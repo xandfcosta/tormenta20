@@ -1,4 +1,4 @@
-import { anyPower, autoPower, electivePower, note, power } from './_helpers'
+import { anyPower, autoPower, classChoice, electivePower, note, power } from './_helpers'
 import type { ClassPower } from '../types'
 
 const C = 'Arcanista'
@@ -90,11 +90,34 @@ export const ARCANISTA_POWERS: ClassPower[] = [
     'Pode criar pergaminhos (como Escrever Pergaminho). Se tiver ambos, custo reduzido à metade.',
     { prerequisites: [power('class.arcanista.caminho-mago'), note('Treinado em Ofício (escriba)')] }),
 
-  // Caminhos como placeholders (chosen at character creation, not via slot)
+  // Caminhos do Arcanista — gated by the caminho choice in classChoices.
+  // Player owns the row matching their picked caminho automatically once
+  // the picker is set; the other two stay locked.
   electivePower(C, 'Caminho: Bruxo',
-    'Lança magias via foco (varinha, cajado, chapéu). CD 20 + custo em PM, ou teste de Misticismo. Foco tem RD 10 e PV iguais à metade dos seus. Atributo-chave: Carisma.'),
+    'Lança magias via foco (varinha, cajado, chapéu). CD 20 + custo em PM, ou teste de Misticismo. Foco tem RD 10 e PV iguais à metade dos seus. Atributo-chave: Carisma.',
+    {
+      prerequisites: [
+        classChoice(C, 'caminho', 'Caminho do Bruxo escolhido', {
+          allowed: ['bruxo'],
+        }),
+      ],
+    }),
   electivePower(C, 'Caminho: Feiticeiro',
-    'Magia inata por linhagem (Draconia, Feérica, Rubra). Aprende magias a cada nível ímpar. Atributo-chave: Carisma.'),
+    'Magia inata por linhagem (Draconia, Feérica, Rubra). Aprende magias a cada nível ímpar. Atributo-chave: Carisma.',
+    {
+      prerequisites: [
+        classChoice(C, 'caminho', 'Caminho do Feiticeiro escolhido', {
+          allowed: ['feiticeiro'],
+        }),
+      ],
+    }),
   electivePower(C, 'Caminho: Mago',
-    'Estudo formal. Memoriza magias do grimório uma vez por dia. Atributo-chave: Inteligência.'),
+    'Estudo formal. Memoriza magias do grimório uma vez por dia. Atributo-chave: Inteligência.',
+    {
+      prerequisites: [
+        classChoice(C, 'caminho', 'Caminho do Mago escolhido', {
+          allowed: ['mago'],
+        }),
+      ],
+    }),
 ]

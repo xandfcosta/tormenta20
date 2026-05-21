@@ -1,4 +1,4 @@
-import { autoPower, electivePower, power } from './_helpers'
+import { autoPower, classChoice, electivePower, power } from './_helpers'
 import type { ClassPower } from '../types'
 
 const C = 'Cavaleiro'
@@ -104,9 +104,25 @@ export const CAVALEIRO_POWERS: ClassPower[] = [
   electivePower(C, 'Torre Armada',
     'Quando inimigo te ataca, gasta 1 PM para +5 nas rolagens de dano contra esse inimigo no próximo turno.'),
 
-  // Caminhos do Cavaleiro (escolhidos no L5)
+  // Caminhos do Cavaleiro (escolhidos no L5) — gated by caminho choice.
   electivePower(C, 'Caminho: Bastião',
-    'Em armadura pesada, recebe Redução de Dano 5 (cumulativa com Especialização em Armadura).'),
+    'Em armadura pesada, recebe Redução de Dano 5 (cumulativa com Especialização em Armadura).',
+    {
+      minLevel: 5,
+      prerequisites: [
+        classChoice(C, 'caminho', 'Caminho do Bastião escolhido', {
+          allowed: ['bastiao'],
+        }),
+      ],
+    }),
   electivePower(C, 'Caminho: Montaria',
-    'Recebe cavalo de guerra. +5 em testes de Adestramento e Cavalgar com ela. L11 vira parceiro mestre. Se morrer, pode comprar/treinar outra (1 semana).'),
+    'Recebe cavalo de guerra. +5 em testes de Adestramento e Cavalgar com ela. L11 vira parceiro mestre. Se morrer, pode comprar/treinar outra (1 semana).',
+    {
+      minLevel: 5,
+      prerequisites: [
+        classChoice(C, 'caminho', 'Caminho da Montaria escolhido', {
+          allowed: ['montaria'],
+        }),
+      ],
+    }),
 ]

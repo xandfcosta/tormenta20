@@ -119,9 +119,25 @@ export const PALADINO_POWERS: ClassPower[] = [
   electivePower(C, 'Virtude Paladinesca: Temperança',
     'Quando ingere alimento, item alquímico ou poção, consome apenas metade. Cada item desses rende duas "doses" para você.'),
 
-  // Caminhos da Bênção da Justiça (L5)
+  // Caminhos da Bênção da Justiça (L5) — gated by caminho choice.
   electivePower(C, 'Caminho: Égide Sagrada',
-    'Ação de movimento + 2 PM: recobre escudo/símbolo sagrado de energia. Você e aliados adjacentes somam Carisma na Defesa até fim cena. L11+: paga 5 PM para refazer resistência se passar e mágica era contra você, devolve a magia ao conjurador.'),
+    'Ação de movimento + 2 PM: recobre escudo/símbolo sagrado de energia. Você e aliados adjacentes somam Carisma na Defesa até fim cena. L11+: paga 5 PM para refazer resistência se passar e mágica era contra você, devolve a magia ao conjurador.',
+    {
+      minLevel: 5,
+      prerequisites: [
+        classChoice(C, 'caminho', 'Caminho da Égide Sagrada escolhido', {
+          allowed: ['egide-sagrada'],
+        }),
+      ],
+    }),
   electivePower(C, 'Caminho: Montaria Sagrada',
-    'Ação de movimento + 2 PM: invoca montaria sagrada (cavalo de guerra Médio ou pônei para Pequenos). Parceiro veterano. L11 vira parceiro mestre. Se morrer, nova após 1 dia de prece. Variante: animal mundano (sem PM, vínculo mental).'),
+    'Ação de movimento + 2 PM: invoca montaria sagrada (cavalo de guerra Médio ou pônei para Pequenos). Parceiro veterano. L11 vira parceiro mestre. Se morrer, nova após 1 dia de prece. Variante: animal mundano (sem PM, vínculo mental).',
+    {
+      minLevel: 5,
+      prerequisites: [
+        classChoice(C, 'caminho', 'Caminho da Montaria Sagrada escolhido', {
+          allowed: ['montaria-sagrada'],
+        }),
+      ],
+    }),
 ]
