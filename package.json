@@ -1,0 +1,29 @@
+{
+  "name": "tormenta20",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm -r --parallel run dev",
+    "dev:backend": "pnpm --filter backend run start:dev",
+    "dev:frontend": "pnpm --filter frontend run dev",
+    "build": "pnpm -r run build",
+    "prisma:generate": "pnpm --filter backend exec prisma generate",
+    "prisma:migrate": "pnpm --filter backend exec prisma migrate dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "@prisma/engines",
+      "better-sqlite3",
+      "prisma",
+      "unrs-resolver",
+      "@parcel/watcher",
+      "esbuild",
+      "@swc/core",
+      "@tailwindcss/oxide",
+      "bcrypt"
+    ]
+  }
+}
