@@ -1,0 +1,488 @@
+import type { CatalogItem } from '../types'
+
+/**
+ * Melhorias from T20 p164–166 (Tabela 3-8). Each is a catalog overlay
+ * attached to a base item via CharacterItem.improvements. The `appliesTo`
+ * array gates which item families may receive the melhoria.
+ *
+ * Some melhorias produce narrative effects (e.g. Mira telescópica extends
+ * weapon range, Injeção alquímica fires a preparado, Polida grants +5 def
+ * only in the first round) and are stored with empty modifier arrays —
+ * the rules text lives in the note. Prerequisite chains (Pungente needs
+ * Certeira, Atroz needs Cruel, Sob medida needs Ajustada, Harmonizada
+ * needs another melhoria) are not enforced at the catalog level.
+ */
+export const IMPROVEMENTS: CatalogItem[] = [
+  // ── Melhorias para armas ──
+  {
+    id: 'melhoria-certeira',
+    name: 'Certeira',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['weapon'],
+    modifiers: [
+      {
+        target: { k: 'attack', scope: 'this' },
+        amount: 1,
+        bonusType: 'enhancement',
+        condition: { c: 'wielded' },
+        note: '+1 atq',
+      },
+    ],
+  },
+  {
+    id: 'melhoria-pungente',
+    name: 'Pungente',
+    category: 'improvement',
+    price: 3000,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['weapon'],
+    modifiers: [
+      {
+        target: { k: 'attack', scope: 'this' },
+        amount: 2,
+        bonusType: 'enhancement',
+        condition: { c: 'wielded' },
+        note: '+2 atq (pré-req: Certeira)',
+      },
+    ],
+  },
+  {
+    id: 'melhoria-cruel',
+    name: 'Cruel',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['weapon'],
+    modifiers: [
+      {
+        target: { k: 'damage', scope: 'this' },
+        amount: 1,
+        bonusType: 'enhancement',
+        condition: { c: 'wielded' },
+        note: '+1 dano',
+      },
+    ],
+  },
+  {
+    id: 'melhoria-atroz',
+    name: 'Atroz',
+    category: 'improvement',
+    price: 3000,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['weapon'],
+    modifiers: [
+      {
+        target: { k: 'damage', scope: 'this' },
+        amount: 2,
+        bonusType: 'enhancement',
+        condition: { c: 'wielded' },
+        note: '+2 dano (pré-req: Cruel)',
+      },
+    ],
+  },
+  {
+    id: 'melhoria-equilibrada',
+    name: 'Equilibrada',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['weapon'],
+    modifiers: [
+      {
+        target: { k: 'maneuver', name: 'derrubar' },
+        amount: 2,
+        bonusType: 'enhancement',
+        condition: { c: 'wielded' },
+        note: '+2 em manobras',
+      },
+      {
+        target: { k: 'maneuver', name: 'desarmar' },
+        amount: 2,
+        bonusType: 'enhancement',
+        condition: { c: 'wielded' },
+        note: '+2 em manobras',
+      },
+      {
+        target: { k: 'maneuver', name: 'quebrar' },
+        amount: 2,
+        bonusType: 'enhancement',
+        condition: { c: 'wielded' },
+        note: '+2 em manobras',
+      },
+      {
+        target: { k: 'maneuver', name: 'agarrar' },
+        amount: 2,
+        bonusType: 'enhancement',
+        condition: { c: 'wielded' },
+        note: '+2 em manobras',
+      },
+    ],
+  },
+  {
+    id: 'melhoria-harmonizada-arma',
+    name: 'Harmonizada (arma)',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['weapon'],
+    modifiers: [
+      {
+        target: { k: 'pmCost' },
+        amount: -1,
+        bonusType: 'untyped',
+        condition: { c: 'wielded' },
+        note: 'custo da habilidade escolhida -1 PM (pré-req: outra melhoria)',
+      },
+    ],
+  },
+  {
+    id: 'melhoria-injecao-alquimica',
+    name: 'Injeção alquímica',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['weapon'],
+    modifiers: [],
+  },
+  {
+    id: 'melhoria-macica',
+    name: 'Maciça',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['weapon'],
+    modifiers: [
+      {
+        target: { k: 'critMult' },
+        amount: 1,
+        bonusType: 'untyped',
+        condition: { c: 'wielded' },
+        note: '+1 multiplicador de crítico (não combina com Precisa)',
+      },
+    ],
+  },
+  {
+    id: 'melhoria-mira-telescopica',
+    name: 'Mira telescópica',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['weapon'],
+    modifiers: [],
+  },
+  {
+    id: 'melhoria-precisa',
+    name: 'Precisa',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['weapon'],
+    modifiers: [
+      {
+        target: { k: 'critRange' },
+        amount: 1,
+        bonusType: 'untyped',
+        condition: { c: 'wielded' },
+        note: '+1 margem de ameaça (não combina com Maciça)',
+      },
+    ],
+  },
+
+  // ── Melhorias para armaduras e escudos ──
+  {
+    id: 'melhoria-ajustada',
+    name: 'Ajustada',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['armor', 'shield'],
+    modifiers: [
+      {
+        target: { k: 'armorPenalty' },
+        amount: 1,
+        bonusType: 'untyped',
+        condition: { c: 'vested' },
+        note: '-1 na penalidade de armadura',
+      },
+    ],
+  },
+  {
+    id: 'melhoria-sob-medida',
+    name: 'Sob medida',
+    category: 'improvement',
+    price: 3000,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['armor', 'shield'],
+    modifiers: [
+      {
+        target: { k: 'armorPenalty' },
+        amount: 2,
+        bonusType: 'untyped',
+        condition: { c: 'vested' },
+        note: '-2 na penalidade de armadura (pré-req: Ajustada, usuário específico)',
+      },
+    ],
+  },
+  {
+    id: 'melhoria-delicada',
+    name: 'Delicada',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['armor'],
+    modifiers: [],
+  },
+  {
+    id: 'melhoria-espinhosa-armadura',
+    name: 'Espinhosa (armadura)',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['armor'],
+    modifiers: [],
+  },
+  {
+    id: 'melhoria-espinhoso-escudo',
+    name: 'Espinhoso (escudo)',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['shield'],
+    modifiers: [],
+  },
+  {
+    id: 'melhoria-polida',
+    name: 'Polida',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['armor', 'shield'],
+    modifiers: [],
+  },
+  {
+    id: 'melhoria-reforcada',
+    name: 'Reforçada',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['armor', 'shield'],
+    modifiers: [
+      {
+        target: { k: 'defense' },
+        amount: 1,
+        bonusType: 'enhancement',
+        condition: { c: 'vested' },
+        note: '+1 Defesa',
+      },
+      {
+        target: { k: 'armorPenalty' },
+        amount: -1,
+        bonusType: 'untyped',
+        condition: { c: 'vested' },
+        note: '+1 na penalidade de armadura',
+      },
+    ],
+  },
+  {
+    id: 'melhoria-selada',
+    name: 'Selada',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['armor'],
+    modifiers: [
+      {
+        target: { k: 'resistance' },
+        amount: 1,
+        bonusType: 'enhancement',
+        condition: { c: 'vested' },
+        note: '+1 em testes de resistência (apenas armaduras pesadas)',
+      },
+    ],
+  },
+
+  // ── Melhorias para esotéricos ──
+  {
+    id: 'melhoria-canalizador',
+    name: 'Canalizador',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['apparel'],
+    modifiers: [
+      {
+        target: { k: 'pmLimit' },
+        amount: 1,
+        bonusType: 'enhancement',
+        condition: { c: 'vested' },
+        note: '+1 no limite de PM',
+      },
+    ],
+  },
+  {
+    id: 'melhoria-energetico',
+    name: 'Energético',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['apparel'],
+    modifiers: [],
+  },
+  {
+    id: 'melhoria-harmonizado-esoterico',
+    name: 'Harmonizado (esotérico)',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['apparel'],
+    modifiers: [
+      {
+        target: { k: 'pmCost' },
+        amount: -1,
+        bonusType: 'untyped',
+        condition: { c: 'vested' },
+        note: 'custo da magia escolhida -1 PM',
+      },
+    ],
+  },
+  {
+    id: 'melhoria-poderoso',
+    name: 'Poderoso',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['apparel'],
+    modifiers: [
+      {
+        target: { k: 'spellDC' },
+        amount: 1,
+        bonusType: 'enhancement',
+        condition: { c: 'vested' },
+        note: '+1 na CD de magias',
+      },
+    ],
+  },
+  {
+    id: 'melhoria-vigilante',
+    name: 'Vigilante',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['apparel'],
+    modifiers: [
+      {
+        target: { k: 'defense' },
+        amount: 2,
+        bonusType: 'enhancement',
+        condition: { c: 'vested' },
+        note: '+2 na Defesa',
+      },
+    ],
+  },
+
+  // ── Melhorias para ferramentas e vestuário ──
+  {
+    id: 'melhoria-aprimorado',
+    name: 'Aprimorado',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['apparel'],
+    modifiers: [],
+  },
+
+  // ── Melhorias para qualquer das categorias acima ──
+  {
+    id: 'melhoria-banhado-a-ouro',
+    name: 'Banhado a ouro',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['weapon', 'armor', 'shield', 'apparel'],
+    modifiers: [
+      {
+        target: { k: 'expertise', name: 'Diplomacia' },
+        amount: 2,
+        bonusType: 'item',
+        note: '+2 em Diplomacia',
+      },
+    ],
+  },
+  {
+    id: 'melhoria-cravejado-de-gemas',
+    name: 'Cravejado de gemas',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['weapon', 'armor', 'shield', 'apparel'],
+    modifiers: [
+      {
+        target: { k: 'expertise', name: 'Enganação' },
+        amount: 2,
+        bonusType: 'item',
+        note: '+2 em Enganação',
+      },
+    ],
+  },
+  {
+    id: 'melhoria-discreto',
+    name: 'Discreto',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['weapon', 'armor', 'shield', 'apparel'],
+    modifiers: [],
+  },
+  {
+    id: 'melhoria-macabro',
+    name: 'Macabro',
+    category: 'improvement',
+    price: 300,
+    slots: 0,
+    equip: 'either',
+    appliesTo: ['weapon', 'armor', 'shield', 'apparel'],
+    modifiers: [
+      {
+        target: { k: 'expertise', name: 'Intimidação' },
+        amount: 2,
+        bonusType: 'item',
+        note: '+2 em Intimidação',
+      },
+      {
+        target: { k: 'expertise', name: 'Diplomacia' },
+        amount: -2,
+        bonusType: 'item',
+        note: '-2 em Diplomacia',
+      },
+    ],
+  },
+]
