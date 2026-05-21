@@ -1,4 +1,4 @@
-import { autoPower, electivePower, note } from './_helpers'
+import { autoPower, classChoice, electivePower } from './_helpers'
 import type { ClassPower } from '../types'
 
 const C = 'Paladino'
@@ -62,7 +62,13 @@ export const PALADINO_POWERS: ClassPower[] = [
   // Poderes de Paladino (p82-84)
   electivePower(C, 'Arma Sagrada',
     'Quando usa Golpe Divino com arma preferida da divindade, dado de dano do Golpe Divino aumenta para d12.',
-    { prerequisites: [note('Devoto, exceto Lena ou Marah')] }),
+    {
+      prerequisites: [
+        classChoice(C, 'devoto', 'Devoto, exceto Lena ou Marah', {
+          forbidden: ['lena', 'marah'],
+        }),
+      ],
+    }),
   electivePower(C, 'Aumento de Atributo',
     '+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo.'),
   electivePower(C, 'Aura Antimagia',

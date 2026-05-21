@@ -79,6 +79,7 @@ import {
   pmCostMod,
   pmLimitTotal,
   spellDCBonus,
+  parseClassChoices,
   useAllConditionals,
   useCharacterEffects,
   type ConditionalEntry,
@@ -370,6 +371,7 @@ function ClassesSection({
   const queryKey = characterQueryOptions(character.id).queryKey
   const allChosen = parseChoices(character.classPowers)
   const chosenSet = new Set(allChosen)
+  const classChoices = parseClassChoices(character.classChoices)
   const pool = classPowersFor(entry.className)
   const auto = pool
     .filter((p) => p.grantedAtLevel !== undefined && p.grantedAtLevel <= entry.level)
@@ -460,7 +462,7 @@ function ClassesSection({
                   const owned = allChosen.includes(power.id)
                   const tooHigh = (power.minLevel ?? 1) > entry.level
                   const prereqChecks = (power.prerequisites ?? []).map((p) =>
-                    evaluatePrerequisite(p, character, chosenSet),
+                    evaluatePrerequisite(p, character, chosenSet, classChoices),
                   )
                   const missingPrereq = prereqChecks.some((c) => !c.met)
                   const noSlot = slotsRemaining <= 0

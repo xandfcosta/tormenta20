@@ -98,6 +98,8 @@ export type Character = {
   originChoices: string
   /** JSON-encoded string[] of class power ids the character owns */
   classPowers: string
+  /** JSON-encoded ClassChoices keyed by className (devoto, caminho, ...) */
+  classChoices: string
   createdAt: string
   updatedAt: string
   races: { race: string }[]
@@ -115,10 +117,13 @@ export type UpdateLevelInput = {
   level: number
 }
 
+import type { ClassChoices } from '@tormenta20/t20-data'
+
 export type UpdateAbilityChoicesInput = {
   raceAbilityChoices?: string[]
   originChoices?: string[]
   classPowers?: string[]
+  classChoices?: ClassChoices
 }
 
 export type UpdateClassLevelInput = {

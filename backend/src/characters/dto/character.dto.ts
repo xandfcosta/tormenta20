@@ -7,6 +7,7 @@ import {
   IsIn,
   IsInt,
   IsNumber,
+  IsObject,
   IsOptional,
   IsString,
   Max,
@@ -224,6 +225,23 @@ export class UpdateClassLevelDto {
   level!: number;
 }
 
+/**
+ * Per-class choice blob — devoto/caminho slugs keyed by className.
+ * Validated at service layer against the t20-data catalog (caminhos +
+ * deuses) since the legal value set depends on the chosen class.
+ */
+export class ClassChoiceBlobDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  devoto?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  caminho?: string;
+}
+
 export class UpdateAbilityChoicesDto {
   @IsOptional()
   @IsArray()
@@ -242,4 +260,8 @@ export class UpdateAbilityChoicesDto {
   @ArrayUnique()
   @IsString({ each: true })
   classPowers?: string[];
+
+  @IsOptional()
+  @IsObject()
+  classChoices?: Record<string, ClassChoiceBlobDto>;
 }

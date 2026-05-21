@@ -1,4 +1,7 @@
-import { anyPower, autoPower, electivePower, note, power } from './_helpers'
+import { anyPower, autoPower, classChoice, electivePower, power } from './_helpers'
+import { DEUSES } from '../deuses'
+
+const CLERIGO_DEUSES_MAIORES = DEUSES.filter((d) => d.major).map((d) => d.id)
 import type { ClassPower } from '../types'
 
 const C = 'Clérigo'
@@ -38,7 +41,14 @@ export const CLERIGO_POWERS: ClassPower[] = [
     '+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo.'),
   electivePower(C, 'Autoridade Eclesiástica',
     'Posição formal em igreja. +5 em testes de Diplomacia ou Intimidação com devotos. Metade do preço em itens alquímicos/poções/serviços em templos da divindade.',
-    { prerequisites: [note('Devoto de deus maior')], minLevel: 5 }),
+    {
+      prerequisites: [
+        classChoice(C, 'devoto', 'Devoto de deus maior', {
+          allowed: CLERIGO_DEUSES_MAIORES,
+        }),
+      ],
+      minLevel: 5,
+    }),
   electivePower(C, 'Canalizar Energia Positiva/Negativa',
     'Ação padrão + PM. Onda de luz/trevas afeta criaturas em alcance curto. Cada PM gasto: luz cura 1d6 PV em criaturas vivas e causa 1d6 dano de luz em mortos-vivos (Vontade CD Sab reduz à metade). Trevas inverso.'),
   electivePower(C, 'Canalizar Amplo',

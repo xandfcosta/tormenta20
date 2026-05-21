@@ -46,6 +46,8 @@ model Character {
   originChoices String @default("[]")
   /// JSON-encoded ClassPower id[] — elective + auto-granted class powers owned.
   classPowers String @default("[]")
+  /// JSON-encoded ClassChoices (per-class devoto/caminho picks keyed by className).
+  classChoices String @default("{}")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   races        CharacterRace[]

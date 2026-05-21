@@ -20,11 +20,15 @@ import {
 } from './dto/character.dto';
 import { EXPERTISE_NAMES, EXPERTISES } from './t20-constants';
 import {
+  CAMINHOS,
+  DEUS_BY_ID,
   PROFICIENCY_CATEGORIES,
   characterProficiencies,
   familyFor,
   getCatalogItem,
   isCatalogId,
+  type ClassChoiceBlob,
+  type ClassChoices,
   type ProficiencyCategory,
 } from '@tormenta20/t20-data';
 
@@ -91,6 +95,59 @@ const characterInclude = {
     orderBy: { id: 'asc' },
   },
 } as const;
+
+/**
+ * Validate a classChoices blob against the t20-data catalogs:
+ *  - keys must be known class names (anything in CAMINHOS or 'Clérigo'/
+ *    'Paladino'/'Druida' for devoto). Permissive on the key — frontend
+ *    only proposes legal class names, so we accept any string and let
+ *    bogus keys be inert at evaluation time.
+ *  - `devoto` value must be a known deus id.
+ *  - `caminho` value must be one of CAMINHOS[className].
+ * Mutates a deep-cloned, deduped output keyed by className.
+ */
+function sanitizeClassChoices(input: unknown): ClassChoices {
+  if (!input || typeof input !== 'object') return {};
+  const fieldErrors: Record<string, string[]> = {};
+  const out: ClassChoices = {};
+  for (const [className, raw] of Object.entries(input)) {
+    if (!raw || typeof raw !== 'object') continue;
+    const blob: ClassChoiceBlob = {};
+    const r = raw as { devoto?: unknown; caminho?: unknown };
+    if (r.devoto !== undefined && r.devoto !== '') {
+      if (typeof r.devoto !== 'string' || !DEUS_BY_ID[r.devoto]) {
+        (fieldErrors[`classChoices.${className}.devoto`] ??= []).push(
+          `Unknown deus id "${String(r.devoto)}"`,
+        );
+      } else {
+        blob.devoto = r.devoto;
+      }
+    }
+    if (r.caminho !== undefined && r.caminho !== '') {
+      const options = CAMINHOS[className];
+      if (
+        typeof r.caminho !== 'string' ||
+        !options?.some((c) => c.id === r.caminho)
+      ) {
+        (fieldErrors[`classChoices.${className}.caminho`] ??= []).push(
+          `Caminho "${String(r.caminho)}" not valid for ${className}`,
+        );
+      } else {
+        blob.caminho = r.caminho;
+      }
+    }
+    if (blob.devoto || blob.caminho) out[className] = blob;
+  }
+  if (Object.keys(fieldErrors).length > 0) {
+    throw new BadRequestException({
+      statusCode: 400,
+      error: 'Bad Request',
+      message: 'Validation failed',
+      fieldErrors,
+    });
+  }
+  return out;
+}
 
 function assertSlotsMultiple(slots: number): void {
   if (!Number.isFinite(slots) || !Number.isInteger(slots * 2)) {
@@ -288,6 +345,7 @@ export class CharactersService {
       raceAbilityChoices?: string;
       originChoices?: string;
       classPowers?: string;
+      classChoices?: string;
     } = {};
     if (dto.raceAbilityChoices !== undefined) {
       data.raceAbilityChoices = JSON.stringify(dto.raceAbilityChoices);
@@ -297,6 +355,9 @@ export class CharactersService {
     }
     if (dto.classPowers !== undefined) {
       data.classPowers = JSON.stringify(dto.classPowers);
+    }
+    if (dto.classChoices !== undefined) {
+      data.classChoices = JSON.stringify(sanitizeClassChoices(dto.classChoices));
     }
     if (Object.keys(data).length === 0) {
       throw new BadRequestException('No fields to update');

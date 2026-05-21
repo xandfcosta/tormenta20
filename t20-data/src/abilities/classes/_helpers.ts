@@ -69,9 +69,33 @@ export function attr(key: AttributeKey, min: number): Prerequisite {
   return { kind: 'attribute', attr: key, min }
 }
 
-/** Free-form gate displayed verbatim — used for devotion, caminho, etc. */
+/** Free-form gate displayed verbatim — escape hatch for non-typed gates. */
 export function note(description: string): Prerequisite {
   return { kind: 'note', description }
+}
+
+/**
+ * Per-class choice gate. `field` indexes into Character.classChoices[class].
+ *  - `allowed`: value must be in this set.
+ *  - `forbidden`: value must NOT be in this set.
+ *  - neither: any non-empty value satisfies (i.e., "must be a devoto").
+ *
+ * `label` is the human-readable rule shown in the UI when displayed.
+ */
+export function classChoice(
+  className: string,
+  field: 'devoto' | 'caminho',
+  label: string,
+  opts: { allowed?: string[]; forbidden?: string[] } = {},
+): Prerequisite {
+  return {
+    kind: 'classChoice',
+    class: className,
+    field,
+    label,
+    ...(opts.allowed ? { allowed: opts.allowed } : {}),
+    ...(opts.forbidden ? { forbidden: opts.forbidden } : {}),
+  }
 }
 
 /** Stable id like `class.barbaro.furia` — matches origin/race id convention. */

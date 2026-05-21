@@ -17,6 +17,7 @@ import {
   type ActiveItem,
   type AttributeKey,
   type CatalogItem,
+  type ClassChoices,
   type ConditionalEffect,
   type ItemEffects,
   type Modifier,
@@ -162,14 +163,16 @@ export type PrerequisiteCheck = {
 /**
  * Auto-checks a single Prerequisite against the character. `power`/`anyPower`
  * test the chosen-class-power set; `trained` looks at the perícia row;
- * `attribute` compares raw character attribute. `note` cannot be auto-checked
- * (devotion, caminho, etc.) — returns `met:true` so it never blocks selection;
- * UI shows reason text as info hint.
+ * `attribute` compares raw character attribute; `classChoice` reads from
+ * the parsed classChoices blob (devoto/caminho picks). `note` cannot be
+ * auto-checked — returns `met:true` so it never blocks selection; UI shows
+ * reason text as info hint.
  */
 export function evaluatePrerequisite(
   prereq: Prerequisite,
   character: Character,
   chosenPowerIds: ReadonlySet<string>,
+  classChoices: ClassChoices,
 ): PrerequisiteCheck {
   switch (prereq.kind) {
     case 'power': {
@@ -197,8 +200,31 @@ export function evaluatePrerequisite(
         reason: `${ATTRIBUTE_ABBR[prereq.attr]} ${prereq.min}+`,
       }
     }
+    case 'classChoice': {
+      const value = classChoices[prereq.class]?.[prereq.field]
+      let met = !!value
+      if (met && prereq.allowed) met = prereq.allowed.includes(value!)
+      if (met && prereq.forbidden) met = !prereq.forbidden.includes(value!)
+      return { prereq, met, reason: prereq.label }
+    }
     case 'note':
       return { prereq, met: true, reason: prereq.description }
+  }
+}
+
+/**
+ * Parses Character.classChoices JSON. Missing/malformed → empty object,
+ * so the rest of the engine treats the character as having no choices yet.
+ */
+export function parseClassChoices(raw: string): ClassChoices {
+  try {
+    const parsed = JSON.parse(raw)
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return parsed as ClassChoices
+    }
+    return {}
+  } catch {
+    return {}
   }
 }
 

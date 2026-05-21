@@ -5,13 +5,16 @@ import type { Modifier } from '../items/types'
 /**
  * Typed prerequisite for class powers and general powers. Covers the four
  * common gates plus a `note` escape hatch for prereqs not yet machine-checked
- * (devotion, caminho, etc.) — UI displays the note text verbatim.
+ * (Ofício sub-crafts, spell knowledge, etc.) — UI displays note verbatim.
  *
  *  - power: must own a specific other power (by id).
  *  - anyPower: must own at least one of the listed ids (used for "any
  *    armadilha", "any missa" rules).
  *  - trained: must be trained in the named expertise.
  *  - attribute: attribute (post-race-mods, raw character.X) must meet min.
+ *  - classChoice: a per-class choice (devoto/caminho) stored in
+ *    Character.classChoices must satisfy `allowed`/`forbidden`. When neither
+ *    is set, any non-empty value satisfies (i.e., "must be devoto").
  *  - note: free-form description shown in UI; not auto-resolved.
  */
 export type Prerequisite =
@@ -19,6 +22,15 @@ export type Prerequisite =
   | { kind: 'anyPower'; ids: string[] }
   | { kind: 'trained'; expertise: ExpertiseName }
   | { kind: 'attribute'; attr: AttributeKey; min: number }
+  | {
+      kind: 'classChoice'
+      class: string
+      field: 'devoto' | 'caminho'
+      allowed?: string[]
+      forbidden?: string[]
+      /** Human-readable hint shown in UI ("Devoto, exceto Lena/Marah"). */
+      label: string
+    }
   | { kind: 'note'; description: string }
 
 /**
