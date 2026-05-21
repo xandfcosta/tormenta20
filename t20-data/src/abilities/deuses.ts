@@ -76,3 +76,36 @@ export type ClassChoiceBlob = {
 }
 
 export type ClassChoices = Partial<Record<string, ClassChoiceBlob>>
+
+/**
+ * Returns the deus catalog filtered for the given class's devoto picker,
+ * or null when the class has no devoto slot. Mirrors the per-class lists
+ * in PDF Cap 3 (Religião) — Clérigo picks any deus maior; Paladino and
+ * Druida have narrower whitelists encoded as boolean flags per deus.
+ */
+export function devotoOptionsFor(className: string): Deus[] | null {
+  switch (className) {
+    case 'Clérigo':
+      return DEUSES.filter((d) => d.major)
+    case 'Paladino':
+      return DEUSES.filter((d) => d.paladinoEligible)
+    case 'Druida':
+      return DEUSES.filter((d) => d.druidaEligible)
+    default:
+      return null
+  }
+}
+
+/**
+ * Per-class caminho/subpath slot. Returns options + the class level at
+ * which the caminho choice unlocks (the class's "Caminho" auto-power), or
+ * null when the class has no caminho slot.
+ */
+export function caminhoSlotFor(
+  className: string,
+): { options: CaminhoOption[]; minLevel: number } | null {
+  const options = CAMINHOS[className]
+  if (!options) return null
+  const minLevel = className === 'Arcanista' ? 1 : 5
+  return { options, minLevel }
+}

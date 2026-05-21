@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import { useDebouncedCallback } from '@tanstack/react-pacer'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Combobox, type ComboboxOption } from '@/components/ui/combobox'
 import {
   Dialog,
   DialogContent,
@@ -90,8 +91,10 @@ import {
   CATALOG_ITEMS,
   IMPROVEMENTS,
   MATERIALS,
+  caminhoSlotFor,
   classPowersFor,
   characterProficiencies,
+  devotoOptionsFor,
   familyFor,
   generalPowersByKinds,
   getCatalogItem,
@@ -101,9 +104,13 @@ import {
   unlockedKinds,
 } from '@tormenta20/t20-data'
 import type {
+  CaminhoOption,
   CatalogItem,
+  ClassChoiceBlob,
+  ClassChoices,
   ClassPower,
   ConditionalEffect,
+  Deus,
   GeneralPower,
   ItemEffects,
   Modifier,
@@ -360,6 +367,119 @@ function AbilitiesPanel({ character }: { character: Character }) {
   )
 }
 
+/**
+ * Picker for per-class subpath choices — devoto (Clérigo/Paladino/Druida)
+ * and caminho (Arcanista L1, Paladino L5, Cavaleiro L5). Returns null when
+ * the class has no slot or the player has not reached the caminho minLevel.
+ * Empty value clears the choice; sending a blob with no fields removes the
+ * class key from the persisted blob so the row stays minimal.
+ */
+function ClassChoicesPicker({
+  character,
+  className,
+  level,
+  classChoices,
+}: {
+  character: Character
+  className: string
+  level: number
+  classChoices: ClassChoices
+}) {
+  const qc = useQueryClient()
+  const queryKey = characterQueryOptions(character.id).queryKey
+  const devotoOpts: Deus[] | null = devotoOptionsFor(className)
+  const caminhoSlot = caminhoSlotFor(className)
+  const showDevoto = devotoOpts !== null
+  const showCaminho = caminhoSlot !== null && level >= caminhoSlot.minLevel
+  const blob: ClassChoiceBlob = classChoices[className] ?? {}
+
+  const mutate = useMutation<
+    Character,
+    Error,
+    ClassChoices,
+    { previous: Character | undefined }
+  >({
+    mutationFn: (next) =>
+      api.characters.updateAbilityChoices(character.id, { classChoices: next }),
+    onMutate: async (next) => {
+      await qc.cancelQueries({ queryKey })
+      const previous = qc.getQueryData<Character>(queryKey)
+      qc.setQueryData<Character>(queryKey, (prev) =>
+        prev ? { ...prev, classChoices: JSON.stringify(next) } : prev,
+      )
+      return { previous }
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
+    },
+    onSuccess: (server) => qc.setQueryData<Character>(queryKey, server),
+  })
+
+  function commit(nextBlob: ClassChoiceBlob) {
+    const next: ClassChoices = { ...classChoices }
+    if (nextBlob.devoto || nextBlob.caminho) next[className] = nextBlob
+    else delete next[className]
+    mutate.mutate(next)
+  }
+
+  if (!showDevoto && !showCaminho) return null
+
+  const devotoOptions: ComboboxOption[] = (devotoOpts ?? []).map((d) => ({
+    value: d.id,
+    label: d.name,
+  }))
+  const caminhoOptions: ComboboxOption[] = (caminhoSlot?.options ?? []).map(
+    (c: CaminhoOption) => ({ value: c.id, label: c.name }),
+  )
+
+  return (
+    <div className="mb-3 space-y-2">
+      <p
+        className={cn(
+          'text-[10px] font-semibold uppercase tracking-wide',
+          subtleText,
+        )}
+      >
+        Escolhas
+      </p>
+      {showDevoto && (
+        <div>
+          <p className={cn('mb-1 text-[11px]', subtleText)}>Devoto</p>
+          <Combobox
+            options={devotoOptions}
+            value={blob.devoto ?? ''}
+            onChange={(value) =>
+              commit({ ...blob, devoto: value || undefined })
+            }
+            placeholder="Escolher devoto…"
+            searchPlaceholder="Buscar deus…"
+            emptyMessage="Nenhum deus."
+            allowClear
+            clearLabel="Sem devoto"
+          />
+        </div>
+      )}
+      {showCaminho && (
+        <div>
+          <p className={cn('mb-1 text-[11px]', subtleText)}>Caminho</p>
+          <Combobox
+            options={caminhoOptions}
+            value={blob.caminho ?? ''}
+            onChange={(value) =>
+              commit({ ...blob, caminho: value || undefined })
+            }
+            placeholder="Escolher caminho…"
+            searchPlaceholder="Buscar caminho…"
+            emptyMessage="Nenhum caminho."
+            allowClear
+            clearLabel="Não escolhido"
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
 function ClassesSection({
   entry,
   character,
@@ -430,6 +550,12 @@ function ClassesSection({
         </p>
       ) : (
         <>
+          <ClassChoicesPicker
+            character={character}
+            className={entry.className}
+            level={entry.level}
+            classChoices={classChoices}
+          />
           {auto.length > 0 && (
             <div className="mb-3">
               <p className={cn('mb-1 text-[10px] font-semibold uppercase tracking-wide', subtleText)}>
