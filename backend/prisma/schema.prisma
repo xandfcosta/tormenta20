@@ -1,0 +1,123 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           Int         @id @default(autoincrement())
+  email        String      @unique
+  name         String?
+  passwordHash String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  characters   Character[]
+}
+
+model Character {
+  id           Int      @id @default(autoincrement())
+  ownerId      Int
+  owner        User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name         String
+  origin       String
+  god          String?
+  level        Int      @default(1)
+  hpMax        Int
+  hpCurrent    Int
+  mpMax        Int
+  mpCurrent    Int
+  strength     Int
+  dexterity    Int
+  constitution Int
+  intelligence Int
+  wisdom       Int @default(0)
+  charisma     Int
+  size         String   @default("Médio")
+  displacement Int      @default(9)
+  /// JSON-encoded ProficiencyCategory[]. Empty until first read backfills from class defaults.
+  proficiencies String  @default("[]")
+  /// JSON-encoded RaceAbility id[] — chosen variants for races with sub-trait picks.
+  raceAbilityChoices String @default("[]")
+  /// JSON-encoded OriginBenefit id[] — typically two ids from the origin's benefit pool.
+  originChoices String @default("[]")
+  /// JSON-encoded ClassPower id[] — elective + auto-granted class powers owned.
+  classPowers String @default("[]")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  races        CharacterRace[]
+  classes      CharacterClass[]
+  expertises   CharacterExpertise[]
+  items        CharacterItem[]
+  activeEffects ActiveEffect[]
+
+  @@index([ownerId])
+}
+
+model ActiveEffect {
+  id          Int       @id @default(autoincrement())
+  characterId Int
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  /// catalogId of the consumable that produced this effect
+  catalogId   String
+  /// 'scene' | 'day'
+  scope       String
+  /// JSON-encoded Modifier[] copied from the catalog entry at consume time
+  modifiers   String
+  createdAt   DateTime  @default(now())
+
+  @@index([characterId])
+}
+
+model CharacterItem {
+  id          Int       @id @default(autoincrement())
+  characterId Int
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  catalogId   String?
+  name        String
+  quantity    Int       @default(1)
+  slots       Float     @default(1)
+  /// null | 'vested' | 'wielded' | 'wielded2'
+  equipped    String?
+  /// JSON-encoded string[] of improvement catalog ids
+  improvements String   @default("[]")
+  /// catalog id of the special material applied, or null
+  material    String?
+  createdAt   DateTime  @default(now())
+
+  @@index([characterId])
+}
+
+model CharacterRace {
+  id          Int       @id @default(autoincrement())
+  characterId Int
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  race        String
+
+  @@unique([characterId, race])
+}
+
+model CharacterClass {
+  id          Int       @id @default(autoincrement())
+  characterId Int
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  className   String
+  level       Int       @default(1)
+
+  @@unique([characterId, className])
+}
+
+model CharacterExpertise {
+  id          Int       @id @default(autoincrement())
+  characterId Int
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  name        String
+  attribute   String
+  trained     Boolean   @default(false)
+  custom      Boolean   @default(false)
+
+  @@unique([characterId, name])
+}
