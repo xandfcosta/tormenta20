@@ -1,4 +1,5 @@
 import { autoPower, classChoice, electivePower } from './_helpers'
+import { CULTO_PALADINO_DO_BEM } from '../deuses'
 import type { ClassPower } from '../types'
 
 const C = 'Paladino'
@@ -64,8 +65,12 @@ export const PALADINO_POWERS: ClassPower[] = [
     'Quando usa Golpe Divino com arma preferida da divindade, dado de dano do Golpe Divino aumenta para d12.',
     {
       prerequisites: [
+        // Book p82: "devoto de uma divindade (exceto Lena e Marah)". The
+        // paladino-do-bem alternative is not devoto of a divindade, so it
+        // must also be blocked here even though the book doesn't list it
+        // explicitly (it predates the alt being a picker value).
         classChoice(C, 'devoto', 'Devoto, exceto Lena ou Marah', {
-          forbidden: ['lena', 'marah'],
+          forbidden: ['lena', 'marah', CULTO_PALADINO_DO_BEM],
         }),
       ],
     }),

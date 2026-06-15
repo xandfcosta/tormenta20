@@ -6,11 +6,16 @@
     "dev:backend": "pnpm --filter backend run start:dev",
     "dev:frontend": "pnpm --filter frontend run dev",
     "build": "pnpm -r run build",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "test": "pnpm -r run test",
     "prisma:generate": "pnpm --filter backend exec prisma generate",
     "prisma:migrate": "pnpm --filter backend exec prisma migrate dev"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0"
+    "@biomejs/biome": "^2.5.0",
+    "concurrently": "^9.1.0",
+    "vitest": "^4.1.8"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
