@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10.33.2'
+
+jobs:
+  ci:
+    name: lint + test + build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm prisma:generate
+
+      - name: Biome lint (with fix)
+        run: pnpm exec biome lint --write .
+
+      - name: Fail if lint produced uncommitted changes
+        run: |
+          if ! git diff --quiet; then
+            echo "::error::biome lint --write modified files. Run 'pnpm lint:fix' locally and commit the results."
+            git diff --stat
+            exit 1
+          fi
+
+      - name: Tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
