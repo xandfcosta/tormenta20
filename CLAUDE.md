@@ -48,3 +48,6 @@
 
 - Structured JSON when logging for debugging / observability.
 - Plain text only for user-facing CLI output.
+
+## Reference
+- Use [Tormenta 20 book](/t20-book.pdf) as reference for rules
