@@ -9,12 +9,16 @@ import { applyServerErrors } from './form-errors'
  * on it for per-field error display.
  */
 
-type FakeMeta = {
-  setFieldMeta: ReturnType<typeof vi.fn>
+// applyServerErrors only reads form.setFieldMeta — model that with a
+// loose mock typed as the same signature the production code expects.
+type SetFieldMeta = (name: unknown, updater: (prev: unknown) => unknown) => void
+
+type FakeForm = {
+  setFieldMeta: ReturnType<typeof vi.fn<SetFieldMeta>>
 }
 
-function fakeForm(): FakeMeta {
-  return { setFieldMeta: vi.fn() }
+function fakeForm(): FakeForm {
+  return { setFieldMeta: vi.fn<SetFieldMeta>() }
 }
 
 describe('applyServerErrors — ApiError dispatch', () => {
