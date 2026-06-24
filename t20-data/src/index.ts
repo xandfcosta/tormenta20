@@ -1,6 +1,7 @@
 export * from './attributes'
 export * from './classes'
 export * from './class-expertises'
+export * from './class-vitals'
 export * from './expertises'
 export * from './proficiencies'
 export * from './size'
