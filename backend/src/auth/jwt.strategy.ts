@@ -6,7 +6,12 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { AuthService } from './auth.service';
 import type { AuthUser, JwtPayload } from './auth.service';
 
-function cookieExtractor(cookieName: string) {
+/**
+ * Returns the JWT extractor used by passport-jwt to pull the token out of
+ * the session cookie. Exported so we can unit-test it directly without
+ * spinning up the full passport pipeline.
+ */
+export function cookieExtractor(cookieName: string) {
   return (req: Request): string | null => {
     const cookies = (req as Request & { cookies?: Record<string, string> }).cookies;
     return cookies?.[cookieName] ?? null;
