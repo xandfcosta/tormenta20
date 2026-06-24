@@ -538,3 +538,144 @@ describe('characterEffects — empty character integration', () => {
     expect(effects.conditional).toEqual([])
   })
 })
+
+/**
+ * Edge cases: previously-untested branches of derived.ts that fold a
+ * stat into the raw value. Each spec pins a specific byTarget key so a
+ * future engine refactor that changes the key shape (e.g. `attribute:str`
+ * vs `attribute:strength`) breaks the spec immediately rather than
+ * silently dropping the bonus in the sheet.
+ */
+describe('attributeTotal + attributeContributions — folded modifiers', () => {
+  it('adds attribute stat total to the raw value (race bonus +2)', () => {
+    const c = character({ strength: 1 })
+    const effects: ItemEffects = {
+      byTarget: {
+        'attribute:strength': {
+          total: 2,
+          contributions: [
+            { source: 'Raça: Minotauro', amount: 2, bonusType: 'untyped' },
+          ],
+        },
+      },
+      flags: new Set(),
+      conditional: [],
+    }
+    expect(attributeTotal(c, 'strength', effects)).toBe(3)
+  })
+
+  it('applies negative attribute modifiers (Elfo: Con-1)', () => {
+    const c = character({ constitution: 0 })
+    const effects: ItemEffects = {
+      byTarget: {
+        'attribute:constitution': {
+          total: -1,
+          contributions: [
+            { source: 'Raça: Elfo', amount: -1, bonusType: 'untyped' },
+          ],
+        },
+      },
+      flags: new Set(),
+      conditional: [],
+    }
+    expect(attributeTotal(c, 'constitution', effects)).toBe(-1)
+  })
+
+  it('exposes contributions for the targeted attribute only', () => {
+    const effects: ItemEffects = {
+      byTarget: {
+        'attribute:strength': {
+          total: 2,
+          contributions: [
+            { source: 'Raça: Minotauro', amount: 2, bonusType: 'untyped' },
+          ],
+        },
+        'attribute:dexterity': {
+          total: 1,
+          contributions: [
+            { source: 'Raça: Elfo', amount: 1, bonusType: 'untyped' },
+          ],
+        },
+      },
+      flags: new Set(),
+      conditional: [],
+    }
+    expect(attributeContributions('strength', effects)).toEqual([
+      { source: 'Raça: Minotauro', amount: 2 },
+    ])
+    expect(attributeContributions('dexterity', effects)).toEqual([
+      { source: 'Raça: Elfo', amount: 1 },
+    ])
+  })
+})
+
+describe('pmLimitTotal — folded pmLimit stat', () => {
+  it('adds pmLimit stat to the base ½-level value', () => {
+    const c = character({ level: 7 })
+    const effects: ItemEffects = {
+      byTarget: {
+        pmLimit: {
+          total: 2,
+          contributions: [
+            { source: 'Foco em Magia', amount: 2, bonusType: 'untyped' },
+          ],
+        },
+      },
+      flags: new Set(),
+      conditional: [],
+    }
+    const result = pmLimitTotal(c, effects)
+    expect(result.base).toBe(3)
+    expect(result.itemBonus).toBe(2)
+    expect(result.total).toBe(5)
+    expect(result.contributions).toEqual([
+      { source: 'Foco em Magia', amount: 2 },
+    ])
+  })
+
+  it('clamps base to min 1 at L1 even when pmLimit stat is 0', () => {
+    expect(pmLimitTotal(character({ level: 1 }), emptyEffects()).base).toBe(1)
+  })
+})
+
+describe('spellDCBonus — stat present', () => {
+  it('returns the spellDC stat total + contributions', () => {
+    const effects: ItemEffects = {
+      byTarget: {
+        spellDC: {
+          total: 1,
+          contributions: [
+            { source: 'Foco em Encantamento', amount: 1, bonusType: 'untyped' },
+          ],
+        },
+      },
+      flags: new Set(),
+      conditional: [],
+    }
+    expect(spellDCBonus(effects)).toEqual({
+      total: 1,
+      contributions: [{ source: 'Foco em Encantamento', amount: 1 }],
+    })
+  })
+})
+
+describe('pmCostMod — stat present', () => {
+  it('returns the pmCost stat total + contributions (negative = cheaper)', () => {
+    const effects: ItemEffects = {
+      byTarget: {
+        pmCost: {
+          total: -1,
+          contributions: [
+            { source: 'Magia Eficiente', amount: -1, bonusType: 'untyped' },
+          ],
+        },
+      },
+      flags: new Set(),
+      conditional: [],
+    }
+    expect(pmCostMod(effects)).toEqual({
+      total: -1,
+      contributions: [{ source: 'Magia Eficiente', amount: -1 }],
+    })
+  })
+})
