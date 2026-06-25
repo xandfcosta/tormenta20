@@ -118,7 +118,7 @@ export type ModifierTarget =
   | { k: 'armorPenaltyExpertises' }
   | { k: 'tempHp' }
   | { k: 'tempMp' }
-  | { k: 'maneuver'; name: 'derrubar' | 'desarmar' | 'quebrar' | 'agarrar' }
+  | { k: 'maneuver'; name: 'derrubar' | 'desarmar' | 'quebrar' | 'agarrar' | 'empurrar' }
   | { k: 'flag'; name: ItemFlag }
 
 export type ItemFlag =
