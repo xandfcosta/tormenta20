@@ -4,6 +4,7 @@ import { ANIMALS } from './animals'
 import { APPAREL } from './apparel'
 import { ARMORS } from './armors'
 import { CONSUMABLES } from './consumables'
+import { GEAR } from './gear'
 import { IMPROVEMENTS } from './improvements'
 import { MATERIALS } from './materials'
 import { SHIELDS } from './shields'
@@ -15,6 +16,7 @@ export {
   APPAREL,
   ARMORS,
   CONSUMABLES,
+  GEAR,
   IMPROVEMENTS,
   MATERIALS,
   SHIELDS,
@@ -27,6 +29,7 @@ export const CATALOG_ITEMS: CatalogItem[] = [
   ...ARMORS,
   ...SHIELDS,
   ...APPAREL,
+  ...GEAR,
   ...CONSUMABLES,
   ...IMPROVEMENTS,
   ...MATERIALS,
