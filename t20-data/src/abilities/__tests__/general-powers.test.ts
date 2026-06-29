@@ -7,10 +7,9 @@ import {
 
 /**
  * PDF Cap 2 — "Poderes Gerais" (Combate, Destino, Magia, Tormenta) plus the
- * class-specific pools that share the same PowerKind union. Catalog content
- * is *deliberately* empty (per general-powers.ts comment: "until Cap 2 pages
- * are audited"). These tests pin the *helpers* so they remain correct once
- * the catalog is populated in a future PR.
+ * class-specific pools that share the same PowerKind union. These tests pin
+ * catalog *plumbing* (id uniqueness, kind validity, helper edge cases).
+ * Content-level assertions live in `__tests__/general-powers.test.ts`.
  */
 describe('GENERAL_POWERS_CATALOG plumbing', () => {
   it('every id is globally unique', () => {
@@ -47,10 +46,6 @@ describe('getGeneralPower', () => {
   it('returns undefined for unknown id', () => {
     expect(getGeneralPower('ghost.id')).toBeUndefined()
   })
-
-  it('returns undefined while catalog is empty (Cap 2 not audited)', () => {
-    expect(getGeneralPower('any')).toBeUndefined()
-  })
 })
 
 describe('generalPowersByKinds', () => {
@@ -58,8 +53,7 @@ describe('generalPowersByKinds', () => {
     expect(generalPowersByKinds([])).toEqual([])
   })
 
-  it('filters by kind set — empty catalog → empty result regardless of kinds', () => {
-    expect(generalPowersByKinds(['combate'])).toEqual([])
-    expect(generalPowersByKinds(['combate', 'destino', 'magia'])).toEqual([])
+  it('filtering by a class kind not in the catalog returns empty', () => {
+    expect(generalPowersByKinds(['barbaro'])).toEqual([])
   })
 })
