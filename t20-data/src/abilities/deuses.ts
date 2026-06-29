@@ -12,12 +12,36 @@
  * deuses maiores from deuses menores for the clérigo picker — currently all
  * entries are maiores; deuses menores arrive in future supplements (p105).
  */
+/**
+ * Energia canalizada — book uses Positiva / Negativa / Qualquer (book p97).
+ * 'qualquer' = devoto picks one at character creation (irreversible).
+ *
+ * Note: T20 explicitly drops D&D-style 2-axis alinhamento. No alinhamento
+ * field here. The clérigo's behavioural restrictions come from the deus's
+ * doutrina prose, not a numeric grid.
+ */
+export type DeusEnergia = 'positiva' | 'negativa' | 'qualquer'
+
 export type Deus = {
   id: string
   name: string
   major: boolean
   paladinoEligible: boolean
   druidaEligible: boolean
+  /** PDF p96-105 enrichment fields — empty on Panteão / Paladino do Bem sentinels. */
+  portfolio?: string
+  energia?: DeusEnergia
+  simbolo?: string
+  /**
+   * Arma preferida. `null` quando o deus proíbe explicitamente Arma
+   * Espiritual (Lena, Marah). Nimb usa `'todas'` por sua natureza caótica.
+   */
+  armaPreferida?: string | null
+  /** Sempre 4 poderes concedidos por deus maior (book Cap 2 — Poderes Concedidos). */
+  poderesConcedidos?: readonly string[]
+  /** Raças + classes elegíveis a devoção (verbatim do "Devotos." line). */
+  devotos?: readonly string[]
+  bookPage?: number
 }
 
 /**
@@ -34,26 +58,246 @@ export const CULTO_PANTEAO = 'panteao'
 export const CULTO_PALADINO_DO_BEM = 'paladino-do-bem'
 
 export const DEUSES: Deus[] = [
-  { id: 'aharadak', name: 'Aharadak', major: true, paladinoEligible: false, druidaEligible: false },
-  { id: 'allihanna', name: 'Allihanna', major: true, paladinoEligible: false, druidaEligible: true },
-  { id: 'arsenal', name: 'Arsenal', major: true, paladinoEligible: false, druidaEligible: false },
-  { id: 'azgher', name: 'Azgher', major: true, paladinoEligible: true, druidaEligible: false },
-  { id: 'hyninn', name: 'Hyninn', major: true, paladinoEligible: false, druidaEligible: false },
-  { id: 'kallyadranoch', name: 'Kallyadranoch', major: true, paladinoEligible: false, druidaEligible: false },
-  { id: 'khalmyr', name: 'Khalmyr', major: true, paladinoEligible: true, druidaEligible: false },
-  { id: 'lena', name: 'Lena', major: true, paladinoEligible: true, druidaEligible: false },
-  { id: 'lin-wu', name: 'Lin-Wu', major: true, paladinoEligible: true, druidaEligible: false },
-  { id: 'marah', name: 'Marah', major: true, paladinoEligible: true, druidaEligible: false },
-  { id: 'megalokk', name: 'Megalokk', major: true, paladinoEligible: false, druidaEligible: true },
-  { id: 'nimb', name: 'Nimb', major: true, paladinoEligible: false, druidaEligible: false },
-  { id: 'oceano', name: 'Oceano', major: true, paladinoEligible: false, druidaEligible: true },
-  { id: 'sszzaas', name: 'Sszzaas', major: true, paladinoEligible: false, druidaEligible: false },
-  { id: 'tanna-toh', name: 'Tanna-Toh', major: true, paladinoEligible: true, druidaEligible: false },
-  { id: 'tenebra', name: 'Tenebra', major: true, paladinoEligible: false, druidaEligible: false },
-  { id: 'thwor', name: 'Thwor', major: true, paladinoEligible: false, druidaEligible: false },
-  { id: 'thyatis', name: 'Thyatis', major: true, paladinoEligible: true, druidaEligible: false },
-  { id: 'valkaria', name: 'Valkaria', major: true, paladinoEligible: true, druidaEligible: false },
-  { id: 'wynna', name: 'Wynna', major: true, paladinoEligible: false, druidaEligible: false },
+  {
+    id: 'aharadak',
+    name: 'Aharadak',
+    major: true, paladinoEligible: false, druidaEligible: false,
+    portfolio: 'Tormenta, escatologia, loucura',
+    energia: 'negativa',
+    simbolo: 'Olho macabro de pupila vertical cercado de espinhos',
+    armaPreferida: 'Corrente de espinhos',
+    poderesConcedidos: ['Afinidade com a Tormenta', 'Êxtase da Loucura', 'Percepção Temporal', 'Rejeição Divina'],
+    devotos: ['Quaisquer'],
+    bookPage: 96,
+  },
+  {
+    id: 'allihanna',
+    name: 'Allihanna',
+    major: true, paladinoEligible: false, druidaEligible: true,
+    portfolio: 'Natureza, vida selvagem',
+    energia: 'positiva',
+    simbolo: 'Pequena árvore (ou animal totêmico)',
+    armaPreferida: 'Bordão',
+    poderesConcedidos: ['Compreender os Ermos', 'Dedo Verde', 'Descanso Natural', 'Voz da Natureza'],
+    devotos: ['Dahllan', 'Elfos', 'Sílfides', 'Bárbaros', 'Caçadores', 'Druidas'],
+    bookPage: 97,
+  },
+  {
+    id: 'arsenal',
+    name: 'Arsenal',
+    major: true, paladinoEligible: false, druidaEligible: false,
+    portfolio: 'Guerra, conflito',
+    energia: 'qualquer',
+    simbolo: 'Martelo de guerra e espada longa cruzados sobre um escudo',
+    armaPreferida: 'Martelo de guerra',
+    poderesConcedidos: ['Conjurar Arma', 'Coragem Total', 'Fé Guerreira', 'Sangue de Ferro'],
+    devotos: ['Anões', 'Minotauros', 'Bárbaros', 'Cavaleiros', 'Guerreiros', 'Lutadores'],
+    bookPage: 98,
+  },
+  {
+    id: 'azgher',
+    name: 'Azgher',
+    major: true, paladinoEligible: true, druidaEligible: false,
+    portfolio: 'Sol, deserto, honestidade',
+    energia: 'positiva',
+    simbolo: 'Um sol dourado',
+    armaPreferida: 'Cimitarra',
+    poderesConcedidos: ['Espada Solar', 'Fulgor Solar', 'Habitante do Deserto', 'Inimigo de Tenebra'],
+    devotos: ['Aggelus', 'Qareen', 'Arcanistas', 'Bárbaros', 'Caçadores', 'Cavaleiros', 'Guerreiros', 'Nobres', 'Paladinos'],
+    bookPage: 98,
+  },
+  {
+    id: 'hyninn',
+    name: 'Hyninn',
+    major: true, paladinoEligible: false, druidaEligible: false,
+    portfolio: 'Trapaça, astúcia',
+    energia: 'qualquer',
+    simbolo: 'Adaga atravessando uma máscara/raposa',
+    armaPreferida: 'Adaga',
+    poderesConcedidos: ['Apostar com o Trapaceiro', 'Farsa do Fingidor', 'Forma de Macaco', 'Golpista Divino'],
+    devotos: ['Hynne', 'Goblins', 'Sílfides', 'Bardos', 'Bucaneiros', 'Ladinos', 'Inventores', 'Nobres'],
+    bookPage: 98,
+  },
+  {
+    id: 'kallyadranoch',
+    name: 'Kallyadranoch',
+    major: true, paladinoEligible: false, druidaEligible: false,
+    portfolio: 'Dragões, soberania, riqueza',
+    energia: 'negativa',
+    simbolo: 'Escamas de cinco cores diferentes',
+    armaPreferida: 'Lança',
+    poderesConcedidos: ['Aura de Medo', 'Escamas Dracônicas', 'Presas Primordiais', 'Servos do Dragão'],
+    devotos: ['Elfos', 'Medusas', 'Sulfure', 'Arcanistas', 'Cavaleiros', 'Guerreiros', 'Lutadores', 'Nobres'],
+    bookPage: 99,
+  },
+  {
+    id: 'khalmyr',
+    name: 'Khalmyr',
+    major: true, paladinoEligible: true, druidaEligible: false,
+    portfolio: 'Justiça, ordem, lei',
+    energia: 'positiva',
+    simbolo: 'Espada sobreposta a uma balança',
+    armaPreferida: 'Espada longa',
+    poderesConcedidos: ['Coragem Total', 'Dom da Verdade', 'Espada Justiceira', 'Reparar Injustiça'],
+    devotos: ['Aggelus', 'Anões', 'Cavaleiros', 'Guerreiros', 'Nobres', 'Paladinos'],
+    bookPage: 99,
+  },
+  {
+    id: 'lena',
+    name: 'Lena',
+    major: true, paladinoEligible: true, druidaEligible: false,
+    portfolio: 'Vida, cura, fertilidade',
+    energia: 'positiva',
+    simbolo: 'Lua crescente prateada',
+    armaPreferida: null,
+    poderesConcedidos: ['Ataque Piedoso', 'Aura Restauradora', 'Cura Gentil', 'Curandeira Perfeita'],
+    devotos: ['Dahllan', 'Qareen', 'Nobres', 'Paladinos'],
+    bookPage: 100,
+  },
+  {
+    id: 'lin-wu',
+    name: 'Lin-Wu',
+    major: true, paladinoEligible: true, druidaEligible: false,
+    portfolio: 'Honra, samurai, Império de Jade',
+    energia: 'qualquer',
+    simbolo: 'Placa de metal com dragão-serpente celestial',
+    armaPreferida: 'Katana',
+    poderesConcedidos: ['Coragem Total', 'Kiai Divino', 'Mente Vazia', 'Tradição de Lin-Wu'],
+    devotos: ['Anões', 'Cavaleiros', 'Guerreiros', 'Nobres', 'Paladinos'],
+    bookPage: 100,
+  },
+  {
+    id: 'marah',
+    name: 'Marah',
+    major: true, paladinoEligible: true, druidaEligible: false,
+    portfolio: 'Paz, amor, harmonia',
+    energia: 'positiva',
+    simbolo: 'Coração vermelho',
+    armaPreferida: null,
+    poderesConcedidos: ['Aura de Paz', 'Dom da Esperança', 'Palavras de Bondade', 'Talento Artístico'],
+    devotos: ['Aggelus', 'Elfos', 'Hynne', 'Qareen', 'Bardos', 'Nobres', 'Paladinos'],
+    bookPage: 101,
+  },
+  {
+    id: 'megalokk',
+    name: 'Megalokk',
+    major: true, paladinoEligible: false, druidaEligible: true,
+    portfolio: 'Monstros, ferocidade',
+    energia: 'negativa',
+    simbolo: 'Garra de um monstro',
+    armaPreferida: 'Maça',
+    poderesConcedidos: ['Olhar Amedrontador', 'Presas Primordiais', 'Urro Divino', 'Voz dos Monstros'],
+    devotos: ['Goblins', 'Medusas', 'Minotauros', 'Sulfure', 'Trogs', 'Bárbaros', 'Caçadores', 'Druidas', 'Lutadores'],
+    bookPage: 101,
+  },
+  {
+    id: 'nimb',
+    name: 'Nimb',
+    major: true, paladinoEligible: false, druidaEligible: false,
+    portfolio: 'Caos, sorte, loucura',
+    energia: 'qualquer',
+    simbolo: 'Dado de seis faces',
+    armaPreferida: 'todas',
+    poderesConcedidos: ['Êxtase da Loucura', 'Poder Oculto', 'Sorte dos Loucos', 'Transmissão da Loucura'],
+    devotos: ['Goblins', 'Qareen', 'Sílfides', 'Arcanistas', 'Bárbaros', 'Bardos', 'Bucaneiros', 'Inventores', 'Ladinos'],
+    bookPage: 102,
+  },
+  {
+    id: 'oceano',
+    name: 'Oceano',
+    major: true, paladinoEligible: false, druidaEligible: true,
+    portfolio: 'Mares, marinheiros',
+    energia: 'qualquer',
+    simbolo: 'Concha',
+    armaPreferida: 'Tridente',
+    poderesConcedidos: ['Anfíbio', 'Arsenal das Profundezas', 'Mestre dos Mares', 'Sopro do Mar'],
+    devotos: ['Dahllan', 'Hynne', 'Minotauros', 'Sereias/Tritões', 'Bárbaros', 'Bucaneiros', 'Caçadores', 'Druidas'],
+    bookPage: 102,
+  },
+  {
+    id: 'sszzaas',
+    name: 'Sszzaas',
+    major: true, paladinoEligible: false, druidaEligible: false,
+    portfolio: 'Traição, mentira',
+    energia: 'negativa',
+    simbolo: 'Naja vertendo veneno pelas presas',
+    armaPreferida: 'Adaga',
+    poderesConcedidos: ['Astúcia da Serpente', 'Familiar Ofídico', 'Presas Venenosas', 'Sangue Ofídico'],
+    devotos: ['Medusas', 'Arcanistas', 'Bardos', 'Bucaneiros', 'Inventores', 'Ladinos', 'Nobres'],
+    bookPage: 103,
+  },
+  {
+    id: 'tanna-toh',
+    name: 'Tanna-Toh',
+    major: true, paladinoEligible: true, druidaEligible: false,
+    portfolio: 'Conhecimento, civilização',
+    energia: 'qualquer',
+    simbolo: 'Pergaminho e pena',
+    armaPreferida: 'Bordão',
+    poderesConcedidos: ['Conhecimento Enciclopédico', 'Mente Analítica', 'Pesquisa Abençoada', 'Voz da Civilização'],
+    devotos: ['Golens', 'Kliren', 'Arcanistas', 'Bardos', 'Inventores', 'Nobres', 'Paladinos'],
+    bookPage: 103,
+  },
+  {
+    id: 'tenebra',
+    name: 'Tenebra',
+    major: true, paladinoEligible: false, druidaEligible: false,
+    portfolio: 'Noite, escuridão, mortos-vivos',
+    energia: 'negativa',
+    simbolo: 'Estrela negra de cinco pontas',
+    armaPreferida: 'Adaga',
+    poderesConcedidos: ['Carícia Sombria', 'Manto da Penumbra', 'Visão nas Trevas', 'Zumbificar'],
+    devotos: ['Anões', 'Medusas', 'Qareen', 'Osteon', 'Sulfure', 'Trogs', 'Arcanistas', 'Bardos', 'Ladinos'],
+    bookPage: 104,
+  },
+  {
+    id: 'thwor',
+    name: 'Thwor',
+    major: true, paladinoEligible: false, druidaEligible: false,
+    portfolio: 'Goblinoides, força',
+    energia: 'qualquer',
+    simbolo: 'Grande punho fechado',
+    armaPreferida: 'Machado de guerra',
+    poderesConcedidos: ['Almejar o Impossível', 'Fúria Divina', 'Olhar Amedrontador', 'Tropas Duyshidakk'],
+    devotos: ['Qualquer duyshidakk'],
+    bookPage: 104,
+  },
+  {
+    id: 'thyatis',
+    name: 'Thyatis',
+    major: true, paladinoEligible: true, druidaEligible: false,
+    portfolio: 'Ressurreição, profecia, perdão',
+    energia: 'positiva',
+    simbolo: 'Ave fênix',
+    armaPreferida: 'Espada longa',
+    poderesConcedidos: ['Ataque Piedoso', 'Dom da Imortalidade', 'Dom da Profecia', 'Dom da Ressurreição'],
+    devotos: ['Aggelus', 'Cavaleiros', 'Guerreiros', 'Inventores', 'Lutadores', 'Paladinos'],
+    bookPage: 104,
+  },
+  {
+    id: 'valkaria',
+    name: 'Valkaria',
+    major: true, paladinoEligible: true, druidaEligible: false,
+    portfolio: 'Ambição, humanidade, liberdade',
+    energia: 'positiva',
+    simbolo: 'Estátua de Valkaria ou seis faixas entrelaçadas',
+    armaPreferida: 'Mangual',
+    poderesConcedidos: ['Almejar o Impossível', 'Armas da Ambição', 'Coragem Total', 'Liberdade Divina'],
+    devotos: ['Aventureiros (todas as classes)'],
+    bookPage: 105,
+  },
+  {
+    id: 'wynna',
+    name: 'Wynna',
+    major: true, paladinoEligible: false, druidaEligible: false,
+    portfolio: 'Magia arcana',
+    energia: 'qualquer',
+    simbolo: 'Anel metálico',
+    armaPreferida: 'Adaga',
+    poderesConcedidos: ['Bênção do Mana', 'Centelha Mágica', 'Escudo Mágico', 'Teurgista Místico'],
+    devotos: ['Elfos', 'Golens', 'Qareen', 'Sílfides', 'Arcanistas', 'Bardos'],
+    bookPage: 105,
+  },
 ]
 
 const CULTO_PANTEAO_OPTION: Deus = {
