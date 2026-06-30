@@ -503,6 +503,597 @@ const SPELLS: readonly CatalogSpell[] = [
     ],
     bookPage: 198,
   },
+
+  // ─── Lote +19 — abrir cobertura Cap 7 (p179-211) ────────────────
+  {
+    id: 'dissipar-magia',
+    name: 'Dissipar Magia',
+    circle: 2,
+    school: 'abjuracao',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'instantanea',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida'],
+    baseEffect:
+      'Dissipa magias ativas em alvo ou área de 3m de raio. Faça teste de Misticismo; dissipa magias com CD igual ou menor que o resultado. Contra item mágico, transforma em mundano por 1d6 rodadas (Vontade anula).',
+    augments: [
+      {
+        pmCost: 12,
+        kind: 'muda',
+        description:
+          'Área esfera 9m; todas as magias automaticamente dissipadas e itens mágicos não carregados viram mundanos por uma cena (Vontade evita).',
+        requiresCircle: 5,
+      },
+    ],
+    bookPage: 191,
+  },
+  {
+    id: 'escudo-da-fe',
+    name: 'Escudo da Fé',
+    circle: 1,
+    school: 'abjuracao',
+    execution: 'reacao',
+    range: 'curto',
+    duration: 'definida',
+    durationNote: '1 turno',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Paladino'],
+    baseEffect:
+      'Escudo místico se manifesta momentaneamente. Alvo recebe +2 na Defesa.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Muda execução para padrão, alcance toque, duração cena.',
+      },
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description: 'Fornece também camuflagem leve contra ataques à distância.',
+      },
+      { pmCost: 2, kind: 'aumenta', description: 'Aumenta o bônus em +1.' },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Padrão/toque/cena. Cria conexão mística — alvo sofre metade do dano por ataques; outra metade transfere para você. Magia dissipa se alvo sair do alcance curto.',
+        requiresCircle: 2,
+      },
+      { pmCost: 3, kind: 'muda', description: 'Muda duração para um dia.' },
+    ],
+    bookPage: 192,
+  },
+  {
+    id: 'invulnerabilidade',
+    name: 'Invulnerabilidade',
+    circle: 5,
+    school: 'abjuracao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida'],
+    baseEffect:
+      'Cria barreira mágica impenetrável contra efeitos nocivos mentais ou físicos, à sua escolha. Mental: imune a abalado, alquebrado, apavorado, atordoado, confuso, esmorecido, fascinado, frustrado, pasmo, encantamento e ilusão. Físico: imune a atordoado, cego, debilitado, enjoado, envenenado, exausto, fatigado, fraco, lento, ofuscado, paralisado, acertos críticos, ataques furtivos e doenças.',
+    augments: [
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description: 'Muda alcance para curto e alvo para 1 criatura.',
+      },
+    ],
+    bookPage: 195,
+  },
+  {
+    id: 'detectar-ameacas',
+    name: 'Detectar Ameaças',
+    circle: 1,
+    school: 'adivinhacao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'definida',
+    durationNote: 'cena, até ser descarregada',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Intuição aguçada sobre perigos. Esfera 18m. Quando criatura hostil ou armadilha entra, faça teste de Percepção (CD a critério do mestre). Sucesso revela origem, direção e distância; falha revela apenas que perigo existe.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description:
+          'Descobre também raça/espécie e poder da criatura via aura (tênue ≤6º, moderada 7-12, poderosa 13-20, avassaladora >20).',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Não fica surpreendido contra perigos detectados; +5 em testes de resistência contra armadilhas.',
+        requiresCircle: 2,
+      },
+    ],
+    bookPage: 190,
+  },
+  {
+    id: 'voz-divina',
+    name: 'Voz Divina',
+    circle: 2,
+    school: 'adivinhacao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida'],
+    baseEffect:
+      'Você pode conversar com criaturas de qualquer raça/tipo (animal, construto, espírito, humanoide, monstro, morto-vivo). Pode fazer perguntas e entender respostas mesmo sem idioma comum, respeitando a Inteligência da criatura. Atitude não muda, mas pode usar Diplomacia.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description:
+          'Concede vida a um cadáver para responder perguntas. Conhecimento limitado ao do alvo em vida; respostas curtas e enigmáticas. Cabeça precisa estar intacta. Um corpo só pode ser alvo uma vez.',
+      },
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description:
+          'Pode falar com plantas (normais ou monstruosas) e rochas. Percepção limitada; respostas simplórias.',
+      },
+    ],
+    bookPage: 211,
+  },
+  {
+    id: 'videncia',
+    name: 'Vidência',
+    circle: 3,
+    school: 'adivinhacao',
+    execution: 'completa',
+    range: 'ilimitado',
+    duration: 'sustentada',
+    saveType: 'vontade',
+    resistance: 'anula',
+    components: ['verbal', 'gestual', 'foco'],
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida'],
+    baseEffect:
+      'Através de uma superfície reflexiva (bacia de água benta, lago, bola de cristal, espelho...) você vê e ouve uma criatura escolhida e seus arredores (6m). Vontade anula. Modificadores conforme conhecimento: não conhece +10; ouviu falar +5; outro plano +5; encontrou em pessoa +0; retrato/escultura -2; conhece bem -5; pertence pessoal -5; parte do corpo -10.',
+    augments: [],
+    bookPage: 211,
+  },
+  {
+    id: 'caminhos-da-natureza',
+    name: 'Caminhos da Natureza',
+    circle: 1,
+    school: 'convocacao',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'definida',
+    durationNote: '1 dia',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida'],
+    baseEffect:
+      'Invoca espíritos da natureza para abrir caminho. Alvos recebem deslocamento +3m e ignoram penalidades por terreno difícil em terrenos naturais.',
+    augments: [
+      {
+        pmCost: 0,
+        kind: 'muda',
+        description:
+          'Truque: muda alcance para pessoal/alvo para você. +5 em testes de Sobrevivência para se orientar.',
+      },
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'CD para rastrear os alvos em terreno natural +10.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o bônus de deslocamento em +3m.',
+      },
+    ],
+    bookPage: 183,
+  },
+  {
+    id: 'teletransporte',
+    name: 'Teletransporte',
+    circle: 3,
+    school: 'convocacao',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'instantanea',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Transporta até 5 criaturas voluntárias para lugar à sua escolha em até 1.000 km. Teste de Misticismo: CD 20 familiar; CD 30 conhecido; CD 40 só por descrição. Falha = 1d10 × 10 km fora; falha por 5+ = lugar parecido mas errado; 1 natural = falha + atordoado 1d4 rodadas.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta número de alvos em +5.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Em vez do normal, teletransporta para seu santuário — local familiar pré-preparado. Sem teste, mas apenas dentro do mesmo plano. Preparar santuário: ritual de 1 dia + T$ 1.000. Apenas um santuário por vez.',
+      },
+    ],
+    bookPage: 208,
+  },
+  {
+    id: 'amedrontar',
+    name: 'Amedrontar',
+    circle: 1,
+    school: 'necromancia',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'cena',
+    saveType: 'vontade',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'O alvo (1 animal ou humanoide) é envolvido por energias sombrias. Falha: apavorado 1 rodada, depois abalado. Sucesso: abalado 1d4 rodadas.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description:
+          'Alvos que falhem ficam apavorados por 1d4+1 rodadas em vez de 1.',
+      },
+      { pmCost: 2, kind: 'muda', description: 'Muda alvo para 1 criatura.' },
+      {
+        pmCost: 5,
+        kind: 'aumenta',
+        description: 'Afeta todos os alvos válidos à sua escolha no alcance.',
+      },
+    ],
+    bookPage: 179,
+  },
+  {
+    id: 'marionete',
+    name: 'Marionete',
+    circle: 4,
+    school: 'encantamento',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'sustentada',
+    saveType: 'fortitude',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Manipula o sistema nervoso do alvo. Ao sofrer e no início de cada turno do alvo, Fortitude anula. Em falha, todas as ações físicas no turno são controladas pelo conjurador. Vítima fica consciente e pode falar e lançar magias com esforço. Você precisa de linha de efeito; sem ela, vítima fica paralisada até retomar controle ou magia terminar.',
+    augments: [],
+    bookPage: 198,
+  },
+  {
+    id: 'explosao-de-chamas',
+    name: 'Explosão de Chamas',
+    circle: 1,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'instantanea',
+    saveType: 'reflexos',
+    resistance: 'metade',
+    components: VG,
+    classes: ['Arcanista'],
+    baseEffect:
+      'Leque de chamas de suas mãos causa 2d6 de fogo em criaturas na área (cone 6m).',
+    augments: [
+      {
+        pmCost: 0,
+        kind: 'muda',
+        description:
+          'Truque: muda alcance para curto, área para 1 objeto, resistência para Reflexos anula. Não causa dano, mas acende vela/tocha/fogueira ou inflama objeto com RD 0 (corda, pergaminho). Criatura em posse pode evitar com a resistência.',
+      },
+      { pmCost: 1, kind: 'aumenta', description: 'Aumenta o dano em +1d6.' },
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Muda resistência para Reflexos parcial. Sucesso = metade do dano; falha = em chamas.',
+      },
+    ],
+    bookPage: 193,
+  },
+  {
+    id: 'tempestade-divina',
+    name: 'Tempestade Divina',
+    circle: 2,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'longo',
+    duration: 'sustentada',
+    saveType: 'reflexos',
+    resistance: 'metade',
+    components: VG,
+    classes: ['Clérigo', 'Druida'],
+    baseEffect:
+      'Apenas em ambientes abertos. Cilindro 15m raio × 15m altura. Vendaval: ataques à distância -5; chamas apagam; névoas dissipam. Pode gerar chuva (-5 Percepção), neve (chuva + terreno difícil) ou granizo (chuva + 1 dano impacto/rodada).',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description:
+          'Uma vez por rodada, ação padrão para fazer raio cair em alvo na área: 3d8 eletricidade (Reflexos metade).',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o dano do raio em +1d8.',
+      },
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description:
+          'Se chuva, fica muito grossa: revela silhueta de invisíveis; Médias ou menores ficam lentas; voadoras precisam Atletismo/rodada ou caem.',
+      },
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description: 'Se granizo, muda dano para 2d6/rodada.',
+      },
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description:
+          'Se neve, criaturas na área sofrem 2d6 de frio no início de seus turnos.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description: 'Cilindro 90m raio × 90m altura.',
+      },
+    ],
+    bookPage: 208,
+  },
+  {
+    id: 'manto-de-sombras',
+    name: 'Manto de Sombras',
+    circle: 3,
+    school: 'ilusao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'sustentada',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo', 'Clérigo'],
+    baseEffect:
+      'Manto de energia sombria torna você incorpóreo (com equipamento). Só afetado por armas e habilidades mágicas ou criaturas incorpóreas; atravessa objetos sólidos mas não manipula. Vulnerável a luz direta (1 dano/rodada exposto). Ação de movimento + 1 PM: entra em sombra do seu tamanho ou maior e teletransporta para outra sombra em alcance médio.',
+    augments: [
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description: 'Muda alcance para toque e alvo para 1 criatura voluntária.',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 197,
+  },
+  {
+    id: 'imagem-espelhada',
+    name: 'Imagem Espelhada',
+    circle: 1,
+    school: 'ilusao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Três cópias ilusórias suas aparecem e imitam suas ações. +6 na Defesa. Cada ataque que erra destrói uma cópia (1 cópia = +4 Defesa, 0 = +2). Oponente precisa ver as cópias para se confundir.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Aumenta número de cópias em +1 (e bônus na Defesa em +2).',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Cópia destruída emite clarão: criatura que a destruiu fica ofuscada por uma rodada.',
+        requiresCircle: 2,
+      },
+    ],
+    bookPage: 195,
+  },
+  {
+    id: 'sopro-das-uivantes',
+    name: 'Sopro das Uivantes',
+    circle: 2,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'instantanea',
+    saveType: 'fortitude',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Arcanista'],
+    baseEffect:
+      'Sopra ar gélido em cone de 9m: 4d6 dano de frio (Fortitude metade). Criaturas Médias que falham ficam caídas e empurradas 6m. Parede no caminho para o movimento, mas vítima sofre +2d6 de impacto.',
+    augments: [
+      { pmCost: 2, kind: 'aumenta', description: 'Aumenta dano de frio em +2d6.' },
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description: 'Aumenta tamanho máximo afetado em uma categoria.',
+        requiresCircle: 3,
+      },
+    ],
+    bookPage: 207,
+  },
+  {
+    id: 'conjurar-mortos-vivos',
+    name: 'Conjurar Mortos-Vivos',
+    circle: 2,
+    school: 'necromancia',
+    execution: 'completa',
+    range: 'curto',
+    duration: 'sustentada',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida'],
+    baseEffect:
+      'Conjura 6 esqueletos capangas Médios em espaços desocupados. Movimento (ação de mov): andam 9m. Ataque (ação padrão): mordida 1d6+2 trevas em criaturas adjacentes. Esqueletos têm For 2 / Des 2 / Defesa 18 / 1 PV; falham automaticamente em resistências; imunes a atordoamento, cansaço, dano não letal, doença, encantamento, frio, ilusão, paralisia, sono e veneno.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Mortos-vivos na área sofrem -2 em testes e Defesa.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta número de mortos-vivos em +1.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description: 'Em vez de esqueletos, conjura carniçais.',
+        requiresCircle: 3,
+      },
+      {
+        pmCost: 7,
+        kind: 'muda',
+        description: 'Em vez de esqueletos, conjura sombras.',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 186,
+  },
+  {
+    id: 'tranca-arcana',
+    name: 'Tranca Arcana',
+    circle: 1,
+    school: 'abjuracao',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'definida',
+    durationNote: 'permanente',
+    saveType: 'none',
+    resistance: null,
+    components: ['verbal', 'gestual', 'material'],
+    classes: ['Arcanista'],
+    baseEffect:
+      'Tranca porta ou item que possa ser aberto/fechado (baú, caixa). CD para abrir com Força ou Ladinagem +10. Você abre livremente sua própria tranca. Componente material: chave de bronze T$ 25.',
+    augments: [
+      {
+        pmCost: 0,
+        kind: 'muda',
+        description:
+          'Truque: alcance curto. Abre ou fecha objeto Grande ou menor (porta, baú). Não afeta objetos trancados.',
+      },
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Alcance curto, duração instantânea. Abre portas, baús e janelas trancadas/presas/barradas ou protegidas por Tranca Arcana (dissipa); afrouxa grilhões e correntes.',
+      },
+      {
+        pmCost: 5,
+        kind: 'aumenta',
+        description: 'Aumenta CD para abrir em +5.',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description: 'Alvo passa a ser objeto de qualquer tamanho.',
+        requiresCircle: 3,
+      },
+    ],
+    bookPage: 210,
+  },
+  {
+    id: 'velocidade',
+    name: 'Velocidade',
+    circle: 2,
+    school: 'transmutacao',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'sustentada',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Alvo (1 criatura) pode realizar uma ação padrão ou de movimento adicional por turno. Não pode lançar magias nem ativar engenhocas.',
+    augments: [
+      {
+        pmCost: 0,
+        kind: 'muda',
+        description:
+          'Muda duração para cena. Ação adicional só pode ser de movimento. Uma criatura só pode receber uma ação adicional por turno por Velocidade.',
+      },
+      {
+        pmCost: 7,
+        kind: 'muda',
+        description: 'Muda alvo para criaturas escolhidas no alcance.',
+        requiresCircle: 4,
+      },
+      {
+        pmCost: 7,
+        kind: 'muda',
+        description:
+          'Muda alcance para pessoal e alvo para você. Ação adicional pode lançar magias e ativar engenhocas.',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 210,
+  },
+  {
+    id: 'voo',
+    name: 'Voo',
+    circle: 3,
+    school: 'transmutacao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Recebe deslocamento de voo 12m. Voar é simples como andar — pode atacar e lançar magias normalmente. Quando termina, desce lentamente como Queda Suave.',
+    augments: [
+      { pmCost: 1, kind: 'muda', description: 'Muda alcance para toque e alvo para 1 criatura.' },
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description: 'Muda duração para um dia.',
+        requiresCircle: 4,
+      },
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description: 'Muda alcance para curto e alvo para até 10 criaturas.',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 211,
+  },
 ]
 
 export const SPELL_CATALOG: Readonly<Record<string, CatalogSpell>> =
