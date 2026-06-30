@@ -1,4 +1,8 @@
 import type { SpecificItemTier } from './specific-magic-items'
+import type { SpellCircle } from './spells'
+
+/** Círculo válido para um item consumível (truques sem item). */
+export type ConsumableCircle = Exclude<SpellCircle, 0>
 
 /**
  * Poções + Pergaminhos — PDF Cap 6 (Tesouro), Tabela 8-12, p341.
@@ -24,14 +28,13 @@ import type { SpecificItemTier } from './specific-magic-items'
  * = círculo 5 (ou aprimoramento extremo).
  */
 export type ConsumableKind = 'pocao' | 'pergaminho'
-export type SpellCircle = 1 | 2 | 3 | 4 | 5
 
 export type ConsumableMagicItem = {
   id: string
   name: string
   kind: ConsumableKind
   spell: string
-  spellCircle: SpellCircle
+  spellCircle: ConsumableCircle
   tier: SpecificItemTier
   priceTibar: number
   effect: string
@@ -39,7 +42,7 @@ export type ConsumableMagicItem = {
 }
 
 /** Tier from circle per PDF p341. */
-export function tierForCircle(circle: SpellCircle): SpecificItemTier {
+export function tierForCircle(circle: ConsumableCircle): SpecificItemTier {
   if (circle <= 2) return 'menor'
   if (circle <= 4) return 'medio'
   return 'maior'
@@ -496,7 +499,7 @@ export function consumablesByKind(
 }
 
 export function consumablesByCircle(
-  circle: SpellCircle,
+  circle: ConsumableCircle,
 ): readonly ConsumableMagicItem[] {
   return CONSUMABLE_MAGIC_ITEMS.filter((i) => i.spellCircle === circle)
 }
