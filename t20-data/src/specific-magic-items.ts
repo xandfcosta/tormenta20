@@ -1,16 +1,22 @@
 /**
- * Itens Mágicos Específicos — Armas (PDF Cap 6 — Tesouro, Tabela 8-9,
- * p337; descriptions p336-338).
+ * Itens Mágicos Específicos — Armas + Armaduras + Escudos (PDF Cap 6
+ * — Tesouro):
+ *
+ *  - Tabela 8-9 (armas, p337; descriptions p336-338) — 18 entries.
+ *  - Tabela 8-11 (armaduras + escudos, p340; descriptions p340) — 13
+ *    entries.
  *
  * These are *named* standalone items, distinct from generic encantos
- * applied to a base weapon. Per PDF p334: "Todas as armas e armaduras
+ * applied to a base item. Per PDF p334: "Todas as armas e armaduras
  * específicas deste livro são itens maiores." Every entry is tier
  * `maior`, with priceTibar 30.000-200.000 T$.
  *
  * `requiresClass` captures both hard restrictions (Vingadora Sagrada
  * only powers up for a paladino) and conditional bonus scaling
  * (Espada Baronial scales with código de conduta / devoção a Khalmyr
- * / treinado em Nobreza).
+ * / treinado em Nobreza). Tabela 8-11 entries have no hard class
+ * locks — conditional bonuses (devoto/código de conduta/uso do poder
+ * Comandar) live in the `effect` text.
  *
  * No attunement system in T20 — every `requiresAttunement: false`.
  */
@@ -275,6 +281,177 @@ export const SPECIFIC_MAGIC_ITEMS: readonly SpecificMagicItem[] = Object.freeze(
     requiresClass: 'Paladino',
     requiresAttunement: false,
     bookPage: 338,
+  },
+
+  // ─── Tabela 8-11: Armaduras + Escudos Específicos (p340) ─────────
+  {
+    id: 'cota-elfica',
+    name: 'Cota Élfica',
+    category: 'armadura',
+    tier: 'maior',
+    priceTibar: 30000,
+    baseItem: 'Cota de Malha',
+    effect:
+      'Composta de anéis finíssimos, esta cota de malha defensora de mitral parece ser feita de seda. Permite aplicar sua Destreza na Defesa como se fosse uma armadura leve.',
+    requiresClass: null,
+    requiresAttunement: false,
+    bookPage: 340,
+  },
+  {
+    id: 'couro-de-monstro',
+    name: 'Couro de Monstro',
+    category: 'armadura',
+    tier: 'maior',
+    priceTibar: 36000,
+    baseItem: 'Gibão de Peles',
+    effect:
+      'Usado por chefes bárbaros das Montanhas Sanguinárias, este gibão de peles defensor é feito do couro de monstros (basiliscos, serpes). Se usar o poder Ataque Poderoso ou fizer uma investida, recebe +2d6 nas rolagens de dano.',
+    requiresClass: null,
+    requiresAttunement: false,
+    bookPage: 340,
+  },
+  {
+    id: 'escudo-do-conjurador',
+    name: 'Escudo do Conjurador',
+    category: 'escudo',
+    tier: 'maior',
+    priceTibar: 45000,
+    baseItem: 'Escudo Leve',
+    effect:
+      'Este escudo leve defensor tem uma pequena tira de couro na parte interna, sobre a qual um conjurador pode lançar uma magia. A magia não surte efeito na hora; fica inscrita na tira. A tira pode então ser lida como pergaminho, descarregando a magia em seus alvos/área. Uma vez descarregada, outra pode ser armazenada.',
+    requiresClass: null,
+    requiresAttunement: false,
+    bookPage: 340,
+  },
+  {
+    id: 'loriga-do-centuriao',
+    name: 'Loriga do Centurião',
+    category: 'armadura',
+    tier: 'maior',
+    priceTibar: 45000,
+    baseItem: 'Loriga Segmentada',
+    effect:
+      'Esta loriga segmentada defensora é dourada com detalhes em vermelho e tem o símbolo de Tauron gravado no peitoral. Se estiver liderando uma ou mais criaturas (usando Comandar ou similar), seus ataques corpo a corpo causam +2d6 de fogo.',
+    requiresClass: null,
+    requiresAttunement: false,
+    bookPage: 340,
+  },
+  {
+    id: 'manto-da-noite',
+    name: 'Manto da Noite',
+    category: 'armadura',
+    tier: 'maior',
+    priceTibar: 45000,
+    baseItem: 'Couro Batido',
+    effect:
+      'Este couro batido ajustado defensor sombrio é negro com partes metálicas foscas. Não sofre penalidade em testes de Furtividade por se mover em seu deslocamento normal e a penalidade por atacar diminui para -10.',
+    requiresClass: null,
+    requiresAttunement: false,
+    bookPage: 340,
+  },
+  {
+    id: 'couraca-do-comando',
+    name: 'Couraça do Comando',
+    category: 'armadura',
+    tier: 'maior',
+    priceTibar: 45000,
+    baseItem: 'Couraça',
+    effect:
+      'Esta couraça banhada a ouro sob medida defensora irradia uma aura de autoridade. Você recebe +1 em Carisma. Se usar o poder Comandar, o bônus fornecido aumenta para +2.',
+    requiresClass: null,
+    requiresAttunement: false,
+    bookPage: 340,
+  },
+  {
+    id: 'baluarte-anao',
+    name: 'Baluarte Anão',
+    category: 'armadura',
+    tier: 'maior',
+    priceTibar: 50000,
+    baseItem: 'Armadura Completa',
+    effect:
+      'Esta armadura completa reforçada defensora de adamante fornece proteção sem igual. Se não se deslocar em seu turno, a RD que ela fornece aumenta para 10 até seu próximo turno.',
+    requiresClass: null,
+    requiresAttunement: false,
+    bookPage: 340,
+  },
+  {
+    id: 'escudo-espinhoso',
+    name: 'Escudo Espinhoso',
+    category: 'escudo',
+    tier: 'maior',
+    priceTibar: 50000,
+    baseItem: 'Escudo Pesado',
+    effect:
+      'Este escudo pesado defensor é coberto de espinhos. Pode gastar uma ação de movimento e 2 PM para disparar um espinho em alvo em alcance curto. O espinho acerta automaticamente e causa 1d10+2 pontos de dano de perfuração.',
+    requiresClass: null,
+    requiresAttunement: false,
+    bookPage: 340,
+  },
+  {
+    id: 'escudo-do-leao',
+    name: 'Escudo do Leão',
+    category: 'escudo',
+    tier: 'maior',
+    priceTibar: 50000,
+    baseItem: 'Escudo Pesado',
+    effect:
+      'Este escudo pesado defensor é forjado como cabeça de leão rugindo. Uma vez por rodada, pode gastar 2 PM para fazer a cabeça criar vida e morder criatura adjacente. A mordida acerta automaticamente e causa 2d6+2 pontos de dano de perfuração.',
+    requiresClass: null,
+    requiresAttunement: false,
+    bookPage: 340,
+  },
+  {
+    id: 'carapaca-demoniaca',
+    name: 'Carapaça Demoníaca',
+    category: 'armadura',
+    tier: 'maior',
+    priceTibar: 63000,
+    baseItem: 'Armadura Completa',
+    effect:
+      'Esta armadura completa macabra reforçada guardiã é forjada para fazer o usuário parecer um demônio — elmo com chifres, visão pela boca dentada. Se devoto de divindade que canaliza apenas energia negativa, seus ataques corpo a corpo causam +1d8 de dano de trevas.',
+    requiresClass: null,
+    requiresAttunement: false,
+    bookPage: 340,
+  },
+  {
+    id: 'escudo-do-eclipse',
+    name: 'Escudo do Eclipse',
+    category: 'escudo',
+    tier: 'maior',
+    priceTibar: 70000,
+    baseItem: 'Escudo Pesado',
+    effect:
+      'Este escudo pesado defensor é completamente negro e parece absorver a luz. Fornece redução de trevas 10 e causa +1d8 de dano de trevas num ataque. Pode gastar uma ação de movimento e 2 PM para lançar Escuridão.',
+    requiresClass: null,
+    requiresAttunement: false,
+    bookPage: 340,
+  },
+  {
+    id: 'escudo-de-azgher',
+    name: 'Escudo de Azgher',
+    category: 'escudo',
+    tier: 'maior',
+    priceTibar: 140000,
+    baseItem: 'Escudo Pesado',
+    effect:
+      'Este escudo pesado guardião é forjado na forma de sol estilizado. Pode gastar uma ação padrão e 10 PM para emitir luz brilhante e quente num cone de alcance curto. A luz gera os efeitos de Visão da Verdade e causa 6d6 de fogo em todos os inimigos (mortos-vivos e criaturas vulneráveis a luz solar sofrem 6d8). Pode gastar 1 PM no início de cada turno para mantê-la.',
+    requiresClass: null,
+    requiresAttunement: false,
+    bookPage: 340,
+  },
+  {
+    id: 'armadura-da-luz',
+    name: 'Armadura da Luz',
+    category: 'armadura',
+    tier: 'maior',
+    priceTibar: 150000,
+    baseItem: 'Armadura Completa',
+    effect:
+      'Esta armadura completa banhada a ouro reforçada guardiã zelosa tem o símbolo de Khalmyr gravado no peitoral. Se possuir código de conduta (de honra, do herói...) ou for devoto de divindade que canaliza apenas energia positiva, recebe redução de dano igual ao seu Carisma.',
+    requiresClass: null,
+    requiresAttunement: false,
+    bookPage: 340,
   },
 ])
 
