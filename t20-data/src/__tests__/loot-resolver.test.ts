@@ -129,7 +129,7 @@ describe('resolveLootForNd — nomes concretos', () => {
     expect(hits).toBeGreaterThan(0)
   })
 
-  it('itens magic mantém tier opaco (integração magic-items é follow-up)', () => {
+  it('itens magic resolvem via kind router 1d6 (arma/armadura/acessorio)', () => {
     const rng = mulberry32(90)
     let hits = 0
     for (let i = 0; i < 300; i++) {
@@ -138,10 +138,82 @@ describe('resolveLootForNd — nomes concretos', () => {
         if (item.kind === 'magic') {
           hits++
           expect(['menor', 'medio', 'maior']).toContain(item.tier)
+          expect(['arma', 'armadura', 'acessorio']).toContain(item.magicKind)
+          if (item.magicKind === 'arma') {
+            expect(typeof item.baseName).toBe('string')
+            expect(['encanto', 'specific']).toContain(item.weapon.kind)
+          } else if (item.magicKind === 'armadura') {
+            expect(typeof item.baseName).toBe('string')
+            expect(typeof item.isShield).toBe('boolean')
+            expect(['encanto', 'specific']).toContain(item.armor.kind)
+          } else {
+            expect(typeof item.name).toBe('string')
+            expect(item.name.length).toBeGreaterThan(0)
+          }
         }
       }
     }
     expect(hits).toBeGreaterThan(0)
+  })
+})
+
+describe('resolveLootForNd — magic integration', () => {
+  it('magic armadura: isShield=true quando baseName começa com "Escudo"', () => {
+    const rng = mulberry32(200)
+    let checked = 0
+    for (let i = 0; i < 500; i++) {
+      const r = resolveLootForNd(rng, '15')
+      for (const item of r.items) {
+        if (item.kind === 'magic' && item.magicKind === 'armadura') {
+          checked++
+          const expectedShield = item.baseName.startsWith('Escudo')
+          expect(item.isShield).toBe(expectedShield)
+          expect(item.armor.isShield).toBe(expectedShield)
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(0)
+  })
+
+  it('magic arma: nomes weapon.kind válidos', () => {
+    const rng = mulberry32(210)
+    let checked = 0
+    for (let i = 0; i < 500; i++) {
+      const r = resolveLootForNd(rng, '15')
+      for (const item of r.items) {
+        if (item.kind === 'magic' && item.magicKind === 'arma') {
+          checked++
+          expect(item.weapon.tier).toBe(item.tier)
+          if (item.weapon.kind === 'encanto') {
+            expect(typeof item.weapon.name).toBe('string')
+            expect(typeof item.weapon.countsAsTwo).toBe('boolean')
+          } else {
+            expect(typeof item.weapon.name).toBe('string')
+          }
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(0)
+  })
+
+  it('potion outcome expande count em potions[] com PotionRoll[]', () => {
+    const rng = mulberry32(220)
+    let checked = 0
+    for (let i = 0; i < 500; i++) {
+      const r = resolveLootForNd(rng, '5')
+      for (const item of r.items) {
+        if (item.kind === 'potion') {
+          checked++
+          expect(item.potions.length).toBe(item.count)
+          for (const p of item.potions) {
+            expect(typeof p.name).toBe('string')
+            expect(p.priceTs).toBeGreaterThan(0)
+            expect(['menor', 'medio', 'maior']).toContain(p.tier)
+          }
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(0)
   })
 })
 
