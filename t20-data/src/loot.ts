@@ -19,7 +19,7 @@ import { rollFormula, rollPercentile, type Rng } from './loot-rng'
 // ─── Types ──────────────────────────────────────────────────────────
 export type CoinCurrency = 'TC' | 'TS' | 'TO'
 export type WealthTier = 'menor' | 'media' | 'maior'
-export type MagicItemTier = 'menor' | 'medio' | 'maior'
+export type LootMagicTier = 'menor' | 'medio' | 'maior'
 
 export type MoneyOutcome =
   | { kind: 'none' }
@@ -37,7 +37,7 @@ export type ItemOutcome =
   | { kind: 'equipamento'; double?: true }
   | { kind: 'potion'; countFormula: string; bonusPct?: 20 }
   | { kind: 'superior'; improvements: 1 | 2 | 3 | 4; double?: true }
-  | { kind: 'magic'; tier: MagicItemTier; double?: true }
+  | { kind: 'magic'; tier: LootMagicTier; double?: true }
 
 type LootRow<T> = readonly [lo: number, hi: number, outcome: T]
 
