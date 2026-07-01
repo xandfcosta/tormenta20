@@ -65,6 +65,9 @@ export function rollFormula(rng: Rng, formula: string): number {
     .replace(/\./g, '') // 1.000 → 1000
     .replace(/\s+/g, '')
 
+  // Literal integer shortcut (e.g. "1" from Tabela 8-1 count columns)
+  if (/^\d+$/.test(normalized)) return Number(normalized)
+
   // Match: <count>d<sides>(+<flat>)? optional (*<mult>)?
   const m = normalized.match(/^(\d+)d(\d+)(?:\+(\d+))?(?:\*(\d+))?$/)
   if (!m) {
