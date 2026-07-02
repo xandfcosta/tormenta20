@@ -82,3 +82,56 @@ export function restRecoveryWithCare(
   if (caregiverLevel < 1) return base
   return base + caregiverLevel
 }
+
+/** Duração mínima de um descanso para conferir recuperação (PDF p106). */
+export const MIN_SLEEP_HOURS = 8
+
+/**
+ * Dormir de armadura pesada aplica a condição Fatigado durante o dia
+ * seguinte (PDF p152). Constante exportada como marcador — a UI/resolver
+ * decide se aplica a condição via `conditions.ts`.
+ */
+export const HEAVY_ARMOR_SLEEP_APPLIES_FATIGADO = true
+
+/**
+ * Descanso Natural — poder de Devoto de Allihanna (PDF p133).
+ *
+ *   "Para você, dormir ao relento conta como condição de descanso
+ *    confortável."
+ *
+ * Substitui `ruim` (relento) por `confortavel`. Demais condições
+ * (estalagem normal, quarto luxuoso) passam intactas.
+ */
+export function descansoNaturalOverride(
+  condition: RestCondition,
+): RestCondition {
+  if (condition === 'ruim') return 'confortavel'
+  return condition
+}
+
+/**
+ * Sono forçado (PDF p318). Personagem que fica sem dormir uma noite:
+ *  1. Não recupera PV nem PM.
+ *  2. A partir da segunda noite sem dormir, Fortitude CD 15 +1 por
+ *     teste anterior. Falha → fatigado; nova falha → exausto; nova
+ *     falha → inconsciente até dormir 8h.
+ */
+export const SONO_FORT_CD_BASE = 15
+
+/**
+ * CD do teste de Fortitude por noite sem dormir.
+ * `previousChecks = 0` (primeira noite após o limite) → 15.
+ */
+export function sonoForcadoFortCd(previousChecks: number): number {
+  if (previousChecks < 0) {
+    throw new Error(
+      `sonoForcadoFortCd: previousChecks must be ≥ 0, got ${previousChecks}`,
+    )
+  }
+  return SONO_FORT_CD_BASE + previousChecks
+}
+
+/** Recuperação de PV/PM ao pular uma noite de sono (PDF p318): sempre 0. */
+export function noSleepRecovery(): number {
+  return 0
+}
