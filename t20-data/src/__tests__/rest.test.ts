@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import {
+  HEAVY_ARMOR_SLEEP_APPLIES_FATIGADO,
+  MIN_SLEEP_HOURS,
   REST_CONDITIONS,
   REST_CONDITION_LABELS,
+  SONO_FORT_CD_BASE,
+  descansoNaturalOverride,
+  noSleepRecovery,
   restRecoveryAmount,
   restRecoveryWithCare,
+  sonoForcadoFortCd,
   type RestCondition,
 } from '../rest'
 
@@ -95,5 +101,59 @@ describe('restRecoveryWithCare — Cuidados Prolongados (PDF p117)', () => {
   it('caregiver bonus applies to luxury rest too (no implicit cap)', () => {
     // PDF does not cap care at the tier — it's additive.
     expect(restRecoveryWithCare(10, 'luxuosa', 10)).toBe(40)
+  })
+})
+
+describe('MIN_SLEEP_HOURS + HEAVY_ARMOR_SLEEP_APPLIES_FATIGADO', () => {
+  it('minimum sleep window = 8h (PDF p106)', () => {
+    expect(MIN_SLEEP_HOURS).toBe(8)
+  })
+
+  it('heavy armor sleep applies fatigado (PDF p152)', () => {
+    expect(HEAVY_ARMOR_SLEEP_APPLIES_FATIGADO).toBe(true)
+  })
+})
+
+describe('descansoNaturalOverride — Devoto de Allihanna (PDF p133)', () => {
+  it('promotes ruim → confortavel', () => {
+    expect(descansoNaturalOverride('ruim')).toBe('confortavel')
+  })
+
+  it('leaves normal untouched', () => {
+    expect(descansoNaturalOverride('normal')).toBe('normal')
+  })
+
+  it('leaves confortavel untouched', () => {
+    expect(descansoNaturalOverride('confortavel')).toBe('confortavel')
+  })
+
+  it('leaves luxuosa untouched', () => {
+    expect(descansoNaturalOverride('luxuosa')).toBe('luxuosa')
+  })
+})
+
+describe('sono forçado — PDF p318', () => {
+  it('SONO_FORT_CD_BASE = 15', () => {
+    expect(SONO_FORT_CD_BASE).toBe(15)
+  })
+
+  it('primeira noite após limite: CD 15', () => {
+    expect(sonoForcadoFortCd(0)).toBe(15)
+  })
+
+  it('segunda: CD 16', () => {
+    expect(sonoForcadoFortCd(1)).toBe(16)
+  })
+
+  it('quinta: CD 19', () => {
+    expect(sonoForcadoFortCd(4)).toBe(19)
+  })
+
+  it('throws se previousChecks negativo', () => {
+    expect(() => sonoForcadoFortCd(-1)).toThrow(/previousChecks/)
+  })
+
+  it('noSleepRecovery sempre 0', () => {
+    expect(noSleepRecovery()).toBe(0)
   })
 })
