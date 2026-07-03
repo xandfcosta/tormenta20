@@ -15,3 +15,4 @@ backend/src/generated
 frontend/dist
 frontend/.vite
 frontend/src/routeTree.gen.ts
+t20-book.pdf
