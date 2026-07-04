@@ -1094,6 +1094,342 @@ const SPELLS: readonly CatalogSpell[] = [
     ],
     bookPage: 211,
   },
+  {
+    id: 'abencoar-alimentos',
+    name: 'Abençoar Alimentos',
+    circle: 1,
+    school: 'transmutacao',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida'],
+    baseEffect:
+      'Purifica e abençoa alimento para 1 criatura, tornando comida suja/estragada/envenenada própria para consumo. Oferece 5 PV temporários ou 1 PM temporário. Bônus de alimentação duram um dia; cada personagem só pode receber um bônus de alimentação por dia.',
+    augments: [
+      {
+        pmCost: 0,
+        kind: 'muda',
+        description:
+          'Truque: o alimento é purificado (não causa efeito nocivo se estava estragado ou envenenado), mas não fornece bônus ao ser consumido.',
+      },
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Aumenta o número de alvos em +1.',
+      },
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Muda a duração para permanente, o alvo passa a ser 1 frasco com água, adiciona componente material (pó de prata T$ 5). Em vez do normal, cria um frasco de água benta.',
+      },
+    ],
+    bookPage: 178,
+  },
+  {
+    id: 'acalmar-animal',
+    name: 'Acalmar Animal',
+    circle: 1,
+    school: 'encantamento',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'cena',
+    saveType: 'vontade',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Clérigo', 'Druida'],
+    baseEffect:
+      'Animal (1 alvo) fica prestativo em relação ao conjurador — não sob controle, mas percebe palavras/ações favoravelmente. +10 em Adestramento e Diplomacia contra o animal. Alvo hostil em combate recebe +5 na resistência. Ação hostil dissipa a magia.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description: 'Muda o alcance para médio.',
+      },
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description: 'Muda o alvo para 1 monstro ou espírito com Inteligência -5 ou -4.',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description: 'Muda o alvo para 1 monstro ou espírito.',
+        requiresCircle: 3,
+      },
+    ],
+    bookPage: 178,
+  },
+  {
+    id: 'adaga-mental',
+    name: 'Adaga Mental',
+    circle: 1,
+    school: 'encantamento',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'instantanea',
+    saveType: 'vontade',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Adaga imaterial contra a mente de 1 criatura: 2d6 dano psíquico + atordoado 1 rodada. Resistência = metade do dano e evita a condição. Uma criatura só pode ficar atordoada por esta magia uma vez por cena.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Lança sem gesticular/pronunciar (permite lançar magia de armadura) e a adaga fica invisível. Alvo que falha na resistência não percebe a magia.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda a duração para um dia. Além do normal, finca a adaga na mente do alvo — sabe direção/localização enquanto no mesmo mundo.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o dano em +1d6.',
+      },
+    ],
+    bookPage: 178,
+  },
+  {
+    id: 'alarme',
+    name: 'Alarme',
+    circle: 1,
+    school: 'abjuracao',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'dia',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Barreira invisível (esfera 9m de raio) detecta criaturas que tocarem/entrarem. Ao lançar, escolhe criaturas isentas. Aviso telepático (alerta o conjurador até 1km, acorda-o) ou sonoro (alerta todos em alcance longo).',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description: 'Muda o alcance para pessoal. A área é emanada a partir do conjurador.',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description:
+          'Além do normal, percebe efeitos de adivinhação que atravessem a área. Teste oposto de Misticismo revela vislumbre do rosto e localização aproximada.',
+      },
+      {
+        pmCost: 9,
+        kind: 'muda',
+        description:
+          'Muda a duração para um dia ou até descarregada e a resistência para Vontade anula. Descarregar quando intruso entra: falha na resistência = paralisado 1d4 rodadas. +10 em Sobrevivência para rastrear o intruso por 24h.',
+      },
+    ],
+    bookPage: 178,
+  },
+  {
+    id: 'aliado-animal',
+    name: 'Aliado Animal',
+    circle: 2,
+    school: 'encantamento',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'dia',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida'],
+    baseEffect:
+      'Vínculo mental com animal prestativo (1 alvo). Obedece no melhor de suas capacidades. Funciona como parceiro veterano de tipo à escolha entre animal, combatente, fortão, guardião, montaria ou perseguidor.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Muda o alvo para 1 animal Minúsculo e a duração para 1 semana. Animal se desloca até local designado (carta, item), espera até o fim da magia permitindo apenas criaturas escolhidas se aproximarem.',
+      },
+      {
+        pmCost: 7,
+        kind: 'muda',
+        description: 'Muda o parceiro para mestre.',
+        requiresCircle: 3,
+      },
+      {
+        pmCost: 12,
+        kind: 'muda',
+        description:
+          'Muda o alvo para 2 animais prestativos. Cada animal funciona como parceiro de tipo diferente (respeitando o limite de parceiros por nível).',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 178,
+  },
+  {
+    id: 'alterar-destino',
+    name: 'Alterar Destino',
+    circle: 5,
+    school: 'adivinhacao',
+    execution: 'reacao',
+    range: 'pessoal',
+    duration: 'instantanea',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Visualiza todas as possibilidades de um evento: rola novamente um teste de resistência com +10, ou faz um inimigo repetir um ataque contra o conjurador com -10.',
+    augments: [],
+    bookPage: 179,
+  },
+  {
+    id: 'alterar-memoria',
+    name: 'Alterar Memória',
+    circle: 4,
+    school: 'encantamento',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'instantanea',
+    saveType: 'vontade',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Invade a mente do alvo (1 criatura) e altera/apaga memórias da última hora.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description: 'Muda o alcance para pessoal e o alvo para área cone de 4,5m.',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description: 'Pode alterar ou apagar memórias das últimas 24 horas.',
+      },
+    ],
+    bookPage: 179,
+  },
+  {
+    id: 'alterar-tamanho',
+    name: 'Alterar Tamanho',
+    circle: 2,
+    school: 'transmutacao',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'dia',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Aumenta ou diminui o tamanho de 1 item mundano em até três categorias (Enorme→Pequeno). Também muda consistência (rígido como pedra / flexível como seda) sem alterar RD/PV. Objeto de criatura involuntária: Vontade anula.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Aumenta o número de alvos em +1.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda o alcance para toque e o alvo para 1 criatura. Aumenta uma categoria de tamanho (equipamento se ajusta) e recebe Força +2. Alvo involuntário: Fortitude nega.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description:
+          'Muda o alcance para toque e o alvo para 1 criatura. Diminui uma categoria de tamanho (equipamento se ajusta) e recebe Destreza +2. Alvo involuntário: Fortitude nega.',
+        requiresCircle: 3,
+      },
+      {
+        pmCost: 7,
+        kind: 'muda',
+        description:
+          'Muda alcance para toque, alvo para 1 criatura, duração para permanente e resistência para Fortitude anula. Falha = tamanho Minúsculo, Força reduzida a -5, deslocamentos reduzidos a 3m.',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 179,
+  },
+  {
+    id: 'amarras-etereas',
+    name: 'Amarras Etéreas',
+    circle: 2,
+    school: 'convocacao',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'cena',
+    saveType: 'reflexos',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Três laços de energia agarram o alvo (1 criatura). Ação padrão + Atletismo destrói um laço (+1 laço por 5 pontos acima da CD). Cada laço: Defesa 10, 10 PV, RD 5, imune a dano mágico. Todos destruídos = magia dissipada. Afeta criaturas incorpóreas.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Aumenta o número de laços em +1 (limitado pelo círculo máximo que o conjurador lança).',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda o efeito: cria fio de energia esmeralda que prende o alvo a um ponto fixo no alcance (pode flutuar). Alvo não se afasta mais de 3m — nem fisicamente, nem por movimento planar. Fio: 20 PV, RD 10.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description:
+          'Cada laço é destruído automaticamente com um ataque; laço destruído libera choque de 1d8+1 dano de essência na criatura amarrada.',
+        requiresCircle: 3,
+      },
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description:
+          'Como a variante do fio, mas em vez de fio cria uma corrente de energia com 20 PV e RD 40.',
+      },
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description:
+          'Muda o alvo para cubo de 9m, duração para permanente, adiciona componente material (chave de esmeralda T$ 2.000). Nenhum movimento planar entra ou sai da área.',
+      },
+      {
+        pmCost: 9,
+        kind: 'muda',
+        description:
+          'Muda alcance para médio, área para esfera de 3m de raio, alvo para criaturas escolhidas. Fio de energia prende todos os alvos ao centro da área.',
+      },
+    ],
+    bookPage: 179,
+  },
+  {
+    id: 'ancora-dimensional',
+    name: 'Âncora Dimensional',
+    circle: 3,
+    school: 'abjuracao',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Alvo (1 criatura ou objeto) é envolvido por campo de força esmeralda que impede qualquer movimento planar — convocação (Salto Dimensional, Teletransporte), viagem astral, habilidade incorpóreo.',
+    augments: [],
+    bookPage: 179,
+  },
 ]
 
 export const SPELL_CATALOG: Readonly<Record<string, CatalogSpell>> =
