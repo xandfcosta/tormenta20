@@ -9,6 +9,7 @@
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
     "test": "pnpm -r run test",
+    "typecheck": "pnpm -r run typecheck",
     "prisma:generate": "pnpm --filter backend exec prisma generate",
     "prisma:migrate": "pnpm --filter backend exec prisma migrate dev"
   },

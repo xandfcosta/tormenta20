@@ -22,7 +22,8 @@
     "dev": "tsc -p tsconfig.json --watch",
     "prepare": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "typescript": "^5.6.0",
