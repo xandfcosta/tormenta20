@@ -1749,6 +1749,296 @@ const SPELLS: readonly CatalogSpell[] = [
     ],
     bookPage: 181,
   },
+  {
+    id: 'aura-divina',
+    name: 'Aura Divina',
+    circle: 5,
+    school: 'abjuracao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'cena',
+    saveType: 'vontade',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Clérigo'],
+    baseEffect:
+      'Emana aura brilhante em esfera de 9m de raio. Conjurador + aliados devotos da mesma divindade: imunes a encantamento, +10 Defesa e testes de resistência. Aliados não devotos: +5 Defesa e resistência. Inimigos que entrem: Vontade — falha = uma condição à escolha entre esmorecido/debilitado/lento até fim da cena. Teste refeito ao reentrar.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta os bônus na Defesa e em testes de resistência em +1.',
+      },
+    ],
+    bookPage: 182,
+  },
+  {
+    id: 'aviso',
+    name: 'Aviso',
+    circle: 1,
+    school: 'adivinhacao',
+    execution: 'movimento',
+    range: 'longo',
+    duration: 'instantanea',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida'],
+    baseEffect:
+      'Aviso telepático para 1 criatura (sem linha de efeito exigida). Escolha: Alerta (+5 no próximo Iniciativa e Percepção até fim da próxima cena); Mensagem (25 palavras, idioma comum); Localização (alvo sabe posição no momento — não atualiza).',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Aumenta o alcance em fator de 10 (90m→900m, 900m→9km etc).',
+      },
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Se escolher mensagem, alvo envia resposta de até 25 palavras até fim do próximo turno.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Se escolher localização, muda a duração para cena. Alvo sabe posição mesmo com movimento.',
+      },
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description: 'Aumenta o número de alvos em +1.',
+      },
+    ],
+    bookPage: 182,
+  },
+  {
+    id: 'banimento',
+    name: 'Banimento',
+    circle: 3,
+    school: 'abjuracao',
+    execution: 'completa',
+    range: 'curto',
+    duration: 'instantanea',
+    saveType: 'vontade',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Clérigo', 'Druida'],
+    baseEffect:
+      'Expulsa criatura não nativa de Arton. Execução: 1d3+1 rodadas (ritual). Nativa de outro mundo: teletransportada de volta. Morto-vivo: conexão com energia negativa rompida, reduzida a 0 PV. Sucesso na resistência = enjoada 1d4 rodadas. Itens que se oponham ao alvo (ex: água benta contra frios, tocha) aumentam CD em +2 por item — mestre decide validade.',
+    augments: [
+      {
+        pmCost: 0,
+        kind: 'muda',
+        description:
+          'Muda a resistência para nenhum. Devolve automaticamente uma criatura conjurada (por magia de convocação) para o plano de origem.',
+      },
+    ],
+    bookPage: 182,
+  },
+  {
+    id: 'barragem-elemental-de-vectorius',
+    name: 'Barragem Elemental de Vectorius',
+    circle: 5,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'longo',
+    duration: 'instantanea',
+    saveType: 'reflexos',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Arcanista'],
+    baseEffect:
+      '4 esferas (ácido, eletricidade, fogo, frio) até ponto escolhido. Cada explode em área de 12m de raio: 6d6 dano do respectivo tipo. Reflexos = metade. Alvos podem ser diferentes por esfera; criatura em múltiplas resiste por esfera. Efeitos por falha: Ácido = vulnerável até fim da cena; Elétrica = atordoado 1 rodada (uma vez/cena); Fogo = em chamas; Frio = lento até fim da cena.',
+    augments: [
+      {
+        pmCost: 5,
+        kind: 'aumenta',
+        description: 'Aumenta o dano de cada esfera em +2d6.',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description:
+          'Muda o tipo de dano de todas as esferas para essência (mas ainda causam os outros efeitos como se o tipo não mudasse).',
+      },
+    ],
+    bookPage: 182,
+  },
+  {
+    id: 'bencao',
+    name: 'Bênção',
+    circle: 1,
+    school: 'encantamento',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Aliados no alcance recebem +1 em testes de ataque e rolagens de dano. Anula Perdição.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Muda o alvo para 1 cadáver e a duração para 1 semana. Cadáver não se decompõe nem vira morto-vivo.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Aumenta o bônus em +1 (bônus máximo limitado pelo círculo máximo).',
+      },
+    ],
+    bookPage: 182,
+  },
+  {
+    id: 'buraco-negro',
+    name: 'Buraco Negro',
+    circle: 5,
+    school: 'convocacao',
+    execution: 'completa',
+    range: 'longo',
+    duration: 'definida',
+    durationNote: '3 rodadas',
+    saveType: 'fortitude',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Arcanista', 'Clérigo'],
+    baseEffect:
+      'Vácuo em espaço desocupado. Início de cada um dos 3 turnos seguintes: criaturas em alcance longo (incl. conjurador) fazem Fortitude. Falha = caído + puxado 30m. Objetos soltos também são puxados. Ação de movimento para se segurar em objeto fixo dá +2 na resistência. Criatura/objeto que inicia turno no espaço do buraco: gasta ação de movimento + Fortitude para se arrastar 1,5m. Falha = perde ação (pode gastar outra). Terminar turno no espaço = sugado, desaparece para sempre. Destino desconhecido (Sombria?).',
+    augments: [
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description: 'Muda o efeito para que o conjurador não seja afetado.',
+      },
+    ],
+    bookPage: 182,
+  },
+  {
+    id: 'campo-antimagia',
+    name: 'Campo Antimagia',
+    circle: 4,
+    school: 'abjuracao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'sustentada',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Barreira invisível 3m de raio acompanha o conjurador. Habilidades mágicas ou itens mágicos na área são suprimidos. Convocadas na área desaparecem — reaparecem quando termina o Campo (se a duração da magia convocadora ainda não terminou). Criaturas mágicas não são afetadas mas não podem usar magia dentro. Magias dissipadoras não dissipam o Campo; 2 Campos na mesma área não se neutralizam. Artefatos e deuses maiores imunes.',
+    augments: [],
+    bookPage: 183,
+  },
+  {
+    id: 'campo-de-forca',
+    name: 'Campo de Força',
+    circle: 2,
+    school: 'abjuracao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect: 'Película protetora: 30 PV temporários.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Muda execução para reação e duração para instantânea. Em vez do normal, RD 30 contra o próximo dano.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description: 'Muda os PV temporários ou a RD para 50.',
+        requiresCircle: 3,
+      },
+      {
+        pmCost: 7,
+        kind: 'muda',
+        description: 'Muda os PV temporários ou a RD para 70.',
+        requiresCircle: 4,
+      },
+      {
+        pmCost: 7,
+        kind: 'muda',
+        description:
+          'Muda alcance para curto, alvo para criatura/objeto sólido Enorme ou menor, duração para sustentada. Esfera imóvel e tremeluzente: nada passa (dano, criaturas, objetos); respiração normal. Criaturas na área: Reflexos para evitar aprisionamento (e sempre que o conjurador se concentrar).',
+        requiresCircle: 4,
+      },
+      {
+        pmCost: 9,
+        kind: 'muda',
+        description:
+          'Como acima, mas conteúdo fica sem peso. Uma vez por rodada, ação livre flutua esfera 9m em uma direção.',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 183,
+  },
+  {
+    id: 'camuflagem-ilusoria',
+    name: 'Camuflagem Ilusória',
+    circle: 2,
+    school: 'ilusao',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Alvo (1 criatura) fica com imagem nublada — recebe efeitos de camuflagem leve.',
+    augments: [
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description:
+          'Muda a duração para sustentada. Imagem mais distorcida: chance de falha da camuflagem leve sobe para 50%.',
+      },
+      {
+        pmCost: 7,
+        kind: 'muda',
+        description: 'Muda o alcance para curto e o alvo para criaturas escolhidas.',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 183,
+  },
+  {
+    id: 'chuva-de-meteoros',
+    name: 'Chuva de Meteoros',
+    circle: 5,
+    school: 'convocacao',
+    execution: 'completa',
+    range: 'longo',
+    duration: 'instantanea',
+    saveType: 'reflexos',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Arcanista'],
+    baseEffect:
+      'Meteoros caem em quadrado 18m de lado. Criaturas: 15d6 impacto + 15d6 fogo + caídas + agarradas (escombros). Sucesso = metade do dano total, sem cair/agarrar. Escapar dos escombros: ação padrão + Atletismo. Área vira terreno difícil coberto de escombros + nuvem de poeira (camuflagem leve). Só a céu aberto.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Aumenta o número de meteoros: +2d6 impacto e +2d6 fogo.',
+      },
+    ],
+    bookPage: 183,
+  },
 ]
 
 export const SPELL_CATALOG: Readonly<Record<string, CatalogSpell>> =
