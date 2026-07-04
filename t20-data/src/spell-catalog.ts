@@ -3641,6 +3641,315 @@ const SPELLS: readonly CatalogSpell[] = [
     augments: [],
     bookPage: 194,
   },
+  {
+    id: 'ilusao-lacerante',
+    name: 'Ilusão Lacerante',
+    circle: 3,
+    school: 'ilusao',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'sustentada',
+    saveType: 'vontade',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Ilusão de perigo mortal em cubo 9m. No lançamento: criaturas na área testam Vontade — falha = crê real + 3d6 psíquico não letal. Início do turno na área repete Vontade; falha = repete dano. Só quem falha vê a ilusão e racionaliza (mesmo teto pode "cair" várias vezes).',
+    augments: [
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description: 'Aumenta o dano em +2d6.',
+      },
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description: 'Muda a área para um cubo de 90m.',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 195,
+  },
+  {
+    id: 'imobilizar',
+    name: 'Imobilizar',
+    circle: 3,
+    school: 'encantamento',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'cena',
+    saveType: 'vontade',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida'],
+    baseEffect:
+      '1 humanoide ou animal fica paralisado; sucesso = lento. Cada rodada: ação completa faz novo Vontade — sucesso liberta.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description: 'Muda o alvo para 1 espírito.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o número de alvos em +1.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description: 'Muda o alvo para 1 criatura.',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 195,
+  },
+  {
+    id: 'infligir-ferimentos',
+    name: 'Infligir Ferimentos',
+    circle: 1,
+    school: 'necromancia',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'instantanea',
+    saveType: 'fortitude',
+    resistance: 'metade',
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Energia negativa em 1 criatura: 2d8+2 trevas (ou cura 2d8+2 PV em morto-vivo). Anula Curar Ferimentos.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Além do normal, alvo fica fraco pela cena (resistência evita).',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o dano em +1d8+1.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda resistência para nenhuma. Como parte da execução: ataque corpo a corpo contra o alvo. Acerto = dano do ataque + efeito da magia.',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description: 'Muda o alcance para curto e o alvo para criaturas escolhidas.',
+      },
+    ],
+    bookPage: 195,
+  },
+  {
+    id: 'intervencao-divina',
+    name: 'Intervenção Divina',
+    circle: 5,
+    school: 'convocacao',
+    execution: 'completa',
+    range: 'ilimitado',
+    duration: 'definida',
+    durationNote: 'veja texto',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida'],
+    baseEffect:
+      'Divindade intercede. Base: cura PV + condições de até 10 criaturas em alcance longo (dano em mortos-vivos); dissipa magias até 4º círc. Com sacrifício 2 PM: item mundano T$ 30.000; duplica magia até 4º (materiais mantidos); proteger cidade de desastre; ressuscitar criatura em alcance longo morta há 1 rodada (1 PV); outras ações à discrição do mestre e da divindade.',
+    augments: [],
+    bookPage: 195,
+  },
+  {
+    id: 'lagrimas-de-wynna',
+    name: 'Lágrimas de Wynna',
+    circle: 5,
+    school: 'abjuracao',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'instantanea',
+    saveType: 'vontade',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Clérigo', 'Druida'],
+    baseEffect:
+      '1 criatura falha na resistência = perde habilidade de lançar magias arcanas até fim da cena. Sucesso = perde por 1 rodada.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda área para esfera 6m raio e alvo para criaturas escolhidas.',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description:
+          'Muda execução para 1 dia + sacrifício 1 PM. Alvo em alcance curto durante toda execução. Ao término: Vontade — falha = perde arcanas permanentemente (irreversível). Sucesso = resiste mas pode ser alvo no dia seguinte.',
+      },
+    ],
+    bookPage: 196,
+  },
+  {
+    id: 'lanca-ignea-de-aleph',
+    name: 'Lança Ígnea de Aleph',
+    circle: 3,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'instantanea',
+    saveType: 'reflexos',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Projétil: 4d6 fogo + 4d6 perfuração em 1 criatura + em chamas (2d6/rodada). Sucesso = metade + sem chamas. Respingos de rocha atingem adjacentes ao alvo (Reflexos evita ficarem em chamas).',
+    augments: [
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description:
+          'Aumenta o dano inicial em +2d6 e o dano em chamas em +1d6.',
+      },
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description:
+          'Muda duração para cena ou até descarregada. Cria 4 dardos de lava flutuantes. Uma vez por rodada, ação livre dispara um dardo (efeito normal da magia).',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 196,
+  },
+  {
+    id: 'legiao',
+    name: 'Legião',
+    circle: 5,
+    school: 'encantamento',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'sustentada',
+    saveType: 'vontade',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Arcanista'],
+    baseEffect:
+      'Domina mente de até 10 criaturas na área. Obedecem cegamente exceto ordens claramente suicidas. Fim do turno = novo teste; sucesso = abalado 1 rodada.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Aumenta o número de alvos em +1.',
+      },
+    ],
+    bookPage: 196,
+  },
+  {
+    id: 'lendas-e-historias',
+    name: 'Lendas e Histórias',
+    circle: 3,
+    school: 'adivinhacao',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'sustentada',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida'],
+    baseEffect:
+      'Descobre informações sobre criatura/objeto/local tocado — mestre modula detalhe/pistas. Por rodada mantida revela: tudo que testes de Conhecimento revelariam (raça/classe/nível/atributos/magias/resistências/fraquezas para criatura); efeito/funcionamento de item mágico; magias ativas.',
+    augments: [
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description:
+          'Muda execução para 1 dia, alcance para ilimitado, adiciona componente material (cuba de ouro + água + ingredientes T$ 1.000). Precisa alguma informação sobre o alvo (nome/descrição/localização).',
+      },
+    ],
+    bookPage: 196,
+  },
+  {
+    id: 'leque-cromatico',
+    name: 'Leque Cromático',
+    circle: 1,
+    school: 'ilusao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'instantanea',
+    saveType: 'vontade',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Cone 4,5m de luzes. Animais e humanoides na área: atordoados 1 rodada (1x/cena, Vontade anula) + ofuscados pela cena. Não afeta cegas.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Além do normal, criaturas afetadas ficam vulneráveis pela cena.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Também afeta espíritos e monstros na área.',
+        requiresCircle: 2,
+      },
+      {
+        pmCost: 5,
+        kind: 'aumenta',
+        description:
+          'Também afeta constructos, espíritos, monstros e mortos-vivos na área.',
+        requiresCircle: 3,
+      },
+    ],
+    bookPage: 196,
+  },
+  {
+    id: 'libertacao',
+    name: 'Libertação',
+    circle: 4,
+    school: 'abjuracao',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida'],
+    baseEffect:
+      'Alvo (1 criatura) imune a efeitos de movimento; ignora restrições de deslocamento. Usa habilidades de liberdade de movimentos mesmo com armadura/escudo.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Além do normal, anda sobre água/líquidos com deslocamento normal (não protege contra efeitos do líquido: lava causa dano).',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Além do normal, alvo pode escolher 20 em Atletismo.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Além do normal, alvo pode escolher 20 em Acrobacia + faz todas as manobras sem treinamento.',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description: 'Muda o alvo para até 5 criaturas.',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description: 'Pode dissipar Aprisionamento.',
+      },
+    ],
+    bookPage: 196,
+  },
 ]
 
 export const SPELL_CATALOG: Readonly<Record<string, CatalogSpell>> =
