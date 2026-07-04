@@ -4884,6 +4884,295 @@ const SPELLS: readonly CatalogSpell[] = [
     ],
     bookPage: 202,
   },
+  {
+    id: 'protecao-divina',
+    name: 'Proteção Divina',
+    circle: 1,
+    school: 'abjuracao',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect: 'Barreira mística: 1 criatura recebe +2 em testes de resistência.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o bônus concedido em +1.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda execução para reação, alcance para curto, duração para 1 rodada. Alvo recebe +5 no próximo teste de resistência (cumulativo com o efeito básico).',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda alvo para esfera 3m raio. Todos os aliados dentro recebem o bônus.',
+      },
+      {
+        pmCost: 5,
+        kind: 'aumenta',
+        description: 'Torna o alvo imune a efeitos mentais e de medo.',
+        requiresCircle: 3,
+      },
+    ],
+    bookPage: 202,
+  },
+  {
+    id: 'purificacao',
+    name: 'Purificação',
+    circle: 2,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'instantanea',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Remove uma condição da criatura tocada: abalado/apavorado/alquebrado/atordoado/cego/confuso/debilitado/enjoado/envenenado/esmorecido/exausto/fascinado/fatigado/fraco/frustrado/lento/ofuscado/paralisado.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Também recupera todos os PV perdidos por veneno.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description: 'Em vez de uma, remove todas as condições listadas.',
+      },
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description:
+          'Alvo pode soltar qualquer item amaldiçoado que segure (não remove a maldição do item).',
+      },
+      {
+        pmCost: 7,
+        kind: 'aumenta',
+        description:
+          'Dissipa magias e efeitos prejudiciais de encantamento, necromancia e transmutação afetando o alvo.',
+        requiresCircle: 3,
+      },
+    ],
+    bookPage: 202,
+  },
+  {
+    id: 'raio-do-enfraquecimento',
+    name: 'Raio do Enfraquecimento',
+    circle: 1,
+    school: 'necromancia',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'cena',
+    saveType: 'fortitude',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Raio púrpura em 1 criatura. Falha = fatigado. Sucesso = vulnerável. Não acumula (2 castes contra mesmo alvo não deixa exausto).',
+    augments: [
+      {
+        pmCost: 0,
+        kind: 'muda',
+        description:
+          'Truque: muda alcance para toque e resistência para Fortitude anula. Mão emana brilho púrpura; toque = fatigado.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Falha = exausto. Sucesso = fatigado.',
+        requiresCircle: 2,
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description: 'Como acima, mas alvo para criaturas escolhidas.',
+        requiresCircle: 3,
+      },
+    ],
+    bookPage: 202,
+  },
+  {
+    id: 'raio-polar',
+    name: 'Raio Polar',
+    circle: 4,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'instantanea',
+    saveType: 'fortitude',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Raio azul-esbranquiçado em 1 criatura: 10d8 frio + preso em bloco de gelo (paralisado). Sucesso = metade dano + lento 1 rodada. Bloco: 20 PV, RD 10, vulnerável a fogo. Presa: ação completa + Atletismo — sucesso causa 10 dano ao bloco (ignora RD).',
+    augments: [
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description: 'Aumenta o dano em +2d8.',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description:
+          'Muda alvo para esfera 6m raio. Bola de gelo explode causando efeito em todos.',
+      },
+    ],
+    bookPage: 203,
+  },
+  {
+    id: 'raio-solar',
+    name: 'Raio Solar',
+    circle: 2,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'instantanea',
+    saveType: 'reflexos',
+    resistance: 'metade',
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Rajada de energia positiva em linha 30m. Criaturas: 4d8 luz (4d12 em mortos-vivos) + ofuscadas 1 rodada. Sucesso = metade dano + sem ofuscada.',
+    augments: [
+      {
+        pmCost: 0,
+        kind: 'muda',
+        description:
+          'Truque: muda duração para cena, resistência para nenhuma. Facho de luz ilumina a área. Ação livre por rodada muda direção.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta dano ou cura em +1d8 (+1d12 em mortos-vivos).',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description:
+          'Criaturas vivas na área curam 4d8 PV; restante sofre dano normalmente.',
+      },
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description: 'Falha na resistência = cegas 1d4 rodadas.',
+      },
+    ],
+    bookPage: 203,
+  },
+  {
+    id: 'reanimacao-impura',
+    name: 'Reanimação Impura',
+    circle: 5,
+    school: 'necromancia',
+    execution: 'completa',
+    range: 'toque',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Reanima criatura morta na mesma cena. Tipo vira morto-vivo; retém memórias e habilidades (inclui magia). Pensa e fala livre; obedece cegamente. Fim da cena volta morta. Destruída = não pode ser reanimada de novo.',
+    augments: [],
+    bookPage: 203,
+  },
+  {
+    id: 'refugio',
+    name: 'Refúgio',
+    circle: 2,
+    school: 'abjuracao',
+    execution: 'completa',
+    range: 'curto',
+    duration: 'dia',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Domo 6m raio imóvel, opaco por fora / transparente por dentro. Protege calor/frio/forças pequenas (neve, vento) — não dano (flecha, Bola de Fogo). Camuflagem total contra ataques externos. Entrada/saída livre. Descanso normal (PV+PM).',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description:
+          'Além do normal, fumaça escura envolve limites — de fora não enxerga/ouve (de dentro sim). Bloqueia adivinhação.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description:
+          'Cria cabana para 10 Médios. Descanso confortável (dobro do nível PV/PM). Cabana real: paredes madeira, telhado, porta, 2 janelas, mobília. Porta/janelas: 15 PV RD 5 + Tranca Arcana. Paredes: 200 PV RD 5.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description:
+          'Cria espaço extradimensional (caverna vazia escura) para 10 Médios. Entrada embebida em objeto fixo (pedra/árvore). Efeitos do mundo real não afetam o espaço e vice-versa. Vê o mundo por janela na entrada. Ao terminar, conteúdo surge na área vazia mais próxima.',
+        requiresCircle: 3,
+      },
+      {
+        pmCost: 9,
+        kind: 'muda',
+        description:
+          'Cria mansão extradimensional para 100 Médios: quartos luxuosos + comida/bebida + servos fantasmagóricos (Servos Invisíveis). Descanso luxuoso (triplo do nível PV/PM). Entrada única (porta de luz), visível/invisível por ação livre; só criaturas escolhidas passam.',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 203,
+  },
+  {
+    id: 'relampago-flamejante-de-reynard',
+    name: 'Relâmpago Flamejante de Reynard',
+    circle: 4,
+    school: 'evocacao',
+    execution: 'completa',
+    range: 'curto',
+    duration: 'sustentada',
+    saveType: 'reflexos',
+    resistance: 'metade',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Uma mão em chamas + outra eletrificada. Ação de movimento por turno: bola de fogo (10d6 esfera 6m) OU relâmpago (10d6 linha). Ação padrão duas mãos: energia mista (20d12, metade fogo/metade eletricidade, esfera 9m) — encerra a magia. Precisa das duas mãos livres. Tempo de execução não pode ser reduzido.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Aumenta o dano das rajadas em +1d6 e o da rajada mista em +2d12.',
+      },
+    ],
+    bookPage: 203,
+  },
+  {
+    id: 'requiem',
+    name: 'Réquiem',
+    circle: 5,
+    school: 'ilusao',
+    execution: 'completa',
+    range: 'curto',
+    duration: 'sustentada',
+    saveType: 'vontade',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Ilusão particular para cada criatura escolhida. Início do turno: Vontade — falha = acha que não tomou ações do turno anterior, obrigada a repeti-las com -5 cumulativo em testes (a penalidade não afeta o Vontade). Ação repetida consome PM/recursos; qualquer alvo faz teste de resistência com bônus = à penalidade.',
+    augments: [],
+    bookPage: 204,
+  },
 ]
 
 export const SPELL_CATALOG: Readonly<Record<string, CatalogSpell>> =
