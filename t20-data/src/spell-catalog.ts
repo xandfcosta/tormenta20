@@ -2671,6 +2671,328 @@ const SPELLS: readonly CatalogSpell[] = [
     ],
     bookPage: 188,
   },
+  {
+    id: 'controlar-terra',
+    name: 'Controlar Terra',
+    circle: 3,
+    school: 'transmutacao',
+    execution: 'padrao',
+    range: 'longo',
+    duration: 'instantanea',
+    saveType: 'reflexos',
+    resistance: 'metade',
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      '9 cubos 1,5m — manipula densidade/forma de terra/pedra/lama/argila/areia. Amolecer: teto/coluna/suporte = desabamento 10d6 impacto (Reflexos metade); piso vira terreno difícil. Solidificar: areia vira terra/pedra, criaturas com pés na superfície agarradas (padrão + Atletismo escapa).',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Aumenta o número de cubos de 1,5m em +2.',
+      },
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Muda alcance para pessoal, alvo para conjurador, duração para 1 dia. Funde-se com superfície de pedra/lama/areia. Ação livre volta ao adjacente (dissipa). Sem falar/agir; percebe arredores. Objeto destruído dissipa + 10d6 impacto.',
+      },
+    ],
+    bookPage: 188,
+  },
+  {
+    id: 'convocacao-instantanea',
+    name: 'Convocação Instantânea',
+    circle: 3,
+    school: 'convocacao',
+    execution: 'padrao',
+    range: 'ilimitado',
+    duration: 'instantanea',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Invoca 1 objeto de até 2 espaços de qualquer lugar para a mão. Objeto deve ter runa pessoal (T$ 5). Se estiver com outra criatura: sabe localização/carregador (ou descrição física).',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description:
+          'Até 1h após lançar, ação de movimento envia o item de volta ao local anterior.',
+      },
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Muda alvo para baú Médio, duração para permanente, adiciona sacrifício 1 PM. Baú no Éter Entre Mundos com 20 espaços; itens de qualquer tamanho cabem. Ação padrão invoca/envia. Componente material: baú de matéria-prima T$ 1.000 + miniatura T$ 100.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o número de alvos em +1.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda o alvo para 1 objeto de até 10 espaços. Muito grande/pesado surge em espaço adjacente à escolha.',
+      },
+    ],
+    bookPage: 188,
+  },
+  {
+    id: 'cranio-voador-de-vladislav',
+    name: 'Crânio Voador de Vladislav',
+    circle: 2,
+    school: 'necromancia',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'instantanea',
+    saveType: 'fortitude',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Crânio envolto em energia negativa: 4d8+4 dano trevas + som horrendo (abalado no alvo e inimigos em 3m; já abalados = apavorados 1d4 rodadas). Sucesso: metade dano, sem condição.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o dano em +1d8+1.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o número de alvos em +1.',
+      },
+    ],
+    bookPage: 188,
+  },
+  {
+    id: 'criar-elementos',
+    name: 'Criar Elementos',
+    circle: 1,
+    school: 'convocacao',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'instantanea',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Cria pequena porção de elemento (real, não mágico). Água: enche recipiente Minúsculo ou cria cubo de gelo Minúsculo. Ar: vento fraco em 1,5m² purifica gás/fumaça ou remove névoa 1 rodada. Fogo: chama como tocha (segurar sem queimar) ou surge em 1,5m² (1d6 fogo, Reflexos evita em chamas). Terra: cubo Minúsculo terra/argila/pedra. Também pode criar objetos simples de gelo/terra/pedra.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description:
+          'Aumenta a quantidade em um passo (categoria de tamanho para água/terra, +1 quadrado 1,5m para ar/fogo).',
+      },
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Muda para alvo 1 criatura ou objeto, resistência Reflexos metade. Água/terra: arremessa cubo/objeto = 2d4 impacto (+1 passo por categoria acima Minúsculo). Cubo se desfaz.',
+      },
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Se escolheu fogo, aumenta o dano inicial em +1d6.',
+      },
+    ],
+    bookPage: 188,
+  },
+  {
+    id: 'cupula-de-repulsao',
+    name: 'Cúpula de Repulsão',
+    circle: 4,
+    school: 'abjuracao',
+    execution: 'completa',
+    range: 'pessoal',
+    duration: 'sustentada',
+    saveType: 'vontade',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Cúpula invisível impede aproximação de tipo/raça escolhida. Criatura afetada que tente ficar adjacente (3m): Vontade — falha = gasta ação, tenta novamente na rodada seguinte. Impede corpo a corpo, não à distância. Se ultrapassar 3m: rompe cúpula, dissipa.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Cúpula impede aproximação a menos de 4,5m (2 quadrados entre conjurador e criaturas).',
+      },
+      {
+        pmCost: 5,
+        kind: 'aumenta',
+        description:
+          'Além do normal, criaturas afetadas também testam ao fazer ataque/efeito à distância. Falha = desviado pela cúpula.',
+        requiresCircle: 5,
+      },
+    ],
+    bookPage: 189,
+  },
+  {
+    id: 'deflagracao-de-mana',
+    name: 'Deflagração de Mana',
+    circle: 5,
+    school: 'evocacao',
+    execution: 'completa',
+    range: 'pessoal',
+    duration: 'instantanea',
+    saveType: 'fortitude',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Emana energia (esfera 15m). Criaturas: 150 dano essência + itens mágicos (exceto artefatos) viram mundanos. Conjurador não é afetado. Fortitude sucesso: metade dano, itens voltam após 1 dia.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Aumenta o dano em +10.',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description: 'Afeta apenas criaturas à escolha.',
+      },
+    ],
+    bookPage: 189,
+  },
+  {
+    id: 'desejo',
+    name: 'Desejo',
+    circle: 5,
+    school: 'transmutacao',
+    execution: 'completa',
+    range: 'longo',
+    duration: 'definida',
+    durationNote: 'veja texto',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Mais poderosa das arcanas — altera realidade. Opções base: dissipa magia até 4º; transporta 10 criaturas voluntárias em alcance longo para qualquer plano; desfaz ataque da rodada anterior de criatura no alcance. Com sacrifício de 2 PM: cria item mundano até T$ 30.000; duplica magia até 4º (mantém componentes materiais); +1 em atributo (uma vez por atributo). Efeitos maiores possíveis mas com riscos — mestre decide.',
+    augments: [],
+    bookPage: 190,
+  },
+  {
+    id: 'desespero-esmagador',
+    name: 'Desespero Esmagador',
+    circle: 2,
+    school: 'encantamento',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'instantanea',
+    saveType: 'vontade',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Humanoides em cone 6m: fracos + frustrados até fim da cena (ou 1 rodada com sucesso).',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description: 'Em vez do normal, as condições são debilitado e esmorecido.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description: 'Em vez do normal, afeta qualquer tipo de criatura.',
+      },
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description:
+          'Além do normal, criaturas que falhem na resistência ficam aos prantos (pasmas) por 1 rodada (uma vez por cena).',
+        requiresCircle: 3,
+      },
+    ],
+    bookPage: 190,
+  },
+  {
+    id: 'desintegrar',
+    name: 'Desintegrar',
+    circle: 4,
+    school: 'transmutacao',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'instantanea',
+    saveType: 'fortitude',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Raio esverdeado: 10d12 dano essência em 1 criatura/objeto. Sucesso: 2d12. PV a 0 ou menos = completamente desintegrado (só pó).',
+    augments: [
+      {
+        pmCost: 4,
+        kind: 'aumenta',
+        description:
+          'Aumenta o dano total em +2d12 e o dano mínimo em +1d12.',
+      },
+    ],
+    bookPage: 190,
+  },
+  {
+    id: 'despedacar',
+    name: 'Despedaçar',
+    circle: 1,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'instantanea',
+    saveType: 'fortitude',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Som agudo em 1 criatura ou objeto mundano Pequeno: 1d8+2 impacto (dobro + ignora RD contra construto/objeto mundano) + atordoado 1 rodada (uma vez por cena). Fortitude reduz metade + evita atordoamento. Anula Transmutar Objetos.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o dano em +1d8+2.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description: 'Muda o alvo para objeto mundano Médio.',
+        requiresCircle: 2,
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description: 'Muda o alvo para objeto mundano Grande.',
+        requiresCircle: 3,
+      },
+      {
+        pmCost: 9,
+        kind: 'muda',
+        description: 'Muda o alvo para objeto mundano Enorme.',
+        requiresCircle: 4,
+      },
+      {
+        pmCost: 14,
+        kind: 'muda',
+        description: 'Muda o alvo para objeto mundano Colossal.',
+        requiresCircle: 5,
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description:
+          'Muda alcance para pessoal e alvo para esfera 6m raio. Afeta todas as criaturas e objetos mundanos na área.',
+      },
+    ],
+    bookPage: 190,
+  },
 ]
 
 export const SPELL_CATALOG: Readonly<Record<string, CatalogSpell>> =
