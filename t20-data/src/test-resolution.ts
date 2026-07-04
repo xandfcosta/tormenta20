@@ -268,3 +268,215 @@ export function opposedTestOutcome(
   if (attackerModifier < defenderModifier) return 'defender-wins'
   return 'reroll'
 }
+
+// ─── Fórmulas de teste (p220) ────────────────────────────────────────
+/**
+ * Teste de atributo (p220 verbatim): `1d20 + Atributo`. Usado quando
+ * nenhuma perícia se aplica (erguer objeto pesado com Força etc.).
+ */
+export function attributeTestResult(
+  d20Roll: number,
+  attributeValue: number,
+): number {
+  if (d20Roll < 1 || d20Roll > 20) {
+    throw new Error(
+      `attributeTestResult: d20Roll must be 1-20, got ${d20Roll}`,
+    )
+  }
+  return d20Roll + attributeValue
+}
+
+/**
+ * Teste de perícia (p220 verbatim): `1d20 + Valor de Perícia`. Funciona
+ * como teste de atributo, mas usa o valor total da perícia (que já
+ * inclui atributo-chave + treino + demais bônus).
+ */
+export function skillTestResult(
+  d20Roll: number,
+  skillValue: number,
+): number {
+  if (d20Roll < 1 || d20Roll > 20) {
+    throw new Error(`skillTestResult: d20Roll must be 1-20, got ${d20Roll}`)
+  }
+  return d20Roll + skillValue
+}
+
+// ─── Auto-pass Fácil por decisão do mestre (p220 rodapé Tabela 5-1) ─
+/**
+ * Tarefas Fáceis (CD 5) aparecem na tabela para escala. Normalmente
+ * não exigem teste — mestre pode conceder auto-pass para acelerar
+ * o jogo. Distinto de Escolher 0 (que exige modificador ≥ CD).
+ */
+export const EASY_TASK_AUTO_PASS_ON_GM_DISCRETION = true
+
+// ─── Testes Mistos (p220 — comum + oposto) ───────────────────────────
+/**
+ * Teste misto: todos rolam contra uma CD (todos os que passam
+ * "atravessam o lago"); entre os aprovados, o maior valor é o
+ * vencedor (chega primeiro).
+ */
+export type HybridTestOutcome = {
+  passed: readonly number[]
+  /**
+   * Índice do maior valor dentre os aprovados; null se ninguém
+   * passar.
+   */
+  winnerIndex: number | null
+}
+
+export function hybridTestOutcome(
+  rolls: readonly number[],
+  cd: number,
+): HybridTestOutcome {
+  const passed: number[] = []
+  let winnerIndex: number | null = null
+  let winnerRoll = -Infinity
+  for (let i = 0; i < rolls.length; i++) {
+    const roll = rolls[i]
+    if (roll >= cd) {
+      passed.push(i)
+      if (roll > winnerRoll) {
+        winnerRoll = roll
+        winnerIndex = i
+      }
+    }
+  }
+  return { passed, winnerIndex }
+}
+
+// ─── Condições Favoráveis/Desfavoráveis (p221) ───────────────────────
+/**
+ * Circunstâncias favoráveis/desfavoráveis podem alterar o teste em
+ * ±2 ou mais, à decisão do mestre.
+ */
+export const CIRCUMSTANCE_MIN_MAGNITUDE = 2
+
+export type CircumstanceKind = 'favorable' | 'unfavorable'
+
+/**
+ * Aplica um modificador circunstancial ao total do teste. `magnitude`
+ * deve ser ≥ CIRCUMSTANCE_MIN_MAGNITUDE; favoráveis somam, desfavoráveis
+ * subtraem.
+ */
+export function applyCircumstance(
+  totalBeforeCircumstance: number,
+  kind: CircumstanceKind,
+  magnitude: number,
+): number {
+  if (magnitude < CIRCUMSTANCE_MIN_MAGNITUDE) {
+    throw new Error(
+      `applyCircumstance: magnitude must be ≥ ${CIRCUMSTANCE_MIN_MAGNITUDE}, got ${magnitude}`,
+    )
+  }
+  return kind === 'favorable'
+    ? totalBeforeCircumstance + magnitude
+    : totalBeforeCircumstance - magnitude
+}
+
+// ─── Novas Tentativas (p221 — retry framework) ───────────────────────
+/**
+ * Por padrão, testes podem ser refeitos em caso de falha. Alguns testes
+ * têm consequência de falha (armadilha dispara, criatura cai) que o
+ * caller registra.
+ */
+export const RETRIES_ALLOWED_BY_DEFAULT = true
+
+/**
+ * Falha "por 5 ou mais" pode disparar consequência catastrófica em
+ * alguns testes (ex: Atletismo escalada). Padrão de margem de falha.
+ */
+export const CATASTROPHIC_FAILURE_MARGIN = 5
+
+/**
+ * Verifica se uma falha foi por margem catastrófica (≥ 5 de diferença).
+ * `rollResult < cd` obrigatório (retorna false se passou).
+ */
+export function isCatastrophicFailure(rollResult: number, cd: number): boolean {
+  if (rollResult >= cd) return false
+  return cd - rollResult >= CATASTROPHIC_FAILURE_MARGIN
+}
+
+// ─── Testes Estendidos: extensões (p223) ─────────────────────────────
+/**
+ * Testes Estendidos Abertos (p223): cada teste avulso precisa ser
+ * feito com uma perícia diferente. Jogadores escolhem a perícia por
+ * teste e explicam como se aplica.
+ */
+export const EXTENDED_OPEN_REQUIRES_DIFFERENT_SKILL_PER_TEST = true
+
+/**
+ * Ajudar em teste estendido (p223): a perícia usada para ajudar não
+ * pode mais ser usada no teste estendido (para ajudar de novo ou para
+ * o teste principal).
+ */
+export const EXTENDED_AID_CONSUMES_SKILL = true
+
+/**
+ * Interrupção de teste estendido pode contar como falha simples ou
+ * falha completa (à decisão do mestre).
+ */
+export const EXTENDED_INTERRUPT_GM_DECIDES = true
+
+/**
+ * Retorna true se a perícia proposta pode ser usada no estendido
+ * aberto — regra: cada teste avulso precisa ser feito com perícia
+ * diferente.
+ */
+export function extendedOpenSkillAllowed(
+  proposedSkill: string,
+  alreadyUsedSkills: readonly string[],
+): boolean {
+  if (!EXTENDED_OPEN_REQUIRES_DIFFERENT_SKILL_PER_TEST) return true
+  return !alreadyUsedSkills.includes(proposedSkill)
+}
+
+/**
+ * Ajudar em estendido: retorna true se a perícia do ajudante ainda
+ * pode ser usada no estendido; false se já foi consumida (ajuda ou
+ * teste principal).
+ */
+export function extendedAidSkillAllowed(
+  aidSkill: string,
+  alreadyUsedSkills: readonly string[],
+): boolean {
+  if (!EXTENDED_AID_CONSUMES_SKILL) return true
+  return !alreadyUsedSkills.includes(aidSkill)
+}
+
+/**
+ * Testes Estendidos em Grupo (p223): a cada "rodada", cada jogador
+ * faz um teste. Soma sucessos e falhas do grupo inteiro para definir
+ * estado (usa a mesma regra base `extendedTestState`).
+ *
+ * `roundResults[i]` = 'success' | 'failure' por jogador na rodada.
+ */
+export function extendedGroupRoundTally(
+  roundResults: readonly ('success' | 'failure')[],
+): { successes: number; failures: number } {
+  let successes = 0
+  let failures = 0
+  for (const r of roundResults) {
+    if (r === 'success') successes++
+    else failures++
+  }
+  return { successes, failures }
+}
+
+/**
+ * Testes Estendidos Multi-perícia (p223): definição de contagens por
+ * perícia. Ex: {atletismo: 1, furtividade: 2} exige 1 sucesso em
+ * Atletismo + 2 em Furtividade antes de 3 falhas totais.
+ */
+export type MultiSkillExtendedRequirement = Readonly<Record<string, number>>
+
+export function multiSkillExtendedComplete(
+  requirement: MultiSkillExtendedRequirement,
+  successesBySkill: Readonly<Record<string, number>>,
+): boolean {
+  for (const skill of Object.keys(requirement)) {
+    const need = requirement[skill]
+    const got = successesBySkill[skill] ?? 0
+    if (got < need) return false
+  }
+  return true
+}
