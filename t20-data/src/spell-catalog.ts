@@ -2039,6 +2039,339 @@ const SPELLS: readonly CatalogSpell[] = [
     ],
     bookPage: 183,
   },
+  {
+    id: 'circulo-da-justica',
+    name: 'Círculo da Justiça',
+    circle: 2,
+    school: 'abjuracao',
+    execution: 'completa',
+    range: 'curto',
+    duration: 'dia',
+    saveType: 'vontade',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Também conhecida como Lágrimas de Hynnn. Esfera 9m. Criaturas: -10 em Acrobacia/Enganação/Furtividade/Ladinagem, não podem mentir deliberadamente (mas podem evadir/omitir). Sucesso na resistência: penalidades reduzidas a -5, pode mentir.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Muda execução para padrão, alcance para pessoal, alvo para conjurador, duração para cena, resistência para nenhuma. Criaturas/objetos invisíveis em alcance curto ficam visíveis (sem dissipar); ao sair do alcance voltam a ficar invisíveis.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description:
+          'Muda as penalidades nas perícias para -10 (se passar na resistência) e -20 (se falhar).',
+        requiresCircle: 4,
+      },
+      {
+        pmCost: 7,
+        kind: 'muda',
+        description:
+          'Muda a duração para permanente e adiciona componente material (balança de prata T$ 5.000).',
+      },
+    ],
+    bookPage: 183,
+  },
+  {
+    id: 'circulo-da-restauracao',
+    name: 'Círculo da Restauração',
+    circle: 4,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'definida',
+    durationNote: '5 rodadas',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Círculo de luz (esfera 3m). Criatura viva que termina turno dentro: recupera 3d8+3 PV e 1 PM. Mortos-vivos e criaturas vulneráveis a luz perdem PV/PM na mesma quantidade. Máximo 5 PM por dia recuperados por esta magia.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta a regeneração de PV em 1d8+1.',
+      },
+    ],
+    bookPage: 184,
+  },
+  {
+    id: 'colera-de-azgher',
+    name: 'Cólera de Azgher',
+    circle: 4,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'instantanea',
+    saveType: 'reflexos',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Fulgor dourado em esfera 6m. Criaturas: cegas 1d4 rodadas + em chamas + 10d6 dano de fogo (mortos-vivos 10d8). Sucesso: sem cegueira/chamas, metade do dano.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o dano em +2d6 (+2d8 contra mortos-vivos).',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta a área em +6m de raio.',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description:
+          'Luz purificadora do Deus-Sol dissipa todas as magias de necromancia ativas na área.',
+        requiresCircle: 5,
+      },
+    ],
+    bookPage: 184,
+  },
+  {
+    id: 'coluna-de-chamas',
+    name: 'Coluna de Chamas',
+    circle: 3,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'longo',
+    duration: 'instantanea',
+    saveType: 'reflexos',
+    resistance: 'metade',
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Pilar de fogo sagrado (cilindro 3m raio, 30m altura): 6d6 dano de fogo + 6d6 dano de luz em criaturas e objetos livres.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Aumenta o dano de fogo em +1d6.',
+      },
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Aumenta o dano de luz em +1d6.',
+      },
+    ],
+    bookPage: 184,
+  },
+  {
+    id: 'comando',
+    name: 'Comando',
+    circle: 1,
+    school: 'encantamento',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'definida',
+    durationNote: '1 rodada',
+    saveType: 'vontade',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Ordem irresistível (1 humanoide deve ouvir; não precisa entender). Falha na resistência = obedece no próprio turno. Escolha: Fuja (afasta usando todas ações), Largue (solta itens, ação livre, não pega até próximo turno), Pare (pasmo, uma vez/cena), Senta (senta ou desce ao chão, não levanta até próximo turno), Venha (aproxima usando todas ações).',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description: 'Muda o alvo para 1 criatura.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta a quantidade de alvos em +1.',
+      },
+    ],
+    bookPage: 184,
+  },
+  {
+    id: 'compreensao',
+    name: 'Compreensão',
+    circle: 1,
+    school: 'adivinhacao',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'cena',
+    saveType: 'vontade',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Toque em texto: entende palavras sem conhecer idioma. Toque em criatura inteligente: comunica sem idioma comum. Toque em não-inteligente (animal): percebe sentimentos. Ação de movimento: ouve pensamentos (alvo involuntário faz Vontade para bloquear).',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description: 'Muda o alcance para curto.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda alcance para curto, alvo para criaturas escolhidas. Entende todas; ouve pensamentos de uma por vez.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda alvo para 1 criatura. Vasculha pensamentos para extrair informação. Vontade anula. Mestre decide se alvo sabe.',
+        requiresCircle: 2,
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description:
+          'Muda alcance para pessoal e alvo para conjurador. Fala, entende e escreve qualquer idioma.',
+        requiresCircle: 3,
+      },
+    ],
+    bookPage: 184,
+  },
+  {
+    id: 'comunhao-com-a-natureza',
+    name: 'Comunhão com a Natureza',
+    circle: 3,
+    school: 'adivinhacao',
+    execution: 'completa',
+    range: 'pessoal',
+    duration: 'dia',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'União com natureza local revela informações da região (dia de viagem). 6d4 dados de auxílio. Em teste de perícia em área natural: gasta 2d4 (+2d4 por círculo acima do 3º disponível) e adiciona ao teste. Termina se acabarem os dados.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Muda execução para 1 min, duração para instantânea. Descobre 1d4+1 informações sobre: terreno, animais, vegetais, minerais, cursos d\'água, criaturas antinaturais em região natural.',
+      },
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description: 'Aumenta o número de dados de auxílio em +2.',
+      },
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description: 'Muda o tipo dos dados de auxílio para d6.',
+      },
+      {
+        pmCost: 8,
+        kind: 'muda',
+        description: 'Muda o tipo dos dados de auxílio para d8.',
+      },
+    ],
+    bookPage: 184,
+  },
+  {
+    id: 'conceder-milagre',
+    name: 'Conceder Milagre',
+    circle: 4,
+    school: 'encantamento',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'definida',
+    durationNote: 'permanente até ser descarregada',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Transfere poder divino a 1 criatura. Escolha magia até 2º círc conhecida; alvo lança 1x sem pagar PM base (aprimoramentos usam PM do alvo). Conjurador sofre -3 PM até ser descarregada.',
+    augments: [
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description: 'Muda o círculo da magia concedida para 3º e a penalidade de PM para -6.',
+      },
+    ],
+    bookPage: 184,
+  },
+  {
+    id: 'concentracao-de-combate',
+    name: 'Concentração de Combate',
+    circle: 1,
+    school: 'adivinhacao',
+    execution: 'livre',
+    range: 'pessoal',
+    duration: 'definida',
+    durationNote: '1 rodada',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Amplia percepção — em teste de ataque rola 2 dados e usa o melhor.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description: 'Muda a execução para padrão e a duração para cena.',
+        requiresCircle: 2,
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description:
+          'Além do normal, ao atacar o conjurador, inimigo rola 2 dados e usa o pior.',
+        requiresCircle: 3,
+      },
+      {
+        pmCost: 9,
+        kind: 'muda',
+        description:
+          'Muda execução para padrão, alcance para curto, alvo para criaturas escolhidas, duração para cena.',
+        requiresCircle: 4,
+      },
+      {
+        pmCost: 14,
+        kind: 'muda',
+        description:
+          'Muda execução para padrão e duração para 1 dia. Sexto sentido: imune a surpreendido/desprevenido, +10 Defesa e Reflexos.',
+        requiresCircle: 5,
+      },
+    ],
+    bookPage: 185,
+  },
+  {
+    id: 'condicao',
+    name: 'Condição',
+    circle: 2,
+    school: 'adivinhacao',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Conhece posição e status (PV, condições, magias ativas) de até 5 alvos. Distância não importa; deixa de detectar apenas se morrer ou mudar de plano.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Aumenta o número de alvos em +1.',
+      },
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description: 'Muda a duração para 1 dia.',
+      },
+    ],
+    bookPage: 185,
+  },
 ]
 
 export const SPELL_CATALOG: Readonly<Record<string, CatalogSpell>> =
