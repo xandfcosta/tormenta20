@@ -2993,6 +2993,355 @@ const SPELLS: readonly CatalogSpell[] = [
     ],
     bookPage: 190,
   },
+  {
+    id: 'despertar-consciencia',
+    name: 'Despertar Consciência',
+    circle: 3,
+    school: 'encantamento',
+    execution: 'completa',
+    range: 'toque',
+    duration: 'dia',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Desperta consciência de 1 animal ou planta. Vira parceiro veterano de tipo à escolha (ajudante/combatente/fortão/guardião/médico/perseguidor/vigilante). Em parceiro existente: aumenta um tipo em um passo (1x/parceiro). Já mestre: recebe iniciante extra. Vira racional, INT -1, fala.',
+    augments: [
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description:
+          'Muda alvo para 1 escultura mundana inanimada. Além do normal, alvo tem características de construto.',
+      },
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description: 'Muda a duração para permanente e adiciona penalidade de -3 PM.',
+      },
+    ],
+    bookPage: 190,
+  },
+  {
+    id: 'dificultar-deteccao',
+    name: 'Dificultar Detecção',
+    circle: 3,
+    school: 'abjuracao',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'dia',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Oculta 1 criatura ou objeto contra meios mágicos de detecção (inclui Detectar Magia). Conjurador que use adivinhação para detectar: Vontade — falha = magia não funciona, PM gastos. Em criatura, protege também equipamento.',
+    augments: [
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description:
+          'Muda alvo para cubo 9m. Criaturas/objetos na área recebem o efeito enquanto dentro.',
+      },
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description: 'Muda a duração para 1 semana.',
+      },
+    ],
+    bookPage: 190,
+  },
+  {
+    id: 'dispersar-as-trevas',
+    name: 'Dispersar as Trevas',
+    circle: 3,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'definida',
+    durationNote: 'veja texto',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Brilho multicolorido/divino em esfera 6m. Dissipa magias até 3º círc na área (Religião oposto por CD). Aliados: +4 resistências + redução trevas 10 até fim da cena. Inimigos: cegos 1d4 rodadas (1x/cena). Anula Anular a Luz (instantâneo).',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o bônus nas resistências em +1.',
+      },
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description:
+          'Muda alcance para curto, área para alvo 1 criatura, duração para cena. Alvo imune a efeitos de trevas.',
+      },
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description: 'Muda o círculo máximo de magias dissipadas para 4º.',
+        requiresCircle: 4,
+      },
+      {
+        pmCost: 9,
+        kind: 'muda',
+        description: 'Muda o círculo máximo de magias dissipadas para 5º.',
+        requiresCircle: 5,
+      },
+    ],
+    bookPage: 191,
+  },
+  {
+    id: 'disfarce-ilusorio',
+    name: 'Disfarce Ilusório',
+    circle: 1,
+    school: 'ilusao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'cena',
+    saveType: 'vontade',
+    resistance: 'desacredita',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Muda aparência (incluindo equipamento): altura/peso/pele/cabelo/voz. +10 Enganação para disfarce. Sem novas habilidades; equipamento continua funcional (espada disfarçada de bordão causa dano de espada).',
+    augments: [
+      {
+        pmCost: 0,
+        kind: 'muda',
+        description:
+          'Truque: muda alcance para toque, alvo para 1 criatura, duração para 1 semana. Pequena alteração inofensiva mas persistente (nariz vermelho, gerânio na cabeça — arrancado renasce).',
+      },
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Muda alcance para curto e alvo para 1 objeto (ferro→moedas de ouro). +10 Enganação para falsificação.',
+      },
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Muda alcance para curto e alvo para 1 criatura. Involuntária anula por Vontade.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Ilusão inclui odores e sensações. Bônus em Enganação para disfarce sobe para +20.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description:
+          'Muda alcance para curto e alvo para criaturas escolhidas. Cada uma pode ter aparência diferente. Involuntárias anulam por Vontade.',
+        requiresCircle: 2,
+      },
+    ],
+    bookPage: 191,
+  },
+  {
+    id: 'duplicata-ilusoria',
+    name: 'Duplicata Ilusória',
+    circle: 4,
+    school: 'ilusao',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Cópia ilusória semirreal do conjurador — idêntica em aparência/som/cheiro, intangível. A cada turno escolhe ver/ouvir pela cópia ou corpo. Cópia reproduz todas as ações (inclui fala). Magias de toque+ podem originar da cópia. Movimento diferente do corpo: ação de movimento. Interação: Vontade percebe ilusão. Magias originadas dela são reais. Some se sair do alcance.',
+    augments: [
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description: 'Cria uma cópia adicional.',
+      },
+    ],
+    bookPage: 191,
+  },
+  {
+    id: 'engenho-de-mana',
+    name: 'Engenho de Mana',
+    circle: 5,
+    school: 'abjuracao',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'sustentada',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Disco de energia (1,5m diâmetro) imune a dano, imóvel. Contramagia automática contra magias em alcance médio (exceto do conjurador) usando Misticismo. Vitória: anula + absorve PM como temporários. No turno do conjurador, se em alcance: gasta PM do disco para lançar magias.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Em vez de flutuar no ponto conjurado, disco flutua atrás do conjurador (sempre adjacente).',
+      },
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description: 'Muda a duração para 1 dia.',
+      },
+    ],
+    bookPage: 192,
+  },
+  {
+    id: 'enxame-de-pestes',
+    name: 'Enxame de Pestes',
+    circle: 2,
+    school: 'convocacao',
+    execution: 'completa',
+    range: 'medio',
+    duration: 'sustentada',
+    saveType: 'fortitude',
+    resistance: 'metade',
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Enxame Médio (1,5m²) — besouros/gafanhotos/ratos/morcegos/serpentes. Passa por espaços; permite outras criaturas. Fim do turno: 2d12 dano a criaturas no espaço (Fortitude metade). Ação de movimento: move 12m.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o dano em +1d12.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description:
+          'Muda resistência para Reflexos metade e enxame para criaturas maiores (gatos/guaxinins/compsognatos/kobolds). 3d12 dano à escolha entre corte/impacto/perfuração.',
+      },
+      {
+        pmCost: 5,
+        kind: 'aumenta',
+        description: 'Aumenta o número de enxames em +1 (não podem ocupar o mesmo espaço).',
+        requiresCircle: 3,
+      },
+      {
+        pmCost: 7,
+        kind: 'muda',
+        description:
+          'Muda resistência para Reflexos metade e enxame para criaturas elementais. 5d12 dano à escolha entre ácido/eletricidade/fogo/frio.',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 192,
+  },
+  {
+    id: 'enxame-rubro-de-ichabod',
+    name: 'Enxame Rubro de Ichabod',
+    circle: 3,
+    school: 'convocacao',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'sustentada',
+    saveType: 'reflexos',
+    resistance: 'metade',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Enxame Grande (3m²) de criaturas da Tormenta. Passa por espaços; permite outras. Fim do turno: 4d12 dano ácido em criaturas no espaço (Reflexos metade). Ação de movimento: move 12m.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Além do normal, falha em Reflexos = agarrada (enxame cobre corpo). Escapar: padrão + Acrobacia/Atletismo. Mover o enxame libera.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o dano em +1d12.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description: 'Muda o dano para trevas.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description: 'O enxame vira Enorme (quadrado 6m).',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description:
+          'Enxame ganha voo 18m e ocupa cubo em vez de quadrado.',
+      },
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description:
+          'Parasitas explodem em novos enxames. Início do turno: rola 1d6 — 5-6 surge novo adjacente. Move todos com uma ação (sem sobrepor).',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 192,
+  },
+  {
+    id: 'erupcao-glacial',
+    name: 'Erupção Glacial',
+    circle: 3,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'instantanea',
+    saveType: 'reflexos',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Estacas de gelo (quadrado 6m): 4d6 corte + 4d6 frio + caído. Sucesso Reflexos = evita corte e queda. Estacas duram cena — área terreno difícil + cobertura leve. Destruídas por qualquer dano de fogo mágico.',
+    augments: [
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description: 'Aumenta o dano de frio em +2d6 e o dano de corte em +2d6.',
+      },
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description:
+          'Muda área para cilindro 6m raio × 6m altura, duração para sustentada. Tempestade de granizo: 3d6 impacto + 3d6 frio em todas as criaturas (sem resistência) + camuflagem leve + piso escorregadio (terreno difícil, Acrobacia equilíbrio).',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 192,
+  },
+  {
+    id: 'esculpir-sons',
+    name: 'Esculpir Sons',
+    circle: 2,
+    school: 'ilusao',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'cena',
+    saveType: 'vontade',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Altera sons do alvo (1 criatura ou objeto). Omite (carroça silenciosa) ou transforma (fala vira canto de pássaro). Não cria sons; não fala idioma desconhecido. Escolha fixa. Voz drasticamente modificada impede lançar magia.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Aumenta o número de alvos em +1. Todas afetadas da mesma forma.',
+      },
+    ],
+    bookPage: 192,
+  },
 ]
 
 export const SPELL_CATALOG: Readonly<Record<string, CatalogSpell>> =
