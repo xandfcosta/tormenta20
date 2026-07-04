@@ -5483,6 +5483,328 @@ const SPELLS: readonly CatalogSpell[] = [
     ],
     bookPage: 205,
   },
+  {
+    id: 'servo-morto-vivo',
+    name: 'Servo Morto-Vivo',
+    circle: 3,
+    school: 'necromancia',
+    execution: 'completa',
+    range: 'toque',
+    duration: 'instantanea',
+    saveType: 'none',
+    resistance: null,
+    components: ['verbal', 'gestual', 'material'],
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Transforma cadáver (humanoide/animal/monstro) em esqueleto ou zumbi (conforme conservação). Obedece cegamente (mesmo suicidas). Como parceiro iniciante: ajudante/atirador/combatente/fortão/guardião/montaria. Uma vez por rodada, ao sofrer dano, sacrifica servo para evitar (destruído sem reanimar). Componente material: ônix negro T$ 100 na boca/olho.',
+    augments: [
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description:
+          'Muda componente material para pó de ônix negro T$ 500. Cria carnicial (parceiro veterano: ajudante/atirador/combatente/fortão/guardião).',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description:
+          'Muda componente material para pó de ônix negro T$ 500. Cria sombra (parceiro veterano: assassino/combatente/perseguidor).',
+      },
+      {
+        pmCost: 7,
+        kind: 'muda',
+        description:
+          'Muda componente material para ferramentas de embalsamar T$ 1.000. Cria múmia (parceiro mestre: ajudante/destruidor/guardião/médico).',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 206,
+  },
+  {
+    id: 'servos-invisiveis',
+    name: 'Servos Invisíveis',
+    circle: 2,
+    school: 'convocacao',
+    execution: 'padrao',
+    range: 'longo',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Até 3 servos invisíveis/silenciosos executam tarefas simples (apanhar lenha, colher, varrer, alimentar cavalo). Mantêm mansão/torre, preparam acampamento (ver Sobrevivência p123). Tarefas complexas: gasta 1 servo por +2 não cumulativo em teste de perícia (exceto ataque/resistência). Não são mágicos, não lutam, falham automaticamente em qualquer resistência/teste oposto e são destruídos.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o número de servos em 1.',
+      },
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description:
+          'Comanda servos para realizar tarefa no lugar do conjurador. Passam automaticamente em teste de perícia com CD máx = nível +2 por servo. Tempo = uso normal da perícia.',
+        requiresCircle: 3,
+      },
+    ],
+    bookPage: 206,
+  },
+  {
+    id: 'seta-infalivel-de-talude',
+    name: 'Seta Infalível de Talude',
+    circle: 1,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'instantanea',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      '2 setas de energia: 1d4+1 essência cada. Alvos diferentes ou concentradas. Bônus de dano de magia (ex: Arcano de Batalha) aplica só a 1 seta por magia.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda para lanças de energia do céu: 1d8+1 essência cada.',
+        requiresCircle: 2,
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o número de setas/lanças para três.',
+      },
+      {
+        pmCost: 4,
+        kind: 'aumenta',
+        description: 'Aumenta o número de setas/lanças para cinco.',
+        requiresCircle: 2,
+      },
+      {
+        pmCost: 9,
+        kind: 'aumenta',
+        description: 'Aumenta o número de setas/lanças para dez.',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 206,
+  },
+  {
+    id: 'silencio',
+    name: 'Silêncio',
+    circle: 2,
+    school: 'ilusao',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'sustentada',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Silêncio sepulcral em esfera 6m. Sem som produzido; criaturas ficam surdas. Impede lançamento de magia (palavras mágicas bloqueadas).',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Muda área para 1 objeto. Emana silêncio 3m raio. Objeto de criatura involuntária: Vontade anula.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda duração para cena. Nenhum som sai da área; dentro pode falar/ouvir/lançar magia normalmente.',
+      },
+    ],
+    bookPage: 206,
+  },
+  {
+    id: 'soco-de-arsenal',
+    name: 'Soco de Arsenal',
+    circle: 2,
+    school: 'convocacao',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'instantanea',
+    saveType: 'fortitude',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Gesticula soco: 1 criatura sofre 4d6 + Força de impacto + empurrada 3m. Sucesso = metade dano + sem empurrão.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Muda alcance para pessoal, alvo para conjurador, duração para cena, resistência para nenhuma. Ataques corpo a corpo acertam à distância — alcance natural +3m (Médio ataca 4,5m).',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o dano em +1d6.',
+      },
+      {
+        pmCost: 4,
+        kind: 'aumenta',
+        description: 'Aumenta o empurrão em +3m.',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description: 'Muda o tipo do dano para essência.',
+      },
+    ],
+    bookPage: 206,
+  },
+  {
+    id: 'sombra-assassina',
+    name: 'Sombra Assassina',
+    circle: 5,
+    school: 'ilusao',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'cena',
+    saveType: 'vontade',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Duplicata ilusória do alvo (silhueta ligada à sombra). Ataca o alvo automaticamente. Ação hostil do alvo (ataque/habilidade/magia) = sombra imediatamente replica contra o alvo (mesmas stats/rolagens). Sombra pode ser atacada; mesmas stats do alvo; 0 PV = destruída. Sucesso = sombra some no fim do turno após copiar ação da rodada.',
+    augments: [
+      {
+        pmCost: 10,
+        kind: 'muda',
+        description: 'Muda o alvo para criaturas escolhidas na área.',
+      },
+    ],
+    bookPage: 207,
+  },
+  {
+    id: 'sonho',
+    name: 'Sonho',
+    circle: 4,
+    school: 'adivinhacao',
+    execution: 'completa',
+    range: 'ilimitado',
+    duration: 'definida',
+    durationNote: 'veja texto',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Entra no sonho de 1 criatura viva; conversa até ela acordar. Se não dormindo, entra em transe até adormecer (indefeso/sem consciência dos arredores; sai voluntariamente = magia termina).',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Transforma sonho em pesadelo. Vítima faz Vontade — falha = sem recuperar PV/PM pela noite + 1d10 trevas + fatigada. Modificadores no teste conforme conhecimento (usar Vidência).',
+      },
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description:
+          'Aumenta o número de alvos em +1. Compartilham sonho/pesadelo entre si e com o conjurador.',
+      },
+    ],
+    bookPage: 207,
+  },
+  {
+    id: 'sopro-da-salvacao',
+    name: 'Sopro da Salvação',
+    circle: 3,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'instantanea',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Cone 9m de poeira reluzente. Só aliados na área: 2d8+4 PV + remove 1 condição (abalado/atordoado/apavorado/alquebrado/cego/confuso/debilitado/enfeitiçado/enjoado/envenenado/esmorecido/exausto/fascinado/fatigado/fraco/frustrado/lento/ofuscado/paralisado/pasmo/surdo).',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta a cura em +1d8+2.',
+      },
+      {
+        pmCost: 4,
+        kind: 'aumenta',
+        description:
+          'Além do normal, aliado com PV negativos é levado a 0 antes da cura.',
+      },
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description: 'Remove todas as condições listadas em vez de apenas uma.',
+      },
+    ],
+    bookPage: 207,
+  },
+  {
+    id: 'suporte-ambiental',
+    name: 'Suporte Ambiental',
+    circle: 1,
+    school: 'abjuracao',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'dia',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      '1 criatura fica imune a calor/frio extremos; respira na água (ou vice-versa); não sufoca em fumaça densa.',
+    augments: [
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description: 'Muda o alcance para curto e o alvo para criaturas escolhidas.',
+      },
+    ],
+    bookPage: 207,
+  },
+  {
+    id: 'sussurros-insanos',
+    name: 'Sussurros Insanos',
+    circle: 2,
+    school: 'encantamento',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'cena',
+    saveType: 'vontade',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect: 'Murmura palavras desconexas: 1 humanoide fica confuso.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o número de alvos em +1.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description: 'Muda o alvo para 1 criatura.',
+      },
+      {
+        pmCost: 12,
+        kind: 'muda',
+        description: 'Muda o alvo para criaturas escolhidas.',
+        requiresCircle: 5,
+      },
+    ],
+    bookPage: 207,
+  },
 ]
 
 export const SPELL_CATALOG: Readonly<Record<string, CatalogSpell>> =
