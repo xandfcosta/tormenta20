@@ -6122,6 +6122,159 @@ const SPELLS: readonly CatalogSpell[] = [
     ],
     bookPage: 210,
   },
+  {
+    id: 'vestimenta-da-fe',
+    name: 'Vestimenta da Fé',
+    circle: 2,
+    school: 'abjuracao',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'dia',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      '1 armadura/escudo ganha +1 Defesa. Vestuário passa a oferecer +2 Defesa (não cumulativo com armadura). Conta como bônus de encanto.',
+    augments: [
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description:
+          'Objeto oferece o mesmo bônus em testes de resistência.',
+        requiresCircle: 3,
+      },
+      {
+        pmCost: 4,
+        kind: 'aumenta',
+        description: 'Aumenta o bônus em +1.',
+      },
+      {
+        pmCost: 7,
+        kind: 'aumenta',
+        description: 'Objeto também oferece RD 5.',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 210,
+  },
+  {
+    id: 'viagem-arborea',
+    name: 'Viagem Arbórea',
+    circle: 3,
+    school: 'convocacao',
+    execution: 'completa',
+    range: 'pessoal',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Entra em árvore adjacente maior que o conjurador. Percebe arredores mas não age. Ação de movimento sai da árvore ou de outra em 1km. Árvore destruída = magia termina + 1d6 impacto. Ação de movimento + 1 PM entra em outras árvores.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda alcance para toque, alvo para até 5 criaturas, duração para instantânea. Entram em planta Médio+ e saem em outra planta do mesmo tamanho até 100km (direção/distância aproximadas).',
+      },
+    ],
+    bookPage: 210,
+  },
+  {
+    id: 'viagem-planar',
+    name: 'Viagem Planar',
+    circle: 4,
+    school: 'convocacao',
+    execution: 'completa',
+    range: 'toque',
+    duration: 'instantanea',
+    saveType: 'none',
+    resistance: null,
+    components: ['verbal', 'gestual', 'material'],
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Viaja instantaneamente para outro plano. Chega 10-1.000km do destino (rola 1d100 × 10km). Componente material: bastão de metal precioso em forma de forquilha T$ 1.000. Metal determina plano de destino.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description: 'Muda o alvo para até 5 criaturas voluntárias tocadas.',
+      },
+    ],
+    bookPage: 211,
+  },
+  {
+    id: 'visao-da-verdade',
+    name: 'Visão da Verdade',
+    circle: 4,
+    school: 'adivinhacao',
+    execution: 'movimento',
+    range: 'pessoal',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Enxerga através de camuflagem/escuridão (normal e mágica) + efeitos de ilusão e transmutação (verdade translúcida ou sobreposta).',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description: 'Muda alcance para toque e alvo para 1 criatura.',
+      },
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Além do normal, alvo com sentidos apurados: +10 em Percepção.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Além do normal, alvo detecta falsidades: +10 em Intuição.',
+      },
+      {
+        pmCost: 4,
+        kind: 'aumenta',
+        description:
+          'Além do normal, alvo enxerga através de paredes/barreiras com 30cm de espessura ou menos (translúcidas).',
+      },
+    ],
+    bookPage: 211,
+  },
+  {
+    id: 'vitalidade-fantasma',
+    name: 'Vitalidade Fantasma',
+    circle: 2,
+    school: 'necromancia',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'instantanea',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Suga energia vital da terra: 2d10 PV temporários. Desaparecem ao fim da cena.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Aumenta os PV temporários em +1d10. Se causar dano, aumenta dano em +1d10.',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description:
+          'Muda alvo para esfera 6m raio centrada no conjurador, resistência para Fortitude metade. Suga energia de criaturas vivas: 1d10 trevas + PV temporários iguais ao dano total. Desaparecem ao fim da cena.',
+        requiresCircle: 2,
+      },
+    ],
+    bookPage: 211,
+  },
 ]
 
 export const SPELL_CATALOG: Readonly<Record<string, CatalogSpell>> =
