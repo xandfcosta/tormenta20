@@ -174,7 +174,12 @@ const POWERS: readonly TormentaPower[] = [
     requiresOtherPowers: 0,
     requiresPower: 'dentes-afiados',
   },
-  { id: 'legiao-aberrante', name: 'Legião Aberrante', requiresOtherPowers: 3 },
+  {
+    id: 'legiao-aberrante',
+    name: 'Legião Aberrante',
+    requiresOtherPowers: 3,
+    requiresPower: 'anatomia-insana',
+  },
   { id: 'maos-membranosas', name: 'Mãos Membranosas', requiresOtherPowers: 0 },
   { id: 'membros-estendidos', name: 'Membros Estendidos', requiresOtherPowers: 0 },
   { id: 'membros-extras', name: 'Membros Extras', requiresOtherPowers: 4 },
@@ -206,8 +211,11 @@ export function canTakePower(
 ): boolean {
   const power = TORMENTA_POWERS[candidate]
   if (held.includes(candidate)) return false
-  if (held.length < power.requiresOtherPowers) return false
   if (power.requiresPower && !held.includes(power.requiresPower)) return false
+  const othersCount = power.requiresPower
+    ? held.length - 1
+    : held.length
+  if (othersCount < power.requiresOtherPowers) return false
   return true
 }
 

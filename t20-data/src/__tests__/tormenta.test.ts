@@ -159,6 +159,13 @@ describe('TORMENTA_POWERS — catalog', () => {
     )
   })
 
+  it('Legião Aberrante requires Anatomia Insana + 3 others', () => {
+    expect(TORMENTA_POWERS['legiao-aberrante'].requiresPower).toBe(
+      'anatomia-insana',
+    )
+    expect(TORMENTA_POWERS['legiao-aberrante'].requiresOtherPowers).toBe(3)
+  })
+
   it('Asas Insetoides / Membros Extras / Desprezar a Realidade need 4 others', () => {
     expect(TORMENTA_POWERS['asas-insetoides'].requiresOtherPowers).toBe(4)
     expect(TORMENTA_POWERS['membros-extras'].requiresOtherPowers).toBe(4)
@@ -178,6 +185,34 @@ describe('canTakePower — prerequisite gating', () => {
 
   it('Larva Explosiva allowed once Dentes Afiados is held', () => {
     expect(canTakePower('larva-explosiva', ['dentes-afiados'])).toBe(true)
+  })
+
+  it('Legião Aberrante refuses without Anatomia Insana (even with 3+ others)', () => {
+    expect(
+      canTakePower('legiao-aberrante', [
+        'carapaca',
+        'dentes-afiados',
+        'antenas',
+        'olhos-vermelhos',
+      ]),
+    ).toBe(false)
+  })
+
+  it('Legião Aberrante refuses with Anatomia Insana but only 2 others', () => {
+    expect(
+      canTakePower('legiao-aberrante', ['anatomia-insana', 'carapaca', 'antenas']),
+    ).toBe(false)
+  })
+
+  it('Legião Aberrante allowed with Anatomia Insana + 3 others', () => {
+    expect(
+      canTakePower('legiao-aberrante', [
+        'anatomia-insana',
+        'carapaca',
+        'antenas',
+        'olhos-vermelhos',
+      ]),
+    ).toBe(true)
   })
 
   it('Asas Insetoides requires 4 other powers', () => {
