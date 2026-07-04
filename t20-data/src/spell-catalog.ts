@@ -5173,6 +5173,316 @@ const SPELLS: readonly CatalogSpell[] = [
     augments: [],
     bookPage: 204,
   },
+  {
+    id: 'resistencia-a-energia',
+    name: 'Resistência a Energia',
+    circle: 1,
+    school: 'abjuracao',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Ao lançar, escolha ácido/eletricidade/fogo/frio/luz/trevas. Alvo (1 criatura) recebe RD 10 contra o tipo escolhido.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta a redução de dano em +5.',
+      },
+    ],
+    bookPage: 204,
+  },
+  {
+    id: 'rogar-maldicao',
+    name: 'Rogar Maldição',
+    circle: 2,
+    school: 'necromancia',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'sustentada',
+    saveType: 'fortitude',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Clérigo', 'Paladino'],
+    baseEffect:
+      'Amaldiçoa 1 criatura. Escolha: Debilidade (esmorecido, não se comunica/lança magias, ainda reconhece aliados). Doença (muda duração para instantânea, alvo contrai doença sem incubação). Fraqueza (debilitado + lento). Isolamento (perde 1 sentido: visão=cego / audição=surdo / olfato/paladar=sem faro / tato=caído sem levantar). Mestre aprova maldições customizadas.',
+    augments: [
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description: 'Aumenta o número de efeitos que pode escolher em +1.',
+        requiresCircle: 3,
+      },
+      {
+        pmCost: 7,
+        kind: 'muda',
+        description:
+          'Muda duração para permanente + adiciona Fortitude parcial. Sucesso = sofre por 1 rodada.',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 204,
+  },
+  {
+    id: 'roubar-a-alma',
+    name: 'Roubar a Alma',
+    circle: 5,
+    school: 'necromancia',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'permanente',
+    saveType: 'vontade',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Rouba alma da vítima e armazena em objeto. Sucesso = abalado 1 rodada. Falha = corpo caído inconsciente inerte, alma no objeto. Corpo em estase (não envelhece/decompõe); pode ser atacado/destruído. Objeto: T$ 1.000 por nível/ND, sem alma prévia. Objeto destruído = magia esvai (alma retorna ao corpo se disponível; senão vai para os Mundos dos Deuses). Custo adicional: sacrifício 1 PM.',
+    augments: [
+      {
+        pmCost: 5,
+        kind: 'aumenta',
+        description:
+          'Objeto detém mesmos PM totais que o alvo. Empunhando: usa esses PM para lançar magias. Recupera PM/dia como descanso normal.',
+      },
+      {
+        pmCost: 10,
+        kind: 'aumenta',
+        description:
+          'Como reação ao lançar, possui o corpo sem alma como em Possessão (mesmo que não substitua a magia).',
+      },
+    ],
+    bookPage: 204,
+  },
+  {
+    id: 'runa-de-protecao',
+    name: 'Runa de Proteção',
+    circle: 2,
+    school: 'abjuracao',
+    execution: 'completa',
+    range: 'toque',
+    duration: 'definida',
+    durationNote: 'permanente até ser descarregada',
+    saveType: 'reflexos',
+    resistance: 'metade',
+    components: ['verbal', 'gestual', 'material'],
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Runa em superfície fixa (parede/chão) — ativação por criatura entrando na área causa 6d6 em todos até 6m (tipo: ácido/eletricidade/fogo/frio/luz/trevas, escolhido ao lançar). Ativadora não testa Reflexos; outras metade. Ativação condicional (só goblins, só mortos-vivos) + palavra mágica desativa. Encontrar: Investigação; desarmar: Ladinagem. Componente material: pó de diamante T$ 200.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Aumenta o dano em +2d6.',
+      },
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Muda alcance para pessoal. Escolhe magia de 1º círc conhecida (ação padrão ou menos). Runa no próprio corpo + condição de ativação ("quando eu for alvo de ataque", "quando for alvo de magia"). Reação lança a magia. Uma runa no corpo por vez.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description: 'Como o aprimoramento anterior, mas magias de 2º círculo.',
+        requiresCircle: 3,
+      },
+    ],
+    bookPage: 204,
+  },
+  {
+    id: 'salto-dimensional',
+    name: 'Salto Dimensional',
+    circle: 2,
+    school: 'convocacao',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'instantanea',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Teletransporta conjurador para lugar no alcance (sem linha de efeito exigida; basta imaginar). Transportadas não agem até a próxima rodada. Não aparece dentro de corpo sólido; sem espaço livre = área vazia mais próxima.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description: 'Muda o alcance para médio.',
+      },
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Muda alvo para conjurador e 1 criatura voluntária. Pode ser escolhido múltiplas vezes (+1 alvo por vez), mas deve tocar todos.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda execução para reação. +5 na Defesa e Reflexos contra ataque/efeito iminente. Após resolução, salta 1,5m para espaço adjacente.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description: 'Muda o alcance para longo.',
+      },
+    ],
+    bookPage: 205,
+  },
+  {
+    id: 'santuario',
+    name: 'Santuário',
+    circle: 1,
+    school: 'abjuracao',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'cena',
+    saveType: 'vontade',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Clérigo', 'Paladino'],
+    baseEffect:
+      'Criatura que tente ação hostil contra 1 alvo: Vontade — falha = não consegue, perde ação, não tenta de novo enquanto ativa. Alvo não pode fazer ações hostis ou dissipa (habilidades/magias de cura e suporte OK).',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description:
+          'Além do normal, escolha tipo (animal/construto/morto-vivo). Não pode ser percebido por criaturas mais inteligentes (INT -4 ou menor) do tipo.',
+      },
+      {
+        pmCost: 9,
+        kind: 'aumenta',
+        description:
+          'Também protege contra efeitos de área. Criatura que ataque área com alvo dentro: Vontade — falha = não consegue, perde ação. Só tenta de novo se o alvo sair da área.',
+      },
+    ],
+    bookPage: 205,
+  },
+  {
+    id: 'segunda-chance',
+    name: 'Segunda Chance',
+    circle: 5,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'instantanea',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Paladino'],
+    baseEffect:
+      'Brilho em asas de fênix: alvo recupera 200 PV + cura 1 condição (abalado/apavorado/alquebrado/atordoado/cego/confuso/debilitado/enjoado/envenenado/esmorecido/exausto/fascinado/fatigado/fraco/frustrado/lento/ofuscado/paralisado/pasmo/surdo).',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Aumenta a cura em +20 PV.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description: 'Muda alcance para curto e alvo para até 5 criaturas.',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description:
+          'Muda alvo para 1 criatura morta há até 1 rodada. Pode curá-la.',
+      },
+    ],
+    bookPage: 205,
+  },
+  {
+    id: 'selo-de-mana',
+    name: 'Selo de Mana',
+    circle: 3,
+    school: 'encantamento',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'cena',
+    saveType: 'vontade',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Selo mágico na pele do alvo (1 criatura). Ação que gasta PM: Vontade — sucesso = ação normal; falha = ação sem efeito (PM gastos).',
+    augments: [
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description:
+          'Muda alcance para curto e alvo para criaturas escolhidas no alcance.',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 205,
+  },
+  {
+    id: 'semiplano',
+    name: 'Semiplano',
+    circle: 5,
+    school: 'convocacao',
+    execution: 'completa',
+    range: 'curto',
+    duration: 'dia',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Dimensão particular 30m lado. Entrar: ação padrão + 10 PM. Leva voluntárias (1 PM extra por criatura) e objetos (1 PM Médio-, 2 PM Grande, 5 PM Enorme, 10 PM Colossal). Ação completa volta ao plano material no mesmo local. Viagem Planar volta em outro local. Escolhe forma/aparência; ar/luz/calor; itens levados persistem.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Adiciona alvo (1 criatura) expulsa para semiplano labiríntico. A cada rodada: Investigação ou Sobrevivência com +1 cumulativo por teste. Escapa = magia termina, reaparece no plano material. Salto Dimensional/Teletransporte não ajudam; Viagem Planar sim.',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description:
+          'Muda duração para permanente + componente material (maquete T$ 5.000). Múltiplas castes aumentam semiplano em +30m de lado cada.',
+      },
+    ],
+    bookPage: 205,
+  },
+  {
+    id: 'servo-divino',
+    name: 'Servo Divino',
+    circle: 3,
+    school: 'convocacao',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'definida',
+    durationNote: 'cena ou até ser descarregada',
+    saveType: 'none',
+    resistance: null,
+    components: ['verbal', 'gestual', 'material'],
+    classes: ['Clérigo', 'Paladino'],
+    baseEffect:
+      'Divindade envia espírito para tarefa até 1h ("nos leve ao topo da montanha", "escolte esses camponeses"). Descarregada ao cumprir. Tipo escolhido pelo mestre. Componente material: T$ 100 pagamento (doação/item mágico/ouro).',
+    augments: [
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description:
+          'Muda duração para 1 dia ou até ser descarregada. Tarefa até 1 dia. Pagamento sobe para T$ 500.',
+      },
+      {
+        pmCost: 9,
+        kind: 'muda',
+        description:
+          'Muda duração para 1 semana ou até ser descarregada. Tarefa até 1 semana. Pagamento sobe para T$ 1.000.',
+      },
+    ],
+    bookPage: 205,
+  },
 ]
 
 export const SPELL_CATALOG: Readonly<Record<string, CatalogSpell>> =
