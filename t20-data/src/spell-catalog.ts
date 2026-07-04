@@ -4200,6 +4200,365 @@ const SPELLS: readonly CatalogSpell[] = [
     ],
     bookPage: 198,
   },
+  {
+    id: 'miasma-mefitico',
+    name: 'Miasma Mefítico',
+    circle: 2,
+    school: 'necromancia',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'instantanea',
+    saveType: 'fortitude',
+    resistance: 'metade',
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Nuvem 6m raio: 5d6 ácido + enjoados 1 rodada. Sucesso = metade + sem condição.',
+    augments: [
+      {
+        pmCost: 0,
+        kind: 'muda',
+        description:
+          'Truque: muda alcance para toque, área para alvo (1 criatura com 0 PV ou menos), duração instantânea, resistência para Fortitude anula, adiciona componente material (pó de ônix T$ 10). Canaliza Miasma contra vítima. Falha = morre, +2 CD das magias por 1 dia. Sucesso = imune ao truque por 1 dia.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o dano em +1d6.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description: 'Muda o tipo do dano para trevas.',
+      },
+    ],
+    bookPage: 199,
+  },
+  {
+    id: 'miragem',
+    name: 'Miragem',
+    circle: 3,
+    school: 'ilusao',
+    execution: 'padrao',
+    range: 'longo',
+    duration: 'dia',
+    saveType: 'vontade',
+    resistance: 'desacredita',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Cubo 90m parece outro terreno (sons e cheiros). Planície vira pântano, floresta vira montanha. Cria armadilhas (areia movediça vira terra firme, precipício vira lago). Altera/inclui/esconde estruturas; não cria criaturas (podem se esconder nas estruturas ilusórias).',
+    augments: [
+      {
+        pmCost: 4,
+        kind: 'aumenta',
+        description:
+          'Além do normal, altera aparência de criaturas escolhidas na área (como Disfarce Ilusório).',
+      },
+      {
+        pmCost: 9,
+        kind: 'muda',
+        description:
+          'Muda duração para permanente + componente material (pó de diamante T$ 1.000).',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 199,
+  },
+  {
+    id: 'missao-divina',
+    name: 'Missão Divina',
+    circle: 3,
+    school: 'encantamento',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'definida',
+    durationNote: '1 semana ou até ser descarregada',
+    saveType: 'vontade',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Alvo (1 criatura) deve cumprir tarefa escolhida. Dura 1 semana ou até cumprir. Pode recusar — fim do dia sem esforço = Vontade; falha = -2 cumulativo em testes/rolagens. Não força ato suicida ou missão impossível.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda alcance para toque, duração para permanente, penalidade -1 PM. Inscreve marca (tatuagem) + ação-gatilho (crime, ato contra divindade). Ativação = -2 cumulativo em testes. Dissipação suprime marca por 1 dia; só conjurador original ou Purificação remove.',
+      },
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description: 'Muda a duração para 1 ano ou até ser descarregada.',
+      },
+    ],
+    bookPage: 199,
+  },
+  {
+    id: 'montaria-arcana',
+    name: 'Montaria Arcana',
+    circle: 2,
+    school: 'convocacao',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'dia',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Convoca parceiro cavalo (ou pônei) de guerra veterano. Animal negro, crina cinzenta, cascos de fumaça (aparência editável). Atravessa terreno difícil sem redução. Misticismo substitui Cavalgar (inclui treinado).',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description:
+          'Além do normal, animais em alcance curto testam Vontade — sucesso = abalados pela cena; falha = apavorados 1d4 rodadas depois abalados pela cena.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description: 'Muda a duração para permanente e adiciona penalidade -3 PM.',
+      },
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description:
+          'Aumenta o tamanho em uma categoria. Enorme carrega 2, Colossal carrega 6. Uma controla, outras são deslocadas.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description: 'Muda o nível do parceiro para mestre.',
+        requiresCircle: 3,
+      },
+    ],
+    bookPage: 199,
+  },
+  {
+    id: 'muralha-de-ossos',
+    name: 'Muralha de Ossos',
+    circle: 4,
+    school: 'necromancia',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'cena',
+    saveType: 'reflexos',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Parede de ossos (15m×9m×1,5m, qualquer forma tocando o solo). Criaturas na área/adjacentes: 4d8 corte + Reflexos ou agarradas. Agarrada: ação padrão + Atletismo — sucesso sai adjacente, falha = 4d8 corte. Trecho 3m: Defesa 8, 40 PV, RD 10 corte/frio/perfuração. Escalar: Atletismo + 4d8 corte por 3m.',
+    augments: [
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description: 'Aumenta o comprimento em +15m e a altura em +3m.',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description:
+          'Muro de esqueletos animados. Início do turno adjacente/escalando: Reflexos — falha = agarrada (efeitos normais).',
+      },
+    ],
+    bookPage: 199,
+  },
+  {
+    id: 'muralha-elemental',
+    name: 'Muralha Elemental',
+    circle: 3,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'cena',
+    saveType: 'reflexos',
+    resistance: 'metade',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Muro 30m×3m ou cúpula 3m raio. Fogo: lado quente à escolha — 2d6 fogo em 6m ao lançar e no início do turno; atravessar = 8d6 fogo; presas testam Reflexos, escape ao lado quente sofre +2d6. Gelo: parede 15cm; cúpula prende criaturas (Reflexos escapa antes). Trecho 3m: Defesa 8, 40 PV, RD 5. Fogo causa dano dobrado. Atravessar trecho rompido = 4d8 frio.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o dano por atravessar em +2d6.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Aumenta o comprimento em +15m e altura em +3m (até 60m×9m).',
+      },
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description:
+          'Muda duração para sustentada + adiciona escolha Força. Muralha invisível e indestrutível — imune a dano/magia. Não atravessada por incorpóreos. Teletransporte (Salto Dimensional) atravessa. Magia de área não passa; magia lançada diretamente em alvo do outro lado (Sono) tem linha de efeito.',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 200,
+  },
+  {
+    id: 'nevoa',
+    name: 'Névoa',
+    circle: 1,
+    school: 'convocacao',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Névoa espessa (nuvem 6m raio × 6m altura). Camuflagem leve até 1,5m, camuflagem total a partir 3m. Vento forte dispersa em 4 rodadas, vendaval em 1. Não funciona sob a água.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Funciona sob a água, criando cortina de tinta.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Escolhe criaturas ao lançar; elas enxergam através do efeito.',
+        requiresCircle: 2,
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Nuvem tem cheiro horrível. Início do turno dentro ou criaturas com faro em alcance curto: Fortitude — falha = enjoada 1 rodada.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Nuvem esverdeada e cáustica. Início do turno dentro: 2d4 ácido.',
+      },
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description: 'Aumenta o dano de ácido em +2d4.',
+      },
+      {
+        pmCost: 5,
+        kind: 'aumenta',
+        description:
+          'Nuvem espessa/quase sólida. Deslocamento reduzido a 3m + -2 em ataque e dano.',
+      },
+    ],
+    bookPage: 200,
+  },
+  {
+    id: 'oracao',
+    name: 'Oração',
+    circle: 2,
+    school: 'encantamento',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'sustentada',
+    saveType: 'none',
+    resistance: null,
+    components: ['verbal', 'gestual', 'material'],
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Aliados no alcance +2 em perícia/dano; inimigos no alcance -2 em perícia/dano. Cumulativo com outras magias. Componente material: T$ 20 por PM em incensos/oferendas.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description:
+          'Aumenta os bônus em +1 (máximo limitado pelo círculo máximo).',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Aumenta as penalidades em -1 (máximo limitado pelo círculo máximo).',
+      },
+      {
+        pmCost: 7,
+        kind: 'muda',
+        description: 'Muda o alcance para médio.',
+        requiresCircle: 3,
+      },
+      {
+        pmCost: 12,
+        kind: 'muda',
+        description: 'Muda a duração para cena.',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 200,
+  },
+  {
+    id: 'orientacao',
+    name: 'Orientação',
+    circle: 1,
+    school: 'adivinhacao',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'definida',
+    durationNote: '1 rodada',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      '1 criatura rola 2 dados e usa o melhor no próximo teste de perícia.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda duração para cena. Testes de perícia baseados no atributo escolhido rolam 2 dados e usam o melhor. Não afeta ataque/resistência.',
+        requiresCircle: 2,
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description:
+          'Como acima, mas escolhe entre atributos físicos (For/Des/Con) ou mentais (Int/Sab/Car).',
+        requiresCircle: 3,
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description: 'Muda o alvo para criaturas escolhidas.',
+        requiresCircle: 3,
+      },
+    ],
+    bookPage: 200,
+  },
+  {
+    id: 'palavra-primordial',
+    name: 'Palavra Primordial',
+    circle: 5,
+    school: 'encantamento',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'instantanea',
+    saveType: 'vontade',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Palavra do idioma primordial da Criação em 1 criatura com menos níveis que o conjurador. Escolha: Atordoar (1d4+1 rodadas, 1x/cena; sucesso ou já atordoada = desprevenida 1d4). Cegar (cega; sucesso = ofuscada 1d4). Matar (morre; se >metade PV também testa Fortitude; sucesso em qualquer = perde 10d8 PV + sangrando).',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda alcance para toque e alvo para 1 criatura. Falha se conjurador e alvo não forem devotos da mesma divindade.',
+      },
+    ],
+    bookPage: 200,
+  },
 ]
 
 export const SPELL_CATALOG: Readonly<Record<string, CatalogSpell>> =
