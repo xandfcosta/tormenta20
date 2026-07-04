@@ -2372,6 +2372,305 @@ const SPELLS: readonly CatalogSpell[] = [
     ],
     bookPage: 185,
   },
+  {
+    id: 'conjurar-elemental',
+    name: 'Conjurar Elemental',
+    circle: 4,
+    school: 'convocacao',
+    execution: 'completa',
+    range: 'medio',
+    duration: 'sustentada',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Transforma porção de elemento inerte (fogueira, tocha, poça) em elemental Grande (ar/água/fogo/terra). Parceiro mestre: destruidor (habilidade 2 PM) + 1 tipo do elemento. Auxilia apenas conjurador, não conta no limite. Ar: assassino/perseguidor/vigilante, dano eletricidade. Água: ajudante/guardião/médico, dano frio. Fogo: atirador/combatente/fortão, dano fogo. Terra: combatente/guardião/montaria, dano impacto.',
+    augments: [
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description:
+          'Elemental muda para Enorme e recebe dois tipos de parceiro do seu elemento.',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description:
+          'Convoca um elemental de cada tipo. Ao lançar, escolhe se cada auxilia conjurador ou aliado no alcance.',
+        requiresCircle: 5,
+      },
+    ],
+    bookPage: 185,
+  },
+  {
+    id: 'consagrar',
+    name: 'Consagrar',
+    circle: 1,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'longo',
+    duration: 'dia',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Enche esfera de 9m com energia positiva. Cura por efeitos de luz é maximizada na área — inclui dano em mortos-vivos por esses efeitos (ex: Curar Ferimentos cura automaticamente 18 PV). Não pode ser lançada em área com símbolo dedicado a outra divindade. Anula Profanar.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Além do normal, mortos-vivos na área sofrem -2 em testes e Defesa.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Aumenta as penalidades para mortos-vivos em -1 (máximo limitado pelo círculo máximo).',
+      },
+      {
+        pmCost: 9,
+        kind: 'muda',
+        description:
+          'Muda execução para 1 hora, duração para permanente, adiciona componente material (incenso e óleos T$ 1.000).',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 186,
+  },
+  {
+    id: 'contato-extraplanar',
+    name: 'Contato Extraplanar',
+    circle: 2,
+    school: 'adivinhacao',
+    execution: 'completa',
+    range: 'pessoal',
+    duration: 'dia',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Mente viaja a outro plano; contrata entidade (gênio/demônio) que se alimenta de mana. 6d6 dados de auxílio. Em teste de perícia: gasta 1d6 (+1d6 por círc acima do 3º) e adiciona ao teste. Cada "6" rolado suga 1 PM. Termina se gastar dados / ficar sem PM / fim do dia.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o número de dados de auxílio em +1.',
+      },
+      {
+        pmCost: 8,
+        kind: 'muda',
+        description:
+          'Muda os dados de auxílio para d12. Resultado 12 suga 2 PM.',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 186,
+  },
+  {
+    id: 'controlar-a-gravidade',
+    name: 'Controlar a Gravidade',
+    circle: 4,
+    school: 'transmutacao',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'sustentada',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Controla gravidade em cubo de 12m. Ação padrão muda efeito. Aumentar: início do turno = Atletismo — sucesso fatigado, falha fatigado + caído. Inverter: criaturas/objetos "caem" 12m ao teto em 1 rodada; obstáculo = 1d6 impacto por 1,5m; senão flutuam; voadoras normais; Reflexos para agarrar. Reduzir: Médios ou menores voam 6m; +20 Atletismo escalar/saltar; -2 ataque instável.',
+    augments: [],
+    bookPage: 186,
+  },
+  {
+    id: 'controlar-agua',
+    name: 'Controlar Água',
+    circle: 3,
+    school: 'transmutacao',
+    execution: 'padrao',
+    range: 'longo',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Controla água em esfera 30m. Congelar: água mundana congela, nadadores imóveis; escapar = padrão + Atletismo/Acrobacia. Derreter: gelo vira água, termina. Enchente: eleva nível 4,5m ou muda alvo p/ embarcação (+3m deslocamento). Evaporar: água/gelo evaporam; elementais/plantas monstruosas/imunes a frio 10d8 fogo (outros metade, Fortitude reduz metade). Partir: diminui nível 4,5m; caminho seco em raso; redemoinho em profundo; elementais lentos.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o dano em +2d8.',
+      },
+    ],
+    bookPage: 186,
+  },
+  {
+    id: 'controlar-fogo',
+    name: 'Controlar Fogo',
+    circle: 2,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Cria/molda/move/extingue chamas. Chamejar: armas +1d6 fogo (inclui naturais/desarmado). Esquentar: 1 objeto sofre 1d6 fogo/rodada + causa dano a quem segura/veste; pode pegar fogo; padrão + água resfria. Extinguir: 1 chama Grande ou menor apagada, nuvem 3m raio (camuflagem leve). Modelar: 1 chama Grande ou menor move 9m/rodada (ação livre); atravessa criatura = 2d6 fogo (1x/rodada por alvo).',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Muda duração para sustentada, resistência para Reflexos metade. Labaredas: ação de movimento projeta labareda em alvo curto = 4d6 fogo (Reflexos metade).',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o dano em +1d6 (exceto do efeito chamejar).',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description:
+          'Muda alvo para 1 criatura composta de fogo/lava/magma (elemental do fogo), resistência Fortitude parcial. Falha = reduzida a 0 PV. Sucesso = 5d6 dano.',
+      },
+    ],
+    bookPage: 187,
+  },
+  {
+    id: 'controlar-madeira',
+    name: 'Controlar Madeira',
+    circle: 2,
+    school: 'transmutacao',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      '1 objeto de madeira Grande ou menor. Objeto de criatura involuntária: Vontade anula. Fortalecer: armas dano +1 passo, escudos +2 Defesa (cumulativo), itens +5 RD e dobra PV. Modelar: muda forma (galho→espada, tronco→caixa). Sem mecanismos complexos ou consumíveis. Repelir: ataques com arma repelida falham; portas se abrem; objetos desviam. Retorcer: porta emperra (For CD 25); armas/itens -5 perícia; escudos sem bônus (penalidades mantém); barco afunda ao fim da cena.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Muda alcance para pessoal, alvo para conjurador, duração para 1 dia. Vira árvore Grande — não fala nem age, percebe arredores. Ataque dissipa. Sobrevivência CD 30 revela.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description:
+          'Muda alvo para quadrado 9m e duração para cena. Vegetação fica rígida/afiada: terreno difícil + 1d6 corte por 1,5m avançado.',
+      },
+      {
+        pmCost: 7,
+        kind: 'muda',
+        description: 'Muda o tamanho do alvo para Enorme ou menor.',
+        requiresCircle: 3,
+      },
+      {
+        pmCost: 12,
+        kind: 'muda',
+        description: 'Muda o tamanho do alvo para Colossal ou menor.',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 187,
+  },
+  {
+    id: 'controlar-o-clima',
+    name: 'Controlar o Clima',
+    circle: 4,
+    school: 'transmutacao',
+    execution: 'completa',
+    range: 'longo',
+    duration: 'definida',
+    durationNote: '4d12 horas',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Muda clima em esfera de 2km: chuva, neve, ventos, névoa. Efeitos em Cap 6: O Mestre.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description: 'Muda o raio para 3km e a duração para 1d4 dias.',
+        classOnly: 'druidas',
+      },
+    ],
+    bookPage: 187,
+  },
+  {
+    id: 'controlar-o-tempo',
+    name: 'Controlar o Tempo',
+    circle: 5,
+    school: 'transmutacao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'definida',
+    durationNote: 'veja texto',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Congelar o tempo: bolha do próprio tamanho — 3 rodadas locais (2 turnos extras) sem efeitos contínuos; efeitos que gerar não saem da área ocupada ao lançar; sem preparar ações. Saltar no tempo: até 5 criaturas voluntárias saltam 1-24h para o futuro; ressurgem no mesmo lugar; obstáculo = área vazia mais próxima. Voltar no tempo: desfaz rodada anterior (inclui PV/PM exceto custo desta magia); conjurador é o único que lembra; só 1x por rodada.',
+    augments: [],
+    bookPage: 187,
+  },
+  {
+    id: 'controlar-plantas',
+    name: 'Controlar Plantas',
+    circle: 1,
+    school: 'transmutacao',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'cena',
+    saveType: 'reflexos',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Área com vegetação (quadrado 9m). Plantas se enroscam — falha = enredado. Libertar: padrão + Acrobacia ou Atletismo. Terreno difícil. Início do turno: novo Reflexos tenta enredar.',
+    augments: [
+      {
+        pmCost: 0,
+        kind: 'muda',
+        description:
+          'Truque: muda área para alvo (1 planta) e resistência para nenhuma. Planta se move como animada, sem causar dano ou atrapalhar concentração.',
+      },
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Muda duração para instantânea. Plantas na área diminuem (podadas): terreno normal, sem camuflagem. Dissipa Controlar Plantas normal.',
+      },
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description:
+          'Além do normal, criaturas que falhem na resistência também ficam imóveis.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda alcance para pessoal, área para alvo (conjurador), resistência para nenhuma. Comunica com plantas (atitude prestativa), Diplomacia com plantas. Respostas simplórias.',
+      },
+    ],
+    bookPage: 188,
+  },
 ]
 
 export const SPELL_CATALOG: Readonly<Record<string, CatalogSpell>> =
