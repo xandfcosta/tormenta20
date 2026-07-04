@@ -3950,6 +3950,256 @@ const SPELLS: readonly CatalogSpell[] = [
     ],
     bookPage: 196,
   },
+  {
+    id: 'ligacao-sombria',
+    name: 'Ligação Sombria',
+    circle: 4,
+    school: 'necromancia',
+    execution: 'padrao',
+    range: 'longo',
+    duration: 'dia',
+    saveType: 'fortitude',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Conexão corpo-a-corpo com 1 criatura (marca idêntica na pele de ambos). Quando o conjurador sofrer dano ou condição: alvo faz Fortitude — falha = mesmo dano/condição. Termina se alvo chegar a 0 PV.',
+    augments: [
+      {
+        pmCost: 5,
+        kind: 'aumenta',
+        description:
+          'A magia não termina se o alvo chegar a 0 PV (dano por esta magia pode matá-lo).',
+      },
+    ],
+    bookPage: 196,
+  },
+  {
+    id: 'ligacao-telepatica',
+    name: 'Ligação Telepática',
+    circle: 2,
+    school: 'adivinhacao',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'dia',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Elo mental entre 2 criaturas voluntárias (INT -3+; conjurador pode ser uma). Comunicam sem idioma comum, sem limite de distância; falha em mundos diferentes.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o número de alvos em +1.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description:
+          'Muda alvo para 1 criatura. Cria elo mental — ação de movimento vê/ouve pelos sentidos. Involuntária faz Vontade para suprimir por 1 hora.',
+        requiresCircle: 3,
+      },
+    ],
+    bookPage: 197,
+  },
+  {
+    id: 'localizacao',
+    name: 'Localização',
+    circle: 2,
+    school: 'adivinhacao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Encontra 1 criatura ou objeto (geral ou específico). Indica direção e distância do mais próximo em esfera 90m. Específico exige imagem precisa; imprecisa = falha (PM gastos). Bloqueada por fina camada de chumbo.',
+    augments: [
+      {
+        pmCost: 0,
+        kind: 'muda',
+        description:
+          'Truque: muda alvo para conjurador. Sabe onde fica o norte + +5 Sobrevivência para se orientar.',
+      },
+      {
+        pmCost: 5,
+        kind: 'aumenta',
+        description:
+          'Aumenta a área em fator de 10 (90m→900m, 900m→9km etc).',
+      },
+    ],
+    bookPage: 197,
+  },
+  {
+    id: 'manto-do-cruzado',
+    name: 'Manto do Cruzado',
+    circle: 4,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'sustentada',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Manto de energia divina. Escolha versão ao aprender (fixa). Manto de Luz: início do turno, conjurador + aliados em alcance curto recuperam 2d8 PV; imune a trevas; ataques causam +2d8 dano de luz. Manto de Trevas: início do turno, inimigos em alcance curto sofrem 4d8 trevas; conjurador cura metade do dano causado.',
+    augments: [],
+    bookPage: 197,
+  },
+  {
+    id: 'mao-poderosa-de-talude',
+    name: 'Mão Poderosa de Talude',
+    circle: 4,
+    school: 'convocacao',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'sustentada',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Mão Grande flutuante entre conjurador e oponente escolhido. Cobertura leve (+5 Defesa) contra o oponente; imune a escuridão/invisibilidade/metamorfose/disfarce. Defesa 20, PV e resistências do conjurador. Ação de movimento: muda oponente ou executa. Agarrar: manobra usando Misticismo +10 (mantém sem dano). Esmagar: 2d6+10 impacto em agarrado. Empurrar: manobra usando Misticismo +10 (mão acompanha).',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o dano em +1d6+5.',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description: 'Muda o bônus em Misticismo para +20.',
+        requiresCircle: 5,
+      },
+    ],
+    bookPage: 197,
+  },
+  {
+    id: 'mapear',
+    name: 'Mapear',
+    circle: 2,
+    school: 'adivinhacao',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Fagulha esboça mapa em superfície/objeto plano. Lugar conhecido = mapa completo; desconhecido = esboço geral + ponto de referência + lugar de interesse (mestre). Máximo 10km². Dentro de construção = mostra o andar atual.',
+    augments: [
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description:
+          'Muda alvo para 1 criatura e duração para 1 hora. Criatura tocada descobre caminho mais direto para entrar/sair de um lugar (não localiza criaturas ou objetos). Passar >1h da magia perde conhecimento.',
+      },
+    ],
+    bookPage: 198,
+  },
+  {
+    id: 'marca-da-obediencia',
+    name: 'Marca da Obediência',
+    circle: 2,
+    school: 'encantamento',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'cena',
+    saveType: 'vontade',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Grava marca mística em 1 criatura + ordem verbal ("não me ataque", "siga-me", "não saia"). Alvo gasta todas as ações do turno para obedecer. Sem ordens genéricas ("ajude-me") ou suicidas. Cada rodada: Vontade — sucesso dissipa.',
+    augments: [
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description:
+          'Muda a duração para 1 dia. Fora de combate, alvo testa Vontade só a cada hora.',
+        requiresCircle: 3,
+      },
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description:
+          'Falha em Vontade = marca causa 3d6 dano psíquico.',
+        requiresCircle: 3,
+      },
+    ],
+    bookPage: 198,
+  },
+  {
+    id: 'mata-dragao',
+    name: 'Mata-Dragão',
+    circle: 5,
+    school: 'evocacao',
+    execution: 'completa',
+    range: 'pessoal',
+    duration: 'instantanea',
+    saveType: 'reflexos',
+    resistance: 'metade',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Execução ritual de 2 rodadas (2 cânticos). Carga de energia em cone 30m: 20d12 essência em criaturas/construções/objetos livres. Cada resultado 12 rolado = +1d12. Lenta, difícil em combate.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Aumenta o dano em +1d12.',
+      },
+    ],
+    bookPage: 198,
+  },
+  {
+    id: 'mente-divina',
+    name: 'Mente Divina',
+    circle: 2,
+    school: 'adivinhacao',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      '1 criatura recebe +2 em Inteligência, Sabedoria ou Carisma. Sem PV/PM/perícias adicionais.',
+    augments: [
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description: 'Muda alcance para curto e alvo para criaturas escolhidas.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description: '+2 nos três atributos mentais.',
+        requiresCircle: 3,
+      },
+      {
+        pmCost: 7,
+        kind: 'muda',
+        description: '+4 no atributo escolhido.',
+        requiresCircle: 4,
+      },
+      {
+        pmCost: 12,
+        kind: 'muda',
+        description: '+4 nos três atributos mentais.',
+        requiresCircle: 5,
+      },
+    ],
+    bookPage: 198,
+  },
 ]
 
 export const SPELL_CATALOG: Readonly<Record<string, CatalogSpell>> =
