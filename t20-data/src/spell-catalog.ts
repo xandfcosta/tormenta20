@@ -4559,6 +4559,331 @@ const SPELLS: readonly CatalogSpell[] = [
     ],
     bookPage: 200,
   },
+  {
+    id: 'pele-de-pedra',
+    name: 'Pele de Pedra',
+    circle: 3,
+    school: 'transmutacao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Pele de rocha: RD 5.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description: 'Muda o alcance para toque e o alvo para 1 criatura.',
+      },
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description: 'Muda a duração para 1 dia.',
+      },
+      {
+        pmCost: 4,
+        kind: 'aumenta',
+        description: 'Pele de aço: RD 10.',
+        requiresCircle: 4,
+      },
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description:
+          'Muda alcance para toque, alvo para 1 criatura, duração para 1d4 rodadas + Resistência Fortitude anula. Transforma alvo + equipamento em estátua inerte sem consciência: mesmos PV + RD 8. Quebrada = morre.',
+        requiresCircle: 4,
+      },
+      {
+        pmCost: 9,
+        kind: 'muda',
+        description: 'Como acima, mas duração permanente.',
+        requiresCircle: 5,
+      },
+    ],
+    bookPage: 201,
+  },
+  {
+    id: 'perdicao',
+    name: 'Perdição',
+    circle: 1,
+    school: 'necromancia',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Paladino'],
+    baseEffect:
+      'Amaldiçoa criaturas escolhidas: -1 em ataque e dano. Anula Bênção.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Aumenta as penalidades em -1 (máximo limitado pelo círculo máximo).',
+      },
+    ],
+    bookPage: 201,
+  },
+  {
+    id: 'poeira-da-podridao',
+    name: 'Poeira da Podridão',
+    circle: 3,
+    school: 'necromancia',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'cena',
+    saveType: 'fortitude',
+    resistance: 'metade',
+    components: VG,
+    classes: ['Clérigo', 'Paladino'],
+    baseEffect:
+      'Nuvem 6m raio de energia negativa. Ao lançar e no início do turno do conjurador: criaturas na área sofrem 2d8+8 trevas (Fortitude metade). Falha = sem cura de PV por 1 rodada.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o dano em +1d8+4.',
+      },
+    ],
+    bookPage: 201,
+  },
+  {
+    id: 'possessao',
+    name: 'Possessão',
+    circle: 5,
+    school: 'encantamento',
+    execution: 'padrao',
+    range: 'longo',
+    duration: 'dia',
+    saveType: 'vontade',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Projeta consciência no corpo do alvo (1 criatura). Controle total; próprio corpo inconsciente; alvo inerte. Usa ficha própria com atributos físicos/deslocamento do alvo. Sucesso: alvo sabe da tentativa, imune por 1 dia. Corpo alvo morre com conjurador dentro: alvo morre; Vontade contra CD da própria magia — sucesso volta ao corpo (se em alcance); falha morre. Voltar voluntariamente = ação livre.',
+    augments: [
+      {
+        pmCost: 5,
+        kind: 'aumenta',
+        description: 'Recebe acesso às habilidades de raça e classe da criatura.',
+      },
+      {
+        pmCost: 5,
+        kind: 'aumenta',
+        description:
+          'Enquanto durar e em alcance do próprio corpo, "salta" de possuída para nova (Vontade — falha = assume nova, anterior recobra consciência).',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description:
+          'Muda duração para permanente, destrói corpo original. Possuída faz Vontade no início do dia para retomar; sucesso recobra (conjurador fica inerte). Corpo morre + nova em alcance = pode possuir. Enquanto houver corpos, é imortal.',
+      },
+    ],
+    bookPage: 201,
+  },
+  {
+    id: 'potencia-divina',
+    name: 'Potência Divina',
+    circle: 3,
+    school: 'transmutacao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'sustentada',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Paladino'],
+    baseEffect:
+      'Canaliza divindade: +1 categoria de tamanho (equipamento ajusta), Força +4, RD 10. Não pode lançar magias enquanto ativa.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o bônus de Força em +1.',
+      },
+      {
+        pmCost: 5,
+        kind: 'aumenta',
+        description: 'Aumenta a RD em +5.',
+      },
+    ],
+    bookPage: 201,
+  },
+  {
+    id: 'premonicao',
+    name: 'Premonição',
+    circle: 4,
+    school: 'adivinhacao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Paladino'],
+    baseEffect:
+      'Vislumbres do futuro. Uma vez por rodada rola novamente um teste recém realizado; aceita o novo resultado.',
+    augments: [
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description:
+          'Muda execução para reação, alcance para toque, alvo para 1 criatura, duração para instantânea. Contra criatura que acabou de testar — obriga novo teste e aceitar novo resultado. Involuntária faz Vontade para negar.',
+      },
+      {
+        pmCost: 10,
+        kind: 'muda',
+        description: 'Muda a duração para 1 dia.',
+      },
+    ],
+    bookPage: 201,
+  },
+  {
+    id: 'primor-atletico',
+    name: 'Primor Atlético',
+    circle: 1,
+    school: 'transmutacao',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      '1 criatura: +9m deslocamento + +10 Atletismo.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description:
+          'Além do normal, +20 Atletismo para saltar (total +30).',
+      },
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description:
+          'Além do normal, escala paredes/tetos sem Atletismo. Mãos livres (uma pode segurar). Não fica desprevenido.',
+      },
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Muda execução para ação de movimento, alcance para pessoal, alvo para conjurador, duração para instantânea. Salta em corpo a corpo de criatura em alcance — se atacar corpo a corpo neste turno, ignora benefícios/penalidades de investida + arma causa 1 dado extra do mesmo tipo.',
+      },
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description:
+          'Além do normal, em perícias baseadas em For/Des/Con rola 2 dados e usa o melhor. Não afeta ataque ou resistência.',
+        requiresCircle: 2,
+      },
+    ],
+    bookPage: 201,
+  },
+  {
+    id: 'profanar',
+    name: 'Profanar',
+    circle: 1,
+    school: 'necromancia',
+    execution: 'padrao',
+    range: 'longo',
+    duration: 'dia',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Paladino'],
+    baseEffect:
+      'Enche esfera 9m com energia negativa. Dano de trevas maximizado na área. Não pode ser lançada em área com símbolo dedicado a outra divindade. Anula Consagrar.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Além do normal, mortos-vivos na área recebem +2 Defesa e +2 em testes.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Aumenta os bônus para mortos-vivos em +1 (máximo limitado pelo círculo máximo).',
+      },
+      {
+        pmCost: 9,
+        kind: 'muda',
+        description:
+          'Muda execução para 1 hora, duração para permanente, adiciona componente material (incenso e óleos T$ 1.000).',
+        requiresCircle: 4,
+      },
+    ],
+    bookPage: 202,
+  },
+  {
+    id: 'projetar-consciencia',
+    name: 'Projetar Consciência',
+    circle: 5,
+    school: 'adivinhacao',
+    execution: 'padrao',
+    range: 'ilimitado',
+    duration: 'sustentada',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Consciência sai do corpo e vai a local conhecido ou perto de criatura (mesmo plano). Forma fantasmagórica invisível — ação de movimento para se mostrar. Move 18m, atravessa objetos sólidos. Restrita ao local escolhido ou alcance curto da criatura alvo. Vê e ouve como presente. Fala mentalmente com criaturas visíveis com idioma comum.',
+    augments: [
+      {
+        pmCost: 10,
+        kind: 'aumenta',
+        description:
+          'Além do normal, projeção lança magias sem componentes materiais e sem duração sustentada. Forma fantasmagórica igual a Forma Etérea (afetada por abjuração/essência), magias lançadas afetam corpóreas.',
+      },
+    ],
+    bookPage: 202,
+  },
+  {
+    id: 'protecao-contra-magia',
+    name: 'Proteção Contra Magia',
+    circle: 3,
+    school: 'abjuracao',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Paladino'],
+    baseEffect:
+      '1 criatura: +5 em testes de resistência contra magias.',
+    augments: [
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description: 'Muda o bônus para +10.',
+        requiresCircle: 4,
+      },
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description: 'Alvo fica imune a uma escola de magia à escolha.',
+        requiresCircle: 4,
+      },
+      {
+        pmCost: 9,
+        kind: 'muda',
+        description: 'Alvo fica imune a duas escolas de magia à escolha.',
+        requiresCircle: 5,
+      },
+    ],
+    bookPage: 202,
+  },
 ]
 
 export const SPELL_CATALOG: Readonly<Record<string, CatalogSpell>> =
