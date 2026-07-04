@@ -1430,6 +1430,325 @@ const SPELLS: readonly CatalogSpell[] = [
     augments: [],
     bookPage: 179,
   },
+  {
+    id: 'animar-objetos',
+    name: 'Animar Objetos',
+    circle: 4,
+    school: 'transmutacao',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Concede vida a até 8 objetos Minúsculos ou Pequenos / 4 Médios / 2 Grandes / 1 Enorme. Cada objeto vira parceiro sob controle (não conta no limite). Comando mental por ação de movimento. Construtos: For/Des/PV por tamanho; sem Defesa/testes de resistência; falham em opostos. Podem sofrer ações hostis. Não afeta itens mágicos nem carregados. Estatísticas: Minúsculo For -3 Des 4 5PV; Pequeno For 0 Des 2 10PV; Médio For 0 Des 1 20PV; Grande For 2 Des 0 40PV; Enorme For 4 Des -2 80PV.',
+    augments: [
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description:
+          'Muda a duração para permanente, adiciona componente material (prataria T$ 1.000). Máximo de objetos animados = metade do nível.',
+      },
+    ],
+    bookPage: 179,
+  },
+  {
+    id: 'anular-a-luz',
+    name: 'Anular a Luz',
+    circle: 3,
+    school: 'necromancia',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'definida',
+    durationNote: 'ver texto (aura persistente até fim da cena; enjôo 1d4 rodadas)',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida'],
+    baseEffect:
+      'Onda de escuridão em esfera de 6m de raio. Dissipa magias até 3º círculo na área (Religião oposto por CD). Aliados na área: aura sombria, +4 Defesa até fim da cena. Inimigos ficam enjoados 1d4 rodadas (uma vez por cena). Anula Dispersar as Trevas (instantâneo).',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o bônus na Defesa em +1.',
+      },
+      {
+        pmCost: 4,
+        kind: 'muda',
+        description: 'Muda as magias dissipadas para até 4º círculo.',
+        requiresCircle: 4,
+      },
+      {
+        pmCost: 9,
+        kind: 'muda',
+        description: 'Muda as magias dissipadas para até 5º círculo.',
+        requiresCircle: 5,
+      },
+    ],
+    bookPage: 180,
+  },
+  {
+    id: 'aparencia-perfeita',
+    name: 'Aparência Perfeita',
+    circle: 2,
+    school: 'ilusao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Rosto idealizado, porte garboso, voz melodiosa. CAR 5+ recebe +2 no atributo; senão vira 5 (conta como bônus). +5 em Diplomacia e Enganação. Ao terminar, observadores suspeitam; pessoas que viram o alvo sob a magia sentem "algo errado" em condições normais. Ao fim da cena, gastar novamente os PM como ação livre mantém ativa. Não fornece PV/PM adicionais.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description: 'Muda o alcance para toque e o alvo para 1 humanoide.',
+      },
+    ],
+    bookPage: 180,
+  },
+  {
+    id: 'aprisionamento',
+    name: 'Aprisionamento',
+    circle: 5,
+    school: 'abjuracao',
+    execution: 'completa',
+    range: 'curto',
+    duration: 'permanente',
+    saveType: 'vontade',
+    resistance: 'anula',
+    components: ['verbal', 'gestual', 'material'],
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Prisão mágica para 1 criatura. Falha na resistência = sofre efeito; sucesso = imune por 1 semana. Preso: não respira, não come, não envelhece; adivinhações não localizam. Formas (componente material T$ 1.000 cada): Acorrentamento (paralisado, correntes de mitral); Contenção Mínima (2cm dentro de gema); Prisão Dimensional (semiplano protegido); Sepultamento (esfera enterrada); Sono Eterno (adormecido). Condição de libertação especificada ao lançar — não pode se basear em estatísticas intangíveis.',
+    augments: [],
+    bookPage: 180,
+  },
+  {
+    id: 'area-escorregadia',
+    name: 'Área Escorregadia',
+    circle: 1,
+    school: 'convocacao',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'cena',
+    saveType: 'reflexos',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Superfície (quadrado de 3m ou 1 objeto) coberta por substância escorregadia. Criatura na área: Reflexos ou cai. Rodadas seguintes: movimento requer Acrobacia CD 10 (equilíbrio). Item afetado: portador testa resistência ou derruba/não usa.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Aumenta a área em +1 quadrado de 1,5m.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description: 'Muda a CD dos testes de Acrobacia para 15.',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description: 'Muda a CD dos testes de Acrobacia para 20.',
+      },
+    ],
+    bookPage: 180,
+  },
+  {
+    id: 'arma-espiritual',
+    name: 'Arma Espiritual',
+    circle: 1,
+    school: 'convocacao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida'],
+    baseEffect:
+      'Invoca a arma preferida da divindade flutuando ao lado. Uma vez por rodada, ao sofrer ataque corpo a corpo, reação faz a arma causar 2d6 dano do tipo da arma no atacante. Dissipa se conjurador morrer.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Além do normal, a arma protege. +1 na Defesa.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o bônus na Defesa em +1.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda a duração para sustentada. Uma vez por rodada, ação livre faz a arma acertar automaticamente alvo adjacente. Se atacar, não contra-ataca até o próximo turno.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description: 'Muda o tipo do dano para essência.',
+        requiresCircle: 2,
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Aumenta o dano da arma em +1d6 (bônus máximo limitado pelo círculo máximo).',
+      },
+      {
+        pmCost: 5,
+        kind: 'aumenta',
+        description:
+          'Invoca duas armas — contra-ataca (ou ataca) duas vezes por rodada.',
+        requiresCircle: 3,
+      },
+    ],
+    bookPage: 180,
+  },
+  {
+    id: 'arma-magica',
+    name: 'Arma Mágica',
+    circle: 1,
+    school: 'transmutacao',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida'],
+    baseEffect:
+      '1 arma empunhada vira mágica; +1 em ataque e dano (bônus de encanto). Se o conjurador empunhar, pode usar atributo-chave de magias em vez do original em ataque (não cumulativo).',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Aumenta o bônus em +1 (bônus máximo limitado pelo círculo máximo).',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Arma causa +1d6 de dano de ácido, eletricidade, fogo ou frio (escolhido ao lançar). Uma vez apenas.',
+      },
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description: 'Muda o bônus de dano acima para +2d6.',
+      },
+    ],
+    bookPage: 181,
+  },
+  {
+    id: 'armamento-da-natureza',
+    name: 'Armamento da Natureza',
+    circle: 1,
+    school: 'transmutacao',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida'],
+    baseEffect:
+      'Fortalece arma mundana primitiva (sem custo T$: bordão, clava, funda, tacape), arma natural ou ataque desarmado. Dano +1 passo, considerada mágica. Ao lançar, pode mudar tipo de dano (corte, impacto ou perfuração).',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Fornece +1 nos testes de ataque com a arma.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description: 'Muda a execução para ação de movimento.',
+      },
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description: 'Aumenta o bônus nos testes de ataque em +1.',
+      },
+      {
+        pmCost: 5,
+        kind: 'aumenta',
+        description: 'Aumenta o dano da arma em mais um passo.',
+      },
+    ],
+    bookPage: 181,
+  },
+  {
+    id: 'assassino-fantasmagorico',
+    name: 'Assassino Fantasmagórico',
+    circle: 4,
+    school: 'necromancia',
+    execution: 'padrao',
+    range: 'longo',
+    duration: 'definida',
+    durationNote: 'cena, até ser descarregada',
+    saveType: 'vontade',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Cria imagem do maior medo da vítima (1 criatura). Só ela vê; outros veem espectro sombrio. Espectro surge adjacente ao conjurador; Vontade da vítima: sucesso = percebe ilusão, dissipa. Falha: espectro flutua 18m/rodada em direção à vítima (fim do turno). Incorpóreo, imune a magias (exceto dissipadoras). Adjacente à vítima no fim do turno: Fortitude — sucesso = 6d6 dano de trevas (não reduz abaixo de 0 PV, não sangra); falha = colapsa a -1 PV sangrando. Desaparece se vítima inconsciente / fora do alcance longo / dissipado.',
+    augments: [],
+    bookPage: 181,
+  },
+  {
+    id: 'augurio',
+    name: 'Augúrio',
+    circle: 2,
+    school: 'adivinhacao',
+    execution: 'completa',
+    range: 'pessoal',
+    duration: 'instantanea',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Druida'],
+    baseEffect:
+      'Prevê resultado de ação até 1h no futuro. Mestre rola 1d6 secreto: 2-6 magia funciona e retorna "felicidade" / "miséria" / "felicidade e miséria" / "nada". Resultado 1: falha e retorna "nada" (não distinguível de sucesso). Múltiplas lançadas sobre mesmo assunto sempre retornam o primeiro resultado.',
+    augments: [
+      {
+        pmCost: 3,
+        kind: 'muda',
+        description:
+          'Muda a execução para 1 minuto. Consulta divindade com pergunta sobre evento até 1 dia no futuro. 2-6: resposta (frase, profecia ou enigma) com pistas de caminho. Falha: sem resposta.',
+        requiresCircle: 3,
+      },
+      {
+        pmCost: 7,
+        kind: 'muda',
+        description:
+          'Muda execução para 10 min e duração para 1 min. Consulta divindade — uma pergunta por rodada respondida por sim/não/não sei. Chance de falha por pergunta; falha = "não sei".',
+        requiresCircle: 4,
+      },
+      {
+        pmCost: 7,
+        kind: 'muda',
+        description: 'O mestre rola 1d12; a magia só falha em resultado 1.',
+      },
+      {
+        pmCost: 12,
+        kind: 'muda',
+        description: 'O mestre rola 1d20; a magia só falha em resultado 1.',
+      },
+    ],
+    bookPage: 181,
+  },
 ]
 
 export const SPELL_CATALOG: Readonly<Record<string, CatalogSpell>> =
