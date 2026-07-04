@@ -5805,6 +5805,323 @@ const SPELLS: readonly CatalogSpell[] = [
     ],
     bookPage: 207,
   },
+  {
+    id: 'talho-invisivel-de-edauros',
+    name: 'Talho Invisível de Edauros',
+    circle: 4,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'instantanea',
+    saveType: 'fortitude',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Lâmina de ar em cone 9m: 10d8 corte + sangrando. Sucesso = metade dano + sem sangramento.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o dano em +2d8.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda alvo para conjurador, duração para sustentada. Uma vez por rodada, ação de movimento dispara lâmina de ar em alvo em alcance médio: 6d8 corte (Fortitude metade).',
+      },
+    ],
+    bookPage: 207,
+  },
+  {
+    id: 'teia',
+    name: 'Teia',
+    circle: 1,
+    school: 'convocacao',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'cena',
+    saveType: 'reflexos',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Fibras entrelaçadas pegajosas em cubo 6m. Falha em Reflexos = enredada. Libertar: ação padrão + Acrobacia/Atletismo. Área = terreno difícil. Inflamável — dano de fogo destrói e liberta criaturas em chamas.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description:
+          'Além do normal, falha em Reflexos também deixa imóvel.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Início dos turnos: magia afeta novamente qualquer criatura na área (novo Reflexos).',
+        requiresCircle: 2,
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta a área em +1 cubo de 1,5m.',
+      },
+    ],
+    bookPage: 208,
+  },
+  {
+    id: 'telecinesia',
+    name: 'Telecinesia',
+    circle: 3,
+    school: 'transmutacao',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'sustentada',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Move objetos/criaturas por concentração. Força Contínua (sustentada): move 1 criatura Médio- ou objeto até 10 espaços a 6m/rodada; alvo anula por Vontade; cai no chão ao sair do alcance/terminar. Empurrão Violento (instantânea): arremessa até 10 objetos (10 espaços) até 3m entre si até o alcance. Dano por espaço: 1 impacto (macio) a 1d6 (duro/afiado). Alvos: Reflexos metade. Criaturas Médio- podem ser arremessadas (Vontade evita). Criatura contra superfície = 1d6 impacto por 3m "voados".',
+    augments: [
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description:
+          'Aumenta o tamanho máximo da criatura em uma categoria (Grande/Enorme/Colossal) ou dobra a quantidade do objeto.',
+      },
+    ],
+    bookPage: 208,
+  },
+  {
+    id: 'tentaculos-de-trevas',
+    name: 'Tentáculos de Trevas',
+    circle: 3,
+    school: 'necromancia',
+    execution: 'padrao',
+    range: 'medio',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Círculo sombrio (esfera 6m) — tentáculos de treva viscosa. Ao lançar e início do turno do conjurador: manobra agarrar (Misticismo) contra cada criatura na área. Sucesso = agarrada; se já agarrada = esmagada 4d6 trevas. Terreno difícil. Tentáculos imunes a dano.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o raio da área em +3m.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o dano dos tentáculos em +2d6.',
+      },
+    ],
+    bookPage: 209,
+  },
+  {
+    id: 'terremoto',
+    name: 'Terremoto',
+    circle: 4,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'longo',
+    duration: 'definida',
+    durationNote: '1 rodada',
+    saveType: 'reflexos',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Tremor de terra em esfera 30m por 1 rodada. Criaturas em solo = atordoadas (1x/cena). Barreiras físicas não interrompem. Caverna/subterrâneo: teto cai, 12d6 impacto + agarradas (Reflexos metade + evita agarrar). Construção: 200 impacto derruba madeira/alvenaria simples; criaturas dentro sofrem efeito de caverna. Espaço aberto: fendas por rolagem ímpar em 1 dado; Reflexos evita cair; fendas fecham no próximo turno (mata quem dentro). Penhasco: desmorona horizontal = distância da queda; 12d6 impacto + agarrada (Reflexos metade + evita). Rio/lago/pântano: fissuras drenam formando lamaçal; Reflexos evita afundar/agarrar; fissuras fecham no próximo turno (afoga agarradas). Agarradas sofrem 1d6/rodada; escapar: ação completa + Atletismo.',
+    augments: [],
+    bookPage: 209,
+  },
+  {
+    id: 'toque-chocante',
+    name: 'Toque Chocante',
+    circle: 1,
+    school: 'evocacao',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'instantanea',
+    saveType: 'fortitude',
+    resistance: 'metade',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Arcos elétricos na mão: 2d8+2 eletricidade em 1 criatura. Armadura de metal (ou muito metal, mestre decide) = -5 na resistência.',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Aumenta o dano em +1d8+1.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda resistência para nenhuma. Como parte da execução: ataque corpo a corpo — acerto = dano do ataque + da magia.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda alcance para pessoal e alvo para esfera 6m raio. Raios pelos dedos afetam todas na área.',
+      },
+    ],
+    bookPage: 209,
+  },
+  {
+    id: 'toque-da-morte',
+    name: 'Toque da Morte',
+    circle: 5,
+    school: 'necromancia',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'instantanea',
+    saveType: 'fortitude',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Mão exala energia letal em 1 criatura: 10d8+10 trevas. Se alvo <metade PV: Fortitude — sucesso = dano normal; falha = PV reduzidos a -10.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description:
+          'Muda alcance para curto. Raio púrpuro do indicador em vez de toque.',
+      },
+      {
+        pmCost: 10,
+        kind: 'muda',
+        description:
+          'Muda alcance para curto e alvo para inimigos no alcance. Raios púrpuros pelos dedos.',
+      },
+    ],
+    bookPage: 209,
+  },
+  {
+    id: 'tranquilidade',
+    name: 'Tranquilidade',
+    circle: 1,
+    school: 'encantamento',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'cena',
+    saveType: 'vontade',
+    resistance: 'parcial',
+    components: VG,
+    classes: ['Clérigo', 'Druida', 'Paladino'],
+    baseEffect:
+      'Ondas de serenidade em 1 animal ou humanoide. Falha = atitude indiferente (p259), não pode atacar/ação agressiva. Sucesso = -1 em ataque. Ação hostil contra alvo/aliados dissipa (atitude anterior ou pior).',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description: 'Muda o alvo para 1 criatura.',
+      },
+      {
+        pmCost: 1,
+        kind: 'aumenta',
+        description: 'Aumenta o número de alvos em +1.',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description: 'Muda alcance para médio e alvo para criaturas escolhidas.',
+        requiresCircle: 3,
+      },
+    ],
+    bookPage: 210,
+  },
+  {
+    id: 'transformacao-de-guerra',
+    name: 'Transformação de Guerra',
+    circle: 3,
+    school: 'transmutacao',
+    execution: 'padrao',
+    range: 'pessoal',
+    duration: 'sustentada',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Máquina de combate: +6 Defesa/ataque/dano corpo a corpo + 30 PV temporários. Não pode lançar magias. Proficiente em todas as armas.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Aumenta os bônus (Defesa/ataque/dano) em +1 e PV temporários em +10.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description:
+          'Adiciona componente material (barra de adamante T$ 100). Forma metálica: RD 10 + imunidade a atordoamento e efeitos de cansaço/encantamento/metabolismo/trevas/veneno + não respira.',
+      },
+    ],
+    bookPage: 210,
+  },
+  {
+    id: 'transmutar-objetos',
+    name: 'Transmutar Objetos',
+    circle: 1,
+    school: 'transmutacao',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Molda matéria bruta em novo objeto: mundana Pequeno- até T$ 25 (balde, espada). Reverte no fim da cena ou tocado por chumbo. Sem consumíveis (alimentos, alquímicos), sem mecanismos complexos (bestas, armas de fogo). Anula Despedaçar.',
+    augments: [
+      {
+        pmCost: 0,
+        kind: 'muda',
+        description:
+          'Truque: muda alvo para 1 objeto mundano Minúsculo (ou quantidade equivalente) + duração para instantânea. Altera propriedades físicas (colorir, limpar, sujar, aquecer, esfriar, umedecer, cura 1 PV consertando falhas pequenas). Objeto afetado 1x/dia.',
+      },
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Muda alcance para toque, alvo para 1 construto, duração para instantânea. Cura 2d8 PV. Cada +2 PM aumenta cura em +1d8.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Aumenta o limite de tamanho do objeto em uma categoria.',
+      },
+      {
+        pmCost: 3,
+        kind: 'aumenta',
+        description:
+          'Aumenta o preço máximo em fator 10 (+3 PM por T$ 250, +6 PM por T$ 2.500 etc).',
+      },
+      {
+        pmCost: 5,
+        kind: 'muda',
+        description:
+          'Muda alvo para 1 objeto mundano + duração para instantânea. Cura todos os PV do objeto (fora dos limites de tamanho/preço), só se destruído (cinzas, desintegrado).',
+        requiresCircle: 3,
+      },
+      {
+        pmCost: 9,
+        kind: 'muda',
+        description: 'Como o aprimoramento anterior, mas afeta itens mágicos.',
+      },
+    ],
+    bookPage: 210,
+  },
 ]
 
 export const SPELL_CATALOG: Readonly<Record<string, CatalogSpell>> =
