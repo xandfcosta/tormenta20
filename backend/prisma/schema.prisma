@@ -29,8 +29,29 @@ model Campaign {
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  sessions    Session[]
 
   @@index([ownerId])
+}
+
+/// A single play session inside a Campaign. Owned by the campaign;
+/// lifecycle transitions via /start (status=active, startedAt=now) and
+/// /end (status=ended, endedAt=now).
+model Session {
+  id            Int       @id @default(autoincrement())
+  campaignId    Int
+  campaign      Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  title         String?
+  sessionNumber Int
+  notes         String?
+  /// 'planned' | 'active' | 'ended'
+  status        String    @default("planned")
+  startedAt     DateTime?
+  endedAt       DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([campaignId])
 }
 
 model Character {
