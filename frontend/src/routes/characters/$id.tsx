@@ -1744,6 +1744,14 @@ function SheetHeader({
           ))}
         </div>
         <LevelBadge character={character} />
+        <Link
+          to="/characters/$id/sheet"
+          params={{ id: String(character.id) }}
+        >
+          <Button variant="outline" size="sm">
+            Ficha computada
+          </Button>
+        </Link>
       </div>
     </header>
   )
