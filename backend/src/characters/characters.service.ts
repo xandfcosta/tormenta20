@@ -707,23 +707,18 @@ export class CharactersService {
       }
     }
 
-    const vitalsPatch: { hpCurrent?: number; mpCurrent?: number } = {};
-    if (spec.instant?.hp) {
-      const gain =
-        dto.hpRolled ?? rollAverage(spec.instant.hp.dice, spec.instant.hp.bonus);
-      vitalsPatch.hpCurrent = Math.min(
-        character.hpMax,
-        character.hpCurrent + gain,
-      );
-    }
-    if (spec.instant?.mp) {
-      const gain =
-        dto.mpRolled ?? rollAverage(spec.instant.mp.dice, spec.instant.mp.bonus);
-      vitalsPatch.mpCurrent = Math.min(
-        character.mpMax,
-        character.mpCurrent + gain,
-      );
-    }
+    /* Roll the instant gain outside the transaction so retries don't
+     * bump the dice again — the roll is a single decision, not part of
+     * the write-atomicity story. Actual clamp against hp/mp happens
+     * against a *fresh* read inside the tx (BC1 audit finding). */
+    const hpGain = spec.instant?.hp
+      ? (dto.hpRolled ??
+        rollAverage(spec.instant.hp.dice, spec.instant.hp.bonus))
+      : null;
+    const mpGain = spec.instant?.mp
+      ? (dto.mpRolled ??
+        rollAverage(spec.instant.mp.dice, spec.instant.mp.bonus))
+      : null;
 
     try {
       await this.prisma.$transaction(async (tx) => {
@@ -749,7 +744,34 @@ export class CharactersService {
         } else {
           await tx.characterItem.delete({ where: { id: itemId } });
         }
-        if (Object.keys(vitalsPatch).length > 0) {
+        if (hpGain !== null || mpGain !== null) {
+          /* Re-read hp/mp inside the tx so a parallel consume doesn't
+           * clobber our gain. Without this, two concurrent potions
+           * both observe the pre-write HP and both write "old + gain",
+           * dropping one of the gains silently. */
+          const fresh = await tx.character.findUnique({
+            where: { id: characterId },
+            select: {
+              hpCurrent: true,
+              hpMax: true,
+              mpCurrent: true,
+              mpMax: true,
+            },
+          });
+          if (!fresh) return;
+          const vitalsPatch: { hpCurrent?: number; mpCurrent?: number } = {};
+          if (hpGain !== null) {
+            vitalsPatch.hpCurrent = Math.min(
+              fresh.hpMax,
+              fresh.hpCurrent + hpGain,
+            );
+          }
+          if (mpGain !== null) {
+            vitalsPatch.mpCurrent = Math.min(
+              fresh.mpMax,
+              fresh.mpCurrent + mpGain,
+            );
+          }
           await tx.character.update({
             where: { id: characterId },
             data: vitalsPatch,

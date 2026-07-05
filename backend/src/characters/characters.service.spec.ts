@@ -150,6 +150,11 @@ class FakePrisma {
         delete: this.characterItemDelete,
       },
       character: {
+        /* BC1: consumeItem re-reads hp/mp/max inside the tx to avoid
+         * read-modify-write races. Fake exposes findUnique so the
+         * service can pull fresh vitals from the "same row" the test
+         * seeded (`lastSeed`). */
+        findUnique: async () => this.lastSeed,
         update: this.characterUpdate,
       },
     }),
@@ -570,6 +575,52 @@ describe('CharactersService.consumeItem — quantity + oncePerDay + clamp', () =
         message: '"Gorad quente" already active for the day',
       }),
     });
+  });
+
+  it('reads fresh hp inside the tx so parallel consumes stack (BC1)', async () => {
+    /* Scenario: character on 5 HP (max 20). Two Bálsamo (heal 5 HP)
+     * fire in parallel. Old code read `hpCurrent=5` once outside the
+     * tx and both wrote `Math.min(20, 5+5)=10` — one gain lost. Fix
+     * re-reads inside the tx, so the second consume observes
+     * `hpCurrent=10` and writes `Math.min(20, 10+5)=15`. */
+    const prisma = new FakePrisma();
+    let hpInDb = 5;
+    /* seedCharacter puts the initial state in lastSeed. But the tx
+     * needs to see updates from the first call. Fake it by overriding
+     * lastSeed after each characterUpdate. */
+    prisma.seedCharacter(
+      makeCharacter({
+        hpMax: 20,
+        hpCurrent: 5,
+        items: [
+          {
+            id: 50,
+            catalogId: 'balsamo-restaurador',
+            name: 'Bálsamo restaurador',
+            quantity: 2,
+            slots: 0.5,
+            equipped: null,
+            improvements: '[]',
+            material: null,
+          },
+        ],
+      }),
+    );
+    prisma.characterUpdate.mockImplementation(async ({ data }) => {
+      const patch = data as { hpCurrent?: number; mpCurrent?: number };
+      if (patch.hpCurrent !== undefined) hpInDb = patch.hpCurrent;
+      const next = { ...prisma.lastSeed!, hpCurrent: hpInDb };
+      prisma.lastSeed = next;
+      return next;
+    });
+    const service = await makeService(prisma);
+
+    /* First consume: hp 5 → 10. */
+    await service.consumeItem(1, 1, 50, { hpRolled: 5 });
+    expect(hpInDb).toBe(10);
+    /* Second consume: hp 10 → 15 because the tx re-reads. */
+    await service.consumeItem(1, 1, 50, { hpRolled: 5 });
+    expect(hpInDb).toBe(15);
   });
 
   it('translates Prisma P2002 into "already active" when race sneaks past app check (BC2)', async () => {
