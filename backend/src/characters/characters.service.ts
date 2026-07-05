@@ -507,33 +507,37 @@ export class CharactersService {
       });
     }
 
-    if (dto.equipped) {
-      await this.assertEquipLimits(characterId, null, dto.equipped);
-    }
-
     assertOverlaysCompatible(dto.catalogId, dto.improvements, dto.material);
 
-    return this.prisma.characterItem.create({
-      data: {
-        characterId,
-        catalogId: dto.catalogId ?? null,
-        name: resolvedName,
-        quantity: dto.quantity,
-        slots: resolvedSlots!,
-        equipped: dto.equipped ?? null,
-        improvements: JSON.stringify(dto.improvements ?? []),
-        material: dto.material ?? null,
-      },
-      select: {
-        id: true,
-        catalogId: true,
-        name: true,
-        quantity: true,
-        slots: true,
-        equipped: true,
-        improvements: true,
-        material: true,
-      },
+    /* BI1: check + create inside one tx so a parallel equip can't slip
+     * past the hand/vested limits. Without the tx, two concurrent
+     * addItem calls both observe handsUsed=0 and both write wielded2 */
+    return this.prisma.$transaction(async (tx) => {
+      if (dto.equipped) {
+        await this.assertEquipLimits(tx, characterId, null, dto.equipped);
+      }
+      return tx.characterItem.create({
+        data: {
+          characterId,
+          catalogId: dto.catalogId ?? null,
+          name: resolvedName,
+          quantity: dto.quantity,
+          slots: resolvedSlots!,
+          equipped: dto.equipped ?? null,
+          improvements: JSON.stringify(dto.improvements ?? []),
+          material: dto.material ?? null,
+        },
+        select: {
+          id: true,
+          catalogId: true,
+          name: true,
+          quantity: true,
+          slots: true,
+          equipped: true,
+          improvements: true,
+          material: true,
+        },
+      });
     });
   }
 
@@ -545,61 +549,67 @@ export class CharactersService {
   ) {
     await this.findOne(ownerId, characterId);
     if (dto.slots !== undefined) assertSlotsMultiple(dto.slots);
-    const item = await this.prisma.characterItem.findUnique({
-      where: { id: itemId },
-      select: { id: true, characterId: true, equipped: true },
-    });
-    if (!item || item.characterId !== characterId) {
-      throw new NotFoundException(`Item ${itemId} not found`);
-    }
-    if (dto.equipped !== undefined && dto.equipped !== item.equipped) {
-      if (dto.equipped) {
-        await this.assertEquipLimits(characterId, itemId, dto.equipped);
-      }
-    }
-    const data: {
-      name?: string;
-      quantity?: number;
-      slots?: number;
-      equipped?: string | null;
-      improvements?: string;
-      material?: string | null;
-    } = {};
-    if (dto.name !== undefined) data.name = dto.name.trim();
-    if (dto.quantity !== undefined) data.quantity = dto.quantity;
-    if (dto.slots !== undefined) data.slots = dto.slots;
-    if (dto.equipped !== undefined) data.equipped = dto.equipped;
-    if (dto.improvements !== undefined || dto.material !== undefined) {
-      const fullItem = await this.prisma.characterItem.findUnique({
+    /* BI1: fold the equipped-limit check + write into a single tx so
+     * two concurrent equip calls can't both observe handsUsed=0 and
+     * both commit `wielded2`. */
+    return this.prisma.$transaction(async (tx) => {
+      const item = await tx.characterItem.findUnique({
         where: { id: itemId },
-        select: { catalogId: true },
+        select: {
+          id: true,
+          characterId: true,
+          equipped: true,
+          catalogId: true,
+        },
       });
-      assertOverlaysCompatible(
-        fullItem?.catalogId ?? null,
-        dto.improvements,
-        dto.material,
-      );
-      if (dto.improvements !== undefined) {
-        data.improvements = JSON.stringify(dto.improvements);
+      if (!item || item.characterId !== characterId) {
+        throw new NotFoundException(`Item ${itemId} not found`);
       }
-      if (dto.material !== undefined) data.material = dto.material;
-    }
-    if (Object.keys(data).length === 0) {
-      throw new BadRequestException('No fields to update');
-    }
-    return this.prisma.characterItem.update({
-      where: { id: itemId },
-      data,
-      select: {
-        id: true,
-        catalogId: true,
-        name: true,
-        quantity: true,
-        slots: true,
-        equipped: true,
-        improvements: true,
-        material: true,
-      },
+      if (dto.equipped !== undefined && dto.equipped !== item.equipped) {
+        if (dto.equipped) {
+          await this.assertEquipLimits(tx, characterId, itemId, dto.equipped);
+        }
+      }
+      const data: {
+        name?: string;
+        quantity?: number;
+        slots?: number;
+        equipped?: string | null;
+        improvements?: string;
+        material?: string | null;
+      } = {};
+      if (dto.name !== undefined) data.name = dto.name.trim();
+      if (dto.quantity !== undefined) data.quantity = dto.quantity;
+      if (dto.slots !== undefined) data.slots = dto.slots;
+      if (dto.equipped !== undefined) data.equipped = dto.equipped;
+      if (dto.improvements !== undefined || dto.material !== undefined) {
+        assertOverlaysCompatible(
+          item.catalogId ?? null,
+          dto.improvements,
+          dto.material,
+        );
+        if (dto.improvements !== undefined) {
+          data.improvements = JSON.stringify(dto.improvements);
+        }
+        if (dto.material !== undefined) data.material = dto.material;
+      }
+      if (Object.keys(data).length === 0) {
+        throw new BadRequestException('No fields to update');
+      }
+      return tx.characterItem.update({
+        where: { id: itemId },
+        data,
+        select: {
+          id: true,
+          catalogId: true,
+          name: true,
+          quantity: true,
+          slots: true,
+          equipped: true,
+          improvements: true,
+          material: true,
+        },
+      });
     });
   }
 
@@ -620,19 +630,35 @@ export class CharactersService {
     return { id: itemId };
   }
 
+  /**
+   * Enforces vested (≤4) and wielded (≤2 hand-slots) totals for the
+   * character. Reads through the passed `reader` — either the top-level
+   * PrismaService or a `$transaction` client — so callers can wrap
+   * check+update atomically (BI1 fix). Reading from the same client
+   * the write will use is what closes the TOCTOU window; using the
+   * global `this.prisma` here (as the original did) let two equip
+   * calls both observe pre-write state.
+   */
   private async assertEquipLimits(
+    /* PrismaService and tx clients share the shape but their generated
+     * types don't line up structurally — accept via a permissive
+     * `PrismaLike` alias here to keep the check + write on the same
+     * client without a full Prisma import.
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    reader: any,
     characterId: number,
     excludeItemId: number | null,
     newEquipped: 'vested' | 'wielded' | 'wielded2',
   ) {
-    const items = await this.prisma.characterItem.findMany({
+    const items = (await reader.characterItem.findMany({
       where: {
         characterId,
         ...(excludeItemId !== null ? { id: { not: excludeItemId } } : {}),
         equipped: { not: null },
       },
       select: { equipped: true },
-    });
+    })) as { equipped: string | null }[];
     const vestedCount = items.filter((i) => i.equipped === 'vested').length;
     const handsUsed = items.reduce(
       (s, i) =>
