@@ -36,7 +36,7 @@ const TOOLS = [
     title: 'Construtor de encontros',
     description:
       'Calcula ND total do combate combinando criaturas e distribui XP entre o grupo.',
-    ready: false,
+    ready: true,
   },
   {
     to: '/gm/dungeon-generator',
