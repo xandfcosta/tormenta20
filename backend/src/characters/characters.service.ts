@@ -260,45 +260,56 @@ export class CharactersService {
     characterId: number,
     dto: UpdateClassLevelDto,
   ) {
-    const character = await this.findOne(ownerId, characterId);
-    const entry = character.classes.find((c) => c.className === dto.className);
-    if (!entry) {
-      throw new BadRequestException({
-        statusCode: 400,
-        error: 'Bad Request',
-        message: `Character does not have class "${dto.className}"`,
-        fieldErrors: { className: [`Class not on character`] },
-      });
-    }
-    const otherSum = character.classes
-      .filter((c) => c.className !== dto.className)
-      .reduce((sum, c) => sum + c.level, 0);
-    const newTotal = otherSum + dto.level;
-    if (newTotal > 20) {
-      throw new BadRequestException({
-        statusCode: 400,
-        error: 'Bad Request',
-        message: `Total level ${newTotal} exceeds 20`,
-        fieldErrors: { level: [`Sum of class levels capped at 20`] },
-      });
-    }
-    return this.prisma.character.update({
-      where: { id: characterId },
-      data: {
-        level: newTotal,
-        classes: {
-          update: {
-            where: {
-              characterId_className: {
-                characterId,
-                className: dto.className,
+    /* Ownership gate before the tx so we don't waste a transaction on
+     * an unauthorized caller. The class + total re-check happen INSIDE
+     * the tx so a parallel updateClassLevel on another class can't
+     * slip past the L20 cap. */
+    await this.findOne(ownerId, characterId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return this.prisma.$transaction(async (tx: any) => {
+      const classes = (await tx.characterClass.findMany({
+        where: { characterId },
+        select: { className: true, level: true },
+      })) as { className: string; level: number }[];
+      const entry = classes.find((c) => c.className === dto.className);
+      if (!entry) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: 'Bad Request',
+          message: `Character does not have class "${dto.className}"`,
+          fieldErrors: { className: [`Class not on character`] },
+        });
+      }
+      const otherSum = classes
+        .filter((c) => c.className !== dto.className)
+        .reduce((sum, c) => sum + c.level, 0);
+      const newTotal = otherSum + dto.level;
+      if (newTotal > 20) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: 'Bad Request',
+          message: `Total level ${newTotal} exceeds 20`,
+          fieldErrors: { level: [`Sum of class levels capped at 20`] },
+        });
+      }
+      return tx.character.update({
+        where: { id: characterId },
+        data: {
+          level: newTotal,
+          classes: {
+            update: {
+              where: {
+                characterId_className: {
+                  characterId,
+                  className: dto.className,
+                },
               },
+              data: { level: dto.level },
             },
-            data: { level: dto.level },
           },
         },
-      },
-      include: characterInclude,
+        include: characterInclude,
+      });
     });
   }
 
