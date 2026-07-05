@@ -19,6 +19,8 @@
  * [[ladinagem-skill-usages]] (Ocultar).
  */
 
+import { makeUsageByKind } from './skill-usage-resolver'
+
 // ─── Types ────────────────────────────────────────────────────────────
 export type PercepcaoUsageKind = 'observar' | 'ouvir'
 
@@ -118,17 +120,10 @@ export const PERCEPCAO_USAGES: readonly PercepcaoUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<PercepcaoUsageKind, PercepcaoUsage>(
-  PERCEPCAO_USAGES.map((u) => [u.kind, u]),
+export const percepcaoUsageByKind = makeUsageByKind<PercepcaoUsageKind, PercepcaoUsage>(
+  PERCEPCAO_USAGES,
+  'percepcaoUsageByKind',
 )
-
-export function percepcaoUsageByKind(kind: PercepcaoUsageKind): PercepcaoUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`percepcaoUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers — Observar ──────────────────────────────────────────────
 /**

@@ -19,6 +19,8 @@
  *    aqui exige Sobrevivência (verbatim redirecionamento).
  */
 
+import { makeUsageByKind } from './skill-usage-resolver'
+
 // ─── Types ────────────────────────────────────────────────────────────
 export type InvestigacaoUsageKind = 'interrogar' | 'procurar'
 
@@ -111,19 +113,10 @@ export const INVESTIGACAO_USAGES: readonly InvestigacaoUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<InvestigacaoUsageKind, InvestigacaoUsage>(
-  INVESTIGACAO_USAGES.map((u) => [u.kind, u]),
+export const investigacaoUsageByKind = makeUsageByKind<InvestigacaoUsageKind, InvestigacaoUsage>(
+  INVESTIGACAO_USAGES,
+  'investigacaoUsageByKind',
 )
-
-export function investigacaoUsageByKind(
-  kind: InvestigacaoUsageKind,
-): InvestigacaoUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`investigacaoUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers — Interrogar ────────────────────────────────────────────
 /**

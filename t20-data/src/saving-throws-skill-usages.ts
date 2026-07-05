@@ -27,6 +27,8 @@
  * [[atuacao-skill-usages]], [[enganacao-skill-usages]].
  */
 
+import { makeUsageByKind } from './skill-usage-resolver'
+
 // ─── Types ────────────────────────────────────────────────────────────
 export type SavingThrowSkill = 'fortitude' | 'reflexos' | 'vontade'
 
@@ -175,39 +177,20 @@ export const VONTADE_USAGES: readonly VontadeUsage[] = Object.freeze([
   },
 ])
 
-const fortitudeByKind = new Map<FortitudeUsageKind, FortitudeUsage>(
-  FORTITUDE_USAGES.map((u) => [u.kind, u]),
-)
-const reflexosByKind = new Map<ReflexosUsageKind, ReflexosUsage>(
-  REFLEXOS_USAGES.map((u) => [u.kind, u]),
-)
-const vontadeByKind = new Map<VontadeUsageKind, VontadeUsage>(
-  VONTADE_USAGES.map((u) => [u.kind, u]),
+export const fortitudeUsageByKind = makeUsageByKind<FortitudeUsageKind, FortitudeUsage>(
+  FORTITUDE_USAGES,
+  'fortitudeUsageByKind',
 )
 
-export function fortitudeUsageByKind(kind: FortitudeUsageKind): FortitudeUsage {
-  const usage = fortitudeByKind.get(kind)
-  if (!usage) {
-    throw new Error(`fortitudeUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
+export const reflexosUsageByKind = makeUsageByKind<ReflexosUsageKind, ReflexosUsage>(
+  REFLEXOS_USAGES,
+  'reflexosUsageByKind',
+)
 
-export function reflexosUsageByKind(kind: ReflexosUsageKind): ReflexosUsage {
-  const usage = reflexosByKind.get(kind)
-  if (!usage) {
-    throw new Error(`reflexosUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
-
-export function vontadeUsageByKind(kind: VontadeUsageKind): VontadeUsage {
-  const usage = vontadeByKind.get(kind)
-  if (!usage) {
-    throw new Error(`vontadeUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
+export const vontadeUsageByKind = makeUsageByKind<VontadeUsageKind, VontadeUsage>(
+  VONTADE_USAGES,
+  'vontadeUsageByKind',
+)
 
 // ─── Helpers — Fortitude Fôlego ─────────────────────────────────────
 /** CD de Fortitude para fôlego escalando por testes anteriores. */

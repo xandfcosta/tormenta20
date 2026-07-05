@@ -26,6 +26,8 @@
  * pode substituir Pilotagem para veículos de tração animal.
  */
 
+import { makeUsageByKind } from './skill-usage-resolver'
+
 // ─── Types ────────────────────────────────────────────────────────────
 export type PilotagemUsageKind = 'conduzir-veiculo'
 
@@ -85,17 +87,10 @@ export const PILOTAGEM_USAGES: readonly PilotagemUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<PilotagemUsageKind, PilotagemUsage>(
-  PILOTAGEM_USAGES.map((u) => [u.kind, u]),
+export const pilotagemUsageByKind = makeUsageByKind<PilotagemUsageKind, PilotagemUsage>(
+  PILOTAGEM_USAGES,
+  'pilotagemUsageByKind',
 )
-
-export function pilotagemUsageByKind(kind: PilotagemUsageKind): PilotagemUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`pilotagemUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers — Conduzir Veículo ─────────────────────────────────────
 /**

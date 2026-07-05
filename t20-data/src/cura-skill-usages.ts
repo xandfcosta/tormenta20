@@ -17,6 +17,8 @@
  * Prolongados, CD rara para Necropsia, etc).
  */
 
+import { makeUsageByKind } from './skill-usage-resolver'
+
 // ─── Types ────────────────────────────────────────────────────────────
 /** Ação/duração exigida por um uso da perícia Cura. */
 export type CuraAction = 'padrao' | 'completa' | '10-minutos' | '1-hora'
@@ -141,17 +143,10 @@ export const CURA_USAGES: readonly CuraUsage[] = Object.freeze([
 ])
 
 // ─── Helpers ──────────────────────────────────────────────────────────
-const usagesByKind = new Map<CuraUsageKind, CuraUsage>(
-  CURA_USAGES.map((u) => [u.kind, u]),
+export const curaUsageByKind = makeUsageByKind<CuraUsageKind, CuraUsage>(
+  CURA_USAGES,
+  'curaUsageByKind',
 )
-
-export function curaUsageByKind(kind: CuraUsageKind): CuraUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`curaUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 /**
  * CD final da Necropsia. `rareCause: true` (veneno, maldição, etc)

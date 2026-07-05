@@ -16,6 +16,8 @@
  * armadura. Espelha [[luta-skill-usages]] com foco em ataques à distância.
  */
 
+import { makeUsageByKind } from './skill-usage-resolver'
+
 // ─── Types ────────────────────────────────────────────────────────────
 export type PontariaUsageKind = 'ataque-a-distancia'
 
@@ -55,17 +57,10 @@ export const PONTARIA_USAGES: readonly PontariaUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<PontariaUsageKind, PontariaUsage>(
-  PONTARIA_USAGES.map((u) => [u.kind, u]),
+export const pontariaUsageByKind = makeUsageByKind<PontariaUsageKind, PontariaUsage>(
+  PONTARIA_USAGES,
+  'pontariaUsageByKind',
 )
-
-export function pontariaUsageByKind(kind: PontariaUsageKind): PontariaUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`pontariaUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers — Ataque à Distância ───────────────────────────────────
 /** CD do ataque à distância = Defesa do alvo (verbatim p122). */

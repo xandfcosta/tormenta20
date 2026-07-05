@@ -24,6 +24,8 @@
  * moeda T$ e à cidade de Valkaria como sabor).
  */
 
+import { makeUsageByKind } from './skill-usage-resolver'
+
 // ─── Types ────────────────────────────────────────────────────────────
 export type JogatinaUsageKind = 'apostar'
 
@@ -92,17 +94,10 @@ export const JOGATINA_USAGES: readonly JogatinaUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<JogatinaUsageKind, JogatinaUsage>(
-  JOGATINA_USAGES.map((u) => [u.kind, u]),
+export const jogatinaUsageByKind = makeUsageByKind<JogatinaUsageKind, JogatinaUsage>(
+  JOGATINA_USAGES,
+  'jogatinaUsageByKind',
 )
-
-export function jogatinaUsageByKind(kind: JogatinaUsageKind): JogatinaUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`jogatinaUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers — Apostar ──────────────────────────────────────────────
 /** Faixa de payout dado o resultado do teste de Jogatina. */

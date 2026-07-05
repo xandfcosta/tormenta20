@@ -21,6 +21,7 @@
  */
 
 import type { InformacaoDifficulty } from './misticismo-skill-usages'
+import { makeUsageByKind } from './skill-usage-resolver'
 
 // ─── Types ────────────────────────────────────────────────────────────
 export type ConhecimentoUsageKind = 'idiomas' | 'informacao'
@@ -92,19 +93,10 @@ export const CONHECIMENTO_USAGES: readonly ConhecimentoUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<ConhecimentoUsageKind, ConhecimentoUsage>(
-  CONHECIMENTO_USAGES.map((u) => [u.kind, u]),
+export const conhecimentoUsageByKind = makeUsageByKind<ConhecimentoUsageKind, ConhecimentoUsage>(
+  CONHECIMENTO_USAGES,
+  'conhecimentoUsageByKind',
 )
-
-export function conhecimentoUsageByKind(
-  kind: ConhecimentoUsageKind,
-): ConhecimentoUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`conhecimentoUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers — Idiomas ──────────────────────────────────────────────
 /** CD por categoria de idioma. */

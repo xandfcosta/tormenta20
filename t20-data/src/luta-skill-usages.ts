@@ -17,6 +17,8 @@
  * são usos de perícia — veja [[maneuvers]] / [[combat-actions]].
  */
 
+import { makeUsageByKind } from './skill-usage-resolver'
+
 // ─── Types ────────────────────────────────────────────────────────────
 export type LutaUsageKind = 'ataque-corpo-a-corpo'
 
@@ -56,17 +58,10 @@ export const LUTA_USAGES: readonly LutaUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<LutaUsageKind, LutaUsage>(
-  LUTA_USAGES.map((u) => [u.kind, u]),
+export const lutaUsageByKind = makeUsageByKind<LutaUsageKind, LutaUsage>(
+  LUTA_USAGES,
+  'lutaUsageByKind',
 )
-
-export function lutaUsageByKind(kind: LutaUsageKind): LutaUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`lutaUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers — Ataque Corpo a Corpo ─────────────────────────────────
 /** CD do ataque = Defesa do alvo (verbatim p121). */

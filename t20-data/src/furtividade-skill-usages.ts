@@ -17,6 +17,8 @@
  * armadura (header p119 lista apenas "Des · Armadura", sem "Treinada").
  */
 
+import { makeUsageByKind } from './skill-usage-resolver'
+
 // ─── Types ────────────────────────────────────────────────────────────
 export type FurtividadeUsageKind = 'esconder-se' | 'seguir'
 
@@ -106,17 +108,10 @@ export const FURTIVIDADE_USAGES: readonly FurtividadeUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<FurtividadeUsageKind, FurtividadeUsage>(
-  FURTIVIDADE_USAGES.map((u) => [u.kind, u]),
+export const furtividadeUsageByKind = makeUsageByKind<FurtividadeUsageKind, FurtividadeUsage>(
+  FURTIVIDADE_USAGES,
+  'furtividadeUsageByKind',
 )
-
-export function furtividadeUsageByKind(kind: FurtividadeUsageKind): FurtividadeUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`furtividadeUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers — Esconder-se ───────────────────────────────────────────
 /**

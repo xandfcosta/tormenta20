@@ -21,6 +21,8 @@
  * based (Diplomacia, Enganação, Intimidação, Jogatina) contra o alvo.
  */
 
+import { makeUsageByKind } from './skill-usage-resolver'
+
 // ─── Types ────────────────────────────────────────────────────────────
 export type AtuacaoUsageKind = 'apresentacao' | 'impressionar'
 
@@ -110,17 +112,10 @@ export const ATUACAO_USAGES: readonly AtuacaoUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<AtuacaoUsageKind, AtuacaoUsage>(
-  ATUACAO_USAGES.map((u) => [u.kind, u]),
+export const atuacaoUsageByKind = makeUsageByKind<AtuacaoUsageKind, AtuacaoUsage>(
+  ATUACAO_USAGES,
+  'atuacaoUsageByKind',
 )
-
-export function atuacaoUsageByKind(kind: AtuacaoUsageKind): AtuacaoUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`atuacaoUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers — Apresentação ─────────────────────────────────────────
 /**

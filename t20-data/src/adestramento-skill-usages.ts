@@ -19,6 +19,8 @@
  *    animais têm regras próprias que não passam por Adestramento.
  */
 
+import { makeUsageByKind } from './skill-usage-resolver'
+
 // ─── Types ────────────────────────────────────────────────────────────
 export type AdestramentoUsageKind = 'acalmar-animal' | 'manejar-animal'
 
@@ -105,19 +107,10 @@ export const ADESTRAMENTO_USAGES: readonly AdestramentoUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<AdestramentoUsageKind, AdestramentoUsage>(
-  ADESTRAMENTO_USAGES.map((u) => [u.kind, u]),
+export const adestramentoUsageByKind = makeUsageByKind<AdestramentoUsageKind, AdestramentoUsage>(
+  ADESTRAMENTO_USAGES,
+  'adestramentoUsageByKind',
 )
-
-export function adestramentoUsageByKind(
-  kind: AdestramentoUsageKind,
-): AdestramentoUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`adestramentoUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 /** CD de Acalmar Animal — fixa 25 (verbatim). */

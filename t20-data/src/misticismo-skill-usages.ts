@@ -28,6 +28,7 @@
  */
 
 import type { SpellCircle } from './spells'
+import { makeUsageByKind } from './skill-usage-resolver'
 
 // ─── Types ────────────────────────────────────────────────────────────
 export type MisticismoUsageKind =
@@ -259,19 +260,10 @@ export const MISTICISMO_USAGES: readonly MisticismoUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<MisticismoUsageKind, MisticismoUsage>(
-  MISTICISMO_USAGES.map((u) => [u.kind, u]),
+export const misticismoUsageByKind = makeUsageByKind<MisticismoUsageKind, MisticismoUsage>(
+  MISTICISMO_USAGES,
+  'misticismoUsageByKind',
 )
-
-export function misticismoUsageByKind(
-  kind: MisticismoUsageKind,
-): MisticismoUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`misticismoUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers — Detectar Magia ────────────────────────────────────────
 /** Penalidade no teste por barreira entre observador e aura. */

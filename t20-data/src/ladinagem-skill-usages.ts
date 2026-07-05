@@ -17,6 +17,8 @@
  * neste conjunto de módulos.
  */
 
+import { makeUsageByKind } from './skill-usage-resolver'
+
 // ─── Types ────────────────────────────────────────────────────────────
 export type LadinagemUsageKind =
   | 'abrir-fechadura'
@@ -167,17 +169,10 @@ export const LADINAGEM_USAGES: readonly LadinagemUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<LadinagemUsageKind, LadinagemUsage>(
-  LADINAGEM_USAGES.map((u) => [u.kind, u]),
+export const ladinagemUsageByKind = makeUsageByKind<LadinagemUsageKind, LadinagemUsage>(
+  LADINAGEM_USAGES,
+  'ladinagemUsageByKind',
 )
-
-export function ladinagemUsageByKind(kind: LadinagemUsageKind): LadinagemUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`ladinagemUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers — Abrir Fechadura ───────────────────────────────────────
 /** CD por qualidade da fechadura. */

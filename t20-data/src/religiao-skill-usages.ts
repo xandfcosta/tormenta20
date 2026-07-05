@@ -29,6 +29,7 @@ import {
   identificarItemMagicoCd as misticismoIdentificarItemMagicoCd,
   identificarItemMagicoRushedPenalty as misticismoIdentificarItemMagicoRushedPenalty,
 } from './misticismo-skill-usages'
+import { makeUsageByKind } from './skill-usage-resolver'
 
 // ─── Types ────────────────────────────────────────────────────────────
 export type ReligiaoUsageKind =
@@ -154,17 +155,10 @@ export const RELIGIAO_USAGES: readonly ReligiaoUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<ReligiaoUsageKind, ReligiaoUsage>(
-  RELIGIAO_USAGES.map((u) => [u.kind, u]),
+export const religiaoUsageByKind = makeUsageByKind<ReligiaoUsageKind, ReligiaoUsage>(
+  RELIGIAO_USAGES,
+  'religiaoUsageByKind',
 )
-
-export function religiaoUsageByKind(kind: ReligiaoUsageKind): ReligiaoUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`religiaoUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers — Identificar Criatura ─────────────────────────────────
 /** CD = 15 + ND da criatura divina. */
