@@ -16,6 +16,21 @@ model User {
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   characters   Character[]
+  campaigns    Campaign[]
+}
+
+/// A GM-run campaign. Owner is the GM (User). Players + characters
+/// attach later via CampaignMember; play happens inside Session rows.
+model Campaign {
+  id          Int      @id @default(autoincrement())
+  ownerId     Int
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([ownerId])
 }
 
 model Character {
