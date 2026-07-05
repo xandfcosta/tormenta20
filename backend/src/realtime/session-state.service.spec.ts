@@ -20,7 +20,10 @@ const emptySessionRepo = { findUnique: async () => null };
 
 async function setup(over?: {
   sessionFindUnique?: (args: unknown) => Promise<unknown>;
+  sessionUpdate?: jest.Mock;
 }) {
+  const sessionUpdate =
+    over?.sessionUpdate ?? jest.fn().mockResolvedValue({});
   const module = await Test.createTestingModule({
     providers: [
       SessionStateService,
@@ -29,12 +32,13 @@ async function setup(over?: {
         useValue: {
           session: {
             findUnique: over?.sessionFindUnique ?? emptySessionRepo.findUnique,
+            update: sessionUpdate,
           },
         },
       },
     ],
   }).compile();
-  return { service: module.get(SessionStateService) };
+  return { service: module.get(SessionStateService), sessionUpdate };
 }
 
 describe('SessionStateService.load (P1a persistence)', () => {
@@ -117,6 +121,64 @@ describe('SessionStateService.load (P1a persistence)', () => {
     expect(a).toBe(b);
     expect(b).toBe(c);
     expect(calls).toBe(1);
+  });
+});
+
+describe('SessionStateService.persist (P1b fire-and-forget)', () => {
+  it('writes the current state to Session.runtimeState', async () => {
+    const { service, sessionUpdate } = await setup();
+    service.addEntry(1, { label: 'A', initiative: 12, type: 'npc' });
+    await service.persist(1);
+    expect(sessionUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 1 },
+        data: expect.objectContaining({
+          runtimeState: expect.any(String),
+        }),
+      }),
+    );
+    const call = sessionUpdate.mock.calls.at(-1)![0]!;
+    const parsed = JSON.parse(call.data.runtimeState);
+    expect(parsed.initiative[0]!.label).toBe('A');
+  });
+
+  it('never rejects — DB failure marks the session dirty', async () => {
+    const sessionUpdate = jest.fn().mockRejectedValue(new Error('DB down'));
+    const { service } = await setup({ sessionUpdate });
+    service.addEntry(1, { label: 'A', initiative: 12, type: 'npc' });
+    /* If the promise rejected, this test would throw. */
+    await service.persist(1);
+    expect(service.isDirty(1)).toBe(true);
+  });
+
+  it('clears the dirty flag on a successful retry', async () => {
+    const sessionUpdate = jest
+      .fn()
+      .mockRejectedValueOnce(new Error('DB down'))
+      .mockResolvedValue({});
+    const { service } = await setup({ sessionUpdate });
+    service.addEntry(1, { label: 'A', initiative: 12, type: 'npc' });
+    await service.persist(1);
+    expect(service.isDirty(1)).toBe(true);
+    await service.persist(1);
+    expect(service.isDirty(1)).toBe(false);
+    expect(sessionUpdate).toHaveBeenCalledTimes(2);
+  });
+
+  it('no-ops when the session was never touched (nothing in memory)', async () => {
+    const { service, sessionUpdate } = await setup();
+    await service.persist(42);
+    expect(sessionUpdate).not.toHaveBeenCalled();
+  });
+
+  it('forget clears both cache and dirty flag', async () => {
+    const sessionUpdate = jest.fn().mockRejectedValue(new Error('DB down'));
+    const { service } = await setup({ sessionUpdate });
+    service.addEntry(1, { label: 'A', initiative: 12, type: 'npc' });
+    await service.persist(1);
+    expect(service.isDirty(1)).toBe(true);
+    service.forget(1);
+    expect(service.isDirty(1)).toBe(false);
   });
 });
 

@@ -35,6 +35,12 @@ async function setup(over?: {
           .fn()
           .mockResolvedValue({ id: 7, email: 'gm@example.com', name: 'GM' }),
     },
+    session: {
+      /* P1b: SessionStateService.persist writes here after every
+       * mutation. Resolves quietly so gateway specs stay green. */
+      findUnique: jest.fn().mockResolvedValue(null),
+      update: jest.fn().mockResolvedValue({}),
+    },
   };
   const sessions = {
     findOne: over?.sessionsFindOne ?? jest.fn().mockResolvedValue({ id: 1 }),
