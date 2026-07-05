@@ -28,6 +28,7 @@ import {
   campaignSessionsQueryOptions,
   meQueryOptions,
 } from '@/lib/queries'
+import { useSessionSocket, type InitiativeEntry } from '@/lib/realtime'
 
 export const Route = createFileRoute('/campaigns/$id/sessions/$sid')({
   beforeLoad: async ({ context, location }) => {
@@ -78,7 +79,201 @@ function SessionDetailPage() {
         campaignId={campaignId}
         session={session.data}
       />
+      <InitiativeCard campaignId={campaignId} sessionId={sessionId} />
       <NotesCard campaignId={campaignId} session={session.data} />
+    </div>
+  )
+}
+
+// ─── Initiative (realtime) ──────────────────────────────────────
+
+function InitiativeCard({
+  campaignId,
+  sessionId,
+}: {
+  campaignId: number
+  sessionId: number
+}) {
+  const rt = useSessionSocket(campaignId, sessionId)
+  const [addLabel, setAddLabel] = useState('')
+  const [addInit, setAddInit] = useState(10)
+  const [addType, setAddType] = useState<'character' | 'npc'>('npc')
+
+  const submitAdd = () => {
+    const label = addLabel.trim()
+    if (!label) return
+    rt.addEntry({
+      label,
+      initiative: addInit,
+      type: addType,
+    })
+    setAddLabel('')
+    setAddInit(10)
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div className="space-y-1">
+          <CardTitle>Iniciativa</CardTitle>
+          <div className="flex gap-2 text-xs text-muted-foreground">
+            <Badge variant={rt.isConnected ? 'default' : 'secondary'}>
+              {rt.isConnected ? 'Conectado' : 'Desconectado'}
+            </Badge>
+            <span>Rodada {rt.state.round}</span>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" onClick={rt.nextTurn} disabled={!rt.isConnected}>
+            Próximo turno
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={rt.resetInitiative}
+            disabled={!rt.isConnected}
+          >
+            Reset
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {rt.error && (
+          <p className="text-sm text-destructive">
+            Erro realtime: {rt.error}
+          </p>
+        )}
+
+        {rt.state.initiative.length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            Sem combatentes ainda. Adicione abaixo.
+          </p>
+        )}
+
+        <div className="space-y-1">
+          {rt.state.initiative.map((entry, idx) => (
+            <InitiativeRow
+              key={entry.id}
+              entry={entry}
+              onTurn={idx === rt.state.turnIndex}
+              onDeltaHp={(delta) =>
+                rt.deltaVitals(entry.id, { hpDelta: delta })
+              }
+              onRemove={() => rt.removeEntry(entry.id)}
+            />
+          ))}
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-end gap-2 rounded-md border border-dashed p-3">
+          <div className="min-w-[160px] flex-1">
+            <label className="text-xs font-medium" htmlFor="add-label">
+              Nome
+            </label>
+            <Input
+              id="add-label"
+              value={addLabel}
+              onChange={(e) => setAddLabel(e.target.value)}
+              placeholder="Goblin salteador…"
+            />
+          </div>
+          <div className="w-24">
+            <label className="text-xs font-medium" htmlFor="add-init">
+              Iniciativa
+            </label>
+            <NumberInput
+              id="add-init"
+              min={-5}
+              max={40}
+              value={addInit}
+              onChange={setAddInit}
+            />
+          </div>
+          <div className="flex gap-1">
+            <Button
+              variant={addType === 'character' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setAddType('character')}
+            >
+              PC
+            </Button>
+            <Button
+              variant={addType === 'npc' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setAddType('npc')}
+            >
+              NPC
+            </Button>
+          </div>
+          <Button
+            onClick={submitAdd}
+            disabled={!rt.isConnected || !addLabel.trim()}
+          >
+            + Adicionar
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function InitiativeRow({
+  entry,
+  onTurn,
+  onDeltaHp,
+  onRemove,
+}: {
+  entry: InitiativeEntry
+  onTurn: boolean
+  onDeltaHp: (delta: number) => void
+  onRemove: () => void
+}) {
+  return (
+    <div
+      className={
+        'flex flex-wrap items-center gap-2 rounded-md border p-2 text-sm ' +
+        (onTurn ? 'border-primary/60 bg-primary/5' : '')
+      }
+    >
+      <Badge variant="outline">{entry.initiative}</Badge>
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-medium">
+          {entry.label}{' '}
+          <Badge
+            variant={entry.type === 'character' ? 'default' : 'secondary'}
+            className="ml-1"
+          >
+            {entry.type === 'character' ? 'PC' : 'NPC'}
+          </Badge>
+          {onTurn && <Badge className="ml-1">Na vez</Badge>}
+        </p>
+        {(entry.hpCurrent !== undefined || entry.hpMax !== undefined) && (
+          <p className="text-xs text-muted-foreground">
+            HP {entry.hpCurrent ?? '?'}/{entry.hpMax ?? '?'}
+            {entry.mpMax !== undefined && (
+              <>
+                {' · '}MP {entry.mpCurrent ?? '?'}/{entry.mpMax}
+              </>
+            )}
+          </p>
+        )}
+      </div>
+      <div className="flex gap-1">
+        <Button size="sm" variant="outline" onClick={() => onDeltaHp(-5)}>
+          −5
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => onDeltaHp(-1)}>
+          −1
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => onDeltaHp(1)}>
+          +1
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => onDeltaHp(5)}>
+          +5
+        </Button>
+        <Button size="sm" variant="ghost" onClick={onRemove}>
+          ✕
+        </Button>
+      </div>
     </div>
   )
 }

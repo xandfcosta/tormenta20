@@ -29,10 +29,17 @@ export async function verifyHandshake(
   return user;
 }
 
+const COOKIE_NAME = process.env.COOKIE_NAME ?? 't20_session';
+
 function extractToken(socket: Socket): string | null {
   const auth = socket.handshake.auth as { token?: string } | undefined;
   if (auth?.token) return auth.token;
   const header = socket.handshake.headers.authorization;
   if (header?.startsWith('Bearer ')) return header.slice(7);
+  const cookie = socket.handshake.headers.cookie;
+  if (cookie) {
+    const match = new RegExp(`(?:^|;\\s*)${COOKIE_NAME}=([^;]+)`).exec(cookie);
+    if (match?.[1]) return decodeURIComponent(match[1]);
+  }
   return null;
 }
