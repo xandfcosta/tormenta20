@@ -71,6 +71,10 @@ model Session {
   endedAt       DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  /// JSON-encoded SessionRuntimeState (initiative + round + turnIndex).
+  /// Persists the realtime tracker across server restarts. Written by
+  /// SessionStateService fire-and-forget after each WS mutation.
+  runtimeState  String    @default("{\"initiative\":[],\"round\":0,\"turnIndex\":-1}")
 
   @@index([campaignId])
 }

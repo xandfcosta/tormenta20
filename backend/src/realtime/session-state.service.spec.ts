@@ -1,24 +1,124 @@
+jest.mock('../prisma/prisma.service', () => ({
+  PrismaService: class {},
+}));
+
 import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { SessionStateService } from './session-state.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 /**
- * In-memory initiative state — pure logic, no dependencies.
- * Behaviour pinned:
- *   - fresh sessions materialize a default state
- *   - addEntry keeps the list sorted by initiative desc
- *   - updateEntry re-sorts and preserves the on-turn combatant
- *   - removeEntry adjusts turnIndex correctly (before / at / after)
- *   - nextTurn wraps + increments round
- *   - resetInitiative clears everything
+ * In-memory initiative state — the P1a persistence layer sits on top
+ * of pure logic that these specs already exercise. To keep the
+ * pre-P1a specs green, we inject a fake PrismaService whose
+ * `session.findUnique` returns `null` (behaves like the pre-P1a "no
+ * DB" world). Persistence-specific specs live below with an
+ * override that returns a runtimeState blob.
  */
 
-async function setup() {
+const emptySessionRepo = { findUnique: async () => null };
+
+async function setup(over?: {
+  sessionFindUnique?: (args: unknown) => Promise<unknown>;
+}) {
   const module = await Test.createTestingModule({
-    providers: [SessionStateService],
+    providers: [
+      SessionStateService,
+      {
+        provide: PrismaService,
+        useValue: {
+          session: {
+            findUnique: over?.sessionFindUnique ?? emptySessionRepo.findUnique,
+          },
+        },
+      },
+    ],
   }).compile();
   return { service: module.get(SessionStateService) };
 }
+
+describe('SessionStateService.load (P1a persistence)', () => {
+  it('hydrates from the persisted runtimeState blob', async () => {
+    const payload = JSON.stringify({
+      initiative: [
+        {
+          id: 'x',
+          label: 'Goblin',
+          initiative: 12,
+          type: 'npc',
+          hpCurrent: 4,
+          hpMax: 4,
+        },
+      ],
+      round: 2,
+      turnIndex: 0,
+    });
+    const { service } = await setup({
+      sessionFindUnique: async () => ({ runtimeState: payload }),
+    });
+    const state = await service.load(1);
+    expect(state.round).toBe(2);
+    expect(state.turnIndex).toBe(0);
+    expect(state.initiative).toHaveLength(1);
+    expect(state.initiative[0]!.label).toBe('Goblin');
+  });
+
+  it('falls back to empty state on malformed JSON', async () => {
+    const { service } = await setup({
+      sessionFindUnique: async () => ({ runtimeState: 'not-json{' }),
+    });
+    const state = await service.load(1);
+    expect(state).toEqual({ initiative: [], round: 0, turnIndex: -1 });
+  });
+
+  it('falls back to empty state on schema mismatch', async () => {
+    const { service } = await setup({
+      sessionFindUnique: async () =>
+        ({ runtimeState: JSON.stringify({ round: 'wrong-type' }) }),
+    });
+    const state = await service.load(1);
+    expect(state).toEqual({ initiative: [], round: 0, turnIndex: -1 });
+  });
+
+  it('falls back to empty state when Prisma throws', async () => {
+    const { service } = await setup({
+      sessionFindUnique: async () => {
+        throw new Error('DB down');
+      },
+    });
+    const state = await service.load(1);
+    expect(state).toEqual({ initiative: [], round: 0, turnIndex: -1 });
+  });
+
+  it('returns the cached state on the second load without a second DB hit', async () => {
+    const findUnique = jest.fn(async () => ({
+      runtimeState: JSON.stringify({ initiative: [], round: 5, turnIndex: -1 }),
+    }));
+    const { service } = await setup({ sessionFindUnique: findUnique });
+    const first = await service.load(1);
+    const second = await service.load(1);
+    expect(first).toBe(second);
+    expect(findUnique).toHaveBeenCalledTimes(1);
+  });
+
+  it('de-dupes concurrent loads (single DB hit under contention)', async () => {
+    let calls = 0;
+    const findUnique = jest.fn(async () => {
+      calls++;
+      await new Promise((r) => setTimeout(r, 10));
+      return { runtimeState: JSON.stringify({ round: 3 }) };
+    });
+    const { service } = await setup({ sessionFindUnique: findUnique });
+    const [a, b, c] = await Promise.all([
+      service.load(1),
+      service.load(1),
+      service.load(1),
+    ]);
+    expect(a).toBe(b);
+    expect(b).toBe(c);
+    expect(calls).toBe(1);
+  });
+});
 
 describe('SessionStateService.getState', () => {
   it('returns a default fresh state for a new session', async () => {
