@@ -37,6 +37,12 @@ export const characterQueryOptions = (id: number) =>
     queryFn: () => api.characters.get(id),
   })
 
+export const characterSheetQueryOptions = (id: number) =>
+  queryOptions({
+    queryKey: ['characters', id, 'sheet'] as const,
+    queryFn: () => api.characters.getSheet(id),
+  })
+
 export const campaignsQueryOptions = queryOptions({
   queryKey: ['campaigns'] as const,
   queryFn: api.campaigns.list,

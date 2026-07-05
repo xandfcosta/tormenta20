@@ -27,6 +27,17 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
+describe('api.characters.getSheet', () => {
+  it('GET /api/characters/:id/sheet', async () => {
+    fetchSpy.mockResolvedValueOnce(jsonResponse({ id: 1, computed: {} }))
+    await api.characters.getSheet(7)
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/characters/7/sheet',
+      expect.any(Object),
+    )
+  })
+})
+
 describe('api.campaigns', () => {
   it('list → GET /api/campaigns', async () => {
     fetchSpy.mockResolvedValueOnce(jsonResponse([]))

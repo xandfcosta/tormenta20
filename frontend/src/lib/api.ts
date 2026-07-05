@@ -176,6 +176,12 @@ export type CreateCharacterInput = {
   displacement: number
 }
 
+import type { ComputedSheet } from '@tormenta20/t20-data'
+
+export type { ComputedSheet }
+
+export type CharacterWithComputed = Character & { computed: ComputedSheet }
+
 export type Campaign = {
   id: number
   ownerId: number
@@ -368,6 +374,8 @@ export const api = {
         method: 'PATCH',
         body: JSON.stringify(input),
       }),
+    getSheet: (id: number) =>
+      request<CharacterWithComputed>(`/characters/${id}/sheet`),
   },
   campaigns: {
     list: () => request<Campaign[]>('/campaigns'),
