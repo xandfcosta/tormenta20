@@ -7,12 +7,19 @@ import {
   OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
+  WebSocketServer,
   WsException,
 } from '@nestjs/websockets';
 import type { Server, Socket } from 'socket.io';
 import { PrismaService } from '../prisma/prisma.service';
 import { SessionsService } from '../sessions/sessions.service';
 import type { AuthUser } from '../auth/auth.service';
+import {
+  SessionStateService,
+  type AddEntryInput,
+  type SessionRuntimeState,
+  type UpdateEntryInput,
+} from './session-state.service';
 import { verifyHandshake } from './ws-auth';
 
 type AuthedSocket = Socket & { data: { user: AuthUser } };
@@ -21,23 +28,27 @@ export function sessionRoom(sessionId: number): string {
   return `session:${sessionId}`;
 }
 
+type SessionScopedBody = { campaignId: number; sessionId: number };
+
 /**
- * WebSocket gateway root for realtime session play. Fase C1 ships the
- * skeleton:
- *   - JWT handshake auth (drops unauthenticated sockets)
- *   - `join-session` message: validates that the user owns the
- *     underlying campaign, adds the socket to the session room
- *   - `leave-session` message
- *   - Broadcast primitives (state/events) plug in on Fase C2+
+ * Realtime session gateway. Fase C1 wired auth + join/leave. Fase C2
+ * adds initiative state management + broadcasts. Every mutating
+ * handler re-checks ownership via `SessionsService.findOne` — that's
+ * duplicated work with the join-time check, but it means someone who
+ * spoofs `sessionId` on a stale socket can't hijack another table.
  */
 @WebSocketGateway({ cors: { origin: true, credentials: true } })
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private readonly logger = new Logger(RealtimeGateway.name);
 
+  @WebSocketServer()
+  server!: Server;
+
   constructor(
     private readonly jwt: JwtService,
     private readonly prisma: PrismaService,
     private readonly sessions: SessionsService,
+    private readonly state: SessionStateService,
   ) {}
 
   async handleConnection(socket: Socket) {
@@ -58,33 +69,12 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     this.logger.log(`socket ${socket.id} disconnected`);
   }
 
-  /**
-   * Join a session room. The gateway delegates ownership enforcement
-   * to `SessionsService.findOne`, which already throws NotFound /
-   * Forbidden — we translate those into WsException so the socket
-   * client sees a structured error instead of a stack trace.
-   */
   @SubscribeMessage('join-session')
   async joinSession(
     @ConnectedSocket() socket: AuthedSocket,
-    @MessageBody() body: { campaignId: number; sessionId: number },
+    @MessageBody() body: SessionScopedBody,
   ) {
-    if (
-      !body ||
-      !Number.isInteger(body.campaignId) ||
-      !Number.isInteger(body.sessionId)
-    ) {
-      throw new WsException('campaignId and sessionId are required integers');
-    }
-    try {
-      await this.sessions.findOne(
-        socket.data.user.id,
-        body.campaignId,
-        body.sessionId,
-      );
-    } catch (err) {
-      throw new WsException((err as Error).message);
-    }
+    await this.assertSessionAccess(socket, body);
     const room = sessionRoom(body.sessionId);
     await socket.join(room);
     return { joined: room };
@@ -103,17 +93,103 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     return { left: room };
   }
 
-  /**
-   * Broadcast a payload to every socket currently subscribed to the
-   * session room. Fase C2 will call this from the state service; kept
-   * public so the tests can drive it directly.
-   */
-  broadcastToSession(
-    server: Server,
-    sessionId: number,
-    event: string,
-    payload: unknown,
+  @SubscribeMessage('get-session-state')
+  async getSessionState(
+    @ConnectedSocket() socket: AuthedSocket,
+    @MessageBody() body: SessionScopedBody,
   ) {
-    server.to(sessionRoom(sessionId)).emit(event, payload);
+    await this.assertSessionAccess(socket, body);
+    return this.state.getState(body.sessionId);
+  }
+
+  @SubscribeMessage('initiative-add')
+  async initiativeAdd(
+    @ConnectedSocket() socket: AuthedSocket,
+    @MessageBody() body: SessionScopedBody & { entry: AddEntryInput },
+  ) {
+    await this.assertSessionAccess(socket, body);
+    if (!body.entry || typeof body.entry.label !== 'string') {
+      throw new WsException('entry.label is required');
+    }
+    const state = this.state.addEntry(body.sessionId, body.entry);
+    this.emitSessionState(body.sessionId, state);
+    return state;
+  }
+
+  @SubscribeMessage('initiative-update')
+  async initiativeUpdate(
+    @ConnectedSocket() socket: AuthedSocket,
+    @MessageBody()
+    body: SessionScopedBody & { entryId: string; patch: UpdateEntryInput },
+  ) {
+    await this.assertSessionAccess(socket, body);
+    if (!body.entryId) throw new WsException('entryId is required');
+    const state = this.state.updateEntry(
+      body.sessionId,
+      body.entryId,
+      body.patch ?? {},
+    );
+    this.emitSessionState(body.sessionId, state);
+    return state;
+  }
+
+  @SubscribeMessage('initiative-remove')
+  async initiativeRemove(
+    @ConnectedSocket() socket: AuthedSocket,
+    @MessageBody() body: SessionScopedBody & { entryId: string },
+  ) {
+    await this.assertSessionAccess(socket, body);
+    if (!body.entryId) throw new WsException('entryId is required');
+    const state = this.state.removeEntry(body.sessionId, body.entryId);
+    this.emitSessionState(body.sessionId, state);
+    return state;
+  }
+
+  @SubscribeMessage('initiative-next-turn')
+  async initiativeNextTurn(
+    @ConnectedSocket() socket: AuthedSocket,
+    @MessageBody() body: SessionScopedBody,
+  ) {
+    await this.assertSessionAccess(socket, body);
+    const state = this.state.nextTurn(body.sessionId);
+    this.emitSessionState(body.sessionId, state);
+    return state;
+  }
+
+  @SubscribeMessage('initiative-reset')
+  async initiativeReset(
+    @ConnectedSocket() socket: AuthedSocket,
+    @MessageBody() body: SessionScopedBody,
+  ) {
+    await this.assertSessionAccess(socket, body);
+    const state = this.state.resetInitiative(body.sessionId);
+    this.emitSessionState(body.sessionId, state);
+    return state;
+  }
+
+  private emitSessionState(sessionId: number, state: SessionRuntimeState) {
+    this.server.to(sessionRoom(sessionId)).emit('session-state', state);
+  }
+
+  private async assertSessionAccess(
+    socket: AuthedSocket,
+    body: SessionScopedBody,
+  ) {
+    if (
+      !body ||
+      !Number.isInteger(body.campaignId) ||
+      !Number.isInteger(body.sessionId)
+    ) {
+      throw new WsException('campaignId and sessionId are required integers');
+    }
+    try {
+      await this.sessions.findOne(
+        socket.data.user.id,
+        body.campaignId,
+        body.sessionId,
+      );
+    } catch (err) {
+      throw new WsException((err as Error).message);
+    }
   }
 }
