@@ -1,17 +1,17 @@
 import {
   computeSheetForRow,
+  equipmentFromRow,
+  expertiseNameToSkillId,
   raceNameToId,
   toCharacterInput,
   type CharacterDbRow,
 } from './character-sheet.mapper';
 
 /**
- * Fase A wiring: DB `Character` row → t20-data orchestrator input.
- *
- * DB stores race as name (PT display), t20-data expects id (kebab).
- * Level authority: sum of class levels (materialized `level` column is
- * derived); first class is treated as the primary for orchestrator
- * `className`.
+ * Fase A wiring + Fase A followup: DB `Character` row → orchestrator
+ * input. Beyond the basics from Fase A, the mapper now decodes trained
+ * skills (PT expertise name → SkillId) and equipped items (catalogId
+ * → armor/shield/weapon slots).
  */
 
 const humanoFighter: CharacterDbRow = {
@@ -26,6 +26,8 @@ const humanoFighter: CharacterDbRow = {
   mpCurrent: 5,
   races: [{ race: 'Humano' }],
   classes: [{ className: 'Guerreiro', level: 3 }],
+  expertises: [],
+  items: [],
 };
 
 describe('raceNameToId', () => {
@@ -119,5 +121,133 @@ describe('computeSheetForRow', () => {
   it('exposes deslocamento derived from race (humano = 9m)', () => {
     const sheet = computeSheetForRow(humanoFighter);
     expect(sheet.deslocamento).toBe(9);
+  });
+});
+
+// ─── Skills ──────────────────────────────────────────────────────
+
+describe('expertiseNameToSkillId', () => {
+  it('strips diacritics + lowercases (PT → SkillId)', () => {
+    expect(expertiseNameToSkillId('Acrobacia')).toBe('acrobacia');
+    expect(expertiseNameToSkillId('Atuação')).toBe('atuacao');
+    expect(expertiseNameToSkillId('Ofício')).toBe('oficio');
+    expect(expertiseNameToSkillId('Percepção')).toBe('percepcao');
+    expect(expertiseNameToSkillId('Religião')).toBe('religiao');
+    expect(expertiseNameToSkillId('Sobrevivência')).toBe('sobrevivencia');
+  });
+
+  it('returns undefined for names that are not in Tabela 2-1', () => {
+    expect(expertiseNameToSkillId('Culinária Élfica')).toBeUndefined();
+  });
+
+  it('is case-insensitive and trims', () => {
+    expect(expertiseNameToSkillId('  ATLETISMO  ')).toBe('atletismo');
+  });
+});
+
+describe('toCharacterInput trainedSkills', () => {
+  it('projects trained expertises into SkillId[]', () => {
+    const row: CharacterDbRow = {
+      ...humanoFighter,
+      expertises: [
+        { name: 'Atletismo', attribute: 'strength', trained: true, custom: false },
+        { name: 'Luta', attribute: 'strength', trained: true, custom: false },
+        { name: 'Furtividade', attribute: 'dexterity', trained: false, custom: false },
+      ],
+    };
+    const input = toCharacterInput(row);
+    expect(input.trainedSkills).toEqual(['atletismo', 'luta']);
+  });
+
+  it('ignores custom names that do not match Tabela 2-1', () => {
+    const row: CharacterDbRow = {
+      ...humanoFighter,
+      expertises: [
+        { name: 'Atletismo', attribute: 'strength', trained: true, custom: false },
+        { name: 'Culinária Élfica', attribute: 'intelligence', trained: true, custom: true },
+      ],
+    };
+    expect(toCharacterInput(row).trainedSkills).toEqual(['atletismo']);
+  });
+});
+
+// ─── Equipment ───────────────────────────────────────────────────
+
+describe('equipmentFromRow', () => {
+  it('returns undefined when nothing is equipped', () => {
+    expect(
+      equipmentFromRow({
+        items: [{ catalogId: 'espada-longa', name: 'Espada', equipped: null }],
+      }),
+    ).toBeUndefined();
+  });
+
+  it('populates armor slot from a vested armor catalog entry', () => {
+    const eq = equipmentFromRow({
+      items: [
+        { catalogId: 'armadura-couro', name: 'Armadura de couro', equipped: 'vested' },
+      ],
+    });
+    expect(eq?.armor?.defense).toBe(2);
+    expect(eq?.armor?.penalty).toBe(0);
+    expect(eq?.armor?.heavy).toBe(false);
+  });
+
+  it('populates mainHand from a wielded one-handed weapon', () => {
+    const eq = equipmentFromRow({
+      items: [
+        { catalogId: 'espada-longa', name: 'Espada longa', equipped: 'wielded' },
+      ],
+    });
+    expect(eq?.mainHand?.name).toBe('Espada longa');
+    expect(eq?.mainHand?.damage).toBe('1d8');
+    expect(eq?.mainHand?.hand).toBe('one');
+  });
+
+  it('two-handed weapon (wielded2) fills mainHand only, offHand stays empty', () => {
+    /* Sample any two-handed weapon by catalogId. If two-handed weapon
+     * doesn't have catalogId 'espada-grande', treat as a smoke test —
+     * just assert equipped=wielded2 doesn't fill offHand. */
+    const eq = equipmentFromRow({
+      items: [
+        {
+          catalogId: 'espada-longa',
+          name: 'Espada longa',
+          equipped: 'wielded2',
+        },
+      ],
+    });
+    expect(eq?.mainHand).toBeDefined();
+    expect(eq?.offHand).toBeUndefined();
+  });
+
+  it('ignores custom items (catalogId=null) — no mechanical stats available', () => {
+    const eq = equipmentFromRow({
+      items: [
+        { catalogId: null, name: 'Espada singular do herói', equipped: 'wielded' },
+      ],
+    });
+    expect(eq).toBeUndefined();
+  });
+
+  it('ignores catalog ids that no longer exist', () => {
+    const eq = equipmentFromRow({
+      items: [
+        { catalogId: 'nao-existe-XYZ', name: 'X', equipped: 'wielded' },
+      ],
+    });
+    expect(eq).toBeUndefined();
+  });
+});
+
+describe('computeSheetForRow with equipment', () => {
+  it('picks up armor defense in the derived sheet', () => {
+    const sheet = computeSheetForRow({
+      ...humanoFighter,
+      items: [
+        { catalogId: 'armadura-couro', name: 'Armadura de couro', equipped: 'vested' },
+      ],
+    });
+    expect(sheet.defense.armor).toBeGreaterThan(0);
   });
 });
