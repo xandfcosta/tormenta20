@@ -36,3 +36,35 @@ export const characterQueryOptions = (id: number) =>
     queryKey: ['characters', id] as const,
     queryFn: () => api.characters.get(id),
   })
+
+export const campaignsQueryOptions = queryOptions({
+  queryKey: ['campaigns'] as const,
+  queryFn: api.campaigns.list,
+})
+
+export const campaignQueryOptions = (id: number) =>
+  queryOptions({
+    queryKey: ['campaigns', id] as const,
+    queryFn: () => api.campaigns.get(id),
+  })
+
+export const campaignSessionsQueryOptions = (campaignId: number) =>
+  queryOptions({
+    queryKey: ['campaigns', campaignId, 'sessions'] as const,
+    queryFn: () => api.sessions.list(campaignId),
+  })
+
+export const campaignSessionQueryOptions = (
+  campaignId: number,
+  id: number,
+) =>
+  queryOptions({
+    queryKey: ['campaigns', campaignId, 'sessions', id] as const,
+    queryFn: () => api.sessions.get(campaignId, id),
+  })
+
+export const campaignMembersQueryOptions = (campaignId: number) =>
+  queryOptions({
+    queryKey: ['campaigns', campaignId, 'members'] as const,
+    queryFn: () => api.members.list(campaignId),
+  })
