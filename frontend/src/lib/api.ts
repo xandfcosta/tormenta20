@@ -438,6 +438,11 @@ export const api = {
       request<Session>(`/campaigns/${campaignId}/sessions/${id}/end`, {
         method: 'POST',
       }),
+    clearTracker: (campaignId: number, id: number) =>
+      request<{ id: number }>(
+        `/campaigns/${campaignId}/sessions/${id}/clear-tracker`,
+        { method: 'POST' },
+      ),
   },
   members: {
     list: (campaignId: number) =>

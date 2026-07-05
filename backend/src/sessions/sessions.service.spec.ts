@@ -41,6 +41,10 @@ function makeSession(over: Partial<SessionRow> = {}): SessionRow {
   };
 }
 
+/* Same string token SessionsService uses. Kept local so the spec
+ * doesn't import the real module and drag Prisma into the test env. */
+const SESSION_STATE_TOKEN = 'SESSION_STATE_SERVICE';
+
 async function setup(over?: {
   findMany?: jest.Mock;
   findUnique?: jest.Mock;
@@ -48,6 +52,7 @@ async function setup(over?: {
   update?: jest.Mock;
   delete?: jest.Mock;
   campaignsFindOne?: jest.Mock;
+  state?: unknown;
 }) {
   const prisma = {
     session: {
@@ -63,12 +68,18 @@ async function setup(over?: {
       over?.campaignsFindOne ??
       jest.fn().mockResolvedValue({ id: 1, ownerId: 1 }),
   };
+  const providers: Parameters<
+    typeof Test.createTestingModule
+  >[0]['providers'] = [
+    SessionsService,
+    { provide: PrismaService, useValue: prisma },
+    { provide: CampaignsService, useValue: campaigns },
+  ];
+  if (over?.state !== undefined) {
+    providers.push({ provide: SESSION_STATE_TOKEN, useValue: over.state });
+  }
   const moduleRef = await Test.createTestingModule({
-    providers: [
-      SessionsService,
-      { provide: PrismaService, useValue: prisma },
-      { provide: CampaignsService, useValue: campaigns },
-    ],
+    providers,
   }).compile();
   return { service: moduleRef.get(SessionsService), prisma, campaigns };
 }
@@ -214,14 +225,46 @@ describe('SessionsService.start', () => {
     expect(update).not.toHaveBeenCalled();
   });
 
-  it('rejects starting an already-ended session', async () => {
+  it('reopens an ended session (P4) — status ended → active, clears endedAt', async () => {
+    /* Pre-P4 this rejected — GMs pause mid-combat and want to resume
+     * without minting a new session (which would break initiative
+     * continuity). Post-P4: reopen restores the session, clears
+     * endedAt so the UI can show "ongoing", and preserves the runtime
+     * tracker via P1a/P1b persistence. */
     const findUnique = jest
       .fn()
       .mockResolvedValue(makeSession({ status: 'ended' }));
+    const update = jest
+      .fn()
+      .mockResolvedValue(makeSession({ status: 'active', endedAt: null }));
+    const { service } = await setup({ findUnique, update });
+    await service.start(1, 1, 1);
+    expect(update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: { status: 'active', endedAt: null },
+    });
+  });
+});
+
+describe('SessionsService.clearTracker', () => {
+  it('resets the tracker + persists the empty state without touching lifecycle', async () => {
+    const findUnique = jest.fn().mockResolvedValue(makeSession({ status: 'active' }));
+    const stateResetInitiative = jest.fn();
+    const statePersist = jest.fn().mockResolvedValue(undefined);
+    const state = {
+      resetInitiative: stateResetInitiative,
+      persist: statePersist,
+    } as unknown as import('../realtime/session-state.service').SessionStateService;
+    const { service } = await setup({ findUnique, state });
+    await expect(service.clearTracker(1, 1, 1)).resolves.toEqual({ id: 1 });
+    expect(stateResetInitiative).toHaveBeenCalledWith(1);
+    expect(statePersist).toHaveBeenCalledWith(1);
+  });
+
+  it('no-ops when SessionStateService is not wired (still returns { id })', async () => {
+    const findUnique = jest.fn().mockResolvedValue(makeSession({ status: 'planned' }));
     const { service } = await setup({ findUnique });
-    await expect(service.start(1, 1, 1)).rejects.toBeInstanceOf(
-      BadRequestException,
-    );
+    await expect(service.clearTracker(1, 1, 1)).resolves.toEqual({ id: 1 });
   });
 });
 

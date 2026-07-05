@@ -131,6 +131,14 @@ describe('api.sessions', () => {
     expect(init?.method).toBe('POST')
   })
 
+  it('clearTracker → POST /:id/clear-tracker', async () => {
+    fetchSpy.mockResolvedValueOnce(jsonResponse({ id: 5 }))
+    await api.sessions.clearTracker(3, 5)
+    const [url, init] = fetchSpy.mock.calls[0]!
+    expect(url).toBe('/api/campaigns/3/sessions/5/clear-tracker')
+    expect(init?.method).toBe('POST')
+  })
+
   it('delete → DELETE nested id', async () => {
     fetchSpy.mockResolvedValueOnce(jsonResponse({ id: 5 }))
     await api.sessions.delete(3, 5)
