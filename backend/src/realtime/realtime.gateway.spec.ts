@@ -9,6 +9,7 @@ import type { Socket } from 'socket.io';
 import { RealtimeGateway, sessionRoom } from './realtime.gateway';
 import { PrismaService } from '../prisma/prisma.service';
 import { SessionsService } from '../sessions/sessions.service';
+import { SessionStateService } from './session-state.service';
 
 /**
  * Fase C1 gateway smoke tests. Cover:
@@ -41,16 +42,26 @@ async function setup(over?: {
   const module = await Test.createTestingModule({
     providers: [
       RealtimeGateway,
+      SessionStateService,
       { provide: JwtService, useValue: new JwtService({ secret: SECRET }) },
       { provide: PrismaService, useValue: prisma },
       { provide: SessionsService, useValue: sessions },
     ],
   }).compile();
+  const gateway = module.get(RealtimeGateway);
+  /* Inject a fake Server so broadcast handlers can be probed. */
+  const emit = jest.fn();
+  const roomServer = { emit } as unknown as { emit: jest.Mock };
+  const to = jest.fn().mockReturnValue(roomServer);
+  gateway.server = { to } as unknown as typeof gateway.server;
   return {
-    gateway: module.get(RealtimeGateway),
+    gateway,
     prisma,
     sessions,
     jwt: module.get(JwtService),
+    state: module.get(SessionStateService),
+    to,
+    emit,
   };
 }
 
@@ -173,5 +184,74 @@ describe('RealtimeGateway.leaveSession', () => {
     );
     expect(socket.leave).toHaveBeenCalledWith('session:5');
     expect(result).toEqual({ left: 'session:5' });
+  });
+});
+
+describe('RealtimeGateway.initiativeAdd', () => {
+  it('adds an entry, broadcasts session-state, returns the state', async () => {
+    const { gateway, to, emit } = await setup();
+    const socket = fakeSocket();
+    (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    const state = await gateway.initiativeAdd(
+      socket as unknown as Parameters<typeof gateway.initiativeAdd>[0],
+      {
+        campaignId: 1,
+        sessionId: 5,
+        entry: { label: 'Goblin', initiative: 12, type: 'npc' },
+      },
+    );
+    expect(state.initiative).toHaveLength(1);
+    expect(to).toHaveBeenCalledWith('session:5');
+    expect(emit).toHaveBeenCalledWith('session-state', state);
+  });
+
+  it('rejects when entry.label is missing', async () => {
+    const { gateway } = await setup();
+    const socket = fakeSocket();
+    (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    await expect(
+      gateway.initiativeAdd(
+        socket as unknown as Parameters<typeof gateway.initiativeAdd>[0],
+        {
+          campaignId: 1,
+          sessionId: 5,
+          entry: { initiative: 12, type: 'npc' } as unknown as {
+            label: string;
+            initiative: number;
+            type: 'npc';
+          },
+        },
+      ),
+    ).rejects.toBeInstanceOf(WsException);
+  });
+});
+
+describe('RealtimeGateway.initiativeNextTurn + reset', () => {
+  it('advances turn and broadcasts', async () => {
+    const { gateway, state, to } = await setup();
+    state.addEntry(5, { label: 'A', initiative: 20, type: 'npc' });
+    const socket = fakeSocket();
+    (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    const result = await gateway.initiativeNextTurn(
+      socket as unknown as Parameters<typeof gateway.initiativeNextTurn>[0],
+      { campaignId: 1, sessionId: 5 },
+    );
+    expect(result.turnIndex).toBe(0);
+    expect(result.round).toBe(1);
+    expect(to).toHaveBeenCalledWith('session:5');
+  });
+
+  it('reset clears the tracker', async () => {
+    const { gateway, state } = await setup();
+    state.addEntry(5, { label: 'A', initiative: 20, type: 'npc' });
+    const socket = fakeSocket();
+    (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    const result = await gateway.initiativeReset(
+      socket as unknown as Parameters<typeof gateway.initiativeReset>[0],
+      { campaignId: 1, sessionId: 5 },
+    );
+    expect(result.initiative).toEqual([]);
+    expect(result.round).toBe(0);
+    expect(result.turnIndex).toBe(-1);
   });
 });
