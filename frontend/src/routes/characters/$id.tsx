@@ -1847,7 +1847,16 @@ function LevelBadge({ character }: { character: Character }) {
     onError: (_e, _v, ctx) => {
       if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
     },
-    onSuccess: (server) => qc.setQueryData<Character>(queryKey, server),
+    onSuccess: (server) => {
+      qc.setQueryData<Character>(queryKey, server)
+      /* Level + class changes are shown on campaign member rows
+       * (`char.level`, `char.classes[].className/level`) — invalidate
+       * every open members roster so stale numbers don't linger. */
+      qc.invalidateQueries({
+        predicate: (q) =>
+          q.queryKey[0] === 'campaigns' && q.queryKey[2] === 'members',
+      })
+    },
   })
 
   const bumpClass = (className: string, delta: 1 | -1) => {

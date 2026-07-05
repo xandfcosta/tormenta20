@@ -294,9 +294,13 @@ function AddMemberForm({ campaignId }: { campaignId: number }) {
         characterId: Number(characterId),
         role,
       }),
-    onSuccess: () => {
+    onSuccess: (_data, _vars) => {
       qc.invalidateQueries({
         queryKey: campaignMembersQueryOptions(campaignId).queryKey,
+      })
+      /* The character just joined — its "Campanhas" tab is stale. */
+      qc.invalidateQueries({
+        queryKey: ['characters', Number(characterId), 'campaigns'],
       })
       setCharacterId('')
       setError(null)
@@ -366,6 +370,11 @@ function MemberRow({
     onSuccess: () => {
       qc.invalidateQueries({
         queryKey: campaignMembersQueryOptions(campaignId).queryKey,
+      })
+      /* The character no longer belongs to this campaign — its
+       * "Campanhas" tab still lists the stale row. */
+      qc.invalidateQueries({
+        queryKey: ['characters', member.characterId, 'campaigns'],
       })
     },
   })
