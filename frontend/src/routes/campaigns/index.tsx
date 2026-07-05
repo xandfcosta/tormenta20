@@ -2,6 +2,7 @@ import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { SkeletonCardGrid } from '@/components/ui/skeleton'
 import { campaignsQueryOptions, meQueryOptions } from '@/lib/queries'
 import type { Campaign } from '@/lib/api'
 
@@ -27,7 +28,7 @@ function CampaignsListPage() {
         </Link>
       </div>
 
-      {campaigns.isLoading && <p>Loading…</p>}
+      {campaigns.isLoading && <SkeletonCardGrid count={3} />}
       {campaigns.isError && (
         <p className="text-destructive">
           {(campaigns.error as Error).message}
