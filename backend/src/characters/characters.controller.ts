@@ -13,6 +13,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthUser } from '../auth/auth.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CharactersService } from './characters.service';
+import { CampaignMembersService } from '../campaign-members/campaign-members.service';
 import {
   ConsumeItemDto,
   CreateCharacterDto,
@@ -37,7 +38,10 @@ import {
 
 @Controller('characters')
 export class CharactersController {
-  constructor(private readonly characters: CharactersService) {}
+  constructor(
+    private readonly characters: CharactersService,
+    private readonly members: CampaignMembersService,
+  ) {}
 
   @Get('options')
   options() {
@@ -73,6 +77,15 @@ export class CharactersController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     return this.characters.findOneWithComputed(user.id, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/campaigns')
+  listCampaigns(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.members.listForCharacter(user.id, id);
   }
 
   @UseGuards(JwtAuthGuard)

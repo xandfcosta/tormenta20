@@ -52,7 +52,7 @@ async function setup(over?: {
     character: {
       findUnique:
         over?.characterFindUnique ??
-        jest.fn().mockResolvedValue({ id: 10 }),
+        jest.fn().mockResolvedValue({ id: 10, ownerId: 1 }),
     },
   };
   const campaigns = {
@@ -191,5 +191,43 @@ describe('CampaignMembersService.remove', () => {
     const { service } = await setup({ memberFindUnique, memberDelete });
     await expect(service.remove(1, 1, 1)).resolves.toEqual({ id: 1 });
     expect(memberDelete).toHaveBeenCalledWith({ where: { id: 1 } });
+  });
+});
+
+describe('CampaignMembersService.listForCharacter', () => {
+  it('returns campaigns joined with the member row for the given character', async () => {
+    const rows = [
+      { id: 1, campaignId: 1, characterId: 10, role: 'player', campaign: { id: 1, name: 'C' } },
+    ];
+    const memberFindMany = jest.fn().mockResolvedValue(rows);
+    const characterFindUnique = jest
+      .fn()
+      .mockResolvedValue({ id: 10, ownerId: 5 });
+    const { service } = await setup({ memberFindMany, characterFindUnique });
+    await expect(service.listForCharacter(5, 10)).resolves.toEqual(rows);
+    expect(memberFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { characterId: 10 },
+        include: expect.objectContaining({ campaign: expect.any(Object) }),
+      }),
+    );
+  });
+
+  it('throws NotFound when the character does not exist', async () => {
+    const characterFindUnique = jest.fn().mockResolvedValue(null);
+    const { service } = await setup({ characterFindUnique });
+    await expect(service.listForCharacter(1, 99)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it('throws Forbidden when the character belongs to another user', async () => {
+    const characterFindUnique = jest
+      .fn()
+      .mockResolvedValue({ id: 10, ownerId: 999 });
+    const { service } = await setup({ characterFindUnique });
+    await expect(service.listForCharacter(1, 10)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
   });
 });

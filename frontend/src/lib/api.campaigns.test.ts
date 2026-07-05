@@ -38,6 +38,17 @@ describe('api.characters.getSheet', () => {
   })
 })
 
+describe('api.characters.campaigns', () => {
+  it('GET /api/characters/:id/campaigns', async () => {
+    fetchSpy.mockResolvedValueOnce(jsonResponse([]))
+    await api.characters.campaigns(7)
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/characters/7/campaigns',
+      expect.any(Object),
+    )
+  })
+})
+
 describe('api.campaigns', () => {
   it('list → GET /api/campaigns', async () => {
     fetchSpy.mockResolvedValueOnce(jsonResponse([]))

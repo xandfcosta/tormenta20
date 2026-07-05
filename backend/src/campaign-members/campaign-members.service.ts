@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -119,5 +120,40 @@ export class CampaignMembersService {
     await this.findOne(ownerId, campaignId, memberId);
     await this.prisma.campaignMember.delete({ where: { id: memberId } });
     return { id: memberId };
+  }
+
+  /**
+   * Reverse lookup — list every campaign a character participates in.
+   * The character must belong to `ownerId` (same rule as CharactersService).
+   * Returns the join row + nested campaign so the UI can render both the
+   * role (player/gm) and the campaign card in one hop.
+   */
+  async listForCharacter(ownerId: number, characterId: number) {
+    const character = await this.prisma.character.findUnique({
+      where: { id: characterId },
+      select: { id: true, ownerId: true },
+    });
+    if (!character) {
+      throw new NotFoundException(`Character ${characterId} not found`);
+    }
+    if (character.ownerId !== ownerId) {
+      throw new ForbiddenException(
+        `Character ${characterId} belongs to another user`,
+      );
+    }
+    return this.prisma.campaignMember.findMany({
+      where: { characterId },
+      orderBy: { addedAt: 'asc' },
+      include: {
+        campaign: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            updatedAt: true,
+          },
+        },
+      },
+    });
   }
 }

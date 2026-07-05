@@ -51,7 +51,12 @@ import {
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
-import { characterQueryOptions, meQueryOptions } from '@/lib/queries'
+import {
+  characterCampaignsQueryOptions,
+  characterQueryOptions,
+  meQueryOptions,
+} from '@/lib/queries'
+import { SkeletonRows } from '@/components/ui/skeleton'
 import type {
   AttributeKey,
   Character,
@@ -199,6 +204,9 @@ function RightPanel({ character }: { character: Character }) {
         <TabsTrigger value="abilities" className="gap-1.5">
           <Star className="size-3.5" /> Habilidades
         </TabsTrigger>
+        <TabsTrigger value="campaigns" className="gap-1.5">
+          Campanhas
+        </TabsTrigger>
       </TabsList>
       <TabsContent
         value="expertises"
@@ -236,7 +244,60 @@ function RightPanel({ character }: { character: Character }) {
       >
         <AbilitiesPanel character={character} />
       </TabsContent>
+      <TabsContent
+        value="campaigns"
+        className="flex min-h-0 flex-1 flex-col overflow-hidden"
+      >
+        <CampaignsPanel characterId={character.id} />
+      </TabsContent>
     </Tabs>
+  )
+}
+
+function CampaignsPanel({ characterId }: { characterId: number }) {
+  const query = useQuery(characterCampaignsQueryOptions(characterId))
+  if (query.isLoading) {
+    return <SkeletonRows count={2} className="p-2" />
+  }
+  if (query.isError) {
+    return (
+      <p className="p-2 text-sm text-destructive">
+        {(query.error as Error).message}
+      </p>
+    )
+  }
+  const rows = query.data ?? []
+  if (rows.length === 0) {
+    return (
+      <p className="p-2 text-sm text-muted-foreground">
+        Este personagem não participa de nenhuma campanha ainda.
+      </p>
+    )
+  }
+  return (
+    <div className="flex flex-col gap-2 overflow-y-auto p-2">
+      {rows.map((row) => (
+        <Link
+          key={row.id}
+          to="/campaigns/$id"
+          params={{ id: String(row.campaignId) }}
+        >
+          <div className="rounded-md border p-3 transition hover:border-primary/40">
+            <div className="flex items-center justify-between">
+              <p className="font-medium">{row.campaign.name}</p>
+              <Badge variant={row.role === 'gm' ? 'default' : 'outline'}>
+                {row.role === 'gm' ? 'GM' : 'Jogador'}
+              </Badge>
+            </div>
+            {row.campaign.description && (
+              <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                {row.campaign.description}
+              </p>
+            )}
+          </div>
+        </Link>
+      ))}
+    </div>
   )
 }
 
