@@ -43,7 +43,7 @@ const TOOLS = [
     title: 'Gerador de masmorras',
     description:
       'Estrutura salas, ameaças e objetivos por tamanho seguindo o Cap 6.',
-    ready: false,
+    ready: true,
   },
 ] as const
 
