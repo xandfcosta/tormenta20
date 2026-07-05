@@ -13,38 +13,116 @@ class FakeUserRepo {
   ]);
 }
 
-describe('UsersService.list', () => {
-  let service: UsersService;
-  let userRepo: FakeUserRepo;
+class FakeCampaignMemberRepo {
+  findMany = jest.fn(async () => []);
+}
 
-  beforeEach(async () => {
-    userRepo = new FakeUserRepo();
-    const moduleRef = await Test.createTestingModule({
-      providers: [
-        UsersService,
-        { provide: PrismaService, useValue: { user: userRepo } },
-      ],
-    }).compile();
-    service = moduleRef.get(UsersService);
-  });
+async function setup(over?: {
+  memberFindMany?: jest.Mock;
+  userFindMany?: jest.Mock;
+}) {
+  const userRepo = new FakeUserRepo();
+  if (over?.userFindMany) userRepo.findMany = over.userFindMany;
+  const memberRepo = new FakeCampaignMemberRepo();
+  if (over?.memberFindMany) memberRepo.findMany = over.memberFindMany;
+  const moduleRef = await Test.createTestingModule({
+    providers: [
+      UsersService,
+      {
+        provide: PrismaService,
+        useValue: { user: userRepo, campaignMember: memberRepo },
+      },
+    ],
+  }).compile();
+  return {
+    service: moduleRef.get(UsersService),
+    userRepo,
+    memberRepo,
+  };
+}
 
+describe('UsersService.listAll (privileged / admin path)', () => {
   it('queries user.findMany with the expected select + order', async () => {
-    await service.list();
+    const { service, userRepo } = await setup();
+    await service.listAll();
     expect(userRepo.findMany).toHaveBeenCalledWith({
       orderBy: { createdAt: 'desc' },
       select: { id: true, email: true, name: true, createdAt: true },
     });
   });
 
-  it('passes the Prisma result through', async () => {
-    const rows = await service.list();
-    expect(rows).toHaveLength(2);
-    expect(rows[0]!.email).toBe('a@b.com');
-  });
-
-  it('does not select passwordHash (caller cannot leak it)', async () => {
-    await service.list();
+  it('does not select passwordHash', async () => {
+    const { service, userRepo } = await setup();
+    await service.listAll();
     const select = userRepo.findMany.mock.calls[0]![0]!.select;
     expect(select).not.toHaveProperty('passwordHash');
+  });
+});
+
+describe('UsersService.listVisibleTo (scoped to co-members)', () => {
+  it('always includes the caller themselves', async () => {
+    const { service, userRepo } = await setup({
+      userFindMany: jest.fn(async () => [{ id: 7 }]),
+    });
+    await service.listVisibleTo(7);
+    const lastCall = userRepo.findMany.mock.calls.at(-1)![0]!;
+    expect(lastCall.where.id.in).toContain(7);
+  });
+
+  it('includes users who own characters in campaigns the caller runs', async () => {
+    const memberFindMany = jest
+      .fn()
+      .mockResolvedValueOnce([{ character: { ownerId: 42 } }])
+      .mockResolvedValueOnce([]);
+    const { service, userRepo } = await setup({
+      memberFindMany,
+    });
+    await service.listVisibleTo(7);
+    const lastCall = userRepo.findMany.mock.calls.at(-1)![0]!;
+    expect(lastCall.where.id.in).toContain(42);
+  });
+
+  it('includes GMs of campaigns the caller plays in', async () => {
+    const memberFindMany = jest
+      .fn()
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ campaign: { ownerId: 99 } }]);
+    const { service, userRepo } = await setup({
+      memberFindMany,
+    });
+    await service.listVisibleTo(7);
+    const lastCall = userRepo.findMany.mock.calls.at(-1)![0]!;
+    expect(lastCall.where.id.in).toContain(99);
+  });
+
+  it('de-duplicates ids so a user shared across many campaigns appears once', async () => {
+    const memberFindMany = jest
+      .fn()
+      .mockResolvedValueOnce([
+        { character: { ownerId: 42 } },
+        { character: { ownerId: 42 } },
+      ])
+      .mockResolvedValueOnce([{ campaign: { ownerId: 42 } }]);
+    const { service, userRepo } = await setup({
+      memberFindMany,
+    });
+    await service.listVisibleTo(7);
+    const ids = userRepo.findMany.mock.calls.at(-1)![0]!.where.id.in;
+    /* Set should collapse the three 42s. */
+    expect(ids.filter((id: number) => id === 42)).toHaveLength(1);
+  });
+
+  it('does not select passwordHash', async () => {
+    const { service, userRepo } = await setup();
+    await service.listVisibleTo(7);
+    const select = userRepo.findMany.mock.calls.at(-1)![0]!.select;
+    expect(select).not.toHaveProperty('passwordHash');
+  });
+
+  it('caller with zero campaigns still sees themselves', async () => {
+    const { service, userRepo } = await setup();
+    await service.listVisibleTo(7);
+    const lastCall = userRepo.findMany.mock.calls.at(-1)![0]!;
+    expect(lastCall.where.id.in).toEqual([7]);
   });
 });
