@@ -67,6 +67,15 @@ export class CharactersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get(':id/sheet')
+  findSheet(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.characters.findOneWithComputed(user.id, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post()
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateCharacterDto) {
     return this.characters.create(user.id, dto);
