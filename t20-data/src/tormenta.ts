@@ -149,45 +149,199 @@ export type TormentaPowerId =
 export type TormentaPower = {
   id: TormentaPowerId
   name: string
+  /**
+   * Verbatim rule text lifted from PDF Cap 2 p135-137. Every power in
+   * this catalog now carries a description so consumers can render
+   * without a second lookup. See `feat(t20-data): 22 tormenta descs`.
+   */
+  description: string
   /** Number of OTHER Tormenta powers required to unlock this one. */
   requiresOtherPowers: number
   /** Specific prerequisite power, when stated. */
   requiresPower?: TormentaPowerId
+  /** Book page anchor (135, 136 or 137). */
+  bookPage: 135 | 136 | 137
 }
 
 const POWERS: readonly TormentaPower[] = [
-  { id: 'anatomia-insana', name: 'Anatomia Insana', requiresOtherPowers: 0 },
-  { id: 'antenas', name: 'Antenas', requiresOtherPowers: 0 },
-  { id: 'armamento-aberrante', name: 'Armamento Aberrante', requiresOtherPowers: 1 },
-  { id: 'articulacoes-flexiveis', name: 'Articulações Flexíveis', requiresOtherPowers: 0 },
-  { id: 'asas-insetoides', name: 'Asas Insetoides', requiresOtherPowers: 4 },
-  { id: 'carapaca', name: 'Carapaça', requiresOtherPowers: 0 },
-  { id: 'corpo-aberrante', name: 'Corpo Aberrante', requiresOtherPowers: 1 },
-  { id: 'cuspir-enxame', name: 'Cuspir Enxame', requiresOtherPowers: 0 },
-  { id: 'dentes-afiados', name: 'Dentes Afiados', requiresOtherPowers: 0 },
-  { id: 'desprezar-a-realidade', name: 'Desprezar a Realidade', requiresOtherPowers: 4 },
-  { id: 'empunhadura-rubra', name: 'Empunhadura Rubra', requiresOtherPowers: 0 },
-  { id: 'fome-de-mana', name: 'Fome de Mana', requiresOtherPowers: 0 },
+  {
+    id: 'anatomia-insana',
+    name: 'Anatomia Insana',
+    description:
+      '25% de chance (resultado "1" em 1d4) de ignorar o dano adicional de um acerto crítico ou ataque furtivo. A chance aumenta em +25% para cada dois outros poderes da Tormenta que você possui.',
+    requiresOtherPowers: 0,
+    bookPage: 136,
+  },
+  {
+    id: 'antenas',
+    name: 'Antenas',
+    description:
+      '+1 em Iniciativa, Percepção e Vontade. Este bônus aumenta em +1 para cada dois outros poderes da Tormenta que você possui.',
+    requiresOtherPowers: 0,
+    bookPage: 136,
+  },
+  {
+    id: 'armamento-aberrante',
+    name: 'Armamento Aberrante',
+    description:
+      'Ação de movimento + 1 PM para produzir versão orgânica de qualquer arma corpo a corpo ou de arremesso com a qual seja proficiente — brota do braço/ombro/costas como planta grotesca e então se desprende. Dano da arma aumenta em um passo para cada dois outros poderes da Tormenta. Dura pela cena, então desfaz em gosma.',
+    requiresOtherPowers: 1,
+    bookPage: 136,
+  },
+  {
+    id: 'articulacoes-flexiveis',
+    name: 'Articulações Flexíveis',
+    description:
+      '+1 em Acrobacia, Furtividade e Reflexos. Bônus aumenta em +1 para cada dois outros poderes da Tormenta.',
+    requiresOtherPowers: 0,
+    bookPage: 136,
+  },
+  {
+    id: 'asas-insetoides',
+    name: 'Asas Insetoides',
+    description:
+      '1 PM para deslocamento de voo 9m até o fim do turno. Deslocamento aumenta +1,5m para cada outro poder da Tormenta que você possui.',
+    requiresOtherPowers: 4,
+    bookPage: 136,
+  },
+  {
+    id: 'carapaca',
+    name: 'Carapaça',
+    description:
+      'Pele recoberta por placas quitinosas: +1 na Defesa. Bônus aumenta em +1 para cada dois outros poderes da Tormenta.',
+    requiresOtherPowers: 0,
+    bookPage: 136,
+  },
+  {
+    id: 'corpo-aberrante',
+    name: 'Corpo Aberrante',
+    description:
+      'Crostas vermelhas tornam ataques desarmados mais perigosos. Dano desarmado aumenta em um passo, mais um passo para cada quatro outros poderes da Tormenta.',
+    requiresOtherPowers: 1,
+    bookPage: 136,
+  },
+  {
+    id: 'cuspir-enxame',
+    name: 'Cuspir Enxame',
+    description:
+      'Ação completa + 2 PM para criar enxame de insetos rubros em ponto à escolha em alcance curto (sustentada). Enxame tamanho Médio, atravessa espaço de outras criaturas. Ação de movimento move enxame 9m. Fim do turno causa 2d6 dano ácido a criaturas no espaço. +1 PM por dois outros poderes da Tormenta aumenta dano em +1d6.',
+    requiresOtherPowers: 0,
+    bookPage: 136,
+  },
+  {
+    id: 'dentes-afiados',
+    name: 'Dentes Afiados',
+    description:
+      'Arma natural de mordida (dano 1d4, crítico x2, corte). Uma vez por rodada quando agride com outra arma, gasta 1 PM para ataque corpo a corpo extra com a mordida.',
+    requiresOtherPowers: 0,
+    bookPage: 137,
+  },
+  {
+    id: 'desprezar-a-realidade',
+    name: 'Desprezar a Realidade',
+    description:
+      '2 PM para ficar no limiar da realidade até o início do próximo turno: ignora terreno difícil e causa 20% de chance de falha em efeitos usados contra você (não apenas ataques). +5% por dois outros poderes da Tormenta (máximo 50%).',
+    requiresOtherPowers: 4,
+    bookPage: 137,
+  },
+  {
+    id: 'empunhadura-rubra',
+    name: 'Empunhadura Rubra',
+    description:
+      '1 PM para cobrir mãos com carapaça rubra. Até fim da cena: +1 em Luta. Bônus aumenta em +1 para cada dois outros poderes da Tormenta.',
+    requiresOtherPowers: 0,
+    bookPage: 137,
+  },
+  {
+    id: 'fome-de-mana',
+    name: 'Fome de Mana',
+    description:
+      'Ao passar em teste de resistência contra habilidade mágica de inimigo, recebe 1 PM temporário cumulativo. Máximo de PM temporários por cena = número de poderes da Tormenta que possui.',
+    requiresOtherPowers: 0,
+    bookPage: 137,
+  },
   {
     id: 'larva-explosiva',
     name: 'Larva Explosiva',
+    description:
+      'Se criatura que sofreu dano de sua mordida na cena é reduzida a 0 PV ou menos, explode em chuva cáustica (morre) causando 4d4 ácido em criaturas adjacentes. +2d4 por dois outros poderes da Tormenta. Imune a esse dano.',
     requiresOtherPowers: 0,
     requiresPower: 'dentes-afiados',
+    bookPage: 137,
   },
   {
     id: 'legiao-aberrante',
     name: 'Legião Aberrante',
+    description:
+      'Corpo se transforma em massa de insetos rubros. Atravessa espaços por onde passa moeda (esses espaços contam como terreno difícil). +1 em testes contra manobras e resistência a efeitos direcionados a você (não área). Bônus aumenta +1 para cada dois outros poderes da Tormenta.',
     requiresOtherPowers: 3,
     requiresPower: 'anatomia-insana',
+    bookPage: 137,
   },
-  { id: 'maos-membranosas', name: 'Mãos Membranosas', requiresOtherPowers: 0 },
-  { id: 'membros-estendidos', name: 'Membros Estendidos', requiresOtherPowers: 0 },
-  { id: 'membros-extras', name: 'Membros Extras', requiresOtherPowers: 4 },
-  { id: 'mente-aberrante', name: 'Mente Aberrante', requiresOtherPowers: 0 },
-  { id: 'olhos-vermelhos', name: 'Olhos Vermelhos', requiresOtherPowers: 0 },
-  { id: 'pele-corrompida', name: 'Pele Corrompida', requiresOtherPowers: 0 },
-  { id: 'sangue-acido', name: 'Sangue Ácido', requiresOtherPowers: 0 },
-  { id: 'visco-rubro', name: 'Visco Rubro', requiresOtherPowers: 0 },
+  {
+    id: 'maos-membranosas',
+    name: 'Mãos Membranosas',
+    description:
+      '+1 em Atletismo, Fortitude e testes de agarrar. Bônus aumenta em +1 para cada dois outros poderes da Tormenta.',
+    requiresOtherPowers: 0,
+    bookPage: 137,
+  },
+  {
+    id: 'membros-estendidos',
+    name: 'Membros Estendidos',
+    description:
+      'Braços e armas naturais grotescamente mais longos: alcance natural corpo a corpo +1,5m. Alcance aumenta +1,5m para cada quatro outros poderes da Tormenta.',
+    requiresOtherPowers: 0,
+    bookPage: 137,
+  },
+  {
+    id: 'membros-extras',
+    name: 'Membros Extras',
+    description:
+      'Duas armas naturais de patas insetoides das costas/ombros/flancos. Uma vez por rodada ao agredir com outra arma, gasta 2 PM para ataque corpo a corpo extra com cada uma (dano 1d4, crítico x2, corte). Com Ambidestria ou Estilo de Duas Armas: empunha armas leves nas patas (ainda paga 2 PM + sofre -2 em todos os ataques).',
+    requiresOtherPowers: 4,
+    bookPage: 137,
+  },
+  {
+    id: 'mente-aberrante',
+    name: 'Mente Aberrante',
+    description:
+      'Resistência a efeitos mentais +1. Ao passar em teste de Vontade contra habilidade, a criatura usuária sofre 1d6 psíquico. Bônus e dano aumentam +1/+1d6 para cada dois outros poderes da Tormenta.',
+    requiresOtherPowers: 0,
+    bookPage: 137,
+  },
+  {
+    id: 'olhos-vermelhos',
+    name: 'Olhos Vermelhos',
+    description:
+      'Visão no escuro e +1 em Intimidação. Bônus em Intimidação aumenta em +1 para cada dois outros poderes da Tormenta.',
+    requiresOtherPowers: 0,
+    bookPage: 137,
+  },
+  {
+    id: 'pele-corrompida',
+    name: 'Pele Corrompida',
+    description:
+      'Carne mesclada à matéria vermelha: redução de ácido, eletricidade, fogo, frio, luz e trevas 2. RD aumenta +2 para cada dois outros poderes da Tormenta.',
+    requiresOtherPowers: 0,
+    bookPage: 137,
+  },
+  {
+    id: 'sangue-acido',
+    name: 'Sangue Ácido',
+    description:
+      'Quando sofre dano por ataque corpo a corpo, atacante sofre 1 dano ácido por poder da Tormenta que você possui.',
+    requiresOtherPowers: 0,
+    bookPage: 137,
+  },
+  {
+    id: 'visco-rubro',
+    name: 'Visco Rubro',
+    description:
+      '1 PM para expelir líquido grosso e corrosivo. Até fim da cena: +1 nas rolagens de dano corpo a corpo. Bônus aumenta em +1 para cada dois outros poderes da Tormenta.',
+    requiresOtherPowers: 0,
+    bookPage: 137,
+  },
 ]
 
 export const TORMENTA_POWERS: Readonly<Record<TormentaPowerId, TormentaPower>> =
