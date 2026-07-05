@@ -46,17 +46,34 @@ export class CampaignMembersService {
   }
 
   /**
-   * Add a character to the campaign. Requires the character to exist —
-   * v1 does NOT require the character's owner to grant access. That
-   * looser check is deliberate for solo GMs prototyping party rosters;
-   * a stricter invite flow (character-owner acceptance) can layer on
-   * later without changing this signature.
+   * Add a character to a campaign. **The caller must own the character
+   * being added.** This closes OC1 from the whole-flow audit: the
+   * pre-fix rule ("caller must be GM of campaign") let any GM slot any
+   * user's PC into their own table without consent from the player.
+   *
+   * New semantics:
+   *   - Player self-joins a campaign: caller owns the character being
+   *     added; campaign must exist. No consent step needed because
+   *     the actor is the character owner.
+   *   - GM adds their own character (PC/NPC) to a campaign they run:
+   *     works because caller is the character owner.
+   *   - GM adds someone else's character: rejected with 403.
+   *
+   * A full invite/accept flow (`Invitation` model) would restore the
+   * "GM invites → player accepts" pattern; deliberately out of scope
+   * for the MVP fix — a GM can always ask the player to self-add.
    */
-  async add(ownerId: number, campaignId: number, dto: AddMemberDto) {
-    await this.assertCampaignOwnership(ownerId, campaignId);
+  async add(callerId: number, campaignId: number, dto: AddMemberDto) {
+    const campaign = await this.prisma.campaign.findUnique({
+      where: { id: campaignId },
+      select: { id: true },
+    });
+    if (!campaign) {
+      throw new NotFoundException(`Campaign ${campaignId} not found`);
+    }
     const character = await this.prisma.character.findUnique({
       where: { id: dto.characterId },
-      select: { id: true },
+      select: { id: true, ownerId: true },
     });
     if (!character) {
       throw new BadRequestException({
@@ -65,6 +82,11 @@ export class CampaignMembersService {
         message: `Character ${dto.characterId} not found`,
         fieldErrors: { characterId: [`Character does not exist`] },
       });
+    }
+    if (character.ownerId !== callerId) {
+      throw new ForbiddenException(
+        `Cannot add a character you don't own (character ${dto.characterId})`,
+      );
     }
     const existing = await this.prisma.campaignMember.findUnique({
       where: {
