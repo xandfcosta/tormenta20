@@ -3642,6 +3642,77 @@ const SPELLS: readonly CatalogSpell[] = [
     bookPage: 194,
   },
   {
+    id: 'heroismo',
+    name: 'Heroísmo',
+    circle: 3,
+    school: 'encantamento',
+    execution: 'padrao',
+    range: 'toque',
+    duration: 'cena',
+    saveType: 'none',
+    resistance: null,
+    components: VG,
+    classes: ['Clérigo', 'Paladino'],
+    baseEffect:
+      'Alvo: 1 criatura. Imbui com coragem e valentia. Fica imune a medo, recebe 40 PV temporários e +4 em testes de ataque e rolagens de dano contra o inimigo de maior ND na cena.',
+    augments: [
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description: 'Muda o bônus para +6.',
+      },
+    ],
+    bookPage: 194,
+  },
+  {
+    id: 'hipnotismo',
+    name: 'Hipnotismo',
+    circle: 1,
+    school: 'encantamento',
+    execution: 'padrao',
+    range: 'curto',
+    duration: 'definida',
+    durationNote: '1d4 rodadas',
+    saveType: 'vontade',
+    resistance: 'anula',
+    components: VG,
+    classes: ['Arcanista', 'Bardo'],
+    baseEffect:
+      'Alvos: 1 animal ou humanoide. Palavras e movimentos ritmados deixam o alvo fascinado. Só afeta criaturas que possam perceber o conjurador. Em combate, o alvo recebe +5 na resistência. Se passar, fica imune por um dia. Truque: muda duração para 1 rodada e o efeito para pasmo (apenas uma vez por cena).',
+    augments: [
+      {
+        pmCost: 1,
+        kind: 'muda',
+        description:
+          'Alvos que passem na resistência não sabem que foram vítimas de uma magia.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description: 'Muda o alvo para animais ou humanoides escolhidos.',
+      },
+      {
+        pmCost: 2,
+        kind: 'muda',
+        description: 'Muda a duração para sustentada.',
+      },
+      {
+        pmCost: 2,
+        kind: 'aumenta',
+        description: 'Também afeta espíritos e monstros na área.',
+        requiresCircle: 2,
+      },
+      {
+        pmCost: 5,
+        kind: 'aumenta',
+        description:
+          'Também afeta construtos, espíritos, monstros e mortos-vivos na área.',
+        requiresCircle: 3,
+      },
+    ],
+    bookPage: 194,
+  },
+  {
     id: 'ilusao-lacerante',
     name: 'Ilusão Lacerante',
     circle: 3,
