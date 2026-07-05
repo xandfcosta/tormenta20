@@ -167,6 +167,46 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     return state;
   }
 
+  @SubscribeMessage('vitals-patch')
+  async vitalsPatch(
+    @ConnectedSocket() socket: AuthedSocket,
+    @MessageBody()
+    body: SessionScopedBody & {
+      entryId: string;
+      patch: { hpCurrent?: number; mpCurrent?: number };
+    },
+  ) {
+    await this.assertSessionAccess(socket, body);
+    if (!body.entryId) throw new WsException('entryId is required');
+    const state = this.state.patchVitals(
+      body.sessionId,
+      body.entryId,
+      body.patch ?? {},
+    );
+    this.emitSessionState(body.sessionId, state);
+    return state;
+  }
+
+  @SubscribeMessage('vitals-delta')
+  async vitalsDelta(
+    @ConnectedSocket() socket: AuthedSocket,
+    @MessageBody()
+    body: SessionScopedBody & {
+      entryId: string;
+      hpDelta?: number;
+      mpDelta?: number;
+    },
+  ) {
+    await this.assertSessionAccess(socket, body);
+    if (!body.entryId) throw new WsException('entryId is required');
+    const state = this.state.deltaVitals(body.sessionId, body.entryId, {
+      hpDelta: body.hpDelta,
+      mpDelta: body.mpDelta,
+    });
+    this.emitSessionState(body.sessionId, state);
+    return state;
+  }
+
   private emitSessionState(sessionId: number, state: SessionRuntimeState) {
     this.server.to(sessionRoom(sessionId)).emit('session-state', state);
   }

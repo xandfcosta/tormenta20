@@ -226,6 +226,98 @@ describe('RealtimeGateway.initiativeAdd', () => {
   });
 });
 
+describe('RealtimeGateway.vitalsPatch', () => {
+  it('applies clamped absolute values + broadcasts', async () => {
+    const { gateway, state, to, emit } = await setup();
+    const s = state.addEntry(5, {
+      label: 'PC',
+      initiative: 15,
+      type: 'character',
+      hpCurrent: 10,
+      hpMax: 20,
+    });
+    const socket = fakeSocket();
+    (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    const result = await gateway.vitalsPatch(
+      socket as unknown as Parameters<typeof gateway.vitalsPatch>[0],
+      {
+        campaignId: 1,
+        sessionId: 5,
+        entryId: s.initiative[0]!.id,
+        patch: { hpCurrent: 999 },
+      },
+    );
+    expect(result.initiative[0]?.hpCurrent).toBe(20);
+    expect(to).toHaveBeenCalledWith('session:5');
+    expect(emit).toHaveBeenCalledWith('session-state', result);
+  });
+
+  it('rejects missing entryId', async () => {
+    const { gateway } = await setup();
+    const socket = fakeSocket();
+    (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    await expect(
+      gateway.vitalsPatch(
+        socket as unknown as Parameters<typeof gateway.vitalsPatch>[0],
+        {
+          campaignId: 1,
+          sessionId: 5,
+          entryId: '',
+          patch: { hpCurrent: 5 },
+        },
+      ),
+    ).rejects.toBeInstanceOf(WsException);
+  });
+});
+
+describe('RealtimeGateway.vitalsDelta', () => {
+  it('applies hpDelta and broadcasts', async () => {
+    const { gateway, state } = await setup();
+    const s = state.addEntry(5, {
+      label: 'PC',
+      initiative: 15,
+      type: 'character',
+      hpCurrent: 20,
+      hpMax: 30,
+    });
+    const socket = fakeSocket();
+    (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    const result = await gateway.vitalsDelta(
+      socket as unknown as Parameters<typeof gateway.vitalsDelta>[0],
+      {
+        campaignId: 1,
+        sessionId: 5,
+        entryId: s.initiative[0]!.id,
+        hpDelta: -8,
+      },
+    );
+    expect(result.initiative[0]?.hpCurrent).toBe(12);
+  });
+
+  it('applies mpDelta', async () => {
+    const { gateway, state } = await setup();
+    const s = state.addEntry(5, {
+      label: 'PC',
+      initiative: 15,
+      type: 'character',
+      mpCurrent: 4,
+      mpMax: 10,
+    });
+    const socket = fakeSocket();
+    (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    const result = await gateway.vitalsDelta(
+      socket as unknown as Parameters<typeof gateway.vitalsDelta>[0],
+      {
+        campaignId: 1,
+        sessionId: 5,
+        entryId: s.initiative[0]!.id,
+        mpDelta: 5,
+      },
+    );
+    expect(result.initiative[0]?.mpCurrent).toBe(9);
+  });
+});
+
 describe('RealtimeGateway.initiativeNextTurn + reset', () => {
   it('advances turn and broadcasts', async () => {
     const { gateway, state, to } = await setup();
