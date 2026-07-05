@@ -29,7 +29,7 @@ const TOOLS = [
     title: 'Bestiário',
     description:
       'Consulta rápida de criaturas por ND, tipo e tamanho, com ataques e habilidades especiais.',
-    ready: false,
+    ready: true,
   },
   {
     to: '/gm/encounters',
