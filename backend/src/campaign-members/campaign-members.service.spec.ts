@@ -42,6 +42,9 @@ async function setup(over?: {
   campaignsFindOne?: jest.Mock;
 }) {
   const prisma = {
+    campaign: {
+      findUnique: jest.fn().mockResolvedValue({ id: 1 }),
+    },
     campaignMember: {
       findMany: over?.memberFindMany ?? jest.fn(),
       findUnique: over?.memberFindUnique ?? jest.fn(),
@@ -138,6 +141,20 @@ describe('CampaignMembersService.add', () => {
     await expect(
       service.add(1, 1, { characterId: 10 }),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('rejects when the caller does not own the character (OC1 consent)', async () => {
+    /* Pre-OC1: the check was "caller is GM of campaign" — any GM
+     * could slot any user's PC into their table. Post-OC1: caller
+     * must own the character. GM adding another user's char → 403. */
+    const characterFindUnique = jest
+      .fn()
+      .mockResolvedValue({ id: 10, ownerId: 999 });
+    const memberFindUnique = jest.fn().mockResolvedValue(null);
+    const { service } = await setup({ characterFindUnique, memberFindUnique });
+    await expect(
+      service.add(1, 1, { characterId: 10 }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
   });
 });
 
