@@ -7,5 +7,6 @@ import { CampaignMembersService } from './campaign-members.service';
   imports: [CampaignsModule],
   controllers: [CampaignMembersController],
   providers: [CampaignMembersService],
+  exports: [CampaignMembersService],
 })
 export class CampaignMembersModule {}

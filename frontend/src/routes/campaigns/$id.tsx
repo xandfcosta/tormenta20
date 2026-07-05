@@ -375,8 +375,12 @@ function MemberRow({
     char?.classes.map((c) => `${c.className} ${c.level}`).join(' / ') ?? '—'
 
   return (
-    <div className="flex items-center justify-between rounded-md border p-2 text-sm">
-      <div className="flex-1">
+    <div className="flex items-center justify-between rounded-md border p-2 text-sm transition hover:border-primary/40">
+      <Link
+        to="/characters/$id"
+        params={{ id: String(member.characterId) }}
+        className="flex-1"
+      >
         <p className="font-medium">
           {char?.name ?? `Character ${member.characterId}`}{' '}
           <Badge variant="secondary">Lv {char?.level ?? '?'}</Badge>{' '}
@@ -385,13 +389,14 @@ function MemberRow({
           </Badge>
         </p>
         <p className="text-xs text-muted-foreground">{classes}</p>
-      </div>
+      </Link>
       <Button
         variant="ghost"
         size="sm"
         onClick={() => mutation.mutate()}
         disabled={mutation.isPending}
       >
+
         Remover
       </Button>
     </div>

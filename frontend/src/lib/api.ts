@@ -253,6 +253,20 @@ export type UpdateMemberInput = {
   role: CampaignMemberRole
 }
 
+export type CampaignMembershipWithCampaign = {
+  id: number
+  campaignId: number
+  characterId: number
+  role: CampaignMemberRole
+  addedAt: string
+  campaign: {
+    id: number
+    name: string
+    description: string | null
+    updatedAt: string
+  }
+}
+
 const API_BASE = '/api'
 
 export type FieldErrorMap = Record<string, string[]>
@@ -376,6 +390,10 @@ export const api = {
       }),
     getSheet: (id: number) =>
       request<CharacterWithComputed>(`/characters/${id}/sheet`),
+    campaigns: (id: number) =>
+      request<CampaignMembershipWithCampaign[]>(
+        `/characters/${id}/campaigns`,
+      ),
   },
   campaigns: {
     list: () => request<Campaign[]>('/campaigns'),
