@@ -129,6 +129,7 @@ model ActiveEffect {
   modifiers   String
   createdAt   DateTime  @default(now())
 
+  @@unique([characterId, catalogId, scope])
   @@index([characterId])
 }
 
