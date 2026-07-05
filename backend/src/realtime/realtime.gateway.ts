@@ -207,8 +207,16 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     return state;
   }
 
+  /**
+   * Emits `session-state` to everyone in the room + kicks off a
+   * fire-and-forget persist of the new state. Persistence P1b: this
+   * is deliberately not awaited — WS latency stays low; a transient
+   * DB failure logs and marks the session dirty so the next mutation
+   * retries the write.
+   */
   private emitSessionState(sessionId: number, state: SessionRuntimeState) {
     this.server.to(sessionRoom(sessionId)).emit('session-state', state);
+    void this.state.persist(sessionId);
   }
 
   private async assertSessionAccess(

@@ -75,6 +75,13 @@ export class SessionStateService {
   private readonly logger = new Logger(SessionStateService.name);
   private readonly states = new Map<number, SessionRuntimeState>();
   private readonly loading = new Map<number, Promise<SessionRuntimeState>>();
+  /**
+   * Sessions whose last persist failed. The next mutation on the same
+   * session retries the write. Idempotent because `persist` always
+   * serializes the current in-memory state — a stale flag can't drift
+   * away from what the DB should hold.
+   */
+  private readonly dirty = new Set<number>();
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -227,6 +234,42 @@ export class SessionStateService {
   /** Drop the session entirely — useful when the DB row is deleted. */
   forget(sessionId: number): void {
     this.states.delete(sessionId);
+    this.dirty.delete(sessionId);
+  }
+
+  /**
+   * Fire-and-forget serialize + write of the current in-memory state.
+   * Returns a promise that never rejects — a failed write logs and
+   * marks the session dirty so the *next* mutation retries the write.
+   *
+   * Callers (typically the RealtimeGateway) should call this after
+   * every mutating handler + broadcast. Not awaiting keeps WS latency
+   * low; the dirty-flag retry keeps the DB from drifting more than a
+   * few mutations behind under transient failures.
+   */
+  persist(sessionId: number): Promise<void> {
+    const state = this.states.get(sessionId);
+    if (!state) return Promise.resolve();
+    const blob = JSON.stringify(state);
+    return this.prisma.session
+      .update({
+        where: { id: sessionId },
+        data: { runtimeState: blob },
+      })
+      .then(() => {
+        this.dirty.delete(sessionId);
+      })
+      .catch((err: unknown) => {
+        this.dirty.add(sessionId);
+        this.logger.warn(
+          `Session ${sessionId}: persist failed (${(err as Error).message}); marked dirty for retry`,
+        );
+      });
+  }
+
+  /** True when the last persist attempt failed and hasn't been retried. */
+  isDirty(sessionId: number): boolean {
+    return this.dirty.has(sessionId);
   }
 
   /**
