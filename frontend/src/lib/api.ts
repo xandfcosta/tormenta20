@@ -176,6 +176,77 @@ export type CreateCharacterInput = {
   displacement: number
 }
 
+export type Campaign = {
+  id: number
+  ownerId: number
+  name: string
+  description: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export type CreateCampaignInput = {
+  name: string
+  description?: string
+}
+
+export type UpdateCampaignInput = {
+  name?: string
+  description?: string
+}
+
+export type SessionStatus = 'planned' | 'active' | 'ended'
+
+export type Session = {
+  id: number
+  campaignId: number
+  title: string | null
+  sessionNumber: number
+  notes: string | null
+  status: SessionStatus
+  startedAt: string | null
+  endedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export type CreateSessionInput = {
+  sessionNumber: number
+  title?: string
+  notes?: string
+}
+
+export type UpdateSessionInput = {
+  sessionNumber?: number
+  title?: string
+  notes?: string
+}
+
+export type CampaignMemberRole = 'player' | 'gm'
+
+export type CampaignMember = {
+  id: number
+  campaignId: number
+  characterId: number
+  role: CampaignMemberRole
+  addedAt: string
+  character?: {
+    id: number
+    name: string
+    level: number
+    classes: { className: string; level: number }[]
+  }
+}
+
+export type AddMemberInput = {
+  characterId: number
+  role?: CampaignMemberRole
+}
+
+export type UpdateMemberInput = {
+  role: CampaignMemberRole
+}
+
 const API_BASE = '/api'
 
 export type FieldErrorMap = Record<string, string[]>
@@ -296,6 +367,68 @@ export const api = {
       request<Character>(`/characters/${id}/classes/level`, {
         method: 'PATCH',
         body: JSON.stringify(input),
+      }),
+  },
+  campaigns: {
+    list: () => request<Campaign[]>('/campaigns'),
+    get: (id: number) => request<Campaign>(`/campaigns/${id}`),
+    create: (input: CreateCampaignInput) =>
+      request<Campaign>('/campaigns', {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    update: (id: number, input: UpdateCampaignInput) =>
+      request<Campaign>(`/campaigns/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(input),
+      }),
+    delete: (id: number) =>
+      request<{ id: number }>(`/campaigns/${id}`, { method: 'DELETE' }),
+  },
+  sessions: {
+    list: (campaignId: number) =>
+      request<Session[]>(`/campaigns/${campaignId}/sessions`),
+    get: (campaignId: number, id: number) =>
+      request<Session>(`/campaigns/${campaignId}/sessions/${id}`),
+    create: (campaignId: number, input: CreateSessionInput) =>
+      request<Session>(`/campaigns/${campaignId}/sessions`, {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    update: (campaignId: number, id: number, input: UpdateSessionInput) =>
+      request<Session>(`/campaigns/${campaignId}/sessions/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(input),
+      }),
+    delete: (campaignId: number, id: number) =>
+      request<{ id: number }>(`/campaigns/${campaignId}/sessions/${id}`, {
+        method: 'DELETE',
+      }),
+    start: (campaignId: number, id: number) =>
+      request<Session>(`/campaigns/${campaignId}/sessions/${id}/start`, {
+        method: 'POST',
+      }),
+    end: (campaignId: number, id: number) =>
+      request<Session>(`/campaigns/${campaignId}/sessions/${id}/end`, {
+        method: 'POST',
+      }),
+  },
+  members: {
+    list: (campaignId: number) =>
+      request<CampaignMember[]>(`/campaigns/${campaignId}/members`),
+    add: (campaignId: number, input: AddMemberInput) =>
+      request<CampaignMember>(`/campaigns/${campaignId}/members`, {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    updateRole: (campaignId: number, id: number, input: UpdateMemberInput) =>
+      request<CampaignMember>(`/campaigns/${campaignId}/members/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(input),
+      }),
+    remove: (campaignId: number, id: number) =>
+      request<{ id: number }>(`/campaigns/${campaignId}/members/${id}`, {
+        method: 'DELETE',
       }),
   },
 }
