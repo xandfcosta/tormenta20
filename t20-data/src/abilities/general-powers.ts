@@ -520,6 +520,67 @@ export const GENERAL_POWERS_CATALOG: GeneralPower[] = [
     description: '+1 PM a cada dois níveis e +2 em Vontade.',
     prerequisites: [{ kind: 'attribute', attr: 'wisdom', min: 1 }],
   },
+  // Destino residual audit 2026-07-05 — 6 poderes p129-131 que ainda
+  // não constavam no catálogo.
+  {
+    id: 'ao-sabor-do-destino',
+    kind: 'destino',
+    name: 'Ao Sabor do Destino',
+    description:
+      'Abre mão de usar itens mágicos (exceto poções); em troca ganha bônus por patamar por tabela (L6 +2 perícia, L7 +1 Defesa, L8 +1 dano, L9 +1 atributo, L11 +2 perícia, L12 +2 Defesa, L13 +2 dano, L14 +1 atributo, L16 +2 perícia, L17 +3 Defesa, L18 +3 dano, L19 +1 atributo). Bônus não cumulativos — atributo e perícia devem ser diferentes a cada vez. Usar item mágico voluntariamente perde o benefício até o fim da aventura.',
+    minLevel: 6,
+  },
+  {
+    id: 'costas-largas',
+    kind: 'destino',
+    name: 'Costas Largas',
+    description:
+      'Limite de carga +5 espaços e pode se beneficiar de um item vestido adicional.',
+    prerequisites: [
+      { kind: 'attribute', attr: 'constitution', min: 1 },
+      { kind: 'attribute', attr: 'strength', min: 1 },
+    ],
+  },
+  {
+    id: 'inventario-organizado',
+    kind: 'destino',
+    name: 'Inventário Organizado',
+    description:
+      'Soma Inteligência no limite de espaços que pode carregar. Itens muito leves ou pequenos ocupam 1/4 de espaço em vez de 1/2.',
+    prerequisites: [{ kind: 'attribute', attr: 'intelligence', min: 1 }],
+  },
+  {
+    id: 'investigador',
+    kind: 'destino',
+    name: 'Investigador',
+    description: '+2 em Investigação e soma Inteligência em Intuição.',
+    prerequisites: [{ kind: 'attribute', attr: 'intelligence', min: 1 }],
+  },
+  {
+    id: 'parceiro-poder',
+    kind: 'destino',
+    name: 'Parceiro',
+    description:
+      'Ganha um parceiro iniciante (tipo à escolha; ver p260). Obedece às suas ordens e se arrisca para ajudá-lo, mas pode parar de segui-lo se for maltratado (a critério do GM). Se perder o parceiro, recebe outro no início da próxima aventura.',
+    minLevel: 5,
+    prerequisites: [
+      {
+        kind: 'note',
+        description:
+          'Treinado em Adestramento (parceiro animal) OU Diplomacia (parceiro humanoide)',
+      },
+    ],
+  },
+  {
+    id: 'veneficio',
+    kind: 'destino',
+    name: 'Venefício',
+    description:
+      'Ao usar veneno, não corre risco de se envenenar acidentalmente. Além disso, a CD para resistir aos seus venenos aumenta em +2.',
+    prerequisites: [
+      { kind: 'note', description: 'Treinado em Ofício (alquimista)' },
+    ],
+  },
 
   // ─── Magia ────────────────────────────────────────────────────────
   {
