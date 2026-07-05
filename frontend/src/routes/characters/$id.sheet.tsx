@@ -8,6 +8,7 @@ import {
   meQueryOptions,
 } from '@/lib/queries'
 import type { CharacterWithComputed, ComputedSheet } from '@/lib/api'
+import { Skeleton } from '@/components/ui/skeleton'
 
 /**
  * Server-computed sheet view. Renders the ComputedSheet payload from
@@ -34,7 +35,16 @@ function CharacterSheetPage() {
   const { id } = Route.useParams()
   const query = useQuery(characterSheetQueryOptions(Number(id)))
 
-  if (query.isLoading) return <p className="p-6">Loading…</p>
+  if (query.isLoading)
+    return (
+      <div className="mx-auto max-w-4xl space-y-3 p-6">
+        <Skeleton className="h-8 w-72" />
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-40 w-full" />
+      </div>
+    )
   if (query.isError)
     return (
       <p className="p-6 text-destructive">

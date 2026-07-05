@@ -29,6 +29,7 @@ import {
   meQueryOptions,
 } from '@/lib/queries'
 import { useSessionSocket, type InitiativeEntry } from '@/lib/realtime'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export const Route = createFileRoute('/campaigns/$id/sessions/$sid')({
   beforeLoad: async ({ context, location }) => {
@@ -51,7 +52,14 @@ function SessionDetailPage() {
     campaignSessionQueryOptions(campaignId, sessionId),
   )
 
-  if (session.isLoading) return <p className="p-6">Loading…</p>
+  if (session.isLoading)
+    return (
+      <div className="mx-auto max-w-3xl space-y-4 p-6">
+        <Skeleton className="h-8 w-52" />
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-40 w-full" />
+      </div>
+    )
   if (session.isError)
     return (
       <p className="p-6 text-destructive">

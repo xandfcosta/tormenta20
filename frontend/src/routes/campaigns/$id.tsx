@@ -21,6 +21,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Combobox } from '@/components/ui/combobox'
+import { Skeleton, SkeletonRows } from '@/components/ui/skeleton'
 import { ApiError, api } from '@/lib/api'
 import type {
   Campaign,
@@ -60,7 +61,14 @@ function CampaignDetailPage() {
   const campaignId = Number(id)
   const campaign = useQuery(campaignQueryOptions(campaignId))
 
-  if (campaign.isLoading) return <p className="p-6">Loading…</p>
+  if (campaign.isLoading)
+    return (
+      <div className="mx-auto max-w-4xl space-y-4 p-6">
+        <Skeleton className="h-8 w-56" />
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-32 w-full" />
+      </div>
+    )
   if (campaign.isError)
     return (
       <p className="p-6 text-destructive">
@@ -256,7 +264,7 @@ function MembersCard({ campaignId }: { campaignId: number }) {
       </CardHeader>
       <CardContent className="space-y-4">
         <AddMemberForm campaignId={campaignId} />
-        {members.isLoading && <p>Loading…</p>}
+        {members.isLoading && <SkeletonRows count={2} />}
         {members.data?.length === 0 && (
           <p className="text-sm text-muted-foreground">
             Nenhum personagem inscrito ainda.
@@ -428,7 +436,7 @@ function SessionsCard({ campaignId }: { campaignId: number }) {
         </Button>
       </CardHeader>
       <CardContent className="space-y-2">
-        {sessions.isLoading && <p>Loading…</p>}
+        {sessions.isLoading && <SkeletonRows count={3} />}
         {sessions.data?.length === 0 && (
           <p className="text-sm text-muted-foreground">
             Nenhuma sessão ainda.

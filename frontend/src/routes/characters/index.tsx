@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { SkeletonCardGrid } from '@/components/ui/skeleton'
 import { meQueryOptions, charactersQueryOptions } from '@/lib/queries'
 import type { Character } from '@/lib/api'
 
@@ -27,7 +28,7 @@ function CharactersListPage() {
         </Link>
       </div>
 
-      {characters.isLoading && <p>Loading…</p>}
+      {characters.isLoading && <SkeletonCardGrid count={3} />}
       {characters.isError && (
         <p className="text-destructive">{(characters.error as Error).message}</p>
       )}
