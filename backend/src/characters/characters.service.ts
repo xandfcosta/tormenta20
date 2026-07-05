@@ -344,43 +344,62 @@ export class CharactersService {
     });
   }
 
+  /**
+   * Two concurrent updateVitals calls (same player, two tabs; two GMs
+   * co-editing) both read `hpMax` outside the write path and both write
+   * `data.hpCurrent`, silently clobbering one write against the other.
+   * BC3 fix: wrap the max lookup + validation + write in one tx so a
+   * mid-flight max change is seen. Same pattern the future WS→DB
+   * write-through (Persistence P3) must adopt — write path already
+   * consolidated here so P3 only needs to plug in.
+   */
   async updateVitals(
     ownerId: number,
     characterId: number,
     dto: UpdateVitalsDto,
   ) {
-    const character = await this.findOne(ownerId, characterId);
-    const data: { hpCurrent?: number; mpCurrent?: number } = {};
-    const fieldErrors: Record<string, string[]> = {};
-    if (dto.hpCurrent !== undefined) {
-      if (dto.hpCurrent > character.hpMax) {
-        fieldErrors.hpCurrent = ['HP current cannot exceed HP max'];
-      } else {
-        data.hpCurrent = dto.hpCurrent;
-      }
-    }
-    if (dto.mpCurrent !== undefined) {
-      if (dto.mpCurrent > character.mpMax) {
-        fieldErrors.mpCurrent = ['MP current cannot exceed MP max'];
-      } else {
-        data.mpCurrent = dto.mpCurrent;
-      }
-    }
-    if (Object.keys(fieldErrors).length > 0) {
-      throw new BadRequestException({
-        statusCode: 400,
-        error: 'Bad Request',
-        message: 'Validation failed',
-        fieldErrors,
-      });
-    }
-    if (Object.keys(data).length === 0) {
+    await this.findOne(ownerId, characterId);
+    if (dto.hpCurrent === undefined && dto.mpCurrent === undefined) {
       throw new BadRequestException('No fields to update');
     }
-    return this.prisma.character.update({
-      where: { id: characterId },
-      data,
-      include: characterInclude,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return this.prisma.$transaction(async (tx: any) => {
+      const fresh = (await tx.character.findUnique({
+        where: { id: characterId },
+        select: { hpMax: true, mpMax: true },
+      })) as { hpMax: number; mpMax: number } | null;
+      if (!fresh) {
+        throw new NotFoundException(`Character ${characterId} not found`);
+      }
+      const data: { hpCurrent?: number; mpCurrent?: number } = {};
+      const fieldErrors: Record<string, string[]> = {};
+      if (dto.hpCurrent !== undefined) {
+        if (dto.hpCurrent > fresh.hpMax) {
+          fieldErrors.hpCurrent = ['HP current cannot exceed HP max'];
+        } else {
+          data.hpCurrent = dto.hpCurrent;
+        }
+      }
+      if (dto.mpCurrent !== undefined) {
+        if (dto.mpCurrent > fresh.mpMax) {
+          fieldErrors.mpCurrent = ['MP current cannot exceed MP max'];
+        } else {
+          data.mpCurrent = dto.mpCurrent;
+        }
+      }
+      if (Object.keys(fieldErrors).length > 0) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: 'Bad Request',
+          message: 'Validation failed',
+          fieldErrors,
+        });
+      }
+      return tx.character.update({
+        where: { id: characterId },
+        data,
+        include: characterInclude,
+      });
     });
   }
 
