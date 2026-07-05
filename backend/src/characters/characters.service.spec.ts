@@ -572,6 +572,42 @@ describe('CharactersService.consumeItem — quantity + oncePerDay + clamp', () =
     });
   });
 
+  it('translates Prisma P2002 into "already active" when race sneaks past app check (BC2)', async () => {
+    /* We use "Cosmético" (scope='scene', has modifiers) because the DB
+     * unique constraint fires on ActiveEffect insert — which only
+     * happens when the catalog entry has modifiers. Consumables with no
+     * modifiers never insert an ActiveEffect and therefore can't race
+     * on this index. */
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(
+      makeCharacter({
+        items: [
+          {
+            id: 22,
+            catalogId: 'cosmetico',
+            name: 'Cosmético',
+            quantity: 1,
+            slots: 0.5,
+            equipped: null,
+            improvements: '[]',
+            material: null,
+          },
+        ],
+      }),
+    );
+    /* Simulate the race: no active effect at app-check time, but the
+     * DB's composite unique index catches the duplicate on insert. */
+    prisma.activeEffectCreate.mockRejectedValueOnce(
+      Object.assign(new Error('unique violation'), { code: 'P2002' }),
+    );
+    const service = await makeService(prisma);
+    await expect(service.consumeItem(1, 1, 22, {})).rejects.toMatchObject({
+      response: expect.objectContaining({
+        message: '"Cosmético" already active for the day',
+      }),
+    });
+  });
+
   it('creates an ActiveEffect for non-instant scopes (Cosmético → scene)', async () => {
     const prisma = new FakePrisma();
     prisma.seedCharacter(

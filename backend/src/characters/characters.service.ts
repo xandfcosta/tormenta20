@@ -36,6 +36,19 @@ import {
 import { computeSheetForRow } from './character-sheet.mapper';
 import type { ComputedSheet } from '@tormenta20/t20-data';
 
+/**
+ * Detects Prisma's `P2002` (unique constraint violation). Kept structural
+ * so we don't depend on `@prisma/client` runtime types.
+ */
+function isPrismaUniqueViolation(err: unknown): boolean {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    'code' in err &&
+    (err as { code: unknown }).code === 'P2002'
+  );
+}
+
 const characterInclude = {
   races: { select: { race: true } },
   classes: { select: { className: true, level: true } },
@@ -712,32 +725,53 @@ export class CharactersService {
       );
     }
 
-    await this.prisma.$transaction(async (tx) => {
-      if (spec.scope !== 'instant' && spec.modifiers && spec.modifiers.length > 0) {
-        await tx.activeEffect.create({
-          data: {
-            characterId,
-            catalogId: catalog.id,
-            scope: spec.scope,
-            modifiers: JSON.stringify(spec.modifiers),
-          },
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        if (
+          spec.scope !== 'instant' &&
+          spec.modifiers &&
+          spec.modifiers.length > 0
+        ) {
+          await tx.activeEffect.create({
+            data: {
+              characterId,
+              catalogId: catalog.id,
+              scope: spec.scope,
+              modifiers: JSON.stringify(spec.modifiers),
+            },
+          });
+        }
+        if (item.quantity > 1) {
+          await tx.characterItem.update({
+            where: { id: itemId },
+            data: { quantity: item.quantity - 1 },
+          });
+        } else {
+          await tx.characterItem.delete({ where: { id: itemId } });
+        }
+        if (Object.keys(vitalsPatch).length > 0) {
+          await tx.character.update({
+            where: { id: characterId },
+            data: vitalsPatch,
+          });
+        }
+      });
+    } catch (err) {
+      /* P2002 = Prisma unique constraint violation. The DB rejected
+       * because another consume of the same catalogId already produced
+       * an ActiveEffect row for this (character, catalogId, scope) —
+       * the app-level check missed it due to concurrency. Translate to
+       * the same BadRequestException the pre-check would have raised. */
+      if (isPrismaUniqueViolation(err)) {
+        throw new BadRequestException({
+          statusCode: 400,
+          error: 'Bad Request',
+          message: `"${catalog.name}" already active for the day`,
+          fieldErrors: { catalogId: ['Apenas uma porção por dia'] },
         });
       }
-      if (item.quantity > 1) {
-        await tx.characterItem.update({
-          where: { id: itemId },
-          data: { quantity: item.quantity - 1 },
-        });
-      } else {
-        await tx.characterItem.delete({ where: { id: itemId } });
-      }
-      if (Object.keys(vitalsPatch).length > 0) {
-        await tx.character.update({
-          where: { id: characterId },
-          data: vitalsPatch,
-        });
-      }
-    });
+      throw err;
+    }
 
     return this.findOne(ownerId, characterId);
   }
