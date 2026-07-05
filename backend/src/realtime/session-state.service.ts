@@ -1,5 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
+import { z } from 'zod';
+import { PrismaService } from '../prisma/prisma.service';
 
 export type InitiativeEntry = {
   id: string;
@@ -24,6 +26,36 @@ export type SessionRuntimeState = {
   turnIndex: number;
 };
 
+/**
+ * Zod schema for the persisted blob. A corrupted or partial payload
+ * fails loudly here rather than feeding malformed state to consumers
+ * — the audit called out silent JSON.parse as an antipattern. Every
+ * field has an explicit default so migration-produced empties parse
+ * cleanly.
+ */
+const InitiativeEntrySchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  initiative: z.number(),
+  type: z.enum(['character', 'npc']),
+  characterId: z.number().optional(),
+  hpCurrent: z.number().optional(),
+  hpMax: z.number().optional(),
+  mpCurrent: z.number().optional(),
+  mpMax: z.number().optional(),
+});
+const SessionRuntimeStateSchema = z.object({
+  initiative: z.array(InitiativeEntrySchema).default([]),
+  round: z.number().default(0),
+  turnIndex: z.number().default(-1),
+});
+
+/** Fresh empty-tracker factory. Returns a new mutable state each call
+ * so different sessions don't accidentally share the initiative array. */
+function emptyRuntimeState(): SessionRuntimeState {
+  return { initiative: [], round: 0, turnIndex: -1 };
+}
+
 export type AddEntryInput = Omit<InitiativeEntry, 'id'>;
 export type UpdateEntryInput = Partial<Omit<InitiativeEntry, 'id'>>;
 
@@ -40,7 +72,63 @@ export type UpdateEntryInput = Partial<Omit<InitiativeEntry, 'id'>>;
  */
 @Injectable()
 export class SessionStateService {
+  private readonly logger = new Logger(SessionStateService.name);
   private readonly states = new Map<number, SessionRuntimeState>();
+  private readonly loading = new Map<number, Promise<SessionRuntimeState>>();
+
+  constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Async accessor — hydrates from Session.runtimeState on the first
+   * call so a restarted server sees the last-persisted tracker. The
+   * mutating helpers below stay sync because callers already hold the
+   * hydrated state (a socket that joined the room already awaited a
+   * `getState` on connect).
+   */
+  async load(sessionId: number): Promise<SessionRuntimeState> {
+    const cached = this.states.get(sessionId);
+    if (cached) return cached;
+    const inflight = this.loading.get(sessionId);
+    if (inflight) return inflight;
+    const promise = this.hydrate(sessionId).finally(() => {
+      this.loading.delete(sessionId);
+    });
+    this.loading.set(sessionId, promise);
+    return promise;
+  }
+
+  private async hydrate(sessionId: number): Promise<SessionRuntimeState> {
+    let state: SessionRuntimeState = emptyRuntimeState();
+    try {
+      const row = await this.prisma.session.findUnique({
+        where: { id: sessionId },
+        select: { runtimeState: true },
+      });
+      if (row?.runtimeState) {
+        state = this.parseBlob(row.runtimeState);
+      }
+    } catch (err) {
+      this.logger.warn(
+        `Session ${sessionId}: DB load failed, using empty state (${(err as Error).message})`,
+      );
+    }
+    this.states.set(sessionId, state);
+    return state;
+  }
+
+  private parseBlob(blob: string): SessionRuntimeState {
+    try {
+      const raw = JSON.parse(blob) as unknown;
+      const parsed = SessionRuntimeStateSchema.safeParse(raw);
+      if (parsed.success) return parsed.data;
+      this.logger.warn(
+        `Malformed runtimeState blob: ${parsed.error.issues[0]?.message ?? 'zod fail'}`,
+      );
+    } catch (err) {
+      this.logger.warn(`runtimeState JSON parse failed: ${(err as Error).message}`);
+    }
+    return emptyRuntimeState();
+  }
 
   getState(sessionId: number): SessionRuntimeState {
     return this.getOrCreate(sessionId);
@@ -205,7 +293,11 @@ export class SessionStateService {
   private getOrCreate(sessionId: number): SessionRuntimeState {
     let state = this.states.get(sessionId);
     if (!state) {
-      state = { initiative: [], round: 0, turnIndex: -1 };
+      /* First sync access without prior `load()`. Materializes an empty
+       * tracker synchronously; the persisted state (if any) will hydrate
+       * on the next async `load()`. Callers that need durability must
+       * `await load()` before mutating. */
+      state = emptyRuntimeState();
       this.states.set(sessionId, state);
     }
     return state;
