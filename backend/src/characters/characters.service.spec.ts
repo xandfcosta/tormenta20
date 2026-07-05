@@ -147,6 +147,10 @@ class FakePrisma {
     className: c.className,
     level: c.level,
   })));
+  /* BC3: some tests want to override what character.findUnique returns
+   * *inside* the tx (simulating a fresh read that diverges from what
+   * the ownership-gate findOne saw). Override this hook per-spec. */
+  characterFindUniqueInTx: () => Promise<unknown> = async () => this.lastSeed;
   transaction = jest.fn(async (cb: (tx: unknown) => Promise<unknown>) =>
     cb({
       activeEffect: {
@@ -163,11 +167,11 @@ class FakePrisma {
         create: this.characterItemCreate,
       },
       character: {
-        /* BC1: consumeItem re-reads hp/mp/max inside the tx to avoid
-         * read-modify-write races. Fake exposes findUnique so the
-         * service can pull fresh vitals from the "same row" the test
-         * seeded (`lastSeed`). */
-        findUnique: async () => this.lastSeed,
+        /* BC1/BC3: consumeItem + updateVitals re-read char fields
+         * (hp/mp + max) inside the tx to avoid read-modify-write races.
+         * Fake exposes findUnique via a hook (`characterFindUniqueInTx`)
+         * defaulting to `lastSeed` so most tests need zero setup. */
+        findUnique: () => this.characterFindUniqueInTx(),
         update: this.characterUpdate,
       },
       characterClass: {
@@ -404,6 +408,40 @@ describe('CharactersService.updateVitals — clamp to max', () => {
       data: { hpCurrent: number; mpCurrent: number };
     };
     expect(payload.data).toEqual({ hpCurrent: 6, mpCurrent: 2 });
+  });
+
+  it('re-reads hpMax inside the tx so a mid-flight max change is honored (BC3)', async () => {
+    /* Pre-BC3: hpMax was read via findOne outside the tx. If Prisma
+     * writes race (two concurrent updateVitals, or one HTTP path
+     * concurrent with the future WS write-through path landing on the
+     * same row), we validated against a stale ceiling and could commit
+     * a value the fresh row would reject.
+     *
+     * Post-BC3: the tx re-reads hpMax and validates against the fresh
+     * value. Simulated here by pinning the seeded (findOne) hpMax high
+     * enough to pass the ownership gate, but returning a lower fresh
+     * hpMax from the tx path — the write must be rejected. */
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ hpMax: 20, mpMax: 10 }));
+    /* The tx's character.findUnique defaults to lastSeed, which has
+     * hpMax=20. Override once with the smaller hpMax that a parallel
+     * mutation shrank it to. */
+    let firstCall = true;
+    prisma.characterFindUniqueInTx = async () => {
+      if (firstCall) {
+        firstCall = false;
+        return { hpMax: 8, mpMax: 10 };
+      }
+      return prisma.lastSeed;
+    };
+    const service = await makeService(prisma);
+    await expect(
+      service.updateVitals(1, 1, { hpCurrent: 15 }),
+    ).rejects.toMatchObject({
+      response: expect.objectContaining({
+        fieldErrors: { hpCurrent: ['HP current cannot exceed HP max'] },
+      }),
+    });
   });
 });
 
