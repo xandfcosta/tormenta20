@@ -125,6 +125,18 @@ class FakePrisma {
   characterItemFindMany = jest.fn(async () => [] as { equipped: string | null }[]);
   characterItemUpdate = jest.fn(async ({ data }: { data: unknown }) => data);
   characterItemDelete = jest.fn(async () => ({ ok: true }));
+  characterItemCreate = jest.fn(async ({ data }: { data: unknown }) => data);
+  transaction = jest.fn(async (cb: (tx: unknown) => Promise<unknown>) =>
+    cb({
+      characterItem: {
+        findUnique: this.characterItemFindUnique,
+        findMany: this.characterItemFindMany,
+        update: this.characterItemUpdate,
+        delete: this.characterItemDelete,
+        create: this.characterItemCreate,
+      },
+    }),
+  );
 
   lastSeed: Character | null = null;
 
@@ -150,7 +162,9 @@ class FakePrisma {
         findMany: this.characterItemFindMany,
         update: this.characterItemUpdate,
         delete: this.characterItemDelete,
+        create: this.characterItemCreate,
       },
+      $transaction: this.transaction,
     };
   }
 }

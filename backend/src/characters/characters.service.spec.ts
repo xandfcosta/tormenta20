@@ -146,8 +146,14 @@ class FakePrisma {
         create: this.activeEffectCreate,
       },
       characterItem: {
+        /* BI1: addItem/updateItem now hold equip-limit check + write
+         * in one tx. Fake exposes findMany/findUnique/update/delete/
+         * create so both sides see a coherent view. */
+        findMany: this.characterItemFindMany,
+        findUnique: this.characterItemFindUnique,
         update: this.characterItemUpdate,
         delete: this.characterItemDelete,
+        create: this.characterItemCreate,
       },
       character: {
         /* BC1: consumeItem re-reads hp/mp/max inside the tx to avoid
@@ -453,6 +459,28 @@ describe('CharactersService.addItem — equip caps (4 vested / 2 hands)', () => 
         fieldErrors: { equipped: ['Limite de 2 mãos atingido'] },
       }),
     });
+  });
+
+  it('runs the equip-limit check inside the tx (BI1 race guard)', async () => {
+    /* Pre-BI1: assertEquipLimits queried `this.prisma` while the write
+     * used `this.prisma`, so two concurrent addItem/updateItem calls
+     * could both observe an empty equip set and both commit wielded2.
+     * Post-BI1: both check + write share the tx client. This spec
+     * captures the wiring — the tx must run at least one findMany
+     * against the tx client (recorded by our FakePrisma). */
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter());
+    prisma.characterItemFindMany.mockResolvedValue([]);
+    const service = await makeService(prisma);
+    await service.addItem(1, 1, {
+      name: 'Adaga',
+      quantity: 1,
+      slots: 0.5,
+      equipped: 'wielded',
+    });
+    expect(prisma.transaction).toHaveBeenCalled();
+    expect(prisma.characterItemFindMany).toHaveBeenCalled();
+    expect(prisma.characterItemCreate).toHaveBeenCalled();
   });
 });
 
