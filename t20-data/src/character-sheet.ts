@@ -17,6 +17,7 @@
 import { ATTRIBUTE_KEYS, type AttributeKey } from './attributes'
 import { CLASS_VITALS } from './class-vitals'
 import { racaById, resolveAtributoMod, type Raca, type Tamanho } from './racas'
+import { SKILL_IDS, SKILL_INDEX, skillValue, type SkillId } from './skill-index'
 
 // ─── Input ───────────────────────────────────────────────────────────
 export type CharacterInput = {
@@ -42,6 +43,18 @@ export type CharacterInput = {
   currentPv?: number
   /** PM atual (opcional; default = pmMax). */
   currentPm?: number
+  /**
+   * Perícias em que o personagem é treinado. IDs canônicos do
+   * `SKILL_INDEX`. Perícias treinada-apenas exigem estar aqui para
+   * poder ser usadas.
+   */
+  trainedSkills?: readonly SkillId[]
+  /**
+   * Penalidade de armadura atual (não-negativa). Aplicada às perícias
+   * com flag `armorPenalty` no `SKILL_INDEX`. Origem: armadura +
+   * escudo equipados (calculada por camada de equipamento em v3).
+   */
+  armorPenalty?: number
 }
 
 // ─── Output ──────────────────────────────────────────────────────────
@@ -74,9 +87,20 @@ export type ComputedSheet = {
     reflexos: number
     vontade: number
   }
+  skills: Record<SkillId, SkillComputed>
   deslocamento: number
   tamanho: Tamanho
   warnings: readonly string[]
+}
+
+export type SkillComputed = {
+  total: number
+  trained: boolean
+  keyAttribute: AttributeKey
+  /** True se a perícia é treinada-apenas E o personagem não é treinado. */
+  cannotUse: boolean
+  /** Penalidade de armadura aplicada (0 se não relevante). */
+  armorPenaltyApplied: number
 }
 
 // ─── Constantes ──────────────────────────────────────────────────────
@@ -168,6 +192,7 @@ export function computeCharacterSheet(input: CharacterInput): ComputedSheet {
   }
 
   const { deslocamento, tamanho } = resolveRaceMovement(input, warnings)
+  const skills = computeSkills(input, attributes, warnings)
 
   return {
     level: input.level,
@@ -176,10 +201,54 @@ export function computeCharacterSheet(input: CharacterInput): ComputedSheet {
     vitals,
     defense,
     saves,
+    skills,
     deslocamento,
     tamanho,
     warnings,
   }
+}
+
+// ─── Skills ──────────────────────────────────────────────────────────
+function computeSkills(
+  input: CharacterInput,
+  attributes: Record<AttributeKey, AttributeComputed>,
+  warnings: string[],
+): Record<SkillId, SkillComputed> {
+  const trainedSet = new Set<SkillId>(input.trainedSkills ?? [])
+  const armorPenalty = input.armorPenalty ?? 0
+  if (armorPenalty < 0) {
+    warnings.push(`armorPenalty deve ser não-negativa, got ${armorPenalty}`)
+  }
+  const penalty = Math.max(0, armorPenalty)
+
+  // Warn on unknown trained skill ids
+  for (const id of trainedSet) {
+    if (!(id in SKILL_INDEX)) {
+      warnings.push(`perícia treinada desconhecida: ${id}`)
+    }
+  }
+
+  const skills = {} as Record<SkillId, SkillComputed>
+  for (const id of SKILL_IDS) {
+    const meta = SKILL_INDEX[id]
+    const trained = trainedSet.has(id)
+    const attributeValue = attributes[meta.keyAttribute].total
+    const total = skillValue({
+      level: input.level,
+      attributeValue,
+      trained,
+      armorPenaltyApplies: meta.armorPenalty && penalty > 0,
+      armorPenalty: penalty,
+    })
+    skills[id] = {
+      total,
+      trained,
+      keyAttribute: meta.keyAttribute,
+      cannotUse: meta.trainedOnly && !trained,
+      armorPenaltyApplied: meta.armorPenalty ? penalty : 0,
+    }
+  }
+  return skills
 }
 
 // ─── Vitals ──────────────────────────────────────────────────────────
