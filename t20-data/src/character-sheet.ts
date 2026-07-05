@@ -16,7 +16,7 @@
 
 import { ATTRIBUTE_KEYS, type AttributeKey } from './attributes'
 import { CLASS_VITALS } from './class-vitals'
-import { racaById, resolveAtributoMod, type Tamanho } from './racas'
+import { racaById, resolveAtributoMod, type Raca, type Tamanho } from './racas'
 
 // ─── Input ───────────────────────────────────────────────────────────
 export type CharacterInput = {
@@ -107,7 +107,7 @@ function resolveRaceMods(
   }
   if (!input.raceId) return zero
 
-  let raca
+  let raca: Raca
   try {
     raca = racaById(input.raceId)
   } catch {
