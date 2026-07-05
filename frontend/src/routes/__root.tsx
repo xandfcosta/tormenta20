@@ -58,6 +58,7 @@ function RootLayout() {
           {current && (
             <>
               <Link to="/characters" className="font-medium hover:underline">Characters</Link>
+              <Link to="/campaigns" className="font-medium hover:underline">Campanhas</Link>
               <Link to="/users" className="font-medium hover:underline">Users</Link>
             </>
           )}
