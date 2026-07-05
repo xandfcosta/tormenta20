@@ -141,6 +141,67 @@ export class SessionStateService {
     this.states.delete(sessionId);
   }
 
+  /**
+   * Set absolute hp/mp values on a specific entry. Clamps against the
+   * max fields when present so a hpCurrent > hpMax broadcast can't
+   * corrupt the tracker.
+   *
+   * TODO(persistence): when `entry.characterId` is set, downstream we
+   * likely want to persist hpCurrent/mpCurrent back to the DB Character
+   * row so a page refresh doesn't lose the state. Kept out of scope
+   * for the MVP realtime loop; add a repo dependency + write-through
+   * when the product needs it.
+   */
+  patchVitals(
+    sessionId: number,
+    entryId: string,
+    patch: { hpCurrent?: number; mpCurrent?: number },
+  ): SessionRuntimeState {
+    const state = this.getOrCreate(sessionId);
+    const idx = state.initiative.findIndex((e) => e.id === entryId);
+    if (idx < 0) {
+      throw new NotFoundException(`Entry ${entryId} not found`);
+    }
+    const entry = state.initiative[idx]!;
+    const next: InitiativeEntry = { ...entry };
+    if (patch.hpCurrent !== undefined) {
+      next.hpCurrent = clampVital(patch.hpCurrent, entry.hpMax);
+    }
+    if (patch.mpCurrent !== undefined) {
+      next.mpCurrent = clampVital(patch.mpCurrent, entry.mpMax);
+    }
+    state.initiative[idx] = next;
+    return state;
+  }
+
+  /**
+   * Apply a hp/mp delta ("sofreu 10 de dano" → hpDelta: -10). Absent
+   * hpCurrent counts as 0. Missing max is treated as no upper bound.
+   */
+  deltaVitals(
+    sessionId: number,
+    entryId: string,
+    patch: { hpDelta?: number; mpDelta?: number },
+  ): SessionRuntimeState {
+    const state = this.getOrCreate(sessionId);
+    const idx = state.initiative.findIndex((e) => e.id === entryId);
+    if (idx < 0) {
+      throw new NotFoundException(`Entry ${entryId} not found`);
+    }
+    const entry = state.initiative[idx]!;
+    const next: InitiativeEntry = { ...entry };
+    if (patch.hpDelta !== undefined) {
+      const raw = (entry.hpCurrent ?? 0) + patch.hpDelta;
+      next.hpCurrent = clampVital(raw, entry.hpMax);
+    }
+    if (patch.mpDelta !== undefined) {
+      const raw = (entry.mpCurrent ?? 0) + patch.mpDelta;
+      next.mpCurrent = clampVital(raw, entry.mpMax);
+    }
+    state.initiative[idx] = next;
+    return state;
+  }
+
   private getOrCreate(sessionId: number): SessionRuntimeState {
     let state = this.states.get(sessionId);
     if (!state) {
@@ -155,4 +216,16 @@ export class SessionStateService {
       (a, b) => b.initiative - a.initiative || a.label.localeCompare(b.label),
     );
   }
+}
+
+/**
+ * Clamp a vital value against an optional max. Negative floor is 0
+ * (T20 conventions treat "morrer" as reaching -PVmáx, but the tracker
+ * itself never goes below 0 for display purposes — a character on 0
+ * is "unconscious/dying" and the GM handles the rest narratively).
+ */
+function clampVital(value: number, max: number | undefined): number {
+  const floored = Math.max(0, value);
+  if (max === undefined) return floored;
+  return Math.min(floored, max);
 }

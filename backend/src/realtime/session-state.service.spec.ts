@@ -182,6 +182,131 @@ describe('SessionStateService.nextTurn', () => {
   });
 });
 
+describe('SessionStateService.patchVitals', () => {
+  it('applies absolute values clamped by hpMax/mpMax', async () => {
+    const { service } = await setup();
+    const s = service.addEntry(1, {
+      label: 'PC',
+      initiative: 15,
+      type: 'character',
+      hpCurrent: 20,
+      hpMax: 30,
+      mpCurrent: 5,
+      mpMax: 10,
+    });
+    const id = s.initiative[0]!.id;
+    /* hpCurrent above max should clamp to max */
+    service.patchVitals(1, id, { hpCurrent: 100 });
+    expect(service.getState(1).initiative[0]?.hpCurrent).toBe(30);
+    /* mpCurrent below 0 should clamp to 0 */
+    service.patchVitals(1, id, { mpCurrent: -5 });
+    expect(service.getState(1).initiative[0]?.mpCurrent).toBe(0);
+  });
+
+  it('leaves untouched fields alone', async () => {
+    const { service } = await setup();
+    const s = service.addEntry(1, {
+      label: 'PC',
+      initiative: 15,
+      type: 'character',
+      hpCurrent: 20,
+      hpMax: 30,
+      mpCurrent: 5,
+      mpMax: 10,
+    });
+    const id = s.initiative[0]!.id;
+    service.patchVitals(1, id, { hpCurrent: 10 });
+    const entry = service.getState(1).initiative[0]!;
+    expect(entry.hpCurrent).toBe(10);
+    expect(entry.mpCurrent).toBe(5);
+  });
+
+  it('throws NotFound for unknown entryId', async () => {
+    const { service } = await setup();
+    expect(() => service.patchVitals(1, 'ghost', { hpCurrent: 10 })).toThrow(
+      NotFoundException,
+    );
+  });
+});
+
+describe('SessionStateService.deltaVitals', () => {
+  it('applies hpDelta and clamps to max', async () => {
+    const { service } = await setup();
+    const s = service.addEntry(1, {
+      label: 'PC',
+      initiative: 15,
+      type: 'character',
+      hpCurrent: 25,
+      hpMax: 30,
+    });
+    const id = s.initiative[0]!.id;
+    service.deltaVitals(1, id, { hpDelta: 10 });
+    /* 25 + 10 = 35 → clamped to 30 */
+    expect(service.getState(1).initiative[0]?.hpCurrent).toBe(30);
+  });
+
+  it('negative delta ("suffered damage") clamps at 0', async () => {
+    const { service } = await setup();
+    const s = service.addEntry(1, {
+      label: 'PC',
+      initiative: 15,
+      type: 'character',
+      hpCurrent: 5,
+      hpMax: 30,
+    });
+    const id = s.initiative[0]!.id;
+    service.deltaVitals(1, id, { hpDelta: -20 });
+    expect(service.getState(1).initiative[0]?.hpCurrent).toBe(0);
+  });
+
+  it('missing hpCurrent counts as 0', async () => {
+    const { service } = await setup();
+    const s = service.addEntry(1, {
+      label: 'NPC',
+      initiative: 10,
+      type: 'npc',
+      hpMax: 20,
+    });
+    const id = s.initiative[0]!.id;
+    service.deltaVitals(1, id, { hpDelta: 5 });
+    expect(service.getState(1).initiative[0]?.hpCurrent).toBe(5);
+  });
+
+  it('no max = no upper bound (only floor 0)', async () => {
+    const { service } = await setup();
+    const s = service.addEntry(1, {
+      label: 'Boss',
+      initiative: 25,
+      type: 'npc',
+      hpCurrent: 100,
+    });
+    const id = s.initiative[0]!.id;
+    service.deltaVitals(1, id, { hpDelta: 500 });
+    expect(service.getState(1).initiative[0]?.hpCurrent).toBe(600);
+  });
+
+  it('applies mpDelta the same way', async () => {
+    const { service } = await setup();
+    const s = service.addEntry(1, {
+      label: 'PC',
+      initiative: 15,
+      type: 'character',
+      mpCurrent: 3,
+      mpMax: 8,
+    });
+    const id = s.initiative[0]!.id;
+    service.deltaVitals(1, id, { mpDelta: -2 });
+    expect(service.getState(1).initiative[0]?.mpCurrent).toBe(1);
+  });
+
+  it('throws NotFound for unknown entryId', async () => {
+    const { service } = await setup();
+    expect(() => service.deltaVitals(1, 'ghost', { hpDelta: 1 })).toThrow(
+      NotFoundException,
+    );
+  });
+});
+
 describe('SessionStateService.resetInitiative', () => {
   it('clears everything but keeps the session tracked', async () => {
     const { service } = await setup();
