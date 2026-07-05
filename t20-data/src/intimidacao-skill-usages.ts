@@ -23,6 +23,8 @@
  *    para atitude "hostil" no eixo `ATITUDE_ORDER`).
  */
 
+import { makeUsageByKind } from './skill-usage-resolver'
+
 // ─── Types ────────────────────────────────────────────────────────────
 export type IntimidacaoUsageKind = 'assustar' | 'coagir'
 
@@ -118,19 +120,10 @@ export const INTIMIDACAO_USAGES: readonly IntimidacaoUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<IntimidacaoUsageKind, IntimidacaoUsage>(
-  INTIMIDACAO_USAGES.map((u) => [u.kind, u]),
+export const intimidacaoUsageByKind = makeUsageByKind<IntimidacaoUsageKind, IntimidacaoUsage>(
+  INTIMIDACAO_USAGES,
+  'intimidacaoUsageByKind',
 )
-
-export function intimidacaoUsageByKind(
-  kind: IntimidacaoUsageKind,
-): IntimidacaoUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`intimidacaoUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers — Assustar ──────────────────────────────────────────────
 export type AssustarOutcome = 'no-effect' | 'abalado' | 'apavorado-then-abalado'

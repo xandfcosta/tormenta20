@@ -19,6 +19,8 @@
  * armadura. Nenhuma cross-ref explícita no bloco.
  */
 
+import { makeUsageByKind } from './skill-usage-resolver'
+
 // ─── Types ────────────────────────────────────────────────────────────
 export type GuerraUsageKind = 'analisar-terreno' | 'plano-de-acao'
 
@@ -89,17 +91,10 @@ export const GUERRA_USAGES: readonly GuerraUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<GuerraUsageKind, GuerraUsage>(
-  GUERRA_USAGES.map((u) => [u.kind, u]),
+export const guerraUsageByKind = makeUsageByKind<GuerraUsageKind, GuerraUsage>(
+  GUERRA_USAGES,
+  'guerraUsageByKind',
 )
-
-export function guerraUsageByKind(kind: GuerraUsageKind): GuerraUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`guerraUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers — Analisar Terreno ─────────────────────────────────────
 /** CD 20 (verbatim). */

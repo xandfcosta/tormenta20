@@ -24,6 +24,8 @@
  *    difícil.
  */
 
+import { makeUsageByKind } from './skill-usage-resolver'
+
 // ─── Types ────────────────────────────────────────────────────────────
 export type AcrobaciaUsageKind =
   | 'amortecer-queda'
@@ -239,17 +241,10 @@ export const ACROBACIA_USAGES: readonly AcrobaciaUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<AcrobaciaUsageKind, AcrobaciaUsage>(
-  ACROBACIA_USAGES.map((u) => [u.kind, u]),
+export const acrobaciaUsageByKind = makeUsageByKind<AcrobaciaUsageKind, AcrobaciaUsage>(
+  ACROBACIA_USAGES,
+  'acrobaciaUsageByKind',
 )
-
-export function acrobaciaUsageByKind(kind: AcrobaciaUsageKind): AcrobaciaUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`acrobaciaUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers — Amortecer Queda ──────────────────────────────────────
 /**

@@ -20,6 +20,8 @@
  *    falsificar objetos físicos além de documentos.
  */
 
+import { makeUsageByKind } from './skill-usage-resolver'
+
 // ─── Types ────────────────────────────────────────────────────────────
 export type EnganacaoUsageKind =
   | 'disfarce'
@@ -212,17 +214,10 @@ export const ENGANACAO_USAGES: readonly EnganacaoUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<EnganacaoUsageKind, EnganacaoUsage>(
-  ENGANACAO_USAGES.map((u) => [u.kind, u]),
+export const enganacaoUsageByKind = makeUsageByKind<EnganacaoUsageKind, EnganacaoUsage>(
+  ENGANACAO_USAGES,
+  'enganacaoUsageByKind',
 )
-
-export function enganacaoUsageByKind(kind: EnganacaoUsageKind): EnganacaoUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`enganacaoUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers — Disfarce ──────────────────────────────────────────────
 /**

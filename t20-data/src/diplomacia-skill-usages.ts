@@ -20,6 +20,8 @@
  *    imunidade a mental (bestiário/condições).
  */
 
+import { makeUsageByKind } from './skill-usage-resolver'
+
 // ─── Types ────────────────────────────────────────────────────────────
 export type DiplomaciaUsageKind = 'barganha' | 'mudar-atitude' | 'persuasao'
 
@@ -176,19 +178,10 @@ export const DIPLOMACIA_USAGES: readonly DiplomaciaUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<DiplomaciaUsageKind, DiplomaciaUsage>(
-  DIPLOMACIA_USAGES.map((u) => [u.kind, u]),
+export const diplomaciaUsageByKind = makeUsageByKind<DiplomaciaUsageKind, DiplomaciaUsage>(
+  DIPLOMACIA_USAGES,
+  'diplomaciaUsageByKind',
 )
-
-export function diplomaciaUsageByKind(
-  kind: DiplomaciaUsageKind,
-): DiplomaciaUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`diplomaciaUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers — Barganha ──────────────────────────────────────────────
 export type BarganhaOutcome = 'refused' | 'no-change' | 'discount' | 'big-discount'

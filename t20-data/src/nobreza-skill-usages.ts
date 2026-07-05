@@ -17,6 +17,7 @@
  */
 
 import type { InformacaoDifficulty } from './misticismo-skill-usages'
+import { makeUsageByKind } from './skill-usage-resolver'
 
 // ─── Types ────────────────────────────────────────────────────────────
 export type NobrezaUsageKind = 'etiqueta' | 'informacao'
@@ -78,17 +79,10 @@ export const NOBREZA_USAGES: readonly NobrezaUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<NobrezaUsageKind, NobrezaUsage>(
-  NOBREZA_USAGES.map((u) => [u.kind, u]),
+export const nobrezaUsageByKind = makeUsageByKind<NobrezaUsageKind, NobrezaUsage>(
+  NOBREZA_USAGES,
+  'nobrezaUsageByKind',
 )
-
-export function nobrezaUsageByKind(kind: NobrezaUsageKind): NobrezaUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`nobrezaUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers — Etiqueta ──────────────────────────────────────────────
 /** CD sempre 15 (verbatim). */

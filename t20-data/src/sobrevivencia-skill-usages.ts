@@ -17,6 +17,8 @@
  *    renda — regra vive na entrada de Ofício, não aqui.
  */
 
+import { makeUsageByKind } from './skill-usage-resolver'
+
 // ─── Types ────────────────────────────────────────────────────────────
 export type SobrevivenciaUsageKind =
   | 'acampamento'
@@ -181,19 +183,10 @@ export const SOBREVIVENCIA_USAGES: readonly SobrevivenciaUsage[] =
     },
   ])
 
-const usagesByKind = new Map<SobrevivenciaUsageKind, SobrevivenciaUsage>(
-  SOBREVIVENCIA_USAGES.map((u) => [u.kind, u]),
+export const sobrevivenciaUsageByKind = makeUsageByKind<SobrevivenciaUsageKind, SobrevivenciaUsage>(
+  SOBREVIVENCIA_USAGES,
+  'sobrevivenciaUsageByKind',
 )
-
-export function sobrevivenciaUsageByKind(
-  kind: SobrevivenciaUsageKind,
-): SobrevivenciaUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`sobrevivenciaUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers — Acampamento ────────────────────────────────────────────
 /**

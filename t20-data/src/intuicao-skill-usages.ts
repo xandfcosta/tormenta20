@@ -19,6 +19,8 @@
  * perícia Enganação").
  */
 
+import { makeUsageByKind } from './skill-usage-resolver'
+
 // ─── Types ────────────────────────────────────────────────────────────
 export type IntuicaoUsageKind = 'perceber-mentira' | 'pressentimento'
 
@@ -94,17 +96,10 @@ export const INTUICAO_USAGES: readonly IntuicaoUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<IntuicaoUsageKind, IntuicaoUsage>(
-  INTUICAO_USAGES.map((u) => [u.kind, u]),
+export const intuicaoUsageByKind = makeUsageByKind<IntuicaoUsageKind, IntuicaoUsage>(
+  INTUICAO_USAGES,
+  'intuicaoUsageByKind',
 )
-
-export function intuicaoUsageByKind(kind: IntuicaoUsageKind): IntuicaoUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`intuicaoUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 /** CD de Pressentimento — fixa 20 (verbatim). */

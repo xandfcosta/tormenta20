@@ -18,6 +18,8 @@
  * Guerra/Plano de Ação concede +5 na Iniciativa de um aliado.
  */
 
+import { makeUsageByKind } from './skill-usage-resolver'
+
 // ─── Types ────────────────────────────────────────────────────────────
 export type IniciativaUsageKind = 'teste-iniciativa'
 
@@ -57,19 +59,10 @@ export const INICIATIVA_USAGES: readonly IniciativaUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<IniciativaUsageKind, IniciativaUsage>(
-  INICIATIVA_USAGES.map((u) => [u.kind, u]),
+export const iniciativaUsageByKind = makeUsageByKind<IniciativaUsageKind, IniciativaUsage>(
+  INICIATIVA_USAGES,
+  'iniciativaUsageByKind',
 )
-
-export function iniciativaUsageByKind(
-  kind: IniciativaUsageKind,
-): IniciativaUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`iniciativaUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers ────────────────────────────────────────────────────────
 /** Comparador para ordenação DESCENDENTE por Iniciativa. */

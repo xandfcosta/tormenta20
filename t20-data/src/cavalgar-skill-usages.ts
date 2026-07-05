@@ -25,6 +25,8 @@
  * comandar animais como uma ação, e de Pilotagem (veículos).
  */
 
+import { makeUsageByKind } from './skill-usage-resolver'
+
 // ─── Types ────────────────────────────────────────────────────────────
 export type CavalgarUsageKind = 'conduzir' | 'galopar' | 'montar-rapidamente'
 
@@ -131,17 +133,10 @@ export const CAVALGAR_USAGES: readonly CavalgarUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<CavalgarUsageKind, CavalgarUsage>(
-  CAVALGAR_USAGES.map((u) => [u.kind, u]),
+export const cavalgarUsageByKind = makeUsageByKind<CavalgarUsageKind, CavalgarUsage>(
+  CAVALGAR_USAGES,
+  'cavalgarUsageByKind',
 )
-
-export function cavalgarUsageByKind(kind: CavalgarUsageKind): CavalgarUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`cavalgarUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers — Conduzir ─────────────────────────────────────────────
 /** CD por dificuldade do obstáculo. */

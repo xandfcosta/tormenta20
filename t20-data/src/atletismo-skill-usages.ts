@@ -30,6 +30,8 @@
  * de armadura por menção explícita dentro do uso Natação.
  */
 
+import { makeUsageByKind } from './skill-usage-resolver'
+
 // ─── Types ────────────────────────────────────────────────────────────
 export type AtletismoUsageKind = 'corrida' | 'escalar' | 'natacao' | 'saltar'
 
@@ -215,17 +217,10 @@ export const ATLETISMO_USAGES: readonly AtletismoUsage[] = Object.freeze([
   },
 ])
 
-const usagesByKind = new Map<AtletismoUsageKind, AtletismoUsage>(
-  ATLETISMO_USAGES.map((u) => [u.kind, u]),
+export const atletismoUsageByKind = makeUsageByKind<AtletismoUsageKind, AtletismoUsage>(
+  ATLETISMO_USAGES,
+  'atletismoUsageByKind',
 )
-
-export function atletismoUsageByKind(kind: AtletismoUsageKind): AtletismoUsage {
-  const usage = usagesByKind.get(kind)
-  if (!usage) {
-    throw new Error(`atletismoUsageByKind: unknown kind ${kind}`)
-  }
-  return usage
-}
 
 // ─── Helpers — Corrida ───────────────────────────────────────────────
 /**
