@@ -57,6 +57,7 @@ import {
   meQueryOptions,
 } from '@/lib/queries'
 import { SkeletonRows } from '@/components/ui/skeleton'
+import { invalidateCharacterDependents } from '@/lib/character-cache'
 import type {
   AttributeKey,
   Character,
@@ -473,7 +474,10 @@ function ClassChoicesPicker({
     onError: (_e, _v, ctx) => {
       if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
     },
-    onSuccess: (server) => qc.setQueryData<Character>(queryKey, server),
+    onSuccess: (server) => {
+      qc.setQueryData<Character>(queryKey, server)
+      invalidateCharacterDependents(qc, character.id)
+    },
   })
 
   function commit(nextBlob: ClassChoiceBlob) {
@@ -591,7 +595,10 @@ function ClassesSection({
     onError: (_e, _v, ctx) => {
       if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
     },
-    onSuccess: (server) => qc.setQueryData<Character>(queryKey, server),
+    onSuccess: (server) => {
+      qc.setQueryData<Character>(queryKey, server)
+      invalidateCharacterDependents(qc, character.id)
+    },
   })
 
   const toggleElective = (powerId: string) => {
@@ -923,7 +930,10 @@ function RaceAbilitySection({
     onError: (_e, _v, ctx) => {
       if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
     },
-    onSuccess: (server) => qc.setQueryData<Character>(queryKey, server),
+    onSuccess: (server) => {
+      qc.setQueryData<Character>(queryKey, server)
+      invalidateCharacterDependents(qc, character.id)
+    },
   })
 
   const pickVariant = (ability: RaceAbility, variantId: string) => {
@@ -1062,7 +1072,10 @@ function OriginPickerSection({
     onError: (_e, _v, ctx) => {
       if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
     },
-    onSuccess: (server) => qc.setQueryData<Character>(queryKey, server),
+    onSuccess: (server) => {
+      qc.setQueryData<Character>(queryKey, server)
+      invalidateCharacterDependents(qc, character.id)
+    },
   })
 
   const toggle = (benefitId: string) => {
@@ -1210,7 +1223,10 @@ function ProficienciesPanel({ character }: { character: Character }) {
     onError: (_e, _v, ctx) => {
       if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
     },
-    onSuccess: (server) => qc.setQueryData<Character>(queryKey, server),
+    onSuccess: (server) => {
+      qc.setQueryData<Character>(queryKey, server)
+      invalidateCharacterDependents(qc, character.id)
+    },
   })
 
   const toggle = (category: string) => {
@@ -1374,7 +1390,7 @@ function ActiveEffectsSection({ character }: { character: Character }) {
   const remove = useMutation<{ id: number }, Error, number>({
     mutationFn: (effectId) =>
       api.characters.removeActiveEffect(character.id, effectId),
-    onSuccess: ({ id }) =>
+    onSuccess: ({ id }) => {
       qc.setQueryData<Character>(queryKey, (prev) =>
         prev
           ? {
@@ -1382,15 +1398,23 @@ function ActiveEffectsSection({ character }: { character: Character }) {
               activeEffects: prev.activeEffects.filter((e) => e.id !== id),
             }
           : prev,
-      ),
+      )
+      invalidateCharacterDependents(qc, character.id)
+    },
   })
   const endScene = useMutation<Character, Error, void>({
     mutationFn: () => api.characters.endScene(character.id),
-    onSuccess: (next) => qc.setQueryData<Character>(queryKey, next),
+    onSuccess: (next) => {
+      qc.setQueryData<Character>(queryKey, next)
+      invalidateCharacterDependents(qc, character.id)
+    },
   })
   const endDay = useMutation<Character, Error, void>({
     mutationFn: () => api.characters.endDay(character.id),
-    onSuccess: (next) => qc.setQueryData<Character>(queryKey, next),
+    onSuccess: (next) => {
+      qc.setQueryData<Character>(queryKey, next)
+      invalidateCharacterDependents(qc, character.id)
+    },
   })
 
   return (
@@ -1849,13 +1873,7 @@ function LevelBadge({ character }: { character: Character }) {
     },
     onSuccess: (server) => {
       qc.setQueryData<Character>(queryKey, server)
-      /* Level + class changes are shown on campaign member rows
-       * (`char.level`, `char.classes[].className/level`) — invalidate
-       * every open members roster so stale numbers don't linger. */
-      qc.invalidateQueries({
-        predicate: (q) =>
-          q.queryKey[0] === 'campaigns' && q.queryKey[2] === 'members',
-      })
+      invalidateCharacterDependents(qc, character.id)
     },
   })
 
@@ -2064,6 +2082,7 @@ function VitalsAside({ character }: { character: Character }) {
       try {
         const updated = await api.characters.updateVitals(character.id, input)
         qc.setQueryData(queryKey, updated)
+        invalidateCharacterDependents(qc, character.id)
       } catch {
         if (rollbackSnapshot.current) {
           qc.setQueryData(queryKey, rollbackSnapshot.current)
@@ -2505,7 +2524,10 @@ function ExpertisesPanel({ character }: { character: Character }) {
     onError: (_e, _v, ctx) => {
       if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey })
+      invalidateCharacterDependents(qc, character.id)
+    },
   })
 
   const removeCustom = useMutation<
@@ -2810,6 +2832,7 @@ function ExpertiseRow({
           ),
         }
       })
+      invalidateCharacterDependents(qc, character.id)
     },
   })
 
@@ -3515,6 +3538,7 @@ function InventoryPanel({ character }: { character: Character }) {
             }
           : prev,
       )
+      invalidateCharacterDependents(qc, character.id)
     },
   })
 
@@ -3559,6 +3583,7 @@ function InventoryPanel({ character }: { character: Character }) {
             }
           : prev,
       )
+      invalidateCharacterDependents(qc, character.id)
     },
   })
 
@@ -3582,11 +3607,17 @@ function InventoryPanel({ character }: { character: Character }) {
     onError: (_e, _v, ctx) => {
       if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
     },
+    onSuccess: () => {
+      invalidateCharacterDependents(qc, character.id)
+    },
   })
 
   const consumeItem = useMutation<Character, Error, number>({
     mutationFn: (itemId) => api.characters.consumeItem(character.id, itemId),
-    onSuccess: (next) => qc.setQueryData<Character>(queryKey, next),
+    onSuccess: (next) => {
+      qc.setQueryData<Character>(queryKey, next)
+      invalidateCharacterDependents(qc, character.id)
+    },
   })
 
   const items = character.items
