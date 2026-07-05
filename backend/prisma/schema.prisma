@@ -20,7 +20,7 @@ model User {
 }
 
 /// A GM-run campaign. Owner is the GM (User). Players + characters
-/// attach later via CampaignMember; play happens inside Session rows.
+/// attach via CampaignMember; play happens inside Session rows.
 model Campaign {
   id          Int      @id @default(autoincrement())
   ownerId     Int
@@ -30,8 +30,29 @@ model Campaign {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   sessions    Session[]
+  members     CampaignMember[]
 
   @@index([ownerId])
+}
+
+/// Character joined to a Campaign. Role controls what the character
+/// represents in play: 'player' is the default (PC controlled by a
+/// player); 'gm' marks a GM-controlled character (recurring NPC,
+/// mentor, capanga acompanhando o grupo). One character per campaign
+/// via the composite unique — re-adding after removal creates a new row.
+model CampaignMember {
+  id          Int       @id @default(autoincrement())
+  campaignId  Int
+  campaign    Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  characterId Int
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  /// 'player' | 'gm'
+  role        String    @default("player")
+  addedAt     DateTime  @default(now())
+
+  @@unique([campaignId, characterId])
+  @@index([campaignId])
+  @@index([characterId])
 }
 
 /// A single play session inside a Campaign. Owned by the campaign;
@@ -91,6 +112,7 @@ model Character {
   expertises   CharacterExpertise[]
   items        CharacterItem[]
   activeEffects ActiveEffect[]
+  campaignMemberships CampaignMember[]
 
   @@index([ownerId])
 }
