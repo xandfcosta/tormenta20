@@ -7,6 +7,7 @@ import { CampaignMembersModule } from './campaign-members/campaign-members.modul
 import { CampaignsModule } from './campaigns/campaigns.module';
 import { CharactersModule } from './characters/characters.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { RealtimeModule } from './realtime/realtime.module';
 import { SessionsModule } from './sessions/sessions.module';
 import { UsersModule } from './users/users.module';
 
@@ -20,6 +21,7 @@ import { UsersModule } from './users/users.module';
     CampaignsModule,
     CampaignMembersModule,
     SessionsModule,
+    RealtimeModule,
   ],
   controllers: [AppController],
   providers: [AppService],
