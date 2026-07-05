@@ -33,6 +33,8 @@ import {
   rollAverage,
   sanitizeClassChoices,
 } from './characters.helpers';
+import { computeSheetForRow } from './character-sheet.mapper';
+import type { ComputedSheet } from '@tormenta20/t20-data';
 
 const characterInclude = {
   races: { select: { race: true } },
@@ -95,6 +97,25 @@ export class CharactersService {
       throw new ForbiddenException(`Character ${id} belongs to another user`);
     }
     return this.backfillProficiencies(character);
+  }
+
+  /**
+   * Read variant that attaches a derived sheet (`computed`) produced by
+   * the t20-data orchestrator. Handy for read-only views (character
+   * sheet UI, initiative panels) that should show total attributes,
+   * defense and saves without the caller re-implementing the rules.
+   *
+   * v1 scope: attributes + vitals + defense base + saves + movement.
+   * Skills, equipment and active-effect stacking are placeholders until
+   * the follow-up phases map those pieces of DB state onto the input.
+   */
+  async findOneWithComputed(
+    ownerId: number,
+    id: number,
+  ): Promise<Awaited<ReturnType<typeof this.findOne>> & { computed: ComputedSheet }> {
+    const character = await this.findOne(ownerId, id);
+    const computed = computeSheetForRow(character);
+    return { ...character, computed };
   }
 
   /**
