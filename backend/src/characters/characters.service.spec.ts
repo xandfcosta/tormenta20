@@ -140,6 +140,13 @@ class FakePrisma {
   activeEffectCreate = jest.fn(async ({ data }: { data: unknown }) => data);
   activeEffectDelete = jest.fn(async () => ({ ok: true }));
   activeEffectDeleteMany = jest.fn(async () => ({ count: 0 }));
+  characterClassFindMany = jest.fn<
+    Promise<{ className: string; level: number }[]>,
+    [unknown]
+  >(async () => (this.lastSeed?.classes ?? []).map((c) => ({
+    className: c.className,
+    level: c.level,
+  })));
   transaction = jest.fn(async (cb: (tx: unknown) => Promise<unknown>) =>
     cb({
       activeEffect: {
@@ -162,6 +169,11 @@ class FakePrisma {
          * seeded (`lastSeed`). */
         findUnique: async () => this.lastSeed,
         update: this.characterUpdate,
+      },
+      characterClass: {
+        /* BI2: updateClassLevel re-reads classes inside the tx so
+         * parallel per-class updates can't slip past the L20 cap. */
+        findMany: this.characterClassFindMany,
       },
     }),
   );
@@ -307,6 +319,43 @@ describe('CharactersService.updateClassLevel — PDF p7 (sum ≤ 20)', () => {
       data: { level: number };
     };
     expect(payload.data.level).toBe(17);
+  });
+
+  it('re-reads classes inside the tx so parallel per-class updates cap correctly (BI2)', async () => {
+    /* Pre-BI2: findOne read `[Guerreiro 10, Bardo 4]`. Two concurrent
+     * updateClassLevel — Guerreiro→15, Bardo→5 — both computed
+     * newTotal against the same stale snapshot (10+5=15 and 15+4=19).
+     * Both wrote; the winning row's committed total ignored the
+     * other's uncommitted delta.
+     *
+     * Post-BI2: the tx re-reads classes fresh. Here we simulate the
+     * second call landing after the first committed by mocking
+     * characterClassFindMany to return the post-first snapshot. Cap
+     * enforcement now correctly rejects. */
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(
+      makeCharacter({
+        classes: [
+          { className: 'Guerreiro', level: 10 },
+          { className: 'Bardo', level: 4 },
+        ],
+      }),
+    );
+    /* The second updateClassLevel call sees Guerreiro already bumped
+     * to 15 by an earlier commit. Trying to also push Bardo to 7
+     * would make total 22 → cap error. */
+    prisma.characterClassFindMany.mockResolvedValueOnce([
+      { className: 'Guerreiro', level: 15 },
+      { className: 'Bardo', level: 4 },
+    ]);
+    const service = await makeService(prisma);
+    await expect(
+      service.updateClassLevel(1, 1, { className: 'Bardo', level: 7 }),
+    ).rejects.toMatchObject({
+      response: expect.objectContaining({
+        message: 'Total level 22 exceeds 20',
+      }),
+    });
   });
 });
 
