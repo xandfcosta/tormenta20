@@ -16,6 +16,7 @@
 
 import { ATTRIBUTE_KEYS, type AttributeKey } from './attributes'
 import { CLASS_VITALS } from './class-vitals'
+import type { DamageType, WeaponHand, WeaponPurpose } from './items/types'
 import { racaById, resolveAtributoMod, type Raca, type Tamanho } from './racas'
 import { SKILL_IDS, SKILL_INDEX, skillValue, type SkillId } from './skill-index'
 
@@ -51,10 +52,50 @@ export type CharacterInput = {
   trainedSkills?: readonly SkillId[]
   /**
    * Penalidade de armadura atual (não-negativa). Aplicada às perícias
-   * com flag `armorPenalty` no `SKILL_INDEX`. Origem: armadura +
-   * escudo equipados (calculada por camada de equipamento em v3).
+   * com flag `armorPenalty` no `SKILL_INDEX`. Se `equipment` estiver
+   * presente, é ignorada — a penalidade é derivada de armor + shield.
    */
   armorPenalty?: number
+  /**
+   * Equipamento atual do personagem. Se presente, o orchestrator deriva
+   * bônus de Defesa (armor + shield), penalidade de armadura para
+   * skills e ataques por arma equipada.
+   */
+  equipment?: CharacterEquipment
+}
+
+export type CharacterEquipment = {
+  armor?: EquippedArmor
+  shield?: EquippedShield
+  mainHand?: EquippedWeapon
+  offHand?: EquippedWeapon
+}
+
+export type EquippedArmor = {
+  name?: string
+  /** Bônus de armadura na Defesa (positivo). */
+  defense: number
+  /** Penalidade de armadura em skills sensíveis (positivo; subtraído). */
+  penalty: number
+  heavy?: boolean
+}
+
+export type EquippedShield = {
+  name?: string
+  defense: number
+  penalty: number
+  heavy?: boolean
+}
+
+export type EquippedWeapon = {
+  name?: string
+  hand: WeaponHand
+  purpose: WeaponPurpose
+  /** Dado de dano base (ex: "1d8"). */
+  damage: string
+  critRange: number
+  critMult: number
+  damageType: DamageType
 }
 
 // ─── Output ──────────────────────────────────────────────────────────
@@ -79,7 +120,10 @@ export type ComputedSheet = {
     base: 10
     /** Componente de Destreza. */
     attribute: number
-    /** Total sem armadura/escudo (v1 não modela equipamento). */
+    /** Bônus de armadura equipada (0 se sem). */
+    armor: number
+    /** Bônus de escudo equipado (0 se sem). */
+    shield: number
     total: number
   }
   saves: {
@@ -88,9 +132,30 @@ export type ComputedSheet = {
     vontade: number
   }
   skills: Record<SkillId, SkillComputed>
+  attacks: {
+    mainHand: ComputedAttack | null
+    offHand: ComputedAttack | null
+  }
   deslocamento: number
   tamanho: Tamanho
   warnings: readonly string[]
+}
+
+export type ComputedAttack = {
+  weaponName?: string
+  /** Perícia usada (Luta corpo a corpo, Pontaria à distância/arremesso). */
+  skill: 'luta' | 'pontaria'
+  /** Bônus total de ataque (mesmo valor da perícia associada). */
+  attackTotal: number
+  /** Dado de dano base. */
+  damageDice: string
+  /** Bônus adicional de atributo no dano (FOR para corpo a corpo). */
+  damageAttributeBonus: number
+  damageType: DamageType
+  critRange: number
+  critMult: number
+  hand: WeaponHand
+  purpose: WeaponPurpose
 }
 
 export type SkillComputed = {
@@ -178,10 +243,14 @@ export function computeCharacterSheet(input: CharacterInput): ComputedSheet {
 
   const vitals = computeVitals(input, attributes, warnings)
   const defenseAttr = attributes.dexterity.total
+  const armorBonus = input.equipment?.armor?.defense ?? 0
+  const shieldBonus = input.equipment?.shield?.defense ?? 0
   const defense: ComputedSheet['defense'] = {
     base: DEFENSE_BASE,
     attribute: defenseAttr,
-    total: DEFENSE_BASE + defenseAttr,
+    armor: armorBonus,
+    shield: shieldBonus,
+    total: DEFENSE_BASE + defenseAttr + armorBonus + shieldBonus,
   }
 
   const half = halfLevel(input.level)
@@ -193,6 +262,7 @@ export function computeCharacterSheet(input: CharacterInput): ComputedSheet {
 
   const { deslocamento, tamanho } = resolveRaceMovement(input, warnings)
   const skills = computeSkills(input, attributes, warnings)
+  const attacks = computeAttacks(input, skills, attributes)
 
   return {
     level: input.level,
@@ -202,10 +272,33 @@ export function computeCharacterSheet(input: CharacterInput): ComputedSheet {
     defense,
     saves,
     skills,
+    attacks,
     deslocamento,
     tamanho,
     warnings,
   }
+}
+
+// ─── Armor penalty derivation ────────────────────────────────────────
+/**
+ * Deriva penalidade de armadura efetiva:
+ *  - Se `equipment.armor` ou `equipment.shield` presentes, soma penalidades.
+ *  - Caso contrário, usa `armorPenalty` override (v2 API).
+ *  - Valores negativos viram 0 + warning.
+ */
+function deriveArmorPenalty(
+  input: CharacterInput,
+  warnings: string[],
+): number {
+  const eq = input.equipment
+  if (eq && (eq.armor || eq.shield)) {
+    return (eq.armor?.penalty ?? 0) + (eq.shield?.penalty ?? 0)
+  }
+  const armorPenalty = input.armorPenalty ?? 0
+  if (armorPenalty < 0) {
+    warnings.push(`armorPenalty deve ser não-negativa, got ${armorPenalty}`)
+  }
+  return Math.max(0, armorPenalty)
 }
 
 // ─── Skills ──────────────────────────────────────────────────────────
@@ -215,11 +308,7 @@ function computeSkills(
   warnings: string[],
 ): Record<SkillId, SkillComputed> {
   const trainedSet = new Set<SkillId>(input.trainedSkills ?? [])
-  const armorPenalty = input.armorPenalty ?? 0
-  if (armorPenalty < 0) {
-    warnings.push(`armorPenalty deve ser não-negativa, got ${armorPenalty}`)
-  }
-  const penalty = Math.max(0, armorPenalty)
+  const penalty = deriveArmorPenalty(input, warnings)
 
   // Warn on unknown trained skill ids
   for (const id of trainedSet) {
@@ -276,6 +365,50 @@ function computeVitals(
     pmMax: Math.max(0, pmMax),
     pvCurrent: Math.min(pvCurrent, pvMax),
     pmCurrent: Math.min(pmCurrent, pmMax),
+  }
+}
+
+// ─── Attacks ─────────────────────────────────────────────────────────
+/**
+ * Arma corpo a corpo usa Luta (FOR); arma à distância/arremesso usa
+ * Pontaria (DES). Bônus de dano de atributo:
+ *  - Melee: FOR total
+ *  - Thrown: FOR total (ainda somam FOR no dano em T20)
+ *  - Ranged: 0 (bows/firearms não somam atributo no dano por padrão)
+ */
+function computeAttackFor(
+  weapon: EquippedWeapon,
+  skills: Record<SkillId, SkillComputed>,
+  attributes: Record<AttributeKey, AttributeComputed>,
+): ComputedAttack {
+  const skillId: 'luta' | 'pontaria' =
+    weapon.purpose === 'ranged' ? 'pontaria' : 'luta'
+  const attackTotal = skills[skillId].total
+  const damageAttributeBonus =
+    weapon.purpose === 'ranged' ? 0 : attributes.strength.total
+  return {
+    weaponName: weapon.name,
+    skill: skillId,
+    attackTotal,
+    damageDice: weapon.damage,
+    damageAttributeBonus,
+    damageType: weapon.damageType,
+    critRange: weapon.critRange,
+    critMult: weapon.critMult,
+    hand: weapon.hand,
+    purpose: weapon.purpose,
+  }
+}
+
+function computeAttacks(
+  input: CharacterInput,
+  skills: Record<SkillId, SkillComputed>,
+  attributes: Record<AttributeKey, AttributeComputed>,
+): ComputedSheet['attacks'] {
+  const eq = input.equipment
+  return {
+    mainHand: eq?.mainHand ? computeAttackFor(eq.mainHand, skills, attributes) : null,
+    offHand: eq?.offHand ? computeAttackFor(eq.offHand, skills, attributes) : null,
   }
 }
 
