@@ -138,8 +138,33 @@ export class CampaignMembersService {
     });
   }
 
-  async remove(ownerId: number, campaignId: number, memberId: number) {
-    await this.findOne(ownerId, campaignId, memberId);
+  /**
+   * Remove a member from a campaign. Either the campaign owner (GM
+   * kicking a player, or removing an NPC) **or** the character owner
+   * (player leaving the campaign) can drive the deletion. This closes
+   * OI1 — pre-fix the GM was the only allowed actor, so players had no
+   * way to leave a campaign, mirror-image of the OC1 consent leak.
+   */
+  async remove(callerId: number, campaignId: number, memberId: number) {
+    const member = await this.prisma.campaignMember.findUnique({
+      where: { id: memberId },
+      select: {
+        id: true,
+        campaignId: true,
+        campaign: { select: { ownerId: true } },
+        character: { select: { ownerId: true } },
+      },
+    });
+    if (!member || member.campaignId !== campaignId) {
+      throw new NotFoundException(`Member ${memberId} not found`);
+    }
+    const isGm = member.campaign.ownerId === callerId;
+    const isCharacterOwner = member.character.ownerId === callerId;
+    if (!isGm && !isCharacterOwner) {
+      throw new ForbiddenException(
+        `You are neither the GM of this campaign nor the character's owner`,
+      );
+    }
     await this.prisma.campaignMember.delete({ where: { id: memberId } });
     return { id: memberId };
   }

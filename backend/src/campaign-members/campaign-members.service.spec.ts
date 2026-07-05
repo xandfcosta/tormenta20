@@ -202,12 +202,62 @@ describe('CampaignMembersService.updateRole', () => {
 });
 
 describe('CampaignMembersService.remove', () => {
-  it('deletes when the member is scoped to the campaign', async () => {
-    const memberFindUnique = jest.fn().mockResolvedValue(makeMember());
+  /* Post-OI1: `remove` fetches the member with nested owners so it can
+   * authorize either the campaign GM or the character owner. Every
+   * spec below mocks that shape explicitly. */
+  const memberRowGmOwnedByOne = {
+    id: 1,
+    campaignId: 1,
+    campaign: { ownerId: 1 },
+    character: { ownerId: 42 },
+  };
+
+  it('GM (campaign owner) can remove any member', async () => {
+    const memberFindUnique = jest
+      .fn()
+      .mockResolvedValue(memberRowGmOwnedByOne);
     const memberDelete = jest.fn().mockResolvedValue({});
     const { service } = await setup({ memberFindUnique, memberDelete });
     await expect(service.remove(1, 1, 1)).resolves.toEqual({ id: 1 });
     expect(memberDelete).toHaveBeenCalledWith({ where: { id: 1 } });
+  });
+
+  it('player (character owner) can leave the campaign (OI1)', async () => {
+    /* Pre-OI1 this was rejected — only the GM could remove. */
+    const memberFindUnique = jest
+      .fn()
+      .mockResolvedValue(memberRowGmOwnedByOne);
+    const memberDelete = jest.fn().mockResolvedValue({});
+    const { service } = await setup({ memberFindUnique, memberDelete });
+    await expect(service.remove(42, 1, 1)).resolves.toEqual({ id: 1 });
+  });
+
+  it('third party (neither GM nor char owner) is rejected', async () => {
+    const memberFindUnique = jest
+      .fn()
+      .mockResolvedValue(memberRowGmOwnedByOne);
+    const { service } = await setup({ memberFindUnique });
+    await expect(service.remove(999, 1, 1)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+  });
+
+  it('NotFound when the member row is missing', async () => {
+    const memberFindUnique = jest.fn().mockResolvedValue(null);
+    const { service } = await setup({ memberFindUnique });
+    await expect(service.remove(1, 1, 99)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it('NotFound when the member belongs to another campaign', async () => {
+    const memberFindUnique = jest
+      .fn()
+      .mockResolvedValue({ ...memberRowGmOwnedByOne, campaignId: 999 });
+    const { service } = await setup({ memberFindUnique });
+    await expect(service.remove(1, 1, 1)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 });
 
