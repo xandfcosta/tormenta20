@@ -23,9 +23,14 @@ function CampaignsListPage() {
     <div className="h-full space-y-6 overflow-y-auto p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-semibold">Campanhas</h1>
-        <Link to="/campaigns/new">
-          <Button>+ Nova campanha</Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link to="/campaigns/join">
+            <Button variant="outline">Entrar em campanha</Button>
+          </Link>
+          <Link to="/campaigns/new">
+            <Button>+ Nova campanha</Button>
+          </Link>
+        </div>
       </div>
 
       {campaigns.isLoading && <SkeletonCardGrid count={3} />}
