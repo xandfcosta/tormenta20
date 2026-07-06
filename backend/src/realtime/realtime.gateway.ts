@@ -316,10 +316,25 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
    * is deliberately not awaited — WS latency stays low; a transient
    * DB failure logs and marks the session dirty so the next mutation
    * retries the write.
+   *
+   * `persistence-warning` broadcast: whenever the dirty flag flips
+   * (either persist just failed for the first time, or the retry just
+   * succeeded), we notify the room so clients can render a
+   * "unsaved changes" badge. We track the last-emitted status per
+   * session to avoid a spammy stream when the flag stays the same.
    */
+  private readonly lastEmittedDirty = new Map<number, boolean>();
+
   private emitSessionState(sessionId: number, state: SessionRuntimeState) {
     this.server.to(sessionRoom(sessionId)).emit('session-state', state);
-    void this.state.persist(sessionId);
+    this.state.persist(sessionId).then((dirty) => {
+      const previous = this.lastEmittedDirty.get(sessionId) ?? false;
+      if (previous === dirty) return;
+      this.lastEmittedDirty.set(sessionId, dirty);
+      this.server
+        .to(sessionRoom(sessionId))
+        .emit('persistence-warning', { sessionId, dirty });
+    });
   }
 
   private async assertSessionAccess(

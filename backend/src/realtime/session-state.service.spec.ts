@@ -177,6 +177,21 @@ describe('SessionStateService.persist (P1b fire-and-forget)', () => {
     expect(sessionUpdate).toHaveBeenCalledTimes(2);
   });
 
+  it('returns the new dirty status (true on failure, false on success)', async () => {
+    /* Persistence-warning gate: the gateway broadcasts based on this
+     * boolean. `persist` must resolve to `true` when the write failed
+     * (dirty just set) and `false` when it succeeded (dirty just
+     * cleared). */
+    const sessionUpdate = jest
+      .fn()
+      .mockRejectedValueOnce(new Error('DB down'))
+      .mockResolvedValue({});
+    const { service } = await setup({ sessionUpdate });
+    service.addEntry(1, { label: 'A', initiative: 12, type: 'npc' });
+    await expect(service.persist(1)).resolves.toBe(true);
+    await expect(service.persist(1)).resolves.toBe(false);
+  });
+
   it('no-ops when the session was never touched (nothing in memory)', async () => {
     const { service, sessionUpdate } = await setup();
     await service.persist(42);

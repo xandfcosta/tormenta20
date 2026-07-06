@@ -128,6 +128,11 @@ function InitiativeCard({
             <Badge variant={rt.isConnected ? 'default' : 'secondary'}>
               {rt.isConnected ? 'Conectado' : 'Desconectado'}
             </Badge>
+            {rt.hasPersistenceWarning && (
+              <Badge variant="destructive">
+                Alterações não salvas — tentando novamente
+              </Badge>
+            )}
             <span>Rodada {rt.state.round}</span>
           </div>
         </div>

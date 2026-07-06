@@ -60,6 +60,11 @@ export function useSessionSocket(campaignId: number, sessionId: number) {
   const [state, setState] = useState<SessionRuntimeState>(EMPTY_STATE)
   const [isConnected, setIsConnected] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  /* `hasPersistenceWarning` reflects the backend's dirty flag. When
+   * true, the server failed to persist the last mutation; UI should
+   * render a "unsaved changes" hint. The flag flips back off on the
+   * next successful retry. */
+  const [hasPersistenceWarning, setHasPersistenceWarning] = useState(false)
   const socketRef = useRef<Socket | null>(null)
 
   useEffect(() => {
@@ -90,6 +95,12 @@ export function useSessionSocket(campaignId: number, sessionId: number) {
     socket.on('session-state', (next: SessionRuntimeState) => {
       setState(next)
     })
+    socket.on(
+      'persistence-warning',
+      (payload: { sessionId: number; dirty: boolean }) => {
+        setHasPersistenceWarning(Boolean(payload?.dirty))
+      },
+    )
 
     socket.connect()
 
@@ -159,5 +170,5 @@ export function useSessionSocket(campaignId: number, sessionId: number) {
     [campaignId, sessionId],
   )
 
-  return { state, isConnected, error, ...actions }
+  return { state, isConnected, error, hasPersistenceWarning, ...actions }
 }
