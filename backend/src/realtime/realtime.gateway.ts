@@ -105,15 +105,114 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   @SubscribeMessage('initiative-add')
   async initiativeAdd(
     @ConnectedSocket() socket: AuthedSocket,
-    @MessageBody() body: SessionScopedBody & { entry: AddEntryInput },
+    @MessageBody()
+    body: SessionScopedBody & {
+      entry: Partial<AddEntryInput> & { characterId?: number };
+    },
   ) {
     await this.assertSessionAccess(socket, body);
-    if (!body.entry || typeof body.entry.label !== 'string') {
-      throw new WsException('entry.label is required');
-    }
-    const state = this.state.addEntry(body.sessionId, body.entry);
+    if (!body.entry) throw new WsException('entry is required');
+    const entry = await this.materializeEntry(
+      socket.data.user.id,
+      body.campaignId,
+      body.entry,
+    );
+    const state = this.state.addEntry(body.sessionId, entry);
     this.emitSessionState(body.sessionId, state);
     return state;
+  }
+
+  /**
+   * Resolve an initiative-add payload into the concrete `AddEntryInput`
+   * the state service expects. When `characterId` is set:
+   *   - The character must be a member of the campaign the session
+   *     belongs to. Prevents adding a random PC from another table.
+   *   - The caller must own the character OR be the campaign GM.
+   *   - `label` / hp / mp defaults are lifted from the Character row
+   *     so the GM doesn't retype known stats.
+   *
+   * NPCs (no `characterId`) still require `label` explicitly.
+   */
+  private async materializeEntry(
+    callerId: number,
+    campaignId: number,
+    input: Partial<AddEntryInput> & { characterId?: number },
+  ): Promise<AddEntryInput> {
+    if (input.characterId === undefined) {
+      if (typeof input.label !== 'string' || !input.label.trim()) {
+        throw new WsException('entry.label is required for NPC entries');
+      }
+      if (typeof input.initiative !== 'number') {
+        throw new WsException('entry.initiative is required');
+      }
+      const type: 'character' | 'npc' = input.type ?? 'npc';
+      return {
+        ...input,
+        label: input.label,
+        initiative: input.initiative,
+        type,
+      };
+    }
+    const characterId = input.characterId;
+    if (typeof input.initiative !== 'number') {
+      throw new WsException('entry.initiative is required');
+    }
+    const [character, campaign, member] = await Promise.all([
+      this.prisma.character.findUnique({
+        where: { id: characterId },
+        select: {
+          id: true,
+          name: true,
+          ownerId: true,
+          hpCurrent: true,
+          hpMax: true,
+          mpCurrent: true,
+          mpMax: true,
+        },
+      }),
+      this.prisma.campaign.findUnique({
+        where: { id: campaignId },
+        select: { id: true, ownerId: true },
+      }),
+      this.prisma.campaignMember.findUnique({
+        where: {
+          campaignId_characterId: {
+            campaignId,
+            characterId,
+          },
+        },
+        select: { id: true },
+      }),
+    ]);
+    if (!character) {
+      throw new WsException(`Character ${characterId} not found`);
+    }
+    if (!campaign) {
+      throw new WsException(`Campaign ${campaignId} not found`);
+    }
+    if (!member) {
+      throw new WsException(
+        `Character ${characterId} is not a member of campaign ${campaignId}`,
+      );
+    }
+    if (
+      callerId !== character.ownerId &&
+      callerId !== campaign.ownerId
+    ) {
+      throw new WsException(
+        `You are neither the campaign GM nor the character's owner`,
+      );
+    }
+    return {
+      label: input.label?.trim() || character.name,
+      initiative: input.initiative,
+      type: 'character',
+      characterId,
+      hpCurrent: input.hpCurrent ?? character.hpCurrent,
+      hpMax: input.hpMax ?? character.hpMax,
+      mpCurrent: input.mpCurrent ?? character.mpCurrent,
+      mpMax: input.mpMax ?? character.mpMax,
+    };
   }
 
   @SubscribeMessage('initiative-update')
