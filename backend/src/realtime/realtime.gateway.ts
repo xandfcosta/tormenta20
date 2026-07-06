@@ -99,7 +99,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     @MessageBody() body: SessionScopedBody,
   ) {
     await this.assertSessionAccess(socket, body);
-    return this.state.getState(body.sessionId);
+    /* P5: on every full-state pull, refresh hpMax/mpMax from the DB
+     * Character rows. Cheap batched read; ensures a level-up
+     * mid-session doesn't leave the tracker capped at the old max.
+     * hpCurrent is intentionally untouched. */
+    return this.state.refreshCharacterMaxes(body.sessionId);
   }
 
   @SubscribeMessage('initiative-add')
