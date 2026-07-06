@@ -27,6 +27,9 @@ import { JwtStrategy } from './jwt.strategy';
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
-  exports: [AuthService],
+  /* JwtModule re-exportado — RealtimeGateway injeta JwtService pra
+   * validar handshake WS. Sem re-export, RealtimeModule importa
+   * AuthModule mas Nest não expõe JwtService downstream. */
+  exports: [AuthService, JwtModule],
 })
 export class AuthModule {}
