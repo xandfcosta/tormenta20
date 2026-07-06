@@ -137,6 +137,15 @@ export class SessionsService {
    * idempotent on ended (returns the current row). Runtime state is
    * intentionally preserved — reopen or `clearTracker` are the two
    * explicit knobs.
+   *
+   * P3 batch commit: when `WS_VITALS_WRITETHROUGH=1` and the tracker
+   * has entries linked to Character rows (via `characterId`), the end
+   * transition also flushes each entry's `hpCurrent`/`mpCurrent` back
+   * to the DB Character row. Clamped against the fresh `Character.hpMax`
+   * (source of truth — the entry cache can be stale after a level-up
+   * mid-session). Skipped by default because the WS layer already
+   * mutates in-memory; opting in shouldn't be automatic until a
+   * product decision to sync sheets happens.
    */
   async end(ownerId: number, campaignId: number, id: number) {
     const session = await this.findOne(ownerId, campaignId, id);
@@ -146,10 +155,61 @@ export class SessionsService {
       );
     }
     if (session.status === 'ended') return session;
+    if (this.state && process.env.WS_VITALS_WRITETHROUGH === '1') {
+      await this.commitVitalsToCharacters(id);
+    }
     return this.prisma.session.update({
       where: { id },
       data: { status: 'ended', endedAt: new Date() },
     });
+  }
+
+  /**
+   * Walk the runtime initiative list; for every entry that carries a
+   * `characterId`, clamp its hp/mp to the fresh `Character.hpMax` /
+   * `mpMax` and write. Individual failures are logged and skipped —
+   * one bad row shouldn't block the whole batch.
+   */
+  private async commitVitalsToCharacters(sessionId: number) {
+    if (!this.state) return;
+    const runtime = this.state.getState(sessionId);
+    for (const entry of runtime.initiative) {
+      if (entry.characterId === undefined) continue;
+      if (
+        entry.hpCurrent === undefined &&
+        entry.mpCurrent === undefined
+      ) {
+        continue;
+      }
+      try {
+        const fresh = await this.prisma.character.findUnique({
+          where: { id: entry.characterId },
+          select: { hpMax: true, mpMax: true },
+        });
+        if (!fresh) continue;
+        const patch: { hpCurrent?: number; mpCurrent?: number } = {};
+        if (entry.hpCurrent !== undefined) {
+          patch.hpCurrent = Math.min(
+            Math.max(0, entry.hpCurrent),
+            fresh.hpMax,
+          );
+        }
+        if (entry.mpCurrent !== undefined) {
+          patch.mpCurrent = Math.min(
+            Math.max(0, entry.mpCurrent),
+            fresh.mpMax,
+          );
+        }
+        await this.prisma.character.update({
+          where: { id: entry.characterId },
+          data: patch,
+        });
+      } catch (err) {
+        this.logger.warn(
+          `Session ${sessionId} vitals commit failed for character ${entry.characterId}: ${(err as Error).message}`,
+        );
+      }
+    }
   }
 
   /**

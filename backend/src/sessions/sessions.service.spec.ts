@@ -52,6 +52,8 @@ async function setup(over?: {
   update?: jest.Mock;
   delete?: jest.Mock;
   campaignsFindOne?: jest.Mock;
+  characterFindUnique?: jest.Mock;
+  characterUpdate?: jest.Mock;
   state?: unknown;
 }) {
   const prisma = {
@@ -61,6 +63,13 @@ async function setup(over?: {
       create: over?.create ?? jest.fn(),
       update: over?.update ?? jest.fn(),
       delete: over?.delete ?? jest.fn(),
+    },
+    /* P3: batch commit path reads/writes Character rows on Session.end
+     * when WS_VITALS_WRITETHROUGH=1. Defaults resolve to shapes the
+     * commit loop tolerates (no matching row = skip). */
+    character: {
+      findUnique: over?.characterFindUnique ?? jest.fn().mockResolvedValue(null),
+      update: over?.characterUpdate ?? jest.fn().mockResolvedValue({}),
     },
   };
   const campaigns = {
@@ -302,6 +311,165 @@ describe('SessionsService.end', () => {
     await expect(service.end(1, 1, 1)).rejects.toBeInstanceOf(
       BadRequestException,
     );
+  });
+
+  describe('P3 batch commit — WS_VITALS_WRITETHROUGH gated', () => {
+    const OLD_ENV = process.env.WS_VITALS_WRITETHROUGH;
+    afterEach(() => {
+      if (OLD_ENV === undefined) delete process.env.WS_VITALS_WRITETHROUGH;
+      else process.env.WS_VITALS_WRITETHROUGH = OLD_ENV;
+    });
+
+    function stateWithEntries(entries: unknown[]) {
+      return {
+        resetInitiative: jest.fn(),
+        persist: jest.fn().mockResolvedValue(undefined),
+        getState: () => ({
+          initiative: entries,
+          round: 1,
+          turnIndex: 0,
+        }),
+      } as unknown;
+    }
+
+    it('when flag off: skips character write-through (no-op)', async () => {
+      delete process.env.WS_VITALS_WRITETHROUGH;
+      const findUnique = jest
+        .fn()
+        .mockResolvedValue(makeSession({ status: 'active' }));
+      const update = jest.fn().mockResolvedValue({});
+      const characterUpdate = jest.fn().mockResolvedValue({});
+      const state = stateWithEntries([
+        {
+          id: 'x',
+          label: 'PC',
+          initiative: 12,
+          type: 'character',
+          characterId: 10,
+          hpCurrent: 5,
+          hpMax: 20,
+        },
+      ]);
+      const { service } = await setup({
+        findUnique,
+        update,
+        characterUpdate,
+        state,
+      });
+      await service.end(1, 1, 1);
+      expect(characterUpdate).not.toHaveBeenCalled();
+    });
+
+    it('when flag on: writes hpCurrent back to Character, clamped to fresh hpMax', async () => {
+      process.env.WS_VITALS_WRITETHROUGH = '1';
+      const findUnique = jest
+        .fn()
+        .mockResolvedValue(makeSession({ status: 'active' }));
+      const update = jest.fn().mockResolvedValue({});
+      const characterFindUnique = jest
+        .fn()
+        .mockResolvedValue({ hpMax: 15, mpMax: 5 });
+      const characterUpdate = jest.fn().mockResolvedValue({});
+      const state = stateWithEntries([
+        {
+          id: 'x',
+          label: 'PC',
+          initiative: 12,
+          type: 'character',
+          characterId: 10,
+          /* Entry cache says hpMax 30 but fresh DB says 15 — clamp
+           * source-of-truth. */
+          hpMax: 30,
+          hpCurrent: 25,
+        },
+      ]);
+      const { service } = await setup({
+        findUnique,
+        update,
+        characterFindUnique,
+        characterUpdate,
+        state,
+      });
+      await service.end(1, 1, 1);
+      expect(characterUpdate).toHaveBeenCalledWith({
+        where: { id: 10 },
+        data: { hpCurrent: 15 },
+      });
+    });
+
+    it('when flag on: skips entries without characterId', async () => {
+      process.env.WS_VITALS_WRITETHROUGH = '1';
+      const findUnique = jest
+        .fn()
+        .mockResolvedValue(makeSession({ status: 'active' }));
+      const update = jest.fn().mockResolvedValue({});
+      const characterUpdate = jest.fn().mockResolvedValue({});
+      const state = stateWithEntries([
+        {
+          id: 'y',
+          label: 'Goblin',
+          initiative: 8,
+          type: 'npc',
+          hpCurrent: 3,
+          hpMax: 10,
+        },
+      ]);
+      const { service } = await setup({
+        findUnique,
+        update,
+        characterUpdate,
+        state,
+      });
+      await service.end(1, 1, 1);
+      expect(characterUpdate).not.toHaveBeenCalled();
+    });
+
+    it('when flag on: individual failure is logged + skipped, rest of batch continues', async () => {
+      process.env.WS_VITALS_WRITETHROUGH = '1';
+      const findUnique = jest
+        .fn()
+        .mockResolvedValue(makeSession({ status: 'active' }));
+      const update = jest.fn().mockResolvedValue({});
+      const characterFindUnique = jest
+        .fn()
+        .mockRejectedValueOnce(new Error('DB blip'))
+        .mockResolvedValueOnce({ hpMax: 20, mpMax: 0 });
+      const characterUpdate = jest.fn().mockResolvedValue({});
+      const state = stateWithEntries([
+        {
+          id: 'a',
+          label: 'PC1',
+          initiative: 12,
+          type: 'character',
+          characterId: 10,
+          hpMax: 20,
+          hpCurrent: 4,
+        },
+        {
+          id: 'b',
+          label: 'PC2',
+          initiative: 8,
+          type: 'character',
+          characterId: 11,
+          hpMax: 20,
+          hpCurrent: 8,
+        },
+      ]);
+      const { service } = await setup({
+        findUnique,
+        update,
+        characterFindUnique,
+        characterUpdate,
+        state,
+      });
+      await service.end(1, 1, 1);
+      /* First entry failed at findUnique → no update; second succeeded. */
+      expect(characterUpdate).toHaveBeenCalledTimes(1);
+      expect(characterUpdate).toHaveBeenCalledWith({
+        where: { id: 11 },
+        data: { hpCurrent: 8 },
+      });
+    });
   });
 });
 
