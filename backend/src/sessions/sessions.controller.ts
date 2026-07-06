@@ -82,4 +82,13 @@ export class SessionsController {
   ) {
     return this.sessions.end(user.id, campaignId, id);
   }
+
+  @Post(':id/clear-tracker')
+  clearTracker(
+    @CurrentUser() user: AuthUser,
+    @Param('campaignId', ParseIntPipe) campaignId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.sessions.clearTracker(user.id, campaignId, id);
+  }
 }
