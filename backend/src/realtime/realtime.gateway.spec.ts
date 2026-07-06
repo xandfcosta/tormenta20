@@ -26,6 +26,9 @@ const SECRET = 'test-secret-just-for-jest';
 async function setup(over?: {
   sessionsFindOne?: jest.Mock;
   userFindUnique?: jest.Mock;
+  characterFindUnique?: jest.Mock;
+  campaignFindUnique?: jest.Mock;
+  campaignMemberFindUnique?: jest.Mock;
 }) {
   const prisma = {
     user: {
@@ -40,6 +43,16 @@ async function setup(over?: {
        * mutation. Resolves quietly so gateway specs stay green. */
       findUnique: jest.fn().mockResolvedValue(null),
       update: jest.fn().mockResolvedValue({}),
+    },
+    /* P2: initiative-add with characterId hits these three tables. */
+    character: {
+      findUnique: over?.characterFindUnique ?? jest.fn(),
+    },
+    campaign: {
+      findUnique: over?.campaignFindUnique ?? jest.fn(),
+    },
+    campaignMember: {
+      findUnique: over?.campaignMemberFindUnique ?? jest.fn(),
     },
   };
   const sessions = {
@@ -211,7 +224,7 @@ describe('RealtimeGateway.initiativeAdd', () => {
     expect(emit).toHaveBeenCalledWith('session-state', state);
   });
 
-  it('rejects when entry.label is missing', async () => {
+  it('rejects when entry.label is missing (NPC path)', async () => {
     const { gateway } = await setup();
     const socket = fakeSocket();
     (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
@@ -225,6 +238,137 @@ describe('RealtimeGateway.initiativeAdd', () => {
             label: string;
             initiative: number;
             type: 'npc';
+          },
+        },
+      ),
+    ).rejects.toBeInstanceOf(WsException);
+  });
+
+  it('P2: resolves characterId — pre-populates label + hp/mp from Character DB', async () => {
+    const { gateway, state } = await setup({
+      characterFindUnique: jest.fn().mockResolvedValue({
+        id: 10,
+        name: 'Alric',
+        ownerId: 7,
+        hpCurrent: 22,
+        hpMax: 30,
+        mpCurrent: 5,
+        mpMax: 8,
+      }),
+      campaignFindUnique: jest.fn().mockResolvedValue({ id: 1, ownerId: 99 }),
+      campaignMemberFindUnique: jest.fn().mockResolvedValue({ id: 55 }),
+    });
+    const socket = fakeSocket();
+    (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    await gateway.initiativeAdd(
+      socket as unknown as Parameters<typeof gateway.initiativeAdd>[0],
+      {
+        campaignId: 1,
+        sessionId: 5,
+        entry: { characterId: 10, initiative: 14 } as unknown as {
+          label: string;
+          initiative: number;
+          type: 'character';
+        },
+      },
+    );
+    const entry = state.getState(5).initiative[0]!;
+    expect(entry.label).toBe('Alric');
+    expect(entry.characterId).toBe(10);
+    expect(entry.hpCurrent).toBe(22);
+    expect(entry.hpMax).toBe(30);
+    expect(entry.type).toBe('character');
+  });
+
+  it('P2: allows GM (campaign owner) to add someone else\'s character', async () => {
+    const { gateway, state } = await setup({
+      characterFindUnique: jest.fn().mockResolvedValue({
+        id: 10,
+        name: 'PlayerPC',
+        ownerId: 42, /* different from caller */
+        hpCurrent: 10,
+        hpMax: 10,
+        mpCurrent: 0,
+        mpMax: 0,
+      }),
+      campaignFindUnique: jest.fn().mockResolvedValue({ id: 1, ownerId: 7 }),
+      campaignMemberFindUnique: jest.fn().mockResolvedValue({ id: 55 }),
+    });
+    const socket = fakeSocket();
+    (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    await gateway.initiativeAdd(
+      socket as unknown as Parameters<typeof gateway.initiativeAdd>[0],
+      {
+        campaignId: 1,
+        sessionId: 5,
+        entry: { characterId: 10, initiative: 8 } as unknown as {
+          label: string;
+          initiative: number;
+          type: 'character';
+        },
+      },
+    );
+    expect(state.getState(5).initiative[0]!.characterId).toBe(10);
+  });
+
+  it('P2: rejects when caller is neither char owner nor GM', async () => {
+    const { gateway } = await setup({
+      characterFindUnique: jest.fn().mockResolvedValue({
+        id: 10,
+        name: 'PC',
+        ownerId: 42,
+        hpCurrent: 10,
+        hpMax: 10,
+        mpCurrent: 0,
+        mpMax: 0,
+      }),
+      campaignFindUnique: jest.fn().mockResolvedValue({ id: 1, ownerId: 99 }),
+      campaignMemberFindUnique: jest.fn().mockResolvedValue({ id: 55 }),
+    });
+    const socket = fakeSocket();
+    (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    await expect(
+      gateway.initiativeAdd(
+        socket as unknown as Parameters<typeof gateway.initiativeAdd>[0],
+        {
+          campaignId: 1,
+          sessionId: 5,
+          entry: { characterId: 10, initiative: 8 } as unknown as {
+            label: string;
+            initiative: number;
+            type: 'character';
+          },
+        },
+      ),
+    ).rejects.toBeInstanceOf(WsException);
+  });
+
+  it('P2: rejects when character is not a member of the campaign', async () => {
+    const { gateway } = await setup({
+      characterFindUnique: jest.fn().mockResolvedValue({
+        id: 10,
+        name: 'Stranger',
+        ownerId: 7,
+        hpCurrent: 5,
+        hpMax: 5,
+        mpCurrent: 0,
+        mpMax: 0,
+      }),
+      campaignFindUnique: jest.fn().mockResolvedValue({ id: 1, ownerId: 7 }),
+      campaignMemberFindUnique: jest.fn().mockResolvedValue(null),
+    });
+    const socket = fakeSocket();
+    (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    await expect(
+      gateway.initiativeAdd(
+        socket as unknown as Parameters<typeof gateway.initiativeAdd>[0],
+        {
+          campaignId: 1,
+          sessionId: 5,
+          entry: { characterId: 10, initiative: 8 } as unknown as {
+            label: string;
+            initiative: number;
+            type: 'character';
           },
         },
       ),
