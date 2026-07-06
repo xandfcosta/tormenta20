@@ -497,3 +497,35 @@ describe('RealtimeGateway.initiativeNextTurn + reset', () => {
     expect(result.turnIndex).toBe(-1);
   });
 });
+
+describe('RealtimeGateway persistence-warning broadcast', () => {
+  it('broadcasts persistence-warning { dirty:true } when persist fails', async () => {
+    const sessionUpdate = jest
+      .fn()
+      .mockRejectedValue(new Error('DB down'));
+    /* setup uses the default userFindUnique; override prisma.session.update
+     * by re-wiring after setup. */
+    const { gateway, state, to, emit } = await setup();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ((gateway as any).state as unknown as { prisma: { session: { update: jest.Mock } } })
+      .prisma.session.update = sessionUpdate;
+    const socket = fakeSocket();
+    (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    await gateway.initiativeAdd(
+      socket as unknown as Parameters<typeof gateway.initiativeAdd>[0],
+      {
+        campaignId: 1,
+        sessionId: 5,
+        entry: { label: 'Goblin', initiative: 12, type: 'npc' },
+      },
+    );
+    /* Yield to the microtask queue so the .then on persist runs. */
+    await new Promise((r) => setImmediate(r));
+    expect(to).toHaveBeenCalledWith('session:5');
+    expect(emit).toHaveBeenCalledWith('persistence-warning', {
+      sessionId: 5,
+      dirty: true,
+    });
+    expect(state.isDirty(5)).toBe(true);
+  });
+});

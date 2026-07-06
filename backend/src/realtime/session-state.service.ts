@@ -294,17 +294,18 @@ export class SessionStateService {
 
   /**
    * Fire-and-forget serialize + write of the current in-memory state.
-   * Returns a promise that never rejects — a failed write logs and
-   * marks the session dirty so the *next* mutation retries the write.
+   * Returns a promise that never rejects; resolves to the new dirty
+   * status so the gateway can broadcast a `persistence-warning` event
+   * to connected clients when the flag flips.
    *
    * Callers (typically the RealtimeGateway) should call this after
    * every mutating handler + broadcast. Not awaiting keeps WS latency
    * low; the dirty-flag retry keeps the DB from drifting more than a
    * few mutations behind under transient failures.
    */
-  persist(sessionId: number): Promise<void> {
+  persist(sessionId: number): Promise<boolean> {
     const state = this.states.get(sessionId);
-    if (!state) return Promise.resolve();
+    if (!state) return Promise.resolve(false);
     const blob = JSON.stringify(state);
     return this.prisma.session
       .update({
@@ -313,12 +314,14 @@ export class SessionStateService {
       })
       .then(() => {
         this.dirty.delete(sessionId);
+        return false;
       })
       .catch((err: unknown) => {
         this.dirty.add(sessionId);
         this.logger.warn(
           `Session ${sessionId}: persist failed (${(err as Error).message}); marked dirty for retry`,
         );
+        return true;
       });
   }
 
