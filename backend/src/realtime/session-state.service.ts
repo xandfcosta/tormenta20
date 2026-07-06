@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { PrismaService } from '../prisma/prisma.service';
@@ -55,6 +60,12 @@ const SessionRuntimeStateSchema = z.object({
 function emptyRuntimeState(): SessionRuntimeState {
   return { initiative: [], round: 0, turnIndex: -1 };
 }
+
+/** Hard ceiling on how many combatants can sit in one tracker. Two
+ *  concerns: (1) a runaway "add" bug can't grow the blob unbounded,
+ *  (2) the UI paginates poorly past ~20 rows anyway. 50 leaves plenty
+ *  of headroom for large monster mob encounters. */
+export const INITIATIVE_MAX_ENTRIES = 50;
 
 export type AddEntryInput = Omit<InitiativeEntry, 'id'>;
 export type UpdateEntryInput = Partial<Omit<InitiativeEntry, 'id'>>;
@@ -143,6 +154,11 @@ export class SessionStateService {
 
   addEntry(sessionId: number, input: AddEntryInput): SessionRuntimeState {
     const state = this.getOrCreate(sessionId);
+    if (state.initiative.length >= INITIATIVE_MAX_ENTRIES) {
+      throw new BadRequestException(
+        `Initiative tracker is full (max ${INITIATIVE_MAX_ENTRIES} entries)`,
+      );
+    }
     const currentTurn = state.initiative[state.turnIndex];
     const entry: InitiativeEntry = { id: randomUUID(), ...input };
     state.initiative.push(entry);
@@ -150,6 +166,45 @@ export class SessionStateService {
     /* Preserve who's currently on turn when the sort shuffles indices. */
     if (currentTurn) {
       state.turnIndex = state.initiative.findIndex((e) => e.id === currentTurn.id);
+    }
+    return state;
+  }
+
+  /**
+   * Refresh `hpMax` / `mpMax` on every entry that carries a
+   * `characterId` — the DB Character row is the source of truth. Only
+   * ceilings move; `hpCurrent`/`mpCurrent` are left untouched
+   * (updateVitals is what changes them). Used by the gateway on
+   * `get-session-state` so a level-up mid-session doesn't leave the
+   * tracker stuck at the old max. Batched via a single findMany.
+   */
+  async refreshCharacterMaxes(sessionId: number): Promise<SessionRuntimeState> {
+    const state = this.getOrCreate(sessionId);
+    const charIds = Array.from(
+      new Set(
+        state.initiative
+          .map((e) => e.characterId)
+          .filter((id): id is number => typeof id === 'number'),
+      ),
+    );
+    if (charIds.length === 0) return state;
+    try {
+      const rows = (await this.prisma.character.findMany({
+        where: { id: { in: charIds } },
+        select: { id: true, hpMax: true, mpMax: true },
+      })) as { id: number; hpMax: number; mpMax: number }[];
+      const byId = new Map(rows.map((r) => [r.id, r]));
+      for (const entry of state.initiative) {
+        if (entry.characterId === undefined) continue;
+        const fresh = byId.get(entry.characterId);
+        if (!fresh) continue;
+        entry.hpMax = fresh.hpMax;
+        entry.mpMax = fresh.mpMax;
+      }
+    } catch (err) {
+      this.logger.warn(
+        `Session ${sessionId} hpMax refresh failed: ${(err as Error).message}`,
+      );
     }
     return state;
   }

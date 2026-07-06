@@ -21,9 +21,12 @@ const emptySessionRepo = { findUnique: async () => null };
 async function setup(over?: {
   sessionFindUnique?: (args: unknown) => Promise<unknown>;
   sessionUpdate?: jest.Mock;
+  characterFindMany?: jest.Mock;
 }) {
   const sessionUpdate =
     over?.sessionUpdate ?? jest.fn().mockResolvedValue({});
+  const characterFindMany =
+    over?.characterFindMany ?? jest.fn().mockResolvedValue([]);
   const module = await Test.createTestingModule({
     providers: [
       SessionStateService,
@@ -34,11 +37,20 @@ async function setup(over?: {
             findUnique: over?.sessionFindUnique ?? emptySessionRepo.findUnique,
             update: sessionUpdate,
           },
+          /* P5: refreshCharacterMaxes reads here. Empty default so
+           * pre-P5 specs stay green (nothing gets updated). */
+          character: {
+            findMany: characterFindMany,
+          },
         },
       },
     ],
   }).compile();
-  return { service: module.get(SessionStateService), sessionUpdate };
+  return {
+    service: module.get(SessionStateService),
+    sessionUpdate,
+    characterFindMany,
+  };
 }
 
 describe('SessionStateService.load (P1a persistence)', () => {
@@ -196,6 +208,75 @@ describe('SessionStateService.getState', () => {
     const a = service.getState(1);
     const b = service.getState(1);
     expect(a).toBe(b);
+  });
+});
+
+describe('SessionStateService P5 caps + hpMax refresh', () => {
+  it('addEntry throws BadRequest when tracker already at 50 entries', async () => {
+    const { service } = await setup();
+    for (let i = 0; i < 50; i++) {
+      service.addEntry(1, {
+        label: `NPC${i}`,
+        initiative: 10 - (i % 5),
+        type: 'npc',
+      });
+    }
+    expect(() =>
+      service.addEntry(1, { label: 'Overflow', initiative: 1, type: 'npc' }),
+    ).toThrow(/Initiative tracker is full/);
+  });
+
+  it('refreshCharacterMaxes updates hpMax/mpMax from DB without touching hpCurrent', async () => {
+    const characterFindMany = jest.fn().mockResolvedValue([
+      { id: 10, hpMax: 25, mpMax: 8 },
+    ]);
+    const { service } = await setup({ characterFindMany });
+    service.addEntry(1, {
+      label: 'PC',
+      initiative: 12,
+      type: 'character',
+      characterId: 10,
+      hpCurrent: 7,
+      hpMax: 15,
+      mpCurrent: 2,
+      mpMax: 4,
+    });
+    const state = await service.refreshCharacterMaxes(1);
+    const entry = state.initiative[0]!;
+    expect(entry.hpMax).toBe(25);
+    expect(entry.mpMax).toBe(8);
+    expect(entry.hpCurrent).toBe(7);
+    expect(entry.mpCurrent).toBe(2);
+  });
+
+  it('refreshCharacterMaxes skips entries without characterId', async () => {
+    const characterFindMany = jest.fn().mockResolvedValue([]);
+    const { service } = await setup({ characterFindMany });
+    service.addEntry(1, {
+      label: 'Goblin',
+      initiative: 8,
+      type: 'npc',
+      hpCurrent: 3,
+      hpMax: 10,
+    });
+    await service.refreshCharacterMaxes(1);
+    expect(characterFindMany).not.toHaveBeenCalled();
+  });
+
+  it('refreshCharacterMaxes tolerates DB failure — returns state unchanged', async () => {
+    const characterFindMany = jest
+      .fn()
+      .mockRejectedValue(new Error('DB down'));
+    const { service } = await setup({ characterFindMany });
+    service.addEntry(1, {
+      label: 'PC',
+      initiative: 12,
+      type: 'character',
+      characterId: 10,
+      hpMax: 15,
+    });
+    const state = await service.refreshCharacterMaxes(1);
+    expect(state.initiative[0]!.hpMax).toBe(15);
   });
 });
 
