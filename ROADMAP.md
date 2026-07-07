@@ -36,18 +36,6 @@ in `git log`.
   Sacerdote de Aharadak + Otyugh).
 - Bestiário considerado feature-complete para o core do livro.
 
-## Persistence residual
-
-### WS→DB current-vitals write-through
-- `backend/src/realtime/session-state.service.ts:338` TODO.
-- P3 shipped end-of-session batch commit (`session end` writes hp/mp
-  to Character rows).
-- P5 shipped `hpMax` auto-refresh from DB on `get-session-state`.
-- Real-time `hpCurrent`/`mpCurrent` write-through on every `patchVitals`
-  still deferred — page refresh mid-combat loses tracker state.
-- Design decision needed: debounced write? per-event? env flag like
-  `WS_VITALS_WRITETHROUGH=1` used in P3?
-
 ## Infra / perf
 
 ### Bundle code-split
