@@ -30,3 +30,6 @@ export const accentTitle = 'text-amber-900 dark:text-amber-50'
 
 export const accentBadge =
   'border-amber-700/50 bg-amber-200/60 text-amber-900 hover:bg-amber-200 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200 dark:hover:bg-amber-500/20'
+
+export const selectClass =
+  'cursor-pointer rounded border bg-amber-50 text-zinc-900 outline-none focus:border-amber-700/60 dark:bg-zinc-900 dark:text-zinc-200 dark:focus:border-amber-500/60 border-amber-700/30 dark:border-zinc-700'
