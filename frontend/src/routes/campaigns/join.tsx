@@ -10,6 +10,8 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { PageChrome } from '@/components/ui/page-chrome'
+import { SectionHeading } from '@/components/ui/section-heading'
 import {
   Field,
   FieldError,
@@ -91,112 +93,118 @@ function JoinCampaignPage() {
   const noCharacters = (characters.data?.length ?? 0) === 0
 
   return (
-    <form
-      className="mx-auto h-full max-w-2xl space-y-6 overflow-y-auto p-6"
-      onSubmit={(e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        form.handleSubmit()
-      }}
-    >
-      <h1 className="text-3xl font-semibold">Entrar em campanha</h1>
+    <PageChrome width="compact">
+      <form
+        className="space-y-6"
+        onSubmit={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          form.handleSubmit()
+        }}
+      >
+        <SectionHeading variant="aharadak" as="h1">
+          Entrar em campanha
+        </SectionHeading>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Identificação</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <FieldGroup className="grid gap-4">
-            <form.Field name="campaignId">
-              {(f) => {
-                const invalid = f.state.meta.isTouched && !f.state.meta.isValid
-                return (
-                  <Field data-invalid={invalid}>
-                    <FieldLabel htmlFor={f.name}>ID da campanha</FieldLabel>
-                    <Input
-                      id={f.name}
-                      type="number"
-                      inputMode="numeric"
-                      min={1}
-                      value={f.state.value || ''}
-                      onChange={(e) => f.handleChange(Number(e.target.value))}
-                      onBlur={f.handleBlur}
-                      aria-invalid={invalid}
-                      placeholder="Ex.: 42"
-                      required
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      O mestre da mesa envia esse número.
-                    </p>
-                    {invalid && <FieldError errors={f.state.meta.errors} />}
-                  </Field>
-                )
-              }}
-            </form.Field>
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-display tracking-wide">
+              Identificação
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FieldGroup className="grid gap-4">
+              <form.Field name="campaignId">
+                {(f) => {
+                  const invalid = f.state.meta.isTouched && !f.state.meta.isValid
+                  return (
+                    <Field data-invalid={invalid}>
+                      <FieldLabel htmlFor={f.name}>ID da campanha</FieldLabel>
+                      <Input
+                        id={f.name}
+                        type="number"
+                        inputMode="numeric"
+                        min={1}
+                        value={f.state.value || ''}
+                        onChange={(e) => f.handleChange(Number(e.target.value))}
+                        onBlur={f.handleBlur}
+                        aria-invalid={invalid}
+                        placeholder="Ex.: 42"
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        O mestre da mesa envia esse número.
+                      </p>
+                      {invalid && <FieldError errors={f.state.meta.errors} />}
+                    </Field>
+                  )
+                }}
+              </form.Field>
 
-            <form.Field name="characterId">
-              {(f) => {
-                const invalid = f.state.meta.isTouched && !f.state.meta.isValid
-                return (
-                  <Field data-invalid={invalid}>
-                    <FieldLabel htmlFor={f.name}>Personagem</FieldLabel>
-                    <select
-                      id={f.name}
-                      className="rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      value={f.state.value || ''}
-                      onChange={(e) => f.handleChange(Number(e.target.value))}
-                      onBlur={f.handleBlur}
-                      aria-invalid={invalid}
-                      required
-                    >
-                      <option value="" disabled>
-                        Selecione um personagem
-                      </option>
-                      {characters.data?.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name} — Nível {c.level}
+              <form.Field name="characterId">
+                {(f) => {
+                  const invalid = f.state.meta.isTouched && !f.state.meta.isValid
+                  return (
+                    <Field data-invalid={invalid}>
+                      <FieldLabel htmlFor={f.name}>Personagem</FieldLabel>
+                      <select
+                        id={f.name}
+                        className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        value={f.state.value || ''}
+                        onChange={(e) => f.handleChange(Number(e.target.value))}
+                        onBlur={f.handleBlur}
+                        aria-invalid={invalid}
+                        required
+                      >
+                        <option value="" disabled>
+                          Selecione um personagem
                         </option>
-                      ))}
-                    </select>
-                    {invalid && <FieldError errors={f.state.meta.errors} />}
-                  </Field>
-                )
-              }}
-            </form.Field>
+                        {characters.data?.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name} — Nível {c.level}
+                          </option>
+                        ))}
+                      </select>
+                      {invalid && <FieldError errors={f.state.meta.errors} />}
+                    </Field>
+                  )
+                }}
+              </form.Field>
 
-            {noCharacters && (
-              <p className="text-sm text-muted-foreground">
-                Você ainda não tem personagens. Crie um primeiro.
-              </p>
+              {noCharacters && (
+                <p className="text-sm text-muted-foreground">
+                  Você ainda não tem personagens. Crie um primeiro.
+                </p>
+              )}
+            </FieldGroup>
+          </CardContent>
+        </Card>
+
+        {formError && (
+          <p className="text-sm text-destructive">{formError}</p>
+        )}
+
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate({ to: '/campaigns' })}
+          >
+            Cancelar
+          </Button>
+          <form.Subscribe
+            selector={(s) => [s.isSubmitting, s.canSubmit] as const}
+            children={([isSubmitting, canSubmit]) => (
+              <Button
+                type="submit"
+                disabled={isSubmitting || !canSubmit || noCharacters}
+              >
+                {isSubmitting ? 'Entrando…' : 'Entrar'}
+              </Button>
             )}
-          </FieldGroup>
-        </CardContent>
-      </Card>
-
-      {formError && (
-        <p className="text-sm text-destructive">{formError}</p>
-      )}
-
-      <div className="flex justify-end gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => navigate({ to: '/campaigns' })}
-        >
-          Cancelar
-        </Button>
-        <form.Subscribe
-          selector={(s) => [s.isSubmitting, s.canSubmit] as const}
-          children={([isSubmitting, canSubmit]) => (
-            <Button
-              type="submit"
-              disabled={isSubmitting || !canSubmit || noCharacters}
-            >
-              {isSubmitting ? 'Entrando…' : 'Entrar'}
-            </Button>
-          )}
-        />
-      </div>
-    </form>
+          />
+        </div>
+      </form>
+    </PageChrome>
   )
 }
