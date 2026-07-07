@@ -30,13 +30,6 @@ in `git log`.
 - Structure already handles ataques + habilidades especiais + tipo
   taxonomy; expansion is pure data entry against existing type shape.
 
-### Encounter → session tracker bridge
-- `/gm/encounters` builds an encounter (partyLevel, monsters, ND, XP).
-- No path to push composition into an active session's initiative
-  tracker — GM currently re-adds each entry manually via WS.
-- Needed: "Enviar para sessão" action + campaign/session picker +
-  batched `initiative-add` per monster (respect `INITIATIVE_MAX_ENTRIES=50`).
-
 ### GM invite / deep-link flow
 - Backend memory (`campaign-members.service.ts:63`): "GM invites →
   player accepts" pattern deliberately out of scope. Currently only

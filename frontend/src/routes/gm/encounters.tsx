@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { NumberInput } from '@/components/ui/number-input'
 import { PageChrome } from '@/components/ui/page-chrome'
 import { SectionHeading } from '@/components/ui/section-heading'
+import { SendEncounterToSessionButton } from '@/components/gm/send-encounter-to-session'
 import {
   BESTIARY,
   encounterXp,
@@ -176,10 +177,16 @@ function EncounterBuilderPage() {
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="font-display text-base tracking-wide">
             Resultado
           </CardTitle>
+          <SendEncounterToSessionButton
+            groups={groups.map((g) => ({
+              monster: g.monster,
+              quantity: g.quantity,
+            }))}
+          />
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
           <Stat label="ND do encontro" value={formatNd(encounterNd)} />
