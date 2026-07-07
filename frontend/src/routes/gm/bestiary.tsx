@@ -13,6 +13,8 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { NumberInput } from '@/components/ui/number-input'
+import { PageChrome } from '@/components/ui/page-chrome'
+import { SectionHeading } from '@/components/ui/section-heading'
 import {
   BESTIARY,
   type Monster,
@@ -86,14 +88,16 @@ function BestiaryPage() {
   }
 
   return (
-    <div className="mx-auto h-full max-w-5xl space-y-4 overflow-y-auto p-6">
+    <PageChrome width="wide" className="space-y-4">
       <div className="flex items-center gap-3">
         <Link to="/gm">
           <Button variant="outline" size="sm">
             ←
           </Button>
         </Link>
-        <h1 className="text-2xl font-semibold">Bestiário</h1>
+        <SectionHeading variant="aharadak" as="h1">
+          Bestiário
+        </SectionHeading>
         <span className="text-sm text-muted-foreground">
           {filtered.length} / {BESTIARY.length}
         </span>
@@ -178,7 +182,7 @@ function BestiaryPage() {
         monster={selected}
         onClose={() => setSelected(null)}
       />
-    </div>
+    </PageChrome>
   )
 }
 
@@ -195,7 +199,7 @@ function MonsterRow({
     <button
       type="button"
       onClick={() => onOpen(monster)}
-      className="w-full rounded-md border p-3 text-left transition hover:border-primary/40 hover:shadow-sm"
+      className="w-full rounded-md border p-3 text-left transition hover:border-[color:var(--primary)]/50 hover:shadow-sm"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex-1 space-y-1">

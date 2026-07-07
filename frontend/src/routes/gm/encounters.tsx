@@ -12,6 +12,8 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { NumberInput } from '@/components/ui/number-input'
+import { PageChrome } from '@/components/ui/page-chrome'
+import { SectionHeading } from '@/components/ui/section-heading'
 import {
   BESTIARY,
   encounterXp,
@@ -89,19 +91,23 @@ function EncounterBuilderPage() {
   }
 
   return (
-    <div className="mx-auto h-full max-w-4xl space-y-4 overflow-y-auto p-6">
+    <PageChrome className="space-y-4">
       <div className="flex items-center gap-3">
         <Link to="/gm">
           <Button variant="outline" size="sm">
             ←
           </Button>
         </Link>
-        <h1 className="text-2xl font-semibold">Construtor de encontros</h1>
+        <SectionHeading variant="kallyadranoch" as="h1">
+          Construtor de encontros
+        </SectionHeading>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Grupo</CardTitle>
+          <CardTitle className="font-display text-base tracking-wide">
+            Grupo
+          </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-4 sm:grid-cols-2">
           <div>
@@ -133,7 +139,9 @@ function EncounterBuilderPage() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Composição</CardTitle>
+          <CardTitle className="font-display text-base tracking-wide">
+            Composição
+          </CardTitle>
           <div className="flex gap-2">
             <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
               <DialogTrigger asChild>
@@ -169,7 +177,9 @@ function EncounterBuilderPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Resultado</CardTitle>
+          <CardTitle className="font-display text-base tracking-wide">
+            Resultado
+          </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
           <Stat label="ND do encontro" value={formatNd(encounterNd)} />
@@ -183,7 +193,7 @@ function EncounterBuilderPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageChrome>
   )
 }
 
