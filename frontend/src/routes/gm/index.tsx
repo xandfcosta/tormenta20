@@ -1,6 +1,10 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import { Dices, Scroll, Skull, Swords } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { PageChrome } from '@/components/ui/page-chrome'
+import { SectionHeading } from '@/components/ui/section-heading'
 import { meQueryOptions } from '@/lib/queries'
 
 /**
@@ -16,12 +20,21 @@ export const Route = createFileRoute('/gm/')({
   component: GMHubPage,
 })
 
-const TOOLS = [
+type Tool = {
+  to: '/gm/random-tables' | '/gm/bestiary' | '/gm/encounters' | '/gm/dungeon-generator'
+  title: string
+  description: string
+  icon: LucideIcon
+  ready: boolean
+}
+
+const TOOLS: Tool[] = [
   {
     to: '/gm/random-tables',
     title: 'Tabelas de mesa',
     description:
       'Rola d6/d20/2d12 nas tabelas Cap 6 (ruína, perseguições, buscas, consequências, ideias de masmorra).',
+    icon: Dices,
     ready: true,
   },
   {
@@ -29,6 +42,7 @@ const TOOLS = [
     title: 'Bestiário',
     description:
       'Consulta rápida de criaturas por ND, tipo e tamanho, com ataques e habilidades especiais.',
+    icon: Skull,
     ready: true,
   },
   {
@@ -36,6 +50,7 @@ const TOOLS = [
     title: 'Construtor de encontros',
     description:
       'Calcula ND total do combate combinando criaturas e distribui XP entre o grupo.',
+    icon: Swords,
     ready: true,
   },
   {
@@ -43,51 +58,57 @@ const TOOLS = [
     title: 'Gerador de masmorras',
     description:
       'Estrutura salas, ameaças e objetivos por tamanho seguindo o Cap 6.',
+    icon: Scroll,
     ready: true,
   },
-] as const
+]
 
 function GMHubPage() {
   return (
-    <div className="mx-auto h-full max-w-5xl space-y-6 overflow-y-auto p-6">
-      <div>
-        <h1 className="text-3xl font-semibold">Ferramentas de mestre</h1>
+    <PageChrome className="space-y-6">
+      <div className="space-y-1">
+        <SectionHeading variant="kallyadranoch" as="h1">
+          Ferramentas de mestre
+        </SectionHeading>
         <p className="text-sm text-muted-foreground">
           Utilitários apoiando o mestre entre as sessões e durante o jogo.
         </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {TOOLS.map((tool) =>
-          tool.ready ? (
-            <Link key={tool.to} to={tool.to}>
-              <Card className="transition hover:border-primary/40 hover:shadow-md">
-                <CardHeader>
-                  <CardTitle>{tool.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="text-sm text-muted-foreground">
-                  {tool.description}
-                </CardContent>
-              </Card>
-            </Link>
-          ) : (
-            <Card
-              key={tool.to}
-              className="opacity-60"
-            >
+        {TOOLS.map((tool) => {
+          const Icon = tool.icon
+          const inner = (
+            <>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>{tool.title}</CardTitle>
-                <Button variant="outline" size="sm" disabled>
-                  Em breve
-                </Button>
+                <CardTitle className="flex items-center gap-2 font-display tracking-wide">
+                  <Icon className="size-5 text-[color:var(--primary)]" />
+                  {tool.title}
+                </CardTitle>
+                {!tool.ready && (
+                  <Button variant="outline" size="sm" disabled>
+                    Em breve
+                  </Button>
+                )}
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground">
                 {tool.description}
               </CardContent>
+            </>
+          )
+          return tool.ready ? (
+            <Link key={tool.to} to={tool.to}>
+              <Card className="h-full transition hover:border-[color:var(--primary)]/50 hover:shadow-[0_1px_0_rgba(0,0,0,0.04),0_18px_50px_-30px_var(--primary)]">
+                {inner}
+              </Card>
+            </Link>
+          ) : (
+            <Card key={tool.to} className="opacity-60">
+              {inner}
             </Card>
-          ),
-        )}
+          )
+        })}
       </div>
-    </div>
+    </PageChrome>
   )
 }

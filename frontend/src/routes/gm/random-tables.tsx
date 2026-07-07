@@ -3,6 +3,9 @@ import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { DicePill } from '@/components/ui/dice-pill'
+import { PageChrome } from '@/components/ui/page-chrome'
+import { SectionHeading } from '@/components/ui/section-heading'
 import {
   BUSCA_CHALLENGE_TABLE,
   BUSCA_OUTCOME_TABLE,
@@ -37,14 +40,16 @@ export const Route = createFileRoute('/gm/random-tables')({
 
 function RandomTablesPage() {
   return (
-    <div className="mx-auto h-full max-w-4xl space-y-4 overflow-y-auto p-6">
+    <PageChrome className="space-y-4">
       <div className="flex items-center gap-3">
         <Link to="/gm">
           <Button variant="outline" size="sm">
             ←
           </Button>
         </Link>
-        <h1 className="text-2xl font-semibold">Tabelas de mesa</h1>
+        <SectionHeading variant="aharadak" as="h1">
+          Tabelas de mesa
+        </SectionHeading>
       </div>
 
       <RuinaCard />
@@ -52,7 +57,7 @@ function RandomTablesPage() {
       <BuscaCard />
       <ConsequenciasCard />
       <DungeonIdeaCard />
-    </div>
+    </PageChrome>
   )
 }
 
@@ -82,7 +87,9 @@ function RuinaCard() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Ermos — Ruína (d6, p269)</CardTitle>
+        <CardTitle className="font-display tracking-wide">
+          Ermos — Ruína (d6, p269)
+        </CardTitle>
         <div className="flex gap-2">
           <Button onClick={roll}>Rolar d6</Button>
           <Button variant="outline" onClick={clear}>
@@ -94,7 +101,10 @@ function RuinaCard() {
         <History history={history}>
           {(entry) => (
             <>
-              <Badge variant="outline">d6 = {entry.roll}</Badge>
+              <DicePill sides={6} />
+              <span className="font-hud tabular-nums text-[color:var(--primary)]">
+                = {entry.roll}
+              </span>
               <span className="font-medium">{entry.result.label}</span>
             </>
           )}
@@ -115,7 +125,9 @@ function ChaseEventCard() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Perseguições (d20, p274)</CardTitle>
+        <CardTitle className="font-display tracking-wide">
+          Perseguições (d20, p274)
+        </CardTitle>
         <div className="flex gap-2">
           <Button onClick={roll}>Rolar d20</Button>
           <Button variant="outline" onClick={clear}>
@@ -127,7 +139,10 @@ function ChaseEventCard() {
         <History history={history}>
           {(entry) => (
             <>
-              <Badge variant="outline">d20 = {entry.roll}</Badge>
+              <DicePill sides={20} />
+              <span className="font-hud tabular-nums text-[color:var(--primary)]">
+                = {entry.roll}
+              </span>
               <Badge
                 variant={
                   entry.result.kind === 'nenhum'
@@ -165,7 +180,9 @@ function BuscaCard() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Buscas (2d12, p279)</CardTitle>
+        <CardTitle className="font-display tracking-wide">
+          Buscas (2d12, p279)
+        </CardTitle>
         <div className="flex items-center gap-2">
           <label className="text-xs" htmlFor="busca-level">
             Nível
@@ -193,7 +210,10 @@ function BuscaCard() {
         <History history={history}>
           {(entry) => (
             <>
-              <Badge variant="outline">2d12 = {entry.roll}</Badge>
+              <DicePill count={2} sides={12} />
+              <span className="font-hud tabular-nums text-[color:var(--primary)]">
+                = {entry.roll}
+              </span>
               <Badge>{entry.result.skill}</Badge>
               <span className="text-sm text-muted-foreground">
                 {entry.result.example}
@@ -219,7 +239,9 @@ function ConsequenciasCard() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Consequências de Buscas (p279)</CardTitle>
+        <CardTitle className="font-display tracking-wide">
+          Consequências de Buscas (p279)
+        </CardTitle>
         <div className="flex gap-2">
           <Button onClick={roll}>Rolar d6</Button>
           <Button variant="outline" onClick={clear}>
@@ -253,7 +275,10 @@ function ConsequenciasCard() {
         <History history={history}>
           {(entry) => (
             <>
-              <Badge variant="outline">d6 = {entry.roll}</Badge>
+              <DicePill sides={6} />
+              <span className="font-hud tabular-nums text-[color:var(--primary)]">
+                = {entry.roll}
+              </span>
               <Badge>Recompensa: {entry.result.reward}</Badge>
               <Badge variant="destructive">
                 Castigo: {entry.result.castigo}
@@ -277,7 +302,9 @@ function DungeonIdeaCard() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Ideias de masmorra (d20, p263)</CardTitle>
+        <CardTitle className="font-display tracking-wide">
+          Ideias de masmorra (d20, p263)
+        </CardTitle>
         <div className="flex gap-2">
           <Button onClick={roll}>Rolar d20</Button>
           <Button variant="outline" onClick={clear}>
@@ -289,7 +316,10 @@ function DungeonIdeaCard() {
         <History history={history}>
           {(entry) => (
             <>
-              <Badge variant="outline">d20 = {entry.roll}</Badge>
+              <DicePill sides={20} />
+              <span className="font-hud tabular-nums text-[color:var(--primary)]">
+                = {entry.roll}
+              </span>
               <span className="font-medium">{entry.result.label}</span>
             </>
           )}
