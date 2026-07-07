@@ -3,12 +3,14 @@ import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { PageChrome } from '@/components/ui/page-chrome'
+import { SectionHeading } from '@/components/ui/section-heading'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   characterSheetQueryOptions,
   meQueryOptions,
 } from '@/lib/queries'
 import type { CharacterWithComputed, ComputedSheet } from '@/lib/api'
-import { Skeleton } from '@/components/ui/skeleton'
 
 /**
  * Server-computed sheet view. Renders the ComputedSheet payload from
@@ -37,36 +39,40 @@ function CharacterSheetPage() {
 
   if (query.isLoading)
     return (
-      <div className="mx-auto max-w-4xl space-y-3 p-6">
+      <PageChrome className="space-y-3">
         <Skeleton className="h-8 w-72" />
         <Skeleton className="h-24 w-full" />
         <Skeleton className="h-16 w-full" />
         <Skeleton className="h-16 w-full" />
         <Skeleton className="h-40 w-full" />
-      </div>
+      </PageChrome>
     )
   if (query.isError)
     return (
-      <p className="p-6 text-destructive">
-        {(query.error as Error).message}
-      </p>
+      <PageChrome>
+        <p className="text-destructive">
+          {(query.error as Error).message}
+        </p>
+      </PageChrome>
     )
   if (!query.data) return null
 
   const { computed } = query.data as CharacterWithComputed
 
   return (
-    <div className="mx-auto h-full max-w-4xl space-y-4 overflow-y-auto p-6">
-      <div className="flex items-center justify-between">
+    <PageChrome className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
         <Link to="/characters/$id" params={{ id }}>
           <Button variant="outline" size="sm">
             ← Voltar
           </Button>
         </Link>
-        <h1 className="text-2xl font-semibold">
-          {query.data.name}{' '}
-          <Badge variant="secondary">Lv {computed.level}</Badge>
-        </h1>
+        <SectionHeading variant="kallyadranoch" as="h1" className="text-2xl">
+          <span>
+            {query.data.name}{' '}
+            <Badge variant="secondary">Nv {computed.level}</Badge>
+          </span>
+        </SectionHeading>
       </div>
 
       {computed.warnings.length > 0 && (
@@ -86,7 +92,7 @@ function CharacterSheetPage() {
       <SavesCard computed={computed} />
       <AttacksCard computed={computed} />
       <SkillsCard computed={computed} />
-    </div>
+    </PageChrome>
   )
 }
 
@@ -105,7 +111,7 @@ function AttributesCard({ computed }: { computed: ComputedSheet }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Atributos</CardTitle>
+        <CardTitle className="font-display tracking-wide">Atributos</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
@@ -140,7 +146,9 @@ function VitalsAndMovementCard({ computed }: { computed: ComputedSheet }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Vitais + Deslocamento</CardTitle>
+        <CardTitle className="font-display tracking-wide">
+          Vitais + Deslocamento
+        </CardTitle>
       </CardHeader>
       <CardContent className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
         <Stat label="PV" value={`${computed.vitals.pvCurrent}/${computed.vitals.pvMax}`} />
@@ -159,7 +167,7 @@ function DefenseCard({ computed }: { computed: ComputedSheet }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Defesa</CardTitle>
+        <CardTitle className="font-display tracking-wide">Defesa</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 text-sm">
         <p className="text-3xl font-semibold">{total}</p>
@@ -181,7 +189,7 @@ function SavesCard({ computed }: { computed: ComputedSheet }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Resistências</CardTitle>
+        <CardTitle className="font-display tracking-wide">Resistências</CardTitle>
       </CardHeader>
       <CardContent className="grid grid-cols-3 gap-3 text-sm">
         <Stat label="Fortitude" value={signed(computed.saves.fortitude)} />
@@ -200,7 +208,7 @@ function AttacksCard({ computed }: { computed: ComputedSheet }) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Ataques</CardTitle>
+          <CardTitle className="font-display tracking-wide">Ataques</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
           Sem arma equipada.
@@ -211,7 +219,7 @@ function AttacksCard({ computed }: { computed: ComputedSheet }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Ataques</CardTitle>
+        <CardTitle className="font-display tracking-wide">Ataques</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
         {mainHand && (
@@ -258,7 +266,7 @@ function SkillsCard({ computed }: { computed: ComputedSheet }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Perícias</CardTitle>
+        <CardTitle className="font-display tracking-wide">Perícias</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-1 text-sm sm:grid-cols-3">

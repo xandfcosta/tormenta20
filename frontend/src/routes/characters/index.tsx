@@ -1,8 +1,13 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { HpBar } from '@/components/ui/hp-bar'
+import { MpBar } from '@/components/ui/mp-bar'
+import { PageChrome } from '@/components/ui/page-chrome'
+import { SectionHeading } from '@/components/ui/section-heading'
 import { SkeletonCardGrid } from '@/components/ui/skeleton'
 import { meQueryOptions, charactersQueryOptions } from '@/lib/queries'
 import type { Character } from '@/lib/api'
@@ -20,11 +25,15 @@ function CharactersListPage() {
   const characters = useQuery(charactersQueryOptions)
 
   return (
-    <div className="h-full space-y-6 overflow-y-auto p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-semibold">Characters</h1>
+    <PageChrome className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <SectionHeading variant="kallyadranoch" as="h1">
+          Personagens
+        </SectionHeading>
         <Link to="/characters/new">
-          <Button>+ New character</Button>
+          <Button>
+            <Plus className="mr-1 size-4" /> Novo personagem
+          </Button>
         </Link>
       </div>
 
@@ -35,9 +44,9 @@ function CharactersListPage() {
       {characters.data?.length === 0 && (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-10 text-muted-foreground">
-            <p>No characters yet.</p>
+            <p>Nenhum personagem ainda.</p>
             <Link to="/characters/new">
-              <Button>Create your first character</Button>
+              <Button>Criar seu primeiro personagem</Button>
             </Link>
           </CardContent>
         </Card>
@@ -46,7 +55,7 @@ function CharactersListPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {characters.data?.map((c) => <CharacterCard key={c.id} character={c} />)}
       </div>
-    </div>
+    </PageChrome>
   )
 }
 
@@ -56,19 +65,29 @@ function CharacterCard({ character }: { character: Character }) {
 
   return (
     <Link to="/characters/$id" params={{ id: String(character.id) }}>
-      <Card className="transition hover:border-primary/40 hover:shadow-md">
+      <Card className="h-full transition hover:border-[color:var(--primary)]/50 hover:shadow-[0_1px_0_rgba(0,0,0,0.04),0_18px_50px_-30px_var(--primary)]">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <CardTitle className="flex items-center justify-between font-display tracking-wide">
             <span>{character.name}</span>
-            <Badge variant="secondary">Lv {character.level}</Badge>
+            <Badge variant="secondary">Nv {character.level}</Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm">
+        <CardContent className="space-y-3 text-sm">
           <p className="text-muted-foreground">{races} • {character.origin}</p>
           <p className="font-medium">{classes}</p>
-          <div className="flex gap-3 pt-2 text-xs">
-            <span className="text-red-500">HP {character.hpCurrent}/{character.hpMax}</span>
-            <span className="text-blue-500">MP {character.mpCurrent}/{character.mpMax}</span>
+          <div className="space-y-1.5 pt-1">
+            <HpBar
+              current={character.hpCurrent}
+              max={character.hpMax}
+              size="sm"
+              label="PV"
+            />
+            <MpBar
+              current={character.mpCurrent}
+              max={character.mpMax}
+              size="sm"
+              label="PM"
+            />
           </div>
         </CardContent>
       </Card>
