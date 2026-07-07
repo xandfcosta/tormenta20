@@ -54,4 +54,12 @@ export class CampaignsController {
   ) {
     return this.campaigns.remove(user.id, id);
   }
+
+  @Post(':id/invite')
+  rotateInvite(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.campaigns.rotateInviteToken(user.id, id);
+  }
 }

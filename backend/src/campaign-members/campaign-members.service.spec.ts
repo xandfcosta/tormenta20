@@ -40,10 +40,13 @@ async function setup(over?: {
   memberDelete?: jest.Mock;
   characterFindUnique?: jest.Mock;
   campaignsFindOne?: jest.Mock;
+  campaignFindUnique?: jest.Mock;
 }) {
   const prisma = {
     campaign: {
-      findUnique: jest.fn().mockResolvedValue({ id: 1 }),
+      findUnique:
+        over?.campaignFindUnique ??
+        jest.fn().mockResolvedValue({ id: 1, inviteToken: null }),
     },
     campaignMember: {
       findMany: over?.memberFindMany ?? jest.fn(),
@@ -154,6 +157,72 @@ describe('CampaignMembersService.add', () => {
     const { service } = await setup({ characterFindUnique, memberFindUnique });
     await expect(
       service.add(1, 1, { characterId: 10 }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('accepts a matching invite token and persists the row', async () => {
+    const campaignFindUnique = jest
+      .fn()
+      .mockResolvedValue({ id: 1, inviteToken: 'good-token' });
+    const memberFindUnique = jest.fn().mockResolvedValue(null);
+    const memberCreate = jest.fn().mockResolvedValue(makeMember());
+    const { service } = await setup({
+      campaignFindUnique,
+      memberFindUnique,
+      memberCreate,
+    });
+    await service.add(1, 1, { characterId: 10, inviteToken: 'good-token' });
+    expect(memberCreate).toHaveBeenCalledWith({
+      data: { campaignId: 1, characterId: 10, role: 'player' },
+    });
+  });
+
+  it('rejects a stale/rotated invite token', async () => {
+    /* GM rotated the token → the old link should stop working. */
+    const campaignFindUnique = jest
+      .fn()
+      .mockResolvedValue({ id: 1, inviteToken: 'new-token' });
+    const memberFindUnique = jest.fn().mockResolvedValue(null);
+    const memberCreate = jest.fn();
+    const { service } = await setup({
+      campaignFindUnique,
+      memberFindUnique,
+      memberCreate,
+    });
+    await expect(
+      service.add(1, 1, { characterId: 10, inviteToken: 'old-token' }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(memberCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects an invite token when the campaign has none set', async () => {
+    const campaignFindUnique = jest
+      .fn()
+      .mockResolvedValue({ id: 1, inviteToken: null });
+    const memberFindUnique = jest.fn().mockResolvedValue(null);
+    const { service } = await setup({ campaignFindUnique, memberFindUnique });
+    await expect(
+      service.add(1, 1, { characterId: 10, inviteToken: 'anything' }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('invite-token flow still rejects a non-owner character (consent preserved)', async () => {
+    /* Even with a valid invite, the caller can only bring in a char
+     * they own. Prevents relaying invites to grab someone else's PC. */
+    const campaignFindUnique = jest
+      .fn()
+      .mockResolvedValue({ id: 1, inviteToken: 'good-token' });
+    const characterFindUnique = jest
+      .fn()
+      .mockResolvedValue({ id: 10, ownerId: 999 });
+    const memberFindUnique = jest.fn().mockResolvedValue(null);
+    const { service } = await setup({
+      campaignFindUnique,
+      characterFindUnique,
+      memberFindUnique,
+    });
+    await expect(
+      service.add(1, 1, { characterId: 10, inviteToken: 'good-token' }),
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 });
