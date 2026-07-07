@@ -99,10 +99,13 @@ export default defineConfig({
       },
     },
   ],
+  /* Always reuse an existing frontend on :5173. CI boots backend +
+   * frontend explicitly (needs seed first); locally the dev shell is
+   * usually already running. If nothing's up, playwright starts one. */
   webServer: {
     command: 'pnpm run dev',
     url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
     timeout: 60_000,
   },
 })
