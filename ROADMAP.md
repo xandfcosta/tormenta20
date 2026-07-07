@@ -38,13 +38,6 @@ in `git log`.
 
 ## Infra / perf
 
-### Bundle code-split
-- Build shows chunks > 500KB warning:
-  - `index-CiZOYcYl.js` 424KB (main)
-  - `_id-C9jE9sJZ.js` 119KB (char sheet)
-- TanStack Router already lazy per-route. Sub-tree splitting inside
-  char sheet subfiles could help; also lucide-react tree-shake audit.
-
 ### E2E coverage
 - Playwright ripped (PR #220) — pixel-diff too fragile.
 - Current coverage: 186 vitest (structural DOM snapshots via
