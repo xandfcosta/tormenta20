@@ -1,7 +1,10 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { CalendarClock, Plus, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { PageChrome } from '@/components/ui/page-chrome'
+import { SectionHeading } from '@/components/ui/section-heading'
 import { SkeletonCardGrid } from '@/components/ui/skeleton'
 import { campaignsQueryOptions, meQueryOptions } from '@/lib/queries'
 import type { Campaign } from '@/lib/api'
@@ -20,15 +23,21 @@ function CampaignsListPage() {
   const campaigns = useQuery(campaignsQueryOptions)
 
   return (
-    <div className="h-full space-y-6 overflow-y-auto p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-semibold">Campanhas</h1>
+    <PageChrome className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <SectionHeading variant="aharadak" as="h1">
+          Campanhas
+        </SectionHeading>
         <div className="flex gap-2">
           <Link to="/campaigns/join">
-            <Button variant="outline">Entrar em campanha</Button>
+            <Button variant="outline">
+              <UserPlus className="mr-1 size-4" /> Entrar em campanha
+            </Button>
           </Link>
           <Link to="/campaigns/new">
-            <Button>+ Nova campanha</Button>
+            <Button>
+              <Plus className="mr-1 size-4" /> Nova campanha
+            </Button>
           </Link>
         </div>
       </div>
@@ -55,16 +64,18 @@ function CampaignsListPage() {
           <CampaignCard key={c.id} campaign={c} />
         ))}
       </div>
-    </div>
+    </PageChrome>
   )
 }
 
 function CampaignCard({ campaign }: { campaign: Campaign }) {
   return (
     <Link to="/campaigns/$id" params={{ id: String(campaign.id) }}>
-      <Card className="transition hover:border-primary/40 hover:shadow-md">
+      <Card className="h-full transition hover:border-[color:var(--primary)]/50 hover:shadow-[0_1px_0_rgba(0,0,0,0.04),0_18px_50px_-30px_var(--primary)]">
         <CardHeader>
-          <CardTitle>{campaign.name}</CardTitle>
+          <CardTitle className="font-display text-lg tracking-wide">
+            {campaign.name}
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           {campaign.description && (
@@ -72,7 +83,8 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
               {campaign.description}
             </p>
           )}
-          <p className="text-xs text-muted-foreground">
+          <p className="flex items-center gap-1 text-xs text-muted-foreground">
+            <CalendarClock className="size-3" />
             Atualizada em{' '}
             {new Date(campaign.updatedAt).toLocaleDateString('pt-BR')}
           </p>

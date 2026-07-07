@@ -10,6 +10,8 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { PageChrome } from '@/components/ui/page-chrome'
+import { SectionHeading } from '@/components/ui/section-heading'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Field,
@@ -71,86 +73,92 @@ function NewCampaignPage() {
   })
 
   return (
-    <form
-      className="mx-auto h-full max-w-2xl space-y-6 overflow-y-auto p-6"
-      onSubmit={(e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        form.handleSubmit()
-      }}
-    >
-      <h1 className="text-3xl font-semibold">Nova campanha</h1>
+    <PageChrome width="compact">
+      <form
+        className="space-y-6"
+        onSubmit={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          form.handleSubmit()
+        }}
+      >
+        <SectionHeading variant="aharadak" as="h1">
+          Nova campanha
+        </SectionHeading>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Identificação</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <FieldGroup className="grid gap-4">
-            <form.Field name="name">
-              {(f) => {
-                const invalid = f.state.meta.isTouched && !f.state.meta.isValid
-                return (
-                  <Field data-invalid={invalid}>
-                    <FieldLabel htmlFor={f.name}>Nome</FieldLabel>
-                    <Input
-                      id={f.name}
-                      value={f.state.value}
-                      onChange={(e) => f.handleChange(e.target.value)}
-                      onBlur={f.handleBlur}
-                      aria-invalid={invalid}
-                      required
-                    />
-                    {invalid && <FieldError errors={f.state.meta.errors} />}
-                  </Field>
-                )
-              }}
-            </form.Field>
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-display tracking-wide">
+              Identificação
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FieldGroup className="grid gap-4">
+              <form.Field name="name">
+                {(f) => {
+                  const invalid = f.state.meta.isTouched && !f.state.meta.isValid
+                  return (
+                    <Field data-invalid={invalid}>
+                      <FieldLabel htmlFor={f.name}>Nome</FieldLabel>
+                      <Input
+                        id={f.name}
+                        value={f.state.value}
+                        onChange={(e) => f.handleChange(e.target.value)}
+                        onBlur={f.handleBlur}
+                        aria-invalid={invalid}
+                        required
+                      />
+                      {invalid && <FieldError errors={f.state.meta.errors} />}
+                    </Field>
+                  )
+                }}
+              </form.Field>
 
-            <form.Field name="description">
-              {(f) => {
-                const invalid = f.state.meta.isTouched && !f.state.meta.isValid
-                return (
-                  <Field data-invalid={invalid}>
-                    <FieldLabel htmlFor={f.name}>Descrição (opcional)</FieldLabel>
-                    <Textarea
-                      id={f.name}
-                      value={f.state.value ?? ''}
-                      onChange={(e) => f.handleChange(e.target.value)}
-                      onBlur={f.handleBlur}
-                      aria-invalid={invalid}
-                      rows={6}
-                    />
-                    {invalid && <FieldError errors={f.state.meta.errors} />}
-                  </Field>
-                )
-              }}
-            </form.Field>
-          </FieldGroup>
-        </CardContent>
-      </Card>
+              <form.Field name="description">
+                {(f) => {
+                  const invalid = f.state.meta.isTouched && !f.state.meta.isValid
+                  return (
+                    <Field data-invalid={invalid}>
+                      <FieldLabel htmlFor={f.name}>Descrição (opcional)</FieldLabel>
+                      <Textarea
+                        id={f.name}
+                        value={f.state.value ?? ''}
+                        onChange={(e) => f.handleChange(e.target.value)}
+                        onBlur={f.handleBlur}
+                        aria-invalid={invalid}
+                        rows={6}
+                      />
+                      {invalid && <FieldError errors={f.state.meta.errors} />}
+                    </Field>
+                  )
+                }}
+              </form.Field>
+            </FieldGroup>
+          </CardContent>
+        </Card>
 
-      {formError && (
-        <p className="text-sm text-destructive">{formError}</p>
-      )}
+        {formError && (
+          <p className="text-sm text-destructive">{formError}</p>
+        )}
 
-      <div className="flex justify-end gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => navigate({ to: '/campaigns' })}
-        >
-          Cancelar
-        </Button>
-        <form.Subscribe
-          selector={(s) => [s.isSubmitting, s.canSubmit] as const}
-          children={([isSubmitting, canSubmit]) => (
-            <Button type="submit" disabled={isSubmitting || !canSubmit}>
-              {isSubmitting ? 'Criando…' : 'Criar campanha'}
-            </Button>
-          )}
-        />
-      </div>
-    </form>
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate({ to: '/campaigns' })}
+          >
+            Cancelar
+          </Button>
+          <form.Subscribe
+            selector={(s) => [s.isSubmitting, s.canSubmit] as const}
+            children={([isSubmitting, canSubmit]) => (
+              <Button type="submit" disabled={isSubmitting || !canSubmit}>
+                {isSubmitting ? 'Criando…' : 'Criar campanha'}
+              </Button>
+            )}
+          />
+        </div>
+      </form>
+    </PageChrome>
   )
 }
