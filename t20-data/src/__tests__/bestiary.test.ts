@@ -43,8 +43,8 @@ const ALL_SIZES: readonly MonsterSize[] = [
 ]
 
 describe('BESTIARY — shape & invariants', () => {
-  it('catálogo tem no mínimo 51 monstros (expansão #1)', () => {
-    expect(BESTIARY.length).toBeGreaterThanOrEqual(51)
+  it('catálogo tem no mínimo 80 monstros (expansão #2)', () => {
+    expect(BESTIARY.length).toBeGreaterThanOrEqual(80)
   })
 
   it('todos ids únicos', () => {
@@ -229,6 +229,54 @@ describe('BESTIARY — expansão #1 pinned entries', () => {
     const m = monsterById('cao-do-inferno')!
     expect(m.specialAbilities.join(' ')).toMatch(/Sopro.*cone.*fogo/i)
     expect(m.specialAbilities.join(' ')).toMatch(/Imunidade a fogo/i)
+  })
+})
+
+describe('BESTIARY — expansão #2 pinned entries', () => {
+  it('Thuwarokk ND 16: Carapaça + Jato de Ácido + colossal', () => {
+    const m = monsterById('thuwarokk')!
+    expect(m.nd).toBe(16)
+    expect(m.size).toBe('colossal')
+    expect(m.specialAbilities.join(' ')).toMatch(/Carapaça/)
+    expect(m.specialAbilities.join(' ')).toMatch(/Jato de Ácido/)
+  })
+
+  it('Lagash ND 13: Crias de Sszzaas + Cuspe Venenoso', () => {
+    const m = monsterById('lagash')!
+    expect(m.nd).toBe(13)
+    expect(m.specialAbilities.join(' ')).toMatch(/Crias de Sszzaas/)
+    expect(m.specialAbilities.join(' ')).toMatch(/Cuspe Venenoso/)
+  })
+
+  it('Troll das Cavernas ND 9: cura acelerada 20 anulada por ácido ou fogo', () => {
+    const m = monsterById('troll-das-cavernas')!
+    expect(m.specialAbilities.join(' ')).toMatch(/Cura acelerada 20/)
+    expect(m.specialAbilities.join(' ')).toMatch(/ácido ou fogo/)
+  })
+
+  it('Sombra de Thwor ND 9: Assassinar + Ataque Furtivo +7d6', () => {
+    const m = monsterById('sombra-de-thwor')!
+    expect(m.specialAbilities.join(' ')).toMatch(/Assassinar/)
+    expect(m.specialAbilities.join(' ')).toMatch(/\+7d6/)
+  })
+
+  it('Engenho de Guerra Goblin ND 6: Arsenal de Engenhocas (6 opções)', () => {
+    const m = monsterById('engenho-guerra-goblin')!
+    expect(m.tipo).toBe('construto')
+    expect(m.specialAbilities.join(' ')).toMatch(/Arsenal de Engenhocas/)
+  })
+
+  it('Dragão Venerável ND 15: Aura Aterradora + Sopro cone 16d12 fogo', () => {
+    const m = monsterById('dragao-veneravel')!
+    expect(m.nd).toBe(15)
+    expect(m.specialAbilities.join(' ')).toMatch(/Aura Aterradora/)
+    expect(m.specialAbilities.join(' ')).toMatch(/16d12 fogo/)
+  })
+
+  it('Enxame Kobold: Unidos Venceremos + immune manobras', () => {
+    const m = monsterById('enxame-kobold')!
+    expect(m.specialAbilities.join(' ')).toMatch(/Unidos Venceremos/)
+    expect(m.specialAbilities.join(' ')).toMatch(/manobras/)
   })
 })
 
