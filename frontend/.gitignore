@@ -12,11 +12,6 @@ dist
 dist-ssr
 *.local
 
-# Playwright — commit only baseline screenshots (e2e/__screenshots__/**)
-test-results/
-playwright-report/
-playwright/.cache/
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
