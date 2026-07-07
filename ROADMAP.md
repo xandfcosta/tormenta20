@@ -30,13 +30,6 @@ in `git log`.
 - Structure already handles ataques + habilidades especiais + tipo
   taxonomy; expansion is pure data entry against existing type shape.
 
-### GM invite / deep-link flow
-- Backend memory (`campaign-members.service.ts:63`): "GM invites →
-  player accepts" pattern deliberately out of scope. Currently only
-  self-join by campaign ID (`/campaigns/join` post-OC1).
-- Needed: invite token endpoint, deep-link route
-  (`/campaigns/join?token=...`), auto-fill campaign ID + validate.
-
 ## Persistence residual
 
 ### WS→DB current-vitals write-through

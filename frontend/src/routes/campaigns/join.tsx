@@ -19,6 +19,7 @@ import {
   FieldLabel,
 } from '@/components/ui/field'
 import { ApiError, api } from '@/lib/api'
+import type { CampaignInvitePreview } from '@/lib/api'
 import { applyServerErrors } from '@/lib/form-errors'
 import {
   campaignsQueryOptions,
@@ -27,13 +28,20 @@ import {
 } from '@/lib/queries'
 
 /**
- * Self-join page. Post-OC1 (whole-flow audit) the backend requires the
- * caller to own the character being added to a campaign — meaning the
- * old "GM adds any character" UX no longer works. This page is the
- * player-side of the pair: they type the campaign id the GM gave them,
- * pick one of their own characters, and submit.
+ * Self-join page. Post-OC1 the caller must own the character being
+ * added. Two entry paths:
+ *   1. Manual: player types the campaign id the GM shared.
+ *   2. Invite: `?token=…` search param resolves to a campaign via the
+ *      public `/invites/:token` endpoint, pre-fills the id, hides the
+ *      manual field, and threads the token through the mutation so
+ *      the server can verify.
  */
+const joinSearchSchema = z.object({
+  token: z.string().min(1).optional(),
+})
+
 export const Route = createFileRoute('/campaigns/join')({
+  validateSearch: joinSearchSchema,
   beforeLoad: async ({ context, location }) => {
     const user = await context.queryClient.ensureQueryData(meQueryOptions)
     if (!user) {
@@ -60,6 +68,15 @@ function JoinCampaignPage() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const characters = useQuery(charactersQueryOptions)
+  const { token } = Route.useSearch()
+
+  const invitePreview = useQuery<CampaignInvitePreview>({
+    queryKey: ['invites', token] as const,
+    queryFn: () => api.invites.resolve(token as string),
+    enabled: !!token,
+    retry: false,
+  })
+
   const [formError, setFormError] = useState<string | null>(null)
 
   const form = useForm({
@@ -71,6 +88,7 @@ function JoinCampaignPage() {
         await api.members.add(value.campaignId, {
           characterId: value.characterId,
           role: 'player',
+          ...(token ? { inviteToken: token } : {}),
         })
         qc.invalidateQueries({ queryKey: campaignsQueryOptions.queryKey })
         qc.invalidateQueries({
@@ -90,7 +108,23 @@ function JoinCampaignPage() {
     },
   })
 
+  // When the invite resolves, fill in the campaignId so the user just
+  // picks a character and submits. Setting it once via a flag avoids
+  // clobbering manual edits if the user later tweaks the form.
+  const [tokenApplied, setTokenApplied] = useState(false)
+  if (
+    token &&
+    invitePreview.data &&
+    !tokenApplied &&
+    form.state.values.campaignId === 0
+  ) {
+    form.setFieldValue('campaignId', invitePreview.data.campaignId)
+    setTokenApplied(true)
+  }
+
   const noCharacters = (characters.data?.length ?? 0) === 0
+  const inviteInvalid = !!token && invitePreview.isError
+  const inviteLoading = !!token && invitePreview.isLoading
 
   return (
     <PageChrome width="compact">
@@ -106,6 +140,37 @@ function JoinCampaignPage() {
           Entrar em campanha
         </SectionHeading>
 
+        {token && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-display tracking-wide">
+                Convite
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm">
+              {inviteLoading && (
+                <p className="text-muted-foreground">
+                  Verificando convite…
+                </p>
+              )}
+              {inviteInvalid && (
+                <p className="text-destructive">
+                  Convite inválido ou expirado. Peça um novo link ao mestre.
+                </p>
+              )}
+              {invitePreview.data && (
+                <p>
+                  Você foi convidado para{' '}
+                  <span className="font-semibold text-[color:var(--primary)]">
+                    {invitePreview.data.campaignName}
+                  </span>
+                  .
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         <Card>
           <CardHeader>
             <CardTitle className="font-display tracking-wide">
@@ -114,32 +179,37 @@ function JoinCampaignPage() {
           </CardHeader>
           <CardContent>
             <FieldGroup className="grid gap-4">
-              <form.Field name="campaignId">
-                {(f) => {
-                  const invalid = f.state.meta.isTouched && !f.state.meta.isValid
-                  return (
-                    <Field data-invalid={invalid}>
-                      <FieldLabel htmlFor={f.name}>ID da campanha</FieldLabel>
-                      <Input
-                        id={f.name}
-                        type="number"
-                        inputMode="numeric"
-                        min={1}
-                        value={f.state.value || ''}
-                        onChange={(e) => f.handleChange(Number(e.target.value))}
-                        onBlur={f.handleBlur}
-                        aria-invalid={invalid}
-                        placeholder="Ex.: 42"
-                        required
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        O mestre da mesa envia esse número.
-                      </p>
-                      {invalid && <FieldError errors={f.state.meta.errors} />}
-                    </Field>
-                  )
-                }}
-              </form.Field>
+              {!token && (
+                <form.Field name="campaignId">
+                  {(f) => {
+                    const invalid =
+                      f.state.meta.isTouched && !f.state.meta.isValid
+                    return (
+                      <Field data-invalid={invalid}>
+                        <FieldLabel htmlFor={f.name}>ID da campanha</FieldLabel>
+                        <Input
+                          id={f.name}
+                          type="number"
+                          inputMode="numeric"
+                          min={1}
+                          value={f.state.value || ''}
+                          onChange={(e) =>
+                            f.handleChange(Number(e.target.value))
+                          }
+                          onBlur={f.handleBlur}
+                          aria-invalid={invalid}
+                          placeholder="Ex.: 42"
+                          required
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          O mestre da mesa envia esse número.
+                        </p>
+                        {invalid && <FieldError errors={f.state.meta.errors} />}
+                      </Field>
+                    )
+                  }}
+                </form.Field>
+              )}
 
               <form.Field name="characterId">
                 {(f) => {
@@ -197,7 +267,13 @@ function JoinCampaignPage() {
             children={([isSubmitting, canSubmit]) => (
               <Button
                 type="submit"
-                disabled={isSubmitting || !canSubmit || noCharacters}
+                disabled={
+                  isSubmitting ||
+                  !canSubmit ||
+                  noCharacters ||
+                  inviteInvalid ||
+                  inviteLoading
+                }
               >
                 {isSubmitting ? 'Entrando…' : 'Entrar'}
               </Button>
