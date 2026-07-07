@@ -75,6 +75,8 @@ export function targetKey(t: ModifierTarget): string {
       return 'pmLimit'
     case 'pmCost':
       return 'pmCost'
+    case 'catalyst':
+      return `catalyst:${t.school}`
     case 'spellDC':
       return 'spellDC'
     case 'inventorySlots':

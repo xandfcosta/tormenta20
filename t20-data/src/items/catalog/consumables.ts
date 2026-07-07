@@ -143,8 +143,10 @@ export const CONSUMABLES: CatalogItem[] = [
   },
 
   // ── Alquímicos catalisadores (PDF p160–161) ──
-  // Consumed when casting a specific magia. No automatic spell integration —
-  // "Usar" just decrements stock so the player can track expenditure.
+  // Consumed produces a scene-scoped ActiveEffect with a `catalyst:<school>`
+  // modifier (-1 PM). The cast engine looks up matching active effects,
+  // applies the discount to a single cast of that school, and deletes
+  // the ActiveEffect (one-shot).
   {
     id: 'dente-dragao',
     name: 'Dente-de-dragão',
@@ -153,7 +155,16 @@ export const CONSUMABLES: CatalogItem[] = [
     slots: 0.5,
     equip: 'either',
     modifiers: [],
-    consumable: { scope: 'instant' },
+    consumable: {
+      scope: 'scene',
+      modifiers: [
+        {
+          target: { k: 'catalyst', school: 'evocacao' },
+          amount: -1,
+          bonusType: 'untyped',
+        },
+      ],
+    },
   },
   {
     id: 'essencia-abissal',
@@ -163,7 +174,16 @@ export const CONSUMABLES: CatalogItem[] = [
     slots: 0.5,
     equip: 'either',
     modifiers: [],
-    consumable: { scope: 'instant' },
+    consumable: {
+      scope: 'scene',
+      modifiers: [
+        {
+          target: { k: 'catalyst', school: 'necromancia' },
+          amount: -1,
+          bonusType: 'untyped',
+        },
+      ],
+    },
   },
   {
     id: 'liquen-lilas',
@@ -173,7 +193,16 @@ export const CONSUMABLES: CatalogItem[] = [
     slots: 0.5,
     equip: 'either',
     modifiers: [],
-    consumable: { scope: 'instant' },
+    consumable: {
+      scope: 'scene',
+      modifiers: [
+        {
+          target: { k: 'catalyst', school: 'encantamento' },
+          amount: -1,
+          bonusType: 'untyped',
+        },
+      ],
+    },
   },
   {
     id: 'musgo-purpura',
@@ -183,7 +212,16 @@ export const CONSUMABLES: CatalogItem[] = [
     slots: 0.5,
     equip: 'either',
     modifiers: [],
-    consumable: { scope: 'instant' },
+    consumable: {
+      scope: 'scene',
+      modifiers: [
+        {
+          target: { k: 'catalyst', school: 'adivinhacao' },
+          amount: -1,
+          bonusType: 'untyped',
+        },
+      ],
+    },
   },
   {
     id: 'ossos-monstro',
@@ -193,7 +231,16 @@ export const CONSUMABLES: CatalogItem[] = [
     slots: 0.5,
     equip: 'either',
     modifiers: [],
-    consumable: { scope: 'instant' },
+    consumable: {
+      scope: 'scene',
+      modifiers: [
+        {
+          target: { k: 'catalyst', school: 'convocacao' },
+          amount: -1,
+          bonusType: 'untyped',
+        },
+      ],
+    },
   },
   {
     id: 'po-cristal',
@@ -203,7 +250,16 @@ export const CONSUMABLES: CatalogItem[] = [
     slots: 0.5,
     equip: 'either',
     modifiers: [],
-    consumable: { scope: 'instant' },
+    consumable: {
+      scope: 'scene',
+      modifiers: [
+        {
+          target: { k: 'catalyst', school: 'ilusao' },
+          amount: -1,
+          bonusType: 'untyped',
+        },
+      ],
+    },
   },
   {
     id: 'po-giz',
@@ -213,7 +269,16 @@ export const CONSUMABLES: CatalogItem[] = [
     slots: 0.5,
     equip: 'either',
     modifiers: [],
-    consumable: { scope: 'instant' },
+    consumable: {
+      scope: 'scene',
+      modifiers: [
+        {
+          target: { k: 'catalyst', school: 'abjuracao' },
+          amount: -1,
+          bonusType: 'untyped',
+        },
+      ],
+    },
   },
   {
     id: 'ramo-verdejante',
@@ -223,7 +288,16 @@ export const CONSUMABLES: CatalogItem[] = [
     slots: 0.5,
     equip: 'either',
     modifiers: [],
-    consumable: { scope: 'instant' },
+    consumable: {
+      scope: 'scene',
+      modifiers: [
+        {
+          target: { k: 'catalyst', school: 'transmutacao' },
+          amount: -1,
+          bonusType: 'untyped',
+        },
+      ],
+    },
   },
   {
     id: 'saco-sal',
@@ -233,7 +307,16 @@ export const CONSUMABLES: CatalogItem[] = [
     slots: 0.5,
     equip: 'either',
     modifiers: [],
-    consumable: { scope: 'instant' },
+    consumable: {
+      scope: 'scene',
+      modifiers: [
+        {
+          target: { k: 'catalyst', school: 'abjuracao' },
+          amount: -1,
+          bonusType: 'untyped',
+        },
+      ],
+    },
   },
   {
     id: 'seixo-ambar',
@@ -243,7 +326,16 @@ export const CONSUMABLES: CatalogItem[] = [
     slots: 0.5,
     equip: 'either',
     modifiers: [],
-    consumable: { scope: 'instant' },
+    consumable: {
+      scope: 'scene',
+      modifiers: [
+        {
+          target: { k: 'catalyst', school: 'evocacao' },
+          amount: -1,
+          bonusType: 'untyped',
+        },
+      ],
+    },
   },
   {
     id: 'terra-cemiterio',
@@ -253,7 +345,16 @@ export const CONSUMABLES: CatalogItem[] = [
     slots: 0.5,
     equip: 'either',
     modifiers: [],
-    consumable: { scope: 'instant' },
+    consumable: {
+      scope: 'scene',
+      modifiers: [
+        {
+          target: { k: 'catalyst', school: 'necromancia' },
+          amount: -1,
+          bonusType: 'untyped',
+        },
+      ],
+    },
   },
 
   // ── Alquímicos venenos (PDF p161) ──

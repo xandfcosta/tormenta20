@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { SPELL_CATALOG, getCatalogItem } from '@tormenta20/t20-data';
-import type { Modifier } from '@tormenta20/t20-data';
+import type { Modifier, SpellSchool } from '@tormenta20/t20-data';
 import { PrismaService } from '../prisma/prisma.service';
 import { CharactersService } from './characters.service';
 
@@ -260,7 +260,20 @@ export class CharactersSpellsService {
     }
 
     const augmentPm = this.validateAugments(spell, augmentPicks);
-    const totalPm = spell.circle === 0 ? 0 : this.baseCircleCost(spell.circle) + augmentPm;
+    const rawTotalPm = spell.circle === 0 ? 0 : this.baseCircleCost(spell.circle) + augmentPm;
+
+    // Catalisador consumption: if the character has an active
+    // scene-scoped effect that carries a `catalyst:<school>` modifier
+    // matching this spell's school, apply the discount and mark the
+    // effect for deletion after the cast succeeds.
+    const catalyst = spell.circle === 0
+      ? null
+      : this.findCatalystForSchool(
+          character.activeEffects ?? [],
+          spell.school,
+        );
+    const catalystDiscount = catalyst?.amount ?? 0;
+    const totalPm = Math.max(0, rawTotalPm + catalystDiscount);
 
     const limit = pmLimitFor(character.level, character.items ?? []);
     if (spell.circle > 0 && totalPm > limit) {
@@ -281,8 +294,20 @@ export class CharactersSpellsService {
       });
     }
 
+    // Consume the catalyst first (idempotent — if the delete fails we
+    // still want the cast to proceed rather than double-charge PM).
+    if (catalyst) {
+      try {
+        await this.prisma.activeEffect.delete({
+          where: { id: catalyst.effectId },
+        });
+      } catch {
+        // Effect vanished concurrently — safe to ignore.
+      }
+    }
+
     if (totalPm === 0) {
-      return character;
+      return this.characters.findOne(ownerId, characterId);
     }
 
     await this.prisma.character.update({
@@ -290,6 +315,39 @@ export class CharactersSpellsService {
       data: { mpCurrent: character.mpCurrent - totalPm },
     });
     return this.characters.findOne(ownerId, characterId);
+  }
+
+  /**
+   * Scan the character's ActiveEffect rows for a scene-scoped catalyst
+   * whose modifier list contains a `catalyst:<school>` entry matching
+   * the spell's school. Returns the first match (multiple catalysts of
+   * the same school stack across days, but per T20 you consume one at
+   * a time — first-in-first-out via the `id ASC` include order).
+   */
+  private findCatalystForSchool(
+    activeEffects: readonly {
+      id: number;
+      scope: string;
+      modifiers: string;
+    }[],
+    school: SpellSchool,
+  ): { effectId: number; amount: number } | null {
+    for (const effect of activeEffects) {
+      if (effect.scope !== 'scene') continue;
+      let mods: Modifier[] = [];
+      try {
+        const parsed = JSON.parse(effect.modifiers);
+        if (Array.isArray(parsed)) mods = parsed as Modifier[];
+      } catch {
+        continue;
+      }
+      for (const m of mods) {
+        if (m.target.k === 'catalyst' && m.target.school === school) {
+          return { effectId: effect.id, amount: m.amount };
+        }
+      }
+    }
+    return null;
   }
 
   private baseCircleCost(circle: 0 | 1 | 2 | 3 | 4 | 5): number {

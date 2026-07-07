@@ -356,6 +356,88 @@ describe('CharactersSpellsService.castSpell', () => {
     expect(characterUpdate).toHaveBeenCalled();
   });
 
+  it('catalyst active effect discounts PM cost + deletes the effect after cast', async () => {
+    // luz base 1 PM, school 'evocacao'. Dente-de-dragão catalyst
+    // (-1 PM catalyst:evocacao) → totalPm 0 → no mp debit, effect
+    // deleted, character re-read returned.
+    const learned = { id: 10, prepared: false };
+    const effectDelete = jest.fn().mockResolvedValue({});
+    const characterUpdate = jest.fn().mockResolvedValue({});
+    const charactersFindOne = jest.fn().mockResolvedValue({
+      id: 1,
+      ownerId: 1,
+      level: 6,
+      mpCurrent: 20,
+      classes: [{ className: 'Arcanista', level: 6 }],
+      activeEffects: [
+        {
+          id: 99,
+          scope: 'scene',
+          modifiers: JSON.stringify([
+            {
+              target: { k: 'catalyst', school: 'evocacao' },
+              amount: -1,
+              bonusType: 'untyped',
+            },
+          ]),
+        },
+      ],
+    });
+    const findUnique = jest.fn().mockResolvedValue(learned);
+    const { service, prisma } = await setup({
+      findUnique,
+      characterUpdate,
+      charactersFindOne,
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (prisma as any).activeEffect = { delete: effectDelete };
+    await service.castSpell(1, 1, 'luz', []);
+    expect(effectDelete).toHaveBeenCalledWith({ where: { id: 99 } });
+    // luz base 1, discounted to 0 → no update
+    expect(characterUpdate).not.toHaveBeenCalled();
+  });
+
+  it('catalyst wrong school does NOT trigger (kept in place)', async () => {
+    const learned = { id: 10, prepared: false };
+    const effectDelete = jest.fn();
+    const characterUpdate = jest.fn().mockResolvedValue({});
+    const charactersFindOne = jest.fn().mockResolvedValue({
+      id: 1,
+      ownerId: 1,
+      level: 6,
+      mpCurrent: 20,
+      classes: [{ className: 'Arcanista', level: 6 }],
+      activeEffects: [
+        {
+          id: 99,
+          scope: 'scene',
+          modifiers: JSON.stringify([
+            {
+              target: { k: 'catalyst', school: 'necromancia' },
+              amount: -1,
+              bonusType: 'untyped',
+            },
+          ]),
+        },
+      ],
+    });
+    const findUnique = jest.fn().mockResolvedValue(learned);
+    const { service, prisma } = await setup({
+      findUnique,
+      characterUpdate,
+      charactersFindOne,
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (prisma as any).activeEffect = { delete: effectDelete };
+    await service.castSpell(1, 1, 'luz', []);
+    // wrong school → catalyst untouched, PM debited normally
+    expect(effectDelete).not.toHaveBeenCalled();
+    expect(characterUpdate).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: { mpCurrent: 19 },
+    });
+  });
+
   it('malformed classChoices JSON is treated as no-prep for Arcanista', async () => {
     const learned = { id: 10, prepared: false };
     const characterUpdate = jest.fn().mockResolvedValue({});

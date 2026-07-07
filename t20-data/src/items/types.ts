@@ -111,6 +111,12 @@ export type ModifierTarget =
   | { k: 'critMult' }
   | { k: 'pmLimit' }
   | { k: 'pmCost' }
+  /**
+   * Catalisador — one-shot pmCost discount on the next magia of the
+   * given school. Consumed on cast; the item consumer creates a
+   * scene-scoped ActiveEffect that the cast engine looks up + deletes.
+   */
+  | { k: 'catalyst'; school: import('../spells').SpellSchool }
   | { k: 'spellDC' }
   | { k: 'inventorySlots' }
   | { k: 'displacement' }
