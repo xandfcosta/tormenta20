@@ -84,6 +84,15 @@ const characterInclude = {
     },
     orderBy: { id: 'asc' },
   },
+  spells: {
+    select: {
+      id: true,
+      catalogSpellId: true,
+      prepared: true,
+      learnedAt: true,
+    },
+    orderBy: { learnedAt: 'asc' },
+  },
 } as const;
 
 @Injectable()
