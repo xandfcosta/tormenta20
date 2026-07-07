@@ -4,23 +4,25 @@ import { useForm } from '@tanstack/react-form'
 import { useState } from 'react'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { PageChrome } from '@/components/ui/page-chrome'
+import { SectionHeading } from '@/components/ui/section-heading'
 import { ApiError, api } from '@/lib/api'
 import { applyServerErrors } from '@/lib/form-errors'
 import { meQueryOptions } from '@/lib/queries'
 
 const registerSchema = z
   .object({
-    email: z.email('Invalid email'),
+    email: z.email('E-mail inválido'),
     name: z.string(),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
-    confirm: z.string().min(1, 'Confirm your password'),
+    password: z.string().min(8, 'A senha precisa ter ao menos 8 caracteres'),
+    confirm: z.string().min(1, 'Confirme sua senha'),
   })
   .refine((v) => v.password === v.confirm, {
     path: ['confirm'],
-    message: 'Passwords do not match',
+    message: 'As senhas não conferem',
   })
 
 export const Route = createFileRoute('/register')({
@@ -53,18 +55,20 @@ function RegisterPage() {
         if (!applyServerErrors(formApi, e) && e instanceof ApiError) {
           setFormError(e.message)
         } else if (!(e instanceof ApiError)) {
-          setFormError('Unexpected error. Try again.')
+          setFormError('Erro inesperado. Tente novamente.')
         }
       }
     },
   })
 
   return (
-    <div className="mx-auto h-full max-w-sm overflow-y-auto p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Create account</CardTitle>
-          <CardDescription>Join the table.</CardDescription>
+    <PageChrome width="compact" className="pt-10 sm:pt-16">
+      <Card className="border-border/60 bg-card/80">
+        <CardHeader className="gap-2">
+          <SectionHeading as="h1" variant="kallyadranoch">
+            Criar conta
+          </SectionHeading>
+          <CardDescription>Junte-se à mesa.</CardDescription>
         </CardHeader>
         <CardContent>
           <form
@@ -81,7 +85,7 @@ function RegisterPage() {
                   const invalid = f.state.meta.isTouched && !f.state.meta.isValid
                   return (
                     <Field data-invalid={invalid}>
-                      <FieldLabel htmlFor={f.name}>Email</FieldLabel>
+                      <FieldLabel htmlFor={f.name}>E-mail</FieldLabel>
                       <Input
                         id={f.name}
                         name={f.name}
@@ -104,7 +108,7 @@ function RegisterPage() {
                   const invalid = f.state.meta.isTouched && !f.state.meta.isValid
                   return (
                     <Field data-invalid={invalid}>
-                      <FieldLabel htmlFor={f.name}>Display name (optional)</FieldLabel>
+                      <FieldLabel htmlFor={f.name}>Nome (opcional)</FieldLabel>
                       <Input
                         id={f.name}
                         name={f.name}
@@ -124,7 +128,7 @@ function RegisterPage() {
                   const invalid = f.state.meta.isTouched && !f.state.meta.isValid
                   return (
                     <Field data-invalid={invalid}>
-                      <FieldLabel htmlFor={f.name}>Password</FieldLabel>
+                      <FieldLabel htmlFor={f.name}>Senha</FieldLabel>
                       <Input
                         id={f.name}
                         name={f.name}
@@ -148,7 +152,7 @@ function RegisterPage() {
                   const invalid = f.state.meta.isTouched && !f.state.meta.isValid
                   return (
                     <Field data-invalid={invalid}>
-                      <FieldLabel htmlFor={f.name}>Confirm password</FieldLabel>
+                      <FieldLabel htmlFor={f.name}>Confirmar senha</FieldLabel>
                       <Input
                         id={f.name}
                         name={f.name}
@@ -173,18 +177,18 @@ function RegisterPage() {
               selector={(s) => [s.isSubmitting, s.canSubmit] as const}
               children={([isSubmitting, canSubmit]) => (
                 <Button type="submit" className="w-full" disabled={isSubmitting || !canSubmit}>
-                  {isSubmitting ? 'Creating…' : 'Create account'}
+                  {isSubmitting ? 'Criando…' : 'Criar conta'}
                 </Button>
               )}
             />
 
             <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{' '}
-              <Link to="/login" className="underline">Login</Link>
+              Já tem conta?{' '}
+              <Link to="/login" className="underline">Entrar</Link>
             </p>
           </form>
         </CardContent>
       </Card>
-    </div>
+    </PageChrome>
   )
 }
