@@ -13,6 +13,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthUser } from '../auth/auth.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CharactersService } from './characters.service';
+import { CharactersSpellsService } from './characters-spells.service';
 import { CampaignMembersService } from '../campaign-members/campaign-members.service';
 import {
   ConsumeItemDto,
@@ -28,6 +29,10 @@ import {
   UpdateVitalsDto,
 } from './dto/character.dto';
 import {
+  LearnSpellDto,
+  SetSpellPreparedDto,
+} from './dto/character-spell.dto';
+import {
   CLASSES,
   EXPERTISES,
   GODS,
@@ -41,6 +46,7 @@ export class CharactersController {
   constructor(
     private readonly characters: CharactersService,
     private readonly members: CampaignMembersService,
+    private readonly spells: CharactersSpellsService,
   ) {}
 
   @Get('options')
@@ -242,5 +248,41 @@ export class CharactersController {
     @Body() dto: UpdateClassLevelDto,
   ) {
     return this.characters.updateClassLevel(user.id, id, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/spells')
+  learnSpell(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: LearnSpellDto,
+  ) {
+    return this.spells.learnSpell(user.id, id, dto.catalogSpellId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id/spells/:catalogSpellId')
+  unlearnSpell(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('catalogSpellId') catalogSpellId: string,
+  ) {
+    return this.spells.unlearnSpell(user.id, id, catalogSpellId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/spells/:catalogSpellId/prepared')
+  setSpellPrepared(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('catalogSpellId') catalogSpellId: string,
+    @Body() dto: SetSpellPreparedDto,
+  ) {
+    return this.spells.setSpellPrepared(
+      user.id,
+      id,
+      catalogSpellId,
+      dto.prepared,
+    );
   }
 }

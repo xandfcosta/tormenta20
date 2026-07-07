@@ -107,6 +107,14 @@ export type Character = {
   expertises: CharacterExpertise[]
   items: CharacterItem[]
   activeEffects: ActiveEffect[]
+  spells: CharacterSpell[]
+}
+
+export type CharacterSpell = {
+  id: number
+  catalogSpellId: string
+  prepared: boolean
+  learnedAt: string
 }
 
 export type UpdateProficienciesInput = {
@@ -404,6 +412,28 @@ export const api = {
     campaigns: (id: number) =>
       request<CampaignMembershipWithCampaign[]>(
         `/characters/${id}/campaigns`,
+      ),
+    learnSpell: (id: number, catalogSpellId: string) =>
+      request<CharacterSpell>(`/characters/${id}/spells`, {
+        method: 'POST',
+        body: JSON.stringify({ catalogSpellId }),
+      }),
+    unlearnSpell: (id: number, catalogSpellId: string) =>
+      request<{ catalogSpellId: string; removed: number }>(
+        `/characters/${id}/spells/${encodeURIComponent(catalogSpellId)}`,
+        { method: 'DELETE' },
+      ),
+    setSpellPrepared: (
+      id: number,
+      catalogSpellId: string,
+      prepared: boolean,
+    ) =>
+      request<CharacterSpell>(
+        `/characters/${id}/spells/${encodeURIComponent(catalogSpellId)}/prepared`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({ prepared }),
+        },
       ),
   },
   campaigns: {

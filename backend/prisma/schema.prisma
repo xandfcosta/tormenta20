@@ -120,8 +120,24 @@ model Character {
   items        CharacterItem[]
   activeEffects ActiveEffect[]
   campaignMemberships CampaignMember[]
+  spells       CharacterSpell[]
 
   @@index([ownerId])
+}
+
+model CharacterSpell {
+  id              Int       @id @default(autoincrement())
+  characterId     Int
+  character       Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  /// catalogSpellId is the SPELL_CATALOG id from t20-data (string).
+  catalogSpellId  String
+  /// Prepared list gate for Clérigo/Druida/Mago-style casters. Bardo/
+  /// Feiticeiro-style casters ignore this — they cast anything learned.
+  prepared        Boolean   @default(false)
+  learnedAt       DateTime  @default(now())
+
+  @@unique([characterId, catalogSpellId])
+  @@index([characterId])
 }
 
 model ActiveEffect {
