@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { Package, Shield, Shirt, Star, ToggleRight } from 'lucide-react'
+import { BookOpen, Package, Shield, Shirt, Star, ToggleRight } from 'lucide-react'
 import {
   Tabs,
   TabsContent,
@@ -22,6 +22,7 @@ import { ExpertisesPanel } from './character-sheet/expertises-panel'
 import { InventoryPanel } from './character-sheet/inventory-panel'
 import { ProficienciesPanel } from './character-sheet/proficiencies-panel'
 import { SheetHeader } from './character-sheet/sheet-header'
+import { SpellbookPanel } from './character-sheet/spellbook-panel'
 import { VitalsAside } from './character-sheet/vitals-aside'
 import type { Character } from '@/lib/api'
 
@@ -89,6 +90,9 @@ function RightPanel({ character }: { character: Character }) {
         <TabsTrigger value="abilities" className="gap-1.5">
           <Star className="size-3.5" /> Habilidades
         </TabsTrigger>
+        <TabsTrigger value="spells" className="gap-1.5">
+          <BookOpen className="size-3.5" /> Magias
+        </TabsTrigger>
         <TabsTrigger value="campaigns" className="gap-1.5">
           Campanhas
         </TabsTrigger>
@@ -128,6 +132,12 @@ function RightPanel({ character }: { character: Character }) {
         className="flex min-h-0 flex-1 flex-col overflow-hidden"
       >
         <AbilitiesPanel character={character} />
+      </TabsContent>
+      <TabsContent
+        value="spells"
+        className="flex min-h-0 flex-1 flex-col overflow-hidden"
+      >
+        <SpellbookPanel character={character} />
       </TabsContent>
       <TabsContent
         value="campaigns"
