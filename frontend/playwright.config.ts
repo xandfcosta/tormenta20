@@ -1,27 +1,40 @@
 import { defineConfig, devices } from '@playwright/test'
+import * as path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 /**
  * Visual regression baseline for the Controlled Decay UI/UX revamp.
  *
- * Scope MVP: unauth-only routes (landing/login/register). Captures
- * light + dark themes across 3 viewports. Authed pages (character
- * sheet, session tracker) need deterministic backend seed and land in
- * a follow-up once the seed script exists.
+ * Two layers:
+ *  1. Public routes (`visual.spec.ts`) — landing/login/register, no
+ *     auth. Sanity check that global tokens don't regress.
+ *  2. Authenticated routes (`visual-authed.spec.ts`) — character
+ *     sheet, campaigns, session tracker. Requires the backend to be
+ *     running with the seed applied (`backend/prisma/seed.ts`).
  *
- * Snapshots are committed under `e2e/__screenshots__/`. Diffs beyond
- * the `maxDiffPixelRatio` threshold fail the run.
+ * Auth is captured once by the `setup` project which logs in via the
+ * seeded user and writes storage state to `.auth/user.json`; the
+ * `authed-*` projects reuse that state so every scenario starts
+ * pre-authenticated without repeating the login flow.
  */
+
+const AUTH_STATE = path.resolve(__dirname, '.auth', 'user.json')
+
+const PHONE_VIEWPORT = { width: 390, height: 844 }
+const TABLET_VIEWPORT = { width: 820, height: 1180 }
+const DESKTOP_VIEWPORT = { width: 1440, height: 900 }
+
 export default defineConfig({
   testDir: './e2e',
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
-    /* Consistent baseline: disable animations so we don't race the
-     * noise-layer redraw or font-load reflow. */
     launchOptions: {
       args: ['--force-prefers-reduced-motion'],
     },
@@ -32,30 +45,57 @@ export default defineConfig({
       animations: 'disabled',
     },
   },
-  /* Chromium for all viewports: visual-regression baselines want a
-   * single rendering engine so cross-browser font/glyph rasterization
-   * doesn't inflate diffs. Device presets are used only for viewport
-   * + userAgent hints. */
   projects: [
     {
-      name: 'phone',
+      name: 'setup',
+      testMatch: /auth\.setup\.ts$/,
+      use: { ...devices['Desktop Chrome'], viewport: DESKTOP_VIEWPORT },
+    },
+    /* Public routes — no storageState. */
+    {
+      name: 'public-phone',
+      testMatch: /visual\.spec\.ts$/,
+      use: { ...devices['Pixel 7'], viewport: PHONE_VIEWPORT },
+    },
+    {
+      name: 'public-tablet',
+      testMatch: /visual\.spec\.ts$/,
+      use: { ...devices['Desktop Chrome'], viewport: TABLET_VIEWPORT },
+    },
+    {
+      name: 'public-desktop',
+      testMatch: /visual\.spec\.ts$/,
+      use: { ...devices['Desktop Chrome'], viewport: DESKTOP_VIEWPORT },
+    },
+    /* Authed routes — depend on `setup` for cookies. */
+    {
+      name: 'authed-phone',
+      testMatch: /visual-authed\.spec\.ts$/,
+      dependencies: ['setup'],
       use: {
         ...devices['Pixel 7'],
-        viewport: { width: 390, height: 844 },
+        viewport: PHONE_VIEWPORT,
+        storageState: AUTH_STATE,
       },
     },
     {
-      name: 'tablet',
+      name: 'authed-tablet',
+      testMatch: /visual-authed\.spec\.ts$/,
+      dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
-        viewport: { width: 820, height: 1180 },
+        viewport: TABLET_VIEWPORT,
+        storageState: AUTH_STATE,
       },
     },
     {
-      name: 'desktop',
+      name: 'authed-desktop',
+      testMatch: /visual-authed\.spec\.ts$/,
+      dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
-        viewport: { width: 1440, height: 900 },
+        viewport: DESKTOP_VIEWPORT,
+        storageState: AUTH_STATE,
       },
     },
   ],

@@ -75,6 +75,44 @@ jobs:
       - name: Install Playwright browser
         run: pnpm --filter frontend exec playwright install chromium --with-deps
 
+      - name: Generate Prisma client
+        run: pnpm prisma:generate
+
+      - name: Prepare backend .env
+        run: |
+          cp backend/.env.example backend/.env
+          echo "JWT_SECRET=ci-only-fake-secret-value-32-chars" >> backend/.env
+
+      - name: Apply Prisma migrations + seed
+        working-directory: backend
+        run: |
+          pnpm exec prisma migrate deploy
+          pnpm run seed
+
+      - name: Boot backend
+        working-directory: backend
+        run: pnpm run start > backend.log 2>&1 &
+
+      - name: Boot frontend
+        working-directory: frontend
+        run: pnpm run dev > frontend.log 2>&1 &
+
+      - name: Wait for both servers
+        run: |
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:5173/ > /dev/null && curl -sf http://localhost:3000/ > /dev/null; then
+              echo "both up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "servers failed to boot" >&2
+          echo "--- backend log ---" >&2
+          tail -80 backend/backend.log >&2 || true
+          echo "--- frontend log ---" >&2
+          tail -80 frontend/frontend.log >&2 || true
+          exit 1
+
       - name: Run visual tests
         run: pnpm --filter frontend run test:visual
 
