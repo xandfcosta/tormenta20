@@ -22,11 +22,18 @@ async function setup(over?: {
   sessionFindUnique?: (args: unknown) => Promise<unknown>;
   sessionUpdate?: jest.Mock;
   characterFindMany?: jest.Mock;
+  characterFindUnique?: jest.Mock;
+  characterUpdate?: jest.Mock;
 }) {
   const sessionUpdate =
     over?.sessionUpdate ?? jest.fn().mockResolvedValue({});
   const characterFindMany =
     over?.characterFindMany ?? jest.fn().mockResolvedValue([]);
+  const characterFindUnique =
+    over?.characterFindUnique ??
+    jest.fn().mockResolvedValue({ hpMax: 100, mpMax: 20 });
+  const characterUpdate =
+    over?.characterUpdate ?? jest.fn().mockResolvedValue({});
   const module = await Test.createTestingModule({
     providers: [
       SessionStateService,
@@ -38,9 +45,12 @@ async function setup(over?: {
             update: sessionUpdate,
           },
           /* P5: refreshCharacterMaxes reads here. Empty default so
-           * pre-P5 specs stay green (nothing gets updated). */
+           * pre-P5 specs stay green (nothing gets updated). Live
+           * write-through reads via findUnique + update. */
           character: {
             findMany: characterFindMany,
+            findUnique: characterFindUnique,
+            update: characterUpdate,
           },
         },
       },
@@ -50,6 +60,8 @@ async function setup(over?: {
     service: module.get(SessionStateService),
     sessionUpdate,
     characterFindMany,
+    characterFindUnique,
+    characterUpdate,
   };
 }
 
@@ -515,6 +527,126 @@ describe('SessionStateService.deltaVitals', () => {
     const id = s.initiative[0]!.id;
     service.deltaVitals(1, id, { hpDelta: -20 });
     expect(service.getState(1).initiative[0]?.hpCurrent).toBe(0);
+  });
+});
+
+describe('SessionStateService — WS_VITALS_WRITETHROUGH_LIVE', () => {
+  const OLD = process.env.WS_VITALS_WRITETHROUGH_LIVE;
+  afterEach(() => {
+    if (OLD === undefined) delete process.env.WS_VITALS_WRITETHROUGH_LIVE;
+    else process.env.WS_VITALS_WRITETHROUGH_LIVE = OLD;
+    jest.clearAllMocks();
+  });
+
+  /**
+   * Small helper: patchVitals / deltaVitals fire the write-through as
+   * `void this.maybeLiveWriteThrough(...)` so the mock resolution needs
+   * a microtask flush before the assertion. Using a promise chain we
+   * fully control instead of an arbitrary setTimeout keeps the test
+   * deterministic.
+   */
+  const flush = () => Promise.resolve().then(() => Promise.resolve());
+
+  it('flag off: no character.update fires on patchVitals', async () => {
+    delete process.env.WS_VITALS_WRITETHROUGH_LIVE;
+    const { service, characterUpdate } = await setup();
+    const s = service.addEntry(1, {
+      label: 'PC',
+      initiative: 15,
+      type: 'character',
+      characterId: 42,
+      hpCurrent: 20,
+      hpMax: 30,
+    });
+    const id = s.initiative[0]!.id;
+    service.patchVitals(1, id, { hpCurrent: 15 });
+    await flush();
+    expect(characterUpdate).not.toHaveBeenCalled();
+  });
+
+  it('flag on: patchVitals mirrors hp to Character row (clamped to fresh hpMax)', async () => {
+    process.env.WS_VITALS_WRITETHROUGH_LIVE = '1';
+    const characterFindUnique = jest
+      .fn()
+      .mockResolvedValue({ hpMax: 25, mpMax: 10 });
+    const characterUpdate = jest.fn().mockResolvedValue({});
+    const { service } = await setup({ characterFindUnique, characterUpdate });
+    const s = service.addEntry(1, {
+      label: 'PC',
+      initiative: 15,
+      type: 'character',
+      characterId: 42,
+      hpCurrent: 20,
+      hpMax: 30,
+    });
+    const id = s.initiative[0]!.id;
+    service.patchVitals(1, id, { hpCurrent: 40 });
+    await flush();
+    // clamped by entry.hpMax=30 first (patchVitals), then fresh hpMax=25
+    // in write-through.
+    expect(characterUpdate).toHaveBeenCalledWith({
+      where: { id: 42 },
+      data: { hpCurrent: 25 },
+    });
+  });
+
+  it('flag on: skips NPC entries (no characterId)', async () => {
+    process.env.WS_VITALS_WRITETHROUGH_LIVE = '1';
+    const { service, characterUpdate } = await setup();
+    const s = service.addEntry(1, {
+      label: 'Goblin',
+      initiative: 15,
+      type: 'npc',
+      hpCurrent: 5,
+      hpMax: 10,
+    });
+    const id = s.initiative[0]!.id;
+    service.patchVitals(1, id, { hpCurrent: 3 });
+    await flush();
+    expect(characterUpdate).not.toHaveBeenCalled();
+  });
+
+  it('flag on: deltaVitals also fires the mirror', async () => {
+    process.env.WS_VITALS_WRITETHROUGH_LIVE = '1';
+    const characterFindUnique = jest
+      .fn()
+      .mockResolvedValue({ hpMax: 30, mpMax: 10 });
+    const characterUpdate = jest.fn().mockResolvedValue({});
+    const { service } = await setup({ characterFindUnique, characterUpdate });
+    const s = service.addEntry(1, {
+      label: 'PC',
+      initiative: 15,
+      type: 'character',
+      characterId: 7,
+      hpCurrent: 20,
+      hpMax: 30,
+    });
+    const id = s.initiative[0]!.id;
+    service.deltaVitals(1, id, { hpDelta: -5 });
+    await flush();
+    expect(characterUpdate).toHaveBeenCalledWith({
+      where: { id: 7 },
+      data: { hpCurrent: 15 },
+    });
+  });
+
+  it('flag on: DB failure logged, does not throw', async () => {
+    process.env.WS_VITALS_WRITETHROUGH_LIVE = '1';
+    const characterUpdate = jest.fn().mockRejectedValue(new Error('boom'));
+    const { service } = await setup({ characterUpdate });
+    const s = service.addEntry(1, {
+      label: 'PC',
+      initiative: 15,
+      type: 'character',
+      characterId: 42,
+      hpCurrent: 20,
+      hpMax: 30,
+    });
+    const id = s.initiative[0]!.id;
+    expect(() =>
+      service.patchVitals(1, id, { hpCurrent: 15 }),
+    ).not.toThrow();
+    await flush();
   });
 
   it('missing hpCurrent counts as 0', async () => {

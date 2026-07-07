@@ -335,11 +335,11 @@ export class SessionStateService {
    * max fields when present so a hpCurrent > hpMax broadcast can't
    * corrupt the tracker.
    *
-   * TODO(persistence): when `entry.characterId` is set, downstream we
-   * likely want to persist hpCurrent/mpCurrent back to the DB Character
-   * row so a page refresh doesn't lose the state. Kept out of scope
-   * for the MVP realtime loop; add a repo dependency + write-through
-   * when the product needs it.
+   * When `WS_VITALS_WRITETHROUGH_LIVE=1` is set, the mutation also fires
+   * a fire-and-forget Character.update so a page refresh mid-combat
+   * sees the last committed state. Failures are logged and do not
+   * block the WS response (session end still does a full batch commit
+   * when `WS_VITALS_WRITETHROUGH=1` — see SessionsService.end).
    */
   patchVitals(
     sessionId: number,
@@ -360,6 +360,7 @@ export class SessionStateService {
       next.mpCurrent = clampVital(patch.mpCurrent, entry.mpMax);
     }
     state.initiative[idx] = next;
+    void this.maybeLiveWriteThrough(sessionId, next);
     return state;
   }
 
@@ -388,7 +389,59 @@ export class SessionStateService {
       next.mpCurrent = clampVital(raw, entry.mpMax);
     }
     state.initiative[idx] = next;
+    void this.maybeLiveWriteThrough(sessionId, next);
     return state;
+  }
+
+  /**
+   * Fire-and-forget Character.update mirroring the entry's current hp/mp
+   * back to the DB row. Gated by `WS_VITALS_WRITETHROUGH_LIVE=1` so
+   * production can opt in without a code change; default off keeps
+   * historical behaviour (end-of-session commit only).
+   *
+   * Runs a fresh `findUnique` before the update to clamp against the
+   * current DB `hpMax`/`mpMax` — the entry's cache can drift after a
+   * level-up mid-session. Individual failures are `.warn` logged; we
+   * do not surface them to the WS caller so a transient DB blip can't
+   * kill an in-flight combat.
+   */
+  private async maybeLiveWriteThrough(
+    sessionId: number,
+    entry: InitiativeEntry,
+  ): Promise<void> {
+    if (process.env.WS_VITALS_WRITETHROUGH_LIVE !== '1') return;
+    if (entry.characterId === undefined) return;
+    if (entry.hpCurrent === undefined && entry.mpCurrent === undefined) {
+      return;
+    }
+    try {
+      const fresh = await this.prisma.character.findUnique({
+        where: { id: entry.characterId },
+        select: { hpMax: true, mpMax: true },
+      });
+      if (!fresh) return;
+      const data: { hpCurrent?: number; mpCurrent?: number } = {};
+      if (entry.hpCurrent !== undefined) {
+        data.hpCurrent = Math.min(
+          Math.max(0, entry.hpCurrent),
+          fresh.hpMax,
+        );
+      }
+      if (entry.mpCurrent !== undefined) {
+        data.mpCurrent = Math.min(
+          Math.max(0, entry.mpCurrent),
+          fresh.mpMax,
+        );
+      }
+      await this.prisma.character.update({
+        where: { id: entry.characterId },
+        data,
+      });
+    } catch (err) {
+      this.logger.warn(
+        `Session ${sessionId} live write-through failed for character ${entry.characterId}: ${(err as Error).message}`,
+      );
+    }
   }
 
   private getOrCreate(sessionId: number): SessionRuntimeState {
