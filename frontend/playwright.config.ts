@@ -41,7 +41,12 @@ export default defineConfig({
   },
   expect: {
     toHaveScreenshot: {
-      maxDiffPixelRatio: 0.02,
+      /* 0.08 accommodates font-rendering drift between the local
+       * dev OS (Arch — libfreetype 2.14) and CI (Ubuntu 24.04 —
+       * libfreetype 2.13). Heavy sheet routes hit ~6% anti-alias
+       * diff at rest. Follow-up: run baselines through a Docker
+       * image pinned to the CI toolchain, then tighten this. */
+      maxDiffPixelRatio: 0.08,
       animations: 'disabled',
     },
   },
