@@ -3,57 +3,103 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/**
+ * Controlled Decay design system (D0a).
+ *
+ * The palette forks light vs dark by more than a lightness swap: the
+ * ember accent is deliberately different per mode so both pass AA
+ * (0.65 chroma on obsidian is legible; the same chroma on parchment
+ * cream falls to 2.7:1). See design audit findings.
+ *
+ * Semantic role vars (`--hp-*`, `--mp-*`, `--class-*`) let panels
+ * express character state visually — the "decay" concept lives in
+ * these tokens rather than in per-component styles.
+ */
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+
+  /* Base surface — parchment cream with warm undertone. */
+  --background: oklch(0.96 0.03 75);
+  --foreground: oklch(0.20 0.02 40);
+  --card: oklch(0.98 0.02 70);
+  --card-foreground: oklch(0.20 0.02 40);
+  --popover: oklch(0.98 0.02 70);
+  --popover-foreground: oklch(0.20 0.02 40);
+
+  /* Ember — light mode uses the deeper vermilion so AA passes on cream. */
+  --primary: oklch(0.48 0.22 28);
+  --primary-foreground: oklch(0.98 0.02 70);
+
+  --secondary: oklch(0.90 0.04 70);
+  --secondary-foreground: oklch(0.20 0.02 40);
+  --muted: oklch(0.90 0.04 70);
+  --muted-foreground: oklch(0.42 0.03 50);
+  --accent: oklch(0.55 0.15 245);
+  --accent-foreground: oklch(0.98 0.02 70);
+
+  --destructive: oklch(0.55 0.22 25);
+  --border: oklch(0.82 0.04 65);
+  --input: oklch(0.85 0.03 65);
+  --ring: oklch(0.48 0.22 28 / 60%);
+
+  /* Semantic role tokens — used by HpBar/MpBar/StatBlock in D0b. */
+  --hp-full: oklch(0.55 0.18 145);
+  --hp-hurt: oklch(0.60 0.20 60);
+  --hp-critical: oklch(0.55 0.22 25);
+  --mp-arcane: oklch(0.55 0.15 245);
+  --class-warrior: oklch(0.45 0.06 240);
+  --class-rogue: oklch(0.42 0.10 340);
+  --class-mage: oklch(0.50 0.14 265);
+  --class-cleric: oklch(0.60 0.13 80);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  /* Obsidian with violet undertone. */
+  --background: oklch(0.13 0.02 280);
+  --foreground: oklch(0.92 0.04 80);
+  --card: oklch(0.18 0.03 60);
+  --card-foreground: oklch(0.92 0.04 80);
+  --popover: oklch(0.18 0.03 60);
+  --popover-foreground: oklch(0.92 0.04 80);
+
+  /* Ember at full brightness — Tormenta crimson lightning. */
+  --primary: oklch(0.65 0.22 28);
+  --primary-foreground: oklch(0.13 0.02 280);
+
+  --secondary: oklch(0.24 0.03 280);
+  --secondary-foreground: oklch(0.92 0.04 80);
+  --muted: oklch(0.24 0.03 280);
+  --muted-foreground: oklch(0.68 0.03 80);
+  --accent: oklch(0.55 0.15 245);
+  --accent-foreground: oklch(0.13 0.02 280);
+
+  --destructive: oklch(0.65 0.22 28);
+  --border: oklch(0.92 0.04 80 / 12%);
+  --input: oklch(0.92 0.04 80 / 15%);
+  --ring: oklch(0.65 0.22 28 / 55%);
+
+  /* Semantic tokens — brighter chroma in dark mode. */
+  --hp-full: oklch(0.68 0.20 145);
+  --hp-hurt: oklch(0.72 0.22 60);
+  --hp-critical: oklch(0.65 0.24 25);
+  --mp-arcane: oklch(0.68 0.18 245);
+  --class-warrior: oklch(0.72 0.08 240);
+  --class-rogue: oklch(0.65 0.14 340);
+  --class-mage: oklch(0.70 0.16 265);
+  --class-cleric: oklch(0.80 0.15 80);
 }
 
 @theme inline {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-serif: 'Cinzel', 'Cormorant Garamond', ui-serif, Georgia, serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: 'EB Garamond Variable', 'EB Garamond', ui-serif, Georgia, serif;
+  --font-serif: 'EB Garamond Variable', 'EB Garamond', ui-serif, Georgia, serif;
+  --font-display: 'Redaction', 'IM Fell English SC', ui-serif, Georgia, serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -72,16 +118,54 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  --color-hp-full: var(--hp-full);
+  --color-hp-hurt: var(--hp-hurt);
+  --color-hp-critical: var(--hp-critical);
+  --color-mp-arcane: var(--mp-arcane);
+  --color-class-warrior: var(--class-warrior);
+  --color-class-rogue: var(--class-rogue);
+  --color-class-mage: var(--class-mage);
+  --color-class-cleric: var(--class-cleric);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: 'cv11', 'ss01', 'ss03';
+    font-family: var(--font-serif);
+    font-feature-settings: 'liga', 'dlig', 'onum', 'ss01';
     text-rendering: optimizeLegibility;
+    position: relative;
+  }
+
+  /* Noise texture overlay — 3% opacity, background layer only (per
+   * design audit: exclude text containers). Data-URI keeps it out of
+   * the network waterfall. */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  /* Display face for large headings — must be opted into with
+   * `font-display` utility class. Body defaults to Garamond. */
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: 0.01em;
+  }
+
+  /* HUD/numeric — stats, dice, HP counters. */
+  .font-hud {
+    font-family: var(--font-mono);
+    font-feature-settings: 'tnum', 'zero';
   }
 
   /* Hide native number input spinners — replaced by custom NumberInput buttons. */
@@ -93,5 +177,16 @@
   input[type="number"] {
     -moz-appearance: textfield;
     appearance: textfield;
+  }
+
+  /* Motion — respect user reduced-motion pref per WCAG 2.3.3. Applied
+   * globally so component-level animations don't need to re-guard. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }

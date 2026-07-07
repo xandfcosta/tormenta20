@@ -12,6 +12,9 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@fontsource-variable/eb-garamond": "^5.2.7",
+    "@fontsource-variable/jetbrains-mono": "^5.2.8",
+    "@fontsource/redaction": "^5.2.5",
     "@tailwindcss/vite": "^4.2.4",
     "@tanstack/react-form": "^1.29.1",
     "@tanstack/react-pacer": "^0.22.0",
