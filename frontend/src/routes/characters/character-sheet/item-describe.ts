@@ -38,6 +38,8 @@ export function describeModifierTarget(t: Modifier['target']): string {
       return 'Limite de PM por magia'
     case 'pmCost':
       return 'Custo em PM'
+    case 'catalyst':
+      return `Catalisador (${t.school})`
     case 'spellDC':
       return 'CD de magias'
     case 'inventorySlots':

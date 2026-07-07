@@ -82,6 +82,8 @@ function describeConditionalTarget(target: Modifier['target']): string {
       return 'Limite de PM'
     case 'pmCost':
       return 'Custo de PM'
+    case 'catalyst':
+      return `Catalisador ${target.school}`
     case 'spellDC':
       return 'CD Magia'
     case 'inventorySlots':

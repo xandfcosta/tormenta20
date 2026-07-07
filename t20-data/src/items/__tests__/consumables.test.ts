@@ -73,16 +73,29 @@ describe('CONSUMABLES — known canonical entries', () => {
     expect(mod.bonusType).toBe('untyped')
   })
 
-  it('catalisadores ship without spell-engine wiring (modifiers + instant empty)', () => {
-    // Per the spell-engine-deferred design: catalysts decrement stock on
-    // use but don't auto-trigger any spell or stat change. They may carry
-    // any scope label (e.g., baga-de-fogo is scene-scoped) — what matters
-    // is that no modifiers or instant vitals patch is attached yet.
-    const catalysts = CONSUMABLES.filter((c) => c.category === 'catalyst')
-    expect(catalysts.length).toBeGreaterThan(0)
+  it('catalisadores magia emit a scene-scoped catalyst:<school> modifier when consumed', () => {
+    // Post-catalisador-consumer: each Cap 4 catalisador (school-tagged
+    // alquímico) attaches a { target: 'catalyst', school } modifier
+    // scoped to the scene. The cast engine looks up matching active
+    // effects, applies the -1 PM discount to a single cast of the
+    // school, and deletes the row.
+    //
+    // `baga-de-fogo` shares the 'catalyst' category label but is a
+    // thrown incendiary (não é catalisador de magia); excluded here.
+    const catalysts = CONSUMABLES.filter(
+      (c) => c.category === 'catalyst' && c.id !== 'baga-de-fogo',
+    )
+    expect(catalysts.length).toBe(11)
     for (const c of catalysts) {
-      expect(c.consumable!.modifiers?.length ?? 0).toBe(0)
+      expect(c.consumable!.scope).toBe('scene')
       expect(c.consumable!.instant).toBeUndefined()
+      const mods = c.consumable!.modifiers ?? []
+      expect(mods.length).toBe(1)
+      const target = mods[0]!.target
+      expect(target.k).toBe('catalyst')
+      // amount is negative — the sign choice matches other pmCost mods
+      // (a discount is a negative amount, not a "positive" reduction).
+      expect(mods[0]!.amount).toBeLessThan(0)
     }
   })
 
