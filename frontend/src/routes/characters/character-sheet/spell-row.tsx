@@ -18,6 +18,7 @@ import { invalidateCharacterDependents } from '@/lib/character-cache'
 import { characterQueryOptions } from '@/lib/queries'
 import { accentStrong, dimText, hoverRow } from '@/lib/sheet-theme'
 import { cn } from '@/lib/utils'
+import { CastSpellDialog } from './cast-spell-dialog'
 import { CIRCLE_LABEL, SCHOOL_LABEL } from './spell-labels'
 
 const ATTRIBUTE_MAP: Record<AttributeKey, keyof Character> = {
@@ -202,6 +203,11 @@ export function SpellRow({
           <div className="flex flex-wrap items-center gap-2 border-t border-amber-700/10 pt-2 dark:border-amber-500/10">
             {learned ? (
               <>
+                <CastSpellDialog
+                  spell={spell}
+                  character={character}
+                  disabled={!canCast}
+                />
                 <Button
                   type="button"
                   size="sm"

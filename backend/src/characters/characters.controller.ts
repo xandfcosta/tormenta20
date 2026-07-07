@@ -29,6 +29,7 @@ import {
   UpdateVitalsDto,
 } from './dto/character.dto';
 import {
+  CastSpellDto,
   LearnSpellDto,
   SetSpellPreparedDto,
 } from './dto/character-spell.dto';
@@ -284,5 +285,16 @@ export class CharactersController {
       catalogSpellId,
       dto.prepared,
     );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/spells/:catalogSpellId/cast')
+  castSpell(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('catalogSpellId') catalogSpellId: string,
+    @Body() dto: CastSpellDto,
+  ) {
+    return this.spells.castSpell(user.id, id, catalogSpellId, dto.augments ?? []);
   }
 }

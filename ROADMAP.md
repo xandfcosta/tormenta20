@@ -10,19 +10,22 @@ in `git log`.
 
 ## Product features
 
-### Spellbook + spell engine
-- `t20-data/spells.ts` (256 LOC) pins **mechanics only**: PM cost per
-  círculo, save CD formula, execução/alcance/duração/área taxonomy,
-  augment validation. No catalog, no consumer.
-- Char sheet shows Limit PM / CD Magia / Custo PM but has no magias
-  UI (no spellbook tab, no cast action, no prepared list).
-- Catalisadores currently ship as instant-decrement (memory:
-  `spell_engine_deferred`) — waiting on engine + per-school modifier
-  targets.
-- Cap 4 magias catalog residual (~150 spells to encode).
-- Needed pieces: catalog file, spellbook panel under `character-sheet/`,
-  cast mutation with PM debit, augment picker UI, prepared-list gate
-  per class (Mago/Feiticeiro/Bardo/etc.).
+### Spellbook + spell engine — residual
+- SP1 shipped: read-only spellbook panel (browser over 199-entry catalog).
+- SP2 shipped: CharacterSpell join + learn/unlearn/prepare persistence.
+- SP3 shipped: cast engine (PM debit + augment validation +
+  prepared-list gate for Clérigo/Druida).
+- **Still pending**: Arcanista path distinction (Bruxo/Feiticeiro cast
+  free, Mago prepares) — currently all Arcanistas cast free per MVP
+  rule. Blocked on wiring class-choice data through to the cast check.
+- **Still pending**: catalisadores instant-decrement replacement —
+  needs per-school modifier targets to land so the item consumer can
+  apply "reduz custo PM em magias de Evocação" etc. (memory:
+  `spell_engine_deferred`).
+- **Still pending**: item-based `pmLimit` stat gets checked frontend-
+  side but not by the backend cast method (backend uses PDF base
+  ½-level). Widen to compile the derived stat server-side or accept
+  the conservative floor.
 
 ### Bestiário expansion
 - `t20-data/bestiary.ts` currently 20 monsters (549 LOC).
