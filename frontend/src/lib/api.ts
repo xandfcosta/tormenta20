@@ -435,6 +435,18 @@ export const api = {
           body: JSON.stringify({ prepared }),
         },
       ),
+    castSpell: (
+      id: number,
+      catalogSpellId: string,
+      augments: { augmentIndex: number; stacks: number }[] = [],
+    ) =>
+      request<Character>(
+        `/characters/${id}/spells/${encodeURIComponent(catalogSpellId)}/cast`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ augments }),
+        },
+      ),
   },
   campaigns: {
     list: () => request<Campaign[]>('/campaigns'),
