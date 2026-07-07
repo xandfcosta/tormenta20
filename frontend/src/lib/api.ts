@@ -247,6 +247,17 @@ export type CampaignMember = {
 export type AddMemberInput = {
   characterId: number
   role?: CampaignMemberRole
+  inviteToken?: string
+}
+
+export type CampaignInviteToken = {
+  campaignId: number
+  token: string
+}
+
+export type CampaignInvitePreview = {
+  campaignId: number
+  campaignName: string
 }
 
 export type UpdateMemberInput = {
@@ -410,6 +421,16 @@ export const api = {
       }),
     delete: (id: number) =>
       request<{ id: number }>(`/campaigns/${id}`, { method: 'DELETE' }),
+    rotateInvite: (id: number) =>
+      request<CampaignInviteToken>(`/campaigns/${id}/invite`, {
+        method: 'POST',
+      }),
+  },
+  invites: {
+    resolve: (token: string) =>
+      request<CampaignInvitePreview>(
+        `/invites/${encodeURIComponent(token)}`,
+      ),
   },
   sessions: {
     list: (campaignId: number) =>

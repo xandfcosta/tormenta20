@@ -11,6 +11,7 @@ import {
 } from '@/lib/queries'
 import { CampaignHeaderCard } from './campaign-detail/header-card'
 import { DeleteCampaignButton } from './campaign-detail/delete-campaign-button'
+import { InviteButton } from './campaign-detail/invite-button'
 import { MembersCard } from './campaign-detail/members-card'
 import { SessionsCard } from './campaign-detail/sessions-card'
 
@@ -62,7 +63,10 @@ function CampaignDetailPage() {
             ← Voltar
           </Button>
         </Link>
-        <DeleteCampaignButton campaign={campaign.data} />
+        <div className="flex items-center gap-2">
+          <InviteButton campaignId={campaignId} />
+          <DeleteCampaignButton campaign={campaign.data} />
+        </div>
       </div>
 
       <CampaignHeaderCard campaign={campaign.data} />
