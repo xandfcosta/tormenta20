@@ -143,8 +143,11 @@ function PickerBody({
   return (
     <div className="space-y-4">
       <div className="space-y-1">
-        <label className="text-xs font-medium">Campanha</label>
+        <label className="text-xs font-medium" htmlFor="picker-campaign">
+          Campanha
+        </label>
         <Combobox
+          id="picker-campaign"
           options={(campaigns.data ?? []).map((c) => ({
             value: String(c.id),
             label: c.name,
@@ -159,8 +162,11 @@ function PickerBody({
         />
       </div>
       <div className="space-y-1">
-        <label className="text-xs font-medium">Sessão ativa</label>
+        <label className="text-xs font-medium" htmlFor="picker-session">
+          Sessão ativa
+        </label>
         <Combobox
+          id="picker-session"
           options={activeSessions.map((s) => ({
             value: String(s.id),
             label: `Sessão ${s.sessionNumber}${s.title ? ` — ${s.title}` : ''}`,
@@ -209,6 +215,9 @@ function SessionSender({
   const willAdd = Math.min(wanted, remaining)
   const clipped = wanted > remaining
 
+  // `fired` state gates so the batch runs exactly once when the socket
+  // first flips to connected. Extra deps (identities that churn) are
+  // safe because the fired short-circuit guarantees a single execution.
   useEffect(() => {
     if (!rt.isConnected || fired) return
     setFired(true)
@@ -231,7 +240,6 @@ function SessionSender({
       if (count >= remaining) break
     }
     setAdded(count)
-    // Give the WS a beat to persist before we route the GM in.
     const t = setTimeout(() => {
       onDone()
       navigate({
@@ -240,10 +248,17 @@ function SessionSender({
       })
     }, 400)
     return () => clearTimeout(t)
-    // rt.addEntry identity changes each render — we only want to run
-    // once when the socket first flips to connected.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rt.isConnected, fired])
+  }, [
+    rt.isConnected,
+    rt.addEntry,
+    fired,
+    groups,
+    remaining,
+    onDone,
+    navigate,
+    campaignId,
+    sessionId,
+  ])
 
   return (
     <div className="space-y-3 text-sm">
