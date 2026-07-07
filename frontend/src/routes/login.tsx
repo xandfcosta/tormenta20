@@ -4,9 +4,11 @@ import { useForm } from '@tanstack/react-form'
 import { useState } from 'react'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { PageChrome } from '@/components/ui/page-chrome'
+import { SectionHeading } from '@/components/ui/section-heading'
 import { ApiError, api } from '@/lib/api'
 import { applyServerErrors } from '@/lib/form-errors'
 import { meQueryOptions } from '@/lib/queries'
@@ -14,8 +16,8 @@ import { meQueryOptions } from '@/lib/queries'
 const searchSchema = z.object({ redirect: z.string().optional() })
 
 const loginSchema = z.object({
-  email: z.email('Invalid email'),
-  password: z.string().min(1, 'Password is required'),
+  email: z.email('E-mail inválido'),
+  password: z.string().min(1, 'Informe sua senha'),
 })
 
 export const Route = createFileRoute('/login')({
@@ -46,18 +48,22 @@ function LoginPage() {
         if (!applyServerErrors(formApi, e) && e instanceof ApiError) {
           setFormError(e.message)
         } else if (!(e instanceof ApiError)) {
-          setFormError('Unexpected error. Try again.')
+          setFormError('Erro inesperado. Tente novamente.')
         }
       }
     },
   })
 
   return (
-    <div className="mx-auto h-full max-w-sm overflow-y-auto p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Login</CardTitle>
-          <CardDescription>Welcome back, adventurer.</CardDescription>
+    <PageChrome width="compact" className="pt-10 sm:pt-16">
+      <Card className="border-border/60 bg-card/80">
+        <CardHeader className="gap-2">
+          <SectionHeading as="h1" variant="kallyadranoch">
+            Entrar
+          </SectionHeading>
+          <CardDescription>
+            Bem-vindo de volta, aventureiro.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form
@@ -74,7 +80,7 @@ function LoginPage() {
                   const invalid = f.state.meta.isTouched && !f.state.meta.isValid
                   return (
                     <Field data-invalid={invalid}>
-                      <FieldLabel htmlFor={f.name}>Email</FieldLabel>
+                      <FieldLabel htmlFor={f.name}>E-mail</FieldLabel>
                       <Input
                         id={f.name}
                         name={f.name}
@@ -97,7 +103,7 @@ function LoginPage() {
                   const invalid = f.state.meta.isTouched && !f.state.meta.isValid
                   return (
                     <Field data-invalid={invalid}>
-                      <FieldLabel htmlFor={f.name}>Password</FieldLabel>
+                      <FieldLabel htmlFor={f.name}>Senha</FieldLabel>
                       <Input
                         id={f.name}
                         name={f.name}
@@ -122,18 +128,18 @@ function LoginPage() {
               selector={(s) => [s.isSubmitting, s.canSubmit] as const}
               children={([isSubmitting, canSubmit]) => (
                 <Button type="submit" className="w-full" disabled={isSubmitting || !canSubmit}>
-                  {isSubmitting ? 'Signing in…' : 'Sign in'}
+                  {isSubmitting ? 'Entrando…' : 'Entrar'}
                 </Button>
               )}
             />
 
             <p className="text-center text-sm text-muted-foreground">
-              No account?{' '}
-              <Link to="/register" className="underline">Register</Link>
+              Sem conta?{' '}
+              <Link to="/register" className="underline">Criar uma</Link>
             </p>
           </form>
         </CardContent>
       </Card>
-    </div>
+    </PageChrome>
   )
 }
