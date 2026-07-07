@@ -9,6 +9,10 @@ import { Input } from '@/components/ui/input'
 import { NumberInput } from '@/components/ui/number-input'
 import { Combobox } from '@/components/ui/combobox'
 import { Badge } from '@/components/ui/badge'
+import { PageChrome } from '@/components/ui/page-chrome'
+import { SectionHeading } from '@/components/ui/section-heading'
+import { ClassEntryRow } from './character-new/class-entry-row'
+import { NumberField } from './character-new/number-field'
 import {
   Field,
   FieldDescription,
@@ -147,23 +151,38 @@ function NewCharacterPage() {
     },
   })
 
-  if (options.isLoading) return <p className="p-6">Loading options…</p>
-  if (!options.data) return <p className="p-6 text-destructive">Failed to load options</p>
+  if (options.isLoading)
+    return (
+      <PageChrome>
+        <p>Carregando opções…</p>
+      </PageChrome>
+    )
+  if (!options.data)
+    return (
+      <PageChrome>
+        <p className="text-destructive">Falha ao carregar opções</p>
+      </PageChrome>
+    )
   const opts = options.data
 
   return (
-    <form
-      className="mx-auto h-full max-w-3xl space-y-6 overflow-y-auto p-6"
-      onSubmit={(e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        form.handleSubmit()
-      }}
-    >
-      <h1 className="text-3xl font-semibold">New character</h1>
+    <PageChrome>
+      <form
+        className="space-y-6"
+        onSubmit={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          form.handleSubmit()
+        }}
+      >
+      <SectionHeading variant="kallyadranoch" as="h1">
+        Novo personagem
+      </SectionHeading>
 
       <Card>
-        <CardHeader><CardTitle>Identity</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="font-display tracking-wide">Identidade</CardTitle>
+        </CardHeader>
         <CardContent>
           <FieldGroup className="grid gap-4 sm:grid-cols-2 sm:gap-6">
             <form.Field name="name">
@@ -171,7 +190,7 @@ function NewCharacterPage() {
                 const invalid = f.state.meta.isTouched && !f.state.meta.isValid
                 return (
                   <Field data-invalid={invalid} className="sm:col-span-2">
-                    <FieldLabel htmlFor={f.name}>Name</FieldLabel>
+                    <FieldLabel htmlFor={f.name}>Nome</FieldLabel>
                     <Input
                       id={f.name}
                       value={f.state.value}
@@ -191,15 +210,15 @@ function NewCharacterPage() {
                 const invalid = f.state.meta.isTouched && !f.state.meta.isValid
                 return (
                   <Field data-invalid={invalid}>
-                    <FieldLabel htmlFor={f.name}>Origin</FieldLabel>
+                    <FieldLabel htmlFor={f.name}>Origem</FieldLabel>
                     <Combobox
                       id={f.name}
                       options={toOptions(opts.origins)}
                       value={f.state.value}
                       onChange={f.handleChange}
-                      placeholder="Select origin"
-                      searchPlaceholder="Search origins…"
-                      emptyMessage="No origin matches."
+                      placeholder="Selecionar origem"
+                      searchPlaceholder="Buscar origens…"
+                      emptyMessage="Nenhuma origem encontrada."
                     />
                     {invalid && <FieldError errors={f.state.meta.errors} />}
                   </Field>
@@ -212,17 +231,17 @@ function NewCharacterPage() {
                 const invalid = f.state.meta.isTouched && !f.state.meta.isValid
                 return (
                   <Field data-invalid={invalid}>
-                    <FieldLabel htmlFor={f.name}>God (optional)</FieldLabel>
+                    <FieldLabel htmlFor={f.name}>Deus (opcional)</FieldLabel>
                     <Combobox
                       id={f.name}
                       options={toOptions(opts.gods)}
                       value={f.state.value ?? ''}
                       onChange={f.handleChange}
-                      placeholder="None"
-                      searchPlaceholder="Search gods…"
-                      emptyMessage="No god matches."
+                      placeholder="Nenhum"
+                      searchPlaceholder="Buscar deuses…"
+                      emptyMessage="Nenhum deus encontrado."
                       allowClear
-                      clearLabel="None"
+                      clearLabel="Nenhum"
                     />
                     {invalid && <FieldError errors={f.state.meta.errors} />}
                   </Field>
@@ -241,9 +260,9 @@ function NewCharacterPage() {
                       options={toOptions(opts.sizes)}
                       value={f.state.value}
                       onChange={f.handleChange}
-                      placeholder="Select size"
-                      searchPlaceholder="Search sizes…"
-                      emptyMessage="No size matches."
+                      placeholder="Selecionar tamanho"
+                      searchPlaceholder="Buscar tamanhos…"
+                      emptyMessage="Nenhum tamanho encontrado."
                     />
                     <FieldDescription>Padrão: Médio.</FieldDescription>
                     {invalid && <FieldError errors={f.state.meta.errors} />}
@@ -279,7 +298,9 @@ function NewCharacterPage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Races</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="font-display tracking-wide">Raças</CardTitle>
+        </CardHeader>
         <CardContent>
           <form.Field name="races" mode="array">
             {(racesField) => {
@@ -310,7 +331,7 @@ function NewCharacterPage() {
                   {invalid ? (
                     <FieldError errors={racesField.state.meta.errors} />
                   ) : !value.length ? (
-                    <FieldDescription>Select at least one race.</FieldDescription>
+                    <FieldDescription>Selecione ao menos uma raça.</FieldDescription>
                   ) : null}
                 </Field>
               )
@@ -321,7 +342,9 @@ function NewCharacterPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Classes (multi-class supported)</CardTitle>
+          <CardTitle className="font-display tracking-wide">
+            Classes (multiclasse suportada)
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <form.Field name="classes" mode="array">
@@ -352,12 +375,12 @@ function NewCharacterPage() {
                       if (items.length === 0) applyClassAttributePreset(first)
                     }}
                   >
-                    + Add class
+                    + Adicionar classe
                   </Button>
                   {arrayInvalid ? (
                     <FieldError errors={classesField.state.meta.errors} />
                   ) : !items.length ? (
-                    <FieldDescription>Add at least one class.</FieldDescription>
+                    <FieldDescription>Adicione ao menos uma classe.</FieldDescription>
                   ) : null}
                   {items.length > 1 && (
                     <p className="text-xs text-amber-700 dark:text-amber-300">
@@ -383,19 +406,23 @@ function NewCharacterPage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Vitals</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="font-display tracking-wide">Vitalidade</CardTitle>
+        </CardHeader>
         <CardContent>
           <FieldGroup className="grid gap-4 sm:grid-cols-4 sm:gap-6">
-            <NumberField form={form} name="hpMax" label="HP max" min={1} />
-            <NumberField form={form} name="hpCurrent" label="HP current" min={0} />
-            <NumberField form={form} name="mpMax" label="MP max" min={0} />
-            <NumberField form={form} name="mpCurrent" label="MP current" min={0} />
+            <NumberField form={form} name="hpMax" label="PV máx" min={1} />
+            <NumberField form={form} name="hpCurrent" label="PV atual" min={0} />
+            <NumberField form={form} name="mpMax" label="PM máx" min={0} />
+            <NumberField form={form} name="mpCurrent" label="PM atual" min={0} />
           </FieldGroup>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Attributes</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="font-display tracking-wide">Atributos</CardTitle>
+        </CardHeader>
         <CardContent>
           <FieldGroup className="grid gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-6">
             <NumberField form={form} name="strength" label="Força" min={-5} max={10} />
@@ -414,132 +441,19 @@ function NewCharacterPage() {
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={() => navigate({ to: '/characters' })}>
-          Cancel
+          Cancelar
         </Button>
         <form.Subscribe
           selector={(s) => [s.isSubmitting, s.canSubmit] as const}
           children={([isSubmitting, canSubmit]) => (
             <Button type="submit" disabled={isSubmitting || !canSubmit}>
-              {isSubmitting ? 'Creating…' : 'Create character'}
+              {isSubmitting ? 'Criando…' : 'Criar personagem'}
             </Button>
           )}
         />
       </div>
-    </form>
+      </form>
+    </PageChrome>
   )
 }
 
-// TanStack Form's API type is heavily generic — `any` here keeps row
-// helpers usable without leaking 10 type parameters across the file.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type FormApi = any
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type FieldApi = any
-
-function ClassEntryRow({
-  index,
-  classOptions,
-  form,
-  onRemove,
-  onPrimaryClassPicked,
-}: {
-  index: number
-  classOptions: string[]
-  form: FormApi
-  onRemove: () => void
-  onPrimaryClassPicked?: (className: string) => void
-}) {
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-end gap-2">
-        <form.Field name={`classes[${index}].className`}>
-          {(f: FieldApi) => {
-            const invalid = f.state.meta.isTouched && !f.state.meta.isValid
-            return (
-              <Field data-invalid={invalid} className="flex-1">
-                <FieldLabel htmlFor={f.name}>Class</FieldLabel>
-                <Combobox
-                  id={f.name}
-                  options={toOptions(classOptions)}
-                  value={f.state.value}
-                  onChange={(v: string) => {
-                    f.handleChange(v)
-                    if (v && onPrimaryClassPicked) onPrimaryClassPicked(v)
-                  }}
-                  placeholder="Select class"
-                  searchPlaceholder="Search classes…"
-                  emptyMessage="No class matches."
-                />
-                {invalid && <FieldError errors={f.state.meta.errors} />}
-              </Field>
-            )
-          }}
-        </form.Field>
-        <form.Field name={`classes[${index}].level`}>
-          {(f: FieldApi) => {
-            const invalid = f.state.meta.isTouched && !f.state.meta.isValid
-            return (
-              <Field data-invalid={invalid} className="w-24">
-                <FieldLabel htmlFor={f.name}>Level</FieldLabel>
-                <NumberInput
-                  id={f.name}
-                  min={1}
-                  max={20}
-                  value={f.state.value}
-                  onChange={(v) => f.handleChange(v)}
-                  onBlur={f.handleBlur}
-                  aria-invalid={invalid}
-                />
-                {invalid && <FieldError errors={f.state.meta.errors} />}
-              </Field>
-            )
-          }}
-        </form.Field>
-        <Button type="button" variant="outline" size="sm" onClick={onRemove}>
-          Remove
-        </Button>
-      </div>
-    </div>
-  )
-}
-
-type NumericFieldName = {
-  [K in keyof CharacterFormValues]: CharacterFormValues[K] extends number ? K : never
-}[keyof CharacterFormValues]
-
-function NumberField({
-  form,
-  name,
-  label,
-  min,
-  max,
-}: {
-  form: FormApi
-  name: NumericFieldName
-  label: string
-  min?: number
-  max?: number
-}) {
-  return (
-    <form.Field name={name}>
-      {(f: FieldApi) => {
-        const invalid = f.state.meta.isTouched && !f.state.meta.isValid
-        return (
-          <Field data-invalid={invalid}>
-            <FieldLabel htmlFor={f.name}>{label}</FieldLabel>
-            <NumberInput
-              id={f.name}
-              min={min}
-              max={max}
-              value={f.state.value as number}
-              onChange={(v) => f.handleChange(v)}
-              onBlur={f.handleBlur}
-              aria-invalid={invalid}
-            />
-            {invalid && <FieldError errors={f.state.meta.errors} />}
-          </Field>
-        )
-      }}
-    </form.Field>
-  )
-}
