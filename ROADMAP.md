@@ -27,23 +27,14 @@ in `git log`.
   ½-level). Widen to compile the derived stat server-side or accept
   the conservative floor.
 
-### Bestiário expansion — residual
-- Expansion #1 shipped: 20 → 51 monstros (livro p286-298). Cobertura
-  atual: Masmorras (Glop, Rato Gigante, Orcs, Guerreiro de Chifres,
-  Centopeia-Dragão, Aranha Gigante, Gárgula, Mantícora, Golem de Ferro),
-  Ermos (Bandido, Guarda de Cidade, Centauro, Gnoll, Lobo, Cão do
-  Inferno, Serpe, Basilisco, Ogro, Urso-Coruja, Grifo), Puristas
-  (Recruta, Soldado, Sargento-Mor, Capelão, Capitão-Baluarte,
-  Cavaleiro do Leopardo, Colosso Supremo), Reino dos Mortos (Zumbi,
-  Turba Zumbi, Esqueleto, Esqueleto de Elite, Aparição, Necromante,
-  Falange, Vampiro), Dragões (Filhote/Jovem/Adulto/Rei).
-- **Ainda pendentes (livro p299-323)**: Trolls Nobres (Fintroll,
-  Ganchador, Troll das Cavernas), Sszzaazitas (Cascavel, Jiboia, Naja,
-  Nagah Mística/Guardião, Sucuri, Cultista, Lagash), Duyshidakk
-  (Hobgoblin, Arauto de Thwor, Engenho de Guerra, Sombra de Thwor,
-  Devorador de Medos), Dragões idades intermediárias (Adulto Extremo,
-  Venerável), Tormenta (Otyugh, Uktril, Maníaco Lefou, Geraktril,
-  Reishid, Sacerdote de Aharadak, Thuwarokk).
+### Bestiário — coverage completo
+- Expansion #1 (PR #238): 20 → 51 monstros (livro p286-298).
+- Expansion #2: 51 → 80 monstros (livro p300-316). Cobertura Cap 7
+  agora inclui todos os grupos: Masmorras, Ermos, Puristas, Reino dos
+  Mortos, Duyshidakk, Sszzaazitas, Trolls Nobres, Dragões (5 idades +
+  Enxame Kobold + Tirano do Terceiro), Tormenta (lefu completos +
+  Sacerdote de Aharadak + Otyugh).
+- Bestiário considerado feature-complete para o core do livro.
 
 ## Persistence residual
 
