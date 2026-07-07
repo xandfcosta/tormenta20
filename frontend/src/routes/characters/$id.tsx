@@ -50,6 +50,17 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import {
+  accentBadge,
+  accentStrong,
+  accentTitle,
+  dimText,
+  hoverRow,
+  panelBg,
+  sheetBg,
+  subtleText,
+  surface,
+} from '@/lib/sheet-theme'
 import { api } from '@/lib/api'
 import {
   characterCampaignsQueryOptions,
@@ -152,19 +163,6 @@ function CharacterViewPage() {
 
   return <CharacterSheet character={character.data} />
 }
-
-// Theme tokens — default = parchment light, dark: = current dark amber sheet.
-const surface = 'border-2 border-amber-700/40 dark:border-amber-500/40'
-const panelBg = 'bg-amber-50/70 dark:bg-zinc-900/40'
-const sheetBg =
-  'bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 text-zinc-900 dark:from-zinc-900 dark:via-zinc-950 dark:to-black dark:text-zinc-100'
-const hoverRow = 'hover:bg-amber-100/60 dark:hover:bg-zinc-900/60'
-const subtleText = 'text-zinc-600 dark:text-zinc-400'
-const dimText = 'text-zinc-500 dark:text-zinc-500'
-const accentStrong = 'text-amber-800 dark:text-amber-200'
-const accentTitle = 'text-amber-900 dark:text-amber-50'
-const accentBadge =
-  'border-amber-700/50 bg-amber-200/60 text-amber-900 hover:bg-amber-200 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200 dark:hover:bg-amber-500/20'
 
 function CharacterSheet({ character }: { character: Character }) {
   return (
