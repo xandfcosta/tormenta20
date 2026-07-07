@@ -27,11 +27,23 @@ in `git log`.
   ½-level). Widen to compile the derived stat server-side or accept
   the conservative floor.
 
-### Bestiário expansion
-- `t20-data/bestiary.ts` currently 20 monsters (549 LOC).
-- Book has ~150+ criaturas across Cap 8.
-- Structure already handles ataques + habilidades especiais + tipo
-  taxonomy; expansion is pure data entry against existing type shape.
+### Bestiário expansion — residual
+- Expansion #1 shipped: 20 → 51 monstros (livro p286-298). Cobertura
+  atual: Masmorras (Glop, Rato Gigante, Orcs, Guerreiro de Chifres,
+  Centopeia-Dragão, Aranha Gigante, Gárgula, Mantícora, Golem de Ferro),
+  Ermos (Bandido, Guarda de Cidade, Centauro, Gnoll, Lobo, Cão do
+  Inferno, Serpe, Basilisco, Ogro, Urso-Coruja, Grifo), Puristas
+  (Recruta, Soldado, Sargento-Mor, Capelão, Capitão-Baluarte,
+  Cavaleiro do Leopardo, Colosso Supremo), Reino dos Mortos (Zumbi,
+  Turba Zumbi, Esqueleto, Esqueleto de Elite, Aparição, Necromante,
+  Falange, Vampiro), Dragões (Filhote/Jovem/Adulto/Rei).
+- **Ainda pendentes (livro p299-323)**: Trolls Nobres (Fintroll,
+  Ganchador, Troll das Cavernas), Sszzaazitas (Cascavel, Jiboia, Naja,
+  Nagah Mística/Guardião, Sucuri, Cultista, Lagash), Duyshidakk
+  (Hobgoblin, Arauto de Thwor, Engenho de Guerra, Sombra de Thwor,
+  Devorador de Medos), Dragões idades intermediárias (Adulto Extremo,
+  Venerável), Tormenta (Otyugh, Uktril, Maníaco Lefou, Geraktril,
+  Reishid, Sacerdote de Aharadak, Thuwarokk).
 
 ## Persistence residual
 
