@@ -66,10 +66,24 @@ export class CampaignMembersService {
   async add(callerId: number, campaignId: number, dto: AddMemberDto) {
     const campaign = await this.prisma.campaign.findUnique({
       where: { id: campaignId },
-      select: { id: true },
+      select: { id: true, inviteToken: true },
     });
     if (!campaign) {
       throw new NotFoundException(`Campaign ${campaignId} not found`);
+    }
+    // Invite token flow: the token must match the campaign's current
+    // token. Rotating the token invalidates any older link (this is
+    // exactly why rotation exists — a leaked/regretted link goes 404
+    // immediately once the GM rotates).
+    if (dto.inviteToken !== undefined) {
+      if (
+        campaign.inviteToken === null ||
+        campaign.inviteToken !== dto.inviteToken
+      ) {
+        throw new ForbiddenException(
+          `Invite token invalid or expired for campaign ${campaignId}`,
+        );
+      }
     }
     const character = await this.prisma.character.findUnique({
       where: { id: dto.characterId },

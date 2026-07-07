@@ -194,3 +194,82 @@ describe('CampaignsService.remove', () => {
     expect(del).not.toHaveBeenCalled();
   });
 });
+
+describe('CampaignsService.rotateInviteToken', () => {
+  it('generates a token, persists it, and returns {campaignId, token}', async () => {
+    const findUnique = jest.fn().mockResolvedValue(makeCampaign());
+    const update = jest
+      .fn()
+      .mockImplementation(async ({ data }: { data: { inviteToken: string } }) => ({
+        id: 1,
+        inviteToken: data.inviteToken,
+      }));
+    const { service } = await setup({ findUnique, update });
+    const result = await service.rotateInviteToken(1, 1);
+    expect(result.campaignId).toBe(1);
+    expect(typeof result.token).toBe('string');
+    expect(result.token.length).toBeGreaterThan(16);
+    expect(update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: { inviteToken: result.token },
+      select: { id: true, inviteToken: true },
+    });
+  });
+
+  it('rejects when the caller is not the GM', async () => {
+    const findUnique = jest
+      .fn()
+      .mockResolvedValue(makeCampaign({ ownerId: 999 }));
+    const update = jest.fn();
+    const { service } = await setup({ findUnique, update });
+    await expect(service.rotateInviteToken(1, 1)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('each rotation produces a different token', async () => {
+    const findUnique = jest.fn().mockResolvedValue(makeCampaign());
+    const update = jest
+      .fn()
+      .mockImplementation(async ({ data }: { data: { inviteToken: string } }) => ({
+        id: 1,
+        inviteToken: data.inviteToken,
+      }));
+    const { service } = await setup({ findUnique, update });
+    const a = await service.rotateInviteToken(1, 1);
+    const b = await service.rotateInviteToken(1, 1);
+    expect(a.token).not.toBe(b.token);
+  });
+});
+
+describe('CampaignsService.resolveInviteToken', () => {
+  it('returns null for an empty token without hitting the DB', async () => {
+    const findUnique = jest.fn();
+    const { service } = await setup({ findUnique });
+    await expect(service.resolveInviteToken('')).resolves.toBeNull();
+    expect(findUnique).not.toHaveBeenCalled();
+  });
+
+  it('returns {campaignId, campaignName} on match', async () => {
+    const findUnique = jest
+      .fn()
+      .mockResolvedValue({ id: 42, name: 'Vale de Sombras' });
+    const { service } = await setup({ findUnique });
+    await expect(
+      service.resolveInviteToken('abc123token'),
+    ).resolves.toEqual({ campaignId: 42, campaignName: 'Vale de Sombras' });
+    expect(findUnique).toHaveBeenCalledWith({
+      where: { inviteToken: 'abc123token' },
+      select: { id: true, name: true },
+    });
+  });
+
+  it('returns null on unknown/rotated token (no throw)', async () => {
+    const findUnique = jest.fn().mockResolvedValue(null);
+    const { service } = await setup({ findUnique });
+    await expect(
+      service.resolveInviteToken('stale-token'),
+    ).resolves.toBeNull();
+  });
+});

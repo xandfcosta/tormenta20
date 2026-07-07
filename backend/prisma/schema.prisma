@@ -27,6 +27,9 @@ model Campaign {
   owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   name        String
   description String?
+  /// Nullable rotating invite token. Null = invite link disabled.
+  /// Rotating the token invalidates any previously shared link.
+  inviteToken String?  @unique
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   sessions    Session[]
