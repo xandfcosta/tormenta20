@@ -5,31 +5,110 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { SPELL_CATALOG } from '@tormenta20/t20-data';
+import { SPELL_CATALOG, getCatalogItem } from '@tormenta20/t20-data';
+import type { Modifier } from '@tormenta20/t20-data';
 import { PrismaService } from '../prisma/prisma.service';
 import { CharactersService } from './characters.service';
 
 /**
- * MVP prepared-list rule. Real T20 splits caster classes into two
- * families: **preparadas** (Clérigo, Druida, Arcanista/Mago) need to
- * flag which magias they hold for the day; **livres** (Bardo,
- * Arcanista/Bruxo, Arcanista/Feiticeiro, Paladino) cast anything they
- * know without prep. Detecting Arcanista path (Bruxo/Feiticeiro/Mago)
- * needs class-choice data we don't wire yet — deferred. Ship the
- * conservative version: any Clérigo or Druida level on the char
- * forces the prepared flag.
+ * Real T20 splits caster classes into two families:
+ *  - **preparadas** need to flag which magias they hold for the day:
+ *    Clérigo, Druida, Arcanista/Mago.
+ *  - **livres** cast anything they know without prep:
+ *    Bardo, Arcanista/Bruxo, Arcanista/Feiticeiro, Paladino.
+ *
+ * Clérigo/Druida are simple — any level triggers the flag. Arcanista
+ * splits by `classChoices.Arcanista.caminho` (bruxo|feiticeiro|mago);
+ * only the 'mago' path needs prep.
  */
-const PREPARE_REQUIRING_CLASSES = new Set(['Clérigo', 'Druida']);
+const ALWAYS_PREPARE_CLASSES = new Set(['Clérigo', 'Druida']);
+
+function parseClassChoices(raw: string | null | undefined): Record<
+  string,
+  { caminho?: string; devoto?: string }
+> {
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    return typeof parsed === 'object' && parsed !== null ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function requiresPreparation(
+  classes: readonly { className: string }[],
+  classChoicesRaw: string | null | undefined,
+): boolean {
+  for (const c of classes) {
+    if (ALWAYS_PREPARE_CLASSES.has(c.className)) return true;
+  }
+  const choices = parseClassChoices(classChoicesRaw);
+  const arcanista = classes.find((c) => c.className === 'Arcanista');
+  if (arcanista && choices.Arcanista?.caminho === 'mago') return true;
+  return false;
+}
 
 /**
  * PDF p171 — limite de PM por magia = ½ nível do conjurador, mínimo 1.
- * Item-based modifiers (`pmLimit` stat) live in the frontend derived
- * layer; keeping the backend authoritative check to the book base so
- * we can't be over-permissive without shipping the full stat compiler
- * server-side too.
+ * Plus any item-based `pmLimit` modifiers on equipped items (catalog
+ * base mods + improvements + material). Race/origin/class powers can
+ * also target pmLimit in the frontend derived layer, but replicating
+ * that full pipeline server-side would drag a large surface — we
+ * pin the check to items since those flow through the CharacterItem
+ * table and can be validated against the catalog authoritatively.
  */
-function pmLimitBase(characterLevel: number): number {
-  return Math.max(1, Math.floor(characterLevel / 2));
+function pmLimitFromItems(
+  items: readonly {
+    catalogId: string | null;
+    equipped: string | null;
+    improvements: string;
+    material: string | null;
+  }[],
+): number {
+  let total = 0;
+  for (const it of items) {
+    if (it.equipped === null || !it.catalogId) continue;
+    const mods: Modifier[] = [];
+    const base = getCatalogItem(it.catalogId);
+    if (base?.modifiers) mods.push(...base.modifiers);
+    let improvementIds: string[] = [];
+    try {
+      const parsed = JSON.parse(it.improvements ?? '[]');
+      if (Array.isArray(parsed)) {
+        improvementIds = parsed.filter(
+          (v): v is string => typeof v === 'string',
+        );
+      }
+    } catch {
+      // Malformed JSON on the row — skip the improvements; the base
+      // catalog mods still apply.
+    }
+    for (const id of improvementIds) {
+      const imp = getCatalogItem(id);
+      if (imp?.modifiers) mods.push(...imp.modifiers);
+    }
+    if (it.material) {
+      const mat = getCatalogItem(it.material);
+      if (mat?.modifiers) mods.push(...mat.modifiers);
+    }
+    for (const m of mods) {
+      if (m.target.k === 'pmLimit') total += m.amount;
+    }
+  }
+  return total;
+}
+
+function pmLimitFor(
+  level: number,
+  items: readonly {
+    catalogId: string | null;
+    equipped: string | null;
+    improvements: string;
+    material: string | null;
+  }[],
+): number {
+  return Math.max(1, Math.floor(level / 2)) + pmLimitFromItems(items);
 }
 
 /**
@@ -170,8 +249,9 @@ export class CharactersSpellsService {
       );
     }
 
-    const needsPrep = character.classes.some((c) =>
-      PREPARE_REQUIRING_CLASSES.has(c.className),
+    const needsPrep = requiresPreparation(
+      character.classes,
+      character.classChoices,
     );
     if (needsPrep && !learned.prepared) {
       throw new ForbiddenException(
@@ -182,7 +262,7 @@ export class CharactersSpellsService {
     const augmentPm = this.validateAugments(spell, augmentPicks);
     const totalPm = spell.circle === 0 ? 0 : this.baseCircleCost(spell.circle) + augmentPm;
 
-    const limit = pmLimitBase(character.level);
+    const limit = pmLimitFor(character.level, character.items ?? []);
     if (spell.circle > 0 && totalPm > limit) {
       throw new BadRequestException({
         statusCode: 400,

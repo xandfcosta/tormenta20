@@ -11,21 +11,16 @@ in `git log`.
 ## Product features
 
 ### Spellbook + spell engine — residual
-- SP1 shipped: read-only spellbook panel (browser over 199-entry catalog).
-- SP2 shipped: CharacterSpell join + learn/unlearn/prepare persistence.
-- SP3 shipped: cast engine (PM debit + augment validation +
-  prepared-list gate for Clérigo/Druida).
-- **Still pending**: Arcanista path distinction (Bruxo/Feiticeiro cast
-  free, Mago prepares) — currently all Arcanistas cast free per MVP
-  rule. Blocked on wiring class-choice data through to the cast check.
+- SP1/2/3 shipped: catalog browser, persistence, cast engine (PM debit
+  + augment validation + prepared-list gate).
+- SP4 shipped: Arcanista path distinction (Bruxo/Feiticeiro cast free,
+  Mago prepares) + item-based pmLimit compiled into backend cast
+  validation (equipped item catalog + improvements + material mods).
 - **Still pending**: catalisadores instant-decrement replacement —
-  needs per-school modifier targets to land so the item consumer can
-  apply "reduz custo PM em magias de Evocação" etc. (memory:
-  `spell_engine_deferred`).
-- **Still pending**: item-based `pmLimit` stat gets checked frontend-
-  side but not by the backend cast method (backend uses PDF base
-  ½-level). Widen to compile the derived stat server-side or accept
-  the conservative floor.
+  needs per-school pmCost modifier target + ActiveEffect wiring so a
+  drunk Alquimista's Fire can knock 2 PM off the next Evocação cast
+  (memory: `spell_engine_deferred`). Non-trivial: schema + engine +
+  UI to display buff + cast-time consumption.
 
 ### Bestiário — coverage completo
 - Expansion #1 (PR #238): 20 → 51 monstros (livro p286-298).

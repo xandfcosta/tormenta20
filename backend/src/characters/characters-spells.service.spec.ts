@@ -296,4 +296,84 @@ describe('CharactersSpellsService.castSpell', () => {
       service.castSpell(1, 1, 'luz', [{ augmentIndex: 2, stacks: 2 }]),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
+
+  it('Arcanista/Bruxo (livre) does NOT require prepared', async () => {
+    const learned = { id: 10, prepared: false };
+    const characterUpdate = jest.fn().mockResolvedValue({});
+    const charactersFindOne = jest.fn().mockResolvedValue({
+      id: 1,
+      ownerId: 1,
+      level: 6,
+      mpCurrent: 20,
+      classes: [{ className: 'Arcanista', level: 6 }],
+      classChoices: JSON.stringify({ Arcanista: { caminho: 'bruxo' } }),
+    });
+    const findUnique = jest.fn().mockResolvedValue(learned);
+    const { service } = await setup({
+      findUnique,
+      characterUpdate,
+      charactersFindOne,
+    });
+    await service.castSpell(1, 1, 'luz', []);
+    expect(characterUpdate).toHaveBeenCalled();
+  });
+
+  it('Arcanista/Mago requires prepared (403 otherwise)', async () => {
+    const learned = { id: 10, prepared: false };
+    const charactersFindOne = jest.fn().mockResolvedValue({
+      id: 1,
+      ownerId: 1,
+      level: 6,
+      mpCurrent: 20,
+      classes: [{ className: 'Arcanista', level: 6 }],
+      classChoices: JSON.stringify({ Arcanista: { caminho: 'mago' } }),
+    });
+    const findUnique = jest.fn().mockResolvedValue(learned);
+    const { service } = await setup({ findUnique, charactersFindOne });
+    await expect(
+      service.castSpell(1, 1, 'luz', []),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('Arcanista/Mago cast succeeds when prepared=true', async () => {
+    const learned = { id: 10, prepared: true };
+    const characterUpdate = jest.fn().mockResolvedValue({});
+    const charactersFindOne = jest.fn().mockResolvedValue({
+      id: 1,
+      ownerId: 1,
+      level: 6,
+      mpCurrent: 20,
+      classes: [{ className: 'Arcanista', level: 6 }],
+      classChoices: JSON.stringify({ Arcanista: { caminho: 'mago' } }),
+    });
+    const findUnique = jest.fn().mockResolvedValue(learned);
+    const { service } = await setup({
+      findUnique,
+      characterUpdate,
+      charactersFindOne,
+    });
+    await service.castSpell(1, 1, 'luz', []);
+    expect(characterUpdate).toHaveBeenCalled();
+  });
+
+  it('malformed classChoices JSON is treated as no-prep for Arcanista', async () => {
+    const learned = { id: 10, prepared: false };
+    const characterUpdate = jest.fn().mockResolvedValue({});
+    const charactersFindOne = jest.fn().mockResolvedValue({
+      id: 1,
+      ownerId: 1,
+      level: 6,
+      mpCurrent: 20,
+      classes: [{ className: 'Arcanista', level: 6 }],
+      classChoices: '{malformed',
+    });
+    const findUnique = jest.fn().mockResolvedValue(learned);
+    const { service } = await setup({
+      findUnique,
+      characterUpdate,
+      charactersFindOne,
+    });
+    await service.castSpell(1, 1, 'luz', []);
+    expect(characterUpdate).toHaveBeenCalled();
+  });
 });
