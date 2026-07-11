@@ -32,6 +32,11 @@ export function sessionRoom(sessionId: number): string {
 
 type SessionScopedBody = { campaignId: number; sessionId: number };
 
+/** One connected participant in a session room. Multiple browser tabs
+ * of the same user are separate socket entries; the emitted roster
+ * dedupes by `userId`. */
+type PresenceUser = { userId: number; name: string; role: 'gm' | 'player' };
+
 /**
  * Realtime session gateway. Fase C1 wired auth + join/leave. Fase C2
  * adds initiative state management + broadcasts. Every mutating
@@ -45,6 +50,13 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   @WebSocketServer()
   server!: Server;
+
+  /** sessionId → (socketId → presence). Rebuilt from live sockets, so a
+   * server restart starts empty and refills as clients reconnect. */
+  private readonly presence = new Map<number, Map<string, PresenceUser>>();
+  /** socketId → sessions it joined, so a disconnect cleans up every room
+   * without relying on socket.io's post-disconnect room set. */
+  private readonly socketSessions = new Map<string, Set<number>>();
 
   constructor(
     private readonly jwt: JwtService,
@@ -69,6 +81,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   handleDisconnect(socket: Socket) {
     this.logger.log(`socket ${socket.id} disconnected`);
+    const sessions = this.socketSessions.get(socket.id);
+    if (!sessions) return;
+    for (const sessionId of sessions) this.dropPresence(socket.id, sessionId);
+    this.socketSessions.delete(socket.id);
   }
 
   @SubscribeMessage('join-session')
@@ -79,6 +95,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     await this.assertSessionAccess(socket, body);
     const room = sessionRoom(body.sessionId);
     await socket.join(room);
+    this.trackPresence(socket, body.sessionId);
     return { joined: room };
   }
 
@@ -92,6 +109,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
     const room = sessionRoom(body.sessionId);
     await socket.leave(room);
+    this.untrackPresence(socket.id, body.sessionId);
     return { left: room };
   }
 
@@ -344,6 +362,60 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         .to(sessionRoom(sessionId))
         .emit('persistence-warning', { sessionId, dirty });
     });
+  }
+
+  /**
+   * Presence roster. `trackPresence` runs after the socket joins the
+   * room (so the joiner receives its own roster); `untrack`/`drop` run
+   * on leave/disconnect. Every change re-broadcasts the deduped roster
+   * to the room so clients render "who's online" chips.
+   */
+  private trackPresence(socket: AuthedSocket, sessionId: number) {
+    let room = this.presence.get(sessionId);
+    if (!room) {
+      room = new Map();
+      this.presence.set(sessionId, room);
+    }
+    room.set(socket.id, {
+      userId: socket.data.user.id,
+      name: socket.data.user.name ?? socket.data.user.email,
+      role: socket.data.role ?? 'player',
+    });
+    let sessions = this.socketSessions.get(socket.id);
+    if (!sessions) {
+      sessions = new Set();
+      this.socketSessions.set(socket.id, sessions);
+    }
+    sessions.add(sessionId);
+    this.broadcastPresence(sessionId);
+  }
+
+  private untrackPresence(socketId: string, sessionId: number) {
+    this.socketSessions.get(socketId)?.delete(sessionId);
+    this.dropPresence(socketId, sessionId);
+  }
+
+  private dropPresence(socketId: string, sessionId: number) {
+    const room = this.presence.get(sessionId);
+    if (!room || !room.delete(socketId)) return;
+    if (room.size === 0) this.presence.delete(sessionId);
+    this.broadcastPresence(sessionId);
+  }
+
+  /** Emit the room's roster, deduped by userId (multi-tab collapses to
+   * one chip). A user counts as GM if any of their sockets is a GM. */
+  private broadcastPresence(sessionId: number) {
+    const room = this.presence.get(sessionId);
+    const byUser = new Map<number, PresenceUser>();
+    for (const user of room?.values() ?? []) {
+      const existing = byUser.get(user.userId);
+      if (!existing || (existing.role !== 'gm' && user.role === 'gm')) {
+        byUser.set(user.userId, user);
+      }
+    }
+    this.server
+      .to(sessionRoom(sessionId))
+      .emit('presence', { sessionId, users: [...byUser.values()] });
   }
 
   private async assertSessionAccess(

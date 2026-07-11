@@ -626,3 +626,59 @@ describe('RealtimeGateway persistence-warning broadcast', () => {
     expect(state.isDirty(5)).toBe(true);
   });
 });
+
+describe('RealtimeGateway presence', () => {
+  const withUser = (id: string) => {
+    const s = fakeSocket({ id });
+    (s as unknown as { data: { user: unknown } }).data.user = {
+      id: 7,
+      name: 'GM',
+      email: 'gm@x',
+    };
+    return s;
+  };
+
+  it('broadcasts presence with the joiner in the roster', async () => {
+    const { gateway, emit } = await setup();
+    const socket = withUser('sock-a');
+    await gateway.joinSession(
+      socket as unknown as Parameters<typeof gateway.joinSession>[0],
+      { campaignId: 1, sessionId: 5 },
+    );
+    expect(emit).toHaveBeenCalledWith('presence', {
+      sessionId: 5,
+      users: [{ userId: 7, name: 'GM', role: 'gm' }],
+    });
+  });
+
+  it('drops the user from the roster on disconnect', async () => {
+    const { gateway, emit } = await setup();
+    const socket = withUser('sock-a');
+    await gateway.joinSession(
+      socket as unknown as Parameters<typeof gateway.joinSession>[0],
+      { campaignId: 1, sessionId: 5 },
+    );
+    emit.mockClear();
+    gateway.handleDisconnect(
+      socket as unknown as Parameters<typeof gateway.handleDisconnect>[0],
+    );
+    expect(emit).toHaveBeenCalledWith('presence', { sessionId: 5, users: [] });
+  });
+
+  it('dedupes multiple tabs of the same user into one roster entry', async () => {
+    const { gateway, emit } = await setup();
+    await gateway.joinSession(
+      withUser('sock-a') as unknown as Parameters<typeof gateway.joinSession>[0],
+      { campaignId: 1, sessionId: 5 },
+    );
+    await gateway.joinSession(
+      withUser('sock-b') as unknown as Parameters<typeof gateway.joinSession>[0],
+      { campaignId: 1, sessionId: 5 },
+    );
+    const last = emit.mock.calls.filter((c) => c[0] === 'presence').pop();
+    expect(last?.[1]).toEqual({
+      sessionId: 5,
+      users: [{ userId: 7, name: 'GM', role: 'gm' }],
+    });
+  });
+});
