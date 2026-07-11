@@ -42,6 +42,7 @@ async function setup(over?: {
   campaignsFindOne?: jest.Mock;
   campaignsResolveAccess?: jest.Mock;
   campaignFindUnique?: jest.Mock;
+  memberFindFirst?: jest.Mock;
 }) {
   const prisma = {
     campaign: {
@@ -52,6 +53,7 @@ async function setup(over?: {
     campaignMember: {
       findMany: over?.memberFindMany ?? jest.fn(),
       findUnique: over?.memberFindUnique ?? jest.fn(),
+      findFirst: over?.memberFindFirst ?? jest.fn().mockResolvedValue(null),
       create: over?.memberCreate ?? jest.fn(),
       update: over?.memberUpdate ?? jest.fn(),
       delete: over?.memberDelete ?? jest.fn(),
@@ -121,6 +123,37 @@ describe('CampaignMembersService.add', () => {
     expect(memberCreate).toHaveBeenCalledWith({
       data: { campaignId: 1, characterId: 10, role: 'player' },
     });
+  });
+
+  it('rejects a second player character from the same user (one PC per campaign)', async () => {
+    const memberFindUnique = jest.fn().mockResolvedValue(null);
+    // caller already owns a player-role member in this campaign
+    const memberFindFirst = jest.fn().mockResolvedValue({ id: 3 });
+    const memberCreate = jest.fn();
+    const { service } = await setup({
+      memberFindUnique,
+      memberFindFirst,
+      memberCreate,
+    });
+    await expect(
+      service.add(1, 1, { characterId: 10 }),
+    ).rejects.toBeInstanceOf(ConflictException);
+    expect(memberCreate).not.toHaveBeenCalled();
+  });
+
+  it('allows a second character when added as a GM-role NPC', async () => {
+    const memberFindUnique = jest.fn().mockResolvedValue(null);
+    const memberFindFirst = jest.fn().mockResolvedValue({ id: 3 });
+    const memberCreate = jest.fn().mockResolvedValue(makeMember({ role: 'gm' }));
+    const { service } = await setup({
+      memberFindUnique,
+      memberFindFirst,
+      memberCreate,
+    });
+    await service.add(1, 1, { characterId: 10, role: 'gm' });
+    // GM-role exempt from the one-PC rule → findFirst not consulted
+    expect(memberFindFirst).not.toHaveBeenCalled();
+    expect(memberCreate).toHaveBeenCalled();
   });
 
   it('accepts an explicit role', async () => {
