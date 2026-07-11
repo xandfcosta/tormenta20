@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && tsc -b --noEmit",
-    "typecheck": "tsc -b --noEmit",
+    "typecheck": "tsgo -b --noEmit",
+    "typecheck:tsc": "tsc -b --noEmit",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run"
@@ -45,6 +46,7 @@
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^10.2.1",
     "eslint-plugin-react-hooks": "^7.1.1",
