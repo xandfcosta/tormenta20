@@ -74,7 +74,16 @@ export function useSessionSocket(campaignId: number, sessionId: number) {
    * next successful retry. */
   const [hasPersistenceWarning, setHasPersistenceWarning] = useState(false)
   const [present, setPresent] = useState<PresenceUser[]>([])
+  /* Transient banner after a GM rest — auto-clears so it reads as a
+   * notification, not persistent state. */
+  const [restFlash, setRestFlash] = useState<'scene' | 'day' | null>(null)
   const socketRef = useRef<Socket | null>(null)
+
+  useEffect(() => {
+    if (!restFlash) return
+    const t = setTimeout(() => setRestFlash(null), 4000)
+    return () => clearTimeout(t)
+  }, [restFlash])
 
   useEffect(() => {
     const socket = connectSession()
@@ -115,6 +124,9 @@ export function useSessionSocket(campaignId: number, sessionId: number) {
     )
     socket.on('presence', (payload: { users?: PresenceUser[] }) => {
       setPresent(payload?.users ?? [])
+    })
+    socket.on('session-rest', (payload: { scope?: 'scene' | 'day' }) => {
+      if (payload?.scope) setRestFlash(payload.scope)
     })
 
     socket.connect()
@@ -159,6 +171,19 @@ export function useSessionSocket(campaignId: number, sessionId: number) {
       resetInitiative: () => {
         socketRef.current?.emit('initiative-reset', { campaignId, sessionId })
       },
+      populateParty: () => {
+        socketRef.current?.emit('initiative-populate', {
+          campaignId,
+          sessionId,
+        })
+      },
+      rest: (scope: 'scene' | 'day') => {
+        socketRef.current?.emit('session-rest', {
+          campaignId,
+          sessionId,
+          scope,
+        })
+      },
       patchVitals: (
         entryId: string,
         patch: { hpCurrent?: number; mpCurrent?: number },
@@ -191,6 +216,7 @@ export function useSessionSocket(campaignId: number, sessionId: number) {
     error,
     hasPersistenceWarning,
     present,
+    restFlash,
     ...actions,
   }
 }

@@ -30,6 +30,8 @@ async function setup(over?: {
   characterFindUnique?: jest.Mock;
   campaignFindUnique?: jest.Mock;
   campaignMemberFindUnique?: jest.Mock;
+  campaignMemberFindMany?: jest.Mock;
+  activeEffectDeleteMany?: jest.Mock;
 }) {
   const prisma = {
     user: {
@@ -54,6 +56,12 @@ async function setup(over?: {
     },
     campaignMember: {
       findUnique: over?.campaignMemberFindUnique ?? jest.fn(),
+      findMany: over?.campaignMemberFindMany ?? jest.fn().mockResolvedValue([]),
+    },
+    activeEffect: {
+      deleteMany:
+        over?.activeEffectDeleteMany ??
+        jest.fn().mockResolvedValue({ count: 0 }),
     },
   };
   const sessions = {
@@ -680,5 +688,132 @@ describe('RealtimeGateway presence', () => {
       sessionId: 5,
       users: [{ userId: 7, name: 'GM', role: 'gm' }],
     });
+  });
+});
+
+describe('RealtimeGateway.initiativePopulate', () => {
+  const gmSocket = () => {
+    const s = fakeSocket();
+    (s as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    return s as unknown as Parameters<
+      typeof RealtimeGateway.prototype.initiativePopulate
+    >[0];
+  };
+
+  it('adds player characters to the tracker, skipping ones already present', async () => {
+    const { gateway, state } = await setup({
+      campaignMemberFindMany: jest.fn().mockResolvedValue([
+        {
+          character: {
+            id: 10,
+            name: 'Mira',
+            hpCurrent: 20,
+            hpMax: 30,
+            mpCurrent: 5,
+            mpMax: 10,
+          },
+        },
+        {
+          character: {
+            id: 11,
+            name: 'Kael',
+            hpCurrent: 15,
+            hpMax: 25,
+            mpCurrent: 0,
+            mpMax: 8,
+          },
+        },
+      ]),
+    });
+    state.addEntry(5, {
+      label: 'Mira',
+      initiative: 3,
+      type: 'character',
+      characterId: 10,
+    });
+    const result = await gateway.initiativePopulate(gmSocket(), {
+      campaignId: 1,
+      sessionId: 5,
+    });
+    const ids = result.initiative.map((e) => e.characterId);
+    expect(ids).toContain(11);
+    expect(ids.filter((id) => id === 10)).toHaveLength(1);
+  });
+
+  it('rejects a non-GM', async () => {
+    const { gateway } = await setup({
+      sessionsFindOneForCaller: jest
+        .fn()
+        .mockResolvedValue({ session: { id: 5 }, role: 'player' }),
+    });
+    await expect(
+      gateway.initiativePopulate(gmSocket(), { campaignId: 1, sessionId: 5 }),
+    ).rejects.toBeInstanceOf(WsException);
+  });
+});
+
+describe('RealtimeGateway.sessionRest', () => {
+  const gmSocket = () => {
+    const s = fakeSocket();
+    (s as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    return s as unknown as Parameters<
+      typeof RealtimeGateway.prototype.sessionRest
+    >[0];
+  };
+
+  it('clears scene effects for all members + broadcasts (GM)', async () => {
+    const deleteMany = jest.fn().mockResolvedValue({ count: 2 });
+    const { gateway, emit } = await setup({
+      campaignMemberFindMany: jest
+        .fn()
+        .mockResolvedValue([{ characterId: 10 }, { characterId: 11 }]),
+      activeEffectDeleteMany: deleteMany,
+    });
+    const result = await gateway.sessionRest(gmSocket(), {
+      campaignId: 1,
+      sessionId: 5,
+      scope: 'scene',
+    });
+    expect(deleteMany).toHaveBeenCalledWith({
+      where: { characterId: { in: [10, 11] }, scope: { in: ['scene'] } },
+    });
+    expect(result).toEqual({ rested: 'scene', characters: 2 });
+    expect(emit).toHaveBeenCalledWith('session-rest', {
+      sessionId: 5,
+      scope: 'scene',
+    });
+  });
+
+  it('day rest also drops day-scoped effects', async () => {
+    const deleteMany = jest.fn().mockResolvedValue({ count: 0 });
+    const { gateway } = await setup({
+      campaignMemberFindMany: jest
+        .fn()
+        .mockResolvedValue([{ characterId: 10 }]),
+      activeEffectDeleteMany: deleteMany,
+    });
+    await gateway.sessionRest(gmSocket(), {
+      campaignId: 1,
+      sessionId: 5,
+      scope: 'day',
+    });
+    expect(deleteMany).toHaveBeenCalledWith({
+      where: { characterId: { in: [10] }, scope: { in: ['scene', 'day'] } },
+    });
+  });
+
+  it('rejects a non-GM', async () => {
+    const { gateway } = await setup({
+      sessionsFindOneForCaller: jest
+        .fn()
+        .mockResolvedValue({ session: { id: 5 }, role: 'player' }),
+    });
+    await expect(
+      gateway.sessionRest(gmSocket(), {
+        campaignId: 1,
+        sessionId: 5,
+        scope: 'scene',
+      }),
+    ).rejects.toBeInstanceOf(WsException);
   });
 });
