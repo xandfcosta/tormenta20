@@ -26,6 +26,14 @@ export type SessionRuntimeState = {
   turnIndex: number
 }
 
+/** A participant currently connected to the session room. Mirrors the
+ * backend `presence` broadcast (deduped by userId). */
+export type PresenceUser = {
+  userId: number
+  name: string
+  role: 'gm' | 'player'
+}
+
 const EMPTY_STATE: SessionRuntimeState = {
   initiative: [],
   round: 0,
@@ -65,6 +73,7 @@ export function useSessionSocket(campaignId: number, sessionId: number) {
    * render a "unsaved changes" hint. The flag flips back off on the
    * next successful retry. */
   const [hasPersistenceWarning, setHasPersistenceWarning] = useState(false)
+  const [present, setPresent] = useState<PresenceUser[]>([])
   const socketRef = useRef<Socket | null>(null)
 
   useEffect(() => {
@@ -88,7 +97,10 @@ export function useSessionSocket(campaignId: number, sessionId: number) {
         }
       })
     })
-    socket.on('disconnect', () => setIsConnected(false))
+    socket.on('disconnect', () => {
+      setIsConnected(false)
+      setPresent([])
+    })
     socket.on('unauthorized', (payload: { message?: string }) => {
       setError(payload?.message ?? 'Unauthorized')
     })
@@ -101,6 +113,9 @@ export function useSessionSocket(campaignId: number, sessionId: number) {
         setHasPersistenceWarning(Boolean(payload?.dirty))
       },
     )
+    socket.on('presence', (payload: { users?: PresenceUser[] }) => {
+      setPresent(payload?.users ?? [])
+    })
 
     socket.connect()
 
@@ -170,5 +185,12 @@ export function useSessionSocket(campaignId: number, sessionId: number) {
     [campaignId, sessionId],
   )
 
-  return { state, isConnected, error, hasPersistenceWarning, ...actions }
+  return {
+    state,
+    isConnected,
+    error,
+    hasPersistenceWarning,
+    present,
+    ...actions,
+  }
 }
