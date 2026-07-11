@@ -107,7 +107,15 @@ export class CharactersService {
     });
   }
 
-  async findOne(ownerId: number, id: number) {
+  /**
+   * Access guard for a single character — used by every read + mutation
+   * path. Granted to the **owner** or to a **campaign GM** (a user who
+   * owns a campaign the character is a member of). The GM path is what
+   * lets a mestre edit a player's sheet, push loot, or peek stats in the
+   * session drawer; the player still owns the row. There is no
+   * whole-character delete endpoint, so GM reach can't destroy the sheet.
+   */
+  async findOne(userId: number, id: number) {
     const character = await this.prisma.character.findUnique({
       where: { id },
       include: characterInclude,
@@ -115,10 +123,26 @@ export class CharactersService {
     if (!character) {
       throw new NotFoundException(`Character ${id} not found`);
     }
-    if (character.ownerId !== ownerId) {
+    if (
+      character.ownerId !== userId &&
+      !(await this.isCampaignGmForCharacter(userId, id))
+    ) {
       throw new ForbiddenException(`Character ${id} belongs to another user`);
     }
     return this.backfillProficiencies(character);
+  }
+
+  /** True when `userId` owns a campaign this character has joined —
+   * i.e. is the character's GM in at least one table. */
+  private async isCampaignGmForCharacter(
+    userId: number,
+    characterId: number,
+  ): Promise<boolean> {
+    const membership = await this.prisma.campaignMember.findFirst({
+      where: { characterId, campaign: { ownerId: userId } },
+      select: { id: true },
+    });
+    return membership !== null;
   }
 
   /**

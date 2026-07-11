@@ -147,6 +147,13 @@ class FakePrisma {
     className: c.className,
     level: c.level,
   })));
+  /* Phase 2 GM access: findOne falls through to campaignMember.findFirst
+   * when the caller isn't the owner. Defaults to null → non-GM → the
+   * ownership gate still throws Forbidden. Override to a row to grant a
+   * campaign-GM caller access. */
+  campaignMemberFindFirst = jest.fn<Promise<{ id: number } | null>, [unknown]>(
+    async () => null,
+  );
   /* BC3: some tests want to override what character.findUnique returns
    * *inside* the tx (simulating a fresh read that diverges from what
    * the ownership-gate findOne saw). Override this hook per-spec. */
@@ -210,12 +217,18 @@ class FakePrisma {
       delete: typeof this.activeEffectDelete;
       deleteMany: typeof this.activeEffectDeleteMany;
     };
+    campaignMember: {
+      findFirst: typeof this.campaignMemberFindFirst;
+    };
     $transaction: typeof this.transaction;
   } {
     return {
       character: {
         findUnique: this.characterFindUnique,
         update: this.characterUpdate,
+      },
+      campaignMember: {
+        findFirst: this.campaignMemberFindFirst,
       },
       characterItem: {
         findMany: this.characterItemFindMany,
@@ -270,6 +283,30 @@ describe('CharactersService.findOne — ownership guard', () => {
     const service = await makeService(prisma);
     const result = await service.findOne(7, 5);
     expect(result.name).toBe('Mira');
+  });
+
+  it('grants access to the campaign GM of a character they do not own', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ id: 5, ownerId: 7, name: 'Mira' }));
+    // caller 99 owns a campaign the character is a member of → GM access
+    prisma.campaignMemberFindFirst.mockResolvedValue({ id: 1 });
+    const service = await makeService(prisma);
+    const result = await service.findOne(99, 5);
+    expect(result.name).toBe('Mira');
+    expect(prisma.campaignMemberFindFirst).toHaveBeenCalledWith({
+      where: { characterId: 5, campaign: { ownerId: 99 } },
+      select: { id: true },
+    });
+  });
+
+  it('still forbids a non-owner who is not the GM of any of the char campaigns', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ id: 5, ownerId: 7 }));
+    prisma.campaignMemberFindFirst.mockResolvedValue(null);
+    const service = await makeService(prisma);
+    await expect(service.findOne(99, 5)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
   });
 });
 
@@ -567,6 +604,22 @@ describe('CharactersService.addItem — equip caps (4 vested / 2 hands)', () => 
     });
     expect(prisma.transaction).toHaveBeenCalled();
     expect(prisma.characterItemFindMany).toHaveBeenCalled();
+    expect(prisma.characterItemCreate).toHaveBeenCalled();
+  });
+
+  it('lets a campaign GM push loot to a member character they do not own', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ id: 5, ownerId: 7 }));
+    prisma.characterItemFindMany.mockResolvedValue([]);
+    // caller 99 is GM of a campaign the char joined → findOne grants access
+    prisma.campaignMemberFindFirst.mockResolvedValue({ id: 1 });
+    const service = await makeService(prisma);
+    const result = await service.addItem(99, 5, {
+      name: 'Poção de cura',
+      quantity: 2,
+      slots: 0.5,
+    });
+    expect(result).toMatchObject({ name: 'Poção de cura', quantity: 2 });
     expect(prisma.characterItemCreate).toHaveBeenCalled();
   });
 });
