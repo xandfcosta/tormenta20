@@ -37,6 +37,16 @@ type SessionScopedBody = { campaignId: number; sessionId: number };
  * dedupes by `userId`. */
 type PresenceUser = { userId: number; name: string; role: 'gm' | 'player' };
 
+/** T20 night's-rest recovery (livro básico p.20): a full rest restores
+ * PV and PM equal to `level × condition multiplier`, floored. */
+type RestCondition = 'ruim' | 'normal' | 'confortavel' | 'luxuosa';
+const REST_MULTIPLIER: Record<RestCondition, number> = {
+  ruim: 0.5,
+  normal: 1,
+  confortavel: 2,
+  luxuosa: 3,
+};
+
 /**
  * Realtime session gateway. Fase C1 wired auth + join/leave. Fase C2
  * adds initiative state management + broadcasts. Every mutating
@@ -358,14 +368,30 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   @SubscribeMessage('session-rest')
   async sessionRest(
     @ConnectedSocket() socket: AuthedSocket,
-    @MessageBody() body: SessionScopedBody & { scope: 'scene' | 'day' },
+    @MessageBody()
+    body: SessionScopedBody & {
+      scope: 'scene' | 'day';
+      condition?: RestCondition;
+    },
   ) {
     await this.assertSessionAccess(socket, body);
     this.assertGm(socket);
     const scopes = body.scope === 'day' ? ['scene', 'day'] : ['scene'];
     const members = await this.prisma.campaignMember.findMany({
       where: { campaignId: body.campaignId },
-      select: { characterId: true },
+      select: {
+        characterId: true,
+        character: {
+          select: {
+            id: true,
+            level: true,
+            hpCurrent: true,
+            hpMax: true,
+            mpCurrent: true,
+            mpMax: true,
+          },
+        },
+      },
     });
     await this.prisma.activeEffect.deleteMany({
       where: {
@@ -373,10 +399,45 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         scope: { in: scopes },
       },
     });
-    this.server
-      .to(sessionRoom(body.sessionId))
-      .emit('session-rest', { sessionId: body.sessionId, scope: body.scope });
-    return { rested: body.scope, characters: members.length };
+
+    // Only a day (night's) rest restores vitals; a scene rest just
+    // expires scene effects. PV/PM heal by floor(level × condition mult),
+    // clamped to max, written to the Character row and mirrored onto the
+    // live tracker entry so bars update in real time.
+    let healed = 0;
+    if (body.scope === 'day') {
+      const mult = REST_MULTIPLIER[body.condition ?? 'normal'];
+      for (const { character: c } of members) {
+        const gain = Math.floor(c.level * mult);
+        if (gain <= 0) continue;
+        const hpCurrent = Math.min(c.hpMax, c.hpCurrent + gain);
+        const mpCurrent = Math.min(c.mpMax, c.mpCurrent + gain);
+        await this.prisma.character.update({
+          where: { id: c.id },
+          data: { hpCurrent, mpCurrent },
+        });
+        const entry = this.state
+          .getState(body.sessionId)
+          .initiative.find((e) => e.characterId === c.id);
+        if (entry) {
+          this.state.patchVitals(body.sessionId, entry.id, {
+            hpCurrent,
+            mpCurrent,
+          });
+        }
+        healed++;
+      }
+      if (healed > 0) {
+        this.emitSessionState(body.sessionId, this.state.getState(body.sessionId));
+      }
+    }
+
+    this.server.to(sessionRoom(body.sessionId)).emit('session-rest', {
+      sessionId: body.sessionId,
+      scope: body.scope,
+      condition: body.condition,
+    });
+    return { rested: body.scope, characters: members.length, healed };
   }
 
   @SubscribeMessage('vitals-patch')
