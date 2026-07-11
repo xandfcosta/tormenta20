@@ -177,11 +177,15 @@ export function useSessionSocket(campaignId: number, sessionId: number) {
           sessionId,
         })
       },
-      rest: (scope: 'scene' | 'day') => {
+      rest: (
+        scope: 'scene' | 'day',
+        condition?: 'ruim' | 'normal' | 'confortavel' | 'luxuosa',
+      ) => {
         socketRef.current?.emit('session-rest', {
           campaignId,
           sessionId,
           scope,
+          condition,
         })
       },
       patchVitals: (

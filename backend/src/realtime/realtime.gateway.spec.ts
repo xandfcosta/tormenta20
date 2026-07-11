@@ -32,6 +32,7 @@ async function setup(over?: {
   campaignMemberFindUnique?: jest.Mock;
   campaignMemberFindMany?: jest.Mock;
   activeEffectDeleteMany?: jest.Mock;
+  characterUpdate?: jest.Mock;
 }) {
   const prisma = {
     user: {
@@ -50,6 +51,7 @@ async function setup(over?: {
     /* P2: initiative-add with characterId hits these three tables. */
     character: {
       findUnique: over?.characterFindUnique ?? jest.fn(),
+      update: over?.characterUpdate ?? jest.fn().mockResolvedValue({}),
     },
     campaign: {
       findUnique: over?.campaignFindUnique ?? jest.fn(),
@@ -777,19 +779,40 @@ describe('RealtimeGateway.sessionRest', () => {
     expect(deleteMany).toHaveBeenCalledWith({
       where: { characterId: { in: [10, 11] }, scope: { in: ['scene'] } },
     });
-    expect(result).toEqual({ rested: 'scene', characters: 2 });
+    expect(result).toEqual({ rested: 'scene', characters: 2, healed: 0 });
     expect(emit).toHaveBeenCalledWith('session-rest', {
       sessionId: 5,
       scope: 'scene',
+      condition: undefined,
     });
+  });
+
+  const memberWithChar = (
+    over?: Partial<{
+      id: number;
+      level: number;
+      hpCurrent: number;
+      hpMax: number;
+      mpCurrent: number;
+      mpMax: number;
+    }>,
+  ) => ({
+    characterId: over?.id ?? 10,
+    character: {
+      id: 10,
+      level: 4,
+      hpCurrent: 10,
+      hpMax: 30,
+      mpCurrent: 2,
+      mpMax: 12,
+      ...over,
+    },
   });
 
   it('day rest also drops day-scoped effects', async () => {
     const deleteMany = jest.fn().mockResolvedValue({ count: 0 });
     const { gateway } = await setup({
-      campaignMemberFindMany: jest
-        .fn()
-        .mockResolvedValue([{ characterId: 10 }]),
+      campaignMemberFindMany: jest.fn().mockResolvedValue([memberWithChar()]),
       activeEffectDeleteMany: deleteMany,
     });
     await gateway.sessionRest(gmSocket(), {
@@ -800,6 +823,41 @@ describe('RealtimeGateway.sessionRest', () => {
     expect(deleteMany).toHaveBeenCalledWith({
       where: { characterId: { in: [10] }, scope: { in: ['scene', 'day'] } },
     });
+  });
+
+  it('day rest heals PV/PM by floor(level × condition mult), clamped to max', async () => {
+    const characterUpdate = jest.fn().mockResolvedValue({});
+    const { gateway } = await setup({
+      // level 4, confortavel (×2) → gain 8. hp 10→18 (max 30); mp 2→10 (max 12).
+      campaignMemberFindMany: jest.fn().mockResolvedValue([memberWithChar()]),
+      characterUpdate,
+    });
+    const result = await gateway.sessionRest(gmSocket(), {
+      campaignId: 1,
+      sessionId: 5,
+      scope: 'day',
+      condition: 'confortavel',
+    });
+    expect(characterUpdate).toHaveBeenCalledWith({
+      where: { id: 10 },
+      data: { hpCurrent: 18, mpCurrent: 10 },
+    });
+    expect(result).toMatchObject({ rested: 'day', healed: 1 });
+  });
+
+  it('scene rest does not heal (no character.update)', async () => {
+    const characterUpdate = jest.fn();
+    const { gateway } = await setup({
+      campaignMemberFindMany: jest.fn().mockResolvedValue([memberWithChar()]),
+      characterUpdate,
+    });
+    const result = await gateway.sessionRest(gmSocket(), {
+      campaignId: 1,
+      sessionId: 5,
+      scope: 'scene',
+    });
+    expect(characterUpdate).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ healed: 0 });
   });
 
   it('rejects a non-GM', async () => {

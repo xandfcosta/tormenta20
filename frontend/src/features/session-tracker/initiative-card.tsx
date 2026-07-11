@@ -12,6 +12,13 @@ import { HpBar } from '@/shared/ui/hp-bar'
 import { Input } from '@/shared/ui/input'
 import { MpBar } from '@/shared/ui/mp-bar'
 import { NumberInput } from '@/shared/ui/number-input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 import { SectionHeading } from '@/shared/ui/section-heading'
 import { useSessionSocket, type InitiativeEntry } from '@/shared/realtime/realtime'
 import { PresenceChips } from './presence-chips'
@@ -47,6 +54,9 @@ export function InitiativeCard({
   const [addInit, setAddInit] = useState(10)
   const [addType, setAddType] = useState<'character' | 'npc'>('npc')
   const [sheetCharId, setSheetCharId] = useState<number | null>(null)
+  const [restCond, setRestCond] = useState<
+    'ruim' | 'normal' | 'confortavel' | 'luxuosa'
+  >('normal')
 
   const submitAdd = () => {
     const label = addLabel.trim()
@@ -79,8 +89,11 @@ export function InitiativeCard({
   // GM rest broadcast → toast for everyone in the room.
   useEffect(() => {
     if (rt.restFlash) {
-      toast(`Descanso de ${rt.restFlash === 'day' ? 'dia' : 'cena'}`, {
-        description: 'Efeitos temporários foram limpos.',
+      const day = rt.restFlash === 'day'
+      toast(`Descanso de ${day ? 'dia' : 'cena'}`, {
+        description: day
+          ? 'PV/PM recuperados e efeitos temporários limpos.'
+          : 'Efeitos temporários de cena foram limpos.',
       })
     }
   }, [rt.restFlash])
@@ -141,14 +154,30 @@ export function InitiativeCard({
             >
               Descanso de cena
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => rt.rest('day')}
-              disabled={!rt.isConnected}
-            >
-              Descanso de dia
-            </Button>
+            <div className="flex items-center gap-1">
+              <Select
+                value={restCond}
+                onValueChange={(v) => setRestCond(v as typeof restCond)}
+              >
+                <SelectTrigger size="sm" className="w-[130px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ruim">Ruim (½ nível)</SelectItem>
+                  <SelectItem value="normal">Normal (nível)</SelectItem>
+                  <SelectItem value="confortavel">Confortável (2×)</SelectItem>
+                  <SelectItem value="luxuosa">Luxuosa (3×)</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => rt.rest('day', restCond)}
+                disabled={!rt.isConnected}
+              >
+                Descanso de dia
+              </Button>
+            </div>
           </div>
         )}
 
