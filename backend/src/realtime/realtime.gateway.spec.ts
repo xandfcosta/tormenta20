@@ -470,9 +470,102 @@ describe('RealtimeGateway.vitalsDelta', () => {
     );
     expect(result.initiative[0]?.mpCurrent).toBe(9);
   });
+
+  it('lets a player edit their own character vitals', async () => {
+    const { gateway, state } = await setup({
+      sessionsFindOneForCaller: jest
+        .fn()
+        .mockResolvedValue({ session: { id: 5 }, role: 'player' }),
+      characterFindUnique: jest.fn().mockResolvedValue({ ownerId: 7 }),
+    });
+    const s = state.addEntry(5, {
+      label: 'PC',
+      initiative: 15,
+      type: 'character',
+      characterId: 10,
+      hpCurrent: 20,
+      hpMax: 30,
+    });
+    const socket = fakeSocket();
+    (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    const result = await gateway.vitalsDelta(
+      socket as unknown as Parameters<typeof gateway.vitalsDelta>[0],
+      { campaignId: 1, sessionId: 5, entryId: s.initiative[0]!.id, hpDelta: -5 },
+    );
+    expect(result.initiative[0]?.hpCurrent).toBe(15);
+  });
+
+  it('blocks a player from editing a combatant they do not own', async () => {
+    const { gateway, state } = await setup({
+      sessionsFindOneForCaller: jest
+        .fn()
+        .mockResolvedValue({ session: { id: 5 }, role: 'player' }),
+      characterFindUnique: jest.fn().mockResolvedValue({ ownerId: 999 }),
+    });
+    const s = state.addEntry(5, {
+      label: 'Ally',
+      initiative: 12,
+      type: 'character',
+      characterId: 11,
+      hpCurrent: 10,
+      hpMax: 20,
+    });
+    const socket = fakeSocket();
+    (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    await expect(
+      gateway.vitalsDelta(
+        socket as unknown as Parameters<typeof gateway.vitalsDelta>[0],
+        {
+          campaignId: 1,
+          sessionId: 5,
+          entryId: s.initiative[0]!.id,
+          hpDelta: -5,
+        },
+      ),
+    ).rejects.toBeInstanceOf(WsException);
+  });
+
+  it('blocks a player from editing NPC vitals (GM-only)', async () => {
+    const { gateway, state } = await setup({
+      sessionsFindOneForCaller: jest
+        .fn()
+        .mockResolvedValue({ session: { id: 5 }, role: 'player' }),
+    });
+    const s = state.addEntry(5, { label: 'Goblin', initiative: 9, type: 'npc' });
+    const socket = fakeSocket();
+    (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    await expect(
+      gateway.vitalsDelta(
+        socket as unknown as Parameters<typeof gateway.vitalsDelta>[0],
+        {
+          campaignId: 1,
+          sessionId: 5,
+          entryId: s.initiative[0]!.id,
+          hpDelta: -5,
+        },
+      ),
+    ).rejects.toBeInstanceOf(WsException);
+  });
 });
 
 describe('RealtimeGateway.initiativeNextTurn + reset', () => {
+  it('rejects initiative-next-turn from a player (GM-only)', async () => {
+    const { gateway, state } = await setup({
+      sessionsFindOneForCaller: jest
+        .fn()
+        .mockResolvedValue({ session: { id: 5 }, role: 'player' }),
+    });
+    state.addEntry(5, { label: 'A', initiative: 20, type: 'npc' });
+    const socket = fakeSocket();
+    (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    await expect(
+      gateway.initiativeNextTurn(
+        socket as unknown as Parameters<typeof gateway.initiativeNextTurn>[0],
+        { campaignId: 1, sessionId: 5 },
+      ),
+    ).rejects.toBeInstanceOf(WsException);
+  });
+
   it('advances turn and broadcasts', async () => {
     const { gateway, state, to } = await setup();
     state.addEntry(5, { label: 'A', initiative: 20, type: 'npc' });

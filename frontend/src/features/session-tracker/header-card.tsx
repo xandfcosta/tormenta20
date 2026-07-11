@@ -21,9 +21,11 @@ import { campaignSessionQueryOptions, campaignSessionsQueryOptions } from '@/ent
 export function HeaderCard({
   campaignId,
   session,
+  isGm,
 }: {
   campaignId: number
   session: Session
+  isGm: boolean
 }) {
   const qc = useQueryClient()
   const [editing, setEditing] = useState(false)
@@ -112,7 +114,7 @@ export function HeaderCard({
         </div>
         <div className="flex flex-col items-end gap-2">
           <StatusBadge status={session.status} />
-          {!editing && (
+          {isGm && !editing && (
             <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
               Editar
             </Button>
@@ -144,7 +146,7 @@ export function HeaderCard({
             </div>
           </>
         )}
-        {!editing && (
+        {isGm && !editing && (
           <div className="flex gap-2">
             {session.status === 'planned' && (
               <Button

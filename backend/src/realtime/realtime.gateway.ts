@@ -117,6 +117,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     },
   ) {
     await this.assertSessionAccess(socket, body);
+    this.assertGm(socket);
     if (!body.entry) throw new WsException('entry is required');
     const entry = await this.materializeEntry(
       socket.data.user.id,
@@ -228,6 +229,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     body: SessionScopedBody & { entryId: string; patch: UpdateEntryInput },
   ) {
     await this.assertSessionAccess(socket, body);
+    this.assertGm(socket);
     if (!body.entryId) throw new WsException('entryId is required');
     const state = this.state.updateEntry(
       body.sessionId,
@@ -244,6 +246,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     @MessageBody() body: SessionScopedBody & { entryId: string },
   ) {
     await this.assertSessionAccess(socket, body);
+    this.assertGm(socket);
     if (!body.entryId) throw new WsException('entryId is required');
     const state = this.state.removeEntry(body.sessionId, body.entryId);
     this.emitSessionState(body.sessionId, state);
@@ -256,6 +259,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     @MessageBody() body: SessionScopedBody,
   ) {
     await this.assertSessionAccess(socket, body);
+    this.assertGm(socket);
     const state = this.state.nextTurn(body.sessionId);
     this.emitSessionState(body.sessionId, state);
     return state;
@@ -267,6 +271,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     @MessageBody() body: SessionScopedBody,
   ) {
     await this.assertSessionAccess(socket, body);
+    this.assertGm(socket);
     const state = this.state.resetInitiative(body.sessionId);
     this.emitSessionState(body.sessionId, state);
     return state;
@@ -283,6 +288,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   ) {
     await this.assertSessionAccess(socket, body);
     if (!body.entryId) throw new WsException('entryId is required');
+    await this.assertVitalsEditable(socket, body.sessionId, body.entryId);
     const state = this.state.patchVitals(
       body.sessionId,
       body.entryId,
@@ -304,6 +310,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   ) {
     await this.assertSessionAccess(socket, body);
     if (!body.entryId) throw new WsException('entryId is required');
+    await this.assertVitalsEditable(socket, body.sessionId, body.entryId);
     const state = this.state.deltaVitals(body.sessionId, body.entryId, {
       hpDelta: body.hpDelta,
       mpDelta: body.mpDelta,
@@ -363,6 +370,46 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       socket.data.role = role;
     } catch (err) {
       throw new WsException((err as Error).message);
+    }
+  }
+
+  /**
+   * GM-only gate for initiative control (add / update / remove / next
+   * turn / reset). Relies on `socket.data.role` stashed by the
+   * preceding `assertSessionAccess`. Players observe the tracker but
+   * cannot drive combat flow — that's the GM's job.
+   */
+  private assertGm(socket: AuthedSocket) {
+    if (socket.data.role !== 'gm') {
+      throw new WsException('Only the campaign GM can control initiative');
+    }
+  }
+
+  /**
+   * Vitals mutations: the GM edits any combatant; a player may edit only
+   * their own character's HP/PM. NPC entries (no `characterId`) are
+   * GM-only. The realtime entry carries `characterId`; we resolve the
+   * Character's owner to authorize.
+   */
+  private async assertVitalsEditable(
+    socket: AuthedSocket,
+    sessionId: number,
+    entryId: string,
+  ) {
+    if (socket.data.role === 'gm') return;
+    const entry = this.state
+      .getState(sessionId)
+      .initiative.find((e) => e.id === entryId);
+    if (!entry) throw new WsException(`Entry ${entryId} not found`);
+    if (entry.characterId === undefined) {
+      throw new WsException('Only the GM can edit NPC vitals');
+    }
+    const character = await this.prisma.character.findUnique({
+      where: { id: entry.characterId },
+      select: { ownerId: true },
+    });
+    if (!character || character.ownerId !== socket.data.user.id) {
+      throw new WsException("You can only edit your own character's vitals");
     }
   }
 }

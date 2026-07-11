@@ -30,9 +30,13 @@ function deriveConnectionStatus(
 export function InitiativeCard({
   campaignId,
   sessionId,
+  isGm,
+  myCharacterIds,
 }: {
   campaignId: number
   sessionId: number
+  isGm: boolean
+  myCharacterIds: Set<number>
 }) {
   const rt = useSessionSocket(campaignId, sessionId)
   const status = deriveConnectionStatus(rt.isConnected, rt.error)
@@ -62,19 +66,21 @@ export function InitiativeCard({
             </span>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button size="sm" onClick={rt.nextTurn} disabled={!rt.isConnected}>
-            Próximo turno
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={rt.resetInitiative}
-            disabled={!rt.isConnected}
-          >
-            Reset
-          </Button>
-        </div>
+        {isGm && (
+          <div className="flex gap-2">
+            <Button size="sm" onClick={rt.nextTurn} disabled={!rt.isConnected}>
+              Próximo turno
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={rt.resetInitiative}
+              disabled={!rt.isConnected}
+            >
+              Reset
+            </Button>
+          </div>
+        )}
       </CardHeader>
       <CardContent className="space-y-3">
         {rt.error && (
@@ -85,7 +91,9 @@ export function InitiativeCard({
 
         {rt.state.initiative.length === 0 && (
           <p className="text-sm text-muted-foreground">
-            Sem combatentes ainda. Adicione abaixo.
+            {isGm
+              ? 'Sem combatentes ainda. Adicione abaixo.'
+              : 'Aguardando o mestre montar a iniciativa.'}
           </p>
         )}
 
@@ -95,6 +103,12 @@ export function InitiativeCard({
               key={entry.id}
               entry={entry}
               onTurn={idx === rt.state.turnIndex}
+              canEditVitals={
+                isGm ||
+                (entry.characterId !== undefined &&
+                  myCharacterIds.has(entry.characterId))
+              }
+              canRemove={isGm}
               onDeltaHp={(delta) =>
                 rt.deltaVitals(entry.id, { hpDelta: delta })
               }
@@ -103,6 +117,7 @@ export function InitiativeCard({
           ))}
         </div>
 
+        {isGm && (
         <div className="mt-3 flex flex-wrap items-end gap-2 rounded-md border border-dashed p-3">
           <div className="min-w-[160px] flex-1">
             <label className="text-xs font-medium" htmlFor="add-label">
@@ -150,6 +165,7 @@ export function InitiativeCard({
             <Plus className="mr-1 size-4" /> Adicionar
           </Button>
         </div>
+        )}
       </CardContent>
     </Card>
   )
@@ -158,11 +174,15 @@ export function InitiativeCard({
 function InitiativeRow({
   entry,
   onTurn,
+  canEditVitals,
+  canRemove,
   onDeltaHp,
   onRemove,
 }: {
   entry: InitiativeEntry
   onTurn: boolean
+  canEditVitals: boolean
+  canRemove: boolean
   onDeltaHp: (delta: number) => void
   onRemove: () => void
 }) {
@@ -221,29 +241,34 @@ function InitiativeRow({
         </div>
       )}
 
-      <div className="flex items-center justify-end gap-1">
-        {[-5, -1, 1, 5].map((delta) => (
-          <Button
-            key={delta}
-            size="sm"
-            variant="outline"
-            onClick={() => onDeltaHp(delta)}
-            className="h-9 min-w-9 font-hud tabular-nums sm:h-8 sm:min-w-8"
-            aria-label={`Ajustar PV em ${delta}`}
-          >
-            {delta > 0 ? `+${delta}` : delta}
-          </Button>
-        ))}
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={onRemove}
-          className="h-9 w-9 sm:h-8 sm:w-8"
-          aria-label={`Remover ${entry.label}`}
-        >
-          <Trash2 className="size-4" />
-        </Button>
-      </div>
+      {(canEditVitals || canRemove) && (
+        <div className="flex items-center justify-end gap-1">
+          {canEditVitals &&
+            [-5, -1, 1, 5].map((delta) => (
+              <Button
+                key={delta}
+                size="sm"
+                variant="outline"
+                onClick={() => onDeltaHp(delta)}
+                className="h-9 min-w-9 font-hud tabular-nums sm:h-8 sm:min-w-8"
+                aria-label={`Ajustar PV em ${delta}`}
+              >
+                {delta > 0 ? `+${delta}` : delta}
+              </Button>
+            ))}
+          {canRemove && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={onRemove}
+              className="h-9 w-9 sm:h-8 sm:w-8"
+              aria-label={`Remover ${entry.label}`}
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   )
 }
