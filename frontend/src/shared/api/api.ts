@@ -197,6 +197,10 @@ export type Campaign = {
   description: string | null
   createdAt: string
   updatedAt: string
+  /** Caller's role in this campaign — server resolves owner=gm vs
+   * member=player on GET /campaigns and GET /campaigns/:id. Optional
+   * because older cached payloads may predate it. */
+  role?: CampaignMemberRole
 }
 
 export type CreateCampaignInput = {

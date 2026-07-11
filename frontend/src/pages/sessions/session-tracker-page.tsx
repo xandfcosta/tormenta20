@@ -1,10 +1,13 @@
 import { getRouteApi } from '@tanstack/react-router'
 import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import { Button } from '@/shared/ui/button'
 import { PageChrome } from '@/shared/ui/page-chrome'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { campaignSessionQueryOptions } from '@/entities/session/queries'
+import { campaignQueryOptions } from '@/entities/campaign/queries'
+import { charactersQueryOptions } from '@/entities/character/queries'
 import { DeleteSessionButton } from '@/features/session-tracker/delete-session-button'
 import { HeaderCard } from '@/features/session-tracker/header-card'
 import { InitiativeCard } from '@/features/session-tracker/initiative-card'
@@ -18,6 +21,17 @@ export function SessionDetailPage() {
   const sessionId = Number(sid)
   const session = useQuery(
     campaignSessionQueryOptions(campaignId, sessionId),
+  )
+  // Role drives which controls render. Until the campaign payload
+  // loads, isGm stays false so GM-only controls never flash for a
+  // player. `myCharacterIds` scopes in-session vitals editing to the
+  // player's own combatants (the server enforces the same rule).
+  const campaign = useQuery(campaignQueryOptions(campaignId))
+  const characters = useQuery(charactersQueryOptions)
+  const isGm = campaign.data?.role === 'gm'
+  const myCharacterIds = useMemo(
+    () => new Set((characters.data ?? []).map((c) => c.id)),
+    [characters.data],
   )
 
   if (session.isLoading)
@@ -46,16 +60,27 @@ export function SessionDetailPage() {
             ← Voltar para a campanha
           </Button>
         </Link>
-        <DeleteSessionButton
-          campaignId={campaignId}
-          sessionId={sessionId}
-          sessionNumber={session.data.sessionNumber}
-        />
+        {isGm && (
+          <DeleteSessionButton
+            campaignId={campaignId}
+            sessionId={sessionId}
+            sessionNumber={session.data.sessionNumber}
+          />
+        )}
       </div>
 
-      <HeaderCard campaignId={campaignId} session={session.data} />
-      <InitiativeCard campaignId={campaignId} sessionId={sessionId} />
-      <NotesCard campaignId={campaignId} session={session.data} />
+      <HeaderCard
+        campaignId={campaignId}
+        session={session.data}
+        isGm={isGm}
+      />
+      <InitiativeCard
+        campaignId={campaignId}
+        sessionId={sessionId}
+        isGm={isGm}
+        myCharacterIds={myCharacterIds}
+      />
+      {isGm && <NotesCard campaignId={campaignId} session={session.data} />}
     </PageChrome>
   )
 }
