@@ -1,6 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { meQueryOptions } from '@/lib/queries'
-
+import { meQueryOptions } from '@/entities/user/queries'
 /**
  * Public invite landing. `join/<token>` is the shareable URL the GM
  * copies from the InviteButton. Two cases:

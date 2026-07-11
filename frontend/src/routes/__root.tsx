@@ -3,12 +3,12 @@ import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
-import { AppShell } from '@/components/shell/app-shell'
-import { TooltipProvider } from '@/components/ui/tooltip'
-import { useUiStore } from '@/store/ui-store'
-import { useAuthStore } from '@/store/auth-store'
-import { meQueryOptions } from '@/lib/queries'
-import { api } from '@/lib/api'
+import { AppShell } from '@/shared/layout/app-shell'
+import { TooltipProvider } from '@/shared/ui/tooltip'
+import { useUiStore } from '@/shared/stores/ui-store'
+import { useAuthStore } from '@/shared/stores/auth-store'
+import { meQueryOptions } from '@/entities/user/queries'
+import { api } from '@/shared/api/api'
 
 type RouterContext = { queryClient: QueryClient }
 

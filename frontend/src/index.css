@@ -92,7 +92,7 @@
 @theme inline {
   --font-sans: 'EB Garamond Variable', 'EB Garamond', ui-serif, Georgia, serif;
   --font-serif: 'EB Garamond Variable', 'EB Garamond', ui-serif, Georgia, serif;
-  --font-display: 'Redaction', 'IM Fell English SC', ui-serif, Georgia, serif;
+  --font-display: 'Cinzel Variable', 'Cinzel', 'IM Fell English SC', ui-serif, Georgia, serif;
   --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
   --radius-sm: calc(var(--radius) - 4px);
