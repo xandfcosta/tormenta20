@@ -10,8 +10,8 @@ import '@fontsource/redaction/400.css'
 import '@fontsource/redaction/700.css'
 import '@fontsource-variable/eb-garamond/index.css'
 import '@fontsource-variable/jetbrains-mono/index.css'
-import './index.css'
-import { routeTree } from './routeTree.gen'
+import '../index.css'
+import { routeTree } from '../routeTree.gen'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000 } },
