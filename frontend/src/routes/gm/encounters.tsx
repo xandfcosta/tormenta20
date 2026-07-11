@@ -14,7 +14,7 @@ import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
 import { PageChrome } from '@/shared/ui/page-chrome'
 import { SectionHeading } from '@/shared/ui/section-heading'
-import { SendEncounterToSessionButton } from '@/components/gm/send-encounter-to-session'
+import { SendEncounterToSessionButton } from '@/features/gm-tools/send-encounter-to-session'
 import {
   BESTIARY,
   encounterXp,

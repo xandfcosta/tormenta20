@@ -6,11 +6,11 @@ import { Skeleton } from '@/shared/ui/skeleton'
 import { campaignMembersQueryOptions, campaignQueryOptions } from '@/entities/campaign/queries'
 import { campaignSessionsQueryOptions } from '@/entities/session/queries'
 import { meQueryOptions } from '@/entities/user/queries'
-import { CampaignHeaderCard } from './campaign-detail/header-card'
-import { DeleteCampaignButton } from './campaign-detail/delete-campaign-button'
-import { InviteButton } from './campaign-detail/invite-button'
-import { MembersCard } from './campaign-detail/members-card'
-import { SessionsCard } from './campaign-detail/sessions-card'
+import { CampaignHeaderCard } from '@/features/campaign-manage/header-card'
+import { DeleteCampaignButton } from '@/features/campaign-manage/delete-campaign-button'
+import { InviteButton } from '@/features/campaign-manage/invite-button'
+import { MembersCard } from '@/features/campaign-manage/members-card'
+import { SessionsCard } from '@/features/campaign-manage/sessions-card'
 
 export const Route = createFileRoute('/campaigns/$id')({
   beforeLoad: async ({ context, location }) => {

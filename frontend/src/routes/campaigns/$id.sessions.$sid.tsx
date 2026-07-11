@@ -5,10 +5,10 @@ import { PageChrome } from '@/shared/ui/page-chrome'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { campaignSessionQueryOptions } from '@/entities/session/queries'
 import { meQueryOptions } from '@/entities/user/queries'
-import { DeleteSessionButton } from './session-tracker/delete-session-button'
-import { HeaderCard } from './session-tracker/header-card'
-import { InitiativeCard } from './session-tracker/initiative-card'
-import { NotesCard } from './session-tracker/notes-card'
+import { DeleteSessionButton } from '@/features/session-tracker/delete-session-button'
+import { HeaderCard } from '@/features/session-tracker/header-card'
+import { InitiativeCard } from '@/features/session-tracker/initiative-card'
+import { NotesCard } from '@/features/session-tracker/notes-card'
 
 export const Route = createFileRoute('/campaigns/$id/sessions/$sid')({
   beforeLoad: async ({ context, location }) => {

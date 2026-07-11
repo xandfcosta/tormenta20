@@ -11,8 +11,8 @@ import { Combobox } from '@/shared/ui/combobox'
 import { Badge } from '@/shared/ui/badge'
 import { PageChrome } from '@/shared/ui/page-chrome'
 import { SectionHeading } from '@/shared/ui/section-heading'
-import { ClassEntryRow } from './character-new/class-entry-row'
-import { NumberField } from './character-new/number-field'
+import { ClassEntryRow } from '@/features/character-build/class-entry-row'
+import { NumberField } from '@/features/character-build/number-field'
 import {
   Field,
   FieldDescription,
