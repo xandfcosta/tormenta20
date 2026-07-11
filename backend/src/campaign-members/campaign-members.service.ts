@@ -104,6 +104,30 @@ export class CampaignMembersService {
         `Cannot add a character you don't own (character ${dto.characterId})`,
       );
     }
+    // One player character per user per campaign. A player brings a single
+    // PC to a table; GM-role entries (recurring NPCs) are exempt so a mestre
+    // can still run several. Enforced here rather than by a DB constraint
+    // because the rule is per-owner, not per-character.
+    if ((dto.role ?? 'player') === 'player') {
+      const priorPc = await this.prisma.campaignMember.findFirst({
+        where: {
+          campaignId,
+          role: 'player',
+          character: { ownerId: callerId },
+        },
+        select: { id: true },
+      });
+      if (priorPc) {
+        throw new ConflictException({
+          statusCode: 409,
+          error: 'Conflict',
+          message: `You already have a character in campaign ${campaignId}`,
+          fieldErrors: {
+            characterId: ['Você já tem um personagem nesta campanha'],
+          },
+        });
+      }
+    }
     const existing = await this.prisma.campaignMember.findUnique({
       where: {
         campaignId_characterId: {

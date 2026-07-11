@@ -79,7 +79,7 @@ export function InitiativeCard({
           <PresenceChips users={rt.present} />
         </div>
         {isGm && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button size="sm" onClick={rt.nextTurn} disabled={!rt.isConnected}>
               Próximo turno
             </Button>

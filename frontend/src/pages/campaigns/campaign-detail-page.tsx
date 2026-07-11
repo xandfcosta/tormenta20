@@ -5,6 +5,7 @@ import { Button } from '@/shared/ui/button'
 import { PageChrome } from '@/shared/ui/page-chrome'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { campaignQueryOptions } from '@/entities/campaign/queries'
+import { campaignSessionsQueryOptions } from '@/entities/session/queries'
 import { CampaignHeaderCard } from '@/features/campaign-manage/header-card'
 import { DeleteCampaignButton } from '@/features/campaign-manage/delete-campaign-button'
 import { InviteButton } from '@/features/campaign-manage/invite-button'
@@ -17,6 +18,9 @@ export function CampaignDetailPage() {
   const { id } = routeApi.useParams()
   const campaignId = Number(id)
   const campaign = useQuery(campaignQueryOptions(campaignId))
+  const sessions = useQuery(campaignSessionsQueryOptions(campaignId))
+  const isGm = campaign.data?.role === 'gm'
+  const activeSession = sessions.data?.find((s) => s.status === 'active')
 
   if (campaign.isLoading)
     return (
@@ -44,11 +48,27 @@ export function CampaignDetailPage() {
             ← Voltar
           </Button>
         </Link>
-        <div className="flex items-center gap-2">
-          <InviteButton campaignId={campaignId} />
-          <DeleteCampaignButton campaign={campaign.data} />
-        </div>
+        {isGm && (
+          <div className="flex items-center gap-2">
+            <InviteButton campaignId={campaignId} />
+            <DeleteCampaignButton campaign={campaign.data} />
+          </div>
+        )}
       </div>
+
+      {activeSession && (
+        <Link
+          to="/campaigns/$id/sessions/$sid"
+          params={{ id, sid: String(activeSession.id) }}
+        >
+          <div className="flex items-center justify-between rounded-md border-2 border-[color:var(--primary)] bg-[color-mix(in_oklch,var(--primary)_8%,transparent)] p-3 transition hover:bg-[color-mix(in_oklch,var(--primary)_14%,transparent)]">
+            <span className="font-display tracking-wide">
+              Sessão {activeSession.sessionNumber} em andamento
+            </span>
+            <Button size="sm">Entrar →</Button>
+          </div>
+        </Link>
+      )}
 
       <CampaignHeaderCard campaign={campaign.data} />
       <MembersCard campaignId={campaignId} />
