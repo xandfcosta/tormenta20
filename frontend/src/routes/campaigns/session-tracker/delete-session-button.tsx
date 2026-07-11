@@ -13,8 +13,7 @@ import {
   DialogTrigger,
 } from '@/shared/ui/dialog'
 import { api } from '@/shared/api/api'
-import { campaignSessionsQueryOptions } from '@/shared/lib/queries'
-
+import { campaignSessionsQueryOptions } from '@/entities/session/queries'
 export function DeleteSessionButton({
   campaignId,
   sessionId,

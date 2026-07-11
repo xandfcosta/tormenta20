@@ -8,8 +8,7 @@ import { SectionHeading } from '@/shared/ui/section-heading'
 import { SkeletonRows } from '@/shared/ui/skeleton'
 import { api } from '@/shared/api/api'
 import type { Session } from '@/shared/api/api'
-import { campaignSessionsQueryOptions } from '@/shared/lib/queries'
-
+import { campaignSessionsQueryOptions } from '@/entities/session/queries'
 export function SessionsCard({ campaignId }: { campaignId: number }) {
   const qc = useQueryClient()
   const sessions = useQuery(campaignSessionsQueryOptions(campaignId))

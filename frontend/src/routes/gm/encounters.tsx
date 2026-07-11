@@ -21,8 +21,7 @@ import {
   type Monster,
 } from '@tormenta20/t20-data'
 import { computeGroupNd } from '@/shared/lib/encounter-math'
-import { meQueryOptions } from '@/shared/lib/queries'
-
+import { meQueryOptions } from '@/entities/user/queries'
 /**
  * Encounter builder — party level + size, monster composition, live
  * ND + XP + difficulty. Book Cap 7 p282 rules:

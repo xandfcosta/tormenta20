@@ -5,8 +5,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { PageChrome } from '@/shared/ui/page-chrome'
 import { SectionHeading } from '@/shared/ui/section-heading'
-import { meQueryOptions } from '@/shared/lib/queries'
-
+import { meQueryOptions } from '@/entities/user/queries'
 /**
  * GM tools hub. Landing page with links to each generator/lookup.
  * Sub-tools ship progressively as Fase E1-E4.

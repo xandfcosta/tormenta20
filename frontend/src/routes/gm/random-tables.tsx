@@ -22,8 +22,7 @@ import {
   type RewardCastigoRow,
   type RuinaRow,
 } from '@tormenta20/t20-data'
-import { meQueryOptions } from '@/shared/lib/queries'
-
+import { meQueryOptions } from '@/entities/user/queries'
 /**
  * Rolls the Cap 6 mesa tables client-side (no API round-trip — all
  * catalogs live in t20-data). Each table is independent + carries its

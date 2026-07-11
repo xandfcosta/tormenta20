@@ -5,7 +5,7 @@ import type {
   CharacterItem,
 } from '@/shared/api/api'
 import { api } from '@/shared/api/api'
-import { characterQueryOptions } from '@/shared/lib/queries'
+import { characterQueryOptions } from '@/entities/character/queries'
 import {
   accentStrong,
   dimText,

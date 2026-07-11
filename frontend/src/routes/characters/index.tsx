@@ -9,7 +9,8 @@ import { MpBar } from '@/shared/ui/mp-bar'
 import { PageChrome } from '@/shared/ui/page-chrome'
 import { SectionHeading } from '@/shared/ui/section-heading'
 import { SkeletonCardGrid } from '@/shared/ui/skeleton'
-import { meQueryOptions, charactersQueryOptions } from '@/shared/lib/queries'
+import { charactersQueryOptions } from '@/entities/character/queries'
+import { meQueryOptions } from '@/entities/user/queries'
 import type { Character } from '@/shared/api/api'
 
 export const Route = createFileRoute('/characters/')({

@@ -14,8 +14,7 @@ import {
 } from '@/shared/ui/dialog'
 import { api } from '@/shared/api/api'
 import type { Campaign } from '@/shared/api/api'
-import { campaignsQueryOptions } from '@/shared/lib/queries'
-
+import { campaignsQueryOptions } from '@/entities/campaign/queries'
 export function DeleteCampaignButton({ campaign }: { campaign: Campaign }) {
   const qc = useQueryClient()
   const navigate = useNavigate()

@@ -27,12 +27,8 @@ import {
   ATTRIBUTE_KEYS,
   attributePresetForClass,
 } from '@tormenta20/t20-data'
-import {
-  characterOptionsQueryOptions,
-  charactersQueryOptions,
-  meQueryOptions,
-} from '@/shared/lib/queries'
-
+import { characterOptionsQueryOptions, charactersQueryOptions } from '@/entities/character/queries'
+import { meQueryOptions } from '@/entities/user/queries'
 export const Route = createFileRoute('/characters/new')({
   beforeLoad: async ({ context, location }) => {
     const user = await context.queryClient.ensureQueryData(meQueryOptions)

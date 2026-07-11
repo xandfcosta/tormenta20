@@ -15,10 +15,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/shared/ui/dialog'
-import {
-  campaignsQueryOptions,
-  campaignSessionsQueryOptions,
-} from '@/shared/lib/queries'
+import { campaignsQueryOptions } from '@/entities/campaign/queries'
+import { campaignSessionsQueryOptions } from '@/entities/session/queries'
 import { useSessionSocket } from '@/shared/realtime/realtime'
 
 // Mirror of backend `INITIATIVE_MAX_ENTRIES` — server rejects the 51st

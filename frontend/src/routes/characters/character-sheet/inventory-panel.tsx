@@ -9,13 +9,13 @@ import type {
   UpdateItemInput,
 } from '@/shared/api/api'
 import { api } from '@/shared/api/api'
-import { invalidateCharacterDependents } from '@/shared/lib/character-cache'
+import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import {
   inventorySlotsTotal,
   isItemProficient,
   useCharacterEffects,
-} from '@/shared/lib/derived'
-import { characterQueryOptions } from '@/shared/lib/queries'
+} from '@/entities/character/derived'
+import { characterQueryOptions } from '@/entities/character/queries'
 import {
   accentStrong,
   dimText,

@@ -22,7 +22,7 @@ import type {
   CreateItemInput,
   UpdateItemInput,
 } from '@/shared/api/api'
-import { parseImprovementIds } from '@/shared/lib/derived'
+import { parseImprovementIds } from '@/entities/character/derived'
 import {
   accentStrong,
   dimText,

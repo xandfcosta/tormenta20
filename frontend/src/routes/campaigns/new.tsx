@@ -22,8 +22,8 @@ import {
 import { ApiError, api } from '@/shared/api/api'
 import type { CreateCampaignInput } from '@/shared/api/api'
 import { applyServerErrors } from '@/shared/lib/form-errors'
-import { campaignsQueryOptions, meQueryOptions } from '@/shared/lib/queries'
-
+import { campaignsQueryOptions } from '@/entities/campaign/queries'
+import { meQueryOptions } from '@/entities/user/queries'
 export const Route = createFileRoute('/campaigns/new')({
   beforeLoad: async ({ context, location }) => {
     const user = await context.queryClient.ensureQueryData(meQueryOptions)

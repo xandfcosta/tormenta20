@@ -19,13 +19,13 @@ import type {
 } from '@tormenta20/t20-data'
 import { Combobox, type ComboboxOption } from '@/shared/ui/combobox'
 import { api, type Character } from '@/shared/api/api'
-import { invalidateCharacterDependents } from '@/shared/lib/character-cache'
+import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import {
   evaluatePrerequisite,
   parseClassChoices,
   type PrerequisiteCheck,
-} from '@/shared/lib/derived'
-import { characterQueryOptions } from '@/shared/lib/queries'
+} from '@/entities/character/derived'
+import { characterQueryOptions } from '@/entities/character/queries'
 import { accentTitle, subtleText } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
 import { AbilitiesSection } from './abilities-section'

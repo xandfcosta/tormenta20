@@ -14,11 +14,8 @@ import type {
   CampaignMemberRole,
   Character,
 } from '@/shared/api/api'
-import {
-  campaignMembersQueryOptions,
-  charactersQueryOptions,
-} from '@/shared/lib/queries'
-
+import { campaignMembersQueryOptions } from '@/entities/campaign/queries'
+import { charactersQueryOptions } from '@/entities/character/queries'
 export function MembersCard({ campaignId }: { campaignId: number }) {
   const members = useQuery(campaignMembersQueryOptions(campaignId))
 

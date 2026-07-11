@@ -3,10 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/shared/ui/button'
 import { PageChrome } from '@/shared/ui/page-chrome'
 import { Skeleton } from '@/shared/ui/skeleton'
-import {
-  campaignSessionQueryOptions,
-  meQueryOptions,
-} from '@/shared/lib/queries'
+import { campaignSessionQueryOptions } from '@/entities/session/queries'
+import { meQueryOptions } from '@/entities/user/queries'
 import { DeleteSessionButton } from './session-tracker/delete-session-button'
 import { HeaderCard } from './session-tracker/header-card'
 import { InitiativeCard } from './session-tracker/initiative-card'

@@ -21,12 +21,9 @@ import {
 import { ApiError, api } from '@/shared/api/api'
 import type { CampaignInvitePreview } from '@/shared/api/api'
 import { applyServerErrors } from '@/shared/lib/form-errors'
-import {
-  campaignsQueryOptions,
-  charactersQueryOptions,
-  meQueryOptions,
-} from '@/shared/lib/queries'
-
+import { campaignsQueryOptions } from '@/entities/campaign/queries'
+import { charactersQueryOptions } from '@/entities/character/queries'
+import { meQueryOptions } from '@/entities/user/queries'
 /**
  * Self-join page. Post-OC1 the caller must own the character being
  * added. Two entry paths:

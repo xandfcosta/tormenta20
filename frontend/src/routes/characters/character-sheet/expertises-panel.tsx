@@ -16,16 +16,16 @@ import type {
   CharacterExpertise,
 } from '@/shared/api/api'
 import { api } from '@/shared/api/api'
-import { invalidateCharacterDependents } from '@/shared/lib/character-cache'
-import { useCharacterEffects } from '@/shared/lib/derived'
-import type { ExpertiseDef } from '@/shared/lib/expertise'
+import { invalidateCharacterDependents } from '@/entities/character/character-cache'
+import { useCharacterEffects } from '@/entities/character/derived'
+import type { ExpertiseDef } from '@/entities/character/expertise'
 import {
   ATTRIBUTE_ABBR,
   ATTRIBUTE_KEYS,
   EXPERTISES,
   trainingBonusForLevel,
-} from '@/shared/lib/expertise'
-import { characterQueryOptions } from '@/shared/lib/queries'
+} from '@/entities/character/expertise'
+import { characterQueryOptions } from '@/entities/character/queries'
 import {
   accentStrong,
   dimText,

@@ -4,8 +4,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader } from '@/shared/ui/card'
 import { PageChrome } from '@/shared/ui/page-chrome'
 import { SectionHeading, type SectionHeadingVariant } from '@/shared/ui/section-heading'
-import { meQueryOptions } from '@/shared/lib/queries'
-
+import { meQueryOptions } from '@/entities/user/queries'
 /**
  * Root landing. Two modes:
  *   - logged in  → shortcut cards for the three main flows

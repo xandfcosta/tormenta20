@@ -11,8 +11,7 @@ import { PageChrome } from '@/shared/ui/page-chrome'
 import { SectionHeading } from '@/shared/ui/section-heading'
 import { ApiError, api } from '@/shared/api/api'
 import { applyServerErrors } from '@/shared/lib/form-errors'
-import { meQueryOptions } from '@/shared/lib/queries'
-
+import { meQueryOptions } from '@/entities/user/queries'
 const registerSchema = z
   .object({
     email: z.email('E-mail inválido'),

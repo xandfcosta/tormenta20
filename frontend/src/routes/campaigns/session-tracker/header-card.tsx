@@ -17,11 +17,7 @@ import { NumberInput } from '@/shared/ui/number-input'
 import { SectionHeading } from '@/shared/ui/section-heading'
 import { ApiError, api } from '@/shared/api/api'
 import type { Session, SessionStatus } from '@/shared/api/api'
-import {
-  campaignSessionQueryOptions,
-  campaignSessionsQueryOptions,
-} from '@/shared/lib/queries'
-
+import { campaignSessionQueryOptions, campaignSessionsQueryOptions } from '@/entities/session/queries'
 export function HeaderCard({
   campaignId,
   session,

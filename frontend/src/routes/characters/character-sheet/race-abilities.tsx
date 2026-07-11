@@ -4,9 +4,9 @@ import type {
   RaceDefinition,
 } from '@tormenta20/t20-data'
 import { api, type Character } from '@/shared/api/api'
-import { invalidateCharacterDependents } from '@/shared/lib/character-cache'
+import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import type { AttributeKey } from '@/shared/api/api'
-import { characterQueryOptions } from '@/shared/lib/queries'
+import { characterQueryOptions } from '@/entities/character/queries'
 import { accentTitle, subtleText } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
 import { AbilitiesSection } from './abilities-section'

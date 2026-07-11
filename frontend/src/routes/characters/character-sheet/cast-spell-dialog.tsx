@@ -16,8 +16,8 @@ import {
 import { NumberInput } from '@/shared/ui/number-input'
 import { ApiError, api } from '@/shared/api/api'
 import type { Character } from '@/shared/api/api'
-import { invalidateCharacterDependents } from '@/shared/lib/character-cache'
-import { characterQueryOptions } from '@/shared/lib/queries'
+import { invalidateCharacterDependents } from '@/entities/character/character-cache'
+import { characterQueryOptions } from '@/entities/character/queries'
 import { accentStrong, dimText } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
 

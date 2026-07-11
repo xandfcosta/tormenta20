@@ -21,8 +21,7 @@ import {
   type MonsterTipo,
   xpForNd,
 } from '@tormenta20/t20-data'
-import { meQueryOptions } from '@/shared/lib/queries'
-
+import { meQueryOptions } from '@/entities/user/queries'
 const TIPOS: readonly MonsterTipo[] = [
   'humanoide',
   'animal',

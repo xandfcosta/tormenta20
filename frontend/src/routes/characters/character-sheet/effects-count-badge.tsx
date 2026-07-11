@@ -1,5 +1,5 @@
 import type { Character } from '@/shared/api/api'
-import { useAllConditionals } from '@/shared/lib/derived'
+import { useAllConditionals } from '@/entities/character/derived'
 import { cn } from '@/shared/lib/utils'
 
 /**

@@ -18,8 +18,7 @@ import {
   type DungeonIdea,
   type DungeonSize,
 } from '@tormenta20/t20-data'
-import { meQueryOptions } from '@/shared/lib/queries'
-
+import { meQueryOptions } from '@/entities/user/queries'
 const SIZE_LABEL: Record<DungeonSize, string> = {
   pequena: 'Pequena',
   media: 'Média',

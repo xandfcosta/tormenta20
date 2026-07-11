@@ -2,8 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { Badge } from '@/shared/ui/badge'
 import { SkeletonRows } from '@/shared/ui/skeleton'
-import { characterCampaignsQueryOptions } from '@/shared/lib/queries'
-
+import { characterCampaignsQueryOptions } from '@/entities/character/queries'
 /**
  * Right-panel tab that lists every campaign a character is currently
  * a member of. Owner + description are surfaced so the player can

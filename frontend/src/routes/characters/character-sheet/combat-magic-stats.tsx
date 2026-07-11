@@ -14,8 +14,8 @@ import {
   pmLimitTotal,
   spellDCBonus,
   useCharacterEffects,
-} from '@/shared/lib/derived'
-import { ATTRIBUTE_ABBR, expertiseStateFor } from '@/shared/lib/expertise'
+} from '@/entities/character/derived'
+import { ATTRIBUTE_ABBR, expertiseStateFor } from '@/entities/character/expertise'
 import { dimText } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
 import { signed } from './signed'

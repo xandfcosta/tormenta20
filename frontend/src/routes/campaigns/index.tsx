@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { PageChrome } from '@/shared/ui/page-chrome'
 import { SectionHeading } from '@/shared/ui/section-heading'
 import { SkeletonCardGrid } from '@/shared/ui/skeleton'
-import { campaignsQueryOptions, meQueryOptions } from '@/shared/lib/queries'
+import { campaignsQueryOptions } from '@/entities/campaign/queries'
+import { meQueryOptions } from '@/entities/user/queries'
 import type { Campaign } from '@/shared/api/api'
 
 export const Route = createFileRoute('/campaigns/')({

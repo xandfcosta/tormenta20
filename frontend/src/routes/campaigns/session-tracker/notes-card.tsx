@@ -6,8 +6,7 @@ import { SectionHeading } from '@/shared/ui/section-heading'
 import { Textarea } from '@/shared/ui/textarea'
 import { ApiError, api } from '@/shared/api/api'
 import type { Session } from '@/shared/api/api'
-import { campaignSessionQueryOptions } from '@/shared/lib/queries'
-
+import { campaignSessionQueryOptions } from '@/entities/session/queries'
 export function NotesCard({
   campaignId,
   session,

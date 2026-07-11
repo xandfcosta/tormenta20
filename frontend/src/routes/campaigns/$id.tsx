@@ -3,12 +3,9 @@ import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/shared/ui/button'
 import { PageChrome } from '@/shared/ui/page-chrome'
 import { Skeleton } from '@/shared/ui/skeleton'
-import {
-  campaignMembersQueryOptions,
-  campaignQueryOptions,
-  campaignSessionsQueryOptions,
-  meQueryOptions,
-} from '@/shared/lib/queries'
+import { campaignMembersQueryOptions, campaignQueryOptions } from '@/entities/campaign/queries'
+import { campaignSessionsQueryOptions } from '@/entities/session/queries'
+import { meQueryOptions } from '@/entities/user/queries'
 import { CampaignHeaderCard } from './campaign-detail/header-card'
 import { DeleteCampaignButton } from './campaign-detail/delete-campaign-button'
 import { InviteButton } from './campaign-detail/invite-button'

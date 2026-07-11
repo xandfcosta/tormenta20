@@ -17,9 +17,9 @@ import {
 } from '@/shared/ui/tooltip'
 import { api } from '@/shared/api/api'
 import type { Character } from '@/shared/api/api'
-import { invalidateCharacterDependents } from '@/shared/lib/character-cache'
-import { displacementTotal, useCharacterEffects } from '@/shared/lib/derived'
-import { characterQueryOptions } from '@/shared/lib/queries'
+import { invalidateCharacterDependents } from '@/entities/character/character-cache'
+import { displacementTotal, useCharacterEffects } from '@/entities/character/derived'
+import { characterQueryOptions } from '@/entities/character/queries'
 import {
   accentBadge,
   accentTitle,

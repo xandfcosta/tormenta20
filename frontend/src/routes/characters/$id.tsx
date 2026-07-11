@@ -9,10 +9,8 @@ import {
 } from '@/shared/ui/tabs'
 import { cn } from '@/shared/lib/utils'
 import { sheetBg } from '@/shared/lib/sheet-theme'
-import {
-  characterQueryOptions,
-  meQueryOptions,
-} from '@/shared/lib/queries'
+import { characterQueryOptions } from '@/entities/character/queries'
+import { meQueryOptions } from '@/entities/user/queries'
 import { AbilitiesPanel } from './character-sheet/abilities-panel'
 import { CampaignsPanel } from './character-sheet/campaigns-panel'
 import { EffectsCountBadge } from './character-sheet/effects-count-badge'

@@ -6,10 +6,8 @@ import { Badge } from '@/shared/ui/badge'
 import { PageChrome } from '@/shared/ui/page-chrome'
 import { SectionHeading } from '@/shared/ui/section-heading'
 import { Skeleton } from '@/shared/ui/skeleton'
-import {
-  characterSheetQueryOptions,
-  meQueryOptions,
-} from '@/shared/lib/queries'
+import { characterSheetQueryOptions } from '@/entities/character/queries'
+import { meQueryOptions } from '@/entities/user/queries'
 import type { CharacterWithComputed, ComputedSheet } from '@/shared/api/api'
 
 /**

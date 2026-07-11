@@ -8,11 +8,7 @@ import { SectionHeading } from '@/shared/ui/section-heading'
 import { Textarea } from '@/shared/ui/textarea'
 import { ApiError, api } from '@/shared/api/api'
 import type { Campaign } from '@/shared/api/api'
-import {
-  campaignQueryOptions,
-  campaignsQueryOptions,
-} from '@/shared/lib/queries'
-
+import { campaignQueryOptions, campaignsQueryOptions } from '@/entities/campaign/queries'
 export function CampaignHeaderCard({ campaign }: { campaign: Campaign }) {
   const qc = useQueryClient()
   const [editing, setEditing] = useState(false)

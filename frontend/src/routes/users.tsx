@@ -1,7 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { meQueryOptions, usersQueryOptions } from '@/shared/lib/queries'
-
+import { meQueryOptions, usersQueryOptions } from '@/entities/user/queries'
 export const Route = createFileRoute('/users')({
   beforeLoad: async ({ context, location }) => {
     const user = await context.queryClient.ensureQueryData(meQueryOptions)

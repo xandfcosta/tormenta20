@@ -7,7 +7,7 @@ import { AppShell } from '@/shared/layout/app-shell'
 import { TooltipProvider } from '@/shared/ui/tooltip'
 import { useUiStore } from '@/shared/stores/ui-store'
 import { useAuthStore } from '@/shared/stores/auth-store'
-import { meQueryOptions } from '@/shared/lib/queries'
+import { meQueryOptions } from '@/entities/user/queries'
 import { api } from '@/shared/api/api'
 
 type RouterContext = { queryClient: QueryClient }

@@ -2,12 +2,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Check, Sparkles, X } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { api, type Character } from '@/shared/api/api'
-import { invalidateCharacterDependents } from '@/shared/lib/character-cache'
+import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import {
   useAllConditionals,
   type ConditionalEntry,
-} from '@/shared/lib/derived'
-import { characterQueryOptions } from '@/shared/lib/queries'
+} from '@/entities/character/derived'
+import { characterQueryOptions } from '@/entities/character/queries'
 import { cn } from '@/shared/lib/utils'
 import { useConditionalsStore } from '@/shared/stores/conditionals-store'
 import { getCatalogItem } from '@tormenta20/t20-data'

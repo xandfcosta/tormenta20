@@ -1,12 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '@/shared/api/api'
-import {
-  characterOptionsQueryOptions,
-  characterQueryOptions,
-  charactersQueryOptions,
-  meQueryOptions,
-  usersQueryOptions,
-} from './queries'
+import { meQueryOptions, usersQueryOptions } from './queries'
 
 /**
  * TanStack queryOptions wrappers — pin the queryKey shape (which the
@@ -38,27 +32,6 @@ describe('queryKey shapes', () => {
 
   it('usersQuery uses ["users"]', () => {
     expect(usersQueryOptions.queryKey).toEqual(['users'])
-  })
-
-  it('charactersQuery uses ["characters"]', () => {
-    expect(charactersQueryOptions.queryKey).toEqual(['characters'])
-  })
-
-  it('characterOptionsQuery uses ["characters", "options"]', () => {
-    expect(characterOptionsQueryOptions.queryKey).toEqual([
-      'characters',
-      'options',
-    ])
-  })
-
-  it('characterQuery(id) uses ["characters", id]', () => {
-    expect(characterQueryOptions(42).queryKey).toEqual(['characters', 42])
-  })
-})
-
-describe('characterOptionsQuery — cache control', () => {
-  it('has staleTime=Infinity (catalog is immutable in-session)', () => {
-    expect(characterOptionsQueryOptions.staleTime).toBe(Infinity)
   })
 })
 
