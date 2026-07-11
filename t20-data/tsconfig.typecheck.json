@@ -1,0 +1,14 @@
+{
+  // Typecheck-only config for tsgo (TS7): the emit config (tsconfig.json) keeps
+  // module/moduleResolution 'commonjs'/'node' for the legacy `tsc -p` build, but
+  // TS7 removed the 'node' (node10) resolver. We override to 'nodenext' here —
+  // matching how backend (nodenext) actually consumes this package — so tsgo can
+  // type-check the source without disturbing emitted output. See plan Phase 0/2.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "noEmit": true
+  },
+  "include": ["src"]
+}
