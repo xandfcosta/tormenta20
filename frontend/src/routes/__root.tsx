@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tansta
 import { useEffect } from 'react'
 import { AppShell } from '@/shared/layout/app-shell'
 import { TooltipProvider } from '@/shared/ui/tooltip'
+import { Toaster } from '@/shared/ui/sonner'
 import { useUiStore } from '@/shared/stores/ui-store'
 import { useAuthStore } from '@/shared/stores/auth-store'
 import { meQueryOptions } from '@/entities/user/queries'
@@ -60,6 +61,7 @@ function RootLayout() {
       >
         <Outlet />
       </AppShell>
+      <Toaster />
       <TanStackRouterDevtools position="bottom-right" />
       <ReactQueryDevtools buttonPosition="bottom-left" />
     </TooltipProvider>
