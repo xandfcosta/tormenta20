@@ -9,6 +9,7 @@ import type { Socket } from 'socket.io';
 import { RealtimeGateway, sessionRoom } from './realtime.gateway';
 import { PrismaService } from '../prisma/prisma.service';
 import { SessionsService } from '../sessions/sessions.service';
+import { CharactersService } from '../characters/characters.service';
 import { SessionStateService } from './session-state.service';
 
 /**
@@ -33,6 +34,9 @@ async function setup(over?: {
   campaignMemberFindMany?: jest.Mock;
   activeEffectDeleteMany?: jest.Mock;
   characterUpdate?: jest.Mock;
+  charactersEndScene?: jest.Mock;
+  charactersEndDay?: jest.Mock;
+  charactersRestVitals?: jest.Mock;
 }) {
   const prisma = {
     user: {
@@ -72,6 +76,13 @@ async function setup(over?: {
       over?.sessionsFindOneForCaller ??
       jest.fn().mockResolvedValue({ session: { id: 1 }, role: 'gm' }),
   };
+  const characters = {
+    endScene: over?.charactersEndScene ?? jest.fn().mockResolvedValue({}),
+    endDay: over?.charactersEndDay ?? jest.fn().mockResolvedValue({}),
+    restVitals:
+      over?.charactersRestVitals ??
+      jest.fn().mockResolvedValue({ hpCurrent: 0, mpCurrent: 0 }),
+  };
   const module = await Test.createTestingModule({
     providers: [
       RealtimeGateway,
@@ -79,6 +90,7 @@ async function setup(over?: {
       { provide: JwtService, useValue: new JwtService({ secret: SECRET }) },
       { provide: PrismaService, useValue: prisma },
       { provide: SessionsService, useValue: sessions },
+      { provide: CharactersService, useValue: characters },
     ],
   }).compile();
   const gateway = module.get(RealtimeGateway);
@@ -91,6 +103,7 @@ async function setup(over?: {
     gateway,
     prisma,
     sessions,
+    characters,
     jwt: module.get(JwtService),
     state: module.get(SessionStateService),
     to,
@@ -763,22 +776,20 @@ describe('RealtimeGateway.sessionRest', () => {
     >[0];
   };
 
-  it('clears scene effects for all members + broadcasts (GM)', async () => {
-    const deleteMany = jest.fn().mockResolvedValue({ count: 2 });
-    const { gateway, emit } = await setup({
+  it('scene rest delegates end-scene per member, no heal, broadcasts (GM)', async () => {
+    const { gateway, emit, characters } = await setup({
       campaignMemberFindMany: jest
         .fn()
         .mockResolvedValue([{ characterId: 10 }, { characterId: 11 }]),
-      activeEffectDeleteMany: deleteMany,
     });
     const result = await gateway.sessionRest(gmSocket(), {
       campaignId: 1,
       sessionId: 5,
       scope: 'scene',
     });
-    expect(deleteMany).toHaveBeenCalledWith({
-      where: { characterId: { in: [10, 11] }, scope: { in: ['scene'] } },
-    });
+    expect(characters.endScene).toHaveBeenCalledWith(7, 10);
+    expect(characters.endScene).toHaveBeenCalledWith(7, 11);
+    expect(characters.restVitals).not.toHaveBeenCalled();
     expect(result).toEqual({ rested: 'scene', characters: 2, healed: 0 });
     expect(emit).toHaveBeenCalledWith('session-rest', {
       sessionId: 5,
@@ -787,50 +798,12 @@ describe('RealtimeGateway.sessionRest', () => {
     });
   });
 
-  const memberWithChar = (
-    over?: Partial<{
-      id: number;
-      level: number;
-      hpCurrent: number;
-      hpMax: number;
-      mpCurrent: number;
-      mpMax: number;
-    }>,
-  ) => ({
-    characterId: over?.id ?? 10,
-    character: {
-      id: 10,
-      level: 4,
-      hpCurrent: 10,
-      hpMax: 30,
-      mpCurrent: 2,
-      mpMax: 12,
-      ...over,
-    },
-  });
-
-  it('day rest also drops day-scoped effects', async () => {
-    const deleteMany = jest.fn().mockResolvedValue({ count: 0 });
-    const { gateway } = await setup({
-      campaignMemberFindMany: jest.fn().mockResolvedValue([memberWithChar()]),
-      activeEffectDeleteMany: deleteMany,
-    });
-    await gateway.sessionRest(gmSocket(), {
-      campaignId: 1,
-      sessionId: 5,
-      scope: 'day',
-    });
-    expect(deleteMany).toHaveBeenCalledWith({
-      where: { characterId: { in: [10] }, scope: { in: ['scene', 'day'] } },
-    });
-  });
-
-  it('day rest heals PV/PM by floor(level × condition mult), clamped to max', async () => {
-    const characterUpdate = jest.fn().mockResolvedValue({});
-    const { gateway } = await setup({
-      // level 4, confortavel (×2) → gain 8. hp 10→18 (max 30); mp 2→10 (max 12).
-      campaignMemberFindMany: jest.fn().mockResolvedValue([memberWithChar()]),
-      characterUpdate,
+  it('day rest delegates end-day + restVitals per member', async () => {
+    const { gateway, characters } = await setup({
+      campaignMemberFindMany: jest.fn().mockResolvedValue([{ characterId: 10 }]),
+      charactersRestVitals: jest
+        .fn()
+        .mockResolvedValue({ hpCurrent: 18, mpCurrent: 10 }),
     });
     const result = await gateway.sessionRest(gmSocket(), {
       campaignId: 1,
@@ -838,26 +811,21 @@ describe('RealtimeGateway.sessionRest', () => {
       scope: 'day',
       condition: 'confortavel',
     });
-    expect(characterUpdate).toHaveBeenCalledWith({
-      where: { id: 10 },
-      data: { hpCurrent: 18, mpCurrent: 10 },
-    });
+    expect(characters.endDay).toHaveBeenCalledWith(7, 10);
+    expect(characters.restVitals).toHaveBeenCalledWith(7, 10, 'confortavel');
     expect(result).toMatchObject({ rested: 'day', healed: 1 });
   });
 
-  it('scene rest does not heal (no character.update)', async () => {
-    const characterUpdate = jest.fn();
-    const { gateway } = await setup({
-      campaignMemberFindMany: jest.fn().mockResolvedValue([memberWithChar()]),
-      characterUpdate,
+  it('day rest defaults the condition to normal when omitted', async () => {
+    const { gateway, characters } = await setup({
+      campaignMemberFindMany: jest.fn().mockResolvedValue([{ characterId: 10 }]),
     });
-    const result = await gateway.sessionRest(gmSocket(), {
+    await gateway.sessionRest(gmSocket(), {
       campaignId: 1,
       sessionId: 5,
-      scope: 'scene',
+      scope: 'day',
     });
-    expect(characterUpdate).not.toHaveBeenCalled();
-    expect(result).toMatchObject({ healed: 0 });
+    expect(characters.restVitals).toHaveBeenCalledWith(7, 10, 'normal');
   });
 
   it('rejects a non-GM', async () => {

@@ -8,5 +8,6 @@ import { CharactersSpellsService } from './characters-spells.service';
   imports: [CampaignMembersModule],
   controllers: [CharactersController],
   providers: [CharactersService, CharactersSpellsService],
+  exports: [CharactersService],
 })
 export class CharactersModule {}

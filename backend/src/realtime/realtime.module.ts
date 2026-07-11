@@ -1,5 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
+import { CharactersModule } from '../characters/characters.module';
 import {
   SessionsModule,
   SESSION_STATE_SERVICE,
@@ -8,7 +9,7 @@ import { RealtimeGateway } from './realtime.gateway';
 import { SessionStateService } from './session-state.service';
 
 @Module({
-  imports: [AuthModule, forwardRef(() => SessionsModule)],
+  imports: [AuthModule, forwardRef(() => SessionsModule), CharactersModule],
   providers: [
     RealtimeGateway,
     SessionStateService,

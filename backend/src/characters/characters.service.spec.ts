@@ -956,3 +956,64 @@ describe('CharactersService.endScene / endDay — scope filtering', () => {
     });
   });
 });
+
+describe('CharactersService.restVitals — T20 night rest (livro p.20)', () => {
+  it('restores floor(level × mult) to PV and PM, clamped to max', async () => {
+    const prisma = new FakePrisma();
+    // level 4, confortavel ×2 → gain 8: hp 10→18 (max 30), mp 2→10 (max 12)
+    prisma.seedCharacter(
+      makeCharacter({
+        id: 5,
+        ownerId: 7,
+        level: 4,
+        hpCurrent: 10,
+        hpMax: 30,
+        mpCurrent: 2,
+        mpMax: 12,
+      }),
+    );
+    const service = await makeService(prisma);
+    const result = await service.restVitals(7, 5, 'confortavel');
+    expect(result).toEqual({ hpCurrent: 18, mpCurrent: 10 });
+    expect(prisma.characterUpdate).toHaveBeenCalledWith({
+      where: { id: 5 },
+      data: { hpCurrent: 18, mpCurrent: 10 },
+    });
+  });
+
+  it('clamps a large gain to max (no overheal)', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(
+      makeCharacter({
+        id: 5,
+        ownerId: 7,
+        level: 20,
+        hpCurrent: 28,
+        hpMax: 30,
+        mpCurrent: 11,
+        mpMax: 12,
+      }),
+    );
+    const service = await makeService(prisma);
+    const result = await service.restVitals(7, 5, 'luxuosa'); // gain 60
+    expect(result).toEqual({ hpCurrent: 30, mpCurrent: 12 });
+  });
+
+  it('floors half-level recovery (Ruim, odd level)', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(
+      makeCharacter({
+        id: 5,
+        ownerId: 7,
+        level: 7,
+        hpCurrent: 0,
+        hpMax: 50,
+        mpCurrent: 0,
+        mpMax: 50,
+      }),
+    );
+    const service = await makeService(prisma);
+    const result = await service.restVitals(7, 5, 'ruim'); // floor(3.5) = 3
+    expect(result).toEqual({ hpCurrent: 3, mpCurrent: 3 });
+  });
+});
