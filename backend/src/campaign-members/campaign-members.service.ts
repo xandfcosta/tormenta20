@@ -26,9 +26,11 @@ export class CampaignMembersService {
   /**
    * List members of a campaign. Joins the Character row so callers can
    * render a roster (name / level / class) without a follow-up call.
+   * Member-aware: any player in the campaign can view the party, not
+   * just the GM — the roster is shared table state.
    */
-  async list(ownerId: number, campaignId: number) {
-    await this.assertCampaignOwnership(ownerId, campaignId);
+  async list(userId: number, campaignId: number) {
+    await this.campaigns.resolveAccess(userId, campaignId);
     return this.prisma.campaignMember.findMany({
       where: { campaignId },
       orderBy: { addedAt: 'asc' },

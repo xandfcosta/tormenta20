@@ -20,17 +20,44 @@ function generateInviteToken(): string {
   return randomBytes(INVITE_TOKEN_BYTES).toString('base64url');
 }
 
+/** Caller's relationship to a campaign. `gm` = campaign owner; `player`
+ * = owns a character that is a CampaignMember. Anyone else has no
+ * access. There is no per-user role column — a user is the GM of the
+ * campaigns they own and a player in the ones their characters joined. */
+export type CampaignRole = 'gm' | 'player';
+
 @Injectable()
 export class CampaignsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  list(ownerId: number) {
-    return this.prisma.campaign.findMany({
-      where: { ownerId },
+  /**
+   * Campaigns the user can see: ones they own (as GM) plus ones a
+   * character of theirs has joined (as player). Each row is tagged with
+   * the caller's `role` so the client can branch GM vs player views
+   * without a second round-trip. Pre-membership this returned owned
+   * campaigns only, which left players with an empty list.
+   */
+  async list(userId: number) {
+    const campaigns = await this.prisma.campaign.findMany({
+      where: {
+        OR: [
+          { ownerId: userId },
+          { members: { some: { character: { ownerId: userId } } } },
+        ],
+      },
       orderBy: { updatedAt: 'desc' },
     });
+    return campaigns.map((c) => ({
+      ...c,
+      role: (c.ownerId === userId ? 'gm' : 'player') as CampaignRole,
+    }));
   }
 
+  /**
+   * Owner-only lookup. Kept as the guard for every **write** path
+   * (update / delete / invite rotation / session lifecycle) — those
+   * must stay GM-exclusive. Reads go through {@link resolveAccess}.
+   */
   async findOne(ownerId: number, id: number) {
     const campaign = await this.prisma.campaign.findUnique({ where: { id } });
     if (!campaign) throw new NotFoundException(`Campaign ${id} not found`);
@@ -38,6 +65,23 @@ export class CampaignsService {
       throw new ForbiddenException(`Campaign ${id} belongs to another user`);
     }
     return campaign;
+  }
+
+  /**
+   * Member-aware access for **read** paths. Returns the campaign plus
+   * the caller's role, or throws NotFound (missing) / Forbidden (caller
+   * is neither owner nor a member via one of their characters).
+   */
+  async resolveAccess(userId: number, id: number) {
+    const campaign = await this.prisma.campaign.findUnique({ where: { id } });
+    if (!campaign) throw new NotFoundException(`Campaign ${id} not found`);
+    if (campaign.ownerId === userId) return { campaign, role: 'gm' };
+    const membership = await this.prisma.campaignMember.findFirst({
+      where: { campaignId: id, character: { ownerId: userId } },
+      select: { id: true },
+    });
+    if (membership) return { campaign, role: 'player' };
+    throw new ForbiddenException(`Campaign ${id} is not accessible`);
   }
 
   create(ownerId: number, dto: CreateCampaignDto) {

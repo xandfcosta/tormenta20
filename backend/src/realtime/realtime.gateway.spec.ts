@@ -25,6 +25,7 @@ const SECRET = 'test-secret-just-for-jest';
 
 async function setup(over?: {
   sessionsFindOne?: jest.Mock;
+  sessionsFindOneForCaller?: jest.Mock;
   userFindUnique?: jest.Mock;
   characterFindUnique?: jest.Mock;
   campaignFindUnique?: jest.Mock;
@@ -57,6 +58,9 @@ async function setup(over?: {
   };
   const sessions = {
     findOne: over?.sessionsFindOne ?? jest.fn().mockResolvedValue({ id: 1 }),
+    findOneForCaller:
+      over?.sessionsFindOneForCaller ??
+      jest.fn().mockResolvedValue({ session: { id: 1 }, role: 'gm' }),
   };
   const module = await Test.createTestingModule({
     providers: [
@@ -162,14 +166,14 @@ describe('RealtimeGateway.joinSession', () => {
       socket as unknown as Parameters<typeof gateway.joinSession>[0],
       { campaignId: 1, sessionId: 5 },
     );
-    expect(sessions.findOne).toHaveBeenCalledWith(7, 1, 5);
+    expect(sessions.findOneForCaller).toHaveBeenCalledWith(7, 1, 5);
     expect(socket.join).toHaveBeenCalledWith('session:5');
     expect(result).toEqual({ joined: 'session:5' });
   });
 
   it('rejects when SessionsService throws (Forbidden / NotFound)', async () => {
     const { gateway } = await setup({
-      sessionsFindOne: jest.fn().mockRejectedValue(new Error('nope')),
+      sessionsFindOneForCaller: jest.fn().mockRejectedValue(new Error('nope')),
     });
     const socket = fakeSocket();
     (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };

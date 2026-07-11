@@ -38,6 +38,7 @@ async function setup(over?: {
   create?: jest.Mock;
   update?: jest.Mock;
   delete?: jest.Mock;
+  memberFindFirst?: jest.Mock;
 }) {
   const prisma = {
     campaign: {
@@ -46,6 +47,9 @@ async function setup(over?: {
       create: over?.create ?? jest.fn(),
       update: over?.update ?? jest.fn(),
       delete: over?.delete ?? jest.fn(),
+    },
+    campaignMember: {
+      findFirst: over?.memberFindFirst ?? jest.fn(),
     },
   };
   const moduleRef = await Test.createTestingModule({
@@ -58,14 +62,69 @@ async function setup(over?: {
 }
 
 describe('CampaignsService.list', () => {
-  it('scopes the query to ownerId + orders by updatedAt desc', async () => {
-    const findMany = jest.fn().mockResolvedValue([makeCampaign()]);
+  it('returns owned + member campaigns, tagged with the caller role', async () => {
+    const owned = makeCampaign({ id: 1, ownerId: 7 });
+    const joined = makeCampaign({ id: 2, ownerId: 99 });
+    const findMany = jest.fn().mockResolvedValue([owned, joined]);
     const { service } = await setup({ findMany });
-    await service.list(7);
+    const result = await service.list(7);
     expect(findMany).toHaveBeenCalledWith({
-      where: { ownerId: 7 },
+      where: {
+        OR: [
+          { ownerId: 7 },
+          { members: { some: { character: { ownerId: 7 } } } },
+        ],
+      },
       orderBy: { updatedAt: 'desc' },
     });
+    expect(result).toEqual([
+      { ...owned, role: 'gm' },
+      { ...joined, role: 'player' },
+    ]);
+  });
+});
+
+describe('CampaignsService.resolveAccess', () => {
+  it('returns role=gm when the caller owns the campaign', async () => {
+    const row = makeCampaign({ id: 1, ownerId: 5 });
+    const findUnique = jest.fn().mockResolvedValue(row);
+    const { service } = await setup({ findUnique });
+    await expect(service.resolveAccess(5, 1)).resolves.toEqual({
+      campaign: row,
+      role: 'gm',
+    });
+  });
+
+  it('returns role=player when a character of the caller is a member', async () => {
+    const row = makeCampaign({ id: 1, ownerId: 999 });
+    const findUnique = jest.fn().mockResolvedValue(row);
+    const memberFindFirst = jest.fn().mockResolvedValue({ id: 42 });
+    const { service } = await setup({ findUnique, memberFindFirst });
+    await expect(service.resolveAccess(5, 1)).resolves.toEqual({
+      campaign: row,
+      role: 'player',
+    });
+    expect(memberFindFirst).toHaveBeenCalledWith({
+      where: { campaignId: 1, character: { ownerId: 5 } },
+      select: { id: true },
+    });
+  });
+
+  it('throws NotFound when the campaign does not exist', async () => {
+    const findUnique = jest.fn().mockResolvedValue(null);
+    const { service } = await setup({ findUnique });
+    await expect(service.resolveAccess(5, 99)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it('throws Forbidden when the caller is neither owner nor member', async () => {
+    const findUnique = jest.fn().mockResolvedValue(makeCampaign({ ownerId: 999 }));
+    const memberFindFirst = jest.fn().mockResolvedValue(null);
+    const { service } = await setup({ findUnique, memberFindFirst });
+    await expect(service.resolveAccess(5, 1)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
   });
 });
 

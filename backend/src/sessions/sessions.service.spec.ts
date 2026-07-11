@@ -52,6 +52,7 @@ async function setup(over?: {
   update?: jest.Mock;
   delete?: jest.Mock;
   campaignsFindOne?: jest.Mock;
+  campaignsResolveAccess?: jest.Mock;
   characterFindUnique?: jest.Mock;
   characterUpdate?: jest.Mock;
   state?: unknown;
@@ -76,6 +77,12 @@ async function setup(over?: {
     findOne:
       over?.campaignsFindOne ??
       jest.fn().mockResolvedValue({ id: 1, ownerId: 1 }),
+    resolveAccess:
+      over?.campaignsResolveAccess ??
+      jest.fn().mockResolvedValue({
+        campaign: { id: 1, ownerId: 1 },
+        role: 'gm',
+      }),
   };
   const providers: Parameters<
     typeof Test.createTestingModule
@@ -111,6 +118,53 @@ describe('SessionsService.list', () => {
     const { service } = await setup({ campaignsFindOne });
     await expect(service.list(99, 1)).rejects.toBeInstanceOf(
       ForbiddenException,
+    );
+  });
+});
+
+describe('SessionsService.listForCaller — member-aware read', () => {
+  it('returns sessions for a player member (via resolveAccess, not owner check)', async () => {
+    const findMany = jest.fn().mockResolvedValue([{ id: 1 }]);
+    const campaignsResolveAccess = jest
+      .fn()
+      .mockResolvedValue({ campaign: { id: 1, ownerId: 999 }, role: 'player' });
+    const { service } = await setup({ findMany, campaignsResolveAccess });
+    await expect(service.listForCaller(5, 1)).resolves.toEqual([{ id: 1 }]);
+    expect(campaignsResolveAccess).toHaveBeenCalledWith(5, 1);
+  });
+
+  it('propagates Forbidden when caller is neither GM nor member', async () => {
+    const campaignsResolveAccess = jest
+      .fn()
+      .mockRejectedValue(new ForbiddenException());
+    const { service } = await setup({ campaignsResolveAccess });
+    await expect(service.listForCaller(9, 1)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+  });
+});
+
+describe('SessionsService.findOneForCaller — member-aware read', () => {
+  it('returns { session, role } for a player member', async () => {
+    const session = { id: 5, campaignId: 1 };
+    const findUnique = jest.fn().mockResolvedValue(session);
+    const campaignsResolveAccess = jest
+      .fn()
+      .mockResolvedValue({ campaign: { id: 1, ownerId: 999 }, role: 'player' });
+    const { service } = await setup({ findUnique, campaignsResolveAccess });
+    await expect(service.findOneForCaller(5, 1, 5)).resolves.toEqual({
+      session,
+      role: 'player',
+    });
+  });
+
+  it('throws NotFound when the session belongs to another campaign', async () => {
+    const findUnique = jest
+      .fn()
+      .mockResolvedValue({ id: 5, campaignId: 2 });
+    const { service } = await setup({ findUnique });
+    await expect(service.findOneForCaller(1, 1, 5)).rejects.toBeInstanceOf(
+      NotFoundException,
     );
   });
 });

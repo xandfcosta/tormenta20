@@ -25,16 +25,21 @@ export class SessionsController {
     @CurrentUser() user: AuthUser,
     @Param('campaignId', ParseIntPipe) campaignId: number,
   ) {
-    return this.sessions.list(user.id, campaignId);
+    return this.sessions.listForCaller(user.id, campaignId);
   }
 
   @Get(':id')
-  findOne(
+  async findOne(
     @CurrentUser() user: AuthUser,
     @Param('campaignId', ParseIntPipe) campaignId: number,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.sessions.findOne(user.id, campaignId, id);
+    const { session } = await this.sessions.findOneForCaller(
+      user.id,
+      campaignId,
+      id,
+    );
+    return session;
   }
 
   @Post()
