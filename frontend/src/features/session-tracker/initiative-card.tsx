@@ -14,6 +14,7 @@ import { NumberInput } from '@/shared/ui/number-input'
 import { SectionHeading } from '@/shared/ui/section-heading'
 import { useSessionSocket, type InitiativeEntry } from '@/shared/realtime/realtime'
 import { PresenceChips } from './presence-chips'
+import { CombatantDrawer } from './combatant-drawer'
 
 // Maps realtime hook state onto ConnectionChip's tri-state. The socket
 // hook only reports `isConnected` + `error`; we infer 'reconnecting' as
@@ -44,6 +45,7 @@ export function InitiativeCard({
   const [addLabel, setAddLabel] = useState('')
   const [addInit, setAddInit] = useState(10)
   const [addType, setAddType] = useState<'character' | 'npc'>('npc')
+  const [sheetCharId, setSheetCharId] = useState<number | null>(null)
 
   const submitAdd = () => {
     const label = addLabel.trim()
@@ -52,6 +54,14 @@ export function InitiativeCard({
     setAddLabel('')
     setAddInit(10)
   }
+
+  // Turn cue: the active combatant is one of the viewer's own characters.
+  const active =
+    rt.state.turnIndex >= 0
+      ? rt.state.initiative[rt.state.turnIndex]
+      : undefined
+  const isMyTurn =
+    active?.characterId !== undefined && myCharacterIds.has(active.characterId)
 
   return (
     <Card>
@@ -91,6 +101,48 @@ export function InitiativeCard({
           </p>
         )}
 
+        {isMyTurn && (
+          <div className="rounded-md border-2 border-[color:var(--primary)] bg-[color-mix(in_oklch,var(--primary)_10%,transparent)] p-3 text-center font-display text-lg tracking-wide">
+            ⚔️ Sua vez, {active?.label}!
+          </div>
+        )}
+
+        {rt.restFlash && (
+          <div className="rounded-md border border-[color:var(--hp-full)]/50 bg-[color-mix(in_oklch,var(--hp-full)_10%,transparent)] p-2 text-center text-sm">
+            Descanso de {rt.restFlash === 'day' ? 'dia' : 'cena'} aplicado —
+            efeitos temporários limpos.
+          </div>
+        )}
+
+        {isGm && (
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={rt.populateParty}
+              disabled={!rt.isConnected}
+            >
+              Adicionar grupo
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => rt.rest('scene')}
+              disabled={!rt.isConnected}
+            >
+              Descanso de cena
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => rt.rest('day')}
+              disabled={!rt.isConnected}
+            >
+              Descanso de dia
+            </Button>
+          </div>
+        )}
+
         {rt.state.initiative.length === 0 && (
           <p className="text-sm text-muted-foreground">
             {isGm
@@ -111,6 +163,11 @@ export function InitiativeCard({
                   myCharacterIds.has(entry.characterId))
               }
               canRemove={isGm}
+              onOpenSheet={
+                isGm && entry.characterId !== undefined
+                  ? () => setSheetCharId(entry.characterId!)
+                  : undefined
+              }
               onDeltaHp={(delta) =>
                 rt.deltaVitals(entry.id, { hpDelta: delta })
               }
@@ -169,6 +226,10 @@ export function InitiativeCard({
         </div>
         )}
       </CardContent>
+      <CombatantDrawer
+        characterId={sheetCharId}
+        onClose={() => setSheetCharId(null)}
+      />
     </Card>
   )
 }
@@ -178,6 +239,7 @@ function InitiativeRow({
   onTurn,
   canEditVitals,
   canRemove,
+  onOpenSheet,
   onDeltaHp,
   onRemove,
 }: {
@@ -185,6 +247,7 @@ function InitiativeRow({
   onTurn: boolean
   canEditVitals: boolean
   canRemove: boolean
+  onOpenSheet?: () => void
   onDeltaHp: (delta: number) => void
   onRemove: () => void
 }) {
@@ -206,7 +269,18 @@ function InitiativeRow({
         </Badge>
         <div className="min-w-0 flex-1">
           <p className="flex flex-wrap items-center gap-1 truncate font-medium">
-            <span className="truncate">{entry.label}</span>
+            {onOpenSheet ? (
+              <button
+                type="button"
+                onClick={onOpenSheet}
+                className="truncate text-left underline-offset-2 hover:underline"
+                title="Ver ficha"
+              >
+                {entry.label}
+              </button>
+            ) : (
+              <span className="truncate">{entry.label}</span>
+            )}
             <Badge
               variant={entry.type === 'character' ? 'default' : 'secondary'}
               className="text-[10px] uppercase tracking-widest"
