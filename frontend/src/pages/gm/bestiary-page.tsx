@@ -248,7 +248,7 @@ function MonsterDialog({
                 <h3 className="mb-1 text-xs font-semibold uppercase text-muted-foreground">
                   Atributos
                 </h3>
-                <div className="grid grid-cols-6 gap-1">
+                <div className="grid grid-cols-3 gap-1 sm:grid-cols-6">
                   <Stat label="For" value={signed(monster.forca)} />
                   <Stat label="Des" value={signed(monster.destreza)} />
                   <Stat label="Con" value={signed(monster.constituicao)} />
