@@ -56,7 +56,10 @@ function RightPanel({ character }: { character: Character }) {
       defaultValue="expertises"
       className="flex min-h-0 flex-col gap-2 overflow-hidden"
     >
-      <TabsList className="self-start">
+      {/* 8 tabs overflow a phone; scroll horizontally instead of clipping
+          (triggers keep intrinsic width via shrink-0). */}
+      <TabsList className="max-w-full self-start overflow-x-auto [&>button]:shrink-0">
+
         <TabsTrigger value="expertises">Perícias</TabsTrigger>
         <TabsTrigger value="equipment" className="gap-1.5">
           <Shirt className="size-3.5" /> Equipado
