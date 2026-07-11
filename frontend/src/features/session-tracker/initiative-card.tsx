@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
 import { Plus, Swords, Trash2 } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -63,6 +64,27 @@ export function InitiativeCard({
   const isMyTurn =
     active?.characterId !== undefined && myCharacterIds.has(active.characterId)
 
+  // Turn cue: toast the moment it becomes the viewer's turn (the row
+  // highlight covers the persistent state; the toast is the alert).
+  const wasMyTurn = useRef(false)
+  useEffect(() => {
+    if (isMyTurn && !wasMyTurn.current) {
+      toast(`⚔️ Sua vez, ${active?.label}!`, {
+        description: 'Seu personagem está na iniciativa.',
+      })
+    }
+    wasMyTurn.current = isMyTurn
+  }, [isMyTurn, active?.label])
+
+  // GM rest broadcast → toast for everyone in the room.
+  useEffect(() => {
+    if (rt.restFlash) {
+      toast(`Descanso de ${rt.restFlash === 'day' ? 'dia' : 'cena'}`, {
+        description: 'Efeitos temporários foram limpos.',
+      })
+    }
+  }, [rt.restFlash])
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-3">
@@ -99,19 +121,6 @@ export function InitiativeCard({
           <p className="text-sm text-destructive">
             Erro realtime: {rt.error}
           </p>
-        )}
-
-        {isMyTurn && (
-          <div className="rounded-md border-2 border-[color:var(--primary)] bg-[color-mix(in_oklch,var(--primary)_10%,transparent)] p-3 text-center font-display text-lg tracking-wide">
-            ⚔️ Sua vez, {active?.label}!
-          </div>
-        )}
-
-        {rt.restFlash && (
-          <div className="rounded-md border border-[color:var(--hp-full)]/50 bg-[color-mix(in_oklch,var(--hp-full)_10%,transparent)] p-2 text-center text-sm">
-            Descanso de {rt.restFlash === 'day' ? 'dia' : 'cena'} aplicado —
-            efeitos temporários limpos.
-          </div>
         )}
 
         {isGm && (
