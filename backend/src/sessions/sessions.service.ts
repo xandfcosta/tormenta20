@@ -35,14 +35,24 @@ export class SessionsService {
   ) {}
 
   /**
-   * All read/write paths run `campaigns.findOne(ownerId, campaignId)`
-   * first — that method already throws NotFound / Forbidden, so ownership
-   * enforcement lives in one place instead of being duplicated per verb.
+   * Owner-only guard for **write** paths (create / update / delete /
+   * start / end / clearTracker). Session mutations stay GM-exclusive.
    */
   private async assertCampaignOwnership(ownerId: number, campaignId: number) {
     await this.campaigns.findOne(ownerId, campaignId);
   }
 
+  /**
+   * Member-aware guard for **read** paths — GM or any player member.
+   * Returns the caller's role so callers (WS gateway) can gate
+   * finer-grained actions later.
+   */
+  private async assertCampaignAccess(userId: number, campaignId: number) {
+    const { role } = await this.campaigns.resolveAccess(userId, campaignId);
+    return role;
+  }
+
+  /** Owner-only session list. Retained for GM-scoped call sites. */
   async list(ownerId: number, campaignId: number) {
     await this.assertCampaignOwnership(ownerId, campaignId);
     return this.prisma.session.findMany({
@@ -51,8 +61,33 @@ export class SessionsService {
     });
   }
 
+  /** Member-aware session list — GM or player member. */
+  async listForCaller(userId: number, campaignId: number) {
+    await this.assertCampaignAccess(userId, campaignId);
+    return this.prisma.session.findMany({
+      where: { campaignId },
+      orderBy: { sessionNumber: 'asc' },
+    });
+  }
+
+  /** Owner-only session lookup — used by every write path below. */
   async findOne(ownerId: number, campaignId: number, id: number) {
     await this.assertCampaignOwnership(ownerId, campaignId);
+    return this.loadSession(campaignId, id);
+  }
+
+  /**
+   * Member-aware session lookup — GM or player member. Returns the
+   * session plus caller role so the realtime gateway can stash it for
+   * per-action gating (e.g. GM-only turn advance).
+   */
+  async findOneForCaller(userId: number, campaignId: number, id: number) {
+    const role = await this.assertCampaignAccess(userId, campaignId);
+    const session = await this.loadSession(campaignId, id);
+    return { session, role };
+  }
+
+  private async loadSession(campaignId: number, id: number) {
     const session = await this.prisma.session.findUnique({ where: { id } });
     if (!session || session.campaignId !== campaignId) {
       throw new NotFoundException(`Session ${id} not found`);

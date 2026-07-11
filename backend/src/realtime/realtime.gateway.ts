@@ -22,7 +22,9 @@ import {
 } from './session-state.service';
 import { verifyHandshake } from './ws-auth';
 
-type AuthedSocket = Socket & { data: { user: AuthUser } };
+type AuthedSocket = Socket & {
+  data: { user: AuthUser; role?: 'gm' | 'player' };
+};
 
 export function sessionRoom(sessionId: number): string {
   return `session:${sessionId}`;
@@ -349,11 +351,16 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       throw new WsException('campaignId and sessionId are required integers');
     }
     try {
-      await this.sessions.findOne(
+      // Member-aware: GM or any player member may join + observe the
+      // session. Per-action GM gating (turn advance, initiative edits)
+      // reads the stashed role — vitals mutations additionally re-check
+      // character ownership below.
+      const { role } = await this.sessions.findOneForCaller(
         socket.data.user.id,
         body.campaignId,
         body.sessionId,
       );
+      socket.data.role = role;
     } catch (err) {
       throw new WsException((err as Error).message);
     }

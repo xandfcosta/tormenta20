@@ -40,6 +40,7 @@ async function setup(over?: {
   memberDelete?: jest.Mock;
   characterFindUnique?: jest.Mock;
   campaignsFindOne?: jest.Mock;
+  campaignsResolveAccess?: jest.Mock;
   campaignFindUnique?: jest.Mock;
 }) {
   const prisma = {
@@ -65,6 +66,12 @@ async function setup(over?: {
     findOne:
       over?.campaignsFindOne ??
       jest.fn().mockResolvedValue({ id: 1, ownerId: 1 }),
+    resolveAccess:
+      over?.campaignsResolveAccess ??
+      jest.fn().mockResolvedValue({
+        campaign: { id: 1, ownerId: 1 },
+        role: 'gm',
+      }),
   };
   const moduleRef = await Test.createTestingModule({
     providers: [
@@ -92,11 +99,11 @@ describe('CampaignMembersService.list', () => {
     );
   });
 
-  it('propagates Forbidden from campaigns.findOne', async () => {
-    const campaignsFindOne = jest.fn().mockRejectedValue(
+  it('propagates Forbidden when caller is neither GM nor member', async () => {
+    const campaignsResolveAccess = jest.fn().mockRejectedValue(
       new ForbiddenException(),
     );
-    const { service } = await setup({ campaignsFindOne });
+    const { service } = await setup({ campaignsResolveAccess });
     await expect(service.list(9, 1)).rejects.toBeInstanceOf(
       ForbiddenException,
     );

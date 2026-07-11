@@ -26,11 +26,12 @@ export class CampaignsController {
   }
 
   @Get(':id')
-  findOne(
+  async findOne(
     @CurrentUser() user: AuthUser,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.campaigns.findOne(user.id, id);
+    const { campaign, role } = await this.campaigns.resolveAccess(user.id, id);
+    return { ...campaign, role };
   }
 
   @Post()
