@@ -13,6 +13,7 @@ import { MpBar } from '@/shared/ui/mp-bar'
 import { NumberInput } from '@/shared/ui/number-input'
 import { SectionHeading } from '@/shared/ui/section-heading'
 import { useSessionSocket, type InitiativeEntry } from '@/shared/realtime/realtime'
+import { PresenceChips } from './presence-chips'
 
 // Maps realtime hook state onto ConnectionChip's tri-state. The socket
 // hook only reports `isConnected` + `error`; we infer 'reconnecting' as
@@ -65,6 +66,7 @@ export function InitiativeCard({
               Rodada {rt.state.round}
             </span>
           </div>
+          <PresenceChips users={rt.present} />
         </div>
         {isGm && (
           <div className="flex gap-2">
