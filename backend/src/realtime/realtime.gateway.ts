@@ -295,6 +295,90 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     return state;
   }
 
+  /**
+   * Pull the campaign's player characters (role='player') into the
+   * tracker in one shot — GM-only. Each PC joins with initiative 0 (the
+   * GM rolls/orders after) and live hp/mp lifted from the Character row.
+   * Characters already in the tracker are skipped, so re-running is
+   * idempotent (e.g. a player joined mid-session).
+   */
+  @SubscribeMessage('initiative-populate')
+  async initiativePopulate(
+    @ConnectedSocket() socket: AuthedSocket,
+    @MessageBody() body: SessionScopedBody,
+  ) {
+    await this.assertSessionAccess(socket, body);
+    this.assertGm(socket);
+    const members = await this.prisma.campaignMember.findMany({
+      where: { campaignId: body.campaignId, role: 'player' },
+      select: {
+        character: {
+          select: {
+            id: true,
+            name: true,
+            hpCurrent: true,
+            hpMax: true,
+            mpCurrent: true,
+            mpMax: true,
+          },
+        },
+      },
+    });
+    const existing = new Set(
+      this.state
+        .getState(body.sessionId)
+        .initiative.map((e) => e.characterId)
+        .filter((id): id is number => id !== undefined),
+    );
+    let state = this.state.getState(body.sessionId);
+    for (const { character } of members) {
+      if (existing.has(character.id)) continue;
+      state = this.state.addEntry(body.sessionId, {
+        label: character.name,
+        initiative: 0,
+        type: 'character',
+        characterId: character.id,
+        hpCurrent: character.hpCurrent,
+        hpMax: character.hpMax,
+        mpCurrent: character.mpCurrent,
+        mpMax: character.mpMax,
+      });
+    }
+    this.emitSessionState(body.sessionId, state);
+    return state;
+  }
+
+  /**
+   * Session-wide rest — GM-only. Clears active effects for every member
+   * character, mirroring the per-character end-scene / end-day rules
+   * (scene rest drops scene-scoped effects; day rest drops scene+day).
+   * Broadcasts a `session-rest` notice so clients can surface it. Does
+   * not touch hp/mp — vitals healing is a separate rules decision.
+   */
+  @SubscribeMessage('session-rest')
+  async sessionRest(
+    @ConnectedSocket() socket: AuthedSocket,
+    @MessageBody() body: SessionScopedBody & { scope: 'scene' | 'day' },
+  ) {
+    await this.assertSessionAccess(socket, body);
+    this.assertGm(socket);
+    const scopes = body.scope === 'day' ? ['scene', 'day'] : ['scene'];
+    const members = await this.prisma.campaignMember.findMany({
+      where: { campaignId: body.campaignId },
+      select: { characterId: true },
+    });
+    await this.prisma.activeEffect.deleteMany({
+      where: {
+        characterId: { in: members.map((m) => m.characterId) },
+        scope: { in: scopes },
+      },
+    });
+    this.server
+      .to(sessionRoom(body.sessionId))
+      .emit('session-rest', { sessionId: body.sessionId, scope: body.scope });
+    return { rested: body.scope, characters: members.length };
+  }
+
   @SubscribeMessage('vitals-patch')
   async vitalsPatch(
     @ConnectedSocket() socket: AuthedSocket,
