@@ -1,42 +1,42 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { SlidersHorizontal, Star, Trash2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/shared/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
+} from '@/shared/ui/dialog'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
+} from '@/shared/ui/tooltip'
 import type {
   AttributeKey,
   Character,
   CharacterExpertise,
-} from '@/lib/api'
-import { api } from '@/lib/api'
-import { invalidateCharacterDependents } from '@/lib/character-cache'
-import { expertiseTotalWithItems } from '@/lib/derived'
-import type { ExpertiseDef } from '@/lib/expertise'
+} from '@/shared/api/api'
+import { api } from '@/shared/api/api'
+import { invalidateCharacterDependents } from '@/shared/lib/character-cache'
+import { expertiseTotalWithItems } from '@/shared/lib/derived'
+import type { ExpertiseDef } from '@/shared/lib/expertise'
 import {
   ATTRIBUTE_ABBR,
   ATTRIBUTE_KEYS,
   expertiseStateFor,
   trainingBonusForLevel,
-} from '@/lib/expertise'
-import { characterQueryOptions } from '@/lib/queries'
+} from '@/shared/lib/expertise'
+import { characterQueryOptions } from '@/shared/lib/queries'
 import {
   accentStrong,
   dimText,
   hoverRow,
   selectClass,
   subtleText,
-} from '@/lib/sheet-theme'
-import { cn } from '@/lib/utils'
+} from '@/shared/lib/sheet-theme'
+import { cn } from '@/shared/lib/utils'
 import type { ItemEffects } from '@tormenta20/t20-data'
 import { signed } from './signed'
 

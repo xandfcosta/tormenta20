@@ -9,17 +9,17 @@ import {
   type SpellSchool,
   type SpellcasterClass,
 } from '@tormenta20/t20-data'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import type { Character, CharacterSpell } from '@/lib/api'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import type { Character, CharacterSpell } from '@/shared/api/api'
 import {
   accentStrong,
   dimText,
   panelBg,
   selectClass,
   surface,
-} from '@/lib/sheet-theme'
-import { cn } from '@/lib/utils'
+} from '@/shared/lib/sheet-theme'
+import { cn } from '@/shared/lib/utils'
 import { normalize } from './normalize'
 import { CIRCLE_LABEL, SCHOOL_LABEL } from './spell-labels'
 import { SpellRow } from './spell-row'

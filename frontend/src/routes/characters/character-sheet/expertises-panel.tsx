@@ -1,39 +1,39 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Search } from 'lucide-react'
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/shared/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
+} from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
 import type {
   AttributeKey,
   Character,
   CharacterExpertise,
-} from '@/lib/api'
-import { api } from '@/lib/api'
-import { invalidateCharacterDependents } from '@/lib/character-cache'
-import { useCharacterEffects } from '@/lib/derived'
-import type { ExpertiseDef } from '@/lib/expertise'
+} from '@/shared/api/api'
+import { api } from '@/shared/api/api'
+import { invalidateCharacterDependents } from '@/shared/lib/character-cache'
+import { useCharacterEffects } from '@/shared/lib/derived'
+import type { ExpertiseDef } from '@/shared/lib/expertise'
 import {
   ATTRIBUTE_ABBR,
   ATTRIBUTE_KEYS,
   EXPERTISES,
   trainingBonusForLevel,
-} from '@/lib/expertise'
-import { characterQueryOptions } from '@/lib/queries'
+} from '@/shared/lib/expertise'
+import { characterQueryOptions } from '@/shared/lib/queries'
 import {
   accentStrong,
   dimText,
   panelBg,
   selectClass,
   surface,
-} from '@/lib/sheet-theme'
-import { cn } from '@/lib/utils'
+} from '@/shared/lib/sheet-theme'
+import { cn } from '@/shared/lib/utils'
 import { ExpertiseRow } from './expertise-row'
 import { normalize } from './normalize'
 import { signed } from './signed'

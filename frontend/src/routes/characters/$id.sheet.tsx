@@ -1,16 +1,16 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { PageChrome } from '@/components/ui/page-chrome'
-import { SectionHeading } from '@/components/ui/section-heading'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Badge } from '@/shared/ui/badge'
+import { PageChrome } from '@/shared/ui/page-chrome'
+import { SectionHeading } from '@/shared/ui/section-heading'
+import { Skeleton } from '@/shared/ui/skeleton'
 import {
   characterSheetQueryOptions,
   meQueryOptions,
-} from '@/lib/queries'
-import type { CharacterWithComputed, ComputedSheet } from '@/lib/api'
+} from '@/shared/lib/queries'
+import type { CharacterWithComputed, ComputedSheet } from '@/shared/api/api'
 
 /**
  * Server-computed sheet view. Renders the ComputedSheet payload from

@@ -10,14 +10,14 @@ import {
   type SpellCircle,
   type SpellcasterClass,
 } from '@tormenta20/t20-data'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import type { AttributeKey, Character, CharacterSpell } from '@/lib/api'
-import { api } from '@/lib/api'
-import { invalidateCharacterDependents } from '@/lib/character-cache'
-import { characterQueryOptions } from '@/lib/queries'
-import { accentStrong, dimText, hoverRow } from '@/lib/sheet-theme'
-import { cn } from '@/lib/utils'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import type { AttributeKey, Character, CharacterSpell } from '@/shared/api/api'
+import { api } from '@/shared/api/api'
+import { invalidateCharacterDependents } from '@/shared/lib/character-cache'
+import { characterQueryOptions } from '@/shared/lib/queries'
+import { accentStrong, dimText, hoverRow } from '@/shared/lib/sheet-theme'
+import { cn } from '@/shared/lib/utils'
 import { CastSpellDialog } from './cast-spell-dialog'
 import { CIRCLE_LABEL, SCHOOL_LABEL } from './spell-labels'
 

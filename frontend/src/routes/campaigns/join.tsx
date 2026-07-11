@@ -7,25 +7,25 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from '@tanstack/react-form'
 import { useState } from 'react'
 import { z } from 'zod'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { PageChrome } from '@/components/ui/page-chrome'
-import { SectionHeading } from '@/components/ui/section-heading'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
+import { PageChrome } from '@/shared/ui/page-chrome'
+import { SectionHeading } from '@/shared/ui/section-heading'
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from '@/components/ui/field'
-import { ApiError, api } from '@/lib/api'
-import type { CampaignInvitePreview } from '@/lib/api'
-import { applyServerErrors } from '@/lib/form-errors'
+} from '@/shared/ui/field'
+import { ApiError, api } from '@/shared/api/api'
+import type { CampaignInvitePreview } from '@/shared/api/api'
+import { applyServerErrors } from '@/shared/lib/form-errors'
 import {
   campaignsQueryOptions,
   charactersQueryOptions,
   meQueryOptions,
-} from '@/lib/queries'
+} from '@/shared/lib/queries'
 
 /**
  * Self-join page. Post-OC1 the caller must own the character being

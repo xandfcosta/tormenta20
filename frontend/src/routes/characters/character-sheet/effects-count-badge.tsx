@@ -1,6 +1,6 @@
-import type { Character } from '@/lib/api'
-import { useAllConditionals } from '@/lib/derived'
-import { cn } from '@/lib/utils'
+import type { Character } from '@/shared/api/api'
+import { useAllConditionals } from '@/shared/lib/derived'
+import { cn } from '@/shared/lib/utils'
 
 /**
  * Small numeric pill shown next to the "Efeitos" tab trigger. Counts

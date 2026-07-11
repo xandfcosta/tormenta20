@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Sparkles, Zap } from 'lucide-react'
 import type { CatalogSpell } from '@tormenta20/t20-data'
 import { SPELL_BASE_PM_COST } from '@tormenta20/t20-data'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/shared/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -12,14 +12,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { NumberInput } from '@/components/ui/number-input'
-import { ApiError, api } from '@/lib/api'
-import type { Character } from '@/lib/api'
-import { invalidateCharacterDependents } from '@/lib/character-cache'
-import { characterQueryOptions } from '@/lib/queries'
-import { accentStrong, dimText } from '@/lib/sheet-theme'
-import { cn } from '@/lib/utils'
+} from '@/shared/ui/dialog'
+import { NumberInput } from '@/shared/ui/number-input'
+import { ApiError, api } from '@/shared/api/api'
+import type { Character } from '@/shared/api/api'
+import { invalidateCharacterDependents } from '@/shared/lib/character-cache'
+import { characterQueryOptions } from '@/shared/lib/queries'
+import { accentStrong, dimText } from '@/shared/lib/sheet-theme'
+import { cn } from '@/shared/lib/utils'
 
 type AugmentPick = { augmentIndex: number; stacks: number }
 

@@ -1,27 +1,27 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { NumberInput } from '@/components/ui/number-input'
-import { PageChrome } from '@/components/ui/page-chrome'
-import { SectionHeading } from '@/components/ui/section-heading'
+} from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import { NumberInput } from '@/shared/ui/number-input'
+import { PageChrome } from '@/shared/ui/page-chrome'
+import { SectionHeading } from '@/shared/ui/section-heading'
 import { SendEncounterToSessionButton } from '@/components/gm/send-encounter-to-session'
 import {
   BESTIARY,
   encounterXp,
   type Monster,
 } from '@tormenta20/t20-data'
-import { computeGroupNd } from '@/lib/encounter-math'
-import { meQueryOptions } from '@/lib/queries'
+import { computeGroupNd } from '@/shared/lib/encounter-math'
+import { meQueryOptions } from '@/shared/lib/queries'
 
 /**
  * Encounter builder — party level + size, monster composition, live

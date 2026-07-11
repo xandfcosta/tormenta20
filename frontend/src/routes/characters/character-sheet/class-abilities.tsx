@@ -17,17 +17,17 @@ import type {
   GeneralPower,
   PowerKind,
 } from '@tormenta20/t20-data'
-import { Combobox, type ComboboxOption } from '@/components/ui/combobox'
-import { api, type Character } from '@/lib/api'
-import { invalidateCharacterDependents } from '@/lib/character-cache'
+import { Combobox, type ComboboxOption } from '@/shared/ui/combobox'
+import { api, type Character } from '@/shared/api/api'
+import { invalidateCharacterDependents } from '@/shared/lib/character-cache'
 import {
   evaluatePrerequisite,
   parseClassChoices,
   type PrerequisiteCheck,
-} from '@/lib/derived'
-import { characterQueryOptions } from '@/lib/queries'
-import { accentTitle, subtleText } from '@/lib/sheet-theme'
-import { cn } from '@/lib/utils'
+} from '@/shared/lib/derived'
+import { characterQueryOptions } from '@/shared/lib/queries'
+import { accentTitle, subtleText } from '@/shared/lib/sheet-theme'
+import { cn } from '@/shared/lib/utils'
 import { AbilitiesSection } from './abilities-section'
 import { parseChoices } from './parse-choices'
 

@@ -1,8 +1,8 @@
 import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { Badge } from '@/components/ui/badge'
-import { SkeletonRows } from '@/components/ui/skeleton'
-import { characterCampaignsQueryOptions } from '@/lib/queries'
+import { Badge } from '@/shared/ui/badge'
+import { SkeletonRows } from '@/shared/ui/skeleton'
+import { characterCampaignsQueryOptions } from '@/shared/lib/queries'
 
 /**
  * Right-panel tab that lists every campaign a character is currently

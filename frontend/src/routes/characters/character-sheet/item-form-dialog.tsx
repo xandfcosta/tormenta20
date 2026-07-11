@@ -1,22 +1,22 @@
 import { type ReactNode, useState } from 'react'
 import { Info } from 'lucide-react'
 import { getCatalogItem } from '@tormenta20/t20-data'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/shared/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { NumberInput } from '@/components/ui/number-input'
+} from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import { NumberInput } from '@/shared/ui/number-input'
 import type {
   CharacterItem,
   CreateItemInput,
-} from '@/lib/api'
-import { accentStrong, dimText, subtleText } from '@/lib/sheet-theme'
-import { cn } from '@/lib/utils'
+} from '@/shared/api/api'
+import { accentStrong, dimText, subtleText } from '@/shared/lib/sheet-theme'
+import { cn } from '@/shared/lib/utils'
 import { CatalogInfoBody } from './catalog-info-body'
 import { formatLoad } from './item-describe'
 

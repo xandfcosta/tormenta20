@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Check, Copy, RefreshCw, Share2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/shared/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -10,9 +10,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { ApiError, api } from '@/lib/api'
+} from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import { ApiError, api } from '@/shared/api/api'
 
 /**
  * Convite dialog — GM opens, clicks "Gerar link" to mint a fresh token,

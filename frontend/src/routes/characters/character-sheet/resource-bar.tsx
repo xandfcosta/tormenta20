@@ -1,16 +1,16 @@
 import { useState } from 'react'
 import { Minus, Pencil, Plus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/shared/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { NumberInput } from '@/components/ui/number-input'
-import { accentStrong, dimText } from '@/lib/sheet-theme'
-import { cn } from '@/lib/utils'
+} from '@/shared/ui/dialog'
+import { NumberInput } from '@/shared/ui/number-input'
+import { accentStrong, dimText } from '@/shared/lib/sheet-theme'
+import { cn } from '@/shared/lib/utils'
 
 export function ResourceBar({
   label,

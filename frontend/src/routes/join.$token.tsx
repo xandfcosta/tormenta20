@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { meQueryOptions } from '@/lib/queries'
+import { meQueryOptions } from '@/shared/lib/queries'
 
 /**
  * Public invite landing. `join/<token>` is the shareable URL the GM

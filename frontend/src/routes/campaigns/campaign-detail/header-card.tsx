@@ -1,17 +1,17 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { CalendarClock } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { SectionHeading } from '@/components/ui/section-heading'
-import { Textarea } from '@/components/ui/textarea'
-import { ApiError, api } from '@/lib/api'
-import type { Campaign } from '@/lib/api'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
+import { SectionHeading } from '@/shared/ui/section-heading'
+import { Textarea } from '@/shared/ui/textarea'
+import { ApiError, api } from '@/shared/api/api'
+import type { Campaign } from '@/shared/api/api'
 import {
   campaignQueryOptions,
   campaignsQueryOptions,
-} from '@/lib/queries'
+} from '@/shared/lib/queries'
 
 export function CampaignHeaderCard({ campaign }: { campaign: Campaign }) {
   const qc = useQueryClient()

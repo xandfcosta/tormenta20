@@ -1,8 +1,8 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -10,18 +10,18 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { NumberInput } from '@/components/ui/number-input'
-import { PageChrome } from '@/components/ui/page-chrome'
-import { SectionHeading } from '@/components/ui/section-heading'
+} from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import { NumberInput } from '@/shared/ui/number-input'
+import { PageChrome } from '@/shared/ui/page-chrome'
+import { SectionHeading } from '@/shared/ui/section-heading'
 import {
   BESTIARY,
   type Monster,
   type MonsterTipo,
   xpForNd,
 } from '@tormenta20/t20-data'
-import { meQueryOptions } from '@/lib/queries'
+import { meQueryOptions } from '@/shared/lib/queries'
 
 const TIPOS: readonly MonsterTipo[] = [
   'humanoide',

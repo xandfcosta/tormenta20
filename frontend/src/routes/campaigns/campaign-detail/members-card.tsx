@@ -2,22 +2,22 @@ import { Link } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Trash2, UserPlus } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Combobox } from '@/components/ui/combobox'
-import { SectionHeading } from '@/components/ui/section-heading'
-import { SkeletonRows } from '@/components/ui/skeleton'
-import { ApiError, api } from '@/lib/api'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader } from '@/shared/ui/card'
+import { Combobox } from '@/shared/ui/combobox'
+import { SectionHeading } from '@/shared/ui/section-heading'
+import { SkeletonRows } from '@/shared/ui/skeleton'
+import { ApiError, api } from '@/shared/api/api'
 import type {
   CampaignMember,
   CampaignMemberRole,
   Character,
-} from '@/lib/api'
+} from '@/shared/api/api'
 import {
   campaignMembersQueryOptions,
   charactersQueryOptions,
-} from '@/lib/queries'
+} from '@/shared/lib/queries'
 
 export function MembersCard({ campaignId }: { campaignId: number }) {
   const members = useQuery(campaignMembersQueryOptions(campaignId))

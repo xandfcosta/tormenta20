@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader } from '@/shared/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -11,16 +11,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { NumberInput } from '@/components/ui/number-input'
-import { SectionHeading } from '@/components/ui/section-heading'
-import { ApiError, api } from '@/lib/api'
-import type { Session, SessionStatus } from '@/lib/api'
+} from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import { NumberInput } from '@/shared/ui/number-input'
+import { SectionHeading } from '@/shared/ui/section-heading'
+import { ApiError, api } from '@/shared/api/api'
+import type { Session, SessionStatus } from '@/shared/api/api'
 import {
   campaignSessionQueryOptions,
   campaignSessionsQueryOptions,
-} from '@/lib/queries'
+} from '@/shared/lib/queries'
 
 export function HeaderCard({
   campaignId,

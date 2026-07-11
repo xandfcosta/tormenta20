@@ -1,22 +1,22 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Check, Sparkles, X } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { api, type Character } from '@/lib/api'
-import { invalidateCharacterDependents } from '@/lib/character-cache'
+import { Button } from '@/shared/ui/button'
+import { api, type Character } from '@/shared/api/api'
+import { invalidateCharacterDependents } from '@/shared/lib/character-cache'
 import {
   useAllConditionals,
   type ConditionalEntry,
-} from '@/lib/derived'
-import { characterQueryOptions } from '@/lib/queries'
-import { cn } from '@/lib/utils'
-import { useConditionalsStore } from '@/store/conditionals-store'
+} from '@/shared/lib/derived'
+import { characterQueryOptions } from '@/shared/lib/queries'
+import { cn } from '@/shared/lib/utils'
+import { useConditionalsStore } from '@/shared/stores/conditionals-store'
 import { getCatalogItem } from '@tormenta20/t20-data'
 import type { ConditionalEffect, Modifier } from '@tormenta20/t20-data'
 import {
   accentStrong,
   subtleText,
   surface,
-} from '@/lib/sheet-theme'
+} from '@/shared/lib/sheet-theme'
 import { signed } from './signed'
 
 /**

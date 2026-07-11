@@ -5,24 +5,24 @@ import {
   Trash2,
 } from 'lucide-react'
 import { getCatalogItem } from '@tormenta20/t20-data'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/shared/ui/button'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
+} from '@/shared/ui/tooltip'
 import type {
   CharacterItem,
   UpdateItemInput,
-} from '@/lib/api'
+} from '@/shared/api/api'
 import {
   accentStrong,
   dimText,
   hoverRow,
   selectClass,
   subtleText,
-} from '@/lib/sheet-theme'
-import { cn } from '@/lib/utils'
+} from '@/shared/lib/sheet-theme'
+import { cn } from '@/shared/lib/utils'
 import {
   OverlayPickerDialog,
 } from './catalog-picker-dialog'

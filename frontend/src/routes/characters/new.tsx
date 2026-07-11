@@ -3,14 +3,14 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from '@tanstack/react-form'
 import { useState } from 'react'
 import { z } from 'zod'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { NumberInput } from '@/components/ui/number-input'
-import { Combobox } from '@/components/ui/combobox'
-import { Badge } from '@/components/ui/badge'
-import { PageChrome } from '@/components/ui/page-chrome'
-import { SectionHeading } from '@/components/ui/section-heading'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
+import { NumberInput } from '@/shared/ui/number-input'
+import { Combobox } from '@/shared/ui/combobox'
+import { Badge } from '@/shared/ui/badge'
+import { PageChrome } from '@/shared/ui/page-chrome'
+import { SectionHeading } from '@/shared/ui/section-heading'
 import { ClassEntryRow } from './character-new/class-entry-row'
 import { NumberField } from './character-new/number-field'
 import {
@@ -19,10 +19,10 @@ import {
   FieldError,
   FieldGroup,
   FieldLabel,
-} from '@/components/ui/field'
-import { ApiError, api } from '@/lib/api'
-import type { CreateCharacterInput } from '@/lib/api'
-import { applyServerErrors } from '@/lib/form-errors'
+} from '@/shared/ui/field'
+import { ApiError, api } from '@/shared/api/api'
+import type { CreateCharacterInput } from '@/shared/api/api'
+import { applyServerErrors } from '@/shared/lib/form-errors'
 import {
   ATTRIBUTE_KEYS,
   attributePresetForClass,
@@ -31,7 +31,7 @@ import {
   characterOptionsQueryOptions,
   charactersQueryOptions,
   meQueryOptions,
-} from '@/lib/queries'
+} from '@/shared/lib/queries'
 
 export const Route = createFileRoute('/characters/new')({
   beforeLoad: async ({ context, location }) => {

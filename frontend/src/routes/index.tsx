@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { PageChrome } from '@/components/ui/page-chrome'
-import { SectionHeading, type SectionHeadingVariant } from '@/components/ui/section-heading'
-import { meQueryOptions } from '@/lib/queries'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader } from '@/shared/ui/card'
+import { PageChrome } from '@/shared/ui/page-chrome'
+import { SectionHeading, type SectionHeadingVariant } from '@/shared/ui/section-heading'
+import { meQueryOptions } from '@/shared/lib/queries'
 
 /**
  * Root landing. Two modes:

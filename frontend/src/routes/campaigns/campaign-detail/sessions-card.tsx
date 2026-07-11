@@ -1,14 +1,14 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CalendarPlus } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { SectionHeading } from '@/components/ui/section-heading'
-import { SkeletonRows } from '@/components/ui/skeleton'
-import { api } from '@/lib/api'
-import type { Session } from '@/lib/api'
-import { campaignSessionsQueryOptions } from '@/lib/queries'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader } from '@/shared/ui/card'
+import { SectionHeading } from '@/shared/ui/section-heading'
+import { SkeletonRows } from '@/shared/ui/skeleton'
+import { api } from '@/shared/api/api'
+import type { Session } from '@/shared/api/api'
+import { campaignSessionsQueryOptions } from '@/shared/lib/queries'
 
 export function SessionsCard({ campaignId }: { campaignId: number }) {
   const qc = useQueryClient()

@@ -6,13 +6,13 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '@/components/ui/tabs'
-import { cn } from '@/lib/utils'
-import { sheetBg } from '@/lib/sheet-theme'
+} from '@/shared/ui/tabs'
+import { cn } from '@/shared/lib/utils'
+import { sheetBg } from '@/shared/lib/sheet-theme'
 import {
   characterQueryOptions,
   meQueryOptions,
-} from '@/lib/queries'
+} from '@/shared/lib/queries'
 import { AbilitiesPanel } from './character-sheet/abilities-panel'
 import { CampaignsPanel } from './character-sheet/campaigns-panel'
 import { EffectsCountBadge } from './character-sheet/effects-count-badge'
@@ -24,7 +24,7 @@ import { ProficienciesPanel } from './character-sheet/proficiencies-panel'
 import { SheetHeader } from './character-sheet/sheet-header'
 import { SpellbookPanel } from './character-sheet/spellbook-panel'
 import { VitalsAside } from './character-sheet/vitals-aside'
-import type { Character } from '@/lib/api'
+import type { Character } from '@/shared/api/api'
 
 export const Route = createFileRoute('/characters/$id')({
   beforeLoad: async ({ context, location }) => {

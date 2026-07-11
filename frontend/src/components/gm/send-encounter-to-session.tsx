@@ -3,9 +3,9 @@ import { useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { Send, Swords } from 'lucide-react'
 import type { Monster } from '@tormenta20/t20-data'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Combobox } from '@/components/ui/combobox'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Combobox } from '@/shared/ui/combobox'
 import {
   Dialog,
   DialogContent,
@@ -14,12 +14,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
+} from '@/shared/ui/dialog'
 import {
   campaignsQueryOptions,
   campaignSessionsQueryOptions,
-} from '@/lib/queries'
-import { useSessionSocket } from '@/lib/realtime'
+} from '@/shared/lib/queries'
+import { useSessionSocket } from '@/shared/realtime/realtime'
 
 // Mirror of backend `INITIATIVE_MAX_ENTRIES` — server rejects the 51st
 // add with a BadRequestException. Frontend clamps too so batch feedback

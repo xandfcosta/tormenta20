@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Trash2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/shared/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -11,9 +11,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { api } from '@/lib/api'
-import { campaignSessionsQueryOptions } from '@/lib/queries'
+} from '@/shared/ui/dialog'
+import { api } from '@/shared/api/api'
+import { campaignSessionsQueryOptions } from '@/shared/lib/queries'
 
 export function DeleteSessionButton({
   campaignId,

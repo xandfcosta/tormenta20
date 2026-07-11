@@ -7,22 +7,22 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useForm } from '@tanstack/react-form'
 import { useState } from 'react'
 import { z } from 'zod'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { PageChrome } from '@/components/ui/page-chrome'
-import { SectionHeading } from '@/components/ui/section-heading'
-import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
+import { PageChrome } from '@/shared/ui/page-chrome'
+import { SectionHeading } from '@/shared/ui/section-heading'
+import { Textarea } from '@/shared/ui/textarea'
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from '@/components/ui/field'
-import { ApiError, api } from '@/lib/api'
-import type { CreateCampaignInput } from '@/lib/api'
-import { applyServerErrors } from '@/lib/form-errors'
-import { campaignsQueryOptions, meQueryOptions } from '@/lib/queries'
+} from '@/shared/ui/field'
+import { ApiError, api } from '@/shared/api/api'
+import type { CreateCampaignInput } from '@/shared/api/api'
+import { applyServerErrors } from '@/shared/lib/form-errors'
+import { campaignsQueryOptions, meQueryOptions } from '@/shared/lib/queries'
 
 export const Route = createFileRoute('/campaigns/new')({
   beforeLoad: async ({ context, location }) => {

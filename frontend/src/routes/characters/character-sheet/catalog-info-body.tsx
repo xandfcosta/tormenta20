@@ -1,6 +1,6 @@
 import type { CatalogItem } from '@tormenta20/t20-data'
-import { accentStrong, dimText } from '@/lib/sheet-theme'
-import { cn } from '@/lib/utils'
+import { accentStrong, dimText } from '@/shared/lib/sheet-theme'
+import { cn } from '@/shared/lib/utils'
 import {
   describeCondition,
   describeModifierTarget,

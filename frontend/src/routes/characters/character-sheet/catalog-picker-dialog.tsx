@@ -7,29 +7,29 @@ import {
   familyFor,
   getCatalogItem,
 } from '@tormenta20/t20-data'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/shared/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { NumberInput } from '@/components/ui/number-input'
+} from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import { NumberInput } from '@/shared/ui/number-input'
 import type {
   CharacterItem,
   CreateItemInput,
   UpdateItemInput,
-} from '@/lib/api'
-import { parseImprovementIds } from '@/lib/derived'
+} from '@/shared/api/api'
+import { parseImprovementIds } from '@/shared/lib/derived'
 import {
   accentStrong,
   dimText,
   selectClass,
   subtleText,
-} from '@/lib/sheet-theme'
-import { cn } from '@/lib/utils'
+} from '@/shared/lib/sheet-theme'
+import { cn } from '@/shared/lib/utils'
 import { formatLoad } from './item-describe'
 import { normalize } from './normalize'
 

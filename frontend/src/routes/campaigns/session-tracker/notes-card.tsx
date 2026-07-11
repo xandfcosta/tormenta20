@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { SectionHeading } from '@/components/ui/section-heading'
-import { Textarea } from '@/components/ui/textarea'
-import { ApiError, api } from '@/lib/api'
-import type { Session } from '@/lib/api'
-import { campaignSessionQueryOptions } from '@/lib/queries'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader } from '@/shared/ui/card'
+import { SectionHeading } from '@/shared/ui/section-heading'
+import { Textarea } from '@/shared/ui/textarea'
+import { ApiError, api } from '@/shared/api/api'
+import type { Session } from '@/shared/api/api'
+import { campaignSessionQueryOptions } from '@/shared/lib/queries'
 
 export function NotesCard({
   campaignId,

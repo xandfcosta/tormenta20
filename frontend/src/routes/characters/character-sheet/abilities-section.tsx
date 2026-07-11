@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import { accentStrong, surface } from '@/lib/sheet-theme'
-import { cn } from '@/lib/utils'
+import { accentStrong, surface } from '@/shared/lib/sheet-theme'
+import { cn } from '@/shared/lib/utils'
 
 /**
  * Shell used by every ability sub-section (race, origin, class). Kept

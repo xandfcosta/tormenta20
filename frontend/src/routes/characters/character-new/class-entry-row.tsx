@@ -1,7 +1,7 @@
-import { Button } from '@/components/ui/button'
-import { Combobox } from '@/components/ui/combobox'
-import { Field, FieldError, FieldLabel } from '@/components/ui/field'
-import { NumberInput } from '@/components/ui/number-input'
+import { Button } from '@/shared/ui/button'
+import { Combobox } from '@/shared/ui/combobox'
+import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
+import { NumberInput } from '@/shared/ui/number-input'
 
 // TanStack Form's API type is heavily generic — `any` here keeps row
 // helpers usable without leaking 10 type parameters across the file.

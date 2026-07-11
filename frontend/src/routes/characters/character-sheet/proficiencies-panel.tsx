@@ -2,12 +2,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Check, X } from 'lucide-react'
 import { characterProficiencies } from '@tormenta20/t20-data'
 import type { ProficiencyEntry } from '@tormenta20/t20-data'
-import { Button } from '@/components/ui/button'
-import { api, type Character } from '@/lib/api'
-import { invalidateCharacterDependents } from '@/lib/character-cache'
-import { characterQueryOptions } from '@/lib/queries'
-import { accentStrong, dimText, surface } from '@/lib/sheet-theme'
-import { cn } from '@/lib/utils'
+import { Button } from '@/shared/ui/button'
+import { api, type Character } from '@/shared/api/api'
+import { invalidateCharacterDependents } from '@/shared/lib/character-cache'
+import { characterQueryOptions } from '@/shared/lib/queries'
+import { accentStrong, dimText, surface } from '@/shared/lib/sheet-theme'
+import { cn } from '@/shared/lib/utils'
 
 /**
  * "Proficiências" tab — lists every weapon / armor / shield proficiency

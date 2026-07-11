@@ -1,18 +1,18 @@
 import { useState } from 'react'
 import { Plus, Swords, Trash2 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader } from '@/shared/ui/card'
 import {
   ConnectionChip,
   type ConnectionStatus,
-} from '@/components/ui/connection-chip'
-import { HpBar } from '@/components/ui/hp-bar'
-import { Input } from '@/components/ui/input'
-import { MpBar } from '@/components/ui/mp-bar'
-import { NumberInput } from '@/components/ui/number-input'
-import { SectionHeading } from '@/components/ui/section-heading'
-import { useSessionSocket, type InitiativeEntry } from '@/lib/realtime'
+} from '@/shared/ui/connection-chip'
+import { HpBar } from '@/shared/ui/hp-bar'
+import { Input } from '@/shared/ui/input'
+import { MpBar } from '@/shared/ui/mp-bar'
+import { NumberInput } from '@/shared/ui/number-input'
+import { SectionHeading } from '@/shared/ui/section-heading'
+import { useSessionSocket, type InitiativeEntry } from '@/shared/realtime/realtime'
 
 // Maps realtime hook state onto ConnectionChip's tri-state. The socket
 // hook only reports `isConnected` + `error`; we infer 'reconnecting' as

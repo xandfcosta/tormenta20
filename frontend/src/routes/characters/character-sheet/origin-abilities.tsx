@@ -5,11 +5,11 @@ import type {
   OriginBenefit,
   OriginDefinition,
 } from '@tormenta20/t20-data'
-import { api, type Character } from '@/lib/api'
-import { invalidateCharacterDependents } from '@/lib/character-cache'
-import { characterQueryOptions } from '@/lib/queries'
-import { accentTitle, dimText, subtleText } from '@/lib/sheet-theme'
-import { cn } from '@/lib/utils'
+import { api, type Character } from '@/shared/api/api'
+import { invalidateCharacterDependents } from '@/shared/lib/character-cache'
+import { characterQueryOptions } from '@/shared/lib/queries'
+import { accentTitle, dimText, subtleText } from '@/shared/lib/sheet-theme'
+import { cn } from '@/shared/lib/utils'
 import { AbilitiesSection } from './abilities-section'
 import { parseChoices } from './parse-choices'
 

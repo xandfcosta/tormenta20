@@ -2,32 +2,32 @@ import { Link } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/shared/ui/dialog'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { api } from '@/lib/api'
-import type { Character } from '@/lib/api'
-import { invalidateCharacterDependents } from '@/lib/character-cache'
-import { displacementTotal, useCharacterEffects } from '@/lib/derived'
-import { characterQueryOptions } from '@/lib/queries'
+} from '@/shared/ui/tooltip'
+import { api } from '@/shared/api/api'
+import type { Character } from '@/shared/api/api'
+import { invalidateCharacterDependents } from '@/shared/lib/character-cache'
+import { displacementTotal, useCharacterEffects } from '@/shared/lib/derived'
+import { characterQueryOptions } from '@/shared/lib/queries'
 import {
   accentBadge,
   accentTitle,
   dimText,
   subtleText,
   surface,
-} from '@/lib/sheet-theme'
-import { cn } from '@/lib/utils'
+} from '@/shared/lib/sheet-theme'
+import { cn } from '@/shared/lib/utils'
 import { signed } from './signed'
 
 export function SheetHeader({

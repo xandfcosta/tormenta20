@@ -1,5 +1,5 @@
-import { Field, FieldError, FieldLabel } from '@/components/ui/field'
-import { NumberInput } from '@/components/ui/number-input'
+import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
+import { NumberInput } from '@/shared/ui/number-input'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FormApi = any

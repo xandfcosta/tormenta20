@@ -1,11 +1,11 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { DicePill } from '@/components/ui/dice-pill'
-import { PageChrome } from '@/components/ui/page-chrome'
-import { SectionHeading } from '@/components/ui/section-heading'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { DicePill } from '@/shared/ui/dice-pill'
+import { PageChrome } from '@/shared/ui/page-chrome'
+import { SectionHeading } from '@/shared/ui/section-heading'
 import {
   BUSCA_CHALLENGE_TABLE,
   BUSCA_OUTCOME_TABLE,
@@ -22,7 +22,7 @@ import {
   type RewardCastigoRow,
   type RuinaRow,
 } from '@tormenta20/t20-data'
-import { meQueryOptions } from '@/lib/queries'
+import { meQueryOptions } from '@/shared/lib/queries'
 
 /**
  * Rolls the Cap 6 mesa tables client-side (no API round-trip — all

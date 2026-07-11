@@ -3,16 +3,16 @@ import { X } from 'lucide-react'
 import type {
   Character,
   CharacterItem,
-} from '@/lib/api'
-import { api } from '@/lib/api'
-import { characterQueryOptions } from '@/lib/queries'
+} from '@/shared/api/api'
+import { api } from '@/shared/api/api'
+import { characterQueryOptions } from '@/shared/lib/queries'
 import {
   accentStrong,
   dimText,
   panelBg,
   surface,
-} from '@/lib/sheet-theme'
-import { cn } from '@/lib/utils'
+} from '@/shared/lib/sheet-theme'
+import { cn } from '@/shared/lib/utils'
 
 /**
  * "Equipado" panel — visual summary of which items are currently

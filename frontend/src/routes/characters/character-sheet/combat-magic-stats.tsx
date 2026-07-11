@@ -5,8 +5,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import type { Character } from '@/lib/api'
+} from '@/shared/ui/dialog'
+import type { Character } from '@/shared/api/api'
 import {
   defenseTotal,
   expertiseTotalWithItems,
@@ -14,10 +14,10 @@ import {
   pmLimitTotal,
   spellDCBonus,
   useCharacterEffects,
-} from '@/lib/derived'
-import { ATTRIBUTE_ABBR, expertiseStateFor } from '@/lib/expertise'
-import { dimText } from '@/lib/sheet-theme'
-import { cn } from '@/lib/utils'
+} from '@/shared/lib/derived'
+import { ATTRIBUTE_ABBR, expertiseStateFor } from '@/shared/lib/expertise'
+import { dimText } from '@/shared/lib/sheet-theme'
+import { cn } from '@/shared/lib/utils'
 import { signed } from './signed'
 
 type StatRow = { label: string; amount: number; muted?: boolean }

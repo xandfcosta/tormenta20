@@ -1,28 +1,28 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
 import { CATALOG_ITEMS } from '@tormenta20/t20-data'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/shared/ui/button'
 import type {
   Character,
   CharacterItem,
   CreateItemInput,
   UpdateItemInput,
-} from '@/lib/api'
-import { api } from '@/lib/api'
-import { invalidateCharacterDependents } from '@/lib/character-cache'
+} from '@/shared/api/api'
+import { api } from '@/shared/api/api'
+import { invalidateCharacterDependents } from '@/shared/lib/character-cache'
 import {
   inventorySlotsTotal,
   isItemProficient,
   useCharacterEffects,
-} from '@/lib/derived'
-import { characterQueryOptions } from '@/lib/queries'
+} from '@/shared/lib/derived'
+import { characterQueryOptions } from '@/shared/lib/queries'
 import {
   accentStrong,
   dimText,
   panelBg,
   surface,
-} from '@/lib/sheet-theme'
-import { cn } from '@/lib/utils'
+} from '@/shared/lib/sheet-theme'
+import { cn } from '@/shared/lib/utils'
 import { AddCatalogItemDialog } from './catalog-picker-dialog'
 import { formatLoad } from './item-describe'
 import { ItemFormDialog } from './item-form-dialog'

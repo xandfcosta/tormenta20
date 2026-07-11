@@ -1,11 +1,11 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { Dices, Scroll, Skull, Swords } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { PageChrome } from '@/components/ui/page-chrome'
-import { SectionHeading } from '@/components/ui/section-heading'
-import { meQueryOptions } from '@/lib/queries'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { PageChrome } from '@/shared/ui/page-chrome'
+import { SectionHeading } from '@/shared/ui/section-heading'
+import { meQueryOptions } from '@/shared/lib/queries'
 
 /**
  * GM tools hub. Landing page with links to each generator/lookup.

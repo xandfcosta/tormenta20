@@ -1,13 +1,13 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { DicePill } from '@/components/ui/dice-pill'
-import { Input } from '@/components/ui/input'
-import { NumberInput } from '@/components/ui/number-input'
-import { PageChrome } from '@/components/ui/page-chrome'
-import { SectionHeading } from '@/components/ui/section-heading'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { DicePill } from '@/shared/ui/dice-pill'
+import { Input } from '@/shared/ui/input'
+import { NumberInput } from '@/shared/ui/number-input'
+import { PageChrome } from '@/shared/ui/page-chrome'
+import { SectionHeading } from '@/shared/ui/section-heading'
 import {
   DUNGEON_SIZE_TABLE,
   classifyDungeonSize,
@@ -18,7 +18,7 @@ import {
   type DungeonIdea,
   type DungeonSize,
 } from '@tormenta20/t20-data'
-import { meQueryOptions } from '@/lib/queries'
+import { meQueryOptions } from '@/shared/lib/queries'
 
 const SIZE_LABEL: Record<DungeonSize, string> = {
   pequena: 'Pequena',
