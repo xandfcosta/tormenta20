@@ -10,9 +10,9 @@ import { cn } from '@/shared/lib/utils'
  * without a glyph — used everywhere else so the marks stay meaningful.
  *
  * The glyphs are ~16px inline SVG so they follow currentColor. Text
- * uses the Redaction display face — deliberately degraded to sell
- * the diegetic "worn manuscript" tone without dropping into cliché
- * scrollwork.
+ * uses the Cinzel display face — inscriptional Roman caps for an epic
+ * carved-stone tone that stays legible on screen (replaced Redaction,
+ * whose deliberate degradation read poorly at UI sizes).
  */
 type SectionHeadingVariant = 'default' | 'aharadak' | 'kallyadranoch'
 
