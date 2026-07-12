@@ -128,6 +128,16 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api/, ''),
       },
+      // The realtime client connects to window.location.origin (dev:
+      // the Vite port). socket.io lives on the Nest server at :3000 —
+      // proxy its path with `ws: true` so the WebSocket upgrade + polling
+      // fallback both reach the backend. Without this the socket targets
+      // the Vite port (no socket.io handler) and never connects.
+      '/socket.io': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        ws: true,
+      },
     },
   },
 })
