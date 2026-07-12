@@ -13,6 +13,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/shared/ui/sheet'
+import { VirtualList } from '@/shared/ui/virtual-list'
 import { rollD20 } from '@/shared/lib/dice'
 import type { useSessionSocket } from '@/shared/realtime/realtime'
 import {
@@ -79,22 +80,26 @@ export function AddMonsterDrawer({
             disabled={!rt.isConnected}
           />
         </div>
-        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
-          {filtered.length === 0 ? (
-            <p className="p-4 text-center text-sm text-muted-foreground">
-              Nenhum monstro casa com a busca.
-            </p>
-          ) : (
-            filtered.map((m) => (
+        {filtered.length === 0 ? (
+          <p className="min-h-0 flex-1 p-4 text-center text-sm text-muted-foreground">
+            Nenhum monstro casa com a busca.
+          </p>
+        ) : (
+          <VirtualList
+            className="min-h-0 flex-1 p-4"
+            items={filtered}
+            estimateSize={68}
+            gap={8}
+            getKey={(m) => m.id}
+            renderItem={(m) => (
               <MonsterRow
-                key={m.id}
                 monster={m}
                 disabled={!rt.isConnected}
                 onAdd={() => addMonster(m)}
               />
-            ))
-          )}
-        </div>
+            )}
+          />
+        )}
       </SheetContent>
     </Sheet>
   )
