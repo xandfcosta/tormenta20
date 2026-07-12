@@ -1,22 +1,7 @@
 import { getRouteApi } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { BookOpen, Package, Shield, Shirt, Star, ToggleRight } from 'lucide-react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
-import { cn } from '@/shared/lib/utils'
-import { sheetBg } from '@/shared/lib/sheet-theme'
 import { characterQueryOptions } from '@/entities/character/queries'
-import { AbilitiesPanel } from '@/features/character-sheet/abilities-panel'
-import { CampaignsPanel } from '@/features/character-sheet/campaigns-panel'
-import { EffectsCountBadge } from '@/features/character-sheet/effects-count-badge'
-import { EffectsPanel } from '@/features/character-sheet/effects-panel'
-import { EquipmentPanel } from '@/features/character-sheet/equipment-panel'
-import { ExpertisesPanel } from '@/features/character-sheet/expertises-panel'
-import { InventoryPanel } from '@/features/character-sheet/inventory-panel'
-import { ProficienciesPanel } from '@/features/character-sheet/proficiencies-panel'
-import { SheetHeader } from '@/features/character-sheet/sheet-header'
-import { SpellbookPanel } from '@/features/character-sheet/spellbook-panel'
-import { VitalsAside } from '@/features/character-sheet/vitals-aside'
-import type { Character } from '@/shared/api/api'
+import { CharacterSheet } from '@/features/character-sheet/character-sheet'
 
 const routeApi = getRouteApi('/characters/$id')
 
@@ -33,105 +18,4 @@ export function CharacterViewPage() {
   if (!character.data) return null
 
   return <CharacterSheet character={character.data} />
-}
-
-function CharacterSheet({ character }: { character: Character }) {
-  return (
-    <div
-      className={cn(
-        'grid h-full grid-rows-[auto_auto_1fr] gap-2 overflow-hidden p-2 sm:gap-3 sm:p-3 lg:grid-cols-[minmax(300px,26rem)_1fr] lg:grid-rows-[auto_1fr]',
-        sheetBg,
-      )}
-    >
-      <SheetHeader character={character} className="lg:col-span-2" />
-      <VitalsAside character={character} />
-      <RightPanel character={character} />
-    </div>
-  )
-}
-
-function RightPanel({ character }: { character: Character }) {
-  return (
-    <Tabs
-      defaultValue="expertises"
-      className="flex min-h-0 flex-col gap-2 overflow-hidden"
-    >
-      {/* 8 tabs overflow a phone; scroll horizontally instead of clipping
-          (triggers keep intrinsic width via shrink-0). */}
-      <TabsList className="max-w-full self-start overflow-x-auto [&>button]:shrink-0">
-
-        <TabsTrigger value="expertises">Perícias</TabsTrigger>
-        <TabsTrigger value="equipment" className="gap-1.5">
-          <Shirt className="size-3.5" /> Equipado
-        </TabsTrigger>
-        <TabsTrigger value="inventory" className="gap-1.5">
-          <Package className="size-3.5" /> Inventário
-        </TabsTrigger>
-        <TabsTrigger value="conditionals" className="gap-1.5">
-          <ToggleRight className="size-3.5" /> Efeitos
-          <EffectsCountBadge character={character} />
-        </TabsTrigger>
-        <TabsTrigger value="proficiencies" className="gap-1.5">
-          <Shield className="size-3.5" /> Proficiências
-        </TabsTrigger>
-        <TabsTrigger value="abilities" className="gap-1.5">
-          <Star className="size-3.5" /> Habilidades
-        </TabsTrigger>
-        <TabsTrigger value="spells" className="gap-1.5">
-          <BookOpen className="size-3.5" /> Magias
-        </TabsTrigger>
-        <TabsTrigger value="campaigns" className="gap-1.5">
-          Campanhas
-        </TabsTrigger>
-      </TabsList>
-      <TabsContent
-        value="expertises"
-        className="flex min-h-0 flex-1 flex-col overflow-hidden"
-      >
-        <ExpertisesPanel character={character} />
-      </TabsContent>
-      <TabsContent
-        value="equipment"
-        className="flex min-h-0 flex-1 flex-col overflow-hidden"
-      >
-        <EquipmentPanel character={character} />
-      </TabsContent>
-      <TabsContent
-        value="inventory"
-        className="flex min-h-0 flex-1 flex-col overflow-hidden"
-      >
-        <InventoryPanel character={character} />
-      </TabsContent>
-      <TabsContent
-        value="conditionals"
-        className="flex min-h-0 flex-1 flex-col overflow-hidden"
-      >
-        <EffectsPanel character={character} />
-      </TabsContent>
-      <TabsContent
-        value="proficiencies"
-        className="flex min-h-0 flex-1 flex-col overflow-hidden"
-      >
-        <ProficienciesPanel character={character} />
-      </TabsContent>
-      <TabsContent
-        value="abilities"
-        className="flex min-h-0 flex-1 flex-col overflow-hidden"
-      >
-        <AbilitiesPanel character={character} />
-      </TabsContent>
-      <TabsContent
-        value="spells"
-        className="flex min-h-0 flex-1 flex-col overflow-hidden"
-      >
-        <SpellbookPanel character={character} />
-      </TabsContent>
-      <TabsContent
-        value="campaigns"
-        className="flex min-h-0 flex-1 flex-col overflow-hidden"
-      >
-        <CampaignsPanel characterId={character.id} />
-      </TabsContent>
-    </Tabs>
-  )
 }

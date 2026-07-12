@@ -15,6 +15,7 @@ export function CatalogTab<T>({
   searchText,
   estimateSize,
   gap = 8,
+  listClassName = 'max-h-[65vh] pr-1',
   getKey,
   renderRow,
   emptyLabel = 'Nada encontrado.',
@@ -24,6 +25,7 @@ export function CatalogTab<T>({
   searchText: (item: T) => string[]
   estimateSize: number
   gap?: number
+  listClassName?: string
   getKey: (item: T) => string
   renderRow: (item: T) => ReactNode
   emptyLabel?: string
@@ -44,7 +46,7 @@ export function CatalogTab<T>({
         </p>
       ) : (
         <VirtualList
-          className="max-h-[65vh] pr-1"
+          className={listClassName}
           items={filtered}
           estimateSize={estimateSize}
           gap={gap}

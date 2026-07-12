@@ -1,28 +1,19 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { X } from 'lucide-react'
-import type {
-  Character,
-  CharacterItem,
-} from '@/shared/api/api'
+import type { ReactNode } from 'react'
+import type { Character, CharacterItem } from '@/shared/api/api'
 import { api } from '@/shared/api/api'
 import { characterQueryOptions } from '@/entities/character/queries'
-import {
-  accentStrong,
-  dimText,
-  panelBg,
-  surface,
-} from '@/shared/lib/sheet-theme'
+import { accentStrong, dimText, panelBg, surface } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
+import { equipBonuses } from './equip-bonuses'
 
 /**
- * "Equipado" panel — visual summary of which items are currently
- * equipped by slot. Each slot is derived from `character.items`
- * filtered by the `equipped` field. Clicking a filled slot unequips
- * the item optimistically.
- *
- * Slot geometry mirrors the paper-doll layout on the character sheet
- * (head / hands / torso / feet / accessory) — a two-hand weapon takes
- * over both hand slots and forces the torso row below.
+ * "Equipado" panel — the two equip capacity pools the rules actually track
+ * (there are no body slots): Mãos (≤2 hand-slots; a `wielded2` weapon takes
+ * both) and Vestidos (≤4 worn items). Each pool shows filled item slots plus
+ * dashed placeholders up to its cap, and each equipped item lists what it
+ * grants. Clicking ✕ unequips optimistically.
  */
 export function EquipmentPanel({ character }: { character: Character }) {
   const qc = useQueryClient()
@@ -56,9 +47,11 @@ export function EquipmentPanel({ character }: { character: Character }) {
     },
   })
 
+  const onUnequip = (id: number) => unequip.mutate(id)
   const vested = character.items.filter((i) => i.equipped === 'vested')
   const wielded = character.items.filter((i) => i.equipped === 'wielded')
   const twoHand = character.items.find((i) => i.equipped === 'wielded2')
+  const handsUsed = twoHand ? 2 : wielded.length
 
   return (
     <section
@@ -68,153 +61,140 @@ export function EquipmentPanel({ character }: { character: Character }) {
         panelBg,
       )}
     >
-      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-amber-700/30 px-3 py-2 dark:border-amber-500/20 sm:px-4">
-        <h2
-          className={cn(
-            'font-serif text-lg font-bold tracking-wide',
-            accentStrong,
-          )}
-        >
+      <div className="flex shrink-0 items-center border-b border-amber-700/30 px-3 py-2 dark:border-amber-500/20 sm:px-4">
+        <h2 className={cn('font-serif text-lg font-bold tracking-wide', accentStrong)}>
           Equipado
         </h2>
-        <p className={cn('text-[10px] sm:text-xs', dimText)}>
-          {vested.length}/4 vestidos •{' '}
-          {twoHand ? '2/2' : `${wielded.length}/2`} mãos
-        </p>
       </div>
 
-      <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto p-4">
-        <div className="grid w-full max-w-xs gap-3">
-          <div className="flex justify-center">
-            <EquipmentSlot
-              label="Cabeça"
-              item={vested[0]}
-              onUnequip={(id) => unequip.mutate(id)}
-              size="md"
-            />
-          </div>
-
-          <div className="grid grid-cols-3 items-stretch gap-3">
-            {twoHand ? (
-              <EquipmentSlot
-                label="Duas mãos"
-                item={twoHand}
-                onUnequip={(id) => unequip.mutate(id)}
-                size="md"
-                className="col-span-3"
-              />
-            ) : (
-              <>
-                <EquipmentSlot
-                  label="Mão principal"
-                  item={wielded[0]}
-                  onUnequip={(id) => unequip.mutate(id)}
-                  size="md"
-                />
-                <EquipmentSlot
-                  label="Tronco"
-                  item={vested[1]}
-                  onUnequip={(id) => unequip.mutate(id)}
-                  size="md"
-                />
-                <EquipmentSlot
-                  label="Mão secundária"
-                  item={wielded[1]}
-                  onUnequip={(id) => unequip.mutate(id)}
-                  size="md"
-                />
-              </>
-            )}
-          </div>
-
-          {twoHand && (
-            <div className="flex justify-center">
-              <EquipmentSlot
-                label="Tronco"
-                item={vested[1]}
-                onUnequip={(id) => unequip.mutate(id)}
-                size="md"
-              />
-            </div>
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-3 sm:p-4">
+        <Pool title="Mãos" count={handsUsed} max={2}>
+          {twoHand ? (
+            <SlotCard label="Duas mãos" item={twoHand} onUnequip={onUnequip} wide />
+          ) : (
+            <>
+              <SlotCard label="Mão principal" item={wielded[0]} onUnequip={onUnequip} />
+              <SlotCard label="Mão secundária" item={wielded[1]} onUnequip={onUnequip} />
+            </>
           )}
+        </Pool>
 
-          <div className="grid grid-cols-2 gap-3">
-            <EquipmentSlot
-              label="Pés"
-              item={vested[2]}
-              onUnequip={(id) => unequip.mutate(id)}
-              size="md"
+        <Pool title="Vestidos" count={vested.length} max={4}>
+          {Array.from({ length: 4 }, (_, i) => (
+            <SlotCard
+              key={vested[i]?.id ?? `empty-${i}`}
+              label="Vestido"
+              item={vested[i]}
+              onUnequip={onUnequip}
             />
-            <EquipmentSlot
-              label="Acessório"
-              item={vested[3]}
-              onUnequip={(id) => unequip.mutate(id)}
-              size="md"
-            />
-          </div>
-        </div>
+          ))}
+        </Pool>
       </div>
     </section>
   )
 }
 
-function EquipmentSlot({
+/** A capacity pool: titled header with an x/max counter over a 2-col grid. */
+function Pool({
+  title,
+  count,
+  max,
+  children,
+}: {
+  title: string
+  count: number
+  max: number
+  children: ReactNode
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-baseline justify-between">
+        <h3 className={cn('text-xs font-bold uppercase tracking-widest', accentStrong)}>
+          {title}
+        </h3>
+        <span
+          className={cn(
+            'font-mono text-xs',
+            count >= max ? 'text-amber-700 dark:text-amber-400' : dimText,
+          )}
+        >
+          {count}/{max}
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-2">{children}</div>
+    </div>
+  )
+}
+
+function SlotCard({
   label,
   item,
   onUnequip,
-  size,
-  className,
+  wide,
 }: {
   label: string
   item: CharacterItem | undefined
   onUnequip: (itemId: number) => void
-  size: 'sm' | 'md'
-  className?: string
+  wide?: boolean
 }) {
-  const filled = !!item
+  if (!item) {
+    return (
+      <div
+        className={cn(
+          'flex min-h-[3.75rem] flex-col justify-center rounded-lg border border-dashed px-3 py-2',
+          'border-amber-700/25 bg-amber-50/30 dark:border-amber-500/15 dark:bg-zinc-900/20',
+          wide && 'col-span-2',
+        )}
+      >
+        <span className={cn('text-[9px] uppercase tracking-widest', dimText)}>
+          {label}
+        </span>
+        <span className={cn('text-xs', dimText)}>vazio</span>
+      </div>
+    )
+  }
+
+  const bonuses = equipBonuses(item)
   return (
     <div
       className={cn(
-        'relative flex flex-col items-center justify-center rounded-lg border-2 px-2 py-2 text-center transition-colors',
-        size === 'md' ? 'min-h-[64px]' : 'min-h-[44px]',
-        filled
-          ? 'border-amber-700/60 bg-amber-100/80 dark:border-amber-500/60 dark:bg-zinc-900/70'
-          : 'border-dashed border-amber-700/30 bg-amber-50/40 dark:border-amber-500/20 dark:bg-zinc-900/30',
-        className,
+        'relative min-h-[3.75rem] rounded-lg border px-3 py-2',
+        'border-amber-700/50 bg-amber-100/70 dark:border-amber-500/50 dark:bg-zinc-900/70',
+        wide && 'col-span-2',
       )}
     >
-      <span
-        className={cn(
-          'text-[9px] uppercase tracking-widest',
-          dimText,
-        )}
-      >
-        {label}
-      </span>
-      {filled ? (
-        <span
-          className={cn(
-            'mt-0.5 line-clamp-2 text-xs font-semibold',
-            accentStrong,
-          )}
-          title={item.name}
-        >
-          {item.name}
-        </span>
-      ) : (
-        <span className={cn('mt-0.5 text-xs', dimText)}>—</span>
-      )}
-      {filled && (
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <span className={cn('block text-[9px] uppercase tracking-widest', dimText)}>
+            {label}
+          </span>
+          <span
+            className={cn('block truncate text-sm font-semibold', accentStrong)}
+            title={item.name}
+          >
+            {item.name}
+          </span>
+        </div>
         <button
           type="button"
-          className={cn(
-            'absolute right-1 top-1 inline-flex size-5 items-center justify-center rounded-full text-zinc-500 hover:bg-red-100 hover:text-red-700 dark:text-zinc-400 dark:hover:bg-red-950/40 dark:hover:text-red-400',
-          )}
+          className="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-zinc-500 hover:bg-red-100 hover:text-red-700 dark:text-zinc-400 dark:hover:bg-red-950/40 dark:hover:text-red-400"
           onClick={() => onUnequip(item.id)}
           aria-label={`Desequipar ${item.name}`}
         >
           <X className="size-3" />
         </button>
+      </div>
+      {bonuses.length > 0 && (
+        <div className="mt-1.5 flex flex-wrap gap-1">
+          {bonuses.map((b) => (
+            <span
+              key={b}
+              className="rounded-full border border-amber-700/20 bg-zinc-100/50 px-1.5 py-0.5 text-[10px] text-zinc-700 dark:border-amber-500/15 dark:bg-zinc-900/40 dark:text-zinc-300"
+            >
+              {b}
+            </span>
+          ))}
+        </div>
       )}
     </div>
   )

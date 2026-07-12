@@ -122,7 +122,7 @@ export function ExpertisesPanel({ character }: { character: Character }) {
   return (
     <section
       className={cn(
-        'flex min-h-0 flex-col overflow-hidden rounded-xl',
+        'flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-xl',
         surface,
         panelBg,
       )}
@@ -170,9 +170,7 @@ export function ExpertisesPanel({ character }: { character: Character }) {
             Nenhuma perícia para "{query}"
           </p>
         ) : (
-          <div className="grid gap-x-4 gap-y-0.5 xl:grid-cols-2">
-            <ExpertiseHeader className="hidden sm:flex" />
-            <ExpertiseHeader className="hidden xl:flex" />
+          <div className="grid gap-2 xl:grid-cols-2">
             {filtered.map((def) => {
               const isCustom = !EXPERTISES.some((b) => b.name === def.name)
               return (
@@ -314,23 +312,3 @@ function AddCustomExpertiseDialog({
   )
 }
 
-function ExpertiseHeader({ className }: { className?: string }) {
-  const cell = cn('text-[9px] uppercase tracking-widest', dimText)
-  return (
-    <div
-      className={cn(
-        'items-center gap-2 border-b border-amber-700/20 px-2 pb-1 pt-2 dark:border-amber-500/15',
-        className,
-      )}
-    >
-      <span className="w-4 shrink-0" aria-hidden />
-      <span className={cn(cell, 'flex-1')}>perícia</span>
-      <span className={cn(cell, 'w-10 text-right')}>total</span>
-      <span className={cn(cell, 'w-8 text-center')}>½lvl</span>
-      <span className={cn(cell, 'w-16 text-center')}>atributo</span>
-      <span className={cn(cell, 'w-10 text-center')}>treino</span>
-      <span className={cn(cell, 'w-20 text-center')}>outros</span>
-      <span className="size-7 shrink-0" aria-hidden />
-    </div>
-  )
-}

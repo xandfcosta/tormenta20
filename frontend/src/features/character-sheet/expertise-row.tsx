@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { SlidersHorizontal, Star, Trash2 } from 'lucide-react'
+import { Dumbbell, Star, Trash2 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import {
   Dialog,
@@ -31,7 +31,6 @@ import {
 import { characterQueryOptions } from '@/entities/character/queries'
 import {
   accentStrong,
-  dimText,
   hoverRow,
   selectClass,
   subtleText,
@@ -106,260 +105,190 @@ export function ExpertiseRow({
   const othersDisplay = detail.itemBonus
 
   const trainedToggle = (
-    <input
-      type="checkbox"
-      className="h-4 w-4 cursor-pointer accent-amber-600 dark:accent-amber-500"
-      checked={state.trained}
-      onChange={(e) => mutation.mutate({ trained: e.target.checked })}
-      aria-label={`${def.name} treinada`}
+    <TrainedToggle
+      trained={state.trained}
+      name={def.name}
+      onToggle={(next) => mutation.mutate({ trained: next })}
     />
   )
 
   const locked = !!def.trainedOnly && !state.trained
 
-  const totalLabel = (
-    <span
-      className={cn(
-        'font-mono text-base font-semibold',
-        locked
-          ? 'text-zinc-400 line-through dark:text-zinc-600'
-          : accentStrong,
-      )}
-      title={locked ? 'Apenas treinada — não pode ser usada sem treino' : undefined}
+  const attrSelect = (
+    <select
+      value={state.attribute}
+      onChange={(e) =>
+        mutation.mutate({ attribute: e.target.value as AttributeKey })
+      }
+      className={cn(selectClass, 'h-6 rounded-full px-2 font-mono text-[11px]')}
+      aria-label={`${def.name} atributo`}
     >
-      {signed(total)}
-    </span>
-  )
-
-  const nameNode = (
-    <span
-      className={cn(
-        'flex flex-1 items-center gap-1.5 truncate text-sm',
-        locked
-          ? 'text-zinc-500 dark:text-zinc-500'
-          : 'text-zinc-800 dark:text-zinc-200',
-      )}
-    >
-      <span className="truncate">{def.name}</span>
-      {def.trainedOnly && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              tabIndex={0}
-              aria-label="Apenas treinada"
-              className="inline-flex shrink-0 cursor-help"
-            >
-              <Star
-                className={cn(
-                  'size-3',
-                  locked
-                    ? 'fill-amber-500 text-amber-700 dark:fill-amber-400 dark:text-amber-300'
-                    : 'fill-zinc-300 text-zinc-500 dark:fill-zinc-700 dark:text-zinc-500',
-                )}
-              />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="top">
-            Pode ser usada apenas quando treinada
-          </TooltipContent>
-        </Tooltip>
-      )}
-    </span>
-  )
-
-  const othersInput = (
-    <OthersDisplay
-      total={othersDisplay}
-      detail={detail}
-      expertiseName={def.name}
-    />
+      {ATTRIBUTE_KEYS.map((k) => (
+        <option key={k} value={k}>
+          {ATTRIBUTE_ABBR[k]} {signed(character[k])}
+        </option>
+      ))}
+    </select>
   )
 
   return (
-    <>
-      {/* Mobile: compact row + dialog */}
+    <ExpertiseBreakdown
+      name={def.name}
+      total={total}
+      locked={locked}
+      halfLevel={halfLevel}
+      attrAbbr={ATTRIBUTE_ABBR[state.attribute]}
+      attrMod={character[state.attribute]}
+      trainBonus={trainBonus}
+      itemBonus={othersDisplay}
+      contributions={detail.itemContributions}
+    >
       <div
         className={cn(
-          'flex items-center gap-2 rounded-md px-2 py-1.5 sm:hidden',
+          'flex items-start gap-2.5 rounded-lg border p-2.5',
+          state.trained
+            ? 'border-amber-500/50 bg-amber-500/[0.06]'
+            : 'border-amber-700/15 dark:border-amber-500/10',
           hoverRow,
         )}
       >
-        {trainedToggle}
-        {nameNode}
-        <span className="w-10 text-right">{totalLabel}</span>
-        {onDelete && <DeleteExpertiseButton name={def.name} onDelete={onDelete} />}
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className={cn(
-                'size-7',
-                subtleText,
-                'hover:bg-amber-200/60 hover:text-amber-900 dark:hover:bg-zinc-800/60 dark:hover:text-amber-200',
-              )}
-              aria-label={`Editar ${def.name}`}
-            >
-              <SlidersHorizontal className="size-4" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent
-            className={cn(
-              'w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] p-4 sm:w-full sm:max-w-sm sm:p-6',
-              'border-amber-700/40 bg-amber-50 text-zinc-900 dark:border-amber-500/40 dark:bg-zinc-950 dark:text-zinc-100',
-            )}
-          >
-            <DialogHeader>
-              <DialogTitle
-                className={cn('flex items-center gap-2 font-serif', accentStrong)}
+        {/* Both the badge and the name open the breakdown; the toggle, attr
+            select and delete stay interactive (they are not triggers). */}
+        <DialogTrigger asChild>
+          <TotalBadge total={total} locked={locked} />
+        </DialogTrigger>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <DialogTrigger asChild>
+              <button
+                type="button"
+                className={cn(
+                  'min-w-0 flex-1 truncate text-left text-sm hover:underline',
+                  locked
+                    ? 'text-zinc-500 dark:text-zinc-500'
+                    : 'text-zinc-800 dark:text-zinc-200',
+                )}
               >
                 {def.name}
-                {def.trainedOnly && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        aria-label="Apenas treinada"
-                        className="inline-flex cursor-help"
-                      >
-                        <Star
-                          className={cn(
-                            'size-4',
-                            locked
-                              ? 'fill-amber-500 text-amber-700 dark:fill-amber-400 dark:text-amber-300'
-                              : 'fill-zinc-300 text-zinc-500 dark:fill-zinc-700 dark:text-zinc-500',
-                          )}
-                        />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      Pode ser usada apenas quando treinada
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-              </DialogTitle>
-            </DialogHeader>
-            {def.trainedOnly && !state.trained && (
-              <p
-                className={cn(
-                  'rounded-md border px-3 py-2 text-xs',
-                  'border-amber-700/40 bg-amber-100/60 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200',
-                )}
-              >
-                Esta perícia exige treino para ser usada.
-              </p>
+              </button>
+            </DialogTrigger>
+            {def.trainedOnly && <TrainedOnlyStar locked={locked} />}
+            {trainedToggle}
+            {onDelete && (
+              <DeleteExpertiseButton name={def.name} onDelete={onDelete} />
             )}
-            <div className="space-y-4">
-              <div
-                className={cn(
-                  'flex items-center justify-between rounded-lg border px-4 py-2',
-                  'border-amber-700/30 bg-amber-100/70 dark:border-amber-500/30 dark:bg-zinc-900/60',
-                )}
-              >
-                <span
-                  className={cn(
-                    'text-xs uppercase tracking-widest',
-                    subtleText,
-                  )}
-                >
-                  total
-                </span>
-                <span
-                  className={cn(
-                    'font-mono text-2xl font-bold',
-                    locked
-                      ? 'text-zinc-400 line-through dark:text-zinc-500'
-                      : accentStrong,
-                  )}
-                >
-                  {signed(total)}
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <DialogField label="½ nível">
-                  <span className="font-mono text-sm text-zinc-800 dark:text-zinc-200">
-                    {halfLevel}
-                  </span>
-                </DialogField>
-                <DialogField label="atributo">
-                  <select
-                    value={state.attribute}
-                    onChange={(e) =>
-                      mutation.mutate({
-                        attribute: e.target.value as AttributeKey,
-                      })
-                    }
-                    className={cn(selectClass, 'h-7 px-2 font-mono text-xs')}
-                    aria-label={`${def.name} atributo`}
-                  >
-                    {ATTRIBUTE_KEYS.map((k) => (
-                      <option key={k} value={k}>
-                        {ATTRIBUTE_ABBR[k]} {signed(character[k])}
-                      </option>
-                    ))}
-                  </select>
-                </DialogField>
-                <DialogField label="treino">
-                  <div className="flex items-center gap-2">
-                    {trainedToggle}
-                    <span className="font-mono text-sm text-zinc-800 dark:text-zinc-200">
-                      {signed(trainBonus)}
-                    </span>
-                  </div>
-                </DialogField>
-                <DialogField label="outros">{othersInput}</DialogField>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Desktop: full breakdown row */}
-      <div
-        className={cn(
-          'hidden items-center gap-2 rounded-md px-2 py-1 sm:flex',
-          hoverRow,
-        )}
-      >
-        {trainedToggle}
-        {nameNode}
-        <span className="w-10 text-right">{totalLabel}</span>
-        <span className="w-8 text-center font-mono text-xs text-zinc-700 dark:text-zinc-300">
-          {halfLevel}
-        </span>
-        <select
-          value={state.attribute}
-          onChange={(e) =>
-            mutation.mutate({ attribute: e.target.value as AttributeKey })
-          }
-          className={cn(selectClass, 'h-7 w-16 px-1 font-mono text-[11px]')}
-          aria-label={`${def.name} atributo`}
-        >
-          {ATTRIBUTE_KEYS.map((k) => (
-            <option key={k} value={k}>
-              {ATTRIBUTE_ABBR[k]} {signed(character[k])}
-            </option>
-          ))}
-        </select>
-        <span className="w-10 text-center font-mono text-xs text-zinc-700 dark:text-zinc-300">
-          {signed(trainBonus)}
-        </span>
-        <div className="w-20">
-          <OthersDisplay
-            total={othersDisplay}
-            detail={detail}
-            expertiseName={def.name}
-          />
+          </div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            {attrSelect}
+            <Chip label="½lvl" value={String(halfLevel)} />
+            <Chip label="treino" value={signed(trainBonus)} />
+            <DialogTrigger asChild>
+              <button type="button" className="inline-flex hover:brightness-105">
+                <Chip label="outros" value={signed(othersDisplay)} />
+              </button>
+            </DialogTrigger>
+          </div>
         </div>
-        {onDelete ? (
-          <DeleteExpertiseButton name={def.name} onDelete={onDelete} />
-        ) : (
-          <span className="size-7 shrink-0" aria-hidden />
-        )}
       </div>
-    </>
+    </ExpertiseBreakdown>
+  )
+}
+
+/** Star marking a trained-only perícia; amber once it's locked (untrained). */
+function TrainedOnlyStar({ locked }: { locked: boolean }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          aria-label="Apenas treinada"
+          className="inline-flex shrink-0 cursor-help"
+        >
+          <Star
+            className={cn(
+              'size-3',
+              locked
+                ? 'fill-amber-500 text-amber-700 dark:fill-amber-400 dark:text-amber-300'
+                : 'fill-zinc-300 text-zinc-500 dark:fill-zinc-700 dark:text-zinc-500',
+            )}
+          />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top">
+        Pode ser usada apenas quando treinada
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
+/** Prominent skill total, doubling as the trigger that opens the modifier
+ *  breakdown. Amber when usable, struck-through when trained-only + untrained. */
+function TotalBadge({ total, locked }: { total: number; locked: boolean }) {
+  return (
+    <button
+      type="button"
+      aria-label="Ver detalhamento dos modificadores"
+      className={cn(
+        'flex size-11 shrink-0 items-center justify-center rounded-lg border font-mono text-lg font-bold transition-colors hover:brightness-110',
+        locked
+          ? 'border-zinc-300 text-zinc-400 line-through dark:border-zinc-700 dark:text-zinc-600'
+          : ['border-amber-500/40 bg-amber-500/10', accentStrong],
+      )}
+    >
+      {signed(total)}
+    </button>
+  )
+}
+
+/** Small self-labeling breakdown chip (½lvl / treino). */
+function Chip({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-amber-700/20 bg-zinc-100/50 px-2 py-0.5 font-mono text-[11px] text-zinc-700 dark:border-amber-500/15 dark:bg-zinc-900/40 dark:text-zinc-300">
+      <span className="text-[9px] uppercase tracking-wider opacity-60">
+        {label}
+      </span>
+      {value}
+    </span>
+  )
+}
+
+/**
+ * Trained toggle — replaces the raw browser checkbox with a themed switch that
+ * reads on the dark/amber sheet: a dumbbell that fills amber when trained.
+ * `role="switch"` keeps it a first-class control for keyboard + screen readers.
+ */
+function TrainedToggle({
+  trained,
+  name,
+  onToggle,
+}: {
+  trained: boolean
+  name: string
+  onToggle: (next: boolean) => void
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={trained}
+          aria-label={`${name} treinada`}
+          onClick={() => onToggle(!trained)}
+          className={cn(
+            'inline-flex size-6 shrink-0 items-center justify-center rounded-md border transition-colors',
+            trained
+              ? 'border-amber-500 bg-amber-500 text-zinc-950 shadow-sm dark:border-amber-400 dark:bg-amber-400'
+              : 'border-amber-700/30 text-amber-700/40 hover:border-amber-600 hover:text-amber-600 dark:border-amber-500/25 dark:text-amber-500/30',
+          )}
+        >
+          <Dumbbell className="size-3.5" strokeWidth={2.5} />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top">
+        {trained ? 'Treinada' : 'Não treinada'}
+      </TooltipContent>
+    </Tooltip>
   )
 }
 
@@ -391,41 +320,40 @@ function DeleteExpertiseButton({
   )
 }
 
-function OthersDisplay({
+type ItemContributions =
+  ReturnType<typeof expertiseTotalWithItems>['itemContributions']
+
+/**
+ * Uniform modifier breakdown for a perícia — the same for every skill, not
+ * just those with item bonuses: ½ nível + atributo + treino + outros (with
+ * per-item lines) summing to the total. Opened from the total badge.
+ */
+function ExpertiseBreakdown({
+  name,
   total,
-  detail,
-  expertiseName,
+  locked,
+  halfLevel,
+  attrAbbr,
+  attrMod,
+  trainBonus,
+  itemBonus,
+  contributions,
+  children,
 }: {
+  name: string
   total: number
-  detail: ReturnType<typeof expertiseTotalWithItems>
-  expertiseName: string
+  locked: boolean
+  halfLevel: number
+  attrAbbr: string
+  attrMod: number
+  trainBonus: number
+  itemBonus: number
+  contributions: ItemContributions
+  children: React.ReactNode
 }) {
-  const hasContribs = detail.itemContributions.length > 0
-  const display = (
-    <span
-      className={cn(
-        'block w-full rounded-md border bg-zinc-100/60 px-2 py-1 text-center font-mono text-xs',
-        'border-amber-700/20 text-zinc-700 dark:border-amber-500/20 dark:bg-zinc-900/40 dark:text-zinc-300',
-        total === 0 && 'text-zinc-400 dark:text-zinc-600',
-        hasContribs &&
-          'cursor-pointer hover:bg-amber-100/60 dark:hover:bg-zinc-800/60',
-      )}
-    >
-      {signed(total)}
-    </span>
-  )
-  if (!hasContribs) return display
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <button
-          type="button"
-          className="block w-full"
-          aria-label={`Detalhes de Outros — ${expertiseName}`}
-        >
-          {display}
-        </button>
-      </DialogTrigger>
+      {children}
       <DialogContent
         className={cn(
           'w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] p-4 sm:w-full sm:max-w-sm sm:p-6',
@@ -433,42 +361,40 @@ function OthersDisplay({
         )}
       >
         <DialogHeader>
-          <DialogTitle
-            className={cn('flex items-center gap-2 font-serif', accentStrong)}
-          >
-            Outros — {expertiseName}
+          <DialogTitle className={cn('font-serif', accentStrong)}>
+            {name}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-2 text-sm">
-          <ul className="space-y-1">
-            {detail.itemContributions.map((c, i) => (
-              <li
-                key={i}
-                className="flex items-center justify-between gap-2 border-b border-amber-700/15 pb-1 dark:border-amber-500/10"
-              >
-                <span className="truncate">{c.source}</span>
-                <span className="shrink-0 font-mono">{signed(c.amount)}</span>
-              </li>
-            ))}
-          </ul>
+        <div className="space-y-1 text-sm">
+          <BreakdownRow label="½ nível" value={halfLevel} />
+          <BreakdownRow label={`Atributo (${attrAbbr})`} value={attrMod} />
+          <BreakdownRow label="Treino" value={trainBonus} />
+          <BreakdownRow label="Outros" value={itemBonus} />
+          {contributions.map((c) => (
+            <BreakdownRow
+              key={`${c.source}-${c.amount}`}
+              label={c.source}
+              value={c.amount}
+              indented
+            />
+          ))}
           <div
             className={cn(
-              'flex items-center justify-between rounded-lg border px-3 py-2',
+              'mt-2 flex items-center justify-between rounded-lg border px-3 py-2',
               'border-amber-700/40 bg-amber-100/60 dark:border-amber-500/40 dark:bg-amber-950/30',
             )}
           >
             <span
-              className={cn(
-                'text-xs uppercase tracking-widest',
-                subtleText,
-              )}
+              className={cn('text-xs uppercase tracking-widest', subtleText)}
             >
               Total
             </span>
             <span
               className={cn(
                 'font-mono text-2xl font-bold',
-                accentStrong,
+                locked
+                  ? 'text-zinc-400 line-through dark:text-zinc-500'
+                  : accentStrong,
               )}
             >
               {signed(total)}
@@ -480,19 +406,25 @@ function OthersDisplay({
   )
 }
 
-function DialogField({
+function BreakdownRow({
   label,
-  children,
+  value,
+  indented,
 }: {
   label: string
-  children: React.ReactNode
+  value: number
+  indented?: boolean
 }) {
   return (
-    <div className="flex flex-col gap-1">
-      <span className={cn('text-[10px] uppercase tracking-widest', dimText)}>
-        {label}
-      </span>
-      {children}
+    <div
+      className={cn(
+        'flex items-center justify-between gap-2 border-b border-amber-700/10 py-1 dark:border-amber-500/10',
+        indented && 'pl-4 text-xs opacity-80',
+      )}
+    >
+      <span className="truncate">{label}</span>
+      <span className="shrink-0 font-mono">{signed(value)}</span>
     </div>
   )
 }
+

@@ -1,6 +1,7 @@
 import type { Session } from '@/shared/api/api'
 import type { useSessionSocket } from '@/shared/realtime/realtime'
 import { AddMonsterDrawer } from '@/features/session/add-monster-drawer'
+import { CatalogDrawer } from '@/features/session/catalog-drawer'
 import { EncounterBuilderDrawer } from '@/features/session/encounter-builder-drawer'
 import { MatchPeek, MatchRail } from '@/features/session/match-rail'
 import { DeleteSessionButton } from '@/features/session-tracker/delete-session-button'
@@ -30,7 +31,7 @@ export function SessionGmView({
   myCharacterIds: Set<number>
 }) {
   return (
-    <div className="mx-auto grid max-w-6xl gap-4 p-3 pb-20 sm:p-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:pb-4">
+    <div className="mx-auto grid max-w-6xl gap-4 p-3 sm:p-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:pb-4">
       <div className="min-w-0 space-y-4">
         <InitiativeCard rt={rt} isGm myCharacterIds={myCharacterIds} />
       </div>
@@ -39,6 +40,7 @@ export function SessionGmView({
         <div className="space-y-2">
           <AddMonsterDrawer rt={rt} />
           <EncounterBuilderDrawer rt={rt} />
+          <CatalogDrawer />
         </div>
         <NotesCard campaignId={campaignId} session={session} />
         <div className="flex justify-end">

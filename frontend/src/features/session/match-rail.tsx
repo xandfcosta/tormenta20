@@ -30,23 +30,49 @@ export function MatchRail({
   children: ReactNode
 }) {
   const isDesktop = useMediaQuery('(min-width: 1024px)')
-  const [open, setOpen] = useState(false)
 
-  if (isDesktop) return <aside className="space-y-4">{children}</aside>
+  if (isDesktop)
+    return (
+      <aside className="max-h-full space-y-4 overflow-y-auto">{children}</aside>
+    )
 
   return (
+    <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-border/60 bg-card/90 px-3 py-2 backdrop-blur">
+      <div className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
+        {peek}
+      </div>
+      <MatchControls title={title}>{children}</MatchControls>
+    </div>
+  )
+}
+
+/**
+ * The rail's collapsible controls, decoupled from the fixed bar: a trigger
+ * that opens the session controls in a bottom sheet. Used inside MatchRail's
+ * phone bar and, in the player view, merged into the character sheet's own
+ * mobile bottom bar so a phone shows a single bar, not two stacked.
+ */
+export function MatchControls({
+  title,
+  trigger,
+  children,
+}: {
+  title: string
+  /** Custom trigger; defaults to an outline "chevron + title" button. */
+  trigger?: ReactNode
+  children: ReactNode
+}) {
+  const [open, setOpen] = useState(false)
+  return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-border/60 bg-card/90 px-3 py-2 backdrop-blur">
-        <div className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
-          {peek}
-        </div>
-        <SheetTrigger asChild>
+      <SheetTrigger asChild>
+        {trigger ?? (
           <Button size="sm" variant="outline" className="gap-1.5">
             <ChevronUp className="size-4" />
             {title}
           </Button>
-        </SheetTrigger>
-      </div>
+        )}
+      </SheetTrigger>
       <SheetContent
         side="bottom"
         className="flex max-h-[85vh] flex-col gap-0 rounded-t-xl"
