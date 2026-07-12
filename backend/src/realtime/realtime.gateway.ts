@@ -227,7 +227,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       callerId !== campaign.ownerId
     ) {
       throw new WsException(
-        `You are neither the campaign GM nor the character's owner`,
+        `Caller ${callerId} is neither the GM of campaign ${campaignId} nor the owner of character ${characterId}`,
       );
     }
     return {
@@ -573,7 +573,9 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     try {
       await this.characters.assertOwner(socket.data.user.id, entry.characterId);
     } catch {
-      throw new WsException("You can only edit your own character's vitals");
+      throw new WsException(
+        `Caller ${socket.data.user.id} can only edit their own character's vitals (entry character ${entry.characterId})`,
+      );
     }
   }
 }
