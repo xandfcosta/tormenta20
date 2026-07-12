@@ -8,10 +8,8 @@ import { campaignSessionQueryOptions } from '@/entities/session/queries'
 import { campaignQueryOptions } from '@/entities/campaign/queries'
 import { charactersQueryOptions } from '@/entities/character/queries'
 import { MatchShell } from '@/features/session/match-shell'
-import { DeleteSessionButton } from '@/features/session-tracker/delete-session-button'
-import { HeaderCard } from '@/features/session-tracker/header-card'
-import { InitiativeCard } from '@/features/session-tracker/initiative-card'
-import { NotesCard } from '@/features/session-tracker/notes-card'
+import { SessionGmView } from '@/features/session/session-gm-view'
+import { SessionPlayerView } from '@/features/session/session-player-view'
 import { PresenceChips } from '@/features/session-tracker/presence-chips'
 
 const routeApi = getRouteApi('/campaigns/$id/sessions/$sid')
@@ -69,20 +67,22 @@ export function SessionDetailPage() {
       title={title}
       bar={<PresenceChips users={rt.present} />}
     >
-      <div className="mx-auto max-w-3xl space-y-4 p-3 sm:p-4">
-        {isGm && (
-          <div className="flex justify-end">
-            <DeleteSessionButton
-              campaignId={campaignId}
-              sessionId={sessionId}
-              sessionNumber={session.data.sessionNumber}
-            />
-          </div>
-        )}
-        <HeaderCard campaignId={campaignId} session={session.data} isGm={isGm} />
-        <InitiativeCard rt={rt} isGm={isGm} myCharacterIds={myCharacterIds} />
-        {isGm && <NotesCard campaignId={campaignId} session={session.data} />}
-      </div>
+      {isGm ? (
+        <SessionGmView
+          campaignId={campaignId}
+          sessionId={sessionId}
+          session={session.data}
+          rt={rt}
+          myCharacterIds={myCharacterIds}
+        />
+      ) : (
+        <SessionPlayerView
+          campaignId={campaignId}
+          session={session.data}
+          rt={rt}
+          myCharacterIds={myCharacterIds}
+        />
+      )}
     </MatchShell>
   )
 }
