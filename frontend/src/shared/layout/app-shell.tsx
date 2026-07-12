@@ -26,6 +26,9 @@ type AppShellProps = {
   onToggleTheme: () => void
   onLogout: () => void
   logoutPending?: boolean
+  /** Full-screen "match" mode — drops the top/bottom nav + drawer so a
+   * live session owns the whole viewport with its own session bar. */
+  bare?: boolean
   children: ReactNode
 }
 
@@ -35,12 +38,24 @@ function AppShell({
   onToggleTheme,
   onLogout,
   logoutPending,
+  bare,
   children,
 }: AppShellProps) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const destinations: readonly NavDestination[] = user
     ? AUTHED_DESTINATIONS
     : PUBLIC_DESTINATIONS
+
+  if (bare) {
+    return (
+      <div
+        data-slot="app-shell-bare"
+        className="flex h-dvh flex-col overflow-hidden bg-background text-foreground"
+      >
+        {children}
+      </div>
+    )
+  }
 
   return (
     <div

@@ -1,4 +1,9 @@
-import { Outlet, createRootRouteWithContext, useNavigate } from '@tanstack/react-router'
+import {
+  Outlet,
+  createRootRouteWithContext,
+  useNavigate,
+  useRouterState,
+} from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
@@ -29,6 +34,14 @@ function RootLayout() {
   const me = useQuery(meQueryOptions)
   const theme = useUiStore((s) => s.theme)
   const toggleTheme = useUiStore((s) => s.toggleTheme)
+  // A live session runs full-screen ("match mode") — drop the app nav
+  // when the session route is matched so the session bar owns the viewport.
+  const inMatch = useRouterState({
+    select: (s) =>
+      s.matches.some(
+        (m) => m.routeId === '/campaigns/$id/sessions/$sid',
+      ),
+  })
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
@@ -58,6 +71,7 @@ function RootLayout() {
         onToggleTheme={toggleTheme}
         onLogout={() => logout.mutate()}
         logoutPending={logout.isPending}
+        bare={inMatch}
       >
         <Outlet />
       </AppShell>
