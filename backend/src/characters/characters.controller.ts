@@ -14,6 +14,7 @@ import type { AuthUser } from '../auth/auth-user.type';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CharactersService } from './characters.service';
 import { CharacterItemsService } from './characters-items.service';
+import { CharacterEffectsService } from './characters-effects.service';
 import { CharactersSpellsService } from './characters-spells.service';
 import { CampaignMembersService } from '../campaign-members/campaign-members.service';
 import {
@@ -50,6 +51,7 @@ export class CharactersController {
     private readonly members: CampaignMembersService,
     private readonly spells: CharactersSpellsService,
     private readonly items: CharacterItemsService,
+    private readonly effects: CharacterEffectsService,
   ) {}
 
   @Get('options')
@@ -192,7 +194,7 @@ export class CharactersController {
     @Param('id', ParseIntPipe) id: number,
     @Param('effectId', ParseIntPipe) effectId: number,
   ) {
-    return this.characters.removeActiveEffect(user.id, id, effectId);
+    return this.effects.removeActiveEffect(user.id, id, effectId);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -201,7 +203,7 @@ export class CharactersController {
     @CurrentUser() user: AuthUser,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.characters.endScene(user.id, id);
+    return this.effects.endScene(user.id, id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -210,7 +212,7 @@ export class CharactersController {
     @CurrentUser() user: AuthUser,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.characters.endDay(user.id, id);
+    return this.effects.endDay(user.id, id);
   }
 
   @UseGuards(JwtAuthGuard)
