@@ -11,6 +11,7 @@ import {
 } from '@tormenta20/t20-data'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
+import { VirtualList } from '@/shared/ui/virtual-list'
 import type { Character, CharacterSpell } from '@/shared/api/api'
 import {
   accentStrong,
@@ -184,25 +185,27 @@ export function SpellbookPanel({ character }: { character: Character }) {
         </p>
       )}
 
-      <div className="min-h-0 flex-1 overflow-auto px-2 py-1">
-        {filtered.length === 0 ? (
-          <p className={cn('px-2 py-3 text-center text-xs', dimText)}>
-            Nenhuma magia para "{query}"
-          </p>
-        ) : (
-          <div className="space-y-0.5">
-            {filtered.map((spell) => (
-              <SpellRow
-                key={spell.id}
-                spell={spell}
-                character={character}
-                casterClasses={casterClasses}
-                learned={learnedById.get(spell.id) ?? null}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      {filtered.length === 0 ? (
+        <p className={cn('min-h-0 flex-1 px-2 py-3 text-center text-xs', dimText)}>
+          Nenhuma magia para "{query}"
+        </p>
+      ) : (
+        <VirtualList
+          className="min-h-0 flex-1 px-2 py-1"
+          items={filtered}
+          estimateSize={44}
+          gap={2}
+          getKey={(spell) => spell.id}
+          renderItem={(spell) => (
+            <SpellRow
+              spell={spell}
+              character={character}
+              casterClasses={casterClasses}
+              learned={learnedById.get(spell.id) ?? null}
+            />
+          )}
+        />
+      )}
     </section>
   )
 }
