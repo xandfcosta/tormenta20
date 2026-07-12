@@ -41,6 +41,7 @@ async function setup(over?: {
   characterFindUnique?: jest.Mock;
   campaignsFindOne?: jest.Mock;
   campaignsResolveAccess?: jest.Mock;
+  campaignsAssertCanJoin?: jest.Mock;
   campaignFindUnique?: jest.Mock;
   memberFindFirst?: jest.Mock;
 }) {
@@ -76,6 +77,10 @@ async function setup(over?: {
         campaign: { id: 1, ownerId: 1 },
         role: 'gm',
       }),
+    // Join gate delegated to CampaignsService — default allows; join-hole
+    // tests override this to reject.
+    assertCanJoin:
+      over?.campaignsAssertCanJoin ?? jest.fn().mockResolvedValue(undefined),
   };
   const moduleRef = await Test.createTestingModule({
     providers: [
@@ -202,82 +207,35 @@ describe('CampaignMembersService.add', () => {
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
-  it('accepts a matching invite token and persists the row', async () => {
-    const campaignFindUnique = jest
-      .fn()
-      .mockResolvedValue({ id: 1, ownerId: 999, inviteToken: 'good-token' });
+  it('delegates the join gate to CampaignsService then persists', async () => {
     const memberFindUnique = jest.fn().mockResolvedValue(null);
     const memberCreate = jest.fn().mockResolvedValue(makeMember());
-    const { service } = await setup({
-      campaignFindUnique,
+    const { service, campaigns } = await setup({
       memberFindUnique,
       memberCreate,
     });
     await service.add(1, 1, { characterId: 10, inviteToken: 'good-token' });
+    expect(campaigns.assertCanJoin).toHaveBeenCalledWith(1, 1, 'good-token');
     expect(memberCreate).toHaveBeenCalledWith({
       data: { campaignId: 1, characterId: 10, role: 'player' },
     });
   });
 
-  it('rejects a non-owner self-join with no invite token (closes the hole)', async () => {
-    /* A stranger who owns a character must NOT be able to join a campaign
-     * by id alone — that would grant member-aware read of its sessions. */
-    const campaignFindUnique = jest
+  it('propagates a join rejection from CampaignsService (closes the hole)', async () => {
+    /* The owner-or-token rule lives in CampaignsService.assertCanJoin
+     * (unit-tested there); here we only prove add() honors its verdict. */
+    const campaignsAssertCanJoin = jest
       .fn()
-      .mockResolvedValue({ id: 1, ownerId: 999, inviteToken: 'secret' });
+      .mockRejectedValue(new ForbiddenException());
     const memberCreate = jest.fn();
-    const { service } = await setup({ campaignFindUnique, memberCreate });
+    const { service } = await setup({ campaignsAssertCanJoin, memberCreate });
     await expect(
       service.add(1, 1, { characterId: 10 }),
     ).rejects.toBeInstanceOf(ForbiddenException);
     expect(memberCreate).not.toHaveBeenCalled();
   });
 
-  it('lets the campaign owner add their own character without a token', async () => {
-    const campaignFindUnique = jest
-      .fn()
-      .mockResolvedValue({ id: 1, ownerId: 1, inviteToken: null });
-    const memberFindUnique = jest.fn().mockResolvedValue(null);
-    const memberCreate = jest.fn().mockResolvedValue(makeMember());
-    const { service } = await setup({
-      campaignFindUnique,
-      memberFindUnique,
-      memberCreate,
-    });
-    await service.add(1, 1, { characterId: 10 });
-    expect(memberCreate).toHaveBeenCalled();
-  });
-
-  it('rejects a stale/rotated invite token', async () => {
-    /* GM rotated the token → the old link should stop working. */
-    const campaignFindUnique = jest
-      .fn()
-      .mockResolvedValue({ id: 1, inviteToken: 'new-token' });
-    const memberFindUnique = jest.fn().mockResolvedValue(null);
-    const memberCreate = jest.fn();
-    const { service } = await setup({
-      campaignFindUnique,
-      memberFindUnique,
-      memberCreate,
-    });
-    await expect(
-      service.add(1, 1, { characterId: 10, inviteToken: 'old-token' }),
-    ).rejects.toBeInstanceOf(ForbiddenException);
-    expect(memberCreate).not.toHaveBeenCalled();
-  });
-
-  it('rejects an invite token when the campaign has none set', async () => {
-    const campaignFindUnique = jest
-      .fn()
-      .mockResolvedValue({ id: 1, inviteToken: null });
-    const memberFindUnique = jest.fn().mockResolvedValue(null);
-    const { service } = await setup({ campaignFindUnique, memberFindUnique });
-    await expect(
-      service.add(1, 1, { characterId: 10, inviteToken: 'anything' }),
-    ).rejects.toBeInstanceOf(ForbiddenException);
-  });
-
-  it('invite-token flow still rejects a non-owner character (consent preserved)', async () => {
+  it('rejects a non-owner character even when the join is allowed (consent preserved)', async () => {
     /* Even with a valid invite, the caller can only bring in a char
      * they own. Prevents relaying invites to grab someone else's PC. */
     const campaignFindUnique = jest

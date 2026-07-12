@@ -1,7 +1,6 @@
 import { JwtService } from '@nestjs/jwt';
 import type { Socket } from 'socket.io';
-import type { AuthUser, JwtPayload } from '../auth/auth.service';
-import { PrismaService } from '../prisma/prisma.service';
+import type { AuthService, AuthUser, JwtPayload } from '../auth/auth.service';
 
 /**
  * WebSocket handshake authentication. Client passes the JWT in the
@@ -16,15 +15,14 @@ import { PrismaService } from '../prisma/prisma.service';
 export async function verifyHandshake(
   socket: Socket,
   jwt: JwtService,
-  prisma: PrismaService,
+  auth: AuthService,
 ): Promise<AuthUser> {
   const token = extractToken(socket);
   if (!token) throw new Error('Missing auth token');
   const payload = jwt.verify<JwtPayload>(token);
-  const user = await prisma.user.findUnique({
-    where: { id: payload.sub },
-    select: { id: true, email: true, name: true },
-  });
+  // Identity resolution (incl. the "revoked user can't linger" rule) is
+  // the auth context's concern — delegate instead of re-querying users.
+  const user = await auth.findById(payload.sub);
   if (!user) throw new Error('User no longer exists');
   return user;
 }

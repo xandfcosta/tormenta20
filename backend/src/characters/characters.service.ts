@@ -156,6 +156,28 @@ export class CharactersService {
   }
 
   /**
+   * Lightweight owner-only guard — throws if the character is missing or
+   * not owned by `userId`, without loading the full aggregate. For hot
+   * paths (live vitals edits) that only need the ownership rule, not the
+   * whole sheet. Encapsulates "who owns this character" so callers (the
+   * WS gateway) don't re-query `ownerId` themselves.
+   */
+  async assertOwner(userId: number, characterId: number): Promise<void> {
+    const character = await this.prisma.character.findUnique({
+      where: { id: characterId },
+      select: { ownerId: true },
+    });
+    if (!character) {
+      throw new NotFoundException(`Character ${characterId} not found`);
+    }
+    if (character.ownerId !== userId) {
+      throw new ForbiddenException(
+        `Character ${characterId} belongs to another user`,
+      );
+    }
+  }
+
+  /**
    * Read variant that attaches a derived sheet (`computed`) produced by
    * the t20-data orchestrator. Handy for read-only views (character
    * sheet UI, initiative panels) that should show total attributes,

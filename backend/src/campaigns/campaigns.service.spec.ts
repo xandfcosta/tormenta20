@@ -155,6 +155,55 @@ describe('CampaignsService.findOne', () => {
   });
 });
 
+describe('CampaignsService.assertCanJoin', () => {
+  it('allows the owner to join without a token', async () => {
+    const findUnique = jest
+      .fn()
+      .mockResolvedValue({ id: 1, ownerId: 5, inviteToken: null });
+    const { service } = await setup({ findUnique });
+    await expect(service.assertCanJoin(5, 1)).resolves.toBeUndefined();
+  });
+
+  it('allows a non-owner presenting the current invite token', async () => {
+    const findUnique = jest
+      .fn()
+      .mockResolvedValue({ id: 1, ownerId: 999, inviteToken: 'tok' });
+    const { service } = await setup({ findUnique });
+    await expect(service.assertCanJoin(5, 1, 'tok')).resolves.toBeUndefined();
+  });
+
+  it('rejects a non-owner with a wrong/absent token', async () => {
+    const findUnique = jest
+      .fn()
+      .mockResolvedValue({ id: 1, ownerId: 999, inviteToken: 'tok' });
+    const { service } = await setup({ findUnique });
+    await expect(service.assertCanJoin(5, 1, 'nope')).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+    await expect(service.assertCanJoin(5, 1)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+  });
+
+  it('rejects a non-owner when the campaign has no token set', async () => {
+    const findUnique = jest
+      .fn()
+      .mockResolvedValue({ id: 1, ownerId: 999, inviteToken: null });
+    const { service } = await setup({ findUnique });
+    await expect(service.assertCanJoin(5, 1, 'anything')).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+  });
+
+  it('throws NotFound when the campaign does not exist', async () => {
+    const findUnique = jest.fn().mockResolvedValue(null);
+    const { service } = await setup({ findUnique });
+    await expect(service.assertCanJoin(5, 99)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+});
+
 describe('CampaignsService.create', () => {
   it('trims name / description and assigns the owner from the JWT user', async () => {
     const create = jest
