@@ -13,6 +13,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/shared/ui/sheet'
+import { VirtualList } from '@/shared/ui/virtual-list'
 import { rollD20 } from '@/shared/lib/dice'
 import type { useSessionSocket } from '@/shared/realtime/realtime'
 import {
@@ -232,10 +233,14 @@ function MonsterPicker({
         placeholder="Buscar monstro para adicionar…"
         disabled={disabled}
       />
-      <div className="max-h-48 space-y-1 overflow-y-auto">
-        {filtered.map((m) => (
+      <VirtualList
+        className="max-h-48"
+        items={filtered}
+        estimateSize={40}
+        gap={4}
+        getKey={(m) => m.id}
+        renderItem={(m) => (
           <button
-            key={m.id}
             type="button"
             disabled={disabled}
             onClick={() => onPick(m.id)}
@@ -244,8 +249,8 @@ function MonsterPicker({
             <span className="truncate">{m.name}</span>
             <Badge variant="secondary">ND {formatNd(m.nd)}</Badge>
           </button>
-        ))}
-      </div>
+        )}
+      />
     </div>
   )
 }

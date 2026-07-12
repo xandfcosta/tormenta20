@@ -15,6 +15,7 @@ import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
 import { PageChrome } from '@/shared/ui/page-chrome'
 import { SectionHeading } from '@/shared/ui/section-heading'
+import { WindowVirtualList } from '@/shared/ui/virtual-list'
 import {
   BESTIARY,
   type Monster,
@@ -148,11 +149,13 @@ export function BestiaryPage() {
           Nenhum monstro casa com os filtros.
         </p>
       ) : (
-        <div className="grid gap-2">
-          {filtered.map((m) => (
-            <MonsterRow key={m.id} monster={m} onOpen={setSelected} />
-          ))}
-        </div>
+        <WindowVirtualList
+          items={filtered}
+          estimateSize={76}
+          gap={8}
+          getKey={(m) => m.id}
+          renderItem={(m) => <MonsterRow monster={m} onOpen={setSelected} />}
+        />
       )}
 
       <MonsterDialog
