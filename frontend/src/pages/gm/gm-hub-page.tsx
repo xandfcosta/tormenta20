@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { Dices, Scroll, Skull, Swords } from 'lucide-react'
+import { BookMarked, Dices, Scroll, Skull, Swords } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -11,7 +11,12 @@ import { SectionHeading } from '@/shared/ui/section-heading'
  * Sub-tools ship progressively as Fase E1-E4.
  */
 type Tool = {
-  to: '/gm/random-tables' | '/gm/bestiary' | '/gm/encounters' | '/gm/dungeon-generator'
+  to:
+    | '/gm/random-tables'
+    | '/gm/bestiary'
+    | '/gm/encounters'
+    | '/gm/dungeon-generator'
+    | '/gm/catalogs'
   title: string
   description: string
   icon: LucideIcon
@@ -19,6 +24,14 @@ type Tool = {
 }
 
 const TOOLS: Tool[] = [
+  {
+    to: '/gm/catalogs',
+    title: 'Catálogos',
+    description:
+      'Consulta rápida de condições, magias, poderes e itens — busca única entre todos os catálogos.',
+    icon: BookMarked,
+    ready: true,
+  },
   {
     to: '/gm/random-tables',
     title: 'Tabelas de mesa',
