@@ -4,6 +4,7 @@ import { CharactersController } from './characters.controller';
 import { CharactersService } from './characters.service';
 import { CharacterItemsService } from './characters-items.service';
 import { CharacterEffectsService } from './characters-effects.service';
+import { CharacterExpertisesService } from './characters-expertises.service';
 import { CharactersSpellsService } from './characters-spells.service';
 
 @Module({
@@ -13,6 +14,7 @@ import { CharactersSpellsService } from './characters-spells.service';
     CharactersService,
     CharacterItemsService,
     CharacterEffectsService,
+    CharacterExpertisesService,
     CharactersSpellsService,
   ],
   exports: [CharactersService, CharacterEffectsService],
