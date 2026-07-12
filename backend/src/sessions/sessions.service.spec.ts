@@ -8,6 +8,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { SessionsService } from './sessions.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CampaignsService } from '../campaigns/campaigns.service';
@@ -90,6 +91,9 @@ async function setup(over?: {
     SessionsService,
     { provide: PrismaService, useValue: prisma },
     { provide: CampaignsService, useValue: campaigns },
+    // Read the write-through flag off process.env so the existing env-
+    // toggling specs keep working after the switch to ConfigService.
+    { provide: ConfigService, useValue: { get: (k: string) => process.env[k] } },
   ];
   if (over?.state !== undefined) {
     providers.push({ provide: SESSION_STATE_TOKEN, useValue: over.state });

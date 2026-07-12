@@ -3,6 +3,7 @@ jest.mock('../prisma/prisma.service', () => ({
 }));
 
 import { Test } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { NotFoundException } from '@nestjs/common';
 import { SessionStateService } from './session-state.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -37,6 +38,7 @@ async function setup(over?: {
   const module = await Test.createTestingModule({
     providers: [
       SessionStateService,
+      { provide: ConfigService, useValue: { get: (k: string) => process.env[k] } },
       {
         provide: PrismaService,
         useValue: {

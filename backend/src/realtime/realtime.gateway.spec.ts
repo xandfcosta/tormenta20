@@ -13,6 +13,7 @@ import { CharactersService } from '../characters/characters.service';
 import { CharacterEffectsService } from '../characters/characters-effects.service';
 import { AuthService } from '../auth/auth.service';
 import { SessionStateService } from './session-state.service';
+import { ConfigService } from '@nestjs/config';
 
 /**
  * Fase C1 gateway smoke tests. Cover:
@@ -108,6 +109,7 @@ async function setup(over?: {
       { provide: CharactersService, useValue: characters },
       { provide: CharacterEffectsService, useValue: effects },
       { provide: AuthService, useValue: auth },
+      { provide: ConfigService, useValue: { get: () => undefined } },
     ],
   }).compile();
   const gateway = module.get(RealtimeGateway);
