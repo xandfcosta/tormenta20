@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
-import { toast } from 'sonner'
+import { useState } from 'react'
 import { Plus, Swords, Trash2 } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -20,8 +19,7 @@ import {
   SelectValue,
 } from '@/shared/ui/select'
 import { SectionHeading } from '@/shared/ui/section-heading'
-import { useSessionSocket, type InitiativeEntry } from '@/shared/realtime/realtime'
-import { PresenceChips } from './presence-chips'
+import type { InitiativeEntry, useSessionSocket } from '@/shared/realtime/realtime'
 import { CombatantDrawer } from './combatant-drawer'
 
 // Maps realtime hook state onto ConnectionChip's tri-state. The socket
@@ -38,17 +36,16 @@ function deriveConnectionStatus(
 }
 
 export function InitiativeCard({
-  campaignId,
-  sessionId,
+  rt,
   isGm,
   myCharacterIds,
 }: {
-  campaignId: number
-  sessionId: number
+  /** Shared session socket, owned by the page so tracker + bar + toasts
+   * share one connection. */
+  rt: ReturnType<typeof useSessionSocket>
   isGm: boolean
   myCharacterIds: Set<number>
 }) {
-  const rt = useSessionSocket(campaignId, sessionId)
   const status = deriveConnectionStatus(rt.isConnected, rt.error)
   const [addLabel, setAddLabel] = useState('')
   const [addInit, setAddInit] = useState(10)
@@ -66,38 +63,6 @@ export function InitiativeCard({
     setAddInit(10)
   }
 
-  // Turn cue: the active combatant is one of the viewer's own characters.
-  const active =
-    rt.state.turnIndex >= 0
-      ? rt.state.initiative[rt.state.turnIndex]
-      : undefined
-  const isMyTurn =
-    active?.characterId !== undefined && myCharacterIds.has(active.characterId)
-
-  // Turn cue: toast the moment it becomes the viewer's turn (the row
-  // highlight covers the persistent state; the toast is the alert).
-  const wasMyTurn = useRef(false)
-  useEffect(() => {
-    if (isMyTurn && !wasMyTurn.current) {
-      toast(`⚔️ Sua vez, ${active?.label}!`, {
-        description: 'Seu personagem está na iniciativa.',
-      })
-    }
-    wasMyTurn.current = isMyTurn
-  }, [isMyTurn, active?.label])
-
-  // GM rest broadcast → toast for everyone in the room.
-  useEffect(() => {
-    if (rt.restFlash) {
-      const day = rt.restFlash === 'day'
-      toast(`Descanso de ${day ? 'dia' : 'cena'}`, {
-        description: day
-          ? 'PV/PM recuperados e efeitos temporários limpos.'
-          : 'Efeitos temporários de cena foram limpos.',
-      })
-    }
-  }, [rt.restFlash])
-
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-3">
@@ -111,7 +76,6 @@ export function InitiativeCard({
               Rodada {rt.state.round}
             </span>
           </div>
-          <PresenceChips users={rt.present} />
         </div>
         {isGm && (
           <div className="flex flex-wrap justify-end gap-2">
