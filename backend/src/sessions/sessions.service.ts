@@ -52,15 +52,6 @@ export class SessionsService {
     return role;
   }
 
-  /** Owner-only session list. Retained for GM-scoped call sites. */
-  async list(ownerId: number, campaignId: number) {
-    await this.assertCampaignOwnership(ownerId, campaignId);
-    return this.prisma.session.findMany({
-      where: { campaignId },
-      orderBy: { sessionNumber: 'asc' },
-    });
-  }
-
   /** Member-aware session list — GM or player member. */
   async listForCaller(userId: number, campaignId: number) {
     await this.assertCampaignAccess(userId, campaignId);

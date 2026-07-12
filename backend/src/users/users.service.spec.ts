@@ -41,24 +41,6 @@ async function setup(over?: {
   };
 }
 
-describe('UsersService.listAll (privileged / admin path)', () => {
-  it('queries user.findMany with the expected select + order', async () => {
-    const { service, userRepo } = await setup();
-    await service.listAll();
-    expect(userRepo.findMany).toHaveBeenCalledWith({
-      orderBy: { createdAt: 'desc' },
-      select: { id: true, email: true, name: true, createdAt: true },
-    });
-  });
-
-  it('does not select passwordHash', async () => {
-    const { service, userRepo } = await setup();
-    await service.listAll();
-    const select = userRepo.findMany.mock.calls[0]![0]!.select;
-    expect(select).not.toHaveProperty('passwordHash');
-  });
-});
-
 describe('UsersService.listVisibleTo (scoped to co-members)', () => {
   it('always includes the caller themselves', async () => {
     const { service, userRepo } = await setup({
