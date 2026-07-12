@@ -10,6 +10,7 @@ import {
 import { Test } from '@nestjs/testing';
 import { CharactersService } from './characters.service';
 import { CharacterItemsService } from './characters-items.service';
+import { CharacterEffectsService } from './characters-effects.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 /**
@@ -272,6 +273,19 @@ async function makeItemsService(
     ],
   }).compile();
   return moduleRef.get(CharacterItemsService);
+}
+
+async function makeEffectsService(
+  prisma: FakePrisma,
+): Promise<CharacterEffectsService> {
+  const moduleRef = await Test.createTestingModule({
+    providers: [
+      CharactersService,
+      CharacterEffectsService,
+      { provide: PrismaService, useValue: prisma.service },
+    ],
+  }).compile();
+  return moduleRef.get(CharacterEffectsService);
 }
 
 describe('CharactersService.findOne — ownership guard', () => {
@@ -921,7 +935,7 @@ describe('CharacterItemsService.consumeItem — quantity + oncePerDay + clamp', 
   });
 });
 
-describe('CharactersService.removeActiveEffect — cross-character guard', () => {
+describe('CharacterEffectsService.removeActiveEffect — cross-character guard', () => {
   it('throws NotFound when the effect belongs to another character', async () => {
     const prisma = new FakePrisma();
     prisma.seedCharacter(makeCharacter({ id: 1 }));
@@ -929,7 +943,7 @@ describe('CharactersService.removeActiveEffect — cross-character guard', () =>
       id: 99,
       characterId: 2,
     });
-    const service = await makeService(prisma);
+    const service = await makeEffectsService(prisma);
     await expect(service.removeActiveEffect(1, 1, 99)).rejects.toBeInstanceOf(
       NotFoundException,
     );
@@ -942,7 +956,7 @@ describe('CharactersService.removeActiveEffect — cross-character guard', () =>
       id: 50,
       characterId: 1,
     });
-    const service = await makeService(prisma);
+    const service = await makeEffectsService(prisma);
     const result = await service.removeActiveEffect(1, 1, 50);
     expect(result).toEqual({ id: 50 });
     expect(prisma.activeEffectDelete).toHaveBeenCalledWith({
@@ -951,11 +965,11 @@ describe('CharactersService.removeActiveEffect — cross-character guard', () =>
   });
 });
 
-describe('CharactersService.endScene / endDay — scope filtering', () => {
+describe('CharacterEffectsService.endScene / endDay — scope filtering', () => {
   it('endScene deletes only scene-scoped effects', async () => {
     const prisma = new FakePrisma();
     prisma.seedCharacter(makeCharacter({ id: 1 }));
-    const service = await makeService(prisma);
+    const service = await makeEffectsService(prisma);
     await service.endScene(1, 1);
     expect(prisma.activeEffectDeleteMany).toHaveBeenCalledWith({
       where: { characterId: 1, scope: 'scene' },
@@ -965,7 +979,7 @@ describe('CharactersService.endScene / endDay — scope filtering', () => {
   it('endDay deletes scene and day effects', async () => {
     const prisma = new FakePrisma();
     prisma.seedCharacter(makeCharacter({ id: 1 }));
-    const service = await makeService(prisma);
+    const service = await makeEffectsService(prisma);
     await service.endDay(1, 1);
     expect(prisma.activeEffectDeleteMany).toHaveBeenCalledWith({
       where: { characterId: 1, scope: { in: ['scene', 'day'] } },
@@ -973,7 +987,7 @@ describe('CharactersService.endScene / endDay — scope filtering', () => {
   });
 });
 
-describe('CharactersService.restVitals — T20 night rest (livro p.20)', () => {
+describe('CharacterEffectsService.restVitals — T20 night rest (livro p.20)', () => {
   it('restores floor(level × mult) to PV and PM, clamped to max', async () => {
     const prisma = new FakePrisma();
     // level 4, confortavel ×2 → gain 8: hp 10→18 (max 30), mp 2→10 (max 12)
@@ -988,7 +1002,7 @@ describe('CharactersService.restVitals — T20 night rest (livro p.20)', () => {
         mpMax: 12,
       }),
     );
-    const service = await makeService(prisma);
+    const service = await makeEffectsService(prisma);
     const result = await service.restVitals(7, 5, 'confortavel');
     expect(result).toEqual({ hpCurrent: 18, mpCurrent: 10 });
     expect(prisma.characterUpdate).toHaveBeenCalledWith({
@@ -1010,7 +1024,7 @@ describe('CharactersService.restVitals — T20 night rest (livro p.20)', () => {
         mpMax: 12,
       }),
     );
-    const service = await makeService(prisma);
+    const service = await makeEffectsService(prisma);
     const result = await service.restVitals(7, 5, 'luxuosa'); // gain 60
     expect(result).toEqual({ hpCurrent: 30, mpCurrent: 12 });
   });
@@ -1028,7 +1042,7 @@ describe('CharactersService.restVitals — T20 night rest (livro p.20)', () => {
         mpMax: 50,
       }),
     );
-    const service = await makeService(prisma);
+    const service = await makeEffectsService(prisma);
     const result = await service.restVitals(7, 5, 'ruim'); // floor(3.5) = 3
     expect(result).toEqual({ hpCurrent: 3, mpCurrent: 3 });
   });

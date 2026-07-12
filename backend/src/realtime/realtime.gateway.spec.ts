@@ -10,6 +10,7 @@ import { RealtimeGateway, sessionRoom } from './realtime.gateway';
 import { PrismaService } from '../prisma/prisma.service';
 import { SessionsService } from '../sessions/sessions.service';
 import { CharactersService } from '../characters/characters.service';
+import { CharacterEffectsService } from '../characters/characters-effects.service';
 import { AuthService } from '../auth/auth.service';
 import { SessionStateService } from './session-state.service';
 
@@ -80,13 +81,15 @@ async function setup(over?: {
       jest.fn().mockResolvedValue({ session: { id: 1 }, role: 'gm' }),
   };
   const characters = {
+    assertOwner:
+      over?.charactersAssertOwner ?? jest.fn().mockResolvedValue(undefined),
+  };
+  const effects = {
     endScene: over?.charactersEndScene ?? jest.fn().mockResolvedValue({}),
     endDay: over?.charactersEndDay ?? jest.fn().mockResolvedValue({}),
     restVitals:
       over?.charactersRestVitals ??
       jest.fn().mockResolvedValue({ hpCurrent: 0, mpCurrent: 0 }),
-    assertOwner:
-      over?.charactersAssertOwner ?? jest.fn().mockResolvedValue(undefined),
   };
   const auth = {
     findById:
@@ -103,6 +106,7 @@ async function setup(over?: {
       { provide: PrismaService, useValue: prisma },
       { provide: SessionsService, useValue: sessions },
       { provide: CharactersService, useValue: characters },
+      { provide: CharacterEffectsService, useValue: effects },
       { provide: AuthService, useValue: auth },
     ],
   }).compile();
@@ -117,6 +121,7 @@ async function setup(over?: {
     prisma,
     sessions,
     characters,
+    effects,
     jwt: module.get(JwtService),
     state: module.get(SessionStateService),
     to,
@@ -791,7 +796,7 @@ describe('RealtimeGateway.sessionRest', () => {
   };
 
   it('scene rest delegates end-scene per member, no heal, broadcasts (GM)', async () => {
-    const { gateway, emit, characters } = await setup({
+    const { gateway, emit, effects } = await setup({
       campaignMemberFindMany: jest
         .fn()
         .mockResolvedValue([{ characterId: 10 }, { characterId: 11 }]),
@@ -801,9 +806,9 @@ describe('RealtimeGateway.sessionRest', () => {
       sessionId: 5,
       scope: 'scene',
     });
-    expect(characters.endScene).toHaveBeenCalledWith(7, 10);
-    expect(characters.endScene).toHaveBeenCalledWith(7, 11);
-    expect(characters.restVitals).not.toHaveBeenCalled();
+    expect(effects.endScene).toHaveBeenCalledWith(7, 10);
+    expect(effects.endScene).toHaveBeenCalledWith(7, 11);
+    expect(effects.restVitals).not.toHaveBeenCalled();
     expect(result).toEqual({ rested: 'scene', characters: 2, healed: 0 });
     expect(emit).toHaveBeenCalledWith('session-rest', {
       sessionId: 5,
@@ -813,7 +818,7 @@ describe('RealtimeGateway.sessionRest', () => {
   });
 
   it('day rest delegates end-day + restVitals per member', async () => {
-    const { gateway, characters } = await setup({
+    const { gateway, effects } = await setup({
       campaignMemberFindMany: jest.fn().mockResolvedValue([{ characterId: 10 }]),
       charactersRestVitals: jest
         .fn()
@@ -825,13 +830,13 @@ describe('RealtimeGateway.sessionRest', () => {
       scope: 'day',
       condition: 'confortavel',
     });
-    expect(characters.endDay).toHaveBeenCalledWith(7, 10);
-    expect(characters.restVitals).toHaveBeenCalledWith(7, 10, 'confortavel');
+    expect(effects.endDay).toHaveBeenCalledWith(7, 10);
+    expect(effects.restVitals).toHaveBeenCalledWith(7, 10, 'confortavel');
     expect(result).toMatchObject({ rested: 'day', healed: 1 });
   });
 
   it('day rest defaults the condition to normal when omitted', async () => {
-    const { gateway, characters } = await setup({
+    const { gateway, effects } = await setup({
       campaignMemberFindMany: jest.fn().mockResolvedValue([{ characterId: 10 }]),
     });
     await gateway.sessionRest(gmSocket(), {
@@ -839,7 +844,7 @@ describe('RealtimeGateway.sessionRest', () => {
       sessionId: 5,
       scope: 'day',
     });
-    expect(characters.restVitals).toHaveBeenCalledWith(7, 10, 'normal');
+    expect(effects.restVitals).toHaveBeenCalledWith(7, 10, 'normal');
   });
 
   it('rejects a non-GM', async () => {

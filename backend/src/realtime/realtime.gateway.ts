@@ -13,10 +13,11 @@ import {
 import type { Server, Socket } from 'socket.io';
 import { PrismaService } from '../prisma/prisma.service';
 import { SessionsService } from '../sessions/sessions.service';
+import { CharactersService } from '../characters/characters.service';
 import {
-  CharactersService,
+  CharacterEffectsService,
   type RestCondition,
-} from '../characters/characters.service';
+} from '../characters/characters-effects.service';
 import { AuthService } from '../auth/auth.service';
 import type { AuthUser } from '../auth/auth-user.type';
 import {
@@ -69,6 +70,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     private readonly sessions: SessionsService,
     private readonly state: SessionStateService,
     private readonly characters: CharactersService,
+    private readonly effects: CharacterEffectsService,
     private readonly auth: AuthService,
   ) {}
 
@@ -383,8 +385,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     let healed = 0;
     for (const { characterId } of members) {
       if (body.scope === 'day') {
-        await this.characters.endDay(callerId, characterId);
-        const vitals = await this.characters.restVitals(
+        await this.effects.endDay(callerId, characterId);
+        const vitals = await this.effects.restVitals(
           callerId,
           characterId,
           condition,
@@ -392,7 +394,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         this.mirrorVitalsToTracker(body.sessionId, characterId, vitals);
         healed++;
       } else {
-        await this.characters.endScene(callerId, characterId);
+        await this.effects.endScene(callerId, characterId);
       }
     }
     if (healed > 0) {
