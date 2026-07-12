@@ -15,6 +15,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CharactersService } from './characters.service';
 import { CharacterItemsService } from './characters-items.service';
 import { CharacterEffectsService } from './characters-effects.service';
+import { CharacterExpertisesService } from './characters-expertises.service';
 import { CharactersSpellsService } from './characters-spells.service';
 import { CampaignMembersService } from '../campaign-members/campaign-members.service';
 import {
@@ -52,6 +53,7 @@ export class CharactersController {
     private readonly spells: CharactersSpellsService,
     private readonly items: CharacterItemsService,
     private readonly effects: CharacterEffectsService,
+    private readonly expertises: CharacterExpertisesService,
   ) {}
 
   @Get('options')
@@ -122,7 +124,7 @@ export class CharactersController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateExpertiseDto,
   ) {
-    return this.characters.updateExpertise(user.id, id, dto);
+    return this.expertises.updateExpertise(user.id, id, dto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -132,7 +134,7 @@ export class CharactersController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: CreateExpertiseDto,
   ) {
-    return this.characters.addCustomExpertise(user.id, id, dto);
+    return this.expertises.addCustomExpertise(user.id, id, dto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -142,7 +144,7 @@ export class CharactersController {
     @Param('id', ParseIntPipe) id: number,
     @Param('name') name: string,
   ) {
-    return this.characters.deleteExpertise(user.id, id, decodeURIComponent(name));
+    return this.expertises.deleteExpertise(user.id, id, decodeURIComponent(name));
   }
 
   @UseGuards(JwtAuthGuard)

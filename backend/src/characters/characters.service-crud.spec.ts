@@ -9,6 +9,7 @@ import {
 import { Test } from '@nestjs/testing';
 import { CharactersService } from './characters.service';
 import { CharacterItemsService } from './characters-items.service';
+import { CharacterExpertisesService } from './characters-expertises.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 /**
@@ -195,11 +196,24 @@ async function makeItemsService(
   return moduleRef.get(CharacterItemsService);
 }
 
-describe('CharactersService.addCustomExpertise', () => {
+async function makeExpertisesService(
+  prisma: FakePrisma,
+): Promise<CharacterExpertisesService> {
+  const moduleRef = await Test.createTestingModule({
+    providers: [
+      CharactersService,
+      CharacterExpertisesService,
+      { provide: PrismaService, useValue: prisma.service },
+    ],
+  }).compile();
+  return moduleRef.get(CharacterExpertisesService);
+}
+
+describe('CharacterExpertisesService.addCustomExpertise', () => {
   it('rejects an empty trimmed name', async () => {
     const prisma = new FakePrisma();
     prisma.seedCharacter(makeCharacter());
-    const service = await makeService(prisma);
+    const service = await makeExpertisesService(prisma);
     await expect(
       service.addCustomExpertise(1, 1, {
         name: '   ',
@@ -215,7 +229,7 @@ describe('CharactersService.addCustomExpertise', () => {
   it('rejects a builtin expertise name', async () => {
     const prisma = new FakePrisma();
     prisma.seedCharacter(makeCharacter());
-    const service = await makeService(prisma);
+    const service = await makeExpertisesService(prisma);
     await expect(
       service.addCustomExpertise(1, 1, {
         name: 'Atletismo',
@@ -234,7 +248,7 @@ describe('CharactersService.addCustomExpertise', () => {
     const prisma = new FakePrisma();
     prisma.seedCharacter(makeCharacter());
     prisma.characterExpertiseFindUnique.mockResolvedValue({ id: 99 });
-    const service = await makeService(prisma);
+    const service = await makeExpertisesService(prisma);
     await expect(
       service.addCustomExpertise(1, 1, {
         name: 'Cozinhar Sopa',
@@ -253,7 +267,7 @@ describe('CharactersService.addCustomExpertise', () => {
     const prisma = new FakePrisma();
     prisma.seedCharacter(makeCharacter());
     prisma.characterExpertiseFindUnique.mockResolvedValue(null);
-    const service = await makeService(prisma);
+    const service = await makeExpertisesService(prisma);
     await service.addCustomExpertise(1, 1, {
       name: '  Cozinhar Sopa  ',
       attribute: 'wisdom',
@@ -271,12 +285,12 @@ describe('CharactersService.addCustomExpertise', () => {
   });
 });
 
-describe('CharactersService.deleteExpertise', () => {
+describe('CharacterExpertisesService.deleteExpertise', () => {
   it('throws NotFound when the expertise row is missing', async () => {
     const prisma = new FakePrisma();
     prisma.seedCharacter(makeCharacter());
     prisma.characterExpertiseFindUnique.mockResolvedValue(null);
-    const service = await makeService(prisma);
+    const service = await makeExpertisesService(prisma);
     await expect(
       service.deleteExpertise(1, 1, 'Ghost'),
     ).rejects.toBeInstanceOf(NotFoundException);
@@ -289,7 +303,7 @@ describe('CharactersService.deleteExpertise', () => {
       id: 7,
       custom: false,
     });
-    const service = await makeService(prisma);
+    const service = await makeExpertisesService(prisma);
     await expect(
       service.deleteExpertise(1, 1, 'Atletismo'),
     ).rejects.toBeInstanceOf(BadRequestException);
@@ -303,7 +317,7 @@ describe('CharactersService.deleteExpertise', () => {
       id: 8,
       custom: true,
     });
-    const service = await makeService(prisma);
+    const service = await makeExpertisesService(prisma);
     const result = await service.deleteExpertise(1, 1, 'Cozinhar Sopa');
     expect(result).toEqual({ name: 'Cozinhar Sopa' });
     expect(prisma.characterExpertiseDelete).toHaveBeenCalledWith({
@@ -312,11 +326,11 @@ describe('CharactersService.deleteExpertise', () => {
   });
 });
 
-describe('CharactersService.updateExpertise', () => {
+describe('CharacterExpertisesService.updateExpertise', () => {
   it('rejects an empty patch (no fields to update)', async () => {
     const prisma = new FakePrisma();
     prisma.seedCharacter(makeCharacter());
-    const service = await makeService(prisma);
+    const service = await makeExpertisesService(prisma);
     await expect(
       service.updateExpertise(1, 1, { name: 'Atletismo' }),
     ).rejects.toBeInstanceOf(BadRequestException);
@@ -325,7 +339,7 @@ describe('CharactersService.updateExpertise', () => {
   it('persists attribute alone', async () => {
     const prisma = new FakePrisma();
     prisma.seedCharacter(makeCharacter());
-    const service = await makeService(prisma);
+    const service = await makeExpertisesService(prisma);
     await service.updateExpertise(1, 1, {
       name: 'Atletismo',
       attribute: 'dexterity',
@@ -339,7 +353,7 @@ describe('CharactersService.updateExpertise', () => {
   it('persists trained alone', async () => {
     const prisma = new FakePrisma();
     prisma.seedCharacter(makeCharacter());
-    const service = await makeService(prisma);
+    const service = await makeExpertisesService(prisma);
     await service.updateExpertise(1, 1, {
       name: 'Atletismo',
       trained: true,
@@ -353,7 +367,7 @@ describe('CharactersService.updateExpertise', () => {
   it('persists both attribute and trained when both supplied', async () => {
     const prisma = new FakePrisma();
     prisma.seedCharacter(makeCharacter());
-    const service = await makeService(prisma);
+    const service = await makeExpertisesService(prisma);
     await service.updateExpertise(1, 1, {
       name: 'Atletismo',
       attribute: 'strength',
