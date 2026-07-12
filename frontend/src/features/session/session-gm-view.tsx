@@ -1,6 +1,7 @@
 import type { Session } from '@/shared/api/api'
 import type { useSessionSocket } from '@/shared/realtime/realtime'
 import { AddMonsterDrawer } from '@/features/session/add-monster-drawer'
+import { EncounterBuilderDrawer } from '@/features/session/encounter-builder-drawer'
 import { MatchPeek, MatchRail } from '@/features/session/match-rail'
 import { DeleteSessionButton } from '@/features/session-tracker/delete-session-button'
 import { HeaderCard } from '@/features/session-tracker/header-card'
@@ -35,7 +36,10 @@ export function SessionGmView({
       </div>
       <MatchRail title="Controles da sessão" peek={<MatchPeek rt={rt} />}>
         <HeaderCard campaignId={campaignId} session={session} isGm />
-        <AddMonsterDrawer rt={rt} />
+        <div className="space-y-2">
+          <AddMonsterDrawer rt={rt} />
+          <EncounterBuilderDrawer rt={rt} />
+        </div>
         <NotesCard campaignId={campaignId} session={session} />
         <div className="flex justify-end">
           <DeleteSessionButton

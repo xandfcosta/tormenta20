@@ -9,8 +9,13 @@ import { NumberInput } from '@/shared/ui/number-input'
 import { PageChrome } from '@/shared/ui/page-chrome'
 import { SectionHeading } from '@/shared/ui/section-heading'
 import { SendEncounterToSessionButton } from '@/features/gm-tools/send-encounter-to-session'
-import { BESTIARY, encounterXp, type Monster } from '@tormenta20/t20-data'
-import { computeGroupNd } from '@/shared/lib/encounter-math'
+import { BESTIARY, encounterXp } from '@tormenta20/t20-data'
+import {
+  type EnrichedGroup,
+  type EncounterEntry as Entry,
+  enrichEncounter as enrich,
+  encounterDifficulty as difficultyLabel,
+} from '@/features/gm-tools/encounter'
 
 /**
  * Encounter builder — party level + size, monster composition, live
@@ -20,8 +25,6 @@ import { computeGroupNd } from '@/shared/lib/encounter-math'
  * Encounter ND (mixed): sum of group NDs. Book is silent on mixed
  * composition — sum is the permissive default; GM can eyeball.
  */
-
-type Entry = { monsterId: string; quantity: number }
 
 export function EncounterBuilderPage() {
   const [partyLevel, setPartyLevel] = useState(1)
@@ -183,43 +186,6 @@ export function EncounterBuilderPage() {
       </Card>
     </PageChrome>
   )
-}
-
-// ─── Group math ─────────────────────────────────────────────────
-
-type EnrichedGroup = {
-  monster: Monster
-  quantity: number
-  groupNd: number
-  perCharacterXp: number
-}
-
-function enrich(entries: readonly Entry[]): EnrichedGroup[] {
-  return entries
-    .map((e) => {
-      const monster = BESTIARY.find((m) => m.id === e.monsterId)
-      if (!monster) return null
-      return {
-        monster,
-        quantity: e.quantity,
-        groupNd: computeGroupNd(monster.nd, e.quantity),
-        perCharacterXp: 0,
-      }
-    })
-    .filter((g): g is EnrichedGroup => g !== null)
-}
-
-// ─── Difficulty ─────────────────────────────────────────────────
-
-function difficultyLabel(gap: number): {
-  label: string
-  variant: 'default' | 'secondary' | 'outline' | 'destructive'
-} {
-  if (gap <= -3) return { label: 'Trivial', variant: 'secondary' }
-  if (gap <= -1) return { label: 'Fácil', variant: 'outline' }
-  if (gap === 0) return { label: 'Médio', variant: 'default' }
-  if (gap <= 2) return { label: 'Difícil', variant: 'default' }
-  return { label: 'Mortal', variant: 'destructive' }
 }
 
 // ─── Row ────────────────────────────────────────────────────────
