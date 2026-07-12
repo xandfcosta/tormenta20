@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { CharactersService } from './characters.service';
+import { CharacterItemsService } from './characters-items.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 /**
@@ -177,6 +178,21 @@ async function makeService(prisma: FakePrisma): Promise<CharactersService> {
     ],
   }).compile();
   return moduleRef.get(CharactersService);
+}
+
+/** Item mutations moved to CharacterItemsService (auth still via
+ * CharactersService.findOne); build both over the same fake prisma. */
+async function makeItemsService(
+  prisma: FakePrisma,
+): Promise<CharacterItemsService> {
+  const moduleRef = await Test.createTestingModule({
+    providers: [
+      CharactersService,
+      CharacterItemsService,
+      { provide: PrismaService, useValue: prisma.service },
+    ],
+  }).compile();
+  return moduleRef.get(CharacterItemsService);
 }
 
 describe('CharactersService.addCustomExpertise', () => {
@@ -401,7 +417,7 @@ describe('CharactersService.updateAbilityChoices', () => {
   });
 });
 
-describe('CharactersService.updateItem — cross-character guard', () => {
+describe('CharacterItemsService.updateItem — cross-character guard', () => {
   it('throws NotFound when the itemId belongs to another character', async () => {
     const prisma = new FakePrisma();
     prisma.seedCharacter(makeCharacter({ id: 1 }));
@@ -409,7 +425,7 @@ describe('CharactersService.updateItem — cross-character guard', () => {
       id: 99,
       characterId: 2,
     });
-    const service = await makeService(prisma);
+    const service = await makeItemsService(prisma);
     await expect(
       service.updateItem(1, 1, 99, { name: 'Adaga' }),
     ).rejects.toBeInstanceOf(NotFoundException);
@@ -423,14 +439,14 @@ describe('CharactersService.updateItem — cross-character guard', () => {
       characterId: 1,
       equipped: null,
     });
-    const service = await makeService(prisma);
+    const service = await makeItemsService(prisma);
     await expect(
       service.updateItem(1, 1, 5, {}),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 });
 
-describe('CharactersService.deleteItem — cross-character guard', () => {
+describe('CharacterItemsService.deleteItem — cross-character guard', () => {
   it('throws NotFound when itemId belongs to another character', async () => {
     const prisma = new FakePrisma();
     prisma.seedCharacter(makeCharacter({ id: 1 }));
@@ -438,7 +454,7 @@ describe('CharactersService.deleteItem — cross-character guard', () => {
       id: 50,
       characterId: 2,
     });
-    const service = await makeService(prisma);
+    const service = await makeItemsService(prisma);
     await expect(service.deleteItem(1, 1, 50)).rejects.toBeInstanceOf(
       NotFoundException,
     );
@@ -452,7 +468,7 @@ describe('CharactersService.deleteItem — cross-character guard', () => {
       id: 51,
       characterId: 1,
     });
-    const service = await makeService(prisma);
+    const service = await makeItemsService(prisma);
     const result = await service.deleteItem(1, 1, 51);
     expect(result).toEqual({ id: 51 });
     expect(prisma.characterItemDelete).toHaveBeenCalledWith({
