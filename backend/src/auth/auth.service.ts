@@ -6,19 +6,16 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
+import { isPrismaUniqueViolation } from '../common/prisma-errors';
+import {
+  authUserSelect,
+  type AuthUser,
+  type JwtPayload,
+} from './auth-user.type';
 
 const BCRYPT_ROUNDS = 12;
 
-export type AuthUser = {
-  id: number;
-  email: string;
-  name: string | null;
-};
-
-export type JwtPayload = {
-  sub: number;
-  email: string;
-};
+export type { AuthUser, JwtPayload };
 
 @Injectable()
 export class AuthService {
@@ -39,11 +36,20 @@ export class AuthService {
       throw new ConflictException(`Email already registered: ${input.email}`);
     }
     const passwordHash = await bcrypt.hash(input.password, BCRYPT_ROUNDS);
-    const user = await this.prisma.user.create({
-      data: { email: input.email, passwordHash, name: input.name ?? null },
-      select: { id: true, email: true, name: true },
-    });
-    return user;
+    try {
+      return await this.prisma.user.create({
+        data: { email: input.email, passwordHash, name: input.name ?? null },
+        select: authUserSelect,
+      });
+    } catch (err) {
+      // Two registrations racing the same email pass the pre-check above
+      // and collide on the unique index — translate P2002 to a domain
+      // Conflict instead of leaking a 500.
+      if (isPrismaUniqueViolation(err)) {
+        throw new ConflictException(`Email already registered: ${input.email}`);
+      }
+      throw err;
+    }
   }
 
   async validate(email: string, password: string): Promise<AuthUser> {
@@ -62,7 +68,7 @@ export class AuthService {
   async findById(id: number): Promise<AuthUser | null> {
     return this.prisma.user.findUnique({
       where: { id },
-      select: { id: true, email: true, name: true },
+      select: authUserSelect,
     });
   }
 }

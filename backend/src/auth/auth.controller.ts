@@ -10,7 +10,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import type { CookieOptions, Response } from 'express';
 import { AuthService } from './auth.service';
-import type { AuthUser } from './auth.service';
+import type { AuthUser } from './auth-user.type';
 import { CurrentUser } from './current-user.decorator';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';

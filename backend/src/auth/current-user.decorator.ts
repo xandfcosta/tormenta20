@@ -1,6 +1,6 @@
 import { ExecutionContext, createParamDecorator } from '@nestjs/common';
 import type { Request } from 'express';
-import type { AuthUser } from './auth.service';
+import type { AuthUser } from './auth-user.type';
 
 export function extractCurrentUser(ctx: ExecutionContext): AuthUser {
   const req = ctx.switchToHttp().getRequest<Request & { user?: AuthUser }>();

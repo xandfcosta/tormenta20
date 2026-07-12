@@ -126,6 +126,16 @@ describe('AuthService.register', () => {
     await service.register({ email: 'n@b.com', password: 'pw' });
     expect(userRepo.rows[0]!.name).toBeNull();
   });
+
+  it('maps a raced P2002 insert to ConflictException (not a 500)', async () => {
+    const { service, userRepo } = await buildService();
+    // Pre-check finds nobody (findUnique → null), but the insert loses a
+    // race and the unique index rejects with P2002.
+    userRepo.create.mockRejectedValueOnce({ code: 'P2002' });
+    await expect(
+      service.register({ email: 'race@b.com', password: 'pw' }),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
 });
 
 describe('AuthService.validate', () => {

@@ -1,6 +1,7 @@
 import { JwtService } from '@nestjs/jwt';
 import type { Socket } from 'socket.io';
-import type { AuthService, AuthUser, JwtPayload } from '../auth/auth.service';
+import type { AuthService } from '../auth/auth.service';
+import type { AuthUser, JwtPayload } from '../auth/auth-user.type';
 
 /**
  * WebSocket handshake authentication. Client passes the JWT in the

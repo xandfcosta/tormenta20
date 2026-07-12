@@ -17,7 +17,8 @@ import {
   CharactersService,
   type RestCondition,
 } from '../characters/characters.service';
-import { AuthService, type AuthUser } from '../auth/auth.service';
+import { AuthService } from '../auth/auth.service';
+import type { AuthUser } from '../auth/auth-user.type';
 import {
   SessionStateService,
   type AddEntryInput,

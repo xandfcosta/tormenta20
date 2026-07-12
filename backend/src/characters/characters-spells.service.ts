@@ -8,6 +8,7 @@ import {
 import { SPELL_CATALOG, getCatalogItem } from '@tormenta20/t20-data';
 import type { Modifier, SpellSchool } from '@tormenta20/t20-data';
 import { PrismaService } from '../prisma/prisma.service';
+import { isPrismaUniqueViolation } from '../common/prisma-errors';
 import { CharactersService } from './characters.service';
 
 /**
@@ -159,8 +160,7 @@ export class CharactersSpellsService {
       });
     } catch (e) {
       // P2002: unique(characterId, catalogSpellId) violated → already known.
-      const code = (e as { code?: string })?.code;
-      if (code === 'P2002') {
+      if (isPrismaUniqueViolation(e)) {
         throw new ConflictException({
           statusCode: 409,
           error: 'Conflict',
