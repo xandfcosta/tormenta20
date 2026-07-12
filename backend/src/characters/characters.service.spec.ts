@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { CharactersService } from './characters.service';
+import { CharacterItemsService } from './characters-items.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 /**
@@ -256,6 +257,21 @@ async function makeService(prisma: FakePrisma): Promise<CharactersService> {
     ],
   }).compile();
   return moduleRef.get(CharactersService);
+}
+
+/** Items live in CharacterItemsService now (auth still flows through
+ * CharactersService.findOne); build both over the same fake prisma. */
+async function makeItemsService(
+  prisma: FakePrisma,
+): Promise<CharacterItemsService> {
+  const moduleRef = await Test.createTestingModule({
+    providers: [
+      CharactersService,
+      CharacterItemsService,
+      { provide: PrismaService, useValue: prisma.service },
+    ],
+  }).compile();
+  return moduleRef.get(CharacterItemsService);
 }
 
 describe('CharactersService.findOne — ownership guard', () => {
@@ -517,7 +533,7 @@ describe('CharactersService.updateProficiencies', () => {
   });
 });
 
-describe('CharactersService.addItem — equip caps (4 vested / 2 hands)', () => {
+describe('CharacterItemsService.addItem — equip caps (4 vested / 2 hands)', () => {
   it('rejects a 5th vested item', async () => {
     const prisma = new FakePrisma();
     prisma.seedCharacter(makeCharacter());
@@ -527,7 +543,7 @@ describe('CharactersService.addItem — equip caps (4 vested / 2 hands)', () => 
       { equipped: 'vested' },
       { equipped: 'vested' },
     ]);
-    const service = await makeService(prisma);
+    const service = await makeItemsService(prisma);
     await expect(
       service.addItem(1, 1, {
         name: 'Amuleto',
@@ -549,7 +565,7 @@ describe('CharactersService.addItem — equip caps (4 vested / 2 hands)', () => 
       { equipped: 'wielded' },
       { equipped: 'wielded' },
     ]);
-    const service = await makeService(prisma);
+    const service = await makeItemsService(prisma);
     await expect(
       service.addItem(1, 1, {
         name: 'Adaga',
@@ -570,7 +586,7 @@ describe('CharactersService.addItem — equip caps (4 vested / 2 hands)', () => 
     prisma.characterItemFindMany.mockResolvedValue([
       { equipped: 'wielded' },
     ]);
-    const service = await makeService(prisma);
+    const service = await makeItemsService(prisma);
     await expect(
       service.addItem(1, 1, {
         name: 'Espadão',
@@ -595,7 +611,7 @@ describe('CharactersService.addItem — equip caps (4 vested / 2 hands)', () => 
     const prisma = new FakePrisma();
     prisma.seedCharacter(makeCharacter());
     prisma.characterItemFindMany.mockResolvedValue([]);
-    const service = await makeService(prisma);
+    const service = await makeItemsService(prisma);
     await service.addItem(1, 1, {
       name: 'Adaga',
       quantity: 1,
@@ -613,7 +629,7 @@ describe('CharactersService.addItem — equip caps (4 vested / 2 hands)', () => 
     prisma.characterItemFindMany.mockResolvedValue([]);
     // caller 99 is GM of a campaign the char joined → findOne grants access
     prisma.campaignMemberFindFirst.mockResolvedValue({ id: 1 });
-    const service = await makeService(prisma);
+    const service = await makeItemsService(prisma);
     const result = await service.addItem(99, 5, {
       name: 'Poção de cura',
       quantity: 2,
@@ -624,7 +640,7 @@ describe('CharactersService.addItem — equip caps (4 vested / 2 hands)', () => 
   });
 });
 
-describe('CharactersService.consumeItem — quantity + oncePerDay + clamp', () => {
+describe('CharacterItemsService.consumeItem — quantity + oncePerDay + clamp', () => {
   it('decrements quantity when more than 1 remains', async () => {
     const prisma = new FakePrisma();
     prisma.seedCharacter(
@@ -645,7 +661,7 @@ describe('CharactersService.consumeItem — quantity + oncePerDay + clamp', () =
         ],
       }),
     );
-    const service = await makeService(prisma);
+    const service = await makeItemsService(prisma);
     await service.consumeItem(1, 1, 10, { hpRolled: 4 });
     expect(prisma.characterItemUpdate).toHaveBeenCalledWith({
       where: { id: 10 },
@@ -674,7 +690,7 @@ describe('CharactersService.consumeItem — quantity + oncePerDay + clamp', () =
         ],
       }),
     );
-    const service = await makeService(prisma);
+    const service = await makeItemsService(prisma);
     await service.consumeItem(1, 1, 11, { hpRolled: 4 });
     expect(prisma.characterItemDelete).toHaveBeenCalledWith({
       where: { id: 11 },
@@ -702,7 +718,7 @@ describe('CharactersService.consumeItem — quantity + oncePerDay + clamp', () =
         ],
       }),
     );
-    const service = await makeService(prisma);
+    const service = await makeItemsService(prisma);
     await service.consumeItem(1, 1, 12, { hpRolled: 8 });
     expect(prisma.characterUpdate).toHaveBeenCalledWith({
       where: { id: 1 },
@@ -737,7 +753,7 @@ describe('CharactersService.consumeItem — quantity + oncePerDay + clamp', () =
         ],
       }),
     );
-    const service = await makeService(prisma);
+    const service = await makeItemsService(prisma);
     await expect(service.consumeItem(1, 1, 20, {})).rejects.toMatchObject({
       response: expect.objectContaining({
         message: '"Gorad quente" already active for the day',
@@ -781,7 +797,7 @@ describe('CharactersService.consumeItem — quantity + oncePerDay + clamp', () =
       prisma.lastSeed = next;
       return next;
     });
-    const service = await makeService(prisma);
+    const service = await makeItemsService(prisma);
 
     /* First consume: hp 5 → 10. */
     await service.consumeItem(1, 1, 50, { hpRolled: 5 });
@@ -819,7 +835,7 @@ describe('CharactersService.consumeItem — quantity + oncePerDay + clamp', () =
     prisma.activeEffectCreate.mockRejectedValueOnce(
       Object.assign(new Error('unique violation'), { code: 'P2002' }),
     );
-    const service = await makeService(prisma);
+    const service = await makeItemsService(prisma);
     await expect(service.consumeItem(1, 1, 22, {})).rejects.toMatchObject({
       response: expect.objectContaining({
         message: '"Cosmético" already active for the day',
@@ -845,7 +861,7 @@ describe('CharactersService.consumeItem — quantity + oncePerDay + clamp', () =
         ],
       }),
     );
-    const service = await makeService(prisma);
+    const service = await makeItemsService(prisma);
     await service.consumeItem(1, 1, 30, {});
     expect(prisma.activeEffectCreate).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -874,7 +890,7 @@ describe('CharactersService.consumeItem — quantity + oncePerDay + clamp', () =
         ],
       }),
     );
-    const service = await makeService(prisma);
+    const service = await makeItemsService(prisma);
     await expect(service.consumeItem(1, 1, 40, {})).rejects.toBeInstanceOf(
       BadRequestException,
     );
@@ -898,7 +914,7 @@ describe('CharactersService.consumeItem — quantity + oncePerDay + clamp', () =
         ],
       }),
     );
-    const service = await makeService(prisma);
+    const service = await makeItemsService(prisma);
     await expect(service.consumeItem(1, 1, 41, {})).rejects.toBeInstanceOf(
       BadRequestException,
     );

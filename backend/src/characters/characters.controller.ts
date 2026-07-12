@@ -13,6 +13,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthUser } from '../auth/auth-user.type';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CharactersService } from './characters.service';
+import { CharacterItemsService } from './characters-items.service';
 import { CharactersSpellsService } from './characters-spells.service';
 import { CampaignMembersService } from '../campaign-members/campaign-members.service';
 import {
@@ -48,6 +49,7 @@ export class CharactersController {
     private readonly characters: CharactersService,
     private readonly members: CampaignMembersService,
     private readonly spells: CharactersSpellsService,
+    private readonly items: CharacterItemsService,
   ) {}
 
   @Get('options')
@@ -148,7 +150,7 @@ export class CharactersController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: CreateItemDto,
   ) {
-    return this.characters.addItem(user.id, id, dto);
+    return this.items.addItem(user.id, id, dto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -159,7 +161,7 @@ export class CharactersController {
     @Param('itemId', ParseIntPipe) itemId: number,
     @Body() dto: UpdateItemDto,
   ) {
-    return this.characters.updateItem(user.id, id, itemId, dto);
+    return this.items.updateItem(user.id, id, itemId, dto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -169,7 +171,7 @@ export class CharactersController {
     @Param('id', ParseIntPipe) id: number,
     @Param('itemId', ParseIntPipe) itemId: number,
   ) {
-    return this.characters.deleteItem(user.id, id, itemId);
+    return this.items.deleteItem(user.id, id, itemId);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -180,7 +182,7 @@ export class CharactersController {
     @Param('itemId', ParseIntPipe) itemId: number,
     @Body() dto: ConsumeItemDto,
   ) {
-    return this.characters.consumeItem(user.id, id, itemId, dto);
+    return this.items.consumeItem(user.id, id, itemId, dto);
   }
 
   @UseGuards(JwtAuthGuard)
