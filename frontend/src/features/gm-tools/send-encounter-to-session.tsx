@@ -18,15 +18,12 @@ import {
 import { campaignsQueryOptions } from '@/entities/campaign/queries'
 import { campaignSessionsQueryOptions } from '@/entities/session/queries'
 import { useSessionSocket } from '@/shared/realtime/realtime'
+import { rollD20 } from '@/shared/lib/dice'
 
 // Mirror of backend `INITIATIVE_MAX_ENTRIES` — server rejects the 51st
 // add with a BadRequestException. Frontend clamps too so batch feedback
 // arrives in the UI (not just as a silent WS error mid-loop).
 const INITIATIVE_MAX_ENTRIES = 50
-
-function rollD20(): number {
-  return Math.floor(Math.random() * 20) + 1
-}
 
 type EncounterGroup = {
   monster: Monster

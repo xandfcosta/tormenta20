@@ -21,25 +21,12 @@ import {
   type MonsterTipo,
   xpForNd,
 } from '@tormenta20/t20-data'
-const TIPOS: readonly MonsterTipo[] = [
-  'humanoide',
-  'animal',
-  'monstro',
-  'morto-vivo',
-  'construto',
-  'espirito',
-  'planar',
-]
-
-const TIPO_LABEL: Record<MonsterTipo, string> = {
-  humanoide: 'Humanoide',
-  animal: 'Animal',
-  monstro: 'Monstro',
-  'morto-vivo': 'Morto-vivo',
-  construto: 'Construto',
-  espirito: 'Espírito',
-  planar: 'Planar',
-}
+import {
+  MONSTER_TIPOS as TIPOS,
+  MONSTER_TIPO_LABEL as TIPO_LABEL,
+  formatNd,
+  normalizeMonsterName as normalize,
+} from '@/features/gm-tools/monster-format'
 
 /**
  * Bestiary lookup. All 20 monsters currently in BESTIARY; filters:
@@ -333,20 +320,4 @@ function Stat({ label, value }: { label: string; value: string | number }) {
 
 function signed(n: number): string {
   return n >= 0 ? `+${n}` : `${n}`
-}
-
-function formatNd(nd: number): string {
-  if (nd < 1) {
-    if (Math.abs(nd - 0.25) < 0.001) return '1/4'
-    if (Math.abs(nd - 0.5) < 0.001) return '1/2'
-  }
-  return String(nd)
-}
-
-function normalize(s: string): string {
-  return s
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .trim()
 }
