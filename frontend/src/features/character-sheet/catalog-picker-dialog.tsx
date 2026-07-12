@@ -17,6 +17,7 @@ import {
 } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
+import { VirtualList } from '@/shared/ui/virtual-list'
 import type {
   CharacterItem,
   CreateItemInput,
@@ -342,43 +343,47 @@ export function AddCatalogItemDialog({
               placeholder="Buscar pelo nome ou categoria..."
               autoFocus
             />
-            <div
-              className={cn(
-                'mt-1 max-h-56 overflow-y-auto rounded-md border',
-                'border-amber-700/30 bg-amber-50/80 dark:border-amber-500/20 dark:bg-zinc-900/60',
-              )}
-            >
-              {filtered.length === 0 ? (
-                <p className={cn('px-3 py-4 text-center text-xs', dimText)}>
-                  Nenhum item.
-                </p>
-              ) : (
-                filtered.map((opt) => {
-                  const active = catalogId === opt.id
-                  return (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => {
-                        setCatalogId(opt.id)
-                        if (error) setError(null)
-                      }}
-                      className={cn(
-                        'flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-sm transition-colors',
-                        active
-                          ? 'bg-amber-200/70 text-amber-900 dark:bg-amber-500/20 dark:text-amber-200'
-                          : 'hover:bg-amber-100/60 dark:hover:bg-zinc-800/60',
-                      )}
-                    >
-                      <span className="truncate">{opt.name}</span>
-                      <span className={cn('shrink-0 text-[10px]', dimText)}>
-                        {opt.category}
-                      </span>
-                    </button>
-                  )
-                })
-              )}
-            </div>
+            {filtered.length === 0 ? (
+              <p
+                className={cn(
+                  'mt-1 rounded-md border px-3 py-4 text-center text-xs',
+                  'border-amber-700/30 bg-amber-50/80 dark:border-amber-500/20 dark:bg-zinc-900/60',
+                  dimText,
+                )}
+              >
+                Nenhum item.
+              </p>
+            ) : (
+              <VirtualList
+                className={cn(
+                  'mt-1 max-h-56 rounded-md border',
+                  'border-amber-700/30 bg-amber-50/80 dark:border-amber-500/20 dark:bg-zinc-900/60',
+                )}
+                items={filtered}
+                estimateSize={34}
+                getKey={(opt) => opt.id}
+                renderItem={(opt) => (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCatalogId(opt.id)
+                      if (error) setError(null)
+                    }}
+                    className={cn(
+                      'flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-sm transition-colors',
+                      catalogId === opt.id
+                        ? 'bg-amber-200/70 text-amber-900 dark:bg-amber-500/20 dark:text-amber-200'
+                        : 'hover:bg-amber-100/60 dark:hover:bg-zinc-800/60',
+                    )}
+                  >
+                    <span className="truncate">{opt.name}</span>
+                    <span className={cn('shrink-0 text-[10px]', dimText)}>
+                      {opt.category}
+                    </span>
+                  </button>
+                )}
+              />
+            )}
           </div>
           {selected && (
             <div
