@@ -1017,3 +1017,30 @@ describe('CharactersService.restVitals — T20 night rest (livro p.20)', () => {
     expect(result).toEqual({ hpCurrent: 3, mpCurrent: 3 });
   });
 });
+
+describe('CharactersService.assertOwner — lightweight owner guard', () => {
+  it('resolves when the caller owns the character', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ id: 5, ownerId: 7 }));
+    const service = await makeService(prisma);
+    await expect(service.assertOwner(7, 5)).resolves.toBeUndefined();
+  });
+
+  it('throws Forbidden when the caller is not the owner (no GM fallback)', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ id: 5, ownerId: 999 }));
+    const service = await makeService(prisma);
+    await expect(service.assertOwner(7, 5)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+  });
+
+  it('throws NotFound when the character is missing', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(null);
+    const service = await makeService(prisma);
+    await expect(service.assertOwner(7, 99)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+});

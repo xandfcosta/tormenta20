@@ -66,29 +66,10 @@ export class CampaignMembersService {
    * for the MVP fix — a GM can always ask the player to self-add.
    */
   async add(callerId: number, campaignId: number, dto: AddMemberDto) {
-    const campaign = await this.prisma.campaign.findUnique({
-      where: { id: campaignId },
-      select: { id: true, ownerId: true, inviteToken: true },
-    });
-    if (!campaign) {
-      throw new NotFoundException(`Campaign ${campaignId} not found`);
-    }
-    // Join authorization: the campaign owner (GM) adds their own
-    // characters/NPCs freely; everyone else must present the campaign's
-    // CURRENT invite token. This closes the self-join hole — without the
-    // gate, member-aware reads (Phase 0) would let any user join by id and
-    // see the table's sessions/roster. Rotating the token invalidates
-    // older links immediately.
-    if (campaign.ownerId !== callerId) {
-      if (
-        campaign.inviteToken === null ||
-        dto.inviteToken !== campaign.inviteToken
-      ) {
-        throw new ForbiddenException(
-          `A valid invite token is required to join campaign ${campaignId}`,
-        );
-      }
-    }
+    // Join authorization (owner joins freely; everyone else needs a valid
+    // invite token) + campaign existence are the campaigns context's
+    // rules — delegate so the campaign row + token stay private to it.
+    await this.campaigns.assertCanJoin(callerId, campaignId, dto.inviteToken);
     const character = await this.prisma.character.findUnique({
       where: { id: dto.characterId },
       select: { id: true, ownerId: true },

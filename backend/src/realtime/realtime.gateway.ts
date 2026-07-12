@@ -17,7 +17,7 @@ import {
   CharactersService,
   type RestCondition,
 } from '../characters/characters.service';
-import type { AuthUser } from '../auth/auth.service';
+import { AuthService, type AuthUser } from '../auth/auth.service';
 import {
   SessionStateService,
   type AddEntryInput,
@@ -68,11 +68,12 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     private readonly sessions: SessionsService,
     private readonly state: SessionStateService,
     private readonly characters: CharactersService,
+    private readonly auth: AuthService,
   ) {}
 
   async handleConnection(socket: Socket) {
     try {
-      const user = await verifyHandshake(socket, this.jwt, this.prisma);
+      const user = await verifyHandshake(socket, this.jwt, this.auth);
       (socket as AuthedSocket).data.user = user;
       this.logger.log(`socket ${socket.id} authenticated as user ${user.id}`);
     } catch (err) {
@@ -603,11 +604,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     if (entry.characterId === undefined) {
       throw new WsException('Only the GM can edit NPC vitals');
     }
-    const character = await this.prisma.character.findUnique({
-      where: { id: entry.characterId },
-      select: { ownerId: true },
-    });
-    if (!character || character.ownerId !== socket.data.user.id) {
+    // Ownership is a Character-aggregate rule — delegate the check.
+    try {
+      await this.characters.assertOwner(socket.data.user.id, entry.characterId);
+    } catch {
       throw new WsException("You can only edit your own character's vitals");
     }
   }

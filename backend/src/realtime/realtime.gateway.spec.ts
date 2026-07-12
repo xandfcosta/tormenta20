@@ -10,6 +10,7 @@ import { RealtimeGateway, sessionRoom } from './realtime.gateway';
 import { PrismaService } from '../prisma/prisma.service';
 import { SessionsService } from '../sessions/sessions.service';
 import { CharactersService } from '../characters/characters.service';
+import { AuthService } from '../auth/auth.service';
 import { SessionStateService } from './session-state.service';
 
 /**
@@ -37,6 +38,8 @@ async function setup(over?: {
   charactersEndScene?: jest.Mock;
   charactersEndDay?: jest.Mock;
   charactersRestVitals?: jest.Mock;
+  charactersAssertOwner?: jest.Mock;
+  authFindById?: jest.Mock;
 }) {
   const prisma = {
     user: {
@@ -82,6 +85,15 @@ async function setup(over?: {
     restVitals:
       over?.charactersRestVitals ??
       jest.fn().mockResolvedValue({ hpCurrent: 0, mpCurrent: 0 }),
+    assertOwner:
+      over?.charactersAssertOwner ?? jest.fn().mockResolvedValue(undefined),
+  };
+  const auth = {
+    findById:
+      over?.authFindById ??
+      jest
+        .fn()
+        .mockResolvedValue({ id: 7, email: 'gm@example.com', name: 'GM' }),
   };
   const module = await Test.createTestingModule({
     providers: [
@@ -91,6 +103,7 @@ async function setup(over?: {
       { provide: PrismaService, useValue: prisma },
       { provide: SessionsService, useValue: sessions },
       { provide: CharactersService, useValue: characters },
+      { provide: AuthService, useValue: auth },
     ],
   }).compile();
   const gateway = module.get(RealtimeGateway);
@@ -159,7 +172,7 @@ describe('RealtimeGateway.handleConnection', () => {
 
   it('disconnects when the token points at a removed user', async () => {
     const { gateway, jwt } = await setup({
-      userFindUnique: jest.fn().mockResolvedValue(null),
+      authFindById: jest.fn().mockResolvedValue(null),
     });
     const token = jwt.sign({ sub: 99, email: 'gone@example.com' });
     const socket = fakeSocket({ auth: { token } });
@@ -523,7 +536,8 @@ describe('RealtimeGateway.vitalsDelta', () => {
       sessionsFindOneForCaller: jest
         .fn()
         .mockResolvedValue({ session: { id: 5 }, role: 'player' }),
-      characterFindUnique: jest.fn().mockResolvedValue({ ownerId: 999 }),
+      // CharactersService.assertOwner rejects → not the player's character.
+      charactersAssertOwner: jest.fn().mockRejectedValue(new Error('nope')),
     });
     const s = state.addEntry(5, {
       label: 'Ally',

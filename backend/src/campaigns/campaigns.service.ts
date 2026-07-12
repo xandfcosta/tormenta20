@@ -84,6 +84,34 @@ export class CampaignsService {
     throw new ForbiddenException(`Campaign ${id} is not accessible`);
   }
 
+  /**
+   * Join authorization for adding a character to a campaign. The owner
+   * (GM) may add their own characters/NPCs freely; everyone else must
+   * present the campaign's CURRENT invite token. Throws NotFound if the
+   * campaign is gone, Forbidden if a non-owner has no valid token. Keeps
+   * the campaign row + token rule private to this context (called by
+   * CampaignMembersService.add).
+   */
+  async assertCanJoin(
+    userId: number,
+    campaignId: number,
+    inviteToken?: string,
+  ): Promise<void> {
+    const campaign = await this.prisma.campaign.findUnique({
+      where: { id: campaignId },
+      select: { id: true, ownerId: true, inviteToken: true },
+    });
+    if (!campaign) {
+      throw new NotFoundException(`Campaign ${campaignId} not found`);
+    }
+    if (campaign.ownerId === userId) return;
+    if (campaign.inviteToken === null || inviteToken !== campaign.inviteToken) {
+      throw new ForbiddenException(
+        `A valid invite token is required to join campaign ${campaignId}`,
+      );
+    }
+  }
+
   create(ownerId: number, dto: CreateCampaignDto) {
     return this.prisma.campaign.create({
       data: {
