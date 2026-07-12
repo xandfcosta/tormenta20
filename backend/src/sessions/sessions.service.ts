@@ -6,6 +6,7 @@ import {
   NotFoundException,
   Optional,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { CampaignsService } from '../campaigns/campaigns.service';
 import { CreateSessionDto, UpdateSessionDto } from './dto/session.dto';
@@ -26,6 +27,7 @@ export class SessionsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly campaigns: CampaignsService,
+    private readonly config: ConfigService,
     /* SessionStateService is a runtime-only concern; keep the
      * dependency `Optional` so unit tests that don't care about the
      * tracker can compile without wiring it. */
@@ -181,7 +183,10 @@ export class SessionsService {
       );
     }
     if (session.status === 'ended') return session;
-    if (this.state && process.env.WS_VITALS_WRITETHROUGH === '1') {
+    if (
+      this.state &&
+      this.config.get('WS_VITALS_WRITETHROUGH') === '1'
+    ) {
       await this.commitVitalsToCharacters(id);
     }
     return this.prisma.session.update({

@@ -4,6 +4,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { PrismaService } from '../prisma/prisma.service';
@@ -94,7 +95,10 @@ export class SessionStateService {
    */
   private readonly dirty = new Set<number>();
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
+  ) {}
 
   /**
    * Async accessor — hydrates from Session.runtimeState on the first
@@ -409,7 +413,7 @@ export class SessionStateService {
     sessionId: number,
     entry: InitiativeEntry,
   ): Promise<void> {
-    if (process.env.WS_VITALS_WRITETHROUGH_LIVE !== '1') return;
+    if (this.config.get('WS_VITALS_WRITETHROUGH_LIVE') !== '1') return;
     if (entry.characterId === undefined) return;
     if (entry.hpCurrent === undefined && entry.mpCurrent === undefined) {
       return;
