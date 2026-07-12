@@ -75,12 +75,12 @@ export class CampaignsService {
   async resolveAccess(userId: number, id: number) {
     const campaign = await this.prisma.campaign.findUnique({ where: { id } });
     if (!campaign) throw new NotFoundException(`Campaign ${id} not found`);
-    if (campaign.ownerId === userId) return { campaign, role: 'gm' };
+    if (campaign.ownerId === userId) return { campaign, role: 'gm' as CampaignRole };
     const membership = await this.prisma.campaignMember.findFirst({
       where: { campaignId: id, character: { ownerId: userId } },
       select: { id: true },
     });
-    if (membership) return { campaign, role: 'player' };
+    if (membership) return { campaign, role: 'player' as CampaignRole };
     throw new ForbiddenException(`Campaign ${id} is not accessible`);
   }
 

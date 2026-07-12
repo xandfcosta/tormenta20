@@ -183,8 +183,10 @@ export function assertOverlaysCompatible(
 
 /**
  * Deterministic average roll used for AI-rolled consumables when the client
- * does not supply a player-rolled value. Treats `NdF` as `N * (F+1)/2`.
- * Accepts plain integers ('0', '5') as a flat-bonus shorthand.
+ * does not supply a player-rolled value. Treats `NdF` as `N * (F+1)/2` —
+ * the arithmetic mean of the dice, not a book rule (so there's no page to
+ * cite); it's just the no-roll fallback value. Accepts plain integers
+ * ('0', '5') as a flat-bonus shorthand.
  */
 export function rollAverage(dice: string, bonus = 0): number {
   const trimmed = dice.trim();
