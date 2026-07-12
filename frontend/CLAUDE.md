@@ -73,8 +73,14 @@ swallows the outlet and children never mount. See
 
 - Typecheck: `pnpm --filter frontend typecheck` (tsgo). `noUnusedLocals` +
   `noUnusedParameters` are **on** — prune unused imports.
-- Lint: `pnpm --filter frontend lint` (eslint). Biome **ignores** this
-  package; there is no prettier binary — match surrounding formatting.
+- Lint: `pnpm --filter frontend lint` (eslint) for this package's own
+  script. **But CI also runs root `biome lint --write .`, and biome's
+  `includes` cover `**/*.tsx` — so biome lints frontend too** (only its
+  formatter is off). CI fails on any biome error or `--write` diff. Biome
+  can't tell a custom component (`NumberInput`, `Combobox`) is a form
+  control, so its recommended a11y rule `noLabelWithoutControl` errors on a
+  `<label>` that wraps one — associate via `htmlFor`+`id`, not nesting.
+  There is no prettier binary — match surrounding formatting.
 - `routeTree.gen.ts` is generated + gitignored; CI regenerates on build.
 
 ## Reference
