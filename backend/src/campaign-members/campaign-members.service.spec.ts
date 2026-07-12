@@ -396,3 +396,130 @@ describe('CampaignMembersService.listForCharacter', () => {
     );
   });
 });
+
+describe('CampaignMembersService.resolveCombatant', () => {
+  it('returns stats when the caller owns the member character', async () => {
+    const characterFindUnique = jest.fn().mockResolvedValue({
+      name: 'Mira',
+      ownerId: 5,
+      hpCurrent: 20,
+      hpMax: 30,
+      mpCurrent: 5,
+      mpMax: 10,
+    });
+    const campaignFindUnique = jest.fn().mockResolvedValue({ ownerId: 999 });
+    const memberFindUnique = jest.fn().mockResolvedValue({ id: 1 });
+    const { service } = await setup({
+      characterFindUnique,
+      campaignFindUnique,
+      memberFindUnique,
+    });
+    await expect(service.resolveCombatant(5, 1, 10)).resolves.toEqual({
+      name: 'Mira',
+      hpCurrent: 20,
+      hpMax: 30,
+      mpCurrent: 5,
+      mpMax: 10,
+    });
+  });
+
+  it('allows the campaign GM to resolve a character they do not own', async () => {
+    const characterFindUnique = jest.fn().mockResolvedValue({
+      name: 'PC',
+      ownerId: 42,
+      hpCurrent: 1,
+      hpMax: 1,
+      mpCurrent: 0,
+      mpMax: 0,
+    });
+    const campaignFindUnique = jest.fn().mockResolvedValue({ ownerId: 7 });
+    const memberFindUnique = jest.fn().mockResolvedValue({ id: 1 });
+    const { service } = await setup({
+      characterFindUnique,
+      campaignFindUnique,
+      memberFindUnique,
+    });
+    await expect(service.resolveCombatant(7, 1, 10)).resolves.toMatchObject({
+      name: 'PC',
+    });
+  });
+
+  it('throws NotFound when the character is missing', async () => {
+    const { service } = await setup({
+      characterFindUnique: jest.fn().mockResolvedValue(null),
+      campaignFindUnique: jest.fn().mockResolvedValue({ ownerId: 7 }),
+      memberFindUnique: jest.fn().mockResolvedValue({ id: 1 }),
+    });
+    await expect(service.resolveCombatant(7, 1, 10)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it('throws BadRequest when the character is not a member', async () => {
+    const { service } = await setup({
+      characterFindUnique: jest.fn().mockResolvedValue({
+        name: 'X',
+        ownerId: 7,
+        hpCurrent: 1,
+        hpMax: 1,
+        mpCurrent: 0,
+        mpMax: 0,
+      }),
+      campaignFindUnique: jest.fn().mockResolvedValue({ ownerId: 7 }),
+      memberFindUnique: jest.fn().mockResolvedValue(null),
+    });
+    await expect(service.resolveCombatant(7, 1, 10)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+  });
+
+  it('throws Forbidden when the caller is neither owner nor GM', async () => {
+    const { service } = await setup({
+      characterFindUnique: jest.fn().mockResolvedValue({
+        name: 'X',
+        ownerId: 42,
+        hpCurrent: 1,
+        hpMax: 1,
+        mpCurrent: 0,
+        mpMax: 0,
+      }),
+      campaignFindUnique: jest.fn().mockResolvedValue({ ownerId: 99 }),
+      memberFindUnique: jest.fn().mockResolvedValue({ id: 1 }),
+    });
+    await expect(service.resolveCombatant(7, 1, 10)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+  });
+});
+
+describe('CampaignMembersService roster reads', () => {
+  it('listPlayerCombatants maps player members to combat stats', async () => {
+    const memberFindMany = jest.fn().mockResolvedValue([
+      {
+        character: {
+          id: 10,
+          name: 'Mira',
+          hpCurrent: 20,
+          hpMax: 30,
+          mpCurrent: 5,
+          mpMax: 10,
+        },
+      },
+    ]);
+    const { service } = await setup({ memberFindMany });
+    await expect(service.listPlayerCombatants(1)).resolves.toEqual([
+      { characterId: 10, name: 'Mira', hpCurrent: 20, hpMax: 30, mpCurrent: 5, mpMax: 10 },
+    ]);
+    expect(memberFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { campaignId: 1, role: 'player' } }),
+    );
+  });
+
+  it('listMemberCharacterIds returns the character ids', async () => {
+    const memberFindMany = jest
+      .fn()
+      .mockResolvedValue([{ characterId: 10 }, { characterId: 11 }]);
+    const { service } = await setup({ memberFindMany });
+    await expect(service.listMemberCharacterIds(1)).resolves.toEqual([10, 11]);
+  });
+});

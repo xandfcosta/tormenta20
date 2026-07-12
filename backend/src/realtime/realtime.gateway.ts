@@ -11,8 +11,8 @@ import {
   WsException,
 } from '@nestjs/websockets';
 import type { Server, Socket } from 'socket.io';
-import { PrismaService } from '../prisma/prisma.service';
 import { SessionsService } from '../sessions/sessions.service';
+import { CampaignMembersService } from '../campaign-members/campaign-members.service';
 import { CharactersService } from '../characters/characters.service';
 import {
   CharacterEffectsService,
@@ -59,7 +59,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   constructor(
     private readonly jwt: JwtService,
-    private readonly prisma: PrismaService,
+    private readonly members: CampaignMembersService,
     private readonly sessions: SessionsService,
     private readonly state: SessionStateService,
     private readonly characters: CharactersService,
@@ -184,61 +184,29 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     if (typeof input.initiative !== 'number') {
       throw new WsException('entry.initiative is required');
     }
-    const [character, campaign, member] = await Promise.all([
-      this.prisma.character.findUnique({
-        where: { id: characterId },
-        select: {
-          id: true,
-          name: true,
-          ownerId: true,
-          hpCurrent: true,
-          hpMax: true,
-          mpCurrent: true,
-          mpMax: true,
-        },
-      }),
-      this.prisma.campaign.findUnique({
-        where: { id: campaignId },
-        select: { id: true, ownerId: true },
-      }),
-      this.prisma.campaignMember.findUnique({
-        where: {
-          campaignId_characterId: {
-            campaignId,
-            characterId,
-          },
-        },
-        select: { id: true },
-      }),
-    ]);
-    if (!character) {
-      throw new WsException(`Character ${characterId} not found`);
-    }
-    if (!campaign) {
-      throw new WsException(`Campaign ${campaignId} not found`);
-    }
-    if (!member) {
-      throw new WsException(
-        `Character ${characterId} is not a member of campaign ${campaignId}`,
+    // Membership + owner-or-GM validation + stat lookup is a campaign
+    // concern — delegate; wrap the domain exception as a WsException.
+    let stats: Awaited<
+      ReturnType<CampaignMembersService['resolveCombatant']>
+    >;
+    try {
+      stats = await this.members.resolveCombatant(
+        callerId,
+        campaignId,
+        characterId,
       );
-    }
-    if (
-      callerId !== character.ownerId &&
-      callerId !== campaign.ownerId
-    ) {
-      throw new WsException(
-        `Caller ${callerId} is neither the GM of campaign ${campaignId} nor the owner of character ${characterId}`,
-      );
+    } catch (err) {
+      throw new WsException((err as Error).message);
     }
     return {
-      label: input.label?.trim() || character.name,
+      label: input.label?.trim() || stats.name,
       initiative: input.initiative,
       type: 'character',
       characterId,
-      hpCurrent: input.hpCurrent ?? character.hpCurrent,
-      hpMax: input.hpMax ?? character.hpMax,
-      mpCurrent: input.mpCurrent ?? character.mpCurrent,
-      mpMax: input.mpMax ?? character.mpMax,
+      hpCurrent: input.hpCurrent ?? stats.hpCurrent,
+      hpMax: input.hpMax ?? stats.hpMax,
+      mpCurrent: input.mpCurrent ?? stats.mpCurrent,
+      mpMax: input.mpMax ?? stats.mpMax,
     };
   }
 
@@ -311,21 +279,9 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   ) {
     await this.assertSessionAccess(socket, body);
     this.assertGm(socket);
-    const members = await this.prisma.campaignMember.findMany({
-      where: { campaignId: body.campaignId, role: 'player' },
-      select: {
-        character: {
-          select: {
-            id: true,
-            name: true,
-            hpCurrent: true,
-            hpMax: true,
-            mpCurrent: true,
-            mpMax: true,
-          },
-        },
-      },
-    });
+    const combatants = await this.members.listPlayerCombatants(
+      body.campaignId,
+    );
     const existing = new Set(
       this.state
         .getState(body.sessionId)
@@ -333,17 +289,17 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         .filter((id): id is number => id !== undefined),
     );
     let state = this.state.getState(body.sessionId);
-    for (const { character } of members) {
-      if (existing.has(character.id)) continue;
+    for (const c of combatants) {
+      if (existing.has(c.characterId)) continue;
       state = this.state.addEntry(body.sessionId, {
-        label: character.name,
+        label: c.name,
         initiative: 0,
         type: 'character',
-        characterId: character.id,
-        hpCurrent: character.hpCurrent,
-        hpMax: character.hpMax,
-        mpCurrent: character.mpCurrent,
-        mpMax: character.mpMax,
+        characterId: c.characterId,
+        hpCurrent: c.hpCurrent,
+        hpMax: c.hpMax,
+        mpCurrent: c.mpCurrent,
+        mpMax: c.mpMax,
       });
     }
     this.emitSessionState(body.sessionId, state);
@@ -370,13 +326,12 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     this.assertGm(socket);
     const callerId = socket.data.user.id;
     const condition: RestCondition = body.condition ?? 'normal';
-    const members = await this.prisma.campaignMember.findMany({
-      where: { campaignId: body.campaignId },
-      select: { characterId: true },
-    });
+    const characterIds = await this.members.listMemberCharacterIds(
+      body.campaignId,
+    );
 
     let healed = 0;
-    for (const { characterId } of members) {
+    for (const characterId of characterIds) {
       if (body.scope === 'day') {
         await this.effects.endDay(callerId, characterId);
         const vitals = await this.effects.restVitals(
@@ -402,7 +357,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       scope: body.scope,
       condition: body.condition,
     });
-    return { rested: body.scope, characters: members.length, healed };
+    return { rested: body.scope, characters: characterIds.length, healed };
   }
 
   /** Copy freshly-persisted PV/PM onto the matching live tracker entry

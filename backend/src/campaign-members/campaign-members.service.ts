@@ -226,4 +226,118 @@ export class CampaignMembersService {
       },
     });
   }
+
+  /**
+   * Player-controlled characters of a campaign with live combat stats —
+   * for the realtime tracker's "add the whole party" action. Keeps the
+   * campaignMember + character reads inside this context instead of the
+   * WS gateway.
+   */
+  async listPlayerCombatants(campaignId: number): Promise<
+    {
+      characterId: number;
+      name: string;
+      hpCurrent: number;
+      hpMax: number;
+      mpCurrent: number;
+      mpMax: number;
+    }[]
+  > {
+    const members = await this.prisma.campaignMember.findMany({
+      where: { campaignId, role: 'player' },
+      select: {
+        character: {
+          select: {
+            id: true,
+            name: true,
+            hpCurrent: true,
+            hpMax: true,
+            mpCurrent: true,
+            mpMax: true,
+          },
+        },
+      },
+    });
+    return members.map(({ character: c }) => ({
+      characterId: c.id,
+      name: c.name,
+      hpCurrent: c.hpCurrent,
+      hpMax: c.hpMax,
+      mpCurrent: c.mpCurrent,
+      mpMax: c.mpMax,
+    }));
+  }
+
+  /** Character ids of every member of a campaign — for session-wide rest. */
+  async listMemberCharacterIds(campaignId: number): Promise<number[]> {
+    const members = await this.prisma.campaignMember.findMany({
+      where: { campaignId },
+      select: { characterId: true },
+    });
+    return members.map((m) => m.characterId);
+  }
+
+  /**
+   * Resolve a character into a session combatant, validating that it is a
+   * member of the campaign and that the caller may add it (owns it, or is
+   * the campaign GM). Returns its combat stats. Encapsulates the
+   * character + campaign + membership reads the WS gateway used to do
+   * inline. Throws NotFound / BadRequest / Forbidden.
+   */
+  async resolveCombatant(
+    callerId: number,
+    campaignId: number,
+    characterId: number,
+  ): Promise<{
+    name: string;
+    hpCurrent: number;
+    hpMax: number;
+    mpCurrent: number;
+    mpMax: number;
+  }> {
+    const [character, campaign, member] = await Promise.all([
+      this.prisma.character.findUnique({
+        where: { id: characterId },
+        select: {
+          name: true,
+          ownerId: true,
+          hpCurrent: true,
+          hpMax: true,
+          mpCurrent: true,
+          mpMax: true,
+        },
+      }),
+      this.prisma.campaign.findUnique({
+        where: { id: campaignId },
+        select: { ownerId: true },
+      }),
+      this.prisma.campaignMember.findUnique({
+        where: { campaignId_characterId: { campaignId, characterId } },
+        select: { id: true },
+      }),
+    ]);
+    if (!character) {
+      throw new NotFoundException(`Character ${characterId} not found`);
+    }
+    if (!campaign) {
+      throw new NotFoundException(`Campaign ${campaignId} not found`);
+    }
+    if (!member) {
+      throw new BadRequestException(
+        `Character ${characterId} is not a member of campaign ${campaignId}`,
+      );
+    }
+    if (callerId !== character.ownerId && callerId !== campaign.ownerId) {
+      throw new ForbiddenException(
+        `Caller ${callerId} is neither the GM of campaign ${campaignId} nor the owner of character ${characterId}`,
+      );
+    }
+    return {
+      name: character.name,
+      hpCurrent: character.hpCurrent,
+      hpMax: character.hpMax,
+      mpCurrent: character.mpCurrent,
+      mpMax: character.mpMax,
+    };
+  }
 }
