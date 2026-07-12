@@ -1,5 +1,6 @@
 import type { Session } from '@/shared/api/api'
 import type { useSessionSocket } from '@/shared/realtime/realtime'
+import { AddMonsterDrawer } from '@/features/session/add-monster-drawer'
 import { DeleteSessionButton } from '@/features/session-tracker/delete-session-button'
 import { HeaderCard } from '@/features/session-tracker/header-card'
 import { InitiativeCard } from '@/features/session-tracker/initiative-card'
@@ -32,6 +33,7 @@ export function SessionGmView({
       </div>
       <aside className="space-y-4 lg:order-2">
         <HeaderCard campaignId={campaignId} session={session} isGm />
+        <AddMonsterDrawer rt={rt} />
         <NotesCard campaignId={campaignId} session={session} />
         <div className="flex justify-end">
           <DeleteSessionButton
