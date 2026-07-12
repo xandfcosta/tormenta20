@@ -5,15 +5,17 @@ import { characterSheetQueryOptions } from '@/entities/character/queries'
 import type { CharacterWithComputed, Session } from '@/shared/api/api'
 import type { useSessionSocket } from '@/shared/realtime/realtime'
 import { ComputedSheetCards } from '@/features/character-sheet/computed-sheet'
+import { MatchPeek, MatchRail } from '@/features/session/match-rail'
 import { HeaderCard } from '@/features/session-tracker/header-card'
 import { InitiativeCard } from '@/features/session-tracker/initiative-card'
 
 /**
  * Player's match screen. Their own character sheet is the primary surface;
  * the session rail (status + read-only initiative) sits alongside on wide
- * viewports and on top on phones so the actionable tracker leads during
- * combat. A player only touches their own combatants' vitals (enforced
- * server-side; the card gates the ± buttons by `myCharacterIds`).
+ * viewports and collapses into a bottom sheet on phones so the sheet owns
+ * the screen — the collapsed bar still peeks the current turn. A player only
+ * touches their own combatants' vitals (enforced server-side; the card gates
+ * the ± buttons by `myCharacterIds`).
  */
 export function SessionPlayerView({
   campaignId,
@@ -50,11 +52,13 @@ export function SessionPlayerView({
   }
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-4 p-3 sm:p-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-      <div className="order-2 min-w-0 space-y-4 lg:order-1">
+    <div className="mx-auto grid max-w-6xl gap-4 p-3 pb-20 sm:p-4 lg:grid-cols-[minmax(0,1fr)_22rem] lg:pb-4">
+      <div className="min-w-0 space-y-4">
         <PlayerSheet characterId={myCharacterId} />
       </div>
-      <aside className="order-1 space-y-4 lg:order-2">{rail}</aside>
+      <MatchRail title="Sessão" peek={<MatchPeek rt={rt} />}>
+        {rail}
+      </MatchRail>
     </div>
   )
 }
