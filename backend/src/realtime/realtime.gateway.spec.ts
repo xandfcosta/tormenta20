@@ -10,6 +10,7 @@ import { RealtimeGateway, sessionRoom } from './realtime.gateway';
 import { PrismaService } from '../prisma/prisma.service';
 import { SessionsService } from '../sessions/sessions.service';
 import { CharactersService } from '../characters/characters.service';
+import { CampaignMembersService } from '../campaign-members/campaign-members.service';
 import { CharacterEffectsService } from '../characters/characters-effects.service';
 import { AuthService } from '../auth/auth.service';
 import { SessionStateService } from './session-state.service';
@@ -41,6 +42,9 @@ async function setup(over?: {
   charactersEndDay?: jest.Mock;
   charactersRestVitals?: jest.Mock;
   charactersAssertOwner?: jest.Mock;
+  membersResolveCombatant?: jest.Mock;
+  membersListPlayerCombatants?: jest.Mock;
+  membersListMemberCharacterIds?: jest.Mock;
   authFindById?: jest.Mock;
 }) {
   const prisma = {
@@ -92,6 +96,15 @@ async function setup(over?: {
       over?.charactersRestVitals ??
       jest.fn().mockResolvedValue({ hpCurrent: 0, mpCurrent: 0 }),
   };
+  const members = {
+    resolveCombatant:
+      over?.membersResolveCombatant ??
+      jest.fn().mockResolvedValue({ name: 'Hero', hpCurrent: 20, hpMax: 30, mpCurrent: 5, mpMax: 10 }),
+    listPlayerCombatants:
+      over?.membersListPlayerCombatants ?? jest.fn().mockResolvedValue([]),
+    listMemberCharacterIds:
+      over?.membersListMemberCharacterIds ?? jest.fn().mockResolvedValue([]),
+  };
   const auth = {
     findById:
       over?.authFindById ??
@@ -107,6 +120,7 @@ async function setup(over?: {
       { provide: PrismaService, useValue: prisma },
       { provide: SessionsService, useValue: sessions },
       { provide: CharactersService, useValue: characters },
+      { provide: CampaignMembersService, useValue: members },
       { provide: CharacterEffectsService, useValue: effects },
       { provide: AuthService, useValue: auth },
       { provide: ConfigService, useValue: { get: () => undefined } },
@@ -124,6 +138,7 @@ async function setup(over?: {
     sessions,
     characters,
     effects,
+    members,
     jwt: module.get(JwtService),
     state: module.get(SessionStateService),
     to,
@@ -291,19 +306,15 @@ describe('RealtimeGateway.initiativeAdd', () => {
     ).rejects.toBeInstanceOf(WsException);
   });
 
-  it('P2: resolves characterId — pre-populates label + hp/mp from Character DB', async () => {
-    const { gateway, state } = await setup({
-      characterFindUnique: jest.fn().mockResolvedValue({
-        id: 10,
+  it('P2: builds a character entry from CampaignMembersService.resolveCombatant', async () => {
+    const { gateway, state, members } = await setup({
+      membersResolveCombatant: jest.fn().mockResolvedValue({
         name: 'Alric',
-        ownerId: 7,
         hpCurrent: 22,
         hpMax: 30,
         mpCurrent: 5,
         mpMax: 8,
       }),
-      campaignFindUnique: jest.fn().mockResolvedValue({ id: 1, ownerId: 99 }),
-      campaignMemberFindUnique: jest.fn().mockResolvedValue({ id: 55 }),
     });
     const socket = fakeSocket();
     (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
@@ -319,6 +330,7 @@ describe('RealtimeGateway.initiativeAdd', () => {
         },
       },
     );
+    expect(members.resolveCombatant).toHaveBeenCalledWith(7, 1, 10);
     const entry = state.getState(5).initiative[0]!;
     expect(entry.label).toBe('Alric');
     expect(entry.characterId).toBe(10);
@@ -327,82 +339,11 @@ describe('RealtimeGateway.initiativeAdd', () => {
     expect(entry.type).toBe('character');
   });
 
-  it('P2: allows GM (campaign owner) to add someone else\'s character', async () => {
-    const { gateway, state } = await setup({
-      characterFindUnique: jest.fn().mockResolvedValue({
-        id: 10,
-        name: 'PlayerPC',
-        ownerId: 42, /* different from caller */
-        hpCurrent: 10,
-        hpMax: 10,
-        mpCurrent: 0,
-        mpMax: 0,
-      }),
-      campaignFindUnique: jest.fn().mockResolvedValue({ id: 1, ownerId: 7 }),
-      campaignMemberFindUnique: jest.fn().mockResolvedValue({ id: 55 }),
-    });
-    const socket = fakeSocket();
-    (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
-    await gateway.initiativeAdd(
-      socket as unknown as Parameters<typeof gateway.initiativeAdd>[0],
-      {
-        campaignId: 1,
-        sessionId: 5,
-        entry: { characterId: 10, initiative: 8 } as unknown as {
-          label: string;
-          initiative: number;
-          type: 'character';
-        },
-      },
-    );
-    expect(state.getState(5).initiative[0]!.characterId).toBe(10);
-  });
-
-  it('P2: rejects when caller is neither char owner nor GM', async () => {
+  it('P2: wraps a resolveCombatant rejection (not owner/GM, or not a member) as WsException', async () => {
     const { gateway } = await setup({
-      characterFindUnique: jest.fn().mockResolvedValue({
-        id: 10,
-        name: 'PC',
-        ownerId: 42,
-        hpCurrent: 10,
-        hpMax: 10,
-        mpCurrent: 0,
-        mpMax: 0,
-      }),
-      campaignFindUnique: jest.fn().mockResolvedValue({ id: 1, ownerId: 99 }),
-      campaignMemberFindUnique: jest.fn().mockResolvedValue({ id: 55 }),
-    });
-    const socket = fakeSocket();
-    (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
-    await expect(
-      gateway.initiativeAdd(
-        socket as unknown as Parameters<typeof gateway.initiativeAdd>[0],
-        {
-          campaignId: 1,
-          sessionId: 5,
-          entry: { characterId: 10, initiative: 8 } as unknown as {
-            label: string;
-            initiative: number;
-            type: 'character';
-          },
-        },
-      ),
-    ).rejects.toBeInstanceOf(WsException);
-  });
-
-  it('P2: rejects when character is not a member of the campaign', async () => {
-    const { gateway } = await setup({
-      characterFindUnique: jest.fn().mockResolvedValue({
-        id: 10,
-        name: 'Stranger',
-        ownerId: 7,
-        hpCurrent: 5,
-        hpMax: 5,
-        mpCurrent: 0,
-        mpMax: 0,
-      }),
-      campaignFindUnique: jest.fn().mockResolvedValue({ id: 1, ownerId: 7 }),
-      campaignMemberFindUnique: jest.fn().mockResolvedValue(null),
+      membersResolveCombatant: jest
+        .fn()
+        .mockRejectedValue(new Error('not allowed')),
     });
     const socket = fakeSocket();
     (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
@@ -738,26 +679,22 @@ describe('RealtimeGateway.initiativePopulate', () => {
 
   it('adds player characters to the tracker, skipping ones already present', async () => {
     const { gateway, state } = await setup({
-      campaignMemberFindMany: jest.fn().mockResolvedValue([
+      membersListPlayerCombatants: jest.fn().mockResolvedValue([
         {
-          character: {
-            id: 10,
-            name: 'Mira',
-            hpCurrent: 20,
-            hpMax: 30,
-            mpCurrent: 5,
-            mpMax: 10,
-          },
+          characterId: 10,
+          name: 'Mira',
+          hpCurrent: 20,
+          hpMax: 30,
+          mpCurrent: 5,
+          mpMax: 10,
         },
         {
-          character: {
-            id: 11,
-            name: 'Kael',
-            hpCurrent: 15,
-            hpMax: 25,
-            mpCurrent: 0,
-            mpMax: 8,
-          },
+          characterId: 11,
+          name: 'Kael',
+          hpCurrent: 15,
+          hpMax: 25,
+          mpCurrent: 0,
+          mpMax: 8,
         },
       ]),
     });
@@ -799,9 +736,7 @@ describe('RealtimeGateway.sessionRest', () => {
 
   it('scene rest delegates end-scene per member, no heal, broadcasts (GM)', async () => {
     const { gateway, emit, effects } = await setup({
-      campaignMemberFindMany: jest
-        .fn()
-        .mockResolvedValue([{ characterId: 10 }, { characterId: 11 }]),
+      membersListMemberCharacterIds: jest.fn().mockResolvedValue([10, 11]),
     });
     const result = await gateway.sessionRest(gmSocket(), {
       campaignId: 1,
@@ -821,7 +756,7 @@ describe('RealtimeGateway.sessionRest', () => {
 
   it('day rest delegates end-day + restVitals per member', async () => {
     const { gateway, effects } = await setup({
-      campaignMemberFindMany: jest.fn().mockResolvedValue([{ characterId: 10 }]),
+      membersListMemberCharacterIds: jest.fn().mockResolvedValue([10]),
       charactersRestVitals: jest
         .fn()
         .mockResolvedValue({ hpCurrent: 18, mpCurrent: 10 }),
@@ -839,7 +774,7 @@ describe('RealtimeGateway.sessionRest', () => {
 
   it('day rest defaults the condition to normal when omitted', async () => {
     const { gateway, effects } = await setup({
-      campaignMemberFindMany: jest.fn().mockResolvedValue([{ characterId: 10 }]),
+      membersListMemberCharacterIds: jest.fn().mockResolvedValue([10]),
     });
     await gateway.sessionRest(gmSocket(), {
       campaignId: 1,

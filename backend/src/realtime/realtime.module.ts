@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { CharactersModule } from '../characters/characters.module';
+import { CampaignMembersModule } from '../campaign-members/campaign-members.module';
 import {
   SessionsModule,
   SESSION_STATE_SERVICE,
@@ -9,7 +10,12 @@ import { RealtimeGateway } from './realtime.gateway';
 import { SessionStateService } from './session-state.service';
 
 @Module({
-  imports: [AuthModule, forwardRef(() => SessionsModule), CharactersModule],
+  imports: [
+    AuthModule,
+    forwardRef(() => SessionsModule),
+    CharactersModule,
+    CampaignMembersModule,
+  ],
   providers: [
     RealtimeGateway,
     SessionStateService,
