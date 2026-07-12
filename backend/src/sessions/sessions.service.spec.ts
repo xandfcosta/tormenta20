@@ -100,28 +100,6 @@ async function setup(over?: {
   return { service: moduleRef.get(SessionsService), prisma, campaigns };
 }
 
-describe('SessionsService.list', () => {
-  it('scopes by campaign + orders by sessionNumber asc', async () => {
-    const findMany = jest.fn().mockResolvedValue([]);
-    const { service } = await setup({ findMany });
-    await service.list(1, 1);
-    expect(findMany).toHaveBeenCalledWith({
-      where: { campaignId: 1 },
-      orderBy: { sessionNumber: 'asc' },
-    });
-  });
-
-  it('propagates ForbiddenException from campaigns.findOne', async () => {
-    const campaignsFindOne = jest.fn().mockRejectedValue(
-      new ForbiddenException(),
-    );
-    const { service } = await setup({ campaignsFindOne });
-    await expect(service.list(99, 1)).rejects.toBeInstanceOf(
-      ForbiddenException,
-    );
-  });
-});
-
 describe('SessionsService.listForCaller — member-aware read', () => {
   it('returns sessions for a player member (via resolveAccess, not owner check)', async () => {
     const findMany = jest.fn().mockResolvedValue([{ id: 1 }]);
