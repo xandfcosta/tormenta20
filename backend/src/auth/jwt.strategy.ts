@@ -4,7 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import type { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { AuthService } from './auth.service';
-import type { AuthUser, JwtPayload } from './auth.service';
+import type { AuthUser, JwtPayload } from './auth-user.type';
 
 /**
  * Returns the JWT extractor used by passport-jwt to pull the token out of

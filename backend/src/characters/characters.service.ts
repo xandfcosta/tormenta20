@@ -35,19 +35,7 @@ import {
 } from './characters.helpers';
 import { computeSheetForRow } from './character-sheet.mapper';
 import type { ComputedSheet } from '@tormenta20/t20-data';
-
-/**
- * Detects Prisma's `P2002` (unique constraint violation). Kept structural
- * so we don't depend on `@prisma/client` runtime types.
- */
-function isPrismaUniqueViolation(err: unknown): boolean {
-  return (
-    typeof err === 'object' &&
-    err !== null &&
-    'code' in err &&
-    (err as { code: unknown }).code === 'P2002'
-  );
-}
+import { isPrismaUniqueViolation } from '../common/prisma-errors';
 
 /** T20 rest-condition recovery multiplier (livro básico p.20): a night's
  * rest restores PV/PM = level × multiplier, floored. */
