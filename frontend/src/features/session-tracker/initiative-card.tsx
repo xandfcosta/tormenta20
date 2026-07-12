@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Plus, Swords, Trash2 } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -154,16 +154,20 @@ export function InitiativeCard({
         )}
 
         <div className="space-y-2">
-          {rt.state.initiative.map((entry, idx) => (
+          {rt.state.initiative.map((entry, idx) => {
+            const isMine =
+              entry.characterId !== undefined &&
+              myCharacterIds.has(entry.characterId)
+            const onTurn = idx === rt.state.turnIndex
+            return (
             <InitiativeRow
               key={entry.id}
               entry={entry}
-              onTurn={idx === rt.state.turnIndex}
-              canEditVitals={
-                isGm ||
-                (entry.characterId !== undefined &&
-                  myCharacterIds.has(entry.characterId))
-              }
+              onTurn={onTurn}
+              // Pull the viewer's own combatant into view the moment its turn
+              // starts — the "match" cue that pairs with the turn toast.
+              focusOnTurn={onTurn && isMine}
+              canEditVitals={isGm || isMine}
               canRemove={isGm}
               onOpenSheet={
                 isGm && entry.characterId !== undefined
@@ -175,7 +179,8 @@ export function InitiativeCard({
               }
               onRemove={() => rt.removeEntry(entry.id)}
             />
-          ))}
+            )
+          })}
         </div>
 
         {isGm && (
@@ -239,6 +244,7 @@ export function InitiativeCard({
 function InitiativeRow({
   entry,
   onTurn,
+  focusOnTurn,
   canEditVitals,
   canRemove,
   onOpenSheet,
@@ -247,6 +253,8 @@ function InitiativeRow({
 }: {
   entry: InitiativeEntry
   onTurn: boolean
+  /** Scroll this row into view when its turn starts (viewer's own combatant). */
+  focusOnTurn: boolean
   canEditVitals: boolean
   canRemove: boolean
   onOpenSheet?: () => void
@@ -255,8 +263,14 @@ function InitiativeRow({
 }) {
   const hasHp = entry.hpMax !== undefined && entry.hpCurrent !== undefined
   const hasMp = entry.mpMax !== undefined
+  const rowRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (focusOnTurn)
+      rowRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }, [focusOnTurn])
   return (
     <div
+      ref={rowRef}
       data-on-turn={onTurn ? 'true' : 'false'}
       className={
         'flex flex-col gap-2 rounded-md border p-2.5 text-sm sm:flex-row sm:items-center sm:gap-3 ' +
