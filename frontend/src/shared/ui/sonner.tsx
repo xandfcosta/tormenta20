@@ -1,39 +1,41 @@
-import type { CSSProperties } from 'react'
-import { Toaster as SonnerToaster } from 'sonner'
-import { useUiStore } from '@/shared/stores/ui-store'
+import type { CSSProperties } from "react"
+import {
+  CircleCheckIcon,
+  InfoIcon,
+  Loader2Icon,
+  OctagonXIcon,
+  TriangleAlertIcon,
+} from "lucide-react"
+import { Toaster as Sonner, type ToasterProps } from "sonner"
+import { useUiStore } from "@/shared/stores/ui-store"
 
-/**
- * App-themed toast host. Wraps sonner with Controlled Decay tokens —
- * card surface, ember-tinted shadow, Cinzel titles — so a notification
- * reads as part of the sheet rather than a stock widget. Mounted once at
- * the app root; fire toasts anywhere via `toast()` from 'sonner'.
- *
- * Colors come through sonner's CSS-var hooks (reliable override); fonts
- * + radius via classNames. `top-center` matches the "notify the active
- * player" intent — the cue lands where the eye already is.
- */
-export function Toaster() {
+// Stock shadcn Sonner, wired to this app's own theme store instead of
+// next-themes (which isn't used here).
+const Toaster = ({ ...props }: ToasterProps) => {
   const theme = useUiStore((s) => s.theme)
+
   return (
-    <SonnerToaster
+    <Sonner
       theme={theme}
-      position="top-center"
+      className="toaster group"
+      icons={{
+        success: <CircleCheckIcon className="size-4" />,
+        info: <InfoIcon className="size-4" />,
+        warning: <TriangleAlertIcon className="size-4" />,
+        error: <OctagonXIcon className="size-4" />,
+        loading: <Loader2Icon className="size-4 animate-spin" />,
+      }}
       style={
         {
-          '--normal-bg': 'var(--card)',
-          '--normal-text': 'var(--card-foreground)',
-          '--normal-border': 'var(--border)',
+          "--normal-bg": "var(--popover)",
+          "--normal-text": "var(--popover-foreground)",
+          "--normal-border": "var(--border)",
+          "--border-radius": "var(--radius)",
         } as CSSProperties
       }
-      toastOptions={{
-        classNames: {
-          toast:
-            'font-serif rounded-md shadow-[0_18px_50px_-30px_var(--primary)]',
-          title: 'font-display tracking-wide',
-          description: 'text-muted-foreground',
-          actionButton: 'bg-primary text-primary-foreground',
-        },
-      }}
+      {...props}
     />
   )
 }
+
+export { Toaster }

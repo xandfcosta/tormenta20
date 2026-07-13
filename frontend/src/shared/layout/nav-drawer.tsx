@@ -40,7 +40,7 @@ function NavDrawer({
 }: NavDrawerProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" size="md" className="gap-6">
+      <SheetContent side="left" className="gap-6 sm:max-w-sm">
         <SheetHeader>
           <SheetTitle>Tormenta 20</SheetTitle>
           <SheetDescription>

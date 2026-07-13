@@ -1,15 +1,10 @@
-import * as React from 'react'
+import { cn } from "@/shared/lib/utils"
 
-import { cn } from '@/shared/lib/utils'
-
-function Skeleton({ className, ...props }: React.ComponentProps<'div'>) {
+function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="skeleton"
-      className={cn(
-        'animate-pulse rounded-md bg-muted/60 dark:bg-muted/40',
-        className,
-      )}
+      className={cn("animate-pulse rounded-md bg-accent", className)}
       {...props}
     />
   )
@@ -24,12 +19,7 @@ function SkeletonCardGrid({
   className?: string
 }) {
   return (
-    <div
-      className={cn(
-        'grid gap-4 sm:grid-cols-2 lg:grid-cols-3',
-        className,
-      )}
-    >
+    <div className={cn("grid gap-4 sm:grid-cols-2 lg:grid-cols-3", className)}>
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} className="rounded-md border p-4">
           <Skeleton className="h-5 w-3/4" />
@@ -54,7 +44,7 @@ function SkeletonRows({
   className?: string
 }) {
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn("space-y-2", className)}>
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}

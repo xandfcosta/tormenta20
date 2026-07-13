@@ -35,12 +35,12 @@ describe('Sheet', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
-  it('exposes the requested side via data-side', async () => {
+  it('anchors the content to the requested side', async () => {
     const user = userEvent.setup()
     render(<Harness side="bottom" />)
     await user.click(screen.getByText('open'))
     const content = document.querySelector('[data-slot="sheet-content"]')
-    expect(content?.getAttribute('data-side')).toBe('bottom')
+    expect(content?.className).toContain('bottom-0')
   })
 
   it('renders title + description with the correct slots', async () => {
@@ -57,6 +57,6 @@ describe('Sheet', () => {
     const user = userEvent.setup()
     render(<Harness />)
     await user.click(screen.getByText('open'))
-    expect(screen.getByRole('button', { name: 'Fechar' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Close' })).toBeInTheDocument()
   })
 })
