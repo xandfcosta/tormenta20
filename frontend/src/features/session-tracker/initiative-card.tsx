@@ -21,6 +21,8 @@ import {
 import { SectionHeading } from '@/shared/ui/section-heading'
 import type { InitiativeEntry, useSessionSocket } from '@/shared/realtime/realtime'
 import { CombatantDrawer } from './combatant-drawer'
+import { InitiativeRollButton } from './initiative-roll'
+import { PartyRoster } from './party-roster'
 
 // Maps realtime hook state onto ConnectionChip's tri-state. The socket
 // hook only reports `isConnected` + `error`; we infer 'reconnecting' as
@@ -38,15 +40,19 @@ function deriveConnectionStatus(
 export function InitiativeCard({
   rt,
   isGm,
+  campaignId,
   myCharacterIds,
 }: {
   /** Shared session socket, owned by the page so tracker + bar + toasts
    * share one connection. */
   rt: ReturnType<typeof useSessionSocket>
   isGm: boolean
+  campaignId: number
   myCharacterIds: Set<number>
 }) {
   const status = deriveConnectionStatus(rt.isConnected, rt.error)
+  // The viewer's own PC (players join with one) — for the self-roll button.
+  const [myCharacterId] = myCharacterIds
   const [addLabel, setAddLabel] = useState('')
   const [addInit, setAddInit] = useState(10)
   const [addType, setAddType] = useState<'character' | 'npc'>('npc')
@@ -98,6 +104,12 @@ export function InitiativeCard({
           <p className="text-sm text-destructive">
             Erro realtime: {rt.error}
           </p>
+        )}
+
+        <PartyRoster campaignId={campaignId} />
+
+        {!isGm && myCharacterId !== undefined && (
+          <InitiativeRollButton characterId={myCharacterId} rt={rt} />
         )}
 
         {isGm && (

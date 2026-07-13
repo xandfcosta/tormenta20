@@ -33,9 +33,12 @@ import { signed } from './signed'
 export function SheetHeader({
   character,
   className,
+  showBack = true,
 }: {
   character: Character
   className?: string
+  /** Back-to-list arrow. Hidden in a session — the match top bar owns nav. */
+  showBack?: boolean
 }) {
   const races = character.races.map((r) => r.race)
   const effects = useCharacterEffects(character)
@@ -52,18 +55,20 @@ export function SheetHeader({
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(217,119,6,0.18),transparent_50%)] dark:bg-[radial-gradient(circle_at_30%_50%,rgba(251,191,36,0.15),transparent_50%)]" />
       <div className="relative flex items-center gap-3">
-        <Link to="/characters">
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              subtleText,
-              'hover:bg-amber-200/60 hover:text-amber-900 dark:hover:bg-zinc-800/60 dark:hover:text-amber-200',
-            )}
-          >
-            ←
-          </Button>
-        </Link>
+        {showBack && (
+          <Link to="/characters">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                subtleText,
+                'hover:bg-amber-200/60 hover:text-amber-900 dark:hover:bg-zinc-800/60 dark:hover:text-amber-200',
+              )}
+            >
+              ←
+            </Button>
+          </Link>
+        )}
         <div className="min-w-0">
           <p className="text-[10px] uppercase tracking-[0.4em] text-amber-800/80 dark:text-amber-400/80">
             Tormenta 20
@@ -107,14 +112,6 @@ export function SheetHeader({
           ))}
         </div>
         <LevelBadge character={character} />
-        <Link
-          to="/characters/$id/sheet"
-          params={{ id: String(character.id) }}
-        >
-          <Button variant="outline" size="sm">
-            Ficha computada
-          </Button>
-        </Link>
       </div>
     </header>
   )

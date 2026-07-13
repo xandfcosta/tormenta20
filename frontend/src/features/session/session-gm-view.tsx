@@ -33,7 +33,12 @@ export function SessionGmView({
   return (
     <div className="mx-auto grid max-w-6xl gap-4 p-3 sm:p-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:pb-4">
       <div className="min-w-0 space-y-4">
-        <InitiativeCard rt={rt} isGm myCharacterIds={myCharacterIds} />
+        <InitiativeCard
+          rt={rt}
+          isGm
+          campaignId={campaignId}
+          myCharacterIds={myCharacterIds}
+        />
       </div>
       <MatchRail title="Controles da sessão" peek={<MatchPeek rt={rt} />}>
         <HeaderCard campaignId={campaignId} session={session} isGm />

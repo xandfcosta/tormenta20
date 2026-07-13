@@ -177,6 +177,16 @@ export function useSessionSocket(campaignId: number, sessionId: number) {
           sessionId,
         })
       },
+      /** A player submits their own rolled initiative (d20 + Iniciativa
+       *  perícia, computed client-side). Upserts by characterId server-side. */
+      rollSelfInitiative: (characterId: number, initiative: number) => {
+        socketRef.current?.emit('initiative-self', {
+          campaignId,
+          sessionId,
+          characterId,
+          initiative,
+        })
+      },
       rest: (
         scope: 'scene' | 'day',
         condition?: 'ruim' | 'normal' | 'confortavel' | 'luxuosa',

@@ -252,6 +252,10 @@ export type CampaignMember = {
     id: number
     name: string
     level: number
+    hpCurrent: number
+    hpMax: number
+    mpCurrent: number
+    mpMax: number
     classes: { className: string; level: number }[]
   }
 }

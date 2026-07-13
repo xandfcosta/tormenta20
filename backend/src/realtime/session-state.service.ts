@@ -175,6 +175,39 @@ export class SessionStateService {
   }
 
   /**
+   * Upsert an initiative entry keyed by `characterId` — a player rolling
+   * their own initiative. The first roll adds a full entry (label + vitals
+   * seeded upstream); a re-roll updates only the `initiative` value of the
+   * existing entry, so mid-combat HP/PM aren't reset. Preserves who's on
+   * turn across the re-sort.
+   */
+  upsertCharacterEntry(
+    sessionId: number,
+    input: AddEntryInput,
+  ): SessionRuntimeState {
+    const state = this.getOrCreate(sessionId);
+    const idx =
+      input.characterId === undefined
+        ? -1
+        : state.initiative.findIndex(
+            (e) => e.characterId === input.characterId,
+          );
+    if (idx < 0) return this.addEntry(sessionId, input);
+    const currentTurn = state.initiative[state.turnIndex];
+    state.initiative[idx] = {
+      ...state.initiative[idx]!,
+      initiative: input.initiative,
+    };
+    this.sortInitiative(state);
+    if (currentTurn) {
+      state.turnIndex = state.initiative.findIndex(
+        (e) => e.id === currentTurn.id,
+      );
+    }
+    return state;
+  }
+
+  /**
    * Refresh `hpMax` / `mpMax` on every entry that carries a
    * `characterId` — the DB Character row is the source of truth. Only
    * ceilings move; `hpCurrent`/`mpCurrent` are left untouched

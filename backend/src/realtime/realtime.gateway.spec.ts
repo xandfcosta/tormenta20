@@ -364,6 +364,87 @@ describe('RealtimeGateway.initiativeAdd', () => {
   });
 });
 
+describe('RealtimeGateway.initiativeSelf', () => {
+  it('lets a player roll their own initiative (not GM-gated) + broadcasts', async () => {
+    const { gateway, members, to, emit } = await setup({
+      sessionsFindOneForCaller: jest
+        .fn()
+        .mockResolvedValue({ session: { id: 5 }, role: 'player' }),
+      membersResolveCombatant: jest.fn().mockResolvedValue({
+        name: 'Bruenor',
+        hpCurrent: 78,
+        hpMax: 78,
+        mpCurrent: 24,
+        mpMax: 24,
+      }),
+    });
+    const socket = fakeSocket();
+    (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    const result = await gateway.initiativeSelf(
+      socket as unknown as Parameters<typeof gateway.initiativeSelf>[0],
+      { campaignId: 1, sessionId: 5, characterId: 10, initiative: 23 },
+    );
+    expect(members.resolveCombatant).toHaveBeenCalledWith(7, 1, 10);
+    expect(result.initiative).toHaveLength(1);
+    expect(result.initiative[0]?.characterId).toBe(10);
+    expect(result.initiative[0]?.initiative).toBe(23);
+    expect(to).toHaveBeenCalledWith('session:5');
+    expect(emit).toHaveBeenCalledWith('session-state', result);
+  });
+
+  it('re-roll updates the existing entry initiative without duplicating or resetting HP', async () => {
+    const { gateway, state } = await setup({
+      sessionsFindOneForCaller: jest
+        .fn()
+        .mockResolvedValue({ session: { id: 5 }, role: 'player' }),
+      membersResolveCombatant: jest.fn().mockResolvedValue({
+        name: 'Bruenor',
+        hpCurrent: 78,
+        hpMax: 78,
+        mpCurrent: 24,
+        mpMax: 24,
+      }),
+    });
+    // Mid-combat entry already present with damaged HP.
+    state.addEntry(5, {
+      label: 'Bruenor',
+      initiative: 12,
+      type: 'character',
+      characterId: 10,
+      hpCurrent: 40,
+      hpMax: 78,
+    });
+    const socket = fakeSocket();
+    (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    const result = await gateway.initiativeSelf(
+      socket as unknown as Parameters<typeof gateway.initiativeSelf>[0],
+      { campaignId: 1, sessionId: 5, characterId: 10, initiative: 5 },
+    );
+    expect(result.initiative).toHaveLength(1);
+    expect(result.initiative[0]?.initiative).toBe(5);
+    expect(result.initiative[0]?.hpCurrent).toBe(40);
+  });
+
+  it('rejects rolling a character the player does not own', async () => {
+    const { gateway } = await setup({
+      sessionsFindOneForCaller: jest
+        .fn()
+        .mockResolvedValue({ session: { id: 5 }, role: 'player' }),
+      membersResolveCombatant: jest
+        .fn()
+        .mockRejectedValue(new Error('not your character')),
+    });
+    const socket = fakeSocket();
+    (socket as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    await expect(
+      gateway.initiativeSelf(
+        socket as unknown as Parameters<typeof gateway.initiativeSelf>[0],
+        { campaignId: 1, sessionId: 5, characterId: 11, initiative: 18 },
+      ),
+    ).rejects.toBeInstanceOf(WsException);
+  });
+});
+
 describe('RealtimeGateway.vitalsPatch', () => {
   it('applies clamped absolute values + broadcasts', async () => {
     const { gateway, state, to, emit } = await setup();

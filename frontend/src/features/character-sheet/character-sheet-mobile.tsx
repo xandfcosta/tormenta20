@@ -9,16 +9,19 @@ import { SHEET_PANELS, type SheetSection } from './sheet-sections'
 import type { Character } from '@/shared/api/api'
 
 // Vitais leads the mobile sections: header + vitals aside as one scroll block.
-const VITALS_SECTION: SheetSection = {
-  value: 'vitals',
-  label: 'Vitais',
-  icon: HeartPulse,
-  render: (c) => (
-    <div className="h-full space-y-3 overflow-y-auto">
-      <SheetHeader character={c} />
-      <VitalsAside character={c} />
-    </div>
-  ),
+// The back arrow is dropped in a session (the match top bar owns navigation).
+function vitalsSection(inSession?: boolean): SheetSection {
+  return {
+    value: 'vitals',
+    label: 'Vitais',
+    icon: HeartPulse,
+    render: (c) => (
+      <div className="h-full space-y-3 overflow-y-auto">
+        <SheetHeader character={c} showBack={!inSession} />
+        <VitalsAside character={c} />
+      </div>
+    ),
+  }
 }
 
 // A bottom-bar cell: minimalist icon-only, sharing the width equally (flex-1)
@@ -48,12 +51,18 @@ export function CharacterSheetMobile({
   const panels = inSession
     ? SHEET_PANELS.filter((p) => p.value !== 'campaigns')
     : SHEET_PANELS
-  const sections = [VITALS_SECTION, ...panels]
+  const vitals = vitalsSection(inSession)
+  const sections = [vitals, ...panels]
 
   return (
     <Tabs
-      defaultValue={VITALS_SECTION.value}
-      className={cn('flex h-full min-h-0 w-full min-w-0 flex-col', sheetBg)}
+      defaultValue={vitals.value}
+      // In a session the sheet blends into the session bg; standalone keeps the
+      // full-bleed sheet gradient. Panels carry their own surfaces either way.
+      className={cn(
+        'flex h-full min-h-0 w-full min-w-0 flex-col',
+        !inSession && sheetBg,
+      )}
     >
       <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
         {sections.map((s) => (

@@ -47,7 +47,12 @@ export function SessionPlayerView({
   const rail = (
     <>
       <HeaderCard campaignId={campaignId} session={session} isGm={false} />
-      <InitiativeCard rt={rt} isGm={false} myCharacterIds={myCharacterIds} />
+      <InitiativeCard
+        rt={rt}
+        isGm={false}
+        campaignId={campaignId}
+        myCharacterIds={myCharacterIds}
+      />
     </>
   )
 

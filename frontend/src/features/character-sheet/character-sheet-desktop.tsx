@@ -24,11 +24,18 @@ export function CharacterSheetDesktop({
   return (
     <div
       className={cn(
-        'grid h-full grid-rows-[auto_1fr] gap-3 overflow-hidden p-3 lg:grid-cols-[minmax(300px,26rem)_1fr]',
-        sheetBg,
+        'grid h-full grid-rows-[auto_1fr] gap-3 overflow-hidden lg:grid-cols-[minmax(300px,24rem)_1fr]',
+        // In a session the sheet sits on the session's own dark bg; its panels
+        // carry their own surfaces, so skip the full-bleed sheet gradient that
+        // would otherwise paint a mismatched rectangle. Standalone page keeps it.
+        inSession ? 'p-0' : cn('p-3', sheetBg),
       )}
     >
-      <SheetHeader character={character} className="lg:col-span-2" />
+      <SheetHeader
+        character={character}
+        className="lg:col-span-2"
+        showBack={!inSession}
+      />
       <VitalsAside character={character} />
       <Tabs
         defaultValue={panels[0]!.value}

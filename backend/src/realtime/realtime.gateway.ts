@@ -150,6 +150,34 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   /**
+   * A player rolls their OWN initiative. Not GM-gated: `materializeEntry`
+   * runs `resolveCombatant`, which requires the caller to own the character
+   * (or be the GM), so a player can only submit for their own PC. Upserts by
+   * characterId so a re-roll updates the existing entry instead of stacking.
+   * The client rolls the d20 and adds the Iniciativa perícia; we trust the
+   * resulting total the same way we trust a GM-typed initiative.
+   */
+  @SubscribeMessage('initiative-self')
+  async initiativeSelf(
+    @ConnectedSocket() socket: AuthedSocket,
+    @MessageBody()
+    body: SessionScopedBody & { characterId: number; initiative: number },
+  ) {
+    await this.assertSessionAccess(socket, body);
+    if (typeof body.characterId !== 'number') {
+      throw new WsException('characterId is required');
+    }
+    const entry = await this.materializeEntry(
+      socket.data.user.id,
+      body.campaignId,
+      { characterId: body.characterId, initiative: body.initiative },
+    );
+    const state = this.state.upsertCharacterEntry(body.sessionId, entry);
+    this.emitSessionState(body.sessionId, state);
+    return state;
+  }
+
+  /**
    * Resolve an initiative-add payload into the concrete `AddEntryInput`
    * the state service expects. When `characterId` is set:
    *   - The character must be a member of the campaign the session

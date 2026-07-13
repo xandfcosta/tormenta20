@@ -40,6 +40,12 @@ export class CampaignMembersService {
             id: true,
             name: true,
             level: true,
+            // PV/PM so the session party roster shows live vitals without a
+            // follow-up per-character fetch.
+            hpCurrent: true,
+            hpMax: true,
+            mpCurrent: true,
+            mpMax: true,
             classes: { select: { className: true, level: true } },
           },
         },
