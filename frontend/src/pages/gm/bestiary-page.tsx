@@ -1,4 +1,3 @@
-import { Link } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -14,7 +13,6 @@ import {
 import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
 import { PageChrome } from '@/shared/ui/page-chrome'
-import { SectionHeading } from '@/shared/ui/section-heading'
 import { WindowVirtualList } from '@/shared/ui/virtual-list'
 import {
   BESTIARY,
@@ -28,6 +26,7 @@ import {
   formatNd,
   normalizeMonsterName as normalize,
 } from '@/features/gm-tools/monster-format'
+import { GmPageHeader } from '@/features/gm-tools/gm-page-header'
 
 /**
  * Bestiary lookup. All 20 monsters currently in BESTIARY; filters:
@@ -67,19 +66,14 @@ export function BestiaryPage() {
 
   return (
     <PageChrome width="wide" className="space-y-4">
-      <div className="flex items-center gap-3">
-        <Link to="/gm">
-          <Button variant="outline" size="sm">
-            ←
-          </Button>
-        </Link>
-        <SectionHeading variant="aharadak" as="h1">
-          Bestiário
-        </SectionHeading>
-        <span className="text-sm text-muted-foreground">
-          {filtered.length} / {BESTIARY.length}
-        </span>
-      </div>
+      <GmPageHeader
+        title="Bestiário"
+        aside={
+          <span className="text-sm text-muted-foreground">
+            {filtered.length} / {BESTIARY.length}
+          </span>
+        }
+      />
 
       <Card>
         <CardHeader>
@@ -179,7 +173,7 @@ function MonsterRow({
     <button
       type="button"
       onClick={() => onOpen(monster)}
-      className="w-full rounded-md border p-3 text-left transition hover:border-[color:var(--primary)]/50 hover:shadow-sm"
+      className="w-full rounded-md border p-3 text-left transition-colors hover:border-primary"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex-1 space-y-1">

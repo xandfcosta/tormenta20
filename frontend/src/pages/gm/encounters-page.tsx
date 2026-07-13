@@ -1,4 +1,3 @@
-import { Link } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -7,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
 import { PageChrome } from '@/shared/ui/page-chrome'
-import { SectionHeading } from '@/shared/ui/section-heading'
+import { GmPageHeader } from '@/features/gm-tools/gm-page-header'
 import { SendEncounterToSessionButton } from '@/features/gm-tools/send-encounter-to-session'
 import { BESTIARY, encounterXp } from '@tormenta20/t20-data'
 import {
@@ -77,20 +76,11 @@ export function EncounterBuilderPage() {
 
   return (
     <PageChrome className="space-y-4">
-      <div className="flex items-center gap-3">
-        <Link to="/gm">
-          <Button variant="outline" size="sm">
-            ←
-          </Button>
-        </Link>
-        <SectionHeading variant="kallyadranoch" as="h1">
-          Construtor de encontros
-        </SectionHeading>
-      </div>
+      <GmPageHeader title="Construtor de encontros" />
 
       <Card>
         <CardHeader>
-          <CardTitle className="font-display text-base tracking-wide">
+          <CardTitle className="text-base">
             Grupo
           </CardTitle>
         </CardHeader>
@@ -124,7 +114,7 @@ export function EncounterBuilderPage() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="font-display text-base tracking-wide">
+          <CardTitle className="text-base">
             Composição
           </CardTitle>
           <div className="flex gap-2">
@@ -162,7 +152,7 @@ export function EncounterBuilderPage() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="font-display text-base tracking-wide">
+          <CardTitle className="text-base">
             Resultado
           </CardTitle>
           <SendEncounterToSessionButton
@@ -258,7 +248,7 @@ function MonsterPickerDialog({
               key={m.id}
               type="button"
               onClick={() => onPick(m.id)}
-              className="flex w-full items-center justify-between rounded-md border p-2 text-sm transition hover:border-primary/40"
+              className="flex w-full items-center justify-between rounded-md border p-2 text-sm transition-colors hover:border-primary"
             >
               <span>{m.name}</span>
               <Badge variant="secondary">ND {formatNd(m.nd)}</Badge>

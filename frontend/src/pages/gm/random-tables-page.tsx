@@ -1,11 +1,10 @@
-import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { DicePill } from '@/shared/ui/dice-pill'
 import { PageChrome } from '@/shared/ui/page-chrome'
-import { SectionHeading } from '@/shared/ui/section-heading'
+import { GmPageHeader } from '@/features/gm-tools/gm-page-header'
 import { BUSCA_CHALLENGE_TABLE, BUSCA_OUTCOME_TABLE, buscaChallengeFromRoll, buscaOutcomeFromSuccesses, buscaTestCd, chaseEventFromRoll, dungeonIdeaFromRoll, rewardCastigoFromRoll, ruinaFromRoll, type BuscaChallengeRow, type ChaseEventRow, type DungeonIdea, type RewardCastigoRow, type RuinaRow } from '@tormenta20/t20-data'
 
 /**
@@ -17,16 +16,7 @@ import { BUSCA_CHALLENGE_TABLE, BUSCA_OUTCOME_TABLE, buscaChallengeFromRoll, bus
 export function RandomTablesPage() {
   return (
     <PageChrome className="space-y-4">
-      <div className="flex items-center gap-3">
-        <Link to="/gm">
-          <Button variant="outline" size="sm">
-            ←
-          </Button>
-        </Link>
-        <SectionHeading variant="aharadak" as="h1">
-          Tabelas de mesa
-        </SectionHeading>
-      </div>
+      <GmPageHeader title="Tabelas de mesa" />
 
       <RuinaCard />
       <ChaseEventCard />
@@ -63,7 +53,7 @@ function RuinaCard() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="font-display tracking-wide">
+        <CardTitle>
           Ermos — Ruína (d6, p269)
         </CardTitle>
         <div className="flex gap-2">
@@ -78,7 +68,7 @@ function RuinaCard() {
           {(entry) => (
             <>
               <DicePill sides={6} />
-              <span className="font-hud tabular-nums text-[color:var(--primary)]">
+              <span className="font-semibold tabular-nums">
                 = {entry.roll}
               </span>
               <span className="font-medium">{entry.result.label}</span>
@@ -101,7 +91,7 @@ function ChaseEventCard() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="font-display tracking-wide">
+        <CardTitle>
           Perseguições (d20, p274)
         </CardTitle>
         <div className="flex gap-2">
@@ -116,7 +106,7 @@ function ChaseEventCard() {
           {(entry) => (
             <>
               <DicePill sides={20} />
-              <span className="font-hud tabular-nums text-[color:var(--primary)]">
+              <span className="font-semibold tabular-nums">
                 = {entry.roll}
               </span>
               <Badge
@@ -156,7 +146,7 @@ function BuscaCard() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="font-display tracking-wide">
+        <CardTitle>
           Buscas (2d12, p279)
         </CardTitle>
         <div className="flex items-center gap-2">
@@ -187,7 +177,7 @@ function BuscaCard() {
           {(entry) => (
             <>
               <DicePill count={2} sides={12} />
-              <span className="font-hud tabular-nums text-[color:var(--primary)]">
+              <span className="font-semibold tabular-nums">
                 = {entry.roll}
               </span>
               <Badge>{entry.result.skill}</Badge>
@@ -215,7 +205,7 @@ function ConsequenciasCard() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="font-display tracking-wide">
+        <CardTitle>
           Consequências de Buscas (p279)
         </CardTitle>
         <div className="flex gap-2">
@@ -252,7 +242,7 @@ function ConsequenciasCard() {
           {(entry) => (
             <>
               <DicePill sides={6} />
-              <span className="font-hud tabular-nums text-[color:var(--primary)]">
+              <span className="font-semibold tabular-nums">
                 = {entry.roll}
               </span>
               <Badge>Recompensa: {entry.result.reward}</Badge>
@@ -278,7 +268,7 @@ function DungeonIdeaCard() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="font-display tracking-wide">
+        <CardTitle>
           Ideias de masmorra (d20, p263)
         </CardTitle>
         <div className="flex gap-2">
@@ -293,7 +283,7 @@ function DungeonIdeaCard() {
           {(entry) => (
             <>
               <DicePill sides={20} />
-              <span className="font-hud tabular-nums text-[color:var(--primary)]">
+              <span className="font-semibold tabular-nums">
                 = {entry.roll}
               </span>
               <span className="font-medium">{entry.result.label}</span>

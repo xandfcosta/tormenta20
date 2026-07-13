@@ -1,4 +1,3 @@
-import { Link } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -7,7 +6,7 @@ import { DicePill } from '@/shared/ui/dice-pill'
 import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
 import { PageChrome } from '@/shared/ui/page-chrome'
-import { SectionHeading } from '@/shared/ui/section-heading'
+import { GmPageHeader } from '@/features/gm-tools/gm-page-header'
 import { DUNGEON_SIZE_TABLE, classifyDungeonSize, dungeonIdeaFromRoll, dungeonSizeRow, plannedThreats, ROOMS_PER_THREAT, type DungeonIdea, type DungeonSize } from '@tormenta20/t20-data'
 
 const SIZE_LABEL: Record<DungeonSize, string> = {
@@ -83,20 +82,11 @@ export function DungeonGeneratorPage() {
 
   return (
     <PageChrome className="space-y-4">
-      <div className="flex items-center gap-3">
-        <Link to="/gm">
-          <Button variant="outline" size="sm">
-            ←
-          </Button>
-        </Link>
-        <SectionHeading variant="aharadak" as="h1">
-          Gerador de masmorras
-        </SectionHeading>
-      </div>
+      <GmPageHeader title="Gerador de masmorras" />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="font-display text-base tracking-wide">
+          <CardTitle className="text-base">
             Estrutura
           </CardTitle>
           <div className="flex gap-2">
@@ -176,7 +166,7 @@ export function DungeonGeneratorPage() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="font-display text-base tracking-wide">
+          <CardTitle className="text-base">
             Ideias (Tabela 6-2 p263)
           </CardTitle>
           <Button onClick={rollIdea}>Rolar ideia (d20)</Button>
@@ -194,7 +184,7 @@ export function DungeonGeneratorPage() {
                   className="flex items-center gap-2 rounded-md border p-2 text-sm"
                 >
                   <DicePill sides={20} />
-                  <span className="font-hud tabular-nums text-[color:var(--primary)]">
+                  <span className="font-semibold tabular-nums">
                     = {entry.roll}
                   </span>
                   <span className={i === 0 ? 'font-medium' : ''}>
