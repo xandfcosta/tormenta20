@@ -60,7 +60,7 @@ function AppShell({
   return (
     <div
       data-slot="app-shell"
-      className="flex min-h-dvh flex-col overflow-x-hidden bg-background text-foreground"
+      className="flex h-dvh flex-col overflow-x-hidden bg-background text-foreground"
     >
       <TopNav
         destinations={destinations}
@@ -72,7 +72,7 @@ function AppShell({
         onOpenDrawer={() => setDrawerOpen(true)}
       />
 
-      <main className="flex min-h-0 flex-1 flex-col overflow-x-hidden">
+      <main className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
         {children}
       </main>
 
