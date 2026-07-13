@@ -1,23 +1,18 @@
 import { useMemo, useState } from 'react'
-import {
-  type ColumnFiltersState,
-  createColumnHelper,
-  getCoreRowModel,
-  getFilteredRowModel,
-  useReactTable,
-} from '@tanstack/react-table'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/shared/ui/dialog'
-import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
 import { PageChrome } from '@/shared/ui/page-chrome'
 import { VirtualList } from '@/shared/ui/virtual-list'
-import { fuzzyFilter } from '@/shared/lib/fuzzy-filter'
 import { GmPageHeader } from '@/features/gm-tools/gm-page-header'
+import {
+  MonsterFilters,
+  useMonsterFilter,
+} from '@/features/gm-tools/monster-filter'
 import { SendEncounterToSessionButton } from '@/features/gm-tools/send-encounter-to-session'
-import { BESTIARY, type Monster, encounterXp } from '@tormenta20/t20-data'
+import { encounterXp } from '@tormenta20/t20-data'
 import {
   type EnrichedGroup,
   type EncounterEntry as Entry,
@@ -230,67 +225,45 @@ function EntryRow({
 
 // ─── Monster picker Dialog ──────────────────────────────────────
 
-// Name filter runs through a headless table; the whole bestiary can grow, so
-// the results render in a virtualized list.
-const pickerColumnHelper = createColumnHelper<Monster>()
-const pickerColumns = [
-  pickerColumnHelper.accessor('name', {
-    id: 'name',
-    filterFn: fuzzyFilter<Monster>(),
-  }),
-]
-
+/** Picker uses the same bestiary filter (fuzzy name + tipo + ND) as the
+ * bestiary page, over a virtualized result list. */
 function MonsterPickerDialog({
   onPick,
 }: {
   onPick: (id: string) => void
 }) {
-  const [query, setQuery] = useState('')
-  const columnFilters = useMemo<ColumnFiltersState>(
-    () => [{ id: 'name', value: query }],
-    [query],
-  )
-  const table = useReactTable({
-    data: BESTIARY as Monster[],
-    columns: pickerColumns,
-    state: { columnFilters },
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-  })
-  const filtered = table
-    .getRowModel()
-    .rows.map((r) => r.original)
-    .sort((a, b) => a.nd - b.nd || a.name.localeCompare(b.name))
+  const { filtered, controls } = useMonsterFilter()
 
   return (
     <DialogContent className="sm:max-w-lg">
       <DialogHeader>
         <DialogTitle>Escolher monstro</DialogTitle>
       </DialogHeader>
-      <div className="space-y-2">
-        <Input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar por nome…"
-          autoFocus
-        />
-        <VirtualList
-          items={filtered}
-          estimateSize={44}
-          gap={4}
-          className="max-h-[60vh]"
-          getKey={(m) => m.id}
-          renderItem={(m) => (
-            <button
-              type="button"
-              onClick={() => onPick(m.id)}
-              className="flex w-full items-center justify-between rounded-md border p-2 text-sm transition-colors hover:border-primary"
-            >
-              <span>{m.name}</span>
-              <Badge variant="secondary">ND {formatNd(m.nd)}</Badge>
-            </button>
-          )}
-        />
+      <div className="space-y-3">
+        <MonsterFilters {...controls} idPrefix="picker" />
+        {filtered.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Nenhum monstro casa com os filtros.
+          </p>
+        ) : (
+          <VirtualList
+            items={filtered}
+            estimateSize={44}
+            gap={4}
+            className="max-h-[50vh]"
+            getKey={(m) => m.id}
+            renderItem={(m) => (
+              <button
+                type="button"
+                onClick={() => onPick(m.id)}
+                className="flex w-full items-center justify-between rounded-md border p-2 text-sm transition-colors hover:border-primary"
+              >
+                <span>{m.name}</span>
+                <Badge variant="secondary">ND {formatNd(m.nd)}</Badge>
+              </button>
+            )}
+          />
+        )}
       </div>
     </DialogContent>
   )
