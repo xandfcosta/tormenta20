@@ -86,34 +86,36 @@ export function EncounterBuilderPage() {
       <div className="grid gap-4 lg:grid-cols-[1fr_20rem] lg:items-start">
         <div className="space-y-4">
       <Card className="py-3 lg:py-4">
-        <CardContent className="flex flex-wrap items-end gap-x-6 gap-y-3">
-          <CardTitle className="self-center text-base">Grupo</CardTitle>
-          <div>
-            <label className="text-xs font-medium" htmlFor="party-level">
-              Nível do grupo
-            </label>
-            <div className="w-24">
-              <NumberInput
-                id="party-level"
-                min={1}
-                max={20}
-                value={partyLevel}
-                onChange={setPartyLevel}
-              />
+        <CardContent className="flex flex-wrap items-center justify-between gap-3">
+          <CardTitle className="text-base">Grupo</CardTitle>
+          <div className="ml-auto flex flex-wrap items-end gap-4">
+            <div>
+              <label className="text-xs font-medium" htmlFor="party-level">
+                Nível do grupo
+              </label>
+              <div className="w-24">
+                <NumberInput
+                  id="party-level"
+                  min={1}
+                  max={20}
+                  value={partyLevel}
+                  onChange={setPartyLevel}
+                />
+              </div>
             </div>
-          </div>
-          <div>
-            <label className="text-xs font-medium" htmlFor="party-size">
-              Personagens
-            </label>
-            <div className="w-24">
-              <NumberInput
-                id="party-size"
-                min={1}
-                max={8}
-                value={partySize}
-                onChange={setPartySize}
-              />
+            <div>
+              <label className="text-xs font-medium" htmlFor="party-size">
+                Personagens
+              </label>
+              <div className="w-24">
+                <NumberInput
+                  id="party-size"
+                  min={1}
+                  max={8}
+                  value={partySize}
+                  onChange={setPartySize}
+                />
+              </div>
             </div>
           </div>
         </CardContent>
