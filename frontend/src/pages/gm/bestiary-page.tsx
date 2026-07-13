@@ -127,7 +127,7 @@ export function BestiaryPage() {
         }
       />
 
-      <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[22rem_1fr]">
+      <div className="grid h-[calc(100dvh-13rem)] min-h-0 flex-1 gap-4 lg:h-[calc(100dvh-8rem)] lg:grid-cols-[22rem_1fr]">
         <div className="flex min-h-0 min-w-0 flex-col gap-3">
           <BestiaryFilters
             name={name}
