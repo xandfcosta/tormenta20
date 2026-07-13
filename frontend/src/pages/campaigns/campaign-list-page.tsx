@@ -15,6 +15,7 @@ import { Input } from '@/shared/ui/input'
 import { PageChrome } from '@/shared/ui/page-chrome'
 import { SkeletonCardGrid } from '@/shared/ui/skeleton'
 import { cn } from '@/shared/lib/utils'
+import { fuzzyFilter } from '@/shared/lib/fuzzy-filter'
 import { campaignsQueryOptions } from '@/entities/campaign/queries'
 import type { Campaign } from '@/shared/api/api'
 
@@ -57,6 +58,7 @@ export function CampaignsListPage() {
     state: { globalFilter, columnFilters },
     onGlobalFilterChange: setGlobalFilter,
     onColumnFiltersChange: setColumnFilters,
+    globalFilterFn: fuzzyFilter<Campaign>(),
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
   })

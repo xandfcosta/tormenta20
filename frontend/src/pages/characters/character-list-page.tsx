@@ -23,6 +23,7 @@ import {
   ATTRIBUTE_KEYS,
 } from '@/entities/character/expertise'
 import { charactersQueryOptions } from '@/entities/character/queries'
+import { fuzzyFilter } from '@/shared/lib/fuzzy-filter'
 import { CharacterPortrait } from './character-portrait'
 
 // Headless table drives the roster search (name / class / origin) via the
@@ -54,6 +55,7 @@ export function CharactersListPage() {
     columns,
     state: { globalFilter: query },
     onGlobalFilterChange: setQuery,
+    globalFilterFn: fuzzyFilter<Character>(),
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
   })

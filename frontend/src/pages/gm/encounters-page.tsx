@@ -14,6 +14,7 @@ import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
 import { PageChrome } from '@/shared/ui/page-chrome'
 import { VirtualList } from '@/shared/ui/virtual-list'
+import { fuzzyFilter } from '@/shared/lib/fuzzy-filter'
 import { GmPageHeader } from '@/features/gm-tools/gm-page-header'
 import { SendEncounterToSessionButton } from '@/features/gm-tools/send-encounter-to-session'
 import { BESTIARY, type Monster, encounterXp } from '@tormenta20/t20-data'
@@ -231,10 +232,7 @@ const pickerColumnHelper = createColumnHelper<Monster>()
 const pickerColumns = [
   pickerColumnHelper.accessor('name', {
     id: 'name',
-    filterFn: (row, id, value: string) => {
-      const q = normalize(value)
-      return !q || normalize(row.getValue<string>(id)).includes(q)
-    },
+    filterFn: fuzzyFilter<Monster>(),
   }),
 ]
 
@@ -321,12 +319,4 @@ function formatNd(nd: number): string {
   if (Math.abs(nd - 0.5) < 0.001) return '1/2'
   if (Number.isInteger(nd)) return String(nd)
   return nd.toFixed(1)
-}
-
-function normalize(s: string): string {
-  return s
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .trim()
 }

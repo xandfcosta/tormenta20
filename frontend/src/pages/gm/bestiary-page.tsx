@@ -33,22 +33,16 @@ import {
   MONSTER_TIPOS as TIPOS,
   MONSTER_TIPO_LABEL as TIPO_LABEL,
   formatNd,
-  normalizeMonsterName as normalize,
 } from '@/features/gm-tools/monster-format'
 import { GmPageHeader } from '@/features/gm-tools/gm-page-header'
+import { fuzzyFilter } from '@/shared/lib/fuzzy-filter'
 
 // Headless table columns drive filtering: an accent-insensitive name filter,
 // a multi-select tipo filter, and an ND range filter. Rows are read back out
 // and rendered as a virtualized list — the table itself never renders.
 const columnHelper = createColumnHelper<Monster>()
 const columns = [
-  columnHelper.accessor('name', {
-    id: 'name',
-    filterFn: (row, id, value: string) => {
-      const q = normalize(value)
-      return !q || normalize(row.getValue<string>(id)).includes(q)
-    },
-  }),
+  columnHelper.accessor('name', { id: 'name', filterFn: fuzzyFilter<Monster>() }),
   columnHelper.accessor('tipo', {
     id: 'tipo',
     filterFn: (row, id, value: MonsterTipo[]) =>
