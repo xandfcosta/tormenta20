@@ -44,8 +44,8 @@ export function CharactersListPage() {
       {roster?.length === 0 && <NoCharacters />}
 
       {roster && roster.length > 0 && selected && (
-        <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
-          <CharacterRoster
+        <div className="flex flex-col-reverse gap-4 lg:flex-row lg:gap-6">
+          <AgentRail
             roster={roster}
             selectedId={selected.id}
             onSelect={setSelectedId}
@@ -57,8 +57,13 @@ export function CharactersListPage() {
   )
 }
 
-/** Left column: selectable list of portrait + name rows, then a create row. */
-function CharacterRoster({
+/**
+ * Agent-select rail (Valorant-style): a scrolling strip of portrait
+ * thumbnails. Desktop → narrow vertical column on the left; phone →
+ * horizontal strip along the bottom (parent uses flex-col-reverse). A
+ * trailing "+" thumbnail creates a new character.
+ */
+function AgentRail({
   roster,
   selectedId,
   onSelect,
@@ -68,9 +73,9 @@ function CharacterRoster({
   onSelect: (id: number) => void
 }) {
   return (
-    <div className="order-2 flex flex-col gap-2 lg:order-1">
+    <div className="flex shrink-0 gap-2 overflow-x-auto pb-2 lg:w-28 lg:flex-col lg:overflow-x-visible lg:overflow-y-auto lg:pb-0">
       {roster.map((c) => (
-        <RosterRow
+        <RailThumb
           key={c.id}
           character={c}
           selected={c.id === selectedId}
@@ -79,16 +84,18 @@ function CharacterRoster({
       ))}
       <Link
         to="/characters/new"
-        className="flex items-center gap-2 rounded-lg border border-dashed px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+        aria-label="Novo personagem"
+        className="flex w-20 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed py-2 text-muted-foreground hover:bg-accent hover:text-foreground lg:w-full"
       >
-        <Plus className="size-4" />
-        Novo personagem
+        <Plus className="size-5" />
+        <span className="text-[11px]">Novo</span>
       </Link>
     </div>
   )
 }
 
-function RosterRow({
+/** A single portrait thumbnail in the rail. */
+function RailThumb({
   character,
   selected,
   onSelect,
@@ -103,20 +110,14 @@ function RosterRow({
       onClick={onSelect}
       aria-pressed={selected}
       className={cn(
-        'flex items-center gap-3 rounded-lg border p-2 text-left transition-colors',
-        selected
-          ? 'border-primary bg-accent'
-          : 'border-border hover:bg-accent',
+        'flex w-20 shrink-0 flex-col items-center gap-1 rounded-lg border p-1.5 transition-colors lg:w-full',
+        selected ? 'border-primary bg-accent' : 'border-border hover:bg-accent',
       )}
     >
       <CharacterPortrait name={character.name} size="sm" />
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-medium">{character.name}</p>
-        <p className="truncate text-xs text-muted-foreground">
-          {primaryClass(character)}
-        </p>
-      </div>
-      <Badge variant="secondary">Nv {character.level}</Badge>
+      <span className="w-full truncate text-center text-[11px]">
+        {character.name}
+      </span>
     </button>
   )
 }
@@ -129,7 +130,7 @@ function CharacterDetail({ character }: { character: Character }) {
     .join(' / ')
 
   return (
-    <Card className="order-1 lg:order-2">
+    <Card className="min-w-0 flex-1">
       <CardContent className="grid gap-6 sm:grid-cols-[16rem_1fr]">
         <CharacterPortrait name={character.name} size="lg" />
 
@@ -197,12 +198,6 @@ function NoCharacters() {
       </CardContent>
     </Card>
   )
-}
-
-function primaryClass(character: Character): string {
-  const first = character.classes[0]
-  if (!first) return character.origin
-  return `${first.className} ${first.level}`
 }
 
 function signed(n: number): string {
