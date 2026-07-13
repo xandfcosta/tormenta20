@@ -87,6 +87,8 @@ export function EncounterBuilderPage() {
     <PageChrome className="space-y-4">
       <GmPageHeader title="Construtor de encontros" />
 
+      <div className="grid gap-4 lg:grid-cols-[1fr_20rem] lg:items-start">
+        <div className="space-y-4">
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
@@ -158,31 +160,33 @@ export function EncounterBuilderPage() {
           ))}
         </CardContent>
       </Card>
+        </div>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">
-            Resultado
-          </CardTitle>
-          <SendEncounterToSessionButton
-            groups={groups.map((g) => ({
-              monster: g.monster,
-              quantity: g.quantity,
-            }))}
-          />
-        </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-          <Stat label="ND do encontro" value={formatNd(encounterNd)} />
-          <Stat label="XP / personagem" value={totalXp} />
-          <Stat label="Gap vs. grupo" value={signed(gap)} />
-          <div>
-            <p className="text-xs text-muted-foreground">Dificuldade</p>
-            <Badge className="mt-1" variant={difficulty.variant}>
-              {difficulty.label}
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
+        <Card className="lg:sticky lg:top-4">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base">Resultado</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <Stat label="ND do encontro" value={formatNd(encounterNd)} />
+              <Stat label="XP / personagem" value={totalXp} />
+              <Stat label="Gap vs. grupo" value={signed(gap)} />
+              <div>
+                <p className="text-xs text-muted-foreground">Dificuldade</p>
+                <Badge className="mt-1" variant={difficulty.variant}>
+                  {difficulty.label}
+                </Badge>
+              </div>
+            </div>
+            <SendEncounterToSessionButton
+              groups={groups.map((g) => ({
+                monster: g.monster,
+                quantity: g.quantity,
+              }))}
+            />
+          </CardContent>
+        </Card>
+      </div>
     </PageChrome>
   )
 }
