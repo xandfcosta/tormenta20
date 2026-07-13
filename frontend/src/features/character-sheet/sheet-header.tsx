@@ -1,9 +1,7 @@
-import { Link } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
-import { Button } from '@/shared/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -26,12 +24,9 @@ import { signed } from './signed'
 export function SheetHeader({
   character,
   className,
-  showBack = true,
 }: {
   character: Character
   className?: string
-  /** Back-to-list arrow. Hidden in a session — the match top bar owns nav. */
-  showBack?: boolean
 }) {
   const races = character.races.map((r) => r.race)
   const effects = useCharacterEffects(character)
@@ -40,43 +35,31 @@ export function SheetHeader({
   return (
     <header
       className={cn(
-        'flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3 sm:px-6',
+        'flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border bg-card px-4 py-2.5',
         className,
       )}
     >
-      <div className="flex items-center gap-3">
-        {showBack && (
-          <Link to="/characters">
-            <Button variant="ghost" size="sm" aria-label="Voltar">
-              ←
-            </Button>
-          </Link>
-        )}
-        <div className="min-w-0">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-            Tormenta 20
-          </p>
-          <h1 className="truncate text-2xl font-bold tracking-tight sm:text-3xl">
-            {character.name}
-          </h1>
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">
-            {races.join(' / ')} • {character.origin}
-            {character.god && (
-              <>
-                {' '}
-                • <span className="text-foreground">{character.god}</span>
-              </>
-            )}
-            {' • '}
-            {character.size} • <DisplacementBadge disp={disp} />
-            {fatigue && (
-              <>
-                {' • '}
-                <FatigueWarning />
-              </>
-            )}
-          </p>
-        </div>
+      <div className="min-w-0">
+        <h1 className="truncate text-xl font-bold leading-tight tracking-tight sm:text-2xl">
+          {character.name}
+        </h1>
+        <p className="truncate text-xs text-muted-foreground">
+          {races.join(' / ')} • {character.origin}
+          {character.god && (
+            <>
+              {' '}
+              • <span className="text-foreground">{character.god}</span>
+            </>
+          )}
+          {' • '}
+          {character.size} • <DisplacementBadge disp={disp} />
+          {fatigue && (
+            <>
+              {' • '}
+              <FatigueWarning />
+            </>
+          )}
+        </p>
       </div>
       <div className="flex items-center gap-2">
         <div className="flex flex-wrap justify-end gap-1">

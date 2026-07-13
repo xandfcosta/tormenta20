@@ -9,15 +9,14 @@ import { SHEET_PANELS, type SheetSection } from './sheet-sections'
 import type { Character } from '@/shared/api/api'
 
 // Vitais leads the mobile sections: header + vitals aside as one scroll block.
-// The back arrow is dropped in a session (the match top bar owns navigation).
-function vitalsSection(inSession?: boolean): SheetSection {
+function vitalsSection(): SheetSection {
   return {
     value: 'vitals',
     label: 'Vitais',
     icon: HeartPulse,
     render: (c) => (
       <div className="h-full space-y-3 overflow-y-auto">
-        <SheetHeader character={c} showBack={!inSession} />
+        <SheetHeader character={c} />
         <VitalsAside character={c} />
       </div>
     ),
@@ -51,7 +50,7 @@ export function CharacterSheetMobile({
   const panels = inSession
     ? SHEET_PANELS.filter((p) => p.value !== 'campaigns')
     : SHEET_PANELS
-  const vitals = vitalsSection(inSession)
+  const vitals = vitalsSection()
   const sections = [vitals, ...panels]
 
   return (

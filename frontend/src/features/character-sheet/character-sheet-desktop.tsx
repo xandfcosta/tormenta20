@@ -28,12 +28,26 @@ export function CharacterSheetDesktop({
         !inSession && 'p-3',
       )}
     >
-      <SheetHeader character={character} showBack={!inSession} />
+      <SheetHeader character={character} />
       <Tabs
         defaultValue={panels[0]!.value}
         orientation="vertical"
-        className="grid min-h-0 gap-3 lg:grid-cols-[auto_minmax(18rem,22rem)_1fr]"
+        className="grid min-h-0 gap-3 lg:grid-cols-[minmax(18rem,22rem)_1fr_auto]"
       >
+        <VitalsAside character={character} />
+
+        <div className="min-h-0">
+          {panels.map((s) => (
+            <TabsContent
+              key={s.value}
+              value={s.value}
+              className="m-0 flex h-full min-h-0 flex-col overflow-hidden"
+            >
+              {s.render(character)}
+            </TabsContent>
+          ))}
+        </div>
+
         <TabsList className="flex h-full flex-col gap-1 self-start rounded-lg border bg-card p-1">
           {panels.map((s) => (
             <TabsTrigger
@@ -52,20 +66,6 @@ export function CharacterSheetDesktop({
             </TabsTrigger>
           ))}
         </TabsList>
-
-        <VitalsAside character={character} />
-
-        <div className="min-h-0">
-          {panels.map((s) => (
-            <TabsContent
-              key={s.value}
-              value={s.value}
-              className="m-0 flex h-full min-h-0 flex-col overflow-hidden"
-            >
-              {s.render(character)}
-            </TabsContent>
-          ))}
-        </div>
       </Tabs>
     </div>
   )
