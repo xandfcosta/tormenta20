@@ -116,7 +116,7 @@ export function OverlayPickerDialog({
           className={cn(
             'size-7',
             subtleText,
-            'hover:bg-amber-200/60 hover:text-amber-900 dark:hover:bg-zinc-800/60 dark:hover:text-amber-200',
+            'hover:bg-muted hover:text-foreground dark:hover:bg-muted dark:hover:text-foreground',
           )}
           aria-label={`Melhorias e material de ${item.name}`}
         >
@@ -126,7 +126,7 @@ export function OverlayPickerDialog({
       <DialogContent
         className={cn(
           'w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] p-4 sm:w-full sm:max-w-md sm:p-6',
-          'border-amber-700/40 bg-amber-50 text-zinc-900 dark:border-amber-500/40 dark:bg-zinc-950 dark:text-zinc-100',
+          'border-border bg-muted text-foreground   ',
         )}
       >
         <DialogHeader>
@@ -149,7 +149,7 @@ export function OverlayPickerDialog({
                   const checked = improvements.includes(imp.id)
                   return (
                     <li key={imp.id}>
-                      <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1 text-xs hover:bg-amber-100 dark:hover:bg-zinc-900/60">
+                      <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1 text-xs hover:bg-muted dark:hover:bg-muted">
                         <input
                           type="checkbox"
                           checked={checked}
@@ -183,7 +183,7 @@ export function OverlayPickerDialog({
             ) : (
               <ul className="mt-2 space-y-1">
                 <li>
-                  <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1 text-xs hover:bg-amber-100 dark:hover:bg-zinc-900/60">
+                  <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1 text-xs hover:bg-muted dark:hover:bg-muted">
                     <input
                       type="radio"
                       name={`material-${item.id}`}
@@ -196,7 +196,7 @@ export function OverlayPickerDialog({
                 </li>
                 {availableMaterials.map((mat) => (
                   <li key={mat.id}>
-                    <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1 text-xs hover:bg-amber-100 dark:hover:bg-zinc-900/60">
+                    <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1 text-xs hover:bg-muted dark:hover:bg-muted">
                       <input
                         type="radio"
                         name={`material-${item.id}`}
@@ -324,7 +324,7 @@ export function AddCatalogItemDialog({
       <DialogContent
         className={cn(
           'w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] p-4 sm:w-full sm:max-w-md sm:p-6',
-          'border-amber-700/40 bg-amber-50 text-zinc-900 dark:border-amber-500/40 dark:bg-zinc-950 dark:text-zinc-100',
+          'border-border bg-muted text-foreground   ',
         )}
       >
         <DialogHeader>
@@ -347,7 +347,7 @@ export function AddCatalogItemDialog({
               <p
                 className={cn(
                   'mt-1 rounded-md border px-3 py-4 text-center text-xs',
-                  'border-amber-700/30 bg-amber-50/80 dark:border-amber-500/20 dark:bg-zinc-900/60',
+                  'border-border bg-muted  ',
                   dimText,
                 )}
               >
@@ -357,7 +357,7 @@ export function AddCatalogItemDialog({
               <VirtualList
                 className={cn(
                   'mt-1 max-h-56 rounded-md border',
-                  'border-amber-700/30 bg-amber-50/80 dark:border-amber-500/20 dark:bg-zinc-900/60',
+                  'border-border bg-muted  ',
                 )}
                 items={filtered}
                 estimateSize={34}
@@ -372,8 +372,8 @@ export function AddCatalogItemDialog({
                     className={cn(
                       'flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-sm transition-colors',
                       catalogId === opt.id
-                        ? 'bg-amber-200/70 text-amber-900 dark:bg-amber-500/20 dark:text-amber-200'
-                        : 'hover:bg-amber-100/60 dark:hover:bg-zinc-800/60',
+                        ? 'bg-muted text-foreground  '
+                        : 'hover:bg-muted dark:hover:bg-muted',
                     )}
                   >
                     <span className="truncate">{opt.name}</span>
@@ -389,7 +389,7 @@ export function AddCatalogItemDialog({
             <div
               className={cn(
                 'rounded-md border px-3 py-2 text-[11px]',
-                'border-amber-700/30 bg-amber-100/70 dark:border-amber-500/30 dark:bg-zinc-900/60',
+                'border-border bg-muted  ',
               )}
             >
               <p className={cn('font-semibold', accentStrong)}>{selected.name}</p>

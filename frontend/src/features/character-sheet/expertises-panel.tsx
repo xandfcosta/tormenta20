@@ -127,7 +127,7 @@ export function ExpertisesPanel({ character }: { character: Character }) {
         panelBg,
       )}
     >
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-amber-700/30 px-3 py-2 dark:border-amber-500/20 sm:px-4">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-2  sm:px-4">
         <div className="flex items-baseline gap-3">
           <h2
             className={cn(
@@ -250,7 +250,7 @@ function AddCustomExpertiseDialog({
       <DialogContent
         className={cn(
           'w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] p-4 sm:w-full sm:max-w-sm sm:p-6',
-          'border-amber-700/40 bg-amber-50 text-zinc-900 dark:border-amber-500/40 dark:bg-zinc-950 dark:text-zinc-100',
+          'border-border bg-muted text-foreground   ',
         )}
       >
         <DialogHeader>

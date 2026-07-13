@@ -215,15 +215,15 @@ function ActiveEffectRow({
       )}
     >
       <Sparkles className="size-3.5 shrink-0 text-emerald-700 dark:text-emerald-300" />
-      <span className="flex-1 truncate text-sm text-zinc-800 dark:text-zinc-200">
+      <span className="flex-1 truncate text-sm text-foreground ">
         {name}
       </span>
       <span
         className={cn(
           'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest',
           effect.scope === 'day'
-            ? 'bg-amber-700/80 text-amber-50 dark:bg-amber-500/70 dark:text-zinc-900'
-            : 'bg-emerald-700/80 text-emerald-50 dark:bg-emerald-500/70 dark:text-zinc-900',
+            ? 'bg-muted text-foreground  '
+            : 'bg-emerald-700/80 text-emerald-50 dark:bg-emerald-500/70 ',
         )}
       >
         {effect.scope === 'day' ? 'dia' : 'cena'}
@@ -232,7 +232,7 @@ function ActiveEffectRow({
         type="button"
         variant="ghost"
         size="icon"
-        className="size-7 text-zinc-500 hover:bg-red-100 hover:text-red-700 dark:text-zinc-400 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+        className="size-7 text-foreground hover:bg-red-100 hover:text-red-700  dark:hover:bg-red-950/40 dark:hover:text-red-400"
         onClick={onRemove}
         aria-label={`Remover ${name}`}
       >
@@ -369,8 +369,8 @@ function FlagGroupRow({
         className={cn(
           'flex w-full flex-col gap-1 rounded-md border px-2 py-1.5 text-left transition-colors',
           anyActive
-            ? 'border-amber-700/50 bg-amber-100/70 dark:border-amber-500/40 dark:bg-amber-950/40'
-            : 'border-amber-700/15 bg-zinc-100/40 hover:bg-amber-100/40 dark:border-amber-500/15 dark:bg-zinc-900/40 dark:hover:bg-zinc-800/60',
+            ? 'border-border bg-muted  '
+            : 'border-border bg-muted hover:bg-muted   dark:hover:bg-muted',
         )}
       >
         <div className="flex items-center gap-3">
@@ -378,16 +378,16 @@ function FlagGroupRow({
             className={cn(
               'flex size-5 shrink-0 items-center justify-center rounded border',
               allActive
-                ? 'border-amber-700 bg-amber-700 text-amber-50 dark:border-amber-400 dark:bg-amber-400 dark:text-zinc-900'
+                ? 'border-border bg-muted text-foreground   '
                 : anyActive
-                  ? 'border-amber-700 bg-amber-100 dark:border-amber-400 dark:bg-amber-900/60'
-                  : 'border-zinc-400 bg-transparent dark:border-zinc-600',
+                  ? 'border-border bg-muted  '
+                  : 'border-border bg-transparent ',
             )}
             aria-hidden
           >
             {allActive && <Check className="size-3" />}
           </span>
-          <span className="truncate text-sm font-medium text-zinc-800 dark:text-zinc-200">
+          <span className="truncate text-sm font-medium text-foreground ">
             {group.source}
           </span>
           <span className={cn('ml-auto truncate text-[11px]', subtleText)}>
@@ -435,16 +435,16 @@ function ConditionalRow({
         className={cn(
           'flex w-full items-center gap-3 rounded-md border px-2 py-1.5 text-left transition-colors',
           active
-            ? 'border-amber-700/50 bg-amber-100/70 dark:border-amber-500/40 dark:bg-amber-950/40'
-            : 'border-amber-700/15 bg-zinc-100/40 hover:bg-amber-100/40 dark:border-amber-500/15 dark:bg-zinc-900/40 dark:hover:bg-zinc-800/60',
+            ? 'border-border bg-muted  '
+            : 'border-border bg-muted hover:bg-muted   dark:hover:bg-muted',
         )}
       >
         <span
           className={cn(
             'flex size-5 shrink-0 items-center justify-center rounded border',
             active
-              ? 'border-amber-700 bg-amber-700 text-amber-50 dark:border-amber-400 dark:bg-amber-400 dark:text-zinc-900'
-              : 'border-zinc-400 bg-transparent dark:border-zinc-600',
+              ? 'border-border bg-muted text-foreground   '
+              : 'border-border bg-transparent ',
           )}
           aria-hidden
         >
@@ -452,7 +452,7 @@ function ConditionalRow({
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
-            <span className="truncate text-sm font-medium text-zinc-800 dark:text-zinc-200">
+            <span className="truncate text-sm font-medium text-foreground ">
               {effect.source}
             </span>
             <span

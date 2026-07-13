@@ -36,7 +36,7 @@ export function ResourceBar({
     <div
       className={cn(
         'rounded-lg border p-2.5',
-        'border-amber-700/30 bg-amber-100/60 dark:border-zinc-800 dark:bg-zinc-900/60',
+        'border-border bg-muted  ',
         className,
       )}
     >
@@ -49,9 +49,9 @@ export function ResourceBar({
           <span className={dimText}> / {max}</span>
         </p>
       </div>
-      <div className="mt-1.5 h-2.5 overflow-hidden rounded-full border border-amber-700/30 bg-amber-50/70 dark:border-zinc-800 dark:bg-zinc-950">
+      <div className="mt-1.5 h-2.5 overflow-hidden rounded-full border border-border bg-muted  ">
         <div
-          className={`h-full bg-gradient-to-r ${fromColor} ${toColor} transition-all`}
+          className={`h-full  ${fromColor} ${toColor} transition-all`}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -167,7 +167,7 @@ function ResourceAdjustDialog({
       <DialogContent
         className={cn(
           'w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] p-4 sm:w-full sm:max-w-sm sm:p-6',
-          'border-amber-700/40 bg-amber-50 text-zinc-900 dark:border-amber-500/40 dark:bg-zinc-950 dark:text-zinc-100',
+          'border-border bg-muted text-foreground   ',
         )}
       >
         <DialogHeader>
@@ -215,7 +215,7 @@ function ResourceAdjustDialog({
           <div
             className={cn(
               'flex items-center justify-between rounded-lg border px-4 py-2',
-              'border-amber-700/30 bg-amber-100/70 dark:border-amber-500/30 dark:bg-zinc-900/60',
+              'border-border bg-muted  ',
             )}
           >
             <div className="flex flex-col">

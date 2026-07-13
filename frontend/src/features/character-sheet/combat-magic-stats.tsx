@@ -114,9 +114,9 @@ function CombatBox({
           type="button"
           className={cn(
             'relative flex cursor-pointer flex-col items-center rounded-lg border-2 p-2 text-center shadow-inner outline-none transition-colors',
-            'border-red-800/50 bg-gradient-to-b from-red-100 to-red-50 text-red-900',
+            'border-red-800/50  from-red-100 to-red-50 text-red-900',
             'hover:from-red-200 hover:to-red-100',
-            'dark:border-red-500/40 dark:from-red-950/40 dark:to-zinc-950 dark:text-red-200 dark:hover:from-red-900/40',
+            'dark:border-red-500/40 dark:from-red-950/40  dark:text-red-200 dark:hover:from-red-900/40',
             'focus-visible:ring-2 focus-visible:ring-red-500/60',
           )}
           aria-label={`${label} ${display}`}
@@ -135,7 +135,7 @@ function CombatBox({
       <DialogContent
         className={cn(
           'w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] p-4 sm:w-full sm:max-w-sm sm:p-6',
-          'border-red-700/40 bg-amber-50 text-zinc-900 dark:border-red-500/40 dark:bg-zinc-950 dark:text-zinc-100',
+          'border-red-700/40 bg-muted text-foreground dark:border-red-500/40  ',
         )}
       >
         <DialogHeader>
@@ -154,7 +154,7 @@ function CombatBox({
               <li
                 key={i}
                 className={cn(
-                  'flex items-center justify-between gap-2 border-b border-amber-700/15 pb-1 dark:border-amber-500/10',
+                  'flex items-center justify-between gap-2 border-b border-border pb-1 ',
                   r.muted && dimText,
                 )}
               >
@@ -265,9 +265,9 @@ function MagicBox({
           type="button"
           className={cn(
             'relative flex cursor-pointer flex-col items-center rounded-lg border-2 p-2 text-center shadow-inner outline-none transition-colors',
-            'border-violet-800/50 bg-gradient-to-b from-violet-100 to-violet-50 text-violet-900',
+            'border-violet-800/50  from-violet-100 to-violet-50 text-violet-900',
             'hover:from-violet-200 hover:to-violet-100',
-            'dark:border-violet-500/40 dark:from-violet-950/40 dark:to-zinc-950 dark:text-violet-200 dark:hover:from-violet-900/40',
+            'dark:border-violet-500/40 dark:from-violet-950/40  dark:text-violet-200 dark:hover:from-violet-900/40',
             'focus-visible:ring-2 focus-visible:ring-violet-500/60',
           )}
           aria-label={`${label} ${display}`}
@@ -286,7 +286,7 @@ function MagicBox({
       <DialogContent
         className={cn(
           'w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] p-4 sm:w-full sm:max-w-sm sm:p-6',
-          'border-violet-700/40 bg-amber-50 text-zinc-900 dark:border-violet-500/40 dark:bg-zinc-950 dark:text-zinc-100',
+          'border-violet-700/40 bg-muted text-foreground dark:border-violet-500/40  ',
         )}
       >
         <DialogHeader>
@@ -305,7 +305,7 @@ function MagicBox({
               <li
                 key={i}
                 className={cn(
-                  'flex items-center justify-between gap-2 border-b border-amber-700/15 pb-1 dark:border-amber-500/10',
+                  'flex items-center justify-between gap-2 border-b border-border pb-1 ',
                   r.muted && dimText,
                 )}
               >

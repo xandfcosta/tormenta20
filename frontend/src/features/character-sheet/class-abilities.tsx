@@ -330,8 +330,8 @@ function GeneralPowerRow({
       className={cn(
         'flex gap-2 rounded border p-2',
         owned
-          ? 'border-amber-600 bg-amber-100/60 dark:border-amber-400 dark:bg-amber-500/10'
-          : 'border-amber-700/20 dark:border-amber-500/20',
+          ? 'border-border bg-muted  '
+          : 'border-border ',
       )}
     >
       <button
@@ -341,8 +341,8 @@ function GeneralPowerRow({
         className={cn(
           'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px]',
           owned
-            ? 'border-amber-700 bg-amber-600 text-white'
-            : 'border-amber-700/50 hover:bg-amber-100 dark:border-amber-500/50',
+            ? 'border-border bg-muted text-white'
+            : 'border-border hover:bg-muted ',
           (disabled || (locked && !owned)) && 'cursor-not-allowed opacity-40',
         )}
         aria-pressed={owned}
@@ -360,7 +360,7 @@ function GeneralPowerRow({
             {power.kind}
           </span>
           {power.minLevel !== undefined && power.minLevel > 1 && (
-            <span className="rounded bg-zinc-200/60 px-1 text-[9px] uppercase tracking-wide text-zinc-700 dark:bg-zinc-500/20 dark:text-zinc-200">
+            <span className="rounded bg-muted px-1 text-[9px] uppercase tracking-wide text-foreground  ">
               ≥L{power.minLevel}
             </span>
           )}
@@ -389,7 +389,7 @@ function kindBadgeClass(kind: PowerKind): string {
     case 'tormenta':
       return 'bg-fuchsia-200/60 text-fuchsia-900 dark:bg-fuchsia-500/20 dark:text-fuchsia-100'
     default:
-      return 'bg-amber-200/60 text-amber-900 dark:bg-amber-500/20 dark:text-amber-100'
+      return 'bg-muted text-foreground  '
   }
 }
 
@@ -414,8 +414,8 @@ function ClassPowerRow({
       className={cn(
         'flex gap-2 rounded border p-2',
         owned
-          ? 'border-amber-600 bg-amber-100/60 dark:border-amber-400 dark:bg-amber-500/10'
-          : 'border-amber-700/20 dark:border-amber-500/20',
+          ? 'border-border bg-muted  '
+          : 'border-border ',
       )}
     >
       {!isAuto && onToggle && (
@@ -426,8 +426,8 @@ function ClassPowerRow({
           className={cn(
             'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px]',
             owned
-              ? 'border-amber-700 bg-amber-600 text-white'
-              : 'border-amber-700/50 hover:bg-amber-100 dark:border-amber-500/50',
+              ? 'border-border bg-muted text-white'
+              : 'border-border hover:bg-muted ',
             (disabled || (locked && !owned)) && 'cursor-not-allowed opacity-40',
           )}
           aria-pressed={owned}
@@ -445,7 +445,7 @@ function ClassPowerRow({
             </span>
           )}
           {!isAuto && power.minLevel !== undefined && power.minLevel > 1 && (
-            <span className="rounded bg-zinc-200/60 px-1 text-[9px] uppercase tracking-wide text-zinc-700 dark:bg-zinc-500/20 dark:text-zinc-200">
+            <span className="rounded bg-muted px-1 text-[9px] uppercase tracking-wide text-foreground  ">
               ≥L{power.minLevel}
             </span>
           )}
@@ -464,7 +464,7 @@ function ClassPowerRow({
                 <span
                   className={cn(
                     c.prereq.kind === 'note'
-                      ? 'text-amber-700 dark:text-amber-300'
+                      ? 'text-foreground '
                       : c.met
                         ? 'text-emerald-700 dark:text-emerald-300'
                         : 'text-red-700 dark:text-red-300',

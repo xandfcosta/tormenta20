@@ -131,8 +131,8 @@ function OriginBenefitRow({
       className={cn(
         'flex gap-2 rounded border p-2',
         selected
-          ? 'border-amber-600 bg-amber-100/60 dark:border-amber-400 dark:bg-amber-500/10'
-          : 'border-amber-700/20 dark:border-amber-500/20',
+          ? 'border-border bg-muted  '
+          : 'border-border ',
       )}
     >
       <button
@@ -142,8 +142,8 @@ function OriginBenefitRow({
         className={cn(
           'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px]',
           selected
-            ? 'border-amber-700 bg-amber-600 text-white'
-            : 'border-amber-700/50 hover:bg-amber-100 dark:border-amber-500/50',
+            ? 'border-border bg-muted text-white'
+            : 'border-border hover:bg-muted ',
           (disabled || blocked) && 'cursor-not-allowed opacity-40',
         )}
         aria-pressed={selected}
@@ -165,7 +165,7 @@ function OriginBenefitRow({
             {benefit.kind === 'pericia' ? 'Perícia' : 'Poder'}
           </span>
           {isUnique && (
-            <span className="rounded bg-amber-300/60 px-1 text-[9px] font-semibold uppercase tracking-wide text-amber-900 dark:bg-amber-500/30 dark:text-amber-100">
+            <span className="rounded bg-muted px-1 text-[9px] font-semibold uppercase tracking-wide text-foreground  ">
               Único
             </span>
           )}

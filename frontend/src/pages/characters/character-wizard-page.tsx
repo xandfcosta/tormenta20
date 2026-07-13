@@ -360,7 +360,7 @@ export function NewCharacterPage() {
                     <FieldDescription>Adicione ao menos uma classe.</FieldDescription>
                   ) : null}
                   {items.length > 1 && (
-                    <p className="text-xs text-amber-700 dark:text-amber-300">
+                    <p className="text-xs text-foreground ">
                       ⚠ Multiclasse no nível 1 não é padrão das regras (T20
                       adquire-se via Poder de Multiclasse em níveis mais
                       altos). O preset de atributos usa apenas a primeira

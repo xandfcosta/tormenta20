@@ -182,7 +182,7 @@ export function InventoryPanel({ character }: { character: Character }) {
         panelBg,
       )}
     >
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-amber-700/30 px-3 py-2 dark:border-amber-500/20 sm:px-4">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-2  sm:px-4">
         <div className="min-w-0">
           <h2
             className={cn(
@@ -199,7 +199,7 @@ export function InventoryPanel({ character }: { character: Character }) {
                 'font-mono',
                 over
                   ? 'text-red-700 dark:text-red-400'
-                  : 'text-zinc-700 dark:text-zinc-300',
+                  : 'text-foreground ',
               )}
             >
               {formatLoad(used)}
@@ -238,13 +238,13 @@ export function InventoryPanel({ character }: { character: Character }) {
       </div>
 
       <div className="shrink-0 px-3 pb-2 pt-2 sm:px-4">
-        <div className="h-2 overflow-hidden rounded-full border border-amber-700/30 bg-amber-50/70 dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="h-2 overflow-hidden rounded-full border border-border bg-muted  ">
           <div
             className={cn(
               'h-full transition-all',
               over
-                ? 'bg-gradient-to-r from-red-700 to-red-500'
-                : 'bg-gradient-to-r from-amber-700 to-amber-500',
+                ? ' from-red-700 to-red-500'
+                : '  ',
             )}
             style={{ width: `${pct}%` }}
           />
@@ -283,7 +283,7 @@ function InventoryHeader({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'items-center gap-2 border-b border-amber-700/20 px-2 pb-1 pt-2 dark:border-amber-500/15',
+        'items-center gap-2 border-b border-border px-2 pb-1 pt-2 ',
         className,
       )}
     >

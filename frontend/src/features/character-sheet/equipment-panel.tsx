@@ -61,7 +61,7 @@ export function EquipmentPanel({ character }: { character: Character }) {
         panelBg,
       )}
     >
-      <div className="flex shrink-0 items-center border-b border-amber-700/30 px-3 py-2 dark:border-amber-500/20 sm:px-4">
+      <div className="flex shrink-0 items-center border-b border-border px-3 py-2  sm:px-4">
         <h2 className={cn('font-serif text-lg font-bold tracking-wide', accentStrong)}>
           Equipado
         </h2>
@@ -115,7 +115,7 @@ function Pool({
         <span
           className={cn(
             'font-mono text-xs',
-            count >= max ? 'text-amber-700 dark:text-amber-400' : dimText,
+            count >= max ? 'text-foreground ' : dimText,
           )}
         >
           {count}/{max}
@@ -142,7 +142,7 @@ function SlotCard({
       <div
         className={cn(
           'flex min-h-[3.75rem] flex-col justify-center rounded-lg border border-dashed px-3 py-2',
-          'border-amber-700/25 bg-amber-50/30 dark:border-amber-500/15 dark:bg-zinc-900/20',
+          'border-border bg-muted  ',
           wide && 'col-span-2',
         )}
       >
@@ -159,7 +159,7 @@ function SlotCard({
     <div
       className={cn(
         'relative min-h-[3.75rem] rounded-lg border px-3 py-2',
-        'border-amber-700/50 bg-amber-100/70 dark:border-amber-500/50 dark:bg-zinc-900/70',
+        'border-border bg-muted  ',
         wide && 'col-span-2',
       )}
     >
@@ -177,7 +177,7 @@ function SlotCard({
         </div>
         <button
           type="button"
-          className="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-zinc-500 hover:bg-red-100 hover:text-red-700 dark:text-zinc-400 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+          className="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-foreground hover:bg-red-100 hover:text-red-700  dark:hover:bg-red-950/40 dark:hover:text-red-400"
           onClick={() => onUnequip(item.id)}
           aria-label={`Desequipar ${item.name}`}
         >
@@ -189,7 +189,7 @@ function SlotCard({
           {bonuses.map((b) => (
             <span
               key={b}
-              className="rounded-full border border-amber-700/20 bg-zinc-100/50 px-1.5 py-0.5 text-[10px] text-zinc-700 dark:border-amber-500/15 dark:bg-zinc-900/40 dark:text-zinc-300"
+              className="rounded-full border border-border bg-muted px-1.5 py-0.5 text-[10px] text-foreground   "
             >
               {b}
             </span>

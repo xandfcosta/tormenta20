@@ -107,7 +107,7 @@ export function InventoryRow({
       className={cn(
         'size-7',
         subtleText,
-        'hover:bg-amber-200/60 hover:text-amber-900 dark:hover:bg-zinc-800/60 dark:hover:text-amber-200',
+        'hover:bg-muted hover:text-foreground dark:hover:bg-muted dark:hover:text-foreground',
       )}
       aria-label={`Editar ${item.name}`}
     >
@@ -121,7 +121,7 @@ export function InventoryRow({
           type="button"
           variant="ghost"
           size="icon"
-          className="size-7 text-zinc-500 hover:bg-red-100 hover:text-red-700 dark:text-zinc-400 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+          className="size-7 text-foreground hover:bg-red-100 hover:text-red-700  dark:hover:bg-red-950/40 dark:hover:text-red-400"
           onClick={() => {
             if (confirm(`Remover "${item.name}"?`)) onDelete()
           }}
@@ -141,14 +141,14 @@ export function InventoryRow({
           hoverRow,
         )}
       >
-        <span className="flex flex-1 items-center gap-1.5 truncate text-sm text-zinc-800 dark:text-zinc-200">
+        <span className="flex flex-1 items-center gap-1.5 truncate text-sm text-foreground ">
           <span className="truncate">{item.name}</span>
           {proficiencyWarning}
         </span>
-        <span className="w-12 text-center font-mono text-xs text-zinc-700 dark:text-zinc-300">
+        <span className="w-12 text-center font-mono text-xs text-foreground ">
           {item.quantity}
         </span>
-        <span className="w-14 text-center font-mono text-xs text-zinc-700 dark:text-zinc-300">
+        <span className="w-14 text-center font-mono text-xs text-foreground ">
           {formatLoad(item.slots)}
         </span>
         <span
@@ -184,7 +184,7 @@ export function InventoryRow({
         )}
       >
         <div className="flex min-w-0 flex-1 flex-col leading-tight">
-          <span className="flex items-center gap-1.5 truncate text-sm text-zinc-800 dark:text-zinc-200">
+          <span className="flex items-center gap-1.5 truncate text-sm text-foreground ">
             <span className="truncate">{item.name}</span>
             {proficiencyWarning}
           </span>

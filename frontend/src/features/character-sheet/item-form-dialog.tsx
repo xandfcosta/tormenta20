@@ -36,7 +36,7 @@ export function ItemInfoDialog({ item }: { item: CharacterItem }) {
           className={cn(
             'size-7',
             subtleText,
-            'hover:bg-amber-200/60 hover:text-amber-900 dark:hover:bg-zinc-800/60 dark:hover:text-amber-200',
+            'hover:bg-muted hover:text-foreground dark:hover:bg-muted dark:hover:text-foreground',
           )}
           aria-label={`Informações de ${item.name}`}
         >
@@ -46,7 +46,7 @@ export function ItemInfoDialog({ item }: { item: CharacterItem }) {
       <DialogContent
         className={cn(
           'w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] p-4 sm:w-full sm:max-w-md sm:p-6',
-          'border-amber-700/40 bg-amber-50 text-zinc-900 dark:border-amber-500/40 dark:bg-zinc-950 dark:text-zinc-100',
+          'border-border bg-muted text-foreground   ',
         )}
       >
         <DialogHeader>
@@ -58,7 +58,7 @@ export function ItemInfoDialog({ item }: { item: CharacterItem }) {
           <div
             className={cn(
               'rounded-md border px-3 py-2 text-xs',
-              'border-amber-700/30 bg-amber-100/70 dark:border-amber-500/30 dark:bg-zinc-900/60',
+              'border-border bg-muted  ',
             )}
           >
             <p>
@@ -160,7 +160,7 @@ export function ItemFormDialog({
       <DialogContent
         className={cn(
           'w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] p-4 sm:w-full sm:max-w-sm sm:p-6',
-          'border-amber-700/40 bg-amber-50 text-zinc-900 dark:border-amber-500/40 dark:bg-zinc-950 dark:text-zinc-100',
+          'border-border bg-muted text-foreground   ',
         )}
       >
         <DialogHeader>

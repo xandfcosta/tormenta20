@@ -94,7 +94,7 @@ export function RaceAbilitySection({
       )}
       <ul className="space-y-2">
         {race.abilities.map((ability) => (
-          <li key={ability.id} className="rounded border border-amber-700/20 p-2 dark:border-amber-500/20">
+          <li key={ability.id} className="rounded border border-border p-2 ">
             <p className={cn('text-xs font-semibold', accentTitle)}>{ability.name}</p>
             <p className={cn('mt-0.5 text-[11px] leading-snug', subtleText)}>
               {ability.description}
@@ -139,8 +139,8 @@ function RaceVariantPicker({
             className={cn(
               'rounded border px-2 py-0.5 text-[11px] transition-colors',
               active
-                ? 'border-amber-600 bg-amber-200 font-semibold text-amber-900 dark:border-amber-400 dark:bg-amber-500/20 dark:text-amber-100'
-                : 'border-amber-700/30 text-amber-900/70 hover:bg-amber-100 dark:border-amber-500/30 dark:text-amber-100/60 dark:hover:bg-amber-500/10',
+                ? 'border-border bg-muted font-semibold text-foreground   '
+                : 'border-border text-foreground hover:bg-muted   dark:hover:bg-muted',
               disabled && 'cursor-not-allowed opacity-60',
             )}
           >

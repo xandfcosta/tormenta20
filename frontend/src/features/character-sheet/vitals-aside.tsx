@@ -107,10 +107,10 @@ function AttributeBox({ label, value }: { label: string; value: number }) {
     <div
       className={cn(
         'relative rounded-lg border-2 p-2 text-center shadow-inner',
-        'border-amber-700/30 bg-gradient-to-b from-amber-100 to-amber-50 dark:border-amber-500/30 dark:from-zinc-900 dark:to-zinc-950',
+        'border-border      ',
       )}
     >
-      <p className="text-[9px] font-bold uppercase tracking-widest text-amber-800/80 dark:text-amber-400/70">
+      <p className="text-[9px] font-bold uppercase tracking-widest text-foreground ">
         {label}
       </p>
       <p

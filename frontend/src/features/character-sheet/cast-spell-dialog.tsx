@@ -144,7 +144,7 @@ export function CastSpellDialog({
                 return (
                   <li
                     key={i}
-                    className="flex flex-wrap items-start gap-2 rounded border border-amber-700/20 p-2 dark:border-amber-500/15"
+                    className="flex flex-wrap items-start gap-2 rounded border border-border p-2 "
                   >
                     <div className="flex-1 space-y-0.5">
                       <p className="text-xs">
@@ -160,7 +160,7 @@ export function CastSpellDialog({
                         </span>
                         +{a.pmCost} PM {a.kind === 'aumenta' ? 'cada' : ''}
                       </p>
-                      <p className="text-xs text-zinc-700 dark:text-zinc-300">
+                      <p className="text-xs text-foreground ">
                         {a.description}
                       </p>
                     </div>
@@ -188,7 +188,7 @@ export function CastSpellDialog({
         <div
           className={cn(
             'flex items-center justify-between rounded-lg border px-3 py-2',
-            'border-amber-700/40 bg-amber-100/60 dark:border-amber-500/40 dark:bg-zinc-900/60',
+            'border-border bg-muted  ',
           )}
         >
           <span

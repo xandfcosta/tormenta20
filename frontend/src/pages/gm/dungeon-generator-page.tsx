@@ -166,7 +166,7 @@ export function DungeonGeneratorPage() {
           )}
 
           {size === null && numRooms > 50 && (
-            <p className="text-sm text-amber-700 dark:text-amber-400">
+            <p className="text-sm text-foreground ">
               Livro p263 recomenda não passar de 50 salas — masmorras
               maiores viram tediosas.
             </p>

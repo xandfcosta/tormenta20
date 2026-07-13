@@ -86,7 +86,7 @@ export function SpellRow({
       className={cn(
         'rounded-md border border-transparent px-2 py-1',
         hoverRow,
-        open && 'border-amber-700/20 dark:border-amber-500/15',
+        open && 'border-border ',
       )}
     >
       <button
@@ -125,7 +125,7 @@ export function SpellRow({
         )}
       </button>
       {open && (
-        <div className="mt-2 space-y-2 border-t border-amber-700/15 pt-2 text-xs dark:border-amber-500/10">
+        <div className="mt-2 space-y-2 border-t border-border pt-2 text-xs ">
           <div className="grid gap-1 sm:grid-cols-2">
             <Stat label="Execução" value={spell.execution} />
             <Stat label="Alcance" value={spell.range} />
@@ -141,7 +141,7 @@ export function SpellRow({
             <Stat label="Teste" value={spell.saveType} />
             <Stat label="Livro" value={`p${spell.bookPage}`} />
           </div>
-          <p className="whitespace-pre-line text-zinc-700 dark:text-zinc-300">
+          <p className="whitespace-pre-line text-foreground ">
             {spell.baseEffect}
           </p>
           {spell.augments.length > 0 && (
@@ -158,7 +158,7 @@ export function SpellRow({
                 {spell.augments.map((a, i) => (
                   <li
                     key={i}
-                    className="flex items-start gap-2 rounded border border-amber-700/10 px-2 py-1 dark:border-amber-500/10"
+                    className="flex items-start gap-2 rounded border border-border px-2 py-1 "
                   >
                     <Badge
                       variant="outline"
@@ -176,7 +176,7 @@ export function SpellRow({
                     >
                       {a.kind}
                     </span>
-                    <span className="flex-1 text-zinc-700 dark:text-zinc-300">
+                    <span className="flex-1 text-foreground ">
                       {a.description}
                       {a.classOnly && (
                         <span className={cn('ml-1 italic', dimText)}>
@@ -195,12 +195,12 @@ export function SpellRow({
             </div>
           )}
           {!canCast && applicableClasses.length > 0 && (
-            <p className="flex items-center gap-1 text-[11px] text-amber-700 dark:text-amber-300">
+            <p className="flex items-center gap-1 text-[11px] text-foreground ">
               <Sparkles className="size-3" />
               Círculo acima do máximo conjurável no nível atual.
             </p>
           )}
-          <div className="flex flex-wrap items-center gap-2 border-t border-amber-700/10 pt-2 dark:border-amber-500/10">
+          <div className="flex flex-wrap items-center gap-2 border-t border-border pt-2 ">
             {learned ? (
               <>
                 <CastSpellDialog
@@ -259,7 +259,7 @@ function Stat({ label, value }: { label: string; value: string | number }) {
       >
         {label}
       </span>
-      <span className="text-zinc-800 dark:text-zinc-200">{value}</span>
+      <span className="text-foreground ">{value}</span>
     </div>
   )
 }

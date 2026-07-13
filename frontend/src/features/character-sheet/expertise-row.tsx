@@ -147,8 +147,8 @@ export function ExpertiseRow({
         className={cn(
           'flex items-start gap-2.5 rounded-lg border p-2.5',
           state.trained
-            ? 'border-amber-500/50 bg-amber-500/[0.06]'
-            : 'border-amber-700/15 dark:border-amber-500/10',
+            ? 'border-border bg-muted/[0.06]'
+            : 'border-border ',
           hoverRow,
         )}
       >
@@ -165,8 +165,8 @@ export function ExpertiseRow({
                 className={cn(
                   'min-w-0 flex-1 truncate text-left text-sm hover:underline',
                   locked
-                    ? 'text-zinc-500 dark:text-zinc-500'
-                    : 'text-zinc-800 dark:text-zinc-200',
+                    ? 'text-foreground '
+                    : 'text-foreground ',
                 )}
               >
                 {def.name}
@@ -208,8 +208,8 @@ function TrainedOnlyStar({ locked }: { locked: boolean }) {
             className={cn(
               'size-3',
               locked
-                ? 'fill-amber-500 text-amber-700 dark:fill-amber-400 dark:text-amber-300'
-                : 'fill-zinc-300 text-zinc-500 dark:fill-zinc-700 dark:text-zinc-500',
+                ? 'fill-current text-foreground  '
+                : 'fill-current text-foreground  ',
             )}
           />
         </button>
@@ -231,8 +231,8 @@ function TotalBadge({ total, locked }: { total: number; locked: boolean }) {
       className={cn(
         'flex size-11 shrink-0 items-center justify-center rounded-lg border font-mono text-lg font-bold transition-colors hover:brightness-110',
         locked
-          ? 'border-zinc-300 text-zinc-400 line-through dark:border-zinc-700 dark:text-zinc-600'
-          : ['border-amber-500/40 bg-amber-500/10', accentStrong],
+          ? 'border-border text-foreground line-through  '
+          : ['border-border bg-muted', accentStrong],
       )}
     >
       {signed(total)}
@@ -243,7 +243,7 @@ function TotalBadge({ total, locked }: { total: number; locked: boolean }) {
 /** Small self-labeling breakdown chip (½lvl / treino). */
 function Chip({ label, value }: { label: string; value: string }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-amber-700/20 bg-zinc-100/50 px-2 py-0.5 font-mono text-[11px] text-zinc-700 dark:border-amber-500/15 dark:bg-zinc-900/40 dark:text-zinc-300">
+    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 font-mono text-[11px] text-foreground   ">
       <span className="text-[9px] uppercase tracking-wider opacity-60">
         {label}
       </span>
@@ -278,8 +278,8 @@ function TrainedToggle({
           className={cn(
             'inline-flex size-6 shrink-0 items-center justify-center rounded-md border transition-colors',
             trained
-              ? 'border-amber-500 bg-amber-500 text-zinc-950 shadow-sm dark:border-amber-400 dark:bg-amber-400'
-              : 'border-amber-700/30 text-amber-700/40 hover:border-amber-600 hover:text-amber-600 dark:border-amber-500/25 dark:text-amber-500/30',
+              ? 'border-border bg-muted text-foreground shadow-sm  '
+              : 'border-border text-foreground hover:border-border hover:text-foreground  ',
           )}
         >
           <Dumbbell className="size-3.5" strokeWidth={2.5} />
@@ -306,7 +306,7 @@ function DeleteExpertiseButton({
           type="button"
           variant="ghost"
           size="icon"
-          className="size-7 text-zinc-500 hover:bg-red-100 hover:text-red-700 dark:text-zinc-400 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+          className="size-7 text-foreground hover:bg-red-100 hover:text-red-700  dark:hover:bg-red-950/40 dark:hover:text-red-400"
           onClick={() => {
             if (confirm(`Remover ofício "${name}"?`)) onDelete()
           }}
@@ -357,7 +357,7 @@ function ExpertiseBreakdown({
       <DialogContent
         className={cn(
           'w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] p-4 sm:w-full sm:max-w-sm sm:p-6',
-          'border-amber-700/40 bg-amber-50 text-zinc-900 dark:border-amber-500/40 dark:bg-zinc-950 dark:text-zinc-100',
+          'border-border bg-muted text-foreground   ',
         )}
       >
         <DialogHeader>
@@ -381,7 +381,7 @@ function ExpertiseBreakdown({
           <div
             className={cn(
               'mt-2 flex items-center justify-between rounded-lg border px-3 py-2',
-              'border-amber-700/40 bg-amber-100/60 dark:border-amber-500/40 dark:bg-amber-950/30',
+              'border-border bg-muted  ',
             )}
           >
             <span
@@ -393,7 +393,7 @@ function ExpertiseBreakdown({
               className={cn(
                 'font-mono text-2xl font-bold',
                 locked
-                  ? 'text-zinc-400 line-through dark:text-zinc-500'
+                  ? 'text-foreground line-through '
                   : accentStrong,
               )}
             >
@@ -418,7 +418,7 @@ function BreakdownRow({
   return (
     <div
       className={cn(
-        'flex items-center justify-between gap-2 border-b border-amber-700/10 py-1 dark:border-amber-500/10',
+        'flex items-center justify-between gap-2 border-b border-border py-1 ',
         indented && 'pl-4 text-xs opacity-80',
       )}
     >

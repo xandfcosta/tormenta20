@@ -49,7 +49,7 @@ export function SheetHeader({
       className={cn(
         'relative flex flex-wrap items-center justify-between gap-3 overflow-hidden rounded-xl px-4 py-3 sm:px-6',
         surface,
-        'bg-gradient-to-r from-amber-200/70 via-amber-100 to-amber-200/70 dark:from-amber-900/40 dark:via-zinc-900 dark:to-amber-900/40',
+        '      ',
         className,
       )}
     >
@@ -62,7 +62,7 @@ export function SheetHeader({
               size="sm"
               className={cn(
                 subtleText,
-                'hover:bg-amber-200/60 hover:text-amber-900 dark:hover:bg-zinc-800/60 dark:hover:text-amber-200',
+                'hover:bg-muted hover:text-foreground dark:hover:bg-muted dark:hover:text-foreground',
               )}
             >
               ←
@@ -70,7 +70,7 @@ export function SheetHeader({
           </Link>
         )}
         <div className="min-w-0">
-          <p className="text-[10px] uppercase tracking-[0.4em] text-amber-800/80 dark:text-amber-400/80">
+          <p className="text-[10px] uppercase tracking-[0.4em] text-foreground ">
             Tormenta 20
           </p>
           <h1
@@ -87,7 +87,7 @@ export function SheetHeader({
               <>
                 {' '}
                 •{' '}
-                <span className="text-amber-700 dark:text-amber-300">
+                <span className="text-foreground ">
                   {character.god}
                 </span>
               </>
@@ -178,7 +178,7 @@ function LevelBadge({ character }: { character: Character }) {
       <div
         className={cn(
           'flex items-center gap-1 rounded-lg border px-2 py-1 text-center',
-          'border-amber-700/40 bg-amber-50/80 dark:border-amber-500/40 dark:bg-zinc-950/80',
+          'border-border bg-muted  ',
         )}
       >
         <button
@@ -187,8 +187,8 @@ function LevelBadge({ character }: { character: Character }) {
           disabled={atMin || mutate.isPending}
           aria-label="Diminuir nível"
           className={cn(
-            'text-amber-700 transition-colors disabled:opacity-30 dark:text-amber-300',
-            'hover:text-amber-900 dark:hover:text-amber-100',
+            'text-foreground transition-colors disabled:opacity-30 ',
+            'hover:text-foreground dark:hover:text-foreground',
           )}
         >
           <ChevronDown className="size-4" />
@@ -199,7 +199,7 @@ function LevelBadge({ character }: { character: Character }) {
           </p>
           <p
             className={cn(
-              'w-7 text-center font-serif text-2xl font-bold leading-none text-amber-700 dark:text-amber-300',
+              'w-7 text-center font-serif text-2xl font-bold leading-none text-foreground ',
             )}
             aria-label="Nível"
           >
@@ -212,8 +212,8 @@ function LevelBadge({ character }: { character: Character }) {
           disabled={atMax || mutate.isPending}
           aria-label="Aumentar nível"
           className={cn(
-            'text-amber-700 transition-colors disabled:opacity-30 dark:text-amber-300',
-            'hover:text-amber-900 dark:hover:text-amber-100',
+            'text-foreground transition-colors disabled:opacity-30 ',
+            'hover:text-foreground dark:hover:text-foreground',
           )}
         >
           <ChevronUp className="size-4" />
@@ -269,7 +269,7 @@ function ClassLevelPicker({
                   onClick={() => onPick(c.className)}
                   className={cn(
                     'flex w-full items-center justify-between rounded border px-3 py-2 text-left transition-colors',
-                    'border-amber-700/30 hover:bg-amber-100 dark:border-amber-500/30 dark:hover:bg-amber-500/10',
+                    'border-border hover:bg-muted  dark:hover:bg-muted',
                   )}
                 >
                   <span className={cn('text-sm font-semibold', accentTitle)}>
@@ -330,7 +330,7 @@ function FatigueWarning() {
       <TooltipTrigger asChild>
         <button
           type="button"
-          className="cursor-help font-semibold text-amber-700 underline decoration-dotted underline-offset-2 dark:text-amber-300"
+          className="cursor-help font-semibold text-foreground underline decoration-dotted underline-offset-2 "
         >
           Fadiga ao dormir
         </button>

@@ -160,26 +160,26 @@ function ProficiencyRow({
         'flex items-center justify-between gap-2 rounded-md text-xs',
         granted
           ? 'bg-emerald-50 dark:bg-emerald-950/30'
-          : 'bg-zinc-100 dark:bg-zinc-900/40',
+          : 'bg-muted ',
       )}
     >
       <button
         type="button"
         onClick={onToggle}
         disabled={disabled}
-        className="flex flex-1 items-center gap-2 rounded-md px-2 py-1 text-left hover:bg-amber-100/60 disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-zinc-800/50"
+        className="flex flex-1 items-center gap-2 rounded-md px-2 py-1 text-left hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-muted"
         aria-pressed={granted}
         aria-label={`${granted ? 'Remover' : 'Adicionar'} proficiência: ${entry.label}`}
       >
         {granted ? (
           <Check className="size-3.5 text-emerald-700 dark:text-emerald-400" />
         ) : (
-          <X className="size-3.5 text-zinc-400" />
+          <X className="size-3.5 text-foreground" />
         )}
         <span
           className={cn(
             granted
-              ? 'text-zinc-800 dark:text-zinc-100'
+              ? 'text-foreground '
               : cn('line-through', dimText),
           )}
         >
@@ -189,7 +189,7 @@ function ProficiencyRow({
           <span
             className={cn(
               'ml-1 rounded px-1 text-[9px] uppercase tracking-wider',
-              'bg-amber-200/60 text-amber-900 dark:bg-amber-500/20 dark:text-amber-200',
+              'bg-muted text-foreground  ',
             )}
             title={`Padrão: ${entry.sources.join(', ')}`}
           >

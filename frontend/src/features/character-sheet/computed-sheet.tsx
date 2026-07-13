@@ -20,7 +20,7 @@ export function ComputedSheetCards({
   return (
     <div className="space-y-4">
       {showWarnings && computed.warnings.length > 0 && (
-        <div className="rounded-md border border-amber-400/60 bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+        <div className="rounded-md border border-border bg-muted p-3 text-sm text-foreground  ">
           <p className="font-medium">Avisos do orchestrator:</p>
           <ul className="ml-4 mt-1 list-disc">
             {computed.warnings.map((w, i) => (

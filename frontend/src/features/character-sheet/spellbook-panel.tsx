@@ -82,7 +82,7 @@ export function SpellbookPanel({ character }: { character: Character }) {
         panelBg,
       )}
     >
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-amber-700/30 px-3 py-2 dark:border-amber-500/20 sm:px-4">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-2  sm:px-4">
         <div className="flex items-baseline gap-3">
           <h2
             className={cn(
@@ -110,7 +110,7 @@ export function SpellbookPanel({ character }: { character: Character }) {
         </Button>
       </div>
 
-      <div className="grid shrink-0 gap-2 border-b border-amber-700/20 px-3 py-2 dark:border-amber-500/15 sm:grid-cols-4 sm:px-4">
+      <div className="grid shrink-0 gap-2 border-b border-border px-3 py-2  sm:grid-cols-4 sm:px-4">
         <div className="relative sm:col-span-2">
           <Search
             className={cn(
