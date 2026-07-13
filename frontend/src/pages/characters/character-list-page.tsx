@@ -1,11 +1,12 @@
 import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { Plus } from 'lucide-react'
+import { Plus, Search } from 'lucide-react'
 import { useState } from 'react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { HpBar } from '@/shared/ui/hp-bar'
+import { Input } from '@/shared/ui/input'
 import { MpBar } from '@/shared/ui/mp-bar'
 import { PageChrome } from '@/shared/ui/page-chrome'
 import { SkeletonCardGrid } from '@/shared/ui/skeleton'
@@ -19,17 +20,18 @@ import { charactersQueryOptions } from '@/entities/character/queries'
 import { CharacterPortrait } from './character-portrait'
 
 /**
- * Characters "select screen" — a game-style master/detail: a roster of
- * portraits + names on the left, a big portrait + stat panel for the
- * selected character on the right. Phone stacks (detail on top, roster
- * below). Selection is local UI state; opening the sheet routes to
- * /characters/$id.
+ * Characters "select screen" — a Valorant-style agent-select in three
+ * columns: a filterable thumbnail grid (left), the selected character's big
+ * portrait + lock-in (middle), and its info panel (right). Phone stacks the
+ * three. Selection is local UI state; "Abrir ficha" routes to the sheet.
  */
 export function CharactersListPage() {
   const characters = useQuery(charactersQueryOptions)
   const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [query, setQuery] = useState('')
   const roster = characters.data
   const selected = roster?.find((c) => c.id === selectedId) ?? roster?.[0]
+  const filtered = roster?.filter((c) => matchesQuery(c, query))
 
   return (
     <PageChrome width="full" className="flex min-h-0 flex-1 flex-col gap-6">
@@ -43,59 +45,74 @@ export function CharactersListPage() {
       )}
       {roster?.length === 0 && <NoCharacters />}
 
-      {roster && roster.length > 0 && selected && (
-        <div className="flex min-h-0 flex-1 flex-col-reverse gap-4 lg:flex-row lg:gap-6">
-          <AgentRail
-            roster={roster}
+      {roster && roster.length > 0 && selected && filtered && (
+        <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[20rem_1fr_22rem]">
+          <RosterPanel
+            roster={filtered}
+            query={query}
+            onQuery={setQuery}
             selectedId={selected.id}
             onSelect={setSelectedId}
           />
-          <CharacterDetail character={selected} />
+          <SplashPanel character={selected} />
+          <InfoPanel character={selected} />
         </div>
       )}
     </PageChrome>
   )
 }
 
-/**
- * Agent-select rail (Valorant-style): a scrolling strip of portrait
- * thumbnails. Desktop → narrow vertical column on the left; phone →
- * horizontal strip along the bottom (parent uses flex-col-reverse). A
- * trailing "+" thumbnail creates a new character.
- */
-function AgentRail({
+/** Left column: filter bar over a scrolling thumbnail grid + a create tile. */
+function RosterPanel({
   roster,
+  query,
+  onQuery,
   selectedId,
   onSelect,
 }: {
   roster: Character[]
+  query: string
+  onQuery: (q: string) => void
   selectedId: number
   onSelect: (id: number) => void
 }) {
   return (
-    <div className="flex shrink-0 gap-2 overflow-x-auto pb-2 lg:w-28 lg:min-h-0 lg:flex-col lg:overflow-x-visible lg:overflow-y-auto lg:pb-0">
-      {roster.map((c) => (
-        <RailThumb
-          key={c.id}
-          character={c}
-          selected={c.id === selectedId}
-          onSelect={() => onSelect(c.id)}
+    <div className="flex min-h-0 flex-col gap-3">
+      <div className="relative shrink-0">
+        <Search className="pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="search"
+          value={query}
+          onChange={(e) => onQuery(e.target.value)}
+          placeholder="Buscar personagem"
+          className="pl-8"
+          aria-label="Buscar personagem"
         />
-      ))}
-      <Link
-        to="/characters/new"
-        aria-label="Novo personagem"
-        className="flex w-20 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed py-2 text-muted-foreground hover:bg-accent hover:text-foreground lg:w-full"
-      >
-        <Plus className="size-5" />
-        <span className="text-[11px]">Novo</span>
-      </Link>
+      </div>
+      <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-3 gap-2 overflow-y-auto sm:grid-cols-4 lg:grid-cols-3">
+        {roster.map((c) => (
+          <Thumb
+            key={c.id}
+            character={c}
+            selected={c.id === selectedId}
+            onSelect={() => onSelect(c.id)}
+          />
+        ))}
+        <Link
+          to="/characters/new"
+          aria-label="Novo personagem"
+          className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border border-dashed text-muted-foreground hover:bg-accent hover:text-foreground"
+        >
+          <Plus className="size-5" />
+          <span className="text-[11px]">Novo</span>
+        </Link>
+      </div>
     </div>
   )
 }
 
-/** A single portrait thumbnail in the rail. */
-function RailThumb({
+/** A single portrait thumbnail in the roster grid. */
+function Thumb({
   character,
   selected,
   onSelect,
@@ -109,12 +126,17 @@ function RailThumb({
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
+      title={character.name}
       className={cn(
-        'flex w-20 shrink-0 flex-col items-center gap-1 rounded-lg border p-1.5 transition-colors lg:w-full',
+        'flex flex-col items-center gap-1 rounded-lg border p-1.5 transition-colors',
         selected ? 'border-primary bg-accent' : 'border-border hover:bg-accent',
       )}
     >
-      <CharacterPortrait name={character.name} size="sm" />
+      <CharacterPortrait
+        name={character.name}
+        size="lg"
+        className="aspect-square text-2xl"
+      />
       <span className="w-full truncate text-center text-[11px]">
         {character.name}
       </span>
@@ -122,49 +144,66 @@ function RailThumb({
   )
 }
 
-/** Right column: big portrait + stat panel for the selected character. */
-function CharacterDetail({ character }: { character: Character }) {
-  const races = character.races.map((r) => r.race).join(', ')
-  const classes = character.classes
-    .map((c) => `${c.className} ${c.level}`)
-    .join(' / ')
-
+/** Middle column: dominant portrait with the name overlaid + a lock-in. */
+function SplashPanel({ character }: { character: Character }) {
   return (
-    <Card className="min-w-0 flex-1 overflow-y-auto">
-      <CardContent className="grid gap-6 sm:grid-cols-[20rem_1fr] lg:h-full lg:grid-cols-[24rem_1fr]">
+    <div className="flex min-h-0 flex-col gap-3">
+      <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl">
         <CharacterPortrait
           name={character.name}
           size="lg"
-          className="lg:aspect-auto lg:h-full"
+          className="aspect-auto h-full min-h-64 w-full rounded-xl"
         />
-
-        <div className="flex flex-col gap-4">
+        <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-background/90 to-transparent p-4">
           <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-2xl font-semibold tracking-tight">
-                {character.name}
-              </h2>
-              <Badge variant="secondary">Nv {character.level}</Badge>
-            </div>
+            <h2 className="text-3xl font-semibold tracking-tight">
+              {character.name}
+            </h2>
             <p className="text-sm text-muted-foreground">
-              {[races, character.origin].filter(Boolean).join(' • ')}
+              {primaryClass(character)}
             </p>
-            {classes && <p className="text-sm font-medium">{classes}</p>}
           </div>
-
-          <div className="space-y-1.5">
-            <HpBar current={character.hpCurrent} max={character.hpMax} size="sm" />
-            <MpBar current={character.mpCurrent} max={character.mpMax} size="sm" />
-          </div>
-
-          <AttributeRow character={character} />
-
-          <div className="mt-auto flex flex-wrap gap-2 pt-2">
-            <Link to="/characters/$id" params={{ id: String(character.id) }}>
-              <Button>Abrir ficha</Button>
-            </Link>
-          </div>
+          <Badge variant="secondary">Nv {character.level}</Badge>
         </div>
+      </div>
+      <Link
+        to="/characters/$id"
+        params={{ id: String(character.id) }}
+        className="shrink-0"
+      >
+        <Button className="w-full" size="lg">
+          Abrir ficha
+        </Button>
+      </Link>
+    </div>
+  )
+}
+
+/** Right column: role + name, vitals, and attributes for the selection. */
+function InfoPanel({ character }: { character: Character }) {
+  const races = character.races.map((r) => r.race).join(', ')
+
+  return (
+    <Card className="min-h-0 overflow-y-auto">
+      <CardContent className="flex flex-col gap-5">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">
+            {primaryClass(character)}
+          </p>
+          <h2 className="text-2xl font-semibold tracking-tight">
+            {character.name}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {[races, character.origin].filter(Boolean).join(' • ')}
+          </p>
+        </div>
+
+        <div className="space-y-1.5">
+          <HpBar current={character.hpCurrent} max={character.hpMax} size="sm" />
+          <MpBar current={character.mpCurrent} max={character.mpMax} size="sm" />
+        </div>
+
+        <AttributeRow character={character} />
       </CardContent>
     </Card>
   )
@@ -173,11 +212,11 @@ function CharacterDetail({ character }: { character: Character }) {
 /** Six-attribute mini grid (ABBR + signed modifier). */
 function AttributeRow({ character }: { character: Character }) {
   return (
-    <div className="grid grid-cols-6 gap-1.5">
+    <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6 lg:grid-cols-2">
       {ATTRIBUTE_KEYS.map((key) => (
         <div
           key={key}
-          className="flex flex-col items-center rounded-md border border-border py-1.5"
+          className="flex items-center justify-between rounded-md border border-border px-3 py-1.5"
         >
           <span className="text-[10px] uppercase text-muted-foreground">
             {ATTRIBUTE_ABBR[key]}
@@ -202,6 +241,21 @@ function NoCharacters() {
       </CardContent>
     </Card>
   )
+}
+
+function matchesQuery(character: Character, query: string): boolean {
+  const q = query.trim().toLowerCase()
+  if (q === '') return true
+  const haystack = [character.name, primaryClass(character), character.origin]
+    .join(' ')
+    .toLowerCase()
+  return haystack.includes(q)
+}
+
+function primaryClass(character: Character): string {
+  const first = character.classes[0]
+  if (!first) return character.origin
+  return `${first.className} ${first.level}`
 }
 
 function signed(n: number): string {
