@@ -42,6 +42,14 @@ function RootLayout() {
         (m) => m.routeId === '/campaigns/$id/sessions/$sid',
       ),
   })
+  // Auth screens own the whole viewport too (split-screen AuthShell), so
+  // they render in the bare shell with no app nav.
+  const inAuth = useRouterState({
+    select: (s) =>
+      s.matches.some(
+        (m) => m.routeId === '/login' || m.routeId === '/register',
+      ),
+  })
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
@@ -71,7 +79,7 @@ function RootLayout() {
         onToggleTheme={toggleTheme}
         onLogout={() => logout.mutate()}
         logoutPending={logout.isPending}
-        bare={inMatch}
+        bare={inMatch || inAuth}
       >
         <Outlet />
       </AppShell>
