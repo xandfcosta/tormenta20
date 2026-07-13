@@ -62,7 +62,7 @@ export function EquipmentPanel({ character }: { character: Character }) {
       )}
     >
       <div className="flex shrink-0 items-center border-b border-border px-3 py-2  sm:px-4">
-        <h2 className={cn('font-serif text-lg font-bold tracking-wide', accentStrong)}>
+        <h2 className={cn('text-lg font-bold tracking-wide', accentStrong)}>
           Equipado
         </h2>
       </div>

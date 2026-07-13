@@ -127,7 +127,7 @@ function CombatBox({
           <span className="text-[9px] font-bold uppercase tracking-widest text-red-800/80 dark:text-red-300/80">
             {label}
           </span>
-          <span className="mt-0.5 font-serif text-2xl font-bold leading-none text-red-800 dark:text-red-100">
+          <span className="mt-0.5 text-2xl font-bold leading-none text-red-800 dark:text-red-100">
             {display}
           </span>
         </button>
@@ -141,7 +141,7 @@ function CombatBox({
         <DialogHeader>
           <DialogTitle
             className={cn(
-              'flex items-center gap-2 font-serif text-red-800 dark:text-red-200',
+              'flex items-center gap-2 text-red-800 dark:text-red-200',
             )}
           >
             {icon}
@@ -278,7 +278,7 @@ function MagicBox({
           <span className="text-[9px] font-bold uppercase tracking-widest text-violet-800/80 dark:text-violet-300/80">
             {label}
           </span>
-          <span className="mt-0.5 font-serif text-2xl font-bold leading-none text-violet-800 dark:text-violet-100">
+          <span className="mt-0.5 text-2xl font-bold leading-none text-violet-800 dark:text-violet-100">
             {display}
           </span>
         </button>
@@ -292,7 +292,7 @@ function MagicBox({
         <DialogHeader>
           <DialogTitle
             className={cn(
-              'flex items-center gap-2 font-serif text-violet-800 dark:text-violet-200',
+              'flex items-center gap-2 text-violet-800 dark:text-violet-200',
             )}
           >
             {icon}

@@ -5,8 +5,6 @@ import type { Character, UpdateVitalsInput } from '@/shared/api/api'
 import { api } from '@/shared/api/api'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import { characterQueryOptions } from '@/entities/character/queries'
-import { accentTitle, panelBg, surface } from '@/shared/lib/sheet-theme'
-import { cn } from '@/shared/lib/utils'
 import { CombatStats, MagicStats } from './combat-magic-stats'
 import { ResourceBar } from './resource-bar'
 
@@ -56,13 +54,7 @@ export function VitalsAside({ character }: { character: Character }) {
   const setMp = (next: number) => setVital('mpCurrent', character.mpMax, next)
 
   return (
-    <aside
-      className={cn(
-        'flex min-h-0 flex-col gap-3 overflow-y-auto rounded-xl p-3 sm:p-4',
-        surface,
-        panelBg,
-      )}
-    >
+    <aside className="flex min-h-0 flex-col gap-3 overflow-y-auto rounded-xl border bg-card p-3 sm:p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:gap-3 lg:flex-col">
         <ResourceBar
           label="Vida"
@@ -104,21 +96,11 @@ export function VitalsAside({ character }: { character: Character }) {
 function AttributeBox({ label, value }: { label: string; value: number }) {
   const sign = value >= 0 ? '+' : ''
   return (
-    <div
-      className={cn(
-        'relative rounded-lg border-2 p-2 text-center shadow-inner',
-        'border-border      ',
-      )}
-    >
-      <p className="text-[9px] font-bold uppercase tracking-widest text-foreground ">
+    <div className="rounded-lg border-2 p-2 text-center">
+      <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
         {label}
       </p>
-      <p
-        className={cn(
-          'mt-0.5 font-serif text-2xl font-bold leading-none',
-          accentTitle,
-        )}
-      >
+      <p className="mt-0.5 text-2xl font-bold leading-none text-foreground">
         {sign}
         {value}
       </p>

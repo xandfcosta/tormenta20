@@ -131,7 +131,7 @@ export function ExpertisesPanel({ character }: { character: Character }) {
         <div className="flex items-baseline gap-3">
           <h2
             className={cn(
-              'font-serif text-lg font-bold tracking-wide',
+              'text-lg font-bold tracking-wide',
               accentStrong,
             )}
           >
@@ -254,7 +254,7 @@ function AddCustomExpertiseDialog({
         )}
       >
         <DialogHeader>
-          <DialogTitle className={cn('font-serif', accentStrong)}>
+          <DialogTitle className={cn(accentStrong)}>
             Novo ofício
           </DialogTitle>
         </DialogHeader>

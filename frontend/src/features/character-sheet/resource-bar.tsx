@@ -171,7 +171,7 @@ function ResourceAdjustDialog({
         )}
       >
         <DialogHeader>
-          <DialogTitle className={cn('font-serif', accentStrong)}>
+          <DialogTitle className={cn(accentStrong)}>
             Ajustar {label}
           </DialogTitle>
         </DialogHeader>

@@ -16,7 +16,7 @@ export function AbilitiesSection({
 }) {
   return (
     <section className={cn('rounded-lg border p-3', surface)}>
-      <h3 className={cn('font-serif text-sm font-bold', accentStrong)}>{title}</h3>
+      <h3 className={cn('text-sm font-bold', accentStrong)}>{title}</h3>
       <div className="mt-2">{children}</div>
     </section>
   )

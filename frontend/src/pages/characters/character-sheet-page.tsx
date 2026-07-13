@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/shared/ui/button'
 import { Badge } from '@/shared/ui/badge'
 import { PageChrome } from '@/shared/ui/page-chrome'
-import { SectionHeading } from '@/shared/ui/section-heading'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { characterSheetQueryOptions } from '@/entities/character/queries'
 import { ComputedSheetCards } from '@/features/character-sheet/computed-sheet'
@@ -55,12 +54,10 @@ export function CharacterSheetPage() {
             ← Voltar
           </Button>
         </Link>
-        <SectionHeading variant="kallyadranoch" as="h1" className="text-2xl">
-          <span>
-            {query.data.name}{' '}
-            <Badge variant="secondary">Nv {computed.level}</Badge>
-          </span>
-        </SectionHeading>
+        <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
+          {query.data.name}
+          <Badge variant="secondary">Nv {computed.level}</Badge>
+        </h1>
       </div>
 
       <ComputedSheetCards computed={computed} showWarnings />

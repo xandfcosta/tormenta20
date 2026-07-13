@@ -50,7 +50,7 @@ export function ItemInfoDialog({ item }: { item: CharacterItem }) {
         )}
       >
         <DialogHeader>
-          <DialogTitle className={cn('font-serif', accentStrong)}>
+          <DialogTitle className={cn(accentStrong)}>
             {item.name}
           </DialogTitle>
         </DialogHeader>
@@ -164,7 +164,7 @@ export function ItemFormDialog({
         )}
       >
         <DialogHeader>
-          <DialogTitle className={cn('font-serif', accentStrong)}>
+          <DialogTitle className={cn(accentStrong)}>
             {title}
           </DialogTitle>
         </DialogHeader>

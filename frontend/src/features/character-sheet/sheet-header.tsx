@@ -20,13 +20,6 @@ import type { Character } from '@/shared/api/api'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import { displacementTotal, useCharacterEffects } from '@/entities/character/derived'
 import { characterQueryOptions } from '@/entities/character/queries'
-import {
-  accentBadge,
-  accentTitle,
-  dimText,
-  subtleText,
-  surface,
-} from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
 import { signed } from './signed'
 
@@ -47,49 +40,31 @@ export function SheetHeader({
   return (
     <header
       className={cn(
-        'relative flex flex-wrap items-center justify-between gap-3 overflow-hidden rounded-xl px-4 py-3 sm:px-6',
-        surface,
-        '      ',
+        'flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3 sm:px-6',
         className,
       )}
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(217,119,6,0.18),transparent_50%)] dark:bg-[radial-gradient(circle_at_30%_50%,rgba(251,191,36,0.15),transparent_50%)]" />
-      <div className="relative flex items-center gap-3">
+      <div className="flex items-center gap-3">
         {showBack && (
           <Link to="/characters">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                subtleText,
-                'hover:bg-muted hover:text-foreground dark:hover:bg-muted dark:hover:text-foreground',
-              )}
-            >
+            <Button variant="ghost" size="sm" aria-label="Voltar">
               ←
             </Button>
           </Link>
         )}
         <div className="min-w-0">
-          <p className="text-[10px] uppercase tracking-[0.4em] text-foreground ">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
             Tormenta 20
           </p>
-          <h1
-            className={cn(
-              'truncate font-serif text-2xl font-bold tracking-tight sm:text-3xl',
-              accentTitle,
-            )}
-          >
+          <h1 className="truncate text-2xl font-bold tracking-tight sm:text-3xl">
             {character.name}
           </h1>
-          <p className={cn('mt-0.5 truncate text-xs', subtleText)}>
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
             {races.join(' / ')} • {character.origin}
             {character.god && (
               <>
                 {' '}
-                •{' '}
-                <span className="text-foreground ">
-                  {character.god}
-                </span>
+                • <span className="text-foreground">{character.god}</span>
               </>
             )}
             {' • '}
@@ -103,10 +78,10 @@ export function SheetHeader({
           </p>
         </div>
       </div>
-      <div className="relative flex items-center gap-2">
+      <div className="flex items-center gap-2">
         <div className="flex flex-wrap justify-end gap-1">
           {character.classes.map((c) => (
-            <Badge key={c.className} className={accentBadge}>
+            <Badge key={c.className}>
               {c.className} {c.level}
             </Badge>
           ))}
@@ -175,32 +150,22 @@ function LevelBadge({ character }: { character: Character }) {
 
   return (
     <>
-      <div
-        className={cn(
-          'flex items-center gap-1 rounded-lg border px-2 py-1 text-center',
-          'border-border bg-muted  ',
-        )}
-      >
+      <div className="flex items-center gap-1 rounded-lg border bg-muted px-2 py-1 text-center">
         <button
           type="button"
           onClick={() => trigger('down')}
           disabled={atMin || mutate.isPending}
           aria-label="Diminuir nível"
-          className={cn(
-            'text-foreground transition-colors disabled:opacity-30 ',
-            'hover:text-foreground dark:hover:text-foreground',
-          )}
+          className="text-foreground transition-colors hover:text-foreground disabled:opacity-30"
         >
           <ChevronDown className="size-4" />
         </button>
         <div className="flex flex-col items-center leading-none">
-          <p className={cn('text-[9px] uppercase tracking-widest', subtleText)}>
+          <p className="text-[9px] uppercase tracking-widest text-muted-foreground">
             Nv
           </p>
           <p
-            className={cn(
-              'w-7 text-center font-serif text-2xl font-bold leading-none text-foreground ',
-            )}
+            className="w-7 text-center text-2xl font-bold leading-none text-foreground"
             aria-label="Nível"
           >
             {character.level}
@@ -211,10 +176,7 @@ function LevelBadge({ character }: { character: Character }) {
           onClick={() => trigger('up')}
           disabled={atMax || mutate.isPending}
           aria-label="Aumentar nível"
-          className={cn(
-            'text-foreground transition-colors disabled:opacity-30 ',
-            'hover:text-foreground dark:hover:text-foreground',
-          )}
+          className="text-foreground transition-colors hover:text-foreground disabled:opacity-30"
         >
           <ChevronUp className="size-4" />
         </button>
@@ -257,7 +219,7 @@ function ClassLevelPicker({
           <DialogTitle>{verb} nível — escolha a classe</DialogTitle>
         </DialogHeader>
         {eligible.length === 0 ? (
-          <p className={cn('text-xs italic', dimText)}>
+          <p className="text-xs italic text-muted-foreground">
             Nenhuma classe elegível.
           </p>
         ) : (
@@ -267,15 +229,12 @@ function ClassLevelPicker({
                 <button
                   type="button"
                   onClick={() => onPick(c.className)}
-                  className={cn(
-                    'flex w-full items-center justify-between rounded border px-3 py-2 text-left transition-colors',
-                    'border-border hover:bg-muted  dark:hover:bg-muted',
-                  )}
+                  className="flex w-full items-center justify-between rounded border px-3 py-2 text-left transition-colors hover:bg-muted"
                 >
-                  <span className={cn('text-sm font-semibold', accentTitle)}>
+                  <span className="text-sm font-semibold text-foreground">
                     {c.className}
                   </span>
-                  <span className={cn('text-xs', subtleText)}>
+                  <span className="text-xs text-muted-foreground">
                     {c.level} → {direction === 'up' ? c.level + 1 : c.level - 1}
                   </span>
                 </button>

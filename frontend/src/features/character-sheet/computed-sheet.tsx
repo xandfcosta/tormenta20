@@ -54,7 +54,7 @@ function AttributesCard({ computed }: { computed: ComputedSheet }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-display tracking-wide">Atributos</CardTitle>
+        <CardTitle>Atributos</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
@@ -86,7 +86,7 @@ function VitalsAndMovementCard({ computed }: { computed: ComputedSheet }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-display tracking-wide">
+        <CardTitle>
           Vitais + Deslocamento
         </CardTitle>
       </CardHeader>
@@ -113,7 +113,7 @@ function DefenseCard({ computed }: { computed: ComputedSheet }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-display tracking-wide">Defesa</CardTitle>
+        <CardTitle>Defesa</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 text-sm">
         <p className="text-3xl font-semibold">{total}</p>
@@ -145,7 +145,7 @@ function SavesCard({ computed }: { computed: ComputedSheet }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-display tracking-wide">
+        <CardTitle>
           Resistências
         </CardTitle>
       </CardHeader>
@@ -166,7 +166,7 @@ function AttacksCard({ computed }: { computed: ComputedSheet }) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="font-display tracking-wide">Ataques</CardTitle>
+          <CardTitle>Ataques</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
           Sem arma equipada.
@@ -177,7 +177,7 @@ function AttacksCard({ computed }: { computed: ComputedSheet }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-display tracking-wide">Ataques</CardTitle>
+        <CardTitle>Ataques</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
         {mainHand && (
@@ -224,7 +224,7 @@ function SkillsCard({ computed }: { computed: ComputedSheet }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-display tracking-wide">Perícias</CardTitle>
+        <CardTitle>Perícias</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-1 text-sm sm:grid-cols-3">

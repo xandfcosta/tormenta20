@@ -361,7 +361,7 @@ function ExpertiseBreakdown({
         )}
       >
         <DialogHeader>
-          <DialogTitle className={cn('font-serif', accentStrong)}>
+          <DialogTitle className={cn(accentStrong)}>
             {name}
           </DialogTitle>
         </DialogHeader>

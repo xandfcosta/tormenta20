@@ -186,7 +186,7 @@ export function InventoryPanel({ character }: { character: Character }) {
         <div className="min-w-0">
           <h2
             className={cn(
-              'font-serif text-lg font-bold tracking-wide',
+              'text-lg font-bold tracking-wide',
               accentStrong,
             )}
           >

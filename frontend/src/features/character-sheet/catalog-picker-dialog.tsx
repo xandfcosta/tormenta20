@@ -130,7 +130,7 @@ export function OverlayPickerDialog({
         )}
       >
         <DialogHeader>
-          <DialogTitle className={cn('font-serif', accentStrong)}>
+          <DialogTitle className={cn(accentStrong)}>
             Melhorias & Material — {item.name}
           </DialogTitle>
         </DialogHeader>
@@ -328,7 +328,7 @@ export function AddCatalogItemDialog({
         )}
       >
         <DialogHeader>
-          <DialogTitle className={cn('font-serif', accentStrong)}>
+          <DialogTitle className={cn(accentStrong)}>
             Adicionar do catálogo
           </DialogTitle>
         </DialogHeader>

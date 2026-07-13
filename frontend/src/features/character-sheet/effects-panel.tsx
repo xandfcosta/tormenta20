@@ -148,7 +148,7 @@ function ActiveEffectsSection({ character }: { character: Character }) {
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <h3 className={cn('font-serif text-sm font-bold', accentStrong)}>
+        <h3 className={cn('text-sm font-bold', accentStrong)}>
           Efeitos consumíveis ativos
         </h3>
         <div className="flex gap-1">

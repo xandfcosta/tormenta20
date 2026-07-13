@@ -86,7 +86,7 @@ export function SpellbookPanel({ character }: { character: Character }) {
         <div className="flex items-baseline gap-3">
           <h2
             className={cn(
-              'flex items-center gap-2 font-serif text-lg font-bold tracking-wide',
+              'flex items-center gap-2 text-lg font-bold tracking-wide',
               accentStrong,
             )}
           >
