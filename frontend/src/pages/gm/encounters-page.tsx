@@ -85,36 +85,36 @@ export function EncounterBuilderPage() {
 
       <div className="grid gap-4 lg:grid-cols-[1fr_20rem] lg:items-start">
         <div className="space-y-4">
-      <Card className="gap-3 py-4 lg:gap-6 lg:py-6">
-        <CardHeader>
-          <CardTitle className="text-base">
-            Grupo
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-3">
+      <Card className="py-3 lg:py-4">
+        <CardContent className="flex flex-wrap items-end gap-x-6 gap-y-3">
+          <CardTitle className="self-center text-base">Grupo</CardTitle>
           <div>
             <label className="text-xs font-medium" htmlFor="party-level">
               Nível do grupo
             </label>
-            <NumberInput
-              id="party-level"
-              min={1}
-              max={20}
-              value={partyLevel}
-              onChange={setPartyLevel}
-            />
+            <div className="w-24">
+              <NumberInput
+                id="party-level"
+                min={1}
+                max={20}
+                value={partyLevel}
+                onChange={setPartyLevel}
+              />
+            </div>
           </div>
           <div>
             <label className="text-xs font-medium" htmlFor="party-size">
               Personagens
             </label>
-            <NumberInput
-              id="party-size"
-              min={1}
-              max={8}
-              value={partySize}
-              onChange={setPartySize}
-            />
+            <div className="w-24">
+              <NumberInput
+                id="party-size"
+                min={1}
+                max={8}
+                value={partySize}
+                onChange={setPartySize}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
