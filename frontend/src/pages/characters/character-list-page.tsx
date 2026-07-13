@@ -32,7 +32,7 @@ export function CharactersListPage() {
   const selected = roster?.find((c) => c.id === selectedId) ?? roster?.[0]
 
   return (
-    <PageChrome className="space-y-6">
+    <PageChrome width="full" className="flex min-h-0 flex-1 flex-col gap-6">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Personagens</h1>
       </header>
@@ -44,7 +44,7 @@ export function CharactersListPage() {
       {roster?.length === 0 && <NoCharacters />}
 
       {roster && roster.length > 0 && selected && (
-        <div className="flex flex-col-reverse gap-4 lg:flex-row lg:gap-6">
+        <div className="flex min-h-0 flex-1 flex-col-reverse gap-4 lg:flex-row lg:gap-6">
           <AgentRail
             roster={roster}
             selectedId={selected.id}
@@ -73,7 +73,7 @@ function AgentRail({
   onSelect: (id: number) => void
 }) {
   return (
-    <div className="flex shrink-0 gap-2 overflow-x-auto pb-2 lg:w-28 lg:flex-col lg:overflow-x-visible lg:overflow-y-auto lg:pb-0">
+    <div className="flex shrink-0 gap-2 overflow-x-auto pb-2 lg:w-28 lg:min-h-0 lg:flex-col lg:overflow-x-visible lg:overflow-y-auto lg:pb-0">
       {roster.map((c) => (
         <RailThumb
           key={c.id}
@@ -130,9 +130,13 @@ function CharacterDetail({ character }: { character: Character }) {
     .join(' / ')
 
   return (
-    <Card className="min-w-0 flex-1">
-      <CardContent className="grid gap-6 sm:grid-cols-[16rem_1fr]">
-        <CharacterPortrait name={character.name} size="lg" />
+    <Card className="min-w-0 flex-1 overflow-y-auto">
+      <CardContent className="grid gap-6 sm:grid-cols-[20rem_1fr] lg:h-full lg:grid-cols-[24rem_1fr]">
+        <CharacterPortrait
+          name={character.name}
+          size="lg"
+          className="lg:aspect-auto lg:h-full"
+        />
 
         <div className="flex flex-col gap-4">
           <div>
