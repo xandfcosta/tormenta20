@@ -3,11 +3,11 @@ import { meQueryOptions } from '@/entities/user/queries'
 import { HomePage } from '@/pages/home/home-page'
 
 export const Route = createFileRoute('/')({
-  // Logged-in users land on their campaign list (the app's home base per
-  // the UX model); the marketing hero in HomePage is for anonymous visitors.
+  // `/` is the authed dashboard overview. Anonymous visitors have no landing
+  // page — they go straight to login.
   beforeLoad: async ({ context }) => {
     const user = await context.queryClient.ensureQueryData(meQueryOptions)
-    if (user) throw redirect({ to: '/campaigns' })
+    if (!user) throw redirect({ to: '/login' })
   },
   component: HomePage,
 })
