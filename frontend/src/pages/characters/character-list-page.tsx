@@ -89,7 +89,7 @@ function RosterPanel({
           aria-label="Buscar personagem"
         />
       </div>
-      <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-3 gap-2 overflow-y-auto sm:grid-cols-4 lg:grid-cols-3">
+      <div className="flex gap-2 overflow-x-auto pb-2 lg:grid lg:min-h-0 lg:flex-1 lg:auto-rows-min lg:grid-cols-3 lg:overflow-x-visible lg:overflow-y-auto lg:pb-0">
         {roster.map((c) => (
           <Thumb
             key={c.id}
@@ -101,7 +101,7 @@ function RosterPanel({
         <Link
           to="/characters/new"
           aria-label="Novo personagem"
-          className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border border-dashed text-muted-foreground hover:bg-accent hover:text-foreground"
+          className="flex w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed py-4 text-muted-foreground hover:bg-accent hover:text-foreground lg:aspect-square lg:w-auto lg:py-0"
         >
           <Plus className="size-5" />
           <span className="text-[11px]">Novo</span>
@@ -128,7 +128,7 @@ function Thumb({
       aria-pressed={selected}
       title={character.name}
       className={cn(
-        'flex flex-col items-center gap-1 rounded-lg border p-1.5 transition-colors',
+        'flex w-24 shrink-0 flex-col items-center gap-1 rounded-lg border p-1.5 transition-colors lg:w-auto',
         selected ? 'border-primary bg-accent' : 'border-border hover:bg-accent',
       )}
     >
