@@ -85,13 +85,13 @@ export function EncounterBuilderPage() {
 
       <div className="grid gap-4 lg:grid-cols-[1fr_20rem] lg:items-start">
         <div className="space-y-4">
-      <Card>
+      <Card className="gap-3 py-4 lg:gap-6 lg:py-6">
         <CardHeader>
           <CardTitle className="text-base">
             Grupo
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4 sm:grid-cols-2">
+        <CardContent className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-xs font-medium" htmlFor="party-level">
               Nível do grupo
@@ -119,7 +119,7 @@ export function EncounterBuilderPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="gap-3 py-4 lg:gap-6 lg:py-6">
         <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="text-base">
             Composição
@@ -158,17 +158,17 @@ export function EncounterBuilderPage() {
       </Card>
         </div>
 
-        <Card className="sticky top-0 z-10 order-first self-start lg:order-none lg:top-4">
+        <Card className="sticky top-0 z-10 order-first gap-3 self-start py-4 lg:order-none lg:gap-6 lg:py-6 lg:top-4">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base">Resultado</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <Stat label="ND do encontro" value={formatNd(encounterNd)} />
-              <Stat label="XP / personagem" value={totalXp} />
-              <Stat label="Gap vs. grupo" value={signed(gap)} />
+            <div className="grid grid-cols-4 gap-2 text-sm lg:grid-cols-2 lg:gap-3">
+              <Stat label="ND" value={formatNd(encounterNd)} />
+              <Stat label="XP" value={totalXp} />
+              <Stat label="Gap" value={signed(gap)} />
               <div>
-                <p className="text-xs text-muted-foreground">Dificuldade</p>
+                <p className="text-xs text-muted-foreground">Dif.</p>
                 <Badge className="mt-1" variant={difficulty.variant}>
                   {difficulty.label}
                 </Badge>
