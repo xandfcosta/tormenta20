@@ -152,7 +152,7 @@ function SplashPanel({ character }: { character: Character }) {
         <CharacterPortrait
           name={character.name}
           size="lg"
-          className="aspect-auto h-full min-h-64 w-full rounded-xl"
+          className="aspect-auto h-full min-h-36 w-full rounded-xl lg:min-h-64"
         />
         <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-background/90 to-transparent p-4">
           <div>
