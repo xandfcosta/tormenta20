@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Trash2 } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -119,7 +120,7 @@ export function EncounterBuilderPage() {
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="text-base">
             Composição
           </CardTitle>
@@ -157,7 +158,7 @@ export function EncounterBuilderPage() {
       </Card>
         </div>
 
-        <Card className="lg:sticky lg:top-4">
+        <Card className="sticky top-0 z-10 order-first self-start lg:order-none lg:top-4">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base">Resultado</CardTitle>
           </CardHeader>
@@ -198,9 +199,9 @@ function EntryRow({
   onRemove: () => void
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-md border p-2 text-sm">
-      <div className="min-w-[140px] flex-1">
-        <p className="font-medium">
+    <div className="flex items-center gap-2 rounded-md border p-2 text-sm">
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-medium">
           {group.monster.name}{' '}
           <Badge variant="secondary">ND {formatNd(group.monster.nd)}</Badge>
         </p>
@@ -208,7 +209,7 @@ function EntryRow({
           Grupo: ND {formatNd(group.groupNd)}
         </p>
       </div>
-      <div className="w-20">
+      <div className="w-16 shrink-0">
         <NumberInput
           min={1}
           max={30}
@@ -216,8 +217,14 @@ function EntryRow({
           onChange={onQuantity}
         />
       </div>
-      <Button variant="ghost" size="sm" onClick={onRemove}>
-        Remover
+      <Button
+        variant="ghost"
+        size="icon"
+        className="shrink-0"
+        onClick={onRemove}
+        aria-label={`Remover ${group.monster.name}`}
+      >
+        <Trash2 className="size-4" />
       </Button>
     </div>
   )
