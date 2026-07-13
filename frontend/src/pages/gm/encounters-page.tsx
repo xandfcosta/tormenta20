@@ -1,4 +1,11 @@
 import { useMemo, useState } from 'react'
+import {
+  type ColumnFiltersState,
+  createColumnHelper,
+  getCoreRowModel,
+  getFilteredRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -6,9 +13,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
 import { PageChrome } from '@/shared/ui/page-chrome'
+import { VirtualList } from '@/shared/ui/virtual-list'
 import { GmPageHeader } from '@/features/gm-tools/gm-page-header'
 import { SendEncounterToSessionButton } from '@/features/gm-tools/send-encounter-to-session'
-import { BESTIARY, encounterXp } from '@tormenta20/t20-data'
+import { BESTIARY, type Monster, encounterXp } from '@tormenta20/t20-data'
 import {
   type EnrichedGroup,
   type EncounterEntry as Entry,
@@ -217,21 +225,43 @@ function EntryRow({
 
 // ─── Monster picker Dialog ──────────────────────────────────────
 
+// Name filter runs through a headless table; the whole bestiary can grow, so
+// the results render in a virtualized list.
+const pickerColumnHelper = createColumnHelper<Monster>()
+const pickerColumns = [
+  pickerColumnHelper.accessor('name', {
+    id: 'name',
+    filterFn: (row, id, value: string) => {
+      const q = normalize(value)
+      return !q || normalize(row.getValue<string>(id)).includes(q)
+    },
+  }),
+]
+
 function MonsterPickerDialog({
   onPick,
 }: {
   onPick: (id: string) => void
 }) {
   const [query, setQuery] = useState('')
-  const filtered = useMemo(() => {
-    const q = normalize(query)
-    return BESTIARY.filter((m) => !q || normalize(m.name).includes(q))
-      .slice()
-      .sort((a, b) => a.nd - b.nd || a.name.localeCompare(b.name))
-  }, [query])
+  const columnFilters = useMemo<ColumnFiltersState>(
+    () => [{ id: 'name', value: query }],
+    [query],
+  )
+  const table = useReactTable({
+    data: BESTIARY as Monster[],
+    columns: pickerColumns,
+    state: { columnFilters },
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+  })
+  const filtered = table
+    .getRowModel()
+    .rows.map((r) => r.original)
+    .sort((a, b) => a.nd - b.nd || a.name.localeCompare(b.name))
 
   return (
-    <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+    <DialogContent className="sm:max-w-lg">
       <DialogHeader>
         <DialogTitle>Escolher monstro</DialogTitle>
       </DialogHeader>
@@ -242,10 +272,14 @@ function MonsterPickerDialog({
           placeholder="Buscar por nome…"
           autoFocus
         />
-        <div className="space-y-1">
-          {filtered.map((m) => (
+        <VirtualList
+          items={filtered}
+          estimateSize={44}
+          gap={4}
+          className="max-h-[60vh]"
+          getKey={(m) => m.id}
+          renderItem={(m) => (
             <button
-              key={m.id}
               type="button"
               onClick={() => onPick(m.id)}
               className="flex w-full items-center justify-between rounded-md border p-2 text-sm transition-colors hover:border-primary"
@@ -253,8 +287,8 @@ function MonsterPickerDialog({
               <span>{m.name}</span>
               <Badge variant="secondary">ND {formatNd(m.nd)}</Badge>
             </button>
-          ))}
-        </div>
+          )}
+        />
       </div>
     </DialogContent>
   )

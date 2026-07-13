@@ -1,5 +1,11 @@
 import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import {
+  createColumnHelper,
+  getCoreRowModel,
+  getFilteredRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
 import { Plus, Search } from 'lucide-react'
 import { useState } from 'react'
 import { Badge } from '@/shared/ui/badge'
@@ -19,6 +25,17 @@ import {
 import { charactersQueryOptions } from '@/entities/character/queries'
 import { CharacterPortrait } from './character-portrait'
 
+// Headless table drives the roster search (name / class / origin) via the
+// built-in global filter. Rows are read back out and rendered as thumbnails.
+const columnHelper = createColumnHelper<Character>()
+const columns = [
+  columnHelper.accessor('name', { id: 'name' }),
+  columnHelper.accessor((c) => primaryClass(c), { id: 'class' }),
+  columnHelper.accessor('origin', { id: 'origin' }),
+]
+
+const EMPTY: Character[] = []
+
 /**
  * Characters "select screen" — a Valorant-style agent-select in three
  * columns: a filterable thumbnail grid (left), the selected character's big
@@ -31,7 +48,16 @@ export function CharactersListPage() {
   const [query, setQuery] = useState('')
   const roster = characters.data
   const selected = roster?.find((c) => c.id === selectedId) ?? roster?.[0]
-  const filtered = roster?.filter((c) => matchesQuery(c, query))
+
+  const table = useReactTable({
+    data: roster ?? EMPTY,
+    columns,
+    state: { globalFilter: query },
+    onGlobalFilterChange: setQuery,
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+  })
+  const filtered = table.getRowModel().rows.map((r) => r.original)
 
   return (
     <PageChrome width="full" className="flex min-h-0 flex-1 flex-col gap-6">
@@ -241,15 +267,6 @@ function NoCharacters() {
       </CardContent>
     </Card>
   )
-}
-
-function matchesQuery(character: Character, query: string): boolean {
-  const q = query.trim().toLowerCase()
-  if (q === '') return true
-  const haystack = [character.name, primaryClass(character), character.origin]
-    .join(' ')
-    .toLowerCase()
-  return haystack.includes(q)
 }
 
 function primaryClass(character: Character): string {
