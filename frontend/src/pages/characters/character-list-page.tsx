@@ -77,7 +77,7 @@ function RosterPanel({
   onSelect: (id: number) => void
 }) {
   return (
-    <div className="flex min-h-0 flex-col gap-3">
+    <div className="flex min-h-0 min-w-0 flex-col gap-3">
       <div className="relative shrink-0">
         <Search className="pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -147,7 +147,7 @@ function Thumb({
 /** Middle column: dominant portrait with the name overlaid + a lock-in. */
 function SplashPanel({ character }: { character: Character }) {
   return (
-    <div className="flex min-h-0 flex-col gap-3">
+    <div className="flex min-h-0 min-w-0 flex-col gap-3">
       <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl">
         <CharacterPortrait
           name={character.name}
@@ -184,7 +184,7 @@ function InfoPanel({ character }: { character: Character }) {
   const races = character.races.map((r) => r.race).join(', ')
 
   return (
-    <Card className="min-h-0 overflow-y-auto">
+    <Card className="min-h-0 min-w-0 overflow-y-auto">
       <CardContent className="flex flex-col gap-5">
         <div>
           <p className="text-xs uppercase tracking-widest text-muted-foreground">
