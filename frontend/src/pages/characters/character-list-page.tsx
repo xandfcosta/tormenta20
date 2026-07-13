@@ -184,13 +184,13 @@ function InfoPanel({ character }: { character: Character }) {
   const races = character.races.map((r) => r.race).join(', ')
 
   return (
-    <Card className="min-h-0 min-w-0 overflow-y-auto">
-      <CardContent className="flex flex-col gap-5">
+    <Card className="min-h-0 min-w-0 gap-0 overflow-y-auto py-4 lg:py-6">
+      <CardContent className="flex flex-col gap-3 px-4 lg:gap-5 lg:px-6">
         <div>
           <p className="text-xs uppercase tracking-widest text-muted-foreground">
             {primaryClass(character)}
           </p>
-          <h2 className="text-2xl font-semibold tracking-tight">
+          <h2 className="text-xl font-semibold tracking-tight lg:text-2xl">
             {character.name}
           </h2>
           <p className="text-sm text-muted-foreground">
@@ -212,11 +212,11 @@ function InfoPanel({ character }: { character: Character }) {
 /** Six-attribute mini grid (ABBR + signed modifier). */
 function AttributeRow({ character }: { character: Character }) {
   return (
-    <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6 lg:grid-cols-2">
+    <div className="grid grid-cols-6 gap-1.5 lg:grid-cols-2">
       {ATTRIBUTE_KEYS.map((key) => (
         <div
           key={key}
-          className="flex items-center justify-between rounded-md border border-border px-3 py-1.5"
+          className="flex flex-col items-center rounded-md border border-border px-1 py-1 lg:flex-row lg:justify-between lg:px-3 lg:py-1.5"
         >
           <span className="text-[10px] uppercase text-muted-foreground">
             {ATTRIBUTE_ABBR[key]}
