@@ -18,11 +18,13 @@ export function RandomTablesPage() {
     <PageChrome className="space-y-4">
       <GmPageHeader title="Tabelas de mesa" />
 
-      <RuinaCard />
-      <ChaseEventCard />
-      <BuscaCard />
-      <ConsequenciasCard />
-      <DungeonIdeaCard />
+      <div className="grid items-start gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <RuinaCard />
+        <ChaseEventCard />
+        <BuscaCard />
+        <ConsequenciasCard />
+        <DungeonIdeaCard />
+      </div>
     </PageChrome>
   )
 }
@@ -52,7 +54,7 @@ function RuinaCard() {
   }
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-wrap items-center justify-between gap-2">
         <CardTitle>
           Ermos — Ruína (d6, p269)
         </CardTitle>
@@ -90,7 +92,7 @@ function ChaseEventCard() {
   }
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-wrap items-center justify-between gap-2">
         <CardTitle>
           Perseguições (d20, p274)
         </CardTitle>
@@ -145,7 +147,7 @@ function BuscaCard() {
   }
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-wrap items-center justify-between gap-2">
         <CardTitle>
           Buscas (2d12, p279)
         </CardTitle>
@@ -204,7 +206,7 @@ function ConsequenciasCard() {
   }
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-wrap items-center justify-between gap-2">
         <CardTitle>
           Consequências de Buscas (p279)
         </CardTitle>
@@ -267,7 +269,7 @@ function DungeonIdeaCard() {
   }
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-wrap items-center justify-between gap-2">
         <CardTitle>
           Ideias de masmorra (d20, p263)
         </CardTitle>
