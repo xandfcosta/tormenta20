@@ -47,6 +47,10 @@ export function VirtualList<T>({
     count: items.length,
     getScrollElement: () => scrollRef.current,
     estimateSize: () => estimateSize,
+    // Key measurements by item identity, not index — otherwise filtering
+    // (which shuffles items across indices) reuses stale row heights and the
+    // rows overlap / leave gaps.
+    getItemKey: (index) => getKey(items[index] as T, index),
     overscan,
     gap,
   })
@@ -75,6 +79,9 @@ export function WindowVirtualList<T>({
   const virtualizer = useWindowVirtualizer({
     count: items.length,
     estimateSize: () => estimateSize,
+    // Key measurements by item identity, not index (see VirtualList) so
+    // filtering doesn't reuse stale row heights.
+    getItemKey: (index) => getKey(items[index] as T, index),
     overscan,
     gap,
     // Offset of this list from the top of the page scroll, so row positions
