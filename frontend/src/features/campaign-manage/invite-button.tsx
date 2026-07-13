@@ -70,8 +70,8 @@ export function InviteButton({ campaignId }: { campaignId: number }) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 font-display tracking-wide">
-            <Share2 className="size-5 text-[color:var(--primary)]" />
+          <DialogTitle className="flex items-center gap-2">
+            <Share2 className="size-5" />
             Convite para a campanha
           </DialogTitle>
           <DialogDescription>

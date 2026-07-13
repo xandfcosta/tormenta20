@@ -8,7 +8,6 @@ import { campaignQueryOptions } from '@/entities/campaign/queries'
 import { campaignSessionsQueryOptions } from '@/entities/session/queries'
 import { CampaignHeaderCard } from '@/features/campaign-manage/header-card'
 import { DeleteCampaignButton } from '@/features/campaign-manage/delete-campaign-button'
-import { InviteButton } from '@/features/campaign-manage/invite-button'
 import { MembersCard } from '@/features/campaign-manage/members-card'
 import { SessionsCard } from '@/features/campaign-manage/sessions-card'
 
@@ -48,12 +47,7 @@ export function CampaignDetailPage() {
             ← Voltar
           </Button>
         </Link>
-        {isGm && (
-          <div className="flex items-center gap-2">
-            <InviteButton campaignId={campaignId} />
-            <DeleteCampaignButton campaign={campaign.data} />
-          </div>
-        )}
+        {isGm && <DeleteCampaignButton campaign={campaign.data} />}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
@@ -76,7 +70,7 @@ export function CampaignDetailPage() {
 
         <div className="space-y-6">
           <CampaignHeaderCard campaign={campaign.data} />
-          <MembersCard campaignId={campaignId} />
+          <MembersCard campaignId={campaignId} isGm={isGm} />
         </div>
       </div>
     </PageChrome>
