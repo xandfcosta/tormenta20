@@ -147,7 +147,7 @@ function MemberRow({
     char?.classes.map((c) => `${c.className} ${c.level}`).join(' / ') ?? '—'
 
   return (
-    <div className="flex items-center justify-between rounded-md border p-2 text-sm transition hover:border-[color:var(--primary)]/50">
+    <div className="flex items-center justify-between rounded-md border p-2 text-sm transition-colors hover:border-primary">
       <Link
         to="/characters/$id"
         params={{ id: String(member.characterId) }}

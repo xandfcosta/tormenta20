@@ -35,9 +35,7 @@ export function SessionsCard({ campaignId }: { campaignId: number }) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <SectionHeading variant="kallyadranoch" as="h2">
-          Sessões
-        </SectionHeading>
+        <SectionHeading as="h2">Sessões</SectionHeading>
         <Button
           size="sm"
           disabled={mutation.isPending}
@@ -80,7 +78,7 @@ function SessionRow({
       to="/campaigns/$id/sessions/$sid"
       params={{ id: String(campaignId), sid: String(session.id) }}
     >
-      <div className="flex items-center justify-between rounded-md border p-2 text-sm transition hover:border-[color:var(--primary)]/50">
+      <div className="flex items-center justify-between rounded-md border p-2 text-sm transition-colors hover:border-primary">
         <div>
           <p className="font-medium">
             Sessão {session.sessionNumber}{' '}

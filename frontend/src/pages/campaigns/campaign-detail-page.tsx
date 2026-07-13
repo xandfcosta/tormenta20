@@ -56,23 +56,29 @@ export function CampaignDetailPage() {
         )}
       </div>
 
-      {activeSession && (
-        <Link
-          to="/campaigns/$id/sessions/$sid"
-          params={{ id, sid: String(activeSession.id) }}
-        >
-          <div className="flex items-center justify-between rounded-md border-2 border-[color:var(--primary)] bg-[color-mix(in_oklch,var(--primary)_8%,transparent)] p-3 transition hover:bg-[color-mix(in_oklch,var(--primary)_14%,transparent)]">
-            <span className="font-display tracking-wide">
-              Sessão {activeSession.sessionNumber} em andamento
-            </span>
-            <Button size="sm">Entrar →</Button>
-          </div>
-        </Link>
-      )}
+      <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
+        <div className="space-y-6">
+          {activeSession && (
+            <Link
+              to="/campaigns/$id/sessions/$sid"
+              params={{ id, sid: String(activeSession.id) }}
+            >
+              <div className="flex items-center justify-between rounded-lg border border-primary bg-primary/5 p-3 transition-colors hover:bg-primary/10">
+                <span className="font-medium">
+                  Sessão {activeSession.sessionNumber} em andamento
+                </span>
+                <Button size="sm">Entrar →</Button>
+              </div>
+            </Link>
+          )}
+          <SessionsCard campaignId={campaignId} />
+        </div>
 
-      <CampaignHeaderCard campaign={campaign.data} />
-      <MembersCard campaignId={campaignId} />
-      <SessionsCard campaignId={campaignId} />
+        <div className="space-y-6">
+          <CampaignHeaderCard campaign={campaign.data} />
+          <MembersCard campaignId={campaignId} />
+        </div>
+      </div>
     </PageChrome>
   )
 }

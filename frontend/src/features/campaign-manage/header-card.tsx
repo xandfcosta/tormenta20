@@ -37,9 +37,7 @@ export function CampaignHeaderCard({ campaign }: { campaign: Campaign }) {
       <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-4">
           <div className="space-y-1">
-            <SectionHeading variant="aharadak" as="h1">
-              {campaign.name}
-            </SectionHeading>
+            <SectionHeading as="h2">{campaign.name}</SectionHeading>
             <p className="flex items-center gap-1 text-xs text-muted-foreground">
               <CalendarClock className="size-3" />
               Criada em{' '}
