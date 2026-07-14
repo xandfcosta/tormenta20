@@ -1,11 +1,14 @@
-# Full stack: nginx serves the SPA + reverse-proxies the API/socket.io; the
-# Nest API runs on SQLite (volume-backed), migrating on boot.
+# Local-network stack: nginx serves the SPA + reverse-proxies the API/socket.io;
+# the Nest API runs on a host-stored SQLite file. No TLS — intended for a trusted
+# LAN over plain HTTP.
 #
+#   pnpm db:migrate          # apply migrations to ./data/app.db (host, once/updates)
 #   docker compose up --build
-#   open http://localhost:8080
+#   open http://<host-lan-ip>:8080
 #
-# The API is NOT published — only nginx (web) is reachable; it proxies /api and
-# /socket.io to the api service over the internal network.
+# Migrations are NOT run inside the image (the API image has no Prisma CLI). Run
+# `pnpm db:migrate` on the host before starting/upgrading. Back up the DB with
+# `pnpm db:backup` (writes ./backups/app-<timestamp>.db).
 
 services:
   api:
@@ -14,18 +17,19 @@ services:
       dockerfile: backend/Dockerfile
     environment:
       DATABASE_URL: file:/data/app.db
-      # CHANGE in any real deployment — signs session JWTs.
+      # CHANGE this — signs session JWTs.
       JWT_SECRET: ${JWT_SECRET:-dev-only-change-me}
       JWT_EXPIRES_IN: 7d
       COOKIE_NAME: t20_session
+      # LAN over plain HTTP: keep the cookie non-secure. Set COOKIE_SECURE=true
+      # only if you terminate TLS in front.
+      COOKIE_SECURE: "false"
       CORS_ORIGIN: http://localhost:8080
-      # Kept non-production so the session cookie's `secure` flag stays off over
-      # plain HTTP. For a real deploy: set NODE_ENV=production AND terminate TLS
-      # in front (secure cookies require HTTPS).
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: "3000"
     volumes:
-      - db-data:/data
+      # SQLite file on the host disk (survives image rebuilds; back up directly).
+      - ./data:/data
     expose:
       - "3000"
     restart: unless-stopped
@@ -39,6 +43,3 @@ services:
     depends_on:
       - api
     restart: unless-stopped
-
-volumes:
-  db-data:

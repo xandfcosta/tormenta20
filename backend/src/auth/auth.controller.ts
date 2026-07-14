@@ -29,11 +29,14 @@ export class AuthController {
   }
 
   private cookieOptions(): CookieOptions {
-    const isProd = this.config.get<string>('NODE_ENV') === 'production';
+    // Decoupled from NODE_ENV: this app runs on a local network over plain HTTP,
+    // where a `secure` cookie would never be sent. Opt in explicitly with
+    // COOKIE_SECURE=true only when TLS terminates in front.
+    const secure = this.config.get<string>('COOKIE_SECURE') === 'true';
     return {
       httpOnly: true,
       sameSite: 'lax',
-      secure: isProd,
+      secure,
       path: '/',
       maxAge: ONE_WEEK_MS,
     };

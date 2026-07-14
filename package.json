@@ -11,7 +11,9 @@
     "test": "pnpm -r run test",
     "typecheck": "pnpm -r run typecheck",
     "prisma:generate": "pnpm --filter backend exec prisma generate",
-    "prisma:migrate": "pnpm --filter backend exec prisma migrate dev"
+    "prisma:migrate": "pnpm --filter backend exec prisma migrate dev",
+    "db:migrate": "mkdir -p data && DATABASE_URL=file:../data/app.db pnpm --filter backend exec prisma migrate deploy",
+    "db:backup": "pnpm --filter backend run db:backup"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.0",

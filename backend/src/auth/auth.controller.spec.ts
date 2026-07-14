@@ -96,18 +96,17 @@ describe('AuthController.register', () => {
     );
   });
 
-  it('sets secure=true only in production', async () => {
+  it('sets secure=true only when COOKIE_SECURE=true (TLS in front)', async () => {
     const { controller, config } = await buildController();
-    config.set('NODE_ENV', 'production');
+    config.set('COOKIE_SECURE', 'true');
     const res = fakeResponse();
     await controller.register({ email: 'a@b.com', password: 'pw' }, res);
     const opts = (res.cookie as jest.Mock).mock.calls[0]![2];
     expect(opts.secure).toBe(true);
   });
 
-  it('sets secure=false outside production', async () => {
-    const { controller, config } = await buildController();
-    config.set('NODE_ENV', 'development');
+  it('sets secure=false by default (local network, plain HTTP)', async () => {
+    const { controller } = await buildController();
     const res = fakeResponse();
     await controller.register({ email: 'a@b.com', password: 'pw' }, res);
     const opts = (res.cookie as jest.Mock).mock.calls[0]![2];

@@ -32,16 +32,16 @@ RUN pnpm --filter @tormenta20/t20-data build \
  && pnpm --filter backend exec prisma generate \
  && pnpm --filter backend build
 
-# Self-contained deploy dir: real @tormenta20/t20-data, native better-sqlite3,
-# and the Prisma CLI (kept for `migrate deploy` at runtime).
-RUN pnpm --filter backend deploy --legacy /app
+# Prod-only, self-contained deploy dir: real @tormenta20/t20-data + native
+# better-sqlite3, but NO Prisma CLI / devDeps. Schema migrations are applied
+# from the host (`pnpm db:migrate`), never from inside this image.
+RUN pnpm --filter backend deploy --prod --legacy /app
 
 FROM node:22-slim AS runtime
+ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=build /app /app
-COPY backend/docker-entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh && mkdir -p /data
-# SQLite lives on a mounted volume; migrations apply against it on boot.
+# SQLite lives on a host bind-mount at /data; the DB must already be migrated.
 ENV DATABASE_URL=file:/data/app.db
 EXPOSE 3000
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["node", "dist/main"]
