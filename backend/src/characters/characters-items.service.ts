@@ -9,7 +9,14 @@ import {
   CreateItemDto,
   UpdateItemDto,
 } from './dto/character.dto';
-import { getCatalogItem, isCatalogId } from '@tormenta20/t20-data';
+import {
+  getCatalogItem,
+  isCatalogId,
+  isValid,
+  validateConsumeQuantity,
+  validateEquipChange,
+  type EquippedState,
+} from '@tormenta20/t20-data';
 import {
   assertOverlaysCompatible,
   assertSlotsMultiple,
@@ -227,34 +234,18 @@ export class CharacterItemsService {
       },
       select: { equipped: true },
     })) as { equipped: string | null }[];
-    const vestedCount = items.filter((i) => i.equipped === 'vested').length;
-    const handsUsed = items.reduce(
-      (s, i) =>
-        s +
-        (i.equipped === 'wielded' ? 1 : i.equipped === 'wielded2' ? 2 : 0),
-      0,
+    // Shared rule (t20-data): same 4-vested / 2-hands caps the frontend uses
+    // to pre-validate an equip, so client optimism can't diverge from here.
+    const errors = validateEquipChange(
+      items.map((i) => i.equipped as EquippedState | null),
+      newEquipped,
     );
-    const incomingHands =
-      newEquipped === 'wielded' ? 1 : newEquipped === 'wielded2' ? 2 : 0;
-    const incomingVested = newEquipped === 'vested' ? 1 : 0;
-    if (vestedCount + incomingVested > 4) {
+    if (errors.length > 0) {
       throw new BadRequestException({
         statusCode: 400,
         error: 'Bad Request',
         message: 'Validation failed',
-        fieldErrors: {
-          equipped: ['Limite de 4 itens vestidos atingido'],
-        },
-      });
-    }
-    if (handsUsed + incomingHands > 2) {
-      throw new BadRequestException({
-        statusCode: 400,
-        error: 'Bad Request',
-        message: 'Validation failed',
-        fieldErrors: {
-          equipped: ['Limite de 2 mãos atingido'],
-        },
+        fieldErrors: { equipped: [errors[0].message] },
       });
     }
   }
@@ -281,7 +272,7 @@ export class CharacterItemsService {
         `Item "${item.name}" is not consumable`,
       );
     }
-    if (item.quantity < 1) {
+    if (!isValid(validateConsumeQuantity(item.quantity))) {
       throw new BadRequestException(`No remaining uses of "${item.name}"`);
     }
 

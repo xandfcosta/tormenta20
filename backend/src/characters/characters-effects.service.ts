@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { SPELL_CATALOG } from '@tormenta20/t20-data';
+import { SPELL_CATALOG, isValid, validateApplyBuff } from '@tormenta20/t20-data';
 import { PrismaService } from '../prisma/prisma.service';
 import { CharactersService } from './characters.service';
 import type { ApplyEffectDto } from './dto/character.dto';
@@ -46,8 +46,9 @@ export class CharacterEffectsService {
     dto: ApplyEffectDto,
   ) {
     await this.characters.findOne(callerId, characterId);
-    const spell = SPELL_CATALOG[dto.spellId];
-    if (!spell?.buff) {
+    // Shared rule (t20-data): the spell must carry a buff block to apply as a
+    // scoped ActiveEffect — same check the frontend uses.
+    if (!isValid(validateApplyBuff(dto.spellId))) {
       throw new BadRequestException({
         statusCode: 400,
         error: 'Bad Request',
@@ -55,8 +56,10 @@ export class CharacterEffectsService {
         fieldErrors: { spellId: ['Magia sem efeito aplicável'] },
       });
     }
-    const scope = dto.scope ?? spell.buff.defaultScope;
-    const modifiers = JSON.stringify(spell.buff.modifiers);
+    // validateApplyBuff guarantees the catalog entry + buff exist.
+    const buff = SPELL_CATALOG[dto.spellId].buff!;
+    const scope = dto.scope ?? buff.defaultScope;
+    const modifiers = JSON.stringify(buff.modifiers);
     await this.prisma.activeEffect.upsert({
       where: {
         characterId_catalogId_scope: {

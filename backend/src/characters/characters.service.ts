@@ -17,6 +17,8 @@ import { EXPERTISES } from './t20-constants';
 import {
   PROFICIENCY_CATEGORIES,
   characterProficiencies,
+  isValid,
+  validateTotalLevel,
   type ProficiencyCategory,
 } from '@tormenta20/t20-data';
 import {
@@ -316,7 +318,12 @@ export class CharactersService {
         .filter((c) => c.className !== dto.className)
         .reduce((sum, c) => sum + c.level, 0);
       const newTotal = otherSum + dto.level;
-      if (newTotal > 20) {
+      // Shared rule (t20-data): class levels ≥ 1 and total ≤ 20 — the same
+      // guard the frontend applies before an optimistic level bump.
+      const projected = classes.map((c) =>
+        c.className === dto.className ? { ...c, level: dto.level } : c,
+      );
+      if (!isValid(validateTotalLevel(projected))) {
         throw new BadRequestException({
           statusCode: 400,
           error: 'Bad Request',
