@@ -1,4 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useForm } from '@tanstack/react-form'
+import { z } from 'zod'
 import { Plus, Search } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/shared/ui/button'
@@ -9,6 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/shared/ui/dialog'
+import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 import type {
   AttributeKey,
@@ -192,6 +195,17 @@ export function ExpertisesPanel({ character }: { character: Character }) {
   )
 }
 
+/** A custom "ofício": a free-text name plus the attribute it keys off. The
+ *  attribute comes from a fixed select, so only the name needs validating. */
+const customExpertiseSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Informe um nome.')
+    .max(40, 'Máximo 40 caracteres.'),
+  attribute: z.enum(ATTRIBUTE_KEYS),
+})
+
 function AddCustomExpertiseDialog({
   character,
   onAdd,
@@ -203,38 +217,35 @@ function AddCustomExpertiseDialog({
   ) => void
 }) {
   const [open, setOpen] = useState(false)
-  const [name, setName] = useState('')
-  const [attribute, setAttribute] = useState<AttributeKey>('intelligence')
-  const [error, setError] = useState<string | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
 
-  const reset = () => {
-    setName('')
-    setAttribute('intelligence')
-    setError(null)
-  }
+  const form = useForm({
+    defaultValues: {
+      name: '',
+      attribute: 'intelligence' as AttributeKey,
+    },
+    validators: { onSubmit: customExpertiseSchema },
+    onSubmit: ({ value }) => {
+      setFormError(null)
+      // ApiError fieldErrors surface a generic message back into the dialog.
+      onAdd({ name: value.name.trim(), attribute: value.attribute }, (e) =>
+        setFormError(e.message),
+      )
+      setOpen(false)
+      form.reset()
+    },
+  })
 
-  const apply = () => {
-    const trimmed = name.trim()
-    if (!trimmed) {
-      setError('Informe um nome.')
-      return
+  const close = (next: boolean) => {
+    setOpen(next)
+    if (!next) {
+      form.reset()
+      setFormError(null)
     }
-    onAdd({ name: trimmed, attribute }, (e) => {
-      // ApiError fieldErrors surface generic message back into dialog
-      setError(e.message)
-    })
-    setOpen(false)
-    reset()
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(o) => {
-        setOpen(o)
-        if (!o) reset()
-      }}
-    >
+    <Dialog open={open} onOpenChange={close}>
       <DialogTrigger asChild>
         <Button
           type="button"
@@ -258,55 +269,79 @@ function AddCustomExpertiseDialog({
             Novo ofício
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <span className={cn('text-[10px] uppercase tracking-widest', dimText)}>
-              nome
-            </span>
-            <Input
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value)
-                if (error) setError(null)
-              }}
-              placeholder="Ex: Carpintaria"
-              autoFocus
-              maxLength={40}
-            />
-          </div>
-          <div className="space-y-1">
-            <span className={cn('text-[10px] uppercase tracking-widest', dimText)}>
-              atributo
-            </span>
-            <select
-              value={attribute}
-              onChange={(e) => setAttribute(e.target.value as AttributeKey)}
-              className={cn(selectClass, 'h-9 w-full px-2 text-sm')}
-            >
-              {ATTRIBUTE_KEYS.map((k) => (
-                <option key={k} value={k}>
-                  {ATTRIBUTE_ABBR[k]} {signed(character[k])}
-                </option>
-              ))}
-            </select>
-          </div>
-          {error && (
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            form.handleSubmit()
+          }}
+        >
+          <form.Field
+            name="name"
+            validators={{ onChange: customExpertiseSchema.shape.name }}
+          >
+            {(f) => {
+              const invalid = f.state.meta.isTouched && !f.state.meta.isValid
+              return (
+                <Field data-invalid={invalid}>
+                  <FieldLabel htmlFor={f.name}>Nome</FieldLabel>
+                  <Input
+                    id={f.name}
+                    value={f.state.value}
+                    onChange={(e) => f.handleChange(e.target.value)}
+                    onBlur={f.handleBlur}
+                    placeholder="Ex: Carpintaria"
+                    autoFocus
+                    maxLength={40}
+                    aria-invalid={invalid}
+                  />
+                  {invalid && <FieldError errors={f.state.meta.errors} />}
+                </Field>
+              )
+            }}
+          </form.Field>
+          <form.Field name="attribute">
+            {(f) => (
+              <Field>
+                <FieldLabel htmlFor={f.name}>Atributo</FieldLabel>
+                <select
+                  id={f.name}
+                  value={f.state.value}
+                  onChange={(e) => f.handleChange(e.target.value as AttributeKey)}
+                  className={cn(selectClass, 'h-9 w-full px-2 text-sm')}
+                >
+                  {ATTRIBUTE_KEYS.map((k) => (
+                    <option key={k} value={k}>
+                      {ATTRIBUTE_ABBR[k]} {signed(character[k])}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
+          </form.Field>
+          {formError && (
             <p className="text-xs text-destructive" role="alert">
-              {error}
+              {formError}
             </p>
           )}
           <p className={cn('text-[11px]', dimText)}>
             Ofícios só podem ser usados quando treinados.
           </p>
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => close(false)}>
               Cancelar
             </Button>
-            <Button type="button" onClick={apply}>
-              Adicionar
-            </Button>
+            <form.Subscribe
+              selector={(s) => s.canSubmit}
+              children={(canSubmit) => (
+                <Button type="submit" disabled={!canSubmit}>
+                  Adicionar
+                </Button>
+              )}
+            />
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   )

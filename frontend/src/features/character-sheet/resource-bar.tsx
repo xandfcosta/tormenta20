@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useForm } from '@tanstack/react-form'
+import { z } from 'zod'
 import { Minus, Pencil, Plus } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import {
@@ -8,9 +10,27 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/shared/ui/dialog'
+import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
 import { NumberInput } from '@/shared/ui/number-input'
 import { accentStrong, dimText } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
+
+/** How much PV/PM to add or remove — a whole number of at least 1. Clamping to
+ *  the resource's [0, max] happens at apply time, not here. */
+const resourceAdjustSchema = z.object({
+  amount: z
+    .number()
+    .int('Quantidade deve ser inteiro.')
+    .min(1, 'Informe uma quantidade ≥ 1.')
+    .max(9999, 'Máximo 9999.'),
+})
+
+/** Clamp a projected resource total into [0, max]; returns the value + whether
+ *  it hit a bound (so the UI can hint "limitado"). */
+function clampResource(raw: number, max: number) {
+  const value = Math.max(0, Math.min(max, raw))
+  return { value, clamped: value !== raw }
+}
 
 export function ResourceBar({
   label,
@@ -125,34 +145,27 @@ function ResourceAdjustDialog({
 }) {
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState<'add' | 'remove'>('remove')
-  const [amount, setAmount] = useState<string>('')
 
-  const parsedAmount = Math.max(0, Number(amount) || 0)
-  const delta = mode === 'add' ? parsedAmount : -parsedAmount
-  const previewRaw = current + delta
-  const preview = Math.max(0, Math.min(max, previewRaw))
-  const clamped = preview !== previewRaw
+  const form = useForm({
+    defaultValues: { amount: 0 },
+    validators: { onSubmit: resourceAdjustSchema },
+    onSubmit: ({ value }) => {
+      const delta = mode === 'add' ? value.amount : -value.amount
+      onSetCurrent(clampResource(current + delta, max).value)
+      close(false)
+    },
+  })
 
-  const reset = () => {
-    setAmount('')
-    setMode('remove')
-  }
-
-  const apply = () => {
-    if (parsedAmount === 0) return
-    onSetCurrent(preview)
-    setOpen(false)
-    reset()
+  const close = (next: boolean) => {
+    setOpen(next)
+    if (!next) {
+      form.reset()
+      setMode('remove')
+    }
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(o) => {
-        setOpen(o)
-        if (!o) reset()
-      }}
-    >
+    <Dialog open={open} onOpenChange={close}>
       <DialogTrigger asChild>
         <Button
           type="button"
@@ -175,7 +188,14 @@ function ResourceAdjustDialog({
             Ajustar {label}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            form.handleSubmit()
+          }}
+        >
           <div className="grid grid-cols-2 gap-2">
             <Button
               type="button"
@@ -195,60 +215,86 @@ function ResourceAdjustDialog({
             </Button>
           </div>
 
-          <div className="space-y-1">
-            <span className={cn('text-[10px] uppercase tracking-widest', dimText)}>
-              quantidade
-            </span>
-            <NumberInput
-              value={amount}
-              onChange={(v) => setAmount(String(v))}
-              min={0}
-              max={9999}
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') apply()
-              }}
-              aria-label="Quantidade"
-            />
-          </div>
-
-          <div
-            className={cn(
-              'flex items-center justify-between rounded-lg border px-4 py-2',
-              'border-border bg-muted  ',
-            )}
+          <form.Field
+            name="amount"
+            validators={{ onChange: resourceAdjustSchema.shape.amount }}
           >
-            <div className="flex flex-col">
-              <span className={cn('text-[10px] uppercase tracking-widest', dimText)}>
-                novo total
-              </span>
-              <span className={cn('text-[10px]', dimText)}>
-                {current} {delta >= 0 ? '+' : '−'} {Math.abs(delta)}
-                {clamped && ' (limitado)'}
-              </span>
-            </div>
-            <span
-              className={cn(
-                'font-mono text-2xl font-bold',
-                accentStrong,
-              )}
-            >
-              {preview}
-              <span className={cn('ml-1 text-sm font-normal', dimText)}>
-                / {max}
-              </span>
-            </span>
-          </div>
+            {(f) => {
+              const invalid = f.state.meta.isTouched && !f.state.meta.isValid
+              return (
+                <Field data-invalid={invalid}>
+                  <FieldLabel htmlFor={f.name}>Quantidade</FieldLabel>
+                  <NumberInput
+                    id={f.name}
+                    value={f.state.value}
+                    onChange={(v) => f.handleChange(v)}
+                    onBlur={f.handleBlur}
+                    min={0}
+                    max={9999}
+                    autoFocus
+                    aria-invalid={invalid}
+                  />
+                  {invalid && <FieldError errors={f.state.meta.errors} />}
+                </Field>
+              )
+            }}
+          </form.Field>
+
+          <form.Subscribe selector={(s) => s.values.amount}>
+            {(amount) => {
+              const delta = mode === 'add' ? amount : -amount
+              const { value: preview, clamped } = clampResource(
+                current + delta,
+                max,
+              )
+              return (
+                <div
+                  className={cn(
+                    'flex items-center justify-between rounded-lg border px-4 py-2',
+                    'border-border bg-muted  ',
+                  )}
+                >
+                  <div className="flex flex-col">
+                    <span
+                      className={cn(
+                        'text-[10px] uppercase tracking-widest',
+                        dimText,
+                      )}
+                    >
+                      novo total
+                    </span>
+                    <span className={cn('text-[10px]', dimText)}>
+                      {current} {delta >= 0 ? '+' : '−'} {Math.abs(delta)}
+                      {clamped && ' (limitado)'}
+                    </span>
+                  </div>
+                  <span
+                    className={cn('font-mono text-2xl font-bold', accentStrong)}
+                  >
+                    {preview}
+                    <span className={cn('ml-1 text-sm font-normal', dimText)}>
+                      / {max}
+                    </span>
+                  </span>
+                </div>
+              )
+            }}
+          </form.Subscribe>
 
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => close(false)}>
               Cancelar
             </Button>
-            <Button type="button" onClick={apply} disabled={parsedAmount === 0}>
-              Aplicar
-            </Button>
+            <form.Subscribe
+              selector={(s) => s.canSubmit}
+              children={(canSubmit) => (
+                <Button type="submit" disabled={!canSubmit}>
+                  Aplicar
+                </Button>
+              )}
+            />
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   )

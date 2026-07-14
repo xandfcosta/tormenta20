@@ -1,5 +1,7 @@
 import { type ReactNode, useState } from 'react'
 import { Info } from 'lucide-react'
+import { useForm } from '@tanstack/react-form'
+import { z } from 'zod'
 import { getCatalogItem } from '@tormenta20/t20-data'
 import { Button } from '@/shared/ui/button'
 import {
@@ -9,6 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/shared/ui/dialog'
+import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
 import type {
@@ -19,6 +22,26 @@ import { accentStrong, dimText, subtleText } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
 import { CatalogInfoBody } from './catalog-info-body'
 import { formatLoad } from './item-describe'
+
+/** A custom inventory item: a name plus a whole-number quantity and a load in
+ *  half-slot increments (T20 tracks encumbrance in 0,5-espaço steps). */
+const itemFormSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Informe um nome.')
+    .max(80, 'Máximo 80 caracteres.'),
+  quantity: z
+    .number()
+    .int('Quantidade deve ser inteiro ≥ 1.')
+    .min(1, 'Quantidade deve ser inteiro ≥ 1.')
+    .max(9999, 'Máximo 9999.'),
+  slots: z
+    .number()
+    .min(0.5, 'Espaços deve ser múltiplo de 0,5 (mínimo 0,5).')
+    .max(9999, 'Máximo 9999.')
+    .refine((v) => Number.isInteger(v * 2), 'Espaços deve ser múltiplo de 0,5.'),
+})
 
 /**
  * Read-only info dialog for a single inventory row. Falls back to a
@@ -113,49 +136,36 @@ export function ItemFormDialog({
   onSubmit: (input: CreateItemInput, onError: (e: Error) => void) => void
 }) {
   const [open, setOpen] = useState(false)
-  const [name, setName] = useState(initial?.name ?? '')
-  const [quantity, setQuantity] = useState<string>(String(initial?.quantity ?? 1))
-  const [slots, setSlots] = useState<string>(String(initial?.slots ?? 1))
-  const [error, setError] = useState<string | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
 
-  const reset = () => {
-    setName(initial?.name ?? '')
-    setQuantity(String(initial?.quantity ?? 1))
-    setSlots(String(initial?.slots ?? 1))
-    setError(null)
-  }
+  const form = useForm({
+    defaultValues: {
+      name: initial?.name ?? '',
+      quantity: initial?.quantity ?? 1,
+      slots: initial?.slots ?? 1,
+    },
+    validators: { onSubmit: itemFormSchema },
+    onSubmit: ({ value }) => {
+      setFormError(null)
+      onSubmit(
+        { name: value.name.trim(), quantity: value.quantity, slots: value.slots },
+        (e) => setFormError(e.message),
+      )
+      setOpen(false)
+      form.reset()
+    },
+  })
 
-  const apply = () => {
-    const trimmed = name.trim()
-    const qty = Number(quantity)
-    const sl = Number(slots)
-    if (!trimmed) {
-      setError('Informe um nome.')
-      return
+  const close = (next: boolean) => {
+    setOpen(next)
+    if (!next) {
+      form.reset()
+      setFormError(null)
     }
-    if (!Number.isInteger(qty) || qty < 1) {
-      setError('Quantidade deve ser inteiro ≥ 1.')
-      return
-    }
-    if (!Number.isFinite(sl) || sl < 0.5 || !Number.isInteger(sl * 2)) {
-      setError('Espaços deve ser múltiplo de 0,5 (mínimo 0,5).')
-      return
-    }
-    onSubmit({ name: trimmed, quantity: qty, slots: sl }, (e) =>
-      setError(e.message),
-    )
-    setOpen(false)
-    reset()
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(o) => {
-        setOpen(o)
-        if (!o) reset()
-      }}
-    >
+    <Dialog open={open} onOpenChange={close}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent
         className={cn(
@@ -168,71 +178,107 @@ export function ItemFormDialog({
             {title}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <span className={cn('text-[10px] uppercase tracking-widest', dimText)}>
-              nome
-            </span>
-            <Input
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value)
-                if (error) setError(null)
-              }}
-              placeholder="Ex: Espada longa"
-              autoFocus
-              maxLength={80}
-            />
-          </div>
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            form.handleSubmit()
+          }}
+        >
+          <form.Field name="name" validators={{ onChange: itemFormSchema.shape.name }}>
+            {(f) => {
+              const invalid = f.state.meta.isTouched && !f.state.meta.isValid
+              return (
+                <Field data-invalid={invalid}>
+                  <FieldLabel htmlFor={f.name}>Nome</FieldLabel>
+                  <Input
+                    id={f.name}
+                    value={f.state.value}
+                    onChange={(e) => f.handleChange(e.target.value)}
+                    onBlur={f.handleBlur}
+                    placeholder="Ex: Espada longa"
+                    autoFocus
+                    maxLength={80}
+                    aria-invalid={invalid}
+                  />
+                  {invalid && <FieldError errors={f.state.meta.errors} />}
+                </Field>
+              )
+            }}
+          </form.Field>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <span
-                className={cn('text-[10px] uppercase tracking-widest', dimText)}
-              >
-                quantidade
-              </span>
-              <NumberInput
-                value={quantity}
-                onChange={(v) => setQuantity(String(v))}
-                min={1}
-                max={9999}
-                step={1}
-                aria-label="Quantidade"
-              />
-            </div>
-            <div className="space-y-1">
-              <span
-                className={cn('text-[10px] uppercase tracking-widest', dimText)}
-              >
-                espaços
-              </span>
-              <NumberInput
-                value={slots}
-                onChange={(v) => setSlots(String(v))}
-                min={0.5}
-                max={9999}
-                step={0.5}
-                aria-label="Espaços"
-              />
-            </div>
+            <form.Field
+              name="quantity"
+              validators={{ onChange: itemFormSchema.shape.quantity }}
+            >
+              {(f) => {
+                const invalid = f.state.meta.isTouched && !f.state.meta.isValid
+                return (
+                  <Field data-invalid={invalid}>
+                    <FieldLabel htmlFor={f.name}>Quantidade</FieldLabel>
+                    <NumberInput
+                      id={f.name}
+                      value={f.state.value}
+                      onChange={(v) => f.handleChange(v)}
+                      onBlur={f.handleBlur}
+                      min={1}
+                      max={9999}
+                      step={1}
+                      aria-invalid={invalid}
+                    />
+                    {invalid && <FieldError errors={f.state.meta.errors} />}
+                  </Field>
+                )
+              }}
+            </form.Field>
+            <form.Field
+              name="slots"
+              validators={{ onChange: itemFormSchema.shape.slots }}
+            >
+              {(f) => {
+                const invalid = f.state.meta.isTouched && !f.state.meta.isValid
+                return (
+                  <Field data-invalid={invalid}>
+                    <FieldLabel htmlFor={f.name}>Espaços</FieldLabel>
+                    <NumberInput
+                      id={f.name}
+                      value={f.state.value}
+                      onChange={(v) => f.handleChange(v)}
+                      onBlur={f.handleBlur}
+                      min={0.5}
+                      max={9999}
+                      step={0.5}
+                      aria-invalid={invalid}
+                    />
+                    {invalid && <FieldError errors={f.state.meta.errors} />}
+                  </Field>
+                )
+              }}
+            </form.Field>
           </div>
           <p className={cn('text-[11px]', dimText)}>
             Espaços é múltiplo de 0,5 (ex.: 0,5 / 1 / 1,5).
           </p>
-          {error && (
+          {formError && (
             <p className="text-xs text-destructive" role="alert">
-              {error}
+              {formError}
             </p>
           )}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => close(false)}>
               Cancelar
             </Button>
-            <Button type="button" onClick={apply}>
-              {submitLabel}
-            </Button>
+            <form.Subscribe
+              selector={(s) => s.canSubmit}
+              children={(canSubmit) => (
+                <Button type="submit" disabled={!canSubmit}>
+                  {submitLabel}
+                </Button>
+              )}
+            />
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   )

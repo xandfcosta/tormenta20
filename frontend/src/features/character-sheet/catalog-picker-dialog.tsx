@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useForm } from '@tanstack/react-form'
+import { z } from 'zod'
 import { Gem, Plus } from 'lucide-react'
 import {
   CATALOG_ITEMS,
@@ -15,6 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/shared/ui/dialog'
+import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
 import { VirtualList } from '@/shared/ui/virtual-list'
@@ -33,6 +36,15 @@ import {
 import { cn } from '@/shared/lib/utils'
 import { formatLoad } from './item-describe'
 import { normalize } from './normalize'
+
+/** How many of a catalog item to add — whole units only. */
+const catalogAddSchema = z.object({
+  quantity: z
+    .number()
+    .int('Quantidade deve ser inteiro ≥ 1.')
+    .min(1, 'Quantidade deve ser inteiro ≥ 1.')
+    .max(9999, 'Máximo 9999.'),
+})
 
 const EQUIP_PICKER_OPTIONS: { value: '' | 'vested' | 'wielded' | 'wielded2'; label: string }[] = [
   { value: '', label: '—' },
@@ -281,22 +293,48 @@ export function AddCatalogItemDialog({
   const [catalogId, setCatalogId] = useState('')
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('')
-  const [quantity, setQuantity] = useState<string>('1')
   const [equipped, setEquipped] = useState<'' | 'vested' | 'wielded' | 'wielded2'>('')
-  const [error, setError] = useState<string | null>(null)
-
-  const reset = () => {
-    setCatalogId('')
-    setSearch('')
-    setCategory('')
-    setQuantity('1')
-    setEquipped('')
-    setError(null)
-  }
+  const [formError, setFormError] = useState<string | null>(null)
 
   const selected = catalogId
     ? CATALOG_ITEMS.find((c) => c.id === catalogId)
     : undefined
+
+  const form = useForm({
+    defaultValues: { quantity: 1 },
+    validators: { onSubmit: catalogAddSchema },
+    onSubmit: ({ value }) => {
+      if (!selected) return
+      setFormError(null)
+      onAdd(
+        {
+          catalogId: selected.id,
+          quantity: value.quantity,
+          equipped: equipped || undefined,
+        },
+        (e) => setFormError(e.message),
+      )
+      setOpen(false)
+      resetLocal()
+      form.reset()
+    },
+  })
+
+  const resetLocal = () => {
+    setCatalogId('')
+    setSearch('')
+    setCategory('')
+    setEquipped('')
+    setFormError(null)
+  }
+
+  const close = (next: boolean) => {
+    setOpen(next)
+    if (!next) {
+      resetLocal()
+      form.reset()
+    }
+  }
 
   const filtered = CATALOG_ITEMS.filter((c) => {
     if (category && c.category !== category) return false
@@ -307,36 +345,8 @@ export function AddCatalogItemDialog({
     )
   })
 
-  const apply = () => {
-    if (!selected) {
-      setError('Selecione um item do catálogo.')
-      return
-    }
-    const qty = Number(quantity)
-    if (!Number.isInteger(qty) || qty < 1) {
-      setError('Quantidade deve ser inteiro ≥ 1.')
-      return
-    }
-    onAdd(
-      {
-        catalogId: selected.id,
-        quantity: qty,
-        equipped: equipped || undefined,
-      },
-      (e) => setError(e.message),
-    )
-    setOpen(false)
-    reset()
-  }
-
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(o) => {
-        setOpen(o)
-        if (!o) reset()
-      }}
-    >
+    <Dialog open={open} onOpenChange={close}>
       <DialogTrigger asChild>
         <Button
           type="button"
@@ -360,7 +370,14 @@ export function AddCatalogItemDialog({
             Adicionar do catálogo
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            form.handleSubmit()
+          }}
+        >
           <div className="space-y-1">
             <span className={cn('text-[10px] uppercase tracking-widest', dimText)}>
               item
@@ -411,7 +428,7 @@ export function AddCatalogItemDialog({
                     type="button"
                     onClick={() => {
                       setCatalogId(opt.id)
-                      if (error) setError(null)
+                      setFormError(null)
                     }}
                     className={cn(
                       'flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-sm transition-colors',
@@ -464,21 +481,30 @@ export function AddCatalogItemDialog({
             </div>
           )}
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <span
-                className={cn('text-[10px] uppercase tracking-widest', dimText)}
-              >
-                quantidade
-              </span>
-              <NumberInput
-                value={quantity}
-                onChange={(v) => setQuantity(String(v))}
-                min={1}
-                max={9999}
-                step={1}
-                aria-label="Quantidade"
-              />
-            </div>
+            <form.Field
+              name="quantity"
+              validators={{ onChange: catalogAddSchema.shape.quantity }}
+            >
+              {(f) => {
+                const invalid = f.state.meta.isTouched && !f.state.meta.isValid
+                return (
+                  <Field data-invalid={invalid}>
+                    <FieldLabel htmlFor={f.name}>Quantidade</FieldLabel>
+                    <NumberInput
+                      id={f.name}
+                      value={f.state.value}
+                      onChange={(v) => f.handleChange(v)}
+                      onBlur={f.handleBlur}
+                      min={1}
+                      max={9999}
+                      step={1}
+                      aria-invalid={invalid}
+                    />
+                    {invalid && <FieldError errors={f.state.meta.errors} />}
+                  </Field>
+                )
+              }}
+            </form.Field>
             <div className="space-y-1">
               <span
                 className={cn('text-[10px] uppercase tracking-widest', dimText)}
@@ -501,20 +527,25 @@ export function AddCatalogItemDialog({
               </select>
             </div>
           </div>
-          {error && (
+          {formError && (
             <p className="text-xs text-destructive" role="alert">
-              {error}
+              {formError}
             </p>
           )}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => close(false)}>
               Cancelar
             </Button>
-            <Button type="button" onClick={apply} disabled={!selected}>
-              Adicionar
-            </Button>
+            <form.Subscribe
+              selector={(s) => s.canSubmit}
+              children={(canSubmit) => (
+                <Button type="submit" disabled={!selected || !canSubmit}>
+                  Adicionar
+                </Button>
+              )}
+            />
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   )
