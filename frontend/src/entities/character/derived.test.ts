@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { statFor } from '@tormenta20/t20-data'
 import type { ClassChoices, ItemEffects } from '@tormenta20/t20-data'
 import type { Character, CharacterItem } from '@/shared/api/api'
 import {
@@ -90,6 +91,47 @@ function item(over: Partial<CharacterItem> = {}): CharacterItem {
 function emptyEffects(): ItemEffects {
   return { byTarget: {}, flags: new Set(), conditional: [] }
 }
+
+describe('active-effect attack modifiers (Phase 0 — buff engine)', () => {
+  // Regression: a buff/conditional granting {k:'attack', scope:'all'} (e.g.
+  // Fúria, Bênção) must flow from character.activeEffects through
+  // characterEffects into statFor so the combat display can add it.
+  it('folds an active {k:attack,scope:all} effect into statFor', () => {
+    const c = character({
+      activeEffects: [
+        {
+          id: 1,
+          catalogId: 'buff',
+          scope: 'scene',
+          modifiers: JSON.stringify([
+            { target: { k: 'attack', scope: 'all' }, amount: 2, bonusType: 'morale' },
+          ]),
+          createdAt: '',
+        },
+      ],
+    })
+    const eff = characterEffects(c)
+    expect(statFor(eff, { k: 'attack', scope: 'all' }).total).toBe(2)
+  })
+
+  it('does not report a scope:all bonus when only scope:this is present', () => {
+    const c = character({
+      activeEffects: [
+        {
+          id: 1,
+          catalogId: 'buff',
+          scope: 'scene',
+          modifiers: JSON.stringify([
+            { target: { k: 'attack', scope: 'this' }, amount: -5, bonusType: 'untyped' },
+          ]),
+          createdAt: '',
+        },
+      ],
+    })
+    const eff = characterEffects(c)
+    expect(statFor(eff, { k: 'attack', scope: 'all' }).total).toBe(0)
+  })
+})
 
 describe('parseClassChoices', () => {
   it('returns empty object for malformed JSON', () => {

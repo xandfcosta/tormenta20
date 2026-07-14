@@ -1,4 +1,5 @@
 import { Crosshair, Shield, Sparkles, Sword, Zap } from 'lucide-react'
+import { statFor } from '@tormenta20/t20-data'
 import {
   Dialog,
   DialogContent,
@@ -52,6 +53,13 @@ export function CombatStats({ character }: { character: Character }) {
     defenseRows.push({ label: c.source, amount: c.amount })
   }
 
+  // Global attack modifiers ({k:'attack', scope:'all'}) — buffs/conditionals like
+  // Fúria that apply to every attack, regardless of the weapon. Weapon-specific
+  // (scope:'this') mods are deliberately excluded here: the non-proficiency
+  // penalty is already surfaced through the expertise path, so folding
+  // scope:'this' on top would double-count it.
+  const attackAll = statFor(effects, { k: 'attack', scope: 'all' })
+
   const attackRows = (
     e: ReturnType<typeof expertiseTotalWithItems>,
     attrAbbr: string,
@@ -62,6 +70,9 @@ export function CombatStats({ character }: { character: Character }) {
     ]
     if (e.training) rows.push({ label: 'Treino', amount: e.training })
     for (const c of e.itemContributions) {
+      rows.push({ label: c.source, amount: c.amount })
+    }
+    for (const c of attackAll.contributions) {
       rows.push({ label: c.source, amount: c.amount })
     }
     return rows
@@ -77,14 +88,14 @@ export function CombatStats({ character }: { character: Character }) {
       />
       <CombatBox
         label="Atq CaC"
-        value={luta.total}
+        value={luta.total + attackAll.total}
         rows={attackRows(luta, ATTRIBUTE_ABBR[lutaState.attribute])}
         icon={<Sword className="size-3.5" />}
         signed
       />
       <CombatBox
         label="Atq Dist"
-        value={pontaria.total}
+        value={pontaria.total + attackAll.total}
         rows={attackRows(pontaria, ATTRIBUTE_ABBR[pontariaState.attribute])}
         icon={<Crosshair className="size-3.5" />}
         signed
