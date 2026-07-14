@@ -1,11 +1,15 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { BookPlus, BookX, Check, Sparkles } from 'lucide-react'
 import {
   CLASS_SPELLCASTING_ATTRIBUTE,
   SPELL_BASE_PM_COST,
+  firstErrorMessage,
   highestCircleAtLevel,
   spellSaveDc,
+  validateLearnSpell,
+  validateSpellLearned,
   type CatalogSpell,
   type SpellCircle,
   type SpellcasterClass,
@@ -59,16 +63,56 @@ export function SpellRow({
   const cast = highestCastableCircle(character, applicableClasses)
   const canCast = spell.circle <= cast
 
+  // Optimistic spellbook edits: the shared t20-data rules pre-validate each
+  // change so we can predict the server's answer and patch the cache before the
+  // round-trip; `onError` rolls back if the prediction was wrong.
+  const patchSpells = (next: (spells: CharacterSpell[]) => CharacterSpell[]) => {
+    const prev = qc.getQueryData<Character>(queryKey)
+    qc.setQueryData<Character>(queryKey, (c) =>
+      c ? { ...c, spells: next(c.spells) } : c,
+    )
+    return prev
+  }
+  const rollback = (prev: Character | undefined) => {
+    if (prev) qc.setQueryData(queryKey, prev)
+  }
+  const knownIds = character.spells.map((s) => s.catalogSpellId)
+
   const learn = useMutation({
     mutationFn: () => api.characters.learnSpell(character.id, spell.id),
-    onSuccess: () => {
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey })
+      // Temp negative id until the server assigns the real row.
+      return {
+        prev: patchSpells((spells) => [
+          ...spells,
+          {
+            id: -Date.now(),
+            catalogSpellId: spell.id,
+            prepared: false,
+            learnedAt: new Date().toISOString(),
+          },
+        ]),
+      }
+    },
+    onError: (_e, _v, ctx) => rollback(ctx?.prev),
+    onSettled: () => {
       qc.invalidateQueries({ queryKey })
       invalidateCharacterDependents(qc, character.id)
     },
   })
   const unlearn = useMutation({
     mutationFn: () => api.characters.unlearnSpell(character.id, spell.id),
-    onSuccess: () => {
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey })
+      return {
+        prev: patchSpells((spells) =>
+          spells.filter((s) => s.catalogSpellId !== spell.id),
+        ),
+      }
+    },
+    onError: (_e, _v, ctx) => rollback(ctx?.prev),
+    onSettled: () => {
       qc.invalidateQueries({ queryKey })
       invalidateCharacterDependents(qc, character.id)
     },
@@ -76,10 +120,32 @@ export function SpellRow({
   const setPrepared = useMutation({
     mutationFn: (prepared: boolean) =>
       api.characters.setSpellPrepared(character.id, spell.id, prepared),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey })
+    onMutate: async (prepared) => {
+      await qc.cancelQueries({ queryKey })
+      return {
+        prev: patchSpells((spells) =>
+          spells.map((s) =>
+            s.catalogSpellId === spell.id ? { ...s, prepared } : s,
+          ),
+        ),
+      }
     },
+    onError: (_e, _v, ctx) => rollback(ctx?.prev),
+    onSettled: () => qc.invalidateQueries({ queryKey }),
   })
+
+  // Guard before mutating so an optimistic patch is only applied when the
+  // shared domain rule says the server will accept it.
+  const doLearn = () => {
+    const err = firstErrorMessage(validateLearnSpell(knownIds, spell.id))
+    if (err) return toast.error(err)
+    learn.mutate()
+  }
+  const doSetPrepared = (prepared: boolean) => {
+    const err = firstErrorMessage(validateSpellLearned(knownIds, spell.id))
+    if (err) return toast.error(err)
+    setPrepared.mutate(prepared)
+  }
 
   return (
     <div
@@ -214,7 +280,7 @@ export function SpellRow({
                   variant={learned.prepared ? 'default' : 'outline'}
                   className="h-7 gap-1 text-xs"
                   disabled={setPrepared.isPending}
-                  onClick={() => setPrepared.mutate(!learned.prepared)}
+                  onClick={() => doSetPrepared(!learned.prepared)}
                 >
                   <Check className="size-3.5" />
                   {learned.prepared ? 'Despreparar' : 'Preparar'}
@@ -238,7 +304,7 @@ export function SpellRow({
                 variant="outline"
                 className="h-7 gap-1 text-xs"
                 disabled={learn.isPending}
-                onClick={() => learn.mutate()}
+                onClick={doLearn}
               >
                 <BookPlus className="size-3.5" />
                 Aprender

@@ -2,7 +2,11 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Sparkles, Zap } from 'lucide-react'
 import type { CatalogSpell } from '@tormenta20/t20-data'
-import { SPELL_BASE_PM_COST } from '@tormenta20/t20-data'
+import {
+  SPELL_BASE_PM_COST,
+  firstErrorMessage,
+  validateCast,
+} from '@tormenta20/t20-data'
 import { Button } from '@/shared/ui/button'
 import {
   Dialog,
@@ -66,12 +70,33 @@ export function CastSpellDialog({
   const basePm = SPELL_BASE_PM_COST[spell.circle]
   const totalPm = spell.circle === 0 ? 0 : basePm + augmentPm
   const perSpellLimit = Math.max(1, Math.floor(character.level / 2))
-  const overLimit = spell.circle > 0 && totalPm > perSpellLimit
-  const insufficientPm = totalPm > character.mpCurrent
+  // Single source of truth for the cast preconditions (shared with the
+  // backend). Prep-requirement stays server-enforced — the cast button only
+  // shows for learned spells, and detecting the caster's prep rule client-side
+  // isn't needed to predict PM outcomes.
+  const castBlocked = firstErrorMessage(
+    validateCast({
+      circle: spell.circle,
+      totalPm,
+      pmLimit: perSpellLimit,
+      mpCurrent: character.mpCurrent,
+      needsPrep: false,
+      prepared: true,
+    }),
+  )
 
-  const cast = useMutation({
+  const cast = useMutation<Character, Error, void, { prev?: Character }>({
     mutationFn: () =>
       api.characters.castSpell(character.id, spell.id, augmentPicks),
+    onMutate: async () => {
+      // Optimistic PM spend — validated above, so the server should agree.
+      await qc.cancelQueries({ queryKey })
+      const prev = qc.getQueryData<Character>(queryKey)
+      qc.setQueryData<Character>(queryKey, (c) =>
+        c ? { ...c, mpCurrent: Math.max(0, c.mpCurrent - totalPm) } : c,
+      )
+      return { prev }
+    },
     onSuccess: (updated) => {
       qc.setQueryData(queryKey, updated)
       invalidateCharacterDependents(qc, character.id)
@@ -79,7 +104,8 @@ export function CastSpellDialog({
       setStacksByIndex(new Map())
       setError(null)
     },
-    onError: (e) => {
+    onError: (e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(queryKey, ctx.prev)
       setError(e instanceof ApiError ? e.message : 'Erro ao conjurar')
     },
   })
@@ -202,23 +228,16 @@ export function CastSpellDialog({
           <span
             className={cn(
               'font-mono text-lg font-bold',
-              overLimit || insufficientPm
-                ? 'text-red-700 dark:text-red-400'
-                : accentStrong,
+              castBlocked ? 'text-red-700 dark:text-red-400' : accentStrong,
             )}
           >
             {totalPm} PM
           </span>
         </div>
 
-        {overLimit && (
+        {castBlocked && (
           <p className="text-xs text-red-700 dark:text-red-400">
-            Custo total excede o limite por magia ({perSpellLimit} PM).
-          </p>
-        )}
-        {insufficientPm && !overLimit && (
-          <p className="text-xs text-red-700 dark:text-red-400">
-            PM insuficientes ({character.mpCurrent} disponíveis).
+            {castBlocked}
           </p>
         )}
         {error && <p className="text-xs text-destructive">{error}</p>}
@@ -228,7 +247,7 @@ export function CastSpellDialog({
             Cancelar
           </Button>
           <Button
-            disabled={cast.isPending || overLimit || insufficientPm}
+            disabled={cast.isPending || Boolean(castBlocked)}
             onClick={() => cast.mutate()}
           >
             <Sparkles className="mr-1 size-4" />

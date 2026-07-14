@@ -1,6 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { Plus } from 'lucide-react'
-import { CATALOG_ITEMS } from '@tormenta20/t20-data'
+import {
+  CATALOG_ITEMS,
+  firstErrorMessage,
+  validateConsumeQuantity,
+  validateEquipChange,
+} from '@tormenta20/t20-data'
 import { Button } from '@/shared/ui/button'
 import type {
   Character,
@@ -178,6 +184,36 @@ export function InventoryPanel({ character }: { character: Character }) {
     },
   })
 
+  // Guard equip changes with the shared cap rule (≤4 vested / ≤2 hands) so an
+  // optimistic `updateItem` is only fired when the server will accept it —
+  // avoids an apply-then-rollback flicker.
+  const changeItem = (
+    itemId: number,
+    input: UpdateItemInput,
+    fail: (e: Error) => void,
+  ) => {
+    if (input.equipped) {
+      const others = character.items
+        .filter((it) => it.id !== itemId)
+        .map((it) => it.equipped)
+      const err = firstErrorMessage(validateEquipChange(others, input.equipped))
+      if (err) {
+        toast.error(err)
+        return
+      }
+    }
+    updateItem.mutate({ itemId, input }, { onError: fail })
+  }
+
+  const consumeGuarded = (item: CharacterItem, input?: ConsumeItemInput) => {
+    const err = firstErrorMessage(validateConsumeQuantity(item.quantity))
+    if (err) {
+      toast.error(err)
+      return
+    }
+    consumeItem.mutate({ itemId: item.id, input })
+  }
+
   const items = character.items
 
   return (
@@ -270,11 +306,9 @@ export function InventoryPanel({ character }: { character: Character }) {
                 key={it.id}
                 item={it}
                 proficient={isItemProficient(character, it)}
-                onUpdate={(input, fail) =>
-                  updateItem.mutate({ itemId: it.id, input }, { onError: fail })
-                }
+                onUpdate={(input, fail) => changeItem(it.id, input, fail)}
                 onDelete={() => removeItem.mutate(it.id)}
-                onConsume={(input) => consumeItem.mutate({ itemId: it.id, input })}
+                onConsume={(input) => consumeGuarded(it, input)}
               />
             ))}
           </div>

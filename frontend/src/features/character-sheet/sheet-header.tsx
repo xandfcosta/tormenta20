@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { isValid, validateTotalLevel } from '@tormenta20/t20-data'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
 import { CharacterPortrait } from '@/shared/ui/character-portrait'
@@ -116,8 +117,12 @@ function LevelBadge({ character }: { character: Character }) {
     const entry = character.classes.find((c) => c.className === className)
     if (!entry) return
     const next = entry.level + delta
-    if (next < 1 || next > 20) return
-    if (character.level + delta < 1 || character.level + delta > 20) return
+    // Shared rule: every class level ≥ 1 and the total ≤ 20 (same guard the
+    // backend applies), so the optimistic level bump can't be rejected.
+    const projected = character.classes.map((c) =>
+      c.className === className ? { ...c, level: next } : c,
+    )
+    if (!isValid(validateTotalLevel(projected))) return
     mutate.mutate({ className, level: next })
   }
 
