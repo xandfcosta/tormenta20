@@ -11,6 +11,10 @@ import type { ApplyEffectDto } from './dto/character.dto';
 /** T20 rest-condition recovery multiplier (livro básico p.20): a night's
  * rest restores PV/PM = level × multiplier, floored. */
 export type RestCondition = 'ruim' | 'normal' | 'confortavel' | 'luxuosa';
+
+/** Delta for end-scene/end-day: the effect scopes the client should drop from
+ *  its cached character (it already holds the rows). */
+export type EffectsClearedResult = { clearedScopes: ('scene' | 'day')[] };
 const REST_MULTIPLIER: Record<RestCondition, number> = {
   ruim: 0.5,
   normal: 1,
@@ -60,7 +64,9 @@ export class CharacterEffectsService {
     const buff = SPELL_CATALOG[dto.spellId].buff!;
     const scope = dto.scope ?? buff.defaultScope;
     const modifiers = JSON.stringify(buff.modifiers);
-    await this.prisma.activeEffect.upsert({
+    // Return just the upserted ActiveEffect row (a delta) — the client merges it
+    // into the cached character rather than re-reading the whole aggregate.
+    return this.prisma.activeEffect.upsert({
       where: {
         characterId_catalogId_scope: {
           characterId,
@@ -76,8 +82,14 @@ export class CharacterEffectsService {
         modifiers,
       },
       update: { modifiers, source: 'spell' },
+      select: {
+        id: true,
+        catalogId: true,
+        scope: true,
+        modifiers: true,
+        createdAt: true,
+      },
     });
-    return this.characters.findOne(callerId, characterId);
   }
 
   async removeActiveEffect(
@@ -97,20 +109,28 @@ export class CharacterEffectsService {
     return { id: effectId };
   }
 
-  async endScene(ownerId: number, characterId: number) {
+  // Delta: which scopes were cleared. The client drops the matching cached
+  // effects itself (it already holds them), so no full-Character re-read.
+  async endScene(
+    ownerId: number,
+    characterId: number,
+  ): Promise<EffectsClearedResult> {
     await this.characters.findOne(ownerId, characterId);
     await this.prisma.activeEffect.deleteMany({
       where: { characterId, scope: 'scene' },
     });
-    return this.characters.findOne(ownerId, characterId);
+    return { clearedScopes: ['scene'] };
   }
 
-  async endDay(ownerId: number, characterId: number) {
+  async endDay(
+    ownerId: number,
+    characterId: number,
+  ): Promise<EffectsClearedResult> {
     await this.characters.findOne(ownerId, characterId);
     await this.prisma.activeEffect.deleteMany({
       where: { characterId, scope: { in: ['scene', 'day'] } },
     });
-    return this.characters.findOne(ownerId, characterId);
+    return { clearedScopes: ['scene', 'day'] };
   }
 
   /**

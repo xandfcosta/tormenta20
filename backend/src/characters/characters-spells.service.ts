@@ -121,6 +121,11 @@ function pmLimitFor(
  * Ownership is enforced by delegating to `CharactersService.findOne`
  * (which throws Forbidden if the caller doesn't own the character).
  */
+
+/** Delta returned by castSpell: the new PM and any catalyst effect ids the cast
+ *  consumed. The client sets mpCurrent + drops those effects from its cache. */
+export type CastSpellResult = { mpCurrent: number; removedEffectIds: number[] };
+
 @Injectable()
 export class CharactersSpellsService {
   constructor(
@@ -306,15 +311,19 @@ export class CharactersSpellsService {
       }
     }
 
+    // Delta (not the whole Character): the new PM + any catalyst effect the cast
+    // consumed. The client sets mpCurrent + drops those effects from its cache.
+    const removedEffectIds = catalyst ? [catalyst.effectId] : [];
     if (totalPm === 0) {
-      return this.characters.findOne(ownerId, characterId);
+      return { mpCurrent: character.mpCurrent, removedEffectIds };
     }
 
+    const mpCurrent = character.mpCurrent - totalPm;
     await this.prisma.character.update({
       where: { id: characterId },
-      data: { mpCurrent: character.mpCurrent - totalPm },
+      data: { mpCurrent },
     });
-    return this.characters.findOne(ownerId, characterId);
+    return { mpCurrent, removedEffectIds };
   }
 
   /**

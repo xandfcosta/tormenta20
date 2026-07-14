@@ -19,7 +19,7 @@ import {
 } from '@/shared/ui/dialog'
 import { NumberInput } from '@/shared/ui/number-input'
 import { ApiError, api } from '@/shared/api/api'
-import type { Character } from '@/shared/api/api'
+import type { CastSpellResult, Character } from '@/shared/api/api'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { accentStrong, dimText } from '@/shared/lib/sheet-theme'
@@ -85,7 +85,7 @@ export function CastSpellDialog({
     }),
   )
 
-  const cast = useMutation<Character, Error, void, { prev?: Character }>({
+  const cast = useMutation<CastSpellResult, Error, void, { prev?: Character }>({
     mutationFn: () =>
       api.characters.castSpell(character.id, spell.id, augmentPicks),
     onMutate: async () => {
@@ -97,8 +97,19 @@ export function CastSpellDialog({
       )
       return { prev }
     },
-    onSuccess: (updated) => {
-      qc.setQueryData(queryKey, updated)
+    // Delta merge: authoritative PM + drop any catalyst effect the cast consumed.
+    onSuccess: (delta) => {
+      qc.setQueryData<Character>(queryKey, (c) =>
+        c
+          ? {
+              ...c,
+              mpCurrent: delta.mpCurrent,
+              activeEffects: c.activeEffects.filter(
+                (e) => !delta.removedEffectIds.includes(e.id),
+              ),
+            }
+          : c,
+      )
       invalidateCharacterDependents(qc, character.id)
       setOpen(false)
       setStacksByIndex(new Map())

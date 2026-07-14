@@ -180,6 +180,17 @@ export type ApplyEffectInput = {
   scope?: 'scene' | 'day'
 }
 
+/** Delta from castSpell: new PM + catalyst effect ids the cast consumed. */
+export type CastSpellResult = {
+  mpCurrent: number
+  removedEffectIds: number[]
+}
+
+/** Delta from endScene/endDay: which effect scopes to drop from the cache. */
+export type EffectsClearedResult = {
+  clearedScopes: ('scene' | 'day')[]
+}
+
 export type CreateCharacterInput = {
   name: string
   races: string[]
@@ -412,7 +423,7 @@ export const api = {
         body: JSON.stringify(input),
       }),
     applyEffect: (id: number, input: ApplyEffectInput) =>
-      request<Character>(`/characters/${id}/active-effects`, {
+      request<ActiveEffect>(`/characters/${id}/active-effects`, {
         method: 'POST',
         body: JSON.stringify(input),
       }),
@@ -421,9 +432,13 @@ export const api = {
         method: 'DELETE',
       }),
     endScene: (id: number) =>
-      request<Character>(`/characters/${id}/end-scene`, { method: 'POST' }),
+      request<EffectsClearedResult>(`/characters/${id}/end-scene`, {
+        method: 'POST',
+      }),
     endDay: (id: number) =>
-      request<Character>(`/characters/${id}/end-day`, { method: 'POST' }),
+      request<EffectsClearedResult>(`/characters/${id}/end-day`, {
+        method: 'POST',
+      }),
     updateProficiencies: (id: number, input: UpdateProficienciesInput) =>
       request<Character>(`/characters/${id}/proficiencies`, {
         method: 'PATCH',
@@ -477,7 +492,7 @@ export const api = {
       catalogSpellId: string,
       augments: { augmentIndex: number; stacks: number }[] = [],
     ) =>
-      request<Character>(
+      request<CastSpellResult>(
         `/characters/${id}/spells/${encodeURIComponent(catalogSpellId)}/cast`,
         {
           method: 'POST',

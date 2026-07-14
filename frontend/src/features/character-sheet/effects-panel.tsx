@@ -150,19 +150,27 @@ function ActiveEffectsSection({ character }: { character: Character }) {
       invalidateCharacterDependents(qc, character.id)
     },
   })
-  const endScene = useMutation<Character, Error, void>({
+  // Delta merge: drop the cached effects whose scope the server cleared.
+  const dropClearedScopes = ({ clearedScopes }: { clearedScopes: string[] }) => {
+    qc.setQueryData<Character>(queryKey, (prev) =>
+      prev
+        ? {
+            ...prev,
+            activeEffects: prev.activeEffects.filter(
+              (e) => !clearedScopes.includes(e.scope),
+            ),
+          }
+        : prev,
+    )
+    invalidateCharacterDependents(qc, character.id)
+  }
+  const endScene = useMutation({
     mutationFn: () => api.characters.endScene(character.id),
-    onSuccess: (next) => {
-      qc.setQueryData<Character>(queryKey, next)
-      invalidateCharacterDependents(qc, character.id)
-    },
+    onSuccess: dropClearedScopes,
   })
-  const endDay = useMutation<Character, Error, void>({
+  const endDay = useMutation({
     mutationFn: () => api.characters.endDay(character.id),
-    onSuccess: (next) => {
-      qc.setQueryData<Character>(queryKey, next)
-      invalidateCharacterDependents(qc, character.id)
-    },
+    onSuccess: dropClearedScopes,
   })
 
   return (
@@ -311,10 +319,30 @@ function ApplyEffectDialog({ character }: { character: Character }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
 
-  const apply = useMutation<Character, Error, string>({
-    mutationFn: (spellId) => api.characters.applyEffect(character.id, { spellId }),
-    onSuccess: (next) => {
-      qc.setQueryData<Character>(queryKey, next)
+  const apply = useMutation({
+    mutationFn: (spellId: string) =>
+      api.characters.applyEffect(character.id, { spellId }),
+    // Delta merge: upsert the returned ActiveEffect row (replace any existing
+    // one for the same spell+scope, since the server upserts on that key).
+    onSuccess: (effect) => {
+      qc.setQueryData<Character>(queryKey, (prev) =>
+        prev
+          ? {
+              ...prev,
+              activeEffects: [
+                ...prev.activeEffects.filter(
+                  (e) =>
+                    e.id !== effect.id &&
+                    !(
+                      e.catalogId === effect.catalogId &&
+                      e.scope === effect.scope
+                    ),
+                ),
+                effect,
+              ],
+            }
+          : prev,
+      )
       invalidateCharacterDependents(qc, character.id)
       setOpen(false)
     },
