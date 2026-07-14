@@ -3,6 +3,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
+import { compression } from 'vite-plugin-compression2'
 
 /**
  * Manual chunk boundaries. Rolldown otherwise concatenates every
@@ -102,6 +103,15 @@ export default defineConfig({
     tanstackRouter({ target: 'react', autoCodeSplitting: true }),
     react(),
     tailwindcss(),
+    // Emit .br alongside each build asset. Brotli quality 11 is the right call
+    // for STATIC assets (compressed once at build, not per request) — ~15–20%
+    // smaller than gzip on our JS/CSS. A brotli-aware static host/CDN serves the
+    // .br when the client sends Accept-Encoding: br. Skips tiny files (<1 KB).
+    compression({
+      algorithms: ['brotliCompress'],
+      exclude: [/\.(br|gz)$/],
+      threshold: 1024,
+    }),
   ],
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
