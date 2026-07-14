@@ -24,7 +24,7 @@ import {
 } from '@/entities/character/expertise'
 import { charactersQueryOptions } from '@/entities/character/queries'
 import { fuzzyFilter } from '@/shared/lib/fuzzy-filter'
-import { CharacterPortrait } from './character-portrait'
+import { CharacterPortrait } from '@/shared/ui/character-portrait'
 
 // Headless table drives the roster search (name / class / origin) via the
 // built-in global filter. Rows are read back out and rendered as thumbnails.

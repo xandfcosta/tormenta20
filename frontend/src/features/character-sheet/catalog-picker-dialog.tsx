@@ -41,6 +41,11 @@ const EQUIP_PICKER_OPTIONS: { value: '' | 'vested' | 'wielded' | 'wielded2'; lab
   { value: 'wielded2', label: '2 mãos' },
 ]
 
+// Distinct catalog categories, sorted, for the add-dialog category filter.
+const CATALOG_CATEGORIES = [
+  ...new Set(CATALOG_ITEMS.map((c) => c.category)),
+].sort()
+
 /**
  * Overlay dialog for applying improvements + a special material to an
  * already-owned item. Returns null when the item's catalog category
@@ -254,6 +259,7 @@ export function AddCatalogItemDialog({
   const [open, setOpen] = useState(false)
   const [catalogId, setCatalogId] = useState('')
   const [search, setSearch] = useState('')
+  const [category, setCategory] = useState('')
   const [quantity, setQuantity] = useState<string>('1')
   const [equipped, setEquipped] = useState<'' | 'vested' | 'wielded' | 'wielded2'>('')
   const [error, setError] = useState<string | null>(null)
@@ -261,6 +267,7 @@ export function AddCatalogItemDialog({
   const reset = () => {
     setCatalogId('')
     setSearch('')
+    setCategory('')
     setQuantity('1')
     setEquipped('')
     setError(null)
@@ -270,14 +277,14 @@ export function AddCatalogItemDialog({
     ? CATALOG_ITEMS.find((c) => c.id === catalogId)
     : undefined
 
-  const filtered =
-    search.trim() === ''
-      ? CATALOG_ITEMS
-      : CATALOG_ITEMS.filter(
-          (c) =>
-            normalize(c.name).includes(normalize(search)) ||
-            normalize(c.category).includes(normalize(search)),
-        )
+  const filtered = CATALOG_ITEMS.filter((c) => {
+    if (category && c.category !== category) return false
+    if (search.trim() === '') return true
+    return (
+      normalize(c.name).includes(normalize(search)) ||
+      normalize(c.category).includes(normalize(search))
+    )
+  })
 
   const apply = () => {
     if (!selected) {
@@ -337,12 +344,28 @@ export function AddCatalogItemDialog({
             <span className={cn('text-[10px] uppercase tracking-widest', dimText)}>
               item
             </span>
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar pelo nome ou categoria..."
-              autoFocus
-            />
+            <div className="flex gap-2">
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar pelo nome..."
+                autoFocus
+                className="flex-1"
+              />
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className={cn(selectClass, 'h-9 max-w-[45%] px-2 text-sm')}
+                aria-label="Categoria"
+              >
+                <option value="">Todas categorias</option>
+                {CATALOG_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
             {filtered.length === 0 ? (
               <p
                 className={cn(

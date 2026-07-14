@@ -48,7 +48,7 @@ export function CharacterSheetDesktop({
           ))}
         </div>
 
-        <TabsList className="flex h-full flex-col gap-1 self-start rounded-lg border bg-card p-1">
+        <TabsList className="flex h-full flex-col gap-1 rounded-lg border bg-card p-1">
           {panels.map((s) => (
             <TabsTrigger
               key={s.value}

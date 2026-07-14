@@ -51,7 +51,7 @@ export function ResourceBar({
       </div>
       <div className="mt-1.5 h-2.5 overflow-hidden rounded-full border border-border bg-muted  ">
         <div
-          className={`h-full  ${fromColor} ${toColor} transition-all`}
+          className={`h-full bg-gradient-to-r ${fromColor} ${toColor} transition-all`}
           style={{ width: `${pct}%` }}
         />
       </div>

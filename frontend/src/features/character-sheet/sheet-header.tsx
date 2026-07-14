@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
+import { CharacterPortrait } from '@/shared/ui/character-portrait'
 import {
   Dialog,
   DialogContent,
@@ -39,27 +40,28 @@ export function SheetHeader({
         className,
       )}
     >
-      <div className="min-w-0">
-        <h1 className="truncate text-xl font-bold leading-tight tracking-tight sm:text-2xl">
-          {character.name}
-        </h1>
-        <p className="truncate text-xs text-muted-foreground">
-          {races.join(' / ')} • {character.origin}
-          {character.god && (
-            <>
-              {' '}
-              • <span className="text-foreground">{character.god}</span>
-            </>
-          )}
-          {' • '}
-          {character.size} • <DisplacementBadge disp={disp} />
-          {fatigue && (
-            <>
-              {' • '}
-              <FatigueWarning />
-            </>
-          )}
-        </p>
+      <div className="flex min-w-0 items-center gap-3">
+        <CharacterPortrait name={character.name} size="sm" />
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-bold leading-tight tracking-tight sm:text-2xl">
+            {character.name}
+          </h1>
+          <p className="truncate text-xs text-muted-foreground">
+            {races.join(' / ')} • {character.origin}
+            {' • '}
+            <span className="text-foreground">
+              {character.god ?? 'Sem devoção'}
+            </span>
+            {' • '}
+            {character.size} • <DisplacementBadge disp={disp} />
+            {fatigue && (
+              <>
+                {' • '}
+                <FatigueWarning />
+              </>
+            )}
+          </p>
+        </div>
       </div>
       <div className="flex items-center gap-2">
         <div className="flex flex-wrap justify-end gap-1">
