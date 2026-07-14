@@ -25,6 +25,7 @@ import {
 } from '@tormenta20/t20-data'
 import type { Character, CharacterExpertise, CharacterItem } from '@/shared/api/api'
 import { useActiveConditionals } from '@/shared/stores/conditionals-store'
+import { effectSourceName } from './effect-source'
 
 function activeItemsFor(character: Character): ActiveItem[] {
   const proficiencies = parseProficiencySetFromCharacter(character)
@@ -55,8 +56,7 @@ function activeItemsFor(character: Character): ActiveItem[] {
       }
     })
   for (const eff of character.activeEffects ?? []) {
-    const catalog = getCatalogItem(eff.catalogId)
-    const sourceName = catalog?.name ?? eff.catalogId
+    const sourceName = effectSourceName(eff.catalogId)
     const modifiers = parseEffectModifiers(eff.modifiers)
     if (modifiers.length === 0) continue
     items.push({
@@ -232,7 +232,7 @@ function powerLabel(id: string): string {
   return getClassPower(id)?.name ?? getGeneralPower(id)?.name ?? id
 }
 
-function parseEffectModifiers(raw: string): Modifier[] {
+export function parseEffectModifiers(raw: string): Modifier[] {
   try {
     const parsed = JSON.parse(raw)
     if (Array.isArray(parsed)) return parsed as Modifier[]

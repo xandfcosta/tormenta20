@@ -1,22 +1,36 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Check, Sparkles, X } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Plus, Search, Sparkles, X } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import { VirtualList } from '@/shared/ui/virtual-list'
 import { api, type Character } from '@/shared/api/api'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import {
+  parseEffectModifiers,
   useAllConditionals,
   type ConditionalEntry,
 } from '@/entities/character/derived'
+import { effectSourceName } from '@/entities/character/effect-source'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { cn } from '@/shared/lib/utils'
 import { useConditionalsStore } from '@/shared/stores/conditionals-store'
-import { getCatalogItem } from '@tormenta20/t20-data'
+import { SPELL_CATALOG } from '@tormenta20/t20-data'
 import type { ConditionalEffect, Modifier } from '@tormenta20/t20-data'
 import {
   accentStrong,
   subtleText,
   surface,
 } from '@/shared/lib/sheet-theme'
+import { normalize } from './normalize'
 import { signed } from './signed'
 
 /**
@@ -158,11 +172,12 @@ function ActiveEffectsSection({ character }: { character: Character }) {
         surface,
       )}
     >
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className={cn('text-sm font-bold', accentStrong)}>
-          Efeitos consumíveis ativos
+          Efeitos ativos
         </h3>
-        <div className="flex gap-1">
+        <div className="flex flex-wrap gap-1">
+          <ApplyEffectDialog character={character} />
           <Button
             type="button"
             variant="outline"
@@ -216,9 +231,11 @@ function ActiveEffectRow({
   effect: Character['activeEffects'][number]
   onRemove: () => void
 }) {
-  const catalog = getCatalogItem(effect.catalogId)
-  const name = catalog?.name ?? effect.catalogId
-  const modifiers = catalog?.consumable?.modifiers ?? []
+  // Name + modifiers resolve for BOTH item and spell sources: the name via the
+  // spell-aware resolver, the modifiers from the effect's own persisted blob
+  // (works regardless of source, unlike reading `catalog.consumable.modifiers`).
+  const name = effectSourceName(effect.catalogId)
+  const modifiers = parseEffectModifiers(effect.modifiers)
   return (
     <li
       className={cn(
@@ -276,6 +293,116 @@ function ActiveEffectRow({
         </p>
       )}
     </li>
+  )
+}
+
+/** Spell buffs the player can self-apply, resolved once from the catalog. A
+ *  spell qualifies only if it carries a Phase-1 `SpellBuff` block. */
+const BUFF_SPELLS = Object.values(SPELL_CATALOG).filter((s) => s.buff)
+
+/**
+ * Manual self-apply of a spell buff as a scene/day ActiveEffect. Buffs are
+ * never auto-applied from another caster — the target (or GM) picks the source
+ * and applies it here. Scope defaults to the buff's `defaultScope`.
+ */
+function ApplyEffectDialog({ character }: { character: Character }) {
+  const qc = useQueryClient()
+  const queryKey = characterQueryOptions(character.id).queryKey
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+
+  const apply = useMutation<Character, Error, string>({
+    mutationFn: (spellId) => api.characters.applyEffect(character.id, { spellId }),
+    onSuccess: (next) => {
+      qc.setQueryData<Character>(queryKey, next)
+      invalidateCharacterDependents(qc, character.id)
+      setOpen(false)
+    },
+  })
+
+  const matches = useMemo(() => {
+    const q = normalize(query.trim())
+    if (!q) return BUFF_SPELLS
+    return BUFF_SPELLS.filter((s) => normalize(s.name).includes(q))
+  }, [query])
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-6 px-2 text-[11px]"
+        >
+          <Plus className="mr-1 size-3" />
+          Aplicar efeito
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="flex max-h-[80vh] flex-col gap-3">
+        <DialogHeader>
+          <DialogTitle>Aplicar efeito de magia</DialogTitle>
+        </DialogHeader>
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar magia…"
+            className="pl-8"
+          />
+        </div>
+        {matches.length === 0 ? (
+          <p className={cn('py-6 text-center text-sm', subtleText)}>
+            Nenhuma magia com efeito aplicável.
+          </p>
+        ) : (
+          <VirtualList
+            items={matches}
+            estimateSize={60}
+            gap={4}
+            getKey={(spell) => spell.id}
+            className="min-h-0 flex-1"
+            renderItem={(spell) => (
+              <button
+                type="button"
+                disabled={apply.isPending}
+                onClick={() => apply.mutate(spell.id)}
+                className="flex w-full flex-col gap-1 rounded-md border p-2 text-left transition-colors hover:bg-muted disabled:opacity-50"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="truncate text-sm font-medium text-foreground">
+                    {spell.name}
+                  </span>
+                  <span className={cn('shrink-0 text-[10px] uppercase', subtleText)}>
+                    {spell.buff?.defaultScope === 'day' ? 'dia' : 'cena'}
+                  </span>
+                </div>
+                <ul className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px]">
+                  {(spell.buff?.modifiers ?? []).map((m, i) => (
+                    <li key={i} className="flex items-center gap-1">
+                      <span className={subtleText}>
+                        {describeConditionalTarget(m.target)}
+                      </span>
+                      <span
+                        className={cn(
+                          'font-mono font-semibold',
+                          m.amount >= 0
+                            ? 'text-emerald-700 dark:text-emerald-300'
+                            : 'text-red-700 dark:text-red-300',
+                        )}
+                      >
+                        {signed(m.amount)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </button>
+            )}
+          />
+        )}
+      </DialogContent>
+    </Dialog>
   )
 }
 

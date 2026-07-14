@@ -164,6 +164,11 @@ export type ConsumeItemInput = {
   mpRolled?: number
 }
 
+export type ApplyEffectInput = {
+  spellId: string
+  scope?: 'scene' | 'day'
+}
+
 export type CreateCharacterInput = {
   name: string
   races: string[]
@@ -392,6 +397,11 @@ export const api = {
       }),
     consumeItem: (id: number, itemId: number, input: ConsumeItemInput = {}) =>
       request<Character>(`/characters/${id}/items/${itemId}/consume`, {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    applyEffect: (id: number, input: ApplyEffectInput) =>
+      request<Character>(`/characters/${id}/active-effects`, {
         method: 'POST',
         body: JSON.stringify(input),
       }),
