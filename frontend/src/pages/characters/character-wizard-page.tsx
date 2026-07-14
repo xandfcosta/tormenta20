@@ -117,7 +117,7 @@ export function NewCharacterPage() {
       try {
         const created = await api.characters.create(payload)
         qc.invalidateQueries({ queryKey: charactersQueryOptions.queryKey })
-        await navigate({ to: '/characters/$id', params: { id: String(created.id) } })
+        await navigate({ to: '/characters/$id', params: { id: created.id } })
       } catch (e) {
         if (!applyServerErrors(formApi, e) && e instanceof ApiError) {
           setFormError(e.message)

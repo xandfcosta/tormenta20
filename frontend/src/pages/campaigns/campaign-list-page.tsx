@@ -190,7 +190,7 @@ function CampaignSection({
 
 function CampaignCard({ campaign }: { campaign: Campaign }) {
   return (
-    <Link to="/campaigns/$id" params={{ id: String(campaign.id) }}>
+    <Link to="/campaigns/$id" params={{ id: campaign.id }}>
       <Card className="h-full transition-colors hover:border-primary">
         <CardHeader>
           <CardTitle>{campaign.name}</CardTitle>

@@ -196,7 +196,7 @@ function SplashPanel({ character }: { character: Character }) {
       </div>
       <Link
         to="/characters/$id"
-        params={{ id: String(character.id) }}
+        params={{ id: character.id }}
         className="shrink-0"
       >
         <Button className="w-full" size="lg">

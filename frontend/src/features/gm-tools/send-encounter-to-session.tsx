@@ -235,7 +235,7 @@ function SessionSender({
       onDone()
       navigate({
         to: '/campaigns/$id/sessions/$sid',
-        params: { id: String(campaignId), sid: String(sessionId) },
+        params: { id: campaignId, sid: sessionId },
       })
     }, 400)
     return () => clearTimeout(t)

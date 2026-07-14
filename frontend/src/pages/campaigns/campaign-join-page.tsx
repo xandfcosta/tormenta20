@@ -71,7 +71,7 @@ export function JoinCampaignPage() {
         })
         await navigate({
           to: '/campaigns/$id',
-          params: { id: String(value.campaignId) },
+          params: { id: value.campaignId },
         })
       } catch (e) {
         if (!applyServerErrors(formApi, e) && e instanceof ApiError) {

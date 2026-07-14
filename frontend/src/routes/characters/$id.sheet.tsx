@@ -10,8 +10,6 @@ export const Route = createFileRoute('/characters/$id/sheet')({
       throw redirect({ to: '/login', search: { redirect: location.href } })
   },
   loader: ({ context, params }) =>
-    context.queryClient.ensureQueryData(
-      characterSheetQueryOptions(Number(params.id)),
-    ),
+    context.queryClient.ensureQueryData(characterSheetQueryOptions(params.id)),
   component: CharacterSheetPage,
 })

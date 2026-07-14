@@ -27,7 +27,7 @@ export function SessionsCard({ campaignId }: { campaignId: number }) {
       })
       await navigate({
         to: '/campaigns/$id/sessions/$sid',
-        params: { id: String(campaignId), sid: String(created.id) },
+        params: { id: campaignId, sid: created.id },
       })
     },
   })
@@ -76,7 +76,7 @@ function SessionRow({
   return (
     <Link
       to="/campaigns/$id/sessions/$sid"
-      params={{ id: String(campaignId), sid: String(session.id) }}
+      params={{ id: campaignId, sid: session.id }}
     >
       <div className="flex items-center justify-between rounded-md border p-2 text-sm transition-colors hover:border-primary">
         <div>

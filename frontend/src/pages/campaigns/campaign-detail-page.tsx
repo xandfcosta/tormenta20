@@ -55,7 +55,7 @@ export function CampaignDetailPage() {
           {activeSession && (
             <Link
               to="/campaigns/$id/sessions/$sid"
-              params={{ id, sid: String(activeSession.id) }}
+              params={{ id, sid: activeSession.id }}
             >
               <div className="flex items-center justify-between rounded-lg border border-primary bg-primary/5 p-3 transition-colors hover:bg-primary/10">
                 <span className="font-medium">

@@ -43,7 +43,7 @@ export function NewCampaignPage() {
         qc.invalidateQueries({ queryKey: campaignsQueryOptions.queryKey })
         await navigate({
           to: '/campaigns/$id',
-          params: { id: String(created.id) },
+          params: { id: created.id },
         })
       } catch (e) {
         if (!applyServerErrors(formApi, e) && e instanceof ApiError) {

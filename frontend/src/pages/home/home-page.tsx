@@ -103,7 +103,7 @@ function CharactersOverview({
             <OverviewRow
               key={c.id}
               to="/characters/$id"
-              params={{ id: String(c.id) }}
+              params={{ id: c.id }}
               label={c.name}
               trailing={<Badge variant="secondary">Nv {c.level}</Badge>}
             />
@@ -131,7 +131,7 @@ function CampaignsOverview({
             <OverviewRow
               key={c.id}
               to="/campaigns/$id"
-              params={{ id: String(c.id) }}
+              params={{ id: c.id }}
               label={c.name}
               trailing={
                 c.role && (
@@ -184,7 +184,7 @@ function OverviewRow({
   trailing,
 }: {
   to: '/characters/$id' | '/campaigns/$id'
-  params: { id: string }
+  params: { id: number }
   label: string
   trailing?: React.ReactNode
 }) {

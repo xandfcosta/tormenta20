@@ -35,7 +35,7 @@ export function DeleteSessionButton({
       setOpen(false)
       await navigate({
         to: '/campaigns/$id',
-        params: { id: String(campaignId) },
+        params: { id: campaignId },
       })
     },
   })

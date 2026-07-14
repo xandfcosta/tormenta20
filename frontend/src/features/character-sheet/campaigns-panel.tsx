@@ -34,7 +34,7 @@ export function CampaignsPanel({ characterId }: { characterId: number }) {
         <Link
           key={row.id}
           to="/campaigns/$id"
-          params={{ id: String(row.campaignId) }}
+          params={{ id: row.campaignId }}
         >
           <div className="rounded-md border p-3 transition hover:border-primary/40">
             <div className="flex items-center justify-between">

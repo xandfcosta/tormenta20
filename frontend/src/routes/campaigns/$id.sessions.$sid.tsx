@@ -2,8 +2,10 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { campaignSessionQueryOptions } from '@/entities/session/queries'
 import { meQueryOptions } from '@/entities/user/queries'
 import { SessionDetailPage } from '@/pages/sessions/session-tracker-page'
+import { idParams } from '@/shared/lib/route-params'
 
 export const Route = createFileRoute('/campaigns/$id/sessions/$sid')({
+  params: idParams('sid'),
   beforeLoad: async ({ context, location }) => {
     const user = await context.queryClient.ensureQueryData(meQueryOptions)
     if (!user)
@@ -11,7 +13,7 @@ export const Route = createFileRoute('/campaigns/$id/sessions/$sid')({
   },
   loader: ({ context, params }) =>
     context.queryClient.ensureQueryData(
-      campaignSessionQueryOptions(Number(params.id), Number(params.sid)),
+      campaignSessionQueryOptions(params.id, params.sid),
     ),
   component: SessionDetailPage,
 })

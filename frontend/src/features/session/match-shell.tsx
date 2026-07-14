@@ -29,7 +29,7 @@ export function MatchShell({
         </p>
         <div className="flex items-center gap-2">
           {bar}
-          <Link to="/campaigns/$id" params={{ id: String(campaignId) }}>
+          <Link to="/campaigns/$id" params={{ id: campaignId }}>
             <Button variant="outline" size="sm" className="gap-1.5">
               <LogOut className="size-4" />
               <span className="hidden sm:inline">Sair da sessão</span>

@@ -90,7 +90,7 @@ function MemberRow({
     <div className="flex items-center justify-between rounded-md border p-2 text-sm transition-colors hover:border-primary">
       <Link
         to="/characters/$id"
-        params={{ id: String(member.characterId) }}
+        params={{ id: member.characterId }}
         className="flex-1"
       >
         <p className="flex flex-wrap items-center gap-1 font-medium">
