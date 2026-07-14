@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react'
 import {
   CATALOG_ITEMS,
   firstErrorMessage,
+  getCatalogItem,
   validateConsumeQuantity,
   validateEquipChange,
 } from '@tormenta20/t20-data'
@@ -174,10 +175,48 @@ export function InventoryPanel({ character }: { character: Character }) {
   const consumeItem = useMutation<
     Character,
     Error,
-    { itemId: number; input?: ConsumeItemInput }
+    { itemId: number; input?: ConsumeItemInput },
+    { previous: Character | undefined }
   >({
     mutationFn: ({ itemId, input }) =>
       api.characters.consumeItem(character.id, itemId, input),
+    onMutate: async ({ itemId, input }) => {
+      // Optimistic: decrement (delete at 1→0) + apply the instant PV/PM gain the
+      // same way the server clamps it. `input.hpRolled/mpRolled` (from the roll
+      // dialog) already includes the bonus; fixed consumables gain just the
+      // bonus. Scene/day effect rows stay server-authoritative (reconciled in
+      // onSuccess). Prediction matches backend, so no visible flicker.
+      await qc.cancelQueries({ queryKey })
+      const previous = qc.getQueryData<Character>(queryKey)
+      qc.setQueryData<Character>(queryKey, (prev) => {
+        if (!prev) return prev
+        const item = prev.items.find((i) => i.id === itemId)
+        if (!item) return prev
+        const items =
+          item.quantity > 1
+            ? prev.items.map((i) =>
+                i.id === itemId ? { ...i, quantity: i.quantity - 1 } : i,
+              )
+            : prev.items.filter((i) => i.id !== itemId)
+        const instant = item.catalogId
+          ? getCatalogItem(item.catalogId)?.consumable?.instant
+          : undefined
+        let { hpCurrent, mpCurrent } = prev
+        if (instant?.hp) {
+          const gain = input?.hpRolled ?? instant.hp.bonus ?? 0
+          hpCurrent = Math.min(prev.hpMax, hpCurrent + gain)
+        }
+        if (instant?.mp) {
+          const gain = input?.mpRolled ?? instant.mp.bonus ?? 0
+          mpCurrent = Math.min(prev.mpMax, mpCurrent + gain)
+        }
+        return { ...prev, items, hpCurrent, mpCurrent }
+      })
+      return { previous }
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
+    },
     onSuccess: (next) => {
       qc.setQueryData<Character>(queryKey, next)
       invalidateCharacterDependents(qc, character.id)
