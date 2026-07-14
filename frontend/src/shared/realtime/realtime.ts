@@ -220,6 +220,22 @@ export function useSessionSocket(campaignId: number, sessionId: number) {
           ...delta,
         })
       },
+      /** GM applies a spell buff to a combatant's character. Buffs are never
+       *  auto-applied — the GM explicitly targets an entry. Server persists on
+       *  the Character aggregate; scope defaults to the buff's `defaultScope`. */
+      applyEffect: (
+        entryId: string,
+        spellId: string,
+        scope?: 'scene' | 'day',
+      ) => {
+        socketRef.current?.emit('apply-effect', {
+          campaignId,
+          sessionId,
+          entryId,
+          spellId,
+          scope,
+        })
+      },
     }),
     [campaignId, sessionId],
   )

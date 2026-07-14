@@ -388,6 +388,51 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     return { rested: body.scope, characters: characterIds.length, healed };
   }
 
+  /**
+   * GM applies a spell buff to a combatant mid-session — GM-only. Buffs are
+   * never auto-applied from a caster; the GM (or the player, via the HTTP
+   * endpoint) explicitly targets a character. Persistence + owner/GM auth is
+   * the Character aggregate's job (`effects.applyEffect` → `findOne`); we just
+   * resolve the tracker entry to a characterId and notify the room so a client
+   * holding that sheet refetches (activeEffects don't live in tracker state).
+   */
+  @SubscribeMessage('apply-effect')
+  async applyEffect(
+    @ConnectedSocket() socket: AuthedSocket,
+    @MessageBody()
+    body: SessionScopedBody & {
+      entryId: string;
+      spellId: string;
+      scope?: 'scene' | 'day';
+    },
+  ) {
+    await this.assertSessionAccess(socket, body);
+    this.assertGm(socket);
+    if (!body.entryId) throw new WsException('entryId is required');
+    if (!body.spellId) throw new WsException('spellId is required');
+    const entry = this.state
+      .getState(body.sessionId)
+      .initiative.find((e) => e.id === body.entryId);
+    if (!entry) throw new WsException(`Entry ${body.entryId} not found`);
+    if (entry.characterId === undefined) {
+      throw new WsException('Only character entries can receive spell effects');
+    }
+    try {
+      await this.effects.applyEffect(socket.data.user.id, entry.characterId, {
+        spellId: body.spellId,
+        scope: body.scope,
+      });
+    } catch (err) {
+      throw new WsException((err as Error).message);
+    }
+    this.server.to(sessionRoom(body.sessionId)).emit('effect-applied', {
+      sessionId: body.sessionId,
+      characterId: entry.characterId,
+      spellId: body.spellId,
+    });
+    return { applied: body.spellId, characterId: entry.characterId };
+  }
+
   /** Copy freshly-persisted PV/PM onto the matching live tracker entry
    * (if the character is in the current initiative) so the bars reflect
    * a rest without a reload. */

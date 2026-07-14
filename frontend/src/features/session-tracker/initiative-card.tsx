@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Plus, Swords, Trash2 } from 'lucide-react'
+import { Plus, Sparkles, Swords, Trash2 } from 'lucide-react'
+import { SPELL_CATALOG } from '@tormenta20/t20-data'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader } from '@/shared/ui/card'
@@ -28,6 +29,9 @@ import { PartyRoster } from './party-roster'
 // hook only reports `isConnected` + `error`; we infer 'reconnecting' as
 // "not connected AND no fatal error yet" so a flicker between attempts
 // shows the spinner instead of the offline glyph.
+/** Spell buffs a GM can push onto a combatant, resolved once from the catalog. */
+const BUFF_SPELLS = Object.values(SPELL_CATALOG).filter((s) => s.buff)
+
 function deriveConnectionStatus(
   isConnected: boolean,
   error: string | null,
@@ -189,6 +193,11 @@ export function InitiativeCard({
               onDeltaHp={(delta) =>
                 rt.deltaVitals(entry.id, { hpDelta: delta })
               }
+              onApplyEffect={
+                isGm && entry.characterId !== undefined
+                  ? (spellId) => rt.applyEffect(entry.id, spellId)
+                  : undefined
+              }
               onRemove={() => rt.removeEntry(entry.id)}
             />
             )
@@ -261,6 +270,7 @@ function InitiativeRow({
   canRemove,
   onOpenSheet,
   onDeltaHp,
+  onApplyEffect,
   onRemove,
 }: {
   entry: InitiativeEntry
@@ -271,6 +281,8 @@ function InitiativeRow({
   canRemove: boolean
   onOpenSheet?: () => void
   onDeltaHp: (delta: number) => void
+  /** GM-only: push a spell buff onto this combatant's character. */
+  onApplyEffect?: (spellId: string) => void
   onRemove: () => void
 }) {
   const hasHp = entry.hpMax !== undefined && entry.hpCurrent !== undefined
@@ -345,8 +357,9 @@ function InitiativeRow({
         </div>
       )}
 
-      {(canEditVitals || canRemove) && (
-        <div className="flex items-center justify-end gap-1">
+      {(canEditVitals || canRemove || onApplyEffect) && (
+        <div className="flex flex-wrap items-center justify-end gap-1">
+          {onApplyEffect && <ApplyEffectSelect onApply={onApplyEffect} />}
           {canEditVitals &&
             [-5, -1, 1, 5].map((delta) => (
               <Button
@@ -374,5 +387,38 @@ function InitiativeRow({
         </div>
       )}
     </div>
+  )
+}
+
+/**
+ * GM picks a spell buff to push onto a combatant. Selecting a spell fires the
+ * apply immediately; the Select value resets so the same buff can be re-applied
+ * (e.g. refreshing a scene buff). Buffs are never auto-applied — this is the
+ * explicit GM-targets-a-player affordance.
+ */
+function ApplyEffectSelect({ onApply }: { onApply: (spellId: string) => void }) {
+  return (
+    <Select
+      value=""
+      onValueChange={(spellId) => {
+        if (spellId) onApply(spellId)
+      }}
+    >
+      <SelectTrigger
+        size="sm"
+        className="h-9 w-9 justify-center p-0 sm:h-8 sm:w-8 [&>svg:last-child]:hidden"
+        aria-label="Aplicar efeito"
+        title="Aplicar efeito"
+      >
+        <Sparkles className="size-4" />
+      </SelectTrigger>
+      <SelectContent>
+        {BUFF_SPELLS.map((spell) => (
+          <SelectItem key={spell.id} value={spell.id}>
+            {spell.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   )
 }

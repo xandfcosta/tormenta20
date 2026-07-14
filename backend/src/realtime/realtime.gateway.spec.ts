@@ -40,6 +40,7 @@ async function setup(over?: {
   characterUpdate?: jest.Mock;
   charactersEndScene?: jest.Mock;
   charactersEndDay?: jest.Mock;
+  charactersApplyEffect?: jest.Mock;
   charactersRestVitals?: jest.Mock;
   charactersAssertOwner?: jest.Mock;
   membersResolveCombatant?: jest.Mock;
@@ -92,6 +93,8 @@ async function setup(over?: {
   const effects = {
     endScene: over?.charactersEndScene ?? jest.fn().mockResolvedValue({}),
     endDay: over?.charactersEndDay ?? jest.fn().mockResolvedValue({}),
+    applyEffect:
+      over?.charactersApplyEffect ?? jest.fn().mockResolvedValue({}),
     restVitals:
       over?.charactersRestVitals ??
       jest.fn().mockResolvedValue({ hpCurrent: 0, mpCurrent: 0 }),
@@ -876,6 +879,104 @@ describe('RealtimeGateway.sessionRest', () => {
         campaignId: 1,
         sessionId: 5,
         scope: 'scene',
+      }),
+    ).rejects.toBeInstanceOf(WsException);
+  });
+});
+
+describe('RealtimeGateway.applyEffect', () => {
+  const gmSocket = () => {
+    const s = fakeSocket();
+    (s as unknown as { data: { user: unknown } }).data.user = { id: 7 };
+    return s as unknown as Parameters<
+      typeof RealtimeGateway.prototype.applyEffect
+    >[0];
+  };
+
+  it('GM applies a buff to a combatant character + broadcasts (delegates auth to the aggregate)', async () => {
+    const { gateway, state, effects, emit } = await setup();
+    state.addEntry(5, {
+      label: 'Hero',
+      initiative: 15,
+      type: 'character',
+      characterId: 10,
+    });
+    const result = await gateway.applyEffect(gmSocket(), {
+      campaignId: 1,
+      sessionId: 5,
+      entryId: state.getState(5).initiative[0]!.id,
+      spellId: 'bencao',
+    });
+    expect(effects.applyEffect).toHaveBeenCalledWith(7, 10, {
+      spellId: 'bencao',
+      scope: undefined,
+    });
+    expect(result).toEqual({ applied: 'bencao', characterId: 10 });
+    expect(emit).toHaveBeenCalledWith('effect-applied', {
+      sessionId: 5,
+      characterId: 10,
+      spellId: 'bencao',
+    });
+  });
+
+  it('rejects a non-GM caller', async () => {
+    const { gateway, state } = await setup({
+      sessionsFindOneForCaller: jest
+        .fn()
+        .mockResolvedValue({ session: { id: 5 }, role: 'player' }),
+    });
+    state.addEntry(5, {
+      label: 'Hero',
+      initiative: 15,
+      type: 'character',
+      characterId: 10,
+    });
+    await expect(
+      gateway.applyEffect(gmSocket(), {
+        campaignId: 1,
+        sessionId: 5,
+        entryId: state.getState(5).initiative[0]!.id,
+        spellId: 'bencao',
+      }),
+    ).rejects.toBeInstanceOf(WsException);
+  });
+
+  it('rejects when the entry is an NPC (no characterId)', async () => {
+    const { gateway, state, effects } = await setup();
+    state.addEntry(5, {
+      label: 'Goblin',
+      initiative: 9,
+      type: 'npc',
+    });
+    await expect(
+      gateway.applyEffect(gmSocket(), {
+        campaignId: 1,
+        sessionId: 5,
+        entryId: state.getState(5).initiative[0]!.id,
+        spellId: 'bencao',
+      }),
+    ).rejects.toBeInstanceOf(WsException);
+    expect(effects.applyEffect).not.toHaveBeenCalled();
+  });
+
+  it('wraps a domain rejection (unknown spell / forbidden) as WsException', async () => {
+    const { gateway, state } = await setup({
+      charactersApplyEffect: jest
+        .fn()
+        .mockRejectedValue(new Error('Spell "nope" has no applicable buff')),
+    });
+    state.addEntry(5, {
+      label: 'Hero',
+      initiative: 15,
+      type: 'character',
+      characterId: 10,
+    });
+    await expect(
+      gateway.applyEffect(gmSocket(), {
+        campaignId: 1,
+        sessionId: 5,
+        entryId: state.getState(5).initiative[0]!.id,
+        spellId: 'nope',
       }),
     ).rejects.toBeInstanceOf(WsException);
   });
