@@ -19,6 +19,7 @@ import { CharacterExpertisesService } from './characters-expertises.service';
 import { CharactersSpellsService } from './characters-spells.service';
 import { CampaignMembersService } from '../campaign-members/campaign-members.service';
 import {
+  ApplyEffectDto,
   ConsumeItemDto,
   CreateCharacterDto,
   CreateExpertiseDto,
@@ -187,6 +188,16 @@ export class CharactersController {
     @Body() dto: ConsumeItemDto,
   ) {
     return this.items.consumeItem(user.id, id, itemId, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/active-effects')
+  applyEffect(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: ApplyEffectDto,
+  ) {
+    return this.effects.applyEffect(user.id, id, dto);
   }
 
   @UseGuards(JwtAuthGuard)

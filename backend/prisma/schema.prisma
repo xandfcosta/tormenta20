@@ -144,11 +144,13 @@ model ActiveEffect {
   id          Int       @id @default(autoincrement())
   characterId Int
   character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
-  /// catalogId of the consumable that produced this effect
+  /// Where the effect came from: 'consumable' (item) or 'spell'
+  source      String    @default("consumable")
+  /// catalog/spell id that produced this effect (disambiguated by `source`)
   catalogId   String
   /// 'scene' | 'day'
   scope       String
-  /// JSON-encoded Modifier[] copied from the catalog entry at consume time
+  /// JSON-encoded Modifier[] copied from the source at apply time
   modifiers   String
   createdAt   DateTime  @default(now())
 

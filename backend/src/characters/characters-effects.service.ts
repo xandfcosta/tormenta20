@@ -1,6 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { SPELL_CATALOG } from '@tormenta20/t20-data';
 import { PrismaService } from '../prisma/prisma.service';
 import { CharactersService } from './characters.service';
+import type { ApplyEffectDto } from './dto/character.dto';
 
 /** T20 rest-condition recovery multiplier (livro básico p.20): a night's
  * rest restores PV/PM = level × multiplier, floored. */
@@ -25,6 +31,51 @@ export class CharacterEffectsService {
     private readonly prisma: PrismaService,
     private readonly characters: CharactersService,
   ) {}
+
+  /**
+   * Apply a spell's structured buff to a character as a scoped ActiveEffect.
+   * Authorization is a domain rule delegated to `findOne` (owner OR a GM of a
+   * campaign the character is in), so a player buffs their own PC and a GM
+   * buffs any table member. Re-applying the same buff+scope refreshes the row
+   * (upsert on the unique key) instead of erroring. The spell must carry a
+   * `buff` block (Phase-1 data) — otherwise it's a rules no-op → 400.
+   */
+  async applyEffect(
+    callerId: number,
+    characterId: number,
+    dto: ApplyEffectDto,
+  ) {
+    await this.characters.findOne(callerId, characterId);
+    const spell = SPELL_CATALOG[dto.spellId];
+    if (!spell?.buff) {
+      throw new BadRequestException({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: `Spell "${dto.spellId}" has no applicable buff`,
+        fieldErrors: { spellId: ['Magia sem efeito aplicável'] },
+      });
+    }
+    const scope = dto.scope ?? spell.buff.defaultScope;
+    const modifiers = JSON.stringify(spell.buff.modifiers);
+    await this.prisma.activeEffect.upsert({
+      where: {
+        characterId_catalogId_scope: {
+          characterId,
+          catalogId: dto.spellId,
+          scope,
+        },
+      },
+      create: {
+        characterId,
+        source: 'spell',
+        catalogId: dto.spellId,
+        scope,
+        modifiers,
+      },
+      update: { modifiers, source: 'spell' },
+    });
+    return this.characters.findOne(callerId, characterId);
+  }
 
   async removeActiveEffect(
     ownerId: number,

@@ -79,6 +79,21 @@ export class CreateCharacterDto {
   @IsInt() @Min(0) @Max(120) displacement!: number;
 }
 
+/**
+ * Apply a spell's structured buff to a character as a scoped ActiveEffect.
+ * `spellId` must reference a SPELL_CATALOG entry that carries a `buff` block;
+ * `scope` overrides the spell's default scope (else the buff's `defaultScope`).
+ */
+export class ApplyEffectDto {
+  @IsString()
+  @MinLength(1)
+  spellId!: string;
+
+  @IsOptional()
+  @IsIn(['scene', 'day'])
+  scope?: 'scene' | 'day';
+}
+
 export class UpdateVitalsDto {
   @IsOptional()
   @IsInt()

@@ -140,6 +140,7 @@ class FakePrisma {
     [unknown]
   >();
   activeEffectCreate = jest.fn(async ({ data }: { data: unknown }) => data);
+  activeEffectUpsert = jest.fn(async ({ create }: { create: unknown }) => create);
   activeEffectDelete = jest.fn(async () => ({ ok: true }));
   activeEffectDeleteMany = jest.fn(async () => ({ count: 0 }));
   characterClassFindMany = jest.fn<
@@ -216,6 +217,7 @@ class FakePrisma {
     activeEffect: {
       findUnique: typeof this.activeEffectFindUnique;
       create: typeof this.activeEffectCreate;
+      upsert: typeof this.activeEffectUpsert;
       delete: typeof this.activeEffectDelete;
       deleteMany: typeof this.activeEffectDeleteMany;
     };
@@ -242,6 +244,7 @@ class FakePrisma {
       activeEffect: {
         findUnique: this.activeEffectFindUnique,
         create: this.activeEffectCreate,
+        upsert: this.activeEffectUpsert,
         delete: this.activeEffectDelete,
         deleteMany: this.activeEffectDeleteMany,
       },
@@ -984,6 +987,81 @@ describe('CharacterEffectsService.endScene / endDay — scope filtering', () => 
     expect(prisma.activeEffectDeleteMany).toHaveBeenCalledWith({
       where: { characterId: 1, scope: { in: ['scene', 'day'] } },
     });
+  });
+});
+
+describe('CharacterEffectsService.applyEffect — spell buffs', () => {
+  it('owner applies a spell buff as a scoped ActiveEffect (upsert)', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ id: 1, ownerId: 7 }));
+    const service = await makeEffectsService(prisma);
+    await service.applyEffect(7, 1, { spellId: 'armadura-arcana' });
+    expect(prisma.activeEffectUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          characterId_catalogId_scope: {
+            characterId: 1,
+            catalogId: 'armadura-arcana',
+            scope: 'scene',
+          },
+        },
+        create: expect.objectContaining({
+          characterId: 1,
+          source: 'spell',
+          catalogId: 'armadura-arcana',
+          scope: 'scene',
+        }),
+      }),
+    );
+  });
+
+  it('lets a campaign GM apply a buff to a member character', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ id: 1, ownerId: 7 }));
+    // caller 99 is the GM of a campaign the character is in
+    prisma.campaignMemberFindFirst.mockResolvedValue({ id: 1 });
+    const service = await makeEffectsService(prisma);
+    await service.applyEffect(99, 1, { spellId: 'escudo-da-fe' });
+    expect(prisma.activeEffectUpsert).toHaveBeenCalled();
+  });
+
+  it('forbids a caller who is neither owner nor campaign GM', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ id: 1, ownerId: 7 }));
+    prisma.campaignMemberFindFirst.mockResolvedValue(null);
+    const service = await makeEffectsService(prisma);
+    await expect(
+      service.applyEffect(99, 1, { spellId: 'armadura-arcana' }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(prisma.activeEffectUpsert).not.toHaveBeenCalled();
+  });
+
+  it('rejects a spell that carries no buff', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ id: 1, ownerId: 7 }));
+    const service = await makeEffectsService(prisma);
+    await expect(
+      service.applyEffect(7, 1, { spellId: 'bola-de-fogo' }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(prisma.activeEffectUpsert).not.toHaveBeenCalled();
+  });
+
+  it('honours a scope override', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ id: 1, ownerId: 7 }));
+    const service = await makeEffectsService(prisma);
+    await service.applyEffect(7, 1, { spellId: 'armadura-arcana', scope: 'day' });
+    expect(prisma.activeEffectUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          characterId_catalogId_scope: {
+            characterId: 1,
+            catalogId: 'armadura-arcana',
+            scope: 'day',
+          },
+        },
+      }),
+    );
   });
 });
 
