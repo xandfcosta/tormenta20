@@ -17,6 +17,38 @@ import {
  * silently regress to a less-representative set.
  */
 
+describe('SPELL_CATALOG — buff spells', () => {
+  it('models known self/ally buffs with well-formed modifiers', () => {
+    const buffed = Object.values(SPELL_CATALOG).filter((s) => s.buff)
+    expect(buffed.length).toBeGreaterThanOrEqual(5)
+    for (const spell of buffed) {
+      expect(['scene', 'day']).toContain(spell.buff!.defaultScope)
+      expect(spell.buff!.modifiers.length).toBeGreaterThan(0)
+      for (const m of spell.buff!.modifiers) {
+        expect(typeof m.amount).toBe('number')
+        expect(m.target).toHaveProperty('k')
+        expect(typeof m.bonusType).toBe('string')
+      }
+    }
+  })
+
+  it('Armadura Arcana grants +5 Defesa', () => {
+    const mod = spellById('armadura-arcana').buff!.modifiers[0]!
+    expect(mod.target).toEqual({ k: 'defense' })
+    expect(mod.amount).toBe(5)
+  })
+
+  it('Bênção grants +1 attack and +1 damage (scope all)', () => {
+    const mods = spellById('bencao').buff!.modifiers
+    expect(mods).toContainEqual(
+      expect.objectContaining({ target: { k: 'attack', scope: 'all' }, amount: 1 }),
+    )
+    expect(mods).toContainEqual(
+      expect.objectContaining({ target: { k: 'damage', scope: 'all' }, amount: 1 }),
+    )
+  })
+})
+
 describe('SPELL_CATALOG — shape & invariants', () => {
   it('has at least 14 entries', () => {
     expect(SPELL_IDS.length).toBeGreaterThanOrEqual(14)

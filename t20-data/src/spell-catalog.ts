@@ -9,6 +9,7 @@ import type {
   SpellSaveType,
   SpellSchool,
 } from './spells'
+import type { Modifier } from './items/types'
 
 /**
  * Spell catalog seed — PDF book Cap 4 (p174-211).
@@ -35,6 +36,17 @@ export type CatalogAugment = {
   classOnly?: 'arcanos' | 'divinos' | 'druidas'
 }
 
+/**
+ * Structured buff a spell can apply as a scoped ActiveEffect. Only spells that
+ * grant a machine-modelable, self/ally-targetable bonus carry one; the rest
+ * stay free-text `baseEffect`. `defaultScope` maps the spell's duration onto
+ * the ActiveEffect scopes the effect lifecycle understands (`scene`/`day`).
+ */
+export type SpellBuff = {
+  defaultScope: 'scene' | 'day'
+  modifiers: Modifier[]
+}
+
 export type CatalogSpell = {
   id: string
   name: string
@@ -53,6 +65,8 @@ export type CatalogSpell = {
   baseEffect: string
   augments: CatalogAugment[]
   bookPage: number
+  /** Present only for self/ally buff spells — see {@link SpellBuff}. */
+  buff?: SpellBuff
 }
 
 const VG: SpellComponent[] = ['verbal', 'gestual']
@@ -99,6 +113,12 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Arcanista'],
     baseEffect:
       'Película invisível mas tangível confere +5 na Defesa. Cumulativa com outras magias, mas não com bônus de armadura.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [
+        { target: { k: 'defense' }, amount: 5, bonusType: 'armor', note: 'Armadura Arcana' },
+      ],
+    },
     augments: [
       {
         pmCost: 1,
@@ -545,6 +565,12 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Clérigo', 'Paladino'],
     baseEffect:
       'Escudo místico se manifesta momentaneamente. Alvo recebe +2 na Defesa.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [
+        { target: { k: 'defense' }, amount: 2, bonusType: 'untyped', note: 'Escudo da Fé' },
+      ],
+    },
     augments: [
       {
         pmCost: 1,
@@ -1879,6 +1905,13 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Clérigo', 'Druida', 'Paladino'],
     baseEffect:
       'Aliados no alcance recebem +1 em testes de ataque e rolagens de dano. Anula Perdição.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [
+        { target: { k: 'attack', scope: 'all' }, amount: 1, bonusType: 'morale', note: 'Bênção' },
+        { target: { k: 'damage', scope: 'all' }, amount: 1, bonusType: 'morale', note: 'Bênção' },
+      ],
+    },
     augments: [
       {
         pmCost: 1,
@@ -3655,6 +3688,14 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Clérigo', 'Paladino'],
     baseEffect:
       'Alvo: 1 criatura. Imbui com coragem e valentia. Fica imune a medo, recebe 40 PV temporários e +4 em testes de ataque e rolagens de dano contra o inimigo de maior ND na cena.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [
+        { target: { k: 'tempHp' }, amount: 40, bonusType: 'untyped', note: 'Heroísmo' },
+        { target: { k: 'attack', scope: 'all' }, amount: 4, bonusType: 'untyped', note: 'Heroísmo' },
+        { target: { k: 'damage', scope: 'all' }, amount: 4, bonusType: 'untyped', note: 'Heroísmo' },
+      ],
+    },
     augments: [
       {
         pmCost: 2,
@@ -4830,6 +4871,13 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Arcanista', 'Bardo'],
     baseEffect:
       '1 criatura: +9m deslocamento + +10 Atletismo.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [
+        { target: { k: 'displacement' }, amount: 9, bonusType: 'untyped', note: 'Primor Atlético' },
+        { target: { k: 'expertise', name: 'Atletismo' }, amount: 10, bonusType: 'untyped', note: 'Primor Atlético' },
+      ],
+    },
     augments: [
       {
         pmCost: 1,
