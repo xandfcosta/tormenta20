@@ -16,6 +16,7 @@ import { PageChrome } from '@/shared/ui/page-chrome'
 import { SkeletonCardGrid } from '@/shared/ui/skeleton'
 import { cn } from '@/shared/lib/utils'
 import { fuzzyFilter } from '@/shared/lib/fuzzy-filter'
+import { CharacterPortrait } from '@/shared/ui/character-portrait'
 import { campaignsQueryOptions } from '@/entities/campaign/queries'
 import type { Campaign } from '@/shared/api/api'
 
@@ -200,6 +201,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
               {campaign.description}
             </p>
           )}
+          {campaign.character && <MyCharacterRow character={campaign.character} />}
           <p className="flex items-center gap-1 text-xs text-muted-foreground">
             <CalendarClock className="size-3" />
             Atualizada em{' '}
@@ -208,6 +210,28 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
         </CardContent>
       </Card>
     </Link>
+  )
+}
+
+/** The caller's PC in a campaign — portrait + name + class/level line. */
+function MyCharacterRow({
+  character,
+}: {
+  character: NonNullable<Campaign['character']>
+}) {
+  const classes = character.classes
+    .map((c) => `${c.className} ${c.level}`)
+    .join(' / ')
+  return (
+    <div className="flex items-center gap-2 rounded-md border p-2">
+      <CharacterPortrait name={character.name} size="sm" />
+      <div className="min-w-0">
+        <p className="truncate font-medium">{character.name}</p>
+        <p className="truncate text-xs text-muted-foreground">
+          {classes || `Nv ${character.level}`}
+        </p>
+      </div>
+    </div>
   )
 }
 

@@ -201,6 +201,14 @@ export type Campaign = {
    * member=player on GET /campaigns and GET /campaigns/:id. Optional
    * because older cached payloads may predate it. */
   role?: CampaignMemberRole
+  /** The caller's own member character in this campaign (null when they're
+   * the GM with no PC of their own). Only populated by GET /campaigns. */
+  character?: {
+    id: number
+    name: string
+    level: number
+    classes: { className: string; level: number }[]
+  } | null
 }
 
 export type CreateCampaignInput = {

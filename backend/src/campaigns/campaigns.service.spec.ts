@@ -62,9 +62,13 @@ async function setup(over?: {
 }
 
 describe('CampaignsService.list', () => {
-  it('returns owned + member campaigns, tagged with the caller role', async () => {
-    const owned = makeCampaign({ id: 1, ownerId: 7 });
-    const joined = makeCampaign({ id: 2, ownerId: 99 });
+  it('returns owned + member campaigns, tagged with the caller role and PC', async () => {
+    const pc = { id: 5, name: 'Guerreiro', level: 8, classes: [] };
+    const owned = { ...makeCampaign({ id: 1, ownerId: 7 }), members: [] };
+    const joined = {
+      ...makeCampaign({ id: 2, ownerId: 99 }),
+      members: [{ character: pc }],
+    };
     const findMany = jest.fn().mockResolvedValue([owned, joined]);
     const { service } = await setup({ findMany });
     const result = await service.list(7);
@@ -76,10 +80,27 @@ describe('CampaignsService.list', () => {
         ],
       },
       orderBy: { updatedAt: 'desc' },
+      include: {
+        members: {
+          where: { character: { ownerId: 7 } },
+          select: {
+            character: {
+              select: {
+                id: true,
+                name: true,
+                level: true,
+                classes: { select: { className: true, level: true } },
+              },
+            },
+          },
+        },
+      },
     });
+    const { members: _o, ...ownedRow } = owned;
+    const { members: _j, ...joinedRow } = joined;
     expect(result).toEqual([
-      { ...owned, role: 'gm' },
-      { ...joined, role: 'player' },
+      { ...ownedRow, role: 'gm', character: null },
+      { ...joinedRow, role: 'player', character: pc },
     ]);
   });
 });

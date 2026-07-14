@@ -46,10 +46,28 @@ export class CampaignsService {
         ],
       },
       orderBy: { updatedAt: 'desc' },
+      // The caller's own member character (if any) so a player's campaign
+      // card can show which PC they play — filtered to their characters.
+      include: {
+        members: {
+          where: { character: { ownerId: userId } },
+          select: {
+            character: {
+              select: {
+                id: true,
+                name: true,
+                level: true,
+                classes: { select: { className: true, level: true } },
+              },
+            },
+          },
+        },
+      },
     });
-    return campaigns.map((c) => ({
+    return campaigns.map(({ members, ...c }) => ({
       ...c,
       role: (c.ownerId === userId ? 'gm' : 'player') as CampaignRole,
+      character: members[0]?.character ?? null,
     }));
   }
 
