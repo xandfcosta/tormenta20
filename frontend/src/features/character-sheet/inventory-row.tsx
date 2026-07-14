@@ -5,6 +5,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useState } from 'react'
+import { type AnyFieldApi, useForm } from '@tanstack/react-form'
 import { getCatalogItem } from '@tormenta20/t20-data'
 import { Button } from '@/shared/ui/button'
 import {
@@ -15,6 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/shared/ui/dialog'
+import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
 import { NumberInput } from '@/shared/ui/number-input'
 import {
   Tooltip,
@@ -37,6 +39,7 @@ import { cn } from '@/shared/lib/utils'
 import {
   OverlayPickerDialog,
 } from './catalog-picker-dialog'
+import { type InstantRoll, rollValueSchema } from './consume-roll'
 import { formatLoad } from './item-describe'
 import { ItemFormDialog, ItemInfoDialog } from './item-form-dialog'
 
@@ -214,8 +217,6 @@ export function InventoryRow({
 type Consumable = NonNullable<
   NonNullable<ReturnType<typeof getCatalogItem>>['consumable']
 >
-type InstantRoll = { dice: string; bonus?: number }
-
 const SCOPE_LABEL: Record<Consumable['scope'], string> = {
   instant: 'imediato',
   scene: '1 cena',
@@ -294,87 +295,106 @@ function ConsumeRollDialog({
   onConsume: (input?: ConsumeItemInput) => void
 }) {
   const [open, setOpen] = useState(false)
-  const [hpRoll, setHpRoll] = useState<string>('')
-  const [mpRoll, setMpRoll] = useState<string>('')
 
-  const apply = () => {
-    const input: ConsumeItemInput = {}
-    if (hp) input.hpRolled = (Number(hpRoll) || 0) + (hp.bonus ?? 0)
-    if (mp) input.mpRolled = (Number(mpRoll) || 0) + (mp.bonus ?? 0)
-    onConsume(input)
-    setOpen(false)
-    setHpRoll('')
-    setMpRoll('')
+  // Headless TanStack Form + per-field zod validators: each present roll is
+  // validated against its die's range (rollValueSchema) on change, and Apply
+  // stays disabled until every field holds a value the die can produce.
+  const form = useForm({
+    defaultValues: { hp: '', mp: '' },
+    onSubmit: ({ value }) => {
+      const input: ConsumeItemInput = {}
+      if (hp) input.hpRolled = Number(value.hp) + (hp.bonus ?? 0)
+      if (mp) input.mpRolled = Number(value.mp) + (mp.bonus ?? 0)
+      onConsume(input)
+      setOpen(false)
+    },
+  })
+
+  const close = (next: boolean) => {
+    setOpen(next)
+    if (!next) form.reset()
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={close}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="w-[calc(100vw-1.5rem)] max-w-sm">
         <DialogHeader>
           <DialogTitle>Usar {itemName}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-3">
+        <form
+          className="space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            form.handleSubmit()
+          }}
+        >
           {hp && (
-            <RollField
-              label="PV"
-              roll={hp}
-              value={hpRoll}
-              onChange={setHpRoll}
-            />
+            <form.Field name="hp" validators={{ onChange: rollValueSchema(hp) }}>
+              {(f) => <RollField field={f} label="PV" roll={hp} />}
+            </form.Field>
           )}
           {mp && (
-            <RollField
-              label="PM"
-              roll={mp}
-              value={mpRoll}
-              onChange={setMpRoll}
-            />
+            <form.Field name="mp" validators={{ onChange: rollValueSchema(mp) }}>
+              {(f) => <RollField field={f} label="PM" roll={mp} />}
+            </form.Field>
           )}
-        </div>
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-            Cancelar
-          </Button>
-          <Button type="button" onClick={apply}>
-            Aplicar
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => close(false)}>
+              Cancelar
+            </Button>
+            <form.Subscribe
+              selector={(s) => [s.canSubmit, s.isDirty] as const}
+              children={([canSubmit, isDirty]) => (
+                <Button type="submit" disabled={!canSubmit || !isDirty}>
+                  Aplicar
+                </Button>
+              )}
+            />
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )
 }
 
 function RollField({
+  field,
   label,
   roll,
-  value,
-  onChange,
 }: {
+  field: AnyFieldApi
   label: string
   roll: InstantRoll
-  value: string
-  onChange: (v: string) => void
 }) {
+  const value = field.state.value as string
+  const invalid = !field.state.meta.isValid
   const total = (Number(value) || 0) + (roll.bonus ?? 0)
   return (
-    <div className="space-y-1">
-      <label className="text-xs font-medium" htmlFor={`roll-${label}`}>
+    <Field data-invalid={invalid}>
+      <FieldLabel htmlFor={`roll-${label}`}>
         Role {roll.dice}
         {roll.bonus ? ` + ${roll.bonus}` : ''} de {label} e informe o resultado
         do dado
-      </label>
+      </FieldLabel>
       <NumberInput
         id={`roll-${label}`}
         min={0}
         max={999}
         value={value}
-        onChange={(v) => onChange(String(v))}
+        onChange={(v) => field.handleChange(String(v))}
+        onBlur={field.handleBlur}
+        aria-invalid={invalid}
       />
-      <p className={cn('text-xs', subtleText)}>
-        {label} recuperado: <span className="font-semibold">{total}</span>
-      </p>
-    </div>
+      {invalid ? (
+        <FieldError errors={field.state.meta.errors} />
+      ) : (
+        <p className={cn('text-xs', subtleText)}>
+          {label} recuperado: <span className="font-semibold">{total}</span>
+        </p>
+      )}
+    </Field>
   )
 }
 
