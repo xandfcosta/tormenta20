@@ -4,8 +4,18 @@ import {
   Sparkles,
   Trash2,
 } from 'lucide-react'
+import { useState } from 'react'
 import { getCatalogItem } from '@tormenta20/t20-data'
 import { Button } from '@/shared/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/shared/ui/dialog'
+import { NumberInput } from '@/shared/ui/number-input'
 import {
   Tooltip,
   TooltipContent,
@@ -13,6 +23,7 @@ import {
 } from '@/shared/ui/tooltip'
 import type {
   CharacterItem,
+  ConsumeItemInput,
   UpdateItemInput,
 } from '@/shared/api/api'
 import {
@@ -52,7 +63,7 @@ export function InventoryRow({
   proficient: boolean
   onUpdate: (input: UpdateItemInput, onError: (e: Error) => void) => void
   onDelete: () => void
-  onConsume: () => void
+  onConsume: (input?: ConsumeItemInput) => void
 }) {
   const total = item.quantity * item.slots
   const catalog = item.catalogId ? getCatalogItem(item.catalogId) : undefined
@@ -76,28 +87,11 @@ export function InventoryRow({
     </Tooltip>
   ) : null
   const useButton = consumable ? (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="size-7 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/40"
-          onClick={onConsume}
-          aria-label={`Usar ${item.name}`}
-        >
-          <Sparkles className="size-3.5" />
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>
-        Usar ({consumable.scope === 'instant'
-          ? 'imediato'
-          : consumable.scope === 'scene'
-            ? '1 cena'
-            : '1 dia'}
-        )
-      </TooltipContent>
-    </Tooltip>
+    <ConsumeAction
+      consumable={consumable}
+      itemName={item.name}
+      onConsume={onConsume}
+    />
   ) : null
   const editTrigger = (
     <Button
@@ -214,6 +208,173 @@ export function InventoryRow({
         {deleteButton}
       </div>
     </>
+  )
+}
+
+type Consumable = NonNullable<
+  NonNullable<ReturnType<typeof getCatalogItem>>['consumable']
+>
+type InstantRoll = { dice: string; bonus?: number }
+
+const SCOPE_LABEL: Record<Consumable['scope'], string> = {
+  instant: 'imediato',
+  scene: '1 cena',
+  day: '1 dia',
+}
+
+/**
+ * "Usar" action for a consumable. When the item's instant gain rolls a die
+ * (e.g. Bálsamo restaurador = 2d4 PV) it opens a dialog explaining the roll
+ * and taking the player's result; fixed-gain / effect consumables apply
+ * straight away.
+ */
+function ConsumeAction({
+  consumable,
+  itemName,
+  onConsume,
+}: {
+  consumable: Consumable
+  itemName: string
+  onConsume: (input?: ConsumeItemInput) => void
+}) {
+  const instant =
+    consumable.scope === 'instant' ? consumable.instant : undefined
+  const hp = rollable(instant?.hp)
+  const mp = rollable(instant?.mp)
+
+  const button = (onClick?: () => void) => (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="size-7 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/40"
+      aria-label={`Usar ${itemName}`}
+      onClick={onClick}
+    >
+      <Sparkles className="size-3.5" />
+    </Button>
+  )
+
+  if (!hp && !mp) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>{button(() => onConsume())}</TooltipTrigger>
+        <TooltipContent>Usar ({SCOPE_LABEL[consumable.scope]})</TooltipContent>
+      </Tooltip>
+    )
+  }
+
+  return (
+    <ConsumeRollDialog
+      itemName={itemName}
+      hp={hp}
+      mp={mp}
+      trigger={button()}
+      onConsume={onConsume}
+    />
+  )
+}
+
+/** A roll is needed only when the die string isn't the fixed "0". */
+function rollable(roll: InstantRoll | undefined): InstantRoll | undefined {
+  return roll && roll.dice !== '0' ? roll : undefined
+}
+
+function ConsumeRollDialog({
+  itemName,
+  hp,
+  mp,
+  trigger,
+  onConsume,
+}: {
+  itemName: string
+  hp?: InstantRoll
+  mp?: InstantRoll
+  trigger: React.ReactNode
+  onConsume: (input?: ConsumeItemInput) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [hpRoll, setHpRoll] = useState<string>('')
+  const [mpRoll, setMpRoll] = useState<string>('')
+
+  const apply = () => {
+    const input: ConsumeItemInput = {}
+    if (hp) input.hpRolled = (Number(hpRoll) || 0) + (hp.bonus ?? 0)
+    if (mp) input.mpRolled = (Number(mpRoll) || 0) + (mp.bonus ?? 0)
+    onConsume(input)
+    setOpen(false)
+    setHpRoll('')
+    setMpRoll('')
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogContent className="w-[calc(100vw-1.5rem)] max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Usar {itemName}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          {hp && (
+            <RollField
+              label="PV"
+              roll={hp}
+              value={hpRoll}
+              onChange={setHpRoll}
+            />
+          )}
+          {mp && (
+            <RollField
+              label="PM"
+              roll={mp}
+              value={mpRoll}
+              onChange={setMpRoll}
+            />
+          )}
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            Cancelar
+          </Button>
+          <Button type="button" onClick={apply}>
+            Aplicar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function RollField({
+  label,
+  roll,
+  value,
+  onChange,
+}: {
+  label: string
+  roll: InstantRoll
+  value: string
+  onChange: (v: string) => void
+}) {
+  const total = (Number(value) || 0) + (roll.bonus ?? 0)
+  return (
+    <div className="space-y-1">
+      <label className="text-xs font-medium" htmlFor={`roll-${label}`}>
+        Role {roll.dice}
+        {roll.bonus ? ` + ${roll.bonus}` : ''} de {label} e informe o resultado
+        do dado
+      </label>
+      <NumberInput
+        id={`roll-${label}`}
+        min={0}
+        max={999}
+        value={value}
+        onChange={(v) => onChange(String(v))}
+      />
+      <p className={cn('text-xs', subtleText)}>
+        {label} recuperado: <span className="font-semibold">{total}</span>
+      </p>
+    </div>
   )
 }
 

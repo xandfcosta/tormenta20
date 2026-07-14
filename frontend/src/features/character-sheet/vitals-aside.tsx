@@ -5,13 +5,20 @@ import type { Character, UpdateVitalsInput } from '@/shared/api/api'
 import { api } from '@/shared/api/api'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import { characterQueryOptions } from '@/entities/character/queries'
+import { cn } from '@/shared/lib/utils'
 import { CombatStats, MagicStats } from './combat-magic-stats'
 import { ResourceBar } from './resource-bar'
 
 // Guards vitals mutations against races: we snapshot the pre-burst state,
 // let onSetCurrent apply optimistic updates, then debounce the network
 // send. On failure we roll back to the snapshot (cleared after success).
-export function VitalsAside({ character }: { character: Character }) {
+export function VitalsAside({
+  character,
+  className,
+}: {
+  character: Character
+  className?: string
+}) {
   const qc = useQueryClient()
   const queryKey = characterQueryOptions(character.id).queryKey
   const rollbackSnapshot = useRef<Character | undefined>(undefined)
@@ -54,7 +61,12 @@ export function VitalsAside({ character }: { character: Character }) {
   const setMp = (next: number) => setVital('mpCurrent', character.mpMax, next)
 
   return (
-    <aside className="flex min-h-0 flex-col gap-3 overflow-y-auto rounded-xl border bg-card p-3 sm:p-4">
+    <aside
+      className={cn(
+        'flex min-h-0 flex-col gap-3 overflow-y-auto rounded-xl border bg-card p-3 sm:p-4',
+        className,
+      )}
+    >
       <div className="flex flex-col gap-3 sm:flex-row sm:gap-3 lg:flex-col">
         <ResourceBar
           label="Vida"

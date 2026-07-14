@@ -46,6 +46,27 @@ const CATALOG_CATEGORIES = [
   ...new Set(CATALOG_ITEMS.map((c) => c.category)),
 ].sort()
 
+// pt-BR labels for the English catalog category ids.
+const CATEGORY_LABEL: Record<string, string> = {
+  animal: 'Animal',
+  apparel: 'Vestuário',
+  'armor-heavy': 'Armadura pesada',
+  'armor-light': 'Armadura leve',
+  catalyst: 'Catalisador',
+  consumable: 'Consumível',
+  improvement: 'Melhoria',
+  material: 'Material',
+  meal: 'Alimentação',
+  shield: 'Escudo',
+  vehicle: 'Veículo',
+  'weapon-exotic': 'Arma exótica',
+  'weapon-firearm': 'Arma de fogo',
+  'weapon-martial': 'Arma marcial',
+  'weapon-simple': 'Arma simples',
+}
+
+const categoryLabel = (c: string): string => CATEGORY_LABEL[c] ?? c
+
 /**
  * Overlay dialog for applying improvements + a special material to an
  * already-owned item. Returns null when the item's catalog category
@@ -361,7 +382,7 @@ export function AddCatalogItemDialog({
                 <option value="">Todas categorias</option>
                 {CATALOG_CATEGORIES.map((c) => (
                   <option key={c} value={c}>
-                    {c}
+                    {categoryLabel(c)}
                   </option>
                 ))}
               </select>
@@ -401,7 +422,7 @@ export function AddCatalogItemDialog({
                   >
                     <span className="truncate">{opt.name}</span>
                     <span className={cn('shrink-0 text-[10px]', dimText)}>
-                      {opt.category}
+                      {categoryLabel(opt.category)}
                     </span>
                   </button>
                 )}
@@ -417,7 +438,8 @@ export function AddCatalogItemDialog({
             >
               <p className={cn('font-semibold', accentStrong)}>{selected.name}</p>
               <p className={dimText}>
-                {selected.category} • esp {formatLoad(selected.slots)} • T${' '}
+                {categoryLabel(selected.category)} • esp{' '}
+                {formatLoad(selected.slots)} • T${' '}
                 {selected.price}
               </p>
               {selected.weapon && (

@@ -44,6 +44,17 @@ export function EffectsPanel({ character }: { character: Character }) {
   )
 }
 
+// Attribute keys arrive raw (e.g. 'charisma') on catalog modifiers — map to
+// the pt-BR name so a row reads "Carisma +2" instead of "charisma +2".
+const ATTRIBUTE_PT: Record<string, string> = {
+  strength: 'Força',
+  dexterity: 'Destreza',
+  constitution: 'Constituição',
+  intelligence: 'Inteligência',
+  wisdom: 'Sabedoria',
+  charisma: 'Carisma',
+}
+
 /**
  * Human-readable label for a Modifier target — used inside the
  * conditional rows so a player can read "Ataque +2" instead of
@@ -61,7 +72,7 @@ function describeConditionalTarget(target: Modifier['target']): string {
     case 'expertiseByAttribute':
       return `Perícias de ${target.attribute}`
     case 'attribute':
-      return target.name
+      return ATTRIBUTE_PT[target.name] ?? target.name
     case 'defense':
       return 'Defesa'
     case 'defenseDexCap':
@@ -207,37 +218,63 @@ function ActiveEffectRow({
 }) {
   const catalog = getCatalogItem(effect.catalogId)
   const name = catalog?.name ?? effect.catalogId
+  const modifiers = catalog?.consumable?.modifiers ?? []
   return (
     <li
       className={cn(
-        'flex items-center gap-2 rounded-md border px-2 py-1.5',
+        'rounded-md border px-2 py-1.5',
         'border-emerald-700/30 bg-emerald-50/60 dark:border-emerald-500/25 dark:bg-emerald-950/30',
       )}
     >
-      <Sparkles className="size-3.5 shrink-0 text-emerald-700 dark:text-emerald-300" />
-      <span className="flex-1 truncate text-sm text-foreground ">
-        {name}
-      </span>
-      <span
-        className={cn(
-          'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest',
-          effect.scope === 'day'
-            ? 'bg-muted text-foreground  '
-            : 'bg-emerald-700/80 text-emerald-50 dark:bg-emerald-500/70 ',
-        )}
-      >
-        {effect.scope === 'day' ? 'dia' : 'cena'}
-      </span>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="size-7 text-foreground hover:bg-red-100 hover:text-red-700  dark:hover:bg-red-950/40 dark:hover:text-red-400"
-        onClick={onRemove}
-        aria-label={`Remover ${name}`}
-      >
-        <X className="size-3.5" />
-      </Button>
+      <div className="flex items-center gap-2">
+        <Sparkles className="size-3.5 shrink-0 text-emerald-700 dark:text-emerald-300" />
+        <span className="flex-1 truncate text-sm text-foreground">{name}</span>
+        <span
+          className={cn(
+            'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest',
+            effect.scope === 'day'
+              ? 'bg-muted text-foreground'
+              : 'bg-emerald-700/80 text-emerald-50 dark:bg-emerald-500/70',
+          )}
+        >
+          {effect.scope === 'day' ? 'dia' : 'cena'}
+        </span>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-7 text-foreground hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+          onClick={onRemove}
+          aria-label={`Remover ${name}`}
+        >
+          <X className="size-3.5" />
+        </Button>
+      </div>
+      {modifiers.length > 0 ? (
+        <ul className="ml-5 mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px]">
+          {modifiers.map((m, i) => (
+            <li key={i} className="flex items-center gap-1">
+              <span className={subtleText}>
+                {describeConditionalTarget(m.target)}
+              </span>
+              <span
+                className={cn(
+                  'font-mono font-semibold',
+                  m.amount >= 0
+                    ? 'text-emerald-700 dark:text-emerald-300'
+                    : 'text-red-700 dark:text-red-300',
+                )}
+              >
+                {signed(m.amount)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className={cn('ml-5 mt-1 text-[11px] italic', subtleText)}>
+          Sem efeito mecânico
+        </p>
+      )}
     </li>
   )
 }

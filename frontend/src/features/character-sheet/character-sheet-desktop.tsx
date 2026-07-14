@@ -32,11 +32,14 @@ export function CharacterSheetDesktop({
       <Tabs
         defaultValue={panels[0]!.value}
         orientation="vertical"
-        className="grid min-h-0 gap-3 lg:grid-cols-[minmax(18rem,22rem)_1fr_auto]"
+        className="flex min-h-0 items-stretch gap-3"
       >
-        <VitalsAside character={character} />
+        <VitalsAside
+          character={character}
+          className="w-full shrink-0 lg:w-[22rem]"
+        />
 
-        <div className="min-h-0">
+        <div className="min-w-0 flex-1">
           {panels.map((s) => (
             <TabsContent
               key={s.value}
@@ -48,7 +51,7 @@ export function CharacterSheetDesktop({
           ))}
         </div>
 
-        <TabsList className="flex h-full flex-col gap-1 rounded-lg border bg-card p-1">
+        <TabsList className="flex shrink-0 flex-col gap-1 rounded-lg border bg-card p-1">
           {panels.map((s) => (
             <TabsTrigger
               key={s.value}

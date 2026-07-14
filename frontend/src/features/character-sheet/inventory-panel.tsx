@@ -5,6 +5,7 @@ import { Button } from '@/shared/ui/button'
 import type {
   Character,
   CharacterItem,
+  ConsumeItemInput,
   CreateItemInput,
   UpdateItemInput,
 } from '@/shared/api/api'
@@ -164,8 +165,13 @@ export function InventoryPanel({ character }: { character: Character }) {
     },
   })
 
-  const consumeItem = useMutation<Character, Error, number>({
-    mutationFn: (itemId) => api.characters.consumeItem(character.id, itemId),
+  const consumeItem = useMutation<
+    Character,
+    Error,
+    { itemId: number; input?: ConsumeItemInput }
+  >({
+    mutationFn: ({ itemId, input }) =>
+      api.characters.consumeItem(character.id, itemId, input),
     onSuccess: (next) => {
       qc.setQueryData<Character>(queryKey, next)
       invalidateCharacterDependents(qc, character.id)
@@ -268,7 +274,7 @@ export function InventoryPanel({ character }: { character: Character }) {
                   updateItem.mutate({ itemId: it.id, input }, { onError: fail })
                 }
                 onDelete={() => removeItem.mutate(it.id)}
-                onConsume={() => consumeItem.mutate(it.id)}
+                onConsume={(input) => consumeItem.mutate({ itemId: it.id, input })}
               />
             ))}
           </div>
