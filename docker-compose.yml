@@ -1,0 +1,44 @@
+# Full stack: nginx serves the SPA + reverse-proxies the API/socket.io; the
+# Nest API runs on SQLite (volume-backed), migrating on boot.
+#
+#   docker compose up --build
+#   open http://localhost:8080
+#
+# The API is NOT published — only nginx (web) is reachable; it proxies /api and
+# /socket.io to the api service over the internal network.
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: file:/data/app.db
+      # CHANGE in any real deployment — signs session JWTs.
+      JWT_SECRET: ${JWT_SECRET:-dev-only-change-me}
+      JWT_EXPIRES_IN: 7d
+      COOKIE_NAME: t20_session
+      CORS_ORIGIN: http://localhost:8080
+      # Kept non-production so the session cookie's `secure` flag stays off over
+      # plain HTTP. For a real deploy: set NODE_ENV=production AND terminate TLS
+      # in front (secure cookies require HTTPS).
+      NODE_ENV: development
+      PORT: "3000"
+    volumes:
+      - db-data:/data
+    expose:
+      - "3000"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  db-data:

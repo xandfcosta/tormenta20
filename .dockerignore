@@ -1,0 +1,16 @@
+# Keep build context small + reproducible — never ship host artifacts.
+**/node_modules
+**/dist
+**/.turbo
+backend/src/generated
+backend/prisma/*.db
+backend/prisma/*.db-journal
+**/*.db
+.git
+.github
+**/coverage
+**/.vscode
+**/.idea
+**/*.log
+frontend/dist
+frontend/.vite
