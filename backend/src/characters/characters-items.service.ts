@@ -26,6 +26,26 @@ import { isPrismaUniqueViolation } from '../common/prisma-errors';
 import { CharactersService } from './characters.service';
 
 /**
+ * Minimal delta returned by {@link CharacterItemsService.consumeItem} instead of
+ * the whole Character aggregate — the client merges it into the cached character
+ * and re-derives. `item.quantity` is the new count (0 when `removed`); `effect`
+ * is the scene/day ActiveEffect a non-instant consumable created (else null);
+ * `hpCurrent`/`mpCurrent` are the post-consume vitals (clamped server-side).
+ */
+export type ConsumeItemResult = {
+  item: { id: number; quantity: number; removed: boolean };
+  effect: {
+    id: number;
+    catalogId: string;
+    scope: string;
+    modifiers: string;
+    createdAt: Date;
+  } | null;
+  hpCurrent: number;
+  mpCurrent: number;
+};
+
+/**
  * Inventory + equipment slice of the Character aggregate — add/update/
  * delete/consume items and the vested/wielded equip-cap invariants.
  * Split out of CharactersService (which was ~970 lines) to keep one
@@ -305,6 +325,13 @@ export class CharacterItemsService {
         rollAverage(spec.instant.mp.dice, spec.instant.mp.bonus))
       : null;
 
+    // Collected inside the tx so we can return a minimal delta (not the whole
+    // Character) — the client merges it into the cached aggregate + re-derives.
+    let createdEffect: ConsumeItemResult['effect'] = null;
+    let removed = false;
+    let hpCurrent = character.hpCurrent;
+    let mpCurrent = character.mpCurrent;
+
     try {
       await this.prisma.$transaction(async (tx) => {
         if (
@@ -312,12 +339,19 @@ export class CharacterItemsService {
           spec.modifiers &&
           spec.modifiers.length > 0
         ) {
-          await tx.activeEffect.create({
+          createdEffect = await tx.activeEffect.create({
             data: {
               characterId,
               catalogId: catalog.id,
               scope: spec.scope,
               modifiers: JSON.stringify(spec.modifiers),
+            },
+            select: {
+              id: true,
+              catalogId: true,
+              scope: true,
+              modifiers: true,
+              createdAt: true,
             },
           });
         }
@@ -328,6 +362,7 @@ export class CharacterItemsService {
           });
         } else {
           await tx.characterItem.delete({ where: { id: itemId } });
+          removed = true;
         }
         if (hpGain !== null || mpGain !== null) {
           /* Re-read hp/mp inside the tx so a parallel consume doesn't
@@ -346,16 +381,12 @@ export class CharacterItemsService {
           if (!fresh) return;
           const vitalsPatch: { hpCurrent?: number; mpCurrent?: number } = {};
           if (hpGain !== null) {
-            vitalsPatch.hpCurrent = Math.min(
-              fresh.hpMax,
-              fresh.hpCurrent + hpGain,
-            );
+            hpCurrent = Math.min(fresh.hpMax, fresh.hpCurrent + hpGain);
+            vitalsPatch.hpCurrent = hpCurrent;
           }
           if (mpGain !== null) {
-            vitalsPatch.mpCurrent = Math.min(
-              fresh.mpMax,
-              fresh.mpCurrent + mpGain,
-            );
+            mpCurrent = Math.min(fresh.mpMax, fresh.mpCurrent + mpGain);
+            vitalsPatch.mpCurrent = mpCurrent;
           }
           await tx.character.update({
             where: { id: characterId },
@@ -380,6 +411,11 @@ export class CharacterItemsService {
       throw err;
     }
 
-    return this.characters.findOne(ownerId, characterId);
+    return {
+      item: { id: itemId, quantity: removed ? 0 : item.quantity - 1, removed },
+      effect: createdEffect,
+      hpCurrent,
+      mpCurrent,
+    };
   }
 }

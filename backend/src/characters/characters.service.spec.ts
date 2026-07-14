@@ -679,12 +679,19 @@ describe('CharacterItemsService.consumeItem — quantity + oncePerDay + clamp', 
       }),
     );
     const service = await makeItemsService(prisma);
-    await service.consumeItem(1, 1, 10, { hpRolled: 4 });
+    const delta = await service.consumeItem(1, 1, 10, { hpRolled: 4 });
     expect(prisma.characterItemUpdate).toHaveBeenCalledWith({
       where: { id: 10 },
       data: { quantity: 2 },
     });
     expect(prisma.characterItemDelete).not.toHaveBeenCalled();
+    // Delta (not the whole Character): new quantity, no effect, clamped HP.
+    expect(delta).toEqual({
+      item: { id: 10, quantity: 2, removed: false },
+      effect: null,
+      hpCurrent: 9, // min(12, 5 + 4)
+      mpCurrent: expect.any(Number),
+    });
   });
 
   it('deletes the row when quantity drops from 1 to 0', async () => {
@@ -880,13 +887,15 @@ describe('CharacterItemsService.consumeItem — quantity + oncePerDay + clamp', 
     );
     const service = await makeItemsService(prisma);
     await service.consumeItem(1, 1, 30, {});
-    expect(prisma.activeEffectCreate).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        characterId: 1,
-        catalogId: 'cosmetico',
-        scope: 'scene',
+    expect(prisma.activeEffectCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          characterId: 1,
+          catalogId: 'cosmetico',
+          scope: 'scene',
+        }),
       }),
-    });
+    );
   });
 
   it('rejects consume on a custom (no-catalog) item', async () => {

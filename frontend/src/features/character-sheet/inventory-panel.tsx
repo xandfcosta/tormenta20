@@ -13,6 +13,7 @@ import type {
   Character,
   CharacterItem,
   ConsumeItemInput,
+  ConsumeItemResult,
   CreateItemInput,
   UpdateItemInput,
 } from '@/shared/api/api'
@@ -173,7 +174,7 @@ export function InventoryPanel({ character }: { character: Character }) {
   })
 
   const consumeItem = useMutation<
-    Character,
+    ConsumeItemResult,
     Error,
     { itemId: number; input?: ConsumeItemInput },
     { previous: Character | undefined }
@@ -217,8 +218,30 @@ export function InventoryPanel({ character }: { character: Character }) {
     onError: (_e, _v, ctx) => {
       if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
     },
-    onSuccess: (next) => {
-      qc.setQueryData<Character>(queryKey, next)
+    // Merge the delta into the cached character (no full-Character round-trip):
+    // reconcile the item count, append a created scene/day effect, set vitals.
+    onSuccess: (delta) => {
+      qc.setQueryData<Character>(queryKey, (prev) => {
+        if (!prev) return prev
+        const items = delta.item.removed
+          ? prev.items.filter((i) => i.id !== delta.item.id)
+          : prev.items.map((i) =>
+              i.id === delta.item.id ? { ...i, quantity: delta.item.quantity } : i,
+            )
+        const activeEffects = delta.effect
+          ? [
+              ...prev.activeEffects.filter((e) => e.id !== delta.effect!.id),
+              delta.effect,
+            ]
+          : prev.activeEffects
+        return {
+          ...prev,
+          items,
+          activeEffects,
+          hpCurrent: delta.hpCurrent,
+          mpCurrent: delta.mpCurrent,
+        }
+      })
       invalidateCharacterDependents(qc, character.id)
     },
   })

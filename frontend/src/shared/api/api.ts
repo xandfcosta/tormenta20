@@ -164,6 +164,17 @@ export type ConsumeItemInput = {
   mpRolled?: number
 }
 
+/** Delta returned by consumeItem (not the whole Character) — the client merges
+ *  it into the cached character. `item.quantity` is the new count (0 when
+ *  removed); `effect` is a scene/day ActiveEffect a non-instant consumable
+ *  created; vitals are the clamped post-consume values. */
+export type ConsumeItemResult = {
+  item: { id: number; quantity: number; removed: boolean }
+  effect: ActiveEffect | null
+  hpCurrent: number
+  mpCurrent: number
+}
+
 export type ApplyEffectInput = {
   spellId: string
   scope?: 'scene' | 'day'
@@ -396,7 +407,7 @@ export const api = {
         method: 'DELETE',
       }),
     consumeItem: (id: number, itemId: number, input: ConsumeItemInput = {}) =>
-      request<Character>(`/characters/${id}/items/${itemId}/consume`, {
+      request<ConsumeItemResult>(`/characters/${id}/items/${itemId}/consume`, {
         method: 'POST',
         body: JSON.stringify(input),
       }),
