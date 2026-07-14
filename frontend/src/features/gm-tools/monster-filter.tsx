@@ -9,6 +9,7 @@ import {
 import { Badge } from '@/shared/ui/badge'
 import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
+import { clampToRange } from '@/shared/lib/bounded-number'
 import { fuzzyFilter } from '@/shared/lib/fuzzy-filter'
 import { BESTIARY, type Monster, type MonsterTipo } from '@tormenta20/t20-data'
 import {
@@ -57,8 +58,13 @@ export function useMonsterFilter(): {
 } {
   const [name, setName] = useState('')
   const [tipos, setTipos] = useState<Set<MonsterTipo>>(new Set())
-  const [ndMin, setNdMin] = useState(0)
-  const [ndMax, setNdMax] = useState(20)
+  const [ndMin, setNdMinRaw] = useState(0)
+  const [ndMax, setNdMaxRaw] = useState(20)
+  // ND is a 0–20 scale in 1/4 steps; clamp typed input so an out-of-range or
+  // NaN value never reaches the range filter (which would hide every monster).
+  const ND_RANGE = { min: 0, max: 20, step: 0.25 }
+  const setNdMin = (v: number) => setNdMinRaw(clampToRange(v, ND_RANGE))
+  const setNdMax = (v: number) => setNdMaxRaw(clampToRange(v, ND_RANGE))
 
   const columnFilters = useMemo<ColumnFiltersState>(
     () => [

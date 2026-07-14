@@ -4,6 +4,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { DicePill } from '@/shared/ui/dice-pill'
 import { PageChrome } from '@/shared/ui/page-chrome'
+import { clampToRange } from '@/shared/lib/bounded-number'
 import { GmPageHeader } from '@/features/gm-tools/gm-page-header'
 import { BUSCA_CHALLENGE_TABLE, BUSCA_OUTCOME_TABLE, buscaChallengeFromRoll, buscaOutcomeFromSuccesses, buscaTestCd, chaseEventFromRoll, dungeonIdeaFromRoll, rewardCastigoFromRoll, ruinaFromRoll, type BuscaChallengeRow, type ChaseEventRow, type DungeonIdea, type RewardCastigoRow, type RuinaRow } from '@tormenta20/t20-data'
 
@@ -161,7 +162,9 @@ function BuscaCard() {
             min={1}
             max={20}
             value={level}
-            onChange={(e) => setLevel(Number(e.target.value) || 1)}
+            onChange={(e) =>
+              setLevel(clampToRange(Number(e.target.value), { min: 1, max: 20 }))
+            }
             className="h-8 w-16 rounded-md border bg-transparent px-2 text-sm"
           />
           <Button onClick={roll}>Rolar 2d12</Button>

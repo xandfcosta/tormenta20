@@ -6,6 +6,7 @@ import { DicePill } from '@/shared/ui/dice-pill'
 import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
 import { PageChrome } from '@/shared/ui/page-chrome'
+import { clampToRange } from '@/shared/lib/bounded-number'
 import { GmPageHeader } from '@/features/gm-tools/gm-page-header'
 import { DUNGEON_SIZE_TABLE, classifyDungeonSize, dungeonIdeaFromRoll, dungeonSizeRow, plannedThreats, ROOMS_PER_THREAT, type DungeonIdea, type DungeonSize } from '@tormenta20/t20-data'
 
@@ -108,7 +109,7 @@ export function DungeonGeneratorPage() {
                   min={1}
                   max={50}
                   value={numRooms}
-                  onChange={setNumRooms}
+                  onChange={(v) => setNumRooms(clampToRange(v, { min: 1, max: 50 }))}
                 />
               </div>
               <div>
@@ -118,7 +119,8 @@ export function DungeonGeneratorPage() {
                 <Input
                   id="objective"
                   value={objective}
-                  onChange={(e) => setObjective(e.target.value)}
+                  onChange={(e) => setObjective(e.target.value.slice(0, 200))}
+                  maxLength={200}
                   placeholder="Resgatar o príncipe capturado…"
                 />
               </div>

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/shared/ui/dialog'
 import { NumberInput } from '@/shared/ui/number-input'
 import { PageChrome } from '@/shared/ui/page-chrome'
+import { clampToRange } from '@/shared/lib/bounded-number'
 import { VirtualList } from '@/shared/ui/virtual-list'
 import { GmPageHeader } from '@/features/gm-tools/gm-page-header'
 import {
@@ -99,7 +100,7 @@ export function EncounterBuilderPage() {
                   min={1}
                   max={20}
                   value={partyLevel}
-                  onChange={setPartyLevel}
+                  onChange={(v) => setPartyLevel(clampToRange(v, { min: 1, max: 20 }))}
                 />
               </div>
             </div>
@@ -113,7 +114,7 @@ export function EncounterBuilderPage() {
                   min={1}
                   max={8}
                   value={partySize}
-                  onChange={setPartySize}
+                  onChange={(v) => setPartySize(clampToRange(v, { min: 1, max: 8 }))}
                 />
               </div>
             </div>
@@ -216,7 +217,7 @@ function EntryRow({
           min={1}
           max={30}
           value={group.quantity}
-          onChange={onQuantity}
+          onChange={(v) => onQuantity(clampToRange(v, { min: 1, max: 30 }))}
         />
       </div>
       <Button
