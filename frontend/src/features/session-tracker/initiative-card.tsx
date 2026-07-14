@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { useForm } from '@tanstack/react-form'
+import { z } from 'zod'
 import { Plus, Sparkles, Swords, Trash2 } from 'lucide-react'
 import { SPELL_CATALOG } from '@tormenta20/t20-data'
 import { Badge } from '@/shared/ui/badge'
@@ -8,6 +10,7 @@ import {
   ConnectionChip,
   type ConnectionStatus,
 } from '@/shared/ui/connection-chip'
+import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
 import { HpBar } from '@/shared/ui/hp-bar'
 import { Input } from '@/shared/ui/input'
 import { MpBar } from '@/shared/ui/mp-bar'
@@ -25,13 +28,13 @@ import { CombatantDrawer } from './combatant-drawer'
 import { InitiativeRollButton } from './initiative-roll'
 import { PartyRoster } from './party-roster'
 
+/** Spell buffs a GM can push onto a combatant, resolved once from the catalog. */
+const BUFF_SPELLS = Object.values(SPELL_CATALOG).filter((s) => s.buff)
+
 // Maps realtime hook state onto ConnectionChip's tri-state. The socket
 // hook only reports `isConnected` + `error`; we infer 'reconnecting' as
 // "not connected AND no fatal error yet" so a flicker between attempts
 // shows the spinner instead of the offline glyph.
-/** Spell buffs a GM can push onto a combatant, resolved once from the catalog. */
-const BUFF_SPELLS = Object.values(SPELL_CATALOG).filter((s) => s.buff)
-
 function deriveConnectionStatus(
   isConnected: boolean,
   error: string | null,
@@ -57,21 +60,10 @@ export function InitiativeCard({
   const status = deriveConnectionStatus(rt.isConnected, rt.error)
   // The viewer's own PC (players join with one) — for the self-roll button.
   const [myCharacterId] = myCharacterIds
-  const [addLabel, setAddLabel] = useState('')
-  const [addInit, setAddInit] = useState(10)
-  const [addType, setAddType] = useState<'character' | 'npc'>('npc')
   const [sheetCharId, setSheetCharId] = useState<number | null>(null)
   const [restCond, setRestCond] = useState<
     'ruim' | 'normal' | 'confortavel' | 'luxuosa'
   >('normal')
-
-  const submitAdd = () => {
-    const label = addLabel.trim()
-    if (!label) return
-    rt.addEntry({ label, initiative: addInit, type: addType })
-    setAddLabel('')
-    setAddInit(10)
-  }
 
   return (
     <Card>
@@ -204,55 +196,7 @@ export function InitiativeCard({
           })}
         </div>
 
-        {isGm && (
-        <div className="mt-3 flex flex-wrap items-end gap-2 rounded-md border border-dashed p-3">
-          <div className="min-w-[160px] flex-1">
-            <label className="text-xs font-medium" htmlFor="add-label">
-              Nome
-            </label>
-            <Input
-              id="add-label"
-              value={addLabel}
-              onChange={(e) => setAddLabel(e.target.value)}
-              placeholder="Goblin salteador…"
-            />
-          </div>
-          <div className="w-24">
-            <label className="text-xs font-medium" htmlFor="add-init">
-              Iniciativa
-            </label>
-            <NumberInput
-              id="add-init"
-              min={-5}
-              max={40}
-              value={addInit}
-              onChange={setAddInit}
-            />
-          </div>
-          <div className="flex gap-1">
-            <Button
-              variant={addType === 'character' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setAddType('character')}
-            >
-              PC
-            </Button>
-            <Button
-              variant={addType === 'npc' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setAddType('npc')}
-            >
-              NPC
-            </Button>
-          </div>
-          <Button
-            onClick={submitAdd}
-            disabled={!rt.isConnected || !addLabel.trim()}
-          >
-            <Plus className="mr-1 size-4" /> Adicionar
-          </Button>
-        </div>
-        )}
+        {isGm && <AddCombatantForm rt={rt} />}
       </CardContent>
       <CombatantDrawer
         characterId={sheetCharId}
@@ -420,5 +364,133 @@ function ApplyEffectSelect({ onApply }: { onApply: (spellId: string) => void }) 
         ))}
       </SelectContent>
     </Select>
+  )
+}
+
+/** A combatant entry: a required label, a whole-number initiative in the
+ *  playable range, and whether it's a PC or an NPC. */
+const addCombatantSchema = z.object({
+  label: z
+    .string()
+    .trim()
+    .min(1, 'Informe um nome.')
+    .max(60, 'Máximo 60 caracteres.'),
+  initiative: z
+    .number()
+    .int('Iniciativa deve ser inteiro.')
+    .min(-5, 'Mínimo -5.')
+    .max(40, 'Máximo 40.'),
+  type: z.enum(['character', 'npc']),
+})
+
+/** GM-only "add combatant" row under the initiative list. Validated with
+ *  zod + TanStack Form; resets to a fresh NPC row after each add. */
+function AddCombatantForm({
+  rt,
+}: {
+  rt: ReturnType<typeof useSessionSocket>
+}) {
+  const form = useForm({
+    defaultValues: {
+      label: '',
+      initiative: 10,
+      type: 'npc' as 'character' | 'npc',
+    },
+    validators: { onSubmit: addCombatantSchema },
+    onSubmit: ({ value }) => {
+      rt.addEntry({
+        label: value.label.trim(),
+        initiative: value.initiative,
+        type: value.type,
+      })
+      form.reset()
+    },
+  })
+
+  return (
+    <form
+      className="mt-3 flex flex-wrap items-end gap-2 rounded-md border border-dashed p-3"
+      onSubmit={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        form.handleSubmit()
+      }}
+    >
+      <form.Field
+        name="label"
+        validators={{ onChange: addCombatantSchema.shape.label }}
+      >
+        {(f) => {
+          const invalid = f.state.meta.isTouched && !f.state.meta.isValid
+          return (
+            <Field data-invalid={invalid} className="min-w-[160px] flex-1">
+              <FieldLabel htmlFor={f.name}>Nome</FieldLabel>
+              <Input
+                id={f.name}
+                value={f.state.value}
+                onChange={(e) => f.handleChange(e.target.value)}
+                onBlur={f.handleBlur}
+                placeholder="Goblin salteador…"
+                aria-invalid={invalid}
+              />
+              {invalid && <FieldError errors={f.state.meta.errors} />}
+            </Field>
+          )
+        }}
+      </form.Field>
+      <form.Field
+        name="initiative"
+        validators={{ onChange: addCombatantSchema.shape.initiative }}
+      >
+        {(f) => {
+          const invalid = f.state.meta.isTouched && !f.state.meta.isValid
+          return (
+            <Field data-invalid={invalid} className="w-24">
+              <FieldLabel htmlFor={f.name}>Iniciativa</FieldLabel>
+              <NumberInput
+                id={f.name}
+                min={-5}
+                max={40}
+                value={f.state.value}
+                onChange={(v) => f.handleChange(v)}
+                onBlur={f.handleBlur}
+                aria-invalid={invalid}
+              />
+              {invalid && <FieldError errors={f.state.meta.errors} />}
+            </Field>
+          )
+        }}
+      </form.Field>
+      <form.Field name="type">
+        {(f) => (
+          <div className="flex gap-1">
+            <Button
+              type="button"
+              variant={f.state.value === 'character' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => f.handleChange('character')}
+            >
+              PC
+            </Button>
+            <Button
+              type="button"
+              variant={f.state.value === 'npc' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => f.handleChange('npc')}
+            >
+              NPC
+            </Button>
+          </div>
+        )}
+      </form.Field>
+      <form.Subscribe
+        selector={(s) => s.canSubmit}
+        children={(canSubmit) => (
+          <Button type="submit" disabled={!rt.isConnected || !canSubmit}>
+            <Plus className="mr-1 size-4" /> Adicionar
+          </Button>
+        )}
+      />
+    </form>
   )
 }

@@ -1,36 +1,61 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
+import { useForm } from '@tanstack/react-form'
 import { useState } from 'react'
+import { z } from 'zod'
 import { CalendarClock } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader } from '@/shared/ui/card'
+import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 import { SectionHeading } from '@/shared/ui/section-heading'
 import { Textarea } from '@/shared/ui/textarea'
 import { ApiError, api } from '@/shared/api/api'
 import type { Campaign } from '@/shared/api/api'
+import { applyServerErrors } from '@/shared/lib/form-errors'
 import { campaignQueryOptions, campaignsQueryOptions } from '@/entities/campaign/queries'
+
+// Mirrors the create form (campaign-new-page) so edit + create validate alike.
+const campaignEditSchema = z.object({
+  name: z.string().trim().min(1, 'Nome é obrigatório').max(120, 'Máximo 120 caracteres'),
+  description: z.string().max(2000, 'Máximo 2000 caracteres'),
+})
+
 export function CampaignHeaderCard({ campaign }: { campaign: Campaign }) {
   const qc = useQueryClient()
   const [editing, setEditing] = useState(false)
-  const [name, setName] = useState(campaign.name)
-  const [description, setDescription] = useState(campaign.description ?? '')
-  const [error, setError] = useState<string | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
 
-  const mutation = useMutation({
-    mutationFn: () =>
-      api.campaigns.update(campaign.id, { name, description }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: campaignsQueryOptions.queryKey })
-      qc.invalidateQueries({
-        queryKey: campaignQueryOptions(campaign.id).queryKey,
-      })
-      setEditing(false)
-      setError(null)
+  const form = useForm({
+    defaultValues: {
+      name: campaign.name,
+      description: campaign.description ?? '',
     },
-    onError: (e) => {
-      setError(e instanceof ApiError ? e.message : 'Erro ao salvar')
+    validators: { onSubmit: campaignEditSchema },
+    onSubmit: async ({ value, formApi }) => {
+      setFormError(null)
+      try {
+        await api.campaigns.update(campaign.id, {
+          name: value.name.trim(),
+          description: value.description,
+        })
+        qc.invalidateQueries({ queryKey: campaignsQueryOptions.queryKey })
+        qc.invalidateQueries({
+          queryKey: campaignQueryOptions(campaign.id).queryKey,
+        })
+        setEditing(false)
+      } catch (e) {
+        if (!applyServerErrors(formApi, e)) {
+          setFormError(e instanceof ApiError ? e.message : 'Erro ao salvar')
+        }
+      }
     },
   })
+
+  const cancel = () => {
+    setEditing(false)
+    setFormError(null)
+    form.reset()
+  }
 
   if (!editing) {
     return (
@@ -64,52 +89,74 @@ export function CampaignHeaderCard({ campaign }: { campaign: Campaign }) {
       <CardHeader>
         <SectionHeading as="h2">Editar campanha</SectionHeading>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium" htmlFor="campaign-name">
-            Nome
-          </label>
-          <Input
-            id="campaign-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label
-            className="text-sm font-medium"
-            htmlFor="campaign-description"
+      <CardContent>
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            form.handleSubmit()
+          }}
+        >
+          <form.Field
+            name="name"
+            validators={{ onChange: campaignEditSchema.shape.name }}
           >
-            Descrição
-          </label>
-          <Textarea
-            id="campaign-description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={6}
-          />
-        </div>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="outline"
-            onClick={() => {
-              setEditing(false)
-              setName(campaign.name)
-              setDescription(campaign.description ?? '')
-              setError(null)
+            {(f) => {
+              const invalid = f.state.meta.isTouched && !f.state.meta.isValid
+              return (
+                <Field data-invalid={invalid}>
+                  <FieldLabel htmlFor={f.name}>Nome</FieldLabel>
+                  <Input
+                    id={f.name}
+                    value={f.state.value}
+                    onChange={(e) => f.handleChange(e.target.value)}
+                    onBlur={f.handleBlur}
+                    aria-invalid={invalid}
+                    required
+                  />
+                  {invalid && <FieldError errors={f.state.meta.errors} />}
+                </Field>
+              )
             }}
+          </form.Field>
+          <form.Field
+            name="description"
+            validators={{ onChange: campaignEditSchema.shape.description }}
           >
-            Cancelar
-          </Button>
-          <Button
-            disabled={mutation.isPending || !name.trim()}
-            onClick={() => mutation.mutate()}
-          >
-            {mutation.isPending ? 'Salvando…' : 'Salvar'}
-          </Button>
-        </div>
+            {(f) => {
+              const invalid = f.state.meta.isTouched && !f.state.meta.isValid
+              return (
+                <Field data-invalid={invalid}>
+                  <FieldLabel htmlFor={f.name}>Descrição</FieldLabel>
+                  <Textarea
+                    id={f.name}
+                    value={f.state.value}
+                    onChange={(e) => f.handleChange(e.target.value)}
+                    onBlur={f.handleBlur}
+                    rows={6}
+                    aria-invalid={invalid}
+                  />
+                  {invalid && <FieldError errors={f.state.meta.errors} />}
+                </Field>
+              )
+            }}
+          </form.Field>
+          {formError && <p className="text-sm text-destructive">{formError}</p>}
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={cancel}>
+              Cancelar
+            </Button>
+            <form.Subscribe
+              selector={(s) => [s.canSubmit, s.isSubmitting] as const}
+              children={([canSubmit, isSubmitting]) => (
+                <Button type="submit" disabled={!canSubmit || isSubmitting}>
+                  {isSubmitting ? 'Salvando…' : 'Salvar'}
+                </Button>
+              )}
+            />
+          </div>
+        </form>
       </CardContent>
     </Card>
   )

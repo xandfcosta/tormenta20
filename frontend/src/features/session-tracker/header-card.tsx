@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useForm } from '@tanstack/react-form'
 import { useState } from 'react'
+import { z } from 'zod'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader } from '@/shared/ui/card'
@@ -12,12 +14,25 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/shared/ui/dialog'
+import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
 import { SectionHeading } from '@/shared/ui/section-heading'
 import { ApiError, api } from '@/shared/api/api'
 import type { Session, SessionStatus } from '@/shared/api/api'
+import { applyServerErrors } from '@/shared/lib/form-errors'
 import { campaignSessionQueryOptions, campaignSessionsQueryOptions } from '@/entities/session/queries'
+
+// A session is numbered (whole, ≥1) and optionally titled.
+const sessionEditSchema = z.object({
+  sessionNumber: z
+    .number()
+    .int('Nº deve ser inteiro.')
+    .min(1, 'Nº deve ser ≥ 1.')
+    .max(9999, 'Máximo 9999.'),
+  title: z.string().max(120, 'Máximo 120 caracteres.'),
+})
+
 export function HeaderCard({
   campaignId,
   session,
@@ -29,9 +44,7 @@ export function HeaderCard({
 }) {
   const qc = useQueryClient()
   const [editing, setEditing] = useState(false)
-  const [sessionNumber, setSessionNumber] = useState(session.sessionNumber)
-  const [title, setTitle] = useState(session.title ?? '')
-  const [error, setError] = useState<string | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
 
   const invalidateAll = () => {
     qc.invalidateQueries({
@@ -42,18 +55,34 @@ export function HeaderCard({
     })
   }
 
-  const patch = useMutation({
-    mutationFn: () =>
-      api.sessions.update(campaignId, session.id, { sessionNumber, title }),
-    onSuccess: () => {
-      invalidateAll()
-      setEditing(false)
-      setError(null)
+  const form = useForm({
+    defaultValues: {
+      sessionNumber: session.sessionNumber,
+      title: session.title ?? '',
     },
-    onError: (e) => {
-      setError(e instanceof ApiError ? e.message : 'Erro ao salvar')
+    validators: { onSubmit: sessionEditSchema },
+    onSubmit: async ({ value, formApi }) => {
+      setFormError(null)
+      try {
+        await api.sessions.update(campaignId, session.id, {
+          sessionNumber: value.sessionNumber,
+          title: value.title,
+        })
+        invalidateAll()
+        setEditing(false)
+      } catch (e) {
+        if (!applyServerErrors(formApi, e)) {
+          setFormError(e instanceof ApiError ? e.message : 'Erro ao salvar')
+        }
+      }
     },
   })
+
+  const cancel = () => {
+    setEditing(false)
+    setFormError(null)
+    form.reset()
+  }
 
   const start = useMutation({
     mutationFn: () => api.sessions.start(campaignId, session.id),
@@ -66,28 +95,53 @@ export function HeaderCard({
         <div className="flex-1 space-y-2">
           {editing ? (
             <div className="flex flex-wrap items-end gap-2">
-              <div className="w-24 space-y-1">
-                <label className="text-xs font-medium" htmlFor="session-number">
-                  Nº
-                </label>
-                <NumberInput
-                  id="session-number"
-                  min={1}
-                  value={sessionNumber}
-                  onChange={(v) => setSessionNumber(v)}
-                />
-              </div>
-              <div className="min-w-[220px] flex-1 space-y-1">
-                <label className="text-xs font-medium" htmlFor="session-title">
-                  Título
-                </label>
-                <Input
-                  id="session-title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Título opcional"
-                />
-              </div>
+              <form.Field
+                name="sessionNumber"
+                validators={{ onChange: sessionEditSchema.shape.sessionNumber }}
+              >
+                {(f) => {
+                  const invalid = f.state.meta.isTouched && !f.state.meta.isValid
+                  return (
+                    <Field data-invalid={invalid} className="w-24">
+                      <FieldLabel htmlFor={f.name}>Nº</FieldLabel>
+                      <NumberInput
+                        id={f.name}
+                        min={1}
+                        value={f.state.value}
+                        onChange={(v) => f.handleChange(v)}
+                        onBlur={f.handleBlur}
+                        aria-invalid={invalid}
+                      />
+                      {invalid && <FieldError errors={f.state.meta.errors} />}
+                    </Field>
+                  )
+                }}
+              </form.Field>
+              <form.Field
+                name="title"
+                validators={{ onChange: sessionEditSchema.shape.title }}
+              >
+                {(f) => {
+                  const invalid = f.state.meta.isTouched && !f.state.meta.isValid
+                  return (
+                    <Field
+                      data-invalid={invalid}
+                      className="min-w-[220px] flex-1"
+                    >
+                      <FieldLabel htmlFor={f.name}>Título</FieldLabel>
+                      <Input
+                        id={f.name}
+                        value={f.state.value}
+                        onChange={(e) => f.handleChange(e.target.value)}
+                        onBlur={f.handleBlur}
+                        placeholder="Título opcional"
+                        aria-invalid={invalid}
+                      />
+                      {invalid && <FieldError errors={f.state.meta.errors} />}
+                    </Field>
+                  )
+                }}
+              </form.Field>
             </div>
           ) : (
             <>
@@ -124,25 +178,24 @@ export function HeaderCard({
       <CardContent className="space-y-3">
         {editing && (
           <>
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {formError && (
+              <p className="text-sm text-destructive">{formError}</p>
+            )}
             <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setEditing(false)
-                  setSessionNumber(session.sessionNumber)
-                  setTitle(session.title ?? '')
-                  setError(null)
-                }}
-              >
+              <Button variant="outline" onClick={cancel}>
                 Cancelar
               </Button>
-              <Button
-                disabled={patch.isPending || sessionNumber < 1}
-                onClick={() => patch.mutate()}
-              >
-                {patch.isPending ? 'Salvando…' : 'Salvar'}
-              </Button>
+              <form.Subscribe
+                selector={(s) => [s.canSubmit, s.isSubmitting] as const}
+                children={([canSubmit, isSubmitting]) => (
+                  <Button
+                    disabled={!canSubmit || isSubmitting}
+                    onClick={() => form.handleSubmit()}
+                  >
+                    {isSubmitting ? 'Salvando…' : 'Salvar'}
+                  </Button>
+                )}
+              />
             </div>
           </>
         )}
