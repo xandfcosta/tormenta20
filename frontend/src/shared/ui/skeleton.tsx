@@ -61,4 +61,20 @@ function SkeletonRows({
   )
 }
 
-export { Skeleton, SkeletonCardGrid, SkeletonRows }
+/**
+ * Generic full-page placeholder for the router's `defaultPendingComponent`,
+ * shown while a blocking route `loader` awaits its first fetch instead of
+ * freezing the previous page. Neutral header + block shape so it fits any
+ * destination screen.
+ */
+function RoutePendingSkeleton() {
+  return (
+    <div className="space-y-4 p-6">
+      <Skeleton className="h-8 w-56" />
+      <Skeleton className="h-32 w-full" />
+      <Skeleton className="h-40 w-full" />
+    </div>
+  )
+}
+
+export { Skeleton, SkeletonCardGrid, SkeletonRows, RoutePendingSkeleton }
