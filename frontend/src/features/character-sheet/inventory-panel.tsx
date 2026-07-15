@@ -346,9 +346,7 @@ export function InventoryPanel({ character }: { character: Character }) {
           <div
             className={cn(
               'h-full transition-all',
-              over
-                ? ' from-red-700 to-red-500'
-                : '  ',
+              over ? 'bg-destructive' : 'bg-primary',
             )}
             style={{ width: `${pct}%` }}
           />
