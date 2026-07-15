@@ -3,7 +3,7 @@ import { Check, X } from 'lucide-react'
 import { characterProficiencies } from '@tormenta20/t20-data'
 import type { ProficiencyEntry } from '@tormenta20/t20-data'
 import { Button } from '@/shared/ui/button'
-import { api, type Character } from '@/shared/api/api'
+import { api, type Character, type ProficienciesResult } from '@/shared/api/api'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { accentStrong, dimText, surface } from '@/shared/lib/sheet-theme'
@@ -24,7 +24,7 @@ export function ProficienciesPanel({ character }: { character: Character }) {
   const stored = parseProficiencySet(character.proficiencies)
 
   const update = useMutation<
-    Character,
+    ProficienciesResult,
     Error,
     string[],
     { previous: Character | undefined }
@@ -42,8 +42,10 @@ export function ProficienciesPanel({ character }: { character: Character }) {
     onError: (_e, _v, ctx) => {
       if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
     },
-    onSuccess: (server) => {
-      qc.setQueryData<Character>(queryKey, server)
+    onSuccess: (delta) => {
+      qc.setQueryData<Character>(queryKey, (prev) =>
+        prev ? { ...prev, proficiencies: delta.proficiencies } : prev,
+      )
       invalidateCharacterDependents(qc, character.id)
     },
   })

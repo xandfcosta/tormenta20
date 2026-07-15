@@ -3,7 +3,7 @@ import type {
   RaceAbility,
   RaceDefinition,
 } from '@tormenta20/t20-data'
-import { api, type Character } from '@/shared/api/api'
+import { api, type Character, type AbilityChoicesResult } from '@/shared/api/api'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import type { AttributeKey } from '@/shared/api/api'
 import { characterQueryOptions } from '@/entities/character/queries'
@@ -51,7 +51,7 @@ export function RaceAbilitySection({
   const choices = parseChoices(character.raceAbilityChoices)
 
   const update = useMutation<
-    Character,
+    AbilityChoicesResult,
     Error,
     string[],
     { previous: Character | undefined }
@@ -71,8 +71,10 @@ export function RaceAbilitySection({
     onError: (_e, _v, ctx) => {
       if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
     },
-    onSuccess: (server) => {
-      qc.setQueryData<Character>(queryKey, server)
+    onSuccess: (delta) => {
+      qc.setQueryData<Character>(queryKey, (prev) =>
+        prev ? { ...prev, ...delta } : prev,
+      )
       invalidateCharacterDependents(qc, character.id)
     },
   })

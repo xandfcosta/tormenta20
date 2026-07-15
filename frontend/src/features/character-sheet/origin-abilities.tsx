@@ -5,7 +5,7 @@ import type {
   OriginBenefit,
   OriginDefinition,
 } from '@tormenta20/t20-data'
-import { api, type Character } from '@/shared/api/api'
+import { api, type Character, type AbilityChoicesResult } from '@/shared/api/api'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { accentTitle, dimText, subtleText } from '@/shared/lib/sheet-theme'
@@ -50,7 +50,7 @@ function OriginPickerSection({
   const selected = choices.filter((id) => benefitIds.has(id))
 
   const update = useMutation<
-    Character,
+    AbilityChoicesResult,
     Error,
     string[],
     { previous: Character | undefined }
@@ -68,8 +68,11 @@ function OriginPickerSection({
     onError: (_e, _v, ctx) => {
       if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
     },
-    onSuccess: (server) => {
-      qc.setQueryData<Character>(queryKey, server)
+    onSuccess: (delta) => {
+      // Delta carries only the serialized choice fields we wrote; merge them.
+      qc.setQueryData<Character>(queryKey, (prev) =>
+        prev ? { ...prev, ...delta } : prev,
+      )
       invalidateCharacterDependents(qc, character.id)
     },
   })

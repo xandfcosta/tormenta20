@@ -191,6 +191,22 @@ export type EffectsClearedResult = {
   clearedScopes: ('scene' | 'day')[]
 }
 
+/** Deltas from the sheet-edit mutations — each carries only the fields the
+ *  write touched; the client merges them into the cached Character. */
+export type VitalsResult = { hpCurrent: number; mpCurrent: number }
+export type LevelResult = { level: number }
+export type ClassLevelResult = {
+  level: number
+  classes: { className: string; level: number }[]
+}
+export type ProficienciesResult = { proficiencies: string }
+export type AbilityChoicesResult = {
+  raceAbilityChoices?: string
+  originChoices?: string
+  classPowers?: string
+  classChoices?: string
+}
+
 export type CreateCharacterInput = {
   name: string
   races: string[]
@@ -384,7 +400,7 @@ export const api = {
     create: (input: CreateCharacterInput) =>
       request<Character>('/characters', { method: 'POST', body: JSON.stringify(input) }),
     updateVitals: (id: number, input: UpdateVitalsInput) =>
-      request<Character>(`/characters/${id}/vitals`, {
+      request<VitalsResult>(`/characters/${id}/vitals`, {
         method: 'PATCH',
         body: JSON.stringify(input),
       }),
@@ -440,22 +456,22 @@ export const api = {
         method: 'POST',
       }),
     updateProficiencies: (id: number, input: UpdateProficienciesInput) =>
-      request<Character>(`/characters/${id}/proficiencies`, {
+      request<ProficienciesResult>(`/characters/${id}/proficiencies`, {
         method: 'PATCH',
         body: JSON.stringify(input),
       }),
     updateLevel: (id: number, input: UpdateLevelInput) =>
-      request<Character>(`/characters/${id}/level`, {
+      request<LevelResult>(`/characters/${id}/level`, {
         method: 'PATCH',
         body: JSON.stringify(input),
       }),
     updateAbilityChoices: (id: number, input: UpdateAbilityChoicesInput) =>
-      request<Character>(`/characters/${id}/abilities`, {
+      request<AbilityChoicesResult>(`/characters/${id}/abilities`, {
         method: 'PATCH',
         body: JSON.stringify(input),
       }),
     updateClassLevel: (id: number, input: UpdateClassLevelInput) =>
-      request<Character>(`/characters/${id}/classes/level`, {
+      request<ClassLevelResult>(`/characters/${id}/classes/level`, {
         method: 'PATCH',
         body: JSON.stringify(input),
       }),

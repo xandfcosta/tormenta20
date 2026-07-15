@@ -4,7 +4,20 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import type { ComputedSheet } from '@tormenta20/t20-data';
+import {
+  characterProficiencies,
+  isValid,
+  PROFICIENCY_CATEGORIES,
+  type ProficiencyCategory,
+  validateTotalLevel,
+} from '@tormenta20/t20-data';
 import { PrismaService } from '../prisma/prisma.service';
+import { computeSheetForRow } from './character-sheet.mapper';
+import {
+  assertCharacterRules,
+  sanitizeClassChoices,
+} from './characters.helpers';
 import {
   CreateCharacterDto,
   UpdateAbilityChoicesDto,
@@ -14,19 +27,6 @@ import {
   UpdateVitalsDto,
 } from './dto/character.dto';
 import { EXPERTISES } from './t20-constants';
-import {
-  PROFICIENCY_CATEGORIES,
-  characterProficiencies,
-  isValid,
-  validateTotalLevel,
-  type ProficiencyCategory,
-} from '@tormenta20/t20-data';
-import {
-  assertCharacterRules,
-  sanitizeClassChoices,
-} from './characters.helpers';
-import { computeSheetForRow } from './character-sheet.mapper';
-import type { ComputedSheet } from '@tormenta20/t20-data';
 
 const characterInclude = {
   races: { select: { race: true } },
@@ -73,6 +73,26 @@ const characterInclude = {
     orderBy: { learnedAt: 'asc' },
   },
 } as const;
+
+/**
+ * Delta shapes returned by the sheet-edit mutations (level, class level,
+ * proficiencies, ability choices, vitals). Each carries only the fields the
+ * write touched — the client merges them into the cached Character instead of
+ * re-reading the whole aggregate.
+ */
+export type LevelResult = { level: number };
+export type ClassLevelResult = {
+  level: number;
+  classes: { className: string; level: number }[];
+};
+export type ProficienciesResult = { proficiencies: string };
+export type AbilityChoicesResult = {
+  raceAbilityChoices?: string;
+  originChoices?: string;
+  classPowers?: string;
+  classChoices?: string;
+};
+export type VitalsResult = { hpCurrent: number; mpCurrent: number };
 
 @Injectable()
 export class CharactersService {
@@ -240,14 +260,9 @@ export class CharactersService {
     ownerId: number,
     characterId: number,
     dto: UpdateAbilityChoicesDto,
-  ) {
+  ): Promise<AbilityChoicesResult> {
     await this.findOne(ownerId, characterId);
-    const data: {
-      raceAbilityChoices?: string;
-      originChoices?: string;
-      classPowers?: string;
-      classChoices?: string;
-    } = {};
+    const data: AbilityChoicesResult = {};
     if (dto.raceAbilityChoices !== undefined) {
       data.raceAbilityChoices = JSON.stringify(dto.raceAbilityChoices);
     }
@@ -263,23 +278,25 @@ export class CharactersService {
     if (Object.keys(data).length === 0) {
       throw new BadRequestException('No fields to update');
     }
-    return this.prisma.character.update({
+    // Delta: echo back just the serialized fields we wrote — the client merges
+    // them into its cached character rather than re-reading the aggregate.
+    await this.prisma.character.update({
       where: { id: characterId },
       data,
-      include: characterInclude,
     });
+    return data;
   }
 
   async updateLevel(
     ownerId: number,
     characterId: number,
     dto: UpdateLevelDto,
-  ) {
+  ): Promise<LevelResult> {
     await this.findOne(ownerId, characterId);
     return this.prisma.character.update({
       where: { id: characterId },
       data: { level: dto.level },
-      include: characterInclude,
+      select: { level: true },
     });
   }
 
@@ -293,7 +310,7 @@ export class CharactersService {
     ownerId: number,
     characterId: number,
     dto: UpdateClassLevelDto,
-  ) {
+  ): Promise<ClassLevelResult> {
     /* Ownership gate before the tx so we don't waste a transaction on
      * an unauthorized caller. The class + total re-check happen INSIDE
      * the tx so a parallel updateClassLevel on another class can't
@@ -331,6 +348,7 @@ export class CharactersService {
           fieldErrors: { level: [`Sum of class levels capped at 20`] },
         });
       }
+      // Delta: new total + the full class list (the client remaps both).
       return tx.character.update({
         where: { id: characterId },
         data: {
@@ -347,7 +365,10 @@ export class CharactersService {
             },
           },
         },
-        include: characterInclude,
+        select: {
+          level: true,
+          classes: { select: { className: true, level: true } },
+        },
       });
     });
   }
@@ -356,7 +377,7 @@ export class CharactersService {
     ownerId: number,
     characterId: number,
     dto: UpdateProficienciesDto,
-  ) {
+  ): Promise<ProficienciesResult> {
     await this.findOne(ownerId, characterId);
     const valid = new Set<string>(PROFICIENCY_CATEGORIES);
     const fieldErrors: Record<string, string[]> = {};
@@ -379,7 +400,7 @@ export class CharactersService {
     return this.prisma.character.update({
       where: { id: characterId },
       data: { proficiencies: JSON.stringify(dedup) },
-      include: characterInclude,
+      select: { proficiencies: true },
     });
   }
 
@@ -396,7 +417,7 @@ export class CharactersService {
     ownerId: number,
     characterId: number,
     dto: UpdateVitalsDto,
-  ) {
+  ): Promise<VitalsResult> {
     await this.findOne(ownerId, characterId);
     if (dto.hpCurrent === undefined && dto.mpCurrent === undefined) {
       throw new BadRequestException('No fields to update');
@@ -434,10 +455,12 @@ export class CharactersService {
           fieldErrors,
         });
       }
+      // Delta: both clamped current values (one may be unchanged) — the client
+      // merges them onto its cached character.
       return tx.character.update({
         where: { id: characterId },
         data,
-        include: characterInclude,
+        select: { hpCurrent: true, mpCurrent: true },
       });
     });
   }

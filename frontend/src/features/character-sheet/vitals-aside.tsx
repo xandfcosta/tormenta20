@@ -26,8 +26,13 @@ export function VitalsAside({
   const sendVitals = useDebouncedCallback(
     async (input: UpdateVitalsInput) => {
       try {
-        const updated = await api.characters.updateVitals(character.id, input)
-        qc.setQueryData(queryKey, updated)
+        // Delta merge: server echoes the clamped hp/mp, not the whole character.
+        const delta = await api.characters.updateVitals(character.id, input)
+        qc.setQueryData<Character>(queryKey, (prev) =>
+          prev
+            ? { ...prev, hpCurrent: delta.hpCurrent, mpCurrent: delta.mpCurrent }
+            : prev,
+        )
         invalidateCharacterDependents(qc, character.id)
       } catch {
         if (rollbackSnapshot.current) {

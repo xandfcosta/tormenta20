@@ -18,7 +18,7 @@ import type {
   PowerKind,
 } from '@tormenta20/t20-data'
 import { Combobox, type ComboboxOption } from '@/shared/ui/combobox'
-import { api, type Character } from '@/shared/api/api'
+import { api, type Character, type AbilityChoicesResult } from '@/shared/api/api'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import {
   evaluatePrerequisite,
@@ -58,7 +58,7 @@ function ClassChoicesPicker({
   const blob: ClassChoiceBlob = classChoices[className] ?? {}
 
   const mutate = useMutation<
-    Character,
+    AbilityChoicesResult,
     Error,
     ClassChoices,
     { previous: Character | undefined }
@@ -76,8 +76,10 @@ function ClassChoicesPicker({
     onError: (_e, _v, ctx) => {
       if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
     },
-    onSuccess: (server) => {
-      qc.setQueryData<Character>(queryKey, server)
+    onSuccess: (delta) => {
+      qc.setQueryData<Character>(queryKey, (prev) =>
+        prev ? { ...prev, ...delta } : prev,
+      )
       invalidateCharacterDependents(qc, character.id)
     },
   })
@@ -184,7 +186,7 @@ export function ClassesSection({
   const slotsRemaining = Math.max(0, slotCount - ownedSlotPicks)
 
   const update = useMutation<
-    Character,
+    AbilityChoicesResult,
     Error,
     string[],
     { previous: Character | undefined }
@@ -202,8 +204,10 @@ export function ClassesSection({
     onError: (_e, _v, ctx) => {
       if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
     },
-    onSuccess: (server) => {
-      qc.setQueryData<Character>(queryKey, server)
+    onSuccess: (delta) => {
+      qc.setQueryData<Character>(queryKey, (prev) =>
+        prev ? { ...prev, ...delta } : prev,
+      )
       invalidateCharacterDependents(qc, character.id)
     },
   })

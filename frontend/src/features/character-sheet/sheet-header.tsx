@@ -16,7 +16,7 @@ import {
   TooltipTrigger,
 } from '@/shared/ui/tooltip'
 import { api } from '@/shared/api/api'
-import type { Character } from '@/shared/api/api'
+import type { Character, ClassLevelResult } from '@/shared/api/api'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import { displacementTotal, useCharacterEffects } from '@/entities/character/derived'
 import { characterQueryOptions } from '@/entities/character/queries'
@@ -84,7 +84,7 @@ function LevelBadge({ character }: { character: Character }) {
   const [pickerDir, setPickerDir] = useState<null | 'up' | 'down'>(null)
 
   const mutate = useMutation<
-    Character,
+    ClassLevelResult,
     Error,
     { className: string; level: number },
     { previous: Character | undefined }
@@ -107,8 +107,10 @@ function LevelBadge({ character }: { character: Character }) {
     onError: (_e, _v, ctx) => {
       if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
     },
-    onSuccess: (server) => {
-      qc.setQueryData<Character>(queryKey, server)
+    onSuccess: (delta) => {
+      qc.setQueryData<Character>(queryKey, (prev) =>
+        prev ? { ...prev, level: delta.level, classes: delta.classes } : prev,
+      )
       invalidateCharacterDependents(qc, character.id)
     },
   })
