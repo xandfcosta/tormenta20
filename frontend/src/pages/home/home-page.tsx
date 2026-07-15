@@ -5,6 +5,7 @@ import { Plus, Scroll, Users2, Wand2 } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { PageChrome } from '@/shared/ui/page-chrome'
+import { SkeletonRows } from '@/shared/ui/skeleton'
 import type { Campaign, Character } from '@/shared/api/api'
 import { charactersQueryOptions } from '@/entities/character/queries'
 import { campaignsQueryOptions } from '@/entities/campaign/queries'
@@ -48,8 +49,14 @@ export function HomePage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <CharactersOverview characters={characters.data} />
-        <CampaignsOverview campaigns={campaigns.data} />
+        <CharactersOverview
+          characters={characters.data}
+          loading={characters.isLoading}
+        />
+        <CampaignsOverview
+          campaigns={campaigns.data}
+          loading={campaigns.isLoading}
+        />
       </div>
     </PageChrome>
   )
@@ -91,12 +98,16 @@ function ShortcutTile({
 /** "Personagens" overview column — recent characters + a create shortcut. */
 function CharactersOverview({
   characters,
+  loading,
 }: {
   characters: Character[] | undefined
+  loading: boolean
 }) {
   return (
     <OverviewCard title="Personagens" viewAllTo="/characters">
-      {characters && characters.length > 0 ? (
+      {loading ? (
+        <SkeletonRows count={3} />
+      ) : characters && characters.length > 0 ? (
         characters
           .slice(0, 5)
           .map((c) => (
@@ -119,12 +130,16 @@ function CharactersOverview({
 /** "Campanhas" overview column — campaigns with the caller's role. */
 function CampaignsOverview({
   campaigns,
+  loading,
 }: {
   campaigns: Campaign[] | undefined
+  loading: boolean
 }) {
   return (
     <OverviewCard title="Campanhas" viewAllTo="/campaigns">
-      {campaigns && campaigns.length > 0 ? (
+      {loading ? (
+        <SkeletonRows count={3} />
+      ) : campaigns && campaigns.length > 0 ? (
         campaigns
           .slice(0, 5)
           .map((c) => (

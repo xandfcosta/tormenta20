@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Dices } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/shared/ui/button'
+import { Skeleton } from '@/shared/ui/skeleton'
 import { rollD20 } from '@/shared/lib/dice'
 import {
   expertiseTotalWithItems,
@@ -29,6 +30,7 @@ export function InitiativeRollButton({
   rt: ReturnType<typeof useSessionSocket>
 }) {
   const character = useQuery(characterQueryOptions(characterId))
+  if (character.isLoading) return <Skeleton className="h-8 w-44" />
   if (!character.data) return null
   return <RollButton character={character.data} rt={rt} />
 }

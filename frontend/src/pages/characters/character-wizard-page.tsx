@@ -10,6 +10,7 @@ import { NumberInput } from '@/shared/ui/number-input'
 import { Combobox } from '@/shared/ui/combobox'
 import { Badge } from '@/shared/ui/badge'
 import { PageChrome } from '@/shared/ui/page-chrome'
+import { Skeleton } from '@/shared/ui/skeleton'
 import { SectionHeading } from '@/shared/ui/section-heading'
 import { ClassEntryRow } from '@/features/character-build/class-entry-row'
 import { NumberField } from '@/features/character-build/number-field'
@@ -130,8 +131,16 @@ export function NewCharacterPage() {
 
   if (options.isLoading)
     return (
-      <PageChrome>
-        <p>Carregando opções…</p>
+      <PageChrome className="space-y-4">
+        <Skeleton className="h-8 w-56" />
+        <Skeleton className="h-11 w-full" />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Skeleton className="h-11 w-full" />
+          <Skeleton className="h-11 w-full" />
+          <Skeleton className="h-11 w-full" />
+          <Skeleton className="h-11 w-full" />
+        </div>
+        <Skeleton className="h-32 w-full" />
       </PageChrome>
     )
   if (!options.data)

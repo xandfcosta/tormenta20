@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Badge } from '@/shared/ui/badge'
 import { HpBar } from '@/shared/ui/hp-bar'
 import { MpBar } from '@/shared/ui/mp-bar'
+import { Skeleton } from '@/shared/ui/skeleton'
 import { campaignMembersQueryOptions } from '@/entities/campaign/queries'
 import type { CampaignMember } from '@/shared/api/api'
 
@@ -18,6 +19,7 @@ export function PartyRoster({ campaignId }: { campaignId: number }) {
   const party = (members.data ?? []).flatMap((m) =>
     m.role === 'player' && m.character ? [m.character] : [],
   )
+  if (members.isLoading) return <PartyRosterSkeleton />
   if (party.length === 0) return null
 
   return (
@@ -28,6 +30,20 @@ export function PartyRoster({ campaignId }: { campaignId: number }) {
       <div className="grid gap-2 sm:grid-cols-2">
         {party.map((c) => (
           <PartyMember key={c.id} character={c} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/** Placeholder party grid so the Iniciativa panel keeps its height. */
+function PartyRosterSkeleton() {
+  return (
+    <div className="space-y-1.5">
+      <Skeleton className="h-3 w-16" />
+      <div className="grid gap-2 sm:grid-cols-2">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <Skeleton key={i} className="h-24 w-full rounded-lg" />
         ))}
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { SkeletonRows } from '@/shared/ui/skeleton'
 import { usersQueryOptions } from '@/entities/user/queries'
 
 export function UsersPage() {
@@ -7,7 +8,7 @@ export function UsersPage() {
   return (
     <div className="h-full space-y-4 overflow-y-auto p-6">
       <h2 className="text-2xl font-semibold">Users</h2>
-      {users.isLoading && <p>Loading…</p>}
+      {users.isLoading && <SkeletonRows count={4} />}
       {users.isError && (
         <p className="text-destructive">{(users.error as Error).message}</p>
       )}

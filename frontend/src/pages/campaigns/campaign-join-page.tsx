@@ -8,6 +8,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
 import { PageChrome } from '@/shared/ui/page-chrome'
+import { Skeleton } from '@/shared/ui/skeleton'
 import { SectionHeading } from '@/shared/ui/section-heading'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
 import { ApiError, api } from '@/shared/api/api'
@@ -123,11 +124,7 @@ export function JoinCampaignPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="text-sm">
-              {inviteLoading && (
-                <p className="text-muted-foreground">
-                  Verificando convite…
-                </p>
-              )}
+              {inviteLoading && <Skeleton className="h-5 w-64" />}
               {inviteInvalid && (
                 <p className="text-destructive">
                   Convite inválido ou expirado. Peça um novo link ao mestre.
