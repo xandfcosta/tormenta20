@@ -1,7 +1,7 @@
 import type { AttributeKey } from '../../attributes'
 import type { ExpertiseName } from '../../expertises'
 import type { Modifier } from '../../items/types'
-import type { ClassPower, Prerequisite } from '../types'
+import type { ClassPower, PowerChoice, Prerequisite } from '../types'
 
 /**
  * Builders for class powers. `autoPower` is granted automatically at the given
@@ -36,6 +36,7 @@ export function electivePower(
     minLevel?: number
     prerequisites?: Prerequisite[]
     modifiers?: Modifier[]
+    choice?: PowerChoice
   } = {},
 ): ClassPower {
   return {
@@ -46,6 +47,7 @@ export function electivePower(
     ...(opts.minLevel !== undefined ? { minLevel: opts.minLevel } : {}),
     ...(opts.prerequisites ? { prerequisites: opts.prerequisites } : {}),
     ...(opts.modifiers ? { modifiers: opts.modifiers } : {}),
+    ...(opts.choice ? { choice: opts.choice } : {}),
   }
 }
 

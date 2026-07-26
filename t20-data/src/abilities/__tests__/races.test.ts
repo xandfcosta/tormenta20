@@ -24,9 +24,7 @@ const BOOK_TABELA_1_2: Record<string, AttrBonuses> = {
   Qareen: { charisma: 2, intelligence: 1, wisdom: -1 },
   Golem: { strength: 2, constitution: 1, charisma: -1 },
   Hynne: { dexterity: 2, charisma: 1, strength: -1 },
-  // Code preserves the legacy "Kiiren" spelling for backend compat; the
-  // PDF spells it "Kliren" (p28). The test uses the catalog id.
-  Kiiren: { intelligence: 2, charisma: 1, strength: -1 },
+  Kliren: { intelligence: 2, charisma: 1, strength: -1 },
   Medusa: { dexterity: 2, charisma: 1 },
   Osteon: { constitution: -1 },
   'Sereia/Tritão': {},

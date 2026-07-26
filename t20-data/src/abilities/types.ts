@@ -97,6 +97,21 @@ export type OriginDefinition = {
  * habilidades granted at specific levels and the elective pool the player
  * draws from when leveling ("Poder de Bárbaro" etc.).
  */
+/**
+ * A structured sub-choice a power requires when taken — Bárbaro's Totem
+ * Espiritual picks an animal, Arcanista's Especialista em Escola picks a
+ * school, Guerreiro's Foco em Arma picks a weapon. `options` enumerates the
+ * choices; when omitted (weapon) the consumer sources them from the item
+ * catalog. `repeatable` marks powers takeable multiple times with distinct
+ * choices.
+ */
+export type PowerChoice = {
+  kind: 'totem' | 'school' | 'companion' | 'weapon'
+  label: string
+  options?: { id: string; name: string; note?: string }[]
+  repeatable?: boolean
+}
+
 export type ClassPower = {
   id: string
   className: string
@@ -110,4 +125,6 @@ export type ClassPower = {
   /** Minimum class level required to pick (separate from `grantedAtLevel`). */
   minLevel?: number
   modifiers?: Modifier[]
+  /** Sub-choice the player resolves when taking this power (totem/school/…). */
+  choice?: PowerChoice
 }

@@ -3,7 +3,7 @@ import type { RaceDefinition } from './types'
 /**
  * Seed catalog for races. Each `id` matches the localized RACES constant in
  * the backend so the stored `Character.races[].race` string is a valid lookup
- * key. 'Kiiren' here mirrors the backend constant (PDF spells it "Kliren").
+ * key.
  */
 export const RACES_CATALOG: RaceDefinition[] = [
   {
@@ -456,34 +456,34 @@ export const RACES_CATALOG: RaceDefinition[] = [
     ],
   },
   {
-    id: 'Kiiren',
-    name: 'Kiiren',
+    id: 'Kliren',
+    name: 'Kliren',
     attributeBonuses: { intelligence: 2, charisma: 1, strength: -1 },
     abilities: [
       {
         id: 'kiiren-hibrido',
-        raceId: 'Kiiren',
+        raceId: 'Kliren',
         name: 'Híbrido',
         description:
           'Sua natureza multifacetada o fez aprender conhecimentos variados. Você se torna treinado em uma perícia a sua escolha (não precisa ser da sua classe).',
       },
       {
         id: 'kiiren-engenhosidade',
-        raceId: 'Kiiren',
+        raceId: 'Kliren',
         name: 'Engenhosidade',
         description:
           'Quando faz um teste de perícia, pode gastar 2 PM para somar sua Inteligência no teste. Não pode usar em testes de ataque. Caso receba esta habilidade novamente, seu custo é reduzido em –1 PM.',
       },
       {
         id: 'kiiren-ossos-frageis',
-        raceId: 'Kiiren',
+        raceId: 'Kliren',
         name: 'Ossos Frágeis',
         description:
           'Você sofre 1 ponto de dano adicional por dado de dano de impacto.',
       },
       {
         id: 'kiiren-vanguardista',
-        raceId: 'Kiiren',
+        raceId: 'Kliren',
         name: 'Vanguardista',
         description: 'Recebe proficiência em armas de fogo e +2 em Ofício (um qualquer, a sua escolha).',
       },

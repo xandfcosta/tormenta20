@@ -272,6 +272,10 @@ describe('Ascendências — listed where relevant', () => {
   it('Anão has no ascendências (single profile)', () => {
     expect(racaById('anao').ascendencias).toBeUndefined()
   })
+
+  it('Kliren id and display name match (canonical PDF spelling)', () => {
+    expect(racaById('kliren').name).toBe('Kliren')
+  })
 })
 
 describe('RACAS immutability', () => {
