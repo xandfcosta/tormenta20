@@ -1,20 +1,11 @@
 import { Link } from '@tanstack/react-router'
-import type { FactCategory } from '@tormenta20/t20-data'
-import {
-  Eye,
-  Footprints,
-  type LucideIcon,
-  Shield,
-  ShieldCheck,
-  Sparkles,
-  Zap,
-} from 'lucide-react'
-import { type ReactNode, useMemo } from 'react'
+import { useMemo } from 'react'
 import type { Character } from '@/shared/api/api'
+import { AbilityLine } from '@/shared/ui/ability-line'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
+import { StatCell } from '@/shared/ui/stat-cell'
 import { hueFromName } from '@/shared/lib/hue-from-name'
-import { cn } from '@/shared/lib/utils'
 import {
   characterEffects,
   defenseTotal,
@@ -26,15 +17,6 @@ import {
   raceAbilityBlurbs,
   raceLoreLine,
 } from './select-helpers'
-
-const ABILITY_ICON: Record<FactCategory, LucideIcon> = {
-  sense: Eye,
-  dr: Shield,
-  immunity: ShieldCheck,
-  movement: Footprints,
-  action: Zap,
-  other: Sparkles,
-}
 
 /**
  * Right-side info panel of the character-select screen. Distributes the T20
@@ -171,32 +153,6 @@ function StatTriple({
   )
 }
 
-function StatCell({
-  label,
-  dim,
-  children,
-}: {
-  label: string
-  dim?: boolean
-  children: ReactNode
-}) {
-  return (
-    <div
-      className={cn(
-        'flex flex-col items-center rounded-md border border-border py-2',
-        dim && 'opacity-50',
-      )}
-    >
-      <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-        {label}
-      </span>
-      <span className="font-mono text-3xl font-semibold tabular-nums">
-        {children}
-      </span>
-    </div>
-  )
-}
-
 function AbilityList({ abilities }: { abilities: AbilityBlurb[] }) {
   if (abilities.length === 0) {
     return (
@@ -211,25 +167,14 @@ function AbilityList({ abilities }: { abilities: AbilityBlurb[] }) {
         Habilidades
       </p>
       <ul className="space-y-1.5">
-        {abilities.map((ability) => {
-          const Icon = ability.category
-            ? ABILITY_ICON[ability.category]
-            : Sparkles
-          return (
-            <li key={ability.id} className="flex gap-2">
-              <Icon
-                className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-                aria-hidden
-              />
-              <div className="min-w-0">
-                <p className="text-xs font-semibold">{ability.name}</p>
-                <p className="line-clamp-2 text-[11px] leading-snug text-muted-foreground">
-                  {ability.description}
-                </p>
-              </div>
-            </li>
-          )
-        })}
+        {abilities.map((ability) => (
+          <AbilityLine
+            key={ability.id}
+            category={ability.category ?? undefined}
+            name={ability.name}
+            description={ability.description}
+          />
+        ))}
       </ul>
     </div>
   )

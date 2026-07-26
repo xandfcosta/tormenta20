@@ -100,6 +100,8 @@ export type Character = {
   classPowers: string
   /** JSON-encoded ClassChoices keyed by className (devoto, caminho, ...) */
   classChoices: string
+  /** JSON-encoded powerId -> option id[] sub-choices (totem/school/companion/weapon) */
+  powerChoices: string
   createdAt: string
   updatedAt: string
   races: { race: string }[]
@@ -132,6 +134,7 @@ export type UpdateAbilityChoicesInput = {
   originChoices?: string[]
   classPowers?: string[]
   classChoices?: ClassChoices
+  powerChoices?: Record<string, string[]>
 }
 
 export type UpdateClassLevelInput = {
@@ -225,6 +228,13 @@ export type CreateCharacterInput = {
   charisma: number
   size: string
   displacement: number
+  // Optional creation-time ability choices (mirror UpdateAbilityChoicesInput +
+  // trained perícias). Absent = character starts with empty picks.
+  classPowers?: string[]
+  originChoices?: string[]
+  classChoices?: ClassChoices
+  trainedExpertises?: string[]
+  powerChoices?: Record<string, string[]>
 }
 
 import type { ComputedSheet } from '@tormenta20/t20-data'
