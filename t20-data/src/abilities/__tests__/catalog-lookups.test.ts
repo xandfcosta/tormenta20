@@ -155,3 +155,41 @@ describe('getOriginBenefit', () => {
     expect(getOriginBenefit('')).toBeUndefined()
   })
 })
+
+describe('power sub-choices (PowerChoice)', () => {
+  const byName = (name: string) =>
+    CLASS_POWERS_CATALOG.find((p) => p.name === name)
+
+  it('Totem Espiritual offers 8 totem animals with granted spells', () => {
+    const p = byName('Totem Espiritual')
+    expect(p?.choice?.kind).toBe('totem')
+    expect(p?.choice?.options).toHaveLength(8)
+    expect(p?.choice?.options?.find((o) => o.id === 'urso')?.note).toBe(
+      'Vitalidade Fantasma',
+    )
+  })
+
+  it('Especialista em Escola offers the 8 schools (repeatable)', () => {
+    const p = byName('Especialista em Escola')
+    expect(p?.choice?.kind).toBe('school')
+    expect(p?.choice?.repeatable).toBe(true)
+    expect(p?.choice?.options).toHaveLength(8)
+  })
+
+  it('Especialização em Arma is a catalog-sourced weapon choice', () => {
+    const p = byName('Especialização em Arma')
+    expect(p?.choice?.kind).toBe('weapon')
+    expect(p?.choice?.options).toBeUndefined()
+    expect(p?.choice?.repeatable).toBe(true)
+  })
+
+  it('Companheiro Animal (Druida + Caçador) offers the base companion types', () => {
+    for (const cls of ['Druida', 'Caçador']) {
+      const p = CLASS_POWERS_CATALOG.find(
+        (x) => x.name === 'Companheiro Animal' && x.className === cls,
+      )
+      expect(p?.choice?.kind).toBe('companion')
+      expect(p?.choice?.options).toHaveLength(8)
+    }
+  })
+})

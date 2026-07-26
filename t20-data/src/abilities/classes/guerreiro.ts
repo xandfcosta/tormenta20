@@ -55,7 +55,9 @@ export const GUERREIRO_POWERS: ClassPower[] = [
     'Quando usa arma corpo-a-corpo leve ou ágil, soma Inteligência nas rolagens de dano (limitado pelo nível).',
     { prerequisites: [attr('intelligence', 1)] }),
   electivePower(C, 'Especialização em Arma',
-    'Escolha uma arma. +2 nas rolagens de dano com essa arma. Pode escolher várias vezes para armas diferentes.'),
+    'Escolha uma arma. +2 nas rolagens de dano com essa arma. Pode escolher várias vezes para armas diferentes.',
+    // Options sourced from the weapon catalog by the consumer (no inline list).
+    { choice: { kind: 'weapon', label: 'Arma', repeatable: true } }),
   electivePower(C, 'Especialização em Armadura',
     'Redução de Dano 5 se usando armadura pesada.',
     { minLevel: 12 }),

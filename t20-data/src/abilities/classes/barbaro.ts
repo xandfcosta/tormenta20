@@ -127,7 +127,25 @@ export const BARBARO_POWERS: ClassPower[] = [
     'Odeia magia: recebe resistência a magia +5.'),
   electivePower(C, 'Totem Espiritual',
     'Soma Sabedoria no PM total. Escolha um animal totêmico — aprende e pode lançar magia definida pelo animal (atributo-chave Sab), mesmo em fúria.',
-    { prerequisites: [attr('wisdom', 1)], minLevel: 4 }),
+    {
+      prerequisites: [attr('wisdom', 1)],
+      minLevel: 4,
+      // Animais totêmicos + magia concedida (PDF p42, quadro "Animais Totêmicos").
+      choice: {
+        kind: 'totem',
+        label: 'Animal totêmico',
+        options: [
+          { id: 'coruja', name: 'Coruja', note: 'Orientação' },
+          { id: 'corvo', name: 'Corvo', note: 'Visão Mística' },
+          { id: 'falcao', name: 'Falcão', note: 'Detectar Ameaças' },
+          { id: 'grifo', name: 'Grifo', note: 'Primor Atlético' },
+          { id: 'lobo', name: 'Lobo', note: 'Concentração de Combate' },
+          { id: 'raposa', name: 'Raposa', note: 'Imagem Espelhada' },
+          { id: 'tartaruga', name: 'Tartaruga', note: 'Armadura Arcana' },
+          { id: 'urso', name: 'Urso', note: 'Vitalidade Fantasma' },
+        ],
+      },
+    }),
   electivePower(C, 'Vigor Primal',
     'Ação de movimento + PM (limitado por Con). Para cada PM, recupera 1d12 PV.'),
 ]

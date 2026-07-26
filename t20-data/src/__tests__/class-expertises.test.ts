@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   CLASS_EXPERTISES_TRAINED,
+  classExpertiseSlots,
   classTrainedExpertises,
 } from '../class-expertises'
 import { EXPERTISE_NAMES } from '../expertises'
@@ -244,5 +245,24 @@ describe('Resistências (Fortitude / Reflexos / Vontade) — PDF p36-83 derivati
     expect(result.has('Reflexos')).toBe(false)
     // Caçador *can* pick Fortitude or Reflexos from the pool — but without
     // an explicit pick neither is granted.
+  })
+})
+
+describe('classExpertiseSlots — creation-UI slot shape', () => {
+  it('exposes the base table for a class', () => {
+    const slots = classExpertiseSlots('Arcanista', 0)
+    expect(slots?.fixed).toEqual(CLASS_EXPERTISES_TRAINED.Arcanista.fixed)
+    expect(slots?.chooseCount).toBe(CLASS_EXPERTISES_TRAINED.Arcanista.chooseCount)
+  })
+
+  it('adds the Inteligência modifier to chooseCount (min 0)', () => {
+    const base = CLASS_EXPERTISES_TRAINED.Arcanista.chooseCount
+    expect(classExpertiseSlots('Arcanista', 3)?.chooseCount).toBe(base + 3)
+    // negative INT never reduces below the base list
+    expect(classExpertiseSlots('Arcanista', -2)?.chooseCount).toBe(base)
+  })
+
+  it('returns null for an unknown class', () => {
+    expect(classExpertiseSlots('NotAClass')).toBeNull()
   })
 })

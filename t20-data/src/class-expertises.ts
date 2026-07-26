@@ -316,6 +316,32 @@ export type ClassExpertisePicks = Partial<
   >
 >
 
+/**
+ * Perícia-training slots a class exposes to the creation UI, with the
+ * "+Inteligência perícias" rule folded in: each class trains its fixed list,
+ * resolves its either/or slot, and picks `chooseCount + max(0, intMod)` from
+ * `choosePool` (PDF Cap 1 — classes train extra perícias equal to the
+ * Inteligência modifier). Returns null for an unknown class.
+ */
+export function classExpertiseSlots(
+  className: string,
+  intMod = 0,
+): {
+  fixed: ExpertiseName[]
+  eitherOr?: { options: [ExpertiseName, ExpertiseName] }
+  chooseCount: number
+  choosePool: ExpertiseName[]
+} | null {
+  const entry = CLASS_EXPERTISES_TRAINED[className]
+  if (!entry) return null
+  return {
+    fixed: entry.fixed,
+    eitherOr: entry.eitherOr,
+    chooseCount: entry.chooseCount + Math.max(0, intMod),
+    choosePool: entry.choosePool,
+  }
+}
+
 export function classTrainedExpertises(
   classNames: readonly string[],
   picks: ClassExpertisePicks = {},
