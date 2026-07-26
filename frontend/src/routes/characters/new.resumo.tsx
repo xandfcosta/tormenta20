@@ -1,0 +1,6 @@
+import { createFileRoute } from '@tanstack/react-router'
+import { ResumoStep } from '@/pages/characters/wizard/resumo-step'
+
+export const Route = createFileRoute('/characters/new/resumo')({
+  component: ResumoStep,
+})

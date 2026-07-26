@@ -70,7 +70,9 @@ export function Roster({
       aria-label="Personagens"
       onKeyDown={onKeyDown}
       className={cn(
-        'gap-2',
+        // p-1.5 keeps the selected thumb's offset outline from being clipped
+        // by the scroll container's overflow edge.
+        'gap-2 p-1.5',
         expanded
           ? 'grid auto-rows-min grid-cols-3 overflow-y-auto sm:grid-cols-4 lg:grid-cols-6'
           : 'grid grid-flow-col grid-rows-2 auto-cols-max snap-x scroll-pl-2 overflow-x-auto pb-2',

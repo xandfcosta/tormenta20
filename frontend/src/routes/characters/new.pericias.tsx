@@ -1,0 +1,6 @@
+import { createFileRoute } from '@tanstack/react-router'
+import { PericiasStep } from '@/pages/characters/wizard/pericias-step'
+
+export const Route = createFileRoute('/characters/new/pericias')({
+  component: PericiasStep,
+})
