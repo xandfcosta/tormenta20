@@ -14,6 +14,12 @@ import { Skeleton } from '@/shared/ui/skeleton'
 import { SectionHeading } from '@/shared/ui/section-heading'
 import { ClassEntryRow } from '@/features/character-build/class-entry-row'
 import { NumberField } from '@/features/character-build/number-field'
+import {
+  ClassGrantPanel,
+  OriginGrantPanel,
+  RaceGrantPanel,
+} from '@/features/character-build/grant-panels'
+import { raceAttributeDeltas } from '@/features/character-build/grant-helpers'
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
 import { ApiError, api } from '@/shared/api/api'
 import type { CreateCharacterInput } from '@/shared/api/api'
@@ -111,8 +117,15 @@ export function NewCharacterPage() {
     validators: { onSubmit: characterSchema },
     onSubmit: async ({ value, formApi }) => {
       setFormError(null)
+      // Fields hold the point-buy base; racial bonuses are baked into the
+      // saved attributes here so an Anão Guerreiro actually keeps its +2 CON.
+      const deltas = raceAttributeDeltas(value.races)
+      const attributes = Object.fromEntries(
+        ATTRIBUTE_KEYS.map((k) => [k, value[k] + (deltas[k] ?? 0)]),
+      ) as Record<(typeof ATTRIBUTE_KEYS)[number], number>
       const payload: CreateCharacterInput = {
         ...value,
+        ...attributes,
         god: value.god ? value.god : undefined,
       }
       try {
@@ -280,6 +293,15 @@ export function NewCharacterPage() {
               }}
             </form.Field>
           </FieldGroup>
+          <form.Subscribe selector={(s) => s.values.origin}>
+            {(origin) =>
+              origin ? (
+                <div className="mt-4">
+                  <OriginGrantPanel originId={origin} />
+                </div>
+              ) : null
+            }
+          </form.Subscribe>
         </CardContent>
       </Card>
 
@@ -319,6 +341,13 @@ export function NewCharacterPage() {
                   ) : !value.length ? (
                     <FieldDescription>Selecione ao menos uma raça.</FieldDescription>
                   ) : null}
+                  {value.length > 0 && (
+                    <div className="mt-2 space-y-2">
+                      {value.map((r) => (
+                        <RaceGrantPanel key={r} raceId={r} />
+                      ))}
+                    </div>
+                  )}
                 </Field>
               )
             }}
@@ -341,16 +370,26 @@ export function NewCharacterPage() {
               return (
                 <>
                   {items.map((_, i) => (
-                    <ClassEntryRow
-                      key={i}
-                      index={i}
-                      classOptions={opts.classes}
-                      form={form}
-                      onRemove={() => classesField.removeValue(i)}
-                      onPrimaryClassPicked={
-                        i === 0 ? applyClassAttributePreset : undefined
-                      }
-                    />
+                    <div key={i} className="space-y-2">
+                      <ClassEntryRow
+                        index={i}
+                        classOptions={opts.classes}
+                        form={form}
+                        onRemove={() => classesField.removeValue(i)}
+                        onPrimaryClassPicked={
+                          i === 0 ? applyClassAttributePreset : undefined
+                        }
+                      />
+                      <form.Subscribe
+                        selector={(s) => s.values.classes[i]?.className}
+                      >
+                        {(className) =>
+                          className ? (
+                            <ClassGrantPanel className={className} />
+                          ) : null
+                        }
+                      </form.Subscribe>
+                    </div>
                   ))}
                   <Button
                     type="button"
@@ -409,15 +448,26 @@ export function NewCharacterPage() {
         <CardHeader>
           <CardTitle className="font-display tracking-wide">Atributos</CardTitle>
         </CardHeader>
-        <CardContent>
-          <FieldGroup className="grid gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-6">
-            <NumberField form={form} name="strength" label="Força" min={-5} max={10} />
-            <NumberField form={form} name="dexterity" label="Destreza" min={-5} max={10} />
-            <NumberField form={form} name="constitution" label="Constituição" min={-5} max={10} />
-            <NumberField form={form} name="intelligence" label="Inteligência" min={-5} max={10} />
-            <NumberField form={form} name="wisdom" label="Sabedoria" min={-5} max={10} />
-            <NumberField form={form} name="charisma" label="Carisma" min={-5} max={10} />
-          </FieldGroup>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            O valor editável é a base (preset da classe). Os bônus de raça são
+            somados automaticamente ao salvar.
+          </p>
+          <form.Subscribe selector={(s) => s.values.races}>
+            {(races) => {
+              const d = raceAttributeDeltas(races)
+              return (
+                <FieldGroup className="grid gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-6">
+                  <NumberField form={form} name="strength" label="Força" min={-5} max={10} raceDelta={d.strength} />
+                  <NumberField form={form} name="dexterity" label="Destreza" min={-5} max={10} raceDelta={d.dexterity} />
+                  <NumberField form={form} name="constitution" label="Constituição" min={-5} max={10} raceDelta={d.constitution} />
+                  <NumberField form={form} name="intelligence" label="Inteligência" min={-5} max={10} raceDelta={d.intelligence} />
+                  <NumberField form={form} name="wisdom" label="Sabedoria" min={-5} max={10} raceDelta={d.wisdom} />
+                  <NumberField form={form} name="charisma" label="Carisma" min={-5} max={10} raceDelta={d.charisma} />
+                </FieldGroup>
+              )
+            }}
+          </form.Subscribe>
         </CardContent>
       </Card>
 
