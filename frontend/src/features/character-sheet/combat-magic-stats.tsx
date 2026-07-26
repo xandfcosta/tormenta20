@@ -132,10 +132,8 @@ function CombatBox({
           )}
           aria-label={`${label} ${display}`}
         >
-          <span className="absolute left-1.5 top-1.5 text-red-700 dark:text-red-300">
-            {icon}
-          </span>
-          <span className="text-[9px] font-bold uppercase tracking-widest text-red-800/80 dark:text-red-300/80">
+          <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-red-800/80 dark:text-red-300/80">
+            <span className="text-red-700 dark:text-red-300">{icon}</span>
             {label}
           </span>
           <span className="mt-0.5 text-2xl font-bold leading-none text-red-800 dark:text-red-100">
@@ -283,10 +281,8 @@ function MagicBox({
           )}
           aria-label={`${label} ${display}`}
         >
-          <span className="absolute left-1.5 top-1.5 text-violet-700 dark:text-violet-300">
-            {icon}
-          </span>
-          <span className="text-[9px] font-bold uppercase tracking-widest text-violet-800/80 dark:text-violet-300/80">
+          <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-violet-800/80 dark:text-violet-300/80">
+            <span className="text-violet-700 dark:text-violet-300">{icon}</span>
             {label}
           </span>
           <span className="mt-0.5 text-2xl font-bold leading-none text-violet-800 dark:text-violet-100">

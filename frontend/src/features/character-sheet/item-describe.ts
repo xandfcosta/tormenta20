@@ -46,6 +46,8 @@ export function describeModifierTarget(t: Modifier['target']): string {
       return 'Espaços de carga'
     case 'displacement':
       return 'Deslocamento'
+    case 'flySpeed':
+      return 'Voo'
     case 'armorPenalty':
       return 'Penalidade de armadura'
     case 'armorPenaltyExpertises':

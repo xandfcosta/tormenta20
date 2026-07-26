@@ -9,7 +9,11 @@ import type { AttributeKey } from '@/shared/api/api'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { accentTitle, subtleText } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
-import { AbilitiesSection } from './abilities-section'
+import {
+  CollapsibleAbilityCard,
+  type CardFocus,
+} from './collapsible-ability-card'
+import { FactChips } from './fact-chips'
 import { parseChoices } from './parse-choices'
 
 const RACE_ATTR_ABBR: Record<AttributeKey, string> = {
@@ -42,9 +46,13 @@ function formatAttributeBonuses(
 export function RaceAbilitySection({
   race,
   character,
+  focus,
+  pending,
 }: {
   race: RaceDefinition
   character: Character
+  focus: CardFocus
+  pending: number
 }) {
   const qc = useQueryClient()
   const queryKey = characterQueryOptions(character.id).queryKey
@@ -88,7 +96,12 @@ export function RaceAbilitySection({
 
   const bonusLine = formatAttributeBonuses(race.attributeBonuses)
   return (
-    <AbilitiesSection title={`Raça: ${race.name}`}>
+    <CollapsibleAbilityCard
+      id={`raca:${race.id}`}
+      title={`Raça: ${race.name}`}
+      pending={pending}
+      focus={focus}
+    >
       {bonusLine && (
         <p className={cn('mb-2 text-xs', subtleText)}>
           <span className="font-semibold">Modificadores:</span> {bonusLine}
@@ -101,6 +114,7 @@ export function RaceAbilitySection({
             <p className={cn('mt-0.5 text-[11px] leading-snug', subtleText)}>
               {ability.description}
             </p>
+            <FactChips facts={ability.facts ?? []} className="mt-1" />
             {ability.variants && (
               <RaceVariantPicker
                 ability={ability}
@@ -112,7 +126,7 @@ export function RaceAbilitySection({
           </li>
         ))}
       </ul>
-    </AbilitiesSection>
+    </CollapsibleAbilityCard>
   )
 }
 

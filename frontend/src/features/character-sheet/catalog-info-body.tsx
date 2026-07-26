@@ -1,6 +1,7 @@
 import type { CatalogItem } from '@tormenta20/t20-data'
 import { accentStrong, dimText } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
+import { FactChips } from './fact-chips'
 import {
   describeCondition,
   describeModifierTarget,
@@ -98,6 +99,14 @@ export function CatalogInfoBody({ catalog }: { catalog: CatalogItem }) {
           </ul>
         )}
       </div>
+      {catalog.displayFacts && catalog.displayFacts.length > 0 && (
+        <div className="space-y-1">
+          <p className={cn('text-[10px] uppercase tracking-widest', dimText)}>
+            outros efeitos
+          </p>
+          <FactChips facts={catalog.displayFacts} />
+        </div>
+      )}
     </div>
   )
 }

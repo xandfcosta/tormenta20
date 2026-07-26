@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Dumbbell, Star, Trash2 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
+import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
 import {
   Dialog,
   DialogContent,
@@ -300,23 +301,22 @@ function DeleteExpertiseButton({
   onDelete: () => void
 }) {
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
+    <ConfirmDialog
+      title={`Remover ofício "${name}"?`}
+      confirmLabel="Remover"
+      onConfirm={onDelete}
+      trigger={
         <Button
           type="button"
           variant="ghost"
           size="icon"
           className="size-7 text-foreground hover:bg-red-100 hover:text-red-700  dark:hover:bg-red-950/40 dark:hover:text-red-400"
-          onClick={() => {
-            if (confirm(`Remover ofício "${name}"?`)) onDelete()
-          }}
           aria-label={`Remover ${name}`}
         >
           <Trash2 className="size-3.5" />
         </Button>
-      </TooltipTrigger>
-      <TooltipContent>Remover ofício</TooltipContent>
-    </Tooltip>
+      }
+    />
   )
 }
 

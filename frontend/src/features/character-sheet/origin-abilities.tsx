@@ -10,7 +10,10 @@ import { invalidateCharacterDependents } from '@/entities/character/character-ca
 import { characterQueryOptions } from '@/entities/character/queries'
 import { accentTitle, dimText, subtleText } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
-import { AbilitiesSection } from './abilities-section'
+import {
+  CollapsibleAbilityCard,
+  type CardFocus,
+} from './collapsible-ability-card'
 import { parseChoices } from './parse-choices'
 
 const ORIGIN_BENEFIT_LIMIT = 2
@@ -21,21 +24,35 @@ const ORIGIN_BENEFIT_LIMIT = 2
  * When the origin id isn't in the catalog, degrades to a message
  * rather than crashing the sheet.
  */
-export function OriginAbilitySection({ character }: { character: Character }) {
+export function OriginAbilitySection({
+  character,
+  focus,
+  pending,
+}: {
+  character: Character
+  focus: CardFocus
+  pending: number
+}) {
   const origin = getOrigin(character.origin)
-  if (!origin) {
-    return (
-      <AbilitiesSection title={`Origem: ${character.origin}`}>
+  return (
+    <CollapsibleAbilityCard
+      id="origem"
+      title={`Origem: ${origin?.name ?? character.origin}`}
+      pending={pending}
+      focus={focus}
+    >
+      {origin ? (
+        <OriginPicker origin={origin} character={character} />
+      ) : (
         <p className={cn('text-xs italic', dimText)}>
           Origem não está no catálogo.
         </p>
-      </AbilitiesSection>
-    )
-  }
-  return <OriginPickerSection origin={origin} character={character} />
+      )}
+    </CollapsibleAbilityCard>
+  )
 }
 
-function OriginPickerSection({
+function OriginPicker({
   origin,
   character,
 }: {
@@ -90,7 +107,7 @@ function OriginPickerSection({
   const remaining = ORIGIN_BENEFIT_LIMIT - selected.length
 
   return (
-    <AbilitiesSection title={`Origem: ${origin.name}`}>
+    <>
       <p className={cn('mb-2 text-[11px]', subtleText)}>
         Escolha {ORIGIN_BENEFIT_LIMIT} benefícios (perícia, poder geral, ou o
         poder único da origem). Restantes:{' '}
@@ -109,7 +126,7 @@ function OriginPickerSection({
           />
         ))}
       </ul>
-    </AbilitiesSection>
+    </>
   )
 }
 

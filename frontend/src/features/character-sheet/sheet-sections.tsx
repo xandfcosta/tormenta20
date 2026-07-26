@@ -12,6 +12,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import type { Character } from '@/shared/api/api'
 import { AbilitiesPanel } from './abilities-panel'
+import { AbilitiesPendingBadge } from './abilities-pending-badge'
 import { CampaignsPanel } from './campaigns-panel'
 import { EffectsCountBadge } from './effects-count-badge'
 import { EffectsPanel } from './effects-panel'
@@ -74,6 +75,7 @@ export const SHEET_PANELS: SheetSection[] = [
     value: 'abilities',
     label: 'Habilidades',
     icon: Star,
+    badge: (c) => <AbilitiesPendingBadge character={c} />,
     render: (c) => <AbilitiesPanel character={c} />,
   },
   {

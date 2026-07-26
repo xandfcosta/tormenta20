@@ -133,6 +133,24 @@ describe('active-effect attack modifiers (Phase 0 — buff engine)', () => {
   })
 })
 
+describe('general-power modifiers', () => {
+  // Regression: general powers are stored in classPowers by their bare id
+  // (e.g. 'esquiva'). generalPowerActiveItem used to require a 'general.'
+  // prefix the picker never writes, so their modifiers never applied.
+  it('folds a chosen general power (esquiva) into defense + Reflexos', () => {
+    const c = character({ classPowers: JSON.stringify(['esquiva']) })
+    const eff = characterEffects(c)
+    expect(statFor(eff, { k: 'defense' }).total).toBe(2)
+    expect(statFor(eff, { k: 'expertise', name: 'Reflexos' }).total).toBe(2)
+  })
+
+  it('ignores a bare class-elective id that is not a general power', () => {
+    const c = character({ classPowers: JSON.stringify(['not-a-general-power']) })
+    const eff = characterEffects(c)
+    expect(statFor(eff, { k: 'defense' }).total).toBe(0)
+  })
+})
+
 describe('parseClassChoices', () => {
   it('returns empty object for malformed JSON', () => {
     expect(parseClassChoices('not json')).toEqual({})

@@ -2,8 +2,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { isValid, validateTotalLevel } from '@tormenta20/t20-data'
 import { ChevronDown, ChevronUp } from 'lucide-react'
-import { Badge } from '@/shared/ui/badge'
-import { CharacterPortrait } from '@/shared/ui/character-portrait'
 import {
   Dialog,
   DialogContent,
@@ -18,67 +16,58 @@ import {
 import { api } from '@/shared/api/api'
 import type { Character, ClassLevelResult } from '@/shared/api/api'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
-import { displacementTotal, useCharacterEffects } from '@/entities/character/derived'
+import {
+  displacementTotal,
+  flySpeedTotal,
+  useCharacterEffects,
+} from '@/entities/character/derived'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { cn } from '@/shared/lib/utils'
 import { signed } from './signed'
 
-export function SheetHeader({
-  character,
-  className,
-}: {
-  character: Character
-  className?: string
-}) {
+/**
+ * Character name + one-line subtitle (races · origin · devoção · size ·
+ * displacement, plus a fatigue warning when relevant). The text half of the
+ * HUD identity block; the portrait, class badges and level stepper are
+ * composed alongside it by `CharacterHud`.
+ */
+export function SheetIdentityText({ character }: { character: Character }) {
   const races = character.races.map((r) => r.race)
   const effects = useCharacterEffects(character)
   const disp = displacementTotal(character, effects)
+  const fly = flySpeedTotal(effects)
   const fatigue = effects.flags.has('fatigue-on-sleep')
   return (
-    <header
-      className={cn(
-        'flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border bg-card px-4 py-2.5',
-        className,
-      )}
-    >
-      <div className="flex min-w-0 items-center gap-3">
-        <CharacterPortrait name={character.name} size="sm" />
-        <div className="min-w-0">
-          <h1 className="truncate text-xl font-bold leading-tight tracking-tight sm:text-2xl">
-            {character.name}
-          </h1>
-          <p className="truncate text-xs text-muted-foreground">
-            {races.join(' / ')} • {character.origin}
+    <div className="min-w-0">
+      <h1 className="truncate text-lg font-bold leading-tight tracking-tight sm:text-xl">
+        {character.name}
+      </h1>
+      <p className="line-clamp-1 text-xs leading-tight text-muted-foreground sm:line-clamp-2">
+        {races.join(' / ')} • {character.origin}
+        {' • '}
+        <span className="text-foreground">
+          {character.god ?? 'Sem devoção'}
+        </span>
+        {' • '}
+        {character.size} • <DisplacementBadge disp={disp} />
+        {fly > 0 && (
+          <>
             {' • '}
-            <span className="text-foreground">
-              {character.god ?? 'Sem devoção'}
-            </span>
+            <span className="text-foreground">voo {fly}m</span>
+          </>
+        )}
+        {fatigue && (
+          <>
             {' • '}
-            {character.size} • <DisplacementBadge disp={disp} />
-            {fatigue && (
-              <>
-                {' • '}
-                <FatigueWarning />
-              </>
-            )}
-          </p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <div className="flex flex-wrap justify-end gap-1">
-          {character.classes.map((c) => (
-            <Badge key={c.className}>
-              {c.className} {c.level}
-            </Badge>
-          ))}
-        </div>
-        <LevelBadge character={character} />
-      </div>
-    </header>
+            <FatigueWarning />
+          </>
+        )}
+      </p>
+    </div>
   )
 }
 
-function LevelBadge({ character }: { character: Character }) {
+export function LevelBadge({ character }: { character: Character }) {
   const qc = useQueryClient()
   const queryKey = characterQueryOptions(character.id).queryKey
   const [pickerDir, setPickerDir] = useState<null | 'up' | 'down'>(null)
@@ -142,22 +131,22 @@ function LevelBadge({ character }: { character: Character }) {
 
   return (
     <>
-      <div className="flex items-center gap-1 rounded-lg border bg-muted px-2 py-1 text-center">
+      <div className="flex items-center gap-0.5 rounded-lg border bg-muted px-1 py-0.5 text-center sm:gap-1 sm:px-2 sm:py-1">
         <button
           type="button"
           onClick={() => trigger('down')}
           disabled={atMin || mutate.isPending}
           aria-label="Diminuir nível"
-          className="text-foreground transition-colors hover:text-foreground disabled:opacity-30"
+          className="flex size-7 items-center justify-center text-foreground transition-colors hover:text-foreground disabled:opacity-30 sm:size-6"
         >
-          <ChevronDown className="size-4" />
+          <ChevronDown className="size-3.5 sm:size-4" />
         </button>
         <div className="flex flex-col items-center leading-none">
-          <p className="text-[9px] uppercase tracking-widest text-muted-foreground">
+          <p className="text-[8px] uppercase tracking-widest text-muted-foreground sm:text-[9px]">
             Nv
           </p>
           <p
-            className="w-7 text-center text-2xl font-bold leading-none text-foreground"
+            className="w-5 text-center text-lg font-bold leading-none text-foreground sm:w-7 sm:text-2xl"
             aria-label="Nível"
           >
             {character.level}
@@ -168,9 +157,9 @@ function LevelBadge({ character }: { character: Character }) {
           onClick={() => trigger('up')}
           disabled={atMax || mutate.isPending}
           aria-label="Aumentar nível"
-          className="text-foreground transition-colors hover:text-foreground disabled:opacity-30"
+          className="flex size-7 items-center justify-center text-foreground transition-colors hover:text-foreground disabled:opacity-30 sm:size-6"
         >
-          <ChevronUp className="size-4" />
+          <ChevronUp className="size-3.5 sm:size-4" />
         </button>
       </div>
       {pickerDir && (

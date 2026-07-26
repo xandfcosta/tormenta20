@@ -3,20 +3,20 @@ import { HeartPulse } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { cn } from '@/shared/lib/utils'
 import { sheetBg } from '@/shared/lib/sheet-theme'
-import { SheetHeader } from './sheet-header'
+import { CharacterHud } from './character-hud'
 import { VitalsAside } from './vitals-aside'
 import { SHEET_PANELS, type SheetSection } from './sheet-sections'
 import type { Character } from '@/shared/api/api'
 
-// Vitais leads the mobile sections: header + vitals aside as one scroll block.
+// Vitais leads the mobile sections. Identity + PV/PM live in the persistent
+// bottom HUD now, so this block is just the attributes/combat/magic column.
 function vitalsSection(): SheetSection {
   return {
     value: 'vitals',
     label: 'Vitais',
     icon: HeartPulse,
     render: (c) => (
-      <div className="h-full space-y-3 overflow-y-auto">
-        <SheetHeader character={c} />
+      <div className="h-full overflow-y-auto">
         <VitalsAside character={c} />
       </div>
     ),
@@ -42,20 +42,26 @@ export function CharacterSheetMobile({
   character,
   barSlot,
   inSession,
+  tab,
+  onTabChange,
 }: {
   character: Character
   barSlot?: ReactNode
   inSession?: boolean
+  tab: string
+  onTabChange: (value: string) => void
 }) {
   const panels = inSession
     ? SHEET_PANELS.filter((p) => p.value !== 'campaigns')
     : SHEET_PANELS
   const vitals = vitalsSection()
   const sections = [vitals, ...panels]
+  const active = sections.some((s) => s.value === tab) ? tab : vitals.value
 
   return (
     <Tabs
-      defaultValue={vitals.value}
+      value={active}
+      onValueChange={onTabChange}
       // In a session the sheet blends into the session bg; standalone keeps the
       // full-bleed sheet gradient. Panels carry their own surfaces either way.
       className={cn(
@@ -78,6 +84,7 @@ export function CharacterSheetMobile({
           </TabsContent>
         ))}
       </div>
+      <CharacterHud character={character} className="shrink-0" />
       {/* Full-width bar; cells share the width (no scroll, no overflow) so the
           over-icon badge is never clipped. */}
       <div className="w-full shrink-0 border-t border-border/60 bg-card/95 backdrop-blur">

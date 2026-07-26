@@ -19,8 +19,8 @@ export function EffectsCountBadge({ character }: { character: Character }) {
       className={cn(
         'ml-0.5 inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full px-1 text-[10px] font-bold',
         total > 0
-          ? 'bg-muted text-foreground  '
-          : 'bg-muted text-foreground  ',
+          ? 'bg-primary text-primary-foreground'
+          : 'bg-muted text-muted-foreground',
       )}
       aria-label={`${total} efeitos ativos`}
     >

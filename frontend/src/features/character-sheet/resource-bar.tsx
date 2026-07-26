@@ -132,16 +132,19 @@ function ResourceControls({
   )
 }
 
-function ResourceAdjustDialog({
+export function ResourceAdjustDialog({
   label,
   current,
   max,
   onSetCurrent,
+  triggerClassName,
 }: {
   label: string
   current: number
   max: number
   onSetCurrent: (next: number) => void
+  /** Override the trigger button size — the HUD uses a more compact one. */
+  triggerClassName?: string
 }) {
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState<'add' | 'remove'>('remove')
@@ -171,7 +174,7 @@ function ResourceAdjustDialog({
           type="button"
           variant="outline"
           size="icon"
-          className="size-7"
+          className={cn('size-7', triggerClassName)}
           aria-label={`Editar ${label}`}
         >
           <Pencil className="size-3.5" />

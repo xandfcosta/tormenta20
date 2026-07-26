@@ -93,14 +93,16 @@ function classActiveItems(character: Character): ActiveItem[] {
 
 /**
  * General powers (Poder de Combate, etc.) live in their own catalog and are
- * stored in the same `classPowers` JSON blob — only ids starting with
- * `general.` resolve through getGeneralPower.
+ * stored in the same `classPowers` JSON blob by their bare catalog id
+ * (e.g. `esquiva`) — the same ids the picker toggles. We resolve every
+ * chosen id through getGeneralPower; non-general ids (class electives)
+ * return undefined and are skipped. (Earlier this filtered on a `general.`
+ * prefix that the picker never writes, so power modifiers never applied.)
  */
 function generalPowerActiveItem(character: Character): ActiveItem | null {
   const chosen = parseChoiceSet(character.classPowers)
   const mods: Modifier[] = []
   for (const id of chosen) {
-    if (!id.startsWith('general.')) continue
     const power = getGeneralPower(id)
     if (power?.modifiers) mods.push(...power.modifiers)
   }
@@ -483,6 +485,15 @@ export function displacementTotal(
       amount: c.amount,
     })),
   }
+}
+
+/**
+ * Fly speed (metros) granted by active effects — Voo and similar. Characters
+ * have no innate fly base, so 0 means "can't fly" and the movement line hides
+ * it. Shown, not folded into ground displacement.
+ */
+export function flySpeedTotal(effects: ItemEffects): number {
+  return Math.max(0, statFor(effects, { k: 'flySpeed' }).total)
 }
 
 export function inventorySlotsTotal(

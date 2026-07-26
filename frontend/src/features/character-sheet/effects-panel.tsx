@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { Plus, Search, Sparkles, X } from 'lucide-react'
 import { Check } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
+import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
 import {
   Dialog,
   DialogContent,
@@ -19,7 +20,10 @@ import {
   useAllConditionals,
   type ConditionalEntry,
 } from '@/entities/character/derived'
-import { effectSourceName } from '@/entities/character/effect-source'
+import {
+  effectSourceFacts,
+  effectSourceName,
+} from '@/entities/character/effect-source'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { cn } from '@/shared/lib/utils'
 import { useConditionalsStore } from '@/shared/stores/conditionals-store'
@@ -30,6 +34,7 @@ import {
   subtleText,
   surface,
 } from '@/shared/lib/sheet-theme'
+import { FactChips } from './fact-chips'
 import { normalize } from './normalize'
 import { signed } from './signed'
 
@@ -115,6 +120,8 @@ function describeConditionalTarget(target: Modifier['target']): string {
       return 'Espaços'
     case 'displacement':
       return 'Deslocamento'
+    case 'flySpeed':
+      return 'Voo'
     case 'armorPenalty':
       return 'Penalidade de armadura'
     case 'armorPenaltyExpertises':
@@ -197,20 +204,24 @@ function ActiveEffectsSection({ character }: { character: Character }) {
           >
             Encerrar cena
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-6 px-2 text-[11px]"
-            onClick={() => {
-              if (confirm('Encerrar dia? Limpa efeitos de cena e dia.'))
-                endDay.mutate()
-            }}
-            disabled={endDay.isPending}
-            aria-label="Encerrar dia"
-          >
-            Encerrar dia
-          </Button>
+          <ConfirmDialog
+            title="Encerrar dia?"
+            description="Limpa efeitos de cena e dia."
+            confirmLabel="Encerrar dia"
+            onConfirm={() => endDay.mutate()}
+            trigger={
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-6 px-2 text-[11px]"
+                disabled={endDay.isPending}
+                aria-label="Encerrar dia"
+              >
+                Encerrar dia
+              </Button>
+            }
+          />
         </div>
       </div>
       {effects.length === 0 ? (
@@ -244,6 +255,7 @@ function ActiveEffectRow({
   // (works regardless of source, unlike reading `catalog.consumable.modifiers`).
   const name = effectSourceName(effect.catalogId)
   const modifiers = parseEffectModifiers(effect.modifiers)
+  const facts = effectSourceFacts(effect.catalogId)
   return (
     <li
       className={cn(
@@ -275,7 +287,7 @@ function ActiveEffectRow({
           <X className="size-3.5" />
         </Button>
       </div>
-      {modifiers.length > 0 ? (
+      {modifiers.length > 0 && (
         <ul className="ml-5 mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px]">
           {modifiers.map((m, i) => (
             <li key={i} className="flex items-center gap-1">
@@ -295,7 +307,9 @@ function ActiveEffectRow({
             </li>
           ))}
         </ul>
-      ) : (
+      )}
+      <FactChips facts={facts} className="ml-5 mt-1" />
+      {modifiers.length === 0 && facts.length === 0 && (
         <p className={cn('ml-5 mt-1 text-[11px] italic', subtleText)}>
           Sem efeito mecânico
         </p>
@@ -425,6 +439,7 @@ function ApplyEffectDialog({ character }: { character: Character }) {
                     </li>
                   ))}
                 </ul>
+                <FactChips facts={spell.buff?.facts ?? []} />
               </button>
             )}
           />
@@ -557,6 +572,8 @@ function FlagGroupRow({
     <li>
       <button
         type="button"
+        role="switch"
+        aria-checked={allActive}
         onClick={() => onToggle(!allActive)}
         className={cn(
           'flex w-full flex-col gap-1 rounded-md border px-2 py-1.5 text-left transition-colors',
@@ -623,6 +640,8 @@ function ConditionalRow({
     <li>
       <button
         type="button"
+        role="switch"
+        aria-checked={active}
         onClick={onToggle}
         className={cn(
           'flex w-full items-center gap-3 rounded-md border px-2 py-1.5 text-left transition-colors',

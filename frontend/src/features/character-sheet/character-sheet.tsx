@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { type ReactNode, useState } from 'react'
 import { useMediaQuery } from '@/shared/lib/use-media-query'
 import { CharacterSheetDesktop } from './character-sheet-desktop'
 import { CharacterSheetMobile } from './character-sheet-mobile'
@@ -26,13 +26,26 @@ export function CharacterSheet({
   inSession?: boolean
 }) {
   const isDesktop = useMediaQuery('(min-width: 1024px)')
+  // Owned here (above the viewport switch) so the selected block survives a
+  // desktop↔mobile swap; each layout falls back to its own first tab when the
+  // shared value isn't in its set (e.g. mobile-only "Vitais").
+  const [tab, setTab] = useState('')
   if (isDesktop)
-    return <CharacterSheetDesktop character={character} inSession={inSession} />
+    return (
+      <CharacterSheetDesktop
+        character={character}
+        inSession={inSession}
+        tab={tab}
+        onTabChange={setTab}
+      />
+    )
   return (
     <CharacterSheetMobile
       character={character}
       barSlot={mobileBarSlot}
       inSession={inSession}
+      tab={tab}
+      onTabChange={setTab}
     />
   )
 }

@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Check } from 'lucide-react'
 import {
   caminhoSlotFor,
   classPowersFor,
@@ -12,10 +11,8 @@ import type {
   CaminhoOption,
   ClassChoiceBlob,
   ClassChoices,
-  ClassPower,
   Deus,
   GeneralPower,
-  PowerKind,
 } from '@tormenta20/t20-data'
 import { Combobox, type ComboboxOption } from '@/shared/ui/combobox'
 import { api, type Character, type AbilityChoicesResult } from '@/shared/api/api'
@@ -23,12 +20,16 @@ import { invalidateCharacterDependents } from '@/entities/character/character-ca
 import {
   evaluatePrerequisite,
   parseClassChoices,
-  type PrerequisiteCheck,
 } from '@/entities/character/derived'
 import { characterQueryOptions } from '@/entities/character/queries'
-import { accentTitle, subtleText } from '@/shared/lib/sheet-theme'
+import { subtleText } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
-import { AbilitiesSection } from './abilities-section'
+import { ClassPowerRow } from './class-power-row'
+import {
+  CollapsibleAbilityCard,
+  type CardFocus,
+} from './collapsible-ability-card'
+import { GeneralPowersPool } from './general-powers-pool'
 import { parseChoices } from './parse-choices'
 
 /**
@@ -117,9 +118,7 @@ function ClassChoicesPicker({
           <Combobox
             options={devotoOptions}
             value={blob.devoto ?? ''}
-            onChange={(value) =>
-              commit({ ...blob, devoto: value || undefined })
-            }
+            onChange={(value) => commit({ ...blob, devoto: value || undefined })}
             placeholder="Escolher devoto…"
             searchPlaceholder="Buscar deus…"
             emptyMessage="Nenhum deus."
@@ -150,16 +149,20 @@ function ClassChoicesPicker({
 }
 
 /**
- * Renders one class row from `character.classes`. Owns the elective
- * pool (class powers + general powers) with slot-count enforcement,
- * plus the devoto/caminho picker when applicable.
+ * One class card from `character.classes`. Owns the elective pool (class powers
+ * + the virtualized general-powers pool) with slot-count enforcement, plus the
+ * devoto/caminho picker when applicable.
  */
 export function ClassesSection({
   entry,
   character,
+  focus,
+  pending,
 }: {
   entry: { className: string; level: number }
   character: Character
+  focus: CardFocus
+  pending: number
 }) {
   const qc = useQueryClient()
   const queryKey = characterQueryOptions(character.id).queryKey
@@ -168,7 +171,9 @@ export function ClassesSection({
   const classChoices = parseClassChoices(character.classChoices)
   const pool = classPowersFor(entry.className)
   const auto = pool
-    .filter((p) => p.grantedAtLevel !== undefined && p.grantedAtLevel <= entry.level)
+    .filter(
+      (p) => p.grantedAtLevel !== undefined && p.grantedAtLevel <= entry.level,
+    )
     .sort((a, b) => (a.grantedAtLevel ?? 0) - (b.grantedAtLevel ?? 0))
   const classElectives = pool
     .filter((p) => p.grantedAtLevel === undefined)
@@ -221,14 +226,29 @@ export function ClassesSection({
     update.mutate(next)
   }
 
+  const generalLabel =
+    kinds.filter((k) => k !== entry.className.toLowerCase()).join(', ') ||
+    'sem pools'
+
   return (
-    <AbilitiesSection title={`Classe: ${entry.className} ${entry.level}`}>
+    <CollapsibleAbilityCard
+      id={`classe:${entry.className}`}
+      title={`${entry.className} ${entry.level}`}
+      count={
+        slotCount > 0
+          ? `${ownedSlotPicks}/${slotCount} poderes · ${slotsRemaining} restantes`
+          : undefined
+      }
+      pending={pending}
+      defaultOpen={pending > 0}
+      focus={focus}
+    >
       {pool.length === 0 ? (
-        <p className={cn('text-xs italic text-muted-foreground')}>
+        <p className="text-xs italic text-muted-foreground">
           Classe não está no catálogo.
         </p>
       ) : (
-        <>
+        <div className="space-y-3">
           <ClassChoicesPicker
             character={character}
             className={entry.className}
@@ -236,8 +256,13 @@ export function ClassesSection({
             classChoices={classChoices}
           />
           {auto.length > 0 && (
-            <div className="mb-3">
-              <p className={cn('mb-1 text-[10px] font-semibold uppercase tracking-wide', subtleText)}>
+            <div>
+              <p
+                className={cn(
+                  'mb-1 text-[10px] font-semibold uppercase tracking-wide',
+                  subtleText,
+                )}
+              >
                 Concedidos
               </p>
               <ul className="space-y-1.5">
@@ -247,19 +272,14 @@ export function ClassesSection({
               </ul>
             </div>
           )}
-          {slotCount > 0 && (
-            <p className={cn('mb-2 text-[11px]', subtleText)}>
-              Poderes:{' '}
-              <span className="font-semibold">
-                {ownedSlotPicks} / {slotCount}
-              </span>{' '}
-              · Restantes:{' '}
-              <span className="font-semibold">{slotsRemaining}</span>
-            </p>
-          )}
           {classElectives.length > 0 && (
-            <div className="mb-3">
-              <p className={cn('mb-1 text-[10px] font-semibold uppercase tracking-wide', subtleText)}>
+            <div>
+              <p
+                className={cn(
+                  'mb-1 text-[10px] font-semibold uppercase tracking-wide',
+                  subtleText,
+                )}
+              >
                 Poderes de {entry.className}
               </p>
               <ul className="space-y-1.5">
@@ -288,202 +308,29 @@ export function ClassesSection({
           )}
           {generalPool.length > 0 && (
             <div>
-              <p className={cn('mb-1 text-[10px] font-semibold uppercase tracking-wide', subtleText)}>
-                Poderes Gerais ({kinds.filter((k) => k !== entry.className.toLowerCase()).join(', ') || 'sem pools'})
+              <p
+                className={cn(
+                  'mb-1 text-[10px] font-semibold uppercase tracking-wide',
+                  subtleText,
+                )}
+              >
+                Poderes Gerais ({generalLabel})
               </p>
-              <ul className="space-y-1.5">
-                {generalPool.map((power) => {
+              <GeneralPowersPool
+                powers={generalPool}
+                isOwned={(id) => allChosen.includes(id)}
+                isLocked={(power: GeneralPower) => {
                   const owned = allChosen.includes(power.id)
                   const tooHigh = (power.minLevel ?? 1) > entry.level
-                  const noSlot = slotsRemaining <= 0
-                  return (
-                    <GeneralPowerRow
-                      key={power.id}
-                      power={power}
-                      owned={owned}
-                      locked={tooHigh || (noSlot && !owned)}
-                      onToggle={() => toggleElective(power.id)}
-                      disabled={update.isPending}
-                    />
-                  )
-                })}
-              </ul>
+                  return tooHigh || (slotsRemaining <= 0 && !owned)
+                }}
+                onToggle={toggleElective}
+                disabled={update.isPending}
+              />
             </div>
           )}
-        </>
-      )}
-    </AbilitiesSection>
-  )
-}
-
-function GeneralPowerRow({
-  power,
-  owned,
-  locked,
-  onToggle,
-  disabled,
-}: {
-  power: GeneralPower
-  owned: boolean
-  locked?: boolean
-  onToggle: () => void
-  disabled?: boolean
-}) {
-  return (
-    <li
-      className={cn(
-        'flex gap-2 rounded border p-2',
-        owned
-          ? 'border-border bg-muted  '
-          : 'border-border ',
-      )}
-    >
-      <button
-        type="button"
-        onClick={onToggle}
-        disabled={disabled || (locked && !owned)}
-        className={cn(
-          'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px]',
-          owned
-            ? 'border-border bg-muted text-white'
-            : 'border-border hover:bg-muted ',
-          (disabled || (locked && !owned)) && 'cursor-not-allowed opacity-40',
-        )}
-        aria-pressed={owned}
-        aria-label={owned ? 'Remover poder' : 'Selecionar poder'}
-      >
-        {owned ? <Check className="size-3" /> : null}
-      </button>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-1">
-          <p className={cn('text-xs font-semibold', accentTitle)}>{power.name}</p>
-          <span className={cn(
-            'rounded px-1 text-[9px] uppercase tracking-wide',
-            kindBadgeClass(power.kind),
-          )}>
-            {power.kind}
-          </span>
-          {power.minLevel !== undefined && power.minLevel > 1 && (
-            <span className="rounded bg-muted px-1 text-[9px] uppercase tracking-wide text-foreground  ">
-              ≥L{power.minLevel}
-            </span>
-          )}
-          {locked && !owned && (
-            <span className="rounded bg-red-200/60 px-1 text-[9px] uppercase tracking-wide text-red-800 dark:bg-red-500/20 dark:text-red-100">
-              Bloqueado
-            </span>
-          )}
         </div>
-        <p className={cn('mt-0.5 text-[11px] leading-snug', subtleText)}>
-          {power.description}
-        </p>
-      </div>
-    </li>
-  )
-}
-
-function kindBadgeClass(kind: PowerKind): string {
-  switch (kind) {
-    case 'combate':
-      return 'bg-rose-200/60 text-rose-900 dark:bg-rose-500/20 dark:text-rose-100'
-    case 'magia':
-      return 'bg-indigo-200/60 text-indigo-900 dark:bg-indigo-500/20 dark:text-indigo-100'
-    case 'destino':
-      return 'bg-emerald-200/60 text-emerald-900 dark:bg-emerald-500/20 dark:text-emerald-100'
-    case 'tormenta':
-      return 'bg-fuchsia-200/60 text-fuchsia-900 dark:bg-fuchsia-500/20 dark:text-fuchsia-100'
-    default:
-      return 'bg-muted text-foreground  '
-  }
-}
-
-function ClassPowerRow({
-  power,
-  owned,
-  locked,
-  prereqChecks,
-  onToggle,
-  disabled,
-}: {
-  power: ClassPower
-  owned: boolean
-  locked?: boolean
-  prereqChecks?: PrerequisiteCheck[]
-  onToggle?: () => void
-  disabled?: boolean
-}) {
-  const isAuto = power.grantedAtLevel !== undefined
-  return (
-    <li
-      className={cn(
-        'flex gap-2 rounded border p-2',
-        owned
-          ? 'border-border bg-muted  '
-          : 'border-border ',
       )}
-    >
-      {!isAuto && onToggle && (
-        <button
-          type="button"
-          onClick={onToggle}
-          disabled={disabled || (locked && !owned)}
-          className={cn(
-            'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px]',
-            owned
-              ? 'border-border bg-muted text-white'
-              : 'border-border hover:bg-muted ',
-            (disabled || (locked && !owned)) && 'cursor-not-allowed opacity-40',
-          )}
-          aria-pressed={owned}
-          aria-label={owned ? 'Remover poder' : 'Selecionar poder'}
-        >
-          {owned ? <Check className="size-3" /> : null}
-        </button>
-      )}
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-1">
-          <p className={cn('text-xs font-semibold', accentTitle)}>{power.name}</p>
-          {isAuto && (
-            <span className="rounded bg-emerald-200/60 px-1 text-[9px] uppercase tracking-wide text-emerald-900 dark:bg-emerald-500/20 dark:text-emerald-100">
-              L{power.grantedAtLevel}
-            </span>
-          )}
-          {!isAuto && power.minLevel !== undefined && power.minLevel > 1 && (
-            <span className="rounded bg-muted px-1 text-[9px] uppercase tracking-wide text-foreground  ">
-              ≥L{power.minLevel}
-            </span>
-          )}
-          {locked && !owned && (
-            <span className="rounded bg-red-200/60 px-1 text-[9px] uppercase tracking-wide text-red-800 dark:bg-red-500/20 dark:text-red-100">
-              Bloqueado
-            </span>
-          )}
-        </div>
-        {!owned && prereqChecks && prereqChecks.length > 0 && (
-          <p className="mt-0.5 text-[10px] leading-snug">
-            <span className={cn('font-semibold', subtleText)}>Requer: </span>
-            {prereqChecks.map((c, i) => (
-              <span key={i}>
-                {i > 0 && <span className={subtleText}>, </span>}
-                <span
-                  className={cn(
-                    c.prereq.kind === 'note'
-                      ? 'text-foreground '
-                      : c.met
-                        ? 'text-emerald-700 dark:text-emerald-300'
-                        : 'text-red-700 dark:text-red-300',
-                  )}
-                >
-                  {c.reason}
-                </span>
-              </span>
-            ))}
-          </p>
-        )}
-        <p className={cn('mt-0.5 text-[11px] leading-snug', subtleText)}>
-          {power.description}
-        </p>
-      </div>
-    </li>
+    </CollapsibleAbilityCard>
   )
 }
