@@ -11,6 +11,7 @@ import { CharactersService } from './characters.service';
 import { CharacterItemsService } from './characters-items.service';
 import { CharacterExpertisesService } from './characters-expertises.service';
 import { PrismaService } from '../prisma/prisma.service';
+import type { CreateCharacterDto } from './dto/character.dto';
 
 /**
  * Sibling spec to characters.service.spec.ts — covers the CRUD paths the
@@ -109,6 +110,10 @@ function makeCharacter(over: Partial<Character> = {}): Character {
 
 class FakePrisma {
   characterFindUnique = jest.fn<Promise<Character | null>, [unknown]>();
+  characterCreate = jest.fn(async ({ data }: { data: unknown }) => ({
+    id: 1,
+    ...(data as object),
+  }));
   characterUpdate = jest.fn(async ({ data }: { data: unknown }) => ({
     ...this.lastSeed!,
     ...(data as object),
@@ -151,6 +156,7 @@ class FakePrisma {
     return {
       character: {
         findUnique: this.characterFindUnique,
+        create: this.characterCreate,
         update: this.characterUpdate,
       },
       characterExpertise: {
@@ -488,5 +494,76 @@ describe('CharacterItemsService.deleteItem — cross-character guard', () => {
     expect(prisma.characterItemDelete).toHaveBeenCalledWith({
       where: { id: 51 },
     });
+  });
+});
+
+describe('CharactersService.create — creation-time ability choices', () => {
+  const baseDto = (extra: Partial<CreateCharacterDto>): CreateCharacterDto =>
+    ({
+      name: 'Test',
+      races: ['Humano'],
+      origin: 'Acólito',
+      classes: [{ className: 'Arcanista', level: 1 }],
+      hpMax: 8,
+      hpCurrent: 8,
+      mpMax: 6,
+      mpCurrent: 6,
+      strength: 0,
+      dexterity: 0,
+      constitution: 0,
+      intelligence: 0,
+      wisdom: 0,
+      charisma: 0,
+      size: 'Médio',
+      displacement: 9,
+      ...extra,
+    }) as CreateCharacterDto;
+
+  it('persists classPowers, originChoices, classChoices, and trained perícias', async () => {
+    const prisma = new FakePrisma();
+    const service = await makeService(prisma);
+    await service.create(
+      7,
+      baseDto({
+        classPowers: ['class.arcanista.caminho-mago'],
+        originChoices: ['acolito-cura'],
+        classChoices: { Arcanista: { caminho: 'mago' } },
+        trainedExpertises: ['Misticismo'],
+        powerChoices: { 'class.arcanista.especialista-em-escola': ['evocacao'] },
+      }),
+    );
+    const { data } = prisma.characterCreate.mock.calls[0][0] as {
+      data: {
+        classPowers: string;
+        originChoices: string;
+        classChoices: string;
+        powerChoices: string;
+        expertises: { create: { name: string; trained: boolean }[] };
+      };
+    };
+    expect(JSON.parse(data.classPowers)).toEqual(['class.arcanista.caminho-mago']);
+    expect(JSON.parse(data.originChoices)).toEqual(['acolito-cura']);
+    expect(JSON.parse(data.classChoices)).toEqual({ Arcanista: { caminho: 'mago' } });
+    expect(JSON.parse(data.powerChoices)).toEqual({
+      'class.arcanista.especialista-em-escola': ['evocacao'],
+    });
+    const mist = data.expertises.create.find((e) => e.name === 'Misticismo');
+    expect(mist?.trained).toBe(true);
+    const other = data.expertises.create.find((e) => e.name !== 'Misticismo');
+    expect(other?.trained).toBe(false);
+  });
+
+  it('defaults to empty picks when omitted', async () => {
+    const prisma = new FakePrisma();
+    const service = await makeService(prisma);
+    await service.create(7, baseDto({}));
+    const { data } = prisma.characterCreate.mock.calls[0][0] as {
+      data: {
+        classPowers: string;
+        expertises: { create: { trained: boolean }[] };
+      };
+    };
+    expect(JSON.parse(data.classPowers)).toEqual([]);
+    expect(data.expertises.create.every((e) => e.trained === false)).toBe(true);
   });
 });

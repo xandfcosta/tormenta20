@@ -77,6 +77,35 @@ export class CreateCharacterDto {
   size!: string;
 
   @IsInt() @Min(0) @Max(120) displacement!: number;
+
+  // Optional creation-time ability choices — validated structurally here and
+  // against the t20-data catalog in the service. Absent = character starts
+  // with empty picks (the sheet's pendências flow then catches them).
+  @IsOptional()
+  @IsArray()
+  @ArrayUnique()
+  @IsString({ each: true })
+  classPowers?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayUnique()
+  @IsString({ each: true })
+  originChoices?: string[];
+
+  @IsOptional()
+  @IsObject()
+  classChoices?: Record<string, ClassChoiceBlobDto>;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayUnique()
+  @IsString({ each: true })
+  trainedExpertises?: string[];
+
+  @IsOptional()
+  @IsObject()
+  powerChoices?: Record<string, string[]>;
 }
 
 /**
@@ -279,4 +308,8 @@ export class UpdateAbilityChoicesDto {
   @IsOptional()
   @IsObject()
   classChoices?: Record<string, ClassChoiceBlobDto>;
+
+  @IsOptional()
+  @IsObject()
+  powerChoices?: Record<string, string[]>;
 }

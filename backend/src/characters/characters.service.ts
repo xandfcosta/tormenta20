@@ -91,6 +91,7 @@ export type AbilityChoicesResult = {
   originChoices?: string;
   classPowers?: string;
   classChoices?: string;
+  powerChoices?: string;
 };
 export type VitalsResult = { hpCurrent: number; mpCurrent: number };
 
@@ -218,6 +219,9 @@ export class CharactersService {
     const grantedDefaults = characterProficiencies(classNames)
       .filter((p) => p.granted)
       .map((p) => p.category);
+    // Creation-time ability choices (optional). Trained perícias are folded
+    // into the seeded expertise rows; the JSON choice fields carry the rest.
+    const trainedSet = new Set(dto.trainedExpertises ?? []);
     return this.prisma.character.create({
       data: {
         ownerId,
@@ -238,6 +242,10 @@ export class CharactersService {
         size: dto.size,
         displacement: dto.displacement,
         proficiencies: JSON.stringify(grantedDefaults),
+        classPowers: JSON.stringify(dto.classPowers ?? []),
+        originChoices: JSON.stringify(dto.originChoices ?? []),
+        classChoices: JSON.stringify(sanitizeClassChoices(dto.classChoices ?? {})),
+        powerChoices: JSON.stringify(dto.powerChoices ?? {}),
         races: { create: dto.races.map((race) => ({ race })) },
         classes: {
           create: dto.classes.map((c) => ({
@@ -249,6 +257,7 @@ export class CharactersService {
           create: EXPERTISES.map((e) => ({
             name: e.name,
             attribute: e.attribute,
+            trained: trainedSet.has(e.name),
           })),
         },
       },
@@ -274,6 +283,9 @@ export class CharactersService {
     }
     if (dto.classChoices !== undefined) {
       data.classChoices = JSON.stringify(sanitizeClassChoices(dto.classChoices));
+    }
+    if (dto.powerChoices !== undefined) {
+      data.powerChoices = JSON.stringify(dto.powerChoices);
     }
     if (Object.keys(data).length === 0) {
       throw new BadRequestException('No fields to update');
