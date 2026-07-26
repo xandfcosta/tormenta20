@@ -38,6 +38,7 @@ export const RACES_CATALOG: RaceDefinition[] = [
         name: 'Conhecimento das Rochas',
         description:
           'Recebe visão no escuro e +2 em testes de Percepção e Sobrevivência realizados no subterrâneo.',
+        facts: [{ category: 'sense', text: 'Visão no escuro' }],
       },
       {
         id: 'anao-devagar-e-sempre',
@@ -111,6 +112,7 @@ export const RACES_CATALOG: RaceDefinition[] = [
         raceId: 'Elfo',
         name: 'Sentidos Élficos',
         description: 'Você recebe visão na penumbra e +2 em Misticismo e Percepção.',
+        facts: [{ category: 'sense', text: 'Visão na penumbra' }],
         modifiers: [
           {
             target: { k: 'expertise', name: 'Misticismo' },
@@ -144,6 +146,10 @@ export const RACES_CATALOG: RaceDefinition[] = [
         name: 'Espelunqueiro',
         description:
           'Você recebe visão no escuro e deslocamento de escalada igual ao seu deslocamento terrestre.',
+        facts: [
+          { category: 'sense', text: 'Visão no escuro' },
+          { category: 'movement', text: 'Escalada = deslocamento terrestre' },
+        ],
       },
       {
         id: 'goblin-peste-esguia',
@@ -392,6 +398,7 @@ export const RACES_CATALOG: RaceDefinition[] = [
         raceId: 'Osteon',
         name: 'Armadura Óssea',
         description: 'Você recebe redução de corte, frio e perfuração 5.',
+        facts: [{ category: 'dr', text: 'RD 5 a corte, frio e perfuração' }],
       },
       {
         id: 'osteon-memoria-postuma',
@@ -406,6 +413,10 @@ export const RACES_CATALOG: RaceDefinition[] = [
         name: 'Natureza Esquelética',
         description:
           'Criatura do tipo morto-vivo. Visão no escuro e imunidade a cansaço, metabólicos, trevas e veneno. Não precisa respirar, comer ou dormir. Efeitos mágicos de cura de luz causam dano; dano de trevas recupera PV.',
+        facts: [
+          { category: 'sense', text: 'Visão no escuro' },
+          { category: 'immunity', text: 'Imune a cansaço, metabólicos, trevas e veneno' },
+        ],
       },
       {
         id: 'osteon-preco-da-nao-vida',
@@ -426,6 +437,7 @@ export const RACES_CATALOG: RaceDefinition[] = [
         raceId: 'Medusa',
         name: 'Cria de Megalokk',
         description: 'Você é uma criatura do tipo monstro e recebe visão no escuro.',
+        facts: [{ category: 'sense', text: 'Visão no escuro' }],
       },
       {
         id: 'medusa-natureza-venenosa',
@@ -544,6 +556,10 @@ export const RACES_CATALOG: RaceDefinition[] = [
         name: 'Criatura Artificial',
         description:
           'Você é uma criatura do tipo construto. Visão no escuro e imunidade a cansaço, metabólicos e veneno. Não respira, alimenta-se ou dorme, mas não se beneficia de cura mundana ou itens de alimentação. Precisa ficar inerte 8h por dia para recarregar (descansa em condições normais sempre).',
+        facts: [
+          { category: 'sense', text: 'Visão no escuro' },
+          { category: 'immunity', text: 'Imune a cansaço, metabólicos e veneno' },
+        ],
       },
       {
         id: 'golem-fonte-elemental',

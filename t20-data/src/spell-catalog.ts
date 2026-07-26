@@ -1,3 +1,5 @@
+import type { DisplayFact } from './display-facts'
+import type { Modifier } from './items/types'
 import type {
   AugmentKind,
   SpellCircle,
@@ -9,7 +11,6 @@ import type {
   SpellSaveType,
   SpellSchool,
 } from './spells'
-import type { Modifier } from './items/types'
 
 /**
  * Spell catalog seed — PDF book Cap 4 (p174-211).
@@ -45,6 +46,13 @@ export type CatalogAugment = {
 export type SpellBuff = {
   defaultScope: 'scene' | 'day'
   modifiers: Modifier[]
+  /**
+   * Display-only mechanical facts (RD, immunities, senses, movement modes,
+   * action economy) — shown as reference chips but not computed. Lets a spell
+   * with no computable modifier still appear in the "Aplicar efeito" dialog,
+   * and lets buffs carry non-numeric sub-effects their modifiers drop.
+   */
+  facts?: DisplayFact[]
 }
 
 export type CatalogSpell = {
@@ -168,6 +176,11 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida'],
     baseEffect:
       'Detecta auras mágicas em alcance médio. Ação de movimento descobre se uma criatura pode lançar magias e o círculo mais alto que ela pode lançar.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [],
+      facts: [{ category: 'sense', text: 'Detecta auras mágicas (alcance médio)' }],
+    },
     augments: [
       { pmCost: 1, kind: 'aumenta', description: 'Ganha visão no escuro.' },
       { pmCost: 2, kind: 'aumenta', description: 'Muda a duração para um dia.' },
@@ -609,6 +622,16 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida'],
     baseEffect:
       'Cria barreira mágica impenetrável contra efeitos nocivos mentais ou físicos, à sua escolha. Mental: imune a abalado, alquebrado, apavorado, atordoado, confuso, esmorecido, fascinado, frustrado, pasmo, encantamento e ilusão. Físico: imune a atordoado, cego, debilitado, enjoado, envenenado, exausto, fatigado, fraco, lento, ofuscado, paralisado, acertos críticos, ataques furtivos e doenças.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [],
+      facts: [
+        {
+          category: 'immunity',
+          text: 'Imune a condições mentais OU físicas à escolha (ver descrição)',
+        },
+      ],
+    },
     augments: [
       {
         pmCost: 5,
@@ -928,6 +951,16 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Arcanista', 'Bardo'],
     baseEffect:
       'Três cópias ilusórias suas aparecem e imitam suas ações. +6 na Defesa. Cada ataque que erra destrói uma cópia (1 cópia = +4 Defesa, 0 = +2). Oponente precisa ver as cópias para se confundir.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [],
+      facts: [
+        {
+          category: 'other',
+          text: '+6 Defesa (3 cópias ilusórias; cai conforme são destruídas)',
+        },
+      ],
+    },
     augments: [
       {
         pmCost: 2,
@@ -1066,6 +1099,14 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Arcanista', 'Bardo'],
     baseEffect:
       'Alvo (1 criatura) pode realizar uma ação padrão ou de movimento adicional por turno. Não pode lançar magias nem ativar engenhocas.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [],
+      facts: [
+        { category: 'action', text: '+1 ação (padrão ou movimento) por turno' },
+        { category: 'other', text: 'Não pode lançar magias nem ativar engenhocas' },
+      ],
+    },
     augments: [
       {
         pmCost: 0,
@@ -1103,6 +1144,12 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Arcanista', 'Bardo'],
     baseEffect:
       'Recebe deslocamento de voo 12m. Voar é simples como andar — pode atacar e lançar magias normalmente. Quando termina, desce lentamente como Queda Suave.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [
+        { target: { k: 'flySpeed' }, amount: 12, bonusType: 'untyped', note: 'Voo' },
+      ],
+    },
     augments: [
       { pmCost: 1, kind: 'muda', description: 'Muda alcance para toque e alvo para 1 criatura.' },
       {
@@ -1530,6 +1577,15 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Arcanista', 'Bardo'],
     baseEffect:
       'Rosto idealizado, porte garboso, voz melodiosa. CAR 5+ recebe +2 no atributo; senão vira 5 (conta como bônus). +5 em Diplomacia e Enganação. Ao terminar, observadores suspeitam; pessoas que viram o alvo sob a magia sentem "algo errado" em condições normais. Ao fim da cena, gastar novamente os PM como ação livre mantém ativa. Não fornece PV/PM adicionais.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [
+        { target: { k: 'attribute', name: 'charisma' }, amount: 2, bonusType: 'untyped', note: 'Aparência Perfeita' },
+        { target: { k: 'expertise', name: 'Diplomacia' }, amount: 5, bonusType: 'untyped', note: 'Aparência Perfeita' },
+        { target: { k: 'expertise', name: 'Enganação' }, amount: 5, bonusType: 'untyped', note: 'Aparência Perfeita' },
+      ],
+      facts: [{ category: 'other', text: 'CAR abaixo de 5 vira 5' }],
+    },
     augments: [
       {
         pmCost: 1,
@@ -1656,6 +1712,13 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida'],
     baseEffect:
       '1 arma empunhada vira mágica; +1 em ataque e dano (bônus de encanto). Se o conjurador empunhar, pode usar atributo-chave de magias em vez do original em ataque (não cumulativo).',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [
+        { target: { k: 'attack', scope: 'all' }, amount: 1, bonusType: 'enhancement', note: 'Arma Mágica' },
+        { target: { k: 'damage', scope: 'all' }, amount: 1, bonusType: 'enhancement', note: 'Arma Mágica' },
+      ],
+    },
     augments: [
       {
         pmCost: 2,
@@ -1691,6 +1754,13 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Clérigo', 'Druida'],
     baseEffect:
       'Fortalece arma mundana primitiva (sem custo T$: bordão, clava, funda, tacape), arma natural ou ataque desarmado. Dano +1 passo, considerada mágica. Ao lançar, pode mudar tipo de dano (corte, impacto ou perfuração).',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [],
+      facts: [
+        { category: 'other', text: 'Dano +1 passo; arma considerada mágica' },
+      ],
+    },
     augments: [
       {
         pmCost: 1,
@@ -1789,6 +1859,19 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Clérigo'],
     baseEffect:
       'Emana aura brilhante em esfera de 9m de raio. Conjurador + aliados devotos da mesma divindade: imunes a encantamento, +10 Defesa e testes de resistência. Aliados não devotos: +5 Defesa e resistência. Inimigos que entrem: Vontade — falha = uma condição à escolha entre esmorecido/debilitado/lento até fim da cena. Teste refeito ao reentrar.',
+    // Models the caster's own bonus (devoto of the same divinity → +10);
+    // non-devoto allies get +5, which the single-target ActiveEffect can't
+    // distinguish, so we annotate the caster case.
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [
+        { target: { k: 'defense' }, amount: 10, bonusType: 'untyped', note: 'Aura Divina' },
+        { target: { k: 'resistance' }, amount: 10, bonusType: 'untyped', note: 'Aura Divina' },
+      ],
+      facts: [
+        { category: 'immunity', text: 'Imune a encantamento (você e aliados devotos)' },
+      ],
+    },
     augments: [
       {
         pmCost: 2,
@@ -1982,6 +2065,12 @@ const SPELLS: readonly CatalogSpell[] = [
     components: VG,
     classes: ['Arcanista', 'Bardo'],
     baseEffect: 'Película protetora: 30 PV temporários.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [
+        { target: { k: 'tempHp' }, amount: 30, bonusType: 'untyped', note: 'Campo de Força' },
+      ],
+    },
     augments: [
       {
         pmCost: 1,
@@ -2032,6 +2121,11 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Arcanista', 'Bardo'],
     baseEffect:
       'Alvo (1 criatura) fica com imagem nublada — recebe efeitos de camuflagem leve.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [],
+      facts: [{ category: 'other', text: 'Camuflagem leve (chance de errar)' }],
+    },
     augments: [
       {
         pmCost: 3,
@@ -3483,6 +3577,13 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Clérigo', 'Druida', 'Paladino'],
     baseEffect:
       'Alvo (1 criatura) recebe +2 em Força, Destreza ou Constituição à escolha. Sem PV/PM adicionais.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [],
+      facts: [
+        { category: 'other', text: '+2 em Força, Destreza ou Constituição (à escolha)' },
+      ],
+    },
     augments: [
       {
         pmCost: 3,
@@ -3558,6 +3659,14 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Arcanista'],
     baseEffect:
       'Transporta conjurador + equipamento para o plano etéreo. Vira fantasma (mas viva): invisível (alterna ação livre), incorpórea, move em qualquer direção. Enxerga material em cinza; visão/audição reduzidas a 18m. Só abjuração/essência afetam etéreas. Etérea não ataca material. Etéreas se afetam. Materializar: ação de movimento encerra magia. Materializar em espaço ocupado = joga para o não-ocupado mais próximo + 1d6 impacto por 1,5m.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [],
+      facts: [
+        { category: 'movement', text: 'Incorpóreo/etéreo — move em qualquer direção' },
+        { category: 'other', text: 'Invisível; só abjuração/essência afeta' },
+      ],
+    },
     augments: [
       {
         pmCost: 5,
@@ -3695,6 +3804,7 @@ const SPELLS: readonly CatalogSpell[] = [
         { target: { k: 'attack', scope: 'all' }, amount: 4, bonusType: 'untyped', note: 'Heroísmo' },
         { target: { k: 'damage', scope: 'all' }, amount: 4, bonusType: 'untyped', note: 'Heroísmo' },
       ],
+      facts: [{ category: 'immunity', text: 'Imune a medo' }],
     },
     augments: [
       {
@@ -4031,6 +4141,14 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida'],
     baseEffect:
       'Alvo (1 criatura) imune a efeitos de movimento; ignora restrições de deslocamento. Usa habilidades de liberdade de movimentos mesmo com armadura/escudo.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [],
+      facts: [
+        { category: 'immunity', text: 'Imune a efeitos de movimento' },
+        { category: 'movement', text: 'Ignora restrições de deslocamento' },
+      ],
+    },
     augments: [
       {
         pmCost: 2,
@@ -4285,6 +4403,13 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Clérigo', 'Druida', 'Paladino'],
     baseEffect:
       '1 criatura recebe +2 em Inteligência, Sabedoria ou Carisma. Sem PV/PM/perícias adicionais.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [],
+      facts: [
+        { category: 'other', text: '+2 em Inteligência, Sabedoria ou Carisma (à escolha)' },
+      ],
+    },
     augments: [
       {
         pmCost: 3,
@@ -4580,6 +4705,14 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Clérigo', 'Druida', 'Paladino'],
     baseEffect:
       'Aliados no alcance +2 em perícia/dano; inimigos no alcance -2 em perícia/dano. Cumulativo com outras magias. Componente material: T$ 20 por PM em incensos/oferendas.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [
+        { target: { k: 'expertiseAll' }, amount: 2, bonusType: 'untyped', note: 'Oração' },
+        { target: { k: 'damage', scope: 'all' }, amount: 2, bonusType: 'untyped', note: 'Oração' },
+      ],
+      facts: [{ category: 'other', text: 'Inimigos no alcance: −2 em perícia e dano' }],
+    },
     augments: [
       {
         pmCost: 1,
@@ -4685,6 +4818,11 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida', 'Paladino'],
     baseEffect:
       'Pele de rocha: RD 5.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [],
+      facts: [{ category: 'dr', text: 'RD 5' }],
+    },
     augments: [
       {
         pmCost: 1,
@@ -4814,6 +4952,17 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Clérigo', 'Paladino'],
     baseEffect:
       'Canaliza divindade: +1 categoria de tamanho (equipamento ajusta), Força +4, RD 10. Não pode lançar magias enquanto ativa.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [
+        { target: { k: 'attribute', name: 'strength' }, amount: 4, bonusType: 'enhancement', note: 'Potência Divina' },
+      ],
+      facts: [
+        { category: 'dr', text: 'RD 10' },
+        { category: 'other', text: '+1 categoria de tamanho' },
+        { category: 'other', text: 'Não pode lançar magias' },
+      ],
+    },
     augments: [
       {
         pmCost: 2,
@@ -4981,6 +5130,18 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Clérigo', 'Paladino'],
     baseEffect:
       '1 criatura: +5 em testes de resistência contra magias.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [
+        {
+          target: { k: 'resistance' },
+          amount: 5,
+          bonusType: 'untyped',
+          condition: { c: 'against', trait: 'magia' },
+          note: 'Proteção Contra Magia',
+        },
+      ],
+    },
     augments: [
       {
         pmCost: 4,
@@ -5016,6 +5177,12 @@ const SPELLS: readonly CatalogSpell[] = [
     components: VG,
     classes: ['Clérigo', 'Druida', 'Paladino'],
     baseEffect: 'Barreira mística: 1 criatura recebe +2 em testes de resistência.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [
+        { target: { k: 'resistance' }, amount: 2, bonusType: 'untyped', note: 'Proteção Divina' },
+      ],
+    },
     augments: [
       {
         pmCost: 2,
@@ -5306,6 +5473,13 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida', 'Paladino'],
     baseEffect:
       'Ao lançar, escolha ácido/eletricidade/fogo/frio/luz/trevas. Alvo (1 criatura) recebe RD 10 contra o tipo escolhido.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [],
+      facts: [
+        { category: 'dr', text: 'RD 10 contra um tipo de energia à escolha' },
+      ],
+    },
     augments: [
       {
         pmCost: 2,
@@ -5882,6 +6056,14 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Clérigo', 'Druida', 'Paladino'],
     baseEffect:
       '1 criatura fica imune a calor/frio extremos; respira na água (ou vice-versa); não sufoca em fumaça densa.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [],
+      facts: [
+        { category: 'immunity', text: 'Imune a calor/frio extremos' },
+        { category: 'other', text: 'Respira na água; não sufoca em fumaça' },
+      ],
+    },
     augments: [
       {
         pmCost: 5,
@@ -6172,6 +6354,21 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Arcanista', 'Bardo'],
     baseEffect:
       'Máquina de combate: +6 Defesa/ataque/dano corpo a corpo + 30 PV temporários. Não pode lançar magias. Proficiente em todas as armas.',
+    // Melee-only per the book; the attack/damage modifier has no melee scope,
+    // so 'all' is a close approximation for the applied buff.
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [
+        { target: { k: 'defense' }, amount: 6, bonusType: 'untyped', note: 'Transformação de Guerra' },
+        { target: { k: 'attack', scope: 'all' }, amount: 6, bonusType: 'untyped', note: 'Transformação de Guerra' },
+        { target: { k: 'damage', scope: 'all' }, amount: 6, bonusType: 'untyped', note: 'Transformação de Guerra' },
+        { target: { k: 'tempHp' }, amount: 30, bonusType: 'untyped', note: 'Transformação de Guerra' },
+      ],
+      facts: [
+        { category: 'other', text: 'Proficiente em todas as armas' },
+        { category: 'other', text: 'Não pode lançar magias' },
+      ],
+    },
     augments: [
       {
         pmCost: 2,
@@ -6255,6 +6452,15 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Clérigo', 'Druida', 'Paladino'],
     baseEffect:
       '1 armadura/escudo ganha +1 Defesa. Vestuário passa a oferecer +2 Defesa (não cumulativo com armadura). Conta como bônus de encanto.',
+    buff: {
+      defaultScope: 'day',
+      modifiers: [
+        { target: { k: 'defense' }, amount: 1, bonusType: 'enhancement', note: 'Vestimenta da Fé' },
+      ],
+      facts: [
+        { category: 'other', text: 'Alternativa: vestuário +2 Defesa (não cumulativo com armadura)' },
+      ],
+    },
     augments: [
       {
         pmCost: 3,
@@ -6338,6 +6544,16 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Arcanista', 'Bardo', 'Clérigo', 'Druida', 'Paladino'],
     baseEffect:
       'Enxerga através de camuflagem/escuridão (normal e mágica) + efeitos de ilusão e transmutação (verdade translúcida ou sobreposta).',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [],
+      facts: [
+        {
+          category: 'sense',
+          text: 'Vê através de camuflagem, escuridão e ilusões',
+        },
+      ],
+    },
     augments: [
       {
         pmCost: 1,
@@ -6377,6 +6593,11 @@ const SPELLS: readonly CatalogSpell[] = [
     classes: ['Arcanista', 'Bardo'],
     baseEffect:
       'Suga energia vital da terra: 2d10 PV temporários. Desaparecem ao fim da cena.',
+    buff: {
+      defaultScope: 'scene',
+      modifiers: [],
+      facts: [{ category: 'other', text: 'PV temporários 2d10 (até fim da cena)' }],
+    },
     augments: [
       {
         pmCost: 2,

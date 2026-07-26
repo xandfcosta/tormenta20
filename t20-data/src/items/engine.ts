@@ -83,6 +83,8 @@ export function targetKey(t: ModifierTarget): string {
       return 'inventorySlots'
     case 'displacement':
       return 'displacement'
+    case 'flySpeed':
+      return 'flySpeed'
     case 'armorPenalty':
       return 'armorPenalty'
     case 'armorPenaltyExpertises':

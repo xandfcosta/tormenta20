@@ -77,4 +77,23 @@ describe('Material catalog invariants', () => {
       }
     }
   })
+
+  // Regression: adamante's "ignora RD" used to be a fake `amount: 0` attack
+  // modifier. It is now a display-only fact — no numeric modifier may carry it.
+  it('adamante carries "ignora RD" as a displayFact, not a zero modifier', () => {
+    const adamante = MATERIALS.find((m) => m.id === 'material-adamante')!
+    expect(adamante.modifiers).toEqual([])
+    expect(adamante.displayFacts).toContainEqual({
+      category: 'dr',
+      text: 'Ignora redução de dano não-mágica',
+    })
+  })
+
+  it('no material uses a zero-amount modifier as a note hack', () => {
+    for (const m of MATERIALS) {
+      for (const mod of m.modifiers) {
+        expect(mod.amount, `${m.id} has a zero-amount modifier`).not.toBe(0)
+      }
+    }
+  })
 })

@@ -48,6 +48,53 @@ describe('getGeneralPower', () => {
   })
 })
 
+/**
+ * Passive general powers whose flat bonuses map onto existing modifier
+ * targets. Regression for the `derived.ts` bug where general-power modifiers
+ * never applied (it filtered on a `general.` id prefix the picker never
+ * writes). Saves are perícias in T20, so Reflexos/Fortitude/Vontade are
+ * `expertise` targets.
+ */
+describe('passive general-power modifiers', () => {
+  const expected: Record<string, number> = {
+    esquiva: 2, // defense + Reflexos
+    atletico: 2, // Atletismo + displacement
+    'saque-rapido': 1, // Iniciativa
+    investigador: 1, // Investigação
+    vitalidade: 1, // Fortitude
+    'vontade-de-ferro': 1, // Vontade
+    'sentidos-agucados': 1, // Percepção
+  }
+
+  for (const [id, count] of Object.entries(expected)) {
+    it(`${id} carries ${count} computed modifier(s)`, () => {
+      expect(getGeneralPower(id)?.modifiers).toHaveLength(count)
+    })
+  }
+
+  it('esquiva grants +2 Defesa and +2 Reflexos', () => {
+    const mods = getGeneralPower('esquiva')?.modifiers ?? []
+    expect(mods).toContainEqual({
+      target: { k: 'defense' },
+      amount: 2,
+      bonusType: 'untyped',
+    })
+    expect(mods).toContainEqual({
+      target: { k: 'expertise', name: 'Reflexos' },
+      amount: 2,
+      bonusType: 'untyped',
+    })
+  })
+
+  it('atletico grants +3m displacement', () => {
+    expect(getGeneralPower('atletico')?.modifiers).toContainEqual({
+      target: { k: 'displacement' },
+      amount: 3,
+      bonusType: 'untyped',
+    })
+  })
+})
+
 describe('generalPowersByKinds', () => {
   it('returns empty array when no kinds are passed', () => {
     expect(generalPowersByKinds([])).toEqual([])

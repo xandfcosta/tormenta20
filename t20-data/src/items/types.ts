@@ -1,4 +1,5 @@
 import type { AttributeKey } from '../attributes'
+import type { DisplayFact } from '../display-facts'
 import type { ExpertiseName } from '../expertises'
 
 export type ItemCategory =
@@ -120,6 +121,7 @@ export type ModifierTarget =
   | { k: 'spellDC' }
   | { k: 'inventorySlots' }
   | { k: 'displacement' }
+  | { k: 'flySpeed' }
   | { k: 'armorPenalty' }
   | { k: 'armorPenaltyExpertises' }
   | { k: 'tempHp' }
@@ -192,6 +194,13 @@ export type CatalogItem = {
   armor?: ArmorStats
   shield?: ShieldStats
   modifiers: Modifier[]
+  /**
+   * Display-only mechanical facts (RD bypass, immunities, senses) the engine
+   * can't compute — shown as reference chips. Replaces the old `amount: 0`
+   * fake-modifier hack (see adamante). Kept separate from `modifiers`, which
+   * stays strictly numeric.
+   */
+  displayFacts?: DisplayFact[]
   /** Present when the item is single-use. Consuming decrements quantity. */
   consumable?: ConsumableSpec
   /**

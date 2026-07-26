@@ -20,14 +20,25 @@ import {
 describe('SPELL_CATALOG — buff spells', () => {
   it('models known self/ally buffs with well-formed modifiers', () => {
     const buffed = Object.values(SPELL_CATALOG).filter((s) => s.buff)
-    expect(buffed.length).toBeGreaterThanOrEqual(5)
+    expect(buffed.length).toBeGreaterThanOrEqual(10)
     for (const spell of buffed) {
       expect(['scene', 'day']).toContain(spell.buff!.defaultScope)
-      expect(spell.buff!.modifiers.length).toBeGreaterThan(0)
+      // A buff must carry *something* — computed modifiers, display-only
+      // facts, or both. Display-only buffs (RD, immunities, senses) ship with
+      // an empty modifiers list and non-empty facts.
+      const factCount = spell.buff!.facts?.length ?? 0
+      expect(spell.buff!.modifiers.length + factCount).toBeGreaterThan(0)
       for (const m of spell.buff!.modifiers) {
         expect(typeof m.amount).toBe('number')
         expect(m.target).toHaveProperty('k')
         expect(typeof m.bonusType).toBe('string')
+      }
+      for (const f of spell.buff!.facts ?? []) {
+        expect(typeof f.text).toBe('string')
+        expect(f.text.length).toBeGreaterThan(0)
+        expect(['dr', 'immunity', 'sense', 'movement', 'action', 'other']).toContain(
+          f.category,
+        )
       }
     }
   })
@@ -46,6 +57,78 @@ describe('SPELL_CATALOG — buff spells', () => {
     expect(mods).toContainEqual(
       expect.objectContaining({ target: { k: 'damage', scope: 'all' }, amount: 1 }),
     )
+  })
+
+  // Regression: these self/ally buffs were book-described but unannotated, so
+  // they never showed up in the "Aplicar efeito" dialog (buff-only list).
+  it('Campo de Força grants 30 temporary HP', () => {
+    const mods = spellById('campo-de-forca').buff!.modifiers
+    expect(mods).toContainEqual(
+      expect.objectContaining({ target: { k: 'tempHp' }, amount: 30 }),
+    )
+  })
+
+  it('Proteção Divina grants +2 resistance', () => {
+    const mods = spellById('protecao-divina').buff!.modifiers
+    expect(mods).toContainEqual(
+      expect.objectContaining({ target: { k: 'resistance' }, amount: 2 }),
+    )
+  })
+
+  it('Arma Mágica grants +1 attack and +1 damage (enhancement)', () => {
+    const mods = spellById('arma-magica').buff!.modifiers
+    expect(mods).toContainEqual(
+      expect.objectContaining({
+        target: { k: 'attack', scope: 'all' },
+        amount: 1,
+        bonusType: 'enhancement',
+      }),
+    )
+    expect(mods).toContainEqual(
+      expect.objectContaining({ target: { k: 'damage', scope: 'all' }, amount: 1 }),
+    )
+  })
+
+  it('Aura Divina grants +10 Defesa and +10 resistance to the caster', () => {
+    const mods = spellById('aura-divina').buff!.modifiers
+    expect(mods).toContainEqual(
+      expect.objectContaining({ target: { k: 'defense' }, amount: 10 }),
+    )
+    expect(mods).toContainEqual(
+      expect.objectContaining({ target: { k: 'resistance' }, amount: 10 }),
+    )
+  })
+
+  it('Transformação de Guerra grants +6 Def/atk/dano and 30 temp HP', () => {
+    const mods = spellById('transformacao-de-guerra').buff!.modifiers
+    expect(mods).toContainEqual(
+      expect.objectContaining({ target: { k: 'defense' }, amount: 6 }),
+    )
+    expect(mods).toContainEqual(
+      expect.objectContaining({ target: { k: 'tempHp' }, amount: 30 }),
+    )
+  })
+
+  // Display-only facts: spells with no computable modifier still appear in the
+  // apply dialog and surface their mechanical text as reference chips.
+  it('Pele de Pedra is a display-only DR buff (no modifiers, one dr fact)', () => {
+    const buff = spellById('pele-de-pedra').buff!
+    expect(buff.modifiers).toHaveLength(0)
+    expect(buff.facts).toContainEqual({ category: 'dr', text: 'RD 5' })
+  })
+
+  it('Velocidade carries an action-economy fact', () => {
+    const facts = spellById('velocidade').buff!.facts ?? []
+    expect(facts.some((f) => f.category === 'action')).toBe(true)
+  })
+
+  it('Heroísmo keeps its numeric buff and adds an immunity fact', () => {
+    const buff = spellById('heroismo').buff!
+    expect(buff.modifiers.length).toBeGreaterThan(0)
+    expect(buff.facts).toContainEqual({
+      category: 'immunity',
+      text: 'Imune a medo',
+    })
   })
 })
 

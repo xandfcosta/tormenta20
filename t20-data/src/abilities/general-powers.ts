@@ -88,6 +88,10 @@ export const GENERAL_POWERS_CATALOG: GeneralPower[] = [
     name: 'Esquiva',
     description: '+2 na Defesa e em Reflexos.',
     prerequisites: [{ kind: 'attribute', attr: 'dexterity', min: 1 }],
+    modifiers: [
+      { target: { k: 'defense' }, amount: 2, bonusType: 'untyped' },
+      { target: { k: 'expertise', name: 'Reflexos' }, amount: 2, bonusType: 'untyped' },
+    ],
   },
   {
     id: 'reflexos-de-combate',
@@ -199,6 +203,9 @@ export const GENERAL_POWERS_CATALOG: GeneralPower[] = [
     description:
       '+2 em Iniciativa; saca/guarda itens como ação livre; recarga diminui uma categoria.',
     prerequisites: [{ kind: 'trained', expertise: 'Iniciativa' }],
+    modifiers: [
+      { target: { k: 'expertise', name: 'Iniciativa' }, amount: 2, bonusType: 'untyped' },
+    ],
   },
   {
     id: 'vitalidade',
@@ -206,6 +213,10 @@ export const GENERAL_POWERS_CATALOG: GeneralPower[] = [
     name: 'Vitalidade',
     description: '+1 PV por nível e +2 em Fortitude.',
     prerequisites: [{ kind: 'attribute', attr: 'constitution', min: 1 }],
+    // PV/nível não é modelado (sem alvo de PV máximo); só o +2 Fortitude.
+    modifiers: [
+      { target: { k: 'expertise', name: 'Fortitude' }, amount: 2, bonusType: 'untyped' },
+    ],
   },
   // Combate residual audit 2026-07-05 — 22 poderes p124-125,128-129 que
   // ainda não constavam no catálogo. Inseridos em ordem alfabética.
@@ -431,6 +442,10 @@ export const GENERAL_POWERS_CATALOG: GeneralPower[] = [
     name: 'Atlético',
     description: '+2 em Atletismo e +3m no deslocamento.',
     prerequisites: [{ kind: 'attribute', attr: 'strength', min: 2 }],
+    modifiers: [
+      { target: { k: 'expertise', name: 'Atletismo' }, amount: 2, bonusType: 'untyped' },
+      { target: { k: 'displacement' }, amount: 3, bonusType: 'untyped' },
+    ],
   },
   {
     id: 'atraente',
@@ -486,6 +501,9 @@ export const GENERAL_POWERS_CATALOG: GeneralPower[] = [
       { kind: 'attribute', attr: 'wisdom', min: 1 },
       { kind: 'trained', expertise: 'Percepção' },
     ],
+    modifiers: [
+      { target: { k: 'expertise', name: 'Percepção' }, amount: 2, bonusType: 'untyped' },
+    ],
   },
   {
     id: 'sortudo',
@@ -519,6 +537,10 @@ export const GENERAL_POWERS_CATALOG: GeneralPower[] = [
     name: 'Vontade de Ferro',
     description: '+1 PM a cada dois níveis e +2 em Vontade.',
     prerequisites: [{ kind: 'attribute', attr: 'wisdom', min: 1 }],
+    // PM/nível não é modelado (sem alvo de PM máximo); só o +2 Vontade.
+    modifiers: [
+      { target: { k: 'expertise', name: 'Vontade' }, amount: 2, bonusType: 'untyped' },
+    ],
   },
   // Destino residual audit 2026-07-05 — 6 poderes p129-131 que ainda
   // não constavam no catálogo.
@@ -555,6 +577,11 @@ export const GENERAL_POWERS_CATALOG: GeneralPower[] = [
     name: 'Investigador',
     description: '+2 em Investigação e soma Inteligência em Intuição.',
     prerequisites: [{ kind: 'attribute', attr: 'intelligence', min: 1 }],
+    // Só o +2 Investigação; "Int em Intuição" troca o atributo-base e não
+    // se expressa como bônus numérico.
+    modifiers: [
+      { target: { k: 'expertise', name: 'Investigação' }, amount: 2, bonusType: 'untyped' },
+    ],
   },
   {
     id: 'parceiro-poder',

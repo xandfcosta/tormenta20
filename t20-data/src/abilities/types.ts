@@ -1,4 +1,5 @@
 import type { AttributeKey } from '../attributes'
+import type { DisplayFact } from '../display-facts'
 import type { ExpertiseName } from '../expertises'
 import type { Modifier } from '../items/types'
 
@@ -47,6 +48,9 @@ export type RaceAbility = {
   variants?: RaceAbilityVariant[]
   /** Numeric modifiers folded into the engine when this ability is owned. */
   modifiers?: Modifier[]
+  /** Display-only facts (visão no escuro, RD, imunidades) — shown as reference
+   *  chips, not computed. Companion-app affordance for non-numeric traits. */
+  facts?: DisplayFact[]
 }
 
 export type RaceAbilityVariant = {

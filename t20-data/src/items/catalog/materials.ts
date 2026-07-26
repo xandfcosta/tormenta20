@@ -32,13 +32,10 @@ export const MATERIALS: CatalogItem[] = [
     slots: 0,
     equip: 'either',
     appliesTo: ['weapon', 'armor', 'shield'],
-    modifiers: [
-      {
-        target: { k: 'attack', scope: 'this' },
-        amount: 0,
-        bonusType: 'untyped',
-        note: 'ignora redução de dano não-mágica',
-      },
+    modifiers: [],
+    // "Ignora RD" não é numérico — display-only (era um hack `amount: 0`).
+    displayFacts: [
+      { category: 'dr', text: 'Ignora redução de dano não-mágica' },
     ],
   },
   {
