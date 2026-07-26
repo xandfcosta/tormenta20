@@ -12,7 +12,7 @@ export const RACES = [
   'Sereia/Tritão',
   'Osteon',
   'Medusa',
-  'Kiiren',
+  'Kliren',
   'Hynne',
   'Golem',
   'Trog',

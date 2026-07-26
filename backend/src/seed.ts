@@ -211,7 +211,7 @@ const PLAYER_CHARACTERS: CharacterSpec[] = [
   { name: 'Lenda Nv20 Maximo', races: ['Anão'], origin: 'Herdeiro', classes: [{ className: 'Cavaleiro', level: 20 }], god: 'Valkaria', attrs: attr(5, 2, 5, 1, 2, 3), gear: HEAVY_GEAR, hpFraction: 0.4 },
   { name: 'Bucaneiro Ferido Meio', races: ['Qareen'], origin: 'Artista', classes: [{ className: 'Bucaneiro', level: 5 }], attrs: attr(2, 4, 2, 1, 1, 3), gear: MARTIAL_GEAR, hpFraction: 0.5 },
   { name: 'Mochila Cheia Itens', races: ['Golem'], origin: 'Capanga', classes: [{ className: 'Lutador', level: 4 }], attrs: attr(3, 2, 4, 0, 1, 0), gear: HEAVY_PACK, hpFraction: 0.8 },
-  { name: 'Inventor Genial Nv6', races: ['Kiiren'], origin: 'Assistente de Laboratório', classes: [{ className: 'Inventor', level: 6 }], god: 'Tanna-Toh', attrs: attr(0, 3, 2, 5, 1, 1), gear: HEAVY_PACK },
+  { name: 'Inventor Genial Nv6', races: ['Kliren'], origin: 'Assistente de Laboratório', classes: [{ className: 'Inventor', level: 6 }], god: 'Tanna-Toh', attrs: attr(0, 3, 2, 5, 1, 1), gear: HEAVY_PACK },
 ];
 
 async function registerOrLogin(
