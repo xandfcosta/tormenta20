@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { cn } from '@/shared/lib/utils'
 import { raceAttributeDeltas } from '@/features/character-build/grant-helpers'
 import {
-  bandPicksRemaining,
+  type PericiaBudget,
   type PericiaPlan,
+  periciaBudget,
   periciaPlan,
 } from '@/features/character-build/pericia-helpers'
 import { useCreationWizard } from '@/features/character-build/creation-wizard-context'
@@ -20,7 +21,7 @@ export function PericiasStep() {
   // the primary class is known, so they persist without a manual toggle.
   useEffect(() => {
     if (!primaryName) return
-    const plan = periciaPlan(primaryName, 0)
+    const plan = periciaPlan(primaryName, 0, [])
     if (!plan) return
     const cur = form.state.values.trainedExpertises as string[]
     const missing = plan.fixed.filter((f) => !cur.includes(f))
@@ -50,7 +51,7 @@ export function PericiasStep() {
         const intMod =
           v.intelligence + (raceAttributeDeltas(v.races, raceChoices).intelligence ?? 0)
         const plan = primary?.className
-          ? periciaPlan(primary.className, intMod)
+          ? periciaPlan(primary.className, intMod, v.races)
           : null
         const trained = v.trainedExpertises
         const set = (next: string[]) =>
@@ -102,6 +103,7 @@ function PericiaPicker({
   onSet: (next: string[]) => void
 }) {
   const trainedSet = new Set(trained)
+  const budget = periciaBudget(plan, trained)
 
   const pickEitherOr = (chosen: string, other: string) =>
     onSet([...trained.filter((x) => x !== other && x !== chosen), chosen])
@@ -155,59 +157,71 @@ function PericiaPicker({
 
       <PericiaBand
         label={`Da classe · escolha ${plan.classCount}`}
-        pool={plan.classPool}
+        subtitle={
+          budget.freeRemaining > 0
+            ? `Escolhas além de ${plan.classCount} usam pontos livres.`
+            : undefined
+        }
+        spent={budget.classSpent}
         count={plan.classCount}
+        pool={plan.classPool}
         trainedSet={trainedSet}
+        // Class perícias never hard-lock while any free budget remains: the
+        // excess spills into it (a free slot on a class perícia).
+        locked={budget.classRemaining === 0 && budget.freeRemaining === 0}
         onToggle={onToggle}
       />
 
-      {plan.intCount > 0 && (
+      {plan.freeCount > 0 && (
         <PericiaBand
-          label={`Por Inteligência · escolha ${plan.intCount}`}
-          subtitle="Qualquer perícia fora da lista da classe."
+          label={`Livre · escolha ${plan.freeCount}`}
+          subtitle={freeBreakdown(plan)}
           accent
-          pool={plan.intPool}
-          count={plan.intCount}
+          spent={budget.freeSpent}
+          count={plan.freeCount}
+          pool={plan.freePool}
           trainedSet={trainedSet}
+          locked={budget.freeRemaining === 0}
           onToggle={onToggle}
         />
       )}
+
+      <BudgetHint budget={budget} />
     </div>
   )
 }
 
 /** One capped pick-band: a header count + a scrollable checkbox grid over its
- *  own pool. Reused for the class list and the +INT bonus. */
+ *  own pool. Reused for the class list and the free (Int + raça) budget. */
 function PericiaBand({
   label,
   subtitle,
   accent,
-  pool,
+  spent,
   count,
+  pool,
   trainedSet,
+  locked,
   onToggle,
 }: {
   label: string
   subtitle?: string
   accent?: boolean
-  pool: string[]
+  spent: number
   count: number
+  pool: string[]
   trainedSet: Set<string>
+  /** Whether an unselected item in this band is currently unpickable. */
+  locked: boolean
   onToggle: (name: string) => void
 }) {
-  const picked = pool.filter((p) => trainedSet.has(p)).length
-  const remaining = bandPicksRemaining(pool, count, [...trainedSet])
-
   return (
     <div
-      className={cn(
-        'space-y-1.5',
-        accent && 'border-l-2 border-primary/50 pl-3',
-      )}
+      className={cn('space-y-1.5', accent && 'border-l-2 border-primary/50 pl-3')}
     >
       <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
         {accent && <span className="mr-1 text-[color:var(--primary)]">✦</span>}
-        {label} ({picked}/{count})
+        {label} ({spent}/{count})
       </p>
       {subtitle && (
         <p className="text-[11px] normal-case text-muted-foreground/80">
@@ -217,18 +231,18 @@ function PericiaBand({
       <div className="grid max-h-[min(220px,28vh)] grid-cols-2 gap-1.5 overflow-y-auto p-0.5 sm:grid-cols-3">
         {pool.map((name) => {
           const selected = trainedSet.has(name)
-          const locked = !selected && remaining === 0
+          const itemLocked = !selected && locked
           return (
             <button
               key={name}
               type="button"
-              disabled={locked}
+              disabled={itemLocked}
               onClick={() => onToggle(name)}
               className={cn(
                 'flex items-center gap-1.5 rounded-md border px-2 py-1 text-left text-xs transition-colors',
                 selected
                   ? 'border-primary bg-accent'
-                  : locked
+                  : itemLocked
                     ? 'border-border opacity-40'
                     : 'border-border hover:bg-accent',
               )}
@@ -241,11 +255,24 @@ function PericiaBand({
           )
         })}
       </div>
-      {remaining > 0 && (
-        <p className="text-[11px] text-[color:var(--hp-hurt)]">
-          Faltam {remaining} perícias — pode terminar depois na ficha.
-        </p>
-      )}
     </div>
+  )
+}
+
+/** Sub-label for the free band spelling out where the slots come from. */
+function freeBreakdown(plan: PericiaPlan): string {
+  const parts: string[] = []
+  if (plan.intCount > 0) parts.push(`${plan.intCount} de Inteligência`)
+  if (plan.raceCount > 0) parts.push(`${plan.raceCount} de raça`)
+  return `${parts.join(' · ')} · qualquer perícia`
+}
+
+function BudgetHint({ budget }: { budget: PericiaBudget }) {
+  const missing = budget.classRemaining + budget.freeRemaining
+  if (missing === 0) return null
+  return (
+    <p className="text-[11px] text-[color:var(--hp-hurt)]">
+      Faltam {missing} perícias — pode terminar depois na ficha.
+    </p>
   )
 }
