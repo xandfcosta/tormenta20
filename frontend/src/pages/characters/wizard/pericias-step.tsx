@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { cn } from '@/shared/lib/utils'
 import { raceAttributeDeltas } from '@/features/character-build/grant-helpers'
 import {
+  bandPicksRemaining,
   type PericiaPlan,
   periciaPlan,
 } from '@/features/character-build/pericia-helpers'
@@ -79,7 +80,6 @@ export function PericiasStep() {
                   trained={trained}
                   onToggle={toggle}
                   onSet={set}
-                  intMod={Math.max(0, intMod)}
                 />
               )}
             </CardContent>
@@ -95,17 +95,13 @@ function PericiaPicker({
   trained,
   onToggle,
   onSet,
-  intMod,
 }: {
   plan: PericiaPlan
   trained: string[]
   onToggle: (name: string) => void
   onSet: (next: string[]) => void
-  intMod: number
 }) {
   const trainedSet = new Set(trained)
-  const poolPicked = plan.choosePool.filter((p) => trainedSet.has(p)).length
-  const poolRemaining = Math.max(0, plan.chooseCount - poolPicked)
 
   const pickEitherOr = (chosen: string, other: string) =>
     onSet([...trained.filter((x) => x !== other && x !== chosen), chosen])
@@ -157,48 +153,99 @@ function PericiaPicker({
         </div>
       )}
 
-      <div className="space-y-1.5">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-          Escolha {plan.chooseCount} ({poolPicked}/{plan.chooseCount})
-          {intMod > 0 && (
-            <span className="ml-1 normal-case text-muted-foreground/80">
-              · inclui +{intMod} de Inteligência
-            </span>
-          )}
+      <PericiaBand
+        label={`Da classe · escolha ${plan.classCount}`}
+        pool={plan.classPool}
+        count={plan.classCount}
+        trainedSet={trainedSet}
+        onToggle={onToggle}
+      />
+
+      {plan.intCount > 0 && (
+        <PericiaBand
+          label={`Por Inteligência · escolha ${plan.intCount}`}
+          subtitle="Qualquer perícia fora da lista da classe."
+          accent
+          pool={plan.intPool}
+          count={plan.intCount}
+          trainedSet={trainedSet}
+          onToggle={onToggle}
+        />
+      )}
+    </div>
+  )
+}
+
+/** One capped pick-band: a header count + a scrollable checkbox grid over its
+ *  own pool. Reused for the class list and the +INT bonus. */
+function PericiaBand({
+  label,
+  subtitle,
+  accent,
+  pool,
+  count,
+  trainedSet,
+  onToggle,
+}: {
+  label: string
+  subtitle?: string
+  accent?: boolean
+  pool: string[]
+  count: number
+  trainedSet: Set<string>
+  onToggle: (name: string) => void
+}) {
+  const picked = pool.filter((p) => trainedSet.has(p)).length
+  const remaining = bandPicksRemaining(pool, count, [...trainedSet])
+
+  return (
+    <div
+      className={cn(
+        'space-y-1.5',
+        accent && 'border-l-2 border-primary/50 pl-3',
+      )}
+    >
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {accent && <span className="mr-1 text-[color:var(--primary)]">✦</span>}
+        {label} ({picked}/{count})
+      </p>
+      {subtitle && (
+        <p className="text-[11px] normal-case text-muted-foreground/80">
+          {subtitle}
         </p>
-        <div className="grid max-h-[min(300px,38vh)] grid-cols-2 gap-1.5 overflow-y-auto p-0.5 sm:grid-cols-3">
-          {plan.choosePool.map((name) => {
-            const selected = trainedSet.has(name)
-            const locked = !selected && poolRemaining === 0
-            return (
-              <button
-                key={name}
-                type="button"
-                disabled={locked}
-                onClick={() => onToggle(name)}
-                className={cn(
-                  'flex items-center gap-1.5 rounded-md border px-2 py-1 text-left text-xs transition-colors',
-                  selected
-                    ? 'border-primary bg-accent'
-                    : locked
-                      ? 'border-border opacity-40'
-                      : 'border-border hover:bg-accent',
-                )}
-              >
-                <span className="flex size-3.5 shrink-0 items-center justify-center rounded-sm border border-border">
-                  {selected && <Check className="size-2.5 text-primary" />}
-                </span>
-                <span className="truncate">{name}</span>
-              </button>
-            )
-          })}
-        </div>
-        {poolRemaining > 0 && (
-          <p className="text-[11px] text-[color:var(--hp-hurt)]">
-            Faltam {poolRemaining} perícias — pode terminar depois na ficha.
-          </p>
-        )}
+      )}
+      <div className="grid max-h-[min(220px,28vh)] grid-cols-2 gap-1.5 overflow-y-auto p-0.5 sm:grid-cols-3">
+        {pool.map((name) => {
+          const selected = trainedSet.has(name)
+          const locked = !selected && remaining === 0
+          return (
+            <button
+              key={name}
+              type="button"
+              disabled={locked}
+              onClick={() => onToggle(name)}
+              className={cn(
+                'flex items-center gap-1.5 rounded-md border px-2 py-1 text-left text-xs transition-colors',
+                selected
+                  ? 'border-primary bg-accent'
+                  : locked
+                    ? 'border-border opacity-40'
+                    : 'border-border hover:bg-accent',
+              )}
+            >
+              <span className="flex size-3.5 shrink-0 items-center justify-center rounded-sm border border-border">
+                {selected && <Check className="size-2.5 text-primary" />}
+              </span>
+              <span className="truncate">{name}</span>
+            </button>
+          )
+        })}
       </div>
+      {remaining > 0 && (
+        <p className="text-[11px] text-[color:var(--hp-hurt)]">
+          Faltam {remaining} perícias — pode terminar depois na ficha.
+        </p>
+      )}
     </div>
   )
 }
