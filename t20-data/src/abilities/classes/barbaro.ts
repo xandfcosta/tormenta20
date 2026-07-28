@@ -1,4 +1,4 @@
-import { attr, autoPower, electivePower, power, trained } from './_helpers'
+import { attributeBoostPower, attr, autoPower, electivePower, power, trained } from './_helpers'
 import type { Modifier } from '../../items/types'
 import type { ClassPower } from '../types'
 
@@ -86,8 +86,7 @@ export const BARBARO_POWERS: ClassPower[] = [
   // Poderes de Bárbaro — eletivos (p41-42)
   electivePower(C, 'Alma de Bronze',
     'Quando entra em fúria, recebe PV temporários = nível + Força.'),
-  electivePower(C, 'Aumento de Atributo',
-    '+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo. Pode ser escolhido várias vezes.'),
+  attributeBoostPower(C),
   electivePower(C, 'Brado Assustador',
     'Ação de movimento + 1 PM: solta berro. Inimigos em alcance curto ficam vulneráveis até fim da cena (Vontade CD Intimidação anula). Medo.',
     { prerequisites: [trained('Intimidação')] }),

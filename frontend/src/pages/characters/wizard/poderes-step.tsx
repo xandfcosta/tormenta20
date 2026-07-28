@@ -20,6 +20,7 @@ import {
   powerBlockedReason,
   powerChoiceOptions,
   totalSlots,
+  usedSlots,
 } from '@/features/character-build/class-power-helpers'
 import { toOptions } from '@/features/character-build/wizard-steps'
 
@@ -35,6 +36,7 @@ export function PoderesStep() {
     | string
     | undefined
   const primaryLevel = form.state.values.classes[0]?.level as number | undefined
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reads form.state imperatively; primaryClass/primaryLevel are the intended re-run triggers.
   useEffect(() => {
     const v = form.state.values
     const total = totalSlots(v.classes)
@@ -200,12 +202,17 @@ function ElectiveSection({
   onPowerChoice: (powerId: string, ids: string[]) => void
 }) {
   const [query, setQuery] = useState('')
-  const remaining = Math.max(0, total - chosenIds.length)
   const primary = classes[0]
   const { classPowers, generalPowers } = classPowerCandidates(
     primary.className,
     primary.level,
   )
+  const byId = new Map(
+    [...classPowers, ...generalPowers].map((o) => [o.id, o] as const),
+  )
+  // Repeatable powers eat one slot per sub-choice; others one each.
+  const used = usedSlots(chosenIds, powerChoices, byId)
+  const remaining = Math.max(0, total - used)
   const q = query.trim().toLowerCase()
   const filterFn = (o: PowerOption) => !q || o.name.toLowerCase().includes(q)
   const ctx = { chosenIds: chosen, classChoices }
@@ -214,7 +221,7 @@ function ElectiveSection({
   return (
     <div className="space-y-3">
       <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        Poderes: {chosenIds.length} de {total} escolhidos · {remaining} restantes
+        Poderes: {used} de {total} escolhidos · {remaining} restantes
       </p>
 
       <div className="space-y-1.5">
@@ -338,6 +345,7 @@ function PowerRow({
           choice={option.choice}
           value={choiceValue}
           onChange={onChoice}
+          canAddMore={canAdd}
         />
       )}
     </li>
@@ -348,16 +356,23 @@ function PowerChoiceSelector({
   choice,
   value,
   onChange,
+  canAddMore,
 }: {
   choice: NonNullable<PowerOption['choice']>
   value: string[]
   onChange: (ids: string[]) => void
+  canAddMore: boolean
 }) {
   const options = powerChoiceOptions(choice)
   const selected = new Set(value)
   const toggle = (id: string) => {
     if (choice.repeatable) {
-      onChange(selected.has(id) ? value.filter((x) => x !== id) : [...value, id])
+      if (selected.has(id)) {
+        onChange(value.filter((x) => x !== id))
+      } else if (canAddMore) {
+        // each extra pick on a repeatable power consumes a slot
+        onChange([...value, id])
+      }
     } else {
       onChange(selected.has(id) ? [] : [id])
     }
@@ -372,15 +387,21 @@ function PowerChoiceSelector({
       <div className="flex flex-wrap gap-1">
         {options.map((o: ChoiceOption) => {
           const on = selected.has(o.id)
+          const lockedOpt = choice.repeatable && !on && !canAddMore
           return (
             <button
               key={o.id}
               type="button"
+              disabled={lockedOpt}
               onClick={() => toggle(o.id)}
               title={o.note}
               className={cn(
                 'rounded-md border px-2 py-0.5 text-[11px] transition-colors',
-                on ? 'border-primary bg-accent' : 'border-border hover:bg-accent',
+                on
+                  ? 'border-primary bg-accent'
+                  : lockedOpt
+                    ? 'border-border opacity-40'
+                    : 'border-border hover:bg-accent',
               )}
             >
               {o.name}

@@ -1,4 +1,4 @@
-import { anyPower, autoPower, classChoice, electivePower, power } from './_helpers'
+import { attributeBoostPower, anyPower, autoPower, classChoice, electivePower, power } from './_helpers'
 import { DEUSES } from '../deuses'
 
 const CLERIGO_DEUSES_MAIORES = DEUSES.filter((d) => d.major).map((d) => d.id)
@@ -37,8 +37,7 @@ export const CLERIGO_POWERS: ClassPower[] = [
   // Poderes de Clérigo (p57-58)
   electivePower(C, 'Abençoar Arma',
     'Treinado na arma preferida da divindade. Pode empunhar e gastar ação de movimento + 3 PM: arma vira mágica, +1 passo de dano, usa Sabedoria nas rolagens de ataque e dano.'),
-  electivePower(C, 'Aumento de Atributo',
-    '+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo.'),
+  attributeBoostPower(C),
   electivePower(C, 'Autoridade Eclesiástica',
     'Posição formal em igreja. +5 em testes de Diplomacia ou Intimidação com devotos. Metade do preço em itens alquímicos/poções/serviços em templos da divindade.',
     {

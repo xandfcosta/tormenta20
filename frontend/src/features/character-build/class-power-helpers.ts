@@ -84,6 +84,26 @@ export function totalSlots(classes: ClassEntry[]): number {
   return classes.reduce((n, c) => n + classSlotCount(c.className, c.level), 0)
 }
 
+/**
+ * Slots actually consumed by the current picks. A repeatable power (Aumento de
+ * Atributo, Especialização em Arma/Escola) can be taken once per sub-choice —
+ * each pick eats a slot — so it counts by the number of choices made; every
+ * other picked power counts as one.
+ */
+export function usedSlots(
+  chosenIds: string[],
+  powerChoices: Record<string, string[]>,
+  candidatesById: Map<string, PowerOption>,
+): number {
+  let n = 0
+  for (const id of chosenIds) {
+    const opt = candidatesById.get(id)
+    if (opt?.choice?.repeatable) n += powerChoices[id]?.length ?? 0
+    else n += 1
+  }
+  return n
+}
+
 /** True while fewer power picks have been made than slots earned. */
 export function anyClassElectivePending(
   classes: ClassEntry[],
@@ -139,8 +159,8 @@ export function evalPowerPrereq(
     case 'classChoice': {
       const value = ctx.classChoices[prereq.class]?.[prereq.field]
       const ok = value
-        ? (!prereq.allowed || prereq.allowed.includes(value)) &&
-          (!prereq.forbidden || !prereq.forbidden.includes(value))
+        ? (prereq.allowed?.includes(value) ?? true) &&
+          !prereq.forbidden?.includes(value)
         : false
       return { enforced: true, met: ok, reason: prereq.label }
     }

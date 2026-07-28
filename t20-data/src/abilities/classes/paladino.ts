@@ -1,4 +1,4 @@
-import { autoPower, classChoice, electivePower } from './_helpers'
+import { attributeBoostPower, autoPower, classChoice, electivePower } from './_helpers'
 import { CULTO_PALADINO_DO_BEM } from '../deuses'
 import type { ClassPower } from '../types'
 
@@ -74,8 +74,7 @@ export const PALADINO_POWERS: ClassPower[] = [
         }),
       ],
     }),
-  electivePower(C, 'Aumento de Atributo',
-    '+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo.'),
+  attributeBoostPower(C),
   electivePower(C, 'Aura Antimagia',
     'Sua aura ativa: você e aliados dentro podem rolar novamente teste de resistência contra magia recém realizado.',
     { minLevel: 14 }),

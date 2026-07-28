@@ -1,4 +1,4 @@
-import { attr, autoPower, electivePower, power, trained } from './_helpers'
+import { attributeBoostPower, attr, autoPower, electivePower, power, trained } from './_helpers'
 import type { ClassPower } from '../types'
 
 const C = 'Druida'
@@ -46,8 +46,7 @@ export const DRUIDA_POWERS: ClassPower[] = [
     'Aprende magia de necromancia (arcana ou divina) de qualquer círculo que possa lançar. Pode gastar 1 PM para -2 em testes de resistência de todos inimigos em alcance curto.'),
   electivePower(C, 'Aspecto do Inverno',
     'Aprende magia de evocação (arcana ou divina) de qualquer círculo que possa lançar. Recebe RD 5 contra frio. Suas magias de frio causam +1 dano por dado.'),
-  electivePower(C, 'Aumento de Atributo',
-    '+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo.'),
+  attributeBoostPower(C),
   electivePower(C, 'Companheiro Animal',
     'Recebe animal companheiro. Tipos: ajudante, assassino, atirador, combatente, fortão, guardião, perseguidor, montaria.',
     {

@@ -51,6 +51,35 @@ export function electivePower(
   }
 }
 
+/**
+ * "Aumento de Atributo" — the +1-attribute elective every base class shares
+ * (PDF Cap 2). Repeatable: taken multiple times, each pick raising a different
+ * attribute (once per patamar per attribute). Shared builder so all 14 classes
+ * carry the same attribute sub-choice.
+ */
+export const ATTRIBUTE_BOOST_CHOICE: PowerChoice = {
+  kind: 'attribute',
+  label: 'Atributo',
+  repeatable: true,
+  options: [
+    { id: 'strength', name: 'Força' },
+    { id: 'dexterity', name: 'Destreza' },
+    { id: 'constitution', name: 'Constituição' },
+    { id: 'intelligence', name: 'Inteligência' },
+    { id: 'wisdom', name: 'Sabedoria' },
+    { id: 'charisma', name: 'Carisma' },
+  ],
+}
+
+export function attributeBoostPower(className: string): ClassPower {
+  return electivePower(
+    className,
+    'Aumento de Atributo',
+    '+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo. Pode ser escolhido várias vezes.',
+    { choice: ATTRIBUTE_BOOST_CHOICE },
+  )
+}
+
 /** Require a specific other power by id. */
 export function power(id: string): Prerequisite {
   return { kind: 'power', id }

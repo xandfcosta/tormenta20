@@ -1,4 +1,4 @@
-import { anyPower, autoPower, classChoice, electivePower, note, power } from './_helpers'
+import { attributeBoostPower, anyPower, autoPower, classChoice, electivePower, note, power } from './_helpers'
 import type { ClassPower } from '../types'
 
 const C = 'Arcanista'
@@ -36,8 +36,7 @@ export const ARCANISTA_POWERS: ClassPower[] = [
   // Poderes de Arcanista (p38-39)
   electivePower(C, 'Arcano de Batalha',
     'Quando lança magia, soma atributo-chave na rolagem de dano.'),
-  electivePower(C, 'Aumento de Atributo',
-    '+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo.'),
+  attributeBoostPower(C),
   electivePower(C, 'Caldeirão do Bruxo',
     'Pode criar poções como se tivesse Preparar Poção. Se tiver ambos, custo para criar poções de até 5° círculo é reduzido.',
     { prerequisites: [power('class.arcanista.caminho-bruxo'), note('Treinado em Ofício (alquimista)')] }),

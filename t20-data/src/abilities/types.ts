@@ -106,7 +106,7 @@ export type OriginDefinition = {
  * choices.
  */
 export type PowerChoice = {
-  kind: 'totem' | 'school' | 'companion' | 'weapon'
+  kind: 'totem' | 'school' | 'companion' | 'weapon' | 'attribute'
   label: string
   options?: { id: string; name: string; note?: string }[]
   repeatable?: boolean

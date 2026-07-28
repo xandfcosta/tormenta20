@@ -193,3 +193,17 @@ describe('power sub-choices (PowerChoice)', () => {
     }
   })
 })
+
+describe('Aumento de Atributo — repeatable attribute choice', () => {
+  it('every class copy carries the repeatable attribute sub-choice', () => {
+    const copies = CLASS_POWERS_CATALOG.filter(
+      (p) => p.name === 'Aumento de Atributo',
+    )
+    expect(copies.length).toBeGreaterThan(5)
+    for (const p of copies) {
+      expect(p.choice?.kind).toBe('attribute')
+      expect(p.choice?.repeatable).toBe(true)
+      expect(p.choice?.options).toHaveLength(6)
+    }
+  })
+})

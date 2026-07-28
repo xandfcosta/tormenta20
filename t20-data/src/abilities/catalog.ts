@@ -1,6 +1,6 @@
 import type { Modifier } from '../items/types'
 import { CLASS_POWERS_CATALOG } from './classes/index'
-import { ORIGINS_CATALOG, originModifiers } from './origins'
+import { ORIGINS_CATALOG } from './origins'
 import { RACES_CATALOG } from './races'
 import type {
   ClassPower,

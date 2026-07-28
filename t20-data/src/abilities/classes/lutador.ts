@@ -1,4 +1,4 @@
-import { attr, autoPower, electivePower, power, trained } from './_helpers'
+import { attributeBoostPower, attr, autoPower, electivePower, power, trained } from './_helpers'
 import type { ClassPower } from '../types'
 
 const C = 'Lutador'
@@ -58,8 +58,7 @@ export const LUTADOR_POWERS: ClassPower[] = [
     'Pode atacar com armas improvisadas como ataques desarmados, mas dano aumenta um passo. Ação de movimento + teste Percepção CD 20: encontra arma improvisada. Frágeis (se erra + d20 ímpar, arma quebra).'),
   electivePower(C, 'Até Acertar',
     'Quando erra ataque desarmado, recebe +2 cumulativo em ataque e dano desarmado contra mesmo oponente até acertar ou fim cena.'),
-  electivePower(C, 'Aumento de Atributo',
-    '+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo.'),
+  attributeBoostPower(C),
   electivePower(C, 'Braços Calejados',
     'Se não estiver usando armadura, soma Força na Defesa, limitado pelo nível.'),
   electivePower(C, 'Cabeçada',
