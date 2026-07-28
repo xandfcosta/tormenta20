@@ -33,23 +33,49 @@ export function NumberField({
         return (
           <Field data-invalid={invalid}>
             <FieldLabel htmlFor={f.name}>{label}</FieldLabel>
-            <NumberInput
-              id={f.name}
-              min={min}
-              max={max}
-              value={base}
-              onChange={(v) => f.handleChange(v)}
-              onBlur={f.handleBlur}
-              aria-invalid={invalid}
-            />
-            {raceDelta ? (
-              <p className="text-[11px] text-muted-foreground">
-                {signed(raceDelta)} raça →{' '}
-                <span className="font-semibold text-foreground">
-                  {base + raceDelta}
+            <div className="flex items-stretch gap-2">
+              <div className="flex flex-col items-center gap-0.5">
+                <NumberInput
+                  id={f.name}
+                  className="w-20 sm:w-24"
+                  min={min}
+                  max={max}
+                  value={base}
+                  onChange={(v) => f.handleChange(v)}
+                  onBlur={f.handleBlur}
+                  aria-invalid={invalid}
+                />
+                <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  base
                 </span>
-              </p>
-            ) : null}
+              </div>
+              {raceDelta ? (
+                <>
+                  <span
+                    aria-hidden
+                    className="self-center text-sm text-muted-foreground"
+                  >
+                    =
+                  </span>
+                  <div className="flex min-w-16 flex-col items-center justify-center rounded-md border border-border bg-card px-3">
+                    <span className="font-display text-2xl font-semibold leading-none text-foreground tabular-nums">
+                      {base + raceDelta}
+                    </span>
+                    <span
+                      className="mt-0.5 text-[10px] tabular-nums"
+                      style={{
+                        color:
+                          raceDelta >= 0
+                            ? 'var(--hp-full)'
+                            : 'var(--hp-hurt)',
+                      }}
+                    >
+                      {signed(raceDelta)} raça
+                    </span>
+                  </div>
+                </>
+              ) : null}
+            </div>
             {invalid && <FieldError errors={f.state.meta.errors} />}
           </Field>
         )
