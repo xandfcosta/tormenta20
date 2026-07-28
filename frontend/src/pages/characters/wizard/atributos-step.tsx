@@ -16,8 +16,8 @@ export function AtributosStep() {
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-xs text-muted-foreground">
-          O valor editável é a base (preset da classe). Os bônus de raça são
-          somados automaticamente ao salvar.
+          Edite a base (preset da classe); o total à direita já inclui os bônus
+          de raça.
         </p>
         <form.Subscribe selector={(s: { values: { races: string[] } }) => s.values.races}>
           {(races: string[]) => {
@@ -30,7 +30,7 @@ export function AtributosStep() {
                     definidos não serão aplicados ao salvar.
                   </p>
                 )}
-                <FieldGroup className="grid gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-6">
+                <FieldGroup className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
                   <NumberField form={form} name="strength" label="Força" min={-5} max={10} raceDelta={d.strength} />
                   <NumberField form={form} name="dexterity" label="Destreza" min={-5} max={10} raceDelta={d.dexterity} />
                   <NumberField form={form} name="constitution" label="Constituição" min={-5} max={10} raceDelta={d.constitution} />
