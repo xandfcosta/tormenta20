@@ -1,4 +1,4 @@
-import { attr, autoPower, electivePower, note, power, trained } from './_helpers'
+import { attributeBoostPower, attr, autoPower, electivePower, note, power, trained } from './_helpers'
 import type { ClassPower } from '../types'
 
 const C = 'Inventor'
@@ -69,8 +69,7 @@ export const INVENTOR_POWERS: ClassPower[] = [
   electivePower(C, 'Ativação Rápida',
     'Ao ativar engenhoca com ação padrão, paga 2 PM para ativá-la com ação de movimento (em vez disto), uma vez por rodada.',
     { prerequisites: [power('class.inventor.engenhoqueiro')], minLevel: 7 }),
-  electivePower(C, 'Aumento de Atributo',
-    '+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo.'),
+  attributeBoostPower(C),
   electivePower(C, 'Autômato',
     'Fabrica autômato (construto). Parceiro iniciante de um tipo (ajudante/assassino/atirador/combatente/guardião/montaria/vigilante). L7 vira veterano, L15 mestre. Se destruído, novo com semana de trabalho e T$ 100.',
     { prerequisites: [power('class.inventor.engenhoqueiro')] }),

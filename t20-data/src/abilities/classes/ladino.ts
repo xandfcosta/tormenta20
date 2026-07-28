@@ -1,4 +1,4 @@
-import { attr, autoPower, electivePower, note, power, trained } from './_helpers'
+import { attributeBoostPower, attr, autoPower, electivePower, note, power, trained } from './_helpers'
 import type { ClassPower } from '../types'
 
 const C = 'Ladino'
@@ -66,8 +66,7 @@ export const LADINO_POWERS: ClassPower[] = [
   electivePower(C, 'Assassinar',
     'Ação de movimento + 3 PM: analisa criatura em alcance curto. Até fim do próximo turno, primeiro AF que causar dano a ela tem dados de furtivo dobrados.',
     { minLevel: 5 }),
-  electivePower(C, 'Aumento de Atributo',
-    '+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo.'),
+  attributeBoostPower(C),
   electivePower(C, 'Contatos no Submundo',
     'Em vila ou maior, gasta 2 PM e teste Carisma CD 10. Se passar e estiver na comunidade: +5 Investigação para interrogar, compra itens mundanos/poções/pergaminhos com 20% desconto, acesso a itens proibidos.'),
   electivePower(C, 'Emboscar',

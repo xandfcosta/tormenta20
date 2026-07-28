@@ -1,4 +1,4 @@
-import { anyPower, attr, autoPower, electivePower, power, trained } from './_helpers'
+import { attributeBoostPower, anyPower, attr, autoPower, electivePower, power, trained } from './_helpers'
 import type { ClassPower } from '../types'
 
 const C = 'Caçador'
@@ -56,8 +56,7 @@ export const CACADOR_POWERS: ClassPower[] = [
   electivePower(C, 'Arqueiro',
     'Em arma de ataque à distância, soma Sabedoria nas rolagens de dano (limitado pelo seu nível).',
     { prerequisites: [attr('wisdom', 1)] }),
-  electivePower(C, 'Aumento de Atributo',
-    '+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo.'),
+  attributeBoostPower(C),
   electivePower(C, 'Bote',
     'Quando faz investida com duas armas, gasta 1 PM para ataque adicional com arma secundária.',
     { prerequisites: [power('class.cacador.ambidestria')], minLevel: 6 }),

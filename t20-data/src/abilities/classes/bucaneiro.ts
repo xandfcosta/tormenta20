@@ -1,4 +1,4 @@
-import { attr, autoPower, electivePower, power, trained } from './_helpers'
+import { attributeBoostPower, attr, autoPower, electivePower, power, trained } from './_helpers'
 import type { ClassPower } from '../types'
 
 const C = 'Bucaneiro'
@@ -58,8 +58,7 @@ export const BUCANEIRO_POWERS: ClassPower[] = [
     { prerequisites: [trained('Jogatina')] }),
   electivePower(C, 'Ataque Acrobático',
     'Ao se aproximar com salto/pirueta (Atletismo/Acrobacia para mover) e atacar no mesmo turno, recebe +2 nesse teste e na rolagem de dano.'),
-  electivePower(C, 'Aumento de Atributo',
-    '+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo.'),
+  attributeBoostPower(C),
   electivePower(C, 'Aventureiro Ávido',
     'Uma vez por rodada, gasta 5 PM para ação padrão ou movimento adicional. Se possuir Surto Heroico, custo cai para -2 PM.'),
   electivePower(C, 'Bravata Audaz',

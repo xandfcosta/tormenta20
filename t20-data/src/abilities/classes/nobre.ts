@@ -1,4 +1,4 @@
-import { attr, autoPower, electivePower, power, trained } from './_helpers'
+import { attributeBoostPower, attr, autoPower, electivePower, power, trained } from './_helpers'
 import type { ClassPower } from '../types'
 
 const C = 'Nobre'
@@ -51,8 +51,7 @@ export const NOBRE_POWERS: ClassPower[] = [
   electivePower(C, 'Armadura Brilhante',
     'Pode usar Carisma na Defesa quando usa armadura pesada. Se fizer, não pode somar Destreza.',
     { minLevel: 8 }),
-  electivePower(C, 'Aumento de Atributo',
-    '+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo.'),
+  attributeBoostPower(C),
   electivePower(C, 'Autoridade Feudal',
     'Em locais com influência (mestre decide), gasta 1 hora + 2 PM para conclamar parceiro iniciante até fim da aventura.',
     { minLevel: 6 }),

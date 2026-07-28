@@ -1,4 +1,4 @@
-import { attr, autoPower, electivePower, power, trained } from './_helpers'
+import { attributeBoostPower, attr, autoPower, electivePower, power, trained } from './_helpers'
 import type { ClassPower } from '../types'
 
 const C = 'Guerreiro'
@@ -44,8 +44,7 @@ export const GUERREIRO_POWERS: ClassPower[] = [
   electivePower(C, 'Ataque Reflexo',
     'Quando alvo de ataques fica desprevenido ou se move voluntariamente fora do seu alcance, gasta 1 PM para ataque corpo-a-corpo (1x/alvo/rodada).',
     { prerequisites: [attr('dexterity', 1)] }),
-  electivePower(C, 'Aumento de Atributo',
-    '+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo.'),
+  attributeBoostPower(C),
   electivePower(C, 'Bater e Correr',
     'Quando faz investida, pode continuar se movendo após ataque até limite de deslocamento. 2 PM = investida sobre terreno difícil sem penalidade.'),
   electivePower(C, 'Destruidor',

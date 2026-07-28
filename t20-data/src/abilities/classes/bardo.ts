@@ -1,4 +1,4 @@
-import { attr, autoPower, electivePower, power, trained } from './_helpers'
+import { attributeBoostPower, attr, autoPower, electivePower, power, trained } from './_helpers'
 import type { ClassPower } from '../types'
 
 const C = 'Bardo'
@@ -52,8 +52,7 @@ export const BARDO_POWERS: ClassPower[] = [
     'Sob Inspiração, CD para resistir a suas habilidades de bardo +2.'),
   electivePower(C, 'Aumentar Repertório',
     'Aprende magia de qualquer círculo que possa lançar — pertencente às escolas que sabe usar, arcanas ou divinas. Pode escolher várias vezes.'),
-  electivePower(C, 'Aumento de Atributo',
-    '+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo.'),
+  attributeBoostPower(C),
   electivePower(C, 'Dança das Lâminas',
     'Quando lança magia de ação padrão, pode gastar 1 PM para fazer ataque corpo-a-corpo como ação livre.',
     { prerequisites: [power('class.bardo.esgrima-magica')], minLevel: 10 }),
