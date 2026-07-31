@@ -6627,6 +6627,23 @@ export const SPELL_CATALOG: Readonly<Record<string, CatalogSpell>> =
 
 export const SPELL_IDS: readonly string[] = SPELLS.map((s) => s.id)
 
+// Spell names are unique in the catalog; the last write would win on a dupe.
+const SPELL_EFFECT_BY_NAME: Readonly<Record<string, string>> = Object.freeze(
+  SPELLS.reduce<Record<string, string>>((acc, spell) => {
+    acc[spell.name] = spell.baseEffect
+    return acc
+  }, {}),
+)
+
+/**
+ * The base-effect blurb of a spell looked up by its display name, or null when
+ * no spell matches. Used where a feature references a spell by name (e.g. a
+ * Bárbaro totem grants "Vitalidade Fantasma") and wants to show what it does.
+ */
+export function spellEffectByName(name: string): string | null {
+  return SPELL_EFFECT_BY_NAME[name] ?? null
+}
+
 export function spellById(id: string): CatalogSpell {
   const spell = SPELL_CATALOG[id]
   if (!spell) {

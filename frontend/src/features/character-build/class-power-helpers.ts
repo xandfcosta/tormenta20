@@ -7,6 +7,7 @@ import {
   type PowerChoice,
   type Prerequisite,
   slotsForClassLevel,
+  spellEffectByName,
   unlockedKinds,
   WEAPONS,
 } from '@tormenta20/t20-data'
@@ -24,15 +25,28 @@ export type PowerOption = {
   choice?: PowerChoice
 }
 
-export type ChoiceOption = { id: string; name: string; note?: string }
+export type ChoiceOption = {
+  id: string
+  name: string
+  note?: string
+  /** What the option does — resolved from the catalog (e.g. a totem's granted
+   *  spell effect). Shown when the option is selected. */
+  desc?: string
+}
 
 /**
  * Resolve the selectable options for a power's sub-choice. Enumerated kinds
  * (totem/school/companion) carry their own list; `weapon` is sourced from the
- * item catalog.
+ * item catalog. When an option's `note` names a spell (Bárbaro totems grant
+ * one), its effect is attached as `desc` so the picker can explain the pick.
  */
 export function powerChoiceOptions(choice: PowerChoice): ChoiceOption[] {
-  if (choice.options) return choice.options
+  if (choice.options) {
+    return choice.options.map((o) => ({
+      ...o,
+      desc: (o.note && spellEffectByName(o.note)) || undefined,
+    }))
+  }
   if (choice.kind === 'weapon') {
     return WEAPONS.map((w) => ({ id: w.id, name: w.name }))
   }
