@@ -1,26 +1,19 @@
 /**
- * Unified test seed — one full table you can log into from two browsers to
- * exercise the whole app (character select, sheet tabs, campaigns, sessions
- * in every state, and live "match mode").
+ * Test seed — three accounts on the @tormenta.com domain, log in from any
+ * browser to exercise the character select + sheet.
  *
- *   GM     mestre@hotmail.com  / 123456
- *   Player jogador@hotmail.com / 123456
+ *   GM      mestre@tormenta.com  / 123456  → many complex characters
+ *   Player  jogador@tormenta.com / 123456  → a few simple + complex characters
+ *   Test    teste@tormenta.com   / 123456  → empty (no characters)
  *
- * What it builds (all idempotent — re-running finds existing rows):
- *   - 2 users (GM + player), each owning 2 fully-enriched characters
- *     (level 8, trained perícias, equipped gear incl. an expertise-boosting
- *     item, potions, an arcane spellbook, and a live scene effect).
- *   - GM owns 2 campaigns:
- *       "Mesa de Teste"      → ACTIVE session #1 (player's Bruenor joined) —
- *                              open in two browsers for match mode.
- *       "A Tormenta Rubra"   → PLANNED session #1 + ENDED session #2
- *                              (player's Lyra joined) — exercises the other
- *                              session lifecycle states.
+ * "Complex" characters are fully enriched (trained perícias + gear; casters
+ * also get a spellbook and some carry a live scene effect) and span a wide
+ * level / god / HP range to cover the sheet's edge cases. "Simple" characters
+ * are low-level with only basic gear — the bare minimum a fresh PC starts with.
  *
- * Everything runs through the real services (Auth / Characters / Campaigns /
- * CampaignMembers / Sessions), so passwords are hashed, characters are
- * rules-valid, and every domain invariant (invite token, one-PC-per-campaign,
- * GM-only session start) is honoured — the same paths the UI uses.
+ * All rows go through the real services (Auth / Characters), so passwords are
+ * hashed, characters are rules-valid, and every domain invariant is honoured —
+ * the same paths the UI uses. Idempotent: re-running finds existing rows.
  *
  * Run from backend/ (needs the compiled dist — the generated Prisma client
  * uses ESM-style .js imports that ts-node can't resolve):
@@ -29,13 +22,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { AuthService } from './auth/auth.service';
-import { CampaignMembersService } from './campaign-members/campaign-members.service';
-import { CampaignsService } from './campaigns/campaigns.service';
 import { CharacterExpertisesService } from './characters/characters-expertises.service';
 import { CharacterItemsService } from './characters/characters-items.service';
 import { CharactersService } from './characters/characters.service';
 import { CharactersSpellsService } from './characters/characters-spells.service';
-import { SessionsService, type SessionStatus } from './sessions/sessions.service';
 
 type SeededUser = { id: number; email: string };
 
@@ -79,6 +69,9 @@ type CharacterSpec = {
   spells?: SpellRef[];
   /** Consume a scene catalisador so the sheet carries a live ActiveEffect. */
   sceneEffect?: boolean;
+  /** A bare starter PC: skip trained perícias / spells / scene effect and give
+   * only basic gear. Used for the player's "simple" characters. */
+  simple?: boolean;
 };
 
 /** Terse attribute constructor to keep the roster specs on one line each. */
@@ -160,6 +153,12 @@ const CASTER_GEAR: GearRef[] = [
   { catalogId: 'cosmetico', quantity: 2 },
 ];
 
+// Bare starter kit for a simple PC — one weapon + light armor, nothing else.
+const SIMPLE_GEAR: GearRef[] = [
+  { catalogId: 'espada-curta', quantity: 1, equipped: 'wielded' },
+  { catalogId: 'armadura-couro', quantity: 1, equipped: 'vested' },
+];
+
 const ARCANE_SPELLBOOK: SpellRef[] = [
   { id: 'luz', prepared: true },
   { id: 'armadura-arcana', prepared: true },
@@ -189,29 +188,30 @@ const SCENE_CONSUMABLE = 'cosmetico';
 
 // ── Character rosters ────────────────────────────────────────────────
 // Names describe the test scenario each character exercises, so the "select
-// screen" doubles as a QA checklist. Every character is enriched (trained
-// perícias + gear; casters also get a spellbook), and levels/gods/HP vary
-// widely to cover the sheet's edge cases.
+// screen" doubles as a QA checklist.
+
+// GM — many complex characters: high level, casters with spellbooks,
+// multiclass, heavy gear, live scene effects; levels/gods/HP vary widely.
 const GM_CHARACTERS: CharacterSpec[] = [
   { name: 'Tanque Placas Nv10', races: ['Anão'], origin: 'Soldado', classes: [{ className: 'Guerreiro', level: 10 }], god: 'Khalmyr', attrs: attr(4, 1, 4, 1, 2, 1), gear: HEAVY_GEAR, sceneEffect: true },
-  { name: 'Curandeira Divina', races: ['Elfo'], origin: 'Acólito', classes: [{ className: 'Clérigo', level: 8 }], god: 'Lena', attrs: attr(1, 2, 2, 2, 4, 3), gear: CASTER_GEAR, spells: DIVINE_SPELLBOOK, hpFraction: 0.5 },
+  { name: 'Curandeira Divina Nv8', races: ['Elfo'], origin: 'Acólito', classes: [{ className: 'Clérigo', level: 8 }], god: 'Lena', attrs: attr(1, 2, 2, 2, 4, 3), gear: CASTER_GEAR, spells: DIVINE_SPELLBOOK, hpFraction: 0.5 },
   { name: 'Necromante Nv12 Magias', races: ['Osteon'], origin: 'Criminoso', classes: [{ className: 'Arcanista', level: 12 }], god: 'Tenebra', attrs: attr(1, 2, 3, 5, 2, 3), gear: CASTER_GEAR, spells: ARCANE_SPELLBOOK },
-  { name: 'Barbaro Ferido 15pct', races: ['Minotauro'], origin: 'Gladiador', classes: [{ className: 'Bárbaro', level: 5 }], attrs: attr(4, 2, 4, 0, 1, 0), gear: MARTIAL_GEAR, hpFraction: 0.15 },
-  { name: 'Druida Natureza', races: ['Dahllan'], origin: 'Eremita', classes: [{ className: 'Druida', level: 9 }], god: 'Allihanna', attrs: attr(1, 3, 2, 2, 4, 2), gear: CASTER_GEAR, spells: NATURE_SPELLBOOK, sceneEffect: true },
-  { name: 'Bardo Sem Devocao', races: ['Lefou'], origin: 'Amnésico', classes: [{ className: 'Bardo', level: 3 }], attrs: attr(1, 3, 2, 2, 1, 4), gear: CASTER_GEAR, spells: ARCANE_SPELLBOOK.slice(0, 3) },
-  { name: 'Multiclasse Guer+Arc', races: ['Humano'], origin: 'Herói Camponês', classes: [{ className: 'Guerreiro', level: 4 }, { className: 'Arcanista', level: 4 }], god: 'Valkaria', attrs: attr(3, 2, 3, 3, 1, 1), gear: MARTIAL_GEAR, spells: ARCANE_SPELLBOOK.slice(0, 4) },
+  { name: 'Druida Natureza Nv9', races: ['Dahllan'], origin: 'Eremita', classes: [{ className: 'Druida', level: 9 }], god: 'Allihanna', attrs: attr(1, 3, 2, 2, 4, 2), gear: CASTER_GEAR, spells: NATURE_SPELLBOOK, sceneEffect: true },
+  { name: 'Multiclasse Guer+Arc Nv8', races: ['Humano'], origin: 'Herói Camponês', classes: [{ className: 'Guerreiro', level: 4 }, { className: 'Arcanista', level: 4 }], god: 'Valkaria', attrs: attr(3, 2, 3, 3, 1, 1), gear: MARTIAL_GEAR, spells: ARCANE_SPELLBOOK.slice(0, 4) },
+  { name: 'Paladino Sagrado Nv11', races: ['Suraggel'], origin: 'Aristocrata', classes: [{ className: 'Paladino', level: 11 }], god: 'Khalmyr', attrs: attr(3, 1, 3, 1, 2, 4), gear: HEAVY_GEAR, spells: DIVINE_SPELLBOOK },
+  { name: 'Lenda Nv20 Maximo', races: ['Anão'], origin: 'Herdeiro', classes: [{ className: 'Cavaleiro', level: 20 }], god: 'Valkaria', attrs: attr(5, 2, 5, 1, 2, 3), gear: HEAVY_GEAR, hpFraction: 0.4 },
+  { name: 'Bardo Versátil Nv7', races: ['Lefou'], origin: 'Amnésico', classes: [{ className: 'Bardo', level: 7 }], attrs: attr(1, 3, 2, 2, 1, 4), gear: CASTER_GEAR, spells: ARCANE_SPELLBOOK.slice(0, 4), sceneEffect: true },
+  { name: 'Inventor Genial Nv6', races: ['Kliren'], origin: 'Assistente de Laboratório', classes: [{ className: 'Inventor', level: 6 }], god: 'Tanna-Toh', attrs: attr(0, 3, 2, 5, 1, 1), gear: HEAVY_PACK },
 ];
 
+// Player — a few simple starter PCs plus a few enriched complex ones.
 const PLAYER_CHARACTERS: CharacterSpec[] = [
-  { name: 'Guerreiro Campanha A', races: ['Humano'], origin: 'Soldado', classes: [{ className: 'Guerreiro', level: 8 }], god: 'Khalmyr', attrs: attr(4, 3, 3, 2, 2, 1), gear: MARTIAL_GEAR, sceneEffect: true },
-  { name: 'Arcanista Campanha B', races: ['Humano'], origin: 'Charlatão', classes: [{ className: 'Arcanista', level: 8 }], god: 'Wynna', attrs: attr(0, 3, 2, 4, 2, 3), gear: CASTER_GEAR, spells: ARCANE_SPELLBOOK, sceneEffect: true },
-  { name: 'Ladino Furtivo Nv7', races: ['Sílfide'], origin: 'Batedor', classes: [{ className: 'Ladino', level: 7 }], attrs: attr(1, 5, 2, 2, 2, 1), gear: MARTIAL_GEAR },
-  { name: 'Paladino Sagrado Nv11', races: ['Suraggel'], origin: 'Aristocrata', classes: [{ className: 'Paladino', level: 11 }], god: 'Khalmyr', attrs: attr(3, 1, 3, 1, 2, 4), gear: HEAVY_GEAR, spells: DIVINE_SPELLBOOK },
-  { name: 'Recruta Nv1 Minimo', races: ['Humano'], origin: 'Capanga', classes: [{ className: 'Guerreiro', level: 1 }], attrs: attr(3, 2, 2, 1, 1, 1), gear: MARTIAL_GEAR },
-  { name: 'Lenda Nv20 Maximo', races: ['Anão'], origin: 'Herdeiro', classes: [{ className: 'Cavaleiro', level: 20 }], god: 'Valkaria', attrs: attr(5, 2, 5, 1, 2, 3), gear: HEAVY_GEAR, hpFraction: 0.4 },
-  { name: 'Bucaneiro Ferido Meio', races: ['Qareen'], origin: 'Artista', classes: [{ className: 'Bucaneiro', level: 5 }], attrs: attr(2, 4, 2, 1, 1, 3), gear: MARTIAL_GEAR, hpFraction: 0.5 },
-  { name: 'Mochila Cheia Itens', races: ['Golem'], origin: 'Capanga', classes: [{ className: 'Lutador', level: 4 }], attrs: attr(3, 2, 4, 0, 1, 0), gear: HEAVY_PACK, hpFraction: 0.8 },
-  { name: 'Inventor Genial Nv6', races: ['Kliren'], origin: 'Assistente de Laboratório', classes: [{ className: 'Inventor', level: 6 }], god: 'Tanna-Toh', attrs: attr(0, 3, 2, 5, 1, 1), gear: HEAVY_PACK },
+  { name: 'Recruta Nv1 Simples', races: ['Humano'], origin: 'Capanga', classes: [{ className: 'Guerreiro', level: 1 }], attrs: attr(3, 2, 2, 1, 1, 1), gear: SIMPLE_GEAR, simple: true },
+  { name: 'Batedor Nv2 Simples', races: ['Sílfide'], origin: 'Batedor', classes: [{ className: 'Ladino', level: 2 }], attrs: attr(1, 4, 2, 2, 2, 1), gear: SIMPLE_GEAR, simple: true },
+  { name: 'Aprendiz Nv1 Simples', races: ['Humano'], origin: 'Charlatão', classes: [{ className: 'Arcanista', level: 1 }], attrs: attr(0, 2, 2, 4, 1, 2), gear: SIMPLE_GEAR, simple: true },
+  { name: 'Guerreiro Veterano Nv8', races: ['Humano'], origin: 'Soldado', classes: [{ className: 'Guerreiro', level: 8 }], god: 'Khalmyr', attrs: attr(4, 3, 3, 2, 2, 1), gear: MARTIAL_GEAR, sceneEffect: true },
+  { name: 'Arcanista Erudito Nv9', races: ['Qareen'], origin: 'Charlatão', classes: [{ className: 'Arcanista', level: 9 }], god: 'Wynna', attrs: attr(0, 3, 2, 4, 2, 3), gear: CASTER_GEAR, spells: ARCANE_SPELLBOOK, sceneEffect: true },
+  { name: 'Paladino Sagrado Nv10', races: ['Suraggel'], origin: 'Aristocrata', classes: [{ className: 'Paladino', level: 10 }], god: 'Khalmyr', attrs: attr(3, 1, 3, 1, 2, 4), gear: HEAVY_GEAR, spells: DIVINE_SPELLBOOK, hpFraction: 0.6 },
 ];
 
 async function registerOrLogin(
@@ -298,9 +298,9 @@ async function applySceneEffect(
   await s.items.consumeItem(ownerId, id, potion.id, {});
 }
 
-// Enrich to the spec: trained perícias + gear for everyone, a spellbook for
-// casters, and an optional live scene effect. Level is set at create time
-// from the spec, so nothing is bumped here — varied levels survive.
+// Enrich to the spec. Simple PCs get only basic gear; complex ones get trained
+// perícias + gear, a spellbook for casters, and an optional live scene effect.
+// Level is set at create time from the spec, so nothing is bumped here.
 async function enrichCharacter(
   s: CharacterServices,
   ownerId: number,
@@ -308,6 +308,10 @@ async function enrichCharacter(
   spec: CharacterSpec,
 ): Promise<void> {
   const before = await s.characters.findOne(ownerId, id);
+  if (spec.simple) {
+    await addGear(s, ownerId, id, before.items, spec.gear ?? SIMPLE_GEAR);
+    return;
+  }
   await trainExpertises(s, ownerId, id);
   await addGear(s, ownerId, id, before.items, spec.gear ?? MARTIAL_GEAR);
   if (spec.spells) await teachSpells(s, ownerId, id, spec.spells);
@@ -353,74 +357,11 @@ async function ensureCharacter(
   return { id: char.id, name: char.name };
 }
 
-async function ensureCampaign(
-  campaigns: CampaignsService,
-  gmId: number,
-  name: string,
-  description: string,
-): Promise<{ id: number; name: string }> {
-  const found = (await campaigns.list(gmId)).find((c) => c.name === name);
-  if (found) {
-    console.log(`• campaign #${found.id} "${found.name}" already exists`);
-    return { id: found.id, name: found.name };
-  }
-  const created = await campaigns.create(gmId, { name, description });
-  console.log(`✓ created campaign #${created.id} "${created.name}"`);
-  return created;
-}
-
-/** Player joins `campaignId` with `characterId` via a fresh invite token. */
-async function ensureMember(
-  campaigns: CampaignsService,
-  members: CampaignMembersService,
-  gmId: number,
-  campaignId: number,
-  playerId: number,
-  characterId: number,
-): Promise<void> {
-  const roster = await members.list(gmId, campaignId);
-  if (roster.some((m) => m.characterId === characterId)) {
-    console.log(`• character #${characterId} already on campaign #${campaignId}`);
-    return;
-  }
-  const { token } = await campaigns.rotateInviteToken(gmId, campaignId);
-  await members.add(playerId, campaignId, { characterId, inviteToken: token });
-  console.log(`✓ character #${characterId} joined campaign #${campaignId}`);
-}
-
-/** Ensure a session exists in campaign and drive it to `target` state. */
-async function ensureSession(
-  sessions: SessionsService,
-  gmId: number,
-  campaignId: number,
-  sessionNumber: number,
-  title: string,
-  target: SessionStatus,
-): Promise<{ id: number; status: SessionStatus }> {
-  const list = await sessions.listForCaller(gmId, campaignId);
-  let session =
-    list.find((s) => s.sessionNumber === sessionNumber) ??
-    (await sessions.create(gmId, campaignId, { sessionNumber, title }));
-  if (target === 'active' && session.status !== 'active') {
-    session = await sessions.start(gmId, campaignId, session.id);
-  } else if (target === 'ended' && session.status !== 'ended') {
-    if (session.status === 'planned') {
-      await sessions.start(gmId, campaignId, session.id);
-    }
-    session = await sessions.end(gmId, campaignId, session.id);
-  }
-  console.log(`✓ session #${session.id} (nº ${sessionNumber}) → ${session.status}`);
-  return { id: session.id, status: session.status as SessionStatus };
-}
-
 async function main() {
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: false,
   });
   const auth = app.get(AuthService);
-  const campaigns = app.get(CampaignsService);
-  const members = app.get(CampaignMembersService);
-  const sessions = app.get(SessionsService);
   const s: CharacterServices = {
     characters: app.get(CharactersService),
     expertises: app.get(CharacterExpertisesService),
@@ -429,50 +370,19 @@ async function main() {
   };
 
   // ── Users ──────────────────────────────────────────────────────
-  const gm = await registerOrLogin(auth, 'mestre@hotmail.com', 'Mestre');
-  const player = await registerOrLogin(auth, 'jogador@hotmail.com', 'Jogador');
+  const gm = await registerOrLogin(auth, 'mestre@tormenta.com', 'Mestre');
+  const player = await registerOrLogin(auth, 'jogador@tormenta.com', 'Jogador');
+  // Test account stays empty — just proves login on a blank roster.
+  await registerOrLogin(auth, 'teste@tormenta.com', 'Teste');
 
-  // ── Characters (full roster each, all enriched) ────────────────
+  // ── Characters ─────────────────────────────────────────────────
   for (const spec of GM_CHARACTERS) await ensureCharacter(s, gm.id, spec);
-  const playerChars: { id: number; name: string }[] = [];
-  for (const spec of PLAYER_CHARACTERS) {
-    playerChars.push(await ensureCharacter(s, player.id, spec));
-  }
-  // First two player PCs are the campaign members (see roster names).
-  const [campaignPcA, campaignPcB] = playerChars;
-
-  // ── Campaign A: "Mesa de Teste" — active session for match mode ─
-  const mesa = await ensureCampaign(
-    campaigns,
-    gm.id,
-    'Mesa de Teste',
-    'Campanha de teste para o multiplayer e o modo sessão ao vivo.',
-  );
-  await ensureMember(campaigns, members, gm.id, mesa.id, player.id, campaignPcA.id);
-  const active = await ensureSession(
-    sessions,
-    gm.id,
-    mesa.id,
-    1,
-    'Primeira sessão',
-    'active',
-  );
-
-  // ── Campaign B: "A Tormenta Rubra" — planned + ended sessions ───
-  const rubra = await ensureCampaign(
-    campaigns,
-    gm.id,
-    'A Tormenta Rubra',
-    'Segunda campanha para exercitar os estados de sessão.',
-  );
-  await ensureMember(campaigns, members, gm.id, rubra.id, player.id, campaignPcB.id);
-  await ensureSession(sessions, gm.id, rubra.id, 1, 'Preparação', 'planned');
-  await ensureSession(sessions, gm.id, rubra.id, 2, 'O Ataque', 'ended');
+  for (const spec of PLAYER_CHARACTERS) await ensureCharacter(s, player.id, spec);
 
   console.log('\n─── test table ready ───');
-  console.log(`GM      mestre@hotmail.com  / ${PASSWORD}`);
-  console.log(`Player  jogador@hotmail.com / ${PASSWORD}`);
-  console.log(`Match   /campaigns/${mesa.id}/sessions/${active.id} (active)`);
+  console.log(`GM      mestre@tormenta.com  / ${PASSWORD}  (${GM_CHARACTERS.length} complex)`);
+  console.log(`Player  jogador@tormenta.com / ${PASSWORD}  (${PLAYER_CHARACTERS.length} chars)`);
+  console.log(`Test    teste@tormenta.com   / ${PASSWORD}  (empty)`);
 
   await app.close();
 }
