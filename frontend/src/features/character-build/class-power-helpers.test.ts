@@ -55,4 +55,23 @@ describe('powerChoiceOptions', () => {
     expect(opts.length).toBeGreaterThan(0)
     expect(opts[0]).toHaveProperty('name')
   })
+
+  it('attaches a spell effect as desc when a totem note names a spell', () => {
+    const [urso] = powerChoiceOptions({
+      kind: 'totem',
+      label: 'Animal totêmico',
+      options: [{ id: 'urso', name: 'Urso', note: 'Vitalidade Fantasma' }],
+    })
+    expect(urso.note).toBe('Vitalidade Fantasma')
+    expect(urso.desc).toBeTruthy()
+  })
+
+  it('leaves desc undefined when a note names no catalog spell', () => {
+    const [o] = powerChoiceOptions({
+      kind: 'totem',
+      label: 'X',
+      options: [{ id: 'x', name: 'X', note: 'Não Existe Magia' }],
+    })
+    expect(o.desc).toBeUndefined()
+  })
 })

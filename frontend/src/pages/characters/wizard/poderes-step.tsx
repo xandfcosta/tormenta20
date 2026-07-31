@@ -378,6 +378,7 @@ function PowerChoiceSelector({
     }
   }
   const pending = value.length === 0
+  const chosenDescs = options.filter((o) => selected.has(o.id) && o.desc)
   return (
     <div className="ml-6 mt-1 space-y-1 rounded-md border border-dashed border-border p-2">
       <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -394,7 +395,7 @@ function PowerChoiceSelector({
               type="button"
               disabled={lockedOpt}
               onClick={() => toggle(o.id)}
-              title={o.note}
+              title={o.desc ?? o.note}
               className={cn(
                 'rounded-md border px-2 py-0.5 text-[11px] transition-colors',
                 on
@@ -412,6 +413,20 @@ function PowerChoiceSelector({
           )
         })}
       </div>
+      {chosenDescs.map((o) => (
+        <div
+          key={o.id}
+          className="rounded-md border-l-2 border-primary/50 bg-accent/40 px-2 py-1"
+        >
+          <p className="text-[11px] font-semibold text-foreground">
+            <span className="mr-1 text-[color:var(--primary)]">✦</span>
+            {o.note ?? o.name}
+          </p>
+          <p className="text-[10px] leading-snug text-muted-foreground">
+            {o.desc}
+          </p>
+        </div>
+      ))}
       {pending && (
         <p className="text-[10px] text-[color:var(--hp-hurt)]">
           Escolha {choice.label.toLowerCase()}.

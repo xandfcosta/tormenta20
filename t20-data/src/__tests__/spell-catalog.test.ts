@@ -4,6 +4,7 @@ import {
   SPELL_CATALOG,
   SPELL_IDS,
   spellById,
+  spellEffectByName,
   spellsByCircle,
   spellsByClass,
   spellsBySchool,
@@ -41,6 +42,16 @@ describe('SPELL_CATALOG — buff spells', () => {
         )
       }
     }
+  })
+
+  it('spellEffectByName returns the base effect for a known name', () => {
+    expect(spellEffectByName('Armadura Arcana')).toBe(
+      spellById('armadura-arcana').baseEffect,
+    )
+  })
+
+  it('spellEffectByName returns null for an unknown name', () => {
+    expect(spellEffectByName('Não Existe Magia')).toBeNull()
   })
 
   it('Armadura Arcana grants +5 Defesa', () => {
