@@ -28,7 +28,10 @@ const vontadeDeFerro: OriginBenefit = {
   id: 'poder-vontade-de-ferro',
   name: 'Vontade de Ferro',
   kind: 'poder',
-  description: 'Você recebe +2 em testes de Vontade.',
+  // Book p131 (poder de Destino). PM/nível não é modelado (sem alvo de PM
+  // máximo); só o +2 Vontade — igual ao catálogo de poderes gerais.
+  description:
+    'Você recebe +1 PM para cada dois níveis de personagem e +2 em Vontade.',
   modifiers: [
     {
       target: { k: 'expertise', name: 'Vontade' },
