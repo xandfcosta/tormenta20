@@ -97,4 +97,17 @@ describe('Origens — spot checks against PDF Tabela 1-19', () => {
     expect(amnesico.benefits).toEqual([])
     expect(amnesico.poderUnico.name).toMatch(/Lembranças/i)
   })
+
+  it('Vontade de Ferro benefit matches the book (p131): +1 PM/2 níveis + +2 Vontade', () => {
+    const acolito = ORIGINS_CATALOG.find((o) => o.id === 'Acólito')!
+    const vdf = acolito.benefits.find((b) => b.name === 'Vontade de Ferro')!
+    expect(vdf.description).toMatch(/\+1 PM para cada dois níveis/i)
+    expect(vdf.description).toMatch(/\+2 em Vontade/i)
+    expect(vdf.modifiers).toContainEqual(
+      expect.objectContaining({
+        target: { k: 'expertise', name: 'Vontade' },
+        amount: 2,
+      }),
+    )
+  })
 })
