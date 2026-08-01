@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  chosenPowerLines,
+  classChoiceSummary,
   type PowerOption,
   powerChoiceOptions,
   tormentaPowerOptions,
@@ -90,5 +92,52 @@ describe('powerChoiceOptions', () => {
       options: [{ id: 'x', name: 'X', note: 'Não Existe Magia' }],
     })
     expect(o.desc).toBeUndefined()
+  })
+})
+
+describe('chosenPowerLines — Resumo mostra escolhas, não o pool', () => {
+  const classes = [{ className: 'Bárbaro', level: 6 }]
+
+  it('resolve nomes por id em todos os pools (classe, geral, tormenta)', () => {
+    const lines = chosenPowerLines(
+      classes,
+      ['class.barbaro.totem-espiritual', 'esquiva', 'dentes-afiados'],
+      {},
+    )
+    expect(lines.map((l) => [l.name, l.source])).toEqual([
+      ['Totem Espiritual', 'class'],
+      ['Esquiva', 'general'],
+      ['Dentes Afiados', 'tormenta'],
+    ])
+  })
+
+  it('resolve sub-escolhas para nomes (totem lobo → Lobo)', () => {
+    const lines = chosenPowerLines(
+      classes,
+      ['class.barbaro.totem-espiritual'],
+      { 'class.barbaro.totem-espiritual': ['lobo'] },
+    )
+    expect(lines[0].choices).toEqual(['Lobo'])
+  })
+
+  it('id desconhecido degrada para o próprio id (não some)', () => {
+    const lines = chosenPowerLines(classes, ['nao-existe'], {})
+    expect(lines[0].name).toBe('nao-existe')
+  })
+})
+
+describe('classChoiceSummary — caminho/devoto por NOME', () => {
+  it('resolve caminho e devoto', () => {
+    expect(
+      classChoiceSummary('Clérigo', { devoto: 'khalmyr' }),
+    ).toBe('devoto de Khalmyr')
+    expect(classChoiceSummary('Arcanista', { caminho: 'mago' })).toMatch(
+      /^caminho: /,
+    )
+  })
+
+  it('null sem escolhas', () => {
+    expect(classChoiceSummary('Clérigo', {})).toBeNull()
+    expect(classChoiceSummary('Clérigo', undefined)).toBeNull()
   })
 })

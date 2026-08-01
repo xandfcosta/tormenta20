@@ -4,6 +4,7 @@ import {
   classGrant,
   classTiles,
   deformidadePayload,
+  deformidadeSummary,
   originGrant,
   raceAttributeDeltas,
   raceChoiceMeta,
@@ -261,5 +262,30 @@ describe('originGrant', () => {
 
   it('returns null for an unknown origin', () => {
     expect(originGrant('NotAnOrigin')).toBeNull()
+  })
+})
+
+describe('deformidadeSummary — linha de escolhas do Resumo', () => {
+  it('perícias + poder trocado', () => {
+    expect(
+      deformidadeSummary('Lefou', {
+        deformidade: { pericias: ['Furtividade'], tormentaPower: 'dentes-afiados' },
+      }),
+    ).toBe('Deformidade: +2 Furtividade · poder da Tormenta: Dentes Afiados (−1 CAR)')
+  })
+
+  it('só perícias', () => {
+    expect(
+      deformidadeSummary('Lefou', {
+        deformidade: { pericias: ['Furtividade', 'Percepção'] },
+      }),
+    ).toBe('Deformidade: +2 Furtividade · +2 Percepção')
+  })
+
+  it('null sem escolha ou raça sem a habilidade', () => {
+    expect(deformidadeSummary('Lefou', {})).toBeNull()
+    expect(
+      deformidadeSummary('Humano', { deformidade: { pericias: ['Furtividade'] } }),
+    ).toBeNull()
   })
 })
