@@ -30,6 +30,7 @@ import {
 } from './modifier-stacking'
 import { racaById, resolveAtributoMod, type Raca, type Tamanho } from './racas'
 import { SKILL_IDS, SKILL_INDEX, skillValue, type SkillId } from './skill-index'
+import { collectVitalGrants } from './vital-grants'
 
 // ─── Input ───────────────────────────────────────────────────────────
 export type CharacterInput = {
@@ -80,6 +81,20 @@ export type CharacterInput = {
    * nonSelfStacking mantêm apenas o melhor por effectId único.
    */
   activeEffects?: readonly ActiveEffect[]
+  /**
+   * IDs das habilidades raciais com variante escolhida (ex: ascendência
+   * Suraggel). Passivos raciais incondicionais (Anão Duro como Pedra, Elfo
+   * Sangue Mágico) não precisam constar aqui — são sempre aplicados.
+   */
+  raceAbilityChoices?: readonly string[]
+  /**
+   * IDs dos poderes de classe eletivos + poderes gerais escolhidos. Alimenta
+   * os bônus passivos de PV/PM máximo (Totem, Poder Mágico, Vitalidade…).
+   */
+  powerIds?: readonly string[]
+  /** Origem (id/nome) e benefícios escolhidos — para passivos de PV/PM. */
+  origin?: string
+  originChoices?: readonly string[]
   /**
    * Condições ativas (Fraco, Cego, Atordoado…). Expostas no output
    * como resumo textual; modificações mecânicas por condição não são
@@ -603,20 +618,39 @@ function computeVitals(
     return { pvMax: 0, pmMax: 0, pvCurrent: 0, pmCurrent: 0 }
   }
   const con = attributes.constitution.total
-  const pvMax = vitals.pvInicial + (input.level - 1) * vitals.pvPerLevel + con * input.level
-  const paladinoBonus =
-    vitals.paladinoMpAtL1Bonus === 'charisma'
-      ? attributes.charisma.total
-      : 0
-  const pmMax = vitals.mpPerLevel * input.level + paladinoBonus
+  const pvBase = vitals.pvInicial + (input.level - 1) * vitals.pvPerLevel + con * input.level
+  const pmBase = vitals.mpPerLevel * input.level
+  // Passivos de PV/PM (raça + poderes + origem). O antigo caso especial do
+  // Paladino (+Carisma no PM) agora vem do poder Devoção via este pipeline.
+  const grants = collectVitalGrants({
+    level: input.level,
+    className: input.className,
+    raceId: input.raceId,
+    raceAbilityChoices: input.raceAbilityChoices,
+    powerIds: input.powerIds,
+    origin: input.origin,
+    originChoices: input.originChoices,
+    attrTotals: attrTotalsOf(attributes),
+  })
+  const pvMax = Math.max(0, pvBase + grants.pv)
+  const pmMax = Math.max(0, pmBase + grants.pm)
   const pvCurrent = input.currentPv ?? pvMax
   const pmCurrent = input.currentPm ?? pmMax
   return {
-    pvMax: Math.max(0, pvMax),
-    pmMax: Math.max(0, pmMax),
+    pvMax,
+    pmMax,
     pvCurrent: Math.min(pvCurrent, pvMax),
     pmCurrent: Math.min(pmCurrent, pmMax),
   }
+}
+
+/** Narrow the computed-attribute map to plain totals for scale evaluation. */
+function attrTotalsOf(
+  attributes: Record<AttributeKey, AttributeComputed>,
+): Record<AttributeKey, number> {
+  const out = {} as Record<AttributeKey, number>
+  for (const key of ATTRIBUTE_KEYS) out[key] = attributes[key].total
+  return out
 }
 
 // ─── Attacks ─────────────────────────────────────────────────────────

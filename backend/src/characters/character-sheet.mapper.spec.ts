@@ -124,6 +124,46 @@ describe('computeSheetForRow', () => {
   });
 });
 
+// ─── Passive PV/PM grants threaded from JSON columns ─────────────
+
+describe('computeSheetForRow — passive max-PV/PM grants', () => {
+  it('parses classPowers/originChoices JSON into CharacterInput', () => {
+    const input = toCharacterInput({
+      ...humanoFighter,
+      origin: 'Acólito',
+      classPowers: JSON.stringify(['vitalidade']),
+      originChoices: JSON.stringify(['poder-vontade-de-ferro']),
+    });
+    expect(input.powerIds).toEqual(['vitalidade']);
+    expect(input.originChoices).toEqual(['poder-vontade-de-ferro']);
+    expect(input.origin).toBe('Acólito');
+  });
+
+  it('tolerates a malformed JSON blob (empty, no crash)', () => {
+    const input = toCharacterInput({ ...humanoFighter, classPowers: 'not json' });
+    expect(input.powerIds).toEqual([]);
+  });
+
+  it('Vitalidade (general power) adds +1 PV per level to pvMax', () => {
+    const base = computeSheetForRow(humanoFighter).vitals.pvMax;
+    const boosted = computeSheetForRow({
+      ...humanoFighter,
+      classPowers: JSON.stringify(['vitalidade']),
+    }).vitals.pvMax;
+    expect(boosted - base).toBe(3); // +1/nível, nível 3
+  });
+
+  it('Clérigo Magia Divina (auto) folds +Sabedoria into pmMax', () => {
+    const clerigo: CharacterDbRow = {
+      ...humanoFighter,
+      wisdom: 4,
+      classes: [{ className: 'Clérigo', level: 3 }],
+    };
+    // pmBase = 5*3 = 15; +Sabedoria total (4 base, Humano sem bônus fixo) = 19.
+    expect(computeSheetForRow(clerigo).vitals.pmMax).toBe(19);
+  });
+});
+
 // ─── Skills ──────────────────────────────────────────────────────
 
 describe('expertiseNameToSkillId', () => {

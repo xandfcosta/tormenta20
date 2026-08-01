@@ -93,7 +93,14 @@ export const ARCANISTA_POWERS: ClassPower[] = [
     'Custo em PM das magias da escola escolhida reduzido em -1.',
     { prerequisites: [power('class.arcanista.especialista-em-escola')], minLevel: 8 }),
   electivePower(C, 'Poder Mágico',
-    '+1 PM por nível de arcanista (retroativo e prospectivo).'),
+    '+1 PM por nível de arcanista (retroativo e prospectivo).',
+    {
+      // "por nível de arcanista" — aproximado pelo nível total (multiclasse
+      // ainda não é resolvido por classe na folha).
+      modifiers: [
+        { target: { k: 'maxPm' }, amount: 1, bonusType: 'untyped', scale: { per: 'level' } },
+      ],
+    }),
   electivePower(C, 'Raio Arcano',
     'Ação padrão, 1 PM: causa 1d8 dano arcano em alvo em alcance curto. +1d8 por círculo de magia acima do 1° que pode lançar. Alvo: Reflexos (CD atributo-chave) reduz à metade.'),
   electivePower(C, 'Raio Elemental',

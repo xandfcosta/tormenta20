@@ -51,11 +51,31 @@ export type CharacterDbRow = {
   charisma: number;
   hpCurrent: number;
   mpCurrent: number;
+  /** Origin name (matches an ORIGINS_CATALOG id). */
+  origin?: string | null;
+  /** JSON string[] columns — picked class/general powers, origin benefits,
+   *  and chosen race-ability variant ids. Feed the passive PV/PM pipeline. */
+  classPowers?: string | null;
+  originChoices?: string | null;
+  raceAbilityChoices?: string | null;
   races: readonly { race: string }[];
   classes: readonly { className: string; level: number }[];
   expertises: readonly CharacterExpertiseRow[];
   items: readonly CharacterItemRow[];
 };
+
+/** Parse a JSON-encoded `string[]` column defensively (bad blob ⇒ empty). */
+function jsonStringArray(raw: string | null | undefined): string[] {
+  if (!raw) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed)
+      ? parsed.filter((x): x is string => typeof x === 'string')
+      : [];
+  } catch {
+    return [];
+  }
+}
 
 // ─── Race ────────────────────────────────────────────────────────
 
@@ -229,6 +249,10 @@ export function toCharacterInput(row: CharacterDbRow): CharacterInput {
     currentPm: row.mpCurrent,
     trainedSkills,
     equipment,
+    origin: row.origin ?? undefined,
+    powerIds: jsonStringArray(row.classPowers),
+    originChoices: jsonStringArray(row.originChoices),
+    raceAbilityChoices: jsonStringArray(row.raceAbilityChoices),
   };
 }
 

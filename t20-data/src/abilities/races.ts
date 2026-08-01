@@ -52,6 +52,11 @@ export const RACES_CATALOG: RaceDefinition[] = [
         raceId: 'Anão',
         name: 'Duro como Pedra',
         description: 'Você recebe +3 pontos de vida no 1º nível e +1 por nível seguinte.',
+        // 3 no 1º nível + 1 por nível seguinte = nível + 2.
+        modifiers: [
+          { target: { k: 'maxPv' }, amount: 2, bonusType: 'untyped' },
+          { target: { k: 'maxPv' }, amount: 1, bonusType: 'untyped', scale: { per: 'level' } },
+        ],
       },
       {
         id: 'anao-tradicao-de-heredrimm',
@@ -106,6 +111,9 @@ export const RACES_CATALOG: RaceDefinition[] = [
         raceId: 'Elfo',
         name: 'Sangue Mágico',
         description: 'Você recebe +1 ponto de mana por nível.',
+        modifiers: [
+          { target: { k: 'maxPm' }, amount: 1, bonusType: 'untyped', scale: { per: 'level' } },
+        ],
       },
       {
         id: 'elfo-sentidos-elficos',

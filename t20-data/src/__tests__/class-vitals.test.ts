@@ -68,16 +68,6 @@ describe('CLASS_VITALS — catalog completeness vs PDF', () => {
     })
   }
 
-  it('only Paladino carries the L1 Carisma PM bonus marker', () => {
-    for (const [className, entry] of Object.entries(CLASS_VITALS)) {
-      if (className === 'Paladino') {
-        expect(entry.paladinoMpAtL1Bonus).toBe('charisma')
-      } else {
-        expect(entry.paladinoMpAtL1Bonus).toBeUndefined()
-      }
-    }
-  })
-
   it('every numeric field is a positive integer', () => {
     for (const [className, entry] of Object.entries(CLASS_VITALS)) {
       for (const v of [entry.pvInicial, entry.pvPerLevel, entry.mpPerLevel]) {

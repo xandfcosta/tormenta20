@@ -124,8 +124,8 @@ describe('computeCharacterSheet — Guerreiro L10 anão', () => {
     expect(sheet.attributes.dexterity.total).toBe(1)
   })
 
-  it('PV = 20 + 9 × 5 + CON 4 × 10 = 105', () => {
-    expect(sheet.vitals.pvMax).toBe(105)
+  it('PV = 20 + 9 × 5 + CON 4 × 10 + Duro como Pedra (nível+2=12) = 117', () => {
+    expect(sheet.vitals.pvMax).toBe(117)
   })
 
   it('PM = 3 × 10 = 30', () => {

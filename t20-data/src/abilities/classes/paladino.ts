@@ -16,6 +16,7 @@ const C = 'Paladino'
 export const PALADINO_POWERS: ClassPower[] = [
   autoPower(C, 1, 'Abençoado',
     'Soma Carisma no PM total no 1° nível. Devoto de deus disponível para paladinos (Azgher, Khalmyr, Lena, Lin-Wu, Marah, Tanna-Toh, Thyatis, Valkaria). Recebe DOIS poderes concedidos. Alternativa: paladino do bem (sem Poder Concedido nem Obrigação/Restrição além do Código).',
+    [{ target: { k: 'maxPm' }, amount: 1, bonusType: 'untyped', scale: { per: 'attribute', attribute: 'charisma' } }],
   ),
   autoPower(C, 1, 'Código do Herói',
     'Deve manter palavra. Nunca recusar pedido de ajuda de inocente. Nunca mentir, trapacear ou roubar. Se violar, perde todos PM e só recupera no próximo dia.',

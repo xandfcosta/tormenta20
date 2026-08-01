@@ -56,6 +56,10 @@ export function describeModifierTarget(t: Modifier['target']): string {
       return 'PV temporários'
     case 'tempMp':
       return 'PM temporários'
+    case 'maxPv':
+      return 'PV máximo'
+    case 'maxPm':
+      return 'PM máximo'
     case 'maneuver':
       return `Manobra ${t.name}`
     case 'flag':

@@ -87,7 +87,13 @@ export const CACADOR_POWERS: ClassPower[] = [
     }),
   electivePower(C, 'Elo com a Natureza',
     'Soma Sabedoria no PM total. Aprende e pode lançar Caminhos da Natureza (atributo-chave Sab).',
-    { prerequisites: [attr('wisdom', 1)], minLevel: 3 }),
+    {
+      prerequisites: [attr('wisdom', 1)],
+      minLevel: 3,
+      modifiers: [
+        { target: { k: 'maxPm' }, amount: 1, bonusType: 'untyped', scale: { per: 'attribute', attribute: 'wisdom' } },
+      ],
+    }),
   electivePower(C, 'Emboscar',
     'Gasta 2 PM para realizar ação padrão adicional em seu turno. Só pode na primeira rodada de combate.',
     { prerequisites: [trained('Furtividade')] }),

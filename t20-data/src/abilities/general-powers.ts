@@ -213,9 +213,9 @@ export const GENERAL_POWERS_CATALOG: GeneralPower[] = [
     name: 'Vitalidade',
     description: '+1 PV por nível e +2 em Fortitude.',
     prerequisites: [{ kind: 'attribute', attr: 'constitution', min: 1 }],
-    // PV/nível não é modelado (sem alvo de PV máximo); só o +2 Fortitude.
     modifiers: [
       { target: { k: 'expertise', name: 'Fortitude' }, amount: 2, bonusType: 'untyped' },
+      { target: { k: 'maxPv' }, amount: 1, bonusType: 'untyped', scale: { per: 'level' } },
     ],
   },
   // Combate residual audit 2026-07-05 — 22 poderes p124-125,128-129 que
@@ -537,9 +537,9 @@ export const GENERAL_POWERS_CATALOG: GeneralPower[] = [
     name: 'Vontade de Ferro',
     description: '+1 PM a cada dois níveis e +2 em Vontade.',
     prerequisites: [{ kind: 'attribute', attr: 'wisdom', min: 1 }],
-    // PM/nível não é modelado (sem alvo de PM máximo); só o +2 Vontade.
     modifiers: [
       { target: { k: 'expertise', name: 'Vontade' }, amount: 2, bonusType: 'untyped' },
+      { target: { k: 'maxPm' }, amount: 1, bonusType: 'untyped', scale: { per: 'levelStep', step: 2, round: 'down' } },
     ],
   },
   // Destino residual audit 2026-07-05 — 6 poderes p129-131 que ainda

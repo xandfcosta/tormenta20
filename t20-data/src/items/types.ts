@@ -126,6 +126,14 @@ export type ModifierTarget =
   | { k: 'armorPenaltyExpertises' }
   | { k: 'tempHp' }
   | { k: 'tempMp' }
+  /**
+   * Permanent max-pool grants (PV/PM total), e.g. race traits (Anão Duro como
+   * Pedra) and powers ("+1 PM por nível", "soma Sabedoria no PM total"). The
+   * amount is scaled by `Modifier.scale` and folded into vitals — see
+   * `vital-grants.ts`. Distinct from `tempHp`/`tempMp` (expiring pools).
+   */
+  | { k: 'maxPv' }
+  | { k: 'maxPm' }
   | { k: 'maneuver'; name: 'derrubar' | 'desarmar' | 'quebrar' | 'agarrar' | 'empurrar' }
   | { k: 'flag'; name: ItemFlag }
 
@@ -144,12 +152,31 @@ export type ModifierCondition =
   | { c: 'context'; note: string }
   | { c: 'flagOn'; flag: string; label: string }
 
+/**
+ * How a `maxPv`/`maxPm` modifier's `amount` scales with the character. Only
+ * interpreted by the vitals collector (`vital-grants.ts`); the item engine
+ * ignores it. Omitted `scale` ⇒ `{ per: 'flat' }`.
+ *  - flat        — amount as-is (e.g. Anão "+3 PV no 1º nível").
+ *  - level       — amount × nível do personagem ("+1 PM por nível").
+ *  - levelStep   — amount × ⌊/⌉(nível / step): floor for "a cada dois níveis"
+ *                  (Vontade de Ferro), ceil for "a cada nível ímpar" (Bênção
+ *                  do Mana).
+ *  - attribute   — amount × total do atributo ("soma Sabedoria no PM total").
+ */
+export type VitalScale =
+  | { per: 'flat' }
+  | { per: 'level' }
+  | { per: 'levelStep'; step: number; round: 'down' | 'up' }
+  | { per: 'attribute'; attribute: AttributeKey }
+
 export type Modifier = {
   target: ModifierTarget
   amount: number
   bonusType: BonusType
   condition?: ModifierCondition
   note?: string
+  /** Scaling for `maxPv`/`maxPm` targets. Ignored for every other target. */
+  scale?: VitalScale
 }
 
 /**

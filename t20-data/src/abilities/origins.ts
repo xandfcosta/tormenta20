@@ -28,8 +28,7 @@ const vontadeDeFerro: OriginBenefit = {
   id: 'poder-vontade-de-ferro',
   name: 'Vontade de Ferro',
   kind: 'poder',
-  // Book p131 (poder de Destino). PM/nível não é modelado (sem alvo de PM
-  // máximo); só o +2 Vontade — igual ao catálogo de poderes gerais.
+  // Book p131 (poder de Destino) — +1 PM a cada dois níveis + +2 Vontade.
   description:
     'Você recebe +1 PM para cada dois níveis de personagem e +2 em Vontade.',
   modifiers: [
@@ -37,6 +36,12 @@ const vontadeDeFerro: OriginBenefit = {
       target: { k: 'expertise', name: 'Vontade' },
       amount: 2,
       bonusType: 'untyped',
+    },
+    {
+      target: { k: 'maxPm' },
+      amount: 1,
+      bonusType: 'untyped',
+      scale: { per: 'levelStep', step: 2, round: 'down' },
     },
   ],
 }
@@ -98,6 +103,7 @@ const vitalidade: OriginBenefit = {
   description: 'Você recebe +1 PV por nível de personagem e +2 em Fortitude.',
   modifiers: [
     { target: { k: 'expertise', name: 'Fortitude' }, amount: 2, bonusType: 'untyped' },
+    { target: { k: 'maxPv' }, amount: 1, bonusType: 'untyped', scale: { per: 'level' } },
   ],
 }
 
