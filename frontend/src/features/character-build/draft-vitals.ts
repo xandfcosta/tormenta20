@@ -7,6 +7,7 @@ import {
 import {
   type RaceChoiceState,
   appliedRaceDeltas,
+  draftTormentaCarismaExtra,
   raceModel,
 } from './grant-helpers'
 
@@ -22,6 +23,7 @@ type VitalsValues = {
   charisma: number
   classPowers: string[]
   originChoices: string[]
+  powerChoices?: Record<string, string[]>
 }
 
 export type DraftVitals = { pvMax: number; pmMax: number }
@@ -45,6 +47,14 @@ export function deriveDraftVitals(
   const deltas = appliedRaceDeltas(v.races, raceChoices)
   const attrTotals = {} as Record<AttributeKey, number>
   for (const k of ATTRIBUTE_KEYS) attrTotals[k] = (v[k] ?? 0) + (deltas[k] ?? 0)
+  // CAR loss from pool/origem tormenta picks (CAR-scaled grants stay exact).
+  attrTotals.charisma += draftTormentaCarismaExtra(
+    v.races,
+    raceChoices,
+    v.classPowers ?? [],
+    v.powerChoices ?? {},
+    v.originChoices ?? [],
+  )
   const grants = collectVitalGrants({
     level,
     className: primary,

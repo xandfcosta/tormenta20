@@ -210,8 +210,15 @@ function placeholderPoder(
   origin: string,
   name: string,
   description: string,
+  powerPick?: 'combate' | 'tormenta',
 ): OriginBenefit {
-  return { id: `origin-${origin}-poder-${slug(name)}`, name, kind: 'poder', description }
+  return {
+    id: `origin-${origin}-poder-${slug(name)}`,
+    name,
+    kind: 'poder',
+    description,
+    ...(powerPick ? { powerPick } : {}),
+  }
 }
 
 function slug(s: string): string {
@@ -321,7 +328,8 @@ export const ORIGINS_CATALOG: OriginDefinition[] = [
       placeholderPoder(
         'assistente',
         'Poder da Tormenta (escolha)',
-        'Você recebe um poder da Tormenta a sua escolha (anote separadamente). Pré-requisitos do poder se aplicam.',
+        'Você recebe um poder da Tormenta a sua escolha. Pré-requisitos do poder se aplicam.',
+        'tormenta',
       ),
     ],
     poderUnico: uniquePoder(
@@ -362,7 +370,8 @@ export const ORIGINS_CATALOG: OriginDefinition[] = [
       placeholderPoder(
         'capanga',
         'Poder de Combate (escolha)',
-        'Você recebe um poder de combate a sua escolha (anote separadamente). Pré-requisitos do poder se aplicam.',
+        'Você recebe um poder de combate a sua escolha. Pré-requisitos do poder se aplicam.',
+        'combate',
       ),
     ],
     poderUnico: uniquePoder(
@@ -527,7 +536,8 @@ export const ORIGINS_CATALOG: OriginDefinition[] = [
       placeholderPoder(
         'gladiador',
         'Poder de Combate (escolha)',
-        'Você recebe um poder de combate a sua escolha (anote separadamente). Pré-requisitos do poder se aplicam.',
+        'Você recebe um poder de combate a sua escolha. Pré-requisitos do poder se aplicam.',
+        'combate',
       ),
     ],
     poderUnico: uniquePoder(
@@ -553,7 +563,8 @@ export const ORIGINS_CATALOG: OriginDefinition[] = [
       placeholderPoder(
         'guarda',
         'Poder de Combate (escolha)',
-        'Você recebe um poder de combate a sua escolha (anote separadamente). Pré-requisitos do poder se aplicam.',
+        'Você recebe um poder de combate a sua escolha. Pré-requisitos do poder se aplicam.',
+        'combate',
       ),
     ],
     poderUnico: uniquePoder(
@@ -772,7 +783,8 @@ export const ORIGINS_CATALOG: OriginDefinition[] = [
       placeholderPoder(
         'soldado',
         'Poder de Combate (escolha)',
-        'Você recebe um poder de combate a sua escolha (anote separadamente). Pré-requisitos do poder se aplicam.',
+        'Você recebe um poder de combate a sua escolha. Pré-requisitos do poder se aplicam.',
+        'combate',
       ),
     ],
     poderUnico: uniquePoder(

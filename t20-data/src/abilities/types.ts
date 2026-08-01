@@ -87,6 +87,9 @@ export type OriginBenefit = {
   /** If kind='pericia', the expertise it trains. */
   expertise?: ExpertiseName
   modifiers?: Modifier[]
+  /** Free-pick benefit ("um poder de combate/da Tormenta a sua escolha") —
+   *  names the pool the player picks the concrete power from. */
+  powerPick?: 'combate' | 'tormenta'
 }
 
 export type OriginDefinition = {

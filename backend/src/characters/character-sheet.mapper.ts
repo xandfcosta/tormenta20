@@ -5,6 +5,7 @@ import {
   SKILL_IDS,
   computeCharacterSheet,
   getCatalogItem,
+  getOriginBenefit,
   raceWithDeformidade,
   type CharacterEquipment,
   type CharacterInput,
@@ -62,6 +63,9 @@ export type CharacterDbRow = {
   classPowers?: string | null;
   originChoices?: string | null;
   raceAbilityChoices?: string | null;
+  /** JSON Record<powerOrBenefitId, string[]> — sub-choices; free-pick origem
+   *  benefits (powerPick) store the concrete power id here. */
+  powerChoices?: string | null;
   /** JSON { floatingPicks?: string[]; ascendencia?: string } for the primary
    *  race — derives the racial attribute mod from the BASE stored attributes. */
   raceAttributeChoices?: string | null;
@@ -72,6 +76,34 @@ export type CharacterDbRow = {
   expertises: readonly CharacterExpertiseRow[];
   items: readonly CharacterItemRow[];
 };
+
+/**
+ * Concrete powers picked through free-pick origem benefits ("um poder de
+ * combate/da Tormenta a sua escolha", `powerPick`): for each CHOSEN benefit,
+ * its entry in the powerChoices blob names the picked power id. These join
+ * `powerIds` so the whole pipeline (modifiers, PV/PM grants, Tormenta Carisma
+ * loss) treats them as owned.
+ */
+function originPickedPowerIds(row: CharacterDbRow): string[] {
+  const chosen = jsonStringArray(row.originChoices);
+  if (chosen.length === 0 || !row.powerChoices) return [];
+  let blob: unknown;
+  try {
+    blob = JSON.parse(row.powerChoices);
+  } catch {
+    return [];
+  }
+  if (!blob || typeof blob !== 'object') return [];
+  const choices = blob as Record<string, unknown>;
+  const out: string[] = [];
+  for (const benefitId of chosen) {
+    if (!getOriginBenefit(benefitId)?.powerPick) continue;
+    const picked = choices[benefitId];
+    if (!Array.isArray(picked)) continue;
+    out.push(...picked.filter((x): x is string => typeof x === 'string'));
+  }
+  return out;
+}
 
 /** Parse a JSON-encoded `string[]` column defensively (bad blob ⇒ empty). */
 function jsonStringArray(raw: string | null | undefined): string[] {
@@ -387,7 +419,12 @@ export function toCharacterInput(row: CharacterDbRow): CharacterInput {
     trainedSkills,
     equipment,
     origin: row.origin ?? undefined,
-    powerIds: jsonStringArray(row.classPowers),
+    powerIds: [
+      ...new Set([
+        ...jsonStringArray(row.classPowers),
+        ...originPickedPowerIds(row),
+      ]),
+    ],
     originChoices: jsonStringArray(row.originChoices),
     raceAbilityChoices: jsonStringArray(row.raceAbilityChoices),
     deformidade: deformidadeFromRow(row, raceAttr),

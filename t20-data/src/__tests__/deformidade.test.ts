@@ -129,3 +129,14 @@ describe('raceWithDeformidade — só raças com a habilidade (Lefou)', () => {
     expect(raceWithDeformidade([])).toBeUndefined()
   })
 })
+
+describe('origem powerPick — benefícios de escolha livre', () => {
+  it('5 benefícios flagados (1 tormenta + 4 combate)', async () => {
+    const { ORIGINS_CATALOG } = await import('../abilities/origins')
+    const flagged = ORIGINS_CATALOG.flatMap((o) =>
+      o.benefits.filter((b) => b.powerPick),
+    )
+    expect(flagged.filter((b) => b.powerPick === 'tormenta')).toHaveLength(1)
+    expect(flagged.filter((b) => b.powerPick === 'combate')).toHaveLength(4)
+  })
+})
