@@ -1,12 +1,11 @@
 import {
+  allGeneralPowers,
   caminhoSlotFor,
   classPowersFor,
   devotoOptionsFor,
-  generalPowersByKinds,
   getOrigin,
   getRace,
   slotsForClassLevel,
-  unlockedKinds,
 } from '@tormenta20/t20-data'
 import type { Character } from '@/shared/api/api'
 import { parseClassChoices } from '@/entities/character/derived'
@@ -136,9 +135,7 @@ function slotsRemainingFor(
   const electiveIds = new Set(
     pool.filter((p) => p.grantedAtLevel === undefined).map((p) => p.id),
   )
-  const generalIds = new Set(
-    generalPowersByKinds(unlockedKinds(className, level)).map((p) => p.id),
-  )
+  const generalIds = new Set(allGeneralPowers().map((p) => p.id))
   const picks = allChosen.filter(
     (id) => electiveIds.has(id) || generalIds.has(id),
   ).length
