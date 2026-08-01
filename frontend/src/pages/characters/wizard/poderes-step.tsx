@@ -90,11 +90,11 @@ export function PoderesStep() {
           })
 
         return (
-          <Card>
+          <Card className="flex h-full min-h-0 flex-col">
             <CardHeader>
               <CardTitle className="font-display tracking-wide">Poderes</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="flex min-h-0 flex-1 flex-col gap-4">
               {!primary?.className ? (
                 <p className="text-sm text-muted-foreground">
                   Selecione uma classe primeiro (etapa Classe).
@@ -221,7 +221,7 @@ function ElectiveSection({
   const filtered = byFacet.filter((o) => !q || o.name.toLowerCase().includes(q))
 
   return (
-    <div className="space-y-3">
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
       <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
         Poderes: {used} de {total} escolhidos · {remaining} restantes
       </p>
@@ -253,7 +253,7 @@ function ElectiveSection({
           getKey={(o) => o.id}
           estimateSize={64}
           gap={4}
-          className="max-h-[min(360px,44vh)] p-0.5"
+          className="min-h-0 flex-1 p-0.5"
           renderItem={(o) => (
             <PowerRow
               option={o}
