@@ -57,7 +57,11 @@ export class CampaignsService {
                 id: true,
                 name: true,
                 level: true,
-                classes: { select: { className: true, level: true } },
+                classes: {
+                  select: { className: true, level: true },
+                  // classes[0] = primary class (insertion order, not index order)
+                  orderBy: { id: 'asc' },
+                },
               },
             },
           },
