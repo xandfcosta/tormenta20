@@ -567,6 +567,30 @@ describe('CharactersService.create — creation-time ability choices', () => {
     expect(data.expertises.create.every((e) => e.trained === false)).toBe(true);
   });
 
+  it('persists the devoção poder concedido (godPower, p96)', async () => {
+    const prisma = new FakePrisma();
+    const service = await makeService(prisma);
+    await service.create(
+      7,
+      baseDto({ god: 'Khalmyr', godPower: 'Coragem Total' }),
+    );
+    const { data } = prisma.characterCreate.mock.calls[0][0] as {
+      data: { god: string | null; godPower: string };
+    };
+    expect(data.god).toBe('Khalmyr');
+    expect(data.godPower).toBe('Coragem Total');
+  });
+
+  it('godPower defaults to empty when not devoto', async () => {
+    const prisma = new FakePrisma();
+    const service = await makeService(prisma);
+    await service.create(7, baseDto({}));
+    const { data } = prisma.characterCreate.mock.calls[0][0] as {
+      data: { godPower: string };
+    };
+    expect(data.godPower).toBe('');
+  });
+
   it('persists the deformidade choice inside the race-choice JSON blobs', async () => {
     const prisma = new FakePrisma();
     const service = await makeService(prisma);

@@ -208,6 +208,9 @@ function SummaryBody({
         <p className="text-sm">
           Tamanho {values.size} · Deslocamento {values.displacement}m
           {values.god ? ` · Deus: ${values.god}` : ''}
+          {values.god && values.godPower
+            ? ` · Poder concedido: ${values.godPower}`
+            : ''}
         </p>
       </SummaryRow>
       </div>

@@ -18,6 +18,7 @@ import { CreationStepper } from '@/features/character-build/creation-stepper'
 import { CreationWizardProvider } from '@/features/character-build/creation-wizard-context'
 import { WizardFooterNav } from '@/features/character-build/wizard-footer-nav'
 import { deriveDraftVitals } from '@/features/character-build/draft-vitals'
+import { syncDevotoFromGod } from '@/features/character-build/devocao-sync'
 import { deformidadePayload } from '@/features/character-build/grant-helpers'
 import { totalSlots } from '@/features/character-build/class-power-helpers'
 import {
@@ -90,6 +91,8 @@ export function CreationWizardShell() {
         // earn (covers lowering the level then skipping the Poderes step).
         classPowers: (value.classPowers ?? []).slice(0, totalSlots(value.classes)),
         god: value.god ? value.god : undefined,
+        // Poder concedido só faz sentido com um deus escolhido (p96).
+        godPower: value.god && value.godPower ? value.godPower : undefined,
         raceAttributeChoices: {
           floatingPicks: rc?.floatingPicks ?? [],
           ascendencia: rc?.ascendencia,
@@ -144,6 +147,17 @@ export function CreationWizardShell() {
     const sub = form.store.subscribe(sync)
     return () => sub.unsubscribe()
   }, [form, raceChoices])
+
+  // Unified devoção: the Identidade god is the single source — it drives the
+  // per-class devoto choice (Clérigo/Paladino/Druida) whenever the chosen god
+  // is valid for that class. Sentinel picks (Panteão / Paladino do Bem) stay
+  // available only while no god is set.
+  useEffect(() => {
+    const sync = () => syncDevotoFromGod(form)
+    sync()
+    const sub = form.store.subscribe(sync)
+    return () => sub.unsubscribe()
+  }, [form])
 
   const cancel = () => {
     resetDraft()

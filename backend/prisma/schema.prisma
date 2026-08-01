@@ -89,6 +89,9 @@ model Character {
   name         String
   origin       String
   god          String?
+  /// Poder concedido escolhido ao se tornar devoto (book p96) — name from the
+  /// god's 4-power list. Empty when not devoto / not chosen yet.
+  godPower     String   @default("")
   level        Int      @default(1)
   hpMax        Int
   hpCurrent    Int
