@@ -96,6 +96,36 @@ export class SecondaryRaceChoiceDto {
   deformidade?: DeformidadeChoiceDto;
 }
 
+/** One starting item granted at creation (kit p140 + origem itens). */
+export class StartingItemDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  catalogId?: string;
+
+  @IsString()
+  @MinLength(1)
+  @MaxLength(80)
+  name!: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(99)
+  quantity?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(20)
+  slots?: number;
+
+  /** null | 'vested' | 'wielded' | 'wielded2' — kit armor/weapons start equipped. */
+  @IsOptional()
+  @IsIn(['vested', 'wielded', 'wielded2'])
+  equipped?: string;
+}
+
 export class CreateCharacterDto {
   @IsString()
   @MinLength(1)
@@ -129,6 +159,20 @@ export class CreateCharacterDto {
   @IsString()
   @MaxLength(60)
   godPower?: string;
+
+  /** Dinheiro inicial em T$ (Tabela 3-1 p140 / rolagem 4d6); editável. */
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(1_000_000)
+  tibar?: number;
+
+  /** Itens iniciais (kit p140 + itens da origem). */
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => StartingItemDto)
+  items?: StartingItemDto[];
 
   @IsInt() @Min(1) @Max(9999) hpMax!: number;
   @IsInt() @Min(0) @Max(9999) hpCurrent!: number;

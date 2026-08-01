@@ -79,6 +79,8 @@ export type Character = {
   god: string | null
   /** Poder concedido escolhido ao se tornar devoto (p96); '' = não devoto. */
   godPower: string
+  /** Tibares (T$). */
+  tibar: number
   level: number
   hpMax: number
   hpCurrent: number
@@ -225,6 +227,16 @@ export type CreateCharacterInput = {
   classes: { className: string; level: number }[]
   god?: string
   godPower?: string
+  /** Dinheiro inicial em T$ (Tabela 3-1 p140 / 4d6). */
+  tibar?: number
+  /** Itens iniciais (kit p140 + itens da origem). */
+  items?: {
+    catalogId?: string
+    name: string
+    quantity?: number
+    slots?: number
+    equipped?: string
+  }[]
   hpMax: number
   hpCurrent: number
   mpMax: number

@@ -567,6 +567,41 @@ describe('CharactersService.create — creation-time ability choices', () => {
     expect(data.expertises.create.every((e) => e.trained === false)).toBe(true);
   });
 
+  it('persists starting items + tibar (Equipamento p140)', async () => {
+    const prisma = new FakePrisma();
+    const service = await makeService(prisma);
+    await service.create(
+      7,
+      baseDto({
+        tibar: 14,
+        items: [
+          { catalogId: 'mochila', name: 'Mochila', quantity: 1, slots: 1 },
+          {
+            catalogId: 'espada-longa',
+            name: 'Espada longa',
+            quantity: 1,
+            slots: 1,
+            equipped: 'wielded',
+          },
+          { name: 'Símbolo sagrado', quantity: 1, slots: 1 },
+        ],
+      }),
+    );
+    const { data } = prisma.characterCreate.mock.calls[0][0] as {
+      data: {
+        tibar: number;
+        items: { create: { catalogId: string | null; name: string; equipped: string | null }[] };
+      };
+    };
+    expect(data.tibar).toBe(14);
+    expect(data.items.create).toHaveLength(3);
+    expect(data.items.create[1]).toMatchObject({
+      catalogId: 'espada-longa',
+      equipped: 'wielded',
+    });
+    expect(data.items.create[2]).toMatchObject({ catalogId: null });
+  });
+
   it('persists the devoção poder concedido (godPower, p96)', async () => {
     const prisma = new FakePrisma();
     const service = await makeService(prisma);
