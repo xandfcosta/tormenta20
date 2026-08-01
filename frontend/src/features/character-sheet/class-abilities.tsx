@@ -1,11 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
+  allGeneralPowers,
   caminhoSlotFor,
   classPowersFor,
   devotoOptionsFor,
-  generalPowersByKinds,
   slotsForClassLevel,
-  unlockedKinds,
 } from '@tormenta20/t20-data'
 import type {
   CaminhoOption,
@@ -181,8 +180,7 @@ export function ClassesSection({
 
   const slots = slotsForClassLevel(entry.className, entry.level)
   const slotCount = slots.length
-  const kinds = unlockedKinds(entry.className, entry.level)
-  const generalPool = generalPowersByKinds(kinds)
+  const generalPool = allGeneralPowers()
   const classElectiveIds = new Set(classElectives.map((p) => p.id))
   const generalIds = new Set(generalPool.map((p) => p.id))
   const ownedSlotPicks = allChosen.filter(
@@ -227,8 +225,7 @@ export function ClassesSection({
   }
 
   const generalLabel =
-    kinds.filter((k) => k !== entry.className.toLowerCase()).join(', ') ||
-    'sem pools'
+    [...new Set(generalPool.map((p) => p.kind))].join(', ') || 'sem pools'
 
   return (
     <CollapsibleAbilityCard

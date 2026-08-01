@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  allGeneralPowers,
   GENERAL_POWERS_CATALOG,
   generalPowersByKinds,
   getGeneralPower,
@@ -55,6 +56,19 @@ describe('getGeneralPower', () => {
  * writes). Saves are perícias in T20, so Reflexos/Fortitude/Vontade are
  * `expertise` targets.
  */
+describe('allGeneralPowers', () => {
+  it('returns the substitutable pool (non-empty, no tormenta)', () => {
+    const all = allGeneralPowers()
+    expect(all.length).toBeGreaterThan(0)
+    expect(all.every((p) => p.kind !== 'tormenta')).toBe(true)
+  })
+
+  it('covers every non-tormenta general power in the catalog', () => {
+    const expected = GENERAL_POWERS_CATALOG.filter((p) => p.kind !== 'tormenta')
+    expect(allGeneralPowers()).toHaveLength(expected.length)
+  })
+})
+
 describe('passive general-power modifiers', () => {
   const expected: Record<string, number> = {
     esquiva: 2, // defense + Reflexos

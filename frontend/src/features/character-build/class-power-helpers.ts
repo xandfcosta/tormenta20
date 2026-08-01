@@ -1,14 +1,13 @@
 import {
+  allGeneralPowers,
   caminhoSlotFor,
   classPowersFor,
   devotoOptionsFor,
-  generalPowersByKinds,
   type ClassChoices,
   type PowerChoice,
   type Prerequisite,
   slotsForClassLevel,
   spellEffectByName,
-  unlockedKinds,
   WEAPONS,
 } from '@tormenta20/t20-data'
 
@@ -56,11 +55,10 @@ export function powerChoiceOptions(choice: PowerChoice): ChoiceOption[] {
 /**
  * Candidate powers a slot can be spent on for one class entry: the class's own
  * elective powers (those WITHOUT `grantedAtLevel` — auto powers are excluded)
- * plus the general powers whose kind is unlocked at this level.
+ * plus every general power (any slot may substitute one; prereqs gate the pick).
  */
 export function classPowerCandidates(
   className: string,
-  level: number,
 ): { classPowers: PowerOption[]; generalPowers: PowerOption[] } {
   const classPowers = classPowersFor(className)
     .filter((p) => p.grantedAtLevel === undefined)
@@ -75,7 +73,9 @@ export function classPowerCandidates(
         choice: p.choice,
       }),
     )
-  const generalPowers = generalPowersByKinds(unlockedKinds(className, level)).map(
+  // Any class-power slot can be spent on any general power (PDF p33); the
+  // pool is level-independent — prereqs/level gate each pick at selection.
+  const generalPowers = allGeneralPowers().map(
     (p): PowerOption => ({
       id: p.id,
       name: p.name,

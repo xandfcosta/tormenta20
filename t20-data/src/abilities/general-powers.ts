@@ -697,3 +697,13 @@ export function generalPowersByKinds(
   const set = new Set(allowedKinds)
   return GENERAL_POWERS_CATALOG.filter((p) => set.has(p.kind))
 }
+
+/**
+ * Every general power a character may take by substituting a class-power slot
+ * (PDF p33: "sempre pode substituir um poder de classe por um poder geral").
+ * Excludes `tormenta` powers — those require Tormenta exposure, not a free
+ * pick. Prerequisites still gate individual powers at the point of selection.
+ */
+export function allGeneralPowers(): GeneralPower[] {
+  return GENERAL_POWERS_CATALOG.filter((p) => p.kind !== 'tormenta')
+}

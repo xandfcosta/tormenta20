@@ -203,10 +203,7 @@ function ElectiveSection({
 }) {
   const [query, setQuery] = useState('')
   const primary = classes[0]
-  const { classPowers, generalPowers } = classPowerCandidates(
-    primary.className,
-    primary.level,
-  )
+  const { classPowers, generalPowers } = classPowerCandidates(primary.className)
   const byId = new Map(
     [...classPowers, ...generalPowers].map((o) => [o.id, o] as const),
   )
