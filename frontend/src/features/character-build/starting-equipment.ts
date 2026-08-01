@@ -122,3 +122,65 @@ export function startingItemsPayload(
   }
   return out
 }
+
+// ─── Loja (comprar com T$ iniciais, p140) ────────────────────────────
+
+export type ShopCategoryKey =
+  | 'all'
+  | 'weapons'
+  | 'armors'
+  | 'gear'
+  | 'consumables'
+  | 'apparel'
+  | 'animals'
+
+export const SHOP_CATEGORIES: readonly {
+  key: ShopCategoryKey
+  label: string
+  matches: readonly string[]
+}[] = [
+  { key: 'all', label: 'Todos', matches: [] },
+  {
+    key: 'weapons',
+    label: 'Armas',
+    matches: ['weapon-simple', 'weapon-martial', 'weapon-exotic', 'weapon-firearm'],
+  },
+  { key: 'armors', label: 'Armaduras', matches: ['armor-light', 'armor-heavy', 'shield'] },
+  { key: 'gear', label: 'Equipamento', matches: ['gear', 'catalyst', 'vehicle'] },
+  { key: 'consumables', label: 'Consumíveis', matches: ['consumable', 'meal'] },
+  { key: 'apparel', label: 'Vestuário', matches: ['apparel'] },
+  { key: 'animals', label: 'Animais', matches: ['animal'] },
+]
+
+const SHOP_EXCLUDED = new Set(['improvement', 'material', 'dr'])
+
+/** Buyable catalog (excludes improvement/material overlays), price-sorted. */
+export function shopCatalog(category: ShopCategoryKey): CatalogItem[] {
+  const group = SHOP_CATEGORIES.find((c) => c.key === category)
+  return CATALOG_ITEMS.filter((i) => {
+    if (SHOP_EXCLUDED.has(i.category)) return false
+    if (!group || group.key === 'all') return true
+    return group.matches.includes(i.category)
+  }).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+}
+
+export type PurchaseMap = Record<string, number>
+
+/** Total T$ spent by the purchase map (centavo-safe rounding). */
+export function purchasesTotal(purchases: PurchaseMap): number {
+  const cents = Object.entries(purchases).reduce((sum, [id, qty]) => {
+    const item = getCatalogItem(id)
+    if (!item || qty <= 0) return sum
+    return sum + Math.round(item.price * 100) * qty
+  }, 0)
+  return cents / 100
+}
+
+/** Purchases as create-payload items (unequipped inventory rows). */
+export function purchasesPayload(purchases: PurchaseMap): StartingItemPayload[] {
+  return Object.entries(purchases).flatMap(([id, qty]) => {
+    const item = getCatalogItem(id)
+    if (!item || qty <= 0) return []
+    return [{ catalogId: id, name: item.name, quantity: qty, slots: item.slots }]
+  })
+}

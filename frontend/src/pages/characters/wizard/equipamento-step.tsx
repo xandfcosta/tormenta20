@@ -12,9 +12,11 @@ import { useCreationWizard } from '@/features/character-build/creation-wizard-co
 import {
   lightArmorOptions,
   originStartingItems,
+  purchasesTotal,
   startingLoadout,
   weaponOptions,
 } from '@/features/character-build/starting-equipment'
+import { StartingShop } from '@/features/character-build/starting-shop'
 
 type EquipValues = {
   classes: { className: string; level: number }[]
@@ -24,6 +26,7 @@ type EquipValues = {
   startingWeaponMartial: string
   startingArmor: string
   startingShield: boolean
+  startingPurchases: Record<string, number>
 }
 
 /**
@@ -69,6 +72,17 @@ export function EquipamentoStep() {
                   tibar={v.tibar}
                   level={level}
                   tableMoney={tableMoney}
+                  spent={purchasesTotal(v.startingPurchases ?? {})}
+                />
+                <StartingShop
+                  purchases={v.startingPurchases ?? {}}
+                  remaining={Math.max(
+                    0,
+                    (v.tibar ?? 0) - purchasesTotal(v.startingPurchases ?? {}),
+                  )}
+                  onChange={(next) =>
+                    form.setFieldValue('startingPurchases', next)
+                  }
                 />
               </>
             )
@@ -255,20 +269,38 @@ function rollDice(count: number, sides: number): number {
   return total
 }
 
+const tibarFmt = (v: number) =>
+  v.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
+
 function MoneyField({
   form,
   tibar,
   level,
   tableMoney,
+  spent,
 }: {
   form: StepForm
   tibar: number
   level: number
   tableMoney: number | null
+  spent: number
 }) {
+  const remaining = (tibar ?? 0) - spent
   return (
     <div className="space-y-1.5">
       <SectionLabel>Dinheiro inicial (Tabela 3-1, p140)</SectionLabel>
+      {spent > 0 && (
+        <p
+          className={cn(
+            'text-xs',
+            remaining < 0
+              ? 'text-[color:var(--hp-hurt)]'
+              : 'text-muted-foreground',
+          )}
+        >
+          Gasto T$ {tibarFmt(spent)} · Restante T$ {tibarFmt(Math.max(0, remaining))}
+        </p>
+      )}
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm">T$</span>
         <NumberInput

@@ -93,7 +93,8 @@ model Character {
   /// god's 4-power list. Empty when not devoto / not chosen yet.
   godPower     String   @default("")
   /// Tibares (T$) — dinheiro inicial da Tabela 3-1 (p140); editável depois.
-  tibar        Int      @default(0)
+  /// Float: preços do Cap 3 têm centavos (tocha T$ 0,1).
+  tibar        Float    @default(0)
   level        Int      @default(1)
   hpMax        Int
   hpCurrent    Int
