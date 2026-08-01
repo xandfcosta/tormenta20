@@ -5,6 +5,7 @@ import {
   CLASS_VITALS,
   carismaLossFromPowers,
   getOrigin,
+  getOriginBenefit,
   getRace,
   ownedClassPowers,
   type Raca,
@@ -80,6 +81,33 @@ export function draftDeformidadeHeldPower(
     if (payload?.tormentaPower) return payload.tormentaPower
   }
   return undefined
+}
+
+/**
+ * EXTRA Carisma delta from poderes da Tormenta beyond the Deformidade swap —
+ * pool picks (classPowers) and free-pick origem benefits. The race deltas
+ * already carry the swap's −1 (`resolveRaceDeltas`), and the p136 loss
+ * escalates over the TOTAL count, so this returns only the difference. Keeps
+ * the wizard preview equal to the saved sheet. Always ≤ 0.
+ */
+export function draftTormentaCarismaExtra(
+  raceIds: string[],
+  choices: RaceChoiceState,
+  classPowers: string[],
+  powerChoices: Record<string, string[]>,
+  originChoices: string[],
+): number {
+  const held = draftDeformidadeHeldPower(raceIds, choices)
+  const originPicked = originChoices.flatMap((benefitId) =>
+    getOriginBenefit(benefitId)?.powerPick ? (powerChoices[benefitId] ?? []) : [],
+  )
+  const picked = [...new Set([...classPowers, ...originPicked])].filter(
+    (id) => id in TORMENTA_POWERS,
+  )
+  const count = picked.length + (held && !picked.includes(held) ? 1 : 0)
+  if (count === 0) return 0
+  const swapLoss = held ? carismaLossFromPowers(1) : 0
+  return swapLoss - carismaLossFromPowers(count)
 }
 
 /**
@@ -298,7 +326,13 @@ export function classTiles(available: string[]): ClassTile[] {
   })
 }
 
-export type GrantLine = { id: string; name: string; description: string }
+export type GrantLine = {
+  id: string
+  name: string
+  description: string
+  /** Free-pick origem benefit — pool the player picks the concrete power from. */
+  powerPick?: 'combate' | 'tormenta'
+}
 
 /** Attribute deltas + innate abilities a race contributes, for the preview. */
 export function raceGrant(raceId: string): {
@@ -365,6 +399,7 @@ export function originGrant(originId: string): {
     id: b.id,
     name: b.name,
     description: b.description,
+    powerPick: b.powerPick,
   }))
   const poderUnico = origin.poderUnico
     ? {

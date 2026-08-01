@@ -5,6 +5,7 @@ import { Combobox } from '@/shared/ui/combobox'
 import { Field, FieldError } from '@/shared/ui/field'
 import { cn } from '@/shared/lib/utils'
 import { originGrant } from '@/features/character-build/grant-helpers'
+import { powerPickOptions } from '@/features/character-build/class-power-helpers'
 import {
   type FieldApi,
   useCreationWizard,
@@ -46,17 +47,39 @@ export function OrigemStep() {
         </form.Field>
 
         <form.Subscribe
-          selector={(s: { values: { origin: string; originChoices: string[] } }) => ({
+          selector={(s: {
+            values: {
+              origin: string
+              originChoices: string[]
+              powerChoices: Record<string, string[]>
+            }
+          }) => ({
             origin: s.values.origin,
             picks: s.values.originChoices,
+            powerChoices: s.values.powerChoices ?? {},
           })}
         >
-          {({ origin, picks }: { origin: string; picks: string[] }) =>
+          {({
+            origin,
+            picks,
+            powerChoices,
+          }: {
+            origin: string
+            picks: string[]
+            powerChoices: Record<string, string[]>
+          }) =>
             origin ? (
               <BenefitPicker
                 originId={origin}
                 picks={picks}
+                powerChoices={powerChoices}
                 onChange={(next) => form.setFieldValue('originChoices', next)}
+                onPowerPick={(benefitId, powerId) =>
+                  form.setFieldValue('powerChoices', {
+                    ...powerChoices,
+                    [benefitId]: powerId ? [powerId] : [],
+                  })
+                }
               />
             ) : null
           }
@@ -69,11 +92,15 @@ export function OrigemStep() {
 function BenefitPicker({
   originId,
   picks,
+  powerChoices,
   onChange,
+  onPowerPick,
 }: {
   originId: string
   picks: string[]
+  powerChoices: Record<string, string[]>
   onChange: (next: string[]) => void
+  onPowerPick: (benefitId: string, powerId: string) => void
 }) {
   const grant = originGrant(originId)
   if (!grant) return null
@@ -133,6 +160,13 @@ function BenefitPicker({
                   </p>
                 </div>
               </button>
+              {selected && b.powerPick && (
+                <FreePowerPicker
+                  pool={b.powerPick}
+                  value={powerChoices[b.id]?.[0] ?? ''}
+                  onPick={(id) => onPowerPick(b.id, id)}
+                />
+              )}
             </li>
           )
         })}
@@ -141,6 +175,51 @@ function BenefitPicker({
         <p className="text-[11px] text-[color:var(--hp-hurt)]">
           Escolha {ORIGIN_BENEFIT_CAP - picks.length} benefício(s) — ou termine
           depois na ficha.
+        </p>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Concrete power pick for a free-pick benefit ("um poder de combate/da
+ * Tormenta a sua escolha"). Prereqs are advisory — GM arbitrates (the benefit
+ * text says they apply).
+ */
+function FreePowerPicker({
+  pool,
+  value,
+  onPick,
+}: {
+  pool: 'combate' | 'tormenta'
+  value: string
+  onPick: (powerId: string) => void
+}) {
+  const options = powerPickOptions(pool)
+  const chosen = options.find((o) => o.value === value)
+  return (
+    <div className="ml-6 mt-1 space-y-1 rounded-md border border-dashed border-border p-2">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+        Poder {pool === 'combate' ? 'de combate' : 'da Tormenta'} · escolha 1
+      </p>
+      <Combobox
+        options={options.map((o) => ({ value: o.value, label: o.label }))}
+        value={value}
+        onChange={onPick}
+        placeholder="Escolher poder"
+        searchPlaceholder="Buscar poder…"
+        emptyMessage="Nenhum."
+        allowClear
+        clearLabel="Nenhum"
+      />
+      {chosen && (
+        <p className="text-[10px] leading-snug text-muted-foreground">
+          {chosen.description}
+        </p>
+      )}
+      {!chosen && (
+        <p className="text-[10px] text-[color:var(--hp-hurt)]">
+          Escolha o poder concedido pelo benefício.
         </p>
       )}
     </div>

@@ -5,6 +5,7 @@ import {
   classTiles,
   deformidadePayload,
   deformidadeSummary,
+  draftTormentaCarismaExtra,
   originGrant,
   raceAttributeDeltas,
   raceChoiceMeta,
@@ -287,5 +288,45 @@ describe('deformidadeSummary — linha de escolhas do Resumo', () => {
     expect(
       deformidadeSummary('Humano', { deformidade: { pericias: ['Furtividade'] } }),
     ).toBeNull()
+  })
+})
+
+describe('draftTormentaCarismaExtra — perda além do swap da Deformidade', () => {
+  const lefou = {
+    Lefou: {
+      deformidade: { pericias: [], tormentaPower: 'dentes-afiados' },
+    },
+  }
+
+  it('sem picks extras → 0 (swap já está nos deltas de raça)', () => {
+    expect(draftTormentaCarismaExtra(['Lefou'], lefou, [], {}, [])).toBe(0)
+  })
+
+  it('swap + 2 picks do pool = 3 poderes → extra −3 (total −4, swap −1 já contado)', () => {
+    expect(
+      draftTormentaCarismaExtra(['Lefou'], lefou, ['antenas', 'carapaca'], {}, []),
+    ).toBe(-3)
+  })
+
+  it('sem deformidade, 1 pick → −1', () => {
+    expect(draftTormentaCarismaExtra(['Lefou'], {}, ['antenas'], {}, [])).toBe(-1)
+  })
+
+  it('pick de origem (benefício tormenta) conta', () => {
+    expect(
+      draftTormentaCarismaExtra(
+        ['Humano'],
+        {},
+        [],
+        { 'origin-assistente-poder-poder-da-tormenta-escolha': ['antenas'] },
+        ['origin-assistente-poder-poder-da-tormenta-escolha'],
+      ),
+    ).toBe(-1)
+  })
+
+  it('pick duplicado com o swap não conta duas vezes', () => {
+    expect(
+      draftTormentaCarismaExtra(['Lefou'], lefou, ['dentes-afiados'], {}, []),
+    ).toBe(0)
   })
 })

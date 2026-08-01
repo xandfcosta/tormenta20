@@ -10,6 +10,7 @@ import {
   type RaceChoiceState,
   appliedRaceDeltas,
   deformidadeSummary,
+  draftTormentaCarismaExtra,
   originGrant,
   raceGrant,
   resolveRaceDeltas,
@@ -17,6 +18,7 @@ import {
 import {
   chosenPowerLines,
   classChoiceSummary,
+  powerPickOptions,
   totalSlots,
 } from './class-power-helpers'
 import { AbilityDisclosure, ClassGrantPanel, DeltaBadges } from './grant-panels'
@@ -50,6 +52,15 @@ function SummaryBody({
   const hue = hueFromName(name)
   const primary = values.classes[0]
   const deltas = appliedRaceDeltas(values.races, raceChoices)
+  // CAR loss from pool/origem tormenta picks beyond the Deformidade swap.
+  const carExtra = draftTormentaCarismaExtra(
+    values.races,
+    raceChoices,
+    values.classPowers ?? [],
+    values.powerChoices ?? {},
+    values.originChoices ?? [],
+  )
+  if (carExtra) deltas.charisma = (deltas.charisma ?? 0) + carExtra
   const defense = 10 + values.dexterity + (deltas.dexterity ?? 0)
   const { pvMax, pmMax } = deriveDraftVitals(values, raceChoices)
   const flavor = [
@@ -172,6 +183,7 @@ function SummaryBody({
           <ChosenOriginBenefits
             originId={values.origin}
             choiceIds={values.originChoices}
+            powerChoices={values.powerChoices ?? {}}
           />
         ) : (
           <Empty />
@@ -285,9 +297,11 @@ function ChosenPowers({ values }: { values: CharacterFormValues }) {
 function ChosenOriginBenefits({
   originId,
   choiceIds,
+  powerChoices,
 }: {
   originId: string
   choiceIds: string[]
+  powerChoices: Record<string, string[]>
 }) {
   const origin = originGrant(originId)
   if (!origin) return <Empty />
@@ -310,6 +324,12 @@ function ChosenOriginBenefits({
           {chosen.map((b) => (
             <li key={b.id} className="text-sm">
               {b.name}
+              {b.powerPick && (
+                <PickedBenefitPower
+                  pool={b.powerPick}
+                  powerId={powerChoices[b.id]?.[0]}
+                />
+              )}
               <span className="block text-[11px] leading-snug text-muted-foreground">
                 {b.description}
               </span>
@@ -318,6 +338,29 @@ function ChosenOriginBenefits({
         </ul>
       )}
     </div>
+  )
+}
+
+/** Resolved name of a free-pick benefit's chosen power (or pending hint). */
+function PickedBenefitPower({
+  pool,
+  powerId,
+}: {
+  pool: 'combate' | 'tormenta'
+  powerId: string | undefined
+}) {
+  if (!powerId) {
+    return (
+      <span className="ml-1.5 text-[11px] text-[color:var(--hp-hurt)]">
+        · poder não escolhido
+      </span>
+    )
+  }
+  const name = powerPickOptions(pool).find((o) => o.value === powerId)?.label
+  return (
+    <span className="ml-1.5 text-[11px] text-muted-foreground">
+      · {name ?? powerId}
+    </span>
   )
 }
 

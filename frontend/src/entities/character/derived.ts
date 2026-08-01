@@ -12,6 +12,7 @@ import {
   getClassPower,
   getGeneralPower,
   getOrigin,
+  getOriginBenefit,
   getRace,
   originModifiers,
   RACAS,
@@ -128,13 +129,46 @@ function originActiveItem(character: Character): ActiveItem | null {
   const origin = getOrigin(character.origin)
   if (!origin) return null
   const choices = parseChoiceSet(character.originChoices)
-  const mods = originModifiers(origin, choices)
+  const mods = [
+    ...originModifiers(origin, choices),
+    // Free-pick benefits ("um poder de combate a sua escolha"): the concrete
+    // power picked lives in powerChoices — fold its modifiers as origem's.
+    ...originPickedPowerIds(character).flatMap(
+      (id) => getGeneralPower(id)?.modifiers ?? [],
+    ),
+  ]
   if (mods.length === 0) return null
   return {
     source: `Origem: ${origin.name}`,
     equipped: 'vested',
     modifiers: mods,
   }
+}
+
+/**
+ * Concrete powers picked via free-pick origem benefits (`powerPick`): for each
+ * CHOSEN benefit, its powerChoices entry names the picked power id. Owned for
+ * all downstream rules (modifiers, Tormenta Carisma loss).
+ */
+export function originPickedPowerIds(character: Character): string[] {
+  const chosen = parseChoiceSet(character.originChoices)
+  if (chosen.size === 0) return []
+  let blob: unknown
+  try {
+    blob = JSON.parse(character.powerChoices)
+  } catch {
+    return []
+  }
+  if (!blob || typeof blob !== 'object') return []
+  const record = blob as Record<string, unknown>
+  const out: string[] = []
+  for (const benefitId of chosen) {
+    if (!getOriginBenefit(benefitId)?.powerPick) continue
+    const picked = record[benefitId]
+    if (!Array.isArray(picked)) continue
+    out.push(...picked.filter((x): x is string => typeof x === 'string'))
+  }
+  return out
 }
 
 const RACA_BY_NAME = new Map(Object.values(RACAS).map((r) => [r.name, r]))
@@ -229,9 +263,12 @@ export function deformidadeHeldPower(character: Character): string | undefined {
  * count (p23).
  */
 function tormentaCarismaItem(character: Character): ActiveItem | null {
-  const picked = [...parseChoiceSet(character.classPowers)].filter(
-    (id) => id in TORMENTA_POWERS,
-  )
+  const picked = [
+    ...new Set([
+      ...parseChoiceSet(character.classPowers),
+      ...originPickedPowerIds(character),
+    ]),
+  ].filter((id) => id in TORMENTA_POWERS)
   const held = deformidadeHeldPower(character)
   const count = picked.length + (held && !picked.includes(held) ? 1 : 0)
   if (count === 0) return null

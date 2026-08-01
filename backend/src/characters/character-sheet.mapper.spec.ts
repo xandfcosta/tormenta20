@@ -242,6 +242,47 @@ describe('toCharacterInput — deformidade', () => {
     expect(withDef.attributes.charisma.tormentaMod).toBe(-1);
   });
 
+  it('origem free-pick benefit power joins powerIds (Capanga → poder de combate)', () => {
+    const row: CharacterDbRow = {
+      ...humanoFighter,
+      origin: 'Capanga',
+      originChoices: JSON.stringify([
+        'origin-capanga-poder-poder-de-combate-escolha',
+      ]),
+      powerChoices: JSON.stringify({
+        'origin-capanga-poder-poder-de-combate-escolha': ['esquiva'],
+      }),
+    };
+    expect(toCharacterInput(row).powerIds).toContain('esquiva');
+  });
+
+  it('origem tormenta pick perde Carisma (p136) via powerIds', () => {
+    const row: CharacterDbRow = {
+      ...humanoFighter,
+      origin: 'Assistente de Laboratório',
+      originChoices: JSON.stringify([
+        'origin-assistente-poder-poder-da-tormenta-escolha',
+      ]),
+      powerChoices: JSON.stringify({
+        'origin-assistente-poder-poder-da-tormenta-escolha': ['antenas'],
+      }),
+    };
+    const sheet = computeSheetForRow(row);
+    expect(sheet.attributes.charisma.tormentaMod).toBe(-1);
+  });
+
+  it('powerChoices for a benefit NOT chosen is ignored', () => {
+    const row: CharacterDbRow = {
+      ...humanoFighter,
+      origin: 'Capanga',
+      originChoices: JSON.stringify([]),
+      powerChoices: JSON.stringify({
+        'origin-capanga-poder-poder-de-combate-escolha': ['esquiva'],
+      }),
+    };
+    expect(toCharacterInput(row).powerIds).not.toContain('esquiva');
+  });
+
   it('malformed deformidade blob is dropped, not thrown', () => {
     const row: CharacterDbRow = {
       ...humanoFighter,

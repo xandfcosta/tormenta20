@@ -140,7 +140,9 @@ export function usedSlots(
   let n = 0
   for (const id of chosenIds) {
     const opt = candidatesById.get(id)
-    if (opt?.choice?.repeatable) n += powerChoices[id]?.length ?? 0
+    // A selected repeatable with no sub-choice yet still occupies its slot
+    // (min 1) — otherwise it reads as picked while consuming nothing.
+    if (opt?.choice?.repeatable) n += Math.max(1, powerChoices[id]?.length ?? 0)
     else n += 1
   }
   return n
@@ -293,4 +295,26 @@ export function classChoiceSummary(
     parts.push(`devoto de ${name}`)
   }
   return parts.length > 0 ? parts.join(' · ') : null
+}
+
+export type PowerPickOption = { value: string; label: string; description: string }
+
+/**
+ * Pickable pool for a free-pick origem benefit ("um poder de combate/da
+ * Tormenta a sua escolha"). Prereqs are advisory here — the benefit text says
+ * they apply; the GM arbitrates at the table.
+ */
+export function powerPickOptions(
+  pool: 'combate' | 'tormenta',
+): PowerPickOption[] {
+  if (pool === 'tormenta') {
+    return Object.values(TORMENTA_POWERS).map((p) => ({
+      value: p.id,
+      label: p.name,
+      description: p.description,
+    }))
+  }
+  return allGeneralPowers()
+    .filter((p) => p.kind === 'combate')
+    .map((p) => ({ value: p.id, label: p.name, description: p.description }))
 }

@@ -50,8 +50,9 @@ describe('usedSlots — repeatable powers count per sub-choice', () => {
     expect(usedSlots(['rep'], { rep: ['strength', 'dexterity', 'wisdom'] }, byId)).toBe(3)
   })
 
-  it('a repeatable power with no picks yet uses zero slots', () => {
-    expect(usedSlots(['rep'], {}, byId)).toBe(0)
+  it('a selected repeatable with no picks still occupies its slot (min 1)', () => {
+    // Regression: 0 would let the power read as picked while consuming nothing.
+    expect(usedSlots(['rep'], {}, byId)).toBe(1)
   })
 
   it('sums plain + repeatable', () => {
