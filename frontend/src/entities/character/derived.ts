@@ -1,9 +1,13 @@
 import {
   ATTRIBUTE_ABBR,
   applyActiveConditionals,
+  carismaLossFromPowers,
   classPowerModifiers,
   computeItemEffects,
   conditionalId,
+  DEFORMIDADE_PERICIA_BONUS,
+  EXPERTISE_NAMES,
+  type ExpertiseName,
   getCatalogItem,
   getClassPower,
   getGeneralPower,
@@ -12,6 +16,7 @@ import {
   originModifiers,
   RACAS,
   raceModifiers,
+  raceWithDeformidade,
   requiredProficiency,
   resolveAtributoMod,
   statFor,
@@ -134,21 +139,75 @@ const RACA_BY_NAME = new Map(Object.values(RACAS).map((r) => [r.name, r]))
 function parseRaceAttributeChoices(raw: string): {
   floatingPicks: AttributeKey[]
   ascendencia?: string
+  deformidade?: DeformidadeStored
 } {
   try {
-    const p = JSON.parse(raw) as { floatingPicks?: unknown; ascendencia?: unknown }
+    const p = JSON.parse(raw) as {
+      floatingPicks?: unknown
+      ascendencia?: unknown
+      deformidade?: unknown
+    }
     return {
       floatingPicks: Array.isArray(p.floatingPicks)
         ? (p.floatingPicks.filter((x) => typeof x === 'string') as AttributeKey[])
         : [],
       ascendencia: typeof p.ascendencia === 'string' ? p.ascendencia : undefined,
+      deformidade: parseDeformidadeStored(p.deformidade),
     }
   } catch {
     return { floatingPicks: [] }
   }
 }
 
-type RaceAttrChoice = { floatingPicks?: AttributeKey[]; ascendencia?: string }
+type RaceAttrChoice = {
+  floatingPicks?: AttributeKey[]
+  ascendencia?: string
+  deformidade?: DeformidadeStored
+}
+
+type DeformidadeStored = { pericias: string[]; tormentaPower?: string }
+
+function parseDeformidadeStored(raw: unknown): DeformidadeStored | undefined {
+  if (!raw || typeof raw !== 'object') return undefined
+  const d = raw as { pericias?: unknown; tormentaPower?: unknown }
+  if (!Array.isArray(d.pericias)) return undefined
+  return {
+    pericias: d.pericias.filter((x): x is string => typeof x === 'string'),
+    tormentaPower:
+      typeof d.tormentaPower === 'string' && d.tormentaPower
+        ? d.tormentaPower
+        : undefined,
+  }
+}
+
+/**
+ * Deformidade (Lefou p23) as engine modifiers: +2 in each chosen perícia and
+ * −1 Carisma when a bônus was swapped for a real poder da Tormenta (p136 —
+ * only the real power costs Carisma). Ignored for races without the ability.
+ */
+function deformidadeModifiers(
+  raceName: string,
+  draft: DeformidadeStored | undefined,
+): Modifier[] {
+  if (!draft || !raceWithDeformidade([raceName])) return []
+  const mods: Modifier[] = draft.pericias
+    .filter((n) => (EXPERTISE_NAMES as readonly string[]).includes(n))
+    .map((n) => ({
+      target: { k: 'expertise', name: n as ExpertiseName },
+      amount: DEFORMIDADE_PERICIA_BONUS,
+      bonusType: 'untyped',
+      note: 'Deformidade',
+    }))
+  if (draft.tormentaPower) {
+    mods.push({
+      target: { k: 'attribute', name: 'charisma' },
+      amount: -carismaLossFromPowers(1),
+      bonusType: 'untyped',
+      note: 'Poder da Tormenta (Deformidade)',
+    })
+  }
+  return mods
+}
 
 /**
  * A race's attribute mod as `{k:'attribute'}` modifiers, derived from its
@@ -188,6 +247,7 @@ function parseSecondaryRaceChoices(raw: string): Map<string, RaceAttrChoice> {
             race: string
             floatingPicks?: unknown
             ascendencia?: unknown
+            deformidade?: unknown
           }
           return [
             x.race,
@@ -199,6 +259,7 @@ function parseSecondaryRaceChoices(raw: string): Map<string, RaceAttrChoice> {
                 : undefined,
               ascendencia:
                 typeof x.ascendencia === 'string' ? x.ascendencia : undefined,
+              deformidade: parseDeformidadeStored(x.deformidade),
             },
           ] as const
         }),
@@ -229,7 +290,11 @@ function raceActiveItems(character: Character): ActiveItem[] {
     const nonAttr = raceModifiers(race, variantChoices).filter(
       (m) => m.target.k !== 'attribute',
     )
-    const mods = [...raceAttributeMods(entry.race, choice), ...nonAttr]
+    const mods = [
+      ...raceAttributeMods(entry.race, choice),
+      ...nonAttr,
+      ...deformidadeModifiers(entry.race, choice.deformidade),
+    ]
     if (mods.length === 0) return
     result.push({
       source: `Raça: ${race.name}`,

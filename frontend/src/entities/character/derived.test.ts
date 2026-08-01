@@ -416,6 +416,72 @@ describe('attributeTotal — race applied once from BASE + choices', () => {
   })
 })
 
+describe('Deformidade (Lefou p23) — +2 perícias e perda de CAR', () => {
+  const furtividade = {
+    name: 'Furtividade',
+    attribute: 'dexterity',
+    trained: false,
+  } as Character['expertises'][number]
+
+  it('primary Lefou: +2 na perícia escolhida, sem perda de CAR sem poder', () => {
+    const c = character({
+      charisma: 1,
+      races: [{ race: 'Lefou' }],
+      raceAttributeChoices: JSON.stringify({
+        floatingPicks: ['strength', 'constitution', 'wisdom'],
+        deformidade: { pericias: ['Furtividade', 'Percepção'] },
+      }),
+    })
+    const effects = characterEffects(c)
+    expect(expertiseTotalWithItems(c, furtividade, effects).itemBonus).toBe(2)
+    // CAR: base 1 + Lefou -1 = 0; bônus de perícia NÃO perde Carisma (p23).
+    expect(attributeTotal(c, 'charisma', effects)).toBe(0)
+  })
+
+  it('poder trocado perde 1 CAR (p136)', () => {
+    const c = character({
+      charisma: 1,
+      races: [{ race: 'Lefou' }],
+      raceAttributeChoices: JSON.stringify({
+        floatingPicks: ['strength', 'constitution', 'wisdom'],
+        deformidade: { pericias: ['Furtividade'], tormentaPower: 'dentes-afiados' },
+      }),
+    })
+    const effects = characterEffects(c)
+    // CAR: base 1 − 1 Lefou − 1 poder = −1.
+    expect(attributeTotal(c, 'charisma', effects)).toBe(-1)
+    expect(expertiseTotalWithItems(c, furtividade, effects).itemBonus).toBe(2)
+  })
+
+  it('secondary Lefou aplicado carrega a deformidade', () => {
+    const c = character({
+      races: [{ race: 'Minotauro' }, { race: 'Lefou' }],
+      secondaryRaceChoices: JSON.stringify([
+        {
+          race: 'Lefou',
+          floatingPicks: ['strength', 'dexterity', 'constitution'],
+          deformidade: { pericias: ['Furtividade'] },
+        },
+      ]),
+    })
+    expect(
+      expertiseTotalWithItems(c, furtividade, characterEffects(c)).itemBonus,
+    ).toBe(2)
+  })
+
+  it('deformidade em raça sem a habilidade é ignorada', () => {
+    const c = character({
+      races: [{ race: 'Humano' }],
+      raceAttributeChoices: JSON.stringify({
+        deformidade: { pericias: ['Furtividade'], tormentaPower: 'antenas' },
+      }),
+    })
+    const effects = characterEffects(c)
+    expect(expertiseTotalWithItems(c, furtividade, effects).itemBonus).toBe(0)
+    expect(attributeTotal(c, 'charisma', effects)).toBe(0)
+  })
+})
+
 describe('defenseTotal — PDF p106 formula', () => {
   it('base = 10 + Dex when no flags + no items', () => {
     const c = character({ dexterity: 3 })

@@ -14,6 +14,7 @@ import {
   resolveRaceDeltas,
 } from './grant-helpers'
 import { AbilityDisclosure, DeltaBadges, GrantBox } from './grant-panels'
+import { DeformidadeControls } from './deformidade-controls'
 import { RaceChoiceControls } from './race-choice-controls'
 
 /**
@@ -207,6 +208,9 @@ function SelectedRaceDetail({
       <DeltaBadges deltas={resolveRaceDeltas(name, choice)} />
       {active && (
         <RaceChoiceControls raceName={name} choice={choice} onChange={onChoice} />
+      )}
+      {active && (
+        <DeformidadeControls raceName={name} choice={choice} onChange={onChoice} />
       )}
       {active && racePending(name, choice) && (
         <p className="text-[11px] text-[color:var(--hp-hurt)]">

@@ -70,6 +70,9 @@ export type RaceDefinition = {
   /** Tormenta-touched race (Lefou) — unlocks the poderes da Tormenta pool at
    *  creation (book p18/p136). */
   grantsTormentaPowers?: boolean
+  /** Race owns the Deformidade ability (p23): 2 chosen +2 perícia bonuses,
+   *  one swappable for a poder da Tormenta. See `deformidade.ts`. */
+  hasDeformidade?: boolean
 }
 
 /**

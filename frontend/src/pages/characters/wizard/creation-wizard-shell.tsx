@@ -18,6 +18,7 @@ import { CreationStepper } from '@/features/character-build/creation-stepper'
 import { CreationWizardProvider } from '@/features/character-build/creation-wizard-context'
 import { WizardFooterNav } from '@/features/character-build/wizard-footer-nav'
 import { deriveDraftVitals } from '@/features/character-build/draft-vitals'
+import { deformidadePayload } from '@/features/character-build/grant-helpers'
 import { totalSlots } from '@/features/character-build/class-power-helpers'
 import {
   type CharacterFormValues,
@@ -74,6 +75,7 @@ export function CreationWizardShell() {
           race: r,
           floatingPicks: submitRaceChoices[r]?.floatingPicks ?? [],
           ascendencia: submitRaceChoices[r]?.ascendencia,
+          deformidade: deformidadePayload(r, submitRaceChoices[r]),
         }))
       // PV/PM máximos are derived (never manual) — recompute at submit so the
       // saved pools match the sheet even if the sync effect hasn't fired.
@@ -91,6 +93,9 @@ export function CreationWizardShell() {
         raceAttributeChoices: {
           floatingPicks: rc?.floatingPicks ?? [],
           ascendencia: rc?.ascendencia,
+          deformidade: primaryRace
+            ? deformidadePayload(primaryRace, rc)
+            : undefined,
         },
         secondaryRaceChoices,
       }

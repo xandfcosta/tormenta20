@@ -176,6 +176,82 @@ describe('computeSheetForRow', () => {
   });
 });
 
+// ─── Deformidade (Lefou p23) threading ───────────────────────────
+
+describe('toCharacterInput — deformidade', () => {
+  const lefouRow: CharacterDbRow = {
+    ...humanoFighter,
+    races: [{ race: 'Lefou' }],
+    raceAttributeChoices: JSON.stringify({
+      floatingPicks: ['strength', 'constitution', 'wisdom'],
+      deformidade: { pericias: ['Furtividade'], tormentaPower: 'dentes-afiados' },
+    }),
+  };
+
+  it('threads the primary race deformidade into CharacterInput', () => {
+    const input = toCharacterInput(lefouRow);
+    expect(input.deformidade).toEqual({
+      pericias: ['Furtividade'],
+      tormentaPower: 'dentes-afiados',
+    });
+  });
+
+  it('threads an applied secondary Lefou deformidade', () => {
+    const row: CharacterDbRow = {
+      ...humanoFighter,
+      races: [{ race: 'Minotauro' }, { race: 'Lefou' }],
+      secondaryRaceChoices: JSON.stringify([
+        {
+          race: 'Lefou',
+          floatingPicks: ['strength', 'dexterity', 'constitution'],
+          deformidade: { pericias: ['Percepção', 'Iniciativa'] },
+        },
+      ]),
+    };
+    expect(toCharacterInput(row).deformidade).toEqual({
+      pericias: ['Percepção', 'Iniciativa'],
+    });
+  });
+
+  it('ignores deformidade persisted on a race without the ability', () => {
+    const row: CharacterDbRow = {
+      ...humanoFighter,
+      races: [{ race: 'Humano' }],
+      raceAttributeChoices: JSON.stringify({
+        deformidade: { pericias: ['Furtividade'] },
+      }),
+    };
+    expect(toCharacterInput(row).deformidade).toBeUndefined();
+  });
+
+  it('sheet folds +2 perícia and −1 CAR from the swapped power (p23/p136)', () => {
+    const noDef: CharacterDbRow = {
+      ...lefouRow,
+      raceAttributeChoices: JSON.stringify({
+        floatingPicks: ['strength', 'constitution', 'wisdom'],
+      }),
+    };
+    const withDef = computeSheetForRow(lefouRow);
+    const without = computeSheetForRow(noDef);
+    expect(withDef.skills.furtividade.total).toBe(
+      without.skills.furtividade.total + 2,
+    );
+    expect(withDef.attributes.charisma.total).toBe(
+      without.attributes.charisma.total - 1,
+    );
+    expect(withDef.attributes.charisma.tormentaMod).toBe(-1);
+  });
+
+  it('malformed deformidade blob is dropped, not thrown', () => {
+    const row: CharacterDbRow = {
+      ...humanoFighter,
+      races: [{ race: 'Lefou' }],
+      raceAttributeChoices: JSON.stringify({ deformidade: { pericias: 'nope' } }),
+    };
+    expect(toCharacterInput(row).deformidade).toBeUndefined();
+  });
+});
+
 // ─── Passive PV/PM grants threaded from JSON columns ─────────────
 
 describe('computeSheetForRow — passive max-PV/PM grants', () => {
