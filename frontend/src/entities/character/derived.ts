@@ -10,8 +10,10 @@ import {
   getOrigin,
   getRace,
   originModifiers,
+  RACAS,
   raceModifiers,
   requiredProficiency,
+  resolveAtributoMod,
   statFor,
   trainingBonusForLevel,
   type ActiveItem,
@@ -127,20 +129,74 @@ function originActiveItem(character: Character): ActiveItem | null {
   }
 }
 
+const RACA_BY_NAME = new Map(Object.values(RACAS).map((r) => [r.name, r]))
+
+function parseRaceAttributeChoices(raw: string): {
+  floatingPicks: AttributeKey[]
+  ascendencia?: string
+} {
+  try {
+    const p = JSON.parse(raw) as { floatingPicks?: unknown; ascendencia?: unknown }
+    return {
+      floatingPicks: Array.isArray(p.floatingPicks)
+        ? (p.floatingPicks.filter((x) => typeof x === 'string') as AttributeKey[])
+        : [],
+      ascendencia: typeof p.ascendencia === 'string' ? p.ascendencia : undefined,
+    }
+  } catch {
+    return { floatingPicks: [] }
+  }
+}
+
+/**
+ * The primary race's attribute mod as `{k:'attribute'}` modifiers, derived from
+ * the persisted floating-pick / ascendência choices (the abilities catalog's
+ * `attributeBonuses` only covers fixed races). Stored attributes are BASE, so
+ * this is applied exactly once. Returns `[]` on incomplete choices.
+ */
+function raceAttributeMods(raceName: string, raw: string): Modifier[] {
+  const raca = RACA_BY_NAME.get(raceName)
+  if (!raca) return []
+  const { floatingPicks, ascendencia } = parseRaceAttributeChoices(raw)
+  let deltas: Partial<Record<AttributeKey, number>>
+  try {
+    deltas = resolveAtributoMod(raca, { floatingPicks, ascendencia })
+  } catch {
+    return []
+  }
+  return Object.entries(deltas)
+    .filter(([, amount]) => amount)
+    .map(([attr, amount]) => ({
+      target: { k: 'attribute', name: attr as AttributeKey },
+      amount: amount as number,
+      bonusType: 'untyped',
+      note: raca.name,
+    }))
+}
+
 function raceActiveItems(character: Character): ActiveItem[] {
   const variantChoices = parseChoiceSet(character.raceAbilityChoices)
   const result: ActiveItem[] = []
-  for (const entry of character.races) {
+  character.races.forEach((entry, i) => {
     const race = getRace(entry.race)
-    if (!race) continue
-    const mods = raceModifiers(race, variantChoices)
-    if (mods.length === 0) continue
+    if (!race) return
+    // Attribute mods come from the persisted choices (primary race only), so
+    // floating picks apply and fixed races aren't double-counted — strip
+    // raceModifiers' own attribute mods. Non-attribute race mods (PV/PM,
+    // perícias) stay for every selected race.
+    const nonAttr = raceModifiers(race, variantChoices).filter(
+      (m) => m.target.k !== 'attribute',
+    )
+    const attr =
+      i === 0 ? raceAttributeMods(entry.race, character.raceAttributeChoices) : []
+    const mods = [...attr, ...nonAttr]
+    if (mods.length === 0) return
     result.push({
       source: `Raça: ${race.name}`,
       equipped: 'vested',
       modifiers: mods,
     })
-  }
+  })
   return result
 }
 

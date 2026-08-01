@@ -1,4 +1,6 @@
 import {
+  ATTRIBUTE_KEYS,
+  type AttributeKey,
   RACAS,
   SKILL_IDS,
   computeCharacterSheet,
@@ -58,6 +60,9 @@ export type CharacterDbRow = {
   classPowers?: string | null;
   originChoices?: string | null;
   raceAbilityChoices?: string | null;
+  /** JSON { floatingPicks?: string[]; ascendencia?: string } for the primary
+   *  race — derives the racial attribute mod from the BASE stored attributes. */
+  raceAttributeChoices?: string | null;
   races: readonly { race: string }[];
   classes: readonly { className: string; level: number }[];
   expertises: readonly CharacterExpertiseRow[];
@@ -74,6 +79,35 @@ function jsonStringArray(raw: string | null | undefined): string[] {
       : [];
   } catch {
     return [];
+  }
+}
+
+const ATTRIBUTE_KEY_SET: ReadonlySet<string> = new Set(ATTRIBUTE_KEYS);
+
+/** Parse the race attribute-choices JSON into typed floating picks + ascendência. */
+function parseRaceAttributeChoices(raw: string | null | undefined): {
+  floatingPicks: AttributeKey[];
+  ascendencia?: string;
+} {
+  if (!raw) return { floatingPicks: [] };
+  try {
+    const p = JSON.parse(raw) as {
+      floatingPicks?: unknown;
+      ascendencia?: unknown;
+    };
+    const floatingPicks = Array.isArray(p.floatingPicks)
+      ? p.floatingPicks.filter(
+          (x): x is AttributeKey =>
+            typeof x === 'string' && ATTRIBUTE_KEY_SET.has(x),
+        )
+      : [];
+    const ascendencia =
+      typeof p.ascendencia === 'string' && p.ascendencia
+        ? p.ascendencia
+        : undefined;
+    return { floatingPicks, ascendencia };
+  } catch {
+    return { floatingPicks: [] };
   }
 }
 
@@ -233,10 +267,15 @@ export function toCharacterInput(row: CharacterDbRow): CharacterInput {
     : undefined;
   const trainedSkills = trainedSkillsFrom(row.expertises);
   const equipment = equipmentFromRow(row);
+  // Stored attributes are BASE (pre-race); the orchestrator applies the racial
+  // mod ONCE from the persisted floating-pick / ascendência choices.
+  const raceAttr = parseRaceAttributeChoices(row.raceAttributeChoices);
   return {
     level: totalLevel > 0 ? totalLevel : row.level,
     className: primaryClass,
     raceId,
+    raceFloatingPicks: raceAttr.floatingPicks,
+    raceAscendencia: raceAttr.ascendencia,
     baseAttributes: {
       strength: row.strength,
       dexterity: row.dexterity,
@@ -245,9 +284,6 @@ export function toCharacterInput(row: CharacterDbRow): CharacterInput {
       wisdom: row.wisdom,
       charisma: row.charisma,
     },
-    // Stored attributes already include racial bonuses (baked at creation) —
-    // don't let the orchestrator re-apply the race attribute mod.
-    attributesIncludeRace: true,
     currentPv: row.hpCurrent,
     currentPm: row.mpCurrent,
     trainedSkills,

@@ -20,6 +20,7 @@
  *   pnpm build && DATABASE_URL="file:./dev.db" node dist/seed.js
  */
 import { NestFactory } from '@nestjs/core';
+import type { AttributeKey } from '@tormenta20/t20-data';
 import { AppModule } from './app.module';
 import { AuthService } from './auth/auth.service';
 import { CharacterExpertisesService } from './characters/characters-expertises.service';
@@ -58,7 +59,16 @@ type CharacterSpec = {
   /** One entry per class — two entries exercise the multiclass level split. */
   classes: ClassLevel[];
   god?: string;
+  /**
+   * BASE attributes (point-buy, pre-race). The sheet derives the racial mod
+   * once from `floatingPicks`/`ascendencia` below (fixed races need neither).
+   */
   attrs: Attributes;
+  /** Floating-race +1 placements (Humano/Osteon/Lefou — 3 distinct, honouring
+   * the race's excluded attribute). */
+  floatingPicks?: AttributeKey[];
+  /** Subrace ascendência for subrace-gated races (Suraggel: aggelus/sulfure). */
+  ascendencia?: string;
   /** Fraction of hpMax the character currently has (0–1). Defaults to full;
    * set below 1 to show a damaged bar on the detail panel. */
   hpFraction?: number;
@@ -195,23 +205,23 @@ const SCENE_CONSUMABLE = 'cosmetico';
 const GM_CHARACTERS: CharacterSpec[] = [
   { name: 'Tanque Placas Nv10', races: ['Anão'], origin: 'Soldado', classes: [{ className: 'Guerreiro', level: 10 }], god: 'Khalmyr', attrs: attr(4, 1, 4, 1, 2, 1), gear: HEAVY_GEAR, sceneEffect: true },
   { name: 'Curandeira Divina Nv8', races: ['Elfo'], origin: 'Acólito', classes: [{ className: 'Clérigo', level: 8 }], god: 'Lena', attrs: attr(1, 2, 2, 2, 4, 3), gear: CASTER_GEAR, spells: DIVINE_SPELLBOOK, hpFraction: 0.5 },
-  { name: 'Necromante Nv12 Magias', races: ['Osteon'], origin: 'Criminoso', classes: [{ className: 'Arcanista', level: 12 }], god: 'Tenebra', attrs: attr(1, 2, 3, 5, 2, 3), gear: CASTER_GEAR, spells: ARCANE_SPELLBOOK },
+  { name: 'Necromante Nv12 Magias', races: ['Osteon'], origin: 'Criminoso', classes: [{ className: 'Arcanista', level: 12 }], god: 'Tenebra', attrs: attr(1, 2, 3, 5, 2, 3), floatingPicks: ['intelligence', 'wisdom', 'charisma'], gear: CASTER_GEAR, spells: ARCANE_SPELLBOOK },
   { name: 'Druida Natureza Nv9', races: ['Dahllan'], origin: 'Eremita', classes: [{ className: 'Druida', level: 9 }], god: 'Allihanna', attrs: attr(1, 3, 2, 2, 4, 2), gear: CASTER_GEAR, spells: NATURE_SPELLBOOK, sceneEffect: true },
-  { name: 'Multiclasse Guer+Arc Nv8', races: ['Humano'], origin: 'Herói Camponês', classes: [{ className: 'Guerreiro', level: 4 }, { className: 'Arcanista', level: 4 }], god: 'Valkaria', attrs: attr(3, 2, 3, 3, 1, 1), gear: MARTIAL_GEAR, spells: ARCANE_SPELLBOOK.slice(0, 4) },
-  { name: 'Paladino Sagrado Nv11', races: ['Suraggel'], origin: 'Aristocrata', classes: [{ className: 'Paladino', level: 11 }], god: 'Khalmyr', attrs: attr(3, 1, 3, 1, 2, 4), gear: HEAVY_GEAR, spells: DIVINE_SPELLBOOK },
+  { name: 'Multiclasse Guer+Arc Nv8', races: ['Humano'], origin: 'Herói Camponês', classes: [{ className: 'Guerreiro', level: 4 }, { className: 'Arcanista', level: 4 }], god: 'Valkaria', attrs: attr(3, 2, 3, 3, 1, 1), floatingPicks: ['strength', 'constitution', 'intelligence'], gear: MARTIAL_GEAR, spells: ARCANE_SPELLBOOK.slice(0, 4) },
+  { name: 'Paladino Sagrado Nv11', races: ['Suraggel'], origin: 'Aristocrata', classes: [{ className: 'Paladino', level: 11 }], god: 'Khalmyr', attrs: attr(3, 1, 3, 1, 2, 4), ascendencia: 'aggelus', gear: HEAVY_GEAR, spells: DIVINE_SPELLBOOK },
   { name: 'Lenda Nv20 Maximo', races: ['Anão'], origin: 'Herdeiro', classes: [{ className: 'Cavaleiro', level: 20 }], god: 'Valkaria', attrs: attr(5, 2, 5, 1, 2, 3), gear: HEAVY_GEAR, hpFraction: 0.4 },
-  { name: 'Bardo Versátil Nv7', races: ['Lefou'], origin: 'Amnésico', classes: [{ className: 'Bardo', level: 7 }], attrs: attr(1, 3, 2, 2, 1, 4), gear: CASTER_GEAR, spells: ARCANE_SPELLBOOK.slice(0, 4), sceneEffect: true },
+  { name: 'Bardo Versátil Nv7', races: ['Lefou'], origin: 'Amnésico', classes: [{ className: 'Bardo', level: 7 }], attrs: attr(1, 3, 2, 2, 1, 4), floatingPicks: ['strength', 'dexterity', 'constitution'], gear: CASTER_GEAR, spells: ARCANE_SPELLBOOK.slice(0, 4), sceneEffect: true },
   { name: 'Inventor Genial Nv6', races: ['Kliren'], origin: 'Assistente de Laboratório', classes: [{ className: 'Inventor', level: 6 }], god: 'Tanna-Toh', attrs: attr(0, 3, 2, 5, 1, 1), gear: HEAVY_PACK },
 ];
 
 // Player — a few simple starter PCs plus a few enriched complex ones.
 const PLAYER_CHARACTERS: CharacterSpec[] = [
-  { name: 'Recruta Nv1 Simples', races: ['Humano'], origin: 'Capanga', classes: [{ className: 'Guerreiro', level: 1 }], attrs: attr(3, 2, 2, 1, 1, 1), gear: SIMPLE_GEAR, simple: true },
+  { name: 'Recruta Nv1 Simples', races: ['Humano'], origin: 'Capanga', classes: [{ className: 'Guerreiro', level: 1 }], attrs: attr(3, 2, 2, 1, 1, 1), floatingPicks: ['strength', 'dexterity', 'constitution'], gear: SIMPLE_GEAR, simple: true },
   { name: 'Batedor Nv2 Simples', races: ['Sílfide'], origin: 'Batedor', classes: [{ className: 'Ladino', level: 2 }], attrs: attr(1, 4, 2, 2, 2, 1), gear: SIMPLE_GEAR, simple: true },
-  { name: 'Aprendiz Nv1 Simples', races: ['Humano'], origin: 'Charlatão', classes: [{ className: 'Arcanista', level: 1 }], attrs: attr(0, 2, 2, 4, 1, 2), gear: SIMPLE_GEAR, simple: true },
-  { name: 'Guerreiro Veterano Nv8', races: ['Humano'], origin: 'Soldado', classes: [{ className: 'Guerreiro', level: 8 }], god: 'Khalmyr', attrs: attr(4, 3, 3, 2, 2, 1), gear: MARTIAL_GEAR, sceneEffect: true },
+  { name: 'Aprendiz Nv1 Simples', races: ['Humano'], origin: 'Charlatão', classes: [{ className: 'Arcanista', level: 1 }], attrs: attr(0, 2, 2, 4, 1, 2), floatingPicks: ['intelligence', 'constitution', 'charisma'], gear: SIMPLE_GEAR, simple: true },
+  { name: 'Guerreiro Veterano Nv8', races: ['Humano'], origin: 'Soldado', classes: [{ className: 'Guerreiro', level: 8 }], god: 'Khalmyr', attrs: attr(4, 3, 3, 2, 2, 1), floatingPicks: ['strength', 'dexterity', 'constitution'], gear: MARTIAL_GEAR, sceneEffect: true },
   { name: 'Arcanista Erudito Nv9', races: ['Qareen'], origin: 'Charlatão', classes: [{ className: 'Arcanista', level: 9 }], god: 'Wynna', attrs: attr(0, 3, 2, 4, 2, 3), gear: CASTER_GEAR, spells: ARCANE_SPELLBOOK, sceneEffect: true },
-  { name: 'Paladino Sagrado Nv10', races: ['Suraggel'], origin: 'Aristocrata', classes: [{ className: 'Paladino', level: 10 }], god: 'Khalmyr', attrs: attr(3, 1, 3, 1, 2, 4), gear: HEAVY_GEAR, spells: DIVINE_SPELLBOOK, hpFraction: 0.6 },
+  { name: 'Paladino Sagrado Nv10', races: ['Suraggel'], origin: 'Aristocrata', classes: [{ className: 'Paladino', level: 10 }], god: 'Khalmyr', attrs: attr(3, 1, 3, 1, 2, 4), ascendencia: 'aggelus', gear: HEAVY_GEAR, spells: DIVINE_SPELLBOOK, hpFraction: 0.6 },
 ];
 
 async function registerOrLogin(
@@ -344,6 +354,10 @@ async function ensureCharacter(
       size: 'Médio',
       displacement: 9,
       ...spec.attrs,
+      raceAttributeChoices: {
+        floatingPicks: spec.floatingPicks ?? [],
+        ascendencia: spec.ascendencia,
+      },
     }));
   const label = spec.classes
     .map((c) => `${c.className} ${c.level}`)

@@ -2,7 +2,6 @@ import { Outlet, useLocation, useNavigate } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from '@tanstack/react-form'
 import { useEffect, useRef, useState } from 'react'
-import { ATTRIBUTE_KEYS } from '@tormenta20/t20-data'
 import { PageChrome } from '@/shared/ui/page-chrome'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { SectionHeading } from '@/shared/ui/section-heading'
@@ -18,7 +17,6 @@ import { CharacterPreviewRail } from '@/features/character-build/character-previ
 import { CreationStepper } from '@/features/character-build/creation-stepper'
 import { CreationWizardProvider } from '@/features/character-build/creation-wizard-context'
 import { WizardFooterNav } from '@/features/character-build/wizard-footer-nav'
-import { raceAttributeDeltas } from '@/features/character-build/grant-helpers'
 import { deriveDraftVitals } from '@/features/character-build/draft-vitals'
 import { totalSlots } from '@/features/character-build/class-power-helpers'
 import {
@@ -61,19 +59,17 @@ export function CreationWizardShell() {
     validators: { onSubmit: characterSchema },
     onSubmit: async ({ value, formApi }) => {
       setFormError(null)
-      // Fields hold the point-buy base; racial bonuses (incl. resolved
-      // floating/subrace choices) are baked into the saved attributes here.
+      // Attribute fields hold the point-buy BASE (pre-race). We store base and
+      // persist the primary race's attribute choices so the sheet derives the
+      // racial mod exactly once — no baking (avoids the double-count).
       const submitRaceChoices = useCharacterDraftStore.getState().raceChoices
-      const deltas = raceAttributeDeltas(value.races, submitRaceChoices)
-      const attributes = Object.fromEntries(
-        ATTRIBUTE_KEYS.map((k) => [k, value[k] + (deltas[k] ?? 0)]),
-      ) as Record<(typeof ATTRIBUTE_KEYS)[number], number>
+      const primaryRace = value.races[0]
+      const rc = primaryRace ? submitRaceChoices[primaryRace] : undefined
       // PV/PM máximos are derived (never manual) — recompute at submit so the
       // saved pools match the sheet even if the sync effect hasn't fired.
       const { pvMax, pmMax } = deriveDraftVitals(value, submitRaceChoices)
       const payload: CreateCharacterInput = {
         ...value,
-        ...attributes,
         hpMax: pvMax,
         mpMax: pmMax,
         hpCurrent: Math.min(value.hpCurrent, pvMax),
@@ -82,6 +78,10 @@ export function CreationWizardShell() {
         // earn (covers lowering the level then skipping the Poderes step).
         classPowers: (value.classPowers ?? []).slice(0, totalSlots(value.classes)),
         god: value.god ? value.god : undefined,
+        raceAttributeChoices: {
+          floatingPicks: rc?.floatingPicks ?? [],
+          ascendencia: rc?.ascendencia,
+        },
       }
       try {
         const created = await api.characters.create(payload)

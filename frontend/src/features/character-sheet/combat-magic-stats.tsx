@@ -9,6 +9,7 @@ import {
 } from '@/shared/ui/dialog'
 import type { Character } from '@/shared/api/api'
 import {
+  attributeTotal,
   defenseTotal,
   expertiseTotalWithItems,
   pmCostMod,
@@ -41,7 +42,10 @@ export function CombatStats({ character }: { character: Character }) {
 
   const defenseRows: StatRow[] = [{ label: 'Base', amount: 10 }]
   if (def.dexApplied) {
-    defenseRows.push({ label: 'Destreza', amount: character.dexterity })
+    defenseRows.push({
+      label: 'Destreza',
+      amount: attributeTotal(character, 'dexterity', effects),
+    })
   } else {
     defenseRows.push({
       label: 'Destreza (bloqueada por armadura pesada)',

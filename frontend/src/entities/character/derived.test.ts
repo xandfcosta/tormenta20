@@ -60,6 +60,7 @@ function character(over: Partial<Character> = {}): Character {
       'escudos',
     ]),
     raceAbilityChoices: '[]',
+    raceAttributeChoices: '{}',
     originChoices: '[]',
     classPowers: '[]',
     classChoices: '{}',
@@ -361,6 +362,33 @@ describe('attributeTotal + attributeContributions', () => {
 
   it('contributions list is empty when no items', () => {
     expect(attributeContributions('strength', emptyEffects())).toEqual([])
+  })
+})
+
+describe('attributeTotal — race applied once from BASE + choices', () => {
+  it('fixed race (Anão) folds its mod onto the base attribute', () => {
+    const c = character({ constitution: 2, races: [{ race: 'Anão' }] })
+    // base 2 + Anão CON+2 = 4 (applied exactly once, no double).
+    expect(attributeTotal(c, 'constitution', characterEffects(c))).toBe(4)
+    expect(attributeTotal(c, 'dexterity', characterEffects(c))).toBe(-1)
+  })
+
+  it('floating race (Humano) applies the persisted floating picks', () => {
+    const c = character({
+      strength: 1,
+      races: [{ race: 'Humano' }],
+      raceAttributeChoices: JSON.stringify({
+        floatingPicks: ['strength', 'constitution', 'wisdom'],
+      }),
+    })
+    expect(attributeTotal(c, 'strength', characterEffects(c))).toBe(2) // 1 + 1
+    expect(attributeTotal(c, 'wisdom', characterEffects(c))).toBe(1) // 0 + 1
+    expect(attributeTotal(c, 'dexterity', characterEffects(c))).toBe(0)
+  })
+
+  it('floating race without picks applies nothing (graceful)', () => {
+    const c = character({ strength: 1, races: [{ race: 'Humano' }] })
+    expect(attributeTotal(c, 'strength', characterEffects(c))).toBe(1)
   })
 })
 
