@@ -15,14 +15,21 @@ import {
   origemRolledMoneySum,
   purchasesTotal,
   startingLoadout,
+  startingSlots,
   weaponOptions,
 } from '@/features/character-build/starting-equipment'
+import {
+  appliedRaceDeltas,
+  type RaceChoiceState,
+} from '@/features/character-build/grant-helpers'
 import { OrigemItemsSection } from '@/features/character-build/origem-items-section'
 import { StartingShop } from '@/features/character-build/starting-shop'
 
 type EquipValues = {
   classes: { className: string; level: number }[]
+  races: string[]
   origin: string
+  strength: number
   tibar: number
   startingWeaponSimple: string
   startingWeaponMartial: string
@@ -40,7 +47,7 @@ type EquipValues = {
  * editable. Under-filling is soft — the sheet inventory finishes the job.
  */
 export function EquipamentoStep() {
-  const { form } = useCreationWizard()
+  const { form, raceChoices } = useCreationWizard()
   return (
     <Card>
       <CardHeader>
@@ -89,6 +96,7 @@ export function EquipamentoStep() {
                   }
                 />
                 <ExtrasNote kit={kit} />
+                <div className="space-y-3 rounded-lg border border-border p-3">
                 <MoneyField
                   form={form}
                   tibar={v.tibar}
@@ -110,6 +118,8 @@ export function EquipamentoStep() {
                     form.setFieldValue('startingPurchases', next)
                   }
                 />
+                </div>
+                <SlotsGauge values={v} kit={kit} raceChoices={raceChoices} />
               </>
             )
           }}
@@ -274,6 +284,46 @@ function ExtrasNote({ kit }: { kit: StartingKit }) {
         </p>
       ))}
     </div>
+  )
+}
+
+/** Espaços de inventário (p141): usados por este passo vs. 10 + 2×|FOR|. */
+function SlotsGauge({
+  values,
+  kit,
+  raceChoices,
+}: {
+  values: EquipValues
+  kit: StartingKit
+  raceChoices: RaceChoiceState
+}) {
+  const forTotal =
+    (values.strength ?? 0) +
+    (appliedRaceDeltas(values.races ?? [], raceChoices).strength ?? 0)
+  const { used, capacity } = startingSlots(
+    {
+      weaponSimple: values.startingWeaponSimple ?? '',
+      weaponMartial: values.startingWeaponMartial ?? '',
+      armor: values.startingArmor ?? '',
+      shield: values.startingShield ?? false,
+    },
+    kit,
+    values.origin,
+    values.originItemPicks ?? {},
+    values.startingPurchases ?? {},
+    forTotal,
+  )
+  const over = used > capacity
+  return (
+    <p
+      className={cn(
+        'text-xs',
+        over ? 'font-semibold text-[color:var(--hp-hurt)]' : 'text-muted-foreground',
+      )}
+    >
+      Espaços de inventário: {used} de {capacity} (10 + 2×FOR)
+      {over ? ' — personagem sobrecarregado (p141)' : ''}
+    </p>
   )
 }
 
