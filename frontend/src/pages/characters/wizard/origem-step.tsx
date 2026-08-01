@@ -5,6 +5,7 @@ import { Combobox } from '@/shared/ui/combobox'
 import { Field, FieldError } from '@/shared/ui/field'
 import { cn } from '@/shared/lib/utils'
 import { originGrant } from '@/features/character-build/grant-helpers'
+import { origemRolledMoneySum } from '@/features/character-build/starting-equipment'
 import { powerPickOptions } from '@/features/character-build/class-power-helpers'
 import {
   type FieldApi,
@@ -32,9 +33,29 @@ export function OrigemStep() {
                   options={toOptions(options.origins)}
                   value={f.state.value as string}
                   onChange={(val: string) => {
+                    // Trocar a origem invalida os picks anteriores: benefícios,
+                    // escolhas de item e dinheiro já rolado (T$ 2d6) — o valor
+                    // rolado é subtraído do tibar para não vazar entre origens.
+                    const prev = form.state.values as {
+                      origin?: string
+                      originItemPicks?: Record<string, string>
+                      tibar?: number
+                    }
+                    const rolled = prev.origin
+                      ? origemRolledMoneySum(
+                          prev.origin,
+                          prev.originItemPicks ?? {},
+                        )
+                      : 0
+                    if (rolled > 0) {
+                      form.setFieldValue(
+                        'tibar',
+                        Math.max(0, (prev.tibar ?? 0) - rolled),
+                      )
+                    }
                     f.handleChange(val)
-                    // reset benefit picks when the origin changes
                     form.setFieldValue('originChoices', [])
+                    form.setFieldValue('originItemPicks', {})
                   }}
                   placeholder="Selecionar origem"
                   searchPlaceholder="Buscar origens…"

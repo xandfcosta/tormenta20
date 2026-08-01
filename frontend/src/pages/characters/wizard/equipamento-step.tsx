@@ -8,9 +8,11 @@ import { Combobox } from '@/shared/ui/combobox'
 import { Field, FieldLabel } from '@/shared/ui/field'
 import { NumberInput } from '@/shared/ui/number-input'
 import { cn } from '@/shared/lib/utils'
+import { Link } from '@tanstack/react-router'
 import { useCreationWizard } from '@/features/character-build/creation-wizard-context'
 import {
   lightArmorOptions,
+  origemRolledMoneySum,
   purchasesTotal,
   startingLoadout,
   weaponOptions,
@@ -28,6 +30,7 @@ type EquipValues = {
   startingShield: boolean
   startingPurchases: Record<string, number>
   originItemPicks: Record<string, string>
+  startingMoneyRolled: boolean
 }
 
 /**
@@ -52,7 +55,13 @@ export function EquipamentoStep() {
             if (!primary?.className) {
               return (
                 <p className="text-sm text-muted-foreground">
-                  Selecione uma classe primeiro (etapa Classe).
+                  Selecione uma classe primeiro —{' '}
+                  <Link
+                    to="/characters/new/classe"
+                    className="underline underline-offset-2 hover:text-foreground"
+                  >
+                    ir para a etapa Classe ›
+                  </Link>
                 </p>
               )
             }
@@ -86,13 +95,17 @@ export function EquipamentoStep() {
                   level={level}
                   tableMoney={tableMoney}
                   spent={purchasesTotal(v.startingPurchases ?? {})}
+                  rolled={v.startingMoneyRolled ?? false}
+                  origemRolled={origemRolledMoneySum(
+                    v.origin,
+                    v.originItemPicks ?? {},
+                  )}
                 />
                 <StartingShop
                   purchases={v.startingPurchases ?? {}}
-                  remaining={Math.max(
-                    0,
-                    (v.tibar ?? 0) - purchasesTotal(v.startingPurchases ?? {}),
-                  )}
+                  remaining={
+                    (v.tibar ?? 0) - purchasesTotal(v.startingPurchases ?? {})
+                  }
                   onChange={(next) =>
                     form.setFieldValue('startingPurchases', next)
                   }
@@ -117,7 +130,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function KitBaseLine() {
   return (
     <div className="space-y-1">
-      <SectionLabel>Kit · automático (p140)</SectionLabel>
+      <SectionLabel>Kit · automático</SectionLabel>
       <p className="text-sm">{STARTING_KIT_BASE_ITEMS.join(' · ')}</p>
     </div>
   )
@@ -197,6 +210,11 @@ function ArmorPicker({
     <div className="space-y-1.5">
       <SectionLabel>
         Armadura{kit.armor === 'brunea' ? ' · brunea' : ' · leve a escolha'}
+        {!values.startingArmor && (
+          <span className="ml-1.5 normal-case tracking-normal text-[color:var(--hp-hurt)]">
+            · escolha pendente
+          </span>
+        )}
       </SectionLabel>
       <div className="flex flex-wrap gap-1.5">
         {options.map((o) => {
@@ -234,7 +252,7 @@ function ArmorPicker({
                 : 'border-border text-muted-foreground hover:bg-accent',
             )}
           >
-            + Escudo leve
+            {values.startingShield ? '✓ Escudo leve' : '+ Escudo leve'}
           </button>
         )}
       </div>
@@ -276,27 +294,32 @@ function MoneyField({
   level,
   tableMoney,
   spent,
+  rolled,
+  origemRolled,
 }: {
   form: StepForm
   tibar: number
   level: number
   tableMoney: number | null
   spent: number
+  rolled: boolean
+  origemRolled: number
 }) {
   const remaining = (tibar ?? 0) - spent
   return (
     <div className="space-y-1.5">
-      <SectionLabel>Dinheiro inicial (Tabela 3-1, p140)</SectionLabel>
+      <SectionLabel>Dinheiro inicial · Tabela 3-1</SectionLabel>
       {spent > 0 && (
         <p
           className={cn(
             'text-xs',
             remaining < 0
-              ? 'text-[color:var(--hp-hurt)]'
+              ? 'font-semibold text-[color:var(--hp-hurt)]'
               : 'text-muted-foreground',
           )}
         >
-          Gasto T$ {tibarFmt(spent)} · Restante T$ {tibarFmt(Math.max(0, remaining))}
+          Gasto T$ {tibarFmt(spent)} · Restante T$ {tibarFmt(remaining)}
+          {remaining < 0 ? ' — remova itens da loja' : ''}
         </p>
       )}
       <div className="flex flex-wrap items-center gap-2">
@@ -312,18 +335,28 @@ function MoneyField({
         {tableMoney === null ? (
           <button
             type="button"
-            onClick={() =>
-              form.setFieldValue('tibar', rollDice(4, 6))
-            }
-            className="rounded-md border border-border px-2.5 py-1 text-xs hover:bg-accent"
+            disabled={rolled}
+            onClick={() => {
+              // Preserva o T$ já rolado por concessão de origem (2d6 etc.).
+              form.setFieldValue('tibar', rollDice(4, 6) + origemRolled)
+              form.setFieldValue('startingMoneyRolled', true)
+            }}
+            className={cn(
+              'rounded-md border border-border px-2.5 py-1.5 text-xs',
+              rolled ? 'opacity-60' : 'hover:bg-accent',
+            )}
           >
-            🎲 Rolar {STARTING_TIBARES_DICE} (Nv 1)
+            {rolled
+              ? `Rolado (${STARTING_TIBARES_DICE})`
+              : `🎲 Rolar ${STARTING_TIBARES_DICE} (Nv 1)`}
           </button>
         ) : (
           <button
             type="button"
-            onClick={() => form.setFieldValue('tibar', tableMoney)}
-            className="rounded-md border border-border px-2.5 py-1 text-xs hover:bg-accent"
+            onClick={() =>
+              form.setFieldValue('tibar', tableMoney + origemRolled)
+            }
+            className="rounded-md border border-border px-2.5 py-1.5 text-xs hover:bg-accent"
           >
             Usar Tabela 3-1 (Nv {level}): T$ {tableMoney.toLocaleString('pt-BR')}
           </button>
