@@ -129,6 +129,10 @@ export const BARBARO_POWERS: ClassPower[] = [
     {
       prerequisites: [attr('wisdom', 1)],
       minLevel: 4,
+      // Soma Sabedoria no PM total (PDF p42).
+      modifiers: [
+        { target: { k: 'maxPm' }, amount: 1, bonusType: 'untyped', scale: { per: 'attribute', attribute: 'wisdom' } },
+      ],
       // Animais totêmicos + magia concedida (PDF p42, quadro "Animais Totêmicos").
       choice: {
         kind: 'totem',

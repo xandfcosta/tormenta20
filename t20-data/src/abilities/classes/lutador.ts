@@ -93,7 +93,13 @@ export const LUTADOR_POWERS: ClassPower[] = [
     'Em ataque desarmado contra criatura até uma categoria de tamanho maior que sua, paga 2 PM. Se acertar, criatura fica caída.'),
   electivePower(C, 'Sarado',
     'Soma Força no PV total e em Fortitude. Pode usar Força em vez de Carisma em Diplomacia com pessoas atraídas por físicos definidos.',
-    { prerequisites: [attr('strength', 3)] }),
+    {
+      prerequisites: [attr('strength', 3)],
+      // Soma Força no PV total (Fortitude +Força ainda não modelado — save target).
+      modifiers: [
+        { target: { k: 'maxPv' }, amount: 1, bonusType: 'untyped', scale: { per: 'attribute', attribute: 'strength' } },
+      ],
+    }),
   electivePower(C, 'Sequência Destruidora',
     'Início do turno: gasta 2 PM para dizer número (≥2). Se fizer e acertar quantidade de ataques igual, último recebe +4 cumulativo na rolagem de dano por ataque feito.',
     { minLevel: 8 }),

@@ -61,8 +61,8 @@ describe('passive general-power modifiers', () => {
     atletico: 2, // Atletismo + displacement
     'saque-rapido': 1, // Iniciativa
     investigador: 1, // Investigação
-    vitalidade: 1, // Fortitude
-    'vontade-de-ferro': 1, // Vontade
+    vitalidade: 2, // Fortitude + maxPv (+1/nível)
+    'vontade-de-ferro': 2, // Vontade + maxPm (+1 a cada 2 níveis)
     'sentidos-agucados': 1, // Percepção
   }
 

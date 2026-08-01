@@ -7,8 +7,9 @@
  *
  * These values are the **base** — Constituição is folded in separately
  * by the derivation helpers since it may change mid-campaign (race
- * picks, items). Paladino has a one-time `+ Carisma` to PM at L1 — read
- * the `paladinoMpAtL1Bonus` flag at the call site and add it once.
+ * picks, items). Attribute/level PM+PV grants (Paladino Devoção +Carisma,
+ * Clérigo Magia Divina +Sabedoria, Anão Duro como Pedra…) are modeled as
+ * `maxPv`/`maxPm` power modifiers folded in by `vital-grants.ts`.
  *
  * Defesa is NOT per-class in T20: PDF p106 gives `10 + Destreza + armor
  * + shield`. Class-flavored Defesa bonuses are situational powers
@@ -22,8 +23,6 @@ export type ClassVitals = {
   pvPerLevel: number
   /** Pontos de Mana gained per level (uniform L1..L20). */
   mpPerLevel: number
-  /** Optional one-time L1 bonus marker — only Paladino sets this. */
-  paladinoMpAtL1Bonus?: 'charisma'
 }
 
 export const CLASS_VITALS: Record<string, ClassVitals> = {
@@ -40,12 +39,8 @@ export const CLASS_VITALS: Record<string, ClassVitals> = {
   Ladino: { pvInicial: 12, pvPerLevel: 3, mpPerLevel: 4 },
   Lutador: { pvInicial: 20, pvPerLevel: 5, mpPerLevel: 3 },
   Nobre: { pvInicial: 16, pvPerLevel: 4, mpPerLevel: 4 },
-  Paladino: {
-    pvInicial: 20,
-    pvPerLevel: 5,
-    mpPerLevel: 3,
-    paladinoMpAtL1Bonus: 'charisma',
-  },
+  // Paladino Cha→PM (L1) is modeled via the Devoção power's maxPm modifier.
+  Paladino: { pvInicial: 20, pvPerLevel: 5, mpPerLevel: 3 },
 }
 
 export type CharacterClassEntry = {
@@ -96,7 +91,9 @@ export function classMpBase(
     const entry = CLASS_VITALS[c.className]
     if (!entry) continue
     mp += entry.mpPerLevel * c.level
-    if (entry.paladinoMpAtL1Bonus === 'charisma') hasPaladino = true
+    // Paladino Cha→PM (L1). Authoritative copy for the sheet is the Abençoado
+    // power modifier; this legacy multiclass helper keeps it for parity.
+    if (c.className === 'Paladino') hasPaladino = true
   }
   if (hasPaladino) mp += charisma
   return mp

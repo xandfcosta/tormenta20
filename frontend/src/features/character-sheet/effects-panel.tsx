@@ -130,6 +130,10 @@ function describeConditionalTarget(target: Modifier['target']): string {
       return 'PV temp.'
     case 'tempMp':
       return 'PM temp.'
+    case 'maxPv':
+      return 'PV máximo'
+    case 'maxPm':
+      return 'PM máximo'
     case 'maneuver':
       return `Manobra: ${target.name}`
     case 'flag':

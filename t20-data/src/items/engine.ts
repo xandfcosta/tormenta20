@@ -93,6 +93,10 @@ export function targetKey(t: ModifierTarget): string {
       return 'tempHp'
     case 'tempMp':
       return 'tempMp'
+    case 'maxPv':
+      return 'maxPv'
+    case 'maxPm':
+      return 'maxPm'
     case 'maneuver':
       return `maneuver:${t.name}`
     case 'flag':

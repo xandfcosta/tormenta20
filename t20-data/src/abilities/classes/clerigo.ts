@@ -17,6 +17,7 @@ export const CLERIGO_POWERS: ClassPower[] = [
   ),
   autoPower(C, 1, 'Magias (1° círculo)',
     'Pode lançar magias divinas de 1° círculo. Soma Sabedoria no PM total.',
+    [{ target: { k: 'maxPm' }, amount: 1, bonusType: 'untyped', scale: { per: 'attribute', attribute: 'wisdom' } }],
   ),
   autoPower(C, 5, 'Magias (2° círculo)',
     'Pode lançar magias divinas de 2° círculo.',
