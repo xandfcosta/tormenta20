@@ -190,7 +190,7 @@ export const SHOP_CATEGORIES: readonly {
 
 const SHOP_EXCLUDED = new Set(['improvement', 'material', 'dr'])
 
-/** Buyable catalog (excludes improvement/material overlays), price-sorted. */
+/** Buyable catalog (excludes improvement/material overlays), name-sorted (pt-BR). */
 export function shopCatalog(category: ShopCategoryKey): CatalogItem[] {
   const group = SHOP_CATEGORIES.find((c) => c.key === category)
   return CATALOG_ITEMS.filter((i) => {
@@ -198,6 +198,16 @@ export function shopCatalog(category: ShopCategoryKey): CatalogItem[] {
     if (!group || group.key === 'all') return true
     return group.matches.includes(i.category)
   }).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+}
+
+/** T$ already rolled from origem money grants (T$ 2d6 último salário…). */
+export function origemRolledMoneySum(
+  originName: string,
+  picks: Record<string, string>,
+): number {
+  return origemItemGrantsByName(originName)
+    .filter((g) => g.kind === 'money')
+    .reduce((sum, g) => sum + (Number(picks[g.label]) || 0), 0)
 }
 
 export type PurchaseMap = Record<string, number>

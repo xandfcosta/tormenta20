@@ -96,6 +96,7 @@ export function CreationWizardShell() {
         startingShield,
         startingPurchases,
         originItemPicks,
+        startingMoneyRolled: _startingMoneyRolled,
         ...restValue
       } = value
       const totalLevel =
