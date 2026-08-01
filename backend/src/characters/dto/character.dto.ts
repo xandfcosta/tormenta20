@@ -36,6 +36,23 @@ export class CharacterClassEntryDto {
   level!: number;
 }
 
+/**
+ * Attribute choices for the primary race, needed to derive the racial mod from
+ * BASE attributes (floating +1 placement; subrace ascendência). Stored as JSON
+ * on the character; the sheet applies race once from these.
+ */
+export class RaceAttributeChoicesDto {
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  floatingPicks?: string[];
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  ascendencia?: string;
+}
+
 export class CreateCharacterDto {
   @IsString()
   @MinLength(1)
@@ -106,6 +123,11 @@ export class CreateCharacterDto {
   @IsOptional()
   @IsObject()
   powerChoices?: Record<string, string[]>;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => RaceAttributeChoicesDto)
+  raceAttributeChoices?: RaceAttributeChoicesDto;
 }
 
 /**

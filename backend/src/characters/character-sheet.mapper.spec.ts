@@ -92,29 +92,40 @@ describe('computeSheetForRow', () => {
     expect(sheet.className).toBe('Guerreiro');
   });
 
-  it('does NOT re-apply the race attribute mod — stored attrs are already final', () => {
-    // Stored attributes are baked at creation (base + raça). The orchestrator
-    // must not add the racial mod again (would double-count). raceMod = 0,
-    // total = the stored value.
-    const anao: CharacterDbRow = {
-      ...humanoFighter,
-      races: [{ race: 'Anão' }],
-    };
-    const sheet = computeSheetForRow(anao);
-    expect(sheet.attributes.constitution.raceMod).toBe(0);
-    expect(sheet.attributes.constitution.total).toBe(humanoFighter.constitution);
-    expect(sheet.attributes.dexterity.raceMod).toBe(0);
-    expect(sheet.attributes.dexterity.total).toBe(humanoFighter.dexterity);
-  });
-
-  it('still derives race-driven movement + PV grant despite pre-raced attrs', () => {
+  it('applies the fixed race attribute mod ONCE from BASE stored attrs', () => {
+    // Stored attributes are BASE (pre-race). Anão CON+2/SAB+1/DES-1 is applied
+    // exactly once by the orchestrator (no double).
     const anao: CharacterDbRow = { ...humanoFighter, races: [{ race: 'Anão' }] };
     const sheet = computeSheetForRow(anao);
-    expect(sheet.deslocamento).toBe(6); // Anão movement (raceId still used)
-    // Duro como Pedra (nível+2) still folds in once — Anão PV exceeds a raceless
-    // build with the same stored attributes.
-    const raceless = computeSheetForRow({ ...humanoFighter, races: [] });
-    expect(sheet.vitals.pvMax).toBe(raceless.vitals.pvMax + (humanoFighter.level + 2));
+    expect(sheet.attributes.constitution.raceMod).toBe(2);
+    expect(sheet.attributes.constitution.total).toBe(humanoFighter.constitution + 2);
+    expect(sheet.attributes.dexterity.raceMod).toBe(-1);
+    expect(sheet.attributes.wisdom.raceMod).toBe(1);
+  });
+
+  it('applies a floating race mod from persisted raceAttributeChoices', () => {
+    // Humano places its +1×3 via floating picks; without them, no race mod.
+    const humano: CharacterDbRow = {
+      ...humanoFighter,
+      races: [{ race: 'Humano' }],
+      raceAttributeChoices: JSON.stringify({
+        floatingPicks: ['strength', 'constitution', 'wisdom'],
+      }),
+    };
+    const sheet = computeSheetForRow(humano);
+    expect(sheet.attributes.strength.total).toBe(humanoFighter.strength + 1);
+    expect(sheet.attributes.constitution.total).toBe(humanoFighter.constitution + 1);
+    expect(sheet.attributes.wisdom.total).toBe(humanoFighter.wisdom + 1);
+    expect(sheet.attributes.dexterity.raceMod).toBe(0);
+  });
+
+  it('still derives race-driven movement + PV grant', () => {
+    const anao: CharacterDbRow = { ...humanoFighter, races: [{ race: 'Anão' }] };
+    const sheet = computeSheetForRow(anao);
+    expect(sheet.deslocamento).toBe(6); // Anão movement
+    // Guerreiro L3, base CON 2 → total 4 (Anão +2). pvBase = 20 + 2*5 + 4*3 = 42;
+    // Duro como Pedra (nível+2 = 5) folds in once → 47.
+    expect(sheet.vitals.pvMax).toBe(47);
   });
 
   it('exposes a defense object with base 10', () => {

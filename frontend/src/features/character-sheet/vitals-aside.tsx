@@ -1,4 +1,5 @@
 import type { Character } from '@/shared/api/api'
+import { attributeTotal, useCharacterEffects } from '@/entities/character/derived'
 import { cn } from '@/shared/lib/utils'
 import { CombatStats, MagicStats } from './combat-magic-stats'
 
@@ -38,14 +39,17 @@ export function AttributesGrid({
   character: Character
   className?: string
 }) {
+  // Stored attributes are BASE (pre-race); the racial mod is folded via the
+  // character effects (race active items), so show the derived total.
+  const effects = useCharacterEffects(character)
   return (
     <div className={cn('grid gap-2', className)}>
-      <AttributeBox label="FOR" value={character.strength} />
-      <AttributeBox label="DES" value={character.dexterity} />
-      <AttributeBox label="CON" value={character.constitution} />
-      <AttributeBox label="INT" value={character.intelligence} />
-      <AttributeBox label="SAB" value={character.wisdom} />
-      <AttributeBox label="CAR" value={character.charisma} />
+      <AttributeBox label="FOR" value={attributeTotal(character, 'strength', effects)} />
+      <AttributeBox label="DES" value={attributeTotal(character, 'dexterity', effects)} />
+      <AttributeBox label="CON" value={attributeTotal(character, 'constitution', effects)} />
+      <AttributeBox label="INT" value={attributeTotal(character, 'intelligence', effects)} />
+      <AttributeBox label="SAB" value={attributeTotal(character, 'wisdom', effects)} />
+      <AttributeBox label="CAR" value={attributeTotal(character, 'charisma', effects)} />
     </div>
   )
 }

@@ -242,6 +242,7 @@ export class CharactersService {
         size: dto.size,
         displacement: dto.displacement,
         proficiencies: JSON.stringify(grantedDefaults),
+        raceAttributeChoices: JSON.stringify(dto.raceAttributeChoices ?? {}),
         classPowers: JSON.stringify(dto.classPowers ?? []),
         originChoices: JSON.stringify(dto.originChoices ?? []),
         classChoices: JSON.stringify(sanitizeClassChoices(dto.classChoices ?? {})),
