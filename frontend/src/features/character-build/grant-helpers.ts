@@ -10,6 +10,8 @@ import {
   type Raca,
   racasByTier,
   raceWithDeformidade,
+  TORMENTA_POWERS,
+  type TormentaPowerId,
 } from '@tormenta20/t20-data'
 
 /** No elective picks at creation — only auto-granted powers are previewed. */
@@ -62,6 +64,27 @@ export function deformidadePayload(
   const tormentaPower = draft.tormentaPower || undefined
   if (pericias.length === 0 && !tormentaPower) return undefined
   return { pericias, tormentaPower }
+}
+
+/**
+ * The Deformidade picks as one display line for the Resumo
+ * ("Deformidade: +2 Furtividade · poder da Tormenta: Dentes Afiados (−1 CAR)"),
+ * or null when the race lacks the ability / nothing was chosen.
+ */
+export function deformidadeSummary(
+  raceName: string,
+  choice: RaceChoice | undefined,
+): string | null {
+  const payload = deformidadePayload(raceName, choice)
+  if (!payload) return null
+  const parts = payload.pericias.map((p) => `+2 ${p}`)
+  if (payload.tormentaPower) {
+    const power = TORMENTA_POWERS[payload.tormentaPower as TormentaPowerId]
+    parts.push(
+      `poder da Tormenta: ${power?.name ?? payload.tormentaPower} (−1 CAR)`,
+    )
+  }
+  return `Deformidade: ${parts.join(' · ')}`
 }
 export type RaceChoiceState = Record<string, RaceChoice>
 

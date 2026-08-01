@@ -229,3 +229,68 @@ export function powerBlockedReason(
   }
   return null
 }
+
+// ─── Resumo (choices, not pools) ─────────────────────────────────────
+
+export type ChosenPowerLine = {
+  id: string
+  name: string
+  description: string
+  source: PowerOption['source']
+  /** Resolved sub-choice names (totem animal, escola, arma…). */
+  choices: string[]
+}
+
+/**
+ * The player's CHOSEN elective powers as display lines — names resolved across
+ * every pool a pick can come from (class electives of each class, generals,
+ * tormenta), with any sub-choice ids mapped to their option names. Unknown ids
+ * degrade to the raw id instead of vanishing. Feeds the Resumo step.
+ */
+export function chosenPowerLines(
+  classes: ClassEntry[],
+  chosenIds: string[],
+  powerChoices: Record<string, string[]>,
+): ChosenPowerLine[] {
+  const byId = new Map<string, PowerOption>()
+  for (const c of classes) {
+    const { classPowers, generalPowers } = classPowerCandidates(c.className)
+    for (const o of [...classPowers, ...generalPowers]) byId.set(o.id, o)
+  }
+  for (const o of tormentaPowerOptions()) byId.set(o.id, o)
+  return chosenIds.map((id) => {
+    const o = byId.get(id)
+    if (!o) return { id, name: id, description: '', source: 'general', choices: [] }
+    const picked = powerChoices[id] ?? []
+    const options = o.choice ? powerChoiceOptions(o.choice) : []
+    const choices = picked.map(
+      (cid) => options.find((opt) => opt.id === cid)?.name ?? cid,
+    )
+    return { id, name: o.name, description: o.description, source: o.source, choices }
+  })
+}
+
+/**
+ * One class's caminho/devoto picks as a display line ("caminho: Mago · devoto
+ * de Khalmyr") — ids resolved to names via the same catalogs the pickers use.
+ * Null when the class made no such pick.
+ */
+export function classChoiceSummary(
+  className: string,
+  blob: { caminho?: string; devoto?: string } | undefined,
+): string | null {
+  const parts: string[] = []
+  if (blob?.caminho) {
+    const name =
+      caminhoSlotFor(className)?.options.find((o) => o.id === blob.caminho)
+        ?.name ?? blob.caminho
+    parts.push(`caminho: ${name}`)
+  }
+  if (blob?.devoto) {
+    const name =
+      devotoOptionsFor(className)?.find((d) => d.id === blob.devoto)?.name ??
+      blob.devoto
+    parts.push(`devoto de ${name}`)
+  }
+  return parts.length > 0 ? parts.join(' · ') : null
+}

@@ -9,15 +9,17 @@ import {
   anyRacePending,
   type RaceChoiceState,
   appliedRaceDeltas,
+  deformidadeSummary,
+  originGrant,
   raceGrant,
   resolveRaceDeltas,
 } from './grant-helpers'
 import {
-  AbilityDisclosure,
-  ClassGrantPanel,
-  DeltaBadges,
-  OriginGrantPanel,
-} from './grant-panels'
+  chosenPowerLines,
+  classChoiceSummary,
+  totalSlots,
+} from './class-power-helpers'
+import { AbilityDisclosure, ClassGrantPanel, DeltaBadges } from './grant-panels'
 import { deriveDraftVitals } from './draft-vitals'
 import type { CharacterFormValues, StepSlug } from './wizard-steps'
 
@@ -110,13 +112,30 @@ function SummaryBody({
         {values.races.length === 0 ? (
           <Empty />
         ) : (
-          values.races.map((r) => (
-            <div key={r} className="space-y-1">
-              <p className="text-sm font-medium">{r}</p>
-              <DeltaBadges deltas={resolveRaceDeltas(r, raceChoices[r])} />
-              <RaceAbilities name={r} />
-            </div>
-          ))
+          values.races.map((r, i) => {
+            const choice = raceChoices[r]
+            const applied = i === 0 || choice?.applied === true
+            const deformidade = applied ? deformidadeSummary(r, choice) : null
+            return (
+              <div key={r} className="space-y-1">
+                <p className="text-sm font-medium">
+                  {r}
+                  <span className="ml-1.5 text-[11px] font-normal text-muted-foreground">
+                    {i === 0
+                      ? '· primária'
+                      : applied
+                        ? '· aplicada'
+                        : '· não aplicada (negociada com o mestre)'}
+                  </span>
+                </p>
+                {applied && (
+                  <DeltaBadges deltas={resolveRaceDeltas(r, choice)} />
+                )}
+                {deformidade && <p className="text-xs">{deformidade}</p>}
+                <RaceAbilities name={r} />
+              </div>
+            )
+          })
         )}
       </SummaryRow>
 
@@ -137,28 +156,23 @@ function SummaryBody({
 
       <SummaryRow slug="poderes" label="Poderes & Caminho">
         {values.classes.map((c) => {
-          const blob = values.classChoices[c.className]
-          if (!blob?.caminho && !blob?.devoto) return null
+          const line = classChoiceSummary(c.className, values.classChoices[c.className])
+          if (!line) return null
           return (
             <p key={c.className} className="text-sm">
-              {c.className}:{blob.caminho ? ` caminho ${blob.caminho}` : ''}
-              {blob.devoto ? ` · devoto de ${blob.devoto}` : ''}
+              {c.className}: {line}
             </p>
           )
         })}
-        <p className="text-sm text-muted-foreground">
-          {values.classPowers.length} poder(es) escolhido(s)
-        </p>
+        <ChosenPowers values={values} />
       </SummaryRow>
 
       <SummaryRow slug="origem" label="Origem">
         {values.origin ? (
-          <>
-            <p className="mb-1 text-xs text-muted-foreground">
-              {values.originChoices.length}/2 benefícios escolhidos
-            </p>
-            <OriginGrantPanel originId={values.origin} collapsible />
-          </>
+          <ChosenOriginBenefits
+            originId={values.origin}
+            choiceIds={values.originChoices}
+          />
         ) : (
           <Empty />
         )}
@@ -214,6 +228,89 @@ function SummaryBody({
         </p>
       </SummaryRow>
       </div>
+    </div>
+  )
+}
+
+const SOURCE_TAG: Record<string, string> = {
+  class: 'classe',
+  general: 'geral',
+  tormenta: 'tormenta',
+}
+
+/** The player's chosen elective powers (names + sub-choices), not the pool. */
+function ChosenPowers({ values }: { values: CharacterFormValues }) {
+  const lines = chosenPowerLines(
+    values.classes,
+    values.classPowers,
+    values.powerChoices ?? {},
+  )
+  const total = totalSlots(values.classes)
+  if (total === 0) return null
+  if (lines.length === 0) {
+    return (
+      <p className="text-xs italic text-muted-foreground">
+        Nenhum poder escolhido ainda ({total} vaga(s)).
+      </p>
+    )
+  }
+  return (
+    <div className="space-y-1">
+      <p className="text-[11px] text-muted-foreground">
+        {lines.length} de {total} vaga(s):
+      </p>
+      <ul className="space-y-0.5">
+        {lines.map((l) => (
+          <li key={l.id} className="text-sm">
+            {l.name}
+            <span className="text-[11px] text-muted-foreground">
+              {' '}
+              · {SOURCE_TAG[l.source] ?? l.source}
+              {l.choices.length > 0 ? ` · ${l.choices.join(', ')}` : ''}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+/** The 2 chosen origin benefits by name/description — not the full pool. */
+function ChosenOriginBenefits({
+  originId,
+  choiceIds,
+}: {
+  originId: string
+  choiceIds: string[]
+}) {
+  const origin = originGrant(originId)
+  if (!origin) return <Empty />
+  const pool = [
+    ...origin.benefits,
+    ...(origin.poderUnico ? [origin.poderUnico] : []),
+  ]
+  const chosen = pool.filter((b) => choiceIds.includes(b.id))
+  return (
+    <div className="space-y-1">
+      <p className="text-xs text-muted-foreground">
+        {origin.name} · {chosen.length}/2 benefícios escolhidos
+      </p>
+      {chosen.length === 0 ? (
+        <p className="text-xs italic text-muted-foreground">
+          Nenhum benefício escolhido ainda.
+        </p>
+      ) : (
+        <ul className="space-y-0.5">
+          {chosen.map((b) => (
+            <li key={b.id} className="text-sm">
+              {b.name}
+              <span className="block text-[11px] leading-snug text-muted-foreground">
+                {b.description}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }
