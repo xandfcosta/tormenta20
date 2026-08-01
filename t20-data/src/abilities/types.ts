@@ -67,6 +67,9 @@ export type RaceDefinition = {
   attributeBonuses: Partial<Record<AttributeKey, number>>
   /** Innate abilities granted by this race. */
   abilities: RaceAbility[]
+  /** Tormenta-touched race (Lefou) — unlocks the poderes da Tormenta pool at
+   *  creation (book p18/p136). */
+  grantsTormentaPowers?: boolean
 }
 
 /**

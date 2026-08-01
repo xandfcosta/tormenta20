@@ -8,6 +8,7 @@ import {
   type Prerequisite,
   slotsForClassLevel,
   spellEffectByName,
+  TORMENTA_POWERS,
   WEAPONS,
 } from '@tormenta20/t20-data'
 
@@ -19,9 +20,36 @@ export type PowerOption = {
   description: string
   minLevel: number
   prerequisites: Prerequisite[]
-  source: 'class' | 'general'
+  source: 'class' | 'general' | 'tormenta'
   /** Sub-choice this power requires when taken (totem/school/…). */
   choice?: PowerChoice
+}
+
+/**
+ * The poderes da Tormenta pool as pickable options. Only offered when the
+ * character's race grants Tormenta access (Lefou) — the caller gates on
+ * `racesGrantTormenta`. Prereqs: a specific power (Larva ← Dentes Afiados) is
+ * enforced; the "N outros poderes da Tormenta" gate is advisory (note).
+ */
+export function tormentaPowerOptions(): PowerOption[] {
+  return Object.values(TORMENTA_POWERS).map((p): PowerOption => {
+    const prerequisites: Prerequisite[] = []
+    if (p.requiresPower) prerequisites.push({ kind: 'power', id: p.requiresPower })
+    if (p.requiresOtherPowers > 0) {
+      prerequisites.push({
+        kind: 'note',
+        description: `Requer ${p.requiresOtherPowers} outro(s) poder(es) da Tormenta`,
+      })
+    }
+    return {
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      minLevel: 1,
+      prerequisites,
+      source: 'tormenta',
+    }
+  })
 }
 
 export type ChoiceOption = {

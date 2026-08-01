@@ -40,6 +40,12 @@ export function getRace(id: string): RaceDefinition | undefined {
   return racesById.get(id)
 }
 
+/** True when any of the given races (by id/name) is Tormenta-touched (Lefou),
+ *  unlocking the poderes da Tormenta pool. */
+export function racesGrantTormenta(raceNames: readonly string[]): boolean {
+  return raceNames.some((n) => getRace(n)?.grantsTormentaPowers === true)
+}
+
 export function getOrigin(id: string): OriginDefinition | undefined {
   return originsById.get(id)
 }

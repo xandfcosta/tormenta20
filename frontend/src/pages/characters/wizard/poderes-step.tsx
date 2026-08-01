@@ -2,6 +2,7 @@ import {
   caminhoSlotFor,
   type ClassChoices,
   devotoOptionsFor,
+  racesGrantTormenta,
 } from '@tormenta20/t20-data'
 import { Check, Lock, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -20,12 +21,19 @@ import {
   type PowerOption,
   powerBlockedReason,
   powerChoiceOptions,
+  tormentaPowerOptions,
   totalSlots,
   usedSlots,
 } from '@/features/character-build/class-power-helpers'
 import { toOptions } from '@/features/character-build/wizard-steps'
 
 type Choices = ClassChoices
+
+const SOURCE_LABEL: Record<PowerOption['source'], string> = {
+  class: 'classe',
+  general: 'geral',
+  tormenta: 'tormenta',
+}
 
 export function PoderesStep() {
   const { form } = useCreationWizard()
@@ -52,6 +60,7 @@ export function PoderesStep() {
       selector={(s: {
         values: {
           classes: ClassEntry[]
+          races: string[]
           classPowers: string[]
           classChoices: Choices
           powerChoices: Record<string, string[]>
@@ -60,11 +69,16 @@ export function PoderesStep() {
     >
       {(v: {
         classes: ClassEntry[]
+        races: string[]
         classPowers: string[]
         classChoices: Choices
         powerChoices: Record<string, string[]>
       }) => {
         const primary = v.classes[0]
+        // Poderes da Tormenta pool, only when a race grants access (Lefou).
+        const tormentaPowers = racesGrantTormenta(v.races ?? [])
+          ? tormentaPowerOptions()
+          : []
         const classPowers = v.classPowers ?? []
         const classChoices = v.classChoices ?? {}
         const powerChoices = v.powerChoices ?? {}
@@ -116,6 +130,7 @@ export function PoderesStep() {
                   ) : (
                     <ElectiveSection
                       classes={v.classes}
+                      tormentaPowers={tormentaPowers}
                       chosen={chosen}
                       chosenIds={classPowers}
                       total={total}
@@ -185,6 +200,7 @@ function ClassChoiceRow({
 
 function ElectiveSection({
   classes,
+  tormentaPowers,
   chosen,
   chosenIds,
   total,
@@ -194,6 +210,7 @@ function ElectiveSection({
   onPowerChoice,
 }: {
   classes: ClassEntry[]
+  tormentaPowers: PowerOption[]
   chosen: Set<string>
   chosenIds: string[]
   total: number
@@ -203,11 +220,14 @@ function ElectiveSection({
   onPowerChoice: (powerId: string, ids: string[]) => void
 }) {
   const [query, setQuery] = useState('')
-  const [facet, setFacet] = useState<'all' | 'class' | 'general'>('all')
+  const [facet, setFacet] = useState<'all' | 'class' | 'general' | 'tormenta'>(
+    'all',
+  )
   const primary = classes[0]
   const { classPowers, generalPowers } = classPowerCandidates(primary.className)
-  // Class + general are alternatives for the same slot (PDF p33) — one pool.
-  const all = [...classPowers, ...generalPowers]
+  // Class + general are alternatives for the same slot (PDF p33) — one pool;
+  // poderes da Tormenta join it when the race grants access (Lefou).
+  const all = [...classPowers, ...generalPowers, ...tormentaPowers]
   const byId = new Map(all.map((o) => [o.id, o] as const))
   // Repeatable powers eat one slot per sub-choice; others one each.
   const used = usedSlots(chosenIds, powerChoices, byId)
@@ -241,6 +261,9 @@ function ElectiveSection({
         <FacetChip active={facet === 'all'} onClick={() => setFacet('all')} label="Todos" count={all.length} />
         <FacetChip active={facet === 'class'} onClick={() => setFacet('class')} label={`Da classe`} count={classPowers.length} />
         <FacetChip active={facet === 'general'} onClick={() => setFacet('general')} label="Gerais" count={generalPowers.length} />
+        {tormentaPowers.length > 0 && (
+          <FacetChip active={facet === 'tormenta'} onClick={() => setFacet('tormenta')} label="Tormenta" count={tormentaPowers.length} />
+        )}
       </div>
 
       {filtered.length === 0 ? (
@@ -354,8 +377,15 @@ function PowerRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <p className="text-xs font-semibold">{option.name}</p>
-            <span className="shrink-0 text-[10px] text-muted-foreground">
-              · {option.source === 'class' ? 'classe' : 'geral'}
+            <span
+              className={cn(
+                'shrink-0 text-[10px]',
+                option.source === 'tormenta'
+                  ? 'text-[color:var(--hp-hurt)]'
+                  : 'text-muted-foreground',
+              )}
+            >
+              · {SOURCE_LABEL[option.source]}
             </span>
             {blocked && (
               <Badge variant="outline" className="px-1 py-0 text-[9px]">

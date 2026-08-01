@@ -2,8 +2,25 @@ import { describe, expect, it } from 'vitest'
 import {
   type PowerOption,
   powerChoiceOptions,
+  tormentaPowerOptions,
   usedSlots,
 } from './class-power-helpers'
+
+describe('tormentaPowerOptions', () => {
+  it('returns the 22 poderes da Tormenta, all source "tormenta"', () => {
+    const opts = tormentaPowerOptions()
+    expect(opts).toHaveLength(22)
+    expect(opts.every((o) => o.source === 'tormenta')).toBe(true)
+  })
+
+  it('encodes a specific-power prereq (Larva Explosiva ← Dentes Afiados)', () => {
+    const larva = tormentaPowerOptions().find((o) => o.id === 'larva-explosiva')
+    expect(larva?.prerequisites).toContainEqual({
+      kind: 'power',
+      id: 'dentes-afiados',
+    })
+  })
+})
 
 const opt = (id: string, repeatable?: boolean): PowerOption => ({
   id,
