@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   lightArmorOptions,
+  purchasesPayload,
+  purchasesTotal,
+  shopCatalog,
   originStartingItems,
   startingItemsPayload,
   startingLoadout,
@@ -103,5 +106,43 @@ describe('startingItemsPayload — payload de criação', () => {
     )
     expect(items.some((i) => i.catalogId === 'brunea')).toBe(false)
     expect(items.some((i) => i.catalogId === 'escudo-leve')).toBe(false)
+  })
+})
+
+describe('loja — purchasesTotal / purchasesPayload / shopCatalog', () => {
+  it('soma preços × quantidade com centavos exatos', () => {
+    // adaga T$ 2; tocha? use catalog-known: adaga ×2 = 4
+    expect(purchasesTotal({ adaga: 2 })).toBe(4)
+  })
+
+  it('centavos não acumulam erro de float', () => {
+    const cheap = shopCatalog('all').find((i) => i.price === 0.1)
+    if (!cheap) return // catálogo sem item de T$ 0,1 — nada a testar
+    expect(purchasesTotal({ [cheap.id]: 3 })).toBe(0.3)
+  })
+
+  it('ids desconhecidos e qty 0 são ignorados', () => {
+    expect(purchasesTotal({ 'nao-existe': 5, adaga: 0 })).toBe(0)
+    expect(purchasesPayload({ 'nao-existe': 5, adaga: 0 })).toEqual([])
+  })
+
+  it('payload carrega catalogId + quantidade, sem equipar', () => {
+    expect(purchasesPayload({ adaga: 2 })).toEqual([
+      { catalogId: 'adaga', name: 'Adaga', quantity: 2, slots: 1 },
+    ])
+  })
+
+  it('shopCatalog exclui overlays (improvement/material)', () => {
+    expect(
+      shopCatalog('all').some(
+        (i) => i.category === 'improvement' || i.category === 'material',
+      ),
+    ).toBe(false)
+  })
+
+  it('categoria Armas só traz armas', () => {
+    expect(
+      shopCatalog('weapons').every((i) => i.category.startsWith('weapon-')),
+    ).toBe(true)
   })
 })

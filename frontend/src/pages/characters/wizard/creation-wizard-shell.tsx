@@ -21,6 +21,8 @@ import { deriveDraftVitals } from '@/features/character-build/draft-vitals'
 import { syncDevotoFromGod } from '@/features/character-build/devocao-sync'
 import { deformidadePayload } from '@/features/character-build/grant-helpers'
 import {
+  purchasesPayload,
+  purchasesTotal,
   startingItemsPayload,
   startingLoadout,
 } from '@/features/character-build/starting-equipment'
@@ -92,11 +94,12 @@ export function CreationWizardShell() {
         startingWeaponMartial,
         startingArmor,
         startingShield,
+        startingPurchases,
         ...restValue
       } = value
       const totalLevel =
         value.classes.reduce((n, c) => n + (c.level || 0), 0) || 1
-      const items = value.classes[0]?.className
+      const kitItems = value.classes[0]?.className
         ? startingItemsPayload(
             {
               weaponSimple: startingWeaponSimple ?? '',
@@ -108,9 +111,16 @@ export function CreationWizardShell() {
             value.origin,
           )
         : []
+      // Loja: purchases become inventory rows and the saved tibar is the
+      // REMAINING money (p140 — o dinheiro inicial compra itens).
+      const purchases = startingPurchases ?? {}
+      const spent = purchasesTotal(purchases)
+      const remainingTibar =
+        Math.round(Math.max(0, (value.tibar ?? 0) - spent) * 100) / 100
       const payload: CreateCharacterInput = {
         ...restValue,
-        items,
+        items: [...kitItems, ...purchasesPayload(purchases)],
+        tibar: remainingTibar,
         hpMax: pvMax,
         mpMax: pmMax,
         hpCurrent: Math.min(value.hpCurrent, pvMax),

@@ -5,7 +5,7 @@ import {
   getCatalogItem,
   STARTING_KIT_BASE_ITEMS,
 } from '@tormenta20/t20-data'
-import { originStartingItems } from './starting-equipment'
+import { originStartingItems, purchasesTotal } from './starting-equipment'
 import type { ReactNode } from 'react'
 import { Card } from '@/shared/ui/card'
 import { StatCell } from '@/shared/ui/stat-cell'
@@ -387,6 +387,15 @@ function EquipamentoSummary({ values }: { values: CharacterFormValues }) {
     .map((id) => getCatalogItem(id as string)?.name ?? id)
   if (values.startingShield) picks.push('Escudo leve')
   const origem = originStartingItems(values.origin)
+  const purchases = values.startingPurchases ?? {}
+  const bought = Object.entries(purchases)
+    .filter(([, qty]) => qty > 0)
+    .map(([id, qty]) => {
+      const name = getCatalogItem(id)?.name ?? id
+      return qty > 1 ? `${name} ×${qty}` : name
+    })
+  const spent = purchasesTotal(purchases)
+  const remaining = Math.max(0, (values.tibar ?? 0) - spent)
   return (
     <div className="space-y-1 text-sm">
       <p>
@@ -398,8 +407,14 @@ function EquipamentoSummary({ values }: { values: CharacterFormValues }) {
           Origem: {origem.join(' · ')}
         </p>
       )}
+      {bought.length > 0 && (
+        <p className="text-[11px] text-muted-foreground">
+          Comprado: {bought.join(' · ')}
+        </p>
+      )}
       <p className="text-[11px] text-muted-foreground">
-        T$ {(values.tibar ?? 0).toLocaleString('pt-BR')}
+        T$ restante:{' '}
+        {remaining.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}
       </p>
     </div>
   )

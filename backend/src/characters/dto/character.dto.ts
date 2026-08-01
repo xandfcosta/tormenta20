@@ -160,9 +160,10 @@ export class CreateCharacterDto {
   @MaxLength(60)
   godPower?: string;
 
-  /** Dinheiro inicial em T$ (Tabela 3-1 p140 / rolagem 4d6); editável. */
+  /** Dinheiro inicial em T$ (Tabela 3-1 p140 / rolagem 4d6); editável.
+   *  Float — preços do Cap 3 têm centavos (tocha T$ 0,1). */
   @IsOptional()
-  @IsInt()
+  @IsNumber()
   @Min(0)
   @Max(1_000_000)
   tibar?: number;
