@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Combobox } from '@/shared/ui/combobox'
 import { Field, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
+import { VirtualList } from '@/shared/ui/virtual-list'
 import { cn } from '@/shared/lib/utils'
 import { useCreationWizard } from '@/features/character-build/creation-wizard-context'
 import {
@@ -202,18 +203,22 @@ function ElectiveSection({
   onPowerChoice: (powerId: string, ids: string[]) => void
 }) {
   const [query, setQuery] = useState('')
+  const [facet, setFacet] = useState<'all' | 'class' | 'general'>('all')
   const primary = classes[0]
   const { classPowers, generalPowers } = classPowerCandidates(primary.className)
-  const byId = new Map(
-    [...classPowers, ...generalPowers].map((o) => [o.id, o] as const),
-  )
+  // Class + general are alternatives for the same slot (PDF p33) — one pool.
+  const all = [...classPowers, ...generalPowers]
+  const byId = new Map(all.map((o) => [o.id, o] as const))
   // Repeatable powers eat one slot per sub-choice; others one each.
   const used = usedSlots(chosenIds, powerChoices, byId)
   const remaining = Math.max(0, total - used)
   const q = query.trim().toLowerCase()
-  const filterFn = (o: PowerOption) => !q || o.name.toLowerCase().includes(q)
   const ctx = { chosenIds: chosen, classChoices }
   const canAdd = remaining > 0
+
+  const byFacet =
+    facet === 'all' ? all : all.filter((o) => o.source === facet)
+  const filtered = byFacet.filter((o) => !q || o.name.toLowerCase().includes(q))
 
   return (
     <div className="space-y-3">
@@ -221,43 +226,36 @@ function ElectiveSection({
         Poderes: {used} de {total} escolhidos · {remaining} restantes
       </p>
 
-      <div className="space-y-1.5">
-        <p className="text-xs font-semibold">Poderes de {primary.className}</p>
-        <ul className="space-y-1">
-          {classPowers.filter(filterFn).map((o) => (
-            <PowerRow
-              key={o.id}
-              option={o}
-              level={primary.level}
-              selected={chosen.has(o.id)}
-              canAdd={canAdd}
-              ctx={ctx}
-              onToggle={() => onToggle(o.id)}
-              choiceValue={powerChoices[o.id] ?? []}
-              onChoice={(ids) => onPowerChoice(o.id, ids)}
-            />
-          ))}
-        </ul>
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Buscar poder"
+          aria-label="Buscar poder"
+          className="h-8 pl-7 text-xs"
+        />
       </div>
 
-      <div className="space-y-1.5">
-        <div className="flex items-center gap-2">
-          <p className="text-xs font-semibold">Poderes Gerais</p>
-          <div className="relative ml-auto w-40">
-            <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar poder"
-              aria-label="Buscar poder geral"
-              className="h-8 pl-7 text-xs"
-            />
-          </div>
-        </div>
-        <ul className="max-h-[min(280px,34vh)] space-y-1 overflow-y-auto p-0.5">
-          {generalPowers.filter(filterFn).map((o) => (
+      <div className="flex flex-wrap gap-1.5">
+        <FacetChip active={facet === 'all'} onClick={() => setFacet('all')} label="Todos" count={all.length} />
+        <FacetChip active={facet === 'class'} onClick={() => setFacet('class')} label={`Da classe`} count={classPowers.length} />
+        <FacetChip active={facet === 'general'} onClick={() => setFacet('general')} label="Gerais" count={generalPowers.length} />
+      </div>
+
+      {filtered.length === 0 ? (
+        <p className="py-6 text-center text-xs text-muted-foreground">
+          Nenhum poder corresponde à busca.
+        </p>
+      ) : (
+        <VirtualList
+          items={filtered}
+          getKey={(o) => o.id}
+          estimateSize={64}
+          gap={4}
+          className="max-h-[min(360px,44vh)] p-0.5"
+          renderItem={(o) => (
             <PowerRow
-              key={o.id}
               option={o}
               level={primary.level}
               selected={chosen.has(o.id)}
@@ -267,9 +265,9 @@ function ElectiveSection({
               choiceValue={powerChoices[o.id] ?? []}
               onChoice={(ids) => onPowerChoice(o.id, ids)}
             />
-          ))}
-        </ul>
-      </div>
+          )}
+        />
+      )}
 
       {remaining > 0 && (
         <p className="text-[11px] text-[color:var(--hp-hurt)]">
@@ -277,6 +275,36 @@ function ElectiveSection({
         </p>
       )}
     </div>
+  )
+}
+
+/** Segmented facet chip: label + live count, active-highlighted. */
+function FacetChip({
+  active,
+  onClick,
+  label,
+  count,
+}: {
+  active: boolean
+  onClick: () => void
+  label: string
+  count: number
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        'rounded-md border px-2.5 py-1 text-xs transition-colors',
+        active
+          ? 'border-primary bg-accent font-medium'
+          : 'border-border text-muted-foreground hover:bg-accent',
+      )}
+    >
+      {label}{' '}
+      <span className="tabular-nums text-muted-foreground">{count}</span>
+    </button>
   )
 }
 
@@ -302,7 +330,7 @@ function PowerRow({
   const blocked = powerBlockedReason(option, level, ctx)
   const locked = !selected && (!!blocked || !canAdd)
   return (
-    <li>
+    <div>
       <button
         type="button"
         disabled={locked}
@@ -326,6 +354,9 @@ function PowerRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <p className="text-xs font-semibold">{option.name}</p>
+            <span className="shrink-0 text-[10px] text-muted-foreground">
+              · {option.source === 'class' ? 'classe' : 'geral'}
+            </span>
             {blocked && (
               <Badge variant="outline" className="px-1 py-0 text-[9px]">
                 {blocked}
@@ -345,7 +376,7 @@ function PowerRow({
           canAddMore={canAdd}
         />
       )}
-    </li>
+    </div>
   )
 }
 
