@@ -7,7 +7,18 @@ import {
   getOriginBenefit,
   getRace,
   getRaceAbility,
+  racesGrantTormenta,
 } from '../catalog'
+
+describe('racesGrantTormenta', () => {
+  it('is true only for Tormenta-touched races (Lefou)', () => {
+    expect(racesGrantTormenta(['Lefou'])).toBe(true)
+    expect(racesGrantTormenta(['Anão'])).toBe(false)
+    // Secondary Lefou still grants access (any selected race counts).
+    expect(racesGrantTormenta(['Minotauro', 'Lefou'])).toBe(true)
+    expect(racesGrantTormenta([])).toBe(false)
+  })
+})
 
 /**
  * Catalog lookup helpers — `get*` and `classPowersFor`. Every UI / engine
