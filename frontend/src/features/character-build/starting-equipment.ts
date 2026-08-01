@@ -154,7 +154,8 @@ export function origemItemsPayload(
           : [{ name: chosen, quantity: 1, slots: 1 }]
       }
       case 'money':
-        return [] // rolled into the tibar field by the step UI
+      default:
+        return [] // money is rolled into the tibar field by the step UI
     }
   })
 }
