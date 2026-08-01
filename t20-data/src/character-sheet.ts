@@ -52,6 +52,14 @@ export type CharacterInput = {
    * atributo já é o modificador (não há d20 conversion).
    */
   baseAttributes: Record<AttributeKey, number>
+  /**
+   * Quando `true`, `baseAttributes` já inclui os bônus raciais (foram
+   * "baked" na criação — o backend persiste o total final). A derivação NÃO
+   * reaplica o mod de atributo da raça (senão dobraria), mas `raceId` ainda
+   * vale para deslocamento, tamanho e concessões raciais de PV/PM. Sem a flag,
+   * mantém o contrato base+raça (usado pelos testes de regra puros).
+   */
+  attributesIncludeRace?: boolean
   /** PV atual (opcional; default = pvMax). */
   currentPv?: number
   /** PM atual (opcional; default = pmMax). */
@@ -271,18 +279,20 @@ export function halfLevel(level: number): number {
  * Resolve mod racial em cada atributo, respeitando o tipo do mod
  * (fixed / floating / subraca-gated). Warnings para inputs inválidos.
  */
+const ZERO_ATTRIBUTE_MODS: Record<AttributeKey, number> = {
+  strength: 0,
+  dexterity: 0,
+  constitution: 0,
+  intelligence: 0,
+  wisdom: 0,
+  charisma: 0,
+}
+
 function resolveRaceMods(
   input: CharacterInput,
   warnings: string[],
 ): Record<AttributeKey, number> {
-  const zero: Record<AttributeKey, number> = {
-    strength: 0,
-    dexterity: 0,
-    constitution: 0,
-    intelligence: 0,
-    wisdom: 0,
-    charisma: 0,
-  }
+  const zero = ZERO_ATTRIBUTE_MODS
   if (!input.raceId) return zero
 
   let raca: Raca
@@ -322,7 +332,12 @@ export function computeCharacterSheet(input: CharacterInput): ComputedSheet {
     warnings.push(`nível fora do range T20 (1-20): ${input.level}`)
   }
 
-  const raceMods = resolveRaceMods(input, warnings)
+  // When attributes are pre-raced (baked at creation), skip the racial
+  // attribute mod to avoid double-counting — `raceId` still drives movement,
+  // size and PV/PM race grants below. Otherwise honour the base+race contract.
+  const raceMods = input.attributesIncludeRace
+    ? ZERO_ATTRIBUTE_MODS
+    : resolveRaceMods(input, warnings)
   const attributes = {} as Record<AttributeKey, AttributeComputed>
   for (const key of ATTRIBUTE_KEYS) {
     const base = input.baseAttributes[key] ?? 0

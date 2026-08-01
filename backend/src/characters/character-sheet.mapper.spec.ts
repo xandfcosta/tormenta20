@@ -92,15 +92,29 @@ describe('computeSheetForRow', () => {
     expect(sheet.className).toBe('Guerreiro');
   });
 
-  it('anão gets Constituição +2 / Sabedoria +1 / Destreza -1 from race mods', () => {
+  it('does NOT re-apply the race attribute mod — stored attrs are already final', () => {
+    // Stored attributes are baked at creation (base + raça). The orchestrator
+    // must not add the racial mod again (would double-count). raceMod = 0,
+    // total = the stored value.
     const anao: CharacterDbRow = {
       ...humanoFighter,
       races: [{ race: 'Anão' }],
     };
     const sheet = computeSheetForRow(anao);
-    expect(sheet.attributes.constitution.raceMod).toBe(2);
-    expect(sheet.attributes.wisdom.raceMod).toBe(1);
-    expect(sheet.attributes.dexterity.raceMod).toBe(-1);
+    expect(sheet.attributes.constitution.raceMod).toBe(0);
+    expect(sheet.attributes.constitution.total).toBe(humanoFighter.constitution);
+    expect(sheet.attributes.dexterity.raceMod).toBe(0);
+    expect(sheet.attributes.dexterity.total).toBe(humanoFighter.dexterity);
+  });
+
+  it('still derives race-driven movement + PV grant despite pre-raced attrs', () => {
+    const anao: CharacterDbRow = { ...humanoFighter, races: [{ race: 'Anão' }] };
+    const sheet = computeSheetForRow(anao);
+    expect(sheet.deslocamento).toBe(6); // Anão movement (raceId still used)
+    // Duro como Pedra (nível+2) still folds in once — Anão PV exceeds a raceless
+    // build with the same stored attributes.
+    const raceless = computeSheetForRow({ ...humanoFighter, races: [] });
+    expect(sheet.vitals.pvMax).toBe(raceless.vitals.pvMax + (humanoFighter.level + 2));
   });
 
   it('exposes a defense object with base 10', () => {

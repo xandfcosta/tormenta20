@@ -245,6 +245,9 @@ export function toCharacterInput(row: CharacterDbRow): CharacterInput {
       wisdom: row.wisdom,
       charisma: row.charisma,
     },
+    // Stored attributes already include racial bonuses (baked at creation) —
+    // don't let the orchestrator re-apply the race attribute mod.
+    attributesIncludeRace: true,
     currentPv: row.hpCurrent,
     currentPm: row.mpCurrent,
     trainedSkills,
