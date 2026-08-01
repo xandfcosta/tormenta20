@@ -108,8 +108,11 @@ describe('racePending / anyRacePending', () => {
     expect(racePending('Suraggel', { ascendencia: 'sulfure' })).toBe(false)
   })
 
-  it('anyRacePending flags a mixed selection', () => {
-    expect(anyRacePending(['Anão', 'Suraggel'], {})).toBe(true)
+  it('only the primary race can be pending (secondary races are GM-negotiated)', () => {
+    // Primary Suraggel needs an ascendência → pending.
+    expect(anyRacePending(['Suraggel', 'Anão'], {})).toBe(true)
+    // Primary Anão is fixed; a pending SECONDARY (Suraggel) is ignored.
+    expect(anyRacePending(['Anão', 'Suraggel'], {})).toBe(false)
     expect(anyRacePending(['Anão'], {})).toBe(false)
   })
 })

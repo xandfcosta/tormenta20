@@ -81,6 +81,21 @@ export function raceAttributeDeltas(
   return out
 }
 
+/**
+ * Attribute deltas from the MECHANICAL primary race only (`raceIds[0]`).
+ * Homebrew allows multiple races, but only the primary applies mechanically —
+ * secondary races are GM-negotiated flavor. Matches the backend sheet, which
+ * derives attributes from `races[0]`, so the wizard preview equals the saved
+ * sheet.
+ */
+export function primaryRaceDeltas(
+  raceIds: string[],
+  choices: RaceChoiceState = {},
+): Partial<Record<AttributeKey, number>> {
+  const primary = raceIds[0]
+  return primary ? resolveRaceDeltas(primary, choices[primary]) : {}
+}
+
 /** True while a race still owes an attribute choice (floating or subrace). */
 export function racePending(name: string, choice: RaceChoice = {}): boolean {
   const mod = raceModel(name)?.atributoMod
@@ -97,11 +112,14 @@ export function racePending(name: string, choice: RaceChoice = {}): boolean {
   return false
 }
 
+/** Only the primary race (`raceIds[0]`) applies mechanically, so only its
+ *  attribute choice can be "pending" — secondary races are GM-negotiated. */
 export function anyRacePending(
   raceIds: string[],
   choices: RaceChoiceState = {},
 ): boolean {
-  return raceIds.some((name) => racePending(name, choices[name]))
+  const primary = raceIds[0]
+  return primary ? racePending(primary, choices[primary]) : false
 }
 
 /** Compact signature for a race tile: `+2 CON`, `+1×3`, or `2 ascend.`. */
