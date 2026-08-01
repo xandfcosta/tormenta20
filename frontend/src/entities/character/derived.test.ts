@@ -469,6 +469,33 @@ describe('Deformidade (Lefou p23) — +2 perícias e perda de CAR', () => {
     ).toBe(2)
   })
 
+  it('poderes da Tormenta escolhidos no pool também perdem CAR (escalada p136)', () => {
+    const c = character({
+      charisma: 1,
+      races: [{ race: 'Lefou' }],
+      raceAttributeChoices: JSON.stringify({
+        floatingPicks: ['strength', 'constitution', 'wisdom'],
+        deformidade: { pericias: [], tormentaPower: 'dentes-afiados' },
+      }),
+      classPowers: JSON.stringify(['antenas', 'carapaca']),
+    })
+    // 3 poderes reais: 1→1, 2→2, 3→4 ⇒ CAR 1 − 1 (Lefou) − 4 = −4
+    expect(attributeTotal(c, 'charisma', characterEffects(c))).toBe(-4)
+  })
+
+  it('poder duplicado (Deformidade + pool) conta uma vez', () => {
+    const c = character({
+      charisma: 1,
+      races: [{ race: 'Lefou' }],
+      raceAttributeChoices: JSON.stringify({
+        floatingPicks: ['strength', 'constitution', 'wisdom'],
+        deformidade: { pericias: [], tormentaPower: 'dentes-afiados' },
+      }),
+      classPowers: JSON.stringify(['dentes-afiados']),
+    })
+    expect(attributeTotal(c, 'charisma', characterEffects(c))).toBe(-1)
+  })
+
   it('deformidade em raça sem a habilidade é ignorada', () => {
     const c = character({
       races: [{ race: 'Humano' }],

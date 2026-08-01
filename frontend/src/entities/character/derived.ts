@@ -20,6 +20,7 @@ import {
   requiredProficiency,
   resolveAtributoMod,
   statFor,
+  TORMENTA_POWERS,
   trainingBonusForLevel,
   type ActiveItem,
   type AttributeKey,
@@ -80,6 +81,8 @@ function activeItemsFor(character: Character): ActiveItem[] {
   items.push(...classMods)
   const generalMods = generalPowerActiveItem(character)
   if (generalMods) items.push(generalMods)
+  const tormentaCar = tormentaCarismaItem(character)
+  if (tormentaCar) items.push(tormentaCar)
   return items
 }
 
@@ -181,16 +184,16 @@ function parseDeformidadeStored(raw: unknown): DeformidadeStored | undefined {
 }
 
 /**
- * Deformidade (Lefou p23) as engine modifiers: +2 in each chosen perícia and
- * −1 Carisma when a bônus was swapped for a real poder da Tormenta (p136 —
- * only the real power costs Carisma). Ignored for races without the ability.
+ * Deformidade (Lefou p23) as engine modifiers: +2 in each chosen perícia.
+ * The Carisma loss lives in `tormentaCarismaItem` — it must escalate over the
+ * TOTAL real power count (p136), so it can't be emitted per-source here.
  */
 function deformidadeModifiers(
   raceName: string,
   draft: DeformidadeStored | undefined,
 ): Modifier[] {
   if (!draft || !raceWithDeformidade([raceName])) return []
-  const mods: Modifier[] = draft.pericias
+  return draft.pericias
     .filter((n) => (EXPERTISE_NAMES as readonly string[]).includes(n))
     .map((n) => ({
       target: { k: 'expertise', name: n as ExpertiseName },
@@ -198,15 +201,52 @@ function deformidadeModifiers(
       bonusType: 'untyped',
       note: 'Deformidade',
     }))
-  if (draft.tormentaPower) {
-    mods.push({
-      target: { k: 'attribute', name: 'charisma' },
-      amount: -carismaLossFromPowers(1),
-      bonusType: 'untyped',
-      note: 'Poder da Tormenta (Deformidade)',
-    })
+}
+
+/** The Deformidade-swapped poder da Tormenta, from either race blob. */
+export function deformidadeHeldPower(character: Character): string | undefined {
+  const primaryRace = character.races[0]?.race
+  const primary = parseRaceAttributeChoices(character.raceAttributeChoices)
+  if (primaryRace && raceWithDeformidade([primaryRace])) {
+    const p = primary.deformidade?.tormentaPower
+    if (p) return p
   }
-  return mods
+  for (const [race, choice] of parseSecondaryRaceChoices(
+    character.secondaryRaceChoices,
+  )) {
+    if (raceWithDeformidade([race]) && choice.deformidade?.tormentaPower) {
+      return choice.deformidade.tormentaPower
+    }
+  }
+  return undefined
+}
+
+/**
+ * Carisma loss from ALL real poderes da Tormenta (p136): the Deformidade swap
+ * plus any picked in the Poderes pool (stored in classPowers). The loss
+ * escalates with the total (1→1, 2→2, 3→4…), so it's one modifier computed
+ * over the count — never summed per source. Deformidade perícia bonuses don't
+ * count (p23).
+ */
+function tormentaCarismaItem(character: Character): ActiveItem | null {
+  const picked = [...parseChoiceSet(character.classPowers)].filter(
+    (id) => id in TORMENTA_POWERS,
+  )
+  const held = deformidadeHeldPower(character)
+  const count = picked.length + (held && !picked.includes(held) ? 1 : 0)
+  if (count === 0) return null
+  return {
+    source: 'Poderes da Tormenta',
+    equipped: 'vested',
+    modifiers: [
+      {
+        target: { k: 'attribute', name: 'charisma' },
+        amount: -carismaLossFromPowers(count),
+        bonusType: 'untyped',
+        note: `${count} poder(es) da Tormenta (p136)`,
+      },
+    ],
+  }
 }
 
 /**

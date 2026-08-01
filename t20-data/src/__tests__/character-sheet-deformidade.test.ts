@@ -84,3 +84,40 @@ describe('computeCharacterSheet — Deformidade (Lefou p23)', () => {
     expect(sheet.warnings.some((w) => w.includes('Xadrez'))).toBe(true)
   })
 })
+
+describe('perda de Carisma escala com TODOS os poderes da Tormenta (p136)', () => {
+  it('poderes escolhidos no pool também perdem CAR (2 poderes → −2)', () => {
+    const sheet = computeCharacterSheet({
+      ...lefouInput(undefined),
+      powerIds: ['antenas', 'carapaca'],
+    })
+    // sequência p136: 1º −1, 2º −1 ⇒ total −2
+    expect(sheet.attributes.charisma.tormentaMod).toBe(-2)
+  })
+
+  it('swap da Deformidade + 2 escolhidos = 3 poderes → −4 (escalada)', () => {
+    const sheet = computeCharacterSheet({
+      ...lefouInput({ pericias: [], tormentaPower: 'dentes-afiados' }),
+      powerIds: ['antenas', 'carapaca'],
+    })
+    // 1→1, 2→2, 3→4 total
+    expect(sheet.attributes.charisma.tormentaMod).toBe(-4)
+  })
+
+  it('poder duplicado (Deformidade + pool) conta uma vez + warning', () => {
+    const sheet = computeCharacterSheet({
+      ...lefouInput({ pericias: [], tormentaPower: 'dentes-afiados' }),
+      powerIds: ['dentes-afiados'],
+    })
+    expect(sheet.attributes.charisma.tormentaMod).toBe(-1)
+    expect(sheet.warnings.some((w) => w.includes('duplicado'))).toBe(true)
+  })
+
+  it('poderes não-Tormenta em powerIds não perdem CAR', () => {
+    const sheet = computeCharacterSheet({
+      ...lefouInput(undefined),
+      powerIds: ['esquiva', 'class.barbaro.totem-espiritual'],
+    })
+    expect(sheet.attributes.charisma.tormentaMod).toBeUndefined()
+  })
+})

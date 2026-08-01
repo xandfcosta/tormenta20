@@ -67,6 +67,22 @@ export function deformidadePayload(
 }
 
 /**
+ * The poder da Tormenta held via a Deformidade swap in the wizard draft —
+ * from any APPLIED race that owns the ability. Used by the Poderes step to
+ * block re-taking it and to satisfy `requiresPower` prereqs (it's owned).
+ */
+export function draftDeformidadeHeldPower(
+  raceIds: string[],
+  choices: RaceChoiceState = {},
+): string | undefined {
+  for (const name of appliedRaces(raceIds, choices)) {
+    const payload = deformidadePayload(name, choices[name])
+    if (payload?.tormentaPower) return payload.tormentaPower
+  }
+  return undefined
+}
+
+/**
  * The Deformidade picks as one display line for the Resumo
  * ("Deformidade: +2 Furtividade · poder da Tormenta: Dentes Afiados (−1 CAR)"),
  * or null when the race lacks the ability / nothing was chosen.

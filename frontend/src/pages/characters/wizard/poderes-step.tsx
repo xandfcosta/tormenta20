@@ -14,7 +14,10 @@ import { Input } from '@/shared/ui/input'
 import { VirtualList } from '@/shared/ui/virtual-list'
 import { cn } from '@/shared/lib/utils'
 import { useCreationWizard } from '@/features/character-build/creation-wizard-context'
-import { appliedRaces } from '@/features/character-build/grant-helpers'
+import {
+  appliedRaces,
+  draftDeformidadeHeldPower,
+} from '@/features/character-build/grant-helpers'
 import {
   type ChoiceOption,
   type ClassEntry,
@@ -26,7 +29,6 @@ import {
   totalSlots,
   usedSlots,
 } from '@/features/character-build/class-power-helpers'
-import { toOptions } from '@/features/character-build/wizard-steps'
 
 type Choices = ClassChoices
 
@@ -83,6 +85,12 @@ export function PoderesStep() {
         )
           ? tormentaPowerOptions()
           : []
+        // Poder já obtido pelo swap da Deformidade: não pode ser re-escolhido,
+        // mas conta como possuído para pré-requisitos (Larva ← Dentes Afiados).
+        const deformidadeHeld = draftDeformidadeHeldPower(
+          v.races ?? [],
+          raceChoices,
+        )
         const classPowers = v.classPowers ?? []
         const classChoices = v.classChoices ?? {}
         const powerChoices = v.powerChoices ?? {}
@@ -137,6 +145,7 @@ export function PoderesStep() {
                       tormentaPowers={tormentaPowers}
                       chosen={chosen}
                       chosenIds={classPowers}
+                      deformidadeHeld={deformidadeHeld}
                       total={total}
                       classChoices={classChoices}
                       powerChoices={powerChoices}
@@ -187,7 +196,7 @@ function ClassChoiceRow({
         <Field className="min-w-48">
           <FieldLabel>Devoto ({entry.className})</FieldLabel>
           <Combobox
-            options={toOptions(devoto.map((d) => d.name))}
+            options={devoto.map((d) => ({ value: d.id, label: d.name }))}
             value={blob.devoto ?? ''}
             onChange={(val) => onChoice(entry.className, 'devoto', val)}
             placeholder="Escolher deus"
@@ -207,6 +216,7 @@ function ElectiveSection({
   tormentaPowers,
   chosen,
   chosenIds,
+  deformidadeHeld,
   total,
   classChoices,
   powerChoices,
@@ -217,6 +227,7 @@ function ElectiveSection({
   tormentaPowers: PowerOption[]
   chosen: Set<string>
   chosenIds: string[]
+  deformidadeHeld?: string
   total: number
   classChoices: Choices
   powerChoices: Record<string, string[]>
@@ -237,7 +248,11 @@ function ElectiveSection({
   const used = usedSlots(chosenIds, powerChoices, byId)
   const remaining = Math.max(0, total - used)
   const q = query.trim().toLowerCase()
-  const ctx = { chosenIds: chosen, classChoices }
+  // Deformidade-held power counts as owned for prereq checks (p23).
+  const owned = deformidadeHeld
+    ? new Set([...chosen, deformidadeHeld])
+    : chosen
+  const ctx = { chosenIds: owned, classChoices }
   const canAdd = remaining > 0
 
   const byFacet =
@@ -286,6 +301,7 @@ function ElectiveSection({
               option={o}
               level={primary.level}
               selected={chosen.has(o.id)}
+              ownedViaDeformidade={o.id === deformidadeHeld}
               canAdd={canAdd}
               ctx={ctx}
               onToggle={() => onToggle(o.id)}
@@ -339,6 +355,7 @@ function PowerRow({
   option,
   level,
   selected,
+  ownedViaDeformidade = false,
   canAdd,
   ctx,
   onToggle,
@@ -348,13 +365,16 @@ function PowerRow({
   option: PowerOption
   level: number
   selected: boolean
+  ownedViaDeformidade?: boolean
   canAdd: boolean
   ctx: { chosenIds: Set<string>; classChoices: Choices }
   onToggle: () => void
   choiceValue: string[]
   onChoice: (ids: string[]) => void
 }) {
-  const blocked = powerBlockedReason(option, level, ctx)
+  const blocked = ownedViaDeformidade
+    ? 'já obtido pela Deformidade'
+    : powerBlockedReason(option, level, ctx)
   const locked = !selected && (!!blocked || !canAdd)
   return (
     <div>
