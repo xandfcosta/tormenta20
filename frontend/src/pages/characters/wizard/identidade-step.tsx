@@ -13,6 +13,7 @@ import {
   type FieldApi,
   useCreationWizard,
 } from '@/features/character-build/creation-wizard-context'
+import { DevocaoPanel } from '@/features/character-build/devocao-panel'
 import { toOptions } from '@/features/character-build/wizard-steps'
 
 export function IdentidadeStep() {
@@ -52,7 +53,11 @@ export function IdentidadeStep() {
                   id={f.name}
                   options={toOptions(options.gods)}
                   value={(f.state.value as string) ?? ''}
-                  onChange={f.handleChange}
+                  onChange={(v) => {
+                    f.handleChange(v)
+                    // Trocar/limpar o deus invalida o poder concedido escolhido.
+                    form.setFieldValue('godPower', '')
+                  }}
                   placeholder="Nenhum"
                   searchPlaceholder="Buscar deuses…"
                   emptyMessage="Nenhum deus encontrado."
@@ -62,6 +67,34 @@ export function IdentidadeStep() {
               </Field>
             )}
           </form.Field>
+
+          <form.Subscribe
+            selector={(s: {
+              values: {
+                god?: string
+                godPower?: string
+                races: string[]
+                classes: { className: string }[]
+              }
+            }) => s.values}
+          >
+            {(v: {
+              god?: string
+              godPower?: string
+              races: string[]
+              classes: { className: string }[]
+            }) =>
+              v.god ? (
+                <DevocaoPanel
+                  godName={v.god}
+                  value={v.godPower ?? ''}
+                  onChange={(name) => form.setFieldValue('godPower', name)}
+                  raceNames={v.races ?? []}
+                  classNames={(v.classes ?? []).map((c) => c.className)}
+                />
+              ) : null
+            }
+          </form.Subscribe>
 
           <form.Field name="size">
             {(f: FieldApi) => {

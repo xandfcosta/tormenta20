@@ -77,6 +77,8 @@ export type Character = {
   name: string
   origin: string
   god: string | null
+  /** Poder concedido escolhido ao se tornar devoto (p96); '' = não devoto. */
+  godPower: string
   level: number
   hpMax: number
   hpCurrent: number
@@ -222,6 +224,7 @@ export type CreateCharacterInput = {
   origin: string
   classes: { className: string; level: number }[]
   god?: string
+  godPower?: string
   hpMax: number
   hpCurrent: number
   mpMax: number

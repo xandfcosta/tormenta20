@@ -232,6 +232,7 @@ export class CharactersService {
         name: dto.name,
         origin: dto.origin,
         god: dto.god ?? null,
+        godPower: dto.godPower ?? '',
         level: totalLevel,
         hpMax: dto.hpMax,
         hpCurrent: dto.hpCurrent,

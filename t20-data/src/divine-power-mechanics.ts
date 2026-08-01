@@ -8,6 +8,8 @@
  * Cada deus maior concede 4 poderes. Total: 20 deuses × 4 = 80.
  */
 
+import { DIVINE_POWER_DESCRIPTIONS } from './divine-power-descriptions'
+
 export type DivinePowerAction =
   | 'padrao'
   | 'movimento'
@@ -170,4 +172,18 @@ export function activeDivinePowers(deusId: string): readonly DivinePower[] {
 /** Filtra só poderes que concedem magia (pmCost variável). */
 export function spellGrantingDivinePowers(): readonly DivinePower[] {
   return DIVINE_POWERS.filter((p) => p.pmCost === 'variavel')
+}
+
+export type GrantedPowerOption = DivinePower & { description: string }
+
+/**
+ * Ao se tornar devoto, o personagem recebe UM poder concedido a sua escolha
+ * da lista do deus (book p96). Retorna as opções do painel de devoção com o
+ * texto de regra (p132-136). Deus desconhecido → lista vazia.
+ */
+export function grantedPowerOptionsFor(deusId: string): GrantedPowerOption[] {
+  return divinePowersOf(deusId).map((p) => ({
+    ...p,
+    description: DIVINE_POWER_DESCRIPTIONS[p.name] ?? '',
+  }))
 }

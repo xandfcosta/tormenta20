@@ -47,6 +47,9 @@ export function SheetIdentityText({ character }: { character: Character }) {
         {' • '}
         <span className="text-foreground">
           {character.god ?? 'Sem devoção'}
+          {character.god && character.godPower
+            ? ` (${character.godPower})`
+            : ''}
         </span>
         {' • '}
         {character.size} • <DisplacementBadge disp={disp} />

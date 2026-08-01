@@ -123,6 +123,13 @@ export class CreateCharacterDto {
   @IsIn(GODS as readonly string[])
   god?: string;
 
+  /** Poder concedido escolhido ao se tornar devoto (p96) — one of the god's
+   *  list; engine-level validation checks it belongs to the chosen god. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  godPower?: string;
+
   @IsInt() @Min(1) @Max(9999) hpMax!: number;
   @IsInt() @Min(0) @Max(9999) hpCurrent!: number;
   @IsInt() @Min(0) @Max(9999) mpMax!: number;
