@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { getOriginBenefit } from '../abilities/catalog'
 import {
   ORIGEM_BENEFICIOS_PER_CHARACTER,
   ORIGEM_IDS,
@@ -247,5 +248,13 @@ describe('ORIGENS immutability', () => {
       // @ts-expect-error — guarded by Object.freeze
       ORIGENS['ghost'] = {} as never
     }).toThrow()
+  })
+})
+
+describe('Estoico — texto do livro (p94), regressão', () => {
+  it('descreve o upgrade de condição de descanso, não "1 PM ignora condição"', () => {
+    const estoico = getOriginBenefit('origin-refugiado-unique')
+    expect(estoico?.description).toMatch(/condição de descanso/)
+    expect(estoico?.description).not.toMatch(/ignorar a condição/)
   })
 })

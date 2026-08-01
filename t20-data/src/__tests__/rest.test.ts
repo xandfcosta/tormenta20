@@ -6,6 +6,7 @@ import {
   REST_CONDITION_LABELS,
   SONO_FORT_CD_BASE,
   descansoNaturalOverride,
+  estoicoRestOverride,
   noSleepRecovery,
   restRecoveryAmount,
   restRecoveryWithCare,
@@ -129,6 +130,20 @@ describe('descansoNaturalOverride — Devoto de Allihanna (PDF p133)', () => {
 
   it('leaves luxuosa untouched', () => {
     expect(descansoNaturalOverride('luxuosa')).toBe('luxuosa')
+  })
+})
+
+describe('estoicoRestOverride — Refugiado poder único (PDF p94)', () => {
+  // Regressão: a descrição no app inventava "1 PM para ignorar condição" —
+  // o poder real promove a condição de DESCANSO em uma categoria.
+  it('promove cada categoria em um passo', () => {
+    expect(estoicoRestOverride('ruim')).toBe('normal')
+    expect(estoicoRestOverride('normal')).toBe('confortavel')
+    expect(estoicoRestOverride('confortavel')).toBe('luxuosa')
+  })
+
+  it('luxuosa é o teto', () => {
+    expect(estoicoRestOverride('luxuosa')).toBe('luxuosa')
   })
 })
 
