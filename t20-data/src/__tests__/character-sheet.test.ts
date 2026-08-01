@@ -297,3 +297,40 @@ describe('computeCharacterSheet — currentPv/Pm respeitam o max', () => {
     expect(s.vitals.pmCurrent).toBe(s.vitals.pmMax)
   })
 })
+
+describe('computeCharacterSheet — attributesIncludeRace (pre-raced attrs)', () => {
+  const anaoFinal = {
+    level: 10,
+    className: 'Guerreiro',
+    raceId: 'anao',
+    // Already-baked totals (Anão CON+2, SAB+1, DES-1 folded in at creation).
+    baseAttributes: {
+      strength: 4,
+      dexterity: 1,
+      constitution: 4,
+      intelligence: 0,
+      wisdom: 2,
+      charisma: 0,
+    },
+  } as const
+
+  it('does not re-apply the race attribute mod (raceMod 0, total = stored)', () => {
+    const sheet = computeCharacterSheet({ ...anaoFinal, attributesIncludeRace: true })
+    expect(sheet.attributes.constitution.raceMod).toBe(0)
+    expect(sheet.attributes.constitution.total).toBe(4)
+    expect(sheet.attributes.dexterity.total).toBe(1)
+  })
+
+  it('without the flag, keeps the base+race contract (would double a baked value)', () => {
+    const sheet = computeCharacterSheet(anaoFinal)
+    expect(sheet.attributes.constitution.raceMod).toBe(2)
+    expect(sheet.attributes.constitution.total).toBe(6)
+  })
+
+  it('still uses raceId for movement + PV grant even with pre-raced attrs', () => {
+    const sheet = computeCharacterSheet({ ...anaoFinal, attributesIncludeRace: true })
+    expect(sheet.deslocamento).toBe(6) // Anão
+    // PV = 20 + 9*5 + CON 4*10 (no double) + Duro como Pedra (nível+2=12) = 137.
+    expect(sheet.vitals.pvMax).toBe(20 + 9 * 5 + 4 * 10 + 12)
+  })
+})
