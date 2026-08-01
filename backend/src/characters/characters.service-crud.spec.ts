@@ -566,4 +566,52 @@ describe('CharactersService.create — creation-time ability choices', () => {
     expect(JSON.parse(data.classPowers)).toEqual([]);
     expect(data.expertises.create.every((e) => e.trained === false)).toBe(true);
   });
+
+  it('persists the deformidade choice inside the race-choice JSON blobs', async () => {
+    const prisma = new FakePrisma();
+    const service = await makeService(prisma);
+    await service.create(
+      7,
+      baseDto({
+        races: ['Minotauro', 'Lefou'],
+        secondaryRaceChoices: [
+          {
+            race: 'Lefou',
+            floatingPicks: ['strength', 'constitution', 'wisdom'],
+            deformidade: {
+              pericias: ['Furtividade'],
+              tormentaPower: 'dentes-afiados',
+            },
+          },
+        ],
+      }),
+    );
+    const { data } = prisma.characterCreate.mock.calls[0][0] as {
+      data: { secondaryRaceChoices: string };
+    };
+    expect(JSON.parse(data.secondaryRaceChoices)).toEqual([
+      {
+        race: 'Lefou',
+        floatingPicks: ['strength', 'constitution', 'wisdom'],
+        deformidade: { pericias: ['Furtividade'], tormentaPower: 'dentes-afiados' },
+      },
+    ]);
+  });
+
+  it('queries relations ordered by insertion id — races[0]/classes[0] are the primaries', async () => {
+    // Regression: without orderBy, SQLite returns CharacterRace rows in
+    // unique-index order ([characterId, race] → alphabetical), silently
+    // swapping the primary race (e.g. 'Lefou' < 'Minotauro').
+    const prisma = new FakePrisma();
+    const service = await makeService(prisma);
+    await service.create(7, baseDto({ races: ['Minotauro', 'Lefou'] }));
+    const { include } = prisma.characterCreate.mock.calls[0][0] as {
+      include: {
+        races: { orderBy?: { id?: string } };
+        classes: { orderBy?: { id?: string } };
+      };
+    };
+    expect(include.races.orderBy).toEqual({ id: 'asc' });
+    expect(include.classes.orderBy).toEqual({ id: 'asc' });
+  });
 });

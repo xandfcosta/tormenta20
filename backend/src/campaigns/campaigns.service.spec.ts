@@ -89,7 +89,10 @@ describe('CampaignsService.list', () => {
                 id: true,
                 name: true,
                 level: true,
-                classes: { select: { className: true, level: true } },
+                classes: {
+                  select: { className: true, level: true },
+                  orderBy: { id: 'asc' },
+                },
               },
             },
           },

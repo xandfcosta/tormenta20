@@ -29,8 +29,12 @@ import {
 import { EXPERTISES } from './t20-constants';
 
 const characterInclude = {
-  races: { select: { race: true } },
-  classes: { select: { className: true, level: true } },
+  // Insertion order is semantic: races[0] is the mechanical PRIMARY race and
+  // classes[0] the primary class. Without orderBy, SQLite returns rows in
+  // unique-index order ([characterId, race] → alphabetical), silently swapping
+  // the primary (e.g. 'Lefou' < 'Minotauro').
+  races: { select: { race: true }, orderBy: { id: 'asc' } },
+  classes: { select: { className: true, level: true }, orderBy: { id: 'asc' } },
   expertises: {
     select: {
       name: true,
@@ -381,7 +385,10 @@ export class CharactersService {
         },
         select: {
           level: true,
-          classes: { select: { className: true, level: true } },
+          classes: {
+            select: { className: true, level: true },
+            orderBy: { id: 'asc' },
+          },
         },
       });
     });
