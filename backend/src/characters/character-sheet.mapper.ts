@@ -5,9 +5,11 @@ import {
   SKILL_IDS,
   computeCharacterSheet,
   getCatalogItem,
+  raceWithDeformidade,
   type CharacterEquipment,
   type CharacterInput,
   type ComputedSheet,
+  type DeformidadeChoice,
   type EquippedArmor,
   type EquippedShield,
   type EquippedWeapon,
@@ -131,12 +133,14 @@ function parseSecondaryRaces(
 function parseRaceAttributeChoices(raw: string | null | undefined): {
   floatingPicks: AttributeKey[];
   ascendencia?: string;
+  deformidade?: DeformidadeChoice;
 } {
   if (!raw) return { floatingPicks: [] };
   try {
     const p = JSON.parse(raw) as {
       floatingPicks?: unknown;
       ascendencia?: unknown;
+      deformidade?: unknown;
     };
     const floatingPicks = Array.isArray(p.floatingPicks)
       ? p.floatingPicks.filter(
@@ -148,10 +152,59 @@ function parseRaceAttributeChoices(raw: string | null | undefined): {
       typeof p.ascendencia === 'string' && p.ascendencia
         ? p.ascendencia
         : undefined;
-    return { floatingPicks, ascendencia };
+    return { floatingPicks, ascendencia, deformidade: parseDeformidade(p.deformidade) };
   } catch {
     return { floatingPicks: [] };
   }
+}
+
+/** Parse a persisted deformidade blob (bad shape ⇒ undefined; engine validates ids). */
+function parseDeformidade(raw: unknown): DeformidadeChoice | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const d = raw as { pericias?: unknown; tormentaPower?: unknown };
+  if (!Array.isArray(d.pericias)) return undefined;
+  const pericias = d.pericias.filter((x): x is string => typeof x === 'string');
+  const tormentaPower =
+    typeof d.tormentaPower === 'string' && d.tormentaPower
+      ? d.tormentaPower
+      : undefined;
+  return { pericias, tormentaPower } as DeformidadeChoice;
+}
+
+/**
+ * Deformidade escolhida — da raça primária ou da primeira secundária aplicada
+ * que realmente possua a habilidade (Lefou, p23). Blobs em raças sem a
+ * habilidade são ignorados (dados stale, não erro).
+ */
+function deformidadeFromRow(
+  row: CharacterDbRow,
+  primary: { deformidade?: DeformidadeChoice },
+): DeformidadeChoice | undefined {
+  const primaryName = row.races[0]?.race;
+  if (primaryName && raceWithDeformidade([primaryName]) && primary.deformidade) {
+    return primary.deformidade;
+  }
+  return secondaryDeformidade(row.secondaryRaceChoices);
+}
+
+function secondaryDeformidade(
+  raw: string | null | undefined,
+): DeformidadeChoice | undefined {
+  if (!raw) return undefined;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return undefined;
+  }
+  if (!Array.isArray(parsed)) return undefined;
+  for (const entry of parsed) {
+    const e = entry as { race?: unknown; deformidade?: unknown };
+    if (typeof e.race !== 'string' || !raceWithDeformidade([e.race])) continue;
+    const choice = parseDeformidade(e.deformidade);
+    if (choice) return choice;
+  }
+  return undefined;
 }
 
 // ─── Race ────────────────────────────────────────────────────────
@@ -337,6 +390,7 @@ export function toCharacterInput(row: CharacterDbRow): CharacterInput {
     powerIds: jsonStringArray(row.classPowers),
     originChoices: jsonStringArray(row.originChoices),
     raceAbilityChoices: jsonStringArray(row.raceAbilityChoices),
+    deformidade: deformidadeFromRow(row, raceAttr),
   };
 }
 

@@ -3,11 +3,13 @@ import {
   ATTRIBUTE_KEYS,
   type AttributeKey,
   CLASS_VITALS,
+  carismaLossFromPowers,
   getOrigin,
   getRace,
   ownedClassPowers,
   type Raca,
   racasByTier,
+  raceWithDeformidade,
 } from '@tormenta20/t20-data'
 
 /** No elective picks at creation — only auto-granted powers are previewed. */
@@ -31,11 +33,35 @@ export function raceModel(name: string): Raca | undefined {
 
 /** A player's per-race attribute-choice state (floating picks / subrace).
  *  `applied` opts a SECONDARY race into the mechanics (GM-negotiated); the
- *  primary race always applies regardless. */
+ *  primary race always applies regardless. `deformidade` captures the Lefou
+ *  p23 choice: ≤2 perícias com +2, uma trocável por um poder da Tormenta. */
 export type RaceChoice = {
   floatingPicks?: AttributeKey[]
   ascendencia?: string
   applied?: boolean
+  deformidade?: DeformidadeDraft
+}
+
+export type DeformidadeDraft = {
+  pericias: string[]
+  tormentaPower?: string
+}
+
+/**
+ * Deformidade draft → submit payload: drops empty slots ('' placeholders from
+ * the swap toggle) and returns undefined when nothing was chosen or the race
+ * doesn't own the ability, so stale drafts never persist.
+ */
+export function deformidadePayload(
+  raceName: string,
+  choice: RaceChoice | undefined,
+): DeformidadeDraft | undefined {
+  const draft = choice?.deformidade
+  if (!draft || !raceWithDeformidade([raceName])) return undefined
+  const pericias = draft.pericias.filter(Boolean)
+  const tormentaPower = draft.tormentaPower || undefined
+  if (pericias.length === 0 && !tormentaPower) return undefined
+  return { pericias, tormentaPower }
 }
 export type RaceChoiceState = Record<string, RaceChoice>
 
@@ -58,6 +84,19 @@ export function appliedRaces(
 export function resolveRaceDeltas(
   name: string,
   choice: RaceChoice = {},
+): Partial<Record<AttributeKey, number>> {
+  const out = attributeModDeltas(name, choice)
+  // Deformidade swap: um poder da Tormenta real perde Carisma (p136); os
+  // bônus de perícia não (p23). Mostrado no preview junto aos mods raciais.
+  if (choice.deformidade?.tormentaPower && raceWithDeformidade([name])) {
+    out.charisma = (out.charisma ?? 0) - carismaLossFromPowers(1)
+  }
+  return out
+}
+
+function attributeModDeltas(
+  name: string,
+  choice: RaceChoice,
 ): Partial<Record<AttributeKey, number>> {
   const raca = raceModel(name)
   if (!raca) return {}

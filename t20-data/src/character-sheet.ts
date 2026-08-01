@@ -30,6 +30,13 @@ import {
 } from './modifier-stacking'
 import { racaById, resolveAtributoMod, type Raca, type Tamanho } from './racas'
 import { SKILL_IDS, SKILL_INDEX, skillValue, type SkillId } from './skill-index'
+import {
+  DEFORMIDADE_PERICIA_BONUS,
+  deformidadeSkillIds,
+  validateDeformidade,
+  type DeformidadeChoice,
+} from './deformidade'
+import { carismaLossFromPowers } from './tormenta'
 import { collectVitalGrants } from './vital-grants'
 
 // ─── Input ───────────────────────────────────────────────────────────
@@ -106,6 +113,12 @@ export type CharacterInput = {
   origin?: string
   originChoices?: readonly string[]
   /**
+   * Escolha da Deformidade (Lefou, p23): perícias com +2 e o eventual poder
+   * da Tormenta trocado. Só o poder real perde Carisma (p136); os bônus de
+   * perícia contam como poderes apenas para pré-requisitos.
+   */
+  deformidade?: DeformidadeChoice
+  /**
    * Condições ativas (Fraco, Cego, Atordoado…). Expostas no output
    * como resumo textual; modificações mecânicas por condição não são
    * aplicadas automaticamente em v4 (heterogêneo demais). Caller pode
@@ -176,6 +189,8 @@ export type EquippedWeapon = {
 export type AttributeComputed = {
   base: number
   raceMod: number
+  /** Perda de Carisma por poder da Tormenta (Deformidade swap, p136). ≤ 0. */
+  tormentaMod?: number
   total: number
 }
 
@@ -361,6 +376,15 @@ export function computeCharacterSheet(input: CharacterInput): ComputedSheet {
     attributes[key] = { base, raceMod, total: base + raceMod }
   }
 
+  const tormentaCarLoss = deformidadeCarismaLoss(input, warnings)
+  if (tormentaCarLoss > 0) {
+    attributes.charisma = {
+      ...attributes.charisma,
+      tormentaMod: -tormentaCarLoss,
+      total: attributes.charisma.total - tormentaCarLoss,
+    }
+  }
+
   const buffs = resolveBuffs(input.activeEffects ?? [])
 
   // Aplicar buffs de atributo primeiro (afetam derivações posteriores).
@@ -416,6 +440,21 @@ export function computeCharacterSheet(input: CharacterInput): ComputedSheet {
     tamanho,
     warnings,
   }
+}
+
+/**
+ * Warnings + perda de Carisma da escolha de Deformidade. Perícia bonuses do
+ * NOT cost Carisma (p23 "exceto para perda de Carisma") — only the swapped
+ * real power triggers the p136 loss (1 for the first power).
+ */
+function deformidadeCarismaLoss(
+  input: CharacterInput,
+  warnings: string[],
+): number {
+  const choice = input.deformidade
+  if (!choice) return 0
+  warnings.push(...validateDeformidade(choice))
+  return carismaLossFromPowers(choice.tormentaPower ? 1 : 0)
 }
 
 // ─── Conditions summary ──────────────────────────────────────────────
@@ -605,6 +644,10 @@ function computeSkills(
 ): Record<SkillId, SkillComputed> {
   const trainedSet = new Set<SkillId>(input.trainedSkills ?? [])
   const penalty = deriveArmorPenalty(input, warnings)
+  // Deformidade (Lefou p23): +2 nas perícias escolhidas, como bônus (não treino).
+  const deformidadeSkills = new Set<SkillId>(
+    input.deformidade ? deformidadeSkillIds(input.deformidade, warnings) : [],
+  )
 
   // Warn on unknown trained skill ids
   for (const id of trainedSet) {
@@ -626,8 +669,11 @@ function computeSkills(
       armorPenalty: penalty,
     })
     const skillBuff = buffTotals[`skill:${id}`] ?? 0
+    const deformidadeBonus = deformidadeSkills.has(id)
+      ? DEFORMIDADE_PERICIA_BONUS
+      : 0
     skills[id] = {
-      total: baseTotal + skillBuff,
+      total: baseTotal + skillBuff + deformidadeBonus,
       trained,
       keyAttribute: meta.keyAttribute,
       cannotUse: meta.trainedOnly && !trained,

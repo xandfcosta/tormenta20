@@ -37,6 +37,23 @@ export class CharacterClassEntryDto {
 }
 
 /**
+ * Deformidade choice (Lefou, book p23): up to 2 perícias getting +2, one of
+ * them swappable for a poder da Tormenta (id from TORMENTA_POWER_IDS). Slot
+ * math (≤2, 1 swap max) is validated by the rules engine, not here.
+ */
+export class DeformidadeChoiceDto {
+  @IsArray()
+  @ArrayUnique()
+  @IsIn(EXPERTISE_NAMES as readonly string[], { each: true })
+  pericias!: string[];
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  tormentaPower?: string;
+}
+
+/**
  * Attribute choices for the primary race, needed to derive the racial mod from
  * BASE attributes (floating +1 placement; subrace ascendência). Stored as JSON
  * on the character; the sheet applies race once from these.
@@ -51,6 +68,11 @@ export class RaceAttributeChoicesDto {
   @IsString()
   @MaxLength(40)
   ascendencia?: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => DeformidadeChoiceDto)
+  deformidade?: DeformidadeChoiceDto;
 }
 
 /** One opted-in secondary race (GM-negotiated) + its attribute choices. */
@@ -67,6 +89,11 @@ export class SecondaryRaceChoiceDto {
   @IsString()
   @MaxLength(40)
   ascendencia?: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => DeformidadeChoiceDto)
+  deformidade?: DeformidadeChoiceDto;
 }
 
 export class CreateCharacterDto {

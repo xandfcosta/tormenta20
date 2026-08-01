@@ -243,13 +243,24 @@ export type CreateCharacterInput = {
   powerChoices?: Record<string, string[]>
   /** Primary-race attribute choices — persisted so the racial mod is derived
    *  once from the BASE attributes (no baking). */
-  raceAttributeChoices?: { floatingPicks?: string[]; ascendencia?: string }
+  raceAttributeChoices?: {
+    floatingPicks?: string[]
+    ascendencia?: string
+    deformidade?: DeformidadeChoiceInput
+  }
   /** Opted-in secondary races (GM-negotiated); their attribute mods also apply. */
   secondaryRaceChoices?: {
     race: string
     floatingPicks?: string[]
     ascendencia?: string
+    deformidade?: DeformidadeChoiceInput
   }[]
+}
+
+/** Deformidade (Lefou p23): ≤2 perícias com +2, uma trocável por um poder. */
+export type DeformidadeChoiceInput = {
+  pericias: string[]
+  tormentaPower?: string
 }
 
 import type { ComputedSheet } from '@tormenta20/t20-data'

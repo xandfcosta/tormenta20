@@ -186,6 +186,7 @@ export const RACES_CATALOG: RaceDefinition[] = [
     name: 'Lefou',
     attributeBonuses: { charisma: -1 },
     grantsTormentaPowers: true, // Deformidade / Cria da Tormenta (p18)
+    hasDeformidade: true, // p23 — 2 slots de +2 em perícia, 1 trocável por poder
     abilities: [
       {
         id: 'lefou-tres-atributos',

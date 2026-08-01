@@ -3,6 +3,7 @@ import {
   anyRacePending,
   classGrant,
   classTiles,
+  deformidadePayload,
   originGrant,
   raceAttributeDeltas,
   raceChoiceMeta,
@@ -86,6 +87,55 @@ describe('resolveRaceDeltas — live-safe partial resolution', () => {
 
   it('returns empty for an unset subrace', () => {
     expect(resolveRaceDeltas('Suraggel', {})).toEqual({})
+  })
+
+  it('deformidade com poder trocado perde 1 CAR no preview (p136)', () => {
+    expect(
+      resolveRaceDeltas('Lefou', {
+        deformidade: { pericias: ['Furtividade'], tormentaPower: 'dentes-afiados' },
+      }),
+    ).toEqual({ charisma: -2 }) // −1 penalidade Lefou − 1 poder
+  })
+
+  it('deformidade só com perícias não perde CAR (p23)', () => {
+    expect(
+      resolveRaceDeltas('Lefou', {
+        deformidade: { pericias: ['Furtividade', 'Percepção'] },
+      }),
+    ).toEqual({ charisma: -1 }) // apenas a penalidade racial
+  })
+
+  it('deformidade em raça sem a habilidade não altera nada', () => {
+    expect(
+      resolveRaceDeltas('Humano', {
+        deformidade: { pericias: [], tormentaPower: 'antenas' },
+      }),
+    ).toEqual({})
+  })
+})
+
+describe('deformidadePayload — draft → payload de submit', () => {
+  it('remove slots vazios e poder não escolhido', () => {
+    expect(
+      deformidadePayload('Lefou', {
+        deformidade: { pericias: ['Furtividade', ''], tormentaPower: '' },
+      }),
+    ).toEqual({ pericias: ['Furtividade'], tormentaPower: undefined })
+  })
+
+  it('undefined quando nada foi escolhido', () => {
+    expect(
+      deformidadePayload('Lefou', { deformidade: { pericias: [] } }),
+    ).toBeUndefined()
+    expect(deformidadePayload('Lefou', {})).toBeUndefined()
+  })
+
+  it('undefined para raça sem a habilidade (draft stale)', () => {
+    expect(
+      deformidadePayload('Humano', {
+        deformidade: { pericias: ['Furtividade'] },
+      }),
+    ).toBeUndefined()
   })
 })
 
