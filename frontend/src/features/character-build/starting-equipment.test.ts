@@ -7,6 +7,7 @@ import {
   originStartingItems,
   startingItemsPayload,
   startingLoadout,
+  startingSlots,
   weaponOptions,
 } from './starting-equipment'
 
@@ -144,5 +145,40 @@ describe('loja — purchasesTotal / purchasesPayload / shopCatalog', () => {
     expect(
       shopCatalog('weapons').every((i) => i.category.startsWith('weapon-')),
     ).toBe(true)
+  })
+})
+
+describe('startingSlots — espaços de inventário (p141)', () => {
+  const kit = startingLoadout('Guerreiro', 1).kit
+  const draft = {
+    weaponSimple: 'espada-curta',
+    weaponMartial: 'espada-longa',
+    armor: 'brunea',
+    shield: true,
+  }
+
+  it('capacidade = 10 + 2×|FOR|', () => {
+    expect(startingSlots(draft, kit, '', {}, {}, 3).capacity).toBe(16)
+    expect(startingSlots(draft, kit, '', {}, {}, -1).capacity).toBe(12)
+  })
+
+  it('usados somam kit + compras (slots × quantidade)', () => {
+    const none = startingSlots(
+      { weaponSimple: '', weaponMartial: '', armor: '', shield: false },
+      kit,
+      '',
+      {},
+      {},
+      0,
+    )
+    const withBuys = startingSlots(
+      { weaponSimple: '', weaponMartial: '', armor: '', shield: false },
+      kit,
+      '',
+      {},
+      { adaga: 4 },
+      0,
+    )
+    expect(withBuys.used).toBe(none.used + 4)
   })
 })

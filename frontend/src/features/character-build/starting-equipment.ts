@@ -231,3 +231,28 @@ export function purchasesPayload(purchases: PurchaseMap): StartingItemPayload[] 
     return [{ catalogId: id, name: item.name, quantity: qty, slots: item.slots }]
   })
 }
+
+/**
+ * Espaços de inventário na criação (p141: 10 + 2×|FOR|): capacity from the
+ * character's FOR total, used = every item this step will grant (kit picks +
+ * itens da origem + compras da loja). Advisory — the sheet enforces nothing,
+ * but overweight should be visible before saving.
+ */
+export function startingSlots(
+  draft: StartingEquipmentDraft,
+  kit: StartingKit,
+  originName: string,
+  originPicks: Record<string, string>,
+  purchases: PurchaseMap,
+  forTotal: number,
+): { used: number; capacity: number } {
+  const items = [
+    ...startingItemsPayload(draft, kit, originName, originPicks),
+    ...purchasesPayload(purchases),
+  ]
+  const used = items.reduce(
+    (n, i) => n + (i.slots ?? 1) * (i.quantity ?? 1),
+    0,
+  )
+  return { used, capacity: 10 + 2 * Math.abs(forTotal) }
+}
