@@ -3,7 +3,7 @@ import { FieldGroup } from '@/shared/ui/field'
 import { NumberField } from '@/features/character-build/number-field'
 import {
   anyRacePending,
-  raceAttributeDeltas,
+  primaryRaceDeltas,
 } from '@/features/character-build/grant-helpers'
 import { useCreationWizard } from '@/features/character-build/creation-wizard-context'
 
@@ -21,7 +21,7 @@ export function AtributosStep() {
         </p>
         <form.Subscribe selector={(s: { values: { races: string[] } }) => s.values.races}>
           {(races: string[]) => {
-            const d = raceAttributeDeltas(races, raceChoices)
+            const d = primaryRaceDeltas(races, raceChoices)
             return (
               <>
                 {anyRacePending(races, raceChoices) && (

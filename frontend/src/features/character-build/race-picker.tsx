@@ -19,9 +19,10 @@ import { RaceChoiceControls } from './race-choice-controls'
 /**
  * Race picker — a searchable, tier-grouped grid of hue-tiled race tiles
  * (mirroring the roster) with the signature attribute delta on each tile.
- * Single-select — a T20 character has exactly one race (PDF p18, "escolher sua
- * raça"). Picking a race replaces the current one; the selected race expands a
- * detail box: resolved deltas + inline floating/subrace choice capture + abilities.
+ * Multi-select (homebrew): the FIRST picked race is the mechanical **primary**
+ * (its mods apply); extra races are flavor whose benefits/debuffs are negotiated
+ * with the GM (not applied automatically). Each selected race expands a detail
+ * box: resolved deltas + inline floating/subrace choice capture + abilities.
  */
 export function RacePicker({
   options,
@@ -41,10 +42,13 @@ export function RacePicker({
   const filtered = q ? options.filter((n) => n.toLowerCase().includes(q)) : options
   const { comuns, extras } = racesByTier(filtered)
 
-  // Single race: pick replaces the current selection (click the chosen one to
-  // clear). Only the picked race's choices are kept, dropping any stale picks.
+  // Multi-select: toggle a race in/out. `value[0]` stays the mechanical primary.
   const toggle = (name: string) =>
-    onChange(value.includes(name) ? [] : [name])
+    onChange(
+      value.includes(name)
+        ? value.filter((n) => n !== name)
+        : [...value, name],
+    )
   const setChoice = (name: string, choice: RaceChoice) =>
     onChoicesChange({ ...choices, [name]: choice })
 
@@ -75,13 +79,14 @@ export function RacePicker({
             Selecione uma raça para ver os detalhes.
           </p>
         ) : (
-          value.map((name) => (
+          value.map((name, i) => (
             <SelectedRaceDetail
               key={name}
               name={name}
               choice={choices[name] ?? {}}
               onChoice={(c) => setChoice(name, c)}
               singleRace={value.length === 1}
+              isPrimary={i === 0}
             />
           ))
         )}
@@ -110,6 +115,7 @@ function RaceTierGrid({
       <div
         role="listbox"
         aria-label={label}
+        aria-multiselectable
         className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6"
       >
         {names.map((name) => (
@@ -168,18 +174,28 @@ function SelectedRaceDetail({
   choice,
   onChoice,
   singleRace,
+  isPrimary,
 }: {
   name: string
   choice: RaceChoice
   onChoice: (next: RaceChoice) => void
   singleRace: boolean
+  isPrimary: boolean
 }) {
   const grant = raceGrant(name)
   return (
-    <GrantBox title={name}>
+    <GrantBox title={isPrimary ? `${name} · primária` : name}>
+      {!isPrimary && (
+        <p className="text-[11px] text-muted-foreground">
+          Raça secundária — benefícios/penalidades negociados com o mestre; não
+          aplicados automaticamente.
+        </p>
+      )}
       <DeltaBadges deltas={resolveRaceDeltas(name, choice)} />
-      <RaceChoiceControls raceName={name} choice={choice} onChange={onChoice} />
-      {racePending(name, choice) && (
+      {isPrimary && (
+        <RaceChoiceControls raceName={name} choice={choice} onChange={onChoice} />
+      )}
+      {isPrimary && racePending(name, choice) && (
         <p className="text-[11px] text-[color:var(--hp-hurt)]">
           Escolha de atributo pendente.
         </p>
