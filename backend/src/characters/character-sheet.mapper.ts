@@ -63,6 +63,8 @@ export type CharacterDbRow = {
   /** JSON { floatingPicks?: string[]; ascendencia?: string } for the primary
    *  race — derives the racial attribute mod from the BASE stored attributes. */
   raceAttributeChoices?: string | null;
+  /** JSON { race, floatingPicks?, ascendencia? }[] — opted-in secondary races. */
+  secondaryRaceChoices?: string | null;
   races: readonly { race: string }[];
   classes: readonly { className: string; level: number }[];
   expertises: readonly CharacterExpertiseRow[];
@@ -83,6 +85,47 @@ function jsonStringArray(raw: string | null | undefined): string[] {
 }
 
 const ATTRIBUTE_KEY_SET: ReadonlySet<string> = new Set(ATTRIBUTE_KEYS);
+
+/** Parse opted-in secondary races → CharacterInput.additionalRaces (name→slug). */
+function parseSecondaryRaces(
+  raw: string | null | undefined,
+): { raceId: string; floatingPicks?: AttributeKey[]; ascendencia?: string }[] {
+  if (!raw) return [];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(parsed)) return [];
+  const out: {
+    raceId: string;
+    floatingPicks?: AttributeKey[];
+    ascendencia?: string;
+  }[] = [];
+  for (const entry of parsed) {
+    const e = entry as {
+      race?: unknown;
+      floatingPicks?: unknown;
+      ascendencia?: unknown;
+    };
+    if (typeof e.race !== 'string') continue;
+    const raceId = raceNameToId(e.race);
+    if (!raceId) continue;
+    const floatingPicks = Array.isArray(e.floatingPicks)
+      ? e.floatingPicks.filter(
+          (x): x is AttributeKey =>
+            typeof x === 'string' && ATTRIBUTE_KEY_SET.has(x),
+        )
+      : undefined;
+    const ascendencia =
+      typeof e.ascendencia === 'string' && e.ascendencia
+        ? e.ascendencia
+        : undefined;
+    out.push({ raceId, floatingPicks, ascendencia });
+  }
+  return out;
+}
 
 /** Parse the race attribute-choices JSON into typed floating picks + ascendência. */
 function parseRaceAttributeChoices(raw: string | null | undefined): {
@@ -270,12 +313,14 @@ export function toCharacterInput(row: CharacterDbRow): CharacterInput {
   // Stored attributes are BASE (pre-race); the orchestrator applies the racial
   // mod ONCE from the persisted floating-pick / ascendência choices.
   const raceAttr = parseRaceAttributeChoices(row.raceAttributeChoices);
+  const additionalRaces = parseSecondaryRaces(row.secondaryRaceChoices);
   return {
     level: totalLevel > 0 ? totalLevel : row.level,
     className: primaryClass,
     raceId,
     raceFloatingPicks: raceAttr.floatingPicks,
     raceAscendencia: raceAttr.ascendencia,
+    additionalRaces,
     baseAttributes: {
       strength: row.strength,
       dexterity: row.dexterity,

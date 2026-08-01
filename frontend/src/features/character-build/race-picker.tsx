@@ -183,19 +183,32 @@ function SelectedRaceDetail({
   isPrimary: boolean
 }) {
   const grant = raceGrant(name)
+  const active = isPrimary || choice.applied === true
   return (
     <GrantBox title={isPrimary ? `${name} · primária` : name}>
       {!isPrimary && (
-        <p className="text-[11px] text-muted-foreground">
-          Raça secundária — benefícios/penalidades negociados com o mestre; não
-          aplicados automaticamente.
-        </p>
+        <button
+          type="button"
+          aria-pressed={active}
+          onClick={() => onChoice({ ...choice, applied: !choice.applied })}
+          className={cn(
+            'flex w-full items-center gap-2 rounded-md border px-2 py-1.5 text-left text-[11px] transition-colors',
+            active
+              ? 'border-primary bg-accent'
+              : 'border-border text-muted-foreground hover:bg-accent',
+          )}
+        >
+          <span className="flex size-3.5 shrink-0 items-center justify-center rounded-sm border border-border">
+            {active && <span className="size-2 rounded-sm bg-primary" />}
+          </span>
+          Aplicar propriedades (negociado com o mestre)
+        </button>
       )}
       <DeltaBadges deltas={resolveRaceDeltas(name, choice)} />
-      {isPrimary && (
+      {active && (
         <RaceChoiceControls raceName={name} choice={choice} onChange={onChoice} />
       )}
-      {isPrimary && racePending(name, choice) && (
+      {active && racePending(name, choice) && (
         <p className="text-[11px] text-[color:var(--hp-hurt)]">
           Escolha de atributo pendente.
         </p>

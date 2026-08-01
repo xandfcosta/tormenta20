@@ -65,6 +65,16 @@ export function CreationWizardShell() {
       const submitRaceChoices = useCharacterDraftStore.getState().raceChoices
       const primaryRace = value.races[0]
       const rc = primaryRace ? submitRaceChoices[primaryRace] : undefined
+      // Secondary races the player opted into (GM-negotiated) — their attribute
+      // mods also apply on the sheet.
+      const secondaryRaceChoices = value.races
+        .slice(1)
+        .filter((r) => submitRaceChoices[r]?.applied)
+        .map((r) => ({
+          race: r,
+          floatingPicks: submitRaceChoices[r]?.floatingPicks ?? [],
+          ascendencia: submitRaceChoices[r]?.ascendencia,
+        }))
       // PV/PM máximos are derived (never manual) — recompute at submit so the
       // saved pools match the sheet even if the sync effect hasn't fired.
       const { pvMax, pmMax } = deriveDraftVitals(value, submitRaceChoices)
@@ -82,6 +92,7 @@ export function CreationWizardShell() {
           floatingPicks: rc?.floatingPicks ?? [],
           ascendencia: rc?.ascendencia,
         },
+        secondaryRaceChoices,
       }
       try {
         const created = await api.characters.create(payload)

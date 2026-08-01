@@ -2,7 +2,7 @@ import { Card } from '@/shared/ui/card'
 import { StatCell } from '@/shared/ui/stat-cell'
 import { cn } from '@/shared/lib/utils'
 import { hueFromName } from '@/shared/lib/hue-from-name'
-import { type RaceChoiceState, primaryRaceDeltas } from './grant-helpers'
+import { type RaceChoiceState, appliedRaceDeltas } from './grant-helpers'
 import { deriveDraftVitals } from './draft-vitals'
 import { type StepSlug, stepReady, WIZARD_STEPS } from './wizard-steps'
 
@@ -80,7 +80,7 @@ function PreviewCard({
   const role = primary?.className
     ? `${primary.className} · Nv ${primary.level}`
     : 'Sem classe'
-  const dexDelta = primaryRaceDeltas(values.races, raceChoices).dexterity ?? 0
+  const dexDelta = appliedRaceDeltas(values.races, raceChoices).dexterity ?? 0
   const defense = 10 + values.dexterity + dexDelta
   const { pvMax, pmMax } = deriveDraftVitals(values, raceChoices)
 

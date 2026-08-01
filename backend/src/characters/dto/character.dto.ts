@@ -53,6 +53,22 @@ export class RaceAttributeChoicesDto {
   ascendencia?: string;
 }
 
+/** One opted-in secondary race (GM-negotiated) + its attribute choices. */
+export class SecondaryRaceChoiceDto {
+  @IsIn(RACES as readonly string[])
+  race!: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  floatingPicks?: string[];
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  ascendencia?: string;
+}
+
 export class CreateCharacterDto {
   @IsString()
   @MinLength(1)
@@ -130,6 +146,12 @@ export class CreateCharacterDto {
   @ValidateNested()
   @Type(() => RaceAttributeChoicesDto)
   raceAttributeChoices?: RaceAttributeChoicesDto;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => SecondaryRaceChoiceDto)
+  secondaryRaceChoices?: SecondaryRaceChoiceDto[];
 }
 
 /**

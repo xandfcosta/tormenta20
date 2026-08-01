@@ -97,6 +97,9 @@ export type Character = {
   /** JSON-encoded { floatingPicks?, ascendencia? } — primary-race attribute
    *  choices; stored attributes are BASE and race is derived from these. */
   raceAttributeChoices: string
+  /** JSON-encoded { race, floatingPicks?, ascendencia? }[] — opted-in secondary
+   *  races (GM-negotiated); their attribute mods also apply. */
+  secondaryRaceChoices: string
   /** JSON-encoded string[] of origin benefit ids the player picked */
   originChoices: string
   /** JSON-encoded string[] of class power ids the character owns */
@@ -241,6 +244,12 @@ export type CreateCharacterInput = {
   /** Primary-race attribute choices — persisted so the racial mod is derived
    *  once from the BASE attributes (no baking). */
   raceAttributeChoices?: { floatingPicks?: string[]; ascendencia?: string }
+  /** Opted-in secondary races (GM-negotiated); their attribute mods also apply. */
+  secondaryRaceChoices?: {
+    race: string
+    floatingPicks?: string[]
+    ascendencia?: string
+  }[]
 }
 
 import type { ComputedSheet } from '@tormenta20/t20-data'

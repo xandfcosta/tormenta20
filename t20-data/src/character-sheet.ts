@@ -48,6 +48,16 @@ export type CharacterInput = {
   /** Ascendência escolhida para raças subraca-gated (Suraggel). */
   raceAscendencia?: string
   /**
+   * Raças secundárias que o jogador optou por aplicar (homebrew negociado com
+   * o mestre). Seus mods de atributo somam aos da raça primária. PV/PM e
+   * habilidades de raças secundárias ainda não são derivados aqui.
+   */
+  additionalRaces?: readonly {
+    raceId: string
+    floatingPicks?: readonly AttributeKey[]
+    ascendencia?: string
+  }[]
+  /**
    * Valores base dos atributos antes de mod racial. Em T20 o valor do
    * atributo já é o modificador (não há d20 conversion).
    */
@@ -280,33 +290,52 @@ const ZERO_ATTRIBUTE_MODS: Record<AttributeKey, number> = {
   charisma: 0,
 }
 
+/** Attribute mods for one race (by slug + its floating/ascendência choices). */
+function raceAttrMods(
+  raceId: string | undefined,
+  floatingPicks: readonly AttributeKey[] | undefined,
+  ascendencia: string | undefined,
+  warnings: string[],
+): Record<AttributeKey, number> {
+  if (!raceId) return ZERO_ATTRIBUTE_MODS
+  let raca: Raca
+  try {
+    raca = racaById(raceId)
+  } catch {
+    warnings.push(`raça desconhecida: ${raceId}`)
+    return ZERO_ATTRIBUTE_MODS
+  }
+  try {
+    const mods = resolveAtributoMod(raca, { floatingPicks, ascendencia })
+    return { ...ZERO_ATTRIBUTE_MODS, ...mods }
+  } catch (err) {
+    warnings.push(`mod racial inválido para ${raceId}: ${(err as Error).message}`)
+    return ZERO_ATTRIBUTE_MODS
+  }
+}
+
+/**
+ * Racial attribute mod = the primary race plus any opted-in secondary
+ * (`additionalRaces`, GM-negotiated homebrew). Summed once onto the base.
+ */
 function resolveRaceMods(
   input: CharacterInput,
   warnings: string[],
 ): Record<AttributeKey, number> {
-  const zero = ZERO_ATTRIBUTE_MODS
-  if (!input.raceId) return zero
-
-  let raca: Raca
-  try {
-    raca = racaById(input.raceId)
-  } catch {
-    warnings.push(`raça desconhecida: ${input.raceId}`)
-    return zero
+  const primary = raceAttrMods(
+    input.raceId,
+    input.raceFloatingPicks,
+    input.raceAscendencia,
+    warnings,
+  )
+  const additional = input.additionalRaces ?? []
+  if (additional.length === 0) return primary
+  const total: Record<AttributeKey, number> = { ...ZERO_ATTRIBUTE_MODS, ...primary }
+  for (const add of additional) {
+    const m = raceAttrMods(add.raceId, add.floatingPicks, add.ascendencia, warnings)
+    for (const key of ATTRIBUTE_KEYS) total[key] += m[key]
   }
-
-  try {
-    const mods = resolveAtributoMod(raca, {
-      floatingPicks: input.raceFloatingPicks,
-      ascendencia: input.raceAscendencia,
-    })
-    return { ...zero, ...mods }
-  } catch (err) {
-    warnings.push(
-      `mod racial inválido para ${input.raceId}: ${(err as Error).message}`,
-    )
-    return zero
-  }
+  return total
 }
 
 // ─── Orchestrator ────────────────────────────────────────────────────
