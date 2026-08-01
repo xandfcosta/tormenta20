@@ -19,6 +19,7 @@ import { CreationStepper } from '@/features/character-build/creation-stepper'
 import { CreationWizardProvider } from '@/features/character-build/creation-wizard-context'
 import { WizardFooterNav } from '@/features/character-build/wizard-footer-nav'
 import { raceAttributeDeltas } from '@/features/character-build/grant-helpers'
+import { deriveDraftVitals } from '@/features/character-build/draft-vitals'
 import { totalSlots } from '@/features/character-build/class-power-helpers'
 import {
   type CharacterFormValues,
@@ -62,16 +63,21 @@ export function CreationWizardShell() {
       setFormError(null)
       // Fields hold the point-buy base; racial bonuses (incl. resolved
       // floating/subrace choices) are baked into the saved attributes here.
-      const deltas = raceAttributeDeltas(
-        value.races,
-        useCharacterDraftStore.getState().raceChoices,
-      )
+      const submitRaceChoices = useCharacterDraftStore.getState().raceChoices
+      const deltas = raceAttributeDeltas(value.races, submitRaceChoices)
       const attributes = Object.fromEntries(
         ATTRIBUTE_KEYS.map((k) => [k, value[k] + (deltas[k] ?? 0)]),
       ) as Record<(typeof ATTRIBUTE_KEYS)[number], number>
+      // PV/PM máximos are derived (never manual) — recompute at submit so the
+      // saved pools match the sheet even if the sync effect hasn't fired.
+      const { pvMax, pmMax } = deriveDraftVitals(value, submitRaceChoices)
       const payload: CreateCharacterInput = {
         ...value,
         ...attributes,
+        hpMax: pvMax,
+        mpMax: pmMax,
+        hpCurrent: Math.min(value.hpCurrent, pvMax),
+        mpCurrent: Math.min(value.mpCurrent, pmMax),
         // Final guard: never save more elective powers than the class slots
         // earn (covers lowering the level then skipping the Poderes step).
         classPowers: (value.classPowers ?? []).slice(0, totalSlots(value.classes)),
@@ -99,6 +105,29 @@ export function CreationWizardShell() {
     )
     return () => sub.unsubscribe()
   }, [form, setValues])
+
+  // PV/PM máximos are derived (classe + Constituição + nível + poderes passivos),
+  // not manual entry. Keep the draft's máx in sync and the editable "atual" in
+  // lockstep while it still reads full, so the saved character matches the sheet.
+  useEffect(() => {
+    const sync = () => {
+      const v = form.state.values as CharacterFormValues
+      const { pvMax, pmMax } = deriveDraftVitals(v, raceChoices)
+      if (v.hpMax !== pvMax) {
+        const wasFull = v.hpCurrent >= v.hpMax
+        form.setFieldValue('hpMax', pvMax)
+        if (wasFull || v.hpCurrent > pvMax) form.setFieldValue('hpCurrent', pvMax)
+      }
+      if (v.mpMax !== pmMax) {
+        const wasFull = v.mpCurrent >= v.mpMax
+        form.setFieldValue('mpMax', pmMax)
+        if (wasFull || v.mpCurrent > pmMax) form.setFieldValue('mpCurrent', pmMax)
+      }
+    }
+    sync()
+    const sub = form.store.subscribe(sync)
+    return () => sub.unsubscribe()
+  }, [form, raceChoices])
 
   const cancel = () => {
     resetDraft()

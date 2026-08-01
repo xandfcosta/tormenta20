@@ -3,6 +3,7 @@ import { StatCell } from '@/shared/ui/stat-cell'
 import { cn } from '@/shared/lib/utils'
 import { hueFromName } from '@/shared/lib/hue-from-name'
 import { type RaceChoiceState, raceAttributeDeltas } from './grant-helpers'
+import { deriveDraftVitals } from './draft-vitals'
 import { type StepSlug, stepReady, WIZARD_STEPS } from './wizard-steps'
 
 // TanStack Form's API type is heavily generic; `any` keeps the seam usable
@@ -81,6 +82,7 @@ function PreviewCard({
     : 'Sem classe'
   const dexDelta = raceAttributeDeltas(values.races, raceChoices).dexterity ?? 0
   const defense = 10 + values.dexterity + dexDelta
+  const { pvMax, pmMax } = deriveDraftVitals(values, raceChoices)
 
   return (
     <Card className="gap-0 overflow-hidden p-0 lg:self-start">
@@ -104,9 +106,9 @@ function PreviewCard({
       </div>
       <div className="grid grid-cols-3 gap-2 p-3">
         <StatCell label="DEF">{defense}</StatCell>
-        <StatCell label="PV">{values.hpMax}</StatCell>
-        <StatCell label="PM" dim={values.mpMax === 0}>
-          {values.mpMax}
+        <StatCell label="PV">{pvMax}</StatCell>
+        <StatCell label="PM" dim={pmMax === 0}>
+          {pmMax}
         </StatCell>
       </div>
       <ul className="space-y-1 border-t border-border p-3 text-sm">

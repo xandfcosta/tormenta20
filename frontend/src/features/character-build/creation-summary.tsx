@@ -18,6 +18,7 @@ import {
   DeltaBadges,
   OriginGrantPanel,
 } from './grant-panels'
+import { deriveDraftVitals } from './draft-vitals'
 import type { CharacterFormValues, StepSlug } from './wizard-steps'
 
 /**
@@ -48,6 +49,7 @@ function SummaryBody({
   const primary = values.classes[0]
   const deltas = raceAttributeDeltas(values.races, raceChoices)
   const defense = 10 + values.dexterity + (deltas.dexterity ?? 0)
+  const { pvMax, pmMax } = deriveDraftVitals(values, raceChoices)
   const flavor = [
     values.races.join(', '),
     values.origin,
@@ -87,10 +89,10 @@ function SummaryBody({
         <div className="grid grid-cols-3 gap-2 p-4">
           <StatCell label="DEF">{defense}</StatCell>
           <StatCell label="PV">
-            {values.hpCurrent}/{values.hpMax}
+            {Math.min(values.hpCurrent, pvMax)}/{pvMax}
           </StatCell>
-          <StatCell label="PM" dim={values.mpMax === 0}>
-            {values.mpCurrent}/{values.mpMax}
+          <StatCell label="PM" dim={pmMax === 0}>
+            {Math.min(values.mpCurrent, pmMax)}/{pmMax}
           </StatCell>
         </div>
       </Card>
