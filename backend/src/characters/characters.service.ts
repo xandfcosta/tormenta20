@@ -233,6 +233,7 @@ export class CharactersService {
         origin: dto.origin,
         god: dto.god ?? null,
         godPower: dto.godPower ?? '',
+        tibar: dto.tibar ?? 0,
         level: totalLevel,
         hpMax: dto.hpMax,
         hpCurrent: dto.hpCurrent,
@@ -254,6 +255,15 @@ export class CharactersService {
         classChoices: JSON.stringify(sanitizeClassChoices(dto.classChoices ?? {})),
         powerChoices: JSON.stringify(dto.powerChoices ?? {}),
         races: { create: dto.races.map((race) => ({ race })) },
+        items: {
+          create: (dto.items ?? []).map((item) => ({
+            catalogId: item.catalogId ?? null,
+            name: item.name,
+            quantity: item.quantity ?? 1,
+            slots: item.slots ?? 1,
+            equipped: item.equipped ?? null,
+          })),
+        },
         classes: {
           create: dto.classes.map((c) => ({
             className: c.className,

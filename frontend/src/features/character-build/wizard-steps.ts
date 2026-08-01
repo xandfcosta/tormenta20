@@ -16,6 +16,7 @@ export const WIZARD_STEPS = [
   { slug: 'origem', label: 'Origem' },
   { slug: 'atributos', label: 'Atributos' },
   { slug: 'pericias', label: 'Perícias' },
+  { slug: 'equipamento', label: 'Equipamento' },
   { slug: 'vitalidade', label: 'Vitalidade' },
   { slug: 'identidade', label: 'Identidade' },
   { slug: 'resumo', label: 'Resumo' },
@@ -40,6 +41,11 @@ export const characterSchema = z
     classes: z.array(classEntrySchema).min(1, 'Add at least one class'),
     god: z.string().optional(),
     godPower: z.string().optional(),
+    tibar: z.number().int().min(0).optional(),
+    startingWeaponSimple: z.string().optional(),
+    startingWeaponMartial: z.string().optional(),
+    startingArmor: z.string().optional(),
+    startingShield: z.boolean().optional(),
     hpMax: z.number().int().min(1),
     hpCurrent: z.number().int().min(0),
     mpMax: z.number().int().min(0),
@@ -106,6 +112,11 @@ export const wizardDefaults: CharacterFormValues = {
   classes: [],
   god: '',
   godPower: '',
+  tibar: 0,
+  startingWeaponSimple: '',
+  startingWeaponMartial: '',
+  startingArmor: '',
+  startingShield: true,
   hpMax: 10,
   hpCurrent: 10,
   mpMax: 0,
@@ -151,6 +162,8 @@ export function stepReady(
       return true // preset-seeded, always within range
     case 'pericias':
       return true // trained perícias are soft (sheet catches)
+    case 'equipamento':
+      return true // kit picks are soft — finish on the sheet
     case 'vitalidade':
       return v.hpMax >= 1 && v.hpCurrent <= v.hpMax && v.mpCurrent <= v.mpMax
     case 'identidade':

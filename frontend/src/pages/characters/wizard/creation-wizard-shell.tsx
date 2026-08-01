@@ -20,6 +20,10 @@ import { WizardFooterNav } from '@/features/character-build/wizard-footer-nav'
 import { deriveDraftVitals } from '@/features/character-build/draft-vitals'
 import { syncDevotoFromGod } from '@/features/character-build/devocao-sync'
 import { deformidadePayload } from '@/features/character-build/grant-helpers'
+import {
+  startingItemsPayload,
+  startingLoadout,
+} from '@/features/character-build/starting-equipment'
 import { totalSlots } from '@/features/character-build/class-power-helpers'
 import {
   type CharacterFormValues,
@@ -81,8 +85,32 @@ export function CreationWizardShell() {
       // PV/PM máximos are derived (never manual) — recompute at submit so the
       // saved pools match the sheet even if the sync effect hasn't fired.
       const { pvMax, pmMax } = deriveDraftVitals(value, submitRaceChoices)
+      // Equipamento picks are wizard-only fields — mapped into the items[]
+      // payload (kit p140 + origem itens) and stripped from the DTO shape.
+      const {
+        startingWeaponSimple,
+        startingWeaponMartial,
+        startingArmor,
+        startingShield,
+        ...restValue
+      } = value
+      const totalLevel =
+        value.classes.reduce((n, c) => n + (c.level || 0), 0) || 1
+      const items = value.classes[0]?.className
+        ? startingItemsPayload(
+            {
+              weaponSimple: startingWeaponSimple ?? '',
+              weaponMartial: startingWeaponMartial ?? '',
+              armor: startingArmor ?? '',
+              shield: startingShield ?? false,
+            },
+            startingLoadout(value.classes[0].className, totalLevel).kit,
+            value.origin,
+          )
+        : []
       const payload: CreateCharacterInput = {
-        ...value,
+        ...restValue,
+        items,
         hpMax: pvMax,
         mpMax: pmMax,
         hpCurrent: Math.min(value.hpCurrent, pvMax),

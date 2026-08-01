@@ -1,5 +1,11 @@
 import { Link } from '@tanstack/react-router'
-import { ATTRIBUTE_ABBR, ATTRIBUTE_KEYS } from '@tormenta20/t20-data'
+import {
+  ATTRIBUTE_ABBR,
+  ATTRIBUTE_KEYS,
+  getCatalogItem,
+  STARTING_KIT_BASE_ITEMS,
+} from '@tormenta20/t20-data'
+import { originStartingItems } from './starting-equipment'
 import type { ReactNode } from 'react'
 import { Card } from '@/shared/ui/card'
 import { StatCell } from '@/shared/ui/stat-cell'
@@ -223,6 +229,10 @@ function SummaryBody({
         )}
       </SummaryRow>
 
+      <SummaryRow slug="equipamento" label="Equipamento">
+        <EquipamentoSummary values={values} />
+      </SummaryRow>
+
       <SummaryRow slug="vitalidade" label="Vitalidade">
         <p className="text-sm">
           PV {values.hpCurrent}/{values.hpMax} · PM {values.mpCurrent}/
@@ -361,6 +371,37 @@ function PickedBenefitPower({
     <span className="ml-1.5 text-[11px] text-muted-foreground">
       · {name ?? powerId}
     </span>
+  )
+}
+
+/** Chosen kit picks + origem itens + T$ — the step's CHOICES, not the pool. */
+function EquipamentoSummary({ values }: { values: CharacterFormValues }) {
+  const primary = values.classes[0]?.className
+  if (!primary) return <Empty />
+  const picks = [
+    values.startingWeaponSimple,
+    values.startingWeaponMartial,
+    values.startingArmor,
+  ]
+    .filter(Boolean)
+    .map((id) => getCatalogItem(id as string)?.name ?? id)
+  if (values.startingShield) picks.push('Escudo leve')
+  const origem = originStartingItems(values.origin)
+  return (
+    <div className="space-y-1 text-sm">
+      <p>
+        {STARTING_KIT_BASE_ITEMS.join(' · ')}
+        {picks.length > 0 ? ` · ${picks.join(' · ')}` : ''}
+      </p>
+      {origem.length > 0 && (
+        <p className="text-[11px] text-muted-foreground">
+          Origem: {origem.join(' · ')}
+        </p>
+      )}
+      <p className="text-[11px] text-muted-foreground">
+        T$ {(values.tibar ?? 0).toLocaleString('pt-BR')}
+      </p>
+    </div>
   )
 }
 

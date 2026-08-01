@@ -133,6 +133,7 @@ export * from './abilities/general-powers'
 export * from './abilities/deuses'
 export * from './devoto-eligibility'
 export * from './point-buy'
+export * from './starting-money'
 export * from './abilities/granted-powers'
 
 export * from './rules'
