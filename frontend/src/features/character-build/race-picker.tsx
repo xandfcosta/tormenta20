@@ -19,8 +19,9 @@ import { RaceChoiceControls } from './race-choice-controls'
 /**
  * Race picker — a searchable, tier-grouped grid of hue-tiled race tiles
  * (mirroring the roster) with the signature attribute delta on each tile.
- * Multi-select (homebrew allowed). Each selected race expands a detail box:
- * resolved deltas + inline floating/subrace choice capture + abilities.
+ * Single-select — a T20 character has exactly one race (PDF p18, "escolher sua
+ * raça"). Picking a race replaces the current one; the selected race expands a
+ * detail box: resolved deltas + inline floating/subrace choice capture + abilities.
  */
 export function RacePicker({
   options,
@@ -40,12 +41,10 @@ export function RacePicker({
   const filtered = q ? options.filter((n) => n.toLowerCase().includes(q)) : options
   const { comuns, extras } = racesByTier(filtered)
 
+  // Single race: pick replaces the current selection (click the chosen one to
+  // clear). Only the picked race's choices are kept, dropping any stale picks.
   const toggle = (name: string) =>
-    onChange(
-      value.includes(name)
-        ? value.filter((n) => n !== name)
-        : [...value, name],
-    )
+    onChange(value.includes(name) ? [] : [name])
   const setChoice = (name: string, choice: RaceChoice) =>
     onChoicesChange({ ...choices, [name]: choice })
 
@@ -111,7 +110,6 @@ function RaceTierGrid({
       <div
         role="listbox"
         aria-label={label}
-        aria-multiselectable
         className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6"
       >
         {names.map((name) => (

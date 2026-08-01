@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
   ArrayMinSize,
   ArrayUnique,
   IsArray,
@@ -59,8 +60,11 @@ export class CreateCharacterDto {
   @MaxLength(80)
   name!: string;
 
+  // T20 characters have exactly one race (PDF p18); the array shape is kept for
+  // storage but capped at 1.
   @IsArray()
   @ArrayMinSize(1)
+  @ArrayMaxSize(1)
   @ArrayUnique()
   @IsIn(RACES as readonly string[], { each: true })
   races!: string[];
