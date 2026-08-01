@@ -148,19 +148,20 @@ function parseRaceAttributeChoices(raw: string): {
   }
 }
 
+type RaceAttrChoice = { floatingPicks?: AttributeKey[]; ascendencia?: string }
+
 /**
- * The primary race's attribute mod as `{k:'attribute'}` modifiers, derived from
- * the persisted floating-pick / ascendência choices (the abilities catalog's
+ * A race's attribute mod as `{k:'attribute'}` modifiers, derived from its
+ * floating-pick / ascendência choices (the abilities catalog's
  * `attributeBonuses` only covers fixed races). Stored attributes are BASE, so
  * this is applied exactly once. Returns `[]` on incomplete choices.
  */
-function raceAttributeMods(raceName: string, raw: string): Modifier[] {
+function raceAttributeMods(raceName: string, choice: RaceAttrChoice): Modifier[] {
   const raca = RACA_BY_NAME.get(raceName)
   if (!raca) return []
-  const { floatingPicks, ascendencia } = parseRaceAttributeChoices(raw)
   let deltas: Partial<Record<AttributeKey, number>>
   try {
-    deltas = resolveAtributoMod(raca, { floatingPicks, ascendencia })
+    deltas = resolveAtributoMod(raca, choice)
   } catch {
     return []
   }
@@ -174,22 +175,61 @@ function raceAttributeMods(raceName: string, raw: string): Modifier[] {
     }))
 }
 
+/** Opted-in secondary races → their attribute choices, keyed by race name. */
+function parseSecondaryRaceChoices(raw: string): Map<string, RaceAttrChoice> {
+  try {
+    const arr = JSON.parse(raw) as unknown
+    if (!Array.isArray(arr)) return new Map()
+    return new Map(
+      arr
+        .filter((e): e is { race: string } => typeof e?.race === 'string')
+        .map((e) => {
+          const x = e as {
+            race: string
+            floatingPicks?: unknown
+            ascendencia?: unknown
+          }
+          return [
+            x.race,
+            {
+              floatingPicks: Array.isArray(x.floatingPicks)
+                ? (x.floatingPicks.filter(
+                    (a) => typeof a === 'string',
+                  ) as AttributeKey[])
+                : undefined,
+              ascendencia:
+                typeof x.ascendencia === 'string' ? x.ascendencia : undefined,
+            },
+          ] as const
+        }),
+    )
+  } catch {
+    return new Map()
+  }
+}
+
+/**
+ * Race modifiers folded into the sheet: the primary race always, plus any
+ * opted-in secondary (GM-negotiated). Attribute mods come from each race's
+ * persisted choices; non-attribute mods (PV/PM, perícias) via `raceModifiers`.
+ * Non-applied secondary races contribute nothing.
+ */
 function raceActiveItems(character: Character): ActiveItem[] {
   const variantChoices = parseChoiceSet(character.raceAbilityChoices)
+  const primaryChoice = parseRaceAttributeChoices(character.raceAttributeChoices)
+  const secondaries = parseSecondaryRaceChoices(character.secondaryRaceChoices)
   const result: ActiveItem[] = []
   character.races.forEach((entry, i) => {
+    const choice = i === 0 ? primaryChoice : secondaries.get(entry.race)
+    if (choice === undefined) return // non-applied secondary → no mechanics
     const race = getRace(entry.race)
     if (!race) return
-    // Attribute mods come from the persisted choices (primary race only), so
-    // floating picks apply and fixed races aren't double-counted — strip
-    // raceModifiers' own attribute mods. Non-attribute race mods (PV/PM,
-    // perícias) stay for every selected race.
+    // Strip raceModifiers' own attribute mods (fixed-race duplicates); attrs
+    // come from the persisted choices so floating picks apply exactly once.
     const nonAttr = raceModifiers(race, variantChoices).filter(
       (m) => m.target.k !== 'attribute',
     )
-    const attr =
-      i === 0 ? raceAttributeMods(entry.race, character.raceAttributeChoices) : []
-    const mods = [...attr, ...nonAttr]
+    const mods = [...raceAttributeMods(entry.race, choice), ...nonAttr]
     if (mods.length === 0) return
     result.push({
       source: `Raça: ${race.name}`,

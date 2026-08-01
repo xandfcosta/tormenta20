@@ -6,7 +6,7 @@ import {
 } from '@tormenta20/t20-data'
 import {
   type RaceChoiceState,
-  primaryRaceDeltas,
+  appliedRaceDeltas,
   raceModel,
 } from './grant-helpers'
 
@@ -42,7 +42,7 @@ export function deriveDraftVitals(
   const vitals = primary ? CLASS_VITALS[primary] : undefined
   if (!vitals) return { pvMax: 0, pmMax: 0 }
   const level = v.classes.reduce((n, c) => n + (c.level || 0), 0) || 1
-  const deltas = primaryRaceDeltas(v.races, raceChoices)
+  const deltas = appliedRaceDeltas(v.races, raceChoices)
   const attrTotals = {} as Record<AttributeKey, number>
   for (const k of ATTRIBUTE_KEYS) attrTotals[k] = (v[k] ?? 0) + (deltas[k] ?? 0)
   const grants = collectVitalGrants({

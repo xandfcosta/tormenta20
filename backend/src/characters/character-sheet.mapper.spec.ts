@@ -103,6 +103,33 @@ describe('computeSheetForRow', () => {
     expect(sheet.attributes.wisdom.raceMod).toBe(1);
   });
 
+  it('folds an opted-in secondary race (additionalRaces) on top of the primary', () => {
+    // Minotauro primary (+1 CON) + Lefou secondary applied (CAR-1 + 3 picks).
+    const row: CharacterDbRow = {
+      ...humanoFighter,
+      charisma: 2,
+      races: [{ race: 'Minotauro' }, { race: 'Lefou' }],
+      secondaryRaceChoices: JSON.stringify([
+        { race: 'Lefou', floatingPicks: ['strength', 'dexterity', 'constitution'] },
+      ]),
+    };
+    const sheet = computeSheetForRow(row);
+    // CON: base 2 + Minotauro 1 + Lefou pick 1 = 4.
+    expect(sheet.attributes.constitution.total).toBe(4);
+    // CAR: base 2 + Lefou penalty -1 = 1.
+    expect(sheet.attributes.charisma.total).toBe(1);
+  });
+
+  it('ignores secondary races when none are opted in', () => {
+    const row: CharacterDbRow = {
+      ...humanoFighter,
+      charisma: 2,
+      races: [{ race: 'Minotauro' }, { race: 'Lefou' }],
+    };
+    // Only Minotauro applies → CAR unchanged.
+    expect(computeSheetForRow(row).attributes.charisma.total).toBe(2);
+  });
+
   it('applies a floating race mod from persisted raceAttributeChoices', () => {
     // Humano places its +1×3 via floating picks; without them, no race mod.
     const humano: CharacterDbRow = {

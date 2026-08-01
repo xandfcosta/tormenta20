@@ -8,7 +8,7 @@ import { useCreationWizard } from './creation-wizard-context'
 import {
   anyRacePending,
   type RaceChoiceState,
-  primaryRaceDeltas,
+  appliedRaceDeltas,
   raceGrant,
   resolveRaceDeltas,
 } from './grant-helpers'
@@ -47,7 +47,7 @@ function SummaryBody({
   const name = values.name.trim() || 'Novo personagem'
   const hue = hueFromName(name)
   const primary = values.classes[0]
-  const deltas = primaryRaceDeltas(values.races, raceChoices)
+  const deltas = appliedRaceDeltas(values.races, raceChoices)
   const defense = 10 + values.dexterity + (deltas.dexterity ?? 0)
   const { pvMax, pmMax } = deriveDraftVitals(values, raceChoices)
   const flavor = [

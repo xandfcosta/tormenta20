@@ -14,6 +14,7 @@ import { Input } from '@/shared/ui/input'
 import { VirtualList } from '@/shared/ui/virtual-list'
 import { cn } from '@/shared/lib/utils'
 import { useCreationWizard } from '@/features/character-build/creation-wizard-context'
+import { appliedRaces } from '@/features/character-build/grant-helpers'
 import {
   type ChoiceOption,
   type ClassEntry,
@@ -36,7 +37,7 @@ const SOURCE_LABEL: Record<PowerOption['source'], string> = {
 }
 
 export function PoderesStep() {
-  const { form } = useCreationWizard()
+  const { form, raceChoices } = useCreationWizard()
 
   // Reconcile over-cap: if the player lowered the class level after picking
   // powers, drop the excess so a level-N character never carries more elective
@@ -75,8 +76,11 @@ export function PoderesStep() {
         powerChoices: Record<string, string[]>
       }) => {
         const primary = v.classes[0]
-        // Poderes da Tormenta pool, only when a race grants access (Lefou).
-        const tormentaPowers = racesGrantTormenta(v.races ?? [])
+        // Poderes da Tormenta pool, only when an APPLIED race grants access
+        // (Lefou primary, or a secondary the player opted into).
+        const tormentaPowers = racesGrantTormenta(
+          appliedRaces(v.races ?? [], raceChoices),
+        )
           ? tormentaPowerOptions()
           : []
         const classPowers = v.classPowers ?? []

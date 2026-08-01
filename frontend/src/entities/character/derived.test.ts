@@ -61,6 +61,7 @@ function character(over: Partial<Character> = {}): Character {
     ]),
     raceAbilityChoices: '[]',
     raceAttributeChoices: '{}',
+    secondaryRaceChoices: '[]',
     originChoices: '[]',
     classPowers: '[]',
     classChoices: '{}',
@@ -389,6 +390,29 @@ describe('attributeTotal — race applied once from BASE + choices', () => {
   it('floating race without picks applies nothing (graceful)', () => {
     const c = character({ strength: 1, races: [{ race: 'Humano' }] })
     expect(attributeTotal(c, 'strength', characterEffects(c))).toBe(1)
+  })
+
+  it('applies an opted-in secondary race on top of the primary', () => {
+    // Primary Minotauro (CON+1), secondary Lefou applied (CAR-1).
+    const base = character({
+      constitution: 2,
+      charisma: 2,
+      races: [{ race: 'Minotauro' }, { race: 'Lefou' }],
+    })
+    // Not applied → only Minotauro: CON 3, CAR unchanged.
+    expect(attributeTotal(base, 'constitution', characterEffects(base))).toBe(3)
+    expect(attributeTotal(base, 'charisma', characterEffects(base))).toBe(2)
+    // Applied with Lefou's 3 floating picks → +1 each + the CAR-1 penalty.
+    const applied = character({
+      ...base,
+      secondaryRaceChoices: JSON.stringify([
+        { race: 'Lefou', floatingPicks: ['strength', 'dexterity', 'constitution'] },
+      ]),
+    })
+    // CON: Minotauro +1 + Lefou pick +1 = base 2 + 2 = 4.
+    expect(attributeTotal(applied, 'constitution', characterEffects(applied))).toBe(4)
+    // CAR: Lefou penalty -1 = base 2 - 1 = 1.
+    expect(attributeTotal(applied, 'charisma', characterEffects(applied))).toBe(1)
   })
 })
 

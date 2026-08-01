@@ -110,6 +110,9 @@ model Character {
   /// primary race — the attribute choices needed to derive the racial mod (stored
   /// attributes are BASE/pre-race; the sheet applies race once from these).
   raceAttributeChoices String @default("{}")
+  /// JSON-encoded { race, floatingPicks?, ascendencia? }[] — secondary races the
+  /// player opted into (GM-negotiated homebrew). Their attribute mods also apply.
+  secondaryRaceChoices String @default("[]")
   /// JSON-encoded OriginBenefit id[] — typically two ids from the origin's benefit pool.
   originChoices String @default("[]")
   /// JSON-encoded ClassPower id[] — elective + auto-granted class powers owned.

@@ -2,7 +2,7 @@ import { Check } from 'lucide-react'
 import { useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { cn } from '@/shared/lib/utils'
-import { primaryRaceDeltas } from '@/features/character-build/grant-helpers'
+import { appliedRaceDeltas } from '@/features/character-build/grant-helpers'
 import {
   type PericiaBudget,
   type PericiaPlan,
@@ -49,7 +49,7 @@ export function PericiasStep() {
       }) => {
         const primary = v.classes[0]
         const intMod =
-          v.intelligence + (primaryRaceDeltas(v.races, raceChoices).intelligence ?? 0)
+          v.intelligence + (appliedRaceDeltas(v.races, raceChoices).intelligence ?? 0)
         const plan = primary?.className
           ? periciaPlan(primary.className, intMod, v.races)
           : null

@@ -29,9 +29,24 @@ export function raceModel(name: string): Raca | undefined {
   return RACA_BY_NAME.get(name)
 }
 
-/** A player's per-race attribute-choice state (floating picks / subrace). */
-export type RaceChoice = { floatingPicks?: AttributeKey[]; ascendencia?: string }
+/** A player's per-race attribute-choice state (floating picks / subrace).
+ *  `applied` opts a SECONDARY race into the mechanics (GM-negotiated); the
+ *  primary race always applies regardless. */
+export type RaceChoice = {
+  floatingPicks?: AttributeKey[]
+  ascendencia?: string
+  applied?: boolean
+}
 export type RaceChoiceState = Record<string, RaceChoice>
+
+/** The races that apply mechanically: the primary (`raceIds[0]`) always, plus
+ *  any secondary the player opted into via `applied`. */
+export function appliedRaces(
+  raceIds: string[],
+  choices: RaceChoiceState = {},
+): string[] {
+  return raceIds.filter((name, i) => i === 0 || choices[name]?.applied === true)
+}
 
 /**
  * Resolve one race's attribute deltas given the player's choices. Unlike the
@@ -82,18 +97,24 @@ export function raceAttributeDeltas(
 }
 
 /**
- * Attribute deltas from the MECHANICAL primary race only (`raceIds[0]`).
- * Homebrew allows multiple races, but only the primary applies mechanically —
- * secondary races are GM-negotiated flavor. Matches the backend sheet, which
- * derives attributes from `races[0]`, so the wizard preview equals the saved
- * sheet.
+ * Attribute deltas from every race that applies mechanically — the primary plus
+ * any opted-in secondary (`appliedRaces`). Homebrew: secondary races are
+ * GM-negotiated, applied only when the player toggles them. Matches the backend
+ * sheet so the wizard preview equals the saved sheet.
  */
-export function primaryRaceDeltas(
+export function appliedRaceDeltas(
   raceIds: string[],
   choices: RaceChoiceState = {},
 ): Partial<Record<AttributeKey, number>> {
-  const primary = raceIds[0]
-  return primary ? resolveRaceDeltas(primary, choices[primary]) : {}
+  const out: Partial<Record<AttributeKey, number>> = {}
+  for (const name of appliedRaces(raceIds, choices)) {
+    const deltas = resolveRaceDeltas(name, choices[name])
+    for (const key of ATTRIBUTE_KEYS) {
+      const d = deltas[key]
+      if (d) out[key] = (out[key] ?? 0) + d
+    }
+  }
+  return out
 }
 
 /** True while a race still owes an attribute choice (floating or subrace). */
@@ -112,14 +133,15 @@ export function racePending(name: string, choice: RaceChoice = {}): boolean {
   return false
 }
 
-/** Only the primary race (`raceIds[0]`) applies mechanically, so only its
- *  attribute choice can be "pending" — secondary races are GM-negotiated. */
+/** Only races that apply mechanically (primary + opted-in secondaries) can have
+ *  a pending attribute choice. */
 export function anyRacePending(
   raceIds: string[],
   choices: RaceChoiceState = {},
 ): boolean {
-  const primary = raceIds[0]
-  return primary ? racePending(primary, choices[primary]) : false
+  return appliedRaces(raceIds, choices).some((name) =>
+    racePending(name, choices[name]),
+  )
 }
 
 /** Compact signature for a race tile: `+2 CON`, `+1×3`, or `2 ascend.`. */
