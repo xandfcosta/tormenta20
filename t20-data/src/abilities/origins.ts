@@ -738,7 +738,7 @@ export const ORIGINS_CATALOG: OriginDefinition[] = [
     poderUnico: uniquePoder(
       'refugiado',
       'Estoico',
-      'Quando sofre uma condição negativa (abalado, agarrado, atordoado, etc.), pode gastar 1 PM como reação para ignorar a condição até o fim do próximo turno.',
+      'Sua condição de descanso é uma categoria acima do padrão pela situação (normal em condições ruins, confortável em condições normais e luxuosa em condições confortáveis ou melhores).',
     ),
   },
   {

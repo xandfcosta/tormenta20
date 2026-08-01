@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ORIGINS_CATALOG } from '../abilities/origins'
 import {
   DEFORMIDADE_PERICIA_BONUS,
   DEFORMIDADE_SLOTS,
@@ -131,8 +132,7 @@ describe('raceWithDeformidade — só raças com a habilidade (Lefou)', () => {
 })
 
 describe('origem powerPick — benefícios de escolha livre', () => {
-  it('5 benefícios flagados (1 tormenta + 4 combate)', async () => {
-    const { ORIGINS_CATALOG } = await import('../abilities/origins')
+  it('5 benefícios flagados (1 tormenta + 4 combate)', () => {
     const flagged = ORIGINS_CATALOG.flatMap((o) =>
       o.benefits.filter((b) => b.powerPick),
     )

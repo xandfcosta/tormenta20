@@ -110,6 +110,20 @@ export function descansoNaturalOverride(
 }
 
 /**
+ * Estoico — poder único da origem Refugiado (PDF p94).
+ *
+ *   "Sua condição de descanso é uma categoria acima do padrão pela situação
+ *    (normal em condições ruins, confortável em condições normais e luxuosa
+ *    em condições confortáveis ou melhores)."
+ *
+ * Promove uma categoria; `luxuosa` já é o teto.
+ */
+export function estoicoRestOverride(condition: RestCondition): RestCondition {
+  const idx = REST_CONDITIONS.indexOf(condition)
+  return REST_CONDITIONS[Math.min(idx + 1, REST_CONDITIONS.length - 1)]
+}
+
+/**
  * Sono forçado (PDF p318). Personagem que fica sem dormir uma noite:
  *  1. Não recupera PV nem PM.
  *  2. A partir da segunda noite sem dormir, Fortitude CD 15 +1 por
