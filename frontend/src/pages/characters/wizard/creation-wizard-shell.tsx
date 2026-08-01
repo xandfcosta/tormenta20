@@ -95,6 +95,7 @@ export function CreationWizardShell() {
         startingArmor,
         startingShield,
         startingPurchases,
+        originItemPicks,
         ...restValue
       } = value
       const totalLevel =
@@ -109,6 +110,7 @@ export function CreationWizardShell() {
             },
             startingLoadout(value.classes[0].className, totalLevel).kit,
             value.origin,
+            originItemPicks ?? {},
           )
         : []
       // Loja: purchases become inventory rows and the saved tibar is the

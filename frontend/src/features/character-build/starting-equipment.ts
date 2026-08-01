@@ -3,6 +3,7 @@ import {
   type CatalogItem,
   getCatalogItem,
   ORIGENS,
+  origemItemGrantsByName,
   type StartingKit,
   startingKitFor,
   startingMoneyForLevel,
@@ -36,7 +37,7 @@ export type StartingEquipmentDraft = {
 }
 
 export function weaponOptions(
-  category: 'weapon-simple' | 'weapon-martial',
+  category: 'weapon-simple' | 'weapon-martial' | 'weapon-exotic',
 ): CatalogItem[] {
   return CATALOG_ITEMS.filter((i) => i.category === category)
 }
@@ -95,6 +96,7 @@ export function startingItemsPayload(
   draft: StartingEquipmentDraft,
   kit: StartingKit,
   originName: string,
+  originPicks: Record<string, string> = {},
 ): StartingItemPayload[] {
   const out: StartingItemPayload[] = []
   for (const id of KIT_BASE_ITEM_IDS) {
@@ -117,10 +119,44 @@ export function startingItemsPayload(
     const s = catalogPayload('escudo-leve', 'wielded')
     if (s) out.push(s)
   }
-  for (const name of originStartingItems(originName)) {
-    out.push({ name, quantity: 1, slots: 1 })
-  }
+  out.push(...origemItemsPayload(originName, originPicks))
   return out
+}
+
+/**
+ * Itens da origem as payload rows: fixed grants verbatim; choice grants
+ * resolve the pick to a catalog item (or a by-name match for "X OU Y") and
+ * fall back to the grant label as a custom row when unpicked, so the grant
+ * still lands on the sheet. Money grants are folded into tibar by the UI.
+ */
+export function origemItemsPayload(
+  originName: string,
+  picks: Record<string, string>,
+): StartingItemPayload[] {
+  return origemItemGrantsByName(originName).flatMap((g): StartingItemPayload[] => {
+    switch (g.kind) {
+      case 'fixed':
+        return [{ name: g.name, quantity: 1, slots: 1 }]
+      case 'weapon':
+      case 'anyItem': {
+        const id = picks[g.label]
+        const item = id ? catalogPayload(id) : null
+        return item ? [item] : [{ name: g.label, quantity: 1, slots: 1 }]
+      }
+      case 'oneOf': {
+        const chosen = picks[g.label]
+        if (!chosen) return [{ name: g.label, quantity: 1, slots: 1 }]
+        const match = CATALOG_ITEMS.find(
+          (i) => i.name.toLowerCase() === chosen.toLowerCase(),
+        )
+        return match
+          ? [{ catalogId: match.id, name: match.name, quantity: 1, slots: match.slots }]
+          : [{ name: chosen, quantity: 1, slots: 1 }]
+      }
+      case 'money':
+        return [] // rolled into the tibar field by the step UI
+    }
+  })
 }
 
 // ─── Loja (comprar com T$ iniciais, p140) ────────────────────────────

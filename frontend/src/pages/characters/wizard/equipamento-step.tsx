@@ -11,11 +11,11 @@ import { cn } from '@/shared/lib/utils'
 import { useCreationWizard } from '@/features/character-build/creation-wizard-context'
 import {
   lightArmorOptions,
-  originStartingItems,
   purchasesTotal,
   startingLoadout,
   weaponOptions,
 } from '@/features/character-build/starting-equipment'
+import { OrigemItemsSection } from '@/features/character-build/origem-items-section'
 import { StartingShop } from '@/features/character-build/starting-shop'
 
 type EquipValues = {
@@ -27,6 +27,7 @@ type EquipValues = {
   startingArmor: string
   startingShield: boolean
   startingPurchases: Record<string, number>
+  originItemPicks: Record<string, string>
 }
 
 /**
@@ -65,7 +66,19 @@ export function EquipamentoStep() {
                 <KitBaseLine />
                 <WeaponPickers form={form} values={v} kit={kit} />
                 <ArmorPicker form={form} values={v} kit={kit} />
-                <OriginItems originName={v.origin} />
+                <OrigemItemsSection
+                  originName={v.origin}
+                  picks={v.originItemPicks ?? {}}
+                  onPick={(label, val) =>
+                    form.setFieldValue('originItemPicks', {
+                      ...(v.originItemPicks ?? {}),
+                      [label]: val,
+                    })
+                  }
+                  onMoneyRoll={(_label, amount) =>
+                    form.setFieldValue('tibar', (v.tibar ?? 0) + amount)
+                  }
+                />
                 <ExtrasNote kit={kit} />
                 <MoneyField
                   form={form}
@@ -225,21 +238,6 @@ function ArmorPicker({
           </button>
         )}
       </div>
-    </div>
-  )
-}
-
-function OriginItems({ originName }: { originName: string }) {
-  const items = originStartingItems(originName)
-  if (!originName) return null
-  return (
-    <div className="space-y-1">
-      <SectionLabel>Origem · {originName} · automático</SectionLabel>
-      {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Sem itens de origem.</p>
-      ) : (
-        <p className="text-sm">{items.join(' · ')}</p>
-      )}
     </div>
   )
 }
