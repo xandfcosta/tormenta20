@@ -36,7 +36,7 @@ import {
   validateDeformidade,
   type DeformidadeChoice,
 } from './deformidade'
-import { carismaLossFromPowers } from './tormenta'
+import { carismaLossFromPowers, TORMENTA_POWERS } from './tormenta'
 import { collectVitalGrants } from './vital-grants'
 
 // ─── Input ───────────────────────────────────────────────────────────
@@ -376,7 +376,7 @@ export function computeCharacterSheet(input: CharacterInput): ComputedSheet {
     attributes[key] = { base, raceMod, total: base + raceMod }
   }
 
-  const tormentaCarLoss = deformidadeCarismaLoss(input, warnings)
+  const tormentaCarLoss = tormentaCarismaLoss(input, warnings)
   if (tormentaCarLoss > 0) {
     attributes.charisma = {
       ...attributes.charisma,
@@ -443,18 +443,27 @@ export function computeCharacterSheet(input: CharacterInput): ComputedSheet {
 }
 
 /**
- * Warnings + perda de Carisma da escolha de Deformidade. Perícia bonuses do
- * NOT cost Carisma (p23 "exceto para perda de Carisma") — only the swapped
- * real power triggers the p136 loss (1 for the first power).
+ * Warnings + perda de Carisma de TODOS os poderes da Tormenta reais: o swap da
+ * Deformidade (p23) e os escolhidos como poderes de classe (p136 pool). A
+ * perda escala com o total (1→1, 2→2, 3→4…), então é computada uma vez sobre a
+ * contagem, nunca somada por partes. Perícia bonuses da Deformidade não contam
+ * (p23 "exceto para perda de Carisma").
  */
-function deformidadeCarismaLoss(
+function tormentaCarismaLoss(
   input: CharacterInput,
   warnings: string[],
 ): number {
   const choice = input.deformidade
-  if (!choice) return 0
-  warnings.push(...validateDeformidade(choice))
-  return carismaLossFromPowers(choice.tormentaPower ? 1 : 0)
+  if (choice) warnings.push(...validateDeformidade(choice))
+  const picked = (input.powerIds ?? []).filter((id) => id in TORMENTA_POWERS)
+  const held = choice?.tormentaPower
+  if (held && picked.includes(held)) {
+    warnings.push(
+      `poder da Tormenta "${held}" duplicado: já obtido pela Deformidade e escolhido de novo como poder`,
+    )
+  }
+  const count = picked.length + (held && !picked.includes(held) ? 1 : 0)
+  return carismaLossFromPowers(count)
 }
 
 // ─── Conditions summary ──────────────────────────────────────────────

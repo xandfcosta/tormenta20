@@ -246,7 +246,13 @@ function ChosenPowers({ values }: { values: CharacterFormValues }) {
     values.powerChoices ?? {},
   )
   const total = totalSlots(values.classes)
-  if (total === 0) return null
+  if (total === 0) {
+    return (
+      <p className="text-xs italic text-muted-foreground">
+        Personagem de 1º nível ainda não escolhe poderes de classe.
+      </p>
+    )
+  }
   if (lines.length === 0) {
     return (
       <p className="text-xs italic text-muted-foreground">
