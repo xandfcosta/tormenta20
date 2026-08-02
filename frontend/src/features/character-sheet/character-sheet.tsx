@@ -1,4 +1,5 @@
-import { type ReactNode, useState } from 'react'
+import { useNavigate, useSearch } from '@tanstack/react-router'
+import { type ReactNode } from 'react'
 import { useMediaQuery } from '@/shared/lib/use-media-query'
 import { CharacterSheetDesktop } from './character-sheet-desktop'
 import { CharacterSheetMobile } from './character-sheet-mobile'
@@ -28,8 +29,17 @@ export function CharacterSheet({
   const isDesktop = useMediaQuery('(min-width: 1024px)')
   // Owned here (above the viewport switch) so the selected block survives a
   // desktop↔mobile swap; each layout falls back to its own first tab when the
-  // shared value isn't in its set (e.g. mobile-only "Vitais").
-  const [tab, setTab] = useState('')
+  // shared value isn't in its set (e.g. mobile-only "Vitais"). Persisted in
+  // the URL: a phone-tab eviction or accidental nav no longer loses context.
+  const navigate = useNavigate()
+  const search = useSearch({ strict: false }) as { tab?: string }
+  const tab = search.tab ?? ''
+  const setTab = (next: string) =>
+    navigate({
+      to: '.',
+      search: (prev: Record<string, unknown>) => ({ ...prev, tab: next }),
+      replace: true,
+    })
   if (isDesktop)
     return (
       <CharacterSheetDesktop

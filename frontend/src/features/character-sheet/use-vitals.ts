@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRef } from 'react'
 import { useDebouncedCallback } from '@tanstack/react-pacer'
@@ -34,6 +35,10 @@ export function useVitals(character: Character) {
       } catch {
         if (rollbackSnapshot.current) {
           qc.setQueryData(queryKey, rollbackSnapshot.current)
+          // Silent rollback = the player believes the damage saved (audit).
+          toast.error('Falha ao salvar PV/PM — valores revertidos', {
+            description: 'Verifique a conexão e aplique de novo.',
+          })
         }
       } finally {
         rollbackSnapshot.current = undefined
