@@ -6,35 +6,22 @@ import {
   getFilteredRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import { LayoutGrid, Rows3, Search } from 'lucide-react'
-import { useState } from 'react'
+import { Search } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
-import { Card, CardContent } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
 import { PageChrome } from '@/shared/ui/page-chrome'
 import { SkeletonCardGrid } from '@/shared/ui/skeleton'
 import type { Character } from '@/shared/api/api'
 import { charactersQueryOptions } from '@/entities/character/queries'
 import { fuzzyFilter } from '@/shared/lib/fuzzy-filter'
-import {
-  CharacterInfoPanel,
-  CharacterSummaryBar,
-} from '@/features/character-select/character-info-panel'
-import { CharacterSplash } from '@/features/character-select/character-splash'
-import {
-  NewCharacterTile,
-  Roster,
-  RosterHint,
-} from '@/features/character-select/roster-strip'
-
-// Past this many characters the roster defaults to the full grid (better scan
-// surface than a long horizontal strip) until the user toggles manually.
-const AUTO_EXPAND_THRESHOLD = 12
+import { CharacterFilmstrip } from '@/features/character-select/character-filmstrip'
+import { CharacterStage } from '@/features/character-select/character-stage'
+import { DossierDrawer } from '@/features/character-select/dossier-drawer'
 
 // Headless table drives the roster search. Indexed columns: name, primary
-// class, origin, and races (races are displayed in the panel, so they must be
-// searchable too).
+// class, origin, and races.
 const columnHelper = createColumnHelper<Character>()
 const columns = [
   columnHelper.accessor('name', { id: 'name' }),
@@ -48,23 +35,20 @@ const columns = [
 const EMPTY: Character[] = []
 
 /**
- * Characters "select screen" — a Valorant-style agent-select: a dominant
- * character splash (left) + an info panel (right) over a 2-row roster strip
- * (bottom). Search is pinned to the header so it never scrolls with the strip;
- * an "Expandir" toggle pops the roster into a full grid for large rosters.
- * Selection is local UI state; "Abrir ficha" routes to the sheet.
+ * Characters select screen — design "palco + dossiê": the selected character
+ * on a spotlit center stage with prev/next peeking from the sides, a
+ * filmstrip index for O(1) jumps across long rosters, and a dossier drawer
+ * for the readable detail. Search filters the roster; the stage snaps to the
+ * first match. `←/→` navigate, Enter opens the sheet, D toggles the dossier,
+ * `/` focuses search.
  */
 export function CharactersListPage() {
   const characters = useQuery(charactersQueryOptions)
   const navigate = useNavigate()
   const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [dossierOpen, setDossierOpen] = useState(false)
   const [query, setQuery] = useState('')
-  // null = follow the auto rule (grid for big rosters); a bool = manual override.
-  const [expandOverride, setExpandOverride] = useState<boolean | null>(null)
   const roster = characters.data
-  const selected = roster?.find((c) => c.id === selectedId) ?? roster?.[0]
-  const expanded =
-    expandOverride ?? (roster?.length ?? 0) > AUTO_EXPAND_THRESHOLD
 
   const table = useReactTable({
     data: roster ?? EMPTY,
@@ -76,12 +60,39 @@ export function CharactersListPage() {
     getFilteredRowModel: getFilteredRowModel(),
   })
   const filtered = table.getRowModel().rows.map((r) => r.original)
+  const index = Math.max(
+    0,
+    filtered.findIndex((c) => c.id === selectedId),
+  )
+  const selected = filtered[index] ?? null
+  const prev = index > 0 ? filtered[index - 1] : null
+  const next = index < filtered.length - 1 ? filtered[index + 1] : null
 
-  const openSheet = (id: number) =>
-    navigate({ to: '/characters/$id', params: { id } })
+  const step = (delta: number) => {
+    if (filtered.length === 0) return
+    const nextIndex = Math.min(filtered.length - 1, Math.max(0, index + delta))
+    setSelectedId(filtered[nextIndex].id)
+  }
+  const openSheet = () => {
+    if (selected) navigate({ to: '/characters/$id', params: { id: selected.id } })
+  }
+
+  useSelectorKeyboard({
+    step,
+    jumpTo: (edge) => {
+      if (filtered.length === 0) return
+      setSelectedId(filtered[edge === 'home' ? 0 : filtered.length - 1].id)
+    },
+    open: openSheet,
+    toggleDossier: () => setDossierOpen((v) => !v),
+    closeDossier: () => setDossierOpen(false),
+    clearSearch: () => setQuery(''),
+    dossierOpen,
+    hasQuery: query.length > 0,
+  })
 
   return (
-    <PageChrome width="full" className="flex min-h-0 flex-1 flex-col gap-4">
+    <PageChrome width="full" className="relative flex min-h-0 flex-1 flex-col gap-2">
       <header className="flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">Personagens</h1>
         {roster && roster.length > 0 && (
@@ -95,26 +106,15 @@ export function CharactersListPage() {
                 placeholder="Buscar nome, classe, origem, raça"
                 className="pl-8"
                 aria-label="Buscar personagem"
+                data-roster-search
               />
             </div>
             <Badge variant="secondary" className="shrink-0">
               {filtered.length} de {roster.length}
             </Badge>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              aria-pressed={expanded}
-              onClick={() => setExpandOverride(!expanded)}
-            >
-              {expanded ? (
-                <Rows3 className="size-4" />
-              ) : (
-                <LayoutGrid className="size-4" />
-              )}
-              {expanded ? 'Recolher' : 'Ver todos'}
-            </Button>
-            <NewCharacterTile />
+            <Link to="/characters/new">
+              <Button size="sm">+ Novo</Button>
+            </Link>
           </div>
         )}
       </header>
@@ -123,55 +123,147 @@ export function CharactersListPage() {
       {characters.isError && (
         <p className="text-destructive">{(characters.error as Error).message}</p>
       )}
-      {roster?.length === 0 && <NoCharacters />}
+      {roster?.length === 0 && <EmptyStage />}
+      {roster && roster.length > 0 && filtered.length === 0 && (
+        <NoMatches query={query} onClear={() => setQuery('')} />
+      )}
 
-      {roster && roster.length > 0 && selected && (
-        <div className="flex min-h-0 flex-1 flex-col gap-3">
-          {expanded ? (
-            <>
-              <CharacterSummaryBar character={selected} />
-              <div className="min-h-0 flex-1 overflow-y-auto">
-                <Roster
-                  roster={filtered}
-                  selectedId={selected.id}
-                  onSelect={setSelectedId}
-                  onOpen={openSheet}
-                  expanded
-                />
-              </div>
-              <RosterHint />
-            </>
-          ) : (
-            <>
-              <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[1fr_22rem]">
-                <CharacterSplash character={selected} />
-                <CharacterInfoPanel character={selected} />
-              </div>
-              <Roster
-                roster={filtered}
-                selectedId={selected.id}
-                onSelect={setSelectedId}
-                onOpen={openSheet}
-                expanded={false}
-              />
-              <RosterHint />
-            </>
-          )}
+      {selected && (
+        <div className="relative flex min-h-0 flex-1 flex-col">
+          <CharacterStage
+            selected={selected}
+            prev={prev}
+            next={next}
+            onStep={step}
+            onOpen={openSheet}
+            onDossier={() => setDossierOpen((v) => !v)}
+            dossierOpen={dossierOpen}
+          />
+          <DossierDrawer
+            character={selected}
+            open={dossierOpen}
+            onClose={() => setDossierOpen(false)}
+          />
+          <CharacterFilmstrip
+            roster={filtered}
+            selectedId={selected.id}
+            onSelect={setSelectedId}
+          />
+          <p className="pt-1 text-center text-[11px] text-muted-foreground">
+            ← → navegar · Enter abrir ficha · D dossiê · / buscar
+          </p>
         </div>
       )}
     </PageChrome>
   )
 }
 
-function NoCharacters() {
+/** Page-level keyboard bindings; ignored while typing in inputs (except Esc). */
+function useSelectorKeyboard({
+  step,
+  jumpTo,
+  open,
+  toggleDossier,
+  closeDossier,
+  clearSearch,
+  dossierOpen,
+  hasQuery,
+}: {
+  step: (delta: number) => void
+  jumpTo: (edge: 'home' | 'end') => void
+  open: () => void
+  toggleDossier: () => void
+  closeDossier: () => void
+  clearSearch: () => void
+  dossierOpen: boolean
+  hasQuery: boolean
+}) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      const typing = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
+      if (typing) {
+        if (e.key === 'Escape') {
+          clearSearch()
+          target.blur()
+        }
+        return
+      }
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault()
+          step(-1)
+          break
+        case 'ArrowRight':
+          e.preventDefault()
+          step(1)
+          break
+        case 'PageUp':
+          e.preventDefault()
+          step(-5)
+          break
+        case 'PageDown':
+          e.preventDefault()
+          step(5)
+          break
+        case 'Home':
+          jumpTo('home')
+          break
+        case 'End':
+          jumpTo('end')
+          break
+        case 'Enter':
+          open()
+          break
+        case 'd':
+        case 'D':
+          toggleDossier()
+          break
+        case '/':
+          e.preventDefault()
+          document
+            .querySelector<HTMLInputElement>('[data-roster-search]')
+            ?.focus()
+          break
+        case 'Escape':
+          if (dossierOpen) closeDossier()
+          else if (hasQuery) clearSearch()
+          break
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [step, jumpTo, open, toggleDossier, closeDossier, clearSearch, dossierOpen, hasQuery])
+}
+
+/** Empty roster: the stage itself invites the first character. */
+function EmptyStage() {
   return (
-    <Card>
-      <CardContent className="flex flex-col items-center gap-3 py-10 text-muted-foreground">
-        <p>Nenhum personagem ainda.</p>
-        <Link to="/characters/new">
-          <Button>Criar seu primeiro personagem</Button>
-        </Link>
-      </CardContent>
-    </Card>
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4">
+      <div className="flex aspect-[3/4] w-48 items-center justify-center rounded-lg border-2 border-dashed border-border">
+        <span className="select-none font-display text-7xl text-muted-foreground/40">
+          ?
+        </span>
+      </div>
+      <p className="font-display text-xl tracking-wide">
+        Seu grupo aguarda um herói
+      </p>
+      <Link to="/characters/new">
+        <Button size="lg">Criar seu primeiro personagem</Button>
+      </Link>
+    </div>
+  )
+}
+
+function NoMatches({ query, onClear }: { query: string; onClear: () => void }) {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3">
+      <p className="text-sm text-muted-foreground">
+        Nenhum personagem para “{query}”.
+      </p>
+      <Button variant="outline" onClick={onClear}>
+        Limpar busca (Esc)
+      </Button>
+    </div>
   )
 }
