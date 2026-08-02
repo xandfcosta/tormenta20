@@ -234,9 +234,23 @@ export function ResourceAdjustDialog({
                     onBlur={f.handleBlur}
                     min={0}
                     max={9999}
-                    autoFocus
                     aria-invalid={invalid}
                   />
+                  {/* Quick amounts: most combat deltas land on these — no
+                      keyboard needed at the table (audit: autoFocus keyboard
+                      pop + 0-default friction). */}
+                  <div className="flex gap-1.5">
+                    {[5, 10, 20].map((quick) => (
+                      <button
+                        key={quick}
+                        type="button"
+                        onClick={() => f.handleChange(quick)}
+                        className="rounded-md border border-border px-2.5 py-1 text-xs hover:bg-accent"
+                      >
+                        {quick}
+                      </button>
+                    ))}
+                  </div>
                   {invalid && <FieldError errors={f.state.meta.errors} />}
                 </Field>
               )
