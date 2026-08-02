@@ -47,6 +47,7 @@ export function CharactersListPage() {
   const navigate = useNavigate()
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [dossierOpen, setDossierOpen] = useState(false)
+  const [direction, setDirection] = useState<1 | -1>(1)
   const [query, setQuery] = useState('')
   const roster = characters.data
 
@@ -71,7 +72,14 @@ export function CharactersListPage() {
   const step = (delta: number) => {
     if (filtered.length === 0) return
     const nextIndex = Math.min(filtered.length - 1, Math.max(0, index + delta))
+    setDirection(delta >= 0 ? 1 : -1)
     setSelectedId(filtered[nextIndex].id)
+  }
+  const jumpTo = (id: number) => {
+    const target = filtered.findIndex((c) => c.id === id)
+    if (target === -1) return
+    setDirection(target >= index ? 1 : -1)
+    setSelectedId(id)
   }
   const openSheet = () => {
     if (selected) navigate({ to: '/characters/$id', params: { id: selected.id } })
@@ -81,7 +89,7 @@ export function CharactersListPage() {
     step,
     jumpTo: (edge) => {
       if (filtered.length === 0) return
-      setSelectedId(filtered[edge === 'home' ? 0 : filtered.length - 1].id)
+      jumpTo(filtered[edge === 'home' ? 0 : filtered.length - 1].id)
     },
     open: openSheet,
     toggleDossier: () => setDossierOpen((v) => !v),
@@ -134,6 +142,7 @@ export function CharactersListPage() {
             selected={selected}
             prev={prev}
             next={next}
+            direction={direction}
             onStep={step}
             onOpen={openSheet}
             onDossier={() => setDossierOpen((v) => !v)}
@@ -147,7 +156,7 @@ export function CharactersListPage() {
           <CharacterFilmstrip
             roster={filtered}
             selectedId={selected.id}
-            onSelect={setSelectedId}
+            onSelect={jumpTo}
           />
           <p className="pt-1 text-center text-[11px] text-muted-foreground">
             ← → navegar · Enter abrir ficha · D dossiê · / buscar
