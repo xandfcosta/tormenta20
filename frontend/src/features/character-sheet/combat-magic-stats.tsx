@@ -117,12 +117,15 @@ export function CombatStats({ character }: { character: Character }) {
 
 function CombatBox({
   label,
+  dialogTitle,
   value,
   rows,
   icon,
   signed: showSigned,
 }: {
   label: string
+  /** Full name for the breakdown dialog when the box label is abbreviated. */
+  dialogTitle?: string
   value: number
   rows: StatRow[]
   icon: React.ReactNode
@@ -165,7 +168,7 @@ function CombatBox({
             )}
           >
             {icon}
-            {label}
+            {dialogTitle ?? label}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-2 text-sm">
@@ -238,6 +241,7 @@ export function SavesStats({ character }: { character: Character }) {
           <CombatBox
             key={meta.name}
             label={meta.name.slice(0, 4)}
+            dialogTitle={meta.name}
             value={total.total}
             rows={rows}
             icon={<ShieldCheck className="size-3.5" />}
