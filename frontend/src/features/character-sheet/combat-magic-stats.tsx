@@ -99,6 +99,7 @@ export function CombatStats({ character }: { character: Character }) {
       />
       <CombatBox
         label="Atq CaC"
+        dialogTitle="Ataque Corpo a Corpo (Luta)"
         value={luta.total + attackAll.total}
         rows={attackRows(luta, ATTRIBUTE_ABBR[lutaState.attribute])}
         icon={<Sword className="size-3.5" />}
@@ -106,6 +107,7 @@ export function CombatStats({ character }: { character: Character }) {
       />
       <CombatBox
         label="Atq Dist"
+        dialogTitle="Ataque à Distância (Pontaria)"
         value={pontaria.total + attackAll.total}
         rows={attackRows(pontaria, ATTRIBUTE_ABBR[pontariaState.attribute])}
         icon={<Crosshair className="size-3.5" />}
@@ -359,12 +361,14 @@ export function MagicStats({ character }: { character: Character }) {
     <div className="grid grid-cols-3 gap-2">
       <MagicBox
         label="Limite PM"
+        dialogTitle="Limite de PM por magia"
         value={pmLimit.total}
         rows={limitRows}
         icon={<Zap className="size-3.5" />}
       />
       <MagicBox
         label="CD Magia"
+        dialogTitle="CD dos testes de resistência das suas magias"
         value={(bestBaseSpellCd(character) ?? 0) + dc.total}
         rows={[
           {
@@ -379,6 +383,7 @@ export function MagicStats({ character }: { character: Character }) {
       />
       <MagicBox
         label="Custo PM"
+        dialogTitle="Modificador de custo de PM"
         value={cost.total}
         rows={
           showCost
@@ -394,6 +399,7 @@ export function MagicStats({ character }: { character: Character }) {
 
 function MagicBox({
   label,
+  dialogTitle,
   value,
   rows,
   icon,
@@ -401,6 +407,8 @@ function MagicBox({
   prefix,
 }: {
   label: string
+  /** Full name for the breakdown dialog when the box label is abbreviated. */
+  dialogTitle?: string
   value: number
   rows: StatRow[]
   icon: React.ReactNode
@@ -444,7 +452,7 @@ function MagicBox({
             )}
           >
             {icon}
-            {label}
+            {dialogTitle ?? label}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-2 text-sm">
