@@ -26,7 +26,12 @@ export function WizardFooterNav({ current }: { current: StepSlug }) {
     navigate({ to: `/characters/new/${slug}` as string })
 
   return (
-    <div className="-mx-4 flex shrink-0 items-center justify-between gap-2 border-t bg-card/95 px-4 py-3 sm:-mx-6 sm:px-6">
+    // Full-bleed fixed bar: the wizard PageChrome is a centered max-w
+    // container, so an in-flow bar leaves page-background gaps on wide
+    // viewports (sides beyond the max-w) and below (container py). Fixed to
+    // the viewport with the content re-centered inside.
+    <div className="fixed inset-x-0 bottom-0 z-10 border-t bg-card/95 backdrop-blur">
+      <div className="mx-auto flex w-full max-w-[90rem] items-center justify-between gap-2 px-4 py-3 sm:px-6">
       {prev ? (
         <Button type="button" variant="outline" onClick={() => go(prev.slug)}>
           ‹ Voltar
@@ -69,6 +74,7 @@ export function WizardFooterNav({ current }: { current: StepSlug }) {
           )
         }
       </form.Subscribe>
+      </div>
     </div>
   )
 }

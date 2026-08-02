@@ -231,7 +231,7 @@ export function CreationWizardShell() {
       <PageChrome
         width="wide"
         padded={false}
-        className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden px-4 py-4 sm:px-6"
+        className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden px-4 pb-20 pt-4 sm:px-6"
       >
         <div className="shrink-0 space-y-4">
           <SectionHeading variant="kallyadranoch" as="h1">

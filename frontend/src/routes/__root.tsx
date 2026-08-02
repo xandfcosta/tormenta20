@@ -86,8 +86,8 @@ function RootLayout() {
       <Toaster />
       {import.meta.env.DEV && !inMatch && (
         <>
-          <TanStackRouterDevtools position="bottom-right" />
-          <ReactQueryDevtools buttonPosition="bottom-left" />
+          <TanStackRouterDevtools position="top-right" />
+          <ReactQueryDevtools buttonPosition="top-left" />
         </>
       )}
     </TooltipProvider>
