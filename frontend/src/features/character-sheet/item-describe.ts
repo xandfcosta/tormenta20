@@ -76,6 +76,8 @@ export function describeCondition(m: Modifier): string | null {
       return 'enquanto empunhado'
     case 'vested':
       return 'enquanto vestido'
+    case 'flagOff':
+      return m.condition.label
     case 'terrain':
       return `terreno: ${m.condition.type}`
     case 'against':
