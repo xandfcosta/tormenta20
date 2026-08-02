@@ -20,6 +20,7 @@ export function CharacterStage({
   selected,
   prev,
   next,
+  direction,
   onStep,
   onOpen,
   onDossier,
@@ -28,6 +29,8 @@ export function CharacterStage({
   selected: Character
   prev: Character | null
   next: Character | null
+  /** Last navigation direction — the new portrait slides in from that side. */
+  direction: 1 | -1
   onStep: (delta: 1 | -1) => void
   onOpen: () => void
   onDossier: () => void
@@ -38,30 +41,56 @@ export function CharacterStage({
     () => defenseTotal(selected, characterEffects(selected)).total,
     [selected],
   )
+  // Directional slide for the incoming portrait; nameplate block fades + rises
+  // with a small stagger. Keyed by character id so tw-animate `animate-in`
+  // replays on every selection change; motion-reduce collapses to instant.
+  const slideIn =
+    direction === 1 ? 'slide-in-from-right-8' : 'slide-in-from-left-8'
   return (
     <div className="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-2">
-      {/* spotlight wash in the character's hue */}
+      {/* spotlight wash in the character's hue — keyed to crossfade per char */}
       <div
+        key={`spot-${selected.id}`}
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10"
+        className="pointer-events-none absolute inset-0 -z-10 animate-in fade-in-0 duration-500 motion-reduce:animate-none"
         style={{
           background: `radial-gradient(ellipse 60% 50% at 50% 42%, oklch(0.55 0.15 ${hue} / 0.14), transparent 70%)`,
         }}
       />
       <div className="flex items-center justify-center gap-4 sm:gap-8">
-        <PeekPortrait character={prev} side="left" onClick={() => onStep(-1)} />
-        <StagePortrait character={selected} hue={hue} onOpen={onOpen} />
-        <PeekPortrait character={next} side="right" onClick={() => onStep(1)} />
+        <div
+          key={`prev-${prev?.id ?? 'none'}`}
+          className="animate-in fade-in-0 duration-300 motion-reduce:animate-none"
+        >
+          <PeekPortrait character={prev} side="left" onClick={() => onStep(-1)} />
+        </div>
+        <div
+          key={`sel-${selected.id}`}
+          className={`animate-in fade-in-0 zoom-in-95 ${slideIn} duration-300 ease-out motion-reduce:animate-none`}
+        >
+          <StagePortrait character={selected} hue={hue} onOpen={onOpen} />
+        </div>
+        <div
+          key={`next-${next?.id ?? 'none'}`}
+          className="animate-in fade-in-0 duration-300 motion-reduce:animate-none"
+        >
+          <PeekPortrait character={next} side="right" onClick={() => onStep(1)} />
+        </div>
       </div>
       {/* pedestal glow */}
       <div
         aria-hidden
-        className="pointer-events-none -mt-6 h-4 w-64 rounded-[100%] blur-md sm:w-80"
+        className="pointer-events-none -mt-6 h-4 w-64 rounded-[100%] blur-md transition-colors duration-300 sm:w-80"
         style={{ background: `oklch(0.5 0.14 ${hue} / 0.35)` }}
       />
-      <Nameplate character={selected} hue={hue} />
-      <VitalsRow character={selected} defense={defense} />
-      <SummaryLine character={selected} />
+      <div
+        key={`plate-${selected.id}`}
+        className="flex flex-col items-center gap-4 animate-in fade-in-0 slide-in-from-bottom-2 fill-mode-backwards duration-300 [animation-delay:80ms] motion-reduce:animate-none"
+      >
+        <Nameplate character={selected} hue={hue} />
+        <VitalsRow character={selected} defense={defense} />
+        <SummaryLine character={selected} />
+      </div>
       <div className="flex flex-wrap items-center justify-center gap-2">
         <Button size="lg" onClick={onOpen}>
           Abrir ficha <kbd className="ml-1 text-[10px] opacity-70">⏎</kbd>
