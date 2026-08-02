@@ -42,6 +42,18 @@ function RootLayout() {
         (m) => m.routeId === '/campaigns/$id/sessions/$sid',
       ),
   })
+  // The character sheet stacks its own tab bar at the bottom edge; on phones
+  // the app BottomNav directly beneath it made two same-height tap surfaces
+  // ("Campanhas" existed in both). Suppress the app bar there — TopNav stays,
+  // so navigation is never stranded (audit P1).
+  const inSheet = useRouterState({
+    select: (s) =>
+      s.matches.some(
+        (m) =>
+          m.routeId === '/characters/$id/' ||
+          m.routeId === '/characters/$id/sheet',
+      ),
+  })
   // Auth screens own the whole viewport too (split-screen AuthShell), so
   // they render in the bare shell with no app nav.
   const inAuth = useRouterState({
@@ -80,6 +92,7 @@ function RootLayout() {
         onLogout={() => logout.mutate()}
         logoutPending={logout.isPending}
         bare={inMatch || inAuth}
+        hideBottomNav={inSheet}
       >
         <Outlet />
       </AppShell>

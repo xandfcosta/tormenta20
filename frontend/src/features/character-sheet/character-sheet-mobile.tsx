@@ -88,7 +88,7 @@ export function CharacterSheetMobile({
       {/* Full-width bar; cells share the width (no scroll, no overflow) so the
           over-icon badge is never clipped. */}
       <div className="w-full shrink-0 border-t border-border/60 bg-card/95 backdrop-blur">
-        <TabsList className="flex h-14 w-full items-stretch gap-0 rounded-none border-0 bg-transparent p-0">
+        <TabsList className="flex h-14 w-full items-stretch gap-0 rounded-none border-0 bg-transparent p-0 landscape:h-11">
           {sections.map((s) => (
             <TabsTrigger
               key={s.value}
