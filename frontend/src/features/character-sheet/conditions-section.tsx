@@ -1,0 +1,130 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { X } from 'lucide-react'
+import { CONDITIONS, type ConditionId } from '@tormenta20/t20-data'
+import { api, type Character } from '@/shared/api/api'
+import { Combobox } from '@/shared/ui/combobox'
+import { cn } from '@/shared/lib/utils'
+import { invalidateCharacterDependents } from '@/entities/character/character-cache'
+import { characterQueryOptions } from '@/entities/character/queries'
+
+/** Parse the persisted ConditionId[] blob (bad blob ⇒ none). */
+export function parseActiveConditions(raw: string): ConditionId[] {
+  try {
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter((x): x is ConditionId => typeof x === 'string' && x in CONDITIONS)
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Book conditions (caído, agarrado, atordoado… PDF p394-395) — the #1
+ * mid-fight tracking need. Active conditions render as removable chips with
+ * the rule text on hover; the picker adds from the full t20-data catalog.
+ * Optimistic: the chip appears/disappears instantly, rolls back on failure.
+ */
+export function ConditionsSection({ character }: { character: Character }) {
+  const qc = useQueryClient()
+  const queryKey = characterQueryOptions(character.id).queryKey
+  const active = parseActiveConditions(character.activeConditions)
+
+  const update = useMutation({
+    mutationFn: (next: ConditionId[]) =>
+      api.characters.updateConditions(character.id, next),
+    onMutate: async (next) => {
+      await qc.cancelQueries({ queryKey })
+      const previous = qc.getQueryData<Character>(queryKey)
+      qc.setQueryData<Character>(queryKey, (prev) =>
+        prev ? { ...prev, activeConditions: JSON.stringify(next) } : prev,
+      )
+      return { previous }
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
+    },
+    onSuccess: () => invalidateCharacterDependents(qc, character.id),
+  })
+
+  const add = (id: string) => {
+    if (!id || active.includes(id as ConditionId)) return
+    update.mutate([...active, id as ConditionId])
+  }
+  const remove = (id: ConditionId) =>
+    update.mutate(active.filter((c) => c !== id))
+
+  const options = Object.values(CONDITIONS)
+    .filter((c) => !active.includes(c.id))
+    .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+    .map((c) => ({ value: c.id, label: c.name }))
+
+  return (
+    <div className="space-y-2">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        Condições (p394)
+      </p>
+      {active.length > 0 && (
+        <ul className="flex flex-wrap gap-1.5">
+          {active.map((id) => {
+            const cond = CONDITIONS[id]
+            return (
+              <li
+                key={id}
+                title={cond.description}
+                className={cn(
+                  'flex items-center gap-1 rounded-md border border-[color:var(--hp-hurt)]/60',
+                  'bg-[color:var(--hp-hurt)]/10 px-2 py-1 text-xs font-medium',
+                )}
+              >
+                {cond.name}
+                <button
+                  type="button"
+                  aria-label={`Remover condição ${cond.name}`}
+                  onClick={() => remove(id)}
+                  className="rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  <X className="size-3" />
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+      <div className="max-w-64">
+        <Combobox
+          options={options}
+          value=""
+          onChange={add}
+          placeholder="Aplicar condição…"
+          searchPlaceholder="Buscar condição…"
+          emptyMessage="Nenhuma."
+        />
+      </div>
+    </div>
+  )
+}
+
+/** Compact HUD pips: active conditions at a glance on every viewport. */
+export function ConditionPips({
+  character,
+  className,
+}: {
+  character: Character
+  className?: string
+}) {
+  const active = parseActiveConditions(character.activeConditions)
+  if (active.length === 0) return null
+  return (
+    <ul className={cn('flex flex-wrap gap-1', className)}>
+      {active.map((id) => (
+        <li
+          key={id}
+          title={CONDITIONS[id].description}
+          className="rounded border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/15 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-[color:var(--hp-hurt)]"
+        >
+          {CONDITIONS[id].name}
+        </li>
+      ))}
+    </ul>
+  )
+}

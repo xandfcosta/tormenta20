@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import type { ComputedSheet } from '@tormenta20/t20-data';
 import {
+  CONDITIONS,
   characterProficiencies,
   isValid,
   PROFICIENCY_CATEGORIES,
@@ -21,6 +22,7 @@ import {
 import {
   CreateCharacterDto,
   UpdateAbilityChoicesDto,
+  UpdateConditionsDto,
   UpdateClassLevelDto,
   UpdateLevelDto,
   UpdateProficienciesDto,
@@ -280,6 +282,31 @@ export class CharactersService {
       },
       include: characterInclude,
     });
+  }
+
+  /**
+   * Replace the active book conditions (caído, agarrado… PDF p394-395).
+   * Unknown ids are rejected with the offending value — the catalog is the
+   * t20-data CONDITIONS record.
+   */
+  async updateConditions(
+    ownerId: number,
+    characterId: number,
+    dto: UpdateConditionsDto,
+  ): Promise<{ activeConditions: string }> {
+    await this.findOne(ownerId, characterId);
+    const unknown = dto.activeConditions.filter((id) => !(id in CONDITIONS));
+    if (unknown.length > 0) {
+      throw new BadRequestException(
+        `Unknown condition ids: ${unknown.join(', ')} — expected ids from the CONDITIONS catalog`,
+      );
+    }
+    const activeConditions = JSON.stringify(dto.activeConditions);
+    await this.prisma.character.update({
+      where: { id: characterId },
+      data: { activeConditions },
+    });
+    return { activeConditions };
   }
 
   async updateAbilityChoices(

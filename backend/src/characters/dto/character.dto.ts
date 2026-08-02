@@ -248,6 +248,15 @@ export class ApplyEffectDto {
   scope?: 'scene' | 'day';
 }
 
+/** Condições do livro ativas (caído, agarrado, atordoado… p394-395). IDs do
+ *  catálogo CONDITIONS do t20-data; validados no service. */
+export class UpdateConditionsDto {
+  @IsArray()
+  @ArrayUnique()
+  @IsString({ each: true })
+  activeConditions!: string[];
+}
+
 export class UpdateVitalsDto {
   @IsOptional()
   @IsInt()

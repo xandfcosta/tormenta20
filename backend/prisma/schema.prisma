@@ -127,6 +127,8 @@ model Character {
   classChoices String @default("{}")
   /// JSON-encoded power sub-choices — powerId -> option id[] (totem/school/companion/weapon).
   powerChoices String @default("{}")
+  /// JSON-encoded ConditionId[] — condições do livro ativas (caído, agarrado…).
+  activeConditions String @default("[]")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   races        CharacterRace[]

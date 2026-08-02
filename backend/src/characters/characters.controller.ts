@@ -25,6 +25,7 @@ import {
   CreateExpertiseDto,
   CreateItemDto,
   UpdateAbilityChoicesDto,
+  UpdateConditionsDto,
   UpdateClassLevelDto,
   UpdateExpertiseDto,
   UpdateItemDto,
@@ -249,6 +250,15 @@ export class CharactersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Patch(':id/conditions')
+  updateConditions(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateConditionsDto,
+  ) {
+    return this.characters.updateConditions(user.id, id, dto);
+  }
+
   @Patch(':id/abilities')
   updateAbilityChoices(
     @CurrentUser() user: AuthUser,

@@ -1,3 +1,4 @@
+import { ConditionsSection } from './conditions-section'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { Plus, Search, Sparkles, X } from 'lucide-react'
@@ -57,6 +58,7 @@ import { signed } from './signed'
 export function EffectsPanel({ character }: { character: Character }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
+      <ConditionsSection character={character} />
       <ActiveEffectsSection character={character} />
       <ConditionalsSection character={character} />
     </div>
