@@ -79,6 +79,7 @@ export function EquipamentoStep() {
             )
             return (
               <>
+                <SlotsGauge values={v} kit={kit} raceChoices={raceChoices} />
                 <KitBaseLine />
                 <WeaponPickers form={form} values={v} kit={kit} />
                 <ArmorPicker form={form} values={v} kit={kit} />
@@ -119,7 +120,6 @@ export function EquipamentoStep() {
                   }
                 />
                 </div>
-                <SlotsGauge values={v} kit={kit} raceChoices={raceChoices} />
               </>
             )
           }}
