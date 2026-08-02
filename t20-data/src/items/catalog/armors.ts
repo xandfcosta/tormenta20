@@ -79,6 +79,7 @@ export const ARMORS: CatalogItem[] = [
       { target: { k: 'displacement' }, amount: -3, bonusType: 'untyped', condition: { c: 'vested' } },
       { target: { k: 'flag', name: 'cannot-apply-dex-to-defense' }, amount: 1, bonusType: 'untyped', condition: { c: 'vested' } },
       { target: { k: 'flag', name: 'fatigue-on-sleep' }, amount: 1, bonusType: 'untyped', condition: { c: 'vested' } },
+      { target: { k: 'flag', name: 'armadura-pesada' }, amount: 1, bonusType: 'untyped', condition: { c: 'vested' } },
     ],
   },
   {
@@ -95,6 +96,7 @@ export const ARMORS: CatalogItem[] = [
       { target: { k: 'displacement' }, amount: -3, bonusType: 'untyped', condition: { c: 'vested' } },
       { target: { k: 'flag', name: 'cannot-apply-dex-to-defense' }, amount: 1, bonusType: 'untyped', condition: { c: 'vested' } },
       { target: { k: 'flag', name: 'fatigue-on-sleep' }, amount: 1, bonusType: 'untyped', condition: { c: 'vested' } },
+      { target: { k: 'flag', name: 'armadura-pesada' }, amount: 1, bonusType: 'untyped', condition: { c: 'vested' } },
     ],
   },
   {
@@ -111,6 +113,7 @@ export const ARMORS: CatalogItem[] = [
       { target: { k: 'displacement' }, amount: -3, bonusType: 'untyped', condition: { c: 'vested' } },
       { target: { k: 'flag', name: 'cannot-apply-dex-to-defense' }, amount: 1, bonusType: 'untyped', condition: { c: 'vested' } },
       { target: { k: 'flag', name: 'fatigue-on-sleep' }, amount: 1, bonusType: 'untyped', condition: { c: 'vested' } },
+      { target: { k: 'flag', name: 'armadura-pesada' }, amount: 1, bonusType: 'untyped', condition: { c: 'vested' } },
     ],
   },
   {
@@ -127,6 +130,7 @@ export const ARMORS: CatalogItem[] = [
       { target: { k: 'displacement' }, amount: -3, bonusType: 'untyped', condition: { c: 'vested' } },
       { target: { k: 'flag', name: 'cannot-apply-dex-to-defense' }, amount: 1, bonusType: 'untyped', condition: { c: 'vested' } },
       { target: { k: 'flag', name: 'fatigue-on-sleep' }, amount: 1, bonusType: 'untyped', condition: { c: 'vested' } },
+      { target: { k: 'flag', name: 'armadura-pesada' }, amount: 1, bonusType: 'untyped', condition: { c: 'vested' } },
     ],
   },
   {
@@ -143,6 +147,7 @@ export const ARMORS: CatalogItem[] = [
       { target: { k: 'displacement' }, amount: -3, bonusType: 'untyped', condition: { c: 'vested' } },
       { target: { k: 'flag', name: 'cannot-apply-dex-to-defense' }, amount: 1, bonusType: 'untyped', condition: { c: 'vested' } },
       { target: { k: 'flag', name: 'fatigue-on-sleep' }, amount: 1, bonusType: 'untyped', condition: { c: 'vested' } },
+      { target: { k: 'flag', name: 'armadura-pesada' }, amount: 1, bonusType: 'untyped', condition: { c: 'vested' } },
     ],
   },
 ]

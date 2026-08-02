@@ -117,9 +117,23 @@ export const BARBARO_POWERS: ClassPower[] = [
     'Em investida, pode aumentar penalidade de Defesa para -5 para receber +1d12 na rolagem de dano deste ataque.'),
   electivePower(C, 'Pele de Aço',
     'Bônus de Pele de Ferro aumenta para +8.',
-    { prerequisites: [power('class.barbaro.pele-de-ferro')], minLevel: 8 }),
+    {
+      prerequisites: [power('class.barbaro.pele-de-ferro')],
+      minLevel: 8,
+      // +4 adicionais sobre Pele de Ferro (total +8, PDF p42) — mesma
+      // condição de armadura.
+      modifiers: [
+        { target: { k: 'defense' }, amount: 4, bonusType: 'untyped', condition: { c: 'flagOff', flag: 'armadura-pesada', label: 'sem armadura pesada' } },
+      ],
+    }),
   electivePower(C, 'Pele de Ferro',
-    '+4 Defesa se não estiver usando armadura pesada.'),
+    '+4 Defesa se não estiver usando armadura pesada.',
+    {
+      // PDF p42 — passivo auto-avaliado contra a armadura equipada.
+      modifiers: [
+        { target: { k: 'defense' }, amount: 4, bonusType: 'untyped', condition: { c: 'flagOff', flag: 'armadura-pesada', label: 'sem armadura pesada' } },
+      ],
+    }),
   electivePower(C, 'Sangue dos Inimigos',
     'Em fúria, quando confirma crítico ou reduz inimigo a 0 PV, recebe +1 cumulativo em ataque e dano (até fim da cena, limitado por nível).'),
   electivePower(C, 'Superstição',
