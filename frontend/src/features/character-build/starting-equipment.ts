@@ -256,3 +256,105 @@ export function startingSlots(
   )
   return { used, capacity: 10 + 2 * Math.abs(forTotal) }
 }
+
+// ─── Sua bagagem (derived view for the Equipamento panel) ────────────
+
+export type BagLine =
+  | { kind: 'item'; name: string; slots: number; qty: number; price?: number; catalogId?: string }
+  | { kind: 'ghost'; label: string; anchor: string }
+
+export type BagGroup = { title: string; lines: BagLine[] }
+
+function bagItem(
+  id: string,
+  qty = 1,
+  withPrice = false,
+): BagLine | null {
+  const item = getCatalogItem(id)
+  if (!item) return null
+  return {
+    kind: 'item',
+    name: item.name,
+    slots: item.slots,
+    qty,
+    price: withPrice ? item.price : undefined,
+    catalogId: id,
+  }
+}
+
+/**
+ * The bag as the step will save it, grouped by source (Kit/Classe/Origem/
+ * Comprado). Pending choices render as ghost lines carrying the anchor id of
+ * their chooser so the panel can scroll-focus it. Derived purely from form
+ * state — never mirrored.
+ */
+export function bagagemGroups(
+  draft: StartingEquipmentDraft,
+  kit: StartingKit,
+  originName: string,
+  originPicks: Record<string, string>,
+  purchases: PurchaseMap,
+): BagGroup[] {
+  const kitLines = KIT_BASE_ITEM_IDS.map((id) => bagItem(id)).filter(
+    (l): l is BagLine => l !== null,
+  )
+  const classe: BagLine[] = []
+  pushPickOrGhost(classe, draft.weaponSimple, 'arma simples', 'chooser-arma-simples')
+  if (kit.weapons === 'simples+marcial') {
+    pushPickOrGhost(classe, draft.weaponMartial, 'arma marcial', 'chooser-arma-marcial')
+  }
+  if (kit.armor !== 'nenhuma') {
+    pushPickOrGhost(classe, draft.armor, 'armadura', 'chooser-armadura')
+  }
+  if (kit.shieldLeve && draft.shield) {
+    const s = bagItem('escudo-leve')
+    if (s) classe.push(s)
+  }
+  const origem: BagLine[] = origemItemGrantsByName(originName).flatMap(
+    (g): BagLine[] => {
+      if (g.kind === 'fixed') return [{ kind: 'item', name: g.name, slots: 1, qty: 1 }]
+      if (g.kind === 'money') return []
+      const picked = picks(originPicks, g.label)
+      if (!picked) return [{ kind: 'ghost', label: g.label, anchor: 'chooser-origem' }]
+      if (g.kind === 'oneOf') {
+        const match = CATALOG_ITEMS.find(
+          (i) => i.name.toLowerCase() === picked.toLowerCase(),
+        )
+        return match
+          ? [bagItem(match.id)].filter((l): l is BagLine => l !== null)
+          : [{ kind: 'item', name: picked, slots: 1, qty: 1 }]
+      }
+      return [bagItem(picked)].filter((l): l is BagLine => l !== null)
+    },
+  )
+  const comprado: BagLine[] = Object.entries(purchases)
+    .filter(([, qty]) => qty > 0)
+    .flatMap(([id, qty]) => {
+      const line = bagItem(id, qty, true)
+      return line ? [line] : []
+    })
+  return [
+    { title: 'Kit', lines: kitLines },
+    { title: 'Classe', lines: classe },
+    { title: 'Origem', lines: origem },
+    { title: 'Comprado', lines: comprado },
+  ].filter((g) => g.lines.length > 0)
+}
+
+function picks(map: Record<string, string>, label: string): string {
+  return map[label] ?? ''
+}
+
+function pushPickOrGhost(
+  out: BagLine[],
+  pickedId: string,
+  ghostLabel: string,
+  anchor: string,
+): void {
+  if (!pickedId) {
+    out.push({ kind: 'ghost', label: ghostLabel, anchor })
+    return
+  }
+  const item = bagItem(pickedId)
+  if (item) out.push(item)
+}
