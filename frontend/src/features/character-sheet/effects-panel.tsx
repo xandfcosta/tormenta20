@@ -199,17 +199,24 @@ function ActiveEffectsSection({ character }: { character: Character }) {
         </h3>
         <div className="flex flex-wrap gap-1">
           <ApplyEffectDialog character={character} />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-6 px-2 text-[11px]"
-            onClick={() => endScene.mutate()}
-            disabled={endScene.isPending}
-            aria-label="Encerrar cena"
-          >
-            Encerrar cena
-          </Button>
+          <ConfirmDialog
+            title="Encerrar cena?"
+            description="Limpa todos os efeitos de cena (buffs, poções ativas)."
+            confirmLabel="Encerrar cena"
+            onConfirm={() => endScene.mutate()}
+            trigger={
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-6 px-2 text-[11px]"
+                disabled={endScene.isPending}
+                aria-label="Encerrar cena"
+              >
+                Encerrar cena
+              </Button>
+            }
+          />
           <ConfirmDialog
             title="Encerrar dia?"
             description="Limpa efeitos de cena e dia."
