@@ -116,6 +116,10 @@ function isUnconditional(m: Modifier): boolean {
     case 'context':
     case 'flagOn':
       return false
+    case 'flagOff':
+      // Auto-evaluated against the collected flags in the main pass —
+      // never a user-toggled conditional.
+      return true
   }
 }
 
@@ -127,6 +131,8 @@ function conditionMet(
   if (m.condition.c === 'wielded')
     return equipped === 'wielded' || equipped === 'wielded2'
   if (m.condition.c === 'vested') return equipped === 'vested'
+  // flagOff passed the flags gate in the main loop — treat as met here.
+  if (m.condition.c === 'flagOff') return true
   return false
 }
 
@@ -140,6 +146,7 @@ function describeCondition(m: Modifier): string {
     case 'context':
       return m.condition.note
     case 'flagOn':
+    case 'flagOff':
       return m.condition.label
     default:
       return ''
@@ -184,9 +191,24 @@ export function computeItemEffects(items: ActiveItem[]): ItemEffects {
   const flags = new Set<string>()
   const conditional: ConditionalEffect[] = []
 
+  // Pre-pass: collect flags from every equipped item FIRST, so auto-evaluated
+  // flag conditions (flagOff) don't depend on item iteration order (the armor
+  // may come after the power that reads its flag).
   for (const item of items) {
     if (item.equipped === null) continue
     for (const m of item.modifiers) {
+      if (m.target.k === 'flag' && conditionMet(m, item.equipped)) {
+        flags.add(m.target.name)
+      }
+    }
+  }
+
+  for (const item of items) {
+    if (item.equipped === null) continue
+    for (const m of item.modifiers) {
+      // flagOff: book-passive that switches off while the flag is set
+      // (Pele de Ferro vs armadura pesada) — resolved here, not user-toggled.
+      if (m.condition?.c === 'flagOff' && flags.has(m.condition.flag)) continue
       if (!isUnconditional(m)) {
         conditional.push({
           source: item.source,

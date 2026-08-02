@@ -142,6 +142,9 @@ export type ItemFlag =
   | 'cannot-apply-dex-to-defense'
   | 'fatigue-on-sleep'
   | 'reach-extends'
+  /** Emitted by every armor-heavy piece while vested — read by flagOff
+   *  conditions like Pele de Ferro ("se não estiver usando armadura pesada"). */
+  | 'armadura-pesada'
 
 export type ModifierCondition =
   | { c: 'always' }
@@ -151,6 +154,9 @@ export type ModifierCondition =
   | { c: 'against'; trait: string }
   | { c: 'context'; note: string }
   | { c: 'flagOn'; flag: string; label: string }
+  /** Auto-evaluated: applies only while the flag is ABSENT (e.g. Pele de
+   *  Ferro's "+4 Defesa se não estiver usando armadura pesada"). */
+  | { c: 'flagOff'; flag: string; label: string }
 
 /**
  * How a `maxPv`/`maxPm` modifier's `amount` scales with the character. Only
