@@ -2,7 +2,7 @@ import {
   ATTRIBUTE_ABBR,
   applyActiveConditionals,
   carismaLossFromPowers,
-  classPowerModifiers,
+  ownedClassPowers,
   computeItemEffects,
   conditionalId,
   DEFORMIDADE_PERICIA_BONUS,
@@ -80,8 +80,7 @@ function activeItemsFor(character: Character): ActiveItem[] {
   if (originMods) items.push(originMods)
   const classMods = classActiveItems(character)
   items.push(...classMods)
-  const generalMods = generalPowerActiveItem(character)
-  if (generalMods) items.push(generalMods)
+  items.push(...generalPowerActiveItem(character))
   const tormentaCar = tormentaCarismaItem(character)
   if (tormentaCar) items.push(tormentaCar)
   return items
@@ -91,13 +90,16 @@ function classActiveItems(character: Character): ActiveItem[] {
   const chosen = parseChoiceSet(character.classPowers)
   const out: ActiveItem[] = []
   for (const entry of character.classes) {
-    const mods = classPowerModifiers(entry.className, entry.level, chosen)
-    if (mods.length === 0) continue
-    out.push({
-      source: `Classe: ${entry.className} ${entry.level}`,
-      equipped: 'vested',
-      modifiers: mods,
-    })
+    // One ActiveItem PER POWER so breakdown dialogs name the actual poder
+    // ("Pele de Ferro +4"), not an opaque "Classe: Bárbaro 6" bundle.
+    for (const power of ownedClassPowers(entry.className, entry.level, chosen)) {
+      if (!power.modifiers || power.modifiers.length === 0) continue
+      out.push({
+        source: power.name,
+        equipped: 'vested',
+        modifiers: power.modifiers,
+      })
+    }
   }
   return out
 }
@@ -110,19 +112,16 @@ function classActiveItems(character: Character): ActiveItem[] {
  * return undefined and are skipped. (Earlier this filtered on a `general.`
  * prefix that the picker never writes, so power modifiers never applied.)
  */
-function generalPowerActiveItem(character: Character): ActiveItem | null {
+function generalPowerActiveItem(character: Character): ActiveItem[] {
   const chosen = parseChoiceSet(character.classPowers)
-  const mods: Modifier[] = []
+  const out: ActiveItem[] = []
   for (const id of chosen) {
     const power = getGeneralPower(id)
-    if (power?.modifiers) mods.push(...power.modifiers)
+    if (!power?.modifiers || power.modifiers.length === 0) continue
+    // Per-power source — same provenance rule as class powers.
+    out.push({ source: power.name, equipped: 'vested', modifiers: power.modifiers })
   }
-  if (mods.length === 0) return null
-  return {
-    source: 'Poderes Gerais',
-    equipped: 'vested',
-    modifiers: mods,
-  }
+  return out
 }
 
 function originActiveItem(character: Character): ActiveItem | null {
