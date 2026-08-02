@@ -95,7 +95,7 @@ export function CharacterSheetMobile({
               value={s.value}
               aria-label={s.label}
               title={s.label}
-              className={BOTTOM_TAB}
+              className={cn(BOTTOM_TAB, s.dim?.(character) && 'opacity-40')}
             >
               <span className="relative flex items-center justify-center">
                 <s.icon className="size-5 shrink-0" />

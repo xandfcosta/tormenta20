@@ -139,7 +139,7 @@ function CombatBox({
             'border-red-800/50  from-red-100 to-red-50 text-red-900',
             'hover:from-red-200 hover:to-red-100',
             'dark:border-red-500/40 dark:from-red-950/40  dark:text-red-200 dark:hover:from-red-900/40',
-            'focus-visible:ring-2 focus-visible:ring-red-500/60',
+            'focus-visible:ring-2 focus-visible:ring-red-500/60 hover:ring-1 hover:ring-red-500/50',
           )}
           aria-label={`${label} ${display}`}
         >

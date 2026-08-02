@@ -1,3 +1,4 @@
+import { ProficienciesPanel } from './proficiencies-panel'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { X } from 'lucide-react'
 import type { ReactNode } from 'react'
@@ -90,6 +91,9 @@ export function EquipmentPanel({ character }: { character: Character }) {
           ))}
         </Pool>
       </div>
+      {/* Proficiências folded here (audit: 8 tabs → 7; the list's payoff is
+          "posso usar esta arma?", an Equipado question). */}
+      <ProficienciesPanel character={character} />
     </section>
   )
 }

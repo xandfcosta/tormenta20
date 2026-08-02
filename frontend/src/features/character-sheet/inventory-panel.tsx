@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { Input } from '@/shared/ui/input'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Plus } from 'lucide-react'
@@ -276,7 +278,11 @@ export function InventoryPanel({ character }: { character: Character }) {
     consumeItem.mutate({ itemId: item.id, input })
   }
 
-  const items = character.items
+  const [itemQuery, setItemQuery] = useState('')
+  const itemQ = itemQuery.trim().toLowerCase()
+  const items = itemQ
+    ? character.items.filter((it) => it.name.toLowerCase().includes(itemQ))
+    : character.items
 
   return (
     <section
@@ -341,7 +347,15 @@ export function InventoryPanel({ character }: { character: Character }) {
         </div>
       </div>
 
-      <div className="shrink-0 px-3 pb-2 pt-2 sm:px-4">
+      <div className="shrink-0 space-y-2 px-3 pb-2 pt-2 sm:px-4">
+        {/* Audit: "quantas rações sobraram?" degrades linearly without search. */}
+        <Input
+          value={itemQuery}
+          onChange={(e) => setItemQuery(e.target.value)}
+          placeholder="Buscar item…"
+          aria-label="Buscar item no inventário"
+          className="h-8 text-xs"
+        />
         <div className="h-2 overflow-hidden rounded-full border border-border bg-muted  ">
           <div
             className={cn(
@@ -356,7 +370,7 @@ export function InventoryPanel({ character }: { character: Character }) {
       <div className="min-h-0 flex-1 overflow-auto px-2 py-1">
         {items.length === 0 ? (
           <p className={cn('px-2 py-3 text-center text-xs', dimText)}>
-            Nenhum item. Use "+ Item" para adicionar.
+            {itemQ ? `Nenhum item para "${itemQuery}".` : 'Nenhum item. Use "+ Item" para adicionar.'}
           </p>
         ) : (
           <div className="grid gap-y-0.5">

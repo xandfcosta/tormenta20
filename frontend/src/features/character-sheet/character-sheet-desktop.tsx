@@ -75,9 +75,17 @@ export function CharacterSheetDesktop({
                   <TabsTrigger
                     value={s.value}
                     aria-label={s.label}
-                    className="relative w-11 flex-1 justify-center p-0"
+                    className={cn(
+                      'relative w-11 flex-1 justify-center p-0 xl:w-32 xl:justify-start xl:gap-2 xl:px-2',
+                      // Irrelevant tabs (Magias for non-casters) stay reachable
+                      // but stop competing for scan attention.
+                      s.dim?.(character) && 'opacity-40',
+                    )}
                   >
-                    <s.icon className="size-5" />
+                    <s.icon className="size-5 shrink-0" />
+                    <span className="hidden truncate text-xs xl:inline">
+                      {s.label}
+                    </span>
                     {s.badge && (
                       <span className="absolute -right-1 -top-1">
                         {s.badge(character)}

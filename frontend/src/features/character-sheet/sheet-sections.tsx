@@ -1,14 +1,6 @@
+import { isCasterCharacter } from './combat-magic-stats'
 import type { ReactNode } from 'react'
-import {
-  BookOpen,
-  Package,
-  ScrollText,
-  Shield,
-  Shirt,
-  Star,
-  Tent,
-  ToggleRight,
-} from 'lucide-react'
+import { BookOpen, Package, ScrollText, Shirt, Star, Tent, ToggleRight } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { Character } from '@/shared/api/api'
 import { AbilitiesPanel } from './abilities-panel'
@@ -19,7 +11,6 @@ import { EffectsPanel } from './effects-panel'
 import { EquipmentPanel } from './equipment-panel'
 import { ExpertisesPanel } from './expertises-panel'
 import { InventoryPanel } from './inventory-panel'
-import { ProficienciesPanel } from './proficiencies-panel'
 import { SpellbookPanel } from './spellbook-panel'
 
 /**
@@ -34,6 +25,8 @@ export type SheetSection = {
   icon: LucideIcon
   badge?: (character: Character) => ReactNode
   render: (character: Character) => ReactNode
+  /** Dim (but keep) the tab when irrelevant for this character. */
+  dim?: (character: Character) => boolean
 }
 
 // The eight non-vitals blocks. The mobile layout prepends a "Vitais" section
@@ -66,12 +59,6 @@ export const SHEET_PANELS: SheetSection[] = [
     render: (c) => <EffectsPanel character={c} />,
   },
   {
-    value: 'proficiencies',
-    label: 'Proficiências',
-    icon: Shield,
-    render: (c) => <ProficienciesPanel character={c} />,
-  },
-  {
     value: 'abilities',
     label: 'Habilidades',
     icon: Star,
@@ -80,6 +67,7 @@ export const SHEET_PANELS: SheetSection[] = [
   },
   {
     value: 'spells',
+    dim: (c) => !isCasterCharacter(c),
     label: 'Magias',
     icon: BookOpen,
     render: (c) => <SpellbookPanel character={c} />,

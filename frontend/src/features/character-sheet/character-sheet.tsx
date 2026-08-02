@@ -1,3 +1,4 @@
+import { SheetSearch } from './sheet-search'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { type ReactNode } from 'react'
 import { useMediaQuery } from '@/shared/lib/use-media-query'
@@ -40,16 +41,14 @@ export function CharacterSheet({
       search: (prev: Record<string, unknown>) => ({ ...prev, tab: next }),
       replace: true,
     })
-  if (isDesktop)
-    return (
-      <CharacterSheetDesktop
-        character={character}
-        inSession={inSession}
-        tab={tab}
-        onTabChange={setTab}
-      />
-    )
-  return (
+  const layout = isDesktop ? (
+    <CharacterSheetDesktop
+      character={character}
+      inSession={inSession}
+      tab={tab}
+      onTabChange={setTab}
+    />
+  ) : (
     <CharacterSheetMobile
       character={character}
       barSlot={mobileBarSlot}
@@ -57,5 +56,11 @@ export function CharacterSheet({
       tab={tab}
       onTabChange={setTab}
     />
+  )
+  return (
+    <>
+      {layout}
+      <SheetSearch character={character} onNavigate={setTab} />
+    </>
   )
 }

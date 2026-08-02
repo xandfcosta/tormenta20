@@ -56,7 +56,12 @@ export function ExpertisesPanel({ character }: { character: Character }) {
       abbr: ATTRIBUTE_ABBR[e.attribute],
       trainedOnly: true,
     }))
-  const allDefs: ExpertiseDef[] = [...EXPERTISES, ...customDefs]
+  // Resistências first (audit: "teste de Reflexos!" is the hottest lookup) —
+  // pinned above the alphabetical rest.
+  const RESISTENCIAS = ['Fortitude', 'Reflexos', 'Vontade']
+  const pinned = EXPERTISES.filter((e) => RESISTENCIAS.includes(e.name))
+  const rest = EXPERTISES.filter((e) => !RESISTENCIAS.includes(e.name))
+  const allDefs: ExpertiseDef[] = [...pinned, ...rest, ...customDefs]
   const filtered =
     query.trim() === ''
       ? allDefs

@@ -140,6 +140,11 @@ export function InventoryRow({
       >
         <span className="flex flex-1 items-center gap-1.5 truncate text-sm text-foreground ">
           <span className="truncate">{item.name}</span>
+          {item.equipped !== null && (
+            <span className="shrink-0 rounded border border-primary/50 px-1 text-[9px] font-semibold uppercase text-primary">
+              equipado
+            </span>
+          )}
           {proficiencyWarning}
         </span>
         <span className="w-12 text-center font-mono text-xs text-foreground ">
@@ -183,6 +188,11 @@ export function InventoryRow({
         <div className="flex min-w-0 flex-1 flex-col leading-tight">
           <span className="flex items-center gap-1.5 truncate text-sm text-foreground ">
             <span className="truncate">{item.name}</span>
+            {item.equipped !== null && (
+            <span className="shrink-0 rounded border border-primary/50 px-1 text-[9px] font-semibold uppercase text-primary">
+              equipado
+            </span>
+          )}
             {proficiencyWarning}
           </span>
           <span className={cn('truncate text-[10px]', dimText)}>
