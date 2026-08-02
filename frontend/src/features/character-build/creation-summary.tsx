@@ -5,7 +5,7 @@ import {
   getCatalogItem,
   STARTING_KIT_BASE_ITEMS,
 } from '@tormenta20/t20-data'
-import { originStartingItems, purchasesTotal } from './starting-equipment'
+import { origemItemsPayload, purchasesTotal } from './starting-equipment'
 import type { ReactNode } from 'react'
 import { Card } from '@/shared/ui/card'
 import { StatCell } from '@/shared/ui/stat-cell'
@@ -386,7 +386,12 @@ function EquipamentoSummary({ values }: { values: CharacterFormValues }) {
     .filter(Boolean)
     .map((id) => getCatalogItem(id as string)?.name ?? id)
   if (values.startingShield) picks.push('Escudo leve')
-  const origem = originStartingItems(values.origin)
+  // Resolve origem grants through the same payload mapper the submit uses, so
+  // the Resumo shows the PICKED item (or the pending grant label as fallback).
+  const origem = origemItemsPayload(
+    values.origin,
+    values.originItemPicks ?? {},
+  ).map((i) => i.name)
   const purchases = values.startingPurchases ?? {}
   const bought = Object.entries(purchases)
     .filter(([, qty]) => qty > 0)
