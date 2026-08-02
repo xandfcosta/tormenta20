@@ -497,6 +497,32 @@ describe('CharacterItemsService.deleteItem — cross-character guard', () => {
   });
 });
 
+describe('CharactersService.updateConditions — condições do livro (p394)', () => {
+  it('persiste ids válidos do catálogo', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter({ id: 1, ownerId: 7 } as never);
+    const service = await makeService(prisma);
+    const result = await service.updateConditions(7, 1, {
+      activeConditions: ['caido', 'agarrado'],
+    });
+    expect(JSON.parse(result.activeConditions)).toEqual(['caido', 'agarrado']);
+    expect(prisma.characterUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { activeConditions: JSON.stringify(['caido', 'agarrado']) },
+      }),
+    );
+  });
+
+  it('rejeita id desconhecido com o valor ofensor', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter({ id: 1, ownerId: 7 } as never);
+    const service = await makeService(prisma);
+    await expect(
+      service.updateConditions(7, 1, { activeConditions: ['dormindo-demais'] }),
+    ).rejects.toThrow(/dormindo-demais/);
+  });
+});
+
 describe('CharactersService.create — creation-time ability choices', () => {
   const baseDto = (extra: Partial<CreateCharacterDto>): CreateCharacterDto =>
     ({

@@ -1,3 +1,4 @@
+import { ConditionPips } from './conditions-section'
 import { Minus, Plus } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -45,6 +46,7 @@ export function CharacterHud({
             </div>
             {/* Class badges sit under the info, just above the PV/PM bars. */}
             <ClassBadges character={character} className="flex-wrap" />
+            <ConditionPips character={character} />
             <div className="mt-auto flex flex-col gap-1">
               <HudVital
                 label="Vida"

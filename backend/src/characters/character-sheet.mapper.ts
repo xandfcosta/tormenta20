@@ -63,6 +63,8 @@ export type CharacterDbRow = {
   classPowers?: string | null;
   originChoices?: string | null;
   raceAbilityChoices?: string | null;
+  /** JSON ConditionId[] — condições do livro ativas. */
+  activeConditions?: string | null;
   /** JSON Record<powerOrBenefitId, string[]> — sub-choices; free-pick origem
    *  benefits (powerPick) store the concrete power id here. */
   powerChoices?: string | null;
@@ -427,6 +429,9 @@ export function toCharacterInput(row: CharacterDbRow): CharacterInput {
     ],
     originChoices: jsonStringArray(row.originChoices),
     raceAbilityChoices: jsonStringArray(row.raceAbilityChoices),
+    activeConditions: jsonStringArray(
+      row.activeConditions,
+    ) as CharacterInput['activeConditions'],
     deformidade: deformidadeFromRow(row, raceAttr),
   };
 }

@@ -98,6 +98,8 @@ export type Character = {
   proficiencies: string
   /** JSON-encoded string[] of race ability variant ids the player picked */
   raceAbilityChoices: string
+  /** JSON ConditionId[] — condições do livro ativas (p394-395). */
+  activeConditions: string
   /** JSON-encoded { floatingPicks?, ascendencia? } — primary-race attribute
    *  choices; stored attributes are BASE and race is derived from these. */
   raceAttributeChoices: string
@@ -520,6 +522,11 @@ export const api = {
       request<AbilityChoicesResult>(`/characters/${id}/abilities`, {
         method: 'PATCH',
         body: JSON.stringify(input),
+      }),
+    updateConditions: (id: number, activeConditions: string[]) =>
+      request<{ activeConditions: string }>(`/characters/${id}/conditions`, {
+        method: 'PATCH',
+        body: JSON.stringify({ activeConditions }),
       }),
     updateClassLevel: (id: number, input: UpdateClassLevelInput) =>
       request<ClassLevelResult>(`/characters/${id}/classes/level`, {
