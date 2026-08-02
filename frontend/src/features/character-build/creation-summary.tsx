@@ -5,7 +5,12 @@ import {
   getCatalogItem,
   STARTING_KIT_BASE_ITEMS,
 } from '@tormenta20/t20-data'
-import { origemItemsPayload, purchasesTotal } from './starting-equipment'
+import {
+  origemItemsPayload,
+  purchasesTotal,
+  startingLoadout,
+  startingSlots,
+} from './starting-equipment'
 import type { ReactNode } from 'react'
 import { Card } from '@/shared/ui/card'
 import { StatCell } from '@/shared/ui/stat-cell'
@@ -230,7 +235,7 @@ function SummaryBody({
       </SummaryRow>
 
       <SummaryRow slug="equipamento" label="Equipamento">
-        <EquipamentoSummary values={values} />
+        <EquipamentoSummary values={values} raceChoices={raceChoices} />
       </SummaryRow>
 
       <SummaryRow slug="vitalidade" label="Vitalidade">
@@ -375,9 +380,32 @@ function PickedBenefitPower({
 }
 
 /** Chosen kit picks + origem itens + T$ — the step's CHOICES, not the pool. */
-function EquipamentoSummary({ values }: { values: CharacterFormValues }) {
+function EquipamentoSummary({
+  values,
+  raceChoices,
+}: {
+  values: CharacterFormValues
+  raceChoices: RaceChoiceState
+}) {
   const primary = values.classes[0]?.className
   if (!primary) return <Empty />
+  const level = values.classes.reduce((n, c) => n + (c.level || 0), 0) || 1
+  const forTotal =
+    (values.strength ?? 0) +
+    (appliedRaceDeltas(values.races ?? [], raceChoices).strength ?? 0)
+  const slots = startingSlots(
+    {
+      weaponSimple: values.startingWeaponSimple ?? '',
+      weaponMartial: values.startingWeaponMartial ?? '',
+      armor: values.startingArmor ?? '',
+      shield: values.startingShield ?? false,
+    },
+    startingLoadout(primary, level).kit,
+    values.origin,
+    values.originItemPicks ?? {},
+    values.startingPurchases ?? {},
+    forTotal,
+  )
   const picks = [
     values.startingWeaponSimple,
     values.startingWeaponMartial,
@@ -420,6 +448,16 @@ function EquipamentoSummary({ values }: { values: CharacterFormValues }) {
       <p className="text-[11px] text-muted-foreground">
         T$ restante:{' '}
         {remaining.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}
+        <span
+          className={
+            slots.used > slots.capacity
+              ? ' font-semibold text-[color:var(--hp-hurt)]'
+              : undefined
+          }
+        >
+          {' '}· Espaços: {slots.used}/{slots.capacity}
+          {slots.used > slots.capacity ? ' (sobrecarregado)' : ''}
+        </span>
       </p>
     </div>
   )
