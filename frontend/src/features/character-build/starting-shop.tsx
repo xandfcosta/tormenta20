@@ -1,12 +1,11 @@
-import { Search, X } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { useState } from 'react'
-import { type CatalogItem, getCatalogItem } from '@tormenta20/t20-data'
+import type { CatalogItem } from '@tormenta20/t20-data'
 import { Input } from '@/shared/ui/input'
 import { VirtualList } from '@/shared/ui/virtual-list'
 import { cn } from '@/shared/lib/utils'
 import {
   type PurchaseMap,
-  purchasesTotal,
   SHOP_CATEGORIES,
   type ShopCategoryKey,
   shopCatalog,
@@ -72,7 +71,6 @@ export function StartingShop({
         </p>
       ) : (
         <>
-          <PurchasedSummary purchases={purchases} onRemove={(id) => setQty(id, 0)} />
           <div className="relative">
             <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -124,51 +122,6 @@ export function StartingShop({
           )}
         </>
       )}
-    </div>
-  )
-}
-
-/** Compact review of everything bought: name ×qty · subtotal, with remove. */
-function PurchasedSummary({
-  purchases,
-  onRemove,
-}: {
-  purchases: PurchaseMap
-  onRemove: (id: string) => void
-}) {
-  const rows = Object.entries(purchases).filter(([, qty]) => qty > 0)
-  if (rows.length === 0) return null
-  return (
-    <div className="space-y-1 rounded-md border border-border p-2">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-        Comprado · {tibarFmt(purchasesTotal(purchases))}
-      </p>
-      <ul className="flex flex-wrap gap-1.5">
-        {rows.map(([id, qty]) => {
-          const item = getCatalogItem(id)
-          if (!item) return null
-          return (
-            <li
-              key={id}
-              className="flex items-center gap-1 rounded-md border border-border px-1.5 py-0.5 text-xs"
-            >
-              {item.name}
-              {qty > 1 ? ` ×${qty}` : ''}
-              <span className="text-[10px] text-muted-foreground">
-                · {tibarFmt(item.price * qty)}
-              </span>
-              <button
-                type="button"
-                aria-label={`Remover ${item.name}`}
-                onClick={() => onRemove(id)}
-                className="ml-0.5 rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
-              >
-                <X className="size-3" />
-              </button>
-            </li>
-          )
-        })}
-      </ul>
     </div>
   )
 }

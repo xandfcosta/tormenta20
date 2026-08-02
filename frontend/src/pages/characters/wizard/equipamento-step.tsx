@@ -3,14 +3,15 @@ import {
   STARTING_TIBARES_DICE,
   type StartingKit,
 } from '@tormenta20/t20-data'
+import { Link } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Combobox } from '@/shared/ui/combobox'
 import { Field, FieldLabel } from '@/shared/ui/field'
 import { NumberInput } from '@/shared/ui/number-input'
 import { cn } from '@/shared/lib/utils'
-import { Link } from '@tanstack/react-router'
 import { useCreationWizard } from '@/features/character-build/creation-wizard-context'
 import {
+  bagagemGroups,
   lightArmorOptions,
   origemRolledMoneySum,
   purchasesTotal,
@@ -18,10 +19,8 @@ import {
   startingSlots,
   weaponOptions,
 } from '@/features/character-build/starting-equipment'
-import {
-  appliedRaceDeltas,
-  type RaceChoiceState,
-} from '@/features/character-build/grant-helpers'
+import { appliedRaceDeltas } from '@/features/character-build/grant-helpers'
+import { BagagemPanel } from '@/features/character-build/bagagem-panel'
 import { OrigemItemsSection } from '@/features/character-build/origem-items-section'
 import { StartingShop } from '@/features/character-build/starting-shop'
 
@@ -41,10 +40,10 @@ type EquipValues = {
 }
 
 /**
- * Equipamento inicial (book p140): unified L1 kit narrowed by the class's
- * proficiências + origem itens + Tabela 3-1 money. Homebrew: kit pickers stay
- * available at any level; money defaults to the level's table value and stays
- * editable. Under-filling is soft — the sheet inventory finishes the job.
+ * Equipamento inicial (book p140) — design "Sua bagagem": choosers on the
+ * left, a sticky derived inventory preview on the right (kit + picks + origem
+ * + compras) with the slots bar and wallet chip as the step's only gauges.
+ * Ghost lines in the bag scroll-focus their chooser. Under-filling is soft.
  */
 export function EquipamentoStep() {
   const { form, raceChoices } = useCreationWizard()
@@ -55,7 +54,7 @@ export function EquipamentoStep() {
           Equipamento inicial
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent>
         <form.Subscribe selector={(s: { values: EquipValues }) => s.values}>
           {(v: EquipValues) => {
             const primary = v.classes[0]
@@ -73,54 +72,86 @@ export function EquipamentoStep() {
               )
             }
             const level = v.classes.reduce((n, c) => n + (c.level || 0), 0) || 1
-            const { kit, tableMoney } = startingLoadout(
-              primary.className,
-              level,
+            const { kit, tableMoney } = startingLoadout(primary.className, level)
+            const draft = {
+              weaponSimple: v.startingWeaponSimple ?? '',
+              weaponMartial: v.startingWeaponMartial ?? '',
+              armor: v.startingArmor ?? '',
+              shield: v.startingShield ?? false,
+            }
+            const forTotal =
+              (v.strength ?? 0) +
+              (appliedRaceDeltas(v.races ?? [], raceChoices).strength ?? 0)
+            const slots = startingSlots(
+              draft,
+              kit,
+              v.origin,
+              v.originItemPicks ?? {},
+              v.startingPurchases ?? {},
+              forTotal,
             )
+            const setPurchaseQty = (id: string, qty: number) => {
+              const next = { ...(v.startingPurchases ?? {}) }
+              if (qty <= 0) delete next[id]
+              else next[id] = qty
+              form.setFieldValue('startingPurchases', next)
+            }
             return (
-              <>
-                <SlotsGauge values={v} kit={kit} raceChoices={raceChoices} />
-                <KitBaseLine />
-                <WeaponPickers form={form} values={v} kit={kit} />
-                <ArmorPicker form={form} values={v} kit={kit} />
-                <OrigemItemsSection
-                  originName={v.origin}
-                  picks={v.originItemPicks ?? {}}
-                  onPick={(label, val) =>
-                    form.setFieldValue('originItemPicks', {
-                      ...(v.originItemPicks ?? {}),
-                      [label]: val,
-                    })
-                  }
-                  onMoneyRoll={(_label, amount) =>
-                    form.setFieldValue('tibar', (v.tibar ?? 0) + amount)
-                  }
-                />
-                <ExtrasNote kit={kit} />
-                <div className="space-y-3 rounded-lg border border-border p-3">
-                <MoneyField
-                  form={form}
-                  tibar={v.tibar}
-                  level={level}
-                  tableMoney={tableMoney}
-                  spent={purchasesTotal(v.startingPurchases ?? {})}
-                  rolled={v.startingMoneyRolled ?? false}
-                  origemRolled={origemRolledMoneySum(
-                    v.origin,
-                    v.originItemPicks ?? {},
-                  )}
-                />
-                <StartingShop
-                  purchases={v.startingPurchases ?? {}}
-                  remaining={
-                    (v.tibar ?? 0) - purchasesTotal(v.startingPurchases ?? {})
-                  }
-                  onChange={(next) =>
-                    form.setFieldValue('startingPurchases', next)
-                  }
-                />
+              <div className="space-y-4 lg:grid lg:grid-cols-[1fr_16.5rem] lg:items-start lg:gap-4 lg:space-y-0">
+                <div className="lg:order-2">
+                  <BagagemPanel
+                    groups={bagagemGroups(
+                      draft,
+                      kit,
+                      v.origin,
+                      v.originItemPicks ?? {},
+                      v.startingPurchases ?? {},
+                    )}
+                    slotsUsed={slots.used}
+                    slotsCapacity={slots.capacity}
+                    tibar={v.tibar ?? 0}
+                    purchases={v.startingPurchases ?? {}}
+                    onPurchaseQty={setPurchaseQty}
+                  />
                 </div>
-              </>
+                <div className="space-y-4 lg:order-1">
+                  <ClasseChoosers form={form} values={v} kit={kit} />
+                  <OrigemItemsSection
+                    originName={v.origin}
+                    picks={v.originItemPicks ?? {}}
+                    onPick={(label, val) =>
+                      form.setFieldValue('originItemPicks', {
+                        ...(v.originItemPicks ?? {}),
+                        [label]: val,
+                      })
+                    }
+                    onMoneyRoll={(_label, amount) =>
+                      form.setFieldValue('tibar', (v.tibar ?? 0) + amount)
+                    }
+                  />
+                  <ExtrasNote kit={kit} />
+                  <MoneyField
+                    form={form}
+                    tibar={v.tibar}
+                    level={level}
+                    tableMoney={tableMoney}
+                    rolled={v.startingMoneyRolled ?? false}
+                    origemRolled={origemRolledMoneySum(
+                      v.origin,
+                      v.originItemPicks ?? {},
+                    )}
+                  />
+                  <StartingShop
+                    purchases={v.startingPurchases ?? {}}
+                    remaining={
+                      (v.tibar ?? 0) - purchasesTotal(v.startingPurchases ?? {})
+                    }
+                    onChange={(next) =>
+                      form.setFieldValue('startingPurchases', next)
+                    }
+                  />
+                </div>
+              </div>
             )
           }}
         </form.Subscribe>
@@ -137,16 +168,31 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   )
 }
 
-function KitBaseLine() {
+type StepForm = ReturnType<typeof useCreationWizard>['form']
+
+/** Kit picks grouped under one bordered "Kit da classe" block. */
+function ClasseChoosers({
+  form,
+  values,
+  kit,
+}: {
+  form: StepForm
+  values: EquipValues
+  kit: StartingKit
+}) {
   return (
-    <div className="space-y-1">
-      <SectionLabel>Kit · automático</SectionLabel>
-      <p className="text-sm">{STARTING_KIT_BASE_ITEMS.join(' · ')}</p>
+    <div className="space-y-3 rounded-lg border border-border p-3">
+      <SectionLabel>
+        Kit da classe{' '}
+        <span className="normal-case tracking-normal">
+          · {STARTING_KIT_BASE_ITEMS.join(' · ')} (automático)
+        </span>
+      </SectionLabel>
+      <WeaponPickers form={form} values={values} kit={kit} />
+      <ArmorPicker form={form} values={values} kit={kit} />
     </div>
   )
 }
-
-type StepForm = ReturnType<typeof useCreationWizard>['form']
 
 function WeaponPickers({
   form,
@@ -161,7 +207,7 @@ function WeaponPickers({
   const martial = weaponOptions('weapon-martial')
   return (
     <div className="flex flex-wrap gap-3">
-      <Field className="min-w-52">
+      <Field className="min-w-52" id="chooser-arma-simples">
         <FieldLabel>Arma simples · escolha 1</FieldLabel>
         <Combobox
           options={simple.map((w) => ({ value: w.id, label: w.name }))}
@@ -175,7 +221,7 @@ function WeaponPickers({
         />
       </Field>
       {kit.weapons === 'simples+marcial' && (
-        <Field className="min-w-52">
+        <Field className="min-w-52" id="chooser-arma-marcial">
           <FieldLabel>Arma marcial · escolha 1 (proficiente)</FieldLabel>
           <Combobox
             options={martial.map((w) => ({ value: w.id, label: w.name }))}
@@ -204,12 +250,9 @@ function ArmorPicker({
 }) {
   if (kit.armor === 'nenhuma') {
     return (
-      <div className="space-y-1">
-        <SectionLabel>Armadura</SectionLabel>
-        <p className="text-sm text-muted-foreground">
-          Arcanistas começam sem armadura (p140).
-        </p>
-      </div>
+      <p className="text-sm text-muted-foreground">
+        Arcanistas começam sem armadura (p140).
+      </p>
     )
   }
   const options =
@@ -217,14 +260,9 @@ function ArmorPicker({
       ? [{ value: 'brunea', label: 'Brunea (proficiência em pesadas)' }]
       : lightArmorOptions().map((a) => ({ value: a.id, label: a.name }))
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1.5" id="chooser-armadura">
       <SectionLabel>
         Armadura{kit.armor === 'brunea' ? ' · brunea' : ' · leve a escolha'}
-        {!values.startingArmor && (
-          <span className="ml-1.5 normal-case tracking-normal text-[color:var(--hp-hurt)]">
-            · escolha pendente
-          </span>
-        )}
       </SectionLabel>
       <div className="flex flex-wrap gap-1.5">
         {options.map((o) => {
@@ -238,12 +276,13 @@ function ArmorPicker({
                 form.setFieldValue('startingArmor', active ? '' : o.value)
               }
               className={cn(
-                'rounded-md border px-2.5 py-1 text-xs transition-colors',
+                'rounded-md border px-2.5 py-1.5 text-xs transition-colors sm:py-1',
                 active
                   ? 'border-primary bg-accent font-medium'
                   : 'border-border text-muted-foreground hover:bg-accent',
               )}
             >
+              {active ? '✓ ' : ''}
               {o.label}
             </button>
           )
@@ -256,7 +295,7 @@ function ArmorPicker({
               form.setFieldValue('startingShield', !values.startingShield)
             }
             className={cn(
-              'rounded-md border px-2.5 py-1 text-xs transition-colors',
+              'rounded-md border px-2.5 py-1.5 text-xs transition-colors sm:py-1',
               values.startingShield
                 ? 'border-primary bg-accent font-medium'
                 : 'border-border text-muted-foreground hover:bg-accent',
@@ -287,46 +326,6 @@ function ExtrasNote({ kit }: { kit: StartingKit }) {
   )
 }
 
-/** Espaços de inventário (p141): usados por este passo vs. 10 + 2×|FOR|. */
-function SlotsGauge({
-  values,
-  kit,
-  raceChoices,
-}: {
-  values: EquipValues
-  kit: StartingKit
-  raceChoices: RaceChoiceState
-}) {
-  const forTotal =
-    (values.strength ?? 0) +
-    (appliedRaceDeltas(values.races ?? [], raceChoices).strength ?? 0)
-  const { used, capacity } = startingSlots(
-    {
-      weaponSimple: values.startingWeaponSimple ?? '',
-      weaponMartial: values.startingWeaponMartial ?? '',
-      armor: values.startingArmor ?? '',
-      shield: values.startingShield ?? false,
-    },
-    kit,
-    values.origin,
-    values.originItemPicks ?? {},
-    values.startingPurchases ?? {},
-    forTotal,
-  )
-  const over = used > capacity
-  return (
-    <p
-      className={cn(
-        'text-xs',
-        over ? 'font-semibold text-[color:var(--hp-hurt)]' : 'text-muted-foreground',
-      )}
-    >
-      Espaços de inventário: {used} de {capacity} (10 + 2×FOR)
-      {over ? ' — personagem sobrecarregado (p141)' : ''}
-    </p>
-  )
-}
-
 function rollDice(count: number, sides: number): number {
   let total = 0
   for (let i = 0; i < count; i++) {
@@ -335,15 +334,11 @@ function rollDice(count: number, sides: number): number {
   return total
 }
 
-const tibarFmt = (v: number) =>
-  v.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
-
 function MoneyField({
   form,
   tibar,
   level,
   tableMoney,
-  spent,
   rolled,
   origemRolled,
 }: {
@@ -351,27 +346,12 @@ function MoneyField({
   tibar: number
   level: number
   tableMoney: number | null
-  spent: number
   rolled: boolean
   origemRolled: number
 }) {
-  const remaining = (tibar ?? 0) - spent
   return (
     <div className="space-y-1.5">
       <SectionLabel>Dinheiro inicial · Tabela 3-1</SectionLabel>
-      {spent > 0 && (
-        <p
-          className={cn(
-            'text-xs',
-            remaining < 0
-              ? 'font-semibold text-[color:var(--hp-hurt)]'
-              : 'text-muted-foreground',
-          )}
-        >
-          Gasto T$ {tibarFmt(spent)} · Restante T$ {tibarFmt(remaining)}
-          {remaining < 0 ? ' — remova itens da loja' : ''}
-        </p>
-      )}
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm">T$</span>
         <NumberInput

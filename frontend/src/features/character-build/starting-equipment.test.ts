@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  bagagemGroups,
   lightArmorOptions,
   purchasesPayload,
   purchasesTotal,
@@ -180,5 +181,53 @@ describe('startingSlots — espaços de inventário (p141)', () => {
       0,
     )
     expect(withBuys.used).toBe(none.used + 4)
+  })
+})
+
+describe('bagagemGroups — Sua bagagem derivada', () => {
+  const kit = startingLoadout('Guerreiro', 1).kit
+
+  it('agrupa por fonte com fantasmas para escolhas pendentes', () => {
+    const groups = bagagemGroups(
+      { weaponSimple: '', weaponMartial: 'espada-longa', armor: '', shield: true },
+      kit,
+      'Acólito',
+      {},
+      { adaga: 2 },
+    )
+    expect(groups.map((g) => g.title)).toEqual(['Kit', 'Classe', 'Origem', 'Comprado'])
+    const classe = groups.find((g) => g.title === 'Classe')
+    expect(classe?.lines[0]).toMatchObject({ kind: 'ghost', label: 'arma simples' })
+    expect(
+      classe?.lines.some((l) => l.kind === 'item' && l.name === 'Espada longa'),
+    ).toBe(true)
+    expect(
+      classe?.lines.some((l) => l.kind === 'ghost' && l.label === 'armadura'),
+    ).toBe(true)
+    const comprado = groups.find((g) => g.title === 'Comprado')
+    expect(comprado?.lines[0]).toMatchObject({ kind: 'item', name: 'Adaga', qty: 2 })
+  })
+
+  it('grupos vazios somem (sem origem, sem compras)', () => {
+    const groups = bagagemGroups(
+      { weaponSimple: 'adaga', weaponMartial: 'espada-longa', armor: 'brunea', shield: false },
+      kit,
+      '',
+      {},
+      {},
+    )
+    expect(groups.map((g) => g.title)).toEqual(['Kit', 'Classe'])
+  })
+
+  it('grant de origem sem pick vira fantasma', () => {
+    const groups = bagagemGroups(
+      { weaponSimple: '', weaponMartial: '', armor: '', shield: false },
+      kit,
+      'Refugiado',
+      {},
+      {},
+    )
+    const origem = groups.find((g) => g.title === 'Origem')
+    expect(origem?.lines.some((l) => l.kind === 'ghost')).toBe(true)
   })
 })
