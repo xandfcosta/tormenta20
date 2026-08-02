@@ -1,5 +1,11 @@
-import { Crosshair, Shield, Sparkles, Sword, Zap } from 'lucide-react'
-import { statFor } from '@tormenta20/t20-data'
+import { Crosshair, Shield, ShieldCheck, Sparkles, Sword, Zap } from 'lucide-react'
+import {
+  ATTRIBUTE_KEYS,
+  CLASS_SPELLCASTING_ATTRIBUTE,
+  SPELLCASTER_CLASSES,
+  spellSaveDc,
+  statFor,
+} from '@tormenta20/t20-data'
 import {
   Dialog,
   DialogContent,
@@ -8,6 +14,7 @@ import {
   DialogTrigger,
 } from '@/shared/ui/dialog'
 import type { Character } from '@/shared/api/api'
+import { getCatalogItem } from '@tormenta20/t20-data'
 import {
   attributeTotal,
   defenseTotal,
@@ -195,6 +202,130 @@ function CombatBox({
   )
 }
 
+/** True when any of the character's classes casts spells (contextual HUD). */
+export function isCasterCharacter(character: Character): boolean {
+  return character.classes.some((c) =>
+    (SPELLCASTER_CLASSES as readonly string[]).includes(c.className),
+  )
+}
+
+/**
+ * Fort/Ref/Von triple — the most reactive numbers in the game ("teste de
+ * Reflexos CD 20!") promoted to the always-visible HUD. Same engine path as
+ * the attack boxes, same breakdown dialogs.
+ */
+export function SavesStats({ character }: { character: Character }) {
+  const effects = useCharacterEffects(character)
+  const saves = [
+    { name: 'Fortitude', attribute: 'constitution', abbr: 'CON' },
+    { name: 'Reflexos', attribute: 'dexterity', abbr: 'DES' },
+    { name: 'Vontade', attribute: 'wisdom', abbr: 'SAB' },
+  ] as const
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      {saves.map((meta) => {
+        const state = expertiseStateFor(character, meta)
+        const total = expertiseTotalWithItems(character, state, effects)
+        const rows: StatRow[] = [
+          { label: '½ nível', amount: total.halfLevel },
+          { label: meta.abbr, amount: total.attrValue },
+        ]
+        if (total.training) rows.push({ label: 'Treino', amount: total.training })
+        for (const c of total.itemContributions) {
+          rows.push({ label: c.source, amount: c.amount })
+        }
+        return (
+          <CombatBox
+            key={meta.name}
+            label={meta.name.slice(0, 4)}
+            value={total.total}
+            rows={rows}
+            icon={<ShieldCheck className="size-3.5" />}
+            signed
+          />
+        )
+      })}
+    </div>
+  )
+}
+
+/**
+ * Equipped-weapon formula cards: "Machado · +10 · 1d12+7 · 19/x3" so a hit
+ * never costs a tab switch to roll damage. Attack = Luta/Pontaria + global
+ * attack mods (same math as the Atq boxes); damage adds FOR for melee/thrown
+ * (engine convention).
+ */
+export function WeaponFormulaCards({ character }: { character: Character }) {
+  const effects = useCharacterEffects(character)
+  const attackAll = statFor(effects, { k: 'attack', scope: 'all' })
+  const forTotal = attributeTotal(character, 'strength', effects)
+  const weapons = character.items
+    .filter((i) => i.equipped === 'wielded' || i.equipped === 'wielded2')
+    .flatMap((i) => {
+      const catalog = i.catalogId ? getCatalogItem(i.catalogId) : undefined
+      return catalog?.weapon ? [{ name: i.name, weapon: catalog.weapon }] : []
+    })
+    .slice(0, 2)
+  if (weapons.length === 0) {
+    return (
+      <p className="self-center text-center text-xs italic text-muted-foreground">
+        Nenhuma arma empunhada.
+      </p>
+    )
+  }
+  return (
+    <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${weapons.length}, 1fr)` }}>
+      {weapons.map(({ name, weapon }) => {
+        const skill = weapon.purpose === 'ranged' ? 'Pontaria' : 'Luta'
+        const state = expertiseStateFor(character, {
+          name: skill,
+          attribute: skill === 'Luta' ? 'strength' : 'dexterity',
+          abbr: skill === 'Luta' ? 'FOR' : 'DES',
+        })
+        const attack =
+          expertiseTotalWithItems(character, state, effects).total +
+          attackAll.total
+        const dmgBonus = weapon.purpose === 'ranged' ? 0 : forTotal
+        const crit = `${weapon.critRange < 20 ? `${weapon.critRange}-20` : '20'}/x${weapon.critMult}`
+        return (
+          <div
+            key={name}
+            className="flex flex-col items-center rounded-lg border-2 border-red-800/50 p-2 text-center dark:border-red-500/40"
+            title={`${skill} ${signed(attack)} · dano ${weapon.damage}${dmgBonus ? signed(dmgBonus) : ''} · crítico ${crit}`}
+          >
+            <span className="max-w-full truncate text-[9px] font-bold uppercase tracking-widest text-red-800/80 dark:text-red-300/80">
+              {name}
+            </span>
+            <span className="mt-0.5 font-mono text-sm font-bold leading-tight text-red-800 dark:text-red-100">
+              {signed(attack)} · {weapon.damage}
+              {dmgBonus !== 0 ? signed(dmgBonus) : ''}
+            </span>
+            <span className="text-[10px] text-muted-foreground">{crit}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/** Best spell save CD across the character's caster classes (absolute, not
+ *  the item bonus): CD = spellSaveDc(nível, atributo-chave) + bônus de itens. */
+function bestBaseSpellCd(character: Character): number | null {
+  let best = -Infinity
+  for (const entry of character.classes) {
+    const attr =
+      CLASS_SPELLCASTING_ATTRIBUTE[
+        entry.className as keyof typeof CLASS_SPELLCASTING_ATTRIBUTE
+      ]
+    if (!attr) continue
+    const key = ATTRIBUTE_KEYS.find((k) => k === attr)
+    if (!key) continue
+    const dc = spellSaveDc(character.level, character[key])
+    if (dc > best) best = dc
+  }
+  return best === -Infinity ? null : best
+}
+
 export function MagicStats({ character }: { character: Character }) {
   const effects = useCharacterEffects(character)
   const pmLimit = pmLimitTotal(character, effects)
@@ -230,15 +361,17 @@ export function MagicStats({ character }: { character: Character }) {
       />
       <MagicBox
         label="CD Magia"
-        value={dc.total}
-        rows={
-          showDC
+        value={(bestBaseSpellCd(character) ?? 0) + dc.total}
+        rows={[
+          {
+            label: 'CD base (nível + atributo-chave)',
+            amount: bestBaseSpellCd(character) ?? 0,
+          },
+          ...(showDC
             ? dcRows
-            : [{ label: 'Sem bônus de itens', amount: 0, muted: true }]
-        }
+            : [{ label: 'Sem bônus de itens', amount: 0, muted: true }]),
+        ]}
         icon={<Sparkles className="size-3.5" />}
-        signed
-        prefix="+"
       />
       <MagicBox
         label="Custo PM"
