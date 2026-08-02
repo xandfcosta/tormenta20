@@ -49,7 +49,7 @@ export function CharacterHud({
             <div className="flex items-start justify-between gap-2">
               <SheetIdentityText character={character} />
               <div className="flex shrink-0 items-center gap-1.5">
-                <MobileDefChip character={character} className="lg:hidden" />
+                <MobileDefChip character={character} className="md:hidden" />
                 <LevelBadge character={character} />
               </div>
             </div>
@@ -78,7 +78,7 @@ export function CharacterHud({
         {/* Desktop only: two short rows that expand to fill the rest of the bar
             — attributes on top, combat + magic below. The wide region keeps
             every box's corner icon clear of its label. */}
-        <div className="hidden min-w-0 flex-1 flex-col justify-center gap-1.5 lg:flex">
+        <div className="hidden min-w-0 flex-1 flex-col justify-center gap-1.5 md:flex">
           {/* Row A: the reactive numbers — defense/attacks + the three saves
               ("teste de Reflexos!"). Row B: contextual — casters get the magic
               triple, martials get equipped-weapon formulas; attributes keep a

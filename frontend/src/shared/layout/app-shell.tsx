@@ -29,6 +29,9 @@ type AppShellProps = {
   /** Full-screen "match" mode — drops the top/bottom nav + drawer so a
    * live session owns the whole viewport with its own session bar. */
   bare?: boolean
+  /** Keep TopNav but drop the phone BottomNav (routes with their own bottom
+   *  bar, e.g. the character sheet — avoids two stacked tap surfaces). */
+  hideBottomNav?: boolean
   children: ReactNode
 }
 
@@ -39,6 +42,7 @@ function AppShell({
   onLogout,
   logoutPending,
   bare,
+  hideBottomNav,
   children,
 }: AppShellProps) {
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -76,7 +80,7 @@ function AppShell({
         {children}
       </main>
 
-      {user && <BottomNav destinations={destinations} />}
+      {user && !hideBottomNav && <BottomNav destinations={destinations} />}
 
       <NavDrawer
         open={drawerOpen}

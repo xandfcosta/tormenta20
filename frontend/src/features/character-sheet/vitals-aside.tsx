@@ -1,7 +1,13 @@
 import type { Character } from '@/shared/api/api'
 import { attributeTotal, useCharacterEffects } from '@/entities/character/derived'
 import { cn } from '@/shared/lib/utils'
-import { CombatStats, MagicStats } from './combat-magic-stats'
+import {
+  CombatStats,
+  isCasterCharacter,
+  MagicStats,
+  SavesStats,
+  WeaponFormulaCards,
+} from './combat-magic-stats'
 
 // PV/PM live in the bottom HUD (see `CharacterHud`); this column now holds the
 // static vitals — attributes and the combat/magic stat blocks.
@@ -25,7 +31,12 @@ export function VitalsAside({
       />
 
       <CombatStats character={character} />
-      <MagicStats character={character} />
+      <SavesStats character={character} />
+      {isCasterCharacter(character) ? (
+        <MagicStats character={character} />
+      ) : (
+        <WeaponFormulaCards character={character} />
+      )}
     </aside>
   )
 }
