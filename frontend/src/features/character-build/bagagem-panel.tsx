@@ -188,8 +188,11 @@ function BagLineRow({
           </span>
         )}
       </span>
-      <span className="shrink-0 text-[10px] text-muted-foreground">
-        {line.slots * line.qty > 0 ? `${line.slots * line.qty}e` : '—'}
+      <span
+        className="shrink-0 text-[10px] text-muted-foreground"
+        title="Espaços de inventário ocupados (p141)"
+      >
+        {line.slots * line.qty > 0 ? `${line.slots * line.qty} esp.` : '—'}
       </span>
       {isPurchase && line.catalogId && (
         <span className="flex shrink-0 items-center gap-0.5">
