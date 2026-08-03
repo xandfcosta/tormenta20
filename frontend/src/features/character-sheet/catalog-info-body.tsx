@@ -82,10 +82,14 @@ export function CatalogInfoBody({ catalog }: { catalog: CatalogItem }) {
               const sign = m.amount >= 0 ? '+' : ''
               return (
                 <li key={i} className="flex flex-wrap gap-x-1">
-                  <span className="font-mono">
-                    {sign}
-                    {m.amount}
-                  </span>
+                  {/* Flags are boolean — their amount (always 1) is bookkeeping,
+                      not a bonus, so it never renders. */}
+                  {m.target.k !== 'flag' && (
+                    <span className="font-mono">
+                      {sign}
+                      {m.amount}
+                    </span>
+                  )}
                   <span>{describeModifierTarget(m.target)}</span>
                   <span className={cn('text-[10px]', dimText)}>
                     [{m.bonusType}]

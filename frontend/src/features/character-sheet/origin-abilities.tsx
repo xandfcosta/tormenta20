@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import type { ReactNode } from 'react'
 import { Check } from 'lucide-react'
 import { getOrigin } from '@tormenta20/t20-data'
 import type {
@@ -137,6 +138,7 @@ function OriginBenefitRow({
   atLimit,
   onToggle,
   disabled,
+  actionSlot,
 }: {
   benefit: OriginBenefit
   isUnique: boolean
@@ -144,6 +146,7 @@ function OriginBenefitRow({
   atLimit: boolean
   onToggle: () => void
   disabled: boolean
+  actionSlot?: ReactNode
 }) {
   const blocked = !selected && atLimit
   return (
@@ -189,6 +192,7 @@ function OriginBenefitRow({
               Único
             </span>
           )}
+          {actionSlot}
         </div>
         <p className={cn('mt-0.5 text-[11px] leading-snug', subtleText)}>
           {benefit.description}

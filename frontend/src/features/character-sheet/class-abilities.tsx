@@ -264,7 +264,11 @@ export function ClassesSection({
               </p>
               <ul className="space-y-1.5">
                 {auto.map((power) => (
-                  <ClassPowerRow key={power.id} power={power} owned />
+                  <ClassPowerRow
+                    key={power.id}
+                    power={power}
+                    owned
+                  />
                 ))}
               </ul>
             </div>

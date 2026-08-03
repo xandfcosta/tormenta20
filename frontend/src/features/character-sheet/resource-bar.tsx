@@ -137,12 +137,19 @@ export function ResourceAdjustDialog({
   current,
   max,
   onSetCurrent,
+  onDamage,
+  tempPool,
   triggerClassName,
 }: {
   label: string
   current: number
   max: number
   onSetCurrent: (next: number) => void
+  /** F2: when set, "Remover" routes through the atomic damage endpoint
+   *  (temp-PV pool drains first) instead of a plain vitals write. */
+  onDamage?: (amount: number) => void
+  /** F3: pool-aware VIDA dialog — current temp-PV total + manual pool setter. */
+  tempPool?: { total: number; onSetManual: (value: number) => void }
   /** Override the trigger button size — the HUD uses a more compact one. */
   triggerClassName?: string
 }) {
@@ -153,6 +160,12 @@ export function ResourceAdjustDialog({
     defaultValues: { amount: 0 },
     validators: { onSubmit: resourceAdjustSchema },
     onSubmit: ({ value }) => {
+      if (mode === 'remove' && onDamage) {
+        // Unclamped: the server soaks the pool first, remainder floors at 0.
+        onDamage(value.amount)
+        close(false)
+        return
+      }
       const delta = mode === 'add' ? value.amount : -value.amount
       onSetCurrent(clampResource(current + delta, max).value)
       close(false)
@@ -259,7 +272,11 @@ export function ResourceAdjustDialog({
 
           <form.Subscribe selector={(s) => s.values.amount}>
             {(amount) => {
-              const delta = mode === 'add' ? amount : -amount
+              // Removals soak the temp-PV pool first (F2 routing) — the
+              // preview mirrors what the damage endpoint will do.
+              const soak =
+                mode === 'remove' ? Math.min(amount, tempPool?.total ?? 0) : 0
+              const delta = mode === 'add' ? amount : -(amount - soak)
               const { value: preview, clamped } = clampResource(
                 current + delta,
                 max,
@@ -283,6 +300,7 @@ export function ResourceAdjustDialog({
                     <span className={cn('text-[10px]', dimText)}>
                       {current} {delta >= 0 ? '+' : '−'} {Math.abs(delta)}
                       {clamped && ' (limitado)'}
+                      {soak > 0 && ` · PV temp. absorvem ${soak}`}
                     </span>
                   </div>
                   <span
@@ -312,7 +330,62 @@ export function ResourceAdjustDialog({
             />
           </div>
         </form>
+        {tempPool && (
+          <ManualTempHpField
+            pool={tempPool}
+            onDone={() => close(false)}
+          />
+        )}
       </DialogContent>
     </Dialog>
+  )
+}
+
+/**
+ * F3 — GM-entered ad-hoc temp-PV pool inside the VIDA ✎ dialog. SETS the
+ * manual pool to the typed value (0 remove); vale-o-maior (p256) is enforced
+ * server-side, the helper text just reminds the table. Own state, not part
+ * of the add/remove form — setting the pool is an independent action.
+ */
+function ManualTempHpField({
+  pool,
+  onDone,
+}: {
+  pool: { total: number; onSetManual: (value: number) => void }
+  onDone: () => void
+}) {
+  const [value, setValue] = useState(pool.total)
+  return (
+    <div className="space-y-2 rounded-lg border border-border bg-muted p-3">
+      <div className="flex items-baseline justify-between">
+        <FieldLabel htmlFor="manual-temp-hp">PV temporários</FieldLabel>
+        <span className={cn('font-mono text-sm font-bold', accentStrong)}>
+          +{pool.total}
+        </span>
+      </div>
+      <div className="flex items-center gap-2">
+        <NumberInput
+          id="manual-temp-hp"
+          value={value}
+          onChange={setValue}
+          min={0}
+          max={9999}
+          className="flex-1"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            pool.onSetManual(value)
+            onDone()
+          }}
+        >
+          Definir
+        </Button>
+      </div>
+      <p className={cn('text-[10px]', dimText)}>
+        vale o maior — não acumulam (p256) · 0 remove o valor manual
+      </p>
+    </div>
   )
 }

@@ -34,7 +34,13 @@ import {
   subtleText,
 } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
-import { formatLoad } from './item-describe'
+import { equipOptionsForCatalog } from './equip-options'
+import { formatLoad, overlayNotesSummary } from './item-describe'
+import {
+  ITEM_DIALOG_CONTENT,
+  ItemDialogFooter,
+  ItemDialogSection,
+} from './item-dialog-kit'
 import { normalize } from './normalize'
 
 /** How many of a catalog item to add — whole units only. */
@@ -46,12 +52,6 @@ const catalogAddSchema = z.object({
     .max(9999, 'Máximo 9999.'),
 })
 
-const EQUIP_PICKER_OPTIONS: { value: '' | 'vested' | 'wielded' | 'wielded2'; label: string }[] = [
-  { value: '', label: '—' },
-  { value: 'vested', label: 'Vestido' },
-  { value: 'wielded', label: '1 mão' },
-  { value: 'wielded2', label: '2 mãos' },
-]
 
 // Distinct catalog categories, sorted, for the add-dialog category filter.
 const CATALOG_CATEGORIES = [
@@ -162,10 +162,7 @@ export function OverlayPickerDialog({
         </Button>
       </DialogTrigger>
       <DialogContent
-        className={cn(
-          'w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] p-4 sm:w-full sm:max-w-md sm:p-6',
-          'border-border bg-muted text-foreground   ',
-        )}
+        className={cn(ITEM_DIALOG_CONTENT, 'border-border bg-muted text-foreground')}
       >
         <DialogHeader>
           <DialogTitle className={cn(accentStrong)}>
@@ -173,10 +170,7 @@ export function OverlayPickerDialog({
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <section>
-            <h3 className={cn('text-xs uppercase tracking-widest', dimText)}>
-              Melhorias
-            </h3>
+          <ItemDialogSection title="Melhorias">
             {availableImprovements.length === 0 ? (
               <p className={cn('mt-1 text-xs italic', dimText)}>
                 Nenhuma melhoria compatível.
@@ -197,10 +191,7 @@ export function OverlayPickerDialog({
                         <span className="flex-1">
                           <span className="font-semibold">{imp.name}</span>
                           <span className={cn('ml-2', dimText)}>
-                            {imp.modifiers
-                              .map((m) => m.note ?? '')
-                              .filter(Boolean)
-                              .join(', ')}
+                            {overlayNotesSummary(imp.modifiers)}
                           </span>
                         </span>
                       </label>
@@ -209,11 +200,8 @@ export function OverlayPickerDialog({
                 })}
               </ul>
             )}
-          </section>
-          <section>
-            <h3 className={cn('text-xs uppercase tracking-widest', dimText)}>
-              Material
-            </h3>
+          </ItemDialogSection>
+          <ItemDialogSection title="Material">
             {availableMaterials.length === 0 ? (
               <p className={cn('mt-1 text-xs italic', dimText)}>
                 Nenhum material compatível.
@@ -245,10 +233,7 @@ export function OverlayPickerDialog({
                       <span className="flex-1">
                         <span className="font-semibold">{mat.name}</span>
                         <span className={cn('ml-2', dimText)}>
-                          {mat.modifiers
-                            .map((m) => m.note ?? '')
-                            .filter(Boolean)
-                            .join(', ')}
+                          {overlayNotesSummary(mat.modifiers)}
                         </span>
                       </span>
                     </label>
@@ -256,11 +241,11 @@ export function OverlayPickerDialog({
                 ))}
               </ul>
             )}
-          </section>
+          </ItemDialogSection>
           {error ? (
             <p className="text-xs text-red-700 dark:text-red-400">{error}</p>
           ) : null}
-          <div className="flex justify-end gap-2">
+          <ItemDialogFooter>
             <Button
               type="button"
               variant="ghost"
@@ -271,7 +256,7 @@ export function OverlayPickerDialog({
             <Button type="button" onClick={apply}>
               Aplicar
             </Button>
-          </div>
+          </ItemDialogFooter>
         </div>
       </DialogContent>
     </Dialog>
@@ -299,6 +284,9 @@ export function AddCatalogItemDialog({
   const selected = catalogId
     ? CATALOG_ITEMS.find((c) => c.id === catalogId)
     : undefined
+  // Slot choices for the picked entry; a single "—" (consumables, meals)
+  // means the item cannot be equipped, so the control disappears.
+  const equipChoices = selected ? equipOptionsForCatalog(selected) : []
 
   const form = useForm({
     defaultValues: { quantity: 1 },
@@ -360,10 +348,7 @@ export function AddCatalogItemDialog({
         </Button>
       </DialogTrigger>
       <DialogContent
-        className={cn(
-          'w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] p-4 sm:w-full sm:max-w-md sm:p-6',
-          'border-border bg-muted text-foreground   ',
-        )}
+        className={cn(ITEM_DIALOG_CONTENT, 'border-border bg-muted text-foreground')}
       >
         <DialogHeader>
           <DialogTitle className={cn(accentStrong)}>
@@ -428,6 +413,7 @@ export function AddCatalogItemDialog({
                     type="button"
                     onClick={() => {
                       setCatalogId(opt.id)
+                      setEquipped('')
                       setFormError(null)
                     }}
                     className={cn(
@@ -505,34 +491,36 @@ export function AddCatalogItemDialog({
                 )
               }}
             </form.Field>
-            <div className="space-y-1">
-              <span
-                className={cn('text-[10px] uppercase tracking-widest', dimText)}
-              >
-                equipar
-              </span>
-              <select
-                value={equipped}
-                onChange={(e) =>
-                  setEquipped(e.target.value as typeof equipped)
-                }
-                className={cn(selectClass, 'h-9 w-full px-2 text-sm')}
-                aria-label="Equipar"
-              >
-                {EQUIP_PICKER_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {equipChoices.length > 1 && (
+              <div className="space-y-1">
+                <span
+                  className={cn('text-[10px] uppercase tracking-widest', dimText)}
+                >
+                  equipar
+                </span>
+                <select
+                  value={equipped}
+                  onChange={(e) =>
+                    setEquipped(e.target.value as typeof equipped)
+                  }
+                  className={cn(selectClass, 'h-9 w-full px-2 text-sm')}
+                  aria-label="Equipar"
+                >
+                  {equipChoices.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
           {formError && (
             <p className="text-xs text-destructive" role="alert">
               {formError}
             </p>
           )}
-          <div className="flex justify-end gap-2">
+          <ItemDialogFooter>
             <Button type="button" variant="outline" onClick={() => close(false)}>
               Cancelar
             </Button>
@@ -544,7 +532,7 @@ export function AddCatalogItemDialog({
                 </Button>
               )}
             />
-          </div>
+          </ItemDialogFooter>
         </form>
       </DialogContent>
     </Dialog>

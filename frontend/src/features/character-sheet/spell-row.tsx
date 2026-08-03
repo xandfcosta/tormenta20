@@ -10,47 +10,56 @@ import {
   spellSaveDc,
   validateLearnSpell,
   validateSpellLearned,
+  type AttributeKey,
   type CatalogSpell,
+  type ItemEffects,
   type SpellCircle,
   type SpellcasterClass,
 } from '@tormenta20/t20-data'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
-import type { AttributeKey, Character, CharacterSpell } from '@/shared/api/api'
+import type { Character, CharacterSpell } from '@/shared/api/api'
 import { api } from '@/shared/api/api'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
+import { attributeTotal } from '@/entities/character/derived'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { accentStrong, dimText, hoverRow } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
 import { CastSpellDialog } from './cast-spell-dialog'
 import { CIRCLE_LABEL, SCHOOL_LABEL } from './spell-labels'
 
-const ATTRIBUTE_MAP: Record<AttributeKey, keyof Character> = {
-  strength: 'strength',
-  dexterity: 'dexterity',
-  constitution: 'constitution',
-  intelligence: 'intelligence',
-  wisdom: 'wisdom',
-  charisma: 'charisma',
-}
-
 /**
  * One catalog row. Header collapses to name + círculo + escola + PM +
- * CD + status badge; expands to full stats + augment list + action
- * cluster (Aprender / Preparar / Esquecer). Mutations invalidate the
- * character query so persisted spells reflect immediately in the
- * "Aprendidas" filter.
+ * CD + status badge, plus an always-visible Conjurar trigger for
+ * learned spells (icon-only below `sm`) so casting never requires
+ * expanding the row; expands to full stats + augment list + action
+ * cluster (Aprender / Preparar / Esquecer). At phone width the header
+ * chip cluster wraps under the name instead of crushing it. Mutations
+ * invalidate the character query so persisted spells reflect
+ * immediately in the "Aprendidas" filter.
  */
+export type GrantedSpellMeta = {
+  /** Power that teaches the spell — shown as a badge, hides spellbook
+   *  management (you can't unlearn a power-granted spell). */
+  sourcePower: string
+  /** Key attribute the granting power casts with (Totem: Sab, p42). */
+  keyAttribute: AttributeKey
+}
+
 export function SpellRow({
   spell,
   character,
   casterClasses,
   learned,
+  effects,
+  granted,
 }: {
   spell: CatalogSpell
   character: Character
   casterClasses: readonly SpellcasterClass[]
   learned: CharacterSpell | null
+  effects: ItemEffects
+  granted?: GrantedSpellMeta
 }) {
   const [open, setOpen] = useState(false)
   const qc = useQueryClient()
@@ -59,9 +68,20 @@ export function SpellRow({
   const applicableClasses = casterClasses.filter((c) =>
     spell.classes.includes(c),
   )
-  const bestCd = computeBestCd(character, applicableClasses)
+  // Power-granted spells cast with the power's own attribute and are always
+  // "learned"; the row synthesizes the CharacterSpell it never persists.
+  const effectiveLearned =
+    granted && !learned
+      ? { id: -1, catalogSpellId: spell.id, prepared: true, learnedAt: '' }
+      : learned
+  const bestCd = granted
+    ? spellSaveDc(
+        character.level,
+        attributeTotal(character, granted.keyAttribute, effects),
+      )
+    : computeBestCd(character, applicableClasses, effects)
   const cast = highestCastableCircle(character, applicableClasses)
-  const canCast = spell.circle <= cast
+  const canCast = granted ? true : spell.circle <= cast
 
   // Optimistic spellbook edits: the shared t20-data rules pre-validate each
   // change so we can predict the server's answer and patch the cache before the
@@ -155,41 +175,70 @@ export function SpellRow({
         open && 'border-border ',
       )}
     >
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-2 text-left"
-        aria-expanded={open}
-      >
-        <Badge
-          variant="outline"
-          className={cn('font-mono text-[10px]', !canCast && dimText)}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 text-left"
+          aria-expanded={open}
         >
-          {CIRCLE_LABEL[spell.circle]}
-        </Badge>
-        <span className="flex-1 truncate text-sm font-medium">
-          {spell.name}
-        </span>
-        <span className={cn('text-[10px] uppercase tracking-widest', dimText)}>
-          {SCHOOL_LABEL[spell.school]}
-        </span>
-        <span className={cn('font-mono text-xs', accentStrong)}>
-          {SPELL_BASE_PM_COST[spell.circle]} PM
-        </span>
-        {bestCd !== null && (
-          <span className="font-mono text-xs text-violet-700 dark:text-violet-300">
-            CD {bestCd}
-          </span>
-        )}
-        {learned && (
           <Badge
-            variant={learned.prepared ? 'default' : 'secondary'}
-            className="text-[10px] uppercase tracking-widest"
+            variant="outline"
+            className={cn('font-mono text-[10px]', !canCast && dimText)}
           >
-            {learned.prepared ? 'Preparada' : 'Aprendida'}
+            {CIRCLE_LABEL[spell.circle]}
           </Badge>
+          {/* basis-32 + flex-wrap: the name claims ~8rem before the chip
+              cluster may share the line, so at 390px the chips wrap below
+              instead of crushing the name to 1-4 chars. */}
+          <span className="min-w-0 flex-1 basis-32 truncate text-sm font-medium">
+            {spell.name}
+          </span>
+          <span className="ml-auto flex shrink-0 items-center gap-2">
+            <span
+              className={cn(
+                'hidden text-[10px] uppercase tracking-widest sm:inline',
+                dimText,
+              )}
+            >
+              {SCHOOL_LABEL[spell.school]}
+            </span>
+            <span className={cn('font-mono text-xs', accentStrong)}>
+              {SPELL_BASE_PM_COST[spell.circle]} PM
+            </span>
+            {bestCd !== null && (
+              <span className="font-mono text-xs text-violet-700 dark:text-violet-300">
+                CD {bestCd}
+              </span>
+            )}
+            {granted ? (
+              <Badge
+                variant="outline"
+                className="text-[10px] uppercase tracking-widest"
+              >
+                {granted.sourcePower}
+              </Badge>
+            ) : (
+              learned && (
+                <Badge
+                  variant={learned.prepared ? 'default' : 'secondary'}
+                  className="text-[10px] uppercase tracking-widest"
+                >
+                  {learned.prepared ? 'Preparada' : 'Aprendida'}
+                </Badge>
+              )
+            )}
+          </span>
+        </button>
+        {effectiveLearned && (
+          <CastSpellDialog
+            spell={spell}
+            character={character}
+            disabled={!canCast}
+            compact
+          />
         )}
-      </button>
+      </div>
       {open && (
         <div className="mt-2 space-y-2 border-t border-border pt-2 text-xs ">
           <div className="grid gap-1 sm:grid-cols-2">
@@ -266,14 +315,13 @@ export function SpellRow({
               Círculo acima do máximo conjurável no nível atual.
             </p>
           )}
+          {granted ? null : (
           <div className="flex flex-wrap items-center gap-2 border-t border-border pt-2 ">
+            {/* Conjurar lives in the always-visible header (same learned +
+                canCast gating) — the expanded cluster keeps the spellbook
+                management actions only. */}
             {learned ? (
               <>
-                <CastSpellDialog
-                  spell={spell}
-                  character={character}
-                  disabled={!canCast}
-                />
                 <Button
                   type="button"
                   size="sm"
@@ -311,6 +359,7 @@ export function SpellRow({
               </Button>
             )}
           </div>
+          )}
         </div>
       )}
     </div>
@@ -330,17 +379,26 @@ function Stat({ label, value }: { label: string; value: string | number }) {
   )
 }
 
+/**
+ * Best CD among the classes able to cast THIS spell. Uses the FINAL key
+ * attribute (attributeTotal — race/item bonuses in), matching the sheet's
+ * "CD Magia" box; the raw stored attribute understated the row CD
+ * (Necromante Osteon: row showed 21, sheet 22). PDF p171.
+ */
 function computeBestCd(
   character: Character,
   applicableClasses: readonly SpellcasterClass[],
+  effects: ItemEffects,
 ): number | null {
   if (applicableClasses.length === 0) return null
   let best = -Infinity
   for (const c of applicableClasses) {
     const attr = CLASS_SPELLCASTING_ATTRIBUTE[c]
     if (!attr) continue
-    const attrValue = character[ATTRIBUTE_MAP[attr]] as number
-    const dc = spellSaveDc(character.level, attrValue)
+    const dc = spellSaveDc(
+      character.level,
+      attributeTotal(character, attr, effects),
+    )
     if (dc > best) best = dc
   }
   return best === -Infinity ? null : best

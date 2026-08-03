@@ -190,9 +190,55 @@ export type ConsumeItemResult = {
   mpCurrent: number
 }
 
+/** One of `spellId` (spell buff), `powerId` (power grant, Fase 4) or
+ *  `manualTempHp` (GM ad-hoc temp-PV pool, F3 — 0 clears it). */
 export type ApplyEffectInput = {
-  spellId: string
+  spellId?: string
+  powerId?: string
+  manualTempHp?: number
+  steps?: number
   scope?: 'scene' | 'day'
+}
+
+/** A pool displaced under vale-o-maior (p256): `removed` rows were deleted;
+ *  kept rows (mixed buffs like Heroísmo) had their tempHp amount zeroed. */
+export type DisplacedPool = { effectId: number; removed: boolean }
+
+/** Temp-PV apply outcome: the upserted pool row + what it displaced. */
+export type PoolApplied = { effect: ActiveEffect; displaced: DisplacedPool[] }
+
+/** Vale-o-maior no-op: an existing pool was bigger or equal; nothing written. */
+export type PoolSuperseded = {
+  superseded: true
+  keptEffectId: number
+  keptAmount: number
+}
+
+/** `manualTempHp: 0` cleared the manual pool. */
+export type ManualPoolCleared = { cleared: true; removedEffectIds: number[] }
+
+/** POST :id/active-effects — spell buffs / verbatim power grants return the
+ *  plain ActiveEffect row; temp-PV pool paths (temp-hp grants, manualTempHp)
+ *  return one of the pool outcomes. */
+export type ApplyEffectResult =
+  | ActiveEffect
+  | PoolApplied
+  | PoolSuperseded
+  | ManualPoolCleared
+
+/** One drained pool from POST :id/damage. `removed` rows are gone; kept rows
+ *  carry `newAmount` (0 for an emptied mixed buff, partial otherwise). */
+export type DamageDrainStep = {
+  effectId: number
+  newAmount: number
+  removed: boolean
+}
+
+/** POST :id/damage — atomic temp-first routing result (F2). */
+export type ApplyDamageResult = {
+  hpCurrent: number
+  tempHpRemaining: number
+  drained: DamageDrainStep[]
 }
 
 /** Delta from castSpell: new PM + catalyst effect ids the cast consumed. */
@@ -492,9 +538,14 @@ export const api = {
         body: JSON.stringify(input),
       }),
     applyEffect: (id: number, input: ApplyEffectInput) =>
-      request<ActiveEffect>(`/characters/${id}/active-effects`, {
+      request<ApplyEffectResult>(`/characters/${id}/active-effects`, {
         method: 'POST',
         body: JSON.stringify(input),
+      }),
+    applyDamage: (id: number, amount: number) =>
+      request<ApplyDamageResult>(`/characters/${id}/damage`, {
+        method: 'POST',
+        body: JSON.stringify({ amount }),
       }),
     removeActiveEffect: (id: number, effectId: number) =>
       request<{ id: number }>(`/characters/${id}/active-effects/${effectId}`, {

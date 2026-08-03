@@ -1,13 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/shared/ui/tooltip'
 import { cn } from '@/shared/lib/utils'
 import { CharacterHud } from './character-hud'
-import { SHEET_PANELS } from './sheet-sections'
+import { SHEET_PANELS, resolveSheetTab } from './sheet-sections'
 import type { Character } from '@/shared/api/api'
 
 /**
@@ -33,8 +27,10 @@ export function CharacterSheetDesktop({
     : SHEET_PANELS
   // The shared tab value may come from the mobile set (e.g. "vitals"), which
   // has no desktop panel — fall back to the first block so content shows.
-  const active = panels.some((p) => p.value === tab) ? tab : panels[0]!.value
-  const activeLabel = panels.find((p) => p.value === active)?.label
+  const resolved = resolveSheetTab(tab)
+  const active = panels.some((p) => p.value === resolved)
+    ? resolved
+    : panels[0]!.value
   return (
     <div
       className={cn(
@@ -48,56 +44,43 @@ export function CharacterSheetDesktop({
         orientation="vertical"
         className="flex min-h-0 items-stretch gap-3"
       >
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
-          {/* Persistent label for the active block — the icon rail alone
-              doesn't say which tab you're on without hovering. */}
-          <h2 className="shrink-0 text-sm font-bold tracking-tight">
-            {activeLabel}
-          </h2>
-          <div className="min-h-0 flex-1">
-            {panels.map((s) => (
-              <TabsContent
-                key={s.value}
-                value={s.value}
-                className="m-0 flex h-full min-h-0 flex-col overflow-hidden"
-              >
-                {s.render(character)}
-              </TabsContent>
-            ))}
-          </div>
+        <div className="min-h-0 min-w-0 flex-1">
+          {panels.map((s) => (
+            <TabsContent
+              key={s.value}
+              value={s.value}
+              className="m-0 flex h-full min-h-0 flex-col overflow-hidden"
+            >
+              {s.render(character)}
+            </TabsContent>
+          ))}
         </div>
 
-        <TooltipProvider delayDuration={200}>
-          <TabsList className="flex h-full shrink-0 flex-col gap-1 rounded-lg border bg-card p-1">
-            {panels.map((s) => (
-              <Tooltip key={s.value}>
-                <TooltipTrigger asChild>
-                  <TabsTrigger
-                    value={s.value}
-                    aria-label={s.label}
-                    className={cn(
-                      'relative w-11 flex-1 justify-center p-0 xl:w-32 xl:justify-start xl:gap-2 xl:px-2',
-                      // Irrelevant tabs (Magias for non-casters) stay reachable
-                      // but stop competing for scan attention.
-                      s.dim?.(character) && 'opacity-40',
-                    )}
-                  >
-                    <s.icon className="size-5 shrink-0" />
-                    <span className="hidden truncate text-xs xl:inline">
-                      {s.label}
-                    </span>
-                    {s.badge && (
-                      <span className="absolute -right-1 -top-1">
-                        {s.badge(character)}
-                      </span>
-                    )}
-                  </TabsTrigger>
-                </TooltipTrigger>
-                <TooltipContent side="left">{s.label}</TooltipContent>
-              </Tooltip>
-            ))}
-          </TabsList>
-        </TooltipProvider>
+        {/* Labeled rail at every desktop width — the panel already carries
+            its own big title, so no floating duplicate above the content. */}
+        <TabsList className="flex h-full shrink-0 flex-col gap-1 rounded-lg border bg-card p-1">
+          {panels.map((s) => (
+            <TabsTrigger
+              key={s.value}
+              value={s.value}
+              aria-label={s.label}
+              className={cn(
+                'relative w-32 flex-1 justify-start gap-2 px-2',
+                // Irrelevant tabs (Magias for non-casters) stay reachable
+                // but stop competing for scan attention.
+                s.dim?.(character) && 'opacity-40',
+              )}
+            >
+              <s.icon className="size-5 shrink-0" />
+              <span className="truncate text-xs">{s.label}</span>
+              {s.badge && (
+                <span className="absolute -right-1 -top-1">
+                  {s.badge(character)}
+                </span>
+              )}
+            </TabsTrigger>
+          ))}
+        </TabsList>
       </Tabs>
       <CharacterHud character={character} className="rounded-xl" />
     </div>

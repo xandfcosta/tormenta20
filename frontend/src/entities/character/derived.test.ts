@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { statFor } from '@tormenta20/t20-data'
+import { conditionalId, statFor } from '@tormenta20/t20-data'
 import type { ClassChoices, ItemEffects } from '@tormenta20/t20-data'
 import type { Character, CharacterItem } from '@/shared/api/api'
 import {
   armorPenaltyTotal,
   attributeContributions,
   attributeTotal,
+  bestBaseSpellCd,
+  characterDamageReduction,
   characterEffects,
   defenseTotal,
   displacementTotal,
@@ -18,6 +20,7 @@ import {
   pmCostMod,
   pmLimitTotal,
   spellDCBonus,
+  tempHpFromPowers,
 } from './derived'
 
 /**
@@ -590,13 +593,14 @@ describe('displacementTotal — PDF p106 default 9m', () => {
 })
 
 describe('inventorySlotsTotal — PDF p141 formula', () => {
-  it('10 + 2 * |strength| with no items', () => {
+  it('10 + 2 per positive Força point', () => {
     expect(inventorySlotsTotal(character({ strength: 3 }), emptyEffects())).toBe(16)
+    expect(inventorySlotsTotal(character({ strength: 4 }), emptyEffects())).toBe(18)
     expect(inventorySlotsTotal(character({ strength: 0 }), emptyEffects())).toBe(10)
   })
 
-  it('uses |strength| even when negative', () => {
-    expect(inventorySlotsTotal(character({ strength: -2 }), emptyEffects())).toBe(14)
+  it('−1 per negative Força point (regression: |FOR| gave 14 instead of 8)', () => {
+    expect(inventorySlotsTotal(character({ strength: -2 }), emptyEffects())).toBe(8)
   })
 
   it('folds in inventorySlots stat modifier', () => {
@@ -614,17 +618,96 @@ describe('inventorySlotsTotal — PDF p141 formula', () => {
   })
 })
 
-describe('pmLimitTotal — PDF gating ½ level (min 1)', () => {
+describe('pmLimitTotal — PDF p224: limite = nível na classe conjuradora', () => {
+  // Regression: base was ½ nível do personagem; the book keys the variable-PM
+  // cap to "seu nível na classe que fornece a habilidade" (p224).
+  it('Arcanista 12 → 12 (não ½ nível)', () => {
+    const c = character({
+      level: 12,
+      classes: [{ className: 'Arcanista', level: 12 }],
+    })
+    expect(pmLimitTotal(c, emptyEffects()).total).toBe(12)
+  })
+
+  it('Guerreiro 4 / Arcanista 4 → 4 (nível na classe conjuradora)', () => {
+    const c = character({
+      level: 8,
+      classes: [
+        { className: 'Guerreiro', level: 4 },
+        { className: 'Arcanista', level: 4 },
+      ],
+    })
+    expect(pmLimitTotal(c, emptyEffects()).total).toBe(4)
+  })
+
+  it('duas classes conjuradoras → maior nível entre elas', () => {
+    const c = character({
+      level: 8,
+      classes: [
+        { className: 'Clérigo', level: 3 },
+        { className: 'Arcanista', level: 5 },
+      ],
+    })
+    expect(pmLimitTotal(c, emptyEffects()).total).toBe(5)
+  })
+
+  it('sem classe conjuradora → nível do personagem (caixa oculta na ficha)', () => {
+    const c = character({
+      level: 7,
+      classes: [{ className: 'Guerreiro', level: 7 }],
+    })
+    expect(pmLimitTotal(c, emptyEffects()).total).toBe(7)
+  })
+
   it('L1 → base 1 (min)', () => {
     expect(pmLimitTotal(character({ level: 1 }), emptyEffects()).total).toBe(1)
   })
+})
 
-  it('L7 → base 3 (½ rounds down)', () => {
-    expect(pmLimitTotal(character({ level: 7 }), emptyEffects()).total).toBe(3)
+describe('bestBaseSpellCd — CD = 10 + ½ nível + atributo-chave FINAL (PDF p171)', () => {
+  // Regression: the CD used the RAW stored attribute, dropping racial/item
+  // attribute bonuses (Necromante Osteon: CD 21 shown, 22 correct).
+  it('folds attribute modifiers from effects into the key attribute', () => {
+    const c = character({
+      level: 12,
+      intelligence: 5,
+      classes: [{ className: 'Arcanista', level: 12 }],
+    })
+    const effects: ItemEffects = {
+      byTarget: {
+        'attribute:intelligence': {
+          total: 1,
+          contributions: [{ source: 'Osteon', amount: 1, bonusType: 'untyped' }],
+        },
+      },
+      flags: new Set(),
+      conditional: [],
+    }
+    // 10 + 6 (½ de 12) + 6 (5 base + 1 racial) = 22
+    expect(bestBaseSpellCd(c, effects)).toBe(22)
+    expect(bestBaseSpellCd(c, emptyEffects())).toBe(21)
   })
 
-  it('L20 → base 10', () => {
-    expect(pmLimitTotal(character({ level: 20 }), emptyEffects()).total).toBe(10)
+  it('picks the best CD across caster classes', () => {
+    const c = character({
+      level: 8,
+      intelligence: 4,
+      wisdom: 1,
+      classes: [
+        { className: 'Arcanista', level: 4 },
+        { className: 'Clérigo', level: 4 },
+      ],
+    })
+    // Arcanista (INT 4): 10 + 4 + 4 = 18; Clérigo (SAB 1): 15 → best 18
+    expect(bestBaseSpellCd(c, emptyEffects())).toBe(18)
+  })
+
+  it('returns null when no class casts spells', () => {
+    const c = character({
+      level: 5,
+      classes: [{ className: 'Guerreiro', level: 5 }],
+    })
+    expect(bestBaseSpellCd(c, emptyEffects())).toBeNull()
   })
 })
 
@@ -815,8 +898,11 @@ describe('attributeTotal + attributeContributions — folded modifiers', () => {
 })
 
 describe('pmLimitTotal — folded pmLimit stat', () => {
-  it('adds pmLimit stat to the base ½-level value', () => {
-    const c = character({ level: 7 })
+  it('adds pmLimit stat to the caster-level base', () => {
+    const c = character({
+      level: 7,
+      classes: [{ className: 'Druida', level: 7 }],
+    })
     const effects: ItemEffects = {
       byTarget: {
         pmLimit: {
@@ -830,9 +916,9 @@ describe('pmLimitTotal — folded pmLimit stat', () => {
       conditional: [],
     }
     const result = pmLimitTotal(c, effects)
-    expect(result.base).toBe(3)
+    expect(result.base).toBe(7)
     expect(result.itemBonus).toBe(2)
-    expect(result.total).toBe(5)
+    expect(result.total).toBe(9)
     expect(result.contributions).toEqual([
       { source: 'Foco em Magia', amount: 2 },
     ])
@@ -882,5 +968,292 @@ describe('pmCostMod — stat present', () => {
       total: -1,
       contributions: [{ source: 'Magia Eficiente', amount: -1 }],
     })
+  })
+})
+
+describe('mirrorWeaponAttackMods — linha da arma chega em Luta/Pontaria', () => {
+  const LUTA = {
+    name: 'Luta',
+    attribute: 'strength',
+    trained: false,
+    custom: false,
+  } as const
+
+  const weaponItem = (
+    catalogId: string,
+    over: Partial<Character['items'][number]> = {},
+  ) =>
+    ({
+      id: 1,
+      catalogId,
+      name: catalogId,
+      quantity: 1,
+      slots: 2,
+      equipped: 'wielded2',
+      improvements: '[]',
+      material: null,
+      ...over,
+    }) as Character['items'][number]
+
+  it('desbalanceada do Machado táurico soma -2 na Luta (p149)', () => {
+    const c = character({
+      proficiencies: JSON.stringify(['armas-exoticas']),
+      items: [weaponItem('machado-taurico')],
+    })
+    const luta = expertiseTotalWithItems(c, LUTA, characterEffects(c))
+    expect(luta.itemBonus).toBe(-2)
+    expect(luta.itemContributions).toContainEqual({
+      source: 'machado-taurico',
+      amount: -2,
+      // The note is what makes the breakdown row self-explanatory.
+      note: 'desbalanceada: -2 em ataque',
+    })
+  })
+
+  it('melhoria Certeira soma +1 na Luta via overlay', () => {
+    const c = character({
+      items: [
+        weaponItem('espada-curta', {
+          equipped: 'wielded',
+          improvements: JSON.stringify(['melhoria-certeira']),
+        }),
+      ],
+    })
+    expect(
+      expertiseTotalWithItems(c, LUTA, characterEffects(c)).itemBonus,
+    ).toBe(1)
+  })
+
+  it('arma guardada (não equipada) não espelha nada', () => {
+    const c = character({
+      proficiencies: JSON.stringify(['armas-exoticas']),
+      items: [weaponItem('machado-taurico', { equipped: null })],
+    })
+    expect(
+      expertiseTotalWithItems(c, LUTA, characterEffects(c)).itemBonus,
+    ).toBe(0)
+  })
+
+  describe('homebrew: Equilibrada anula desbalanceada (toggle no Efeitos)', () => {
+    const tauricoEquilibrado = () =>
+      character({
+        proficiencies: JSON.stringify(['armas-exoticas']),
+        items: [
+          weaponItem('machado-taurico', {
+            improvements: JSON.stringify(['melhoria-equilibrada']),
+          }),
+        ],
+      })
+
+    it('RAW por padrão: sem o toggle, o -2 permanece', () => {
+      const c = tauricoEquilibrado()
+      expect(
+        expertiseTotalWithItems(c, LUTA, characterEffects(c)).itemBonus,
+      ).toBe(-2)
+    })
+
+    it('expõe o contraponto como conditional opt-in', () => {
+      const cond = characterEffects(tauricoEquilibrado()).conditional.find(
+        (x) => /Homebrew: Equilibrada/.test(x.note),
+      )
+      expect(cond).toBeDefined()
+      expect(cond!.amount).toBe(2)
+      expect(cond!.target).toEqual({ k: 'expertise', name: 'Luta' })
+    })
+
+    it('com o toggle ativo, -2 e +2 se anulam (net 0)', () => {
+      const c = tauricoEquilibrado()
+      const cond = characterEffects(c).conditional.find((x) =>
+        /Homebrew: Equilibrada/.test(x.note),
+      )!
+      const effects = characterEffects(c, new Set([conditionalId(cond)]))
+      expect(expertiseTotalWithItems(c, LUTA, effects).itemBonus).toBe(0)
+    })
+
+    it('sem a melhoria não há toggle homebrew', () => {
+      const c = character({
+        proficiencies: JSON.stringify(['armas-exoticas']),
+        items: [weaponItem('machado-taurico')],
+      })
+      expect(
+        characterEffects(c).conditional.some((x) =>
+          /Homebrew: Equilibrada/.test(x.note),
+        ),
+      ).toBe(false)
+    })
+  })
+})
+
+describe('homebrew: Medalhão de prata vestido (registry HOMEBREW_VESTED_OK)', () => {
+  const medalhao = (equipped: 'vested' | 'wielded') =>
+    character({
+      items: [
+        item({ catalogId: 'medalhao-de-prata', name: 'Medalhão de prata', equipped }),
+      ],
+    })
+
+  it('vestido sem toggle: RAW, nenhum bônus de limite de PM', () => {
+    const c = medalhao('vested')
+    expect(pmLimitTotal(c, characterEffects(c)).contributions).toEqual([])
+  })
+
+  it('vestido expõe o conditional homebrew no Efeitos', () => {
+    const cond = characterEffects(medalhao('vested')).conditional.find((x) =>
+      /Homebrew: esotérico vestido/.test(x.note),
+    )
+    expect(cond).toBeDefined()
+    expect(cond!.target).toEqual({ k: 'pmLimit' })
+    expect(cond!.amount).toBe(1)
+  })
+
+  it('vestido com o toggle ativo soma o +1 de limite de PM', () => {
+    const c = medalhao('vested')
+    const cond = characterEffects(c).conditional.find((x) =>
+      /Homebrew: esotérico vestido/.test(x.note),
+    )!
+    const effects = characterEffects(c, new Set([conditionalId(cond)]))
+    expect(statFor(effects, { k: 'pmLimit' }).total).toBe(1)
+  })
+
+  it('vestido com Vigilante: o toggle também reativa o overlay (+2 Defesa)', () => {
+    // Regressão: a versão inicial só reativava os modifiers do CATÁLOGO —
+    // a melhoria Vigilante (overlay) ficava morta com o medalhão vestido.
+    const c = character({
+      items: [
+        item({
+          catalogId: 'medalhao-de-prata',
+          name: 'Medalhão de prata',
+          equipped: 'vested',
+          improvements: JSON.stringify(['melhoria-vigilante']),
+        }),
+      ],
+    })
+    const conds = characterEffects(c).conditional.filter((x) =>
+      /Homebrew: esotérico vestido/.test(x.note),
+    )
+    // One flag-grouped toggle covering BOTH bonuses.
+    expect(conds).toHaveLength(2)
+    expect(new Set(conds.map((x) => x.flag))).toEqual(
+      new Set(['homebrew-vestido-medalhao-de-prata']),
+    )
+    const effects = characterEffects(
+      c,
+      new Set(conds.map((x) => conditionalId(x))),
+    )
+    expect(statFor(effects, { k: 'defense' }).total).toBe(2)
+    expect(statFor(effects, { k: 'pmLimit' }).total).toBe(1)
+  })
+
+  it('empunhado segue RAW direto: +1 sem conditional homebrew', () => {
+    const c = medalhao('wielded')
+    const effects = characterEffects(c)
+    expect(statFor(effects, { k: 'pmLimit' }).total).toBe(1)
+    expect(
+      effects.conditional.some((x) => /Homebrew: esotérico/.test(x.note)),
+    ).toBe(false)
+  })
+})
+
+describe('overlay provenance nas notes (melhoria/material nomeados)', () => {
+  it('Couraça + Reforçada: contribution de Defesa diz qual melhoria', () => {
+    const c = character({
+      items: [
+        item({
+          catalogId: 'couraca',
+          name: 'Couraça',
+          equipped: 'vested',
+          improvements: JSON.stringify(['melhoria-reforcada']),
+        }),
+      ],
+    })
+    const def = defenseTotal(c, characterEffects(c))
+    expect(def.contributions).toContainEqual(
+      expect.objectContaining({
+        source: 'Couraça',
+        amount: 1,
+        note: 'Reforçada: +1 Defesa',
+      }),
+    )
+  })
+})
+
+describe('characterDamageReduction — RD junto da Defesa', () => {
+  const heavyGear = () =>
+    item({ id: 9, catalogId: 'armadura-completa', name: 'Armadura completa', equipped: 'vested' })
+
+  it('Bárbaro segue a tabela p47 (nível 8 → RD 4), sem exigir armadura', () => {
+    const c = character({ classes: [{ className: 'Bárbaro', level: 8 }] })
+    const rd = characterDamageReduction(c, characterEffects(c))
+    expect(rd.total).toBe(4)
+    expect(rd.sources[0].source).toContain('Bárbaro')
+  })
+
+  it('Guerreiro só tem RD em armadura pesada', () => {
+    const semArmadura = character({ classes: [{ className: 'Guerreiro', level: 8 }] })
+    expect(characterDamageReduction(semArmadura, characterEffects(semArmadura)).total).toBe(0)
+    const comArmadura = character({
+      classes: [{ className: 'Guerreiro', level: 8 }],
+      items: [heavyGear()],
+    })
+    expect(characterDamageReduction(comArmadura, characterEffects(comArmadura)).total).toBe(4)
+  })
+
+  it('RD geral não acumula entre classes — vale a maior (p290)', () => {
+    const c = character({
+      classes: [
+        { className: 'Bárbaro', level: 17 },
+        { className: 'Guerreiro', level: 5 },
+      ],
+      items: [heavyGear()],
+    })
+    expect(characterDamageReduction(c, characterEffects(c)).total).toBe(10)
+  })
+
+  it('Cavaleiro Bastião: RD 5 em armadura pesada quando o caminho foi escolhido', () => {
+    const c = character({
+      classes: [{ className: 'Cavaleiro', level: 5 }],
+      classPowers: JSON.stringify(['caminho-bastiao']),
+      items: [heavyGear()],
+    })
+    expect(characterDamageReduction(c, characterEffects(c)).total).toBe(5)
+  })
+
+  it('Especialização em Armadura acumula com Bastião (texto explícito, p54)', () => {
+    const c = character({
+      classes: [{ className: 'Cavaleiro', level: 12 }],
+      classPowers: JSON.stringify([
+        'class.cavaleiro.caminho-bastiao',
+        'class.cavaleiro.especializacao-em-armadura',
+      ]),
+      items: [heavyGear()],
+    })
+    expect(characterDamageReduction(c, characterEffects(c)).total).toBe(10)
+  })
+})
+
+describe('tempHpFromPowers — Alma de Bronze na Fúria (p41)', () => {
+  const barbaro = (powers: string[]) =>
+    character({
+      level: 6,
+      strength: 4,
+      classes: [{ className: 'Bárbaro', level: 6 }],
+      classPowers: JSON.stringify(powers),
+    })
+
+  it('fúria ativa + poder escolhido → PV temp = nível + Força', () => {
+    const c = barbaro(['class.barbaro.alma-de-bronze'])
+    const out = tempHpFromPowers(c, characterEffects(c), true)
+    expect(out.total).toBe(10)
+    expect(out.sources[0].source).toContain('Alma de Bronze')
+  })
+
+  it('sem fúria ativa não concede nada', () => {
+    const c = barbaro(['class.barbaro.alma-de-bronze'])
+    expect(tempHpFromPowers(c, characterEffects(c), false).total).toBe(0)
+  })
+
+  it('sem o poder escolhido não concede nada', () => {
+    const c = barbaro([])
+    expect(tempHpFromPowers(c, characterEffects(c), true).total).toBe(0)
   })
 })

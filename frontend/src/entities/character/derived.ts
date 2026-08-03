@@ -1,8 +1,12 @@
 import {
   ATTRIBUTE_ABBR,
   applyActiveConditionals,
+  barbaroRdForLevel,
+  CAVALEIRO_BASTIAO_RD,
+  guerreiroRdForLevel,
   carismaLossFromPowers,
   ownedClassPowers,
+  CLASS_SPELLCASTING_ATTRIBUTE,
   computeItemEffects,
   conditionalId,
   DEFORMIDADE_PERICIA_BONUS,
@@ -14,12 +18,14 @@ import {
   getOrigin,
   getOriginBenefit,
   getRace,
+  HOMEBREW_VESTED_OK,
   originModifiers,
   RACAS,
   raceModifiers,
   raceWithDeformidade,
   requiredProficiency,
   resolveAtributoMod,
+  spellSaveDc,
   statFor,
   TORMENTA_POWERS,
   trainingBonusForLevel,
@@ -44,23 +50,25 @@ function activeItemsFor(character: Character): ActiveItem[] {
       const catalog = it.catalogId ? getCatalogItem(it.catalogId) : undefined
       const baseMods: Modifier[] = catalog?.modifiers ?? []
       const improvementIds = parseImprovementIds(it.improvements)
-      const improvementMods = improvementIds.flatMap(
-        (id) => getCatalogItem(id)?.modifiers ?? [],
+      const improvementMods = improvementIds.flatMap((id) =>
+        overlayModsWithProvenance(getCatalogItem(id)),
       )
-      const materialMods = it.material
-        ? (getCatalogItem(it.material)?.modifiers ?? [])
-        : []
+      const materialMods = overlayModsWithProvenance(
+        it.material ? getCatalogItem(it.material) : undefined,
+      )
       const penaltyMods = catalog
         ? nonProficiencyPenalties(catalog, proficiencies)
         : []
+      const ownMods = [...baseMods, ...improvementMods, ...materialMods]
       return {
         source: it.name,
         equipped: it.equipped,
         modifiers: [
-          ...baseMods,
-          ...improvementMods,
-          ...materialMods,
+          ...ownMods,
           ...penaltyMods,
+          ...mirrorWeaponAttackMods(catalog, ownMods),
+          ...equilibradaHomebrewMods(catalog, improvementIds),
+          ...vestedEsotericHomebrewMods(it.equipped, catalog, ownMods),
         ],
       }
     })
@@ -381,7 +389,9 @@ function raceActiveItems(character: Character): ActiveItem[] {
   return result
 }
 
-function parseChoiceSet(raw: string): Set<string> {
+/** Parse a JSON string[] choice column (classPowers, originChoices…) into a
+ *  Set — exported for grant-ownership checks in use-power-action (Fase 4). */
+export function parseChoiceSet(raw: string): Set<string> {
   try {
     const parsed = JSON.parse(raw)
     if (Array.isArray(parsed)) {
@@ -506,6 +516,110 @@ function parseProficiencySetFromCharacter(character: Character): Set<string> {
 }
 
 /**
+ * Mirror a weapon's own `{k:'attack', scope:'this'}` mods (desbalanceada -2,
+ * melhoria Certeira +1, materials…) onto its attack perícia (Luta/Pontaria) —
+ * the same route `nonProficiencyPenalties` takes for the -5. T20 resolves
+ * attacks as expertise tests, so this is what makes the penalty land in the
+ * "Ataque Corpo a Corpo" box and its breakdown (named per weapon) instead of
+ * hiding inside a per-weapon target no total reads. Mirrors are 'untyped' so
+ * they never collide with genuine expertise bonuses in `resolveStack`; the
+ * original mod keeps its own bonusType for the item chip.
+ */
+function mirrorWeaponAttackMods(
+  catalog: CatalogItem | undefined,
+  ownMods: readonly Modifier[],
+): Modifier[] {
+  if (!catalog?.weapon) return []
+  const expertise = catalog.weapon.purpose === 'melee' ? 'Luta' : 'Pontaria'
+  return ownMods
+    .filter((m) => m.target.k === 'attack' && m.target.scope === 'this')
+    .map((m) => ({
+      target: { k: 'expertise', name: expertise },
+      amount: m.amount,
+      bonusType: 'untyped',
+      condition: m.condition ?? { c: 'wielded' },
+      // Breakdown rows already name the item (Contribution.source) — the
+      // note only carries the WHY ("desbalanceada: -2 em ataque").
+      note: m.note ?? 'bônus desta arma',
+    }))
+}
+
+/**
+ * An overlay's modifiers with the overlay's NAME folded into each note, so
+ * breakdown rows say WHICH melhoria/material a bonus came from — "Couraça +1"
+ * with note "Reforçada: +1 Defesa" instead of a bare "+1 Defesa" (the
+ * Contribution.source only carries the host item's name).
+ */
+function overlayModsWithProvenance(
+  overlay: CatalogItem | undefined,
+): Modifier[] {
+  if (!overlay) return []
+  return overlay.modifiers.map((m) => ({
+    ...m,
+    note: m.note?.includes(overlay.name)
+      ? m.note
+      : `${overlay.name}${m.note ? `: ${m.note}` : ''}`,
+  }))
+}
+
+/**
+ * HOMEBREW (opt-in, not RAW): esotéricos in the shared HOMEBREW_VESTED_OK
+ * registry (Medalhão de prata) may be WORN. RAW p159 grants the bonus only
+ * EMPUNHADO, so while vested every wielded-gated modifier the item carries —
+ * its own catalog line AND its overlays (melhoria Vigilante's +2 Defesa,
+ * materials) — stays off; this offers them back as ONE Efeitos toggle
+ * (flagOn groups all of them under a single switch). Same bonusType as the
+ * originals, so non-stacking absorbs any double route.
+ */
+function vestedEsotericHomebrewMods(
+  equipped: ActiveItem['equipped'],
+  catalog: CatalogItem | undefined,
+  ownMods: readonly Modifier[],
+): Modifier[] {
+  if (equipped !== 'vested') return []
+  if (!catalog || !HOMEBREW_VESTED_OK.has(catalog.id)) return []
+  return ownMods
+    .filter((m) => m.condition?.c === 'wielded')
+    .map((m) => ({
+      ...m,
+      condition: {
+        c: 'flagOn',
+        flag: `homebrew-vestido-${catalog.id}`,
+        label:
+          'Homebrew: esotérico vestido mantém o bônus (RAW exige empunhar, p159)',
+      },
+    }))
+}
+
+/**
+ * HOMEBREW (opt-in, not RAW): some tables rule that the Equilibrada melhoria
+ * cancels the weapon's desbalanceada trait. The book keeps both (-2 ataque
+ * p149; +2 manobras p164), so the counter ships as a CONDITIONAL +2 on the
+ * weapon's attack perícia — it surfaces as a toggle in the Efeitos tab and
+ * only nets the -2 out while the player keeps it switched on.
+ */
+function equilibradaHomebrewMods(
+  catalog: CatalogItem | undefined,
+  improvementIds: readonly string[],
+): Modifier[] {
+  if (!catalog?.weapon?.traits.includes('desbalanceada')) return []
+  if (!improvementIds.includes('melhoria-equilibrada')) return []
+  const expertise = catalog.weapon.purpose === 'melee' ? 'Luta' : 'Pontaria'
+  return [
+    {
+      target: { k: 'expertise', name: expertise },
+      amount: 2,
+      bonusType: 'untyped',
+      condition: {
+        c: 'context',
+        note: 'Homebrew: Equilibrada anula a desbalanceada (-2 → 0)',
+      },
+      note: 'anula desbalanceada',
+    },
+  ]
+}
+
+/**
  * T20 p142: non-proficient weapon use → -5 attack. Armor/shield without
  * proficiency → cannot apply Dex to Defense and the armor penalty extends to
  * all expertise tests. Penalties are emitted as synthetic modifiers attached
@@ -537,7 +651,7 @@ function nonProficiencyPenalties(
         amount: -5,
         bonusType: 'untyped',
         condition: { c: 'wielded' },
-        note: `${catalog.name} sem proficiência`,
+        note: 'sem proficiência: -5 em testes de ataque (p142)',
       },
     ]
   }
@@ -628,7 +742,7 @@ export function expertiseTotalWithItems(
   halfLevel: number
   attrValue: number
   training: number
-  itemContributions: { source: string; amount: number }[]
+  itemContributions: { source: string; amount: number; note?: string }[]
   armorPenaltyApplied: number
 } {
   const halfLevel = Math.floor(character.level / 2)
@@ -648,6 +762,7 @@ export function expertiseTotalWithItems(
   ].map((c) => ({
     source: c.source,
     amount: c.amount,
+    ...(c.note ? { note: c.note } : {}),
   }))
 
   let armorPenaltyApplied = 0
@@ -685,7 +800,7 @@ export function defenseTotal(
   itemBonus: number
   total: number
   dexApplied: boolean
-  contributions: { source: string; amount: number }[]
+  contributions: { source: string; amount: number; note?: string }[]
 } {
   const stat = statFor(effects, { k: 'defense' })
   const dexApplied = !effects.flags.has('cannot-apply-dex-to-defense')
@@ -699,6 +814,7 @@ export function defenseTotal(
     contributions: stat.contributions.map((c) => ({
       source: c.source,
       amount: c.amount,
+      ...(c.note ? { note: c.note } : {}),
     })),
   }
 }
@@ -710,7 +826,7 @@ export function displacementTotal(
   base: number
   itemBonus: number
   total: number
-  contributions: { source: string; amount: number }[]
+  contributions: { source: string; amount: number; note?: string }[]
 } {
   const stat = statFor(effects, { k: 'displacement' })
   return {
@@ -720,6 +836,7 @@ export function displacementTotal(
     contributions: stat.contributions.map((c) => ({
       source: c.source,
       amount: c.amount,
+      ...(c.note ? { note: c.note } : {}),
     })),
   }
 }
@@ -738,7 +855,9 @@ export function inventorySlotsTotal(
   effects: ItemEffects,
 ): number {
   const effStr = attributeTotal(character, 'strength', effects)
-  const base = 10 + 2 * Math.abs(effStr)
+  // PDF p141 (Carga): "10 espaços, +2 por ponto de Força (ou –1 por ponto de
+  // Força negativo)". Math.abs here inflated negative-Str carriers (−2 → 14).
+  const base = effStr >= 0 ? 10 + 2 * effStr : 10 + effStr
   const stat = statFor(effects, { k: 'inventorySlots' })
   return base + stat.total
 }
@@ -761,7 +880,7 @@ export function attributeTotal(
 export function attributeContributions(
   attr: AttributeKey,
   effects: ItemEffects,
-): { source: string; amount: number }[] {
+): { source: string; amount: number; note?: string }[] {
   return statFor(effects, { k: 'attribute', name: attr }).contributions.map(
     (c) => ({ source: c.source, amount: c.amount }),
   )
@@ -771,6 +890,21 @@ export function armorPenaltyTotal(effects: ItemEffects): number {
   return statFor(effects, { k: 'armorPenalty' }).total
 }
 
+/**
+ * Caster level for the per-spell PM cap — PDF p224: "o máximo de PM que você
+ * pode gastar por uso é igual ao seu nível NA CLASSE que fornece a
+ * habilidade". Multiclass casters take the best spellcasting-class level;
+ * non-casters fall back to character level (their Limite PM box is hidden).
+ * Ex.: Guerreiro 4 / Arcanista 4 → 4 (not ½ do nível 8 do personagem).
+ */
+export function casterLevelForPmLimit(character: Character): number {
+  const casterLevels = character.classes
+    .filter((c) => CLASS_SPELLCASTING_ATTRIBUTE[c.className] !== undefined)
+    .map((c) => c.level)
+  if (casterLevels.length === 0) return character.level
+  return Math.max(...casterLevels)
+}
+
 export function pmLimitTotal(
   character: Character,
   effects: ItemEffects,
@@ -778,9 +912,9 @@ export function pmLimitTotal(
   base: number
   itemBonus: number
   total: number
-  contributions: { source: string; amount: number }[]
+  contributions: { source: string; amount: number; note?: string }[]
 } {
-  const base = Math.max(1, Math.floor(character.level / 2))
+  const base = Math.max(1, casterLevelForPmLimit(character))
   const stat = statFor(effects, { k: 'pmLimit' })
   return {
     base,
@@ -789,13 +923,35 @@ export function pmLimitTotal(
     contributions: stat.contributions.map((c) => ({
       source: c.source,
       amount: c.amount,
+      ...(c.note ? { note: c.note } : {}),
     })),
   }
 }
 
+/**
+ * Best spell save CD across the character's caster classes — PDF p171:
+ * CD = 10 + ½ nível + modificador do atributo-chave. Uses the FINAL
+ * attribute (attributeTotal), so racial/item bonuses count — the raw stored
+ * attribute understated the CD (Necromante Osteon: 21 shown, 22 correct).
+ * Ex.: bestBaseSpellCd(arcanista12ComIntFinal6, effects) === 22
+ */
+export function bestBaseSpellCd(
+  character: Character,
+  effects: ItemEffects,
+): number | null {
+  let best: number | null = null
+  for (const entry of character.classes) {
+    const attr = CLASS_SPELLCASTING_ATTRIBUTE[entry.className]
+    if (!attr) continue
+    const dc = spellSaveDc(character.level, attributeTotal(character, attr, effects))
+    if (best === null || dc > best) best = dc
+  }
+  return best
+}
+
 export function spellDCBonus(effects: ItemEffects): {
   total: number
-  contributions: { source: string; amount: number }[]
+  contributions: { source: string; amount: number; note?: string }[]
 } {
   const stat = statFor(effects, { k: 'spellDC' })
   return {
@@ -803,13 +959,14 @@ export function spellDCBonus(effects: ItemEffects): {
     contributions: stat.contributions.map((c) => ({
       source: c.source,
       amount: c.amount,
+      ...(c.note ? { note: c.note } : {}),
     })),
   }
 }
 
 export function pmCostMod(effects: ItemEffects): {
   total: number
-  contributions: { source: string; amount: number }[]
+  contributions: { source: string; amount: number; note?: string }[]
 } {
   const stat = statFor(effects, { k: 'pmCost' })
   return {
@@ -817,6 +974,97 @@ export function pmCostMod(effects: ItemEffects): {
     contributions: stat.contributions.map((c) => ({
       source: c.source,
       amount: c.amount,
+      ...(c.note ? { note: c.note } : {}),
     })),
+  }
+}
+
+/**
+ * Redução de Dano agregada do personagem, para exibir junto da Defesa.
+ * Fontes cobertas (todas passivas e deriváveis do estado da ficha):
+ *  - Bárbaro: tabela p47 (2/4/6/8/10 nos níveis 5/8/11/14/17)
+ *  - Guerreiro: mesma progressão, apenas em armadura pesada (flag
+ *    'armadura-pesada' do engine)
+ *  - Cavaleiro Caminho do Bastião (p55): RD 5 em armadura pesada
+ *  - Cavaleiro Especialização em Armadura (p54): RD 5 em armadura pesada,
+ *    explicitamente CUMULATIVA com Bastião
+ * RD geral não acumula entre fontes (vale a maior, p290) — exceto a
+ * cumulatividade explícita acima.
+ *
+ * @example characterDamageReduction(barbaro8, effects).total // 4
+ */
+export function characterDamageReduction(
+  character: Character,
+  effects: ItemEffects,
+): { total: number; sources: { source: string; amount: number }[] } {
+  const heavy = effects.flags.has('armadura-pesada')
+  const chosen = parseChoiceSet(character.classPowers)
+  const has = (suffix: string) =>
+    [...chosen].some((id) => id === suffix || id.endsWith(`.${suffix}`))
+
+  const sources: { source: string; amount: number }[] = []
+  for (const entry of character.classes) {
+    if (entry.className === 'Bárbaro') {
+      const rd = barbaroRdForLevel(entry.level)
+      if (rd > 0) sources.push({ source: 'Bárbaro (p47)', amount: rd })
+    }
+    if (entry.className === 'Guerreiro' && heavy) {
+      const rd = guerreiroRdForLevel(entry.level, heavy)
+      if (rd > 0)
+        sources.push({ source: 'Guerreiro — armadura pesada', amount: rd })
+    }
+    if (entry.className === 'Cavaleiro' && heavy) {
+      if (entry.level >= 5 && has('caminho-bastiao'))
+        sources.push({ source: 'Bastião — armadura pesada', amount: CAVALEIRO_BASTIAO_RD })
+      if (has('especializacao-em-armadura'))
+        sources.push({
+          source: 'Especialização em Armadura',
+          amount: 5,
+        })
+    }
+  }
+  if (sources.length === 0) return { total: 0, sources }
+  // Maior RD geral + a Especialização (cumulativa por texto explícito).
+  const especializacao = sources
+    .filter((s) => s.source === 'Especialização em Armadura')
+    .reduce((sum, s) => sum + s.amount, 0)
+  const general = Math.max(
+    0,
+    ...sources
+      .filter((s) => s.source !== 'Especialização em Armadura')
+      .map((s) => s.amount),
+  )
+  return { total: general + especializacao, sources }
+}
+
+/** True when the Fúria stance is switched on in the Efeitos tab. */
+export function useFuriaActive(character: Character): boolean {
+  const entries = useAllConditionals(character)
+  return entries.some((e) => e.effect.flag === 'furia' && e.active)
+}
+
+/**
+ * PV temporários concedidos por poderes disparados por postura ativa.
+ * Coberto: Alma de Bronze (Bárbaro p41) — "quando entra em fúria, recebe
+ * PV temporários = nível + Força". Exibição apenas (a pool não é
+ * persistida; o jogador abate dano dela manualmente).
+ *
+ * @example tempHpFromPowers(barbaroComAlma, effects, true).total // nível + For
+ */
+export function tempHpFromPowers(
+  character: Character,
+  effects: ItemEffects,
+  furiaActive: boolean,
+): { total: number; sources: { source: string; amount: number }[] } {
+  if (!furiaActive) return { total: 0, sources: [] }
+  const chosen = parseChoiceSet(character.classPowers)
+  const owns = [...chosen].some(
+    (id) => id === 'alma-de-bronze' || id.endsWith('.alma-de-bronze'),
+  )
+  if (!owns) return { total: 0, sources: [] }
+  const amount = character.level + attributeTotal(character, 'strength', effects)
+  return {
+    total: amount,
+    sources: [{ source: 'Alma de Bronze (Fúria, p41)', amount }],
   }
 }

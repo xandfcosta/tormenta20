@@ -1,8 +1,12 @@
 import {
+  computeItemEffects,
+  getActivation,
   type DisplayFact,
   getCatalogItem,
+  type ItemFlag,
   SPELL_CATALOG,
 } from '@tormenta20/t20-data'
+import type { CharacterItem } from '@/shared/api/api'
 
 /**
  * Display name for an ActiveEffect's source id. Item-sourced effects resolve
@@ -11,9 +15,14 @@ import {
  * undefined for a spell id, which is exactly the case this bridges.
  */
 export function effectSourceName(catalogId: string): string {
+  // GM-entered ad-hoc pool (F3) — no catalog entry behind it.
+  if (catalogId === 'manual-temp-hp') return 'PV temporários (manual)'
   return (
     getCatalogItem(catalogId)?.name ??
     SPELL_CATALOG[catalogId]?.name ??
+    // Power-granted effects persist the power id as catalogId (Fase 4) —
+    // "class.barbaro.alma-de-bronze" must read "Alma de Bronze".
+    getActivation(catalogId)?.name ??
     catalogId
   )
 }
@@ -25,4 +34,51 @@ export function effectSourceName(catalogId: string): string {
  */
 export function effectSourceFacts(catalogId: string): DisplayFact[] {
   return SPELL_CATALOG[catalogId]?.buff?.facts ?? []
+}
+
+/**
+ * pt-BR labels for the engine's ItemFlag names, so 'fatigue-on-sleep' always
+ * reads "Fadiga ao dormir". Exhaustive Record — a new ItemFlag in t20-data
+ * fails typecheck here instead of rendering a raw id. Strings are kept
+ * byte-identical to `ITEM_FLAG_LABELS` in features/character-sheet/
+ * item-describe.ts (which this entities module cannot import under FSD);
+ * consolidate there by re-exporting from here when that file is next touched.
+ */
+export const ITEM_FLAG_LABEL: Record<ItemFlag, string> = {
+  'lethal-unarmed': 'Ataques desarmados causam dano letal',
+  'cannot-apply-dex-to-defense': 'Não soma Destreza na Defesa',
+  'fatigue-on-sleep': 'Fadiga ao dormir',
+  'reach-extends': 'Alcance ampliado',
+  'armadura-pesada': 'Conta como armadura pesada',
+}
+
+export type ItemFlagEffect = {
+  flag: ItemFlag
+  label: string
+  source: string
+}
+
+/**
+ * Always-on flag effects carried by equipped items (heavy armor's
+ * fatigue-on-sleep / armadura-pesada, …) with item provenance, for read-only
+ * display in the Efeitos tab. Runs the item engine per item so wear
+ * conditions (vested/wielded) resolve by the same rules as the sheet totals.
+ *
+ * Usage: `equippedItemFlagEffects(character.items)` → `[{ flag, label, source }]`.
+ */
+export function equippedItemFlagEffects(
+  items: readonly CharacterItem[],
+): ItemFlagEffect[] {
+  const out: ItemFlagEffect[] = []
+  for (const it of items) {
+    if (it.equipped === null || !it.catalogId) continue
+    const modifiers = getCatalogItem(it.catalogId)?.modifiers ?? []
+    const { flags } = computeItemEffects([
+      { source: it.name, equipped: it.equipped, modifiers },
+    ])
+    for (const flag of flags as Set<ItemFlag>) {
+      out.push({ flag, label: ITEM_FLAG_LABEL[flag], source: it.name })
+    }
+  }
+  return out
 }

@@ -3,23 +3,22 @@ import { HeartPulse } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { cn } from '@/shared/lib/utils'
 import { sheetBg } from '@/shared/lib/sheet-theme'
+import { useMediaQuery } from '@/shared/lib/use-media-query'
 import { CharacterHud } from './character-hud'
 import { VitalsAside } from './vitals-aside'
-import { SHEET_PANELS, type SheetSection } from './sheet-sections'
+import { SHEET_PANELS, resolveSheetTab, type SheetSection } from './sheet-sections'
 import type { Character } from '@/shared/api/api'
 
-// Vitais leads the mobile sections. Identity + PV/PM live in the persistent
+// Vitais leads the phone sections. Identity + PV/PM live in the persistent
 // bottom HUD now, so this block is just the attributes/combat/magic column.
+// `flex-1` fills the tab area so the card surface reaches the HUD instead of
+// leaving a dead page-background gap under the stats (audit task 12).
 function vitalsSection(): SheetSection {
   return {
     value: 'vitals',
     label: 'Vitais',
     icon: HeartPulse,
-    render: (c) => (
-      <div className="h-full overflow-y-auto">
-        <VitalsAside character={c} />
-      </div>
-    ),
+    render: (c) => <VitalsAside character={c} className="min-h-0 flex-1" />,
   }
 }
 
@@ -54,9 +53,14 @@ export function CharacterSheetMobile({
   const panels = inSession
     ? SHEET_PANELS.filter((p) => p.value !== 'campaigns')
     : SHEET_PANELS
-  const vitals = vitalsSection()
-  const sections = [vitals, ...panels]
-  const active = sections.some((s) => s.value === tab) ? tab : vitals.value
+  // From `md` the HUD's stat cluster (see CharacterHud) shows exactly the
+  // Vitais content, so the tab would be a full duplicate — drop it (task 12).
+  const hudShowsVitals = useMediaQuery('(min-width: 768px)')
+  const sections = hudShowsVitals ? panels : [vitalsSection(), ...panels]
+  const resolved = resolveSheetTab(tab)
+  const active = sections.some((s) => s.value === resolved)
+    ? resolved
+    : sections[0]!.value
 
   return (
     <Tabs
@@ -69,7 +73,12 @@ export function CharacterSheetMobile({
         !inSession && sheetBg,
       )}
     >
-      <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
+      {/* min-h-40 floor: on short viewports (phone landscape) the shrink-0
+          HUD + tab bar would otherwise squeeze this flex-1 area to 0px and the
+          active panel's first header (e.g. "Condições") vanished under the top
+          nav (audit task 11). With a floor, the AppShell <main> scrolls
+          instead, keeping the panel readable. */}
+      <div className="min-h-40 min-w-0 flex-1 overflow-hidden">
         {sections.map((s) => (
           <TabsContent
             key={s.value}

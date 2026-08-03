@@ -1,8 +1,6 @@
 import { type ReactNode, useState } from 'react'
-import { Info } from 'lucide-react'
 import { useForm } from '@tanstack/react-form'
 import { z } from 'zod'
-import { getCatalogItem } from '@tormenta20/t20-data'
 import { Button } from '@/shared/ui/button'
 import {
   Dialog,
@@ -14,14 +12,10 @@ import {
 import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
-import type {
-  CharacterItem,
-  CreateItemInput,
-} from '@/shared/api/api'
-import { accentStrong, dimText, subtleText } from '@/shared/lib/sheet-theme'
+import type { CreateItemInput } from '@/shared/api/api'
+import { accentStrong, dimText } from '@/shared/lib/sheet-theme'
+import { ITEM_DIALOG_CONTENT, ItemDialogFooter } from './item-dialog-kit'
 import { cn } from '@/shared/lib/utils'
-import { CatalogInfoBody } from './catalog-info-body'
-import { formatLoad } from './item-describe'
 
 /** A custom inventory item: a name plus a whole-number quantity and a load in
  *  half-slot increments (T20 tracks encumbrance in 0,5-espaço steps). */
@@ -42,79 +36,6 @@ const itemFormSchema = z.object({
     .max(9999, 'Máximo 9999.')
     .refine((v) => Number.isInteger(v * 2), 'Espaços deve ser múltiplo de 0,5.'),
 })
-
-/**
- * Read-only info dialog for a single inventory row. Falls back to a
- * "custom item" message when the row has no catalog link.
- */
-export function ItemInfoDialog({ item }: { item: CharacterItem }) {
-  const catalog = item.catalogId ? getCatalogItem(item.catalogId) : undefined
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className={cn(
-            'size-7',
-            subtleText,
-            'hover:bg-muted hover:text-foreground dark:hover:bg-muted dark:hover:text-foreground',
-          )}
-          aria-label={`Informações de ${item.name}`}
-        >
-          <Info className="size-3.5" />
-        </Button>
-      </DialogTrigger>
-      <DialogContent
-        className={cn(
-          'w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] p-4 sm:w-full sm:max-w-md sm:p-6',
-          'border-border bg-muted text-foreground   ',
-        )}
-      >
-        <DialogHeader>
-          <DialogTitle className={cn(accentStrong)}>
-            {item.name}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div
-            className={cn(
-              'rounded-md border px-3 py-2 text-xs',
-              'border-border bg-muted  ',
-            )}
-          >
-            <p>
-              quantidade <span className="font-mono">{item.quantity}</span> •
-              espaços <span className="font-mono">{formatLoad(item.slots)}</span>{' '}
-              • total{' '}
-              <span className={cn('font-mono font-semibold', accentStrong)}>
-                {formatLoad(item.quantity * item.slots)}
-              </span>
-            </p>
-            <p className={dimText}>
-              equipado:{' '}
-              {item.equipped
-                ? item.equipped === 'wielded'
-                  ? '1 mão'
-                  : item.equipped === 'wielded2'
-                    ? '2 mãos'
-                    : 'vestido'
-                : '—'}
-            </p>
-          </div>
-          {catalog ? (
-            <CatalogInfoBody catalog={catalog} />
-          ) : (
-            <p className={cn('text-xs', dimText)}>
-              Item customizado, sem dados de catálogo.
-            </p>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
-}
 
 /**
  * Form dialog used for both "novo item custom" (create) and per-item
@@ -168,10 +89,7 @@ export function ItemFormDialog({
     <Dialog open={open} onOpenChange={close}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent
-        className={cn(
-          'w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] p-4 sm:w-full sm:max-w-sm sm:p-6',
-          'border-border bg-muted text-foreground   ',
-        )}
+        className={cn(ITEM_DIALOG_CONTENT, 'border-border bg-muted text-foreground')}
       >
         <DialogHeader>
           <DialogTitle className={cn(accentStrong)}>
@@ -265,7 +183,7 @@ export function ItemFormDialog({
               {formError}
             </p>
           )}
-          <div className="flex justify-end gap-2">
+          <ItemDialogFooter>
             <Button type="button" variant="outline" onClick={() => close(false)}>
               Cancelar
             </Button>
@@ -277,7 +195,7 @@ export function ItemFormDialog({
                 </Button>
               )}
             />
-          </div>
+          </ItemDialogFooter>
         </form>
       </DialogContent>
     </Dialog>

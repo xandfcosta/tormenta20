@@ -21,7 +21,10 @@ import type {
 } from '@/shared/api/api'
 import { api } from '@/shared/api/api'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
-import { expertiseTotalWithItems } from '@/entities/character/derived'
+import {
+  attributeTotal,
+  expertiseTotalWithItems,
+} from '@/entities/character/derived'
 import type { ExpertiseDef } from '@/entities/character/expertise'
 import {
   ATTRIBUTE_ABBR,
@@ -124,9 +127,11 @@ export function ExpertiseRow({
       className={cn(selectClass, 'h-6 rounded-full px-2 font-mono text-[11px]')}
       aria-label={`${def.name} atributo`}
     >
+      {/* Final modifier (race/item bonuses in), not the raw sheet value —
+          the row must agree with the breakdown + total (bug C). */}
       {ATTRIBUTE_KEYS.map((k) => (
         <option key={k} value={k}>
-          {ATTRIBUTE_ABBR[k]} {signed(character[k])}
+          {ATTRIBUTE_ABBR[k]} {signed(attributeTotal(character, k, effects))}
         </option>
       ))}
     </select>
@@ -139,7 +144,7 @@ export function ExpertiseRow({
       locked={locked}
       halfLevel={halfLevel}
       attrAbbr={ATTRIBUTE_ABBR[state.attribute]}
-      attrMod={character[state.attribute]}
+      attrMod={detail.attrValue}
       trainBonus={trainBonus}
       itemBonus={othersDisplay}
       contributions={detail.itemContributions}
@@ -223,8 +228,15 @@ function TrainedOnlyStar({ locked }: { locked: boolean }) {
 }
 
 /** Prominent skill total, doubling as the trigger that opens the modifier
- *  breakdown. Amber when usable, struck-through when trained-only + untrained. */
-function TotalBadge({ total, locked }: { total: number; locked: boolean }) {
+ *  breakdown. Amber when usable, struck-through when trained-only + untrained.
+ *  Rest props are spread onto the button: `DialogTrigger asChild` injects its
+ *  onClick/ref via props, and dropping them left the trigger dead (bug D). */
+function TotalBadge({
+  total,
+  locked,
+  className,
+  ...trigger
+}: { total: number; locked: boolean } & React.ComponentProps<'button'>) {
   return (
     <button
       type="button"
@@ -234,7 +246,9 @@ function TotalBadge({ total, locked }: { total: number; locked: boolean }) {
         locked
           ? 'border-border text-foreground line-through  '
           : ['border-border bg-muted', accentStrong],
+        className,
       )}
+      {...trigger}
     >
       {signed(total)}
     </button>
@@ -375,6 +389,7 @@ function ExpertiseBreakdown({
               key={`${c.source}-${c.amount}`}
               label={c.source}
               value={c.amount}
+              note={c.note}
               indented
             />
           ))}
@@ -409,21 +424,31 @@ function ExpertiseBreakdown({
 function BreakdownRow({
   label,
   value,
+  note,
   indented,
 }: {
   label: string
   value: number
+  /** Modifier note — the WHY ("desbalanceada: -2 em ataque"), dim sub-line. */
+  note?: string
   indented?: boolean
 }) {
   return (
     <div
       className={cn(
-        'flex items-center justify-between gap-2 border-b border-border py-1 ',
+        'border-b border-border py-1',
         indented && 'pl-4 text-xs opacity-80',
       )}
     >
-      <span className="truncate">{label}</span>
-      <span className="shrink-0 font-mono">{signed(value)}</span>
+      <div className="flex items-center justify-between gap-2">
+        <span className="truncate">{label}</span>
+        <span className="shrink-0 font-mono">{signed(value)}</span>
+      </div>
+      {/* wrap, never truncate: a nowrap note becomes min-content and can
+          inflate the dialog past its max-width */}
+      {note && (
+        <p className={cn('text-[10px] leading-snug', subtleText)}>{note}</p>
+      )}
     </div>
   )
 }

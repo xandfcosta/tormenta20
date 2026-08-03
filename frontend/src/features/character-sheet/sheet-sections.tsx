@@ -1,16 +1,17 @@
 import { isCasterCharacter } from './combat-magic-stats'
 import type { ReactNode } from 'react'
-import { BookOpen, Package, ScrollText, Shirt, Star, Tent, ToggleRight } from 'lucide-react'
+import { Backpack, BadgeCheck, BookOpen, ScrollText, Tent, ToggleRight, Zap } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { Character } from '@/shared/api/api'
 import { AbilitiesPanel } from './abilities-panel'
 import { AbilitiesPendingBadge } from './abilities-pending-badge'
+import { BagPanel } from './bag-panel'
 import { CampaignsPanel } from './campaigns-panel'
 import { EffectsCountBadge } from './effects-count-badge'
 import { EffectsPanel } from './effects-panel'
-import { EquipmentPanel } from './equipment-panel'
 import { ExpertisesPanel } from './expertises-panel'
-import { InventoryPanel } from './inventory-panel'
+import { grantedSpells } from '@/entities/character/granted-spells'
+import { ProficienciesTab } from './proficiencies-panel'
 import { SpellbookPanel } from './spellbook-panel'
 
 /**
@@ -29,6 +30,16 @@ export type SheetSection = {
   dim?: (character: Character) => boolean
 }
 
+/**
+ * Old deep-link tab values → their current home. Equipado + Inventário were
+ * merged into the Mochila bag; ?tab=inventory bookmarks must keep landing on
+ * items, not fall back to the first tab.
+ */
+export function resolveSheetTab(tab: string): string {
+  if (tab === 'inventory' || tab === 'equipment') return 'bag'
+  return tab
+}
+
 // The eight non-vitals blocks. The mobile layout prepends a "Vitais" section
 // (header + vitals aside); the desktop layout renders vitals persistently and
 // keeps these as the right-panel tabs.
@@ -40,16 +51,16 @@ export const SHEET_PANELS: SheetSection[] = [
     render: (c) => <ExpertisesPanel character={c} />,
   },
   {
-    value: 'equipment',
-    label: 'Equipado',
-    icon: Shirt,
-    render: (c) => <EquipmentPanel character={c} />,
+    value: 'bag',
+    label: 'Mochila',
+    icon: Backpack,
+    render: (c) => <BagPanel character={c} />,
   },
   {
-    value: 'inventory',
-    label: 'Inventário',
-    icon: Package,
-    render: (c) => <InventoryPanel character={c} />,
+    value: 'proficiencies',
+    label: 'Proficiências',
+    icon: BadgeCheck,
+    render: (c) => <ProficienciesTab character={c} />,
   },
   {
     value: 'conditionals',
@@ -58,16 +69,20 @@ export const SHEET_PANELS: SheetSection[] = [
     badge: (c) => <EffectsCountBadge character={c} />,
     render: (c) => <EffectsPanel character={c} />,
   },
+  // Value stays 'abilities' — ?tab=abilities deep links must survive the
+  // Habilidades→Poderes rename.
   {
     value: 'abilities',
-    label: 'Habilidades',
-    icon: Star,
+    label: 'Poderes',
+    icon: Zap,
     badge: (c) => <AbilitiesPendingBadge character={c} />,
     render: (c) => <AbilitiesPanel character={c} />,
   },
   {
     value: 'spells',
-    dim: (c) => !isCasterCharacter(c),
+    // Dim only when there is truly nothing castable — a Bárbaro with Totem
+    // Espiritual owns a granted spell and must see the tab lit.
+    dim: (c) => !isCasterCharacter(c) && grantedSpells(c).length === 0,
     label: 'Magias',
     icon: BookOpen,
     render: (c) => <SpellbookPanel character={c} />,

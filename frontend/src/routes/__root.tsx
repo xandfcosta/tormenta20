@@ -97,11 +97,16 @@ function RootLayout() {
         <Outlet />
       </AppShell>
       <Toaster />
+      {/* Bottom corners: the top ones sit over the TopNav on every route —
+          the RQ toggle covered the brand ("Tormenta 20" read "menta 20") and
+          the router pill hid the theme/user controls (UI audit task 14).
+          Hidden below md: on phones the pills sat on top of the sheet's
+          bottom tab bar, covering the last tabs. */}
       {import.meta.env.DEV && !inMatch && (
-        <>
-          <TanStackRouterDevtools position="top-right" />
-          <ReactQueryDevtools buttonPosition="top-left" />
-        </>
+        <div className="hidden md:contents">
+          <TanStackRouterDevtools position="bottom-right" />
+          <ReactQueryDevtools buttonPosition="bottom-left" />
+        </div>
       )}
     </TooltipProvider>
   )

@@ -1,4 +1,5 @@
 import { Check, Info } from 'lucide-react'
+import type { ReactNode } from 'react'
 import type { ClassPower, GeneralPower, PowerKind } from '@tormenta20/t20-data'
 import { Badge } from '@/shared/ui/badge'
 import {
@@ -143,6 +144,7 @@ export function ClassPowerRow({
   prereqChecks,
   onToggle,
   disabled,
+  actionSlot,
 }: {
   power: ClassPower
   owned: boolean
@@ -150,6 +152,8 @@ export function ClassPowerRow({
   prereqChecks?: PrerequisiteCheck[]
   onToggle?: () => void
   disabled?: boolean
+  /** Use affordance (PowerActionSlot) — only passed for OWNED powers. */
+  actionSlot?: ReactNode
 }) {
   const isAuto = power.grantedAtLevel !== undefined
   const inlineDescription = owned || isAuto
@@ -188,6 +192,9 @@ export function ClassPowerRow({
             </Badge>
           )}
           {!inlineDescription && <PowerInfo text={power.description} />}
+          {/* ml-auto right-aligns on wide rows; flex-wrap drops it to its own
+              full line at phone width (390px). */}
+          {actionSlot && <span className="ml-auto">{actionSlot}</span>}
         </div>
         {!owned && prereqChecks && prereqChecks.length > 0 && (
           <p className="mt-0.5 text-[10px] leading-snug">
