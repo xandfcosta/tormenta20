@@ -238,14 +238,56 @@ export class CreateCharacterDto {
  * `spellId` must reference a SPELL_CATALOG entry that carries a `buff` block;
  * `scope` overrides the spell's default scope (else the buff's `defaultScope`).
  */
+/**
+ * Apply a lasting effect from ONE of three sources: a spell buff (`spellId`),
+ * a power grant (`powerId`, Fase 4 — `getActivation(id).grant`) or a manual
+ * temp-PV pool (`manualTempHp`, F3 — the GM enters a rolled value; 0 clears
+ * it). The service rejects the request when none is present.
+ */
 export class ApplyEffectDto {
+  @IsOptional()
   @IsString()
   @MinLength(1)
-  spellId!: string;
+  spellId?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  powerId?: string;
+
+  /** Ad-hoc pool value (vale-o-maior, p256). 0 deletes the manual pool. */
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(9999)
+  manualTempHp?: number;
+
+  /** Stance steps paid on activation (reserved for scaling grants). */
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  steps?: number;
 
   @IsOptional()
   @IsIn(['scene', 'day'])
   scope?: 'scene' | 'day';
+}
+
+/**
+ * Adjust a persisted tempHp pool effect (Fase 4): negative delta debits
+ * damage from the pool; the service deletes the row when it hits 0.
+ */
+export class AdjustActiveEffectDto {
+  @IsInt()
+  tempHpDelta!: number;
+}
+
+/** POST :id/damage — atomic temp-first damage routing (F2). */
+export class ApplyDamageDto {
+  @IsInt()
+  @Min(1)
+  @Max(9999)
+  amount!: number;
 }
 
 /** Condições do livro ativas (caído, agarrado, atordoado… p394-395). IDs do

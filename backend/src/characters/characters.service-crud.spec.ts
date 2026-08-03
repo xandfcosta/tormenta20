@@ -392,7 +392,8 @@ describe('CharactersService.updateLevel', () => {
     prisma.seedCharacter(makeCharacter());
     const service = await makeService(prisma);
     await service.updateLevel(1, 1, { level: 5 });
-    const payload = prisma.characterUpdate.mock.calls[0]![0] as {
+    // .at(-1): the findOne read-heal may prepend its own character.update.
+    const payload = prisma.characterUpdate.mock.calls.at(-1)![0] as {
       data: { level: number };
     };
     expect(payload.data).toEqual({ level: 5 });
@@ -418,7 +419,8 @@ describe('CharactersService.updateAbilityChoices', () => {
       originChoices: ['origin-soldado-pericia-Fortitude'],
       classPowers: ['class.guerreiro.especializacao-em-arma'],
     });
-    const payload = prisma.characterUpdate.mock.calls[0]![0] as {
+    // .at(-1): the findOne read-heal may prepend its own character.update.
+    const payload = prisma.characterUpdate.mock.calls.at(-1)![0] as {
       data: {
         raceAbilityChoices: string;
         originChoices: string;
