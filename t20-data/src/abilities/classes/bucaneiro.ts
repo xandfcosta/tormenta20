@@ -1,7 +1,25 @@
 import { attributeBoostPower, attr, autoPower, electivePower, power, trained } from './_helpers'
+import type { Modifier } from '../../items/types'
 import type { ClassPower } from '../types'
 
 const C = 'Bucaneiro'
+
+/**
+ * Esquiva Sagaz (p48): "+1 na Defesa e em Reflexos ... aumenta em +1 a cada
+ * quatro níveis. Exige liberdade de movimentos; você não pode usá-la se
+ * estiver de armadura pesada ou na condição imóvel." A parte da armadura é
+ * auto-avaliada via flagOff 'armadura-pesada' (flag emitida por toda
+ * armor-heavy); a condição imóvel não é rastreada pelo engine. Mesmo
+ * bonusType 'training' (escala por nível, sem colisão com itens) em todos os
+ * tiers para o resolveStack manter só o maior.
+ */
+function esquivaSagazMods(bonus: number): Modifier[] {
+  const cond = { c: 'flagOff' as const, flag: 'armadura-pesada', label: 'sem armadura pesada' }
+  return [
+    { target: { k: 'defense' }, amount: bonus, bonusType: 'training', condition: cond },
+    { target: { k: 'expertise', name: 'Reflexos' }, amount: bonus, bonusType: 'training', condition: cond },
+  ]
+}
 
 /**
  * PDF Cap 1 (Bucaneiro, p46-48, Tabela 1-8). Auto: Audácia + Insolência L1.
@@ -20,24 +38,29 @@ export const BUCANEIRO_POWERS: ClassPower[] = [
   ),
   autoPower(C, 3, 'Esquiva Sagaz +1',
     '+1 Defesa e Reflexos. Sobe a cada 4 níveis (+2 em L7, +3 em L11, +4 em L15, +5 em L19). Exige liberdade de movimentos.',
+    esquivaSagazMods(1),
   ),
   autoPower(C, 5, 'Panache',
     'Quando faz crítico em combate ou reduz inimigo a 0 PV, recupera 1 PM.',
   ),
   autoPower(C, 7, 'Esquiva Sagaz +2',
     'Bônus de Esquiva Sagaz sobe para +2.',
+    esquivaSagazMods(2),
   ),
   autoPower(C, 10, 'Evasão Aprimorada',
     'Em teste de Reflexos que reduziria dano à metade: sucesso = 0 dano, falha = metade. Exige liberdade de movimentos.',
   ),
   autoPower(C, 11, 'Esquiva Sagaz +3',
     'Bônus de Esquiva Sagaz sobe para +3.',
+    esquivaSagazMods(3),
   ),
   autoPower(C, 15, 'Esquiva Sagaz +4',
     'Bônus de Esquiva Sagaz sobe para +4.',
+    esquivaSagazMods(4),
   ),
   autoPower(C, 19, 'Esquiva Sagaz +5',
     'Bônus de Esquiva Sagaz sobe para +5.',
+    esquivaSagazMods(5),
   ),
   autoPower(C, 20, 'Sorte de Nimb',
     'Capstone: gasta 5 PM para refazer um teste. Qualquer 11+ no segundo dado conta como 20 natural.',

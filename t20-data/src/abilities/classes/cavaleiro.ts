@@ -1,7 +1,36 @@
 import { attributeBoostPower, autoPower, classChoice, electivePower, power } from './_helpers'
+import type { Modifier } from '../../items/types'
 import type { ClassPower } from '../types'
 
 const C = 'Cavaleiro'
+
+/**
+ * Baluarte (p53): reação, 1 PM — "+2 na Defesa e nos testes de resistência
+ * até o início do seu próximo turno. A cada quatro níveis, pode gastar +1 PM
+ * para aumentar o bônus em +2." Condição context ⇒ toggle opt-in na aba
+ * Efeitos. Mesmo bonusType 'training' em todos os tiers para o resolveStack
+ * manter só o maior quando mais de um tier estiver ligado.
+ */
+function baluarteMods(bonus: number): Modifier[] {
+  const cond = { c: 'context' as const, note: 'Baluarte — 1 PM, até o início do próximo turno' }
+  return [
+    { target: { k: 'defense' }, amount: bonus, bonusType: 'training', condition: cond },
+    { target: { k: 'resistance' }, amount: bonus, bonusType: 'training', condition: cond },
+  ]
+}
+
+/**
+ * Duelo (p53): 2 PM — "+2 em testes de ataque e rolagens de dano contra ele
+ * [um oponente escolhido] até o fim da cena. A cada cinco níveis, pode gastar
+ * +1 PM para aumentar o bônus em +1." Restrito a um alvo ⇒ context toggle.
+ */
+function dueloMods(bonus: number): Modifier[] {
+  const cond = { c: 'context' as const, note: 'contra o alvo do Duelo — 2 PM, até o fim da cena' }
+  return [
+    { target: { k: 'attack', scope: 'all' }, amount: bonus, bonusType: 'training', condition: cond },
+    { target: { k: 'damage', scope: 'all' }, amount: bonus, bonusType: 'training', condition: cond },
+  ]
+}
 
 /**
  * PDF Cap 1 (Cavaleiro, p52-55, Tabela 1-10). Auto: Código de Honra +
@@ -16,12 +45,15 @@ export const CAVALEIRO_POWERS: ClassPower[] = [
   ),
   autoPower(C, 1, 'Baluarte +2',
     'Quando sofre ataque ou faz teste de resistência, gasta 1 PM para +2 Defesa e testes de resistência até início do próximo turno. A cada 4 níveis pode gastar +1 PM para aumentar bônus em +2.',
+    baluarteMods(2),
   ),
   autoPower(C, 2, 'Duelo +2',
     'Gasta 2 PM para escolher oponente em alcance curto. +2 nos testes de ataque e rolagens de dano contra ele até fim da cena. Se atacar outro oponente, bônus termina.',
+    dueloMods(2),
   ),
   autoPower(C, 5, 'Baluarte +4',
     'Bônus de Baluarte sobe para +4.',
+    baluarteMods(4),
   ),
   autoPower(C, 5, 'Caminho do Cavaleiro',
     'Escolha entre Bastião ou Montaria.',
@@ -31,27 +63,33 @@ export const CAVALEIRO_POWERS: ClassPower[] = [
   ),
   autoPower(C, 7, 'Duelo +3',
     'Bônus de Duelo sobe para +3.',
+    dueloMods(3),
   ),
   autoPower(C, 9, 'Baluarte +6',
     'Bônus de Baluarte sobe para +6.',
+    baluarteMods(6),
   ),
   autoPower(C, 11, 'Resoluto',
     'Gasta 1 PM para refazer teste de resistência contra condição. Segundo teste recebe +5. Apenas uma vez por efeito.',
   ),
   autoPower(C, 12, 'Duelo +4',
     'Bônus de Duelo sobe para +4.',
+    dueloMods(4),
   ),
   autoPower(C, 13, 'Baluarte +8',
     'Bônus de Baluarte sobe para +8.',
+    baluarteMods(8),
   ),
   autoPower(C, 15, 'Baluarte (aliados em alcance curto)',
     'Pode gastar 5 PM adicionais para fornecer Baluarte a todos aliados em alcance curto.',
   ),
   autoPower(C, 17, 'Baluarte +10',
     'Bônus de Baluarte sobe para +10.',
+    baluarteMods(10),
   ),
   autoPower(C, 17, 'Duelo +5',
     'Bônus de Duelo sobe para +5.',
+    dueloMods(5),
   ),
   autoPower(C, 20, 'Bravura Final',
     'Capstone: se reduzido a 0 PV ou menos, paga 3 PM para continuar consciente e em pé. Sustentada. Ao encerrar, sofre PV atuais (cai/morre se for caso).',

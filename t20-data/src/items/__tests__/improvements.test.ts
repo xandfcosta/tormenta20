@@ -129,3 +129,25 @@ describe('Melhoria modifier types', () => {
     }
   })
 })
+
+describe('Melhorias de esotéricos — condição de empunhadura (p159/p166)', () => {
+  // Regressão: estas melhorias vinham com condition 'vested', um estado que
+  // esotéricos (equip axis 'wielded') nunca alcançam — o bônus era inatingível
+  // (Medalhão de prata + Vigilante não somava a Defesa). Esotéricos só
+  // funcionam EMPUNHADOS: "Para usar um esotérico, você precisa empunhá-lo
+  // com a mão que usará para gesticular ao lançar a magia" (p159).
+  const ESOTERIC_MELHORIAS = [
+    'melhoria-canalizador',
+    'melhoria-harmonizado-esoterico',
+    'melhoria-poderoso',
+    'melhoria-vigilante',
+  ]
+
+  it.each(ESOTERIC_MELHORIAS)('%s gates on wielded, never vested', (id) => {
+    const m = IMPROVEMENTS.find((x) => x.id === id)!
+    expect(m.modifiers.length).toBeGreaterThan(0)
+    for (const mod of m.modifiers) {
+      expect(mod.condition).toEqual({ c: 'wielded' })
+    }
+  })
+})

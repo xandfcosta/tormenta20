@@ -4,6 +4,10 @@ export type Contribution = {
   source: string
   bonusType: BonusType
   amount: number
+  /** The modifier's own `note`, when present — the WHY behind the number
+   *  ("desbalanceada: -2 em ataque"). Breakdown dialogs render it under
+   *  the source so a row explains itself. */
+  note?: string
 }
 
 export type AggregatedStat = {
@@ -186,6 +190,38 @@ function resolveStack(contribs: Contribution[]): AggregatedStat {
   return { total, contributions: kept }
 }
 
+/**
+ * Non-stacking resolution for DISPLAYING a set of conditional effects (an
+ * active stance's rows): buckets by target identity, runs the same
+ * per-bonusType resolution as the main aggregation, and returns only the
+ * surviving `{target, amount}` rows — so a Bárbaro 6's Fúria shows the +3
+ * tier without the superseded +2 duplicates.
+ *
+ * @example
+ * resolveConditionalDisplay([
+ *   { target: { k: 'attack', scope: 'all' }, bonusType: 'morale', amount: 2 },
+ *   { target: { k: 'attack', scope: 'all' }, bonusType: 'morale', amount: 3 },
+ * ]) // → [{ target: { k: 'attack', scope: 'all' }, amount: 3 }]
+ */
+export function resolveConditionalDisplay(
+  effects: { target: ModifierTarget; bonusType: BonusType; amount: number }[],
+): { target: ModifierTarget; amount: number }[] {
+  const byKey = new Map<string, { target: ModifierTarget; contribs: Contribution[] }>()
+  for (const e of effects) {
+    const key = targetKey(e.target)
+    const bucket = byKey.get(key) ?? { target: e.target, contribs: [] }
+    bucket.contribs.push({ source: '', bonusType: e.bonusType, amount: e.amount })
+    byKey.set(key, bucket)
+  }
+  const kept: { target: ModifierTarget; amount: number }[] = []
+  for (const { target, contribs } of byKey.values()) {
+    for (const c of resolveStack(contribs).contributions) {
+      kept.push({ target, amount: c.amount })
+    }
+  }
+  return kept
+}
+
 export function computeItemEffects(items: ActiveItem[]): ItemEffects {
   const buckets: Record<string, Contribution[]> = {}
   const flags = new Set<string>()
@@ -233,6 +269,7 @@ export function computeItemEffects(items: ActiveItem[]): ItemEffects {
         source: item.source,
         bonusType: m.bonusType,
         amount: m.amount,
+        ...(m.note ? { note: m.note } : {}),
       })
     }
   }
@@ -295,6 +332,7 @@ export function applyActiveConditionals(
       source: `${c.source} (cond.)`,
       bonusType: c.bonusType,
       amount: c.amount,
+      ...(c.note ? { note: c.note } : {}),
     })
   }
   const byTarget: Record<string, AggregatedStat> = {}

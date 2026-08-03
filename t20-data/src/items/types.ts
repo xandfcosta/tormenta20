@@ -79,7 +79,10 @@ export type ShieldStats = {
  * the highest. `untyped` always stacks.
  *
  * Mapped to T20 conventions:
- *  - 'armor'    — armor / shield Defense bonus (don't stack with itself).
+ *  - 'armor'    — body-armor Defense bonus (don't stack with itself).
+ *  - 'shield'   — shield Defense bonus. Distinct from 'armor' because the
+ *                 book stacks armadura + escudo (p226 sidebar) — a shared
+ *                 bucket made resolveStack silently drop the shield.
  *  - 'item'     — generic item bonus (most apparel +1 expertise).
  *  - 'training' — training bonus (level-based).
  *  - 'morale'   — temporary morale (e.g. Bardo Inspiração).
@@ -88,6 +91,7 @@ export type ShieldStats = {
  */
 export type BonusType =
   | 'armor'
+  | 'shield'
   | 'item'
   | 'training'
   | 'morale'

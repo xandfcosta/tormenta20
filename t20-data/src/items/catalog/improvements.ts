@@ -332,10 +332,12 @@ export const IMPROVEMENTS: CatalogItem[] = [
     appliesTo: ['apparel'],
     modifiers: [
       {
+        // Esotéricos only work while EMPUNHADOS (p159); 'vested' here made
+        // the bonus unreachable — esotéricos have no vested state at all.
         target: { k: 'pmLimit' },
         amount: 1,
         bonusType: 'enhancement',
-        condition: { c: 'vested' },
+        condition: { c: 'wielded' },
         note: '+1 no limite de PM',
       },
     ],
@@ -363,7 +365,7 @@ export const IMPROVEMENTS: CatalogItem[] = [
         target: { k: 'pmCost' },
         amount: -1,
         bonusType: 'untyped',
-        condition: { c: 'vested' },
+        condition: { c: 'wielded' },
         note: 'custo da magia escolhida -1 PM',
       },
     ],
@@ -381,7 +383,7 @@ export const IMPROVEMENTS: CatalogItem[] = [
         target: { k: 'spellDC' },
         amount: 1,
         bonusType: 'enhancement',
-        condition: { c: 'vested' },
+        condition: { c: 'wielded' },
         note: '+1 na CD de magias',
       },
     ],
@@ -399,7 +401,7 @@ export const IMPROVEMENTS: CatalogItem[] = [
         target: { k: 'defense' },
         amount: 2,
         bonusType: 'enhancement',
-        condition: { c: 'vested' },
+        condition: { c: 'wielded' },
         note: '+2 na Defesa',
       },
     ],

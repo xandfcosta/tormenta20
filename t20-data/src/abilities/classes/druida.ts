@@ -35,6 +35,15 @@ export const DRUIDA_POWERS: ClassPower[] = [
   ),
   autoPower(C, 20, 'Força da Natureza',
     'Capstone: custo em PM de suas magias diminui em -2 PM e CD delas aumenta em +2. Bônus dobram (-4 PM e +4 CD) se em terreno natural.',
+    // p63: "diminui o custo de todas as suas magias em –2 PM e aumenta a CD
+    // delas em +2. Os bônus dobram (–4 PM e +4 na CD) se você estiver em
+    // terrenos naturais" — parcela extra condicionada ao terreno.
+    [
+      { target: { k: 'pmCost' }, amount: -2, bonusType: 'untyped' },
+      { target: { k: 'spellDC' }, amount: 2, bonusType: 'untyped' },
+      { target: { k: 'pmCost' }, amount: -2, bonusType: 'untyped', condition: { c: 'terrain', type: 'natural' } },
+      { target: { k: 'spellDC' }, amount: 2, bonusType: 'untyped', condition: { c: 'terrain', type: 'natural' } },
+    ],
   ),
 
   // Poderes de Druida (p61-63)

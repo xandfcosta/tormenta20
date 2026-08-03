@@ -75,10 +75,10 @@ describe('BARBARO_ELECTIVES — pinned entries', () => {
     expect(p.pmCost).toBe('variavel')
   })
 
-  it('Totem Espiritual: varia, pmCost variavel', () => {
+  it('Totem Espiritual: passivo — o custo variável é da magia concedida (p42)', () => {
     const p = barbaroPowerById('totem-espiritual')!
-    expect(p.action).toBe('varia')
-    expect(p.pmCost).toBe('variavel')
+    expect(p.action).toBe('passivo')
+    expect(p.pmCost).toBe(0)
   })
 
   it('Força Indomável: livre, 1 PM, ilimitado', () => {
@@ -113,13 +113,16 @@ describe('barbaroElectives', () => {
 })
 
 describe('furiaOnlyPowers', () => {
-  it('exatamente 4 poderes exigem Fúria', () => {
-    expect(furiaOnlyPowers().length).toBe(4)
+  it('exatamente 5 poderes exigem Fúria', () => {
+    // Alma de Bronze entrou na lista: o gatilho é ENTRAR em fúria (p41) —
+    // a taxonomia do power-activation depende dessa flag ('triggered-passive').
+    expect(furiaOnlyPowers().length).toBe(5)
   })
 
-  it('inclui Frenesi, Fúria Raivosa, Espírito Inquebrável, Sangue dos Inimigos', () => {
+  it('inclui Alma de Bronze, Frenesi, Fúria Raivosa, Espírito Inquebrável, Sangue dos Inimigos', () => {
     const ids = furiaOnlyPowers().map((p) => p.id).sort()
     expect(ids).toEqual([
+      'alma-de-bronze',
       'espirito-inquebravel',
       'frenesi',
       'furia-raivosa',
@@ -135,7 +138,7 @@ describe('activeBarbaroPowers', () => {
     }
   })
 
-  it('inclui Brado Assustador, Frenesi, Fúria Raivosa, Força Indomável, Golpe Poderoso, Ímpeto, Totem Espiritual, Vigor Primal', () => {
+  it('inclui Brado Assustador, Frenesi, Fúria Raivosa, Força Indomável, Golpe Poderoso, Ímpeto, Vigor Primal (Totem virou passivo, p42)', () => {
     const ids = activeBarbaroPowers().map((p) => p.id).sort()
     expect(ids).toEqual([
       'brado-assustador',
@@ -144,7 +147,6 @@ describe('activeBarbaroPowers', () => {
       'furia-raivosa',
       'golpe-poderoso',
       'impeto',
-      'totem-espiritual',
       'vigor-primal',
     ])
   })

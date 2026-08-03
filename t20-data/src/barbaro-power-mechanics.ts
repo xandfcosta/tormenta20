@@ -36,7 +36,9 @@ export type BarbaroPower = {
 }
 
 const RAW: readonly BarbaroPower[] = [
-  { id: 'alma-de-bronze', name: 'Alma de Bronze', action: 'passivo', pmCost: 0, uses: null, bookPage: 41 },
+  // requiresFuria: o gatilho é ENTRAR em fúria ('quando entra em fúria,
+  // recebe PV temporários = nível + Força', p41).
+  { id: 'alma-de-bronze', name: 'Alma de Bronze', action: 'passivo', pmCost: 0, uses: null, requiresFuria: true, bookPage: 41 },
   { id: 'aumento-de-atributo', name: 'Aumento de Atributo', action: 'passivo', pmCost: 0, uses: null, bookPage: 41 },
   { id: 'brado-assustador', name: 'Brado Assustador', action: 'movimento', pmCost: 1, uses: 'cena', bookPage: 41 },
   { id: 'critico-brutal', name: 'Crítico Brutal', action: 'passivo', pmCost: 0, uses: null, bookPage: 41 },
@@ -54,7 +56,9 @@ const RAW: readonly BarbaroPower[] = [
   { id: 'pele-de-ferro', name: 'Pele de Ferro', action: 'passivo', pmCost: 0, uses: null, bookPage: 42 },
   { id: 'sangue-dos-inimigos', name: 'Sangue dos Inimigos', action: 'passivo', pmCost: 0, uses: null, requiresFuria: true, bookPage: 42 },
   { id: 'supersticao', name: 'Superstição', action: 'passivo', pmCost: 0, uses: null, bookPage: 42 },
-  { id: 'totem-espiritual', name: 'Totem Espiritual', action: 'varia', pmCost: 'variavel', uses: null, bookPage: 42 },
+  // Passivo: o poder em si só concede (+Sab no PM, magia do animal); o custo
+  // variável pertence a LANÇAR a magia concedida, não ao poder (p42).
+  { id: 'totem-espiritual', name: 'Totem Espiritual', action: 'passivo', pmCost: 0, uses: null, bookPage: 42 },
   { id: 'vigor-primal', name: 'Vigor Primal', action: 'movimento', pmCost: 'variavel', uses: null, bookPage: 42 },
 ]
 

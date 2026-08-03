@@ -775,7 +775,17 @@ export const WEAPONS: CatalogItem[] = [
       purpose: 'melee',
       traits: ['desbalanceada'],
     },
-    modifiers: [],
+    // Desbalanceada (p149): -2 em testes de ataque com esta arma. The trait
+    // tag alone carries no mechanics — the modifier is what the engine reads.
+    modifiers: [
+      {
+        target: { k: 'attack', scope: 'this' },
+        amount: -2,
+        bonusType: 'untyped',
+        condition: { c: 'wielded' },
+        note: 'desbalanceada: -2 em ataque',
+      },
+    ],
   },
   {
     id: 'rede',

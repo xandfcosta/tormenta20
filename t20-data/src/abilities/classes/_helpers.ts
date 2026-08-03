@@ -134,7 +134,7 @@ export function classPowerId(className: string, powerName: string): string {
   return `class.${slug(className)}.${slug(powerName)}`
 }
 
-function slug(text: string): string {
+export function slug(text: string): string {
   return text
     .toLowerCase()
     .normalize('NFD')

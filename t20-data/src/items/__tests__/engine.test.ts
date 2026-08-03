@@ -4,9 +4,11 @@ import {
   applyActiveConditionals,
   computeItemEffects,
   conditionalId,
+  resolveConditionalDisplay,
   statFor,
   targetKey,
 } from '../engine'
+import { getCatalogItem } from '../catalog'
 import type { Modifier, ModifierTarget } from '../types'
 
 /**
@@ -65,7 +67,7 @@ describe('computeItemEffects — non-stacking by bonusType', () => {
         },
       ]),
       // Hypothetical second armor source — shouldn't stack.
-      vested('escudo-pesado', [
+      vested('brunea', [
         {
           target: defenseTarget,
           amount: 2,
@@ -123,6 +125,55 @@ describe('computeItemEffects — non-stacking by bonusType', () => {
       ]),
     ])
     expect(statFor(effects, defenseTarget).total).toBe(6)
+  })
+
+  it('armor bonus + shield bonus stack (PDF p226: "armadura + escudo empilham")', () => {
+    // Regression: shields shipped with bonusType 'armor', so resolveStack
+    // suppressed the shield next to a body armor — Tanque (Armadura completa
+    // + Escudo pesado) showed Defesa 20 instead of 22.
+    const effects = computeItemEffects([
+      vested('armadura-completa', [
+        {
+          target: defenseTarget,
+          amount: 10,
+          bonusType: 'armor',
+          condition: { c: 'vested' },
+        },
+      ]),
+      wielded('escudo-pesado', [
+        {
+          target: defenseTarget,
+          amount: 2,
+          bonusType: 'shield',
+          condition: { c: 'wielded' },
+        },
+      ]),
+    ])
+    const def = statFor(effects, defenseTarget)
+    expect(def.total).toBe(12)
+    expect(def.contributions).toHaveLength(2)
+  })
+
+  it('two shield bonuses do not stack with each other', () => {
+    const effects = computeItemEffects([
+      wielded('escudo-leve', [
+        {
+          target: defenseTarget,
+          amount: 1,
+          bonusType: 'shield',
+          condition: { c: 'wielded' },
+        },
+      ]),
+      wielded('escudo-pesado', [
+        {
+          target: defenseTarget,
+          amount: 2,
+          bonusType: 'shield',
+          condition: { c: 'wielded' },
+        },
+      ]),
+    ])
+    expect(statFor(effects, defenseTarget).total).toBe(2)
   })
 
   it('keeps the most-negative entry for stacked negatives (penalty resolution)', () => {
@@ -308,6 +359,45 @@ describe('applyActiveConditionals', () => {
   })
 })
 
+describe('resolveConditionalDisplay — stance-row tier dedupe', () => {
+  // Bárbaro 6 owns Fúria (+2) AND Fúria +3: both emit morale modifiers on the
+  // same four targets; only the +3 tier may survive for display.
+  const furiaTargets: ModifierTarget[] = [
+    { k: 'attack', scope: 'all' },
+    { k: 'damage', scope: 'all' },
+    { k: 'expertise', name: 'Fortitude' },
+    { k: 'expertise', name: 'Vontade' },
+  ]
+  const furiaTier = (amount: number) =>
+    furiaTargets.map((target) => ({
+      target,
+      bonusType: 'morale' as const,
+      amount,
+    }))
+
+  it('keeps only the +3 tier when Bárbaro 6 has both Fúria tiers', () => {
+    const kept = resolveConditionalDisplay([...furiaTier(2), ...furiaTier(3)])
+    expect(kept).toHaveLength(4)
+    expect(kept.every((row) => row.amount === 3)).toBe(true)
+    expect(kept.map((row) => targetKey(row.target)).sort()).toEqual(
+      furiaTargets.map(targetKey).sort(),
+    )
+  })
+
+  it('lets untyped entries stack alongside a typed representative', () => {
+    const kept = resolveConditionalDisplay([
+      { target: defenseTarget, bonusType: 'morale', amount: 2 },
+      { target: defenseTarget, bonusType: 'untyped', amount: 1 },
+      { target: defenseTarget, bonusType: 'untyped', amount: 1 },
+    ])
+    expect(kept.map((row) => row.amount).sort()).toEqual([1, 1, 2])
+  })
+
+  it('returns an empty list for no effects', () => {
+    expect(resolveConditionalDisplay([])).toEqual([])
+  })
+})
+
 describe('statFor', () => {
   it('returns zeroed default for absent target', () => {
     const effects = computeItemEffects([])
@@ -339,5 +429,28 @@ describe('conditionalId', () => {
     }
     const b = { ...a, source: 'b' }
     expect(conditionalId(a)).not.toBe(conditionalId(b))
+  })
+})
+
+describe('esotérico overlay end-to-end — Medalhão de prata + Vigilante', () => {
+  // Regressão: a melhoria Vigilante carregava condition 'vested', estado que
+  // um esotérico (equip 'wielded') nunca tem — o +2 na Defesa nunca chegava
+  // ao total. Monta o ActiveItem como a ficha monta (mods do host + overlay,
+  // equipped do host) e cobra o bônus empunhado / a ausência dele guardado.
+  const overlay = () =>
+    getCatalogItem('melhoria-vigilante')!.modifiers.map((m) => ({ ...m }))
+
+  it('grants +2 Defesa while wielded', () => {
+    const effects = computeItemEffects([
+      { source: 'Medalhão de prata', equipped: 'wielded', modifiers: overlay() },
+    ])
+    expect(statFor(effects, defenseTarget).total).toBe(2)
+  })
+
+  it('grants nothing while merely carried (equipped null)', () => {
+    const effects = computeItemEffects([
+      { source: 'Medalhão de prata', equipped: null, modifiers: overlay() },
+    ])
+    expect(statFor(effects, defenseTarget).total).toBe(0)
   })
 })
