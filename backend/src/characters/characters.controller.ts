@@ -15,10 +15,13 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CharactersService } from './characters.service';
 import { CharacterItemsService } from './characters-items.service';
 import { CharacterEffectsService } from './characters-effects.service';
+import { CharacterTempHpService } from './character-temp-hp.service';
 import { CharacterExpertisesService } from './characters-expertises.service';
 import { CharactersSpellsService } from './characters-spells.service';
 import { CampaignMembersService } from '../campaign-members/campaign-members.service';
 import {
+  AdjustActiveEffectDto,
+  ApplyDamageDto,
   ApplyEffectDto,
   ConsumeItemDto,
   CreateCharacterDto,
@@ -55,6 +58,7 @@ export class CharactersController {
     private readonly spells: CharactersSpellsService,
     private readonly items: CharacterItemsService,
     private readonly effects: CharacterEffectsService,
+    private readonly tempHp: CharacterTempHpService,
     private readonly expertises: CharacterExpertisesService,
   ) {}
 
@@ -202,6 +206,17 @@ export class CharactersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Patch(':id/active-effects/:effectId')
+  adjustActiveEffect(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('effectId', ParseIntPipe) effectId: number,
+    @Body() dto: AdjustActiveEffectDto,
+  ) {
+    return this.effects.adjustActiveEffect(user.id, id, effectId, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Delete(':id/active-effects/:effectId')
   removeActiveEffect(
     @CurrentUser() user: AuthUser,
@@ -209,6 +224,19 @@ export class CharactersController {
     @Param('effectId', ParseIntPipe) effectId: number,
   ) {
     return this.effects.removeActiveEffect(user.id, id, effectId);
+  }
+
+  /** Atomic temp-first damage (F2): pools drain highest-first, remainder
+   *  lowers hpCurrent (floor 0). One transaction — replaces the client's old
+   *  two-write drain path. */
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/damage')
+  applyDamage(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: ApplyDamageDto,
+  ) {
+    return this.tempHp.applyDamage(user.id, id, dto.amount);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -259,6 +287,9 @@ export class CharactersController {
     return this.characters.updateConditions(user.id, id, dto);
   }
 
+  // Regression 2026-08: this was the only route missing the guard —
+  // request.user stayed undefined and every call 500'd on user.id.
+  @UseGuards(JwtAuthGuard)
   @Patch(':id/abilities')
   updateAbilityChoices(
     @CurrentUser() user: AuthUser,

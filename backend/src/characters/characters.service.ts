@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import type { ComputedSheet } from '@tormenta20/t20-data';
@@ -19,6 +20,7 @@ import {
   assertCharacterRules,
   sanitizeClassChoices,
 } from './characters.helpers';
+import { engineVitalsPatch } from './vitals-sync.helpers';
 import {
   CreateCharacterDto,
   UpdateAbilityChoicesDto,
@@ -103,6 +105,8 @@ export type VitalsResult = { hpCurrent: number; mpCurrent: number };
 
 @Injectable()
 export class CharactersService {
+  private readonly logger = new Logger(CharactersService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   list(ownerId: number) {
@@ -135,7 +139,49 @@ export class CharactersService {
     ) {
       throw new ForbiddenException(`Character ${id} belongs to another user`);
     }
-    return this.backfillProficiencies(character);
+    return this.healVitalsFromEngine(await this.backfillProficiencies(character));
+  }
+
+  /**
+   * Read-heal: `hpMax`/`mpMax` are DERIVED — the t20-data engine is the
+   * single source of truth and the stored columns are only a read cache
+   * (see vitals-sync.helpers). Every mutation path guards through
+   * `findOne`, so healing here also refreshes the cache after any write
+   * that changed computeSheet inputs (level, classes, attributes, gear).
+   * The write-through is best-effort: on failure we log and still return
+   * the healed shape, so a read never 500s over a cache refresh.
+   */
+  private async healVitalsFromEngine<
+    T extends {
+      id: number;
+      hpMax: number;
+      hpCurrent: number;
+      mpMax: number;
+      mpCurrent: number;
+    } & Parameters<typeof computeSheetForRow>[0],
+  >(character: T): Promise<T> {
+    // A row without classes has no engine vitals (computeVitals yields 0/0)
+    // — healing would zero the pools. Keep the stored values untouched.
+    if (!Array.isArray(character.classes) || character.classes.length === 0) {
+      return character;
+    }
+    const { vitals } = computeSheetForRow(character);
+    const patch = engineVitalsPatch(character, {
+      pvMax: vitals.pvMax,
+      pmMax: vitals.pmMax,
+    });
+    if (!patch) return character;
+    try {
+      await this.prisma.character.update({
+        where: { id: character.id },
+        data: patch,
+      });
+    } catch (err) {
+      this.logger.warn(
+        `vitals write-through failed for character ${character.id}: ${String(err)}`,
+      );
+    }
+    return { ...character, ...patch };
   }
 
   /** True when `userId` owns a campaign this character has joined —
@@ -218,7 +264,7 @@ export class CharactersService {
     return { ...character, proficiencies: next };
   }
 
-  create(ownerId: number, dto: CreateCharacterDto) {
+  async create(ownerId: number, dto: CreateCharacterDto) {
     assertCharacterRules(dto);
     const totalLevel = dto.classes.reduce((sum, c) => sum + c.level, 0);
     const classNames = dto.classes.map((c) => c.className);
@@ -228,7 +274,9 @@ export class CharactersService {
     // Creation-time ability choices (optional). Trained perícias are folded
     // into the seeded expertise rows; the JSON choice fields carry the rest.
     const trainedSet = new Set(dto.trainedExpertises ?? []);
-    return this.prisma.character.create({
+    // Client-sent maxes are only a hint; the engine re-derives + overwrites
+    // them right below (healVitalsFromEngine) so both sources always agree.
+    const created = await this.prisma.character.create({
       data: {
         ownerId,
         name: dto.name,
@@ -282,6 +330,7 @@ export class CharactersService {
       },
       include: characterInclude,
     });
+    return this.healVitalsFromEngine(created);
   }
 
   /**

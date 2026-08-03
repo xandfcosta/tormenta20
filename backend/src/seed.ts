@@ -135,12 +135,16 @@ const MARTIAL_GEAR: GearRef[] = [
 ];
 
 // Heavy armor + shield → exercises the "Destreza bloqueada por armadura
-// pesada" Defense breakdown on the sheet.
+// pesada" Defense breakdown on the sheet. Weapon wielded in the free hand so
+// the HUD weapon row + attack chips have a live source; cosmético feeds
+// applySceneEffect (which consumes SCENE_CONSUMABLE — without it a
+// sceneEffect:true spec silently no-ops and activeEffects stays empty).
 const HEAVY_GEAR: GearRef[] = [
   { catalogId: 'armadura-completa', quantity: 1, equipped: 'vested' },
   { catalogId: 'escudo-pesado', quantity: 1, equipped: 'wielded' },
-  { catalogId: 'machado-batalha', quantity: 1 },
+  { catalogId: 'machado-batalha', quantity: 1, equipped: 'wielded' },
   { catalogId: 'balsamo-restaurador', quantity: 2 },
+  { catalogId: 'cosmetico', quantity: 2 },
 ];
 
 // A stuffed backpack → gives the Inventário tab a long list to scroll/filter.

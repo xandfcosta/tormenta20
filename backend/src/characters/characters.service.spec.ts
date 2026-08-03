@@ -11,6 +11,7 @@ import { Test } from '@nestjs/testing';
 import { CharactersService } from './characters.service';
 import { CharacterItemsService } from './characters-items.service';
 import { CharacterEffectsService } from './characters-effects.service';
+import { CharacterTempHpService } from './character-temp-hp.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 /**
@@ -136,11 +137,25 @@ class FakePrisma {
   characterItemDelete = jest.fn(async () => ({ ok: true }));
   characterItemCreate = jest.fn(async ({ data }: { data: unknown }) => data);
   activeEffectFindUnique = jest.fn<
-    Promise<{ id: number; characterId: number } | null>,
+    Promise<
+      | ({ id: number; characterId: number } & Partial<{
+          catalogId: string;
+          scope: string;
+          modifiers: string;
+          createdAt: Date;
+        }>)
+      | null
+    >,
     [unknown]
   >();
   activeEffectCreate = jest.fn(async ({ data }: { data: unknown }) => data);
+  /* F1 vale-o-maior: the temp-hp apply path reads the character's effect
+   * rows inside the tx before upserting. Defaults to the seed's rows. */
+  activeEffectFindMany = jest.fn(
+    async () => this.lastSeed?.activeEffects ?? [],
+  );
   activeEffectUpsert = jest.fn(async ({ create }: { create: unknown }) => create);
+  activeEffectUpdate = jest.fn(async ({ data }: { data: unknown }) => data);
   activeEffectDelete = jest.fn(async () => ({ ok: true }));
   activeEffectDeleteMany = jest.fn(async () => ({ count: 0 }));
   characterClassFindMany = jest.fn<
@@ -165,6 +180,12 @@ class FakePrisma {
     cb({
       activeEffect: {
         create: this.activeEffectCreate,
+        /* F1: temp-hp pool apply runs read → displace → upsert in one tx. */
+        findMany: this.activeEffectFindMany,
+        upsert: this.activeEffectUpsert,
+        update: this.activeEffectUpdate,
+        delete: this.activeEffectDelete,
+        deleteMany: this.activeEffectDeleteMany,
       },
       characterItem: {
         /* BI1: addItem/updateItem now hold equip-limit check + write
@@ -216,8 +237,10 @@ class FakePrisma {
     };
     activeEffect: {
       findUnique: typeof this.activeEffectFindUnique;
+      findMany: typeof this.activeEffectFindMany;
       create: typeof this.activeEffectCreate;
       upsert: typeof this.activeEffectUpsert;
+      update: typeof this.activeEffectUpdate;
       delete: typeof this.activeEffectDelete;
       deleteMany: typeof this.activeEffectDeleteMany;
     };
@@ -243,8 +266,10 @@ class FakePrisma {
       },
       activeEffect: {
         findUnique: this.activeEffectFindUnique,
+        findMany: this.activeEffectFindMany,
         create: this.activeEffectCreate,
         upsert: this.activeEffectUpsert,
+        update: this.activeEffectUpdate,
         delete: this.activeEffectDelete,
         deleteMany: this.activeEffectDeleteMany,
       },
@@ -285,6 +310,7 @@ async function makeEffectsService(
     providers: [
       CharactersService,
       CharacterEffectsService,
+      CharacterTempHpService,
       { provide: PrismaService, useValue: prisma.service },
     ],
   }).compile();
@@ -389,7 +415,8 @@ describe('CharactersService.updateClassLevel — PDF p7 (sum ≤ 20)', () => {
     );
     const service = await makeService(prisma);
     await service.updateClassLevel(1, 1, { className: 'Bardo', level: 7 });
-    const payload = prisma.characterUpdate.mock.calls[0]![0] as {
+    // .at(-1): the findOne read-heal may prepend its own character.update.
+    const payload = prisma.characterUpdate.mock.calls.at(-1)![0] as {
       data: { level: number };
     };
     expect(payload.data.level).toBe(17);
@@ -474,7 +501,8 @@ describe('CharactersService.updateVitals — clamp to max', () => {
     prisma.seedCharacter(makeCharacter({ hpMax: 12, mpMax: 4 }));
     const service = await makeService(prisma);
     await service.updateVitals(1, 1, { hpCurrent: 6, mpCurrent: 2 });
-    const payload = prisma.characterUpdate.mock.calls[0]![0] as {
+    // .at(-1): the findOne read-heal may prepend its own character.update.
+    const payload = prisma.characterUpdate.mock.calls.at(-1)![0] as {
       data: { hpCurrent: number; mpCurrent: number };
     };
     expect(payload.data).toEqual({ hpCurrent: 6, mpCurrent: 2 });
@@ -540,7 +568,8 @@ describe('CharactersService.updateProficiencies', () => {
     await service.updateProficiencies(1, 1, {
       proficiencies: ['armas-simples', 'armas-simples', 'armas-marciais'],
     });
-    const payload = prisma.characterUpdate.mock.calls[0]![0] as {
+    // .at(-1): the findOne read-heal may prepend its own character.update.
+    const payload = prisma.characterUpdate.mock.calls.at(-1)![0] as {
       data: { proficiencies: string };
     };
     expect(JSON.parse(payload.data.proficiencies)).toEqual([
@@ -1074,17 +1103,224 @@ describe('CharacterEffectsService.applyEffect — spell buffs', () => {
   });
 });
 
+describe('CharacterEffectsService.applyEffect — power grants (Fase 4)', () => {
+  it('temp-hp grant: Alma de Bronze persists nível + Força FINAL (p41)', async () => {
+    const prisma = new FakePrisma();
+    // races: [] → sem mod racial, então Força FINAL = coluna strength (4).
+    prisma.seedCharacter(
+      makeCharacter({
+        id: 1,
+        ownerId: 7,
+        level: 6,
+        strength: 4,
+        classes: [{ className: 'Bárbaro', level: 6 }],
+        races: [],
+      }),
+    );
+    const service = await makeEffectsService(prisma);
+    await service.applyEffect(7, 1, { powerId: 'class.barbaro.alma-de-bronze' });
+    expect(prisma.activeEffectUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          characterId_catalogId_scope: {
+            characterId: 1,
+            catalogId: 'class.barbaro.alma-de-bronze',
+            scope: 'scene',
+          },
+        },
+        create: expect.objectContaining({
+          source: 'power',
+          modifiers: JSON.stringify([
+            {
+              target: { k: 'tempHp' },
+              amount: 10, // nível 6 + Força 4
+              bonusType: 'untyped',
+              note: 'PV temporários',
+            },
+          ]),
+        }),
+      }),
+    );
+  });
+
+  it('active-effect grant persists the modifiers verbatim (Dahllan p21)', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ id: 1, ownerId: 7 }));
+    const service = await makeEffectsService(prisma);
+    await service.applyEffect(7, 1, {
+      powerId: 'race.dahllan.armadura-de-allihanna',
+    });
+    expect(prisma.activeEffectUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({
+          source: 'power',
+          catalogId: 'race.dahllan.armadura-de-allihanna',
+          scope: 'scene',
+          modifiers: JSON.stringify([
+            {
+              target: { k: 'defense' },
+              amount: 2,
+              bonusType: 'untyped',
+              note: 'Armadura de Allihanna',
+            },
+          ]),
+        }),
+      }),
+    );
+  });
+
+  it('rejects an unknown powerId with the offending value', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ id: 1, ownerId: 7 }));
+    const service = await makeEffectsService(prisma);
+    await expect(
+      service.applyEffect(7, 1, { powerId: 'class.fake.nao-existe' }),
+    ).rejects.toMatchObject({
+      response: expect.objectContaining({
+        message: expect.stringContaining('class.fake.nao-existe'),
+      }),
+    });
+    expect(prisma.activeEffectUpsert).not.toHaveBeenCalled();
+  });
+
+  it('rejects a registered power that carries no grant', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ id: 1, ownerId: 7 }));
+    const service = await makeEffectsService(prisma);
+    await expect(
+      service.applyEffect(7, 1, { powerId: 'class.barbaro.golpe-poderoso' }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(prisma.activeEffectUpsert).not.toHaveBeenCalled();
+  });
+
+  it('rejects a dto with neither spellId nor powerId', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ id: 1, ownerId: 7 }));
+    const service = await makeEffectsService(prisma);
+    await expect(service.applyEffect(7, 1, {})).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+  });
+});
+
+describe('CharacterEffectsService.adjustActiveEffect — debitable temp-PV pool', () => {
+  const tempHpRow = (amount: number) => ({
+    id: 50,
+    characterId: 1,
+    catalogId: 'class.barbaro.alma-de-bronze',
+    scope: 'scene',
+    modifiers: JSON.stringify([
+      { target: { k: 'tempHp' }, amount, bonusType: 'untyped', note: 'PV temporários' },
+    ]),
+    createdAt: new Date(),
+  });
+
+  it('debits the pool and persists the reduced amount', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ id: 1 }));
+    prisma.activeEffectFindUnique.mockResolvedValue(tempHpRow(10));
+    const service = await makeEffectsService(prisma);
+    await service.adjustActiveEffect(1, 1, 50, { tempHpDelta: -3 });
+    expect(prisma.activeEffectUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 50 },
+        data: {
+          modifiers: JSON.stringify([
+            {
+              target: { k: 'tempHp' },
+              amount: 7,
+              bonusType: 'untyped',
+              note: 'PV temporários',
+            },
+          ]),
+        },
+      }),
+    );
+    expect(prisma.activeEffectDelete).not.toHaveBeenCalled();
+  });
+
+  it('deletes the row and reports removal when the pool reaches 0', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ id: 1 }));
+    prisma.activeEffectFindUnique.mockResolvedValue(tempHpRow(5));
+    const service = await makeEffectsService(prisma);
+    const result = await service.adjustActiveEffect(1, 1, 50, {
+      tempHpDelta: -5,
+    });
+    expect(result).toEqual({ removed: true, id: 50 });
+    expect(prisma.activeEffectDelete).toHaveBeenCalledWith({ where: { id: 50 } });
+    expect(prisma.activeEffectUpdate).not.toHaveBeenCalled();
+  });
+
+  it('floors at 0 when the delta over-drains the pool', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ id: 1 }));
+    prisma.activeEffectFindUnique.mockResolvedValue(tempHpRow(4));
+    const service = await makeEffectsService(prisma);
+    const result = await service.adjustActiveEffect(1, 1, 50, {
+      tempHpDelta: -99,
+    });
+    expect(result).toEqual({ removed: true, id: 50 });
+  });
+
+  it('404s when the effect belongs to another character', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ id: 1 }));
+    prisma.activeEffectFindUnique.mockResolvedValue({
+      ...tempHpRow(10),
+      characterId: 2,
+    });
+    const service = await makeEffectsService(prisma);
+    await expect(
+      service.adjustActiveEffect(1, 1, 50, { tempHpDelta: -1 }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('404s when the effect does not exist', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ id: 1 }));
+    prisma.activeEffectFindUnique.mockResolvedValue(null);
+    const service = await makeEffectsService(prisma);
+    await expect(
+      service.adjustActiveEffect(1, 1, 999, { tempHpDelta: -1 }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('400s (with the offending ids) on an effect without tempHp target', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ id: 1 }));
+    prisma.activeEffectFindUnique.mockResolvedValue({
+      ...tempHpRow(10),
+      catalogId: 'armadura-arcana',
+      modifiers: JSON.stringify([
+        { target: { k: 'defense' }, amount: 5, bonusType: 'armor' },
+      ]),
+    });
+    const service = await makeEffectsService(prisma);
+    await expect(
+      service.adjustActiveEffect(1, 1, 50, { tempHpDelta: -1 }),
+    ).rejects.toMatchObject({
+      response: expect.objectContaining({
+        message: expect.stringContaining('armadura-arcana'),
+      }),
+    });
+  });
+});
+
 describe('CharacterEffectsService.restVitals — T20 night rest (livro p.20)', () => {
   it('restores floor(level × mult) to PV and PM, clamped to max', async () => {
     const prisma = new FakePrisma();
-    // level 4, confortavel ×2 → gain 8: hp 10→18 (max 30), mp 2→10 (max 12)
+    // level 4 (classes kept in sync — the read-heal derives maxes from the
+    // class-level sum), confortavel ×2 → gain 8: hp 10→18, mp 2→10.
+    // Guerreiro 4 / Con 1 → engine 39 PV / 12 PM, so neither gain clamps.
     prisma.seedCharacter(
       makeCharacter({
         id: 5,
         ownerId: 7,
         level: 4,
+        classes: [{ className: 'Guerreiro', level: 4 }],
         hpCurrent: 10,
-        hpMax: 30,
+        hpMax: 39,
         mpCurrent: 2,
         mpMax: 12,
       }),
@@ -1100,20 +1336,23 @@ describe('CharacterEffectsService.restVitals — T20 night rest (livro p.20)', (
 
   it('clamps a large gain to max (no overheal)', async () => {
     const prisma = new FakePrisma();
+    // Guerreiro 20 / Con 1 → engine 135 PV / 60 PM; maxes must match the
+    // engine or the read-heal rewrites them before the rest clamps.
     prisma.seedCharacter(
       makeCharacter({
         id: 5,
         ownerId: 7,
         level: 20,
-        hpCurrent: 28,
-        hpMax: 30,
-        mpCurrent: 11,
-        mpMax: 12,
+        classes: [{ className: 'Guerreiro', level: 20 }],
+        hpCurrent: 133,
+        hpMax: 135,
+        mpCurrent: 59,
+        mpMax: 60,
       }),
     );
     const service = await makeEffectsService(prisma);
     const result = await service.restVitals(7, 5, 'luxuosa'); // gain 60
-    expect(result).toEqual({ hpCurrent: 30, mpCurrent: 12 });
+    expect(result).toEqual({ hpCurrent: 135, mpCurrent: 60 });
   });
 
   it('floors half-level recovery (Ruim, odd level)', async () => {
@@ -1159,5 +1398,115 @@ describe('CharactersService.assertOwner — lightweight owner guard', () => {
     await expect(service.assertOwner(7, 99)).rejects.toBeInstanceOf(
       NotFoundException,
     );
+  });
+});
+
+describe('CharactersService.findOne — engine vitals read-heal', () => {
+  /* hpMax/mpMax are derived: the t20-data engine is the single source of
+   * truth and the stored columns are only a read cache (2026-08 audit:
+   * every seeded character diverged). findOne heals stale rows in place.
+   * The default fixture (Guerreiro 1 / Con 1) computes 21 PV / 3 PM. */
+  it('rewrites stale stored maxes to the engine values and clamps currents', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(
+      makeCharacter({ hpMax: 12, hpCurrent: 12, mpMax: 4, mpCurrent: 4 }),
+    );
+    const service = await makeService(prisma);
+    const row = await service.findOne(1, 1);
+    expect(row).toMatchObject({
+      hpMax: 21,
+      hpCurrent: 12,
+      mpMax: 3,
+      mpCurrent: 3,
+    });
+    expect(prisma.characterUpdate).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: { hpMax: 21, mpMax: 3, mpCurrent: 3 },
+    });
+  });
+
+  it('writes nothing when the stored columns already match the engine', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(
+      makeCharacter({ hpMax: 21, hpCurrent: 21, mpMax: 3, mpCurrent: 3 }),
+    );
+    const service = await makeService(prisma);
+    const row = await service.findOne(1, 1);
+    expect(row.hpMax).toBe(21);
+    expect(prisma.characterUpdate).not.toHaveBeenCalled();
+  });
+
+  it('leaves a class-less row untouched (engine vitals would be 0/0)', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ classes: [], hpMax: 12, mpMax: 4 }));
+    const service = await makeService(prisma);
+    const row = await service.findOne(1, 1);
+    expect(row.hpMax).toBe(12);
+    expect(prisma.characterUpdate).not.toHaveBeenCalled();
+  });
+
+  it('still returns the healed shape when the write-through fails', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter({ hpMax: 12, mpMax: 4, mpCurrent: 3 }));
+    prisma.characterUpdate.mockRejectedValueOnce(new Error('db locked'));
+    const service = await makeService(prisma);
+    const row = await service.findOne(1, 1);
+    expect(row.hpMax).toBe(21);
+  });
+});
+
+describe('CharacterItemsService — equip-axis invariant (2026-08 audit)', () => {
+  /* The API used to persist `equipped: 'vested'` for Escudo pesado
+   * (catalog equip axis 'wielded') — an impossible state the sheet engine
+   * silently ignored. Axis is now asserted on addItem + updateItem. */
+  it('addItem rejects a vested shield (wielded-axis item)', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter());
+    const service = await makeItemsService(prisma);
+    await expect(
+      service.addItem(1, 1, {
+        catalogId: 'escudo-pesado',
+        quantity: 1,
+        equipped: 'vested',
+      }),
+    ).rejects.toMatchObject({
+      response: expect.objectContaining({
+        fieldErrors: { equipped: ['"Escudo pesado" só aceita wielded ou wielded2'] },
+      }),
+    });
+  });
+
+  it('updateItem rejects wielding an armor (vested-axis item)', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter());
+    prisma.characterItemFindUnique.mockResolvedValue({
+      id: 9,
+      characterId: 1,
+      equipped: null,
+      catalogId: 'armadura-completa',
+    });
+    const service = await makeItemsService(prisma);
+    await expect(
+      service.updateItem(1, 1, 9, { equipped: 'wielded' }),
+    ).rejects.toMatchObject({
+      response: expect.objectContaining({
+        fieldErrors: { equipped: ['"Armadura completa" só aceita vested'] },
+      }),
+    });
+  });
+
+  it('updateItem keeps a legal axis change (shield → wielded) working', async () => {
+    const prisma = new FakePrisma();
+    prisma.seedCharacter(makeCharacter());
+    prisma.characterItemFindUnique.mockResolvedValue({
+      id: 9,
+      characterId: 1,
+      equipped: null,
+      catalogId: 'escudo-pesado',
+    });
+    const service = await makeItemsService(prisma);
+    await expect(
+      service.updateItem(1, 1, 9, { equipped: 'wielded' }),
+    ).resolves.toBeDefined();
   });
 });

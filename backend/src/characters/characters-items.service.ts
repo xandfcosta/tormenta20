@@ -22,6 +22,7 @@ import {
   assertSlotsMultiple,
   rollAverage,
 } from './characters.helpers';
+import { assertEquipAxisAllowed } from './equip-axis.helpers';
 import { isPrismaUniqueViolation } from '../common/prisma-errors';
 import { CharactersService } from './characters.service';
 
@@ -103,6 +104,9 @@ export class CharacterItemsService {
     }
 
     assertOverlaysCompatible(dto.catalogId, dto.improvements, dto.material);
+    if (dto.equipped) {
+      assertEquipAxisAllowed(dto.catalogId ?? null, dto.equipped);
+    }
 
     /* BI1: check + create inside one tx so a parallel equip can't slip
      * past the hand/vested limits. Without the tx, two concurrent
@@ -162,6 +166,7 @@ export class CharacterItemsService {
       }
       if (dto.equipped !== undefined && dto.equipped !== item.equipped) {
         if (dto.equipped) {
+          assertEquipAxisAllowed(item.catalogId ?? null, dto.equipped);
           await this.assertEquipLimits(tx, characterId, itemId, dto.equipped);
         }
       }
