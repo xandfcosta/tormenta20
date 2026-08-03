@@ -30,6 +30,7 @@ const ATTR_KEYS = new Set<string>(ATTRIBUTE_KEYS)
 
 const BONUS_TYPES = new Set<BonusType>([
   'armor',
+  'shield',
   'item',
   'training',
   'morale',

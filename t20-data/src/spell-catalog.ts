@@ -6644,6 +6644,31 @@ export function spellEffectByName(name: string): string | null {
   return SPELL_EFFECT_BY_NAME[name] ?? null
 }
 
+/** Accent/case-insensitive key so "Visão Mística" and "visao mistica" match. */
+function normalizeSpellName(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
+// Normalized names stay unique across the 199-spell catalog (asserted in
+// spell-catalog.test.ts); a dupe would silently shadow on last write.
+const SPELL_BY_NORMALIZED_NAME: ReadonlyMap<string, CatalogSpell> = new Map(
+  SPELLS.map((spell) => [normalizeSpellName(spell.name), spell]),
+)
+
+/**
+ * Catalog spell looked up by display name, accent-insensitive; null when no
+ * spell matches. Used where a feature references a spell by NAME instead of id
+ * — e.g. Bárbaro Totem Espiritual grants the spell its animal's `note` names.
+ * Ex.: spellByName('Visão Mística')?.id === 'visao-mistica'
+ */
+export function spellByName(name: string): CatalogSpell | null {
+  return SPELL_BY_NORMALIZED_NAME.get(normalizeSpellName(name)) ?? null
+}
+
 export function spellById(id: string): CatalogSpell {
   const spell = SPELL_CATALOG[id]
   if (!spell) {

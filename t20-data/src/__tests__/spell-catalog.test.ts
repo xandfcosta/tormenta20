@@ -4,6 +4,7 @@ import {
   SPELL_CATALOG,
   SPELL_IDS,
   spellById,
+  spellByName,
   spellEffectByName,
   spellsByCircle,
   spellsByClass,
@@ -52,6 +53,30 @@ describe('SPELL_CATALOG — buff spells', () => {
 
   it('spellEffectByName returns null for an unknown name', () => {
     expect(spellEffectByName('Não Existe Magia')).toBeNull()
+  })
+
+  it('spellByName resolves a display name to its catalog spell', () => {
+    expect(spellByName('Armadura Arcana')?.id).toBe('armadura-arcana')
+  })
+
+  it('spellByName is accent/case-insensitive', () => {
+    expect(spellByName('visao mistica')?.id).toBe('visao-mistica')
+    expect(spellByName('VISÃO MÍSTICA')?.id).toBe('visao-mistica')
+  })
+
+  it('spellByName returns null for an unknown name', () => {
+    expect(spellByName('Não Existe Magia')).toBeNull()
+  })
+
+  // spellByName's map would silently shadow on a dupe — pin uniqueness.
+  it('normalized spell names are unique across the catalog', () => {
+    const normalized = SPELL_IDS.map((id) =>
+      spellById(id)
+        .name.normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase(),
+    )
+    expect(new Set(normalized).size).toBe(normalized.length)
   })
 
   it('Armadura Arcana grants +5 Defesa', () => {

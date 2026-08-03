@@ -27,6 +27,9 @@ export const INVENTOR_POWERS: ClassPower[] = [
   ),
   autoPower(C, 7, 'Encontrar Fraqueza',
     'Ação de movimento + 2 PM: analisa objeto em alcance curto. Ignora redução de dano dele. Em armadura/construto: +2 ataques contra ele.',
+    // p70: "Se ele estiver de armadura ou for um construto, você recebe +2 em
+    // seus testes de ataque contra ele ... até o fim da cena" ⇒ context toggle.
+    [{ target: { k: 'attack', scope: 'all' }, amount: 2, bonusType: 'untyped', condition: { c: 'context', note: 'contra alvo analisado de armadura ou construto — 2 PM, até o fim da cena' } }],
   ),
   autoPower(C, 8, 'Fabricar Item Superior (3 melhorias)',
     'Pode substituir item por superior com três melhorias. Passa a fabricar itens superiores com até 3 melhorias.',

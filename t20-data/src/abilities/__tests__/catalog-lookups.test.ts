@@ -9,6 +9,7 @@ import {
   getRaceAbility,
   racesGrantTormenta,
 } from '../catalog'
+import { spellByName } from '../../spell-catalog'
 
 describe('racesGrantTormenta', () => {
   it('is true only for Tormenta-touched races (Lefou)', () => {
@@ -178,6 +179,20 @@ describe('power sub-choices (PowerChoice)', () => {
     expect(p?.choice?.options?.find((o) => o.id === 'urso')?.note).toBe(
       'Vitalidade Fantasma',
     )
+  })
+
+  // Cross-ref: the sheet surfaces the granted spell by resolving each option's
+  // `note` through spellByName — a rename in either catalog must fail here.
+  it('Totem Espiritual grants Sab-keyed spells whose notes all resolve', () => {
+    const choice = byName('Totem Espiritual')?.choice
+    expect(choice?.grantsSpellAttribute).toBe('wisdom')
+    for (const option of choice?.options ?? []) {
+      expect(option.note, `totem ${option.id} sem magia`).toBeTruthy()
+      expect(
+        spellByName(option.note!)?.name,
+        `magia "${option.note}" do totem ${option.id} não está no catálogo`,
+      ).toBe(option.note)
+    }
   })
 
   it('Especialista em Escola offers the 8 schools (repeatable)', () => {

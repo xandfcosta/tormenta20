@@ -15,6 +15,8 @@ export const CACADOR_POWERS: ClassPower[] = [
   ),
   autoPower(C, 1, 'Rastreador',
     '+2 em Sobrevivência. Move-se em deslocamento normal enquanto rastreia sem penalidade no teste.',
+    // p50: "Rastreador. Você recebe +2 em Sobrevivência." — passivo flat.
+    [{ target: { k: 'expertise', name: 'Sobrevivência' }, amount: 2, bonusType: 'untyped' }],
   ),
   autoPower(C, 3, 'Explorador',
     'Escolha um tipo de terreno (aquático, ártico, colina, deserto, floresta, montanha, pântano, planície, subterrâneo, urbano). Quando nele, soma Sabedoria (mín +1) na Defesa e em testes de Acrobacia, Atletismo, Furtividade, Percepção e Sobrevivência. L11 inclui Tormenta. A cada 4 níveis (L7/11/15/19), escolhe outro terreno ou aumenta bônus em terreno já escolhido em +2.',
@@ -36,6 +38,9 @@ export const CACADOR_POWERS: ClassPower[] = [
   ),
   autoPower(C, 20, 'Mestre Caçador',
     'Capstone: pode usar Marca da Presa como ação livre. Quando usa, +2 margem de ameaça contra criatura. Se reduzir alvo marcado a 0 PV, recupera 5 PM.',
+    // p51: "pode pagar 5 PM para aumentar sua margem de ameaça contra a
+    // criatura em +2" — restrito ao alvo marcado ⇒ context toggle.
+    [{ target: { k: 'critRange' }, amount: 2, bonusType: 'untyped', condition: { c: 'context', note: 'contra a criatura marcada — +5 PM ao usar Marca da Presa' } }],
   ),
 
   // Poderes de Caçador (p50-51)

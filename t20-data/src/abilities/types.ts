@@ -119,6 +119,10 @@ export type PowerChoice = {
   label: string
   options?: { id: string; name: string; note?: string }[]
   repeatable?: boolean
+  /** When set, each option's `note` names a SPELL the power teaches, cast with
+   *  this key attribute (Bárbaro Totem Espiritual: Sab, PDF p42). Consumers
+   *  resolve `note` → catalog spell via `spellByName`. */
+  grantsSpellAttribute?: AttributeKey
 }
 
 export type ClassPower = {

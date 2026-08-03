@@ -1,7 +1,22 @@
 import { attributeBoostPower, attr, autoPower, electivePower, power, trained } from './_helpers'
+import type { Modifier } from '../../items/types'
 import type { ClassPower } from '../types'
 
 const C = 'Bardo'
+
+/**
+ * Inspiração (p44): "+1 em testes de perícia até o fim da cena" — postura
+ * ligada no painel de Efeitos (flag 'inspiracao', custo 2 PM via
+ * FLAG_ACTIVATIONS). Mesmo bonusType 'morale' em todos os tiers para o
+ * resolveStack manter só o maior (+2 do L5 supera o +1 do L1), espelhando
+ * furiaMods do Bárbaro.
+ */
+function inspiracaoMods(bonus: number): Modifier[] {
+  const cond = { c: 'flagOn' as const, flag: 'inspiracao', label: 'Sob Inspiração' }
+  return [
+    { target: { k: 'expertiseAll' }, amount: bonus, bonusType: 'morale', condition: cond },
+  ]
+}
 
 /**
  * PDF Cap 1 (Bardo, p43-45, Tabela 1-7). Auto: Inspiração L1 + scaling
@@ -15,6 +30,7 @@ const C = 'Bardo'
 export const BARDO_POWERS: ClassPower[] = [
   autoPower(C, 1, 'Inspiração +1',
     'Ação padrão + 2 PM: aliados (incluindo bardo) em alcance curto recebem +1 em testes de perícia até fim da cena. A cada 4 níveis pode gastar +2 PM para aumentar bônus em +1.',
+    inspiracaoMods(1),
   ),
   autoPower(C, 1, 'Magias (1° círculo)',
     'Pode lançar magias arcanas de 3 escolas escolhidas. Atributo-chave: Carisma. Pode lançar com armaduras leves sem teste de Misticismo.',
@@ -24,24 +40,28 @@ export const BARDO_POWERS: ClassPower[] = [
   ),
   autoPower(C, 5, 'Inspiração +2',
     'Bônus base de Inspiração sobe para +2.',
+    inspiracaoMods(2),
   ),
   autoPower(C, 6, 'Magias (2° círculo)',
     'Pode lançar magias arcanas de 2° círculo.',
   ),
   autoPower(C, 9, 'Inspiração +3',
     'Bônus base de Inspiração sobe para +3.',
+    inspiracaoMods(3),
   ),
   autoPower(C, 10, 'Magias (3° círculo)',
     'Pode lançar magias arcanas de 3° círculo.',
   ),
   autoPower(C, 13, 'Inspiração +4',
     'Bônus base de Inspiração sobe para +4.',
+    inspiracaoMods(4),
   ),
   autoPower(C, 14, 'Magias (4° círculo)',
     'Pode lançar magias arcanas de 4° círculo.',
   ),
   autoPower(C, 17, 'Inspiração +5',
     'Bônus base de Inspiração sobe para +5.',
+    inspiracaoMods(5),
   ),
   autoPower(C, 20, 'Artista Completo',
     'Capstone: pode usar Inspiração como ação livre. Sob Inspiração, custo em PM de habilidades de bardo (incluindo magias) reduzido à metade.',

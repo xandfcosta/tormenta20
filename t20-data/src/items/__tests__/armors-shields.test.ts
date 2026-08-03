@@ -148,11 +148,13 @@ describe('Shield catalog invariants', () => {
     }
   })
 
-  it('shield Defense bonus is "armor"-typed (won’t stack with armor)', () => {
+  it('shield Defense bonus is "shield"-typed (stacks with armor, not with other shields)', () => {
+    // PDF p226 sidebar: bônus de armadura e de escudo são distintos e
+    // cumulativos. bonusType 'armor' here made resolveStack drop the shield.
     for (const s of SHIELDS) {
       const defMod = s.modifiers.find((m) => m.target.k === 'defense')
       expect(defMod, `${s.id} missing defense modifier`).toBeDefined()
-      expect(defMod!.bonusType).toBe('armor')
+      expect(defMod!.bonusType).toBe('shield')
     }
   })
 })

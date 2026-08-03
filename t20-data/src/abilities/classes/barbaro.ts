@@ -10,6 +10,19 @@ const C = 'Bárbaro'
  * player toggles in the conditionals panel. Non-stacking morale rule keeps
  * only the highest tier (so L6+ Fúria +3 supersedes L1 Fúria +2).
  */
+/**
+ * Instinto Selvagem (p40): "+1 em rolagens de dano, Percepção e Reflexos".
+ * Mesmo bonusType em todos os tiers para o resolveStack manter só o maior
+ * (+2 do L9 supera o +1 do L3).
+ */
+function instintoMods(bonus: number): Modifier[] {
+  return [
+    { target: { k: 'damage', scope: 'all' }, amount: bonus, bonusType: 'enhancement' },
+    { target: { k: 'expertise', name: 'Percepção' }, amount: bonus, bonusType: 'enhancement' },
+    { target: { k: 'expertise', name: 'Reflexos' }, amount: bonus, bonusType: 'enhancement' },
+  ]
+}
+
 function furiaMods(bonus: number): Modifier[] {
   const cond = { c: 'flagOn' as const, flag: 'furia', label: 'Em Fúria' }
   return [
@@ -45,6 +58,7 @@ export const BARBARO_POWERS: ClassPower[] = [
   ),
   autoPower(C, 3, 'Instinto Selvagem +1',
     '+1 em rolagens de dano, Percepção e Reflexos. A cada 6 níveis aumenta em +1 (+2 em L9, +3 em L15).',
+    instintoMods(1),
   ),
   autoPower(C, 5, 'Redução de Dano',
     'Recebe RD 2 contra dano físico. Sobe +2 a cada 3 níveis (RD 4 em L8, RD 6 em L11, RD 8 em L14, RD 10 em L17).',
@@ -58,6 +72,7 @@ export const BARBARO_POWERS: ClassPower[] = [
   ),
   autoPower(C, 9, 'Instinto Selvagem +2',
     'Bônus de Instinto Selvagem sobe para +2.',
+    instintoMods(2),
   ),
   autoPower(C, 11, 'Fúria +4',
     'Bônus base de Fúria sobe para +4.',
@@ -71,6 +86,7 @@ export const BARBARO_POWERS: ClassPower[] = [
   ),
   autoPower(C, 15, 'Instinto Selvagem +3',
     'Bônus de Instinto Selvagem sobe para +3.',
+    instintoMods(3),
   ),
   autoPower(C, 16, 'Fúria +5',
     'Bônus base de Fúria sobe para +5.',
@@ -151,6 +167,8 @@ export const BARBARO_POWERS: ClassPower[] = [
       choice: {
         kind: 'totem',
         label: 'Animal totêmico',
+        // Cada note nomeia a magia aprendida — lançada com Sab, mesmo em fúria.
+        grantsSpellAttribute: 'wisdom',
         options: [
           { id: 'coruja', name: 'Coruja', note: 'Orientação' },
           { id: 'corvo', name: 'Corvo', note: 'Visão Mística' },

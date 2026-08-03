@@ -242,3 +242,27 @@ describe('Weapon catalog invariants', () => {
     )
   })
 })
+
+describe('trait desbalanceada carrega a mecânica (p149)', () => {
+  // Regressão: Machado táurico tinha só a tag 'desbalanceada' e modifiers
+  // vazios — o -2 em testes de ataque nunca chegava à ficha. A tag é
+  // descritiva; a mecânica precisa existir como modifier legível pelo engine.
+  it.each(WEAPONS.filter((w) => w.weapon?.traits.includes('desbalanceada')))(
+    '$id tem modifier de ataque -2 (esta arma)',
+    (w) => {
+      const mod = w.modifiers.find(
+        (m) => m.target.k === 'attack' && m.target.scope === 'this',
+      )
+      expect(mod).toBeDefined()
+      expect(mod!.amount).toBe(-2)
+      expect(mod!.condition).toEqual({ c: 'wielded' })
+    },
+  )
+
+  it('a lista cobre pelo menos o machado táurico', () => {
+    const ids = WEAPONS.filter((w) =>
+      w.weapon?.traits.includes('desbalanceada'),
+    ).map((w) => w.id)
+    expect(ids).toContain('machado-taurico')
+  })
+})

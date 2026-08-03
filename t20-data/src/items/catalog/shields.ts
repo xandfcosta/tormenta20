@@ -11,7 +11,7 @@ export const SHIELDS: CatalogItem[] = [
     hands: 1,
     shield: { defense: 1, penalty: -1, heavy: false },
     modifiers: [
-      { target: { k: 'defense' }, amount: 1, bonusType: 'armor', condition: { c: 'wielded' } },
+      { target: { k: 'defense' }, amount: 1, bonusType: 'shield', condition: { c: 'wielded' } },
       { target: { k: 'armorPenalty' }, amount: -1, bonusType: 'untyped', condition: { c: 'wielded' } },
     ],
   },
@@ -25,7 +25,7 @@ export const SHIELDS: CatalogItem[] = [
     hands: 1,
     shield: { defense: 2, penalty: -2, heavy: true },
     modifiers: [
-      { target: { k: 'defense' }, amount: 2, bonusType: 'armor', condition: { c: 'wielded' } },
+      { target: { k: 'defense' }, amount: 2, bonusType: 'shield', condition: { c: 'wielded' } },
       { target: { k: 'armorPenalty' }, amount: -2, bonusType: 'untyped', condition: { c: 'wielded' } },
     ],
   },

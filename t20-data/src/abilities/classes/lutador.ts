@@ -1,7 +1,22 @@
 import { attributeBoostPower, attr, autoPower, electivePower, power, trained } from './_helpers'
+import type { Modifier } from '../../items/types'
 import type { ClassPower } from '../types'
 
 const C = 'Lutador'
+
+/**
+ * Casca Grossa (p77): "soma sua Constituição na Defesa ... apenas se não
+ * estiver usando armadura pesada. Além disso, no 7º nível, e a cada quatro
+ * níveis, você recebe +1 na Defesa." Só a parte FIXA (+1..+4 em L7/11/15/19)
+ * é modelada — Defesa escalada por atributo não tem ModifierTarget (scale só
+ * vale para maxPv/maxPm). Mesmo bonusType 'training' em todos os tiers para
+ * o resolveStack manter só o maior (+2 do L11 supera o +1 do L7).
+ */
+function cascaGrossaMods(bonus: number): Modifier[] {
+  return [
+    { target: { k: 'defense' }, amount: bonus, bonusType: 'training' },
+  ]
+}
 
 /**
  * PDF Cap 1 (Lutador, p75-77, Tabela 1-16). Auto: Briga (1d6) + Golpe
@@ -24,30 +39,39 @@ export const LUTADOR_POWERS: ClassPower[] = [
   ),
   autoPower(C, 5, 'Golpe Cruel',
     'Margem de ameaça com ataques desarmados aumenta em +1.',
+    // p77: "Sua margem de ameaça com ataques desarmados aumenta em +1" —
+    // critRange não tem escopo por arma; context ⇒ toggle opt-in.
+    [{ target: { k: 'critRange' }, amount: 1, bonusType: 'untyped', condition: { c: 'context', note: 'com ataques desarmados' } }],
   ),
   autoPower(C, 7, 'Casca Grossa (Con+1)',
     '+1 na Defesa (cumulativo com Casca Grossa).',
+    cascaGrossaMods(1),
   ),
   autoPower(C, 9, 'Briga (1d10)',
     'Dano desarmado sobe para 1d10.',
   ),
   autoPower(C, 9, 'Golpe Violento',
     'Multiplicador de crítico com ataques desarmados aumenta em +1.',
+    // p77: "Seu multiplicador de crítico com ataques desarmados aumenta em +1".
+    [{ target: { k: 'critMult' }, amount: 1, bonusType: 'untyped', condition: { c: 'context', note: 'com ataques desarmados' } }],
   ),
   autoPower(C, 11, 'Casca Grossa (Con+2)',
     '+2 na Defesa.',
+    cascaGrossaMods(2),
   ),
   autoPower(C, 13, 'Briga (2d6)',
     'Dano desarmado sobe para 2d6.',
   ),
   autoPower(C, 15, 'Casca Grossa (Con+3)',
     '+3 na Defesa.',
+    cascaGrossaMods(3),
   ),
   autoPower(C, 17, 'Briga (2d8)',
     'Dano desarmado sobe para 2d8.',
   ),
   autoPower(C, 19, 'Casca Grossa (Con+4)',
     '+4 na Defesa.',
+    cascaGrossaMods(4),
   ),
   autoPower(C, 20, 'Dono da Rua (2d10)',
     'Capstone: dano desarmado sobe para 2d10. Quando usa ação agredir para ataque desarmado, faz dois ataques (podendo usar Golpe Relâmpago para terceiro).',
