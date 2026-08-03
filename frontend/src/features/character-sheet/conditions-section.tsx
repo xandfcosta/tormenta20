@@ -3,6 +3,11 @@ import { X } from 'lucide-react'
 import { CONDITIONS, type ConditionId } from '@tormenta20/t20-data'
 import { api, type Character } from '@/shared/api/api'
 import { Combobox } from '@/shared/ui/combobox'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/shared/ui/popover'
 import { cn } from '@/shared/lib/utils'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import { characterQueryOptions } from '@/entities/character/queries'
@@ -59,7 +64,9 @@ export function ConditionsSection({ character }: { character: Character }) {
     .map((c) => ({ value: c.id, label: c.name }))
 
   return (
-    <div className="space-y-2">
+    // scroll-mt clears the sticky TopNav (~53px) when this section is the
+    // scroll target, so the header never lands hidden under it (audit task 11).
+    <div className="scroll-mt-14 space-y-2">
       <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
         Condições (p394)
       </p>
@@ -108,23 +115,49 @@ export function ConditionsSection({ character }: { character: Character }) {
 export function ConditionPips({
   character,
   className,
+  mini = false,
 }: {
   character: Character
   className?: string
+  /** Compact HUD variant: h-4 chips inline with the class badges, 4+ folds
+   *  into a ⚠+N popover — a dedicated row doubled the nameplate height. */
+  mini?: boolean
 }) {
   const active = parseActiveConditions(character.activeConditions)
   if (active.length === 0) return null
+  const shown = mini ? active.slice(0, 3) : active
+  const overflow = active.length - shown.length
+  const chip = mini
+    ? 'max-w-20 truncate rounded border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/15 px-1 text-[9px] font-semibold uppercase tracking-wide text-[color:var(--hp-hurt)]'
+    : 'rounded border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/15 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-[color:var(--hp-hurt)]'
   return (
-    <ul className={cn('flex flex-wrap gap-1', className)}>
-      {active.map((id) => (
-        <li
-          key={id}
-          title={CONDITIONS[id].description}
-          className="rounded border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/15 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-[color:var(--hp-hurt)]"
-        >
+    <ul className={cn('flex flex-wrap items-center gap-1', className)}>
+      {shown.map((id) => (
+        <li key={id} title={CONDITIONS[id].description} className={chip}>
           {CONDITIONS[id].name}
         </li>
       ))}
+      {overflow > 0 && (
+        <li>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button type="button" className={chip} aria-label={`Mais ${overflow} condições`}>
+                ⚠+{overflow}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72 space-y-2 text-xs">
+              {active.map((id) => (
+                <div key={id}>
+                  <p className="font-semibold uppercase">{CONDITIONS[id].name}</p>
+                  <p className="text-muted-foreground">
+                    {CONDITIONS[id].description}
+                  </p>
+                </div>
+              ))}
+            </PopoverContent>
+          </Popover>
+        </li>
+      )}
     </ul>
   )
 }

@@ -25,3 +25,13 @@ export const accentBadge = ''
 
 export const selectClass =
   'cursor-pointer rounded-md border border-input bg-transparent outline-none focus:ring-2 focus:ring-ring'
+
+/**
+ * Inventory row action cluster: 5 icon slots (info, overlays, usar, editar,
+ * remover) of size-7 (1.75rem) + 4 gap-2 (0.5rem) = 10.75rem. Rows and the
+ * column header both reserve this width so the qtd/esp/total/equipar columns
+ * stay aligned no matter how many buttons a given row actually renders
+ * ("Usar" only exists on consumables). Fixed from sm: up — the phone layout
+ * hides the numeric columns, so there alignment doesn't apply.
+ */
+export const INVENTORY_ACTIONS_WIDTH = 'sm:w-[10.75rem] shrink-0'

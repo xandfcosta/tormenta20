@@ -6,7 +6,7 @@ import { Button } from '@/shared/ui/button'
 import { api, type Character, type ProficienciesResult } from '@/shared/api/api'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import { characterQueryOptions } from '@/entities/character/queries'
-import { accentStrong, dimText, surface } from '@/shared/lib/sheet-theme'
+import { accentStrong, dimText, panelBg, surface } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
 
 /**
@@ -68,8 +68,14 @@ export function ProficienciesPanel({ character }: { character: Character }) {
   )
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
-      <div className="flex justify-end">
+    // border-t + own padding: this block sits below the Equipado pools' scroll
+    // area, which clips its cards mid-content at the seam — without a visible
+    // boundary the transparent "Restaurar padrão" row read as a button floating
+    // over the clipped card (UI audit task 14). The heading anchors the row and
+    // flex-wrap keeps it from colliding with the button at narrow widths.
+    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto border-t border-border p-3 sm:p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className={cn('text-sm font-bold', accentStrong)}>Proficiências</h3>
         <Button
           type="button"
           variant="outline"
@@ -200,5 +206,23 @@ function ProficiencyRow({
         ) : null}
       </button>
     </li>
+  )
+}
+
+/**
+ * Standalone "Proficiências" tab — split back out of the bag (the fold into
+ * Equipado/Mochila buried it two scrolls deep). Same panel, own surface.
+ */
+export function ProficienciesTab({ character }: { character: Character }) {
+  return (
+    <section
+      className={cn(
+        'flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl',
+        surface,
+        panelBg,
+      )}
+    >
+      <ProficienciesPanel character={character} />
+    </section>
   )
 }

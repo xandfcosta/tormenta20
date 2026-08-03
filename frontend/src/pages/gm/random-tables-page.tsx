@@ -159,6 +159,7 @@ function BuscaCard() {
           <input
             id="busca-level"
             type="number"
+            inputMode="numeric"
             min={1}
             max={20}
             value={level}

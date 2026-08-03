@@ -6,16 +6,13 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { CharacterPortrait } from '@/shared/ui/character-portrait'
 import { cn } from '@/shared/lib/utils'
+import { tempHpPool } from '@/entities/character/temp-hp-pool'
+import { useApplyDamage } from '@/entities/character/use-apply-damage'
+import { useManualTempHp } from '@/entities/character/use-manual-temp-hp'
 import type { Character } from '@/shared/api/api'
 import { LevelBadge, SheetIdentityText } from './sheet-header'
-import {
-  CombatStats,
-  isCasterCharacter,
-  MagicStats,
-  SavesStats,
-  WeaponFormulaCards,
-} from './combat-magic-stats'
-import { AttributesGrid } from './vitals-aside'
+import { CombatStats, SavesStats } from './combat-magic-stats'
+import { AttributesGrid, ContextualStatBlocks } from './vitals-aside'
 import { ResourceAdjustDialog } from './resource-bar'
 import { useVitals } from './use-vitals'
 
@@ -34,12 +31,31 @@ export function CharacterHud({
   className?: string
 }) {
   const { setHp, setMp } = useVitals(character)
+  // Fase 4: the REAL pool (persisted tempHp effects) replaced the display-only
+  // tempHpFromPowers here. F2: damage goes through ONE atomic POST :id/damage
+  // (server drains the pool first, remainder lowers hp) — the old two-write
+  // drain path is gone. Healing keeps the optimistic vitals PATCH.
+  const pool = tempHpPool(character)
+  const { applyDamage } = useApplyDamage(character)
+  const { setManualTempHp } = useManualTempHp(character)
+  const applyHp = (next: number) => {
+    const damage = character.hpCurrent - next
+    if (damage <= 0) {
+      setHp(next)
+      return
+    }
+    applyDamage(damage)
+  }
   return (
     <div className={cn('border-t bg-card px-3 py-2 sm:px-4', className)}>
-      <div className="flex items-stretch gap-3 lg:gap-4">
+      {/* md-only stacks the stat cluster BELOW the nameplate: side-by-side the
+          cluster's height stretched the square portrait, which squeezed the
+          PV/PM row until its +/−/edit buttons slid under the cluster and were
+          untappable (audit task 10). From lg the desktop row layout returns. */}
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch lg:gap-4">
         {/* Nameplate: square portrait + [name/info over PV/PM bars]. Fills the
-            width on phones; a fixed slice on desktop so the stats get the rest. */}
-        <div className="flex min-w-0 flex-1 items-stretch gap-3 lg:w-[34rem] lg:flex-none">
+            width below lg; a fixed slice on desktop so the stats get the rest. */}
+        <div className="flex min-w-0 items-stretch gap-3 lg:w-[34rem] lg:flex-none">
           <CharacterPortrait
             name={character.name}
             size="sm"
@@ -54,15 +70,23 @@ export function CharacterHud({
               </div>
             </div>
             {/* Class badges sit under the info, just above the PV/PM bars. */}
-            <ClassBadges character={character} className="flex-wrap" />
-            <ConditionPips character={character} />
+            {/* Badges + condition mini-pips share ONE row — a dedicated
+                conditions row doubled the nameplate height (owner feedback). */}
+            <div className="flex flex-wrap items-center gap-1">
+              <ClassBadges character={character} />
+              <ConditionPips character={character} mini />
+            </div>
             <div className="mt-auto flex flex-col gap-1">
               <HudVital
                 label="Vida"
                 current={character.hpCurrent}
                 max={character.hpMax}
                 kind="hp"
-                onSet={setHp}
+                onSet={applyHp}
+                onDamage={applyDamage}
+                temp={pool.total}
+                tempTitle={pool.slices.map((s) => s.label).join(', ')}
+                tempPool={{ total: pool.total, onSetManual: setManualTempHp }}
               />
               <HudVital
                 label="Mana"
@@ -75,25 +99,23 @@ export function CharacterHud({
           </div>
         </div>
 
-        {/* Desktop only: two short rows that expand to fill the rest of the bar
-            — attributes on top, combat + magic below. The wide region keeps
-            every box's corner icon clear of its label. */}
+
+        {/* From md (tablet): the stat cluster — this IS the Vitais content, so
+            the mobile layout drops its Vitais tab at these widths (task 12).
+            md gets full-width 2-col rows under the nameplate; lg stacks 1-col
+            beside it; xl spreads back to 2-col. */}
         <div className="hidden min-w-0 flex-1 flex-col justify-center gap-1.5 md:flex">
           {/* Row A: the reactive numbers — defense/attacks + the three saves
-              ("teste de Reflexos!"). Row B: contextual — casters get the magic
-              triple, martials get equipped-weapon formulas; attributes keep a
-              compact provenance row. */}
-          <div className="grid grid-cols-1 gap-2 xl:grid-cols-2">
+              ("teste de Reflexos!"). Row B: contextual — weapon formulas when
+              something is wielded AND the magic triple for casters (hybrids
+              get both); attributes keep a compact provenance row. */}
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
             <CombatStats character={character} />
             <SavesStats character={character} />
           </div>
-          <div className="grid grid-cols-1 gap-2 xl:grid-cols-2">
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
             <AttributesGrid character={character} className="grid-cols-6" />
-            {isCasterCharacter(character) ? (
-              <MagicStats character={character} />
-            ) : (
-              <WeaponFormulaCards character={character} />
-            )}
+            <ContextualStatBlocks character={character} />
           </div>
         </div>
       </div>
@@ -142,12 +164,23 @@ function HudVital({
   max,
   kind,
   onSet,
+  onDamage,
+  temp = 0,
+  tempTitle,
+  tempPool,
 }: {
   label: string
   current: number
   max: number
   kind: 'hp' | 'mp'
   onSet: (next: number) => void
+  /** F2: routes "Remover" through POST :id/damage (temp-first, atomic). */
+  onDamage?: (amount: number) => void
+  /** Debitable temp-PV pool (persisted tempHp effects) shown as "+N". */
+  temp?: number
+  tempTitle?: string
+  /** F3: pool-aware ✎ dialog — current total + manual pool setter. */
+  tempPool?: { total: number; onSetManual: (value: number) => void }
 }) {
   const pct = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0
   const fillVar = kind === 'hp' ? hpFillVar(pct) : '--mp-arcane'
@@ -163,14 +196,21 @@ function HudVital({
         {label}
       </span>
       {/* − on the far side of + so a greasy thumb never heals when it meant
-          to hurt (audit: fat-finger risk at gap-0.5). */}
+          to hurt (audit: fat-finger risk at gap-0.5). Damage goes through the
+          atomic endpoint UNclamped (F2) — the server routes temp-first, so a
+          shift−5 at 3 PV still drains 5 from the pool; with a pool left the
+          button stays tappable even at 0 PV. */}
       <Button
         type="button"
         variant="outline"
         size="icon"
         className="size-9 shrink-0 lg:size-6"
-        disabled={current <= 0}
-        onClick={(e) => onSet(Math.max(0, current - stepOf(e)))}
+        disabled={current <= 0 && temp <= 0}
+        onClick={(e) =>
+          onDamage
+            ? onDamage(stepOf(e))
+            : onSet(Math.max(0, current - stepOf(e)))
+        }
         aria-label={`Reduzir ${label} (shift: 5)`}
       >
         <Minus className="size-4 lg:size-3" />
@@ -191,6 +231,14 @@ function HudVital({
       <span className="relative shrink-0 font-mono text-base tabular-nums lg:text-xs">
         <span className="font-bold">{current}</span>
         <span className="text-muted-foreground">/{max}</span>
+        {temp > 0 && (
+          <span
+            className="ml-1 font-bold text-emerald-700 dark:text-emerald-400"
+            title={tempTitle ?? 'PV temporários'}
+          >
+            +{temp}
+          </span>
+        )}
         {delta !== null && (
           <span
             className={cn(
@@ -221,6 +269,8 @@ function HudVital({
           current={current}
           max={max}
           onSetCurrent={onSet}
+          onDamage={onDamage}
+          tempPool={tempPool}
           triggerClassName="size-9 lg:size-6"
         />
       </div>

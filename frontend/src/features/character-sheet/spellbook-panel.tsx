@@ -4,6 +4,7 @@ import {
   SPELL_CATALOG,
   SPELL_SCHOOLS,
   SPELLCASTER_CLASSES,
+  type ItemEffects,
   type SpellCircle,
   type SpellClassName,
   type SpellSchool,
@@ -20,6 +21,8 @@ import {
 import { Input } from '@/shared/ui/input'
 import { VirtualList } from '@/shared/ui/virtual-list'
 import type { Character, CharacterSpell } from '@/shared/api/api'
+import { useCharacterEffects } from '@/entities/character/derived'
+import { grantedSpells } from '@/entities/character/granted-spells'
 import {
   accentStrong,
   dimText,
@@ -42,6 +45,9 @@ const CIRCLES: readonly SpellCircle[] = [0, 1, 2, 3, 4, 5]
  * `character.spells`.
  */
 export function SpellbookPanel({ character }: { character: Character }) {
+  // Computed once for the whole grimoire — every SpellRow needs the item/race
+  // effects to show the same final-attribute CD as the sheet's "CD Magia" box.
+  const effects = useCharacterEffects(character)
   const casterClasses = useMemo(
     () =>
       character.classes
@@ -68,6 +74,9 @@ export function SpellbookPanel({ character }: { character: Character }) {
   )
 
   const noCaster = casterClasses.length === 0
+  // Poderes que ensinam magia (Totem Espiritual, p42) — visíveis até para
+  // não-conjuradores: um Bárbaro com Totem precisa ver a magia dele.
+  const granted = grantedSpells(character)
 
   return (
     <section
@@ -97,14 +106,35 @@ export function SpellbookPanel({ character }: { character: Character }) {
             character={character}
             casterClasses={casterClasses}
             learnedById={learnedById}
+            effects={effects}
           />
         )}
       </div>
 
+      {granted.length > 0 && (
+        <div className="shrink-0 space-y-1 border-b border-border px-2 py-1">
+          <p className={cn('px-2 pt-1 text-[10px] font-bold uppercase tracking-widest', dimText)}>
+            Concedidas por poderes
+          </p>
+          {granted.map((g) => (
+            <SpellRow
+              key={`granted-${g.spell.id}`}
+              spell={g.spell}
+              character={character}
+              casterClasses={casterClasses}
+              learned={learnedById.get(g.spell.id) ?? null}
+              effects={effects}
+              granted={{ sourcePower: g.sourcePower, keyAttribute: g.keyAttribute }}
+            />
+          ))}
+        </div>
+      )}
       {noCaster ? (
-        <p className={cn('px-4 py-3 text-[11px]', dimText)}>
-          Este personagem não tem classe conjuradora.
-        </p>
+        granted.length === 0 && (
+          <p className={cn('px-4 py-3 text-[11px]', dimText)}>
+            Este personagem não tem classe conjuradora.
+          </p>
+        )
       ) : learned.length === 0 ? (
         <p className={cn('min-h-0 flex-1 px-4 py-6 text-center text-xs', dimText)}>
           Nenhuma magia aprendida. Use "Aprender" para adicionar magias.
@@ -122,6 +152,7 @@ export function SpellbookPanel({ character }: { character: Character }) {
               character={character}
               casterClasses={casterClasses}
               learned={learnedById.get(spell.id) ?? null}
+              effects={effects}
             />
           )}
         />
@@ -139,10 +170,12 @@ function LearnSpellDialog({
   character,
   casterClasses,
   learnedById,
+  effects,
 }: {
   character: Character
   casterClasses: SpellcasterClass[]
   learnedById: Map<string, CharacterSpell>
+  effects: ItemEffects
 }) {
   const [query, setQuery] = useState('')
   const [circle, setCircle] = useState<SpellCircle | 'all'>('all')
@@ -267,6 +300,7 @@ function LearnSpellDialog({
                 character={character}
                 casterClasses={casterClasses}
                 learned={learnedById.get(spell.id) ?? null}
+                effects={effects}
               />
             )}
           />

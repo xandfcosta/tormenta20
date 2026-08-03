@@ -110,7 +110,9 @@ export function RaceAbilitySection({
       <ul className="space-y-2">
         {race.abilities.map((ability) => (
           <li key={ability.id} className="rounded border border-border p-2 ">
-            <p className={cn('text-xs font-semibold', accentTitle)}>{ability.name}</p>
+            <div className="flex flex-wrap items-center gap-1">
+              <p className={cn('text-xs font-semibold', accentTitle)}>{ability.name}</p>
+            </div>
             <p className={cn('mt-0.5 text-[11px] leading-snug', subtleText)}>
               {ability.description}
             </p>

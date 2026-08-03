@@ -1,11 +1,5 @@
 import { Crosshair, Shield, ShieldCheck, Sparkles, Sword, Zap } from 'lucide-react'
-import {
-  ATTRIBUTE_KEYS,
-  CLASS_SPELLCASTING_ATTRIBUTE,
-  SPELLCASTER_CLASSES,
-  spellSaveDc,
-  statFor,
-} from '@tormenta20/t20-data'
+import { SPELLCASTER_CLASSES, statFor } from '@tormenta20/t20-data'
 import {
   Dialog,
   DialogContent,
@@ -14,9 +8,11 @@ import {
   DialogTrigger,
 } from '@/shared/ui/dialog'
 import type { Character } from '@/shared/api/api'
-import { getCatalogItem } from '@tormenta20/t20-data'
+import { wieldedWeaponEntries } from './wielded-weapons'
 import {
   attributeTotal,
+  bestBaseSpellCd,
+  characterDamageReduction,
   defenseTotal,
   expertiseTotalWithItems,
   pmCostMod,
@@ -29,7 +25,33 @@ import { dimText } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
 import { signed } from './signed'
 
-type StatRow = { label: string; amount: number; muted?: boolean }
+type StatRow = { label: string; amount: number; muted?: boolean; note?: string }
+
+/**
+ * One breakdown line: source + amount, with the modifier's note (the WHY —
+ * "desbalanceada: -2 em ataque") as a dim sub-line so rows explain
+ * themselves instead of showing a bare item name.
+ */
+function StatRowLine({ row }: { row: StatRow }) {
+  return (
+    <li
+      className={cn(
+        'border-b border-border pb-1',
+        row.muted && dimText,
+      )}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="truncate">{row.label}</span>
+        <span className="shrink-0 font-mono">{signed(row.amount)}</span>
+      </div>
+      {/* wrap, never truncate: a nowrap note becomes the grid's min-content
+          and inflates the whole dialog past its max-width */}
+      {row.note && (
+        <p className={cn('text-[11px] leading-snug', dimText)}>{row.note}</p>
+      )}
+    </li>
+  )
+}
 
 export function CombatStats({ character }: { character: Character }) {
   const effects = useCharacterEffects(character)
@@ -46,6 +68,7 @@ export function CombatStats({ character }: { character: Character }) {
   })
   const luta = expertiseTotalWithItems(character, lutaState, effects)
   const pontaria = expertiseTotalWithItems(character, pontariaState, effects)
+  const rd = characterDamageReduction(character, effects)
 
   const defenseRows: StatRow[] = [{ label: 'Base', amount: 10 }]
   if (def.dexApplied) {
@@ -61,7 +84,7 @@ export function CombatStats({ character }: { character: Character }) {
     })
   }
   for (const c of def.contributions) {
-    defenseRows.push({ label: c.source, amount: c.amount })
+    defenseRows.push({ label: c.source, amount: c.amount, note: c.note })
   }
 
   // Global attack modifiers ({k:'attack', scope:'all'}) — buffs/conditionals like
@@ -81,10 +104,10 @@ export function CombatStats({ character }: { character: Character }) {
     ]
     if (e.training) rows.push({ label: 'Treino', amount: e.training })
     for (const c of e.itemContributions) {
-      rows.push({ label: c.source, amount: c.amount })
+      rows.push({ label: c.source, amount: c.amount, note: c.note })
     }
     for (const c of attackAll.contributions) {
-      rows.push({ label: c.source, amount: c.amount })
+      rows.push({ label: c.source, amount: c.amount, note: c.note })
     }
     return rows
   }
@@ -96,6 +119,18 @@ export function CombatStats({ character }: { character: Character }) {
         value={def.total}
         rows={defenseRows}
         icon={<Shield className="size-3.5" />}
+        sub={rd.total > 0 ? `RD ${rd.total}` : undefined}
+        extra={
+          rd.total > 0
+            ? {
+                title: `Redução de dano ${rd.total}`,
+                rows: rd.sources.map((s) => ({
+                  label: s.source,
+                  amount: s.amount,
+                })),
+              }
+            : undefined
+        }
       />
       <CombatBox
         label="Atq CaC"
@@ -124,6 +159,8 @@ function CombatBox({
   rows,
   icon,
   signed: showSigned,
+  sub,
+  extra,
 }: {
   label: string
   /** Full name for the breakdown dialog when the box label is abbreviated. */
@@ -132,6 +169,11 @@ function CombatBox({
   rows: StatRow[]
   icon: React.ReactNode
   signed?: boolean
+  /** Small companion line under the value (e.g. "RD 4"). */
+  sub?: string
+  /** Titled section after the total — values that relate to the stat but
+   *  don't sum into it (RD sources under Defesa). */
+  extra?: { title: string; rows: StatRow[] }
 }) {
   const display = showSigned ? signed(value) : String(value)
   return (
@@ -155,6 +197,11 @@ function CombatBox({
           <span className="mt-0.5 text-2xl font-bold leading-none text-red-800 dark:text-red-100">
             {display}
           </span>
+          {sub && (
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-red-800/70 dark:text-red-300/70">
+              {sub}
+            </span>
+          )}
         </button>
       </DialogTrigger>
       <DialogContent
@@ -176,16 +223,7 @@ function CombatBox({
         <div className="space-y-2 text-sm">
           <ul className="space-y-1">
             {rows.map((r, i) => (
-              <li
-                key={i}
-                className={cn(
-                  'flex items-center justify-between gap-2 border-b border-border pb-1 ',
-                  r.muted && dimText,
-                )}
-              >
-                <span className="truncate">{r.label}</span>
-                <span className="shrink-0 font-mono">{signed(r.amount)}</span>
-              </li>
+              <StatRowLine key={i} row={r} />
             ))}
           </ul>
           <div
@@ -201,6 +239,18 @@ function CombatBox({
               {display}
             </span>
           </div>
+          {extra && (
+            <div className="space-y-1">
+              <p className="text-xs font-bold uppercase tracking-widest text-red-800/80 dark:text-red-300/80">
+                {extra.title}
+              </p>
+              <ul className="space-y-1">
+                {extra.rows.map((r, i) => (
+                  <StatRowLine key={i} row={r} />
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
@@ -264,14 +314,9 @@ export function SavesStats({ character }: { character: Character }) {
 export function WeaponFormulaCards({ character }: { character: Character }) {
   const effects = useCharacterEffects(character)
   const attackAll = statFor(effects, { k: 'attack', scope: 'all' })
+  const damageAll = statFor(effects, { k: 'damage', scope: 'all' })
   const forTotal = attributeTotal(character, 'strength', effects)
-  const weapons = character.items
-    .filter((i) => i.equipped === 'wielded' || i.equipped === 'wielded2')
-    .flatMap((i) => {
-      const catalog = i.catalogId ? getCatalogItem(i.catalogId) : undefined
-      return catalog?.weapon ? [{ name: i.name, weapon: catalog.weapon }] : []
-    })
-    .slice(0, 2)
+  const weapons = wieldedWeaponEntries(character)
   if (weapons.length === 0) {
     return (
       <p className="self-center text-center text-xs italic text-muted-foreground">
@@ -288,70 +333,135 @@ export function WeaponFormulaCards({ character }: { character: Character }) {
           attribute: skill === 'Luta' ? 'strength' : 'dexterity',
           abbr: skill === 'Luta' ? 'FOR' : 'DES',
         })
-        const attack =
-          expertiseTotalWithItems(character, state, effects).total +
-          attackAll.total
-        const dmgBonus = weapon.purpose === 'ranged' ? 0 : forTotal
+        // Per-weapon mods (desbalanceada -2, Certeira +1…) arrive through the
+        // Luta/Pontaria mirror inside `effects` (mirrorWeaponAttackMods) —
+        // do NOT add scope:'this' here on top, that would double-count.
+        const detail = expertiseTotalWithItems(character, state, effects)
+        const attack = detail.total + attackAll.total
+        // Damage: FOR for melee + every {damage, scope:'all'} source (Fúria,
+        // Instinto Selvagem) — the card used to show FOR alone.
+        const dmgBonus =
+          (weapon.purpose === 'ranged' ? 0 : forTotal) + damageAll.total
         const crit = `${weapon.critRange < 20 ? `${weapon.critRange}-20` : '20'}/x${weapon.critMult}`
+
+        const attackRows: StatRow[] = [
+          { label: '½ nível', amount: detail.halfLevel },
+          { label: state.attribute === 'strength' ? 'FOR' : 'DES', amount: detail.attrValue },
+          ...(detail.training ? [{ label: 'Treino', amount: detail.training }] : []),
+          ...detail.itemContributions.map((c) => ({
+            label: c.source,
+            amount: c.amount,
+            note: c.note,
+          })),
+          ...attackAll.contributions.map((c) => ({
+            label: c.source,
+            amount: c.amount,
+            note: c.note,
+          })),
+        ]
+        const damageRows: StatRow[] = [
+          ...(weapon.purpose === 'ranged'
+            ? []
+            : [{ label: 'FOR', amount: forTotal }]),
+          ...damageAll.contributions.map((c) => ({
+            label: c.source,
+            amount: c.amount,
+            note: c.note,
+          })),
+        ]
+
         return (
-          <div
-            key={name}
-            className="flex flex-col items-center rounded-lg border-2 border-red-800/50 p-2 text-center dark:border-red-500/40"
-            title={`${skill} ${signed(attack)} · dano ${weapon.damage}${dmgBonus ? signed(dmgBonus) : ''} · crítico ${crit}`}
-          >
-            <span className="max-w-full truncate text-[9px] font-bold uppercase tracking-widest text-red-800/80 dark:text-red-300/80">
-              {name}
-            </span>
-            <span className="mt-0.5 font-mono text-sm font-bold leading-tight text-red-800 dark:text-red-100">
-              {signed(attack)} · {weapon.damage}
-              {dmgBonus !== 0 ? signed(dmgBonus) : ''}
-            </span>
-            <span className="text-[10px] text-muted-foreground">{crit}</span>
-          </div>
+          <Dialog key={name}>
+            <DialogTrigger asChild>
+              <button
+                type="button"
+                className="flex cursor-pointer flex-col items-center rounded-lg border-2 border-red-800/50 p-2 text-center transition-colors hover:bg-red-950/20 dark:border-red-500/40"
+                aria-label={`Detalhamento de ${name}`}
+                title={`${skill} ${signed(attack)} · dano ${weapon.damage}${dmgBonus ? signed(dmgBonus) : ''} · crítico ${crit}`}
+              >
+                <span className="max-w-full truncate text-[9px] font-bold uppercase tracking-widest text-red-800/80 dark:text-red-300/80">
+                  {name}
+                </span>
+                <span className="mt-0.5 font-mono text-sm font-bold leading-tight text-red-800 dark:text-red-100">
+                  {signed(attack)} · {weapon.damage}
+                  {dmgBonus !== 0 ? signed(dmgBonus) : ''}
+                </span>
+                <span className="text-[10px] text-muted-foreground">{crit}</span>
+              </button>
+            </DialogTrigger>
+            <DialogContent
+              className={cn(
+                'w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] p-4 sm:w-full sm:max-w-sm sm:p-6',
+                'border-red-700/40 bg-muted text-foreground dark:border-red-500/40',
+              )}
+            >
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-red-800 dark:text-red-200">
+                  <Sword className="size-3.5" />
+                  {name}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-red-800/80 dark:text-red-300/80">
+                    Ataque ({skill}) {signed(attack)}
+                  </p>
+                  <ul className="mt-1 space-y-1">
+                    {attackRows.map((r, i) => (
+                      <StatRowLine key={i} row={r} />
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-red-800/80 dark:text-red-300/80">
+                    Dano {weapon.damage}
+                    {dmgBonus !== 0 ? signed(dmgBonus) : ''} · crítico {crit}
+                  </p>
+                  <ul className="mt-1 space-y-1">
+                    {damageRows.length === 0 ? (
+                      <li className={cn('text-xs', dimText)}>
+                        Só o dado da arma.
+                      </li>
+                    ) : (
+                      damageRows.map((r, i) => <StatRowLine key={i} row={r} />)
+                    )}
+                  </ul>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         )
       })}
     </div>
   )
 }
 
-/** Best spell save CD across the character's caster classes (absolute, not
- *  the item bonus): CD = spellSaveDc(nível, atributo-chave) + bônus de itens. */
-function bestBaseSpellCd(character: Character): number | null {
-  let best = -Infinity
-  for (const entry of character.classes) {
-    const attr =
-      CLASS_SPELLCASTING_ATTRIBUTE[
-        entry.className as keyof typeof CLASS_SPELLCASTING_ATTRIBUTE
-      ]
-    if (!attr) continue
-    const key = ATTRIBUTE_KEYS.find((k) => k === attr)
-    if (!key) continue
-    const dc = spellSaveDc(character.level, character[key])
-    if (dc > best) best = dc
-  }
-  return best === -Infinity ? null : best
-}
-
 export function MagicStats({ character }: { character: Character }) {
   const effects = useCharacterEffects(character)
   const pmLimit = pmLimitTotal(character, effects)
+  // CD base from derived so the key attribute is the FINAL value (racial/item
+  // bonuses included) — the raw attribute understated Osteon casters by 1.
+  const baseCd = bestBaseSpellCd(character, effects) ?? 0
   const dc = spellDCBonus(effects)
   const cost = pmCostMod(effects)
 
   const limitRows: StatRow[] = [
-    { label: '½ nível (mín 1)', amount: pmLimit.base },
+    { label: 'Nível de conjurador', amount: pmLimit.base },
     ...pmLimit.contributions.map((c) => ({
       label: c.source,
       amount: c.amount,
+      note: c.note,
     })),
   ]
   const dcRows: StatRow[] = dc.contributions.map((c) => ({
     label: c.source,
     amount: c.amount,
+    note: c.note,
   }))
   const costRows: StatRow[] = cost.contributions.map((c) => ({
     label: c.source,
     amount: c.amount,
+    note: c.note,
   }))
 
   const showDC = dc.total !== 0
@@ -369,11 +479,11 @@ export function MagicStats({ character }: { character: Character }) {
       <MagicBox
         label="CD Magia"
         dialogTitle="CD dos testes de resistência das suas magias"
-        value={(bestBaseSpellCd(character) ?? 0) + dc.total}
+        value={baseCd + dc.total}
         rows={[
           {
             label: 'CD base (nível + atributo-chave)',
-            amount: bestBaseSpellCd(character) ?? 0,
+            amount: baseCd,
           },
           ...(showDC
             ? dcRows
@@ -458,16 +568,7 @@ function MagicBox({
         <div className="space-y-2 text-sm">
           <ul className="space-y-1">
             {rows.map((r, i) => (
-              <li
-                key={i}
-                className={cn(
-                  'flex items-center justify-between gap-2 border-b border-border pb-1 ',
-                  r.muted && dimText,
-                )}
-              >
-                <span className="truncate">{r.label}</span>
-                <span className="shrink-0 font-mono">{signed(r.amount)}</span>
-              </li>
+              <StatRowLine key={i} row={r} />
             ))}
           </ul>
           <div

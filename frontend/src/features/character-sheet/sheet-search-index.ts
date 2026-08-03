@@ -4,6 +4,7 @@ import {
   getGeneralPower,
   getOrigin,
   getRace,
+  ownedClassPowers,
   TORMENTA_POWERS,
 } from '@tormenta20/t20-data'
 import { spellById } from '@tormenta20/t20-data'
@@ -25,6 +26,9 @@ export type SheetSearchEntry = {
   source: string
   /** Sheet tab that owns the fact (palette navigates there on select). */
   tab: string
+  /** Catalog id of an owned power/ability — lets the flat Poderes results
+   *  resolve its ActivationSpec by id before falling back to the name. */
+  powerId?: string
 }
 
 function parseIds(raw: string): string[] {
@@ -101,6 +105,8 @@ export function buildSheetSearchIndex(character: Character): SheetSearchEntry[] 
 }
 
 /** Owned abilities/powers across every source, with rule text as the answer. */
+const EMPTY_IDS: ReadonlySet<string> = new Set()
+
 export function ownedAbilities(character: Character): SheetSearchEntry[] {
   const out: SheetSearchEntry[] = []
   for (const { race } of character.races) {
@@ -111,6 +117,7 @@ export function ownedAbilities(character: Character): SheetSearchEntry[] {
         detail: ability.description,
         source: `Raça · ${race}`,
         tab: 'abilities',
+        powerId: ability.id,
       })
     }
   }
@@ -124,6 +131,20 @@ export function ownedAbilities(character: Character): SheetSearchEntry[] {
         detail: benefit.description,
         source: `Origem · ${origin.name}`,
         tab: 'abilities',
+        powerId: benefit.id,
+      })
+    }
+  }
+  // Class AUTOS (Fúria, Instinto Selvagem…) are owned by level, not chosen —
+  // without this loop searching "fúria" found nothing (2026-08 bug report).
+  for (const entry of character.classes) {
+    for (const power of ownedClassPowers(entry.className, entry.level, EMPTY_IDS)) {
+      out.push({
+        name: power.name,
+        detail: power.description,
+        source: `Classe · ${entry.className}`,
+        tab: 'abilities',
+        powerId: power.id,
       })
     }
   }
@@ -140,7 +161,7 @@ export function ownedAbilities(character: Character): SheetSearchEntry[] {
       : id in TORMENTA_POWERS
         ? 'Poder da Tormenta'
         : 'Poder geral'
-    out.push({ name: power.name, detail: power.description, source, tab: 'abilities' })
+    out.push({ name: power.name, detail: power.description, source, tab: 'abilities', powerId: id })
   }
   return out
 }

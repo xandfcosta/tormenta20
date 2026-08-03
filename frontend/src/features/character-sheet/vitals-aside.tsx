@@ -8,6 +8,7 @@ import {
   SavesStats,
   WeaponFormulaCards,
 } from './combat-magic-stats'
+import { hasWieldedWeapon } from './wielded-weapons'
 
 // PV/PM live in the bottom HUD (see `CharacterHud`); this column now holds the
 // static vitals — attributes and the combat/magic stat blocks.
@@ -32,12 +33,28 @@ export function VitalsAside({
 
       <CombatStats character={character} />
       <SavesStats character={character} />
-      {isCasterCharacter(character) ? (
-        <MagicStats character={character} />
-      ) : (
-        <WeaponFormulaCards character={character} />
-      )}
+      <ContextualStatBlocks character={character} />
     </aside>
+  )
+}
+
+/**
+ * Contextual formula blocks (audit task 17): the weapon cards render whenever
+ * something is wielded — hybrids like Paladino/Druida/Bardo keep their attack
+ * row — and the magic triple renders for any caster. A martial with nothing
+ * wielded still gets the "Nenhuma arma empunhada" placeholder.
+ *
+ * @example <ContextualStatBlocks character={paladino} /> // weapons + magic
+ */
+export function ContextualStatBlocks({ character }: { character: Character }) {
+  const wielding = hasWieldedWeapon(character)
+  const caster = isCasterCharacter(character)
+  return (
+    <>
+      {wielding && <WeaponFormulaCards character={character} />}
+      {caster && <MagicStats character={character} />}
+      {!wielding && !caster && <WeaponFormulaCards character={character} />}
+    </>
   )
 }
 
