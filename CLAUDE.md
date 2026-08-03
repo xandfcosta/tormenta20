@@ -12,21 +12,18 @@
 
 ## Comments
 
-- Keep your own comments. Don't strip them on refactor — they carry
-  intent and provenance.
+- Keep your own comments. Don't strip them on refactor — they carry intent and provenance.
 - Write WHY, not WHAT. Skip `// increment counter` above `i++`.
 - Docstrings on public functions: intent + one usage example.
-- Reference issue numbers / commit SHAs when a line exists because
-  of a specific bug or upstream constraint.
+- Reference issue numbers / commit SHAs when a line exists because of a specific bug or upstream constraint.
 
 ## Tests
 
 - Tests run with a single command: `<project-specific>`.
 - Every new function gets a test. Bug fixes get a regression test.
-- Mock external I/O (API, DB, filesystem) with named fake classes,
-  not inline stubs.
-- Tests must be F.I.R.S.T: fast, independent, repeatable,
-  self-validating, timely.
+- Mock external I/O (API, DB, filesystem) with named fake classes, not inline stubs.
+- Tests must be F.I.R.S.T: fast, independent, repeatable, self-validating, timely.
+- Write tests first, then implement
 
 ## Dependencies
 
@@ -41,8 +38,7 @@
 
 ## Formatting
 
-- Use the language default formatter (`cargo fmt`, `gofmt`, `prettier`,
-  `black`, `rubocop -A`). Don't discuss style beyond that.
+- Use the language default formatter (`cargo fmt`, `gofmt`, `prettier`, `black`, `rubocop -A`). Don't discuss style beyond that.
 
 ## Logging
 
