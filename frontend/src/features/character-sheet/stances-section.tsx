@@ -2,11 +2,10 @@ import { Flame } from 'lucide-react'
 import { FLAG_ACTIVATIONS } from '@tormenta20/t20-data'
 import type { Character } from '@/shared/api/api'
 import {
-  tempHpFromPowers,
   useAllConditionals,
-  useCharacterEffects,
   type ConditionalEntry,
 } from '@/entities/character/derived'
+import { useComputedSheet } from '@/entities/character/computed-sheet'
 import { usePowerAction } from '@/entities/character/use-power-action'
 import { useStanceActivation } from '@/shared/stores/stance-activation-store'
 import { accentStrong, subtleText, surface } from '@/shared/lib/sheet-theme'
@@ -75,13 +74,12 @@ function StanceCard({
 }) {
   const { deactivateStance } = usePowerAction(character)
   const [expanded, setExpanded] = useState(false)
-  const effects = useCharacterEffects(character)
+  const sheet = useComputedSheet(character)
   const activation = FLAG_ACTIVATIONS[group.flag]
   // Fallback to the base cost for stances toggled before this phase (no record).
   const paid = useStanceActivation(character.id, group.flag)
   const pmPaid = paid?.pmPaid ?? activation.pmCost
-  const tempHp =
-    group.flag === 'furia' ? tempHpFromPowers(character, effects, true) : null
+  const tempHp = group.flag === 'furia' ? sheet.tempHpFuria : null
   const summary = stanceSummary(group)
   return (
     <li className="rounded-md border border-violet-500/30 bg-violet-50/60 px-2 py-1.5 dark:border-violet-500/25 dark:bg-violet-950/30">
@@ -146,9 +144,8 @@ function StanceBreakdown({
   group: StanceGroup
   character: Character
 }) {
-  const effects = useCharacterEffects(character)
-  const tempHp =
-    group.flag === 'furia' ? tempHpFromPowers(character, effects, true) : null
+  const sheet = useComputedSheet(character)
+  const tempHp = group.flag === 'furia' ? sheet.tempHpFuria : null
   return (
     <ul className="ml-5 mt-1 space-y-0.5 text-[11px]">
       {group.entries.map((e) => (

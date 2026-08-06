@@ -1,5 +1,5 @@
 import type { Character } from '@/shared/api/api'
-import { attributeTotal, useCharacterEffects } from '@/entities/character/derived'
+import { useComputedSheet } from '@/entities/character/computed-sheet'
 import { cn } from '@/shared/lib/utils'
 import {
   CombatStats,
@@ -67,17 +67,17 @@ export function AttributesGrid({
   character: Character
   className?: string
 }) {
-  // Stored attributes are BASE (pre-race); the racial mod is folded via the
-  // character effects (race active items), so show the derived total.
-  const effects = useCharacterEffects(character)
+  // Stored attributes are BASE (pre-race); the racial mod is folded by the
+  // engine, so show the derived total from the computed sheet.
+  const attrs = useComputedSheet(character).attributes
   return (
     <div className={cn('grid gap-2', className)}>
-      <AttributeBox label="FOR" value={attributeTotal(character, 'strength', effects)} />
-      <AttributeBox label="DES" value={attributeTotal(character, 'dexterity', effects)} />
-      <AttributeBox label="CON" value={attributeTotal(character, 'constitution', effects)} />
-      <AttributeBox label="INT" value={attributeTotal(character, 'intelligence', effects)} />
-      <AttributeBox label="SAB" value={attributeTotal(character, 'wisdom', effects)} />
-      <AttributeBox label="CAR" value={attributeTotal(character, 'charisma', effects)} />
+      <AttributeBox label="FOR" value={attrs.strength.total} />
+      <AttributeBox label="DES" value={attrs.dexterity.total} />
+      <AttributeBox label="CON" value={attrs.constitution.total} />
+      <AttributeBox label="INT" value={attrs.intelligence.total} />
+      <AttributeBox label="SAB" value={attrs.wisdom.total} />
+      <AttributeBox label="CAR" value={attrs.charisma.total} />
     </div>
   )
 }

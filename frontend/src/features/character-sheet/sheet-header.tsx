@@ -18,10 +18,10 @@ import type { Character, ClassLevelResult } from '@/shared/api/api'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import {
   characterEffects,
-  displacementTotal,
-  flySpeedTotal,
   useCharacterEffects,
 } from '@/entities/character/derived'
+import { useComputedSheet } from '@/entities/character/computed-sheet'
+import type { ValueBreakdown } from '@/shared/lib/computed-sheet-v2'
 import { optimisticLevelVitals } from '@/entities/character/level-vitals'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { cn } from '@/shared/lib/utils'
@@ -35,10 +35,12 @@ import { signed } from './signed'
  */
 export function SheetIdentityText({ character }: { character: Character }) {
   const races = character.races.map((r) => r.race)
-  const effects = useCharacterEffects(character)
-  const disp = displacementTotal(character, effects)
-  const fly = flySpeedTotal(effects)
-  const fatigue = effects.flags.has('fatigue-on-sleep')
+  const sheet = useComputedSheet(character)
+  const disp = sheet.displacement
+  const fly = sheet.flySpeed
+  // The fatigue-on-sleep flag isn't a breakdown — read it from the raw effects
+  // (heavy-armor rest penalty); everything numeric comes from the sheet.
+  const fatigue = useCharacterEffects(character).flags.has('fatigue-on-sleep')
   return (
     <div className="min-w-0">
       <h1 className="truncate text-lg font-bold leading-tight tracking-tight sm:text-xl">
@@ -248,7 +250,7 @@ function ClassLevelPicker({
 function DisplacementBadge({
   disp,
 }: {
-  disp: ReturnType<typeof displacementTotal>
+  disp: ValueBreakdown
 }) {
   const changed = disp.itemBonus !== 0
   if (!changed) return <span>{disp.total}m</span>

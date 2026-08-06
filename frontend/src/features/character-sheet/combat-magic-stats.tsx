@@ -11,15 +11,14 @@ import type { Character } from '@/shared/api/api'
 import { wieldedWeaponEntries } from './wielded-weapons'
 import {
   attributeTotal,
-  bestBaseSpellCd,
-  characterDamageReduction,
-  defenseTotal,
   expertiseTotalWithItems,
-  pmCostMod,
-  pmLimitTotal,
-  spellDCBonus,
   useCharacterEffects,
 } from '@/entities/character/derived'
+import {
+  requireExpertise,
+  useComputedSheet,
+} from '@/entities/character/computed-sheet'
+import type { ExpertiseBreakdown } from '@/shared/lib/computed-sheet-v2'
 import { ATTRIBUTE_ABBR, expertiseStateFor } from '@/entities/character/expertise'
 import { dimText } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
@@ -54,27 +53,17 @@ function StatRowLine({ row }: { row: StatRow }) {
 }
 
 export function CombatStats({ character }: { character: Character }) {
-  const effects = useCharacterEffects(character)
-  const def = defenseTotal(character, effects)
-  const lutaState = expertiseStateFor(character, {
-    name: 'Luta',
-    attribute: 'strength',
-    abbr: 'FOR',
-  })
-  const pontariaState = expertiseStateFor(character, {
-    name: 'Pontaria',
-    attribute: 'dexterity',
-    abbr: 'DES',
-  })
-  const luta = expertiseTotalWithItems(character, lutaState, effects)
-  const pontaria = expertiseTotalWithItems(character, pontariaState, effects)
-  const rd = characterDamageReduction(character, effects)
+  const sheet = useComputedSheet(character)
+  const def = sheet.defense
+  const luta = requireExpertise(sheet, 'Luta', 'strength')
+  const pontaria = requireExpertise(sheet, 'Pontaria', 'dexterity')
+  const rd = sheet.damageReduction
 
   const defenseRows: StatRow[] = [{ label: 'Base', amount: 10 }]
   if (def.dexApplied) {
     defenseRows.push({
       label: 'Destreza',
-      amount: attributeTotal(character, 'dexterity', effects),
+      amount: sheet.attributes.dexterity.total,
     })
   } else {
     defenseRows.push({
@@ -92,10 +81,10 @@ export function CombatStats({ character }: { character: Character }) {
   // (scope:'this') mods are deliberately excluded here: the non-proficiency
   // penalty is already surfaced through the expertise path, so folding
   // scope:'this' on top would double-count it.
-  const attackAll = statFor(effects, { k: 'attack', scope: 'all' })
+  const attackAll = sheet.attackAll
 
   const attackRows = (
-    e: ReturnType<typeof expertiseTotalWithItems>,
+    e: ExpertiseBreakdown,
     attrAbbr: string,
   ): StatRow[] => {
     const rows: StatRow[] = [
@@ -136,7 +125,7 @@ export function CombatStats({ character }: { character: Character }) {
         label="Atq CaC"
         dialogTitle="Ataque Corpo a Corpo (Luta)"
         value={luta.total + attackAll.total}
-        rows={attackRows(luta, ATTRIBUTE_ABBR[lutaState.attribute])}
+        rows={attackRows(luta, ATTRIBUTE_ABBR[luta.attribute])}
         icon={<Sword className="size-3.5" />}
         signed
       />
@@ -144,7 +133,7 @@ export function CombatStats({ character }: { character: Character }) {
         label="Atq Dist"
         dialogTitle="Ataque à Distância (Pontaria)"
         value={pontaria.total + attackAll.total}
-        rows={attackRows(pontaria, ATTRIBUTE_ABBR[pontariaState.attribute])}
+        rows={attackRows(pontaria, ATTRIBUTE_ABBR[pontaria.attribute])}
         icon={<Crosshair className="size-3.5" />}
         signed
       />
@@ -270,7 +259,7 @@ export function isCasterCharacter(character: Character): boolean {
  * the attack boxes, same breakdown dialogs.
  */
 export function SavesStats({ character }: { character: Character }) {
-  const effects = useCharacterEffects(character)
+  const sheet = useComputedSheet(character)
   const saves = [
     { name: 'Fortitude', attribute: 'constitution', abbr: 'CON' },
     { name: 'Reflexos', attribute: 'dexterity', abbr: 'DES' },
@@ -279,8 +268,7 @@ export function SavesStats({ character }: { character: Character }) {
   return (
     <div className="grid grid-cols-3 gap-2">
       {saves.map((meta) => {
-        const state = expertiseStateFor(character, meta)
-        const total = expertiseTotalWithItems(character, state, effects)
+        const total = requireExpertise(sheet, meta.name, meta.attribute)
         const rows: StatRow[] = [
           { label: '½ nível', amount: total.halfLevel },
           { label: meta.abbr, amount: total.attrValue },
@@ -437,13 +425,13 @@ export function WeaponFormulaCards({ character }: { character: Character }) {
 }
 
 export function MagicStats({ character }: { character: Character }) {
-  const effects = useCharacterEffects(character)
-  const pmLimit = pmLimitTotal(character, effects)
-  // CD base from derived so the key attribute is the FINAL value (racial/item
+  const sheet = useComputedSheet(character)
+  const pmLimit = sheet.pmLimit
+  // CD base from the engine so the key attribute is the FINAL value (racial/item
   // bonuses included) — the raw attribute understated Osteon casters by 1.
-  const baseCd = bestBaseSpellCd(character, effects) ?? 0
-  const dc = spellDCBonus(effects)
-  const cost = pmCostMod(effects)
+  const baseCd = sheet.bestBaseSpellCd ?? 0
+  const dc = sheet.spellDCBonus
+  const cost = sheet.pmCostMod
 
   const limitRows: StatRow[] = [
     { label: 'Nível de conjurador', amount: pmLimit.base },

@@ -5,21 +5,16 @@ import { Button } from '@/shared/ui/button'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { rollD20 } from '@/shared/lib/dice'
 import {
-  expertiseTotalWithItems,
-  useCharacterEffects,
-} from '@/entities/character/derived'
-import {
-  EXPERTISES,
-  expertiseStateFor,
-} from '@/entities/character/expertise'
+  expertiseFromSheet,
+  useComputedSheet,
+} from '@/entities/character/computed-sheet'
 import { characterQueryOptions } from '@/entities/character/queries'
 import type { Character } from '@/shared/api/api'
 import type { useSessionSocket } from '@/shared/realtime/realtime'
 
 // Iniciativa is a DEX perícia; the initiative roll is d20 + its total
-// (½ nível + atributo + treino + outros) — computed client-side, same math
-// the sheet shows, then sent to the session.
-const INICIATIVA = EXPERTISES.find((e) => e.name === 'Iniciativa')!
+// (½ nível + atributo + treino + outros) — read from the computed sheet, same
+// math the sheet shows, then sent to the session.
 
 /** Loads the player's own character so its Iniciativa bonus can be rolled. */
 export function InitiativeRollButton({
@@ -42,12 +37,8 @@ function RollButton({
   character: Character
   rt: ReturnType<typeof useSessionSocket>
 }) {
-  const effects = useCharacterEffects(character)
-  const bonus = expertiseTotalWithItems(
-    character,
-    expertiseStateFor(character, INICIATIVA),
-    effects,
-  ).total
+  const sheet = useComputedSheet(character)
+  const bonus = expertiseFromSheet(sheet, 'Iniciativa')?.total ?? 0
 
   const roll = () => {
     const d20 = rollD20()

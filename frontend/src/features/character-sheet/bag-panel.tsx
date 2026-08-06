@@ -4,12 +4,8 @@ import { getCatalogItem } from '@/shared/lib/catalog-cache'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import type { Character, CharacterItem } from '@/shared/api/api'
-import {
-  attributeTotal,
-  inventorySlotsTotal,
-  isItemProficient,
-  useCharacterEffects,
-} from '@/entities/character/derived'
+import { useComputedSheet } from '@/entities/character/computed-sheet'
+import { isItemProficient } from '@/entities/character/derived'
 import {
   accentStrong,
   dimText,
@@ -74,9 +70,9 @@ function matchesFilter(item: CharacterItem, key: FilterKey): boolean {
  * remover). Proficiências live in their own tab.
  */
 export function BagPanel({ character }: { character: Character }) {
-  const effects = useCharacterEffects(character)
+  const sheet = useComputedSheet(character)
   const mutations = useItemMutations(character)
-  const max = inventorySlotsTotal(character, effects)
+  const max = sheet.inventorySlots
   const used = character.items.reduce((s, it) => s + it.quantity * it.slots, 0)
   const pct = max > 0 ? Math.min(100, (used / max) * 100) : 0
   const over = used > max
@@ -123,7 +119,7 @@ export function BagPanel({ character }: { character: Character }) {
               </span>
             )}
             <span className="ml-2">
-              • {loadLimitLabel(max, attributeTotal(character, 'strength', effects))}
+              • {loadLimitLabel(max, sheet.attributes.strength.total)}
             </span>
           </p>
         </div>

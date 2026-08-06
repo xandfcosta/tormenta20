@@ -13,11 +13,10 @@ import {
 import { spellById } from '@/shared/lib/spell-cache'
 import type { Character } from '@/shared/api/api'
 import {
-  characterEffects,
-  expertiseTotalWithItems,
-  parseClassChoices,
-} from '@/entities/character/derived'
-import { expertiseStateFor } from '@/entities/character/expertise'
+  computedSheetFor,
+  expertiseFromSheet,
+} from '@/entities/character/computed-sheet'
+import { parseClassChoices } from '@/entities/character/derived'
 import { parseActiveConditions } from './conditions-section'
 
 export type SheetSearchEntry = {
@@ -52,16 +51,11 @@ function parseIds(raw: string): string[] {
  * palette opens (cheap: a few hundred entries max).
  */
 export function buildSheetSearchIndex(character: Character): SheetSearchEntry[] {
-  const effects = characterEffects(character)
+  const sheet = computedSheetFor(character)
   const out: SheetSearchEntry[] = []
 
   for (const def of EXPERTISES) {
-    const state = expertiseStateFor(character, {
-      name: def.name,
-      attribute: def.attribute,
-      abbr: def.name.slice(0, 3).toUpperCase(),
-    })
-    const total = expertiseTotalWithItems(character, state, effects).total
+    const total = expertiseFromSheet(sheet, def.name)?.total ?? 0
     out.push({
       name: def.name,
       detail: `${total >= 0 ? '+' : ''}${total}`,

@@ -1,16 +1,11 @@
 import { X } from 'lucide-react'
-import { useMemo } from 'react'
 import {
   ATTRIBUTE_ABBR,
   ATTRIBUTE_KEYS,
 } from '@tormenta20/t20-data'
 import type { Character } from '@/shared/api/api'
 import { cn } from '@/shared/lib/utils'
-import {
-  attributeTotal,
-  characterEffects,
-  defenseTotal,
-} from '@/entities/character/derived'
+import { useComputedSheet } from '@/entities/character/computed-sheet'
 import { type AbilityBlurb, raceAbilityBlurbs } from './select-helpers'
 
 /**
@@ -28,11 +23,8 @@ export function DossierDrawer({
   open: boolean
   onClose: () => void
 }) {
-  const effects = useMemo(() => characterEffects(character), [character])
-  const defense = useMemo(
-    () => defenseTotal(character, effects).total,
-    [character, effects],
-  )
+  const sheet = useComputedSheet(character)
+  const defense = sheet.defense.total
   if (!open) return null
   return (
     <aside
@@ -83,7 +75,7 @@ export function DossierDrawer({
                 {ATTRIBUTE_ABBR[k]}
               </p>
               <p className="font-mono text-sm">
-                {attributeTotal(character, k, effects)}
+                {sheet.attributes[k].total}
               </p>
             </div>
           ))}

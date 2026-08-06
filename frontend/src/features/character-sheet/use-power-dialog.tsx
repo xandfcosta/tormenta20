@@ -12,11 +12,8 @@ import {
   DialogTrigger,
 } from '@/shared/ui/dialog'
 import type { Character } from '@/shared/api/api'
-import {
-  tempHpFromPowers,
-  useAllConditionals,
-  useCharacterEffects,
-} from '@/entities/character/derived'
+import { useAllConditionals } from '@/entities/character/derived'
+import { useComputedSheet } from '@/entities/character/computed-sheet'
 import {
   stanceActivationDecision,
   stanceFlagOf,
@@ -223,10 +220,10 @@ function StancePreview({
   steps: number
 }) {
   const entries = useAllConditionals(character)
-  const effects = useCharacterEffects(character)
+  const sheet = useComputedSheet(character)
   const flag = stanceFlagOf(spec)
   const modifiers = entries.filter((e) => e.effect.flag === flag)
-  const tempHp = flag === 'furia' ? tempHpFromPowers(character, effects, true) : null
+  const tempHp = flag === 'furia' ? sheet.tempHpFuria : null
   return (
     <ItemDialogSection title="Efeito ao ativar">
       <ul className="space-y-0.5 text-[11px]">

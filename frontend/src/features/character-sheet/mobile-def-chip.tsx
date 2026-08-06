@@ -1,11 +1,7 @@
 import { Shield } from 'lucide-react'
-import { useMemo } from 'react'
 import type { Character } from '@/shared/api/api'
 import { cn } from '@/shared/lib/utils'
-import {
-  characterEffects,
-  defenseTotal,
-} from '@/entities/character/derived'
+import { useComputedSheet } from '@/entities/character/computed-sheet'
 
 /**
  * Compact DEF chip for viewports where the stats cluster is hidden (<lg):
@@ -19,10 +15,7 @@ export function MobileDefChip({
   character: Character
   className?: string
 }) {
-  const defense = useMemo(
-    () => defenseTotal(character, characterEffects(character)).total,
-    [character],
-  )
+  const defense = useComputedSheet(character).defense.total
   return (
     <span
       className={cn(

@@ -21,10 +21,7 @@ import type {
 } from '@/shared/api/api'
 import { api } from '@/shared/api/api'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
-import {
-  attributeTotal,
-  expertiseTotalWithItems,
-} from '@/entities/character/derived'
+import { expertiseFromSheet } from '@/entities/character/computed-sheet'
 import type { ExpertiseDef } from '@/entities/character/expertise'
 import {
   ATTRIBUTE_ABBR,
@@ -40,18 +37,21 @@ import {
   subtleText,
 } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
-import type { ItemEffects } from '@tormenta20/t20-data'
+import type {
+  BreakdownContribution,
+  ComputedSheetV2,
+} from '@/shared/lib/computed-sheet-v2'
 import { signed } from './signed'
 
 export function ExpertiseRow({
   character,
   def,
-  effects,
+  sheet,
   onDelete,
 }: {
   character: Character
   def: ExpertiseDef
-  effects: ItemEffects
+  sheet: ComputedSheetV2
   onDelete?: () => void
 }) {
   const qc = useQueryClient()
@@ -102,11 +102,14 @@ export function ExpertiseRow({
     },
   })
 
-  const detail = expertiseTotalWithItems(character, state, effects)
-  const total = detail.total
+  // Every standard + custom perícia is on the sheet; `?? 0` is only a type guard.
+  const entry = expertiseFromSheet(sheet, def.name)
+  const total = entry?.total ?? 0
+  const attrMod = entry?.attrValue ?? 0
   const halfLevel = Math.floor(character.level / 2)
   const trainBonus = state.trained ? trainingBonusForLevel(character.level) : 0
-  const othersDisplay = detail.itemBonus
+  const othersDisplay = entry?.itemBonus ?? 0
+  const itemContributions = entry?.itemContributions ?? []
 
   const trainedToggle = (
     <TrainedToggle
@@ -131,7 +134,7 @@ export function ExpertiseRow({
           the row must agree with the breakdown + total (bug C). */}
       {ATTRIBUTE_KEYS.map((k) => (
         <option key={k} value={k}>
-          {ATTRIBUTE_ABBR[k]} {signed(attributeTotal(character, k, effects))}
+          {ATTRIBUTE_ABBR[k]} {signed(sheet.attributes[k].total)}
         </option>
       ))}
     </select>
@@ -144,10 +147,10 @@ export function ExpertiseRow({
       locked={locked}
       halfLevel={halfLevel}
       attrAbbr={ATTRIBUTE_ABBR[state.attribute]}
-      attrMod={detail.attrValue}
+      attrMod={attrMod}
       trainBonus={trainBonus}
       itemBonus={othersDisplay}
-      contributions={detail.itemContributions}
+      contributions={itemContributions}
     >
       <div
         className={cn(
@@ -347,8 +350,7 @@ function DeleteExpertiseButton({
   )
 }
 
-type ItemContributions =
-  ReturnType<typeof expertiseTotalWithItems>['itemContributions']
+type ItemContributions = BreakdownContribution[]
 
 /**
  * Uniform modifier breakdown for a perícia — the same for every skill, not

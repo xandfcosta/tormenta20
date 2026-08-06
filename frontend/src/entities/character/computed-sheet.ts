@@ -6,6 +6,7 @@ import {
 import type {
   AttributeBreakdown,
   ComputedSheetV2,
+  ExpertiseBreakdown,
   TotalContribs,
 } from '@/shared/lib/computed-sheet-v2'
 import type { Character } from '@/shared/api/api'
@@ -114,4 +115,43 @@ export function computedSheetFor(
 export function useComputedSheet(char: Character): ComputedSheetV2 {
   const active = useActiveConditionals(char.id)
   return computedSheetFor(char, active)
+}
+
+/**
+ * The computed breakdown for a single perícia by name — every standard + custom
+ * expertise is persisted on the character, so the entry is present for anything
+ * the UI can render (`undefined` only for an unknown name).
+ */
+export function expertiseFromSheet(
+  sheet: ComputedSheetV2,
+  name: string,
+): ExpertiseBreakdown | undefined {
+  return sheet.expertises.find((e) => e.name === name)
+}
+
+/**
+ * Like {@link expertiseFromSheet} but total-safe for the always-present combat
+ * perícias (Luta/Pontaria/resistências): returns a zeroed breakdown rather than
+ * `undefined` if a character somehow lacks the entry, so display code stays
+ * branch-free.
+ */
+export function requireExpertise(
+  sheet: ComputedSheetV2,
+  name: string,
+  attribute: AttributeKey,
+): ExpertiseBreakdown {
+  return (
+    expertiseFromSheet(sheet, name) ?? {
+      name,
+      attribute,
+      base: 0,
+      itemBonus: 0,
+      total: 0,
+      halfLevel: 0,
+      attrValue: 0,
+      training: 0,
+      itemContributions: [],
+      armorPenaltyApplied: 0,
+    }
+  )
 }

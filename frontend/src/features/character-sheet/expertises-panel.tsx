@@ -20,7 +20,7 @@ import type {
 } from '@/shared/api/api'
 import { api } from '@/shared/api/api'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
-import { useCharacterEffects } from '@/entities/character/derived'
+import { useComputedSheet } from '@/entities/character/computed-sheet'
 import type { ExpertiseDef } from '@/entities/character/expertise'
 import {
   ATTRIBUTE_ABBR,
@@ -46,7 +46,7 @@ export function ExpertisesPanel({ character }: { character: Character }) {
   const [query, setQuery] = useState('')
   const qc = useQueryClient()
   const queryKey = characterQueryOptions(character.id).queryKey
-  const effects = useCharacterEffects(character)
+  const sheet = useComputedSheet(character)
 
   const customDefs: ExpertiseDef[] = character.expertises
     .filter((e) => e.custom)
@@ -186,7 +186,7 @@ export function ExpertisesPanel({ character }: { character: Character }) {
                   key={def.name}
                   character={character}
                   def={def}
-                  effects={effects}
+                  sheet={sheet}
                   onDelete={
                     isCustom ? () => removeCustom.mutate(def.name) : undefined
                   }

@@ -1,12 +1,8 @@
-import { useMemo } from 'react'
 import type { Character } from '@/shared/api/api'
 import { Button } from '@/shared/ui/button'
 import { hueFromName } from '@/shared/lib/hue-from-name'
 import { cn } from '@/shared/lib/utils'
-import {
-  characterEffects,
-  defenseTotal,
-} from '@/entities/character/derived'
+import { useComputedSheet } from '@/entities/character/computed-sheet'
 import { primaryRole } from './select-helpers'
 
 /**
@@ -37,10 +33,7 @@ export function CharacterStage({
   dossierOpen: boolean
 }) {
   const hue = hueFromName(selected.name)
-  const defense = useMemo(
-    () => defenseTotal(selected, characterEffects(selected)).total,
-    [selected],
-  )
+  const defense = useComputedSheet(selected).defense.total
   // Directional slide for the incoming portrait; nameplate block fades + rises
   // with a small stagger. Keyed by character id so tw-animate `animate-in`
   // replays on every selection change; motion-reduce collapses to instant.

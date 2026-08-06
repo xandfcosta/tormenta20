@@ -23,7 +23,7 @@ import { NumberInput } from '@/shared/ui/number-input'
 import { ApiError, api } from '@/shared/api/api'
 import type { CastSpellResult, Character } from '@/shared/api/api'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
-import { pmLimitTotal, useCharacterEffects } from '@/entities/character/derived'
+import { useComputedSheet } from '@/entities/character/computed-sheet'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { accentStrong, dimText } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
@@ -59,7 +59,7 @@ export function CastSpellDialog({
 
   const qc = useQueryClient()
   const queryKey = characterQueryOptions(character.id).queryKey
-  const effects = useCharacterEffects(character)
+  const sheet = useComputedSheet(character)
 
   /**
    * Highest circle this character can CAST — gates aprimoramentos with
@@ -105,7 +105,7 @@ export function CastSpellDialog({
   const totalPm = spell.circle === 0 ? 0 : basePm + augmentPm
   // Same number as the Limite PM HUD box — caster-class level (PDF p224) plus
   // pmLimit item bonuses — so the cast gate and the sheet never disagree.
-  const perSpellLimit = pmLimitTotal(character, effects).total
+  const perSpellLimit = sheet.pmLimit.total
   // Single source of truth for the cast preconditions (shared with the
   // backend). Prep-requirement stays server-enforced — the cast button only
   // shows for learned spells, and detecting the caster's prep rule client-side
