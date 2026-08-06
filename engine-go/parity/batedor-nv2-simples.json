@@ -1,5 +1,249 @@
 {
   "slug": "batedor-nv2-simples",
+  "char": {
+    "id": 11,
+    "ownerId": 2,
+    "name": "Batedor Nv2 Simples",
+    "origin": "Batedor",
+    "god": null,
+    "godPower": "",
+    "tibar": 0,
+    "level": 2,
+    "hpMax": 19,
+    "hpCurrent": 19,
+    "mpMax": 8,
+    "mpCurrent": 8,
+    "strength": 1,
+    "dexterity": 4,
+    "constitution": 2,
+    "intelligence": 2,
+    "wisdom": 2,
+    "charisma": 1,
+    "size": "Médio",
+    "displacement": 9,
+    "proficiencies": "[\"armas-simples\"]",
+    "raceAbilityChoices": "[]",
+    "raceAttributeChoices": "{\"floatingPicks\":[]}",
+    "secondaryRaceChoices": "[]",
+    "originChoices": "[]",
+    "classPowers": "[]",
+    "classChoices": "{}",
+    "powerChoices": "{}",
+    "activeConditions": "[]",
+    "createdAt": "2026-08-02T13:17:22.012Z",
+    "updatedAt": "2026-08-02T13:17:22.470Z",
+    "races": [
+      {
+        "race": "Sílfide"
+      }
+    ],
+    "classes": [
+      {
+        "className": "Ladino",
+        "level": 2
+      }
+    ],
+    "expertises": [
+      {
+        "name": "Acrobacia",
+        "attribute": "dexterity",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Adestramento",
+        "attribute": "charisma",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Atletismo",
+        "attribute": "strength",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Atuação",
+        "attribute": "charisma",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Cavalgar",
+        "attribute": "dexterity",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Conhecimento",
+        "attribute": "intelligence",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Cura",
+        "attribute": "wisdom",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Diplomacia",
+        "attribute": "charisma",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Enganação",
+        "attribute": "charisma",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Fortitude",
+        "attribute": "constitution",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Furtividade",
+        "attribute": "dexterity",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Guerra",
+        "attribute": "intelligence",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Iniciativa",
+        "attribute": "dexterity",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Intimidação",
+        "attribute": "charisma",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Intuição",
+        "attribute": "wisdom",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Investigação",
+        "attribute": "intelligence",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Jogatina",
+        "attribute": "charisma",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Ladinagem",
+        "attribute": "dexterity",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Luta",
+        "attribute": "strength",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Misticismo",
+        "attribute": "intelligence",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Nobreza",
+        "attribute": "intelligence",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Ofício",
+        "attribute": "intelligence",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Percepção",
+        "attribute": "wisdom",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Pilotagem",
+        "attribute": "dexterity",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Pontaria",
+        "attribute": "dexterity",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Reflexos",
+        "attribute": "dexterity",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Religião",
+        "attribute": "wisdom",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Sobrevivência",
+        "attribute": "wisdom",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Vontade",
+        "attribute": "wisdom",
+        "trained": false,
+        "custom": false
+      }
+    ],
+    "items": [
+      {
+        "id": 47,
+        "catalogId": "espada-curta",
+        "name": "Espada curta",
+        "quantity": 1,
+        "slots": 1,
+        "equipped": "wielded",
+        "improvements": "[]",
+        "material": null
+      },
+      {
+        "id": 48,
+        "catalogId": "armadura-couro",
+        "name": "Armadura de couro",
+        "quantity": 1,
+        "slots": 2,
+        "equipped": "vested",
+        "improvements": "[]",
+        "material": null
+      }
+    ],
+    "activeEffects": [],
+    "spells": []
+  },
   "activeItems": [
     {
       "source": "Espada curta",

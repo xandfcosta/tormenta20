@@ -2,6 +2,7 @@ package engine
 
 import (
 	"encoding/json"
+	"math"
 	"sort"
 	"strconv"
 )
@@ -35,14 +36,54 @@ type ModifierCondition struct {
 	Label string `json:"label,omitempty"` // flagOn, flagOff
 }
 
+// VitalScale mirrors items/types.ts VitalScale. Only the vitals collector reads
+// it; the resolution engine ignores it. Carried on Modifier so the collection
+// layer round-trips maxPv/maxPm mods byte-equal to the TS oracle.
+type VitalScale struct {
+	Per       string `json:"per"`
+	Step      int    `json:"step,omitempty"`
+	Round     string `json:"round,omitempty"`
+	Attribute string `json:"attribute,omitempty"`
+}
+
 // Modifier mirrors items/types.ts Modifier. `scale` (maxPv/maxPm) is ignored by
-// the resolution engine — dropped on unmarshal, re-added in the vitals slice.
+// the resolution engine but preserved for the collection layer's parity dump.
 type Modifier struct {
 	Target    ModifierTarget     `json:"target"`
 	Amount    int                `json:"amount"`
 	BonusType string             `json:"bonusType"`
 	Condition *ModifierCondition `json:"condition,omitempty"`
 	Note      string             `json:"note,omitempty"`
+	Scale     *VitalScale        `json:"scale,omitempty"`
+}
+
+// UnmarshalJSON rounds a modifier's amount to the nearest int. The engine is
+// integer-modeled (see types.go), but the TS type is `number` and one catalog
+// entry carries a fractional amount (botas-reforcadas, +1.5m displacement — not
+// equipped by any seed). Rounding at the JSON boundary keeps catalog parsing from
+// failing without widening every total to float. Integer amounts pass through
+// unchanged, so parity is unaffected.
+func (m *Modifier) UnmarshalJSON(b []byte) error {
+	var shadow struct {
+		Target    ModifierTarget     `json:"target"`
+		Amount    float64            `json:"amount"`
+		BonusType string             `json:"bonusType"`
+		Condition *ModifierCondition `json:"condition"`
+		Note      string             `json:"note"`
+		Scale     *VitalScale        `json:"scale"`
+	}
+	if err := json.Unmarshal(b, &shadow); err != nil {
+		return err
+	}
+	*m = Modifier{
+		Target:    shadow.Target,
+		Amount:    int(math.Round(shadow.Amount)),
+		BonusType: shadow.BonusType,
+		Condition: shadow.Condition,
+		Note:      shadow.Note,
+		Scale:     shadow.Scale,
+	}
+	return nil
 }
 
 // ActiveItem mirrors items/engine.ts ActiveItem. Equipped is a pointer so the

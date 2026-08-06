@@ -91,8 +91,10 @@ são catalog-free e inline — portados pra table-tests Go dão verde imediato.
    `applyActiveConditionals`, `resolveConditionalDisplay`. Testes = port de
    engine*.test.ts. **Catalog-free, autocontido — começa já.**
 2. **Harness de paridade** (task #3). Destrava #4/#5.
-3. **Coleta + catálogos → Go** (task #4). `activeItemsFor` + `primeEngineCatalogs`.
-   Bate `activeItems` contra o oráculo.
+3. **Coleta + catálogos → Go** (task #4, ✅ DONE). `ActiveItemsFor` +
+   `PrimeEngineCatalogs` portados (catalogs.go/character.go/collect*.go). Bate
+   `activeItems` byte-equal contra o oráculo nos 16 seeds
+   (`collect_parity_test.go`). Harness dumpa `char` + `_catalogs.json`.
 4. **Breakdowns → Go** (task #5). Os `*Total` + RD/tempHp. Emite `ComputedSheetV2`.
    Bate contra o oráculo.
 5. **Fronteira WASM + boot/build** (task #6). Expõe `computeSheetV2`; prima

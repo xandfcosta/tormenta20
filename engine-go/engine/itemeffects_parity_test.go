@@ -26,7 +26,8 @@ func TestItemEffectsParity(t *testing.T) {
 
 	var slugs []string
 	for _, e := range entries {
-		if filepath.Ext(e.Name()) == ".json" {
+		// `_`-prefixed files are shared inputs (e.g. _catalogs.json), not oracles.
+		if filepath.Ext(e.Name()) == ".json" && e.Name()[0] != '_' {
 			slugs = append(slugs, e.Name())
 		}
 	}

@@ -5,7 +5,16 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { ItemEffects } from '@tormenta20/t20-data'
+import {
+  CATALOG_ITEMS,
+  CLASS_POWERS_CATALOG,
+  GENERAL_POWERS_CATALOG,
+  type ItemEffects,
+  ORIGINS_CATALOG,
+  RACAS,
+  RACES_CATALOG,
+  TORMENTA_POWERS,
+} from '@tormenta20/t20-data'
 import { describe, expect, it } from 'vitest'
 import type { Character } from '@/shared/api/api'
 import fixtures from './__fixtures__/character-input-parity.json'
@@ -57,12 +66,34 @@ describe('parity oracle — derived.ts golden output for the 16 seed chars', () 
       expect(itemEffects.byTarget).toBeTypeOf('object')
 
       if (shouldWrite) {
-        const payload = { slug, activeItems, itemEffects }
+        // `char` is included so the Go collection-layer test (slice 2) can
+        // re-run `ActiveItemsFor` on the same raw input and check it against
+        // `activeItems` — the resolution test (slice 1) only needs activeItems.
+        const payload = { slug, char, activeItems, itemEffects }
         writeFileSync(
           resolve(oracleDir, `${slug}.json`),
           `${JSON.stringify(payload, null, 2)}\n`,
         )
       }
     }
+  })
+
+  // Underscore-prefixed so the Go per-slug loops (which glob `*.json`) skip it.
+  it('dumps the catalogs the collection layer reads (for the Go engine)', () => {
+    if (!process.env.GEN_ORACLE) return
+    mkdirSync(oracleDir, { recursive: true })
+    const catalogs = {
+      items: CATALOG_ITEMS,
+      races: RACES_CATALOG,
+      origins: ORIGINS_CATALOG,
+      classPowers: CLASS_POWERS_CATALOG,
+      generalPowers: GENERAL_POWERS_CATALOG,
+      racas: RACAS,
+      tormentaPowerIds: Object.keys(TORMENTA_POWERS),
+    }
+    writeFileSync(
+      resolve(oracleDir, '_catalogs.json'),
+      `${JSON.stringify(catalogs, null, 2)}\n`,
+    )
   })
 })

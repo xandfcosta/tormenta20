@@ -1,5 +1,318 @@
 {
   "slug": "necromante-nv12-magias",
+  "char": {
+    "id": 3,
+    "ownerId": 1,
+    "name": "Necromante Nv12 Magias",
+    "origin": "Criminoso",
+    "god": "Tenebra",
+    "godPower": "",
+    "tibar": 0,
+    "level": 12,
+    "hpMax": 54,
+    "hpCurrent": 54,
+    "mpMax": 78,
+    "mpCurrent": 51,
+    "strength": 1,
+    "dexterity": 2,
+    "constitution": 3,
+    "intelligence": 5,
+    "wisdom": 2,
+    "charisma": 3,
+    "size": "Médio",
+    "displacement": 9,
+    "proficiencies": "[\"armas-simples\"]",
+    "raceAbilityChoices": "[]",
+    "raceAttributeChoices": "{\"floatingPicks\":[\"intelligence\",\"wisdom\",\"charisma\"]}",
+    "secondaryRaceChoices": "[]",
+    "originChoices": "[]",
+    "classPowers": "[]",
+    "classChoices": "{\"Arcanista\":{\"caminho\":\"mago\"}}",
+    "powerChoices": "{}",
+    "activeConditions": "[]",
+    "createdAt": "2026-08-02T13:16:19.920Z",
+    "updatedAt": "2026-08-06T11:39:12.876Z",
+    "races": [
+      {
+        "race": "Osteon"
+      }
+    ],
+    "classes": [
+      {
+        "className": "Arcanista",
+        "level": 12
+      }
+    ],
+    "expertises": [
+      {
+        "name": "Acrobacia",
+        "attribute": "dexterity",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Adestramento",
+        "attribute": "charisma",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Atletismo",
+        "attribute": "strength",
+        "trained": true,
+        "custom": false
+      },
+      {
+        "name": "Atuação",
+        "attribute": "charisma",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Cavalgar",
+        "attribute": "dexterity",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Conhecimento",
+        "attribute": "intelligence",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Cura",
+        "attribute": "wisdom",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Diplomacia",
+        "attribute": "charisma",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Enganação",
+        "attribute": "charisma",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Fortitude",
+        "attribute": "constitution",
+        "trained": true,
+        "custom": false
+      },
+      {
+        "name": "Furtividade",
+        "attribute": "dexterity",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Guerra",
+        "attribute": "intelligence",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Iniciativa",
+        "attribute": "dexterity",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Intimidação",
+        "attribute": "charisma",
+        "trained": true,
+        "custom": false
+      },
+      {
+        "name": "Intuição",
+        "attribute": "wisdom",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Investigação",
+        "attribute": "intelligence",
+        "trained": true,
+        "custom": false
+      },
+      {
+        "name": "Jogatina",
+        "attribute": "charisma",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Ladinagem",
+        "attribute": "dexterity",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Luta",
+        "attribute": "strength",
+        "trained": true,
+        "custom": false
+      },
+      {
+        "name": "Misticismo",
+        "attribute": "intelligence",
+        "trained": true,
+        "custom": false
+      },
+      {
+        "name": "Nobreza",
+        "attribute": "intelligence",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Ofício",
+        "attribute": "intelligence",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Percepção",
+        "attribute": "wisdom",
+        "trained": true,
+        "custom": false
+      },
+      {
+        "name": "Pilotagem",
+        "attribute": "dexterity",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Pontaria",
+        "attribute": "dexterity",
+        "trained": true,
+        "custom": false
+      },
+      {
+        "name": "Reflexos",
+        "attribute": "dexterity",
+        "trained": true,
+        "custom": false
+      },
+      {
+        "name": "Religião",
+        "attribute": "wisdom",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Sobrevivência",
+        "attribute": "wisdom",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Vontade",
+        "attribute": "wisdom",
+        "trained": true,
+        "custom": false
+      }
+    ],
+    "items": [
+      {
+        "id": 10,
+        "catalogId": "adaga",
+        "name": "Adaga",
+        "quantity": 1,
+        "slots": 1,
+        "equipped": "wielded",
+        "improvements": "[]",
+        "material": null
+      },
+      {
+        "id": 11,
+        "catalogId": "bandana",
+        "name": "Bandana",
+        "quantity": 1,
+        "slots": 1,
+        "equipped": "vested",
+        "improvements": "[]",
+        "material": null
+      },
+      {
+        "id": 12,
+        "catalogId": "balsamo-restaurador",
+        "name": "Bálsamo restaurador",
+        "quantity": 2,
+        "slots": 0.5,
+        "equipped": null,
+        "improvements": "[]",
+        "material": null
+      },
+      {
+        "id": 13,
+        "catalogId": "cosmetico",
+        "name": "Cosmético",
+        "quantity": 2,
+        "slots": 0.5,
+        "equipped": null,
+        "improvements": "[]",
+        "material": null
+      }
+    ],
+    "activeEffects": [],
+    "spells": [
+      {
+        "id": 6,
+        "catalogSpellId": "luz",
+        "prepared": true,
+        "learnedAt": "2026-08-02T13:16:25.783Z"
+      },
+      {
+        "id": 7,
+        "catalogSpellId": "armadura-arcana",
+        "prepared": true,
+        "learnedAt": "2026-08-02T13:16:26.479Z"
+      },
+      {
+        "id": 8,
+        "catalogSpellId": "bola-de-fogo",
+        "prepared": true,
+        "learnedAt": "2026-08-02T13:16:27.174Z"
+      },
+      {
+        "id": 9,
+        "catalogSpellId": "relampago",
+        "prepared": true,
+        "learnedAt": "2026-08-02T13:16:27.859Z"
+      },
+      {
+        "id": 10,
+        "catalogSpellId": "sono",
+        "prepared": false,
+        "learnedAt": "2026-08-02T13:16:28.555Z"
+      },
+      {
+        "id": 11,
+        "catalogSpellId": "invisibilidade",
+        "prepared": false,
+        "learnedAt": "2026-08-02T13:16:28.969Z"
+      },
+      {
+        "id": 12,
+        "catalogSpellId": "teletransporte",
+        "prepared": false,
+        "learnedAt": "2026-08-02T13:16:29.294Z"
+      },
+      {
+        "id": 13,
+        "catalogSpellId": "imagem-espelhada",
+        "prepared": false,
+        "learnedAt": "2026-08-02T13:16:29.642Z"
+      }
+    ]
+  },
   "activeItems": [
     {
       "source": "Adaga",

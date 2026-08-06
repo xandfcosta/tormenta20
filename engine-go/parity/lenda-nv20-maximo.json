@@ -1,5 +1,279 @@
 {
   "slug": "lenda-nv20-maximo",
+  "char": {
+    "id": 7,
+    "ownerId": 1,
+    "name": "Lenda Nv20 Maximo",
+    "origin": "Herdeiro",
+    "god": "Valkaria",
+    "godPower": "",
+    "tibar": 0,
+    "level": 20,
+    "hpMax": 277,
+    "hpCurrent": 61,
+    "mpMax": 60,
+    "mpCurrent": 60,
+    "strength": 5,
+    "dexterity": 2,
+    "constitution": 5,
+    "intelligence": 1,
+    "wisdom": 2,
+    "charisma": 3,
+    "size": "Médio",
+    "displacement": 9,
+    "proficiencies": "[\"armas-simples\",\"armas-marciais\",\"armaduras-leves\",\"armaduras-pesadas\",\"escudos\"]",
+    "raceAbilityChoices": "[]",
+    "raceAttributeChoices": "{\"floatingPicks\":[]}",
+    "secondaryRaceChoices": "[]",
+    "originChoices": "[]",
+    "classPowers": "[]",
+    "classChoices": "{}",
+    "powerChoices": "{}",
+    "activeConditions": "[]",
+    "createdAt": "2026-08-02T13:16:57.095Z",
+    "updatedAt": "2026-08-02T13:16:57.489Z",
+    "races": [
+      {
+        "race": "Anão"
+      }
+    ],
+    "classes": [
+      {
+        "className": "Cavaleiro",
+        "level": 20
+      }
+    ],
+    "expertises": [
+      {
+        "name": "Acrobacia",
+        "attribute": "dexterity",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Adestramento",
+        "attribute": "charisma",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Atletismo",
+        "attribute": "strength",
+        "trained": true,
+        "custom": false
+      },
+      {
+        "name": "Atuação",
+        "attribute": "charisma",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Cavalgar",
+        "attribute": "dexterity",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Conhecimento",
+        "attribute": "intelligence",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Cura",
+        "attribute": "wisdom",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Diplomacia",
+        "attribute": "charisma",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Enganação",
+        "attribute": "charisma",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Fortitude",
+        "attribute": "constitution",
+        "trained": true,
+        "custom": false
+      },
+      {
+        "name": "Furtividade",
+        "attribute": "dexterity",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Guerra",
+        "attribute": "intelligence",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Iniciativa",
+        "attribute": "dexterity",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Intimidação",
+        "attribute": "charisma",
+        "trained": true,
+        "custom": false
+      },
+      {
+        "name": "Intuição",
+        "attribute": "wisdom",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Investigação",
+        "attribute": "intelligence",
+        "trained": true,
+        "custom": false
+      },
+      {
+        "name": "Jogatina",
+        "attribute": "charisma",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Ladinagem",
+        "attribute": "dexterity",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Luta",
+        "attribute": "strength",
+        "trained": true,
+        "custom": false
+      },
+      {
+        "name": "Misticismo",
+        "attribute": "intelligence",
+        "trained": true,
+        "custom": false
+      },
+      {
+        "name": "Nobreza",
+        "attribute": "intelligence",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Ofício",
+        "attribute": "intelligence",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Percepção",
+        "attribute": "wisdom",
+        "trained": true,
+        "custom": false
+      },
+      {
+        "name": "Pilotagem",
+        "attribute": "dexterity",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Pontaria",
+        "attribute": "dexterity",
+        "trained": true,
+        "custom": false
+      },
+      {
+        "name": "Reflexos",
+        "attribute": "dexterity",
+        "trained": true,
+        "custom": false
+      },
+      {
+        "name": "Religião",
+        "attribute": "wisdom",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Sobrevivência",
+        "attribute": "wisdom",
+        "trained": false,
+        "custom": false
+      },
+      {
+        "name": "Vontade",
+        "attribute": "wisdom",
+        "trained": true,
+        "custom": false
+      }
+    ],
+    "items": [
+      {
+        "id": 28,
+        "catalogId": "armadura-completa",
+        "name": "Armadura completa",
+        "quantity": 1,
+        "slots": 5,
+        "equipped": "vested",
+        "improvements": "[]",
+        "material": null
+      },
+      {
+        "id": 29,
+        "catalogId": "escudo-pesado",
+        "name": "Escudo pesado",
+        "quantity": 1,
+        "slots": 2,
+        "equipped": "wielded",
+        "improvements": "[]",
+        "material": null
+      },
+      {
+        "id": 30,
+        "catalogId": "machado-batalha",
+        "name": "Machado de batalha",
+        "quantity": 1,
+        "slots": 1,
+        "equipped": "wielded",
+        "improvements": "[]",
+        "material": null
+      },
+      {
+        "id": 31,
+        "catalogId": "balsamo-restaurador",
+        "name": "Bálsamo restaurador",
+        "quantity": 2,
+        "slots": 0.5,
+        "equipped": null,
+        "improvements": "[]",
+        "material": null
+      },
+      {
+        "id": 32,
+        "catalogId": "cosmetico",
+        "name": "Cosmético",
+        "quantity": 2,
+        "slots": 0.5,
+        "equipped": null,
+        "improvements": "[]",
+        "material": null
+      }
+    ],
+    "activeEffects": [],
+    "spells": []
+  },
   "activeItems": [
     {
       "source": "Armadura completa",
