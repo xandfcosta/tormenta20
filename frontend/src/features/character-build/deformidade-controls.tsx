@@ -3,8 +3,8 @@ import {
   DEFORMIDADE_SLOTS,
   deformidadeAvailablePowers,
   EXPERTISE_NAMES,
-  raceWithDeformidade,
 } from '@tormenta20/t20-data'
+import { raceWithDeformidade } from '@/shared/lib/abilities-cache'
 import { Combobox } from '@/shared/ui/combobox'
 import { cn } from '@/shared/lib/utils'
 import type { DeformidadeDraft, RaceChoice } from './grant-helpers'

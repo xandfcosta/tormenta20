@@ -1,25 +1,25 @@
 import { describe, expect, it } from 'vitest'
-import { CATALOG_POWERS, matchesQuery } from './catalog-model'
+import { catalogPowers, matchesQuery } from './catalog-model'
 
-describe('CATALOG_POWERS', () => {
+describe('catalogPowers', () => {
+  // Cache is primed once in test-setup.ts, so the accessor is warm here.
+  const powers = catalogPowers()
+
   it('merges the three power sources, sorted by name, each with text', () => {
-    expect(CATALOG_POWERS.length).toBeGreaterThan(500)
-    for (let i = 1; i < CATALOG_POWERS.length; i++) {
+    expect(powers.length).toBeGreaterThan(500)
+    for (let i = 1; i < powers.length; i++) {
       expect(
-        CATALOG_POWERS[i - 1]!.name.localeCompare(
-          CATALOG_POWERS[i]!.name,
-          'pt-BR',
-        ),
+        powers[i - 1]!.name.localeCompare(powers[i]!.name, 'pt-BR'),
       ).toBeLessThanOrEqual(0)
     }
     // Every entry carries a description (divine powers, which lack one, are
     // excluded by design).
-    expect(CATALOG_POWERS.every((p) => p.description.length > 0)).toBe(true)
+    expect(powers.every((p) => p.description.length > 0)).toBe(true)
   })
 
   it('keeps ids unique across the merged sources', () => {
-    const ids = new Set(CATALOG_POWERS.map((p) => p.id))
-    expect(ids.size).toBe(CATALOG_POWERS.length)
+    const ids = new Set(powers.map((p) => p.id))
+    expect(ids.size).toBe(powers.length)
   })
 })
 

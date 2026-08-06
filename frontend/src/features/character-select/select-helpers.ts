@@ -1,4 +1,5 @@
-import { type FactCategory, getRace } from '@tormenta20/t20-data'
+import type { FactCategory } from '@tormenta20/t20-data'
+import { getRace } from '@/shared/lib/abilities-cache'
 import type { Character } from '@/shared/api/api'
 
 /** Uppercased primary class + level — the T20 analog to a Valorant "role" tag.

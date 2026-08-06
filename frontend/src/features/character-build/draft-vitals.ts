@@ -6,6 +6,7 @@ import {
   multiclassMpPool,
   multiclassPvPool,
 } from '@tormenta20/t20-data'
+import { frontVitalResolver } from '@/entities/character/vital-resolver'
 import {
   type RaceChoiceState,
   appliedRaceDeltas,
@@ -73,7 +74,7 @@ export function deriveDraftVitals(
     origin: v.origin || undefined,
     originChoices: v.originChoices,
     attrTotals,
-  })
+  }, frontVitalResolver)
   // Shared pools mirror the server sheet incl. p34 min-1-PV and p34-35
   // multiclass seeding.
   const pvBase = multiclassPvPool(classEntries, attrTotals.constitution)

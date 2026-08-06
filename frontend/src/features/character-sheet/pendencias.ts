@@ -1,12 +1,11 @@
+import { caminhoSlotFor, slotsForClassLevel } from '@tormenta20/t20-data'
 import {
   allGeneralPowers,
-  caminhoSlotFor,
   classPowersFor,
   devotoOptionsFor,
   getOrigin,
   getRace,
-  slotsForClassLevel,
-} from '@tormenta20/t20-data'
+} from '@/shared/lib/abilities-cache'
 import type { Character } from '@/shared/api/api'
 import { parseClassChoices } from '@/entities/character/derived'
 import { parseChoices } from './parse-choices'

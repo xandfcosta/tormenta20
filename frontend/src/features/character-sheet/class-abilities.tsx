@@ -1,11 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { caminhoSlotFor, slotsForClassLevel } from '@tormenta20/t20-data'
 import {
   allGeneralPowers,
-  caminhoSlotFor,
   classPowersFor,
   devotoOptionsFor,
-  slotsForClassLevel,
-} from '@tormenta20/t20-data'
+} from '@/shared/lib/abilities-cache'
 import type {
   CaminhoOption,
   ClassChoiceBlob,

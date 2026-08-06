@@ -1,6 +1,4 @@
-import { DEUSES, devotoOptionsFor } from '@tormenta20/t20-data'
-
-const DEUS_ID_BY_NAME = new Map(DEUSES.map((d) => [d.name, d.id]))
+import { deuses, devotoOptionsFor } from '@/shared/lib/abilities-cache'
 
 /** Shape the wizard form stores under `classChoices` (zod schema, not the
  *  t20-data Partial-record alias — TanStack's Updater needs the exact type). */
@@ -22,7 +20,10 @@ type DevocaoValues = {
 export function devotoSyncPatch(
   values: DevocaoValues,
 ): WizardClassChoices | null {
-  const deusId = values.god ? DEUS_ID_BY_NAME.get(values.god) : undefined
+  // Resolve god name → id off the primed catalog (warm by the loader gate).
+  const deusId = values.god
+    ? deuses().find((d) => d.name === values.god)?.id
+    : undefined
   if (!deusId) return null
   let next: WizardClassChoices | null = null
   for (const c of values.classes ?? []) {

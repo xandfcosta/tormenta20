@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { Check } from 'lucide-react'
-import { getOrigin } from '@tormenta20/t20-data'
+import { getOrigin } from '@/shared/lib/abilities-cache'
 import type {
   OriginBenefit,
   OriginDefinition,

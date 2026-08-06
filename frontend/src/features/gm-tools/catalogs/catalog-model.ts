@@ -1,8 +1,8 @@
 import {
-  CLASS_POWERS_CATALOG,
-  GENERAL_POWERS_CATALOG,
-  GRANTED_POWERS,
-} from '@tormenta20/t20-data'
+  classPowerCatalog,
+  generalPowerCatalog,
+  grantedPowers as grantedPowerCatalog,
+} from '@/shared/lib/abilities-cache'
 import { normalizeText } from '@/shared/lib/normalize-text'
 
 /**
@@ -20,7 +20,7 @@ export type CatalogPower = {
 }
 
 function classPowers(): CatalogPower[] {
-  return CLASS_POWERS_CATALOG.map((p) => ({
+  return classPowerCatalog().map((p) => ({
     id: p.id,
     name: p.name,
     source: p.className,
@@ -29,7 +29,7 @@ function classPowers(): CatalogPower[] {
 }
 
 function generalPowers(): CatalogPower[] {
-  return GENERAL_POWERS_CATALOG.map((p) => ({
+  return generalPowerCatalog().map((p) => ({
     id: `general.${p.id}`,
     name: p.name,
     source: `Geral · ${p.kind}`,
@@ -38,7 +38,7 @@ function generalPowers(): CatalogPower[] {
 }
 
 function grantedPowers(): CatalogPower[] {
-  return GRANTED_POWERS.map((p) => ({
+  return grantedPowerCatalog().map((p) => ({
     id: `granted.${p.id}`,
     name: p.name,
     source: `Concedido · ${p.deuses.join(', ')}`,
@@ -46,12 +46,17 @@ function grantedPowers(): CatalogPower[] {
   }))
 }
 
-/** All searchable powers, sorted by name (accent-insensitive). */
-export const CATALOG_POWERS: readonly CatalogPower[] = [
-  ...classPowers(),
-  ...generalPowers(),
-  ...grantedPowers(),
-].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+/**
+ * All searchable powers, sorted by name (accent-insensitive). A function, not a
+ * module-level const, because the abilities catalog is fetched + primed by the
+ * loader gate — reading it at import time (before priming) would yield an empty
+ * list. Call from a component/effect that runs after the gate (B.3).
+ */
+export function catalogPowers(): readonly CatalogPower[] {
+  return [...classPowers(), ...generalPowers(), ...grantedPowers()].sort(
+    (a, b) => a.name.localeCompare(b.name, 'pt-BR'),
+  )
+}
 
 /**
  * True when every whitespace-separated term in `query` appears in one of the

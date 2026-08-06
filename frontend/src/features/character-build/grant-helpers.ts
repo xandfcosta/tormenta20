@@ -4,16 +4,18 @@ import {
   type AttributeKey,
   CLASS_VITALS,
   carismaLossFromPowers,
+  type Raca,
+  racasByTier,
+  TORMENTA_POWERS,
+  type TormentaPowerId,
+} from '@tormenta20/t20-data'
+import {
   getOrigin,
   getOriginBenefit,
   getRace,
   ownedClassPowers,
-  type Raca,
-  racasByTier,
   raceWithDeformidade,
-  TORMENTA_POWERS,
-  type TormentaPowerId,
-} from '@tormenta20/t20-data'
+} from '@/shared/lib/abilities-cache'
 
 /** No elective picks at creation — only auto-granted powers are previewed. */
 const EMPTY_CHOICES: ReadonlySet<string> = new Set()

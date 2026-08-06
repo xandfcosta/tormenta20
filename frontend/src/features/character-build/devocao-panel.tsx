@@ -1,13 +1,11 @@
 import {
-  DEUSES,
   type Deus,
   devotoEligible,
   type GrantedPowerOption,
   grantedPowerOptionsFor,
 } from '@tormenta20/t20-data'
+import { deuses } from '@/shared/lib/abilities-cache'
 import { cn } from '@/shared/lib/utils'
-
-const DEUS_BY_NAME = new Map(DEUSES.map((d) => [d.name, d]))
 
 const ACTION_LABEL: Record<string, string> = {
   padrao: 'ação padrão',
@@ -39,7 +37,9 @@ export function DevocaoPanel({
   raceNames: string[]
   classNames: string[]
 }) {
-  const deus = DEUS_BY_NAME.get(godName)
+  // Read the primed catalog (warm by loader gate); ~20 deuses, linear find is
+  // cheap and avoids a module-level Map that would evaluate before priming.
+  const deus = deuses().find((d) => d.name === godName)
   if (!deus) return null
   const powers = grantedPowerOptionsFor(deus.id)
   if (powers.length === 0) return null

@@ -5,23 +5,16 @@ import {
   CAVALEIRO_BASTIAO_RD,
   guerreiroRdForLevel,
   carismaLossFromPowers,
-  ownedClassPowers,
   CLASS_SPELLCASTING_ATTRIBUTE,
   computeItemEffects,
   conditionalId,
   DEFORMIDADE_PERICIA_BONUS,
   EXPERTISE_NAMES,
   type ExpertiseName,
-  getClassPower,
-  getGeneralPower,
-  getOrigin,
-  getOriginBenefit,
-  getRace,
   HOMEBREW_VESTED_OK,
   originModifiers,
   RACAS,
   raceModifiers,
-  raceWithDeformidade,
   requiredProficiency,
   resolveAtributoMod,
   spellSaveDc,
@@ -37,10 +30,21 @@ import {
   type Modifier,
   type Prerequisite,
 } from '@tormenta20/t20-data'
-// getCatalogItem now reads the fetched item catalog (primed by the root
-// loader) instead of the build-time CATALOG_ITEMS — keeps the ~44KB item data
-// out of the bundle. See project_front_decouple_catalog B.2.
+// The abilities lookups + item catalog now read the fetched catalogs (primed by
+// the root loader) instead of the build-time t20-data data — keeps the ~149KB
+// abilities chunk + ~44KB item data out of the bundle. `raceModifiers` /
+// `originModifiers` stay imported above: they're pure, data-free logic that
+// tree-shakes on its own. See project_front_decouple_catalog B.2/B.3.
 import { getCatalogItem } from '@/shared/lib/catalog-cache'
+import {
+  getClassPower,
+  getGeneralPower,
+  getOrigin,
+  getOriginBenefit,
+  getRace,
+  ownedClassPowers,
+  raceWithDeformidade,
+} from '@/shared/lib/abilities-cache'
 import type { Character, CharacterExpertise, CharacterItem } from '@/shared/api/api'
 import { useActiveConditionals } from '@/shared/stores/conditionals-store'
 import { effectSourceName } from './effect-source'

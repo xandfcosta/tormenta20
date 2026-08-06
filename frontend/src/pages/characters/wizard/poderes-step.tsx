@@ -1,9 +1,8 @@
+import { caminhoSlotFor, type ClassChoices } from '@tormenta20/t20-data'
 import {
-  caminhoSlotFor,
-  type ClassChoices,
   devotoOptionsFor,
   racesGrantTormenta,
-} from '@tormenta20/t20-data'
+} from '@/shared/lib/abilities-cache'
 import { Check, Lock, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Badge } from '@/shared/ui/badge'

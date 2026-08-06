@@ -8,6 +8,7 @@ import {
 } from '@tormenta20/t20-data'
 import type { Character } from '@/shared/api/api'
 import { attributeTotal, parseChoiceSet, parseClassChoices } from './derived'
+import { frontVitalResolver } from './vital-resolver'
 
 type ClassEntry = { className: string; level: number }
 type LevelVitals = {
@@ -40,7 +41,7 @@ function enginePools(
     origin: character.origin || undefined,
     originChoices: [...parseChoiceSet(character.originChoices)],
     attrTotals,
-  })
+  }, frontVitalResolver)
   return {
     pv: Math.max(0, multiclassPvPool(classes, attrTotals.constitution) + grants.pv),
     pm: Math.max(0, multiclassMpPool(classes) + grants.pm),

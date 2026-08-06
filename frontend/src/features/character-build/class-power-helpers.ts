@@ -1,8 +1,5 @@
 import {
-  allGeneralPowers,
   caminhoSlotFor,
-  classPowersFor,
-  devotoOptionsFor,
   type ClassChoices,
   type PowerChoice,
   type Prerequisite,
@@ -10,6 +7,11 @@ import {
   spellEffectByName,
   TORMENTA_POWERS,
 } from '@tormenta20/t20-data'
+import {
+  allGeneralPowers,
+  classPowersFor,
+  devotoOptionsFor,
+} from '@/shared/lib/abilities-cache'
 import { catalogWeapons } from '@/shared/lib/catalog-cache'
 
 export type ClassEntry = { className: string; level: number }

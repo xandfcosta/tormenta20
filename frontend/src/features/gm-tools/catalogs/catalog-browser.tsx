@@ -9,7 +9,7 @@ import {
 import { allCatalogItems } from '@/shared/lib/catalog-cache'
 import { Input } from '@/shared/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
-import { CATALOG_POWERS, type CatalogPower } from './catalog-model'
+import { catalogPowers, type CatalogPower } from './catalog-model'
 import { CatalogTab } from './catalog-tab'
 import {
   ConditionRow,
@@ -53,6 +53,8 @@ export function CatalogBrowser({
       [...allCatalogItems()].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')),
     [],
   )
+  // Same reason as itemList — the power catalog is primed by the loader gate.
+  const powerList = useMemo(() => catalogPowers(), [])
 
   return (
     <div className="flex min-h-0 flex-col gap-4">
@@ -94,7 +96,7 @@ export function CatalogBrowser({
         </TabsContent>
         <TabsContent value="powers">
           <CatalogTab
-            items={CATALOG_POWERS}
+            items={powerList}
             query={query}
             searchText={powerSearch}
             estimateSize={96}

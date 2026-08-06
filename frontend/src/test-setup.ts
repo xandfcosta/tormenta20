@@ -7,15 +7,32 @@
  */
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
-import { CATALOG_ITEMS } from '@tormenta20/t20-data'
+import {
+  CATALOG_ITEMS,
+  CLASS_POWERS_CATALOG,
+  DEUSES,
+  GENERAL_POWERS_CATALOG,
+  GRANTED_POWERS,
+  ORIGINS_CATALOG,
+  RACES_CATALOG,
+} from '@tormenta20/t20-data'
 import { afterEach } from 'vitest'
+import { primeAbilities } from './shared/lib/abilities-cache'
 import { primeItemCatalog } from './shared/lib/catalog-cache'
 
-/* The item catalog is fetched + primed by the root loader at runtime (B.2 —
- * keeps the data out of the bundle). Tests have no loader, so prime the cache
- * once from the real t20-data catalog — restores the pre-migration behavior
- * where getCatalogItem worked synchronously at import. */
+/* The catalogs are fetched + primed by the root loader at runtime (B.2/B.3 —
+ * keeps the data out of the bundle). Tests have no loader, so prime the caches
+ * once from the real t20-data catalogs — restores the pre-migration behavior
+ * where getCatalogItem / getRace / ownedClassPowers worked synchronously. */
 primeItemCatalog(CATALOG_ITEMS)
+primeAbilities({
+  races: RACES_CATALOG,
+  origins: ORIGINS_CATALOG,
+  classPowers: CLASS_POWERS_CATALOG,
+  generalPowers: GENERAL_POWERS_CATALOG,
+  deuses: DEUSES,
+  grantedPowers: GRANTED_POWERS,
+})
 
 /* Vitest doesn't auto-cleanup React trees between tests — DOM leaks
  * across tests and `getByText` starts matching leftovers from an

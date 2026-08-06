@@ -1,6 +1,16 @@
 // Type-only — erases at compile, so the catalog DATA no longer rides in the
 // bundle; it is fetched from GET /catalog/* and cached instead.
-import type { CatalogItem, CatalogSpell, Monster } from '@tormenta20/t20-data'
+import type {
+  CatalogItem,
+  CatalogSpell,
+  ClassPower,
+  Deus,
+  GeneralPower,
+  GrantedPower,
+  Monster,
+  OriginDefinition,
+  RaceDefinition,
+} from '@tormenta20/t20-data'
 
 export type User = {
   id: number
@@ -512,6 +522,14 @@ export const api = {
       request<Record<string, CatalogSpell>>('/catalog/spells'),
     bestiary: () => request<Monster[]>('/catalog/bestiary'),
     items: () => request<CatalogItem[]>('/catalog/items'),
+    // Abilities cluster (B.3). `race-defs` = RaceDefinition catalog (getRace),
+    // DISTINCT from the racas.ts dataset served at a different concern.
+    raceDefs: () => request<RaceDefinition[]>('/catalog/race-defs'),
+    origins: () => request<OriginDefinition[]>('/catalog/origins'),
+    classPowers: () => request<ClassPower[]>('/catalog/class-powers'),
+    generalPowers: () => request<GeneralPower[]>('/catalog/general-powers'),
+    deuses: () => request<Deus[]>('/catalog/deuses'),
+    grantedPowers: () => request<GrantedPower[]>('/catalog/granted-powers'),
   },
   characters: {
     options: () => request<CharacterOptions>('/characters/options'),
