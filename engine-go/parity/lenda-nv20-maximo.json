@@ -954,5 +954,436 @@
         }
       }
     ]
+  },
+  "sheetV2": {
+    "defense": {
+      "base": 10,
+      "itemBonus": 12,
+      "total": 22,
+      "dexApplied": false,
+      "contributions": [
+        {
+          "source": "Armadura completa",
+          "amount": 10
+        },
+        {
+          "source": "Escudo pesado",
+          "amount": 2
+        }
+      ]
+    },
+    "displacement": {
+      "base": 9,
+      "itemBonus": -3,
+      "total": 6,
+      "contributions": [
+        {
+          "source": "Armadura completa",
+          "amount": -3
+        }
+      ]
+    },
+    "flySpeed": 0,
+    "inventorySlots": 20,
+    "attributes": {
+      "strength": {
+        "total": 5,
+        "contributions": []
+      },
+      "dexterity": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Anão",
+            "amount": -1
+          }
+        ]
+      },
+      "constitution": {
+        "total": 7,
+        "contributions": [
+          {
+            "source": "Raça: Anão",
+            "amount": 2
+          }
+        ]
+      },
+      "intelligence": {
+        "total": 1,
+        "contributions": []
+      },
+      "wisdom": {
+        "total": 3,
+        "contributions": [
+          {
+            "source": "Raça: Anão",
+            "amount": 1
+          }
+        ]
+      },
+      "charisma": {
+        "total": 3,
+        "contributions": []
+      }
+    },
+    "pmLimit": {
+      "base": 20,
+      "itemBonus": 0,
+      "total": 20,
+      "contributions": []
+    },
+    "bestBaseSpellCd": null,
+    "spellDCBonus": {
+      "total": 0,
+      "contributions": []
+    },
+    "pmCostMod": {
+      "total": 0,
+      "contributions": []
+    },
+    "damageReduction": {
+      "total": 0,
+      "sources": []
+    },
+    "tempHpFuria": {
+      "total": 0,
+      "sources": []
+    },
+    "expertises": [
+      {
+        "name": "Acrobacia",
+        "base": 11,
+        "itemBonus": -7,
+        "total": 4,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [
+          {
+            "source": "Penalidade de armadura",
+            "amount": -7
+          }
+        ],
+        "armorPenaltyApplied": -7
+      },
+      {
+        "name": "Adestramento",
+        "base": 13,
+        "itemBonus": 0,
+        "total": 13,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Atletismo",
+        "base": 21,
+        "itemBonus": 0,
+        "total": 21,
+        "halfLevel": 10,
+        "attrValue": 5,
+        "training": 6,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Atuação",
+        "base": 13,
+        "itemBonus": 0,
+        "total": 13,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Cavalgar",
+        "base": 11,
+        "itemBonus": 0,
+        "total": 11,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Conhecimento",
+        "base": 11,
+        "itemBonus": 0,
+        "total": 11,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Cura",
+        "base": 13,
+        "itemBonus": 0,
+        "total": 13,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Diplomacia",
+        "base": 13,
+        "itemBonus": 0,
+        "total": 13,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Enganação",
+        "base": 13,
+        "itemBonus": 0,
+        "total": 13,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Fortitude",
+        "base": 23,
+        "itemBonus": 0,
+        "total": 23,
+        "halfLevel": 10,
+        "attrValue": 7,
+        "training": 6,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Furtividade",
+        "base": 11,
+        "itemBonus": -7,
+        "total": 4,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [
+          {
+            "source": "Penalidade de armadura",
+            "amount": -7
+          }
+        ],
+        "armorPenaltyApplied": -7
+      },
+      {
+        "name": "Guerra",
+        "base": 11,
+        "itemBonus": 0,
+        "total": 11,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Iniciativa",
+        "base": 11,
+        "itemBonus": 0,
+        "total": 11,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Intimidação",
+        "base": 19,
+        "itemBonus": 0,
+        "total": 19,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 6,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Intuição",
+        "base": 13,
+        "itemBonus": 0,
+        "total": 13,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Investigação",
+        "base": 17,
+        "itemBonus": 0,
+        "total": 17,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 6,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Jogatina",
+        "base": 13,
+        "itemBonus": 0,
+        "total": 13,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Ladinagem",
+        "base": 11,
+        "itemBonus": -7,
+        "total": 4,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [
+          {
+            "source": "Penalidade de armadura",
+            "amount": -7
+          }
+        ],
+        "armorPenaltyApplied": -7
+      },
+      {
+        "name": "Luta",
+        "base": 21,
+        "itemBonus": 0,
+        "total": 21,
+        "halfLevel": 10,
+        "attrValue": 5,
+        "training": 6,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Misticismo",
+        "base": 17,
+        "itemBonus": 0,
+        "total": 17,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 6,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Nobreza",
+        "base": 11,
+        "itemBonus": 0,
+        "total": 11,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Ofício",
+        "base": 11,
+        "itemBonus": 0,
+        "total": 11,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Percepção",
+        "base": 19,
+        "itemBonus": 0,
+        "total": 19,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 6,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Pilotagem",
+        "base": 11,
+        "itemBonus": 0,
+        "total": 11,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Pontaria",
+        "base": 17,
+        "itemBonus": 0,
+        "total": 17,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 6,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Reflexos",
+        "base": 17,
+        "itemBonus": 0,
+        "total": 17,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 6,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Religião",
+        "base": 13,
+        "itemBonus": 0,
+        "total": 13,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Sobrevivência",
+        "base": 13,
+        "itemBonus": 0,
+        "total": 13,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Vontade",
+        "base": 19,
+        "itemBonus": 0,
+        "total": 19,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 6,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      }
+    ]
   }
 }

@@ -27,10 +27,21 @@ type Character struct {
 	ClassChoices         string `json:"classChoices"`
 	PowerChoices         string `json:"powerChoices"`
 
-	Races         []CharacterRace   `json:"races"`
-	Classes       []CharacterClass  `json:"classes"`
-	Items         []CharacterItem   `json:"items"`
-	ActiveEffects []ActiveEffectRow `json:"activeEffects"`
+	Displacement int `json:"displacement"`
+
+	Races         []CharacterRace      `json:"races"`
+	Classes       []CharacterClass     `json:"classes"`
+	Items         []CharacterItem      `json:"items"`
+	ActiveEffects []ActiveEffectRow    `json:"activeEffects"`
+	Expertises    []CharacterExpertise `json:"expertises"`
+}
+
+// CharacterExpertise mirrors api.ts CharacterExpertise — the per-perícia row the
+// expertise breakdown reads (name + key attribute + trained flag).
+type CharacterExpertise struct {
+	Name      string `json:"name"`
+	Attribute string `json:"attribute"`
+	Trained   bool   `json:"trained"`
 }
 
 type CharacterRace struct {

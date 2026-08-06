@@ -95,8 +95,10 @@ são catalog-free e inline — portados pra table-tests Go dão verde imediato.
    `PrimeEngineCatalogs` portados (catalogs.go/character.go/collect*.go). Bate
    `activeItems` byte-equal contra o oráculo nos 16 seeds
    (`collect_parity_test.go`). Harness dumpa `char` + `_catalogs.json`.
-4. **Breakdowns → Go** (task #5). Os `*Total` + RD/tempHp. Emite `ComputedSheetV2`.
-   Bate contra o oráculo.
+4. **Breakdowns → Go** (task #5, ✅ DONE). Todos os `*Total` + RD/tempHp num
+   `ComputedSheetV2` (`sheet_rules.go`/`breakdowns.go`/`breakdowns_magic.go`).
+   `(*Catalogs).ComputeSheetV2(char, conditionals)` bate byte-equal contra o
+   oráculo `sheetV2` nos 16 seeds (`sheetv2_parity_test.go`).
 5. **Fronteira WASM + boot/build** (task #6). Expõe `computeSheetV2`; prima
    catálogos; `ensureEngine()` no `__root.tsx` beforeLoad; build do wasm no
    `predev`/`prebuild` do frontend (hoje só o air cobre — CI/build precisam).

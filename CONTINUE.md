@@ -10,7 +10,7 @@ Migração **"1 motor só"**: portar o motor real de derivação de ficha
 com paridade TDD contra os 16 personagens semente, e no fim remover a derivação
 TS. Escopo escolhido pelo dono: **port completo** (não o MVP).
 
-## Estado atual (slices 1–3 + coleta/catálogos — DONE, verde e verificado)
+## Estado atual (tasks #2–#5 — DONE, verde e verificado)
 
 - **Slice 1** — resolução core em Go: `engine-go/engine/itemeffects.go`
   (port fiel de `items/engine.ts`, catalog-free) + `itemeffects_test.go` (~44 casos).
@@ -18,28 +18,36 @@ TS. Escopo escolhido pelo dono: **port completo** (não o MVP).
   `frontend/src/entities/character/parity-oracle.test.ts` gera 16 oráculos em
   `engine-go/parity/*.json`; `engine-go/engine/itemeffects_parity_test.go` prova
   `ComputeItemEffects` **byte-equal ao TS nos 16 seed chars**.
-- **Slice 2 (task #4) — coleta + catálogos → Go [NOVO]**: portado `activeItemsFor`
-  inteiro + `PrimeEngineCatalogs`. Arquivos Go novos: `catalogs.go` (shapes +
+- **Slice 2 (task #4) — coleta + catálogos → Go**: portado `activeItemsFor`
+  inteiro + `PrimeEngineCatalogs`. Arquivos Go: `catalogs.go` (shapes +
   store + lookups), `character.go` (Character cru), `collect_rules.go` (raceMods/
   originMods/resolveAtributoDeltas/requiredProficiency/ownership), `collect_parse.go`
   (parsers das colunas JSON), `collect_entities.go` (raça/origem/classe/tormenta),
   `collect.go` (`(*Catalogs).ActiveItemsFor` + itens/overlays/penalidades/homebrew).
-  Harness agora dumpa `char` em cada oráculo + `engine-go/parity/_catalogs.json`;
+  Harness dumpa `char` em cada oráculo + `engine-go/parity/_catalogs.json`;
   `collect_parity_test.go` prova `ActiveItemsFor` **byte-equal ao TS nos 16 seeds**.
-  Detalhes/cuidados do port abaixo em "Cuidados".
+- **Task #5 — breakdowns → Go [NOVO]**: portados TODOS os `*Total` de `derived.ts`
+  num único `ComputedSheetV2` (defense/displacement/flySpeed/inventorySlots/
+  attribute×6/pmLimit/bestBaseSpellCd/spellDCBonus/pmCostMod/RD/tempHp/expertise-
+  por-perícia). Arquivos Go: `sheet_rules.go` (trainingBonusForLevel/spellSaveDc/
+  classSpellcastingAttribute/barbaroRd/guerreiroRd — puros de t20-data),
+  `breakdowns.go` (structs + `(*Catalogs).ComputeSheetV2` + defense/movimento/
+  attribute/expertise), `breakdowns_magic.go` (pm/spell/RD/tempHp). Harness dumpa
+  `sheetV2` por seed (chama as funções reais do derived.ts; `tempHpFuria` usa
+  furiaActive=true p/ exercitar Alma de Bronze); `sheetv2_parity_test.go` prova
+  `ComputeSheetV2` **byte-equal ao TS nos 16 seeds**.
 - Nada removido ainda — `derived.ts` intacto. Sem regressão.
 
-## Próximo passo — task #5: breakdowns → Go
+## Próximo passo — task #6: fronteira WASM + boot/build
 
-Portar os `*Total` de `derived.ts` (defenseTotal, expertiseTotalWithItems,
-displacementTotal, flySpeedTotal, inventorySlotsTotal, attributeTotal×6,
-pmLimitTotal, bestBaseSpellCd, spellDCBonus, pmCostMod, characterDamageReduction,
-tempHpFromPowers) + RD/tempHp, emitindo um `ComputedSheetV2`. Oráculo já existe
-no harness (PORT-PLAN.md §3 lista os breakdowns; hoje o oráculo só dumpa
-`activeItems`+`itemEffects` — estender `parity-oracle.test.ts` p/ dumpar os
-breakdowns esperados). Depois: #6 fronteira WASM + boot/build, #7 troca da UI
-(paridade visual), #8 remoção. Ordem/detalhe: `PORT-PLAN.md §4`. Consumidores da
-UI a cobrir: `PORT-PLAN.md §5`.
+Expor `ComputeSheetV2` (e `ActiveItemsFor`) no `cmd/wasm` (hoje só expõe o MVP
+`computeSheet`): novo entry que recebe `Character` cru + prima catálogos uma vez
+(`PrimeEngineCatalogs` a partir do MESMO JSON que `ensureCatalogs` busca). No
+front: `computeSheetV2(char, conditionals)` no wrapper `engine-wasm.ts`;
+`ensureEngine()` no `__root.tsx` beforeLoad (paralelo a `ensureCatalogs`); buildar
+o wasm no `predev`/`prebuild` do frontend (hoje só o air cobre — CI/build
+precisam). Depois: #7 troca da UI (paridade visual, faseado), #8 remoção do
+`derived.ts`. Ordem/detalhe: `PORT-PLAN.md §4`. Consumidores da UI: `PORT-PLAN.md §5`.
 
 ## Verificação (rodar antes/depois de cada slice)
 
