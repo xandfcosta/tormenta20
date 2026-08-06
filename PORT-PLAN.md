@@ -113,9 +113,15 @@ são catalog-free e inline — portados pra table-tests Go dão verde imediato.
    paridade garantida (`computeEffects` byte-equal ao oráculo `itemEffects`).
    Otimismo (level/draft-vitals) fica p/ depois — usa collectVitalGrants, não este
    derive. Breakdowns seguem TS (puros sobre effects) até #8.
-7. **Remoção** (task #8). Deleta `derived.ts` (breakdowns + coleta) e o import de
-   `items/engine.ts` do bundle. Verde em FE/BE/t20-data + typecheck + biome +
-   bundle sem regressão.
+7. **Remoção** (task #8, ✅ DONE). `resolveEffects` gated por
+   `import.meta.env.MODE === 'test'`: produção/dev só o engine (throw se não
+   primado); ramo TS (coleta + `computeItemEffects` + `applyActiveConditionals`)
+   é test-only → **DCE no build**. Provado: strings exclusivos da coleta ausentes
+   de `dist/assets`. A coleta TS fica como ORÁCULO de teste (vitest usa derive TS,
+   sem wasm). FE 585 verde, build verde. Caudas opcionais (não bloqueiam): migrar
+   `effect-source.equippedItemFlagEffects` (usa `computeItemEffects` por-item),
+   otimismo level/draft-vitals, breakdowns→ComputedSheetV2, e deletar de vez a
+   coleta TS (exigiria wasm no vitest — hoje não vale, perde a paridade). Ver CONTINUE.md.
 
 ## 5. Consumidores de `derived.ts` (mapa — o que a troca precisa cobrir)
 

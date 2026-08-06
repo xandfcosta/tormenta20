@@ -10,7 +10,7 @@ Migração **"1 motor só"**: portar o motor real de derivação de ficha
 com paridade TDD contra os 16 personagens semente, e no fim remover a derivação
 TS. Escopo escolhido pelo dono: **port completo** (não o MVP).
 
-## Estado atual (tasks #2–#7 — DONE, verde e verificado)
+## Estado atual (tasks #2–#8 — DONE; "1 motor só" em produção)
 
 - **Slice 1** — resolução core em Go: `engine-go/engine/itemeffects.go`
   (port fiel de `items/engine.ts`, catalog-free) + `itemeffects_test.go` (~44 casos).
@@ -56,22 +56,36 @@ TS. Escopo escolhido pelo dono: **port completo** (não o MVP).
   passam por ele → **os 23 consumidores + os breakdowns rodam sobre effects do Go,
   ZERO mudança de call-site, paridade garantida**. Prova E2E node:
   `computeEffects(char)` byte-equal ao oráculo `itemEffects` nos 16 seeds. Os
-  breakdowns continuam TS (puros sobre effects) — removidos/portados no #8.
-- Nada removido ainda — `derived.ts` intacto (agora é o fallback). Sem regressão.
+  breakdowns continuam TS (puros sobre effects).
+- **Task #8 — remoção / engine obrigatório [NOVO]**: `resolveEffects` agora é
+  gated por `import.meta.env.MODE === 'test'`. Em produção/dev SÓ o engine roda
+  (throw se não primado); o ramo TS (coleta `activeItemsFor` inteira +
+  `computeItemEffects` + `applyActiveConditionals`) é TEST-ONLY → o build estático
+  faz **dead-code-elimination** dele. **Provado**: os 4 strings exclusivos da
+  coleta ("sem proficiência: -5…", "Homebrew: esotérico vestido", "poder(es) da
+  Tormenta (p136)", "anula desbalanceada") estão AUSENTES de `dist/assets` (os
+  breakdowns "Penalidade de armadura"/"cannot-apply-dex" continuam). `ensure-
+  catalogs`/`__root` atualizados (engine load-bearing; falha vira erro só nas
+  páginas de ficha). A coleta TS fica no repo como ORÁCULO de teste (o harness
+  `parity-oracle.test.ts` ainda regenera; os testes vitest usam o derive TS, sem
+  wasm). FE 585 verde, build verde, DCE provado.
 
-## Próximo passo — task #8: remoção (fechar o "1 motor só")
+## Estado: migração "1 motor só" COMPLETA em produção
 
-Tornar o engine OBRIGATÓRIO e remover a duplicação TS: (1) carregar o wasm no
-setup dos testes (o harness node `wasm-effects-proof.cjs` mostra o padrão:
-`wasm_exec.js` + instantiate + prime a partir de `_catalogs.json`) para o
-fallback poder sair; (2) deletar o ramo TS de `resolveEffects` + `activeItemsFor`
-+ toda a coleta de `derived.ts`, e dropar o import de `t20-data/items/engine.ts`
-(`computeItemEffects`) do bundle do front (o grande ganho de bundle); (3) decidir
-se os breakdowns `*Total` viram consumidores de `ComputedSheetV2` (engine) ou
-ficam TS finos sobre `computeEffects`. Verificar: FE/BE/t20-data verdes + typecheck
-+ biome + **bundle sem `items/engine.ts`** + paridade visual. Detalhe: `PORT-PLAN.md §4-5`.
-Nota: `effect-source.ts equippedItemFlagEffects` ainda usa `computeItemEffects`
-por-item (display) — decidir no #8 se migra.
+O derive da ficha roda 100% no motor Go/WASM em produção; o bundle não carrega
+mais a coleta TS. Restam APENAS caudas opcionais (não bloqueiam nada):
+- `effect-source.ts equippedItemFlagEffects` ainda usa `computeItemEffects`
+  por-item (lista de flags por item no tab Efeitos, com proveniência) → o engine
+  agrega flags e perde a proveniência por-item, então migrar exigiria uma função
+  nova no engine. `computeItemEffects` (resolução pura, ~100 ln) segue no bundle
+  só por isso. Baixa prioridade.
+- Otimismo `optimisticLevelVitals`/`deriveDraftVitals` usa `collectVitalGrants`+
+  `frontVitalResolver` (caminho de vitals, NÃO este derive) — pode virar
+  `computeSheetV2(hipótese)` um dia. Independente.
+- Breakdowns `*Total` seguem TS finos sobre os effects do Go (decisão do #7).
+  Migrar p/ `ComputedSheetV2` removeria `statFor` do bundle — ganho marginal.
+- Deletar de vez a coleta TS (e o oráculo) exigiria carregar wasm no vitest
+  (padrão em `wasm-effects-proof.cjs`); hoje NÃO vale (perde a rede de paridade).
 
 ## Verificação (rodar antes/depois de cada slice)
 

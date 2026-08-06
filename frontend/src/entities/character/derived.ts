@@ -723,29 +723,34 @@ export function isItemProficient(
 }
 
 /**
- * The sheet derive's CHOKE POINT (Inc.2 task #7): resolve a character's
- * `ItemEffects` through the Go/WASM engine when it's warm, else the TS derive.
+ * The sheet derive's CHOKE POINT (Inc.2 task #7/#8): resolve a character's
+ * `ItemEffects` through the Go/WASM engine — the single source of truth.
  *
- * The engine runs the heavy half — `activeItemsFor` (catalog reads) +
- * `computeItemEffects` (non-stacking resolution) — in Go, so the browser stops
- * duplicating it; the thin breakdown helpers below stay TS over these effects.
- * The TS branch is the fallback for tests (no wasm) and the (proven-not-to-happen)
- * case where the primed engine still throws — so the sheet can never break.
+ * In PRODUCTION/dev the engine runs the whole heavy derive (collection +
+ * resolution) in Go. The TS branch below is TEST-ONLY: it keeps the TS derive as
+ * the parity oracle + vitest backing so the unit suite needs no wasm. Because
+ * `import.meta.env.MODE` is statically `'production'` in the app build, that
+ * branch — and everything only it reaches (`activeItemsFor` + the whole
+ * collection layer, `computeItemEffects`, `applyActiveConditionals`) — is
+ * dead-code-eliminated, so the front bundle ships ONLY the Go engine (task #8).
  * Parity is proven byte-equal by the `itemEffects` oracle across the 16 seeds.
  */
 function resolveEffects(
   character: Character,
   activeConditionals: ReadonlySet<string>,
 ): ItemEffects {
-  if (areEngineCatalogsPrimed()) {
-    try {
-      return engineComputeEffects(character, [...activeConditionals])
-    } catch (err) {
-      console.error('engine computeEffects failed — using TS derive fallback:', err)
-    }
+  if (import.meta.env.MODE === 'test') {
+    return applyActiveConditionals(
+      computeItemEffects(activeItemsFor(character)),
+      activeConditionals,
+    )
   }
-  const base = computeItemEffects(activeItemsFor(character))
-  return applyActiveConditionals(base, activeConditionals)
+  if (!areEngineCatalogsPrimed()) {
+    throw new Error(
+      'sheet derive: WASM engine not primed — ensureEngineCatalogs() must resolve before any sheet renders',
+    )
+  }
+  return engineComputeEffects(character, [...activeConditionals])
 }
 
 export function characterEffects(

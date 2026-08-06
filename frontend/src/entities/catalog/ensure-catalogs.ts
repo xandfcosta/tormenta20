@@ -87,19 +87,21 @@ export async function ensureCatalogs(qc: QueryClient): Promise<void> {
 
 /**
  * Warm the Go/WASM engine and prime its catalogs with the SAME data
- * `ensureCatalogs` uses — so `computeSheetV2` is sync-ready on the first derive.
+ * `ensureCatalogs` uses — so the sheet derive is sync-ready on the first render.
  * Loads the wasm in parallel with the (cached) catalog fetches, then primes.
+ * Runs alongside `ensureCatalogs` from the root beforeLoad.
  *
- * Best-effort: the engine is NOT load-bearing yet (task #7 swaps the UI onto it),
- * so a missing/failed wasm must not break the app gate. Runs alongside
- * `ensureCatalogs` from the root beforeLoad.
+ * The engine is now LOAD-BEARING (task #8): the front bundle ships no TS derive,
+ * so `resolveEffects` throws if the engine isn't primed. We still don't reject the
+ * whole app gate on a wasm failure — non-sheet routes stay usable and the failure
+ * surfaces (loudly) as a sheet-scoped error boundary rather than a blank app.
  */
 export async function ensureEngineCatalogs(qc: QueryClient): Promise<void> {
   try {
     const [payload] = await Promise.all([buildEnginePayload(qc), ensureEngine()])
     primeEngineCatalogs(payload)
   } catch (err) {
-    console.error('engine-wasm warm failed (non-fatal until task #7):', err)
+    console.error('engine-wasm warm failed — sheet pages will error until it loads:', err)
   }
 }
 

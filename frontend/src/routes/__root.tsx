@@ -25,8 +25,9 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     // Prime the catalog cache once for the whole authenticated app (static,
     // cached-∞) so the sync accessors in derived.ts & co. are warm on ANY
     // authed route — not just the sheet/wizard. Skipped when logged out, so
-    // login/register stay fast. The Go/WASM engine warms in parallel (best-
-    // effort until task #7 makes it load-bearing).
+    // login/register stay fast. The Go/WASM engine warms in parallel — it's the
+    // single source for the sheet derive now (task #8), so this must run before
+    // any sheet renders.
     if (user) {
       await Promise.all([
         ensureCatalogs(context.queryClient),
