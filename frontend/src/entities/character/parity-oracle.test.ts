@@ -5,7 +5,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { type AttributeKey, statFor } from '@tormenta20/t20-data'
 import {
   CATALOG_ITEMS,
   CLASS_POWERS_CATALOG,
@@ -20,23 +19,8 @@ import {
 import { describe, expect, it } from 'vitest'
 import type { Character } from '@/shared/api/api'
 import fixtures from './__fixtures__/character-input-parity.json'
-import {
-  activeItemsFor,
-  attributeContributions,
-  attributeTotal,
-  bestBaseSpellCd,
-  characterDamageReduction,
-  characterEffects,
-  defenseTotal,
-  displacementTotal,
-  expertiseTotalWithItems,
-  flySpeedTotal,
-  inventorySlotsTotal,
-  pmCostMod,
-  pmLimitTotal,
-  spellDCBonus,
-  tempHpFromPowers,
-} from './derived'
+import { assembleSheetV2 } from './computed-sheet'
+import { activeItemsFor, characterEffects } from './derived'
 import { buildVitalContext } from './level-vitals'
 import { computeVitalPools } from './vital-pools'
 
@@ -59,57 +43,15 @@ import { computeVitalPools } from './vital-pools'
 
 const EMPTY_CONDITIONALS: ReadonlySet<string> = new Set()
 
-const ATTRIBUTE_KEYS: readonly AttributeKey[] = [
-  'strength',
-  'dexterity',
-  'constitution',
-  'intelligence',
-  'wisdom',
-  'charisma',
-]
-
 /**
- * The full breakdown sheet the Go ComputeSheetV2 mirrors. `tempHpFuria` uses
- * furiaActive=true so the Alma de Bronze branch is exercised (the base sheet with
- * furia off is always {0, []}). Built by calling the real derived.ts breakdowns
- * over the no-conditionals effects, so this stays the single source of truth.
+ * The full breakdown sheet the Go ComputeSheetV2 mirrors. Built from the shared
+ * `assembleSheetV2` (which calls the real derived.ts breakdowns), so the oracle
+ * generator and the `useComputedSheet` test branch stay the single source of
+ * truth. `assembleSheetV2` uses furiaActive=true for `tempHpFuria` (the base
+ * sheet with furia off is always {0, []}).
  */
 function sheetV2For(char: Character) {
-  const effects = characterEffects(char, EMPTY_CONDITIONALS)
-  const attributes = Object.fromEntries(
-    ATTRIBUTE_KEYS.map((a) => [
-      a,
-      { total: attributeTotal(char, a, effects), contributions: attributeContributions(a, effects) },
-    ]),
-  )
-  const toTotalContribs = (stat: ReturnType<typeof statFor>) => ({
-    total: stat.total,
-    contributions: stat.contributions.map((c) => ({
-      source: c.source,
-      amount: c.amount,
-      ...(c.note ? { note: c.note } : {}),
-    })),
-  })
-  return {
-    defense: defenseTotal(char, effects),
-    displacement: displacementTotal(char, effects),
-    flySpeed: flySpeedTotal(effects),
-    inventorySlots: inventorySlotsTotal(char, effects),
-    attributes,
-    pmLimit: pmLimitTotal(char, effects),
-    bestBaseSpellCd: bestBaseSpellCd(char, effects),
-    spellDCBonus: spellDCBonus(effects),
-    pmCostMod: pmCostMod(effects),
-    attackAll: toTotalContribs(statFor(effects, { k: 'attack', scope: 'all' })),
-    damageAll: toTotalContribs(statFor(effects, { k: 'damage', scope: 'all' })),
-    damageReduction: characterDamageReduction(char, effects),
-    tempHpFuria: tempHpFromPowers(char, effects, true),
-    expertises: char.expertises.map((e) => ({
-      name: e.name,
-      attribute: e.attribute,
-      ...expertiseTotalWithItems(char, e, effects),
-    })),
-  }
+  return assembleSheetV2(char, characterEffects(char, EMPTY_CONDITIONALS))
 }
 
 /** Serializable ItemEffects: Set → sorted array, mirroring the Go MarshalJSON. */
