@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react'
 import {
-  CONDITIONS,
   type CatalogItem,
   type CatalogSpell,
   type Condition,
 } from '@tormenta20/t20-data'
 import { allCatalogItems } from '@/shared/lib/catalog-cache'
+import { conditionsList } from '@/shared/lib/rules-catalog-cache'
 import { spellCatalog } from '@/shared/lib/spell-cache'
 import { Input } from '@/shared/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
@@ -18,14 +18,9 @@ import {
   SpellCatalogRow,
 } from './catalog-rows'
 
-// Static, sorted once. SPELL_CATALOG / CONDITIONS are id-keyed records; the
-// item list is already an array. One shared search box filters the active tab.
-const CONDITION_LIST = Object.values(CONDITIONS).sort((a, b) =>
-  a.name.localeCompare(b.name, 'pt-BR'),
-)
-// The spell catalog is fetched + primed by the loader gate, so build its sorted
-// list inside the component (a module const would evaluate before priming). See
-// project_front_decouple_catalog A.
+// All catalog lists are fetched + primed by the loader gate, so build their
+// sorted views inside the component (a module const would evaluate before
+// priming). See project_front_decouple_catalog.
 // Stable module-level search extractors (CatalogTab memoizes on their identity).
 const conditionSearch = (c: Condition) => [c.name, c.description, ...c.tags]
 const spellSearch = (s: CatalogSpell) => [s.name, s.baseEffect]
@@ -62,6 +57,13 @@ export function CatalogBrowser({
       ),
     [],
   )
+  const conditionList = useMemo(
+    () =>
+      [...conditionsList()].sort((a, b) =>
+        a.name.localeCompare(b.name, 'pt-BR'),
+      ),
+    [],
+  )
 
   return (
     <div className="flex min-h-0 flex-col gap-4">
@@ -81,7 +83,7 @@ export function CatalogBrowser({
 
         <TabsContent value="conditions">
           <CatalogTab
-            items={CONDITION_LIST}
+            items={conditionList}
             query={query}
             searchText={conditionSearch}
             estimateSize={80}

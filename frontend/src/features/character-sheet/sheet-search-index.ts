@@ -1,4 +1,8 @@
-import { EXPERTISES, TORMENTA_POWERS } from '@tormenta20/t20-data'
+import { EXPERTISES } from '@tormenta20/t20-data'
+import {
+  conditionsRecord,
+  tormentaPowersRecord,
+} from '@/shared/lib/rules-catalog-cache'
 import {
   getClassPower,
   getGeneralPower,
@@ -15,7 +19,6 @@ import {
 } from '@/entities/character/derived'
 import { expertiseStateFor } from '@/entities/character/expertise'
 import { parseActiveConditions } from './conditions-section'
-import { CONDITIONS } from '@tormenta20/t20-data'
 
 export type SheetSearchEntry = {
   /** Display name ("Furtividade", "Totem Espiritual", "Adaga"). */
@@ -92,10 +95,11 @@ export function buildSheetSearchIndex(character: Character): SheetSearchEntry[] 
     }
   }
 
+  const conditions = conditionsRecord()
   for (const id of parseActiveConditions(character.activeConditions)) {
     out.push({
-      name: CONDITIONS[id].name,
-      detail: CONDITIONS[id].description,
+      name: conditions[id].name,
+      detail: conditions[id].description,
       source: 'Condição',
       tab: 'conditionals',
     })
@@ -155,17 +159,16 @@ export function ownedAbilities(character: Character): SheetSearchEntry[] {
       })
     }
   }
+  const tormenta = tormentaPowersRecord()
   for (const id of parseIds(character.classPowers)) {
     const power =
       getClassPower(id) ??
       getGeneralPower(id) ??
-      (id in TORMENTA_POWERS
-        ? TORMENTA_POWERS[id as keyof typeof TORMENTA_POWERS]
-        : undefined)
+      (id in tormenta ? tormenta[id as keyof typeof tormenta] : undefined)
     if (!power) continue
     const source = getClassPower(id)
       ? `Classe · ${(power as { className?: string }).className ?? ''}`
-      : id in TORMENTA_POWERS
+      : id in tormenta
         ? 'Poder da Tormenta'
         : 'Poder geral'
     out.push({ name: power.name, detail: power.description, source, tab: 'abilities', powerId: id })

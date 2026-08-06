@@ -13,13 +13,11 @@ import {
   type ExpertiseName,
   HOMEBREW_VESTED_OK,
   originModifiers,
-  RACAS,
   raceModifiers,
   requiredProficiency,
   resolveAtributoMod,
   spellSaveDc,
   statFor,
-  TORMENTA_POWERS,
   trainingBonusForLevel,
   type ActiveItem,
   type AttributeKey,
@@ -45,6 +43,11 @@ import {
   ownedClassPowers,
   raceWithDeformidade,
 } from '@/shared/lib/abilities-cache'
+// RACAS + TORMENTA_POWERS now read the fetched catalogs (primed by the loader);
+// `resolveAtributoMod` stays a barrel import — data-free after the racas-attr
+// split, so it tree-shakes. See project_front_decouple_catalog.
+import { racasList } from '@/shared/lib/racas-cache'
+import { tormentaPowersRecord } from '@/shared/lib/rules-catalog-cache'
 import type { Character, CharacterExpertise, CharacterItem } from '@/shared/api/api'
 import { useActiveConditionals } from '@/shared/stores/conditionals-store'
 import { effectSourceName } from './effect-source'
@@ -192,7 +195,11 @@ export function originPickedPowerIds(character: Character): string[] {
   return out
 }
 
-const RACA_BY_NAME = new Map(Object.values(RACAS).map((r) => [r.name, r]))
+// racasList() is primed by the loader gate; a module-level Map would evaluate
+// before priming (empty). 17 racas → linear find is cheap.
+function racaByName(name: string) {
+  return racasList().find((r) => r.name === name)
+}
 
 function parseRaceAttributeChoices(raw: string): {
   floatingPicks: AttributeKey[]
@@ -289,7 +296,7 @@ function tormentaCarismaItem(character: Character): ActiveItem | null {
       ...parseChoiceSet(character.classPowers),
       ...originPickedPowerIds(character),
     ]),
-  ].filter((id) => id in TORMENTA_POWERS)
+  ].filter((id) => id in tormentaPowersRecord())
   const held = deformidadeHeldPower(character)
   const count = picked.length + (held && !picked.includes(held) ? 1 : 0)
   if (count === 0) return null
@@ -314,7 +321,7 @@ function tormentaCarismaItem(character: Character): ActiveItem | null {
  * this is applied exactly once. Returns `[]` on incomplete choices.
  */
 function raceAttributeMods(raceName: string, choice: RaceAttrChoice): Modifier[] {
-  const raca = RACA_BY_NAME.get(raceName)
+  const raca = racaByName(raceName)
   if (!raca) return []
   let deltas: Partial<Record<AttributeKey, number>>
   try {

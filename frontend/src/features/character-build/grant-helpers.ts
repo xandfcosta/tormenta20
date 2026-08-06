@@ -5,8 +5,6 @@ import {
   CLASS_VITALS,
   carismaLossFromPowers,
   type Raca,
-  racasByTier,
-  TORMENTA_POWERS,
   type TormentaPowerId,
 } from '@tormenta20/t20-data'
 import {
@@ -16,6 +14,8 @@ import {
   ownedClassPowers,
   raceWithDeformidade,
 } from '@/shared/lib/abilities-cache'
+import { racasByTier, racasList } from '@/shared/lib/racas-cache'
+import { tormentaPowersRecord } from '@/shared/lib/rules-catalog-cache'
 
 /** No elective picks at creation — only auto-granted powers are previewed. */
 const EMPTY_CHOICES: ReadonlySet<string> = new Set()
@@ -25,15 +25,11 @@ export function signed(n: number): string {
   return n >= 0 ? `+${n}` : `${n}`
 }
 
-// Race names (backend/RACES_CATALOG strings) → the rules-accurate racas model.
-// Names are unified across sources, so a plain name lookup bridges cleanly.
-const RACA_BY_NAME: ReadonlyMap<string, Raca> = new Map(
-  [...racasByTier('comum'), ...racasByTier('extra')].map((r) => [r.name, r]),
-)
-
-/** The rules model for a race name, or undefined for an unknown string. */
+/** The rules model for a race name, or undefined for an unknown string. Reads
+ *  the primed racas cache (loader-gate warm; a module-level Map would evaluate
+ *  before priming). Names are unified across sources so a plain name bridges. */
 export function raceModel(name: string): Raca | undefined {
-  return RACA_BY_NAME.get(name)
+  return racasList().find((r) => r.name === name)
 }
 
 /** A player's per-race attribute-choice state (floating picks / subrace).
@@ -104,7 +100,7 @@ export function draftTormentaCarismaExtra(
     getOriginBenefit(benefitId)?.powerPick ? (powerChoices[benefitId] ?? []) : [],
   )
   const picked = [...new Set([...classPowers, ...originPicked])].filter(
-    (id) => id in TORMENTA_POWERS,
+    (id) => id in tormentaPowersRecord(),
   )
   const count = picked.length + (held && !picked.includes(held) ? 1 : 0)
   if (count === 0) return 0
@@ -125,7 +121,8 @@ export function deformidadeSummary(
   if (!payload) return null
   const parts = payload.pericias.map((p) => `+2 ${p}`)
   if (payload.tormentaPower) {
-    const power = TORMENTA_POWERS[payload.tormentaPower as TormentaPowerId]
+    const power =
+      tormentaPowersRecord()[payload.tormentaPower as TormentaPowerId]
     parts.push(
       `poder da Tormenta: ${power?.name ?? payload.tormentaPower} (−1 CAR)`,
     )

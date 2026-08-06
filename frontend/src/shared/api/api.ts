@@ -1,15 +1,23 @@
 // Type-only — erases at compile, so the catalog DATA no longer rides in the
 // bundle; it is fetched from GET /catalog/* and cached instead.
 import type {
+  ActivationSpec,
   CatalogItem,
   CatalogSpell,
   ClassPower,
+  Condition,
+  ConditionId,
   Deus,
   GeneralPower,
   GrantedPower,
+  GrantedPowerOption,
   Monster,
+  Origem,
   OriginDefinition,
+  Raca,
   RaceDefinition,
+  TormentaPower,
+  TormentaPowerId,
 } from '@tormenta20/t20-data'
 
 export type User = {
@@ -530,6 +538,18 @@ export const api = {
     generalPowers: () => request<GeneralPower[]>('/catalog/general-powers'),
     deuses: () => request<Deus[]>('/catalog/deuses'),
     grantedPowers: () => request<GrantedPower[]>('/catalog/granted-powers'),
+    // racas.ts RACAS (movement/size/attr-mod) — DISTINCT from raceDefs.
+    races: () => request<Record<string, Raca>>('/catalog/races'),
+    origens: () => request<Record<string, Origem>>('/catalog/origens'),
+    conditions: () =>
+      request<Record<ConditionId, Condition>>('/catalog/conditions'),
+    tormentaPowers: () =>
+      request<Record<TormentaPowerId, TormentaPower>>(
+        '/catalog/tormenta-powers',
+      ),
+    divinePowers: () =>
+      request<GrantedPowerOption[]>('/catalog/divine-powers'),
+    activations: () => request<ActivationSpec[]>('/catalog/activations'),
   },
   characters: {
     options: () => request<CharacterOptions>('/characters/options'),

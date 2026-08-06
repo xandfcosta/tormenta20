@@ -8,18 +8,28 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
 import {
+  ACTIVATION_SPECS,
+  allGrantedPowerOptions,
   CATALOG_ITEMS,
   CLASS_POWERS_CATALOG,
+  CONDITIONS,
   DEUSES,
   GENERAL_POWERS_CATALOG,
   GRANTED_POWERS,
+  ORIGENS,
   ORIGINS_CATALOG,
+  RACAS,
   RACES_CATALOG,
   SPELL_CATALOG,
+  TORMENTA_POWERS,
 } from '@tormenta20/t20-data'
 import { afterEach } from 'vitest'
 import { primeAbilities } from './shared/lib/abilities-cache'
+import { primeActivations } from './shared/lib/activation-cache'
 import { primeItemCatalog } from './shared/lib/catalog-cache'
+import { primeDivinePowers } from './shared/lib/divine-powers-cache'
+import { primeRacas } from './shared/lib/racas-cache'
+import { primeRulesCatalogs } from './shared/lib/rules-catalog-cache'
 import { primeSpellCatalog } from './shared/lib/spell-cache'
 
 /* The catalogs are fetched + primed by the root loader at runtime (B.2/B.3 —
@@ -36,6 +46,10 @@ primeAbilities({
   grantedPowers: GRANTED_POWERS,
 })
 primeSpellCatalog(SPELL_CATALOG)
+primeRacas(RACAS, ORIGENS)
+primeRulesCatalogs(CONDITIONS, TORMENTA_POWERS)
+primeDivinePowers(allGrantedPowerOptions())
+primeActivations(ACTIVATION_SPECS)
 
 /* Vitest doesn't auto-cleanup React trees between tests — DOM leaks
  * across tests and `getByText` starts matching leftovers from an

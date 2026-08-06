@@ -1,7 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { X } from 'lucide-react'
-import { CONDITIONS, type ConditionId } from '@tormenta20/t20-data'
+import type { ConditionId } from '@tormenta20/t20-data'
 import { api, type Character } from '@/shared/api/api'
+import {
+  conditionsList,
+  conditionsRecord,
+} from '@/shared/lib/rules-catalog-cache'
 import { Combobox } from '@/shared/ui/combobox'
 import {
   Popover,
@@ -17,7 +21,7 @@ export function parseActiveConditions(raw: string): ConditionId[] {
   try {
     const parsed = JSON.parse(raw)
     if (!Array.isArray(parsed)) return []
-    return parsed.filter((x): x is ConditionId => typeof x === 'string' && x in CONDITIONS)
+    return parsed.filter((x): x is ConditionId => typeof x === 'string' && x in conditionsRecord())
   } catch {
     return []
   }
@@ -58,7 +62,7 @@ export function ConditionsSection({ character }: { character: Character }) {
   const remove = (id: ConditionId) =>
     update.mutate(active.filter((c) => c !== id))
 
-  const options = Object.values(CONDITIONS)
+  const options = conditionsList()
     .filter((c) => !active.includes(c.id))
     .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
     .map((c) => ({ value: c.id, label: c.name }))
@@ -73,7 +77,7 @@ export function ConditionsSection({ character }: { character: Character }) {
       {active.length > 0 && (
         <ul className="flex flex-wrap gap-1.5">
           {active.map((id) => {
-            const cond = CONDITIONS[id]
+            const cond = conditionsRecord()[id]
             return (
               <li
                 key={id}
@@ -133,8 +137,8 @@ export function ConditionPips({
   return (
     <ul className={cn('flex flex-wrap items-center gap-1', className)}>
       {shown.map((id) => (
-        <li key={id} title={CONDITIONS[id].description} className={chip}>
-          {CONDITIONS[id].name}
+        <li key={id} title={conditionsRecord()[id].description} className={chip}>
+          {conditionsRecord()[id].name}
         </li>
       ))}
       {overflow > 0 && (
@@ -148,9 +152,9 @@ export function ConditionPips({
             <PopoverContent className="w-72 space-y-2 text-xs">
               {active.map((id) => (
                 <div key={id}>
-                  <p className="font-semibold uppercase">{CONDITIONS[id].name}</p>
+                  <p className="font-semibold uppercase">{conditionsRecord()[id].name}</p>
                   <p className="text-muted-foreground">
-                    {CONDITIONS[id].description}
+                    {conditionsRecord()[id].description}
                   </p>
                 </div>
               ))}

@@ -1,12 +1,11 @@
 import {
   type CatalogItem,
-  ORIGENS,
-  origemItemGrantsByName,
   type StartingKit,
   startingKitFor,
   startingMoneyForLevel,
 } from '@tormenta20/t20-data'
 import { allCatalogItems, getCatalogItem } from '@/shared/lib/catalog-cache'
+import { origemItemGrantsByName, origensList } from '@/shared/lib/racas-cache'
 
 /**
  * Equipamento inicial (book p140) helpers for the wizard step: the unified L1
@@ -61,7 +60,7 @@ export function startingLoadout(
 
 /** Origem itens iniciais (auto-granted) — display names, by origem NAME. */
 export function originStartingItems(originName: string): readonly string[] {
-  const origem = Object.values(ORIGENS).find((o) => o.name === originName)
+  const origem = origensList().find((o) => o.name === originName)
   return origem?.itensIniciais ?? []
 }
 

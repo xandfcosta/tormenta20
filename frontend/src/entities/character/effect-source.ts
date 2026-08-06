@@ -1,9 +1,9 @@
 import {
   computeItemEffects,
-  getActivation,
   type DisplayFact,
   type ItemFlag,
 } from '@tormenta20/t20-data'
+import { getActivation } from '@/shared/lib/activation-cache'
 import { getCatalogItem } from '@/shared/lib/catalog-cache'
 import { spellCatalog } from '@/shared/lib/spell-cache'
 import type { CharacterItem } from '@/shared/api/api'

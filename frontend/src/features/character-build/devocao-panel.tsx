@@ -2,9 +2,9 @@ import {
   type Deus,
   devotoEligible,
   type GrantedPowerOption,
-  grantedPowerOptionsFor,
 } from '@tormenta20/t20-data'
 import { deuses } from '@/shared/lib/abilities-cache'
+import { grantedPowerOptionsFor } from '@/shared/lib/divine-powers-cache'
 import { cn } from '@/shared/lib/utils'
 
 const ACTION_LABEL: Record<string, string> = {

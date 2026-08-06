@@ -1,16 +1,26 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { primeAbilities } from '@/shared/lib/abilities-cache'
+import { primeActivations } from '@/shared/lib/activation-cache'
 import { primeItemCatalog } from '@/shared/lib/catalog-cache'
+import { primeDivinePowers } from '@/shared/lib/divine-powers-cache'
+import { primeRacas } from '@/shared/lib/racas-cache'
+import { primeRulesCatalogs } from '@/shared/lib/rules-catalog-cache'
 import { primeSpellCatalog } from '@/shared/lib/spell-cache'
 import {
   classPowersCatalogQueryOptions,
+  conditionsCatalogQueryOptions,
   deusesCatalogQueryOptions,
+  divinePowersCatalogQueryOptions,
   generalPowersCatalogQueryOptions,
   grantedPowersCatalogQueryOptions,
+  activationsCatalogQueryOptions,
   itemCatalogQueryOptions,
+  origensCatalogQueryOptions,
   originsCatalogQueryOptions,
   raceDefsCatalogQueryOptions,
+  racasCatalogQueryOptions,
   spellCatalogQueryOptions,
+  tormentaPowersCatalogQueryOptions,
 } from './queries'
 
 /**
@@ -36,6 +46,12 @@ export async function ensureCatalogs(qc: QueryClient): Promise<void> {
     deuses,
     granted,
     spells,
+    racas,
+    origens,
+    conditions,
+    tormentaPowers,
+    divinePowers,
+    activations,
   ] = await Promise.all([
     qc.ensureQueryData(itemCatalogQueryOptions),
     qc.ensureQueryData(raceDefsCatalogQueryOptions),
@@ -45,6 +61,12 @@ export async function ensureCatalogs(qc: QueryClient): Promise<void> {
     qc.ensureQueryData(deusesCatalogQueryOptions),
     qc.ensureQueryData(grantedPowersCatalogQueryOptions),
     qc.ensureQueryData(spellCatalogQueryOptions),
+    qc.ensureQueryData(racasCatalogQueryOptions),
+    qc.ensureQueryData(origensCatalogQueryOptions),
+    qc.ensureQueryData(conditionsCatalogQueryOptions),
+    qc.ensureQueryData(tormentaPowersCatalogQueryOptions),
+    qc.ensureQueryData(divinePowersCatalogQueryOptions),
+    qc.ensureQueryData(activationsCatalogQueryOptions),
   ])
   primeItemCatalog(items)
   primeAbilities({
@@ -56,4 +78,8 @@ export async function ensureCatalogs(qc: QueryClient): Promise<void> {
     grantedPowers: granted,
   })
   primeSpellCatalog(spells)
+  primeRacas(racas, origens)
+  primeRulesCatalogs(conditions, tormentaPowers)
+  primeDivinePowers(divinePowers)
+  primeActivations(activations)
 }

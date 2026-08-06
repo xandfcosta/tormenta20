@@ -61,3 +61,39 @@ export const grantedPowersCatalogQueryOptions = queryOptions({
   queryFn: api.catalog.grantedPowers,
   staleTime: Number.POSITIVE_INFINITY,
 })
+
+export const racasCatalogQueryOptions = queryOptions({
+  queryKey: ['catalog', 'races'] as const,
+  queryFn: api.catalog.races,
+  staleTime: Number.POSITIVE_INFINITY,
+})
+
+export const origensCatalogQueryOptions = queryOptions({
+  queryKey: ['catalog', 'origens'] as const,
+  queryFn: api.catalog.origens,
+  staleTime: Number.POSITIVE_INFINITY,
+})
+
+export const conditionsCatalogQueryOptions = queryOptions({
+  queryKey: ['catalog', 'conditions'] as const,
+  queryFn: api.catalog.conditions,
+  staleTime: Number.POSITIVE_INFINITY,
+})
+
+export const tormentaPowersCatalogQueryOptions = queryOptions({
+  queryKey: ['catalog', 'tormenta-powers'] as const,
+  queryFn: api.catalog.tormentaPowers,
+  staleTime: Number.POSITIVE_INFINITY,
+})
+
+export const divinePowersCatalogQueryOptions = queryOptions({
+  queryKey: ['catalog', 'divine-powers'] as const,
+  queryFn: api.catalog.divinePowers,
+  staleTime: Number.POSITIVE_INFINITY,
+})
+
+export const activationsCatalogQueryOptions = queryOptions({
+  queryKey: ['catalog', 'activations'] as const,
+  queryFn: api.catalog.activations,
+  staleTime: Number.POSITIVE_INFINITY,
+})

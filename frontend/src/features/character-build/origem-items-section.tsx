@@ -1,7 +1,7 @@
+import type { OrigemItemGrant } from '@tormenta20/t20-data'
 import {
-  type OrigemItemGrant,
   origemItemGrantsByName,
-} from '@tormenta20/t20-data'
+} from '@/shared/lib/racas-cache'
 import { Combobox } from '@/shared/ui/combobox'
 import { cn } from '@/shared/lib/utils'
 import { shopCatalog, weaponOptions } from './starting-equipment'

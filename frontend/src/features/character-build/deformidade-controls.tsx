@@ -5,6 +5,7 @@ import {
   EXPERTISE_NAMES,
 } from '@tormenta20/t20-data'
 import { raceWithDeformidade } from '@/shared/lib/abilities-cache'
+import { tormentaPowersRecord } from '@/shared/lib/rules-catalog-cache'
 import { Combobox } from '@/shared/ui/combobox'
 import { cn } from '@/shared/lib/utils'
 import type { DeformidadeDraft, RaceChoice } from './grant-helpers'
@@ -114,7 +115,10 @@ function TormentaPowerSlot({
 }) {
   // Perícia bonuses count as owned powers for prerequisites (p23), so the
   // pickable pool grows with each placed perícia.
-  const options = deformidadeAvailablePowers(draft.pericias.length).map((p) => ({
+  const options = deformidadeAvailablePowers(
+    tormentaPowersRecord(),
+    draft.pericias.length,
+  ).map((p) => ({
     value: p.id,
     label: p.name,
   }))

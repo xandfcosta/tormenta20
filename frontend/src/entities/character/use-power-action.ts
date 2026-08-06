@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { FLAG_ACTIVATIONS } from '@tormenta20/t20-data'
+import type { ActivationSpec } from '@tormenta20/t20-data'
 import {
-  ACTIVATION_SPECS,
-  FLAG_ACTIVATIONS,
+  activationSpecs,
   findActivationByName,
   getActivation,
-} from '@tormenta20/t20-data'
-import type { ActivationSpec } from '@tormenta20/t20-data'
+} from '@/shared/lib/activation-cache'
 import { api, type Character } from '@/shared/api/api'
 import { useConditionalsStore } from '@/shared/stores/conditionals-store'
 import {
@@ -173,7 +173,7 @@ export function grantPowersForFlag(
   flag: string,
 ): ActivationSpec[] {
   const chosen = parseChoiceSet(character.classPowers)
-  return ACTIVATION_SPECS.filter((spec) => {
+  return activationSpecs().filter((spec) => {
     if (spec.requiresFlag !== flag || !spec.grant) return false
     const tail = spec.id.split('.').pop() ?? spec.id
     if (chosen.has(spec.id) || chosen.has(tail)) return true

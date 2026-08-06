@@ -2,7 +2,6 @@ import {
   originModifiers as computeOriginModifiers,
   raceModifiers as computeRaceModifiers,
   type Modifier,
-  racaById,
   type VitalAbilitiesResolver,
 } from '@tormenta20/t20-data'
 import {
@@ -12,6 +11,7 @@ import {
   getRace,
   grantedPowerByName,
 } from '@/shared/lib/abilities-cache'
+import { racaById } from '@/shared/lib/racas-cache'
 
 /**
  * Cache-backed `VitalAbilitiesResolver` for the FRONT — the twin of t20-data's

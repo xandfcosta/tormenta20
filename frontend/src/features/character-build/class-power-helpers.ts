@@ -4,7 +4,6 @@ import {
   type PowerChoice,
   type Prerequisite,
   slotsForClassLevel,
-  TORMENTA_POWERS,
 } from '@tormenta20/t20-data'
 import {
   allGeneralPowers,
@@ -12,6 +11,7 @@ import {
   devotoOptionsFor,
 } from '@/shared/lib/abilities-cache'
 import { catalogWeapons } from '@/shared/lib/catalog-cache'
+import { tormentaPowersRecord } from '@/shared/lib/rules-catalog-cache'
 import { spellEffectByName } from '@/shared/lib/spell-cache'
 
 export type ClassEntry = { className: string; level: number }
@@ -34,7 +34,7 @@ export type PowerOption = {
  * enforced; the "N outros poderes da Tormenta" gate is advisory (note).
  */
 export function tormentaPowerOptions(): PowerOption[] {
-  return Object.values(TORMENTA_POWERS).map((p): PowerOption => {
+  return Object.values(tormentaPowersRecord()).map((p): PowerOption => {
     const prerequisites: Prerequisite[] = []
     if (p.requiresPower) prerequisites.push({ kind: 'power', id: p.requiresPower })
     if (p.requiresOtherPowers > 0) {
@@ -310,7 +310,7 @@ export function powerPickOptions(
   pool: 'combate' | 'tormenta',
 ): PowerPickOption[] {
   if (pool === 'tormenta') {
-    return Object.values(TORMENTA_POWERS).map((p) => ({
+    return Object.values(tormentaPowersRecord()).map((p) => ({
       value: p.id,
       label: p.name,
       description: p.description,
