@@ -1,4 +1,8 @@
 import type { AttributeKey } from './attributes'
+// resolveAtributoMod moved to ./racas-attr (data-free, pure over a resolved
+// Raca) so the front can call it without anchoring RACAS. Re-exported for the
+// backend/engine (character-sheet.ts imports it from here).
+export { resolveAtributoMod } from './racas-attr'
 
 /**
  * Raças — PDF book p18-31 (Capítulo 1).
@@ -380,53 +384,4 @@ export function racaById(id: string): Raca {
 
 export function racasByTier(tier: 'comum' | 'extra'): readonly Raca[] {
   return RACAS_LIST.filter((r) => r.tier === tier)
-}
-
-/**
- * Resolve a raça's atributo modifiers into a flat `Partial<Record<AttributeKey, number>>`.
- *
- * - `fixed`: returns the static map.
- * - `floating`: requires `floatingPicks` — exactly `count` distinct
- *   attributes, each given `value`. Validates exclusion.
- * - `subraca-gated`: requires `ascendencia` matching a variant key.
- */
-export function resolveAtributoMod(
-  raca: Raca,
-  opts: {
-    floatingPicks?: readonly AttributeKey[]
-    ascendencia?: string
-  } = {},
-): Partial<Record<AttributeKey, number>> {
-  const mod = raca.atributoMod
-  if (mod.kind === 'fixed') return { ...mod.mods }
-
-  if (mod.kind === 'floating') {
-    const picks = opts.floatingPicks ?? []
-    if (picks.length !== mod.count) {
-      throw new Error(
-        `resolveAtributoMod: ${raca.name} requires exactly ${mod.count} floating picks, got ${picks.length}`,
-      )
-    }
-    if (new Set(picks).size !== picks.length) {
-      throw new Error(`resolveAtributoMod: ${raca.name} floating picks must be distinct`)
-    }
-    if (mod.exclude && picks.includes(mod.exclude)) {
-      throw new Error(
-        `resolveAtributoMod: ${raca.name} cannot place +${mod.value} in ${mod.exclude}`,
-      )
-    }
-    const result: Partial<Record<AttributeKey, number>> = {}
-    for (const a of picks) result[a] = mod.value
-    if (mod.penalty) result[mod.penalty.attribute] = mod.penalty.value
-    return result
-  }
-
-  // subraca-gated
-  if (!opts.ascendencia || !mod.variants[opts.ascendencia]) {
-    const keys = Object.keys(mod.variants).join(', ')
-    throw new Error(
-      `resolveAtributoMod: ${raca.name} requires ascendência in [${keys}], got ${opts.ascendencia}`,
-    )
-  }
-  return { ...mod.variants[opts.ascendencia] }
 }

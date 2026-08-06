@@ -10,6 +10,14 @@ import {
   raceWithDeformidade,
   validateDeformidade,
 } from '../deformidade'
+import { TORMENTA_POWERS } from '../tormenta'
+
+// The two catalog-parametrized deformidade helpers take TORMENTA_POWERS as a
+// param now (A/final decouple); bind it here so the rule tests read as before.
+const validate = (choice: Parameters<typeof validateDeformidade>[0]) =>
+  validateDeformidade(choice, TORMENTA_POWERS)
+const availablePowers = (periciaCount: number) =>
+  deformidadeAvailablePowers(TORMENTA_POWERS, periciaCount)
 
 describe('DeformidadeChoice — slots e limites (Lefou, p23)', () => {
   it('2 perícias preenchem os 2 slots', () => {
@@ -28,8 +36,8 @@ describe('DeformidadeChoice — slots e limites (Lefou, p23)', () => {
   })
 
   it('sub-preenchimento é válido (homebrew: GM permite menos)', () => {
-    expect(validateDeformidade({ pericias: ['Furtividade'] })).toEqual([])
-    expect(validateDeformidade({ pericias: [] })).toEqual([])
+    expect(validate({ pericias: ['Furtividade'] })).toEqual([])
+    expect(validate({ pericias: [] })).toEqual([])
   })
 
   it('constantes do livro: 2 slots, bônus +2', () => {
@@ -40,7 +48,7 @@ describe('DeformidadeChoice — slots e limites (Lefou, p23)', () => {
 
 describe('validateDeformidade — inputs inválidos viram warnings', () => {
   it('mais que 2 slots usados', () => {
-    const warnings = validateDeformidade({
+    const warnings = validate({
       pericias: ['Furtividade', 'Percepção'],
       tormentaPower: 'dentes-afiados',
     })
@@ -48,21 +56,21 @@ describe('validateDeformidade — inputs inválidos viram warnings', () => {
   })
 
   it('perícia duplicada', () => {
-    const warnings = validateDeformidade({
+    const warnings = validate({
       pericias: ['Furtividade', 'Furtividade'],
     })
     expect(warnings.length).toBeGreaterThan(0)
   })
 
   it('perícia desconhecida', () => {
-    const warnings = validateDeformidade({
+    const warnings = validate({
       pericias: ['Tocar Flauta' as never],
     })
     expect(warnings.some((w) => w.includes('Tocar Flauta'))).toBe(true)
   })
 
   it('poder da Tormenta desconhecido', () => {
-    const warnings = validateDeformidade({
+    const warnings = validate({
       pericias: [],
       tormentaPower: 'nao-existe' as never,
     })
@@ -91,7 +99,7 @@ describe('contam como poder da Tormenta (exceto perda de Carisma)', () => {
 
 describe('deformidadeAvailablePowers — pré-requisitos com perícias contando', () => {
   it('0 perícias → só poderes sem pré-requisito', () => {
-    const powers = deformidadeAvailablePowers(0)
+    const powers = availablePowers(0)
     expect(powers.every((p) => p.requiresOtherPowers === 0 && !p.requiresPower)).toBe(
       true,
     )
@@ -100,7 +108,7 @@ describe('deformidadeAvailablePowers — pré-requisitos com perícias contando'
   })
 
   it('1 perícia → desbloqueia poderes que exigem 1 outro (Armamento Aberrante)', () => {
-    const powers = deformidadeAvailablePowers(1)
+    const powers = availablePowers(1)
     expect(powers.some((p) => p.id === 'armamento-aberrante')).toBe(true)
     // requiresPower específico nunca é satisfazível só com perícias
     expect(powers.some((p) => p.id === 'larva-explosiva')).toBe(false)

@@ -187,3 +187,16 @@ export function grantedPowerOptionsFor(deusId: string): GrantedPowerOption[] {
     description: DIVINE_POWER_DESCRIPTIONS[p.name] ?? '',
   }))
 }
+
+/**
+ * Every divine power as a GrantedPowerOption (power + rule text), for ALL
+ * deuses. Served as a `/catalog` resource so the frontend can fetch + cache it
+ * and filter by deus locally, instead of bundling DIVINE_POWERS +
+ * DIVINE_POWER_DESCRIPTIONS (~24KB) — project_front_decouple_catalog.
+ */
+export function allGrantedPowerOptions(): GrantedPowerOption[] {
+  return DIVINE_POWERS.map((p) => ({
+    ...p,
+    description: DIVINE_POWER_DESCRIPTIONS[p.name] ?? '',
+  }))
+}

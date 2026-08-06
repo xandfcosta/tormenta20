@@ -470,7 +470,7 @@ function tormentaCarismaLoss(
   warnings: string[],
 ): number {
   const choice = input.deformidade
-  if (choice) warnings.push(...validateDeformidade(choice))
+  if (choice) warnings.push(...validateDeformidade(choice, TORMENTA_POWERS))
   const picked = (input.powerIds ?? []).filter((id) => id in TORMENTA_POWERS)
   const held = choice?.tormentaPower
   if (held && picked.includes(held)) {

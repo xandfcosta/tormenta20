@@ -373,29 +373,9 @@ export function canTakePower(
   return true
 }
 
-/**
- * Total Carisma loss from taking N Tormenta powers.
- *
- * Rule (book p136): "Quando escolhe um poder da Tormenta, você perde 1
- * de Carisma. Para cada dois outros poderes da Tormenta, você perde
- * mais 1 de Carisma." Interpreted incrementally: picking the N-th
- * power costs `1 + floor((N-1) / 2)` Carisma (so 0 prior others adds
- * +0, 2 prior others adds +1, 4 prior others adds +2, …).
- *
- * Sequence: 1 → 2 → 4 → 6 → 9 → 12 → 16 → 20 → 25 → …
- */
-export function carismaLossFromPowers(powerCount: number): number {
-  if (powerCount < 0) {
-    throw new Error(
-      `carismaLossFromPowers: powerCount must be ≥ 0, got ${powerCount}`,
-    )
-  }
-  let total = 0
-  for (let k = 1; k <= powerCount; k++) {
-    total += 1 + Math.floor((k - 1) / 2)
-  }
-  return total
-}
+// carismaLossFromPowers (pure math, p136) moved to ./tormenta-carisma so the
+// front can import it without anchoring TORMENTA_POWERS. Re-exported here.
+export { carismaLossFromPowers } from './tormenta-carisma'
 
 /**
  * Lefeu insanity (book p313-316 monster ability): sight of one or more

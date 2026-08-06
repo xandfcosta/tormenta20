@@ -20,11 +20,7 @@ import { EXPERTISE_NAMES } from './expertises'
 export { raceWithDeformidade } from './deformidade-race'
 import type { SkillId } from './skill-index'
 import { SKILL_IDS } from './skill-index'
-import {
-  TORMENTA_POWERS,
-  type TormentaPower,
-  type TormentaPowerId,
-} from './tormenta'
+import type { TormentaPower, TormentaPowerId } from './tormenta'
 
 export type DeformidadeChoice = {
   /** Perícias que recebem +2 (um slot cada). */
@@ -46,7 +42,10 @@ export function deformidadeSlotsUsed(choice: DeformidadeChoice): number {
  * Under-filled choices are valid — only over-fills / duplicates / unknown
  * ids warn. Example: `validateDeformidade({ pericias: ['Furtividade'] })`.
  */
-export function validateDeformidade(choice: DeformidadeChoice): string[] {
+export function validateDeformidade(
+  choice: DeformidadeChoice,
+  tormentaPowers: Readonly<Record<string, TormentaPower>>,
+): string[] {
   const warnings: string[] = []
   const used = deformidadeSlotsUsed(choice)
   if (used > DEFORMIDADE_SLOTS) {
@@ -64,7 +63,7 @@ export function validateDeformidade(choice: DeformidadeChoice): string[] {
       warnings.push(`Deformidade: perícia desconhecida "${name}"`)
     }
   }
-  if (choice.tormentaPower && !(choice.tormentaPower in TORMENTA_POWERS)) {
+  if (choice.tormentaPower && !(choice.tormentaPower in tormentaPowers)) {
     warnings.push(
       `Deformidade: poder da Tormenta desconhecido "${choice.tormentaPower}"`,
     )
@@ -88,9 +87,10 @@ export function deformidadeTormentaPowerCount(choice: DeformidadeChoice): number
  * be satisfied by perícia bonuses.
  */
 export function deformidadeAvailablePowers(
+  tormentaPowers: Readonly<Record<string, TormentaPower>>,
   periciaCount: number,
 ): TormentaPower[] {
-  return Object.values(TORMENTA_POWERS).filter(
+  return Object.values(tormentaPowers).filter(
     (p) => !p.requiresPower && p.requiresOtherPowers <= periciaCount,
   )
 }
