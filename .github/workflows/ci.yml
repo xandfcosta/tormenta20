@@ -30,6 +30,13 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
 
+      # The frontend build's `prebuild` compiles engine-go → WASM (needs Go).
+      # No external deps ⇒ no go.sum ⇒ nothing to cache.
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: engine-go/go.mod
+          cache: false
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -49,6 +56,10 @@ jobs:
 
       - name: Tests
         run: pnpm test
+
+      - name: Go engine tests
+        run: go test ./...
+        working-directory: engine-go
 
       - name: Build
         run: pnpm build

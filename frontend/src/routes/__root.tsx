@@ -1,21 +1,21 @@
+import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import {
-  Outlet,
   createRootRouteWithContext,
+  Outlet,
   useNavigate,
   useRouterState,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
-import { AppShell } from '@/shared/layout/app-shell'
-import { TooltipProvider } from '@/shared/ui/tooltip'
-import { Toaster } from '@/shared/ui/sonner'
-import { useUiStore } from '@/shared/stores/ui-store'
-import { useAuthStore } from '@/shared/stores/auth-store'
+import { ensureCatalogs, ensureEngineCatalogs } from '@/entities/catalog/ensure-catalogs'
 import { meQueryOptions } from '@/entities/user/queries'
-import { ensureCatalogs } from '@/entities/catalog/ensure-catalogs'
 import { api } from '@/shared/api/api'
+import { AppShell } from '@/shared/layout/app-shell'
+import { useAuthStore } from '@/shared/stores/auth-store'
+import { useUiStore } from '@/shared/stores/ui-store'
+import { Toaster } from '@/shared/ui/sonner'
+import { TooltipProvider } from '@/shared/ui/tooltip'
 
 type RouterContext = { queryClient: QueryClient }
 
@@ -25,8 +25,14 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     // Prime the catalog cache once for the whole authenticated app (static,
     // cached-∞) so the sync accessors in derived.ts & co. are warm on ANY
     // authed route — not just the sheet/wizard. Skipped when logged out, so
-    // login/register stay fast.
-    if (user) await ensureCatalogs(context.queryClient)
+    // login/register stay fast. The Go/WASM engine warms in parallel (best-
+    // effort until task #7 makes it load-bearing).
+    if (user) {
+      await Promise.all([
+        ensureCatalogs(context.queryClient),
+        ensureEngineCatalogs(context.queryClient),
+      ])
+    }
     return { user }
   },
   component: RootLayout,

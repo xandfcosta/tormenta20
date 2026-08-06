@@ -3,22 +3,23 @@ import { primeAbilities } from '@/shared/lib/abilities-cache'
 import { primeActivations } from '@/shared/lib/activation-cache'
 import { primeItemCatalog } from '@/shared/lib/catalog-cache'
 import { primeDivinePowers } from '@/shared/lib/divine-powers-cache'
+import { ensureEngine, primeEngineCatalogs } from '@/shared/lib/engine-wasm'
 import { primeRacas } from '@/shared/lib/racas-cache'
 import { primeRulesCatalogs } from '@/shared/lib/rules-catalog-cache'
 import { primeSpellCatalog } from '@/shared/lib/spell-cache'
 import {
+  activationsCatalogQueryOptions,
   classPowersCatalogQueryOptions,
   conditionsCatalogQueryOptions,
   deusesCatalogQueryOptions,
   divinePowersCatalogQueryOptions,
   generalPowersCatalogQueryOptions,
   grantedPowersCatalogQueryOptions,
-  activationsCatalogQueryOptions,
   itemCatalogQueryOptions,
   origensCatalogQueryOptions,
   originsCatalogQueryOptions,
-  raceDefsCatalogQueryOptions,
   racasCatalogQueryOptions,
+  raceDefsCatalogQueryOptions,
   spellCatalogQueryOptions,
   tormentaPowersCatalogQueryOptions,
 } from './queries'
@@ -82,4 +83,46 @@ export async function ensureCatalogs(qc: QueryClient): Promise<void> {
   primeRulesCatalogs(conditions, tormentaPowers)
   primeDivinePowers(divinePowers)
   primeActivations(activations)
+}
+
+/**
+ * Warm the Go/WASM engine and prime its catalogs with the SAME data
+ * `ensureCatalogs` uses — so `computeSheetV2` is sync-ready on the first derive.
+ * Loads the wasm in parallel with the (cached) catalog fetches, then primes.
+ *
+ * Best-effort: the engine is NOT load-bearing yet (task #7 swaps the UI onto it),
+ * so a missing/failed wasm must not break the app gate. Runs alongside
+ * `ensureCatalogs` from the root beforeLoad.
+ */
+export async function ensureEngineCatalogs(qc: QueryClient): Promise<void> {
+  try {
+    const [payload] = await Promise.all([buildEnginePayload(qc), ensureEngine()])
+    primeEngineCatalogs(payload)
+  } catch (err) {
+    console.error('engine-wasm warm failed (non-fatal until task #7):', err)
+  }
+}
+
+/** Assemble the engine-catalog JSON from the (cached) fetched catalogs — the
+ *  exact shape `engine.PrimeEngineCatalogs` / the parity dump expect. */
+async function buildEnginePayload(qc: QueryClient): Promise<string> {
+  const [items, races, origins, classPowers, generalPowers, racas, tormentaPowers] =
+    await Promise.all([
+      qc.ensureQueryData(itemCatalogQueryOptions),
+      qc.ensureQueryData(raceDefsCatalogQueryOptions),
+      qc.ensureQueryData(originsCatalogQueryOptions),
+      qc.ensureQueryData(classPowersCatalogQueryOptions),
+      qc.ensureQueryData(generalPowersCatalogQueryOptions),
+      qc.ensureQueryData(racasCatalogQueryOptions),
+      qc.ensureQueryData(tormentaPowersCatalogQueryOptions),
+    ])
+  return JSON.stringify({
+    items,
+    races,
+    origins,
+    classPowers,
+    generalPowers,
+    racas,
+    tormentaPowerIds: Object.keys(tormentaPowers),
+  })
 }

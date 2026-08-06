@@ -10,7 +10,7 @@ Migração **"1 motor só"**: portar o motor real de derivação de ficha
 com paridade TDD contra os 16 personagens semente, e no fim remover a derivação
 TS. Escopo escolhido pelo dono: **port completo** (não o MVP).
 
-## Estado atual (tasks #2–#5 — DONE, verde e verificado)
+## Estado atual (tasks #2–#6 — DONE, verde e verificado)
 
 - **Slice 1** — resolução core em Go: `engine-go/engine/itemeffects.go`
   (port fiel de `items/engine.ts`, catalog-free) + `itemeffects_test.go` (~44 casos).
@@ -36,18 +36,30 @@ TS. Escopo escolhido pelo dono: **port completo** (não o MVP).
   `sheetV2` por seed (chama as funções reais do derived.ts; `tempHpFuria` usa
   furiaActive=true p/ exercitar Alma de Bronze); `sheetv2_parity_test.go` prova
   `ComputeSheetV2` **byte-equal ao TS nos 16 seeds**.
+- **Task #6 — fronteira WASM + boot/build [NOVO]**: `cmd/wasm/main.go` expõe
+  `primeEngineCatalogs` + `computeSheetV2` (além do MVP `computeCharacterSheet`).
+  Front: `engine-wasm.ts` ganhou `primeEngineCatalogs`/`computeSheetV2` +
+  `shared/lib/computed-sheet-v2.ts` (tipo `ComputedSheetV2` espelha o struct Go).
+  Boot: `ensureEngineCatalogs(qc)` em `ensure-catalogs.ts` (warma o wasm + prima
+  com o MESMO JSON de `ensureCatalogs`) chamado no `__root.tsx` beforeLoad em
+  paralelo — **best-effort** (try/catch; NÃO load-bearing até #7). Build: `predev`/
+  `prebuild` do frontend rodam `build-engine-wasm.sh`; CI ganhou `setup-go` +
+  step `go test ./...`. **Prova E2E**: harness node (build real do wasm → prime →
+  `computeSheetV2(char)`) bate byte-equal ao oráculo `sheetV2` nos 16 seeds.
 - Nada removido ainda — `derived.ts` intacto. Sem regressão.
 
-## Próximo passo — task #6: fronteira WASM + boot/build
+## Próximo passo — task #7: troca da UI (o refactor grande)
 
-Expor `ComputeSheetV2` (e `ActiveItemsFor`) no `cmd/wasm` (hoje só expõe o MVP
-`computeSheet`): novo entry que recebe `Character` cru + prima catálogos uma vez
-(`PrimeEngineCatalogs` a partir do MESMO JSON que `ensureCatalogs` busca). No
-front: `computeSheetV2(char, conditionals)` no wrapper `engine-wasm.ts`;
-`ensureEngine()` no `__root.tsx` beforeLoad (paralelo a `ensureCatalogs`); buildar
-o wasm no `predev`/`prebuild` do frontend (hoje só o air cobre — CI/build
-precisam). Depois: #7 troca da UI (paridade visual, faseado), #8 remoção do
-`derived.ts`. Ordem/detalhe: `PORT-PLAN.md §4`. Consumidores da UI: `PORT-PLAN.md §5`.
+Trocar os 26 consumidores de `derived.ts` + 3 hooks (`useCharacterEffects`,
+`useAllConditionals`, `useFuriaActive`) por hooks engine-backed que leem
+`computeSheetV2(char, conditionals)` (já sync-ready após o boot). Faseado por
+consumidor, com **paridade visual**. Contratos a preservar: os 3 hooks leem o
+store Zustand de condicionais → wrapper hook-shaped em volta de `computeSheetV2`;
+os `{total, contributions[]}` das funções de breakdown já existem no
+`ComputedSheetV2`. Consumidor mais pesado: `combat-magic-stats.tsx`. Otimismo
+(`optimisticLevelVitals`/`deriveDraftVitals`) passa a `computeSheetV2(hipótese)`.
+Só DEPOIS de #7 ok vem #8 (remover `derived.ts` + `items/engine.ts` do bundle).
+Detalhe/lista completa de consumidores: `PORT-PLAN.md §4-5`.
 
 ## Verificação (rodar antes/depois de cada slice)
 

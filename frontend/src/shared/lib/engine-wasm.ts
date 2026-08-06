@@ -1,4 +1,6 @@
 import type { CharacterInput, ComputedSheet } from '@tormenta20/t20-data'
+import type { Character } from '@/shared/api/api'
+import type { ComputedSheetV2 } from './computed-sheet-v2'
 
 /**
  * Lazy loader + typed wrapper for the engine-go rules engine compiled to WASM.
@@ -20,7 +22,11 @@ type GoRuntime = {
 type GlobalWithGo = typeof globalThis & {
   Go?: new () => GoRuntime
   computeCharacterSheet?: (inputJson: string) => string
+  primeEngineCatalogs?: (payloadJson: string) => string
+  computeSheetV2?: (charJson: string, conditionalsJson: string) => string
 }
+
+let catalogsPrimed = false
 
 const WASM_URL = '/engine/t20.wasm'
 const GLUE_URL = '/engine/wasm_exec.js'
@@ -73,6 +79,44 @@ export function computeSheet(input: CharacterInput): ComputedSheet {
   const out = JSON.parse(fn(JSON.stringify(input))) as ComputedSheet & {
     error?: string
   }
+  if (out.error) throw new Error(`engine-wasm: ${out.error}`)
+  return out
+}
+
+/**
+ * Prime the REAL derive's catalogs once — the same JSON `ensureCatalogs` fetches
+ * (items/races/origins/classPowers/generalPowers/racas/tormentaPowerIds).
+ * Required before `computeSheetV2`; idempotent (re-priming replaces the set).
+ * Requires `ensureEngine()` to have resolved.
+ */
+export function primeEngineCatalogs(payloadJson: string): void {
+  const fn = (globalThis as GlobalWithGo).primeEngineCatalogs
+  if (!fn) throw new Error('engine-wasm: engine not ready — call ensureEngine() first')
+  const res = JSON.parse(fn(payloadJson)) as { ok?: boolean; error?: string }
+  if (res.error) throw new Error(`engine-wasm: ${res.error}`)
+  catalogsPrimed = true
+}
+
+/** True once the engine catalogs have been primed — for a render-time gate. */
+export function areEngineCatalogsPrimed(): boolean {
+  return catalogsPrimed
+}
+
+/**
+ * Compute the rich derived sheet (every breakdown) through the Go engine over a
+ * RAW Character + the active-conditional ids. Requires `ensureEngine()` +
+ * `primeEngineCatalogs()`. Mirrors the front's `derived.ts` breakdowns
+ * byte-for-byte (verified by the `sheetV2` parity oracle).
+ */
+export function computeSheetV2(
+  char: Character,
+  conditionals: readonly string[] = [],
+): ComputedSheetV2 {
+  const fn = (globalThis as GlobalWithGo).computeSheetV2
+  if (!fn) throw new Error('engine-wasm: engine not ready — call ensureEngine() first')
+  const out = JSON.parse(
+    fn(JSON.stringify(char), JSON.stringify(conditionals)),
+  ) as ComputedSheetV2 & { error?: string }
   if (out.error) throw new Error(`engine-wasm: ${out.error}`)
   return out
 }

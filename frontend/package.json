@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predev": "bash scripts/build-engine-wasm.sh",
     "dev": "vite",
+    "prebuild": "bash scripts/build-engine-wasm.sh",
     "build": "vite build && tsc -b --noEmit",
     "typecheck": "tsgo -b --noEmit",
     "typecheck:tsc": "tsc -b --noEmit",

@@ -99,9 +99,11 @@ são catalog-free e inline — portados pra table-tests Go dão verde imediato.
    `ComputedSheetV2` (`sheet_rules.go`/`breakdowns.go`/`breakdowns_magic.go`).
    `(*Catalogs).ComputeSheetV2(char, conditionals)` bate byte-equal contra o
    oráculo `sheetV2` nos 16 seeds (`sheetv2_parity_test.go`).
-5. **Fronteira WASM + boot/build** (task #6). Expõe `computeSheetV2`; prima
-   catálogos; `ensureEngine()` no `__root.tsx` beforeLoad; build do wasm no
-   `predev`/`prebuild` do frontend (hoje só o air cobre — CI/build precisam).
+5. **Fronteira WASM + boot/build** (task #6, ✅ DONE). `cmd/wasm` expõe
+   `primeEngineCatalogs`+`computeSheetV2`; `engine-wasm.ts` + `computed-sheet-v2.ts`
+   no front; `ensureEngineCatalogs` warma+prima no `__root` beforeLoad (best-effort,
+   não load-bearing até #7); `predev`/`prebuild` buildam o wasm; CI ganhou `setup-go`
+   + `go test`. Prova E2E node: `computeSheetV2` byte-equal ao oráculo nos 16 seeds.
 6. **Troca da UI** (task #7). Substitui os 26 consumidores + 3 hooks por hooks
    engine-backed, faseado, com paridade visual. Inclui otimismo (level/draft).
 7. **Remoção** (task #8). Deleta `derived.ts` (breakdowns + coleta) e o import de
