@@ -50,6 +50,10 @@ import { racasList } from '@/shared/lib/racas-cache'
 import { tormentaPowersRecord } from '@/shared/lib/rules-catalog-cache'
 import type { Character, CharacterExpertise, CharacterItem } from '@/shared/api/api'
 import { useActiveConditionals } from '@/shared/stores/conditionals-store'
+import {
+  areEngineCatalogsPrimed,
+  computeEffects as engineComputeEffects,
+} from '@/shared/lib/engine-wasm'
 import { effectSourceName } from './effect-source'
 
 /**
@@ -718,12 +722,37 @@ export function isItemProficient(
   return set.has(required)
 }
 
+/**
+ * The sheet derive's CHOKE POINT (Inc.2 task #7): resolve a character's
+ * `ItemEffects` through the Go/WASM engine when it's warm, else the TS derive.
+ *
+ * The engine runs the heavy half — `activeItemsFor` (catalog reads) +
+ * `computeItemEffects` (non-stacking resolution) — in Go, so the browser stops
+ * duplicating it; the thin breakdown helpers below stay TS over these effects.
+ * The TS branch is the fallback for tests (no wasm) and the (proven-not-to-happen)
+ * case where the primed engine still throws — so the sheet can never break.
+ * Parity is proven byte-equal by the `itemEffects` oracle across the 16 seeds.
+ */
+function resolveEffects(
+  character: Character,
+  activeConditionals: ReadonlySet<string>,
+): ItemEffects {
+  if (areEngineCatalogsPrimed()) {
+    try {
+      return engineComputeEffects(character, [...activeConditionals])
+    } catch (err) {
+      console.error('engine computeEffects failed — using TS derive fallback:', err)
+    }
+  }
+  const base = computeItemEffects(activeItemsFor(character))
+  return applyActiveConditionals(base, activeConditionals)
+}
+
 export function characterEffects(
   character: Character,
   activeConditionals: ReadonlySet<string> = EMPTY_SET,
 ): ItemEffects {
-  const base = computeItemEffects(activeItemsFor(character))
-  return applyActiveConditionals(base, activeConditionals)
+  return resolveEffects(character, activeConditionals)
 }
 
 const EMPTY_SET: ReadonlySet<string> = new Set()
@@ -741,7 +770,9 @@ export type ConditionalEntry = {
 
 export function useAllConditionals(character: Character): ConditionalEntry[] {
   const active = useActiveConditionals(character.id)
-  const raw = computeItemEffects(activeItemsFor(character))
+  // Base effects (no conditionals applied) — the `conditional` list enumerates
+  // every opt-in the character could toggle. Same choke point as the sheet.
+  const raw = resolveEffects(character, EMPTY_SET)
   return raw.conditional.map((effect) => {
     const id = conditionalId(effect)
     return { id, effect, active: active.has(id) }

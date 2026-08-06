@@ -10,7 +10,7 @@ Migração **"1 motor só"**: portar o motor real de derivação de ficha
 com paridade TDD contra os 16 personagens semente, e no fim remover a derivação
 TS. Escopo escolhido pelo dono: **port completo** (não o MVP).
 
-## Estado atual (tasks #2–#6 — DONE, verde e verificado)
+## Estado atual (tasks #2–#7 — DONE, verde e verificado)
 
 - **Slice 1** — resolução core em Go: `engine-go/engine/itemeffects.go`
   (port fiel de `items/engine.ts`, catalog-free) + `itemeffects_test.go` (~44 casos).
@@ -46,20 +46,32 @@ TS. Escopo escolhido pelo dono: **port completo** (não o MVP).
   `prebuild` do frontend rodam `build-engine-wasm.sh`; CI ganhou `setup-go` +
   step `go test ./...`. **Prova E2E**: harness node (build real do wasm → prime →
   `computeSheetV2(char)`) bate byte-equal ao oráculo `sheetV2` nos 16 seeds.
-- Nada removido ainda — `derived.ts` intacto. Sem regressão.
+- **Task #7 — troca da UI via CHOKE-POINT [NOVO]** (estratégia escolhida pelo dono
+  — ver AskUserQuestion): em vez de reescrever os 26 consumidores, roteou-se o
+  motor pesado num ÚNICO ponto. `cmd/wasm` expõe `computeEffects(char, conds)`
+  (ItemEffects resolvido); `engine-wasm.ts` ganhou `computeEffects` (rebuild do
+  flags array→Set). Em `derived.ts`, `resolveEffects()` chama o engine quando
+  `areEngineCatalogsPrimed()`, senão cai no derive TS (fallback p/ testes/erro).
+  `characterEffects`/`useCharacterEffects`/`useAllConditionals`/`useFuriaActive`
+  passam por ele → **os 23 consumidores + os breakdowns rodam sobre effects do Go,
+  ZERO mudança de call-site, paridade garantida**. Prova E2E node:
+  `computeEffects(char)` byte-equal ao oráculo `itemEffects` nos 16 seeds. Os
+  breakdowns continuam TS (puros sobre effects) — removidos/portados no #8.
+- Nada removido ainda — `derived.ts` intacto (agora é o fallback). Sem regressão.
 
-## Próximo passo — task #7: troca da UI (o refactor grande)
+## Próximo passo — task #8: remoção (fechar o "1 motor só")
 
-Trocar os 26 consumidores de `derived.ts` + 3 hooks (`useCharacterEffects`,
-`useAllConditionals`, `useFuriaActive`) por hooks engine-backed que leem
-`computeSheetV2(char, conditionals)` (já sync-ready após o boot). Faseado por
-consumidor, com **paridade visual**. Contratos a preservar: os 3 hooks leem o
-store Zustand de condicionais → wrapper hook-shaped em volta de `computeSheetV2`;
-os `{total, contributions[]}` das funções de breakdown já existem no
-`ComputedSheetV2`. Consumidor mais pesado: `combat-magic-stats.tsx`. Otimismo
-(`optimisticLevelVitals`/`deriveDraftVitals`) passa a `computeSheetV2(hipótese)`.
-Só DEPOIS de #7 ok vem #8 (remover `derived.ts` + `items/engine.ts` do bundle).
-Detalhe/lista completa de consumidores: `PORT-PLAN.md §4-5`.
+Tornar o engine OBRIGATÓRIO e remover a duplicação TS: (1) carregar o wasm no
+setup dos testes (o harness node `wasm-effects-proof.cjs` mostra o padrão:
+`wasm_exec.js` + instantiate + prime a partir de `_catalogs.json`) para o
+fallback poder sair; (2) deletar o ramo TS de `resolveEffects` + `activeItemsFor`
++ toda a coleta de `derived.ts`, e dropar o import de `t20-data/items/engine.ts`
+(`computeItemEffects`) do bundle do front (o grande ganho de bundle); (3) decidir
+se os breakdowns `*Total` viram consumidores de `ComputedSheetV2` (engine) ou
+ficam TS finos sobre `computeEffects`. Verificar: FE/BE/t20-data verdes + typecheck
++ biome + **bundle sem `items/engine.ts`** + paridade visual. Detalhe: `PORT-PLAN.md §4-5`.
+Nota: `effect-source.ts equippedItemFlagEffects` ainda usa `computeItemEffects`
+por-item (display) — decidir no #8 se migra.
 
 ## Verificação (rodar antes/depois de cada slice)
 

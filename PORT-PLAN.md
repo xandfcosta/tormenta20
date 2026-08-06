@@ -104,8 +104,15 @@ são catalog-free e inline — portados pra table-tests Go dão verde imediato.
    no front; `ensureEngineCatalogs` warma+prima no `__root` beforeLoad (best-effort,
    não load-bearing até #7); `predev`/`prebuild` buildam o wasm; CI ganhou `setup-go`
    + `go test`. Prova E2E node: `computeSheetV2` byte-equal ao oráculo nos 16 seeds.
-6. **Troca da UI** (task #7). Substitui os 26 consumidores + 3 hooks por hooks
-   engine-backed, faseado, com paridade visual. Inclui otimismo (level/draft).
+6. **Troca da UI** (task #7, ✅ DONE — via CHOKE-POINT, decisão do dono). Em vez de
+   reescrever os 26 consumidores, roteou-se o motor pesado num ponto só:
+   `cmd/wasm` expõe `computeEffects`; `derived.ts resolveEffects()` usa o engine
+   quando primado, senão o derive TS (fallback testes/erro). `characterEffects`/
+   `useCharacterEffects`/`useAllConditionals`/`useFuriaActive` passam por ele → os
+   23 consumidores + breakdowns rodam sobre effects do Go, zero call-site change,
+   paridade garantida (`computeEffects` byte-equal ao oráculo `itemEffects`).
+   Otimismo (level/draft-vitals) fica p/ depois — usa collectVitalGrants, não este
+   derive. Breakdowns seguem TS (puros sobre effects) até #8.
 7. **Remoção** (task #8). Deleta `derived.ts` (breakdowns + coleta) e o import de
    `items/engine.ts` do bundle. Verde em FE/BE/t20-data + typecheck + biome +
    bundle sem regressão.

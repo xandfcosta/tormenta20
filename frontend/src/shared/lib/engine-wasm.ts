@@ -1,4 +1,4 @@
-import type { CharacterInput, ComputedSheet } from '@tormenta20/t20-data'
+import type { CharacterInput, ComputedSheet, ItemEffects } from '@tormenta20/t20-data'
 import type { Character } from '@/shared/api/api'
 import type { ComputedSheetV2 } from './computed-sheet-v2'
 
@@ -24,6 +24,16 @@ type GlobalWithGo = typeof globalThis & {
   computeCharacterSheet?: (inputJson: string) => string
   primeEngineCatalogs?: (payloadJson: string) => string
   computeSheetV2?: (charJson: string, conditionalsJson: string) => string
+  computeEffects?: (charJson: string, conditionalsJson: string) => string
+}
+
+/** The engine's serialized ItemEffects — flags as a sorted array (rebuilt into a
+ *  Set on the TS side to match the t20-data `ItemEffects` shape). */
+type SerializedEffects = {
+  byTarget: ItemEffects['byTarget']
+  flags: string[]
+  conditional: ItemEffects['conditional']
+  error?: string
 }
 
 let catalogsPrimed = false
@@ -100,6 +110,32 @@ export function primeEngineCatalogs(payloadJson: string): void {
 /** True once the engine catalogs have been primed — for a render-time gate. */
 export function areEngineCatalogsPrimed(): boolean {
   return catalogsPrimed
+}
+
+/**
+ * Compute the resolved `ItemEffects` through the Go engine over a RAW Character +
+ * the active-conditional ids — the sheet derive's choke point (Inc.2 task #7).
+ * The heavy collection + resolution runs in Go; the thin `derived.ts` breakdown
+ * helpers stay TS over these effects. Requires `ensureEngine()` +
+ * `primeEngineCatalogs()`. Mirrors `characterEffects` byte-for-byte (verified by
+ * the `itemEffects` parity oracle). Flags come back as an array → rebuilt into a
+ * Set to match the t20-data `ItemEffects` shape.
+ */
+export function computeEffects(
+  char: Character,
+  conditionals: readonly string[] = [],
+): ItemEffects {
+  const fn = (globalThis as GlobalWithGo).computeEffects
+  if (!fn) throw new Error('engine-wasm: engine not ready — call ensureEngine() first')
+  const out = JSON.parse(
+    fn(JSON.stringify(char), JSON.stringify(conditionals)),
+  ) as SerializedEffects
+  if (out.error) throw new Error(`engine-wasm: ${out.error}`)
+  return {
+    byTarget: out.byTarget,
+    flags: new Set(out.flags) as ItemEffects['flags'],
+    conditional: out.conditional,
+  }
 }
 
 /**
