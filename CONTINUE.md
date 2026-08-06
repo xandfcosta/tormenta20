@@ -73,19 +73,32 @@ TS. Escopo escolhido pelo dono: **port completo** (não o MVP).
 ## Estado: migração "1 motor só" COMPLETA em produção
 
 O derive da ficha roda 100% no motor Go/WASM em produção; o bundle não carrega
-mais a coleta TS. Restam APENAS caudas opcionais (não bloqueiam nada):
-- `effect-source.ts equippedItemFlagEffects` ainda usa `computeItemEffects`
-  por-item (lista de flags por item no tab Efeitos, com proveniência) → o engine
-  agrega flags e perde a proveniência por-item, então migrar exigiria uma função
-  nova no engine. `computeItemEffects` (resolução pura, ~100 ln) segue no bundle
-  só por isso. Baixa prioridade.
-- Otimismo `optimisticLevelVitals`/`deriveDraftVitals` usa `collectVitalGrants`+
-  `frontVitalResolver` (caminho de vitals, NÃO este derive) — pode virar
-  `computeSheetV2(hipótese)` um dia. Independente.
-- Breakdowns `*Total` seguem TS finos sobre os effects do Go (decisão do #7).
-  Migrar p/ `ComputedSheetV2` removeria `statFor` do bundle — ganho marginal.
-- Deletar de vez a coleta TS (e o oráculo) exigiria carregar wasm no vitest
-  (padrão em `wasm-effects-proof.cjs`); hoje NÃO vale (perde a rede de paridade).
+mais a coleta TS. `ComputedSheetV2` (engine) foi completado (expertise.attribute +
+attackAll/damageAll) e é a API pública rica do engine — hoje só o oráculo a
+consome. Caudas opcionais **ANALISADAS e conscientemente NÃO feitas** (não vale):
+
+- **Reshape dos consumidores p/ `ComputedSheetV2` (remover breakdowns TS +
+  `statFor` do bundle) — NÃO VALE.** `effects` (ItemEffects) é uma abstração
+  ENFIADA por props: `spellbook-panel`/`expertises-panel` passam `effects` p/ os
+  rows filhos; `spell-row` faz `attributeTotal(char, keyAttr, effects)` p/ CD de
+  magia por-classe ARBITRÁRIA; `cast-spell-dialog` usa p/ catalisador. Esses
+  precisam de `statFor`/`attributeTotal` sobre effects CRU — que o `ComputedSheetV2`
+  não pré-computa (nem deveria). Logo o reshape seria ~16 arquivos de churn/risco
+  visual E MESMO ASSIM não removeria `items/engine.ts` (statFor/attributeTotal
+  continuam necessários). Os breakdowns TS são helpers FINOS sobre os effects do
+  Go — não um motor duplicado. Conclusão: parar aqui.
+- `effect-source.equippedItemFlagEffects` usa `computeItemEffects` por-item →
+  como `items/engine.ts` fica no bundle de qualquer forma (statFor), migrar isso
+  dá ~zero ganho. Skip.
+- Otimismo `optimisticLevelVitals`/`deriveDraftVitals`: usa `collectVitalGrants`+
+  `frontVitalResolver`+`multiclassPvPool/MpPool` — é um MOTOR DE VITALS separado
+  (não este derive). Portá-lo p/ Go é um INCREMENTO próprio (tamanho ~Inc.2 dos
+  vitals), não uma cauda. Fica p/ um "Inc.3 vitals" se o dono quiser.
+- Deletar de vez a coleta TS (e o oráculo) exigiria wasm no vitest — perde a rede
+  de paridade. Não vale.
+
+**Veredito: a migração do derive de item-effects (Inc.2) está COMPLETA.** O que
+resta são não-objetivos (churn sem ganho) ou um incremento separado (vitals).
 
 ## Verificação (rodar antes/depois de cada slice)
 
