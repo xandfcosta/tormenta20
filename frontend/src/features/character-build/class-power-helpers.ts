@@ -9,8 +9,8 @@ import {
   slotsForClassLevel,
   spellEffectByName,
   TORMENTA_POWERS,
-  WEAPONS,
 } from '@tormenta20/t20-data'
+import { catalogWeapons } from '@/shared/lib/catalog-cache'
 
 export type ClassEntry = { className: string; level: number }
 
@@ -75,7 +75,7 @@ export function powerChoiceOptions(choice: PowerChoice): ChoiceOption[] {
     }))
   }
   if (choice.kind === 'weapon') {
-    return WEAPONS.map((w) => ({ id: w.id, name: w.name }))
+    return catalogWeapons().map((w) => ({ id: w.id, name: w.name }))
   }
   return []
 }

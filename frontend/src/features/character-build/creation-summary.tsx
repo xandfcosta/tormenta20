@@ -2,9 +2,9 @@ import { Link } from '@tanstack/react-router'
 import {
   ATTRIBUTE_ABBR,
   ATTRIBUTE_KEYS,
-  getCatalogItem,
   STARTING_KIT_BASE_ITEMS,
 } from '@tormenta20/t20-data'
+import { getCatalogItem } from '@/shared/lib/catalog-cache'
 import {
   origemItemsPayload,
   purchasesTotal,

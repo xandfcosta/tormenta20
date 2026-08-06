@@ -14,6 +14,7 @@ import { Toaster } from '@/shared/ui/sonner'
 import { useUiStore } from '@/shared/stores/ui-store'
 import { useAuthStore } from '@/shared/stores/auth-store'
 import { meQueryOptions } from '@/entities/user/queries'
+import { ensureCatalogs } from '@/entities/catalog/ensure-catalogs'
 import { api } from '@/shared/api/api'
 
 type RouterContext = { queryClient: QueryClient }
@@ -21,6 +22,11 @@ type RouterContext = { queryClient: QueryClient }
 export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async ({ context }) => {
     const user = await context.queryClient.ensureQueryData(meQueryOptions)
+    // Prime the catalog cache once for the whole authenticated app (static,
+    // cached-∞) so the sync accessors in derived.ts & co. are warm on ANY
+    // authed route — not just the sheet/wizard. Skipped when logged out, so
+    // login/register stay fast.
+    if (user) await ensureCatalogs(context.queryClient)
     return { user }
   },
   component: RootLayout,

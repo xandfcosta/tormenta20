@@ -12,7 +12,6 @@ import {
   DEFORMIDADE_PERICIA_BONUS,
   EXPERTISE_NAMES,
   type ExpertiseName,
-  getCatalogItem,
   getClassPower,
   getGeneralPower,
   getOrigin,
@@ -38,6 +37,10 @@ import {
   type Modifier,
   type Prerequisite,
 } from '@tormenta20/t20-data'
+// getCatalogItem now reads the fetched item catalog (primed by the root
+// loader) instead of the build-time CATALOG_ITEMS — keeps the ~44KB item data
+// out of the bundle. See project_front_decouple_catalog B.2.
+import { getCatalogItem } from '@/shared/lib/catalog-cache'
 import type { Character, CharacterExpertise, CharacterItem } from '@/shared/api/api'
 import { useActiveConditionals } from '@/shared/stores/conditionals-store'
 import { effectSourceName } from './effect-source'

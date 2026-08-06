@@ -1,4 +1,4 @@
-import { getCatalogItem } from '@tormenta20/t20-data'
+import { getCatalogItem } from '@/shared/lib/catalog-cache'
 import type { CatalogItem, ItemFlag, Modifier } from '@tormenta20/t20-data'
 import { signed } from './signed'
 

@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query'
-import { primeItemCatalog } from './catalog-cache'
+import { primeItemCatalog } from '@/shared/lib/catalog-cache'
 import { itemCatalogQueryOptions } from './queries'
 
 /**

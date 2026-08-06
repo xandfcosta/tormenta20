@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
-import { getCatalogItem } from '@tormenta20/t20-data'
+import { getCatalogItem } from '@/shared/lib/catalog-cache'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import type { Character, CharacterItem } from '@/shared/api/api'

@@ -2,10 +2,10 @@ import {
   computeItemEffects,
   getActivation,
   type DisplayFact,
-  getCatalogItem,
   type ItemFlag,
   SPELL_CATALOG,
 } from '@tormenta20/t20-data'
+import { getCatalogItem } from '@/shared/lib/catalog-cache'
 import type { CharacterItem } from '@/shared/api/api'
 
 /**

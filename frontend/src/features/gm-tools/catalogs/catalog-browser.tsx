@@ -1,12 +1,12 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
-  CATALOG_ITEMS,
   CONDITIONS,
   SPELL_CATALOG,
   type CatalogItem,
   type CatalogSpell,
   type Condition,
 } from '@tormenta20/t20-data'
+import { allCatalogItems } from '@/shared/lib/catalog-cache'
 import { Input } from '@/shared/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { CATALOG_POWERS, type CatalogPower } from './catalog-model'
@@ -26,10 +26,6 @@ const CONDITION_LIST = Object.values(CONDITIONS).sort((a, b) =>
 const SPELL_LIST = Object.values(SPELL_CATALOG).sort(
   (a, b) => a.circle - b.circle || a.name.localeCompare(b.name, 'pt-BR'),
 )
-const ITEM_LIST = [...CATALOG_ITEMS].sort((a, b) =>
-  a.name.localeCompare(b.name, 'pt-BR'),
-)
-
 // Stable module-level search extractors (CatalogTab memoizes on their identity).
 const conditionSearch = (c: Condition) => [c.name, c.description, ...c.tags]
 const spellSearch = (s: CatalogSpell) => [s.name, s.baseEffect]
@@ -50,6 +46,13 @@ export function CatalogBrowser({
   listClassName?: string
 }) {
   const [query, setQuery] = useState('')
+  // Item catalog comes from the fetched cache (primed by the root loader), so
+  // sort inside the component rather than a module const (which would be empty).
+  const itemList = useMemo(
+    () =>
+      [...allCatalogItems()].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')),
+    [],
+  )
 
   return (
     <div className="flex min-h-0 flex-col gap-4">
@@ -102,7 +105,7 @@ export function CatalogBrowser({
         </TabsContent>
         <TabsContent value="items">
           <CatalogTab
-            items={ITEM_LIST}
+            items={itemList}
             query={query}
             searchText={itemSearch}
             estimateSize={76}

@@ -1,4 +1,5 @@
-import { getCatalogItem, HOMEBREW_VESTED_OK } from '@tormenta20/t20-data'
+import { HOMEBREW_VESTED_OK } from '@tormenta20/t20-data'
+import { getCatalogItem } from '@/shared/lib/catalog-cache'
 import type { CatalogItem } from '@tormenta20/t20-data'
 import type { CharacterItem, EquippedSlot } from '@/shared/api/api'
 

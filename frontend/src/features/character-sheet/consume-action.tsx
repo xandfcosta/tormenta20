@@ -1,7 +1,7 @@
 import { Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { type AnyFieldApi, useForm } from '@tanstack/react-form'
-import { getCatalogItem } from '@tormenta20/t20-data'
+import { getCatalogItem } from '@/shared/lib/catalog-cache'
 import { Button } from '@/shared/ui/button'
 import {
   Dialog,

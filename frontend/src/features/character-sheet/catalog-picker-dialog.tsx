@@ -2,13 +2,13 @@ import { useState } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { z } from 'zod'
 import { Gem, Plus } from 'lucide-react'
+import { familyFor } from '@tormenta20/t20-data'
 import {
-  CATALOG_ITEMS,
-  IMPROVEMENTS,
-  MATERIALS,
-  familyFor,
+  allCatalogItems,
+  catalogImprovements,
+  catalogMaterials,
   getCatalogItem,
-} from '@tormenta20/t20-data'
+} from '@/shared/lib/catalog-cache'
 import { Button } from '@/shared/ui/button'
 import {
   Dialog,
@@ -54,9 +54,11 @@ const catalogAddSchema = z.object({
 
 
 // Distinct catalog categories, sorted, for the add-dialog category filter.
-const CATALOG_CATEGORIES = [
-  ...new Set(CATALOG_ITEMS.map((c) => c.category)),
-].sort()
+// A function (not a module const) so it reads the fetched catalog AFTER the
+// root loader primes it — a top-level const would evaluate empty at import.
+function catalogCategories(): string[] {
+  return [...new Set(allCatalogItems().map((c) => c.category))].sort()
+}
 
 // pt-BR labels for the English catalog category ids.
 const CATEGORY_LABEL: Record<string, string> = {
@@ -113,10 +115,10 @@ export function OverlayPickerDialog({
   }
 
   const baseFamily = familyFor(catalog)
-  const availableImprovements = IMPROVEMENTS.filter((imp) =>
+  const availableImprovements = catalogImprovements().filter((imp) =>
     imp.appliesTo?.includes(baseFamily),
   )
-  const availableMaterials = MATERIALS.filter((mat) =>
+  const availableMaterials = catalogMaterials().filter((mat) =>
     mat.appliesTo?.includes(baseFamily),
   )
 
@@ -265,7 +267,7 @@ export function OverlayPickerDialog({
 
 /**
  * "Adicionar do catálogo" dialog. Searchable list backed by the
- * static `CATALOG_ITEMS` from `t20-data`; selection triggers `onAdd`
+ * static `allCatalogItems()` from `t20-data`; selection triggers `onAdd`
  * with the create input. Passes catalog id + quantity + optional
  * `equipped` slot to the caller mutation.
  */
@@ -282,7 +284,7 @@ export function AddCatalogItemDialog({
   const [formError, setFormError] = useState<string | null>(null)
 
   const selected = catalogId
-    ? CATALOG_ITEMS.find((c) => c.id === catalogId)
+    ? allCatalogItems().find((c) => c.id === catalogId)
     : undefined
   // Slot choices for the picked entry; a single "—" (consumables, meals)
   // means the item cannot be equipped, so the control disappears.
@@ -324,7 +326,7 @@ export function AddCatalogItemDialog({
     }
   }
 
-  const filtered = CATALOG_ITEMS.filter((c) => {
+  const filtered = allCatalogItems().filter((c) => {
     if (category && c.category !== category) return false
     if (search.trim() === '') return true
     return (
@@ -382,7 +384,7 @@ export function AddCatalogItemDialog({
                 aria-label="Categoria"
               >
                 <option value="">Todas categorias</option>
-                {CATALOG_CATEGORIES.map((c) => (
+                {catalogCategories().map((c) => (
                   <option key={c} value={c}>
                     {categoryLabel(c)}
                   </option>

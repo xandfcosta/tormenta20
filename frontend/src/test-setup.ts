@@ -7,7 +7,15 @@
  */
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
+import { CATALOG_ITEMS } from '@tormenta20/t20-data'
 import { afterEach } from 'vitest'
+import { primeItemCatalog } from './shared/lib/catalog-cache'
+
+/* The item catalog is fetched + primed by the root loader at runtime (B.2 —
+ * keeps the data out of the bundle). Tests have no loader, so prime the cache
+ * once from the real t20-data catalog — restores the pre-migration behavior
+ * where getCatalogItem worked synchronously at import. */
+primeItemCatalog(CATALOG_ITEMS)
 
 /* Vitest doesn't auto-cleanup React trees between tests — DOM leaks
  * across tests and `getByText` starts matching leftovers from an

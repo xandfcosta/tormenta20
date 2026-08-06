@@ -1,13 +1,12 @@
 import {
-  CATALOG_ITEMS,
   type CatalogItem,
-  getCatalogItem,
   ORIGENS,
   origemItemGrantsByName,
   type StartingKit,
   startingKitFor,
   startingMoneyForLevel,
 } from '@tormenta20/t20-data'
+import { allCatalogItems, getCatalogItem } from '@/shared/lib/catalog-cache'
 
 /**
  * Equipamento inicial (book p140) helpers for the wizard step: the unified L1
@@ -39,7 +38,7 @@ export type StartingEquipmentDraft = {
 export function weaponOptions(
   category: 'weapon-simple' | 'weapon-martial' | 'weapon-exotic',
 ): CatalogItem[] {
-  return CATALOG_ITEMS.filter((i) => i.category === category)
+  return allCatalogItems().filter((i) => i.category === category)
 }
 
 export function lightArmorOptions(): CatalogItem[] {
@@ -146,7 +145,7 @@ export function origemItemsPayload(
       case 'oneOf': {
         const chosen = picks[g.label]
         if (!chosen) return [{ name: g.label, quantity: 1, slots: 1 }]
-        const match = CATALOG_ITEMS.find(
+        const match = allCatalogItems().find(
           (i) => i.name.toLowerCase() === chosen.toLowerCase(),
         )
         return match
@@ -194,7 +193,7 @@ const SHOP_EXCLUDED = new Set(['improvement', 'material', 'dr'])
 /** Buyable catalog (excludes improvement/material overlays), name-sorted (pt-BR). */
 export function shopCatalog(category: ShopCategoryKey): CatalogItem[] {
   const group = SHOP_CATEGORIES.find((c) => c.key === category)
-  return CATALOG_ITEMS.filter((i) => {
+  return allCatalogItems().filter((i) => {
     if (SHOP_EXCLUDED.has(i.category)) return false
     if (!group || group.key === 'all') return true
     return group.matches.includes(i.category)
@@ -317,7 +316,7 @@ export function bagagemGroups(
       const picked = picks(originPicks, g.label)
       if (!picked) return [{ kind: 'ghost', label: g.label, anchor: 'chooser-origem' }]
       if (g.kind === 'oneOf') {
-        const match = CATALOG_ITEMS.find(
+        const match = allCatalogItems().find(
           (i) => i.name.toLowerCase() === picked.toLowerCase(),
         )
         return match

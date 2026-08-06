@@ -1,12 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
-  CATALOG_ITEMS,
   firstErrorMessage,
-  getCatalogItem,
   validateConsumeQuantity,
   validateEquipChange,
 } from '@tormenta20/t20-data'
+import { allCatalogItems, getCatalogItem } from '@/shared/lib/catalog-cache'
 import type {
   Character,
   CharacterItem,
@@ -58,7 +57,7 @@ export function useItemMutations(character: Character): ItemMutations {
       const previous = qc.getQueryData<Character>(queryKey)
       const tempId = -Date.now()
       const catalog = input.catalogId
-        ? CATALOG_ITEMS.find((c) => c.id === input.catalogId)
+        ? allCatalogItems().find((c) => c.id === input.catalogId)
         : undefined
       const optimistic: CharacterItem = {
         id: tempId,

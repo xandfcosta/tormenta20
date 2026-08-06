@@ -1,4 +1,5 @@
-import { getCatalogItem, type WeaponStats } from '@tormenta20/t20-data'
+import type { WeaponStats } from '@tormenta20/t20-data'
+import { getCatalogItem } from '@/shared/lib/catalog-cache'
 import type { Character } from '@/shared/api/api'
 
 export type WieldedWeaponEntry = { name: string; weapon: WeaponStats }

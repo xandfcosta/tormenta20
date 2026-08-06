@@ -1,5 +1,5 @@
 import { Pencil, Sparkles, Trash2 } from 'lucide-react'
-import { getCatalogItem } from '@tormenta20/t20-data'
+import { getCatalogItem } from '@/shared/lib/catalog-cache'
 import { Button } from '@/shared/ui/button'
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
 import {
