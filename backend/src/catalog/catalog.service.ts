@@ -2,10 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   BESTIARY,
   CATALOG_ITEMS,
+  CLASS_POWERS_CATALOG,
   CONDITIONS,
   DEUSES,
+  GENERAL_POWERS_CATALOG,
+  GRANTED_POWERS,
   ORIGINS_CATALOG,
   RACAS,
+  RACES_CATALOG,
   SPELL_CATALOG,
 } from '@tormenta20/t20-data';
 
@@ -26,6 +30,13 @@ export const CATALOG_RESOURCES = [
   'deuses',
   'races',
   'origins',
+  // Abilities cluster (t20-abilities chunk). `race-defs` is the RaceDefinition
+  // catalog (abilities/races.ts) the front's `getRace` needs — DISTINCT from
+  // `races` above, which serves racas.ts RACAS (movement/size/attr-mod).
+  'race-defs',
+  'class-powers',
+  'general-powers',
+  'granted-powers',
 ] as const;
 
 export type CatalogResource = (typeof CATALOG_RESOURCES)[number];
@@ -40,6 +51,10 @@ export class CatalogService {
     deuses: () => DEUSES,
     races: () => RACAS,
     origins: () => ORIGINS_CATALOG,
+    'race-defs': () => RACES_CATALOG,
+    'class-powers': () => CLASS_POWERS_CATALOG,
+    'general-powers': () => GENERAL_POWERS_CATALOG,
+    'granted-powers': () => GRANTED_POWERS,
   };
 
   /** Names the `:resource` route accepts — also the catalog index payload. */
