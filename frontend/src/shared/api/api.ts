@@ -1,6 +1,6 @@
 // Type-only — erases at compile, so the catalog DATA no longer rides in the
 // bundle; it is fetched from GET /catalog/* and cached instead.
-import type { CatalogSpell, Monster } from '@tormenta20/t20-data'
+import type { CatalogItem, CatalogSpell, Monster } from '@tormenta20/t20-data'
 
 export type User = {
   id: number
@@ -511,6 +511,7 @@ export const api = {
     spells: () =>
       request<Record<string, CatalogSpell>>('/catalog/spells'),
     bestiary: () => request<Monster[]>('/catalog/bestiary'),
+    items: () => request<CatalogItem[]>('/catalog/items'),
   },
   characters: {
     options: () => request<CharacterOptions>('/characters/options'),

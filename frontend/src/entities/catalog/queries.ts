@@ -17,3 +17,9 @@ export const bestiaryCatalogQueryOptions = queryOptions({
   queryFn: api.catalog.bestiary,
   staleTime: Number.POSITIVE_INFINITY,
 })
+
+export const itemCatalogQueryOptions = queryOptions({
+  queryKey: ['catalog', 'items'] as const,
+  queryFn: api.catalog.items,
+  staleTime: Number.POSITIVE_INFINITY,
+})
