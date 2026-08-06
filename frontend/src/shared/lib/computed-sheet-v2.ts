@@ -79,6 +79,9 @@ export type ComputedSheetV2 = {
   attributes: Record<AttributeKey, AttributeBreakdown>
   pmLimit: ValueBreakdown
   bestBaseSpellCd: number | null
+  /** Spell save CD per casting attribute (p171) — a spell row picks the CD for
+   *  any of its applicable classes without re-deriving. */
+  spellCdByAttribute: Record<AttributeKey, number>
   spellDCBonus: TotalContribs
   pmCostMod: TotalContribs
   /** {k:attack|damage, scope:all} globals — added onto every weapon/attack. */

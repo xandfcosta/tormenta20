@@ -79,6 +79,17 @@ func bestBaseSpellCd(ch Character, e ItemEffects) *int {
 	return best
 }
 
+// spellCdByAttribute ports derived.ts computeBestCd's per-class CD: the spell
+// save CD keyed by casting attribute (10 + ½ nível + FINAL attr mod), so a spell
+// row can pick the CD for any of its applicable classes without re-deriving.
+func spellCdByAttribute(ch Character, e ItemEffects) map[string]int {
+	out := make(map[string]int, len(AttributeKeys))
+	for _, a := range AttributeKeys {
+		out[a] = spellSaveDc(ch.Level, effectiveAttribute(ch, a, e))
+	}
+	return out
+}
+
 // spellDCBonus ports derived.ts: item spellDC bonus + contributions.
 func spellDCBonus(e ItemEffects) TotalContribs {
 	return totalContribsFor(e, ModifierTarget{K: "spellDC"})

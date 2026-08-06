@@ -3,8 +3,8 @@ import { BookOpen, Plus, Search } from 'lucide-react'
 import {
   SPELL_SCHOOLS,
   SPELLCASTER_CLASSES,
+  type AttributeKey,
   type CatalogSpell,
-  type ItemEffects,
   type SpellCircle,
   type SpellClassName,
   type SpellSchool,
@@ -22,7 +22,7 @@ import {
 import { Input } from '@/shared/ui/input'
 import { VirtualList } from '@/shared/ui/virtual-list'
 import type { Character, CharacterSpell } from '@/shared/api/api'
-import { useCharacterEffects } from '@/entities/character/derived'
+import { useComputedSheet } from '@/entities/character/computed-sheet'
 import { grantedSpells } from '@/entities/character/granted-spells'
 import {
   accentStrong,
@@ -46,9 +46,9 @@ const CIRCLES: readonly SpellCircle[] = [0, 1, 2, 3, 4, 5]
  * `character.spells`.
  */
 export function SpellbookPanel({ character }: { character: Character }) {
-  // Computed once for the whole grimoire — every SpellRow needs the item/race
-  // effects to show the same final-attribute CD as the sheet's "CD Magia" box.
-  const effects = useCharacterEffects(character)
+  // Computed once for the whole grimoire — every SpellRow reads the same
+  // per-attribute CD map the sheet's "CD Magia" box uses.
+  const spellCdByAttribute = useComputedSheet(character).spellCdByAttribute
   const casterClasses = useMemo(
     () =>
       character.classes
@@ -107,7 +107,7 @@ export function SpellbookPanel({ character }: { character: Character }) {
             character={character}
             casterClasses={casterClasses}
             learnedById={learnedById}
-            effects={effects}
+            spellCdByAttribute={spellCdByAttribute}
           />
         )}
       </div>
@@ -124,7 +124,7 @@ export function SpellbookPanel({ character }: { character: Character }) {
               character={character}
               casterClasses={casterClasses}
               learned={learnedById.get(g.spell.id) ?? null}
-              effects={effects}
+              spellCdByAttribute={spellCdByAttribute}
               granted={{ sourcePower: g.sourcePower, keyAttribute: g.keyAttribute }}
             />
           ))}
@@ -153,7 +153,7 @@ export function SpellbookPanel({ character }: { character: Character }) {
               character={character}
               casterClasses={casterClasses}
               learned={learnedById.get(spell.id) ?? null}
-              effects={effects}
+              spellCdByAttribute={spellCdByAttribute}
             />
           )}
         />
@@ -171,12 +171,12 @@ function LearnSpellDialog({
   character,
   casterClasses,
   learnedById,
-  effects,
+  spellCdByAttribute,
 }: {
   character: Character
   casterClasses: SpellcasterClass[]
   learnedById: Map<string, CharacterSpell>
-  effects: ItemEffects
+  spellCdByAttribute: Record<AttributeKey, number>
 }) {
   const [query, setQuery] = useState('')
   const [circle, setCircle] = useState<SpellCircle | 'all'>('all')
@@ -301,7 +301,7 @@ function LearnSpellDialog({
                 character={character}
                 casterClasses={casterClasses}
                 learned={learnedById.get(spell.id) ?? null}
-                effects={effects}
+                spellCdByAttribute={spellCdByAttribute}
               />
             )}
           />

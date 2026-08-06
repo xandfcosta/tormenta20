@@ -74,8 +74,12 @@ type ComputedSheetV2 struct {
 	Attributes      map[string]AttributeBreakdown `json:"attributes"`
 	PmLimit         ValueBreakdown                `json:"pmLimit"`
 	BestBaseSpellCd *int                          `json:"bestBaseSpellCd"`
-	SpellDCBonus    TotalContribs                 `json:"spellDCBonus"`
-	PmCostMod       TotalContribs                 `json:"pmCostMod"`
+	// SpellCdByAttribute is the spell save CD keyed by casting attribute (p171),
+	// so a spell row can pick the CD for any of its applicable classes without
+	// re-deriving (derived.ts computeBestCd).
+	SpellCdByAttribute map[string]int `json:"spellCdByAttribute"`
+	SpellDCBonus       TotalContribs  `json:"spellDCBonus"`
+	PmCostMod          TotalContribs  `json:"pmCostMod"`
 	// AttackAll/DamageAll are the {k:attack|damage, scope:all} globals (Fúria,
 	// Instinto Selvagem…) — the combat HUD adds them onto every weapon/attack.
 	AttackAll       TotalContribs `json:"attackAll"`
@@ -102,20 +106,21 @@ func (c *Catalogs) ComputeSheetV2(ch Character, activeConditionals map[string]bo
 	}
 
 	return ComputedSheetV2{
-		Defense:         defenseBreakdown(ch, effects),
-		Displacement:    displacementBreakdown(ch, effects),
-		FlySpeed:        flySpeedTotal(effects),
-		InventorySlots:  inventorySlotsTotal(ch, effects),
-		Attributes:      attrs,
-		PmLimit:         pmLimitBreakdown(ch, effects),
-		BestBaseSpellCd: bestBaseSpellCd(ch, effects),
-		SpellDCBonus:    spellDCBonus(effects),
-		PmCostMod:       pmCostMod(effects),
-		AttackAll:       totalContribsFor(effects, ModifierTarget{K: "attack", Scope: "all"}),
-		DamageAll:       totalContribsFor(effects, ModifierTarget{K: "damage", Scope: "all"}),
-		DamageReduction: characterDamageReduction(ch, effects),
-		TempHpFuria:     tempHpFromPowers(ch, effects, true),
-		Expertises:      expertises,
+		Defense:            defenseBreakdown(ch, effects),
+		Displacement:       displacementBreakdown(ch, effects),
+		FlySpeed:           flySpeedTotal(effects),
+		InventorySlots:     inventorySlotsTotal(ch, effects),
+		Attributes:         attrs,
+		PmLimit:            pmLimitBreakdown(ch, effects),
+		BestBaseSpellCd:    bestBaseSpellCd(ch, effects),
+		SpellCdByAttribute: spellCdByAttribute(ch, effects),
+		SpellDCBonus:       spellDCBonus(effects),
+		PmCostMod:          pmCostMod(effects),
+		AttackAll:          totalContribsFor(effects, ModifierTarget{K: "attack", Scope: "all"}),
+		DamageAll:          totalContribsFor(effects, ModifierTarget{K: "damage", Scope: "all"}),
+		DamageReduction:    characterDamageReduction(ch, effects),
+		TempHpFuria:        tempHpFromPowers(ch, effects, true),
+		Expertises:         expertises,
 	}
 }
 

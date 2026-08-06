@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { SPELL_CATALOG } from '@tormenta20/t20-data'
 import type { Character, CharacterSpell } from '@/shared/api/api'
-import { characterEffects } from '@/entities/character/derived'
+import { computedSheetFor } from '@/entities/character/computed-sheet'
 import { SpellRow } from './spell-row'
 
 // Named fake — full Character shape with neutral defaults; tests override
@@ -78,7 +78,7 @@ describe('SpellRow — Conjurar sempre visível', () => {
         character={character}
         casterClasses={['Arcanista']}
         learned={character.spells[0]}
-        effects={characterEffects(character)}
+        spellCdByAttribute={computedSheetFor(character).spellCdByAttribute}
         />,
     )
     // Collapsed: expanded-only content is absent, but the cast trigger shows.
@@ -97,7 +97,7 @@ describe('SpellRow — Conjurar sempre visível', () => {
         character={character}
         casterClasses={['Arcanista']}
         learned={character.spells[0]}
-        effects={characterEffects(character)}
+        spellCdByAttribute={computedSheetFor(character).spellCdByAttribute}
         />,
     )
     fireEvent.click(
@@ -116,7 +116,7 @@ describe('SpellRow — Conjurar sempre visível', () => {
         character={character}
         casterClasses={['Arcanista']}
         learned={null}
-        effects={characterEffects(character)}
+        spellCdByAttribute={computedSheetFor(character).spellCdByAttribute}
         />,
     )
     expect(
@@ -137,7 +137,7 @@ describe('SpellRow — Conjurar sempre visível', () => {
         character={character}
         casterClasses={['Arcanista']}
         learned={character.spells[0]}
-        effects={characterEffects(character)}
+        spellCdByAttribute={computedSheetFor(character).spellCdByAttribute}
         />,
     )
     expect(
@@ -154,7 +154,7 @@ describe('SpellRow — Conjurar sempre visível', () => {
         character={character}
         casterClasses={['Arcanista']}
         learned={character.spells[0]}
-        effects={characterEffects(character)}
+        spellCdByAttribute={computedSheetFor(character).spellCdByAttribute}
         />,
     )
     // Radix's DialogTrigger (Conjurar) also exposes aria-expanded, so pick

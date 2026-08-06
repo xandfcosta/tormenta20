@@ -603,6 +603,14 @@
       "contributions": []
     },
     "bestBaseSpellCd": 19,
+    "spellCdByAttribute": {
+      "strength": 18,
+      "dexterity": 16,
+      "constitution": 18,
+      "intelligence": 16,
+      "wisdom": 19,
+      "charisma": 20
+    },
     "spellDCBonus": {
       "total": 0,
       "contributions": []

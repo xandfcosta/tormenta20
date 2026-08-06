@@ -1,4 +1,9 @@
-import { type AttributeKey, type ItemEffects, statFor } from '@tormenta20/t20-data'
+import {
+  type AttributeKey,
+  type ItemEffects,
+  spellSaveDc,
+  statFor,
+} from '@tormenta20/t20-data'
 import {
   areEngineCatalogsPrimed,
   computeSheetV2 as engineComputeSheetV2,
@@ -73,6 +78,12 @@ export function assembleSheetV2(char: Character, effects: ItemEffects): Computed
     attributes,
     pmLimit: pmLimitTotal(char, effects),
     bestBaseSpellCd: bestBaseSpellCd(char, effects),
+    spellCdByAttribute: Object.fromEntries(
+      ATTRIBUTE_KEYS.map((a) => [
+        a,
+        spellSaveDc(char.level, attributeTotal(char, a, effects)),
+      ]),
+    ) as Record<AttributeKey, number>,
     spellDCBonus: spellDCBonus(effects),
     pmCostMod: pmCostMod(effects),
     attackAll: toTotalContribs(statFor(effects, { k: 'attack', scope: 'all' })),

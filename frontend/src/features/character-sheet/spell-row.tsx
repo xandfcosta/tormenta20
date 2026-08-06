@@ -7,12 +7,10 @@ import {
   SPELL_BASE_PM_COST,
   firstErrorMessage,
   highestCircleAtLevel,
-  spellSaveDc,
   validateLearnSpell,
   validateSpellLearned,
   type AttributeKey,
   type CatalogSpell,
-  type ItemEffects,
   type SpellCircle,
   type SpellcasterClass,
 } from '@tormenta20/t20-data'
@@ -22,7 +20,6 @@ import { Button } from '@/shared/ui/button'
 import type { Character, CharacterSpell } from '@/shared/api/api'
 import { api } from '@/shared/api/api'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
-import { attributeTotal } from '@/entities/character/derived'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { accentStrong, dimText, hoverRow } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
@@ -52,14 +49,15 @@ export function SpellRow({
   character,
   casterClasses,
   learned,
-  effects,
+  spellCdByAttribute,
   granted,
 }: {
   spell: CatalogSpell
   character: Character
   casterClasses: readonly SpellcasterClass[]
   learned: CharacterSpell | null
-  effects: ItemEffects
+  /** Spell save CD per casting attribute, from the computed sheet (p171). */
+  spellCdByAttribute: Record<AttributeKey, number>
   granted?: GrantedSpellMeta
 }) {
   const [open, setOpen] = useState(false)
@@ -76,11 +74,8 @@ export function SpellRow({
       ? { id: -1, catalogSpellId: spell.id, prepared: true, learnedAt: '' }
       : learned
   const bestCd = granted
-    ? spellSaveDc(
-        character.level,
-        attributeTotal(character, granted.keyAttribute, effects),
-      )
-    : computeBestCd(character, applicableClasses, effects)
+    ? spellCdByAttribute[granted.keyAttribute]
+    : computeBestCd(applicableClasses, spellCdByAttribute)
   const cast = highestCastableCircle(character, applicableClasses)
   const canCast = granted ? true : spell.circle <= cast
 
@@ -383,25 +378,20 @@ function Stat({ label, value }: { label: string; value: string | number }) {
 }
 
 /**
- * Best CD among the classes able to cast THIS spell. Uses the FINAL key
- * attribute (attributeTotal — race/item bonuses in), matching the sheet's
- * "CD Magia" box; the raw stored attribute understated the row CD
- * (Necromante Osteon: row showed 21, sheet 22). PDF p171.
+ * Best CD among the classes able to cast THIS spell — picks each class's casting
+ * attribute out of the sheet's per-attribute CD map (final key attribute,
+ * race/item bonuses in), matching the "CD Magia" box. PDF p171.
  */
 function computeBestCd(
-  character: Character,
   applicableClasses: readonly SpellcasterClass[],
-  effects: ItemEffects,
+  spellCdByAttribute: Record<AttributeKey, number>,
 ): number | null {
   if (applicableClasses.length === 0) return null
   let best = -Infinity
   for (const c of applicableClasses) {
     const attr = CLASS_SPELLCASTING_ATTRIBUTE[c]
     if (!attr) continue
-    const dc = spellSaveDc(
-      character.level,
-      attributeTotal(character, attr, effects),
-    )
+    const dc = spellCdByAttribute[attr]
     if (dc > best) best = dc
   }
   return best === -Infinity ? null : best
