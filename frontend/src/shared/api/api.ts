@@ -1,3 +1,7 @@
+// Type-only — erases at compile, so the spell catalog DATA no longer rides in
+// the bundle; it is fetched from GET /catalog/spells and cached instead.
+import type { CatalogSpell } from '@tormenta20/t20-data'
+
 export type User = {
   id: number
   email: string
@@ -501,6 +505,11 @@ export const api = {
   },
   users: {
     list: () => request<User[]>('/users'),
+  },
+  catalog: {
+    // Static rulebook reference; served id-keyed, cached hard (staleTime ∞).
+    spells: () =>
+      request<Record<string, CatalogSpell>>('/catalog/spells'),
   },
   characters: {
     options: () => request<CharacterOptions>('/characters/options'),
