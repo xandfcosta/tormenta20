@@ -1,0 +1,282 @@
+{
+  "level": 9,
+  "className": "Arcanista",
+  "attributes": {
+    "strength": {
+      "base": 0,
+      "raceMod": 0,
+      "total": 0
+    },
+    "dexterity": {
+      "base": 3,
+      "raceMod": 0,
+      "total": 3
+    },
+    "constitution": {
+      "base": 2,
+      "raceMod": 0,
+      "total": 2
+    },
+    "intelligence": {
+      "base": 4,
+      "raceMod": 1,
+      "total": 5
+    },
+    "wisdom": {
+      "base": 2,
+      "raceMod": -1,
+      "total": 1
+    },
+    "charisma": {
+      "base": 3,
+      "raceMod": 2,
+      "total": 5
+    }
+  },
+  "vitals": {
+    "pvMax": 42,
+    "pmMax": 64,
+    "pvCurrent": 42,
+    "pmCurrent": 39
+  },
+  "defense": {
+    "base": 10,
+    "attribute": 3,
+    "armor": 0,
+    "shield": 0,
+    "total": 13
+  },
+  "saves": {
+    "fortitude": 6,
+    "reflexos": 7,
+    "vontade": 5
+  },
+  "skills": {
+    "acrobacia": {
+      "total": 3,
+      "trained": false,
+      "keyAttribute": "dexterity",
+      "cannotUse": false,
+      "armorPenaltyApplied": 0
+    },
+    "adestramento": {
+      "total": 5,
+      "trained": false,
+      "keyAttribute": "charisma",
+      "cannotUse": false,
+      "armorPenaltyApplied": 0
+    },
+    "atletismo": {
+      "total": 6,
+      "trained": true,
+      "keyAttribute": "strength",
+      "cannotUse": false,
+      "armorPenaltyApplied": 0
+    },
+    "atuacao": {
+      "total": 5,
+      "trained": false,
+      "keyAttribute": "charisma",
+      "cannotUse": false,
+      "armorPenaltyApplied": 0
+    },
+    "cavalgar": {
+      "total": 3,
+      "trained": false,
+      "keyAttribute": "dexterity",
+      "cannotUse": false,
+      "armorPenaltyApplied": 0
+    },
+    "conhecimento": {
+      "total": 5,
+      "trained": false,
+      "keyAttribute": "intelligence",
+      "cannotUse": true,
+      "armorPenaltyApplied": 0
+    },
+    "cura": {
+      "total": 1,
+      "trained": false,
+      "keyAttribute": "wisdom",
+      "cannotUse": false,
+      "armorPenaltyApplied": 0
+    },
+    "diplomacia": {
+      "total": 5,
+      "trained": false,
+      "keyAttribute": "charisma",
+      "cannotUse": false,
+      "armorPenaltyApplied": 0
+    },
+    "enganacao": {
+      "total": 5,
+      "trained": false,
+      "keyAttribute": "charisma",
+      "cannotUse": false,
+      "armorPenaltyApplied": 0
+    },
+    "fortitude": {
+      "total": 8,
+      "trained": true,
+      "keyAttribute": "constitution",
+      "cannotUse": false,
+      "armorPenaltyApplied": 0
+    },
+    "furtividade": {
+      "total": 3,
+      "trained": false,
+      "keyAttribute": "dexterity",
+      "cannotUse": false,
+      "armorPenaltyApplied": 0
+    },
+    "guerra": {
+      "total": 5,
+      "trained": false,
+      "keyAttribute": "intelligence",
+      "cannotUse": true,
+      "armorPenaltyApplied": 0
+    },
+    "iniciativa": {
+      "total": 3,
+      "trained": false,
+      "keyAttribute": "dexterity",
+      "cannotUse": false,
+      "armorPenaltyApplied": 0
+    },
+    "intimidacao": {
+      "total": 11,
+      "trained": true,
+      "keyAttribute": "charisma",
+      "cannotUse": false,
+      "armorPenaltyApplied": 0
+    },
+    "intuicao": {
+      "total": 1,
+      "trained": false,
+      "keyAttribute": "wisdom",
+      "cannotUse": false,
+      "armorPenaltyApplied": 0
+    },
+    "investigacao": {
+      "total": 11,
+      "trained": true,
+      "keyAttribute": "intelligence",
+      "cannotUse": false,
+      "armorPenaltyApplied": 0
+    },
+    "jogatina": {
+      "total": 5,
+      "trained": false,
+      "keyAttribute": "charisma",
+      "cannotUse": true,
+      "armorPenaltyApplied": 0
+    },
+    "ladinagem": {
+      "total": 3,
+      "trained": false,
+      "keyAttribute": "dexterity",
+      "cannotUse": true,
+      "armorPenaltyApplied": 0
+    },
+    "luta": {
+      "total": 6,
+      "trained": true,
+      "keyAttribute": "strength",
+      "cannotUse": false,
+      "armorPenaltyApplied": 0
+    },
+    "misticismo": {
+      "total": 11,
+      "trained": true,
+      "keyAttribute": "intelligence",
+      "cannotUse": false,
+      "armorPenaltyApplied": 0
+    },
+    "nobreza": {
+      "total": 5,
+      "trained": false,
+      "keyAttribute": "intelligence",
+      "cannotUse": true,
+      "armorPenaltyApplied": 0
+    },
+    "oficio": {
+      "total": 5,
+      "trained": false,
+      "keyAttribute": "intelligence",
+      "cannotUse": true,
+      "armorPenaltyApplied": 0
+    },
+    "percepcao": {
+      "total": 7,
+      "trained": true,
+      "keyAttribute": "wisdom",
+      "cannotUse": false,
+      "armorPenaltyApplied": 0
+    },
+    "pilotagem": {
+      "total": 3,
+      "trained": false,
+      "keyAttribute": "dexterity",
+      "cannotUse": true,
+      "armorPenaltyApplied": 0
+    },
+    "pontaria": {
+      "total": 9,
+      "trained": true,
+      "keyAttribute": "dexterity",
+      "cannotUse": false,
+      "armorPenaltyApplied": 0
+    },
+    "reflexos": {
+      "total": 9,
+      "trained": true,
+      "keyAttribute": "dexterity",
+      "cannotUse": false,
+      "armorPenaltyApplied": 0
+    },
+    "religiao": {
+      "total": 1,
+      "trained": false,
+      "keyAttribute": "wisdom",
+      "cannotUse": true,
+      "armorPenaltyApplied": 0
+    },
+    "sobrevivencia": {
+      "total": 1,
+      "trained": false,
+      "keyAttribute": "wisdom",
+      "cannotUse": false,
+      "armorPenaltyApplied": 0
+    },
+    "vontade": {
+      "total": 7,
+      "trained": true,
+      "keyAttribute": "wisdom",
+      "cannotUse": false,
+      "armorPenaltyApplied": 0
+    }
+  },
+  "attacks": {
+    "mainHand": {
+      "weaponName": "Adaga",
+      "skill": "luta",
+      "attackTotal": 6,
+      "damageDice": "1d4",
+      "damageAttributeBonus": 0,
+      "damageType": "perfuracao",
+      "critRange": 19,
+      "critMult": 2,
+      "hand": "light",
+      "purpose": "melee"
+    },
+    "offHand": null
+  },
+  "conditions": [],
+  "buffs": {
+    "totals": {},
+    "contributions": []
+  },
+  "deslocamento": 9,
+  "tamanho": "Médio",
+  "warnings": []
+}

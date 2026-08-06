@@ -1,0 +1,65 @@
+{
+  "level": 11,
+  "className": "Paladino",
+  "classes": [
+    {
+      "className": "Paladino",
+      "level": 11
+    }
+  ],
+  "raceId": "suraggel",
+  "raceFloatingPicks": [],
+  "raceAscendencia": "aggelus",
+  "additionalRaces": [],
+  "baseAttributes": {
+    "strength": 3,
+    "dexterity": 1,
+    "constitution": 3,
+    "intelligence": 1,
+    "wisdom": 2,
+    "charisma": 4
+  },
+  "currentPv": 89,
+  "currentPm": 38,
+  "trainedSkills": [
+    "atletismo",
+    "fortitude",
+    "intimidacao",
+    "investigacao",
+    "luta",
+    "misticismo",
+    "percepcao",
+    "pontaria",
+    "reflexos",
+    "vontade"
+  ],
+  "equipment": {
+    "armor": {
+      "name": "Armadura completa",
+      "defense": 10,
+      "penalty": -5,
+      "heavy": true
+    },
+    "shield": {
+      "name": "Escudo pesado",
+      "defense": 2,
+      "penalty": -2,
+      "heavy": true
+    },
+    "mainHand": {
+      "name": "Machado de batalha",
+      "hand": "one",
+      "purpose": "melee",
+      "damage": "1d8",
+      "critRange": 20,
+      "critMult": 3,
+      "damageType": "corte"
+    }
+  },
+  "origin": "Aristocrata",
+  "powerIds": [],
+  "originChoices": [],
+  "raceAbilityChoices": [],
+  "classChoices": {},
+  "activeConditions": []
+}

@@ -1,0 +1,47 @@
+{
+  "level": 2,
+  "className": "Ladino",
+  "classes": [
+    {
+      "className": "Ladino",
+      "level": 2
+    }
+  ],
+  "raceId": "silfide",
+  "raceFloatingPicks": [],
+  "additionalRaces": [],
+  "baseAttributes": {
+    "strength": 1,
+    "dexterity": 4,
+    "constitution": 2,
+    "intelligence": 2,
+    "wisdom": 2,
+    "charisma": 1
+  },
+  "currentPv": 19,
+  "currentPm": 8,
+  "trainedSkills": [],
+  "equipment": {
+    "mainHand": {
+      "name": "Espada curta",
+      "hand": "light",
+      "purpose": "melee",
+      "damage": "1d6",
+      "critRange": 19,
+      "critMult": 2,
+      "damageType": "perfuracao"
+    },
+    "armor": {
+      "name": "Armadura de couro",
+      "defense": 2,
+      "penalty": 0,
+      "heavy": false
+    }
+  },
+  "origin": "Batedor",
+  "powerIds": [],
+  "originChoices": [],
+  "raceAbilityChoices": [],
+  "classChoices": {},
+  "activeConditions": []
+}

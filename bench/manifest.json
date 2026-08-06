@@ -1,0 +1,82 @@
+[
+  {
+    "slug": "tanque-placas-nv10",
+    "name": "Tanque Placas Nv10",
+    "level": 10
+  },
+  {
+    "slug": "curandeira-divina-nv8",
+    "name": "Curandeira Divina Nv8",
+    "level": 8
+  },
+  {
+    "slug": "necromante-nv12-magias",
+    "name": "Necromante Nv12 Magias",
+    "level": 12
+  },
+  {
+    "slug": "druida-natureza-nv9",
+    "name": "Druida Natureza Nv9",
+    "level": 9
+  },
+  {
+    "slug": "multiclasse-guer-arc-nv8",
+    "name": "Multiclasse Guer+Arc Nv8",
+    "level": 8
+  },
+  {
+    "slug": "paladino-sagrado-nv11",
+    "name": "Paladino Sagrado Nv11",
+    "level": 11
+  },
+  {
+    "slug": "lenda-nv20-maximo",
+    "name": "Lenda Nv20 Maximo",
+    "level": 20
+  },
+  {
+    "slug": "bardo-versatil-nv7",
+    "name": "Bardo Versátil Nv7",
+    "level": 7
+  },
+  {
+    "slug": "inventor-genial-nv6",
+    "name": "Inventor Genial Nv6",
+    "level": 6
+  },
+  {
+    "slug": "recruta-nv1-simples",
+    "name": "Recruta Nv1 Simples",
+    "level": 1
+  },
+  {
+    "slug": "batedor-nv2-simples",
+    "name": "Batedor Nv2 Simples",
+    "level": 2
+  },
+  {
+    "slug": "aprendiz-nv1-simples",
+    "name": "Aprendiz Nv1 Simples",
+    "level": 1
+  },
+  {
+    "slug": "guerreiro-veterano-nv8",
+    "name": "Guerreiro Veterano Nv8",
+    "level": 8
+  },
+  {
+    "slug": "arcanista-erudito-nv9",
+    "name": "Arcanista Erudito Nv9",
+    "level": 9
+  },
+  {
+    "slug": "paladino-sagrado-nv10",
+    "name": "Paladino Sagrado Nv10",
+    "level": 10
+  },
+  {
+    "slug": "kharvos-o-guardiao-rubro",
+    "name": "Kharvos, O Guardião Rubro",
+    "level": 7
+  }
+]

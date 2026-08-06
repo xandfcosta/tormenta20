@@ -1,0 +1,70 @@
+{
+  "level": 8,
+  "className": "Guerreiro",
+  "classes": [
+    {
+      "className": "Guerreiro",
+      "level": 4
+    },
+    {
+      "className": "Arcanista",
+      "level": 4
+    }
+  ],
+  "raceId": "humano",
+  "raceFloatingPicks": [
+    "strength",
+    "constitution",
+    "intelligence"
+  ],
+  "additionalRaces": [],
+  "baseAttributes": {
+    "strength": 3,
+    "dexterity": 2,
+    "constitution": 3,
+    "intelligence": 3,
+    "wisdom": 1,
+    "charisma": 1
+  },
+  "currentPv": 68,
+  "currentPm": 24,
+  "trainedSkills": [
+    "atletismo",
+    "fortitude",
+    "intimidacao",
+    "investigacao",
+    "luta",
+    "misticismo",
+    "percepcao",
+    "pontaria",
+    "reflexos",
+    "vontade"
+  ],
+  "equipment": {
+    "mainHand": {
+      "name": "Espada curta",
+      "hand": "light",
+      "purpose": "melee",
+      "damage": "1d6",
+      "critRange": 19,
+      "critMult": 2,
+      "damageType": "perfuracao"
+    },
+    "armor": {
+      "name": "Armadura de couro",
+      "defense": 2,
+      "penalty": 0,
+      "heavy": false
+    }
+  },
+  "origin": "Herói Camponês",
+  "powerIds": [],
+  "originChoices": [],
+  "raceAbilityChoices": [],
+  "classChoices": {
+    "Arcanista": {
+      "caminho": "feiticeiro"
+    }
+  },
+  "activeConditions": []
+}

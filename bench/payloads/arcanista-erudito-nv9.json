@@ -1,0 +1,57 @@
+{
+  "level": 9,
+  "className": "Arcanista",
+  "classes": [
+    {
+      "className": "Arcanista",
+      "level": 9
+    }
+  ],
+  "raceId": "qareen",
+  "raceFloatingPicks": [],
+  "additionalRaces": [],
+  "baseAttributes": {
+    "strength": 0,
+    "dexterity": 3,
+    "constitution": 2,
+    "intelligence": 4,
+    "wisdom": 2,
+    "charisma": 3
+  },
+  "currentPv": 42,
+  "currentPm": 39,
+  "trainedSkills": [
+    "atletismo",
+    "fortitude",
+    "intimidacao",
+    "investigacao",
+    "luta",
+    "misticismo",
+    "percepcao",
+    "pontaria",
+    "reflexos",
+    "vontade"
+  ],
+  "equipment": {
+    "mainHand": {
+      "name": "Adaga",
+      "hand": "light",
+      "purpose": "melee",
+      "damage": "1d4",
+      "critRange": 19,
+      "critMult": 2,
+      "damageType": "perfuracao"
+    }
+  },
+  "origin": "Charlatão",
+  "godPower": "Bênção do Mana",
+  "powerIds": [],
+  "originChoices": [],
+  "raceAbilityChoices": [],
+  "classChoices": {
+    "Arcanista": {
+      "caminho": "bruxo"
+    }
+  },
+  "activeConditions": []
+}

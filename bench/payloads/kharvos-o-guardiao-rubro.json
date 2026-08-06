@@ -1,0 +1,72 @@
+{
+  "level": 7,
+  "className": "Bárbaro",
+  "classes": [
+    {
+      "className": "Bárbaro",
+      "level": 7
+    }
+  ],
+  "raceId": "minotauro",
+  "raceFloatingPicks": [],
+  "additionalRaces": [
+    {
+      "raceId": "lefou",
+      "floatingPicks": []
+    }
+  ],
+  "baseAttributes": {
+    "strength": 3,
+    "dexterity": 1,
+    "constitution": 0,
+    "intelligence": -1,
+    "wisdom": 2,
+    "charisma": 2
+  },
+  "currentPv": 67,
+  "currentPm": 25,
+  "trainedSkills": [
+    "atletismo",
+    "fortitude",
+    "iniciativa",
+    "luta",
+    "percepcao",
+    "vontade"
+  ],
+  "equipment": {
+    "mainHand": {
+      "name": "Machado táurico",
+      "hand": "two",
+      "purpose": "melee",
+      "damage": "2d8",
+      "critRange": 20,
+      "critMult": 3,
+      "damageType": "corte"
+    },
+    "armor": {
+      "name": "Couraça",
+      "defense": 5,
+      "penalty": -4,
+      "heavy": false
+    }
+  },
+  "origin": "Refugiado",
+  "powerIds": [
+    "class.barbaro.alma-de-bronze",
+    "class.barbaro.destruidor",
+    "class.barbaro.golpe-poderoso",
+    "class.barbaro.pele-de-ferro",
+    "class.barbaro.totem-espiritual"
+  ],
+  "originChoices": [
+    "poder-vontade-de-ferro",
+    "origin-refugiado-unique"
+  ],
+  "raceAbilityChoices": [],
+  "classChoices": {},
+  "activeConditions": [],
+  "deformidade": {
+    "pericias": [],
+    "tormentaPower": "olhos-vermelhos"
+  }
+}
