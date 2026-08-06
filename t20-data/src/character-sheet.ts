@@ -37,6 +37,7 @@ import {
   type DeformidadeChoice,
 } from './deformidade'
 import { carismaLossFromPowers, TORMENTA_POWERS } from './tormenta'
+import { defaultVitalResolver } from './abilities/vital-resolver'
 import { collectVitalGrants } from './vital-grants'
 
 // ─── Input ───────────────────────────────────────────────────────────
@@ -742,7 +743,7 @@ function computeVitals(
     origin: input.origin,
     originChoices: input.originChoices,
     attrTotals: attrTotalsOf(attributes),
-  })
+  }, defaultVitalResolver)
   const pvMax = Math.max(0, pvBase + grants.pv)
   const pmMax = Math.max(0, pmBase + grants.pm)
   const pvCurrent = input.currentPv ?? pvMax

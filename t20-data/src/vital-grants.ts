@@ -15,16 +15,36 @@
  * still collapses to one pick.
  */
 import type { AttributeKey } from './attributes'
-import { getOrigin, getRace, raceModifiers } from './abilities/catalog'
-import {
-  classPowerModifiers,
-  type ClassChoiceSelections,
-} from './abilities/classes'
-import { getGeneralPower } from './abilities/general-powers'
-import { grantedPowerByName } from './abilities/granted-powers'
-import { originModifiers } from './abilities/origins'
+import type { ClassChoiceSelections } from './abilities/classes'
 import type { Modifier, VitalScale } from './items/types'
-import { racaById } from './racas'
+
+/**
+ * Data-lookup seam for the vital pipeline. `collectVitalGrants` orchestrates
+ * WHICH abilities a character owns; this resolver supplies the modifiers for
+ * each, decoupling the orchestration from the abilities CATALOG so the frontend
+ * can run the same pipeline against its fetched-and-cached data instead of the
+ * bundled t20-data catalog (project_front_decouple_catalog B.3). The engine
+ * passes `defaultVitalResolver` (./abilities/vital-resolver, data-backed); the
+ * front passes a cache-backed resolver. Each method returns the resolved
+ * Modifier[] (empty when the entity/power is unknown).
+ */
+export type VitalAbilitiesResolver = {
+  /** Modifiers from a race's abilities (impl bridges raceId → race + resolves). */
+  raceModifiers(raceId: string, variantChoices: ReadonlySet<string>): Modifier[]
+  /** Modifiers from the class powers owned at `level` for one class. */
+  classPowerModifiers(
+    className: string,
+    level: number,
+    chosenIds: ReadonlySet<string>,
+    choices?: ClassChoiceSelections,
+  ): Modifier[]
+  /** Modifiers from a general-power id (empty if unknown). */
+  generalPowerModifiers(id: string): Modifier[]
+  /** Modifiers from the chosen god power NAME (empty if none/unknown). */
+  godPowerModifiers(godPowerName: string): Modifier[]
+  /** Modifiers from an origin's chosen benefits. */
+  originModifiers(originId: string, choiceSet: ReadonlySet<string>): Modifier[]
+}
 
 export type VitalGrantContext = {
   level: number
@@ -71,26 +91,21 @@ export function evalVitalScale(
   return amount * (attrTotals[scale.attribute] ?? 0)
 }
 
-/**
- * `raceId` is the racas.ts slug ('anao'); the abilities catalog keys races by
- * display name ('Anão'). Bridge slug → name, tolerating an unknown slug
- * (`racaById` throws) and an abilities-name passed straight through.
- */
-function abilitiesRaceKey(raceId: string): string {
-  try {
-    return racaById(raceId).name
-  } catch {
-    return raceId
-  }
-}
-
-/** All modifiers from the abilities the character owns (any target). */
-function ownedModifiers(ctx: VitalGrantContext): Modifier[] {
+/** All modifiers from the abilities the character owns (any target), resolved
+ *  through the injected `resolver` (data- or cache-backed). */
+function ownedModifiers(
+  ctx: VitalGrantContext,
+  resolver: VitalAbilitiesResolver,
+): Modifier[] {
   const out: Modifier[] = []
   const powers = new Set(ctx.powerIds ?? [])
   if (ctx.raceId) {
-    const race = getRace(abilitiesRaceKey(ctx.raceId))
-    if (race) out.push(...raceModifiers(race, new Set(ctx.raceAbilityChoices ?? [])))
+    out.push(
+      ...resolver.raceModifiers(
+        ctx.raceId,
+        new Set(ctx.raceAbilityChoices ?? []),
+      ),
+    )
   }
   // Auto-granted class powers fold in by className+level; electives need the
   // id; caminho rows resolve via classChoices (grantedByChoice). Multiclass:
@@ -101,7 +116,7 @@ function ownedModifiers(ctx: VitalGrantContext): Modifier[] {
       : [{ className: ctx.className, level: ctx.level }]
   for (const c of classEntries) {
     out.push(
-      ...classPowerModifiers(
+      ...resolver.classPowerModifiers(
         c.className,
         c.level,
         powers,
@@ -109,17 +124,12 @@ function ownedModifiers(ctx: VitalGrantContext): Modifier[] {
       ),
     )
   }
-  for (const id of powers) {
-    const general = getGeneralPower(id)
-    if (general?.modifiers) out.push(...general.modifiers)
-  }
-  if (ctx.godPower) {
-    const granted = grantedPowerByName(ctx.godPower)
-    if (granted?.modifiers) out.push(...granted.modifiers)
-  }
+  for (const id of powers) out.push(...resolver.generalPowerModifiers(id))
+  if (ctx.godPower) out.push(...resolver.godPowerModifiers(ctx.godPower))
   if (ctx.origin) {
-    const origin = getOrigin(ctx.origin)
-    if (origin) out.push(...originModifiers(origin, new Set(ctx.originChoices ?? [])))
+    out.push(
+      ...resolver.originModifiers(ctx.origin, new Set(ctx.originChoices ?? [])),
+    )
   }
   return out
 }
@@ -131,11 +141,14 @@ function ownedModifiers(ctx: VitalGrantContext): Modifier[] {
  * Sabedoria nos pontos de mana". Distinct scales (Poder Mágico per-level +
  * caminho attribute) still stack.
  */
-export function collectVitalGrants(ctx: VitalGrantContext): VitalGrants {
+export function collectVitalGrants(
+  ctx: VitalGrantContext,
+  resolver: VitalAbilitiesResolver,
+): VitalGrants {
   let pv = 0
   let pm = 0
   const seenAttrGrants = new Set<string>()
-  for (const m of ownedModifiers(ctx)) {
+  for (const m of ownedModifiers(ctx, resolver)) {
     if (m.target.k !== 'maxPv' && m.target.k !== 'maxPm') continue
     if (m.scale?.per === 'attribute') {
       const key = `${m.target.k}:${m.scale.attribute}`

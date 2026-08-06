@@ -54,8 +54,17 @@ export type Deus = {
  * source of truth; prereq checks treat them as "not devoto of a divindade"
  * (Arma Sagrada explicitly forbids `paladino-do-bem`, for instance).
  */
-export const CULTO_PANTEAO = 'panteao'
-export const CULTO_PALADINO_DO_BEM = 'paladino-do-bem'
+// The culto sentinels + the pure devoto-picker filter live in ./devoto-options
+// (data-free) so the front can call them off its cache; the caminho tables live
+// in ./caminhos. Both re-exported here to keep this module's surface unchanged.
+export {
+  CULTO_PALADINO_DO_BEM,
+  CULTO_PANTEAO,
+  devotoOptionsIn,
+} from './devoto-options'
+export { CAMINHOS, caminhoSlotFor } from './caminhos'
+export type { CaminhoOption } from './caminhos'
+import { devotoOptionsIn } from './devoto-options'
 
 export const DEUSES: Deus[] = [
   {
@@ -300,44 +309,9 @@ export const DEUSES: Deus[] = [
   },
 ]
 
-const CULTO_PANTEAO_OPTION: Deus = {
-  id: CULTO_PANTEAO,
-  name: 'Panteão',
-  major: false,
-  paladinoEligible: false,
-  druidaEligible: false,
-}
-
-const CULTO_PALADINO_DO_BEM_OPTION: Deus = {
-  id: CULTO_PALADINO_DO_BEM,
-  name: 'Paladino do Bem',
-  major: false,
-  paladinoEligible: false,
-  druidaEligible: false,
-}
-
 export const DEUS_BY_ID: Record<string, Deus> = Object.fromEntries(
   DEUSES.map((d) => [d.id, d]),
 )
-
-/** Caminhos per class — subpath choices unlocked by class abilities. */
-export type CaminhoOption = { id: string; name: string }
-
-export const CAMINHOS: Record<string, CaminhoOption[]> = {
-  Arcanista: [
-    { id: 'bruxo', name: 'Bruxo' },
-    { id: 'feiticeiro', name: 'Feiticeiro' },
-    { id: 'mago', name: 'Mago' },
-  ],
-  Paladino: [
-    { id: 'egide-sagrada', name: 'Égide Sagrada' },
-    { id: 'montaria-sagrada', name: 'Montaria Sagrada' },
-  ],
-  Cavaleiro: [
-    { id: 'bastiao', name: 'Bastião' },
-    { id: 'montaria', name: 'Montaria' },
-  ],
-}
 
 /**
  * Per-class persisted choices keyed by className. Stored as JSON on
@@ -361,31 +335,5 @@ export type ClassChoices = Partial<Record<string, ClassChoiceBlob>>
  *  - Druida: Allihanna, Megalokk, Oceano (p61) — no non-divindade alt.
  */
 export function devotoOptionsFor(className: string): Deus[] | null {
-  switch (className) {
-    case 'Clérigo':
-      return [...DEUSES.filter((d) => d.major), CULTO_PANTEAO_OPTION]
-    case 'Paladino':
-      return [
-        ...DEUSES.filter((d) => d.paladinoEligible),
-        CULTO_PALADINO_DO_BEM_OPTION,
-      ]
-    case 'Druida':
-      return DEUSES.filter((d) => d.druidaEligible)
-    default:
-      return null
-  }
-}
-
-/**
- * Per-class caminho/subpath slot. Returns options + the class level at
- * which the caminho choice unlocks (the class's "Caminho" auto-power), or
- * null when the class has no caminho slot.
- */
-export function caminhoSlotFor(
-  className: string,
-): { options: CaminhoOption[]; minLevel: number } | null {
-  const options = CAMINHOS[className]
-  if (!options) return null
-  const minLevel = className === 'Arcanista' ? 1 : 5
-  return { options, minLevel }
+  return devotoOptionsIn(DEUSES, className)
 }

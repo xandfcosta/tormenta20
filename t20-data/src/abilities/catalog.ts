@@ -1,4 +1,3 @@
-import type { Modifier } from '../items/types'
 import { CLASS_POWERS_CATALOG } from './classes/index'
 import { ORIGINS_CATALOG } from './origins'
 import { RACES_CATALOG } from './races'
@@ -12,19 +11,25 @@ import type {
 
 /**
  * Catalog assembly + lookup helpers. Race entries live in `./races`, origin
- * entries in `./origins`, class powers under `./classes/`.
+ * entries in `./origins`, class powers under `./classes/`. The pure modifier
+ * builders `raceModifiers`/`originModifiers` live in `./race-logic` /
+ * `./origin-logic` (data-free) so the front can call them off its cache; they
+ * are re-exported here to keep this hub's public surface unchanged.
  */
 export { RACES_CATALOG } from './races'
+export { raceModifiers } from './race-logic'
 export { ORIGINS_CATALOG, originModifiers } from './origins'
 export {
   CLASS_POWERS_CATALOG,
   CLASS_POWER_SLOTS,
   classPowerModifiers,
+  classPowerModifiersIn,
   ownedClassPowers,
+  ownedClassPowersIn,
   slotsForClassLevel,
   unlockedKinds,
 } from './classes/index'
-export type { ClassPowerSlot } from './classes/index'
+export type { ClassChoiceSelections, ClassPowerSlot } from './classes/index'
 
 const racesById = new Map<string, RaceDefinition>(
   RACES_CATALOG.map((r) => [r.id, r]),
@@ -77,34 +82,4 @@ export function getOriginBenefit(benefitId: string): OriginBenefit | undefined {
     if (origin.poderUnico.id === benefitId) return origin.poderUnico
   }
   return undefined
-}
-
-/**
- * Build the list of Modifier[] contributed by a race definition + variant
- * choices for the player. Race attribute bonuses are emitted as `attribute`
- * target modifiers so they flow through the standard engine. Abilities with
- * variants only contribute modifiers from the chosen variant id.
- */
-export function raceModifiers(
-  race: RaceDefinition,
-  variantChoices: ReadonlySet<string>,
-): Modifier[] {
-  const out: Modifier[] = []
-  for (const [attr, amount] of Object.entries(race.attributeBonuses)) {
-    if (typeof amount !== 'number' || amount === 0) continue
-    out.push({
-      target: { k: 'attribute', name: attr as never },
-      amount,
-      bonusType: 'untyped',
-      note: race.name,
-    })
-  }
-  for (const ability of race.abilities) {
-    if (ability.modifiers) out.push(...ability.modifiers)
-    if (ability.variants) {
-      const chosen = ability.variants.find((v) => variantChoices.has(v.id))
-      if (chosen?.modifiers) out.push(...chosen.modifiers)
-    }
-  }
-  return out
 }

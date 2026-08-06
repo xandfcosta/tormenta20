@@ -15,7 +15,9 @@
  */
 import type { ExpertiseName } from './expertises'
 import { EXPERTISE_NAMES } from './expertises'
-import { RACES_CATALOG } from './abilities/races'
+// raceWithDeformidade reads RACES_CATALOG — moved to ./deformidade-race so this
+// module tree-shakes free of the abilities catalog in the front (B.3).
+export { raceWithDeformidade } from './deformidade-race'
 import type { SkillId } from './skill-index'
 import { SKILL_IDS } from './skill-index'
 import {
@@ -120,14 +122,4 @@ export function deformidadeSkillIds(
     out.push(id)
   }
   return out
-}
-
-/** First race (abilities-catalog name) that owns the Deformidade ability. */
-export function raceWithDeformidade(
-  raceNames: readonly string[],
-): string | undefined {
-  const owners = new Set(
-    RACES_CATALOG.filter((r) => r.hasDeformidade === true).map((r) => r.name),
-  )
-  return raceNames.find((n) => owners.has(n))
 }

@@ -13,79 +13,27 @@ import { LUTADOR_POWERS } from './lutador'
 import { NOBRE_POWERS } from './nobre'
 import { PALADINO_POWERS } from './paladino'
 import type { Modifier } from '../../items/types'
-import type { PowerKind } from '../general-powers'
 import type { ClassPower } from '../types'
+import {
+  type ClassChoiceSelections,
+  classPowerModifiersIn,
+  ownedClassPowersIn,
+} from './ownership'
 
-export type ClassPowerSlot = {
-  /** Class level at which this slot opens. */
-  level: number
-  /** Pools the player may draw from at this slot. */
-  kinds: PowerKind[]
-}
-
-/**
- * Slot tracks per class (PDF Cap 1 — Tabela 1-5 a 1-18). Per PDF p33:
- * "Todas as classes possuem uma habilidade 'Poder' (Poder de Arcanista,
- * Poder de Bárbaro...) que permite escolher um poder de uma lista... Você
- * sempre pode substituir um poder de classe por um poder geral (veja no
- * Capítulo 2)."
- *
- * For all 14 classes the slot opens every level from L2 to L20 (19 slots
- * total). Bardo also has a L2 auto power "Eclético" that doesn't consume a
- * slot. `kinds` is the className-slug — general-power pools live separately
- * and aren't filtered here (the catalog is empty until Cap 2 review).
- */
-function levelsForAllClasses(): number[] {
-  return [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
-}
-
-function classSlots(kind: PowerKind): ClassPowerSlot[] {
-  return levelsForAllClasses().map((level) => ({ level, kinds: [kind] }))
-}
-
-export const CLASS_POWER_SLOTS: Record<string, ClassPowerSlot[]> = {
-  Arcanista: classSlots('arcanista'),
-  'Bárbaro': classSlots('barbaro'),
-  Bardo: classSlots('bardo'),
-  Bucaneiro: classSlots('bucaneiro'),
-  'Caçador': classSlots('cacador'),
-  Cavaleiro: classSlots('cavaleiro'),
-  'Clérigo': classSlots('clerigo'),
-  Druida: classSlots('druida'),
-  Guerreiro: classSlots('guerreiro'),
-  Inventor: classSlots('inventor'),
-  Ladino: classSlots('ladino'),
-  Lutador: classSlots('lutador'),
-  Nobre: classSlots('nobre'),
-  Paladino: classSlots('paladino'),
-}
-
-/**
- * How many power slots the player has *earned* (level ≤ classLevel). Used by
- * the UI to enforce "Poderes: X de N".
- */
-export function slotsForClassLevel(
-  className: string,
-  classLevel: number,
-): ClassPowerSlot[] {
-  const all = CLASS_POWER_SLOTS[className]
-  if (!all) return []
-  return all.filter((s) => s.level <= classLevel)
-}
-
-/**
- * Union of kinds across all unlocked slots — used to filter the general
- * power list shown in the picker.
- */
-export function unlockedKinds(
-  className: string,
-  classLevel: number,
-): PowerKind[] {
-  const slots = slotsForClassLevel(className, classLevel)
-  const set = new Set<PowerKind>()
-  for (const slot of slots) for (const k of slot.kinds) set.add(k)
-  return [...set]
-}
+// Slot tables + ownership rules are pure logic with no power data — they live
+// in ./slots and ./ownership so the frontend can import them without anchoring
+// CLASS_POWERS_CATALOG (project_front_decouple_catalog B.3). Re-exported here to
+// keep the classes barrel's public surface unchanged for backend/engine.
+export {
+  CLASS_POWER_SLOTS,
+  slotsForClassLevel,
+  unlockedKinds,
+} from './slots'
+export type { ClassPowerSlot } from './slots'
+// The catalog-parametrized pure rules are exported too: the frontend calls
+// `ownedClassPowersIn` with its fetched-and-cached catalog (B.3).
+export { classPowerModifiersIn, ownedClassPowersIn } from './ownership'
+export type { ClassChoiceSelections } from './ownership'
 
 /**
  * Catalog merge — one array used by the rest of the engine. Per-class files
@@ -108,34 +56,10 @@ export const CLASS_POWERS_CATALOG: ClassPower[] = [
   ...PALADINO_POWERS,
 ]
 
-/** One class's picks in Character.classChoices (per-class JSON blob). */
-export type ClassChoiceSelections = { devoto?: string; caminho?: string }
-
 /**
- * Ownership rule shared by modifiers + UI lists: auto powers by class level,
- * electives by picked id, and `grantedByChoice` rows (Caminho do Arcanista)
- * by the matching classChoices value — those cost no slot (p36).
- */
-function ownsClassPower(
-  power: ClassPower,
-  classLevel: number,
-  chosenIds: ReadonlySet<string>,
-  choices?: ClassChoiceSelections,
-): boolean {
-  if (power.grantedAtLevel !== undefined && power.grantedAtLevel <= classLevel)
-    return true
-  if (chosenIds.has(power.id)) return true
-  return (
-    power.grantedByChoice !== undefined &&
-    choices?.[power.grantedByChoice.field] === power.grantedByChoice.value
-  )
-}
-
-/**
- * Returns the union of modifiers from class powers the character actually
- * owns. Auto-granted powers (`grantedAtLevel <= classLevel`) are always
- * folded in; elective powers must be present in `chosenIds` to count;
- * `choices` resolves grantedByChoice rows (Caminho → +atributo-chave no PM).
+ * Union of modifiers from the class powers the character owns. Thin wrapper
+ * binding the engine's real CLASS_POWERS_CATALOG to the pure rule in
+ * `./ownership` (which the frontend calls with its cached catalog instead).
  */
 export function classPowerModifiers(
   className: string,
@@ -143,20 +67,18 @@ export function classPowerModifiers(
   chosenIds: ReadonlySet<string>,
   choices?: ClassChoiceSelections,
 ): Modifier[] {
-  const out: Modifier[] = []
-  for (const power of CLASS_POWERS_CATALOG) {
-    if (power.className !== className) continue
-    if (!power.modifiers) continue
-    if (!ownsClassPower(power, classLevel, chosenIds, choices)) continue
-    out.push(...power.modifiers)
-  }
-  return out
+  return classPowerModifiersIn(
+    CLASS_POWERS_CATALOG,
+    className,
+    classLevel,
+    chosenIds,
+    choices,
+  )
 }
 
 /**
- * Returns the list of class powers the character "owns" for a given class +
- * level + chosen ids (+ classChoices picks). Used by the UI to render the
- * auto-granted + elective lists.
+ * List of class powers the character "owns" for a given class + level + chosen
+ * ids (+ classChoices picks). Thin wrapper over the pure rule in `./ownership`.
  */
 export function ownedClassPowers(
   className: string,
@@ -164,9 +86,11 @@ export function ownedClassPowers(
   chosenIds: ReadonlySet<string>,
   choices?: ClassChoiceSelections,
 ): ClassPower[] {
-  return CLASS_POWERS_CATALOG.filter(
-    (power) =>
-      power.className === className &&
-      ownsClassPower(power, classLevel, chosenIds, choices),
+  return ownedClassPowersIn(
+    CLASS_POWERS_CATALOG,
+    className,
+    classLevel,
+    chosenIds,
+    choices,
   )
 }

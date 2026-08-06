@@ -1,6 +1,10 @@
 import type { Modifier } from '../items/types'
 import type { OriginBenefit, OriginDefinition } from './types'
 
+// originModifiers moved to ./origin-logic (data-free) so the frontend can call
+// it without anchoring ORIGINS_CATALOG. Re-exported for the backend/engine.
+export { originModifiers } from './origin-logic'
+
 /**
  * T20 origens (PDF Cap. 1, p85+ / Tabela 1-19 p87). Each origin has a benefits
  * pool the player picks 2 from (mix of perícias and poderes). Each also has a
@@ -825,22 +829,3 @@ export const ORIGINS_CATALOG: OriginDefinition[] = [
   },
 ]
 
-/**
- * Modifiers contributed by an origin's chosen benefits. `choiceSet` is the
- * set of benefit ids the player has selected (including the poderUnico id
- * if picked). Only benefits with embedded `modifiers` contribute — perícia
- * benefits don't auto-train the expertise via the engine; the player toggles
- * trained state on the expertise panel.
- */
-export function originModifiers(
-  origin: OriginDefinition,
-  choiceSet: ReadonlySet<string>,
-): Modifier[] {
-  const out: Modifier[] = []
-  const all: OriginBenefit[] = [...origin.benefits, origin.poderUnico]
-  for (const benefit of all) {
-    if (!choiceSet.has(benefit.id)) continue
-    if (benefit.modifiers) out.push(...benefit.modifiers)
-  }
-  return out
-}

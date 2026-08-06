@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest'
+import { defaultVitalResolver } from './abilities/vital-resolver'
 import type { AttributeKey } from './attributes'
 import { computeCharacterSheet } from './character-sheet'
-import { collectVitalGrants, evalVitalScale } from './vital-grants'
+import {
+  collectVitalGrants,
+  evalVitalScale,
+  type VitalGrantContext,
+} from './vital-grants'
+
+/** Engine-side wrapper: bind the data-backed resolver (what the backend uses)
+ *  so these rule tests read as before the DI refactor (B.3). */
+const collect = (ctx: VitalGrantContext) =>
+  collectVitalGrants(ctx, defaultVitalResolver)
 
 const attrs = (
   o: Partial<Record<AttributeKey, number>> = {},
@@ -41,59 +51,59 @@ describe('evalVitalScale', () => {
 
 describe('collectVitalGrants — permanent max-pool grants', () => {
   it('Anão Duro como Pedra: +3 no 1º nível +1/nível = nível + 2 PV', () => {
-    expect(collectVitalGrants({ level: 1, className: 'Guerreiro', raceId: 'anao', attrTotals: attrs() }).pv).toBe(3)
-    expect(collectVitalGrants({ level: 5, className: 'Guerreiro', raceId: 'anao', attrTotals: attrs() }).pv).toBe(7)
+    expect(collect({ level: 1, className: 'Guerreiro', raceId: 'anao', attrTotals: attrs() }).pv).toBe(3)
+    expect(collect({ level: 5, className: 'Guerreiro', raceId: 'anao', attrTotals: attrs() }).pv).toBe(7)
   })
 
   it('Elfo Sangue Mágico: +1 PM por nível', () => {
-    expect(collectVitalGrants({ level: 8, className: 'Guerreiro', raceId: 'elfo', attrTotals: attrs() }).pm).toBe(8)
+    expect(collect({ level: 8, className: 'Guerreiro', raceId: 'elfo', attrTotals: attrs() }).pm).toBe(8)
   })
 
   it('Clérigo Magia Divina (auto): +Sabedoria no PM — sem powerIds', () => {
-    const g = collectVitalGrants({ level: 3, className: 'Clérigo', attrTotals: attrs({ wisdom: 4 }) })
+    const g = collect({ level: 3, className: 'Clérigo', attrTotals: attrs({ wisdom: 4 }) })
     expect(g.pm).toBe(4)
   })
 
   it('Paladino Abençoado (auto): +Carisma no PM', () => {
-    expect(collectVitalGrants({ level: 1, className: 'Paladino', attrTotals: attrs({ charisma: 3 }) }).pm).toBe(3)
+    expect(collect({ level: 1, className: 'Paladino', attrTotals: attrs({ charisma: 3 }) }).pm).toBe(3)
   })
 
   it('Bárbaro Totem Espiritual (elective): +Sabedoria no PM só quando escolhido', () => {
     const base = { level: 6, className: 'Bárbaro', attrTotals: attrs({ wisdom: 2 }) }
-    expect(collectVitalGrants(base).pm).toBe(0)
-    expect(collectVitalGrants({ ...base, powerIds: ['class.barbaro.totem-espiritual'] }).pm).toBe(2)
+    expect(collect(base).pm).toBe(0)
+    expect(collect({ ...base, powerIds: ['class.barbaro.totem-espiritual'] }).pm).toBe(2)
   })
 
   it('Arcanista Poder Mágico (elective): +1 PM por nível quando escolhido', () => {
     expect(
-      collectVitalGrants({ level: 7, className: 'Arcanista', powerIds: ['class.arcanista.poder-magico'], attrTotals: attrs() }).pm,
+      collect({ level: 7, className: 'Arcanista', powerIds: ['class.arcanista.poder-magico'], attrTotals: attrs() }).pm,
     ).toBe(7)
   })
 
   it('Vitalidade (poder geral): +1 PV por nível quando escolhido', () => {
     expect(
-      collectVitalGrants({ level: 6, className: 'Guerreiro', powerIds: ['vitalidade'], attrTotals: attrs() }).pv,
+      collect({ level: 6, className: 'Guerreiro', powerIds: ['vitalidade'], attrTotals: attrs() }).pv,
     ).toBe(6)
   })
 
   it('Vontade de Ferro (origem): +1 PM a cada 2 níveis quando o benefício é escolhido', () => {
     const base = { level: 10, className: 'Guerreiro', origin: 'Acólito', attrTotals: attrs() }
-    expect(collectVitalGrants(base).pm).toBe(0)
-    expect(collectVitalGrants({ ...base, originChoices: ['poder-vontade-de-ferro'] }).pm).toBe(5)
+    expect(collect(base).pm).toBe(0)
+    expect(collect({ ...base, originChoices: ['poder-vontade-de-ferro'] }).pm).toBe(5)
   })
 
   it('no race/powers/origin ⇒ zero grant', () => {
-    expect(collectVitalGrants({ level: 5, className: 'Guerreiro', attrTotals: attrs() })).toEqual({ pv: 0, pm: 0 })
+    expect(collect({ level: 5, className: 'Guerreiro', attrTotals: attrs() })).toEqual({ pv: 0, pm: 0 })
   })
 
   // "soma seu Carisma no seu total de PM" (Bardo p43) / "soma sua Sabedoria
   // no seu total de PM" (Druida p60) — same auto rule the Clérigo already had.
   it('Bardo Magias (auto): +Carisma no PM', () => {
-    expect(collectVitalGrants({ level: 2, className: 'Bardo', attrTotals: attrs({ charisma: 3 }) }).pm).toBe(3)
+    expect(collect({ level: 2, className: 'Bardo', attrTotals: attrs({ charisma: 3 }) }).pm).toBe(3)
   })
 
   it('Druida Magias (auto): +Sabedoria no PM', () => {
-    expect(collectVitalGrants({ level: 2, className: 'Druida', attrTotals: attrs({ wisdom: 4 }) }).pm).toBe(4)
+    expect(collect({ level: 2, className: 'Druida', attrTotals: attrs({ wisdom: 4 }) }).pm).toBe(4)
   })
 
   // Arcanista p36-37: "Seu atributo-chave para lançar magias é definido pelo
@@ -102,15 +112,15 @@ describe('collectVitalGrants — permanent max-pool grants', () => {
   // classChoices.caminho, not from a power slot.
   it('Arcanista caminho Mago: +Inteligência no PM via classChoices', () => {
     const base = { level: 1, className: 'Arcanista', attrTotals: attrs({ intelligence: 4, charisma: 2 }) }
-    expect(collectVitalGrants(base).pm).toBe(0)
+    expect(collect(base).pm).toBe(0)
     expect(
-      collectVitalGrants({ ...base, classChoices: { Arcanista: { caminho: 'mago' } } }).pm,
+      collect({ ...base, classChoices: { Arcanista: { caminho: 'mago' } } }).pm,
     ).toBe(4)
   })
 
   it('Arcanista caminho Bruxo: +Inteligência no PM (p37 — não Carisma)', () => {
     expect(
-      collectVitalGrants({
+      collect({
         level: 1,
         className: 'Arcanista',
         classChoices: { Arcanista: { caminho: 'bruxo' } },
@@ -121,7 +131,7 @@ describe('collectVitalGrants — permanent max-pool grants', () => {
 
   it('Arcanista caminho Feiticeiro: +Carisma no PM', () => {
     expect(
-      collectVitalGrants({
+      collect({
         level: 1,
         className: 'Arcanista',
         classChoices: { Arcanista: { caminho: 'feiticeiro' } },
@@ -131,7 +141,7 @@ describe('collectVitalGrants — permanent max-pool grants', () => {
   })
 
   it('multiclasse: grants de TODAS as classes entram (Guerreiro+Arcanista mago)', () => {
-    const g = collectVitalGrants({
+    const g = collect({
       level: 8,
       className: 'Guerreiro',
       classes: [
@@ -145,7 +155,7 @@ describe('collectVitalGrants — permanent max-pool grants', () => {
   })
 
   it('p225: Clérigo/Druida NÃO soma Sabedoria duas vezes no PM', () => {
-    const g = collectVitalGrants({
+    const g = collect({
       level: 2,
       className: 'Clérigo',
       classes: [
@@ -158,7 +168,7 @@ describe('collectVitalGrants — permanent max-pool grants', () => {
   })
 
   it('atributos DIFERENTES somam (Paladino Car + Clérigo Sab)', () => {
-    const g = collectVitalGrants({
+    const g = collect({
       level: 2,
       className: 'Paladino',
       classes: [
@@ -172,7 +182,7 @@ describe('collectVitalGrants — permanent max-pool grants', () => {
 
   it('dedupe por atributo não engole grants com scale diferente (Poder Mágico)', () => {
     // Caminho mago (+Int) + Poder Mágico (+1/nível): scales distintos, ambos valem.
-    const g = collectVitalGrants({
+    const g = collect({
       level: 5,
       className: 'Arcanista',
       classChoices: { Arcanista: { caminho: 'mago' } },
@@ -184,16 +194,16 @@ describe('collectVitalGrants — permanent max-pool grants', () => {
 
   it('Bênção do Mana (Wynna, p132): +1 PM a cada nível ímpar via godPower', () => {
     const base = { level: 7, className: 'Arcanista', attrTotals: attrs() }
-    expect(collectVitalGrants(base).pm).toBe(0)
+    expect(collect(base).pm).toBe(0)
     // Níveis ímpares até 7: 1, 3, 5, 7 → +4.
     expect(
-      collectVitalGrants({ ...base, godPower: 'Bênção do Mana' }).pm,
+      collect({ ...base, godPower: 'Bênção do Mana' }).pm,
     ).toBe(4)
   })
 
   it('godPower sem modifier mecânico (Coragem Total) não altera PV/PM', () => {
     expect(
-      collectVitalGrants({
+      collect({
         level: 5,
         className: 'Guerreiro',
         godPower: 'Coragem Total',
@@ -205,7 +215,7 @@ describe('collectVitalGrants — permanent max-pool grants', () => {
   it('classChoice como PRÉ-REQUISITO de elective não concede o poder sozinho', () => {
     // Clérigo devoto escolhido ⇒ Autoridade Eclesiástica ainda exige o slot;
     // nenhum modifier de elective pode vazar só pela escolha de devoto.
-    const g = collectVitalGrants({
+    const g = collect({
       level: 5,
       className: 'Clérigo',
       classChoices: { 'Clérigo': { devoto: 'khalmyr' } },
