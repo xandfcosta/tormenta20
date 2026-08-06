@@ -1,0 +1,68 @@
+/// <reference types="node" />
+// Dev harness: runs under vitest (Node), not shipped in the app bundle — the
+// reference pulls in the already-installed @types/node without adding node to
+// the app tsconfig's `types`.
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import type { ItemEffects } from '@tormenta20/t20-data'
+import { describe, expect, it } from 'vitest'
+import type { Character } from '@/shared/api/api'
+import fixtures from './__fixtures__/character-input-parity.json'
+import { activeItemsFor, characterEffects } from './derived'
+
+/**
+ * PARITY HARNESS (PORT-PLAN.md §3) — the TDD backbone for the Go engine port.
+ *
+ * For each of the 16 seed characters, dumps the CURRENT `derived.ts` output as
+ * the golden oracle the Go engine (engine-go) is checked against:
+ *   - `activeItems` — the collection-layer output; slice 2's target + the
+ *     resolution engine's real-data input.
+ *   - `itemEffects` — the resolution output (flags Set normalized to a sorted
+ *     array so JSON parity is order-independent, matching the Go MarshalJSON).
+ *
+ * The oracle files (`engine-go/parity/<slug>.json`) are committed. Regenerate
+ * them whenever the TS rules change, while `derived.ts` is still the reference:
+ *   GEN_ORACLE=1 pnpm --filter frontend test parity-oracle
+ */
+
+const EMPTY_CONDITIONALS: ReadonlySet<string> = new Set()
+
+/** Serializable ItemEffects: Set → sorted array, mirroring the Go MarshalJSON. */
+function normalizeEffects(e: ItemEffects) {
+  return {
+    byTarget: e.byTarget,
+    flags: [...e.flags].sort(),
+    conditional: e.conditional,
+  }
+}
+
+const oracleDir = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  '../../../../engine-go/parity',
+)
+
+const chars = fixtures as { slug: string; char: Character }[]
+
+describe('parity oracle — derived.ts golden output for the 16 seed chars', () => {
+  it('generates one oracle per seed character', () => {
+    expect(chars).toHaveLength(16)
+    const shouldWrite = !!process.env.GEN_ORACLE
+    if (shouldWrite) mkdirSync(oracleDir, { recursive: true })
+
+    for (const { slug, char } of chars) {
+      const activeItems = activeItemsFor(char)
+      const itemEffects = normalizeEffects(characterEffects(char, EMPTY_CONDITIONALS))
+      expect(Array.isArray(activeItems)).toBe(true)
+      expect(itemEffects.byTarget).toBeTypeOf('object')
+
+      if (shouldWrite) {
+        const payload = { slug, activeItems, itemEffects }
+        writeFileSync(
+          resolve(oracleDir, `${slug}.json`),
+          `${JSON.stringify(payload, null, 2)}\n`,
+        )
+      }
+    }
+  })
+})

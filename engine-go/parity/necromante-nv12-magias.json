@@ -1,0 +1,156 @@
+{
+  "slug": "necromante-nv12-magias",
+  "activeItems": [
+    {
+      "source": "Adaga",
+      "equipped": "wielded",
+      "modifiers": []
+    },
+    {
+      "source": "Bandana",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Intimidação"
+          },
+          "amount": 1,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          }
+        }
+      ]
+    },
+    {
+      "source": "Raça: Osteon",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "intelligence"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Osteon"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "wisdom"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Osteon"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "charisma"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Osteon"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "constitution"
+          },
+          "amount": -1,
+          "bonusType": "untyped",
+          "note": "Osteon"
+        }
+      ]
+    },
+    {
+      "source": "Caminho: Mago",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "maxPm"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "scale": {
+            "per": "attribute",
+            "attribute": "intelligence"
+          }
+        }
+      ]
+    }
+  ],
+  "itemEffects": {
+    "byTarget": {
+      "expertise:Intimidação": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Bandana",
+            "bonusType": "item",
+            "amount": 1
+          }
+        ]
+      },
+      "attribute:intelligence": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Osteon",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Osteon"
+          }
+        ]
+      },
+      "attribute:wisdom": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Osteon",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Osteon"
+          }
+        ]
+      },
+      "attribute:charisma": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Osteon",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Osteon"
+          }
+        ]
+      },
+      "attribute:constitution": {
+        "total": -1,
+        "contributions": [
+          {
+            "source": "Raça: Osteon",
+            "bonusType": "untyped",
+            "amount": -1,
+            "note": "Osteon"
+          }
+        ]
+      },
+      "maxPm": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Caminho: Mago",
+            "bonusType": "untyped",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    "flags": [],
+    "conditional": []
+  }
+}

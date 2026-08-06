@@ -1,0 +1,684 @@
+{
+  "slug": "lenda-nv20-maximo",
+  "activeItems": [
+    {
+      "source": "Armadura completa",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 10,
+          "bonusType": "armor",
+          "condition": {
+            "c": "vested"
+          }
+        },
+        {
+          "target": {
+            "k": "armorPenalty"
+          },
+          "amount": -5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          }
+        },
+        {
+          "target": {
+            "k": "displacement"
+          },
+          "amount": -3,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          }
+        },
+        {
+          "target": {
+            "k": "flag",
+            "name": "cannot-apply-dex-to-defense"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          }
+        },
+        {
+          "target": {
+            "k": "flag",
+            "name": "fatigue-on-sleep"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          }
+        },
+        {
+          "target": {
+            "k": "flag",
+            "name": "armadura-pesada"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          }
+        }
+      ]
+    },
+    {
+      "source": "Escudo pesado",
+      "equipped": "wielded",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 2,
+          "bonusType": "shield",
+          "condition": {
+            "c": "wielded"
+          }
+        },
+        {
+          "target": {
+            "k": "armorPenalty"
+          },
+          "amount": -2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "wielded"
+          }
+        }
+      ]
+    },
+    {
+      "source": "Machado de batalha",
+      "equipped": "wielded",
+      "modifiers": []
+    },
+    {
+      "source": "Raça: Anão",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "constitution"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "note": "Anão"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "wisdom"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Anão"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "dexterity"
+          },
+          "amount": -1,
+          "bonusType": "untyped",
+          "note": "Anão"
+        },
+        {
+          "target": {
+            "k": "maxPv"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "maxPv"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "scale": {
+            "per": "level"
+          }
+        }
+      ]
+    },
+    {
+      "source": "Baluarte +2",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 2,
+          "bonusType": "training",
+          "condition": {
+            "c": "context",
+            "note": "Baluarte — 1 PM, até o início do próximo turno"
+          }
+        },
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 2,
+          "bonusType": "training",
+          "condition": {
+            "c": "context",
+            "note": "Baluarte — 1 PM, até o início do próximo turno"
+          }
+        }
+      ]
+    },
+    {
+      "source": "Duelo +2",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attack",
+            "scope": "all"
+          },
+          "amount": 2,
+          "bonusType": "training",
+          "condition": {
+            "c": "context",
+            "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+          }
+        },
+        {
+          "target": {
+            "k": "damage",
+            "scope": "all"
+          },
+          "amount": 2,
+          "bonusType": "training",
+          "condition": {
+            "c": "context",
+            "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+          }
+        }
+      ]
+    },
+    {
+      "source": "Baluarte +4",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 4,
+          "bonusType": "training",
+          "condition": {
+            "c": "context",
+            "note": "Baluarte — 1 PM, até o início do próximo turno"
+          }
+        },
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 4,
+          "bonusType": "training",
+          "condition": {
+            "c": "context",
+            "note": "Baluarte — 1 PM, até o início do próximo turno"
+          }
+        }
+      ]
+    },
+    {
+      "source": "Duelo +3",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attack",
+            "scope": "all"
+          },
+          "amount": 3,
+          "bonusType": "training",
+          "condition": {
+            "c": "context",
+            "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+          }
+        },
+        {
+          "target": {
+            "k": "damage",
+            "scope": "all"
+          },
+          "amount": 3,
+          "bonusType": "training",
+          "condition": {
+            "c": "context",
+            "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+          }
+        }
+      ]
+    },
+    {
+      "source": "Baluarte +6",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 6,
+          "bonusType": "training",
+          "condition": {
+            "c": "context",
+            "note": "Baluarte — 1 PM, até o início do próximo turno"
+          }
+        },
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 6,
+          "bonusType": "training",
+          "condition": {
+            "c": "context",
+            "note": "Baluarte — 1 PM, até o início do próximo turno"
+          }
+        }
+      ]
+    },
+    {
+      "source": "Duelo +4",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attack",
+            "scope": "all"
+          },
+          "amount": 4,
+          "bonusType": "training",
+          "condition": {
+            "c": "context",
+            "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+          }
+        },
+        {
+          "target": {
+            "k": "damage",
+            "scope": "all"
+          },
+          "amount": 4,
+          "bonusType": "training",
+          "condition": {
+            "c": "context",
+            "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+          }
+        }
+      ]
+    },
+    {
+      "source": "Baluarte +8",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 8,
+          "bonusType": "training",
+          "condition": {
+            "c": "context",
+            "note": "Baluarte — 1 PM, até o início do próximo turno"
+          }
+        },
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 8,
+          "bonusType": "training",
+          "condition": {
+            "c": "context",
+            "note": "Baluarte — 1 PM, até o início do próximo turno"
+          }
+        }
+      ]
+    },
+    {
+      "source": "Baluarte +10",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 10,
+          "bonusType": "training",
+          "condition": {
+            "c": "context",
+            "note": "Baluarte — 1 PM, até o início do próximo turno"
+          }
+        },
+        {
+          "target": {
+            "k": "resistance"
+          },
+          "amount": 10,
+          "bonusType": "training",
+          "condition": {
+            "c": "context",
+            "note": "Baluarte — 1 PM, até o início do próximo turno"
+          }
+        }
+      ]
+    },
+    {
+      "source": "Duelo +5",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attack",
+            "scope": "all"
+          },
+          "amount": 5,
+          "bonusType": "training",
+          "condition": {
+            "c": "context",
+            "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+          }
+        },
+        {
+          "target": {
+            "k": "damage",
+            "scope": "all"
+          },
+          "amount": 5,
+          "bonusType": "training",
+          "condition": {
+            "c": "context",
+            "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+          }
+        }
+      ]
+    }
+  ],
+  "itemEffects": {
+    "byTarget": {
+      "defense": {
+        "total": 12,
+        "contributions": [
+          {
+            "source": "Armadura completa",
+            "bonusType": "armor",
+            "amount": 10
+          },
+          {
+            "source": "Escudo pesado",
+            "bonusType": "shield",
+            "amount": 2
+          }
+        ]
+      },
+      "armorPenalty": {
+        "total": -7,
+        "contributions": [
+          {
+            "source": "Armadura completa",
+            "bonusType": "untyped",
+            "amount": -5
+          },
+          {
+            "source": "Escudo pesado",
+            "bonusType": "untyped",
+            "amount": -2
+          }
+        ]
+      },
+      "displacement": {
+        "total": -3,
+        "contributions": [
+          {
+            "source": "Armadura completa",
+            "bonusType": "untyped",
+            "amount": -3
+          }
+        ]
+      },
+      "attribute:constitution": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Raça: Anão",
+            "bonusType": "untyped",
+            "amount": 2,
+            "note": "Anão"
+          }
+        ]
+      },
+      "attribute:wisdom": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Anão",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Anão"
+          }
+        ]
+      },
+      "attribute:dexterity": {
+        "total": -1,
+        "contributions": [
+          {
+            "source": "Raça: Anão",
+            "bonusType": "untyped",
+            "amount": -1,
+            "note": "Anão"
+          }
+        ]
+      },
+      "maxPv": {
+        "total": 3,
+        "contributions": [
+          {
+            "source": "Raça: Anão",
+            "bonusType": "untyped",
+            "amount": 2
+          },
+          {
+            "source": "Raça: Anão",
+            "bonusType": "untyped",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    "flags": [
+      "armadura-pesada",
+      "cannot-apply-dex-to-defense",
+      "fatigue-on-sleep"
+    ],
+    "conditional": [
+      {
+        "source": "Baluarte +2",
+        "bonusType": "training",
+        "amount": 2,
+        "note": "Baluarte — 1 PM, até o início do próximo turno",
+        "target": {
+          "k": "defense"
+        }
+      },
+      {
+        "source": "Baluarte +2",
+        "bonusType": "training",
+        "amount": 2,
+        "note": "Baluarte — 1 PM, até o início do próximo turno",
+        "target": {
+          "k": "resistance"
+        }
+      },
+      {
+        "source": "Duelo +2",
+        "bonusType": "training",
+        "amount": 2,
+        "note": "contra o alvo do Duelo — 2 PM, até o fim da cena",
+        "target": {
+          "k": "attack",
+          "scope": "all"
+        }
+      },
+      {
+        "source": "Duelo +2",
+        "bonusType": "training",
+        "amount": 2,
+        "note": "contra o alvo do Duelo — 2 PM, até o fim da cena",
+        "target": {
+          "k": "damage",
+          "scope": "all"
+        }
+      },
+      {
+        "source": "Baluarte +4",
+        "bonusType": "training",
+        "amount": 4,
+        "note": "Baluarte — 1 PM, até o início do próximo turno",
+        "target": {
+          "k": "defense"
+        }
+      },
+      {
+        "source": "Baluarte +4",
+        "bonusType": "training",
+        "amount": 4,
+        "note": "Baluarte — 1 PM, até o início do próximo turno",
+        "target": {
+          "k": "resistance"
+        }
+      },
+      {
+        "source": "Duelo +3",
+        "bonusType": "training",
+        "amount": 3,
+        "note": "contra o alvo do Duelo — 2 PM, até o fim da cena",
+        "target": {
+          "k": "attack",
+          "scope": "all"
+        }
+      },
+      {
+        "source": "Duelo +3",
+        "bonusType": "training",
+        "amount": 3,
+        "note": "contra o alvo do Duelo — 2 PM, até o fim da cena",
+        "target": {
+          "k": "damage",
+          "scope": "all"
+        }
+      },
+      {
+        "source": "Baluarte +6",
+        "bonusType": "training",
+        "amount": 6,
+        "note": "Baluarte — 1 PM, até o início do próximo turno",
+        "target": {
+          "k": "defense"
+        }
+      },
+      {
+        "source": "Baluarte +6",
+        "bonusType": "training",
+        "amount": 6,
+        "note": "Baluarte — 1 PM, até o início do próximo turno",
+        "target": {
+          "k": "resistance"
+        }
+      },
+      {
+        "source": "Duelo +4",
+        "bonusType": "training",
+        "amount": 4,
+        "note": "contra o alvo do Duelo — 2 PM, até o fim da cena",
+        "target": {
+          "k": "attack",
+          "scope": "all"
+        }
+      },
+      {
+        "source": "Duelo +4",
+        "bonusType": "training",
+        "amount": 4,
+        "note": "contra o alvo do Duelo — 2 PM, até o fim da cena",
+        "target": {
+          "k": "damage",
+          "scope": "all"
+        }
+      },
+      {
+        "source": "Baluarte +8",
+        "bonusType": "training",
+        "amount": 8,
+        "note": "Baluarte — 1 PM, até o início do próximo turno",
+        "target": {
+          "k": "defense"
+        }
+      },
+      {
+        "source": "Baluarte +8",
+        "bonusType": "training",
+        "amount": 8,
+        "note": "Baluarte — 1 PM, até o início do próximo turno",
+        "target": {
+          "k": "resistance"
+        }
+      },
+      {
+        "source": "Baluarte +10",
+        "bonusType": "training",
+        "amount": 10,
+        "note": "Baluarte — 1 PM, até o início do próximo turno",
+        "target": {
+          "k": "defense"
+        }
+      },
+      {
+        "source": "Baluarte +10",
+        "bonusType": "training",
+        "amount": 10,
+        "note": "Baluarte — 1 PM, até o início do próximo turno",
+        "target": {
+          "k": "resistance"
+        }
+      },
+      {
+        "source": "Duelo +5",
+        "bonusType": "training",
+        "amount": 5,
+        "note": "contra o alvo do Duelo — 2 PM, até o fim da cena",
+        "target": {
+          "k": "attack",
+          "scope": "all"
+        }
+      },
+      {
+        "source": "Duelo +5",
+        "bonusType": "training",
+        "amount": 5,
+        "note": "contra o alvo do Duelo — 2 PM, até o fim da cena",
+        "target": {
+          "k": "damage",
+          "scope": "all"
+        }
+      }
+    ]
+  }
+}

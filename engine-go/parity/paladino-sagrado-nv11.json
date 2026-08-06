@@ -1,0 +1,228 @@
+{
+  "slug": "paladino-sagrado-nv11",
+  "activeItems": [
+    {
+      "source": "Armadura completa",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 10,
+          "bonusType": "armor",
+          "condition": {
+            "c": "vested"
+          }
+        },
+        {
+          "target": {
+            "k": "armorPenalty"
+          },
+          "amount": -5,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          }
+        },
+        {
+          "target": {
+            "k": "displacement"
+          },
+          "amount": -3,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          }
+        },
+        {
+          "target": {
+            "k": "flag",
+            "name": "cannot-apply-dex-to-defense"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          }
+        },
+        {
+          "target": {
+            "k": "flag",
+            "name": "fatigue-on-sleep"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          }
+        },
+        {
+          "target": {
+            "k": "flag",
+            "name": "armadura-pesada"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          }
+        }
+      ]
+    },
+    {
+      "source": "Escudo pesado",
+      "equipped": "wielded",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 2,
+          "bonusType": "shield",
+          "condition": {
+            "c": "wielded"
+          }
+        },
+        {
+          "target": {
+            "k": "armorPenalty"
+          },
+          "amount": -2,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "wielded"
+          }
+        }
+      ]
+    },
+    {
+      "source": "Machado de batalha",
+      "equipped": "wielded",
+      "modifiers": []
+    },
+    {
+      "source": "Raça: Suraggel",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "wisdom"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "note": "Suraggel"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "charisma"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Suraggel"
+        }
+      ]
+    },
+    {
+      "source": "Abençoado",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "maxPm"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "scale": {
+            "per": "attribute",
+            "attribute": "charisma"
+          }
+        }
+      ]
+    }
+  ],
+  "itemEffects": {
+    "byTarget": {
+      "defense": {
+        "total": 12,
+        "contributions": [
+          {
+            "source": "Armadura completa",
+            "bonusType": "armor",
+            "amount": 10
+          },
+          {
+            "source": "Escudo pesado",
+            "bonusType": "shield",
+            "amount": 2
+          }
+        ]
+      },
+      "armorPenalty": {
+        "total": -7,
+        "contributions": [
+          {
+            "source": "Armadura completa",
+            "bonusType": "untyped",
+            "amount": -5
+          },
+          {
+            "source": "Escudo pesado",
+            "bonusType": "untyped",
+            "amount": -2
+          }
+        ]
+      },
+      "displacement": {
+        "total": -3,
+        "contributions": [
+          {
+            "source": "Armadura completa",
+            "bonusType": "untyped",
+            "amount": -3
+          }
+        ]
+      },
+      "attribute:wisdom": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Raça: Suraggel",
+            "bonusType": "untyped",
+            "amount": 2,
+            "note": "Suraggel"
+          }
+        ]
+      },
+      "attribute:charisma": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Suraggel",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Suraggel"
+          }
+        ]
+      },
+      "maxPm": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Abençoado",
+            "bonusType": "untyped",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    "flags": [
+      "armadura-pesada",
+      "cannot-apply-dex-to-defense",
+      "fatigue-on-sleep"
+    ],
+    "conditional": []
+  }
+}

@@ -4,6 +4,49 @@
 > o próximo passo concreto. Detalhes finos estão nos arquivos de memória
 > `project_front_decouple_catalog` e `project_fase3_rtt_bench`.
 
+## ⚠️ CORREÇÃO (Inc.2) — leia PORT-PLAN.md antes de continuar
+
+A premissa do "PRÓXIMO PASSO" abaixo estava **errada**. Descoberta: existem DOIS
+motores. O WASM/engine-go porta só o MVP `computeCharacterSheet`; a ficha
+interativa roda um motor RICO e SEPARADO (`derived.ts` + `computeItemEffects`,
+~28 alvos de modifier, breakdowns/condicionais/RD/tempHp). `characterToInput` NÃO
+popula `activeEffects`, então `/sheet` (o "oráculo") ignora modificadores de item
+— tem MENOS dados que a UI. "Um motor só" ⇒ portar o motor real inteiro pra Go.
+
+Dono escolheu **port completo** (endgame de 1 motor só). Plano vivo, arquitetura,
+slices e harness: **`PORT-PLAN.md`** (raiz). Tasks no tracker (#1–#8).
+
+### Progresso desta sessão (slices 1–3 ✅, verde e verificado)
+
+- **Slice 1 — resolução core → Go.** `engine-go/engine/itemeffects.go`: port fiel
+  de `t20-data/src/items/engine.ts` (tipos Modifier/ModifierTarget/BonusType/
+  ModifierCondition/ActiveItem/ItemEffects/Contribution/ConditionalEffect +
+  `targetKey`/`resolveStack`/`ComputeItemEffects`/`StatFor`/`ConditionalID`/
+  `ApplyActiveConditionals`/`ResolveConditionalDisplay`). Catalog-free.
+  `itemeffects_test.go`: ~44 casos portados de `engine*.test.ts` — verdes.
+- **Slice 3 — harness de paridade (TDD backbone).** `activeItemsFor` agora
+  exportado. `frontend/src/entities/character/parity-oracle.test.ts` gera
+  (`GEN_ORACLE=1 pnpm --filter frontend test parity-oracle`) 16 oráculos em
+  `engine-go/parity/<slug>.json` (`{activeItems, itemEffects}`) — commitados.
+  `engine-go/engine/itemeffects_parity_test.go` roda `ComputeItemEffects` nos
+  activeItems reais e compara byte-equal ao oráculo TS: **16/16 verdes**.
+  ⇒ a resolução core está PROVADA nos 16 seed chars, não só em toy cases.
+
+**Verificação:** `cd engine-go && go test ./...` verde; `gofmt -l` limpo; wasm
+build ok. Front: 1 teste novo verde. Nada removido ainda (derived.ts intacto).
+
+### PRÓXIMO PASSO REAL — Slice 2 (task #4): coleta + catálogos → Go
+
+Portar `activeItemsFor` (a camada que LÊ catálogos) pra Go + primar o engine com
+o JSON de catálogo já buscado (`primeEngineCatalogs`). Bater os `activeItems`
+gerados em Go contra o oráculo (`engine-go/parity/*.json` já tem o alvo). Depois
+slice 3-breakdowns (task #5), fronteira WASM+boot (task #6), troca de UI (#7),
+remoção (#8). Detalhe fino de cada slice em `PORT-PLAN.md §4`.
+
+---
+
+## (Histórico — premissa antiga, mantida por contexto; ver correção acima)
+
 ## TL;DR do estado
 
 1. **Decouple de DADOS — 100% concluído e commitado.** O front NÃO empacota mais

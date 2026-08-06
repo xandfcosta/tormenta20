@@ -1,0 +1,87 @@
+{
+  "slug": "inventor-genial-nv6",
+  "activeItems": [
+    {
+      "source": "Clava",
+      "equipped": "wielded",
+      "modifiers": []
+    },
+    {
+      "source": "Mochila",
+      "equipped": "vested",
+      "modifiers": []
+    },
+    {
+      "source": "Raça: Kliren",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "intelligence"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "note": "Kliren"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "charisma"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Kliren"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "strength"
+          },
+          "amount": -1,
+          "bonusType": "untyped",
+          "note": "Kliren"
+        }
+      ]
+    }
+  ],
+  "itemEffects": {
+    "byTarget": {
+      "attribute:intelligence": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Raça: Kliren",
+            "bonusType": "untyped",
+            "amount": 2,
+            "note": "Kliren"
+          }
+        ]
+      },
+      "attribute:charisma": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Kliren",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Kliren"
+          }
+        ]
+      },
+      "attribute:strength": {
+        "total": -1,
+        "contributions": [
+          {
+            "source": "Raça: Kliren",
+            "bonusType": "untyped",
+            "amount": -1,
+            "note": "Kliren"
+          }
+        ]
+      }
+    },
+    "flags": [],
+    "conditional": []
+  }
+}

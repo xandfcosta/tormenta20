@@ -1,0 +1,162 @@
+{
+  "slug": "multiclasse-guer-arc-nv8",
+  "activeItems": [
+    {
+      "source": "Espada curta",
+      "equipped": "wielded",
+      "modifiers": []
+    },
+    {
+      "source": "Armadura de couro",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 2,
+          "bonusType": "armor",
+          "condition": {
+            "c": "vested"
+          }
+        }
+      ]
+    },
+    {
+      "source": "Bandana",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Intimidação"
+          },
+          "amount": 1,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          }
+        }
+      ]
+    },
+    {
+      "source": "Raça: Humano",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "strength"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Humano"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "constitution"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Humano"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "intelligence"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Humano"
+        }
+      ]
+    },
+    {
+      "source": "Caminho: Feiticeiro",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "maxPm"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "scale": {
+            "per": "attribute",
+            "attribute": "charisma"
+          }
+        }
+      ]
+    }
+  ],
+  "itemEffects": {
+    "byTarget": {
+      "defense": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Armadura de couro",
+            "bonusType": "armor",
+            "amount": 2
+          }
+        ]
+      },
+      "expertise:Intimidação": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Bandana",
+            "bonusType": "item",
+            "amount": 1
+          }
+        ]
+      },
+      "attribute:strength": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Humano",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Humano"
+          }
+        ]
+      },
+      "attribute:constitution": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Humano",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Humano"
+          }
+        ]
+      },
+      "attribute:intelligence": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Humano",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Humano"
+          }
+        ]
+      },
+      "maxPm": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Caminho: Feiticeiro",
+            "bonusType": "untyped",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    "flags": [],
+    "conditional": []
+  }
+}

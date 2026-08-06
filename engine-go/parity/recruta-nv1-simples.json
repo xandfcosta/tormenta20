@@ -1,0 +1,108 @@
+{
+  "slug": "recruta-nv1-simples",
+  "activeItems": [
+    {
+      "source": "Espada curta",
+      "equipped": "wielded",
+      "modifiers": []
+    },
+    {
+      "source": "Armadura de couro",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 2,
+          "bonusType": "armor",
+          "condition": {
+            "c": "vested"
+          }
+        }
+      ]
+    },
+    {
+      "source": "Raça: Humano",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "strength"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Humano"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "dexterity"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Humano"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "constitution"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Humano"
+        }
+      ]
+    }
+  ],
+  "itemEffects": {
+    "byTarget": {
+      "defense": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Armadura de couro",
+            "bonusType": "armor",
+            "amount": 2
+          }
+        ]
+      },
+      "attribute:strength": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Humano",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Humano"
+          }
+        ]
+      },
+      "attribute:dexterity": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Humano",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Humano"
+          }
+        ]
+      },
+      "attribute:constitution": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Humano",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Humano"
+          }
+        ]
+      }
+    },
+    "flags": [],
+    "conditional": []
+  }
+}

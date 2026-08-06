@@ -1,0 +1,155 @@
+{
+  "slug": "arcanista-erudito-nv9",
+  "activeItems": [
+    {
+      "source": "Adaga",
+      "equipped": "wielded",
+      "modifiers": []
+    },
+    {
+      "source": "Bandana",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Intimidação"
+          },
+          "amount": 1,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          }
+        }
+      ]
+    },
+    {
+      "source": "Cosmético (cena)",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "charisma"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
+    },
+    {
+      "source": "Raça: Qareen",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "charisma"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "note": "Qareen"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "intelligence"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Qareen"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "wisdom"
+          },
+          "amount": -1,
+          "bonusType": "untyped",
+          "note": "Qareen"
+        }
+      ]
+    },
+    {
+      "source": "Caminho: Bruxo",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "maxPm"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "scale": {
+            "per": "attribute",
+            "attribute": "intelligence"
+          }
+        }
+      ]
+    }
+  ],
+  "itemEffects": {
+    "byTarget": {
+      "expertise:Intimidação": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Bandana",
+            "bonusType": "item",
+            "amount": 1
+          }
+        ]
+      },
+      "attribute:charisma": {
+        "total": 4,
+        "contributions": [
+          {
+            "source": "Cosmético (cena)",
+            "bonusType": "untyped",
+            "amount": 2
+          },
+          {
+            "source": "Raça: Qareen",
+            "bonusType": "untyped",
+            "amount": 2,
+            "note": "Qareen"
+          }
+        ]
+      },
+      "attribute:intelligence": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Qareen",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Qareen"
+          }
+        ]
+      },
+      "attribute:wisdom": {
+        "total": -1,
+        "contributions": [
+          {
+            "source": "Raça: Qareen",
+            "bonusType": "untyped",
+            "amount": -1,
+            "note": "Qareen"
+          }
+        ]
+      },
+      "maxPm": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Caminho: Bruxo",
+            "bonusType": "untyped",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    "flags": [],
+    "conditional": []
+  }
+}

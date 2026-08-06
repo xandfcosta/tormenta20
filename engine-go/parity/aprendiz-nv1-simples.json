@@ -1,0 +1,171 @@
+{
+  "slug": "aprendiz-nv1-simples",
+  "activeItems": [
+    {
+      "source": "Espada curta",
+      "equipped": "wielded",
+      "modifiers": []
+    },
+    {
+      "source": "Armadura de couro",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 2,
+          "bonusType": "armor",
+          "condition": {
+            "c": "vested"
+          }
+        },
+        {
+          "target": {
+            "k": "flag",
+            "name": "cannot-apply-dex-to-defense"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "sem proficiência"
+        },
+        {
+          "target": {
+            "k": "expertiseAll"
+          },
+          "amount": -1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "Armadura de couro sem proficiência"
+        }
+      ]
+    },
+    {
+      "source": "Raça: Humano",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "intelligence"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Humano"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "constitution"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Humano"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "charisma"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Humano"
+        }
+      ]
+    },
+    {
+      "source": "Caminho: Mago",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "maxPm"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "scale": {
+            "per": "attribute",
+            "attribute": "intelligence"
+          }
+        }
+      ]
+    }
+  ],
+  "itemEffects": {
+    "byTarget": {
+      "defense": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Armadura de couro",
+            "bonusType": "armor",
+            "amount": 2
+          }
+        ]
+      },
+      "expertiseAll": {
+        "total": -1,
+        "contributions": [
+          {
+            "source": "Armadura de couro",
+            "bonusType": "untyped",
+            "amount": -1,
+            "note": "Armadura de couro sem proficiência"
+          }
+        ]
+      },
+      "attribute:intelligence": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Humano",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Humano"
+          }
+        ]
+      },
+      "attribute:constitution": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Humano",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Humano"
+          }
+        ]
+      },
+      "attribute:charisma": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Humano",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Humano"
+          }
+        ]
+      },
+      "maxPm": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Caminho: Mago",
+            "bonusType": "untyped",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    "flags": [
+      "cannot-apply-dex-to-defense"
+    ],
+    "conditional": []
+  }
+}

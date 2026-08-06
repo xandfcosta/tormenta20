@@ -1,0 +1,232 @@
+{
+  "slug": "bardo-versatil-nv7",
+  "activeItems": [
+    {
+      "source": "Adaga",
+      "equipped": "wielded",
+      "modifiers": []
+    },
+    {
+      "source": "Bandana",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Intimidação"
+          },
+          "amount": 1,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          }
+        }
+      ]
+    },
+    {
+      "source": "Cosmético (cena)",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "charisma"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
+    },
+    {
+      "source": "Raça: Lefou",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "strength"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Lefou"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "dexterity"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Lefou"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "constitution"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Lefou"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "charisma"
+          },
+          "amount": -1,
+          "bonusType": "untyped",
+          "note": "Lefou"
+        }
+      ]
+    },
+    {
+      "source": "Inspiração +1",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertiseAll"
+          },
+          "amount": 1,
+          "bonusType": "morale",
+          "condition": {
+            "c": "flagOn",
+            "flag": "inspiracao",
+            "label": "Sob Inspiração"
+          }
+        }
+      ]
+    },
+    {
+      "source": "Magias (1° círculo)",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "maxPm"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "scale": {
+            "per": "attribute",
+            "attribute": "charisma"
+          }
+        }
+      ]
+    },
+    {
+      "source": "Inspiração +2",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertiseAll"
+          },
+          "amount": 2,
+          "bonusType": "morale",
+          "condition": {
+            "c": "flagOn",
+            "flag": "inspiracao",
+            "label": "Sob Inspiração"
+          }
+        }
+      ]
+    }
+  ],
+  "itemEffects": {
+    "byTarget": {
+      "expertise:Intimidação": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Bandana",
+            "bonusType": "item",
+            "amount": 1
+          }
+        ]
+      },
+      "attribute:charisma": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Cosmético (cena)",
+            "bonusType": "untyped",
+            "amount": 2
+          },
+          {
+            "source": "Raça: Lefou",
+            "bonusType": "untyped",
+            "amount": -1,
+            "note": "Lefou"
+          }
+        ]
+      },
+      "attribute:strength": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Lefou",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Lefou"
+          }
+        ]
+      },
+      "attribute:dexterity": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Lefou",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Lefou"
+          }
+        ]
+      },
+      "attribute:constitution": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Lefou",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Lefou"
+          }
+        ]
+      },
+      "maxPm": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Magias (1° círculo)",
+            "bonusType": "untyped",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    "flags": [],
+    "conditional": [
+      {
+        "source": "Inspiração +1",
+        "bonusType": "morale",
+        "amount": 1,
+        "note": "Sob Inspiração",
+        "target": {
+          "k": "expertiseAll"
+        },
+        "flag": "inspiracao"
+      },
+      {
+        "source": "Inspiração +2",
+        "bonusType": "morale",
+        "amount": 2,
+        "note": "Sob Inspiração",
+        "target": {
+          "k": "expertiseAll"
+        },
+        "flag": "inspiracao"
+      }
+    ]
+  }
+}

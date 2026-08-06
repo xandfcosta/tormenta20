@@ -1,0 +1,187 @@
+{
+  "slug": "curandeira-divina-nv8",
+  "activeItems": [
+    {
+      "source": "Adaga",
+      "equipped": "wielded",
+      "modifiers": []
+    },
+    {
+      "source": "Bandana",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Intimidação"
+          },
+          "amount": 1,
+          "bonusType": "item",
+          "condition": {
+            "c": "vested"
+          }
+        }
+      ]
+    },
+    {
+      "source": "Raça: Elfo",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "intelligence"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "note": "Elfo"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "dexterity"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Elfo"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "constitution"
+          },
+          "amount": -1,
+          "bonusType": "untyped",
+          "note": "Elfo"
+        },
+        {
+          "target": {
+            "k": "maxPm"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "scale": {
+            "per": "level"
+          }
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Misticismo"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Percepção"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        }
+      ]
+    },
+    {
+      "source": "Magias (1° círculo)",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "maxPm"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "scale": {
+            "per": "attribute",
+            "attribute": "wisdom"
+          }
+        }
+      ]
+    }
+  ],
+  "itemEffects": {
+    "byTarget": {
+      "expertise:Intimidação": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Bandana",
+            "bonusType": "item",
+            "amount": 1
+          }
+        ]
+      },
+      "attribute:intelligence": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Raça: Elfo",
+            "bonusType": "untyped",
+            "amount": 2,
+            "note": "Elfo"
+          }
+        ]
+      },
+      "attribute:dexterity": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Elfo",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Elfo"
+          }
+        ]
+      },
+      "attribute:constitution": {
+        "total": -1,
+        "contributions": [
+          {
+            "source": "Raça: Elfo",
+            "bonusType": "untyped",
+            "amount": -1,
+            "note": "Elfo"
+          }
+        ]
+      },
+      "maxPm": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Raça: Elfo",
+            "bonusType": "untyped",
+            "amount": 1
+          },
+          {
+            "source": "Magias (1° círculo)",
+            "bonusType": "untyped",
+            "amount": 1
+          }
+        ]
+      },
+      "expertise:Misticismo": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Raça: Elfo",
+            "bonusType": "untyped",
+            "amount": 2
+          }
+        ]
+      },
+      "expertise:Percepção": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Raça: Elfo",
+            "bonusType": "untyped",
+            "amount": 2
+          }
+        ]
+      }
+    },
+    "flags": [],
+    "conditional": []
+  }
+}

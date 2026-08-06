@@ -52,7 +52,13 @@ import type { Character, CharacterExpertise, CharacterItem } from '@/shared/api/
 import { useActiveConditionals } from '@/shared/stores/conditionals-store'
 import { effectSourceName } from './effect-source'
 
-function activeItemsFor(character: Character): ActiveItem[] {
+/**
+ * Collect every active modifier source into `ActiveItem[]` — the input the
+ * resolution engine (`computeItemEffects`) consumes. Exported so the parity
+ * harness can dump it as the Go engine's oracle input (PORT-PLAN.md §3, the
+ * catalog-reading collection layer ported in slice 2).
+ */
+export function activeItemsFor(character: Character): ActiveItem[] {
   const proficiencies = parseProficiencySetFromCharacter(character)
   const items: ActiveItem[] = character.items
     .filter((it) => it.equipped !== null)

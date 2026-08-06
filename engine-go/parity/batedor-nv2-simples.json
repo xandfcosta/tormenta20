@@ -1,0 +1,144 @@
+{
+  "slug": "batedor-nv2-simples",
+  "activeItems": [
+    {
+      "source": "Espada curta",
+      "equipped": "wielded",
+      "modifiers": []
+    },
+    {
+      "source": "Armadura de couro",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 2,
+          "bonusType": "armor",
+          "condition": {
+            "c": "vested"
+          }
+        },
+        {
+          "target": {
+            "k": "flag",
+            "name": "cannot-apply-dex-to-defense"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "sem proficiência"
+        },
+        {
+          "target": {
+            "k": "expertiseAll"
+          },
+          "amount": -1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "vested"
+          },
+          "note": "Armadura de couro sem proficiência"
+        }
+      ]
+    },
+    {
+      "source": "Raça: Sílfide",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "attribute",
+            "name": "charisma"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "note": "Sílfide"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "dexterity"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Sílfide"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "strength"
+          },
+          "amount": -2,
+          "bonusType": "untyped",
+          "note": "Sílfide"
+        }
+      ]
+    }
+  ],
+  "itemEffects": {
+    "byTarget": {
+      "defense": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Armadura de couro",
+            "bonusType": "armor",
+            "amount": 2
+          }
+        ]
+      },
+      "expertiseAll": {
+        "total": -1,
+        "contributions": [
+          {
+            "source": "Armadura de couro",
+            "bonusType": "untyped",
+            "amount": -1,
+            "note": "Armadura de couro sem proficiência"
+          }
+        ]
+      },
+      "attribute:charisma": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Raça: Sílfide",
+            "bonusType": "untyped",
+            "amount": 2,
+            "note": "Sílfide"
+          }
+        ]
+      },
+      "attribute:dexterity": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Sílfide",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Sílfide"
+          }
+        ]
+      },
+      "attribute:strength": {
+        "total": -2,
+        "contributions": [
+          {
+            "source": "Raça: Sílfide",
+            "bonusType": "untyped",
+            "amount": -2,
+            "note": "Sílfide"
+          }
+        ]
+      }
+    },
+    "flags": [
+      "cannot-apply-dex-to-defense"
+    ],
+    "conditional": []
+  }
+}
