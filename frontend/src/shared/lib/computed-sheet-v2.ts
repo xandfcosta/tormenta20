@@ -50,6 +50,7 @@ export type AttributeBreakdown = {
 
 export type ExpertiseBreakdown = {
   name: string
+  attribute: AttributeKey
   base: number
   itemBonus: number
   total: number
@@ -80,6 +81,9 @@ export type ComputedSheetV2 = {
   bestBaseSpellCd: number | null
   spellDCBonus: TotalContribs
   pmCostMod: TotalContribs
+  /** {k:attack|damage, scope:all} globals — added onto every weapon/attack. */
+  attackAll: TotalContribs
+  damageAll: TotalContribs
   damageReduction: RdBreakdown
   /** tempHpFromPowers with furia active — the Alma de Bronze branch. */
   tempHpFuria: TempHpBreakdown

@@ -81,14 +81,12 @@ func bestBaseSpellCd(ch Character, e ItemEffects) *int {
 
 // spellDCBonus ports derived.ts: item spellDC bonus + contributions.
 func spellDCBonus(e ItemEffects) TotalContribs {
-	stat := StatFor(e, ModifierTarget{K: "spellDC"})
-	return TotalContribs{Total: stat.Total, Contributions: withNoteContribs(stat.Contributions)}
+	return totalContribsFor(e, ModifierTarget{K: "spellDC"})
 }
 
 // pmCostMod ports derived.ts: item pmCost modifier + contributions.
 func pmCostMod(e ItemEffects) TotalContribs {
-	stat := StatFor(e, ModifierTarget{K: "pmCost"})
-	return TotalContribs{Total: stat.Total, Contributions: withNoteContribs(stat.Contributions)}
+	return totalContribsFor(e, ModifierTarget{K: "pmCost"})
 }
 
 // characterDamageReduction ports derived.ts: aggregate passive RD (Bárbaro p47,

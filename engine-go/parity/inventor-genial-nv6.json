@@ -460,6 +460,14 @@
       "total": 0,
       "contributions": []
     },
+    "attackAll": {
+      "total": 0,
+      "contributions": []
+    },
+    "damageAll": {
+      "total": 0,
+      "contributions": []
+    },
     "damageReduction": {
       "total": 0,
       "sources": []
@@ -471,6 +479,7 @@
     "expertises": [
       {
         "name": "Acrobacia",
+        "attribute": "dexterity",
         "base": 6,
         "itemBonus": 0,
         "total": 6,
@@ -482,6 +491,7 @@
       },
       {
         "name": "Adestramento",
+        "attribute": "charisma",
         "base": 5,
         "itemBonus": 0,
         "total": 5,
@@ -493,6 +503,7 @@
       },
       {
         "name": "Atletismo",
+        "attribute": "strength",
         "base": 4,
         "itemBonus": 0,
         "total": 4,
@@ -504,6 +515,7 @@
       },
       {
         "name": "Atuação",
+        "attribute": "charisma",
         "base": 5,
         "itemBonus": 0,
         "total": 5,
@@ -515,6 +527,7 @@
       },
       {
         "name": "Cavalgar",
+        "attribute": "dexterity",
         "base": 6,
         "itemBonus": 0,
         "total": 6,
@@ -526,6 +539,7 @@
       },
       {
         "name": "Conhecimento",
+        "attribute": "intelligence",
         "base": 10,
         "itemBonus": 0,
         "total": 10,
@@ -537,6 +551,7 @@
       },
       {
         "name": "Cura",
+        "attribute": "wisdom",
         "base": 4,
         "itemBonus": 0,
         "total": 4,
@@ -548,6 +563,7 @@
       },
       {
         "name": "Diplomacia",
+        "attribute": "charisma",
         "base": 5,
         "itemBonus": 0,
         "total": 5,
@@ -559,6 +575,7 @@
       },
       {
         "name": "Enganação",
+        "attribute": "charisma",
         "base": 5,
         "itemBonus": 0,
         "total": 5,
@@ -570,6 +587,7 @@
       },
       {
         "name": "Fortitude",
+        "attribute": "constitution",
         "base": 7,
         "itemBonus": 0,
         "total": 7,
@@ -581,6 +599,7 @@
       },
       {
         "name": "Furtividade",
+        "attribute": "dexterity",
         "base": 6,
         "itemBonus": 0,
         "total": 6,
@@ -592,6 +611,7 @@
       },
       {
         "name": "Guerra",
+        "attribute": "intelligence",
         "base": 10,
         "itemBonus": 0,
         "total": 10,
@@ -603,6 +623,7 @@
       },
       {
         "name": "Iniciativa",
+        "attribute": "dexterity",
         "base": 6,
         "itemBonus": 0,
         "total": 6,
@@ -614,6 +635,7 @@
       },
       {
         "name": "Intimidação",
+        "attribute": "charisma",
         "base": 7,
         "itemBonus": 0,
         "total": 7,
@@ -625,6 +647,7 @@
       },
       {
         "name": "Intuição",
+        "attribute": "wisdom",
         "base": 4,
         "itemBonus": 0,
         "total": 4,
@@ -636,6 +659,7 @@
       },
       {
         "name": "Investigação",
+        "attribute": "intelligence",
         "base": 12,
         "itemBonus": 0,
         "total": 12,
@@ -647,6 +671,7 @@
       },
       {
         "name": "Jogatina",
+        "attribute": "charisma",
         "base": 5,
         "itemBonus": 0,
         "total": 5,
@@ -658,6 +683,7 @@
       },
       {
         "name": "Ladinagem",
+        "attribute": "dexterity",
         "base": 6,
         "itemBonus": 0,
         "total": 6,
@@ -669,6 +695,7 @@
       },
       {
         "name": "Luta",
+        "attribute": "strength",
         "base": 4,
         "itemBonus": 0,
         "total": 4,
@@ -680,6 +707,7 @@
       },
       {
         "name": "Misticismo",
+        "attribute": "intelligence",
         "base": 12,
         "itemBonus": 0,
         "total": 12,
@@ -691,6 +719,7 @@
       },
       {
         "name": "Nobreza",
+        "attribute": "intelligence",
         "base": 10,
         "itemBonus": 0,
         "total": 10,
@@ -702,6 +731,7 @@
       },
       {
         "name": "Ofício",
+        "attribute": "intelligence",
         "base": 10,
         "itemBonus": 0,
         "total": 10,
@@ -713,6 +743,7 @@
       },
       {
         "name": "Percepção",
+        "attribute": "wisdom",
         "base": 6,
         "itemBonus": 0,
         "total": 6,
@@ -724,6 +755,7 @@
       },
       {
         "name": "Pilotagem",
+        "attribute": "dexterity",
         "base": 6,
         "itemBonus": 0,
         "total": 6,
@@ -735,6 +767,7 @@
       },
       {
         "name": "Pontaria",
+        "attribute": "dexterity",
         "base": 8,
         "itemBonus": 0,
         "total": 8,
@@ -746,6 +779,7 @@
       },
       {
         "name": "Reflexos",
+        "attribute": "dexterity",
         "base": 8,
         "itemBonus": 0,
         "total": 8,
@@ -757,6 +791,7 @@
       },
       {
         "name": "Religião",
+        "attribute": "wisdom",
         "base": 4,
         "itemBonus": 0,
         "total": 4,
@@ -768,6 +803,7 @@
       },
       {
         "name": "Sobrevivência",
+        "attribute": "wisdom",
         "base": 4,
         "itemBonus": 0,
         "total": 4,
@@ -779,6 +815,7 @@
       },
       {
         "name": "Vontade",
+        "attribute": "wisdom",
         "base": 6,
         "itemBonus": 0,
         "total": 6,

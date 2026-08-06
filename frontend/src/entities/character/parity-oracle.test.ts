@@ -5,7 +5,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { AttributeKey } from '@tormenta20/t20-data'
+import { type AttributeKey, statFor } from '@tormenta20/t20-data'
 import {
   CATALOG_ITEMS,
   CLASS_POWERS_CATALOG,
@@ -79,6 +79,14 @@ function sheetV2For(char: Character) {
       { total: attributeTotal(char, a, effects), contributions: attributeContributions(a, effects) },
     ]),
   )
+  const toTotalContribs = (stat: ReturnType<typeof statFor>) => ({
+    total: stat.total,
+    contributions: stat.contributions.map((c) => ({
+      source: c.source,
+      amount: c.amount,
+      ...(c.note ? { note: c.note } : {}),
+    })),
+  })
   return {
     defense: defenseTotal(char, effects),
     displacement: displacementTotal(char, effects),
@@ -89,10 +97,13 @@ function sheetV2For(char: Character) {
     bestBaseSpellCd: bestBaseSpellCd(char, effects),
     spellDCBonus: spellDCBonus(effects),
     pmCostMod: pmCostMod(effects),
+    attackAll: toTotalContribs(statFor(effects, { k: 'attack', scope: 'all' })),
+    damageAll: toTotalContribs(statFor(effects, { k: 'damage', scope: 'all' })),
     damageReduction: characterDamageReduction(char, effects),
     tempHpFuria: tempHpFromPowers(char, effects, true),
     expertises: char.expertises.map((e) => ({
       name: e.name,
+      attribute: e.attribute,
       ...expertiseTotalWithItems(char, e, effects),
     })),
   }

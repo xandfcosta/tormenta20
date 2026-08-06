@@ -53,6 +53,7 @@ type AttributeBreakdown struct {
 
 type ExpertiseBreakdown struct {
 	Name                string                  `json:"name"`
+	Attribute           string                  `json:"attribute"`
 	Base                int                     `json:"base"`
 	ItemBonus           int                     `json:"itemBonus"`
 	Total               int                     `json:"total"`
@@ -75,7 +76,11 @@ type ComputedSheetV2 struct {
 	BestBaseSpellCd *int                          `json:"bestBaseSpellCd"`
 	SpellDCBonus    TotalContribs                 `json:"spellDCBonus"`
 	PmCostMod       TotalContribs                 `json:"pmCostMod"`
-	DamageReduction RdBreakdown                   `json:"damageReduction"`
+	// AttackAll/DamageAll are the {k:attack|damage, scope:all} globals (Fúria,
+	// Instinto Selvagem…) — the combat HUD adds them onto every weapon/attack.
+	AttackAll       TotalContribs `json:"attackAll"`
+	DamageAll       TotalContribs `json:"damageAll"`
+	DamageReduction RdBreakdown   `json:"damageReduction"`
 	// TempHpFuria is tempHpFromPowers with furia active — the interesting branch
 	// (Alma de Bronze). The base sheet (furia off) is always {0, []}.
 	TempHpFuria TempHpBreakdown      `json:"tempHpFuria"`
@@ -106,6 +111,8 @@ func (c *Catalogs) ComputeSheetV2(ch Character, activeConditionals map[string]bo
 		BestBaseSpellCd: bestBaseSpellCd(ch, effects),
 		SpellDCBonus:    spellDCBonus(effects),
 		PmCostMod:       pmCostMod(effects),
+		AttackAll:       totalContribsFor(effects, ModifierTarget{K: "attack", Scope: "all"}),
+		DamageAll:       totalContribsFor(effects, ModifierTarget{K: "damage", Scope: "all"}),
 		DamageReduction: characterDamageReduction(ch, effects),
 		TempHpFuria:     tempHpFromPowers(ch, effects, true),
 		Expertises:      expertises,
@@ -186,6 +193,7 @@ func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects) E
 	itemBonus := stat.Total + allStat.Total + byAttrStat.Total
 	return ExpertiseBreakdown{
 		Name:                state.Name,
+		Attribute:           state.Attribute,
 		Base:                base,
 		ItemBonus:           itemBonus + armorPenaltyApplied,
 		Total:               base + itemBonus + armorPenaltyApplied,
@@ -195,6 +203,13 @@ func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects) E
 		ItemContributions:   itemContribs,
 		ArmorPenaltyApplied: armorPenaltyApplied,
 	}
+}
+
+// totalContribsFor is the {total, contributions} shape for a single target
+// (spellDC, pmCost, attack/damage globals).
+func totalContribsFor(e ItemEffects, target ModifierTarget) TotalContribs {
+	stat := StatFor(e, target)
+	return TotalContribs{Total: stat.Total, Contributions: withNoteContribs(stat.Contributions)}
 }
 
 // withNoteContribs maps resolution Contributions to display rows, keeping note.
