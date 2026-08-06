@@ -12,6 +12,7 @@ import {
   buildSheetSearchIndex,
   type SheetSearchEntry,
 } from './sheet-search-index'
+import { sheetSearchFilter } from './sheet-search-filter'
 
 /**
  * Sheet-global search palette (audit P1: "3-second lookup"). `/` or Ctrl+K
@@ -54,6 +55,7 @@ export function SheetSearch({
       onOpenChange={setOpen}
       title="Buscar na ficha"
       description="Perícias, poderes, itens, magias e condições"
+      filter={sheetSearchFilter}
     >
       <CommandInput placeholder="Buscar na ficha… (perícia, poder, item, magia)" />
       <CommandList>
