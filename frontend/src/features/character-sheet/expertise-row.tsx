@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Dumbbell, Star, Trash2 } from 'lucide-react'
+import { Dumbbell, Lock, Star, Trash2 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
 import {
@@ -213,9 +213,11 @@ function TrainedOnlyStar({ locked }: { locked: boolean }) {
           <Star
             className={cn(
               'size-3',
+              // Amber = locked out (trained-only, still untrained); subtle
+              // outline once trained so the marker stops shouting.
               locked
-                ? 'fill-current text-foreground  '
-                : 'fill-current text-foreground  ',
+                ? 'fill-amber-500 text-amber-500'
+                : 'fill-none text-muted-foreground/60',
             )}
           />
         </button>
@@ -228,9 +230,11 @@ function TrainedOnlyStar({ locked }: { locked: boolean }) {
 }
 
 /** Prominent skill total, doubling as the trigger that opens the modifier
- *  breakdown. Amber when usable, struck-through when trained-only + untrained.
- *  Rest props are spread onto the button: `DialogTrigger asChild` injects its
- *  onClick/ref via props, and dropping them left the trigger dead (bug D). */
+ *  breakdown. Locked (trained-only + untrained) = dashed border, dimmed value
+ *  and an amber corner padlock — the old line-through was illegible on the
+ *  small mono digits (2026-08 owner report). Rest props are spread onto the
+ *  button: `DialogTrigger asChild` injects its onClick/ref via props, and
+ *  dropping them left the trigger dead (bug D). */
 function TotalBadge({
   total,
   locked,
@@ -240,17 +244,24 @@ function TotalBadge({
   return (
     <button
       type="button"
-      aria-label="Ver detalhamento dos modificadores"
-      className={cn(
-        'flex size-11 shrink-0 items-center justify-center rounded-lg border font-mono text-lg font-bold transition-colors hover:brightness-110',
+      aria-label={
         locked
-          ? 'border-border text-foreground line-through  '
+          ? 'Ver detalhamento dos modificadores (requer treino)'
+          : 'Ver detalhamento dos modificadores'
+      }
+      className={cn(
+        'relative flex size-11 shrink-0 items-center justify-center rounded-lg border font-mono text-lg font-bold transition-colors hover:brightness-110',
+        locked
+          ? 'border-dashed border-border text-muted-foreground/50'
           : ['border-border bg-muted', accentStrong],
         className,
       )}
       {...trigger}
     >
       {signed(total)}
+      {locked && (
+        <Lock className="absolute -right-1 -top-1 size-3.5 rounded-full bg-background p-0.5 text-amber-500" />
+      )}
     </button>
   )
 }
@@ -292,9 +303,11 @@ function TrainedToggle({
           onClick={() => onToggle(!trained)}
           className={cn(
             'inline-flex size-6 shrink-0 items-center justify-center rounded-md border transition-colors',
+            // Filled green vs faint outline — the old muted-vs-muted pair was
+            // indistinguishable at a glance (2026-08 owner report).
             trained
-              ? 'border-border bg-muted text-foreground shadow-sm  '
-              : 'border-border text-foreground hover:border-border hover:text-foreground  ',
+              ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-600 shadow-sm dark:text-emerald-300'
+              : 'border-border text-muted-foreground/50 hover:border-emerald-500/40 hover:text-muted-foreground',
           )}
         >
           <Dumbbell className="size-3.5" strokeWidth={2.5} />
@@ -406,12 +419,11 @@ function ExpertiseBreakdown({
             </span>
             <span
               className={cn(
-                'font-mono text-2xl font-bold',
-                locked
-                  ? 'text-foreground line-through '
-                  : accentStrong,
+                'flex items-center gap-1.5 font-mono text-2xl font-bold',
+                locked ? 'text-muted-foreground/50' : accentStrong,
               )}
             >
+              {locked && <Lock className="size-4 text-amber-500" />}
               {signed(total)}
             </span>
           </div>
