@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { z } from 'zod'
 import { Plus, Sparkles, Swords, Trash2 } from 'lucide-react'
-import { SPELL_CATALOG } from '@tormenta20/t20-data'
+import { buffSpells } from '@/shared/lib/spell-cache'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader } from '@/shared/ui/card'
@@ -27,9 +27,6 @@ import type { InitiativeEntry, useSessionSocket } from '@/shared/realtime/realti
 import { CombatantDrawer } from './combatant-drawer'
 import { InitiativeRollButton } from './initiative-roll'
 import { PartyRoster } from './party-roster'
-
-/** Spell buffs a GM can push onto a combatant, resolved once from the catalog. */
-const BUFF_SPELLS = Object.values(SPELL_CATALOG).filter((s) => s.buff)
 
 // Maps realtime hook state onto ConnectionChip's tri-state. The socket
 // hook only reports `isConnected` + `error`; we infer 'reconnecting' as
@@ -341,6 +338,9 @@ function InitiativeRow({
  * explicit GM-targets-a-player affordance.
  */
 function ApplyEffectSelect({ onApply }: { onApply: (spellId: string) => void }) {
+  // Buff spells from the primed cache (loader-gate warm; a module const would
+  // evaluate before priming). See project_front_decouple_catalog A.
+  const buffs = useMemo(() => buffSpells(), [])
   return (
     <Select
       value=""
@@ -357,7 +357,7 @@ function ApplyEffectSelect({ onApply }: { onApply: (spellId: string) => void }) 
         <Sparkles className="size-4" />
       </SelectTrigger>
       <SelectContent>
-        {BUFF_SPELLS.map((spell) => (
+        {buffs.map((spell) => (
           <SelectItem key={spell.id} value={spell.id}>
             {spell.name}
           </SelectItem>

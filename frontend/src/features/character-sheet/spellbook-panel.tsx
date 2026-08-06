@@ -1,15 +1,16 @@
 import { useMemo, useState } from 'react'
 import { BookOpen, Plus, Search } from 'lucide-react'
 import {
-  SPELL_CATALOG,
   SPELL_SCHOOLS,
   SPELLCASTER_CLASSES,
+  type CatalogSpell,
   type ItemEffects,
   type SpellCircle,
   type SpellClassName,
   type SpellSchool,
   type SpellcasterClass,
 } from '@tormenta20/t20-data'
+import { spellCatalog } from '@/shared/lib/spell-cache'
 import { Button } from '@/shared/ui/button'
 import {
   Dialog,
@@ -64,13 +65,13 @@ export function SpellbookPanel({ character }: { character: Character }) {
     return map
   }, [character.spells])
 
-  const learned = useMemo(
-    () =>
-      character.spells
-        .map((s) => SPELL_CATALOG[s.catalogSpellId])
-        .filter((s): s is (typeof SPELL_CATALOG)[string] => Boolean(s))
-        .sort((a, b) => a.circle - b.circle || a.name.localeCompare(b.name)),
-    [character.spells],
+  const learned = useMemo(() => {
+    const catalog = spellCatalog()
+    return character.spells
+      .map((s) => catalog[s.catalogSpellId])
+      .filter((s): s is CatalogSpell => Boolean(s))
+      .sort((a, b) => a.circle - b.circle || a.name.localeCompare(b.name))
+  }, [character.spells],
   )
 
   const noCaster = casterClasses.length === 0
@@ -182,7 +183,7 @@ function LearnSpellDialog({
   const [school, setSchool] = useState<SpellSchool | 'all'>('all')
   const [classFilter, setClassFilter] = useState<SpellClassName | 'all'>('all')
 
-  const catalog = useMemo(() => Object.values(SPELL_CATALOG), [])
+  const catalog = useMemo(() => Object.values(spellCatalog()), [])
   const filtered = useMemo(() => {
     const q = query.trim() ? normalize(query) : ''
     return catalog

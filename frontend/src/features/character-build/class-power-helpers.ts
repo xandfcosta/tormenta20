@@ -4,7 +4,6 @@ import {
   type PowerChoice,
   type Prerequisite,
   slotsForClassLevel,
-  spellEffectByName,
   TORMENTA_POWERS,
 } from '@tormenta20/t20-data'
 import {
@@ -13,6 +12,7 @@ import {
   devotoOptionsFor,
 } from '@/shared/lib/abilities-cache'
 import { catalogWeapons } from '@/shared/lib/catalog-cache'
+import { spellEffectByName } from '@/shared/lib/spell-cache'
 
 export type ClassEntry = { className: string; level: number }
 

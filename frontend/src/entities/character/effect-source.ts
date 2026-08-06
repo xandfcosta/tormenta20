@@ -3,9 +3,9 @@ import {
   getActivation,
   type DisplayFact,
   type ItemFlag,
-  SPELL_CATALOG,
 } from '@tormenta20/t20-data'
 import { getCatalogItem } from '@/shared/lib/catalog-cache'
+import { spellCatalog } from '@/shared/lib/spell-cache'
 import type { CharacterItem } from '@/shared/api/api'
 
 /**
@@ -19,7 +19,7 @@ export function effectSourceName(catalogId: string): string {
   if (catalogId === 'manual-temp-hp') return 'PV temporários (manual)'
   return (
     getCatalogItem(catalogId)?.name ??
-    SPELL_CATALOG[catalogId]?.name ??
+    spellCatalog()[catalogId]?.name ??
     // Power-granted effects persist the power id as catalogId (Fase 4) —
     // "class.barbaro.alma-de-bronze" must read "Alma de Bronze".
     getActivation(catalogId)?.name ??
@@ -33,7 +33,7 @@ export function effectSourceName(catalogId: string): string {
  * chips. Empty for item sources / unknown ids.
  */
 export function effectSourceFacts(catalogId: string): DisplayFact[] {
-  return SPELL_CATALOG[catalogId]?.buff?.facts ?? []
+  return spellCatalog()[catalogId]?.buff?.facts ?? []
 }
 
 /**

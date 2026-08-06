@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import {
   CONDITIONS,
-  SPELL_CATALOG,
   type CatalogItem,
   type CatalogSpell,
   type Condition,
 } from '@tormenta20/t20-data'
 import { allCatalogItems } from '@/shared/lib/catalog-cache'
+import { spellCatalog } from '@/shared/lib/spell-cache'
 import { Input } from '@/shared/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { catalogPowers, type CatalogPower } from './catalog-model'
@@ -23,9 +23,9 @@ import {
 const CONDITION_LIST = Object.values(CONDITIONS).sort((a, b) =>
   a.name.localeCompare(b.name, 'pt-BR'),
 )
-const SPELL_LIST = Object.values(SPELL_CATALOG).sort(
-  (a, b) => a.circle - b.circle || a.name.localeCompare(b.name, 'pt-BR'),
-)
+// The spell catalog is fetched + primed by the loader gate, so build its sorted
+// list inside the component (a module const would evaluate before priming). See
+// project_front_decouple_catalog A.
 // Stable module-level search extractors (CatalogTab memoizes on their identity).
 const conditionSearch = (c: Condition) => [c.name, c.description, ...c.tags]
 const spellSearch = (s: CatalogSpell) => [s.name, s.baseEffect]
@@ -55,6 +55,13 @@ export function CatalogBrowser({
   )
   // Same reason as itemList — the power catalog is primed by the loader gate.
   const powerList = useMemo(() => catalogPowers(), [])
+  const spellList = useMemo(
+    () =>
+      Object.values(spellCatalog()).sort(
+        (a, b) => a.circle - b.circle || a.name.localeCompare(b.name, 'pt-BR'),
+      ),
+    [],
+  )
 
   return (
     <div className="flex min-h-0 flex-col gap-4">
@@ -85,7 +92,7 @@ export function CatalogBrowser({
         </TabsContent>
         <TabsContent value="spells">
           <CatalogTab
-            items={SPELL_LIST}
+            items={spellList}
             query={query}
             searchText={spellSearch}
             estimateSize={132}

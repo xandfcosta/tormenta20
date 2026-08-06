@@ -16,6 +16,7 @@ import {
   type SpellCircle,
   type SpellcasterClass,
 } from '@tormenta20/t20-data'
+import { hasSpell } from '@/shared/lib/spell-cache'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import type { Character, CharacterSpell } from '@/shared/api/api'
@@ -157,7 +158,9 @@ export function SpellRow({
   // Guard before mutating so an optimistic patch is only applied when the
   // shared domain rule says the server will accept it.
   const doLearn = () => {
-    const err = firstErrorMessage(validateLearnSpell(knownIds, spell.id))
+    const err = firstErrorMessage(
+      validateLearnSpell(knownIds, spell.id, hasSpell(spell.id)),
+    )
     if (err) return toast.error(err)
     learn.mutate()
   }

@@ -1,6 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { primeAbilities } from '@/shared/lib/abilities-cache'
 import { primeItemCatalog } from '@/shared/lib/catalog-cache'
+import { primeSpellCatalog } from '@/shared/lib/spell-cache'
 import {
   classPowersCatalogQueryOptions,
   deusesCatalogQueryOptions,
@@ -9,6 +10,7 @@ import {
   itemCatalogQueryOptions,
   originsCatalogQueryOptions,
   raceDefsCatalogQueryOptions,
+  spellCatalogQueryOptions,
 } from './queries'
 
 /**
@@ -25,16 +27,25 @@ import {
  * granted-powers — B.3).
  */
 export async function ensureCatalogs(qc: QueryClient): Promise<void> {
-  const [items, races, origins, classPowers, generalPowers, deuses, granted] =
-    await Promise.all([
-      qc.ensureQueryData(itemCatalogQueryOptions),
-      qc.ensureQueryData(raceDefsCatalogQueryOptions),
-      qc.ensureQueryData(originsCatalogQueryOptions),
-      qc.ensureQueryData(classPowersCatalogQueryOptions),
-      qc.ensureQueryData(generalPowersCatalogQueryOptions),
-      qc.ensureQueryData(deusesCatalogQueryOptions),
-      qc.ensureQueryData(grantedPowersCatalogQueryOptions),
-    ])
+  const [
+    items,
+    races,
+    origins,
+    classPowers,
+    generalPowers,
+    deuses,
+    granted,
+    spells,
+  ] = await Promise.all([
+    qc.ensureQueryData(itemCatalogQueryOptions),
+    qc.ensureQueryData(raceDefsCatalogQueryOptions),
+    qc.ensureQueryData(originsCatalogQueryOptions),
+    qc.ensureQueryData(classPowersCatalogQueryOptions),
+    qc.ensureQueryData(generalPowersCatalogQueryOptions),
+    qc.ensureQueryData(deusesCatalogQueryOptions),
+    qc.ensureQueryData(grantedPowersCatalogQueryOptions),
+    qc.ensureQueryData(spellCatalogQueryOptions),
+  ])
   primeItemCatalog(items)
   primeAbilities({
     races,
@@ -44,4 +55,5 @@ export async function ensureCatalogs(qc: QueryClient): Promise<void> {
     deuses,
     grantedPowers: granted,
   })
+  primeSpellCatalog(spells)
 }

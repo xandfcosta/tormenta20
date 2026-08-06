@@ -1,5 +1,4 @@
 import { EXPERTISES, TORMENTA_POWERS } from '@tormenta20/t20-data'
-import { spellById } from '@tormenta20/t20-data'
 import {
   getClassPower,
   getGeneralPower,
@@ -7,6 +6,7 @@ import {
   getRace,
   ownedClassPowers,
 } from '@/shared/lib/abilities-cache'
+import { spellById } from '@/shared/lib/spell-cache'
 import type { Character } from '@/shared/api/api'
 import {
   characterEffects,

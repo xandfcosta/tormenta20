@@ -15,10 +15,12 @@ import {
   GRANTED_POWERS,
   ORIGINS_CATALOG,
   RACES_CATALOG,
+  SPELL_CATALOG,
 } from '@tormenta20/t20-data'
 import { afterEach } from 'vitest'
 import { primeAbilities } from './shared/lib/abilities-cache'
 import { primeItemCatalog } from './shared/lib/catalog-cache'
+import { primeSpellCatalog } from './shared/lib/spell-cache'
 
 /* The catalogs are fetched + primed by the root loader at runtime (B.2/B.3 —
  * keeps the data out of the bundle). Tests have no loader, so prime the caches
@@ -33,6 +35,7 @@ primeAbilities({
   deuses: DEUSES,
   grantedPowers: GRANTED_POWERS,
 })
+primeSpellCatalog(SPELL_CATALOG)
 
 /* Vitest doesn't auto-cleanup React trees between tests — DOM leaks
  * across tests and `getByText` starts matching leftovers from an

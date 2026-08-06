@@ -23,7 +23,7 @@ import { characterQueryOptions } from '@/entities/character/queries'
 import { applyPoolResult } from '@/entities/character/temp-hp-pool'
 import { cn } from '@/shared/lib/utils'
 import { usePowerUsesStore } from '@/shared/stores/power-uses-store'
-import { SPELL_CATALOG } from '@tormenta20/t20-data'
+import { buffSpells } from '@/shared/lib/spell-cache'
 import { accentStrong, subtleText, surface } from '@/shared/lib/sheet-theme'
 import { describeConditionalTarget } from './conditional-target-label'
 import { FactChips } from './fact-chips'
@@ -235,10 +235,6 @@ function ActiveEffectRow({
   )
 }
 
-/** Spell buffs the player can self-apply, resolved once from the catalog. A
- *  spell qualifies only if it carries a Phase-1 `SpellBuff` block. */
-const BUFF_SPELLS = Object.values(SPELL_CATALOG).filter((s) => s.buff)
-
 /**
  * Manual self-apply of a spell buff as a scene/day ActiveEffect. Buffs are
  * never auto-applied from another caster — the target (or GM) picks the source
@@ -266,10 +262,13 @@ function ApplyEffectDialog({ character }: { character: Character }) {
     },
   })
 
+  // Spell buffs the player can self-apply (Phase-1 `SpellBuff` block), from the
+  // primed spell cache (warm by the loader gate; a module const would be empty).
   const matches = useMemo(() => {
+    const buffs = buffSpells()
     const q = normalize(query.trim())
-    if (!q) return BUFF_SPELLS
-    return BUFF_SPELLS.filter((s) => normalize(s.name).includes(q))
+    if (!q) return buffs
+    return buffs.filter((s) => normalize(s.name).includes(q))
   }, [query])
 
   return (
