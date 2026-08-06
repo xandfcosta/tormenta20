@@ -82,9 +82,23 @@ consome via `/api` (proxy do Vite → :3000; socket.io idem).
   ws-auth. Front usa via `shared/realtime` (`useSessionSocket`).
 - **Seed** — `backend/src/seed.ts` (16 seed chars; ver memória `project_seed`).
 
-**Porte (decisões a tomar na sessão nova):** router Go (net/http vs chi/echo),
-acesso a SQLite (database/sql + modernc/mattn, ou ORM), JWT/sessão, WebSocket
-(coturn/gorilla/nhooyr) p/ o realtime, servir catálogos, portar o seed. Depois:
+**Stack de dados escolhida (SQL-first, sem mágica de ORM):**
+- **`sqlc`** — modelagem+queries: você escreve o SQL (`query.sql`) sobre um
+  `schema.sql`, e o sqlc gera código Go **type-safe** (structs + métodos). Zero
+  reflection, controle total do SQL; relações/eager-load = JOINs escritos à mão
+  (nada de `Preload` automático).
+- **`goose`** (ou **Atlas** se quiser diff declarativo estilo `prisma migrate`) —
+  migrations: arquivos `.sql` up/down versionados.
+- **`modernc.org/sqlite`** — driver SQLite **Go puro (sem cgo)**, mantém o
+  `engine-go` compilando/cross-compilando limpo como já é.
+- Fluxo: `schema.sql` (fonte da verdade do DB, migrado do `schema.prisma`) →
+  goose aplica → sqlc gera o acesso tipado. Alternativa considerada e preterida:
+  **Ent+Atlas** (mais "Prisma-like", client tipado + eager-load ergonômico, mas
+  mais mágica/código gerado).
+
+**Porte (demais decisões a tomar na sessão nova):** router Go (net/http vs chi/echo),
+JWT/sessão, WebSocket (gorilla/nhooyr/coder) p/ o realtime, servir catálogos,
+portar o seed. Depois:
 apontar `/api` (e o socket) do Vite pro server Go, e o `pnpm dev` raiz roda só
 `frontend` + `engine-go` (server Go que serve API + WASM). O engine Go já existe —
 a API é o grosso.
