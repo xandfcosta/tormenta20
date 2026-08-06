@@ -93,7 +93,7 @@ export class CharacterEffectsService {
     spellId: string,
     scopeOverride?: 'scene' | 'day',
   ) {
-    if (!isValid(validateApplyBuff(spellId))) {
+    if (!isValid(validateApplyBuff(!!SPELL_CATALOG[spellId]?.buff))) {
       throw new BadRequestException({
         statusCode: 400,
         error: 'Bad Request',
