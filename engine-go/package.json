@@ -1,0 +1,10 @@
+{
+  "name": "@tormenta20/engine-go",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Go rules engine (single source of truth) — served to the front as WASM. `dev` runs air, rebuilding the wasm on any .go change.",
+  "scripts": {
+    "dev": "air",
+    "build:wasm": "bash ../frontend/scripts/build-engine-wasm.sh"
+  }
+}

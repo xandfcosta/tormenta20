@@ -2,7 +2,8 @@
   "name": "tormenta20",
   "private": true,
   "scripts": {
-    "dev": "pnpm -r --parallel run dev",
+    "dev": "concurrently -k -n t20,back,front,wasm -c gray,yellow,cyan,magenta \"pnpm -F @tormenta20/t20-data dev\" \"pnpm -F backend dev\" \"pnpm -F frontend dev\" \"pnpm -F @tormenta20/engine-go dev\"",
+    "dev:app": "concurrently -k -n back,front -c yellow,cyan \"pnpm -F backend dev\" \"pnpm -F frontend dev\"",
     "dev:backend": "pnpm --filter backend run start:dev",
     "dev:frontend": "pnpm --filter frontend run dev",
     "build": "pnpm -r run build",

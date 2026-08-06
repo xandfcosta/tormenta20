@@ -1,0 +1,22 @@
+# Air hot-reload do engine-go em dev (parte do `pnpm dev` do root, via concurrently).
+# A cada mudança em .go: (1) rebuilda o WASM que o front consome
+# (frontend/public/engine/) e (2) recompila+reinicia o server Go em :3002 (POST
+# /sheet, útil pra checagens de paridade durante a migração pro WASM).
+# Ver project_fase3_rtt_bench (Fase 3 → WASM).
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  # Rebuilda o wasm (script resolve os paths pelo próprio local) + compila o server.
+  cmd = "bash ../frontend/scripts/build-engine-wasm.sh && go build -o ./tmp/engine-server ./cmd/server"
+  # air roda este binário após o build; cmd/server usa :3002 por padrão.
+  bin = "./tmp/engine-server"
+  include_ext = ["go"]
+  exclude_dir = ["tmp", "cmd/wasm/testdata"]
+  stop_on_error = true
+
+[log]
+  time = true
+
+[misc]
+  clean_on_exit = true
