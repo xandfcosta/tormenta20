@@ -20,7 +20,11 @@ import {
   assertCharacterRules,
   sanitizeClassChoices,
 } from './characters.helpers';
-import { engineVitalsPatch } from './vitals-sync.helpers';
+import {
+  engineVitalsPatch,
+  levelVitalsPatch,
+  type StoredVitals,
+} from './vitals-sync.helpers';
 import {
   CreateCharacterDto,
   UpdateAbilityChoicesDto,
@@ -88,10 +92,11 @@ const characterInclude = {
  * write touched — the client merges them into the cached Character instead of
  * re-reading the whole aggregate.
  */
-export type LevelResult = { level: number };
+export type LevelResult = { level: number; vitals: StoredVitals };
 export type ClassLevelResult = {
   level: number;
   classes: { className: string; level: number }[];
+  vitals: StoredVitals;
 };
 export type ProficienciesResult = { proficiencies: string };
 export type AbilityChoicesResult = {
@@ -182,6 +187,46 @@ export class CharactersService {
       );
     }
     return { ...character, ...patch };
+  }
+
+  /**
+   * Post-write vitals sync for the level mutations: recomputes the engine
+   * pools on a projection of the row carrying the NEW class levels, shifts
+   * the currents by the max delta (`levelVitalsPatch` — leveling up heals
+   * the gained PV/PM, leveling down takes them back), persists the patch
+   * and returns the four pool columns for the client delta-merge.
+   *
+   * @example
+   * const vitals = await this.syncVitalsForProjection({ ...current, level: 11 })
+   */
+  private async syncVitalsForProjection(
+    row: Parameters<typeof this.healVitalsFromEngine>[0],
+  ): Promise<StoredVitals> {
+    const stored: StoredVitals = {
+      hpMax: row.hpMax,
+      hpCurrent: row.hpCurrent,
+      mpMax: row.mpMax,
+      mpCurrent: row.mpCurrent,
+    };
+    // No classes → no engine vitals (computeVitals yields 0/0); keep stored.
+    if (!Array.isArray(row.classes) || row.classes.length === 0) return stored;
+    const { vitals } = computeSheetForRow(row);
+    const patch = levelVitalsPatch(stored, {
+      pvMax: vitals.pvMax,
+      pmMax: vitals.pmMax,
+    });
+    if (!patch) return stored;
+    try {
+      await this.prisma.character.update({
+        where: { id: row.id },
+        data: patch,
+      });
+    } catch (err) {
+      this.logger.warn(
+        `level vitals sync failed for character ${row.id}: ${String(err)}`,
+      );
+    }
+    return { ...stored, ...patch };
   }
 
   /** True when `userId` owns a campaign this character has joined —
@@ -397,12 +442,17 @@ export class CharactersService {
     characterId: number,
     dto: UpdateLevelDto,
   ): Promise<LevelResult> {
-    await this.findOne(ownerId, characterId);
-    return this.prisma.character.update({
+    const current = await this.findOne(ownerId, characterId);
+    const updated = await this.prisma.character.update({
       where: { id: characterId },
       data: { level: dto.level },
       select: { level: true },
     });
+    const vitals = await this.syncVitalsForProjection({
+      ...current,
+      level: dto.level,
+    });
+    return { level: updated.level, vitals };
   }
 
   /**
@@ -420,9 +470,9 @@ export class CharactersService {
      * an unauthorized caller. The class + total re-check happen INSIDE
      * the tx so a parallel updateClassLevel on another class can't
      * slip past the L20 cap. */
-    await this.findOne(ownerId, characterId);
+    const current = await this.findOne(ownerId, characterId);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return this.prisma.$transaction(async (tx: any) => {
+    const delta = await this.prisma.$transaction(async (tx: any) => {
       const classes = (await tx.characterClass.findMany({
         where: { characterId },
         select: { className: true, level: true },
@@ -479,6 +529,16 @@ export class CharactersService {
         },
       });
     });
+    /* Regression 2026-08: PV/PM never changed on level up/down — the delta
+     * carried only {level, classes} and the client merges deltas without
+     * refetching, so the read-heal (next GET) never ran. Recompute the
+     * derived pools against the NEW class levels and ship them along. */
+    const vitals = await this.syncVitalsForProjection({
+      ...current,
+      level: delta.level,
+      classes: delta.classes,
+    });
+    return { ...delta, vitals };
   }
 
   async updateProficiencies(

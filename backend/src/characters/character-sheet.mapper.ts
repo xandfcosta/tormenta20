@@ -58,11 +58,16 @@ export type CharacterDbRow = {
   mpCurrent: number;
   /** Origin name (matches an ORIGINS_CATALOG id). */
   origin?: string | null;
+  /** Chosen poder concedido (NAME) — Bênção do Mana feeds maxPm (p132). */
+  godPower?: string | null;
   /** JSON string[] columns — picked class/general powers, origin benefits,
    *  and chosen race-ability variant ids. Feed the passive PV/PM pipeline. */
   classPowers?: string | null;
   originChoices?: string | null;
   raceAbilityChoices?: string | null;
+  /** JSON Record<className, { caminho?, devoto? }> — resolves grantedByChoice
+   *  rows (Caminho do Arcanista → +atributo-chave no PM, p37). */
+  classChoices?: string | null;
   /** JSON ConditionId[] — condições do livro ativas. */
   activeConditions?: string | null;
   /** JSON Record<powerOrBenefitId, string[]> — sub-choices; free-pick origem
@@ -108,6 +113,32 @@ function originPickedPowerIds(row: CharacterDbRow): string[] {
 }
 
 /** Parse a JSON-encoded `string[]` column defensively (bad blob ⇒ empty). */
+/** Parse the classChoices JSON blob ({ Arcanista: { caminho: 'mago' } });
+ *  malformed input yields undefined so the grant is simply absent. */
+function classChoicesFromRow(
+  raw: string | null | undefined,
+): Record<string, { devoto?: string; caminho?: string }> | undefined {
+  if (!raw) return undefined;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return undefined;
+    }
+    const out: Record<string, { devoto?: string; caminho?: string }> = {};
+    for (const [cls, blob] of Object.entries(parsed)) {
+      if (!blob || typeof blob !== 'object') continue;
+      const b = blob as { devoto?: unknown; caminho?: unknown };
+      out[cls] = {
+        ...(typeof b.devoto === 'string' ? { devoto: b.devoto } : {}),
+        ...(typeof b.caminho === 'string' ? { caminho: b.caminho } : {}),
+      };
+    }
+    return out;
+  } catch {
+    return undefined;
+  }
+}
+
 function jsonStringArray(raw: string | null | undefined): string[] {
   if (!raw) return [];
   try {
@@ -404,6 +435,12 @@ export function toCharacterInput(row: CharacterDbRow): CharacterInput {
   return {
     level: totalLevel > 0 ? totalLevel : row.level,
     className: primaryClass,
+    // Full list unlocks the p34-35 multiclass math (PV seed = 1ª classe, PM
+    // por classe, grants por nível de classe).
+    classes: row.classes.map((c) => ({
+      className: c.className,
+      level: c.level,
+    })),
     raceId,
     raceFloatingPicks: raceAttr.floatingPicks,
     raceAscendencia: raceAttr.ascendencia,
@@ -421,6 +458,7 @@ export function toCharacterInput(row: CharacterDbRow): CharacterInput {
     trainedSkills,
     equipment,
     origin: row.origin ?? undefined,
+    godPower: row.godPower || undefined,
     powerIds: [
       ...new Set([
         ...jsonStringArray(row.classPowers),
@@ -429,6 +467,7 @@ export function toCharacterInput(row: CharacterDbRow): CharacterInput {
     ],
     originChoices: jsonStringArray(row.originChoices),
     raceAbilityChoices: jsonStringArray(row.raceAbilityChoices),
+    classChoices: classChoicesFromRow(row.classChoices),
     activeConditions: jsonStringArray(
       row.activeConditions,
     ) as CharacterInput['activeConditions'],

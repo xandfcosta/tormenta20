@@ -8,6 +8,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { computeSheetForRow } from './character-sheet.mapper';
 import { CharactersService } from './characters.service';
 import { CharacterItemsService } from './characters-items.service';
 import { CharacterEffectsService } from './characters-effects.service';
@@ -120,10 +121,29 @@ function makeCharacter(over: Partial<Character> = {}): Character {
 class FakePrisma {
   characterFindUnique = jest.fn<Promise<Character | null>, [unknown]>();
   characterUpdate = jest.fn<Promise<Character>, [unknown]>(
-    async ({ data }: { data: Partial<Character> }) => ({
-      ...this.lastSeed!,
-      ...data,
-    }),
+    async ({ data }: { data: Partial<Character> & { classes?: unknown } }) => {
+      /* Real Prisma resolves a nested `classes: { update: ... }` write and a
+       * `classes` select back into rows; spreading the raw op object here
+       * left `classes` as `{update: …}` and broke callers that feed the
+       * result to the engine (vitals delta regression). Translate it. */
+      const { classes: classesOp, ...rest } = data;
+      const nested = classesOp as
+        | {
+            update?: {
+              where: { characterId_className: { className: string } };
+              data: { level: number };
+            };
+          }
+        | undefined;
+      const classes = nested?.update
+        ? (this.lastSeed?.classes ?? []).map((c) =>
+            c.className === nested.update!.where.characterId_className.className
+              ? { ...c, level: nested.update!.data.level }
+              : c,
+          )
+        : (this.lastSeed?.classes ?? []);
+      return { ...this.lastSeed!, ...rest, classes };
+    },
   );
   characterItemFindMany = jest.fn<
     Promise<{ equipped: string | null }[]>,
@@ -415,11 +435,56 @@ describe('CharactersService.updateClassLevel — PDF p7 (sum ≤ 20)', () => {
     );
     const service = await makeService(prisma);
     await service.updateClassLevel(1, 1, { className: 'Bardo', level: 7 });
-    // .at(-1): the findOne read-heal may prepend its own character.update.
-    const payload = prisma.characterUpdate.mock.calls.at(-1)![0] as {
-      data: { level: number };
-    };
-    expect(payload.data.level).toBe(17);
+    // Filter to the level write: the findOne read-heal may prepend a vitals
+    // update and the post-write vitals sync appends another.
+    const payload = prisma.characterUpdate.mock.calls
+      .map((c) => c[0] as { data: { level?: number } })
+      .filter((p) => p.data.level !== undefined)
+      .at(-1);
+    expect(payload?.data.level).toBe(17);
+  });
+
+  it('returns engine-recomputed vitals so the client delta-merge sees the new PV/PM (regression 2026-08)', async () => {
+    /* Level up/down did not change PV/PM on the sheet: the delta response
+     * carried only {level, classes}, the client merged it without refetching,
+     * and the read-heal only ran on the NEXT full GET. The delta now ships
+     * the engine-derived pools computed against the NEW class levels. */
+    const prisma = new FakePrisma();
+    const seed = makeCharacter({
+      classes: [{ className: 'Guerreiro', level: 10 }],
+      level: 10,
+    });
+    prisma.seedCharacter(seed);
+    const service = await makeService(prisma);
+    const result = await service.updateClassLevel(1, 1, {
+      className: 'Guerreiro',
+      level: 11,
+    });
+    const engineOld = computeSheetForRow(seed).vitals;
+    const engine = computeSheetForRow({
+      ...seed,
+      level: 11,
+      classes: [{ className: 'Guerreiro', level: 11 }],
+    }).vitals;
+    // Currents FOLLOW the max delta (level up heals the gained PV/PM); the
+    // findOne read-heal ran first, so the pre-write currents were clamped
+    // into the old engine maxes.
+    expect(result.vitals).toEqual({
+      hpMax: engine.pvMax,
+      hpCurrent:
+        Math.min(seed.hpCurrent, engineOld.pvMax) +
+        (engine.pvMax - engineOld.pvMax),
+      mpMax: engine.pmMax,
+      mpCurrent:
+        Math.min(seed.mpCurrent, engineOld.pmMax) +
+        (engine.pmMax - engineOld.pmMax),
+    });
+    // And the pools are persisted, not just echoed.
+    const persisted = prisma.characterUpdate.mock.calls
+      .map((c) => (c[0] as { data: Partial<Character> }).data)
+      .filter((d) => d.hpMax !== undefined)
+      .at(-1);
+    expect(persisted?.hpMax).toBe(engine.pvMax);
   });
 
   it('re-reads classes inside the tx so parallel per-class updates cap correctly (BI2)', async () => {

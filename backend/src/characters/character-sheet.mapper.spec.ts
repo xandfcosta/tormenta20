@@ -331,6 +331,22 @@ describe('computeSheetForRow — passive max-PV/PM grants', () => {
     // pmBase = 5*3 = 15; +Sabedoria total (4 base, Humano sem bônus fixo) = 19.
     expect(computeSheetForRow(clerigo).vitals.pmMax).toBe(19);
   });
+
+  it('Arcanista caminho (classChoices JSON) folds +atributo-chave into pmMax', () => {
+    // p37: Mago soma Inteligência no PM. pmBase = 6*1; Int 4 → 10.
+    const mago: CharacterDbRow = {
+      ...humanoFighter,
+      level: 1,
+      intelligence: 4,
+      classes: [{ className: 'Arcanista', level: 1 }],
+      classChoices: JSON.stringify({ Arcanista: { caminho: 'mago' } }),
+    };
+    expect(computeSheetForRow(mago).vitals.pmMax).toBe(10);
+    // Malformed blob → grant simply absent, no crash.
+    expect(
+      computeSheetForRow({ ...mago, classChoices: 'not json' }).vitals.pmMax,
+    ).toBe(6);
+  });
 });
 
 // ─── Skills ──────────────────────────────────────────────────────

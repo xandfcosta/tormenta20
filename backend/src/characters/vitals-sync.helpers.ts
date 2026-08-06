@@ -51,6 +51,44 @@ export function engineVitalsPatch(
   return Object.keys(patch).length > 0 ? patch : null;
 }
 
+/**
+ * Level-change variant of `engineVitalsPatch`: currents FOLLOW the max delta
+ * instead of only being clamped — leveling up must not leave the character
+ * "wounded" by the new, larger max, and leveling down walks the same delta
+ * back (owner report 2026-08: 68/87 leveled up to 68/96 instead of 77/96).
+ * Shifted currents stay inside [0, newMax]. Only for mutations whose INTENT
+ * is a level change; the read-heal keeps clamp-only semantics (repairing a
+ * stale cache must not invent healing).
+ *
+ * @example
+ * levelVitalsPatch(
+ *   { hpMax: 87, hpCurrent: 68, mpMax: 24, mpCurrent: 24 },
+ *   { pvMax: 96, pmMax: 27 },
+ * ) // → { hpMax: 96, hpCurrent: 77, mpMax: 27, mpCurrent: 27 }
+ */
+export function levelVitalsPatch(
+  stored: StoredVitals,
+  engine: { pvMax: number; pmMax: number },
+): Partial<StoredVitals> | null {
+  const next: StoredVitals = {
+    hpMax: engine.pvMax,
+    hpCurrent: clampCurrent(
+      stored.hpCurrent + (engine.pvMax - stored.hpMax),
+      engine.pvMax,
+    ),
+    mpMax: engine.pmMax,
+    mpCurrent: clampCurrent(
+      stored.mpCurrent + (engine.pmMax - stored.mpMax),
+      engine.pmMax,
+    ),
+  };
+  const patch: Partial<StoredVitals> = {};
+  for (const key of Object.keys(next) as (keyof StoredVitals)[]) {
+    if (next[key] !== stored[key]) patch[key] = next[key];
+  }
+  return Object.keys(patch).length > 0 ? patch : null;
+}
+
 /** Clamp a current pool into [0, max]; valid values pass through unchanged. */
 function clampCurrent(current: number, max: number): number {
   return Math.min(Math.max(0, current), max);
