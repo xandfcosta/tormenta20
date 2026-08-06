@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
+  ACTIVATION_SPECS,
+  allGrantedPowerOptions,
   BESTIARY,
   CATALOG_ITEMS,
   CLASS_POWERS_CATALOG,
@@ -7,10 +9,12 @@ import {
   DEUSES,
   GENERAL_POWERS_CATALOG,
   GRANTED_POWERS,
+  ORIGENS,
   ORIGINS_CATALOG,
   RACAS,
   RACES_CATALOG,
   SPELL_CATALOG,
+  TORMENTA_POWERS,
 } from '@tormenta20/t20-data';
 
 /**
@@ -37,6 +41,16 @@ export const CATALOG_RESOURCES = [
   'class-powers',
   'general-powers',
   'granted-powers',
+  // `origens` = racas.ts-style origins (ORIGENS: perícias/poderes/kit) — DISTINCT
+  // from `origins` above (ORIGINS_CATALOG, the abilities OriginDefinition).
+  'origens',
+  'tormenta-powers',
+  // Divine powers (poderes concedidos) merged with their rule text, for the
+  // devoto picker — front filters by deus. See divine-power-mechanics.
+  'divine-powers',
+  // Power activation registry (id → pmCost/action/uses) for every power source
+  // — resolves effect labels + power-use UI. See power-activation.
+  'activations',
 ] as const;
 
 export type CatalogResource = (typeof CATALOG_RESOURCES)[number];
@@ -55,6 +69,10 @@ export class CatalogService {
     'class-powers': () => CLASS_POWERS_CATALOG,
     'general-powers': () => GENERAL_POWERS_CATALOG,
     'granted-powers': () => GRANTED_POWERS,
+    origens: () => ORIGENS,
+    'tormenta-powers': () => TORMENTA_POWERS,
+    'divine-powers': () => allGrantedPowerOptions(),
+    activations: () => ACTIVATION_SPECS,
   };
 
   /** Names the `:resource` route accepts — also the catalog index payload. */
