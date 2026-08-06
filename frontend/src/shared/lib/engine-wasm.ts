@@ -1,6 +1,32 @@
-import type { CharacterInput, ComputedSheet, ItemEffects } from '@tormenta20/t20-data'
+import type {
+  AttributeKey,
+  CharacterInput,
+  ComputedSheet,
+  ItemEffects,
+} from '@tormenta20/t20-data'
 import type { Character } from '@/shared/api/api'
 import type { ComputedSheetV2 } from './computed-sheet-v2'
+
+/**
+ * Normalized input for the Go vitals pipeline (PV/PM máximos) — mirrors t20-data
+ * VitalGrantContext. Built by the front consumers (level-vitals, draft-vitals).
+ * `raceId` is the race NAME (getRace resolves by it); `attrTotals` are the FINAL
+ * totals (post item/race mods).
+ */
+export type VitalContext = {
+  level: number
+  classes: { className: string; level: number }[]
+  raceId: string
+  raceAbilityChoices: string[]
+  powerIds: string[]
+  classChoices: Record<string, { devoto?: string; caminho?: string } | undefined>
+  godPower: string
+  origin: string
+  originChoices: string[]
+  attrTotals: Record<AttributeKey, number>
+}
+
+export type VitalPools = { pvMax: number; pmMax: number }
 
 /**
  * Lazy loader + typed wrapper for the engine-go rules engine compiled to WASM.
@@ -25,6 +51,7 @@ type GlobalWithGo = typeof globalThis & {
   primeEngineCatalogs?: (payloadJson: string) => string
   computeSheetV2?: (charJson: string, conditionalsJson: string) => string
   computeEffects?: (charJson: string, conditionalsJson: string) => string
+  computeVitals?: (contextJson: string) => string
 }
 
 /** The engine's serialized ItemEffects — flags as a sorted array (rebuilt into a
@@ -136,6 +163,19 @@ export function computeEffects(
     flags: new Set(out.flags) as ItemEffects['flags'],
     conditional: out.conditional,
   }
+}
+
+/**
+ * Compute PV/PM máximos through the Go engine over a normalized `VitalContext`.
+ * Requires `ensureEngine()` + `primeEngineCatalogs()`. Mirrors the front's TS
+ * vitals pipeline byte-for-byte (verified by the `vitals` parity oracle).
+ */
+export function computeVitals(context: VitalContext): VitalPools {
+  const fn = (globalThis as GlobalWithGo).computeVitals
+  if (!fn) throw new Error('engine-wasm: engine not ready — call ensureEngine() first')
+  const out = JSON.parse(fn(JSON.stringify(context))) as VitalPools & { error?: string }
+  if (out.error) throw new Error(`engine-wasm: ${out.error}`)
+  return out
 }
 
 /**

@@ -1,17 +1,9 @@
-import {
-  ATTRIBUTE_KEYS,
-  type AttributeKey,
-  CLASS_VITALS,
-  collectVitalGrants,
-  multiclassMpPool,
-  multiclassPvPool,
-} from '@tormenta20/t20-data'
-import { frontVitalResolver } from '@/entities/character/vital-resolver'
+import { ATTRIBUTE_KEYS, type AttributeKey, CLASS_VITALS } from '@tormenta20/t20-data'
+import { computeVitalPools, type VitalContext } from '@/entities/character/vital-pools'
 import {
   type RaceChoiceState,
   appliedRaceDeltas,
   draftTormentaCarismaExtra,
-  raceModel,
 } from './grant-helpers'
 
 type VitalsValues = {
@@ -48,8 +40,8 @@ export function deriveDraftVitals(
   raceChoices: RaceChoiceState,
 ): DraftVitals {
   const primary = v.classes[0]?.className
-  const vitals = primary ? CLASS_VITALS[primary] : undefined
-  if (!vitals) return { pvMax: 0, pmMax: 0 }
+  // Guard: no valid primary class yet (early wizard) → no vitals preview.
+  if (!primary || !CLASS_VITALS[primary]) return { pvMax: 0, pmMax: 0 }
   const level = v.classes.reduce((n, c) => n + (c.level || 0), 0) || 1
   const classEntries = v.classes.filter((c) => c.className && c.level > 0)
   const deltas = appliedRaceDeltas(v.races, raceChoices)
@@ -63,24 +55,19 @@ export function deriveDraftVitals(
     v.powerChoices ?? {},
     v.originChoices ?? [],
   )
-  const grants = collectVitalGrants({
+  // `raceId` is the race NAME (the Go engine's getRace resolves by it) — v.races
+  // holds names, so pass directly instead of the raceModel slug.
+  const ctx: VitalContext = {
     level,
-    className: primary,
     classes: classEntries,
-    raceId: raceModel(v.races[0] ?? '')?.id,
-    powerIds: v.classPowers,
-    classChoices: v.classChoices,
-    godPower: v.godPower || undefined,
-    origin: v.origin || undefined,
-    originChoices: v.originChoices,
+    raceId: v.races[0] ?? '',
+    raceAbilityChoices: [],
+    powerIds: v.classPowers ?? [],
+    classChoices: v.classChoices ?? {},
+    godPower: v.godPower ?? '',
+    origin: v.origin ?? '',
+    originChoices: v.originChoices ?? [],
     attrTotals,
-  }, frontVitalResolver)
-  // Shared pools mirror the server sheet incl. p34 min-1-PV and p34-35
-  // multiclass seeding.
-  const pvBase = multiclassPvPool(classEntries, attrTotals.constitution)
-  const pmBase = multiclassMpPool(classEntries)
-  return {
-    pvMax: Math.max(0, pvBase + grants.pv),
-    pmMax: Math.max(0, pmBase + grants.pm),
   }
+  return computeVitalPools(ctx)
 }

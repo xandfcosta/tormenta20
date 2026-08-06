@@ -10,6 +10,7 @@ import {
   CATALOG_ITEMS,
   CLASS_POWERS_CATALOG,
   GENERAL_POWERS_CATALOG,
+  GRANTED_POWERS,
   type ItemEffects,
   ORIGINS_CATALOG,
   RACAS,
@@ -36,6 +37,8 @@ import {
   spellDCBonus,
   tempHpFromPowers,
 } from './derived'
+import { buildVitalContext } from './level-vitals'
+import { computeVitalPools } from './vital-pools'
 
 /**
  * PARITY HARNESS (PORT-PLAN.md §3) — the TDD backbone for the Go engine port.
@@ -142,7 +145,17 @@ describe('parity oracle — derived.ts golden output for the 16 seed chars', () 
         // re-run `ActiveItemsFor` on the same raw input and check it against
         // `activeItems` — the resolution test (slice 1) only needs activeItems.
         // `sheetV2` is the breakdown oracle (task #5).
-        const payload = { slug, char, activeItems, itemEffects, sheetV2: sheetV2For(char) }
+        const vitals = computeVitalPools(
+          buildVitalContext(char, characterEffects(char, EMPTY_CONDITIONALS), char.classes),
+        )
+        const payload = {
+          slug,
+          char,
+          activeItems,
+          itemEffects,
+          sheetV2: sheetV2For(char),
+          vitals,
+        }
         writeFileSync(
           resolve(oracleDir, `${slug}.json`),
           `${JSON.stringify(payload, null, 2)}\n`,
@@ -161,6 +174,7 @@ describe('parity oracle — derived.ts golden output for the 16 seed chars', () 
       origins: ORIGINS_CATALOG,
       classPowers: CLASS_POWERS_CATALOG,
       generalPowers: GENERAL_POWERS_CATALOG,
+      grantedPowers: GRANTED_POWERS,
       racas: RACAS,
       tormentaPowerIds: Object.keys(TORMENTA_POWERS),
     }

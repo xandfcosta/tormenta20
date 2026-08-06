@@ -1,14 +1,7 @@
-import {
-  ATTRIBUTE_KEYS,
-  type AttributeKey,
-  type ItemEffects,
-  collectVitalGrants,
-  multiclassMpPool,
-  multiclassPvPool,
-} from '@tormenta20/t20-data'
+import { ATTRIBUTE_KEYS, type AttributeKey, type ItemEffects } from '@tormenta20/t20-data'
 import type { Character } from '@/shared/api/api'
 import { attributeTotal, parseChoiceSet, parseClassChoices } from './derived'
-import { frontVitalResolver } from './vital-resolver'
+import { computeVitalPools, type VitalContext } from './vital-pools'
 
 type ClassEntry = { className: string; level: number }
 type LevelVitals = {
@@ -18,33 +11,32 @@ type LevelVitals = {
   mpCurrent: number
 }
 
-/** Engine PV/PM pools for an arbitrary class list — same shared helpers the
- *  server sheet uses (multiclass p34-35 + p34 floor + vital grants). */
-function enginePools(
+/**
+ * Build the normalized `VitalContext` for a character + hypothetical class list —
+ * the input the Go vitals engine (and the TS test fallback) consume. Exported so
+ * the parity harness can feed the same context into `computeVitalPools` (the Inc.3
+ * `vitals` oracle). `raceId` is the race NAME (getRace resolves by it).
+ */
+export function buildVitalContext(
   character: Character,
   effects: ItemEffects,
   classes: readonly ClassEntry[],
-): { pv: number; pm: number } {
+): VitalContext {
   const attrTotals = {} as Record<AttributeKey, number>
   for (const k of ATTRIBUTE_KEYS) {
     attrTotals[k] = attributeTotal(character, k, effects)
   }
-  const grants = collectVitalGrants({
+  return {
     level: classes.reduce((n, c) => n + c.level, 0),
-    className: classes[0]?.className ?? '',
-    classes,
-    raceId: character.races[0]?.race,
+    classes: [...classes],
+    raceId: character.races[0]?.race ?? '',
     raceAbilityChoices: [...parseChoiceSet(character.raceAbilityChoices)],
     powerIds: [...parseChoiceSet(character.classPowers)],
     classChoices: parseClassChoices(character.classChoices),
-    godPower: character.godPower || undefined,
-    origin: character.origin || undefined,
+    godPower: character.godPower || '',
+    origin: character.origin || '',
     originChoices: [...parseChoiceSet(character.originChoices)],
     attrTotals,
-  }, frontVitalResolver)
-  return {
-    pv: Math.max(0, multiclassPvPool(classes, attrTotals.constitution) + grants.pv),
-    pm: Math.max(0, multiclassMpPool(classes) + grants.pm),
   }
 }
 
@@ -62,13 +54,13 @@ export function optimisticLevelVitals(
   effects: ItemEffects,
   nextClasses: readonly ClassEntry[],
 ): LevelVitals {
-  const prev = enginePools(character, effects, character.classes)
-  const next = enginePools(character, effects, nextClasses)
+  const prev = computeVitalPools(buildVitalContext(character, effects, character.classes))
+  const next = computeVitalPools(buildVitalContext(character, effects, nextClasses))
   return {
-    hpMax: next.pv,
-    hpCurrent: shiftCurrent(character.hpCurrent, next.pv - prev.pv, next.pv),
-    mpMax: next.pm,
-    mpCurrent: shiftCurrent(character.mpCurrent, next.pm - prev.pm, next.pm),
+    hpMax: next.pvMax,
+    hpCurrent: shiftCurrent(character.hpCurrent, next.pvMax - prev.pvMax, next.pvMax),
+    mpMax: next.pmMax,
+    mpCurrent: shiftCurrent(character.mpCurrent, next.pmMax - prev.pmMax, next.pmMax),
   }
 }
 

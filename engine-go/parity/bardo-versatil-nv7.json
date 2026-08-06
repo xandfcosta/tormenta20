@@ -978,5 +978,9 @@
         "armorPenaltyApplied": 0
       }
     ]
+  },
+  "vitals": {
+    "pvMax": 51,
+    "pmMax": 33
   }
 }

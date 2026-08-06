@@ -87,6 +87,14 @@ type GeneralPower struct {
 	Modifiers []Modifier `json:"modifiers"`
 }
 
+// GrantedPower mirrors abilities/granted-powers.ts GrantedPower (poder concedido
+// do deus) — only name + modifiers are read (Bênção do Mana → maxPm). Keyed by
+// NAME because the picker stores the poder's name in Character.godPower.
+type GrantedPower struct {
+	Name      string     `json:"name"`
+	Modifiers []Modifier `json:"modifiers"`
+}
+
 // Raca mirrors racas.ts Raca (only name + atributoMod are read here).
 type Raca struct {
 	Name        string      `json:"name"`
@@ -160,6 +168,7 @@ type Catalogs struct {
 	classPowers    []*ClassPower
 	classPowerByID map[string]*ClassPower
 	generalByID    map[string]*GeneralPower
+	grantedByName  map[string]*GrantedPower
 	racasByName    map[string]*Raca
 	tormentaIDs    map[string]bool
 }
@@ -172,6 +181,7 @@ type enginePayload struct {
 	Origins       []OriginDefinition `json:"origins"`
 	ClassPowers   []ClassPower       `json:"classPowers"`
 	GeneralPowers []GeneralPower     `json:"generalPowers"`
+	GrantedPowers []GrantedPower     `json:"grantedPowers"`
 	Racas         map[string]Raca    `json:"racas"`
 	TormentaIDs   []string           `json:"tormentaPowerIds"`
 }
@@ -189,6 +199,7 @@ func PrimeEngineCatalogs(raw []byte) (*Catalogs, error) {
 		racesByID:      make(map[string]*RaceDefinition, len(p.Races)),
 		classPowerByID: make(map[string]*ClassPower, len(p.ClassPowers)),
 		generalByID:    make(map[string]*GeneralPower, len(p.GeneralPowers)),
+		grantedByName:  make(map[string]*GrantedPower, len(p.GrantedPowers)),
 		racasByName:    make(map[string]*Raca, len(p.Racas)),
 		tormentaIDs:    make(map[string]bool, len(p.TormentaIDs)),
 	}
@@ -207,6 +218,9 @@ func PrimeEngineCatalogs(raw []byte) (*Catalogs, error) {
 	}
 	for i := range p.GeneralPowers {
 		c.generalByID[p.GeneralPowers[i].ID] = &p.GeneralPowers[i]
+	}
+	for i := range p.GrantedPowers {
+		c.grantedByName[p.GrantedPowers[i].Name] = &p.GrantedPowers[i]
 	}
 	for id := range p.Racas {
 		r := p.Racas[id]
@@ -227,6 +241,10 @@ func (c *Catalogs) getRace(id string) *RaceDefinition { return c.racesByID[id] }
 func (c *Catalogs) getClassPower(id string) *ClassPower { return c.classPowerByID[id] }
 
 func (c *Catalogs) getGeneralPower(id string) *GeneralPower { return c.generalByID[id] }
+
+// grantedPowerByName mirrors abilities-cache.grantedPowerByName — the god power
+// keyed by its book name (Character.godPower stores the name).
+func (c *Catalogs) grantedPowerByName(name string) *GrantedPower { return c.grantedByName[name] }
 
 // getOrigin looks up an origin by id (abilities-cache getOrigin).
 func (c *Catalogs) getOrigin(id string) *OriginDefinition {

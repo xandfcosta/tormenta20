@@ -94,6 +94,20 @@ func parseCharArgs(args []js.Value) (*engine.Character, map[string]bool, string)
 	return &ch, conditionals, ""
 }
 
+// computeVitals runs the catalog-driven vitals pipeline (PV/PM máximos) over a
+// normalized VitalContext the front builds. Requires primeEngineCatalogs first.
+func computeVitals(_ js.Value, args []js.Value) any {
+	if primedCatalogs == nil {
+		return `{"error":"engine catalogs not primed — call primeEngineCatalogs first"}`
+	}
+	var ctx engine.VitalContext
+	if err := json.Unmarshal([]byte(args[0].String()), &ctx); err != nil {
+		return errorJSON(err)
+	}
+	out, _ := json.Marshal(primedCatalogs.ComputeVitals(ctx))
+	return string(out)
+}
+
 // errorJSON returns a JSON string carrying the error, matching the sheet
 // functions' shape so the TS wrapper reads `.error` uniformly.
 func errorJSON(err error) string {
@@ -106,5 +120,6 @@ func main() {
 	js.Global().Set("primeEngineCatalogs", js.FuncOf(primeEngineCatalogs))
 	js.Global().Set("computeSheetV2", js.FuncOf(computeSheetV2))
 	js.Global().Set("computeEffects", js.FuncOf(computeEffects))
+	js.Global().Set("computeVitals", js.FuncOf(computeVitals))
 	select {} // keep the runtime alive
 }

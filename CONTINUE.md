@@ -98,7 +98,20 @@ consome. Caudas opcionais **ANALISADAS e conscientemente NÃO feitas** (não val
   de paridade. Não vale.
 
 **Veredito: a migração do derive de item-effects (Inc.2) está COMPLETA.** O que
-resta são não-objetivos (churn sem ganho) ou um incremento separado (vitals).
+resta são não-objetivos (churn sem ganho).
+
+## Inc.3 — vitals (PV/PM) viraram Go único EM PRODUÇÃO (DONE)
+
+Ver `INC3-VITALS-PLAN.md`. Portado o motor de vitals (pools + `collectVitalGrants`)
+pro engine Go catalog-driven (`vitals_v2.go` `(*Catalogs).ComputeVitals`, reusa a
+coleta da Inc.2 + o pool math do `vitals.go`), exposto via WASM `computeVitals`.
+Front: choke point `entities/character/vital-pools.ts computeVitalPools(ctx)`
+MODE-gated (engine em prod; TS `collectVitalGrants`+`frontVitalResolver`+pools em
+test = oráculo). `optimisticLevelVitals` (level-vitals) + `deriveDraftVitals`
+(wizard) chamam o choke point. **DCE provado** (`godPowerModifiers` ausente do
+`dist`); E2E node 16/16; FE 585 verde. Adicionado catálogo `grantedPowers` (deus)
+ao dump + Go + `GodPower` ao `Character` Go. O MVP `vitals.go` (hardcoded, catalog-
+free) segue servindo só o `/sheet` do backend — engine separado, fora de escopo.
 
 ## Verificação (rodar antes/depois de cada slice)
 
