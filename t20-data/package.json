@@ -2,6 +2,7 @@
   "name": "@tormenta20/t20-data",
   "version": "0.0.1",
   "private": true,
+  "sideEffects": false,
   "main": "./dist/index.js",
   "module": "./src/index.ts",
   "types": "./dist/index.d.ts",
