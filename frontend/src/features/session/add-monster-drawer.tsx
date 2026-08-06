@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Skull } from 'lucide-react'
-import { BESTIARY, type Monster } from '@tormenta20/t20-data'
+import type { Monster } from '@tormenta20/t20-data'
+import { useBestiary } from '@/entities/catalog/use-bestiary'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
@@ -35,13 +36,15 @@ export function AddMonsterDrawer({
 }: {
   rt: ReturnType<typeof useSessionSocket>
 }) {
+  const bestiary = useBestiary().data ?? []
   const [name, setName] = useState('')
   const filtered = useMemo(() => {
     const q = normalizeMonsterName(name)
-    return BESTIARY.filter((m) => !q || normalizeMonsterName(m.name).includes(q))
+    return bestiary
+      .filter((m) => !q || normalizeMonsterName(m.name).includes(q))
       .slice()
       .sort((a, b) => a.nd - b.nd || a.name.localeCompare(b.name))
-  }, [name])
+  }, [name, bestiary])
 
   const addMonster = (monster: Monster) => {
     rt.addEntry({

@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { computeGroupNd } from './encounter-math'
+import { computeGroupNd, xpForNd } from './encounter-math'
+
+describe('xpForNd', () => {
+  it('treasure XP = round(nd × 1000) (Book Cap 8 p326)', () => {
+    expect(xpForNd(1)).toBe(1000)
+    expect(xpForNd(0.25)).toBe(250)
+    expect(xpForNd(2.5)).toBe(2500)
+  })
+})
 
 /**
  * Book Cap 7 p282 examples — these are the canonical illustrations

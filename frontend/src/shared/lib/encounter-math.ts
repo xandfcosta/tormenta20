@@ -20,3 +20,13 @@ export function computeGroupNd(
   if (quantity === 1) return monsterNd
   return monsterNd + 2 * Math.log2(quantity)
 }
+
+/**
+ * XP de tesouro derivado do ND (Book Cap 8 p326). Reimplementado no front
+ * (era `xpForNd` de t20-data/bestiary.ts) para não ancorar o módulo bestiary —
+ * importar a função puxava o array `BESTIARY` inteiro (Object.freeze não
+ * tree-shaka) de volta pro bundle.
+ */
+export function xpForNd(nd: number): number {
+  return Math.round(nd * 1000)
+}

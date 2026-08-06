@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Swords } from 'lucide-react'
-import { BESTIARY, encounterXp } from '@tormenta20/t20-data'
+import { encounterXp } from '@tormenta20/t20-data'
+import { useBestiary } from '@/entities/catalog/use-bestiary'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
@@ -39,12 +40,16 @@ export function EncounterBuilderDrawer({
 }: {
   rt: ReturnType<typeof useSessionSocket>
 }) {
+  const bestiary = useBestiary().data ?? []
   const [open, setOpen] = useState(false)
   const [partyLevel, setPartyLevel] = useState(1)
   const [partySize, setPartySize] = useState(4)
   const [entries, setEntries] = useState<EncounterEntry[]>([])
 
-  const groups = useMemo(() => enrichEncounter(entries), [entries])
+  const groups = useMemo(
+    () => enrichEncounter(entries, bestiary),
+    [entries, bestiary],
+  )
   const encounterNd = groups.reduce((sum, g) => sum + g.groupNd, 0)
   const totalXp = encounterXp({
     nd: encounterNd,
@@ -217,13 +222,15 @@ function MonsterPicker({
   onPick: (id: string) => void
   disabled: boolean
 }) {
+  const bestiary = useBestiary().data ?? []
   const [query, setQuery] = useState('')
   const filtered = useMemo(() => {
     const q = normalizeMonsterName(query)
-    return BESTIARY.filter((m) => !q || normalizeMonsterName(m.name).includes(q))
+    return bestiary
+      .filter((m) => !q || normalizeMonsterName(m.name).includes(q))
       .slice()
       .sort((a, b) => a.nd - b.nd || a.name.localeCompare(b.name))
-  }, [query])
+  }, [query, bestiary])
 
   return (
     <div className="space-y-2 rounded-md border border-dashed p-2">

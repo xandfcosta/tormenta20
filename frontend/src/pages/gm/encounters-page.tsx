@@ -21,6 +21,7 @@ import {
   enrichEncounter as enrich,
   encounterDifficulty as difficultyLabel,
 } from '@/features/gm-tools/encounter'
+import { useBestiary } from '@/entities/catalog/use-bestiary'
 
 /**
  * Encounter builder — party level + size, monster composition, live
@@ -37,7 +38,8 @@ export function EncounterBuilderPage() {
   const [entries, setEntries] = useState<Entry[]>([])
   const [pickerOpen, setPickerOpen] = useState(false)
 
-  const groups = useMemo(() => enrich(entries), [entries])
+  const bestiary = useBestiary().data ?? []
+  const groups = useMemo(() => enrich(entries, bestiary), [entries, bestiary])
   const encounterNd = useMemo(
     () => groups.reduce((sum, g) => sum + g.groupNd, 0),
     [groups],

@@ -1,4 +1,4 @@
-import { BESTIARY, type Monster } from '@tormenta20/t20-data'
+import type { Monster } from '@tormenta20/t20-data'
 import { computeGroupNd } from '@/shared/lib/encounter-math'
 
 /**
@@ -22,14 +22,16 @@ export type EnrichedGroup = {
 /**
  * Resolves raw entries to their monsters and computes each group's ND
  * (Cap 7 p282 via {@link computeGroupNd}). Drops entries whose monster id
- * no longer exists in the bestiary.
+ * no longer exists in the bestiary. `monsters` is the fetched bestiary
+ * (was the build-time BESTIARY import), passed in by the calling screen.
  */
 export function enrichEncounter(
   entries: readonly EncounterEntry[],
+  monsters: readonly Monster[],
 ): EnrichedGroup[] {
   return entries
     .map((e) => {
-      const monster = BESTIARY.find((m) => m.id === e.monsterId)
+      const monster = monsters.find((m) => m.id === e.monsterId)
       if (!monster) return null
       return {
         monster,

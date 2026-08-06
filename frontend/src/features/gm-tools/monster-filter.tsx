@@ -11,7 +11,8 @@ import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
 import { clampToRange } from '@/shared/lib/bounded-number'
 import { fuzzyFilter } from '@/shared/lib/fuzzy-filter'
-import { BESTIARY, type Monster, type MonsterTipo } from '@tormenta20/t20-data'
+import type { Monster, MonsterTipo } from '@tormenta20/t20-data'
+import { useBestiary } from '@/entities/catalog/use-bestiary'
 import {
   MONSTER_TIPOS as TIPOS,
   MONSTER_TIPO_LABEL as TIPO_LABEL,
@@ -54,8 +55,10 @@ export type MonsterFilterControls = {
 
 export function useMonsterFilter(): {
   filtered: Monster[]
+  total: number
   controls: MonsterFilterControls
 } {
+  const bestiary = useBestiary().data ?? []
   const [name, setName] = useState('')
   const [tipos, setTipos] = useState<Set<MonsterTipo>>(new Set())
   const [ndMin, setNdMinRaw] = useState(0)
@@ -76,7 +79,7 @@ export function useMonsterFilter(): {
   )
 
   const table = useReactTable({
-    data: BESTIARY as Monster[],
+    data: bestiary,
     columns,
     state: { columnFilters },
     getCoreRowModel: getCoreRowModel(),
@@ -98,6 +101,7 @@ export function useMonsterFilter(): {
 
   return {
     filtered,
+    total: bestiary.length,
     controls: { name, setName, ndMin, setNdMin, ndMax, setNdMax, tipos, toggleTipo },
   }
 }

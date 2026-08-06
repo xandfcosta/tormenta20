@@ -1,6 +1,6 @@
-// Type-only — erases at compile, so the spell catalog DATA no longer rides in
-// the bundle; it is fetched from GET /catalog/spells and cached instead.
-import type { CatalogSpell } from '@tormenta20/t20-data'
+// Type-only — erases at compile, so the catalog DATA no longer rides in the
+// bundle; it is fetched from GET /catalog/* and cached instead.
+import type { CatalogSpell, Monster } from '@tormenta20/t20-data'
 
 export type User = {
   id: number
@@ -507,9 +507,10 @@ export const api = {
     list: () => request<User[]>('/users'),
   },
   catalog: {
-    // Static rulebook reference; served id-keyed, cached hard (staleTime ∞).
+    // Static rulebook reference; cached hard (staleTime ∞).
     spells: () =>
       request<Record<string, CatalogSpell>>('/catalog/spells'),
+    bestiary: () => request<Monster[]>('/catalog/bestiary'),
   },
   characters: {
     options: () => request<CharacterOptions>('/characters/options'),

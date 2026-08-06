@@ -5,7 +5,10 @@ import { enrichEncounter, encounterDifficulty } from './encounter'
 describe('enrichEncounter', () => {
   it('resolves real monster ids to groups with a computed group ND', () => {
     const first = BESTIARY[0]!
-    const groups = enrichEncounter([{ monsterId: first.id, quantity: 3 }])
+    const groups = enrichEncounter(
+      [{ monsterId: first.id, quantity: 3 }],
+      BESTIARY,
+    )
     expect(groups).toHaveLength(1)
     expect(groups[0]!.monster.id).toBe(first.id)
     expect(groups[0]!.quantity).toBe(3)
@@ -13,7 +16,9 @@ describe('enrichEncounter', () => {
   })
 
   it('drops entries whose monster no longer exists', () => {
-    expect(enrichEncounter([{ monsterId: 'does-not-exist', quantity: 1 }])).toEqual([])
+    expect(
+      enrichEncounter([{ monsterId: 'does-not-exist', quantity: 1 }], BESTIARY),
+    ).toEqual([])
   })
 })
 

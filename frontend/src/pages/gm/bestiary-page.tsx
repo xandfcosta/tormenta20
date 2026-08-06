@@ -14,7 +14,8 @@ import { PageChrome } from '@/shared/ui/page-chrome'
 import { VirtualList } from '@/shared/ui/virtual-list'
 import { cn } from '@/shared/lib/utils'
 import { useMediaQuery } from '@/shared/lib/use-media-query'
-import { BESTIARY, type Monster, xpForNd } from '@tormenta20/t20-data'
+import type { Monster } from '@tormenta20/t20-data'
+import { xpForNd } from '@/shared/lib/encounter-math'
 import {
   MONSTER_TIPO_LABEL as TIPO_LABEL,
   formatNd,
@@ -32,7 +33,7 @@ import {
  * phone (no room for it) opens a dialog on tap.
  */
 export function BestiaryPage() {
-  const { filtered, controls } = useMonsterFilter()
+  const { filtered, total, controls } = useMonsterFilter()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [dialogId, setDialogId] = useState<string | null>(null)
   const isDesktop = useMediaQuery('(min-width: 1024px)')
@@ -51,7 +52,7 @@ export function BestiaryPage() {
         title="Bestiário"
         aside={
           <span className="text-sm text-muted-foreground">
-            {filtered.length} / {BESTIARY.length}
+            {filtered.length} / {total}
           </span>
         }
       />
