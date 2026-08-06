@@ -62,11 +62,12 @@ describe('validateConsumeQuantity', () => {
 })
 
 describe('spell rules', () => {
-  // 'bencao' carries a buff block (Phase-1 SpellBuff); pick a known catalog id.
+  // The validators are data-free (A): the caller resolves the catalog lookup and
+  // passes the boolean. 'bencao' carries a buff block (Phase-1 SpellBuff).
   it('validateLearnSpell rejects unknown + duplicate, accepts new', () => {
-    expect(isValid(validateLearnSpell([], 'bencao'))).toBe(true)
-    expect(firstErrorMessage(validateLearnSpell([], 'not-a-spell'))).toContain('não existe')
-    expect(firstErrorMessage(validateLearnSpell(['bencao'], 'bencao'))).toBe('Magia já conhecida')
+    expect(isValid(validateLearnSpell([], 'bencao', true))).toBe(true)
+    expect(firstErrorMessage(validateLearnSpell([], 'not-a-spell', false))).toContain('não existe')
+    expect(firstErrorMessage(validateLearnSpell(['bencao'], 'bencao', true))).toBe('Magia já conhecida')
   })
 
   it('validateSpellLearned requires the spell in the book', () => {
@@ -75,8 +76,8 @@ describe('spell rules', () => {
   })
 
   it('validateApplyBuff requires a buff block', () => {
-    expect(isValid(validateApplyBuff('bencao'))).toBe(true)
-    expect(firstErrorMessage(validateApplyBuff('not-a-spell'))).toBe('Magia sem efeito aplicável')
+    expect(isValid(validateApplyBuff(true))).toBe(true)
+    expect(firstErrorMessage(validateApplyBuff(false))).toBe('Magia sem efeito aplicável')
   })
 
   it('validateCast enforces prep, PM limit, and current PM', () => {

@@ -1,16 +1,23 @@
-import { SPELL_CATALOG } from '../spell-catalog'
 import type { ValidationError } from './types'
+
+// This module is DATA-FREE — the two catalog-dependent checks take the lookup
+// RESULT as a param (spellExists / hasBuff) instead of importing SPELL_CATALOG,
+// so the frontend can import these validators without bundling the ~175KB spell
+// catalog (project_front_decouple_catalog A). Callers resolve the lookup: the
+// backend from SPELL_CATALOG, the front from its primed spell-cache.
 
 /**
  * Learning a spell: it must exist in the catalog and not already be in the
  * character's spellbook. Mirrors backend `learnSpell` (assertSpellExists +
- * unique(characterId, catalogSpellId)).
+ * unique(characterId, catalogSpellId)). `spellExists` is the catalog lookup
+ * result (`!!SPELL_CATALOG[id]` / cache equivalent).
  */
 export function validateLearnSpell(
   knownSpellIds: readonly string[],
   catalogSpellId: string,
+  spellExists: boolean,
 ): ValidationError[] {
-  if (!SPELL_CATALOG[catalogSpellId]) {
+  if (!spellExists) {
     return [{ field: 'catalogSpellId', message: `Magia "${catalogSpellId}" não existe` }]
   }
   if (knownSpellIds.includes(catalogSpellId)) {
@@ -32,11 +39,11 @@ export function validateSpellLearned(
 
 /**
  * Applying a spell as a scoped ActiveEffect requires the catalog entry to carry
- * a `buff` block. Mirrors backend `applyEffect`.
+ * a `buff` block. Mirrors backend `applyEffect`. `hasBuff` is the lookup result
+ * (`!!SPELL_CATALOG[id]?.buff` / cache equivalent).
  */
-export function validateApplyBuff(spellId: string): ValidationError[] {
-  const spell = SPELL_CATALOG[spellId]
-  if (!spell?.buff) {
+export function validateApplyBuff(hasBuff: boolean): ValidationError[] {
+  if (!hasBuff) {
     return [{ field: 'spellId', message: 'Magia sem efeito aplicável' }]
   }
   return []
