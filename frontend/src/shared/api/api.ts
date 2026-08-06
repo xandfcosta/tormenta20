@@ -255,10 +255,20 @@ export type EffectsClearedResult = {
 /** Deltas from the sheet-edit mutations — each carries only the fields the
  *  write touched; the client merges them into the cached Character. */
 export type VitalsResult = { hpCurrent: number; mpCurrent: number }
-export type LevelResult = { level: number }
+/** Engine-derived PV/PM pools shipped with any delta whose write changes
+ *  computeSheet inputs — merging them keeps hpMax/mpMax fresh without a
+ *  refetch (regression 2026-08: level up/down left the pools stale). */
+export type VitalsSync = {
+  hpMax: number
+  hpCurrent: number
+  mpMax: number
+  mpCurrent: number
+}
+export type LevelResult = { level: number; vitals: VitalsSync }
 export type ClassLevelResult = {
   level: number
   classes: { className: string; level: number }[]
+  vitals: VitalsSync
 }
 export type ProficienciesResult = { proficiencies: string }
 export type AbilityChoicesResult = {

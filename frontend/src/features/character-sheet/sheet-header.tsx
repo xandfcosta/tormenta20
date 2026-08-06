@@ -17,10 +17,12 @@ import { api } from '@/shared/api/api'
 import type { Character, ClassLevelResult } from '@/shared/api/api'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import {
+  characterEffects,
   displacementTotal,
   flySpeedTotal,
   useCharacterEffects,
 } from '@/entities/character/derived'
+import { optimisticLevelVitals } from '@/entities/character/level-vitals'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { cn } from '@/shared/lib/utils'
 import { signed } from './signed'
@@ -92,7 +94,15 @@ export function LevelBadge({ character }: { character: Character }) {
           c.className === input.className ? { ...c, level: input.level } : c,
         )
         const total = nextClasses.reduce((s, c) => s + c.level, 0)
-        return { ...prev, classes: nextClasses, level: total }
+        // Optimistic PV/PM: same shared engine pools + current-shift rule the
+        // server applies, so the bars move with the stepper instead of waiting
+        // a roundtrip. onSuccess reconciles with the authoritative delta.
+        const vitals = optimisticLevelVitals(
+          prev,
+          characterEffects(prev),
+          nextClasses,
+        )
+        return { ...prev, classes: nextClasses, level: total, ...vitals }
       })
       return { previous }
     },
@@ -100,8 +110,12 @@ export function LevelBadge({ character }: { character: Character }) {
       if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
     },
     onSuccess: (delta) => {
+      // `vitals` rides along because PV/PM max are DERIVED from class levels —
+      // without merging them the bars kept the pre-level pools (2026-08 bug).
       qc.setQueryData<Character>(queryKey, (prev) =>
-        prev ? { ...prev, level: delta.level, classes: delta.classes } : prev,
+        prev
+          ? { ...prev, level: delta.level, classes: delta.classes, ...delta.vitals }
+          : prev,
       )
       invalidateCharacterDependents(qc, character.id)
     },

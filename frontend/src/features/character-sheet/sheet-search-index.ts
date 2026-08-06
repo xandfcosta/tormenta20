@@ -12,6 +12,7 @@ import type { Character } from '@/shared/api/api'
 import {
   characterEffects,
   expertiseTotalWithItems,
+  parseClassChoices,
 } from '@/entities/character/derived'
 import { expertiseStateFor } from '@/entities/character/expertise'
 import { parseActiveConditions } from './conditions-section'
@@ -137,8 +138,15 @@ export function ownedAbilities(character: Character): SheetSearchEntry[] {
   }
   // Class AUTOS (Fúria, Instinto Selvagem…) are owned by level, not chosen —
   // without this loop searching "fúria" found nothing (2026-08 bug report).
+  // classChoices surfaces grantedByChoice rows ("Caminho: Mago").
+  const classChoices = parseClassChoices(character.classChoices)
   for (const entry of character.classes) {
-    for (const power of ownedClassPowers(entry.className, entry.level, EMPTY_IDS)) {
+    for (const power of ownedClassPowers(
+      entry.className,
+      entry.level,
+      EMPTY_IDS,
+      classChoices[entry.className],
+    )) {
       out.push({
         name: power.name,
         detail: power.description,

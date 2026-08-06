@@ -96,11 +96,18 @@ function activeItemsFor(character: Character): ActiveItem[] {
 
 function classActiveItems(character: Character): ActiveItem[] {
   const chosen = parseChoiceSet(character.classPowers)
+  const choices = parseClassChoices(character.classChoices)
   const out: ActiveItem[] = []
   for (const entry of character.classes) {
     // One ActiveItem PER POWER so breakdown dialogs name the actual poder
     // ("Pele de Ferro +4"), not an opaque "Classe: Bárbaro 6" bundle.
-    for (const power of ownedClassPowers(entry.className, entry.level, chosen)) {
+    // classChoices resolves grantedByChoice rows (Caminho do Arcanista).
+    for (const power of ownedClassPowers(
+      entry.className,
+      entry.level,
+      chosen,
+      choices[entry.className],
+    )) {
       if (!power.modifiers || power.modifiers.length === 0) continue
       out.push({
         source: power.name,
