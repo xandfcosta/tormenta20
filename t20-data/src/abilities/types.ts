@@ -140,4 +140,12 @@ export type ClassPower = {
   modifiers?: Modifier[]
   /** Sub-choice the player resolves when taking this power (totem/school/…). */
   choice?: PowerChoice
+  /**
+   * Owned automatically when `Character.classChoices[className][field] ===
+   * value` — no power slot spent. Models the Caminho do Arcanista rows (p36):
+   * picking the caminho grants its habilidade; the other two stay locked.
+   * Distinct from a `classChoice` PREREQUISITE, which only gates an elective
+   * that still costs a slot (e.g. Autoridade Eclesiástica).
+   */
+  grantedByChoice?: { field: 'devoto' | 'caminho'; value: string }
 }

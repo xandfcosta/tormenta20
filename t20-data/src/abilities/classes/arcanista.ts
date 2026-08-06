@@ -1,4 +1,4 @@
-import { attributeBoostPower, anyPower, autoPower, classChoice, electivePower, note, power } from './_helpers'
+import { attributeBoostPower, anyPower, autoPower, choiceGrantedPower, electivePower, note, power } from './_helpers'
 import type { ClassPower } from '../types'
 
 const C = 'Arcanista'
@@ -7,8 +7,8 @@ const C = 'Arcanista'
  * PDF Cap 1 (Arcanista, p36-39, Tabela 1-5). Auto: Caminho L1, Magias scaling
  * (1°/2°/3°/4°/5° em L1/5/9/13/17), Alta Arcana L20. 19 power slots L2-L20.
  *
- * Caminhos (escolhidos no L1, exclusivos): Bruxo (Cha, foco), Feiticeiro
- * (Car, linhagem), Mago (Int, grimório).
+ * Caminhos (escolhidos no L1, exclusivos): Bruxo (Int, foco), Feiticeiro
+ * (Car, linhagem), Mago (Int, grimório) — atributos-chave por p37.
  */
 export const ARCANISTA_POWERS: ClassPower[] = [
   autoPower(C, 1, 'Caminho do Arcanista',
@@ -113,34 +113,32 @@ export const ARCANISTA_POWERS: ClassPower[] = [
     'Pode criar pergaminhos (como Escrever Pergaminho). Se tiver ambos, custo reduzido à metade.',
     { prerequisites: [power('class.arcanista.caminho-mago'), note('Treinado em Ofício (escriba)')] }),
 
-  // Caminhos do Arcanista — gated by the caminho choice in classChoices.
-  // Player owns the row matching their picked caminho automatically once
-  // the picker is set; the other two stay locked.
-  electivePower(C, 'Caminho: Bruxo',
-    'Lança magias via foco (varinha, cajado, chapéu). CD 20 + custo em PM, ou teste de Misticismo. Foco tem RD 10 e PV iguais à metade dos seus. Atributo-chave: Carisma.',
+  // Caminhos do Arcanista — owned automatically via classChoices.caminho
+  // (grantedByChoice), no slot spent; the other two stay locked. Each carries
+  // the "soma seu atributo-chave no seu total de PM" grant (p37): Bruxo e
+  // Mago usam Inteligência, Feiticeiro usa Carisma.
+  choiceGrantedPower(C, 'Caminho: Bruxo',
+    'Lança magias via foco (varinha, cajado, chapéu). CD 20 + custo em PM, ou teste de Misticismo. Foco tem RD 10 e PV iguais à metade dos seus. Atributo-chave: Inteligência. Soma Inteligência no PM total.',
+    'caminho', 'bruxo',
     {
-      prerequisites: [
-        classChoice(C, 'caminho', 'Caminho do Bruxo escolhido', {
-          allowed: ['bruxo'],
-        }),
+      modifiers: [
+        { target: { k: 'maxPm' }, amount: 1, bonusType: 'untyped', scale: { per: 'attribute', attribute: 'intelligence' } },
       ],
     }),
-  electivePower(C, 'Caminho: Feiticeiro',
-    'Magia inata por linhagem (Draconia, Feérica, Rubra). Aprende magias a cada nível ímpar. Atributo-chave: Carisma.',
+  choiceGrantedPower(C, 'Caminho: Feiticeiro',
+    'Magia inata por linhagem (Draconia, Feérica, Rubra). Aprende magias a cada nível ímpar. Atributo-chave: Carisma. Soma Carisma no PM total.',
+    'caminho', 'feiticeiro',
     {
-      prerequisites: [
-        classChoice(C, 'caminho', 'Caminho do Feiticeiro escolhido', {
-          allowed: ['feiticeiro'],
-        }),
+      modifiers: [
+        { target: { k: 'maxPm' }, amount: 1, bonusType: 'untyped', scale: { per: 'attribute', attribute: 'charisma' } },
       ],
     }),
-  electivePower(C, 'Caminho: Mago',
-    'Estudo formal. Memoriza magias do grimório uma vez por dia. Atributo-chave: Inteligência.',
+  choiceGrantedPower(C, 'Caminho: Mago',
+    'Estudo formal. Memoriza magias do grimório uma vez por dia. Começa com uma magia adicional. Atributo-chave: Inteligência. Soma Inteligência no PM total.',
+    'caminho', 'mago',
     {
-      prerequisites: [
-        classChoice(C, 'caminho', 'Caminho do Mago escolhido', {
-          allowed: ['mago'],
-        }),
+      modifiers: [
+        { target: { k: 'maxPm' }, amount: 1, bonusType: 'untyped', scale: { per: 'attribute', attribute: 'intelligence' } },
       ],
     }),
 ]

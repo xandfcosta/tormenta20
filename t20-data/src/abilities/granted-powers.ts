@@ -15,6 +15,8 @@
  * NOT the per-deus block. Cross-references against the `Deus` record
  * are validated in `__tests__/granted-powers.test.ts`.
  */
+import type { Modifier } from '../items/types'
+
 export type GrantedPowerKind =
   | 'ataque'
   | 'defesa'
@@ -31,6 +33,9 @@ export type GrantedPower = {
   effect: string
   kind: GrantedPowerKind
   bookPage: number
+  /** Numeric passives folded into the sheet when the character's `godPower`
+   *  names this poder (Bênção do Mana → maxPm por nível ímpar). */
+  modifiers?: Modifier[]
 }
 
 export const GRANTED_POWERS: readonly GrantedPower[] = Object.freeze([
@@ -352,6 +357,10 @@ export const GRANTED_POWERS: readonly GrantedPower[] = Object.freeze([
     effect: 'Você recebe +1 PM a cada nível ímpar.',
     kind: 'magia',
     bookPage: 132,
+    // "a cada nível ímpar" = ceil(nível/2): níveis 1, 3, 5…
+    modifiers: [
+      { target: { k: 'maxPm' }, amount: 1, bonusType: 'untyped', scale: { per: 'levelStep', step: 2, round: 'up' } },
+    ],
   },
 ])
 

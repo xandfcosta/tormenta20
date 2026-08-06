@@ -3,6 +3,9 @@ import {
   CLASS_VITALS,
   classMpBase,
   classPvBase,
+  multiclassMpPool,
+  multiclassPvPool,
+  pvPoolWithCon,
 } from '../class-vitals'
 
 /**
@@ -136,6 +139,79 @@ describe('classPvBase — multiclass: seed = first class', () => {
         { className: 'Hexer', level: 4 },
       ]),
     ).toBe(20 + 5 * 2)
+  })
+})
+
+describe('pvPoolWithCon — "sempre ganha pelo menos 1 PV ao subir de nível" (p34)', () => {
+  it('CON positiva: idêntico à fórmula linear (Guerreiro L5 CON 2 = 50)', () => {
+    // 20+2 no L1 + 4 níveis × (5+2) = 50 — mesmo resultado da soma antiga.
+    expect(pvPoolWithCon(CLASS_VITALS.Guerreiro, 5, 2)).toBe(50)
+  })
+
+  it('CON negativa anula o PV/nível → aplica o piso de 1 (Arcanista CON −2 L5 = 10)', () => {
+    // L1: 8−2 = 6; níveis 2-5: max(1, 2−2) = 1 cada → 6 + 4 = 10.
+    // A fórmula linear antiga dava 8 + 4×2 − 2×5 = 6 (errado).
+    expect(pvPoolWithCon(CLASS_VITALS.Arcanista, 5, -2)).toBe(10)
+  })
+
+  it('piso vale por nível mesmo com CON muito negativa (Guerreiro CON −5 L3 = 17)', () => {
+    // L1: 20−5 = 15; níveis 2-3: max(1, 5−5) = 1 cada → 17.
+    expect(pvPoolWithCon(CLASS_VITALS.Guerreiro, 3, -5)).toBe(17)
+  })
+
+  it('L1 não tem piso (não é "subir de nível"): Arcanista CON −2 L1 = 6', () => {
+    expect(pvPoolWithCon(CLASS_VITALS.Arcanista, 1, -2)).toBe(6)
+  })
+})
+
+describe('multiclassPvPool / multiclassMpPool — p34-35 (com CON + piso)', () => {
+  it('Zaled (p35): 1º nível de Paladino novo dá 5 PV, não 20', () => {
+    // Guerreiro 1 → Paladino 1: seed Guerreiro 20 + con 0, Paladino soma 5.
+    expect(
+      multiclassPvPool(
+        [
+          { className: 'Guerreiro', level: 1 },
+          { className: 'Paladino', level: 1 },
+        ],
+        0,
+      ),
+    ).toBe(25)
+  })
+
+  it('CON conta em todos os níveis, com o piso do p34 por nível', () => {
+    // Arcanista 2 / Guerreiro 2, CON −2: seed 8−2 + 1×max(1,0) + 2×max(1,3) = 13.
+    expect(
+      multiclassPvPool(
+        [
+          { className: 'Arcanista', level: 2 },
+          { className: 'Guerreiro', level: 2 },
+        ],
+        -2,
+      ),
+    ).toBe(13)
+  })
+
+  it('classe única degenera para pvPoolWithCon', () => {
+    expect(multiclassPvPool([{ className: 'Guerreiro', level: 5 }], 2)).toBe(
+      pvPoolWithCon(CLASS_VITALS.Guerreiro, 5, 2),
+    )
+  })
+
+  it('PM: "some os PM fornecidos por cada classe" (p35), sem rider de Carisma', () => {
+    // Guerreiro 4 (3×4) + Arcanista 4 (6×4) = 36. O +Car do Paladino vem do
+    // modifier de Abençoado, nunca daqui.
+    expect(
+      multiclassMpPool([
+        { className: 'Guerreiro', level: 4 },
+        { className: 'Arcanista', level: 4 },
+      ]),
+    ).toBe(36)
+    expect(multiclassMpPool([{ className: 'Paladino', level: 2 }])).toBe(6)
+  })
+
+  it('lista vazia / seed desconhecida → 0', () => {
+    expect(multiclassPvPool([], 3)).toBe(0)
+    expect(multiclassPvPool([{ className: 'Hexer', level: 5 }], 3)).toBe(0)
   })
 })
 

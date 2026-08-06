@@ -33,7 +33,9 @@ export const BARDO_POWERS: ClassPower[] = [
     inspiracaoMods(1),
   ),
   autoPower(C, 1, 'Magias (1° círculo)',
-    'Pode lançar magias arcanas de 3 escolas escolhidas. Atributo-chave: Carisma. Pode lançar com armaduras leves sem teste de Misticismo.',
+    'Pode lançar magias arcanas de 3 escolas escolhidas. Atributo-chave: Carisma. Soma Carisma no PM total. Pode lançar com armaduras leves sem teste de Misticismo.',
+    // "você soma seu Carisma no seu total de PM" (p43) — mesma regra do Clérigo.
+    [{ target: { k: 'maxPm' }, amount: 1, bonusType: 'untyped', scale: { per: 'attribute', attribute: 'charisma' } }],
   ),
   autoPower(C, 2, 'Eclético',
     'Ao fazer teste de perícia, gasta 1 PM para receber benefícios de ser treinado nessa perícia para este teste. Não consome slot de poder.',

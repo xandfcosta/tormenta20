@@ -15,7 +15,7 @@
  */
 
 import { ATTRIBUTE_KEYS, type AttributeKey } from './attributes'
-import { CLASS_VITALS } from './class-vitals'
+import { CLASS_VITALS, multiclassMpPool, multiclassPvPool } from './class-vitals'
 import {
   CONDITIONS,
   type Condition,
@@ -109,6 +109,21 @@ export type CharacterInput = {
    * os bônus passivos de PV/PM máximo (Totem, Poder Mágico, Vitalidade…).
    */
   powerIds?: readonly string[]
+  /**
+   * Escolhas por classe (character.classChoices): caminho/devoto. Resolve os
+   * poderes grantedByChoice — Caminho do Arcanista soma o atributo-chave
+   * (Int/Car) no PM total (p37).
+   */
+  classChoices?: Readonly<Record<string, { devoto?: string; caminho?: string }>>
+  /**
+   * Lista completa de classes para multiclasse (p34-35): PV inicial só da 1ª
+   * classe, PM somado por classe, grants de poderes por nível DE CLASSE.
+   * Ausente ⇒ classe única via `className`/`level`.
+   */
+  classes?: readonly { className: string; level: number }[]
+  /** Poder concedido da devoção (character.godPower, NOME do poder) —
+   *  Bênção do Mana soma +1 PM/nível ímpar (p132). */
+  godPower?: string
   /** Origem (id/nome) e benefícios escolhidos — para passivos de PV/PM. */
   origin?: string
   originChoices?: readonly string[]
@@ -704,16 +719,26 @@ function computeVitals(
     return { pvMax: 0, pmMax: 0, pvCurrent: 0, pmCurrent: 0 }
   }
   const con = attributes.constitution.total
-  const pvBase = vitals.pvInicial + (input.level - 1) * vitals.pvPerLevel + con * input.level
-  const pmBase = vitals.mpPerLevel * input.level
+  // Multiclasse (p34-35): PV inicial só da 1ª classe, PM soma por classe.
+  // p34: "sempre ganha pelo menos 1 PV ao subir de nível" — CON negativa não
+  // pode zerar o ganho por nível (piso dentro dos helpers).
+  const classEntries =
+    input.classes && input.classes.length > 0
+      ? input.classes
+      : [{ className: input.className, level: input.level }]
+  const pvBase = multiclassPvPool(classEntries, con)
+  const pmBase = multiclassMpPool(classEntries)
   // Passivos de PV/PM (raça + poderes + origem). O antigo caso especial do
   // Paladino (+Carisma no PM) agora vem do poder Devoção via este pipeline.
   const grants = collectVitalGrants({
     level: input.level,
     className: input.className,
+    classes: classEntries,
     raceId: input.raceId,
     raceAbilityChoices: input.raceAbilityChoices,
     powerIds: input.powerIds,
+    classChoices: input.classChoices,
+    godPower: input.godPower,
     origin: input.origin,
     originChoices: input.originChoices,
     attrTotals: attrTotalsOf(attributes),

@@ -49,6 +49,63 @@ export type CharacterClassEntry = {
 }
 
 /**
+ * PV pool with Constituição folded in, honouring the p34 floor: "você sempre
+ * ganha pelo menos 1 PV ao subir de nível". Each level past the 1st grants
+ * max(1, pvPerLevel + con); the 1st grants pvInicial + con (the floor talks
+ * about LEVELING, so L1 has none — the sheet's global 0-floor covers it).
+ * With pvPerLevel + con ≥ 1 this equals the plain linear sum.
+ *
+ * @example pvPoolWithCon(CLASS_VITALS.Arcanista, 5, -2) // → 10, not 6
+ */
+export function pvPoolWithCon(
+  vitals: Pick<ClassVitals, 'pvInicial' | 'pvPerLevel'>,
+  level: number,
+  con: number,
+): number {
+  const perLevel = Math.max(1, vitals.pvPerLevel + con)
+  return vitals.pvInicial + con + (level - 1) * perLevel
+}
+
+/**
+ * Multiclass PV pool with Constituição + the p34 min-1 floor. p34-35: only
+ * the FIRST class contributes its PV inicial ("Zaled ganha 5 PV pelo
+ * primeiro nível de paladino, não 20"); every other level — of any class —
+ * grants max(1, pvPerLevel + con). Single-class degenerates to
+ * `pvPoolWithCon`.
+ */
+export function multiclassPvPool(
+  classes: readonly CharacterClassEntry[],
+  con: number,
+): number {
+  const seed = classes[0] && CLASS_VITALS[classes[0].className]
+  if (!seed) return 0
+  let pv = pvPoolWithCon(seed, classes[0]!.level, con)
+  for (const c of classes.slice(1)) {
+    const entry = CLASS_VITALS[c.className]
+    if (!entry) continue
+    pv += c.level * Math.max(1, entry.pvPerLevel + con)
+  }
+  return pv
+}
+
+/**
+ * Multiclass PM pool — p35: "some os PM fornecidos por cada classe". No
+ * attribute riders here; Paladino +Car / caster key-attribute→PM live as
+ * `maxPm` power modifiers resolved by vital-grants (single source, no
+ * double count).
+ */
+export function multiclassMpPool(
+  classes: readonly CharacterClassEntry[],
+): number {
+  let mp = 0
+  for (const c of classes) {
+    const entry = CLASS_VITALS[c.className]
+    if (entry) mp += entry.mpPerLevel * c.level
+  }
+  return mp
+}
+
+/**
  * Total Pontos de Vida **before** Constituição. Splits the seed (PV
  * inicial of the L1 class) from the per-level grants summed across all
  * classes. Multiclass uses the *first* class's PV inicial as the seed —

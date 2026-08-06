@@ -52,6 +52,31 @@ export function electivePower(
 }
 
 /**
+ * Power owned by a classChoices pick instead of a slot — the Caminho rows
+ * (p36): setting `classChoices[className].caminho = 'mago'` grants "Caminho:
+ * Mago" automatically; no "Poder de Arcanista" slot is spent.
+ *
+ * @example choiceGrantedPower(C, 'Caminho: Mago', '…', 'caminho', 'mago', {...})
+ */
+export function choiceGrantedPower(
+  className: string,
+  name: string,
+  description: string,
+  field: 'devoto' | 'caminho',
+  value: string,
+  opts: { modifiers?: Modifier[] } = {},
+): ClassPower {
+  return {
+    id: classPowerId(className, name),
+    className,
+    name,
+    description,
+    grantedByChoice: { field, value },
+    ...(opts.modifiers ? { modifiers: opts.modifiers } : {}),
+  }
+}
+
+/**
  * "Aumento de Atributo" — the +1-attribute elective every base class shares
  * (PDF Cap 2). Repeatable: taken multiple times, each pick raising a different
  * attribute (once per patamar per attribute). Shared builder so all 14 classes

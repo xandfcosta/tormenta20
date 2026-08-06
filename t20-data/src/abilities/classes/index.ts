@@ -108,25 +108,46 @@ export const CLASS_POWERS_CATALOG: ClassPower[] = [
   ...PALADINO_POWERS,
 ]
 
+/** One class's picks in Character.classChoices (per-class JSON blob). */
+export type ClassChoiceSelections = { devoto?: string; caminho?: string }
+
+/**
+ * Ownership rule shared by modifiers + UI lists: auto powers by class level,
+ * electives by picked id, and `grantedByChoice` rows (Caminho do Arcanista)
+ * by the matching classChoices value — those cost no slot (p36).
+ */
+function ownsClassPower(
+  power: ClassPower,
+  classLevel: number,
+  chosenIds: ReadonlySet<string>,
+  choices?: ClassChoiceSelections,
+): boolean {
+  if (power.grantedAtLevel !== undefined && power.grantedAtLevel <= classLevel)
+    return true
+  if (chosenIds.has(power.id)) return true
+  return (
+    power.grantedByChoice !== undefined &&
+    choices?.[power.grantedByChoice.field] === power.grantedByChoice.value
+  )
+}
+
 /**
  * Returns the union of modifiers from class powers the character actually
  * owns. Auto-granted powers (`grantedAtLevel <= classLevel`) are always
- * folded in; elective powers must be present in `chosenIds` to count.
+ * folded in; elective powers must be present in `chosenIds` to count;
+ * `choices` resolves grantedByChoice rows (Caminho → +atributo-chave no PM).
  */
 export function classPowerModifiers(
   className: string,
   classLevel: number,
   chosenIds: ReadonlySet<string>,
+  choices?: ClassChoiceSelections,
 ): Modifier[] {
   const out: Modifier[] = []
   for (const power of CLASS_POWERS_CATALOG) {
     if (power.className !== className) continue
     if (!power.modifiers) continue
-    const isAuto =
-      power.grantedAtLevel !== undefined &&
-      power.grantedAtLevel <= classLevel
-    const isChosen = chosenIds.has(power.id)
-    if (!isAuto && !isChosen) continue
+    if (!ownsClassPower(power, classLevel, chosenIds, choices)) continue
     out.push(...power.modifiers)
   }
   return out
@@ -134,19 +155,18 @@ export function classPowerModifiers(
 
 /**
  * Returns the list of class powers the character "owns" for a given class +
- * level + chosen ids. Used by the UI to render the auto-granted + elective
- * lists.
+ * level + chosen ids (+ classChoices picks). Used by the UI to render the
+ * auto-granted + elective lists.
  */
 export function ownedClassPowers(
   className: string,
   classLevel: number,
   chosenIds: ReadonlySet<string>,
+  choices?: ClassChoiceSelections,
 ): ClassPower[] {
-  return CLASS_POWERS_CATALOG.filter((power) => {
-    if (power.className !== className) return false
-    const isAuto =
-      power.grantedAtLevel !== undefined &&
-      power.grantedAtLevel <= classLevel
-    return isAuto || chosenIds.has(power.id)
-  })
+  return CLASS_POWERS_CATALOG.filter(
+    (power) =>
+      power.className === className &&
+      ownsClassPower(power, classLevel, chosenIds, choices),
+  )
 }

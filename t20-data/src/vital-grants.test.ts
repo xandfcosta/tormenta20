@@ -85,6 +85,134 @@ describe('collectVitalGrants — permanent max-pool grants', () => {
   it('no race/powers/origin ⇒ zero grant', () => {
     expect(collectVitalGrants({ level: 5, className: 'Guerreiro', attrTotals: attrs() })).toEqual({ pv: 0, pm: 0 })
   })
+
+  // "soma seu Carisma no seu total de PM" (Bardo p43) / "soma sua Sabedoria
+  // no seu total de PM" (Druida p60) — same auto rule the Clérigo already had.
+  it('Bardo Magias (auto): +Carisma no PM', () => {
+    expect(collectVitalGrants({ level: 2, className: 'Bardo', attrTotals: attrs({ charisma: 3 }) }).pm).toBe(3)
+  })
+
+  it('Druida Magias (auto): +Sabedoria no PM', () => {
+    expect(collectVitalGrants({ level: 2, className: 'Druida', attrTotals: attrs({ wisdom: 4 }) }).pm).toBe(4)
+  })
+
+  // Arcanista p36-37: "Seu atributo-chave para lançar magias é definido pelo
+  // seu Caminho... e você soma seu atributo-chave no seu total de PM."
+  // Bruxo = Int, Mago = Int, Feiticeiro = Car. Ownership comes from
+  // classChoices.caminho, not from a power slot.
+  it('Arcanista caminho Mago: +Inteligência no PM via classChoices', () => {
+    const base = { level: 1, className: 'Arcanista', attrTotals: attrs({ intelligence: 4, charisma: 2 }) }
+    expect(collectVitalGrants(base).pm).toBe(0)
+    expect(
+      collectVitalGrants({ ...base, classChoices: { Arcanista: { caminho: 'mago' } } }).pm,
+    ).toBe(4)
+  })
+
+  it('Arcanista caminho Bruxo: +Inteligência no PM (p37 — não Carisma)', () => {
+    expect(
+      collectVitalGrants({
+        level: 1,
+        className: 'Arcanista',
+        classChoices: { Arcanista: { caminho: 'bruxo' } },
+        attrTotals: attrs({ intelligence: 3, charisma: 5 }),
+      }).pm,
+    ).toBe(3)
+  })
+
+  it('Arcanista caminho Feiticeiro: +Carisma no PM', () => {
+    expect(
+      collectVitalGrants({
+        level: 1,
+        className: 'Arcanista',
+        classChoices: { Arcanista: { caminho: 'feiticeiro' } },
+        attrTotals: attrs({ intelligence: 3, charisma: 5 }),
+      }).pm,
+    ).toBe(5)
+  })
+
+  it('multiclasse: grants de TODAS as classes entram (Guerreiro+Arcanista mago)', () => {
+    const g = collectVitalGrants({
+      level: 8,
+      className: 'Guerreiro',
+      classes: [
+        { className: 'Guerreiro', level: 4 },
+        { className: 'Arcanista', level: 4 },
+      ],
+      classChoices: { Arcanista: { caminho: 'mago' } },
+      attrTotals: attrs({ intelligence: 3 }),
+    })
+    expect(g.pm).toBe(3)
+  })
+
+  it('p225: Clérigo/Druida NÃO soma Sabedoria duas vezes no PM', () => {
+    const g = collectVitalGrants({
+      level: 2,
+      className: 'Clérigo',
+      classes: [
+        { className: 'Clérigo', level: 1 },
+        { className: 'Druida', level: 1 },
+      ],
+      attrTotals: attrs({ wisdom: 4 }),
+    })
+    expect(g.pm).toBe(4)
+  })
+
+  it('atributos DIFERENTES somam (Paladino Car + Clérigo Sab)', () => {
+    const g = collectVitalGrants({
+      level: 2,
+      className: 'Paladino',
+      classes: [
+        { className: 'Paladino', level: 1 },
+        { className: 'Clérigo', level: 1 },
+      ],
+      attrTotals: attrs({ wisdom: 4, charisma: 3 }),
+    })
+    expect(g.pm).toBe(7)
+  })
+
+  it('dedupe por atributo não engole grants com scale diferente (Poder Mágico)', () => {
+    // Caminho mago (+Int) + Poder Mágico (+1/nível): scales distintos, ambos valem.
+    const g = collectVitalGrants({
+      level: 5,
+      className: 'Arcanista',
+      classChoices: { Arcanista: { caminho: 'mago' } },
+      powerIds: ['class.arcanista.poder-magico'],
+      attrTotals: attrs({ intelligence: 4 }),
+    })
+    expect(g.pm).toBe(9)
+  })
+
+  it('Bênção do Mana (Wynna, p132): +1 PM a cada nível ímpar via godPower', () => {
+    const base = { level: 7, className: 'Arcanista', attrTotals: attrs() }
+    expect(collectVitalGrants(base).pm).toBe(0)
+    // Níveis ímpares até 7: 1, 3, 5, 7 → +4.
+    expect(
+      collectVitalGrants({ ...base, godPower: 'Bênção do Mana' }).pm,
+    ).toBe(4)
+  })
+
+  it('godPower sem modifier mecânico (Coragem Total) não altera PV/PM', () => {
+    expect(
+      collectVitalGrants({
+        level: 5,
+        className: 'Guerreiro',
+        godPower: 'Coragem Total',
+        attrTotals: attrs(),
+      }),
+    ).toEqual({ pv: 0, pm: 0 })
+  })
+
+  it('classChoice como PRÉ-REQUISITO de elective não concede o poder sozinho', () => {
+    // Clérigo devoto escolhido ⇒ Autoridade Eclesiástica ainda exige o slot;
+    // nenhum modifier de elective pode vazar só pela escolha de devoto.
+    const g = collectVitalGrants({
+      level: 5,
+      className: 'Clérigo',
+      classChoices: { 'Clérigo': { devoto: 'khalmyr' } },
+      attrTotals: attrs(),
+    })
+    expect(g.pv).toBe(0)
+  })
 })
 
 describe('computeCharacterSheet — vitals fold in the grants', () => {
@@ -106,6 +234,34 @@ describe('computeCharacterSheet — vitals fold in the grants', () => {
       baseAttributes: { strength: 0, dexterity: 0, constitution: 0, intelligence: 0, wisdom: 0, charisma: 3 },
     })
     expect(sheet.vitals.pmMax).toBe(15)
+  })
+
+  it('Arcanista Mago Int 4 L1 tem 10 PM (exemplo do livro, p37)', () => {
+    // pmBase = 6; +atributo-chave (Int 4) = 10.
+    const sheet = computeCharacterSheet({
+      level: 1,
+      className: 'Arcanista',
+      classChoices: { Arcanista: { caminho: 'mago' } },
+      baseAttributes: { strength: 0, dexterity: 0, constitution: 0, intelligence: 4, wisdom: 0, charisma: 0 },
+    })
+    expect(sheet.vitals.pmMax).toBe(10)
+  })
+
+  it('multiclasse Guerreiro 4 / Arcanista 4 (feiticeiro): PV seed + PM somado (p34-35)', () => {
+    // PV: 20+2 (Guerreiro L1) + 3×(5+2) + 4×(2+2) = 59.
+    // PM: 3×4 + 6×4 = 36; caminho feiticeiro soma Car 1 → 37.
+    const sheet = computeCharacterSheet({
+      level: 8,
+      className: 'Guerreiro',
+      classes: [
+        { className: 'Guerreiro', level: 4 },
+        { className: 'Arcanista', level: 4 },
+      ],
+      classChoices: { Arcanista: { caminho: 'feiticeiro' } },
+      baseAttributes: { strength: 3, dexterity: 0, constitution: 2, intelligence: 0, wisdom: 0, charisma: 1 },
+    })
+    expect(sheet.vitals.pvMax).toBe(59)
+    expect(sheet.vitals.pmMax).toBe(37)
   })
 
   it('Anão Duro como Pedra folds in via the racas slug id ("anao")', () => {

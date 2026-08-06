@@ -19,7 +19,9 @@ export const DRUIDA_POWERS: ClassPower[] = [
     'Pode se comunicar com animais via linguagem corporal e vocalizações. Pode usar Adestramento com animais para mudar atitude e persuasão (como Diplomacia).',
   ),
   autoPower(C, 1, 'Magias (1° círculo)',
-    'Escolha 3 escolas de magia (permanente). Pode lançar magias divinas de 1° círculo pertencentes a essas escolas. Atributo-chave: Sabedoria.',
+    'Escolha 3 escolas de magia (permanente). Pode lançar magias divinas de 1° círculo pertencentes a essas escolas. Atributo-chave: Sabedoria. Soma Sabedoria no PM total.',
+    // "você soma sua Sabedoria no seu total de PM" (p60) — mesma regra do Clérigo.
+    [{ target: { k: 'maxPm' }, amount: 1, bonusType: 'untyped', scale: { per: 'attribute', attribute: 'wisdom' } }],
   ),
   autoPower(C, 2, 'Caminho dos Ermos',
     'Pode atravessar terrenos difíceis sem redução em seu deslocamento. CD para rastreá-lo aumenta em +10. Só em terrenos naturais.',
