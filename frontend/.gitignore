@@ -23,3 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 .tanstack/
+
+# Built WASM engine (run scripts/build-engine-wasm.sh)
+public/engine/
