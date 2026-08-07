@@ -2,7 +2,7 @@
   "name": "tormenta20",
   "private": true,
   "scripts": {
-    "dev": "concurrently -k -n t20,api,front -c gray,green,cyan \"pnpm -F @tormenta20/t20-data dev\" \"pnpm -F @tormenta20/engine-go dev\" \"pnpm -F frontend dev\"",
+    "dev": "concurrently -k -n api,front -c green,cyan \"pnpm -F @tormenta20/engine-go dev\" \"pnpm -F frontend dev\"",
     "dev:nest": "concurrently -k -n t20,nest,front -c gray,yellow,cyan \"pnpm -F @tormenta20/t20-data dev\" \"pnpm -F backend dev\" \"API_TARGET=http://localhost:3000 pnpm -F frontend dev\"",
     "dev:app": "concurrently -k -n back,front -c yellow,cyan \"pnpm -F backend dev\" \"API_TARGET=http://localhost:3000 pnpm -F frontend dev\"",
     "dev:backend": "pnpm --filter backend run start:dev",
