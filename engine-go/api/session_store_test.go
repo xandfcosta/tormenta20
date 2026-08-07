@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"sync"
 	"testing"
+	"time"
 
 	"t20engine/db/sqlcgen"
 )
@@ -117,6 +118,57 @@ func TestStoreDirtyOnPersistFailure(t *testing.T) {
 	if !store.isDirty(sid) {
 		t.Error("isDirty should be true after a failed persist")
 	}
+}
+
+func TestStoreLiveWriteThrough(t *testing.T) {
+	s := newTestServer(t)
+	ctx := context.Background()
+	gm := seedUser(t, s, "gm@t.com")
+	charID := seedCharacter(t, s, gm, "A", 20, 30, 5, 10) // DB starts hp 20/30, mp 5/10
+	sid := seedSession(t, s, seedCampaign(t, s, gm))
+
+	seedEntry := func(store *sessionStore) string {
+		if _, err := store.load(ctx, sid); err != nil {
+			t.Fatalf("load: %v", err)
+		}
+		hp, hpm, mp, mpm := int64(20), int64(30), int64(5), int64(10)
+		e := charEntry("A", 12, charID)
+		e.HpCurrent, e.HpMax, e.MpCurrent, e.MpMax = &hp, &hpm, &mp, &mpm
+		if _, err := store.addInitiativeEntry(sid, e); err != nil {
+			t.Fatalf("add: %v", err)
+		}
+		return store.getState(sid).Initiative[0].ID
+	}
+
+	t.Run("on: mirrors PV to the character row", func(t *testing.T) {
+		store := newSessionStore(s.queries, newUUID, true)
+		id := seedEntry(store)
+		if _, err := store.deltaVitals(sid, id, ptrInt64(-8), nil); err != nil { // 20-8 → 12
+			t.Fatalf("delta: %v", err)
+		}
+		var got int64 = -1
+		for i := 0; i < 40; i++ { // write-through is async; poll the DB row
+			if row, err := s.queries.GetCharacter(ctx, charID); err == nil {
+				got = row.Hpcurrent
+				if got == 12 {
+					break
+				}
+			}
+			time.Sleep(25 * time.Millisecond)
+		}
+		if got != 12 {
+			t.Errorf("DB hpCurrent=%d, want 12 (written through)", got)
+		}
+	})
+	t.Run("off: leaves the character row untouched", func(t *testing.T) {
+		store := newSessionStore(s.queries, newUUID, false)
+		id := seedEntry(store)
+		_, _ = store.deltaVitals(sid, id, ptrInt64(-5), nil)
+		time.Sleep(150 * time.Millisecond) // give any (unwanted) goroutine time to run
+		if row, _ := s.queries.GetCharacter(ctx, charID); row.Hpcurrent != 12 {
+			t.Errorf("DB hpCurrent=%d, want 12 unchanged (write-through off; 12 from the prior subtest)", row.Hpcurrent)
+		}
+	})
 }
 
 // Concurrent mutations on one session must not race (run with -race) and must all land.

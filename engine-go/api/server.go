@@ -28,7 +28,7 @@ func NewServer(cfg Config, database *sql.DB, catalogs *engine.Catalogs) *Server 
 	q := sqlcgen.New(database)
 	return &Server{
 		cfg: cfg, db: database, queries: q, catalogs: catalogs,
-		sessions: newSessionStore(q, newUUID),
+		sessions: newSessionStore(q, newUUID, cfg.WSVitalsWriteThroughLive),
 		presence: newPresenceRegistry(),
 	}
 }

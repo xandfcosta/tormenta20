@@ -29,14 +29,17 @@ type sessionStore struct {
 	// persistMu serializes DB writes so concurrent mutations on the same session can't
 	// persist out of order (each writer snapshots the CURRENT state at its turn).
 	persistMu sync.Mutex
+	// liveWriteThrough mirrors vitals patch/delta back to the Character row (opt-in).
+	liveWriteThrough bool
 }
 
-func newSessionStore(q *sqlcgen.Queries, newID func() string) *sessionStore {
+func newSessionStore(q *sqlcgen.Queries, newID func() string, liveWriteThrough bool) *sessionStore {
 	return &sessionStore{
-		states: map[int64]*SessionRuntimeState{},
-		dirty:  map[int64]bool{},
-		newID:  newID,
-		q:      q,
+		states:           map[int64]*SessionRuntimeState{},
+		dirty:            map[int64]bool{},
+		newID:            newID,
+		q:                q,
+		liveWriteThrough: liveWriteThrough,
 	}
 }
 
@@ -101,11 +104,57 @@ func (st *sessionStore) reset(sessionID int64) (*SessionRuntimeState, error) {
 }
 
 func (st *sessionStore) patchVitals(sessionID int64, entryID string, hpCurrent, mpCurrent *int64) (*SessionRuntimeState, error) {
-	return st.apply(sessionID, func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hpCurrent, mpCurrent) })
+	snap, err := st.apply(sessionID, func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hpCurrent, mpCurrent) })
+	st.maybeWriteThrough(sessionID, entryID, err)
+	return snap, err
 }
 
 func (st *sessionStore) deltaVitals(sessionID int64, entryID string, hpDelta, mpDelta *int64) (*SessionRuntimeState, error) {
-	return st.apply(sessionID, func(s *SessionRuntimeState) error { return deltaEntryVitals(s, entryID, hpDelta, mpDelta) })
+	snap, err := st.apply(sessionID, func(s *SessionRuntimeState) error { return deltaEntryVitals(s, entryID, hpDelta, mpDelta) })
+	st.maybeWriteThrough(sessionID, entryID, err)
+	return snap, err
+}
+
+// maybeWriteThrough fires a fire-and-forget Character.update mirroring the entry's PV/PM
+// back to the DB, when opt-in via WS_VITALS_WRITETHROUGH_LIVE. Mirrors maybeLiveWriteThrough.
+func (st *sessionStore) maybeWriteThrough(sessionID int64, entryID string, err error) {
+	if err == nil && st.liveWriteThrough {
+		go st.writeThroughVitals(sessionID, entryID)
+	}
+}
+
+// writeThroughVitals mirrors the entry's current PV/PM onto the Character row, clamped to
+// the fresh DB max (the entry's cached max can drift after a mid-session level-up). Only
+// character entries with both vitals present; failures are logged, never surfaced.
+func (st *sessionStore) writeThroughVitals(sessionID int64, entryID string) {
+	st.mu.Lock()
+	var entry *InitiativeEntry
+	if s := st.states[sessionID]; s != nil {
+		if idx := findEntryIndex(s, entryID); idx >= 0 {
+			e := s.Initiative[idx]
+			entry = &e
+		}
+	}
+	st.mu.Unlock()
+	if entry == nil || entry.CharacterID == nil || entry.HpCurrent == nil || entry.MpCurrent == nil {
+		return
+	}
+	ctx := context.Background()
+	rows, err := st.q.ListCharacterMaxes(ctx, []int64{*entry.CharacterID})
+	if err != nil || len(rows) == 0 {
+		if err != nil {
+			log.Printf("session %d write-through: load maxes failed (%v)", sessionID, err)
+		}
+		return
+	}
+	m := rows[0]
+	if err := st.q.SetVitalsCurrent(ctx, sqlcgen.SetVitalsCurrentParams{
+		HpCurrent: clampVital(*entry.HpCurrent, &m.Hpmax),
+		MpCurrent: clampVital(*entry.MpCurrent, &m.Mpmax),
+		UpdatedAt: nowISO(), ID: *entry.CharacterID,
+	}); err != nil {
+		log.Printf("session %d write-through failed for character %d: %v", sessionID, *entry.CharacterID, err)
+	}
 }
 
 // load hydrates the session from Session.runtimeState on first access, then serves the
