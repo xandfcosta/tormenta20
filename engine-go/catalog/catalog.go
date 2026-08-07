@@ -50,6 +50,53 @@ func LookupSpell(id string) (Spell, bool) {
 	return sp, ok
 }
 
+// Item is the subset of a CATALOG_ITEMS entry the consume path reads.
+type Item struct {
+	ID         string      `json:"id"`
+	Name       string      `json:"name"`
+	Consumable *Consumable `json:"consumable"`
+}
+
+// Consumable mirrors the item consumable spec (scope + instant dice + effect mods).
+type Consumable struct {
+	Scope      string          `json:"scope"` // 'instant' | 'scene' | 'day'
+	OncePerDay bool            `json:"oncePerDay"`
+	Instant    *Instant        `json:"instant"`
+	Modifiers  json.RawMessage `json:"modifiers"`
+}
+
+type Instant struct {
+	Hp *DiceGain `json:"hp"`
+	Mp *DiceGain `json:"mp"`
+}
+
+type DiceGain struct {
+	Dice  string `json:"dice"`
+	Bonus int    `json:"bonus"`
+}
+
+var (
+	itemsOnce sync.Once
+	itemsByID map[string]Item
+)
+
+// LookupItem returns the parsed catalog item, or (zero, false) if unknown.
+func LookupItem(id string) (Item, bool) {
+	itemsOnce.Do(func() {
+		itemsByID = map[string]Item{}
+		if b, err := files.ReadFile("data/items.json"); err == nil {
+			var items []Item
+			if json.Unmarshal(b, &items) == nil {
+				for _, it := range items {
+					itemsByID[it.ID] = it
+				}
+			}
+		}
+	})
+	it, ok := itemsByID[id]
+	return it, ok
+}
+
 // resources is the ordered CatalogService registry — the GET /catalog index.
 var resources = []string{
 	"spells", "bestiary", "items", "conditions", "deuses", "races", "origins",

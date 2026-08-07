@@ -76,6 +76,18 @@ FROM character_items WHERE id = ? LIMIT 1;
 -- name: DeleteItem :exec
 DELETE FROM character_items WHERE id = ?;
 
+-- name: SetItemQuantity :exec
+UPDATE character_items SET quantity = sqlc.arg('quantity') WHERE id = sqlc.arg('id');
+
+-- name: CreateActiveEffect :one
+INSERT INTO active_effects (characterId, catalogId, scope, modifiers, createdAt)
+VALUES (?, ?, ?, ?, ?)
+RETURNING id, catalogId, scope, modifiers, createdAt;
+
+-- name: SetVitalsCurrent :exec
+UPDATE characters SET hpCurrent = sqlc.arg('hpCurrent'), mpCurrent = sqlc.arg('mpCurrent'), updatedAt = sqlc.arg('updatedAt')
+WHERE id = sqlc.arg('id');
+
 -- name: ListEquippedItems :many
 SELECT id, equipped FROM character_items WHERE characterId = ? AND equipped IS NOT NULL;
 

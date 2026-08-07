@@ -35,6 +35,47 @@ func (q *Queries) CallerCharacterInCampaign(ctx context.Context, arg CallerChara
 	return i, err
 }
 
+const createActiveEffect = `-- name: CreateActiveEffect :one
+INSERT INTO active_effects (characterId, catalogId, scope, modifiers, createdAt)
+VALUES (?, ?, ?, ?, ?)
+RETURNING id, catalogId, scope, modifiers, createdAt
+`
+
+type CreateActiveEffectParams struct {
+	Characterid int64  `json:"characterid"`
+	Catalogid   string `json:"catalogid"`
+	Scope       string `json:"scope"`
+	Modifiers   string `json:"modifiers"`
+	Createdat   string `json:"createdat"`
+}
+
+type CreateActiveEffectRow struct {
+	ID        int64  `json:"id"`
+	Catalogid string `json:"catalogid"`
+	Scope     string `json:"scope"`
+	Modifiers string `json:"modifiers"`
+	Createdat string `json:"createdat"`
+}
+
+func (q *Queries) CreateActiveEffect(ctx context.Context, arg CreateActiveEffectParams) (CreateActiveEffectRow, error) {
+	row := q.db.QueryRowContext(ctx, createActiveEffect,
+		arg.Characterid,
+		arg.Catalogid,
+		arg.Scope,
+		arg.Modifiers,
+		arg.Createdat,
+	)
+	var i CreateActiveEffectRow
+	err := row.Scan(
+		&i.ID,
+		&i.Catalogid,
+		&i.Scope,
+		&i.Modifiers,
+		&i.Createdat,
+	)
+	return i, err
+}
+
 const createCampaign = `-- name: CreateCampaign :one
 INSERT INTO campaigns (ownerId, name, description, createdAt, updatedAt)
 VALUES (?, ?, ?, ?, ?)
@@ -1597,6 +1638,20 @@ func (q *Queries) SetInviteToken(ctx context.Context, arg SetInviteTokenParams) 
 	return i, err
 }
 
+const setItemQuantity = `-- name: SetItemQuantity :exec
+UPDATE character_items SET quantity = ?1 WHERE id = ?2
+`
+
+type SetItemQuantityParams struct {
+	Quantity int64 `json:"quantity"`
+	ID       int64 `json:"id"`
+}
+
+func (q *Queries) SetItemQuantity(ctx context.Context, arg SetItemQuantityParams) error {
+	_, err := q.db.ExecContext(ctx, setItemQuantity, arg.Quantity, arg.ID)
+	return err
+}
+
 const setMemberRole = `-- name: SetMemberRole :one
 UPDATE campaign_members SET role = ?1 WHERE id = ?2 RETURNING id, campaignid, characterid, role, addedat
 `
@@ -1674,6 +1729,28 @@ func (q *Queries) SetSpellPreparedByCatalog(ctx context.Context, arg SetSpellPre
 		&i.Learnedat,
 	)
 	return i, err
+}
+
+const setVitalsCurrent = `-- name: SetVitalsCurrent :exec
+UPDATE characters SET hpCurrent = ?1, mpCurrent = ?2, updatedAt = ?3
+WHERE id = ?4
+`
+
+type SetVitalsCurrentParams struct {
+	HpCurrent int64  `json:"hpCurrent"`
+	MpCurrent int64  `json:"mpCurrent"`
+	UpdatedAt string `json:"updatedAt"`
+	ID        int64  `json:"id"`
+}
+
+func (q *Queries) SetVitalsCurrent(ctx context.Context, arg SetVitalsCurrentParams) error {
+	_, err := q.db.ExecContext(ctx, setVitalsCurrent,
+		arg.HpCurrent,
+		arg.MpCurrent,
+		arg.UpdatedAt,
+		arg.ID,
+	)
+	return err
 }
 
 const startSessionFresh = `-- name: StartSessionFresh :one

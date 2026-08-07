@@ -105,6 +105,7 @@ func (s *Server) Router() http.Handler {
 			r.Post("/{id}/items", s.handleAddItem)
 			r.Patch("/{id}/items/{itemId}", s.handleUpdateItem)
 			r.Delete("/{id}/items/{itemId}", s.handleDeleteItem)
+			r.Post("/{id}/items/{itemId}/consume", s.handleConsumeItem)
 			r.Patch("/{id}/conditions", s.handleUpdateConditions)
 			r.Post("/{id}/expertises", s.handleAddExpertise)
 			r.Patch("/{id}/expertises", s.handleUpdateExpertise)
