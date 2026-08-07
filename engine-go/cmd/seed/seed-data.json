@@ -1,66 +1,343 @@
 {
-  "email": "mestre@t20.local",
-  "name": "Mestre",
   "password": "mestre123456",
-  "characters": [
+  "users": [
     {
-      "create": {
-        "name": "Kharvos, o Guardião Rubro",
-        "races": ["Anão"],
-        "origin": "Batedor",
-        "classes": [{ "className": "Guerreiro", "level": 8 }],
-        "god": null,
-        "tibar": 250,
-        "hpMax": 80, "hpCurrent": 80, "mpMax": 0, "mpCurrent": 0,
-        "strength": 4, "dexterity": 1, "constitution": 3, "intelligence": 0, "wisdom": 1, "charisma": 0,
-        "size": "Médio", "displacement": 6,
-        "trainedExpertises": ["Luta", "Fortitude", "Percepção", "Intimidação"],
-        "items": [
-          { "catalogId": "machado-de-batalha", "name": "Machado de batalha", "quantity": 1, "slots": 1, "equipped": "wielded" },
-          { "catalogId": "armadura-completa", "name": "Armadura completa", "quantity": 1, "slots": 5, "equipped": "vested" }
-        ]
-      },
-      "spells": []
-    },
-    {
-      "create": {
-        "name": "Aurora, a Erudita Arcana",
-        "races": ["Humano"],
-        "origin": "Acólito",
-        "classes": [{ "className": "Arcanista", "level": 9 }],
-        "god": null,
-        "tibar": 180,
-        "hpMax": 47, "hpCurrent": 47, "mpMax": 36, "mpCurrent": 36,
-        "strength": 0, "dexterity": 2, "constitution": 1, "intelligence": 4, "wisdom": 1, "charisma": 1,
-        "size": "Médio", "displacement": 9,
-        "trainedExpertises": ["Misticismo", "Conhecimento", "Vontade", "Investigação"],
-        "items": [
-          { "catalogId": "adaga", "name": "Adaga", "quantity": 1, "slots": 1, "equipped": "wielded" }
-        ]
-      },
-      "spells": [
-        { "id": "bola-de-fogo", "prepared": true },
-        { "id": "misseis-magicos", "prepared": true }
+      "email": "mestre@t20.local",
+      "name": "Mestre",
+      "characters": [
+        {
+          "sceneEffect": true,
+          "create": {
+            "name": "Tanque Placas Nv10",
+            "races": ["Anão"], "origin": "Soldado",
+            "classes": [{ "className": "Guerreiro", "level": 10 }],
+            "god": "Khalmyr",
+            "strength": 4, "dexterity": 1, "constitution": 4, "intelligence": 1, "wisdom": 2, "charisma": 1,
+            "size": "Médio", "displacement": 9,
+            "items": [
+              { "catalogId": "armadura-completa", "equipped": "vested" },
+              { "catalogId": "escudo-pesado", "equipped": "wielded" },
+              { "catalogId": "machado-batalha", "equipped": "wielded" },
+              { "catalogId": "balsamo-restaurador", "quantity": 2 },
+              { "catalogId": "cosmetico", "quantity": 2 }
+            ]
+          }
+        },
+        {
+          "hpFraction": 0.5,
+          "create": {
+            "name": "Curandeira Divina Nv8",
+            "races": ["Elfo"], "origin": "Acólito",
+            "classes": [{ "className": "Clérigo", "level": 8 }],
+            "god": "Lena",
+            "strength": 1, "dexterity": 2, "constitution": 2, "intelligence": 2, "wisdom": 4, "charisma": 3,
+            "size": "Médio", "displacement": 9,
+            "items": [
+              { "catalogId": "adaga", "equipped": "wielded" },
+              { "catalogId": "bandana", "equipped": "vested" },
+              { "catalogId": "balsamo-restaurador", "quantity": 2 },
+              { "catalogId": "cosmetico", "quantity": 2 }
+            ]
+          },
+          "spells": [
+            { "id": "curar-ferimentos", "prepared": true },
+            { "id": "escudo-da-fe", "prepared": true },
+            { "id": "abencoar-alimentos", "prepared": true },
+            { "id": "voz-divina" },
+            { "id": "tempestade-divina" }
+          ]
+        },
+        {
+          "create": {
+            "name": "Necromante Nv12 Magias",
+            "races": ["Osteon"], "origin": "Criminoso",
+            "classes": [{ "className": "Arcanista", "level": 12 }],
+            "god": "Tenebra",
+            "strength": 1, "dexterity": 2, "constitution": 3, "intelligence": 5, "wisdom": 2, "charisma": 3,
+            "size": "Médio", "displacement": 9,
+            "raceAttributeChoices": { "floatingPicks": ["intelligence", "wisdom", "charisma"] },
+            "classChoices": { "Arcanista": { "caminho": "mago" } },
+            "items": [
+              { "catalogId": "adaga", "equipped": "wielded" },
+              { "catalogId": "bandana", "equipped": "vested" },
+              { "catalogId": "balsamo-restaurador", "quantity": 2 },
+              { "catalogId": "cosmetico", "quantity": 2 }
+            ]
+          },
+          "spells": [
+            { "id": "luz", "prepared": true },
+            { "id": "armadura-arcana", "prepared": true },
+            { "id": "bola-de-fogo", "prepared": true },
+            { "id": "relampago", "prepared": true },
+            { "id": "sono" },
+            { "id": "invisibilidade" },
+            { "id": "teletransporte" },
+            { "id": "imagem-espelhada" }
+          ]
+        },
+        {
+          "sceneEffect": true,
+          "create": {
+            "name": "Druida Natureza Nv9",
+            "races": ["Dahllan"], "origin": "Eremita",
+            "classes": [{ "className": "Druida", "level": 9 }],
+            "god": "Allihanna",
+            "strength": 1, "dexterity": 3, "constitution": 2, "intelligence": 2, "wisdom": 4, "charisma": 2,
+            "size": "Médio", "displacement": 9,
+            "items": [
+              { "catalogId": "adaga", "equipped": "wielded" },
+              { "catalogId": "bandana", "equipped": "vested" },
+              { "catalogId": "balsamo-restaurador", "quantity": 2 },
+              { "catalogId": "cosmetico", "quantity": 2 }
+            ]
+          },
+          "spells": [
+            { "id": "caminhos-da-natureza", "prepared": true },
+            { "id": "controlar-plantas", "prepared": true },
+            { "id": "metamorfose" }
+          ]
+        },
+        {
+          "create": {
+            "name": "Multiclasse Guer+Arc Nv8",
+            "races": ["Humano"], "origin": "Herói Camponês",
+            "classes": [{ "className": "Guerreiro", "level": 4 }, { "className": "Arcanista", "level": 4 }],
+            "god": "Valkaria",
+            "strength": 3, "dexterity": 2, "constitution": 3, "intelligence": 3, "wisdom": 1, "charisma": 1,
+            "size": "Médio", "displacement": 9,
+            "raceAttributeChoices": { "floatingPicks": ["strength", "constitution", "intelligence"] },
+            "classChoices": { "Arcanista": { "caminho": "feiticeiro" } },
+            "items": [
+              { "catalogId": "espada-curta", "equipped": "wielded" },
+              { "catalogId": "armadura-couro", "equipped": "vested" },
+              { "catalogId": "bandana", "equipped": "vested" },
+              { "catalogId": "balsamo-restaurador", "quantity": 3 },
+              { "catalogId": "cosmetico", "quantity": 2 }
+            ]
+          },
+          "spells": [
+            { "id": "luz", "prepared": true },
+            { "id": "armadura-arcana", "prepared": true },
+            { "id": "bola-de-fogo", "prepared": true },
+            { "id": "relampago", "prepared": true }
+          ]
+        },
+        {
+          "create": {
+            "name": "Paladino Sagrado Nv11",
+            "races": ["Suraggel"], "origin": "Aristocrata",
+            "classes": [{ "className": "Paladino", "level": 11 }],
+            "god": "Khalmyr",
+            "strength": 3, "dexterity": 1, "constitution": 3, "intelligence": 1, "wisdom": 2, "charisma": 4,
+            "size": "Médio", "displacement": 9,
+            "raceAttributeChoices": { "floatingPicks": [], "ascendencia": "aggelus" },
+            "items": [
+              { "catalogId": "armadura-completa", "equipped": "vested" },
+              { "catalogId": "escudo-pesado", "equipped": "wielded" },
+              { "catalogId": "machado-batalha", "equipped": "wielded" },
+              { "catalogId": "balsamo-restaurador", "quantity": 2 },
+              { "catalogId": "cosmetico", "quantity": 2 }
+            ]
+          },
+          "spells": [
+            { "id": "curar-ferimentos", "prepared": true },
+            { "id": "escudo-da-fe", "prepared": true },
+            { "id": "abencoar-alimentos", "prepared": true },
+            { "id": "voz-divina" },
+            { "id": "tempestade-divina" }
+          ]
+        },
+        {
+          "hpFraction": 0.4,
+          "create": {
+            "name": "Lenda Nv20 Maximo",
+            "races": ["Anão"], "origin": "Herdeiro",
+            "classes": [{ "className": "Cavaleiro", "level": 20 }],
+            "god": "Valkaria",
+            "strength": 5, "dexterity": 2, "constitution": 5, "intelligence": 1, "wisdom": 2, "charisma": 3,
+            "size": "Médio", "displacement": 9,
+            "items": [
+              { "catalogId": "armadura-completa", "equipped": "vested" },
+              { "catalogId": "escudo-pesado", "equipped": "wielded" },
+              { "catalogId": "machado-batalha", "equipped": "wielded" },
+              { "catalogId": "balsamo-restaurador", "quantity": 2 },
+              { "catalogId": "cosmetico", "quantity": 2 }
+            ]
+          }
+        },
+        {
+          "sceneEffect": true,
+          "create": {
+            "name": "Bardo Versátil Nv7",
+            "races": ["Lefou"], "origin": "Amnésico",
+            "classes": [{ "className": "Bardo", "level": 7 }],
+            "strength": 1, "dexterity": 3, "constitution": 2, "intelligence": 2, "wisdom": 1, "charisma": 4,
+            "size": "Médio", "displacement": 9,
+            "raceAttributeChoices": { "floatingPicks": ["strength", "dexterity", "constitution"] },
+            "items": [
+              { "catalogId": "adaga", "equipped": "wielded" },
+              { "catalogId": "bandana", "equipped": "vested" },
+              { "catalogId": "balsamo-restaurador", "quantity": 2 },
+              { "catalogId": "cosmetico", "quantity": 2 }
+            ]
+          },
+          "spells": [
+            { "id": "luz", "prepared": true },
+            { "id": "armadura-arcana", "prepared": true },
+            { "id": "bola-de-fogo", "prepared": true },
+            { "id": "relampago", "prepared": true }
+          ]
+        },
+        {
+          "create": {
+            "name": "Inventor Genial Nv6",
+            "races": ["Kliren"], "origin": "Assistente de Laboratório",
+            "classes": [{ "className": "Inventor", "level": 6 }],
+            "god": "Tanna-Toh",
+            "strength": 0, "dexterity": 3, "constitution": 2, "intelligence": 5, "wisdom": 1, "charisma": 1,
+            "size": "Médio", "displacement": 9,
+            "items": [
+              { "catalogId": "clava", "equipped": "wielded" },
+              { "catalogId": "mochila", "equipped": "vested" },
+              { "catalogId": "corda", "quantity": 2 },
+              { "catalogId": "tocha", "quantity": 6 },
+              { "catalogId": "racao-de-viagem", "quantity": 10 },
+              { "catalogId": "balsamo-restaurador", "quantity": 5 },
+              { "catalogId": "cosmetico", "quantity": 3 },
+              { "catalogId": "saco-de-dormir", "quantity": 1 }
+            ]
+          }
+        }
       ]
     },
     {
-      "create": {
-        "name": "Irmão Aldric, o Devoto",
-        "races": ["Humano"],
-        "origin": "Herói",
-        "classes": [{ "className": "Clérigo", "level": 6 }],
-        "god": "Khalmyr",
-        "godPower": "Kharmma",
-        "tibar": 120,
-        "hpMax": 48, "hpCurrent": 48, "mpMax": 18, "mpCurrent": 18,
-        "strength": 2, "dexterity": 0, "constitution": 2, "intelligence": 1, "wisdom": 4, "charisma": 1,
-        "size": "Médio", "displacement": 9,
-        "trainedExpertises": ["Religião", "Cura", "Fortitude", "Vontade"],
-        "items": [
-          { "catalogId": "escudo-pesado", "name": "Escudo pesado", "quantity": 1, "slots": 2, "equipped": "wielded" }
-        ]
-      },
-      "spells": [{ "id": "curar-ferimentos", "prepared": true }]
+      "email": "jogador@t20.local",
+      "name": "Jogador",
+      "characters": [
+        {
+          "simple": true,
+          "create": {
+            "name": "Recruta Nv1 Simples",
+            "races": ["Humano"], "origin": "Capanga",
+            "classes": [{ "className": "Guerreiro", "level": 1 }],
+            "strength": 3, "dexterity": 2, "constitution": 2, "intelligence": 1, "wisdom": 1, "charisma": 1,
+            "size": "Médio", "displacement": 9,
+            "raceAttributeChoices": { "floatingPicks": ["strength", "dexterity", "constitution"] },
+            "items": [
+              { "catalogId": "espada-curta", "equipped": "wielded" },
+              { "catalogId": "armadura-couro", "equipped": "vested" }
+            ]
+          }
+        },
+        {
+          "simple": true,
+          "create": {
+            "name": "Batedor Nv2 Simples",
+            "races": ["Sílfide"], "origin": "Batedor",
+            "classes": [{ "className": "Ladino", "level": 2 }],
+            "strength": 1, "dexterity": 4, "constitution": 2, "intelligence": 2, "wisdom": 2, "charisma": 1,
+            "size": "Médio", "displacement": 9,
+            "items": [
+              { "catalogId": "espada-curta", "equipped": "wielded" },
+              { "catalogId": "armadura-couro", "equipped": "vested" }
+            ]
+          }
+        },
+        {
+          "simple": true,
+          "create": {
+            "name": "Aprendiz Nv1 Simples",
+            "races": ["Humano"], "origin": "Charlatão",
+            "classes": [{ "className": "Arcanista", "level": 1 }],
+            "strength": 0, "dexterity": 2, "constitution": 2, "intelligence": 4, "wisdom": 1, "charisma": 2,
+            "size": "Médio", "displacement": 9,
+            "raceAttributeChoices": { "floatingPicks": ["intelligence", "constitution", "charisma"] },
+            "classChoices": { "Arcanista": { "caminho": "mago" } },
+            "items": [
+              { "catalogId": "espada-curta", "equipped": "wielded" },
+              { "catalogId": "armadura-couro", "equipped": "vested" }
+            ]
+          }
+        },
+        {
+          "sceneEffect": true,
+          "create": {
+            "name": "Guerreiro Veterano Nv8",
+            "races": ["Humano"], "origin": "Soldado",
+            "classes": [{ "className": "Guerreiro", "level": 8 }],
+            "god": "Khalmyr",
+            "strength": 4, "dexterity": 3, "constitution": 3, "intelligence": 2, "wisdom": 2, "charisma": 1,
+            "size": "Médio", "displacement": 9,
+            "raceAttributeChoices": { "floatingPicks": ["strength", "dexterity", "constitution"] },
+            "items": [
+              { "catalogId": "espada-curta", "equipped": "wielded" },
+              { "catalogId": "armadura-couro", "equipped": "vested" },
+              { "catalogId": "bandana", "equipped": "vested" },
+              { "catalogId": "balsamo-restaurador", "quantity": 3 },
+              { "catalogId": "cosmetico", "quantity": 2 }
+            ]
+          }
+        },
+        {
+          "sceneEffect": true,
+          "create": {
+            "name": "Arcanista Erudito Nv9",
+            "races": ["Qareen"], "origin": "Charlatão",
+            "classes": [{ "className": "Arcanista", "level": 9 }],
+            "god": "Wynna", "godPower": "Bênção do Mana",
+            "strength": 0, "dexterity": 3, "constitution": 2, "intelligence": 4, "wisdom": 2, "charisma": 3,
+            "size": "Médio", "displacement": 9,
+            "classChoices": { "Arcanista": { "caminho": "bruxo" } },
+            "items": [
+              { "catalogId": "adaga", "equipped": "wielded" },
+              { "catalogId": "bandana", "equipped": "vested" },
+              { "catalogId": "balsamo-restaurador", "quantity": 2 },
+              { "catalogId": "cosmetico", "quantity": 2 }
+            ]
+          },
+          "spells": [
+            { "id": "luz", "prepared": true },
+            { "id": "armadura-arcana", "prepared": true },
+            { "id": "bola-de-fogo", "prepared": true },
+            { "id": "relampago", "prepared": true },
+            { "id": "sono" },
+            { "id": "invisibilidade" },
+            { "id": "teletransporte" },
+            { "id": "imagem-espelhada" }
+          ]
+        },
+        {
+          "hpFraction": 0.6,
+          "create": {
+            "name": "Paladino Sagrado Nv10",
+            "races": ["Suraggel"], "origin": "Aristocrata",
+            "classes": [{ "className": "Paladino", "level": 10 }],
+            "god": "Khalmyr",
+            "strength": 3, "dexterity": 1, "constitution": 3, "intelligence": 1, "wisdom": 2, "charisma": 4,
+            "size": "Médio", "displacement": 9,
+            "raceAttributeChoices": { "floatingPicks": [], "ascendencia": "aggelus" },
+            "items": [
+              { "catalogId": "armadura-completa", "equipped": "vested" },
+              { "catalogId": "escudo-pesado", "equipped": "wielded" },
+              { "catalogId": "machado-batalha", "equipped": "wielded" },
+              { "catalogId": "balsamo-restaurador", "quantity": 2 },
+              { "catalogId": "cosmetico", "quantity": 2 }
+            ]
+          },
+          "spells": [
+            { "id": "curar-ferimentos", "prepared": true },
+            { "id": "escudo-da-fe", "prepared": true },
+            { "id": "abencoar-alimentos", "prepared": true },
+            { "id": "voz-divina" },
+            { "id": "tempestade-divina" }
+          ]
+        }
+      ]
+    },
+    {
+      "email": "teste@t20.local",
+      "name": "Teste",
+      "characters": []
     }
   ]
 }

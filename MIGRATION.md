@@ -177,7 +177,14 @@ Fase B (grande). Ou B direto se a prioridade é a API — são independentes.
 - ✅ **B.0** — fundação: `cmd/api`, chi, config, `/health`, middleware JWT.
 - ✅ **B.1** — data layer: `schema`/goose migrations, sqlc, modernc/sqlite. Seed via
   `cmd/seed` (HTTP-driven, `seed-data.json`; senha ≥8 chars: "mestre123456").
-  **PENDENTE: expandir o seed p/ os 16 chars** (hoje só 3 representativos).
+  **Roster completo**: espelha o seed do Nest (`backend/src/seed.ts`) — 3 contas
+  (`mestre`/`jogador`/`teste` @t20.local), 15 chars diversos. O driver enriquece o
+  create body a partir do catálogo (nome+slots de item via `catalog.LookupItem`) e
+  injeta vitals (9999 → o engine cura p/ o max real) + as 10 perícias treinadas
+  padrão nos não-`simple`; HP danificado (`hpFraction`) via PATCH `/vitals` pós-cura,
+  efeito de cena via `consume` do `cosmetico`. Ids inválidos do seed antigo
+  corrigidos (`machado-batalha`, não `-de-`; `misseis-magicos` não existe no catálogo →
+  usa o ARCANE_SPELLBOOK do Nest). **Não é idempotente** — rode em DB limpo (`rm -f $DB*`).
 - ✅ **B.2** — auth: register/login/logout/me, bcrypt + cookie JWT.
 - ✅ **B.3 — COMPLETA** — domínio Characters: CRUD + ~30 rotas de mutação. Todas as
   rotas em `api/server.go`. Cobre: vitals/damage (roteamento temp-HP + `planDamage`),

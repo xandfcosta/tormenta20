@@ -50,10 +50,11 @@ func LookupSpell(id string) (Spell, bool) {
 	return sp, ok
 }
 
-// Item is the subset of a CATALOG_ITEMS entry the consume path reads.
+// Item is the subset of a CATALOG_ITEMS entry the consume + seed paths read.
 type Item struct {
 	ID         string      `json:"id"`
 	Name       string      `json:"name"`
+	Slots      float64     `json:"slots"`
 	Consumable *Consumable `json:"consumable"`
 }
 
