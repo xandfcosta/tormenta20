@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -36,17 +37,28 @@ func sessionDTO(s sqlcgen.Session) SessionDTO {
 
 // ownedSession loads a session under an owned campaign (findOne), writing the
 // 404/403 and returning ok=false.
+// loadSessionInCampaign loads a session and asserts it belongs to the campaign —
+// transport-agnostic, no access check of its own. Shared by ownedSession (owner-only)
+// and the WS gateway's member-aware sessionForCaller so the "session belongs to the
+// campaign" rule lives in one place.
+func (s *Server) loadSessionInCampaign(ctx context.Context, campaignID, sessionID int64) (sqlcgen.Session, int, error) {
+	sess, err := s.queries.GetSession(ctx, sessionID)
+	if errors.Is(err, sql.ErrNoRows) || (err == nil && sess.Campaignid != campaignID) {
+		return sqlcgen.Session{}, http.StatusNotFound, fmt.Errorf("Session %d not found", sessionID)
+	}
+	if err != nil {
+		return sqlcgen.Session{}, http.StatusInternalServerError, errors.New("Could not load session")
+	}
+	return sess, http.StatusOK, nil
+}
+
 func (s *Server) ownedSession(w http.ResponseWriter, r *http.Request, campaignID, sessionID int64) (sqlcgen.Session, bool) {
 	if _, ok := s.ownedCampaign(w, r, campaignID); !ok {
 		return sqlcgen.Session{}, false
 	}
-	sess, err := s.queries.GetSession(r.Context(), sessionID)
-	if errors.Is(err, sql.ErrNoRows) || (err == nil && sess.Campaignid != campaignID) {
-		writeError(w, http.StatusNotFound, fmt.Sprintf("Session %d not found", sessionID))
-		return sqlcgen.Session{}, false
-	}
+	sess, status, err := s.loadSessionInCampaign(r.Context(), campaignID, sessionID)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load session")
+		writeError(w, status, err.Error())
 		return sqlcgen.Session{}, false
 	}
 	return sess, true

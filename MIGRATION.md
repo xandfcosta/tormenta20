@@ -207,6 +207,24 @@ Fase B (grande). Ou B direto se a prioridade é a API — são independentes.
   namespace default `/`). **Protocolo**: socket.io-client **^4.8.3** → **Engine.IO v4
   (`EIO=4`)**. **Fase de mapeamento CONCLUÍDA** — detalhes abaixo.
 
+  **FASE 0 — domínio transport-agnostic (pré-requisito do gateway).** Auditoria do
+  pacote `api/` achou regra de negócio trançada com resposta HTTP (recebe `w`/`r`,
+  escreve `writeError`/`writeJSON` no meio da regra) — o gateway WS não consegue reusar.
+  Padrão-alvo (precedente `authorizedCharacter`): domínio devolve `(valor, status int,
+  error)`; o HTTP mapeia p/ `writeError`, o WS p/ emit/WsException. Refactor sem mudança
+  de comportamento (smoke-tests HTTP + `go test ./api/` como rede).
+  - 🔴 **Leak (extrair núcleo):** authz `campaignAccess`/`ownedSession`/`ownedCampaign`
+    (o 1º ainda lê `currentUser(r)` dentro da regra); apply-effect `applyManualPool`/
+    `applyPool`/`applySpellBuff` (regra inteira — supremacia de pool, plan de displacement,
+    buff de magia — tecida com `writeJSON`; `applySpellBuff` é o que o WS `apply-effect` chama).
+  - 🟡 **Smell leve (só usa `r.Context()`):** `insertCharacter`/`healVitals`/`syncLevelVitals`/
+    `equipLimitCheck`/`classDTOs` → trocar `r *http.Request` por `ctx context.Context`.
+  - 🟢 **Transporte legítimo (não mexer):** `writeJSON`/`writeError`/`decodeJSON`/`intParam`/
+    `issueSession`/`extractToken`/`currentUser`.
+  - **Slices:** 0.1 authz (`resolveRole` member-aware = owner→gm / membro→player / 403;
+    `loadOwnedCampaign`; `loadSessionInCampaign` compartilhado por `ownedSession` owner-only
+    e o futuro `sessionForCaller` member-aware do WS). 0.2 apply-effect. 0.3 smells de assinatura.
+
   **Auth (handshake, `ws-auth.ts`):** token via `handshake.auth.token` → `Authorization:
   Bearer` → **cookie `t20_session`** (nome de `COOKIE_NAME`), nessa ordem. `jwt.verify`
   (mesmo segredo do HTTP, `sub` = id) → `auth.findById(sub)` (nega usuário revogado).

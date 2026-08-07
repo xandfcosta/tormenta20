@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
@@ -225,18 +226,48 @@ func (s *Server) handleResolveInvite(w http.ResponseWriter, r *http.Request) {
 
 // ownedCampaign loads a campaign and enforces owner-only access (the guard for
 // every campaign write), writing the 404/403 itself and returning ok=false.
-func (s *Server) ownedCampaign(w http.ResponseWriter, r *http.Request, id int64) (sqlcgen.Campaign, bool) {
-	c, err := s.queries.GetCampaign(r.Context(), id)
+// resolveRole is the campaign-access domain rule (mirrors CampaignsService.resolveAccess),
+// transport-agnostic so both the HTTP handlers and the WS gateway can gate on it: the
+// owner is the "gm"; a user who owns a member character is a "player"; anyone else is
+// forbidden. Returns the role + an HTTP-ish status the caller maps to its transport.
+func (s *Server) resolveRole(ctx context.Context, userID, campaignID int64) (string, int, error) {
+	c, err := s.queries.GetCampaign(ctx, campaignID)
 	if errors.Is(err, sql.ErrNoRows) {
-		writeError(w, http.StatusNotFound, fmt.Sprintf("Campaign %d not found", id))
-		return c, false
+		return "", http.StatusNotFound, fmt.Errorf("Campaign %d not found", campaignID)
 	}
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load campaign")
-		return c, false
+		return "", http.StatusInternalServerError, errors.New("Could not load campaign")
 	}
-	if c.Ownerid != currentUser(r).ID {
-		writeError(w, http.StatusForbidden, fmt.Sprintf("Campaign %d belongs to another user", id))
+	if c.Ownerid == userID {
+		return "gm", http.StatusOK, nil
+	}
+	isMember, _ := s.queries.IsCampaignMember(ctx, sqlcgen.IsCampaignMemberParams{Campaignid: campaignID, Ownerid: userID})
+	if !isMember {
+		return "", http.StatusForbidden, fmt.Errorf("Campaign %d is not accessible", campaignID)
+	}
+	return "player", http.StatusOK, nil
+}
+
+// loadOwnedCampaign is the owner-only campaign rule, transport-agnostic. The GM (owner)
+// alone passes; everyone else gets Forbidden.
+func (s *Server) loadOwnedCampaign(ctx context.Context, userID, id int64) (sqlcgen.Campaign, int, error) {
+	c, err := s.queries.GetCampaign(ctx, id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return c, http.StatusNotFound, fmt.Errorf("Campaign %d not found", id)
+	}
+	if err != nil {
+		return c, http.StatusInternalServerError, errors.New("Could not load campaign")
+	}
+	if c.Ownerid != userID {
+		return c, http.StatusForbidden, fmt.Errorf("Campaign %d belongs to another user", id)
+	}
+	return c, http.StatusOK, nil
+}
+
+func (s *Server) ownedCampaign(w http.ResponseWriter, r *http.Request, id int64) (sqlcgen.Campaign, bool) {
+	c, status, err := s.loadOwnedCampaign(r.Context(), currentUser(r).ID, id)
+	if err != nil {
+		writeError(w, status, err.Error())
 		return c, false
 	}
 	return c, true

@@ -47,21 +47,8 @@ func (s *Server) classDTOs(r *http.Request, characterID int64) []ClassDTO {
 // campaignAccess enforces owner-or-member read access (resolveAccess), writing
 // the 404/403 and returning false.
 func (s *Server) campaignAccess(w http.ResponseWriter, r *http.Request, campaignID int64) bool {
-	c, err := s.queries.GetCampaign(r.Context(), campaignID)
-	if errors.Is(err, sql.ErrNoRows) {
-		writeError(w, http.StatusNotFound, fmt.Sprintf("Campaign %d not found", campaignID))
-		return false
-	}
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load campaign")
-		return false
-	}
-	if c.Ownerid == currentUser(r).ID {
-		return true
-	}
-	isMember, _ := s.queries.IsCampaignMember(r.Context(), sqlcgen.IsCampaignMemberParams{Campaignid: campaignID, Ownerid: currentUser(r).ID})
-	if !isMember {
-		writeError(w, http.StatusForbidden, fmt.Sprintf("Campaign %d is not accessible", campaignID))
+	if _, status, err := s.resolveRole(r.Context(), currentUser(r).ID, campaignID); err != nil {
+		writeError(w, status, err.Error())
 		return false
 	}
 	return true
