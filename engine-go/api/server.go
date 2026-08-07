@@ -57,6 +57,8 @@ func (s *Server) Router() http.Handler {
 		r.Post("/{id}/damage", s.handleApplyDamage)
 		r.Patch("/{id}/level", s.handleUpdateLevel)
 		r.Patch("/{id}/classes/level", s.handleUpdateClassLevel)
+		r.Patch("/{id}/abilities", s.handleUpdateAbilities)
+		r.Patch("/{id}/proficiencies", s.handleUpdateProficiencies)
 		r.Post("/{id}/items", s.handleAddItem)
 		r.Patch("/{id}/items/{itemId}", s.handleUpdateItem)
 		r.Delete("/{id}/items/{itemId}", s.handleDeleteItem)

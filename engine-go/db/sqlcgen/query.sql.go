@@ -784,6 +784,22 @@ func (q *Queries) SetHpCurrent(ctx context.Context, arg SetHpCurrentParams) erro
 	return err
 }
 
+const setProficiencies = `-- name: SetProficiencies :exec
+UPDATE characters SET proficiencies = ?1, updatedAt = ?2
+WHERE id = ?3
+`
+
+type SetProficienciesParams struct {
+	Proficiencies string `json:"proficiencies"`
+	UpdatedAt     string `json:"updatedAt"`
+	ID            int64  `json:"id"`
+}
+
+func (q *Queries) SetProficiencies(ctx context.Context, arg SetProficienciesParams) error {
+	_, err := q.db.ExecContext(ctx, setProficiencies, arg.Proficiencies, arg.UpdatedAt, arg.ID)
+	return err
+}
+
 const setSpellPreparedByCatalog = `-- name: SetSpellPreparedByCatalog :one
 UPDATE character_spells SET prepared = ?1
 WHERE characterId = ?2 AND catalogSpellId = ?3
