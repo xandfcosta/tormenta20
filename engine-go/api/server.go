@@ -17,8 +17,9 @@ type Server struct {
 	cfg      Config
 	db       *sql.DB
 	queries  *sqlcgen.Queries
-	catalogs *engine.Catalogs // nil if the catalog snapshot failed to load
-	sessions *sessionStore    // in-memory realtime tracker state (B.6)
+	catalogs *engine.Catalogs  // nil if the catalog snapshot failed to load
+	sessions *sessionStore     // in-memory realtime tracker state (B.6)
+	presence *presenceRegistry // who's-online per session room (B.6)
 }
 
 // NewServer wires the API server. The DB is already opened + migrated (db.Open);
@@ -28,6 +29,7 @@ func NewServer(cfg Config, database *sql.DB, catalogs *engine.Catalogs) *Server 
 	return &Server{
 		cfg: cfg, db: database, queries: q, catalogs: catalogs,
 		sessions: newSessionStore(q, newUUID),
+		presence: newPresenceRegistry(),
 	}
 }
 

@@ -277,7 +277,15 @@ Fase B (grande). Ou B direto se a prioridade é a API — são independentes.
   (`s.sessions`). Testes DB **sob `-race`**: round-trip persist/hydrate, blob, refresh, dirty
   na falha (fecha o DB), 20 mutações concorrentes. **Deferido**: `maybeLiveWriteThrough`
   (env-gated `WS_VITALS_WRITETHROUGH_LIVE`, default off — opt-in, sem impacto no fluxo).
-  ⏳ **2.2 presence** (dedupe por userId, lógica pura). ⏳ **2.3 handlers+emits** no `cmd/api` com zishang520.
+  ✅ **2.2 presence** (`presence.go`): `presenceRegistry` (mapas sessionID→socketID→user +
+  socketID→sessões, `sync.Mutex`) — `join`/`leave`/`disconnect` devolvem o roster a
+  broadcastar; dedupe por userId (multi-aba colapsa, GM vence); limpa sala vazia. Ligado no
+  `Server` (`s.presence`). Testes puros sob `-race` (dedup, gm-wins, leave-ausente, disconnect
+  multi-sessão, churn concorrente). **Desvio anotado**: roster ordenado por userId
+  (determinístico) em vez da ordem de inserção do Map (cosmético).
+  ⏳ **2.3 handlers+emits** no `cmd/api` com zishang520 — a cola final, usando Fase 0/1/2.
+  Padrão de erro→transporte: domínio devolve `(…, status, error)` → o gateway mapeia p/
+  `socket.emit('unauthorized'|erro)` / ack; HTTP já mapeia p/ `writeError`/`writeDomainError`.
 
   **Auth (handshake, `ws-auth.ts`):** token via `handshake.auth.token` → `Authorization:
   Bearer` → **cookie `t20_session`** (nome de `COOKIE_NAME`), nessa ordem. `jwt.verify`
