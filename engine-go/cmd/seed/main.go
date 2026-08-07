@@ -85,17 +85,61 @@ func seedUserCharacters(base, password string, u seedUser) int {
 		log.Printf("auth %s: %v", u.Email, err)
 		return 0
 	}
-	log.Printf("authenticated as %s (%d characters)", u.Email, len(u.Characters))
+	existing, err := existingCharacterNames(client, base)
+	if err != nil {
+		log.Printf("%s: list characters: %v", u.Email, err)
+		existing = map[string]bool{}
+	}
+	log.Printf("authenticated as %s (%d in roster, %d already present)", u.Email, len(u.Characters), len(existing))
 
 	seeded := 0
 	for _, ch := range u.Characters {
+		name := characterName(ch.Create)
+		if existing[name] {
+			log.Printf("skip %q (already exists)", name)
+			continue
+		}
 		if err := seedCharacterRow(client, base, ch); err != nil {
 			log.Printf("%s: %v", u.Email, err)
 			continue
 		}
+		existing[name] = true
 		seeded++
 	}
 	return seeded
+}
+
+// characterName pulls the name out of a create body so the seed can skip a character that
+// already exists (idempotent re-runs).
+func characterName(create json.RawMessage) string {
+	var probe struct {
+		Name string `json:"name"`
+	}
+	_ = json.Unmarshal(create, &probe)
+	return probe.Name
+}
+
+// existingCharacterNames lists the authenticated user's characters so the seed is
+// idempotent — re-running skips names already present (matches the Nest seed's dedupe).
+func existingCharacterNames(c *http.Client, base string) (map[string]bool, error) {
+	status, body, err := do(c, http.MethodGet, base+"/characters", nil)
+	if err != nil {
+		return nil, err
+	}
+	if status != http.StatusOK {
+		return nil, fmt.Errorf("list status %d", status)
+	}
+	var chars []struct {
+		Name string `json:"name"`
+	}
+	if err := json.Unmarshal(body, &chars); err != nil {
+		return nil, err
+	}
+	names := make(map[string]bool, len(chars))
+	for _, ch := range chars {
+		names[ch.Name] = true
+	}
+	return names, nil
 }
 
 // seedCharacterRow creates one character then applies its spells, damaged HP,

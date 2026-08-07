@@ -184,7 +184,7 @@ Fase B (grande). Ou B direto se a prioridade é a API — são independentes.
   padrão nos não-`simple`; HP danificado (`hpFraction`) via PATCH `/vitals` pós-cura,
   efeito de cena via `consume` do `cosmetico`. Ids inválidos do seed antigo
   corrigidos (`machado-batalha`, não `-de-`; `misseis-magicos` não existe no catálogo →
-  usa o ARCANE_SPELLBOOK do Nest). **Não é idempotente** — rode em DB limpo (`rm -f $DB*`).
+  usa o ARCANE_SPELLBOOK do Nest). **Idempotente** (dedupe por nome via GET /characters) — re-rodar pula os existentes (ALE-12).
 - ✅ **B.2** — auth: register/login/logout/me, bcrypt + cookie JWT.
 - ✅ **B.3 — COMPLETA** — domínio Characters: CRUD + ~30 rotas de mutação. Todas as
   rotas em `api/server.go`. Cobre: vitals/damage (roteamento temp-HP + `planDamage`),
