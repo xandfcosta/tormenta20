@@ -34,34 +34,52 @@ As ~14 fórmulas de breakdown (`derived.ts`) **já estão portadas em Go**
 (`ComputeSheetV2`, provado byte-equal), mas a UI ainda roda as **cópias TS**. Meta:
 a UI **consome** o `ComputedSheetV2` do Go; nenhuma regra de ficha é autorada em TS.
 
+**STATUS: quase completa** (commits `5dc3587`..`c552657`). Falta só o item 3.3.
+
 **Passos:**
-1. Hook `useComputedSheet(char)` em `entities/character` → `computeSheetV2(char,
-   activeConditionals)` (engine), MODE-gated com montador TS p/ teste (reusa os
-   breakdowns como oráculo, sem wasm no vitest). Padrão idêntico a `resolveEffects`.
-   `ComputedSheetV2` já está COMPLETO (tem `attribute`, `attackAll`, `damageAll`).
-2. Trocar os ~16 consumidores de breakdown p/ ler campos do `ComputedSheetV2`:
-   `combat-magic-stats`, `mobile-def-chip`, `character-stage`, `dossier-drawer`,
-   `vitals-aside`, `sheet-header`, `expertise-row`, `expertises-panel`, `spell-row`,
+1. ✅ **FEITO** — Hook `useComputedSheet(char)` (`entities/character/computed-sheet.ts`)
+   → `computeSheetV2` (engine), MODE-gated com o montador TS `assembleSheetV2` p/
+   teste (reusa os breakdowns como oráculo, sem wasm no vitest). O oráculo de paridade
+   (`parity-oracle.test.ts`) usa o MESMO `assembleSheetV2` — fonte única.
+2. ✅ **FEITO** — 13 consumidores de breakdown lêem campos do `ComputedSheetV2`:
+   `combat-magic-stats` (Combat/Saves/Magic — `WeaponFormulaCards` fica TS de propósito),
+   `mobile-def-chip`, `character-stage`, `dossier-drawer`, `vitals-aside`, `sheet-header`
+   (disp/fly; ainda lê `effects.flags` p/ fatigue), `expertise-row`, `expertises-panel`,
    `bag-panel`, `cast-spell-dialog`, `initiative-roll`, `sheet-search-index`,
-   `stances-section`, `use-power-dialog`, `spellbook-panel`. Ex.: `defenseTotal(c,eff)`
-   → `sheet.defense`; `expertiseTotalWithItems(c,luta,eff)` → `sheet.expertises.find`.
-   Valores idênticos (provados) → sem regressão visual.
-3. Expor no Go/WASM as regras que já estão em Go mas ainda não expostas, e trocar
-   os últimos consumidores de effects-cru:
-   - `resolveConditionalDisplay` (posturas, `stances-section`) → já existe em Go
-     (`ResolveConditionalDisplay`); expor via WASM + consumir.
-   - CD de magia por classe aplicável (`spell-row computeBestCd`) → usa `spellSaveDc`
-     (já em Go); expor uma função ou os CDs por-atributo no `ComputedSheetV2`.
-   - `effect-source.equippedItemFlagEffects` (flags por-item, `effects-panel`) →
-     nova função Go `computeEquippedFlags(char)` (a resolução já é `ComputeItemEffects`;
-     falta a proveniência por-item).
-4. Depois disso: `defenseTotal`/`statFor`/etc. ficam sem consumidor em prod →
-   **DCE**. `statFor` remanescente é só LOOKUP (não regra). Verificar DCE por strings
-   (padrão: os breakdowns somem do `dist/assets`; ver método na Fase A abaixo).
+   `stances-section` (tempHp), `use-power-dialog`. Helpers `expertiseFromSheet` /
+   `requireExpertise` p/ perícias por nome. Valores idênticos (provados).
+3. Expor no Go/WASM as regras que faltavam e trocar os consumidores de effects-cru:
+   - 3.1 ✅ **FEITO** — CD de magia por classe aplicável (`spell-row computeBestCd`):
+     novo campo `spellCdByAttribute` no `ComputedSheetV2` (Go + TS + oráculo regenerado,
+     paridade E2E wasm provada). `spell-row`/`spellbook-panel` lêem o mapa; drop de
+     `effects` desses dois.
+   - 3.2 ✅ **FEITO** — `resolveConditionalDisplay` (posturas, `stances-section`):
+     exposto via WASM (`resolveConditionalDisplay` em `cmd/wasm`), choke point MODE-gated
+     `entities/character/conditional-display.ts` (`resolveStanceDisplay`), E2E ok.
+   - 3.3 ⬜ **FALTA** — `effect-source.equippedItemFlagEffects` (flags por-item,
+     `effects-panel`) → nova função Go `computeEquippedFlags(char)`. É o **último
+     consumidor em prod de `computeItemEffects`** (t20-data), então portar isso fecha o
+     DCE do core de resolução TS. Cuidado na paridade: espelhar o TS EXATO — só
+     `catalog.modifiers` base (sem melhorias/material/penalidades/mirrors), flags por item.
+     Baixo ganho de bundle enquanto o front ainda empacota t20-data (ver projeto
+     `project_front_decouple_catalog`) → casa bem com ELE.
+4. ✅ **DCE VERIFICADO** — os breakdowns sem consumidor em prod (`defenseTotal`,
+   `displacementTotal`, `flySpeedTotal`, `inventorySlotsTotal`, `pmLimitTotal`,
+   `bestBaseSpellCd`, `spellDCBonus`, `pmCostMod`, `characterDamageReduction`,
+   `tempHpFromPowers`) saíram do bundle: labels só-de-breakdown (`"Bárbaro (p47)"`,
+   `"Alma de Bronze (Fúria, p41)"`, …) dão **0** em `dist/assets/*.js` e vêm do wasm em
+   runtime. `attributeTotal`/`expertiseTotalWithItems`/`statFor` PERMANECEM (usados por
+   `WeaponFormulaCards`, deferido). `computeItemEffects` permanece até o item 3.3.
 
 **NÃO nesta fase** (ainda TS-only, portar depois se quiser "tudo da ficha"):
 montagem de ataque/dano de arma (`WeaponFormulaCards`: melee soma Força, crítico)
 e `point-buy` (criação). São ports novos, não duplicações.
+
+**Padrão E2E wasm** (recriar em `$CLAUDE_JOB_DIR/tmp`): `wasm_exec.js` via
+`vm.runInThisContext`, instanciar `t20.wasm`, `primeEngineCatalogs` a partir de
+`engine-go/parity/_catalogs.json`, comparar `computeSheetV2`/`resolveConditionalDisplay`
+contra o oráculo/valor esperado. Mapas do Go serializam com chaves ordenadas
+(alfabético) — comparar deep/canônico, não string-equal.
 
 ## Fase B — a API: NestJS → Go (a frente grande)
 
