@@ -705,6 +705,69 @@ func (q *Queries) ListSpellsByCharacter(ctx context.Context, characterid int64) 
 	return items, nil
 }
 
+const setCharacterClassLevel = `-- name: SetCharacterClassLevel :execrows
+UPDATE character_classes SET level = ?1
+WHERE characterId = ?2 AND className = ?3
+`
+
+type SetCharacterClassLevelParams struct {
+	Level       int64  `json:"level"`
+	CharacterId int64  `json:"characterId"`
+	ClassName   string `json:"className"`
+}
+
+func (q *Queries) SetCharacterClassLevel(ctx context.Context, arg SetCharacterClassLevelParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, setCharacterClassLevel, arg.Level, arg.CharacterId, arg.ClassName)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const setCharacterLevel = `-- name: SetCharacterLevel :exec
+UPDATE characters SET level = ?1, updatedAt = ?2
+WHERE id = ?3
+`
+
+type SetCharacterLevelParams struct {
+	Level     int64  `json:"level"`
+	UpdatedAt string `json:"updatedAt"`
+	ID        int64  `json:"id"`
+}
+
+func (q *Queries) SetCharacterLevel(ctx context.Context, arg SetCharacterLevelParams) error {
+	_, err := q.db.ExecContext(ctx, setCharacterLevel, arg.Level, arg.UpdatedAt, arg.ID)
+	return err
+}
+
+const setCharacterVitals = `-- name: SetCharacterVitals :exec
+UPDATE characters
+SET hpMax = ?1, hpCurrent = ?2,
+    mpMax = ?3, mpCurrent = ?4, updatedAt = ?5
+WHERE id = ?6
+`
+
+type SetCharacterVitalsParams struct {
+	HpMax     int64  `json:"hpMax"`
+	HpCurrent int64  `json:"hpCurrent"`
+	MpMax     int64  `json:"mpMax"`
+	MpCurrent int64  `json:"mpCurrent"`
+	UpdatedAt string `json:"updatedAt"`
+	ID        int64  `json:"id"`
+}
+
+func (q *Queries) SetCharacterVitals(ctx context.Context, arg SetCharacterVitalsParams) error {
+	_, err := q.db.ExecContext(ctx, setCharacterVitals,
+		arg.HpMax,
+		arg.HpCurrent,
+		arg.MpMax,
+		arg.MpCurrent,
+		arg.UpdatedAt,
+		arg.ID,
+	)
+	return err
+}
+
 const setHpCurrent = `-- name: SetHpCurrent :exec
 UPDATE characters SET hpCurrent = ?1, updatedAt = ?2
 WHERE id = ?3

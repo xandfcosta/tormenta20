@@ -43,44 +43,11 @@ func TestVitalsParity(t *testing.T) {
 			}
 			readJSON(t, filepath.Join(dir, slug), &oracle)
 
-			ctx := catalogs.vitalContextFor(oracle.Char)
+			ctx := catalogs.VitalContextFor(oracle.Char)
 			got := roundTrip(t, catalogs.ComputeVitals(ctx))
 			if !reflect.DeepEqual(got, oracle.Vitals) {
 				diffReport(t, "vitals", got, oracle.Vitals)
 			}
 		})
-	}
-}
-
-// vitalContextFor builds the VitalContext the front assembles in enginePools:
-// parsed ownership blobs + attrTotals from base effects (no conditionals). Lives
-// on the test since the real front builds the context in TS and passes it in.
-func (c *Catalogs) vitalContextFor(ch Character) VitalContext {
-	effects := ComputeItemEffects(c.ActiveItemsFor(ch))
-	attrTotals := map[string]int{}
-	for _, a := range AttributeKeys {
-		attrTotals[a] = effectiveAttribute(ch, a, effects)
-	}
-	level := 0
-	classes := make([]ClassEntry, len(ch.Classes))
-	for i, ce := range ch.Classes {
-		classes[i] = ClassEntry{ClassName: ce.ClassName, Level: ce.Level}
-		level += ce.Level
-	}
-	raceID := ""
-	if len(ch.Races) > 0 {
-		raceID = ch.Races[0].Race
-	}
-	return VitalContext{
-		Level:              level,
-		Classes:            classes,
-		RaceID:             raceID,
-		RaceAbilityChoices: parseChoiceSet(ch.RaceAbilityChoices).list,
-		PowerIDs:           parseChoiceSet(ch.ClassPowers).list,
-		ClassChoices:       parseClassChoices(ch.ClassChoices),
-		GodPower:           ch.GodPower,
-		Origin:             ch.Origin,
-		OriginChoices:      parseChoiceSet(ch.OriginChoices).list,
-		AttrTotals:         attrTotals,
 	}
 }

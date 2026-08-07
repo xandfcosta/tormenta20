@@ -123,3 +123,17 @@ DELETE FROM active_effects WHERE id = ?;
 -- name: SetHpCurrent :exec
 UPDATE characters SET hpCurrent = sqlc.arg('hpCurrent'), updatedAt = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id');
+
+-- name: SetCharacterLevel :exec
+UPDATE characters SET level = sqlc.arg('level'), updatedAt = sqlc.arg('updatedAt')
+WHERE id = sqlc.arg('id');
+
+-- name: SetCharacterClassLevel :execrows
+UPDATE character_classes SET level = sqlc.arg('level')
+WHERE characterId = sqlc.arg('characterId') AND className = sqlc.arg('className');
+
+-- name: SetCharacterVitals :exec
+UPDATE characters
+SET hpMax = sqlc.arg('hpMax'), hpCurrent = sqlc.arg('hpCurrent'),
+    mpMax = sqlc.arg('mpMax'), mpCurrent = sqlc.arg('mpCurrent'), updatedAt = sqlc.arg('updatedAt')
+WHERE id = sqlc.arg('id');
