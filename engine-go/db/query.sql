@@ -100,6 +100,12 @@ SELECT id FROM active_effects WHERE characterId = ? AND catalogId = ?;
 -- name: DeleteEffectsByCatalog :exec
 DELETE FROM active_effects WHERE characterId = ? AND catalogId = ?;
 
+-- name: DeleteEffectsByScope :exec
+DELETE FROM active_effects WHERE characterId = ? AND scope = ?;
+
+-- name: DeleteSceneAndDayEffects :exec
+DELETE FROM active_effects WHERE characterId = ? AND scope IN ('scene', 'day');
+
 -- name: ListEquippedItems :many
 SELECT id, equipped FROM character_items WHERE characterId = ? AND equipped IS NOT NULL;
 

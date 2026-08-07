@@ -486,6 +486,20 @@ func (q *Queries) DeleteEffectsByCatalog(ctx context.Context, arg DeleteEffectsB
 	return err
 }
 
+const deleteEffectsByScope = `-- name: DeleteEffectsByScope :exec
+DELETE FROM active_effects WHERE characterId = ? AND scope = ?
+`
+
+type DeleteEffectsByScopeParams struct {
+	Characterid int64  `json:"characterid"`
+	Scope       string `json:"scope"`
+}
+
+func (q *Queries) DeleteEffectsByScope(ctx context.Context, arg DeleteEffectsByScopeParams) error {
+	_, err := q.db.ExecContext(ctx, deleteEffectsByScope, arg.Characterid, arg.Scope)
+	return err
+}
+
 const deleteExpertiseByID = `-- name: DeleteExpertiseByID :exec
 DELETE FROM character_expertises WHERE id = ?
 `
@@ -510,6 +524,15 @@ DELETE FROM campaign_members WHERE id = ?
 
 func (q *Queries) DeleteMember(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteMember, id)
+	return err
+}
+
+const deleteSceneAndDayEffects = `-- name: DeleteSceneAndDayEffects :exec
+DELETE FROM active_effects WHERE characterId = ? AND scope IN ('scene', 'day')
+`
+
+func (q *Queries) DeleteSceneAndDayEffects(ctx context.Context, characterid int64) error {
+	_, err := q.db.ExecContext(ctx, deleteSceneAndDayEffects, characterid)
 	return err
 }
 

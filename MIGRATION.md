@@ -242,8 +242,15 @@ Fase B (grande). Ou B direto se a prioridade é a API — são independentes.
   `GetCampaign`, `IsCharacterMember`, `ListMembers`) — **zero query nova**. **Harness de teste
   DB-backed novo** (`realtime_domain_test.go`: `newTestServer` = `db.Open` temp + `NewServer`
   cat-less + seeds) cobrindo cada branch de authz — reusável nas próximas slices.
-  ⏳ **1.2 descanso** (`endScene`/`endDay`/`restVitals(condition)`) — mecânica T20, provavelmente
-  puxa o smell 0.3 (computar vitais precisa de `ctx`). ⏳ **1.3 ws-auth** (verify JWT, reusar do HTTP).
+  ✅ **1.2 descanso** (`character_effects.go`, todos `(…, status, error)`, authz owner-or-GM via
+  `authorizedCharacter`): `endScene` (deleta efeitos scope=scene), `endDay` (scope IN scene,day),
+  `restVitals(condition)` (PV/PM += floor(level × `restMultiplier`), clamp ao max, persiste via
+  `SetVitalsCurrent`; `restMultiplier`={ruim .5, normal 1, confortavel 2, luxuosa 3}; condition
+  desconhecida→normal). **2 queries sqlc novas** (`DeleteEffectsByScope`, `DeleteSceneAndDayEffects`
+  — IN estático, sem slice) regeneradas com `go run …/sqlc@latest generate` (v1.31.1; +23 linhas,
+  0 removidas). Testes DB cobrindo seletividade de escopo + clamp + fallback + authz 403.
+  **Nota**: os helpers recebem `ctx` direto — o *smell 0.3* não apareceu aqui (`restVitals` usa o
+  row do `authorizedCharacter`, não `r`). ⏳ **1.3 ws-auth** (verify JWT, reusar do HTTP).
 
   **Auth (handshake, `ws-auth.ts`):** token via `handshake.auth.token` → `Authorization:
   Bearer` → **cookie `t20_session`** (nome de `COOKIE_NAME`), nessa ordem. `jwt.verify`

@@ -178,6 +178,105 @@ func TestSessionForCaller(t *testing.T) {
 	})
 }
 
+func seedEffect(t *testing.T, s *Server, charID int64, catalogID, scope string) {
+	t.Helper()
+	if _, err := s.queries.CreateActiveEffect(context.Background(), sqlcgen.CreateActiveEffectParams{
+		Characterid: charID, Catalogid: catalogID, Scope: scope, Modifiers: "[]", Createdat: nowISO(),
+	}); err != nil {
+		t.Fatalf("seed effect %q/%q: %v", catalogID, scope, err)
+	}
+}
+
+func effectScopes(t *testing.T, s *Server, charID int64) []string {
+	t.Helper()
+	rows, err := s.queries.ListActiveEffectsByCharacter(context.Background(), charID)
+	if err != nil {
+		t.Fatalf("list effects: %v", err)
+	}
+	out := make([]string, len(rows))
+	for i, r := range rows {
+		out[i] = r.Scope
+	}
+	return out
+}
+
+func TestEndSceneEndDay(t *testing.T) {
+	s := newTestServer(t)
+	ctx := context.Background()
+	gmID := seedUser(t, s, "gm@t.com")
+	gm := AuthUser{ID: gmID}
+	stranger := AuthUser{ID: seedUser(t, s, "x@t.com")}
+	_ = seedCampaign(t, s, gmID)
+	char := seedCharacter(t, s, gmID, "PC", 10, 10, 5, 5)
+
+	t.Run("endScene removes only scene effects", func(t *testing.T) {
+		seedEffect(t, s, char, "buff-a", "scene")
+		seedEffect(t, s, char, "buff-b", "day")
+		if status, err := s.endScene(ctx, gm, char); status != 200 || err != nil {
+			t.Fatalf("status=%d err=%v", status, err)
+		}
+		if got := effectScopes(t, s, char); len(got) != 1 || got[0] != "day" {
+			t.Errorf("remaining scopes=%v, want [day]", got)
+		}
+	})
+	t.Run("endDay removes scene and day", func(t *testing.T) {
+		seedEffect(t, s, char, "buff-a", "scene") // re-add the scene one
+		if status, err := s.endDay(ctx, gm, char); status != 200 || err != nil {
+			t.Fatalf("status=%d err=%v", status, err)
+		}
+		if got := effectScopes(t, s, char); len(got) != 0 {
+			t.Errorf("remaining scopes=%v, want []", got)
+		}
+	})
+	t.Run("stranger forbidden, effects untouched", func(t *testing.T) {
+		seedEffect(t, s, char, "buff-c", "scene")
+		if status, _ := s.endScene(ctx, stranger, char); status != 403 {
+			t.Errorf("status=%d, want 403", status)
+		}
+		if got := effectScopes(t, s, char); len(got) != 1 {
+			t.Errorf("effect should survive a rejected rest, scopes=%v", got)
+		}
+	})
+}
+
+func TestRestVitals(t *testing.T) {
+	s := newTestServer(t)
+	ctx := context.Background()
+	gmID := seedUser(t, s, "gm@t.com")
+	gm := AuthUser{ID: gmID}
+	_ = seedCampaign(t, s, gmID)
+
+	// Level-1 characters: gain = floor(1 × mult) → ruim 0, normal 1, confortavel 2, luxuosa 3.
+	t.Run("luxuosa gains 3, clamped to max", func(t *testing.T) {
+		char := seedCharacter(t, s, gmID, "Ferido", 5, 20, 2, 8)
+		got, status, err := s.restVitals(ctx, gm, char, "luxuosa")
+		if err != nil || status != 200 || got.hpCurrent != 8 || got.mpCurrent != 5 {
+			t.Fatalf("got %+v status=%d err=%v, want hp=8 mp=5", got, status, err)
+		}
+	})
+	t.Run("gain clamps at max", func(t *testing.T) {
+		char := seedCharacter(t, s, gmID, "QuaseCheio", 19, 20, 8, 8)
+		got, _, _ := s.restVitals(ctx, gm, char, "luxuosa")
+		if got.hpCurrent != 20 || got.mpCurrent != 8 {
+			t.Errorf("got %+v, want hp=20 mp=8 (clamped)", got)
+		}
+	})
+	t.Run("ruim gains nothing at level 1", func(t *testing.T) {
+		char := seedCharacter(t, s, gmID, "Pobre", 5, 20, 2, 8)
+		got, _, _ := s.restVitals(ctx, gm, char, "ruim")
+		if got.hpCurrent != 5 || got.mpCurrent != 2 {
+			t.Errorf("got %+v, want unchanged 5/2", got)
+		}
+	})
+	t.Run("unknown condition falls back to normal (gain 1)", func(t *testing.T) {
+		char := seedCharacter(t, s, gmID, "Default", 5, 20, 2, 8)
+		got, _, _ := s.restVitals(ctx, gm, char, "bogus")
+		if got.hpCurrent != 6 || got.mpCurrent != 3 {
+			t.Errorf("got %+v, want 6/3", got)
+		}
+	})
+}
+
 func TestListMemberHelpers(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()

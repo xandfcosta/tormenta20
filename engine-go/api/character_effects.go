@@ -1,14 +1,77 @@
 package api
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 
 	"t20engine/db/sqlcgen"
 )
+
+// restMultiplier is the T20 night-rest recovery factor per accommodation quality:
+// PV/PM gained = floor(level × factor). Mirrors REST_MULTIPLIER in
+// characters-effects.service.ts (livro: descanso). An unknown condition falls back to
+// 'normal' — the gateway already defaults, this keeps the domain rule self-contained.
+var restMultiplier = map[string]float64{"ruim": 0.5, "normal": 1, "confortavel": 2, "luxuosa": 3}
+
+// restedVitals is the PV/PM current pair a rest leaves the character on.
+type restedVitals struct {
+	hpCurrent int64
+	mpCurrent int64
+}
+
+// endScene expires the character's scene-scoped effects (owner-or-GM authorized first).
+// Transport-agnostic — the WS session-rest handler calls this per member character.
+// Mirrors CharacterEffectsService.endScene.
+func (s *Server) endScene(ctx context.Context, user AuthUser, characterID int64) (int, error) {
+	if _, status, err := s.authorizedCharacter(ctx, user, characterID); err != nil {
+		return status, err
+	}
+	if err := s.queries.DeleteEffectsByScope(ctx, sqlcgen.DeleteEffectsByScopeParams{Characterid: characterID, Scope: "scene"}); err != nil {
+		return http.StatusInternalServerError, errors.New("Could not clear effects")
+	}
+	return http.StatusOK, nil
+}
+
+// endDay expires both scene- and day-scoped effects. Mirrors CharacterEffectsService.endDay.
+func (s *Server) endDay(ctx context.Context, user AuthUser, characterID int64) (int, error) {
+	if _, status, err := s.authorizedCharacter(ctx, user, characterID); err != nil {
+		return status, err
+	}
+	if err := s.queries.DeleteSceneAndDayEffects(ctx, characterID); err != nil {
+		return http.StatusInternalServerError, errors.New("Could not clear effects")
+	}
+	return http.StatusOK, nil
+}
+
+// restVitals applies the T20 night-rest recovery: PV/PM each gain floor(level × factor),
+// clamped to their max, then persists. Returns the new current values so the gateway can
+// mirror them onto the live tracker. Mirrors CharacterEffectsService.restVitals.
+func (s *Server) restVitals(ctx context.Context, user AuthUser, characterID int64, condition string) (restedVitals, int, error) {
+	row, status, err := s.authorizedCharacter(ctx, user, characterID)
+	if err != nil {
+		return restedVitals{}, status, err
+	}
+	mult, ok := restMultiplier[condition]
+	if !ok {
+		mult = restMultiplier["normal"]
+	}
+	gain := int64(math.Floor(float64(row.Level) * mult))
+	next := restedVitals{
+		hpCurrent: min(row.Hpmax, row.Hpcurrent+gain),
+		mpCurrent: min(row.Mpmax, row.Mpcurrent+gain),
+	}
+	if err := s.queries.SetVitalsCurrent(ctx, sqlcgen.SetVitalsCurrentParams{
+		HpCurrent: next.hpCurrent, MpCurrent: next.mpCurrent, UpdatedAt: nowISO(), ID: characterID,
+	}); err != nil {
+		return restedVitals{}, http.StatusInternalServerError, errors.New("Could not update vitals")
+	}
+	return next, http.StatusOK, nil
+}
 
 // handleAdjustEffect ports adjustActiveEffect: bump a temp-HP pool's amount by
 // tempHpDelta; delete when it hits 0 ({removed, id}), else return the effect.
