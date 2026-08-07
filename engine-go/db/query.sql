@@ -14,3 +14,42 @@ SELECT * FROM users WHERE id = ? LIMIT 1;
 INSERT INTO users (email, name, passwordHash, createdAt, updatedAt)
 VALUES (?, ?, ?, ?, ?)
 RETURNING *;
+
+-- characters read model (B.3)
+
+-- name: ListCharactersByOwner :many
+SELECT * FROM characters WHERE ownerId = ? ORDER BY updatedAt DESC;
+
+-- name: GetCharacter :one
+SELECT * FROM characters WHERE id = ? LIMIT 1;
+
+-- name: GetCharacterOwner :one
+SELECT ownerId FROM characters WHERE id = ? LIMIT 1;
+
+-- name: IsCampaignGmForCharacter :one
+SELECT EXISTS (
+  SELECT 1 FROM campaign_members m
+  JOIN campaigns c ON c.id = m.campaignId
+  WHERE m.characterId = ? AND c.ownerId = ?
+) AS isGm;
+
+-- name: ListRacesByCharacter :many
+SELECT race FROM character_races WHERE characterId = ? ORDER BY id ASC;
+
+-- name: ListClassesByCharacter :many
+SELECT className, level FROM character_classes WHERE characterId = ? ORDER BY id ASC;
+
+-- name: ListExpertisesByCharacter :many
+SELECT name, attribute, trained, custom FROM character_expertises WHERE characterId = ? ORDER BY name ASC;
+
+-- name: ListItemsByCharacter :many
+SELECT id, catalogId, name, quantity, slots, equipped, improvements, material
+FROM character_items WHERE characterId = ? ORDER BY id ASC;
+
+-- name: ListActiveEffectsByCharacter :many
+SELECT id, catalogId, scope, modifiers, createdAt
+FROM active_effects WHERE characterId = ? ORDER BY id ASC;
+
+-- name: ListSpellsByCharacter :many
+SELECT id, catalogSpellId, prepared, learnedAt
+FROM character_spells WHERE characterId = ? ORDER BY learnedAt ASC;

@@ -1,17 +1,30 @@
 package api
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 )
 
+// nullToPtr converts a nullable TEXT column into a *string (nil → JSON null).
+func nullToPtr(ns sql.NullString) *string {
+	if !ns.Valid {
+		return nil
+	}
+	return &ns.String
+}
+
 // writeJSON serializes body as JSON with the given status. A nil body writes just
-// the status line (204 responses).
+// the status line (204 responses). HTML escaping is off so `<`, `>`, `&` inside
+// the stored JSON-string columns (modifiers, choices) stay byte-identical to
+// Nest's JSON.stringify.
 func writeJSON(w http.ResponseWriter, status int, body any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	if body != nil {
-		_ = json.NewEncoder(w).Encode(body)
+		enc := json.NewEncoder(w)
+		enc.SetEscapeHTML(false)
+		_ = enc.Encode(body)
 	}
 }
 

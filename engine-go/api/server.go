@@ -45,5 +45,11 @@ func (s *Server) Router() http.Handler {
 		r.Post("/logout", s.handleLogout)
 		r.With(s.requireAuth).Get("/me", s.handleMe)
 	})
+
+	r.Route("/characters", func(r chi.Router) {
+		r.Use(s.requireAuth)
+		r.Get("/", s.handleListCharacters)
+		r.Get("/{id}", s.handleGetCharacter)
+	})
 	return r
 }

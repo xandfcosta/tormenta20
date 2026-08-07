@@ -44,6 +44,60 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
+const getCharacter = `-- name: GetCharacter :one
+SELECT id, ownerid, name, origin, god, godpower, tibar, level, hpmax, hpcurrent, mpmax, mpcurrent, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classpowers, classchoices, powerchoices, activeconditions, createdat, updatedat FROM characters WHERE id = ? LIMIT 1
+`
+
+func (q *Queries) GetCharacter(ctx context.Context, id int64) (Character, error) {
+	row := q.db.QueryRowContext(ctx, getCharacter, id)
+	var i Character
+	err := row.Scan(
+		&i.ID,
+		&i.Ownerid,
+		&i.Name,
+		&i.Origin,
+		&i.God,
+		&i.Godpower,
+		&i.Tibar,
+		&i.Level,
+		&i.Hpmax,
+		&i.Hpcurrent,
+		&i.Mpmax,
+		&i.Mpcurrent,
+		&i.Strength,
+		&i.Dexterity,
+		&i.Constitution,
+		&i.Intelligence,
+		&i.Wisdom,
+		&i.Charisma,
+		&i.Size,
+		&i.Displacement,
+		&i.Proficiencies,
+		&i.Raceabilitychoices,
+		&i.Raceattributechoices,
+		&i.Secondaryracechoices,
+		&i.Originchoices,
+		&i.Classpowers,
+		&i.Classchoices,
+		&i.Powerchoices,
+		&i.Activeconditions,
+		&i.Createdat,
+		&i.Updatedat,
+	)
+	return i, err
+}
+
+const getCharacterOwner = `-- name: GetCharacterOwner :one
+SELECT ownerId FROM characters WHERE id = ? LIMIT 1
+`
+
+func (q *Queries) GetCharacterOwner(ctx context.Context, id int64) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getCharacterOwner, id)
+	var ownerid int64
+	err := row.Scan(&ownerid)
+	return ownerid, err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
 
 
@@ -84,4 +138,313 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (User, error) {
 		&i.Updatedat,
 	)
 	return i, err
+}
+
+const isCampaignGmForCharacter = `-- name: IsCampaignGmForCharacter :one
+SELECT EXISTS (
+  SELECT 1 FROM campaign_members m
+  JOIN campaigns c ON c.id = m.campaignId
+  WHERE m.characterId = ? AND c.ownerId = ?
+) AS isGm
+`
+
+type IsCampaignGmForCharacterParams struct {
+	Characterid int64 `json:"characterid"`
+	Ownerid     int64 `json:"ownerid"`
+}
+
+func (q *Queries) IsCampaignGmForCharacter(ctx context.Context, arg IsCampaignGmForCharacterParams) (bool, error) {
+	row := q.db.QueryRowContext(ctx, isCampaignGmForCharacter, arg.Characterid, arg.Ownerid)
+	var isgm bool
+	err := row.Scan(&isgm)
+	return isgm, err
+}
+
+const listActiveEffectsByCharacter = `-- name: ListActiveEffectsByCharacter :many
+SELECT id, catalogId, scope, modifiers, createdAt
+FROM active_effects WHERE characterId = ? ORDER BY id ASC
+`
+
+type ListActiveEffectsByCharacterRow struct {
+	ID        int64  `json:"id"`
+	Catalogid string `json:"catalogid"`
+	Scope     string `json:"scope"`
+	Modifiers string `json:"modifiers"`
+	Createdat string `json:"createdat"`
+}
+
+func (q *Queries) ListActiveEffectsByCharacter(ctx context.Context, characterid int64) ([]ListActiveEffectsByCharacterRow, error) {
+	rows, err := q.db.QueryContext(ctx, listActiveEffectsByCharacter, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListActiveEffectsByCharacterRow{}
+	for rows.Next() {
+		var i ListActiveEffectsByCharacterRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Catalogid,
+			&i.Scope,
+			&i.Modifiers,
+			&i.Createdat,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listCharactersByOwner = `-- name: ListCharactersByOwner :many
+
+SELECT id, ownerid, name, origin, god, godpower, tibar, level, hpmax, hpcurrent, mpmax, mpcurrent, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classpowers, classchoices, powerchoices, activeconditions, createdat, updatedat FROM characters WHERE ownerId = ? ORDER BY updatedAt DESC
+`
+
+// characters read model (B.3)
+func (q *Queries) ListCharactersByOwner(ctx context.Context, ownerid int64) ([]Character, error) {
+	rows, err := q.db.QueryContext(ctx, listCharactersByOwner, ownerid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Character{}
+	for rows.Next() {
+		var i Character
+		if err := rows.Scan(
+			&i.ID,
+			&i.Ownerid,
+			&i.Name,
+			&i.Origin,
+			&i.God,
+			&i.Godpower,
+			&i.Tibar,
+			&i.Level,
+			&i.Hpmax,
+			&i.Hpcurrent,
+			&i.Mpmax,
+			&i.Mpcurrent,
+			&i.Strength,
+			&i.Dexterity,
+			&i.Constitution,
+			&i.Intelligence,
+			&i.Wisdom,
+			&i.Charisma,
+			&i.Size,
+			&i.Displacement,
+			&i.Proficiencies,
+			&i.Raceabilitychoices,
+			&i.Raceattributechoices,
+			&i.Secondaryracechoices,
+			&i.Originchoices,
+			&i.Classpowers,
+			&i.Classchoices,
+			&i.Powerchoices,
+			&i.Activeconditions,
+			&i.Createdat,
+			&i.Updatedat,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listClassesByCharacter = `-- name: ListClassesByCharacter :many
+SELECT className, level FROM character_classes WHERE characterId = ? ORDER BY id ASC
+`
+
+type ListClassesByCharacterRow struct {
+	Classname string `json:"classname"`
+	Level     int64  `json:"level"`
+}
+
+func (q *Queries) ListClassesByCharacter(ctx context.Context, characterid int64) ([]ListClassesByCharacterRow, error) {
+	rows, err := q.db.QueryContext(ctx, listClassesByCharacter, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListClassesByCharacterRow{}
+	for rows.Next() {
+		var i ListClassesByCharacterRow
+		if err := rows.Scan(&i.Classname, &i.Level); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listExpertisesByCharacter = `-- name: ListExpertisesByCharacter :many
+SELECT name, attribute, trained, custom FROM character_expertises WHERE characterId = ? ORDER BY name ASC
+`
+
+type ListExpertisesByCharacterRow struct {
+	Name      string `json:"name"`
+	Attribute string `json:"attribute"`
+	Trained   int64  `json:"trained"`
+	Custom    int64  `json:"custom"`
+}
+
+func (q *Queries) ListExpertisesByCharacter(ctx context.Context, characterid int64) ([]ListExpertisesByCharacterRow, error) {
+	rows, err := q.db.QueryContext(ctx, listExpertisesByCharacter, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListExpertisesByCharacterRow{}
+	for rows.Next() {
+		var i ListExpertisesByCharacterRow
+		if err := rows.Scan(
+			&i.Name,
+			&i.Attribute,
+			&i.Trained,
+			&i.Custom,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listItemsByCharacter = `-- name: ListItemsByCharacter :many
+SELECT id, catalogId, name, quantity, slots, equipped, improvements, material
+FROM character_items WHERE characterId = ? ORDER BY id ASC
+`
+
+type ListItemsByCharacterRow struct {
+	ID           int64          `json:"id"`
+	Catalogid    sql.NullString `json:"catalogid"`
+	Name         string         `json:"name"`
+	Quantity     int64          `json:"quantity"`
+	Slots        float64        `json:"slots"`
+	Equipped     sql.NullString `json:"equipped"`
+	Improvements string         `json:"improvements"`
+	Material     sql.NullString `json:"material"`
+}
+
+func (q *Queries) ListItemsByCharacter(ctx context.Context, characterid int64) ([]ListItemsByCharacterRow, error) {
+	rows, err := q.db.QueryContext(ctx, listItemsByCharacter, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListItemsByCharacterRow{}
+	for rows.Next() {
+		var i ListItemsByCharacterRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Catalogid,
+			&i.Name,
+			&i.Quantity,
+			&i.Slots,
+			&i.Equipped,
+			&i.Improvements,
+			&i.Material,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listRacesByCharacter = `-- name: ListRacesByCharacter :many
+SELECT race FROM character_races WHERE characterId = ? ORDER BY id ASC
+`
+
+func (q *Queries) ListRacesByCharacter(ctx context.Context, characterid int64) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, listRacesByCharacter, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var race string
+		if err := rows.Scan(&race); err != nil {
+			return nil, err
+		}
+		items = append(items, race)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listSpellsByCharacter = `-- name: ListSpellsByCharacter :many
+SELECT id, catalogSpellId, prepared, learnedAt
+FROM character_spells WHERE characterId = ? ORDER BY learnedAt ASC
+`
+
+type ListSpellsByCharacterRow struct {
+	ID             int64  `json:"id"`
+	Catalogspellid string `json:"catalogspellid"`
+	Prepared       int64  `json:"prepared"`
+	Learnedat      string `json:"learnedat"`
+}
+
+func (q *Queries) ListSpellsByCharacter(ctx context.Context, characterid int64) ([]ListSpellsByCharacterRow, error) {
+	rows, err := q.db.QueryContext(ctx, listSpellsByCharacter, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListSpellsByCharacterRow{}
+	for rows.Next() {
+		var i ListSpellsByCharacterRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Catalogspellid,
+			&i.Prepared,
+			&i.Learnedat,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
