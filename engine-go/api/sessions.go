@@ -304,6 +304,10 @@ func (s *Server) handleClearTracker(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "Could not clear tracker")
 		return
 	}
+	// Drop the in-memory tracker too — otherwise a live session's cached state
+	// would shadow the cleared DB row until the next cold load (the realtime
+	// store hydrates only on first access). Code-review finding (B.6 fase 2).
+	s.sessions.forget(sid)
 	writeJSON(w, http.StatusOK, map[string]int64{"id": sid})
 }
 
