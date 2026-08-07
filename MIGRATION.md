@@ -268,9 +268,16 @@ Fase B (grande). Ou B direto se a prioridade é a API — são independentes.
   max=50). **Id injetável** (`newID func() string`) → testes determinísticos. Cobertura
   exaustiva (11 testes, todos os branches de turn/remove/clamp). **Desvio anotado**:
   tiebreak usa byte-compare, não `localeCompare` pt-BR (cosmético, só empata acento).
-  ⏳ **2.1b store+persist** (mapa+mutex por sessão, hydrate/persist fire-and-forget na coluna
-  `runtimeState` + flag `dirty`, `refreshCharacterMaxes` do DB) — DB-backed. ⏳ **2.2 presence**
-  (dedupe por userId, lógica pura). ⏳ **2.3 handlers+emits** no `cmd/api` com zishang520.
+  ✅ **2.1b store+persist** (`session_store.go`): `sessionStore` = mapa+`sync.Mutex` por sessão
+  envolvendo as funções puras; métodos retornam **snapshot** (`cloneState`) p/ o gateway
+  serializar sem corrida. `load`/hydrate (parse do blob, fallback empty), `persist`
+  fire-and-forget (reusa `ResetSessionTracker`; devolve `dirty`, `isDirty`, retry na próxima),
+  `refreshCharacterMaxes` (query batched nova `ListCharacterMaxes` via `sqlc.slice`; só mexe
+  em max, não em current), `forget`. `newUUID` (crypto/rand v4) injetável. Ligado no `Server`
+  (`s.sessions`). Testes DB **sob `-race`**: round-trip persist/hydrate, blob, refresh, dirty
+  na falha (fecha o DB), 20 mutações concorrentes. **Deferido**: `maybeLiveWriteThrough`
+  (env-gated `WS_VITALS_WRITETHROUGH_LIVE`, default off — opt-in, sem impacto no fluxo).
+  ⏳ **2.2 presence** (dedupe por userId, lógica pura). ⏳ **2.3 handlers+emits** no `cmd/api` com zishang520.
 
   **Auth (handshake, `ws-auth.ts`):** token via `handshake.auth.token` → `Authorization:
   Bearer` → **cookie `t20_session`** (nome de `COOKIE_NAME`), nessa ordem. `jwt.verify`

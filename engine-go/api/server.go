@@ -18,12 +18,17 @@ type Server struct {
 	db       *sql.DB
 	queries  *sqlcgen.Queries
 	catalogs *engine.Catalogs // nil if the catalog snapshot failed to load
+	sessions *sessionStore    // in-memory realtime tracker state (B.6)
 }
 
 // NewServer wires the API server. The DB is already opened + migrated (db.Open);
 // catalogs may be nil (best-effort) — rule-heavy handlers guard on it.
 func NewServer(cfg Config, database *sql.DB, catalogs *engine.Catalogs) *Server {
-	return &Server{cfg: cfg, db: database, queries: sqlcgen.New(database), catalogs: catalogs}
+	q := sqlcgen.New(database)
+	return &Server{
+		cfg: cfg, db: database, queries: q, catalogs: catalogs,
+		sessions: newSessionStore(q, newUUID),
+	}
 }
 
 // Router builds the HTTP handler: shared middleware + domain routes. Routes carry

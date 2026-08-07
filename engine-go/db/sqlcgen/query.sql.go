@@ -1098,6 +1098,49 @@ func (q *Queries) ListCampaignsForUser(ctx context.Context, userid int64) ([]Cam
 	return items, nil
 }
 
+const listCharacterMaxes = `-- name: ListCharacterMaxes :many
+SELECT id, hpMax, mpMax FROM characters WHERE id IN (/*SLICE:ids*/?)
+`
+
+type ListCharacterMaxesRow struct {
+	ID    int64 `json:"id"`
+	Hpmax int64 `json:"hpmax"`
+	Mpmax int64 `json:"mpmax"`
+}
+
+func (q *Queries) ListCharacterMaxes(ctx context.Context, ids []int64) ([]ListCharacterMaxesRow, error) {
+	query := listCharacterMaxes
+	var queryParams []interface{}
+	if len(ids) > 0 {
+		for _, v := range ids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListCharacterMaxesRow{}
+	for rows.Next() {
+		var i ListCharacterMaxesRow
+		if err := rows.Scan(&i.ID, &i.Hpmax, &i.Mpmax); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listCharactersByOwner = `-- name: ListCharactersByOwner :many
 
 SELECT id, ownerid, name, origin, god, godpower, tibar, level, hpmax, hpcurrent, mpmax, mpcurrent, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classpowers, classchoices, powerchoices, activeconditions, createdat, updatedat FROM characters WHERE ownerId = ? ORDER BY updatedAt DESC

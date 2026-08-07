@@ -88,6 +88,9 @@ RETURNING id, catalogId, scope, modifiers, createdAt;
 UPDATE characters SET hpCurrent = sqlc.arg('hpCurrent'), mpCurrent = sqlc.arg('mpCurrent'), updatedAt = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id');
 
+-- name: ListCharacterMaxes :many
+SELECT id, hpMax, mpMax FROM characters WHERE id IN (sqlc.slice('ids'));
+
 -- name: UpsertActiveEffect :one
 INSERT INTO active_effects (characterId, source, catalogId, scope, modifiers, createdAt)
 VALUES (?, ?, ?, ?, ?, ?)
