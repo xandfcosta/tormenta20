@@ -57,6 +57,10 @@ func (s *Server) Router() http.Handler {
 		r.Post("/{id}/items", s.handleAddItem)
 		r.Patch("/{id}/items/{itemId}", s.handleUpdateItem)
 		r.Delete("/{id}/items/{itemId}", s.handleDeleteItem)
+		r.Patch("/{id}/conditions", s.handleUpdateConditions)
+		r.Post("/{id}/spells", s.handleLearnSpell)
+		r.Delete("/{id}/spells/{catalogSpellId}", s.handleUnlearnSpell)
+		r.Patch("/{id}/spells/{catalogSpellId}/prepared", s.handleSetSpellPrepared)
 	})
 	return r
 }

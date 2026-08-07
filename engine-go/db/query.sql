@@ -78,3 +78,20 @@ DELETE FROM character_items WHERE id = ?;
 
 -- name: ListEquippedItems :many
 SELECT id, equipped FROM character_items WHERE characterId = ? AND equipped IS NOT NULL;
+
+-- name: CreateSpell :one
+INSERT INTO character_spells (characterId, catalogSpellId, prepared, learnedAt)
+VALUES (?, ?, ?, ?)
+RETURNING id, characterId, catalogSpellId, prepared, learnedAt;
+
+-- name: SetSpellPreparedByCatalog :one
+UPDATE character_spells SET prepared = sqlc.arg('prepared')
+WHERE characterId = sqlc.arg('characterId') AND catalogSpellId = sqlc.arg('catalogSpellId')
+RETURNING id, characterId, catalogSpellId, prepared, learnedAt;
+
+-- name: DeleteSpell :execrows
+DELETE FROM character_spells WHERE characterId = ? AND catalogSpellId = ?;
+
+-- name: UpdateConditions :exec
+UPDATE characters SET activeConditions = sqlc.arg('activeConditions'), updatedAt = sqlc.arg('updatedAt')
+WHERE id = sqlc.arg('id');

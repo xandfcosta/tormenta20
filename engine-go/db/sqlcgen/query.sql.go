@@ -65,6 +65,37 @@ func (q *Queries) CreateItem(ctx context.Context, arg CreateItemParams) (CreateI
 	return i, err
 }
 
+const createSpell = `-- name: CreateSpell :one
+INSERT INTO character_spells (characterId, catalogSpellId, prepared, learnedAt)
+VALUES (?, ?, ?, ?)
+RETURNING id, characterId, catalogSpellId, prepared, learnedAt
+`
+
+type CreateSpellParams struct {
+	Characterid    int64  `json:"characterid"`
+	Catalogspellid string `json:"catalogspellid"`
+	Prepared       int64  `json:"prepared"`
+	Learnedat      string `json:"learnedat"`
+}
+
+func (q *Queries) CreateSpell(ctx context.Context, arg CreateSpellParams) (CharacterSpell, error) {
+	row := q.db.QueryRowContext(ctx, createSpell,
+		arg.Characterid,
+		arg.Catalogspellid,
+		arg.Prepared,
+		arg.Learnedat,
+	)
+	var i CharacterSpell
+	err := row.Scan(
+		&i.ID,
+		&i.Characterid,
+		&i.Catalogspellid,
+		&i.Prepared,
+		&i.Learnedat,
+	)
+	return i, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (email, name, passwordHash, createdAt, updatedAt)
 VALUES (?, ?, ?, ?, ?)
@@ -106,6 +137,23 @@ DELETE FROM character_items WHERE id = ?
 func (q *Queries) DeleteItem(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteItem, id)
 	return err
+}
+
+const deleteSpell = `-- name: DeleteSpell :execrows
+DELETE FROM character_spells WHERE characterId = ? AND catalogSpellId = ?
+`
+
+type DeleteSpellParams struct {
+	Characterid    int64  `json:"characterid"`
+	Catalogspellid string `json:"catalogspellid"`
+}
+
+func (q *Queries) DeleteSpell(ctx context.Context, arg DeleteSpellParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, deleteSpell, arg.Characterid, arg.Catalogspellid)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const getCharacter = `-- name: GetCharacter :one
@@ -577,6 +625,47 @@ func (q *Queries) ListSpellsByCharacter(ctx context.Context, characterid int64) 
 		return nil, err
 	}
 	return items, nil
+}
+
+const setSpellPreparedByCatalog = `-- name: SetSpellPreparedByCatalog :one
+UPDATE character_spells SET prepared = ?1
+WHERE characterId = ?2 AND catalogSpellId = ?3
+RETURNING id, characterId, catalogSpellId, prepared, learnedAt
+`
+
+type SetSpellPreparedByCatalogParams struct {
+	Prepared       int64  `json:"prepared"`
+	CharacterId    int64  `json:"characterId"`
+	CatalogSpellId string `json:"catalogSpellId"`
+}
+
+func (q *Queries) SetSpellPreparedByCatalog(ctx context.Context, arg SetSpellPreparedByCatalogParams) (CharacterSpell, error) {
+	row := q.db.QueryRowContext(ctx, setSpellPreparedByCatalog, arg.Prepared, arg.CharacterId, arg.CatalogSpellId)
+	var i CharacterSpell
+	err := row.Scan(
+		&i.ID,
+		&i.Characterid,
+		&i.Catalogspellid,
+		&i.Prepared,
+		&i.Learnedat,
+	)
+	return i, err
+}
+
+const updateConditions = `-- name: UpdateConditions :exec
+UPDATE characters SET activeConditions = ?1, updatedAt = ?2
+WHERE id = ?3
+`
+
+type UpdateConditionsParams struct {
+	ActiveConditions string `json:"activeConditions"`
+	UpdatedAt        string `json:"updatedAt"`
+	ID               int64  `json:"id"`
+}
+
+func (q *Queries) UpdateConditions(ctx context.Context, arg UpdateConditionsParams) error {
+	_, err := q.db.ExecContext(ctx, updateConditions, arg.ActiveConditions, arg.UpdatedAt, arg.ID)
+	return err
 }
 
 const updateVitals = `-- name: UpdateVitals :one
