@@ -36,7 +36,7 @@ func TestStorePersistLoadRoundTrip(t *testing.T) {
 	if _, err := store.nextTurn(sid); err != nil {
 		t.Fatalf("nextTurn: %v", err)
 	}
-	if dirty := store.persist(ctx, sid); dirty {
+	if dirty, _ := store.persist(ctx, sid); dirty {
 		t.Fatalf("persist should succeed, got dirty")
 	}
 
@@ -107,11 +107,11 @@ func TestStoreDirtyOnPersistFailure(t *testing.T) {
 	if _, err := store.addInitiativeEntry(sid, npc("x", 1)); err != nil {
 		t.Fatalf("add: %v", err)
 	}
-	if store.persist(ctx, sid) {
+	if d, _ := store.persist(ctx, sid); d {
 		t.Fatalf("first persist should succeed")
 	}
 	_ = s.db.Close() // break the DB so the next write fails
-	if !store.persist(ctx, sid) {
+	if d, _ := store.persist(ctx, sid); !d {
 		t.Error("persist after DB close should report dirty")
 	}
 	if !store.isDirty(sid) {

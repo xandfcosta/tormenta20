@@ -2,11 +2,9 @@ package api
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
 
 	socket "github.com/zishang520/socket.io/servers/socket/v3"
 	"github.com/zishang520/socket.io/v3/pkg/types"
@@ -15,14 +13,11 @@ import (
 // realtimeGateway is the socket.io transport for the session tracker — the thin glue that
 // binds the front's socket.io-client to the transport-agnostic domain (sessionForCaller,
 // sessionStore, presenceRegistry, effects). Mirrors RealtimeGateway; nothing here authors a
-// rule. Built once by SocketHandler and mounted at /socket.io/.
+// rule. Built once by SocketHandler and mounted at /socket.io/. The initiative handlers live
+// in realtime_initiative.go and the vitals/rest/apply handlers in realtime_vitals.go.
 type realtimeGateway struct {
 	s  *Server
 	io *socket.Server
-	// lastDirty tracks the last-broadcast persistence status per session so
-	// `persistence-warning` only fires when the flag flips.
-	mu        sync.Mutex
-	lastDirty map[int64]bool
 }
 
 // socketData is stashed on each authenticated socket: the resolved user and the caller's
@@ -41,7 +36,7 @@ func (s *Server) SocketHandler() http.Handler {
 	// gateway's `@WebSocketGateway({ cors: { origin: true, credentials: true } })`.
 	opts := socket.DefaultServerOptions()
 	opts.SetCors(&types.Cors{Origin: "*", Credentials: true})
-	g := &realtimeGateway{s: s, io: socket.NewServer(nil, opts), lastDirty: map[int64]bool{}}
+	g := &realtimeGateway{s: s, io: socket.NewServer(nil, opts)}
 	g.io.On("connection", func(clients ...any) {
 		if sock, ok := clients[0].(*socket.Socket); ok {
 			g.onConnect(sock)
@@ -209,316 +204,8 @@ func (g *realtimeGateway) wsError(sock *socket.Socket, message string) {
 	_ = sock.Emit("exception", map[string]any{"status": "error", "message": message})
 }
 
-// onInitiativeAdd (GM) materializes an entry (NPC or character) and appends it.
-func (g *realtimeGateway) onInitiativeAdd(sock *socket.Socket, args []any) {
-	ctx, ok := g.access(sock, args)
-	if !ok || !g.requireGm(sock, ctx.role) {
-		return
-	}
-	entryBody, _ := ctx.body["entry"].(map[string]any)
-	if entryBody == nil {
-		g.wsError(sock, "entry is required")
-		return
-	}
-	entry, err := g.materializeEntry(ctx.userID, ctx.campaignID, entryBody)
-	if err != nil {
-		g.wsError(sock, err.Error())
-		return
-	}
-	g.mutateAndBroadcast(sock, ctx, func() (*SessionRuntimeState, error) {
-		return g.s.sessions.addInitiativeEntry(ctx.sessionID, entry)
-	})
-}
-
-// onInitiativeSelf lets a player roll their OWN initiative (NOT GM-gated — resolveCombatant
-// enforces they own the character). Upserts by characterId so a re-roll updates in place.
-func (g *realtimeGateway) onInitiativeSelf(sock *socket.Socket, args []any) {
-	ctx, ok := g.access(sock, args)
-	if !ok {
-		return
-	}
-	if _, has := intField(ctx.body, "characterId"); !has {
-		g.wsError(sock, "characterId is required")
-		return
-	}
-	entry, err := g.materializeEntry(ctx.userID, ctx.campaignID, ctx.body)
-	if err != nil {
-		g.wsError(sock, err.Error())
-		return
-	}
-	g.mutateAndBroadcast(sock, ctx, func() (*SessionRuntimeState, error) {
-		return g.s.sessions.upsertInitiativeEntry(ctx.sessionID, entry)
-	})
-}
-
-// onInitiativeUpdate (GM) patches an entry's fields.
-func (g *realtimeGateway) onInitiativeUpdate(sock *socket.Socket, args []any) {
-	ctx, ok := g.access(sock, args)
-	if !ok || !g.requireGm(sock, ctx.role) {
-		return
-	}
-	entryID := stringField(ctx.body, "entryId")
-	if entryID == "" {
-		g.wsError(sock, "entryId is required")
-		return
-	}
-	patch := parseEntryPatch(ctx.body["patch"])
-	g.mutateAndBroadcast(sock, ctx, func() (*SessionRuntimeState, error) {
-		return g.s.sessions.updateInitiativeEntry(ctx.sessionID, entryID, patch)
-	})
-}
-
-// onInitiativeRemove (GM) drops an entry.
-func (g *realtimeGateway) onInitiativeRemove(sock *socket.Socket, args []any) {
-	ctx, ok := g.access(sock, args)
-	if !ok || !g.requireGm(sock, ctx.role) {
-		return
-	}
-	entryID := stringField(ctx.body, "entryId")
-	if entryID == "" {
-		g.wsError(sock, "entryId is required")
-		return
-	}
-	g.mutateAndBroadcast(sock, ctx, func() (*SessionRuntimeState, error) {
-		return g.s.sessions.removeInitiativeEntry(ctx.sessionID, entryID)
-	})
-}
-
-// onNextTurn (GM) advances to the next combatant.
-func (g *realtimeGateway) onNextTurn(sock *socket.Socket, args []any) {
-	ctx, ok := g.access(sock, args)
-	if !ok || !g.requireGm(sock, ctx.role) {
-		return
-	}
-	g.mutateAndBroadcast(sock, ctx, func() (*SessionRuntimeState, error) {
-		return g.s.sessions.nextTurn(ctx.sessionID)
-	})
-}
-
-// onResetInitiative (GM) clears the tracker.
-func (g *realtimeGateway) onResetInitiative(sock *socket.Socket, args []any) {
-	ctx, ok := g.access(sock, args)
-	if !ok || !g.requireGm(sock, ctx.role) {
-		return
-	}
-	g.mutateAndBroadcast(sock, ctx, func() (*SessionRuntimeState, error) {
-		return g.s.sessions.reset(ctx.sessionID)
-	})
-}
-
-// onPopulate (GM) pulls the campaign's player characters into the tracker (initiative 0,
-// live vitals), skipping any already present. Idempotent. Mirrors initiativePopulate.
-func (g *realtimeGateway) onPopulate(sock *socket.Socket, args []any) {
-	ctx, ok := g.access(sock, args)
-	if !ok || !g.requireGm(sock, ctx.role) {
-		return
-	}
-	combatants, err := g.s.listPlayerCombatants(context.Background(), ctx.campaignID)
-	if err != nil {
-		g.wsError(sock, "Could not load party")
-		return
-	}
-	existing := map[int64]bool{}
-	for _, e := range g.s.sessions.getState(ctx.sessionID).Initiative {
-		if e.CharacterID != nil {
-			existing[*e.CharacterID] = true
-		}
-	}
-	var state *SessionRuntimeState
-	failed := false
-	for _, c := range combatants {
-		if existing[c.characterID] {
-			continue
-		}
-		cid, hpc, hpm, mpc, mpm := c.characterID, c.hpCurrent, c.hpMax, c.mpCurrent, c.mpMax
-		st, err := g.s.sessions.addInitiativeEntry(ctx.sessionID, InitiativeEntry{
-			Label: c.name, Initiative: 0, Type: "character", CharacterID: &cid,
-			HpCurrent: &hpc, HpMax: &hpm, MpCurrent: &mpc, MpMax: &mpm,
-		})
-		if err != nil {
-			g.wsError(sock, err.Error())
-			failed = true
-			break
-		}
-		state = st
-	}
-	// Broadcast whatever landed (a partial populate still updates the room), but after an
-	// error don't ALSO ack success — the client already got an `exception`. Code-review finding.
-	if state != nil {
-		g.emitSessionState(ctx.sessionID, state)
-	}
-	if failed {
-		return
-	}
-	if state == nil {
-		state = g.s.sessions.getState(ctx.sessionID)
-	}
-	ackOK(ctx.ack, state)
-}
-
-// onVitalsPatch sets absolute hp/mp on an entry. The GM edits anyone; a player only their
-// own character; NPC vitals are GM-only (assertVitalsEditable). Mirrors vitalsPatch.
-func (g *realtimeGateway) onVitalsPatch(sock *socket.Socket, args []any) {
-	ctx, ok := g.access(sock, args)
-	if !ok {
-		return
-	}
-	entryID := stringField(ctx.body, "entryId")
-	if entryID == "" {
-		g.wsError(sock, "entryId is required")
-		return
-	}
-	if err := g.assertVitalsEditable(ctx, entryID); err != nil {
-		g.wsError(sock, err.Error())
-		return
-	}
-	patch, _ := ctx.body["patch"].(map[string]any)
-	g.mutateAndBroadcast(sock, ctx, func() (*SessionRuntimeState, error) {
-		return g.s.sessions.patchVitals(ctx.sessionID, entryID, optInt(patch, "hpCurrent"), optInt(patch, "mpCurrent"))
-	})
-}
-
-// onVitalsDelta applies an hp/mp delta to an entry (same authorization as patch). Mirrors
-// vitalsDelta.
-func (g *realtimeGateway) onVitalsDelta(sock *socket.Socket, args []any) {
-	ctx, ok := g.access(sock, args)
-	if !ok {
-		return
-	}
-	entryID := stringField(ctx.body, "entryId")
-	if entryID == "" {
-		g.wsError(sock, "entryId is required")
-		return
-	}
-	if err := g.assertVitalsEditable(ctx, entryID); err != nil {
-		g.wsError(sock, err.Error())
-		return
-	}
-	g.mutateAndBroadcast(sock, ctx, func() (*SessionRuntimeState, error) {
-		return g.s.sessions.deltaVitals(ctx.sessionID, entryID, optInt(ctx.body, "hpDelta"), optInt(ctx.body, "mpDelta"))
-	})
-}
-
-// assertVitalsEditable authorizes a vitals mutation: the GM edits any combatant; a player
-// only their own character; NPC entries are GM-only. Mirrors assertVitalsEditable.
-func (g *realtimeGateway) assertVitalsEditable(ctx msgCtx, entryID string) error {
-	if ctx.role == "gm" {
-		return nil
-	}
-	state := g.s.sessions.getState(ctx.sessionID)
-	idx := findEntryIndex(state, entryID)
-	if idx < 0 {
-		return errors.New("Entry " + entryID + " not found")
-	}
-	entry := state.Initiative[idx]
-	if entry.CharacterID == nil {
-		return errors.New("Only the GM can edit NPC vitals")
-	}
-	_, err := g.s.assertCharacterOwner(context.Background(), ctx.userID, *entry.CharacterID)
-	return err
-}
-
-// onSessionRest (GM) rests every member character: end-scene expires scene effects;
-// end-day also expires day effects AND restores PV/PM, mirrored onto the live tracker.
-// Broadcasts `session-rest` + (if anyone healed) `session-state`. Mirrors sessionRest.
-func (g *realtimeGateway) onSessionRest(sock *socket.Socket, args []any) {
-	ctx, ok := g.access(sock, args)
-	if !ok || !g.requireGm(sock, ctx.role) {
-		return
-	}
-	scope := stringField(ctx.body, "scope")
-	condition := stringField(ctx.body, "condition")
-	if condition == "" {
-		condition = "normal"
-	}
-	charIDs, err := g.s.listMemberCharacterIds(context.Background(), ctx.campaignID)
-	if err != nil {
-		g.wsError(sock, "Could not load campaign members")
-		return
-	}
-	user := sockData(sock).user
-	healed := 0
-	for _, cid := range charIDs {
-		if scope == "day" {
-			if _, err := g.s.endDay(context.Background(), user, cid); err != nil {
-				continue
-			}
-			vitals, _, err := g.s.restVitals(context.Background(), user, cid, condition)
-			if err != nil {
-				continue
-			}
-			g.mirrorVitalsToTracker(ctx.sessionID, cid, vitals)
-			healed++
-		} else {
-			_, _ = g.s.endScene(context.Background(), user, cid)
-		}
-	}
-	if healed > 0 {
-		g.emitSessionState(ctx.sessionID, g.s.sessions.getState(ctx.sessionID))
-	}
-	g.io.To(socket.Room(sessionRoomName(ctx.sessionID))).Emit("session-rest", map[string]any{
-		"sessionId": ctx.sessionID, "scope": scope, "condition": condition,
-	})
-	ackOK(ctx.ack, map[string]any{"rested": scope, "characters": len(charIDs), "healed": healed})
-}
-
-// mirrorVitalsToTracker copies freshly-persisted PV/PM onto the matching live tracker entry
-// (if the character is in the current initiative) so bars update without a reload.
-func (g *realtimeGateway) mirrorVitalsToTracker(sessionID, characterID int64, vitals restedVitals) {
-	for _, e := range g.s.sessions.getState(sessionID).Initiative {
-		if e.CharacterID != nil && *e.CharacterID == characterID {
-			hp, mp := vitals.hpCurrent, vitals.mpCurrent
-			_, _ = g.s.sessions.patchVitals(sessionID, e.ID, &hp, &mp)
-			return
-		}
-	}
-}
-
-// onApplyEffect (GM) applies a spell buff to a combatant's character and notifies the room
-// so clients holding that sheet refetch (activeEffects aren't in tracker state). Mirrors
-// applyEffect.
-func (g *realtimeGateway) onApplyEffect(sock *socket.Socket, args []any) {
-	ctx, ok := g.access(sock, args)
-	if !ok || !g.requireGm(sock, ctx.role) {
-		return
-	}
-	entryID := stringField(ctx.body, "entryId")
-	spellID := stringField(ctx.body, "spellId")
-	if entryID == "" {
-		g.wsError(sock, "entryId is required")
-		return
-	}
-	if spellID == "" {
-		g.wsError(sock, "spellId is required")
-		return
-	}
-	state := g.s.sessions.getState(ctx.sessionID)
-	idx := findEntryIndex(state, entryID)
-	if idx < 0 {
-		g.wsError(sock, "Entry "+entryID+" not found")
-		return
-	}
-	entry := state.Initiative[idx]
-	if entry.CharacterID == nil {
-		g.wsError(sock, "Only character entries can receive spell effects")
-		return
-	}
-	var scope *string
-	if s := stringField(ctx.body, "scope"); s != "" {
-		scope = &s
-	}
-	if _, _, err := g.s.applySpellBuffEffect(context.Background(), *entry.CharacterID, spellID, scope); err != nil {
-		g.wsError(sock, err.Error())
-		return
-	}
-	g.io.To(socket.Room(sessionRoomName(ctx.sessionID))).Emit("effect-applied", map[string]any{
-		"sessionId": ctx.sessionID, "characterId": *entry.CharacterID, "spellId": spellID,
-	})
-	ackOK(ctx.ack, map[string]any{"applied": spellID, "characterId": *entry.CharacterID})
-}
-
 // mutateAndBroadcast runs a store mutation, broadcasts the new state (+ persists), and acks.
-// The shared tail of every initiative handler.
+// The shared tail of every initiative/vitals handler.
 func (g *realtimeGateway) mutateAndBroadcast(sock *socket.Socket, ctx msgCtx, mutate func() (*SessionRuntimeState, error)) {
 	state, err := mutate()
 	if err != nil {
@@ -537,115 +224,16 @@ func (g *realtimeGateway) emitSessionState(sessionID int64, state *SessionRuntim
 }
 
 // persistAndWarn persists the state and broadcasts `persistence-warning` only when the
-// dirty flag flips (first failure, or a retry that recovered). Mirrors the persist().then
-// block. Absent previous status defaults to false (matches the Nest `?? false`).
+// store reports the dirty flag flipped (first failure, or a retry that recovered). The
+// store owns the flag now — the gateway just relays the transitions.
 func (g *realtimeGateway) persistAndWarn(sessionID int64) {
-	dirty := g.s.sessions.persist(context.Background(), sessionID)
-	g.mu.Lock()
-	if g.lastDirty[sessionID] == dirty {
-		g.mu.Unlock()
+	dirty, changed := g.s.sessions.persist(context.Background(), sessionID)
+	if !changed {
 		return
 	}
-	g.lastDirty[sessionID] = dirty
-	g.mu.Unlock()
 	g.io.To(socket.Room(sessionRoomName(sessionID))).Emit("persistence-warning", map[string]any{
 		"sessionId": sessionID, "dirty": dirty,
 	})
-}
-
-// materializeEntry resolves an initiative payload into a concrete entry. NPCs (no
-// characterId) require label + initiative; character entries pull name/vitals via
-// resolveCombatant (membership + owner-or-GM enforced there), with optional client
-// overrides. Mirrors RealtimeGateway.materializeEntry.
-func (g *realtimeGateway) materializeEntry(callerID, campaignID int64, input map[string]any) (InitiativeEntry, error) {
-	charID, hasChar := intField(input, "characterId")
-	initiative, hasInit := intField(input, "initiative")
-	if !hasChar {
-		label := strings.TrimSpace(stringField(input, "label"))
-		if label == "" {
-			return InitiativeEntry{}, errors.New("entry.label is required for NPC entries")
-		}
-		if !hasInit {
-			return InitiativeEntry{}, errors.New("entry.initiative is required")
-		}
-		typ := "npc"
-		if t := stringField(input, "type"); t != "" {
-			typ = t
-		}
-		return InitiativeEntry{Label: label, Initiative: int(initiative), Type: typ}, nil
-	}
-	if !hasInit {
-		return InitiativeEntry{}, errors.New("entry.initiative is required")
-	}
-	stats, _, err := g.s.resolveCombatant(context.Background(), callerID, campaignID, charID)
-	if err != nil {
-		return InitiativeEntry{}, err
-	}
-	label := stats.name
-	if l := strings.TrimSpace(stringField(input, "label")); l != "" {
-		label = l
-	}
-	cid := charID
-	return InitiativeEntry{
-		Label: label, Initiative: int(initiative), Type: "character", CharacterID: &cid,
-		HpCurrent: overrideInt(input, "hpCurrent", stats.hpCurrent),
-		HpMax:     overrideInt(input, "hpMax", stats.hpMax),
-		MpCurrent: overrideInt(input, "mpCurrent", stats.mpCurrent),
-		MpMax:     overrideInt(input, "mpMax", stats.mpMax),
-	}, nil
-}
-
-// parseEntryPatch reads an update patch from the raw body (only present fields become
-// non-nil, so "leave unchanged" is distinct from "set to zero").
-func parseEntryPatch(v any) entryPatch {
-	m, _ := v.(map[string]any)
-	p := entryPatch{}
-	if m == nil {
-		return p
-	}
-	if s, ok := m["label"].(string); ok {
-		p.Label = &s
-	}
-	if i, ok := intField(m, "initiative"); ok {
-		n := int(i)
-		p.Initiative = &n
-	}
-	if s, ok := m["type"].(string); ok {
-		p.Type = &s
-	}
-	if i, ok := intField(m, "characterId"); ok {
-		p.CharacterID = &i
-	}
-	if i, ok := intField(m, "hpCurrent"); ok {
-		p.HpCurrent = &i
-	}
-	if i, ok := intField(m, "hpMax"); ok {
-		p.HpMax = &i
-	}
-	if i, ok := intField(m, "mpCurrent"); ok {
-		p.MpCurrent = &i
-	}
-	if i, ok := intField(m, "mpMax"); ok {
-		p.MpMax = &i
-	}
-	return p
-}
-
-// overrideInt returns the body's value for key when present, else def — as a pointer.
-func overrideInt(m map[string]any, key string, def int64) *int64 {
-	if v, ok := intField(m, key); ok {
-		return ptrInt64(v)
-	}
-	return ptrInt64(def)
-}
-
-// optInt returns a pointer to the body's value for key, or nil when absent (so a vitals
-// patch/delta only touches the fields the client actually sent).
-func optInt(m map[string]any, key string) *int64 {
-	if v, ok := intField(m, key); ok {
-		return ptrInt64(v)
-	}
-	return nil
 }
 
 // ── small transport helpers ──────────────────────────────────────────
@@ -706,6 +294,15 @@ func intField(m map[string]any, key string) (int64, bool) {
 		return int64(v), true
 	}
 	return 0, false
+}
+
+// optInt returns a pointer to the body's value for key, or nil when absent (so a vitals
+// patch/delta only touches the fields the client actually sent).
+func optInt(m map[string]any, key string) *int64 {
+	if v, ok := intField(m, key); ok {
+		return ptrInt64(v)
+	}
+	return nil
 }
 
 // headerValue reads a header whose value is string or []string (IncomingHttpHeaders).

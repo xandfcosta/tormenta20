@@ -142,13 +142,15 @@ func parseRuntimeBlob(blob string) *SessionRuntimeState {
 	return &parsed
 }
 
-// persist serializes the current state to Session.runtimeState. Fire-and-forget: it never
-// returns an error — instead it returns the new dirty status (true = the write failed and
-// the next mutation should retry). Mirrors SessionStateService.persist.
-func (st *sessionStore) persist(ctx context.Context, sessionID int64) bool {
-	// Serialize the snapshot+write so overlapping persists for the same session run in
-	// order; whichever runs last snapshots the newest state, so the DB converges to the
-	// latest instead of a stale in-flight capture. Code-review finding (B.6 fase 2).
+// persist serializes the current state to Session.runtimeState. Fire-and-forget: never
+// returns an error — it returns (dirty, changed), where `changed` is true only when the
+// persistence health flipped since the last persist, so the gateway can broadcast
+// `persistence-warning` exactly on the transitions. The store is the single owner of the
+// dirty flag (pruned by forget) — the gateway no longer tracks it. Code-review finding.
+//
+// Serialized so overlapping persists for one session write in order: whichever runs last
+// snapshots the newest state, so the DB converges to the latest instead of a stale capture.
+func (st *sessionStore) persist(ctx context.Context, sessionID int64) (dirty, changed bool) {
 	st.persistMu.Lock()
 	defer st.persistMu.Unlock()
 
@@ -156,7 +158,7 @@ func (st *sessionStore) persist(ctx context.Context, sessionID int64) bool {
 	s := st.states[sessionID]
 	if s == nil {
 		st.mu.Unlock()
-		return false
+		return false, false
 	}
 	blob, _ := json.Marshal(cloneState(s))
 	st.mu.Unlock()
@@ -167,13 +169,16 @@ func (st *sessionStore) persist(ctx context.Context, sessionID int64) bool {
 
 	st.mu.Lock()
 	defer st.mu.Unlock()
-	if err != nil {
+	prev := st.dirty[sessionID] // absent ⇒ false (healthy), matching the Nest `?? false`
+	dirty = err != nil
+	changed = prev != dirty
+	if dirty {
 		st.dirty[sessionID] = true
 		log.Printf("session %d: persist failed (%v); marked dirty for retry", sessionID, err)
-		return true
+	} else {
+		delete(st.dirty, sessionID)
 	}
-	delete(st.dirty, sessionID)
-	return false
+	return dirty, changed
 }
 
 func (st *sessionStore) isDirty(sessionID int64) bool {
