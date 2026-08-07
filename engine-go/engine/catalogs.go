@@ -27,8 +27,11 @@ type CatalogItem struct {
 }
 
 type WeaponStats struct {
-	Purpose string   `json:"purpose"` // 'melee' | 'thrown' | 'ranged'
-	Traits  []string `json:"traits"`
+	Purpose   string   `json:"purpose"` // 'melee' | 'thrown' | 'ranged'
+	Traits    []string `json:"traits"`
+	Damage    string   `json:"damage"`    // dice, e.g. "1d8" (weapon-card display)
+	CritRange int      `json:"critRange"` // lowest natural roll that threatens
+	CritMult  int      `json:"critMult"`
 }
 
 // RaceDefinition mirrors abilities/types.ts RaceDefinition (the abilities

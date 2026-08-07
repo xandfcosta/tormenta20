@@ -22,6 +22,7 @@ import fixtures from './__fixtures__/character-input-parity.json'
 import { assembleSheetV2 } from './computed-sheet'
 import { activeItemsFor, characterEffects } from './derived'
 import { equippedItemFlagEffects } from './effect-source'
+import { assembleWeaponCards } from './weapon-cards'
 import { buildVitalContext } from './level-vitals'
 import { computeVitalPools } from './vital-pools'
 
@@ -104,6 +105,8 @@ describe('parity oracle — derived.ts golden output for the 16 seed chars', () 
             flag: e.flag,
             source: e.source,
           })),
+          // Wielded-weapon formula cards oracle (WeaponFormulaCards port).
+          weaponCards: assembleWeaponCards(char, characterEffects(char, EMPTY_CONDITIONALS)),
         }
         writeFileSync(
           resolve(oracleDir, `${slug}.json`),

@@ -1042,5 +1042,44 @@
     "pvMax": 11,
     "pmMax": 11
   },
-  "equippedFlags": []
+  "equippedFlags": [],
+  "weaponCards": [
+    {
+      "name": "Espada curta",
+      "skill": "Luta",
+      "attribute": "strength",
+      "attack": -1,
+      "expertise": {
+        "name": "Luta",
+        "attribute": "strength",
+        "base": 0,
+        "itemBonus": -1,
+        "total": -1,
+        "halfLevel": 0,
+        "attrValue": 0,
+        "training": 0,
+        "itemContributions": [
+          {
+            "source": "Armadura de couro",
+            "amount": -1,
+            "note": "Armadura de couro sem proficiência"
+          }
+        ],
+        "armorPenaltyApplied": 0
+      },
+      "attackAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damage": "1d6",
+      "strDamage": 0,
+      "damageBonus": 0,
+      "damageAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "critRange": 19,
+      "critMult": 2
+    }
+  ]
 }

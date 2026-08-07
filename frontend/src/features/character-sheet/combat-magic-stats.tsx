@@ -1,5 +1,5 @@
 import { Crosshair, Shield, ShieldCheck, Sparkles, Sword, Zap } from 'lucide-react'
-import { SPELLCASTER_CLASSES, statFor } from '@tormenta20/t20-data'
+import { SPELLCASTER_CLASSES } from '@tormenta20/t20-data'
 import {
   Dialog,
   DialogContent,
@@ -8,18 +8,16 @@ import {
   DialogTrigger,
 } from '@/shared/ui/dialog'
 import type { Character } from '@/shared/api/api'
-import { wieldedWeaponEntries } from './wielded-weapons'
-import {
-  attributeTotal,
-  expertiseTotalWithItems,
-  useCharacterEffects,
-} from '@/entities/character/derived'
 import {
   requireExpertise,
   useComputedSheet,
 } from '@/entities/character/computed-sheet'
-import type { ExpertiseBreakdown } from '@/shared/lib/computed-sheet-v2'
-import { ATTRIBUTE_ABBR, expertiseStateFor } from '@/entities/character/expertise'
+import { useWeaponCards } from '@/entities/character/weapon-cards'
+import type {
+  ExpertiseBreakdown,
+  WeaponCard,
+} from '@/shared/lib/computed-sheet-v2'
+import { ATTRIBUTE_ABBR } from '@/entities/character/expertise'
 import { dimText } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
 import { signed } from './signed'
@@ -294,18 +292,53 @@ export function SavesStats({ character }: { character: Character }) {
 }
 
 /**
+ * Attack + damage breakdown rows for a weapon card — the Go engine owns the
+ * numbers (`WeaponCard`), this applies the structural labels (½ nível, FOR/DES,
+ * Treino) and folds in the global attack/damage contributions. The FOR damage
+ * row shows for melee/thrown (Luta), never ranged (`strDamage` is 0 there).
+ */
+function weaponCardRows(card: WeaponCard): {
+  attackRows: StatRow[]
+  damageRows: StatRow[]
+} {
+  const attrAbbr = card.attribute === 'strength' ? 'FOR' : 'DES'
+  const attackRows: StatRow[] = [
+    { label: '½ nível', amount: card.expertise.halfLevel },
+    { label: attrAbbr, amount: card.expertise.attrValue },
+    ...(card.expertise.training
+      ? [{ label: 'Treino', amount: card.expertise.training }]
+      : []),
+    ...card.expertise.itemContributions.map((c) => ({
+      label: c.source,
+      amount: c.amount,
+      note: c.note,
+    })),
+    ...card.attackAll.contributions.map((c) => ({
+      label: c.source,
+      amount: c.amount,
+      note: c.note,
+    })),
+  ]
+  const damageRows: StatRow[] = [
+    ...(card.skill === 'Luta' ? [{ label: 'FOR', amount: card.strDamage }] : []),
+    ...card.damageAll.contributions.map((c) => ({
+      label: c.source,
+      amount: c.amount,
+      note: c.note,
+    })),
+  ]
+  return { attackRows, damageRows }
+}
+
+/**
  * Equipped-weapon formula cards: "Machado · +10 · 1d12+7 · 19/x3" so a hit
  * never costs a tab switch to roll damage. Attack = Luta/Pontaria + global
  * attack mods (same math as the Atq boxes); damage adds FOR for melee/thrown
- * (engine convention).
+ * (engine convention). The numbers come from the Go engine (`useWeaponCards`).
  */
 export function WeaponFormulaCards({ character }: { character: Character }) {
-  const effects = useCharacterEffects(character)
-  const attackAll = statFor(effects, { k: 'attack', scope: 'all' })
-  const damageAll = statFor(effects, { k: 'damage', scope: 'all' })
-  const forTotal = attributeTotal(character, 'strength', effects)
-  const weapons = wieldedWeaponEntries(character)
-  if (weapons.length === 0) {
+  const cards = useWeaponCards(character)
+  if (cards.length === 0) {
     return (
       <p className="self-center text-center text-xs italic text-muted-foreground">
         Nenhuma arma empunhada.
@@ -313,50 +346,13 @@ export function WeaponFormulaCards({ character }: { character: Character }) {
     )
   }
   return (
-    <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${weapons.length}, 1fr)` }}>
-      {weapons.map(({ name, weapon }) => {
-        const skill = weapon.purpose === 'ranged' ? 'Pontaria' : 'Luta'
-        const state = expertiseStateFor(character, {
-          name: skill,
-          attribute: skill === 'Luta' ? 'strength' : 'dexterity',
-          abbr: skill === 'Luta' ? 'FOR' : 'DES',
-        })
-        // Per-weapon mods (desbalanceada -2, Certeira +1…) arrive through the
-        // Luta/Pontaria mirror inside `effects` (mirrorWeaponAttackMods) —
-        // do NOT add scope:'this' here on top, that would double-count.
-        const detail = expertiseTotalWithItems(character, state, effects)
-        const attack = detail.total + attackAll.total
-        // Damage: FOR for melee + every {damage, scope:'all'} source (Fúria,
-        // Instinto Selvagem) — the card used to show FOR alone.
-        const dmgBonus =
-          (weapon.purpose === 'ranged' ? 0 : forTotal) + damageAll.total
-        const crit = `${weapon.critRange < 20 ? `${weapon.critRange}-20` : '20'}/x${weapon.critMult}`
-
-        const attackRows: StatRow[] = [
-          { label: '½ nível', amount: detail.halfLevel },
-          { label: state.attribute === 'strength' ? 'FOR' : 'DES', amount: detail.attrValue },
-          ...(detail.training ? [{ label: 'Treino', amount: detail.training }] : []),
-          ...detail.itemContributions.map((c) => ({
-            label: c.source,
-            amount: c.amount,
-            note: c.note,
-          })),
-          ...attackAll.contributions.map((c) => ({
-            label: c.source,
-            amount: c.amount,
-            note: c.note,
-          })),
-        ]
-        const damageRows: StatRow[] = [
-          ...(weapon.purpose === 'ranged'
-            ? []
-            : [{ label: 'FOR', amount: forTotal }]),
-          ...damageAll.contributions.map((c) => ({
-            label: c.source,
-            amount: c.amount,
-            note: c.note,
-          })),
-        ]
+    <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${cards.length}, 1fr)` }}>
+      {cards.map((card) => {
+        const { name, skill, attack, damage } = card
+        const dmgBonus = card.damageBonus
+        const crit = `${card.critRange < 20 ? `${card.critRange}-20` : '20'}/x${card.critMult}`
+        const rows = weaponCardRows(card)
+        const { attackRows, damageRows } = rows
 
         return (
           <Dialog key={name}>
@@ -365,13 +361,13 @@ export function WeaponFormulaCards({ character }: { character: Character }) {
                 type="button"
                 className="flex cursor-pointer flex-col items-center rounded-lg border-2 border-red-800/50 p-2 text-center transition-colors hover:bg-red-950/20 dark:border-red-500/40"
                 aria-label={`Detalhamento de ${name}`}
-                title={`${skill} ${signed(attack)} · dano ${weapon.damage}${dmgBonus ? signed(dmgBonus) : ''} · crítico ${crit}`}
+                title={`${skill} ${signed(attack)} · dano ${damage}${dmgBonus ? signed(dmgBonus) : ''} · crítico ${crit}`}
               >
                 <span className="max-w-full truncate text-[9px] font-bold uppercase tracking-widest text-red-800/80 dark:text-red-300/80">
                   {name}
                 </span>
                 <span className="mt-0.5 font-mono text-sm font-bold leading-tight text-red-800 dark:text-red-100">
-                  {signed(attack)} · {weapon.damage}
+                  {signed(attack)} · {damage}
                   {dmgBonus !== 0 ? signed(dmgBonus) : ''}
                 </span>
                 <span className="text-[10px] text-muted-foreground">{crit}</span>
@@ -402,7 +398,7 @@ export function WeaponFormulaCards({ character }: { character: Character }) {
                 </div>
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest text-red-800/80 dark:text-red-300/80">
-                    Dano {weapon.damage}
+                    Dano {damage}
                     {dmgBonus !== 0 ? signed(dmgBonus) : ''} · crítico {crit}
                   </p>
                   <ul className="mt-1 space-y-1">

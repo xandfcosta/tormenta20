@@ -1654,5 +1654,49 @@
     "pvMax": 67,
     "pmMax": 25
   },
-  "equippedFlags": []
+  "equippedFlags": [],
+  "weaponCards": [
+    {
+      "name": "Machado táurico",
+      "skill": "Luta",
+      "attribute": "strength",
+      "attack": 10,
+      "expertise": {
+        "name": "Luta",
+        "attribute": "strength",
+        "base": 12,
+        "itemBonus": -2,
+        "total": 10,
+        "halfLevel": 3,
+        "attrValue": 5,
+        "training": 4,
+        "itemContributions": [
+          {
+            "source": "Machado táurico",
+            "amount": -2,
+            "note": "desbalanceada: -2 em ataque"
+          }
+        ],
+        "armorPenaltyApplied": 0
+      },
+      "attackAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damage": "2d8",
+      "strDamage": 5,
+      "damageBonus": 6,
+      "damageAll": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Instinto Selvagem +1",
+            "amount": 1
+          }
+        ]
+      },
+      "critRange": 20,
+      "critMult": 3
+    }
+  ]
 }

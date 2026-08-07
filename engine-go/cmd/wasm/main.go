@@ -136,6 +136,17 @@ func computeEquippedFlags(_ js.Value, args []js.Value) any {
 	return string(out)
 }
 
+// computeWeaponCards resolves the wielded-weapon formula cards (attack/damage/
+// crit) for a raw Character + active-conditional ids. Requires primeEngineCatalogs.
+func computeWeaponCards(_ js.Value, args []js.Value) any {
+	ch, conditionals, errJSON := parseCharArgs(args)
+	if errJSON != "" {
+		return errJSON
+	}
+	out, _ := json.Marshal(primedCatalogs.ComputeWeaponCards(*ch, conditionals))
+	return string(out)
+}
+
 // pointBuyStatus runs the creation point-buy rules (p17) over a base attribute
 // spread — pure, needs no primed catalogs. Returns {spent, warnings}.
 func pointBuyStatus(_ js.Value, args []js.Value) any {
@@ -163,5 +174,6 @@ func main() {
 	js.Global().Set("resolveConditionalDisplay", js.FuncOf(resolveConditionalDisplay))
 	js.Global().Set("computeEquippedFlags", js.FuncOf(computeEquippedFlags))
 	js.Global().Set("pointBuyStatus", js.FuncOf(pointBuyStatus))
+	js.Global().Set("computeWeaponCards", js.FuncOf(computeWeaponCards))
 	select {} // keep the runtime alive
 }

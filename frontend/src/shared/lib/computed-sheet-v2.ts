@@ -71,6 +71,30 @@ export type TempHpBreakdown = {
   sources: SourceAmount[]
 }
 
+/**
+ * One wielded-weapon formula card (WeaponFormulaCards) — the Go engine
+ * (`WeaponCard`) assembles the numbers; the front applies the structural row
+ * labels and formats the crit string. Attack = the skill perícia + global attack
+ * mods; damage folds Força for melee/thrown (`strDamage`) + global damage mods.
+ */
+export type WeaponCard = {
+  name: string
+  /** "Luta" (melee/thrown) | "Pontaria" (ranged). */
+  skill: string
+  attribute: AttributeKey
+  attack: number
+  expertise: ExpertiseBreakdown
+  attackAll: TotalContribs
+  /** Damage dice, e.g. "1d8". */
+  damage: string
+  /** Força folded into melee/thrown damage (0 for ranged). */
+  strDamage: number
+  damageBonus: number
+  damageAll: TotalContribs
+  critRange: number
+  critMult: number
+}
+
 export type ComputedSheetV2 = {
   defense: DefenseBreakdown
   displacement: ValueBreakdown

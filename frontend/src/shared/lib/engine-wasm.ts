@@ -7,7 +7,7 @@ import type {
   ModifierTarget,
 } from '@tormenta20/t20-data'
 import type { Character } from '@/shared/api/api'
-import type { ComputedSheetV2 } from './computed-sheet-v2'
+import type { ComputedSheetV2, WeaponCard } from './computed-sheet-v2'
 
 /**
  * Normalized input for the Go vitals pipeline (PV/PM máximos) — mirrors t20-data
@@ -57,6 +57,7 @@ type GlobalWithGo = typeof globalThis & {
   resolveConditionalDisplay?: (rowsJson: string) => string
   computeEquippedFlags?: (itemsJson: string) => string
   pointBuyStatus?: (attrsJson: string) => string
+  computeWeaponCards?: (charJson: string, conditionalsJson: string) => string
 }
 
 /** Creation point-buy result (p17): total spent (null when a value is out of
@@ -265,5 +266,24 @@ export function pointBuyStatus(attrs: Record<string, number>): PointBuyStatus {
   if (!fn) throw new Error('engine-wasm: engine not ready — call ensureEngine() first')
   const out = JSON.parse(fn(JSON.stringify(attrs))) as PointBuyStatus & { error?: string }
   if (out.error) throw new Error(`engine-wasm: ${out.error}`)
+  return out
+}
+
+/**
+ * Wielded-weapon formula cards (attack/damage/crit) through the Go engine over a
+ * RAW Character + active-conditional ids. Requires `ensureEngine()` +
+ * `primeEngineCatalogs()`. Mirrors the front's `assembleWeaponCards` byte-for-byte
+ * (verified by the `weaponCards` parity oracle).
+ */
+export function computeWeaponCards(
+  char: Character,
+  conditionals: readonly string[] = [],
+): WeaponCard[] {
+  const fn = (globalThis as GlobalWithGo).computeWeaponCards
+  if (!fn) throw new Error('engine-wasm: engine not ready — call ensureEngine() first')
+  const out = JSON.parse(
+    fn(JSON.stringify(char), JSON.stringify(conditionals)),
+  ) as WeaponCard[] | { error: string }
+  if (!Array.isArray(out)) throw new Error(`engine-wasm: ${out.error}`)
   return out
 }

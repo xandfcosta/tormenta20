@@ -805,5 +805,38 @@
     "pvMax": 23,
     "pmMax": 3
   },
-  "equippedFlags": []
+  "equippedFlags": [],
+  "weaponCards": [
+    {
+      "name": "Espada curta",
+      "skill": "Luta",
+      "attribute": "strength",
+      "attack": 4,
+      "expertise": {
+        "name": "Luta",
+        "attribute": "strength",
+        "base": 4,
+        "itemBonus": 0,
+        "total": 4,
+        "halfLevel": 0,
+        "attrValue": 4,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      "attackAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damage": "1d6",
+      "strDamage": 4,
+      "damageBonus": 4,
+      "damageAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "critRange": 19,
+      "critMult": 2
+    }
+  ]
 }
