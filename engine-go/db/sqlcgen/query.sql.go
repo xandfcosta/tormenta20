@@ -264,6 +264,35 @@ func (q *Queries) CreateItem(ctx context.Context, arg CreateItemParams) (CreateI
 	return i, err
 }
 
+const createMember = `-- name: CreateMember :one
+INSERT INTO campaign_members (campaignId, characterId, role, addedAt) VALUES (?, ?, ?, ?) RETURNING id, campaignid, characterid, role, addedat
+`
+
+type CreateMemberParams struct {
+	Campaignid  int64  `json:"campaignid"`
+	Characterid int64  `json:"characterid"`
+	Role        string `json:"role"`
+	Addedat     string `json:"addedat"`
+}
+
+func (q *Queries) CreateMember(ctx context.Context, arg CreateMemberParams) (CampaignMember, error) {
+	row := q.db.QueryRowContext(ctx, createMember,
+		arg.Campaignid,
+		arg.Characterid,
+		arg.Role,
+		arg.Addedat,
+	)
+	var i CampaignMember
+	err := row.Scan(
+		&i.ID,
+		&i.Campaignid,
+		&i.Characterid,
+		&i.Role,
+		&i.Addedat,
+	)
+	return i, err
+}
+
 const createRace = `-- name: CreateRace :exec
 INSERT INTO character_races (characterId, race) VALUES (?, ?)
 `
@@ -376,6 +405,15 @@ DELETE FROM character_items WHERE id = ?
 
 func (q *Queries) DeleteItem(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteItem, id)
+	return err
+}
+
+const deleteMember = `-- name: DeleteMember :exec
+DELETE FROM campaign_members WHERE id = ?
+`
+
+func (q *Queries) DeleteMember(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteMember, id)
 	return err
 }
 
@@ -584,6 +622,48 @@ func (q *Queries) GetItem(ctx context.Context, id int64) (GetItemRow, error) {
 	return i, err
 }
 
+const getMember = `-- name: GetMember :one
+SELECT id, campaignid, characterid, role, addedat FROM campaign_members WHERE id = ? LIMIT 1
+`
+
+func (q *Queries) GetMember(ctx context.Context, id int64) (CampaignMember, error) {
+	row := q.db.QueryRowContext(ctx, getMember, id)
+	var i CampaignMember
+	err := row.Scan(
+		&i.ID,
+		&i.Campaignid,
+		&i.Characterid,
+		&i.Role,
+		&i.Addedat,
+	)
+	return i, err
+}
+
+const getMemberOwners = `-- name: GetMemberOwners :one
+SELECT m.id, m.campaignId, c.ownerId AS campaignOwner, ch.ownerId AS characterOwner
+FROM campaign_members m JOIN campaigns c ON c.id = m.campaignId JOIN characters ch ON ch.id = m.characterId
+WHERE m.id = ? LIMIT 1
+`
+
+type GetMemberOwnersRow struct {
+	ID             int64 `json:"id"`
+	Campaignid     int64 `json:"campaignid"`
+	Campaignowner  int64 `json:"campaignowner"`
+	Characterowner int64 `json:"characterowner"`
+}
+
+func (q *Queries) GetMemberOwners(ctx context.Context, id int64) (GetMemberOwnersRow, error) {
+	row := q.db.QueryRowContext(ctx, getMemberOwners, id)
+	var i GetMemberOwnersRow
+	err := row.Scan(
+		&i.ID,
+		&i.Campaignid,
+		&i.Campaignowner,
+		&i.Characterowner,
+	)
+	return i, err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
 
 
@@ -626,6 +706,25 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (User, error) {
 	return i, err
 }
 
+const hasPlayerPc = `-- name: HasPlayerPc :one
+SELECT EXISTS (
+  SELECT 1 FROM campaign_members m JOIN characters ch ON ch.id = m.characterId
+  WHERE m.campaignId = ? AND m.role = 'player' AND ch.ownerId = ?
+) AS hasPc
+`
+
+type HasPlayerPcParams struct {
+	Campaignid int64 `json:"campaignid"`
+	Ownerid    int64 `json:"ownerid"`
+}
+
+func (q *Queries) HasPlayerPc(ctx context.Context, arg HasPlayerPcParams) (bool, error) {
+	row := q.db.QueryRowContext(ctx, hasPlayerPc, arg.Campaignid, arg.Ownerid)
+	var haspc bool
+	err := row.Scan(&haspc)
+	return haspc, err
+}
+
 const isCampaignGmForCharacter = `-- name: IsCampaignGmForCharacter :one
 SELECT EXISTS (
   SELECT 1 FROM campaign_members m
@@ -660,6 +759,22 @@ type IsCampaignMemberParams struct {
 
 func (q *Queries) IsCampaignMember(ctx context.Context, arg IsCampaignMemberParams) (bool, error) {
 	row := q.db.QueryRowContext(ctx, isCampaignMember, arg.Campaignid, arg.Ownerid)
+	var ismember bool
+	err := row.Scan(&ismember)
+	return ismember, err
+}
+
+const isCharacterMember = `-- name: IsCharacterMember :one
+SELECT EXISTS (SELECT 1 FROM campaign_members WHERE campaignId = ? AND characterId = ?) AS isMember
+`
+
+type IsCharacterMemberParams struct {
+	Campaignid  int64 `json:"campaignid"`
+	Characterid int64 `json:"characterid"`
+}
+
+func (q *Queries) IsCharacterMember(ctx context.Context, arg IsCharacterMemberParams) (bool, error) {
+	row := q.db.QueryRowContext(ctx, isCharacterMember, arg.Campaignid, arg.Characterid)
 	var ismember bool
 	err := row.Scan(&ismember)
 	return ismember, err
@@ -1014,6 +1129,66 @@ func (q *Queries) ListItemsByCharacter(ctx context.Context, characterid int64) (
 	return items, nil
 }
 
+const listMembers = `-- name: ListMembers :many
+
+SELECT m.id, m.campaignId, m.characterId, m.role, m.addedAt,
+       ch.name AS charName, ch.level AS charLevel,
+       ch.hpCurrent AS charHpCurrent, ch.hpMax AS charHpMax,
+       ch.mpCurrent AS charMpCurrent, ch.mpMax AS charMpMax
+FROM campaign_members m JOIN characters ch ON ch.id = m.characterId
+WHERE m.campaignId = ? ORDER BY m.addedAt ASC
+`
+
+type ListMembersRow struct {
+	ID            int64  `json:"id"`
+	Campaignid    int64  `json:"campaignid"`
+	Characterid   int64  `json:"characterid"`
+	Role          string `json:"role"`
+	Addedat       string `json:"addedat"`
+	Charname      string `json:"charname"`
+	Charlevel     int64  `json:"charlevel"`
+	Charhpcurrent int64  `json:"charhpcurrent"`
+	Charhpmax     int64  `json:"charhpmax"`
+	Charmpcurrent int64  `json:"charmpcurrent"`
+	Charmpmax     int64  `json:"charmpmax"`
+}
+
+// campaign members (B.4)
+func (q *Queries) ListMembers(ctx context.Context, campaignid int64) ([]ListMembersRow, error) {
+	rows, err := q.db.QueryContext(ctx, listMembers, campaignid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListMembersRow{}
+	for rows.Next() {
+		var i ListMembersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Campaignid,
+			&i.Characterid,
+			&i.Role,
+			&i.Addedat,
+			&i.Charname,
+			&i.Charlevel,
+			&i.Charhpcurrent,
+			&i.Charhpmax,
+			&i.Charmpcurrent,
+			&i.Charmpmax,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listRacesByCharacter = `-- name: ListRacesByCharacter :many
 SELECT race FROM character_races WHERE characterId = ? ORDER BY id ASC
 `
@@ -1230,6 +1405,28 @@ func (q *Queries) SetInviteToken(ctx context.Context, arg SetInviteTokenParams) 
 	row := q.db.QueryRowContext(ctx, setInviteToken, arg.InviteToken, arg.UpdatedAt, arg.ID)
 	var i SetInviteTokenRow
 	err := row.Scan(&i.ID, &i.Invitetoken)
+	return i, err
+}
+
+const setMemberRole = `-- name: SetMemberRole :one
+UPDATE campaign_members SET role = ?1 WHERE id = ?2 RETURNING id, campaignid, characterid, role, addedat
+`
+
+type SetMemberRoleParams struct {
+	Role string `json:"role"`
+	ID   int64  `json:"id"`
+}
+
+func (q *Queries) SetMemberRole(ctx context.Context, arg SetMemberRoleParams) (CampaignMember, error) {
+	row := q.db.QueryRowContext(ctx, setMemberRole, arg.Role, arg.ID)
+	var i CampaignMember
+	err := row.Scan(
+		&i.ID,
+		&i.Campaignid,
+		&i.Characterid,
+		&i.Role,
+		&i.Addedat,
+	)
 	return i, err
 }
 

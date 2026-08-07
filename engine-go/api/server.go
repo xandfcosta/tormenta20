@@ -67,6 +67,12 @@ func (s *Server) Router() http.Handler {
 		r.Patch("/{id}", s.handleUpdateCampaign)
 		r.Delete("/{id}", s.handleDeleteCampaign)
 		r.Post("/{id}/invite", s.handleRotateInvite)
+		r.Route("/{campaignId}/members", func(r chi.Router) {
+			r.Get("/", s.handleListMembers)
+			r.Post("/", s.handleAddMember)
+			r.Patch("/{id}", s.handleUpdateMemberRole)
+			r.Delete("/{id}", s.handleRemoveMember)
+		})
 	})
 
 	r.Route("/characters", func(r chi.Router) {

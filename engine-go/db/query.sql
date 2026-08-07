@@ -230,6 +230,42 @@ WHERE ch.ownerId = ?;
 -- name: ListUsersByIDs :many
 SELECT id, email, name, createdAt FROM users WHERE id IN (sqlc.slice('ids')) ORDER BY createdAt DESC;
 
+-- campaign members (B.4)
+
+-- name: ListMembers :many
+SELECT m.id, m.campaignId, m.characterId, m.role, m.addedAt,
+       ch.name AS charName, ch.level AS charLevel,
+       ch.hpCurrent AS charHpCurrent, ch.hpMax AS charHpMax,
+       ch.mpCurrent AS charMpCurrent, ch.mpMax AS charMpMax
+FROM campaign_members m JOIN characters ch ON ch.id = m.characterId
+WHERE m.campaignId = ? ORDER BY m.addedAt ASC;
+
+-- name: GetMember :one
+SELECT * FROM campaign_members WHERE id = ? LIMIT 1;
+
+-- name: HasPlayerPc :one
+SELECT EXISTS (
+  SELECT 1 FROM campaign_members m JOIN characters ch ON ch.id = m.characterId
+  WHERE m.campaignId = ? AND m.role = 'player' AND ch.ownerId = ?
+) AS hasPc;
+
+-- name: IsCharacterMember :one
+SELECT EXISTS (SELECT 1 FROM campaign_members WHERE campaignId = ? AND characterId = ?) AS isMember;
+
+-- name: CreateMember :one
+INSERT INTO campaign_members (campaignId, characterId, role, addedAt) VALUES (?, ?, ?, ?) RETURNING *;
+
+-- name: SetMemberRole :one
+UPDATE campaign_members SET role = sqlc.arg('role') WHERE id = sqlc.arg('id') RETURNING *;
+
+-- name: DeleteMember :exec
+DELETE FROM campaign_members WHERE id = ?;
+
+-- name: GetMemberOwners :one
+SELECT m.id, m.campaignId, c.ownerId AS campaignOwner, ch.ownerId AS characterOwner
+FROM campaign_members m JOIN campaigns c ON c.id = m.campaignId JOIN characters ch ON ch.id = m.characterId
+WHERE m.id = ? LIMIT 1;
+
 -- name: ListCampaignsForCharacter :many
 SELECT m.id, m.campaignId, m.characterId, m.role, m.addedAt,
        c.name AS campaignName, c.description AS campaignDescription, c.updatedAt AS campaignUpdatedAt
