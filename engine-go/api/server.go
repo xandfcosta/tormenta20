@@ -1,0 +1,39 @@
+package api
+
+import (
+	"database/sql"
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
+)
+
+// Server holds the API dependencies (config + DB handle) and builds the router.
+type Server struct {
+	cfg Config
+	db  *sql.DB
+}
+
+// NewServer wires the API server. The DB is already opened + migrated (db.Open).
+func NewServer(cfg Config, database *sql.DB) *Server {
+	return &Server{cfg: cfg, db: database}
+}
+
+// Router builds the HTTP handler: shared middleware + domain routes. Routes carry
+// NO /api prefix — the Vite dev proxy strips it (rewrite ^/api → ""), matching the
+// Nest controllers so the frontend contract is unchanged at cutover.
+func (s *Server) Router() http.Handler {
+	r := chi.NewRouter()
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Recoverer)
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{s.cfg.CORSOrigin},
+		AllowedMethods:   []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
+		AllowCredentials: true,
+	}))
+
+	r.Get("/health", s.handleHealth)
+	return r
+}

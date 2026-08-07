@@ -1,1 +1,8 @@
 tmp/
+
+# Go API dev database (SQLite + WAL/SHM). Seeded from migrations; not tracked.
+t20-go.db
+t20-go.db-*
+*.db
+*.db-shm
+*.db-wal

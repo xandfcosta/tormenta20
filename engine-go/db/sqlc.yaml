@@ -1,0 +1,14 @@
+version: "2"
+sql:
+  - engine: "sqlite"
+    # sqlc reads the goose migration files directly (it understands the
+    # `-- +goose Up/Down` annotations) so the schema has a single source.
+    schema: "migrations"
+    queries: "query.sql"
+    gen:
+      go:
+        package: "sqlcgen"
+        out: "sqlcgen"
+        emit_json_tags: true
+        emit_empty_slices: true
+        emit_result_struct_pointers: false
