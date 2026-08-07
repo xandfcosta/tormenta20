@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -13,6 +14,37 @@ import (
 // FieldErrorMap mirrors the Nest validationExceptionFactory output: field →
 // human messages. Emitted inside the {statusCode,error,message,fieldErrors} body.
 type FieldErrorMap map[string][]string
+
+// fieldError is a domain validation failure that also carries per-field messages.
+// It lets a transport-agnostic domain rule signal a rich validation body without
+// depending on http.ResponseWriter: the HTTP layer renders the full
+// {statusCode,error,message,fieldErrors} envelope; other transports (the WS gateway)
+// just read Error(). Foundation for the B.6 fase-0 extraction.
+type fieldError struct {
+	status  int
+	message string
+	fields  FieldErrorMap
+}
+
+func (e *fieldError) Error() string { return e.message }
+
+// writeDomainError maps a domain error to the HTTP response: a *fieldError becomes the
+// full validation envelope (preserving its custom message); anything else falls back to
+// a plain {message} at the given status. The single seam every HTTP handler uses to
+// translate a domain rule's (status, error) return.
+func writeDomainError(w http.ResponseWriter, status int, err error) {
+	var fe *fieldError
+	if errors.As(err, &fe) {
+		writeJSON(w, fe.status, map[string]any{
+			"statusCode":  fe.status,
+			"error":       http.StatusText(fe.status),
+			"message":     fe.message,
+			"fieldErrors": fe.fields,
+		})
+		return
+	}
+	writeError(w, status, err.Error())
+}
 
 // decodeJSON reads a JSON body into dst; on malformed input it writes a 400 and
 // returns false so the handler can bail.

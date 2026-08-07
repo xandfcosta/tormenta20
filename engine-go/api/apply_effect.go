@@ -1,7 +1,9 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -45,7 +47,12 @@ func (s *Server) handleApplyEffect(w http.ResponseWriter, r *http.Request) {
 			"fieldErrors": FieldErrorMap{"spellId": {"Informe uma magia, um poder ou PV temporários"}},
 		})
 	default:
-		s.applySpellBuff(w, r, id, *body.SpellID, body.Scope)
+		dto, status, err := s.applySpellBuffEffect(r.Context(), id, *body.SpellID, body.Scope)
+		if err != nil {
+			writeDomainError(w, status, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, dto)
 	}
 }
 
@@ -130,27 +137,27 @@ func (s *Server) applyPool(w http.ResponseWriter, r *http.Request, id int64, sou
 	})
 }
 
-// applySpellBuff ports applySpellBuff: the spell must carry a buff block, upsert
-// its modifiers under (character, spell, scope).
-func (s *Server) applySpellBuff(w http.ResponseWriter, r *http.Request, id int64, spellID string, scopeOverride *string) {
+// applySpellBuffEffect is the spell-buff domain rule, transport-agnostic: the spell must
+// carry a buff block; upsert its modifiers under (character, spell, scope). Used by the
+// HTTP handler and — via the same core — the WS `apply-effect` gateway handler (B.6).
+// Returns the effect + an HTTP-ish status the caller maps to its transport.
+func (s *Server) applySpellBuffEffect(ctx context.Context, charID int64, spellID string, scopeOverride *string) (EffectDTO, int, error) {
 	spell, known := catalog.LookupSpell(spellID)
 	if !known || spell.Buff == nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{
-			"statusCode": http.StatusBadRequest, "error": "Bad Request",
-			"message":     fmt.Sprintf("Spell %q has no applicable buff", spellID),
-			"fieldErrors": FieldErrorMap{"spellId": {"Magia sem efeito aplicável"}},
-		})
-		return
+		return EffectDTO{}, http.StatusBadRequest, &fieldError{
+			status:  http.StatusBadRequest,
+			message: fmt.Sprintf("Spell %q has no applicable buff", spellID),
+			fields:  FieldErrorMap{"spellId": {"Magia sem efeito aplicável"}},
+		}
 	}
 	scope := derefStr(scopeOverride, spell.Buff.DefaultScope)
-	eff, err := s.queries.UpsertActiveEffect(r.Context(), sqlcgen.UpsertActiveEffectParams{
-		Characterid: id, Source: "spell", Catalogid: spellID, Scope: scope, Modifiers: string(spell.Buff.Modifiers), Createdat: nowISO(),
+	eff, err := s.queries.UpsertActiveEffect(ctx, sqlcgen.UpsertActiveEffectParams{
+		Characterid: charID, Source: "spell", Catalogid: spellID, Scope: scope, Modifiers: string(spell.Buff.Modifiers), Createdat: nowISO(),
 	})
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not apply buff")
-		return
+		return EffectDTO{}, http.StatusInternalServerError, errors.New("Could not apply buff")
 	}
-	writeJSON(w, http.StatusOK, effectDTOFromUpsert(eff))
+	return effectDTOFromUpsert(eff), http.StatusOK, nil
 }
 
 func effectDTOFromUpsert(e sqlcgen.UpsertActiveEffectRow) EffectDTO {

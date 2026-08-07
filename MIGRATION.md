@@ -221,9 +221,16 @@ Fase B (grande). Ou B direto se a prioridade é a API — são independentes.
     `equipLimitCheck`/`classDTOs` → trocar `r *http.Request` por `ctx context.Context`.
   - 🟢 **Transporte legítimo (não mexer):** `writeJSON`/`writeError`/`decodeJSON`/`intParam`/
     `issueSession`/`extractToken`/`currentUser`.
-  - **Slices:** 0.1 authz (`resolveRole` member-aware = owner→gm / membro→player / 403;
+  - **Slices:** ✅ **0.1 authz** (`resolveRole` member-aware = owner→gm / membro→player / 403;
     `loadOwnedCampaign`; `loadSessionInCampaign` compartilhado por `ownedSession` owner-only
-    e o futuro `sessionForCaller` member-aware do WS). 0.2 apply-effect. 0.3 smells de assinatura.
+    e o futuro `sessionForCaller` member-aware do WS). ✅ **0.2 apply-effect** — núcleo
+    `applySpellBuffEffect(ctx, charID, spellID, scope) (EffectDTO, status, error)` extraído
+    (o WS `apply-effect` chama direto); introduzido o padrão de erro tipado **`fieldError`**
+    + **`writeDomainError`** (domínio devolve error, HTTP renderiza o envelope rico; WS usa
+    `.Error()`). **Deferido**: `applyManualPool`/`applyPool` (pools tempHp) — **sem consumidor
+    WS**, múltiplas formas de resposta (cleared/superseded/displaced); extrair só se surgir
+    consumidor ou como cleanup puro. ⏳ **0.3 smells de assinatura** (`r *http.Request` →
+    `ctx`) — só quando um helper de B.6 precisar (ex.: computar vitais no descanso).
 
   **Auth (handshake, `ws-auth.ts`):** token via `handshake.auth.token` → `Authorization:
   Bearer` → **cookie `t20_session`** (nome de `COOKIE_NAME`), nessa ordem. `jwt.verify`
