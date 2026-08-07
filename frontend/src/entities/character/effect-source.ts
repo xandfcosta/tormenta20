@@ -6,6 +6,10 @@ import {
 import { getActivation } from '@/shared/lib/activation-cache'
 import { getCatalogItem } from '@/shared/lib/catalog-cache'
 import { spellCatalog } from '@/shared/lib/spell-cache'
+import {
+  computeEquippedFlags as engineComputeEquippedFlags,
+  type EquippedItemFlag,
+} from '@/shared/lib/engine-wasm'
 import type { CharacterItem } from '@/shared/api/api'
 
 /**
@@ -61,23 +65,44 @@ export type ItemFlagEffect = {
 /**
  * Always-on flag effects carried by equipped items (heavy armor's
  * fatigue-on-sleep / armadura-pesada, …) with item provenance, for read-only
- * display in the Efeitos tab. Runs the item engine per item so wear
- * conditions (vested/wielded) resolve by the same rules as the sheet totals.
+ * display in the Efeitos tab. Same MODE-gate as the other engine choke points:
+ * production/dev runs the Go/WASM `ComputeEquippedFlags`; the TS branch below is
+ * TEST-ONLY (parity oracle, no wasm in vitest) and is dead-code-eliminated from
+ * the app bundle — taking `computeItemEffects` (the last effects-cru consumer)
+ * with it. The pt-BR label is always mapped on this side.
  *
  * Usage: `equippedItemFlagEffects(character.items)` → `[{ flag, label, source }]`.
  */
 export function equippedItemFlagEffects(
   items: readonly CharacterItem[],
 ): ItemFlagEffect[] {
-  const out: ItemFlagEffect[] = []
+  const raw =
+    import.meta.env.MODE === 'test'
+      ? tsEquippedFlags(items)
+      : engineComputeEquippedFlags(items)
+  return raw.map((f) => ({
+    flag: f.flag as ItemFlag,
+    label: ITEM_FLAG_LABEL[f.flag as ItemFlag],
+    source: f.source,
+  }))
+}
+
+/**
+ * The TS derivation kept as the parity oracle: per equipped catalog item, run
+ * ONLY its base catalog modifiers through the item engine (so wear conditions
+ * resolve like the sheet totals) and collect the flags, sorted per item for a
+ * deterministic order matching the Go `ComputeEquippedFlags`.
+ */
+function tsEquippedFlags(items: readonly CharacterItem[]): EquippedItemFlag[] {
+  const out: EquippedItemFlag[] = []
   for (const it of items) {
     if (it.equipped === null || !it.catalogId) continue
     const modifiers = getCatalogItem(it.catalogId)?.modifiers ?? []
     const { flags } = computeItemEffects([
       { source: it.name, equipped: it.equipped, modifiers },
     ])
-    for (const flag of flags as Set<ItemFlag>) {
-      out.push({ flag, label: ITEM_FLAG_LABEL[flag], source: it.name })
+    for (const flag of [...flags].sort()) {
+      out.push({ flag, source: it.name })
     }
   }
   return out

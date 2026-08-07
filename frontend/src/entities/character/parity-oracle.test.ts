@@ -21,6 +21,7 @@ import type { Character } from '@/shared/api/api'
 import fixtures from './__fixtures__/character-input-parity.json'
 import { assembleSheetV2 } from './computed-sheet'
 import { activeItemsFor, characterEffects } from './derived'
+import { equippedItemFlagEffects } from './effect-source'
 import { buildVitalContext } from './level-vitals'
 import { computeVitalPools } from './vital-pools'
 
@@ -97,6 +98,12 @@ describe('parity oracle — derived.ts golden output for the 16 seed chars', () 
           itemEffects,
           sheetV2: sheetV2For(char),
           vitals,
+          // Equipped-item flag provenance oracle (Fase A.3.3) — label dropped so
+          // it mirrors the Go `ComputeEquippedFlags` ({flag, source}) shape.
+          equippedFlags: equippedItemFlagEffects(char.items).map((e) => ({
+            flag: e.flag,
+            source: e.source,
+          })),
         }
         writeFileSync(
           resolve(oracleDir, `${slug}.json`),

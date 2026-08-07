@@ -1045,5 +1045,19 @@
   "vitals": {
     "pvMax": 137,
     "pmMax": 30
-  }
+  },
+  "equippedFlags": [
+    {
+      "flag": "armadura-pesada",
+      "source": "Armadura completa"
+    },
+    {
+      "flag": "cannot-apply-dex-to-defense",
+      "source": "Armadura completa"
+    },
+    {
+      "flag": "fatigue-on-sleep",
+      "source": "Armadura completa"
+    }
+  ]
 }

@@ -120,6 +120,22 @@ func computeVitals(_ js.Value, args []js.Value) any {
 	return string(out)
 }
 
+// computeEquippedFlags returns the always-on flags carried by a character's
+// equipped items with item provenance (effect-source.ts equippedItemFlagEffects)
+// — the last effects-cru consumer to move off TS. Requires primeEngineCatalogs
+// first (item modifiers come from the catalog).
+func computeEquippedFlags(_ js.Value, args []js.Value) any {
+	if primedCatalogs == nil {
+		return `{"error":"engine catalogs not primed — call primeEngineCatalogs first"}`
+	}
+	var items []engine.CharacterItem
+	if err := json.Unmarshal([]byte(args[0].String()), &items); err != nil {
+		return errorJSON(err)
+	}
+	out, _ := json.Marshal(primedCatalogs.ComputeEquippedFlags(items))
+	return string(out)
+}
+
 // errorJSON returns a JSON string carrying the error, matching the sheet
 // functions' shape so the TS wrapper reads `.error` uniformly.
 func errorJSON(err error) string {
@@ -134,5 +150,6 @@ func main() {
 	js.Global().Set("computeEffects", js.FuncOf(computeEffects))
 	js.Global().Set("computeVitals", js.FuncOf(computeVitals))
 	js.Global().Set("resolveConditionalDisplay", js.FuncOf(resolveConditionalDisplay))
+	js.Global().Set("computeEquippedFlags", js.FuncOf(computeEquippedFlags))
 	select {} // keep the runtime alive
 }

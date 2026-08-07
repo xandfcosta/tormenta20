@@ -903,5 +903,6 @@
   "vitals": {
     "pvMax": 87,
     "pmMax": 24
-  }
+  },
+  "equippedFlags": []
 }

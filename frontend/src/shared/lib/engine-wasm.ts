@@ -55,7 +55,12 @@ type GlobalWithGo = typeof globalThis & {
   computeEffects?: (charJson: string, conditionalsJson: string) => string
   computeVitals?: (contextJson: string) => string
   resolveConditionalDisplay?: (rowsJson: string) => string
+  computeEquippedFlags?: (itemsJson: string) => string
 }
+
+/** One always-on flag carried by an equipped item, with item provenance —
+ *  mirrors the Go `EquippedFlag` (the pt-BR label is added on the entities side). */
+export type EquippedItemFlag = { flag: string; source: string }
 
 /** One conditional-effect row (an active stance's modifier) fed to the display
  *  resolver — mirrors the Go `ConditionalDisplayInput`. */
@@ -223,6 +228,23 @@ export function resolveConditionalDisplay(
   if (!fn) throw new Error('engine-wasm: engine not ready — call ensureEngine() first')
   const out = JSON.parse(fn(JSON.stringify(rows))) as
     | ConditionalDisplayRow[]
+    | { error: string }
+  if (!Array.isArray(out)) throw new Error(`engine-wasm: ${out.error}`)
+  return out
+}
+
+/**
+ * Always-on flags of a character's equipped items with provenance (Go
+ * `ComputeEquippedFlags`). Requires `ensureEngine()` + `primeEngineCatalogs()`
+ * (item modifiers come from the catalog). Mirrors the TS `tsEquippedFlags`.
+ */
+export function computeEquippedFlags(
+  items: readonly unknown[],
+): EquippedItemFlag[] {
+  const fn = (globalThis as GlobalWithGo).computeEquippedFlags
+  if (!fn) throw new Error('engine-wasm: engine not ready — call ensureEngine() first')
+  const out = JSON.parse(fn(JSON.stringify(items))) as
+    | EquippedItemFlag[]
     | { error: string }
   if (!Array.isArray(out)) throw new Error(`engine-wasm: ${out.error}`)
   return out

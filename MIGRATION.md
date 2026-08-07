@@ -34,7 +34,8 @@ As ~14 fórmulas de breakdown (`derived.ts`) **já estão portadas em Go**
 (`ComputeSheetV2`, provado byte-equal), mas a UI ainda roda as **cópias TS**. Meta:
 a UI **consome** o `ComputedSheetV2` do Go; nenhuma regra de ficha é autorada em TS.
 
-**STATUS: quase completa** (commits `5dc3587`..`c552657`). Falta só o item 3.3.
+**STATUS: COMPLETA** (commits `5dc3587`..A.3.3). Todos os breakdowns + effects-cru
+migrados; só `WeaponFormulaCards`/`point-buy` ficam TS de propósito (ports novos).
 
 **Passos:**
 1. ✅ **FEITO** — Hook `useComputedSheet(char)` (`entities/character/computed-sheet.ts`)
@@ -56,20 +57,23 @@ a UI **consome** o `ComputedSheetV2` do Go; nenhuma regra de ficha é autorada e
    - 3.2 ✅ **FEITO** — `resolveConditionalDisplay` (posturas, `stances-section`):
      exposto via WASM (`resolveConditionalDisplay` em `cmd/wasm`), choke point MODE-gated
      `entities/character/conditional-display.ts` (`resolveStanceDisplay`), E2E ok.
-   - 3.3 ⬜ **FALTA** — `effect-source.equippedItemFlagEffects` (flags por-item,
-     `effects-panel`) → nova função Go `computeEquippedFlags(char)`. É o **último
-     consumidor em prod de `computeItemEffects`** (t20-data), então portar isso fecha o
-     DCE do core de resolução TS. Cuidado na paridade: espelhar o TS EXATO — só
-     `catalog.modifiers` base (sem melhorias/material/penalidades/mirrors), flags por item.
-     Baixo ganho de bundle enquanto o front ainda empacota t20-data (ver projeto
-     `project_front_decouple_catalog`) → casa bem com ELE.
+   - 3.3 ✅ **FEITO** — `effect-source.equippedItemFlagEffects` (flags por-item,
+     `effects-panel`): nova função Go `ComputeEquippedFlags(items)` (`engine/equipped_flags.go`)
+     + WASM `computeEquippedFlags` + oráculo `equippedFlags` + teste de paridade Go
+     (`equipped_flags_parity_test.go`, byte-equal) + E2E wasm (16/16, 4 chars com flags).
+     `effect-source.ts` MODE-gated: prod chama o engine, o ramo TS (`tsEquippedFlags`) é
+     o oráculo e some por DCE — levando junto o **último consumidor em prod de
+     `computeItemEffects`**. Espelha o TS EXATO (só `catalog.modifiers` base; flags
+     ordenadas por item p/ bater com `MarshalJSON`).
 4. ✅ **DCE VERIFICADO** — os breakdowns sem consumidor em prod (`defenseTotal`,
    `displacementTotal`, `flySpeedTotal`, `inventorySlotsTotal`, `pmLimitTotal`,
    `bestBaseSpellCd`, `spellDCBonus`, `pmCostMod`, `characterDamageReduction`,
    `tempHpFromPowers`) saíram do bundle: labels só-de-breakdown (`"Bárbaro (p47)"`,
    `"Alma de Bronze (Fúria, p41)"`, …) dão **0** em `dist/assets/*.js` e vêm do wasm em
    runtime. `attributeTotal`/`expertiseTotalWithItems`/`statFor` PERMANECEM (usados por
-   `WeaponFormulaCards`, deferido). `computeItemEffects` permanece até o item 3.3.
+   `WeaponFormulaCards`, deferido). `computeItemEffects` agora **DCE** (item 3.3):
+   os dois consumidores restantes (`derived.ts resolveEffects` + `effect-source.ts
+   tsEquippedFlags`) estão ambos no ramo `MODE==='test'`.
 
 **NÃO nesta fase** (ainda TS-only, portar depois se quiser "tudo da ficha"):
 montagem de ataque/dano de arma (`WeaponFormulaCards`: melee soma Força, crítico)
