@@ -10,6 +10,45 @@ import (
 	"database/sql"
 )
 
+const createExpertise = `-- name: CreateExpertise :one
+INSERT INTO character_expertises (characterId, name, attribute, trained, custom)
+VALUES (?, ?, ?, ?, ?)
+RETURNING name, attribute, trained, custom
+`
+
+type CreateExpertiseParams struct {
+	Characterid int64  `json:"characterid"`
+	Name        string `json:"name"`
+	Attribute   string `json:"attribute"`
+	Trained     int64  `json:"trained"`
+	Custom      int64  `json:"custom"`
+}
+
+type CreateExpertiseRow struct {
+	Name      string `json:"name"`
+	Attribute string `json:"attribute"`
+	Trained   int64  `json:"trained"`
+	Custom    int64  `json:"custom"`
+}
+
+func (q *Queries) CreateExpertise(ctx context.Context, arg CreateExpertiseParams) (CreateExpertiseRow, error) {
+	row := q.db.QueryRowContext(ctx, createExpertise,
+		arg.Characterid,
+		arg.Name,
+		arg.Attribute,
+		arg.Trained,
+		arg.Custom,
+	)
+	var i CreateExpertiseRow
+	err := row.Scan(
+		&i.Name,
+		&i.Attribute,
+		&i.Trained,
+		&i.Custom,
+	)
+	return i, err
+}
+
 const createItem = `-- name: CreateItem :one
 INSERT INTO character_items (characterId, catalogId, name, quantity, slots, equipped, improvements, material, createdAt)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -130,6 +169,15 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
+const deleteExpertiseByID = `-- name: DeleteExpertiseByID :exec
+DELETE FROM character_expertises WHERE id = ?
+`
+
+func (q *Queries) DeleteExpertiseByID(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteExpertiseByID, id)
+	return err
+}
+
 const deleteItem = `-- name: DeleteItem :exec
 DELETE FROM character_items WHERE id = ?
 `
@@ -208,6 +256,27 @@ func (q *Queries) GetCharacterOwner(ctx context.Context, id int64) (int64, error
 	var ownerid int64
 	err := row.Scan(&ownerid)
 	return ownerid, err
+}
+
+const getExpertiseMeta = `-- name: GetExpertiseMeta :one
+SELECT id, custom FROM character_expertises WHERE characterId = ? AND name = ? LIMIT 1
+`
+
+type GetExpertiseMetaParams struct {
+	Characterid int64  `json:"characterid"`
+	Name        string `json:"name"`
+}
+
+type GetExpertiseMetaRow struct {
+	ID     int64 `json:"id"`
+	Custom int64 `json:"custom"`
+}
+
+func (q *Queries) GetExpertiseMeta(ctx context.Context, arg GetExpertiseMetaParams) (GetExpertiseMetaRow, error) {
+	row := q.db.QueryRowContext(ctx, getExpertiseMeta, arg.Characterid, arg.Name)
+	var i GetExpertiseMetaRow
+	err := row.Scan(&i.ID, &i.Custom)
+	return i, err
 }
 
 const getItem = `-- name: GetItem :one
@@ -666,6 +735,45 @@ type UpdateConditionsParams struct {
 func (q *Queries) UpdateConditions(ctx context.Context, arg UpdateConditionsParams) error {
 	_, err := q.db.ExecContext(ctx, updateConditions, arg.ActiveConditions, arg.UpdatedAt, arg.ID)
 	return err
+}
+
+const updateExpertise = `-- name: UpdateExpertise :one
+UPDATE character_expertises
+SET attribute = COALESCE(?1, attribute),
+    trained = COALESCE(?2, trained)
+WHERE characterId = ?3 AND name = ?4
+RETURNING name, attribute, trained, custom
+`
+
+type UpdateExpertiseParams struct {
+	Attribute   sql.NullString `json:"attribute"`
+	Trained     sql.NullInt64  `json:"trained"`
+	CharacterId int64          `json:"characterId"`
+	Name        string         `json:"name"`
+}
+
+type UpdateExpertiseRow struct {
+	Name      string `json:"name"`
+	Attribute string `json:"attribute"`
+	Trained   int64  `json:"trained"`
+	Custom    int64  `json:"custom"`
+}
+
+func (q *Queries) UpdateExpertise(ctx context.Context, arg UpdateExpertiseParams) (UpdateExpertiseRow, error) {
+	row := q.db.QueryRowContext(ctx, updateExpertise,
+		arg.Attribute,
+		arg.Trained,
+		arg.CharacterId,
+		arg.Name,
+	)
+	var i UpdateExpertiseRow
+	err := row.Scan(
+		&i.Name,
+		&i.Attribute,
+		&i.Trained,
+		&i.Custom,
+	)
+	return i, err
 }
 
 const updateVitals = `-- name: UpdateVitals :one

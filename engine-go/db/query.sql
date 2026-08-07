@@ -95,3 +95,21 @@ DELETE FROM character_spells WHERE characterId = ? AND catalogSpellId = ?;
 -- name: UpdateConditions :exec
 UPDATE characters SET activeConditions = sqlc.arg('activeConditions'), updatedAt = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id');
+
+-- name: GetExpertiseMeta :one
+SELECT id, custom FROM character_expertises WHERE characterId = ? AND name = ? LIMIT 1;
+
+-- name: CreateExpertise :one
+INSERT INTO character_expertises (characterId, name, attribute, trained, custom)
+VALUES (?, ?, ?, ?, ?)
+RETURNING name, attribute, trained, custom;
+
+-- name: UpdateExpertise :one
+UPDATE character_expertises
+SET attribute = COALESCE(sqlc.narg('attribute'), attribute),
+    trained = COALESCE(sqlc.narg('trained'), trained)
+WHERE characterId = sqlc.arg('characterId') AND name = sqlc.arg('name')
+RETURNING name, attribute, trained, custom;
+
+-- name: DeleteExpertiseByID :exec
+DELETE FROM character_expertises WHERE id = ?;
