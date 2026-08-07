@@ -258,6 +258,20 @@ Fase B (grande). Ou B direto se a prioridade é a API — são independentes.
   sintético (mesma gramática do `r.Cookie` do HTTP). Testável sem socket — 8 casos verdes.
   **FASE 1 COMPLETA.** Todos os pré-requisitos de domínio do gateway existem e testados.
 
+  **FASE 2 — o coração (session-state runtime · presence · handlers).**
+  ✅ **2.1a runtime puro** (`session_state.go`): tipos `InitiativeEntry`/`SessionRuntimeState`
+  (JSON com `omitempty` nos ponteiros = shape do front) + funções LIVRES sobre
+  `*SessionRuntimeState` (sem DB, sem socket): `addEntry`/`upsertCharacterEntry`/`updateEntry`/
+  `removeEntry`/`advanceTurn`/`resetInitiative`/`patchEntryVitals`/`deltaEntryVitals` +
+  `sortInitiative`/`clampVital`. Invariantes portadas EXATO (sort DESC+tiebreak label, turn
+  preservado no re-sort via id, wrap de round no remove-tail/nextTurn, clamp [0,max],
+  max=50). **Id injetável** (`newID func() string`) → testes determinísticos. Cobertura
+  exaustiva (11 testes, todos os branches de turn/remove/clamp). **Desvio anotado**:
+  tiebreak usa byte-compare, não `localeCompare` pt-BR (cosmético, só empata acento).
+  ⏳ **2.1b store+persist** (mapa+mutex por sessão, hydrate/persist fire-and-forget na coluna
+  `runtimeState` + flag `dirty`, `refreshCharacterMaxes` do DB) — DB-backed. ⏳ **2.2 presence**
+  (dedupe por userId, lógica pura). ⏳ **2.3 handlers+emits** no `cmd/api` com zishang520.
+
   **Auth (handshake, `ws-auth.ts`):** token via `handshake.auth.token` → `Authorization:
   Bearer` → **cookie `t20_session`** (nome de `COOKIE_NAME`), nessa ordem. `jwt.verify`
   (mesmo segredo do HTTP, `sub` = id) → `auth.findById(sub)` (nega usuário revogado).
