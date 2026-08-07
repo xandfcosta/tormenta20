@@ -79,6 +79,19 @@ func TestAddEntryTieBreakByLabel(t *testing.T) {
 	}
 }
 
+func TestAddEntryTieBreakCollation(t *testing.T) {
+	// Accent-aware pt-BR collation: "Ávila" sorts with A (before "Bravo"). A byte
+	// compare would do the opposite (Á's first byte 0xC3 > 'B'), so this proves the
+	// collator is in effect. Same initiative → the tie-break decides.
+	st := emptyRuntimeState()
+	id := counter()
+	_ = addEntry(st, npc("Bravo", 10), id)
+	_ = addEntry(st, npc("Ávila", 10), id)
+	if got := labels(st); !eq(got, []string{"Ávila", "Bravo"}) {
+		t.Errorf("order=%v, want [Ávila Bravo] (pt-BR collation, not byte order)", got)
+	}
+}
+
 func TestAddEntryFull(t *testing.T) {
 	st := emptyRuntimeState()
 	id := counter()

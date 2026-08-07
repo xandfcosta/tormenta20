@@ -3,6 +3,9 @@ package api
 import (
 	"fmt"
 	"sort"
+
+	"golang.org/x/text/collate"
+	"golang.org/x/text/language"
 )
 
 // INITIATIVE_MAX_ENTRIES — hard ceiling on combatants in one tracker (runaway-add guard;
@@ -54,17 +57,18 @@ type entryPatch struct {
 	MpMax       *int64  `json:"mpMax"`
 }
 
-// sortInitiative keeps the list DESC by initiative, ties broken by label ascending.
-// NOTE: Nest uses String.localeCompare (pt-BR collation); Go compares byte-wise here.
-// The two differ only for equal-initiative entries whose labels differ by accent — a
-// cosmetic tie-break — and the server stays the single source of truth for order.
+// sortInitiative keeps the list DESC by initiative, ties broken by label using pt-BR
+// collation (accent-aware, e.g. "Ávila" < "Bravo") to match the Nest side's
+// String.localeCompare. The collator is created per call — used only within this single
+// sort goroutine, so no sharing/concurrency concern (Collator isn't concurrency-safe).
 func sortInitiative(st *SessionRuntimeState) {
+	c := collate.New(language.BrazilianPortuguese)
 	sort.SliceStable(st.Initiative, func(i, j int) bool {
 		a, b := st.Initiative[i], st.Initiative[j]
 		if a.Initiative != b.Initiative {
 			return a.Initiative > b.Initiative
 		}
-		return a.Label < b.Label
+		return c.CompareString(a.Label, b.Label) < 0
 	})
 }
 
