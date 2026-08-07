@@ -63,3 +63,18 @@ SET hpCurrent = COALESCE(sqlc.narg('hpCurrent'), hpCurrent),
     updatedAt = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id')
 RETURNING hpCurrent, mpCurrent;
+
+-- name: CreateItem :one
+INSERT INTO character_items (characterId, catalogId, name, quantity, slots, equipped, improvements, material, createdAt)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, catalogId, name, quantity, slots, equipped, improvements, material;
+
+-- name: GetItem :one
+SELECT id, characterId, catalogId, name, quantity, slots, equipped, improvements, material
+FROM character_items WHERE id = ? LIMIT 1;
+
+-- name: DeleteItem :exec
+DELETE FROM character_items WHERE id = ?;
+
+-- name: ListEquippedItems :many
+SELECT id, equipped FROM character_items WHERE characterId = ? AND equipped IS NOT NULL;

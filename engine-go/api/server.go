@@ -8,19 +8,22 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"t20engine/db/sqlcgen"
+	"t20engine/engine"
 )
 
-// Server holds the API dependencies (config, DB handle, typed queries) and builds
-// the router.
+// Server holds the API dependencies (config, DB handle, typed queries, primed
+// rules catalogs) and builds the router.
 type Server struct {
-	cfg     Config
-	db      *sql.DB
-	queries *sqlcgen.Queries
+	cfg      Config
+	db       *sql.DB
+	queries  *sqlcgen.Queries
+	catalogs *engine.Catalogs // nil if the catalog snapshot failed to load
 }
 
-// NewServer wires the API server. The DB is already opened + migrated (db.Open).
-func NewServer(cfg Config, database *sql.DB) *Server {
-	return &Server{cfg: cfg, db: database, queries: sqlcgen.New(database)}
+// NewServer wires the API server. The DB is already opened + migrated (db.Open);
+// catalogs may be nil (best-effort) — rule-heavy handlers guard on it.
+func NewServer(cfg Config, database *sql.DB, catalogs *engine.Catalogs) *Server {
+	return &Server{cfg: cfg, db: database, queries: sqlcgen.New(database), catalogs: catalogs}
 }
 
 // Router builds the HTTP handler: shared middleware + domain routes. Routes carry
@@ -51,6 +54,8 @@ func (s *Server) Router() http.Handler {
 		r.Get("/", s.handleListCharacters)
 		r.Get("/{id}", s.handleGetCharacter)
 		r.Patch("/{id}/vitals", s.handleUpdateVitals)
+		r.Post("/{id}/items", s.handleAddItem)
+		r.Delete("/{id}/items/{itemId}", s.handleDeleteItem)
 	})
 	return r
 }

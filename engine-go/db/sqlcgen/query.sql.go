@@ -10,6 +10,61 @@ import (
 	"database/sql"
 )
 
+const createItem = `-- name: CreateItem :one
+INSERT INTO character_items (characterId, catalogId, name, quantity, slots, equipped, improvements, material, createdAt)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, catalogId, name, quantity, slots, equipped, improvements, material
+`
+
+type CreateItemParams struct {
+	Characterid  int64          `json:"characterid"`
+	Catalogid    sql.NullString `json:"catalogid"`
+	Name         string         `json:"name"`
+	Quantity     int64          `json:"quantity"`
+	Slots        float64        `json:"slots"`
+	Equipped     sql.NullString `json:"equipped"`
+	Improvements string         `json:"improvements"`
+	Material     sql.NullString `json:"material"`
+	Createdat    string         `json:"createdat"`
+}
+
+type CreateItemRow struct {
+	ID           int64          `json:"id"`
+	Catalogid    sql.NullString `json:"catalogid"`
+	Name         string         `json:"name"`
+	Quantity     int64          `json:"quantity"`
+	Slots        float64        `json:"slots"`
+	Equipped     sql.NullString `json:"equipped"`
+	Improvements string         `json:"improvements"`
+	Material     sql.NullString `json:"material"`
+}
+
+func (q *Queries) CreateItem(ctx context.Context, arg CreateItemParams) (CreateItemRow, error) {
+	row := q.db.QueryRowContext(ctx, createItem,
+		arg.Characterid,
+		arg.Catalogid,
+		arg.Name,
+		arg.Quantity,
+		arg.Slots,
+		arg.Equipped,
+		arg.Improvements,
+		arg.Material,
+		arg.Createdat,
+	)
+	var i CreateItemRow
+	err := row.Scan(
+		&i.ID,
+		&i.Catalogid,
+		&i.Name,
+		&i.Quantity,
+		&i.Slots,
+		&i.Equipped,
+		&i.Improvements,
+		&i.Material,
+	)
+	return i, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (email, name, passwordHash, createdAt, updatedAt)
 VALUES (?, ?, ?, ?, ?)
@@ -42,6 +97,15 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Updatedat,
 	)
 	return i, err
+}
+
+const deleteItem = `-- name: DeleteItem :exec
+DELETE FROM character_items WHERE id = ?
+`
+
+func (q *Queries) DeleteItem(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteItem, id)
+	return err
 }
 
 const getCharacter = `-- name: GetCharacter :one
@@ -96,6 +160,40 @@ func (q *Queries) GetCharacterOwner(ctx context.Context, id int64) (int64, error
 	var ownerid int64
 	err := row.Scan(&ownerid)
 	return ownerid, err
+}
+
+const getItem = `-- name: GetItem :one
+SELECT id, characterId, catalogId, name, quantity, slots, equipped, improvements, material
+FROM character_items WHERE id = ? LIMIT 1
+`
+
+type GetItemRow struct {
+	ID           int64          `json:"id"`
+	Characterid  int64          `json:"characterid"`
+	Catalogid    sql.NullString `json:"catalogid"`
+	Name         string         `json:"name"`
+	Quantity     int64          `json:"quantity"`
+	Slots        float64        `json:"slots"`
+	Equipped     sql.NullString `json:"equipped"`
+	Improvements string         `json:"improvements"`
+	Material     sql.NullString `json:"material"`
+}
+
+func (q *Queries) GetItem(ctx context.Context, id int64) (GetItemRow, error) {
+	row := q.db.QueryRowContext(ctx, getItem, id)
+	var i GetItemRow
+	err := row.Scan(
+		&i.ID,
+		&i.Characterid,
+		&i.Catalogid,
+		&i.Name,
+		&i.Quantity,
+		&i.Slots,
+		&i.Equipped,
+		&i.Improvements,
+		&i.Material,
+	)
+	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
@@ -282,6 +380,38 @@ func (q *Queries) ListClassesByCharacter(ctx context.Context, characterid int64)
 	for rows.Next() {
 		var i ListClassesByCharacterRow
 		if err := rows.Scan(&i.Classname, &i.Level); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEquippedItems = `-- name: ListEquippedItems :many
+SELECT id, equipped FROM character_items WHERE characterId = ? AND equipped IS NOT NULL
+`
+
+type ListEquippedItemsRow struct {
+	ID       int64          `json:"id"`
+	Equipped sql.NullString `json:"equipped"`
+}
+
+func (q *Queries) ListEquippedItems(ctx context.Context, characterid int64) ([]ListEquippedItemsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listEquippedItems, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEquippedItemsRow{}
+	for rows.Next() {
+		var i ListEquippedItemsRow
+		if err := rows.Scan(&i.ID, &i.Equipped); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

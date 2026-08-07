@@ -19,12 +19,21 @@ import (
 // CatalogItem mirrors items/types.ts CatalogItem — only the fields the
 // collection layer reads are typed.
 type CatalogItem struct {
-	ID        string       `json:"id"`
-	Name      string       `json:"name"`
-	Category  string       `json:"category"`
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Category string `json:"category"`
+	// Equip axis + Slots + AppliesTo feed the API's mutation validators (equip
+	// axis, carga, overlay compatibility); the derive ignores them.
+	Equip     string       `json:"equip"`
+	Slots     float64      `json:"slots"`
+	AppliesTo []string     `json:"appliesTo,omitempty"`
 	Weapon    *WeaponStats `json:"weapon,omitempty"`
 	Modifiers []Modifier   `json:"modifiers"`
 }
+
+// Item returns the catalog item by id, or nil if unknown — the exported accessor
+// the API server uses for its item-mutation validators.
+func (c *Catalogs) Item(id string) *CatalogItem { return c.itemsByID[id] }
 
 type WeaponStats struct {
 	Purpose   string   `json:"purpose"` // 'melee' | 'thrown' | 'ranged'

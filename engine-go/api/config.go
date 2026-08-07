@@ -18,6 +18,9 @@ type Config struct {
 	CookieName   string
 	CookieSecure bool
 	CORSOrigin   string
+	// CatalogPath is the primeEngineCatalogs payload (items/races/…) the API loads
+	// at startup for its mutation validators. Defaults to the committed snapshot.
+	CatalogPath string
 }
 
 // LoadConfig reads the environment with the same defaults as the Nest backend,
@@ -32,6 +35,7 @@ func LoadConfig() Config {
 		CookieName:   env("COOKIE_NAME", "t20_session"),
 		CookieSecure: os.Getenv("COOKIE_SECURE") == "true",
 		CORSOrigin:   env("CORS_ORIGIN", "http://localhost:5173"),
+		CatalogPath:  env("CATALOG_PATH", "parity/_catalogs.json"),
 	}
 }
 
