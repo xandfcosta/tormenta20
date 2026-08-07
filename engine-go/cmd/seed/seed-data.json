@@ -1,0 +1,66 @@
+{
+  "email": "mestre@t20.local",
+  "name": "Mestre",
+  "password": "mestre123456",
+  "characters": [
+    {
+      "create": {
+        "name": "Kharvos, o Guardião Rubro",
+        "races": ["Anão"],
+        "origin": "Batedor",
+        "classes": [{ "className": "Guerreiro", "level": 8 }],
+        "god": null,
+        "tibar": 250,
+        "hpMax": 80, "hpCurrent": 80, "mpMax": 0, "mpCurrent": 0,
+        "strength": 4, "dexterity": 1, "constitution": 3, "intelligence": 0, "wisdom": 1, "charisma": 0,
+        "size": "Médio", "displacement": 6,
+        "trainedExpertises": ["Luta", "Fortitude", "Percepção", "Intimidação"],
+        "items": [
+          { "catalogId": "machado-de-batalha", "name": "Machado de batalha", "quantity": 1, "slots": 1, "equipped": "wielded" },
+          { "catalogId": "armadura-completa", "name": "Armadura completa", "quantity": 1, "slots": 5, "equipped": "vested" }
+        ]
+      },
+      "spells": []
+    },
+    {
+      "create": {
+        "name": "Aurora, a Erudita Arcana",
+        "races": ["Humano"],
+        "origin": "Acólito",
+        "classes": [{ "className": "Arcanista", "level": 9 }],
+        "god": null,
+        "tibar": 180,
+        "hpMax": 47, "hpCurrent": 47, "mpMax": 36, "mpCurrent": 36,
+        "strength": 0, "dexterity": 2, "constitution": 1, "intelligence": 4, "wisdom": 1, "charisma": 1,
+        "size": "Médio", "displacement": 9,
+        "trainedExpertises": ["Misticismo", "Conhecimento", "Vontade", "Investigação"],
+        "items": [
+          { "catalogId": "adaga", "name": "Adaga", "quantity": 1, "slots": 1, "equipped": "wielded" }
+        ]
+      },
+      "spells": [
+        { "id": "bola-de-fogo", "prepared": true },
+        { "id": "misseis-magicos", "prepared": true }
+      ]
+    },
+    {
+      "create": {
+        "name": "Irmão Aldric, o Devoto",
+        "races": ["Humano"],
+        "origin": "Herói",
+        "classes": [{ "className": "Clérigo", "level": 6 }],
+        "god": "Khalmyr",
+        "godPower": "Kharmma",
+        "tibar": 120,
+        "hpMax": 48, "hpCurrent": 48, "mpMax": 18, "mpCurrent": 18,
+        "strength": 2, "dexterity": 0, "constitution": 2, "intelligence": 1, "wisdom": 4, "charisma": 1,
+        "size": "Médio", "displacement": 9,
+        "trainedExpertises": ["Religião", "Cura", "Fortitude", "Vontade"],
+        "items": [
+          { "catalogId": "escudo-pesado", "name": "Escudo pesado", "quantity": 1, "slots": 2, "equipped": "wielded" }
+        ]
+      },
+      "spells": [{ "id": "curar-ferimentos", "prepared": true }]
+    }
+  ]
+}
