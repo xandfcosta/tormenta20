@@ -75,9 +75,21 @@ migrados; só `WeaponFormulaCards`/`point-buy` ficam TS de propósito (ports nov
    os dois consumidores restantes (`derived.ts resolveEffects` + `effect-source.ts
    tsEquippedFlags`) estão ambos no ramo `MODE==='test'`.
 
-**NÃO nesta fase** (ainda TS-only, portar depois se quiser "tudo da ficha"):
-montagem de ataque/dano de arma (`WeaponFormulaCards`: melee soma Força, crítico)
-e `point-buy` (criação). São ports novos, não duplicações.
+**"Tudo da ficha" — TAMBÉM FEITO** (eram os ports novos deferidos):
+- ✅ **point-buy (criação)** → `engine/pointbuy.go` (`PointBuyStatusFor` = spent +
+  warnings, strings pt-BR byte-iguais incl. U+2212) + WASM `pointBuyStatus` +
+  choke point `features/character-build/point-buy.ts` + swap `atributos-step`.
+  Go unit test + E2E. `pointBuySpent`/`pointBuyWarnings` DCE (0 no bundle).
+- ✅ **weapon formula cards** → `engine/weapons.go` (`ComputeWeaponCards`: skill
+  ranged?Pontaria:Luta, dano soma Força melee/thrown, crit) + WASM
+  `computeWeaponCards` + oráculo `weaponCards` + teste paridade Go (byte-equal, 16
+  chars) + E2E + choke point `entities/character/weapon-cards.ts` (`useWeaponCards`).
+  `WeaponFormulaCards` agora só renderiza os números do Go; **`statFor` e
+  `expertiseTotalWithItems` saíram do prod** (só nos montadores MODE-gated).
+  `attributeTotal` permanece (usado por `level-vitals` p/ montar o input do vitals
+  engine); `wieldedWeaponEntries` permanece (lookup de catálogo, via `hasWieldedWeapon`).
+
+Fase A **100% concluída**: nenhuma regra de ficha é autorada em TS em prod.
 
 **Padrão E2E wasm** (recriar em `$CLAUDE_JOB_DIR/tmp`): `wasm_exec.js` via
 `vm.runInThisContext`, instanciar `t20.wasm`, `primeEngineCatalogs` a partir de
