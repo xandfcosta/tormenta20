@@ -78,6 +78,37 @@ func (s *Server) authorizedCharacter(ctx context.Context, user AuthUser, id int6
 	return row, http.StatusOK, nil
 }
 
+// handleGetSheet ports GET /characters/:id/sheet — the server-computed derived sheet
+// (ComputedSheetV2), the same shape the WASM engine produces for the front. No live
+// consumer today (the front derives via WASM); provided for non-WASM clients + parity.
+// Active conditionals (stances) aren't applied — this is the base sheet.
+func (s *Server) handleGetSheet(w http.ResponseWriter, r *http.Request) {
+	id, ok := intParam(w, r, "id")
+	if !ok {
+		return
+	}
+	row, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id)
+	if err != nil {
+		writeError(w, status, err.Error())
+		return
+	}
+	if s.catalogs == nil {
+		writeError(w, http.StatusServiceUnavailable, "Rules catalog not loaded")
+		return
+	}
+	dto, err := s.loadCharacter(r.Context(), row)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Could not load character")
+		return
+	}
+	ec, err := engineCharacterFrom(dto)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Could not build sheet input")
+		return
+	}
+	writeJSON(w, http.StatusOK, s.catalogs.ComputeSheetV2(ec, map[string]bool{}))
+}
+
 // assertCharacterOwner is the strict owner-only check (mirrors CharactersService.assertOwner)
 // the WS vitals gate uses: a player may edit only a character they own. Transport-agnostic.
 func (s *Server) assertCharacterOwner(ctx context.Context, userID, characterID int64) (int, error) {
