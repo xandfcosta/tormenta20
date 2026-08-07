@@ -50,6 +50,7 @@ func (s *Server) Router() http.Handler {
 		r.Use(s.requireAuth)
 		r.Get("/", s.handleListCharacters)
 		r.Get("/{id}", s.handleGetCharacter)
+		r.Patch("/{id}/vitals", s.handleUpdateVitals)
 	})
 	return r
 }

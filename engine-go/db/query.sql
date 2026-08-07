@@ -53,3 +53,13 @@ FROM active_effects WHERE characterId = ? ORDER BY id ASC;
 -- name: ListSpellsByCharacter :many
 SELECT id, catalogSpellId, prepared, learnedAt
 FROM character_spells WHERE characterId = ? ORDER BY learnedAt ASC;
+
+-- character mutations (B.3)
+
+-- name: UpdateVitals :one
+UPDATE characters
+SET hpCurrent = COALESCE(sqlc.narg('hpCurrent'), hpCurrent),
+    mpCurrent = COALESCE(sqlc.narg('mpCurrent'), mpCurrent),
+    updatedAt = sqlc.arg('updatedAt')
+WHERE id = sqlc.arg('id')
+RETURNING hpCurrent, mpCurrent;

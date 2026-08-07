@@ -448,3 +448,38 @@ func (q *Queries) ListSpellsByCharacter(ctx context.Context, characterid int64) 
 	}
 	return items, nil
 }
+
+const updateVitals = `-- name: UpdateVitals :one
+
+UPDATE characters
+SET hpCurrent = COALESCE(?1, hpCurrent),
+    mpCurrent = COALESCE(?2, mpCurrent),
+    updatedAt = ?3
+WHERE id = ?4
+RETURNING hpCurrent, mpCurrent
+`
+
+type UpdateVitalsParams struct {
+	HpCurrent sql.NullInt64 `json:"hpCurrent"`
+	MpCurrent sql.NullInt64 `json:"mpCurrent"`
+	UpdatedAt string        `json:"updatedAt"`
+	ID        int64         `json:"id"`
+}
+
+type UpdateVitalsRow struct {
+	Hpcurrent int64 `json:"hpcurrent"`
+	Mpcurrent int64 `json:"mpcurrent"`
+}
+
+// character mutations (B.3)
+func (q *Queries) UpdateVitals(ctx context.Context, arg UpdateVitalsParams) (UpdateVitalsRow, error) {
+	row := q.db.QueryRowContext(ctx, updateVitals,
+		arg.HpCurrent,
+		arg.MpCurrent,
+		arg.UpdatedAt,
+		arg.ID,
+	)
+	var i UpdateVitalsRow
+	err := row.Scan(&i.Hpcurrent, &i.Mpcurrent)
+	return i, err
+}
