@@ -201,25 +201,69 @@ Fase B (grande). Ou B direto se a prioridade é a API — são independentes.
 - ✅ **B.5** — catalog endpoint: serve 15 resources + `options`. Retro-desbloqueou o
   cast (catálogo de magias) e o consume (specs de consumível) do B.3.
 
-- ⏳ **B.6 — Realtime (PRÓXIMO, o mais difícil)**. Gateway socket.io do Nest em
-  `backend/src/realtime/` (`realtime.gateway.ts`, `session-state.service.ts`,
-  `presence-registry.ts`, `ws-auth.ts`). Front consome em
-  `frontend/src/shared/realtime/realtime.ts` (`io(...)`, namespace default).
-  **Auth do socket**: mesmo cookie JWT do HTTP (`ws-auth.ts`), emite `unauthorized`
-  no handshake ruim. **Salas**: `sessionRoom(sessionId)`.
-  **Mensagens cliente→servidor (`@SubscribeMessage`, ~18):** `join-session`,
-  `leave-session`, `get-session-state`, `initiative-add`, `initiative-self`,
-  `initiative-update`, `initiative-remove`, `initiative-next-turn`,
-  `initiative-reset`, `initiative-populate`, `session-rest`, `apply-effect`,
-  `vitals-patch`, `vitals-delta`.
-  **Emits servidor→cliente:** `unauthorized`, `session-state` (broadcast do estado
-  do tracker), `session-rest` (`{scope:'scene'|'day'}`), `effect-applied`,
-  `presence` (`{sessionId, users}`), `persistence-warning` (`{sessionId, dirty}`).
-  Muitos handlers usam ACK-callback (o front passa callback em `join-session`).
-  **Risco**: achar/validar a lib Go socket.io-compatível que fale Engine.IO v4
-  (o `socket.io-client` do front). Começar mapeando payloads exatos de cada msg em
-  `realtime.gateway.ts` + o formato do `SessionRuntimeState` (front
-  `SessionRuntimeState`/`PresenceUser`) antes de escrever qualquer Go.
+- ⏳ **B.6 — Realtime (EM ANDAMENTO, o mais difícil)**. Gateway socket.io do Nest em
+  `backend/src/realtime/`. Front consome em `frontend/src/shared/realtime/realtime.ts`
+  (`io(REALTIME_ORIGIN, {withCredentials, transports:['websocket','polling'], autoConnect:false})`,
+  namespace default `/`). **Protocolo**: socket.io-client **^4.8.3** → **Engine.IO v4
+  (`EIO=4`)**. **Fase de mapeamento CONCLUÍDA** — detalhes abaixo.
+
+  **Auth (handshake, `ws-auth.ts`):** token via `handshake.auth.token` → `Authorization:
+  Bearer` → **cookie `t20_session`** (nome de `COOKIE_NAME`), nessa ordem. `jwt.verify`
+  (mesmo segredo do HTTP, `sub` = id) → `auth.findById(sub)` (nega usuário revogado).
+  Falha: `socket.emit('unauthorized', {message})` + `disconnect(true)`. O user resolvido
+  vai em `socket.data.user`; o **role** (`gm|player`) é resolvido POR-mensagem em
+  `assertSessionAccess` e guardado em `socket.data.role`.
+
+  **Estado (`SessionRuntimeState`)**: `{ initiative: InitiativeEntry[], round, turnIndex }`.
+  `InitiativeEntry = {id(uuid), label, initiative, type:'character'|'npc', characterId?,
+  hpCurrent?, hpMax?, mpCurrent?, mpMax?}`. Invariantes a portar EXATO (`session-state.service.ts`):
+  lista **sempre ordenada DESC** por `initiative`, desempate `label.localeCompare`;
+  `turnIndex` preserva quem está no turno após re-sort/insert/remove; `nextTurn` faz wrap
+  → `round++`; `removeEntry` ajusta `turnIndex`; clamp de vitais `[0, max]`; `INITIATIVE_MAX_ENTRIES=50`.
+  Persistência: `runtimeState` (coluna JSON **já existe** no schema, default correto) —
+  gravação **fire-and-forget** com flag `dirty` + retry na próxima mutação → emite
+  `persistence-warning` só quando a flag vira. Hidratação no 1º `load(sessionId)`.
+
+  **Mensagens cliente→servidor** (payload sempre inclui `{campaignId, sessionId}` exceto
+  onde nota): `join-session`(ack `{joined}`), `leave-session`(`{sessionId}` só; ack `{left}`),
+  `get-session-state`(ack=state; refaz hpMax/mpMax do DB), `initiative-add`(`{entry}`, GM),
+  `initiative-self`(`{characterId, initiative}`, upsert por characterId, **não** GM-gated),
+  `initiative-update`(`{entryId, patch}`, GM), `initiative-remove`(`{entryId}`, GM),
+  `initiative-next-turn`(GM), `initiative-reset`(GM), `initiative-populate`(GM),
+  `session-rest`(`{scope:'scene'|'day', condition?}`, GM), `apply-effect`(`{entryId, spellId,
+  scope?}`, GM), `vitals-patch`(`{entryId, patch:{hpCurrent?,mpCurrent?}}`),
+  `vitals-delta`(`{entryId, hpDelta?, mpDelta?}`). Mutações vitais: player só edita o
+  PRÓPRIO personagem (`assertVitalsEditable`); NPC = GM-only. Handlers com ack retornam o
+  novo `state` (ou `{applied…}`, `{rested…}`).
+  **Emits servidor→cliente:** `unauthorized{message}`, `session-state`(state, broadcast p/
+  sala), `session-rest{sessionId,scope,condition}`, `effect-applied{sessionId,characterId,
+  spellId}`, `presence{sessionId,users:PresenceUser[]}`, `persistence-warning{sessionId,dirty}`.
+  **Presence** (`presence-registry.ts`): mapa sessionId→(socketId→user); roster **dedupe por
+  userId** (multi-aba colapsa; GM vence). Broadcast em join/leave/disconnect.
+
+  **⚠️ GAP DE DOMÍNIO DESCOBERTO** — o gateway chama métodos de serviço do Nest que **nunca
+  viraram rota HTTP**, logo B.3/B.4 **não** os portaram. Precisam ser portados p/ Go como
+  helpers (reusando sqlc + engine já existentes):
+  1. `sessions.findOneForCaller` → resolver **role** (gm/player) member-aware. Go tem
+     `campaignAccess`(bool) + `ownedSession`(owner); falta a variante que devolve role.
+  2. `members.resolveCombatant(caller, campaign, charId)` → membership + owner-or-GM + stats
+     `{name,hpCurrent,hpMax,mpCurrent,mpMax}` (usado por `initiative-add/self`).
+  3. `members.listPlayerCombatants(campaign)` → PCs role=player com vitais (`initiative-populate`).
+  4. `members.listMemberCharacterIds(campaign)` → ids (`session-rest`).
+  5. `effects.endScene` / `endDay` / `restVitals(condition)` → mecânica de descanso T20
+     (expira efeitos por escopo; restaura PV/PM). **Nenhuma existe em Go** (só há
+     adjust/delete/`applyEffect`). `applyEffect` já existe (`apply_effect.go`).
+  6. `characters.assertOwner` — Go tem `authorizedCharacter`; derivar a variante owner-only.
+
+  **Lib Go (o risco central) — decisão:** front/back em **socket.io ^4.8.3 (EIO v4)**.
+  Candidatas: **`zishang520/socket.io`** (RECOMENDADA — port fiel do server JS: rooms, acks,
+  ambos transports, `socket.data`, releases ativos → port quase mecânico) × `doquangtan/socket.io/v4`
+  (leve, **só websocket** — arriscado p/ fallback de polling). **Regra de ouro**: a lib entra
+  SÓ em `api/`/`cmd/api`, **nunca** em `engine/` (senão quebra `GOOS=js` do WASM).
+  **PRÓXIMO PASSO = SPIKE** (validar antes de escrever o gateway): server Go mínimo com a lib
+  escolhida + cliente `socket.io-client` real (node_modules do front) provando handshake por
+  cookie + ack round-trip + broadcast de sala. Só depois: portar os 6 helpers de domínio,
+  o `session-state` (runtime + invariantes), presence, e os ~14 handlers.
 - ⏳ **B.7 — Cutover**. Virar o proxy `/api` + `/socket.io` do Vite p/ o server Go;
   `pnpm dev` roda front + `cmd/api` (que serve API + WASM). Nest fica p/ rollback.
 
