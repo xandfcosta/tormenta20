@@ -10,6 +10,106 @@ import (
 	"database/sql"
 )
 
+const createCharacter = `-- name: CreateCharacter :one
+INSERT INTO characters (
+  ownerId, name, origin, god, godPower, tibar, level, hpMax, hpCurrent, mpMax, mpCurrent,
+  strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement,
+  proficiencies, raceAttributeChoices, secondaryRaceChoices, originChoices, classPowers,
+  classChoices, powerChoices, createdAt, updatedAt
+) VALUES (
+  ?1, ?2, ?3, ?4, ?5,
+  ?6, ?7, ?8, ?9, ?10,
+  ?11, ?12, ?13, ?14,
+  ?15, ?16, ?17, ?18,
+  ?19, ?20, ?21,
+  ?22, ?23, ?24,
+  ?25, ?26, ?27, ?28
+)
+RETURNING id
+`
+
+type CreateCharacterParams struct {
+	OwnerId              int64          `json:"ownerId"`
+	Name                 string         `json:"name"`
+	Origin               string         `json:"origin"`
+	God                  sql.NullString `json:"god"`
+	GodPower             string         `json:"godPower"`
+	Tibar                float64        `json:"tibar"`
+	Level                int64          `json:"level"`
+	HpMax                int64          `json:"hpMax"`
+	HpCurrent            int64          `json:"hpCurrent"`
+	MpMax                int64          `json:"mpMax"`
+	MpCurrent            int64          `json:"mpCurrent"`
+	Strength             int64          `json:"strength"`
+	Dexterity            int64          `json:"dexterity"`
+	Constitution         int64          `json:"constitution"`
+	Intelligence         int64          `json:"intelligence"`
+	Wisdom               int64          `json:"wisdom"`
+	Charisma             int64          `json:"charisma"`
+	Size                 string         `json:"size"`
+	Displacement         int64          `json:"displacement"`
+	Proficiencies        string         `json:"proficiencies"`
+	RaceAttributeChoices string         `json:"raceAttributeChoices"`
+	SecondaryRaceChoices string         `json:"secondaryRaceChoices"`
+	OriginChoices        string         `json:"originChoices"`
+	ClassPowers          string         `json:"classPowers"`
+	ClassChoices         string         `json:"classChoices"`
+	PowerChoices         string         `json:"powerChoices"`
+	CreatedAt            string         `json:"createdAt"`
+	UpdatedAt            string         `json:"updatedAt"`
+}
+
+func (q *Queries) CreateCharacter(ctx context.Context, arg CreateCharacterParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, createCharacter,
+		arg.OwnerId,
+		arg.Name,
+		arg.Origin,
+		arg.God,
+		arg.GodPower,
+		arg.Tibar,
+		arg.Level,
+		arg.HpMax,
+		arg.HpCurrent,
+		arg.MpMax,
+		arg.MpCurrent,
+		arg.Strength,
+		arg.Dexterity,
+		arg.Constitution,
+		arg.Intelligence,
+		arg.Wisdom,
+		arg.Charisma,
+		arg.Size,
+		arg.Displacement,
+		arg.Proficiencies,
+		arg.RaceAttributeChoices,
+		arg.SecondaryRaceChoices,
+		arg.OriginChoices,
+		arg.ClassPowers,
+		arg.ClassChoices,
+		arg.PowerChoices,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
+const createClass = `-- name: CreateClass :exec
+INSERT INTO character_classes (characterId, className, level) VALUES (?, ?, ?)
+`
+
+type CreateClassParams struct {
+	Characterid int64  `json:"characterid"`
+	Classname   string `json:"classname"`
+	Level       int64  `json:"level"`
+}
+
+func (q *Queries) CreateClass(ctx context.Context, arg CreateClassParams) error {
+	_, err := q.db.ExecContext(ctx, createClass, arg.Characterid, arg.Classname, arg.Level)
+	return err
+}
+
 const createExpertise = `-- name: CreateExpertise :one
 INSERT INTO character_expertises (characterId, name, attribute, trained, custom)
 VALUES (?, ?, ?, ?, ?)
@@ -102,6 +202,20 @@ func (q *Queries) CreateItem(ctx context.Context, arg CreateItemParams) (CreateI
 		&i.Material,
 	)
 	return i, err
+}
+
+const createRace = `-- name: CreateRace :exec
+INSERT INTO character_races (characterId, race) VALUES (?, ?)
+`
+
+type CreateRaceParams struct {
+	Characterid int64  `json:"characterid"`
+	Race        string `json:"race"`
+}
+
+func (q *Queries) CreateRace(ctx context.Context, arg CreateRaceParams) error {
+	_, err := q.db.ExecContext(ctx, createRace, arg.Characterid, arg.Race)
+	return err
 }
 
 const createSpell = `-- name: CreateSpell :one

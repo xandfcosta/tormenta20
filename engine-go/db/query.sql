@@ -142,6 +142,29 @@ WHERE id = sqlc.arg('id');
 UPDATE characters SET proficiencies = sqlc.arg('proficiencies'), updatedAt = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id');
 
+-- name: CreateCharacter :one
+INSERT INTO characters (
+  ownerId, name, origin, god, godPower, tibar, level, hpMax, hpCurrent, mpMax, mpCurrent,
+  strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement,
+  proficiencies, raceAttributeChoices, secondaryRaceChoices, originChoices, classPowers,
+  classChoices, powerChoices, createdAt, updatedAt
+) VALUES (
+  sqlc.arg('ownerId'), sqlc.arg('name'), sqlc.arg('origin'), sqlc.arg('god'), sqlc.arg('godPower'),
+  sqlc.arg('tibar'), sqlc.arg('level'), sqlc.arg('hpMax'), sqlc.arg('hpCurrent'), sqlc.arg('mpMax'),
+  sqlc.arg('mpCurrent'), sqlc.arg('strength'), sqlc.arg('dexterity'), sqlc.arg('constitution'),
+  sqlc.arg('intelligence'), sqlc.arg('wisdom'), sqlc.arg('charisma'), sqlc.arg('size'),
+  sqlc.arg('displacement'), sqlc.arg('proficiencies'), sqlc.arg('raceAttributeChoices'),
+  sqlc.arg('secondaryRaceChoices'), sqlc.arg('originChoices'), sqlc.arg('classPowers'),
+  sqlc.arg('classChoices'), sqlc.arg('powerChoices'), sqlc.arg('createdAt'), sqlc.arg('updatedAt')
+)
+RETURNING id;
+
+-- name: CreateRace :exec
+INSERT INTO character_races (characterId, race) VALUES (?, ?);
+
+-- name: CreateClass :exec
+INSERT INTO character_classes (characterId, className, level) VALUES (?, ?, ?);
+
 -- name: GetActiveEffectMeta :one
 SELECT id, characterId FROM active_effects WHERE id = ? LIMIT 1;
 

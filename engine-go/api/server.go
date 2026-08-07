@@ -52,6 +52,7 @@ func (s *Server) Router() http.Handler {
 	r.Route("/characters", func(r chi.Router) {
 		r.Use(s.requireAuth)
 		r.Get("/", s.handleListCharacters)
+		r.Post("/", s.handleCreateCharacter)
 		r.Get("/{id}", s.handleGetCharacter)
 		r.Get("/{id}/campaigns", s.handleListCharacterCampaigns)
 		r.Delete("/{id}/active-effects/{effectId}", s.handleDeleteEffect)
