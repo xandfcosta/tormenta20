@@ -20,7 +20,7 @@ func newTestServer(t *testing.T) *Server {
 		t.Fatalf("open test db: %v", err)
 	}
 	t.Cleanup(func() { _ = database.Close() })
-	return NewServer(Config{}, database, nil)
+	return NewServer(Config{JWTSecret: "test-secret", CookieName: "t20_session"}, database, nil)
 }
 
 func seedUser(t *testing.T, s *Server, email string) int64 {

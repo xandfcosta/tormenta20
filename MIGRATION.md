@@ -250,7 +250,13 @@ Fase B (grande). Ou B direto se a prioridade é a API — são independentes.
   — IN estático, sem slice) regeneradas com `go run …/sqlc@latest generate` (v1.31.1; +23 linhas,
   0 removidas). Testes DB cobrindo seletividade de escopo + clamp + fallback + authz 403.
   **Nota**: os helpers recebem `ctx` direto — o *smell 0.3* não apareceu aqui (`restVitals` usa o
-  row do `authorizedCharacter`, não `r`). ⏳ **1.3 ws-auth** (verify JWT, reusar do HTTP).
+  row do `authorizedCharacter`, não `r`).
+  ✅ **1.3 ws-auth** (`ws_auth.go`): `authenticateHandshake(ctx, authToken, authHeader, cookieHeader)
+  (AuthUser, error)` — recebe os 3 inputs CRUS do handshake (não o socket), ordem ws-auth.ts
+  (auth.token → Bearer → cookie `t20_session`), reusa `verifyToken`+`GetUserByID` do HTTP; nega
+  token ausente/inválido/segredo-errado/usuário-deletado. `cookieToken` parseia via request
+  sintético (mesma gramática do `r.Cookie` do HTTP). Testável sem socket — 8 casos verdes.
+  **FASE 1 COMPLETA.** Todos os pré-requisitos de domínio do gateway existem e testados.
 
   **Auth (handshake, `ws-auth.ts`):** token via `handshake.auth.token` → `Authorization:
   Bearer` → **cookie `t20_session`** (nome de `COOKIE_NAME`), nessa ordem. `jwt.verify`
