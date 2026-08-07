@@ -325,6 +325,7 @@ func (g *realtimeGateway) onPopulate(sock *socket.Socket, args []any) {
 		}
 	}
 	var state *SessionRuntimeState
+	failed := false
 	for _, c := range combatants {
 		if existing[c.characterID] {
 			continue
@@ -336,14 +337,22 @@ func (g *realtimeGateway) onPopulate(sock *socket.Socket, args []any) {
 		})
 		if err != nil {
 			g.wsError(sock, err.Error())
+			failed = true
 			break
 		}
 		state = st
 	}
+	// Broadcast whatever landed (a partial populate still updates the room), but after an
+	// error don't ALSO ack success — the client already got an `exception`. Code-review finding.
+	if state != nil {
+		g.emitSessionState(ctx.sessionID, state)
+	}
+	if failed {
+		return
+	}
 	if state == nil {
 		state = g.s.sessions.getState(ctx.sessionID)
 	}
-	g.emitSessionState(ctx.sessionID, state)
 	ackOK(ctx.ack, state)
 }
 

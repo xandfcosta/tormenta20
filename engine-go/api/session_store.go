@@ -2,24 +2,18 @@ package api
 
 import (
 	"context"
-	"crypto/rand"
 	"encoding/json"
-	"fmt"
 	"log"
 	"sync"
+
+	"github.com/google/uuid"
 
 	"t20engine/db/sqlcgen"
 )
 
 // newUUID generates a random v4 UUID string for initiative entry ids (randomUUID() in the
 // Nest service). Injected into the store so tests can swap a deterministic generator.
-func newUUID() string {
-	var b [16]byte
-	_, _ = rand.Read(b[:])
-	b[6] = (b[6] & 0x0f) | 0x40 // version 4
-	b[8] = (b[8] & 0x3f) | 0x80 // variant 10
-	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
-}
+func newUUID() string { return uuid.NewString() }
 
 // sessionStore holds each session's in-memory runtime state, guarding the pure mutations
 // (session_state.go) with a mutex and persisting fire-and-forget to Session.runtimeState.
@@ -32,6 +26,9 @@ type sessionStore struct {
 	dirty  map[int64]bool
 	newID  func() string
 	q      *sqlcgen.Queries
+	// persistMu serializes DB writes so concurrent mutations on the same session can't
+	// persist out of order (each writer snapshots the CURRENT state at its turn).
+	persistMu sync.Mutex
 }
 
 func newSessionStore(q *sqlcgen.Queries, newID func() string) *sessionStore {
@@ -149,6 +146,12 @@ func parseRuntimeBlob(blob string) *SessionRuntimeState {
 // returns an error — instead it returns the new dirty status (true = the write failed and
 // the next mutation should retry). Mirrors SessionStateService.persist.
 func (st *sessionStore) persist(ctx context.Context, sessionID int64) bool {
+	// Serialize the snapshot+write so overlapping persists for the same session run in
+	// order; whichever runs last snapshots the newest state, so the DB converges to the
+	// latest instead of a stale in-flight capture. Code-review finding (B.6 fase 2).
+	st.persistMu.Lock()
+	defer st.persistMu.Unlock()
+
 	st.mu.Lock()
 	s := st.states[sessionID]
 	if s == nil {
