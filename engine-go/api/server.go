@@ -3,6 +3,9 @@ package api
 import (
 	"database/sql"
 	"net/http"
+	"strconv"
+	"strings"
+	"sync"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -20,6 +23,49 @@ type Server struct {
 	catalogs *engine.Catalogs  // nil if the catalog snapshot failed to load
 	sessions *sessionStore     // in-memory realtime tracker state (B.6)
 	presence *presenceRegistry // who's-online per session room (B.6)
+	// charMu serializes mutating HTTP requests per character (characterID → *sync.Mutex)
+	// so concurrent read-modify-write mutations (rapid damage/vitals clicks) can't lose
+	// updates. Mirrors the per-session lock used by the realtime store.
+	charMu sync.Map
+}
+
+// lockCharacter acquires the per-character write lock, returning the unlock func.
+func (s *Server) lockCharacter(id int64) func() {
+	m, _ := s.charMu.LoadOrStore(id, &sync.Mutex{})
+	mu := m.(*sync.Mutex)
+	mu.Lock()
+	return mu.Unlock
+}
+
+// serializeCharacterWrites serializes mutating requests (POST/PATCH/DELETE) per character,
+// so concurrent read-modify-write handlers (damage, vitals, items, effects…) don't race on
+// load→compute→save and drop updates. Reads pass straight through.
+func (s *Server) serializeCharacterWrites(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet || r.Method == http.MethodHead {
+			next.ServeHTTP(w, r)
+			return
+		}
+		if id, ok := characterIDFromPath(r.URL.Path); ok {
+			unlock := s.lockCharacter(id)
+			defer unlock()
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// characterIDFromPath extracts the {id} from /characters/{id}/... — used to key the write
+// lock. Returns false for paths without a numeric id (e.g. POST /characters create).
+func characterIDFromPath(path string) (int64, bool) {
+	parts := strings.Split(strings.Trim(path, "/"), "/")
+	for i, seg := range parts {
+		if seg == "characters" && i+1 < len(parts) {
+			if id, err := strconv.ParseInt(parts[i+1], 10, 64); err == nil {
+				return id, true
+			}
+		}
+	}
+	return 0, false
 }
 
 // NewServer wires the API server. The DB is already opened + migrated (db.Open);
@@ -97,6 +143,7 @@ func (s *Server) Router() http.Handler {
 		r.Get("/options", s.handleCharacterOptions)
 		r.Group(func(r chi.Router) {
 			r.Use(s.requireAuth)
+			r.Use(s.serializeCharacterWrites)
 			r.Get("/", s.handleListCharacters)
 			r.Post("/", s.handleCreateCharacter)
 			r.Get("/{id}", s.handleGetCharacter)
