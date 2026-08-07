@@ -4,9 +4,8 @@ import {
   POINT_BUY_BUDGET,
   POINT_BUY_MAX,
   POINT_BUY_MIN,
-  pointBuySpent,
-  pointBuyWarnings,
 } from '@tormenta20/t20-data'
+import { pointBuyStatusFor } from '@/features/character-build/point-buy'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { FieldGroup } from '@/shared/ui/field'
 import { cn } from '@/shared/lib/utils'
@@ -137,13 +136,7 @@ function PointBuyStatus({ values }: { values: Record<AttributeKey, number> }) {
   const attrs = Object.fromEntries(
     ATTRIBUTE_KEYS.map((k) => [k, values[k] ?? 0]),
   ) as Record<AttributeKey, number>
-  let spent: number | null = null
-  try {
-    spent = pointBuySpent(attrs)
-  } catch {
-    spent = null // base fora do intervalo (valores do modo livre) — warnings cobrem
-  }
-  const warnings = pointBuyWarnings(attrs)
+  const { spent, warnings } = pointBuyStatusFor(attrs)
   const over = spent !== null && spent > POINT_BUY_BUDGET
   return (
     <div className="space-y-1">

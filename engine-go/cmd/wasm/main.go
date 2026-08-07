@@ -136,6 +136,17 @@ func computeEquippedFlags(_ js.Value, args []js.Value) any {
 	return string(out)
 }
 
+// pointBuyStatus runs the creation point-buy rules (p17) over a base attribute
+// spread — pure, needs no primed catalogs. Returns {spent, warnings}.
+func pointBuyStatus(_ js.Value, args []js.Value) any {
+	var attrs map[string]int
+	if err := json.Unmarshal([]byte(args[0].String()), &attrs); err != nil {
+		return errorJSON(err)
+	}
+	out, _ := json.Marshal(engine.PointBuyStatusFor(attrs))
+	return string(out)
+}
+
 // errorJSON returns a JSON string carrying the error, matching the sheet
 // functions' shape so the TS wrapper reads `.error` uniformly.
 func errorJSON(err error) string {
@@ -151,5 +162,6 @@ func main() {
 	js.Global().Set("computeVitals", js.FuncOf(computeVitals))
 	js.Global().Set("resolveConditionalDisplay", js.FuncOf(resolveConditionalDisplay))
 	js.Global().Set("computeEquippedFlags", js.FuncOf(computeEquippedFlags))
+	js.Global().Set("pointBuyStatus", js.FuncOf(pointBuyStatus))
 	select {} // keep the runtime alive
 }

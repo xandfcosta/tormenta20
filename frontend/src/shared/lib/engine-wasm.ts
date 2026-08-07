@@ -56,7 +56,12 @@ type GlobalWithGo = typeof globalThis & {
   computeVitals?: (contextJson: string) => string
   resolveConditionalDisplay?: (rowsJson: string) => string
   computeEquippedFlags?: (itemsJson: string) => string
+  pointBuyStatus?: (attrsJson: string) => string
 }
+
+/** Creation point-buy result (p17): total spent (null when a value is out of
+ *  range) + advisory warnings — mirrors the Go `PointBuyStatus`. */
+export type PointBuyStatus = { spent: number | null; warnings: string[] }
 
 /** One always-on flag carried by an equipped item, with item provenance —
  *  mirrors the Go `EquippedFlag` (the pt-BR label is added on the entities side). */
@@ -247,5 +252,18 @@ export function computeEquippedFlags(
     | EquippedItemFlag[]
     | { error: string }
   if (!Array.isArray(out)) throw new Error(`engine-wasm: ${out.error}`)
+  return out
+}
+
+/**
+ * Creation point-buy status (p17) over a base attribute spread (Go
+ * `PointBuyStatusFor`) — pure, needs no primed catalogs, only the loaded engine.
+ * Mirrors t20-data `pointBuySpent` + `pointBuyWarnings`.
+ */
+export function pointBuyStatus(attrs: Record<string, number>): PointBuyStatus {
+  const fn = (globalThis as GlobalWithGo).pointBuyStatus
+  if (!fn) throw new Error('engine-wasm: engine not ready — call ensureEngine() first')
+  const out = JSON.parse(fn(JSON.stringify(attrs))) as PointBuyStatus & { error?: string }
+  if (out.error) throw new Error(`engine-wasm: ${out.error}`)
   return out
 }
