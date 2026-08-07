@@ -56,13 +56,14 @@ export function CharacterHud({
         {/* Nameplate: square portrait + [name/info over PV/PM bars]. Fills the
             width below lg; a fixed slice on desktop so the stats get the rest. */}
         <div className="flex min-w-0 items-stretch gap-3 lg:w-[34rem] lg:flex-none">
-          {/* Fixed square, top-aligned. A stretched `aspect-square` collapsed to
-              the initials' width in this flex row (aspect-ratio can't derive width
-              from a flex-stretched height), rendering a thin clipped strip. */}
+          {/* Fixed-width card that fills the nameplate height (h-auto lets the flex
+              row stretch it). `aspect-square + self-stretch` was buggy: aspect-ratio
+              can't derive width from a flex-stretched height, so it collapsed to the
+              initials' width — a thin clipped strip. */}
           <CharacterPortrait
             name={character.name}
             size="sm"
-            className="size-20 self-start rounded-xl text-2xl"
+            className="h-auto w-24 self-stretch rounded-xl text-4xl"
           />
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             <div className="flex items-start justify-between gap-2">
