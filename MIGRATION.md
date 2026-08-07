@@ -255,15 +255,30 @@ Fase B (grande). Ou B direto se a prioridade é a API — são independentes.
      adjust/delete/`applyEffect`). `applyEffect` já existe (`apply_effect.go`).
   6. `characters.assertOwner` — Go tem `authorizedCharacter`; derivar a variante owner-only.
 
-  **Lib Go (o risco central) — decisão:** front/back em **socket.io ^4.8.3 (EIO v4)**.
-  Candidatas: **`zishang520/socket.io`** (RECOMENDADA — port fiel do server JS: rooms, acks,
-  ambos transports, `socket.data`, releases ativos → port quase mecânico) × `doquangtan/socket.io/v4`
-  (leve, **só websocket** — arriscado p/ fallback de polling). **Regra de ouro**: a lib entra
-  SÓ em `api/`/`cmd/api`, **nunca** em `engine/` (senão quebra `GOOS=js` do WASM).
-  **PRÓXIMO PASSO = SPIKE** (validar antes de escrever o gateway): server Go mínimo com a lib
-  escolhida + cliente `socket.io-client` real (node_modules do front) provando handshake por
-  cookie + ack round-trip + broadcast de sala. Só depois: portar os 6 helpers de domínio,
-  o `session-state` (runtime + invariantes), presence, e os ~14 handlers.
+  **Lib Go (o risco central) — ✅ RESOLVIDA + VALIDADA POR SPIKE.** Escolhida:
+  **`github.com/zishang520/socket.io/servers/socket/v3` v3.0.4** (port fiel do server JS).
+  **Spike** (server Go mínimo + `socket.io-client` **4.8.3** real do front, node_modules)
+  provou os 3 cenários: handshake por `auth.token`; handshake por **cookie `t20_session`**;
+  no-auth rejeitado (`unauthorized` + disconnect). Ack round-trip (`{joined:"session:42"}`)
+  e broadcast de sala (`session-state`) chegaram no cliente. **API mapeada** (usar direto no
+  gateway):
+  - `io := socket.NewServer(nil, nil)`; montar `http.Handle("/socket.io/", io.ServeHandler(nil))`.
+  - `io.On("connection", func(clients ...any){ s := clients[0].(*socket.Socket); … })`.
+  - **Ack** = `type Ack = func([]any, error)`; é o ÚLTIMO arg do handler quando o cliente
+    passa callback: `cb := args[len(args)-1].(socket.Ack); cb([]any{payload}, nil)`.
+  - **Handshake**: `s.Handshake().Auth["token"].(string)` + `.Headers` (`map[string]any`,
+    valor string|[]string; ler `"Cookie"`). Extração espelha `ws-auth.ts` (auth→Bearer→cookie).
+  - Per-socket: `s.SetData(x)` / `s.Data()` (guardar `{user,role}`). Salas: `s.Join(socket.Room(...))`,
+    `s.Leave`, broadcast `io.To(room).Emit(ev, payload)`, direto `s.Emit`, `s.Disconnect(true)`.
+  - Deps puxadas: `zishang520/socket.io/v3`, `parsers/socket/v3`, `servers/engine/v3`,
+    `golang.org/x/{crypto,net,sys,text}`. **Regra de ouro**: SÓ em `api/`/`cmd/api`, **nunca**
+    em `engine/` (senão quebra `GOOS=js` do WASM). Spike descartável em
+    `$SCRATCH/sio-spike` (não commitado).
+  **PRÓXIMOS PASSOS de implementação** (lib desbloqueada): (1) portar os 6 helpers de domínio;
+  (2) `session-state` runtime (mapa em memória + invariantes de sort/turn/clamp + persist
+  fire-and-forget na coluna `runtimeState`); (3) presence-registry (dedupe por userId);
+  (4) ws-auth (reusar o verify JWT do HTTP); (5) os ~14 handlers + emits; (6) montar no
+  `cmd/api`. Testar com o mesmo padrão do spike (client socket.io-client real).
 - ⏳ **B.7 — Cutover**. Virar o proxy `/api` + `/socket.io` do Vite p/ o server Go;
   `pnpm dev` roda front + `cmd/api` (que serve API + WASM). Nest fica p/ rollback.
 
