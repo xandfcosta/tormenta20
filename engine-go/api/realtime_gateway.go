@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -55,6 +56,13 @@ func (g *realtimeGateway) onConnect(sock *socket.Socket) {
 	sock.On("join-session", func(args ...any) { g.onJoin(sock, args) })
 	sock.On("leave-session", func(args ...any) { g.onLeave(sock, args) })
 	sock.On("get-session-state", func(args ...any) { g.onGetState(sock, args) })
+	sock.On("initiative-add", func(args ...any) { g.onInitiativeAdd(sock, args) })
+	sock.On("initiative-self", func(args ...any) { g.onInitiativeSelf(sock, args) })
+	sock.On("initiative-update", func(args ...any) { g.onInitiativeUpdate(sock, args) })
+	sock.On("initiative-remove", func(args ...any) { g.onInitiativeRemove(sock, args) })
+	sock.On("initiative-next-turn", func(args ...any) { g.onNextTurn(sock, args) })
+	sock.On("initiative-reset", func(args ...any) { g.onResetInitiative(sock, args) })
+	sock.On("initiative-populate", func(args ...any) { g.onPopulate(sock, args) })
 	sock.On("disconnect", func(...any) { g.onDisconnect(sock) })
 }
 
@@ -71,27 +79,59 @@ func (g *realtimeGateway) authenticate(sock *socket.Socket) (AuthUser, error) {
 	return g.s.authenticateHandshake(context.Background(), authToken, authHeader, cookieHeader)
 }
 
-// onJoin resolves session access (stashing the role), joins the room, and tracks presence.
-// Ack: {joined: room}. Mirrors RealtimeGateway.joinSession.
-func (g *realtimeGateway) onJoin(sock *socket.Socket, args []any) {
+// msgCtx is the resolved context of a session-scoped message: the caller, the ids, the
+// per-message-resolved role, the raw body, and the client's ack callback.
+type msgCtx struct {
+	userID     int64
+	campaignID int64
+	sessionID  int64
+	role       string
+	body       map[string]any
+	ack        socket.Ack
+}
+
+// access re-resolves the caller's role for a session-scoped message (per-message check so a
+// spoofed sessionId on a stale socket can't hijack another table), stashing it on the
+// socket. Returns ok=false after emitting the error. Mirrors assertSessionAccess.
+func (g *realtimeGateway) access(sock *socket.Socket, args []any) (msgCtx, bool) {
 	body, ack := bodyOf(args), ackOf(args)
 	campaignID, ok1 := intField(body, "campaignId")
 	sessionID, ok2 := intField(body, "sessionId")
 	if !ok1 || !ok2 {
 		g.wsError(sock, "campaignId and sessionId are required integers")
-		return
+		return msgCtx{}, false
 	}
 	data := sockData(sock)
 	_, role, _, err := g.s.sessionForCaller(context.Background(), data.user.ID, campaignID, sessionID)
 	if err != nil {
 		g.wsError(sock, err.Error())
-		return
+		return msgCtx{}, false
 	}
 	data.role = role
-	room := sessionRoomName(sessionID)
+	return msgCtx{userID: data.user.ID, campaignID: campaignID, sessionID: sessionID, role: role, body: body, ack: ack}, true
+}
+
+// requireGm gates initiative control (add/update/remove/next/reset/populate) to the GM.
+// Mirrors assertGm.
+func (g *realtimeGateway) requireGm(sock *socket.Socket, role string) bool {
+	if role != "gm" {
+		g.wsError(sock, "Only the campaign GM can control initiative")
+		return false
+	}
+	return true
+}
+
+// onJoin resolves session access (stashing the role), joins the room, and tracks presence.
+// Ack: {joined: room}. Mirrors RealtimeGateway.joinSession.
+func (g *realtimeGateway) onJoin(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok {
+		return
+	}
+	room := sessionRoomName(ctx.sessionID)
 	sock.Join(socket.Room(room))
-	g.trackPresence(sock, sessionID)
-	ackOK(ack, map[string]any{"joined": room})
+	g.trackPresence(sock, ctx.sessionID)
+	ackOK(ctx.ack, map[string]any{"joined": room})
 }
 
 // onLeave leaves the room + drops presence. Ack: {left: room}. Mirrors leaveSession.
@@ -113,25 +153,15 @@ func (g *realtimeGateway) onLeave(sock *socket.Socket, args []any) {
 // onGetState hydrates the tracker (first pull restores the persisted state), refreshes
 // character maxes from the DB, and acks the full state. Mirrors getSessionState.
 func (g *realtimeGateway) onGetState(sock *socket.Socket, args []any) {
-	body, ack := bodyOf(args), ackOf(args)
-	campaignID, ok1 := intField(body, "campaignId")
-	sessionID, ok2 := intField(body, "sessionId")
-	if !ok1 || !ok2 {
-		g.wsError(sock, "campaignId and sessionId are required integers")
+	ctx, ok := g.access(sock, args)
+	if !ok {
 		return
 	}
-	data := sockData(sock)
-	_, role, _, err := g.s.sessionForCaller(context.Background(), data.user.ID, campaignID, sessionID)
-	if err != nil {
-		g.wsError(sock, err.Error())
-		return
-	}
-	data.role = role
-	if _, err := g.s.sessions.load(context.Background(), sessionID); err != nil {
+	if _, err := g.s.sessions.load(context.Background(), ctx.sessionID); err != nil {
 		g.wsError(sock, "Could not load session state")
 		return
 	}
-	ackOK(ack, g.s.sessions.refreshCharacterMaxes(context.Background(), sessionID))
+	ackOK(ctx.ack, g.s.sessions.refreshCharacterMaxes(context.Background(), ctx.sessionID))
 }
 
 // onDisconnect drops the socket from every room and broadcasts each changed roster.
@@ -168,6 +198,266 @@ func (g *realtimeGateway) wsError(sock *socket.Socket, message string) {
 	_ = sock.Emit("exception", map[string]any{"status": "error", "message": message})
 }
 
+// onInitiativeAdd (GM) materializes an entry (NPC or character) and appends it.
+func (g *realtimeGateway) onInitiativeAdd(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok || !g.requireGm(sock, ctx.role) {
+		return
+	}
+	entryBody, _ := ctx.body["entry"].(map[string]any)
+	if entryBody == nil {
+		g.wsError(sock, "entry is required")
+		return
+	}
+	entry, err := g.materializeEntry(ctx.userID, ctx.campaignID, entryBody)
+	if err != nil {
+		g.wsError(sock, err.Error())
+		return
+	}
+	g.mutateAndBroadcast(sock, ctx, func() (*SessionRuntimeState, error) {
+		return g.s.sessions.addInitiativeEntry(ctx.sessionID, entry)
+	})
+}
+
+// onInitiativeSelf lets a player roll their OWN initiative (NOT GM-gated — resolveCombatant
+// enforces they own the character). Upserts by characterId so a re-roll updates in place.
+func (g *realtimeGateway) onInitiativeSelf(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok {
+		return
+	}
+	if _, has := intField(ctx.body, "characterId"); !has {
+		g.wsError(sock, "characterId is required")
+		return
+	}
+	entry, err := g.materializeEntry(ctx.userID, ctx.campaignID, ctx.body)
+	if err != nil {
+		g.wsError(sock, err.Error())
+		return
+	}
+	g.mutateAndBroadcast(sock, ctx, func() (*SessionRuntimeState, error) {
+		return g.s.sessions.upsertInitiativeEntry(ctx.sessionID, entry)
+	})
+}
+
+// onInitiativeUpdate (GM) patches an entry's fields.
+func (g *realtimeGateway) onInitiativeUpdate(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok || !g.requireGm(sock, ctx.role) {
+		return
+	}
+	entryID := stringField(ctx.body, "entryId")
+	if entryID == "" {
+		g.wsError(sock, "entryId is required")
+		return
+	}
+	patch := parseEntryPatch(ctx.body["patch"])
+	g.mutateAndBroadcast(sock, ctx, func() (*SessionRuntimeState, error) {
+		return g.s.sessions.updateInitiativeEntry(ctx.sessionID, entryID, patch)
+	})
+}
+
+// onInitiativeRemove (GM) drops an entry.
+func (g *realtimeGateway) onInitiativeRemove(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok || !g.requireGm(sock, ctx.role) {
+		return
+	}
+	entryID := stringField(ctx.body, "entryId")
+	if entryID == "" {
+		g.wsError(sock, "entryId is required")
+		return
+	}
+	g.mutateAndBroadcast(sock, ctx, func() (*SessionRuntimeState, error) {
+		return g.s.sessions.removeInitiativeEntry(ctx.sessionID, entryID)
+	})
+}
+
+// onNextTurn (GM) advances to the next combatant.
+func (g *realtimeGateway) onNextTurn(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok || !g.requireGm(sock, ctx.role) {
+		return
+	}
+	g.mutateAndBroadcast(sock, ctx, func() (*SessionRuntimeState, error) {
+		return g.s.sessions.nextTurn(ctx.sessionID)
+	})
+}
+
+// onResetInitiative (GM) clears the tracker.
+func (g *realtimeGateway) onResetInitiative(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok || !g.requireGm(sock, ctx.role) {
+		return
+	}
+	g.mutateAndBroadcast(sock, ctx, func() (*SessionRuntimeState, error) {
+		return g.s.sessions.reset(ctx.sessionID)
+	})
+}
+
+// onPopulate (GM) pulls the campaign's player characters into the tracker (initiative 0,
+// live vitals), skipping any already present. Idempotent. Mirrors initiativePopulate.
+func (g *realtimeGateway) onPopulate(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok || !g.requireGm(sock, ctx.role) {
+		return
+	}
+	combatants, err := g.s.listPlayerCombatants(context.Background(), ctx.campaignID)
+	if err != nil {
+		g.wsError(sock, "Could not load party")
+		return
+	}
+	existing := map[int64]bool{}
+	for _, e := range g.s.sessions.getState(ctx.sessionID).Initiative {
+		if e.CharacterID != nil {
+			existing[*e.CharacterID] = true
+		}
+	}
+	var state *SessionRuntimeState
+	for _, c := range combatants {
+		if existing[c.characterID] {
+			continue
+		}
+		cid, hpc, hpm, mpc, mpm := c.characterID, c.hpCurrent, c.hpMax, c.mpCurrent, c.mpMax
+		st, err := g.s.sessions.addInitiativeEntry(ctx.sessionID, InitiativeEntry{
+			Label: c.name, Initiative: 0, Type: "character", CharacterID: &cid,
+			HpCurrent: &hpc, HpMax: &hpm, MpCurrent: &mpc, MpMax: &mpm,
+		})
+		if err != nil {
+			g.wsError(sock, err.Error())
+			break
+		}
+		state = st
+	}
+	if state == nil {
+		state = g.s.sessions.getState(ctx.sessionID)
+	}
+	g.emitSessionState(ctx.sessionID, state)
+	ackOK(ctx.ack, state)
+}
+
+// mutateAndBroadcast runs a store mutation, broadcasts the new state (+ persists), and acks.
+// The shared tail of every initiative handler.
+func (g *realtimeGateway) mutateAndBroadcast(sock *socket.Socket, ctx msgCtx, mutate func() (*SessionRuntimeState, error)) {
+	state, err := mutate()
+	if err != nil {
+		g.wsError(sock, err.Error())
+		return
+	}
+	g.emitSessionState(ctx.sessionID, state)
+	ackOK(ctx.ack, state)
+}
+
+// emitSessionState broadcasts the tracker to the room and kicks off a fire-and-forget
+// persist. Mirrors RealtimeGateway.emitSessionState.
+func (g *realtimeGateway) emitSessionState(sessionID int64, state *SessionRuntimeState) {
+	g.io.To(socket.Room(sessionRoomName(sessionID))).Emit("session-state", state)
+	go g.persistAndWarn(sessionID)
+}
+
+// persistAndWarn persists the state and broadcasts `persistence-warning` only when the
+// dirty flag flips (first failure, or a retry that recovered). Mirrors the persist().then
+// block. Absent previous status defaults to false (matches the Nest `?? false`).
+func (g *realtimeGateway) persistAndWarn(sessionID int64) {
+	dirty := g.s.sessions.persist(context.Background(), sessionID)
+	g.mu.Lock()
+	if g.lastDirty[sessionID] == dirty {
+		g.mu.Unlock()
+		return
+	}
+	g.lastDirty[sessionID] = dirty
+	g.mu.Unlock()
+	g.io.To(socket.Room(sessionRoomName(sessionID))).Emit("persistence-warning", map[string]any{
+		"sessionId": sessionID, "dirty": dirty,
+	})
+}
+
+// materializeEntry resolves an initiative payload into a concrete entry. NPCs (no
+// characterId) require label + initiative; character entries pull name/vitals via
+// resolveCombatant (membership + owner-or-GM enforced there), with optional client
+// overrides. Mirrors RealtimeGateway.materializeEntry.
+func (g *realtimeGateway) materializeEntry(callerID, campaignID int64, input map[string]any) (InitiativeEntry, error) {
+	charID, hasChar := intField(input, "characterId")
+	initiative, hasInit := intField(input, "initiative")
+	if !hasChar {
+		label := strings.TrimSpace(stringField(input, "label"))
+		if label == "" {
+			return InitiativeEntry{}, errors.New("entry.label is required for NPC entries")
+		}
+		if !hasInit {
+			return InitiativeEntry{}, errors.New("entry.initiative is required")
+		}
+		typ := "npc"
+		if t := stringField(input, "type"); t != "" {
+			typ = t
+		}
+		return InitiativeEntry{Label: label, Initiative: int(initiative), Type: typ}, nil
+	}
+	if !hasInit {
+		return InitiativeEntry{}, errors.New("entry.initiative is required")
+	}
+	stats, _, err := g.s.resolveCombatant(context.Background(), callerID, campaignID, charID)
+	if err != nil {
+		return InitiativeEntry{}, err
+	}
+	label := stats.name
+	if l := strings.TrimSpace(stringField(input, "label")); l != "" {
+		label = l
+	}
+	cid := charID
+	return InitiativeEntry{
+		Label: label, Initiative: int(initiative), Type: "character", CharacterID: &cid,
+		HpCurrent: overrideInt(input, "hpCurrent", stats.hpCurrent),
+		HpMax:     overrideInt(input, "hpMax", stats.hpMax),
+		MpCurrent: overrideInt(input, "mpCurrent", stats.mpCurrent),
+		MpMax:     overrideInt(input, "mpMax", stats.mpMax),
+	}, nil
+}
+
+// parseEntryPatch reads an update patch from the raw body (only present fields become
+// non-nil, so "leave unchanged" is distinct from "set to zero").
+func parseEntryPatch(v any) entryPatch {
+	m, _ := v.(map[string]any)
+	p := entryPatch{}
+	if m == nil {
+		return p
+	}
+	if s, ok := m["label"].(string); ok {
+		p.Label = &s
+	}
+	if i, ok := intField(m, "initiative"); ok {
+		n := int(i)
+		p.Initiative = &n
+	}
+	if s, ok := m["type"].(string); ok {
+		p.Type = &s
+	}
+	if i, ok := intField(m, "characterId"); ok {
+		p.CharacterID = &i
+	}
+	if i, ok := intField(m, "hpCurrent"); ok {
+		p.HpCurrent = &i
+	}
+	if i, ok := intField(m, "hpMax"); ok {
+		p.HpMax = &i
+	}
+	if i, ok := intField(m, "mpCurrent"); ok {
+		p.MpCurrent = &i
+	}
+	if i, ok := intField(m, "mpMax"); ok {
+		p.MpMax = &i
+	}
+	return p
+}
+
+// overrideInt returns the body's value for key when present, else def — as a pointer.
+func overrideInt(m map[string]any, key string, def int64) *int64 {
+	if v, ok := intField(m, key); ok {
+		return ptrInt64(v)
+	}
+	return ptrInt64(def)
+}
+
 // ── small transport helpers ──────────────────────────────────────────
 
 func sessionRoomName(sessionID int64) string {
@@ -177,6 +467,14 @@ func sessionRoomName(sessionID int64) string {
 func sockData(sock *socket.Socket) *socketData {
 	d, _ := sock.Data().(*socketData)
 	return d
+}
+
+func stringField(m map[string]any, key string) string {
+	if m == nil {
+		return ""
+	}
+	s, _ := m[key].(string)
+	return s
 }
 
 func bodyOf(args []any) map[string]any {

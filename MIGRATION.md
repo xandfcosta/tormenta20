@@ -293,8 +293,14 @@ Fase B (grande). Ou B direto se a prioridade é a API — são independentes.
   emit `presence`. Helpers de transporte (`bodyOf`/`ackOf`/`intField`/`headerValue`).
   **E2E com socket.io-client REAL** (padrão do spike, em `$SCRATCH`): cookie→join→get-state→
   presence(gm)→leave; cookie ruim→unauthorized. PASS.
-  ⏳ **2.3b initiative** (add/self/update/remove/next-turn/reset/populate — GM-gate +
-  `materializeEntry` via `resolveCombatant` + `emitSessionState`/persist/persistence-warning).
+  ✅ **2.3b initiative**: os 7 handlers (`initiative-add`/`-self`/`-update`/`-remove`/
+  `-next-turn`/`-reset`/`-populate`). Helper `access` (re-checa role member-aware por msg) +
+  `requireGm` (só `-self` não é gated) + `materializeEntry` (NPC exige label+init; character
+  puxa stats via `resolveCombatant`, com overrides opcionais) + `parseEntryPatch`. Cauda
+  comum `mutateAndBroadcast` → `emitSessionState` (broadcast `session-state` + `go
+  persistAndWarn` → `persistence-warning` só quando o dirty vira, default false = `?? false`).
+  **E2E dois clientes** (GM+player via invite): add NPC/character, self upsert, GM-gate
+  (player rejeitado c/ `exception`, estado intacto), next-turn/remove/reset/populate. PASS.
   ⏳ **2.3c** vitals-patch/delta (assertVitalsEditable) · session-rest (endScene/Day/restVitals +
   mirror) · apply-effect (applySpellBuffEffect + effect-applied).
 
