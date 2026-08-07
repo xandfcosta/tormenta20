@@ -78,6 +78,23 @@ func (s *Server) authorizedCharacter(ctx context.Context, user AuthUser, id int6
 	return row, http.StatusOK, nil
 }
 
+// assertCharacterOwner is the strict owner-only check (mirrors CharactersService.assertOwner)
+// the WS vitals gate uses: a player may edit only a character they own. Transport-agnostic.
+func (s *Server) assertCharacterOwner(ctx context.Context, userID, characterID int64) (int, error) {
+	owner, err := s.queries.GetCharacterOwner(ctx, characterID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return http.StatusNotFound, fmt.Errorf("Character %d not found", characterID)
+	}
+	if err != nil {
+		return http.StatusInternalServerError, errors.New("Could not load character")
+	}
+	if owner != userID {
+		return http.StatusForbidden, fmt.Errorf(
+			"Caller %d can only edit their own character's vitals (character %d)", userID, characterID)
+	}
+	return http.StatusOK, nil
+}
+
 // loadCharacter attaches the six relations to a character row in the Prisma
 // include order (races/classes/items/effects by id, expertises by name, spells by
 // learnedAt).

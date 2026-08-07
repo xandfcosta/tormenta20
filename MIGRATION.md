@@ -301,8 +301,16 @@ Fase B (grande). Ou B direto se a prioridade é a API — são independentes.
   persistAndWarn` → `persistence-warning` só quando o dirty vira, default false = `?? false`).
   **E2E dois clientes** (GM+player via invite): add NPC/character, self upsert, GM-gate
   (player rejeitado c/ `exception`, estado intacto), next-turn/remove/reset/populate. PASS.
-  ⏳ **2.3c** vitals-patch/delta (assertVitalsEditable) · session-rest (endScene/Day/restVitals +
-  mirror) · apply-effect (applySpellBuffEffect + effect-applied).
+  ✅ **2.3c** `vitals-patch`/`vitals-delta` (`assertVitalsEditable`: GM edita qualquer um; player
+  só o próprio via `assertCharacterOwner` novo; NPC = GM-only) · `session-rest` (GM: por membro,
+  endScene ou endDay+restVitals; `mirrorVitalsToTracker` espelha PV/PM curados; emit `session-rest`
+  {scope,condition} + `session-state` se curou) · `apply-effect` (GM: `applySpellBuffEffect` no
+  personagem do entry; emit `effect-applied` {characterId,spellId}; NÃO broadcasta state).
+  **E2E dois clientes**: delta GM, patch player-próprio, gating de NPC (rejeitado), rest day
+  (cura+evento+espelho), apply-effect (evento). PASS.
+  **B.6 FEATURE-COMPLETE.** Todos os ~18 handlers + 6 emits portados. Domínio 100% testado
+  (unit+DB+`-race`); gateway (cola) validado E2E com o `socket.io-client` real do front (scripts
+  efêmeros em `$SCRATCH`, padrão do projeto). Falta só **B.7 cutover** (virar proxy Vite → Go).
 
   **Auth (handshake, `ws-auth.ts`):** token via `handshake.auth.token` → `Authorization:
   Bearer` → **cookie `t20_session`** (nome de `COOKIE_NAME`), nessa ordem. `jwt.verify`
