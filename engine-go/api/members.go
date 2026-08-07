@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -52,6 +53,88 @@ func (s *Server) campaignAccess(w http.ResponseWriter, r *http.Request, campaign
 		return false
 	}
 	return true
+}
+
+// combatant is a character's tracker-relevant snapshot (name + live vitals) for an
+// initiative entry. Transport-agnostic — the WS gateway maps it into an InitiativeEntry.
+type combatant struct {
+	characterID int64
+	name        string
+	hpCurrent   int64
+	hpMax       int64
+	mpCurrent   int64
+	mpMax       int64
+}
+
+// resolveCombatant resolves a character's tracker stats for an initiative entry, enforcing
+// the campaign rules: the character must be a member of the campaign, and the caller must
+// be either the character's owner or the campaign GM (owner). Transport-agnostic (the WS
+// gateway maps status→WsException). Mirrors CampaignMembersService.resolveCombatant — same
+// check order (character → campaign → membership → authorization).
+func (s *Server) resolveCombatant(ctx context.Context, callerID, campaignID, characterID int64) (combatant, int, error) {
+	ch, err := s.queries.GetCharacter(ctx, characterID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return combatant{}, http.StatusNotFound, fmt.Errorf("Character %d not found", characterID)
+	}
+	if err != nil {
+		return combatant{}, http.StatusInternalServerError, errors.New("Could not load character")
+	}
+	camp, err := s.queries.GetCampaign(ctx, campaignID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return combatant{}, http.StatusNotFound, fmt.Errorf("Campaign %d not found", campaignID)
+	}
+	if err != nil {
+		return combatant{}, http.StatusInternalServerError, errors.New("Could not load campaign")
+	}
+	isMember, err := s.queries.IsCharacterMember(ctx, sqlcgen.IsCharacterMemberParams{Campaignid: campaignID, Characterid: characterID})
+	if err != nil {
+		return combatant{}, http.StatusInternalServerError, errors.New("Could not check membership")
+	}
+	if !isMember {
+		return combatant{}, http.StatusBadRequest, fmt.Errorf("Character %d is not a member of campaign %d", characterID, campaignID)
+	}
+	if callerID != ch.Ownerid && callerID != camp.Ownerid {
+		return combatant{}, http.StatusForbidden, fmt.Errorf(
+			"Caller %d is neither the GM of campaign %d nor the owner of character %d", callerID, campaignID, characterID)
+	}
+	return combatant{
+		characterID: characterID, name: ch.Name,
+		hpCurrent: ch.Hpcurrent, hpMax: ch.Hpmax, mpCurrent: ch.Mpcurrent, mpMax: ch.Mpmax,
+	}, http.StatusOK, nil
+}
+
+// listPlayerCombatants returns every player character in the campaign with live vitals —
+// the GM's one-shot "populate tracker". Mirrors CampaignMembersService.listPlayerCombatants.
+func (s *Server) listPlayerCombatants(ctx context.Context, campaignID int64) ([]combatant, error) {
+	rows, err := s.queries.ListMembers(ctx, campaignID)
+	if err != nil {
+		return nil, err
+	}
+	out := []combatant{}
+	for _, m := range rows {
+		if m.Role != "player" {
+			continue
+		}
+		out = append(out, combatant{
+			characterID: m.Characterid, name: m.Charname,
+			hpCurrent: m.Charhpcurrent, hpMax: m.Charhpmax, mpCurrent: m.Charmpcurrent, mpMax: m.Charmpmax,
+		})
+	}
+	return out, nil
+}
+
+// listMemberCharacterIds returns the character id of every member (any role) — the set a
+// session-wide rest iterates over. Mirrors CampaignMembersService.listMemberCharacterIds.
+func (s *Server) listMemberCharacterIds(ctx context.Context, campaignID int64) ([]int64, error) {
+	rows, err := s.queries.ListMembers(ctx, campaignID)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]int64, 0, len(rows))
+	for _, m := range rows {
+		ids = append(ids, m.Characterid)
+	}
+	return ids, nil
 }
 
 // handleListMembers ports members.list: any player in the campaign sees the

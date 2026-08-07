@@ -52,6 +52,22 @@ func (s *Server) loadSessionInCampaign(ctx context.Context, campaignID, sessionI
 	return sess, http.StatusOK, nil
 }
 
+// sessionForCaller is the member-aware session resolver the WS gateway runs on every
+// session-scoped message: resolve the caller's role (gm/player) then load the session and
+// assert it belongs to the campaign. Mirrors SessionsService.findOneForCaller — the role is
+// stashed on socket.data for per-action GM gating. Transport-agnostic (WS maps status/err).
+func (s *Server) sessionForCaller(ctx context.Context, userID, campaignID, sessionID int64) (sqlcgen.Session, string, int, error) {
+	role, status, err := s.resolveRole(ctx, userID, campaignID)
+	if err != nil {
+		return sqlcgen.Session{}, "", status, err
+	}
+	sess, status, err := s.loadSessionInCampaign(ctx, campaignID, sessionID)
+	if err != nil {
+		return sqlcgen.Session{}, "", status, err
+	}
+	return sess, role, http.StatusOK, nil
+}
+
 func (s *Server) ownedSession(w http.ResponseWriter, r *http.Request, campaignID, sessionID int64) (sqlcgen.Session, bool) {
 	if _, ok := s.ownedCampaign(w, r, campaignID); !ok {
 		return sqlcgen.Session{}, false

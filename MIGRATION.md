@@ -232,6 +232,19 @@ Fase B (grande). Ou B direto se a prioridade é a API — são independentes.
     consumidor ou como cleanup puro. ⏳ **0.3 smells de assinatura** (`r *http.Request` →
     `ctx`) — só quando um helper de B.6 precisar (ex.: computar vitais no descanso).
 
+  **FASE 1 — helpers de domínio do gateway (transport-agnostic, sem rota HTTP).**
+  ✅ **1.1 combatant/session** (`members.go`/`sessions.go`, todos `(valor, status, error)`):
+  `sessionForCaller(ctx,user,camp,sess) (Session, role, status, err)` = `resolveRole` +
+  `loadSessionInCampaign` (o `findOneForCaller` do WS, member-aware); `resolveCombatant(ctx,
+  caller,camp,char) (combatant, status, err)` — char→camp→membership→authz (404/404/400/403),
+  devolve `{name,hp,mp}`; `listPlayerCombatants(camp)` (role=player + vitais, p/ populate);
+  `listMemberCharacterIds(camp)` (p/ descanso). Reusam sqlc existente (`GetCharacter`,
+  `GetCampaign`, `IsCharacterMember`, `ListMembers`) — **zero query nova**. **Harness de teste
+  DB-backed novo** (`realtime_domain_test.go`: `newTestServer` = `db.Open` temp + `NewServer`
+  cat-less + seeds) cobrindo cada branch de authz — reusável nas próximas slices.
+  ⏳ **1.2 descanso** (`endScene`/`endDay`/`restVitals(condition)`) — mecânica T20, provavelmente
+  puxa o smell 0.3 (computar vitais precisa de `ctx`). ⏳ **1.3 ws-auth** (verify JWT, reusar do HTTP).
+
   **Auth (handshake, `ws-auth.ts`):** token via `handshake.auth.token` → `Authorization:
   Bearer` → **cookie `t20_session`** (nome de `COOKIE_NAME`), nessa ordem. `jwt.verify`
   (mesmo segredo do HTTP, `sub` = id) → `auth.findById(sub)` (nega usuário revogado).
