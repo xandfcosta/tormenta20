@@ -307,6 +307,47 @@ func (q *Queries) CreateRace(ctx context.Context, arg CreateRaceParams) error {
 	return err
 }
 
+const createSession = `-- name: CreateSession :one
+INSERT INTO sessions (campaignId, sessionNumber, title, notes, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?, ?)
+RETURNING id, campaignid, title, sessionnumber, notes, status, startedat, endedat, createdat, updatedat, runtimestate
+`
+
+type CreateSessionParams struct {
+	Campaignid    int64          `json:"campaignid"`
+	Sessionnumber int64          `json:"sessionnumber"`
+	Title         sql.NullString `json:"title"`
+	Notes         sql.NullString `json:"notes"`
+	Createdat     string         `json:"createdat"`
+	Updatedat     string         `json:"updatedat"`
+}
+
+func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error) {
+	row := q.db.QueryRowContext(ctx, createSession,
+		arg.Campaignid,
+		arg.Sessionnumber,
+		arg.Title,
+		arg.Notes,
+		arg.Createdat,
+		arg.Updatedat,
+	)
+	var i Session
+	err := row.Scan(
+		&i.ID,
+		&i.Campaignid,
+		&i.Title,
+		&i.Sessionnumber,
+		&i.Notes,
+		&i.Status,
+		&i.Startedat,
+		&i.Endedat,
+		&i.Createdat,
+		&i.Updatedat,
+		&i.Runtimestate,
+	)
+	return i, err
+}
+
 const createSpell = `-- name: CreateSpell :one
 INSERT INTO character_spells (characterId, catalogSpellId, prepared, learnedAt)
 VALUES (?, ?, ?, ?)
@@ -417,6 +458,15 @@ func (q *Queries) DeleteMember(ctx context.Context, id int64) error {
 	return err
 }
 
+const deleteSession = `-- name: DeleteSession :exec
+DELETE FROM sessions WHERE id = ?
+`
+
+func (q *Queries) DeleteSession(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteSession, id)
+	return err
+}
+
 const deleteSpell = `-- name: DeleteSpell :execrows
 DELETE FROM character_spells WHERE characterId = ? AND catalogSpellId = ?
 `
@@ -432,6 +482,36 @@ func (q *Queries) DeleteSpell(ctx context.Context, arg DeleteSpellParams) (int64
 		return 0, err
 	}
 	return result.RowsAffected()
+}
+
+const endSession = `-- name: EndSession :one
+UPDATE sessions SET status = 'ended', endedAt = ?1, updatedAt = ?2
+WHERE id = ?3 RETURNING id, campaignid, title, sessionnumber, notes, status, startedat, endedat, createdat, updatedat, runtimestate
+`
+
+type EndSessionParams struct {
+	EndedAt   sql.NullString `json:"endedAt"`
+	UpdatedAt string         `json:"updatedAt"`
+	ID        int64          `json:"id"`
+}
+
+func (q *Queries) EndSession(ctx context.Context, arg EndSessionParams) (Session, error) {
+	row := q.db.QueryRowContext(ctx, endSession, arg.EndedAt, arg.UpdatedAt, arg.ID)
+	var i Session
+	err := row.Scan(
+		&i.ID,
+		&i.Campaignid,
+		&i.Title,
+		&i.Sessionnumber,
+		&i.Notes,
+		&i.Status,
+		&i.Startedat,
+		&i.Endedat,
+		&i.Createdat,
+		&i.Updatedat,
+		&i.Runtimestate,
+	)
+	return i, err
 }
 
 const getActiveEffect = `-- name: GetActiveEffect :one
@@ -660,6 +740,29 @@ func (q *Queries) GetMemberOwners(ctx context.Context, id int64) (GetMemberOwner
 		&i.Campaignid,
 		&i.Campaignowner,
 		&i.Characterowner,
+	)
+	return i, err
+}
+
+const getSession = `-- name: GetSession :one
+SELECT id, campaignid, title, sessionnumber, notes, status, startedat, endedat, createdat, updatedat, runtimestate FROM sessions WHERE id = ? LIMIT 1
+`
+
+func (q *Queries) GetSession(ctx context.Context, id int64) (Session, error) {
+	row := q.db.QueryRowContext(ctx, getSession, id)
+	var i Session
+	err := row.Scan(
+		&i.ID,
+		&i.Campaignid,
+		&i.Title,
+		&i.Sessionnumber,
+		&i.Notes,
+		&i.Status,
+		&i.Startedat,
+		&i.Endedat,
+		&i.Createdat,
+		&i.Updatedat,
+		&i.Runtimestate,
 	)
 	return i, err
 }
@@ -1216,6 +1319,47 @@ func (q *Queries) ListRacesByCharacter(ctx context.Context, characterid int64) (
 	return items, nil
 }
 
+const listSessions = `-- name: ListSessions :many
+
+SELECT id, campaignid, title, sessionnumber, notes, status, startedat, endedat, createdat, updatedat, runtimestate FROM sessions WHERE campaignId = ? ORDER BY sessionNumber ASC
+`
+
+// sessions (B.4)
+func (q *Queries) ListSessions(ctx context.Context, campaignid int64) ([]Session, error) {
+	rows, err := q.db.QueryContext(ctx, listSessions, campaignid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Session{}
+	for rows.Next() {
+		var i Session
+		if err := rows.Scan(
+			&i.ID,
+			&i.Campaignid,
+			&i.Title,
+			&i.Sessionnumber,
+			&i.Notes,
+			&i.Status,
+			&i.Startedat,
+			&i.Endedat,
+			&i.Createdat,
+			&i.Updatedat,
+			&i.Runtimestate,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listSpellsByCharacter = `-- name: ListSpellsByCharacter :many
 SELECT id, catalogSpellId, prepared, learnedAt
 FROM character_spells WHERE characterId = ? ORDER BY learnedAt ASC
@@ -1303,6 +1447,51 @@ func (q *Queries) ListUsersByIDs(ctx context.Context, ids []int64) ([]ListUsersB
 		return nil, err
 	}
 	return items, nil
+}
+
+const reopenSession = `-- name: ReopenSession :one
+UPDATE sessions SET status = 'active', endedAt = NULL, updatedAt = ?1
+WHERE id = ?2 RETURNING id, campaignid, title, sessionnumber, notes, status, startedat, endedat, createdat, updatedat, runtimestate
+`
+
+type ReopenSessionParams struct {
+	UpdatedAt string `json:"updatedAt"`
+	ID        int64  `json:"id"`
+}
+
+func (q *Queries) ReopenSession(ctx context.Context, arg ReopenSessionParams) (Session, error) {
+	row := q.db.QueryRowContext(ctx, reopenSession, arg.UpdatedAt, arg.ID)
+	var i Session
+	err := row.Scan(
+		&i.ID,
+		&i.Campaignid,
+		&i.Title,
+		&i.Sessionnumber,
+		&i.Notes,
+		&i.Status,
+		&i.Startedat,
+		&i.Endedat,
+		&i.Createdat,
+		&i.Updatedat,
+		&i.Runtimestate,
+	)
+	return i, err
+}
+
+const resetSessionTracker = `-- name: ResetSessionTracker :exec
+UPDATE sessions SET runtimeState = ?1, updatedAt = ?2
+WHERE id = ?3
+`
+
+type ResetSessionTrackerParams struct {
+	RuntimeState string `json:"runtimeState"`
+	UpdatedAt    string `json:"updatedAt"`
+	ID           int64  `json:"id"`
+}
+
+func (q *Queries) ResetSessionTracker(ctx context.Context, arg ResetSessionTrackerParams) error {
+	_, err := q.db.ExecContext(ctx, resetSessionTracker, arg.RuntimeState, arg.UpdatedAt, arg.ID)
+	return err
 }
 
 const setCharacterClassLevel = `-- name: SetCharacterClassLevel :execrows
@@ -1483,6 +1672,36 @@ func (q *Queries) SetSpellPreparedByCatalog(ctx context.Context, arg SetSpellPre
 		&i.Catalogspellid,
 		&i.Prepared,
 		&i.Learnedat,
+	)
+	return i, err
+}
+
+const startSessionFresh = `-- name: StartSessionFresh :one
+UPDATE sessions SET status = 'active', startedAt = ?1, updatedAt = ?2
+WHERE id = ?3 RETURNING id, campaignid, title, sessionnumber, notes, status, startedat, endedat, createdat, updatedat, runtimestate
+`
+
+type StartSessionFreshParams struct {
+	StartedAt sql.NullString `json:"startedAt"`
+	UpdatedAt string         `json:"updatedAt"`
+	ID        int64          `json:"id"`
+}
+
+func (q *Queries) StartSessionFresh(ctx context.Context, arg StartSessionFreshParams) (Session, error) {
+	row := q.db.QueryRowContext(ctx, startSessionFresh, arg.StartedAt, arg.UpdatedAt, arg.ID)
+	var i Session
+	err := row.Scan(
+		&i.ID,
+		&i.Campaignid,
+		&i.Title,
+		&i.Sessionnumber,
+		&i.Notes,
+		&i.Status,
+		&i.Startedat,
+		&i.Endedat,
+		&i.Createdat,
+		&i.Updatedat,
+		&i.Runtimestate,
 	)
 	return i, err
 }

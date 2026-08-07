@@ -266,6 +266,38 @@ SELECT m.id, m.campaignId, c.ownerId AS campaignOwner, ch.ownerId AS characterOw
 FROM campaign_members m JOIN campaigns c ON c.id = m.campaignId JOIN characters ch ON ch.id = m.characterId
 WHERE m.id = ? LIMIT 1;
 
+-- sessions (B.4)
+
+-- name: ListSessions :many
+SELECT * FROM sessions WHERE campaignId = ? ORDER BY sessionNumber ASC;
+
+-- name: GetSession :one
+SELECT * FROM sessions WHERE id = ? LIMIT 1;
+
+-- name: CreateSession :one
+INSERT INTO sessions (campaignId, sessionNumber, title, notes, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?, ?)
+RETURNING *;
+
+-- name: DeleteSession :exec
+DELETE FROM sessions WHERE id = ?;
+
+-- name: StartSessionFresh :one
+UPDATE sessions SET status = 'active', startedAt = sqlc.arg('startedAt'), updatedAt = sqlc.arg('updatedAt')
+WHERE id = sqlc.arg('id') RETURNING *;
+
+-- name: ReopenSession :one
+UPDATE sessions SET status = 'active', endedAt = NULL, updatedAt = sqlc.arg('updatedAt')
+WHERE id = sqlc.arg('id') RETURNING *;
+
+-- name: EndSession :one
+UPDATE sessions SET status = 'ended', endedAt = sqlc.arg('endedAt'), updatedAt = sqlc.arg('updatedAt')
+WHERE id = sqlc.arg('id') RETURNING *;
+
+-- name: ResetSessionTracker :exec
+UPDATE sessions SET runtimeState = sqlc.arg('runtimeState'), updatedAt = sqlc.arg('updatedAt')
+WHERE id = sqlc.arg('id');
+
 -- name: ListCampaignsForCharacter :many
 SELECT m.id, m.campaignId, m.characterId, m.role, m.addedAt,
        c.name AS campaignName, c.description AS campaignDescription, c.updatedAt AS campaignUpdatedAt

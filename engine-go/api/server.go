@@ -73,6 +73,16 @@ func (s *Server) Router() http.Handler {
 			r.Patch("/{id}", s.handleUpdateMemberRole)
 			r.Delete("/{id}", s.handleRemoveMember)
 		})
+		r.Route("/{campaignId}/sessions", func(r chi.Router) {
+			r.Get("/", s.handleListSessions)
+			r.Post("/", s.handleCreateSession)
+			r.Get("/{id}", s.handleGetSession)
+			r.Patch("/{id}", s.handleUpdateSession)
+			r.Delete("/{id}", s.handleDeleteSession)
+			r.Post("/{id}/start", s.handleStartSession)
+			r.Post("/{id}/end", s.handleEndSession)
+			r.Post("/{id}/clear-tracker", s.handleClearTracker)
+		})
 	})
 
 	r.Route("/characters", func(r chi.Router) {
