@@ -283,9 +283,20 @@ Fase B (grande). Ou B direto se a prioridade é a API — são independentes.
   `Server` (`s.presence`). Testes puros sob `-race` (dedup, gm-wins, leave-ausente, disconnect
   multi-sessão, churn concorrente). **Desvio anotado**: roster ordenado por userId
   (determinístico) em vez da ordem de inserção do Map (cosmético).
-  ⏳ **2.3 handlers+emits** no `cmd/api` com zishang520 — a cola final, usando Fase 0/1/2.
-  Padrão de erro→transporte: domínio devolve `(…, status, error)` → o gateway mapeia p/
-  `socket.emit('unauthorized'|erro)` / ack; HTTP já mapeia p/ `writeError`/`writeDomainError`.
+  **2.3 handlers+emits** — a cola (`realtime_gateway.go`, pkg `api`, dep zishang520 SÓ aqui;
+  WASM confirmado limpo). `Server.SocketHandler()` monta em `/socket.io/` no `cmd/api` (mux:
+  socket + router). Erros de domínio viram evento `exception` (não ack — não corromper o ack
+  do get-state); handshake ruim → `unauthorized` + disconnect.
+  ✅ **2.3a conexão+salas+presence+estado**: `onConnect` (authenticateHandshake→SetData),
+  `join-session`/`leave-session` (presence + ack `{joined}`/`{left}`), `get-session-state`
+  (load/hydrate + refreshCharacterMaxes → ack estado), `disconnect` (limpa presence),
+  emit `presence`. Helpers de transporte (`bodyOf`/`ackOf`/`intField`/`headerValue`).
+  **E2E com socket.io-client REAL** (padrão do spike, em `$SCRATCH`): cookie→join→get-state→
+  presence(gm)→leave; cookie ruim→unauthorized. PASS.
+  ⏳ **2.3b initiative** (add/self/update/remove/next-turn/reset/populate — GM-gate +
+  `materializeEntry` via `resolveCombatant` + `emitSessionState`/persist/persistence-warning).
+  ⏳ **2.3c** vitals-patch/delta (assertVitalsEditable) · session-rest (endScene/Day/restVitals +
+  mirror) · apply-effect (applySpellBuffEffect + effect-applied).
 
   **Auth (handshake, `ws-auth.ts`):** token via `handshake.auth.token` → `Authorization:
   Bearer` → **cookie `t20_session`** (nome de `COOKIE_NAME`), nessa ordem. `jwt.verify`

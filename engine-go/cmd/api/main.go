@@ -35,8 +35,15 @@ func main() {
 	}
 
 	srv := api.NewServer(cfg, database, catalogs)
+
+	// Mount the socket.io realtime gateway (B.6) at /socket.io/ alongside the HTTP
+	// API; the Vite proxy forwards both to this server at cutover.
+	mux := http.NewServeMux()
+	mux.Handle("/socket.io/", srv.SocketHandler())
+	mux.Handle("/", srv.Router())
+
 	log.Printf("t20 API listening on :%s (db=%s)", cfg.Port, cfg.DatabasePath)
-	if err := http.ListenAndServe(":"+cfg.Port, srv.Router()); err != nil {
+	if err := http.ListenAndServe(":"+cfg.Port, mux); err != nil {
 		log.Fatalf("listen: %v", err)
 	}
 }
