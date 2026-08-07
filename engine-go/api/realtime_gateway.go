@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	socket "github.com/zishang520/socket.io/servers/socket/v3"
+	"github.com/zishang520/socket.io/v3/pkg/types"
 )
 
 // realtimeGateway is the socket.io transport for the session tracker — the thin glue that
@@ -34,7 +35,13 @@ type socketData struct {
 // SocketHandler builds the socket.io server wired to this Server's domain and returns the
 // http.Handler to mount at /socket.io/. Called once by cmd/api.
 func (s *Server) SocketHandler() http.Handler {
-	g := &realtimeGateway{s: s, io: socket.NewServer(nil, nil), lastDirty: map[int64]bool{}}
+	// CORS must reflect the browser's Origin with credentials — the front connects
+	// through the Vite proxy, so the forwarded Origin (:5173) differs from the Go
+	// port and engine.io otherwise mishandles the WS handshake. Mirrors the Nest
+	// gateway's `@WebSocketGateway({ cors: { origin: true, credentials: true } })`.
+	opts := socket.DefaultServerOptions()
+	opts.SetCors(&types.Cors{Origin: "*", Credentials: true})
+	g := &realtimeGateway{s: s, io: socket.NewServer(nil, opts), lastDirty: map[int64]bool{}}
 	g.io.On("connection", func(clients ...any) {
 		if sock, ok := clients[0].(*socket.Socket); ok {
 			g.onConnect(sock)

@@ -392,10 +392,15 @@ Fase B (grande). Ou B direto se a prioridade é a API — são independentes.
   Nest + front com `API_TARGET=:3000` (só um script, sem editar código). DB Go próprio
   (`engine-go/t20-go.db`, gitignored), semeado por `pnpm -F @tormenta20/engine-go seed`
   (3 contas @t20.local / `mestre123456`, 15 chars). Nest + `backend/dev.db` intactos p/ rollback.
-  **Validado**: build estilo-air de `cmd/api`, login com creds do seed (200), socket conecta
-  autenticado via cookie; front typecheck/biome limpos. **CORS**: não precisa — o socket
-  conecta em `window.location.origin` (Vite), proxied → same-origin p/ o browser.
-  **Sem cobertura**: smoke manual do app no browser (login→ficha→sessão ao vivo) fica p/ o dono.
+  **CORS (correção do smoke)**: o server socket zishang520 PRECISA de
+  `SetCors(&types.Cors{Origin:"*", Credentials:true})` (espelha o `@WebSocketGateway({cors:{
+  origin:true,credentials:true}})` do Nest). Sem isso, o browser (que manda header `Origin:
+  :5173` via proxy) falha o upgrade WS (`superfluous WriteHeader` + `ws proxy socket error`);
+  os E2E de node NÃO pegaram porque node não manda `Origin`. **Só o smoke no browser expôs.**
+  **Validado no browser (Chrome)**: login→home (9 chars do seed)→ficha completa (VIDA 111/277
+  = hpFraction 0.4, derivados via WASM)→criar campanha→criar sessão→**socket "Conectado" +
+  presença**→`initiative-add` (Goblin no tracker via broadcast)→`Próximo turno` (Rodada 1,
+  "NA VEZ"). Tudo pelo server Go via proxy do Vite.
   **Prod (fora do escopo do dev-cutover)**: servir o front buildado + migrar dados reais do
   Nest→Go (schema goose×prisma) — slice futura se/quando for pra produção.
 
