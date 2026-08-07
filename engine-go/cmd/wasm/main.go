@@ -68,6 +68,18 @@ func computeEffects(_ js.Value, args []js.Value) any {
 	return string(out)
 }
 
+// resolveConditionalDisplay runs the non-stacking display resolution over an
+// active stance's conditional rows (t20-data resolveConditionalDisplay) — pure,
+// needs no primed catalogs. Returns the surviving {target, amount} rows.
+func resolveConditionalDisplay(_ js.Value, args []js.Value) any {
+	var rows []engine.ConditionalDisplayInput
+	if err := json.Unmarshal([]byte(args[0].String()), &rows); err != nil {
+		return errorJSON(err)
+	}
+	out, _ := json.Marshal(engine.ResolveConditionalDisplay(rows))
+	return string(out)
+}
+
 // parseCharArgs unmarshals the shared (charJson, conditionalsJson) argument pair
 // used by computeSheetV2 + computeEffects. Returns an error-JSON string when the
 // catalogs aren't primed or a payload is malformed.
@@ -121,5 +133,6 @@ func main() {
 	js.Global().Set("computeSheetV2", js.FuncOf(computeSheetV2))
 	js.Global().Set("computeEffects", js.FuncOf(computeEffects))
 	js.Global().Set("computeVitals", js.FuncOf(computeVitals))
+	js.Global().Set("resolveConditionalDisplay", js.FuncOf(resolveConditionalDisplay))
 	select {} // keep the runtime alive
 }

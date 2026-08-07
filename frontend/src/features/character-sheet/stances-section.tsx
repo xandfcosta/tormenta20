@@ -11,7 +11,7 @@ import { useStanceActivation } from '@/shared/stores/stance-activation-store'
 import { accentStrong, subtleText, surface } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
 import { useState } from 'react'
-import { resolveConditionalDisplay } from '@tormenta20/t20-data'
+import { resolveStanceDisplay } from '@/entities/character/conditional-display'
 import { Button } from '@/shared/ui/button'
 import {
   abbreviateConditionalTarget,
@@ -118,7 +118,7 @@ function StanceCard({
 
 /** "Atq/Dano/Fort/Von +3" — winning tiers only, grouped by signed amount. */
 function stanceSummary(group: StanceGroup): string {
-  const kept = resolveConditionalDisplay(
+  const kept = resolveStanceDisplay(
     group.entries.map((e) => ({
       target: e.effect.target,
       bonusType: e.effect.bonusType,

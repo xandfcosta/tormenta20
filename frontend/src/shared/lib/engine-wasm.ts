@@ -1,8 +1,10 @@
 import type {
   AttributeKey,
+  BonusType,
   CharacterInput,
   ComputedSheet,
   ItemEffects,
+  ModifierTarget,
 } from '@tormenta20/t20-data'
 import type { Character } from '@/shared/api/api'
 import type { ComputedSheetV2 } from './computed-sheet-v2'
@@ -52,7 +54,19 @@ type GlobalWithGo = typeof globalThis & {
   computeSheetV2?: (charJson: string, conditionalsJson: string) => string
   computeEffects?: (charJson: string, conditionalsJson: string) => string
   computeVitals?: (contextJson: string) => string
+  resolveConditionalDisplay?: (rowsJson: string) => string
 }
+
+/** One conditional-effect row (an active stance's modifier) fed to the display
+ *  resolver — mirrors the Go `ConditionalDisplayInput`. */
+export type ConditionalDisplayInput = {
+  target: ModifierTarget
+  bonusType: BonusType
+  amount: number
+}
+
+/** A surviving {target, amount} row after non-stacking display resolution. */
+export type ConditionalDisplayRow = { target: ModifierTarget; amount: number }
 
 /** The engine's serialized ItemEffects — flags as a sorted array (rebuilt into a
  *  Set on the TS side to match the t20-data `ItemEffects` shape). */
@@ -194,5 +208,22 @@ export function computeSheetV2(
     fn(JSON.stringify(char), JSON.stringify(conditionals)),
   ) as ComputedSheetV2 & { error?: string }
   if (out.error) throw new Error(`engine-wasm: ${out.error}`)
+  return out
+}
+
+/**
+ * Non-stacking display resolution over an active stance's conditional rows (Go
+ * `ResolveConditionalDisplay`) — pure, needs no primed catalogs, only the loaded
+ * engine. Mirrors t20-data `resolveConditionalDisplay` byte-for-byte.
+ */
+export function resolveConditionalDisplay(
+  rows: readonly ConditionalDisplayInput[],
+): ConditionalDisplayRow[] {
+  const fn = (globalThis as GlobalWithGo).resolveConditionalDisplay
+  if (!fn) throw new Error('engine-wasm: engine not ready — call ensureEngine() first')
+  const out = JSON.parse(fn(JSON.stringify(rows))) as
+    | ConditionalDisplayRow[]
+    | { error: string }
+  if (!Array.isArray(out)) throw new Error(`engine-wasm: ${out.error}`)
   return out
 }

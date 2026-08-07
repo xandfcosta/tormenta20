@@ -320,9 +320,9 @@ func resolveStack(contribs []Contribution) AggregatedStat {
 // ConditionalDisplayInput is one conditional-effect row fed to
 // ResolveConditionalDisplay (an active stance's rows).
 type ConditionalDisplayInput struct {
-	Target    ModifierTarget
-	BonusType string
-	Amount    int
+	Target    ModifierTarget `json:"target"`
+	BonusType string         `json:"bonusType"`
+	Amount    int            `json:"amount"`
 }
 
 type ConditionalDisplayRow struct {
