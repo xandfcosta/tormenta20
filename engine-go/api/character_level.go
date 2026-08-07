@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -51,6 +52,22 @@ func engineCharacterFrom(dto CharacterDTO) (engine.Character, error) {
 		return ec, err
 	}
 	return ec, json.Unmarshal(b, &ec)
+}
+
+// computeSheet builds the engine input from an already-loaded character row and returns the
+// server-computed ComputedSheetV2 (base sheet, no active conditionals). Shared by GET /sheet
+// and the power-grant temp-HP amount so the load→engine→compute wiring lives in one place.
+// Caller must ensure s.catalogs is primed.
+func (s *Server) computeSheet(ctx context.Context, row sqlcgen.Character) (engine.ComputedSheetV2, error) {
+	dto, err := s.loadCharacter(ctx, row)
+	if err != nil {
+		return engine.ComputedSheetV2{}, err
+	}
+	ec, err := engineCharacterFrom(dto)
+	if err != nil {
+		return engine.ComputedSheetV2{}, err
+	}
+	return s.catalogs.ComputeSheetV2(ec, map[string]bool{}), nil
 }
 
 // syncLevelVitals recomputes the pools for the (already mutated) aggregate and

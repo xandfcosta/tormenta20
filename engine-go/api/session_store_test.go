@@ -120,6 +120,22 @@ func TestStoreDirtyOnPersistFailure(t *testing.T) {
 	}
 }
 
+func TestForgetPreservesDirtyForRecovery(t *testing.T) {
+	// forget (clear-tracker) must NOT drop the dirty flag: a session left dirty still
+	// needs to emit persistence-warning{dirty:false} on the next successful persist.
+	store := newTestServer(t).sessions
+	sid := int64(42)
+	store.mu.Lock()
+	store.dirty[sid] = true // simulate a prior failed persist (banner shown)
+	store.mu.Unlock()
+
+	store.forget(sid)
+
+	if !store.isDirty(sid) {
+		t.Error("forget cleared the dirty flag — the dirty→healthy recovery broadcast would be lost")
+	}
+}
+
 func TestStoreLiveWriteThrough(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()

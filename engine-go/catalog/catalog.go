@@ -7,6 +7,7 @@ package catalog
 import (
 	"embed"
 	"encoding/json"
+	"log"
 	"sync"
 )
 
@@ -122,13 +123,18 @@ var (
 func LookupActivation(id string) (Activation, bool) {
 	activationsOnce.Do(func() {
 		activationsByID = map[string]Activation{}
-		if b, err := files.ReadFile("data/activations.json"); err == nil {
-			var specs []Activation
-			if json.Unmarshal(b, &specs) == nil {
-				for _, a := range specs {
-					activationsByID[a.ID] = a
-				}
-			}
+		b, err := files.ReadFile("data/activations.json")
+		if err != nil {
+			log.Printf("catalog: read activations.json failed: %v", err)
+			return
+		}
+		var specs []Activation
+		if err := json.Unmarshal(b, &specs); err != nil {
+			log.Printf("catalog: parse activations.json failed — power grants disabled: %v", err)
+			return
+		}
+		for _, a := range specs {
+			activationsByID[a.ID] = a
 		}
 	})
 	a, ok := activationsByID[id]

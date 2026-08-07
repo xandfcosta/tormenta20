@@ -96,17 +96,12 @@ func (s *Server) handleGetSheet(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusServiceUnavailable, "Rules catalog not loaded")
 		return
 	}
-	dto, err := s.loadCharacter(r.Context(), row)
+	sheet, err := s.computeSheet(r.Context(), row)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load character")
+		writeError(w, http.StatusInternalServerError, "Could not compute sheet")
 		return
 	}
-	ec, err := engineCharacterFrom(dto)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not build sheet input")
-		return
-	}
-	writeJSON(w, http.StatusOK, s.catalogs.ComputeSheetV2(ec, map[string]bool{}))
+	writeJSON(w, http.StatusOK, sheet)
 }
 
 // assertCharacterOwner is the strict owner-only check (mirrors CharactersService.assertOwner)

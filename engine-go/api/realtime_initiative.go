@@ -123,15 +123,14 @@ func (g *realtimeGateway) onPopulate(sock *socket.Socket, args []any) {
 		return
 	}
 	state, addErr := g.populateParty(ctx.sessionID, combatants)
-	if state != nil {
-		g.emitSessionState(ctx.sessionID, state)
+	if state == nil { // nothing added (all already present) → still broadcast current state
+		state = g.s.sessions.getState(ctx.sessionID)
 	}
+	// Always rebroadcast so a client with a drifted tracker is resynced, even on a no-op.
+	g.emitSessionState(ctx.sessionID, state)
 	if addErr != nil {
 		g.wsError(sock, addErr.Error())
 		return
-	}
-	if state == nil {
-		state = g.s.sessions.getState(ctx.sessionID)
 	}
 	ackOK(ctx.ack, state)
 }

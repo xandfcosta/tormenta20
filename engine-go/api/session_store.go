@@ -26,11 +26,18 @@ type sessionStore struct {
 	dirty  map[int64]bool
 	newID  func() string
 	q      *sqlcgen.Queries
-	// persistMu serializes DB writes so concurrent mutations on the same session can't
-	// persist out of order (each writer snapshots the CURRENT state at its turn).
-	persistMu sync.Mutex
+	// persistMus holds a per-session mutex (sessionID → *sync.Mutex) serializing that
+	// session's DB writes (runtime-state persist + vitals write-through) so concurrent
+	// mutations can't land out of order — WITHOUT coupling latency across sessions.
+	persistMus sync.Map
 	// liveWriteThrough mirrors vitals patch/delta back to the Character row (opt-in).
 	liveWriteThrough bool
+}
+
+// persistLock returns the per-session DB-write mutex, creating it on first use.
+func (st *sessionStore) persistLock(sessionID int64) *sync.Mutex {
+	m, _ := st.persistMus.LoadOrStore(sessionID, &sync.Mutex{})
+	return m.(*sync.Mutex)
 }
 
 func newSessionStore(q *sqlcgen.Queries, newID func() string, liveWriteThrough bool) *sessionStore {
@@ -127,6 +134,13 @@ func (st *sessionStore) maybeWriteThrough(sessionID int64, entryID string, err e
 // the fresh DB max (the entry's cached max can drift after a mid-session level-up). Only
 // character entries with both vitals present; failures are logged, never surfaced.
 func (st *sessionStore) writeThroughVitals(sessionID int64, entryID string) {
+	// Same per-session lock as persist: serialize write-throughs so two concurrent vitals
+	// edits can't land out of order. Whoever runs last reads the CURRENT entry (below) and
+	// writes it, so the DB converges to the latest value.
+	pm := st.persistLock(sessionID)
+	pm.Lock()
+	defer pm.Unlock()
+
 	st.mu.Lock()
 	var entry *InitiativeEntry
 	if s := st.states[sessionID]; s != nil {
@@ -200,8 +214,9 @@ func parseRuntimeBlob(blob string) *SessionRuntimeState {
 // Serialized so overlapping persists for one session write in order: whichever runs last
 // snapshots the newest state, so the DB converges to the latest instead of a stale capture.
 func (st *sessionStore) persist(ctx context.Context, sessionID int64) (dirty, changed bool) {
-	st.persistMu.Lock()
-	defer st.persistMu.Unlock()
+	pm := st.persistLock(sessionID)
+	pm.Lock()
+	defer pm.Unlock()
 
 	st.mu.Lock()
 	s := st.states[sessionID]
@@ -237,11 +252,14 @@ func (st *sessionStore) isDirty(sessionID int64) bool {
 }
 
 // forget drops a session from memory (e.g. its DB row was deleted).
+// forget drops a session's in-memory tracker (e.g. on clear-tracker). It does NOT clear
+// the dirty flag: that would swallow the dirty→healthy recovery — a session left dirty
+// must still emit persistence-warning{dirty:false} on the next successful persist. The
+// dirty map self-prunes on that success, so it stays small (only currently-dirty sessions).
 func (st *sessionStore) forget(sessionID int64) {
 	st.mu.Lock()
 	defer st.mu.Unlock()
 	delete(st.states, sessionID)
-	delete(st.dirty, sessionID)
 }
 
 // refreshCharacterMaxes refreshes hpMax/mpMax on every entry carrying a characterId from
