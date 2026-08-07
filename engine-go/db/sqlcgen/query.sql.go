@@ -327,6 +327,34 @@ func (q *Queries) DeleteSpell(ctx context.Context, arg DeleteSpellParams) (int64
 	return result.RowsAffected()
 }
 
+const getActiveEffect = `-- name: GetActiveEffect :one
+SELECT id, characterId, catalogId, scope, modifiers, createdAt
+FROM active_effects WHERE id = ? LIMIT 1
+`
+
+type GetActiveEffectRow struct {
+	ID          int64  `json:"id"`
+	Characterid int64  `json:"characterid"`
+	Catalogid   string `json:"catalogid"`
+	Scope       string `json:"scope"`
+	Modifiers   string `json:"modifiers"`
+	Createdat   string `json:"createdat"`
+}
+
+func (q *Queries) GetActiveEffect(ctx context.Context, id int64) (GetActiveEffectRow, error) {
+	row := q.db.QueryRowContext(ctx, getActiveEffect, id)
+	var i GetActiveEffectRow
+	err := row.Scan(
+		&i.ID,
+		&i.Characterid,
+		&i.Catalogid,
+		&i.Scope,
+		&i.Modifiers,
+		&i.Createdat,
+	)
+	return i, err
+}
+
 const getActiveEffectMeta = `-- name: GetActiveEffectMeta :one
 SELECT id, characterId FROM active_effects WHERE id = ? LIMIT 1
 `

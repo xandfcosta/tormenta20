@@ -168,6 +168,10 @@ INSERT INTO character_classes (characterId, className, level) VALUES (?, ?, ?);
 -- name: GetActiveEffectMeta :one
 SELECT id, characterId FROM active_effects WHERE id = ? LIMIT 1;
 
+-- name: GetActiveEffect :one
+SELECT id, characterId, catalogId, scope, modifiers, createdAt
+FROM active_effects WHERE id = ? LIMIT 1;
+
 -- name: ListCampaignsForCharacter :many
 SELECT m.id, m.campaignId, m.characterId, m.role, m.addedAt,
        c.name AS campaignName, c.description AS campaignDescription, c.updatedAt AS campaignUpdatedAt

@@ -2,10 +2,84 @@ package api
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+
+	"t20engine/db/sqlcgen"
 )
+
+// handleAdjustEffect ports adjustActiveEffect: bump a temp-HP pool's amount by
+// tempHpDelta; delete when it hits 0 ({removed, id}), else return the effect.
+func (s *Server) handleAdjustEffect(w http.ResponseWriter, r *http.Request) {
+	id, ok := intParam(w, r, "id")
+	if !ok {
+		return
+	}
+	effectID, ok := intParam(w, r, "effectId")
+	if !ok {
+		return
+	}
+	var body struct {
+		TempHpDelta *int64 `json:"tempHpDelta"`
+	}
+	if !decodeJSON(w, r, &body) {
+		return
+	}
+	if _, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id); err != nil {
+		writeError(w, status, err.Error())
+		return
+	}
+	if body.TempHpDelta == nil {
+		writeValidationError(w, FieldErrorMap{"tempHpDelta": {"tempHpDelta must be an integer number"}})
+		return
+	}
+	eff, err := s.queries.GetActiveEffect(r.Context(), effectID)
+	if errors.Is(err, sql.ErrNoRows) || (err == nil && eff.Characterid != id) {
+		writeError(w, http.StatusNotFound, fmt.Sprintf("Active effect %d not found for character %d", effectID, id))
+		return
+	}
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Could not load effect")
+		return
+	}
+
+	var mods []map[string]any
+	if json.Unmarshal([]byte(eff.Modifiers), &mods) != nil {
+		writeError(w, http.StatusBadRequest, "Effect modifiers are malformed")
+		return
+	}
+	idx := -1
+	for i, m := range mods {
+		if isTempHpModifier(m) {
+			idx = i
+			break
+		}
+	}
+	if idx < 0 {
+		writeError(w, http.StatusBadRequest, "Active effect has no temp HP to adjust")
+		return
+	}
+	amount := max(0, toInt(mods[idx]["amount"])+int(*body.TempHpDelta))
+	if amount == 0 {
+		if err := s.queries.DeleteEffectByID(r.Context(), effectID); err != nil {
+			writeError(w, http.StatusInternalServerError, "Could not remove effect")
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"removed": true, "id": effectID})
+		return
+	}
+	mods[idx]["amount"] = amount
+	next, _ := json.Marshal(mods)
+	if err := s.queries.UpdateEffectModifiers(r.Context(), sqlcgen.UpdateEffectModifiersParams{Modifiers: string(next), ID: effectID}); err != nil {
+		writeError(w, http.StatusInternalServerError, "Could not update effect")
+		return
+	}
+	writeJSON(w, http.StatusOK, EffectDTO{
+		ID: eff.ID, CatalogID: eff.Catalogid, Scope: eff.Scope, Modifiers: string(next), CreatedAt: eff.Createdat,
+	})
+}
 
 // handleDeleteEffect ports removeActiveEffect: 404 if the effect isn't on this
 // character; returns {id}.
