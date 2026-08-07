@@ -140,6 +140,94 @@ a API é o grosso.
 **Ordem sugerida:** Fase A (rápida, baixo risco, regras já provadas em Go) →
 Fase B (grande). Ou B direto se a prioridade é a API — são independentes.
 
+---
+
+## Fase B — PROGRESSO DE IMPLEMENTAÇÃO (começar a próxima sessão aqui)
+
+**Decisões travadas** (via AskUserQuestion, não re-perguntar):
+- **Realtime**: lib Go **socket.io-compatível** (não reescrever em WebSocket cru) —
+  precisa falar o protocolo Engine.IO/Socket.IO que o front (`socket.io-client`) usa.
+- **Migrations**: **goose** (embarcado, roda no startup).
+- **Cutover**: **big-bang** — construir o Go até paridade total ATRÁS do Nest, virar o
+  proxy `/api` + `/socket.io` do Vite no fim, manter o Nest para rollback.
+- **Restrição**: o Nest continua a autoridade até B.7; o app não muda até o cutover.
+  Commits: uma linha, sem trailer de co-autor.
+
+**Stack já montada** (`engine-go/`, módulo `t20engine`):
+- Router **chi** + **chi/cors**; **golang-jwt/jwt v5** (HS256, `sub` assinado como
+  NÚMERO p/ compat do cookie do Nest); **x/crypto/bcrypt** (cost 12);
+  **modernc.org/sqlite** (driver Go puro, sem cgo — mantém o WASM limpo);
+  **pressly/goose/v3** (migrations embarcadas em `db/migrations`, rodam no startup);
+  **sqlc** (codegen commitado em `db/sqlcgen/`).
+- **Regra de ouro das deps**: libs novas só em `api/`, `db/`, `catalog/`, `cmd/api`,
+  `cmd/seed`. **NUNCA** em `engine/` — senão `GOOS=js GOARCH=wasm go build ./cmd/wasm`
+  quebra. Os dois motores de `engine/` seguem stdlib-puro.
+- **sqlc quirk**: colunas viram minúsculas → campos gerados tipo `Ownerid`, `Hpmax`,
+  `Catalogspellid`. Structs sqlc = tipos internos de DB; os **DTOs à mão**
+  (`character_dto.go`) carregam o contrato camelCase do JSON (espelha Nest DTO×Prisma).
+  Args nomeados via `sqlc.arg('foo')` PRESERVAM camelCase → `Foo`; `?` posicional
+  vira minúsculo. `sqlc.narg`=nullable. `sqlc.slice('ids')`=`[]int64` IN-clause.
+- **writeJSON** usa `enc.SetEscapeHTML(false)` p/ paridade byte-a-byte com
+  `JSON.stringify` (`<>&` em modifiers).
+- **Catálogos**: servidos de JSON embarcado (`catalog/data/*.json`, `//go:embed`),
+  exportados pelo harness do front `GEN_CATALOGS=1`
+  (`frontend/src/entities/catalog/catalog-export.test.ts`).
+
+**Slices — estado:**
+- ✅ **B.0** — fundação: `cmd/api`, chi, config, `/health`, middleware JWT.
+- ✅ **B.1** — data layer: `schema`/goose migrations, sqlc, modernc/sqlite. Seed via
+  `cmd/seed` (HTTP-driven, `seed-data.json`; senha ≥8 chars: "mestre123456").
+  **PENDENTE: expandir o seed p/ os 16 chars** (hoje só 3 representativos).
+- ✅ **B.2** — auth: register/login/logout/me, bcrypt + cookie JWT.
+- ✅ **B.3 — COMPLETA** — domínio Characters: CRUD + ~30 rotas de mutação. Todas as
+  rotas em `api/server.go`. Cobre: vitals/damage (roteamento temp-HP + `planDamage`),
+  level/class-level (recompute via `VitalsForCharacter`), abilities, proficiencies,
+  items (add/patch/equip/delete/**consume**), conditions (catálogo), expertises
+  (add/update/delete), spells (learn/unlearn/prepared/**cast**), **active-effects**
+  (`POST` = spell buff + temp-HP manual com supremacia vale-o-maior; `PATCH`/`DELETE`).
+  **Deferidos documentados (sem consumidor vivo no front):** ramo power-grant do
+  applyEffect (`501`; precisa registry de ativação + compute de atributo server-side)
+  e `GET /sheet`. Paridade verificada em smoke-tests + engine de vitals integrado.
+- ✅ **B.4** — campaigns, members, invites, sessions, users. Helpers de authz
+  (`ownedCampaign`, `campaignAccess`, `ownedSession`); roles player/gm; 409 de PC
+  prévio; ciclo de sessão planned→active→ended→reopen.
+- ✅ **B.5** — catalog endpoint: serve 15 resources + `options`. Retro-desbloqueou o
+  cast (catálogo de magias) e o consume (specs de consumível) do B.3.
+
+- ⏳ **B.6 — Realtime (PRÓXIMO, o mais difícil)**. Gateway socket.io do Nest em
+  `backend/src/realtime/` (`realtime.gateway.ts`, `session-state.service.ts`,
+  `presence-registry.ts`, `ws-auth.ts`). Front consome em
+  `frontend/src/shared/realtime/realtime.ts` (`io(...)`, namespace default).
+  **Auth do socket**: mesmo cookie JWT do HTTP (`ws-auth.ts`), emite `unauthorized`
+  no handshake ruim. **Salas**: `sessionRoom(sessionId)`.
+  **Mensagens cliente→servidor (`@SubscribeMessage`, ~18):** `join-session`,
+  `leave-session`, `get-session-state`, `initiative-add`, `initiative-self`,
+  `initiative-update`, `initiative-remove`, `initiative-next-turn`,
+  `initiative-reset`, `initiative-populate`, `session-rest`, `apply-effect`,
+  `vitals-patch`, `vitals-delta`.
+  **Emits servidor→cliente:** `unauthorized`, `session-state` (broadcast do estado
+  do tracker), `session-rest` (`{scope:'scene'|'day'}`), `effect-applied`,
+  `presence` (`{sessionId, users}`), `persistence-warning` (`{sessionId, dirty}`).
+  Muitos handlers usam ACK-callback (o front passa callback em `join-session`).
+  **Risco**: achar/validar a lib Go socket.io-compatível que fale Engine.IO v4
+  (o `socket.io-client` do front). Começar mapeando payloads exatos de cada msg em
+  `realtime.gateway.ts` + o formato do `SessionRuntimeState` (front
+  `SessionRuntimeState`/`PresenceUser`) antes de escrever qualquer Go.
+- ⏳ **B.7 — Cutover**. Virar o proxy `/api` + `/socket.io` do Vite p/ o server Go;
+  `pnpm dev` roda front + `cmd/api` (que serve API + WASM). Nest fica p/ rollback.
+
+**Como rodar/testar a API Go hoje** (padrão dos smoke-tests desta fase):
+```bash
+cd engine-go && go build ./...
+DB=/tmp/t20.db; rm -f $DB*; JAR=/tmp/t20.cookies
+PORT=3036 DATABASE_URL="file:$DB" JWT_SECRET=x go run ./cmd/api &   # migra no startup
+curl -s -c $JAR -X POST localhost:3036/auth/register -H 'Content-Type: application/json' \
+  -d '{"email":"gm@test.com","password":"password123"}'
+# depois -b $JAR nas rotas autenticadas. gofmt -w + go vet ./api/ antes de commitar.
+```
+
+---
+
 ## Verificação (rodar por slice)
 
 ```bash
