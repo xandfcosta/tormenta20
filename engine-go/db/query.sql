@@ -141,3 +141,14 @@ WHERE id = sqlc.arg('id');
 -- name: SetProficiencies :exec
 UPDATE characters SET proficiencies = sqlc.arg('proficiencies'), updatedAt = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id');
+
+-- name: GetActiveEffectMeta :one
+SELECT id, characterId FROM active_effects WHERE id = ? LIMIT 1;
+
+-- name: ListCampaignsForCharacter :many
+SELECT m.id, m.campaignId, m.characterId, m.role, m.addedAt,
+       c.name AS campaignName, c.description AS campaignDescription, c.updatedAt AS campaignUpdatedAt
+FROM campaign_members m
+JOIN campaigns c ON c.id = m.campaignId
+WHERE m.characterId = ?
+ORDER BY m.addedAt ASC;

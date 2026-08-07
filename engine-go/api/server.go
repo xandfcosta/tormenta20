@@ -53,6 +53,8 @@ func (s *Server) Router() http.Handler {
 		r.Use(s.requireAuth)
 		r.Get("/", s.handleListCharacters)
 		r.Get("/{id}", s.handleGetCharacter)
+		r.Get("/{id}/campaigns", s.handleListCharacterCampaigns)
+		r.Delete("/{id}/active-effects/{effectId}", s.handleDeleteEffect)
 		r.Patch("/{id}/vitals", s.handleUpdateVitals)
 		r.Post("/{id}/damage", s.handleApplyDamage)
 		r.Patch("/{id}/level", s.handleUpdateLevel)

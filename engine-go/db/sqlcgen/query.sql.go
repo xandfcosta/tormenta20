@@ -213,6 +213,22 @@ func (q *Queries) DeleteSpell(ctx context.Context, arg DeleteSpellParams) (int64
 	return result.RowsAffected()
 }
 
+const getActiveEffectMeta = `-- name: GetActiveEffectMeta :one
+SELECT id, characterId FROM active_effects WHERE id = ? LIMIT 1
+`
+
+type GetActiveEffectMetaRow struct {
+	ID          int64 `json:"id"`
+	Characterid int64 `json:"characterid"`
+}
+
+func (q *Queries) GetActiveEffectMeta(ctx context.Context, id int64) (GetActiveEffectMetaRow, error) {
+	row := q.db.QueryRowContext(ctx, getActiveEffectMeta, id)
+	var i GetActiveEffectMetaRow
+	err := row.Scan(&i.ID, &i.Characterid)
+	return i, err
+}
+
 const getCharacter = `-- name: GetCharacter :one
 SELECT id, ownerid, name, origin, god, godpower, tibar, level, hpmax, hpcurrent, mpmax, mpcurrent, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classpowers, classchoices, powerchoices, activeconditions, createdat, updatedat FROM characters WHERE id = ? LIMIT 1
 `
@@ -412,6 +428,58 @@ func (q *Queries) ListActiveEffectsByCharacter(ctx context.Context, characterid 
 			&i.Scope,
 			&i.Modifiers,
 			&i.Createdat,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listCampaignsForCharacter = `-- name: ListCampaignsForCharacter :many
+SELECT m.id, m.campaignId, m.characterId, m.role, m.addedAt,
+       c.name AS campaignName, c.description AS campaignDescription, c.updatedAt AS campaignUpdatedAt
+FROM campaign_members m
+JOIN campaigns c ON c.id = m.campaignId
+WHERE m.characterId = ?
+ORDER BY m.addedAt ASC
+`
+
+type ListCampaignsForCharacterRow struct {
+	ID                  int64          `json:"id"`
+	Campaignid          int64          `json:"campaignid"`
+	Characterid         int64          `json:"characterid"`
+	Role                string         `json:"role"`
+	Addedat             string         `json:"addedat"`
+	Campaignname        string         `json:"campaignname"`
+	Campaigndescription sql.NullString `json:"campaigndescription"`
+	Campaignupdatedat   string         `json:"campaignupdatedat"`
+}
+
+func (q *Queries) ListCampaignsForCharacter(ctx context.Context, characterid int64) ([]ListCampaignsForCharacterRow, error) {
+	rows, err := q.db.QueryContext(ctx, listCampaignsForCharacter, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListCampaignsForCharacterRow{}
+	for rows.Next() {
+		var i ListCampaignsForCharacterRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Campaignid,
+			&i.Characterid,
+			&i.Role,
+			&i.Addedat,
+			&i.Campaignname,
+			&i.Campaigndescription,
+			&i.Campaignupdatedat,
 		); err != nil {
 			return nil, err
 		}
