@@ -401,8 +401,14 @@ Fase B (grande). Ou B direto se a prioridade é a API — são independentes.
   = hpFraction 0.4, derivados via WASM)→criar campanha→criar sessão→**socket "Conectado" +
   presença**→`initiative-add` (Goblin no tracker via broadcast)→`Próximo turno` (Rodada 1,
   "NA VEZ"). Tudo pelo server Go via proxy do Vite.
-  **Prod (fora do escopo do dev-cutover)**: servir o front buildado + migrar dados reais do
-  Nest→Go (schema goose×prisma) — slice futura se/quando for pra produção.
+  **Prod (single-binary)**: ✅ o `cmd/api` serve o front buildado quando `STATIC_DIR` está
+  setado (ex.: `frontend/dist`): monta `/api/*` → `StripPrefix("/api")` → router (não há Vite
+  pra tirar o prefixo), `/socket.io/` → gateway, e `/` → `spaHandler` (arquivo estático se
+  existir, senão `index.html` p/ rotas client-side). WASM servido como `application/wasm`.
+  Em dev (`STATIC_DIR` vazio) nada muda — o Vite serve o front. Build+run de prod:
+  `pnpm --filter frontend build && STATIC_DIR=frontend/dist JWT_SECRET=… go run ./cmd/api`.
+  Smoke validado: `/`→index, `/api/health`+auth por cookie, assets, wasm, SPA fallback, socket.
+  Migração de dados Nest→Go **cancelada** (app nunca foi pra prod; dados são todos de dev).
 
 **Como rodar/testar a API Go hoje** (padrão dos smoke-tests desta fase):
 ```bash

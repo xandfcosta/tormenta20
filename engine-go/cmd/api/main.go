@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"t20engine/api"
 	"t20engine/db"
@@ -36,14 +37,39 @@ func main() {
 
 	srv := api.NewServer(cfg, database, catalogs)
 
-	// Mount the socket.io realtime gateway (B.6) at /socket.io/ alongside the HTTP
-	// API; the Vite proxy forwards both to this server at cutover.
+	// The socket.io realtime gateway (B.6) lives at /socket.io/ in both modes.
 	mux := http.NewServeMux()
 	mux.Handle("/socket.io/", srv.SocketHandler())
-	mux.Handle("/", srv.Router())
+	if cfg.StaticDir != "" {
+		// Production single binary: serve the built front here + route /api/* to the
+		// domain (no Vite to strip the prefix), with an SPA fallback for client routes.
+		mux.Handle("/api/", http.StripPrefix("/api", srv.Router()))
+		mux.Handle("/", spaHandler(cfg.StaticDir))
+		log.Printf("serving built frontend from %s", cfg.StaticDir)
+	} else {
+		// Dev: Vite serves the front and strips /api before proxying to us.
+		mux.Handle("/", srv.Router())
+	}
 
 	log.Printf("t20 API listening on :%s (db=%s)", cfg.Port, cfg.DatabasePath)
 	if err := http.ListenAndServe(":"+cfg.Port, mux); err != nil {
 		log.Fatalf("listen: %v", err)
 	}
+}
+
+// spaHandler serves the built SPA from dir: an existing file (JS/CSS/wasm assets) is
+// served directly, anything else falls back to index.html so client-side (TanStack)
+// routes resolve on a hard refresh. Mirrors what the Vite dev server does implicitly.
+func spaHandler(dir string) http.Handler {
+	fileServer := http.FileServer(http.Dir(dir))
+	index := filepath.Join(dir, "index.html")
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Rooted Clean so "../" can't escape dir; serve the file when it exists.
+		p := filepath.Join(dir, filepath.Clean("/"+r.URL.Path))
+		if info, err := os.Stat(p); err == nil && !info.IsDir() {
+			fileServer.ServeHTTP(w, r)
+			return
+		}
+		http.ServeFile(w, r, index)
+	})
 }

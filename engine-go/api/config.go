@@ -21,6 +21,11 @@ type Config struct {
 	// CatalogPath is the primeEngineCatalogs payload (items/races/…) the API loads
 	// at startup for its mutation validators. Defaults to the committed snapshot.
 	CatalogPath string
+	// StaticDir, when set, is the built frontend (frontend/dist) served by cmd/api in
+	// production: the server then owns the app + API + socket as a single binary and
+	// routes /api/* to the domain (no Vite to strip the prefix). Empty in dev, where
+	// Vite serves the front and proxies /api + /socket.io.
+	StaticDir string
 }
 
 // LoadConfig reads the environment with the same defaults as the Nest backend,
@@ -36,6 +41,7 @@ func LoadConfig() Config {
 		CookieSecure: os.Getenv("COOKIE_SECURE") == "true",
 		CORSOrigin:   env("CORS_ORIGIN", "http://localhost:5173"),
 		CatalogPath:  env("CATALOG_PATH", "parity/_catalogs.json"),
+		StaticDir:    env("STATIC_DIR", ""),
 	}
 }
 
