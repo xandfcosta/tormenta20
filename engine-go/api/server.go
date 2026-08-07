@@ -54,6 +54,21 @@ func (s *Server) Router() http.Handler {
 		r.Get("/{resource}", s.handleCatalogResource)
 	})
 
+	// Invite landing is anonymous (pre-login preview).
+	r.Get("/invites/{token}", s.handleResolveInvite)
+
+	r.With(s.requireAuth).Get("/users", s.handleListUsers)
+
+	r.Route("/campaigns", func(r chi.Router) {
+		r.Use(s.requireAuth)
+		r.Get("/", s.handleListCampaigns)
+		r.Post("/", s.handleCreateCampaign)
+		r.Get("/{id}", s.handleGetCampaign)
+		r.Patch("/{id}", s.handleUpdateCampaign)
+		r.Delete("/{id}", s.handleDeleteCampaign)
+		r.Post("/{id}/invite", s.handleRotateInvite)
+	})
+
 	r.Route("/characters", func(r chi.Router) {
 		// Public creation lists (the Nest options() route carries no guard).
 		r.Get("/options", s.handleCharacterOptions)

@@ -176,6 +176,60 @@ SELECT id, characterId FROM active_effects WHERE id = ? LIMIT 1;
 SELECT id, characterId, catalogId, scope, modifiers, createdAt
 FROM active_effects WHERE id = ? LIMIT 1;
 
+-- campaigns / users (B.4)
+
+-- name: ListCampaignsForUser :many
+SELECT * FROM campaigns c
+WHERE c.ownerId = sqlc.arg('userId')
+   OR c.id IN (
+     SELECT m.campaignId FROM campaign_members m
+     JOIN characters ch ON ch.id = m.characterId WHERE ch.ownerId = sqlc.arg('userId')
+   )
+ORDER BY c.updatedAt DESC;
+
+-- name: GetCampaign :one
+SELECT * FROM campaigns WHERE id = ? LIMIT 1;
+
+-- name: IsCampaignMember :one
+SELECT EXISTS (
+  SELECT 1 FROM campaign_members m JOIN characters ch ON ch.id = m.characterId
+  WHERE m.campaignId = ? AND ch.ownerId = ?
+) AS isMember;
+
+-- name: CreateCampaign :one
+INSERT INTO campaigns (ownerId, name, description, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?)
+RETURNING *;
+
+-- name: DeleteCampaign :exec
+DELETE FROM campaigns WHERE id = ?;
+
+-- name: SetInviteToken :one
+UPDATE campaigns SET inviteToken = sqlc.arg('inviteToken'), updatedAt = sqlc.arg('updatedAt')
+WHERE id = sqlc.arg('id')
+RETURNING id, inviteToken;
+
+-- name: GetCampaignByToken :one
+SELECT id, name FROM campaigns WHERE inviteToken = ? LIMIT 1;
+
+-- name: CallerCharacterInCampaign :one
+SELECT ch.id, ch.name, ch.level FROM campaign_members m
+JOIN characters ch ON ch.id = m.characterId
+WHERE m.campaignId = ? AND ch.ownerId = ? LIMIT 1;
+
+-- name: VisiblePlayerOwners :many
+SELECT DISTINCT ch.ownerId FROM campaign_members m
+JOIN campaigns c ON c.id = m.campaignId JOIN characters ch ON ch.id = m.characterId
+WHERE c.ownerId = ?;
+
+-- name: VisibleGmOwners :many
+SELECT DISTINCT c.ownerId FROM campaign_members m
+JOIN campaigns c ON c.id = m.campaignId JOIN characters ch ON ch.id = m.characterId
+WHERE ch.ownerId = ?;
+
+-- name: ListUsersByIDs :many
+SELECT id, email, name, createdAt FROM users WHERE id IN (sqlc.slice('ids')) ORDER BY createdAt DESC;
+
 -- name: ListCampaignsForCharacter :many
 SELECT m.id, m.campaignId, m.characterId, m.role, m.addedAt,
        c.name AS campaignName, c.description AS campaignDescription, c.updatedAt AS campaignUpdatedAt

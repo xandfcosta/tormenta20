@@ -8,7 +8,67 @@ package sqlcgen
 import (
 	"context"
 	"database/sql"
+	"strings"
 )
+
+const callerCharacterInCampaign = `-- name: CallerCharacterInCampaign :one
+SELECT ch.id, ch.name, ch.level FROM campaign_members m
+JOIN characters ch ON ch.id = m.characterId
+WHERE m.campaignId = ? AND ch.ownerId = ? LIMIT 1
+`
+
+type CallerCharacterInCampaignParams struct {
+	Campaignid int64 `json:"campaignid"`
+	Ownerid    int64 `json:"ownerid"`
+}
+
+type CallerCharacterInCampaignRow struct {
+	ID    int64  `json:"id"`
+	Name  string `json:"name"`
+	Level int64  `json:"level"`
+}
+
+func (q *Queries) CallerCharacterInCampaign(ctx context.Context, arg CallerCharacterInCampaignParams) (CallerCharacterInCampaignRow, error) {
+	row := q.db.QueryRowContext(ctx, callerCharacterInCampaign, arg.Campaignid, arg.Ownerid)
+	var i CallerCharacterInCampaignRow
+	err := row.Scan(&i.ID, &i.Name, &i.Level)
+	return i, err
+}
+
+const createCampaign = `-- name: CreateCampaign :one
+INSERT INTO campaigns (ownerId, name, description, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?)
+RETURNING id, ownerid, name, description, invitetoken, createdat, updatedat
+`
+
+type CreateCampaignParams struct {
+	Ownerid     int64          `json:"ownerid"`
+	Name        string         `json:"name"`
+	Description sql.NullString `json:"description"`
+	Createdat   string         `json:"createdat"`
+	Updatedat   string         `json:"updatedat"`
+}
+
+func (q *Queries) CreateCampaign(ctx context.Context, arg CreateCampaignParams) (Campaign, error) {
+	row := q.db.QueryRowContext(ctx, createCampaign,
+		arg.Ownerid,
+		arg.Name,
+		arg.Description,
+		arg.Createdat,
+		arg.Updatedat,
+	)
+	var i Campaign
+	err := row.Scan(
+		&i.ID,
+		&i.Ownerid,
+		&i.Name,
+		&i.Description,
+		&i.Invitetoken,
+		&i.Createdat,
+		&i.Updatedat,
+	)
+	return i, err
+}
 
 const createCharacter = `-- name: CreateCharacter :one
 INSERT INTO characters (
@@ -283,6 +343,15 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
+const deleteCampaign = `-- name: DeleteCampaign :exec
+DELETE FROM campaigns WHERE id = ?
+`
+
+func (q *Queries) DeleteCampaign(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteCampaign, id)
+	return err
+}
+
 const deleteEffectByID = `-- name: DeleteEffectByID :exec
 DELETE FROM active_effects WHERE id = ?
 `
@@ -368,6 +437,41 @@ func (q *Queries) GetActiveEffectMeta(ctx context.Context, id int64) (GetActiveE
 	row := q.db.QueryRowContext(ctx, getActiveEffectMeta, id)
 	var i GetActiveEffectMetaRow
 	err := row.Scan(&i.ID, &i.Characterid)
+	return i, err
+}
+
+const getCampaign = `-- name: GetCampaign :one
+SELECT id, ownerid, name, description, invitetoken, createdat, updatedat FROM campaigns WHERE id = ? LIMIT 1
+`
+
+func (q *Queries) GetCampaign(ctx context.Context, id int64) (Campaign, error) {
+	row := q.db.QueryRowContext(ctx, getCampaign, id)
+	var i Campaign
+	err := row.Scan(
+		&i.ID,
+		&i.Ownerid,
+		&i.Name,
+		&i.Description,
+		&i.Invitetoken,
+		&i.Createdat,
+		&i.Updatedat,
+	)
+	return i, err
+}
+
+const getCampaignByToken = `-- name: GetCampaignByToken :one
+SELECT id, name FROM campaigns WHERE inviteToken = ? LIMIT 1
+`
+
+type GetCampaignByTokenRow struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+}
+
+func (q *Queries) GetCampaignByToken(ctx context.Context, invitetoken sql.NullString) (GetCampaignByTokenRow, error) {
+	row := q.db.QueryRowContext(ctx, getCampaignByToken, invitetoken)
+	var i GetCampaignByTokenRow
+	err := row.Scan(&i.ID, &i.Name)
 	return i, err
 }
 
@@ -542,6 +646,25 @@ func (q *Queries) IsCampaignGmForCharacter(ctx context.Context, arg IsCampaignGm
 	return isgm, err
 }
 
+const isCampaignMember = `-- name: IsCampaignMember :one
+SELECT EXISTS (
+  SELECT 1 FROM campaign_members m JOIN characters ch ON ch.id = m.characterId
+  WHERE m.campaignId = ? AND ch.ownerId = ?
+) AS isMember
+`
+
+type IsCampaignMemberParams struct {
+	Campaignid int64 `json:"campaignid"`
+	Ownerid    int64 `json:"ownerid"`
+}
+
+func (q *Queries) IsCampaignMember(ctx context.Context, arg IsCampaignMemberParams) (bool, error) {
+	row := q.db.QueryRowContext(ctx, isCampaignMember, arg.Campaignid, arg.Ownerid)
+	var ismember bool
+	err := row.Scan(&ismember)
+	return ismember, err
+}
+
 const listActiveEffectsByCharacter = `-- name: ListActiveEffectsByCharacter :many
 SELECT id, catalogId, scope, modifiers, createdAt
 FROM active_effects WHERE characterId = ? ORDER BY id ASC
@@ -622,6 +745,49 @@ func (q *Queries) ListCampaignsForCharacter(ctx context.Context, characterid int
 			&i.Campaignname,
 			&i.Campaigndescription,
 			&i.Campaignupdatedat,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listCampaignsForUser = `-- name: ListCampaignsForUser :many
+
+SELECT id, ownerid, name, description, invitetoken, createdat, updatedat FROM campaigns c
+WHERE c.ownerId = ?1
+   OR c.id IN (
+     SELECT m.campaignId FROM campaign_members m
+     JOIN characters ch ON ch.id = m.characterId WHERE ch.ownerId = ?1
+   )
+ORDER BY c.updatedAt DESC
+`
+
+// campaigns / users (B.4)
+func (q *Queries) ListCampaignsForUser(ctx context.Context, userid int64) ([]Campaign, error) {
+	rows, err := q.db.QueryContext(ctx, listCampaignsForUser, userid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Campaign{}
+	for rows.Next() {
+		var i Campaign
+		if err := rows.Scan(
+			&i.ID,
+			&i.Ownerid,
+			&i.Name,
+			&i.Description,
+			&i.Invitetoken,
+			&i.Createdat,
+			&i.Updatedat,
 		); err != nil {
 			return nil, err
 		}
@@ -915,6 +1081,55 @@ func (q *Queries) ListSpellsByCharacter(ctx context.Context, characterid int64) 
 	return items, nil
 }
 
+const listUsersByIDs = `-- name: ListUsersByIDs :many
+SELECT id, email, name, createdAt FROM users WHERE id IN (/*SLICE:ids*/?) ORDER BY createdAt DESC
+`
+
+type ListUsersByIDsRow struct {
+	ID        int64          `json:"id"`
+	Email     string         `json:"email"`
+	Name      sql.NullString `json:"name"`
+	Createdat string         `json:"createdat"`
+}
+
+func (q *Queries) ListUsersByIDs(ctx context.Context, ids []int64) ([]ListUsersByIDsRow, error) {
+	query := listUsersByIDs
+	var queryParams []interface{}
+	if len(ids) > 0 {
+		for _, v := range ids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListUsersByIDsRow{}
+	for rows.Next() {
+		var i ListUsersByIDsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Email,
+			&i.Name,
+			&i.Createdat,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const setCharacterClassLevel = `-- name: SetCharacterClassLevel :execrows
 UPDATE character_classes SET level = ?1
 WHERE characterId = ?2 AND className = ?3
@@ -992,6 +1207,30 @@ type SetHpCurrentParams struct {
 func (q *Queries) SetHpCurrent(ctx context.Context, arg SetHpCurrentParams) error {
 	_, err := q.db.ExecContext(ctx, setHpCurrent, arg.HpCurrent, arg.UpdatedAt, arg.ID)
 	return err
+}
+
+const setInviteToken = `-- name: SetInviteToken :one
+UPDATE campaigns SET inviteToken = ?1, updatedAt = ?2
+WHERE id = ?3
+RETURNING id, inviteToken
+`
+
+type SetInviteTokenParams struct {
+	InviteToken sql.NullString `json:"inviteToken"`
+	UpdatedAt   string         `json:"updatedAt"`
+	ID          int64          `json:"id"`
+}
+
+type SetInviteTokenRow struct {
+	ID          int64          `json:"id"`
+	Invitetoken sql.NullString `json:"invitetoken"`
+}
+
+func (q *Queries) SetInviteToken(ctx context.Context, arg SetInviteTokenParams) (SetInviteTokenRow, error) {
+	row := q.db.QueryRowContext(ctx, setInviteToken, arg.InviteToken, arg.UpdatedAt, arg.ID)
+	var i SetInviteTokenRow
+	err := row.Scan(&i.ID, &i.Invitetoken)
+	return i, err
 }
 
 const setMpCurrent = `-- name: SetMpCurrent :exec
@@ -1153,4 +1392,62 @@ func (q *Queries) UpdateVitals(ctx context.Context, arg UpdateVitalsParams) (Upd
 	var i UpdateVitalsRow
 	err := row.Scan(&i.Hpcurrent, &i.Mpcurrent)
 	return i, err
+}
+
+const visibleGmOwners = `-- name: VisibleGmOwners :many
+SELECT DISTINCT c.ownerId FROM campaign_members m
+JOIN campaigns c ON c.id = m.campaignId JOIN characters ch ON ch.id = m.characterId
+WHERE ch.ownerId = ?
+`
+
+func (q *Queries) VisibleGmOwners(ctx context.Context, ownerid int64) ([]int64, error) {
+	rows, err := q.db.QueryContext(ctx, visibleGmOwners, ownerid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []int64{}
+	for rows.Next() {
+		var ownerid int64
+		if err := rows.Scan(&ownerid); err != nil {
+			return nil, err
+		}
+		items = append(items, ownerid)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const visiblePlayerOwners = `-- name: VisiblePlayerOwners :many
+SELECT DISTINCT ch.ownerId FROM campaign_members m
+JOIN campaigns c ON c.id = m.campaignId JOIN characters ch ON ch.id = m.characterId
+WHERE c.ownerId = ?
+`
+
+func (q *Queries) VisiblePlayerOwners(ctx context.Context, ownerid int64) ([]int64, error) {
+	rows, err := q.db.QueryContext(ctx, visiblePlayerOwners, ownerid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []int64{}
+	for rows.Next() {
+		var ownerid int64
+		if err := rows.Scan(&ownerid); err != nil {
+			return nil, err
+		}
+		items = append(items, ownerid)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
