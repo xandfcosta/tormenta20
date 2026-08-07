@@ -13,10 +13,58 @@ import (
 // deleted when emptied, a mixed one is kept with its tempHp amount zeroed.
 
 type tempHpPool struct {
-	effectID int64
-	amount   int
-	pure     bool
-	mods     []map[string]any // preserved verbatim so a rewrite drops no fields
+	effectID  int64
+	catalogID string
+	scope     string
+	amount    int
+	pure      bool
+	mods      []map[string]any // preserved verbatim so a rewrite drops no fields
+}
+
+type displacedPool struct {
+	EffectID int64 `json:"effectId"`
+	Removed  bool  `json:"removed"`
+}
+
+// poolPlan ports temp-hp.helpers.ts PoolSupremacyPlan (vale-o-maior, p256).
+type poolPlan struct {
+	superseded   bool
+	keptEffectID int64
+	keptAmount   int
+	displaced    []displacedPool
+	zeroWrites   []effectModifierWrite
+	deleteIDs    []int64
+}
+
+// planPoolSupremacy decides whether a new pool of newAmount may exist beside the
+// character's other pools: a bigger-or-equal existing pool wins (superseded);
+// otherwise the new pool wins and every smaller pool is displaced.
+func planPoolSupremacy(pools []tempHpPool, ownCatalogID, ownScope string, newAmount int) poolPlan {
+	others := []tempHpPool{}
+	for _, p := range pools {
+		if !(p.catalogID == ownCatalogID && p.scope == ownScope) {
+			others = append(others, p)
+		}
+	}
+	var top *tempHpPool
+	for i := range others {
+		if top == nil || others[i].amount > top.amount {
+			top = &others[i]
+		}
+	}
+	if top != nil && top.amount >= newAmount {
+		return poolPlan{superseded: true, keptEffectID: top.effectID, keptAmount: top.amount}
+	}
+	plan := poolPlan{displaced: []displacedPool{}}
+	for _, p := range others {
+		plan.displaced = append(plan.displaced, displacedPool{EffectID: p.effectID, Removed: p.pure})
+		if p.pure {
+			plan.deleteIDs = append(plan.deleteIDs, p.effectID)
+		} else {
+			plan.zeroWrites = append(plan.zeroWrites, effectModifierWrite{p.effectID, withTempHpAmount(p.mods, 0)})
+		}
+	}
+	return plan
 }
 
 type damageDrain struct {
@@ -60,7 +108,9 @@ func parseTempHpPools(rows []sqlcgen.ListActiveEffectsByCharacterRow) []tempHpPo
 		if !found || amount <= 0 {
 			continue
 		}
-		pools = append(pools, tempHpPool{effectID: row.ID, amount: amount, pure: pure, mods: mods})
+		pools = append(pools, tempHpPool{
+			effectID: row.ID, catalogID: row.Catalogid, scope: row.Scope, amount: amount, pure: pure, mods: mods,
+		})
 	}
 	return pools
 }

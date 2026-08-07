@@ -94,6 +94,7 @@ func (s *Server) Router() http.Handler {
 			r.Post("/", s.handleCreateCharacter)
 			r.Get("/{id}", s.handleGetCharacter)
 			r.Get("/{id}/campaigns", s.handleListCharacterCampaigns)
+			r.Post("/{id}/active-effects", s.handleApplyEffect)
 			r.Patch("/{id}/active-effects/{effectId}", s.handleAdjustEffect)
 			r.Delete("/{id}/active-effects/{effectId}", s.handleDeleteEffect)
 			r.Patch("/{id}/vitals", s.handleUpdateVitals)

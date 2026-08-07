@@ -88,6 +88,18 @@ RETURNING id, catalogId, scope, modifiers, createdAt;
 UPDATE characters SET hpCurrent = sqlc.arg('hpCurrent'), mpCurrent = sqlc.arg('mpCurrent'), updatedAt = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id');
 
+-- name: UpsertActiveEffect :one
+INSERT INTO active_effects (characterId, source, catalogId, scope, modifiers, createdAt)
+VALUES (?, ?, ?, ?, ?, ?)
+ON CONFLICT (characterId, catalogId, scope) DO UPDATE SET modifiers = excluded.modifiers, source = excluded.source
+RETURNING id, catalogId, scope, modifiers, createdAt;
+
+-- name: ListEffectIdsByCatalog :many
+SELECT id FROM active_effects WHERE characterId = ? AND catalogId = ?;
+
+-- name: DeleteEffectsByCatalog :exec
+DELETE FROM active_effects WHERE characterId = ? AND catalogId = ?;
+
 -- name: ListEquippedItems :many
 SELECT id, equipped FROM character_items WHERE characterId = ? AND equipped IS NOT NULL;
 

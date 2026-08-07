@@ -472,6 +472,20 @@ func (q *Queries) DeleteEffectByID(ctx context.Context, id int64) error {
 	return err
 }
 
+const deleteEffectsByCatalog = `-- name: DeleteEffectsByCatalog :exec
+DELETE FROM active_effects WHERE characterId = ? AND catalogId = ?
+`
+
+type DeleteEffectsByCatalogParams struct {
+	Characterid int64  `json:"characterid"`
+	Catalogid   string `json:"catalogid"`
+}
+
+func (q *Queries) DeleteEffectsByCatalog(ctx context.Context, arg DeleteEffectsByCatalogParams) error {
+	_, err := q.db.ExecContext(ctx, deleteEffectsByCatalog, arg.Characterid, arg.Catalogid)
+	return err
+}
+
 const deleteExpertiseByID = `-- name: DeleteExpertiseByID :exec
 DELETE FROM character_expertises WHERE id = ?
 `
@@ -1144,6 +1158,38 @@ func (q *Queries) ListClassesByCharacter(ctx context.Context, characterid int64)
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEffectIdsByCatalog = `-- name: ListEffectIdsByCatalog :many
+SELECT id FROM active_effects WHERE characterId = ? AND catalogId = ?
+`
+
+type ListEffectIdsByCatalogParams struct {
+	Characterid int64  `json:"characterid"`
+	Catalogid   string `json:"catalogid"`
+}
+
+func (q *Queries) ListEffectIdsByCatalog(ctx context.Context, arg ListEffectIdsByCatalogParams) ([]int64, error) {
+	rows, err := q.db.QueryContext(ctx, listEffectIdsByCatalog, arg.Characterid, arg.Catalogid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []int64{}
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
@@ -1884,6 +1930,50 @@ func (q *Queries) UpdateVitals(ctx context.Context, arg UpdateVitalsParams) (Upd
 	)
 	var i UpdateVitalsRow
 	err := row.Scan(&i.Hpcurrent, &i.Mpcurrent)
+	return i, err
+}
+
+const upsertActiveEffect = `-- name: UpsertActiveEffect :one
+INSERT INTO active_effects (characterId, source, catalogId, scope, modifiers, createdAt)
+VALUES (?, ?, ?, ?, ?, ?)
+ON CONFLICT (characterId, catalogId, scope) DO UPDATE SET modifiers = excluded.modifiers, source = excluded.source
+RETURNING id, catalogId, scope, modifiers, createdAt
+`
+
+type UpsertActiveEffectParams struct {
+	Characterid int64  `json:"characterid"`
+	Source      string `json:"source"`
+	Catalogid   string `json:"catalogid"`
+	Scope       string `json:"scope"`
+	Modifiers   string `json:"modifiers"`
+	Createdat   string `json:"createdat"`
+}
+
+type UpsertActiveEffectRow struct {
+	ID        int64  `json:"id"`
+	Catalogid string `json:"catalogid"`
+	Scope     string `json:"scope"`
+	Modifiers string `json:"modifiers"`
+	Createdat string `json:"createdat"`
+}
+
+func (q *Queries) UpsertActiveEffect(ctx context.Context, arg UpsertActiveEffectParams) (UpsertActiveEffectRow, error) {
+	row := q.db.QueryRowContext(ctx, upsertActiveEffect,
+		arg.Characterid,
+		arg.Source,
+		arg.Catalogid,
+		arg.Scope,
+		arg.Modifiers,
+		arg.Createdat,
+	)
+	var i UpsertActiveEffectRow
+	err := row.Scan(
+		&i.ID,
+		&i.Catalogid,
+		&i.Scope,
+		&i.Modifiers,
+		&i.Createdat,
+	)
 	return i, err
 }
 
