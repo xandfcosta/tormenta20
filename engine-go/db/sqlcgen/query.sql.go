@@ -169,6 +169,15 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
+const deleteEffectByID = `-- name: DeleteEffectByID :exec
+DELETE FROM active_effects WHERE id = ?
+`
+
+func (q *Queries) DeleteEffectByID(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteEffectByID, id)
+	return err
+}
+
 const deleteExpertiseByID = `-- name: DeleteExpertiseByID :exec
 DELETE FROM character_expertises WHERE id = ?
 `
@@ -696,6 +705,22 @@ func (q *Queries) ListSpellsByCharacter(ctx context.Context, characterid int64) 
 	return items, nil
 }
 
+const setHpCurrent = `-- name: SetHpCurrent :exec
+UPDATE characters SET hpCurrent = ?1, updatedAt = ?2
+WHERE id = ?3
+`
+
+type SetHpCurrentParams struct {
+	HpCurrent int64  `json:"hpCurrent"`
+	UpdatedAt string `json:"updatedAt"`
+	ID        int64  `json:"id"`
+}
+
+func (q *Queries) SetHpCurrent(ctx context.Context, arg SetHpCurrentParams) error {
+	_, err := q.db.ExecContext(ctx, setHpCurrent, arg.HpCurrent, arg.UpdatedAt, arg.ID)
+	return err
+}
+
 const setSpellPreparedByCatalog = `-- name: SetSpellPreparedByCatalog :one
 UPDATE character_spells SET prepared = ?1
 WHERE characterId = ?2 AND catalogSpellId = ?3
@@ -734,6 +759,20 @@ type UpdateConditionsParams struct {
 
 func (q *Queries) UpdateConditions(ctx context.Context, arg UpdateConditionsParams) error {
 	_, err := q.db.ExecContext(ctx, updateConditions, arg.ActiveConditions, arg.UpdatedAt, arg.ID)
+	return err
+}
+
+const updateEffectModifiers = `-- name: UpdateEffectModifiers :exec
+UPDATE active_effects SET modifiers = ?1 WHERE id = ?2
+`
+
+type UpdateEffectModifiersParams struct {
+	Modifiers string `json:"modifiers"`
+	ID        int64  `json:"id"`
+}
+
+func (q *Queries) UpdateEffectModifiers(ctx context.Context, arg UpdateEffectModifiersParams) error {
+	_, err := q.db.ExecContext(ctx, updateEffectModifiers, arg.Modifiers, arg.ID)
 	return err
 }
 

@@ -89,3 +89,72 @@ func nullInt(p *int64) sql.NullInt64 {
 	}
 	return sql.NullInt64{Int64: *p, Valid: true}
 }
+
+type applyDamageResult struct {
+	HpCurrent       int           `json:"hpCurrent"`
+	TempHpRemaining int           `json:"tempHpRemaining"`
+	Drained         []damageDrain `json:"drained"`
+}
+
+// handleApplyDamage ports CharacterTempHpService.applyDamage: temp-first damage
+// routing (drain pools, overflow to HP), persisting the drained/emptied effects
+// and the new HP. Returns the {hpCurrent, tempHpRemaining, drained} delta.
+func (s *Server) handleApplyDamage(w http.ResponseWriter, r *http.Request) {
+	id, ok := intParam(w, r, "id")
+	if !ok {
+		return
+	}
+	var body struct {
+		Amount *int64 `json:"amount"`
+	}
+	if !decodeJSON(w, r, &body) {
+		return
+	}
+	row, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id)
+	if err != nil {
+		writeError(w, status, err.Error())
+		return
+	}
+	switch {
+	case body.Amount == nil:
+		writeValidationError(w, FieldErrorMap{"amount": {"amount must be an integer number"}})
+		return
+	case *body.Amount < 1:
+		writeValidationError(w, FieldErrorMap{"amount": {"amount must not be less than 1"}})
+		return
+	case *body.Amount > 9999:
+		writeValidationError(w, FieldErrorMap{"amount": {"amount must not be greater than 9999"}})
+		return
+	}
+
+	effects, err := s.queries.ListActiveEffectsByCharacter(r.Context(), id)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Could not load effects")
+		return
+	}
+	plan := planDamage(parseTempHpPools(effects), int(row.Hpcurrent), int(*body.Amount))
+
+	for _, u := range plan.updates {
+		if err := s.queries.UpdateEffectModifiers(r.Context(), sqlcgen.UpdateEffectModifiersParams{Modifiers: u.modifiers, ID: u.effectID}); err != nil {
+			writeError(w, http.StatusInternalServerError, "Could not update effect")
+			return
+		}
+	}
+	for _, delID := range plan.deleteIDs {
+		if err := s.queries.DeleteEffectByID(r.Context(), delID); err != nil {
+			writeError(w, http.StatusInternalServerError, "Could not remove effect")
+			return
+		}
+	}
+	if plan.hpCurrent != int(row.Hpcurrent) {
+		if err := s.queries.SetHpCurrent(r.Context(), sqlcgen.SetHpCurrentParams{
+			HpCurrent: int64(plan.hpCurrent), UpdatedAt: nowISO(), ID: id,
+		}); err != nil {
+			writeError(w, http.StatusInternalServerError, "Could not apply damage")
+			return
+		}
+	}
+	writeJSON(w, http.StatusOK, applyDamageResult{
+		HpCurrent: plan.hpCurrent, TempHpRemaining: plan.tempHpRemaining, Drained: plan.drained,
+	})
+}

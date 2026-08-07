@@ -54,6 +54,7 @@ func (s *Server) Router() http.Handler {
 		r.Get("/", s.handleListCharacters)
 		r.Get("/{id}", s.handleGetCharacter)
 		r.Patch("/{id}/vitals", s.handleUpdateVitals)
+		r.Post("/{id}/damage", s.handleApplyDamage)
 		r.Post("/{id}/items", s.handleAddItem)
 		r.Patch("/{id}/items/{itemId}", s.handleUpdateItem)
 		r.Delete("/{id}/items/{itemId}", s.handleDeleteItem)

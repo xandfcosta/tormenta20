@@ -113,3 +113,13 @@ RETURNING name, attribute, trained, custom;
 
 -- name: DeleteExpertiseByID :exec
 DELETE FROM character_expertises WHERE id = ?;
+
+-- name: UpdateEffectModifiers :exec
+UPDATE active_effects SET modifiers = sqlc.arg('modifiers') WHERE id = sqlc.arg('id');
+
+-- name: DeleteEffectByID :exec
+DELETE FROM active_effects WHERE id = ?;
+
+-- name: SetHpCurrent :exec
+UPDATE characters SET hpCurrent = sqlc.arg('hpCurrent'), updatedAt = sqlc.arg('updatedAt')
+WHERE id = sqlc.arg('id');
