@@ -81,6 +81,7 @@ func (s *Server) Router() http.Handler {
 			r.Post("/{id}/spells", s.handleLearnSpell)
 			r.Delete("/{id}/spells/{catalogSpellId}", s.handleUnlearnSpell)
 			r.Patch("/{id}/spells/{catalogSpellId}/prepared", s.handleSetSpellPrepared)
+			r.Post("/{id}/spells/{catalogSpellId}/cast", s.handleCastSpell)
 		})
 	})
 	return r

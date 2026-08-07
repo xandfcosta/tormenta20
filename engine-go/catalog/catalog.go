@@ -4,10 +4,51 @@
 // and embedded here so the Go server needs no TS import.
 package catalog
 
-import "embed"
+import (
+	"embed"
+	"encoding/json"
+	"sync"
+)
 
 //go:embed data/*.json
 var files embed.FS
+
+// Spell is the subset of a SPELL_CATALOG entry the API's cast/apply paths read.
+type Spell struct {
+	Circle   int       `json:"circle"`
+	School   string    `json:"school"`
+	Augments []Augment `json:"augments"`
+	Buff     *Buff     `json:"buff"`
+}
+
+type Augment struct {
+	PmCost int    `json:"pmCost"`
+	Kind   string `json:"kind"`
+}
+
+// Buff carries the modifiers an applied spell effect stores (raw JSON so it
+// re-serializes byte-identical to the catalog).
+type Buff struct {
+	DefaultScope string          `json:"defaultScope"`
+	Modifiers    json.RawMessage `json:"modifiers"`
+}
+
+var (
+	spellsOnce sync.Once
+	spellsByID map[string]Spell
+)
+
+// LookupSpell returns the parsed spell entry, or (zero, false) if unknown.
+func LookupSpell(id string) (Spell, bool) {
+	spellsOnce.Do(func() {
+		spellsByID = map[string]Spell{}
+		if b, err := files.ReadFile("data/spells.json"); err == nil {
+			_ = json.Unmarshal(b, &spellsByID)
+		}
+	})
+	sp, ok := spellsByID[id]
+	return sp, ok
+}
 
 // resources is the ordered CatalogService registry — the GET /catalog index.
 var resources = []string{

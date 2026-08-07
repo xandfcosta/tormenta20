@@ -994,6 +994,22 @@ func (q *Queries) SetHpCurrent(ctx context.Context, arg SetHpCurrentParams) erro
 	return err
 }
 
+const setMpCurrent = `-- name: SetMpCurrent :exec
+UPDATE characters SET mpCurrent = ?1, updatedAt = ?2
+WHERE id = ?3
+`
+
+type SetMpCurrentParams struct {
+	MpCurrent int64  `json:"mpCurrent"`
+	UpdatedAt string `json:"updatedAt"`
+	ID        int64  `json:"id"`
+}
+
+func (q *Queries) SetMpCurrent(ctx context.Context, arg SetMpCurrentParams) error {
+	_, err := q.db.ExecContext(ctx, setMpCurrent, arg.MpCurrent, arg.UpdatedAt, arg.ID)
+	return err
+}
+
 const setProficiencies = `-- name: SetProficiencies :exec
 UPDATE characters SET proficiencies = ?1, updatedAt = ?2
 WHERE id = ?3
