@@ -98,6 +98,43 @@ func LookupItem(id string) (Item, bool) {
 	return it, ok
 }
 
+// Activation is the subset of an ACTIVATION_SPECS entry the power-grant path reads.
+type Activation struct {
+	ID    string           `json:"id"`
+	Grant *ActivationGrant `json:"grant"`
+}
+
+// ActivationGrant is the effect a power activation grants: a temp-HP pool scaled by an
+// attribute (kind "temp-hp"), or a fixed set of active-effect modifiers (kind "active-effect").
+type ActivationGrant struct {
+	Kind      string          `json:"kind"`
+	Scope     string          `json:"scope"`
+	Attribute string          `json:"attribute"`
+	Modifiers json.RawMessage `json:"modifiers"`
+}
+
+var (
+	activationsOnce sync.Once
+	activationsByID map[string]Activation
+)
+
+// LookupActivation returns the parsed activation spec by id, or (zero, false) if unknown.
+func LookupActivation(id string) (Activation, bool) {
+	activationsOnce.Do(func() {
+		activationsByID = map[string]Activation{}
+		if b, err := files.ReadFile("data/activations.json"); err == nil {
+			var specs []Activation
+			if json.Unmarshal(b, &specs) == nil {
+				for _, a := range specs {
+					activationsByID[a.ID] = a
+				}
+			}
+		}
+	})
+	a, ok := activationsByID[id]
+	return a, ok
+}
+
 // resources is the ordered CatalogService registry — the GET /catalog index.
 var resources = []string{
 	"spells", "bestiary", "items", "conditions", "deuses", "races", "origins",

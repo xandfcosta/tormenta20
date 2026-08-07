@@ -192,9 +192,9 @@ Fase B (grande). Ou B direto se a prioridade é a API — são independentes.
   items (add/patch/equip/delete/**consume**), conditions (catálogo), expertises
   (add/update/delete), spells (learn/unlearn/prepared/**cast**), **active-effects**
   (`POST` = spell buff + temp-HP manual com supremacia vale-o-maior; `PATCH`/`DELETE`).
-  **Deferidos documentados (sem consumidor vivo no front):** ramo power-grant do
-  applyEffect (`501`; precisa registry de ativação + compute de atributo server-side)
-  e `GET /sheet`. Paridade verificada em smoke-tests + engine de vitals integrado.
+  **Deferidos → depois FEITOS:** ramo power-grant do applyEffect (ALE-9: resolve o grant
+  via `catalog.LookupActivation`; temp-hp escala por atributo via `ComputeSheetV2`) e
+  `GET /sheet` (ALE-10: `ComputedSheetV2` server-side). Paridade verificada em smoke-tests + engine de vitals integrado.
 - ✅ **B.4** — campaigns, members, invites, sessions, users. Helpers de authz
   (`ownedCampaign`, `campaignAccess`, `ownedSession`); roles player/gm; 409 de PC
   prévio; ciclo de sessão planned→active→ended→reopen.

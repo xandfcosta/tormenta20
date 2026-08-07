@@ -39,7 +39,7 @@ func (s *Server) handleApplyEffect(w http.ResponseWriter, r *http.Request) {
 	case body.ManualTempHp != nil:
 		s.applyManualPool(w, r, id, *body.ManualTempHp, derefStr(body.Scope, "scene"))
 	case body.PowerID != nil:
-		writeError(w, http.StatusNotImplemented, "power grants are not yet supported by the Go API")
+		s.applyPowerGrant(w, r, id, *body.PowerID, body.Scope)
 	case body.SpellID == nil:
 		writeJSON(w, http.StatusBadRequest, map[string]any{
 			"statusCode": http.StatusBadRequest, "error": "Bad Request",
@@ -158,6 +158,78 @@ func (s *Server) applySpellBuffEffect(ctx context.Context, charID int64, spellID
 		return EffectDTO{}, http.StatusInternalServerError, errors.New("Could not apply buff")
 	}
 	return effectDTOFromUpsert(eff), http.StatusOK, nil
+}
+
+// applyPowerGrant ports the Nest powerId branch: resolve the power's activation grant and
+// apply it — a temp-HP pool scaled by (level + attribute total), or a fixed active-effect.
+// Unknown power / power without a grant → 400 (like the Nest registry lookup).
+func (s *Server) applyPowerGrant(w http.ResponseWriter, r *http.Request, id int64, powerID string, scopeOverride *string) {
+	spec, known := catalog.LookupActivation(powerID)
+	if !known {
+		writeJSON(w, http.StatusBadRequest, map[string]any{
+			"statusCode": http.StatusBadRequest, "error": "Bad Request",
+			"message":     fmt.Sprintf("Power %q not found in the activation registry", powerID),
+			"fieldErrors": FieldErrorMap{"powerId": {"Poder desconhecido"}},
+		})
+		return
+	}
+	if spec.Grant == nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{
+			"statusCode": http.StatusBadRequest, "error": "Bad Request",
+			"message":     fmt.Sprintf("Power %q has no applicable grant", powerID),
+			"fieldErrors": FieldErrorMap{"powerId": {"Poder sem efeito aplicável"}},
+		})
+		return
+	}
+	grant := spec.Grant
+	scope := derefStr(scopeOverride, grant.Scope)
+	if grant.Kind == "temp-hp" {
+		amount, ok := s.powerTempHpAmount(r, id, grant.Attribute)
+		if !ok {
+			writeError(w, http.StatusInternalServerError, "Could not compute power temp HP")
+			return
+		}
+		s.applyPool(w, r, id, "power", powerID, scope, amount, "PV temporários")
+		return
+	}
+	// active-effect: upsert the grant's modifiers as a power effect (source "power").
+	mods := grant.Modifiers
+	if len(mods) == 0 {
+		mods = json.RawMessage("[]")
+	}
+	eff, err := s.queries.UpsertActiveEffect(r.Context(), sqlcgen.UpsertActiveEffectParams{
+		Characterid: id, Source: "power", Catalogid: powerID, Scope: scope, Modifiers: string(mods), Createdat: nowISO(),
+	})
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Could not apply power")
+		return
+	}
+	writeJSON(w, http.StatusOK, effectDTOFromUpsert(eff))
+}
+
+// powerTempHpAmount computes a temp-HP power's magnitude: character level + the attribute's
+// computed total (mirrors tempHpModifier). Needs the rules engine primed.
+func (s *Server) powerTempHpAmount(r *http.Request, id int64, attribute string) (int, bool) {
+	if s.catalogs == nil {
+		return 0, false
+	}
+	row, err := s.queries.GetCharacter(r.Context(), id)
+	if err != nil {
+		return 0, false
+	}
+	dto, err := s.loadCharacter(r.Context(), row)
+	if err != nil {
+		return 0, false
+	}
+	ec, err := engineCharacterFrom(dto)
+	if err != nil {
+		return 0, false
+	}
+	attr, ok := s.catalogs.ComputeSheetV2(ec, map[string]bool{}).Attributes[attribute]
+	if !ok {
+		return 0, false
+	}
+	return int(row.Level) + attr.Total, true
 }
 
 func effectDTOFromUpsert(e sqlcgen.UpsertActiveEffectRow) EffectDTO {
