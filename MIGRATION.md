@@ -384,8 +384,20 @@ Fase B (grande). Ou B direto se a prioridade é a API — são independentes.
   fire-and-forget na coluna `runtimeState`); (3) presence-registry (dedupe por userId);
   (4) ws-auth (reusar o verify JWT do HTTP); (5) os ~14 handlers + emits; (6) montar no
   `cmd/api`. Testar com o mesmo padrão do spike (client socket.io-client real).
-- ⏳ **B.7 — Cutover**. Virar o proxy `/api` + `/socket.io` do Vite p/ o server Go;
-  `pnpm dev` roda front + `cmd/api` (que serve API + WASM). Nest fica p/ rollback.
+- ✅ **B.7 — Cutover (dev)**. Proxy do Vite (`/api` + `/socket.io`) agora aponta pro server
+  Go via `API_TARGET` (default `http://localhost:3001`). `.air.toml` roda **`cmd/api`** (não
+  mais `cmd/server`); WASM fica com o `predev` do front. Env do dev Go no script
+  `@tormenta20/engine-go dev` (`JWT_SECRET`/`PORT`/`COOKIE_NAME`). Scripts raiz:
+  **`pnpm dev`** = t20-data + **API Go** + front; **`pnpm dev:nest`** (rollback) = t20-data +
+  Nest + front com `API_TARGET=:3000` (só um script, sem editar código). DB Go próprio
+  (`engine-go/t20-go.db`, gitignored), semeado por `pnpm -F @tormenta20/engine-go seed`
+  (3 contas @t20.local / `mestre123456`, 15 chars). Nest + `backend/dev.db` intactos p/ rollback.
+  **Validado**: build estilo-air de `cmd/api`, login com creds do seed (200), socket conecta
+  autenticado via cookie; front typecheck/biome limpos. **CORS**: não precisa — o socket
+  conecta em `window.location.origin` (Vite), proxied → same-origin p/ o browser.
+  **Sem cobertura**: smoke manual do app no browser (login→ficha→sessão ao vivo) fica p/ o dono.
+  **Prod (fora do escopo do dev-cutover)**: servir o front buildado + migrar dados reais do
+  Nest→Go (schema goose×prisma) — slice futura se/quando for pra produção.
 
 **Como rodar/testar a API Go hoje** (padrão dos smoke-tests desta fase):
 ```bash

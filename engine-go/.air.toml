@@ -1,15 +1,15 @@
 # Air hot-reload do engine-go em dev (parte do `pnpm dev` do root, via concurrently).
-# A cada mudança em .go: (1) rebuilda o WASM que o front consome
-# (frontend/public/engine/) e (2) recompila+reinicia o server Go em :3002 (POST
-# /sheet, útil pra checagens de paridade durante a migração pro WASM).
-# Ver project_fase3_rtt_bench (Fase 3 → WASM).
+# B.7 cutover: agora compila+reinicia a API Go (cmd/api :3001) — o server que o
+# front consome via proxy do Vite (/api + /socket.io). O WASM é buildado pelo
+# `predev` do frontend (scripts/build-engine-wasm.sh), então não é rebuildado aqui
+# a cada mudança em .go (mais rápido). O env (JWT_SECRET/PORT) vem do script
+# `dev` do engine-go. cmd/server (motor de bench :3002) continua existindo, só não
+# roda no dev.
 root = "."
 tmp_dir = "tmp"
 
 [build]
-  # Rebuilda o wasm (script resolve os paths pelo próprio local) + compila o server.
-  cmd = "bash ../frontend/scripts/build-engine-wasm.sh && go build -o ./tmp/engine-server ./cmd/server"
-  # air roda este binário após o build; cmd/server usa :3002 por padrão.
+  cmd = "go build -o ./tmp/engine-server ./cmd/api"
   bin = "./tmp/engine-server"
   include_ext = ["go"]
   exclude_dir = ["tmp", "cmd/wasm/testdata"]

@@ -98,6 +98,11 @@ function chunkFor(id: string): string | undefined {
   return 'vendor-misc'
 }
 
+// Backend the dev proxy forwards /api + /socket.io to. Defaults to the Go server
+// (cmd/api :3001) after the B.7 cutover; `pnpm dev:nest` overrides it to the Nest
+// backend (:3000) for rollback.
+const API_TARGET = process.env.API_TARGET ?? 'http://localhost:3001'
+
 export default defineConfig({
   plugins: [
     tanstackRouter({ target: 'react', autoCodeSplitting: true }),
@@ -133,18 +138,20 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
+      // B.7 cutover: /api + /socket.io target the Go server (cmd/api :3001) by
+      // default. Rollback to Nest is `pnpm dev:nest`, which just sets
+      // API_TARGET=http://localhost:3000 — no code edit. The Go routes carry no
+      // /api prefix, so the rewrite still strips it.
       '/api': {
-        target: 'http://localhost:3000',
+        target: API_TARGET,
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api/, ''),
       },
-      // The realtime client connects to window.location.origin (dev:
-      // the Vite port). socket.io lives on the Nest server at :3000 —
-      // proxy its path with `ws: true` so the WebSocket upgrade + polling
-      // fallback both reach the backend. Without this the socket targets
-      // the Vite port (no socket.io handler) and never connects.
+      // The realtime client connects to window.location.origin (dev: the Vite
+      // port). socket.io lives on the same backend — proxy its path with
+      // `ws: true` so the WebSocket upgrade + polling fallback both reach it.
       '/socket.io': {
-        target: 'http://localhost:3000',
+        target: API_TARGET,
         changeOrigin: true,
         ws: true,
       },

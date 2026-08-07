@@ -2,9 +2,10 @@
   "name": "@tormenta20/engine-go",
   "version": "0.0.0",
   "private": true,
-  "description": "Go rules engine (single source of truth) — served to the front as WASM. `dev` runs air, rebuilding the wasm on any .go change.",
+  "description": "Go API + rules engine. `dev` runs air (hot-reload of cmd/api :3001, the app's backend after the B.7 cutover). The WASM is built by the frontend's predev.",
   "scripts": {
-    "dev": "air",
+    "dev": "JWT_SECRET=t20-dev-secret PORT=3001 COOKIE_NAME=t20_session air",
+    "seed": "SEED_API_URL=http://localhost:3001 go run ./cmd/seed",
     "build:wasm": "bash ../frontend/scripts/build-engine-wasm.sh"
   }
 }
