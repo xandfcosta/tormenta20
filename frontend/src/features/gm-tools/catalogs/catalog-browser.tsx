@@ -1,15 +1,17 @@
 import { useMemo, useState } from 'react'
-import {
-  type CatalogItem,
-  type CatalogSpell,
-  type Condition,
-} from '@tormenta20/t20-data'
 import { allCatalogItems } from '@/shared/lib/catalog-cache'
 import { conditionsList } from '@/shared/lib/rules-catalog-cache'
 import { spellCatalog } from '@/shared/lib/spell-cache'
 import { Input } from '@/shared/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
-import { catalogPowers, type CatalogPower } from './catalog-model'
+import {
+  catalogPowers,
+  conditionSearch,
+  itemSearch,
+  powerSearch,
+  spellSearch,
+} from './catalog-model'
+import { CatalogSearchResults } from './catalog-search-results'
 import { CatalogTab } from './catalog-tab'
 import {
   ConditionRow,
@@ -17,15 +19,6 @@ import {
   PowerRow,
   SpellCatalogRow,
 } from './catalog-rows'
-
-// All catalog lists are fetched + primed by the loader gate, so build their
-// sorted views inside the component (a module const would evaluate before
-// priming). See project_front_decouple_catalog.
-// Stable module-level search extractors (CatalogTab memoizes on their identity).
-const conditionSearch = (c: Condition) => [c.name, c.description, ...c.tags]
-const spellSearch = (s: CatalogSpell) => [s.name, s.baseEffect]
-const powerSearch = (p: CatalogPower) => [p.name, p.source, p.description]
-const itemSearch = (i: CatalogItem) => [i.name, i.category]
 
 /**
  * Tabbed catalog browser (condições / magias / poderes / itens) over one shared
@@ -65,6 +58,11 @@ export function CatalogBrowser({
     [],
   )
 
+  // A live query searches every catalog at once (unified results); an empty box
+  // falls back to tab-by-tab browsing. This makes the "todos os catálogos"
+  // placeholder honest — before, the filter only hit the active tab (ALE-22).
+  const searching = query.trim().length > 0
+
   return (
     <div className="flex min-h-0 flex-col gap-4">
       <Input
@@ -73,6 +71,16 @@ export function CatalogBrowser({
         placeholder="Buscar em todos os catálogos…"
       />
 
+      {searching ? (
+        <CatalogSearchResults
+          conditions={conditionList}
+          spells={spellList}
+          powers={powerList}
+          items={itemList}
+          query={query}
+          listClassName={listClassName}
+        />
+      ) : (
       <Tabs defaultValue="conditions" className="flex min-h-0 flex-col">
         <TabsList className="max-w-full self-start overflow-x-auto [&>button]:shrink-0">
           <TabsTrigger value="conditions">Condições</TabsTrigger>
@@ -126,6 +134,7 @@ export function CatalogBrowser({
           />
         </TabsContent>
       </Tabs>
+      )}
     </div>
   )
 }
