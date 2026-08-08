@@ -1,6 +1,7 @@
 import { useNavigate } from '@tanstack/react-router'
 import { Button } from '@/shared/ui/button'
 import { useCreationWizard } from './creation-wizard-context'
+import { WizardRestartButton } from './wizard-restart-button'
 import {
   allStepsReady,
   type CharacterFormValues,
@@ -32,15 +33,18 @@ export function WizardFooterNav({ current }: { current: StepSlug }) {
     // the viewport with the content re-centered inside.
     <div className="fixed inset-x-0 bottom-0 z-10 border-t bg-card/95 backdrop-blur">
       <div className="mx-auto flex w-full max-w-[90rem] items-center justify-between gap-2 px-4 py-3 sm:px-6">
-      {prev ? (
-        <Button type="button" variant="outline" onClick={() => go(prev.slug)}>
-          ‹ Voltar
-        </Button>
-      ) : (
-        <Button type="button" variant="outline" onClick={cancel}>
-          Cancelar
-        </Button>
-      )}
+      <div className="flex items-center gap-2">
+        {prev ? (
+          <Button type="button" variant="outline" onClick={() => go(prev.slug)}>
+            ‹ Voltar
+          </Button>
+        ) : (
+          <Button type="button" variant="outline" onClick={cancel}>
+            Cancelar
+          </Button>
+        )}
+        <WizardRestartButton />
+      </div>
 
       <form.Subscribe
         selector={(s: {

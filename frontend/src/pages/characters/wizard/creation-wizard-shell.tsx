@@ -205,6 +205,15 @@ export function CreationWizardShell() {
     navigate({ to: '/characters' })
   }
 
+  // Start over in place: clear the persisted draft AND the live form (the
+  // form→store mirror would otherwise write the stale values straight back),
+  // then bounce to step 1.
+  const restart = () => {
+    resetDraft()
+    form.reset(wizardDefaults)
+    navigate({ to: '/characters/new/raca' })
+  }
+
   const location = useLocation()
   const currentSlug = slugFromPath(location.pathname)
 
@@ -226,6 +235,7 @@ export function CreationWizardShell() {
         formError,
         submit: () => form.handleSubmit(),
         cancel,
+        restart,
       }}
     >
       <PageChrome

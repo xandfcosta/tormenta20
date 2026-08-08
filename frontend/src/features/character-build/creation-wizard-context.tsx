@@ -24,6 +24,8 @@ export type CreationWizard = {
   formError: string | null
   submit: () => void
   cancel: () => void
+  /** Discard the persisted draft and return to the first step (start over). */
+  restart: () => void
 }
 
 const CreationWizardContext = createContext<CreationWizard | null>(null)
