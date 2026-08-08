@@ -30,4 +30,22 @@ describe('encounterDifficulty', () => {
     expect(encounterDifficulty(2).label).toBe('Difícil')
     expect(encounterDifficulty(5).label).toBe('Mortal')
   })
+
+  // Regressão ALE-25: gaps fracionários (monstros ND < 1, escalonamento log2)
+  // arredondam ao passo de ND mais próximo. Antes, um gap pequeno e negativo
+  // caía direto em "Difícil".
+  it('a small negative gap é fácil, não difícil (1 monstro ND 1/4 vs grupo Nv 1)', () => {
+    // encounterNd 0.25 − partyLevel 1 = −0.75 → arredonda p/ −1 → Fácil
+    expect(encounterDifficulty(-0.75).label).toBe('Fácil')
+  })
+
+  it('a small positive gap é médio (5 monstros ND 1/4 ≈ ND 1.25 vs grupo Nv 1)', () => {
+    // 1.25 − 1 = 0.25 → arredonda p/ 0 → Médio
+    expect(encounterDifficulty(0.25).label).toBe('Médio')
+  })
+
+  it('arredonda para cima nos limites (gap 1.5 → Difícil, −1.5 → Fácil)', () => {
+    expect(encounterDifficulty(1.5).label).toBe('Difícil')
+    expect(encounterDifficulty(-1.5).label).toBe('Fácil')
+  })
 })

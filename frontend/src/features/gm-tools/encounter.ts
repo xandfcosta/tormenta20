@@ -44,15 +44,23 @@ export function enrichEncounter(
 
 /**
  * Maps the encounter-vs-party ND gap to a difficulty band + badge variant.
- * Bands follow the book's threat scale (trivial → mortal).
+ * Bands follow the book's threat scale (trivial → mortal): ND = nível do grupo
+ * é um combate justo ("Médio", p281), abaixo é mais fácil, acima mais difícil.
+ *
+ * O gap é frequentemente fracionário — monstros de ND < 1 dão `groupNd` fracion
+ * (0.25, 1.3…) e o escalonamento por dobra usa `log2`. As faixas são passos
+ * inteiros de ND, então arredondamos o gap ao passo mais próximo antes de bandar.
+ * Sem isso, um gap pequeno e negativo como −0.75 (1 monstro ND 1/4 vs grupo Nv 1)
+ * escapava dos checks `<= -1` e `=== 0` e caía direto em "Difícil" (ALE-25).
  */
 export function encounterDifficulty(gap: number): {
   label: string
   variant: 'default' | 'secondary' | 'outline' | 'destructive'
 } {
-  if (gap <= -3) return { label: 'Trivial', variant: 'secondary' }
-  if (gap <= -1) return { label: 'Fácil', variant: 'outline' }
-  if (gap === 0) return { label: 'Médio', variant: 'default' }
-  if (gap <= 2) return { label: 'Difícil', variant: 'default' }
+  const step = Math.round(gap)
+  if (step <= -3) return { label: 'Trivial', variant: 'secondary' }
+  if (step <= -1) return { label: 'Fácil', variant: 'outline' }
+  if (step === 0) return { label: 'Médio', variant: 'default' }
+  if (step <= 2) return { label: 'Difícil', variant: 'default' }
   return { label: 'Mortal', variant: 'destructive' }
 }
