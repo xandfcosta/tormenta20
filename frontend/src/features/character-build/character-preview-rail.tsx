@@ -2,7 +2,8 @@ import { Card } from '@/shared/ui/card'
 import { StatCell } from '@/shared/ui/stat-cell'
 import { cn } from '@/shared/lib/utils'
 import { hueFromName } from '@/shared/lib/hue-from-name'
-import { type RaceChoiceState, appliedRaceDeltas } from './grant-helpers'
+import { type RaceChoiceState } from './grant-helpers'
+import { deriveDraftDefense } from './draft-defense'
 import { deriveDraftVitals } from './draft-vitals'
 import { type StepSlug, stepReady, WIZARD_STEPS } from './wizard-steps'
 
@@ -15,8 +16,8 @@ type FormApi = any
  * Live character preview — a sticky splash echoing the select screen
  * (hue gradient + keystone initials + DEF·PV·PM triple) plus an accreting
  * step checklist that lights up as each step completes. Morphs as the player
- * fills the wizard, closing the create→view visual loop. DEF is an armor-free
- * estimate (10 + final Destreza).
+ * fills the wizard, closing the create→view visual loop. DEF mirrors the sheet
+ * (10 + final Destreza + Defesa de armadura/escudo do kit — ALE-26).
  */
 export function CharacterPreviewRail({
   form,
@@ -63,6 +64,8 @@ type WizardValues = {
   trainedExpertises: string[]
   classChoices: Record<string, { devoto?: string; caminho?: string }>
   powerChoices: Record<string, string[]>
+  startingArmor?: string
+  startingShield?: boolean
 }
 
 function PreviewCard({
@@ -80,8 +83,7 @@ function PreviewCard({
   const role = primary?.className
     ? `${primary.className} · Nv ${primary.level}`
     : 'Sem classe'
-  const dexDelta = appliedRaceDeltas(values.races, raceChoices).dexterity ?? 0
-  const defense = 10 + values.dexterity + dexDelta
+  const defense = deriveDraftDefense(values, raceChoices)
   const { pvMax, pmMax } = deriveDraftVitals(values, raceChoices)
 
   return (
