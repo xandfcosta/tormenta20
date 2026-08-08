@@ -262,3 +262,24 @@ export function rewardCastigoFromRoll(d6: number): RewardCastigoRow {
   const row = REWARD_CASTIGO_TABLE.find((r) => r.roll === d6)!
   return row
 }
+
+// Human-readable labels for the slug enums (rendered raw before, so the UI
+// showed "complicacao", "ruina-menor" etc. without acentos — ALE-23). The
+// slugs stay the stable identifiers; these are the display layer.
+export const REWARD_LABELS: Readonly<Record<RewardKind, string>> = Object.freeze({
+  'tesouro-riqueza': 'Tesouro (riqueza)',
+  favor: 'Favor',
+  'tesouro-item': 'Tesouro (item)',
+  informacao: 'Informação',
+  'tesouro-ambos': 'Tesouro (ambos)',
+  poder: 'Poder',
+})
+
+export const CASTIGO_LABELS: Readonly<Record<CastigoKind, string>> = Object.freeze({
+  'ruina-menor': 'Ruína menor',
+  abalo: 'Abalo',
+  complicacao: 'Complicação',
+  ferimento: 'Ferimento',
+  maldicao: 'Maldição',
+  'ruina-maior': 'Ruína maior',
+})

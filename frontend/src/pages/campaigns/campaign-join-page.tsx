@@ -2,7 +2,7 @@ import { getRouteApi } from '@tanstack/react-router'
 import { useNavigate } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from '@tanstack/react-form'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { z } from 'zod'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -84,19 +84,22 @@ export function JoinCampaignPage() {
     },
   })
 
-  // When the invite resolves, fill in the campaignId so the user just
-  // picks a character and submits. Setting it once via a flag avoids
-  // clobbering manual edits if the user later tweaks the form.
+  // When the invite resolves, fill in the campaignId so the user just picks a
+  // character and submits. In an effect (not render) — doing it inline warned
+  // "Cannot update a component while rendering a different component" (ALE-20).
+  // The flag applies it once, so it doesn't clobber later manual edits.
   const [tokenApplied, setTokenApplied] = useState(false)
-  if (
-    token &&
-    invitePreview.data &&
-    !tokenApplied &&
-    form.state.values.campaignId === 0
-  ) {
-    form.setFieldValue('campaignId', invitePreview.data.campaignId)
-    setTokenApplied(true)
-  }
+  useEffect(() => {
+    if (
+      token &&
+      invitePreview.data &&
+      !tokenApplied &&
+      form.state.values.campaignId === 0
+    ) {
+      form.setFieldValue('campaignId', invitePreview.data.campaignId)
+      setTokenApplied(true)
+    }
+  }, [token, invitePreview.data, tokenApplied, form])
 
   const noCharacters = (characters.data?.length ?? 0) === 0
   const inviteInvalid = !!token && invitePreview.isError

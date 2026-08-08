@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest'
 import {
   BUSCA_CHALLENGE_TABLE,
   BUSCA_OUTCOME_TABLE,
+  CASTIGO_LABELS,
   CHASE_EVENT_TABLE,
   REWARD_CASTIGO_TABLE,
+  REWARD_LABELS,
   RUINA_TABLE,
   buscaChallengeFromRoll,
   buscaOutcomeFromSuccesses,
@@ -214,5 +216,21 @@ describe('Recompensas & Castigos d6 (p279)', () => {
   it('rejects out-of-range', () => {
     expect(() => rewardCastigoFromRoll(0)).toThrow()
     expect(() => rewardCastigoFromRoll(7)).toThrow()
+  })
+
+  // ALE-23: the UI rendered raw slugs ("complicacao", "ruina-menor"). Labels
+  // give every kind an accented, human-readable display string.
+  it('labels cover every kind used in the table', () => {
+    for (const row of REWARD_CASTIGO_TABLE) {
+      expect(REWARD_LABELS[row.reward]).toBeTruthy()
+      expect(CASTIGO_LABELS[row.castigo]).toBeTruthy()
+    }
+  })
+
+  it('labels carry the missing acentos', () => {
+    expect(CASTIGO_LABELS.complicacao).toBe('Complicação')
+    expect(CASTIGO_LABELS['ruina-menor']).toBe('Ruína menor')
+    expect(CASTIGO_LABELS.maldicao).toBe('Maldição')
+    expect(REWARD_LABELS.informacao).toBe('Informação')
   })
 })

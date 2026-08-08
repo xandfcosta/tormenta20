@@ -7,7 +7,7 @@ export function UsersPage() {
 
   return (
     <div className="h-full space-y-4 overflow-y-auto p-6">
-      <h2 className="text-2xl font-semibold">Users</h2>
+      <h2 className="text-2xl font-semibold">Usuários</h2>
       {users.isLoading && <SkeletonRows count={4} />}
       {users.isError && (
         <p className="text-destructive">{(users.error as Error).message}</p>

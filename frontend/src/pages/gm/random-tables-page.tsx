@@ -6,7 +6,7 @@ import { DicePill } from '@/shared/ui/dice-pill'
 import { PageChrome } from '@/shared/ui/page-chrome'
 import { clampToRange } from '@/shared/lib/bounded-number'
 import { GmPageHeader } from '@/features/gm-tools/gm-page-header'
-import { BUSCA_CHALLENGE_TABLE, BUSCA_OUTCOME_TABLE, buscaChallengeFromRoll, buscaOutcomeFromSuccesses, buscaTestCd, chaseEventFromRoll, dungeonIdeaFromRoll, rewardCastigoFromRoll, ruinaFromRoll, type BuscaChallengeRow, type ChaseEventRow, type DungeonIdea, type RewardCastigoRow, type RuinaRow } from '@tormenta20/t20-data'
+import { BUSCA_CHALLENGE_TABLE, BUSCA_OUTCOME_TABLE, buscaChallengeFromRoll, buscaOutcomeFromSuccesses, buscaTestCd, CASTIGO_LABELS, chaseEventFromRoll, dungeonIdeaFromRoll, REWARD_LABELS, rewardCastigoFromRoll, ruinaFromRoll, type BuscaChallengeRow, type ChaseEventRow, type DungeonIdea, type RewardCastigoRow, type RuinaRow } from '@tormenta20/t20-data'
 
 /**
  * Rolls the Cap 6 mesa tables client-side (no API round-trip — all
@@ -251,9 +251,9 @@ function ConsequenciasCard() {
               <span className="font-semibold tabular-nums">
                 = {entry.roll}
               </span>
-              <Badge>Recompensa: {entry.result.reward}</Badge>
+              <Badge>Recompensa: {REWARD_LABELS[entry.result.reward]}</Badge>
               <Badge variant="destructive">
-                Castigo: {entry.result.castigo}
+                Castigo: {CASTIGO_LABELS[entry.result.castigo]}
               </Badge>
             </>
           )}
