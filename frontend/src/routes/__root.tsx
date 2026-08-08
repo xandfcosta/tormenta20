@@ -1,16 +1,15 @@
 import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import {
   createRootRouteWithContext,
   Outlet,
   useNavigate,
   useRouterState,
 } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { useEffect } from 'react'
 import { ensureCatalogs, ensureEngineCatalogs } from '@/entities/catalog/ensure-catalogs'
 import { meQueryOptions } from '@/entities/user/queries'
 import { api } from '@/shared/api/api'
+import { DevtoolsDock } from '@/shared/dev/devtools-dock'
 import { AppShell } from '@/shared/layout/app-shell'
 import { useAuthStore } from '@/shared/stores/auth-store'
 import { useUiStore } from '@/shared/stores/ui-store'
@@ -115,11 +114,12 @@ function RootLayout() {
           the router pill hid the theme/user controls (UI audit task 14).
           Hidden below md: on phones the pills sat on top of the sheet's
           bottom tab bar, covering the last tabs. */}
-      {import.meta.env.DEV && !inMatch && (
-        <div className="hidden md:contents">
-          <TanStackRouterDevtools position="bottom-right" />
-          <ReactQueryDevtools buttonPosition="bottom-left" />
-        </div>
+      {/* Devtools: production is always off (guarded by import.meta.env.DEV,
+          which the prod build stamps to false and dead-code-eliminates); in
+          dev, VITE_DEVTOOLS=off opts out. The dock makes both launchers
+          draggable so they never trap the bottom-corner UI. */}
+      {import.meta.env.DEV && import.meta.env.VITE_DEVTOOLS !== 'off' && (
+        <DevtoolsDock />
       )}
     </TooltipProvider>
   )
