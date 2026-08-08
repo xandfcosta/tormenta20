@@ -110,8 +110,13 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	sess, ok := s.ownedSession(w, r, cid, sid)
-	if !ok {
+	// Member-aware (ALE-19): a player who is a member must be able to load the
+	// session before the socket connects — the WS gateway already gates on
+	// sessionForCaller, so mirror it here instead of the owner-only ownedSession
+	// (which 403'd invited players with "belongs to another user").
+	sess, _, status, err := s.sessionForCaller(r.Context(), currentUser(r).ID, cid, sid)
+	if err != nil {
+		writeError(w, status, err.Error())
 		return
 	}
 	writeJSON(w, http.StatusOK, sessionDTO(sess))

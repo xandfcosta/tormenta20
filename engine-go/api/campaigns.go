@@ -213,7 +213,11 @@ func (s *Server) handleRotateInvite(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"campaignId": row.ID, "token": row.Invitetoken.String})
 }
 
-// handleResolveInvite ports resolveInviteToken: {id, name} or null (public).
+// handleResolveInvite ports resolveInviteToken: {campaignId, campaignName} or
+// null (public). The frontend's CampaignInvitePreview expects camelCase keys —
+// returning {id, name} left the join form with an undefined campaignId, so the
+// "Entrar" button stayed disabled forever (ALE-18). Mirrors handleRotateInvite,
+// which already returns campaignId.
 func (s *Server) handleResolveInvite(w http.ResponseWriter, r *http.Request) {
 	token := chi.URLParam(r, "token")
 	c, err := s.queries.GetCampaignByToken(r.Context(), sql.NullString{String: token, Valid: token != ""})
@@ -221,7 +225,7 @@ func (s *Server) handleResolveInvite(w http.ResponseWriter, r *http.Request) {
 		writeRawJSON(w, []byte("null")) // unknown/rotated token → null (no 500)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"id": c.ID, "name": c.Name})
+	writeJSON(w, http.StatusOK, map[string]any{"campaignId": c.ID, "campaignName": c.Name})
 }
 
 // ownedCampaign loads a campaign and enforces owner-only access (the guard for
