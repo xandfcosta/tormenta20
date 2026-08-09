@@ -11,11 +11,12 @@ import { useEffect, useState } from 'react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
-import { PageChrome } from '@/shared/ui/page-chrome'
 import { SkeletonCardGrid } from '@/shared/ui/skeleton'
 import type { Character } from '@/shared/api/api'
 import { charactersQueryOptions } from '@/entities/character/queries'
+import { SceneShell } from '@/shared/layout/scene-shell'
 import { fuzzyFilter } from '@/shared/lib/fuzzy-filter'
+import { useSfx } from '@/shared/lib/use-sfx'
 import { CharacterFilmstrip } from '@/features/character-select/character-filmstrip'
 import { CharacterStage } from '@/features/character-select/character-stage'
 import { DossierDrawer } from '@/features/character-select/dossier-drawer'
@@ -45,6 +46,7 @@ const EMPTY: Character[] = []
 export function CharactersListPage() {
   const characters = useQuery(charactersQueryOptions)
   const navigate = useNavigate()
+  const sfx = useSfx()
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [dossierOpen, setDossierOpen] = useState(false)
   const [direction, setDirection] = useState<1 | -1>(1)
@@ -99,34 +101,42 @@ export function CharactersListPage() {
     hasQuery: query.length > 0,
   })
 
-  return (
-    <PageChrome width="full" className="relative flex min-h-0 flex-1 flex-col gap-2">
-      <header className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">Personagens</h1>
-        {roster && roster.length > 0 && (
-          <div className="ml-auto flex flex-1 flex-wrap items-center justify-end gap-2">
-            <div className="relative min-w-48 flex-1 sm:max-w-xs">
-              <Search className="pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Buscar nome, classe, origem, raça"
-                className="pl-8"
-                aria-label="Buscar personagem"
-                data-roster-search
-              />
-            </div>
-            <Badge variant="secondary" className="shrink-0">
-              {filtered.length} de {roster.length}
-            </Badge>
-            <Link to="/characters/new">
-              <Button size="sm">+ Novo</Button>
-            </Link>
-          </div>
-        )}
-      </header>
+  const headerControls =
+    roster && roster.length > 0 ? (
+      <>
+        <div className="relative min-w-48 flex-1 sm:max-w-xs">
+          <Search className="pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar nome, classe, origem, raça"
+            className="pl-8"
+            aria-label="Buscar personagem"
+            data-roster-search
+          />
+        </div>
+        <Badge variant="secondary" className="shrink-0">
+          {filtered.length} de {roster.length}
+        </Badge>
+        <Link to="/characters/new">
+          <Button size="sm">+ Novo</Button>
+        </Link>
+      </>
+    ) : null
 
+  return (
+    <SceneShell
+      dense
+      title="Personagens"
+      onBack={() => {
+        sfx('select')
+        navigate({ to: '/' })
+      }}
+      onEnter={() => sfx('transition')}
+      headerRight={headerControls}
+      className="gap-2"
+    >
       {characters.isLoading && <SkeletonCardGrid count={3} />}
       {characters.isError && (
         <p className="text-destructive">{(characters.error as Error).message}</p>
@@ -163,7 +173,7 @@ export function CharactersListPage() {
           </p>
         </div>
       )}
-    </PageChrome>
+    </SceneShell>
   )
 }
 

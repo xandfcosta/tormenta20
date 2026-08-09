@@ -79,6 +79,13 @@ function RootLayout() {
   const inHub = useRouterState({
     select: (s) => s.matches.some((m) => m.routeId === '/'),
   })
+  // The Personagens roster is a full grimório scene now (SceneShell owns the
+  // back-to-Hub control). Bare-wire ONLY the index route — the sheet
+  // (`/characters/$id`) and the wizard (`/characters/new`) keep their web nav
+  // until they migrate too (ALE-43/ALE-41). See the sibling routeId note.
+  const inRoster = useRouterState({
+    select: (s) => s.matches.some((m) => m.routeId === '/characters/'),
+  })
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
@@ -100,7 +107,7 @@ function RootLayout() {
         onToggleTheme={toggleTheme}
         onLogout={() => logout.mutate()}
         logoutPending={logout.isPending}
-        bare={inMatch || inAuth || inHub}
+        bare={inMatch || inAuth || inHub || inRoster}
         hideBottomNav={inSheet}
       >
         <Outlet />

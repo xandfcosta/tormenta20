@@ -68,6 +68,20 @@ describe('SceneShell', () => {
     expect(onEnter).not.toHaveBeenCalled()
   })
 
+  it('renders a compact header with title + headerRight in dense mode', () => {
+    installReducedMotion(false)
+    render(
+      <SceneShell dense title="Personagens" headerRight={<span>controles</span>}>
+        corpo
+      </SceneShell>,
+    )
+    expect(
+      screen.getByRole('heading', { name: 'Personagens' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('controles')).toBeInTheDocument()
+    expect(screen.getByText('corpo')).toBeInTheDocument()
+  })
+
   it('shows the back control only when onBack is set, and fires it', async () => {
     installReducedMotion(false)
     const onBack = vi.fn()
