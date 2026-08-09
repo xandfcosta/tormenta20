@@ -56,14 +56,13 @@ export function CharacterFilmstrip({
             title={c.name}
             onClick={() => onSelect(c.id)}
             className={cn(
-              'flex size-10 shrink-0 items-center justify-center rounded-md font-display text-xs text-white/80 transition-all',
+              'flex size-10 shrink-0 items-center justify-center rounded-md border font-display text-xs text-white/80 transition-all',
               active
-                ? 'scale-110 ring-2 ring-offset-2 ring-offset-background'
-                : 'opacity-60 hover:opacity-100',
+                ? 'scale-110 border-grimorio-gold ring-2 ring-grimorio-gold ring-offset-2 ring-offset-background'
+                : 'border-grimorio-iron/60 opacity-60 hover:opacity-100',
             )}
             style={{
               background: `linear-gradient(155deg, oklch(0.5 0.14 ${hue}), oklch(0.3 0.08 ${hue}))`,
-              ...(active ? { ['--tw-ring-color' as string]: `oklch(0.6 0.16 ${hue})` } : {}),
             }}
           >
             {initials(c.name)}

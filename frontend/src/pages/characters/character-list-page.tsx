@@ -104,7 +104,7 @@ export function CharactersListPage() {
   const headerControls =
     roster && roster.length > 0 ? (
       <>
-        <div className="relative min-w-48 flex-1 sm:max-w-xs">
+        <div className="relative min-w-40 flex-1 sm:max-w-xs">
           <Search className="pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"

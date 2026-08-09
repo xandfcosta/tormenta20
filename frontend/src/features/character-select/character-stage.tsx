@@ -127,10 +127,12 @@ function StagePortrait({
       type="button"
       onClick={onOpen}
       aria-label={`Abrir ficha de ${character.name}`}
-      className="relative aspect-[3/4] w-44 overflow-hidden rounded-lg outline outline-2 outline-offset-4 transition-transform hover:scale-[1.01] sm:w-56 lg:w-64"
+      className="relative aspect-[3/4] w-44 overflow-hidden rounded-md border-2 border-grimorio-iron transition-transform hover:scale-[1.01] sm:w-56 lg:w-64"
       style={{
         background: portraitGradient(character.name),
-        outlineColor: `oklch(0.6 0.16 ${hue} / 0.6)`,
+        // Iron frame + a thin gold filete (the 1px spread), then a soft glow in
+        // the character's own hue so the roster still reads authored.
+        boxShadow: `0 0 0 1px oklch(0.8 0.11 85 / 0.55), 0 0 44px oklch(0.55 0.15 ${hue} / 0.35)`,
       }}
     >
       <span className="absolute inset-0 flex select-none items-center justify-center font-display text-[7rem] leading-none text-white/20 sm:text-[9rem]">
@@ -158,7 +160,7 @@ function PeekPortrait({
       onClick={onClick}
       title={character.name}
       aria-label={`${side === 'left' ? 'Anterior' : 'Próximo'}: ${character.name}`}
-      className="group relative aspect-[3/4] w-20 overflow-hidden rounded-md opacity-50 transition-all hover:opacity-80 sm:w-28 lg:w-32"
+      className="group relative aspect-[3/4] w-20 overflow-hidden rounded-md border border-grimorio-iron opacity-50 transition-all hover:opacity-80 sm:w-28 lg:w-32"
       style={{ background: portraitGradient(character.name) }}
     >
       <span className="absolute inset-0 flex select-none items-center justify-center font-display text-4xl text-white/20 sm:text-5xl">
@@ -208,7 +210,7 @@ function VitalsRow({
       <Vital
         label="PM"
         value={`${character.mpCurrent}/${character.mpMax}`}
-        tone="text-[color:var(--primary)]"
+        tone="text-[color:var(--mp-arcane)]"
         dim={character.mpMax === 0}
       />
     </div>
