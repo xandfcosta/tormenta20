@@ -43,7 +43,7 @@ export function SheetIdentityText({ character }: { character: Character }) {
   const fatigue = useCharacterEffects(character).flags.has('fatigue-on-sleep')
   return (
     <div className="min-w-0">
-      <h1 className="truncate text-lg font-bold leading-tight tracking-tight sm:text-xl">
+      <h1 className="truncate font-heading text-lg font-bold leading-tight tracking-tight sm:text-xl">
         {character.name}
       </h1>
       <p className="line-clamp-1 text-xs leading-tight text-muted-foreground sm:line-clamp-2">
