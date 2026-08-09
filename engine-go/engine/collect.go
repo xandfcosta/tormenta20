@@ -68,7 +68,79 @@ func (c *Catalogs) ActiveItemsFor(ch Character) []ActiveItem {
 	if tormenta := c.tormentaCarismaItem(ch); tormenta != nil {
 		items = append(items, *tormenta)
 	}
+	if cond := conditionActiveItem(ch); cond != nil {
+		items = append(items, *cond)
+	}
 	return items
+}
+
+// conditionActiveItem mirrors derived.ts `conditionActiveItem`: the p394 status
+// conditions as a synthetic ActiveItem so their numeric penalties flow through
+// the resolution engine (ALE-28). The modifier table below duplicates t20-data
+// `CONDITION_MODIFIERS` byte-for-byte (Go can't import the TS catalog, like the
+// rest of the engine). Appended last — same position as the TS collector.
+func conditionActiveItem(ch Character) *ActiveItem {
+	ids := parseStringArray(ch.ActiveConditions)
+	mods := []Modifier{}
+	for _, id := range ids {
+		mods = append(mods, conditionModifiers(id)...)
+	}
+	if len(mods) == 0 {
+		return nil
+	}
+	return &ActiveItem{Source: "Condições", Equipped: &vestedWear, Modifiers: mods}
+}
+
+func conditionModifiers(id string) []Modifier {
+	return conditionModifierTable[id]
+}
+
+// condMod builds a status-condition modifier (bonusType "condition": book p394
+// "aplique apenas o mais severo" → resolveStack keeps the worst per target).
+func condMod(target ModifierTarget, amount int) Modifier {
+	return Modifier{Target: target, Amount: amount, BonusType: "condition"}
+}
+
+func condDefense(n int) Modifier { return condMod(ModifierTarget{K: "defense"}, n) }
+func condAllSkills(n int) Modifier {
+	return condMod(ModifierTarget{K: "expertiseAll"}, n)
+}
+func condSkill(name string, n int) Modifier {
+	return condMod(ModifierTarget{K: "expertise", Name: name}, n)
+}
+func condByAttr(attr string, n int) Modifier {
+	return condMod(ModifierTarget{K: "expertiseByAttribute", Attribute: attr}, n)
+}
+func condAttack(n int) Modifier {
+	return condMod(ModifierTarget{K: "attack", Scope: "all"}, n)
+}
+func condForDesCon(n int) []Modifier {
+	return []Modifier{condByAttr("strength", n), condByAttr("dexterity", n), condByAttr("constitution", n)}
+}
+func condIntSabCar(n int) []Modifier {
+	return []Modifier{condByAttr("intelligence", n), condByAttr("wisdom", n), condByAttr("charisma", n)}
+}
+
+// conditionModifierTable duplicates t20-data condition-modifiers.ts — keep in sync.
+var conditionModifierTable = map[string][]Modifier{
+	"abalado":      {condAllSkills(-2)},
+	"apavorado":    {condAllSkills(-5)},
+	"vulneravel":   {condDefense(-2)},
+	"desprevenido": {condDefense(-5), condSkill("Reflexos", -5)},
+	"indefeso":     {condDefense(-10)},
+	"fraco":        condForDesCon(-2),
+	"debilitado":   condForDesCon(-5),
+	"frustrado":    condIntSabCar(-2),
+	"esmorecido":   condIntSabCar(-5),
+	"fatigado":     append(condForDesCon(-2), condDefense(-2)),
+	"exausto":      append(condForDesCon(-5), condDefense(-2)),
+	"cego":         {condDefense(-5), condByAttr("strength", -5), condByAttr("dexterity", -5)},
+	"ofuscado":     {condAttack(-2), condSkill("Percepção", -2)},
+	"fascinado":    {condSkill("Percepção", -5)},
+	"surdo":        {condSkill("Iniciativa", -5)},
+	"enredado":     {condDefense(-2), condAttack(-2)},
+	"agarrado":     {condDefense(-5), condSkill("Reflexos", -5), condAttack(-2)},
+	"caido":        {condSkill("Luta", -5)},
 }
 
 // itemActiveItem ports the per-item branch of activeItemsFor's map: base +

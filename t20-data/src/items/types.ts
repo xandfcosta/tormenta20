@@ -87,6 +87,11 @@ export type ShieldStats = {
  *  - 'training' — training bonus (level-based).
  *  - 'morale'   — temporary morale (e.g. Bardo Inspiração).
  *  - 'enhancement' — magical enhancement (melhorias).
+ *  - 'condition' — status-condition penalty (Abalado, Vulnerável…). Book p394:
+ *                  "condições com os mesmos efeitos não se acumulam; aplique
+ *                  apenas o mais severo" — so condition mods sharing a target
+ *                  keep the highest-abs (like any typed bucket) instead of
+ *                  summing, while still stacking with item/other bonuses.
  *  - 'untyped'  — stacks freely (situational bonuses, alchemicals).
  */
 export type BonusType =
@@ -96,6 +101,7 @@ export type BonusType =
   | 'training'
   | 'morale'
   | 'enhancement'
+  | 'condition'
   | 'untyped'
 
 export type EquipSlot = 'vested' | 'wielded'

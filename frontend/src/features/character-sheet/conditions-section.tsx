@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { X } from 'lucide-react'
-import type { ConditionId } from '@tormenta20/t20-data'
+import { type ConditionId, conditionEffectSummary } from '@tormenta20/t20-data'
 import { api, type Character } from '@/shared/api/api'
 import {
   conditionsList,
@@ -88,6 +88,11 @@ export function ConditionsSection({ character }: { character: Character }) {
                 )}
               >
                 {cond.name}
+                {/* Applied mechanical effect, or "lembrete" for conditions with
+                    no sheet-number impact (ALE-28). */}
+                <span className="text-[10px] font-normal text-muted-foreground">
+                  {conditionEffectSummary(id)}
+                </span>
                 <button
                   type="button"
                   aria-label={`Remover condição ${cond.name}`}
@@ -152,7 +157,12 @@ export function ConditionPips({
             <PopoverContent className="w-72 space-y-2 text-xs">
               {active.map((id) => (
                 <div key={id}>
-                  <p className="font-semibold uppercase">{conditionsRecord()[id].name}</p>
+                  <p className="font-semibold uppercase">
+                    {conditionsRecord()[id].name}{' '}
+                    <span className="font-normal normal-case text-[color:var(--hp-hurt)]">
+                      {conditionEffectSummary(id)}
+                    </span>
+                  </p>
                   <p className="text-muted-foreground">
                     {conditionsRecord()[id].description}
                   </p>

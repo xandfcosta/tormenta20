@@ -27,6 +27,7 @@ type Character struct {
 	ClassPowers          string `json:"classPowers"`
 	ClassChoices         string `json:"classChoices"`
 	PowerChoices         string `json:"powerChoices"`
+	ActiveConditions     string `json:"activeConditions"` // JSON ConditionId[] — p394 status conditions (ALE-28)
 
 	Displacement int `json:"displacement"`
 

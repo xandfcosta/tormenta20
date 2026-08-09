@@ -7,7 +7,9 @@ import {
   carismaLossFromPowers,
   CLASS_SPELLCASTING_ATTRIBUTE,
   computeItemEffects,
+  conditionModifiers,
   conditionalId,
+  type ConditionId,
   DEFORMIDADE_PERICIA_BONUS,
   EXPERTISE_NAMES,
   type ExpertiseName,
@@ -111,7 +113,34 @@ export function activeItemsFor(character: Character): ActiveItem[] {
   items.push(...generalPowerActiveItem(character))
   const tormentaCar = tormentaCarismaItem(character)
   if (tormentaCar) items.push(tormentaCar)
+  const conditions = conditionActiveItem(character)
+  if (conditions) items.push(conditions)
   return items
+}
+
+/**
+ * Status conditions (p394) as a synthetic ActiveItem, so their p394 numeric
+ * penalties flow through the same engine as items (ALE-28). Parsed cache-free
+ * (unknown/no-modifier ids yield no mods) so the Go mirror collects byte-equal.
+ * Appended last — must match the Go `conditionActiveItem` position for parity.
+ */
+function conditionActiveItem(character: Character): ActiveItem | null {
+  const ids = parseConditionIds(character.activeConditions)
+  const modifiers = ids.flatMap((id) => conditionModifiers(id))
+  if (modifiers.length === 0) return null
+  return { source: 'Condições', equipped: 'vested', modifiers }
+}
+
+/** Parse the persisted ConditionId[] blob to ids (bad blob ⇒ none). */
+function parseConditionIds(raw: string | undefined): ConditionId[] {
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter((x): x is ConditionId => typeof x === 'string')
+  } catch {
+    return []
+  }
 }
 
 function classActiveItems(character: Character): ActiveItem[] {

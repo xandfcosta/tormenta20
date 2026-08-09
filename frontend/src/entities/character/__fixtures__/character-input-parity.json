@@ -5365,7 +5365,7 @@
 "classPowers": "[]",
 "classChoices": "{}",
 "powerChoices": "{}",
-"activeConditions": "[]",
+"activeConditions": "[\"abalado\",\"vulneravel\",\"desprevenido\"]",
 "createdAt": "2026-08-02T13:17:20.537Z",
 "updatedAt": "2026-08-02T13:17:20.973Z",
 "races": [
@@ -5629,7 +5629,7 @@
 "originChoices": [],
 "raceAbilityChoices": [],
 "classChoices": {},
-"activeConditions": []
+"activeConditions": ["abalado", "vulneravel", "desprevenido"]
 }
 }
 ]

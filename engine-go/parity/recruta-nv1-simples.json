@@ -29,7 +29,7 @@
     "classPowers": "[]",
     "classChoices": "{}",
     "powerChoices": "{}",
-    "activeConditions": "[]",
+    "activeConditions": "[\"abalado\",\"vulneravel\",\"desprevenido\"]",
     "createdAt": "2026-08-02T13:17:20.537Z",
     "updatedAt": "2026-08-02T13:17:20.973Z",
     "races": [
@@ -298,17 +298,57 @@
           "note": "Humano"
         }
       ]
+    },
+    {
+      "source": "Condições",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertiseAll"
+          },
+          "amount": -2,
+          "bonusType": "condition"
+        },
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": -2,
+          "bonusType": "condition"
+        },
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": -5,
+          "bonusType": "condition"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Reflexos"
+          },
+          "amount": -5,
+          "bonusType": "condition"
+        }
+      ]
     }
   ],
   "itemEffects": {
     "byTarget": {
       "defense": {
-        "total": 2,
+        "total": -3,
         "contributions": [
           {
             "source": "Armadura de couro",
             "bonusType": "armor",
             "amount": 2
+          },
+          {
+            "source": "Condições",
+            "bonusType": "condition",
+            "amount": -5
           }
         ]
       },
@@ -344,6 +384,26 @@
             "note": "Humano"
           }
         ]
+      },
+      "expertiseAll": {
+        "total": -2,
+        "contributions": [
+          {
+            "source": "Condições",
+            "bonusType": "condition",
+            "amount": -2
+          }
+        ]
+      },
+      "expertise:Reflexos": {
+        "total": -5,
+        "contributions": [
+          {
+            "source": "Condições",
+            "bonusType": "condition",
+            "amount": -5
+          }
+        ]
       }
     },
     "flags": [],
@@ -352,13 +412,17 @@
   "sheetV2": {
     "defense": {
       "base": 13,
-      "itemBonus": 2,
-      "total": 15,
+      "itemBonus": -3,
+      "total": 10,
       "dexApplied": true,
       "contributions": [
         {
           "source": "Armadura de couro",
           "amount": 2
+        },
+        {
+          "source": "Condições",
+          "amount": -5
         }
       ]
     },
@@ -455,348 +519,497 @@
         "name": "Acrobacia",
         "attribute": "dexterity",
         "base": 3,
-        "itemBonus": 0,
-        "total": 3,
+        "itemBonus": -2,
+        "total": 1,
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Adestramento",
         "attribute": "charisma",
         "base": 1,
-        "itemBonus": 0,
-        "total": 1,
+        "itemBonus": -2,
+        "total": -1,
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Atletismo",
         "attribute": "strength",
         "base": 4,
-        "itemBonus": 0,
-        "total": 4,
+        "itemBonus": -2,
+        "total": 2,
         "halfLevel": 0,
         "attrValue": 4,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Atuação",
         "attribute": "charisma",
         "base": 1,
-        "itemBonus": 0,
-        "total": 1,
+        "itemBonus": -2,
+        "total": -1,
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Cavalgar",
         "attribute": "dexterity",
         "base": 3,
-        "itemBonus": 0,
-        "total": 3,
+        "itemBonus": -2,
+        "total": 1,
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Conhecimento",
         "attribute": "intelligence",
         "base": 1,
-        "itemBonus": 0,
-        "total": 1,
+        "itemBonus": -2,
+        "total": -1,
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Cura",
         "attribute": "wisdom",
         "base": 1,
-        "itemBonus": 0,
-        "total": 1,
+        "itemBonus": -2,
+        "total": -1,
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Diplomacia",
         "attribute": "charisma",
         "base": 1,
-        "itemBonus": 0,
-        "total": 1,
+        "itemBonus": -2,
+        "total": -1,
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Enganação",
         "attribute": "charisma",
         "base": 1,
-        "itemBonus": 0,
-        "total": 1,
+        "itemBonus": -2,
+        "total": -1,
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Fortitude",
         "attribute": "constitution",
         "base": 3,
-        "itemBonus": 0,
-        "total": 3,
+        "itemBonus": -2,
+        "total": 1,
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Furtividade",
         "attribute": "dexterity",
         "base": 3,
-        "itemBonus": 0,
-        "total": 3,
+        "itemBonus": -2,
+        "total": 1,
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Guerra",
         "attribute": "intelligence",
         "base": 1,
-        "itemBonus": 0,
-        "total": 1,
+        "itemBonus": -2,
+        "total": -1,
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Iniciativa",
         "attribute": "dexterity",
         "base": 3,
-        "itemBonus": 0,
-        "total": 3,
+        "itemBonus": -2,
+        "total": 1,
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Intimidação",
         "attribute": "charisma",
         "base": 1,
-        "itemBonus": 0,
-        "total": 1,
+        "itemBonus": -2,
+        "total": -1,
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Intuição",
         "attribute": "wisdom",
         "base": 1,
-        "itemBonus": 0,
-        "total": 1,
+        "itemBonus": -2,
+        "total": -1,
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Investigação",
         "attribute": "intelligence",
         "base": 1,
-        "itemBonus": 0,
-        "total": 1,
+        "itemBonus": -2,
+        "total": -1,
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Jogatina",
         "attribute": "charisma",
         "base": 1,
-        "itemBonus": 0,
-        "total": 1,
+        "itemBonus": -2,
+        "total": -1,
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Ladinagem",
         "attribute": "dexterity",
         "base": 3,
-        "itemBonus": 0,
-        "total": 3,
+        "itemBonus": -2,
+        "total": 1,
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Luta",
         "attribute": "strength",
         "base": 4,
-        "itemBonus": 0,
-        "total": 4,
+        "itemBonus": -2,
+        "total": 2,
         "halfLevel": 0,
         "attrValue": 4,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Misticismo",
         "attribute": "intelligence",
         "base": 1,
-        "itemBonus": 0,
-        "total": 1,
+        "itemBonus": -2,
+        "total": -1,
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Nobreza",
         "attribute": "intelligence",
         "base": 1,
-        "itemBonus": 0,
-        "total": 1,
+        "itemBonus": -2,
+        "total": -1,
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Ofício",
         "attribute": "intelligence",
         "base": 1,
-        "itemBonus": 0,
-        "total": 1,
+        "itemBonus": -2,
+        "total": -1,
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Percepção",
         "attribute": "wisdom",
         "base": 1,
-        "itemBonus": 0,
-        "total": 1,
+        "itemBonus": -2,
+        "total": -1,
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Pilotagem",
         "attribute": "dexterity",
         "base": 3,
-        "itemBonus": 0,
-        "total": 3,
+        "itemBonus": -2,
+        "total": 1,
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Pontaria",
         "attribute": "dexterity",
         "base": 3,
-        "itemBonus": 0,
-        "total": 3,
+        "itemBonus": -2,
+        "total": 1,
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Reflexos",
         "attribute": "dexterity",
         "base": 3,
-        "itemBonus": 0,
-        "total": 3,
+        "itemBonus": -7,
+        "total": -4,
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          },
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Religião",
         "attribute": "wisdom",
         "base": 1,
-        "itemBonus": 0,
-        "total": 1,
+        "itemBonus": -2,
+        "total": -1,
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Sobrevivência",
         "attribute": "wisdom",
         "base": 1,
-        "itemBonus": 0,
-        "total": 1,
+        "itemBonus": -2,
+        "total": -1,
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Vontade",
         "attribute": "wisdom",
         "base": 1,
-        "itemBonus": 0,
-        "total": 1,
+        "itemBonus": -2,
+        "total": -1,
         "halfLevel": 0,
         "attrValue": 1,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       }
     ]
@@ -811,17 +1024,22 @@
       "name": "Espada curta",
       "skill": "Luta",
       "attribute": "strength",
-      "attack": 4,
+      "attack": 2,
       "expertise": {
         "name": "Luta",
         "attribute": "strength",
         "base": 4,
-        "itemBonus": 0,
-        "total": 4,
+        "itemBonus": -2,
+        "total": 2,
         "halfLevel": 0,
         "attrValue": 4,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       "attackAll": {
