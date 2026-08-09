@@ -24,10 +24,13 @@ export function CharacterFilmstrip({
   roster,
   selectedId,
   onSelect,
+  onHover,
 }: {
   roster: Character[]
   selectedId: number
   onSelect: (id: number) => void
+  /** Fired when the pointer enters a chip — e.g. a subtle hover cue. */
+  onHover?: () => void
 }) {
   const stripRef = useRef<HTMLDivElement>(null)
   // biome-ignore lint/correctness/useExhaustiveDependencies: recenter on selection change only.
@@ -55,6 +58,7 @@ export function CharacterFilmstrip({
             aria-current={active}
             title={c.name}
             onClick={() => onSelect(c.id)}
+            onMouseEnter={onHover}
             className={cn(
               'flex size-10 shrink-0 items-center justify-center rounded-md border font-display text-xs text-white/80 transition-all',
               active

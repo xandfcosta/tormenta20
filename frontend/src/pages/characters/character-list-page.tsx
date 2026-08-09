@@ -73,6 +73,7 @@ export function CharactersListPage() {
 
   const step = (delta: number) => {
     if (filtered.length === 0) return
+    sfx('hover')
     const nextIndex = Math.min(filtered.length - 1, Math.max(0, index + delta))
     setDirection(delta >= 0 ? 1 : -1)
     setSelectedId(filtered[nextIndex].id)
@@ -80,11 +81,14 @@ export function CharactersListPage() {
   const jumpTo = (id: number) => {
     const target = filtered.findIndex((c) => c.id === id)
     if (target === -1) return
+    sfx('select')
     setDirection(target >= index ? 1 : -1)
     setSelectedId(id)
   }
   const openSheet = () => {
-    if (selected) navigate({ to: '/characters/$id', params: { id: selected.id } })
+    if (!selected) return
+    sfx('select')
+    navigate({ to: '/characters/$id', params: { id: selected.id } })
   }
 
   useSelectorKeyboard({
@@ -167,6 +171,7 @@ export function CharactersListPage() {
             roster={filtered}
             selectedId={selected.id}
             onSelect={jumpTo}
+            onHover={() => sfx('hover')}
           />
           <p className="pt-1 text-center text-[11px] text-muted-foreground">
             ← → navegar · Enter abrir ficha · D dossiê · / buscar
@@ -259,12 +264,12 @@ function useSelectorKeyboard({
 function EmptyStage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4">
-      <div className="flex aspect-[3/4] w-48 items-center justify-center rounded-lg border-2 border-dashed border-border">
-        <span className="select-none font-display text-7xl text-muted-foreground/40">
+      <div className="flex aspect-[3/4] w-48 items-center justify-center rounded-md border-2 border-dashed border-grimorio-iron">
+        <span className="select-none font-heading text-7xl text-grimorio-gold/30">
           ?
         </span>
       </div>
-      <p className="font-display text-xl tracking-wide">
+      <p className="font-heading text-xl uppercase tracking-[0.12em] text-foreground">
         Seu grupo aguarda um herói
       </p>
       <Link to="/characters/new">
@@ -277,6 +282,9 @@ function EmptyStage() {
 function NoMatches({ query, onClear }: { query: string; onClear: () => void }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3">
+      <p className="font-heading text-sm uppercase tracking-widest text-grimorio-gold/70">
+        Nada encontrado
+      </p>
       <p className="text-sm text-muted-foreground">
         Nenhum personagem para “{query}”.
       </p>
