@@ -23,6 +23,7 @@ type memberDTO struct {
 
 type memberCharacterDTO struct {
 	ID        int64      `json:"id"`
+	OwnerID   int64      `json:"ownerId"`
 	Name      string     `json:"name"`
 	Level     int64      `json:"level"`
 	HpCurrent int64      `json:"hpCurrent"`
@@ -154,10 +155,13 @@ func (s *Server) handleListMembers(w http.ResponseWriter, r *http.Request) {
 	}
 	out := make([]memberDTO, 0, len(rows))
 	for _, m := range rows {
+		// ownerId lets a player match their own campaign character even though
+		// it's a campaign snapshot excluded from their /characters roster (ALE-33).
+		owner, _ := s.queries.GetCharacterOwner(r.Context(), m.Characterid)
 		out = append(out, memberDTO{
 			ID: m.ID, CampaignID: m.Campaignid, CharacterID: m.Characterid, Role: m.Role, AddedAt: m.Addedat,
 			Character: &memberCharacterDTO{
-				ID: m.Characterid, Name: m.Charname, Level: m.Charlevel,
+				ID: m.Characterid, OwnerID: owner, Name: m.Charname, Level: m.Charlevel,
 				HpCurrent: m.Charhpcurrent, HpMax: m.Charhpmax, MpCurrent: m.Charmpcurrent, MpMax: m.Charmpmax,
 				Classes: s.classDTOs(r, m.Characterid),
 			},

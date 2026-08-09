@@ -5,8 +5,11 @@ import { toast } from 'sonner'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { useSessionSocket } from '@/shared/realtime/realtime'
 import { campaignSessionQueryOptions } from '@/entities/session/queries'
-import { campaignQueryOptions } from '@/entities/campaign/queries'
-import { charactersQueryOptions } from '@/entities/character/queries'
+import {
+  campaignMembersQueryOptions,
+  campaignQueryOptions,
+} from '@/entities/campaign/queries'
+import { meQueryOptions } from '@/entities/user/queries'
 import { MatchShell } from '@/features/session/match-shell'
 import { SessionGmView } from '@/features/session/session-gm-view'
 import { SessionPlayerView } from '@/features/session/session-player-view'
@@ -21,14 +24,22 @@ export function SessionDetailPage() {
   const session = useQuery(campaignSessionQueryOptions(campaignId, sessionId))
   // Role drives which controls render. Until the campaign payload loads,
   // isGm stays false so GM-only controls never flash for a player.
-  // `myCharacterIds` scopes in-session vitals editing to the player's own
-  // combatants (the server enforces the same rule).
   const campaign = useQuery(campaignQueryOptions(campaignId))
-  const characters = useQuery(charactersQueryOptions)
+  const me = useQuery(meQueryOptions)
+  const members = useQuery(campaignMembersQueryOptions(campaignId))
   const isGm = campaign.data?.role === 'gm'
+  // `myCharacterIds` scopes in-session vitals editing + the player-sheet match to
+  // the player's own combatants (server enforces the same rule). Derived from the
+  // campaign roster — a member's character is the campaign snapshot (ALE-33), which
+  // is NOT in the player's /characters list, so we match by character ownerId.
   const myCharacterIds = useMemo(
-    () => new Set((characters.data ?? []).map((c) => c.id)),
-    [characters.data],
+    () =>
+      new Set(
+        (members.data ?? [])
+          .filter((m) => m.character?.ownerId === me.data?.id)
+          .map((m) => m.characterId),
+      ),
+    [members.data, me.data?.id],
   )
 
   // One socket for the whole match — tracker, presence bar, and toasts all

@@ -432,6 +432,7 @@ export type CampaignMember = {
   addedAt: string
   character?: {
     id: number
+    ownerId: number
     name: string
     level: number
     hpCurrent: number
