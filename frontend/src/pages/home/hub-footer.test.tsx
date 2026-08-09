@@ -3,7 +3,12 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { HubFooter } from './hub-footer'
 
-const baseProps = { name: 'Alexandre', onLogout: () => {} }
+const baseProps = {
+  name: 'Alexandre',
+  onLogout: () => {},
+  sfxEnabled: false,
+  onToggleSfx: () => {},
+}
 
 const openMenu = async () =>
   userEvent.click(screen.getByRole('button', { name: 'Menu de Alexandre' }))
@@ -28,6 +33,18 @@ describe('HubFooter', () => {
     await openMenu()
     await userEvent.click(screen.getByRole('button', { name: 'Sair' }))
     expect(onLogout).toHaveBeenCalledOnce()
+  })
+
+  it('labels the sound item by state and toggles it', async () => {
+    const onToggleSfx = vi.fn()
+    const { rerender } = render(
+      <HubFooter {...baseProps} sfxEnabled={false} onToggleSfx={onToggleSfx} />,
+    )
+    await openMenu()
+    await userEvent.click(screen.getByRole('button', { name: 'Som desligado' }))
+    expect(onToggleSfx).toHaveBeenCalledOnce()
+    rerender(<HubFooter {...baseProps} sfxEnabled onToggleSfx={onToggleSfx} />)
+    expect(screen.getByRole('button', { name: 'Som ligado' })).toBeInTheDocument()
   })
 
   it('disables Configurações (placeholder) and Sair while logging out', async () => {

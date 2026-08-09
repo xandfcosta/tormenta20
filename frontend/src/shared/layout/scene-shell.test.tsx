@@ -54,6 +54,20 @@ describe('SceneShell', () => {
     expect(content()).not.toHaveClass('scene-in')
   })
 
+  it('fires onEnter once on mount when motion is allowed', () => {
+    installReducedMotion(false)
+    const onEnter = vi.fn()
+    render(<SceneShell onEnter={onEnter}>x</SceneShell>)
+    expect(onEnter).toHaveBeenCalledOnce()
+  })
+
+  it('skips onEnter under prefers-reduced-motion', () => {
+    installReducedMotion(true)
+    const onEnter = vi.fn()
+    render(<SceneShell onEnter={onEnter}>x</SceneShell>)
+    expect(onEnter).not.toHaveBeenCalled()
+  })
+
   it('shows the back control only when onBack is set, and fires it', async () => {
     installReducedMotion(false)
     const onBack = vi.fn()

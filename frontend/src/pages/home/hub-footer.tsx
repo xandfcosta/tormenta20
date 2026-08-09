@@ -1,13 +1,19 @@
-import { LogOut, type LucideIcon, Settings } from 'lucide-react'
+import {
+  LogOut,
+  type LucideIcon,
+  Settings,
+  Volume2,
+  VolumeX,
+} from 'lucide-react'
 import type * as React from 'react'
 import { cn } from '@/shared/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 
 /**
  * HubFooter — the player's identity strip at the foot of the Hub. The
- * initialed portrait + name is the trigger for a quick menu (popover):
- * Configurações (placeholder until a settings screen exists) and Sair. Pure —
- * the page injects the `me`-derived name + the logout callback.
+ * initialed portrait + name is the trigger for a quick menu (popover): the
+ * sound toggle, Configurações (placeholder until a settings screen exists), and
+ * Sair. Pure — the page injects the `me`-derived name + the callbacks.
  *
  * No theme toggle here on purpose: a game scene is intrinsically dark
  * (`.scene-grimorio`), so a light/dark switch would read as a dead control.
@@ -17,10 +23,19 @@ type HubFooterProps = {
   name: string
   onLogout: () => void
   logoutPending?: boolean
+  sfxEnabled: boolean
+  onToggleSfx: () => void
   className?: string
 }
 
-function HubFooter({ name, onLogout, logoutPending, className }: HubFooterProps) {
+function HubFooter({
+  name,
+  onLogout,
+  logoutPending,
+  sfxEnabled,
+  onToggleSfx,
+  className,
+}: HubFooterProps) {
   const initial = name.trim().charAt(0).toUpperCase() || '?'
   return (
     <footer
@@ -54,6 +69,12 @@ function HubFooter({ name, onLogout, logoutPending, className }: HubFooterProps)
         {/* The portal escapes the .scene-grimorio subtree, so re-apply the
             scope here or the menu falls back to the light shadcn tokens. */}
         <PopoverContent align="start" side="top" className="scene-grimorio w-56 p-1.5">
+          <QuickMenuItem
+            icon={sfxEnabled ? Volume2 : VolumeX}
+            onClick={onToggleSfx}
+          >
+            {sfxEnabled ? 'Som ligado' : 'Som desligado'}
+          </QuickMenuItem>
           <QuickMenuItem icon={Settings} disabled>
             Configurações
           </QuickMenuItem>

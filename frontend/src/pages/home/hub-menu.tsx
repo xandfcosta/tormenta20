@@ -14,11 +14,13 @@ type HubMenuItem = {
 type HubMenuProps = {
   items: HubMenuItem[]
   className?: string
+  /** Fired when the pointer enters any item — e.g. a subtle hover cue. */
+  onItemHover?: () => void
 }
 
 /** The Hub's vertical menu — the game's "main menu". Pure: the page wires each
- *  item's `onSelect` to navigation. */
-function HubMenu({ items, className }: HubMenuProps) {
+ *  item's `onSelect` to navigation and the optional hover cue. */
+function HubMenu({ items, className, onItemHover }: HubMenuProps) {
   return (
     <nav
       aria-label="Menu principal"
@@ -30,6 +32,7 @@ function HubMenu({ items, className }: HubMenuProps) {
           icon={item.icon}
           hasNext={item.hasNext}
           onClick={item.onSelect}
+          onMouseEnter={onItemHover}
         >
           {item.label}
         </GameMenuButton>

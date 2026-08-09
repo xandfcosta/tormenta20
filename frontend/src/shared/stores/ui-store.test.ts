@@ -3,7 +3,7 @@ import { THEME_STORAGE_KEY, useUiStore } from './ui-store'
 
 beforeEach(() => {
   localStorage.clear()
-  useUiStore.setState({ theme: 'light' })
+  useUiStore.setState({ theme: 'light', sfx: false })
 })
 
 describe('useUiStore', () => {
@@ -29,5 +29,13 @@ describe('useUiStore', () => {
     expect(raw).toBeTruthy()
     const parsed = JSON.parse(raw!)
     expect(parsed.state.theme).toBe('dark')
+  })
+
+  it('sfx is off by default and toggles + persists', () => {
+    expect(useUiStore.getState().sfx).toBe(false)
+    useUiStore.getState().toggleSfx()
+    expect(useUiStore.getState().sfx).toBe(true)
+    const parsed = JSON.parse(localStorage.getItem(THEME_STORAGE_KEY)!)
+    expect(parsed.state.sfx).toBe(true)
   })
 })

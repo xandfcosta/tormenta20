@@ -1,5 +1,5 @@
 import { ChevronLeft } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { type ReactNode, useEffect, useRef } from 'react'
 import { usePrefersReducedMotion } from '@/shared/lib/use-media-query'
 import { cn } from '@/shared/lib/utils'
 import { BackgroundTexture } from '@/shared/ui/background-texture'
@@ -31,6 +31,9 @@ type SceneShellProps = {
   onBack?: () => void
   backLabel?: string
   texture?: 'stone' | 'parchment'
+  /** Fires once when the scene mounts *and* motion is allowed — pairs the
+   *  enter animation with an optional cue (e.g. a transition sound). */
+  onEnter?: () => void
   /** Extra classes for the scrollable content column. */
   className?: string
 }
@@ -42,9 +45,19 @@ function SceneShell({
   onBack,
   backLabel = 'Voltar',
   texture = 'stone',
+  onEnter,
   className,
 }: SceneShellProps) {
   const reduced = usePrefersReducedMotion()
+  // Fire onEnter once on mount (a scene "enters" once), gated by motion. Refs
+  // keep the mount-only effect free of reactive deps.
+  const enterRef = useRef(onEnter)
+  enterRef.current = onEnter
+  const reducedRef = useRef(reduced)
+  reducedRef.current = reduced
+  useEffect(() => {
+    if (!reducedRef.current) enterRef.current?.()
+  }, [])
   return (
     <section
       data-slot="scene-shell"

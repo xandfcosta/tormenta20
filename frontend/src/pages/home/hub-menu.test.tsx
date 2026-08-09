@@ -21,6 +21,18 @@ describe('HubMenu', () => {
     expect(onSelect).toHaveBeenCalledOnce()
   })
 
+  it('fires onItemHover when the pointer enters an item', async () => {
+    const onItemHover = vi.fn()
+    render(
+      <HubMenu
+        items={[{ label: 'Crônicas', onSelect: vi.fn() }]}
+        onItemHover={onItemHover}
+      />,
+    )
+    await userEvent.hover(screen.getByRole('button', { name: /Crônicas/ }))
+    expect(onItemHover).toHaveBeenCalled()
+  })
+
   it('shows the ► chevron on a hasNext item', () => {
     render(
       <HubMenu
