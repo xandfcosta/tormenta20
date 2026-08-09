@@ -1,5 +1,6 @@
 import { ChevronLeft } from 'lucide-react'
-import { type ReactNode, useEffect, useRef } from 'react'
+import { type ReactNode, useEffect, useRef, useState } from 'react'
+import { SceneContainerContext } from '@/shared/lib/scene-container'
 import { usePrefersReducedMotion } from '@/shared/lib/use-media-query'
 import { cn } from '@/shared/lib/utils'
 import { BackgroundTexture } from '@/shared/ui/background-texture'
@@ -70,9 +71,14 @@ function SceneShell({
   useEffect(() => {
     if (!reducedRef.current) enterRef.current?.()
   }, [])
+  // The scene element is published so overlays (Dialog/Popover) can portal into
+  // it and inherit `.scene-grimorio` instead of rendering shadcn over the body.
+  const [sceneEl, setSceneEl] = useState<HTMLElement | null>(null)
 
   return (
+    <SceneContainerContext.Provider value={sceneEl}>
     <section
+      ref={setSceneEl}
       data-slot="scene-shell"
       data-dense={dense || undefined}
       className="scene-grimorio relative flex h-dvh flex-col overflow-hidden"
@@ -129,6 +135,7 @@ function SceneShell({
         {children}
       </div>
     </section>
+    </SceneContainerContext.Provider>
   )
 }
 

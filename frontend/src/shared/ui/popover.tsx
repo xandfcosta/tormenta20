@@ -2,6 +2,7 @@ import * as React from "react"
 import { Popover as PopoverPrimitive } from "radix-ui"
 
 import { cn } from "@/shared/lib/utils"
+import { useSceneContainer } from "@/shared/lib/scene-container"
 
 function Popover({
   ...props
@@ -21,8 +22,10 @@ function PopoverContent({
   sideOffset = 4,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
+  // Portal into the current grimório scene (if any) so tokens are inherited.
+  const container = useSceneContainer()
   return (
-    <PopoverPrimitive.Portal>
+    <PopoverPrimitive.Portal container={container ?? undefined}>
       <PopoverPrimitive.Content
         data-slot="popover-content"
         align={align}
