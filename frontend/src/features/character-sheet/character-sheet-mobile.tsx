@@ -27,7 +27,7 @@ function vitalsSection(): SheetSection {
 // `overflow` entirely, so an over-icon badge never gets clipped. Active = amber
 // icon + a short amber marker along the top edge.
 export const BOTTOM_TAB =
-  'group/tab relative flex h-full flex-1 items-center justify-center rounded-none border-0 px-1 text-muted-foreground transition-colors data-[state=active]:bg-transparent data-[state=active]:text-[color:var(--primary)] data-[state=active]:shadow-none data-[state=active]:before:absolute data-[state=active]:before:left-1/2 data-[state=active]:before:top-0 data-[state=active]:before:h-0.5 data-[state=active]:before:w-6 data-[state=active]:before:-translate-x-1/2 data-[state=active]:before:rounded-full data-[state=active]:before:bg-[color:var(--primary)]'
+  'group/tab relative flex h-full flex-1 items-center justify-center rounded-none border-0 px-1 text-muted-foreground transition-colors data-[state=active]:bg-transparent data-[state=active]:text-[color:var(--grimorio-gold)] data-[state=active]:shadow-none data-[state=active]:before:absolute data-[state=active]:before:left-1/2 data-[state=active]:before:top-0 data-[state=active]:before:h-0.5 data-[state=active]:before:w-6 data-[state=active]:before:-translate-x-1/2 data-[state=active]:before:rounded-full data-[state=active]:before:bg-[color:var(--grimorio-gold)]'
 
 /**
  * Phone sheet: one block at a time over a bottom tab bar (thumb-reach), instead

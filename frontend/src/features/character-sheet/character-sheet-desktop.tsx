@@ -64,6 +64,10 @@ export function CharacterSheetDesktop({
               aria-label={s.label}
               className={cn(
                 'relative w-32 flex-1 justify-start gap-2 px-2',
+                // Selected block = gold (the app's "selected = gold" language);
+                // text+icon inherit currentColor, the indicator bar (`after`)
+                // is tinted too.
+                'data-[state=active]:text-grimorio-gold data-[state=active]:after:bg-grimorio-gold',
                 // Irrelevant tabs (Magias for non-casters) stay reachable
                 // but stop competing for scan attention.
                 s.dim?.(character) && 'opacity-40',
