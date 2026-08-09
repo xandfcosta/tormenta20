@@ -30,7 +30,7 @@ export function DossierDrawer({
   return (
     <aside
       aria-label={`Dossiê de ${character.name}`}
-      className="absolute inset-y-0 right-0 z-10 w-full max-w-sm overflow-y-auto border-l border-border bg-card/95 p-4 backdrop-blur sm:rounded-l-lg"
+      className="absolute inset-y-0 right-0 z-10 w-full max-w-sm overflow-y-auto border-l border-border bg-card/95 p-4 backdrop-blur duration-200 ease-out animate-in fade-in-0 slide-in-from-right-6 motion-reduce:animate-none sm:rounded-l-lg"
     >
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-display text-lg tracking-wide">{character.name}</h3>
