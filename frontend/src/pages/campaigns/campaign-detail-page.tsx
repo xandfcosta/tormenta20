@@ -1,78 +1,134 @@
-import { getRouteApi } from '@tanstack/react-router'
-import { Link } from '@tanstack/react-router'
+import { getRouteApi, Link, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { Button } from '@/shared/ui/button'
+import { CalendarClock } from 'lucide-react'
 import { PageChrome } from '@/shared/ui/page-chrome'
 import { Skeleton } from '@/shared/ui/skeleton'
-import { campaignQueryOptions } from '@/entities/campaign/queries'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { Card, CardContent } from '@/shared/ui/card'
+import { campaignQueryOptions, campaignMembersQueryOptions } from '@/entities/campaign/queries'
 import { campaignSessionsQueryOptions } from '@/entities/session/queries'
 import { CampaignHeaderCard } from '@/features/campaign-manage/header-card'
+import { CampaignOverview } from '@/features/campaign-manage/campaign-overview'
 import { DeleteCampaignButton } from '@/features/campaign-manage/delete-campaign-button'
 import { MembersCard } from '@/features/campaign-manage/members-card'
 import { SessionsCard } from '@/features/campaign-manage/sessions-card'
 
-const routeApi = getRouteApi('/campaigns/$id')
+const routeApi = getRouteApi('/campaigns/$id/')
 
+type CampaignTab = 'visao' | 'sessoes' | 'membros' | 'config'
+
+/**
+ * Campaign detail (GM + player) organized into tabs (ALE-29): a fixed header
+ * (name + status subtitle) over Visão geral / Sessões / Membros / Config. The
+ * active tab lives in `?tab=` so it deep-links and survives the back button.
+ * Config (edit + delete) is GM-only.
+ */
 export function CampaignDetailPage() {
   const { id } = routeApi.useParams()
+  const { tab } = routeApi.useSearch()
+  const navigate = useNavigate()
   const campaignId = Number(id)
   const campaign = useQuery(campaignQueryOptions(campaignId))
   const sessions = useQuery(campaignSessionsQueryOptions(campaignId))
+  const members = useQuery(campaignMembersQueryOptions(campaignId))
   const isGm = campaign.data?.role === 'gm'
   const activeSession = sessions.data?.find((s) => s.status === 'active')
+  const playerCount =
+    members.data?.filter((m) => m.role === 'player').length ?? 0
+
+  const current: CampaignTab = isTab(tab) ? tab : 'visao'
+  const goToTab = (next: CampaignTab) =>
+    navigate({ to: '.', search: { tab: next }, replace: true })
 
   if (campaign.isLoading)
     return (
       <PageChrome width="wide" className="space-y-4">
         <Skeleton className="h-8 w-56" />
         <Skeleton className="h-40 w-full" />
-        <Skeleton className="h-32 w-full" />
       </PageChrome>
     )
   if (campaign.isError)
     return (
       <PageChrome width="wide">
-        <p className="text-destructive">
-          {(campaign.error as Error).message}
-        </p>
+        <p className="text-destructive">{(campaign.error as Error).message}</p>
       </PageChrome>
     )
   if (!campaign.data) return null
 
   return (
-    <PageChrome width="wide" className="space-y-6">
-      <div className="flex items-center justify-between">
-        <Link to="/campaigns">
-          <Button variant="outline" size="sm">
-            ← Voltar
-          </Button>
+    <PageChrome width="wide" className="space-y-5">
+      <div className="space-y-1">
+        <Link to="/campaigns" className="text-sm text-muted-foreground hover:text-foreground">
+          ← Campanhas
         </Link>
-        {isGm && <DeleteCampaignButton campaign={campaign.data} />}
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
-        <div className="space-y-6">
+        <h1 className="font-display text-2xl font-semibold tracking-wide">
+          {campaign.data.name}
+        </h1>
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+          <span>{isGm ? 'Mestrando' : 'Jogando'}</span>
+          <span aria-hidden>·</span>
+          <span className="flex items-center gap-1">
+            <CalendarClock className="size-3" />
+            Criada em {new Date(campaign.data.createdAt).toLocaleDateString('pt-BR')}
+          </span>
+          <span aria-hidden>·</span>
+          <span>
+            {playerCount} {playerCount === 1 ? 'jogador' : 'jogadores'}
+          </span>
           {activeSession && (
-            <Link
-              to="/campaigns/$id/sessions/$sid"
-              params={{ id, sid: activeSession.id }}
-            >
-              <div className="flex items-center justify-between rounded-lg border border-primary bg-primary/5 p-3 transition-colors hover:bg-primary/10">
-                <span className="font-medium">
-                  Sessão {activeSession.sessionNumber} em andamento
-                </span>
-                <Button size="sm">Entrar →</Button>
-              </div>
-            </Link>
+            <>
+              <span aria-hidden>·</span>
+              <span className="flex items-center gap-1 font-medium text-foreground">
+                <span className="size-2 rounded-full bg-[color:var(--hp-full)]" />
+                Sessão {activeSession.sessionNumber} ativa
+              </span>
+            </>
           )}
-          <SessionsCard campaignId={campaignId} />
-        </div>
-
-        <div className="space-y-6">
-          <CampaignHeaderCard campaign={campaign.data} />
-          <MembersCard campaignId={campaignId} isGm={isGm} />
-        </div>
+        </p>
       </div>
+
+      <Tabs value={current} onValueChange={(v) => goToTab(v as CampaignTab)}>
+        <TabsList className="max-w-full self-start overflow-x-auto [&>button]:shrink-0">
+          <TabsTrigger value="visao">Visão geral</TabsTrigger>
+          <TabsTrigger value="sessoes">Sessões</TabsTrigger>
+          <TabsTrigger value="membros">Membros</TabsTrigger>
+          {isGm && <TabsTrigger value="config">Config</TabsTrigger>}
+        </TabsList>
+
+        <TabsContent value="visao">
+          <CampaignOverview
+            campaignId={campaignId}
+            isGm={isGm}
+            onGoToTab={goToTab}
+          />
+        </TabsContent>
+        <TabsContent value="sessoes">
+          <SessionsCard campaignId={campaignId} isGm={isGm} />
+        </TabsContent>
+        <TabsContent value="membros">
+          <MembersCard campaignId={campaignId} isGm={isGm} />
+        </TabsContent>
+        {isGm && (
+          <TabsContent value="config" className="space-y-6">
+            <CampaignHeaderCard campaign={campaign.data} />
+            <Card className="border-destructive/40">
+              <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-6">
+                <div>
+                  <p className="font-medium">Excluir campanha</p>
+                  <p className="text-xs text-muted-foreground">
+                    Remove todas as sessões e membros. Não pode ser desfeito.
+                  </p>
+                </div>
+                <DeleteCampaignButton campaign={campaign.data} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+      </Tabs>
     </PageChrome>
   )
+}
+
+function isTab(v: string | undefined): v is CampaignTab {
+  return v === 'visao' || v === 'sessoes' || v === 'membros' || v === 'config'
 }

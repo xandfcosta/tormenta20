@@ -1,49 +1,35 @@
-import { Link, useNavigate } from '@tanstack/react-router'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CalendarPlus } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
 import { Badge } from '@/shared/ui/badge'
-import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader } from '@/shared/ui/card'
+import { cn } from '@/shared/lib/utils'
 import { SectionHeading } from '@/shared/ui/section-heading'
 import { SkeletonRows } from '@/shared/ui/skeleton'
-import { api } from '@/shared/api/api'
 import type { Session } from '@/shared/api/api'
 import { campaignSessionsQueryOptions } from '@/entities/session/queries'
-export function SessionsCard({ campaignId }: { campaignId: number }) {
-  const qc = useQueryClient()
+import { NewSessionButton } from './new-session-button'
+
+export function SessionsCard({
+  campaignId,
+  isGm,
+}: {
+  campaignId: number
+  isGm: boolean
+}) {
   const sessions = useQuery(campaignSessionsQueryOptions(campaignId))
-  const navigate = useNavigate()
-
-  const nextNumber =
-    (sessions.data?.reduce((max, s) => Math.max(max, s.sessionNumber), 0) ??
-      0) + 1
-
-  const mutation = useMutation({
-    mutationFn: () =>
-      api.sessions.create(campaignId, { sessionNumber: nextNumber }),
-    onSuccess: async (created) => {
-      qc.invalidateQueries({
-        queryKey: campaignSessionsQueryOptions(campaignId).queryKey,
-      })
-      await navigate({
-        to: '/campaigns/$id/sessions/$sid',
-        params: { id: campaignId, sid: created.id },
-      })
-    },
+  // Active session first, then the rest by most-recent number (a live session
+  // is what the GM most likely wants to jump back into).
+  const ordered = [...(sessions.data ?? [])].sort((a, b) => {
+    if (a.status === 'active' !== (b.status === 'active'))
+      return a.status === 'active' ? -1 : 1
+    return b.sessionNumber - a.sessionNumber
   })
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <SectionHeading as="h2">Sessões</SectionHeading>
-        <Button
-          size="sm"
-          disabled={mutation.isPending}
-          onClick={() => mutation.mutate()}
-        >
-          <CalendarPlus className="mr-1 size-4" />
-          {mutation.isPending ? 'Criando…' : `Sessão ${nextNumber}`}
-        </Button>
+        {isGm && <NewSessionButton campaignId={campaignId} />}
       </CardHeader>
       <CardContent className="space-y-2">
         {sessions.isLoading && <SkeletonRows count={3} />}
@@ -52,7 +38,7 @@ export function SessionsCard({ campaignId }: { campaignId: number }) {
             Nenhuma sessão ainda.
           </p>
         )}
-        {sessions.data?.map((s) => (
+        {ordered.map((s) => (
           <SessionRow key={s.id} session={s} campaignId={campaignId} />
         ))}
       </CardContent>
@@ -73,12 +59,18 @@ function SessionRow({
       : session.status === 'ended'
         ? 'secondary'
         : 'outline'
+  const isActive = session.status === 'active'
   return (
     <Link
       to="/campaigns/$id/sessions/$sid"
       params={{ id: campaignId, sid: session.id }}
     >
-      <div className="flex items-center justify-between rounded-md border p-2 text-sm transition-colors hover:border-primary">
+      <div
+        className={cn(
+          'flex items-center justify-between rounded-md border p-2 text-sm transition-colors hover:border-primary',
+          isActive && 'border-primary bg-primary/5',
+        )}
+      >
         <div>
           <p className="font-medium">
             Sessão {session.sessionNumber}{' '}
