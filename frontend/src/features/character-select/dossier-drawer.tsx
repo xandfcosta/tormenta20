@@ -6,6 +6,7 @@ import {
 import type { Character } from '@/shared/api/api'
 import { cn } from '@/shared/lib/utils'
 import { useComputedSheet } from '@/entities/character/computed-sheet'
+import { FramedPanel } from '@/shared/ui/framed-panel'
 import { type AbilityBlurb, raceAbilityBlurbs } from './select-helpers'
 
 /**
@@ -83,7 +84,9 @@ export function DossierDrawer({
       </DossierSection>
 
       <DossierSection title="Habilidades">
-        <AbilityList abilities={raceAbilityBlurbs(character, 8)} />
+        <FramedPanel variant="parchment" className="p-3">
+          <AbilityList abilities={raceAbilityBlurbs(character, 8)} />
+        </FramedPanel>
       </DossierSection>
     </aside>
   )
@@ -98,7 +101,7 @@ function DossierSection({
 }) {
   return (
     <section className="mb-4 space-y-1.5">
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-grimorio-gold">
         {title}
       </p>
       {children}
@@ -106,18 +109,19 @@ function DossierSection({
   )
 }
 
+// Rendered on the parchment FramedPanel — colors inherit the dark ink; the
+// description is dimmed via opacity rather than a light muted token (which
+// would vanish on the light surface).
 function AbilityList({ abilities }: { abilities: AbilityBlurb[] }) {
   if (abilities.length === 0) {
-    return <p className="text-xs italic text-muted-foreground">Nenhuma.</p>
+    return <p className="text-xs italic opacity-70">Nenhuma.</p>
   }
   return (
     <ul className="space-y-1.5">
       {abilities.map((a) => (
         <li key={a.name}>
           <p className="text-xs font-semibold">{a.name}</p>
-          <p className="text-[11px] leading-snug text-muted-foreground">
-            {a.description}
-          </p>
+          <p className="text-[11px] leading-snug opacity-80">{a.description}</p>
         </li>
       ))}
     </ul>
