@@ -86,6 +86,12 @@ function RootLayout() {
   const inRoster = useRouterState({
     select: (s) => s.matches.some((m) => m.routeId === '/characters/'),
   })
+  // The character sheet (`/characters/$id/`) is a full grimório scene now
+  // (SceneShell owns back-to-roster). Bare-wire only the editor index — the
+  // computed read-only view (`/characters/$id/sheet`) keeps its web nav.
+  const inFicha = useRouterState({
+    select: (s) => s.matches.some((m) => m.routeId === '/characters/$id/'),
+  })
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
@@ -107,7 +113,7 @@ function RootLayout() {
         onToggleTheme={toggleTheme}
         onLogout={() => logout.mutate()}
         logoutPending={logout.isPending}
-        bare={inMatch || inAuth || inHub || inRoster}
+        bare={inMatch || inAuth || inHub || inRoster || inFicha}
         hideBottomNav={inSheet}
       >
         <Outlet />

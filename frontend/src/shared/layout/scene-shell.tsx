@@ -40,6 +40,9 @@ type SceneShellProps = {
   dense?: boolean
   /** Controls aligned to the right of the dense header (search, actions). */
   headerRight?: ReactNode
+  /** Full-bleed content: no padding, no outer scroll — the child owns its own
+   *  height/scroll (e.g. the character sheet's HUD-pinned grid). */
+  bleed?: boolean
   /** Extra classes for the scrollable content column. */
   className?: string
 }
@@ -54,6 +57,7 @@ function SceneShell({
   onEnter,
   dense = false,
   headerRight,
+  bleed = false,
   className,
 }: SceneShellProps) {
   const reduced = usePrefersReducedMotion()
@@ -105,11 +109,16 @@ function SceneShell({
         data-slot="scene-content"
         data-animate={reduced ? undefined : true}
         className={cn(
-          // overflow-x-hidden: a scene never scrolls horizontally, and it
-          // clips slide-in overlays (the dossier) so they don't flash a
-          // transient bottom scrollbar mid-animation.
-          'relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto',
-          dense ? 'px-4 py-4' : 'px-5 py-14',
+          'relative flex min-h-0 flex-1 flex-col',
+          // A scene never scrolls horizontally (overflow-x-hidden also clips
+          // slide-in overlays like the dossier). `bleed` hands scroll + padding
+          // to a full-height child; otherwise the column scrolls with padding.
+          bleed
+            ? 'overflow-hidden'
+            : cn(
+                'overflow-x-hidden overflow-y-auto',
+                dense ? 'px-4 py-4' : 'px-5 py-14',
+              ),
           !reduced && 'scene-in',
           className,
         )}
