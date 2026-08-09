@@ -20,3 +20,15 @@ export function useMediaQuery(query: string): boolean {
     () => false,
   )
 }
+
+/**
+ * True when the user asked the OS to minimize motion (WCAG 2.3.3). Scene
+ * transitions and other juice gate on this so they degrade to no-motion.
+ *
+ * @example
+ *   const reduced = usePrefersReducedMotion()
+ *   <div className={reduced ? undefined : 'scene-in'} />
+ */
+export function usePrefersReducedMotion(): boolean {
+  return useMediaQuery('(prefers-reduced-motion: reduce)')
+}

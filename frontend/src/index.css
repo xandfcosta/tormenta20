@@ -294,4 +294,20 @@
   .grimorio-menu-item[data-active='true'] {
     border-color: var(--grimorio-gold);
   }
+
+  /* Scene enter transition (ALE-37). Applied by SceneShell only when motion
+   * is allowed; the base-layer reduced-motion rule is a second safety net. */
+  @keyframes scene-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .scene-in {
+    animation: scene-in 0.32s ease-out both;
+  }
 }

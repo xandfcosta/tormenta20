@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { useMediaQuery } from './use-media-query'
+import { useMediaQuery, usePrefersReducedMotion } from './use-media-query'
 
 /**
  * Models the slice of MediaQueryList the hook touches — `matches` plus a
@@ -51,5 +51,16 @@ describe('useMediaQuery', () => {
     expect(result.current).toBe(false)
     act(() => list.emitChange(true))
     expect(result.current).toBe(true)
+  })
+})
+
+describe('usePrefersReducedMotion', () => {
+  it('reflects the reduced-motion media query', () => {
+    const list = new FakeMediaQueryList(true)
+    installMatchMedia(list)
+    const { result } = renderHook(() => usePrefersReducedMotion())
+    expect(result.current).toBe(true)
+    act(() => list.emitChange(false))
+    expect(result.current).toBe(false)
   })
 })
