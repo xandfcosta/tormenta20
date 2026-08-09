@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
+import { cn } from '@/shared/lib/utils'
 import { GameMenuButton } from '@/shared/ui/game-menu-button'
 
 /** One entry in the Hub's main menu — a label, an icon, and what to do when
@@ -12,15 +13,16 @@ type HubMenuItem = {
 
 type HubMenuProps = {
   items: HubMenuItem[]
+  className?: string
 }
 
 /** The Hub's vertical menu — the game's "main menu". Pure: the page wires each
  *  item's `onSelect` to navigation. */
-function HubMenu({ items }: HubMenuProps) {
+function HubMenu({ items, className }: HubMenuProps) {
   return (
     <nav
       aria-label="Menu principal"
-      className="mx-auto flex w-full max-w-md flex-col gap-2.5"
+      className={cn('mx-auto flex w-full max-w-md flex-col gap-2.5', className)}
     >
       {items.map((item) => (
         <GameMenuButton

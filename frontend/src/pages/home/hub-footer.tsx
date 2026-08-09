@@ -1,37 +1,26 @@
-import { LogOut, type LucideIcon, Moon, Settings, Sun } from 'lucide-react'
+import { LogOut, type LucideIcon, Settings } from 'lucide-react'
 import type * as React from 'react'
 import { cn } from '@/shared/lib/utils'
-import type { Theme } from '@/shared/stores/ui-store'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/shared/ui/popover'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 
 /**
  * HubFooter — the player's identity strip at the foot of the Hub. The
- * initialed portrait + name is the trigger for a quick menu (popover): toggle
- * theme, Configurações (placeholder until a settings screen exists), and Sair.
- * Pure — the page injects `me`-derived name + the callbacks. "Continuar sessão"
- * (ALE-40) is a separate menu entry, not part of this footer.
+ * initialed portrait + name is the trigger for a quick menu (popover):
+ * Configurações (placeholder until a settings screen exists) and Sair. Pure —
+ * the page injects the `me`-derived name + the logout callback.
+ *
+ * No theme toggle here on purpose: a game scene is intrinsically dark
+ * (`.scene-grimorio`), so a light/dark switch would read as a dead control.
+ * Theme still lives on the not-yet-migrated shadcn screens' top nav.
  */
 type HubFooterProps = {
   name: string
-  theme: Theme
-  onToggleTheme: () => void
   onLogout: () => void
   logoutPending?: boolean
   className?: string
 }
 
-function HubFooter({
-  name,
-  theme,
-  onToggleTheme,
-  onLogout,
-  logoutPending,
-  className,
-}: HubFooterProps) {
+function HubFooter({ name, onLogout, logoutPending, className }: HubFooterProps) {
   const initial = name.trim().charAt(0).toUpperCase() || '?'
   return (
     <footer
@@ -65,12 +54,6 @@ function HubFooter({
         {/* The portal escapes the .scene-grimorio subtree, so re-apply the
             scope here or the menu falls back to the light shadcn tokens. */}
         <PopoverContent align="start" side="top" className="scene-grimorio w-56 p-1.5">
-          <QuickMenuItem
-            icon={theme === 'light' ? Moon : Sun}
-            onClick={onToggleTheme}
-          >
-            {theme === 'light' ? 'Modo escuro' : 'Modo claro'}
-          </QuickMenuItem>
           <QuickMenuItem icon={Settings} disabled>
             Configurações
           </QuickMenuItem>

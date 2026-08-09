@@ -3,12 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { HubFooter } from './hub-footer'
 
-const baseProps = {
-  name: 'Alexandre',
-  theme: 'dark' as const,
-  onToggleTheme: () => {},
-  onLogout: () => {},
-}
+const baseProps = { name: 'Alexandre', onLogout: () => {} }
 
 const openMenu = async () =>
   userEvent.click(screen.getByRole('button', { name: 'Menu de Alexandre' }))
@@ -27,28 +22,11 @@ describe('HubFooter', () => {
     expect(screen.getByRole('button', { name: 'Sair' })).toBeInTheDocument()
   })
 
-  it('labels the theme item by the target mode', async () => {
-    const { rerender } = render(<HubFooter {...baseProps} theme="dark" />)
-    await openMenu()
-    expect(screen.getByRole('button', { name: 'Modo claro' })).toBeInTheDocument()
-    rerender(<HubFooter {...baseProps} theme="light" />)
-    expect(screen.getByRole('button', { name: 'Modo escuro' })).toBeInTheDocument()
-  })
-
-  it('fires onToggleTheme and onLogout from the menu', async () => {
-    const onToggleTheme = vi.fn()
+  it('fires onLogout from the menu', async () => {
     const onLogout = vi.fn()
-    render(
-      <HubFooter
-        {...baseProps}
-        onToggleTheme={onToggleTheme}
-        onLogout={onLogout}
-      />,
-    )
+    render(<HubFooter {...baseProps} onLogout={onLogout} />)
     await openMenu()
-    await userEvent.click(screen.getByRole('button', { name: /Modo/ }))
     await userEvent.click(screen.getByRole('button', { name: 'Sair' }))
-    expect(onToggleTheme).toHaveBeenCalledOnce()
     expect(onLogout).toHaveBeenCalledOnce()
   })
 
