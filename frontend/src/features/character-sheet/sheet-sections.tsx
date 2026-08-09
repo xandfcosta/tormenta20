@@ -1,12 +1,11 @@
 import { isCasterCharacter } from './combat-magic-stats'
 import type { ReactNode } from 'react'
-import { Backpack, BadgeCheck, BookOpen, ScrollText, Tent, ToggleRight, Zap } from 'lucide-react'
+import { Backpack, BadgeCheck, BookOpen, ScrollText, ToggleRight, Zap } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { Character } from '@/shared/api/api'
 import { AbilitiesPanel } from './abilities-panel'
 import { AbilitiesPendingBadge } from './abilities-pending-badge'
 import { BagPanel } from './bag-panel'
-import { CampaignsPanel } from './campaigns-panel'
 import { EffectsCountBadge } from './effects-count-badge'
 import { EffectsPanel } from './effects-panel'
 import { ExpertisesPanel } from './expertises-panel'
@@ -40,9 +39,10 @@ export function resolveSheetTab(tab: string): string {
   return tab
 }
 
-// The eight non-vitals blocks. The mobile layout prepends a "Vitais" section
+// The non-vitals blocks. The mobile layout prepends a "Vitais" section
 // (header + vitals aside); the desktop layout renders vitals persistently and
-// keeps these as the right-panel tabs.
+// keeps these as the right-panel tabs. Campaign membership is managed on the
+// campaign screens, not here (ALE-32), so there is no "Campanhas" tab.
 export const SHEET_PANELS: SheetSection[] = [
   {
     value: 'expertises',
@@ -86,11 +86,5 @@ export const SHEET_PANELS: SheetSection[] = [
     label: 'Magias',
     icon: BookOpen,
     render: (c) => <SpellbookPanel character={c} />,
-  },
-  {
-    value: 'campaigns',
-    label: 'Campanhas',
-    icon: Tent,
-    render: (c) => <CampaignsPanel characterId={c.id} />,
   },
 ]

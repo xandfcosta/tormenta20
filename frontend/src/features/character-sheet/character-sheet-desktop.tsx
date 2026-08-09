@@ -22,9 +22,7 @@ export function CharacterSheetDesktop({
   tab: string
   onTabChange: (value: string) => void
 }) {
-  const panels = inSession
-    ? SHEET_PANELS.filter((p) => p.value !== 'campaigns')
-    : SHEET_PANELS
+  const panels = SHEET_PANELS
   // The shared tab value may come from the mobile set (e.g. "vitals"), which
   // has no desktop panel — fall back to the first block so content shows.
   const resolved = resolveSheetTab(tab)

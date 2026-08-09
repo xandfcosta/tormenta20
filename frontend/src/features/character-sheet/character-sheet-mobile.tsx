@@ -50,9 +50,7 @@ export function CharacterSheetMobile({
   tab: string
   onTabChange: (value: string) => void
 }) {
-  const panels = inSession
-    ? SHEET_PANELS.filter((p) => p.value !== 'campaigns')
-    : SHEET_PANELS
+  const panels = SHEET_PANELS
   // From `md` the HUD's stat cluster (see CharacterHud) shows exactly the
   // Vitais content, so the tab would be a full duplicate — drop it (task 12).
   const hudShowsVitals = useMediaQuery('(min-width: 768px)')
