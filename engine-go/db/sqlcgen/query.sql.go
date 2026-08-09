@@ -672,7 +672,7 @@ func (q *Queries) GetCampaignByToken(ctx context.Context, invitetoken sql.NullSt
 }
 
 const getCharacter = `-- name: GetCharacter :one
-SELECT id, ownerid, name, origin, god, godpower, tibar, level, hpmax, hpcurrent, mpmax, mpcurrent, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classpowers, classchoices, powerchoices, activeconditions, createdat, updatedat FROM characters WHERE id = ? LIMIT 1
+SELECT id, ownerid, name, origin, god, godpower, tibar, level, hpmax, hpcurrent, mpmax, mpcurrent, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classpowers, classchoices, powerchoices, activeconditions, createdat, updatedat, sourceCharacterId, campaignId FROM characters WHERE id = ? LIMIT 1
 `
 
 func (q *Queries) GetCharacter(ctx context.Context, id int64) (Character, error) {
@@ -710,6 +710,8 @@ func (q *Queries) GetCharacter(ctx context.Context, id int64) (Character, error)
 		&i.Activeconditions,
 		&i.Createdat,
 		&i.Updatedat,
+		&i.SourceCharacterId,
+		&i.CampaignId,
 	)
 	return i, err
 }
@@ -1143,10 +1145,14 @@ func (q *Queries) ListCharacterMaxes(ctx context.Context, ids []int64) ([]ListCh
 
 const listCharactersByOwner = `-- name: ListCharactersByOwner :many
 
-SELECT id, ownerid, name, origin, god, godpower, tibar, level, hpmax, hpcurrent, mpmax, mpcurrent, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classpowers, classchoices, powerchoices, activeconditions, createdat, updatedat FROM characters WHERE ownerId = ? ORDER BY updatedAt DESC
+SELECT id, ownerid, name, origin, god, godpower, tibar, level, hpmax, hpcurrent, mpmax, mpcurrent, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classpowers, classchoices, powerchoices, activeconditions, createdat, updatedat, sourceCharacterId, campaignId FROM characters
+WHERE ownerId = ? AND sourceCharacterId IS NULL
+ORDER BY updatedAt DESC
 `
 
 // characters read model (B.3)
+// Roster = templates only; campaign snapshots (sourceCharacterId set) are
+// reached through their campaign, not the personal list (ALE-33).
 func (q *Queries) ListCharactersByOwner(ctx context.Context, ownerid int64) ([]Character, error) {
 	rows, err := q.db.QueryContext(ctx, listCharactersByOwner, ownerid)
 	if err != nil {
@@ -1188,6 +1194,8 @@ func (q *Queries) ListCharactersByOwner(ctx context.Context, ownerid int64) ([]C
 			&i.Activeconditions,
 			&i.Createdat,
 			&i.Updatedat,
+			&i.SourceCharacterId,
+			&i.CampaignId,
 		); err != nil {
 			return nil, err
 		}

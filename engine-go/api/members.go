@@ -235,7 +235,10 @@ func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if isMember, _ := s.queries.IsCharacterMember(r.Context(), sqlcgen.IsCharacterMemberParams{Campaignid: cid, Characterid: *body.CharacterID}); isMember {
+	// Snapshot model (ALE-33): the roster character is a template; a mesa holds
+	// its own copy. Dedupe on "this template already snapshotted here" rather
+	// than membership of the source (the source is never a member — the copy is).
+	if hasCopy, _ := s.campaignHasCopyOf(r.Context(), *body.CharacterID, cid); hasCopy {
 		writeJSON(w, http.StatusConflict, map[string]any{
 			"statusCode": http.StatusConflict, "error": "Conflict",
 			"message":     fmt.Sprintf("Character %d already in campaign %d", *body.CharacterID, cid),
@@ -243,8 +246,15 @@ func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+	// Clone the template into a campaign-scoped copy and add THAT to the mesa,
+	// so editing the sheet during play never leaks to other campaigns.
+	copyID, err := s.cloneCharacterForCampaign(r.Context(), *body.CharacterID, cid)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Could not snapshot character for campaign")
+		return
+	}
 	m, err := s.queries.CreateMember(r.Context(), sqlcgen.CreateMemberParams{
-		Campaignid: cid, Characterid: *body.CharacterID, Role: role, Addedat: nowISO(),
+		Campaignid: cid, Characterid: copyID, Role: role, Addedat: nowISO(),
 	})
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not add member")

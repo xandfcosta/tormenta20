@@ -18,7 +18,11 @@ RETURNING *;
 -- characters read model (B.3)
 
 -- name: ListCharactersByOwner :many
-SELECT * FROM characters WHERE ownerId = ? ORDER BY updatedAt DESC;
+-- Roster = templates only; campaign snapshots (sourceCharacterId set) are
+-- reached through their campaign, not the personal list (ALE-33).
+SELECT * FROM characters
+WHERE ownerId = ? AND sourceCharacterId IS NULL
+ORDER BY updatedAt DESC;
 
 -- name: GetCharacter :one
 SELECT * FROM characters WHERE id = ? LIMIT 1;

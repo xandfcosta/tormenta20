@@ -68,6 +68,8 @@ type Character struct {
 	Activeconditions     string         `json:"activeconditions"`
 	Createdat            string         `json:"createdat"`
 	Updatedat            string         `json:"updatedat"`
+	SourceCharacterId    sql.NullInt64  `json:"sourceCharacterId"`
+	CampaignId           sql.NullInt64  `json:"campaignId"`
 }
 
 type CharacterClass struct {
