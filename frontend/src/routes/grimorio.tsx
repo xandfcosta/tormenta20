@@ -1,5 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { Scroll, Users2, Wand2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { BackgroundTexture } from '@/shared/ui/background-texture'
+import { FramedPanel } from '@/shared/ui/framed-panel'
+import { GameMenuButton } from '@/shared/ui/game-menu-button'
+import { SceneTitle } from '@/shared/ui/scene-title'
 
 /**
  * ISOLATED preview route for the "Grimório" theme (ALE-35). Not part of the
@@ -99,11 +104,52 @@ function GrimorioPreview() {
         nada global mudou. Aprovando, porto pro <code>index.css</code>.
       </p>
 
+      <RealPrimitives />
       <MockHub />
       <Palette ratios={ratios} />
       <Typography />
       <Surfaces />
     </div>
+  )
+}
+
+/** The ALE-36 primitives, composed inside a real `.scene-grimorio` scope —
+ *  end-to-end proof they consume the ported tokens (not the preview's --g-*). */
+function RealPrimitives() {
+  return (
+    <section className="scene-grimorio relative overflow-hidden">
+      <BackgroundTexture vignette />
+      <div className="relative mx-auto flex max-w-lg flex-col gap-6 px-5 py-14">
+        <SceneTitle kicker="— primitivos reais (ALE-36) —">
+          Tormenta&nbsp;20
+        </SceneTitle>
+        <nav className="flex flex-col gap-2.5">
+          <GameMenuButton icon={Users2}>Meus Heróis</GameMenuButton>
+          <GameMenuButton icon={Scroll}>Crônicas</GameMenuButton>
+          <GameMenuButton icon={Wand2} active>
+            Ferramentas do Mestre
+          </GameMenuButton>
+          <GameMenuButton hasNext>Continuar sessão</GameMenuButton>
+        </nav>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FramedPanel>
+            <h4 className="mb-1 font-heading text-grimorio-gold">
+              Painel de Pedra
+            </h4>
+            <p className="text-sm text-foreground">
+              Container padrão das cenas — moldura de ferro, filete de ouro.
+            </p>
+          </FramedPanel>
+          <FramedPanel variant="parchment">
+            <h4 className="mb-1 font-heading">Pergaminho</h4>
+            <p className="text-sm">
+              Superfície de destaque — texto de magia, cartas. Tinta escura,
+              alto contraste.
+            </p>
+          </FramedPanel>
+        </div>
+      </div>
+    </section>
   )
 }
 
