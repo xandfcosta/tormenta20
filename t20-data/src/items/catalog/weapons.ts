@@ -19,6 +19,7 @@ export const WEAPONS: CatalogItem[] = [
       purpose: 'melee',
       range: 'curto',
       traits: [],
+      finesse: true, // p145: "pode usar Destreza em vez de Força nos ataques"
     },
     modifiers: [],
   },

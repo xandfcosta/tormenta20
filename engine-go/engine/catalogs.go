@@ -37,10 +37,12 @@ func (c *Catalogs) Item(id string) *CatalogItem { return c.itemsByID[id] }
 
 type WeaponStats struct {
 	Purpose   string   `json:"purpose"` // 'melee' | 'thrown' | 'ranged'
+	Hand      string   `json:"hand"`    // 'light' | 'one' | 'two' (finesse gating — ALE-31)
 	Traits    []string `json:"traits"`
 	Damage    string   `json:"damage"`    // dice, e.g. "1d8" (weapon-card display)
 	CritRange int      `json:"critRange"` // lowest natural roll that threatens
 	CritMult  int      `json:"critMult"`
+	Finesse   bool     `json:"finesse"` // inherent Des-on-attack (Adaga) — ALE-31
 }
 
 // RaceDefinition mirrors abilities/types.ts RaceDefinition (the abilities

@@ -30,6 +30,8 @@ func (c *Catalogs) ComputeWeaponCards(ch Character, activeConditionals map[strin
 	attackAll := totalContribsFor(effects, ModifierTarget{K: "attack", Scope: "all"})
 	damageAll := totalContribsFor(effects, ModifierTarget{K: "damage", Scope: "all"})
 	forTotal := effectiveAttribute(ch, "strength", effects)
+	dexTotal := effectiveAttribute(ch, "dexterity", effects)
+	hasAcuidade := parseChoiceSet(ch.ClassPowers).has["acuidade-com-arma"]
 
 	cards := []WeaponCard{}
 	for _, it := range ch.Items {
@@ -49,8 +51,21 @@ func (c *Catalogs) ComputeWeaponCards(ch Character, activeConditionals map[strin
 		if w.Purpose == "ranged" {
 			skill, attribute = "Pontaria", "dexterity"
 			strDamage = 0
+		} else {
+			// Finesse (Adaga / Acuidade com Arma): use Destreza when it beats Força.
+			dexAttack, dexDamage := weaponDexUse(w, hasAcuidade, forTotal, dexTotal)
+			if dexAttack {
+				attribute = "dexterity"
+			}
+			if dexDamage {
+				strDamage = dexTotal
+			}
 		}
-		ex := expertiseBreakdown(ch, weaponSkillState(ch, skill, attribute), effects)
+		// weaponSkillState returns the stored Luta row (attribute strength); force
+		// the resolved attribute so a finessed melee attack sums Destreza (ALE-31).
+		state := weaponSkillState(ch, skill, attribute)
+		state.Attribute = attribute
+		ex := expertiseBreakdown(ch, state, effects)
 		cards = append(cards, WeaponCard{
 			Name:        it.Name,
 			Skill:       skill,
@@ -70,6 +85,29 @@ func (c *Catalogs) ComputeWeaponCards(ch Character, activeConditionals map[strin
 		}
 	}
 	return cards
+}
+
+// weaponDexUse mirrors weapon-cards.ts weaponDexUse: whether a wielded weapon may
+// use Destreza instead of Força on attack/damage (T20 p145). Only when DES beats
+// FOR (the rule is optional, so the sheet takes the better). Attack finesse = the
+// weapon's inherent flag (Adaga) OR the Acuidade power on a light-melee/thrown/
+// ágil weapon; damage finesse is Acuidade-only. Ranged never applies (ALE-31).
+func weaponDexUse(w *WeaponStats, hasAcuidade bool, forTotal, dexTotal int) (attack, damage bool) {
+	if w.Purpose == "ranged" || dexTotal <= forTotal {
+		return false, false
+	}
+	acuidade := hasAcuidade &&
+		((w.Hand == "light" && w.Purpose == "melee") || w.Purpose == "thrown" || hasTrait(w.Traits, "agil"))
+	return w.Finesse || acuidade, acuidade
+}
+
+func hasTrait(traits []string, t string) bool {
+	for _, x := range traits {
+		if x == t {
+			return true
+		}
+	}
+	return false
 }
 
 // weaponSkillState mirrors expertise.ts expertiseStateFor: the stored Luta/Pontaria

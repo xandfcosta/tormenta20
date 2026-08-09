@@ -59,6 +59,11 @@ export type WeaponStats = {
   purpose: WeaponPurpose
   range?: WeaponRange
   traits: WeaponTrait[]
+  /** Weapon that inherently lets you use Destreza instead of Força on the
+   *  attack roll (Adaga, p145) — no power required. Attack only, not damage.
+   *  (The "Acuidade com Arma" power grants Des on attack AND damage for light/
+   *  thrown/ágil weapons; that's derived from the power + these stats.) */
+  finesse?: boolean
 }
 
 export type ArmorStats = {

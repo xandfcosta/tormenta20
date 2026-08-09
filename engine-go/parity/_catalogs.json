@@ -16,7 +16,8 @@
         "hand": "light",
         "purpose": "melee",
         "range": "curto",
-        "traits": []
+        "traits": [],
+        "finesse": true
       },
       "modifiers": []
     },

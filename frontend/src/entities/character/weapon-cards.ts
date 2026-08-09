@@ -1,4 +1,9 @@
-import { type AttributeKey, type ItemEffects, statFor } from '@tormenta20/t20-data'
+import {
+  type AttributeKey,
+  type ItemEffects,
+  type WeaponStats,
+  statFor,
+} from '@tormenta20/t20-data'
 import { getCatalogItem } from '@/shared/lib/catalog-cache'
 import {
   areEngineCatalogsPrimed,
@@ -11,8 +16,35 @@ import {
   attributeTotal,
   characterEffects,
   expertiseTotalWithItems,
+  parseChoiceSet,
 } from './derived'
 import { expertiseStateFor } from './expertise'
+
+const ACUIDADE_POWER = 'acuidade-com-arma'
+
+/**
+ * Whether a wielded weapon may use Destreza for its attack roll / damage instead
+ * of Força (T20 p145). Only helps when DES beats FOR (the rule is "pode usar", so
+ * the sheet takes the better attribute). Attack finesse comes from the weapon
+ * itself (Adaga: `finesse`) OR the "Acuidade com Arma" power on a light melee /
+ * thrown / ágil weapon; damage finesse is Acuidade-only (the inherent weapon rule
+ * is attack-only). Ranged already uses Pontaria (DES), so it never applies.
+ */
+function weaponDexUse(
+  weapon: WeaponStats,
+  hasAcuidade: boolean,
+  forTotal: number,
+  dexTotal: number,
+): { attack: boolean; damage: boolean } {
+  if (weapon.purpose === 'ranged' || dexTotal <= forTotal)
+    return { attack: false, damage: false }
+  const acuidade =
+    hasAcuidade &&
+    ((weapon.hand === 'light' && weapon.purpose === 'melee') ||
+      weapon.purpose === 'thrown' ||
+      weapon.traits.includes('agil'))
+  return { attack: weapon.finesse === true || acuidade, damage: acuidade }
+}
 
 const EMPTY_SET: ReadonlySet<string> = new Set()
 
@@ -39,6 +71,8 @@ export function assembleWeaponCards(char: Character, effects: ItemEffects): Weap
   const attackAll = toTotalContribs(statFor(effects, { k: 'attack', scope: 'all' }))
   const damageAll = toTotalContribs(statFor(effects, { k: 'damage', scope: 'all' }))
   const forTotal = attributeTotal(char, 'strength', effects)
+  const dexTotal = attributeTotal(char, 'dexterity', effects)
+  const hasAcuidade = parseChoiceSet(char.classPowers).has(ACUIDADE_POWER)
 
   const cards: WeaponCard[] = []
   for (const it of char.items) {
@@ -48,18 +82,23 @@ export function assembleWeaponCards(char: Character, effects: ItemEffects): Weap
     if (!weapon) continue
     const ranged = weapon.purpose === 'ranged'
     const skill = ranged ? 'Pontaria' : 'Luta'
-    const attribute: AttributeKey = ranged ? 'dexterity' : 'strength'
-    const state = expertiseStateFor(char, {
+    const baseAttr: AttributeKey = ranged ? 'dexterity' : 'strength'
+    // Finesse (Adaga / Acuidade com Arma) swaps the attack attribute to DES when
+    // it beats FOR; the perícia stays Luta but sums Destreza (ALE-31).
+    const dex = weaponDexUse(weapon, hasAcuidade, forTotal, dexTotal)
+    const attribute: AttributeKey = dex.attack ? 'dexterity' : baseAttr
+    const base = expertiseStateFor(char, {
       name: skill,
-      attribute,
+      attribute: baseAttr,
       abbr: ranged ? 'DES' : 'FOR',
     })
+    const state = { ...base, attribute }
     const expertise = {
       name: state.name,
       attribute: state.attribute,
       ...expertiseTotalWithItems(char, state, effects),
     }
-    const strDamage = ranged ? 0 : forTotal
+    const strDamage = ranged ? 0 : dex.damage ? dexTotal : forTotal
     cards.push({
       name: it.name,
       skill,
