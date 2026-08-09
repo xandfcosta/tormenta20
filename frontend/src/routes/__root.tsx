@@ -1,4 +1,4 @@
-import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { type QueryClient, useQuery } from '@tanstack/react-query'
 import {
   createRootRouteWithContext,
   Outlet,
@@ -8,7 +8,7 @@ import {
 import { useEffect } from 'react'
 import { ensureCatalogs, ensureEngineCatalogs } from '@/entities/catalog/ensure-catalogs'
 import { meQueryOptions } from '@/entities/user/queries'
-import { api } from '@/shared/api/api'
+import { useLogout } from '@/entities/user/use-logout'
 import { DevtoolsDock } from '@/shared/dev/devtools-dock'
 import { AppShell } from '@/shared/layout/app-shell'
 import { useAuthStore } from '@/shared/stores/auth-store'
@@ -41,7 +41,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 function RootLayout() {
   const { user } = Route.useRouteContext()
   const navigate = useNavigate()
-  const qc = useQueryClient()
   const setUser = useAuthStore((s) => s.setUser)
   const me = useQuery(meQueryOptions)
   const theme = useUiStore((s) => s.theme)
@@ -74,6 +73,12 @@ function RootLayout() {
         (m) => m.routeId === '/login' || m.routeId === '/register',
       ),
   })
+  // The Hub (`/`) IS the main menu — it renders as a full game scene with no
+  // app nav; its own footer owns theme/logout (ALE-38). Fuller cross-scene nav
+  // (back-to-hub, /users reach) lands in ALE-41.
+  const inHub = useRouterState({
+    select: (s) => s.matches.some((m) => m.routeId === '/'),
+  })
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
@@ -83,15 +88,7 @@ function RootLayout() {
     setUser(me.data ?? user ?? null)
   }, [me.data, user, setUser])
 
-  const logout = useMutation({
-    mutationFn: api.auth.logout,
-    onSuccess: async () => {
-      qc.setQueryData(meQueryOptions.queryKey, null)
-      qc.removeQueries({ queryKey: ['users'] })
-      setUser(null)
-      await navigate({ to: '/login' })
-    },
-  })
+  const logout = useLogout(() => navigate({ to: '/login' }))
 
   const current = me.data ?? user ?? null
 
@@ -103,7 +100,7 @@ function RootLayout() {
         onToggleTheme={toggleTheme}
         onLogout={() => logout.mutate()}
         logoutPending={logout.isPending}
-        bare={inMatch || inAuth}
+        bare={inMatch || inAuth || inHub}
         hideBottomNav={inSheet}
       >
         <Outlet />
