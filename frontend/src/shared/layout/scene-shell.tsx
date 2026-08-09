@@ -105,7 +105,10 @@ function SceneShell({
         data-slot="scene-content"
         data-animate={reduced ? undefined : true}
         className={cn(
-          'relative flex min-h-0 flex-1 flex-col overflow-y-auto',
+          // overflow-x-hidden: a scene never scrolls horizontally, and it
+          // clips slide-in overlays (the dossier) so they don't flash a
+          // transient bottom scrollbar mid-animation.
+          'relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto',
           dense ? 'px-4 py-4' : 'px-5 py-14',
           !reduced && 'scene-in',
           className,
