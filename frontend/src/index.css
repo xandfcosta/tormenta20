@@ -3,6 +3,30 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Cinzel (OFL) — self-hosted display face for the game scenes (ALE-35).
+ * Variable weight 400–900; latin covers pt-BR (ã/ç/õ/é…), latin-ext kept for
+ * the odd extended glyph. Files in public/fonts, so no CDN / CSP-safe. */
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('/fonts/cinzel-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('/fonts/cinzel-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 /* Default shadcn neutral theme. Custom "Controlled Decay" palette stripped —
  * the app is on plain shadcn now, focused on function. The only kept
  * non-default tokens are the HP/PM bar colors (functional state signal). */
@@ -61,10 +85,64 @@
   --mp-arcane: oklch(0.65 0.17 250);
 }
 
+/* ── Grimório theme (ALE-35) ────────────────────────────────────────────
+ * Canonical palette for the game-like scenes. A scene reads intrinsically
+ * dark (like a CRPG screen) regardless of the app's light/dark toggle, and
+ * high-contrast: body text hits AAA, decorative purple is only AA-Large so
+ * it stays in glow / large titles, never small text. Applied via the scope
+ * class `.scene-grimorio` (added by SceneShell, ALE-37) — the existing
+ * shadcn screens are left untouched until each migrates scene-by-scene.
+ * Contrast + look validated live at /grimorio before porting. */
+:root {
+  --grimorio-bg: oklch(0.15 0.01 305);
+  --grimorio-bg-2: oklch(0.19 0.012 305);
+  --grimorio-panel: oklch(0.225 0.014 300);
+  --grimorio-panel-raised: oklch(0.27 0.016 300);
+  --grimorio-fg: oklch(0.93 0.014 85);
+  --grimorio-fg-muted: oklch(0.74 0.02 85);
+  --grimorio-crimson: oklch(0.55 0.19 25);
+  --grimorio-crimson-bright: oklch(0.64 0.21 25);
+  --grimorio-purple: oklch(0.55 0.15 305);
+  --grimorio-gold: oklch(0.8 0.11 85);
+  --grimorio-iron: oklch(0.4 0.015 300);
+  --grimorio-iron-light: oklch(0.52 0.02 300);
+  --grimorio-parchment: oklch(0.9 0.035 80);
+  --grimorio-parchment-ink: oklch(0.28 0.03 60);
+}
+
+/* Remaps the shadcn semantic tokens inside a scene so any stock component
+ * (card, button, input) adopts Grimório automatically, plus a sharper
+ * iron-forged radius and Cinzel as the display face. */
+.scene-grimorio {
+  --background: var(--grimorio-bg);
+  --foreground: var(--grimorio-fg);
+  --card: var(--grimorio-panel);
+  --card-foreground: var(--grimorio-fg);
+  --popover: var(--grimorio-panel-raised);
+  --popover-foreground: var(--grimorio-fg);
+  --primary: var(--grimorio-crimson);
+  --primary-foreground: oklch(0.97 0.01 85);
+  --secondary: var(--grimorio-panel-raised);
+  --secondary-foreground: var(--grimorio-fg);
+  --muted: var(--grimorio-bg-2);
+  --muted-foreground: var(--grimorio-fg-muted);
+  --accent: var(--grimorio-panel-raised);
+  --accent-foreground: var(--grimorio-gold);
+  --destructive: var(--grimorio-crimson-bright);
+  --border: var(--grimorio-iron);
+  --input: var(--grimorio-iron);
+  --ring: var(--grimorio-gold);
+  --radius: 0.25rem;
+  --font-display: var(--font-heading);
+  background-color: var(--grimorio-bg);
+  color: var(--grimorio-fg);
+}
+
 @theme inline {
   --font-sans: ui-sans-serif, system-ui, sans-serif;
   --font-serif: ui-serif, Georgia, serif;
   --font-display: ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Cinzel', ui-serif, Georgia, serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
   --radius-sm: calc(var(--radius) - 4px);
@@ -95,6 +173,17 @@
   --color-hp-hurt: var(--hp-hurt);
   --color-hp-critical: var(--hp-critical);
   --color-mp-arcane: var(--mp-arcane);
+
+  /* Grimório accents beyond the shadcn semantics — so scene primitives can
+   * use text-grimorio-gold / border-grimorio-iron / bg-grimorio-parchment. */
+  --color-grimorio-crimson: var(--grimorio-crimson);
+  --color-grimorio-crimson-bright: var(--grimorio-crimson-bright);
+  --color-grimorio-purple: var(--grimorio-purple);
+  --color-grimorio-gold: var(--grimorio-gold);
+  --color-grimorio-iron: var(--grimorio-iron);
+  --color-grimorio-iron-light: var(--grimorio-iron-light);
+  --color-grimorio-parchment: var(--grimorio-parchment);
+  --color-grimorio-parchment-ink: var(--grimorio-parchment-ink);
 }
 
 @layer base {
@@ -110,6 +199,12 @@
    * dropped — `font-display` is now the system sans, `font-hud` the mono. */
   .font-display {
     font-family: var(--font-display);
+  }
+
+  /* Cinzel display face — the game scenes' titles/menus (ALE-35). */
+  .font-heading {
+    font-family: var(--font-heading);
+    font-optical-sizing: auto;
   }
 
   .font-hud {
