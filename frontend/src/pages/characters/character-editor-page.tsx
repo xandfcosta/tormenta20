@@ -4,7 +4,6 @@ import { characterQueryOptions } from '@/entities/character/queries'
 import { CharacterSheet } from '@/features/character-sheet/character-sheet'
 import { SceneShell } from '@/shared/layout/scene-shell'
 import { useSfx } from '@/shared/lib/use-sfx'
-import { Badge } from '@/shared/ui/badge'
 import { Skeleton } from '@/shared/ui/skeleton'
 
 const routeApi = getRouteApi('/characters/$id')
@@ -28,9 +27,6 @@ export function CharacterViewPage() {
       bleed
       dense
       title={data?.name ?? 'Ficha'}
-      headerRight={
-        data ? <Badge variant="secondary">Nv {data.level}</Badge> : null
-      }
       onBack={() => {
         sfx('select')
         navigate({ to: '/characters' })
