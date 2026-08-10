@@ -86,6 +86,13 @@ function RootLayout() {
   const inRoster = useRouterState({
     select: (s) => s.matches.some((m) => m.routeId === '/characters/'),
   })
+  // Crônicas (`/campaigns/`) is a full grimório scene now (SceneShell owns the
+  // back-to-Hub control). Bare-wire ONLY the index route — the detail
+  // (`/campaigns/$id`), join and new keep their web nav until they migrate too
+  // (ALE-55). `/campaigns/$id` is a layout, so match the index routeId exactly.
+  const inCampaigns = useRouterState({
+    select: (s) => s.matches.some((m) => m.routeId === '/campaigns/'),
+  })
   // The character sheet (`/characters/$id/`) is a full grimório scene now
   // (SceneShell owns back-to-roster). Bare-wire only the editor index — the
   // computed read-only view (`/characters/$id/sheet`) keeps its web nav.
@@ -113,7 +120,7 @@ function RootLayout() {
         onToggleTheme={toggleTheme}
         onLogout={() => logout.mutate()}
         logoutPending={logout.isPending}
-        bare={inMatch || inAuth || inHub || inRoster || inFicha}
+        bare={inMatch || inAuth || inHub || inRoster || inCampaigns || inFicha}
         hideBottomNav={inSheet}
       >
         <Outlet />

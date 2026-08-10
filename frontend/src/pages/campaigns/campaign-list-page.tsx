@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import {
   type ColumnFiltersState,
@@ -7,18 +7,20 @@ import {
   getFilteredRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import { CalendarClock, Plus, Search, UserPlus } from 'lucide-react'
-import { useState } from 'react'
+import { Plus, Search, UserPlus } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/shared/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
-import { PageChrome } from '@/shared/ui/page-chrome'
 import { SkeletonCardGrid } from '@/shared/ui/skeleton'
+import { SceneShell } from '@/shared/layout/scene-shell'
 import { cn } from '@/shared/lib/utils'
 import { fuzzyFilter } from '@/shared/lib/fuzzy-filter'
-import { CharacterPortrait } from '@/shared/ui/character-portrait'
+import { useSfx } from '@/shared/lib/use-sfx'
 import { campaignsQueryOptions } from '@/entities/campaign/queries'
 import type { Campaign } from '@/shared/api/api'
+import { CampaignRail } from '@/features/campaign-select/campaign-rail'
+import { CampaignBook } from '@/features/campaign-select/campaign-book'
+import { useActiveSessionByCampaign } from '@/features/campaign-select/use-active-sessions'
 
 type RoleFilter = 'all' | 'gm' | 'player'
 
@@ -29,8 +31,8 @@ const ROLE_FILTERS: { value: RoleFilter; label: string }[] = [
 ]
 
 // Headless table columns: the accessors feed the built-in global (search)
-// and column (role) filters. Nothing here renders — we read the filtered
-// rows back out and render them as grouped cards.
+// and column (role) filters. Nothing renders from here — we read the filtered
+// rows back out and drive the rail/stage with them.
 const columnHelper = createColumnHelper<Campaign>()
 const columns = [
   columnHelper.accessor('name', { id: 'name' }),
@@ -44,17 +46,24 @@ const columns = [
 const EMPTY: Campaign[] = []
 
 /**
- * Campaigns list, grouped by the caller's role ("Mestrando" / "Jogando").
- * Filtering (name/description search + role) runs through a headless
- * TanStack Table; the filtered rows are rendered as cards, not a table.
+ * Crônicas — the campaigns roster as a cinematic "chapter select" scene
+ * (ALE-56): the focused chronicle on a stage (emblem, synopsis, your PC, live
+ * status, primary action) with a rail to switch focus, mirroring the character
+ * selector. Search + role filter run through a headless TanStack Table;
+ * `←/→` (or `↑/↓`) move focus, Enter opens (resumes a live session or opens the
+ * chronicle), `/` focuses search, Esc clears.
  */
 export function CampaignsListPage() {
   const campaigns = useQuery(campaignsQueryOptions)
+  const navigate = useNavigate()
+  const sfx = useSfx()
+  const [selectedId, setSelectedId] = useState<number | null>(null)
   const [globalFilter, setGlobalFilter] = useState('')
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const roster = campaigns.data
 
   const table = useReactTable({
-    data: campaigns.data ?? EMPTY,
+    data: roster ?? EMPTY,
     columns,
     state: { globalFilter, columnFilters },
     onGlobalFilterChange: setGlobalFilter,
@@ -63,187 +72,285 @@ export function CampaignsListPage() {
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
   })
+  const filtered = table.getRowModel().rows.map((r) => r.original)
+  const index = Math.max(
+    0,
+    filtered.findIndex((c) => c.id === selectedId),
+  )
+  const selected = filtered[index] ?? null
+  const activeByCampaign = useActiveSessionByCampaign(
+    (roster ?? EMPTY).map((c) => c.id),
+  )
+  const hasData = (roster?.length ?? 0) > 0
 
-  const visible = table.getRowModel().rows.map((r) => r.original)
-  const mastering = visible.filter((c) => c.role === 'gm')
-  const playing = visible.filter((c) => c.role !== 'gm')
-  const hasData = (campaigns.data?.length ?? 0) > 0
+  // Every pick feeds the book; it queues them and turns to each in order (see
+  // usePageTurns). `orderIds` gives each turn its direction.
+  const orderIds = filtered.map((c) => c.id)
 
   const role =
     (columnFilters.find((f) => f.id === 'role')?.value as RoleFilter) ?? 'all'
   const setRole = (r: RoleFilter) =>
     setColumnFilters(r === 'all' ? [] : [{ id: 'role', value: r }])
 
-  return (
-    <PageChrome className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">Campanhas</h1>
-        <div className="flex gap-2">
+  const step = (delta: number) => {
+    if (filtered.length === 0) return
+    sfx('hover')
+    const next = Math.min(filtered.length - 1, Math.max(0, index + delta))
+    setSelectedId(filtered[next].id)
+  }
+  const jumpTo = (id: number) => {
+    sfx('select')
+    setSelectedId(id)
+  }
+  const openDetail = (c: Campaign) => {
+    sfx('select')
+    navigate({ to: '/campaigns/$id', params: { id: c.id } })
+  }
+  const resume = (c: Campaign) => {
+    const sid = activeByCampaign[c.id]
+    if (sid == null) return openDetail(c)
+    sfx('select')
+    navigate({
+      to: '/campaigns/$id/sessions/$sid',
+      params: { id: c.id, sid },
+    })
+  }
+  const openFocused = () => {
+    if (!selected) return
+    if (activeByCampaign[selected.id] != null) resume(selected)
+    else openDetail(selected)
+  }
+
+  useRailKeyboard({
+    step,
+    jumpTo: (edge) => {
+      if (filtered.length === 0) return
+      jumpTo(filtered[edge === 'home' ? 0 : filtered.length - 1].id)
+    },
+    open: openFocused,
+    openChronicle: () => selected && openDetail(selected),
+    clearSearch: () => setGlobalFilter(''),
+    hasQuery: globalFilter.length > 0,
+  })
+
+  const headerControls = (
+    <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-1 sm:justify-end">
+      {hasData && (
+        <div className="relative w-full sm:w-56 md:w-64">
+          <Search className="pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            value={globalFilter}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            placeholder="Buscar campanha"
+            className="pl-8"
+            aria-label="Buscar campanha"
+            data-campaign-search
+          />
+        </div>
+      )}
+      <div className="flex flex-1 flex-wrap items-center gap-2 sm:flex-none">
+        {hasData && <RoleFilterButtons role={role} onRole={setRole} />}
+        <div className="ml-auto flex gap-2 sm:ml-0">
           <Link to="/campaigns/join">
-            <Button variant="outline">
-              <UserPlus className="mr-1 size-4" /> Entrar em campanha
+            <Button variant="outline" size="sm" aria-label="Entrar em campanha">
+              <UserPlus className="size-4 sm:mr-1" />
+              <span className="hidden sm:inline">Entrar</span>
             </Button>
           </Link>
           <Link to="/campaigns/new">
-            <Button>
-              <Plus className="mr-1 size-4" /> Nova campanha
+            <Button size="sm" aria-label="Nova campanha">
+              <Plus className="size-4 sm:mr-1" />
+              <span className="hidden sm:inline">Nova</span>
             </Button>
           </Link>
         </div>
       </div>
+    </div>
+  )
 
-      {hasData && (
-        <CampaignFilters
-          query={globalFilter}
-          onQuery={setGlobalFilter}
-          role={role}
-          onRole={setRole}
-        />
-      )}
-
+  return (
+    <SceneShell
+      dense
+      title="Crônicas"
+      onBack={() => {
+        sfx('select')
+        navigate({ to: '/' })
+      }}
+      onEnter={() => sfx('transition')}
+      headerRight={headerControls}
+    >
       {campaigns.isLoading && <SkeletonCardGrid count={3} />}
       {campaigns.isError && (
         <p className="text-destructive">{(campaigns.error as Error).message}</p>
       )}
-      {campaigns.data?.length === 0 && <NoCampaigns />}
+      {roster?.length === 0 && <NoCampaigns />}
+      {hasData && filtered.length === 0 && (
+        <NoMatches onClear={() => setGlobalFilter('')} />
+      )}
 
-      {mastering.length > 0 && (
-        <CampaignSection title="Mestrando" campaigns={mastering} />
+      {selected && (
+        <div className="flex min-h-0 flex-1 items-center justify-center">
+          <div className="flex min-h-0 w-full max-w-7xl flex-col gap-2 lg:flex-row lg:items-stretch lg:gap-0">
+            {/* Mirrors the bookmarks' width so the book itself centers on the
+                viewport (not the book+tabs group). Hidden on phones. */}
+            <div aria-hidden className="hidden lg:block lg:w-56 lg:shrink-0" />
+            <CampaignBook
+              campaign={selected}
+              isLive={activeByCampaign[selected.id] != null}
+              orderIds={orderIds}
+              onOpen={() => openDetail(selected)}
+              onResume={() => resume(selected)}
+            />
+            <CampaignRail
+              campaigns={filtered}
+              selectedId={selected.id}
+              activeByCampaign={activeByCampaign}
+              onSelect={jumpTo}
+              onHover={() => sfx('hover')}
+              className="lg:-ml-px lg:w-56 lg:shrink-0 lg:self-stretch"
+            />
+          </div>
+        </div>
       )}
-      {playing.length > 0 && (
-        <CampaignSection title="Jogando" campaigns={playing} />
-      )}
-      {hasData && visible.length === 0 && (
-        <p className="py-6 text-center text-sm text-muted-foreground">
-          Nenhuma campanha corresponde ao filtro.
-        </p>
-      )}
-    </PageChrome>
+    </SceneShell>
   )
 }
 
-/** Search box + role segmented filter over the campaign list. */
-function CampaignFilters({
-  query,
-  onQuery,
+/** Page-level keyboard bindings; ignored while typing in inputs (except Esc). */
+function useRailKeyboard({
+  step,
+  jumpTo,
+  open,
+  openChronicle,
+  clearSearch,
+  hasQuery,
+}: {
+  step: (delta: number) => void
+  jumpTo: (edge: 'home' | 'end') => void
+  open: () => void
+  /** Open the focused chronicle's detail regardless of a live session (key O). */
+  openChronicle: () => void
+  clearSearch: () => void
+  hasQuery: boolean
+}) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      const typing = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
+      if (typing) {
+        if (e.key === 'Escape') {
+          clearSearch()
+          target.blur()
+        }
+        return
+      }
+      switch (e.key) {
+        case 'ArrowLeft':
+        case 'ArrowUp':
+          e.preventDefault()
+          step(-1)
+          break
+        case 'ArrowRight':
+        case 'ArrowDown':
+          e.preventDefault()
+          step(1)
+          break
+        case 'PageUp':
+          e.preventDefault()
+          step(-5)
+          break
+        case 'PageDown':
+          e.preventDefault()
+          step(5)
+          break
+        case 'Home':
+          jumpTo('home')
+          break
+        case 'End':
+          jumpTo('end')
+          break
+        case 'Enter':
+          open()
+          break
+        case 'o':
+        case 'O':
+          openChronicle()
+          break
+        case '/':
+          e.preventDefault()
+          document
+            .querySelector<HTMLInputElement>('[data-campaign-search]')
+            ?.focus()
+          break
+        case 'Escape':
+          if (hasQuery) clearSearch()
+          break
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [step, jumpTo, open, openChronicle, clearSearch, hasQuery])
+}
+
+/** Role segmented filter (Todas / Mestrando / Jogando). */
+function RoleFilterButtons({
   role,
   onRole,
 }: {
-  query: string
-  onQuery: (q: string) => void
   role: RoleFilter
   onRole: (r: RoleFilter) => void
 }) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-      <div className="relative sm:max-w-xs sm:flex-1">
-        <Search className="pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          type="search"
-          value={query}
-          onChange={(e) => onQuery(e.target.value)}
-          placeholder="Buscar campanha"
-          className="pl-8"
-          aria-label="Buscar campanha"
-        />
-      </div>
-      <div className="flex gap-1">
-        {ROLE_FILTERS.map((f) => (
-          <Button
-            key={f.value}
-            type="button"
-            size="sm"
-            variant={role === f.value ? 'default' : 'outline'}
-            aria-pressed={role === f.value}
-            onClick={() => onRole(f.value)}
-            className={cn(role === f.value && 'pointer-events-none')}
-          >
-            {f.label}
-          </Button>
-        ))}
-      </div>
+    <div className="flex gap-1">
+      {ROLE_FILTERS.map((f) => (
+        <Button
+          key={f.value}
+          type="button"
+          size="sm"
+          variant={role === f.value ? 'default' : 'outline'}
+          aria-pressed={role === f.value}
+          onClick={() => onRole(f.value)}
+          className={cn(role === f.value && 'pointer-events-none')}
+        >
+          {f.label}
+        </Button>
+      ))}
     </div>
   )
 }
 
-/** A titled role section with a responsive card grid. */
-function CampaignSection({
-  title,
-  campaigns,
-}: {
-  title: string
-  campaigns: Campaign[]
-}) {
-  return (
-    <section className="space-y-3">
-      <h2 className="text-sm font-medium uppercase tracking-widest text-muted-foreground">
-        {title}
-      </h2>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {campaigns.map((c) => (
-          <CampaignCard key={c.id} campaign={c} />
-        ))}
-      </div>
-    </section>
-  )
-}
-
-function CampaignCard({ campaign }: { campaign: Campaign }) {
-  return (
-    <Link to="/campaigns/$id" params={{ id: campaign.id }}>
-      <Card className="h-full transition-colors hover:border-primary">
-        <CardHeader>
-          <CardTitle>{campaign.name}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          {campaign.description && (
-            <p className="line-clamp-3 text-muted-foreground">
-              {campaign.description}
-            </p>
-          )}
-          {campaign.character && <MyCharacterRow character={campaign.character} />}
-          <p className="flex items-center gap-1 text-xs text-muted-foreground">
-            <CalendarClock className="size-3" />
-            Atualizada em{' '}
-            {new Date(campaign.updatedAt).toLocaleDateString('pt-BR')}
-          </p>
-        </CardContent>
-      </Card>
-    </Link>
-  )
-}
-
-/** The caller's PC in a campaign — portrait + name + class/level line. */
-function MyCharacterRow({
-  character,
-}: {
-  character: NonNullable<Campaign['character']>
-}) {
-  const classes = character.classes
-    .map((c) => `${c.className} ${c.level}`)
-    .join(' / ')
-  return (
-    <div className="flex items-center gap-2 rounded-md border p-2">
-      <CharacterPortrait name={character.name} size="sm" />
-      <div className="min-w-0">
-        <p className="truncate font-medium">{character.name}</p>
-        <p className="truncate text-xs text-muted-foreground">
-          {classes || `Nv ${character.level}`}
-        </p>
-      </div>
-    </div>
-  )
-}
-
+/** Empty roster: theatrical CTA matching the grimório scene. */
 function NoCampaigns() {
   return (
-    <Card>
-      <CardContent className="flex flex-col items-center gap-3 py-10 text-muted-foreground">
-        <p>Nenhuma campanha ainda.</p>
-        <Link to="/campaigns/new">
-          <Button>Criar sua primeira campanha</Button>
-        </Link>
-      </CardContent>
-    </Card>
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-10">
+      <div className="flex size-24 items-center justify-center rounded-md border-2 border-dashed border-grimorio-iron">
+        <span className="select-none font-heading text-5xl text-grimorio-gold/30">
+          ✦
+        </span>
+      </div>
+      <p className="font-heading text-xl uppercase tracking-[0.12em] text-foreground">
+        Nenhuma crônica ainda
+      </p>
+      <Link to="/campaigns/new">
+        <Button size="lg">Criar sua primeira campanha</Button>
+      </Link>
+    </div>
+  )
+}
+
+function NoMatches({ onClear }: { onClear: () => void }) {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 py-10">
+      <p className="font-heading text-sm uppercase tracking-widest text-grimorio-gold/70">
+        Nada encontrado
+      </p>
+      <p className="text-sm text-muted-foreground">
+        Nenhuma campanha corresponde ao filtro.
+      </p>
+      <Button variant="outline" onClick={onClear}>
+        Limpar busca (Esc)
+      </Button>
+    </div>
   )
 }

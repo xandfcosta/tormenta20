@@ -300,6 +300,166 @@
   .grimorio-frame--stone {
     background: linear-gradient(var(--grimorio-panel-raised), var(--grimorio-panel));
   }
+  /* Open-tome presentation for a focused chronicle (Crônicas). Leather cover +
+   * parchment pages (the child .grimorio-parchment-bg) + a shaded central
+   * spine, so it reads as a book rather than two cards. Decorative → literal
+   * oklch is fine here (same rule as the other backgrounds/glows). */
+  .grimorio-book {
+    position: relative;
+    background: linear-gradient(150deg, oklch(0.28 0.03 45), oklch(0.19 0.02 40));
+    border: 1px solid var(--grimorio-iron);
+    border-radius: 10px;
+    box-shadow: inset 0 0 0 1px oklch(0.8 0.11 85 / 0.12),
+      0 12px 34px oklch(0 0 0 / 0.5);
+  }
+  .grimorio-book-pages {
+    position: relative;
+    border-radius: 4px;
+    box-shadow: 0 0 0 1px oklch(0 0 0 / 0.35);
+    /* Depth for the page-turn leaf's rotateY (spine pivot). */
+    perspective: 2200px;
+  }
+  /* Spine/gutter drawn as an overlay ON THE COVER — above the pages AND the
+   * turning leaf — so the mid-page shadow stays CONSTANT through a page turn.
+   * (When it lived on .grimorio-book-pages, the leaf covered it mid-turn and it
+   * popped back darker on unmount — the reported flick.) Only on the side-by-
+   * side spread (sm+); stacked phones have no gutter. */
+  @media (min-width: 640px) {
+    .grimorio-book::before {
+      content: '';
+      position: absolute;
+      top: 12px;
+      bottom: 12px;
+      left: 50%;
+      width: 46px;
+      transform: translateX(-50%);
+      background: linear-gradient(
+        90deg,
+        transparent,
+        oklch(0 0 0 / 0.22) 42%,
+        oklch(0 0 0 / 0.34) 50%,
+        oklch(0 0 0 / 0.22) 58%,
+        transparent
+      );
+      pointer-events: none;
+      z-index: 10;
+    }
+    .grimorio-book::after {
+      content: '';
+      position: absolute;
+      top: 20px;
+      bottom: 20px;
+      left: 50%;
+      width: 1px;
+      transform: translateX(-50%);
+      background: oklch(0 0 0 / 0.4);
+      pointer-events: none;
+      z-index: 11;
+    }
+  }
+  /* Page turn: a leaf carrying the OUTGOING right page lifts at the fore-edge
+   * and rotates over the spine (transform-origin left) to reveal the new page
+   * beneath — you see the real old page turn away, not a blank sheet.
+   * backface-hidden makes it vanish past 90deg; the ::after gradient is the fold
+   * shadow that sweeps (the light cue from the researched demos). Transform +
+   * opacity only → GPU-composited. Reduced motion is gated in JS (never mounts).*/
+  @keyframes grimorio-leaf-turn {
+    from {
+      transform: rotateY(0deg);
+    }
+    to {
+      transform: rotateY(-180deg);
+    }
+  }
+  @keyframes grimorio-leaf-shade {
+    0% {
+      opacity: 0;
+    }
+    50% {
+      opacity: 0.5;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+  /* The turning leaf is a double-sided page pivoting on the spine: the FRONT
+   * carries the outgoing right page (lifts on the right), the BACK carries the
+   * incoming illustration (lands on the left) — so the page turns the whole way
+   * over, revealing the new spread. preserve-3d keeps both faces in space;
+   * backface-hidden shows only the one facing you. */
+  .grimorio-leaf {
+    position: absolute;
+    inset: 0 0 0 50%;
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    animation: grimorio-leaf-turn var(--grimorio-turn, 0.45s) ease-in-out both;
+    pointer-events: none;
+    z-index: 9;
+  }
+  /* Backward turn (picking a marker ABOVE the current one): the LEFT page lifts
+   * and rotates the other way over the spine — the mirror of the forward turn,
+   * so paging up feels like paging back. */
+  @keyframes grimorio-leaf-turn-rev {
+    from {
+      transform: rotateY(0deg);
+    }
+    to {
+      transform: rotateY(180deg);
+    }
+  }
+  .grimorio-leaf--rev {
+    inset: 0 50% 0 0;
+    transform-origin: right center;
+    animation-name: grimorio-leaf-turn-rev;
+  }
+  .grimorio-leaf-face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    overflow: hidden;
+    backface-visibility: hidden;
+    /* No constant box-shadow here: it would pop out of existence the instant
+     * the leaf unmounts at turn's end (the mid-page shadow flick). Depth comes
+     * from the animated .grimorio-leaf-shade, which fades to 0 first. */
+  }
+  .grimorio-leaf-front {
+    border-radius: 0 3px 3px 0;
+  }
+  .grimorio-leaf-back {
+    transform: rotateY(180deg);
+    border-radius: 3px 0 0 3px;
+  }
+  /* Fold shadow — darkest when the leaf is edge-on (mid-turn); each face carries
+   * its own so it shows on whichever side faces you. Dark toward the spine. */
+  .grimorio-leaf-shade {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(90deg, oklch(0 0 0 / 0.6), transparent 58%);
+    animation: grimorio-leaf-shade var(--grimorio-turn, 0.45s) ease-in-out both;
+  }
+  /* Bookmark tabs down the fore-edge of the tome — the chronicle selector as
+   * page markers. The active tab takes the parchment of an open page + a gold
+   * edge and nudges toward the book (merges with it); inactive tabs are
+   * recessed leather. */
+  .grimorio-book-tab {
+    border: 1px solid var(--grimorio-iron-light);
+    background: linear-gradient(
+      oklch(0.29 0.016 300),
+      oklch(0.23 0.014 305)
+    );
+    color: var(--grimorio-fg);
+    transition: transform 0.16s, border-color 0.16s, background 0.16s,
+      color 0.16s;
+  }
+  .grimorio-book-tab:hover {
+    border-color: var(--grimorio-gold);
+  }
+  .grimorio-book-tab[data-active='true'] {
+    border-color: var(--grimorio-gold);
+    background: var(--grimorio-parchment);
+    color: var(--grimorio-parchment-ink);
+  }
   .grimorio-menu-item {
     border: 1px solid var(--grimorio-iron);
     border-left-width: 3px;
