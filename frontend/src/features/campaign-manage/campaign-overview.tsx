@@ -1,4 +1,3 @@
-import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -8,13 +7,11 @@ import { SkeletonRows } from '@/shared/ui/skeleton'
 import { campaignMembersQueryOptions } from '@/entities/campaign/queries'
 import { campaignSessionsQueryOptions } from '@/entities/session/queries'
 import { InviteButton } from './invite-button'
-import { NewSessionButton } from './new-session-button'
 
 /**
- * Campaign "Visão geral" tab (ALE-29): the current-session block up top (the
- * one thing a GM opens the campaign to do) plus light summaries of Membros and
- * Sessões that link into their own tabs. Replaces the old duplicated
- * active-session banner.
+ * Campaign "Visão geral" tab: light summaries of Membros and Sessões that link
+ * into their own tabs. The live-session action lives on the detail's identity
+ * page now (the tome's hero CTA), so it isn't duplicated here (ALE-59).
  */
 export function CampaignOverview({
   campaignId,
@@ -26,78 +23,17 @@ export function CampaignOverview({
   onGoToTab: (tab: 'sessoes' | 'membros') => void
 }) {
   return (
-    <div className="space-y-6">
-      <CurrentSessionCard campaignId={campaignId} isGm={isGm} />
-      <div className="grid gap-6 sm:grid-cols-2">
-        <MembersSummary
-          campaignId={campaignId}
-          isGm={isGm}
-          onSeeAll={() => onGoToTab('membros')}
-        />
-        <SessionsSummary
-          campaignId={campaignId}
-          onSeeAll={() => onGoToTab('sessoes')}
-        />
-      </div>
+    <div className="grid gap-6 sm:grid-cols-2">
+      <MembersSummary
+        campaignId={campaignId}
+        isGm={isGm}
+        onSeeAll={() => onGoToTab('membros')}
+      />
+      <SessionsSummary
+        campaignId={campaignId}
+        onSeeAll={() => onGoToTab('sessoes')}
+      />
     </div>
-  )
-}
-
-function CurrentSessionCard({
-  campaignId,
-  isGm,
-}: {
-  campaignId: number
-  isGm: boolean
-}) {
-  const sessions = useQuery(campaignSessionsQueryOptions(campaignId))
-  const active = sessions.data?.find((s) => s.status === 'active')
-
-  if (active) {
-    return (
-      <Card className="border-primary bg-primary/5">
-        <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-6">
-          <div>
-            <p className="flex items-center gap-2 font-medium">
-              <span className="size-2 shrink-0 rounded-full bg-[color:var(--hp-full)]" />
-              Sessão {active.sessionNumber} em andamento
-            </p>
-            {active.startedAt && (
-              <p className="text-xs text-muted-foreground">
-                Iniciada{' '}
-                {new Date(active.startedAt).toLocaleString('pt-BR', {
-                  dateStyle: 'short',
-                  timeStyle: 'short',
-                })}
-              </p>
-            )}
-          </div>
-          <Link
-            to="/campaigns/$id/sessions/$sid"
-            params={{ id: campaignId, sid: active.id }}
-          >
-            <Button>Entrar →</Button>
-          </Link>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  return (
-    <Card className="border-dashed">
-      <CardContent className="flex flex-col items-center gap-3 py-8 text-center">
-        <p className="text-sm text-muted-foreground">
-          Nenhuma sessão ao vivo no momento.
-        </p>
-        {isGm && (
-          <NewSessionButton
-            campaignId={campaignId}
-            label="Nova sessão"
-            size="default"
-          />
-        )}
-      </CardContent>
-    </Card>
   )
 }
 

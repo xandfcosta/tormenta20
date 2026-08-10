@@ -438,6 +438,30 @@
     background: linear-gradient(90deg, oklch(0 0 0 / 0.6), transparent 58%);
     animation: grimorio-leaf-shade var(--grimorio-turn, 0.45s) ease-in-out both;
   }
+  /* Page open (ALE-59): the campaign detail is ONE page (no book spine cutting
+   * the content); on mount it turns in from its bound (left) edge and zooms —
+   * "flipped to during a zoom". Transform + opacity only → cross-browser (no
+   * View Transitions), GPU. Off under reduced motion. */
+  @keyframes grimorio-page-in {
+    from {
+      opacity: 0;
+      transform: perspective(2000px) rotateY(-24deg) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: perspective(2000px) rotateY(0deg) scale(1);
+    }
+  }
+  .grimorio-page-in {
+    transform-origin: left center;
+    animation: grimorio-page-in 0.5s ease-out both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .grimorio-page-in {
+      animation: none;
+    }
+  }
+
   /* Bookmark tabs down the fore-edge of the tome — the chronicle selector as
    * page markers. The active tab takes the parchment of an open page + a gold
    * edge and nudges toward the book (merges with it); inactive tabs are
