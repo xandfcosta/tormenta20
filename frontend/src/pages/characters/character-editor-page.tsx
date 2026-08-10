@@ -2,6 +2,7 @@ import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { CharacterSheet } from '@/features/character-sheet/character-sheet'
+import { HealthVignette } from '@/features/character-sheet/health-vignette'
 import { SceneShell } from '@/shared/layout/scene-shell'
 import { useSfx } from '@/shared/lib/use-sfx'
 import { Skeleton } from '@/shared/ui/skeleton'
@@ -26,6 +27,7 @@ export function CharacterViewPage() {
     <SceneShell
       bleed
       dense
+      vignette={false}
       title={data?.name ?? 'Ficha'}
       onBack={() => {
         sfx('select')
@@ -40,7 +42,10 @@ export function CharacterViewPage() {
           {(character.error as Error).message}
         </p>
       ) : data ? (
-        <CharacterSheet character={data} />
+        <>
+          <CharacterSheet character={data} />
+          <HealthVignette current={data.hpCurrent} max={data.hpMax} />
+        </>
       ) : null}
     </SceneShell>
   )

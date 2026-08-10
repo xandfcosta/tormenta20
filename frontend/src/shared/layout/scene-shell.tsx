@@ -34,6 +34,9 @@ type SceneShellProps = {
   onBack?: () => void
   backLabel?: string
   texture?: 'stone' | 'parchment'
+  /** Override the decorative edge vignette (defaults on for stone). Scenes that
+   *  drive their own edge effect — the sheet's HP vignette — pass `false`. */
+  vignette?: boolean
   /** Fires once when the scene mounts *and* motion is allowed — pairs the
    *  enter animation with an optional cue (e.g. a transition sound). */
   onEnter?: () => void
@@ -55,6 +58,7 @@ function SceneShell({
   onBack,
   backLabel = 'Voltar',
   texture = 'stone',
+  vignette,
   onEnter,
   dense = false,
   headerRight,
@@ -83,7 +87,10 @@ function SceneShell({
       data-dense={dense || undefined}
       className="scene-grimorio relative flex h-dvh flex-col overflow-hidden"
     >
-      <BackgroundTexture variant={texture} vignette={texture === 'stone'} />
+      <BackgroundTexture
+        variant={texture}
+        vignette={vignette ?? texture === 'stone'}
+      />
 
       {dense ? (
         <header
