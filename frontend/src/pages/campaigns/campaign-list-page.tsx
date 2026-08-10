@@ -349,7 +349,7 @@ function NoMatches({ onClear }: { onClear: () => void }) {
         Nenhuma campanha corresponde ao filtro.
       </p>
       <Button variant="outline" onClick={onClear}>
-        Limpar busca (Esc)
+        Limpar busca<span className="hidden xl:inline"> (Esc)</span>
       </Button>
     </div>
   )

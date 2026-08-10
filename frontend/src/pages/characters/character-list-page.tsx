@@ -173,7 +173,9 @@ export function CharactersListPage() {
             onSelect={jumpTo}
             onHover={() => sfx('hover')}
           />
-          <p className="pt-1 text-center text-[11px] text-muted-foreground">
+          {/* Keyboard hints only where there's a keyboard: laptop+desktop (≥xl).
+              Hidden on tablet/phone (touch) — the keys don't apply there. */}
+          <p className="hidden pt-1 text-center text-[11px] text-muted-foreground xl:block">
             ← → navegar · Enter abrir ficha · D dossiê · / buscar
           </p>
         </div>
@@ -289,7 +291,7 @@ function NoMatches({ query, onClear }: { query: string; onClear: () => void }) {
         Nenhum personagem para “{query}”.
       </p>
       <Button variant="outline" onClick={onClear}>
-        Limpar busca (Esc)
+        Limpar busca<span className="hidden xl:inline"> (Esc)</span>
       </Button>
     </div>
   )

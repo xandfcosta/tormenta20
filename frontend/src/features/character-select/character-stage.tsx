@@ -1,5 +1,6 @@
 import type { Character } from '@/shared/api/api'
 import { Button } from '@/shared/ui/button'
+import { Kbd } from '@/shared/ui/kbd'
 import { hueFromName } from '@/shared/lib/hue-from-name'
 import { cn } from '@/shared/lib/utils'
 import { useComputedSheet } from '@/entities/character/computed-sheet'
@@ -86,10 +87,10 @@ export function CharacterStage({
       </div>
       <div className="flex flex-wrap items-center justify-center gap-2">
         <Button size="lg" onClick={onOpen}>
-          Abrir ficha <kbd className="ml-1 text-[10px] opacity-70">⏎</kbd>
+          Abrir ficha <Kbd>⏎</Kbd>
         </Button>
         <Button variant="outline" onClick={onDossier} aria-pressed={dossierOpen}>
-          Dossiê <kbd className="ml-1 text-[10px] opacity-70">D</kbd>
+          Dossiê <Kbd>D</Kbd>
         </Button>
       </div>
     </div>

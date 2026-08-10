@@ -8,6 +8,7 @@ import {
 import type { Campaign } from '@/shared/api/api'
 import { Button } from '@/shared/ui/button'
 import { CharacterPortrait } from '@/shared/ui/character-portrait'
+import { Kbd } from '@/shared/ui/kbd'
 import { cn } from '@/shared/lib/utils'
 import { hueFromName } from '@/shared/lib/hue-from-name'
 import { useMediaQuery, usePrefersReducedMotion } from '@/shared/lib/use-media-query'
@@ -309,15 +310,15 @@ function Actions({
           <Button size="lg" onClick={onResume}>
             Continuar a sessão
             <ChevronRight aria-hidden className="ml-1 size-4" />
-            <kbd className="ml-1 text-[10px] opacity-70">⏎</kbd>
+            <Kbd>⏎</Kbd>
           </Button>
           <Button variant="outline" onClick={onOpen}>
-            Abrir crônica <kbd className="ml-1 text-[10px] opacity-70">O</kbd>
+            Abrir crônica <Kbd>O</Kbd>
           </Button>
         </>
       ) : (
         <Button size="lg" onClick={onOpen}>
-          Abrir crônica <kbd className="ml-1 text-[10px] opacity-70">⏎</kbd>
+          Abrir crônica <Kbd>⏎</Kbd>
         </Button>
       )}
     </div>
