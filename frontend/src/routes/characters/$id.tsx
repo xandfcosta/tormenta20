@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { meQueryOptions } from '@/entities/user/queries'
+import { SceneFallback } from '@/shared/layout/scene-fallback'
 import { idParams } from '@/shared/lib/route-params'
 
 /**
@@ -18,5 +19,8 @@ export const Route = createFileRoute('/characters/$id')({
   },
   loader: ({ context, params }) =>
     context.queryClient.ensureQueryData(characterQueryOptions(params.id)),
+  // Bare scene route: show the dark grimório ground while the character loads,
+  // not the white generic skeleton (the "load em branco" roster → ficha).
+  pendingComponent: SceneFallback,
   component: Outlet,
 })

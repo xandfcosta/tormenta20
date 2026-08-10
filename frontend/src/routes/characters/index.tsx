@@ -1,6 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { charactersQueryOptions } from '@/entities/character/queries'
 import { meQueryOptions } from '@/entities/user/queries'
+import { SceneFallback } from '@/shared/layout/scene-fallback'
 import { CharactersListPage } from '@/pages/characters/character-list-page'
 
 export const Route = createFileRoute('/characters/')({
@@ -9,5 +10,8 @@ export const Route = createFileRoute('/characters/')({
     if (!user) throw redirect({ to: '/login', search: { redirect: location.href } })
   },
   loader: ({ context }) => context.queryClient.ensureQueryData(charactersQueryOptions),
+  // Bare scene route: keep the transition on the dark grimório ground instead
+  // of flashing the white generic skeleton (Hub → Personagens).
+  pendingComponent: SceneFallback,
   component: CharactersListPage,
 })
