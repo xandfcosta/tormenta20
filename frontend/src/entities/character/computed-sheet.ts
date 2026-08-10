@@ -107,9 +107,38 @@ export function assembleSheetV2(char: Character, effects: ItemEffects): Computed
  * eliminated from the app bundle (`import.meta.env.MODE` is statically
  * `'production'` there). Parity is proven byte-equal by the `sheetV2` oracle.
  */
+// Memo: computing a sheet crosses into the WASM engine (serialize char → Go →
+// compute → deserialize) — non-trivial, and ~10 sheet components call this with
+// the same query-stable `char` reference in a single render. Uncached, each
+// call re-ran the engine, so a mount/tab-switch fired ~10 WASM computes and
+// felt laggy. Cache is keyed by the character object (WeakMap → the entry is
+// dropped for free when the query hands back a new object on any edit, so it
+// self-invalidates) then by the active-conditionals signature. The compute is a
+// pure function of (char, conditionals), so a hit is always correct.
+const sheetCache = new WeakMap<Character, Map<string, ComputedSheetV2>>()
+
 export function computedSheetFor(
   char: Character,
   activeConditionals: ReadonlySet<string> = EMPTY_SET,
+): ComputedSheetV2 {
+  const key =
+    activeConditionals.size === 0 ? '' : [...activeConditionals].sort().join('|')
+  let byCond = sheetCache.get(char)
+  const cached = byCond?.get(key)
+  if (cached) return cached
+
+  const result = computeSheetUncached(char, activeConditionals)
+  if (!byCond) {
+    byCond = new Map()
+    sheetCache.set(char, byCond)
+  }
+  byCond.set(key, result)
+  return result
+}
+
+function computeSheetUncached(
+  char: Character,
+  activeConditionals: ReadonlySet<string>,
 ): ComputedSheetV2 {
   if (import.meta.env.MODE === 'test') {
     return assembleSheetV2(char, characterEffects(char, activeConditionals))
