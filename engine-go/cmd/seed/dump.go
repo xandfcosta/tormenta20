@@ -11,6 +11,15 @@ import (
 // deterministic (only real data changes show up in the diff, not the wall clock).
 const seedTimestamp = "2026-01-01T00:00:00.000Z"
 
+// chronicleDateTables keep their (hardcoded, deterministic) `*At` dates in the
+// dump — their timestamps are meaningful demo data (session log history), unlike
+// the handler-generated user/character ones that the clock would churn.
+var chronicleDateTables = map[string]bool{
+	"campaigns":        true,
+	"campaign_members": true,
+	"sessions":         true,
+}
+
 // devPasswordHash is a fixed bcrypt hash of the dev password (seed-data.json's
 // `password` = "mestre123456"), embedded so the dump is deterministic — bcrypt's
 // random salt would otherwise churn `passwordHash` on every regeneration. Not a
@@ -90,7 +99,9 @@ func dumpTable(b *strings.Builder, database *sql.DB, table string) error {
 			switch {
 			case cols[i] == "passwordHash":
 				lits[i] = quote(devPasswordHash)
-			case v != nil && strings.HasSuffix(cols[i], "At"):
+			case v != nil &&
+				strings.HasSuffix(cols[i], "At") &&
+				!chronicleDateTables[table]:
 				lits[i] = quote(seedTimestamp)
 			default:
 				lits[i] = sqlLiteral(v)
