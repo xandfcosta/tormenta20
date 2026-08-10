@@ -85,7 +85,7 @@ export function CharacterSheetMobile({
             // header + inner scroll region take over — the header stays put
             // while the table grows and scrolls. Blocky sections (Vitais)
             // wrap their own overflow-y-auto.
-            className="flex h-full min-h-0 flex-col overflow-hidden p-2"
+            className="flex h-full min-h-0 flex-col overflow-hidden p-2 animate-in fade-in-0 duration-200 motion-reduce:animate-none"
           >
             {s.render(character)}
           </TabsContent>

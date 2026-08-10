@@ -2,6 +2,7 @@ import { SheetSearch } from './sheet-search'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { type ReactNode } from 'react'
 import { useMediaQuery } from '@/shared/lib/use-media-query'
+import { useSfx } from '@/shared/lib/use-sfx'
 import { CharacterSheetDesktop } from './character-sheet-desktop'
 import { CharacterSheetMobile } from './character-sheet-mobile'
 import type { Character } from '@/shared/api/api'
@@ -33,14 +34,17 @@ export function CharacterSheet({
   // shared value isn't in its set (e.g. mobile-only "Vitais"). Persisted in
   // the URL: a phone-tab eviction or accidental nav no longer loses context.
   const navigate = useNavigate()
+  const sfx = useSfx()
   const search = useSearch({ strict: false }) as { tab?: string }
   const tab = search.tab ?? ''
-  const setTab = (next: string) =>
+  const setTab = (next: string) => {
+    if (next !== tab) sfx('select')
     navigate({
       to: '.',
       search: (prev: Record<string, unknown>) => ({ ...prev, tab: next }),
       replace: true,
     })
+  }
   const layout = isDesktop ? (
     <CharacterSheetDesktop
       character={character}
