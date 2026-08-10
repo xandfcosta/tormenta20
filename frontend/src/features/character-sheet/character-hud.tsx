@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import { ConditionPips } from './conditions-section'
 import { MobileDefChip } from './mobile-def-chip'
 import { Minus, Plus } from 'lucide-react'
@@ -23,7 +23,13 @@ import { useVitals } from './use-vitals'
  * the plate, and (on desktop) the attribute/combat/magic stat blocks filling
  * the rest of the bar. Replaces the old top header.
  */
-export function CharacterHud({
+// Memoized: the HUD is the sheet's heaviest always-mounted chrome (portrait,
+// PV/PM bars, the full attribute/combat/magic tile grid via combat-magic-stats
+// with 3 useComputedSheet reads). A tab switch re-renders the layout but not
+// the HUD's `character`/`className`, so memo lets it bail out of that churn —
+// this is what collapses the ~160ms per-switch floor left after the panels
+// were memoized. HP/PM edits mint a new character object, so it still updates.
+function CharacterHudImpl({
   character,
   className,
 }: {
@@ -63,7 +69,7 @@ export function CharacterHud({
           <CharacterPortrait
             name={character.name}
             size="sm"
-            className="h-auto w-24 self-stretch rounded-xl text-4xl"
+            className="h-auto w-24 self-stretch rounded-md border-2 border-grimorio-iron text-4xl"
           />
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             <div className="flex items-start justify-between gap-2">
@@ -300,3 +306,5 @@ function useVitalDelta(current: number): number | null {
   }, [current])
   return delta
 }
+
+export const CharacterHud = memo(CharacterHudImpl)

@@ -7,6 +7,7 @@ import { useMediaQuery } from '@/shared/lib/use-media-query'
 import { CharacterHud } from './character-hud'
 import { VitalsAside } from './vitals-aside'
 import { SHEET_PANELS, resolveSheetTab, type SheetSection } from './sheet-sections'
+import { useVisitedTabs } from './use-visited-tabs'
 import type { Character } from '@/shared/api/api'
 
 // Vitais leads the phone sections. Identity + PV/PM live in the persistent
@@ -27,7 +28,7 @@ function vitalsSection(): SheetSection {
 // `overflow` entirely, so an over-icon badge never gets clipped. Active = amber
 // icon + a short amber marker along the top edge.
 export const BOTTOM_TAB =
-  'group/tab relative flex h-full flex-1 items-center justify-center rounded-none border-0 px-1 text-muted-foreground transition-colors data-[state=active]:bg-transparent data-[state=active]:text-[color:var(--primary)] data-[state=active]:shadow-none data-[state=active]:before:absolute data-[state=active]:before:left-1/2 data-[state=active]:before:top-0 data-[state=active]:before:h-0.5 data-[state=active]:before:w-6 data-[state=active]:before:-translate-x-1/2 data-[state=active]:before:rounded-full data-[state=active]:before:bg-[color:var(--primary)]'
+  'group/tab relative flex h-full flex-1 items-center justify-center rounded-none border-0 px-1 text-muted-foreground transition-colors data-[state=active]:bg-transparent data-[state=active]:text-[color:var(--grimorio-gold)] data-[state=active]:shadow-none data-[state=active]:before:absolute data-[state=active]:before:left-1/2 data-[state=active]:before:top-0 data-[state=active]:before:h-0.5 data-[state=active]:before:w-6 data-[state=active]:before:-translate-x-1/2 data-[state=active]:before:rounded-full data-[state=active]:before:bg-[color:var(--grimorio-gold)]'
 
 /**
  * Phone sheet: one block at a time over a bottom tab bar (thumb-reach), instead
@@ -59,6 +60,9 @@ export function CharacterSheetMobile({
   const active = sections.some((s) => s.value === resolved)
     ? resolved
     : sections[0]!.value
+  // Keep opened blocks mounted so a revisit toggles visibility instead of
+  // re-mounting heavy content (the tab-switch jank fix).
+  const visited = useVisitedTabs(active)
 
   return (
     <Tabs
@@ -81,11 +85,14 @@ export function CharacterSheetMobile({
           <TabsContent
             key={s.value}
             value={s.value}
+            // Once visited, stay mounted and just hide when inactive — the
+            // `data-[state=inactive]:hidden` variant outranks `flex`.
+            forceMount={visited.has(s.value) || undefined}
             // Bounded height (no outer scroll) so each panel's own pinned
             // header + inner scroll region take over — the header stays put
             // while the table grows and scrolls. Blocky sections (Vitais)
             // wrap their own overflow-y-auto.
-            className="flex h-full min-h-0 flex-col overflow-hidden p-2"
+            className="flex h-full min-h-0 flex-col overflow-hidden p-2 data-[state=inactive]:hidden"
           >
             {s.render(character)}
           </TabsContent>

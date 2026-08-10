@@ -3,6 +3,7 @@ import { XIcon } from "lucide-react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { cn } from "@/shared/lib/utils"
+import { useSceneContainer } from "@/shared/lib/scene-container"
 import { Button } from "@/shared/ui/button"
 
 function Dialog({
@@ -53,8 +54,11 @@ function DialogContent({
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
 }) {
+  // Inside a grimório scene, portal into the scene so tokens are inherited
+  // (otherwise the dialog renders shadcn over the body). Null → body → shadcn.
+  const container = useSceneContainer()
   return (
-    <DialogPortal data-slot="dialog-portal">
+    <DialogPortal data-slot="dialog-portal" container={container ?? undefined}>
       <DialogOverlay />
       <DialogPrimitive.Content
         data-slot="dialog-content"

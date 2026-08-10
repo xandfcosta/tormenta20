@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { cn } from '@/shared/lib/utils'
 import { CharacterHud } from './character-hud'
 import { SHEET_PANELS, resolveSheetTab } from './sheet-sections'
+import { useVisitedTabs } from './use-visited-tabs'
 import type { Character } from '@/shared/api/api'
 
 /**
@@ -29,6 +30,9 @@ export function CharacterSheetDesktop({
   const active = panels.some((p) => p.value === resolved)
     ? resolved
     : panels[0]!.value
+  // Keep every already-opened block mounted so a revisit toggles visibility
+  // instead of re-mounting its (heavy) content — the tab-switch jank fix.
+  const visited = useVisitedTabs(active)
   return (
     <div
       className={cn(
@@ -47,7 +51,11 @@ export function CharacterSheetDesktop({
             <TabsContent
               key={s.value}
               value={s.value}
-              className="m-0 flex h-full min-h-0 flex-col overflow-hidden"
+              // Once visited, stay mounted (forceMount) and just hide when
+              // inactive — the `data-[state=inactive]:hidden` variant outranks
+              // `flex` so the hidden panel is truly display:none.
+              forceMount={visited.has(s.value) || undefined}
+              className="m-0 flex h-full min-h-0 flex-col overflow-hidden data-[state=inactive]:hidden"
             >
               {s.render(character)}
             </TabsContent>
@@ -64,6 +72,10 @@ export function CharacterSheetDesktop({
               aria-label={s.label}
               className={cn(
                 'relative w-32 flex-1 justify-start gap-2 px-2',
+                // Selected block = gold (the app's "selected = gold" language);
+                // text+icon inherit currentColor, the indicator bar (`after`)
+                // is tinted too.
+                'data-[state=active]:text-grimorio-gold data-[state=active]:after:bg-grimorio-gold',
                 // Irrelevant tabs (Magias for non-casters) stay reachable
                 // but stop competing for scan attention.
                 s.dim?.(character) && 'opacity-40',

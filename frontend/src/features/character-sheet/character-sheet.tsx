@@ -1,7 +1,8 @@
 import { SheetSearch } from './sheet-search'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { type ReactNode } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { useMediaQuery } from '@/shared/lib/use-media-query'
+import { useSfx } from '@/shared/lib/use-sfx'
 import { CharacterSheetDesktop } from './character-sheet-desktop'
 import { CharacterSheetMobile } from './character-sheet-mobile'
 import type { Character } from '@/shared/api/api'
@@ -33,20 +34,50 @@ export function CharacterSheet({
   // shared value isn't in its set (e.g. mobile-only "Vitais"). Persisted in
   // the URL: a phone-tab eviction or accidental nav no longer loses context.
   const navigate = useNavigate()
+  const sfx = useSfx()
   const search = useSearch({ strict: false }) as { tab?: string }
-  const tab = search.tab ?? ''
-  const setTab = (next: string) =>
-    navigate({
-      to: '.',
-      search: (prev: Record<string, unknown>) => ({ ...prev, tab: next }),
-      replace: true,
-    })
+  const urlTab = search.tab ?? ''
+  // Local tab state drives the switch INSTANTLY. The tab used to live only in
+  // the URL, so every switch was a router navigation — and TanStack's state is
+  // a `useSyncExternalStore`, whose updates React can't defer, so the switch
+  // ran as one synchronous ~120ms task even after the panels/HUD were memoized.
+  // Now a click flips local state (a cheap, memoized re-render → instant paint)
+  // and the URL is reconciled in a passive effect AFTER paint, off the switch's
+  // critical path. The URL stays the source for deep-links/back (adopted below),
+  // so nothing about that behaviour is lost.
+  const [tab, setTab] = useState(urlTab)
+  // Adopt external URL changes (deep-link, back/forward) into the local tab.
+  useEffect(() => {
+    setTab((cur) => (cur === urlTab ? cur : urlTab))
+  }, [urlTab])
+  // Reconcile local → URL, but OFF the switch's critical path. TanStack's
+  // router state is a `useSyncExternalStore`, so a navigate() commits
+  // synchronously and would drag a router re-render into the same task as the
+  // click — re-inflating the blocking switch. Deferring it past a macrotask
+  // lets the local switch paint first; debouncing collapses a fast burst of
+  // switches into a single history write while keeping deep-links/back working.
+  useEffect(() => {
+    if (urlTab === tab) return
+    const id = setTimeout(() => {
+      navigate({
+        to: '.',
+        search: (prev: Record<string, unknown>) => ({ ...prev, tab }),
+        replace: true,
+      })
+    }, 250)
+    return () => clearTimeout(id)
+  }, [tab, urlTab, navigate])
+  const changeTab = (next: string) => {
+    if (next === tab) return
+    sfx('select')
+    setTab(next)
+  }
   const layout = isDesktop ? (
     <CharacterSheetDesktop
       character={character}
       inSession={inSession}
       tab={tab}
-      onTabChange={setTab}
+      onTabChange={changeTab}
     />
   ) : (
     <CharacterSheetMobile
@@ -54,13 +85,13 @@ export function CharacterSheet({
       barSlot={mobileBarSlot}
       inSession={inSession}
       tab={tab}
-      onTabChange={setTab}
+      onTabChange={changeTab}
     />
   )
   return (
     <>
       {layout}
-      <SheetSearch character={character} onNavigate={setTab} />
+      <SheetSearch character={character} onNavigate={changeTab} />
     </>
   )
 }

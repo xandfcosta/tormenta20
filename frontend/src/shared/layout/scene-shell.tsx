@@ -1,5 +1,6 @@
 import { ChevronLeft } from 'lucide-react'
-import { type ReactNode, useEffect, useRef } from 'react'
+import { type ReactNode, useEffect, useRef, useState } from 'react'
+import { SceneContainerContext } from '@/shared/lib/scene-container'
 import { usePrefersReducedMotion } from '@/shared/lib/use-media-query'
 import { cn } from '@/shared/lib/utils'
 import { BackgroundTexture } from '@/shared/ui/background-texture'
@@ -33,6 +34,9 @@ type SceneShellProps = {
   onBack?: () => void
   backLabel?: string
   texture?: 'stone' | 'parchment'
+  /** Override the decorative edge vignette (defaults on for stone). Scenes that
+   *  drive their own edge effect — the sheet's HP vignette — pass `false`. */
+  vignette?: boolean
   /** Fires once when the scene mounts *and* motion is allowed — pairs the
    *  enter animation with an optional cue (e.g. a transition sound). */
   onEnter?: () => void
@@ -40,6 +44,9 @@ type SceneShellProps = {
   dense?: boolean
   /** Controls aligned to the right of the dense header (search, actions). */
   headerRight?: ReactNode
+  /** Full-bleed content: no padding, no outer scroll — the child owns its own
+   *  height/scroll (e.g. the character sheet's HUD-pinned grid). */
+  bleed?: boolean
   /** Extra classes for the scrollable content column. */
   className?: string
 }
@@ -51,9 +58,11 @@ function SceneShell({
   onBack,
   backLabel = 'Voltar',
   texture = 'stone',
+  vignette,
   onEnter,
   dense = false,
   headerRight,
+  bleed = false,
   className,
 }: SceneShellProps) {
   const reduced = usePrefersReducedMotion()
@@ -66,14 +75,22 @@ function SceneShell({
   useEffect(() => {
     if (!reducedRef.current) enterRef.current?.()
   }, [])
+  // The scene element is published so overlays (Dialog/Popover) can portal into
+  // it and inherit `.scene-grimorio` instead of rendering shadcn over the body.
+  const [sceneEl, setSceneEl] = useState<HTMLElement | null>(null)
 
   return (
+    <SceneContainerContext.Provider value={sceneEl}>
     <section
+      ref={setSceneEl}
       data-slot="scene-shell"
       data-dense={dense || undefined}
       className="scene-grimorio relative flex h-dvh flex-col overflow-hidden"
     >
-      <BackgroundTexture variant={texture} vignette={texture === 'stone'} />
+      <BackgroundTexture
+        variant={texture}
+        vignette={vignette ?? texture === 'stone'}
+      />
 
       {dense ? (
         <header
@@ -105,11 +122,16 @@ function SceneShell({
         data-slot="scene-content"
         data-animate={reduced ? undefined : true}
         className={cn(
-          // overflow-x-hidden: a scene never scrolls horizontally, and it
-          // clips slide-in overlays (the dossier) so they don't flash a
-          // transient bottom scrollbar mid-animation.
-          'relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto',
-          dense ? 'px-4 py-4' : 'px-5 py-14',
+          'relative flex min-h-0 flex-1 flex-col',
+          // A scene never scrolls horizontally (overflow-x-hidden also clips
+          // slide-in overlays like the dossier). `bleed` hands scroll + padding
+          // to a full-height child; otherwise the column scrolls with padding.
+          bleed
+            ? 'overflow-hidden'
+            : cn(
+                'overflow-x-hidden overflow-y-auto',
+                dense ? 'px-4 py-4' : 'px-5 py-14',
+              ),
           !reduced && 'scene-in',
           className,
         )}
@@ -120,6 +142,7 @@ function SceneShell({
         {children}
       </div>
     </section>
+    </SceneContainerContext.Provider>
   )
 }
 
