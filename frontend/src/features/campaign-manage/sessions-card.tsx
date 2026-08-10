@@ -1,14 +1,16 @@
-import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { Badge } from '@/shared/ui/badge'
-import { Card, CardContent, CardHeader } from '@/shared/ui/card'
-import { cn } from '@/shared/lib/utils'
-import { SectionHeading } from '@/shared/ui/section-heading'
+import { ScrollText } from 'lucide-react'
 import { SkeletonRows } from '@/shared/ui/skeleton'
-import type { Session } from '@/shared/api/api'
 import { campaignSessionsQueryOptions } from '@/entities/session/queries'
 import { NewSessionButton } from './new-session-button'
+import { SessionLog } from './session-log'
+import { TomeSection } from './tome-section'
 
+/**
+ * Sessões section: the campaign's chronicle log — every session as an entry on a
+ * gilt timeline (the live one first + highlighted). GM mints the next session
+ * from the heading action; empty state invites the first entry.
+ */
 export function SessionsCard({
   campaignId,
   isGm,
@@ -17,79 +19,30 @@ export function SessionsCard({
   isGm: boolean
 }) {
   const sessions = useQuery(campaignSessionsQueryOptions(campaignId))
-  // Active session first, then the rest by most-recent number (a live session
-  // is what the GM most likely wants to jump back into).
-  const ordered = [...(sessions.data ?? [])].sort((a, b) => {
-    if (a.status === 'active' !== (b.status === 'active'))
-      return a.status === 'active' ? -1 : 1
-    return b.sessionNumber - a.sessionNumber
-  })
+  const list = sessions.data ?? []
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <SectionHeading as="h2">Sessões</SectionHeading>
-        {isGm && <NewSessionButton campaignId={campaignId} />}
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {sessions.isLoading && <SkeletonRows count={3} />}
-        {sessions.data?.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            Nenhuma sessão ainda.
-          </p>
-        )}
-        {ordered.map((s) => (
-          <SessionRow key={s.id} session={s} campaignId={campaignId} />
-        ))}
-      </CardContent>
-    </Card>
+    <TomeSection
+      eyebrow="Crônica"
+      title="Sessões"
+      action={isGm && <NewSessionButton campaignId={campaignId} />}
+    >
+      {sessions.isLoading && <SkeletonRows count={3} />}
+      {!sessions.isLoading && list.length === 0 && <EmptyLog isGm={isGm} />}
+      {list.length > 0 && <SessionLog sessions={list} campaignId={campaignId} />}
+    </TomeSection>
   )
 }
 
-function SessionRow({
-  session,
-  campaignId,
-}: {
-  session: Session
-  campaignId: number
-}) {
-  const badgeVariant =
-    session.status === 'active'
-      ? 'default'
-      : session.status === 'ended'
-        ? 'secondary'
-        : 'outline'
-  const isActive = session.status === 'active'
+/** No sessions yet — a blank page waiting for the first entry. */
+function EmptyLog({ isGm }: { isGm: boolean }) {
   return (
-    <Link
-      to="/campaigns/$id/sessions/$sid"
-      params={{ id: campaignId, sid: session.id }}
-    >
-      <div
-        className={cn(
-          'flex items-center justify-between rounded-md border p-2 text-sm transition-colors hover:border-primary',
-          isActive && 'border-primary bg-primary/5',
-        )}
-      >
-        <div>
-          <p className="font-medium">
-            Sessão {session.sessionNumber}{' '}
-            {session.title && (
-              <span className="text-muted-foreground">— {session.title}</span>
-            )}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {new Date(session.createdAt).toLocaleDateString('pt-BR')}
-          </p>
-        </div>
-        <Badge variant={badgeVariant}>
-          {session.status === 'planned'
-            ? 'Planejada'
-            : session.status === 'active'
-              ? 'Ativa'
-              : 'Encerrada'}
-        </Badge>
-      </div>
-    </Link>
+    <div className="flex flex-col items-center gap-2 rounded-sm border border-dashed border-grimorio-iron px-4 py-10 text-center">
+      <ScrollText aria-hidden className="size-6 text-muted-foreground" />
+      <p className="text-sm text-muted-foreground">
+        A crônica ainda não tem sessões.
+        {isGm && ' Abra a primeira para começar a registrar.'}
+      </p>
+    </div>
   )
 }
