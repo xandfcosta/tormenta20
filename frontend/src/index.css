@@ -1,7 +1,14 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+/* `dark:` fires for the real dark theme (descendants of `.dark`) AND inside any
+ * grimório scene. A scene is ALWAYS dark, but it gets there via the
+ * `.scene-grimorio` token scope, not the `.dark` class — so without this every
+ * `dark:` utility in a component rendered inside a scene silently no-ops,
+ * leaving its light-theme styles on a dark ground (e.g. `bg-emerald-50` trained
+ * rows rendering near-white text on near-white, illegible). Treat the scene as
+ * dark for variants too, so components look right in both places. */
+@custom-variant dark (&:is(.dark *, .scene-grimorio, .scene-grimorio *));
 
 /* Cinzel (OFL) — self-hosted display face for the game scenes (ALE-35).
  * Variable weight 400–900; latin covers pt-BR (ã/ç/õ/é…), latin-ext kept for
@@ -136,6 +143,29 @@
   --font-display: var(--font-heading);
   background-color: var(--grimorio-bg);
   color: var(--grimorio-fg);
+  /* Firefox: thin iron scrollbars for every scroll area in the scene, instead
+   * of the OS-default light bar that clashed with the dark ground. Inherited,
+   * so it reaches nested scrollers (perícias list, poderes column, …). */
+  scrollbar-width: thin;
+  scrollbar-color: var(--grimorio-iron) transparent;
+}
+
+/* WebKit/Blink counterpart — the pseudo-elements aren't inherited, so target
+ * every scroller inside a scene. Track transparent so a barely-overflowing
+ * strip doesn't paint a full-height rail; thumb warms to gold on hover. */
+.scene-grimorio ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scene-grimorio ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scene-grimorio ::-webkit-scrollbar-thumb {
+  background-color: var(--grimorio-iron);
+  border-radius: 4px;
+}
+.scene-grimorio ::-webkit-scrollbar-thumb:hover {
+  background-color: var(--grimorio-gold);
 }
 
 @theme inline {

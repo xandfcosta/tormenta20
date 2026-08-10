@@ -44,7 +44,9 @@ export function CharacterFilmstrip({
       ref={stripRef}
       role="listbox"
       aria-label="Personagens"
-      className="flex items-center gap-1.5 overflow-x-auto border-t border-border px-1 py-2"
+      // overflow-y-hidden: a lone overflow-x-auto lets the browser add a
+      // spurious vertical scrollbar on this single-row strip (sub-pixel height).
+      className="flex items-center gap-1.5 overflow-x-auto overflow-y-hidden border-t border-border px-1 py-2"
     >
       {roster.map((c) => {
         const hue = hueFromName(c.name)

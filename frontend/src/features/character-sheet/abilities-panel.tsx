@@ -112,7 +112,10 @@ export function AbilitiesPanel({ character }: { character: Character }) {
           nested inside the sheet's vertical Tabs, and Tailwind's group matching
           isn't scoped to the nearest ancestor, so a nested TabsList inherits
           the outer vertical orientation and stacks. */}
-      <div className="flex shrink-0 gap-1 overflow-x-auto border-b">
+      {/* overflow-y-hidden: a lone `overflow-x-auto` makes the browser promote
+          overflow-y to `auto`, and the 1px the active tab's `border-b-2 -mb-px`
+          adds spawned a spurious vertical scrollbar on this single-row strip. */}
+      <div className="flex shrink-0 gap-1 overflow-x-auto overflow-y-hidden border-b">
         {SOURCE_TABS.map((s) => (
           <button
             key={s.value}
