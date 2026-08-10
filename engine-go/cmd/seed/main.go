@@ -1,27 +1,34 @@
-// Command seed populates a running Go API with the test table by driving its
-// HTTP endpoints (register → create → learn/prepare spells → damage/consume) —
-// reusing every handler's validation + engine integration, no logic duplicated.
-// The roster lives in the embedded seed-data.json and mirrors the Nest seed
-// (backend/src/seed.ts): 3 accounts, 15 diverse characters. Run against a live
-// server:
+// Command seed regenerates engine-go/seed.sql — a pure-SQL dump of the dev
+// dataset (3 accounts, the diverse test roster, demo chronicles) that applies
+// instantly with `sqlite3 t20-go.db < seed.sql`, no API server (ALE-57).
 //
-//	PORT=3001 JWT_SECRET=dev go run ./cmd/api        # in one shell
-//	SEED_API_URL=http://localhost:3001 go run ./cmd/seed
+// It builds the data by driving the REAL HTTP handlers IN-PROCESS (httptest, no
+// network) into a throwaway migrated DB — so bcrypt hashes, engine-computed
+// vitals and the normalized fan-out come from the same code the API runs, never
+// hand-maintained — then dumps that DB to SQL. The roster lives in the embedded
+// seed-data.json (readable source of truth). Regenerate after roster/rule/
+// chronicle changes:
+//
+//	go run ./cmd/seed            # writes ./seed.sql (from the engine-go dir)
 package main
 
 import (
 	"bytes"
+	"database/sql"
 	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
-	"math"
 	"net/http"
-	"net/http/cookiejar"
+	"net/http/httptest"
 	"os"
+	"path/filepath"
 
+	"t20engine/api"
 	"t20engine/catalog"
+	"t20engine/db"
+	"t20engine/engine"
 )
 
 //go:embed seed-data.json
@@ -52,8 +59,7 @@ type seedSpell struct {
 }
 
 // standardTrained is TRAINED_EXPERTISES from the Nest seed — every non-simple
-// character trains these, giving the skill list real totals (treino + ½ nível +
-// atributo). Simple starter PCs train nothing.
+// character trains these, giving the skill list real totals. Simple PCs train none.
 var standardTrained = []string{
 	"Luta", "Atletismo", "Pontaria", "Reflexos", "Fortitude",
 	"Vontade", "Percepção", "Intimidação", "Investigação", "Misticismo",
@@ -63,7 +69,13 @@ var standardTrained = []string{
 const sceneConsumable = "cosmetico"
 
 func main() {
-	base := env("SEED_API_URL", "http://localhost:3001")
+	out := "seed.sql"
+	if len(os.Args) > 1 {
+		out = os.Args[1]
+	}
+	handler, database, cleanup := freshServer()
+	defer cleanup()
+
 	var sf seedFile
 	if err := json.Unmarshal(seedData, &sf); err != nil {
 		log.Fatalf("seed-data.json: %v", err)
@@ -71,113 +83,136 @@ func main() {
 	total, seeded := 0, 0
 	for _, u := range sf.Users {
 		total += len(u.Characters)
-		seeded += seedUserCharacters(base, sf.Password, u)
+		seeded += seedUserCharacters(handler, sf.Password, u)
 	}
-	log.Printf("done: %d/%d characters across %d users", seeded, total, len(sf.Users))
+	if err := seedChronicles(database); err != nil {
+		log.Fatalf("chronicles: %v", err)
+	}
+	script, err := dump(database)
+	if err != nil {
+		log.Fatalf("dump: %v", err)
+	}
+	if err := os.WriteFile(out, []byte(script), 0o644); err != nil {
+		log.Fatalf("write %s: %v", out, err)
+	}
+	log.Printf("wrote %s — %d/%d characters across %d users", out, seeded, total, len(sf.Users))
 }
 
-// seedUserCharacters authenticates one account and seeds its roster, returning
-// how many characters were created.
-func seedUserCharacters(base, password string, u seedUser) int {
-	jar, _ := cookiejar.New(nil)
-	client := &http.Client{Jar: jar}
-	if err := authenticate(client, base, u.Email, u.Name, password); err != nil {
+// freshServer boots the real API against a throwaway migrated SQLite DB and
+// returns its in-process handler plus the DB (for the chronicle seed + dump).
+func freshServer() (http.Handler, *sql.DB, func()) {
+	dir, err := os.MkdirTemp("", "seedgen")
+	if err != nil {
+		log.Fatalf("tempdir: %v", err)
+	}
+	dbPath := filepath.Join(dir, "seed.db")
+	database, err := db.Open(dbPath)
+	if err != nil {
+		log.Fatalf("db.Open: %v", err)
+	}
+	cfg := api.LoadConfig()
+	cfg.DatabasePath = dbPath
+	if cfg.JWTSecret == "" {
+		cfg.JWTSecret = "seedgen"
+	}
+	raw, err := os.ReadFile(cfg.CatalogPath)
+	if err != nil {
+		log.Fatalf("catalogs %q: %v", cfg.CatalogPath, err)
+	}
+	catalogs, err := engine.PrimeEngineCatalogs(raw)
+	if err != nil {
+		log.Fatalf("prime catalogs: %v", err)
+	}
+	srv := api.NewServer(cfg, database, catalogs)
+	cleanup := func() {
+		_ = database.Close()
+		_ = os.RemoveAll(dir)
+	}
+	return srv.Router(), database, cleanup
+}
+
+// ── in-process HTTP client (no network) ──────────────────────────────────────
+
+// client drives the API handler directly via httptest, tracking the session
+// cookie between calls so an authenticated flow works exactly as over the wire.
+type client struct {
+	h       http.Handler
+	cookies map[string]*http.Cookie
+}
+
+func newClient(h http.Handler) *client {
+	return &client{h: h, cookies: map[string]*http.Cookie{}}
+}
+
+func (c *client) do(method, path string, body []byte) (int, []byte) {
+	var r io.Reader
+	if body != nil {
+		r = bytes.NewReader(body)
+	}
+	req := httptest.NewRequest(method, path, r)
+	req.Header.Set("Content-Type", "application/json")
+	for _, ck := range c.cookies {
+		req.AddCookie(ck)
+	}
+	rec := httptest.NewRecorder()
+	c.h.ServeHTTP(rec, req)
+	for _, ck := range rec.Result().Cookies() {
+		c.cookies[ck.Name] = ck
+	}
+	return rec.Code, rec.Body.Bytes()
+}
+
+// ── seeding via the real handlers ────────────────────────────────────────────
+
+func seedUserCharacters(h http.Handler, password string, u seedUser) int {
+	c := newClient(h)
+	if err := authenticate(c, u.Email, u.Name, password); err != nil {
 		log.Printf("auth %s: %v", u.Email, err)
 		return 0
 	}
-	existing, err := existingCharacterNames(client, base)
-	if err != nil {
-		log.Printf("%s: list characters: %v", u.Email, err)
-		existing = map[string]bool{}
-	}
-	log.Printf("authenticated as %s (%d in roster, %d already present)", u.Email, len(u.Characters), len(existing))
-
 	seeded := 0
 	for _, ch := range u.Characters {
-		name := characterName(ch.Create)
-		if existing[name] {
-			log.Printf("skip %q (already exists)", name)
-			continue
-		}
-		if err := seedCharacterRow(client, base, ch); err != nil {
+		if err := seedCharacterRow(c, ch); err != nil {
 			log.Printf("%s: %v", u.Email, err)
 			continue
 		}
-		existing[name] = true
 		seeded++
 	}
 	return seeded
 }
 
-// characterName pulls the name out of a create body so the seed can skip a character that
-// already exists (idempotent re-runs).
-func characterName(create json.RawMessage) string {
-	var probe struct {
-		Name string `json:"name"`
-	}
-	_ = json.Unmarshal(create, &probe)
-	return probe.Name
-}
-
-// existingCharacterNames lists the authenticated user's characters so the seed is
-// idempotent — re-running skips names already present (matches the Nest seed's dedupe).
-func existingCharacterNames(c *http.Client, base string) (map[string]bool, error) {
-	status, body, err := do(c, http.MethodGet, base+"/characters", nil)
-	if err != nil {
-		return nil, err
-	}
-	if status != http.StatusOK {
-		return nil, fmt.Errorf("list status %d", status)
-	}
-	var chars []struct {
-		Name string `json:"name"`
-	}
-	if err := json.Unmarshal(body, &chars); err != nil {
-		return nil, err
-	}
-	names := make(map[string]bool, len(chars))
-	for _, ch := range chars {
-		names[ch.Name] = true
-	}
-	return names, nil
-}
-
-// seedCharacterRow creates one character then applies its spells, damaged HP,
-// and scene effect — mirroring enrichCharacter in the Nest seed.
-func seedCharacterRow(c *http.Client, base string, ch seedCharacter) error {
+func seedCharacterRow(c *client, ch seedCharacter) error {
 	body, err := enrichCreate(ch)
 	if err != nil {
 		return err
 	}
-	id, err := createCharacter(c, base, body)
+	id, err := createCharacter(c, body)
 	if err != nil {
 		return err
 	}
 	for _, sp := range ch.Spells {
-		if err := learnSpell(c, base, id, sp); err != nil {
+		if err := learnSpell(c, id, sp); err != nil {
 			log.Printf("character %d spell %q: %v", id, sp.ID, err)
 		}
 	}
 	if ch.HpFraction != nil || ch.SceneEffect {
-		if err := enrichLiveState(c, base, id, ch); err != nil {
+		if err := enrichLiveState(c, id, ch); err != nil {
 			log.Printf("character %d live-state: %v", id, err)
 		}
 	}
-	log.Printf("seeded character %d", id)
 	return nil
 }
 
 // enrichCreate fills the create body with data derived from the catalog + roster
 // flags: vitals the engine will heal, the standard trained perícias (non-simple),
-// and each item's catalog name + slot cost. Keeps seed-data.json free of data
-// the catalog already owns.
+// and each item's catalog name + slot cost.
 func enrichCreate(ch seedCharacter) (json.RawMessage, error) {
 	var obj map[string]json.RawMessage
 	if err := json.Unmarshal(ch.Create, &obj); err != nil {
 		return nil, fmt.Errorf("create body: %w", err)
 	}
-	// healVitals recomputes the real maxes from the engine, so pass a value it
-	// can only clamp down to full. Damaged bars are set afterwards via /vitals.
+	// healVitals recomputes the real maxes from the engine, so pass a value it can
+	// only clamp down to full. Damaged bars are set afterwards via /vitals.
 	for _, field := range []string{"hpMax", "hpCurrent", "mpMax", "mpCurrent"} {
 		obj[field] = json.RawMessage("9999")
 	}
@@ -193,8 +228,8 @@ func enrichCreate(ch seedCharacter) (json.RawMessage, error) {
 	return json.Marshal(obj)
 }
 
-// resolveItemMetadata fills each item's name + slots from the catalog (source of
-// truth) so the roster references items by catalogId + quantity + equipped alone.
+// resolveItemMetadata fills each item's name + slots from the catalog so the
+// roster references items by catalogId + quantity + equipped alone.
 func resolveItemMetadata(obj map[string]json.RawMessage) error {
 	raw, ok := obj["items"]
 	if !ok {
@@ -221,23 +256,19 @@ func resolveItemMetadata(obj map[string]json.RawMessage) error {
 	return nil
 }
 
-// enrichLiveState GETs the created character once, then damages it to hpFraction
-// and/or consumes a scene catalisador so its sheet carries a live ActiveEffect.
-func enrichLiveState(c *http.Client, base string, id int64, ch seedCharacter) error {
-	char, err := getCharacter(c, base, id)
+func enrichLiveState(c *client, id int64, ch seedCharacter) error {
+	char, err := getCharacter(c, id)
 	if err != nil {
 		return err
 	}
 	if ch.HpFraction != nil {
-		hp := int64(math.Round(float64(char.HpMax) * *ch.HpFraction))
-		if err := patchVitals(c, base, id, hp); err != nil {
+		hp := int64(float64(char.HpMax)**ch.HpFraction + 0.5)
+		if err := patchVitals(c, id, hp); err != nil {
 			return err
 		}
 	}
 	if ch.SceneEffect {
-		if err := applySceneEffect(c, base, id, char.Items); err != nil {
-			return err
-		}
+		return applySceneEffect(c, id, char.Items)
 	}
 	return nil
 }
@@ -252,105 +283,68 @@ type characterState struct {
 	Items []charItem `json:"items"`
 }
 
-func getCharacter(c *http.Client, base string, id int64) (characterState, error) {
+func getCharacter(c *client, id int64) (characterState, error) {
 	var out characterState
-	status, respBody, err := do(c, http.MethodGet, fmt.Sprintf("%s/characters/%d", base, id), nil)
-	if err != nil {
-		return out, err
-	}
+	status, body := c.do(http.MethodGet, fmt.Sprintf("/characters/%d", id), nil)
 	if status != http.StatusOK {
-		return out, fmt.Errorf("get character status %d: %s", status, respBody)
+		return out, fmt.Errorf("get character status %d: %s", status, body)
 	}
-	return out, json.Unmarshal(respBody, &out)
+	return out, json.Unmarshal(body, &out)
 }
 
-func patchVitals(c *http.Client, base string, id, hpCurrent int64) error {
-	url := fmt.Sprintf("%s/characters/%d/vitals", base, id)
-	if s, b, err := do(c, http.MethodPatch, url, mustJSON(map[string]int64{"hpCurrent": hpCurrent})); err != nil {
-		return err
-	} else if s != http.StatusOK {
-		return fmt.Errorf("patch vitals status %d: %s", s, b)
+func patchVitals(c *client, id, hpCurrent int64) error {
+	status, body := c.do(http.MethodPatch, fmt.Sprintf("/characters/%d/vitals", id), mustJSON(map[string]int64{"hpCurrent": hpCurrent}))
+	if status != http.StatusOK {
+		return fmt.Errorf("patch vitals status %d: %s", status, body)
 	}
 	return nil
 }
 
-// applySceneEffect consumes the first scene catalisador on hand, matching the
-// Nest seed's applySceneEffect (idempotent no-op when the potion is absent).
-func applySceneEffect(c *http.Client, base string, id int64, items []charItem) error {
+func applySceneEffect(c *client, id int64, items []charItem) error {
 	for _, it := range items {
 		if it.CatalogID == nil || *it.CatalogID != sceneConsumable {
 			continue
 		}
-		url := fmt.Sprintf("%s/characters/%d/items/%d/consume", base, id, it.ID)
-		if s, b, err := do(c, http.MethodPost, url, []byte("{}")); err != nil {
-			return err
-		} else if s != http.StatusOK {
-			return fmt.Errorf("consume status %d: %s", s, b)
+		status, body := c.do(http.MethodPost, fmt.Sprintf("/characters/%d/items/%d/consume", id, it.ID), []byte("{}"))
+		if status != http.StatusOK {
+			return fmt.Errorf("consume status %d: %s", status, body)
 		}
 		return nil
 	}
 	return nil
 }
 
-// authenticate registers the seed user, falling back to login if it exists.
-func authenticate(c *http.Client, base, email, name, password string) error {
-	body := map[string]string{"email": email, "password": password, "name": name}
-	status, respBody, err := do(c, http.MethodPost, base+"/auth/register", mustJSON(body))
-	if err != nil {
-		return err
-	}
-	switch status {
-	case http.StatusCreated:
+func authenticate(c *client, email, name, password string) error {
+	status, body := c.do(http.MethodPost, "/auth/register", mustJSON(map[string]string{"email": email, "password": password, "name": name}))
+	if status == http.StatusCreated {
 		return nil
-	case http.StatusConflict:
-		creds := map[string]string{"email": email, "password": password}
-		s, b, err := do(c, http.MethodPost, base+"/auth/login", mustJSON(creds))
-		if err != nil {
-			return err
-		}
-		if s != http.StatusOK {
-			return fmt.Errorf("login status %d: %s", s, b)
-		}
-		return nil
-	default:
-		return fmt.Errorf("register status %d: %s", status, respBody)
 	}
+	return fmt.Errorf("register status %d: %s", status, body)
 }
 
-func createCharacter(c *http.Client, base string, createBody json.RawMessage) (int64, error) {
-	status, respBody, err := do(c, http.MethodPost, base+"/characters", createBody)
-	if err != nil {
-		return 0, err
-	}
+func createCharacter(c *client, createBody json.RawMessage) (int64, error) {
+	status, body := c.do(http.MethodPost, "/characters", createBody)
 	if status != http.StatusCreated {
-		return 0, fmt.Errorf("create status %d: %s", status, respBody)
+		return 0, fmt.Errorf("create status %d: %s", status, body)
 	}
 	var out struct {
 		ID int64 `json:"id"`
 	}
-	if err := json.Unmarshal(respBody, &out); err != nil {
+	if err := json.Unmarshal(body, &out); err != nil {
 		return 0, err
 	}
 	return out.ID, nil
 }
 
-func learnSpell(c *http.Client, base string, id int64, sp seedSpell) error {
-	learnURL := fmt.Sprintf("%s/characters/%d/spells", base, id)
-	if s, _, err := do(c, http.MethodPost, learnURL, mustJSON(map[string]string{"catalogSpellId": sp.ID})); err != nil {
-		return err
-	} else if s != http.StatusCreated && s != http.StatusConflict {
-		return fmt.Errorf("learn status %d", s)
+func learnSpell(c *client, id int64, sp seedSpell) error {
+	if s, b := c.do(http.MethodPost, fmt.Sprintf("/characters/%d/spells", id), mustJSON(map[string]string{"catalogSpellId": sp.ID})); s != http.StatusCreated && s != http.StatusConflict {
+		return fmt.Errorf("learn status %d: %s", s, b)
 	}
 	if !sp.Prepared {
 		return nil
 	}
-	prepURL := fmt.Sprintf("%s/characters/%d/spells/%s/prepared", base, id, sp.ID)
-	s, _, err := do(c, http.MethodPatch, prepURL, mustJSON(map[string]bool{"prepared": true}))
-	if err != nil {
-		return err
-	}
-	if s != http.StatusOK {
-		return fmt.Errorf("prepare status %d", s)
+	if s, b := c.do(http.MethodPatch, fmt.Sprintf("/characters/%d/spells/%s/prepared", id, sp.ID), mustJSON(map[string]bool{"prepared": true})); s != http.StatusOK {
+		return fmt.Errorf("prepare status %d: %s", s, b)
 	}
 	return nil
 }
@@ -358,30 +352,4 @@ func learnSpell(c *http.Client, base string, id int64, sp seedSpell) error {
 func mustJSON(v any) []byte {
 	b, _ := json.Marshal(v)
 	return b
-}
-
-func do(c *http.Client, method, url string, body []byte) (int, []byte, error) {
-	var reader io.Reader
-	if body != nil {
-		reader = bytes.NewReader(body)
-	}
-	req, err := http.NewRequest(method, url, reader)
-	if err != nil {
-		return 0, nil, err
-	}
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := c.Do(req)
-	if err != nil {
-		return 0, nil, err
-	}
-	defer func() { _ = resp.Body.Close() }()
-	out, _ := io.ReadAll(resp.Body)
-	return resp.StatusCode, out, nil
-}
-
-func env(key, fallback string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return fallback
 }
