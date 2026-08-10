@@ -27,8 +27,14 @@ export interface SceneNavOptions {
   /** Section switch from anywhere (PageUp/PageDown). */
   bumpers?: { prev: () => void; next: () => void }
   /** Scenes with a bespoke cursor (selection-driven, e.g. the roster) set
-   *  `delegated` and handle every command here; return true when handled. */
+   *  `delegated` and map the standard grammar here; return true when handled.
+   *  This is the gamepad-ready seam. */
   onCommand?: (cmd: NavCommand) => boolean
+  /** Delegated-scene escape hatch for keyboard-only accelerators (D, /, O) and
+   *  typing-aware Esc — runs before the command mapping, even while typing. The
+   *  scene calls preventDefault as needed and returns true when it consumed the
+   *  key. */
+  onKey?: (e: KeyboardEvent) => boolean
   delegated?: boolean
   sfx: (name: SfxName) => void
   /** Turn nav off while the scene is loading/errored (media gate still applies). */
@@ -80,18 +86,34 @@ type Memory = WeakMap<HTMLElement, HTMLElement>
 
 function handleKey(e: KeyboardEvent, opts: SceneNavOptions, memory: Memory): void {
   if (e.ctrlKey || e.metaKey || e.altKey) return
-  if (isTypingTarget() || hasOpenOverlay()) return
-  const cmd = toCommand(e)
-  if (!cmd) return
+  if (hasOpenOverlay()) return
   const root = opts.root()
   if (!root) return
   const active = document.activeElement as HTMLElement | null
   const region = active?.closest<HTMLElement>('[data-nav-region]') ?? null
+  const delegated = opts.delegated || region?.dataset.navMode === 'delegated'
 
-  if (opts.delegated || region?.dataset.navMode === 'delegated') {
-    if (opts.onCommand?.(cmd)) stop(e)
+  // Delegated (selection-model) scenes: bespoke keys first — even while typing,
+  // so search Esc-to-clear works — then the standard grammar via onCommand.
+  if (delegated) {
+    if (opts.onKey?.(e)) return
+    if (isTypingTarget()) return
+    const cmd = toCommand(e)
+    if (!cmd) return
+    if (opts.onCommand?.(cmd)) {
+      stop(e)
+      return
+    }
+    // Unhandled Esc still backs out one level (leave the scene).
+    if (cmd.type === 'back') {
+      stop(e)
+      opts.onEscape()
+    }
     return
   }
+  if (isTypingTarget()) return
+  const cmd = toCommand(e)
+  if (!cmd) return
   route(e, cmd, opts, region, root, memory)
 }
 

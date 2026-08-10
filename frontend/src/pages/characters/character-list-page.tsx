@@ -7,7 +7,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { Search } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
@@ -16,6 +16,7 @@ import type { Character } from '@/shared/api/api'
 import { charactersQueryOptions } from '@/entities/character/queries'
 import { SceneShell } from '@/shared/layout/scene-shell'
 import { fuzzyFilter } from '@/shared/lib/fuzzy-filter'
+import { useSceneNav } from '@/shared/lib/use-scene-nav'
 import { useSfx } from '@/shared/lib/use-sfx'
 import { CharacterFilmstrip } from '@/features/character-select/character-filmstrip'
 import { CharacterStage } from '@/features/character-select/character-stage'
@@ -91,18 +92,73 @@ export function CharactersListPage() {
     navigate({ to: '/characters/$id', params: { id: selected.id } })
   }
 
-  useSelectorKeyboard({
-    step,
-    jumpTo: (edge) => {
-      if (filtered.length === 0) return
-      jumpTo(filtered[edge === 'home' ? 0 : filtered.length - 1].id)
+  // The roster is a selection scene (the spotlight stage): a `delegated`
+  // scene-nav so it shares the grammar + gamepad seam while keeping its own
+  // cursor. onCommand maps the standard grammar; onKey holds the keyboard-only
+  // accelerators (D dossier, / search) and search Esc-to-clear.
+  const leaveScene = () => {
+    sfx('back')
+    navigate({ to: '/' })
+  }
+  useSceneNav({
+    root: () => document.querySelector<HTMLElement>('[data-slot="scene-shell"]'),
+    delegated: true,
+    sfx,
+    onEscape: leaveScene,
+    onCommand: (cmd) => {
+      switch (cmd.type) {
+        case 'move':
+          if (cmd.dir === 'left') {
+            step(-1)
+            return true
+          }
+          if (cmd.dir === 'right') {
+            step(1)
+            return true
+          }
+          return false // ↑/↓ have no meaning on the horizontal stage
+        case 'edge':
+          if (filtered.length > 0) {
+            jumpTo(filtered[cmd.to === 'first' ? 0 : filtered.length - 1].id)
+          }
+          return true
+        case 'bumper':
+          step(cmd.dir === 'next' ? 5 : -5)
+          return true
+        case 'activate':
+          openSheet()
+          return true
+        case 'back':
+          if (dossierOpen) {
+            setDossierOpen(false)
+            return true
+          }
+          if (query.length > 0) {
+            setQuery('')
+            return true
+          }
+          return false // nothing to close → onEscape leaves the scene
+      }
     },
-    open: openSheet,
-    toggleDossier: () => setDossierOpen((v) => !v),
-    closeDossier: () => setDossierOpen(false),
-    clearSearch: () => setQuery(''),
-    dossierOpen,
-    hasQuery: query.length > 0,
+    onKey: (e) => {
+      const el = e.target as HTMLElement
+      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+        if (e.key !== 'Escape') return false // let the field handle its keys
+        setQuery('')
+        el.blur()
+        return true
+      }
+      if (e.key === 'd' || e.key === 'D') {
+        setDossierOpen((v) => !v)
+        return true
+      }
+      if (e.key === '/') {
+        e.preventDefault()
+        document.querySelector<HTMLInputElement>('[data-roster-search]')?.focus()
+        return true
+      }
+      return false
+    },
   })
 
   const headerControls =
@@ -182,84 +238,6 @@ export function CharactersListPage() {
       )}
     </SceneShell>
   )
-}
-
-/** Page-level keyboard bindings; ignored while typing in inputs (except Esc). */
-function useSelectorKeyboard({
-  step,
-  jumpTo,
-  open,
-  toggleDossier,
-  closeDossier,
-  clearSearch,
-  dossierOpen,
-  hasQuery,
-}: {
-  step: (delta: number) => void
-  jumpTo: (edge: 'home' | 'end') => void
-  open: () => void
-  toggleDossier: () => void
-  closeDossier: () => void
-  clearSearch: () => void
-  dossierOpen: boolean
-  hasQuery: boolean
-}) {
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement
-      const typing = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
-      if (typing) {
-        if (e.key === 'Escape') {
-          clearSearch()
-          target.blur()
-        }
-        return
-      }
-      switch (e.key) {
-        case 'ArrowLeft':
-          e.preventDefault()
-          step(-1)
-          break
-        case 'ArrowRight':
-          e.preventDefault()
-          step(1)
-          break
-        case 'PageUp':
-          e.preventDefault()
-          step(-5)
-          break
-        case 'PageDown':
-          e.preventDefault()
-          step(5)
-          break
-        case 'Home':
-          jumpTo('home')
-          break
-        case 'End':
-          jumpTo('end')
-          break
-        case 'Enter':
-          open()
-          break
-        case 'd':
-        case 'D':
-          toggleDossier()
-          break
-        case '/':
-          e.preventDefault()
-          document
-            .querySelector<HTMLInputElement>('[data-roster-search]')
-            ?.focus()
-          break
-        case 'Escape':
-          if (dossierOpen) closeDossier()
-          else if (hasQuery) clearSearch()
-          break
-      }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [step, jumpTo, open, toggleDossier, closeDossier, clearSearch, dossierOpen, hasQuery])
 }
 
 /** Empty roster: the stage itself invites the first character. */

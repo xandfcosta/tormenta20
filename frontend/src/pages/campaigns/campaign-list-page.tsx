@@ -8,13 +8,14 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { Plus, Search, UserPlus } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { SkeletonCardGrid } from '@/shared/ui/skeleton'
 import { SceneShell } from '@/shared/layout/scene-shell'
 import { cn } from '@/shared/lib/utils'
 import { fuzzyFilter } from '@/shared/lib/fuzzy-filter'
+import { useSceneNav } from '@/shared/lib/use-scene-nav'
 import { useSfx } from '@/shared/lib/use-sfx'
 import { campaignsQueryOptions } from '@/entities/campaign/queries'
 import type { Campaign } from '@/shared/api/api'
@@ -121,16 +122,64 @@ export function CampaignsListPage() {
     else openDetail(selected)
   }
 
-  useRailKeyboard({
-    step,
-    jumpTo: (edge) => {
-      if (filtered.length === 0) return
-      jumpTo(filtered[edge === 'home' ? 0 : filtered.length - 1].id)
+  // The chronicles list is a selection scene (the 1-D book rail): a `delegated`
+  // scene-nav so it shares the grammar + gamepad seam while keeping its own
+  // cursor. onKey holds the keyboard-only accelerators (/ search, O open).
+  const leaveScene = () => {
+    sfx('back')
+    navigate({ to: '/' })
+  }
+  useSceneNav({
+    root: () => document.querySelector<HTMLElement>('[data-slot="scene-shell"]'),
+    delegated: true,
+    sfx,
+    onEscape: leaveScene,
+    onCommand: (cmd) => {
+      switch (cmd.type) {
+        case 'move':
+          // A 1-D rail: both axes step (←/↑ back, →/↓ forward).
+          step(cmd.dir === 'right' || cmd.dir === 'down' ? 1 : -1)
+          return true
+        case 'edge':
+          if (filtered.length > 0) {
+            jumpTo(filtered[cmd.to === 'first' ? 0 : filtered.length - 1].id)
+          }
+          return true
+        case 'bumper':
+          step(cmd.dir === 'next' ? 5 : -5)
+          return true
+        case 'activate':
+          openFocused()
+          return true
+        case 'back':
+          if (globalFilter.length > 0) {
+            setGlobalFilter('')
+            return true
+          }
+          return false // nothing to clear → onEscape leaves the scene
+      }
     },
-    open: openFocused,
-    openChronicle: () => selected && openDetail(selected),
-    clearSearch: () => setGlobalFilter(''),
-    hasQuery: globalFilter.length > 0,
+    onKey: (e) => {
+      const el = e.target as HTMLElement
+      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+        if (e.key !== 'Escape') return false
+        setGlobalFilter('')
+        el.blur()
+        return true
+      }
+      if (e.key === 'o' || e.key === 'O') {
+        if (selected) openDetail(selected)
+        return true
+      }
+      if (e.key === '/') {
+        e.preventDefault()
+        document
+          .querySelector<HTMLInputElement>('[data-campaign-search]')
+          ?.focus()
+        return true
+      }
+      return false
+    },
   })
 
   const headerControls = (
@@ -215,82 +264,6 @@ export function CampaignsListPage() {
       )}
     </SceneShell>
   )
-}
-
-/** Page-level keyboard bindings; ignored while typing in inputs (except Esc). */
-function useRailKeyboard({
-  step,
-  jumpTo,
-  open,
-  openChronicle,
-  clearSearch,
-  hasQuery,
-}: {
-  step: (delta: number) => void
-  jumpTo: (edge: 'home' | 'end') => void
-  open: () => void
-  /** Open the focused chronicle's detail regardless of a live session (key O). */
-  openChronicle: () => void
-  clearSearch: () => void
-  hasQuery: boolean
-}) {
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement
-      const typing = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
-      if (typing) {
-        if (e.key === 'Escape') {
-          clearSearch()
-          target.blur()
-        }
-        return
-      }
-      switch (e.key) {
-        case 'ArrowLeft':
-        case 'ArrowUp':
-          e.preventDefault()
-          step(-1)
-          break
-        case 'ArrowRight':
-        case 'ArrowDown':
-          e.preventDefault()
-          step(1)
-          break
-        case 'PageUp':
-          e.preventDefault()
-          step(-5)
-          break
-        case 'PageDown':
-          e.preventDefault()
-          step(5)
-          break
-        case 'Home':
-          jumpTo('home')
-          break
-        case 'End':
-          jumpTo('end')
-          break
-        case 'Enter':
-          open()
-          break
-        case 'o':
-        case 'O':
-          openChronicle()
-          break
-        case '/':
-          e.preventDefault()
-          document
-            .querySelector<HTMLInputElement>('[data-campaign-search]')
-            ?.focus()
-          break
-        case 'Escape':
-          if (hasQuery) clearSearch()
-          break
-      }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [step, jumpTo, open, openChronicle, clearSearch, hasQuery])
 }
 
 /** Role segmented filter (Todas / Mestrando / Jogando). */

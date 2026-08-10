@@ -160,3 +160,46 @@ describe('useSceneNav', () => {
     expect(document.activeElement).toBe(g('A')) // no listener bound
   })
 })
+
+describe('useSceneNav — delegated (selection scenes)', () => {
+  const onCommand = vi.fn<(c: unknown) => boolean>(() => true)
+  const onKey = vi.fn<(e: KeyboardEvent) => boolean>(() => false)
+  const leaveScene = vi.fn()
+
+  function Delegated() {
+    const root = useRef<HTMLDivElement>(null)
+    useSceneNav({
+      root: () => root.current,
+      delegated: true,
+      onCommand,
+      onKey,
+      onEscape: leaveScene,
+      sfx,
+    })
+    return <div data-slot="scene-shell" ref={root} />
+  }
+
+  it('maps the standard grammar to onCommand', () => {
+    render(<Delegated />)
+    press('ArrowRight')
+    press('Enter')
+    press('PageDown')
+    expect(onCommand).toHaveBeenCalledWith({ type: 'move', dir: 'right' })
+    expect(onCommand).toHaveBeenCalledWith({ type: 'activate' })
+    expect(onCommand).toHaveBeenCalledWith({ type: 'bumper', dir: 'next' })
+  })
+
+  it('routes bespoke keys through onKey (even while an input has focus)', () => {
+    onKey.mockImplementation((e) => e.key === 'd')
+    render(<Delegated />)
+    press('d')
+    expect(onKey).toHaveBeenCalled()
+  })
+
+  it('falls back to onEscape when onCommand leaves Esc unhandled', () => {
+    onCommand.mockImplementation((c) => (c as { type: string }).type !== 'back')
+    render(<Delegated />)
+    press('Escape')
+    expect(leaveScene).toHaveBeenCalledOnce()
+  })
+})
