@@ -1,7 +1,8 @@
-import { getRouteApi, Link, useNavigate } from '@tanstack/react-router'
+import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { CalendarClock } from 'lucide-react'
-import { PageChrome } from '@/shared/ui/page-chrome'
+import { SceneShell } from '@/shared/layout/scene-shell'
+import { useSfx } from '@/shared/lib/use-sfx'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Card, CardContent } from '@/shared/ui/card'
@@ -18,15 +19,18 @@ const routeApi = getRouteApi('/campaigns/$id/')
 type CampaignTab = 'visao' | 'sessoes' | 'membros' | 'config'
 
 /**
- * Campaign detail (GM + player) organized into tabs (ALE-29): a fixed header
- * (name + status subtitle) over Visão geral / Sessões / Membros / Config. The
- * active tab lives in `?tab=` so it deep-links and survives the back button.
- * Config (edit + delete) is GM-only.
+ * Campaign detail (GM + player) as a grimório scene (ALE-58): a full-screen
+ * SceneShell (back → Crônicas) over the name + status subtitle and the
+ * Visão geral / Sessões / Membros / Config tabs. The active tab lives in
+ * `?tab=` so it deep-links and survives the back button. Config (edit + delete)
+ * is GM-only. The live-session route (`/sessions/$sid`) stays its own bare
+ * match-mode scene; only this index page is the detail scene.
  */
 export function CampaignDetailPage() {
   const { id } = routeApi.useParams()
   const { tab } = routeApi.useSearch()
   const navigate = useNavigate()
+  const sfx = useSfx()
   const campaignId = Number(id)
   const campaign = useQuery(campaignQueryOptions(campaignId))
   const sessions = useQuery(campaignSessionsQueryOptions(campaignId))
@@ -39,37 +43,43 @@ export function CampaignDetailPage() {
   const current: CampaignTab = isTab(tab) ? tab : 'visao'
   const goToTab = (next: CampaignTab) =>
     navigate({ to: '.', search: { tab: next }, replace: true })
+  const back = () => {
+    sfx('select')
+    navigate({ to: '/campaigns' })
+  }
 
   if (campaign.isLoading)
     return (
-      <PageChrome width="wide" className="space-y-4">
-        <Skeleton className="h-8 w-56" />
-        <Skeleton className="h-40 w-full" />
-      </PageChrome>
+      <SceneShell dense title="Campanha" onBack={back}>
+        <div className="mx-auto w-full max-w-5xl space-y-4">
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="h-40 w-full" />
+        </div>
+      </SceneShell>
     )
   if (campaign.isError)
     return (
-      <PageChrome width="wide">
+      <SceneShell dense title="Campanha" onBack={back}>
         <p className="text-destructive">{(campaign.error as Error).message}</p>
-      </PageChrome>
+      </SceneShell>
     )
   if (!campaign.data) return null
 
   return (
-    <PageChrome width="wide" className="space-y-5">
-      <div className="space-y-1">
-        <Link to="/campaigns" className="text-sm text-muted-foreground hover:text-foreground">
-          ← Campanhas
-        </Link>
-        <h1 className="font-display text-2xl font-semibold tracking-wide">
-          {campaign.data.name}
-        </h1>
+    <SceneShell
+      dense
+      title={campaign.data.name}
+      onBack={back}
+      onEnter={() => sfx('transition')}
+    >
+      <div className="mx-auto w-full max-w-5xl space-y-5">
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
           <span>{isGm ? 'Mestrando' : 'Jogando'}</span>
           <span aria-hidden>·</span>
           <span className="flex items-center gap-1">
             <CalendarClock className="size-3" />
-            Criada em {new Date(campaign.data.createdAt).toLocaleDateString('pt-BR')}
+            Criada em{' '}
+            {new Date(campaign.data.createdAt).toLocaleDateString('pt-BR')}
           </span>
           <span aria-hidden>·</span>
           <span>
@@ -85,47 +95,47 @@ export function CampaignDetailPage() {
             </>
           )}
         </p>
-      </div>
 
-      <Tabs value={current} onValueChange={(v) => goToTab(v as CampaignTab)}>
-        <TabsList className="max-w-full self-start overflow-x-auto [&>button]:shrink-0">
-          <TabsTrigger value="visao">Visão geral</TabsTrigger>
-          <TabsTrigger value="sessoes">Sessões</TabsTrigger>
-          <TabsTrigger value="membros">Membros</TabsTrigger>
-          {isGm && <TabsTrigger value="config">Config</TabsTrigger>}
-        </TabsList>
+        <Tabs value={current} onValueChange={(v) => goToTab(v as CampaignTab)}>
+          <TabsList className="max-w-full self-start overflow-x-auto [&>button]:shrink-0">
+            <TabsTrigger value="visao">Visão geral</TabsTrigger>
+            <TabsTrigger value="sessoes">Sessões</TabsTrigger>
+            <TabsTrigger value="membros">Membros</TabsTrigger>
+            {isGm && <TabsTrigger value="config">Config</TabsTrigger>}
+          </TabsList>
 
-        <TabsContent value="visao">
-          <CampaignOverview
-            campaignId={campaignId}
-            isGm={isGm}
-            onGoToTab={goToTab}
-          />
-        </TabsContent>
-        <TabsContent value="sessoes">
-          <SessionsCard campaignId={campaignId} isGm={isGm} />
-        </TabsContent>
-        <TabsContent value="membros">
-          <MembersCard campaignId={campaignId} isGm={isGm} />
-        </TabsContent>
-        {isGm && (
-          <TabsContent value="config" className="space-y-6">
-            <CampaignHeaderCard campaign={campaign.data} />
-            <Card className="border-destructive/40">
-              <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-6">
-                <div>
-                  <p className="font-medium">Excluir campanha</p>
-                  <p className="text-xs text-muted-foreground">
-                    Remove todas as sessões e membros. Não pode ser desfeito.
-                  </p>
-                </div>
-                <DeleteCampaignButton campaign={campaign.data} />
-              </CardContent>
-            </Card>
+          <TabsContent value="visao">
+            <CampaignOverview
+              campaignId={campaignId}
+              isGm={isGm}
+              onGoToTab={goToTab}
+            />
           </TabsContent>
-        )}
-      </Tabs>
-    </PageChrome>
+          <TabsContent value="sessoes">
+            <SessionsCard campaignId={campaignId} isGm={isGm} />
+          </TabsContent>
+          <TabsContent value="membros">
+            <MembersCard campaignId={campaignId} isGm={isGm} />
+          </TabsContent>
+          {isGm && (
+            <TabsContent value="config" className="space-y-6">
+              <CampaignHeaderCard campaign={campaign.data} />
+              <Card className="border-destructive/40">
+                <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-6">
+                  <div>
+                    <p className="font-medium">Excluir campanha</p>
+                    <p className="text-xs text-muted-foreground">
+                      Remove todas as sessões e membros. Não pode ser desfeito.
+                    </p>
+                  </div>
+                  <DeleteCampaignButton campaign={campaign.data} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+        </Tabs>
+      </div>
+    </SceneShell>
   )
 }
 
