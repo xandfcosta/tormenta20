@@ -47,7 +47,7 @@ export function CharacterSheetDesktop({
             <TabsContent
               key={s.value}
               value={s.value}
-              className="m-0 flex h-full min-h-0 flex-col overflow-hidden animate-in fade-in-0 duration-200 motion-reduce:animate-none"
+              className="m-0 flex h-full min-h-0 flex-col overflow-hidden"
             >
               {s.render(character)}
             </TabsContent>
