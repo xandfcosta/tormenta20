@@ -60,6 +60,27 @@ swallows the outlet and children never mount. See
 - Every screen must work at phone width: responsive grids (`sm:`/`lg:`),
   `flex-wrap` button rows, horizontal scroll for overflowing tab bars.
 
+## Interaction &amp; navigation (one philosophy, all scenes)
+
+- **One design language across every scene** (grimório reskin, ALE-55): same
+  tokens, framing, focus/selection treatment, and SFX vocabulary. A new screen
+  adopts the existing scene grammar — it doesn't invent its own look.
+- **One keyboard-navigation grammar, everywhere.** Scenes are **regions**
+  (rail / header / content …) navigated with a shared primitive
+  (`shared/lib/spatial-nav` geometry + `shared/ui/scene-nav` hook): arrows move
+  the focus cursor **by layout** (2-D in a grid, 1-D in a list) and cross to a
+  neighbouring region at the edge; **PageUp/PageDown** switch section (bumpers);
+  **Enter** activates; **Esc** goes up one level (item → rail → leave scene). Do
+  not hand-roll per-scene `keydown` handlers — declare regions via
+  `data-nav-region` / `data-nav-layout` and let the hook drive.
+- **Keyboard never removes the mouse.** Arrow/gamepad navigation is **additive
+  progressive enhancement** over real, clickable/tappable controls — every item
+  stays a native `a`/`button` (or has a click handler) and keeps its `hover`
+  state. Pointer input must work fully on its own; never gate a click behind a
+  keyboard step, and never trap focus.
+- Keyboard nav is enabled only on laptop/desktop (`≥xl` + `pointer: fine`); it
+  degrades cleanly to tap below that. Shortcut hints are `xl:`-gated too.
+
 ## Tests
 
 - Run: `pnpm --filter frontend test` (vitest). Root `pnpm test` fans out.
@@ -68,6 +89,18 @@ swallows the outlet and children never mount. See
   not inline stubs. React Testing Library for components.
 - The security boundary lives on the server — don't rely on UI gating for
   correctness; still gate UI by role for UX.
+- **Responsive validation is mandatory for any screen/layout change.** Before
+  calling a UI task done, validate it at all six form factors — a scene must
+  fill the space it's given (no card floating in wasted margin) *and* stay
+  usable when cramped:
+  - **Desktop** — 1920×1080
+  - **Laptop** — 1440×900
+  - **Tablet landscape** — 1024×768 · **Tablet portrait** — 768×1024
+  - **Mobile landscape** — 844×390 · **Mobile portrait** — 390×844
+
+  Grimório scenes fill their `SceneShell` width (no narrow `max-w` cap that
+  leaves empty margin on desktop); reserve max-width only for genuine reading
+  measure (prose), not for whole scenes.
 
 ## Typecheck + lint + format
 

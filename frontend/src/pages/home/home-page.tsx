@@ -5,6 +5,7 @@ import { meQueryOptions } from '@/entities/user/queries'
 import { useLogout } from '@/entities/user/use-logout'
 import { useActiveSession } from '@/features/session-resume/use-active-session'
 import { SceneShell } from '@/shared/layout/scene-shell'
+import { useSceneNav } from '@/shared/lib/use-scene-nav'
 import { useSfx } from '@/shared/lib/use-sfx'
 import { useUiStore } from '@/shared/stores/ui-store'
 import { HubFooter } from './hub-footer'
@@ -31,6 +32,14 @@ export function HomePage() {
     sfx('select')
     select()
   }
+
+  // Keyboard: the Hub is a single vertical menu region — ↑/↓ walk it, Enter
+  // picks. It's the root scene, so Esc has nowhere to go back to (no-op).
+  useSceneNav({
+    root: () => document.querySelector<HTMLElement>('[data-slot="scene-shell"]'),
+    onEscape: () => {},
+    sfx,
+  })
 
   const items: HubMenuItem[] = [
     {

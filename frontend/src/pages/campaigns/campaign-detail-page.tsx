@@ -1,7 +1,9 @@
 import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 import { SceneShell } from '@/shared/layout/scene-shell'
 import { useSfx } from '@/shared/lib/use-sfx'
+import { useSceneNav } from '@/shared/lib/use-scene-nav'
 import { Skeleton } from '@/shared/ui/skeleton'
 import {
   campaignQueryOptions,
@@ -25,7 +27,7 @@ const routeApi = getRouteApi('/campaigns/$id/')
  */
 export function CampaignDetailPage() {
   const { id } = routeApi.useParams()
-  const { tab } = routeApi.useSearch()
+  const { tab: urlTab } = routeApi.useSearch()
   const navigate = useNavigate()
   const sfx = useSfx()
   const campaignId = Number(id)
@@ -37,13 +39,58 @@ export function CampaignDetailPage() {
   const playerCount =
     members.data?.filter((m) => m.role === 'player').length ?? 0
 
-  const current: CampaignTab = isTab(tab) ? tab : 'visao'
-  const goToTab = (next: CampaignTab) =>
-    navigate({ to: '.', search: { tab: next }, replace: true })
-  const back = () => {
+  // Local tab state drives the switch INSTANTLY (same fix as the ficha): the tab
+  // used to live only in the URL, and TanStack's router state is a
+  // useSyncExternalStore whose updates React can't defer, so every switch ran as
+  // one synchronous navigation (the delay). Now a click / ↑↓ flips local state
+  // (instant paint) and the URL reconciles in a passive, debounced effect AFTER
+  // paint — off the switch's critical path. The URL stays the source for
+  // deep-links + back (adopted below), so that behaviour is unchanged.
+  const [tab, setTab] = useState<CampaignTab>(isTab(urlTab) ? urlTab : 'visao')
+  useEffect(() => {
+    const next: CampaignTab = isTab(urlTab) ? urlTab : 'visao'
+    setTab((cur) => (cur === next ? cur : next))
+  }, [urlTab])
+  useEffect(() => {
+    const current: CampaignTab = isTab(urlTab) ? urlTab : 'visao'
+    if (current === tab) return
+    const timer = setTimeout(() => {
+      navigate({
+        to: '.',
+        search: (prev: Record<string, unknown>) => ({ ...prev, tab }),
+        replace: true,
+      })
+    }, 250)
+    return () => clearTimeout(timer)
+  }, [tab, urlTab, navigate])
+  const goToTab = (next: CampaignTab) => {
+    if (next === tab) return
     sfx('select')
+    setTab(next)
+  }
+  const back = () => {
+    sfx('back')
     navigate({ to: '/campaigns' })
   }
+  // Game-like walk through the chronicle via the shared scene-nav grammar: arrows
+  // move the focus cursor by layout within a region and cross rail ↔ header ↔
+  // content at the edges; PageUp/PageDown are the section bumpers; Esc pops
+  // content → rail → back to the book. Sections switch through local `setTab`
+  // only (never `navigate()` — that re-inflates the switch into a blocking task).
+  const cycleSection = (delta: number) => {
+    const tabs: CampaignTab[] = isGm
+      ? ['visao', 'sessoes', 'membros', 'config']
+      : ['visao', 'sessoes', 'membros']
+    const i = Math.max(0, tabs.indexOf(tab))
+    setTab(tabs[(i + delta + tabs.length) % tabs.length])
+  }
+  useSceneNav({
+    root: () => document.querySelector<HTMLElement>('[data-tome-root]'),
+    onEscape: back,
+    bumpers: { prev: () => cycleSection(-1), next: () => cycleSection(1) },
+    sfx,
+    active: !campaign.isLoading && !!campaign.data,
+  })
   const resume = () => {
     if (!activeSession) return
     sfx('select')
@@ -56,7 +103,7 @@ export function CampaignDetailPage() {
   if (campaign.isLoading)
     return (
       <SceneShell dense onBack={back}>
-        <div className="mx-auto w-full max-w-5xl space-y-4">
+        <div className="w-full space-y-4">
           <Skeleton className="h-8 w-56" />
           <Skeleton className="h-56 w-full" />
         </div>
@@ -71,14 +118,14 @@ export function CampaignDetailPage() {
   if (!campaign.data) return null
 
   return (
-    <SceneShell dense onBack={back} onEnter={() => sfx('transition')}>
+    <SceneShell dense onBack={back} onEnter={() => sfx('open')}>
       <CampaignTome
         campaign={campaign.data}
         campaignId={campaignId}
         isGm={isGm}
         activeSession={activeSession}
         playerCount={playerCount}
-        current={current}
+        current={tab}
         onTab={goToTab}
         onResume={resume}
       />

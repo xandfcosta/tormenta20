@@ -35,6 +35,7 @@ export function CharacterSheetDesktop({
   const visited = useVisitedTabs(active)
   return (
     <div
+      data-sheet-root
       className={cn(
         'grid h-full min-h-0 grid-rows-[1fr_auto] gap-3 overflow-hidden',
         !inSession && 'p-3',
@@ -46,6 +47,9 @@ export function CharacterSheetDesktop({
         orientation="vertical"
         className="flex min-h-0 items-stretch gap-3"
       >
+        {/* Content is a dense editing FORM (selects, inline edits) — Tab, not
+            arrow-roving, is the right keyboard here. Only the block rail is a
+            scene-nav region; PageUp/PageDown bump blocks, Esc leaves. */}
         <div className="min-h-0 min-w-0 flex-1">
           {panels.map((s) => (
             <TabsContent
@@ -64,7 +68,11 @@ export function CharacterSheetDesktop({
 
         {/* Labeled rail at every desktop width — the panel already carries
             its own big title, so no floating duplicate above the content. */}
-        <TabsList className="flex h-full shrink-0 flex-col gap-1 rounded-lg border bg-card p-1">
+        <TabsList
+          data-nav-region="rail"
+          data-nav-layout="column"
+          className="flex h-full shrink-0 flex-col gap-1 rounded-lg border bg-card p-1"
+        >
           {panels.map((s) => (
             <TabsTrigger
               key={s.value}

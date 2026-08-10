@@ -2,9 +2,11 @@ import { SheetSearch } from './sheet-search'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { type ReactNode, useEffect, useState } from 'react'
 import { useMediaQuery } from '@/shared/lib/use-media-query'
+import { useSceneNav } from '@/shared/lib/use-scene-nav'
 import { useSfx } from '@/shared/lib/use-sfx'
 import { CharacterSheetDesktop } from './character-sheet-desktop'
 import { CharacterSheetMobile } from './character-sheet-mobile'
+import { SHEET_PANELS, resolveSheetTab } from './sheet-sections'
 import type { Character } from '@/shared/api/api'
 
 // Re-exported so callers merging a control into the phone bar (session view)
@@ -72,6 +74,24 @@ export function CharacterSheet({
     sfx('select')
     setTab(next)
   }
+  // Shared scene-nav grammar (desktop only): arrows rove the block content and
+  // cross to the icon rail; PageUp/PageDown are the block bumpers; Esc leaves to
+  // the roster (never mid-session). Bumpers switch through local state only —
+  // never navigate() — so the block swap stays instant (same reason as above).
+  const cycleBlock = (delta: number) => {
+    const vals = SHEET_PANELS.map((p) => p.value)
+    const i = Math.max(0, vals.indexOf(resolveSheetTab(tab)))
+    setTab(vals[(i + delta + vals.length) % vals.length])
+  }
+  useSceneNav({
+    root: () => document.querySelector<HTMLElement>('[data-sheet-root]'),
+    onEscape: () => {
+      if (!inSession) navigate({ to: '/characters' })
+    },
+    bumpers: { prev: () => cycleBlock(-1), next: () => cycleBlock(1) },
+    sfx,
+    active: isDesktop,
+  })
   const layout = isDesktop ? (
     <CharacterSheetDesktop
       character={character}

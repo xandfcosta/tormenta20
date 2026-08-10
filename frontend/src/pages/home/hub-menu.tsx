@@ -24,6 +24,8 @@ function HubMenu({ items, className, onItemHover }: HubMenuProps) {
   return (
     <nav
       aria-label="Menu principal"
+      data-nav-region="menu"
+      data-nav-layout="column"
       className={cn('mx-auto flex w-full max-w-md flex-col gap-2.5', className)}
     >
       {items.map((item) => (
