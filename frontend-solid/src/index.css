@@ -1,0 +1,555 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* `dark:` fires for the real dark theme (descendants of `.dark`) AND inside any
+ * grimório scene. A scene is ALWAYS dark, but it gets there via the
+ * `.scene-grimorio` token scope, not the `.dark` class — so without this every
+ * `dark:` utility in a component rendered inside a scene silently no-ops,
+ * leaving its light-theme styles on a dark ground (e.g. `bg-emerald-50` trained
+ * rows rendering near-white text on near-white, illegible). Treat the scene as
+ * dark for variants too, so components look right in both places. */
+@custom-variant dark (&:is(.dark *, .scene-grimorio, .scene-grimorio *));
+
+/* Cinzel (OFL) — self-hosted display face for the game scenes (ALE-35).
+ * Variable weight 400–900; latin covers pt-BR (ã/ç/õ/é…), latin-ext kept for
+ * the odd extended glyph. Files in public/fonts, so no CDN / CSP-safe. */
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('/fonts/cinzel-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('/fonts/cinzel-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* Default shadcn neutral theme. Custom "Controlled Decay" palette stripped —
+ * the app is on plain shadcn now, focused on function. The only kept
+ * non-default tokens are the HP/PM bar colors (functional state signal). */
+:root {
+  --radius: 0.625rem;
+
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.141 0.005 285.823);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.141 0.005 285.823);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.141 0.005 285.823);
+  --primary: oklch(0.21 0.006 285.885);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --accent: oklch(0.967 0.001 286.375);
+  --accent-foreground: oklch(0.21 0.006 285.885);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
+  --ring: oklch(0.705 0.015 286.067);
+
+  /* HP/PM bars — functional state colors, not decoration. */
+  --hp-full: oklch(0.6 0.17 145);
+  --hp-hurt: oklch(0.7 0.17 70);
+  --hp-critical: oklch(0.58 0.22 25);
+  --mp-arcane: oklch(0.55 0.15 250);
+}
+
+.dark {
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.21 0.006 285.885);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.21 0.006 285.885);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --accent: oklch(0.274 0.006 286.033);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.552 0.016 285.938);
+
+  --hp-full: oklch(0.68 0.19 145);
+  --hp-hurt: oklch(0.75 0.19 70);
+  --hp-critical: oklch(0.65 0.23 25);
+  --mp-arcane: oklch(0.65 0.17 250);
+}
+
+/* ── Grimório theme (ALE-35) ────────────────────────────────────────────
+ * Canonical palette for the game-like scenes. A scene reads intrinsically
+ * dark (like a CRPG screen) regardless of the app's light/dark toggle, and
+ * high-contrast: body text hits AAA, decorative purple is only AA-Large so
+ * it stays in glow / large titles, never small text. Applied via the scope
+ * class `.scene-grimorio` (added by SceneShell, ALE-37) — the existing
+ * shadcn screens are left untouched until each migrates scene-by-scene.
+ * Contrast + look validated live at /grimorio before porting. */
+:root {
+  --grimorio-bg: oklch(0.15 0.01 305);
+  --grimorio-bg-2: oklch(0.19 0.012 305);
+  --grimorio-panel: oklch(0.225 0.014 300);
+  --grimorio-panel-raised: oklch(0.27 0.016 300);
+  --grimorio-fg: oklch(0.93 0.014 85);
+  --grimorio-fg-muted: oklch(0.74 0.02 85);
+  --grimorio-crimson: oklch(0.55 0.19 25);
+  --grimorio-crimson-bright: oklch(0.64 0.21 25);
+  --grimorio-purple: oklch(0.55 0.15 305);
+  --grimorio-gold: oklch(0.8 0.11 85);
+  --grimorio-iron: oklch(0.4 0.015 300);
+  --grimorio-iron-light: oklch(0.52 0.02 300);
+  --grimorio-parchment: oklch(0.9 0.035 80);
+  --grimorio-parchment-ink: oklch(0.28 0.03 60);
+}
+
+/* Remaps the shadcn semantic tokens inside a scene so any stock component
+ * (card, button, input) adopts Grimório automatically, plus a sharper
+ * iron-forged radius and Cinzel as the display face. */
+.scene-grimorio {
+  --background: var(--grimorio-bg);
+  --foreground: var(--grimorio-fg);
+  --card: var(--grimorio-panel);
+  --card-foreground: var(--grimorio-fg);
+  --popover: var(--grimorio-panel-raised);
+  --popover-foreground: var(--grimorio-fg);
+  --primary: var(--grimorio-crimson);
+  --primary-foreground: oklch(0.97 0.01 85);
+  --secondary: var(--grimorio-panel-raised);
+  --secondary-foreground: var(--grimorio-fg);
+  --muted: var(--grimorio-bg-2);
+  --muted-foreground: var(--grimorio-fg-muted);
+  --accent: var(--grimorio-panel-raised);
+  --accent-foreground: var(--grimorio-gold);
+  --destructive: var(--grimorio-crimson-bright);
+  --border: var(--grimorio-iron);
+  --input: var(--grimorio-iron);
+  --ring: var(--grimorio-gold);
+  --radius: 0.25rem;
+  --font-display: var(--font-heading);
+  background-color: var(--grimorio-bg);
+  color: var(--grimorio-fg);
+  /* Firefox: thin iron scrollbars for every scroll area in the scene, instead
+   * of the OS-default light bar that clashed with the dark ground. Inherited,
+   * so it reaches nested scrollers (perícias list, poderes column, …). */
+  scrollbar-width: thin;
+  scrollbar-color: var(--grimorio-iron) transparent;
+}
+
+/* WebKit/Blink counterpart — the pseudo-elements aren't inherited, so target
+ * every scroller inside a scene. Track transparent so a barely-overflowing
+ * strip doesn't paint a full-height rail; thumb warms to gold on hover. */
+.scene-grimorio ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scene-grimorio ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scene-grimorio ::-webkit-scrollbar-thumb {
+  background-color: var(--grimorio-iron);
+  border-radius: 4px;
+}
+.scene-grimorio ::-webkit-scrollbar-thumb:hover {
+  background-color: var(--grimorio-gold);
+}
+
+/* Scene-nav cursor (ALE-55): the focused item inside a nav region reads as
+ * game-"selected" — the gold language already used by the filmstrip/rail — not
+ * a default browser ring. We drive real .focus(), so :focus-visible fires. */
+.scene-grimorio [data-nav-region] :is(a, button, [data-nav-item]):focus-visible {
+  outline: none;
+  border-color: var(--grimorio-gold);
+  box-shadow:
+    0 0 0 1px var(--grimorio-gold),
+    0 0 18px oklch(0.8 0.11 85 / 0.28);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .scene-grimorio [data-nav-region] :is(a, button):focus-visible {
+    transition:
+      transform 120ms ease,
+      box-shadow 120ms ease;
+    transform: scale(1.02);
+  }
+}
+
+@theme inline {
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-serif: ui-serif, Georgia, serif;
+  --font-display: ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Cinzel', ui-serif, Georgia, serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-hp-full: var(--hp-full);
+  --color-hp-hurt: var(--hp-hurt);
+  --color-hp-critical: var(--hp-critical);
+  --color-mp-arcane: var(--mp-arcane);
+
+  /* Grimório accents beyond the shadcn semantics — so scene primitives can
+   * use text-grimorio-gold / border-grimorio-iron / bg-grimorio-parchment. */
+  --color-grimorio-crimson: var(--grimorio-crimson);
+  --color-grimorio-crimson-bright: var(--grimorio-crimson-bright);
+  --color-grimorio-purple: var(--grimorio-purple);
+  --color-grimorio-gold: var(--grimorio-gold);
+  --color-grimorio-iron: var(--grimorio-iron);
+  --color-grimorio-iron-light: var(--grimorio-iron-light);
+  --color-grimorio-parchment: var(--grimorio-parchment);
+  --color-grimorio-parchment-ink: var(--grimorio-parchment-ink);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  /* Kept as no-op-ish utilities so the ~25 usages compile; custom faces
+   * dropped — `font-display` is now the system sans, `font-hud` the mono. */
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  /* Cinzel display face — the game scenes' titles/menus (ALE-35). */
+  .font-heading {
+    font-family: var(--font-heading);
+    font-optical-sizing: auto;
+  }
+
+  .font-hud {
+    font-family: var(--font-mono);
+    font-feature-settings: 'tnum', 'zero';
+  }
+
+  /* Hide native number spinners — replaced by the NumberInput buttons. */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  /* Respect reduced-motion (WCAG 2.3.3). */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* ── Grimório scene primitives (ALE-36) ───────────────────────────────
+   * Decorative treatments shared by shared/ui/{background-texture,
+   * framed-panel,game-menu-button,scene-title}. Tuned live in /grimorio.
+   * Decorative (backgrounds/glows) → literal oklch is fine here, same as the
+   * functional HP/PM tokens. Reduced-motion is handled by the base layer. */
+  .grimorio-stone {
+    background-color: var(--grimorio-bg);
+    background-image:
+      radial-gradient(120% 80% at 50% -10%, oklch(0.28 0.06 305 / 0.55), transparent 60%),
+      radial-gradient(100% 60% at 50% 120%, oklch(0.3 0.12 25 / 0.3), transparent 55%),
+      repeating-linear-gradient(115deg, oklch(1 0 0 / 0.015) 0 2px, transparent 2px 6px);
+  }
+  .grimorio-parchment-bg {
+    background-color: var(--grimorio-parchment);
+    background-image: radial-gradient(
+      120% 120% at 30% 10%,
+      oklch(0.93 0.03 85),
+      oklch(0.86 0.04 75)
+    );
+    color: var(--grimorio-parchment-ink);
+  }
+  .grimorio-vignette {
+    box-shadow: inset 0 0 240px 40px oklch(0 0 0 / 0.65);
+  }
+  .scene-title-glow {
+    text-shadow: 0 0 24px oklch(0.55 0.15 305 / 0.5), 0 2px 2px oklch(0 0 0 / 0.6);
+  }
+  .grimorio-frame {
+    border: 1px solid var(--grimorio-iron);
+    border-radius: 5px;
+    box-shadow: inset 0 0 0 1px oklch(0.8 0.11 85 / 0.12), 0 6px 20px oklch(0 0 0 / 0.4);
+  }
+  .grimorio-frame--stone {
+    background: linear-gradient(var(--grimorio-panel-raised), var(--grimorio-panel));
+  }
+  /* Open-tome presentation for a focused chronicle (Crônicas). Leather cover +
+   * parchment pages (the child .grimorio-parchment-bg) + a shaded central
+   * spine, so it reads as a book rather than two cards. Decorative → literal
+   * oklch is fine here (same rule as the other backgrounds/glows). */
+  .grimorio-book {
+    position: relative;
+    background: linear-gradient(150deg, oklch(0.28 0.03 45), oklch(0.19 0.02 40));
+    border: 1px solid var(--grimorio-iron);
+    border-radius: 10px;
+    box-shadow: inset 0 0 0 1px oklch(0.8 0.11 85 / 0.12),
+      0 12px 34px oklch(0 0 0 / 0.5);
+  }
+  /* Same leather cover, but WITHOUT the two-page spine — for a single immersive
+   * page (the campaign detail tome), so nothing cuts down the middle. */
+  .grimorio-leather {
+    background: linear-gradient(150deg, oklch(0.28 0.03 45), oklch(0.19 0.02 40));
+    border: 1px solid var(--grimorio-iron);
+    border-radius: 10px;
+    box-shadow: inset 0 0 0 1px oklch(0.8 0.11 85 / 0.12),
+      0 12px 34px oklch(0 0 0 / 0.5);
+  }
+  .grimorio-book-pages {
+    position: relative;
+    border-radius: 4px;
+    box-shadow: 0 0 0 1px oklch(0 0 0 / 0.35);
+    /* Depth for the page-turn leaf's rotateY (spine pivot). */
+    perspective: 2200px;
+  }
+  /* Spine/gutter drawn as an overlay ON THE COVER — above the pages AND the
+   * turning leaf — so the mid-page shadow stays CONSTANT through a page turn.
+   * (When it lived on .grimorio-book-pages, the leaf covered it mid-turn and it
+   * popped back darker on unmount — the reported flick.) Only on the side-by-
+   * side spread (sm+); stacked phones have no gutter. */
+  @media (min-width: 640px) {
+    .grimorio-book::before {
+      content: '';
+      position: absolute;
+      top: 12px;
+      bottom: 12px;
+      left: 50%;
+      width: 46px;
+      transform: translateX(-50%);
+      background: linear-gradient(
+        90deg,
+        transparent,
+        oklch(0 0 0 / 0.22) 42%,
+        oklch(0 0 0 / 0.34) 50%,
+        oklch(0 0 0 / 0.22) 58%,
+        transparent
+      );
+      pointer-events: none;
+      z-index: 10;
+    }
+    .grimorio-book::after {
+      content: '';
+      position: absolute;
+      top: 20px;
+      bottom: 20px;
+      left: 50%;
+      width: 1px;
+      transform: translateX(-50%);
+      background: oklch(0 0 0 / 0.4);
+      pointer-events: none;
+      z-index: 11;
+    }
+  }
+  /* Page turn: a leaf carrying the OUTGOING right page lifts at the fore-edge
+   * and rotates over the spine (transform-origin left) to reveal the new page
+   * beneath — you see the real old page turn away, not a blank sheet.
+   * backface-hidden makes it vanish past 90deg; the ::after gradient is the fold
+   * shadow that sweeps (the light cue from the researched demos). Transform +
+   * opacity only → GPU-composited. Reduced motion is gated in JS (never mounts).*/
+  @keyframes grimorio-leaf-turn {
+    from {
+      transform: rotateY(0deg);
+    }
+    to {
+      transform: rotateY(-180deg);
+    }
+  }
+  @keyframes grimorio-leaf-shade {
+    0% {
+      opacity: 0;
+    }
+    50% {
+      opacity: 0.5;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+  /* The turning leaf is a double-sided page pivoting on the spine: the FRONT
+   * carries the outgoing right page (lifts on the right), the BACK carries the
+   * incoming illustration (lands on the left) — so the page turns the whole way
+   * over, revealing the new spread. preserve-3d keeps both faces in space;
+   * backface-hidden shows only the one facing you. */
+  .grimorio-leaf {
+    position: absolute;
+    inset: 0 0 0 50%;
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    animation: grimorio-leaf-turn var(--grimorio-turn, 0.45s) ease-in-out both;
+    pointer-events: none;
+    z-index: 9;
+  }
+  /* Backward turn (picking a marker ABOVE the current one): the LEFT page lifts
+   * and rotates the other way over the spine — the mirror of the forward turn,
+   * so paging up feels like paging back. */
+  @keyframes grimorio-leaf-turn-rev {
+    from {
+      transform: rotateY(0deg);
+    }
+    to {
+      transform: rotateY(180deg);
+    }
+  }
+  .grimorio-leaf--rev {
+    inset: 0 50% 0 0;
+    transform-origin: right center;
+    animation-name: grimorio-leaf-turn-rev;
+  }
+  .grimorio-leaf-face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    overflow: hidden;
+    backface-visibility: hidden;
+    /* No constant box-shadow here: it would pop out of existence the instant
+     * the leaf unmounts at turn's end (the mid-page shadow flick). Depth comes
+     * from the animated .grimorio-leaf-shade, which fades to 0 first. */
+  }
+  .grimorio-leaf-front {
+    border-radius: 0 3px 3px 0;
+  }
+  .grimorio-leaf-back {
+    transform: rotateY(180deg);
+    border-radius: 3px 0 0 3px;
+  }
+  /* Fold shadow — darkest when the leaf is edge-on (mid-turn); each face carries
+   * its own so it shows on whichever side faces you. Dark toward the spine. */
+  .grimorio-leaf-shade {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(90deg, oklch(0 0 0 / 0.6), transparent 58%);
+    animation: grimorio-leaf-shade var(--grimorio-turn, 0.45s) ease-in-out both;
+  }
+  /* Dive in (ALE-59): opening a chronicle zooms into its page inside the tome —
+   * you're now looking at the open page up close; ESC pops back to the book.
+   * Transform + opacity only → cross-browser (no View Transitions), GPU. Off
+   * under reduced motion. */
+  @keyframes grimorio-page-in {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  .grimorio-page-in {
+    transform-origin: center center;
+    animation: grimorio-page-in 0.42s ease-out both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .grimorio-page-in {
+      animation: none;
+    }
+  }
+
+  /* Bookmark tabs down the fore-edge of the tome — the chronicle selector as
+   * page markers. The active tab takes the parchment of an open page + a gold
+   * edge and nudges toward the book (merges with it); inactive tabs are
+   * recessed leather. */
+  .grimorio-book-tab {
+    border: 1px solid var(--grimorio-iron-light);
+    background: linear-gradient(
+      oklch(0.29 0.016 300),
+      oklch(0.23 0.014 305)
+    );
+    color: var(--grimorio-fg);
+    transition: transform 0.16s, border-color 0.16s, background 0.16s,
+      color 0.16s;
+  }
+  .grimorio-book-tab:hover {
+    border-color: var(--grimorio-gold);
+  }
+  .grimorio-book-tab[data-active='true'] {
+    border-color: var(--grimorio-gold);
+    background: var(--grimorio-parchment);
+    color: var(--grimorio-parchment-ink);
+  }
+  .grimorio-menu-item {
+    border: 1px solid var(--grimorio-iron);
+    border-left-width: 3px;
+    border-left-color: var(--grimorio-iron-light);
+    background: linear-gradient(
+      oklch(0.24 0.014 300 / 0.9),
+      oklch(0.19 0.012 305 / 0.9)
+    );
+    transition: border-color 0.18s, box-shadow 0.18s, transform 0.12s,
+      background 0.18s;
+  }
+  .grimorio-menu-item:hover {
+    border-color: var(--grimorio-gold);
+    border-left-color: var(--grimorio-crimson-bright);
+    box-shadow: 0 0 0 1px oklch(0.8 0.11 85 / 0.25), 0 0 22px oklch(0.55 0.19 25 / 0.28);
+    transform: translateX(3px);
+    background: linear-gradient(
+      oklch(0.28 0.02 300 / 0.95),
+      oklch(0.22 0.014 305 / 0.95)
+    );
+  }
+  .grimorio-menu-item[data-active='true'] {
+    border-color: var(--grimorio-gold);
+  }
+
+  /* Scene enter transition (ALE-37). Applied by SceneShell only when motion
+   * is allowed; the base-layer reduced-motion rule is a second safety net. */
+  @keyframes scene-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .scene-in {
+    animation: scene-in 0.32s ease-out both;
+  }
+}
