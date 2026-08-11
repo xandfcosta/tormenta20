@@ -370,6 +370,25 @@ export type EffectsClearedResult = {
  *  against the book catalog (p394-395) and echoes the stored JSON blob. */
 export type ConditionsResult = { activeConditions: string }
 
+/** POST :id/spells/:catalogSpellId/cast — the augment picks, one entry per
+ *  aprimoramento (stacks combined; a duplicate index is a 400). */
+export type SpellAugmentPick = { augmentIndex: number; stacks: number }
+
+/**
+ * Delta from castSpell: the new PM plus the catalyst effects the cast consumed.
+ * `removedEffectIds` is always empty today — the catalisador scene-discount is
+ * deferred in the Go handler — but it is part of the contract and the client
+ * already drops what it names.
+ */
+export type CastSpellResult = {
+  mpCurrent: number
+  removedEffectIds: number[]
+}
+
+/** DELETE :id/spells/:catalogSpellId — `removed` is 0 when it wasn't known
+ *  (still a 200, so "esquecer" is idempotent). */
+export type UnlearnSpellResult = { catalogSpellId: string; removed: number }
+
 /**
  * PATCH :id/abilities — patches ANY SUBSET of the five ability-choice blobs;
  * omitted fields are left alone, and sending none is a 400. Verified against

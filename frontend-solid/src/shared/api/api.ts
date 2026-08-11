@@ -28,6 +28,7 @@ import type {
   ApplyDamageResult,
   ApplyEffectInput,
   ApplyEffectResult,
+  CastSpellResult,
   AuthUser,
   Campaign,
   CampaignInvitePreview,
@@ -37,6 +38,7 @@ import type {
   CharacterExpertise,
   CharacterItem,
   CharacterOptions,
+  CharacterSpell,
   ClassLevelResult,
   AbilityChoicesResult,
   ConditionsResult,
@@ -58,6 +60,8 @@ import type {
   UpdateClassLevelInput,
   UpdateItemInput,
   UpdateProficienciesInput,
+  SpellAugmentPick,
+  UnlearnSpellResult,
   UpdateVitalsInput,
   User,
   VitalsResult,
@@ -197,6 +201,28 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
        *  classe, escolhas de origem/raça, caminhos). Sending none is a 400. */
       updateAbilityChoices: (id: number, input: UpdateAbilityChoicesInput) =>
         request<AbilityChoicesResult>(`/characters/${id}/abilities`, patch(input)),
+      /** Adds a spell to the grimoire, unprepared. 409 if already known. */
+      learnSpell: (id: number, catalogSpellId: string) =>
+        request<CharacterSpell>(`/characters/${id}/spells`, json({ catalogSpellId })),
+      unlearnSpell: (id: number, catalogSpellId: string) =>
+        request<UnlearnSpellResult>(
+          `/characters/${id}/spells/${encodeURIComponent(catalogSpellId)}`,
+          del,
+        ),
+      /** 404 (not 400) when the spell isn't learned, so the UI can say
+       *  "aprenda primeiro" instead of a generic failure. */
+      setSpellPrepared: (id: number, catalogSpellId: string, prepared: boolean) =>
+        request<CharacterSpell>(
+          `/characters/${id}/spells/${encodeURIComponent(catalogSpellId)}/prepared`,
+          patch({ prepared }),
+        ),
+      /** Answers a DELTA (new PM), not the character. The server re-validates
+       *  learned/prepared/augments and the per-spell PM limit. */
+      castSpell: (id: number, catalogSpellId: string, augments: SpellAugmentPick[] = []) =>
+        request<CastSpellResult>(
+          `/characters/${id}/spells/${encodeURIComponent(catalogSpellId)}/cast`,
+          json({ augments }),
+        ),
       /** Replaces the active book conditions (caído, atordoado…, p394-395). */
       updateConditions: (id: number, activeConditions: ConditionId[]) =>
         request<ConditionsResult>(
