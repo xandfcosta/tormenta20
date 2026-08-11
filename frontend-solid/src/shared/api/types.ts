@@ -222,6 +222,47 @@ export type CreateSessionInput = {
   notes?: string
 }
 
+// --- PV temporários (contrato do POST :id/damage e :id/active-effects) ---
+
+export type DisplacedPool = { effectId: number; removed: boolean }
+
+/** Temp-PV apply outcome: the upserted pool row + what it displaced. */
+export type PoolApplied = { effect: ActiveEffect; displaced: DisplacedPool[] }
+
+/** Vale-o-maior no-op: an existing pool was bigger or equal; nothing written. */
+export type PoolSuperseded = {
+  superseded: true
+  keptEffectId: number
+  keptAmount: number
+}
+
+/** `manualTempHp: 0` cleared the manual pool. */
+export type ManualPoolCleared = { cleared: true; removedEffectIds: number[] }
+
+/** POST :id/active-effects — spell buffs / verbatim power grants return the
+ *  plain ActiveEffect row; temp-PV pool paths (temp-hp grants, manualTempHp)
+ *  return one of the pool outcomes. */
+export type ApplyEffectResult =
+  | ActiveEffect
+  | PoolApplied
+  | PoolSuperseded
+  | ManualPoolCleared
+
+/** One drained pool from POST :id/damage. `removed` rows are gone; kept rows
+ *  carry `newAmount` (0 for an emptied mixed buff, partial otherwise). */
+export type DamageDrainStep = {
+  effectId: number
+  newAmount: number
+  removed: boolean
+}
+
+/** POST :id/damage — atomic temp-first routing result (F2). */
+export type ApplyDamageResult = {
+  hpCurrent: number
+  tempHpRemaining: number
+  drained: DamageDrainStep[]
+}
+
 // --- computed sheet -----------------------------------------------------------
 
 import type { RaceDefinition } from '@tormenta20/t20-data'
