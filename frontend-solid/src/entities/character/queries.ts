@@ -18,3 +18,10 @@ export const characterQueryOptions = (id: number) =>
     queryKey: ['characters', id] as const,
     queryFn: () => api.characters.get(id),
   })
+
+/** The character plus its server-computed sheet (defense, attribute totals). */
+export const characterSheetQueryOptions = (id: number) =>
+  queryOptions({
+    queryKey: ['characters', id, 'sheet'] as const,
+    queryFn: () => api.characters.getSheet(id),
+  })

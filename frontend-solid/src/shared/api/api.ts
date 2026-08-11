@@ -12,7 +12,9 @@ import type {
   CampaignMember,
   Character,
   CharacterOptions,
+  ComputedSheetV2,
   Credentials,
+  RaceDefinition,
   Session,
   User,
 } from './types'
@@ -92,6 +94,12 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
       get: (id: number) => request<Character>(`/characters/${id}`),
       /** The creation wizard's pick lists (races, classes, origins…). Static. */
       options: () => request<CharacterOptions>('/characters/options'),
+      /** The server-computed sheet (defense, attribute totals, perícias…). */
+      getSheet: (id: number) => request<ComputedSheetV2>(`/characters/${id}/sheet`),
+    },
+    catalog: {
+      /** Race definitions (innate abilities). Static rulebook reference. */
+      raceDefs: () => request<RaceDefinition[]>('/catalog/race-defs'),
     },
     campaigns: {
       list: () => request<Campaign[]>('/campaigns'),

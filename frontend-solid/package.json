@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@kobalte/core": "^0.13.13",
+    "@tanstack/match-sorter-utils": "^8.19.4",
     "@tanstack/solid-query": "^5.100.9",
     "@tanstack/solid-router": "^1.169.2",
     "@tormenta20/t20-data": "workspace:*",

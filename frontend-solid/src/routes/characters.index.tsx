@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/solid-router'
-import { PendingScene } from '@/pages/pending-scene'
+import { CharactersListPage } from '@/pages/characters/character-list-page'
 import { requireSession } from './-guards'
 
 export const Route = createFileRoute('/characters/')({
   beforeLoad: requireSession,
-  component: () => <PendingScene title="Personagens" issue="ALE-70" />,
+  component: CharactersListPage,
 })

@@ -186,3 +186,17 @@ export type Session = {
   createdAt: string
   updatedAt: string
 }
+
+// --- computed sheet -----------------------------------------------------------
+
+import type { RaceDefinition } from '@tormenta20/t20-data'
+import type { ComputedSheetV2 } from '@/shared/lib/computed-sheet-v2'
+
+export type { RaceDefinition, ComputedSheetV2 }
+
+/**
+ * GET /characters/:id/sheet returns the **flat `ComputedSheetV2`** the Go
+ * engine produces — NOT `Character & { computed }`, which is the pre-cutover
+ * Nest shape the React app still types it as (and crashes on: see ALE-77).
+ * Verified against the running backend.
+ */
