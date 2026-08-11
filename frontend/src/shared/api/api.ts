@@ -362,7 +362,12 @@ import type { ComputedSheet } from '@tormenta20/t20-data'
 
 export type { ComputedSheet }
 
-export type CharacterWithComputed = Character & { computed: ComputedSheet }
+/**
+ * GET /characters/:id/sheet returns the flat `ComputedSheetV2` the Go engine
+ * produces — NOT `Character & { computed }`, which was the pre-cutover Nest
+ * shape (ALE-77). The read-only sheet screens derive via WASM instead; this
+ * stays typed correctly for any non-WASM consumer.
+ */
 
 export type Campaign = {
   id: number
@@ -476,6 +481,8 @@ export type CampaignMembershipWithCampaign = {
     updatedAt: string
   }
 }
+
+import type { ComputedSheetV2 } from '@/shared/lib/computed-sheet-v2'
 
 const API_BASE = '/api'
 
@@ -645,7 +652,7 @@ export const api = {
         body: JSON.stringify(input),
       }),
     getSheet: (id: number) =>
-      request<CharacterWithComputed>(`/characters/${id}/sheet`),
+      request<ComputedSheetV2>(`/characters/${id}/sheet`),
     campaigns: (id: number) =>
       request<CampaignMembershipWithCampaign[]>(
         `/characters/${id}/campaigns`,
