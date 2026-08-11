@@ -75,25 +75,33 @@ export function CampaignBook(props: CampaignBookProps) {
           />
           {/* The turning leaf. Forward: FRONT = outgoing info (lifts on the
               right), BACK = incoming illustration (lands on the left). Backward
-              is the mirror (--rev). Spread only (sm+); phones switch instantly. */}
-          <Show when={turn()}>
+              is the mirror (--rev). Spread only (sm+); phones switch instantly.
+
+              `keyed` is load-bearing, not a style choice: an unkeyed Show only
+              tracks truthiness, so a turn starting right as the previous one
+              ends would REUSE this element — the CSS animation, already
+              finished on that node, never replays, `animationend` never fires,
+              `finishTurn` is never called and the machine wedges with a leaf
+              frozen over the spine. Keyed by the turn, every turn gets a fresh
+              element and therefore a fresh animation. */}
+          <Show when={turn()} keyed>
             {(activeTurn) => (
               <div
                 class={cn(
                   'grimorio-leaf hidden sm:block',
-                  activeTurn().dir === -1 && 'grimorio-leaf--rev',
+                  activeTurn.dir === -1 && 'grimorio-leaf--rev',
                 )}
-                style={{ '--grimorio-turn': activeTurn().fast ? '0.22s' : '0.45s' }}
+                style={{ '--grimorio-turn': activeTurn.fast ? '0.22s' : '0.45s' }}
                 on:animationend={onAnimationEnd}
               >
                 <div class="grimorio-leaf-face grimorio-leaf-front">
                   <Show
-                    when={activeTurn().dir === 1}
-                    fallback={<ArtPage name={activeTurn().from.campaign.name} class="h-full w-full" />}
+                    when={activeTurn.dir === 1}
+                    fallback={<ArtPage name={activeTurn.from.campaign.name} class="h-full w-full" />}
                   >
                     <InfoPage
-                      campaign={activeTurn().from.campaign}
-                      isLive={activeTurn().from.isLive}
+                      campaign={activeTurn.from.campaign}
+                      isLive={activeTurn.from.isLive}
                       onOpen={NOOP}
                       onResume={NOOP}
                     />
@@ -102,17 +110,17 @@ export function CampaignBook(props: CampaignBookProps) {
                 </div>
                 <div class="grimorio-leaf-face grimorio-leaf-back">
                   <Show
-                    when={activeTurn().dir === 1}
+                    when={activeTurn.dir === 1}
                     fallback={
                       <InfoPage
-                        campaign={activeTurn().to.campaign}
-                        isLive={activeTurn().to.isLive}
+                        campaign={activeTurn.to.campaign}
+                        isLive={activeTurn.to.isLive}
                         onOpen={NOOP}
                         onResume={NOOP}
                       />
                     }
                   >
-                    <ArtPage name={activeTurn().to.campaign.name} class="h-full w-full" />
+                    <ArtPage name={activeTurn.to.campaign.name} class="h-full w-full" />
                   </Show>
                   <span aria-hidden="true" class="grimorio-leaf-shade" />
                 </div>
