@@ -11,6 +11,11 @@ const CAMPAIGN = 'Snapshot Test ALE-33' // the seed chronicle with a live sessio
 test.describe('Sessão ao vivo', () => {
   test('Crônicas → campanha → continuar a sessão (realtime conectado)', async ({ page }) => {
     await page.goto('/campaigns')
+    // O estado "ao vivo" chega DEPOIS da lista (fan-out separado de sessões) e
+    // troca os botões do livro. Esperar ele assentar antes de clicar — senão a
+    // ação some debaixo do cursor e o clique cai no botão vizinho (ALE-78).
+    await expect(page.getByRole('button', { name: /^Continuar a sessão/ })).toBeVisible()
+
     await page.getByRole('button', { name: /^Abrir crônica/ }).click()
     await expect(page.getByRole('heading', { name: CAMPAIGN, level: 1 })).toBeVisible()
 

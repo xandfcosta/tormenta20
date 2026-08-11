@@ -5,9 +5,9 @@ import { Button } from '@/shared/ui/button'
 import { Badge } from '@/shared/ui/badge'
 import { PageChrome } from '@/shared/ui/page-chrome'
 import { Skeleton } from '@/shared/ui/skeleton'
-import { characterSheetQueryOptions } from '@/entities/character/queries'
+import { characterQueryOptions } from '@/entities/character/queries'
+import { computedSheetV1For } from '@/entities/character/sheet-v1'
 import { ComputedSheetCards } from '@/features/character-sheet/computed-sheet'
-import type { CharacterWithComputed } from '@/shared/api/api'
 
 const routeApi = getRouteApi('/characters/$id/sheet')
 
@@ -24,7 +24,7 @@ const routeApi = getRouteApi('/characters/$id/sheet')
 
 export function CharacterSheetPage() {
   const { id } = routeApi.useParams()
-  const query = useQuery(characterSheetQueryOptions(Number(id)))
+  const query = useQuery(characterQueryOptions(Number(id)))
 
   if (query.isLoading)
     return (
@@ -44,7 +44,9 @@ export function CharacterSheetPage() {
     )
   if (!query.data) return null
 
-  const { computed } = query.data as CharacterWithComputed
+  // Derived here (WASM, same Go engine) — the /sheet endpoint returns a
+  // different payload than these cards read (ALE-77).
+  const computed = computedSheetV1For(query.data)
 
   return (
     <PageChrome className="space-y-4">

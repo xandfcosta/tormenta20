@@ -8,8 +8,9 @@ import {
 } from '@/shared/ui/sheet'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { Badge } from '@/shared/ui/badge'
-import { characterSheetQueryOptions } from '@/entities/character/queries'
-import type { CharacterWithComputed, ComputedSheet } from '@/shared/api/api'
+import { characterQueryOptions } from '@/entities/character/queries'
+import { computedSheetV1For } from '@/entities/character/sheet-v1'
+import type { ComputedSheet } from '@/shared/api/api'
 
 const ATTR_LABELS: Record<string, string> = {
   strength: 'For',
@@ -40,18 +41,20 @@ export function CombatantDrawer({
 }) {
   const open = characterId !== null
   const query = useQuery({
-    ...characterSheetQueryOptions(characterId ?? 0),
+    ...characterQueryOptions(characterId ?? 0),
     enabled: open,
   })
-  const data = query.data as CharacterWithComputed | undefined
+  const character = query.data
+  // Derived via WASM (same Go engine) — see ALE-77.
+  const computed = character ? computedSheetV1For(character) : undefined
 
   return (
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
       <SheetContent className="w-full overflow-y-auto sm:max-w-md">
         <SheetHeader>
-          <SheetTitle>{data?.name ?? 'Combatente'}</SheetTitle>
+          <SheetTitle>{character?.name ?? 'Combatente'}</SheetTitle>
           <SheetDescription>
-            {data ? `Nível ${data.computed.level}` : 'Carregando ficha…'}
+            {computed ? `Nível ${computed.level}` : 'Carregando ficha…'}
           </SheetDescription>
         </SheetHeader>
 
@@ -61,7 +64,7 @@ export function CombatantDrawer({
             <Skeleton className="h-24 w-full" />
           </div>
         )}
-        {data && <StatPeek computed={data.computed} />}
+        {computed && <StatPeek computed={computed} />}
       </SheetContent>
     </Sheet>
   )
