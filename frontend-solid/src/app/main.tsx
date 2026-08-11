@@ -5,6 +5,7 @@ import { render } from 'solid-js/web'
 import { AuthProvider } from '@/shared/stores/auth-context'
 import { ConditionalsProvider } from '@/shared/stores/conditionals-context'
 import { PowerUsesProvider } from '@/shared/stores/power-uses-context'
+import { StanceActivationProvider } from '@/shared/stores/stance-activation-context'
 import { UiProvider } from '@/shared/stores/ui-context'
 import '@/index.css'
 import { routeTree } from '../routeTree.gen'
@@ -28,7 +29,9 @@ render(
         <AuthProvider>
           <ConditionalsProvider>
             <PowerUsesProvider>
-              <RouterProvider router={router} />
+              <StanceActivationProvider>
+                <RouterProvider router={router} />
+              </StanceActivationProvider>
             </PowerUsesProvider>
           </ConditionalsProvider>
         </AuthProvider>

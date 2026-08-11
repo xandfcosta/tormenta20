@@ -38,6 +38,7 @@ import type {
   CharacterItem,
   CharacterOptions,
   ClassLevelResult,
+  AbilityChoicesResult,
   ConditionsResult,
   ConsumeItemInput,
   ConsumeItemResult,
@@ -53,6 +54,7 @@ import type {
   Session,
   UpdateCampaignInput,
   UpdateExpertiseInput,
+  UpdateAbilityChoicesInput,
   UpdateClassLevelInput,
   UpdateItemInput,
   UpdateProficienciesInput,
@@ -191,6 +193,10 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
         request<EffectsClearedResult>(`/characters/${id}/end-scene`, { method: 'POST' }),
       endDay: (id: number) =>
         request<EffectsClearedResult>(`/characters/${id}/end-day`, { method: 'POST' }),
+      /** Patches ANY SUBSET of the five ability-choice blobs (poderes de
+       *  classe, escolhas de origem/raça, caminhos). Sending none is a 400. */
+      updateAbilityChoices: (id: number, input: UpdateAbilityChoicesInput) =>
+        request<AbilityChoicesResult>(`/characters/${id}/abilities`, patch(input)),
       /** Replaces the active book conditions (caído, atordoado…, p394-395). */
       updateConditions: (id: number, activeConditions: ConditionId[]) =>
         request<ConditionsResult>(

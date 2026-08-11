@@ -6,7 +6,7 @@
  * Type-only imports from `@tormenta20/t20-data` erase at compile, so no catalog
  * DATA rides in the bundle — it is fetched from /catalog and cached.
  */
-import type { AttributeKey } from '@tormenta20/t20-data'
+import type { AttributeKey, ClassChoices } from '@tormenta20/t20-data'
 
 export type { AttributeKey }
 
@@ -369,6 +369,28 @@ export type EffectsClearedResult = {
 /** PATCH :id/conditions — replaces the whole set; the server validates every id
  *  against the book catalog (p394-395) and echoes the stored JSON blob. */
 export type ConditionsResult = { activeConditions: string }
+
+/**
+ * PATCH :id/abilities — patches ANY SUBSET of the five ability-choice blobs;
+ * omitted fields are left alone, and sending none is a 400. Verified against
+ * `api/character_abilities.go`.
+ */
+export type UpdateAbilityChoicesInput = {
+  raceAbilityChoices?: string[]
+  originChoices?: string[]
+  classPowers?: string[]
+  classChoices?: ClassChoices
+  powerChoices?: Record<string, string[]>
+}
+
+/** The server echoes back ONLY the blobs it wrote, each already JSON-encoded. */
+export type AbilityChoicesResult = {
+  raceAbilityChoices?: string
+  originChoices?: string
+  classPowers?: string
+  classChoices?: string
+  powerChoices?: string
+}
 
 // --- computed sheet -----------------------------------------------------------
 
