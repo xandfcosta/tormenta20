@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/solid-query'
 import { Link, useNavigate } from '@tanstack/solid-router'
 import { Search } from 'lucide-solid'
 import { Show, createMemo, createSignal } from 'solid-js'
-import { raceDefsQueryOptions } from '@/entities/catalog/queries'
+import { raceDefsCatalogQueryOptions } from '@/entities/catalog/queries'
 import { charactersQueryOptions, characterSheetQueryOptions } from '@/entities/character/queries'
 import { CharacterFilmstrip } from '@/features/character-select/character-filmstrip'
 import { CharacterStage } from '@/features/character-select/character-stage'
@@ -42,7 +42,7 @@ export function CharactersListPage() {
   const ui = useUi()
   const sfx = createSfx(ui)
   const characters = useQuery(() => charactersQueryOptions)
-  const raceDefs = useQuery(() => raceDefsQueryOptions)
+  const raceDefs = useQuery(() => raceDefsCatalogQueryOptions)
 
   const [selectedId, setSelectedId] = createSignal<number | null>(null)
   const [dossierOpen, setDossierOpen] = createSignal(false)

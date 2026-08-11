@@ -33,6 +33,17 @@ export type CharacterExpertise = {
   custom: boolean
 }
 
+export type CreateExpertiseInput = {
+  name: string
+  attribute: AttributeKey
+}
+
+export type UpdateExpertiseInput = {
+  name: string
+  attribute?: AttributeKey
+  trained?: boolean
+}
+
 export type EquippedSlot = 'vested' | 'wielded' | 'wielded2'
 
 export type CharacterItem = {

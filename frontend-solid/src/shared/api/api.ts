@@ -7,6 +7,23 @@
  * own mutations when it lands, so the client never gets ahead of its consumers.
  */
 import type {
+  ActivationSpec,
+  CatalogItem,
+  CatalogSpell,
+  ClassPower,
+  Condition,
+  ConditionId,
+  Deus,
+  GeneralPower,
+  GrantedPower,
+  GrantedPowerOption,
+  Origem,
+  OriginDefinition,
+  Raca,
+  TormentaPower,
+  TormentaPowerId,
+} from '@tormenta20/t20-data'
+import type {
   AddMemberInput,
   AuthUser,
   Campaign,
@@ -14,14 +31,17 @@ import type {
   CampaignInviteToken,
   CampaignMember,
   Character,
+  CharacterExpertise,
   CharacterOptions,
   ComputedSheetV2,
   CreateCampaignInput,
+  CreateExpertiseInput,
   CreateSessionInput,
   Credentials,
   RaceDefinition,
   Session,
   UpdateCampaignInput,
+  UpdateExpertiseInput,
   User,
 } from './types'
 
@@ -107,10 +127,39 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
       options: () => request<CharacterOptions>('/characters/options'),
       /** The server-computed sheet (defense, attribute totals, perícias…). */
       getSheet: (id: number) => request<ComputedSheetV2>(`/characters/${id}/sheet`),
+      /** Trains/untrains a perícia or rekeys it to another attribute. */
+      updateExpertise: (id: number, input: UpdateExpertiseInput) =>
+        request<CharacterExpertise>(`/characters/${id}/expertises`, patch(input)),
+      /** A custom "ofício" the player invented. */
+      addExpertise: (id: number, input: CreateExpertiseInput) =>
+        request<CharacterExpertise>(`/characters/${id}/expertises`, json(input)),
+      deleteExpertise: (id: number, name: string) =>
+        request<{ name: string }>(
+          `/characters/${id}/expertises/${encodeURIComponent(name)}`,
+          del,
+        ),
     },
     catalog: {
-      /** Race definitions (innate abilities). Static rulebook reference. */
+      // Static rulebook reference; cached hard (staleTime ∞) and fetched instead
+      // of bundled — the front ships no catalog DATA
+      // (project_front_decouple_catalog).
+      spells: () => request<Record<string, CatalogSpell>>('/catalog/spells'),
+      items: () => request<CatalogItem[]>('/catalog/items'),
+      /** RaceDefinition catalog (innate abilities) — DISTINCT from `races`. */
       raceDefs: () => request<RaceDefinition[]>('/catalog/race-defs'),
+      origins: () => request<OriginDefinition[]>('/catalog/origins'),
+      classPowers: () => request<ClassPower[]>('/catalog/class-powers'),
+      generalPowers: () => request<GeneralPower[]>('/catalog/general-powers'),
+      deuses: () => request<Deus[]>('/catalog/deuses'),
+      grantedPowers: () => request<GrantedPower[]>('/catalog/granted-powers'),
+      /** racas.ts RACAS (movement/size/attr-mod) — DISTINCT from `raceDefs`. */
+      races: () => request<Record<string, Raca>>('/catalog/races'),
+      origens: () => request<Record<string, Origem>>('/catalog/origens'),
+      conditions: () => request<Record<ConditionId, Condition>>('/catalog/conditions'),
+      tormentaPowers: () =>
+        request<Record<TormentaPowerId, TormentaPower>>('/catalog/tormenta-powers'),
+      divinePowers: () => request<GrantedPowerOption[]>('/catalog/divine-powers'),
+      activations: () => request<ActivationSpec[]>('/catalog/activations'),
     },
     campaigns: {
       list: () => request<Campaign[]>('/campaigns'),

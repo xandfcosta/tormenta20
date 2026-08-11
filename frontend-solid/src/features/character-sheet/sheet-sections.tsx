@@ -3,6 +3,7 @@ import type { Component } from 'solid-js'
 import { grantedSpells } from '@/entities/character/granted-spells'
 import type { Character } from '@/shared/api/api'
 import { isCasterCharacter } from './is-caster'
+import { ExpertisesPanel } from './expertises-panel'
 import { PendingBlock } from './pending-block'
 
 /**
@@ -54,7 +55,7 @@ export const SHEET_PANELS: SheetSection[] = [
     value: 'expertises',
     label: 'Perícias',
     icon: ScrollText,
-    component: (props) => <PendingBlock title="Perícias" issue="ALE-83" character={props.character} />,
+    component: ExpertisesPanel,
   },
   {
     value: 'bag',
