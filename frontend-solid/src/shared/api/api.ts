@@ -1,24 +1,23 @@
 /**
  * HTTP client for the Go backend. Framework-agnostic on purpose — this file
- * ports ~1:1 from the React app (frontend/src/shared/api/api.ts) and carries no
- * Solid import. It grows one domain at a time as scenes are ported (ALE-63);
- * today it covers auth + users.
+ * carries no Solid import and ports ~1:1 from the React app. It grows one
+ * domain at a time as scenes are ported (ALE-63).
+ *
+ * Only the READ endpoints the query layer needs are here; each scene brings its
+ * own mutations when it lands, so the client never gets ahead of its consumers.
  */
+import type {
+  AuthUser,
+  Campaign,
+  CampaignMember,
+  Character,
+  CharacterOptions,
+  Credentials,
+  Session,
+  User,
+} from './types'
 
-export type AuthUser = {
-  id: number
-  email: string
-  name: string | null
-}
-
-export type User = {
-  id: number
-  email: string
-  name: string | null
-  createdAt: string
-}
-
-export type Credentials = { email: string; password: string }
+export * from './types'
 
 export type FieldErrorMap = Record<string, string[]>
 
@@ -87,6 +86,24 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
     },
     users: {
       list: () => request<User[]>('/users'),
+    },
+    characters: {
+      list: () => request<Character[]>('/characters'),
+      get: (id: number) => request<Character>(`/characters/${id}`),
+      /** The creation wizard's pick lists (races, classes, origins…). Static. */
+      options: () => request<CharacterOptions>('/characters/options'),
+    },
+    campaigns: {
+      list: () => request<Campaign[]>('/campaigns'),
+      get: (id: number) => request<Campaign>(`/campaigns/${id}`),
+    },
+    members: {
+      list: (campaignId: number) => request<CampaignMember[]>(`/campaigns/${campaignId}/members`),
+    },
+    sessions: {
+      list: (campaignId: number) => request<Session[]>(`/campaigns/${campaignId}/sessions`),
+      get: (campaignId: number, id: number) =>
+        request<Session>(`/campaigns/${campaignId}/sessions/${id}`),
     },
   }
 }

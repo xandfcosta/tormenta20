@@ -348,6 +348,9 @@ importers:
       '@tanstack/solid-router':
         specifier: ^1.169.2
         version: 1.170.24(solid-js@1.9.14)
+      '@tormenta20/t20-data':
+        specifier: workspace:*
+        version: link:../t20-data
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
