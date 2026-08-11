@@ -2,6 +2,8 @@ import { Backpack, BadgeCheck, BookOpen, ScrollText, ToggleRight, Zap } from 'lu
 import type { Component } from 'solid-js'
 import { grantedSpells } from '@/entities/character/granted-spells'
 import type { Character } from '@/shared/api/api'
+import { AbilitiesPanel } from './abilities-panel'
+import { AbilitiesPendingBadge } from './abilities-pending-badge'
 import { BagPanel } from './bag-panel'
 import { EffectsCountBadge } from './effects-count-badge'
 import { EffectsPanel } from './effects-panel'
@@ -86,7 +88,8 @@ export const SHEET_PANELS: SheetSection[] = [
     value: 'abilities',
     label: 'Poderes',
     icon: Zap,
-    component: (props) => <PendingBlock title="Poderes" issue="ALE-87" character={props.character} />,
+    badge: AbilitiesPendingBadge,
+    component: AbilitiesPanel,
   },
   {
     value: 'spells',
