@@ -1,1 +1,3807 @@
-[{"id":"class.barbaro.alma-de-bronze","name":"Alma de Bronze","kind":"triggered-passive","action":"passivo","pmCost":0,"uses":null,"requiresFlag":"furia","bookPage":41,"grant":{"kind":"temp-hp","scope":"scene","attribute":"strength"}},{"id":"class.barbaro.aumento-de-atributo","name":"Aumento de Atributo","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":41},{"id":"class.barbaro.brado-assustador","name":"Brado Assustador","kind":"instant","action":"movimento","pmCost":1,"uses":"cena","bookPage":41},{"id":"class.barbaro.critico-brutal","name":"Crítico Brutal","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":41},{"id":"class.barbaro.destruidor","name":"Destruidor","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":41},{"id":"class.barbaro.espirito-inquebravel","name":"Espírito Inquebrável","kind":"triggered-passive","action":"passivo","pmCost":0,"uses":null,"requiresFlag":"furia","bookPage":41},{"id":"class.barbaro.esquiva-sobrenatural","name":"Esquiva Sobrenatural","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":41},{"id":"class.barbaro.forca-indomavel","name":"Força Indomável","kind":"instant","action":"livre","pmCost":1,"uses":null,"bookPage":41},{"id":"class.barbaro.frenesi","name":"Frenesi","kind":"instant","action":"livre","pmCost":2,"uses":"rodada","requiresFlag":"furia","bookPage":41},{"id":"class.barbaro.furia-da-savana","name":"Fúria da Savana","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":42},{"id":"class.barbaro.furia-raivosa","name":"Fúria Raivosa","kind":"instant","action":"livre","pmCost":1,"uses":null,"requiresFlag":"furia","bookPage":42},{"id":"class.barbaro.golpe-poderoso","name":"Golpe Poderoso","kind":"instant","action":"livre","pmCost":1,"uses":null,"bookPage":42},{"id":"class.barbaro.impeto","name":"Ímpeto","kind":"instant","action":"livre","pmCost":1,"uses":null,"bookPage":42},{"id":"class.barbaro.investida-imprudente","name":"Investida Imprudente","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":42},{"id":"class.barbaro.pele-de-aco","name":"Pele de Aço","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":42},{"id":"class.barbaro.pele-de-ferro","name":"Pele de Ferro","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":42},{"id":"class.barbaro.sangue-dos-inimigos","name":"Sangue dos Inimigos","kind":"triggered-passive","action":"passivo","pmCost":0,"uses":null,"requiresFlag":"furia","bookPage":42},{"id":"class.barbaro.supersticao","name":"Superstição","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":42},{"id":"class.barbaro.totem-espiritual","name":"Totem Espiritual","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":42},{"id":"class.barbaro.vigor-primal","name":"Vigor Primal","kind":"instant","action":"movimento","pmCost":"variavel","uses":null,"bookPage":42},{"id":"class.bardo.arte-magica","name":"Arte Mágica","kind":"triggered-passive","action":"passivo","pmCost":0,"uses":null,"requiresFlag":"inspiracao","bookPage":44},{"id":"class.bardo.aumentar-repertorio","name":"Aumentar Repertório","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":44},{"id":"class.bardo.aumento-de-atributo","name":"Aumento de Atributo","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":44},{"id":"class.bardo.danca-das-laminas","name":"Dança das Lâminas","kind":"instant","action":"livre","pmCost":1,"uses":null,"bookPage":44},{"id":"class.bardo.esgrima-magica","name":"Esgrima Mágica","kind":"triggered-passive","action":"passivo","pmCost":0,"uses":null,"requiresFlag":"inspiracao","bookPage":44},{"id":"class.bardo.estrelato","name":"Estrelato","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":44},{"id":"class.bardo.fascinar-em-massa","name":"Fascinar em Massa","kind":"passive","action":"passivo","pmCost":2,"uses":null,"bookPage":44},{"id":"class.bardo.golpe-elemental","name":"Golpe Elemental","kind":"instant","action":"livre","pmCost":1,"uses":null,"requiresFlag":"inspiracao","bookPage":44},{"id":"class.bardo.golpe-magico","name":"Golpe Mágico","kind":"triggered-passive","action":"passivo","pmCost":0,"uses":null,"requiresFlag":"inspiracao","bookPage":44},{"id":"class.bardo.inspiracao-marcial","name":"Inspiração Marcial","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":44},{"id":"class.bardo.lendas-e-historias","name":"Lendas e Histórias","kind":"instant","action":"livre","pmCost":1,"uses":null,"bookPage":44},{"id":"class.bardo.manipular","name":"Manipular","kind":"instant","action":"padrao","pmCost":1,"uses":null,"bookPage":45},{"id":"class.bardo.manipular-em-massa","name":"Manipular em Massa","kind":"passive","action":"passivo","pmCost":2,"uses":null,"bookPage":45},{"id":"class.bardo.mestre-dos-sussurros","name":"Mestre dos Sussurros","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":45},{"id":"class.bardo.musica-balada-fascinante","name":"Música: Balada Fascinante","kind":"instant","action":"padrao","pmCost":1,"uses":null,"bookPage":45},{"id":"class.bardo.musica-cancao-assustadora","name":"Música: Canção Assustadora","kind":"instant","action":"padrao","pmCost":1,"uses":null,"bookPage":45},{"id":"class.bardo.musica-melodia-curativa","name":"Música: Melodia Curativa","kind":"instant","action":"padrao","pmCost":1,"uses":null,"bookPage":45},{"id":"class.bardo.musica-melodia-restauradora","name":"Música: Melodia Restauradora","kind":"passive","action":"passivo","pmCost":2,"uses":null,"bookPage":45},{"id":"class.bardo.parodia","name":"Paródia","kind":"instant","action":"reacao","pmCost":"variavel","uses":"rodada","bookPage":45},{"id":"class.bardo.prestidigitacao","name":"Prestidigitação","kind":"instant","action":"padrao","pmCost":"variavel","uses":null,"bookPage":45},{"id":"class.bucaneiro.abusar-dos-fracos","name":"Abusar dos Fracos","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":47},{"id":"class.bucaneiro.amigos-no-porto","name":"Amigos no Porto","kind":"passive","action":"passivo","pmCost":0,"uses":"dia","bookPage":47},{"id":"class.bucaneiro.aparar","name":"Aparar","kind":"instant","action":"reacao","pmCost":1,"uses":null,"bookPage":47},{"id":"class.bucaneiro.apostador","name":"Apostador","kind":"passive","action":"passivo","pmCost":0,"uses":"dia","bookPage":47},{"id":"class.bucaneiro.ataque-acrobatico","name":"Ataque Acrobático","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":47},{"id":"class.bucaneiro.aumento-de-atributo","name":"Aumento de Atributo","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":47},{"id":"class.bucaneiro.aventureiro-avido","name":"Aventureiro Ávido","kind":"instant","action":"livre","pmCost":5,"uses":"rodada","bookPage":47},{"id":"class.bucaneiro.bravata-audaz","name":"Bravata Audaz","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":47},{"id":"class.bucaneiro.bravata-imprudente","name":"Bravata Imprudente","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":47},{"id":"class.bucaneiro.en-garde","name":"En Garde","kind":"instant","action":"movimento","pmCost":1,"uses":"cena","bookPage":47,"grant":{"kind":"active-effect","scope":"scene","modifiers":[{"target":{"k":"defense"},"amount":2,"bonusType":"untyped","note":"En Garde"},{"target":{"k":"critRange"},"amount":2,"bonusType":"untyped","note":"En Garde","condition":{"c":"context","note":"com armas corpo a corpo leves ou ágeis"}}]}},{"id":"class.bucaneiro.esgrimista","name":"Esgrimista","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":48},{"id":"class.bucaneiro.flagelo-dos-mares","name":"Flagelo dos Mares","kind":"instant","action":"varia","pmCost":"variavel","uses":null,"bookPage":48},{"id":"class.bucaneiro.foliao","name":"Folião","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":48},{"id":"class.bucaneiro.grudar-o-cano","name":"Grudar o Cano","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":48},{"id":"class.bucaneiro.pernas-do-mar","name":"Pernas do Mar","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":48},{"id":"class.bucaneiro.pistoleiro","name":"Pistoleiro","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":48},{"id":"class.bucaneiro.presenca-paralisante","name":"Presença Paralisante","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":48},{"id":"class.bucaneiro.ripostar","name":"Ripostar","kind":"instant","action":"reacao","pmCost":1,"uses":null,"bookPage":48},{"id":"class.bucaneiro.touche","name":"Touché","kind":"instant","action":"livre","pmCost":2,"uses":null,"bookPage":48},{"id":"class.cacador.ambidestria","name":"Ambidestria","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":50},{"id":"class.cacador.armadilha-arataca","name":"Armadilha: Arataca","kind":"instant","action":"padrao","pmCost":0,"uses":null,"bookPage":50},{"id":"class.cacador.armadilha-espinhos","name":"Armadilha: Espinhos","kind":"instant","action":"padrao","pmCost":0,"uses":null,"bookPage":50},{"id":"class.cacador.armadilha-laco","name":"Armadilha: Laço","kind":"instant","action":"padrao","pmCost":0,"uses":null,"bookPage":50},{"id":"class.cacador.armadilha-rede","name":"Armadilha: Rede","kind":"instant","action":"padrao","pmCost":0,"uses":null,"bookPage":50},{"id":"class.cacador.armadilheiro","name":"Armadilheiro","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":50},{"id":"class.cacador.arqueiro","name":"Arqueiro","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":50},{"id":"class.cacador.aumento-de-atributo","name":"Aumento de Atributo","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":50},{"id":"class.cacador.bote","name":"Bote","kind":"instant","action":"livre","pmCost":1,"uses":null,"bookPage":50},{"id":"class.cacador.camuflagem","name":"Camuflagem","kind":"instant","action":"livre","pmCost":2,"uses":null,"bookPage":50},{"id":"class.cacador.chuva-de-laminas","name":"Chuva de Lâminas","kind":"instant","action":"livre","pmCost":2,"uses":"rodada","bookPage":50},{"id":"class.cacador.companheiro-animal","name":"Companheiro Animal","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":50},{"id":"class.cacador.elo-com-a-natureza","name":"Elo com a Natureza","kind":"instant","action":"varia","pmCost":"variavel","uses":null,"bookPage":50},{"id":"class.cacador.emboscar","name":"Emboscar","kind":"instant","action":"livre","pmCost":2,"uses":"rodada","bookPage":50},{"id":"class.cacador.empatia-selvagem","name":"Empatia Selvagem","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":50},{"id":"class.cacador.escaramuca","name":"Escaramuça","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":51},{"id":"class.cacador.escaramuca-superior","name":"Escaramuça Superior","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":51},{"id":"class.cacador.espreitar","name":"Espreitar","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":51},{"id":"class.cacador.ervas-curativas","name":"Ervas Curativas","kind":"instant","action":"completa","pmCost":"variavel","uses":null,"bookPage":51},{"id":"class.cacador.impeto","name":"Ímpeto","kind":"instant","action":"livre","pmCost":1,"uses":null,"bookPage":51},{"id":"class.cacador.inimigo-criatura","name":"Inimigo de (Criatura)","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":51},{"id":"class.cacador.olho-do-falcao","name":"Olho do Falcão","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":51},{"id":"class.cacador.ponto-fraco","name":"Ponto Fraco","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":51},{"id":"class.cavaleiro.armadura-da-honra","name":"Armadura da Honra","kind":"passive","action":"passivo","pmCost":0,"uses":"cena","bookPage":53,"grant":{"kind":"temp-hp","scope":"scene","attribute":"charisma"}},{"id":"class.cavaleiro.aumento-de-atributo","name":"Aumento de Atributo","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":53},{"id":"class.cavaleiro.autoridade-feudal","name":"Autoridade Feudal","kind":"instant","action":"varia","pmCost":2,"uses":null,"bookPage":53},{"id":"class.cavaleiro.desprezar-os-covardes","name":"Desprezar os Covardes","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":53},{"id":"class.cavaleiro.escudeiro","name":"Escudeiro","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":53},{"id":"class.cavaleiro.especializacao-em-armadura","name":"Especialização em Armadura","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":53},{"id":"class.cavaleiro.estandarte","name":"Estandarte","kind":"passive","action":"passivo","pmCost":0,"uses":"cena","bookPage":54},{"id":"class.cavaleiro.etiqueta","name":"Etiqueta","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":54},{"id":"class.cavaleiro.investida-destruidora","name":"Investida Destruidora","kind":"instant","action":"livre","pmCost":2,"uses":null,"bookPage":54},{"id":"class.cavaleiro.montaria-corajosa","name":"Montaria Corajosa","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":54},{"id":"class.cavaleiro.pajem","name":"Pajem","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":54},{"id":"class.cavaleiro.postura-ariete-implacavel","name":"Postura: Ariete Implacável","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":54},{"id":"class.cavaleiro.postura-castigo-de-ferro","name":"Postura: Castigo de Ferro","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":54},{"id":"class.cavaleiro.postura-foco-de-batalha","name":"Postura: Foco de Batalha","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":54},{"id":"class.cavaleiro.postura-muralha-intransponivel","name":"Postura: Muralha Intransponível","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":54},{"id":"class.cavaleiro.postura-provocacao-petulante","name":"Postura: Provocação Petulante","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":55},{"id":"class.cavaleiro.postura-torre-inabalavel","name":"Postura: Torre Inabalável","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":55},{"id":"class.cavaleiro.solidez","name":"Solidez","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":55},{"id":"class.cavaleiro.titulo","name":"Título","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":55},{"id":"class.cavaleiro.torre-armada","name":"Torre Armada","kind":"instant","action":"livre","pmCost":1,"uses":null,"bookPage":55},{"id":"class.cavaleiro.caminho-bastiao","name":"Caminho: Bastião","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":55},{"id":"class.cavaleiro.caminho-montaria","name":"Caminho: Montaria","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":55},{"id":"class.clerigo.abencoar-arma","name":"Abençoar Arma","kind":"instant","action":"movimento","pmCost":3,"uses":null,"bookPage":57},{"id":"class.clerigo.aumento-de-atributo","name":"Aumento de Atributo","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":57},{"id":"class.clerigo.autoridade-eclesiastica","name":"Autoridade Eclesiástica","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":57},{"id":"class.clerigo.canalizar-energia-positiva-negativa","name":"Canalizar Energia Positiva/Negativa","kind":"instant","action":"padrao","pmCost":"variavel","uses":null,"bookPage":57},{"id":"class.clerigo.canalizar-amplo","name":"Canalizar Amplo","kind":"passive","action":"passivo","pmCost":2,"uses":null,"bookPage":57},{"id":"class.clerigo.comunhao-vital","name":"Comunhão Vital","kind":"passive","action":"passivo","pmCost":2,"uses":null,"bookPage":57},{"id":"class.clerigo.conhecimento-magico","name":"Conhecimento Mágico","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":57},{"id":"class.clerigo.expulsar-comandar-mortos-vivos","name":"Expulsar/Comandar Mortos-Vivos","kind":"instant","action":"padrao","pmCost":3,"uses":null,"bookPage":57},{"id":"class.clerigo.liturgia-magica","name":"Liturgia Mágica","kind":"instant","action":"movimento","pmCost":0,"uses":null,"bookPage":57},{"id":"class.clerigo.magia-sagrada-profana","name":"Magia Sagrada/Profana","kind":"passive","action":"passivo","pmCost":1,"uses":null,"bookPage":57},{"id":"class.clerigo.mestre-celebrante","name":"Mestre Celebrante","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":57},{"id":"class.clerigo.missa-bencao-da-vida","name":"Missa: Bênção da Vida","kind":"instant","action":"varia","pmCost":1,"uses":null,"bookPage":58},{"id":"class.clerigo.missa-chamado-as-armas","name":"Missa: Chamado às Armas","kind":"instant","action":"varia","pmCost":1,"uses":null,"bookPage":58},{"id":"class.clerigo.missa-elevacao-do-espirito","name":"Missa: Elevação do Espírito","kind":"instant","action":"varia","pmCost":1,"uses":null,"bookPage":58},{"id":"class.clerigo.missa-escudo-divino","name":"Missa: Escudo Divino","kind":"instant","action":"varia","pmCost":1,"uses":null,"bookPage":58},{"id":"class.clerigo.missa-superar-as-limitacoes","name":"Missa: Superar as Limitações","kind":"instant","action":"varia","pmCost":1,"uses":null,"bookPage":58},{"id":"class.clerigo.prece-de-combate","name":"Prece de Combate","kind":"passive","action":"passivo","pmCost":2,"uses":null,"bookPage":58},{"id":"class.clerigo.simbolo-sagrado-energizado","name":"Símbolo Sagrado Energizado","kind":"instant","action":"movimento","pmCost":1,"uses":"cena","bookPage":58},{"id":"class.druida.aspecto-da-primavera","name":"Aspecto da Primavera","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":61},{"id":"class.druida.aspecto-do-verao","name":"Aspecto do Verão","kind":"instant","action":"livre","pmCost":1,"uses":"cena","bookPage":61},{"id":"class.druida.aspecto-do-outono","name":"Aspecto do Outono","kind":"instant","action":"livre","pmCost":1,"uses":null,"bookPage":61},{"id":"class.druida.aspecto-do-inverno","name":"Aspecto do Inverno","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":61},{"id":"class.druida.aumento-de-atributo","name":"Aumento de Atributo","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":61},{"id":"class.druida.companheiro-animal","name":"Companheiro Animal","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":61},{"id":"class.druida.companheiro-animal-aprimorado","name":"Companheiro Animal Aprimorado","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":61},{"id":"class.druida.companheiro-animal-lendario","name":"Companheiro Animal Lendário","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":62},{"id":"class.druida.companheiro-animal-magico","name":"Companheiro Animal Mágico","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":62},{"id":"class.druida.coracao-da-selva","name":"Coração da Selva","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":62},{"id":"class.druida.espirito-dos-equinocios","name":"Espírito dos Equinócios","kind":"instant","action":"livre","pmCost":4,"uses":"cena","bookPage":62},{"id":"class.druida.espirito-dos-solsticios","name":"Espírito dos Solstícios","kind":"passive","action":"passivo","pmCost":4,"uses":null,"bookPage":62},{"id":"class.druida.forca-dos-penhascos","name":"Força dos Penhascos","kind":"instant","action":"reacao","pmCost":"variavel","uses":null,"bookPage":62},{"id":"class.druida.forma-primal","name":"Forma Primal","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":62},{"id":"class.druida.forma-selvagem","name":"Forma Selvagem","kind":"instant","action":"completa","pmCost":3,"uses":null,"bookPage":62},{"id":"class.druida.forma-selvagem-aprimorada","name":"Forma Selvagem Aprimorada","kind":"instant","action":"completa","pmCost":6,"uses":null,"bookPage":62},{"id":"class.druida.forma-selvagem-superior","name":"Forma Selvagem Superior","kind":"instant","action":"completa","pmCost":10,"uses":null,"bookPage":62},{"id":"class.druida.liberdade-da-pradaria","name":"Liberdade da Pradaria","kind":"passive","action":"passivo","pmCost":1,"uses":null,"bookPage":63},{"id":"class.druida.magia-natural","name":"Magia Natural","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":63},{"id":"class.druida.presas-afiadas","name":"Presas Afiadas","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":63},{"id":"class.druida.segredos-da-natureza","name":"Segredos da Natureza","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":63},{"id":"class.druida.tranquilidade-dos-lagos","name":"Tranquilidade dos Lagos","kind":"instant","action":"reacao","pmCost":1,"uses":"rodada","bookPage":63},{"id":"class.guerreiro.ambidestria","name":"Ambidestria","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":65},{"id":"class.guerreiro.arqueiro","name":"Arqueiro","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":65},{"id":"class.guerreiro.ataque-reflexo","name":"Ataque Reflexo","kind":"instant","action":"reacao","pmCost":1,"uses":"rodada","bookPage":65},{"id":"class.guerreiro.aumento-de-atributo","name":"Aumento de Atributo","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":65},{"id":"class.guerreiro.bater-e-correr","name":"Bater e Correr","kind":"passive","action":"passivo","pmCost":2,"uses":null,"bookPage":65},{"id":"class.guerreiro.destruidor","name":"Destruidor","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":65},{"id":"class.guerreiro.esgrimista","name":"Esgrimista","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":65},{"id":"class.guerreiro.especializacao-em-arma","name":"Especialização em Arma","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":65},{"id":"class.guerreiro.especializacao-em-armadura","name":"Especialização em Armadura","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":65},{"id":"class.guerreiro.golpe-de-raspao","name":"Golpe de Raspão","kind":"instant","action":"reacao","pmCost":2,"uses":"rodada","bookPage":66},{"id":"class.guerreiro.golpe-demolidor","name":"Golpe Demolidor","kind":"instant","action":"livre","pmCost":2,"uses":null,"bookPage":66},{"id":"class.guerreiro.golpe-pessoal","name":"Golpe Pessoal","kind":"instant","action":"varia","pmCost":"variavel","uses":null,"bookPage":66},{"id":"class.guerreiro.impeto","name":"Ímpeto","kind":"instant","action":"livre","pmCost":1,"uses":null,"bookPage":66},{"id":"class.guerreiro.mestre-em-arma","name":"Mestre em Arma","kind":"passive","action":"passivo","pmCost":2,"uses":null,"bookPage":66},{"id":"class.guerreiro.planejamento-marcial","name":"Planejamento Marcial","kind":"instant","action":"varia","pmCost":3,"uses":"dia","bookPage":67},{"id":"class.guerreiro.romper-resistencias","name":"Romper Resistências","kind":"passive","action":"passivo","pmCost":1,"uses":null,"bookPage":67},{"id":"class.guerreiro.solidez","name":"Solidez","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":67},{"id":"class.guerreiro.tornado-de-dor","name":"Tornado de Dor","kind":"instant","action":"padrao","pmCost":2,"uses":null,"bookPage":67},{"id":"class.guerreiro.valentao","name":"Valentão","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":67},{"id":"class.inventor.agite-antes-de-usar","name":"Agite Antes de Usar","kind":"passive","action":"passivo","pmCost":"variavel","uses":null,"bookPage":68},{"id":"class.inventor.ajuste-de-mira","name":"Ajuste de Mira","kind":"instant","action":"padrao","pmCost":"variavel","uses":"cena","bookPage":68},{"id":"class.inventor.alquimista-de-batalha","name":"Alquimista de Batalha","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":68},{"id":"class.inventor.alquimista-iniciado","name":"Alquimista Iniciado","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":69},{"id":"class.inventor.armeiro","name":"Armeiro","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":69},{"id":"class.inventor.ativacao-rapida","name":"Ativação Rápida","kind":"passive","action":"passivo","pmCost":2,"uses":"rodada","bookPage":69},{"id":"class.inventor.aumento-de-atributo","name":"Aumento de Atributo","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":69},{"id":"class.inventor.automato","name":"Autômato","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":69},{"id":"class.inventor.automato-prototipado","name":"Autômato Prototipado","kind":"instant","action":"padrao","pmCost":2,"uses":null,"bookPage":69},{"id":"class.inventor.balistica","name":"Balística","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":69},{"id":"class.inventor.blindagem","name":"Blindagem","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":69},{"id":"class.inventor.cano-raiado","name":"Cano Raiado","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":69},{"id":"class.inventor.catalisador-instavel","name":"Catalisador Instável","kind":"instant","action":"completa","pmCost":3,"uses":null,"bookPage":69},{"id":"class.inventor.chutes-e-palavroes","name":"Chutes e Palavrões","kind":"instant","action":"livre","pmCost":1,"uses":"rodada","bookPage":70},{"id":"class.inventor.conhecimento-de-formulas","name":"Conhecimento de Fórmulas","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":70},{"id":"class.inventor.couraceiro","name":"Couraceiro","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":70},{"id":"class.inventor.engenhoqueiro","name":"Engenhoqueiro","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":70},{"id":"class.inventor.farmaceutico","name":"Farmacêutico","kind":"passive","action":"passivo","pmCost":"variavel","uses":null,"bookPage":70},{"id":"class.inventor.ferreiro","name":"Ferreiro","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":70},{"id":"class.inventor.granadeiro","name":"Granadeiro","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":70},{"id":"class.inventor.homunculo","name":"Homúnculo","kind":"passive","action":"passivo","pmCost":0,"uses":"cena","bookPage":70},{"id":"class.inventor.invencao-potente","name":"Invenção Potente","kind":"passive","action":"passivo","pmCost":1,"uses":null,"bookPage":70},{"id":"class.inventor.maestria-em-pericia","name":"Maestria em Perícia","kind":"instant","action":"livre","pmCost":1,"uses":null,"bookPage":70},{"id":"class.inventor.manutencao-eficiente","name":"Manutenção Eficiente","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":70},{"id":"class.inventor.mestre-alquimista","name":"Mestre Alquimista","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":71},{"id":"class.inventor.mestre-cuca","name":"Mestre Cuca","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":71},{"id":"class.inventor.mistura-fervilhante","name":"Mistura Fervilhante","kind":"passive","action":"passivo","pmCost":2,"uses":null,"bookPage":71},{"id":"class.inventor.oficina-de-campo","name":"Oficina de Campo","kind":"instant","action":"varia","pmCost":2,"uses":"dia","bookPage":71},{"id":"class.inventor.pedra-de-amolar","name":"Pedra de Amolar","kind":"instant","action":"movimento","pmCost":"variavel","uses":"cena","bookPage":71},{"id":"class.inventor.sintese-rapida","name":"Síntese Rápida","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":71},{"id":"class.ladino.assassinar","name":"Assassinar","kind":"instant","action":"movimento","pmCost":3,"uses":null,"bookPage":73},{"id":"class.ladino.aumento-de-atributo","name":"Aumento de Atributo","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":73},{"id":"class.ladino.contatos-no-submundo","name":"Contatos no Submundo","kind":"passive","action":"passivo","pmCost":2,"uses":null,"bookPage":73},{"id":"class.ladino.emboscar","name":"Emboscar","kind":"instant","action":"livre","pmCost":2,"uses":"rodada","bookPage":73},{"id":"class.ladino.escapista","name":"Escapista","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":73},{"id":"class.ladino.fuga-formidavel","name":"Fuga Formidável","kind":"instant","action":"completa","pmCost":1,"uses":"cena","bookPage":73},{"id":"class.ladino.gatuno","name":"Gatuno","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":73},{"id":"class.ladino.ladrao-arcano","name":"Ladrão Arcano","kind":"passive","action":"passivo","pmCost":"variavel","uses":"cena","bookPage":74},{"id":"class.ladino.mao-na-boca","name":"Mão na Boca","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":74},{"id":"class.ladino.maos-rapidas","name":"Mãos Rápidas","kind":"instant","action":"livre","pmCost":1,"uses":"rodada","bookPage":74},{"id":"class.ladino.mente-criminosa","name":"Mente Criminosa","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":74},{"id":"class.ladino.oportunismo","name":"Oportunismo","kind":"instant","action":"reacao","pmCost":2,"uses":"rodada","bookPage":74},{"id":"class.ladino.rolamento-defensivo","name":"Rolamento Defensivo","kind":"instant","action":"reacao","pmCost":2,"uses":null,"bookPage":74},{"id":"class.ladino.roubo-de-mana","name":"Roubo de Mana","kind":"passive","action":"passivo","pmCost":0,"uses":"cena","bookPage":74},{"id":"class.ladino.saqueador-de-tumbas","name":"Saqueador de Tumbas","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":74},{"id":"class.ladino.sombra","name":"Sombra","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":74},{"id":"class.ladino.truque-magico","name":"Truque Mágico","kind":"instant","action":"varia","pmCost":"variavel","uses":null,"bookPage":74},{"id":"class.ladino.velocidade-ladina","name":"Velocidade Ladina","kind":"instant","action":"livre","pmCost":2,"uses":"rodada","bookPage":74},{"id":"class.ladino.veneno-persistente","name":"Veneno Persistente","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":74},{"id":"class.ladino.veneno-potente","name":"Veneno Potente","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":74},{"id":"class.lutador.arma-improvisada","name":"Arma Improvisada","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":76},{"id":"class.lutador.ate-acertar","name":"Até Acertar","kind":"passive","action":"passivo","pmCost":0,"uses":"cena","bookPage":76},{"id":"class.lutador.aumento-de-atributo","name":"Aumento de Atributo","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":76},{"id":"class.lutador.bracos-calejados","name":"Braços Calejados","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":76},{"id":"class.lutador.cabecada","name":"Cabeçada","kind":"instant","action":"livre","pmCost":2,"uses":"cena","bookPage":76},{"id":"class.lutador.chave","name":"Chave","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":76},{"id":"class.lutador.confianca-dos-ringues","name":"Confiança dos Ringues","kind":"passive","action":"passivo","pmCost":0,"uses":"cena","bookPage":76},{"id":"class.lutador.convencido","name":"Convencido","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":77},{"id":"class.lutador.golpe-baixo","name":"Golpe Baixo","kind":"instant","action":"livre","pmCost":2,"uses":"cena","bookPage":77},{"id":"class.lutador.golpe-imprudente","name":"Golpe Imprudente","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":77},{"id":"class.lutador.imobilizacao","name":"Imobilização","kind":"instant","action":"completa","pmCost":0,"uses":null,"bookPage":77},{"id":"class.lutador.lingua-dos-becos","name":"Língua dos Becos","kind":"instant","action":"livre","pmCost":1,"uses":null,"bookPage":77},{"id":"class.lutador.lutador-de-chao","name":"Lutador de Chão","kind":"passive","action":"passivo","pmCost":1,"uses":null,"bookPage":77},{"id":"class.lutador.nome-na-arena","name":"Nome na Arena","kind":"instant","action":"completa","pmCost":0,"uses":"cena","bookPage":77},{"id":"class.lutador.punhos-de-adamante","name":"Punhos de Adamante","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":77},{"id":"class.lutador.rasteira","name":"Rasteira","kind":"instant","action":"livre","pmCost":2,"uses":null,"bookPage":77},{"id":"class.lutador.sarado","name":"Sarado","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":77},{"id":"class.lutador.sequencia-destruidora","name":"Sequência Destruidora","kind":"instant","action":"livre","pmCost":2,"uses":null,"bookPage":77},{"id":"class.lutador.trincado","name":"Trincado","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":77},{"id":"class.lutador.trocacao","name":"Trocação","kind":"instant","action":"livre","pmCost":"variavel","uses":null,"bookPage":77},{"id":"class.lutador.trocacao-tumultuosa","name":"Trocação Tumultuosa","kind":"instant","action":"livre","pmCost":2,"uses":null,"bookPage":77},{"id":"class.lutador.valentao","name":"Valentão","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":78},{"id":"class.lutador.voadora","name":"Voadora","kind":"instant","action":"livre","pmCost":2,"uses":null,"bookPage":78},{"id":"class.nobre.armadura-brilhante","name":"Armadura Brilhante","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":79},{"id":"class.nobre.aumento-de-atributo","name":"Aumento de Atributo","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":79},{"id":"class.nobre.autoridade-feudal","name":"Autoridade Feudal","kind":"instant","action":"varia","pmCost":2,"uses":null,"bookPage":79},{"id":"class.nobre.educacao-privilegiada","name":"Educação Privilegiada","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":79},{"id":"class.nobre.estrategista","name":"Estrategista","kind":"instant","action":"padrao","pmCost":"variavel","uses":null,"bookPage":79},{"id":"class.nobre.favor","name":"Favor","kind":"instant","action":"varia","pmCost":5,"uses":null,"bookPage":79},{"id":"class.nobre.general","name":"General","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":80},{"id":"class.nobre.grito-tiranico","name":"Grito Tirânico","kind":"instant","action":"completa","pmCost":0,"uses":null,"bookPage":80},{"id":"class.nobre.inspirar-confianca","name":"Inspirar Confiança","kind":"instant","action":"reacao","pmCost":2,"uses":null,"bookPage":80},{"id":"class.nobre.inspirar-gloria","name":"Inspirar Glória","kind":"instant","action":"livre","pmCost":5,"uses":"cena","bookPage":80},{"id":"class.nobre.jogo-da-corte","name":"Jogo da Corte","kind":"instant","action":"livre","pmCost":1,"uses":null,"bookPage":80},{"id":"class.nobre.liderar-pelo-exemplo","name":"Liderar pelo Exemplo","kind":"instant","action":"livre","pmCost":2,"uses":null,"bookPage":80},{"id":"class.nobre.lingua-de-ouro","name":"Língua de Ouro","kind":"instant","action":"padrao","pmCost":4,"uses":null,"bookPage":80},{"id":"class.nobre.lingua-de-prata","name":"Língua de Prata","kind":"instant","action":"livre","pmCost":2,"uses":null,"bookPage":80},{"id":"class.nobre.lingua-rapida","name":"Língua Rápida","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":80},{"id":"class.nobre.presenca-majestosa","name":"Presença Majestosa","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":80},{"id":"class.nobre.titulo","name":"Título","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":80},{"id":"class.nobre.voz-poderosa","name":"Voz Poderosa","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":80},{"id":"class.paladino.arma-sagrada","name":"Arma Sagrada","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":82},{"id":"class.paladino.aumento-de-atributo","name":"Aumento de Atributo","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":82},{"id":"class.paladino.aura-antimagia","name":"Aura Antimagia","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":82},{"id":"class.paladino.aura-ardente","name":"Aura Ardente","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":82},{"id":"class.paladino.aura-de-cura","name":"Aura de Cura","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":83},{"id":"class.paladino.aura-de-invencibilidade","name":"Aura de Invencibilidade","kind":"passive","action":"passivo","pmCost":0,"uses":"cena","bookPage":83},{"id":"class.paladino.aura-poderosa","name":"Aura Poderosa","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":83},{"id":"class.paladino.fulgor-divino","name":"Fulgor Divino","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":83},{"id":"class.paladino.julgamento-arrependimento","name":"Julgamento Divino: Arrependimento","kind":"instant","action":"livre","pmCost":2,"uses":null,"bookPage":83},{"id":"class.paladino.julgamento-autoridade","name":"Julgamento Divino: Autoridade","kind":"instant","action":"livre","pmCost":1,"uses":"cena","bookPage":83},{"id":"class.paladino.julgamento-coragem","name":"Julgamento Divino: Coragem","kind":"instant","action":"livre","pmCost":2,"uses":null,"bookPage":83},{"id":"class.paladino.julgamento-iluminacao","name":"Julgamento Divino: Iluminação","kind":"instant","action":"livre","pmCost":2,"uses":"cena","bookPage":83},{"id":"class.paladino.julgamento-justica","name":"Julgamento Divino: Justiça","kind":"instant","action":"livre","pmCost":2,"uses":null,"bookPage":83},{"id":"class.paladino.julgamento-libertacao","name":"Julgamento Divino: Libertação","kind":"instant","action":"livre","pmCost":5,"uses":null,"bookPage":84},{"id":"class.paladino.julgamento-salvacao","name":"Julgamento Divino: Salvação","kind":"instant","action":"livre","pmCost":2,"uses":null,"bookPage":84},{"id":"class.paladino.julgamento-vindicacao","name":"Julgamento Divino: Vindicação","kind":"instant","action":"livre","pmCost":2,"uses":null,"bookPage":84},{"id":"class.paladino.julgamento-zelo","name":"Julgamento Divino: Zelo","kind":"instant","action":"livre","pmCost":1,"uses":null,"bookPage":84},{"id":"class.paladino.orar","name":"Orar","kind":"instant","action":"varia","pmCost":"variavel","uses":null,"bookPage":84},{"id":"class.paladino.virtude-caridade","name":"Virtude Paladinesca: Caridade","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":84},{"id":"class.paladino.virtude-castidade","name":"Virtude Paladinesca: Castidade","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":84},{"id":"class.paladino.virtude-compaixao","name":"Virtude Paladinesca: Compaixão","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":84},{"id":"class.paladino.virtude-humildade","name":"Virtude Paladinesca: Humildade","kind":"instant","action":"completa","pmCost":0,"uses":"cena","bookPage":84},{"id":"class.paladino.virtude-temperanca","name":"Virtude Paladinesca: Temperança","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":84},{"id":"class.paladino.caminho-egide-sagrada","name":"Caminho: Égide Sagrada","kind":"instant","action":"movimento","pmCost":2,"uses":"cena","bookPage":85},{"id":"class.paladino.caminho-montaria-sagrada","name":"Caminho: Montaria Sagrada","kind":"instant","action":"movimento","pmCost":2,"uses":null,"bookPage":85},{"id":"race.dahllan.amiga-das-plantas","name":"Amiga das Plantas","kind":"instant","action":"padrao","pmCost":3,"uses":null,"bookPage":21},{"id":"race.dahllan.armadura-de-allihanna","name":"Armadura de Allihanna","kind":"instant","action":"movimento","pmCost":1,"uses":"cena","bookPage":21,"grant":{"kind":"active-effect","scope":"scene","modifiers":[{"target":{"k":"defense"},"amount":2,"bonusType":"untyped","note":"Armadura de Allihanna"}]}},{"id":"race.minotauro.chifres","name":"Chifres","kind":"instant","action":"livre","pmCost":1,"uses":"rodada","bookPage":25},{"id":"race.qareen.tatuagem-mistica","name":"Tatuagem Mística","kind":"instant","action":"padrao","pmCost":1,"uses":null,"bookPage":26},{"id":"race.hynne.sorte-salvadora","name":"Sorte Salvadora","kind":"instant","action":"reacao","pmCost":1,"uses":null,"bookPage":27},{"id":"race.kliren.engenhosidade","name":"Engenhosidade","kind":"instant","action":"livre","pmCost":2,"uses":null,"bookPage":28},{"id":"race.medusa.natureza-venenosa","name":"Natureza Venenosa","kind":"instant","action":"movimento","pmCost":1,"uses":null,"bookPage":28},{"id":"race.medusa.olhar-atordoante","name":"Olhar Atordoante","kind":"instant","action":"movimento","pmCost":1,"uses":"cena","bookPage":28},{"id":"race.sereia-tritao.cancao-dos-mares","name":"Canção dos Mares","kind":"instant","action":"padrao","pmCost":"variavel","uses":null,"bookPage":29},{"id":"race.silfide.asas-de-borboleta","name":"Asas de Borboleta","kind":"instant","action":"livre","pmCost":1,"uses":"rodada","bookPage":30},{"id":"race.silfide.magia-das-fadas","name":"Magia das Fadas","kind":"instant","action":"padrao","pmCost":"variavel","uses":null,"bookPage":30},{"id":"race.suraggel.luz-sagrada","name":"Luz Sagrada","kind":"instant","action":"padrao","pmCost":1,"uses":null,"bookPage":30},{"id":"race.suraggel.sombras-profanas","name":"Sombras Profanas","kind":"instant","action":"padrao","pmCost":1,"uses":null,"bookPage":30},{"id":"race.trog.mau-cheiro","name":"Mau Cheiro","kind":"instant","action":"padrao","pmCost":2,"uses":null,"bookPage":31},{"id":"race.trog.mordida","name":"Mordida","kind":"instant","action":"livre","pmCost":1,"uses":"rodada","bookPage":31},{"id":"origin.acolito.membro-da-igreja","name":"Membro da Igreja","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":85},{"id":"origin.amigo-dos-animais.amigo-especial","name":"Amigo Especial","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":85},{"id":"origin.amnesico.lembrancas-graduais","name":"Lembranças Graduais","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":86},{"id":"origin.aristocrata.sangue-azul","name":"Sangue Azul","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":86},{"id":"origin.artesao.frutos-do-trabalho","name":"Frutos do Trabalho","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":86},{"id":"origin.artista.dom-artistico","name":"Dom Artístico","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":87},{"id":"origin.assistente-de-laboratorio.esse-cheiro","name":"Esse Cheiro...","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":87},{"id":"origin.batedor.a-prova-de-tudo","name":"À Prova de Tudo","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":88},{"id":"origin.capanga.confissao","name":"Confissão","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":88},{"id":"origin.charlatao.alpinista-social","name":"Alpinista Social","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":88},{"id":"origin.circense.truque-de-magica","name":"Truque de Mágica","kind":"instant","action":"varia","pmCost":"variavel","uses":null,"bookPage":89},{"id":"origin.criminoso.punguista","name":"Punguista","kind":"passive","action":"passivo","pmCost":0,"uses":"dia","bookPage":89},{"id":"origin.curandeiro.medico-de-campo","name":"Médico de Campo","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":89},{"id":"origin.eremita.busca-interior","name":"Busca Interior","kind":"instant","action":"completa","pmCost":1,"uses":null,"bookPage":89},{"id":"origin.escravo.desejo-de-liberdade","name":"Desejo de Liberdade","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":89},{"id":"origin.estudioso.palpite-fundamentado","name":"Palpite Fundamentado","kind":"instant","action":"livre","pmCost":2,"uses":null,"bookPage":90},{"id":"origin.fazendeiro.agua-no-feijao","name":"Água no Feijão","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":90},{"id":"origin.forasteiro.cultura-exotica","name":"Cultura Exótica","kind":"instant","action":"livre","pmCost":1,"uses":null,"bookPage":90},{"id":"origin.gladiador.pao-e-circo","name":"Pão e Circo","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":90},{"id":"origin.guarda.detetive","name":"Detetive","kind":"instant","action":"livre","pmCost":1,"uses":"cena","bookPage":91},{"id":"origin.herdeiro.heranca","name":"Herança","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":91},{"id":"origin.heroi-camponês.coracao-heroico","name":"Coração Heroico","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":91,"grant":{"kind":"temp-hp","scope":"scene","attribute":"charisma"}},{"id":"origin.marujo.passagem-de-navio","name":"Passagem de Navio","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":92},{"id":"origin.mateiro.vendedor-de-carcacas","name":"Vendedor de Carcaças","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":92},{"id":"origin.membro-de-guilda.rede-de-contatos","name":"Rede de Contatos","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":92},{"id":"origin.mercador.negociacao","name":"Negociação","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":93},{"id":"origin.minerador.escavador","name":"Escavador","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":93},{"id":"origin.nomade.mochileiro","name":"Mochileiro","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":93},{"id":"origin.pivete.quebra-galho","name":"Quebra-Galho","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":93},{"id":"origin.refugiado.estoico","name":"Estoico","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":93},{"id":"origin.seguidor.antigo-mestre","name":"Antigo Mestre","kind":"passive","action":"passivo","pmCost":0,"uses":"cena","bookPage":94},{"id":"origin.selvagem.vida-rustica","name":"Vida Rústica","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":94},{"id":"origin.soldado.influencia-militar","name":"Influência Militar","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":94},{"id":"origin.taverneiro.gororoba","name":"Gororoba","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":94},{"id":"origin.trabalhador.atletico","name":"Atlético","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":95},{"id":"deus.aharadak.afinidade-com-a-tormenta","name":"Afinidade com a Tormenta","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":132},{"id":"deus.aharadak.extase-da-loucura","name":"Êxtase da Loucura","kind":"instant","action":"reacao","pmCost":0,"uses":null,"bookPage":132},{"id":"deus.aharadak.percepcao-temporal","name":"Percepção Temporal","kind":"instant","action":"livre","pmCost":3,"uses":"cena","bookPage":132},{"id":"deus.aharadak.rejeicao-divina","name":"Rejeição Divina","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":132},{"id":"deus.allihanna.compreender-os-ermos","name":"Compreender os Ermos","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":132},{"id":"deus.allihanna.dedo-verde","name":"Dedo Verde","kind":"instant","action":"varia","pmCost":"variavel","uses":null,"bookPage":132},{"id":"deus.allihanna.descanso-natural","name":"Descanso Natural","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":132},{"id":"deus.allihanna.voz-da-natureza","name":"Voz da Natureza","kind":"instant","action":"varia","pmCost":"variavel","uses":null,"bookPage":132},{"id":"deus.arsenal.conjurar-arma","name":"Conjurar Arma","kind":"instant","action":"padrao","pmCost":1,"uses":"cena","bookPage":132},{"id":"deus.arsenal.coragem-total","name":"Coragem Total","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":132},{"id":"deus.arsenal.fe-guerreira","name":"Fé Guerreira","kind":"passive","action":"passivo","pmCost":2,"uses":null,"bookPage":132},{"id":"deus.arsenal.sangue-de-ferro","name":"Sangue de Ferro","kind":"instant","action":"livre","pmCost":3,"uses":"cena","bookPage":132},{"id":"deus.azgher.espada-solar","name":"Espada Solar","kind":"instant","action":"livre","pmCost":1,"uses":"cena","bookPage":132},{"id":"deus.azgher.fulgor-solar","name":"Fulgor Solar","kind":"instant","action":"reacao","pmCost":1,"uses":"rodada","bookPage":132},{"id":"deus.azgher.habitante-do-deserto","name":"Habitante do Deserto","kind":"instant","action":"livre","pmCost":1,"uses":null,"bookPage":132},{"id":"deus.azgher.inimigo-de-tenebra","name":"Inimigo de Tenebra","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":132},{"id":"deus.hyninn.apostar-com-o-trapaceiro","name":"Apostar com o Trapaceiro","kind":"instant","action":"livre","pmCost":1,"uses":null,"bookPage":133},{"id":"deus.hyninn.farsa-do-fingidor","name":"Farsa do Fingidor","kind":"instant","action":"varia","pmCost":"variavel","uses":null,"bookPage":133},{"id":"deus.hyninn.forma-de-macaco","name":"Forma de Macaco","kind":"instant","action":"completa","pmCost":2,"uses":"cena","bookPage":133},{"id":"deus.hyninn.golpista-divino","name":"Golpista Divino","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":133},{"id":"deus.kallyadranoch.aura-de-medo","name":"Aura de Medo","kind":"instant","action":"livre","pmCost":2,"uses":"cena","bookPage":133},{"id":"deus.kallyadranoch.escamas-draconicas","name":"Escamas Dracônicas","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":133},{"id":"deus.kallyadranoch.presas-primordiais","name":"Presas Primordiais","kind":"instant","action":"livre","pmCost":1,"uses":"cena","bookPage":133},{"id":"deus.kallyadranoch.servos-do-dragao","name":"Servos do Dragão","kind":"instant","action":"completa","pmCost":2,"uses":"cena","bookPage":133},{"id":"deus.khalmyr.coragem-total","name":"Coragem Total","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":133},{"id":"deus.khalmyr.dom-da-verdade","name":"Dom da Verdade","kind":"instant","action":"livre","pmCost":2,"uses":"cena","bookPage":133,"grant":{"kind":"active-effect","scope":"scene","modifiers":[{"target":{"k":"expertise","name":"Intuição"},"amount":5,"bonusType":"untyped","note":"Dom da Verdade"},{"target":{"k":"expertise","name":"Percepção"},"amount":5,"bonusType":"untyped","note":"Dom da Verdade","condition":{"c":"context","note":"contra Enganação e Furtividade"}}]}},{"id":"deus.khalmyr.espada-justiceira","name":"Espada Justiceira","kind":"instant","action":"livre","pmCost":1,"uses":"cena","bookPage":133},{"id":"deus.khalmyr.reparar-injustica","name":"Reparar Injustiça","kind":"instant","action":"reacao","pmCost":2,"uses":"rodada","bookPage":133},{"id":"deus.lena.ataque-piedoso","name":"Ataque Piedoso","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":133},{"id":"deus.lena.aura-restauradora","name":"Aura Restauradora","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":133},{"id":"deus.lena.cura-gentil","name":"Cura Gentil","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":133},{"id":"deus.lena.curandeira-perfeita","name":"Curandeira Perfeita","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":133},{"id":"deus.lin-wu.coragem-total","name":"Coragem Total","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":134},{"id":"deus.lin-wu.kiai-divino","name":"Kiai Divino","kind":"instant","action":"livre","pmCost":3,"uses":"rodada","bookPage":134},{"id":"deus.lin-wu.mente-vazia","name":"Mente Vazia","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":134},{"id":"deus.lin-wu.tradicao-de-lin-wu","name":"Tradição de Lin-Wu","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":134},{"id":"deus.marah.aura-de-paz","name":"Aura de Paz","kind":"instant","action":"livre","pmCost":2,"uses":"cena","bookPage":134},{"id":"deus.marah.dom-da-esperanca","name":"Dom da Esperança","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":134},{"id":"deus.marah.palavras-de-bondade","name":"Palavras de Bondade","kind":"instant","action":"varia","pmCost":"variavel","uses":null,"bookPage":134},{"id":"deus.marah.talento-artistico","name":"Talento Artístico","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":134},{"id":"deus.megalokk.olhar-amedrontador","name":"Olhar Amedrontador","kind":"instant","action":"varia","pmCost":"variavel","uses":null,"bookPage":134},{"id":"deus.megalokk.presas-primordiais","name":"Presas Primordiais","kind":"instant","action":"livre","pmCost":1,"uses":"cena","bookPage":134},{"id":"deus.megalokk.urro-divino","name":"Urro Divino","kind":"instant","action":"livre","pmCost":1,"uses":null,"bookPage":134},{"id":"deus.megalokk.voz-dos-monstros","name":"Voz dos Monstros","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":134},{"id":"deus.nimb.extase-da-loucura","name":"Êxtase da Loucura","kind":"instant","action":"reacao","pmCost":0,"uses":null,"bookPage":134},{"id":"deus.nimb.poder-oculto","name":"Poder Oculto","kind":"instant","action":"movimento","pmCost":2,"uses":"cena","bookPage":134},{"id":"deus.nimb.sorte-dos-loucos","name":"Sorte dos Loucos","kind":"instant","action":"livre","pmCost":1,"uses":null,"bookPage":134},{"id":"deus.nimb.transmissao-da-loucura","name":"Transmissão da Loucura","kind":"instant","action":"varia","pmCost":"variavel","uses":null,"bookPage":134},{"id":"deus.oceano.anfibio","name":"Anfíbio","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":134},{"id":"deus.oceano.arsenal-das-profundezas","name":"Arsenal das Profundezas","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":134},{"id":"deus.oceano.mestre-dos-mares","name":"Mestre dos Mares","kind":"instant","action":"varia","pmCost":"variavel","uses":null,"bookPage":134},{"id":"deus.oceano.sopro-do-mar","name":"Sopro do Mar","kind":"instant","action":"padrao","pmCost":1,"uses":"rodada","bookPage":134},{"id":"deus.sszzaas.astucia-da-serpente","name":"Astúcia da Serpente","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":134},{"id":"deus.sszzaas.familiar-ofidico","name":"Familiar Ofídico","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":134},{"id":"deus.sszzaas.presas-venenosas","name":"Presas Venenosas","kind":"instant","action":"movimento","pmCost":1,"uses":"cena","bookPage":134},{"id":"deus.sszzaas.sangue-ofidico","name":"Sangue Ofídico","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":134},{"id":"deus.tanna-toh.conhecimento-enciclopedico","name":"Conhecimento Enciclopédico","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":135},{"id":"deus.tanna-toh.mente-analitica","name":"Mente Analítica","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":135},{"id":"deus.tanna-toh.pesquisa-abencoada","name":"Pesquisa Abençoada","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":135},{"id":"deus.tanna-toh.voz-da-civilizacao","name":"Voz da Civilização","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":135},{"id":"deus.tenebra.caricia-sombria","name":"Carícia Sombria","kind":"instant","action":"padrao","pmCost":1,"uses":"rodada","bookPage":135},{"id":"deus.tenebra.manto-da-penumbra","name":"Manto da Penumbra","kind":"instant","action":"varia","pmCost":"variavel","uses":null,"bookPage":135},{"id":"deus.tenebra.visao-nas-trevas","name":"Visão nas Trevas","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":135},{"id":"deus.tenebra.zumbificar","name":"Zumbificar","kind":"instant","action":"completa","pmCost":3,"uses":null,"bookPage":135},{"id":"deus.thwor.almejar-o-impossivel","name":"Almejar o Impossível","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":135},{"id":"deus.thwor.furia-divina","name":"Fúria Divina","kind":"instant","action":"livre","pmCost":2,"uses":"cena","bookPage":135},{"id":"deus.thwor.olhar-amedrontador","name":"Olhar Amedrontador","kind":"instant","action":"varia","pmCost":"variavel","uses":null,"bookPage":135},{"id":"deus.thwor.tropas-duyshidakk","name":"Tropas Duyshidakk","kind":"instant","action":"completa","pmCost":2,"uses":"cena","bookPage":135},{"id":"deus.thyatis.ataque-piedoso","name":"Ataque Piedoso","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":135},{"id":"deus.thyatis.dom-da-imortalidade","name":"Dom da Imortalidade","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":135},{"id":"deus.thyatis.dom-da-profecia","name":"Dom da Profecia","kind":"instant","action":"varia","pmCost":"variavel","uses":null,"bookPage":135},{"id":"deus.thyatis.dom-da-ressurreicao","name":"Dom da Ressurreição","kind":"instant","action":"completa","pmCost":"variavel","uses":"cena","bookPage":135},{"id":"deus.valkaria.almejar-o-impossivel","name":"Almejar o Impossível","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":135},{"id":"deus.valkaria.armas-da-ambicao","name":"Armas da Ambição","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":135},{"id":"deus.valkaria.coragem-total","name":"Coragem Total","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":135},{"id":"deus.valkaria.liberdade-divina","name":"Liberdade Divina","kind":"instant","action":"livre","pmCost":2,"uses":"rodada","bookPage":135},{"id":"deus.wynna.bencao-do-mana","name":"Bênção do Mana","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":135},{"id":"deus.wynna.centelha-magica","name":"Centelha Mágica","kind":"instant","action":"varia","pmCost":"variavel","uses":null,"bookPage":135},{"id":"deus.wynna.escudo-magico","name":"Escudo Mágico","kind":"instant","action":"reacao","pmCost":0,"uses":null,"bookPage":135},{"id":"deus.wynna.teurgista-mistico","name":"Teurgista Místico","kind":"passive","action":"passivo","pmCost":0,"uses":null,"bookPage":135},{"id":"class.barbaro.furia","name":"Fúria","kind":"stance","action":"livre","pmCost":2,"uses":null,"scaling":{"basePm":2,"stepPm":1,"stepLabel":"+1 no bônus de Fúria"},"bookPage":40},{"id":"class.bardo.inspiracao","name":"Inspiração","kind":"stance","action":"padrao","pmCost":2,"uses":null,"scaling":{"basePm":2,"stepPm":2,"stepLabel":"+1 no bônus de Inspiração"},"bookPage":44}]
+[
+  {
+    "id": "class.barbaro.alma-de-bronze",
+    "name": "Alma de Bronze",
+    "kind": "triggered-passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "requiresFlag": "furia",
+    "bookPage": 41,
+    "grant": {
+      "kind": "temp-hp",
+      "scope": "scene",
+      "attribute": "strength"
+    }
+  },
+  {
+    "id": "class.barbaro.aumento-de-atributo",
+    "name": "Aumento de Atributo",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 41
+  },
+  {
+    "id": "class.barbaro.brado-assustador",
+    "name": "Brado Assustador",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 1,
+    "uses": "cena",
+    "bookPage": 41
+  },
+  {
+    "id": "class.barbaro.critico-brutal",
+    "name": "Crítico Brutal",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 41
+  },
+  {
+    "id": "class.barbaro.destruidor",
+    "name": "Destruidor",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 41
+  },
+  {
+    "id": "class.barbaro.espirito-inquebravel",
+    "name": "Espírito Inquebrável",
+    "kind": "triggered-passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "requiresFlag": "furia",
+    "bookPage": 41
+  },
+  {
+    "id": "class.barbaro.esquiva-sobrenatural",
+    "name": "Esquiva Sobrenatural",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 41
+  },
+  {
+    "id": "class.barbaro.forca-indomavel",
+    "name": "Força Indomável",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 41
+  },
+  {
+    "id": "class.barbaro.frenesi",
+    "name": "Frenesi",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": "rodada",
+    "requiresFlag": "furia",
+    "bookPage": 41
+  },
+  {
+    "id": "class.barbaro.furia-da-savana",
+    "name": "Fúria da Savana",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 42
+  },
+  {
+    "id": "class.barbaro.furia-raivosa",
+    "name": "Fúria Raivosa",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": null,
+    "requiresFlag": "furia",
+    "bookPage": 42
+  },
+  {
+    "id": "class.barbaro.golpe-poderoso",
+    "name": "Golpe Poderoso",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 42
+  },
+  {
+    "id": "class.barbaro.impeto",
+    "name": "Ímpeto",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 42
+  },
+  {
+    "id": "class.barbaro.investida-imprudente",
+    "name": "Investida Imprudente",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 42
+  },
+  {
+    "id": "class.barbaro.pele-de-aco",
+    "name": "Pele de Aço",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 42
+  },
+  {
+    "id": "class.barbaro.pele-de-ferro",
+    "name": "Pele de Ferro",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 42
+  },
+  {
+    "id": "class.barbaro.sangue-dos-inimigos",
+    "name": "Sangue dos Inimigos",
+    "kind": "triggered-passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "requiresFlag": "furia",
+    "bookPage": 42
+  },
+  {
+    "id": "class.barbaro.supersticao",
+    "name": "Superstição",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 42
+  },
+  {
+    "id": "class.barbaro.totem-espiritual",
+    "name": "Totem Espiritual",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 42
+  },
+  {
+    "id": "class.barbaro.vigor-primal",
+    "name": "Vigor Primal",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 42
+  },
+  {
+    "id": "class.bardo.arte-magica",
+    "name": "Arte Mágica",
+    "kind": "triggered-passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "requiresFlag": "inspiracao",
+    "bookPage": 44
+  },
+  {
+    "id": "class.bardo.aumentar-repertorio",
+    "name": "Aumentar Repertório",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 44
+  },
+  {
+    "id": "class.bardo.aumento-de-atributo",
+    "name": "Aumento de Atributo",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 44
+  },
+  {
+    "id": "class.bardo.danca-das-laminas",
+    "name": "Dança das Lâminas",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 44
+  },
+  {
+    "id": "class.bardo.esgrima-magica",
+    "name": "Esgrima Mágica",
+    "kind": "triggered-passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "requiresFlag": "inspiracao",
+    "bookPage": 44
+  },
+  {
+    "id": "class.bardo.estrelato",
+    "name": "Estrelato",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 44
+  },
+  {
+    "id": "class.bardo.fascinar-em-massa",
+    "name": "Fascinar em Massa",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 44
+  },
+  {
+    "id": "class.bardo.golpe-elemental",
+    "name": "Golpe Elemental",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": null,
+    "requiresFlag": "inspiracao",
+    "bookPage": 44
+  },
+  {
+    "id": "class.bardo.golpe-magico",
+    "name": "Golpe Mágico",
+    "kind": "triggered-passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "requiresFlag": "inspiracao",
+    "bookPage": 44
+  },
+  {
+    "id": "class.bardo.inspiracao-marcial",
+    "name": "Inspiração Marcial",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 44
+  },
+  {
+    "id": "class.bardo.lendas-e-historias",
+    "name": "Lendas e Histórias",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 44
+  },
+  {
+    "id": "class.bardo.manipular",
+    "name": "Manipular",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 45
+  },
+  {
+    "id": "class.bardo.manipular-em-massa",
+    "name": "Manipular em Massa",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 45
+  },
+  {
+    "id": "class.bardo.mestre-dos-sussurros",
+    "name": "Mestre dos Sussurros",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 45
+  },
+  {
+    "id": "class.bardo.musica-balada-fascinante",
+    "name": "Música: Balada Fascinante",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 45
+  },
+  {
+    "id": "class.bardo.musica-cancao-assustadora",
+    "name": "Música: Canção Assustadora",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 45
+  },
+  {
+    "id": "class.bardo.musica-melodia-curativa",
+    "name": "Música: Melodia Curativa",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 45
+  },
+  {
+    "id": "class.bardo.musica-melodia-restauradora",
+    "name": "Música: Melodia Restauradora",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 45
+  },
+  {
+    "id": "class.bardo.parodia",
+    "name": "Paródia",
+    "kind": "instant",
+    "action": "reacao",
+    "pmCost": "variavel",
+    "uses": "rodada",
+    "bookPage": 45
+  },
+  {
+    "id": "class.bardo.prestidigitacao",
+    "name": "Prestidigitação",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 45
+  },
+  {
+    "id": "class.bucaneiro.abusar-dos-fracos",
+    "name": "Abusar dos Fracos",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 47
+  },
+  {
+    "id": "class.bucaneiro.amigos-no-porto",
+    "name": "Amigos no Porto",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": "dia",
+    "bookPage": 47
+  },
+  {
+    "id": "class.bucaneiro.aparar",
+    "name": "Aparar",
+    "kind": "instant",
+    "action": "reacao",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 47
+  },
+  {
+    "id": "class.bucaneiro.apostador",
+    "name": "Apostador",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": "dia",
+    "bookPage": 47
+  },
+  {
+    "id": "class.bucaneiro.ataque-acrobatico",
+    "name": "Ataque Acrobático",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 47
+  },
+  {
+    "id": "class.bucaneiro.aumento-de-atributo",
+    "name": "Aumento de Atributo",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 47
+  },
+  {
+    "id": "class.bucaneiro.aventureiro-avido",
+    "name": "Aventureiro Ávido",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 5,
+    "uses": "rodada",
+    "bookPage": 47
+  },
+  {
+    "id": "class.bucaneiro.bravata-audaz",
+    "name": "Bravata Audaz",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 47
+  },
+  {
+    "id": "class.bucaneiro.bravata-imprudente",
+    "name": "Bravata Imprudente",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 47
+  },
+  {
+    "id": "class.bucaneiro.en-garde",
+    "name": "En Garde",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 1,
+    "uses": "cena",
+    "bookPage": 47,
+    "grant": {
+      "kind": "active-effect",
+      "scope": "scene",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "note": "En Garde"
+        },
+        {
+          "target": {
+            "k": "critRange"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "note": "En Garde",
+          "condition": {
+            "c": "context",
+            "note": "com armas corpo a corpo leves ou ágeis"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "class.bucaneiro.esgrimista",
+    "name": "Esgrimista",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 48
+  },
+  {
+    "id": "class.bucaneiro.flagelo-dos-mares",
+    "name": "Flagelo dos Mares",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 48
+  },
+  {
+    "id": "class.bucaneiro.foliao",
+    "name": "Folião",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 48
+  },
+  {
+    "id": "class.bucaneiro.grudar-o-cano",
+    "name": "Grudar o Cano",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 48
+  },
+  {
+    "id": "class.bucaneiro.pernas-do-mar",
+    "name": "Pernas do Mar",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 48
+  },
+  {
+    "id": "class.bucaneiro.pistoleiro",
+    "name": "Pistoleiro",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 48
+  },
+  {
+    "id": "class.bucaneiro.presenca-paralisante",
+    "name": "Presença Paralisante",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 48
+  },
+  {
+    "id": "class.bucaneiro.ripostar",
+    "name": "Ripostar",
+    "kind": "instant",
+    "action": "reacao",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 48
+  },
+  {
+    "id": "class.bucaneiro.touche",
+    "name": "Touché",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 48
+  },
+  {
+    "id": "class.cacador.ambidestria",
+    "name": "Ambidestria",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 50
+  },
+  {
+    "id": "class.cacador.armadilha-arataca",
+    "name": "Armadilha: Arataca",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 50
+  },
+  {
+    "id": "class.cacador.armadilha-espinhos",
+    "name": "Armadilha: Espinhos",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 50
+  },
+  {
+    "id": "class.cacador.armadilha-laco",
+    "name": "Armadilha: Laço",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 50
+  },
+  {
+    "id": "class.cacador.armadilha-rede",
+    "name": "Armadilha: Rede",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 50
+  },
+  {
+    "id": "class.cacador.armadilheiro",
+    "name": "Armadilheiro",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 50
+  },
+  {
+    "id": "class.cacador.arqueiro",
+    "name": "Arqueiro",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 50
+  },
+  {
+    "id": "class.cacador.aumento-de-atributo",
+    "name": "Aumento de Atributo",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 50
+  },
+  {
+    "id": "class.cacador.bote",
+    "name": "Bote",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 50
+  },
+  {
+    "id": "class.cacador.camuflagem",
+    "name": "Camuflagem",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 50
+  },
+  {
+    "id": "class.cacador.chuva-de-laminas",
+    "name": "Chuva de Lâminas",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": "rodada",
+    "bookPage": 50
+  },
+  {
+    "id": "class.cacador.companheiro-animal",
+    "name": "Companheiro Animal",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 50
+  },
+  {
+    "id": "class.cacador.elo-com-a-natureza",
+    "name": "Elo com a Natureza",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 50
+  },
+  {
+    "id": "class.cacador.emboscar",
+    "name": "Emboscar",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": "rodada",
+    "bookPage": 50
+  },
+  {
+    "id": "class.cacador.empatia-selvagem",
+    "name": "Empatia Selvagem",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 50
+  },
+  {
+    "id": "class.cacador.escaramuca",
+    "name": "Escaramuça",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 51
+  },
+  {
+    "id": "class.cacador.escaramuca-superior",
+    "name": "Escaramuça Superior",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 51
+  },
+  {
+    "id": "class.cacador.espreitar",
+    "name": "Espreitar",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 51
+  },
+  {
+    "id": "class.cacador.ervas-curativas",
+    "name": "Ervas Curativas",
+    "kind": "instant",
+    "action": "completa",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 51
+  },
+  {
+    "id": "class.cacador.impeto",
+    "name": "Ímpeto",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 51
+  },
+  {
+    "id": "class.cacador.inimigo-criatura",
+    "name": "Inimigo de (Criatura)",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 51
+  },
+  {
+    "id": "class.cacador.olho-do-falcao",
+    "name": "Olho do Falcão",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 51
+  },
+  {
+    "id": "class.cacador.ponto-fraco",
+    "name": "Ponto Fraco",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 51
+  },
+  {
+    "id": "class.cavaleiro.armadura-da-honra",
+    "name": "Armadura da Honra",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": "cena",
+    "bookPage": 53,
+    "grant": {
+      "kind": "temp-hp",
+      "scope": "scene",
+      "attribute": "charisma"
+    }
+  },
+  {
+    "id": "class.cavaleiro.aumento-de-atributo",
+    "name": "Aumento de Atributo",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 53
+  },
+  {
+    "id": "class.cavaleiro.autoridade-feudal",
+    "name": "Autoridade Feudal",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 53
+  },
+  {
+    "id": "class.cavaleiro.desprezar-os-covardes",
+    "name": "Desprezar os Covardes",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 53
+  },
+  {
+    "id": "class.cavaleiro.escudeiro",
+    "name": "Escudeiro",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 53
+  },
+  {
+    "id": "class.cavaleiro.especializacao-em-armadura",
+    "name": "Especialização em Armadura",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 53
+  },
+  {
+    "id": "class.cavaleiro.estandarte",
+    "name": "Estandarte",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": "cena",
+    "bookPage": 54
+  },
+  {
+    "id": "class.cavaleiro.etiqueta",
+    "name": "Etiqueta",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 54
+  },
+  {
+    "id": "class.cavaleiro.investida-destruidora",
+    "name": "Investida Destruidora",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 54
+  },
+  {
+    "id": "class.cavaleiro.montaria-corajosa",
+    "name": "Montaria Corajosa",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 54
+  },
+  {
+    "id": "class.cavaleiro.pajem",
+    "name": "Pajem",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 54
+  },
+  {
+    "id": "class.cavaleiro.postura-ariete-implacavel",
+    "name": "Postura: Ariete Implacável",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 54
+  },
+  {
+    "id": "class.cavaleiro.postura-castigo-de-ferro",
+    "name": "Postura: Castigo de Ferro",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 54
+  },
+  {
+    "id": "class.cavaleiro.postura-foco-de-batalha",
+    "name": "Postura: Foco de Batalha",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 54
+  },
+  {
+    "id": "class.cavaleiro.postura-muralha-intransponivel",
+    "name": "Postura: Muralha Intransponível",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 54
+  },
+  {
+    "id": "class.cavaleiro.postura-provocacao-petulante",
+    "name": "Postura: Provocação Petulante",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 55
+  },
+  {
+    "id": "class.cavaleiro.postura-torre-inabalavel",
+    "name": "Postura: Torre Inabalável",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 55
+  },
+  {
+    "id": "class.cavaleiro.solidez",
+    "name": "Solidez",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 55
+  },
+  {
+    "id": "class.cavaleiro.titulo",
+    "name": "Título",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 55
+  },
+  {
+    "id": "class.cavaleiro.torre-armada",
+    "name": "Torre Armada",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 55
+  },
+  {
+    "id": "class.cavaleiro.caminho-bastiao",
+    "name": "Caminho: Bastião",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 55
+  },
+  {
+    "id": "class.cavaleiro.caminho-montaria",
+    "name": "Caminho: Montaria",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 55
+  },
+  {
+    "id": "class.clerigo.abencoar-arma",
+    "name": "Abençoar Arma",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 3,
+    "uses": null,
+    "bookPage": 57
+  },
+  {
+    "id": "class.clerigo.aumento-de-atributo",
+    "name": "Aumento de Atributo",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 57
+  },
+  {
+    "id": "class.clerigo.autoridade-eclesiastica",
+    "name": "Autoridade Eclesiástica",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 57
+  },
+  {
+    "id": "class.clerigo.canalizar-energia-positiva-negativa",
+    "name": "Canalizar Energia Positiva/Negativa",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 57
+  },
+  {
+    "id": "class.clerigo.canalizar-amplo",
+    "name": "Canalizar Amplo",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 57
+  },
+  {
+    "id": "class.clerigo.comunhao-vital",
+    "name": "Comunhão Vital",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 57
+  },
+  {
+    "id": "class.clerigo.conhecimento-magico",
+    "name": "Conhecimento Mágico",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 57
+  },
+  {
+    "id": "class.clerigo.expulsar-comandar-mortos-vivos",
+    "name": "Expulsar/Comandar Mortos-Vivos",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 3,
+    "uses": null,
+    "bookPage": 57
+  },
+  {
+    "id": "class.clerigo.liturgia-magica",
+    "name": "Liturgia Mágica",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 57
+  },
+  {
+    "id": "class.clerigo.magia-sagrada-profana",
+    "name": "Magia Sagrada/Profana",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 57
+  },
+  {
+    "id": "class.clerigo.mestre-celebrante",
+    "name": "Mestre Celebrante",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 57
+  },
+  {
+    "id": "class.clerigo.missa-bencao-da-vida",
+    "name": "Missa: Bênção da Vida",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 58
+  },
+  {
+    "id": "class.clerigo.missa-chamado-as-armas",
+    "name": "Missa: Chamado às Armas",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 58
+  },
+  {
+    "id": "class.clerigo.missa-elevacao-do-espirito",
+    "name": "Missa: Elevação do Espírito",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 58
+  },
+  {
+    "id": "class.clerigo.missa-escudo-divino",
+    "name": "Missa: Escudo Divino",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 58
+  },
+  {
+    "id": "class.clerigo.missa-superar-as-limitacoes",
+    "name": "Missa: Superar as Limitações",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 58
+  },
+  {
+    "id": "class.clerigo.prece-de-combate",
+    "name": "Prece de Combate",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 58
+  },
+  {
+    "id": "class.clerigo.simbolo-sagrado-energizado",
+    "name": "Símbolo Sagrado Energizado",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 1,
+    "uses": "cena",
+    "bookPage": 58
+  },
+  {
+    "id": "class.druida.aspecto-da-primavera",
+    "name": "Aspecto da Primavera",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 61
+  },
+  {
+    "id": "class.druida.aspecto-do-verao",
+    "name": "Aspecto do Verão",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": "cena",
+    "bookPage": 61
+  },
+  {
+    "id": "class.druida.aspecto-do-outono",
+    "name": "Aspecto do Outono",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 61
+  },
+  {
+    "id": "class.druida.aspecto-do-inverno",
+    "name": "Aspecto do Inverno",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 61
+  },
+  {
+    "id": "class.druida.aumento-de-atributo",
+    "name": "Aumento de Atributo",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 61
+  },
+  {
+    "id": "class.druida.companheiro-animal",
+    "name": "Companheiro Animal",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 61
+  },
+  {
+    "id": "class.druida.companheiro-animal-aprimorado",
+    "name": "Companheiro Animal Aprimorado",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 61
+  },
+  {
+    "id": "class.druida.companheiro-animal-lendario",
+    "name": "Companheiro Animal Lendário",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 62
+  },
+  {
+    "id": "class.druida.companheiro-animal-magico",
+    "name": "Companheiro Animal Mágico",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 62
+  },
+  {
+    "id": "class.druida.coracao-da-selva",
+    "name": "Coração da Selva",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 62
+  },
+  {
+    "id": "class.druida.espirito-dos-equinocios",
+    "name": "Espírito dos Equinócios",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 4,
+    "uses": "cena",
+    "bookPage": 62
+  },
+  {
+    "id": "class.druida.espirito-dos-solsticios",
+    "name": "Espírito dos Solstícios",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 4,
+    "uses": null,
+    "bookPage": 62
+  },
+  {
+    "id": "class.druida.forca-dos-penhascos",
+    "name": "Força dos Penhascos",
+    "kind": "instant",
+    "action": "reacao",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 62
+  },
+  {
+    "id": "class.druida.forma-primal",
+    "name": "Forma Primal",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 62
+  },
+  {
+    "id": "class.druida.forma-selvagem",
+    "name": "Forma Selvagem",
+    "kind": "instant",
+    "action": "completa",
+    "pmCost": 3,
+    "uses": null,
+    "bookPage": 62
+  },
+  {
+    "id": "class.druida.forma-selvagem-aprimorada",
+    "name": "Forma Selvagem Aprimorada",
+    "kind": "instant",
+    "action": "completa",
+    "pmCost": 6,
+    "uses": null,
+    "bookPage": 62
+  },
+  {
+    "id": "class.druida.forma-selvagem-superior",
+    "name": "Forma Selvagem Superior",
+    "kind": "instant",
+    "action": "completa",
+    "pmCost": 10,
+    "uses": null,
+    "bookPage": 62
+  },
+  {
+    "id": "class.druida.liberdade-da-pradaria",
+    "name": "Liberdade da Pradaria",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 63
+  },
+  {
+    "id": "class.druida.magia-natural",
+    "name": "Magia Natural",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 63
+  },
+  {
+    "id": "class.druida.presas-afiadas",
+    "name": "Presas Afiadas",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 63
+  },
+  {
+    "id": "class.druida.segredos-da-natureza",
+    "name": "Segredos da Natureza",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 63
+  },
+  {
+    "id": "class.druida.tranquilidade-dos-lagos",
+    "name": "Tranquilidade dos Lagos",
+    "kind": "instant",
+    "action": "reacao",
+    "pmCost": 1,
+    "uses": "rodada",
+    "bookPage": 63
+  },
+  {
+    "id": "class.guerreiro.ambidestria",
+    "name": "Ambidestria",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 65
+  },
+  {
+    "id": "class.guerreiro.arqueiro",
+    "name": "Arqueiro",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 65
+  },
+  {
+    "id": "class.guerreiro.ataque-reflexo",
+    "name": "Ataque Reflexo",
+    "kind": "instant",
+    "action": "reacao",
+    "pmCost": 1,
+    "uses": "rodada",
+    "bookPage": 65
+  },
+  {
+    "id": "class.guerreiro.aumento-de-atributo",
+    "name": "Aumento de Atributo",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 65
+  },
+  {
+    "id": "class.guerreiro.bater-e-correr",
+    "name": "Bater e Correr",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 65
+  },
+  {
+    "id": "class.guerreiro.destruidor",
+    "name": "Destruidor",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 65
+  },
+  {
+    "id": "class.guerreiro.esgrimista",
+    "name": "Esgrimista",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 65
+  },
+  {
+    "id": "class.guerreiro.especializacao-em-arma",
+    "name": "Especialização em Arma",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 65
+  },
+  {
+    "id": "class.guerreiro.especializacao-em-armadura",
+    "name": "Especialização em Armadura",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 65
+  },
+  {
+    "id": "class.guerreiro.golpe-de-raspao",
+    "name": "Golpe de Raspão",
+    "kind": "instant",
+    "action": "reacao",
+    "pmCost": 2,
+    "uses": "rodada",
+    "bookPage": 66
+  },
+  {
+    "id": "class.guerreiro.golpe-demolidor",
+    "name": "Golpe Demolidor",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 66
+  },
+  {
+    "id": "class.guerreiro.golpe-pessoal",
+    "name": "Golpe Pessoal",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 66
+  },
+  {
+    "id": "class.guerreiro.impeto",
+    "name": "Ímpeto",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 66
+  },
+  {
+    "id": "class.guerreiro.mestre-em-arma",
+    "name": "Mestre em Arma",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 66
+  },
+  {
+    "id": "class.guerreiro.planejamento-marcial",
+    "name": "Planejamento Marcial",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": 3,
+    "uses": "dia",
+    "bookPage": 67
+  },
+  {
+    "id": "class.guerreiro.romper-resistencias",
+    "name": "Romper Resistências",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 67
+  },
+  {
+    "id": "class.guerreiro.solidez",
+    "name": "Solidez",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 67
+  },
+  {
+    "id": "class.guerreiro.tornado-de-dor",
+    "name": "Tornado de Dor",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 67
+  },
+  {
+    "id": "class.guerreiro.valentao",
+    "name": "Valentão",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 67
+  },
+  {
+    "id": "class.inventor.agite-antes-de-usar",
+    "name": "Agite Antes de Usar",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 68
+  },
+  {
+    "id": "class.inventor.ajuste-de-mira",
+    "name": "Ajuste de Mira",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": "variavel",
+    "uses": "cena",
+    "bookPage": 68
+  },
+  {
+    "id": "class.inventor.alquimista-de-batalha",
+    "name": "Alquimista de Batalha",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 68
+  },
+  {
+    "id": "class.inventor.alquimista-iniciado",
+    "name": "Alquimista Iniciado",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 69
+  },
+  {
+    "id": "class.inventor.armeiro",
+    "name": "Armeiro",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 69
+  },
+  {
+    "id": "class.inventor.ativacao-rapida",
+    "name": "Ativação Rápida",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 2,
+    "uses": "rodada",
+    "bookPage": 69
+  },
+  {
+    "id": "class.inventor.aumento-de-atributo",
+    "name": "Aumento de Atributo",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 69
+  },
+  {
+    "id": "class.inventor.automato",
+    "name": "Autômato",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 69
+  },
+  {
+    "id": "class.inventor.automato-prototipado",
+    "name": "Autômato Prototipado",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 69
+  },
+  {
+    "id": "class.inventor.balistica",
+    "name": "Balística",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 69
+  },
+  {
+    "id": "class.inventor.blindagem",
+    "name": "Blindagem",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 69
+  },
+  {
+    "id": "class.inventor.cano-raiado",
+    "name": "Cano Raiado",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 69
+  },
+  {
+    "id": "class.inventor.catalisador-instavel",
+    "name": "Catalisador Instável",
+    "kind": "instant",
+    "action": "completa",
+    "pmCost": 3,
+    "uses": null,
+    "bookPage": 69
+  },
+  {
+    "id": "class.inventor.chutes-e-palavroes",
+    "name": "Chutes e Palavrões",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": "rodada",
+    "bookPage": 70
+  },
+  {
+    "id": "class.inventor.conhecimento-de-formulas",
+    "name": "Conhecimento de Fórmulas",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 70
+  },
+  {
+    "id": "class.inventor.couraceiro",
+    "name": "Couraceiro",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 70
+  },
+  {
+    "id": "class.inventor.engenhoqueiro",
+    "name": "Engenhoqueiro",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 70
+  },
+  {
+    "id": "class.inventor.farmaceutico",
+    "name": "Farmacêutico",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 70
+  },
+  {
+    "id": "class.inventor.ferreiro",
+    "name": "Ferreiro",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 70
+  },
+  {
+    "id": "class.inventor.granadeiro",
+    "name": "Granadeiro",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 70
+  },
+  {
+    "id": "class.inventor.homunculo",
+    "name": "Homúnculo",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": "cena",
+    "bookPage": 70
+  },
+  {
+    "id": "class.inventor.invencao-potente",
+    "name": "Invenção Potente",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 70
+  },
+  {
+    "id": "class.inventor.maestria-em-pericia",
+    "name": "Maestria em Perícia",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 70
+  },
+  {
+    "id": "class.inventor.manutencao-eficiente",
+    "name": "Manutenção Eficiente",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 70
+  },
+  {
+    "id": "class.inventor.mestre-alquimista",
+    "name": "Mestre Alquimista",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 71
+  },
+  {
+    "id": "class.inventor.mestre-cuca",
+    "name": "Mestre Cuca",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 71
+  },
+  {
+    "id": "class.inventor.mistura-fervilhante",
+    "name": "Mistura Fervilhante",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 71
+  },
+  {
+    "id": "class.inventor.oficina-de-campo",
+    "name": "Oficina de Campo",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": 2,
+    "uses": "dia",
+    "bookPage": 71
+  },
+  {
+    "id": "class.inventor.pedra-de-amolar",
+    "name": "Pedra de Amolar",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": "variavel",
+    "uses": "cena",
+    "bookPage": 71
+  },
+  {
+    "id": "class.inventor.sintese-rapida",
+    "name": "Síntese Rápida",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 71
+  },
+  {
+    "id": "class.ladino.assassinar",
+    "name": "Assassinar",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 3,
+    "uses": null,
+    "bookPage": 73
+  },
+  {
+    "id": "class.ladino.aumento-de-atributo",
+    "name": "Aumento de Atributo",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 73
+  },
+  {
+    "id": "class.ladino.contatos-no-submundo",
+    "name": "Contatos no Submundo",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 73
+  },
+  {
+    "id": "class.ladino.emboscar",
+    "name": "Emboscar",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": "rodada",
+    "bookPage": 73
+  },
+  {
+    "id": "class.ladino.escapista",
+    "name": "Escapista",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 73
+  },
+  {
+    "id": "class.ladino.fuga-formidavel",
+    "name": "Fuga Formidável",
+    "kind": "instant",
+    "action": "completa",
+    "pmCost": 1,
+    "uses": "cena",
+    "bookPage": 73
+  },
+  {
+    "id": "class.ladino.gatuno",
+    "name": "Gatuno",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 73
+  },
+  {
+    "id": "class.ladino.ladrao-arcano",
+    "name": "Ladrão Arcano",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": "variavel",
+    "uses": "cena",
+    "bookPage": 74
+  },
+  {
+    "id": "class.ladino.mao-na-boca",
+    "name": "Mão na Boca",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 74
+  },
+  {
+    "id": "class.ladino.maos-rapidas",
+    "name": "Mãos Rápidas",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": "rodada",
+    "bookPage": 74
+  },
+  {
+    "id": "class.ladino.mente-criminosa",
+    "name": "Mente Criminosa",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 74
+  },
+  {
+    "id": "class.ladino.oportunismo",
+    "name": "Oportunismo",
+    "kind": "instant",
+    "action": "reacao",
+    "pmCost": 2,
+    "uses": "rodada",
+    "bookPage": 74
+  },
+  {
+    "id": "class.ladino.rolamento-defensivo",
+    "name": "Rolamento Defensivo",
+    "kind": "instant",
+    "action": "reacao",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 74
+  },
+  {
+    "id": "class.ladino.roubo-de-mana",
+    "name": "Roubo de Mana",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": "cena",
+    "bookPage": 74
+  },
+  {
+    "id": "class.ladino.saqueador-de-tumbas",
+    "name": "Saqueador de Tumbas",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 74
+  },
+  {
+    "id": "class.ladino.sombra",
+    "name": "Sombra",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 74
+  },
+  {
+    "id": "class.ladino.truque-magico",
+    "name": "Truque Mágico",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 74
+  },
+  {
+    "id": "class.ladino.velocidade-ladina",
+    "name": "Velocidade Ladina",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": "rodada",
+    "bookPage": 74
+  },
+  {
+    "id": "class.ladino.veneno-persistente",
+    "name": "Veneno Persistente",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 74
+  },
+  {
+    "id": "class.ladino.veneno-potente",
+    "name": "Veneno Potente",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 74
+  },
+  {
+    "id": "class.lutador.arma-improvisada",
+    "name": "Arma Improvisada",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 76
+  },
+  {
+    "id": "class.lutador.ate-acertar",
+    "name": "Até Acertar",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": "cena",
+    "bookPage": 76
+  },
+  {
+    "id": "class.lutador.aumento-de-atributo",
+    "name": "Aumento de Atributo",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 76
+  },
+  {
+    "id": "class.lutador.bracos-calejados",
+    "name": "Braços Calejados",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 76
+  },
+  {
+    "id": "class.lutador.cabecada",
+    "name": "Cabeçada",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": "cena",
+    "bookPage": 76
+  },
+  {
+    "id": "class.lutador.chave",
+    "name": "Chave",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 76
+  },
+  {
+    "id": "class.lutador.confianca-dos-ringues",
+    "name": "Confiança dos Ringues",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": "cena",
+    "bookPage": 76
+  },
+  {
+    "id": "class.lutador.convencido",
+    "name": "Convencido",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 77
+  },
+  {
+    "id": "class.lutador.golpe-baixo",
+    "name": "Golpe Baixo",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": "cena",
+    "bookPage": 77
+  },
+  {
+    "id": "class.lutador.golpe-imprudente",
+    "name": "Golpe Imprudente",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 77
+  },
+  {
+    "id": "class.lutador.imobilizacao",
+    "name": "Imobilização",
+    "kind": "instant",
+    "action": "completa",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 77
+  },
+  {
+    "id": "class.lutador.lingua-dos-becos",
+    "name": "Língua dos Becos",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 77
+  },
+  {
+    "id": "class.lutador.lutador-de-chao",
+    "name": "Lutador de Chão",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 77
+  },
+  {
+    "id": "class.lutador.nome-na-arena",
+    "name": "Nome na Arena",
+    "kind": "instant",
+    "action": "completa",
+    "pmCost": 0,
+    "uses": "cena",
+    "bookPage": 77
+  },
+  {
+    "id": "class.lutador.punhos-de-adamante",
+    "name": "Punhos de Adamante",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 77
+  },
+  {
+    "id": "class.lutador.rasteira",
+    "name": "Rasteira",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 77
+  },
+  {
+    "id": "class.lutador.sarado",
+    "name": "Sarado",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 77
+  },
+  {
+    "id": "class.lutador.sequencia-destruidora",
+    "name": "Sequência Destruidora",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 77
+  },
+  {
+    "id": "class.lutador.trincado",
+    "name": "Trincado",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 77
+  },
+  {
+    "id": "class.lutador.trocacao",
+    "name": "Trocação",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 77
+  },
+  {
+    "id": "class.lutador.trocacao-tumultuosa",
+    "name": "Trocação Tumultuosa",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 77
+  },
+  {
+    "id": "class.lutador.valentao",
+    "name": "Valentão",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 78
+  },
+  {
+    "id": "class.lutador.voadora",
+    "name": "Voadora",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 78
+  },
+  {
+    "id": "class.nobre.armadura-brilhante",
+    "name": "Armadura Brilhante",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 79
+  },
+  {
+    "id": "class.nobre.aumento-de-atributo",
+    "name": "Aumento de Atributo",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 79
+  },
+  {
+    "id": "class.nobre.autoridade-feudal",
+    "name": "Autoridade Feudal",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 79
+  },
+  {
+    "id": "class.nobre.educacao-privilegiada",
+    "name": "Educação Privilegiada",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 79
+  },
+  {
+    "id": "class.nobre.estrategista",
+    "name": "Estrategista",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 79
+  },
+  {
+    "id": "class.nobre.favor",
+    "name": "Favor",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": 5,
+    "uses": null,
+    "bookPage": 79
+  },
+  {
+    "id": "class.nobre.general",
+    "name": "General",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 80
+  },
+  {
+    "id": "class.nobre.grito-tiranico",
+    "name": "Grito Tirânico",
+    "kind": "instant",
+    "action": "completa",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 80
+  },
+  {
+    "id": "class.nobre.inspirar-confianca",
+    "name": "Inspirar Confiança",
+    "kind": "instant",
+    "action": "reacao",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 80
+  },
+  {
+    "id": "class.nobre.inspirar-gloria",
+    "name": "Inspirar Glória",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 5,
+    "uses": "cena",
+    "bookPage": 80
+  },
+  {
+    "id": "class.nobre.jogo-da-corte",
+    "name": "Jogo da Corte",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 80
+  },
+  {
+    "id": "class.nobre.liderar-pelo-exemplo",
+    "name": "Liderar pelo Exemplo",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 80
+  },
+  {
+    "id": "class.nobre.lingua-de-ouro",
+    "name": "Língua de Ouro",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 4,
+    "uses": null,
+    "bookPage": 80
+  },
+  {
+    "id": "class.nobre.lingua-de-prata",
+    "name": "Língua de Prata",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 80
+  },
+  {
+    "id": "class.nobre.lingua-rapida",
+    "name": "Língua Rápida",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 80
+  },
+  {
+    "id": "class.nobre.presenca-majestosa",
+    "name": "Presença Majestosa",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 80
+  },
+  {
+    "id": "class.nobre.titulo",
+    "name": "Título",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 80
+  },
+  {
+    "id": "class.nobre.voz-poderosa",
+    "name": "Voz Poderosa",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 80
+  },
+  {
+    "id": "class.paladino.arma-sagrada",
+    "name": "Arma Sagrada",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 82
+  },
+  {
+    "id": "class.paladino.aumento-de-atributo",
+    "name": "Aumento de Atributo",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 82
+  },
+  {
+    "id": "class.paladino.aura-antimagia",
+    "name": "Aura Antimagia",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 82
+  },
+  {
+    "id": "class.paladino.aura-ardente",
+    "name": "Aura Ardente",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 82
+  },
+  {
+    "id": "class.paladino.aura-de-cura",
+    "name": "Aura de Cura",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 83
+  },
+  {
+    "id": "class.paladino.aura-de-invencibilidade",
+    "name": "Aura de Invencibilidade",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": "cena",
+    "bookPage": 83
+  },
+  {
+    "id": "class.paladino.aura-poderosa",
+    "name": "Aura Poderosa",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 83
+  },
+  {
+    "id": "class.paladino.fulgor-divino",
+    "name": "Fulgor Divino",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 83
+  },
+  {
+    "id": "class.paladino.julgamento-arrependimento",
+    "name": "Julgamento Divino: Arrependimento",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 83
+  },
+  {
+    "id": "class.paladino.julgamento-autoridade",
+    "name": "Julgamento Divino: Autoridade",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": "cena",
+    "bookPage": 83
+  },
+  {
+    "id": "class.paladino.julgamento-coragem",
+    "name": "Julgamento Divino: Coragem",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 83
+  },
+  {
+    "id": "class.paladino.julgamento-iluminacao",
+    "name": "Julgamento Divino: Iluminação",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": "cena",
+    "bookPage": 83
+  },
+  {
+    "id": "class.paladino.julgamento-justica",
+    "name": "Julgamento Divino: Justiça",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 83
+  },
+  {
+    "id": "class.paladino.julgamento-libertacao",
+    "name": "Julgamento Divino: Libertação",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 5,
+    "uses": null,
+    "bookPage": 84
+  },
+  {
+    "id": "class.paladino.julgamento-salvacao",
+    "name": "Julgamento Divino: Salvação",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 84
+  },
+  {
+    "id": "class.paladino.julgamento-vindicacao",
+    "name": "Julgamento Divino: Vindicação",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 84
+  },
+  {
+    "id": "class.paladino.julgamento-zelo",
+    "name": "Julgamento Divino: Zelo",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 84
+  },
+  {
+    "id": "class.paladino.orar",
+    "name": "Orar",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 84
+  },
+  {
+    "id": "class.paladino.virtude-caridade",
+    "name": "Virtude Paladinesca: Caridade",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 84
+  },
+  {
+    "id": "class.paladino.virtude-castidade",
+    "name": "Virtude Paladinesca: Castidade",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 84
+  },
+  {
+    "id": "class.paladino.virtude-compaixao",
+    "name": "Virtude Paladinesca: Compaixão",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 84
+  },
+  {
+    "id": "class.paladino.virtude-humildade",
+    "name": "Virtude Paladinesca: Humildade",
+    "kind": "instant",
+    "action": "completa",
+    "pmCost": 0,
+    "uses": "cena",
+    "bookPage": 84
+  },
+  {
+    "id": "class.paladino.virtude-temperanca",
+    "name": "Virtude Paladinesca: Temperança",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 84
+  },
+  {
+    "id": "class.paladino.caminho-egide-sagrada",
+    "name": "Caminho: Égide Sagrada",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 2,
+    "uses": "cena",
+    "bookPage": 85
+  },
+  {
+    "id": "class.paladino.caminho-montaria-sagrada",
+    "name": "Caminho: Montaria Sagrada",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 85
+  },
+  {
+    "id": "race.dahllan.amiga-das-plantas",
+    "name": "Amiga das Plantas",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 3,
+    "uses": null,
+    "bookPage": 21
+  },
+  {
+    "id": "race.dahllan.armadura-de-allihanna",
+    "name": "Armadura de Allihanna",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 1,
+    "uses": "cena",
+    "bookPage": 21,
+    "grant": {
+      "kind": "active-effect",
+      "scope": "scene",
+      "modifiers": [
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "note": "Armadura de Allihanna"
+        }
+      ]
+    }
+  },
+  {
+    "id": "race.minotauro.chifres",
+    "name": "Chifres",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": "rodada",
+    "bookPage": 25
+  },
+  {
+    "id": "race.qareen.tatuagem-mistica",
+    "name": "Tatuagem Mística",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 26
+  },
+  {
+    "id": "race.hynne.sorte-salvadora",
+    "name": "Sorte Salvadora",
+    "kind": "instant",
+    "action": "reacao",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 27
+  },
+  {
+    "id": "race.kliren.engenhosidade",
+    "name": "Engenhosidade",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 28
+  },
+  {
+    "id": "race.medusa.natureza-venenosa",
+    "name": "Natureza Venenosa",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 28
+  },
+  {
+    "id": "race.medusa.olhar-atordoante",
+    "name": "Olhar Atordoante",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 1,
+    "uses": "cena",
+    "bookPage": 28
+  },
+  {
+    "id": "race.sereia-tritao.cancao-dos-mares",
+    "name": "Canção dos Mares",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 29
+  },
+  {
+    "id": "race.silfide.asas-de-borboleta",
+    "name": "Asas de Borboleta",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": "rodada",
+    "bookPage": 30
+  },
+  {
+    "id": "race.silfide.magia-das-fadas",
+    "name": "Magia das Fadas",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 30
+  },
+  {
+    "id": "race.suraggel.luz-sagrada",
+    "name": "Luz Sagrada",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 30
+  },
+  {
+    "id": "race.suraggel.sombras-profanas",
+    "name": "Sombras Profanas",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 30
+  },
+  {
+    "id": "race.trog.mau-cheiro",
+    "name": "Mau Cheiro",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 31
+  },
+  {
+    "id": "race.trog.mordida",
+    "name": "Mordida",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": "rodada",
+    "bookPage": 31
+  },
+  {
+    "id": "origin.acolito.membro-da-igreja",
+    "name": "Membro da Igreja",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 85
+  },
+  {
+    "id": "origin.amigo-dos-animais.amigo-especial",
+    "name": "Amigo Especial",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 85
+  },
+  {
+    "id": "origin.amnesico.lembrancas-graduais",
+    "name": "Lembranças Graduais",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 86
+  },
+  {
+    "id": "origin.aristocrata.sangue-azul",
+    "name": "Sangue Azul",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 86
+  },
+  {
+    "id": "origin.artesao.frutos-do-trabalho",
+    "name": "Frutos do Trabalho",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 86
+  },
+  {
+    "id": "origin.artista.dom-artistico",
+    "name": "Dom Artístico",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 87
+  },
+  {
+    "id": "origin.assistente-de-laboratorio.esse-cheiro",
+    "name": "Esse Cheiro...",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 87
+  },
+  {
+    "id": "origin.batedor.a-prova-de-tudo",
+    "name": "À Prova de Tudo",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 88
+  },
+  {
+    "id": "origin.capanga.confissao",
+    "name": "Confissão",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 88
+  },
+  {
+    "id": "origin.charlatao.alpinista-social",
+    "name": "Alpinista Social",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 88
+  },
+  {
+    "id": "origin.circense.truque-de-magica",
+    "name": "Truque de Mágica",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 89
+  },
+  {
+    "id": "origin.criminoso.punguista",
+    "name": "Punguista",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": "dia",
+    "bookPage": 89
+  },
+  {
+    "id": "origin.curandeiro.medico-de-campo",
+    "name": "Médico de Campo",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 89
+  },
+  {
+    "id": "origin.eremita.busca-interior",
+    "name": "Busca Interior",
+    "kind": "instant",
+    "action": "completa",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 89
+  },
+  {
+    "id": "origin.escravo.desejo-de-liberdade",
+    "name": "Desejo de Liberdade",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 89
+  },
+  {
+    "id": "origin.estudioso.palpite-fundamentado",
+    "name": "Palpite Fundamentado",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 90
+  },
+  {
+    "id": "origin.fazendeiro.agua-no-feijao",
+    "name": "Água no Feijão",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 90
+  },
+  {
+    "id": "origin.forasteiro.cultura-exotica",
+    "name": "Cultura Exótica",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 90
+  },
+  {
+    "id": "origin.gladiador.pao-e-circo",
+    "name": "Pão e Circo",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 90
+  },
+  {
+    "id": "origin.guarda.detetive",
+    "name": "Detetive",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": "cena",
+    "bookPage": 91
+  },
+  {
+    "id": "origin.herdeiro.heranca",
+    "name": "Herança",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 91
+  },
+  {
+    "id": "origin.heroi-camponês.coracao-heroico",
+    "name": "Coração Heroico",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 91,
+    "grant": {
+      "kind": "temp-hp",
+      "scope": "scene",
+      "attribute": "charisma"
+    }
+  },
+  {
+    "id": "origin.marujo.passagem-de-navio",
+    "name": "Passagem de Navio",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 92
+  },
+  {
+    "id": "origin.mateiro.vendedor-de-carcacas",
+    "name": "Vendedor de Carcaças",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 92
+  },
+  {
+    "id": "origin.membro-de-guilda.rede-de-contatos",
+    "name": "Rede de Contatos",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 92
+  },
+  {
+    "id": "origin.mercador.negociacao",
+    "name": "Negociação",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 93
+  },
+  {
+    "id": "origin.minerador.escavador",
+    "name": "Escavador",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 93
+  },
+  {
+    "id": "origin.nomade.mochileiro",
+    "name": "Mochileiro",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 93
+  },
+  {
+    "id": "origin.pivete.quebra-galho",
+    "name": "Quebra-Galho",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 93
+  },
+  {
+    "id": "origin.refugiado.estoico",
+    "name": "Estoico",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 93
+  },
+  {
+    "id": "origin.seguidor.antigo-mestre",
+    "name": "Antigo Mestre",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": "cena",
+    "bookPage": 94
+  },
+  {
+    "id": "origin.selvagem.vida-rustica",
+    "name": "Vida Rústica",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 94
+  },
+  {
+    "id": "origin.soldado.influencia-militar",
+    "name": "Influência Militar",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 94
+  },
+  {
+    "id": "origin.taverneiro.gororoba",
+    "name": "Gororoba",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 94
+  },
+  {
+    "id": "origin.trabalhador.atletico",
+    "name": "Atlético",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 95
+  },
+  {
+    "id": "deus.aharadak.afinidade-com-a-tormenta",
+    "name": "Afinidade com a Tormenta",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 132
+  },
+  {
+    "id": "deus.aharadak.extase-da-loucura",
+    "name": "Êxtase da Loucura",
+    "kind": "instant",
+    "action": "reacao",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 132
+  },
+  {
+    "id": "deus.aharadak.percepcao-temporal",
+    "name": "Percepção Temporal",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 3,
+    "uses": "cena",
+    "bookPage": 132
+  },
+  {
+    "id": "deus.aharadak.rejeicao-divina",
+    "name": "Rejeição Divina",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 132
+  },
+  {
+    "id": "deus.allihanna.compreender-os-ermos",
+    "name": "Compreender os Ermos",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 132
+  },
+  {
+    "id": "deus.allihanna.dedo-verde",
+    "name": "Dedo Verde",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 132
+  },
+  {
+    "id": "deus.allihanna.descanso-natural",
+    "name": "Descanso Natural",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 132
+  },
+  {
+    "id": "deus.allihanna.voz-da-natureza",
+    "name": "Voz da Natureza",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 132
+  },
+  {
+    "id": "deus.arsenal.conjurar-arma",
+    "name": "Conjurar Arma",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 1,
+    "uses": "cena",
+    "bookPage": 132
+  },
+  {
+    "id": "deus.arsenal.coragem-total",
+    "name": "Coragem Total",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 132
+  },
+  {
+    "id": "deus.arsenal.fe-guerreira",
+    "name": "Fé Guerreira",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 2,
+    "uses": null,
+    "bookPage": 132
+  },
+  {
+    "id": "deus.arsenal.sangue-de-ferro",
+    "name": "Sangue de Ferro",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 3,
+    "uses": "cena",
+    "bookPage": 132
+  },
+  {
+    "id": "deus.azgher.espada-solar",
+    "name": "Espada Solar",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": "cena",
+    "bookPage": 132
+  },
+  {
+    "id": "deus.azgher.fulgor-solar",
+    "name": "Fulgor Solar",
+    "kind": "instant",
+    "action": "reacao",
+    "pmCost": 1,
+    "uses": "rodada",
+    "bookPage": 132
+  },
+  {
+    "id": "deus.azgher.habitante-do-deserto",
+    "name": "Habitante do Deserto",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 132
+  },
+  {
+    "id": "deus.azgher.inimigo-de-tenebra",
+    "name": "Inimigo de Tenebra",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 132
+  },
+  {
+    "id": "deus.hyninn.apostar-com-o-trapaceiro",
+    "name": "Apostar com o Trapaceiro",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 133
+  },
+  {
+    "id": "deus.hyninn.farsa-do-fingidor",
+    "name": "Farsa do Fingidor",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 133
+  },
+  {
+    "id": "deus.hyninn.forma-de-macaco",
+    "name": "Forma de Macaco",
+    "kind": "instant",
+    "action": "completa",
+    "pmCost": 2,
+    "uses": "cena",
+    "bookPage": 133
+  },
+  {
+    "id": "deus.hyninn.golpista-divino",
+    "name": "Golpista Divino",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 133
+  },
+  {
+    "id": "deus.kallyadranoch.aura-de-medo",
+    "name": "Aura de Medo",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": "cena",
+    "bookPage": 133
+  },
+  {
+    "id": "deus.kallyadranoch.escamas-draconicas",
+    "name": "Escamas Dracônicas",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 133
+  },
+  {
+    "id": "deus.kallyadranoch.presas-primordiais",
+    "name": "Presas Primordiais",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": "cena",
+    "bookPage": 133
+  },
+  {
+    "id": "deus.kallyadranoch.servos-do-dragao",
+    "name": "Servos do Dragão",
+    "kind": "instant",
+    "action": "completa",
+    "pmCost": 2,
+    "uses": "cena",
+    "bookPage": 133
+  },
+  {
+    "id": "deus.khalmyr.coragem-total",
+    "name": "Coragem Total",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 133
+  },
+  {
+    "id": "deus.khalmyr.dom-da-verdade",
+    "name": "Dom da Verdade",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": "cena",
+    "bookPage": 133,
+    "grant": {
+      "kind": "active-effect",
+      "scope": "scene",
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Intuição"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "note": "Dom da Verdade"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Percepção"
+          },
+          "amount": 5,
+          "bonusType": "untyped",
+          "note": "Dom da Verdade",
+          "condition": {
+            "c": "context",
+            "note": "contra Enganação e Furtividade"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "deus.khalmyr.espada-justiceira",
+    "name": "Espada Justiceira",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": "cena",
+    "bookPage": 133
+  },
+  {
+    "id": "deus.khalmyr.reparar-injustica",
+    "name": "Reparar Injustiça",
+    "kind": "instant",
+    "action": "reacao",
+    "pmCost": 2,
+    "uses": "rodada",
+    "bookPage": 133
+  },
+  {
+    "id": "deus.lena.ataque-piedoso",
+    "name": "Ataque Piedoso",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 133
+  },
+  {
+    "id": "deus.lena.aura-restauradora",
+    "name": "Aura Restauradora",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 133
+  },
+  {
+    "id": "deus.lena.cura-gentil",
+    "name": "Cura Gentil",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 133
+  },
+  {
+    "id": "deus.lena.curandeira-perfeita",
+    "name": "Curandeira Perfeita",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 133
+  },
+  {
+    "id": "deus.lin-wu.coragem-total",
+    "name": "Coragem Total",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 134
+  },
+  {
+    "id": "deus.lin-wu.kiai-divino",
+    "name": "Kiai Divino",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 3,
+    "uses": "rodada",
+    "bookPage": 134
+  },
+  {
+    "id": "deus.lin-wu.mente-vazia",
+    "name": "Mente Vazia",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 134
+  },
+  {
+    "id": "deus.lin-wu.tradicao-de-lin-wu",
+    "name": "Tradição de Lin-Wu",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 134
+  },
+  {
+    "id": "deus.marah.aura-de-paz",
+    "name": "Aura de Paz",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": "cena",
+    "bookPage": 134
+  },
+  {
+    "id": "deus.marah.dom-da-esperanca",
+    "name": "Dom da Esperança",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 134
+  },
+  {
+    "id": "deus.marah.palavras-de-bondade",
+    "name": "Palavras de Bondade",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 134
+  },
+  {
+    "id": "deus.marah.talento-artistico",
+    "name": "Talento Artístico",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 134
+  },
+  {
+    "id": "deus.megalokk.olhar-amedrontador",
+    "name": "Olhar Amedrontador",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 134
+  },
+  {
+    "id": "deus.megalokk.presas-primordiais",
+    "name": "Presas Primordiais",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": "cena",
+    "bookPage": 134
+  },
+  {
+    "id": "deus.megalokk.urro-divino",
+    "name": "Urro Divino",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 134
+  },
+  {
+    "id": "deus.megalokk.voz-dos-monstros",
+    "name": "Voz dos Monstros",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 134
+  },
+  {
+    "id": "deus.nimb.extase-da-loucura",
+    "name": "Êxtase da Loucura",
+    "kind": "instant",
+    "action": "reacao",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 134
+  },
+  {
+    "id": "deus.nimb.poder-oculto",
+    "name": "Poder Oculto",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 2,
+    "uses": "cena",
+    "bookPage": 134
+  },
+  {
+    "id": "deus.nimb.sorte-dos-loucos",
+    "name": "Sorte dos Loucos",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 1,
+    "uses": null,
+    "bookPage": 134
+  },
+  {
+    "id": "deus.nimb.transmissao-da-loucura",
+    "name": "Transmissão da Loucura",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 134
+  },
+  {
+    "id": "deus.oceano.anfibio",
+    "name": "Anfíbio",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 134
+  },
+  {
+    "id": "deus.oceano.arsenal-das-profundezas",
+    "name": "Arsenal das Profundezas",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 134
+  },
+  {
+    "id": "deus.oceano.mestre-dos-mares",
+    "name": "Mestre dos Mares",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 134
+  },
+  {
+    "id": "deus.oceano.sopro-do-mar",
+    "name": "Sopro do Mar",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 1,
+    "uses": "rodada",
+    "bookPage": 134
+  },
+  {
+    "id": "deus.sszzaas.astucia-da-serpente",
+    "name": "Astúcia da Serpente",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 134
+  },
+  {
+    "id": "deus.sszzaas.familiar-ofidico",
+    "name": "Familiar Ofídico",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 134
+  },
+  {
+    "id": "deus.sszzaas.presas-venenosas",
+    "name": "Presas Venenosas",
+    "kind": "instant",
+    "action": "movimento",
+    "pmCost": 1,
+    "uses": "cena",
+    "bookPage": 134
+  },
+  {
+    "id": "deus.sszzaas.sangue-ofidico",
+    "name": "Sangue Ofídico",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 134
+  },
+  {
+    "id": "deus.tanna-toh.conhecimento-enciclopedico",
+    "name": "Conhecimento Enciclopédico",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 135
+  },
+  {
+    "id": "deus.tanna-toh.mente-analitica",
+    "name": "Mente Analítica",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 135
+  },
+  {
+    "id": "deus.tanna-toh.pesquisa-abencoada",
+    "name": "Pesquisa Abençoada",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 135
+  },
+  {
+    "id": "deus.tanna-toh.voz-da-civilizacao",
+    "name": "Voz da Civilização",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 135
+  },
+  {
+    "id": "deus.tenebra.caricia-sombria",
+    "name": "Carícia Sombria",
+    "kind": "instant",
+    "action": "padrao",
+    "pmCost": 1,
+    "uses": "rodada",
+    "bookPage": 135
+  },
+  {
+    "id": "deus.tenebra.manto-da-penumbra",
+    "name": "Manto da Penumbra",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 135
+  },
+  {
+    "id": "deus.tenebra.visao-nas-trevas",
+    "name": "Visão nas Trevas",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 135
+  },
+  {
+    "id": "deus.tenebra.zumbificar",
+    "name": "Zumbificar",
+    "kind": "instant",
+    "action": "completa",
+    "pmCost": 3,
+    "uses": null,
+    "bookPage": 135
+  },
+  {
+    "id": "deus.thwor.almejar-o-impossivel",
+    "name": "Almejar o Impossível",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 135
+  },
+  {
+    "id": "deus.thwor.furia-divina",
+    "name": "Fúria Divina",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": "cena",
+    "bookPage": 135
+  },
+  {
+    "id": "deus.thwor.olhar-amedrontador",
+    "name": "Olhar Amedrontador",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 135
+  },
+  {
+    "id": "deus.thwor.tropas-duyshidakk",
+    "name": "Tropas Duyshidakk",
+    "kind": "instant",
+    "action": "completa",
+    "pmCost": 2,
+    "uses": "cena",
+    "bookPage": 135
+  },
+  {
+    "id": "deus.thyatis.ataque-piedoso",
+    "name": "Ataque Piedoso",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 135
+  },
+  {
+    "id": "deus.thyatis.dom-da-imortalidade",
+    "name": "Dom da Imortalidade",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 135
+  },
+  {
+    "id": "deus.thyatis.dom-da-profecia",
+    "name": "Dom da Profecia",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 135
+  },
+  {
+    "id": "deus.thyatis.dom-da-ressurreicao",
+    "name": "Dom da Ressurreição",
+    "kind": "instant",
+    "action": "completa",
+    "pmCost": "variavel",
+    "uses": "cena",
+    "bookPage": 135
+  },
+  {
+    "id": "deus.valkaria.almejar-o-impossivel",
+    "name": "Almejar o Impossível",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 135
+  },
+  {
+    "id": "deus.valkaria.armas-da-ambicao",
+    "name": "Armas da Ambição",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 135
+  },
+  {
+    "id": "deus.valkaria.coragem-total",
+    "name": "Coragem Total",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 135
+  },
+  {
+    "id": "deus.valkaria.liberdade-divina",
+    "name": "Liberdade Divina",
+    "kind": "instant",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": "rodada",
+    "bookPage": 135
+  },
+  {
+    "id": "deus.wynna.bencao-do-mana",
+    "name": "Bênção do Mana",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 135
+  },
+  {
+    "id": "deus.wynna.centelha-magica",
+    "name": "Centelha Mágica",
+    "kind": "instant",
+    "action": "varia",
+    "pmCost": "variavel",
+    "uses": null,
+    "bookPage": 135
+  },
+  {
+    "id": "deus.wynna.escudo-magico",
+    "name": "Escudo Mágico",
+    "kind": "instant",
+    "action": "reacao",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 135
+  },
+  {
+    "id": "deus.wynna.teurgista-mistico",
+    "name": "Teurgista Místico",
+    "kind": "passive",
+    "action": "passivo",
+    "pmCost": 0,
+    "uses": null,
+    "bookPage": 135
+  },
+  {
+    "id": "class.barbaro.furia",
+    "name": "Fúria",
+    "kind": "stance",
+    "action": "livre",
+    "pmCost": 2,
+    "uses": null,
+    "scaling": {
+      "basePm": 2,
+      "stepPm": 1,
+      "stepLabel": "+1 no bônus de Fúria",
+      "firstStepLevel": 5,
+      "stepEveryLevels": 5
+    },
+    "bookPage": 40
+  },
+  {
+    "id": "class.bardo.inspiracao",
+    "name": "Inspiração",
+    "kind": "stance",
+    "action": "padrao",
+    "pmCost": 2,
+    "uses": null,
+    "scaling": {
+      "basePm": 2,
+      "stepPm": 2,
+      "stepLabel": "+1 no bônus de Inspiração",
+      "firstStepLevel": 5,
+      "stepEveryLevels": 4
+    },
+    "bookPage": 44
+  }
+]

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { FLAG_ACTIVATIONS } from '@tormenta20/t20-data'
+import { FLAG_ACTIVATIONS, maxStepsForLevel } from '@tormenta20/t20-data'
 import type { ActivationSpec } from '@tormenta20/t20-data'
 import {
   activationSpecs,
@@ -129,7 +129,7 @@ export function stanceMaxSteps(
   classes: readonly { className: string; level: number }[],
 ): number {
   if (!spec.scaling) return 0
-  return spec.scaling.maxStepsForLevel(stanceClassLevel(spec, classes))
+  return maxStepsForLevel(spec.scaling, stanceClassLevel(spec, classes))
 }
 
 /**

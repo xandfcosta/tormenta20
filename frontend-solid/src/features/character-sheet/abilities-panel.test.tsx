@@ -5,14 +5,49 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { makeCharacter } from '@/entities/character/__fixtures__/character'
 import { characterQueryOptions } from '@/entities/character/queries'
 import type { Character } from '@/shared/api/api'
+import { ConditionalsProvider } from '@/shared/stores/conditionals-context'
+import { createConditionalsStore } from '@/shared/stores/conditionals-store'
+import { PowerUsesProvider } from '@/shared/stores/power-uses-context'
+import { createPowerUsesStore } from '@/shared/stores/power-uses-store'
+import { StanceActivationProvider } from '@/shared/stores/stance-activation-context'
+import { createStanceActivationStore } from '@/shared/stores/stance-activation-store'
 import { AbilitiesPanel } from './abilities-panel'
+
+/** In-memory Storage double, so no test reaches a real localStorage. */
+class FakeStorage implements Storage {
+  private entries = new Map<string, string>()
+  get length() {
+    return this.entries.size
+  }
+  clear() {
+    this.entries.clear()
+  }
+  getItem(key: string) {
+    return this.entries.get(key) ?? null
+  }
+  key(index: number) {
+    return [...this.entries.keys()][index] ?? null
+  }
+  removeItem(key: string) {
+    this.entries.delete(key)
+  }
+  setItem(key: string, value: string) {
+    this.entries.set(key, value)
+  }
+}
 
 function renderPanel(char: Character = makeCharacter()) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   client.setQueryData(characterQueryOptions(char.id).queryKey, char)
   render(() => (
     <QueryClientProvider client={client}>
-      <AbilitiesPanel character={char} />
+      <ConditionalsProvider store={createConditionalsStore(new FakeStorage())}>
+        <PowerUsesProvider store={createPowerUsesStore(new FakeStorage())}>
+          <StanceActivationProvider store={createStanceActivationStore(new FakeStorage())}>
+            <AbilitiesPanel character={char} />
+          </StanceActivationProvider>
+        </PowerUsesProvider>
+      </ConditionalsProvider>
     </QueryClientProvider>
   ))
   return { user: userEvent.setup(), client }
@@ -68,6 +103,20 @@ describe('AbilitiesPanel', () => {
     await user.type(screen.getByRole('textbox', { name: 'Buscar poder ou habilidade' }), 'zzzz')
 
     expect(await screen.findByText(/Nenhum poder para "zzzz"/)).toBeInTheDocument()
+  })
+
+  // O modo de jogo é a lista da mesa: o que dá pra FAZER, com o afordance de
+  // usar inline. É o padrão quando não há escolha pendente.
+  it('voltar ao jogo mostra a lista de ações', async () => {
+    const { user } = renderPanel(
+      makeCharacter({ classes: [{ className: 'Bárbaro', level: 6 }] }),
+    )
+
+    await user.click(screen.getByRole('button', { name: /Voltar ao jogo/ }))
+
+    expect(await screen.findByText('Ações')).toBeInTheDocument()
+    // Fúria é postura: entra com o chip de custo e o botão de ativar.
+    expect(screen.getByRole('button', { name: 'Ativar Fúria' })).toBeInTheDocument()
   })
 
   it('escolher um benefício de origem grava a lista', async () => {

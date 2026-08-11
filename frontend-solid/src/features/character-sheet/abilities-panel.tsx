@@ -11,6 +11,9 @@ import type { CardFocus } from './collapsible-ability-card'
 import { OriginAbilitySection } from './origin-abilities'
 import { type Pendencia, type PendenciaSource, computePendencias } from './pendencias'
 import { PendenciasCallout } from './pendencias-callout'
+import { PowerActionSlot } from './power-action-slot'
+import { PowerPlayList } from './power-play-list'
+import { ownedPowerSpec } from './power-spec-resolver'
 import { RaceAbilitySection } from './race-abilities'
 import { normalize } from './normalize'
 import { ownedAbilities } from './sheet-search-index'
@@ -106,7 +109,7 @@ export function AbilitiesPanel(props: { character: Character }) {
           when={query().trim() === ''}
           fallback={<FlatAbilityResults character={props.character} query={query()} />}
         >
-          <Show when={mode() === 'edit'} fallback={<PlayModePlaceholder />}>
+          <Show when={mode() === 'edit'} fallback={<PowerPlayList character={props.character} />}>
             <SourceTabs
               active={tab()}
               countFor={countFor}
@@ -230,6 +233,11 @@ function FlatAbilityResults(props: { character: Character; query: string }) {
                 <span class="rounded-sm bg-muted px-1 py-0 text-[9px] text-muted-foreground">
                   {entry.source}
                 </span>
+                <PowerActionSlot
+                  spec={ownedPowerSpec(entry)}
+                  character={props.character}
+                  class="ml-auto"
+                />
               </div>
               <p class="mt-0.5 text-[11px] leading-snug text-muted-foreground">{entry.detail}</p>
             </li>
@@ -237,19 +245,6 @@ function FlatAbilityResults(props: { character: Character; query: string }) {
         </For>
       </ul>
     </Show>
-  )
-}
-
-/** The play list (action slots, stances) lands in ALE-87 slice 3. */
-function PlayModePlaceholder() {
-  return (
-    <div class="flex min-h-0 flex-1 items-center justify-center rounded-sm border border-dashed border-grimorio-iron p-6 text-center">
-      <p class="text-xs text-muted-foreground">
-        A lista de jogo (usar poder, posturas) chega na próxima fatia da ALE-87.
-        <br />
-        Use <span class="font-semibold">Editar poderes</span> para escolher.
-      </p>
-    </div>
   )
 }
 
