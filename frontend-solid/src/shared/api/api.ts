@@ -45,6 +45,7 @@ import type {
   CreateExpertiseInput,
   CreateItemInput,
   CreateSessionInput,
+  ProficienciesResult,
   Credentials,
   RaceDefinition,
   Session,
@@ -52,6 +53,7 @@ import type {
   UpdateExpertiseInput,
   UpdateClassLevelInput,
   UpdateItemInput,
+  UpdateProficienciesInput,
   UpdateVitalsInput,
   User,
   VitalsResult,
@@ -169,6 +171,9 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
        */
       applyDamage: (id: number, amount: number) =>
         request<ApplyDamageResult>(`/characters/${id}/damage`, json({ amount })),
+      /** Replaces the proficiency set (weapons, armor, shields). */
+      updateProficiencies: (id: number, input: UpdateProficienciesInput) =>
+        request<ProficienciesResult>(`/characters/${id}/proficiencies`, patch(input)),
       /** Level one class up or down; answers the new totals AND the resynced
        *  PV/PM pools, which are derived from class levels. */
       updateClassLevel: (id: number, input: UpdateClassLevelInput) =>

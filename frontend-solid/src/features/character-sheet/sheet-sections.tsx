@@ -6,6 +6,7 @@ import { BagPanel } from './bag-panel'
 import { isCasterCharacter } from './is-caster'
 import { ExpertisesPanel } from './expertises-panel'
 import { PendingBlock } from './pending-block'
+import { ProficienciesPanel } from './proficiencies-panel'
 
 /**
  * One switchable block of the sheet: tab value, short label, icon, optional
@@ -68,9 +69,7 @@ export const SHEET_PANELS: SheetSection[] = [
     value: 'proficiencies',
     label: 'Proficiências',
     icon: BadgeCheck,
-    component: (props) => (
-      <PendingBlock title="Proficiências" issue="ALE-85" character={props.character} />
-    ),
+    component: ProficienciesPanel,
   },
   {
     value: 'conditionals',

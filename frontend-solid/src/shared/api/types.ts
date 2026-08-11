@@ -330,6 +330,11 @@ export type ApplyDamageResult = {
   drained: DamageDrainStep[]
 }
 
+/** PATCH :id/proficiencies — the full category set; the server dedups and
+ *  rejects unknown ids, then echoes the stored blob. */
+export type UpdateProficienciesInput = { proficiencies: string[] }
+export type ProficienciesResult = { proficiencies: string }
+
 /** PATCH :id/vitals — either field alone is a valid write. */
 export type UpdateVitalsInput = {
   hpCurrent?: number
