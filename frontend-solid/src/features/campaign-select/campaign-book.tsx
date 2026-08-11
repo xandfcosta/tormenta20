@@ -11,6 +11,13 @@ import { createPageTurns } from './page-turns'
 
 const NOOP = () => {}
 
+/**
+ * How long a leaf takes to cross the spine. `QUEUED` runs when more picks are
+ * already waiting behind this one, so a burst of navigation drains briskly
+ * instead of making the reader sit through every turn at full length.
+ */
+const TURN_DURATION = { settling: '0.32s', queued: '0.16s' } as const
+
 export type CampaignBookProps = {
   campaign: Campaign
   isLive: boolean
@@ -91,7 +98,11 @@ export function CampaignBook(props: CampaignBookProps) {
                   'grimorio-leaf hidden sm:block',
                   activeTurn.dir === -1 && 'grimorio-leaf--rev',
                 )}
-                style={{ '--grimorio-turn': activeTurn.fast ? '0.22s' : '0.45s' }}
+                style={{
+                  '--grimorio-turn': activeTurn.fast
+                    ? TURN_DURATION.queued
+                    : TURN_DURATION.settling,
+                }}
                 on:animationend={onAnimationEnd}
               >
                 <div class="grimorio-leaf-face grimorio-leaf-front">

@@ -420,7 +420,7 @@
     inset: 0 0 0 50%;
     transform-origin: left center;
     transform-style: preserve-3d;
-    animation: grimorio-leaf-turn var(--grimorio-turn, 0.45s) ease-in-out both;
+    animation: grimorio-leaf-turn var(--grimorio-turn, 0.32s) ease-in-out both;
     pointer-events: none;
     z-index: 9;
   }
@@ -464,7 +464,7 @@
     inset: 0;
     pointer-events: none;
     background: linear-gradient(90deg, oklch(0 0 0 / 0.6), transparent 58%);
-    animation: grimorio-leaf-shade var(--grimorio-turn, 0.45s) ease-in-out both;
+    animation: grimorio-leaf-shade var(--grimorio-turn, 0.32s) ease-in-out both;
   }
   /* Dive in (ALE-59): opening a chronicle zooms into its page inside the tome —
    * you're now looking at the open page up close; ESC pops back to the book.
