@@ -3,6 +3,7 @@ import { For, Show } from 'solid-js'
 import type { Character } from '@/shared/api/api'
 import { cn } from '@/shared/lib/utils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { CharacterHud } from './character-hud'
 import { SHEET_PANELS, resolveSheetTab } from './sheet-sections'
 
 export type CharacterSheetDesktopProps = {
@@ -91,6 +92,10 @@ export function CharacterSheetDesktop(props: CharacterSheetDesktopProps) {
           </For>
         </TabsList>
       </Tabs>
+
+      {/* The `auto` row of the grid: the HUD is chrome every block sits above,
+          not a block of its own. */}
+      <CharacterHud character={props.character} class="rounded-sm" />
     </div>
   )
 }

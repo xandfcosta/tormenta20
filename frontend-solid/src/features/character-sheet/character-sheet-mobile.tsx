@@ -3,6 +3,7 @@ import { For, type JSX, Show } from 'solid-js'
 import type { Character } from '@/shared/api/api'
 import { cn } from '@/shared/lib/utils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { CharacterHud } from './character-hud'
 import { SHEET_PANELS, resolveSheetTab } from './sheet-sections'
 
 /**
@@ -58,6 +59,10 @@ export function CharacterSheetMobile(props: CharacterSheetMobileProps) {
           )}
         </For>
       </div>
+
+      {/* Above the tab bar, below the block: PV/PM stay reachable from every
+          block — at the table they are what the player touches most. */}
+      <CharacterHud character={props.character} class="shrink-0" />
 
       <div class="w-full shrink-0 border-t border-border/60 bg-card/95 backdrop-blur">
         <TabsList class="flex h-14 w-full items-stretch gap-0 rounded-none border-0 bg-transparent p-0 landscape:h-11">
