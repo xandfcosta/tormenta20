@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/solid-query'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { characterQueryOptions } from '@/entities/character/queries'
-import type { Character, CharacterItem, ConsumeItemResult } from '@/shared/api/api'
+import { ApiError, type Character, type CharacterItem, type ConsumeItemResult } from '@/shared/api/api'
 import {
   ItemRefused,
   addItem,
@@ -9,6 +9,7 @@ import {
   consumeRefusal,
   equipRefusal,
   itemActions,
+  itemWriteMessage,
   optimisticItem,
   removeItem,
   settleAddedItem,
@@ -86,6 +87,20 @@ describe('updateItem vs settleUpdatedItem', () => {
   it('não toca nos outros itens', () => {
     const start = character([item({ id: 1 }), item({ id: 2, name: 'Tocha' })])
     expect(updateItem(start, 1, { quantity: 9 }).items[1].name).toBe('Tocha')
+  })
+})
+
+describe('removeItem', () => {
+  it('tira só a linha pedida e devolve outro personagem', () => {
+    const start = character([item({ id: 1 }), item({ id: 2, name: 'Tocha' })])
+    const after = removeItem(start, 1)
+    expect(after.items.map((i) => i.name)).toEqual(['Tocha'])
+    expect(start.items).toHaveLength(2)
+  })
+
+  it('id que não existe deixa a mochila como estava', () => {
+    const start = character([item({ id: 1 })])
+    expect(removeItem(start, 99).items).toHaveLength(1)
   })
 })
 
@@ -215,5 +230,24 @@ describe('itemActions', () => {
     ).rejects.toBeInstanceOf(ItemRefused)
 
     expect(call).not.toHaveBeenCalled()
+  })
+})
+
+describe('itemWriteMessage', () => {
+  it('mostra a frase da regra quando o domínio recusou', () => {
+    const message = itemWriteMessage(new ItemRefused('Máximo de 2 mãos ocupadas.'), 'fallback')
+    expect(message).toBe('Máximo de 2 mãos ocupadas.')
+  })
+
+  it('traduz a falha de API pela mensagem do backend', () => {
+    const failure = new ApiError(404, 'Item não encontrado.')
+    expect(itemWriteMessage(failure, 'fallback')).toBe('Item não encontrado.')
+  })
+
+  // Rede caída não vira "Failed to fetch" na cara do jogador.
+  it('cai no texto do chamador quando a falha não tem mensagem de usuário', () => {
+    expect(itemWriteMessage(new TypeError('Failed to fetch'), 'fallback')).toBe(
+      'Erro inesperado. Tente novamente.',
+    )
   })
 })

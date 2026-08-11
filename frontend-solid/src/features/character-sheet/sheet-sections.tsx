@@ -2,6 +2,7 @@ import { Backpack, BadgeCheck, BookOpen, ScrollText, ToggleRight, Zap } from 'lu
 import type { Component } from 'solid-js'
 import { grantedSpells } from '@/entities/character/granted-spells'
 import type { Character } from '@/shared/api/api'
+import { BagPanel } from './bag-panel'
 import { isCasterCharacter } from './is-caster'
 import { ExpertisesPanel } from './expertises-panel'
 import { PendingBlock } from './pending-block'
@@ -61,7 +62,7 @@ export const SHEET_PANELS: SheetSection[] = [
     value: 'bag',
     label: 'Mochila',
     icon: Backpack,
-    component: (props) => <PendingBlock title="Mochila" issue="ALE-84" character={props.character} />,
+    component: BagPanel,
   },
   {
     value: 'proficiencies',

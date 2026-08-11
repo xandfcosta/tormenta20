@@ -16,6 +16,7 @@ import {
   api,
 } from '@/shared/api/api'
 import { allCatalogItems, getCatalogItem } from '@/shared/lib/catalog-cache'
+import { toSubmitFailure } from '@/shared/lib/form-errors'
 
 /**
  * The optimistic transforms behind the four inventory writes, as pure
@@ -166,6 +167,19 @@ export class ItemRefused extends Error {
     super(reason)
     this.name = 'ItemRefused'
   }
+}
+
+/**
+ * What to show the player when an inventory write fails. An `ItemRefused`
+ * already carries the rule's own sentence ("Máximo de 2 mãos ocupadas") and
+ * must reach the screen verbatim — routing it through `toSubmitFailure` would
+ * flatten the one useful message into "Erro inesperado".
+ *
+ * @example itemWriteMessage(failure, 'Não foi possível salvar o item.')
+ */
+export function itemWriteMessage(failure: unknown, fallback: string): string {
+  if (failure instanceof ItemRefused) return failure.message
+  return toSubmitFailure(failure).formError ?? fallback
 }
 
 /**
