@@ -151,9 +151,27 @@ export type Campaign = {
   } | null
 }
 
+export type CreateCampaignInput = {
+  name: string
+  description?: string
+}
+
 export type UpdateCampaignInput = {
   name?: string
   description?: string
+}
+
+/** What a player sees BEFORE joining — public, resolved from the token alone. */
+export type CampaignInvitePreview = {
+  campaignId: number
+  campaignName: string
+}
+
+export type AddMemberInput = {
+  characterId: number
+  role?: CampaignMemberRole
+  /** Present when joining through an invite link; the server verifies it. */
+  inviteToken?: string
 }
 
 /** POST /campaigns/:id/invite mints a fresh token, invalidating the previous. */

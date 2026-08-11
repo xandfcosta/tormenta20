@@ -7,13 +7,16 @@
  * own mutations when it lands, so the client never gets ahead of its consumers.
  */
 import type {
+  AddMemberInput,
   AuthUser,
   Campaign,
+  CampaignInvitePreview,
   CampaignInviteToken,
   CampaignMember,
   Character,
   CharacterOptions,
   ComputedSheetV2,
+  CreateCampaignInput,
   CreateSessionInput,
   Credentials,
   RaceDefinition,
@@ -112,6 +115,7 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
     campaigns: {
       list: () => request<Campaign[]>('/campaigns'),
       get: (id: number) => request<Campaign>(`/campaigns/${id}`),
+      create: (input: CreateCampaignInput) => request<Campaign>('/campaigns', json(input)),
       update: (id: number, input: UpdateCampaignInput) =>
         request<Campaign>(`/campaigns/${id}`, patch(input)),
       delete: (id: number) => request<{ id: number }>(`/campaigns/${id}`, del),
@@ -119,8 +123,16 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
       rotateInvite: (id: number) =>
         request<CampaignInviteToken>(`/campaigns/${id}/invite`, { method: 'POST' }),
     },
+    invites: {
+      /** Public: resolves a shared token to the campaign it invites into. */
+      resolve: (token: string) =>
+        request<CampaignInvitePreview>(`/invites/${encodeURIComponent(token)}`),
+    },
     members: {
       list: (campaignId: number) => request<CampaignMember[]>(`/campaigns/${campaignId}/members`),
+      /** Self-join: the caller must own `characterId`. */
+      add: (campaignId: number, input: AddMemberInput) =>
+        request<CampaignMember>(`/campaigns/${campaignId}/members`, json(input)),
       /** `id` is the MEMBER's id, not the character's. */
       remove: (campaignId: number, id: number) =>
         request<{ id: number }>(`/campaigns/${campaignId}/members/${id}`, del),

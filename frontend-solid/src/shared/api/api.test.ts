@@ -128,6 +128,46 @@ describe('createApiClient', () => {
     expect(init?.method).toBe('DELETE')
   })
 
+  // Criar campanha + entrar por convite (ALE-80).
+  it('cria a campanha com POST, omitindo a descrição vazia', async () => {
+    const http = new FakeFetch([FakeFetch.json({ id: 9, name: 'Mesa nova' })])
+    const api = createApiClient(http.fetch)
+
+    await api.campaigns.create({ name: 'Mesa nova' })
+
+    const { url, init } = http.onlyCall
+    expect(url).toBe('/api/campaigns')
+    expect(init?.method).toBe('POST')
+    expect(JSON.parse(String(init?.body))).toEqual({ name: 'Mesa nova' })
+  })
+
+  // O token vem da URL e é digitado por gente: sem escapar, um `/` ou `#`
+  // no token viraria outro caminho.
+  it('resolve o convite escapando o token na URL', async () => {
+    const http = new FakeFetch([FakeFetch.json({ campaignId: 1, campaignName: 'Mesa' })])
+    const api = createApiClient(http.fetch)
+
+    await api.invites.resolve('a/b#c')
+
+    expect(http.onlyCall.url).toBe('/api/invites/a%2Fb%23c')
+  })
+
+  it('entra na mesa levando o personagem e o token do convite', async () => {
+    const http = new FakeFetch([FakeFetch.json({ id: 3, characterId: 7 })])
+    const api = createApiClient(http.fetch)
+
+    await api.members.add(1, { characterId: 7, role: 'player', inviteToken: 'abc123' })
+
+    const { url, init } = http.onlyCall
+    expect(url).toBe('/api/campaigns/1/members')
+    expect(init?.method).toBe('POST')
+    expect(JSON.parse(String(init?.body))).toEqual({
+      characterId: 7,
+      role: 'player',
+      inviteToken: 'abc123',
+    })
+  })
+
   it('cai no status HTTP quando o corpo do erro não é JSON', async () => {
     const http = new FakeFetch([new Response('<html>502</html>', { status: 502 })])
     const api = createApiClient(http.fetch)

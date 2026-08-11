@@ -1,22 +1,11 @@
 import { useQueryClient } from '@tanstack/solid-query'
 import { CalendarClock } from 'lucide-solid'
 import { Show, createSignal } from 'solid-js'
-import { z } from 'zod'
 import { campaignQueryOptions, campaignsQueryOptions } from '@/entities/campaign/queries'
 import { type Campaign, type UpdateCampaignInput, api } from '@/shared/api/api'
-import { type FieldErrors, toSubmitFailure } from '@/shared/lib/form-errors'
 import { Button } from '@/shared/ui/button'
 import { FramedPanel } from '@/shared/ui/framed-panel'
-import { TextField } from '@/shared/ui/text-field'
-import { TextAreaField } from '@/shared/ui/textarea-field'
-
-// Mirrors the create form so edit and create validate alike. `.trim()` runs
-// before `.min(1)`, so a name of pure spaces is rejected instead of leaving the
-// chronicle untitled in the book.
-const campaignEditSchema = z.object({
-  name: z.string().trim().min(1, 'Nome é obrigatório').max(120, 'Máximo 120 caracteres'),
-  description: z.string().max(2000, 'Máximo 2000 caracteres'),
-})
+import { CampaignForm } from './campaign-form'
 
 export type CampaignEditFormProps = {
   campaign: Campaign
@@ -25,76 +14,28 @@ export type CampaignEditFormProps = {
 }
 
 /**
- * The chronicle's ledger, open for writing: name + description with the app's
- * shared validation grammar. Persisting is the caller's job, so this renders in
- * a test with no query client.
+ * The chronicle's ledger, open for writing. Shares its fields and validation
+ * with "abrir nova crônica" via `CampaignForm`; only the framing and the verb
+ * differ.
  *
  * @example <CampaignEditForm campaign={c} onSave={save} onCancel={stop} />
  */
 export function CampaignEditForm(props: CampaignEditFormProps) {
-  const [name, setName] = createSignal(props.campaign.name)
-  const [description, setDescription] = createSignal(props.campaign.description ?? '')
-  const [fieldErrors, setFieldErrors] = createSignal<FieldErrors>({})
-  const [formError, setFormError] = createSignal<string | null>(null)
-  const [saving, setSaving] = createSignal(false)
-
-  const showFailure = (failure: unknown) => {
-    const submit = toSubmitFailure(failure)
-    setFieldErrors(submit.fieldErrors)
-    setFormError(submit.formError)
-  }
-
-  const handleSubmit = async (event: SubmitEvent) => {
-    event.preventDefault()
-    setFormError(null)
-    const parsed = campaignEditSchema.safeParse({ name: name(), description: description() })
-    if (!parsed.success) {
-      setFieldErrors(z.flattenError(parsed.error).fieldErrors as FieldErrors)
-      return
-    }
-    setFieldErrors({})
-    setSaving(true)
-    try {
-      await props.onSave(parsed.data)
-    } catch (failure) {
-      showFailure(failure)
-    } finally {
-      setSaving(false)
-    }
-  }
-
   return (
     <FramedPanel>
       <h2 class="mb-4 font-heading text-xl uppercase tracking-wide text-grimorio-gold">
         Editar campanha
       </h2>
-      <form class="space-y-4" onSubmit={handleSubmit} noValidate>
-        <TextField
-          name="name"
-          label="Nome"
-          value={name()}
-          onInput={setName}
-          errors={fieldErrors().name}
-        />
-        <TextAreaField
-          name="description"
-          label="Descrição"
-          value={description()}
-          onInput={setDescription}
-          errors={fieldErrors().description}
-        />
-        <Show when={formError()}>
-          {(message) => <p class="text-sm text-destructive">{message()}</p>}
-        </Show>
-        <div class="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={() => props.onCancel()}>
-            Cancelar
-          </Button>
-          <Button type="submit" disabled={saving()}>
-            {saving() ? 'Salvando…' : 'Salvar'}
-          </Button>
-        </div>
-      </form>
+      <CampaignForm
+        initial={{
+          name: props.campaign.name,
+          description: props.campaign.description ?? '',
+        }}
+        submitLabel="Salvar"
+        pendingLabel="Salvando…"
+        onSubmit={props.onSave}
+        onCancel={props.onCancel}
+      />
     </FramedPanel>
   )
 }

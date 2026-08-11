@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/solid-query'
 import { useNavigate } from '@tanstack/solid-router'
 import { Trash2 } from 'lucide-solid'
 import { createSignal } from 'solid-js'
-import { campaignsQueryOptions } from '@/entities/campaign/queries'
+import { campaignQueryOptions, campaignsQueryOptions } from '@/entities/campaign/queries'
 import { type Campaign, api } from '@/shared/api/api'
 import { Button } from '@/shared/ui/button'
 import {
@@ -73,8 +73,14 @@ export function DeleteCampaignButton(props: { campaign: Campaign }) {
 
   const remove = async () => {
     await api.campaigns.delete(props.campaign.id)
-    await queryClient.invalidateQueries({ queryKey: campaignsQueryOptions.queryKey })
+    // Leave FIRST, then clean the cache. `['campaigns']` is the parent of this
+    // chronicle's detail/members/sessions keys, so invalidating it while the
+    // detail scene is still mounted sends those queries off to refetch a
+    // campaign that no longer exists — and awaiting that 404 meant the user
+    // never left the page of the chronicle they just burned (ALE-80 E2E).
     await navigate({ to: '/campaigns' })
+    queryClient.removeQueries({ queryKey: campaignQueryOptions(props.campaign.id).queryKey })
+    await queryClient.invalidateQueries({ queryKey: campaignsQueryOptions.queryKey })
   }
 
   return <DeleteCampaignDialog campaignName={props.campaign.name} onConfirm={remove} />

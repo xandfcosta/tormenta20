@@ -6,7 +6,7 @@ export type TextFieldProps = {
   /** Doubles as the input's `id` and `name`, so the label associates by `for`. */
   name: string
   label: string
-  type?: 'text' | 'email' | 'password'
+  type?: 'text' | 'email' | 'password' | 'number'
   autocomplete?: JSX.InputHTMLAttributes<HTMLInputElement>['autocomplete']
   value: string
   onInput: (value: string) => void

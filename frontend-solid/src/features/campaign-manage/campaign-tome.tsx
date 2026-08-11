@@ -4,6 +4,7 @@ import { campaignEmblemGradient, campaignInitials, roleLabel } from '@/entities/
 import type { Campaign, Session } from '@/shared/api/api'
 import { Button } from '@/shared/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { TomePage } from '@/shared/ui/tome-page'
 import { CampaignOverview } from './campaign-overview'
 import { ConfigSection } from './config-section'
 import { MembersCard } from './members-card'
@@ -63,30 +64,23 @@ export type CampaignTomeProps = {
  */
 export function CampaignTome(props: CampaignTomeProps) {
   return (
-    <div class="w-full">
-      <div class="grimorio-leather grimorio-page-in p-2.5 sm:p-3">
-        <div
-          data-tome-root
-          class="grimorio-frame--stone flex min-h-[calc(100dvh-7rem)] flex-col gap-6 rounded-sm p-6 sm:p-10"
-        >
-          <TomeHeader
-            campaign={props.campaign}
-            isGm={props.isGm}
-            playerCount={props.playerCount}
-            activeSession={props.activeSession}
-            onResume={props.onResume}
-          />
-          <GiltRule />
-          <Sections
-            campaign={props.campaign}
-            campaignId={props.campaignId}
-            isGm={props.isGm}
-            current={props.current}
-            onTab={props.onTab}
-          />
-        </div>
-      </div>
-    </div>
+    <TomePage>
+      <TomeHeader
+        campaign={props.campaign}
+        isGm={props.isGm}
+        playerCount={props.playerCount}
+        activeSession={props.activeSession}
+        onResume={props.onResume}
+      />
+      <GiltRule />
+      <Sections
+        campaign={props.campaign}
+        campaignId={props.campaignId}
+        isGm={props.isGm}
+        current={props.current}
+        onTab={props.onTab}
+      />
+    </TomePage>
   )
 }
 

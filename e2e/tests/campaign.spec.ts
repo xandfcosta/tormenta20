@@ -64,6 +64,71 @@ test.describe('Escrita do mestre', () => {
   })
 })
 
+/**
+ * Criar campanha e entrar por convite (ALE-80). The create case writes for
+ * real, so it DELETES what it made — the seed is shared with every other spec
+ * and a run that leaves campaigns behind poisons the next one.
+ */
+test.describe('Abrir e fechar uma crônica', () => {
+  test('criar leva direto para a nova crônica, e excluir traz de volta', async ({
+    page,
+  }) => {
+    const name = `E2E Descartável ${Date.now()}`
+    await page.goto('/campaigns/new')
+
+    await page.getByLabel('Nome').fill(name)
+    await page.getByLabel('Descrição').fill('Criada e excluída pelo E2E.')
+    await page.getByRole('button', { name: 'Abrir crônica' }).click()
+
+    // Landed on the new chronicle's own page.
+    await expect(page).toHaveURL(/\/campaigns\/\d+/)
+    await expect(page.getByRole('heading', { name, level: 1 })).toBeVisible()
+
+    // Clean up through the UI, which also exercises the ALE-79 delete path.
+    await page.goto(`${new URL(page.url()).pathname}?tab=config`)
+    await page.getByRole('button', { name: /Excluir campanha/ }).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Excluir' }).click()
+    await expect(page).toHaveURL(/\/campaigns$/)
+  })
+
+  test('nome em branco não cria nada', async ({ page }) => {
+    await page.goto('/campaigns/new')
+
+    await page.getByRole('button', { name: 'Abrir crônica' }).click()
+
+    await expect(page.getByText('Nome é obrigatório')).toBeVisible()
+    await expect(page).toHaveURL(/\/campaigns\/new/)
+  })
+})
+
+test.describe('Entrar por convite', () => {
+  test('o link de convite abre a carta com o token', async ({ page }) => {
+    await page.goto('/join/um-token-qualquer')
+
+    // The /join/$token shim hands off to the real form.
+    await expect(page).toHaveURL(/\/campaigns\/join\?token=um-token-qualquer/)
+    await expect(page.getByRole('heading', { name: 'Entrar na mesa' })).toBeVisible()
+  })
+
+  // Um token morto tem que DIZER que morreu; sem isso o jogador só vê um botão
+  // desabilitado e não sabe que precisa pedir outro link.
+  test('convite expirado explica o que fazer', async ({ page }) => {
+    await page.goto('/campaigns/join?token=token-que-nao-existe')
+
+    await expect(page.getByText(/Convite inválido ou expirado/)).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Entrar na mesa' })).toBeDisabled()
+  })
+
+  test('sem convite, pede o número da mesa e o herói', async ({ page }) => {
+    await page.goto('/campaigns/join')
+
+    await expect(page.getByLabel('Número da campanha')).toBeVisible()
+    await expect(page.getByText('Qual herói entra na mesa?')).toBeVisible()
+    // Nada escolhido ainda → não dá para entrar.
+    await expect(page.getByRole('button', { name: 'Entrar na mesa' })).toBeDisabled()
+  })
+})
+
 // The scene must FILL the width at every form factor — no horizontal body
 // scroll. This is the deterministic version of the manual 6-resolution pass.
 const VIEWPORTS = [
@@ -75,22 +140,30 @@ const VIEWPORTS = [
   { name: 'mobile-portrait', width: 390, height: 844 },
 ]
 
+// Every campaign leaf of the grimório, since they share the TomePage surface —
+// a regression in it would otherwise only be caught on whichever one we spot-checked.
+const SCENES = [
+  { name: 'detalhe', path: `${CAMPAIGN}?tab=membros`, heading: /Snapshot Test ALE-33/i },
+  { name: 'nova', path: '/campaigns/new', heading: /Abrir nova crônica/i },
+  { name: 'convite', path: '/campaigns/join', heading: /Entrar na mesa/i },
+]
+
 test.describe('Campanha — responsivo (preenche a tela, sem overflow horizontal)', () => {
-  for (const vp of VIEWPORTS) {
-    test(`sem scroll horizontal @ ${vp.name} (${vp.width}×${vp.height})`, async ({
-      page,
-    }) => {
-      await page.setViewportSize({ width: vp.width, height: vp.height })
-      await page.goto(`${CAMPAIGN}?tab=membros`)
-      await expect(
-        page.getByRole('heading', { name: /Snapshot Test ALE-33/i }),
-      ).toBeVisible()
-      const overflow = await page.evaluate(
-        () =>
-          document.documentElement.scrollWidth -
-          document.documentElement.clientWidth,
-      )
-      expect(overflow, 'a página não deve rolar horizontalmente').toBeLessThanOrEqual(1)
-    })
+  for (const scene of SCENES) {
+    for (const vp of VIEWPORTS) {
+      test(`${scene.name}: sem scroll horizontal @ ${vp.name} (${vp.width}×${vp.height})`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width: vp.width, height: vp.height })
+        await page.goto(scene.path)
+        await expect(page.getByRole('heading', { name: scene.heading })).toBeVisible()
+        const overflow = await page.evaluate(
+          () =>
+            document.documentElement.scrollWidth -
+            document.documentElement.clientWidth,
+        )
+        expect(overflow, 'a página não deve rolar horizontalmente').toBeLessThanOrEqual(1)
+      })
+    }
   }
 })
