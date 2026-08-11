@@ -20,3 +20,6 @@ t20-book.pdf
 # Runtime SQLite data + backups (host-stored, never commit)
 /data/
 /backups/
+
+# Playwright MCP scratch output (page/console dumps from browser automation)
+.playwright-mcp/

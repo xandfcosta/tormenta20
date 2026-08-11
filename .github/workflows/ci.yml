@@ -63,3 +63,65 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  e2e:
+    name: e2e (playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      # Needed twice here: to build the API binary, and by the frontend's
+      # `predev`, which compiles engine-go → WASM before Vite starts.
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: engine-go/go.mod
+          cache: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright chromium
+        run: pnpm --filter e2e exec playwright install --with-deps chromium
+
+      - name: Build the Go API
+        run: go build -o ./tmp/api ./cmd/api
+        working-directory: engine-go
+
+      # The API migrates the SQLite file on open (goose), so it has to run once
+      # before seed.sql — which is data-only (INSERTs, no DDL) — can apply.
+      - name: Start the API + apply the seed
+        working-directory: engine-go
+        env:
+          JWT_SECRET: e2e-ci-secret
+          PORT: '3001'
+          COOKIE_NAME: t20_session
+        run: |
+          ./tmp/api > api.log 2>&1 &
+          for _ in $(seq 1 60); do
+            curl -sf http://localhost:3001/health > /dev/null && break
+            sleep 0.5
+          done
+          curl -sf http://localhost:3001/health > /dev/null || { cat api.log; exit 1; }
+          sqlite3 t20-go.db ".timeout 5000" ".read seed.sql"
+
+      # Playwright's `webServer` starts Vite (:5173), which proxies /api + /socket.io
+      # to the API above.
+      - name: E2E
+        run: pnpm --filter e2e test
+
+      - name: Upload the Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 7
