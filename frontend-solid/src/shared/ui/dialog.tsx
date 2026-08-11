@@ -1,16 +1,16 @@
 import { Dialog as KDialog } from '@kobalte/core/dialog'
 import { XIcon } from 'lucide-solid'
 import { type ComponentProps, Show, splitProps } from 'solid-js'
+import { useSceneContainer } from '@/shared/lib/scene-container'
 import { cn } from '@/shared/lib/utils'
 
 /**
  * Modal dialog on Kobalte. Radix's `data-[state=open|closed]` becomes
  * `data-[expanded]` / `data-[closed]`; everything else keeps the shadcn look.
  *
- * The React version portalled into the current grimório scene so the dialog
- * inherited the scene tokens. That seam (`useSceneContainer`) is shared/lib
- * and lands with ALE-66 — until then `DialogContent` takes an explicit
- * `mount` element, which is what Kobalte's Portal accepts.
+ * Portals into the enclosing grimório scene (`useSceneContainer`) so it
+ * inherits the scene's token scope; outside a scene it falls back to body, and
+ * an explicit `mount` always wins.
  *
  * @example
  * <Dialog>
@@ -38,14 +38,16 @@ export function DialogOverlay(props: ComponentProps<typeof KDialog.Overlay>) {
 
 export type DialogContentProps = ComponentProps<typeof KDialog.Content> & {
   showCloseButton?: boolean
-  /** Portal target; defaults to document.body. Scene-aware in ALE-66. */
+  /** Portal target. Defaults to the enclosing grimório scene (so the dialog
+   *  inherits its tokens), else document.body. */
   mount?: Node
 }
 
 export function DialogContent(props: DialogContentProps) {
   const [local, rest] = splitProps(props, ['class', 'children', 'showCloseButton', 'mount'])
+  const scene = useSceneContainer()
   return (
-    <KDialog.Portal mount={local.mount}>
+    <KDialog.Portal mount={local.mount ?? scene() ?? undefined}>
       <DialogOverlay />
       <KDialog.Content
         data-slot="dialog-content"

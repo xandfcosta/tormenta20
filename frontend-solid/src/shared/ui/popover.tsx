@@ -1,5 +1,6 @@
 import { Popover as KPopover } from '@kobalte/core/popover'
 import { type ComponentProps, splitProps } from 'solid-js'
+import { useSceneContainer } from '@/shared/lib/scene-container'
 import { cn } from '@/shared/lib/utils'
 
 /**
@@ -17,14 +18,15 @@ export const PopoverTrigger = KPopover.Trigger
 export const PopoverAnchor = KPopover.Anchor
 
 export type PopoverContentProps = ComponentProps<typeof KPopover.Content> & {
-  /** Portal target; defaults to document.body. Scene-aware in ALE-66. */
+  /** Portal target. Defaults to the enclosing grimório scene, else body. */
   mount?: Node
 }
 
 export function PopoverContent(props: PopoverContentProps) {
   const [local, rest] = splitProps(props, ['class', 'mount'])
+  const scene = useSceneContainer()
   return (
-    <KPopover.Portal mount={local.mount}>
+    <KPopover.Portal mount={local.mount ?? scene() ?? undefined}>
       <KPopover.Content
         data-slot="popover-content"
         class={cn(

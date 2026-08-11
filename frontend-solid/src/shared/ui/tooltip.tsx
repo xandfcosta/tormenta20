@@ -1,5 +1,6 @@
 import { Tooltip as KTooltip } from '@kobalte/core/tooltip'
 import { type ComponentProps, splitProps } from 'solid-js'
+import { useSceneContainer } from '@/shared/lib/scene-container'
 import { cn } from '@/shared/lib/utils'
 
 /**
@@ -20,14 +21,15 @@ export const Tooltip = KTooltip
 export const TooltipTrigger = KTooltip.Trigger
 
 export type TooltipContentProps = ComponentProps<typeof KTooltip.Content> & {
-  /** Portal target; defaults to document.body. Scene-aware in ALE-66. */
+  /** Portal target. Defaults to the enclosing grimório scene, else body. */
   mount?: Node
 }
 
 export function TooltipContent(props: TooltipContentProps) {
   const [local, rest] = splitProps(props, ['class', 'children', 'mount'])
+  const scene = useSceneContainer()
   return (
-    <KTooltip.Portal mount={local.mount}>
+    <KTooltip.Portal mount={local.mount ?? scene() ?? undefined}>
       <KTooltip.Content
         data-slot="tooltip-content"
         class={cn(

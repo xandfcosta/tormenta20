@@ -1,5 +1,6 @@
 import { Select as KSelect } from '@kobalte/core/select'
 import { CheckIcon, ChevronDownIcon } from 'lucide-solid'
+import { useSceneContainer } from '@/shared/lib/scene-container'
 import { cn } from '@/shared/lib/utils'
 
 export type SelectOption<T> = {
@@ -18,7 +19,7 @@ export type SelectProps<T> = {
   class?: string
   /** Required when there's no visible <Label> pointing at the trigger. */
   'aria-label'?: string
-  /** Portal target; defaults to document.body. Scene-aware in ALE-66. */
+  /** Portal target. Defaults to the enclosing grimório scene, else body. */
   mount?: Node
 }
 
@@ -34,6 +35,7 @@ export type SelectProps<T> = {
  * <Select options={races()} value={race()} onChange={setRace} placeholder="Raça" />
  */
 export function Select<T>(props: SelectProps<T>) {
+  const scene = useSceneContainer()
   return (
     <KSelect<SelectOption<T>>
       options={props.options}
@@ -72,7 +74,7 @@ export function Select<T>(props: SelectProps<T>) {
           <ChevronDownIcon class="size-4 opacity-50" />
         </KSelect.Icon>
       </KSelect.Trigger>
-      <KSelect.Portal mount={props.mount}>
+      <KSelect.Portal mount={props.mount ?? scene() ?? undefined}>
         <KSelect.Content
           data-slot="select-content"
           class="z-50 min-w-32 overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[closed]:animate-out data-[closed]:fade-out-0 data-[expanded]:animate-in data-[expanded]:fade-in-0"
