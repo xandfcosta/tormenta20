@@ -25,6 +25,9 @@ import type {
 } from '@tormenta20/t20-data'
 import type {
   AddMemberInput,
+  ApplyDamageResult,
+  ApplyEffectInput,
+  ApplyEffectResult,
   AuthUser,
   Campaign,
   CampaignInvitePreview,
@@ -47,7 +50,9 @@ import type {
   UpdateCampaignInput,
   UpdateExpertiseInput,
   UpdateItemInput,
+  UpdateVitalsInput,
   User,
+  VitalsResult,
 } from './types'
 
 export * from './types'
@@ -152,6 +157,19 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
       /** Spends one unit; the server answers a DELTA, not the whole character. */
       consumeItem: (id: number, itemId: number, input?: ConsumeItemInput) =>
         request<ConsumeItemResult>(`/characters/${id}/items/${itemId}/consume`, json(input ?? {})),
+      /** PV/PM edit. Answers the CLAMPED pair, so the client takes the server's word. */
+      updateVitals: (id: number, input: UpdateVitalsInput) =>
+        request<VitalsResult>(`/characters/${id}/vitals`, patch(input)),
+      /**
+       * Damage in ONE request: the server routes it temp-PV-first and answers
+       * what it drained. Two requests (drain, then subtract) could interleave
+       * with another client's hit and lose a pool.
+       */
+      applyDamage: (id: number, amount: number) =>
+        request<ApplyDamageResult>(`/characters/${id}/damage`, json({ amount })),
+      /** Spell buff, power grant, or the GM's manual temp-PV pool. */
+      applyEffect: (id: number, input: ApplyEffectInput) =>
+        request<ApplyEffectResult>(`/characters/${id}/active-effects`, json(input)),
     },
     catalog: {
       // Static rulebook reference; cached hard (staleTime ∞) and fetched instead

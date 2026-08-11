@@ -311,6 +311,25 @@ export type ApplyDamageResult = {
   drained: DamageDrainStep[]
 }
 
+/** PATCH :id/vitals — either field alone is a valid write. */
+export type UpdateVitalsInput = {
+  hpCurrent?: number
+  mpCurrent?: number
+}
+
+/** PATCH :id/vitals answers with the CLAMPED pair, never the whole character. */
+export type VitalsResult = { hpCurrent: number; mpCurrent: number }
+
+/** POST :id/active-effects — one of `spellId` (spell buff), `powerId` (power
+ *  grant) or `manualTempHp` (GM ad-hoc temp-PV pool; 0 clears it). Verified
+ *  against the Go handler (`api/apply_effect.go`). */
+export type ApplyEffectInput = {
+  spellId?: string
+  powerId?: string
+  manualTempHp?: number
+  scope?: 'scene' | 'day'
+}
+
 // --- computed sheet -----------------------------------------------------------
 
 import type { RaceDefinition } from '@tormenta20/t20-data'

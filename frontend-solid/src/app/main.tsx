@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
 import { RouterProvider, createRouter } from '@tanstack/solid-router'
 import { render } from 'solid-js/web'
 import { AuthProvider } from '@/shared/stores/auth-context'
+import { ConditionalsProvider } from '@/shared/stores/conditionals-context'
 import { UiProvider } from '@/shared/stores/ui-context'
 import '@/index.css'
 import { routeTree } from '../routeTree.gen'
@@ -24,7 +25,9 @@ render(
     <QueryClientProvider client={queryClient}>
       <UiProvider>
         <AuthProvider>
-          <RouterProvider router={router} />
+          <ConditionalsProvider>
+            <RouterProvider router={router} />
+          </ConditionalsProvider>
         </AuthProvider>
       </UiProvider>
     </QueryClientProvider>
