@@ -3,9 +3,9 @@ import { render, screen } from '@solidjs/testing-library'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Campaign, CampaignMember, Session } from '@/shared/api/api'
 import {
-  CAMPAIGN_TABS,
   CampaignTome,
   type CampaignTomeProps,
+  campaignTabs,
   isCampaignTab,
   sectionLayout,
 } from './campaign-tome'
@@ -14,23 +14,35 @@ import { memberName, sortRoster } from './members-card'
 describe('sectionLayout', () => {
   // The nav driver reads this off the DOM to decide whether arrows move in 2-D
   // or 1-D — it has to match what the eye sees in each section.
-  it('grid nas seções em grade, coluna na linha do tempo', () => {
+  it('grid nas seções em grade, coluna na linha do tempo e no formulário', () => {
     expect(sectionLayout('visao')).toBe('grid')
     expect(sectionLayout('membros')).toBe('grid')
     expect(sectionLayout('sessoes')).toBe('column')
+    expect(sectionLayout('config')).toBe('column')
   })
 })
 
 describe('isCampaignTab', () => {
   it('aceita as seções conhecidas', () => {
-    for (const tab of CAMPAIGN_TABS) expect(isCampaignTab(tab)).toBe(true)
+    for (const tab of campaignTabs(true)) expect(isCampaignTab(tab)).toBe(true)
   })
 
   // A URL é a fonte da verdade e vem do usuário: `?tab=lixo` não pode quebrar.
   it('rejeita qualquer outra coisa vinda da URL', () => {
-    expect(isCampaignTab('config')).toBe(false)
     expect(isCampaignTab('lixo')).toBe(false)
     expect(isCampaignTab(undefined)).toBe(false)
+  })
+})
+
+describe('campaignTabs', () => {
+  it('o mestre percorre as quatro seções, na ordem do rail', () => {
+    expect(campaignTabs(true)).toEqual(['visao', 'sessoes', 'membros', 'config'])
+  })
+
+  // Os bumpers (PgUp/PgDn) andam por esta lista: se Config entrasse nela, o
+  // jogador cairia numa seção que o rail dele não tem.
+  it('o jogador não tem Config no ciclo', () => {
+    expect(campaignTabs(false)).toEqual(['visao', 'sessoes', 'membros'])
   })
 })
 
@@ -202,5 +214,22 @@ describe('CampaignTome', () => {
     const props = renderTome()
     screen.getByRole('tab', { name: 'Membros' }).click()
     expect(props.onTab).toHaveBeenCalledWith('membros')
+  })
+
+  it('o mestre tem a seção Config no rail', () => {
+    renderTome()
+    expect(screen.getByRole('tab', { name: 'Config' })).toBeInTheDocument()
+  })
+
+  it('o jogador não vê Config no rail', () => {
+    renderTome({ isGm: false })
+    expect(screen.queryByRole('tab', { name: 'Config' })).not.toBeInTheDocument()
+  })
+
+  it('a seção Config traz o ledger e a zona de perigo', () => {
+    renderTome({ current: 'config' })
+    expect(screen.getByRole('heading', { name: 'Snapshot Test', level: 2 })).toBeInTheDocument()
+    expect(screen.getByText('Zona de perigo')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Excluir campanha/ })).toBeInTheDocument()
   })
 })

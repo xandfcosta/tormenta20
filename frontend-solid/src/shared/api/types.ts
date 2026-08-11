@@ -151,6 +151,17 @@ export type Campaign = {
   } | null
 }
 
+export type UpdateCampaignInput = {
+  name?: string
+  description?: string
+}
+
+/** POST /campaigns/:id/invite mints a fresh token, invalidating the previous. */
+export type CampaignInviteToken = {
+  campaignId: number
+  token: string
+}
+
 export type CampaignMember = {
   id: number
   campaignId: number
@@ -185,6 +196,12 @@ export type Session = {
   endedAt: string | null
   createdAt: string
   updatedAt: string
+}
+
+export type CreateSessionInput = {
+  sessionNumber: number
+  title?: string
+  notes?: string
 }
 
 // --- computed sheet -----------------------------------------------------------

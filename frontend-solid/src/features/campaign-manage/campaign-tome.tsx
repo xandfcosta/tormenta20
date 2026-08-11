@@ -5,22 +5,33 @@ import type { Campaign, Session } from '@/shared/api/api'
 import { Button } from '@/shared/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { CampaignOverview } from './campaign-overview'
+import { ConfigSection } from './config-section'
 import { MembersCard } from './members-card'
 import { SessionsCard } from './sessions-card'
 
-export type CampaignTab = 'visao' | 'sessoes' | 'membros'
+export type CampaignTab = 'visao' | 'sessoes' | 'membros' | 'config'
+
+const ALL_TABS: readonly CampaignTab[] = ['visao', 'sessoes', 'membros', 'config']
 
 export function isCampaignTab(value: string | undefined): value is CampaignTab {
-  return value === 'visao' || value === 'sessoes' || value === 'membros'
+  return ALL_TABS.includes(value as CampaignTab)
 }
 
-/** The sections a caller can cycle through with the bumpers, in rail order. */
-export const CAMPAIGN_TABS: readonly CampaignTab[] = ['visao', 'sessoes', 'membros']
+/**
+ * The sections a caller can cycle through with the bumpers, in rail order.
+ * Config is the GM's leaf: a player's bumpers must not stop on a section that
+ * isn't on their rail (ALE-79).
+ *
+ * @example campaignTabs(false) // ['visao', 'sessoes', 'membros']
+ */
+export function campaignTabs(isGm: boolean): readonly CampaignTab[] {
+  return isGm ? ALL_TABS : ALL_TABS.filter((tab) => tab !== 'config')
+}
 
 /**
  * The content region's spatial layout per section: the dashboard and the member
- * roster are 2-D grids; the session timeline is a 1-D list. Drives
- * `data-nav-layout` so arrow movement matches what the eye sees.
+ * roster are 2-D grids; the session timeline and the config form are 1-D lists.
+ * Drives `data-nav-layout` so arrow movement matches what the eye sees.
  */
 export function sectionLayout(tab: CampaignTab): 'grid' | 'column' {
   return tab === 'visao' || tab === 'membros' ? 'grid' : 'column'
@@ -67,6 +78,7 @@ export function CampaignTome(props: CampaignTomeProps) {
           />
           <GiltRule />
           <Sections
+            campaign={props.campaign}
             campaignId={props.campaignId}
             isGm={props.isGm}
             current={props.current}
@@ -167,6 +179,7 @@ function GiltRule() {
 
 /** The sections written on the page, behind marker tabs. */
 function Sections(props: {
+  campaign: Campaign
   campaignId: number
   isGm: boolean
   current: CampaignTab
@@ -198,6 +211,11 @@ function Sections(props: {
           <TabsTrigger value="membros" class={railTabClass}>
             Membros
           </TabsTrigger>
+          <Show when={props.isGm}>
+            <TabsTrigger value="config" class={railTabClass}>
+              Config
+            </TabsTrigger>
+          </Show>
         </TabsList>
         <p class="hidden px-2 text-[10px] uppercase tracking-widest text-muted-foreground xl:block">
           ↑↓←→ navegar · PgUp/PgDn seção · Esc voltar
@@ -225,6 +243,11 @@ function Sections(props: {
         <TabsContent value="membros">
           <MembersCard campaignId={props.campaignId} isGm={props.isGm} />
         </TabsContent>
+        <Show when={props.isGm}>
+          <TabsContent value="config">
+            <ConfigSection campaign={props.campaign} />
+          </TabsContent>
+        </Show>
       </div>
     </Tabs>
   )

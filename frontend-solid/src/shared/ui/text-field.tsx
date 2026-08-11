@@ -1,7 +1,6 @@
-import { For, Show } from 'solid-js'
 import type { JSX } from 'solid-js'
+import { FieldFrame, isInvalid } from './field-frame'
 import { Input } from './input'
-import { Label } from './label'
 
 export type TextFieldProps = {
   /** Doubles as the input's `id` and `name`, so the label associates by `for`. */
@@ -27,10 +26,8 @@ export type TextFieldProps = {
  * @example <TextField name="email" label="E-mail" type="email" value={email()} onInput={setEmail} />
  */
 export function TextField(props: TextFieldProps) {
-  const invalid = () => (props.errors?.length ?? 0) > 0
   return (
-    <div class="space-y-2">
-      <Label for={props.name}>{props.label}</Label>
+    <FieldFrame name={props.name} label={props.label} errors={props.errors} hint={props.hint}>
       <Input
         id={props.name}
         name={props.name}
@@ -38,12 +35,8 @@ export function TextField(props: TextFieldProps) {
         autocomplete={props.autocomplete}
         value={props.value}
         onInput={(e) => props.onInput(e.currentTarget.value)}
-        aria-invalid={invalid()}
+        aria-invalid={isInvalid(props.errors)}
       />
-      <Show when={!invalid() && props.hint}>
-        {(hint) => <p class="text-xs text-muted-foreground">{hint()}</p>}
-      </Show>
-      <For each={props.errors}>{(message) => <p class="text-sm text-destructive">{message}</p>}</For>
-    </div>
+    </FieldFrame>
   )
 }

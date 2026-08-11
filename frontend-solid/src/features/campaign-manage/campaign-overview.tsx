@@ -9,6 +9,7 @@ import { Button } from '@/shared/ui/button'
 import { CharacterPortrait } from '@/shared/ui/character-portrait'
 import { FramedPanel } from '@/shared/ui/framed-panel'
 import { SkeletonRows } from '@/shared/ui/skeleton'
+import { InviteButton } from './invite-button'
 import { memberName, sortRoster } from './members-card'
 import { SessionLog } from './session-log'
 import { TomeSection } from './tome-section'
@@ -36,6 +37,8 @@ export function CampaignOverview(props: {
         <PartyMuster
           members={memberList()}
           isLoading={members.isLoading}
+          isGm={props.isGm}
+          campaignId={props.campaignId}
           onSeeAll={() => props.onGoToTab('membros')}
         />
         <RecentChronicle
@@ -80,12 +83,18 @@ function Sigil(props: { icon: JSX.Element; value: number; label: string }) {
 function PartyMuster(props: {
   members: CampaignMember[]
   isLoading: boolean
+  isGm: boolean
+  campaignId: number
   onSeeAll: () => void
 }) {
   const roster = () => sortRoster(props.members)
   return (
     <FramedPanel>
-      <TomeSection eyebrow="A Mesa" title="Grupo">
+      <TomeSection
+        eyebrow="A Mesa"
+        title="Grupo"
+        action={<Show when={props.isGm}>{<InviteButton campaignId={props.campaignId} />}</Show>}
+      >
         <Show when={props.isLoading}>
           <SkeletonRows count={2} />
         </Show>

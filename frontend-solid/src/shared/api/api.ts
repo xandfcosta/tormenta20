@@ -9,13 +9,16 @@
 import type {
   AuthUser,
   Campaign,
+  CampaignInviteToken,
   CampaignMember,
   Character,
   CharacterOptions,
   ComputedSheetV2,
+  CreateSessionInput,
   Credentials,
   RaceDefinition,
   Session,
+  UpdateCampaignInput,
   User,
 } from './types'
 
@@ -77,6 +80,11 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
     method: 'POST',
     body: JSON.stringify(body),
   })
+  const patch = (body: unknown): RequestInit => ({
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  })
+  const del: RequestInit = { method: 'DELETE' }
 
   return {
     auth: {
@@ -104,14 +112,25 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
     campaigns: {
       list: () => request<Campaign[]>('/campaigns'),
       get: (id: number) => request<Campaign>(`/campaigns/${id}`),
+      update: (id: number, input: UpdateCampaignInput) =>
+        request<Campaign>(`/campaigns/${id}`, patch(input)),
+      delete: (id: number) => request<{ id: number }>(`/campaigns/${id}`, del),
+      /** Mints a fresh invite token — any link shared before this 404s. */
+      rotateInvite: (id: number) =>
+        request<CampaignInviteToken>(`/campaigns/${id}/invite`, { method: 'POST' }),
     },
     members: {
       list: (campaignId: number) => request<CampaignMember[]>(`/campaigns/${campaignId}/members`),
+      /** `id` is the MEMBER's id, not the character's. */
+      remove: (campaignId: number, id: number) =>
+        request<{ id: number }>(`/campaigns/${campaignId}/members/${id}`, del),
     },
     sessions: {
       list: (campaignId: number) => request<Session[]>(`/campaigns/${campaignId}/sessions`),
       get: (campaignId: number, id: number) =>
         request<Session>(`/campaigns/${campaignId}/sessions/${id}`),
+      create: (campaignId: number, input: CreateSessionInput) =>
+        request<Session>(`/campaigns/${campaignId}/sessions`, json(input)),
     },
   }
 }

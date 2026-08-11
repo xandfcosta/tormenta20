@@ -3,20 +3,25 @@ import { ScrollText } from 'lucide-solid'
 import { Show } from 'solid-js'
 import { campaignSessionsQueryOptions } from '@/entities/session/queries'
 import { SkeletonRows } from '@/shared/ui/skeleton'
+import { NewSessionButton } from './new-session-button'
 import { SessionLog } from './session-log'
 import { TomeSection } from './tome-section'
 
 /**
  * Sessões section: the campaign's chronicle log — every session as an entry on
- * a gilt timeline (the live one highlighted). Empty state invites the first
- * entry.
+ * a gilt timeline (the live one highlighted). The GM mints the next session
+ * from the heading action; the empty state invites the first entry.
  */
 export function SessionsCard(props: { campaignId: number; isGm: boolean }) {
   const sessions = useQuery(() => campaignSessionsQueryOptions(props.campaignId))
   const list = () => sessions.data ?? []
 
   return (
-    <TomeSection eyebrow="Crônica" title="Sessões">
+    <TomeSection
+      eyebrow="Crônica"
+      title="Sessões"
+      action={<Show when={props.isGm}>{<NewSessionButton campaignId={props.campaignId} />}</Show>}
+    >
       <Show when={sessions.isLoading}>
         <SkeletonRows count={3} />
       </Show>

@@ -4,9 +4,9 @@ import { Show } from 'solid-js'
 import { campaignMembersQueryOptions, campaignQueryOptions } from '@/entities/campaign/queries'
 import { campaignSessionsQueryOptions } from '@/entities/session/queries'
 import {
-  CAMPAIGN_TABS,
   type CampaignTab,
   CampaignTome,
+  campaignTabs,
   isCampaignTab,
 } from '@/features/campaign-manage/campaign-tome'
 import { SceneShell } from '@/shared/layout/scene-shell'
@@ -49,9 +49,13 @@ export function CampaignDetailPage() {
   const activeSession = () => sessions.data?.find((s) => s.status === 'active')
   const playerCount = () => members.data?.filter((m) => m.role === 'player').length ?? 0
 
+  const tabs = () => campaignTabs(isGm())
+
+  // `?tab=config` from a player's URL falls back instead of showing a section
+  // their rail doesn't have (the real gate is the server's, this is UX).
   const tab = (): CampaignTab => {
     const fromUrl = search().tab
-    return isCampaignTab(fromUrl) ? fromUrl : 'visao'
+    return isCampaignTab(fromUrl) && tabs().includes(fromUrl) ? fromUrl : 'visao'
   }
 
   const goToTab = (next: CampaignTab) => {
@@ -80,8 +84,9 @@ export function CampaignDetailPage() {
   // header ↔ content at the edges; PageUp/PageDown are the section bumpers;
   // Esc pops content → rail → back to the book.
   const cycleSection = (delta: number) => {
-    const index = Math.max(0, CAMPAIGN_TABS.indexOf(tab()))
-    goToTab(CAMPAIGN_TABS[(index + delta + CAMPAIGN_TABS.length) % CAMPAIGN_TABS.length])
+    const sections = tabs()
+    const index = Math.max(0, sections.indexOf(tab()))
+    goToTab(sections[(index + delta + sections.length) % sections.length])
   }
 
   createSceneNav({

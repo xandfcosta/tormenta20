@@ -4,5 +4,5 @@ import { requireSession } from './-guards'
 
 export const Route = createFileRoute('/campaigns/join')({
   beforeLoad: requireSession,
-  component: () => <PendingScene title="Entrar em campanha" issue="ALE-72" />,
+  component: () => <PendingScene title="Entrar em campanha" issue="ALE-80" />,
 })
