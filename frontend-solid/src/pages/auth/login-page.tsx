@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/solid-query'
-import { getRouteApi, useNavigate } from '@tanstack/solid-router'
+import { Link, getRouteApi, useNavigate } from '@tanstack/solid-router'
 import { meQueryOptions } from '@/entities/user/queries'
 import { type Credentials, api } from '@/shared/api/api'
 import { AuthShell } from './auth-shell'
@@ -22,8 +22,18 @@ export function LoginPage() {
   }
 
   return (
-    // The "Criar uma conta" link returns with /register, ported in ALE-69.
-    <AuthShell title="Entrar" subtitle="Bem-vindo de volta, aventureiro.">
+    <AuthShell
+      title="Entrar"
+      subtitle="Bem-vindo de volta, aventureiro."
+      footer={
+        <>
+          Sem conta?{' '}
+          <Link to="/register" class="underline underline-offset-4">
+            Criar uma
+          </Link>
+        </>
+      }
+    >
       <LoginForm onSubmit={login} />
     </AuthShell>
   )

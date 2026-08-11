@@ -1,17 +1,14 @@
-import { For, Show, createSignal } from 'solid-js'
+import { Show, createSignal } from 'solid-js'
 import { z } from 'zod'
-import { ApiError, type Credentials } from '@/shared/api/api'
+import type { Credentials } from '@/shared/api/api'
+import { type FieldErrors, toSubmitFailure } from '@/shared/lib/form-errors'
 import { Button } from '@/shared/ui/button'
-import { Input } from '@/shared/ui/input'
-import { Label } from '@/shared/ui/label'
+import { TextField } from '@/shared/ui/text-field'
 
 const loginSchema = z.object({
   email: z.email('E-mail inválido'),
   password: z.string().min(1, 'Informe sua senha'),
 })
-
-type FieldName = keyof Credentials
-type FieldErrors = Partial<Record<FieldName, string[]>>
 
 /**
  * Login form — pure presentation + validation. Auth/routing is the caller's
@@ -32,7 +29,7 @@ export function LoginForm(props: { onSubmit: (credentials: Credentials) => Promi
     setFormError(null)
     const parsed = loginSchema.safeParse({ email: email(), password: password() })
     if (!parsed.success) {
-      setFieldErrors(z.flattenError(parsed.error).fieldErrors)
+      setFieldErrors(z.flattenError(parsed.error).fieldErrors as FieldErrors)
       return
     }
     setFieldErrors({})
@@ -40,20 +37,12 @@ export function LoginForm(props: { onSubmit: (credentials: Credentials) => Promi
     try {
       await props.onSubmit(parsed.data)
     } catch (error) {
-      reportFailure(error)
+      const failure = toSubmitFailure(error)
+      setFieldErrors(failure.fieldErrors)
+      setFormError(failure.formError)
     } finally {
       setSubmitting(false)
     }
-  }
-
-  /** Server-side rejections: per-field when the backend says which, else global. */
-  const reportFailure = (error: unknown) => {
-    if (!(error instanceof ApiError)) {
-      setFormError('Erro inesperado. Tente novamente.')
-      return
-    }
-    setFieldErrors(error.fieldErrors)
-    if (Object.keys(error.fieldErrors).length === 0) setFormError(error.message)
   }
 
   return (
@@ -85,33 +74,5 @@ export function LoginForm(props: { onSubmit: (credentials: Credentials) => Promi
         {submitting() ? 'Entrando…' : 'Entrar'}
       </Button>
     </form>
-  )
-}
-
-/** Labelled input + its error list, on the kit's Label/Input primitives. */
-function TextField(props: {
-  name: FieldName
-  label: string
-  type: 'email' | 'password'
-  autocomplete: 'email' | 'current-password'
-  value: string
-  onInput: (value: string) => void
-  errors: string[] | undefined
-}) {
-  const invalid = () => (props.errors?.length ?? 0) > 0
-  return (
-    <div class="space-y-2">
-      <Label for={props.name}>{props.label}</Label>
-      <Input
-        id={props.name}
-        name={props.name}
-        type={props.type}
-        autocomplete={props.autocomplete}
-        value={props.value}
-        onInput={(e) => props.onInput(e.currentTarget.value)}
-        aria-invalid={invalid()}
-      />
-      <For each={props.errors}>{(message) => <p class="text-sm text-destructive">{message}</p>}</For>
-    </div>
   )
 }
