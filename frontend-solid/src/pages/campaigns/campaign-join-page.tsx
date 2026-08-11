@@ -15,6 +15,7 @@ import { useUi } from '@/shared/stores/ui-context'
 import { Button } from '@/shared/ui/button'
 import { SkeletonRows } from '@/shared/ui/skeleton'
 import { TextField } from '@/shared/ui/text-field'
+import { TomeHeading } from '@/shared/ui/tome-heading'
 import { TomePage } from '@/shared/ui/tome-page'
 
 const routeApi = getRouteApi('/campaigns/join')
@@ -100,8 +101,11 @@ export function CampaignJoinPage() {
   return (
     <SceneShell dense onBack={back} onEnter={() => sfx('open')}>
       <TomePage>
-        <JoinHeading />
-        <form class="mx-auto w-full max-w-3xl space-y-6" onSubmit={join} noValidate>
+        {/* `m-auto` centers a short letter (dead invite, no heroes yet) instead
+            of leaving it stranded at the top of an empty leaf; with a full
+            roster the auto margins collapse and it fills the page. */}
+        <form class="m-auto w-full max-w-3xl space-y-6" onSubmit={join} noValidate>
+          <TomeHeading eyebrow="Carta de convite">Entrar na mesa</TomeHeading>
           <Show when={token()}>
             <InviteLetter
               loading={inviteLoading()}
@@ -146,24 +150,6 @@ export function CampaignJoinPage() {
         </form>
       </TomePage>
     </SceneShell>
-  )
-}
-
-/** Illuminated head of the invite leaf. */
-function JoinHeading() {
-  return (
-    <header class="mx-auto w-full max-w-3xl space-y-3 text-center">
-      <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-        Carta de convite
-      </p>
-      <h1 class="font-display text-3xl uppercase leading-tight tracking-wide text-grimorio-gold sm:text-4xl">
-        Entrar na mesa
-      </h1>
-      <div
-        aria-hidden="true"
-        class="h-px w-full bg-gradient-to-r from-transparent via-grimorio-gold/40 to-transparent"
-      />
-    </header>
   )
 }
 

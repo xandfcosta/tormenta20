@@ -8,6 +8,7 @@ import { SceneShell } from '@/shared/layout/scene-shell'
 import { createSceneNav } from '@/shared/lib/scene-nav'
 import { createSfx } from '@/shared/lib/sfx'
 import { useUi } from '@/shared/stores/ui-context'
+import { TomeHeading } from '@/shared/ui/tome-heading'
 import { TomePage } from '@/shared/ui/tome-page'
 
 /**
@@ -49,8 +50,13 @@ export function NewCampaignPage() {
   return (
     <SceneShell dense onBack={back} onEnter={() => sfx('open')}>
       <TomePage>
-        <BlankLeafHeading />
-        <div class="mx-auto w-full max-w-2xl">
+        {/* `m-auto`: a blank leaf holds little, so the entry sits in the MIDDLE
+            of the page instead of clinging to the top of a vast empty rectangle
+            on a desktop screen. With taller content the auto margins collapse. */}
+        <div class="m-auto w-full max-w-2xl space-y-6">
+          <TomeHeading eyebrow="Folha em branco" icon={<BlankLeafMark />}>
+            Abrir nova crônica
+          </TomeHeading>
           <CampaignForm
             submitLabel="Abrir crônica"
             pendingLabel="Abrindo…"
@@ -63,23 +69,11 @@ export function NewCampaignPage() {
   )
 }
 
-/** Illuminated head of a page nobody has written on yet. */
-function BlankLeafHeading() {
+/** The scribe's mark on an unwritten page. */
+function BlankLeafMark() {
   return (
-    <header class="mx-auto w-full max-w-2xl space-y-3 text-center">
-      <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-        Folha em branco
-      </p>
-      <h1 class="font-display text-3xl uppercase leading-tight tracking-wide text-grimorio-gold sm:text-4xl">
-        <span aria-hidden="true" class="mr-2 text-grimorio-gold/60">
-          ✦
-        </span>
-        Abrir nova crônica
-      </h1>
-      <div
-        aria-hidden="true"
-        class="h-px w-full bg-gradient-to-r from-transparent via-grimorio-gold/40 to-transparent"
-      />
-    </header>
+    <span aria-hidden="true" class="mr-2 text-grimorio-gold/60">
+      ✦
+    </span>
   )
 }

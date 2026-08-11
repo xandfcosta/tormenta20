@@ -24,6 +24,9 @@ export function TomePage(props: ParentProps<{ class?: string }>) {
           data-tome-root
           class={cn(
             'grimorio-frame--stone flex min-h-[calc(100dvh-7rem)] flex-col gap-6 rounded-sm p-6 sm:p-10',
+            // A phone held sideways has ~390px of height; full padding there
+            // pushes the content of a short leaf clean off the screen.
+            '[@media(max-height:520px)]:gap-3 [@media(max-height:520px)]:p-4',
             props.class,
           )}
         >

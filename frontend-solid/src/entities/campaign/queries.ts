@@ -13,13 +13,14 @@ export const campaignQueryOptions = (id: number) =>
   })
 
 /**
- * Resolves an invite token, turning "no such invite" into a real failure.
+ * Resolves an invite token, refusing to call a preview without a campaign an
+ * invite. The backend now answers an unknown token with a 404 (it used to send
+ * 200 + a `null` body, which reached the client as a SUCCESS carrying nothing —
+ * a dead link then looked exactly like one still loading, ALE-80). This keeps
+ * the client honest regardless: an empty success is not an invite.
  *
- * The Go backend answers an unknown token with **200 and a `null` body**, not a
- * 404 — so without this an expired link is indistinguishable from one still
- * loading, and the player faces a dead button with no explanation. Verified
- * against the running backend (ALE-80). Takes the client as a parameter so the
- * rule is testable without patching a global.
+ * Takes the client as a parameter so the rule is testable without patching a
+ * global.
  *
  * @example await fetchInvitePreview('abc', createApiClient(fake.fetch))
  */
