@@ -58,6 +58,30 @@ export type CharacterItem = {
   material: string | null
 }
 
+export type CreateItemInput = {
+  catalogId?: string
+  name?: string
+  quantity: number
+  slots?: number
+  equipped?: EquippedSlot
+  improvements?: string[]
+  material?: string
+}
+
+export type UpdateItemInput = {
+  name?: string
+  quantity?: number
+  slots?: number
+  equipped?: EquippedSlot | null
+  improvements?: string[]
+  material?: string | null
+}
+
+export type ConsumeItemInput = {
+  hpRolled?: number
+  mpRolled?: number
+}
+
 export type ActiveEffect = {
   id: number
   catalogId: string
@@ -231,6 +255,19 @@ export type CreateSessionInput = {
   sessionNumber: number
   title?: string
   notes?: string
+}
+
+/**
+ * Delta returned by consumeItem (not the whole Character) — the client merges
+ * it into the cached character. `item.quantity` is the new count (0 when
+ * removed); `effect` is the scene/day ActiveEffect a non-instant consumable
+ * created; vitals are the clamped post-consume values.
+ */
+export type ConsumeItemResult = {
+  item: { id: number; quantity: number; removed: boolean }
+  effect: ActiveEffect | null
+  hpCurrent: number
+  mpCurrent: number
 }
 
 // --- PV temporários (contrato do POST :id/damage e :id/active-effects) ---

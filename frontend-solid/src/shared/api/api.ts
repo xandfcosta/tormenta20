@@ -32,16 +32,21 @@ import type {
   CampaignMember,
   Character,
   CharacterExpertise,
+  CharacterItem,
   CharacterOptions,
+  ConsumeItemInput,
+  ConsumeItemResult,
   ComputedSheetV2,
   CreateCampaignInput,
   CreateExpertiseInput,
+  CreateItemInput,
   CreateSessionInput,
   Credentials,
   RaceDefinition,
   Session,
   UpdateCampaignInput,
   UpdateExpertiseInput,
+  UpdateItemInput,
   User,
 } from './types'
 
@@ -138,6 +143,15 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
           `/characters/${id}/expertises/${encodeURIComponent(name)}`,
           del,
         ),
+      addItem: (id: number, input: CreateItemInput) =>
+        request<CharacterItem>(`/characters/${id}/items`, json(input)),
+      updateItem: (id: number, itemId: number, input: UpdateItemInput) =>
+        request<CharacterItem>(`/characters/${id}/items/${itemId}`, patch(input)),
+      deleteItem: (id: number, itemId: number) =>
+        request<{ id: number }>(`/characters/${id}/items/${itemId}`, del),
+      /** Spends one unit; the server answers a DELTA, not the whole character. */
+      consumeItem: (id: number, itemId: number, input?: ConsumeItemInput) =>
+        request<ConsumeItemResult>(`/characters/${id}/items/${itemId}/consume`, json(input ?? {})),
     },
     catalog: {
       // Static rulebook reference; cached hard (staleTime ∞) and fetched instead
