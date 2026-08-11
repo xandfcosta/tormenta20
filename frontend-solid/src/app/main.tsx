@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
 import { RouterProvider, createRouter } from '@tanstack/solid-router'
 import { render } from 'solid-js/web'
 import { AuthProvider } from '@/shared/stores/auth-context'
+import { UiProvider } from '@/shared/stores/ui-context'
 import '@/index.css'
 import { routeTree } from '../routeTree.gen'
 
@@ -21,9 +22,11 @@ if (!root) throw new Error('main: #root ausente no index.html (esperado <div id=
 render(
   () => (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
+      <UiProvider>
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </UiProvider>
     </QueryClientProvider>
   ),
   root,

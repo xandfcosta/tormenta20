@@ -1,6 +1,9 @@
 import { For, Show, createSignal } from 'solid-js'
 import { z } from 'zod'
 import { ApiError, type Credentials } from '@/shared/api/api'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import { Label } from '@/shared/ui/label'
 
 const loginSchema = z.object({
   email: z.email('E-mail inválido'),
@@ -78,18 +81,14 @@ export function LoginForm(props: { onSubmit: (credentials: Credentials) => Promi
         {(message) => <p class="text-sm text-destructive">{message()}</p>}
       </Show>
 
-      <button
-        type="submit"
-        disabled={submitting()}
-        class="h-9 w-full rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
-      >
+      <Button type="submit" class="w-full" disabled={submitting()}>
         {submitting() ? 'Entrando…' : 'Entrar'}
-      </button>
+      </Button>
     </form>
   )
 }
 
-/** Labelled input + its error list. Replaced by the UI kit's Field in ALE-65. */
+/** Labelled input + its error list, on the kit's Label/Input primitives. */
 function TextField(props: {
   name: FieldName
   label: string
@@ -102,10 +101,8 @@ function TextField(props: {
   const invalid = () => (props.errors?.length ?? 0) > 0
   return (
     <div class="space-y-2">
-      <label for={props.name} class="text-sm font-medium">
-        {props.label}
-      </label>
-      <input
+      <Label for={props.name}>{props.label}</Label>
+      <Input
         id={props.name}
         name={props.name}
         type={props.type}
@@ -113,11 +110,8 @@ function TextField(props: {
         value={props.value}
         onInput={(e) => props.onInput(e.currentTarget.value)}
         aria-invalid={invalid()}
-        class="h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive"
       />
-      <For each={props.errors}>
-        {(message) => <p class="text-sm text-destructive">{message}</p>}
-      </For>
+      <For each={props.errors}>{(message) => <p class="text-sm text-destructive">{message}</p>}</For>
     </div>
   )
 }
