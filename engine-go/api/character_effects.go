@@ -48,6 +48,39 @@ func (s *Server) endDay(ctx context.Context, user AuthUser, characterID int64) (
 	return http.StatusOK, nil
 }
 
+// clearEffectScopes runs one of the scope-expiring domain helpers for the {id}
+// character and answers with the scopes the client must drop from its cached
+// character — a delta, so the sheet updates without a refetch.
+func (s *Server) clearEffectScopes(
+	w http.ResponseWriter,
+	r *http.Request,
+	expire func(context.Context, AuthUser, int64) (int, error),
+	cleared []string,
+) {
+	id, ok := intParam(w, r, "id")
+	if !ok {
+		return
+	}
+	if status, err := expire(r.Context(), currentUser(r), id); err != nil {
+		writeError(w, status, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string][]string{"clearedScopes": cleared})
+}
+
+// handleEndScene is the sheet's own "Encerrar cena" (Efeitos tab): one player
+// ending their scene, as opposed to the GM's session-wide rest that reaches
+// endScene through the WS gateway.
+func (s *Server) handleEndScene(w http.ResponseWriter, r *http.Request) {
+	s.clearEffectScopes(w, r, s.endScene, []string{"scene"})
+}
+
+// handleEndDay ends the day, which also ends the running scene (book rest
+// semantics) — hence both scopes in the delta.
+func (s *Server) handleEndDay(w http.ResponseWriter, r *http.Request) {
+	s.clearEffectScopes(w, r, s.endDay, []string{"scene", "day"})
+}
+
 // restVitals applies the T20 night-rest recovery: PV/PM each gain floor(level × factor),
 // clamped to their max, then persists. Returns the new current values so the gateway can
 // mirror them onto the live tracker. Mirrors CharacterEffectsService.restVitals.

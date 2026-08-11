@@ -354,6 +354,22 @@ export type ApplyEffectInput = {
   scope?: 'scene' | 'day'
 }
 
+/**
+ * POST :id/end-scene and :id/end-day — the scopes the client must drop from its
+ * cached character. Ending the day also ends the running scene (book rest
+ * semantics), so it answers BOTH scopes; trusting the endpoint's name instead
+ * would leave cleared scene buffs painted on the sheet. Verified against
+ * `api/character_effects.go` (routes added for the Solid port — the React app
+ * called them before they existed and got a 404).
+ */
+export type EffectsClearedResult = {
+  clearedScopes: ('scene' | 'day')[]
+}
+
+/** PATCH :id/conditions — replaces the whole set; the server validates every id
+ *  against the book catalog (p394-395) and echoes the stored JSON blob. */
+export type ConditionsResult = { activeConditions: string }
+
 // --- computed sheet -----------------------------------------------------------
 
 import type { RaceDefinition } from '@tormenta20/t20-data'

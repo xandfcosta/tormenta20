@@ -4,6 +4,7 @@ import { RouterProvider, createRouter } from '@tanstack/solid-router'
 import { render } from 'solid-js/web'
 import { AuthProvider } from '@/shared/stores/auth-context'
 import { ConditionalsProvider } from '@/shared/stores/conditionals-context'
+import { PowerUsesProvider } from '@/shared/stores/power-uses-context'
 import { UiProvider } from '@/shared/stores/ui-context'
 import '@/index.css'
 import { routeTree } from '../routeTree.gen'
@@ -26,7 +27,9 @@ render(
       <UiProvider>
         <AuthProvider>
           <ConditionalsProvider>
-            <RouterProvider router={router} />
+            <PowerUsesProvider>
+              <RouterProvider router={router} />
+            </PowerUsesProvider>
           </ConditionalsProvider>
         </AuthProvider>
       </UiProvider>

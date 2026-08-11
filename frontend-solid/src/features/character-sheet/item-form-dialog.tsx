@@ -4,13 +4,13 @@ import type { CreateItemInput } from '@/shared/api/api'
 import type { FieldErrors } from '@/shared/lib/form-errors'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { DialogInlineError } from '@/shared/ui/dialog-inline-error'
 import { FieldFrame, isInvalid } from '@/shared/ui/field-frame'
 import { NumberInput } from '@/shared/ui/number-input'
 import { TextField } from '@/shared/ui/text-field'
 import {
   ITEM_DIALOG_CONTENT,
   ITEM_DIALOG_TITLE,
-  ItemDialogError,
   ItemDialogFooter,
 } from './item-dialog-kit'
 import { itemWriteMessage } from './item-mutations'
@@ -145,7 +145,7 @@ export function ItemFormDialog(props: ItemFormDialogProps) {
                 />
               </FieldFrame>
             </div>
-            <ItemDialogError message={formError()} />
+            <DialogInlineError message={formError()} />
             <ItemDialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancelar

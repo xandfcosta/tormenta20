@@ -5,6 +5,7 @@ import type { CreateItemInput, EquippedSlot } from '@/shared/api/api'
 import { allCatalogItems } from '@/shared/lib/catalog-cache'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { DialogInlineError } from '@/shared/ui/dialog-inline-error'
 import { FieldFrame } from '@/shared/ui/field-frame'
 import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
@@ -14,7 +15,6 @@ import { equipOptionsForCatalog } from './equip-options'
 import {
   ITEM_DIALOG_CONTENT,
   ITEM_DIALOG_TITLE,
-  ItemDialogError,
   ItemDialogFooter,
 } from './item-dialog-kit'
 import { formatLoad } from './item-describe'
@@ -214,7 +214,7 @@ export function CatalogAddDialog(props: CatalogAddDialogProps) {
               </Show>
             </div>
 
-            <ItemDialogError message={formError()} />
+            <DialogInlineError message={formError()} />
             <ItemDialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancelar

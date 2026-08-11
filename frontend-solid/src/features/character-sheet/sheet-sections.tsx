@@ -3,6 +3,8 @@ import type { Component } from 'solid-js'
 import { grantedSpells } from '@/entities/character/granted-spells'
 import type { Character } from '@/shared/api/api'
 import { BagPanel } from './bag-panel'
+import { EffectsCountBadge } from './effects-count-badge'
+import { EffectsPanel } from './effects-panel'
 import { isCasterCharacter } from './is-caster'
 import { ExpertisesPanel } from './expertises-panel'
 import { PendingBlock } from './pending-block'
@@ -75,7 +77,8 @@ export const SHEET_PANELS: SheetSection[] = [
     value: 'conditionals',
     label: 'Efeitos',
     icon: ToggleRight,
-    component: (props) => <PendingBlock title="Efeitos" issue="ALE-86" character={props.character} />,
+    badge: EffectsCountBadge,
+    component: EffectsPanel,
   },
   // Value stays 'abilities' — ?tab=abilities deep links must survive the
   // Habilidades→Poderes rename.

@@ -5,6 +5,7 @@ import { getCatalogItem } from '@/shared/lib/catalog-cache'
 import { Button } from '@/shared/ui/button'
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { DialogInlineError } from '@/shared/ui/dialog-inline-error'
 import { cn } from '@/shared/lib/utils'
 import { CatalogInfoBody } from './catalog-info-body'
 import { ConsumeAction } from './consume-action'
@@ -12,7 +13,6 @@ import { equipOptionsFor } from './equip-options'
 import {
   ITEM_DIALOG_CONTENT,
   ITEM_DIALOG_TITLE,
-  ItemDialogError,
   ItemDialogFooter,
   ItemDialogMeta,
   ItemDialogSection,
@@ -98,7 +98,7 @@ export function BagItemSheet(props: BagItemSheetProps) {
           </Show>
         </ItemDialogMeta>
 
-        <ItemDialogError message={refusal()} />
+        <DialogInlineError message={refusal()} />
 
         <EquipActions item={props.item} onPick={pickEquip} />
 

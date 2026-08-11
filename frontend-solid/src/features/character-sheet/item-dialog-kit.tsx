@@ -1,4 +1,4 @@
-import type { JSX, ParentProps } from 'solid-js'
+import type { ParentProps } from 'solid-js'
 import { Show } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
 
@@ -47,18 +47,5 @@ export function ItemDialogFooter(props: ParentProps<{ label?: string }>) {
       </Show>
       {props.children}
     </div>
-  )
-}
-
-/** Error line shared by the item forms, announced as it appears. */
-export function ItemDialogError(props: { message: string | null }): JSX.Element {
-  return (
-    <Show when={props.message}>
-      {(message) => (
-        <p class="text-xs text-destructive" role="alert">
-          {message()}
-        </p>
-      )}
-    </Show>
   )
 }

@@ -152,6 +152,8 @@ func (s *Server) Router() http.Handler {
 			r.Post("/{id}/active-effects", s.handleApplyEffect)
 			r.Patch("/{id}/active-effects/{effectId}", s.handleAdjustEffect)
 			r.Delete("/{id}/active-effects/{effectId}", s.handleDeleteEffect)
+			r.Post("/{id}/end-scene", s.handleEndScene)
+			r.Post("/{id}/end-day", s.handleEndDay)
 			r.Patch("/{id}/vitals", s.handleUpdateVitals)
 			r.Post("/{id}/damage", s.handleApplyDamage)
 			r.Patch("/{id}/level", s.handleUpdateLevel)

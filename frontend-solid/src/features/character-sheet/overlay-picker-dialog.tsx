@@ -6,10 +6,10 @@ import type { CharacterItem, UpdateItemInput } from '@/shared/api/api'
 import { catalogImprovements, catalogMaterials, getCatalogItem } from '@/shared/lib/catalog-cache'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { DialogInlineError } from '@/shared/ui/dialog-inline-error'
 import {
   ITEM_DIALOG_CONTENT,
   ITEM_DIALOG_TITLE,
-  ItemDialogError,
   ItemDialogFooter,
   ItemDialogSection,
 } from './item-dialog-kit'
@@ -171,7 +171,7 @@ function OverlayPicker(props: OverlayPickerDialogProps & { catalog: CatalogItem 
               </Show>
             </ItemDialogSection>
 
-            <ItemDialogError message={formError()} />
+            <DialogInlineError message={formError()} />
             <ItemDialogFooter>
               <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
                 Cancelar

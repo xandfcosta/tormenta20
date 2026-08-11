@@ -38,9 +38,11 @@ import type {
   CharacterItem,
   CharacterOptions,
   ClassLevelResult,
+  ConditionsResult,
   ConsumeItemInput,
   ConsumeItemResult,
   ComputedSheetV2,
+  EffectsClearedResult,
   CreateCampaignInput,
   CreateExpertiseInput,
   CreateItemInput,
@@ -181,6 +183,20 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
       /** Spell buff, power grant, or the GM's manual temp-PV pool. */
       applyEffect: (id: number, input: ApplyEffectInput) =>
         request<ApplyEffectResult>(`/characters/${id}/active-effects`, json(input)),
+      removeActiveEffect: (id: number, effectId: number) =>
+        request<{ id: number }>(`/characters/${id}/active-effects/${effectId}`, del),
+      /** Expires the scene-scoped effects. The player's own "Encerrar cena" —
+       *  the GM's session-wide rest reaches the same rule over the WS. */
+      endScene: (id: number) =>
+        request<EffectsClearedResult>(`/characters/${id}/end-scene`, { method: 'POST' }),
+      endDay: (id: number) =>
+        request<EffectsClearedResult>(`/characters/${id}/end-day`, { method: 'POST' }),
+      /** Replaces the active book conditions (caído, atordoado…, p394-395). */
+      updateConditions: (id: number, activeConditions: ConditionId[]) =>
+        request<ConditionsResult>(
+          `/characters/${id}/conditions`,
+          patch({ activeConditions }),
+        ),
     },
     catalog: {
       // Static rulebook reference; cached hard (staleTime ∞) and fetched instead
