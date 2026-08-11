@@ -3,6 +3,7 @@ import { getRouteApi, useNavigate } from '@tanstack/solid-router'
 import { Show } from 'solid-js'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { CharacterSheet } from '@/features/character-sheet/character-sheet'
+import { SheetSearch } from '@/features/character-sheet/sheet-search'
 import { SHEET_PANELS, resolveSheetTab } from '@/features/character-sheet/sheet-sections'
 import { SceneShell } from '@/shared/layout/scene-shell'
 import { createSceneNav } from '@/shared/lib/scene-nav'
@@ -76,6 +77,7 @@ export function CharacterSheetPage() {
           {(data) => (
             <div class="h-[calc(100dvh-7rem)] w-full">
               <CharacterSheet character={data()} tab={tab()} onTabChange={goToTab} />
+              <SheetSearch character={data()} onNavigate={goToTab} />
             </div>
           )}
         </Show>
