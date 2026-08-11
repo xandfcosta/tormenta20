@@ -370,6 +370,14 @@ export type EffectsClearedResult = {
  *  against the book catalog (p394-395) and echoes the stored JSON blob. */
 export type ConditionsResult = { activeConditions: string }
 
+/** PATCH /campaigns/:cid/sessions/:id — any subset; the server echoes the
+ *  whole session back. Verified against `api/sessions.go`. */
+export type UpdateSessionInput = {
+  sessionNumber?: number
+  title?: string
+  notes?: string
+}
+
 /** POST :id/spells/:catalogSpellId/cast — the augment picks, one entry per
  *  aprimoramento (stacks combined; a duplicate index is a 400). */
 export type SpellAugmentPick = { augmentIndex: number; stacks: number }

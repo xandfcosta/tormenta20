@@ -8,7 +8,8 @@ import {
 import { campaignSessionQueryOptions } from '@/entities/session/queries'
 import { meQueryOptions } from '@/entities/user/queries'
 import { MatchShell } from '@/features/session/match-shell'
-import { InitiativeCard } from '@/features/session-tracker/initiative-card'
+import { SessionGmView } from '@/features/session/session-gm-view'
+import { SessionPlayerView } from '@/features/session/session-player-view'
 import { PresenceChips } from '@/features/session-tracker/presence-chips'
 import { myCharacterIdsOf } from '@/features/session-tracker/tracker-rules'
 import { createSessionSocket } from '@/shared/realtime/realtime'
@@ -68,9 +69,27 @@ export function SessionTrackerPage() {
             <p class="p-4 text-destructive">{(session.error as Error | null)?.message}</p>
           }
         >
-          <div class="mx-auto grid max-w-6xl gap-4 p-3 sm:p-4">
-            <InitiativeCard rt={rt} isGm={isGm()} myCharacterIds={myCharacterIds()} />
-          </div>
+          {(data) => (
+            <Show
+              when={isGm()}
+              fallback={
+                <SessionPlayerView
+                  campaignId={campaignId()}
+                  session={data()}
+                  rt={rt}
+                  myCharacterIds={myCharacterIds()}
+                />
+              }
+            >
+              <SessionGmView
+                campaignId={campaignId()}
+                sessionId={sessionId()}
+                session={data()}
+                rt={rt}
+                myCharacterIds={myCharacterIds()}
+              />
+            </Show>
+          )}
         </Show>
       </Show>
     </MatchShell>

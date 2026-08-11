@@ -60,6 +60,7 @@ import type {
   UpdateClassLevelInput,
   UpdateItemInput,
   UpdateProficienciesInput,
+  UpdateSessionInput,
   SpellAugmentPick,
   UnlearnSpellResult,
   UpdateVitalsInput,
@@ -283,6 +284,18 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
         request<Session>(`/campaigns/${campaignId}/sessions/${id}`),
       create: (campaignId: number, input: CreateSessionInput) =>
         request<Session>(`/campaigns/${campaignId}/sessions`, json(input)),
+      /** Patches any subset (número, título, notas); answers the whole row. */
+      update: (campaignId: number, id: number, input: UpdateSessionInput) =>
+        request<Session>(`/campaigns/${campaignId}/sessions/${id}`, patch(input)),
+      remove: (campaignId: number, id: number) =>
+        request<{ id: number }>(`/campaigns/${campaignId}/sessions/${id}`, del),
+      /** planned → active. The live session is the one the Hub resumes. */
+      start: (campaignId: number, id: number) =>
+        request<Session>(`/campaigns/${campaignId}/sessions/${id}/start`, {
+          method: 'POST',
+        }),
+      end: (campaignId: number, id: number) =>
+        request<Session>(`/campaigns/${campaignId}/sessions/${id}/end`, { method: 'POST' }),
     },
   }
 }
