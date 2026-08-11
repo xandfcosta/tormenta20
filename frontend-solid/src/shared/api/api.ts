@@ -37,6 +37,7 @@ import type {
   CharacterExpertise,
   CharacterItem,
   CharacterOptions,
+  ClassLevelResult,
   ConsumeItemInput,
   ConsumeItemResult,
   ComputedSheetV2,
@@ -49,6 +50,7 @@ import type {
   Session,
   UpdateCampaignInput,
   UpdateExpertiseInput,
+  UpdateClassLevelInput,
   UpdateItemInput,
   UpdateVitalsInput,
   User,
@@ -167,6 +169,10 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
        */
       applyDamage: (id: number, amount: number) =>
         request<ApplyDamageResult>(`/characters/${id}/damage`, json({ amount })),
+      /** Level one class up or down; answers the new totals AND the resynced
+       *  PV/PM pools, which are derived from class levels. */
+      updateClassLevel: (id: number, input: UpdateClassLevelInput) =>
+        request<ClassLevelResult>(`/characters/${id}/classes/level`, patch(input)),
       /** Spell buff, power grant, or the GM's manual temp-PV pool. */
       applyEffect: (id: number, input: ApplyEffectInput) =>
         request<ApplyEffectResult>(`/characters/${id}/active-effects`, json(input)),

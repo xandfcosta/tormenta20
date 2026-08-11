@@ -304,6 +304,25 @@ export type DamageDrainStep = {
   removed: boolean
 }
 
+/** Pools the server recomputed after a write that changes them (level up/down).
+ *  Merging these keeps hpMax/mpMax fresh without a refetch — a 2026-08 bug left
+ *  the bars on the pre-level pools. Verified against `api/character_level.go`. */
+export type VitalsSync = {
+  hpMax: number
+  hpCurrent: number
+  mpMax: number
+  mpCurrent: number
+}
+
+/** PATCH :id/classes/level — one class's new level, plus the resynced pools. */
+export type UpdateClassLevelInput = { className: string; level: number }
+
+export type ClassLevelResult = {
+  level: number
+  classes: { className: string; level: number }[]
+  vitals: VitalsSync
+}
+
 /** POST :id/damage — atomic temp-first routing result (F2). */
 export type ApplyDamageResult = {
   hpCurrent: number

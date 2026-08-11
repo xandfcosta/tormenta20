@@ -8,7 +8,10 @@ import { Button } from '@/shared/ui/button'
 import { CharacterPortrait } from '@/shared/ui/character-portrait'
 import { cn } from '@/shared/lib/utils'
 import { AttributesGrid } from './attributes-grid'
+import { CombatStats, SavesStats } from './combat-stats'
 import { ConditionPips } from './condition-pips'
+import { ContextualStatBlocks } from './contextual-stat-blocks'
+import { LevelStepper } from './level-stepper'
 import { MobileDefChip } from './mobile-def-chip'
 import { type TempPoolControl, ResourceAdjustDialog } from './resource-adjust-dialog'
 import { ClassBadges, SheetIdentityText } from './sheet-identity'
@@ -74,7 +77,7 @@ export function CharacterHud(props: { character: Character; class?: string }) {
                   activeConditionals={active()}
                   class="md:hidden"
                 />
-                <LevelBadge character={props.character} />
+                <LevelStepper character={props.character} />
               </div>
             </div>
             {/* Class badges and condition pips share ONE row — a dedicated
@@ -115,24 +118,27 @@ export function CharacterHud(props: { character: Character; class?: string }) {
             which is why the phone layout keeps its own Vitais section and these
             widths do not. */}
         <div class="hidden min-w-0 flex-1 flex-col justify-center gap-1.5 md:flex">
-          <AttributesGrid
-            character={props.character}
-            activeConditionals={active()}
-            class="grid-cols-6"
-          />
+          {/* Row A is the reactive numbers (defesa/ataques + as três
+              resistências); row B is contextual — fórmulas de arma e o triplo
+              de magia — com os atributos ao lado. */}
+          <div class="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+            <CombatStats character={props.character} activeConditionals={active()} />
+            <SavesStats character={props.character} activeConditionals={active()} />
+          </div>
+          <div class="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+            <AttributesGrid
+              character={props.character}
+              activeConditionals={active()}
+              class="grid-cols-6"
+            />
+            <ContextualStatBlocks
+              character={props.character}
+              activeConditionals={active()}
+            />
+          </div>
         </div>
       </div>
     </div>
-  )
-}
-
-/** Total level, read-only. The multiclass stepper lands with the rest of the
- *  level mutation (ALE-90, fatia seguinte). */
-function LevelBadge(props: { character: Character }) {
-  return (
-    <span class="shrink-0 rounded-sm border border-grimorio-gold/50 px-2 py-0.5 font-mono text-xs font-bold text-grimorio-gold">
-      Nv {props.character.level}
-    </span>
   )
 }
 
