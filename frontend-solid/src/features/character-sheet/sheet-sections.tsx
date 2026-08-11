@@ -9,8 +9,8 @@ import { EffectsCountBadge } from './effects-count-badge'
 import { EffectsPanel } from './effects-panel'
 import { isCasterCharacter } from './is-caster'
 import { ExpertisesPanel } from './expertises-panel'
-import { PendingBlock } from './pending-block'
 import { ProficienciesPanel } from './proficiencies-panel'
+import { SpellbookPanel } from './spellbook-panel'
 
 /**
  * One switchable block of the sheet: tab value, short label, icon, optional
@@ -98,6 +98,6 @@ export const SHEET_PANELS: SheetSection[] = [
     // Dim only when there is truly nothing castable — a Bárbaro with Totem
     // Espiritual owns a granted spell and must see the tab lit.
     dim: (c) => !isCasterCharacter(c) && grantedSpells(c).length === 0,
-    component: (props) => <PendingBlock title="Magias" issue="ALE-88" character={props.character} />,
+    component: SpellbookPanel,
   },
 ]

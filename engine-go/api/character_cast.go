@@ -79,7 +79,7 @@ func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
 		totalPm = max(0, spellBasePmCost[spell.Circle]+augmentPm)
 	}
 
-	limit := max(1, int(dto.Level)/2) + pmLimitFromItems(s.catalogs, dto.Items)
+	limit := spellPmLimitFor(int(dto.Level), dto.Classes, spell.Classes, pmLimitFromItems(s.catalogs, dto.Items))
 	if spell.Circle > 0 && totalPm > limit {
 		writeJSON(w, http.StatusBadRequest, map[string]any{
 			"statusCode":  http.StatusBadRequest,
@@ -109,6 +109,31 @@ func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, castResult{MpCurrent: mpCurrent, RemovedEffectIDs: []int64{}})
+}
+
+// spellPmLimitFor is the per-use PM ceiling (p224): the level in the CLASS that
+// provides the ability, or the character level when no class does — a spell
+// granted by a race, origin or power. Item `pmLimit` bonuses add on top.
+//
+// It used to be `level/2`, from a Nest comment citing "p171 — ½ nível" that
+// misread the book: p171 defers to p224 and its own example spends the FULL
+// level ("um arcanista de 11º nível pode gastar até 11 PM"). The halving made
+// the server refuse casts the sheet correctly offered.
+func spellPmLimitFor(characterLevel int, classes []ClassDTO, spellClasses []string, itemBonus int) int {
+	onList := map[string]bool{}
+	for _, name := range spellClasses {
+		onList[name] = true
+	}
+	best := 0
+	for _, c := range classes {
+		if onList[c.ClassName] && int(c.Level) > best {
+			best = int(c.Level)
+		}
+	}
+	if best == 0 {
+		best = characterLevel
+	}
+	return max(1, best) + itemBonus
 }
 
 func findSpell(spells []SpellDTO, catalogSpellID string) *SpellDTO {
