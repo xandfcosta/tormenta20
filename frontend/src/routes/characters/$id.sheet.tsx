@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { characterSheetQueryOptions } from '@/entities/character/queries'
+import { characterQueryOptions } from '@/entities/character/queries'
 import { meQueryOptions } from '@/entities/user/queries'
 import { CharacterSheetPage } from '@/pages/characters/character-sheet-page'
 
@@ -13,6 +13,6 @@ export const Route = createFileRoute('/characters/$id/sheet')({
       throw redirect({ to: '/login', search: { redirect: location.href } })
   },
   loader: ({ context, params }) =>
-    context.queryClient.ensureQueryData(characterSheetQueryOptions(params.id)),
+    context.queryClient.ensureQueryData(characterQueryOptions(params.id)),
   component: CharacterSheetPage,
 })

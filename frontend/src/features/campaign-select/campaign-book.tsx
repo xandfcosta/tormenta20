@@ -49,8 +49,15 @@ function usePageTurns(target: Page, orderIds: number[]) {
   // Drive the machine during render (guarded → no render loop). All setState
   // uses functional updates so an enqueue and a dequeue in the same render
   // compose instead of clobbering each other.
+  // A page is {campaign, isLive}, and `isLive` lands LATER than the campaign
+  // (the live-session map is a separate fan-out). Comparing ids alone left the
+  // book saying "Abrir crônica" while the rail already showed the live ember —
+  // same state, two answers (ALE-78). So identity is id + liveness.
+  const isStale = (page: Page) =>
+    page.campaign.id !== target.campaign.id || page.isLive !== target.isLive
+
   if (!canTurn) {
-    if (shown.campaign.id !== target.campaign.id) setShown(target)
+    if (isStale(shown)) setShown(target)
   } else {
     // Enqueue each new target, deduped against the last known destination (the
     // queue's tail, else the turn's destination, else what's shown).
@@ -60,6 +67,10 @@ function usePageTurns(target: Page, orderIds: number[]) {
         setQueue((q) => [...q, target])
       }
       lastTargetId.current = target.campaign.id
+    } else if (!turn && queue.length === 0 && isStale(shown)) {
+      // Same chronicle, fresher data: refresh in place. Turning a page to
+      // itself would be nonsense, but dropping the update is the bug above.
+      setShown(target)
     }
     // Idle with work queued → start the next turn.
     if (!turn && queue.length > 0) {
