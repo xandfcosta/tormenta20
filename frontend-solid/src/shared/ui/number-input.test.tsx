@@ -19,7 +19,10 @@ describe('clampToRange', () => {
   })
 })
 
-function renderInput(initial: number, extra: { min?: number; max?: number; step?: number } = {}) {
+function renderInput(
+  initial: number,
+  extra: { min?: number; max?: number; step?: number; spinnerLabel?: string } = {},
+) {
   const [value, setValue] = createSignal(initial)
   render(() => (
     <NumberInput aria-label="Espaços" value={value()} onChange={setValue} {...extra} />
@@ -52,6 +55,15 @@ describe('NumberInput', () => {
     await user.click(screen.getByLabelText('Aumentar'))
     expect(value()).toBe(2)
     expect(screen.getByLabelText('Aumentar')).toBeDisabled()
+  })
+
+  // Uma tela com três campos numéricos anunciava "Aumentar" três vezes e não
+  // dizia o quê — o nome do campo entra no rótulo do spinner.
+  it('nomeia os spinners quando o campo pede', async () => {
+    renderInput(9, { spinnerLabel: 'deslocamento' })
+
+    expect(screen.getByLabelText('Aumentar deslocamento')).toBeInTheDocument()
+    expect(screen.getByLabelText('Diminuir deslocamento')).toBeInTheDocument()
   })
 
   it('digitar atualiza o valor', async () => {

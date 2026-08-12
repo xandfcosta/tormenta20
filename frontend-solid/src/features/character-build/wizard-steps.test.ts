@@ -41,16 +41,28 @@ describe('stepReady', () => {
     expect(stepReady('atributos', wizardDefaults, {})).toBe(true)
   })
 
-  it('vitalidade enforces current ≤ max', () => {
-    expect(
-      stepReady('vitalidade', { ...complete, hpCurrent: 99, hpMax: 10 }, {}),
-    ).toBe(false)
-    expect(stepReady('vitalidade', complete, {})).toBe(true)
-  })
-
   it('identidade needs a name and size', () => {
     expect(stepReady('identidade', { ...complete, name: '  ' }, {})).toBe(false)
     expect(stepReady('identidade', complete, {})).toBe(true)
+  })
+
+  // Vitalidade was folded into Identidade (ALE-94): four numbers, two of them
+  // derived, floated on a full stage. Its gate had to come along, or a draft
+  // with PV atual above PV máx would walk to the Resumo unchallenged.
+  it('identidade still enforces current ≤ max', () => {
+    expect(
+      stepReady('identidade', { ...complete, hpCurrent: 99, hpMax: 10 }, {}),
+    ).toBe(false)
+    expect(
+      stepReady('identidade', { ...complete, mpCurrent: 5, mpMax: 0 }, {}),
+    ).toBe(false)
+  })
+})
+
+describe('WIZARD_STEPS', () => {
+  it('has no standalone vitalidade step', () => {
+    // A bookmark to the old URL is caught by the same guard as any typo.
+    expect(isStepSlug('vitalidade')).toBe(false)
   })
 })
 

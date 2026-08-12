@@ -12,6 +12,10 @@ export type NumberInputProps = Omit<
   min?: number
   max?: number
   step?: number
+  /** Names the spinner buttons ("Aumentar deslocamento"). Required in practice
+   *  wherever a screen holds more than one — three bare "Aumentar" buttons are
+   *  three identical announcements. */
+  spinnerLabel?: string
 }
 
 /** Keeps a spinner step inside the field's own bounds. */
@@ -40,6 +44,7 @@ export function NumberInput(props: NumberInputProps) {
     'max',
     'step',
     'disabled',
+    'spinnerLabel',
   ])
   const numeric = () => (typeof local.value === 'number' ? local.value : Number(local.value) || 0)
   const step = () => local.step ?? 1
@@ -68,11 +73,13 @@ export function NumberInput(props: NumberInputProps) {
       <div class="pointer-events-none absolute inset-y-0 right-0 flex w-6 flex-col">
         <SpinnerButton
           direction="up"
+          name={local.spinnerLabel}
           disabled={local.disabled || atMax()}
           onClick={() => adjust(step())}
         />
         <SpinnerButton
           direction="down"
+          name={local.spinnerLabel}
           disabled={local.disabled || atMin()}
           onClick={() => adjust(-step())}
         />
@@ -85,16 +92,20 @@ export function NumberInput(props: NumberInputProps) {
  *  own arrow keys, and the labels are pt-BR like the rest of the app. */
 function SpinnerButton(props: {
   direction: 'up' | 'down'
+  name?: string
   disabled?: boolean
   onClick: () => void
 }) {
+  const label = () =>
+    [props.direction === 'up' ? 'Aumentar' : 'Diminuir', props.name].filter(Boolean).join(' ')
+
   return (
     <button
       type="button"
       tabIndex={-1}
       disabled={props.disabled}
       onClick={() => props.onClick()}
-      aria-label={props.direction === 'up' ? 'Aumentar' : 'Diminuir'}
+      aria-label={label()}
       class={cn(
         'pointer-events-auto flex flex-1 items-center justify-center text-muted-foreground transition-colors',
         'hover:bg-accent/50 hover:text-foreground',

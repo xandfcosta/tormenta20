@@ -14,7 +14,7 @@ describe('ForgeBeads', () => {
     renderBeads()
 
     // "III" é decoração; o leitor de tela recebe a frase.
-    expect(screen.getByText('Passo 3 de 10 · Poderes')).toBeInTheDocument()
+    expect(screen.getByText('Passo 3 de 9 · Poderes')).toBeInTheDocument()
   })
 
   it('mostra o algarismo romano do passo atual', () => {
@@ -43,7 +43,7 @@ describe('ForgeBeads', () => {
   it('não anda para um passo ainda trancado', async () => {
     const { onJump } = renderBeads({ reachable: 2 })
 
-    const locked = screen.getByRole('button', { name: /Vitalidade/ })
+    const locked = screen.getByRole('button', { name: /Identidade/ })
     expect(locked).toBeDisabled()
     await userEvent.click(locked)
 

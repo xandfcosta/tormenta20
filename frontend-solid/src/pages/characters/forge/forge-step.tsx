@@ -4,6 +4,8 @@ import { createCurrentStep } from '@/features/character-build/current-step'
 import { WIZARD_STEPS, type StepSlug, stepIndex } from '@/features/character-build/wizard-steps'
 import { AtributosStep } from './atributos-step'
 import { ClasseStep } from './classe-step'
+import { IdentidadeStep } from './identidade-step'
+import { OrigemStep } from './origem-step'
 import { PericiasStep } from './pericias-step'
 import { RacaStep } from './raca-step'
 
@@ -18,8 +20,10 @@ import { RacaStep } from './raca-step'
 const STEP_COMPONENTS: Partial<Record<StepSlug, Component>> = {
   raca: RacaStep,
   classe: ClasseStep,
+  origem: OrigemStep,
   atributos: AtributosStep,
   pericias: PericiasStep,
+  identidade: IdentidadeStep,
 }
 
 export function ForgeStep() {

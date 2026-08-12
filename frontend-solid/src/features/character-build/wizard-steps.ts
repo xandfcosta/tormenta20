@@ -17,7 +17,9 @@ export const WIZARD_STEPS = [
   { slug: 'atributos', label: 'Atributos' },
   { slug: 'pericias', label: 'Perícias' },
   { slug: 'equipamento', label: 'Equipamento' },
-  { slug: 'vitalidade', label: 'Vitalidade' },
+  // Vitalidade is NOT a step of its own: PV/PM are four numbers, two of them
+  // derived, which floated on a full stage — they close the Identidade step
+  // instead, where the character stops being a build and becomes a person.
   { slug: 'identidade', label: 'Identidade' },
   { slug: 'resumo', label: 'Resumo' },
 ] as const
@@ -185,10 +187,15 @@ export function stepReady(
       return true // trained perícias are soft (sheet catches)
     case 'equipamento':
       return true // kit picks are soft — finish on the sheet
-    case 'vitalidade':
-      return v.hpMax >= 1 && v.hpCurrent <= v.hpMax && v.mpCurrent <= v.mpMax
     case 'identidade':
-      return v.name.trim().length > 0 && v.size.length > 0
+      // Identity AND vitality: the merged step owns both gates.
+      return (
+        v.name.trim().length > 0 &&
+        v.size.length > 0 &&
+        v.hpMax >= 1 &&
+        v.hpCurrent <= v.hpMax &&
+        v.mpCurrent <= v.mpMax
+      )
     case 'resumo':
       return true
   }

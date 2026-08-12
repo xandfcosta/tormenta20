@@ -12,9 +12,14 @@ import { classGrant, signed } from './grant-helpers'
  * Forja so the player sees a race/class/origin's deltas and abilities before
  * committing — no hidden bonuses.
  */
-export function GrantBox(props: { title: string; children: JSX.Element }) {
+export function GrantBox(props: { title: string; class?: string; children: JSX.Element }) {
   return (
-    <div class="space-y-2 rounded-md border border-grimorio-iron bg-muted/20 p-3 text-sm">
+    <div
+      class={cn(
+        'space-y-2 rounded-md border border-grimorio-iron bg-muted/20 p-3 text-sm',
+        props.class,
+      )}
+    >
       <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-grimorio-gold">
         {props.title}
       </p>
