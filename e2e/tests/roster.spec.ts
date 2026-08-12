@@ -135,6 +135,15 @@ test.describe('Roster — a cena não reanima ao trocar de personagem', () => {
     const spotlight = page.getByRole('heading', { level: 2 })
     const antes = await textOf(spotlight, 'spotlight inicial')
 
+    // Wait for the scene's OWN entrance to finish before listening. Registering
+    // the listener while `scene-in` is still playing let the test capture that
+    // first, legitimate animation and report it as a re-animation — a race by
+    // construction that `retries: 1` was masking in CI.
+    await page.waitForFunction(
+      () => document.getAnimations().every((a) => a.playState === 'finished'),
+      null,
+      { timeout: 5_000 },
+    )
     await page.evaluate(() => {
       const fired: string[] = []
       ;(window as unknown as { __fired: string[] }).__fired = fired
@@ -228,4 +237,61 @@ test.describe('Roster — responsivo (sem overflow horizontal)', () => {
       expect(overflow, 'a página não deve rolar horizontalmente').toBeLessThanOrEqual(1)
     })
   }
+})
+
+/**
+ * ALE-99. The stage is a centred column, so ANY change in the caption below the
+ * portraits moved the portraits themselves: a name wrapping to two lines
+ * shifted the whole row 20px, and landing on the create slot (no vitals, no
+ * summary line) dropped it much further. Arrowing through the roster made the
+ * cards dance.
+ *
+ * The invariant is simple and worth stating in one place: the portrait row sits
+ * at the SAME height for every cursor position, heroes and create slot alike.
+ */
+test.describe('Roster — o palco não pula ao trocar de personagem', () => {
+  test.use({ viewport: DESK })
+
+  /**
+   * Measured AT REST: the entrance animation scales the card to 95%, which
+   * moves its bounding box by ~8px while it plays. Measuring mid-flight would
+   * report the animation as a layout jump.
+   */
+  const portraitTop = async (page: import('@playwright/test').Page) => {
+    // `scene-in` has `fill: both`, so it stays listed forever — wait for every
+    // animation to have FINISHED, not for the list to empty.
+    await page.waitForFunction(
+      () => document.getAnimations().every((a) => a.playState === 'finished'),
+      null,
+      { timeout: 5_000 },
+    )
+    return page.evaluate(() => {
+      const card = document.querySelector(
+        'button[aria-label^="Abrir ficha de"], button[aria-label="Criar novo personagem"]',
+      )
+      if (!card) throw new Error('nenhum card central no palco')
+      return Math.round(card.getBoundingClientRect().top)
+    })
+  }
+
+  test('o retrato central fica na mesma altura em todo o elenco e no slot', async ({ page }) => {
+    await page.goto('/characters')
+    await expect(page.getByRole('heading', { level: 2 })).not.toHaveText('')
+
+    const primeiro = await portraitTop(page)
+    const alturas: { quem: string; top: number }[] = []
+
+    // Percorre TODO o elenco e termina no slot de criação.
+    for (let i = 0; i < 12; i++) {
+      const quem = await textOf(page.getByRole('heading', { level: 2 }), `posição ${i}`)
+      alturas.push({ quem, top: await portraitTop(page) })
+      await page.keyboard.press('ArrowRight')
+    }
+
+    const desalinhados = alturas.filter((a) => Math.abs(a.top - primeiro) > 1)
+    expect(
+      desalinhados,
+      `estes saíram da linha (topo esperado ${primeiro}): ${JSON.stringify(desalinhados)}`,
+    ).toEqual([])
+  })
 })

@@ -34,14 +34,27 @@ export function CreateSlotStage(props: CreateSlotStageProps) {
         </button>
         <div class="w-20 sm:w-28 lg:w-32" aria-hidden="true" />
       </div>
+      {/* The hero stage has a lit pedestal here. An empty slot has nothing to
+          light, but it needs the same box: without it the centred column pulled
+          the portrait row 7px down on arrival (ALE-99). Same classes, no glow. */}
+      <div aria-hidden="true" class="pointer-events-none -mt-6 h-4 w-64 sm:w-80" />
       <div class="flex flex-col items-center gap-4 animate-in fade-in-0 slide-in-from-bottom-2 fill-mode-backwards duration-300 [animation-delay:80ms] motion-reduce:animate-none">
         <div class="max-w-2xl px-4 text-center">
-          <h2 class="font-display text-2xl uppercase tracking-[0.12em] text-muted-foreground sm:text-4xl">
+          <h2 class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-muted-foreground sm:text-4xl">
             Novo personagem
           </h2>
           <p class="mt-1 text-[11px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">
             Uma vaga vazia no grupo
           </p>
+        </div>
+        {/* An empty slot has no vitals and no summary line, and without their
+            height the centred column pulled the portrait row down 40px on the
+            way in. These two invisible rows keep the caption the same height as
+            a hero's, so the cards never move (ALE-99). Mirrors VitalsRow and
+            SummaryLine's type scale — change those, change these. */}
+        <div aria-hidden="true" class="invisible flex flex-col items-center gap-4">
+          <span class="font-mono text-lg font-semibold">0</span>
+          <span class="text-xs">.</span>
         </div>
       </div>
       <div class="flex flex-wrap items-center justify-center gap-2">

@@ -63,7 +63,12 @@ export function CharacterStage(props: CharacterStageProps) {
           {(_id) => (
             <div
               class={cn(
-                'animate-in fade-in-0 zoom-in-95 duration-300 ease-out motion-reduce:animate-none',
+                // `flex`, not a plain block: the portrait is a <button>, which
+                // is inline-level, so a block wrapper builds a line box around
+                // it and adds ~5px of descender space under the card. That made
+                // the hero's portrait row 5px taller than the create slot's and
+                // knocked the two out of line (ALE-99).
+                'flex animate-in fade-in-0 zoom-in-95 duration-300 ease-out motion-reduce:animate-none',
                 slideIn(),
               )}
             >
@@ -130,8 +135,13 @@ function Nameplate(props: { character: Character; hue: number }) {
   const race = () => props.character.races[0]?.race
   return (
     <div class="max-w-2xl px-4 text-center">
+      {/* Two lines are always reserved (`lh` = this element's own line-height,
+          so it follows the responsive font size). The stage is a centred
+          column: a name wrapping to a second line otherwise pushed the whole
+          portrait row 20px up, and arrowing through the roster made the cards
+          dance (ALE-99). */}
       <h2
-        class="font-display text-2xl uppercase tracking-[0.12em] sm:text-4xl"
+        class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] sm:text-4xl"
         style={{
           'text-shadow': `0 1px 0 oklch(0.2 0 0), 0 0 24px oklch(0.55 0.15 ${props.hue} / 0.35)`,
         }}
