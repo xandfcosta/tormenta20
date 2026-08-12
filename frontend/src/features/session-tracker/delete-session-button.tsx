@@ -1,72 +1,50 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
-import { Trash2 } from 'lucide-react'
-import { Button } from '@/shared/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/shared/ui/dialog'
-import { api } from '@/shared/api/api'
+import { useQueryClient } from '@tanstack/solid-query'
+import { useNavigate } from '@tanstack/solid-router'
+import { Trash2 } from 'lucide-solid'
+import { createSignal } from 'solid-js'
 import { campaignSessionsQueryOptions } from '@/entities/session/queries'
-export function DeleteSessionButton({
-  campaignId,
-  sessionId,
-  sessionNumber,
-}: {
+import { api } from '@/shared/api/api'
+import { Button } from '@/shared/ui/button'
+import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
+import { toast } from '@/shared/ui/sonner'
+
+/** Deletes the session and leaves the match — GM-only, irreversible. */
+export function DeleteSessionButton(props: {
   campaignId: number
   sessionId: number
   sessionNumber: number
 }) {
-  const qc = useQueryClient()
+  const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const [open, setOpen] = useState(false)
-  const mutation = useMutation({
-    mutationFn: () => api.sessions.delete(campaignId, sessionId),
-    onSuccess: async () => {
-      qc.invalidateQueries({
-        queryKey: campaignSessionsQueryOptions(campaignId).queryKey,
+  const [pending, setPending] = createSignal(false)
+
+  const remove = async () => {
+    setPending(true)
+    try {
+      await api.sessions.remove(props.campaignId, props.sessionId)
+      queryClient.invalidateQueries({
+        queryKey: campaignSessionsQueryOptions(props.campaignId).queryKey,
       })
-      setOpen(false)
-      await navigate({
-        to: '/campaigns/$id',
-        params: { id: campaignId },
-      })
-    },
-  })
+      await navigate({ to: '/campaigns/$id', params: { id: String(props.campaignId) } })
+    } catch {
+      // The dialog is already gone by now, so this one is a toast.
+      toast.error('Falha ao excluir a sessão')
+    } finally {
+      setPending(false)
+    }
+  }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="destructive" size="sm">
-          <Trash2 className="mr-1 size-3.5" /> Excluir sessão
+    <ConfirmDialog
+      title={`Excluir sessão ${props.sessionNumber}?`}
+      description="Esta ação não pode ser desfeita."
+      confirmLabel="Excluir"
+      onConfirm={() => void remove()}
+      trigger={(open) => (
+        <Button variant="destructive" size="sm" disabled={pending()} onClick={open}>
+          <Trash2 aria-hidden="true" class="mr-1 size-3.5" /> Excluir sessão
         </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Excluir sessão {sessionNumber}?</DialogTitle>
-          <DialogDescription>
-            Esta ação não pode ser desfeita.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancelar
-          </Button>
-          <Button
-            variant="destructive"
-            disabled={mutation.isPending}
-            onClick={() => mutation.mutate()}
-          >
-            {mutation.isPending ? 'Excluindo…' : 'Excluir'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      )}
+    />
   )
 }

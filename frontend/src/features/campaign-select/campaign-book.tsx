@@ -1,198 +1,143 @@
-import { ChevronRight } from 'lucide-react'
-import {
-  type AnimationEvent,
-  type CSSProperties,
-  useRef,
-  useState,
-} from 'react'
+import { ChevronRight } from 'lucide-solid'
+import { Show } from 'solid-js'
 import type { Campaign } from '@/shared/api/api'
+import { hueFromName } from '@/shared/lib/hue-from-name'
+import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { CharacterPortrait } from '@/shared/ui/character-portrait'
 import { Kbd } from '@/shared/ui/kbd'
-import { cn } from '@/shared/lib/utils'
-import { hueFromName } from '@/shared/lib/hue-from-name'
-import { useMediaQuery, usePrefersReducedMotion } from '@/shared/lib/use-media-query'
-import {
-  campaignEmblemGradient,
-  campaignInitials,
-  roleLabel,
-} from './campaign-select-helpers'
+import { campaignEmblemGradient, campaignInitials, roleLabel } from './campaign-select-helpers'
+import { createPageTurns } from './page-turns'
 
 const NOOP = () => {}
 
-type Page = { campaign: Campaign; isLive: boolean }
-// `fast`: more picks are still queued behind this turn (rapid navigation) — play
-// it quickly so the sequence drains; the settling turn (empty queue) runs normal.
-type Turn = { from: Page; to: Page; dir: 1 | -1; fast: boolean }
-
 /**
- * Page-turn state machine with an unbounded queue. `target` is the current
- * pick; `shown` is what's landed. Every new target is appended to `queue`
- * (deduped against the last known destination); the book turns to them one at a
- * time — when a turn ends, the next queued target turns in. So picks made during
- * animations all play, in order, never cutting or restarting. Direction comes
- * from the markers' order (`orderIds`): a later marker turns forward, an earlier
- * one backward. Disabled (instant sync, no leaf) on phones / reduced motion.
+ * How long a leaf takes to cross the spine. `QUEUED` runs when more picks are
+ * already waiting behind this one, so a burst of navigation drains briskly
+ * instead of making the reader sit through every turn at full length.
  */
-function usePageTurns(target: Page, orderIds: number[]) {
-  const wide = useMediaQuery('(min-width: 640px)')
-  const reduced = usePrefersReducedMotion()
-  const canTurn = wide && !reduced
-  const [shown, setShown] = useState<Page>(target)
-  const [turn, setTurn] = useState<Turn | null>(null)
-  const [queue, setQueue] = useState<Page[]>([])
-  const lastTargetId = useRef(target.campaign.id)
+const TURN_DURATION = { settling: '0.32s', queued: '0.16s' } as const
 
-  const dirTo = (fromId: number, toId: number): 1 | -1 =>
-    orderIds.indexOf(toId) >= orderIds.indexOf(fromId) ? 1 : -1
-
-  // Drive the machine during render (guarded → no render loop). All setState
-  // uses functional updates so an enqueue and a dequeue in the same render
-  // compose instead of clobbering each other.
-  // A page is {campaign, isLive}, and `isLive` lands LATER than the campaign
-  // (the live-session map is a separate fan-out). Comparing ids alone left the
-  // book saying "Abrir crônica" while the rail already showed the live ember —
-  // same state, two answers (ALE-78). So identity is id + liveness.
-  const isStale = (page: Page) =>
-    page.campaign.id !== target.campaign.id || page.isLive !== target.isLive
-
-  if (!canTurn) {
-    if (isStale(shown)) setShown(target)
-  } else {
-    // Enqueue each new target, deduped against the last known destination (the
-    // queue's tail, else the turn's destination, else what's shown).
-    if (lastTargetId.current !== target.campaign.id) {
-      const lastDest = queue.at(-1) ?? turn?.to ?? shown
-      if (lastDest.campaign.id !== target.campaign.id) {
-        setQueue((q) => [...q, target])
-      }
-      lastTargetId.current = target.campaign.id
-    } else if (!turn && queue.length === 0 && isStale(shown)) {
-      // Same chronicle, fresher data: refresh in place. Turning a page to
-      // itself would be nonsense, but dropping the update is the bug above.
-      setShown(target)
-    }
-    // Idle with work queued → start the next turn.
-    if (!turn && queue.length > 0) {
-      const next = queue[0]
-      setTurn({
-        from: shown,
-        to: next,
-        dir: dirTo(shown.campaign.id, next.campaign.id),
-        fast: queue.length > 1,
-      })
-      setShown(next)
-      setQueue((q) => q.slice(1))
-    }
-  }
-
-  const onEnd = (e: AnimationEvent<HTMLDivElement>) => {
-    if (
-      e.animationName === 'grimorio-leaf-turn' ||
-      e.animationName === 'grimorio-leaf-turn-rev'
-    )
-      // Go idle; the render logic above starts the next queued turn, if any.
-      setTurn(null)
-  }
-
-  return { shown, turn, onEnd }
-}
-
-/**
- * The focused chronicle as an open tome: a leather cover holding two leaves
- * split by a shaded spine. The left leaf is the illustration (a hue emblem
- * until real cover art lands — object-cover fills the same plate later); the
- * right leaf is the info + primary action. Page margins grow with the viewport
- * (roomy real-book margins on desktop, tight on phones). Switching chronicles
- * turns a double-sided leaf the whole way over the spine (queued via
- * `usePageTurns`). On phones the leaves stack and switch instantly.
- */
-export function CampaignBook({
-  campaign,
-  isLive,
-  orderIds,
-  onOpen,
-  onResume,
-}: {
+export type CampaignBookProps = {
   campaign: Campaign
   isLive: boolean
   /** The markers' current order (ids) — gives each turn its direction. */
   orderIds: number[]
   onOpen: () => void
   onResume: () => void
-}) {
-  const { shown, turn, onEnd } = usePageTurns({ campaign, isLive }, orderIds)
-  const fwd = !turn || turn.dir === 1
+}
+
+/**
+ * The focused chronicle as an open tome: a leather cover holding two leaves
+ * split by a shaded spine. The left leaf is the illustration (a hue emblem
+ * until real cover art lands); the right leaf is the info + primary action.
+ * Page margins grow with the viewport. Switching chronicles turns a
+ * double-sided leaf the whole way over the spine (queued via `createPageTurns`).
+ * On phones the leaves switch instantly.
+ */
+export function CampaignBook(props: CampaignBookProps) {
+  const { shown, turn, finishTurn } = createPageTurns(
+    () => ({ campaign: props.campaign, isLive: props.isLive }),
+    () => props.orderIds,
+  )
+
+  const forward = () => {
+    const t = turn()
+    return !t || t.dir === 1
+  }
   // Base spread. Idle: both pages = shown. Turning: the not-yet-covered page
   // keeps the OLD content and the revealed page is already NEW (the leaf brings
   // the new one down over the old, so nothing mismatches). Forward reveals the
   // info (right) and keeps the old illustration; backward mirrors it.
-  const baseArtName = turn
-    ? (fwd ? turn.from : turn.to).campaign.name
-    : shown.campaign.name
-  const baseInfo = turn ? (fwd ? turn.to : turn.from) : shown
+  const baseArtName = () => {
+    const t = turn()
+    if (!t) return shown().campaign.name
+    return (forward() ? t.from : t.to).campaign.name
+  }
+  const baseInfo = () => {
+    const t = turn()
+    if (!t) return shown()
+    return forward() ? t.to : t.from
+  }
+
+  const onAnimationEnd = (event: AnimationEvent) => {
+    if (
+      event.animationName === 'grimorio-leaf-turn' ||
+      event.animationName === 'grimorio-leaf-turn-rev'
+    ) {
+      finishTurn()
+    }
+  }
+
   return (
-    <div className="flex min-h-0 flex-1 items-center justify-center py-1">
-      <div className="grimorio-book w-full p-2.5 sm:p-3">
-        <div className="grimorio-book-pages flex flex-col overflow-hidden sm:min-h-[26rem] sm:flex-row sm:items-stretch lg:min-h-[32rem] xl:min-h-[36rem]">
-          <ArtPage name={baseArtName} className="shrink-0 sm:w-1/2" />
+    <div class="flex min-h-0 flex-1 items-center justify-center py-1">
+      <div class="grimorio-book w-full p-2.5 sm:p-3">
+        <div class="grimorio-book-pages flex flex-col overflow-hidden sm:min-h-[26rem] sm:flex-row sm:items-stretch lg:min-h-[32rem] xl:min-h-[36rem]">
+          <ArtPage name={baseArtName()} class="shrink-0 sm:w-1/2" />
           <InfoPage
-            campaign={baseInfo.campaign}
-            isLive={baseInfo.isLive}
-            onOpen={onOpen}
-            onResume={onResume}
+            campaign={baseInfo().campaign}
+            isLive={baseInfo().isLive}
+            onOpen={props.onOpen}
+            onResume={props.onResume}
           />
           {/* The turning leaf. Forward: FRONT = outgoing info (lifts on the
               right), BACK = incoming illustration (lands on the left). Backward
-              is the mirror (--rev): FRONT = outgoing illustration (lifts on the
-              left), BACK = incoming info. It turns the whole way over. Spread
-              only (sm+); phones switch instantly. */}
-          {turn && (
-            <div
-              key={`${turn.from.campaign.id}-${turn.to.campaign.id}`}
-              className={cn(
-                'grimorio-leaf hidden sm:block',
-                turn.dir === -1 && 'grimorio-leaf--rev',
-              )}
-              style={
-                { '--grimorio-turn': turn.fast ? '0.22s' : '0.45s' } as CSSProperties
-              }
-              onAnimationEnd={onEnd}
-            >
-              <div className="grimorio-leaf-face grimorio-leaf-front">
-                {turn.dir === 1 ? (
-                  <InfoPage
-                    campaign={turn.from.campaign}
-                    isLive={turn.from.isLive}
-                    onOpen={NOOP}
-                    onResume={NOOP}
-                  />
-                ) : (
-                  <ArtPage
-                    name={turn.from.campaign.name}
-                    className="h-full w-full"
-                  />
+              is the mirror (--rev). Spread only (sm+); phones switch instantly.
+
+              `keyed` is load-bearing, not a style choice: an unkeyed Show only
+              tracks truthiness, so a turn starting right as the previous one
+              ends would REUSE this element — the CSS animation, already
+              finished on that node, never replays, `animationend` never fires,
+              `finishTurn` is never called and the machine wedges with a leaf
+              frozen over the spine. Keyed by the turn, every turn gets a fresh
+              element and therefore a fresh animation. */}
+          <Show when={turn()} keyed>
+            {(activeTurn) => (
+              <div
+                class={cn(
+                  'grimorio-leaf hidden sm:block',
+                  activeTurn.dir === -1 && 'grimorio-leaf--rev',
                 )}
-                <span aria-hidden className="grimorio-leaf-shade" />
+                style={{
+                  '--grimorio-turn': activeTurn.fast
+                    ? TURN_DURATION.queued
+                    : TURN_DURATION.settling,
+                }}
+                on:animationend={onAnimationEnd}
+              >
+                <div class="grimorio-leaf-face grimorio-leaf-front">
+                  <Show
+                    when={activeTurn.dir === 1}
+                    fallback={<ArtPage name={activeTurn.from.campaign.name} class="h-full w-full" />}
+                  >
+                    <InfoPage
+                      campaign={activeTurn.from.campaign}
+                      isLive={activeTurn.from.isLive}
+                      onOpen={NOOP}
+                      onResume={NOOP}
+                    />
+                  </Show>
+                  <span aria-hidden="true" class="grimorio-leaf-shade" />
+                </div>
+                <div class="grimorio-leaf-face grimorio-leaf-back">
+                  <Show
+                    when={activeTurn.dir === 1}
+                    fallback={
+                      <InfoPage
+                        campaign={activeTurn.to.campaign}
+                        isLive={activeTurn.to.isLive}
+                        onOpen={NOOP}
+                        onResume={NOOP}
+                      />
+                    }
+                  >
+                    <ArtPage name={activeTurn.to.campaign.name} class="h-full w-full" />
+                  </Show>
+                  <span aria-hidden="true" class="grimorio-leaf-shade" />
+                </div>
               </div>
-              <div className="grimorio-leaf-face grimorio-leaf-back">
-                {turn.dir === 1 ? (
-                  <ArtPage
-                    name={turn.to.campaign.name}
-                    className="h-full w-full"
-                  />
-                ) : (
-                  <InfoPage
-                    campaign={turn.to.campaign}
-                    isLive={turn.to.isLive}
-                    onOpen={NOOP}
-                    onResume={NOOP}
-                  />
-                )}
-                <span aria-hidden className="grimorio-leaf-shade" />
-              </div>
-            </div>
-          )}
+            )}
+          </Show>
         </div>
       </div>
     </div>
@@ -201,137 +146,123 @@ export function CampaignBook({
 
 /** Left leaf — the illustration. Full-bleed on phones; matted on a parchment
  *  margin as the viewport grows (roomy real-book plate). */
-function ArtPage({ name, className }: { name: string; className?: string }) {
-  const hue = hueFromName(name)
+function ArtPage(props: { name: string; class?: string }) {
+  const hue = () => hueFromName(props.name)
   return (
     <div
-      className={cn(
+      class={cn(
         'grimorio-parchment-bg flex items-center justify-center p-0 sm:p-4 lg:p-7 xl:p-10',
-        className,
+        props.class,
       )}
     >
       <div
-        className="relative aspect-[16/10] w-full overflow-hidden rounded-sm border border-[color:var(--grimorio-parchment-ink)]/35 sm:aspect-auto sm:h-full"
-        style={{ background: campaignEmblemGradient(name) }}
+        class="relative aspect-[16/10] w-full overflow-hidden rounded-sm border border-[color:var(--grimorio-parchment-ink)]/35 sm:aspect-auto sm:h-full"
+        style={{ background: campaignEmblemGradient(props.name) }}
       >
         <span
-          aria-hidden
-          className="absolute inset-0 flex select-none items-center justify-center font-display text-[4.5rem] leading-none text-white/15 sm:text-[7rem] lg:text-[8.5rem]"
-          style={{ textShadow: `0 0 48px oklch(0.55 0.15 ${hue} / 0.5)` }}
+          aria-hidden="true"
+          class="absolute inset-0 flex select-none items-center justify-center font-display text-[4.5rem] leading-none text-white/15 sm:text-[7rem] lg:text-[8.5rem]"
+          style={{ 'text-shadow': `0 0 48px oklch(0.55 0.15 ${hue()} / 0.5)` }}
         >
-          {campaignInitials(name)}
+          {campaignInitials(props.name)}
         </span>
         <span
-          aria-hidden
-          className="pointer-events-none absolute inset-0 [box-shadow:inset_0_0_90px_14px_oklch(0_0_0/0.45)]"
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-0 [box-shadow:inset_0_0_90px_14px_oklch(0_0_0/0.45)]"
         />
       </div>
     </div>
   )
 }
 
-/** Right leaf — parchment with dark ink. Margins grow with the viewport; muted
- *  text is opacity (dark scene tokens would vanish on cream), live is crimson. */
-function InfoPage({
-  campaign,
-  isLive,
-  onOpen,
-  onResume,
-}: {
+/** Right leaf — parchment with dark ink. Muted text is opacity (dark scene
+ *  tokens would vanish on cream); live is crimson. */
+function InfoPage(props: {
   campaign: Campaign
   isLive: boolean
   onOpen: () => void
   onResume: () => void
 }) {
   return (
-    <div className="grimorio-parchment-bg flex flex-1 flex-col justify-center gap-4 p-6 sm:p-8 lg:p-12 xl:p-16">
-      <StatusLine role={roleLabel(campaign.role)} isLive={isLive} />
-      <h2 className="font-display text-2xl uppercase leading-tight tracking-[0.05em] sm:text-[2rem] lg:text-4xl">
-        {campaign.name}
+    <div class="grimorio-parchment-bg flex flex-1 flex-col justify-center gap-4 p-6 sm:p-8 lg:p-12 xl:p-16">
+      <StatusLine role={roleLabel(props.campaign.role)} isLive={props.isLive} />
+      <h2 class="font-display text-2xl uppercase leading-tight tracking-[0.05em] sm:text-[2rem] lg:text-4xl">
+        {props.campaign.name}
       </h2>
-      <Synopsis text={campaign.description} />
-      {campaign.character && <CharacterRow character={campaign.character} />}
-      <Actions isLive={isLive} onOpen={onOpen} onResume={onResume} />
+      <Synopsis text={props.campaign.description} />
+      <Show when={props.campaign.character}>
+        {(character) => <CharacterRow character={character()} />}
+      </Show>
+      <Actions isLive={props.isLive} onOpen={props.onOpen} onResume={props.onResume} />
     </div>
   )
 }
 
-function StatusLine({ role, isLive }: { role: string; isLive: boolean }) {
+function StatusLine(props: { role: string; isLive: boolean }) {
   return (
-    <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] opacity-70">
-      <span>{role}</span>
-      {isLive && (
-        <>
-          <span aria-hidden>·</span>
-          <span className="flex items-center gap-1.5 text-[color:var(--grimorio-crimson)] opacity-100">
-            <span className="size-2 animate-pulse rounded-full bg-[color:var(--grimorio-crimson-bright)] motion-reduce:animate-none" />
-            Sessão ao vivo
-          </span>
-        </>
-      )}
+    <p class="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] opacity-70">
+      <span>{props.role}</span>
+      <Show when={props.isLive}>
+        <span aria-hidden="true">·</span>
+        <span class="flex items-center gap-1.5 text-[color:var(--grimorio-crimson)] opacity-100">
+          <span class="size-2 animate-pulse rounded-full bg-[color:var(--grimorio-crimson-bright)] motion-reduce:animate-none" />
+          Sessão ao vivo
+        </span>
+      </Show>
     </p>
   )
 }
 
-function Synopsis({ text }: { text: string | null }) {
-  if (!text)
-    return (
-      <p className="text-sm italic opacity-60">
-        Esta crônica ainda não tem uma sinopse.
-      </p>
-    )
-  return <p className="max-w-prose text-sm leading-relaxed opacity-85">{text}</p>
+function Synopsis(props: { text: string | null }) {
+  return (
+    <Show
+      when={props.text}
+      fallback={
+        <p class="text-sm italic opacity-60">Esta crônica ainda não tem uma sinopse.</p>
+      }
+    >
+      {(text) => <p class="max-w-prose text-sm leading-relaxed opacity-85">{text()}</p>}
+    </Show>
+  )
 }
 
 /** The caller's own PC in this chronicle — portrait + name + class/level. */
-function CharacterRow({
-  character,
-}: {
-  character: NonNullable<Campaign['character']>
-}) {
-  const classes = character.classes
-    .map((c) => `${c.className} ${c.level}`)
-    .join(' / ')
+function CharacterRow(props: { character: NonNullable<Campaign['character']> }) {
+  const classes = () =>
+    props.character.classes.map((c) => `${c.className} ${c.level}`).join(' / ')
   return (
-    <div className="flex w-full max-w-xs items-center gap-2 rounded-md border border-[color:var(--grimorio-parchment-ink)]/25 p-2">
-      <CharacterPortrait name={character.name} size="sm" />
-      <div className="min-w-0">
-        <p className="truncate font-medium">{character.name}</p>
-        <p className="truncate text-xs opacity-70">
-          {classes || `Nv ${character.level}`}
+    <div class="flex w-full max-w-xs items-center gap-2 rounded-md border border-[color:var(--grimorio-parchment-ink)]/25 p-2">
+      <CharacterPortrait name={props.character.name} size="sm" />
+      <div class="min-w-0">
+        <p class="truncate font-medium">{props.character.name}</p>
+        <p class="truncate text-xs opacity-70">
+          {classes() || `Nv ${props.character.level}`}
         </p>
       </div>
     </div>
   )
 }
 
-function Actions({
-  isLive,
-  onOpen,
-  onResume,
-}: {
-  isLive: boolean
-  onOpen: () => void
-  onResume: () => void
-}) {
+function Actions(props: { isLive: boolean; onOpen: () => void; onResume: () => void }) {
   return (
-    <div className="flex flex-wrap items-center gap-2 pt-1">
-      {isLive ? (
-        <>
-          <Button size="lg" onClick={onResume}>
-            Continuar a sessão
-            <ChevronRight aria-hidden className="ml-1 size-4" />
-            <Kbd>⏎</Kbd>
+    <div class="flex flex-wrap items-center gap-2 pt-1">
+      <Show
+        when={props.isLive}
+        fallback={
+          <Button size="lg" onClick={() => props.onOpen()}>
+            Abrir crônica <Kbd>⏎</Kbd>
           </Button>
-          <Button variant="outline" onClick={onOpen}>
-            Abrir crônica <Kbd>O</Kbd>
-          </Button>
-        </>
-      ) : (
-        <Button size="lg" onClick={onOpen}>
-          Abrir crônica <Kbd>⏎</Kbd>
+        }
+      >
+        <Button size="lg" onClick={() => props.onResume()}>
+          Continuar a sessão
+          <ChevronRight aria-hidden="true" class="ml-1 size-4" />
+          <Kbd>⏎</Kbd>
         </Button>
-      )}
+        <Button variant="outline" onClick={() => props.onOpen()}>
+          Abrir crônica <Kbd>O</Kbd>
+        </Button>
+      </Show>
     </div>
   )
 }

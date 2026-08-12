@@ -1,116 +1,109 @@
-import type { CatalogItem } from '@tormenta20/t20-data'
-import { accentStrong, dimText } from '@/shared/lib/sheet-theme'
-import { cn } from '@/shared/lib/utils'
+import type { CatalogItem, Modifier } from '@tormenta20/t20-data'
+import { For, type JSX, Show } from 'solid-js'
 import { FactChips } from './fact-chips'
-import {
-  describeCondition,
-  describeModifierTarget,
-  formatLoad,
-} from './item-describe'
+import { describeCondition, describeModifierTarget, formatLoad } from './item-describe'
+import { signed } from './signed'
 
 /**
- * Rendered inside two dialogs — the "Adicionar do catálogo" preview
- * and the per-item `ItemInfoDialog`. Extracted so both consumers stay
- * in sync when a new field is added to `CatalogItem`.
+ * The item's full sheet — read inside two dialogs (the catálogo preview and the
+ * bag's action sheet), so a new `CatalogItem` field surfaces in both at once.
+ *
+ * @example <CatalogInfoBody catalog={getCatalogItem('espada-longa')!} />
  */
-export function CatalogInfoBody({ catalog }: { catalog: CatalogItem }) {
+export function CatalogInfoBody(props: { catalog: CatalogItem }) {
   return (
-    <div className="space-y-3 text-xs">
+    <div class="space-y-3 text-xs">
       <div>
-        <p className={cn('font-semibold', accentStrong)}>{catalog.name}</p>
-        <p className={dimText}>
-          {catalog.category} • esp {formatLoad(catalog.slots)} • T${' '}
-          {catalog.price} •{' '}
-          {catalog.equip === 'either' ? 'qualquer equipar' : catalog.equip}
-          {catalog.hands ? ` • ${catalog.hands} mão(s)` : ''}
+        <p class="font-semibold text-grimorio-gold">{props.catalog.name}</p>
+        <p class="text-muted-foreground">
+          {props.catalog.category} • esp {formatLoad(props.catalog.slots)} • T$ {props.catalog.price}{' '}
+          • {props.catalog.equip === 'either' ? 'qualquer equipar' : props.catalog.equip}
+          {props.catalog.hands ? ` • ${props.catalog.hands} mão(s)` : ''}
         </p>
       </div>
-      {catalog.weapon && (
-        <div className="space-y-0.5">
-          <p className={cn('text-[10px] uppercase tracking-widest', dimText)}>
-            arma
-          </p>
-          <p>
-            dano <span className="font-mono">{catalog.weapon.damage}</span> •
-            crítico{' '}
-            <span className="font-mono">
-              {catalog.weapon.critRange}/×{catalog.weapon.critMult}
-            </span>{' '}
-            • {catalog.weapon.type} • {catalog.weapon.purpose}
-            {catalog.weapon.range ? ` (${catalog.weapon.range})` : ''}
-          </p>
-          {catalog.weapon.traits.length > 0 && (
-            <p className={dimText}>
-              propriedades: {catalog.weapon.traits.join(', ')}
+
+      <Show when={props.catalog.weapon}>
+        {(weapon) => (
+          <InfoBlock title="arma">
+            <p>
+              dano <span class="font-mono">{weapon().damage}</span> • crítico{' '}
+              <span class="font-mono">
+                {weapon().critRange}/×{weapon().critMult}
+              </span>{' '}
+              • {weapon().type} • {weapon().purpose}
+              {weapon().range ? ` (${weapon().range})` : ''}
             </p>
-          )}
-        </div>
-      )}
-      {catalog.armor && (
-        <div className="space-y-0.5">
-          <p className={cn('text-[10px] uppercase tracking-widest', dimText)}>
-            armadura
-          </p>
-          <p>
-            Defesa +{catalog.armor.defense} • penalidade{' '}
-            {catalog.armor.penalty} •{' '}
-            {catalog.armor.heavy ? 'pesada' : 'leve'}
-          </p>
-        </div>
-      )}
-      {catalog.shield && (
-        <div className="space-y-0.5">
-          <p className={cn('text-[10px] uppercase tracking-widest', dimText)}>
-            escudo
-          </p>
-          <p>
-            Defesa +{catalog.shield.defense} • penalidade{' '}
-            {catalog.shield.penalty}
-          </p>
-        </div>
-      )}
-      <div className="space-y-1">
-        <p className={cn('text-[10px] uppercase tracking-widest', dimText)}>
-          modificadores
-        </p>
-        {catalog.modifiers.length === 0 ? (
-          <p className={dimText}>Nenhum.</p>
-        ) : (
-          <ul className="space-y-0.5">
-            {catalog.modifiers.map((m, i) => {
-              const cond = describeCondition(m)
-              const sign = m.amount >= 0 ? '+' : ''
-              return (
-                <li key={i} className="flex flex-wrap gap-x-1">
-                  {/* Flags are boolean — their amount (always 1) is bookkeeping,
-                      not a bonus, so it never renders. */}
-                  {m.target.k !== 'flag' && (
-                    <span className="font-mono">
-                      {sign}
-                      {m.amount}
-                    </span>
-                  )}
-                  <span>{describeModifierTarget(m.target)}</span>
-                  <span className={cn('text-[10px]', dimText)}>
-                    [{m.bonusType}]
-                  </span>
-                  {cond && (
-                    <span className={cn('text-[10px]', dimText)}>— {cond}</span>
-                  )}
-                </li>
-              )
-            })}
-          </ul>
+            <Show when={weapon().traits.length > 0}>
+              <p class="text-muted-foreground">propriedades: {weapon().traits.join(', ')}</p>
+            </Show>
+          </InfoBlock>
         )}
-      </div>
-      {catalog.displayFacts && catalog.displayFacts.length > 0 && (
-        <div className="space-y-1">
-          <p className={cn('text-[10px] uppercase tracking-widest', dimText)}>
-            outros efeitos
-          </p>
-          <FactChips facts={catalog.displayFacts} />
-        </div>
-      )}
+      </Show>
+
+      <Show when={props.catalog.armor}>
+        {(armor) => (
+          <InfoBlock title="armadura">
+            <p>
+              Defesa +{armor().defense} • penalidade {armor().penalty} •{' '}
+              {armor().heavy ? 'pesada' : 'leve'}
+            </p>
+          </InfoBlock>
+        )}
+      </Show>
+
+      <Show when={props.catalog.shield}>
+        {(shield) => (
+          <InfoBlock title="escudo">
+            <p>
+              Defesa +{shield().defense} • penalidade {shield().penalty}
+            </p>
+          </InfoBlock>
+        )}
+      </Show>
+
+      <InfoBlock title="modificadores">
+        <Show
+          when={props.catalog.modifiers.length > 0}
+          fallback={<p class="text-muted-foreground">Nenhum.</p>}
+        >
+          <ul class="space-y-0.5">
+            <For each={props.catalog.modifiers}>{(modifier) => <ModifierLine modifier={modifier} />}</For>
+          </ul>
+        </Show>
+      </InfoBlock>
+
+      <Show when={props.catalog.displayFacts?.length}>
+        <InfoBlock title="outros efeitos">
+          <FactChips facts={props.catalog.displayFacts ?? []} />
+        </InfoBlock>
+      </Show>
     </div>
+  )
+}
+
+function InfoBlock(props: { title: string; children: JSX.Element }) {
+  return (
+    <div class="space-y-0.5">
+      <p class="text-[10px] uppercase tracking-widest text-muted-foreground">{props.title}</p>
+      {props.children}
+    </div>
+  )
+}
+
+/** Flags are boolean — their amount (always 1) is bookkeeping, not a bonus,
+ *  so it never renders. */
+function ModifierLine(props: { modifier: Modifier }) {
+  const condition = () => describeCondition(props.modifier)
+  return (
+    <li class="flex flex-wrap gap-x-1">
+      <Show when={props.modifier.target.k !== 'flag'}>
+        <span class="font-mono">{signed(props.modifier.amount)}</span>
+      </Show>
+      <span>{describeModifierTarget(props.modifier.target)}</span>
+      <span class="text-[10px] text-muted-foreground">[{props.modifier.bonusType}]</span>
+      <Show when={condition()}>
+        {(text) => <span class="text-[10px] text-muted-foreground">— {text()}</span>}
+      </Show>
+    </li>
   )
 }

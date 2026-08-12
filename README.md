@@ -3,9 +3,15 @@
 pnpm workspace monorepo.
 
 ```
-backend/   NestJS + Prisma 7 (sqlite via @prisma/adapter-better-sqlite3)
-frontend/  Vite + React + TanStack Router/Query + Zustand + Shadcn (Tailwind v4, CSS variables)
+backend/   NestJS + Prisma 7 (sqlite via @prisma/adapter-better-sqlite3) — LEGADO
+engine-go/ Go: API (:3001), motor de regras e o build WASM do mesmo motor
+frontend/  Vite + SolidJS + TanStack Router/Query + Kobalte (Tailwind v4, CSS variables)
+t20-data/  catálogos e regras puras, compartilhados pelo front e pelo motor
+e2e/       Playwright, fora do frontend de propósito
 ```
+
+O frontend era React até o cutover (ALE-76); a migração para SolidJS está
+contada em [MIGRATION.md](MIGRATION.md).
 
 ## Setup
 

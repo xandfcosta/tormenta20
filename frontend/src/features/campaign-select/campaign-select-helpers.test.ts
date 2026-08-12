@@ -1,57 +1,54 @@
 import { describe, expect, it } from 'vitest'
 import type { Session } from '@/shared/api/api'
-import {
-  activeSessionByCampaign,
-  campaignInitials,
-  roleLabel,
-} from './campaign-select-helpers'
+import { type CampaignSessions, activeSessionByCampaign } from './campaign-select-helpers'
 
-/** Named fake session — only the fields the selection rule reads matter. */
-function fakeSession(id: number, status: Session['status']): Session {
+function session(id: number, status: Session['status'], campaignId = 1): Session {
   return {
     id,
-    campaignId: 1,
+    campaignId,
     title: null,
     sessionNumber: id,
     notes: null,
     status,
     startedAt: null,
     endedAt: null,
-    createdAt: '2026-08-10T00:00:00.000Z',
-    updatedAt: '2026-08-10T00:00:00.000Z',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
   }
 }
 
-describe('campaignInitials', () => {
-  it('takes up to two words, uppercased', () => {
-    expect(campaignInitials('A Lâmina de Arton')).toBe('AL')
-    expect(campaignInitials('Tauron')).toBe('T')
-    expect(campaignInitials('   ')).toBe('?')
-  })
-})
-
-describe('roleLabel', () => {
-  it('maps gm to Mestrando and everything else to Jogando', () => {
-    expect(roleLabel('gm')).toBe('Mestrando')
-    expect(roleLabel('player')).toBe('Jogando')
-    expect(roleLabel(undefined)).toBe('Jogando')
-  })
-})
-
 describe('activeSessionByCampaign', () => {
-  it('maps each campaign with a live session to that session id', () => {
-    const map = activeSessionByCampaign([
-      { campaignId: 5, sessions: [fakeSession(12, 'active')] },
-      { campaignId: 6, sessions: [fakeSession(20, 'ended')] },
-    ])
-    expect(map).toEqual({ 5: 12 })
+  it('mapeia crônica → id da sessão ao vivo', () => {
+    const lists: CampaignSessions[] = [{ campaignId: 5, sessions: [session(12, 'active')] }]
+    expect(activeSessionByCampaign(lists)).toEqual({ 5: 12 })
   })
 
-  it('skips loading (undefined) lists and campaigns with no live session', () => {
-    const map = activeSessionByCampaign([
-      { campaignId: 5, sessions: undefined },
-      { campaignId: 6, sessions: [] },
-    ])
-    expect(map).toEqual({})
+  it('crônica sem sessão ao vivo fica fora do mapa', () => {
+    const lists: CampaignSessions[] = [
+      { campaignId: 1, sessions: [session(1, 'ended'), session(2, 'planned')] },
+    ]
+    expect(activeSessionByCampaign(lists)).toEqual({})
+  })
+
+  // Lista undefined = ainda carregando; incluir mostraria brasa errada no rail.
+  it('pula crônicas ainda carregando', () => {
+    const lists: CampaignSessions[] = [
+      { campaignId: 1, sessions: undefined },
+      { campaignId: 2, sessions: [session(7, 'active')] },
+    ]
+    expect(activeSessionByCampaign(lists)).toEqual({ 2: 7 })
+  })
+
+  it('lida com várias crônicas ao vivo ao mesmo tempo', () => {
+    const lists: CampaignSessions[] = [
+      { campaignId: 1, sessions: [session(4, 'active')] },
+      { campaignId: 2, sessions: [session(9, 'ended')] },
+      { campaignId: 3, sessions: [session(11, 'active')] },
+    ]
+    expect(activeSessionByCampaign(lists)).toEqual({ 1: 4, 3: 11 })
+  })
+
+  it('mapa vazio sem crônica nenhuma', () => {
+    expect(activeSessionByCampaign([])).toEqual({})
   })
 })

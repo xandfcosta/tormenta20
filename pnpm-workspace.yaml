@@ -4,4 +4,3 @@ packages:
   - t20-data
   - engine-go
   - e2e
-  - frontend-solid

@@ -1,63 +1,65 @@
-import { useQuery } from '@tanstack/react-query'
-import { Dices } from 'lucide-react'
-import { toast } from 'sonner'
-import { Button } from '@/shared/ui/button'
-import { Skeleton } from '@/shared/ui/skeleton'
-import { rollD20 } from '@/shared/lib/dice'
-import {
-  expertiseFromSheet,
-  useComputedSheet,
-} from '@/entities/character/computed-sheet'
+import { useQuery } from '@tanstack/solid-query'
+import { Dices } from 'lucide-solid'
+import { Show } from 'solid-js'
+import { computedSheetFor, expertiseFromSheet } from '@/entities/character/computed-sheet'
 import { characterQueryOptions } from '@/entities/character/queries'
 import type { Character } from '@/shared/api/api'
-import type { useSessionSocket } from '@/shared/realtime/realtime'
+import type { SessionRealtime } from '@/shared/realtime/realtime'
+import { useConditionals } from '@/shared/stores/conditionals-context'
+import { Button } from '@/shared/ui/button'
+import { rollD20 } from '@/shared/lib/dice'
+import { Skeleton } from '@/shared/ui/skeleton'
+import { toast } from '@/shared/ui/sonner'
 
-// Iniciativa is a DEX perícia; the initiative roll is d20 + its total
-// (½ nível + atributo + treino + outros) — read from the computed sheet, same
-// math the sheet shows, then sent to the session.
+/**
+ * The player rolls their OWN initiative: d20 + the Iniciativa perícia total
+ * (½ nível + atributo + treino + outros), read from the computed sheet so the
+ * table sees the same number the sheet shows. Upserted by characterId
+ * server-side, so re-rolling replaces instead of duplicating.
+ */
+export function InitiativeRollButton(props: { characterId: number; rt: SessionRealtime }) {
+  const character = useQuery(() => characterQueryOptions(props.characterId))
 
-/** Loads the player's own character so its Iniciativa bonus can be rolled. */
-export function InitiativeRollButton({
-  characterId,
-  rt,
-}: {
-  characterId: number
-  rt: ReturnType<typeof useSessionSocket>
-}) {
-  const character = useQuery(characterQueryOptions(characterId))
-  if (character.isLoading) return <Skeleton className="h-8 w-44" />
-  if (!character.data) return null
-  return <RollButton character={character.data} rt={rt} />
+  return (
+    <Show when={!character.isLoading} fallback={<Skeleton class="h-8 w-44" />}>
+      <Show when={character.data}>
+        {(data) => <RollButton character={data()} rt={props.rt} />}
+      </Show>
+    </Show>
+  )
 }
 
-function RollButton({
-  character,
-  rt,
-}: {
-  character: Character
-  rt: ReturnType<typeof useSessionSocket>
-}) {
-  const sheet = useComputedSheet(character)
-  const bonus = expertiseFromSheet(sheet, 'Iniciativa')?.total ?? 0
+function RollButton(props: { character: Character; rt: SessionRealtime }) {
+  const conditionals = useConditionals()
+  const bonus = () => {
+    const sheet = computedSheetFor(
+      props.character,
+      conditionals.active(props.character.id),
+    )
+    return expertiseFromSheet(sheet, 'Iniciativa')?.total ?? 0
+  }
 
   const roll = () => {
     const d20 = rollD20()
-    const total = d20 + bonus
-    rt.rollSelfInitiative(character.id, total)
-    toast(`Iniciativa ${total}`, {
-      description: `d20 ${d20} ${bonus >= 0 ? '+' : ''}${bonus} (Iniciativa)`,
+    const total = d20 + bonus()
+    props.rt.rollSelfInitiative(props.character.id, total)
+    toast.success(`Iniciativa ${total}`, {
+      description: `d20 ${d20} ${bonus() >= 0 ? '+' : ''}${bonus()} (Iniciativa)`,
     })
   }
 
   return (
     <Button
+      type="button"
       size="sm"
+      variant="secondary"
+      class="gap-1.5"
+      disabled={!props.rt.isConnected()}
       onClick={roll}
-      disabled={!rt.isConnected}
-      className="gap-1.5"
     >
-      <Dices className="size-4" /> Rolar iniciativa ({bonus >= 0 ? '+' : ''}
-      {bonus})
+      <Dices aria-hidden="true" class="size-4" />
+      Rolar iniciativa ({bonus() >= 0 ? '+' : ''}
+      {bonus()})
     </Button>
   )
 }

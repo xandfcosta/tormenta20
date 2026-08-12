@@ -18,7 +18,29 @@ import { chromium } from '@playwright/test'
  * `painted` is measured with a double rAF: the first fires before the frame is
  * committed, the second after the browser has painted it.
  *
- * Usage: node bench-tabs.mjs http://localhost:5174 "SOLID"
+ * Usage: node bench-tabs.mjs http://localhost:5173 "SOLID"
+ *
+ * MEASURE A PRODUCTION BUILD (`pnpm -F frontend build && pnpm -F frontend
+ * preview`), never the dev server. Measuring in dev is what produced the
+ * original React→Solid headline — "React blocks the main thread 64–74ms per
+ * tab switch" — which does NOT reproduce under any condition. The re-measure
+ * at the cutover (ALE-76) covered all four cells, twice each:
+ *
+ *   blocked   React dev 0ms · React prod 0ms · Solid dev 0ms · Solid prod 0ms
+ *   painted   React 21–26ms (dev AND prod)   ·  Solid 6–9ms
+ *
+ * So the difference was never jank — it is PAINT, ~3× in Solid's favour, which
+ * is exactly what the first measurement dismissed as "equivalent". The lost
+ * 64–74ms was most likely cold-start cost (first chunk, WASM compiling,
+ * catalogs arriving) plus machine contention: the 2.5s wait after load does
+ * not cover a cold cache.
+ *
+ * Honest caveat on the paint win: the two sheets were not the same UI on two
+ * frameworks — the Solid one was rewritten — so part of it may be a smaller
+ * tree rather than a faster framework.
+ *
+ * Kept after the cutover as the way to measure a REGRESSION; there is no
+ * second app to compare against any more.
  */
 const BASE = process.argv[2]
 const LABEL = process.argv[3] ?? BASE

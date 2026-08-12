@@ -1,41 +1,35 @@
-import type * as React from 'react'
+import { type ComponentProps, splitProps } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
 
-/**
- * FramedPanel — the default scene container: an iron border with a faint gold
- * inset filete. `stone` (dark, default) is the standard surface; `parchment`
- * is a light aged surface with dark ink for highlighted content (spell text,
- * descriptions, cards). Meant to be used inside a `.scene-grimorio` scope.
- */
-type FramedPanelVariant = 'stone' | 'parchment'
+export type FramedPanelVariant = 'stone' | 'parchment'
 
-type FramedPanelProps = React.ComponentProps<'div'> & {
+export type FramedPanelProps = ComponentProps<'div'> & {
   variant?: FramedPanelVariant
 }
 
-function FramedPanel({
-  className,
-  variant = 'stone',
-  children,
-  ...props
-}: FramedPanelProps) {
+/**
+ * The default scene container: an iron border with a faint gold inset filete.
+ * `stone` (dark, default) is the standard surface; `parchment` is a light aged
+ * surface with dark ink for highlighted content (spell text, descriptions).
+ * Meant to be used inside a `.scene-grimorio` scope.
+ *
+ * @example <FramedPanel variant="parchment" class="p-3">…</FramedPanel>
+ */
+export function FramedPanel(props: FramedPanelProps) {
+  const [local, rest] = splitProps(props, ['class', 'variant', 'children'])
+  const variant = () => local.variant ?? 'stone'
   return (
     <div
       data-slot="framed-panel"
-      data-variant={variant}
-      className={cn(
+      data-variant={variant()}
+      class={cn(
         'grimorio-frame p-5',
-        variant === 'stone'
-          ? 'grimorio-frame--stone text-foreground'
-          : 'grimorio-parchment-bg',
-        className,
+        variant() === 'stone' ? 'grimorio-frame--stone text-foreground' : 'grimorio-parchment-bg',
+        local.class,
       )}
-      {...props}
+      {...rest}
     >
-      {children}
+      {local.children}
     </div>
   )
 }
-
-export { FramedPanel }
-export type { FramedPanelVariant }

@@ -1,26 +1,21 @@
-import { Pencil, Sparkles, Trash2 } from 'lucide-react'
+import { Pencil, Sparkles, Trash2 } from 'lucide-solid'
+import { For, Show, createMemo, createSignal } from 'solid-js'
+import type { CharacterItem, EquippedSlot } from '@/shared/api/api'
 import { getCatalogItem } from '@/shared/lib/catalog-cache'
 import { Button } from '@/shared/ui/button'
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog'
-import type { CharacterItem, EquippedSlot } from '@/shared/api/api'
-import { accentStrong, dimText } from '@/shared/lib/sheet-theme'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { DialogInlineError } from '@/shared/ui/dialog-inline-error'
 import { cn } from '@/shared/lib/utils'
 import { CatalogInfoBody } from './catalog-info-body'
-import { OverlayPickerDialog } from './catalog-picker-dialog'
 import { ConsumeAction } from './consume-action'
 import { equipOptionsFor } from './equip-options'
 import {
   ITEM_DIALOG_CONTENT,
+  ITEM_DIALOG_TITLE,
   ItemDialogFooter,
   ItemDialogMeta,
   ItemDialogSection,
-  itemDialogTitleClass,
 } from './item-dialog-kit'
 import {
   formatLoad,
@@ -29,144 +24,178 @@ import {
   overlayNotesSummary,
 } from './item-describe'
 import { ItemFormDialog } from './item-form-dialog'
-import type { ItemMutations } from './use-item-mutations'
+import { type ItemActions, itemWriteMessage } from './item-mutations'
+import { OverlayPickerDialog, acceptsOverlays } from './overlay-picker-dialog'
 
-/**
- * Action sheet for one bag item — the tap target behind every tile and
- * equipped card. Standard item-dialog structure (item-dialog-kit): title +
- * chips, meta line, then titled sections — Equipar, Usar, Ficha do item,
- * Melhorias & material — and the bordered action footer.
- */
-export function BagItemSheet({
-  item,
-  proficient,
-  open,
-  onOpenChange,
-  mutations,
-}: {
+export type BagItemSheetProps = {
   item: CharacterItem
   proficient: boolean
   open: boolean
   onOpenChange: (open: boolean) => void
-  mutations: ItemMutations
-}) {
-  const catalog = item.catalogId ? getCatalogItem(item.catalogId) : undefined
-  const consumable = catalog?.consumable
-  const overlays = itemOverlayNames(item)
+  actions: ItemActions
+}
 
-  const setEquipped = (value: '' | EquippedSlot) => {
-    mutations.changeItem(item.id, { equipped: value || null }, () => {})
-    onOpenChange(false)
+/**
+ * Action sheet for one bag item — the target behind every tile and every
+ * equipped card. Standard item-dialog structure: title + chips, meta line, then
+ * the titled sections (Equipar, Usar, Ficha do item) and the action footer.
+ */
+export function BagItemSheet(props: BagItemSheetProps) {
+  const catalog = createMemo(() =>
+    props.item.catalogId ? getCatalogItem(props.item.catalogId) : undefined,
+  )
+  const overlays = createMemo(() => itemOverlayNames(props.item))
+  const overlayable = createMemo(() => {
+    const entry = catalog()
+    return Boolean(entry && acceptsOverlays(entry))
+  })
+
+  const [refusal, setRefusal] = createSignal<string | null>(null)
+
+  /**
+   * The sheet only closes once the write went through, and a refusal ("Limite
+   * de 2 mãos atingido") lands INSIDE it. Not a toast: Kobalte marks every
+   * sibling of an open modal `aria-hidden`, so a toast fired from here is
+   * invisible to a screen reader and easy to miss with the eyes on the dialog.
+   */
+  const runAndClose = async (write: Promise<void>, fallback: string) => {
+    setRefusal(null)
+    try {
+      await write
+      props.onOpenChange(false)
+    } catch (failure) {
+      setRefusal(itemWriteMessage(failure, fallback))
+    }
   }
 
+  const pickEquip = (value: '' | EquippedSlot) =>
+    runAndClose(
+      props.actions.change(props.item.id, { equipped: value || null }),
+      'Não foi possível equipar o item.',
+    )
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn(ITEM_DIALOG_CONTENT, 'space-y-3')}>
+    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
+      <DialogContent class={cn(ITEM_DIALOG_CONTENT, 'space-y-3')}>
         <DialogHeader>
-          <DialogTitle className={itemDialogTitleClass}>
-            {item.name}
-            {overlays.map((n) => (
-              <span
-                key={n}
-                className="rounded border border-border bg-muted px-1 text-[10px] font-medium text-muted-foreground"
-              >
-                {n}
-              </span>
-            ))}
+          <DialogTitle class={ITEM_DIALOG_TITLE}>
+            {props.item.name}
+            <For each={overlays()}>
+              {(name) => (
+                <span class="rounded border border-border bg-muted px-1 text-[10px] font-medium text-muted-foreground">
+                  {name}
+                </span>
+              )}
+            </For>
           </DialogTitle>
         </DialogHeader>
 
         <ItemDialogMeta>
-          {item.quantity} × {formatLoad(item.slots)} espaço ={' '}
-          <span className="font-semibold">
-            {formatLoad(item.quantity * item.slots)}
-          </span>
-          {!proficient && item.equipped !== null && (
-            <span className="ml-2 font-semibold text-red-700 dark:text-red-400">
-              sem proficiência
-            </span>
-          )}
+          {props.item.quantity} × {formatLoad(props.item.slots)} espaço ={' '}
+          <span class="font-semibold">{formatLoad(props.item.quantity * props.item.slots)}</span>
+          <Show when={!props.proficient && props.item.equipped !== null}>
+            <span class="ml-2 font-semibold text-destructive">sem proficiência</span>
+          </Show>
         </ItemDialogMeta>
 
-        <EquipActions item={item} onPick={setEquipped} />
+        <DialogInlineError message={refusal()} />
 
-        {consumable && (
-          <ItemDialogSection title="Usar">
-            <ConsumeAction
-              consumable={consumable}
-              itemName={item.name}
-              onConsume={(input) => {
-                mutations.consumeItem(item, input)
-                onOpenChange(false)
-              }}
-              trigger={(onClick) => (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full gap-2 text-emerald-700 dark:text-emerald-400"
-                  onClick={onClick}
-                >
-                  <Sparkles className="size-4" />
-                  Usar
-                </Button>
-              )}
-            />
-          </ItemDialogSection>
-        )}
+        <EquipActions item={props.item} onPick={pickEquip} />
+
+        <Show when={catalog()?.consumable}>
+          {(consumable) => (
+            <ItemDialogSection title="Usar">
+              <ConsumeAction
+                consumable={consumable()}
+                itemName={props.item.name}
+                onConsume={(input) =>
+                  runAndClose(
+                    props.actions.consume(props.item, input),
+                    'Não foi possível usar o item.',
+                  )
+                }
+                trigger={(open) => (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    class="w-full gap-2 text-emerald-400"
+                    onClick={open}
+                  >
+                    <Sparkles aria-hidden="true" class="size-4" />
+                    Usar
+                  </Button>
+                )}
+              />
+            </ItemDialogSection>
+          )}
+        </Show>
 
         <ItemDialogSection title="Ficha do item">
-          <div className="max-h-[34vh] space-y-3 overflow-y-auto rounded-md border border-border bg-muted/40 px-3 py-2">
-            {catalog ? (
-              <CatalogInfoBody catalog={catalog} />
-            ) : (
-              <p className={cn('text-xs', dimText)}>
-                Item customizado, sem dados de catálogo.
-              </p>
-            )}
-            <AppliedOverlays item={item} />
+          <div class="max-h-[34vh] space-y-3 overflow-y-auto rounded-md border border-border bg-muted px-3 py-2">
+            <Show
+              when={catalog()}
+              fallback={
+                <p class="text-xs text-muted-foreground">
+                  Item customizado, sem dados de catálogo.
+                </p>
+              }
+            >
+              {(entry) => <CatalogInfoBody catalog={entry()} />}
+            </Show>
+            <AppliedOverlays item={props.item} />
           </div>
         </ItemDialogSection>
 
-        <ItemDialogFooter label="melhorias · editar · remover">
+        {/* The label names the buttons that are actually there: a poção shows
+            no Gem button, and announcing "melhorias" over an absent control
+            sends the player looking for it. */}
+        <ItemDialogFooter
+          label={overlayable() ? 'melhorias · editar · remover' : 'editar · remover'}
+        >
           <OverlayPickerDialog
-            item={item}
-            onUpdate={(input, fail) => mutations.changeItem(item.id, input, fail)}
+            item={props.item}
+            onApply={(input) => props.actions.change(props.item.id, input)}
           />
           <ItemFormDialog
-            title={`Editar ${item.name}`}
+            title={`Editar ${props.item.name}`}
             submitLabel="Salvar"
-            trigger={
+            initial={{
+              name: props.item.name,
+              quantity: props.item.quantity,
+              slots: props.item.slots,
+            }}
+            onSubmit={(input) => props.actions.change(props.item.id, input)}
+            trigger={(open) => (
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="size-7"
-                aria-label={`Editar ${item.name}`}
+                class="size-7"
+                aria-label={`Editar ${props.item.name}`}
+                onClick={open}
               >
-                <Pencil className="size-3.5" />
+                <Pencil aria-hidden="true" class="size-3.5" />
               </Button>
-            }
-            initial={{ name: item.name, quantity: item.quantity, slots: item.slots }}
-            onSubmit={(input, fail) => mutations.changeItem(item.id, input, fail)}
+            )}
           />
           <ConfirmDialog
-            title={`Remover "${item.name}"?`}
+            title={`Remover "${props.item.name}"?`}
             confirmLabel="Remover"
-            onConfirm={() => {
-              mutations.removeItem(item.id)
-              onOpenChange(false)
-            }}
-            trigger={
+            onConfirm={() =>
+              runAndClose(props.actions.remove(props.item.id), 'Não foi possível remover o item.')
+            }
+            trigger={(open) => (
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="size-7 text-foreground hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-950/40 dark:hover:text-red-400"
-                aria-label={`Remover ${item.name}`}
+                class="size-7 text-foreground hover:bg-destructive/20 hover:text-destructive"
+                aria-label={`Remover ${props.item.name}`}
+                onClick={open}
               >
-                <Trash2 className="size-3.5" />
+                <Trash2 aria-hidden="true" class="size-3.5" />
               </Button>
-            }
+            )}
           />
         </ItemDialogFooter>
       </DialogContent>
@@ -174,25 +203,28 @@ export function BagItemSheet({
   )
 }
 
-/** Applied melhorias + material with their effects — the base CatalogInfoBody
- *  only knows the host item, so overlays get their own block. */
-function AppliedOverlays({ item }: { item: CharacterItem }) {
-  const overlays = itemOverlayCatalogs(item)
-  if (overlays.length === 0) return null
+/** Applied melhorias + material with their effects — `CatalogInfoBody` only
+ *  knows the host item, so the overlays get their own block. */
+function AppliedOverlays(props: { item: CharacterItem }) {
+  const overlays = createMemo(() => itemOverlayCatalogs(props.item))
   return (
-    <div className="space-y-1 text-xs">
-      <p className={cn('text-[10px] uppercase tracking-widest', dimText)}>
-        Melhorias & material
-      </p>
-      {overlays.map((o) => (
-        <p key={o.id}>
-          <span className={cn('font-semibold', accentStrong)}>{o.name}</span>
-          <span className={cn('ml-2', dimText)}>
-            {overlayNotesSummary(o.modifiers) || 'sem efeito mecânico'}
-          </span>
+    <Show when={overlays().length > 0}>
+      <div class="space-y-1 text-xs">
+        <p class="text-[10px] uppercase tracking-widest text-muted-foreground">
+          Melhorias & material
         </p>
-      ))}
-    </div>
+        <For each={overlays()}>
+          {(overlay) => (
+            <p>
+              <span class="font-semibold text-grimorio-gold">{overlay.name}</span>
+              <span class="ml-2 text-muted-foreground">
+                {overlayNotesSummary(overlay.modifiers) || 'sem efeito mecânico'}
+              </span>
+            </p>
+          )}
+        </For>
+      </div>
+    </Show>
   )
 }
 
@@ -203,34 +235,38 @@ const SLOT_ACTION_LABEL: Record<'' | EquippedSlot, string> = {
   wielded2: 'Empunhar (2 mãos)',
 }
 
-/** One button per REACHABLE equip state — the current state is omitted (a
- *  stowed item is already in the bag, no "Guardar"; an empunhado item offers
- *  only Guardar/Vestir/other grip). Big targets replace the old select. */
-function EquipActions({
-  item,
-  onPick,
-}: {
+/**
+ * One button per REACHABLE equip state — the current one is omitted (a stowed
+ * item is already in the bag, so no "Guardar"; an empunhado item offers only
+ * Guardar/Vestir/the other grip).
+ */
+function EquipActions(props: {
   item: CharacterItem
   onPick: (value: '' | EquippedSlot) => void
 }) {
-  const current = item.equipped ?? ''
-  const options = equipOptionsFor(item).filter((opt) => opt.value !== current)
-  if (options.length === 0) return null
+  const options = createMemo(() => {
+    const current = props.item.equipped ?? ''
+    return equipOptionsFor(props.item).filter((option) => option.value !== current)
+  })
+
   return (
-    <ItemDialogSection title="Equipar">
-      <div className="grid grid-cols-2 gap-2">
-        {options.map((opt) => (
-          <Button
-            key={opt.value}
-            type="button"
-            variant="outline"
-            className="h-9 text-xs"
-            onClick={() => onPick(opt.value)}
-          >
-            {SLOT_ACTION_LABEL[opt.value]}
-          </Button>
-        ))}
-      </div>
-    </ItemDialogSection>
+    <Show when={options().length > 0}>
+      <ItemDialogSection title="Equipar">
+        <div class="grid grid-cols-2 gap-2">
+          <For each={options()}>
+            {(option) => (
+              <Button
+                type="button"
+                variant="outline"
+                class="h-9 text-xs"
+                onClick={() => props.onPick(option.value)}
+              >
+                {SLOT_ACTION_LABEL[option.value]}
+              </Button>
+            )}
+          </For>
+        </div>
+      </ItemDialogSection>
+    </Show>
   )
 }

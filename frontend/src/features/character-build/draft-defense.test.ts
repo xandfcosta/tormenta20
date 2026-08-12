@@ -39,6 +39,22 @@ describe('deriveDraftDefense', () => {
     expect(deriveDraftDefense(v, {})).toBe(12) // 10 + (2−1) + 1
   })
 
+  // Achado ao criar um personagem de verdade (ALE-94): a Forja prometia DEF 17
+  // e a ficha abria com 16. Brunea é `armor-heavy` e carrega a flag
+  // `cannot-apply-dex-to-defense` — sob armadura pesada a Destreza NÃO entra na
+  // Defesa, e o preview somava assim mesmo. O motor é a autoridade.
+  it('armadura pesada zera a Destreza na Defesa', () => {
+    const v = base({ startingArmor: 'brunea' })
+
+    expect(deriveDraftDefense(v, {})).toBe(15) // 10 + 5, sem os +2 de Destreza
+  })
+
+  it('a armadura pesada não come o escudo junto', () => {
+    const v = base({ startingArmor: 'brunea', startingShield: true })
+
+    expect(deriveDraftDefense(v, {})).toBe(16) // 10 + 5 + 1
+  })
+
   it('Arcanista ignora armadura/escudo (kit sem eles) mesmo se marcados', () => {
     const v = base({
       classes: [{ className: 'Arcanista', level: 1 }],

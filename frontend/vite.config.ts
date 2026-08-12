@@ -1,160 +1,67 @@
 import path from 'node:path'
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
-import { compression } from 'vite-plugin-compression2'
+import solid from 'vite-plugin-solid'
+// vitest/config, not vite: it's the one whose config type knows `test`.
+import { defineConfig } from 'vitest/config'
 
-/**
- * Manual chunk boundaries. Rolldown otherwise concatenates every
- * vendor lib plus t20-data catalogs into a monolithic index chunk
- * shipped on every route load (500KB+). Splitting keeps first paint
- * cheap and lets browser-cached vendor chunks survive across
- * unrelated app deploys.
- */
-function chunkFor(id: string): string | undefined {
-  if (!id.includes('node_modules')) {
-    // App-side split: the big data catalogs get their own chunks so
-    // routes that don't touch them (login, session tracker) don't pull
-    // 200KB+ of spell/monster tables.
-    if (id.includes('t20-data/src/spell-catalog')) return 't20-spells'
-    if (id.includes('t20-data/src/bestiary')) return 't20-bestiary'
-    if (id.includes('t20-data')) {
-      // Group the remaining 120+ t20-data modules by concern so no
-      // single chunk becomes another 500KB monolith.
-      if (
-        id.includes('t20-data/src/wondrous-items') ||
-        id.includes('t20-data/src/specific-magic-items') ||
-        id.includes('t20-data/src/consumable-magic-items') ||
-        id.includes('t20-data/src/magic-items') ||
-        id.includes('t20-data/src/loot') ||
-        id.includes('t20-data/src/reward-tables') ||
-        id.includes('t20-data/src/magic-potion-tables') ||
-        id.includes('t20-data/src/armor-enchants') ||
-        id.includes('t20-data/src/weapon-enchants')
-      ) {
-        return 't20-items'
-      }
-      if (id.includes('skill-usages') || id.includes('skill-index')) {
-        return 't20-skills'
-      }
-      if (id.includes('power-mechanics') || id.includes('parceiro') || id.includes('divine-power')) {
-        return 't20-classes'
-      }
-      if (
-        id.includes('t20-data/src/racas') ||
-        id.includes('t20-data/src/origens') ||
-        id.includes('t20-data/src/character-sheet') ||
-        id.includes('habilidades-gerais') ||
-        id.includes('deusiades') ||
-        id.includes('deuses') ||
-        id.includes('t20-data/src/classes')
-      ) {
-        return 't20-sheet-refs'
-      }
-      if (id.includes('t20-data/src/abilities/')) {
-        return 't20-abilities'
-      }
-      if (
-        id.includes('conditions') ||
-        id.includes('combat') ||
-        id.includes('maneuvers') ||
-        id.includes('test-resolution') ||
-        id.includes('spell-') ||
-        id.includes('t20-data/src/spells')
-      ) {
-        return 't20-rules'
-      }
-      return 't20-data-core'
-    }
-    return undefined
-  }
-  // Vendor chunks. Order matters — first prefix that matches wins.
-  if (id.includes('@tanstack/react-router')) return 'vendor-router'
-  if (id.includes('@tanstack/react-query')) return 'vendor-query'
-  if (
-    id.includes('@tanstack/react-form') ||
-    id.includes('@tanstack/react-pacer')
-  ) {
-    return 'vendor-tanstack'
-  }
-  if (id.includes('radix-ui') || id.includes('@radix-ui')) return 'vendor-radix'
-  if (id.includes('socket.io-client') || id.includes('engine.io')) {
-    return 'vendor-socketio'
-  }
-  if (id.includes('lucide-react')) return 'vendor-icons'
-  if (
-    id.includes('zod') ||
-    id.includes('class-variance-authority') ||
-    id.includes('clsx') ||
-    id.includes('tailwind-merge')
-  ) {
-    return 'vendor-utils'
-  }
-  if (id.includes('react-dom') || id.includes('scheduler')) {
-    return 'vendor-react-dom'
-  }
-  if (id.match(/[\\/]node_modules[\\/]react[\\/]/)) return 'vendor-react'
-  return 'vendor-misc'
-}
-
-// Backend the dev proxy forwards /api + /socket.io to. Defaults to the Go server
-// (cmd/api :3001) after the B.7 cutover; `pnpm dev:nest` overrides it to the Nest
-// backend (:3000) for rollback.
+// The Go server (cmd/api :3001) is the backend. During the migration this app
+// ran on :5174 beside the React one; since the cutover (ALE-76) it owns the
+// canonical :5173, which is what the E2E suite and the docs point at.
 const API_TARGET = process.env.API_TARGET ?? 'http://localhost:3001'
 
 export default defineConfig({
   plugins: [
-    tanstackRouter({ target: 'react', autoCodeSplitting: true }),
-    react(),
+    // Must precede solid() so the generated route tree gets the Solid transform.
+    tanstackRouter({ target: 'solid', autoCodeSplitting: true }),
+    solid(),
     tailwindcss(),
-    // Emit .br alongside each build asset. Brotli quality 11 is the right call
-    // for STATIC assets (compressed once at build, not per request) — ~15–20%
-    // smaller than gzip on our JS/CSS. A brotli-aware static host/CDN serves the
-    // .br when the client sends Accept-Encoding: br. Skips tiny files (<1 KB).
-    compression({
-      algorithms: ['brotliCompress'],
-      exclude: [/\.(br|gz)$/],
-      threshold: 1024,
-    }),
   ],
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
   },
-  build: {
-    rolldownOptions: {
-      output: {
-        advancedChunks: {
-          groups: [
-            {
-              name: (id: string) => chunkFor(id) ?? '',
-              test: (id: string) => chunkFor(id) !== undefined,
-            },
-          ],
-        },
-      },
-    },
-  },
   server: {
     port: 5173,
     proxy: {
-      // B.7 cutover: /api + /socket.io target the Go server (cmd/api :3001) by
-      // default. Rollback to Nest is `pnpm dev:nest`, which just sets
-      // API_TARGET=http://localhost:3000 — no code edit. The Go routes carry no
-      // /api prefix, so the rewrite still strips it.
       '/api': {
         target: API_TARGET,
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api/, ''),
       },
-      // The realtime client connects to window.location.origin (dev: the Vite
-      // port). socket.io lives on the same backend — proxy its path with
-      // `ws: true` so the WebSocket upgrade + polling fallback both reach it.
-      '/socket.io': {
+      // The realtime client connects to window.location.origin; socket.io lives
+      // on the same backend, so proxy its path with the WebSocket upgrade on.
+      '/socket.io': { target: API_TARGET, changeOrigin: true, ws: true },
+    },
+  },
+  /**
+   * `vite preview` serves the BUILT `dist/` and has its own proxy config —
+   * `server.proxy` above does not reach it. Without this block every `/api`
+   * call 404s against the preview server itself, the screen loads empty, and
+   * the production build cannot be inspected or measured at all.
+   *
+   * Not a production concern (there a static host/CDN serves `dist/` and the
+   * deploy routes the API) — this exists so a local production build behaves
+   * like one. Measuring in DEV is what produced the phantom "React blocks
+   * 64–74ms" that did not survive a production run (ALE-76).
+   */
+  preview: {
+    port: 5173,
+    proxy: {
+      '/api': {
         target: API_TARGET,
         changeOrigin: true,
-        ws: true,
+        rewrite: (p) => p.replace(/^\/api/, ''),
       },
+      '/socket.io': { target: API_TARGET, changeOrigin: true, ws: true },
     },
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['src/test-setup.ts'],
+    // vite-plugin-solid needs Solid's client/test transform, not the SSR one —
+    // without inlining, vitest loads the pre-built server bundle and every
+    // render() throws (spike ALE-62).
+    server: { deps: { inline: [/solid-js/, /@solidjs/, /@tanstack/] } },
   },
 })

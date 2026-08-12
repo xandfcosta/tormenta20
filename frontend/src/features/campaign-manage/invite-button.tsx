@@ -1,6 +1,8 @@
-import { useMutation } from '@tanstack/react-query'
-import { useState } from 'react'
-import { Check, Copy, RefreshCw, Share2 } from 'lucide-react'
+import { Check, Copy, RefreshCw, Share2 } from 'lucide-solid'
+import { Show, createSignal, onCleanup } from 'solid-js'
+import { api } from '@/shared/api/api'
+import { copyToClipboard } from '@/shared/lib/clipboard'
+import { toSubmitFailure } from '@/shared/lib/form-errors'
 import { Button } from '@/shared/ui/button'
 import {
   Dialog,
@@ -12,131 +14,134 @@ import {
   DialogTrigger,
 } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
-import { ApiError, api } from '@/shared/api/api'
+
+export type InviteDialogProps = {
+  /** Mints a fresh token, invalidating whatever was shared before. */
+  onRotate: () => Promise<string>
+  onCopy: (text: string) => Promise<void>
+}
 
 /**
- * Convite dialog — GM opens, clicks "Gerar link" to mint a fresh token,
- * copies the URL, shares with the player. Rotating replaces the token
- * (any previously-shared link 404s from that moment). Token is only
- * ever held in local component state — never cached in React Query
- * because the source of truth is the DB and rotation invalidates the
- * previous value.
+ * Convite dialog — the GM opens it, mints a token, copies the URL and shares it
+ * with a player. The token lives ONLY in this component's state, never in the
+ * query cache: the DB is the source of truth and rotating invalidates the
+ * previous value, so a cached copy would hand out a dead link.
+ *
+ * Both effects are injected, so the test drives it with no network or
+ * `navigator.clipboard`.
+ *
+ * @example <InviteDialog onRotate={rotate} onCopy={copyToClipboard} />
  */
-export function InviteButton({ campaignId }: { campaignId: number }) {
-  const [open, setOpen] = useState(false)
-  const [token, setToken] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
+export function InviteDialog(props: InviteDialogProps) {
+  const [open, setOpen] = createSignal(false)
+  const [token, setToken] = createSignal<string | null>(null)
+  const [error, setError] = createSignal<string | null>(null)
+  const [pending, setPending] = createSignal(false)
 
-  const mutation = useMutation({
-    mutationFn: () => api.campaigns.rotateInvite(campaignId),
-    onSuccess: (data) => {
-      setToken(data.token)
+  const inviteUrl = () => {
+    const value = token()
+    return value ? `${window.location.origin}/join/${value}` : null
+  }
+
+  const rotate = async () => {
+    setPending(true)
+    try {
+      setToken(await props.onRotate())
       setError(null)
-      setCopied(false)
-    },
-    onError: (e) => {
-      setError(e instanceof ApiError ? e.message : 'Erro ao gerar convite')
-    },
-  })
+    } catch (failure) {
+      setError(toSubmitFailure(failure).formError ?? 'Erro ao gerar convite')
+    } finally {
+      setPending(false)
+    }
+  }
 
-  const inviteUrl = token
-    ? `${window.location.origin}/join/${token}`
-    : null
-
-  const copy = async () => {
-    if (!inviteUrl) return
-    await navigator.clipboard.writeText(inviteUrl)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  const onOpenChange = (next: boolean) => {
+    setOpen(next)
+    if (next) return
+    setToken(null)
+    setError(null)
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(o) => {
-        setOpen(o)
-        if (!o) {
-          setToken(null)
-          setError(null)
-          setCopied(false)
-        }
-      }}
-    >
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Share2 className="mr-1 size-4" /> Convite
-        </Button>
+    <Dialog open={open()} onOpenChange={onOpenChange}>
+      <DialogTrigger as={Button} variant="outline" size="sm">
+        <Share2 aria-hidden="true" class="mr-1 size-4" /> Convite
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Share2 className="size-5" />
+          <DialogTitle class="flex items-center gap-2">
+            <Share2 aria-hidden="true" class="size-5" />
             Convite para a campanha
           </DialogTitle>
           <DialogDescription>
-            Envie o link abaixo para um jogador. Ao entrar, ele escolhe
-            um personagem próprio e é adicionado automaticamente à mesa.
-            Rotacionar invalida o link anterior.
+            Envie o link abaixo para um jogador. Ao entrar, ele escolhe um personagem próprio e é
+            adicionado automaticamente à mesa. Rotacionar invalida o link anterior.
           </DialogDescription>
         </DialogHeader>
 
-        {token ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Input
-                readOnly
-                value={inviteUrl ?? ''}
-                aria-label="Link de convite"
-                className="font-mono text-xs"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={copy}
-                aria-label="Copiar link"
-              >
-                {copied ? (
-                  <Check className="size-4" />
-                ) : (
-                  <Copy className="size-4" />
-                )}
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Rotacionar invalida este link e gera um novo.
-            </p>
-          </div>
-        ) : (
-          <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-            Nenhum link gerado. Clique em "Gerar link" para criar.
-          </div>
-        )}
+        <Show when={inviteUrl()} fallback={<NoLinkYet />}>
+          {(url) => <InviteLinkRow url={url()} onCopy={props.onCopy} />}
+        </Show>
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        <Show when={error()}>{(message) => <p class="text-sm text-destructive">{message()}</p>}</Show>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Fechar
           </Button>
-          <Button
-            disabled={mutation.isPending}
-            onClick={() => mutation.mutate()}
-          >
-            {token ? (
-              <RefreshCw className="mr-1 size-4" />
-            ) : (
-              <Share2 className="mr-1 size-4" />
-            )}
-            {mutation.isPending
-              ? 'Gerando…'
-              : token
-                ? 'Rotacionar convite'
-                : 'Gerar link'}
+          <Button disabled={pending()} onClick={rotate}>
+            <Show
+              when={token()}
+              fallback={<Share2 aria-hidden="true" class="mr-1 size-4" />}
+            >
+              <RefreshCw aria-hidden="true" class="mr-1 size-4" />
+            </Show>
+            {pending() ? 'Gerando…' : token() ? 'Rotacionar convite' : 'Gerar link'}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   )
+}
+
+/** Nothing minted yet — the dialog's resting state. */
+function NoLinkYet() {
+  return (
+    <div class="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
+      Nenhum link gerado. Clique em "Gerar link" para criar.
+    </div>
+  )
+}
+
+/** The minted link, read-only, with a copy button that acknowledges the copy. */
+function InviteLinkRow(props: { url: string; onCopy: (text: string) => Promise<void> }) {
+  const [copied, setCopied] = createSignal(false)
+  let timer: ReturnType<typeof setTimeout> | undefined
+  onCleanup(() => clearTimeout(timer))
+
+  const copy = async () => {
+    await props.onCopy(props.url)
+    setCopied(true)
+    timer = setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div class="space-y-3">
+      <div class="flex items-center gap-2">
+        <Input readOnly value={props.url} aria-label="Link de convite" class="font-mono text-xs" />
+        <Button type="button" variant="outline" size="sm" onClick={copy} aria-label="Copiar link">
+          <Show when={copied()} fallback={<Copy aria-hidden="true" class="size-4" />}>
+            <Check aria-hidden="true" class="size-4" />
+          </Show>
+        </Button>
+      </div>
+      <p class="text-xs text-muted-foreground">Rotacionar invalida este link e gera um novo.</p>
+    </div>
+  )
+}
+
+/** Wires the dialog to the backend and the system clipboard. */
+export function InviteButton(props: { campaignId: number }) {
+  const rotate = async () => (await api.campaigns.rotateInvite(props.campaignId)).token
+  return <InviteDialog onRotate={rotate} onCopy={copyToClipboard} />
 }

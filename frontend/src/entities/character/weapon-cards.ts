@@ -4,14 +4,13 @@ import {
   type WeaponStats,
   statFor,
 } from '@tormenta20/t20-data'
+import type { Character } from '@/shared/api/api'
 import { getCatalogItem } from '@/shared/lib/catalog-cache'
+import type { TotalContribs, WeaponCard } from '@/shared/lib/computed-sheet-v2'
 import {
   areEngineCatalogsPrimed,
   computeWeaponCards as engineComputeWeaponCards,
 } from '@/shared/lib/engine-wasm'
-import type { TotalContribs, WeaponCard } from '@/shared/lib/computed-sheet-v2'
-import type { Character } from '@/shared/api/api'
-import { useActiveConditionals } from '@/shared/stores/conditionals-store'
 import {
   attributeTotal,
   characterEffects,
@@ -36,8 +35,9 @@ function weaponDexUse(
   forTotal: number,
   dexTotal: number,
 ): { attack: boolean; damage: boolean } {
-  if (weapon.purpose === 'ranged' || dexTotal <= forTotal)
+  if (weapon.purpose === 'ranged' || dexTotal <= forTotal) {
     return { attack: false, damage: false }
+  }
   const acuidade =
     hasAcuidade &&
     ((weapon.hand === 'light' && weapon.purpose === 'melee') ||
@@ -64,7 +64,7 @@ function toTotalContribs(stat: ReturnType<typeof statFor>): TotalContribs {
  * The pure TS assembly of the wielded-weapon cards from the `derived.ts` helpers
  * — the SAME payload the Go `ComputeWeaponCards` reproduces byte-equal (proven by
  * the `weaponCards` parity oracle). Kept as the single source of truth so both the
- * oracle generator and the hook's test branch reuse it. Skill = ranged?Pontaria:
+ * oracle generator and the test branch below reuse it. Skill = ranged?Pontaria:
  * Luta; damage folds Força unless ranged. Capped at two (one per hand).
  */
 export function assembleWeaponCards(char: Character, effects: ItemEffects): WeaponCard[] {
@@ -80,49 +80,73 @@ export function assembleWeaponCards(char: Character, effects: ItemEffects): Weap
     if (!it.catalogId) continue
     const weapon = getCatalogItem(it.catalogId)?.weapon
     if (!weapon) continue
-    const ranged = weapon.purpose === 'ranged'
-    const skill = ranged ? 'Pontaria' : 'Luta'
-    const baseAttr: AttributeKey = ranged ? 'dexterity' : 'strength'
-    // Finesse (Adaga / Acuidade com Arma) swaps the attack attribute to DES when
-    // it beats FOR; the perícia stays Luta but sums Destreza (ALE-31).
-    const dex = weaponDexUse(weapon, hasAcuidade, forTotal, dexTotal)
-    const attribute: AttributeKey = dex.attack ? 'dexterity' : baseAttr
-    const base = expertiseStateFor(char, {
-      name: skill,
-      attribute: baseAttr,
-      abbr: ranged ? 'DES' : 'FOR',
-    })
-    const state = { ...base, attribute }
-    const expertise = {
-      name: state.name,
-      attribute: state.attribute,
-      ...expertiseTotalWithItems(char, state, effects),
-    }
-    const strDamage = ranged ? 0 : dex.damage ? dexTotal : forTotal
-    cards.push({
-      name: it.name,
-      skill,
-      attribute: state.attribute,
-      attack: expertise.total + attackAll.total,
-      expertise,
-      attackAll,
-      damage: weapon.damage,
-      strDamage,
-      damageBonus: strDamage + damageAll.total,
-      damageAll,
-      critRange: weapon.critRange,
-      critMult: weapon.critMult,
-    })
+    cards.push(weaponCard(char, effects, it.name, weapon, { forTotal, dexTotal, hasAcuidade, attackAll, damageAll }))
     if (cards.length === 2) break
   }
   return cards
 }
 
+/** Everything a single card needs that is the same for every weapon on the sheet. */
+type CardContext = {
+  forTotal: number
+  dexTotal: number
+  hasAcuidade: boolean
+  attackAll: TotalContribs
+  damageAll: TotalContribs
+}
+
+function weaponCard(
+  char: Character,
+  effects: ItemEffects,
+  name: string,
+  weapon: WeaponStats,
+  context: CardContext,
+): WeaponCard {
+  const ranged = weapon.purpose === 'ranged'
+  const skill = ranged ? 'Pontaria' : 'Luta'
+  const baseAttr: AttributeKey = ranged ? 'dexterity' : 'strength'
+  // Finesse (Adaga / Acuidade com Arma) swaps the attack attribute to DES when
+  // it beats FOR; the perícia stays Luta but sums Destreza (ALE-31).
+  const dex = weaponDexUse(weapon, context.hasAcuidade, context.forTotal, context.dexTotal)
+  const attribute: AttributeKey = dex.attack ? 'dexterity' : baseAttr
+  const base = expertiseStateFor(char, {
+    name: skill,
+    attribute: baseAttr,
+    abbr: ranged ? 'DES' : 'FOR',
+  })
+  const state = { ...base, attribute }
+  const expertise = {
+    name: state.name,
+    attribute: state.attribute,
+    ...expertiseTotalWithItems(char, state, effects),
+  }
+  const strDamage = ranged ? 0 : dex.damage ? context.dexTotal : context.forTotal
+  return {
+    name,
+    skill,
+    attribute: state.attribute,
+    attack: expertise.total + context.attackAll.total,
+    expertise,
+    attackAll: context.attackAll,
+    damage: weapon.damage,
+    strDamage,
+    damageBonus: strDamage + context.damageAll.total,
+    damageAll: context.damageAll,
+    critRange: weapon.critRange,
+    critMult: weapon.critMult,
+  }
+}
+
 /**
  * Weapon-cards CHOKE POINT (migração TS→Go): the wielded-weapon formula cards via
- * the Go/WASM engine — the single source. Same MODE-gate as `useComputedSheet` —
+ * the Go/WASM engine — the single source. Same MODE-gate as `computedSheetFor` —
  * production runs the engine; the TS branch (`assembleWeaponCards`) is TEST-ONLY
  * (parity oracle, no wasm) and DCE'd from the app bundle.
+ *
+ * Takes the active conditionals as an ARGUMENT (the React version was a hook
+ * reading the zustand store): the panel owns the store, this stays pure.
+ *
+ * @example weaponCardsFor(character, conditionals.active(character.id))
  */
 export function weaponCardsFor(
   char: Character,
@@ -137,10 +161,4 @@ export function weaponCardsFor(
     )
   }
   return engineComputeWeaponCards(char, [...activeConditionals])
-}
-
-/** Reactive wielded-weapon cards for a character, tracking active conditionals. */
-export function useWeaponCards(char: Character): WeaponCard[] {
-  const active = useActiveConditionals(char.id)
-  return weaponCardsFor(char, active)
 }

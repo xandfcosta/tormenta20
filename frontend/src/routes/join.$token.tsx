@@ -1,27 +1,20 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
-import { meQueryOptions } from '@/entities/user/queries'
+import { createFileRoute, redirect } from '@tanstack/solid-router'
+import { requireSession } from './-guards'
+
 /**
- * Public invite landing. `join/<token>` is the shareable URL the GM
- * copies from the InviteButton. Two cases:
- *   1. Unauth → redirect to /login with `redirect=/campaigns/join?token=…`
- *      so post-login the user lands on the token-aware join form.
- *   2. Auth → redirect straight to `/campaigns/join?token=…`.
+ * The shareable invite URL — this is what `InviteDialog` mints and the GM sends
+ * (ALE-79). A router shim, nothing else: it hands the token to
+ * `/campaigns/join`, where the preview and the form live, so the join flow
+ * exists in exactly one place.
  *
- * All actual validation + campaign preview happens inside
- * `/campaigns/join` — this file is just a router shim. Keeping it thin
- * means the token flow can evolve without a second copy of the form.
+ * `requireSession` runs first, so an anonymous visitor goes to /login
+ * remembering THIS url — after logging in they land back here and continue
+ * into the form, invite intact.
  */
 export const Route = createFileRoute('/join/$token')({
-  beforeLoad: async ({ context, params }) => {
-    const user = await context.queryClient.ensureQueryData(meQueryOptions)
-    const target = `/campaigns/join?token=${encodeURIComponent(params.token)}`
-    if (!user) {
-      throw redirect({ to: '/login', search: { redirect: target } })
-    }
-    throw redirect({
-      to: '/campaigns/join',
-      search: { token: params.token },
-    })
+  beforeLoad: async (args) => {
+    await requireSession(args)
+    throw redirect({ to: '/campaigns/join', search: { token: args.params.token } })
   },
   component: () => null,
 })

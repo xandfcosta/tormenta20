@@ -1,180 +1,179 @@
-import { Flame } from 'lucide-react'
+import { useQueryClient } from '@tanstack/solid-query'
 import { FLAG_ACTIVATIONS } from '@tormenta20/t20-data'
-import type { Character } from '@/shared/api/api'
-import {
-  useAllConditionals,
-  type ConditionalEntry,
-} from '@/entities/character/derived'
-import { useComputedSheet } from '@/entities/character/computed-sheet'
-import { usePowerAction } from '@/entities/character/use-power-action'
-import { useStanceActivation } from '@/shared/stores/stance-activation-store'
-import { accentStrong, subtleText, surface } from '@/shared/lib/sheet-theme'
-import { cn } from '@/shared/lib/utils'
-import { useState } from 'react'
+import { Flame } from 'lucide-solid'
+import { For, Show, createMemo, createSignal } from 'solid-js'
+import { computedSheetFor } from '@/entities/character/computed-sheet'
 import { resolveStanceDisplay } from '@/entities/character/conditional-display'
+import { type ConditionalEntry, allConditionals } from '@/entities/character/derived'
+import type { Character } from '@/shared/api/api'
+import { useConditionals } from '@/shared/stores/conditionals-context'
+import { useStanceActivations } from '@/shared/stores/stance-activation-context'
 import { Button } from '@/shared/ui/button'
+import { cn } from '@/shared/lib/utils'
 import {
   abbreviateConditionalTarget,
   describeConditionalTarget,
 } from './conditional-target-label'
 import { signed } from './signed'
+import { usePowerActions } from './use-power-actions'
 
-type StanceGroup = { flag: string; entries: ConditionalEntry[] }
+export type StanceGroup = { flag: string; entries: ConditionalEntry[] }
 
 /**
- * Power-stance flag groups (FLAG_ACTIVATIONS) that are fully ON. The
- * on-switch moved to the Poderes tab; here only ACTIVE stances render.
+ * Power-stance flag groups (FLAG_ACTIVATIONS) that are fully ON. The on-switch
+ * lives in the Poderes block; only ACTIVE stances render here.
  */
-function activeStanceGroups(entries: ConditionalEntry[]): StanceGroup[] {
+export function activeStanceGroups(entries: readonly ConditionalEntry[]): StanceGroup[] {
   const byFlag = new Map<string, ConditionalEntry[]>()
-  for (const e of entries) {
-    const flag = e.effect.flag
+  for (const entry of entries) {
+    const flag = entry.effect.flag
     if (!flag || !FLAG_ACTIVATIONS[flag]) continue
-    byFlag.set(flag, [...(byFlag.get(flag) ?? []), e])
+    byFlag.set(flag, [...(byFlag.get(flag) ?? []), entry])
   }
   return [...byFlag]
-    .filter(([, list]) => list.every((e) => e.active))
+    .filter(([, list]) => list.every((entry) => entry.active))
     .map(([flag, list]) => ({ flag, entries: list }))
 }
 
 /**
- * "Posturas ativas" — one card per running stance: what it grants, what was
- * paid (stance-activation-store, incl. the display-only stepper extra) and
- * an Encerrar exit. Hidden entirely while no stance is up.
+ * "Atq/Dano/Fort/Von +3" — the ENGINE's non-stacking resolution over the flag
+ * group, so a Bárbaro 6 reads +3 and not also the superseded +2 tier, then
+ * grouped by amount.
  */
-export function StancesSection({ character }: { character: Character }) {
-  const entries = useAllConditionals(character)
-  const groups = activeStanceGroups(entries)
-  if (groups.length === 0) return null
-  return (
-    <section className={cn('rounded-lg border p-3', surface)}>
-      <h3 className={cn('text-sm font-bold', accentStrong)}>Posturas ativas</h3>
-      <ul className="mt-2 space-y-1">
-        {groups.map((g) => (
-          <StanceCard key={g.flag} group={g} character={character} />
-        ))}
-      </ul>
-    </section>
-  )
-}
-
-/**
- * One-line stance summary (owner feedback: the old card listed 9 rows incl.
- * the superseded Fúria +2 tier). Runs the ENGINE's non-stacking resolution
- * over the flag group so only winning tiers render, then groups surviving
- * targets by amount: "Atq/Dano/Fort/Von +3". Tapping the line (not Encerrar)
- * expands the audited per-target breakdown.
- */
-function StanceCard({
-  group,
-  character,
-}: {
-  group: StanceGroup
-  character: Character
-}) {
-  const { deactivateStance } = usePowerAction(character)
-  const [expanded, setExpanded] = useState(false)
-  const sheet = useComputedSheet(character)
-  const activation = FLAG_ACTIVATIONS[group.flag]
-  // Fallback to the base cost for stances toggled before this phase (no record).
-  const paid = useStanceActivation(character.id, group.flag)
-  const pmPaid = paid?.pmPaid ?? activation.pmCost
-  const tempHp = group.flag === 'furia' ? sheet.tempHpFuria : null
-  const summary = stanceSummary(group)
-  return (
-    <li className="rounded-md border border-violet-500/30 bg-violet-50/60 px-2 py-1.5 dark:border-violet-500/25 dark:bg-violet-950/30">
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          aria-expanded={expanded}
-          className="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-left"
-        >
-          <Flame className="size-3.5 shrink-0 text-violet-700 dark:text-violet-300" />
-          <span className="shrink-0 text-sm font-medium text-foreground">
-            {activation.name}
-          </span>
-          <span className={cn('min-w-0 truncate text-[11px]', subtleText)}>
-            · {summary}
-            {tempHp && tempHp.total > 0 ? ` · PV temp +${tempHp.total}` : ''}
-            {` · ${pmPaid} PM`}
-          </span>
-        </button>
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          className="h-11 shrink-0 px-3 text-xs text-red-700 hover:bg-red-100 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/40 sm:h-6 sm:px-2 sm:text-[11px]"
-          onClick={() => deactivateStance(group.flag)}
-          aria-label={`Encerrar ${activation.name}`}
-        >
-          Encerrar
-        </Button>
-      </div>
-      {expanded && <StanceBreakdown group={group} character={character} />}
-    </li>
-  )
-}
-
-/** "Atq/Dano/Fort/Von +3" — winning tiers only, grouped by signed amount. */
-function stanceSummary(group: StanceGroup): string {
+export function stanceSummary(group: StanceGroup): string {
   const kept = resolveStanceDisplay(
-    group.entries.map((e) => ({
-      target: e.effect.target,
-      bonusType: e.effect.bonusType,
-      amount: e.effect.amount,
+    group.entries.map((entry) => ({
+      target: entry.effect.target,
+      bonusType: entry.effect.bonusType,
+      amount: entry.effect.amount,
     })),
   )
   const byAmount = new Map<number, string[]>()
-  for (const k of kept) {
-    const list = byAmount.get(k.amount) ?? []
-    list.push(abbreviateConditionalTarget(k.target))
-    byAmount.set(k.amount, list)
+  for (const row of kept) {
+    byAmount.set(row.amount, [
+      ...(byAmount.get(row.amount) ?? []),
+      abbreviateConditionalTarget(row.target),
+    ])
   }
   return [...byAmount]
     .map(([amount, labels]) => `${labels.join('/')} ${signed(amount)}`)
     .join(' · ')
 }
 
-/** Per-modifier lines (FlagGroupRow's inner-list markup) + temp-PV when owned. */
-function StanceBreakdown({
-  group,
-  character,
-}: {
-  group: StanceGroup
-  character: Character
-}) {
-  const sheet = useComputedSheet(character)
-  const tempHp = group.flag === 'furia' ? sheet.tempHpFuria : null
+/**
+ * "Posturas ativas" — one card per running stance: what it grants, what was
+ * paid (including the display-only stepper extra) and an Encerrar exit. Hidden
+ * entirely while no stance is up.
+ */
+export function StancesSection(props: { character: Character }) {
+  const conditionals = useConditionals()
+  const groups = createMemo(() =>
+    activeStanceGroups(
+      allConditionals(props.character, conditionals.active(props.character.id)),
+    ),
+  )
+
   return (
-    <ul className="ml-5 mt-1 space-y-0.5 text-[11px]">
-      {group.entries.map((e) => (
-        <li key={e.id} className="flex items-center justify-between gap-2">
-          <span className={cn('truncate', subtleText)}>
-            {describeConditionalTarget(e.effect.target)}
+    <Show when={groups().length > 0}>
+      <section class="rounded-sm border border-grimorio-iron p-3">
+        <h3 class="font-heading text-sm uppercase tracking-wide text-grimorio-gold">
+          Posturas ativas
+        </h3>
+        <ul class="mt-2 space-y-1">
+          <For each={groups()}>
+            {(group) => <StanceCard group={group} character={props.character} />}
+          </For>
+        </ul>
+      </section>
+    </Show>
+  )
+}
+
+/**
+ * One-line stance summary — the old card listed every tier, including the
+ * superseded ones. Tapping the line (not Encerrar) expands the audited
+ * per-target breakdown.
+ */
+function StanceCard(props: { group: StanceGroup; character: Character }) {
+  const queryClient = useQueryClient()
+  const stanceActivations = useStanceActivations()
+  const conditionals = useConditionals()
+  const actions = usePowerActions()
+  const [expanded, setExpanded] = createSignal(false)
+
+  const activation = () => FLAG_ACTIVATIONS[props.group.flag]
+  // Falls back to the base cost for a stance toggled before the payment record
+  // existed (legacy toggle, cleared storage).
+  const pmPaid = () =>
+    stanceActivations.paidFor(props.character.id, props.group.flag)?.pmPaid ??
+    activation().pmCost
+  const tempHp = createMemo(() =>
+    props.group.flag === 'furia'
+      ? computedSheetFor(props.character, conditionals.active(props.character.id)).tempHpFuria
+      : null,
+  )
+
+  return (
+    <li class="rounded-sm border border-violet-500/25 bg-violet-950/30 px-2 py-1.5">
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setExpanded(!expanded())}
+          aria-expanded={expanded()}
+          class="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-left"
+        >
+          <Flame aria-hidden="true" class="size-3.5 shrink-0 text-violet-300" />
+          <span class="shrink-0 text-sm font-medium text-foreground">{activation().name}</span>
+          <span class="min-w-0 truncate text-[11px] text-muted-foreground">
+            · {stanceSummary(props.group)}
+            {(tempHp()?.total ?? 0) > 0 ? ` · PV temp +${tempHp()?.total}` : ''}
+            {` · ${pmPaid()} PM`}
           </span>
-          <span
-            className={cn(
-              'shrink-0 font-mono font-semibold',
-              e.effect.amount >= 0
-                ? 'text-emerald-700 dark:text-emerald-300'
-                : 'text-red-700 dark:text-red-300',
+        </button>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          class="h-11 shrink-0 px-3 text-xs text-red-400 hover:bg-red-950/40 sm:h-6 sm:px-2 sm:text-[11px]"
+          aria-label={`Encerrar ${activation().name}`}
+          onClick={() =>
+            void actions(queryClient, props.character).deactivateStance(props.group.flag)
+          }
+        >
+          Encerrar
+        </Button>
+      </div>
+      <Show when={expanded()}>
+        <ul class="ml-5 mt-1 space-y-0.5 text-[11px]">
+          <For each={props.group.entries}>
+            {(entry) => (
+              <li class="flex items-center justify-between gap-2">
+                <span class="truncate text-muted-foreground">
+                  {describeConditionalTarget(entry.effect.target)}
+                </span>
+                <span
+                  class={cn(
+                    'shrink-0 font-mono font-semibold',
+                    entry.effect.amount >= 0 ? 'text-emerald-300' : 'text-red-300',
+                  )}
+                >
+                  {signed(entry.effect.amount)}
+                </span>
+              </li>
             )}
-          >
-            {signed(e.effect.amount)}
-          </span>
-        </li>
-      ))}
-      {tempHp && tempHp.total > 0 && (
-        <li className="flex items-center justify-between gap-2">
-          <span className={cn('truncate', subtleText)}>
-            Alma de Bronze — PV temporários (nível + For)
-          </span>
-          <span className="shrink-0 font-mono font-semibold text-emerald-700 dark:text-emerald-300">
-            +{tempHp.total}
-          </span>
-        </li>
-      )}
-    </ul>
+          </For>
+          <Show when={(tempHp()?.total ?? 0) > 0}>
+            <li class="flex items-center justify-between gap-2">
+              <span class="truncate text-muted-foreground">
+                Alma de Bronze — PV temporários (nível + For)
+              </span>
+              <span class="shrink-0 font-mono font-semibold text-emerald-300">
+                +{tempHp()?.total}
+              </span>
+            </li>
+          </Show>
+        </ul>
+      </Show>
+    </li>
   )
 }

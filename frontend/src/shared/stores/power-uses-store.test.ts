@@ -1,91 +1,91 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
   POWER_USES_STORAGE_KEY,
-  usePowerUsesStore,
+  createPowerUsesStore,
+  readStoredPowerUses,
 } from './power-uses-store'
 
-/**
- * Per-character limited-power-use counters. Persists to localStorage via
- * zustand/persist; src/test-setup.ts installs a deterministic MemoryStorage
- * so persist captures a working handle at module init. Reset state + storage
- * between cases to avoid cross-test leakage.
- */
-beforeEach(() => {
-  localStorage.clear()
-  usePowerUsesStore.setState({ uses: {} })
-})
+/** In-memory Storage double — the store must never reach a real localStorage. */
+class FakeStorage implements Storage {
+  private entries = new Map<string, string>()
+  get length() {
+    return this.entries.size
+  }
+  clear() {
+    this.entries.clear()
+  }
+  getItem(key: string) {
+    return this.entries.get(key) ?? null
+  }
+  key(index: number) {
+    return [...this.entries.keys()][index] ?? null
+  }
+  removeItem(key: string) {
+    this.entries.delete(key)
+  }
+  setItem(key: string, value: string) {
+    this.entries.set(key, value)
+  }
+}
 
-describe('bump', () => {
-  it('starts a power at 1 on first use', () => {
-    usePowerUsesStore.getState().bump(1, 'class.barbaro.golpe-poderoso', 'scene')
-    expect(
-      usePowerUsesStore.getState().uses[1]!.scene['class.barbaro.golpe-poderoso'],
-    ).toBe(1)
+const POWER = 'class.barbaro.golpe-poderoso'
+
+describe('readStoredPowerUses', () => {
+  it('lê a forma do zustand que o React grava', () => {
+    const raw = JSON.stringify({ state: { uses: { '1': { scene: { [POWER]: 2 }, day: {} } } } })
+    expect(readStoredPowerUses(raw)['1'].scene[POWER]).toBe(2)
   })
 
-  it('increments on repeated use', () => {
-    usePowerUsesStore.getState().bump(1, 'p', 'day')
-    usePowerUsesStore.getState().bump(1, 'p', 'day')
-    expect(usePowerUsesStore.getState().uses[1]!.day.p).toBe(2)
-  })
-
-  it('keeps scene and day buckets independent', () => {
-    usePowerUsesStore.getState().bump(1, 'p', 'scene')
-    usePowerUsesStore.getState().bump(1, 'p', 'day')
-    expect(usePowerUsesStore.getState().uses[1]).toEqual({
-      scene: { p: 1 },
-      day: { p: 1 },
-    })
-  })
-
-  it('scopes per character — bumping char 1 leaves char 2 untouched', () => {
-    usePowerUsesStore.getState().bump(1, 'a', 'scene')
-    usePowerUsesStore.getState().bump(2, 'b', 'scene')
-    expect(usePowerUsesStore.getState().uses[1]!.scene).toEqual({ a: 1 })
-    expect(usePowerUsesStore.getState().uses[2]!.scene).toEqual({ b: 1 })
+  it('blob corrompido ou ausente não derruba a ficha', () => {
+    expect(readStoredPowerUses(null)).toEqual({})
+    expect(readStoredPowerUses('{quebrado')).toEqual({})
+    expect(readStoredPowerUses(JSON.stringify({ state: { uses: 'nem objeto' } }))).toEqual({})
   })
 })
 
-describe('resetScene', () => {
-  it('clears scene counters but keeps day counters', () => {
-    usePowerUsesStore.getState().bump(1, 'p', 'scene')
-    usePowerUsesStore.getState().bump(1, 'q', 'day')
-    usePowerUsesStore.getState().resetScene(1)
-    expect(usePowerUsesStore.getState().uses[1]).toEqual({
-      scene: {},
-      day: { q: 1 },
-    })
+describe('createPowerUsesStore', () => {
+  it('conta os usos por escopo e persiste na chave do React', () => {
+    const storage = new FakeStorage()
+    const store = createPowerUsesStore(storage)
+
+    store.bump(1, POWER, 'scene')
+    store.bump(1, POWER, 'scene')
+    store.bump(1, POWER, 'day')
+
+    expect(store.used(1, POWER)).toEqual({ scene: 2, day: 1 })
+    expect(readStoredPowerUses(storage.getItem(POWER_USES_STORAGE_KEY))['1'].scene[POWER]).toBe(2)
   })
 
-  it('is a no-op for unknown character ids', () => {
-    usePowerUsesStore.getState().bump(2, 'p', 'scene')
-    usePowerUsesStore.getState().resetScene(999)
-    expect(usePowerUsesStore.getState().uses[2]!.scene).toEqual({ p: 1 })
-  })
-})
-
-describe('resetDay', () => {
-  it('clears both day AND scene counters (ending the day ends the scene)', () => {
-    usePowerUsesStore.getState().bump(1, 'p', 'scene')
-    usePowerUsesStore.getState().bump(1, 'q', 'day')
-    usePowerUsesStore.getState().resetDay(1)
-    expect(usePowerUsesStore.getState().uses[1]).toBeUndefined()
+  it('personagens diferentes contam separado', () => {
+    const store = createPowerUsesStore(new FakeStorage())
+    store.bump(1, POWER, 'scene')
+    expect(store.used(2, POWER)).toEqual({ scene: 0, day: 0 })
   })
 
-  it('leaves other characters untouched', () => {
-    usePowerUsesStore.getState().bump(1, 'p', 'day')
-    usePowerUsesStore.getState().bump(2, 'q', 'day')
-    usePowerUsesStore.getState().resetDay(1)
-    expect(usePowerUsesStore.getState().uses[2]!.day).toEqual({ q: 1 })
-  })
-})
+  it('encerrar cena zera só a cena', () => {
+    const store = createPowerUsesStore(new FakeStorage())
+    store.bump(1, POWER, 'scene')
+    store.bump(1, POWER, 'day')
 
-describe('persistence — localStorage round-trip', () => {
-  it('writes to the configured storage key on bump', () => {
-    usePowerUsesStore.getState().bump(7, 'p', 'scene')
-    const raw = localStorage.getItem(POWER_USES_STORAGE_KEY)
-    expect(raw).toBeTruthy()
-    const parsed = JSON.parse(raw!)
-    expect(parsed.state.uses[7].scene.p).toBe(1)
+    store.resetScene(1)
+
+    expect(store.used(1, POWER)).toEqual({ scene: 0, day: 1 })
+  })
+
+  // Encerrar o dia encerra a cena que estava rolando (descanso do livro).
+  it('encerrar dia zera os dois escopos', () => {
+    const store = createPowerUsesStore(new FakeStorage())
+    store.bump(1, POWER, 'scene')
+    store.bump(1, POWER, 'day')
+
+    store.resetDay(1)
+
+    expect(store.used(1, POWER)).toEqual({ scene: 0, day: 0 })
+  })
+
+  it('encerrar cena de um personagem sem uso nenhum é inofensivo', () => {
+    const store = createPowerUsesStore(new FakeStorage())
+    expect(() => store.resetScene(99)).not.toThrow()
+    expect(store.used(99, POWER)).toEqual({ scene: 0, day: 0 })
   })
 })

@@ -3,6 +3,8 @@ import {
   allStepsReady,
   type CharacterFormValues,
   furthestReachableIndex,
+  isStepSlug,
+  stepAt,
   stepReady,
   WIZARD_STEPS,
   wizardDefaults,
@@ -39,16 +41,28 @@ describe('stepReady', () => {
     expect(stepReady('atributos', wizardDefaults, {})).toBe(true)
   })
 
-  it('vitalidade enforces current ≤ max', () => {
-    expect(
-      stepReady('vitalidade', { ...complete, hpCurrent: 99, hpMax: 10 }, {}),
-    ).toBe(false)
-    expect(stepReady('vitalidade', complete, {})).toBe(true)
-  })
-
   it('identidade needs a name and size', () => {
     expect(stepReady('identidade', { ...complete, name: '  ' }, {})).toBe(false)
     expect(stepReady('identidade', complete, {})).toBe(true)
+  })
+
+  // Vitalidade was folded into Identidade (ALE-94): four numbers, two of them
+  // derived, floated on a full stage. Its gate had to come along, or a draft
+  // with PV atual above PV máx would walk to the Resumo unchallenged.
+  it('identidade still enforces current ≤ max', () => {
+    expect(
+      stepReady('identidade', { ...complete, hpCurrent: 99, hpMax: 10 }, {}),
+    ).toBe(false)
+    expect(
+      stepReady('identidade', { ...complete, mpCurrent: 5, mpMax: 0 }, {}),
+    ).toBe(false)
+  })
+})
+
+describe('WIZARD_STEPS', () => {
+  it('has no standalone vitalidade step', () => {
+    // A bookmark to the old URL is caught by the same guard as any typo.
+    expect(isStepSlug('vitalidade')).toBe(false)
   })
 })
 
@@ -74,5 +88,28 @@ describe('allStepsReady', () => {
   })
   it('true for a complete build', () => {
     expect(allStepsReady(complete, {})).toBe(true)
+  })
+})
+
+describe('stepAt — andar um passo', () => {
+  it('avança e recua na ordem declarada', () => {
+    expect(stepAt('raca', 1)).toBe('classe')
+    expect(stepAt('classe', -1)).toBe('raca')
+  })
+
+  it('devolve null nas pontas (não circula)', () => {
+    expect(stepAt('raca', -1)).toBeNull()
+    expect(stepAt('resumo', 1)).toBeNull()
+  })
+})
+
+describe('isStepSlug — slug vindo da URL', () => {
+  it('aceita um passo real', () => {
+    expect(isStepSlug('pericias')).toBe(true)
+  })
+
+  it('recusa qualquer outra coisa', () => {
+    expect(isStepSlug('inventario')).toBe(false)
+    expect(isStepSlug('')).toBe(false)
   })
 })

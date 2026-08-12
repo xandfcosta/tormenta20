@@ -1,31 +1,25 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import {
-  RouterProvider,
-  createMemoryHistory,
-  createRootRoute,
-  createRouter,
-} from '@tanstack/react-router'
-import { render, screen, type RenderResult } from '@testing-library/react'
-import type { ReactNode } from 'react'
-import { describe, expect, it } from 'vitest'
-import type { CampaignMember } from '@/shared/api/api'
+import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
+import { screen } from '@solidjs/testing-library'
+import userEvent from '@testing-library/user-event'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { campaignMembersQueryOptions } from '@/entities/campaign/queries'
-import { MembersCard } from './members-card'
+import type { CampaignMember } from '@/shared/api/api'
+import { renderWithRouter } from '@/shared/test/render-with-router'
+import { MembersCard, MemberPlate } from './members-card'
 
 const CAMPAIGN_ID = 7
 
 function fakeMember(overrides: Partial<CampaignMember> = {}): CampaignMember {
-  const name = overrides.character?.name ?? 'Herói'
   return {
-    id: overrides.id ?? 1,
+    id: 1,
     campaignId: CAMPAIGN_ID,
-    characterId: overrides.characterId ?? 1,
-    role: overrides.role ?? 'player',
-    addedAt: '',
+    characterId: 1,
+    role: 'player',
+    addedAt: '2026-01-01T00:00:00.000Z',
     character: {
       id: 1,
       ownerId: 1,
-      name,
+      name: 'Alvo',
       level: 3,
       hpCurrent: 20,
       hpMax: 20,
@@ -37,66 +31,75 @@ function fakeMember(overrides: Partial<CampaignMember> = {}): CampaignMember {
   }
 }
 
-// Seeds the members cache and mounts inside a router (the plates are <Link>s).
-function renderRoster(members: CampaignMember[], isGm: boolean): RenderResult {
-  const qc = new QueryClient({
-    defaultOptions: { queries: { retry: false, staleTime: Infinity } },
+/** Seeds the members cache so the roster paints without a network round-trip. */
+function renderRoster(members: CampaignMember[], isGm: boolean) {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false, staleTime: Number.POSITIVE_INFINITY } },
   })
-  qc.setQueryData(campaignMembersQueryOptions(CAMPAIGN_ID).queryKey, members)
-  const node: ReactNode = <MembersCard campaignId={CAMPAIGN_ID} isGm={isGm} />
-  const rootRoute = createRootRoute({ component: () => <>{node}</> })
-  const router = createRouter({
-    routeTree: rootRoute,
-    history: createMemoryHistory({ initialEntries: ['/'] }),
-  })
-  return render(
-    <QueryClientProvider client={qc}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>,
-  )
+  client.setQueryData(campaignMembersQueryOptions(CAMPAIGN_ID).queryKey, members)
+  renderWithRouter(() => (
+    <QueryClientProvider client={client}>
+      <MembersCard campaignId={CAMPAIGN_ID} isGm={isGm} />
+    </QueryClientProvider>
+  ))
 }
 
-describe('MembersCard — party roster', () => {
-  it('lists every hero with class/level and crowns the GM', async () => {
-    renderRoster(
-      [
-        fakeMember({
-          id: 1,
-          characterId: 1,
-          role: 'player',
-          character: {
-            ...fakeMember().character!,
-            name: 'Aventureiro',
-            classes: [{ className: 'Bárbaro', level: 4 }],
-          },
-        }),
-        fakeMember({ id: 2, characterId: 2, role: 'gm', character: { ...fakeMember().character!, id: 2, name: 'Mestra' } }),
-      ],
-      false,
-    )
-    expect(await screen.findByText('Aventureiro')).toBeInTheDocument()
-    expect(screen.getByText('Mestra')).toBeInTheDocument()
-    expect(screen.getByText('Mestre')).toBeInTheDocument()
-    expect(screen.getByText('Jogador')).toBeInTheDocument()
-    expect(screen.getByText('Bárbaro 4')).toBeInTheDocument()
-  })
+beforeEach(() => {
+  window.matchMedia = vi.fn().mockImplementation((media: string) => ({
+    matches: false,
+    media,
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }))
+})
 
-  it('shows the remove control + invite only for the GM', async () => {
-    renderRoster([fakeMember({ character: { ...fakeMember().character!, name: 'Alvo' } })], true)
+afterEach(() => {
+  vi.clearAllMocks()
+  document.body.innerHTML = ''
+})
+
+describe('MembersCard — escrita do mestre', () => {
+  it('mostra remover e convite para o mestre', async () => {
+    renderRoster([fakeMember()], true)
+
     expect(await screen.findByLabelText('Remover Alvo')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Convite/ })).toBeInTheDocument()
   })
 
-  it('hides the remove control for a player', async () => {
-    renderRoster([fakeMember({ character: { ...fakeMember().character!, name: 'Alvo' } })], false)
-    await screen.findByText('Alvo')
+  // A trava de verdade é do servidor; isto é só UX — mas oferecer ao jogador um
+  // botão que sempre falha é pior que não oferecer.
+  it('esconde remover e convite do jogador', async () => {
+    renderRoster([fakeMember()], false)
+
+    expect(await screen.findByText('Alvo')).toBeInTheDocument()
     expect(screen.queryByLabelText('Remover Alvo')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Convite/ })).not.toBeInTheDocument()
+  })
+})
+
+describe('MemberPlate', () => {
+  it('remove o membro no clique', async () => {
+    const onRemove = vi.fn().mockResolvedValue(undefined)
+    renderWithRouter(() => (
+      <MemberPlate member={fakeMember()} canRemove onRemove={onRemove} />
+    ))
+
+    await userEvent.setup().click(await screen.findByLabelText('Remover Alvo'))
+
+    expect(onRemove).toHaveBeenCalledOnce()
   })
 
-  it('renders an empty muster when there are no members', async () => {
-    renderRoster([], false)
-    expect(
-      await screen.findByText('Nenhum personagem inscrito ainda.'),
-    ).toBeInTheDocument()
+  // O cursor de setas anda pelo grid de heróis; parar em "remover" no caminho
+  // seria um passo a um Enter de distância de perder alguém da mesa.
+  it('deixa o botão de remover fora do cursor de setas', async () => {
+    renderWithRouter(() => (
+      <MemberPlate member={fakeMember()} canRemove onRemove={vi.fn()} />
+    ))
+
+    expect(await screen.findByLabelText('Remover Alvo')).toHaveAttribute('data-nav-skip')
   })
 })

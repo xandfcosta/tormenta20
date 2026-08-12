@@ -1,41 +1,39 @@
-import type * as React from 'react'
+import { type ComponentProps, splitProps } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
 
-/**
- * BackgroundTexture — a full-bleed decorative backdrop for a scene. `stone`
- * (dark, default) or `parchment`. Purely presentational (`aria-hidden`), sits
- * behind content via `-z-10`, so place it inside a `position: relative`
- * parent. Pass `vignette` to darken the edges on stone scenes. Lightweight —
- * layered gradients, no image asset.
- */
-type BackgroundTextureVariant = 'stone' | 'parchment'
+export type BackgroundTextureVariant = 'stone' | 'parchment'
 
-type BackgroundTextureProps = React.ComponentProps<'div'> & {
+export type BackgroundTextureProps = ComponentProps<'div'> & {
   variant?: BackgroundTextureVariant
   vignette?: boolean
 }
 
-function BackgroundTexture({
-  className,
-  variant = 'stone',
-  vignette = false,
-  ...props
-}: BackgroundTextureProps) {
+/**
+ * Full-bleed decorative backdrop for a scene: `stone` (dark, default) or
+ * `parchment`. Purely presentational (`aria-hidden`), sits behind content via
+ * `-z-10`, so it needs a `position: relative` parent. Pass `vignette` to darken
+ * the edges on stone scenes. Layered gradients — no image asset.
+ *
+ * @example <BackgroundTexture variant="stone" vignette />
+ */
+export function BackgroundTexture(props: BackgroundTextureProps) {
+  const [local, rest] = splitProps(props, ['class', 'variant', 'vignette'])
+  const variant = () => local.variant ?? 'stone'
   return (
     <div
-      aria-hidden
+      // Explicit "true": bare `aria-hidden` renders as `aria-hidden=""` in
+      // Solid (React normalized it to "true"), and an empty value does NOT
+      // hide the node from assistive tech.
+      aria-hidden="true"
       data-slot="background-texture"
-      data-variant={variant}
-      className={cn(
+      data-variant={variant()}
+      class={cn(
         'pointer-events-none absolute inset-0 -z-10',
-        variant === 'stone' ? 'grimorio-stone' : 'grimorio-parchment-bg',
-        vignette && 'grimorio-vignette',
-        className,
+        variant() === 'stone' ? 'grimorio-stone' : 'grimorio-parchment-bg',
+        local.vignette && 'grimorio-vignette',
+        local.class,
       )}
-      {...props}
+      {...rest}
     />
   )
 }
-
-export { BackgroundTexture }
-export type { BackgroundTextureVariant }

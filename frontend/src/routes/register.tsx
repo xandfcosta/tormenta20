@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/solid-router'
 import { meQueryOptions } from '@/entities/user/queries'
 import { RegisterPage } from '@/pages/auth/register-page'
 

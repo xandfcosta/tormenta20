@@ -17,7 +17,9 @@ export const WIZARD_STEPS = [
   { slug: 'atributos', label: 'Atributos' },
   { slug: 'pericias', label: 'Perícias' },
   { slug: 'equipamento', label: 'Equipamento' },
-  { slug: 'vitalidade', label: 'Vitalidade' },
+  // Vitalidade is NOT a step of its own: PV/PM are four numbers, two of them
+  // derived, which floated on a full stage — they close the Identidade step
+  // instead, where the character stops being a build and becomes a person.
   { slug: 'identidade', label: 'Identidade' },
   { slug: 'resumo', label: 'Resumo' },
 ] as const
@@ -26,6 +28,21 @@ export type StepSlug = (typeof WIZARD_STEPS)[number]['slug']
 
 export function stepIndex(slug: StepSlug): number {
   return WIZARD_STEPS.findIndex((s) => s.slug === slug)
+}
+
+/**
+ * The step one walk away, or null at either end of the flow. Keeps "next" and
+ * "previous" defined by the order above and nowhere else.
+ *
+ * @example stepAt('classe', -1) // 'raca'
+ */
+export function stepAt(current: StepSlug, delta: -1 | 1): StepSlug | null {
+  return WIZARD_STEPS[stepIndex(current) + delta]?.slug ?? null
+}
+
+/** Whether a string names a step — for validating a slug arriving from the URL. */
+export function isStepSlug(value: string): value is StepSlug {
+  return WIZARD_STEPS.some((s) => s.slug === value)
 }
 
 const classEntrySchema = z.object({
@@ -170,10 +187,15 @@ export function stepReady(
       return true // trained perícias are soft (sheet catches)
     case 'equipamento':
       return true // kit picks are soft — finish on the sheet
-    case 'vitalidade':
-      return v.hpMax >= 1 && v.hpCurrent <= v.hpMax && v.mpCurrent <= v.mpMax
     case 'identidade':
-      return v.name.trim().length > 0 && v.size.length > 0
+      // Identity AND vitality: the merged step owns both gates.
+      return (
+        v.name.trim().length > 0 &&
+        v.size.length > 0 &&
+        v.hpMax >= 1 &&
+        v.hpCurrent <= v.hpMax &&
+        v.mpCurrent <= v.mpMax
+      )
     case 'resumo':
       return true
   }

@@ -1,62 +1,79 @@
-import { Link } from '@tanstack/react-router'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Crown, Trash2, Users } from 'lucide-react'
+import { useQuery, useQueryClient } from '@tanstack/solid-query'
+import { Link } from '@tanstack/solid-router'
+import { Crown, Trash2, Users } from 'lucide-solid'
+import { For, Show, createSignal } from 'solid-js'
+import { campaignMembersQueryOptions } from '@/entities/campaign/queries'
+import { classLevelLine } from '@/entities/character/class-line'
+import { type CampaignMember, api } from '@/shared/api/api'
+import { hueFromName } from '@/shared/lib/hue-from-name'
 import { Button } from '@/shared/ui/button'
 import { CharacterPortrait } from '@/shared/ui/character-portrait'
 import { SkeletonRows } from '@/shared/ui/skeleton'
-import { cn } from '@/shared/lib/utils'
-import { hueFromName } from '@/shared/lib/hue-from-name'
-import { api } from '@/shared/api/api'
-import type { CampaignMember } from '@/shared/api/api'
-import { classLevelLine } from '@/entities/character/class-line'
-import { campaignMembersQueryOptions } from '@/entities/campaign/queries'
 import { InviteButton } from './invite-button'
 import { TomeSection } from './tome-section'
+
+/** GM first (the crest leads the muster), then the rest in arrival order. */
+export function sortRoster(members: readonly CampaignMember[]): CampaignMember[] {
+  return [...members].sort((a, b) => (a.role === b.role ? 0 : a.role === 'gm' ? -1 : 1))
+}
+
+/** A member's display name — the character's, or a placeholder by id. */
+export function memberName(member: CampaignMember): string {
+  return member.character?.name ?? `Personagem ${member.characterId}`
+}
 
 /**
  * Membros section as a PARTY ROSTER — every hero as a portrait plate (the GM
  * crowned), laid out as a grid that grows columns with the tome page. Players
- * are never added here; the GM shares an invite link (InviteButton) and each
- * player joins with a character of their own.
+ * are never added here; the GM shares an invite link and each player joins
+ * with a character of their own.
  */
-export function MembersCard({
-  campaignId,
-  isGm,
-}: {
-  campaignId: number
-  isGm: boolean
-}) {
-  const members = useQuery(campaignMembersQueryOptions(campaignId))
-  // GM first (the crest leads the muster), then the rest in arrival order.
-  const roster = [...(members.data ?? [])].sort((a, b) =>
-    a.role === b.role ? 0 : a.role === 'gm' ? -1 : 1,
-  )
+export function MembersCard(props: { campaignId: number; isGm: boolean }) {
+  const members = useQuery(() => campaignMembersQueryOptions(props.campaignId))
+  const roster = () => sortRoster(members.data ?? [])
+  const queryClient = useQueryClient()
+
+  /** Drops a member and clears the character's now-stale "Campanhas" list. */
+  const remove = async (member: CampaignMember) => {
+    await api.members.remove(props.campaignId, member.id)
+    await queryClient.invalidateQueries({
+      queryKey: campaignMembersQueryOptions(props.campaignId).queryKey,
+    })
+    await queryClient.invalidateQueries({
+      queryKey: ['characters', member.characterId, 'campaigns'],
+    })
+  }
 
   return (
     <TomeSection
       eyebrow="A Mesa"
       title="Heróis"
-      action={isGm && <InviteButton campaignId={campaignId} />}
+      action={<Show when={props.isGm}>{<InviteButton campaignId={props.campaignId} />}</Show>}
     >
-      {isGm && (
-        <p className="text-sm text-muted-foreground">
+      <Show when={props.isGm}>
+        <p class="text-sm text-muted-foreground">
           Jogadores entram pelo link de convite com um personagem próprio.
         </p>
-      )}
-      {members.isLoading && <SkeletonRows count={2} />}
-      {!members.isLoading && roster.length === 0 && <EmptyMuster />}
-      {roster.length > 0 && (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {roster.map((m) => (
-            <MemberPlate
-              key={m.id}
-              member={m}
-              campaignId={campaignId}
-              canRemove={isGm}
-            />
-          ))}
+      </Show>
+      <Show when={members.isLoading}>
+        <SkeletonRows count={2} />
+      </Show>
+      <Show when={!members.isLoading && roster().length === 0}>
+        <EmptyMuster />
+      </Show>
+      <Show when={roster().length > 0}>
+        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <For each={roster()}>
+            {(member) => (
+              <MemberPlate
+                member={member}
+                canRemove={props.isGm}
+                onRemove={() => remove(member)}
+              />
+            )}
+          </For>
         </div>
-      )}
+      </Show>
     </TomeSection>
   )
 }
@@ -64,102 +81,86 @@ export function MembersCard({
 /** No members yet — an empty muster awaiting the first hero. */
 function EmptyMuster() {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-sm border border-dashed border-grimorio-iron px-4 py-10 text-center">
-      <Users aria-hidden className="size-6 text-muted-foreground" />
-      <p className="text-sm text-muted-foreground">
-        Nenhum personagem inscrito ainda.
-      </p>
+    <div class="flex flex-col items-center gap-2 rounded-sm border border-dashed border-grimorio-iron px-4 py-10 text-center">
+      <Users aria-hidden="true" class="size-6 text-muted-foreground" />
+      <p class="text-sm text-muted-foreground">Nenhum personagem inscrito ainda.</p>
     </div>
   )
 }
 
-function MemberPlate({
-  member,
-  campaignId,
-  canRemove,
-}: {
+export type MemberPlateProps = {
   member: CampaignMember
-  campaignId: number
+  /** Only the GM may drop someone from the muster. */
   canRemove: boolean
-}) {
-  const remove = useRemoveMember(member, campaignId)
-  const char = member.character
-  const name = char?.name ?? `Personagem ${member.characterId}`
-  const isGm = member.role === 'gm'
+  onRemove: () => Promise<void>
+}
+
+export function MemberPlate(props: MemberPlateProps) {
+  const name = () => memberName(props.member)
+  const character = () => props.member.character
+  const isGm = () => props.member.role === 'gm'
 
   return (
-    <div
-      className={cn(
-        'group relative flex gap-3 rounded-sm border bg-[var(--grimorio-panel)] p-3 transition-colors',
-        isGm
-          ? 'border-grimorio-gold/50 hover:border-grimorio-gold'
-          : 'border-grimorio-iron hover:border-grimorio-gold',
-      )}
-    >
-      <Link
-        to="/characters/$id"
-        params={{ id: member.characterId }}
-        className="flex min-w-0 flex-1 items-center gap-3"
-      >
-        <CharacterPortrait name={name} size="sm" hue={hueFromName(name)} />
-        <div className="min-w-0 space-y-1">
-          <p className="flex items-center gap-1.5 truncate font-medium text-foreground">
-            <span className="truncate">{name}</span>
-            {isGm && (
-              <Crown aria-hidden className="size-3.5 shrink-0 text-grimorio-gold" />
-            )}
-          </p>
-          <p className="truncate text-xs text-muted-foreground">
-            {char ? classLevelLine(char.classes) || `Nível ${char.level}` : '—'}
-          </p>
-          <RolePill isGm={isGm} />
-        </div>
-      </Link>
-      {canRemove && (
-        <Button
-          variant="ghost"
-          size="icon"
-          data-nav-skip
-          className="absolute right-1.5 top-1.5 size-7 opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
-          onClick={() => remove.mutate()}
-          disabled={remove.isPending}
-          aria-label={`Remover ${name}`}
-        >
-          <Trash2 className="size-4" />
-        </Button>
-      )}
+    <div class="group relative flex items-center gap-3 rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)] p-3">
+      <CharacterPortrait name={name()} size="sm" hue={hueFromName(name())} />
+      <div class="min-w-0 flex-1">
+        <p class="flex items-center gap-1.5 truncate font-medium text-foreground">
+          {name()}
+          <Show when={isGm()}>
+            <Crown aria-hidden="true" class="size-3.5 shrink-0 text-grimorio-gold" />
+          </Show>
+        </p>
+        <p class="truncate text-xs text-muted-foreground">
+          {classLevelLine(character()?.classes ?? []) || `Nv ${character()?.level ?? 1}`}
+        </p>
+      </div>
+      <Show when={character()}>
+        {(char) => (
+          <Link
+            to="/characters/$id"
+            params={{ id: String(char().id) }}
+            class="shrink-0 text-xs text-grimorio-gold hover:underline"
+          >
+            Ficha
+          </Link>
+        )}
+      </Show>
+      <Show when={props.canRemove}>
+        <RemoveMemberButton name={name()} onRemove={props.onRemove} />
+      </Show>
     </div>
   )
 }
 
-/** Stance chip: the GM wears a gilt crest, players a plain iron tag. */
-function RolePill({ isGm }: { isGm: boolean }) {
-  return (
-    <span
-      className={cn(
-        'inline-flex rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider',
-        isGm
-          ? 'border-grimorio-gold/60 text-grimorio-gold'
-          : 'border-grimorio-iron text-muted-foreground',
-      )}
-    >
-      {isGm ? 'Mestre' : 'Jogador'}
-    </span>
-  )
-}
+/**
+ * Drops a hero from the muster. Hidden until hover/focus so the roster reads as
+ * a roster, and `data-nav-skip` keeps it out of the arrow-key cursor — nobody
+ * should land on "remove" by walking the grid. On a touch screen there IS no
+ * hover, so it stays visible there or the GM could never remove anyone.
+ */
+function RemoveMemberButton(props: { name: string; onRemove: () => Promise<void> }) {
+  const [pending, setPending] = createSignal(false)
 
-/** Drops a member and clears the character's now-stale "Campanhas" list. */
-function useRemoveMember(member: CampaignMember, campaignId: number) {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: () => api.members.remove(campaignId, member.id),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: campaignMembersQueryOptions(campaignId).queryKey,
-      })
-      qc.invalidateQueries({
-        queryKey: ['characters', member.characterId, 'campaigns'],
-      })
-    },
-  })
+  const remove = async () => {
+    setPending(true)
+    try {
+      await props.onRemove()
+    } finally {
+      setPending(false)
+    }
+  }
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      data-nav-skip
+      class="absolute top-1.5 right-1.5 opacity-0 transition-opacity pointer-coarse:opacity-100 focus-visible:opacity-100 group-hover:opacity-100"
+      onClick={remove}
+      disabled={pending()}
+      aria-label={`Remover ${props.name}`}
+    >
+      <Trash2 aria-hidden="true" class="size-4" />
+    </Button>
+  )
 }

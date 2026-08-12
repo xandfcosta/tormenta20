@@ -1,170 +1,207 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
-import { SPELL_CATALOG } from '@tormenta20/t20-data'
+import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
+import { render, screen, waitFor } from '@solidjs/testing-library'
+import userEvent from '@testing-library/user-event'
+import type { AttributeKey } from '@tormenta20/t20-data'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { makeCharacter } from '@/entities/character/__fixtures__/character'
+import { characterQueryOptions } from '@/entities/character/queries'
 import type { Character, CharacterSpell } from '@/shared/api/api'
-import { computedSheetFor } from '@/entities/character/computed-sheet'
+import { spellCatalog } from '@/shared/lib/spell-cache'
+import { ConditionalsProvider } from '@/shared/stores/conditionals-context'
+import { createConditionalsStore } from '@/shared/stores/conditionals-store'
 import { SpellRow } from './spell-row'
 
-// Named fake — full Character shape with neutral defaults; tests override
-// only what the row under test reads (classes, level, mp, spells).
-function fakeCharacter(overrides: Partial<Character> = {}): Character {
-  return {
-    id: 1,
-    ownerId: 1,
-    name: 'Teste Conjurador',
-    origin: 'Acólito',
-    god: null,
-    godPower: '',
-    tibar: 0,
-    level: 4,
-    hpMax: 20,
-    hpCurrent: 20,
-    mpMax: 12,
-    mpCurrent: 12,
-    strength: 0,
-    dexterity: 1,
-    constitution: 1,
-    intelligence: 3,
-    wisdom: 1,
-    charisma: 0,
-    size: 'Médio',
-    displacement: 9,
-    proficiencies: '[]',
-    raceAbilityChoices: '[]',
-    activeConditions: '[]',
-    raceAttributeChoices: '{}',
-    secondaryRaceChoices: '[]',
-    originChoices: '[]',
-    classPowers: '[]',
-    classChoices: '{}',
-    powerChoices: '{}',
-    createdAt: '',
-    updatedAt: '',
-    races: [{ race: 'Humano' }],
-    classes: [{ className: 'Arcanista', level: 4 }],
-    expertises: [],
-    items: [],
-    activeEffects: [],
-    spells: [],
-    ...overrides,
+/**
+ * SpellRow gets its own file because in the panel it lives inside a VIRTUALIZED
+ * list, and jsdom measures every element as 0 — no row ever renders there
+ * (migration trap: the panel test would pass green against an empty list).
+ */
+
+/** In-memory Storage double, so no test reaches a real localStorage. */
+class FakeStorage implements Storage {
+  private entries = new Map<string, string>()
+  get length() {
+    return this.entries.size
+  }
+  clear() {
+    this.entries.clear()
+  }
+  getItem(key: string) {
+    return this.entries.get(key) ?? null
+  }
+  key(index: number) {
+    return [...this.entries.keys()][index] ?? null
+  }
+  removeItem(key: string) {
+    this.entries.delete(key)
+  }
+  setItem(key: string, value: string) {
+    this.entries.set(key, value)
   }
 }
 
-const CIRCLE1_SPELL = Object.values(SPELL_CATALOG).find(
-  (s) => s.circle === 1 && s.classes.includes('Arcanista'),
-)
-const CIRCLE5_SPELL = Object.values(SPELL_CATALOG).find(
-  (s) => s.circle === 5 && s.classes.includes('Arcanista'),
-)
-
-function learnedRow(spellId: string): CharacterSpell {
-  return { id: 1, catalogSpellId: spellId, prepared: true, learnedAt: '' }
+const CD: Record<AttributeKey, number> = {
+  strength: 10,
+  dexterity: 11,
+  constitution: 12,
+  intelligence: 18,
+  wisdom: 15,
+  charisma: 14,
 }
 
-function renderWithQuery(ui: React.ReactElement) {
-  return render(
-    <QueryClientProvider client={new QueryClient()}>{ui}</QueryClientProvider>,
+function firstCircleSpell() {
+  const spell = Object.values(spellCatalog()).find(
+    (s) => s.circle === 1 && s.classes.includes('Arcanista'),
   )
+  if (!spell) throw new Error('catálogo sem magia de Arcanista de 1º círculo')
+  return spell
 }
 
-describe('SpellRow — Conjurar sempre visível', () => {
-  it('mostra o botão Conjurar no cabeçalho sem expandir a linha', () => {
-    const spell = CIRCLE1_SPELL!
-    const character = fakeCharacter({ spells: [learnedRow(spell.id)] })
-    renderWithQuery(
-      <SpellRow
-        spell={spell}
-        character={character}
-        casterClasses={['Arcanista']}
-        learned={character.spells[0]}
-        spellCdByAttribute={computedSheetFor(character).spellCdByAttribute}
-        />,
-    )
-    // Collapsed: expanded-only content is absent, but the cast trigger shows.
-    expect(screen.queryByText('Execução')).not.toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: `Conjurar ${spell.name}` }),
-    ).toBeEnabled()
-  })
+/** A 5th-circle spell an Arcanista 5 cannot reach yet. */
+function highCircleSpell() {
+  const spell = Object.values(spellCatalog()).find((s) => s.circle === 5)
+  if (!spell) throw new Error('catálogo sem magia de 5º círculo')
+  return spell
+}
 
-  it('clicar em Conjurar abre o diálogo de conjuração direto', () => {
-    const spell = CIRCLE1_SPELL!
-    const character = fakeCharacter({ spells: [learnedRow(spell.id)] })
-    renderWithQuery(
-      <SpellRow
-        spell={spell}
-        character={character}
-        casterClasses={['Arcanista']}
-        learned={character.spells[0]}
-        spellCdByAttribute={computedSheetFor(character).spellCdByAttribute}
-        />,
-    )
-    fireEvent.click(
-      screen.getByRole('button', { name: `Conjurar ${spell.name}` }),
-    )
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByText('Custo total')).toBeInTheDocument()
-  })
-
-  it('não mostra Conjurar quando a magia não é aprendida', () => {
-    const spell = CIRCLE1_SPELL!
-    const character = fakeCharacter()
-    renderWithQuery(
-      <SpellRow
-        spell={spell}
-        character={character}
-        casterClasses={['Arcanista']}
-        learned={null}
-        spellCdByAttribute={computedSheetFor(character).spellCdByAttribute}
-        />,
-    )
-    expect(
-      screen.queryByRole('button', { name: `Conjurar ${spell.name}` }),
-    ).not.toBeInTheDocument()
-  })
-
-  it('desabilita Conjurar quando o círculo excede o máximo conjurável', () => {
-    const spell = CIRCLE5_SPELL!
-    const character = fakeCharacter({
-      level: 1,
-      classes: [{ className: 'Arcanista', level: 1 }],
-      spells: [learnedRow(spell.id)],
+function renderRow(
+  options: {
+    learned?: CharacterSpell | null
+    character?: Character
+    spell?: ReturnType<typeof firstCircleSpell>
+  } = {},
+) {
+  // A learned row only means "learned" when the character carries it too — the
+  // shared guard reads `character.spells`, not this prop.
+  const character =
+    options.character ??
+    makeCharacter({
+      classes: [{ className: 'Arcanista', level: 5 }],
+      spells: options.learned ? [options.learned] : [],
     })
-    renderWithQuery(
-      <SpellRow
-        spell={spell}
-        character={character}
-        casterClasses={['Arcanista']}
-        learned={character.spells[0]}
-        spellCdByAttribute={computedSheetFor(character).spellCdByAttribute}
-        />,
-    )
-    expect(
-      screen.getByRole('button', { name: `Conjurar ${spell.name}` }),
-    ).toBeDisabled()
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  client.setQueryData(characterQueryOptions(character.id).queryKey, character)
+  render(() => (
+    <QueryClientProvider client={client}>
+      <ConditionalsProvider store={createConditionalsStore(new FakeStorage())}>
+        <SpellRow
+          spell={options.spell ?? firstCircleSpell()}
+          character={character}
+          learned={options.learned ?? null}
+          spellCdByAttribute={CD}
+        />
+      </ConditionalsProvider>
+    </QueryClientProvider>
+  ))
+  return { user: userEvent.setup() }
+}
+
+beforeEach(() => {
+  window.matchMedia = vi.fn().mockImplementation((media: string) => ({
+    matches: false,
+    media,
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }))
+})
+
+afterEach(() => {
+  vi.restoreAllMocks()
+  document.body.innerHTML = ''
+})
+
+describe('SpellRow', () => {
+  it('mostra a CD da classe que lança a magia', () => {
+    renderRow()
+    // Arcanista lança por Inteligência.
+    expect(screen.getByText(`CD ${CD.intelligence}`)).toBeInTheDocument()
   })
 
-  it('expandir a linha continua funcionando após o novo cabeçalho', () => {
-    const spell = CIRCLE1_SPELL!
-    const character = fakeCharacter({ spells: [learnedRow(spell.id)] })
-    renderWithQuery(
-      <SpellRow
-        spell={spell}
-        character={character}
-        casterClasses={['Arcanista']}
-        learned={character.spells[0]}
-        spellCdByAttribute={computedSheetFor(character).spellCdByAttribute}
-        />,
-    )
-    // Radix's DialogTrigger (Conjurar) also exposes aria-expanded, so pick
-    // the header toggle by excluding the trigger's accessible name.
-    fireEvent.click(
-      screen.getByRole('button', {
-        expanded: false,
-        name: (name) => !name.startsWith('Conjurar'),
-      }),
-    )
-    expect(screen.getByText('Execução')).toBeInTheDocument()
+  it('magia não aprendida não oferece Conjurar', () => {
+    renderRow()
+    expect(screen.queryByRole('button', { name: /^Conjurar/ })).not.toBeInTheDocument()
+  })
+
+  it('aprendida oferece Conjurar sem precisar expandir a linha', () => {
+    renderRow({ learned: { id: 1, catalogSpellId: firstCircleSpell().id, prepared: false, learnedAt: '' } })
+
+    expect(screen.getByRole('button', { name: /^Conjurar/ })).toBeInTheDocument()
+  })
+
+  // Círculo acima do alcançável: a linha aparece, mas conjurar fica travado.
+  it('círculo alto demais desabilita o Conjurar', () => {
+    const spell = highCircleSpell()
+    renderRow({
+      spell,
+      learned: { id: 1, catalogSpellId: spell.id, prepared: false, learnedAt: '' },
+    })
+
+    expect(screen.getByRole('button', { name: `Conjurar ${spell.name}` })).toBeDisabled()
+  })
+
+  it('aprender chama o endpoint com a magia da linha', async () => {
+    const spell = firstCircleSpell()
+    const api = await import('@/shared/api/api')
+    const learn = vi.spyOn(api.api.characters, 'learnSpell').mockResolvedValue({
+      id: 1,
+      catalogSpellId: spell.id,
+      prepared: false,
+      learnedAt: '',
+    })
+    const { user } = renderRow()
+
+    await user.click(screen.getByRole('button', { expanded: false }))
+    await user.click(await screen.findByRole('button', { name: 'Aprender' }))
+
+    await waitFor(() => expect(learn).toHaveBeenCalledWith(1, spell.id))
+  })
+
+  it('preparar e despreparar trocam de rótulo', async () => {
+    const spell = firstCircleSpell()
+    const api = await import('@/shared/api/api')
+    const setPrepared = vi
+      .spyOn(api.api.characters, 'setSpellPrepared')
+      .mockResolvedValue({ id: 1, catalogSpellId: spell.id, prepared: true, learnedAt: '' })
+    const { user } = renderRow({
+      learned: { id: 1, catalogSpellId: spell.id, prepared: false, learnedAt: '' },
+    })
+
+    await user.click(screen.getByRole('button', { expanded: false }))
+    await user.click(await screen.findByRole('button', { name: 'Preparar' }))
+
+    await waitFor(() => expect(setPrepared).toHaveBeenCalledWith(1, spell.id, true))
+  })
+
+  // Magia concedida por poder não tem linha de grimório pra gerenciar.
+  it('magia concedida não oferece Esquecer', async () => {
+    const spell = firstCircleSpell()
+    const client = new QueryClient()
+    const character = makeCharacter({ classes: [{ className: 'Bárbaro', level: 5 }] })
+    client.setQueryData(characterQueryOptions(character.id).queryKey, character)
+    render(() => (
+      <QueryClientProvider client={client}>
+        <ConditionalsProvider store={createConditionalsStore(new FakeStorage())}>
+          <SpellRow
+            spell={spell}
+            character={character}
+            learned={null}
+            spellCdByAttribute={CD}
+            granted={{ sourcePower: 'Totem Espiritual', keyAttribute: 'wisdom' }}
+          />
+        </ConditionalsProvider>
+      </QueryClientProvider>
+    ))
+    const user = userEvent.setup()
+
+    expect(screen.getByText('Totem Espiritual')).toBeInTheDocument()
+    // Concedida é conjurável mesmo para não-conjurador.
+    expect(screen.getByRole('button', { name: /^Conjurar/ })).toBeEnabled()
+
+    await user.click(screen.getByRole('button', { expanded: false }))
+    expect(screen.queryByRole('button', { name: 'Esquecer' })).not.toBeInTheDocument()
   })
 })

@@ -1,4 +1,4 @@
-import { queryOptions } from '@tanstack/react-query'
+import { queryOptions } from '@tanstack/solid-query'
 import { api } from '@/shared/api/api'
 
 /**
@@ -12,15 +12,19 @@ export const spellCatalogQueryOptions = queryOptions({
   staleTime: Number.POSITIVE_INFINITY,
 })
 
-export const bestiaryCatalogQueryOptions = queryOptions({
-  queryKey: ['catalog', 'bestiary'] as const,
-  queryFn: api.catalog.bestiary,
-  staleTime: Number.POSITIVE_INFINITY,
-})
 
 export const itemCatalogQueryOptions = queryOptions({
   queryKey: ['catalog', 'items'] as const,
   queryFn: api.catalog.items,
+  staleTime: Number.POSITIVE_INFINITY,
+})
+
+/** The bestiary. Unlike the abilities cluster it is NOT primed into a module
+ *  cache: only the Mesa do Mestre and the in-session monster add read it, and
+ *  they can wait for a query like any other screen. */
+export const bestiaryCatalogQueryOptions = queryOptions({
+  queryKey: ['catalog', 'bestiary'] as const,
+  queryFn: api.catalog.bestiary,
   staleTime: Number.POSITIVE_INFINITY,
 })
 

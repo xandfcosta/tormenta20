@@ -1,57 +1,46 @@
-"use client"
+import { Tooltip as KTooltip } from '@kobalte/core/tooltip'
+import { type ComponentProps, splitProps } from 'solid-js'
+import { useSceneContainer } from '@/shared/lib/scene-container'
+import { cn } from '@/shared/lib/utils'
 
-import * as React from "react"
-import { Tooltip as TooltipPrimitive } from "radix-ui"
+/**
+ * Tooltip on Kobalte.
+ *
+ * Note there is no `TooltipProvider` to mount at the app root: Radix kept the
+ * shared open-delay there, Kobalte puts it on each tooltip (`openDelay`). The
+ * root's `<TooltipProvider delayDuration={150}>` therefore has no counterpart —
+ * pass `openDelay={150}` where a tooltip needs it.
+ *
+ * @example
+ * <Tooltip openDelay={150}>
+ *   <TooltipTrigger>?</TooltipTrigger>
+ *   <TooltipContent>Defesa = 10 + DES + armadura</TooltipContent>
+ * </Tooltip>
+ */
+export const Tooltip = KTooltip
+export const TooltipTrigger = KTooltip.Trigger
 
-import { cn } from "@/shared/lib/utils"
+export type TooltipContentProps = ComponentProps<typeof KTooltip.Content> & {
+  /** Portal target. Defaults to the enclosing grimório scene, else body. */
+  mount?: Node
+}
 
-function TooltipProvider({
-  delayDuration = 0,
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
+export function TooltipContent(props: TooltipContentProps) {
+  const [local, rest] = splitProps(props, ['class', 'children', 'mount'])
+  const scene = useSceneContainer()
   return (
-    <TooltipPrimitive.Provider
-      data-slot="tooltip-provider"
-      delayDuration={delayDuration}
-      {...props}
-    />
-  )
-}
-
-function Tooltip({
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Root>) {
-  return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
-}
-
-function TooltipTrigger({
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
-  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
-}
-
-function TooltipContent({
-  className,
-  sideOffset = 0,
-  children,
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Content>) {
-  return (
-    <TooltipPrimitive.Portal>
-      <TooltipPrimitive.Content
+    <KTooltip.Portal mount={local.mount ?? scene() ?? undefined}>
+      <KTooltip.Content
         data-slot="tooltip-content"
-        sideOffset={sideOffset}
-        className={cn(
-          "z-50 w-fit origin-(--radix-tooltip-content-transform-origin) animate-in rounded-md bg-foreground px-3 py-1.5 text-xs text-balance text-background fade-in-0 zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
-          className
+        class={cn(
+          'z-50 w-fit animate-in rounded-md bg-foreground px-3 py-1.5 text-xs text-balance text-background fade-in-0 zoom-in-95 data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95',
+          local.class,
         )}
-        {...props}
+        {...rest}
       >
-        {children}
-        <TooltipPrimitive.Arrow className="z-50 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px] bg-foreground fill-foreground" />
-      </TooltipPrimitive.Content>
-    </TooltipPrimitive.Portal>
+        {local.children}
+        <KTooltip.Arrow />
+      </KTooltip.Content>
+    </KTooltip.Portal>
   )
 }
-
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }

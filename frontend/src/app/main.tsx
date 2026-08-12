@@ -1,35 +1,42 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { RouterProvider, createRouter } from '@tanstack/react-router'
-import '../index.css'
-import { RoutePendingSkeleton } from '../shared/ui/skeleton'
+/* @refresh reload */
+import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
+import { RouterProvider, createRouter } from '@tanstack/solid-router'
+import { render } from 'solid-js/web'
+import { AuthProvider } from '@/shared/stores/auth-context'
+import { ConditionalsProvider } from '@/shared/stores/conditionals-context'
+import { PowerUsesProvider } from '@/shared/stores/power-uses-context'
+import { StanceActivationProvider } from '@/shared/stores/stance-activation-context'
+import { UiProvider } from '@/shared/stores/ui-context'
+import '@/index.css'
 import { routeTree } from '../routeTree.gen'
 
-const queryClient = new QueryClient({
-  defaultOptions: { queries: { staleTime: 30_000 } },
-})
+const queryClient = new QueryClient()
+const router = createRouter({ routeTree, context: { queryClient } })
 
-const router = createRouter({
-  routeTree,
-  context: { queryClient },
-  defaultPreload: 'intent',
-  // Blocking loaders keep the old page frozen while awaiting the first
-  // fetch; show a skeleton after 150ms instead of that dead gap.
-  defaultPendingComponent: RoutePendingSkeleton,
-  defaultPendingMs: 150,
-})
-
-declare module '@tanstack/react-router' {
+declare module '@tanstack/solid-router' {
   interface Register {
     router: typeof router
   }
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+const root = document.getElementById('root')
+if (!root) throw new Error('main: #root ausente no index.html (esperado <div id="root">)')
+
+render(
+  () => (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <UiProvider>
+        <AuthProvider>
+          <ConditionalsProvider>
+            <PowerUsesProvider>
+              <StanceActivationProvider>
+                <RouterProvider router={router} />
+              </StanceActivationProvider>
+            </PowerUsesProvider>
+          </ConditionalsProvider>
+        </AuthProvider>
+      </UiProvider>
     </QueryClientProvider>
-  </StrictMode>,
+  ),
+  root,
 )

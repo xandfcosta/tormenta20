@@ -1,68 +1,87 @@
-import { getRouteApi } from '@tanstack/react-router'
-import { Link } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
-import { Button } from '@/shared/ui/button'
-import { Badge } from '@/shared/ui/badge'
-import { PageChrome } from '@/shared/ui/page-chrome'
-import { Skeleton } from '@/shared/ui/skeleton'
+import { useQuery } from '@tanstack/solid-query'
+import { getRouteApi, useNavigate } from '@tanstack/solid-router'
+import { Show } from 'solid-js'
 import { characterQueryOptions } from '@/entities/character/queries'
-import { computedSheetV1For } from '@/entities/character/sheet-v1'
-import { ComputedSheetCards } from '@/features/character-sheet/computed-sheet'
+import { CharacterSheet } from '@/features/character-sheet/character-sheet'
+import { SheetSearch } from '@/features/character-sheet/sheet-search'
+import { SHEET_PANELS, resolveSheetTab } from '@/features/character-sheet/sheet-sections'
+import { SceneShell } from '@/shared/layout/scene-shell'
+import { createSceneNav } from '@/shared/lib/scene-nav'
+import { createSfx } from '@/shared/lib/sfx'
+import { useUi } from '@/shared/stores/ui-context'
+import { Skeleton } from '@/shared/ui/skeleton'
 
-const routeApi = getRouteApi('/characters/$id/sheet')
+const routeApi = getRouteApi('/characters/$id')
 
 /**
- * Server-computed sheet view. Renders the ComputedSheet payload from
- * `GET /characters/:id/sheet` — the same fields the orchestrator now
- * produces (attrs+race+vitals+Defesa full+saves+skills+attacks+movement).
- *
- * Separate from the main editor page: this one is read-only + a
- * consistency check that the mapper + orchestrator are talking correctly.
- * The card stack itself lives in `ComputedSheetCards` so the in-session
- * player view can render the identical sheet.
+ * The character sheet as a scene. The selected block lives in `?tab=` and
+ * nowhere else, so it deep-links, survives the back button and cannot drift out
+ * of sync with the screen — see `CharacterSheet` for what the React version had
+ * to do instead.
  */
-
 export function CharacterSheetPage() {
-  const { id } = routeApi.useParams()
-  const query = useQuery(characterQueryOptions(Number(id)))
+  const params = routeApi.useParams()
+  const search = routeApi.useSearch()
+  const navigate = useNavigate()
+  const ui = useUi()
+  const sfx = createSfx(ui)
 
-  if (query.isLoading)
-    return (
-      <PageChrome className="space-y-3">
-        <Skeleton className="h-8 w-72" />
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-40 w-full" />
-      </PageChrome>
-    )
-  if (query.isError)
-    return (
-      <PageChrome>
-        <p className="text-destructive">{(query.error as Error).message}</p>
-      </PageChrome>
-    )
-  if (!query.data) return null
+  const characterId = () => Number(params().id)
+  const character = useQuery(() => characterQueryOptions(characterId()))
 
-  // Derived here (WASM, same Go engine) — the /sheet endpoint returns a
-  // different payload than these cards read (ALE-77).
-  const computed = computedSheetV1For(query.data)
+  const tab = () => resolveSheetTab(search().tab ?? '')
+
+  const goToTab = (next: string) => {
+    if (next === tab()) return
+    sfx('select')
+    navigate({ to: '.', search: { tab: next }, replace: true })
+  }
+
+  const back = () => {
+    sfx('back')
+    navigate({ to: '/characters' })
+  }
+
+  // PageUp/PageDown bump blocks; Esc leaves to the roster. The content is a
+  // dense editing form, so arrows stay native there — only the rail declares a
+  // nav region (see the desktop layout).
+  const cycleBlock = (delta: number) => {
+    const values = SHEET_PANELS.map((p) => p.value)
+    const index = Math.max(0, values.indexOf(tab()))
+    goToTab(values[(index + delta + values.length) % values.length])
+  }
+
+  createSceneNav({
+    root: () => document.querySelector<HTMLElement>('[data-sheet-root]'),
+    onEscape: back,
+    bumpers: { prev: () => cycleBlock(-1), next: () => cycleBlock(1) },
+    sfx,
+    active: () => !character.isLoading && !!character.data,
+  })
 
   return (
-    <PageChrome className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <Link to="/characters/$id" params={{ id }}>
-          <Button variant="outline" size="sm">
-            ← Voltar
-          </Button>
-        </Link>
-        <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
-          {query.data.name}
-          <Badge variant="secondary">Nv {computed.level}</Badge>
-        </h1>
-      </div>
-
-      <ComputedSheetCards computed={computed} showWarnings />
-    </PageChrome>
+    <SceneShell dense onBack={back} onEnter={() => sfx('open')}>
+      <Show
+        when={!character.isLoading}
+        fallback={
+          <div class="w-full space-y-4">
+            <Skeleton class="h-8 w-56" />
+            <Skeleton class="h-96 w-full" />
+          </div>
+        }
+      >
+        <Show
+          when={character.data}
+          fallback={<p class="text-destructive">{(character.error as Error | null)?.message}</p>}
+        >
+          {(data) => (
+            <div class="h-[calc(100dvh-7rem)] w-full">
+              <CharacterSheet character={data()} tab={tab()} onTabChange={goToTab} />
+              <SheetSearch character={data()} onNavigate={goToTab} />
+            </div>
+          )}
+        </Show>
+      </Show>
+    </SceneShell>
   )
 }

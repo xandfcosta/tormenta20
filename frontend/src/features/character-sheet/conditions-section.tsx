@@ -1,177 +1,93 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { X } from 'lucide-react'
+import { useQueryClient } from '@tanstack/solid-query'
 import { type ConditionId, conditionEffectSummary } from '@tormenta20/t20-data'
-import { api, type Character } from '@/shared/api/api'
-import {
-  conditionsList,
-  conditionsRecord,
-} from '@/shared/lib/rules-catalog-cache'
-import { Combobox } from '@/shared/ui/combobox'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/shared/ui/popover'
-import { cn } from '@/shared/lib/utils'
-import { invalidateCharacterDependents } from '@/entities/character/character-cache'
-import { characterQueryOptions } from '@/entities/character/queries'
-
-/** Parse the persisted ConditionId[] blob (bad blob ⇒ none). */
-export function parseActiveConditions(raw: string): ConditionId[] {
-  try {
-    const parsed = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
-    return parsed.filter((x): x is ConditionId => typeof x === 'string' && x in conditionsRecord())
-  } catch {
-    return []
-  }
-}
+import { X } from 'lucide-solid'
+import { For, Show, createMemo } from 'solid-js'
+import type { Character } from '@/shared/api/api'
+import { conditionsList, conditionsRecord } from '@/shared/lib/rules-catalog-cache'
+import { PickerCombobox } from '@/shared/ui/picker-combobox'
+import { parseActiveConditions } from './active-conditions'
+import { conditionActions } from './effect-mutations'
 
 /**
- * Book conditions (caído, agarrado, atordoado… PDF p394-395) — the #1
- * mid-fight tracking need. Active conditions render as removable chips with
- * the rule text on hover; the picker adds from the full t20-data catalog.
- * Optimistic: the chip appears/disappears instantly, rolls back on failure.
+ * Book conditions (caído, agarrado, atordoado… p394-395) — the #1 mid-fight
+ * tracking need. Active conditions render as removable chips carrying the
+ * mechanical effect they apply; the picker adds from the full catalog.
+ *
+ * The chips say what each condition DOES because a condition that is only a
+ * badge is the bug ALE-28 was: these change the sheet's numbers.
  */
-export function ConditionsSection({ character }: { character: Character }) {
-  const qc = useQueryClient()
-  const queryKey = characterQueryOptions(character.id).queryKey
-  const active = parseActiveConditions(character.activeConditions)
+export function ConditionsSection(props: { character: Character }) {
+  const queryClient = useQueryClient()
+  const active = createMemo(() => parseActiveConditions(props.character.activeConditions))
 
-  const update = useMutation({
-    mutationFn: (next: ConditionId[]) =>
-      api.characters.updateConditions(character.id, next),
-    onMutate: async (next) => {
-      await qc.cancelQueries({ queryKey })
-      const previous = qc.getQueryData<Character>(queryKey)
-      qc.setQueryData<Character>(queryKey, (prev) =>
-        prev ? { ...prev, activeConditions: JSON.stringify(next) } : prev,
-      )
-      return { previous }
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
-    },
-    onSuccess: () => invalidateCharacterDependents(qc, character.id),
-  })
+  const save = async (next: ConditionId[]) => {
+    try {
+      await conditionActions(queryClient, props.character.id).set(next)
+    } catch {
+      // conditionActions already rolled back and told the player.
+    }
+  }
 
   const add = (id: string) => {
-    if (!id || active.includes(id as ConditionId)) return
-    update.mutate([...active, id as ConditionId])
+    if (active().includes(id as ConditionId)) return
+    void save([...active(), id as ConditionId])
   }
-  const remove = (id: ConditionId) =>
-    update.mutate(active.filter((c) => c !== id))
 
-  const options = conditionsList()
-    .filter((c) => !active.includes(c.id))
-    .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
-    .map((c) => ({ value: c.id, label: c.name }))
+  const options = createMemo(() =>
+    conditionsList()
+      .filter((condition) => !active().includes(condition.id))
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+      .map((condition) => ({ value: condition.id, label: condition.name })),
+  )
 
   return (
-    // scroll-mt clears the sticky TopNav (~53px) when this section is the
-    // scroll target, so the header never lands hidden under it (audit task 11).
-    <div className="scroll-mt-14 space-y-2">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+    <section class="space-y-2 rounded-sm border border-grimorio-iron p-3">
+      <h3 class="font-heading text-sm uppercase tracking-wide text-grimorio-gold">
         Condições (p394)
-      </p>
-      {active.length > 0 && (
-        <ul className="flex flex-wrap gap-1.5">
-          {active.map((id) => {
-            const cond = conditionsRecord()[id]
-            return (
-              <li
-                key={id}
-                title={cond.description}
-                className={cn(
-                  'flex items-center gap-1 rounded-md border border-[color:var(--hp-hurt)]/60',
-                  'bg-[color:var(--hp-hurt)]/10 px-2 py-1 text-xs font-medium',
-                )}
-              >
-                {cond.name}
-                {/* Applied mechanical effect, or "lembrete" for conditions with
-                    no sheet-number impact (ALE-28). */}
-                <span className="text-[10px] font-normal text-muted-foreground">
-                  {conditionEffectSummary(id)}
-                </span>
-                <button
-                  type="button"
-                  aria-label={`Remover condição ${cond.name}`}
-                  onClick={() => remove(id)}
-                  className="rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
-                >
-                  <X className="size-3" />
-                </button>
-              </li>
-            )
-          })}
+      </h3>
+      <Show when={active().length > 0}>
+        <ul class="flex flex-wrap gap-1.5">
+          <For each={active()}>
+            {(id) => (
+              <ConditionChip id={id} onRemove={() => void save(active().filter((c) => c !== id))} />
+            )}
+          </For>
         </ul>
-      )}
-      <div className="max-w-64">
-        <Combobox
-          options={options}
-          value=""
-          onChange={add}
+      </Show>
+      <div class="max-w-64">
+        <PickerCombobox
+          options={options()}
+          onPick={add}
+          aria-label="Aplicar condição"
           placeholder="Aplicar condição…"
-          searchPlaceholder="Buscar condição…"
           emptyMessage="Nenhuma."
         />
       </div>
-    </div>
+    </section>
   )
 }
 
-/** Compact HUD pips: active conditions at a glance on every viewport. */
-export function ConditionPips({
-  character,
-  className,
-  mini = false,
-}: {
-  character: Character
-  className?: string
-  /** Compact HUD variant: h-4 chips inline with the class badges, 4+ folds
-   *  into a ⚠+N popover — a dedicated row doubled the nameplate height. */
-  mini?: boolean
-}) {
-  const active = parseActiveConditions(character.activeConditions)
-  if (active.length === 0) return null
-  const shown = mini ? active.slice(0, 3) : active
-  const overflow = active.length - shown.length
-  const chip = mini
-    ? 'max-w-20 truncate rounded border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/15 px-1 text-[9px] font-semibold uppercase tracking-wide text-[color:var(--hp-hurt)]'
-    : 'rounded border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/15 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-[color:var(--hp-hurt)]'
+function ConditionChip(props: { id: ConditionId; onRemove: () => void }) {
+  const condition = () => conditionsRecord()[props.id]
   return (
-    <ul className={cn('flex flex-wrap items-center gap-1', className)}>
-      {shown.map((id) => (
-        <li key={id} title={conditionsRecord()[id].description} className={chip}>
-          {conditionsRecord()[id].name}
-        </li>
-      ))}
-      {overflow > 0 && (
-        <li>
-          <Popover>
-            <PopoverTrigger asChild>
-              <button type="button" className={chip} aria-label={`Mais ${overflow} condições`}>
-                ⚠+{overflow}
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-72 space-y-2 text-xs">
-              {active.map((id) => (
-                <div key={id}>
-                  <p className="font-semibold uppercase">
-                    {conditionsRecord()[id].name}{' '}
-                    <span className="font-normal normal-case text-[color:var(--hp-hurt)]">
-                      {conditionEffectSummary(id)}
-                    </span>
-                  </p>
-                  <p className="text-muted-foreground">
-                    {conditionsRecord()[id].description}
-                  </p>
-                </div>
-              ))}
-            </PopoverContent>
-          </Popover>
-        </li>
-      )}
-    </ul>
+    <li
+      title={condition().description}
+      class="flex items-center gap-1 rounded-md border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/10 px-2 py-1 text-xs font-medium"
+    >
+      {condition().name}
+      {/* The applied mechanical effect, or "lembrete" for the conditions with
+          no sheet-number impact (ALE-28). */}
+      <span class="text-[10px] font-normal text-muted-foreground">
+        {conditionEffectSummary(props.id)}
+      </span>
+      <button
+        type="button"
+        aria-label={`Remover condição ${condition().name}`}
+        onClick={() => props.onRemove()}
+        class="rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+      >
+        <X aria-hidden="true" class="size-3" />
+      </button>
+    </li>
   )
 }

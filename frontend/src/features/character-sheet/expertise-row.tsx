@@ -1,200 +1,99 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Dumbbell, Lock, Star, Trash2 } from 'lucide-react'
-import { Button } from '@/shared/ui/button'
-import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/shared/ui/dialog'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/shared/ui/tooltip'
-import type {
-  AttributeKey,
-  Character,
-  CharacterExpertise,
-} from '@/shared/api/api'
-import { api } from '@/shared/api/api'
-import { invalidateCharacterDependents } from '@/entities/character/character-cache'
-import { expertiseFromSheet } from '@/entities/character/computed-sheet'
-import type { ExpertiseDef } from '@/entities/character/expertise'
+import { Dumbbell, Star, Trash2 } from 'lucide-solid'
+import { For, Show } from 'solid-js'
 import {
   ATTRIBUTE_ABBR,
   ATTRIBUTE_KEYS,
+  type ExpertiseDef,
   expertiseStateFor,
   trainingBonusForLevel,
 } from '@/entities/character/expertise'
-import { characterQueryOptions } from '@/entities/character/queries'
-import {
-  accentStrong,
-  hoverRow,
-  selectClass,
-  subtleText,
-} from '@/shared/lib/sheet-theme'
+import { expertiseFromSheet } from '@/entities/character/computed-sheet'
+import type { AttributeKey, Character } from '@/shared/api/api'
+import type { ComputedSheetV2 } from '@/shared/lib/computed-sheet-v2'
 import { cn } from '@/shared/lib/utils'
-import type {
-  BreakdownContribution,
-  ComputedSheetV2,
-} from '@/shared/lib/computed-sheet-v2'
+import { DialogTrigger } from '@/shared/ui/dialog'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
+import { ExpertiseBreakdown } from './expertise-breakdown'
+import type { ExpertisePatch } from './expertise-mutations'
 import { signed } from './signed'
 
-export function ExpertiseRow({
-  character,
-  def,
-  sheet,
-  onDelete,
-}: {
+export type ExpertiseRowProps = {
   character: Character
   def: ExpertiseDef
   sheet: ComputedSheetV2
+  onPatch: (patch: ExpertisePatch) => void
+  /** Only custom "ofícios" can be deleted. */
   onDelete?: () => void
-}) {
-  const qc = useQueryClient()
-  const queryKey = characterQueryOptions(character.id).queryKey
-  const state = expertiseStateFor(character, def)
+}
 
-  type ExpertisePatch = {
-    attribute?: AttributeKey
-    trained?: boolean
-  }
-
-  const mutation = useMutation<
-    CharacterExpertise,
-    Error,
-    ExpertisePatch,
-    { previous: Character | undefined }
-  >({
-    mutationFn: (input) =>
-      api.characters.updateExpertise(character.id, { name: def.name, ...input }),
-    onMutate: async (input) => {
-      await qc.cancelQueries({ queryKey })
-      const previous = qc.getQueryData<Character>(queryKey)
-      qc.setQueryData<Character>(queryKey, (prev) => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          expertises: prev.expertises.map((e) =>
-            e.name === def.name ? { ...e, ...input } : e,
-          ),
-        }
-      })
-      return { previous }
-    },
-    onError: (_err, _vars, ctx) => {
-      if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
-    },
-    onSuccess: (updated) => {
-      qc.setQueryData<Character>(queryKey, (prev) => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          expertises: prev.expertises.map((e) =>
-            e.name === updated.name ? updated : e,
-          ),
-        }
-      })
-      invalidateCharacterDependents(qc, character.id)
-    },
-  })
-
+/**
+ * One perícia: its total (which opens the breakdown), the name, the trained
+ * toggle, the attribute it keys off, and the chips that preview the math.
+ */
+export function ExpertiseRow(props: ExpertiseRowProps) {
+  const state = () => expertiseStateFor(props.character, props.def)
   // Every standard + custom perícia is on the sheet; `?? 0` is only a type guard.
-  const entry = expertiseFromSheet(sheet, def.name)
-  const total = entry?.total ?? 0
-  const attrMod = entry?.attrValue ?? 0
-  const halfLevel = Math.floor(character.level / 2)
-  const trainBonus = state.trained ? trainingBonusForLevel(character.level) : 0
-  const othersDisplay = entry?.itemBonus ?? 0
-  const itemContributions = entry?.itemContributions ?? []
-
-  const trainedToggle = (
-    <TrainedToggle
-      trained={state.trained}
-      name={def.name}
-      onToggle={(next) => mutation.mutate({ trained: next })}
-    />
-  )
-
-  const locked = !!def.trainedOnly && !state.trained
-
-  const attrSelect = (
-    <select
-      value={state.attribute}
-      onChange={(e) =>
-        mutation.mutate({ attribute: e.target.value as AttributeKey })
-      }
-      className={cn(selectClass, 'h-6 rounded-full px-2 font-mono text-[11px]')}
-      aria-label={`${def.name} atributo`}
-    >
-      {/* Final modifier (race/item bonuses in), not the raw sheet value —
-          the row must agree with the breakdown + total (bug C). */}
-      {ATTRIBUTE_KEYS.map((k) => (
-        <option key={k} value={k}>
-          {ATTRIBUTE_ABBR[k]} {signed(sheet.attributes[k].total)}
-        </option>
-      ))}
-    </select>
-  )
+  const entry = () => expertiseFromSheet(props.sheet, props.def.name)
+  const total = () => entry()?.total ?? 0
+  const halfLevel = () => Math.floor(props.character.level / 2)
+  const trainBonus = () => (state().trained ? trainingBonusForLevel(props.character.level) : 0)
+  const itemBonus = () => entry()?.itemBonus ?? 0
+  const locked = () => !!props.def.trainedOnly && !state().trained
 
   return (
     <ExpertiseBreakdown
-      name={def.name}
-      total={total}
-      locked={locked}
-      halfLevel={halfLevel}
-      attrAbbr={ATTRIBUTE_ABBR[state.attribute]}
-      attrMod={attrMod}
-      trainBonus={trainBonus}
-      itemBonus={othersDisplay}
-      contributions={itemContributions}
+      name={props.def.name}
+      total={total()}
+      locked={locked()}
+      halfLevel={halfLevel()}
+      attrAbbr={ATTRIBUTE_ABBR[state().attribute]}
+      attrMod={entry()?.attrValue ?? 0}
+      trainBonus={trainBonus()}
+      itemBonus={itemBonus()}
+      contributions={entry()?.itemContributions ?? []}
     >
       <div
-        className={cn(
-          'flex items-start gap-2.5 rounded-lg border p-2.5',
-          state.trained
-            ? 'border-border bg-muted/[0.06]'
-            : 'border-border ',
-          hoverRow,
+        class={cn(
+          'flex items-start gap-2.5 rounded-sm border border-grimorio-iron p-2.5 transition-colors hover:border-grimorio-gold/50',
+          state().trained && 'bg-[var(--grimorio-panel)]',
         )}
       >
-        {/* Both the badge and the name open the breakdown; the toggle, attr
-            select and delete stay interactive (they are not triggers). */}
-        <DialogTrigger asChild>
-          <TotalBadge total={total} locked={locked} />
-        </DialogTrigger>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <DialogTrigger asChild>
-              <button
-                type="button"
-                className={cn(
-                  'min-w-0 flex-1 truncate text-left text-sm hover:underline',
-                  locked
-                    ? 'text-foreground '
-                    : 'text-foreground ',
-                )}
-              >
-                {def.name}
-              </button>
+        {/* Both the badge and the name open the breakdown; the toggle, the
+            attribute select and delete stay interactive — they are not
+            triggers. Kobalte composes via `as=`, where Radix used `asChild`. */}
+        <DialogTrigger as={TotalBadge} total={total()} locked={locked()} />
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-1.5">
+            <DialogTrigger
+              as="button"
+              type="button"
+              class="min-w-0 flex-1 truncate text-left text-sm text-foreground hover:underline"
+            >
+              {props.def.name}
             </DialogTrigger>
-            {def.trainedOnly && <TrainedOnlyStar locked={locked} />}
-            {trainedToggle}
-            {onDelete && (
-              <DeleteExpertiseButton name={def.name} onDelete={onDelete} />
-            )}
+            <Show when={props.def.trainedOnly}>
+              <TrainedOnlyStar locked={locked()} />
+            </Show>
+            <TrainedToggle
+              trained={state().trained}
+              name={props.def.name}
+              onToggle={(next) => props.onPatch({ trained: next })}
+            />
+            <Show when={props.onDelete}>
+              {(onDelete) => <DeleteExpertiseButton name={props.def.name} onDelete={onDelete()} />}
+            </Show>
           </div>
-          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-            {attrSelect}
-            <Chip label="½lvl" value={String(halfLevel)} />
-            <Chip label="treino" value={signed(trainBonus)} />
-            <DialogTrigger asChild>
-              <button type="button" className="inline-flex hover:brightness-105">
-                <Chip label="outros" value={signed(othersDisplay)} />
-              </button>
+          <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+            <AttributeSelect
+              name={props.def.name}
+              value={state().attribute}
+              sheet={props.sheet}
+              onChange={(attribute) => props.onPatch({ attribute })}
+            />
+            <Chip label="½lvl" value={String(halfLevel())} />
+            <Chip label="treino" value={signed(trainBonus())} />
+            <DialogTrigger as="button" type="button" class="inline-flex hover:brightness-110">
+              <Chip label="outros" value={signed(itemBonus())} />
             </DialogTrigger>
           </div>
         </div>
@@ -203,267 +102,122 @@ export function ExpertiseRow({
   )
 }
 
-/** Star marking a trained-only perícia; amber once it's locked (untrained). */
-function TrainedOnlyStar({ locked }: { locked: boolean }) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          type="button"
-          aria-label="Apenas treinada"
-          className="inline-flex shrink-0 cursor-help"
-        >
-          <Star
-            className={cn(
-              'size-3',
-              // Amber = locked out (trained-only, still untrained); subtle
-              // outline once trained so the marker stops shouting.
-              locked
-                ? 'fill-amber-500 text-amber-500'
-                : 'fill-none text-muted-foreground/60',
-            )}
-          />
-        </button>
-      </TooltipTrigger>
-      <TooltipContent side="top">
-        Pode ser usada apenas quando treinada
-      </TooltipContent>
-    </Tooltip>
-  )
-}
-
-/** Prominent skill total, doubling as the trigger that opens the modifier
- *  breakdown. Locked (trained-only + untrained) = dashed border, dimmed value
- *  and an amber corner padlock — the old line-through was illegible on the
- *  small mono digits (2026-08 owner report). Rest props are spread onto the
- *  button: `DialogTrigger asChild` injects its onClick/ref via props, and
- *  dropping them left the trigger dead (bug D). */
-function TotalBadge({
-  total,
-  locked,
-  className,
-  ...trigger
-}: { total: number; locked: boolean } & React.ComponentProps<'button'>) {
+/**
+ * The perícia's number, doubling as the breakdown trigger. Locked (trained-only
+ * and still untrained) reads as a dashed, dimmed box — the old line-through was
+ * illegible on small mono digits.
+ */
+function TotalBadge(props: { total: number; locked: boolean }) {
   return (
     <button
+      {...props}
       type="button"
-      aria-label={
-        locked
-          ? 'Ver detalhamento dos modificadores (requer treino)'
-          : 'Ver detalhamento dos modificadores'
-      }
-      className={cn(
-        'relative flex size-11 shrink-0 items-center justify-center rounded-lg border font-mono text-lg font-bold transition-colors hover:brightness-110',
-        locked
-          ? 'border-dashed border-border text-muted-foreground/50'
-          : ['border-border bg-muted', accentStrong],
-        className,
+      aria-label={`Detalhar ${signed(props.total)}`}
+      class={cn(
+        'flex size-11 shrink-0 items-center justify-center rounded-sm border font-mono text-lg font-bold',
+        props.locked
+          ? 'border-dashed border-grimorio-iron text-muted-foreground/50'
+          : 'border-grimorio-iron bg-[var(--grimorio-panel-raised)] text-grimorio-gold',
       )}
-      {...trigger}
     >
-      {signed(total)}
-      {locked && (
-        <Lock className="absolute -right-1 -top-1 size-3.5 rounded-full bg-background p-0.5 text-amber-500" />
-      )}
+      {signed(props.total)}
     </button>
   )
 }
 
-/** Small self-labeling breakdown chip (½lvl / treino). */
-function Chip({ label, value }: { label: string; value: string }) {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 font-mono text-[11px] text-foreground   ">
-      <span className="text-[9px] uppercase tracking-wider opacity-60">
-        {label}
-      </span>
-      {value}
-    </span>
-  )
-}
-
-/**
- * Trained toggle — replaces the raw browser checkbox with a themed switch that
- * reads on the dark/amber sheet: a dumbbell that fills amber when trained.
- * `role="switch"` keeps it a first-class control for keyboard + screen readers.
- */
-function TrainedToggle({
-  trained,
-  name,
-  onToggle,
-}: {
-  trained: boolean
-  name: string
-  onToggle: (next: boolean) => void
-}) {
+/** Star marking a trained-only perícia; amber while it is locked out. */
+function TrainedOnlyStar(props: { locked: boolean }) {
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={trained}
-          aria-label={`${name} treinada`}
-          onClick={() => onToggle(!trained)}
-          className={cn(
-            'inline-flex size-6 shrink-0 items-center justify-center rounded-md border transition-colors',
-            // Filled green vs faint outline — the old muted-vs-muted pair was
-            // indistinguishable at a glance (2026-08 owner report).
-            trained
-              ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-600 shadow-sm dark:text-emerald-300'
-              : 'border-border text-muted-foreground/50 hover:border-emerald-500/40 hover:text-muted-foreground',
+      <TooltipTrigger
+        as="button"
+        type="button"
+        aria-label="Apenas treinada"
+        class="inline-flex shrink-0 cursor-help"
+      >
+        <Star
+          aria-hidden="true"
+          class={cn(
+            'size-3',
+            props.locked
+              ? 'fill-amber-500 text-amber-500'
+              : 'fill-none text-muted-foreground/60',
           )}
-        >
-          <Dumbbell className="size-3.5" strokeWidth={2.5} />
-        </button>
+        />
       </TooltipTrigger>
-      <TooltipContent side="top">
-        {trained ? 'Treinada' : 'Não treinada'}
-      </TooltipContent>
+      <TooltipContent>Pode ser usada apenas quando treinada</TooltipContent>
     </Tooltip>
   )
 }
 
-function DeleteExpertiseButton({
-  name,
-  onDelete,
-}: {
-  name: string
-  onDelete: () => void
-}) {
+function TrainedToggle(props: { trained: boolean; name: string; onToggle: (next: boolean) => void }) {
   return (
-    <ConfirmDialog
-      title={`Remover ofício "${name}"?`}
-      confirmLabel="Remover"
-      onConfirm={onDelete}
-      trigger={
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="size-7 text-foreground hover:bg-red-100 hover:text-red-700  dark:hover:bg-red-950/40 dark:hover:text-red-400"
-          aria-label={`Remover ${name}`}
-        >
-          <Trash2 className="size-3.5" />
-        </Button>
-      }
-    />
-  )
-}
-
-type ItemContributions = BreakdownContribution[]
-
-/**
- * Uniform modifier breakdown for a perícia — the same for every skill, not
- * just those with item bonuses: ½ nível + atributo + treino + outros (with
- * per-item lines) summing to the total. Opened from the total badge.
- */
-function ExpertiseBreakdown({
-  name,
-  total,
-  locked,
-  halfLevel,
-  attrAbbr,
-  attrMod,
-  trainBonus,
-  itemBonus,
-  contributions,
-  children,
-}: {
-  name: string
-  total: number
-  locked: boolean
-  halfLevel: number
-  attrAbbr: string
-  attrMod: number
-  trainBonus: number
-  itemBonus: number
-  contributions: ItemContributions
-  children: React.ReactNode
-}) {
-  return (
-    <Dialog>
-      {children}
-      <DialogContent
-        className={cn(
-          'w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] p-4 sm:w-full sm:max-w-sm sm:p-6',
-          'border-border bg-muted text-foreground   ',
-        )}
-      >
-        <DialogHeader>
-          <DialogTitle className={cn(accentStrong)}>
-            {name}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-1 text-sm">
-          <BreakdownRow label="½ nível" value={halfLevel} />
-          <BreakdownRow label={`Atributo (${attrAbbr})`} value={attrMod} />
-          <BreakdownRow label="Treino" value={trainBonus} />
-          <BreakdownRow label="Outros" value={itemBonus} />
-          {contributions.map((c) => (
-            <BreakdownRow
-              key={`${c.source}-${c.amount}`}
-              label={c.source}
-              value={c.amount}
-              note={c.note}
-              indented
-            />
-          ))}
-          <div
-            className={cn(
-              'mt-2 flex items-center justify-between rounded-lg border px-3 py-2',
-              'border-border bg-muted  ',
-            )}
-          >
-            <span
-              className={cn('text-xs uppercase tracking-widest', subtleText)}
-            >
-              Total
-            </span>
-            <span
-              className={cn(
-                'flex items-center gap-1.5 font-mono text-2xl font-bold',
-                locked ? 'text-muted-foreground/50' : accentStrong,
-              )}
-            >
-              {locked && <Lock className="size-4 text-amber-500" />}
-              {signed(total)}
-            </span>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-function BreakdownRow({
-  label,
-  value,
-  note,
-  indented,
-}: {
-  label: string
-  value: number
-  /** Modifier note — the WHY ("desbalanceada: -2 em ataque"), dim sub-line. */
-  note?: string
-  indented?: boolean
-}) {
-  return (
-    <div
-      className={cn(
-        'border-b border-border py-1',
-        indented && 'pl-4 text-xs opacity-80',
+    <button
+      type="button"
+      role="switch"
+      aria-checked={props.trained}
+      aria-label={`${props.name} treinada`}
+      onClick={() => props.onToggle(!props.trained)}
+      class={cn(
+        'inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider transition-colors',
+        props.trained
+          ? 'border-grimorio-gold/60 text-grimorio-gold'
+          : 'border-grimorio-iron text-muted-foreground hover:border-grimorio-gold/40',
       )}
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className="truncate">{label}</span>
-        <span className="shrink-0 font-mono">{signed(value)}</span>
-      </div>
-      {/* wrap, never truncate: a nowrap note becomes min-content and can
-          inflate the dialog past its max-width */}
-      {note && (
-        <p className={cn('text-[10px] leading-snug', subtleText)}>{note}</p>
-      )}
-    </div>
+      <Dumbbell aria-hidden="true" class="size-3" />
+      Treino
+    </button>
   )
 }
 
+function DeleteExpertiseButton(props: { name: string; onDelete: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label={`Remover ${props.name}`}
+      onClick={() => props.onDelete()}
+      class="inline-flex shrink-0 rounded-sm p-1 text-muted-foreground transition-colors hover:text-destructive"
+    >
+      <Trash2 aria-hidden="true" class="size-3.5" />
+    </button>
+  )
+}
+
+/**
+ * Which attribute the perícia keys off. Shows the FINAL modifier (race and item
+ * bonuses folded in), not the raw sheet value — otherwise the row disagrees
+ * with its own breakdown and total.
+ */
+function AttributeSelect(props: {
+  name: string
+  value: AttributeKey
+  sheet: ComputedSheetV2
+  onChange: (attribute: AttributeKey) => void
+}) {
+  return (
+    <select
+      value={props.value}
+      onChange={(event) => props.onChange(event.currentTarget.value as AttributeKey)}
+      aria-label={`${props.name} atributo`}
+      class="h-6 cursor-pointer rounded-full border border-grimorio-iron bg-transparent px-2 font-mono text-[11px] outline-none focus:ring-2 focus:ring-ring"
+    >
+      <For each={ATTRIBUTE_KEYS}>
+        {(key) => (
+          <option value={key}>
+            {ATTRIBUTE_ABBR[key]} {signed(props.sheet.attributes[key].total)}
+          </option>
+        )}
+      </For>
+    </select>
+  )
+}
+
+function Chip(props: { label: string; value: string }) {
+  return (
+    <span class="inline-flex items-center gap-1 rounded-full border border-grimorio-iron px-2 py-0.5 text-[10px] text-muted-foreground">
+      <span class="uppercase tracking-wider">{props.label}</span>
+      <span class="font-mono text-foreground">{props.value}</span>
+    </span>
+  )
+}

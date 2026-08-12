@@ -1,80 +1,94 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
   STANCE_ACTIVATIONS_STORAGE_KEY,
-  useStanceActivationStore,
+  createStanceActivationStore,
+  readStoredStanceActivations,
 } from './stance-activation-store'
 
-/**
- * Per-character stance payment records. Persists via zustand/persist —
- * src/test-setup.ts installs a deterministic MemoryStorage. Reset state +
- * storage between cases to avoid cross-test leakage.
- */
-beforeEach(() => {
-  localStorage.clear()
-  useStanceActivationStore.setState({ records: {} })
-})
+/** In-memory Storage double — the store must never reach a real localStorage. */
+class FakeStorage implements Storage {
+  private entries = new Map<string, string>()
+  get length() {
+    return this.entries.size
+  }
+  clear() {
+    this.entries.clear()
+  }
+  getItem(key: string) {
+    return this.entries.get(key) ?? null
+  }
+  key(index: number) {
+    return [...this.entries.keys()][index] ?? null
+  }
+  removeItem(key: string) {
+    this.entries.delete(key)
+  }
+  setItem(key: string, value: string) {
+    this.entries.set(key, value)
+  }
+}
 
-describe('logActivation', () => {
-  it('stores the payment record per character and flag', () => {
-    useStanceActivationStore
-      .getState()
-      .logActivation(1, 'furia', { steps: 1, pmPaid: 3 })
-    expect(useStanceActivationStore.getState().records[1]).toEqual({
-      furia: { steps: 1, pmPaid: 3 },
+describe('readStoredStanceActivations', () => {
+  it('lê a forma do zustand que o React grava', () => {
+    const raw = JSON.stringify({
+      state: { records: { '1': { furia: { steps: 1, pmPaid: 3 } } } },
     })
+
+    expect(readStoredStanceActivations(raw)['1'].furia).toEqual({ steps: 1, pmPaid: 3 })
   })
 
-  it('overwrites the record on re-activation (latest payment wins)', () => {
-    const store = useStanceActivationStore.getState()
-    store.logActivation(1, 'furia', { steps: 0, pmPaid: 2 })
+  it('blob corrompido ou ausente não derruba a ficha', () => {
+    expect(readStoredStanceActivations(null)).toEqual({})
+    expect(readStoredStanceActivations('{quebrado')).toEqual({})
+    expect(readStoredStanceActivations(JSON.stringify({ state: { records: 7 } }))).toEqual({})
+  })
+
+  // Registro sem os números não descreve pagamento nenhum — cai fora em vez de
+  // virar NaN na tela de Posturas ativas.
+  it('registro sem steps/pmPaid numéricos é descartado', () => {
+    const raw = JSON.stringify({ state: { records: { '1': { furia: { steps: 'x' } } } } })
+
+    expect(readStoredStanceActivations(raw)).toEqual({})
+  })
+})
+
+describe('createStanceActivationStore', () => {
+  it('guarda o que foi pago e persiste na chave do React', () => {
+    const storage = new FakeStorage()
+    const store = createStanceActivationStore(storage)
+
+    store.logActivation(1, 'furia', { steps: 1, pmPaid: 3 })
+
+    expect(store.paidFor(1, 'furia')).toEqual({ steps: 1, pmPaid: 3 })
+    const persisted = readStoredStanceActivations(storage.getItem(STANCE_ACTIVATIONS_STORAGE_KEY))
+    expect(persisted['1'].furia.pmPaid).toBe(3)
+  })
+
+  it('stance nunca ativada não tem registro', () => {
+    const store = createStanceActivationStore(new FakeStorage())
+    expect(store.paidFor(1, 'furia')).toBeUndefined()
+  })
+
+  it('personagens diferentes guardam pagamentos separados', () => {
+    const store = createStanceActivationStore(new FakeStorage())
     store.logActivation(1, 'furia', { steps: 2, pmPaid: 4 })
-    expect(useStanceActivationStore.getState().records[1]?.furia).toEqual({
-      steps: 2,
-      pmPaid: 4,
-    })
+
+    expect(store.paidFor(2, 'furia')).toBeUndefined()
   })
 
-  it('scopes per character — logging on char 1 leaves char 2 untouched', () => {
-    const store = useStanceActivationStore.getState()
-    store.logActivation(1, 'furia', { steps: 0, pmPaid: 2 })
-    store.logActivation(2, 'furia', { steps: 1, pmPaid: 3 })
-    expect(useStanceActivationStore.getState().records[1]?.furia?.pmPaid).toBe(2)
-    expect(useStanceActivationStore.getState().records[2]?.furia?.pmPaid).toBe(3)
-  })
-})
+  it('encerrar a stance apaga o registro, sem tocar nas outras', () => {
+    const store = createStanceActivationStore(new FakeStorage())
+    store.logActivation(1, 'furia', { steps: 1, pmPaid: 3 })
+    store.logActivation(1, 'inspiracao', { steps: 0, pmPaid: 2 })
 
-describe('clearActivation', () => {
-  it('removes only the given flag for the character', () => {
-    const store = useStanceActivationStore.getState()
-    store.logActivation(1, 'furia', { steps: 0, pmPaid: 2 })
-    store.logActivation(1, 'outra', { steps: 0, pmPaid: 1 })
     store.clearActivation(1, 'furia')
-    expect(useStanceActivationStore.getState().records[1]).toEqual({
-      outra: { steps: 0, pmPaid: 1 },
-    })
+
+    expect(store.paidFor(1, 'furia')).toBeUndefined()
+    expect(store.paidFor(1, 'inspiracao')).toEqual({ steps: 0, pmPaid: 2 })
   })
 
-  it('is a no-op for unknown character or flag', () => {
-    useStanceActivationStore
-      .getState()
-      .logActivation(2, 'furia', { steps: 0, pmPaid: 2 })
-    useStanceActivationStore.getState().clearActivation(999, 'furia')
-    useStanceActivationStore.getState().clearActivation(2, 'inexistente')
-    expect(useStanceActivationStore.getState().records[2]?.furia).toEqual({
-      steps: 0,
-      pmPaid: 2,
-    })
-  })
-})
-
-describe('persistence — localStorage round-trip', () => {
-  it('writes to the configured storage key on log', () => {
-    useStanceActivationStore
-      .getState()
-      .logActivation(7, 'furia', { steps: 1, pmPaid: 3 })
-    const raw = localStorage.getItem(STANCE_ACTIVATIONS_STORAGE_KEY)
-    expect(raw).toBeTruthy()
-    const parsed = JSON.parse(raw!)
-    expect(parsed.state.records[7].furia).toEqual({ steps: 1, pmPaid: 3 })
+  it('encerrar stance que não estava ativa é inofensivo', () => {
+    const store = createStanceActivationStore(new FakeStorage())
+    expect(() => store.clearActivation(9, 'furia')).not.toThrow()
   })
 })

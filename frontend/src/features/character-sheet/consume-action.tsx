@@ -1,7 +1,6 @@
-import { Sparkles } from 'lucide-react'
-import { useState } from 'react'
-import { type AnyFieldApi, useForm } from '@tanstack/react-form'
-import { getCatalogItem } from '@/shared/lib/catalog-cache'
+import type { CatalogItem } from '@tormenta20/t20-data'
+import { type JSX, Show, createSignal } from 'solid-js'
+import type { ConsumeItemInput } from '@/shared/api/api'
 import { Button } from '@/shared/ui/button'
 import {
   Dialog,
@@ -9,85 +8,67 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/shared/ui/dialog'
-import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
+import { FieldFrame, isInvalid } from '@/shared/ui/field-frame'
 import { NumberInput } from '@/shared/ui/number-input'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/shared/ui/tooltip'
-import type { ConsumeItemInput } from '@/shared/api/api'
-import { subtleText } from '@/shared/lib/sheet-theme'
-import { cn } from '@/shared/lib/utils'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { type InstantRoll, rollValueSchema } from './consume-roll'
 
-type Consumable = NonNullable<
-  NonNullable<ReturnType<typeof getCatalogItem>>['consumable']
->
+type Consumable = NonNullable<CatalogItem['consumable']>
+
 const SCOPE_LABEL: Record<Consumable['scope'], string> = {
   instant: 'imediato',
   scene: '1 cena',
   day: '1 dia',
 }
 
-/**
- * "Usar" action for a consumable (moved out of the old InventoryRow so the
- * Mochila bag reuses it). When the item's instant gain rolls a die (e.g.
- * Bálsamo restaurador = 2d4 PV) it opens a dialog explaining the roll and
- * taking the player's result; fixed-gain / effect consumables apply straight
- * away. Pass `trigger` to replace the default icon button (the bag's action
- * sheet uses a full-width button).
- */
-export function ConsumeAction({
-  consumable,
-  itemName,
-  onConsume,
-  trigger,
-}: {
+export type ConsumeActionProps = {
   consumable: Consumable
   itemName: string
   onConsume: (input?: ConsumeItemInput) => void
-  trigger?: (onClick?: () => void) => React.ReactNode
-}) {
-  const instant =
-    consumable.scope === 'instant' ? consumable.instant : undefined
-  const hp = rollable(instant?.hp)
-  const mp = rollable(instant?.mp)
+  /** Receives the opener — see `ConfirmDialog` on why these are render props. */
+  trigger: (open: () => void) => JSX.Element
+}
 
-  const button =
-    trigger ??
-    ((onClick?: () => void) => (
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="size-7 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/40"
-        aria-label={`Usar ${itemName}`}
-        onClick={onClick}
-      >
-        <Sparkles className="size-3.5" />
-      </Button>
-    ))
-
-  if (!hp && !mp) {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>{button(() => onConsume())}</TooltipTrigger>
-        <TooltipContent>Usar ({SCOPE_LABEL[consumable.scope]})</TooltipContent>
-      </Tooltip>
-    )
-  }
+/**
+ * "Usar" for a consumable. When the instant gain rolls a die (Bálsamo
+ * restaurador = 2d4 PV) it asks for the player's result before spending the
+ * unit; a fixed gain or a pure effect applies on the click.
+ *
+ * @example
+ * <ConsumeAction consumable={catalog.consumable!} itemName={item.name}
+ *   onConsume={(input) => actions().consume(item, input)}
+ *   trigger={(open) => <Button onClick={open}>Usar</Button>} />
+ */
+export function ConsumeAction(props: ConsumeActionProps) {
+  // Only an `instant` consumable rolls: a scene/day effect is applied by the
+  // server from its own spec.
+  const instant = () =>
+    props.consumable.scope === 'instant' ? props.consumable.instant : undefined
+  const hp = () => rollable(instant()?.hp)
+  const mp = () => rollable(instant()?.mp)
+  const needsRoll = () => Boolean(hp() || mp())
 
   return (
-    <ConsumeRollDialog
-      itemName={itemName}
-      hp={hp}
-      mp={mp}
-      trigger={button()}
-      onConsume={onConsume}
-    />
+    <Show
+      when={needsRoll()}
+      fallback={
+        <Tooltip>
+          <TooltipTrigger as="span" class="contents">
+            {props.trigger(() => props.onConsume())}
+          </TooltipTrigger>
+          <TooltipContent>Usar ({SCOPE_LABEL[props.consumable.scope]})</TooltipContent>
+        </Tooltip>
+      }
+    >
+      <ConsumeRollDialog
+        itemName={props.itemName}
+        hp={hp()}
+        mp={mp()}
+        trigger={props.trigger}
+        onConsume={props.onConsume}
+      />
+    </Show>
   )
 }
 
@@ -96,119 +77,126 @@ function rollable(roll: InstantRoll | undefined): InstantRoll | undefined {
   return roll && roll.dice !== '0' ? roll : undefined
 }
 
-function ConsumeRollDialog({
-  itemName,
-  hp,
-  mp,
-  trigger,
-  onConsume,
-}: {
+function ConsumeRollDialog(props: {
   itemName: string
   hp?: InstantRoll
   mp?: InstantRoll
-  trigger: React.ReactNode
+  trigger: (open: () => void) => JSX.Element
   onConsume: (input?: ConsumeItemInput) => void
 }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = createSignal(false)
+  const [hpValue, setHpValue] = createSignal('')
+  const [mpValue, setMpValue] = createSignal('')
+  const [hpErrors, setHpErrors] = createSignal<string[]>([])
+  const [mpErrors, setMpErrors] = createSignal<string[]>([])
 
-  // Headless TanStack Form + per-field zod validators: each present roll is
-  // validated against its die's range (rollValueSchema) on change, and Apply
-  // stays disabled until every field holds a value the die can produce.
-  const form = useForm({
-    defaultValues: { hp: '', mp: '' },
-    onSubmit: ({ value }) => {
-      const input: ConsumeItemInput = {}
-      if (hp) input.hpRolled = Number(value.hp) + (hp.bonus ?? 0)
-      if (mp) input.mpRolled = Number(value.mp) + (mp.bonus ?? 0)
-      onConsume(input)
-      setOpen(false)
-    },
-  })
+  const reset = () => {
+    setHpValue('')
+    setMpValue('')
+    setHpErrors([])
+    setMpErrors([])
+  }
 
-  const close = (next: boolean) => {
-    setOpen(next)
-    if (!next) form.reset()
+  /** Messages for one rolled field, or [] when the die could produce it. */
+  const validate = (roll: InstantRoll | undefined, raw: string): string[] => {
+    if (!roll) return []
+    const parsed = rollValueSchema(roll).safeParse(raw)
+    return parsed.success ? [] : parsed.error.issues.map((issue) => issue.message)
+  }
+
+  const submit = (event: SubmitEvent) => {
+    event.preventDefault()
+    const hpIssues = validate(props.hp, hpValue())
+    const mpIssues = validate(props.mp, mpValue())
+    setHpErrors(hpIssues)
+    setMpErrors(mpIssues)
+    if (hpIssues.length > 0 || mpIssues.length > 0) return
+
+    const input: ConsumeItemInput = {}
+    if (props.hp) input.hpRolled = Number(hpValue()) + (props.hp.bonus ?? 0)
+    if (props.mp) input.mpRolled = Number(mpValue()) + (props.mp.bonus ?? 0)
+    props.onConsume(input)
+    setOpen(false)
+    reset()
   }
 
   return (
-    <Dialog open={open} onOpenChange={close}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="w-[calc(100vw-1.5rem)] max-w-sm">
-        <DialogHeader>
-          <DialogTitle>Usar {itemName}</DialogTitle>
-        </DialogHeader>
-        <form
-          className="space-y-3"
-          onSubmit={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            form.handleSubmit()
-          }}
-        >
-          {hp && (
-            <form.Field name="hp" validators={{ onChange: rollValueSchema(hp) }}>
-              {(f) => <RollField field={f} label="PV" roll={hp} />}
-            </form.Field>
-          )}
-          {mp && (
-            <form.Field name="mp" validators={{ onChange: rollValueSchema(mp) }}>
-              {(f) => <RollField field={f} label="PM" roll={mp} />}
-            </form.Field>
-          )}
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => close(false)}>
-              Cancelar
-            </Button>
-            <form.Subscribe
-              selector={(s) => [s.canSubmit, s.isDirty] as const}
-              children={([canSubmit, isDirty]) => (
-                <Button type="submit" disabled={!canSubmit || !isDirty}>
-                  Aplicar
-                </Button>
+    <>
+      {props.trigger(() => {
+        reset()
+        setOpen(true)
+      })}
+      <Dialog open={open()} onOpenChange={setOpen}>
+        <DialogContent class="w-[calc(100vw-1.5rem)] max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Usar {props.itemName}</DialogTitle>
+          </DialogHeader>
+          <form class="space-y-3" onSubmit={submit} noValidate>
+            <Show when={props.hp}>
+              {(roll) => (
+                <RollField
+                  slot="hp"
+                  label="PV"
+                  roll={roll()}
+                  value={hpValue()}
+                  onInput={setHpValue}
+                  errors={hpErrors()}
+                />
               )}
-            />
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            </Show>
+            <Show when={props.mp}>
+              {(roll) => (
+                <RollField
+                  slot="mp"
+                  label="PM"
+                  roll={roll()}
+                  value={mpValue()}
+                  onInput={setMpValue}
+                  errors={mpErrors()}
+                />
+              )}
+            </Show>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">Aplicar</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 
-function RollField({
-  field,
-  label,
-  roll,
-}: {
-  field: AnyFieldApi
+/** One die result, with the total it will restore spelled out below it — the
+ *  player types the DIE, not the total, and the bonus is easy to double-add. */
+function RollField(props: {
+  slot: 'hp' | 'mp'
   label: string
   roll: InstantRoll
+  value: string
+  onInput: (value: string) => void
+  errors: string[]
 }) {
-  const value = field.state.value as string
-  const invalid = !field.state.meta.isValid
-  const total = (Number(value) || 0) + (roll.bonus ?? 0)
+  const bonusLabel = () => (props.roll.bonus ? ` + ${props.roll.bonus}` : '')
+  const total = () => (Number(props.value) || 0) + (props.roll.bonus ?? 0)
+
   return (
-    <Field data-invalid={invalid}>
-      <FieldLabel htmlFor={`roll-${label}`}>
-        Role {roll.dice}
-        {roll.bonus ? ` + ${roll.bonus}` : ''} de {label} e informe o resultado
-        do dado
-      </FieldLabel>
+    <FieldFrame
+      name={`roll-${props.slot}`}
+      label={`Role ${props.roll.dice}${bonusLabel()} de ${props.label} e informe o resultado do dado`}
+      errors={props.errors}
+      hint={`${props.label} recuperado: ${total()}`}
+    >
       <NumberInput
-        id={`roll-${label}`}
+        id={`roll-${props.slot}`}
         min={0}
         max={999}
-        value={value}
-        onChange={(v) => field.handleChange(String(v))}
-        onBlur={field.handleBlur}
-        aria-invalid={invalid}
+        value={props.value}
+        onChange={(value) => props.onInput(String(value))}
+        aria-invalid={isInvalid(props.errors)}
       />
-      {invalid ? (
-        <FieldError errors={field.state.meta.errors} />
-      ) : (
-        <p className={cn('text-xs', subtleText)}>
-          {label} recuperado: <span className="font-semibold">{total}</span>
-        </p>
-      )}
-    </Field>
+    </FieldFrame>
   )
 }

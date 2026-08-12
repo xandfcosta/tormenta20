@@ -1,116 +1,123 @@
-import * as React from 'react'
-import { ChevronDown, ChevronUp } from 'lucide-react'
-
+import { ChevronDown, ChevronUp } from 'lucide-solid'
+import { type ComponentProps, splitProps } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
-import { Input } from '@/shared/ui/input'
+import { Input } from './input'
 
-type NumberInputProps = Omit<
-  React.ComponentProps<'input'>,
+export type NumberInputProps = Omit<
+  ComponentProps<'input'>,
   'value' | 'onChange' | 'type'
 > & {
   value: number | string
   onChange: (value: number) => void
-  /**
-   * Fired only when the value changes via the +/- spinner buttons.
-   * Typing in the input does NOT fire this. Useful for triggering
-   * a commit (mutation, autosave) without firing on every keystroke.
-   */
-  onCommit?: (value: number) => void
   min?: number
   max?: number
   step?: number
+  /** Names the spinner buttons ("Aumentar deslocamento"). Required in practice
+   *  wherever a screen holds more than one — three bare "Aumentar" buttons are
+   *  three identical announcements. */
+  spinnerLabel?: string
 }
 
-function clamp(n: number, min?: number, max?: number): number {
-  let out = n
-  if (typeof min === 'number' && out < min) out = min
-  if (typeof max === 'number' && out > max) out = max
-  return out
+/** Keeps a spinner step inside the field's own bounds. */
+export function clampToRange(n: number, min?: number, max?: number): number {
+  if (typeof min === 'number' && n < min) return min
+  if (typeof max === 'number' && n > max) return max
+  return n
 }
 
-function NumberInput({
-  className,
-  value,
-  onChange,
-  onCommit,
-  min,
-  max,
-  step = 1,
-  disabled,
-  ...rest
-}: NumberInputProps) {
-  const numericValue = typeof value === 'number' ? value : Number(value) || 0
+/**
+ * Numeric field with its own spinner column — a `0,5` step is a tap, not a
+ * keyboard exercise (T20 tracks encumbrance in half-espaço steps). The native
+ * spinner is unstyleable and invisible on touch, hence the pair of buttons.
+ *
+ * The React kit also carried an `onCommit` for "changed by spinner, not by
+ * typing"; nothing in this app used it on a bag field, so it is not ported.
+ *
+ * @example <NumberInput value={slots()} onChange={setSlots} min={0.5} step={0.5} />
+ */
+export function NumberInput(props: NumberInputProps) {
+  const [local, rest] = splitProps(props, [
+    'class',
+    'value',
+    'onChange',
+    'min',
+    'max',
+    'step',
+    'disabled',
+    'spinnerLabel',
+  ])
+  const numeric = () => (typeof local.value === 'number' ? local.value : Number(local.value) || 0)
+  const step = () => local.step ?? 1
+  const atMin = () => typeof local.min === 'number' && numeric() <= local.min
+  const atMax = () => typeof local.max === 'number' && numeric() >= local.max
 
   const adjust = (delta: number) => {
-    if (disabled) return
-    const next = clamp(numericValue + delta, min, max)
-    onChange(next)
-    onCommit?.(next)
+    if (local.disabled) return
+    local.onChange(clampToRange(numeric() + delta, local.min, local.max))
   }
 
-  const atMin = typeof min === 'number' && numericValue <= min
-  const atMax = typeof max === 'number' && numericValue >= max
-
   return (
-    <div className={cn('relative', className)}>
+    <div class={cn('relative', local.class)}>
       <Input
         {...rest}
         type="number"
         inputMode="numeric"
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        min={min}
-        max={max}
-        step={step}
-        disabled={disabled}
-        className="pr-7"
+        value={local.value}
+        onInput={(event) => local.onChange(Number(event.currentTarget.value))}
+        min={local.min}
+        max={local.max}
+        step={step()}
+        disabled={local.disabled}
+        class="pr-7"
       />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-y-0 right-0 flex w-6 flex-col"
-      >
+      <div class="pointer-events-none absolute inset-y-0 right-0 flex w-6 flex-col">
         <SpinnerButton
           direction="up"
-          disabled={disabled || atMax}
-          onClick={() => adjust(step)}
+          name={local.spinnerLabel}
+          disabled={local.disabled || atMax()}
+          onClick={() => adjust(step())}
         />
         <SpinnerButton
           direction="down"
-          disabled={disabled || atMin}
-          onClick={() => adjust(-step)}
+          name={local.spinnerLabel}
+          disabled={local.disabled || atMin()}
+          onClick={() => adjust(-step())}
         />
       </div>
     </div>
   )
 }
 
-function SpinnerButton({
-  direction,
-  disabled,
-  onClick,
-}: {
+/** Pointer affordance only — `tabIndex={-1}` leaves the keyboard to the field's
+ *  own arrow keys, and the labels are pt-BR like the rest of the app. */
+function SpinnerButton(props: {
   direction: 'up' | 'down'
+  name?: string
   disabled?: boolean
   onClick: () => void
 }) {
-  const Icon = direction === 'up' ? ChevronUp : ChevronDown
+  const label = () =>
+    [props.direction === 'up' ? 'Aumentar' : 'Diminuir', props.name].filter(Boolean).join(' ')
+
   return (
     <button
       type="button"
       tabIndex={-1}
-      disabled={disabled}
-      onClick={onClick}
-      aria-label={direction === 'up' ? 'Increase' : 'Decrease'}
-      className={cn(
+      disabled={props.disabled}
+      onClick={() => props.onClick()}
+      aria-label={label()}
+      class={cn(
         'pointer-events-auto flex flex-1 items-center justify-center text-muted-foreground transition-colors',
-        'hover:text-foreground hover:bg-accent/50',
+        'hover:bg-accent/50 hover:text-foreground',
         'disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent',
-        direction === 'up' ? 'rounded-tr-md' : 'rounded-br-md',
+        props.direction === 'up' ? 'rounded-tr-md' : 'rounded-br-md',
       )}
     >
-      <Icon className="size-3" />
+      {props.direction === 'up' ? (
+        <ChevronUp aria-hidden="true" class="size-3" />
+      ) : (
+        <ChevronDown aria-hidden="true" class="size-3" />
+      )}
     </button>
   )
 }
-
-export { NumberInput }

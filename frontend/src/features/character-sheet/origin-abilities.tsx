@@ -1,201 +1,153 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
-import { Check } from 'lucide-react'
+import { useQueryClient } from '@tanstack/solid-query'
+import type { OriginBenefit, OriginDefinition } from '@tormenta20/t20-data'
+import { Check } from 'lucide-solid'
+import { For, Show, createMemo, createSignal } from 'solid-js'
+import type { Character } from '@/shared/api/api'
 import { getOrigin } from '@/shared/lib/abilities-cache'
-import type {
-  OriginBenefit,
-  OriginDefinition,
-} from '@tormenta20/t20-data'
-import { api, type Character, type AbilityChoicesResult } from '@/shared/api/api'
-import { invalidateCharacterDependents } from '@/entities/character/character-cache'
-import { characterQueryOptions } from '@/entities/character/queries'
-import { accentTitle, dimText, subtleText } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
-import {
-  CollapsibleAbilityCard,
-  type CardFocus,
-} from './collapsible-ability-card'
+import { toggleWithLimit } from './choice-lists'
+import { choiceActions } from './choice-mutations'
+import { type CardFocus, CollapsibleAbilityCard } from './collapsible-ability-card'
 import { parseChoices } from './parse-choices'
 
 const ORIGIN_BENEFIT_LIMIT = 2
 
 /**
- * Origin section — lets the player pick `ORIGIN_BENEFIT_LIMIT`
- * benefits out of the origin's pool + the origin's unique power.
- * When the origin id isn't in the catalog, degrades to a message
- * rather than crashing the sheet.
+ * Origin section — the player picks `ORIGIN_BENEFIT_LIMIT` benefits out of the
+ * origin's pool plus its unique power. An origin id missing from the catalog
+ * degrades to a message instead of taking the sheet down.
  */
-export function OriginAbilitySection({
-  character,
-  focus,
-  pending,
-}: {
+export function OriginAbilitySection(props: {
   character: Character
   focus: CardFocus
   pending: number
 }) {
-  const origin = getOrigin(character.origin)
+  const origin = () => getOrigin(props.character.origin)
+
   return (
     <CollapsibleAbilityCard
       id="origem"
-      title={`Origem: ${origin?.name ?? character.origin}`}
-      pending={pending}
-      focus={focus}
+      title={`Origem: ${origin()?.name ?? props.character.origin}`}
+      pending={props.pending}
+      focus={props.focus}
     >
-      {origin ? (
-        <OriginPicker origin={origin} character={character} />
-      ) : (
-        <p className={cn('text-xs italic', dimText)}>
-          Origem não está no catálogo.
-        </p>
-      )}
+      <Show
+        when={origin()}
+        fallback={<p class="text-xs italic text-muted-foreground">Origem não está no catálogo.</p>}
+        keyed
+      >
+        {(definition) => <OriginPicker origin={definition} character={props.character} />}
+      </Show>
     </CollapsibleAbilityCard>
   )
 }
 
-function OriginPicker({
-  origin,
-  character,
-}: {
-  origin: OriginDefinition
-  character: Character
-}) {
-  const qc = useQueryClient()
-  const queryKey = characterQueryOptions(character.id).queryKey
-  const choices = parseChoices(character.originChoices)
-  const pool: OriginBenefit[] = [...origin.benefits, origin.poderUnico]
-  const benefitIds = new Set(pool.map((b) => b.id))
-  const selected = choices.filter((id) => benefitIds.has(id))
+function OriginPicker(props: { origin: OriginDefinition; character: Character }) {
+  const queryClient = useQueryClient()
+  const [pending, setPending] = createSignal(false)
 
-  const update = useMutation<
-    AbilityChoicesResult,
-    Error,
-    string[],
-    { previous: Character | undefined }
-  >({
-    mutationFn: (next) =>
-      api.characters.updateAbilityChoices(character.id, { originChoices: next }),
-    onMutate: async (next) => {
-      await qc.cancelQueries({ queryKey })
-      const previous = qc.getQueryData<Character>(queryKey)
-      qc.setQueryData<Character>(queryKey, (prev) =>
-        prev ? { ...prev, originChoices: JSON.stringify(next) } : prev,
-      )
-      return { previous }
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
-    },
-    onSuccess: (delta) => {
-      // Delta carries only the serialized choice fields we wrote; merge them.
-      qc.setQueryData<Character>(queryKey, (prev) =>
-        prev ? { ...prev, ...delta } : prev,
-      )
-      invalidateCharacterDependents(qc, character.id)
-    },
+  const pool = createMemo<OriginBenefit[]>(() => [
+    ...props.origin.benefits,
+    props.origin.poderUnico,
+  ])
+  const selected = createMemo(() => {
+    const ids = new Set(pool().map((b) => b.id))
+    return parseChoices(props.character.originChoices).filter((id) => ids.has(id))
   })
+  const remaining = () => ORIGIN_BENEFIT_LIMIT - selected().length
 
-  const toggle = (benefitId: string) => {
-    const isSelected = selected.includes(benefitId)
-    if (isSelected) {
-      update.mutate(selected.filter((id) => id !== benefitId))
-      return
+  const toggle = async (benefitId: string) => {
+    const next = toggleWithLimit(selected(), benefitId, ORIGIN_BENEFIT_LIMIT)
+    // Same length means the cap refused the pick (a real toggle always changes
+    // it) — don't spend a request on a no-op.
+    if (next.length === selected().length) return
+    setPending(true)
+    try {
+      await choiceActions(queryClient, props.character.id).setOriginChoices(next)
+    } catch {
+      // choiceActions already rolled back and told the player.
+    } finally {
+      setPending(false)
     }
-    if (selected.length >= ORIGIN_BENEFIT_LIMIT) return
-    update.mutate([...selected, benefitId])
   }
-
-  const remaining = ORIGIN_BENEFIT_LIMIT - selected.length
 
   return (
     <>
-      <p className={cn('mb-2 text-[11px]', subtleText)}>
-        Escolha {ORIGIN_BENEFIT_LIMIT} benefícios (perícia, poder geral, ou o
-        poder único da origem). Restantes:{' '}
-        <span className="font-semibold">{Math.max(0, remaining)}</span>
+      <p class="mb-2 text-[11px] text-muted-foreground">
+        Escolha {ORIGIN_BENEFIT_LIMIT} benefícios (perícia, poder geral, ou o poder único da
+        origem). Restantes: <span class="font-semibold">{Math.max(0, remaining())}</span>
       </p>
-      <ul className="space-y-1.5">
-        {pool.map((benefit) => (
-          <OriginBenefitRow
-            key={benefit.id}
-            benefit={benefit}
-            isUnique={benefit.id === origin.poderUnico.id}
-            selected={selected.includes(benefit.id)}
-            atLimit={remaining <= 0}
-            onToggle={() => toggle(benefit.id)}
-            disabled={update.isPending}
-          />
-        ))}
+      <ul class="space-y-1.5">
+        <For each={pool()}>
+          {(benefit) => (
+            <OriginBenefitRow
+              benefit={benefit}
+              isUnique={benefit.id === props.origin.poderUnico.id}
+              selected={selected().includes(benefit.id)}
+              atLimit={remaining() <= 0}
+              disabled={pending()}
+              onToggle={() => void toggle(benefit.id)}
+            />
+          )}
+        </For>
       </ul>
     </>
   )
 }
 
-function OriginBenefitRow({
-  benefit,
-  isUnique,
-  selected,
-  atLimit,
-  onToggle,
-  disabled,
-  actionSlot,
-}: {
+function OriginBenefitRow(props: {
   benefit: OriginBenefit
   isUnique: boolean
   selected: boolean
   atLimit: boolean
-  onToggle: () => void
   disabled: boolean
-  actionSlot?: ReactNode
+  onToggle: () => void
 }) {
-  const blocked = !selected && atLimit
+  const blocked = () => !props.selected && props.atLimit
   return (
     <li
-      className={cn(
-        'flex gap-2 rounded border p-2',
-        selected
-          ? 'border-border bg-muted  '
-          : 'border-border ',
+      class={cn(
+        'flex gap-2 rounded-sm border border-border p-2',
+        props.selected && 'bg-muted',
       )}
     >
       <button
         type="button"
-        onClick={onToggle}
-        disabled={disabled || blocked}
-        className={cn(
-          'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px]',
-          selected
-            ? 'border-border bg-muted text-white'
-            : 'border-border hover:bg-muted ',
-          (disabled || blocked) && 'cursor-not-allowed opacity-40',
+        onClick={() => props.onToggle()}
+        disabled={props.disabled || blocked()}
+        aria-pressed={props.selected}
+        aria-label={`${props.selected ? 'Remover' : 'Selecionar'} benefício: ${props.benefit.name}`}
+        class={cn(
+          'mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-sm border border-border text-[10px]',
+          props.selected ? 'bg-muted text-foreground' : 'hover:bg-muted',
+          (props.disabled || blocked()) && 'cursor-not-allowed opacity-40',
         )}
-        aria-pressed={selected}
-        aria-label={selected ? 'Remover benefício' : 'Selecionar benefício'}
       >
-        {selected ? <Check className="size-3" /> : null}
+        <Show when={props.selected}>
+          <Check aria-hidden="true" class="size-3" />
+        </Show>
       </button>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-1">
-          <p className={cn('text-xs font-semibold', accentTitle)}>{benefit.name}</p>
+      <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-center gap-1">
+          <p class="text-xs font-semibold text-grimorio-gold">{props.benefit.name}</p>
           <span
-            className={cn(
-              'rounded px-1 text-[9px] uppercase tracking-wide',
-              benefit.kind === 'pericia'
-                ? 'bg-emerald-200/60 text-emerald-900 dark:bg-emerald-500/20 dark:text-emerald-100'
-                : 'bg-violet-200/60 text-violet-900 dark:bg-violet-500/20 dark:text-violet-100',
+            class={cn(
+              'rounded-sm px-1 text-[9px] uppercase tracking-wide',
+              props.benefit.kind === 'pericia'
+                ? 'bg-emerald-500/20 text-emerald-100'
+                : 'bg-violet-500/20 text-violet-100',
             )}
           >
-            {benefit.kind === 'pericia' ? 'Perícia' : 'Poder'}
+            {props.benefit.kind === 'pericia' ? 'Perícia' : 'Poder'}
           </span>
-          {isUnique && (
-            <span className="rounded bg-muted px-1 text-[9px] font-semibold uppercase tracking-wide text-foreground  ">
+          <Show when={props.isUnique}>
+            <span class="rounded-sm bg-muted px-1 text-[9px] font-semibold uppercase tracking-wide text-foreground">
               Único
             </span>
-          )}
-          {actionSlot}
+          </Show>
         </div>
-        <p className={cn('mt-0.5 text-[11px] leading-snug', subtleText)}>
-          {benefit.description}
+        <p class="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+          {props.benefit.description}
         </p>
       </div>
     </li>

@@ -1,7 +1,7 @@
 import { deuses, devotoOptionsFor } from '@/shared/lib/abilities-cache'
 
-/** Shape the wizard form stores under `classChoices` (zod schema, not the
- *  t20-data Partial-record alias — TanStack's Updater needs the exact type). */
+/** Shape the wizard draft stores under `classChoices` (the zod schema's type,
+ *  not the t20-data Partial-record alias, which is wider). */
 type WizardClassChoices = Record<string, { devoto?: string; caminho?: string }>
 
 type DevocaoValues = {
@@ -35,13 +35,4 @@ export function devotoSyncPatch(
     next[c.className] = { ...next[c.className], devoto: deusId }
   }
   return next
-}
-
-/** Apply the sync onto the wizard form (no-op when already in sync). */
-export function syncDevotoFromGod(form: {
-  state: { values: unknown }
-  setFieldValue: (name: 'classChoices', value: WizardClassChoices) => void
-}): void {
-  const patch = devotoSyncPatch(form.state.values as DevocaoValues)
-  if (patch) form.setFieldValue('classChoices', patch)
 }

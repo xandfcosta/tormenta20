@@ -1,261 +1,170 @@
-import { getRouteApi } from '@tanstack/react-router'
-import { useNavigate } from '@tanstack/react-router'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useForm } from '@tanstack/react-form'
-import { useEffect, useState } from 'react'
-import { z } from 'zod'
-import { Button } from '@/shared/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import { Input } from '@/shared/ui/input'
-import { PageChrome } from '@/shared/ui/page-chrome'
-import { Skeleton } from '@/shared/ui/skeleton'
-import { SectionHeading } from '@/shared/ui/section-heading'
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
-import { ApiError, api } from '@/shared/api/api'
-import type { CampaignInvitePreview } from '@/shared/api/api'
-import { applyServerErrors } from '@/shared/lib/form-errors'
-import { campaignsQueryOptions } from '@/entities/campaign/queries'
+import { useQuery, useQueryClient } from '@tanstack/solid-query'
+import { Link, getRouteApi, useNavigate } from '@tanstack/solid-router'
+import { Show, createSignal } from 'solid-js'
+import { joinTargetId } from '@/entities/campaign/join-target'
+import { campaignsQueryOptions, inviteQueryOptions } from '@/entities/campaign/queries'
 import { charactersQueryOptions } from '@/entities/character/queries'
+import { HeroPicker } from '@/features/campaign-join/hero-picker'
+import { InviteLetter } from '@/features/campaign-join/invite-letter'
+import { api } from '@/shared/api/api'
+import { SceneShell } from '@/shared/layout/scene-shell'
+import { toSubmitFailure } from '@/shared/lib/form-errors'
+import { createSceneNav } from '@/shared/lib/scene-nav'
+import { createSfx } from '@/shared/lib/sfx'
+import { useUi } from '@/shared/stores/ui-context'
+import { Button } from '@/shared/ui/button'
+import { SkeletonRows } from '@/shared/ui/skeleton'
+import { TextField } from '@/shared/ui/text-field'
+import { TomeHeading } from '@/shared/ui/tome-heading'
+import { TomePage } from '@/shared/ui/tome-page'
 
 const routeApi = getRouteApi('/campaigns/join')
 
 /**
- * Self-join page. Post-OC1 the caller must own the character being
- * added. Two entry paths:
- *   1. Manual: player types the campaign id the GM shared.
- *   2. Invite: `?token=…` search param resolves to a campaign via the
- *      public `/invites/:token` endpoint, pre-fills the id, hides the
- *      manual field, and threads the token through the mutation so
- *      the server can verify.
+ * Entrar na mesa — the invite as a letter tucked into the grimório. Two ways in:
+ * an invite link (`?token=…`, which names the campaign for you) or the campaign
+ * number the GM read out loud.
+ *
+ * The React version had to MIRROR the resolved campaign id into form state
+ * through an effect, with a `tokenApplied` flag to stop it clobbering manual
+ * edits — doing it inline warned "Cannot update a component while rendering a
+ * different component" (ALE-20). Here the id is simply derived from whichever
+ * source is in play: no effect, no flag, nothing to get out of sync.
  */
-const joinSchema = z.object({
-  campaignId: z.number().int().positive(),
-  characterId: z.number().int().positive(),
-})
-
-type JoinFormValues = z.infer<typeof joinSchema>
-
-const defaults: JoinFormValues = {
-  campaignId: 0,
-  characterId: 0,
-}
-
-export function JoinCampaignPage() {
+export function CampaignJoinPage() {
+  const search = routeApi.useSearch()
   const navigate = useNavigate()
-  const qc = useQueryClient()
-  const characters = useQuery(charactersQueryOptions)
-  const { token } = routeApi.useSearch()
+  const queryClient = useQueryClient()
+  const ui = useUi()
+  const sfx = createSfx(ui)
 
-  const invitePreview = useQuery<CampaignInvitePreview>({
-    queryKey: ['invites', token] as const,
-    queryFn: () => api.invites.resolve(token as string),
-    enabled: !!token,
-    retry: false,
+  const token = () => search().token
+  const characters = useQuery(() => charactersQueryOptions)
+  const invite = useQuery(() => inviteQueryOptions(token()))
+
+  const [manualId, setManualId] = createSignal('')
+  const [heroId, setHeroId] = createSignal<number | null>(null)
+  const [formError, setFormError] = createSignal<string | null>(null)
+  const [pending, setPending] = createSignal(false)
+
+  const roster = () => characters.data ?? []
+  const inviteLoading = () => !!token() && invite.isLoading
+  const inviteInvalid = () => !!token() && invite.isError
+
+  const campaignId = () =>
+    joinTargetId({
+      token: token(),
+      invitedCampaignId: invite.data?.campaignId,
+      typedId: manualId(),
+    })
+
+  const canJoin = () =>
+    !pending() && !inviteLoading() && !inviteInvalid() && campaignId() !== null && heroId() !== null
+
+  const back = () => {
+    sfx('back')
+    navigate({ to: '/campaigns' })
+  }
+
+  // Same grammar as every other scene: arrows walk the hero plates, Esc leaves.
+  // The driver ignores keys while a field has focus, so typing stays native.
+  createSceneNav({
+    root: () => document.querySelector<HTMLElement>('[data-tome-root]'),
+    onEscape: back,
+    sfx,
   })
 
-  const [formError, setFormError] = useState<string | null>(null)
-
-  const form = useForm({
-    defaultValues: defaults,
-    validators: { onSubmit: joinSchema },
-    onSubmit: async ({ value, formApi }) => {
-      setFormError(null)
-      try {
-        await api.members.add(value.campaignId, {
-          characterId: value.characterId,
-          role: 'player',
-          ...(token ? { inviteToken: token } : {}),
-        })
-        qc.invalidateQueries({ queryKey: campaignsQueryOptions.queryKey })
-        qc.invalidateQueries({
-          queryKey: ['characters', value.characterId, 'campaigns'],
-        })
-        await navigate({
-          to: '/campaigns/$id',
-          params: { id: value.campaignId },
-        })
-      } catch (e) {
-        if (!applyServerErrors(formApi, e) && e instanceof ApiError) {
-          setFormError(e.message)
-        } else if (!(e instanceof ApiError)) {
-          setFormError('Erro inesperado. Tente novamente.')
-        }
-      }
-    },
-  })
-
-  // When the invite resolves, fill in the campaignId so the user just picks a
-  // character and submits. In an effect (not render) — doing it inline warned
-  // "Cannot update a component while rendering a different component" (ALE-20).
-  // The flag applies it once, so it doesn't clobber later manual edits.
-  const [tokenApplied, setTokenApplied] = useState(false)
-  useEffect(() => {
-    if (
-      token &&
-      invitePreview.data &&
-      !tokenApplied &&
-      form.state.values.campaignId === 0
-    ) {
-      form.setFieldValue('campaignId', invitePreview.data.campaignId)
-      setTokenApplied(true)
+  const join = async (event: SubmitEvent) => {
+    event.preventDefault()
+    const id = campaignId()
+    const characterId = heroId()
+    if (id === null || characterId === null) return
+    setFormError(null)
+    setPending(true)
+    try {
+      await api.members.add(id, {
+        characterId,
+        role: 'player',
+        ...(token() ? { inviteToken: token() } : {}),
+      })
+      await queryClient.invalidateQueries({ queryKey: campaignsQueryOptions.queryKey })
+      await queryClient.invalidateQueries({ queryKey: ['characters', characterId, 'campaigns'] })
+      sfx('open')
+      await navigate({ to: '/campaigns/$id', params: { id: String(id) } })
+    } catch (failure) {
+      setFormError(toSubmitFailure(failure).formError ?? 'Não foi possível entrar na mesa.')
+    } finally {
+      setPending(false)
     }
-  }, [token, invitePreview.data, tokenApplied, form])
-
-  const noCharacters = (characters.data?.length ?? 0) === 0
-  const inviteInvalid = !!token && invitePreview.isError
-  const inviteLoading = !!token && invitePreview.isLoading
+  }
 
   return (
-    <PageChrome width="compact">
-      <form
-        className="space-y-6"
-        onSubmit={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          form.handleSubmit()
-        }}
-      >
-        <SectionHeading variant="aharadak" as="h1">
-          Entrar em campanha
-        </SectionHeading>
+    <SceneShell dense onBack={back} onEnter={() => sfx('open')}>
+      <TomePage>
+        {/* `m-auto` centers a short letter (dead invite, no heroes yet) instead
+            of leaving it stranded at the top of an empty leaf; with a full
+            roster the auto margins collapse and it fills the page. */}
+        <form class="m-auto w-full max-w-3xl space-y-6" onSubmit={join} noValidate>
+          <TomeHeading eyebrow="Carta de convite">Entrar na mesa</TomeHeading>
+          <Show when={token()}>
+            <InviteLetter
+              loading={inviteLoading()}
+              invalid={inviteInvalid()}
+              campaignName={invite.data?.campaignName}
+            />
+          </Show>
 
-        {token && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-display tracking-wide">
-                Convite
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm">
-              {inviteLoading && <Skeleton className="h-5 w-64" />}
-              {inviteInvalid && (
-                <p className="text-destructive">
-                  Convite inválido ou expirado. Peça um novo link ao mestre.
-                </p>
-              )}
-              {invitePreview.data && (
-                <p>
-                  Você foi convidado para{' '}
-                  <span className="font-semibold text-[color:var(--primary)]">
-                    {invitePreview.data.campaignName}
-                  </span>
-                  .
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        )}
+          <Show when={!token()}>
+            <TextField
+              name="campaignId"
+              label="Número da campanha"
+              type="number"
+              value={manualId()}
+              onInput={setManualId}
+              hint="O mestre da mesa envia esse número."
+            />
+          </Show>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-display tracking-wide">
-              Identificação
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FieldGroup className="grid gap-4">
-              {!token && (
-                <form.Field name="campaignId">
-                  {(f) => {
-                    const invalid =
-                      f.state.meta.isTouched && !f.state.meta.isValid
-                    return (
-                      <Field data-invalid={invalid}>
-                        <FieldLabel htmlFor={f.name}>ID da campanha</FieldLabel>
-                        <Input
-                          id={f.name}
-                          type="number"
-                          inputMode="numeric"
-                          min={1}
-                          value={f.state.value || ''}
-                          onChange={(e) =>
-                            f.handleChange(Number(e.target.value))
-                          }
-                          onBlur={f.handleBlur}
-                          aria-invalid={invalid}
-                          placeholder="Ex.: 42"
-                          required
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          O mestre da mesa envia esse número.
-                        </p>
-                        {invalid && <FieldError errors={f.state.meta.errors} />}
-                      </Field>
-                    )
-                  }}
-                </form.Field>
-              )}
+          <Show when={characters.isLoading}>
+            <SkeletonRows count={2} />
+          </Show>
+          <Show when={!characters.isLoading && roster().length === 0}>
+            <NoHeroes />
+          </Show>
+          <Show when={roster().length > 0}>
+            <HeroPicker characters={roster()} selectedId={heroId()} onSelect={setHeroId} />
+          </Show>
 
-              <form.Field name="characterId">
-                {(f) => {
-                  const invalid = f.state.meta.isTouched && !f.state.meta.isValid
-                  return (
-                    <Field data-invalid={invalid}>
-                      <FieldLabel htmlFor={f.name}>Personagem</FieldLabel>
-                      <select
-                        id={f.name}
-                        className="rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        value={f.state.value || ''}
-                        onChange={(e) => f.handleChange(Number(e.target.value))}
-                        onBlur={f.handleBlur}
-                        aria-invalid={invalid}
-                        required
-                      >
-                        <option value="" disabled>
-                          Selecione um personagem
-                        </option>
-                        {characters.data?.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name} — Nível {c.level}
-                          </option>
-                        ))}
-                      </select>
-                      {invalid && <FieldError errors={f.state.meta.errors} />}
-                    </Field>
-                  )
-                }}
-              </form.Field>
+          <Show when={formError()}>
+            {(message) => <p class="text-sm text-destructive">{message()}</p>}
+          </Show>
 
-              {noCharacters && (
-                <p className="text-sm text-muted-foreground">
-                  Você ainda não tem personagens. Crie um primeiro.
-                </p>
-              )}
-            </FieldGroup>
-          </CardContent>
-        </Card>
+          <div class="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={back}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={!canJoin()}>
+              {pending() ? 'Entrando…' : 'Entrar na mesa'}
+            </Button>
+          </div>
+        </form>
+      </TomePage>
+    </SceneShell>
+  )
+}
 
-        {formError && (
-          <p className="text-sm text-destructive">{formError}</p>
-        )}
-
-        <div className="flex justify-end gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate({ to: '/campaigns' })}
-          >
-            Cancelar
-          </Button>
-          <form.Subscribe
-            selector={(s) => [s.isSubmitting, s.canSubmit] as const}
-            children={([isSubmitting, canSubmit]) => (
-              <Button
-                type="submit"
-                disabled={
-                  isSubmitting ||
-                  !canSubmit ||
-                  noCharacters ||
-                  inviteInvalid ||
-                  inviteLoading
-                }
-              >
-                {isSubmitting ? 'Entrando…' : 'Entrar'}
-              </Button>
-            )}
-          />
-        </div>
-      </form>
-    </PageChrome>
+/** No characters yet — you can't sit at a table without someone to play. */
+function NoHeroes() {
+  return (
+    <div class="flex flex-col items-center gap-3 rounded-sm border border-dashed border-grimorio-iron px-4 py-10 text-center">
+      <p class="text-sm text-muted-foreground">
+        Você ainda não tem heróis. Crie um antes de entrar numa mesa.
+      </p>
+      <Link to="/characters/new">
+        <Button variant="outline" size="sm">
+          Criar herói
+        </Button>
+      </Link>
+    </div>
   )
 }

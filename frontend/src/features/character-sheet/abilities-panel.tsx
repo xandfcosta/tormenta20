@@ -1,243 +1,22 @@
-import { Settings2 } from 'lucide-react'
+import type { RaceDefinition } from '@tormenta20/t20-data'
+import { Settings2 } from 'lucide-solid'
+import { For, type JSX, Show, createMemo, createSignal } from 'solid-js'
+import type { Character } from '@/shared/api/api'
+import { getRace } from '@/shared/lib/abilities-cache'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
-import { ownedAbilities, type SheetSearchEntry } from './sheet-search-index'
-import { type ReactNode, useMemo, useState } from 'react'
-import { getRace } from '@/shared/lib/abilities-cache'
-import type { RaceDefinition } from '@tormenta20/t20-data'
-import { Badge } from '@/shared/ui/badge'
-import type { ActivationSpec } from '@tormenta20/t20-data'
-import type { Character } from '@/shared/api/api'
-import { resolveActivationSpec } from '@/entities/character/use-power-action'
-import { dimText } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
-import type { CardFocus } from './collapsible-ability-card'
 import { ClassesSection } from './class-abilities'
-import { PowerPlayList } from './power-play-list'
-import { normalize } from './normalize'
+import type { CardFocus } from './collapsible-ability-card'
 import { OriginAbilitySection } from './origin-abilities'
-import { RaceAbilitySection } from './race-abilities'
-import {
-  computePendencias,
-  type Pendencia,
-  type PendenciaSource,
-} from './pendencias'
+import { type Pendencia, type PendenciaSource, computePendencias } from './pendencias'
 import { PendenciasCallout } from './pendencias-callout'
 import { PowerActionSlot } from './power-action-slot'
-
-/**
- * "Habilidades" tab — a Pendências callout over three source sub-tabs
- * (Raça / Origem / Classe). Each source renders its abilities as collapsible
- * cards; clicking a pendência jumps to its tab and opens the owning card.
- */
-export function AbilitiesPanel({ character }: { character: Character }) {
-  const races = character.races
-    .map((r) => getRace(r.race))
-    .filter((r): r is RaceDefinition => Boolean(r))
-  const classes = character.classes
-
-  const pendencias = useMemo(() => computePendencias(character), [character])
-  const pendingByCard = useMemo(() => {
-    const m = new Map<string, number>()
-    for (const p of pendencias) m.set(p.cardId, (m.get(p.cardId) ?? 0) + 1)
-    return m
-  }, [pendencias])
-
-  // Open on the first source that still owes a choice; falls back to Raça.
-  const [tab, setTab] = useState<PendenciaSource>(
-    pendencias[0]?.source ?? 'raca',
-  )
-  const [focus, setFocus] = useState<CardFocus>(null)
-  const [query, setQuery] = useState('')
-  // Play list by default; acquisition UI (checkboxes, pendências) lives
-  // behind "Editar poderes". Open in edit when choices are still owed so
-  // onboarding isn't hidden.
-  const [mode, setMode] = useState<'play' | 'edit'>(
-    pendencias.length > 0 ? 'edit' : 'play',
-  )
-
-  const jump = (p: Pendencia) => {
-    setMode('edit')
-    setTab(p.source)
-    setFocus({ id: p.cardId, nonce: Date.now() })
-  }
-
-  const countFor = (source: PendenciaSource) =>
-    pendencias.filter((p) => p.source === source).length
-
-  return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden pr-1">
-      {mode === 'edit' && (
-        <PendenciasCallout pendencias={pendencias} onJump={jump} />
-      )}
-
-      {/* Flat lookup by NAME (audit: at the table the player knows the power's
-          name, not which source granted it). A non-empty query replaces the
-          list with one filtered result set + source badges. */}
-      <div className="flex shrink-0 items-center gap-2">
-        <Input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar poder ou habilidade…"
-          aria-label="Buscar poder ou habilidade"
-          className="h-8 min-w-0 flex-1 text-xs"
-        />
-        <Button
-          type="button"
-          variant={mode === 'edit' ? 'default' : 'outline'}
-          size="sm"
-          className="h-8 shrink-0 gap-1 text-xs"
-          onClick={() => setMode(mode === 'edit' ? 'play' : 'edit')}
-        >
-          <Settings2 className="size-3.5" />
-          {mode === 'edit' ? 'Voltar ao jogo' : 'Editar poderes'}
-          {mode === 'play' && pendencias.length > 0 && (
-            <Badge
-              variant="destructive"
-              className="h-4 min-w-4 px-1 text-[10px] leading-none"
-            >
-              {pendencias.length}
-            </Badge>
-          )}
-        </Button>
-      </div>
-      {query.trim() !== '' ? (
-        <FlatAbilityResults character={character} query={query} />
-      ) : mode === 'play' ? (
-        <PowerPlayList character={character} />
-      ) : (
-        <>
-
-      {/* Custom pill row instead of the shared Tabs primitive: this panel is
-          nested inside the sheet's vertical Tabs, and Tailwind's group matching
-          isn't scoped to the nearest ancestor, so a nested TabsList inherits
-          the outer vertical orientation and stacks. */}
-      {/* overflow-y-hidden: a lone `overflow-x-auto` makes the browser promote
-          overflow-y to `auto`, and the 1px the active tab's `border-b-2 -mb-px`
-          adds spawned a spurious vertical scrollbar on this single-row strip. */}
-      <div className="flex shrink-0 gap-1 overflow-x-auto overflow-y-hidden border-b">
-        {SOURCE_TABS.map((s) => (
-          <button
-            key={s.value}
-            type="button"
-            onClick={() => setTab(s.value)}
-            className={cn(
-              '-mb-px flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-1.5 text-sm font-medium transition-colors',
-              tab === s.value
-                ? 'border-primary text-foreground'
-                : 'border-transparent text-muted-foreground hover:text-foreground',
-            )}
-          >
-            {s.label}
-            {countFor(s.value) > 0 && (
-              <Badge
-                variant="destructive"
-                className="h-4 min-w-4 px-1 text-[10px] leading-none"
-              >
-                {countFor(s.value)}
-              </Badge>
-            )}
-          </button>
-        ))}
-      </div>
-
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
-        {tab === 'raca' &&
-          (races.length === 0 ? (
-            <EmptyHint>Raça do personagem não está no catálogo.</EmptyHint>
-          ) : (
-            races.map((race) => (
-              <RaceAbilitySection
-                key={race.id}
-                race={race}
-                character={character}
-                focus={focus}
-                pending={pendingByCard.get(`raca:${race.id}`) ?? 0}
-              />
-            ))
-          ))}
-
-        {tab === 'origem' && (
-          <OriginAbilitySection
-            character={character}
-            focus={focus}
-            pending={pendingByCard.get('origem') ?? 0}
-          />
-        )}
-
-        {tab === 'classe' &&
-          (classes.length === 0 ? (
-            <EmptyHint>Nenhuma classe atribuída.</EmptyHint>
-          ) : (
-            classes.map((entry) => (
-              <ClassesSection
-                key={entry.className}
-                entry={entry}
-                character={character}
-                focus={focus}
-                pending={pendingByCard.get(`classe:${entry.className}`) ?? 0}
-              />
-            ))
-          ))}
-      </div>
-        </>
-      )}
-    </div>
-  )
-}
-
-/** Flat, source-badged results for the abilities search. */
-function FlatAbilityResults({
-  character,
-  query,
-}: {
-  character: Character
-  query: string
-}) {
-  // normalize: acento-insensível ("furia" acha "Fúria") — mesmo helper das
-  // outras buscas da ficha.
-  const q = normalize(query.trim())
-  const results = ownedAbilities(character).filter((a) =>
-    normalize(a.name).includes(q),
-  )
-  if (results.length === 0) {
-    return <EmptyHint>Nenhum poder para "{query}".</EmptyHint>
-  }
-  return (
-    <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
-      {results.map((a) => (
-        <li key={`${a.source}-${a.name}`} className="rounded border border-border p-2">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <p className="text-xs font-semibold">{a.name}</p>
-            <Badge variant="secondary" className="px-1 py-0 text-[9px]">
-              {a.source}
-            </Badge>
-            <PowerActionSlot
-              spec={flatEntrySpec(a)}
-              character={character}
-              className="ml-auto"
-            />
-          </div>
-          <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-            {a.detail}
-          </p>
-        </li>
-      ))}
-    </ul>
-  )
-}
-
-/**
- * Spec for a flat search result. General/Tormenta powers are outside the
- * activation registry (its id space is class/race/origin/deus) — skip them so
- * a name collision with a class power can't paint a wrong Usar button.
- */
-function flatEntrySpec(a: SheetSearchEntry): ActivationSpec | undefined {
-  if (a.source === 'Poder geral' || a.source === 'Poder da Tormenta') {
-    return undefined
-  }
-  return resolveActivationSpec(a.name, a.powerId)
-}
+import { PowerPlayList } from './power-play-list'
+import { ownedPowerSpec } from './power-spec-resolver'
+import { RaceAbilitySection } from './race-abilities'
+import { normalize } from './normalize'
+import { ownedAbilities } from './sheet-search-index'
 
 const SOURCE_TABS: { value: PendenciaSource; label: string }[] = [
   { value: 'raca', label: 'Raça' },
@@ -245,6 +24,230 @@ const SOURCE_TABS: { value: PendenciaSource; label: string }[] = [
   { value: 'classe', label: 'Classe' },
 ]
 
-function EmptyHint({ children }: { children: ReactNode }) {
-  return <p className={cn('text-xs italic', dimText)}>{children}</p>
+/**
+ * The Poderes block — a Pendências callout over three source sub-tabs (Raça /
+ * Origem / Classe), each rendering its abilities as collapsible cards. Clicking
+ * a pendência jumps to its tab and opens the owning card.
+ *
+ * Two modes: `play` is the table-side list of what you can DO, `edit` is the
+ * acquisition UI (checkboxes, pickers, pendências). It opens in `edit` while
+ * choices are still owed, so onboarding is never hidden behind a toggle.
+ */
+export function AbilitiesPanel(props: { character: Character }) {
+  const pendencias = createMemo(() => computePendencias(props.character))
+  const pendingByCard = createMemo(() => {
+    const byCard = new Map<string, number>()
+    for (const pendencia of pendencias()) {
+      byCard.set(pendencia.cardId, (byCard.get(pendencia.cardId) ?? 0) + 1)
+    }
+    return byCard
+  })
+
+  // Opens on the first source that still owes a choice; falls back to Raça.
+  const [tab, setTab] = createSignal<PendenciaSource>(pendencias()[0]?.source ?? 'raca')
+  const [focus, setFocus] = createSignal<CardFocus>(null)
+  const [query, setQuery] = createSignal('')
+  const [mode, setMode] = createSignal<'play' | 'edit'>(
+    pendencias().length > 0 ? 'edit' : 'play',
+  )
+
+  const races = createMemo(() =>
+    props.character.races
+      .map((entry) => getRace(entry.race))
+      .filter((race): race is RaceDefinition => Boolean(race)),
+  )
+
+  const jump = (pendencia: Pendencia) => {
+    setMode('edit')
+    setTab(pendencia.source)
+    // A fresh nonce so re-clicking the same pendência re-opens the card.
+    setFocus({ id: pendencia.cardId, nonce: focus() ? (focus()?.nonce ?? 0) + 1 : 1 })
+  }
+
+  const countFor = (source: PendenciaSource) =>
+    pendencias().filter((pendencia) => pendencia.source === source).length
+
+  return (
+    <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)]">
+      <div class="shrink-0 border-b border-grimorio-iron px-3 py-2 sm:px-4">
+        <h2 class="font-heading text-lg uppercase tracking-wide text-grimorio-gold">Poderes</h2>
+      </div>
+
+      <div class="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden p-3 sm:p-4">
+        <Show when={mode() === 'edit'}>
+          <PendenciasCallout pendencias={pendencias()} onJump={jump} />
+        </Show>
+
+        {/* Flat lookup by NAME: at the table the player knows the power's name,
+            not which source granted it. */}
+        <div class="flex shrink-0 items-center gap-2">
+          <Input
+            value={query()}
+            onInput={(event) => setQuery(event.currentTarget.value)}
+            placeholder="Buscar poder ou habilidade…"
+            aria-label="Buscar poder ou habilidade"
+            class="h-8 min-w-0 flex-1 text-xs"
+          />
+          <Button
+            type="button"
+            variant={mode() === 'edit' ? 'default' : 'outline'}
+            size="sm"
+            class="h-8 shrink-0 gap-1 text-xs"
+            onClick={() => setMode(mode() === 'edit' ? 'play' : 'edit')}
+          >
+            <Settings2 aria-hidden="true" class="size-3.5" />
+            {mode() === 'edit' ? 'Voltar ao jogo' : 'Editar poderes'}
+            <Show when={mode() === 'play' && pendencias().length > 0}>
+              <span class="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-white">
+                {pendencias().length}
+              </span>
+            </Show>
+          </Button>
+        </div>
+
+        <Show
+          when={query().trim() === ''}
+          fallback={<FlatAbilityResults character={props.character} query={query()} />}
+        >
+          <Show when={mode() === 'edit'} fallback={<PowerPlayList character={props.character} />}>
+            <SourceTabs
+              active={tab()}
+              countFor={countFor}
+              onPick={setTab}
+            />
+            <div class="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+              <Show when={tab() === 'raca'}>
+                <Show
+                  when={races().length > 0}
+                  fallback={<EmptyHint>Raça do personagem não está no catálogo.</EmptyHint>}
+                >
+                  <For each={races()}>
+                    {(race) => (
+                      <RaceAbilitySection
+                        race={race}
+                        character={props.character}
+                        focus={focus()}
+                        pending={pendingByCard().get(`raca:${race.id}`) ?? 0}
+                      />
+                    )}
+                  </For>
+                </Show>
+              </Show>
+
+              <Show when={tab() === 'origem'}>
+                <OriginAbilitySection
+                  character={props.character}
+                  focus={focus()}
+                  pending={pendingByCard().get('origem') ?? 0}
+                />
+              </Show>
+
+              <Show when={tab() === 'classe'}>
+                <Show
+                  when={props.character.classes.length > 0}
+                  fallback={<EmptyHint>Nenhuma classe atribuída.</EmptyHint>}
+                >
+                  <For each={props.character.classes}>
+                    {(entry) => (
+                      <ClassesSection
+                        entry={entry}
+                        character={props.character}
+                        focus={focus()}
+                        pending={pendingByCard().get(`classe:${entry.className}`) ?? 0}
+                      />
+                    )}
+                  </For>
+                </Show>
+              </Show>
+            </div>
+          </Show>
+        </Show>
+      </div>
+    </section>
+  )
+}
+
+/**
+ * Custom pill row instead of the shared Tabs primitive: this panel is nested
+ * inside the sheet's VERTICAL tabs, and a nested TabsList inherits that
+ * orientation and stacks.
+ */
+function SourceTabs(props: {
+  active: PendenciaSource
+  countFor: (source: PendenciaSource) => number
+  onPick: (source: PendenciaSource) => void
+}) {
+  return (
+    // overflow-y-hidden: a lone `overflow-x-auto` lets the browser promote
+    // overflow-y to `auto`, and the 1px of the active tab's border spawned a
+    // spurious vertical scrollbar on this single-row strip.
+    <div class="flex shrink-0 gap-1 overflow-x-auto overflow-y-hidden border-b border-grimorio-iron">
+      <For each={SOURCE_TABS}>
+        {(source) => (
+          <button
+            type="button"
+            onClick={() => props.onPick(source.value)}
+            aria-pressed={props.active === source.value}
+            class={cn(
+              '-mb-px flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-1.5 text-sm font-medium transition-colors',
+              props.active === source.value
+                ? 'border-primary text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {source.label}
+            <Show when={props.countFor(source.value) > 0}>
+              <span class="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-white">
+                {props.countFor(source.value)}
+              </span>
+            </Show>
+          </button>
+        )}
+      </For>
+    </div>
+  )
+}
+
+/** Flat, source-badged results for the abilities search. */
+function FlatAbilityResults(props: { character: Character; query: string }) {
+  // normalize: accent-insensitive ("furia" finds "Fúria"), same helper as the
+  // sheet's other searches.
+  const results = createMemo(() => {
+    const search = normalize(props.query.trim())
+    return ownedAbilities(props.character).filter((entry) =>
+      normalize(entry.name).includes(search),
+    )
+  })
+
+  return (
+    <Show
+      when={results().length > 0}
+      fallback={<EmptyHint>Nenhum poder para "{props.query}".</EmptyHint>}
+    >
+      <ul class="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+        <For each={results()}>
+          {(entry) => (
+            <li class="rounded-sm border border-border p-2">
+              <div class="flex flex-wrap items-center gap-1.5">
+                <p class="text-xs font-semibold">{entry.name}</p>
+                <span class="rounded-sm bg-muted px-1 py-0 text-[9px] text-muted-foreground">
+                  {entry.source}
+                </span>
+                <PowerActionSlot
+                  spec={ownedPowerSpec(entry)}
+                  character={props.character}
+                  class="ml-auto"
+                />
+              </div>
+              <p class="mt-0.5 text-[11px] leading-snug text-muted-foreground">{entry.detail}</p>
+            </li>
+          )}
+        </For>
+      </ul>
+    </Show>
+  )
+}
+
+function EmptyHint(props: { children: JSX.Element }) {
+  return <p class="text-xs italic text-muted-foreground">{props.children}</p>
 }

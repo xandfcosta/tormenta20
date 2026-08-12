@@ -1,23 +1,24 @@
-import { render, screen } from '@testing-library/react'
+import { render } from '@solidjs/testing-library'
+import { createSignal } from 'solid-js'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Campaign } from '@/shared/api/api'
 import { CampaignBook } from './campaign-book'
 
-function campaign(id: number, name = `Crônica ${id}`): Campaign {
+function campaign(id: number): Campaign {
   return {
     id,
     ownerId: 1,
-    name,
+    name: `Crônica ${id}`,
     description: null,
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
   }
 }
 
-/** Phone/reduced-motion by default: no leaf animation to wait on. */
-function mockViewport({ wide = false, reduced = true } = {}) {
+/** Desktop + motion allowed, so the leaf actually turns. */
+beforeEach(() => {
   window.matchMedia = vi.fn().mockImplementation((media: string) => ({
-    matches: media.includes('prefers-reduced-motion') ? reduced : wide,
+    matches: !media.includes('prefers-reduced-motion'),
     media,
     onchange: null,
     addEventListener: vi.fn(),
@@ -26,104 +27,97 @@ function mockViewport({ wide = false, reduced = true } = {}) {
     removeListener: vi.fn(),
     dispatchEvent: vi.fn(),
   }))
+})
+
+afterEach(() => {
+  vi.restoreAllMocks()
+  document.body.innerHTML = ''
+})
+
+const leaf = () => document.querySelector<HTMLElement>('.grimorio-leaf')
+
+/**
+ * jsdom runs no CSS, so the browser's animationend is simulated here. This
+ * jsdom has no `AnimationEvent` constructor at all, so it is a plain Event with
+ * `animationName` pinned on — the component filters on that name and would
+ * ignore a nameless event.
+ */
+function endLeafAnimation() {
+  const event = new Event('animationend', { bubbles: true })
+  Object.defineProperty(event, 'animationName', { value: 'grimorio-leaf-turn' })
+  leaf()?.dispatchEvent(event)
 }
 
-beforeEach(() => mockViewport())
-afterEach(() => vi.restoreAllMocks())
+function mountBook() {
+  const [pick, setPick] = createSignal(campaign(1))
+  render(() => (
+    <CampaignBook
+      campaign={pick()}
+      isLive={false}
+      orderIds={[1, 2, 3, 4]}
+      onOpen={() => {}}
+      onResume={() => {}}
+    />
+  ))
+  return setPick
+}
 
-describe('CampaignBook', () => {
-  it('sem sessão ao vivo, oferece abrir a crônica', () => {
-    render(
-      <CampaignBook
-        campaign={campaign(1)}
-        isLive={false}
-        orderIds={[1]}
-        onOpen={vi.fn()}
-        onResume={vi.fn()}
-      />,
-    )
-    expect(screen.getByRole('button', { name: /Abrir crônica/ })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /Continuar a sessão/ })).not.toBeInTheDocument()
+describe('CampaignBook — virada de folha', () => {
+  it('em repouso não há folha virando', () => {
+    mountBook()
+    expect(leaf()).toBeNull()
+  })
+
+  it('escolher outra crônica põe uma folha em movimento', () => {
+    const setPick = mountBook()
+
+    setPick(campaign(2))
+
+    expect(leaf()).not.toBeNull()
+  })
+
+  it('terminada a animação, a folha sai da frente', () => {
+    const setPick = mountBook()
+    setPick(campaign(2))
+
+    endLeafAnimation()
+
+    expect(leaf()).toBeNull()
   })
 
   /**
-   * Regressão ALE-78: o mapa de sessões ao vivo é um fan-out separado, então
-   * chega DEPOIS da lista — o alvo muda só no `isLive`, com o mesmo id. A
-   * máquina de virada deduplicava por id e engolia essa atualização, deixando o
-   * livro em "Abrir crônica" enquanto o rail já mostrava a brasa.
+   * A regressão: com escolhas enfileiradas, a folha da virada seguinte tem de
+   * ser um elemento NOVO. Reaproveitar o nó deixa a animação CSS já terminada
+   * nele — ela não recomeça, o `animationend` nunca vem, e a máquina trava com
+   * a folha congelada sobre a lombada (nada mais anima depois disso).
    */
-  it('reflete a sessão ao vivo quando ela chega depois (mesma crônica)', () => {
-    const view = render(
-      <CampaignBook
-        campaign={campaign(1)}
-        isLive={false}
-        orderIds={[1]}
-        onOpen={vi.fn()}
-        onResume={vi.fn()}
-      />,
-    )
+  it('cada virada enfileirada ganha uma folha nova, e não o nó reaproveitado', () => {
+    const setPick = mountBook()
+    setPick(campaign(2))
+    const first = leaf()
+    expect(first).not.toBeNull()
 
-    view.rerender(
-      <CampaignBook
-        campaign={campaign(1)}
-        isLive={true}
-        orderIds={[1]}
-        onOpen={vi.fn()}
-        onResume={vi.fn()}
-      />,
-    )
+    // Duas escolhas durante a animação: elas ficam na fila.
+    setPick(campaign(3))
+    setPick(campaign(4))
+    endLeafAnimation()
 
-    expect(screen.getByRole('button', { name: /Continuar a sessão/ })).toBeInTheDocument()
-    expect(screen.getByText('Sessão ao vivo')).toBeInTheDocument()
+    const second = leaf()
+    expect(second).not.toBeNull()
+    expect(second).not.toBe(first)
   })
 
-  it('vale também no spread do desktop, com a folha virando', () => {
-    mockViewport({ wide: true, reduced: false })
-    const view = render(
-      <CampaignBook
-        campaign={campaign(1)}
-        isLive={false}
-        orderIds={[1]}
-        onOpen={vi.fn()}
-        onResume={vi.fn()}
-      />,
-    )
+  it('a fila drena até o fim em vez de travar na primeira virada', () => {
+    const setPick = mountBook()
+    setPick(campaign(2))
+    setPick(campaign(3))
+    setPick(campaign(4))
 
-    view.rerender(
-      <CampaignBook
-        campaign={campaign(1)}
-        isLive={true}
-        orderIds={[1]}
-        onOpen={vi.fn()}
-        onResume={vi.fn()}
-      />,
-    )
+    // Uma animação por virada enfileirada; ao final não sobra folha nenhuma.
+    endLeafAnimation()
+    endLeafAnimation()
+    endLeafAnimation()
 
-    expect(screen.getByRole('button', { name: /Continuar a sessão/ })).toBeInTheDocument()
-  })
-
-  it('trocar de crônica troca o conteúdo do livro', () => {
-    const view = render(
-      <CampaignBook
-        campaign={campaign(1, 'A Queda de Tauron')}
-        isLive={false}
-        orderIds={[1, 2]}
-        onOpen={vi.fn()}
-        onResume={vi.fn()}
-      />,
-    )
-    expect(screen.getByText('A Queda de Tauron')).toBeInTheDocument()
-
-    view.rerender(
-      <CampaignBook
-        campaign={campaign(2, 'Segredos de Wynlla')}
-        isLive={false}
-        orderIds={[1, 2]}
-        onOpen={vi.fn()}
-        onResume={vi.fn()}
-      />,
-    )
-
-    expect(screen.getByText('Segredos de Wynlla')).toBeInTheDocument()
+    expect(leaf()).toBeNull()
   })
 })
