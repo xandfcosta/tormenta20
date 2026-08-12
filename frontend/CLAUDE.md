@@ -84,6 +84,12 @@ links, the browser Back button and the progress rail cannot then disagree.
 - **`Show` without `keyed` only watches truthiness**: swapping one non-null
   value for another REUSES the node, so a mount-triggered CSS animation never
   restarts and an `animationend` machine hangs.
+- **A `keyed` `Show` only rebuilds if its child function DECLARES a parameter.**
+  Solid branches on `child.length > 0`, so `{() => …}` silently never rebuilds
+  while `{(_v) => …}` does — same JSX, opposite behaviour, no warning either
+  way. Key on the ID, not the object: a refetch hands back a new object and
+  would re-key on data that didn't change identity (ALE-97). Key the smallest
+  block that must re-animate, never the scene — that's the ALE-95 flash.
 - With `Show when={x}{(v) => …}` the `v` is an **accessor**; without `keyed`
   it is not the value.
 - A registry of steps/blocks holds the **component**, never `render(value)` —

@@ -86,4 +86,33 @@ test.describe('Roster — a cena não reanima ao trocar de personagem', () => {
       expect(await sceneInStart(page), `a cena reanimou no passo ${step}`).toBe(atEntry)
     }
   })
+
+  /**
+   * ALE-97, the mirror of the test above: the scene must stay put, but the
+   * STAGE must still animate. Those two came apart once — fixing the scene
+   * flash left the roster switching characters in total silence, because the
+   * stage's `animate-in` only ever replayed as a side effect of the bug.
+   * Asserted together so neither fix can quietly undo the other.
+   */
+  test('o palco anima na troca, e só ele', async ({ page }) => {
+    await page.goto('/characters')
+    await expect(page.getByRole('heading', { level: 2 })).not.toHaveText('')
+
+    await page.evaluate(() => {
+      const fired: string[] = []
+      ;(window as unknown as { __fired: string[] }).__fired = fired
+      document.addEventListener(
+        'animationstart',
+        (e) => fired.push(`${e.animationName}|${(e.target as HTMLElement).className}`),
+        true,
+      )
+    })
+
+    await page.keyboard.press('ArrowRight')
+    await page.waitForTimeout(500)
+
+    const fired = await page.evaluate(() => (window as unknown as { __fired: string[] }).__fired)
+    expect(fired.some((f) => f.includes('zoom-in-95')), 'o retrato não animou').toBe(true)
+    expect(fired.some((f) => f.startsWith('scene-in')), 'a cena inteira reanimou').toBe(false)
+  })
 })

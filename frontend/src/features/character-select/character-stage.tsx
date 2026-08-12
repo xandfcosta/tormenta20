@@ -33,8 +33,13 @@ export type CharacterStageProps = {
 export function CharacterStage(props: CharacterStageProps) {
   const hue = () => hueFromName(props.selected.name)
   // Directional slide for the incoming portrait; the nameplate fades + rises
-  // with a small stagger. Keyed by character id so the animation replays on
-  // every selection change; motion-reduce collapses it to instant.
+  // with a small stagger. `animate-in` fires on MOUNT and only on mount, so the
+  // two blocks are `keyed` on the character id: swapping a character then
+  // REBUILDS them and the entrance replays. Without the key Solid reuses the
+  // nodes and the stage swaps in dead silence (ALE-97) — which is what happened
+  // once the scene stopped being re-inserted wholesale by the ALE-95 bug.
+  // Keyed on the id, not on the character: the computed sheet landing must not
+  // count as a selection change. motion-reduce collapses it to instant.
   const slideIn = () => (props.direction === 1 ? 'slide-in-from-right-8' : 'slide-in-from-left-8')
 
   return (
@@ -49,14 +54,22 @@ export function CharacterStage(props: CharacterStageProps) {
       />
       <div class="flex items-center justify-center gap-4 sm:gap-8">
         <PeekPortrait character={props.prev} side="left" onClick={() => props.onStep(-1)} />
-        <div
-          class={cn(
-            'animate-in fade-in-0 zoom-in-95 duration-300 ease-out motion-reduce:animate-none',
-            slideIn(),
+        {/* The parameter is load-bearing, not decoration: Solid only re-invokes
+            a keyed Show's child when the function DECLARES one (it branches on
+            `child.length > 0`). Written `{() => …}` the block silently never
+            rebuilds and the entrance never replays. */}
+        <Show when={props.selected.id} keyed>
+          {(_id) => (
+            <div
+              class={cn(
+                'animate-in fade-in-0 zoom-in-95 duration-300 ease-out motion-reduce:animate-none',
+                slideIn(),
+              )}
+            >
+              <StagePortrait character={props.selected} hue={hue()} onOpen={props.onOpen} />
+            </div>
           )}
-        >
-          <StagePortrait character={props.selected} hue={hue()} onOpen={props.onOpen} />
-        </div>
+        </Show>
         <PeekPortrait character={props.next} side="right" onClick={() => props.onStep(1)} />
       </div>
       {/* pedestal glow */}
@@ -65,11 +78,15 @@ export function CharacterStage(props: CharacterStageProps) {
         class="pointer-events-none -mt-6 h-4 w-64 rounded-[100%] blur-md transition-colors duration-300 sm:w-80"
         style={{ background: `oklch(0.5 0.14 ${hue()} / 0.35)` }}
       />
-      <div class="flex flex-col items-center gap-4 animate-in fade-in-0 slide-in-from-bottom-2 fill-mode-backwards duration-300 [animation-delay:80ms] motion-reduce:animate-none">
-        <Nameplate character={props.selected} hue={hue()} />
-        <VitalsRow character={props.selected} defense={props.defense} />
-        <SummaryLine character={props.selected} />
-      </div>
+      <Show when={props.selected.id} keyed>
+        {(_id) => (
+          <div class="flex flex-col items-center gap-4 animate-in fade-in-0 slide-in-from-bottom-2 fill-mode-backwards duration-300 [animation-delay:80ms] motion-reduce:animate-none">
+            <Nameplate character={props.selected} hue={hue()} />
+            <VitalsRow character={props.selected} defense={props.defense} />
+            <SummaryLine character={props.selected} />
+          </div>
+        )}
+      </Show>
       <div class="flex flex-wrap items-center justify-center gap-2">
         <Button size="lg" onClick={() => props.onOpen()}>
           Abrir ficha <Kbd>⏎</Kbd>
