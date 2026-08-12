@@ -12,6 +12,7 @@ import type { Character } from '@/shared/api/api'
 import { SceneShell } from '@/shared/layout/scene-shell'
 import { matchesQuery } from '@/shared/lib/fuzzy-filter'
 import { createSceneNav } from '@/shared/lib/scene-nav'
+import { settledQuery } from '@/shared/lib/settled-query'
 import { createSfx } from '@/shared/lib/sfx'
 import { useUi } from '@/shared/stores/ui-context'
 import { Badge } from '@/shared/ui/badge'
@@ -71,7 +72,10 @@ export function CharactersListPage() {
     ...characterSheetQueryOptions(selected()?.id ?? 0),
     enabled: selected() !== null,
   }))
-  const computed = () => sheet.data ?? null
+  // Never touch `sheet.data` while it's pending: that suspends, and the nearest
+  // boundary is the router's per-match Suspense, so the WHOLE scene gets
+  // detached + re-inserted and every enter animation replays (ALE-95).
+  const computed = () => settledQuery(sheet)
 
   const abilities = createMemo(() => {
     const character = selected()

@@ -100,6 +100,19 @@ links, the browser Back button and the progress rail cannot then disagree.
   screen — cover these in e2e.
 - **`{label} {value}` in an `sr-only` line renders TWO text nodes** and the
   announced string comes out split. Use one interpolation.
+- **Reading a PENDING `useQuery().data` suspends, and that re-animates the
+  whole scene.** The app declares no `Suspense`, so the nearest boundary is the
+  one solid-router wraps every route match in; Solid resolves a suspend by
+  detaching the match subtree and re-inserting it, and re-inserting a node
+  RESTARTS every CSS animation under it. Symptom: the entire screen fades and
+  slides on an in-scene interaction. It hides well — same nodes, same classes,
+  no DOM mutation; the only trace is `getAnimations()[].startTime` moving.
+  Bites whenever a query KEY changes without navigation (a selection driving a
+  detail fetch). Read through `shared/lib/settled-query` (`null` while pending);
+  do NOT reach for `placeholderData: keepPreviousData`, which swaps the flash
+  for the PREVIOUS row's numbers — real values, wrong subject. Forward-only
+  bug: going back is a cache hit and never suspends, so a test that arrows
+  both ways passes over it (ALE-95).
 
 ## Kobalte (headless UI)
 
