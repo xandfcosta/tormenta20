@@ -2,7 +2,7 @@
 // Dev harness: runs under vitest (Node), not shipped in the app bundle — the
 // reference pulls in the already-installed @types/node without adding node to
 // the app tsconfig's `types`.
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
@@ -72,54 +72,80 @@ const oracleDir = resolve(
 
 const chars = fixtures as { slug: string; char: Character }[]
 
+/**
+ * The golden payload for one seed character: everything the Go engine must
+ * reproduce. `char` is included so the Go collection-layer test can re-run
+ * `ActiveItemsFor` on the same raw input.
+ */
+function oraclePayloadFor(slug: string, char: Character) {
+  const effects = characterEffects(char, EMPTY_CONDITIONALS)
+  return {
+    slug,
+    char,
+    activeItems: activeItemsFor(char),
+    itemEffects: normalizeEffects(effects),
+    sheetV2: sheetV2For(char),
+    vitals: computeVitalPools(buildVitalContext(char, effects, char.classes)),
+    // Equipped-item flag provenance oracle (Fase A.3.3) — label dropped so it
+    // mirrors the Go `ComputeEquippedFlags` ({flag, source}) shape.
+    equippedFlags: equippedItemFlagEffects(char.items).map((e) => ({
+      flag: e.flag,
+      source: e.source,
+    })),
+    // Wielded-weapon formula cards oracle (WeaponFormulaCards port).
+    weaponCards: assembleWeaponCards(char, effects),
+  }
+}
+
+/** Round-trip through JSON so the comparison sees what the file can hold. */
+const serialized = (value: unknown) => JSON.parse(JSON.stringify(value))
+
+function readOracle(file: string): unknown {
+  try {
+    return JSON.parse(readFileSync(resolve(oracleDir, file), 'utf8'))
+  } catch {
+    throw new Error(
+      `oráculo de paridade ausente: engine-go/parity/${file}. ` +
+        'Gere com `GEN_ORACLE=1 pnpm --filter frontend test parity-oracle`.',
+    )
+  }
+}
+
 describe('parity oracle — derived.ts golden output for the 16 seed chars', () => {
-  it('generates one oracle per seed character', () => {
+  /**
+   * Without GEN_ORACLE this COMPARES instead of just smoke-checking (ALE-100).
+   *
+   * It used to assert only `chars.length === 16` and that two fields were the
+   * right JS type, which made the oracle a photo rather than a mirror: change a
+   * TS rule, and the committed JSONs silently went stale while the Go parity
+   * tests stayed green against the old snapshot. Nothing in the repo — and
+   * nothing in CI, which never sets GEN_ORACLE — could answer "are the oracles
+   * up to date?" without overwriting them.
+   */
+  it('bate com o oráculo commitado de cada personagem da seed', () => {
     expect(chars).toHaveLength(16)
     const shouldWrite = !!process.env.GEN_ORACLE
     if (shouldWrite) mkdirSync(oracleDir, { recursive: true })
 
     for (const { slug, char } of chars) {
-      const activeItems = activeItemsFor(char)
-      const itemEffects = normalizeEffects(characterEffects(char, EMPTY_CONDITIONALS))
-      expect(Array.isArray(activeItems)).toBe(true)
-      expect(itemEffects.byTarget).toBeTypeOf('object')
+      const payload = oraclePayloadFor(slug, char)
 
       if (shouldWrite) {
-        // `char` is included so the Go collection-layer test (slice 2) can
-        // re-run `ActiveItemsFor` on the same raw input and check it against
-        // `activeItems` — the resolution test (slice 1) only needs activeItems.
-        // `sheetV2` is the breakdown oracle (task #5).
-        const vitals = computeVitalPools(
-          buildVitalContext(char, characterEffects(char, EMPTY_CONDITIONALS), char.classes),
-        )
-        const payload = {
-          slug,
-          char,
-          activeItems,
-          itemEffects,
-          sheetV2: sheetV2For(char),
-          vitals,
-          // Equipped-item flag provenance oracle (Fase A.3.3) — label dropped so
-          // it mirrors the Go `ComputeEquippedFlags` ({flag, source}) shape.
-          equippedFlags: equippedItemFlagEffects(char.items).map((e) => ({
-            flag: e.flag,
-            source: e.source,
-          })),
-          // Wielded-weapon formula cards oracle (WeaponFormulaCards port).
-          weaponCards: assembleWeaponCards(char, characterEffects(char, EMPTY_CONDITIONALS)),
-        }
         writeFileSync(
           resolve(oracleDir, `${slug}.json`),
           `${JSON.stringify(payload, null, 2)}\n`,
         )
+        continue
       }
+
+      expect(serialized(payload), `oráculo desatualizado para "${slug}"`).toEqual(
+        readOracle(`${slug}.json`),
+      )
     }
   })
 
   // Underscore-prefixed so the Go per-slug loops (which glob `*.json`) skip it.
-  it('dumps the catalogs the collection layer reads (for the Go engine)', () => {
-    if (!process.env.GEN_ORACLE) return
-    mkdirSync(oracleDir, { recursive: true })
+  it('bate com o dump de catálogos que a camada de coleta lê', () => {
     const catalogs = {
       items: CATALOG_ITEMS,
       races: RACES_CATALOG,
@@ -130,9 +156,22 @@ describe('parity oracle — derived.ts golden output for the 16 seed chars', () 
       racas: RACAS,
       tormentaPowerIds: Object.keys(TORMENTA_POWERS),
     }
-    writeFileSync(
-      resolve(oracleDir, '_catalogs.json'),
-      `${JSON.stringify(catalogs, null, 2)}\n`,
-    )
+    const body = `${JSON.stringify(catalogs, null, 2)}\n`
+
+    if (process.env.GEN_ORACLE) {
+      mkdirSync(oracleDir, { recursive: true })
+      writeFileSync(resolve(oracleDir, '_catalogs.json'), body)
+      return
+    }
+
+    // Compared as text, not with toEqual: this dump is ~400 KB and a structural
+    // diff on failure would bury the terminal. The actionable message is the
+    // same either way — regenerate.
+    const committed = readFileSync(resolve(oracleDir, '_catalogs.json'), 'utf8')
+    expect(
+      body.length,
+      'o dump de catálogos mudou — rode `GEN_ORACLE=1 pnpm --filter frontend test parity-oracle`',
+    ).toBe(committed.length)
+    expect(body === committed, 'o dump de catálogos divergiu do commitado').toBe(true)
   })
 })

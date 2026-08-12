@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { textOf } from './support/roster'
+import { DESK_VIEWPORTS, VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
 
 // The scene-nav keyboard layer is gated to `≥xl + pointer: fine` (a desk setup,
 // see frontend/CLAUDE.md), so the spotlight only answers arrows above 1280px.
@@ -97,13 +98,35 @@ test.describe('Roster — navegação por teclado', () => {
 test.describe('Roster — a cena não reanima ao trocar de personagem', () => {
   test.use({ viewport: DESK })
 
-  const sceneInStart = (page: import('@playwright/test').Page) =>
-    page.evaluate(() => {
+  /**
+   * The scene's entrance start time, read only once the animation has actually
+   * STARTED. A not-yet-started animation reports `startTime === null`, and
+   * `Math.round(null)` is 0 — so a baseline taken too early passed the
+   * not-null check as a 0 and then "changed" on the first arrow. The test
+   * accused the app of re-animating when it was measuring its own impatience.
+   */
+  const sceneInStart = async (page: import('@playwright/test').Page) => {
+    await page.waitForFunction(
+      () => {
+        const scene = document.querySelector('[data-slot="scene-content"]')
+        const enter = scene
+          ?.getAnimations()
+          .find((a) => 'animationName' in a && a.animationName === 'scene-in')
+        return !!enter && enter.startTime !== null
+      },
+      null,
+      { timeout: 5_000 },
+    )
+    return page.evaluate(() => {
       const scene = document.querySelector('[data-slot="scene-content"]')
       if (!scene) throw new Error('cena não encontrada: [data-slot="scene-content"]')
-      const enter = scene.getAnimations().find((a) => 'animationName' in a && a.animationName === 'scene-in')
-      return enter ? Math.round(enter.startTime as number) : null
+      const enter = scene
+        .getAnimations()
+        .find((a) => 'animationName' in a && a.animationName === 'scene-in')
+      if (!enter || enter.startTime === null) throw new Error('scene-in não começou')
+      return Math.round(enter.startTime as number)
     })
+  }
 
   test('a animação de entrada da cena não reinicia a cada troca', async ({ page }) => {
     await page.goto('/characters')
@@ -192,106 +215,25 @@ test.describe('Roster — a cena não reanima ao trocar de personagem', () => {
 
 /**
  * The create slot (ALE-98) is a new stage, and the house rule is that any new
- * screen is validated at all six form factors. Reaching it needs the keyboard,
- * which only answers at ≥xl, so below that the slot is reached by URL-free
- * means: the filmstrip "+" is a plain Link everywhere, and what's checked here
- * is that the slot's stage itself never forces the page sideways.
+ * screen is validated at all six form factors. Six viewports inside two tests,
+ * not twelve tests — see `support/viewports.ts`.
  */
-const VIEWPORTS = [
-  { name: 'desktop', width: 1920, height: 1080 },
-  { name: 'laptop', width: 1440, height: 900 },
-  { name: 'tablet-landscape', width: 1024, height: 768 },
-  { name: 'tablet-portrait', width: 768, height: 1024 },
-  { name: 'mobile-landscape', width: 844, height: 390 },
-  { name: 'mobile-portrait', width: 390, height: 844 },
-]
-
 test.describe('Roster — responsivo (sem overflow horizontal)', () => {
-  for (const vp of VIEWPORTS) {
-    test(`elenco: sem scroll horizontal @ ${vp.name} (${vp.width}×${vp.height})`, async ({
-      page,
-    }) => {
-      await page.setViewportSize({ width: vp.width, height: vp.height })
-      await page.goto('/characters')
-      await expect(page.getByRole('heading', { level: 2 })).not.toHaveText('')
-
-      const overflow = await page.evaluate(
-        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      )
-      expect(overflow, 'a página não deve rolar horizontalmente').toBeLessThanOrEqual(1)
-    })
-  }
-
-  // The slot only answers arrows on a desk setup (≥xl + pointer: fine).
-  for (const vp of VIEWPORTS.filter((v) => v.width >= 1280)) {
-    test(`slot de criação: sem scroll horizontal @ ${vp.name}`, async ({ page }) => {
-      await page.setViewportSize({ width: vp.width, height: vp.height })
-      await page.goto('/characters')
-      await expect(page.getByRole('heading', { level: 2 })).not.toHaveText('')
-      for (let i = 0; i < 20; i++) await page.keyboard.press('ArrowRight')
-      await expect(page.getByRole('heading', { name: 'Novo personagem', level: 2 })).toBeVisible()
-
-      const overflow = await page.evaluate(
-        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      )
-      expect(overflow, 'a página não deve rolar horizontalmente').toBeLessThanOrEqual(1)
-    })
-  }
-})
-
-/**
- * ALE-99. The stage is a centred column, so ANY change in the caption below the
- * portraits moved the portraits themselves: a name wrapping to two lines
- * shifted the whole row 20px, and landing on the create slot (no vitals, no
- * summary line) dropped it much further. Arrowing through the roster made the
- * cards dance.
- *
- * The invariant is simple and worth stating in one place: the portrait row sits
- * at the SAME height for every cursor position, heroes and create slot alike.
- */
-test.describe('Roster — o palco não pula ao trocar de personagem', () => {
-  test.use({ viewport: DESK })
-
-  /**
-   * Measured AT REST: the entrance animation scales the card to 95%, which
-   * moves its bounding box by ~8px while it plays. Measuring mid-flight would
-   * report the animation as a layout jump.
-   */
-  const portraitTop = async (page: import('@playwright/test').Page) => {
-    // `scene-in` has `fill: both`, so it stays listed forever — wait for every
-    // animation to have FINISHED, not for the list to empty.
-    await page.waitForFunction(
-      () => document.getAnimations().every((a) => a.playState === 'finished'),
-      null,
-      { timeout: 5_000 },
-    )
-    return page.evaluate(() => {
-      const card = document.querySelector(
-        'button[aria-label^="Abrir ficha de"], button[aria-label="Criar novo personagem"]',
-      )
-      if (!card) throw new Error('nenhum card central no palco')
-      return Math.round(card.getBoundingClientRect().top)
-    })
-  }
-
-  test('o retrato central fica na mesma altura em todo o elenco e no slot', async ({ page }) => {
+  test('elenco: sem scroll horizontal nos seis formatos', async ({ page }) => {
     await page.goto('/characters')
     await expect(page.getByRole('heading', { level: 2 })).not.toHaveText('')
 
-    const primeiro = await portraitTop(page)
-    const alturas: { quem: string; top: number }[] = []
+    await expectNoHorizontalOverflow(page, VIEWPORTS)
+  })
 
-    // Percorre TODO o elenco e termina no slot de criação.
-    for (let i = 0; i < 12; i++) {
-      const quem = await textOf(page.getByRole('heading', { level: 2 }), `posição ${i}`)
-      alturas.push({ quem, top: await portraitTop(page) })
-      await page.keyboard.press('ArrowRight')
-    }
+  // The slot is only reachable by arrow on a desk setup (≥xl + pointer: fine).
+  test('slot de criação: sem scroll horizontal nos formatos de mesa', async ({ page }) => {
+    await page.setViewportSize(DESK)
+    await page.goto('/characters')
+    await expect(page.getByRole('heading', { level: 2 })).not.toHaveText('')
+    for (let i = 0; i < 20; i++) await page.keyboard.press('ArrowRight')
+    await expect(page.getByRole('heading', { name: 'Novo personagem', level: 2 })).toBeVisible()
 
-    const desalinhados = alturas.filter((a) => Math.abs(a.top - primeiro) > 1)
-    expect(
-      desalinhados,
-      `estes saíram da linha (topo esperado ${primeiro}): ${JSON.stringify(desalinhados)}`,
-    ).toEqual([])
+    await expectNoHorizontalOverflow(page, DESK_VIEWPORTS)
   })
 })

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
 
 const CAMPAIGN = '/campaigns/1' // Snapshot Test ALE-33 (seed)
 
@@ -129,41 +130,26 @@ test.describe('Entrar por convite', () => {
   })
 })
 
-// The scene must FILL the width at every form factor — no horizontal body
-// scroll. This is the deterministic version of the manual 6-resolution pass.
-const VIEWPORTS = [
-  { name: 'desktop', width: 1920, height: 1080 },
-  { name: 'laptop', width: 1440, height: 900 },
-  { name: 'tablet-landscape', width: 1024, height: 768 },
-  { name: 'tablet-portrait', width: 768, height: 1024 },
-  { name: 'mobile-landscape', width: 844, height: 390 },
-  { name: 'mobile-portrait', width: 390, height: 844 },
-]
-
-// Every campaign leaf of the grimório, since they share the TomePage surface —
-// a regression in it would otherwise only be caught on whichever one we spot-checked.
+/**
+ * One test per scene, six viewports inside each — not one test per pair. The
+ * layout answers `setViewportSize` live (media queries are width-only, a house
+ * rule), so paying a full page load per viewport bought nothing: this block was
+ * 18 tests and 134s. See `support/viewports.ts` for what it does and does not
+ * prove.
+ */
 const SCENES = [
   { name: 'detalhe', path: `${CAMPAIGN}?tab=membros`, heading: /Snapshot Test ALE-33/i },
   { name: 'nova', path: '/campaigns/new', heading: /Abrir nova crônica/i },
   { name: 'convite', path: '/campaigns/join', heading: /Entrar na mesa/i },
 ]
 
-test.describe('Campanha — responsivo (preenche a tela, sem overflow horizontal)', () => {
+test.describe('Campanha — responsivo (sem overflow horizontal)', () => {
   for (const scene of SCENES) {
-    for (const vp of VIEWPORTS) {
-      test(`${scene.name}: sem scroll horizontal @ ${vp.name} (${vp.width}×${vp.height})`, async ({
-        page,
-      }) => {
-        await page.setViewportSize({ width: vp.width, height: vp.height })
-        await page.goto(scene.path)
-        await expect(page.getByRole('heading', { name: scene.heading })).toBeVisible()
-        const overflow = await page.evaluate(
-          () =>
-            document.documentElement.scrollWidth -
-            document.documentElement.clientWidth,
-        )
-        expect(overflow, 'a página não deve rolar horizontalmente').toBeLessThanOrEqual(1)
-      })
-    }
+    test(`${scene.name}: sem scroll horizontal nos seis formatos`, async ({ page }) => {
+      await page.goto(scene.path)
+      await expect(page.getByRole('heading', { name: scene.heading })).toBeVisible()
+
+      await expectNoHorizontalOverflow(page, VIEWPORTS)
+    })
   }
 })
