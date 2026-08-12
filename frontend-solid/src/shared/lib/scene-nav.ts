@@ -335,11 +335,22 @@ function isTypingTarget(): boolean {
   )
 }
 
-/** A modal surface owns the keyboard while open — stand down. Kobalte flags an
- *  open overlay with `data-expanded` (Radix used `data-state="open"`). */
+/**
+ * A MODAL surface owns the keyboard while open — stand down. Kobalte flags an
+ * open overlay with `data-expanded` (Radix used `data-state="open"`).
+ *
+ * `[data-nav-inline]` opts out: a non-modal side panel shares the screen with
+ * the scene on purpose (the GM reads a condition in the panel and applies it on
+ * the tracker behind). Standing down for one would kill the scene's keyboard
+ * navigation the moment the panel opened (ALE-75).
+ */
 function hasOpenOverlay(): boolean {
   return !!document.querySelector(
-    '[role="dialog"][data-expanded], [role="menu"][data-expanded], [role="listbox"][data-expanded]',
+    [
+      '[role="dialog"][data-expanded]:not([data-nav-inline])',
+      '[role="menu"][data-expanded]',
+      '[role="listbox"][data-expanded]',
+    ].join(', '),
   )
 }
 

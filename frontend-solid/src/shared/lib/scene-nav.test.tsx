@@ -220,3 +220,38 @@ describe('createSceneNav — delegado (cenas por seleção)', () => {
     expect(leaveScene).toHaveBeenCalledOnce()
   })
 })
+
+describe('createSceneNav — sobreposição aberta', () => {
+  /** Kobalte marca a superfície aberta com `data-expanded`. */
+  function openDialog(extra: Record<string, string> = {}): HTMLElement {
+    const dialog = document.createElement('div')
+    dialog.setAttribute('role', 'dialog')
+    dialog.setAttribute('data-expanded', '')
+    for (const [key, value] of Object.entries(extra)) dialog.setAttribute(key, value)
+    document.body.appendChild(dialog)
+    return dialog
+  }
+
+  it('recua com um diálogo MODAL aberto — ele é dono do teclado', () => {
+    const { g } = setup()
+    g('A').focus()
+    openDialog()
+
+    press('ArrowRight')
+
+    expect(document.activeElement).toBe(g('A'))
+  })
+
+  // Um painel lateral NÃO-MODAL divide a tela com a cena de propósito: o mestre
+  // lê a condição no painel e aplica no rastreador atrás. Se o driver recuasse,
+  // abrir o painel mataria a navegação por teclado da cena inteira (ALE-75).
+  it('NÃO recua com um painel não-modal — ele divide a tela, não a toma', () => {
+    const { g } = setup()
+    g('A').focus()
+    openDialog({ 'data-nav-inline': '' })
+
+    press('ArrowRight')
+
+    expect(document.activeElement).toBe(g('B'))
+  })
+})

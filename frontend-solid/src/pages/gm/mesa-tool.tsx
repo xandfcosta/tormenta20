@@ -3,6 +3,7 @@ import { Dynamic } from 'solid-js/web'
 import { createCurrentTool } from '@/features/gm-tools/current-tool'
 import type { ToolSlug } from '@/features/gm-tools/gm-tools'
 import { BestiarioTool } from './bestiario-tool'
+import { EncontrosTool } from './encontros-tool'
 import { ToolPending } from './tool-pending'
 
 /**
@@ -15,6 +16,7 @@ import { ToolPending } from './tool-pending'
  */
 const TOOL_COMPONENTS: Partial<Record<ToolSlug, Component>> = {
   bestiario: BestiarioTool,
+  encontros: EncontrosTool,
 }
 
 export function MesaTool() {
