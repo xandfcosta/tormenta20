@@ -4,7 +4,8 @@ import { hueFromName } from '@/shared/lib/hue-from-name'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { Kbd } from '@/shared/ui/kbd'
-import { primaryRole } from './select-helpers'
+import { PeekPortrait } from './peek-portrait'
+import { initials, portraitGradient, primaryRole } from './select-helpers'
 
 export type CharacterStageProps = {
   selected: Character
@@ -99,21 +100,6 @@ export function CharacterStage(props: CharacterStageProps) {
   )
 }
 
-function portraitGradient(name: string): string {
-  const hue = hueFromName(name)
-  return `linear-gradient(155deg, oklch(0.55 0.15 ${hue}) 0%, oklch(0.30 0.09 ${hue}) 70%, oklch(0.22 0.06 ${hue}) 100%)`
-}
-
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return '?'
-  return parts
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join('')
-    .toUpperCase()
-}
-
 /** The selected character's 3:4 portrait — hue gradient + giant monogram
  *  until real art lands (art will fill the same frame). */
 function StagePortrait(props: { character: Character; hue: number; onOpen: () => void }) {
@@ -138,37 +124,6 @@ function StagePortrait(props: { character: Character; hue: number; onOpen: () =>
   )
 }
 
-/** Dimmed side peek (±1). Click steps the selection toward it. */
-function PeekPortrait(props: {
-  character: Character | null
-  side: 'left' | 'right'
-  onClick: () => void
-}) {
-  return (
-    <Show
-      when={props.character}
-      fallback={<div class="w-20 sm:w-28 lg:w-32" aria-hidden="true" />}
-    >
-      {(character) => (
-        <button
-          type="button"
-          onClick={() => props.onClick()}
-          title={character().name}
-          aria-label={`${props.side === 'left' ? 'Anterior' : 'Próximo'}: ${character().name}`}
-          class="group relative aspect-[3/4] w-20 overflow-hidden rounded-md border border-grimorio-iron opacity-50 transition-all hover:opacity-80 sm:w-28 lg:w-32"
-          style={{ background: portraitGradient(character().name) }}
-        >
-          <span class="absolute inset-0 flex select-none items-center justify-center font-display text-4xl text-white/20 sm:text-5xl">
-            {initials(character().name)}
-          </span>
-          <span class="absolute inset-x-0 bottom-0 truncate bg-black/50 px-1 py-0.5 text-center text-[10px] text-white/80 opacity-0 transition-opacity group-hover:opacity-100">
-            {character().name}
-          </span>
-        </button>
-      )}
-    </Show>
-  )
-}
 
 /** Engraved Cinzel nameplate + class/race kicker. */
 function Nameplate(props: { character: Character; hue: number }) {

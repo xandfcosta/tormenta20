@@ -42,6 +42,42 @@ test.describe('Roster — navegação por teclado', () => {
     await expect(page).toHaveURL(/\/characters\/\d+$/)
     await expect(page.getByRole('heading', { name: moved, level: 1 }).first()).toBeVisible()
   })
+
+  /**
+   * ALE-98. The "+" used to be a mouse-only Link the arrows skipped: pressing →
+   * on the last hero did nothing, and creation was unreachable without a
+   * pointer. It is now a real cursor position — the stage shows an empty "?"
+   * frame there and Enter opens the Forge.
+   */
+  test('a seta alcança o "+" e Enter leva para a criação', async ({ page }) => {
+    await page.goto('/characters')
+    await expect(page.getByRole('heading', { level: 2 })).not.toHaveText('')
+
+    // Walk past the end of the roster; the cursor stops on the create slot.
+    for (let i = 0; i < 20; i++) await page.keyboard.press('ArrowRight')
+
+    await expect(page.getByRole('heading', { name: 'Novo personagem', level: 2 })).toBeVisible()
+    await expect(page.getByRole('button', { name: /Criar novo personagem/ })).toBeVisible()
+
+    await page.keyboard.press('Enter')
+    await expect(page).toHaveURL(/\/characters\/new/)
+  })
+
+  test('← volta do "+" para o último herói do elenco', async ({ page }) => {
+    await page.goto('/characters')
+    await expect(page.getByRole('heading', { level: 2 })).not.toHaveText('')
+    for (let i = 0; i < 20; i++) await page.keyboard.press('ArrowRight')
+    await expect(page.getByRole('heading', { name: 'Novo personagem', level: 2 })).toBeVisible()
+
+    // The peek on the left names the hero we came from — pressing ← returns to him.
+    const voltandoPara = await page
+      .getByRole('button', { name: /^Anterior:/ })
+      .getAttribute('aria-label')
+    await page.keyboard.press('ArrowLeft')
+
+    await expect(page.getByRole('heading', { name: 'Novo personagem', level: 2 })).toBeHidden()
+    expect(voltandoPara).toContain(await textOf(page.getByRole('heading', { level: 2 }), 'herói'))
+  })
 })
 
 /**
@@ -96,7 +132,8 @@ test.describe('Roster — a cena não reanima ao trocar de personagem', () => {
    */
   test('o palco anima na troca, e só ele', async ({ page }) => {
     await page.goto('/characters')
-    await expect(page.getByRole('heading', { level: 2 })).not.toHaveText('')
+    const spotlight = page.getByRole('heading', { level: 2 })
+    const antes = await textOf(spotlight, 'spotlight inicial')
 
     await page.evaluate(() => {
       const fired: string[] = []
@@ -109,10 +146,86 @@ test.describe('Roster — a cena não reanima ao trocar de personagem', () => {
     })
 
     await page.keyboard.press('ArrowRight')
-    await page.waitForTimeout(500)
+    // Judge the animations only after the swap actually happened — a fixed
+    // sleep here made the test flaky when the arrow landed before the roster
+    // finished settling, and blamed the animation for a missed keypress.
+    await expect(spotlight).not.toHaveText(antes)
+    await page.waitForTimeout(300)
 
     const fired = await page.evaluate(() => (window as unknown as { __fired: string[] }).__fired)
     expect(fired.some((f) => f.includes('zoom-in-95')), 'o retrato não animou').toBe(true)
     expect(fired.some((f) => f.startsWith('scene-in')), 'a cena inteira reanimou').toBe(false)
   })
+
+  /**
+   * The peek label used to be `opacity-0` + `group-hover:opacity-100`, so the
+   * name only ever showed under a mouse — invisible on touch and under keyboard
+   * navigation, where two initials don't say who's next. jsdom applies no CSS,
+   * so only a real browser can hold this: assert the computed opacity WITHOUT
+   * hovering anything.
+   */
+  test('os dois peeks mostram o nome sem precisar de hover', async ({ page }) => {
+    await page.goto('/characters')
+    // Wait for the roster: an arrow pressed over an empty list is a no-op.
+    await expect(page.getByRole('heading', { level: 2 })).not.toHaveText('')
+    // Step in once so there is a peek on BOTH sides of the stage.
+    await page.keyboard.press('ArrowRight')
+    await expect(page.getByRole('button', { name: /^Anterior:/ })).toBeVisible()
+
+    for (const side of [/^Anterior:/, /^Próximo:/]) {
+      const peek = page.getByRole('button', { name: side })
+      const label = peek.locator('span').last()
+      await expect(label).not.toHaveText('')
+      await expect(label).toHaveCSS('opacity', '1')
+    }
+  })
+})
+
+/**
+ * The create slot (ALE-98) is a new stage, and the house rule is that any new
+ * screen is validated at all six form factors. Reaching it needs the keyboard,
+ * which only answers at ≥xl, so below that the slot is reached by URL-free
+ * means: the filmstrip "+" is a plain Link everywhere, and what's checked here
+ * is that the slot's stage itself never forces the page sideways.
+ */
+const VIEWPORTS = [
+  { name: 'desktop', width: 1920, height: 1080 },
+  { name: 'laptop', width: 1440, height: 900 },
+  { name: 'tablet-landscape', width: 1024, height: 768 },
+  { name: 'tablet-portrait', width: 768, height: 1024 },
+  { name: 'mobile-landscape', width: 844, height: 390 },
+  { name: 'mobile-portrait', width: 390, height: 844 },
+]
+
+test.describe('Roster — responsivo (sem overflow horizontal)', () => {
+  for (const vp of VIEWPORTS) {
+    test(`elenco: sem scroll horizontal @ ${vp.name} (${vp.width}×${vp.height})`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: vp.width, height: vp.height })
+      await page.goto('/characters')
+      await expect(page.getByRole('heading', { level: 2 })).not.toHaveText('')
+
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      )
+      expect(overflow, 'a página não deve rolar horizontalmente').toBeLessThanOrEqual(1)
+    })
+  }
+
+  // The slot only answers arrows on a desk setup (≥xl + pointer: fine).
+  for (const vp of VIEWPORTS.filter((v) => v.width >= 1280)) {
+    test(`slot de criação: sem scroll horizontal @ ${vp.name}`, async ({ page }) => {
+      await page.setViewportSize({ width: vp.width, height: vp.height })
+      await page.goto('/characters')
+      await expect(page.getByRole('heading', { level: 2 })).not.toHaveText('')
+      for (let i = 0; i < 20; i++) await page.keyboard.press('ArrowRight')
+      await expect(page.getByRole('heading', { name: 'Novo personagem', level: 2 })).toBeVisible()
+
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      )
+      expect(overflow, 'a página não deve rolar horizontalmente').toBeLessThanOrEqual(1)
+    })
+  }
 })

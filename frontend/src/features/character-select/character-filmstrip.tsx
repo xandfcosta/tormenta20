@@ -4,20 +4,12 @@ import { For, createEffect } from 'solid-js'
 import type { Character } from '@/shared/api/api'
 import { hueFromName } from '@/shared/lib/hue-from-name'
 import { cn } from '@/shared/lib/utils'
-
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return '?'
-  return parts
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join('')
-    .toUpperCase()
-}
+import { initials } from './select-helpers'
 
 export type CharacterFilmstripProps = {
   roster: Character[]
-  selectedId: number
+  /** `'novo'` when the cursor is on the trailing create slot (ALE-98). */
+  selectedId: number | 'novo'
   onSelect: (id: number) => void
   /** Fired when the pointer enters a chip — e.g. a subtle hover cue. */
   onHover?: () => void
@@ -79,10 +71,21 @@ export function CharacterFilmstrip(props: CharacterFilmstripProps) {
           )
         }}
       </For>
+      {/* Reachable by keyboard as a cursor position (the stage shows the "?"
+          frame), and still a one-click Link for the mouse — the arrows are
+          additive, they never take a click away (ALE-98). `data-chip-id` keeps
+          it inside the auto-centering, so arrowing to the end scrolls it in. */}
       <Link
         to="/characters/new"
         title="Novo personagem"
-        class="flex size-10 shrink-0 items-center justify-center rounded-md border border-dashed border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        data-chip-id="novo"
+        aria-current={props.selectedId === 'novo'}
+        class={cn(
+          'flex size-10 shrink-0 items-center justify-center rounded-md border border-dashed transition-all',
+          props.selectedId === 'novo'
+            ? 'scale-110 border-grimorio-gold text-grimorio-gold ring-2 ring-grimorio-gold ring-offset-2 ring-offset-background'
+            : 'border-border text-muted-foreground hover:bg-accent hover:text-foreground',
+        )}
       >
         <Plus class="size-4" />
       </Link>

@@ -6,8 +6,14 @@ import { raceDefsCatalogQueryOptions } from '@/entities/catalog/queries'
 import { charactersQueryOptions, characterSheetQueryOptions } from '@/entities/character/queries'
 import { CharacterFilmstrip } from '@/features/character-select/character-filmstrip'
 import { CharacterStage } from '@/features/character-select/character-stage'
+import { CreateSlotStage } from '@/features/character-select/create-slot-stage'
 import { DossierDrawer } from '@/features/character-select/dossier-drawer'
-import { raceAbilityBlurbs } from '@/features/character-select/select-helpers'
+import { QuestionFrame } from '@/features/character-select/question-frame'
+import {
+  isCreateSlot,
+  raceAbilityBlurbs,
+  stepRosterIndex,
+} from '@/features/character-select/select-helpers'
 import type { Character } from '@/shared/api/api'
 import { SceneShell } from '@/shared/layout/scene-shell'
 import { matchesQuery } from '@/shared/lib/fuzzy-filter'
@@ -45,7 +51,9 @@ export function CharactersListPage() {
   const characters = useQuery(() => charactersQueryOptions)
   const raceDefs = useQuery(() => raceDefsCatalogQueryOptions)
 
-  const [selectedId, setSelectedId] = createSignal<number | null>(null)
+  // `'novo'` is the trailing create slot, a real cursor position rather than a
+  // link the arrows skip over (ALE-98).
+  const [selectedId, setSelectedId] = createSignal<number | 'novo' | null>(null)
   const [dossierOpen, setDossierOpen] = createSignal(false)
   const [direction, setDirection] = createSignal<1 | -1>(1)
   const [query, setQuery] = createSignal('')
@@ -58,9 +66,11 @@ export function CharactersListPage() {
   // typing a query slides the stage onto the first match instead of stranding
   // it on a character that's no longer shown.
   const index = createMemo(() => {
+    if (selectedId() === 'novo') return filtered().length
     const found = filtered().findIndex((c) => c.id === selectedId())
     return Math.max(0, found)
   })
+  const atCreateSlot = () => isCreateSlot(index(), filtered().length)
   const selected = () => filtered()[index()] ?? null
   const prev = () => (index() > 0 ? filtered()[index() - 1] : null)
   const next = () => (index() < filtered().length - 1 ? filtered()[index() + 1] : null)
@@ -77,30 +87,42 @@ export function CharactersListPage() {
   // detached + re-inserted and every enter animation replays (ALE-95).
   const computed = () => settledQuery(sheet)
 
+  // Same guard as the sheet above, and for the same reason (ALE-95): the race
+  // catalog is still in flight on the first visit, and reading `.data` there
+  // suspends the route match — which re-inserts the scene and replays every
+  // animation. It showed up as a 1-in-4 flake in the E2E, not as a steady bug.
   const abilities = createMemo(() => {
     const character = selected()
     if (!character) return []
-    return raceAbilityBlurbs(raceDefs.data ?? [], character, 8)
+    return raceAbilityBlurbs(settledQuery(raceDefs) ?? [], character, 8)
   })
 
   const step = (delta: number) => {
     const list = filtered()
     if (list.length === 0) return
     sfx('hover')
-    const nextIndex = Math.min(list.length - 1, Math.max(0, index() + delta))
+    const nextIndex = stepRosterIndex(index(), delta, list.length)
     setDirection(delta >= 0 ? 1 : -1)
-    setSelectedId(list[nextIndex].id)
+    setSelectedId(isCreateSlot(nextIndex, list.length) ? 'novo' : list[nextIndex].id)
   }
 
-  const jumpTo = (id: number) => {
-    const target = filtered().findIndex((c) => c.id === id)
+  const jumpTo = (id: number | 'novo') => {
+    const target = id === 'novo' ? filtered().length : filtered().findIndex((c) => c.id === id)
     if (target === -1) return
     sfx('select')
     setDirection(target >= index() ? 1 : -1)
     setSelectedId(id)
   }
 
+  const openForge = () => {
+    sfx('select')
+    navigate({ to: '/characters/new' })
+  }
+
+  // Enter means "activate what the cursor is on" — a hero opens its sheet, the
+  // trailing slot opens the Forge. Same key, one grammar (ALE-98).
   const openSheet = () => {
+    if (atCreateSlot()) return openForge()
     const character = selected()
     if (!character) return
     sfx('select')
@@ -225,40 +247,49 @@ export function CharactersListPage() {
         <NoMatches query={query()} onClear={() => setQuery('')} />
       </Show>
 
-      <Show when={selected()}>
-        {(character) => (
-          <div class="relative flex min-h-0 flex-1 flex-col">
-            <CharacterStage
-              selected={character()}
-              prev={prev()}
-              next={next()}
-              direction={direction()}
-              defense={computed()?.defense.total ?? null}
-              onStep={step}
-              onOpen={openSheet}
-              onDossier={() => setDossierOpen((open) => !open)}
-              dossierOpen={dossierOpen()}
-            />
-            <DossierDrawer
-              character={character()}
-              sheet={computed()}
-              abilities={abilities()}
-              open={dossierOpen()}
-              onClose={() => setDossierOpen(false)}
-            />
-            <CharacterFilmstrip
-              roster={filtered()}
-              selectedId={character().id}
-              onSelect={jumpTo}
-              onHover={() => sfx('hover')}
-            />
-            {/* Keyboard hints only where there's a keyboard: laptop+desktop
-                (≥xl). Hidden on tablet/phone — the keys don't apply there. */}
-            <p class="hidden pt-1 text-center text-[11px] text-muted-foreground xl:block">
-              ← → navegar · Enter abrir ficha · D dossiê · / buscar
-            </p>
-          </div>
-        )}
+      <Show when={filtered().length > 0}>
+        <div class="relative flex min-h-0 flex-1 flex-col">
+          <Show
+            when={!atCreateSlot() && selected()}
+            fallback={<CreateSlotStage prev={prev()} onStep={step} onOpen={openForge} />}
+          >
+            {(character) => (
+              <>
+                <CharacterStage
+                  selected={character()}
+                  prev={prev()}
+                  next={next()}
+                  direction={direction()}
+                  defense={computed()?.defense.total ?? null}
+                  onStep={step}
+                  onOpen={openSheet}
+                  onDossier={() => setDossierOpen((open) => !open)}
+                  dossierOpen={dossierOpen()}
+                />
+                <DossierDrawer
+                  character={character()}
+                  sheet={computed()}
+                  abilities={abilities()}
+                  open={dossierOpen()}
+                  onClose={() => setDossierOpen(false)}
+                />
+              </>
+            )}
+          </Show>
+          <CharacterFilmstrip
+            roster={filtered()}
+            selectedId={atCreateSlot() ? 'novo' : (selected()?.id ?? 0)}
+            onSelect={jumpTo}
+            onHover={() => sfx('hover')}
+          />
+          {/* Keyboard hints only where there's a keyboard: laptop+desktop
+              (≥xl). Hidden on tablet/phone — the keys don't apply there.
+              "abrir" and not "abrir ficha": on the create slot Enter opens the
+              Forge, and the hint has to be true in both positions. */}
+          <p class="hidden pt-1 text-center text-[11px] text-muted-foreground xl:block">
+            ← → navegar · Enter abrir · D dossiê · / buscar
+          </p>
+        </div>
       </Show>
     </SceneShell>
   )
@@ -268,8 +299,8 @@ export function CharactersListPage() {
 function EmptyStage() {
   return (
     <div class="flex min-h-0 flex-1 flex-col items-center justify-center gap-4">
-      <div class="flex aspect-[3/4] w-48 items-center justify-center rounded-md border-2 border-dashed border-grimorio-iron">
-        <span class="select-none font-heading text-7xl text-grimorio-gold/30">?</span>
+      <div class="aspect-[3/4] w-48 rounded-md border-2 border-dashed border-grimorio-iron">
+        <QuestionFrame />
       </div>
       <p class="font-heading text-xl uppercase tracking-[0.12em] text-foreground">
         Seu grupo aguarda um herói

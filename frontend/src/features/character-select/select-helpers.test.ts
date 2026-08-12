@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import type { Character, RaceDefinition } from '@/shared/api/api'
-import { characterFlavor, primaryClass, primaryRole, raceAbilityBlurbs } from './select-helpers'
+import {
+  characterFlavor,
+  initials,
+  isCreateSlot,
+  primaryClass,
+  primaryRole,
+  raceAbilityBlurbs,
+  stepRosterIndex,
+} from './select-helpers'
 
 function character(overrides: Partial<Character> = {}): Character {
   return {
@@ -124,5 +132,61 @@ describe('raceAbilityBlurbs', () => {
 
   it('sem raça, sem habilidades', () => {
     expect(raceAbilityBlurbs(raceDefs, character({ races: [] }), 8)).toEqual([])
+  })
+})
+
+/** ALE-98: o "+" da criação virou uma POSIÇÃO do cursor, não só um link. */
+describe('cursor do roster com o slot de criação', () => {
+  const CINCO_HEROIS = 5
+
+  it('avança de herói em herói dentro do elenco', () => {
+    expect(stepRosterIndex(0, 1, CINCO_HEROIS)).toBe(1)
+    expect(stepRosterIndex(3, -1, CINCO_HEROIS)).toBe(2)
+  })
+
+  it('do último herói, → cai no slot de criação em vez de parar', () => {
+    expect(stepRosterIndex(4, 1, CINCO_HEROIS)).toBe(5)
+    expect(isCreateSlot(5, CINCO_HEROIS)).toBe(true)
+  })
+
+  it('o slot de criação é o fim da linha — → de novo não passa dele', () => {
+    expect(stepRosterIndex(5, 1, CINCO_HEROIS)).toBe(5)
+  })
+
+  it('← do slot de criação volta pro último herói', () => {
+    const voltou = stepRosterIndex(5, -1, CINCO_HEROIS)
+
+    expect(voltou).toBe(4)
+    expect(isCreateSlot(voltou, CINCO_HEROIS)).toBe(false)
+  })
+
+  it('não anda pra antes do primeiro herói', () => {
+    expect(stepRosterIndex(0, -1, CINCO_HEROIS)).toBe(0)
+  })
+
+  // O salto de 5 em 5 (bumper) não pode pular POR CIMA do slot e sumir.
+  it('um salto grande para no slot de criação, não além', () => {
+    expect(stepRosterIndex(2, 5, CINCO_HEROIS)).toBe(5)
+  })
+
+  // Elenco vazio: a EmptyStage já convida a criar, então o cursor nasce no slot.
+  it('sem heróis, a única posição é o slot de criação', () => {
+    expect(stepRosterIndex(0, 1, 0)).toBe(0)
+    expect(isCreateSlot(0, 0)).toBe(true)
+  })
+})
+
+describe('initials', () => {
+  it('duas iniciais do nome', () => {
+    expect(initials('Thal, o Errante')).toBe('TO')
+  })
+
+  it('nome de uma palavra rende uma letra', () => {
+    expect(initials('Zumbi')).toBe('Z')
+  })
+
+  // A vaga vazia e o nome em branco caem no mesmo símbolo do card de criação.
+  it('nome vazio vira "?"', () => {
+    expect(initials('   ')).toBe('?')
   })
 })
