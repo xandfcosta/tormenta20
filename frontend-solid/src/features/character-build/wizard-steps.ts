@@ -28,6 +28,21 @@ export function stepIndex(slug: StepSlug): number {
   return WIZARD_STEPS.findIndex((s) => s.slug === slug)
 }
 
+/**
+ * The step one walk away, or null at either end of the flow. Keeps "next" and
+ * "previous" defined by the order above and nowhere else.
+ *
+ * @example stepAt('classe', -1) // 'raca'
+ */
+export function stepAt(current: StepSlug, delta: -1 | 1): StepSlug | null {
+  return WIZARD_STEPS[stepIndex(current) + delta]?.slug ?? null
+}
+
+/** Whether a string names a step — for validating a slug arriving from the URL. */
+export function isStepSlug(value: string): value is StepSlug {
+  return WIZARD_STEPS.some((s) => s.slug === value)
+}
+
 const classEntrySchema = z.object({
   className: z.string().min(1, 'Choose a class'),
   level: z.number().int().min(1).max(20),

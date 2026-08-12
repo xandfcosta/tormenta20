@@ -3,6 +3,8 @@ import {
   allStepsReady,
   type CharacterFormValues,
   furthestReachableIndex,
+  isStepSlug,
+  stepAt,
   stepReady,
   WIZARD_STEPS,
   wizardDefaults,
@@ -74,5 +76,28 @@ describe('allStepsReady', () => {
   })
   it('true for a complete build', () => {
     expect(allStepsReady(complete, {})).toBe(true)
+  })
+})
+
+describe('stepAt — andar um passo', () => {
+  it('avança e recua na ordem declarada', () => {
+    expect(stepAt('raca', 1)).toBe('classe')
+    expect(stepAt('classe', -1)).toBe('raca')
+  })
+
+  it('devolve null nas pontas (não circula)', () => {
+    expect(stepAt('raca', -1)).toBeNull()
+    expect(stepAt('resumo', 1)).toBeNull()
+  })
+})
+
+describe('isStepSlug — slug vindo da URL', () => {
+  it('aceita um passo real', () => {
+    expect(isStepSlug('pericias')).toBe(true)
+  })
+
+  it('recusa qualquer outra coisa', () => {
+    expect(isStepSlug('inventario')).toBe(false)
+    expect(isStepSlug('')).toBe(false)
   })
 })
