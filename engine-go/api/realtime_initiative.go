@@ -186,7 +186,17 @@ func materializeNpcEntry(input map[string]any) (InitiativeEntry, error) {
 	if t := stringField(input, "type"); t != "" {
 		typ = t
 	}
-	return InitiativeEntry{Label: label, Initiative: int(initiative), Type: typ}, nil
+	// PV rides along when the client seeds it (a monster dropped in from the
+	// bestiary knows its own pool). Absent stays absent: a bare NPC has no
+	// health to track, and a zeroed bar would mean something it does not.
+	entry := InitiativeEntry{Label: label, Initiative: int(initiative), Type: typ}
+	if hp, ok := intField(input, "hpCurrent"); ok {
+		entry.HpCurrent = &hp
+	}
+	if hp, ok := intField(input, "hpMax"); ok {
+		entry.HpMax = &hp
+	}
+	return entry, nil
 }
 
 func (g *realtimeGateway) materializeCharacterEntry(callerID, campaignID int64, input map[string]any) (InitiativeEntry, error) {

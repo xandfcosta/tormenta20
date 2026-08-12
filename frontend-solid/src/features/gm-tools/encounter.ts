@@ -74,20 +74,36 @@ export function encounterDifficulty(gap: number): EncounterDifficulty {
   return { label: 'Mortal', tone: 'deadly' }
 }
 
+/** One creature as the tracker will hold it — named apart and carrying its own
+ *  PV, which is the whole reason the copies are numbered. */
+export type EncounterInitiativeEntry = {
+  label: string
+  hpCurrent: number
+  hpMax: number
+}
+
 /**
  * The encounter as tracker entries, one per creature — four goblins become
- * "Goblin 1".."Goblin 4", because the GM tracks each one's PV separately.
- * Capped at what the server accepts; the caller reports what was left out.
+ * "Goblin 1".."Goblin 4", each with its own PV pool, because the GM damages
+ * them one at a time.
+ *
+ * Capped at what the server accepts, counting what is ALREADY in the tracker;
+ * the caller reports what was left out instead of letting the surplus die as a
+ * silent socket error halfway through the loop.
+ *
+ * @example encounterInitiativeEntries(groups, 48) // { entries: [...2], dropped: 3 }
  */
-export function encounterInitiativeLabels(
+export function encounterInitiativeEntries(
   groups: readonly EnrichedGroup[],
   alreadyInTracker = 0,
-): { labels: string[]; dropped: number } {
+): { entries: EncounterInitiativeEntry[]; dropped: number } {
   const all = groups.flatMap((group) =>
-    Array.from({ length: group.quantity }, (_, i) =>
-      group.quantity === 1 ? group.monster.name : `${group.monster.name} ${i + 1}`,
-    ),
+    Array.from({ length: group.quantity }, (_, i) => ({
+      label: group.quantity === 1 ? group.monster.name : `${group.monster.name} ${i + 1}`,
+      hpCurrent: group.monster.hp,
+      hpMax: group.monster.hp,
+    })),
   )
   const room = Math.max(0, INITIATIVE_MAX_ENTRIES - alreadyInTracker)
-  return { labels: all.slice(0, room), dropped: Math.max(0, all.length - room) }
+  return { entries: all.slice(0, room), dropped: Math.max(0, all.length - room) }
 }

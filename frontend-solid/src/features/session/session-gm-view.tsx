@@ -6,6 +6,7 @@ import { InitiativeCard } from '@/features/session-tracker/initiative-card'
 import { NotesCard } from '@/features/session-tracker/notes-card'
 import { PartyRoster } from '@/features/session-tracker/party-roster'
 import { AddMonsterPanel } from './add-monster-panel'
+import { CatalogPanel } from './catalog-panel'
 import { EncounterPanel } from './encounter-panel'
 import { MatchPeek, MatchRail } from './match-rail'
 
@@ -33,6 +34,7 @@ export function SessionGmView(props: {
         <div class="space-y-2">
           <AddMonsterPanel rt={props.rt} />
           <EncounterPanel rt={props.rt} />
+          <CatalogPanel rt={props.rt} />
         </div>
         <HeaderCard campaignId={props.campaignId} session={props.session} isGm />
         <NotesCard campaignId={props.campaignId} session={props.session} />

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/solid-query'
 import { Plus, Swords } from 'lucide-solid'
 import { Show, createMemo, createSignal } from 'solid-js'
 import { bestiaryCatalogQueryOptions } from '@/entities/catalog/queries'
-import { enrichEncounter, encounterInitiativeLabels } from '@/features/gm-tools/encounter'
+import { enrichEncounter, encounterInitiativeEntries } from '@/features/gm-tools/encounter'
 import { EncounterComposer } from '@/features/gm-tools/encounter-composer'
 import { createEncounterDraft } from '@/features/gm-tools/encounter-draft'
 import { MonsterPickerList } from '@/features/gm-tools/monster-picker-list'
@@ -31,15 +31,15 @@ export function EncounterPanel(props: { rt: SessionRealtime }) {
   const groups = createMemo(() => enrichEncounter(draft.entries(), bestiary.data ?? []))
 
   const send = () => {
-    const { labels, dropped } = encounterInitiativeLabels(
+    const { entries, dropped } = encounterInitiativeEntries(
       groups(),
       props.rt.state().initiative.length,
     )
-    for (const label of labels) {
-      props.rt.addEntry({ label, initiative: rollD20(), type: 'npc' })
+    for (const entry of entries) {
+      props.rt.addEntry({ ...entry, initiative: rollD20(), type: 'npc' })
     }
     draft.clear()
-    toast(`${labels.length} criaturas entraram na iniciativa`, {
+    toast(`${entries.length} criaturas entraram na iniciativa`, {
       description:
         dropped > 0
           ? `${dropped} ficaram de fora — o rastreador aceita 50 entradas.`
