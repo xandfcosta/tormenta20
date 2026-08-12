@@ -8,7 +8,7 @@ import { BagagemPanel } from '@/features/character-build/bagagem-panel'
 import { useForge } from '@/features/character-build/forge-context'
 import { appliedRaceDeltas } from '@/features/character-build/grant-helpers'
 import { OrigemItemsSection } from '@/features/character-build/origem-items-section'
-import { rollDice } from '@/features/character-build/roll-dice'
+import { rollDice } from '@/shared/lib/dice'
 import { StartingShop } from '@/features/character-build/starting-shop'
 import {
   bagagemGroups,

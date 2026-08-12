@@ -7,13 +7,9 @@ import type { Character } from '@/shared/api/api'
 import type { SessionRealtime } from '@/shared/realtime/realtime'
 import { useConditionals } from '@/shared/stores/conditionals-context'
 import { Button } from '@/shared/ui/button'
+import { rollD20 } from '@/shared/lib/dice'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { toast } from '@/shared/ui/sonner'
-
-/** Raw d20 (1–20). */
-function rollD20(): number {
-  return Math.floor(Math.random() * 20) + 1
-}
 
 /**
  * The player rolls their OWN initiative: d20 + the Iniciativa perícia total

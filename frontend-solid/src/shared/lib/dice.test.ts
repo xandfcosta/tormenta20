@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseDiceNotation, rollDice } from './roll-dice'
+import { parseDiceNotation, rollDice } from './dice'
 
 describe('rollDice', () => {
   it('stays inside the possible range of the roll', () => {

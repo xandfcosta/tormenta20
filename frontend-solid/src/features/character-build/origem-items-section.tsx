@@ -3,7 +3,7 @@ import { For, type JSX, Show, Switch, Match } from 'solid-js'
 import { origemItemGrantsByName } from '@/shared/lib/racas-cache'
 import { cn } from '@/shared/lib/utils'
 import { Select } from '@/shared/ui/select'
-import { parseDiceNotation, rollDice } from './roll-dice'
+import { parseDiceNotation, rollDice } from '@/shared/lib/dice'
 import { shopCatalog, weaponOptions } from './starting-equipment'
 
 /** Picked value per grant, keyed by the grant's verbatim label. */

@@ -5,6 +5,8 @@ import { HeaderCard } from '@/features/session-tracker/header-card'
 import { InitiativeCard } from '@/features/session-tracker/initiative-card'
 import { NotesCard } from '@/features/session-tracker/notes-card'
 import { PartyRoster } from '@/features/session-tracker/party-roster'
+import { AddMonsterPanel } from './add-monster-panel'
+import { EncounterPanel } from './encounter-panel'
 import { MatchPeek, MatchRail } from './match-rail'
 
 /**
@@ -27,6 +29,11 @@ export function SessionGmView(props: {
         <PartyRoster campaignId={props.campaignId} />
       </div>
       <MatchRail title="Controles da sessão" peek={<MatchPeek rt={props.rt} />}>
+        {/* The GM's reach into the Mesa without leaving the match (ALE-75). */}
+        <div class="space-y-2">
+          <AddMonsterPanel rt={props.rt} />
+          <EncounterPanel rt={props.rt} />
+        </div>
         <HeaderCard campaignId={props.campaignId} session={props.session} isGm />
         <NotesCard campaignId={props.campaignId} session={props.session} />
         <div class="flex justify-end">
