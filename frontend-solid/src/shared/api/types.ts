@@ -68,6 +68,65 @@ export type CreateItemInput = {
   material?: string
 }
 
+/** Deformidade (Lefou p23): ≤2 perícias com +2, uma trocável por um poder. */
+export type DeformidadeChoiceInput = {
+  pericias: string[]
+  tormentaPower?: string
+}
+
+/** Race attribute picks persisted so the sheet derives the racial mod ONCE,
+ *  from the base attributes — baking it into the value would double-count. */
+export type RaceAttributeChoicesInput = {
+  floatingPicks?: string[]
+  ascendencia?: string
+  deformidade?: DeformidadeChoiceInput
+}
+
+/**
+ * POST /characters — the whole character in one body. Verified field by field
+ * against `api/character_create.go`: the handler seeds every perícia, derives
+ * the class proficiencies itself, and re-heals PV/PM from the engine after the
+ * insert, so the pools here are a starting point and not the last word.
+ */
+export type CreateCharacterInput = {
+  name: string
+  races: string[]
+  origin: string
+  classes: { className: string; level: number }[]
+  god?: string
+  godPower?: string
+  /** Dinheiro inicial em T$ (Tabela 3-1 p140 / 4d6). */
+  tibar?: number
+  /** Itens iniciais (kit p140 + itens da origem + compras). */
+  items?: {
+    catalogId?: string
+    name: string
+    quantity?: number
+    slots?: number
+    equipped?: string
+  }[]
+  hpMax: number
+  hpCurrent: number
+  mpMax: number
+  mpCurrent: number
+  strength: number
+  dexterity: number
+  constitution: number
+  intelligence: number
+  wisdom: number
+  charisma: number
+  size: string
+  displacement: number
+  classPowers?: string[]
+  originChoices?: string[]
+  classChoices?: ClassChoices
+  trainedExpertises?: string[]
+  powerChoices?: Record<string, string[]>
+  raceAttributeChoices?: RaceAttributeChoicesInput
+  /** Opted-in secondary races (GM-negotiated); their mods apply too. */
+  secondaryRaceChoices?: ({ race: string } & RaceAttributeChoicesInput)[]
+}
+
 export type UpdateItemInput = {
   name?: string
   quantity?: number

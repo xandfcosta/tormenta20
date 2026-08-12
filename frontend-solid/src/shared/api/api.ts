@@ -48,6 +48,7 @@ import type {
   EffectsClearedResult,
   CreateCampaignInput,
   CreateExpertiseInput,
+  CreateCharacterInput,
   CreateItemInput,
   CreateSessionInput,
   ProficienciesResult,
@@ -148,6 +149,9 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
       get: (id: number) => request<Character>(`/characters/${id}`),
       /** The creation wizard's pick lists (races, classes, origins…). Static. */
       options: () => request<CharacterOptions>('/characters/options'),
+      /** Forges the character — the Forja's one write. */
+      create: (input: CreateCharacterInput) =>
+        request<Character>('/characters', json(input)),
       /** The server-computed sheet (defense, attribute totals, perícias…). */
       getSheet: (id: number) => request<ComputedSheetV2>(`/characters/${id}/sheet`),
       /** Trains/untrains a perícia or rekeys it to another attribute. */

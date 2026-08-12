@@ -1,11 +1,13 @@
-import { useQuery } from '@tanstack/solid-query'
+import { useQuery, useQueryClient } from '@tanstack/solid-query'
 import { Outlet, useNavigate } from '@tanstack/solid-router'
 import { RotateCcw } from 'lucide-solid'
 import { Show } from 'solid-js'
 import { characterOptionsQueryOptions } from '@/entities/character/queries'
+import { api } from '@/shared/api/api'
 import { ForgeBeads } from '@/features/character-build/forge-beads'
 import { ForgeFooter } from '@/features/character-build/forge-footer'
 import { ForgeProvider } from '@/features/character-build/forge-context'
+import { createForgeSubmit } from '@/features/character-build/forge-submit'
 import { createCurrentStep } from '@/features/character-build/current-step'
 import {
   type StepSlug,
@@ -37,6 +39,18 @@ export function ForgePage() {
   // `create*`: the draft owns state between calls, so it is born ONCE here in
   // the component body — not per event (gotcha #17 of the port).
   const draft = createCharacterDraftStore()
+  const queryClient = useQueryClient()
+  // Same reason as the draft: it holds the in-flight guard, so it is born once
+  // here and not per click (gotcha #17).
+  const forge = createForgeSubmit({
+    draft,
+    queryClient,
+    createCharacter: api.characters.create,
+    onCreated: async (id) => {
+      sfx('open')
+      await navigate({ to: '/characters/$id', params: { id: String(id) } })
+    },
+  })
 
   const current = createCurrentStep()
 
@@ -97,11 +111,10 @@ export function ForgePage() {
               <ForgeFooter
                 draft={draft}
                 current={current()}
-                submitting={false}
+                submitting={forge.isPending}
+                error={forge.error}
                 onStep={step}
-                onCreate={() => {
-                  // Chega na fatia do Resumo (ALE-94).
-                }}
+                onCreate={() => forge.create()}
               />
             </div>
           </ForgeProvider>

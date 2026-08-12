@@ -11,6 +11,9 @@ export type ForgeFooterProps = {
   draft: CharacterDraftStore
   current: StepSlug
   submitting: boolean
+  /** Why the last forge attempt failed, shown in the band itself — a toast
+   *  would be gone before the player looked away from the button. */
+  error?: string | null
   /** Walk the wizard: −1 back, +1 forward. */
   onStep: (delta: -1 | 1) => void
   onCreate: () => void
@@ -53,7 +56,18 @@ export function ForgeFooter(props: ForgeFooterProps) {
   const canCreate = () => allStepsReady(values(), raceChoices())
 
   return (
-    <div class="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-grimorio-iron bg-card/80 px-3 py-2 backdrop-blur sm:px-5">
+    <div class="shrink-0 border-t border-grimorio-iron bg-card/80 backdrop-blur">
+      <Show when={props.error}>
+        {(message) => (
+          <p
+            role="alert"
+            class="border-b border-grimorio-iron px-3 py-1.5 text-xs text-[color:var(--hp-hurt)] sm:px-5"
+          >
+            {message()}
+          </p>
+        )}
+      </Show>
+      <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-3 py-2 sm:px-5">
       <div class="flex min-w-0 flex-1 items-baseline gap-2">
         <p class="truncate font-heading text-sm uppercase tracking-[0.12em] text-foreground">
           {name()}
@@ -97,6 +111,7 @@ export function ForgeFooter(props: ForgeFooterProps) {
             {props.submitting ? 'Forjando…' : 'Criar personagem'}
           </Button>
         </Show>
+        </div>
       </div>
     </div>
   )
