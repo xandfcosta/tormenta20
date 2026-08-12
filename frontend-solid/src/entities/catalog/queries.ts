@@ -19,6 +19,15 @@ export const itemCatalogQueryOptions = queryOptions({
   staleTime: Number.POSITIVE_INFINITY,
 })
 
+/** The bestiary. Unlike the abilities cluster it is NOT primed into a module
+ *  cache: only the Mesa do Mestre and the in-session monster add read it, and
+ *  they can wait for a query like any other screen. */
+export const bestiaryCatalogQueryOptions = queryOptions({
+  queryKey: ['catalog', 'bestiary'] as const,
+  queryFn: api.catalog.bestiary,
+  staleTime: Number.POSITIVE_INFINITY,
+})
+
 // Abilities cluster (B.3) — each fetched once, cached forever, primed into the
 // abilities-cache by `ensureCatalogs` before the sheet/build/wizard renders.
 export const raceDefsCatalogQueryOptions = queryOptions({

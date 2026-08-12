@@ -17,6 +17,7 @@ import type {
   GeneralPower,
   GrantedPower,
   GrantedPowerOption,
+  Monster,
   Origem,
   OriginDefinition,
   Raca,
@@ -241,6 +242,9 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
       // (project_front_decouple_catalog).
       spells: () => request<Record<string, CatalogSpell>>('/catalog/spells'),
       items: () => request<CatalogItem[]>('/catalog/items'),
+      /** The bestiary the Mesa do Mestre and the in-session monster add draw
+       *  from — 80 creatures, served rather than bundled like every catalog. */
+      bestiary: () => request<Monster[]>('/catalog/bestiary'),
       /** RaceDefinition catalog (innate abilities) — DISTINCT from `races`. */
       raceDefs: () => request<RaceDefinition[]>('/catalog/race-defs'),
       origins: () => request<OriginDefinition[]>('/catalog/origins'),
