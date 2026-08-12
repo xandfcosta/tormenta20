@@ -5,7 +5,7 @@ import { AbilityLine } from '@/shared/ui/ability-line'
 import { Badge } from '@/shared/ui/badge'
 import { cn } from '@/shared/lib/utils'
 import type { GrantLine } from './grant-helpers'
-import { signed } from './grant-helpers'
+import { classGrant, signed } from './grant-helpers'
 
 /**
  * Inline "what this pick grants" box, rendered live under a picker in the
@@ -89,5 +89,34 @@ export function DeltaBadges(props: { deltas: Partial<Record<AttributeKey, number
         </For>
       </div>
     </Show>
+  )
+}
+
+export type ClassGrantLinesProps = { className: string; level: number }
+
+/**
+ * What a class is worth through a level: its vitals line and the powers it
+ * grants automatically. Rendered inside the chosen-class panel, next to that
+ * class's own level control, so raising the level visibly buys something.
+ */
+export function ClassGrantLines(props: ClassGrantLinesProps) {
+  const grant = () => classGrant(props.className, props.level)
+
+  return (
+    <>
+      <Show when={grant().vitals}>
+        {(vitals) => (
+          <p class="font-mono text-[11px] text-muted-foreground">
+            PV {vitals().pvInicial} inicial (+{vitals().pvPerLevel}/nível) · PM +
+            {vitals().mpPerLevel}/nível
+          </p>
+        )}
+      </Show>
+      <AbilityDisclosure
+        label="habilidades automáticas"
+        singular="habilidade automática"
+        lines={grant().powers}
+      />
+    </>
   )
 }

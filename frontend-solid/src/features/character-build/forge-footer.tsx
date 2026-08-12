@@ -2,6 +2,7 @@ import { Show } from 'solid-js'
 import { Button } from '@/shared/ui/button'
 import { cn } from '@/shared/lib/utils'
 import type { CharacterDraftStore } from '@/shared/stores/character-draft-store'
+import { totalClassLevel } from './class-entries'
 import { deriveDraftDefense } from './draft-defense'
 import { deriveDraftVitals } from './draft-vitals'
 import { type StepSlug, allStepsReady, stepIndex, stepReady } from './wizard-steps'
@@ -28,13 +29,19 @@ export function ForgeFooter(props: ForgeFooterProps) {
   const raceChoices = () => props.draft.raceChoices
 
   const name = () => values().name.trim() || 'Novo personagem'
+  /**
+   * Multiclasse shows every class and the TOTAL level: PV/PM already count all
+   * of them, and a line reading "Guerreiro Nv 1" beside PV 27 would be the
+   * preview contradicting itself.
+   */
   const lineage = () => {
-    const primary = values().classes[0]
-    const parts = [
-      values().races.join(' · '),
-      primary?.className ? `${primary.className} Nv ${primary.level}` : '',
-    ].filter(Boolean)
-    return parts.join(' · ')
+    const classes = values().classes.filter((entry) => entry.className)
+    const level = totalClassLevel(classes)
+    const classLine =
+      classes.length === 0
+        ? ''
+        : `${classes.map((entry) => entry.className).join(' · ')} Nv ${level}`
+    return [values().races.join(' · '), classLine].filter(Boolean).join(' · ')
   }
 
   const defense = () => deriveDraftDefense(values(), raceChoices())

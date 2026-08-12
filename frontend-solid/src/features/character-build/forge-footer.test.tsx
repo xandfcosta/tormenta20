@@ -74,6 +74,17 @@ describe('ForgeFooter', () => {
     expect(statValue('Pontos de vida')).toBeGreaterThan(before)
   })
 
+  it('com multiclasse, mostra as duas classes e o nível TOTAL', () => {
+    renderFooter((draft) =>
+      draft.setValue('classes', [
+        { className: 'Guerreiro', level: 3 },
+        { className: 'Ladino', level: 2 },
+      ]),
+    )
+
+    expect(screen.getByText(/Guerreiro · Ladino Nv 5/)).toBeInTheDocument()
+  })
+
   it('Próximo fica trancado enquanto o passo não está pronto', async () => {
     const { onStep } = renderFooter()
 
