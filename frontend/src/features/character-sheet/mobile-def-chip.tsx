@@ -1,33 +1,34 @@
-import { Shield } from 'lucide-react'
+import { Shield } from 'lucide-solid'
+import { computedSheetFor } from '@/entities/character/computed-sheet'
 import type { Character } from '@/shared/api/api'
 import { cn } from '@/shared/lib/utils'
-import { useComputedSheet } from '@/entities/character/computed-sheet'
 
 /**
- * Compact DEF chip for viewports where the stats cluster is hidden (<lg):
- * "does 17 hit?" must be answerable without a tab switch (audit P1). Read-only
- * — the full breakdown lives in the desktop Defesa box / Vitais tab.
+ * Compact DEF chip for the viewports where the stats cluster is hidden (<md):
+ * "does a 17 hit me?" has to be answerable without switching blocks. Read-only
+ * — the full breakdown lives in the desktop Defesa box.
  */
-export function MobileDefChip({
-  character,
-  className,
-}: {
+export function MobileDefChip(props: {
   character: Character
-  className?: string
+  activeConditionals: ReadonlySet<string>
+  class?: string
 }) {
-  const defense = useComputedSheet(character).defense.total
+  const defense = () => computedSheetFor(props.character, props.activeConditionals).defense.total
   return (
+    // role="img": a bare span is `generic`, which does not take an accessible
+    // name — the shield glyph plus the number only read as "Defesa 17" here.
     <span
-      className={cn(
-        'flex items-center gap-1 rounded-md border border-red-800/50 px-1.5 py-0.5',
-        'font-mono text-sm font-bold text-red-800 dark:border-red-500/40 dark:text-red-200',
-        className,
+      role="img"
+      class={cn(
+        'flex items-center gap-1 rounded-md border border-destructive/50 px-1.5 py-0.5',
+        'font-mono text-sm font-bold text-destructive',
+        props.class,
       )}
       title="Defesa"
-      aria-label={`Defesa ${defense}`}
+      aria-label={`Defesa ${defense()}`}
     >
-      <Shield className="size-3.5" />
-      {defense}
+      <Shield aria-hidden="true" class="size-3.5" />
+      {defense()}
     </span>
   )
 }

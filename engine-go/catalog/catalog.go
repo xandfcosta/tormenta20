@@ -16,8 +16,11 @@ var files embed.FS
 
 // Spell is the subset of a SPELL_CATALOG entry the API's cast/apply paths read.
 type Spell struct {
-	Circle   int       `json:"circle"`
-	School   string    `json:"school"`
+	Circle int    `json:"circle"`
+	School string `json:"school"`
+	// Class lists the spell appears on — the per-spell PM limit is the level in
+	// the class that PROVIDES the ability (p224), so the gate needs to know.
+	Classes  []string  `json:"classes"`
 	Augments []Augment `json:"augments"`
 	Buff     *Buff     `json:"buff"`
 }

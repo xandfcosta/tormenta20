@@ -7,74 +7,79 @@ import {
   Sword,
   Utensils,
   Wand2,
-} from 'lucide-react'
-import { getCatalogItem } from '@/shared/lib/catalog-cache'
+} from 'lucide-solid'
+import { type Component, Show } from 'solid-js'
+import { Dynamic } from 'solid-js/web'
 import type { CharacterItem } from '@/shared/api/api'
-import { dimText, hoverRow } from '@/shared/lib/sheet-theme'
-import { cn } from '@/shared/lib/utils'
+import { getCatalogItem } from '@/shared/lib/catalog-cache'
 import { itemOverlayNames } from './item-describe'
 
-/** Category → tile glyph. Custom items (no catalog) read as generic gear. */
-function TileGlyph({ item, className }: { item: CharacterItem; className?: string }) {
-  const catalog = item.catalogId ? getCatalogItem(item.catalogId) : undefined
-  const category = catalog?.category
-  if (!category) return <Package className={className} aria-hidden />
-  if (category.startsWith('weapon-')) return <Sword className={className} aria-hidden />
-  if (category.startsWith('armor-') || category === 'shield')
-    return <Shield className={className} aria-hidden />
-  if (category === 'apparel')
-    return catalog.equip === 'wielded' ? (
-      <Wand2 className={className} aria-hidden />
-    ) : (
-      <Shirt className={className} aria-hidden />
-    )
-  if (category === 'consumable') return <FlaskConical className={className} aria-hidden />
-  if (category === 'meal') return <Utensils className={className} aria-hidden />
-  return <Package className={className} aria-hidden />
-}
+type Glyph = Component<{ class?: string; 'aria-hidden'?: boolean | 'true' | 'false' }>
 
 /**
- * One Mochila tile — the game-bag cell for a stowed item: category glyph,
- * name, ×qty badge and overlay markers. The whole tile is the tap target
- * that opens the item's action sheet.
+ * Category → tile glyph. Custom items (no catalog) read as generic gear.
+ * Returns the component rather than an element so the caller renders it with
+ * `<Dynamic>`: a `Show` chain would keep the first glyph it painted.
+ *
+ * @example glyphFor(espadaLongaRow) === Sword
  */
-export function BagTile({
-  item,
-  proficient,
-  onOpen,
-}: {
+export function glyphFor(item: CharacterItem): Glyph {
+  const catalog = item.catalogId ? getCatalogItem(item.catalogId) : undefined
+  const category = catalog?.category
+  if (!category) return Package
+  if (category.startsWith('weapon-')) return Sword
+  if (category.startsWith('armor-') || category === 'shield') return Shield
+  if (category === 'apparel') return catalog.equip === 'wielded' ? Wand2 : Shirt
+  if (category === 'consumable') return FlaskConical
+  if (category === 'meal') return Utensils
+  return Package
+}
+
+export type BagTileProps = {
   item: CharacterItem
   proficient: boolean
   onOpen: () => void
-}) {
-  const overlays = itemOverlayNames(item)
+}
+
+/**
+ * One Mochila cell for a stowed item: category glyph, name, ×qty badge and
+ * overlay markers. The whole tile is the tap target that opens the item's
+ * action sheet.
+ */
+export function BagTile(props: BagTileProps) {
+  const overlays = () => itemOverlayNames(props.item)
+
   return (
     <button
       type="button"
-      onClick={onOpen}
-      aria-label={`Abrir ${item.name}`}
-      className={cn(
-        'relative flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-lg border border-border bg-muted/40 p-2 text-center transition-colors',
-        hoverRow,
-      )}
+      onClick={() => props.onOpen()}
+      aria-label={`Abrir ${props.item.name}`}
+      class="relative flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)] p-2 text-center transition-colors hover:border-grimorio-gold/50"
     >
-      {item.quantity > 1 && (
-        <span className="absolute right-1 top-1 rounded-full bg-primary/15 px-1.5 font-mono text-[10px] font-semibold text-primary">
-          ×{item.quantity}
+      <Show when={props.item.quantity > 1}>
+        <span class="absolute top-1 right-1 rounded-full bg-accent px-1.5 font-mono text-[10px] font-semibold text-grimorio-gold">
+          ×{props.item.quantity}
         </span>
-      )}
-      {!proficient && item.equipped !== null && (
-        <AlertTriangle className="absolute left-1 top-1 size-3 text-red-700 dark:text-red-400" />
-      )}
-      <TileGlyph item={item} className={cn('size-5', dimText)} />
-      <span className="line-clamp-2 w-full text-[11px] leading-tight text-foreground">
-        {item.name}
+      </Show>
+      <Show when={!props.proficient && props.item.equipped !== null}>
+        <AlertTriangle
+          aria-label={`${props.item.name} sem proficiência`}
+          class="absolute top-1 left-1 size-3 text-destructive"
+        />
+      </Show>
+      <Dynamic
+        component={glyphFor(props.item)}
+        aria-hidden="true"
+        class="size-5 text-muted-foreground"
+      />
+      <span class="line-clamp-2 w-full text-[11px] leading-tight text-foreground">
+        {props.item.name}
       </span>
-      {overlays.length > 0 && (
-        <span className={cn('line-clamp-1 w-full text-[9px]', dimText)}>
-          {overlays.join(' · ')}
+      <Show when={overlays().length > 0}>
+        <span class="line-clamp-1 w-full text-[9px] text-muted-foreground">
+          {overlays().join(' · ')}
         </span>
-      )}
+      </Show>
     </button>
   )
 }

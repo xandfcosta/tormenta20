@@ -1,110 +1,93 @@
-import { type ReactNode, useState } from 'react'
-import { ChevronUp, Swords } from 'lucide-react'
+import { ChevronUp, Swords } from 'lucide-solid'
+import { type JSX, Show, createSignal } from 'solid-js'
+import { createMediaQuery } from '@/shared/lib/media-query'
+import type { SessionRealtime } from '@/shared/realtime/realtime'
 import { Button } from '@/shared/ui/button'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/shared/ui/sheet'
-import { useMediaQuery } from '@/shared/lib/use-media-query'
-import type { useSessionSocket } from '@/shared/realtime/realtime'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 
 /**
- * Session side rail that adapts to viewport. On desktop (`lg+`) it's an
- * aside column beside the main surface. On phones the main surface (tracker
- * or sheet) owns the screen and the rail collapses into a bottom sheet: a
- * fixed bar shows a live `peek` (current turn / round) and drags up into the
- * full controls. Rendered once — a media query, not duplicated DOM — so the
+ * The session's side rail, which changes shape with the viewport. On desktop
+ * it is an aside beside the main surface; on a phone the main surface (tracker
+ * or sheet) owns the screen and the rail collapses into a fixed bottom bar
+ * showing a live peek, with the full controls one tap away.
+ *
+ * Rendered ONCE either way — a media query, not duplicated DOM — so the
  * interactive cards inside keep a single mount.
  */
-export function MatchRail({
-  title,
-  peek,
-  children,
-}: {
+export function MatchRail(props: {
   title: string
-  /** Compact live status shown in the collapsed phone bar. */
-  peek?: ReactNode
-  children: ReactNode
+  /** Compact live status for the collapsed phone bar. */
+  peek?: JSX.Element
+  children: JSX.Element
 }) {
-  const isDesktop = useMediaQuery('(min-width: 1024px)')
-
-  if (isDesktop)
-    return (
-      <aside className="max-h-full space-y-4 overflow-y-auto">{children}</aside>
-    )
+  const isDesktop = createMediaQuery('(min-width: 1024px)')
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-border/60 bg-card/90 px-3 py-2 backdrop-blur">
-      <div className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
-        {peek}
-      </div>
-      <MatchControls title={title}>{children}</MatchControls>
-    </div>
+    <Show
+      when={isDesktop()}
+      fallback={
+        <div class="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-grimorio-iron bg-[var(--grimorio-panel)] px-3 py-2">
+          <div class="min-w-0 flex-1 truncate text-sm text-muted-foreground">{props.peek}</div>
+          <MatchControls title={props.title}>{props.children}</MatchControls>
+        </div>
+      }
+    >
+      <aside class="max-h-full space-y-4 overflow-y-auto">{props.children}</aside>
+    </Show>
   )
 }
 
 /**
- * The rail's collapsible controls, decoupled from the fixed bar: a trigger
- * that opens the session controls in a bottom sheet. Used inside MatchRail's
- * phone bar and, in the player view, merged into the character sheet's own
- * mobile bottom bar so a phone shows a single bar, not two stacked.
+ * The rail's controls behind a trigger, separate from the fixed bar: the
+ * player view folds this into the sheet's own bottom bar so a phone shows one
+ * bar, not two stacked.
  */
-export function MatchControls({
-  title,
-  trigger,
-  children,
-}: {
+export function MatchControls(props: {
   title: string
-  /** Custom trigger; defaults to an outline "chevron + title" button. */
-  trigger?: ReactNode
-  children: ReactNode
+  /** Custom trigger; defaults to a chevron + title button. */
+  trigger?: (open: () => void) => JSX.Element
+  children: JSX.Element
 }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = createSignal(false)
+
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        {trigger ?? (
-          <Button size="sm" variant="outline" className="gap-1.5">
-            <ChevronUp className="size-4" />
-            {title}
-          </Button>
-        )}
-      </SheetTrigger>
-      <SheetContent
-        side="bottom"
-        className="flex max-h-[85vh] flex-col gap-0 rounded-t-xl"
-      >
-        <SheetHeader>
-          <SheetTitle className="font-display tracking-wide">{title}</SheetTitle>
-        </SheetHeader>
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
-          {children}
-        </div>
-      </SheetContent>
-    </Sheet>
+    <>
+      {props.trigger?.(() => setOpen(true)) ?? (
+        <Button size="sm" variant="outline" class="gap-1.5" onClick={() => setOpen(true)}>
+          <ChevronUp aria-hidden="true" class="size-4" />
+          {props.title}
+        </Button>
+      )}
+      <Dialog open={open()} onOpenChange={setOpen}>
+        <DialogContent class="flex max-h-[85vh] w-[calc(100vw-1.5rem)] max-w-lg flex-col gap-0 sm:w-full">
+          <DialogHeader>
+            <DialogTitle class="font-heading tracking-wide">{props.title}</DialogTitle>
+          </DialogHeader>
+          <div class="min-h-0 flex-1 space-y-4 overflow-y-auto p-1">{props.children}</div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 
-/** Live one-liner for the collapsed phone bar: round + who's up. */
-export function MatchPeek({
-  rt,
-}: {
-  rt: ReturnType<typeof useSessionSocket>
-}) {
-  const active =
-    rt.state.turnIndex >= 0 ? rt.state.initiative[rt.state.turnIndex] : undefined
+/** One live line for the collapsed phone bar: round + who is up. */
+export function MatchPeek(props: { rt: SessionRealtime }) {
+  const active = () => {
+    const state = props.rt.state()
+    return state.turnIndex >= 0 ? state.initiative[state.turnIndex] : undefined
+  }
+
   return (
-    <span className="flex items-center gap-1.5">
-      <span className="font-hud tabular-nums">Rodada {rt.state.round}</span>
-      {active && (
-        <>
-          <Swords className="size-3.5 text-[color:var(--primary)]" />
-          <span className="truncate">{active.label}</span>
-        </>
-      )}
+    <span class="flex items-center gap-1.5">
+      <span class="font-mono tabular-nums">Rodada {props.rt.state().round}</span>
+      <Show when={active()}>
+        {(entry) => (
+          <>
+            <Swords aria-hidden="true" class="size-3.5 text-[color:var(--primary)]" />
+            <span class="truncate">{entry().label}</span>
+          </>
+        )}
+      </Show>
     </span>
   )
 }

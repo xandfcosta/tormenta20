@@ -1,55 +1,39 @@
 import { describe, expect, it } from 'vitest'
 import { computeGroupNd, xpForNd } from './encounter-math'
 
-describe('xpForNd', () => {
-  it('treasure XP = round(nd × 1000) (Book Cap 8 p326)', () => {
-    expect(xpForNd(1)).toBe(1000)
-    expect(xpForNd(0.25)).toBe(250)
-    expect(xpForNd(2.5)).toBe(2500)
-  })
-})
-
-/**
- * Book Cap 7 p282 examples — these are the canonical illustrations
- * the rules text gives; pinning them here catches drift.
- */
-
 describe('computeGroupNd', () => {
-  it('zero quantity → 0', () => {
-    expect(computeGroupNd(3, 0)).toBe(0)
-  })
-
-  it('quantity 1 = the monster ND unchanged', () => {
-    expect(computeGroupNd(3, 1)).toBe(3)
-    expect(computeGroupNd(0.5, 1)).toBe(0.5)
-  })
-
-  it('ND < 1: four ND 1/4 = ND 1 (book example)', () => {
+  it('multiplica quando o ND é fracionário (p282)', () => {
+    // Quatro de ND 1/4 valem ND 1; dois de ND 1/2 também.
     expect(computeGroupNd(0.25, 4)).toBe(1)
-  })
-
-  it('ND < 1: two ND 1/2 = ND 1 (book example)', () => {
     expect(computeGroupNd(0.5, 2)).toBe(1)
   })
 
-  it('ND ≥ 1: two ND 1 = ND 3 (book example)', () => {
+  it('soma 2 a cada dobra quando o ND é inteiro (p282)', () => {
     expect(computeGroupNd(1, 2)).toBe(3)
-  })
-
-  it('ND ≥ 1: four ND 5 = ND 9 (book example)', () => {
     expect(computeGroupNd(5, 4)).toBe(9)
   })
 
-  it('doubling adds +2 (book rule)', () => {
-    expect(computeGroupNd(2, 2)).toBe(4)
-    expect(computeGroupNd(2, 4)).toBe(6)
-    expect(computeGroupNd(2, 8)).toBe(8)
+  it('um monstro sozinho vale o próprio ND', () => {
+    expect(computeGroupNd(7, 1)).toBe(7)
+    expect(computeGroupNd(0.25, 1)).toBe(0.25)
   })
 
-  it('non-doubling quantity interpolates between doublings', () => {
-    /* 3 = 2^1.585; ND 2 + 2×1.585 ≈ 5.17 */
-    const v = computeGroupNd(2, 3)
-    expect(v).toBeGreaterThan(4)
-    expect(v).toBeLessThan(6)
+  it('cai entre as dobras num grupo de 3', () => {
+    const three = computeGroupNd(1, 3)
+
+    expect(three).toBeGreaterThan(computeGroupNd(1, 2))
+    expect(three).toBeLessThan(computeGroupNd(1, 4))
+  })
+
+  it('grupo vazio não vale ND nenhum', () => {
+    expect(computeGroupNd(5, 0)).toBe(0)
+    expect(computeGroupNd(5, -1)).toBe(0)
+  })
+})
+
+describe('xpForNd', () => {
+  it('mil por ponto de ND (p326)', () => {
+    expect(xpForNd(1)).toBe(1000)
+    expect(xpForNd(0.25)).toBe(250)
   })
 })

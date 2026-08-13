@@ -30,8 +30,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
 
-      # The frontend build's `prebuild` compiles engine-go → WASM (needs Go).
-      # No external deps ⇒ no go.sum ⇒ nothing to cache.
+      # The frontend's `prebuild` compiles engine-go → WASM, so the Go toolchain
+      # is needed even for the JS build.
       - uses: actions/setup-go@v5
         with:
           go-version-file: engine-go/go.mod
@@ -39,9 +39,6 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Generate Prisma client
-        run: pnpm prisma:generate
 
       - name: Biome lint (with fix)
         run: pnpm exec biome lint --write .

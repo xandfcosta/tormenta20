@@ -31,7 +31,9 @@ test.describe('Sessão ao vivo', () => {
     await page.goto('/campaigns/1/sessions/4')
     await expect(page.getByRole('heading', { name: 'Iniciativa' })).toBeVisible()
 
-    await page.getByRole('button', { name: 'Sair da sessão' }).click()
+    // Um LINK, não um botão: sem `asChild` no Solid, um link com cara de botão
+    // é um `<a>` vestindo as classes do botão (armadilha #6 do porte).
+    await page.getByRole('link', { name: 'Sair da sessão' }).click()
     await expect(page).toHaveURL(/\/campaigns\/1$/)
     await expect(page.getByRole('heading', { name: CAMPAIGN, level: 1 })).toBeVisible()
   })

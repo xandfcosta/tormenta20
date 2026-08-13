@@ -16,12 +16,15 @@ type DefenseValues = {
 /**
  * DEF do preview de criação, espelhando a ficha final (Go `compute.go`): base
  * 10 + Destreza final (base + delta racial) + Defesa da armadura e do escudo
- * equipados no kit inicial. O engine soma a Destreza cheia mesmo sob armadura
- * pesada (não há cap de DES), então o preview faz igual para bater com a ficha.
- * Os gates `kit.armor !== 'nenhuma'` / `kit.shieldLeve` copiam
- * `startingItemsPayload` — classes sem armadura/escudo no kit não contam esses
- * bônus mesmo com os campos preenchidos. Antes o preview era DEF-sem-equip (só
- * 10 + Destreza), divergindo da ficha (ALE-26).
+ * equipados no kit inicial. Os gates `kit.armor !== 'nenhuma'` /
+ * `kit.shieldLeve` copiam `startingItemsPayload` — classes sem armadura/escudo
+ * no kit não contam esses bônus mesmo com os campos preenchidos. Antes o
+ * preview era DEF-sem-equip (só 10 + Destreza), divergindo da ficha (ALE-26).
+ *
+ * **Armadura pesada zera a Destreza** (a Brunea carrega a flag
+ * `cannot-apply-dex-to-defense` no catálogo, e é o motor que manda). O
+ * comentário anterior aqui afirmava o oposto — "não há cap de DES" — e a Forja
+ * prometia 1 de Defesa a mais do que a ficha entregava (ALE-94).
  */
 export function deriveDraftDefense(
   v: DefenseValues,
@@ -29,13 +32,14 @@ export function deriveDraftDefense(
 ): number {
   const dexDelta = appliedRaceDeltas(v.races, raceChoices).dexterity ?? 0
   const kit = startingKitFor(v.classes[0]?.className ?? '')
-  const armorDef =
+  const armor =
     kit.armor !== 'nenhuma' && v.startingArmor
-      ? (getCatalogItem(v.startingArmor)?.armor?.defense ?? 0)
-      : 0
+      ? getCatalogItem(v.startingArmor)?.armor
+      : undefined
   const shieldDef =
     kit.shieldLeve && v.startingShield
       ? (getCatalogItem(SHIELD_LEVE_ID)?.shield?.defense ?? 0)
       : 0
-  return DEFENSE_BASE + v.dexterity + dexDelta + armorDef + shieldDef
+  const dex = armor?.heavy ? 0 : v.dexterity + dexDelta
+  return DEFENSE_BASE + dex + (armor?.defense ?? 0) + shieldDef
 }

@@ -1,38 +1,39 @@
-import { beforeEach, describe, expect, it } from 'vitest'
-import { useAuthStore } from './auth-store'
+import { describe, expect, it } from 'vitest'
+import { createAuthStore } from './auth-store'
 
-beforeEach(() => {
-  useAuthStore.setState({ user: null })
-})
+const ALICE = { id: 1, email: 'mestre@t20.local', name: 'Mestre' }
 
-describe('useAuthStore', () => {
-  it('initial user is null', () => {
-    expect(useAuthStore.getState().user).toBeNull()
+describe('createAuthStore', () => {
+  it('começa deslogado', () => {
+    const auth = createAuthStore()
+    expect(auth.user()).toBeNull()
+    expect(auth.isAuthenticated()).toBe(false)
   })
 
-  it('setUser stores the AuthUser', () => {
-    useAuthStore.getState().setUser({
-      id: 1,
-      email: 'a@b.com',
-      name: 'Alice',
-    })
-    expect(useAuthStore.getState().user).toEqual({
-      id: 1,
-      email: 'a@b.com',
-      name: 'Alice',
-    })
+  it('aceita um usuário inicial (hidratação da rota)', () => {
+    const auth = createAuthStore(ALICE)
+    expect(auth.user()).toEqual(ALICE)
+    expect(auth.isAuthenticated()).toBe(true)
   })
 
-  it('setUser(null) clears the user (logout)', () => {
-    useAuthStore.setState({ user: { id: 1, email: 'a', name: null } })
-    useAuthStore.getState().setUser(null)
-    expect(useAuthStore.getState().user).toBeNull()
+  it('setUser publica o usuário e marca como autenticado', () => {
+    const auth = createAuthStore()
+    auth.setUser(ALICE)
+    expect(auth.user()).toEqual(ALICE)
+    expect(auth.isAuthenticated()).toBe(true)
   })
 
-  it('does not persist to storage (in-memory only)', () => {
-    useAuthStore.getState().setUser({ id: 1, email: 'a', name: null })
-    // Auth state is intentionally not persisted — it rehydrates from
-    // /auth/me on app boot. Storage shouldn't carry the 'auth' key.
-    expect(localStorage.getItem('auth')).toBeNull()
+  it('setUser(null) desloga', () => {
+    const auth = createAuthStore(ALICE)
+    auth.setUser(null)
+    expect(auth.user()).toBeNull()
+    expect(auth.isAuthenticated()).toBe(false)
+  })
+
+  it('cada store é independente (sem singleton global como no zustand)', () => {
+    const one = createAuthStore()
+    const other = createAuthStore()
+    one.setUser(ALICE)
+    expect(other.user()).toBeNull()
   })
 })

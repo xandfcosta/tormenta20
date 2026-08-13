@@ -1,4 +1,4 @@
-import { queryOptions } from '@tanstack/react-query'
+import { queryOptions } from '@tanstack/solid-query'
 import { api } from '@/shared/api/api'
 
 export const campaignSessionsQueryOptions = (campaignId: number) =>

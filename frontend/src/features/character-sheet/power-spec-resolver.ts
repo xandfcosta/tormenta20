@@ -1,5 +1,5 @@
 import type { ActivationSpec } from '@tormenta20/t20-data'
-import { resolveActivationSpec } from '@/entities/character/use-power-action'
+import { resolveActivationSpec } from '@/entities/character/power-rules'
 import type { SheetSearchEntry } from './sheet-search-index'
 
 /**

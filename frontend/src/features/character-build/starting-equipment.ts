@@ -151,9 +151,10 @@ export function origemItemsPayload(
           ? [{ catalogId: match.id, name: match.name, quantity: 1, slots: match.slots }]
           : [{ name: chosen, quantity: 1, slots: 1 }]
       }
-      case 'money':
       default:
-        return [] // money is rolled into the tibar field by the step UI
+        // 'money' grants carry no item: the step UI folds them into tibar. Any
+        // future kind lands here harmlessly until it earns its own case.
+        return []
     }
   })
 }

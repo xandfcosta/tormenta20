@@ -1,6 +1,6 @@
 import type { MonsterTipo } from '@tormenta20/t20-data'
 
-/** Ordered MonsterTipo list for filter chips. */
+/** Ordered MonsterTipo list — the order the filter chips appear in. */
 export const MONSTER_TIPOS: readonly MonsterTipo[] = [
   'humanoide',
   'animal',
@@ -11,7 +11,7 @@ export const MONSTER_TIPOS: readonly MonsterTipo[] = [
   'planar',
 ]
 
-/** Display labels for each MonsterTipo (bestiary browser + in-session add). */
+/** Display labels per MonsterTipo (bestiário + adicionar monstro na sessão). */
 export const MONSTER_TIPO_LABEL: Record<MonsterTipo, string> = {
   humanoide: 'Humanoide',
   animal: 'Animal',
@@ -22,20 +22,16 @@ export const MONSTER_TIPO_LABEL: Record<MonsterTipo, string> = {
   planar: 'Planar',
 }
 
-/** Renders fractional NDs as book fractions (0.25 → "1/4"), else the number. */
+/**
+ * Renders a fractional ND the way the book writes it (0.25 → "1/4"). A bare
+ * "0.25" on a monster row reads like a rounding artifact instead of a rating.
+ *
+ * @example formatNd(0.5) // '1/2'
+ */
 export function formatNd(nd: number): string {
   if (nd < 1) {
     if (Math.abs(nd - 0.25) < 0.001) return '1/4'
     if (Math.abs(nd - 0.5) < 0.001) return '1/2'
   }
   return String(nd)
-}
-
-/** Accent- and case-insensitive normalize for monster name search. */
-export function normalizeMonsterName(s: string): string {
-  return s
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .trim()
 }

@@ -1,155 +1,82 @@
-import { type ReactNode, useRef } from 'react'
-import {
-  type VirtualItem,
-  type Virtualizer,
-  useVirtualizer,
-  useWindowVirtualizer,
-} from '@tanstack/react-virtual'
+import { createVirtualizer } from '@tanstack/solid-virtual'
+import { For, type JSX, Show } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
 
-/**
- * Thin project-owned wrapper over `@tanstack/react-virtual` so features never
- * import the library directly. Renders only the rows near the viewport, which
- * keeps big catalogs (spells ~200, class powers ~460, bestiary) cheap to
- * scroll. Rows are measured dynamically (`measureElement`), so variable-height
- * content (wrapping names, expandable rows) needs no fixed height — pass
- * `estimateSize` only as the first-paint guess.
- *
- * Two variants:
- *   - `VirtualList` — owns a bounded scroll container (`className` sets its
- *     height); use inside dialogs, drawers, panels.
- *   - `WindowVirtualList` — virtualizes against the page scroll; use for
- *     full-page lists that shouldn't introduce a nested scrollbar.
- */
-type SharedProps<T> = {
+export type VirtualListProps<T> = {
   items: readonly T[]
-  /** First-paint height guess per row in px; real height is measured. */
+  /** First-paint height guess per row in px; the real height is measured. */
   estimateSize?: number
   /** Rows rendered beyond the viewport on each side. */
   overscan?: number
-  /** Vertical gap between rows in px. */
-  gap?: number
   getKey: (item: T, index: number) => string | number
-  renderItem: (item: T) => ReactNode
-}
-
-export function VirtualList<T>({
-  items,
-  estimateSize = 56,
-  overscan = 8,
-  gap = 0,
-  getKey,
-  renderItem,
-  className,
-}: SharedProps<T> & { className?: string }) {
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const virtualizer = useVirtualizer({
-    count: items.length,
-    getScrollElement: () => scrollRef.current,
-    estimateSize: () => estimateSize,
-    // Key measurements by item identity, not index — otherwise filtering
-    // (which shuffles items across indices) reuses stale row heights and the
-    // rows overlap / leave gaps.
-    getItemKey: (index) => getKey(items[index] as T, index),
-    overscan,
-    gap,
-  })
-
-  return (
-    <div ref={scrollRef} className={cn('overflow-y-auto', className)}>
-      <VirtualRows
-        virtualizer={virtualizer}
-        items={items}
-        getKey={getKey}
-        renderItem={renderItem}
-      />
-    </div>
-  )
-}
-
-export function WindowVirtualList<T>({
-  items,
-  estimateSize = 56,
-  overscan = 8,
-  gap = 0,
-  getKey,
-  renderItem,
-}: SharedProps<T>) {
-  const listRef = useRef<HTMLDivElement>(null)
-  const virtualizer = useWindowVirtualizer({
-    count: items.length,
-    estimateSize: () => estimateSize,
-    // Key measurements by item identity, not index (see VirtualList) so
-    // filtering doesn't reuse stale row heights.
-    getItemKey: (index) => getKey(items[index] as T, index),
-    overscan,
-    gap,
-    // Offset of this list from the top of the page scroll, so row positions
-    // account for whatever chrome sits above it.
-    scrollMargin: listRef.current?.offsetTop ?? 0,
-  })
-
-  return (
-    <div ref={listRef}>
-      <VirtualRows
-        virtualizer={virtualizer}
-        items={items}
-        getKey={getKey}
-        renderItem={renderItem}
-        scrollMargin={virtualizer.options.scrollMargin}
-      />
-    </div>
-  )
+  renderItem: (item: T) => JSX.Element
+  /** Sets the scroll container's bounded height. */
+  class?: string
 }
 
 /**
- * Shared absolute-positioned row layer for both variants. The total-size
- * spacer reserves scroll height; each visible row is translated into place and
- * self-measures via `measureElement` (keyed by `data-index`).
+ * Project-owned wrapper over `@tanstack/solid-virtual`, so features never
+ * import the library directly. Renders only the rows near the viewport, which
+ * is what keeps the item catalog (~400 entries) cheap to scroll inside a
+ * dialog. Rows self-measure, so wrapping names need no fixed height.
+ *
+ * Only the bounded-container variant is ported: nothing in the Solid app
+ * virtualizes against the page scroll yet, and an unused second variant is a
+ * second thing to keep correct.
+ *
+ * @example
+ * <VirtualList class="max-h-56" items={filtered()} estimateSize={34}
+ *   getKey={(c) => c.id} renderItem={(c) => <CatalogRow catalog={c} />} />
  */
-function VirtualRows<T>({
-  virtualizer,
-  items,
-  getKey,
-  renderItem,
-  scrollMargin = 0,
-}: {
-  virtualizer:
-    | Virtualizer<HTMLDivElement, Element>
-    | Virtualizer<Window, Element>
-  items: readonly T[]
-  getKey: (item: T, index: number) => string | number
-  renderItem: (item: T) => ReactNode
-  scrollMargin?: number
-}) {
+export function VirtualList<T>(props: VirtualListProps<T>) {
+  let scrollRef: HTMLDivElement | undefined
+  const virtualizer = createVirtualizer({
+    get count() {
+      return props.items.length
+    },
+    getScrollElement: () => scrollRef ?? null,
+    estimateSize: () => props.estimateSize ?? 56,
+    // Measurements keyed by item identity, not index: filtering shuffles items
+    // across indices, and index-keyed heights would leave stale gaps. The
+    // out-of-range guard is not paranoia — the virtualizer asks about index -1
+    // for an element it could not identify, and reading `items[-1].id` there
+    // took down the whole scene.
+    getItemKey: (index) => {
+      const item = props.items[index]
+      return item === undefined ? index : props.getKey(item, index)
+    },
+    get overscan() {
+      return props.overscan ?? 8
+    },
+  })
+
   return (
-    <div
-      style={{
-        height: virtualizer.getTotalSize(),
-        position: 'relative',
-        width: '100%',
-      }}
-    >
-      {virtualizer.getVirtualItems().map((row: VirtualItem) => {
-        const item = items[row.index]
-        if (item === undefined) return null
-        return (
-          <div
-            key={getKey(item, row.index)}
-            data-index={row.index}
-            ref={virtualizer.measureElement}
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              transform: `translateY(${row.start - scrollMargin}px)`,
-            }}
-          >
-            {renderItem(item)}
-          </div>
-        )
-      })}
+    <div ref={scrollRef} class={cn('overflow-y-auto', props.class)}>
+      <div class="relative w-full" style={{ height: `${virtualizer.getTotalSize()}px` }}>
+        <For each={virtualizer.getVirtualItems()}>
+          {(row) => (
+            <div
+              data-index={row.index}
+              // Measured in a microtask on purpose: Solid runs `ref` BEFORE it
+              // sets the attributes, and the virtualizer identifies what it
+              // measured by reading `data-index` off the node. Measuring in the
+              // same tick reads an empty attribute, resolves to index -1 and
+              // poisons the size cache.
+              ref={(element) => queueMicrotask(() => virtualizer.measureElement(element))}
+              class="absolute top-0 left-0 w-full"
+              style={{ transform: `translateY(${row.start}px)` }}
+            >
+              {/* `keyed`: a row div survives a filter change (the virtualizer
+                  reconciles virtual items by index), so a plain Show would keep
+                  showing the item this row painted first — search for "escudo"
+                  and read back "Adaga". */}
+              <Show keyed when={props.items[row.index]}>
+                {(item) => props.renderItem(item)}
+              </Show>
+            </div>
+          )}
+        </For>
+      </div>
     </div>
   )
 }

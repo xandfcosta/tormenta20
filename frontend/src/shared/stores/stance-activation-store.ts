@@ -1,68 +1,90 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-
-type CharacterId = number
+import { createStore, produce } from 'solid-js/store'
 
 /**
  * What the player paid entering a stance. `steps` are the extra-PM stepper
  * picks (Fúria p40: +1 PM per +1 bônus every 5 levels). The stepped EXTRA has
- * no engine modifier yet (spell-engine-deferred style), so this record is the
- * display-only source of truth for "+N extra (stepper)" in Posturas ativas.
+ * no engine modifier yet, so this record is the display-only source of truth
+ * for "+N extra (stepper)" in Posturas ativas.
  */
 export type StanceActivationRecord = { steps: number; pmPaid: number }
 
-type StanceActivationState = {
-  records: Record<CharacterId, Record<string, StanceActivationRecord>>
-  logActivation: (
-    characterId: CharacterId,
-    flag: string,
-    record: StanceActivationRecord,
-  ) => void
-  clearActivation: (characterId: CharacterId, flag: string) => void
-}
-
-export const STANCE_ACTIVATIONS_STORAGE_KEY = 't20-stance-activations'
+type RecordsByCharacter = Record<string, Record<string, StanceActivationRecord>>
 
 /**
  * Per-character record of active-stance payments — local-only like
- * `useConditionalsStore` (the flag state itself lives there; this only
- * remembers what was paid, so ending a stance never refunds).
+ * [[conditionals-store]]: the flag state itself lives there, this only
+ * remembers what was paid, so ending a stance never refunds.
  *
- * @example useStanceActivationStore.getState().logActivation(1, 'furia', { steps: 1, pmPaid: 3 })
+ * Persisted under the SAME key/shape the React zustand used
+ * (`t20-stance-activations` → `{ state: { records } }`): mid-migration the
+ * player alternates between the two apps and a Fúria paid at the table must
+ * still read as paid.
  */
-export const useStanceActivationStore = create<StanceActivationState>()(
-  persist(
-    (set) => ({
-      records: {},
-      logActivation: (characterId, flag, record) =>
-        set((s) => ({
-          records: {
-            ...s.records,
-            [characterId]: { ...s.records[characterId], [flag]: record },
-          },
-        })),
-      clearActivation: (characterId, flag) =>
-        set((s) => {
-          const current = s.records[characterId]
-          if (!current?.[flag]) return s
-          const next = { ...current }
-          delete next[flag]
-          return { records: { ...s.records, [characterId]: next } }
-        }),
-    }),
-    { name: STANCE_ACTIVATIONS_STORAGE_KEY },
-  ),
-)
+export const STANCE_ACTIVATIONS_STORAGE_KEY = 't20-stance-activations'
+
+export type StanceActivationStore = {
+  /** What was paid for one active stance, or undefined if it never was. */
+  paidFor: (characterId: number, flag: string) => StanceActivationRecord | undefined
+  logActivation: (characterId: number, flag: string, record: StanceActivationRecord) => void
+  clearActivation: (characterId: number, flag: string) => void
+}
+
+function isRecord(value: unknown): value is StanceActivationRecord {
+  const { steps, pmPaid } = (value ?? {}) as Partial<StanceActivationRecord>
+  return typeof steps === 'number' && typeof pmPaid === 'number'
+}
+
+/** Defensive read: a corrupt or older blob must not take the sheet down. */
+export function readStoredStanceActivations(raw: string | null): RecordsByCharacter {
+  if (!raw) return {}
+  try {
+    const parsed = (JSON.parse(raw) as { state?: { records?: unknown } }).state?.records
+    if (!parsed || typeof parsed !== 'object') return {}
+    const entries = Object.entries(parsed as Record<string, unknown>).flatMap(
+      ([id, byFlag]): [string, Record<string, StanceActivationRecord>][] => {
+        if (!byFlag || typeof byFlag !== 'object') return []
+        const clean = Object.entries(byFlag as Record<string, unknown>).filter(
+          (entry): entry is [string, StanceActivationRecord] => isRecord(entry[1]),
+        )
+        return clean.length ? [[id, Object.fromEntries(clean)]] : []
+      },
+    )
+    return Object.fromEntries(entries)
+  } catch {
+    return {}
+  }
+}
 
 /**
- * Live payment record for one active stance, or undefined when the stance was
- * never activated through the new path (legacy toggle / cleared storage).
- *
- * @example const paid = useStanceActivation(1, 'furia') // { steps: 1, pmPaid: 3 }
+ * @example
+ * const stances = createStanceActivationStore()
+ * stances.logActivation(character.id, 'furia', { steps: 1, pmPaid: 3 })
  */
-export function useStanceActivation(
-  characterId: CharacterId,
-  flag: string,
-): StanceActivationRecord | undefined {
-  return useStanceActivationStore((s) => s.records[characterId]?.[flag])
+export function createStanceActivationStore(
+  storage: Storage | undefined = globalThis.localStorage,
+): StanceActivationStore {
+  const [records, setRecords] = createStore<RecordsByCharacter>(
+    readStoredStanceActivations(storage?.getItem(STANCE_ACTIVATIONS_STORAGE_KEY) ?? null),
+  )
+
+  const edit = (mutate: (draft: RecordsByCharacter) => void) => {
+    setRecords(produce(mutate))
+    storage?.setItem(STANCE_ACTIVATIONS_STORAGE_KEY, JSON.stringify({ state: { records } }))
+  }
+
+  return {
+    paidFor: (characterId, flag) => records[String(characterId)]?.[flag],
+
+    logActivation: (characterId, flag, record) =>
+      edit((draft) => {
+        const key = String(characterId)
+        draft[key] = { ...draft[key], [flag]: record }
+      }),
+
+    clearActivation: (characterId, flag) =>
+      edit((draft) => {
+        const current = draft[String(characterId)]
+        if (current?.[flag]) delete current[flag]
+      }),
+  }
 }

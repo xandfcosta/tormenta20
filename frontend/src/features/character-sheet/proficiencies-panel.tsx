@@ -1,228 +1,151 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Check, X } from 'lucide-react'
-import { characterProficiencies } from '@tormenta20/t20-data'
+import { useQueryClient } from '@tanstack/solid-query'
 import type { ProficiencyEntry } from '@tormenta20/t20-data'
+import { Check, X } from 'lucide-solid'
+import { For, createMemo, createSignal } from 'solid-js'
+import type { Character } from '@/shared/api/api'
 import { Button } from '@/shared/ui/button'
-import { api, type Character, type ProficienciesResult } from '@/shared/api/api'
-import { invalidateCharacterDependents } from '@/entities/character/character-cache'
-import { characterQueryOptions } from '@/entities/character/queries'
-import { accentStrong, dimText, panelBg, surface } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
+import {
+  classDefaults,
+  groupProficiencies,
+  ownedProficiencies,
+  proficiencyActions,
+  proficiencyCatalog,
+  toggleProficiency,
+} from './proficiency-mutations'
 
 /**
- * "Proficiências" tab — lists every weapon / armor / shield proficiency
- * granted by the character's classes, plus a "restore class defaults"
- * button that resets manual toggles. The stored blob is a bare
- * `string[]` of category ids; anything absent from the array is
- * treated as not-granted.
+ * The Proficiências block: every weapon / armor / shield category the
+ * character's classes have an opinion about, each toggleable, plus a
+ * "restaurar padrão de classe" that throws away manual edits.
+ *
+ * Being proficient or not is what the Mochila's "sem proficiência" warning
+ * reads — this is where that warning gets resolved.
  */
-export function ProficienciesPanel({ character }: { character: Character }) {
-  const qc = useQueryClient()
-  const queryKey = characterQueryOptions(character.id).queryKey
-  const classNames = character.classes.map((c) => c.className)
-  const classDefaults = characterProficiencies(classNames)
-  const stored = parseProficiencySet(character.proficiencies)
+export function ProficienciesPanel(props: { character: Character }) {
+  const queryClient = useQueryClient()
+  const actions = () => proficiencyActions(queryClient, props.character.id)
+  const [pending, setPending] = createSignal(false)
 
-  const update = useMutation<
-    ProficienciesResult,
-    Error,
-    string[],
-    { previous: Character | undefined }
-  >({
-    mutationFn: (next) =>
-      api.characters.updateProficiencies(character.id, { proficiencies: next }),
-    onMutate: async (next) => {
-      await qc.cancelQueries({ queryKey })
-      const previous = qc.getQueryData<Character>(queryKey)
-      qc.setQueryData<Character>(queryKey, (prev) =>
-        prev ? { ...prev, proficiencies: JSON.stringify(next) } : prev,
-      )
-      return { previous }
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
-    },
-    onSuccess: (delta) => {
-      qc.setQueryData<Character>(queryKey, (prev) =>
-        prev ? { ...prev, proficiencies: delta.proficiencies } : prev,
-      )
-      invalidateCharacterDependents(qc, character.id)
-    },
-  })
+  const owned = createMemo(() => ownedProficiencies(props.character))
+  const groups = createMemo(() => groupProficiencies(proficiencyCatalog(props.character)))
 
-  const toggle = (category: string) => {
-    const next = new Set(stored)
-    if (next.has(category)) next.delete(category)
-    else next.add(category)
-    update.mutate([...next])
+  const save = async (categories: string[]) => {
+    setPending(true)
+    try {
+      await actions().set(categories)
+    } catch {
+      // proficiencyActions already rolled back and told the player.
+    } finally {
+      setPending(false)
+    }
   }
-
-  const resetToDefaults = () => {
-    const defaults = classDefaults.filter((e) => e.granted).map((e) => e.category)
-    update.mutate(defaults)
-  }
-
-  const weapons = classDefaults.filter((e) => e.category.startsWith('armas-'))
-  const armors = classDefaults.filter(
-    (e) => e.category.startsWith('armaduras-') || e.category === 'escudos',
-  )
 
   return (
-    // border-t + own padding: this block sits below the Equipado pools' scroll
-    // area, which clips its cards mid-content at the seam — without a visible
-    // boundary the transparent "Restaurar padrão" row read as a button floating
-    // over the clipped card (UI audit task 14). The heading anchors the row and
-    // flex-wrap keeps it from colliding with the button at narrow widths.
-    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto border-t border-border p-3 sm:p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className={cn('text-sm font-bold', accentStrong)}>Proficiências</h3>
+    <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)]">
+      <div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
+        <h2 class="font-heading text-lg uppercase tracking-wide text-grimorio-gold">
+          Proficiências
+        </h2>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="h-6 px-2 text-[11px]"
-          onClick={resetToDefaults}
-          disabled={update.isPending}
+          class="h-7 text-xs"
+          disabled={pending()}
+          onClick={() => void save(classDefaults(props.character))}
         >
           Restaurar padrão de classe
         </Button>
       </div>
-      <ProficiencyGroup
-        title="Armas"
-        entries={weapons}
-        stored={stored}
-        onToggle={toggle}
-        disabled={update.isPending}
-      />
-      <ProficiencyGroup
-        title="Armaduras & Escudos"
-        entries={armors}
-        stored={stored}
-        onToggle={toggle}
-        disabled={update.isPending}
-      />
-    </div>
+
+      <div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3 sm:p-4">
+        <ProficiencyGroup
+          title="Armas"
+          entries={groups().weapons}
+          owned={owned()}
+          disabled={pending()}
+          onToggle={(category) => void save(toggleProficiency(owned(), category))}
+        />
+        <ProficiencyGroup
+          title="Armaduras & Escudos"
+          entries={groups().armors}
+          owned={owned()}
+          disabled={pending()}
+          onToggle={(category) => void save(toggleProficiency(owned(), category))}
+        />
+      </div>
+    </section>
   )
 }
 
-function parseProficiencySet(raw: string): Set<string> {
-  try {
-    const parsed = JSON.parse(raw)
-    if (Array.isArray(parsed)) {
-      return new Set(parsed.filter((x): x is string => typeof x === 'string'))
-    }
-    return new Set()
-  } catch {
-    return new Set()
-  }
-}
-
-function ProficiencyGroup({
-  title,
-  entries,
-  stored,
-  onToggle,
-  disabled,
-}: {
+function ProficiencyGroup(props: {
   title: string
   entries: ProficiencyEntry[]
-  stored: Set<string>
-  onToggle: (category: string) => void
+  owned: ReadonlySet<string>
   disabled: boolean
+  onToggle: (category: string) => void
 }) {
   return (
-    <section className={cn('rounded-lg border p-3', surface)}>
-      <h3 className={cn('text-sm font-bold', accentStrong)}>{title}</h3>
-      <ul className="mt-2 space-y-1">
-        {entries.map((entry) => (
-          <ProficiencyRow
-            key={entry.category}
-            entry={entry}
-            granted={stored.has(entry.category)}
-            isClassDefault={entry.granted}
-            onToggle={() => onToggle(entry.category)}
-            disabled={disabled}
-          />
-        ))}
+    <section class="rounded-sm border border-grimorio-iron p-3">
+      <h3 class="font-heading text-sm uppercase tracking-wide text-grimorio-gold">
+        {props.title}
+      </h3>
+      <ul class="mt-2 space-y-1">
+        <For each={props.entries}>
+          {(entry) => (
+            <ProficiencyRow
+              entry={entry}
+              granted={props.owned.has(entry.category)}
+              disabled={props.disabled}
+              onToggle={() => props.onToggle(entry.category)}
+            />
+          )}
+        </For>
       </ul>
     </section>
   )
 }
 
-function ProficiencyRow({
-  entry,
-  granted,
-  isClassDefault,
-  onToggle,
-  disabled,
-}: {
+function ProficiencyRow(props: {
   entry: ProficiencyEntry
   granted: boolean
-  isClassDefault: boolean
-  onToggle: () => void
   disabled: boolean
+  onToggle: () => void
 }) {
   return (
-    <li
-      className={cn(
-        'flex items-center justify-between gap-2 rounded-md text-xs',
-        granted
-          ? 'bg-emerald-50 dark:bg-emerald-950/30'
-          : 'bg-muted ',
-      )}
-    >
+    <li class={cn('rounded-md text-xs', props.granted && 'bg-emerald-950/30')}>
       <button
         type="button"
-        onClick={onToggle}
-        disabled={disabled}
-        className="flex flex-1 items-center gap-2 rounded-md px-2 py-1 text-left hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-muted"
-        aria-pressed={granted}
-        aria-label={`${granted ? 'Remover' : 'Adicionar'} proficiência: ${entry.label}`}
+        onClick={() => props.onToggle()}
+        disabled={props.disabled}
+        aria-pressed={props.granted}
+        aria-label={`${props.granted ? 'Remover' : 'Adicionar'} proficiência: ${props.entry.label}`}
+        class="flex w-full items-center gap-2 rounded-md px-2 py-1 text-left transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {granted ? (
-          <Check className="size-3.5 text-emerald-700 dark:text-emerald-400" />
+        {props.granted ? (
+          <Check aria-hidden="true" class="size-3.5 text-emerald-400" />
         ) : (
-          <X className="size-3.5 text-foreground" />
+          <X aria-hidden="true" class="size-3.5 text-muted-foreground" />
         )}
         <span
-          className={cn(
-            granted
-              ? 'text-foreground '
-              : cn('line-through', dimText),
+          class={cn(
+            props.granted ? 'text-foreground' : 'text-muted-foreground line-through',
           )}
         >
-          {entry.label}
+          {props.entry.label}
         </span>
-        {isClassDefault ? (
+        {/* "classe" marks what the class grants by default, so a player can
+            tell an intentional manual toggle from the baseline. */}
+        {props.entry.granted && (
           <span
-            className={cn(
-              'ml-1 rounded px-1 text-[9px] uppercase tracking-wider',
-              'bg-muted text-foreground  ',
-            )}
-            title={`Padrão: ${entry.sources.join(', ')}`}
+            class="ml-1 rounded bg-muted px-1 text-[9px] uppercase tracking-wider text-muted-foreground"
+            title={`Padrão: ${props.entry.sources.join(', ')}`}
           >
             classe
           </span>
-        ) : null}
+        )}
       </button>
     </li>
-  )
-}
-
-/**
- * Standalone "Proficiências" tab — split back out of the bag (the fold into
- * Equipado/Mochila buried it two scrolls deep). Same panel, own surface.
- */
-export function ProficienciesTab({ character }: { character: Character }) {
-  return (
-    <section
-      className={cn(
-        'flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl',
-        surface,
-        panelBg,
-      )}
-    >
-      <ProficienciesPanel character={character} />
-    </section>
   )
 }

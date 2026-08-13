@@ -1,336 +1,293 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { caminhoSlotFor, slotsForClassLevel } from '@tormenta20/t20-data'
+import { useQueryClient } from '@tanstack/solid-query'
 import {
-  allGeneralPowers,
-  classPowersFor,
-  devotoOptionsFor,
-} from '@/shared/lib/abilities-cache'
-import type {
-  CaminhoOption,
-  ClassChoiceBlob,
-  ClassChoices,
-  Deus,
-  GeneralPower,
+  type ClassChoiceBlob,
+  type ClassChoices,
+  type GeneralPower,
+  caminhoSlotFor,
 } from '@tormenta20/t20-data'
-import { Combobox, type ComboboxOption } from '@/shared/ui/combobox'
-import { api, type Character, type AbilityChoicesResult } from '@/shared/api/api'
-import { invalidateCharacterDependents } from '@/entities/character/character-cache'
-import {
-  evaluatePrerequisite,
-  parseClassChoices,
-} from '@/entities/character/derived'
-import { characterQueryOptions } from '@/entities/character/queries'
-import { subtleText } from '@/shared/lib/sheet-theme'
-import { cn } from '@/shared/lib/utils'
-import { ClassPowerRow } from './class-power-row'
-import {
-  CollapsibleAbilityCard,
-  type CardFocus,
-} from './collapsible-ability-card'
+import { For, type JSX, Show, createMemo, createSignal } from 'solid-js'
+import { electiveSlotUsage } from '@/entities/character/class-powers'
+import { evaluatePrerequisite, parseClassChoices } from '@/entities/character/derived'
+import { allGeneralPowers, classPowersFor, devotoOptionsFor } from '@/shared/lib/abilities-cache'
+import type { Character } from '@/shared/api/api'
+import { Select, type SelectOption } from '@/shared/ui/select'
+import { choiceActions } from './choice-mutations'
+import { type CardFocus, CollapsibleAbilityCard } from './collapsible-ability-card'
 import { GeneralPowersPool } from './general-powers-pool'
 import { parseChoices } from './parse-choices'
+import { ClassPowerRow } from './power-rows'
+
+/** Value the Select uses for "no pick" — an empty option clears the choice. */
+const NO_CHOICE = ''
 
 /**
- * Picker for per-class subpath choices — devoto (Clérigo/Paladino/Druida)
- * and caminho (Arcanista L1, Paladino L5, Cavaleiro L5). Returns null when
- * the class has no slot or the player has not reached the caminho minLevel.
- * Empty value clears the choice; sending a blob with no fields removes the
- * class key from the persisted blob so the row stays minimal.
+ * Per-class subpath picks: devoto (Clérigo/Paladino/Druida) and caminho
+ * (Arcanista L1, Paladino/Cavaleiro L5). Renders nothing when the class has no
+ * slot or the character hasn't reached the caminho's minLevel.
+ *
+ * A `Select` rather than the searchable picker: both lists are short and the
+ * control has to SHOW the current pick, which `PickerCombobox` deliberately
+ * never does.
  */
-function ClassChoicesPicker({
-  character,
-  className,
-  level,
-  classChoices,
-}: {
+function ClassChoicesPicker(props: {
   character: Character
   className: string
   level: number
   classChoices: ClassChoices
 }) {
-  const qc = useQueryClient()
-  const queryKey = characterQueryOptions(character.id).queryKey
-  const devotoOpts: Deus[] | null = devotoOptionsFor(className)
-  const caminhoSlot = caminhoSlotFor(className)
-  const showDevoto = devotoOpts !== null
-  const showCaminho = caminhoSlot !== null && level >= caminhoSlot.minLevel
-  const blob: ClassChoiceBlob = classChoices[className] ?? {}
+  const queryClient = useQueryClient()
+  const [pending, setPending] = createSignal(false)
 
-  const mutate = useMutation<
-    AbilityChoicesResult,
-    Error,
-    ClassChoices,
-    { previous: Character | undefined }
-  >({
-    mutationFn: (next) =>
-      api.characters.updateAbilityChoices(character.id, { classChoices: next }),
-    onMutate: async (next) => {
-      await qc.cancelQueries({ queryKey })
-      const previous = qc.getQueryData<Character>(queryKey)
-      qc.setQueryData<Character>(queryKey, (prev) =>
-        prev ? { ...prev, classChoices: JSON.stringify(next) } : prev,
-      )
-      return { previous }
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
-    },
-    onSuccess: (delta) => {
-      qc.setQueryData<Character>(queryKey, (prev) =>
-        prev ? { ...prev, ...delta } : prev,
-      )
-      invalidateCharacterDependents(qc, character.id)
-    },
-  })
+  const devotoOptions = () => devotoOptionsFor(props.className)
+  const caminhoSlot = () => caminhoSlotFor(props.className)
+  const showCaminho = () => {
+    const slot = caminhoSlot()
+    return slot !== null && props.level >= slot.minLevel
+  }
+  const blob = (): ClassChoiceBlob => props.classChoices[props.className] ?? {}
 
-  function commit(nextBlob: ClassChoiceBlob) {
-    const next: ClassChoices = { ...classChoices }
-    if (nextBlob.devoto || nextBlob.caminho) next[className] = nextBlob
-    else delete next[className]
-    mutate.mutate(next)
+  /** A class with neither pick left is dropped from the blob entirely, so the
+   *  stored JSON never grows keys that mean "nothing chosen". */
+  const commit = async (nextBlob: ClassChoiceBlob) => {
+    const next: ClassChoices = { ...props.classChoices }
+    if (nextBlob.devoto || nextBlob.caminho) next[props.className] = nextBlob
+    else delete next[props.className]
+    setPending(true)
+    try {
+      await choiceActions(queryClient, props.character.id).setClassChoices(next)
+    } catch {
+      // choiceActions already rolled back and told the player.
+    } finally {
+      setPending(false)
+    }
   }
 
-  if (!showDevoto && !showCaminho) return null
-
-  const devotoOptions: ComboboxOption[] = (devotoOpts ?? []).map((d) => ({
-    value: d.id,
-    label: d.name,
-  }))
-  const caminhoOptions: ComboboxOption[] = (caminhoSlot?.options ?? []).map(
-    (c: CaminhoOption) => ({ value: c.id, label: c.name }),
+  return (
+    <Show when={devotoOptions() !== null || showCaminho()}>
+      <div class="mb-3 space-y-2">
+        <p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Escolhas
+        </p>
+        <Show when={devotoOptions()}>
+          {(deuses) => (
+            <ChoiceSelect
+              label="Devoto"
+              ariaLabel={`Devoto de ${props.className}`}
+              emptyLabel="Sem devoto"
+              options={deuses().map((deus) => ({ value: deus.id, label: deus.name }))}
+              value={blob().devoto ?? NO_CHOICE}
+              disabled={pending()}
+              onChange={(value) =>
+                void commit({ ...blob(), devoto: value || undefined })
+              }
+            />
+          )}
+        </Show>
+        <Show when={showCaminho() && caminhoSlot()}>
+          {(slot) => (
+            <ChoiceSelect
+              label="Caminho"
+              ariaLabel={`Caminho de ${props.className}`}
+              emptyLabel="Não escolhido"
+              options={slot().options.map((option) => ({
+                value: option.id,
+                label: option.name,
+              }))}
+              value={blob().caminho ?? NO_CHOICE}
+              disabled={pending()}
+              onChange={(value) =>
+                void commit({ ...blob(), caminho: value || undefined })
+              }
+            />
+          )}
+        </Show>
+      </div>
+    </Show>
   )
+}
+
+function ChoiceSelect(props: {
+  label: string
+  ariaLabel: string
+  emptyLabel: string
+  options: SelectOption<string>[]
+  value: string
+  disabled: boolean
+  onChange: (value: string) => void
+}) {
+  const options = createMemo<SelectOption<string>[]>(() => [
+    { value: NO_CHOICE, label: props.emptyLabel },
+    ...props.options,
+  ])
+  const selected = () => options().find((option) => option.value === props.value) ?? null
 
   return (
-    <div className="mb-3 space-y-2">
-      <p
-        className={cn(
-          'text-[10px] font-semibold uppercase tracking-wide',
-          subtleText,
-        )}
-      >
-        Escolhas
-      </p>
-      {showDevoto && (
-        <div>
-          <p className={cn('mb-1 text-[11px]', subtleText)}>Devoto</p>
-          <Combobox
-            options={devotoOptions}
-            value={blob.devoto ?? ''}
-            onChange={(value) => commit({ ...blob, devoto: value || undefined })}
-            placeholder="Escolher devoto…"
-            searchPlaceholder="Buscar deus…"
-            emptyMessage="Nenhum deus."
-            allowClear
-            clearLabel="Sem devoto"
-          />
-        </div>
-      )}
-      {showCaminho && (
-        <div>
-          <p className={cn('mb-1 text-[11px]', subtleText)}>Caminho</p>
-          <Combobox
-            options={caminhoOptions}
-            value={blob.caminho ?? ''}
-            onChange={(value) =>
-              commit({ ...blob, caminho: value || undefined })
-            }
-            placeholder="Escolher caminho…"
-            searchPlaceholder="Buscar caminho…"
-            emptyMessage="Nenhum caminho."
-            allowClear
-            clearLabel="Não escolhido"
-          />
-        </div>
-      )}
+    <div>
+      <p class="mb-1 text-[11px] text-muted-foreground">{props.label}</p>
+      <Select
+        aria-label={props.ariaLabel}
+        options={options()}
+        value={selected()}
+        disabled={props.disabled}
+        placeholder={props.emptyLabel}
+        size="sm"
+        class="w-full"
+        onChange={(option) => props.onChange(option?.value ?? NO_CHOICE)}
+      />
     </div>
   )
 }
 
 /**
- * One class card from `character.classes`. Owns the elective pool (class powers
- * + the virtualized general-powers pool) with slot-count enforcement, plus the
- * devoto/caminho picker when applicable.
+ * One class card from `character.classes`: the powers it grants automatically,
+ * its elective pool, the general-power pool any slot may be spent on (p33), and
+ * the devoto/caminho picker when the class has one.
  */
-export function ClassesSection({
-  entry,
-  character,
-  focus,
-  pending,
-}: {
+export function ClassesSection(props: {
   entry: { className: string; level: number }
   character: Character
   focus: CardFocus
   pending: number
 }) {
-  const qc = useQueryClient()
-  const queryKey = characterQueryOptions(character.id).queryKey
-  const allChosen = parseChoices(character.classPowers)
-  const chosenSet = new Set(allChosen)
-  const classChoices = parseClassChoices(character.classChoices)
-  const pool = classPowersFor(entry.className)
-  const auto = pool
-    .filter(
-      (p) => p.grantedAtLevel !== undefined && p.grantedAtLevel <= entry.level,
-    )
-    .sort((a, b) => (a.grantedAtLevel ?? 0) - (b.grantedAtLevel ?? 0))
-  const classElectives = pool
-    .filter((p) => p.grantedAtLevel === undefined)
-    .sort((a, b) => (a.minLevel ?? 1) - (b.minLevel ?? 1))
+  const queryClient = useQueryClient()
+  const [saving, setSaving] = createSignal(false)
 
-  const slots = slotsForClassLevel(entry.className, entry.level)
-  const slotCount = slots.length
-  const generalPool = allGeneralPowers()
-  const classElectiveIds = new Set(classElectives.map((p) => p.id))
-  const generalIds = new Set(generalPool.map((p) => p.id))
-  const ownedSlotPicks = allChosen.filter(
-    (id) => classElectiveIds.has(id) || generalIds.has(id),
-  ).length
-  const slotsRemaining = Math.max(0, slotCount - ownedSlotPicks)
+  const chosen = createMemo(() => parseChoices(props.character.classPowers))
+  const classChoices = createMemo(() => parseClassChoices(props.character.classChoices))
+  const pool = createMemo(() => classPowersFor(props.entry.className))
 
-  const update = useMutation<
-    AbilityChoicesResult,
-    Error,
-    string[],
-    { previous: Character | undefined }
-  >({
-    mutationFn: (next) =>
-      api.characters.updateAbilityChoices(character.id, { classPowers: next }),
-    onMutate: async (next) => {
-      await qc.cancelQueries({ queryKey })
-      const previous = qc.getQueryData<Character>(queryKey)
-      qc.setQueryData<Character>(queryKey, (prev) =>
-        prev ? { ...prev, classPowers: JSON.stringify(next) } : prev,
-      )
-      return { previous }
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
-    },
-    onSuccess: (delta) => {
-      qc.setQueryData<Character>(queryKey, (prev) =>
-        prev ? { ...prev, ...delta } : prev,
-      )
-      invalidateCharacterDependents(qc, character.id)
-    },
-  })
+  const granted = createMemo(() =>
+    pool()
+      .filter((p) => p.grantedAtLevel !== undefined && p.grantedAtLevel <= props.entry.level)
+      .sort((a, b) => (a.grantedAtLevel ?? 0) - (b.grantedAtLevel ?? 0)),
+  )
+  const electives = createMemo(() =>
+    pool()
+      .filter((p) => p.grantedAtLevel === undefined)
+      .sort((a, b) => (a.minLevel ?? 1) - (b.minLevel ?? 1)),
+  )
+  const slots = createMemo(() =>
+    electiveSlotUsage(props.entry.className, props.entry.level, chosen()),
+  )
+  const generalPool = createMemo(() => allGeneralPowers())
 
-  const toggleElective = (powerId: string) => {
-    const isSelected = allChosen.includes(powerId)
-    if (!isSelected && slotsRemaining <= 0) return
-    const next = isSelected
-      ? allChosen.filter((id) => id !== powerId)
-      : [...allChosen, powerId]
-    update.mutate(next)
+  const toggleElective = async (powerId: string) => {
+    const owned = chosen().includes(powerId)
+    if (!owned && slots().remaining <= 0) return
+    const next = owned
+      ? chosen().filter((id) => id !== powerId)
+      : [...chosen(), powerId]
+    setSaving(true)
+    try {
+      await choiceActions(queryClient, props.character.id).setClassPowers(next)
+    } catch {
+      // choiceActions already rolled back and told the player.
+    } finally {
+      setSaving(false)
+    }
   }
 
-  const generalLabel =
-    [...new Set(generalPool.map((p) => p.kind))].join(', ') || 'sem pools'
+  const generalLabel = () =>
+    [...new Set(generalPool().map((p) => p.kind))].join(', ') || 'sem pools'
 
   return (
     <CollapsibleAbilityCard
-      id={`classe:${entry.className}`}
-      title={`${entry.className} ${entry.level}`}
+      id={`classe:${props.entry.className}`}
+      title={`${props.entry.className} ${props.entry.level}`}
       count={
-        slotCount > 0
-          ? `${ownedSlotPicks}/${slotCount} poderes · ${slotsRemaining} restantes`
+        slots().total > 0
+          ? `${slots().used}/${slots().total} poderes · ${slots().remaining} restantes`
           : undefined
       }
-      pending={pending}
-      defaultOpen={pending > 0}
-      focus={focus}
+      pending={props.pending}
+      defaultOpen={props.pending > 0}
+      focus={props.focus}
     >
-      {pool.length === 0 ? (
-        <p className="text-xs italic text-muted-foreground">
-          Classe não está no catálogo.
-        </p>
-      ) : (
-        <div className="space-y-3">
+      <Show
+        when={pool().length > 0}
+        fallback={<p class="text-xs italic text-muted-foreground">Classe não está no catálogo.</p>}
+      >
+        <div class="space-y-3">
           <ClassChoicesPicker
-            character={character}
-            className={entry.className}
-            level={entry.level}
-            classChoices={classChoices}
+            character={props.character}
+            className={props.entry.className}
+            level={props.entry.level}
+            classChoices={classChoices()}
           />
-          {auto.length > 0 && (
-            <div>
-              <p
-                className={cn(
-                  'mb-1 text-[10px] font-semibold uppercase tracking-wide',
-                  subtleText,
-                )}
-              >
-                Concedidos
-              </p>
-              <ul className="space-y-1.5">
-                {auto.map((power) => (
-                  <ClassPowerRow
-                    key={power.id}
-                    power={power}
-                    owned
-                  />
-                ))}
-              </ul>
-            </div>
-          )}
-          {classElectives.length > 0 && (
-            <div>
-              <p
-                className={cn(
-                  'mb-1 text-[10px] font-semibold uppercase tracking-wide',
-                  subtleText,
-                )}
-              >
-                Poderes de {entry.className}
-              </p>
-              <ul className="space-y-1.5">
-                {classElectives.map((power) => {
-                  const owned = allChosen.includes(power.id)
-                  const tooHigh = (power.minLevel ?? 1) > entry.level
-                  const prereqChecks = (power.prerequisites ?? []).map((p) =>
-                    evaluatePrerequisite(p, character, chosenSet, classChoices),
-                  )
-                  const missingPrereq = prereqChecks.some((c) => !c.met)
-                  const noSlot = slotsRemaining <= 0
+
+          <Show when={granted().length > 0}>
+            <PowerGroup title="Concedidos">
+              <For each={granted()}>{(power) => <ClassPowerRow power={power} owned />}</For>
+            </PowerGroup>
+          </Show>
+
+          <Show when={electives().length > 0}>
+            <PowerGroup title={`Poderes de ${props.entry.className}`}>
+              <For each={electives()}>
+                {(power) => {
+                  const owned = () => chosen().includes(power.id)
+                  const checks = () =>
+                    (power.prerequisites ?? []).map((prereq) =>
+                      evaluatePrerequisite(
+                        prereq,
+                        props.character,
+                        new Set(chosen()),
+                        classChoices(),
+                      ),
+                    )
+                  const locked = () =>
+                    (power.minLevel ?? 1) > props.entry.level ||
+                    checks().some((check) => !check.met) ||
+                    (slots().remaining <= 0 && !owned())
                   return (
                     <ClassPowerRow
-                      key={power.id}
                       power={power}
-                      owned={owned}
-                      locked={tooHigh || missingPrereq || (noSlot && !owned)}
-                      prereqChecks={prereqChecks}
-                      onToggle={() => toggleElective(power.id)}
-                      disabled={update.isPending}
+                      owned={owned()}
+                      locked={locked()}
+                      prereqChecks={checks()}
+                      disabled={saving()}
+                      onToggle={() => void toggleElective(power.id)}
                     />
                   )
-                })}
-              </ul>
-            </div>
-          )}
-          {generalPool.length > 0 && (
-            <div>
-              <p
-                className={cn(
-                  'mb-1 text-[10px] font-semibold uppercase tracking-wide',
-                  subtleText,
-                )}
-              >
-                Poderes Gerais ({generalLabel})
-              </p>
-              <GeneralPowersPool
-                powers={generalPool}
-                isOwned={(id) => allChosen.includes(id)}
-                isLocked={(power: GeneralPower) => {
-                  const owned = allChosen.includes(power.id)
-                  const tooHigh = (power.minLevel ?? 1) > entry.level
-                  return tooHigh || (slotsRemaining <= 0 && !owned)
                 }}
-                onToggle={toggleElective}
-                disabled={update.isPending}
+              </For>
+            </PowerGroup>
+          </Show>
+
+          <Show when={generalPool().length > 0}>
+            <div>
+              <GroupTitle>Poderes Gerais ({generalLabel()})</GroupTitle>
+              <GeneralPowersPool
+                powers={generalPool()}
+                isOwned={(id) => chosen().includes(id)}
+                isLocked={(power: GeneralPower) =>
+                  (power.minLevel ?? 1) > props.entry.level ||
+                  (slots().remaining <= 0 && !chosen().includes(power.id))
+                }
+                disabled={saving()}
+                onToggle={(id) => void toggleElective(id)}
               />
             </div>
-          )}
+          </Show>
         </div>
-      )}
+      </Show>
     </CollapsibleAbilityCard>
+  )
+}
+
+function GroupTitle(props: { children: JSX.Element }) {
+  return (
+    <p class="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+      {props.children}
+    </p>
+  )
+}
+
+function PowerGroup(props: { title: string; children: JSX.Element }) {
+  return (
+    <div>
+      <GroupTitle>{props.title}</GroupTitle>
+      <ul class="space-y-1.5">{props.children}</ul>
+    </div>
   )
 }

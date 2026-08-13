@@ -1,6 +1,6 @@
 import { FLAG_ACTIVATIONS } from '@tormenta20/t20-data'
 import type { ActivationSpec } from '@tormenta20/t20-data'
-import { stanceFlagOf } from '@/entities/character/use-power-action'
+import { stanceFlagOf } from '@/entities/character/power-rules'
 import type { SheetSearchEntry } from './sheet-search-index'
 
 export type PlayPower = {

@@ -1,18 +1,11 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type {
-  RaceAbility,
-  RaceDefinition,
-} from '@tormenta20/t20-data'
-import { api, type Character, type AbilityChoicesResult } from '@/shared/api/api'
-import { invalidateCharacterDependents } from '@/entities/character/character-cache'
-import type { AttributeKey } from '@/shared/api/api'
-import { characterQueryOptions } from '@/entities/character/queries'
-import { accentTitle, subtleText } from '@/shared/lib/sheet-theme'
+import { useQueryClient } from '@tanstack/solid-query'
+import type { RaceAbility, RaceDefinition } from '@tormenta20/t20-data'
+import { For, Show, createMemo, createSignal } from 'solid-js'
+import type { AttributeKey, Character } from '@/shared/api/api'
 import { cn } from '@/shared/lib/utils'
-import {
-  CollapsibleAbilityCard,
-  type CardFocus,
-} from './collapsible-ability-card'
+import { choiceActions } from './choice-mutations'
+import { pickExclusive } from './choice-lists'
+import { type CardFocus, CollapsibleAbilityCard } from './collapsible-ability-card'
 import { FactChips } from './fact-chips'
 import { parseChoices } from './parse-choices'
 
@@ -25,147 +18,117 @@ const RACE_ATTR_ABBR: Record<AttributeKey, string> = {
   charisma: 'Car',
 }
 
-function formatAttributeBonuses(
-  bonuses: Partial<Record<AttributeKey, number>>,
-): string {
-  const parts: string[] = []
-  for (const [attr, amount] of Object.entries(bonuses)) {
-    if (typeof amount !== 'number' || amount === 0) continue
-    const sign = amount > 0 ? '+' : ''
-    parts.push(`${RACE_ATTR_ABBR[attr as AttributeKey]} ${sign}${amount}`)
-  }
-  return parts.join(', ')
+/** "For +2, Des +1" — keeps the header's attribute numbers explainable. */
+function formatAttributeBonuses(bonuses: Partial<Record<AttributeKey, number>>): string {
+  return Object.entries(bonuses)
+    .filter(([, amount]) => typeof amount === 'number' && amount !== 0)
+    .map(([attr, amount]) => {
+      const sign = (amount as number) > 0 ? '+' : ''
+      return `${RACE_ATTR_ABBR[attr as AttributeKey]} ${sign}${amount}`
+    })
+    .join(', ')
 }
 
 /**
- * Renders the abilities granted by a single race, including variant
- * pickers for abilities that offer sub-choices (e.g. Humano's
- * `versatil` slot). Attribute bonuses derived from the race show as a
- * one-liner at the top so the sheet-header numbers stay explainable.
+ * The abilities one race grants, including variant pickers for the abilities
+ * that offer sub-choices (Humano's `versatil` slot). Attribute bonuses show as
+ * a one-liner at the top.
  */
-export function RaceAbilitySection({
-  race,
-  character,
-  focus,
-  pending,
-}: {
+export function RaceAbilitySection(props: {
   race: RaceDefinition
   character: Character
   focus: CardFocus
   pending: number
 }) {
-  const qc = useQueryClient()
-  const queryKey = characterQueryOptions(character.id).queryKey
-  const choices = parseChoices(character.raceAbilityChoices)
+  const queryClient = useQueryClient()
+  const [pending, setPending] = createSignal(false)
+  const choices = createMemo(() => parseChoices(props.character.raceAbilityChoices))
 
-  const update = useMutation<
-    AbilityChoicesResult,
-    Error,
-    string[],
-    { previous: Character | undefined }
-  >({
-    mutationFn: (next) =>
-      api.characters.updateAbilityChoices(character.id, {
-        raceAbilityChoices: next,
-      }),
-    onMutate: async (next) => {
-      await qc.cancelQueries({ queryKey })
-      const previous = qc.getQueryData<Character>(queryKey)
-      qc.setQueryData<Character>(queryKey, (prev) =>
-        prev ? { ...prev, raceAbilityChoices: JSON.stringify(next) } : prev,
+  const pickVariant = async (ability: RaceAbility, variantId: string) => {
+    const siblings = new Set(ability.variants?.map((v) => v.id) ?? [])
+    setPending(true)
+    try {
+      await choiceActions(queryClient, props.character.id).setRaceAbilityChoices(
+        pickExclusive(choices(), siblings, variantId),
       )
-      return { previous }
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.previous) qc.setQueryData(queryKey, ctx.previous)
-    },
-    onSuccess: (delta) => {
-      qc.setQueryData<Character>(queryKey, (prev) =>
-        prev ? { ...prev, ...delta } : prev,
-      )
-      invalidateCharacterDependents(qc, character.id)
-    },
-  })
-
-  const pickVariant = (ability: RaceAbility, variantId: string) => {
-    const siblingIds = new Set(ability.variants?.map((v) => v.id) ?? [])
-    const next = choices.filter((c) => !siblingIds.has(c))
-    next.push(variantId)
-    update.mutate(next)
+    } catch {
+      // choiceActions already rolled back and told the player.
+    } finally {
+      setPending(false)
+    }
   }
 
-  const bonusLine = formatAttributeBonuses(race.attributeBonuses)
+  const bonusLine = () => formatAttributeBonuses(props.race.attributeBonuses)
+
   return (
     <CollapsibleAbilityCard
-      id={`raca:${race.id}`}
-      title={`Raça: ${race.name}`}
-      pending={pending}
-      focus={focus}
+      id={`raca:${props.race.id}`}
+      title={`Raça: ${props.race.name}`}
+      pending={props.pending}
+      focus={props.focus}
     >
-      {bonusLine && (
-        <p className={cn('mb-2 text-xs', subtleText)}>
-          <span className="font-semibold">Modificadores:</span> {bonusLine}
-        </p>
-      )}
-      <ul className="space-y-2">
-        {race.abilities.map((ability) => (
-          <li key={ability.id} className="rounded border border-border p-2 ">
-            <div className="flex flex-wrap items-center gap-1">
-              <p className={cn('text-xs font-semibold', accentTitle)}>{ability.name}</p>
-            </div>
-            <p className={cn('mt-0.5 text-[11px] leading-snug', subtleText)}>
-              {ability.description}
-            </p>
-            <FactChips facts={ability.facts ?? []} className="mt-1" />
-            {ability.variants && (
-              <RaceVariantPicker
-                ability={ability}
-                selected={ability.variants.find((v) => choices.includes(v.id))?.id}
-                onPick={(id) => pickVariant(ability, id)}
-                disabled={update.isPending}
-              />
-            )}
-          </li>
-        ))}
+      <Show when={bonusLine()}>
+        {(line) => (
+          <p class="mb-2 text-xs text-muted-foreground">
+            <span class="font-semibold">Modificadores:</span> {line()}
+          </p>
+        )}
+      </Show>
+      <ul class="space-y-2">
+        <For each={props.race.abilities}>
+          {(ability) => (
+            <li class="rounded-sm border border-border p-2">
+              <p class="text-xs font-semibold text-grimorio-gold">{ability.name}</p>
+              <p class="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+                {ability.description}
+              </p>
+              <FactChips facts={ability.facts ?? []} class="mt-1" />
+              <Show when={ability.variants}>
+                {(variants) => (
+                  <RaceVariantPicker
+                    variants={variants()}
+                    selected={variants().find((v) => choices().includes(v.id))?.id}
+                    disabled={pending()}
+                    onPick={(id) => void pickVariant(ability, id)}
+                  />
+                )}
+              </Show>
+            </li>
+          )}
+        </For>
       </ul>
     </CollapsibleAbilityCard>
   )
 }
 
-function RaceVariantPicker({
-  ability,
-  selected,
-  onPick,
-  disabled,
-}: {
-  ability: RaceAbility
+function RaceVariantPicker(props: {
+  variants: NonNullable<RaceAbility['variants']>
   selected: string | undefined
-  onPick: (variantId: string) => void
   disabled: boolean
+  onPick: (variantId: string) => void
 }) {
   return (
-    <div className="mt-2 flex flex-wrap gap-1">
-      {ability.variants?.map((variant) => {
-        const active = variant.id === selected
-        return (
+    <div class="mt-2 flex flex-wrap gap-1">
+      <For each={props.variants}>
+        {(variant) => (
           <button
-            key={variant.id}
             type="button"
-            disabled={disabled}
-            onClick={() => onPick(variant.id)}
+            disabled={props.disabled}
+            onClick={() => props.onPick(variant.id)}
             title={variant.description}
-            className={cn(
-              'rounded border px-2 py-0.5 text-[11px] transition-colors',
-              active
-                ? 'border-border bg-muted font-semibold text-foreground   '
-                : 'border-border text-foreground hover:bg-muted   dark:hover:bg-muted',
-              disabled && 'cursor-not-allowed opacity-60',
+            aria-pressed={variant.id === props.selected}
+            class={cn(
+              'rounded-sm border border-border px-2 py-0.5 text-[11px] transition-colors',
+              variant.id === props.selected
+                ? 'bg-muted font-semibold text-foreground'
+                : 'text-foreground hover:bg-muted',
+              props.disabled && 'cursor-not-allowed opacity-60',
             )}
           >
             {variant.name}
           </button>
-        )
-      })}
+        )}
+      </For>
     </div>
   )
 }

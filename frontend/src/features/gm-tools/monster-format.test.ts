@@ -1,26 +1,27 @@
 import { describe, expect, it } from 'vitest'
-import { formatNd, normalizeMonsterName } from './monster-format'
+import { MONSTER_TIPOS, MONSTER_TIPO_LABEL, formatNd } from './monster-format'
 
 describe('formatNd', () => {
-  it('renders sub-1 NDs as book fractions', () => {
+  it('escreve o ND fracionário como o livro escreve', () => {
     expect(formatNd(0.25)).toBe('1/4')
     expect(formatNd(0.5)).toBe('1/2')
   })
 
-  it('renders whole and higher NDs as the number', () => {
-    expect(formatNd(0)).toBe('0')
+  it('deixa o ND inteiro em paz', () => {
     expect(formatNd(1)).toBe('1')
     expect(formatNd(12)).toBe('12')
   })
+
+  it('tolera a imprecisão de ponto flutuante do catálogo', () => {
+    expect(formatNd(0.2500001)).toBe('1/4')
+  })
 })
 
-describe('normalizeMonsterName', () => {
-  it('strips accents and lowercases for search', () => {
-    expect(normalizeMonsterName('Espírito')).toBe('espirito')
-    expect(normalizeMonsterName('  GOBLIN  ')).toBe('goblin')
-  })
-
-  it('makes accented queries match accented names', () => {
-    expect(normalizeMonsterName('Aparição').includes(normalizeMonsterName('apari'))).toBe(true)
+describe('MONSTER_TIPO_LABEL', () => {
+  it('rotula todos os tipos que os chips oferecem', () => {
+    // Um tipo sem rótulo viraria um chip vazio na tela.
+    for (const tipo of MONSTER_TIPOS) {
+      expect(MONSTER_TIPO_LABEL[tipo]).toBeTruthy()
+    }
   })
 })

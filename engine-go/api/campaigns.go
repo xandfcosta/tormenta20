@@ -213,16 +213,30 @@ func (s *Server) handleRotateInvite(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"campaignId": row.ID, "token": row.Invitetoken.String})
 }
 
-// handleResolveInvite ports resolveInviteToken: {campaignId, campaignName} or
-// null (public). The frontend's CampaignInvitePreview expects camelCase keys —
+// handleResolveInvite resolves a shared token to {campaignId, campaignName}
+// (public). The frontend's CampaignInvitePreview expects camelCase keys —
 // returning {id, name} left the join form with an undefined campaignId, so the
 // "Entrar" button stayed disabled forever (ALE-18). Mirrors handleRotateInvite,
 // which already returns campaignId.
+//
+// An unknown or rotated token is a 404. It used to answer 200 with a `null`
+// body, which made a dead invite arrive at the client as a SUCCESS carrying no
+// campaign — indistinguishable from one still loading, so the join screen sat
+// there with a disabled button and no explanation (ALE-80). A missing thing is
+// a 404; only a genuine lookup failure is a 500.
 func (s *Server) handleResolveInvite(w http.ResponseWriter, r *http.Request) {
 	token := chi.URLParam(r, "token")
-	c, err := s.queries.GetCampaignByToken(r.Context(), sql.NullString{String: token, Valid: token != ""})
-	if err != nil || token == "" {
-		writeRawJSON(w, []byte("null")) // unknown/rotated token → null (no 500)
+	if token == "" {
+		writeError(w, http.StatusNotFound, "Invite not found")
+		return
+	}
+	c, err := s.queries.GetCampaignByToken(r.Context(), sql.NullString{String: token, Valid: true})
+	if errors.Is(err, sql.ErrNoRows) {
+		writeError(w, http.StatusNotFound, "Invite not found")
+		return
+	}
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Could not resolve invite")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"campaignId": c.ID, "campaignName": c.Name})

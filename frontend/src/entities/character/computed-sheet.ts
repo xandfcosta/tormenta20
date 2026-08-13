@@ -15,7 +15,6 @@ import type {
   TotalContribs,
 } from '@/shared/lib/computed-sheet-v2'
 import type { Character } from '@/shared/api/api'
-import { useActiveConditionals } from '@/shared/stores/conditionals-store'
 import {
   attributeContributions,
   attributeTotal,
@@ -151,11 +150,11 @@ function computeSheetUncached(
   return engineComputeSheetV2(char, [...activeConditionals])
 }
 
-/** Reactive `ComputedSheetV2` for a character, tracking its active conditionals. */
-export function useComputedSheet(char: Character): ComputedSheetV2 {
-  const active = useActiveConditionals(char.id)
-  return computedSheetFor(char, active)
-}
+// The React file also exported a `useComputedSheet` hook whose whole body was
+// "read the toggled conditionals from a Zustand store, then call
+// `computedSheetFor`". On the Solid side the store is a signal the caller
+// already holds, so the hook has no reason to exist — `computedSheetFor` is
+// the seam, and it was pure all along.
 
 /**
  * The computed breakdown for a single perícia by name — every standard + custom

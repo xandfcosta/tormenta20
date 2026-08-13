@@ -1,184 +1,127 @@
 import { ATTRIBUTE_ABBR, type AttributeKey } from '@tormenta20/t20-data'
-import { ChevronRight } from 'lucide-react'
-import { type ReactNode, useState } from 'react'
+import { ChevronRight } from 'lucide-solid'
+import { For, type JSX, Show, createSignal } from 'solid-js'
 import { AbilityLine } from '@/shared/ui/ability-line'
 import { Badge } from '@/shared/ui/badge'
 import { cn } from '@/shared/lib/utils'
-import { classGrant, type GrantLine, originGrant, signed } from './grant-helpers'
+import type { GrantLine } from './grant-helpers'
+import { classGrant, signed } from './grant-helpers'
 
 /**
- * Inline "what this pick grants" preview. Rendered live under each picker in
- * the creation wizard so the player sees a race/class/origin's attribute
- * deltas and abilities before committing — no hidden bonuses.
+ * Inline "what this pick grants" box, rendered live under a picker in the
+ * Forja so the player sees a race/class/origin's deltas and abilities before
+ * committing — no hidden bonuses.
  */
-export function GrantBox({
-  title,
-  children,
-}: {
-  title: string
-  children: ReactNode
-}) {
+export function GrantBox(props: { title: string; class?: string; children: JSX.Element }) {
   return (
-    <div className="space-y-2 rounded-md border border-border bg-muted/30 p-3 text-sm">
-      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-        {title}
+    <div
+      class={cn(
+        'space-y-2 rounded-md border border-grimorio-iron bg-muted/20 p-3 text-sm',
+        props.class,
+      )}
+    >
+      <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-grimorio-gold">
+        {props.title}
       </p>
-      {children}
+      {props.children}
     </div>
   )
 }
 
-/**
- * Collapsed ability/benefit list — shows `▸ N label` and expands the full
- * AbilityLine list on click. Keeps constrained wizard steps within the
- * viewport (the prose is reference, not a decision input at commit time).
- */
-export function AbilityDisclosure({
-  label,
-  singular,
-  lines,
-  defaultOpen = false,
-}: {
+export type AbilityDisclosureProps = {
   /** Plural noun, e.g. "habilidades". */
   label: string
-  /** Singular noun for count === 1, e.g. "habilidade". Falls back to label. */
+  /** Singular for a single line, e.g. "habilidade". Falls back to `label`. */
   singular?: string
   lines: GrantLine[]
   defaultOpen?: boolean
-}) {
-  const [open, setOpen] = useState(defaultOpen)
-  if (lines.length === 0) return null
-  const noun = lines.length === 1 ? (singular ?? label) : label
-  return (
-    <div className="space-y-1.5">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground"
-      >
-        <ChevronRight
-          className={cn('size-3 transition-transform', open && 'rotate-90')}
-          aria-hidden
-        />
-        {lines.length} {noun}
-      </button>
-      {open && (
-        <ul className="space-y-1.5">
-          {lines.map((line) => (
-            <AbilityLine
-              key={line.id}
-              name={line.name}
-              description={line.description}
-            />
-          ))}
-        </ul>
-      )}
-    </div>
-  )
 }
 
-function GrantList({ label, lines }: { label: string; lines: GrantLine[] }) {
-  if (lines.length === 0) return null
+/**
+ * Collapsed ability list — `▸ N habilidades`, expanding on click. The prose is
+ * reference, not a decision input, so it stays folded and the step keeps its
+ * height for the choices themselves.
+ */
+export function AbilityDisclosure(props: AbilityDisclosureProps) {
+  const [open, setOpen] = createSignal(props.defaultOpen ?? false)
+  const noun = () =>
+    props.lines.length === 1 ? (props.singular ?? props.label) : props.label
+
   return (
-    <div className="space-y-1">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        {label}
-      </p>
-      <ul className="space-y-1.5">
-        {lines.map((line) => (
-          <AbilityLine
-            key={line.id}
-            name={line.name}
-            description={line.description}
+    <Show when={props.lines.length > 0}>
+      <div class="space-y-1.5">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open()}
+          class="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground"
+        >
+          <ChevronRight
+            class={cn('size-3 transition-transform', open() && 'rotate-90')}
+            aria-hidden="true"
           />
-        ))}
-      </ul>
-    </div>
+          {props.lines.length} {noun()}
+        </button>
+        <Show when={open()}>
+          <ul class="space-y-1.5">
+            <For each={props.lines}>
+              {(line) => <AbilityLine name={line.name} description={line.description} />}
+            </For>
+          </ul>
+        </Show>
+      </div>
+    </Show>
   )
 }
 
 /**
- * Signed attribute-delta chips (`+2 CON`, `−1 DES`). Negatives use the outline
- * variant so a penalty reads distinctly from a bonus. Shared by the race
- * picker's selected-race detail and its subrace option cards.
+ * Signed attribute-delta chips (`+2 CON`, `−1 DES`). A penalty takes the
+ * outline variant so it never reads as a bonus at a glance.
  */
-export function DeltaBadges({
-  deltas,
-}: {
-  deltas: Partial<Record<AttributeKey, number>>
-}) {
-  const entries = (Object.entries(deltas) as [AttributeKey, number][]).filter(
-    ([, v]) => v !== 0,
-  )
-  if (entries.length === 0) return null
+export function DeltaBadges(props: { deltas: Partial<Record<AttributeKey, number>> }) {
+  const entries = () =>
+    (Object.entries(props.deltas) as [AttributeKey, number][]).filter(([, v]) => v !== 0)
+
   return (
-    <div className="flex flex-wrap gap-1.5">
-      {entries.map(([key, amount]) => (
-        <Badge key={key} variant={amount < 0 ? 'outline' : 'secondary'}>
-          {signed(amount)} {ATTRIBUTE_ABBR[key]}
-        </Badge>
-      ))}
-    </div>
+    <Show when={entries().length > 0}>
+      <div class="flex flex-wrap gap-1.5">
+        <For each={entries()}>
+          {([key, amount]) => (
+            <Badge variant={amount < 0 ? 'outline' : 'secondary'} class="font-mono">
+              {signed(amount)} {ATTRIBUTE_ABBR[key]}
+            </Badge>
+          )}
+        </For>
+      </div>
+    </Show>
   )
 }
 
-export function ClassGrantPanel({
-  className,
-  level = 1,
-}: {
-  className: string
-  level?: number
-}) {
-  const grant = classGrant(className, level)
+export type ClassGrantLinesProps = { className: string; level: number }
+
+/**
+ * What a class is worth through a level: its vitals line and the powers it
+ * grants automatically. Rendered inside the chosen-class panel, next to that
+ * class's own level control, so raising the level visibly buys something.
+ */
+export function ClassGrantLines(props: ClassGrantLinesProps) {
+  const grant = () => classGrant(props.className, props.level)
+
   return (
-    <GrantBox title={className}>
-      {grant.vitals && (
-        <p className="text-xs text-muted-foreground">
-          PV {grant.vitals.pvInicial} inicial (+{grant.vitals.pvPerLevel}/nível)
-          {' · '}
-          PM +{grant.vitals.mpPerLevel}/nível
-        </p>
-      )}
+    <>
+      <Show when={grant().vitals}>
+        {(vitals) => (
+          <p class="font-mono text-[11px] text-muted-foreground">
+            PV {vitals().pvInicial} inicial (+{vitals().pvPerLevel}/nível) · PM +
+            {vitals().mpPerLevel}/nível
+          </p>
+        )}
+      </Show>
       <AbilityDisclosure
         label="habilidades automáticas"
         singular="habilidade automática"
-        lines={grant.powers}
+        lines={grant().powers}
       />
-    </GrantBox>
-  )
-}
-
-export function OriginGrantPanel({
-  originId,
-  collapsible = false,
-}: {
-  originId: string
-  collapsible?: boolean
-}) {
-  const grant = originGrant(originId)
-  if (!grant) return null
-  const poder = grant.poderUnico ? [grant.poderUnico] : []
-  return (
-    <GrantBox title={grant.name}>
-      <p className="text-xs text-muted-foreground">Escolha 2 benefícios:</p>
-      {collapsible ? (
-        <>
-          <AbilityDisclosure
-            label="benefícios"
-            singular="benefício"
-            lines={grant.benefits}
-          />
-          <AbilityDisclosure label="poder único" lines={poder} />
-        </>
-      ) : (
-        <>
-          <GrantList label="Benefícios" lines={grant.benefits} />
-          {grant.poderUnico && (
-            <GrantList label="Poder único" lines={[grant.poderUnico]} />
-          )}
-        </>
-      )}
-    </GrantBox>
+    </>
   )
 }

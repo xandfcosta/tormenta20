@@ -23,3 +23,5 @@ t20-book.pdf
 
 # Playwright MCP scratch output (page/console dumps from browser automation)
 .playwright-mcp/
+frontend-solid/dist
+frontend-solid/src/routeTree.gen.ts

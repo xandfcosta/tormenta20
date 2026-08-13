@@ -3,6 +3,7 @@ import {
   ACTIVATION_SPECS,
   findActivationByName,
   getActivation,
+  maxStepsForLevel,
 } from '../power-activation'
 
 /**
@@ -53,12 +54,27 @@ describe('power-activation registry', () => {
     const spec = getActivation('class.barbaro.furia')!
     expect(spec.kind).toBe('stance')
     expect(spec.pmCost).toBe(2)
-    const steps = spec.scaling!.maxStepsForLevel
+    const steps = (level: number) => maxStepsForLevel(spec.scaling!, level)
     expect(steps(4)).toBe(0)
     expect(steps(5)).toBe(1)
     expect(steps(6)).toBe(1)
     expect(steps(10)).toBe(2)
     expect(steps(20)).toBe(4)
+  })
+
+  /**
+   * O catálogo é SERVIDO por HTTP (o front não empacota dado de catálogo), e
+   * uma função não sobrevive ao JSON: `maxStepsForLevel` era um método do
+   * spec, chegava `undefined` no cliente e derrubava a cena inteira ao abrir
+   * qualquer postura que escala — nos dois fronts.
+   */
+  it('a escalada sobrevive à ida e volta por JSON', () => {
+    const spec = getActivation('class.barbaro.furia')!
+
+    const overTheWire = JSON.parse(JSON.stringify(spec)) as typeof spec
+
+    expect(overTheWire.scaling).toEqual(spec.scaling)
+    expect(maxStepsForLevel(overTheWire.scaling!, 10)).toBe(2)
   })
 
   it('fontes não-classe: racial, origem e deus resolvem por slug do nome', () => {

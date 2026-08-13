@@ -1,4 +1,4 @@
-import type { QueryClient } from '@tanstack/react-query'
+import type { QueryClient } from '@tanstack/solid-query'
 
 /**
  * Invalidates every derived cache entry that depends on a Character row

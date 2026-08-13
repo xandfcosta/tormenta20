@@ -51,7 +51,6 @@ import {
 import { racasList } from '@/shared/lib/racas-cache'
 import { tormentaPowersRecord } from '@/shared/lib/rules-catalog-cache'
 import type { Character, CharacterExpertise, CharacterItem } from '@/shared/api/api'
-import { useActiveConditionals } from '@/shared/stores/conditionals-store'
 import {
   areEngineCatalogsPrimed,
   computeEffects as engineComputeEffects,
@@ -791,8 +790,16 @@ export function characterEffects(
 
 const EMPTY_SET: ReadonlySet<string> = new Set()
 
-export function useCharacterEffects(character: Character): ItemEffects {
-  const active = useActiveConditionals(character.id)
+/**
+ * Ported from the React `useCharacterEffects`, which only existed to read the
+ * toggled conditionals out of a Zustand store and hand them to
+ * `characterEffects`. The set comes in as an argument here, so this file stays
+ * framework-free and the Solid side wires the store where it belongs.
+ */
+export function characterEffectsWith(
+  character: Character,
+  active: ReadonlySet<string>,
+): ItemEffects {
   return characterEffects(character, active)
 }
 
@@ -802,8 +809,11 @@ export type ConditionalEntry = {
   active: boolean
 }
 
-export function useAllConditionals(character: Character): ConditionalEntry[] {
-  const active = useActiveConditionals(character.id)
+/** Every opt-in the character could toggle, flagged with what's on right now. */
+export function allConditionals(
+  character: Character,
+  active: ReadonlySet<string>,
+): ConditionalEntry[] {
   // Base effects (no conditionals applied) — the `conditional` list enumerates
   // every opt-in the character could toggle. Same choke point as the sheet.
   const raw = resolveEffects(character, EMPTY_SET)
@@ -1130,8 +1140,7 @@ export function characterDamageReduction(
 }
 
 /** True when the Fúria stance is switched on in the Efeitos tab. */
-export function useFuriaActive(character: Character): boolean {
-  const entries = useAllConditionals(character)
+export function isFuriaActive(entries: readonly ConditionalEntry[]): boolean {
   return entries.some((e) => e.effect.flag === 'furia' && e.active)
 }
 

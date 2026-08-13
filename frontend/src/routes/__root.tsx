@@ -1,32 +1,24 @@
-import { type QueryClient, useQuery } from '@tanstack/react-query'
-import {
-  createRootRouteWithContext,
-  Outlet,
-  useNavigate,
-  useRouterState,
-} from '@tanstack/react-router'
-import { useEffect } from 'react'
+import type { QueryClient } from '@tanstack/solid-query'
+import { Outlet, createRootRouteWithContext } from '@tanstack/solid-router'
+import { createEffect } from 'solid-js'
 import { ensureCatalogs, ensureEngineCatalogs } from '@/entities/catalog/ensure-catalogs'
 import { meQueryOptions } from '@/entities/user/queries'
-import { useLogout } from '@/entities/user/use-logout'
-import { DevtoolsDock } from '@/shared/dev/devtools-dock'
-import { AppShell } from '@/shared/layout/app-shell'
-import { useAuthStore } from '@/shared/stores/auth-store'
-import { useUiStore } from '@/shared/stores/ui-store'
+import { useAuth } from '@/shared/stores/auth-context'
+import { useUi } from '@/shared/stores/ui-context'
 import { Toaster } from '@/shared/ui/sonner'
-import { TooltipProvider } from '@/shared/ui/tooltip'
 
-type RouterContext = { queryClient: QueryClient }
+export type RouterContext = { queryClient: QueryClient }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
+  // Resolved once before any route renders, so guards read a settled session
+  // instead of racing a loading state.
   beforeLoad: async ({ context }) => {
     const user = await context.queryClient.ensureQueryData(meQueryOptions)
-    // Prime the catalog cache once for the whole authenticated app (static,
-    // cached-∞) so the sync accessors in derived.ts & co. are warm on ANY
-    // authed route — not just the sheet/wizard. Skipped when logged out, so
-    // login/register stay fast. The Go/WASM engine warms in parallel — it's the
-    // single source for the sheet derive now (task #8), so this must run before
-    // any sheet renders.
+    // The catalogs are fetched, not bundled, and the sheet derives through the
+    // WASM engine — both have SYNCHRONOUS accessors, so they must be warm
+    // before any sheet renders or `computedSheetFor` returns nothing and the
+    // panel reads `.expertises` off undefined (ALE-83). Skipped when logged
+    // out, so /login stays light; the two warm in parallel.
     if (user) {
       await Promise.all([
         ensureCatalogs(context.queryClient),
@@ -38,121 +30,19 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   component: RootLayout,
 })
 
+/**
+ * Thin root: mirrors the resolved session into the auth store and renders the
+ * matched route. The app shell (nav, theme, toaster) lands in ALE-66.
+ */
 function RootLayout() {
-  const { user } = Route.useRouteContext()
-  const navigate = useNavigate()
-  const setUser = useAuthStore((s) => s.setUser)
-  const me = useQuery(meQueryOptions)
-  const theme = useUiStore((s) => s.theme)
-  const toggleTheme = useUiStore((s) => s.toggleTheme)
-  // A live session runs full-screen ("match mode") — drop the app nav
-  // when the session route is matched so the session bar owns the viewport.
-  const inMatch = useRouterState({
-    select: (s) =>
-      s.matches.some(
-        (m) => m.routeId === '/campaigns/$id/sessions/$sid',
-      ),
-  })
-  // The character sheet stacks its own tab bar at the bottom edge; on phones
-  // the app BottomNav directly beneath it made two same-height tap surfaces
-  // ("Campanhas" existed in both). Suppress the app bar there — TopNav stays,
-  // so navigation is never stranded (audit P1).
-  const inSheet = useRouterState({
-    select: (s) =>
-      s.matches.some(
-        (m) =>
-          m.routeId === '/characters/$id/' ||
-          m.routeId === '/characters/$id/sheet',
-      ),
-  })
-  // Auth screens own the whole viewport too (split-screen AuthShell), so
-  // they render in the bare shell with no app nav.
-  const inAuth = useRouterState({
-    select: (s) =>
-      s.matches.some(
-        (m) => m.routeId === '/login' || m.routeId === '/register',
-      ),
-  })
-  // The Hub (`/`) IS the main menu — it renders as a full game scene with no
-  // app nav; its own footer owns theme/logout (ALE-38). Fuller cross-scene nav
-  // (back-to-hub, /users reach) lands in ALE-41.
-  const inHub = useRouterState({
-    select: (s) => s.matches.some((m) => m.routeId === '/'),
-  })
-  // The Personagens roster is a full grimório scene now (SceneShell owns the
-  // back-to-Hub control). Bare-wire ONLY the index route — the sheet
-  // (`/characters/$id`) and the wizard (`/characters/new`) keep their web nav
-  // until they migrate too (ALE-43/ALE-41). See the sibling routeId note.
-  const inRoster = useRouterState({
-    select: (s) => s.matches.some((m) => m.routeId === '/characters/'),
-  })
-  // Crônicas (`/campaigns/`) is a full grimório scene now (SceneShell owns the
-  // back-to-Hub control). Bare-wire ONLY the index route — the detail
-  // (`/campaigns/$id`), join and new keep their web nav until they migrate too
-  // (ALE-55). `/campaigns/$id` is a layout, so match the index routeId exactly.
-  const inCampaigns = useRouterState({
-    select: (s) => s.matches.some((m) => m.routeId === '/campaigns/'),
-  })
-  // The campaign detail (`/campaigns/$id/`) is a full grimório scene now
-  // (SceneShell owns back-to-Crônicas). Bare-wire only the detail index — the
-  // layout and the live session (`/campaigns/$id/sessions/$sid`, already
-  // match-mode) are untouched (ALE-58).
-  const inCampaignDetail = useRouterState({
-    select: (s) => s.matches.some((m) => m.routeId === '/campaigns/$id/'),
-  })
-  // The character sheet (`/characters/$id/`) is a full grimório scene now
-  // (SceneShell owns back-to-roster). Bare-wire only the editor index — the
-  // computed read-only view (`/characters/$id/sheet`) keeps its web nav.
-  const inFicha = useRouterState({
-    select: (s) => s.matches.some((m) => m.routeId === '/characters/$id/'),
-  })
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark')
-  }, [theme])
-
-  useEffect(() => {
-    setUser(me.data ?? user ?? null)
-  }, [me.data, user, setUser])
-
-  const logout = useLogout(() => navigate({ to: '/login' }))
-
-  const current = me.data ?? user ?? null
-
+  const context = Route.useRouteContext()
+  const auth = useAuth()
+  const ui = useUi()
+  createEffect(() => auth.setUser(context().user))
   return (
-    <TooltipProvider delayDuration={150}>
-      <AppShell
-        user={current}
-        theme={theme}
-        onToggleTheme={toggleTheme}
-        onLogout={() => logout.mutate()}
-        logoutPending={logout.isPending}
-        bare={
-          inMatch ||
-          inAuth ||
-          inHub ||
-          inRoster ||
-          inCampaigns ||
-          inCampaignDetail ||
-          inFicha
-        }
-        hideBottomNav={inSheet}
-      >
-        <Outlet />
-      </AppShell>
-      <Toaster />
-      {/* Bottom corners: the top ones sit over the TopNav on every route —
-          the RQ toggle covered the brand ("Tormenta 20" read "menta 20") and
-          the router pill hid the theme/user controls (UI audit task 14).
-          Hidden below md: on phones the pills sat on top of the sheet's
-          bottom tab bar, covering the last tabs. */}
-      {/* Devtools: production is always off (guarded by import.meta.env.DEV,
-          which the prod build stamps to false and dead-code-eliminates); in
-          dev, VITE_DEVTOOLS=off opts out. The dock makes both launchers
-          draggable so they never trap the bottom-corner UI. */}
-      {import.meta.env.DEV && import.meta.env.VITE_DEVTOOLS !== 'off' && (
-        <DevtoolsDock />
-      )}
-    </TooltipProvider>
+    <>
+      <Outlet />
+      <Toaster theme={ui.theme()} />
+    </>
   )
 }

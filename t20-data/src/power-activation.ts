@@ -59,8 +59,30 @@ export type ActivationScaling = {
   stepPm: number
   /** O que cada passo compra ("+1 no bônus de Fúria"). */
   stepLabel: string
-  /** Passos máximos pelo NÍVEL NA CLASSE (p40: multiclasse conta só Bárbaro). */
-  maxStepsForLevel: (classLevel: number) => number
+  /**
+   * Nível NA CLASSE que destrava o primeiro passo, e de quantos em quantos
+   * níveis vem o próximo.
+   *
+   * DADO, não função: o catálogo é servido por HTTP e uma função não sobrevive
+   * ao JSON — o front recebia `scaling` sem o método e derrubava a cena ao
+   * abrir qualquer postura que escala. Leia com `maxStepsForLevel`.
+   */
+  firstStepLevel: number
+  stepEveryLevels: number
+}
+
+/**
+ * Passos extras que o nível NA CLASSE concede (p40: multiclasse conta só os
+ * níveis de Bárbaro para a Fúria).
+ *
+ * @example maxStepsForLevel({ firstStepLevel: 5, stepEveryLevels: 5, ... }, 10) // 2
+ */
+export function maxStepsForLevel(
+  scaling: ActivationScaling,
+  classLevel: number,
+): number {
+  if (classLevel < scaling.firstStepLevel) return 0
+  return 1 + Math.floor((classLevel - scaling.firstStepLevel) / scaling.stepEveryLevels)
 }
 
 /**
@@ -161,7 +183,8 @@ const STANCE_SPECS: ActivationSpec[] = [
       basePm: FLAG_ACTIVATIONS.furia.pmCost,
       stepPm: 1,
       stepLabel: '+1 no bônus de Fúria',
-      maxStepsForLevel: (classLevel) => Math.floor(classLevel / 5),
+      firstStepLevel: 5,
+      stepEveryLevels: 5,
     },
     bookPage: FLAG_ACTIVATIONS.furia.bookPage,
   },
@@ -179,7 +202,8 @@ const STANCE_SPECS: ActivationSpec[] = [
       basePm: FLAG_ACTIVATIONS.inspiracao.pmCost,
       stepPm: 2,
       stepLabel: '+1 no bônus de Inspiração',
-      maxStepsForLevel: (classLevel) => Math.floor((classLevel - 1) / 4),
+      firstStepLevel: 5,
+      stepEveryLevels: 4,
     },
     bookPage: FLAG_ACTIVATIONS.inspiracao.bookPage,
   },

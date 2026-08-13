@@ -1,88 +1,79 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
-import { Button } from '@/shared/ui/button'
-import { Card, CardContent, CardHeader } from '@/shared/ui/card'
-import { SectionHeading } from '@/shared/ui/section-heading'
-import { Textarea } from '@/shared/ui/textarea'
-import { ApiError, api } from '@/shared/api/api'
-import type { Session } from '@/shared/api/api'
+import { useQueryClient } from '@tanstack/solid-query'
+import { Show, createSignal } from 'solid-js'
 import { campaignSessionQueryOptions } from '@/entities/session/queries'
-export function NotesCard({
-  campaignId,
-  session,
-}: {
-  campaignId: number
-  session: Session
-}) {
-  const qc = useQueryClient()
-  const [editing, setEditing] = useState(false)
-  const [notes, setNotes] = useState(session.notes ?? '')
-  const [error, setError] = useState<string | null>(null)
+import { ApiError, type Session, api } from '@/shared/api/api'
+import { Button } from '@/shared/ui/button'
+import { DialogInlineError } from '@/shared/ui/dialog-inline-error'
+import { Textarea } from '@/shared/ui/textarea'
 
-  const patch = useMutation({
-    mutationFn: () =>
-      api.sessions.update(campaignId, session.id, { notes }),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: campaignSessionQueryOptions(campaignId, session.id).queryKey,
+/** The GM's running notes for the session — what happened, XP, treasure. */
+export function NotesCard(props: { campaignId: number; session: Session }) {
+  const queryClient = useQueryClient()
+  const [editing, setEditing] = createSignal(false)
+  const [notes, setNotes] = createSignal(props.session.notes ?? '')
+  const [pending, setPending] = createSignal(false)
+  const [error, setError] = createSignal<string | null>(null)
+
+  const save = async () => {
+    setPending(true)
+    setError(null)
+    try {
+      await api.sessions.update(props.campaignId, props.session.id, { notes: notes() })
+      queryClient.invalidateQueries({
+        queryKey: campaignSessionQueryOptions(props.campaignId, props.session.id).queryKey,
       })
       setEditing(false)
-      setError(null)
-    },
-    onError: (e) => {
-      setError(e instanceof ApiError ? e.message : 'Erro ao salvar')
-    },
-  })
+    } catch (failure) {
+      setError(failure instanceof ApiError ? failure.message : 'Erro ao salvar')
+    } finally {
+      setPending(false)
+    }
+  }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <SectionHeading variant="aharadak" as="h2">
-          Notas
-        </SectionHeading>
-        {!editing && (
+    <section class="space-y-3 rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)] p-3 text-sm">
+      <div class="flex flex-row items-center justify-between">
+        <h2 class="font-heading text-sm uppercase tracking-wide text-grimorio-gold">Notas</h2>
+        <Show when={!editing()}>
           <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
             Editar
           </Button>
-        )}
-      </CardHeader>
-      <CardContent className="space-y-3 text-sm">
-        {editing ? (
-          <>
-            <Textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={10}
-              placeholder="Anote acontecimentos, decisões, XP, tesouro…"
-            />
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setEditing(false)
-                  setNotes(session.notes ?? '')
-                  setError(null)
-                }}
-              >
-                Cancelar
-              </Button>
-              <Button
-                disabled={patch.isPending}
-                onClick={() => patch.mutate()}
-              >
-                {patch.isPending ? 'Salvando…' : 'Salvar'}
-              </Button>
-            </div>
-          </>
-        ) : session.notes ? (
-          <p className="whitespace-pre-line text-muted-foreground">
-            {session.notes}
+        </Show>
+      </div>
+
+      <Show
+        when={editing()}
+        fallback={
+          <p class="whitespace-pre-line text-muted-foreground">
+            {props.session.notes || 'Nenhuma nota ainda.'}
           </p>
-        ) : (
-          <p className="text-muted-foreground">Nenhuma nota ainda.</p>
-        )}
-      </CardContent>
-    </Card>
+        }
+      >
+        <Textarea
+          value={notes()}
+          onInput={(event) => setNotes(event.currentTarget.value)}
+          rows={10}
+          aria-label="Notas da sessão"
+          placeholder="Anote acontecimentos, decisões, XP, tesouro…"
+        />
+        <DialogInlineError message={error()} />
+        <div class="flex justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setEditing(false)
+              setNotes(props.session.notes ?? '')
+              setError(null)
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button size="sm" disabled={pending()} onClick={() => void save()}>
+            {pending() ? 'Salvando…' : 'Salvar'}
+          </Button>
+        </div>
+      </Show>
+    </section>
   )
 }

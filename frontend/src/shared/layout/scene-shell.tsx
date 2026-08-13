@@ -1,35 +1,14 @@
-import { ChevronLeft } from 'lucide-react'
-import { type ReactNode, useEffect, useRef, useState } from 'react'
-import { SceneContainerContext } from '@/shared/lib/scene-container'
-import { usePrefersReducedMotion } from '@/shared/lib/use-media-query'
+import { ChevronLeft } from 'lucide-solid'
+import { type JSX, type ParentProps, Show, createSignal, onMount } from 'solid-js'
+import { SceneContainerProvider } from '@/shared/lib/scene-container'
+import { createPrefersReducedMotion } from '@/shared/lib/media-query'
 import { cn } from '@/shared/lib/utils'
 import { BackgroundTexture } from '@/shared/ui/background-texture'
 import { SceneTitle } from '@/shared/ui/scene-title'
 
-/**
- * SceneShell — the frame every game scene lives in. It owns a fixed `dvh`
- * viewport (a scene doesn't scroll like a web document — its content column
- * scrolls inside instead), the `.scene-grimorio` token scope, the textured
- * backdrop, an optional title, and an optional diegetic "back" control.
- *
- * Two layouts: the default (Hub-style) centers a big cinematic Cinzel title in
- * the content; `dense` (content-heavy section scenes like the roster) uses a
- * compact top header row — back + small title + `headerRight` — and tighter
- * padding so the stage/list keeps the height.
- *
- * The enter transition plays on mount and is skipped under
- * `prefers-reduced-motion` (WCAG 2.3.3). Generalizes the app's `bare`
- * full-screen "match mode"; a scene page renders in a bare route and wraps its
- * body here. See [[reference_tanstack_nested_routes]] for the bare wiring.
- *
- * @example
- * <SceneShell title="Tormenta 20" kicker="— Grimório de Arton —"><HubMenu /></SceneShell>
- * <SceneShell dense title="Personagens" onBack={toHub} headerRight={<Search/>}>…</SceneShell>
- */
-type SceneShellProps = {
-  children: ReactNode
-  title?: ReactNode
-  kicker?: ReactNode
+export type SceneShellProps = ParentProps<{
+  title?: JSX.Element
+  kicker?: JSX.Element
   /** When set, renders a diegetic "back" control that calls this. */
   onBack?: () => void
   backLabel?: string
@@ -37,127 +16,127 @@ type SceneShellProps = {
   /** Override the decorative edge vignette (defaults on for stone). Scenes that
    *  drive their own edge effect — the sheet's HP vignette — pass `false`. */
   vignette?: boolean
-  /** Fires once when the scene mounts *and* motion is allowed — pairs the
-   *  enter animation with an optional cue (e.g. a transition sound). */
+  /** Fires once when the scene mounts *and* motion is allowed — pairs the enter
+   *  animation with an optional cue (e.g. a transition sound). */
   onEnter?: () => void
   /** Compact header-row layout for content-heavy section scenes. */
   dense?: boolean
   /** Controls aligned to the right of the dense header (search, actions). */
-  headerRight?: ReactNode
+  headerRight?: JSX.Element
   /** Full-bleed content: no padding, no outer scroll — the child owns its own
    *  height/scroll (e.g. the character sheet's HUD-pinned grid). */
   bleed?: boolean
   /** Extra classes for the scrollable content column. */
-  className?: string
-}
+  class?: string
+}>
 
-function SceneShell({
-  children,
-  title,
-  kicker,
-  onBack,
-  backLabel = 'Voltar',
-  texture = 'stone',
-  vignette,
-  onEnter,
-  dense = false,
-  headerRight,
-  bleed = false,
-  className,
-}: SceneShellProps) {
-  const reduced = usePrefersReducedMotion()
-  // Fire onEnter once on mount (a scene "enters" once), gated by motion. Refs
-  // keep the mount-only effect free of reactive deps.
-  const enterRef = useRef(onEnter)
-  enterRef.current = onEnter
-  const reducedRef = useRef(reduced)
-  reducedRef.current = reduced
-  useEffect(() => {
-    if (!reducedRef.current) enterRef.current?.()
-  }, [])
-  // The scene element is published so overlays (Dialog/Popover) can portal into
-  // it and inherit `.scene-grimorio` instead of rendering shadcn over the body.
-  const [sceneEl, setSceneEl] = useState<HTMLElement | null>(null)
+/**
+ * The frame every game scene lives in. It owns a fixed `dvh` viewport (a scene
+ * doesn't scroll like a web document — its content column scrolls inside
+ * instead), the `.scene-grimorio` token scope, the textured backdrop, an
+ * optional title, and an optional diegetic "back" control.
+ *
+ * Two layouts: the default (Hub-style) centers a big cinematic Cinzel title;
+ * `dense` (content-heavy section scenes like the roster) uses a compact top
+ * header row — back + small title + `headerRight` — and tighter padding so the
+ * stage keeps the height.
+ *
+ * The enter transition plays on mount and is skipped under
+ * `prefers-reduced-motion` (WCAG 2.3.3).
+ *
+ * @example
+ * <SceneShell title="Tormenta 20" kicker="— Grimório de Arton —"><HubMenu /></SceneShell>
+ * <SceneShell dense title="Personagens" onBack={toHub} headerRight={<Search/>}>…</SceneShell>
+ */
+export function SceneShell(props: SceneShellProps) {
+  const reduced = createPrefersReducedMotion()
+  // Published so overlays (Dialog/Popover/Tooltip/Select) can portal into the
+  // scene and inherit `.scene-grimorio` instead of rendering shadcn over body.
+  const [sceneEl, setSceneEl] = createSignal<HTMLElement | null>(null)
+
+  // A scene "enters" once. onMount is inherently mount-only, so the React
+  // version's ref dance to keep the effect dep-free simply isn't needed.
+  onMount(() => {
+    if (!reduced()) props.onEnter?.()
+  })
+
+  const texture = () => props.texture ?? 'stone'
 
   return (
-    <SceneContainerContext.Provider value={sceneEl}>
-    <section
-      ref={setSceneEl}
-      data-slot="scene-shell"
-      data-dense={dense || undefined}
-      className="scene-grimorio relative flex h-dvh flex-col overflow-hidden"
-    >
-      <BackgroundTexture
-        variant={texture}
-        vignette={vignette ?? texture === 'stone'}
-      />
-
-      {dense ? (
-        <header
-          className="relative flex flex-wrap items-center gap-3 border-b border-grimorio-iron px-4 py-3"
-          style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}
-        >
-          {onBack ? <BackControl onBack={onBack} label={backLabel} /> : null}
-          {title ? (
-            <h1 className="font-heading text-xl tracking-wide text-foreground">
-              {title}
-            </h1>
-          ) : null}
-          {headerRight ? (
-            <div className="ml-auto flex flex-1 flex-wrap items-center justify-end gap-2">
-              {headerRight}
-            </div>
-          ) : null}
-        </header>
-      ) : onBack ? (
-        <div
-          className="absolute left-3 top-3 z-10"
-          style={{ paddingTop: 'env(safe-area-inset-top)' }}
-        >
-          <BackControl onBack={onBack} label={backLabel} />
-        </div>
-      ) : null}
-
-      <div
-        data-slot="scene-content"
-        data-animate={reduced ? undefined : true}
-        className={cn(
-          'relative flex min-h-0 flex-1 flex-col',
-          // A scene never scrolls horizontally (overflow-x-hidden also clips
-          // slide-in overlays like the dossier). `bleed` hands scroll + padding
-          // to a full-height child; otherwise the column scrolls with padding.
-          bleed
-            ? 'overflow-hidden'
-            : cn(
-                'overflow-x-hidden overflow-y-auto',
-                dense ? 'px-4 py-4' : 'px-5 py-14',
-              ),
-          !reduced && 'scene-in',
-          className,
-        )}
+    <SceneContainerProvider element={sceneEl}>
+      <section
+        ref={setSceneEl}
+        data-slot="scene-shell"
+        data-dense={props.dense || undefined}
+        class="scene-grimorio relative flex h-dvh flex-col overflow-hidden"
       >
-        {!dense && title ? (
-          <SceneTitle kicker={kicker}>{title}</SceneTitle>
-        ) : null}
-        {children}
-      </div>
-    </section>
-    </SceneContainerContext.Provider>
+        <BackgroundTexture variant={texture()} vignette={props.vignette ?? texture() === 'stone'} />
+
+        <Show
+          when={props.dense}
+          fallback={
+            <Show when={props.onBack}>
+              {(onBack) => (
+                <div class="absolute left-3 top-3 z-10" style={{ 'padding-top': 'env(safe-area-inset-top)' }}>
+                  <BackControl onBack={onBack()} label={props.backLabel ?? 'Voltar'} />
+                </div>
+              )}
+            </Show>
+          }
+        >
+          <header
+            class="relative flex flex-wrap items-center gap-3 border-b border-grimorio-iron px-4 py-3"
+            style={{ 'padding-top': 'max(0.75rem, env(safe-area-inset-top))' }}
+          >
+            <Show when={props.onBack}>
+              {(onBack) => <BackControl onBack={onBack()} label={props.backLabel ?? 'Voltar'} />}
+            </Show>
+            <Show when={props.title}>
+              {(title) => <h1 class="font-heading text-xl tracking-wide text-foreground">{title()}</h1>}
+            </Show>
+            <Show when={props.headerRight}>
+              {(right) => (
+                <div class="ml-auto flex flex-1 flex-wrap items-center justify-end gap-2">{right()}</div>
+              )}
+            </Show>
+          </header>
+        </Show>
+
+        <div
+          data-slot="scene-content"
+          data-animate={reduced() ? undefined : true}
+          class={cn(
+            'relative flex min-h-0 flex-1 flex-col',
+            // A scene never scrolls horizontally (overflow-x-hidden also clips
+            // slide-in overlays like the dossier). `bleed` hands scroll +
+            // padding to a full-height child; otherwise the column scrolls.
+            props.bleed
+              ? 'overflow-hidden'
+              : cn('overflow-x-hidden overflow-y-auto', props.dense ? 'px-4 py-4' : 'px-5 py-14'),
+            !reduced() && 'scene-in',
+            props.class,
+          )}
+        >
+          <Show when={!props.dense && props.title}>
+            {(title) => <SceneTitle kicker={props.kicker}>{title()}</SceneTitle>}
+          </Show>
+          {props.children}
+        </div>
+      </section>
+    </SceneContainerProvider>
   )
 }
 
 /** The diegetic back affordance — shared by both layouts. */
-function BackControl({ onBack, label }: { onBack: () => void; label: string }) {
+function BackControl(props: { onBack: () => void; label: string }) {
   return (
     <button
       type="button"
-      onClick={onBack}
-      className="inline-flex min-h-11 items-center gap-1 rounded-sm px-3 font-heading text-sm tracking-wide text-muted-foreground transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grimorio-gold"
+      onClick={() => props.onBack()}
+      class="inline-flex min-h-11 items-center gap-1 rounded-sm px-3 font-heading text-sm tracking-wide text-muted-foreground transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grimorio-gold"
     >
-      <ChevronLeft aria-hidden className="size-4" />
-      {label}
+      <ChevronLeft aria-hidden="true" class="size-4" />
+      {props.label}
     </button>
   )
 }
-
-export { SceneShell }

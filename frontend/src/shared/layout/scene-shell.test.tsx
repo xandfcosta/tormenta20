@@ -1,96 +1,116 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/shared/ui/dialog'
 import { SceneShell } from './scene-shell'
 
-/**
- * Named fake for the reduced-motion query — lets each test pin whether the OS
- * is asking to minimize motion without a real browser. Mirrors the fake in
- * use-media-query.test.ts (project I/O-mock rule).
- */
-function installReducedMotion(reduce: boolean) {
-  Object.defineProperty(window, 'matchMedia', {
-    writable: true,
-    configurable: true,
-    value: vi.fn((query: string) => ({
-      matches: query.includes('prefers-reduced-motion') ? reduce : false,
-      media: query,
-      addEventListener: () => {},
-      removeEventListener: () => {},
-    })),
-  })
+function mockMotion(reduced: boolean): void {
+  window.matchMedia = vi.fn().mockImplementation((media: string) => ({
+    matches: media.includes('prefers-reduced-motion') ? reduced : false,
+    media,
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }))
 }
 
-afterEach(() => vi.restoreAllMocks())
-
-const shell = () => document.querySelector('[data-slot="scene-shell"]')
-const content = () => document.querySelector('[data-slot="scene-content"]')
+beforeEach(() => mockMotion(false))
+afterEach(() => {
+  vi.clearAllMocks()
+  document.body.innerHTML = ''
+})
 
 describe('SceneShell', () => {
-  it('renders its children inside the grimório scene scope', () => {
-    installReducedMotion(false)
-    render(<SceneShell>corpo da cena</SceneShell>)
-    expect(screen.getByText('corpo da cena')).toBeInTheDocument()
-    expect(shell()).toHaveClass('scene-grimorio')
+  it('rende o conteúdo dentro do escopo de tokens da cena', () => {
+    const { container } = render(() => <SceneShell>conteúdo</SceneShell>)
+    const shell = container.querySelector('[data-slot=scene-shell]')
+    expect(shell?.className).toContain('scene-grimorio')
+    expect(shell?.className).toContain('h-dvh')
+    expect(screen.getByText('conteúdo')).toBeInTheDocument()
   })
 
-  it('renders the scene title when provided', () => {
-    installReducedMotion(false)
-    render(<SceneShell title="Tormenta 20">x</SceneShell>)
-    expect(
-      screen.getByRole('heading', { name: 'Tormenta 20' }),
-    ).toBeInTheDocument()
+  it('layout padrão mostra o título cinematográfico com kicker', () => {
+    render(() => (
+      <SceneShell title="Tormenta 20" kicker="— Grimório de Arton —">
+        x
+      </SceneShell>
+    ))
+    expect(screen.getByRole('heading', { level: 1, name: 'Tormenta 20' })).toBeInTheDocument()
+    expect(screen.getByText('— Grimório de Arton —')).toBeInTheDocument()
   })
 
-  it('plays the enter transition when motion is allowed', () => {
-    installReducedMotion(false)
-    render(<SceneShell>x</SceneShell>)
-    expect(content()).toHaveClass('scene-in')
+  it('layout dense usa o header compacto e aceita controles à direita', () => {
+    const { container } = render(() => (
+      <SceneShell dense title="Personagens" headerRight={<button type="button">Novo</button>}>
+        x
+      </SceneShell>
+    ))
+    expect(container.querySelector('[data-slot=scene-shell]')).toHaveAttribute('data-dense', 'true')
+    expect(screen.getByRole('heading', { level: 1, name: 'Personagens' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Novo' })).toBeInTheDocument()
   })
 
-  it('omits the enter transition under prefers-reduced-motion', () => {
-    installReducedMotion(true)
-    render(<SceneShell>x</SceneShell>)
-    expect(content()).not.toHaveClass('scene-in')
+  it('o controle de voltar chama onBack', async () => {
+    const onBack = vi.fn()
+    render(() => (
+      <SceneShell onBack={onBack} backLabel="Voltar ao Hub">
+        x
+      </SceneShell>
+    ))
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Voltar ao Hub' }))
+    expect(onBack).toHaveBeenCalledOnce()
   })
 
-  it('fires onEnter once on mount when motion is allowed', () => {
-    installReducedMotion(false)
+  it('sem onBack não rende controle nenhum', () => {
+    render(() => <SceneShell>x</SceneShell>)
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  })
+
+  it('onEnter dispara uma vez ao montar', () => {
     const onEnter = vi.fn()
-    render(<SceneShell onEnter={onEnter}>x</SceneShell>)
+    render(() => <SceneShell onEnter={onEnter}>x</SceneShell>)
     expect(onEnter).toHaveBeenCalledOnce()
   })
 
-  it('skips onEnter under prefers-reduced-motion', () => {
-    installReducedMotion(true)
+  // WCAG 2.3.3: quem pediu menos movimento não ganha nem a animação nem a
+  // deixa sonora que anda junto com ela.
+  it('respeita prefers-reduced-motion: sem animação e sem onEnter', () => {
+    mockMotion(true)
     const onEnter = vi.fn()
-    render(<SceneShell onEnter={onEnter}>x</SceneShell>)
+    const { container } = render(() => <SceneShell onEnter={onEnter}>x</SceneShell>)
     expect(onEnter).not.toHaveBeenCalled()
+    const content = container.querySelector('[data-slot=scene-content]')
+    expect(content?.className).not.toContain('scene-in')
+    expect(content).not.toHaveAttribute('data-animate')
   })
 
-  it('renders a compact header with title + headerRight in dense mode', () => {
-    installReducedMotion(false)
-    render(
-      <SceneShell dense title="Personagens" headerRight={<span>controles</span>}>
-        corpo
-      </SceneShell>,
-    )
-    expect(
-      screen.getByRole('heading', { name: 'Personagens' }),
-    ).toBeInTheDocument()
-    expect(screen.getByText('controles')).toBeInTheDocument()
-    expect(screen.getByText('corpo')).toBeInTheDocument()
+  it('bleed entrega o scroll pro filho', () => {
+    const { container } = render(() => <SceneShell bleed>x</SceneShell>)
+    const content = container.querySelector('[data-slot=scene-content]')
+    expect(content?.className).toContain('overflow-hidden')
+    expect(content?.className).not.toContain('overflow-y-auto')
   })
 
-  it('shows the back control only when onBack is set, and fires it', async () => {
-    installReducedMotion(false)
-    const onBack = vi.fn()
-    const { rerender } = render(<SceneShell>x</SceneShell>)
-    expect(
-      screen.queryByRole('button', { name: /Voltar/ }),
-    ).not.toBeInTheDocument()
-    rerender(<SceneShell onBack={onBack}>x</SceneShell>)
-    await userEvent.click(screen.getByRole('button', { name: /Voltar/ }))
-    expect(onBack).toHaveBeenCalledOnce()
+  // A razão de o container de cena existir: sem isso o dialog abre no body e
+  // perde o escopo `.scene-grimorio`, renderizando shadcn puro sobre a cena.
+  it('overlays portalam PRA DENTRO da cena, herdando os tokens', async () => {
+    const { container } = render(() => (
+      <SceneShell>
+        <Dialog>
+          <DialogTrigger>Abrir</DialogTrigger>
+          <DialogContent>
+            <DialogTitle>Confirmar</DialogTitle>
+          </DialogContent>
+        </Dialog>
+      </SceneShell>
+    ))
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Abrir' }))
+
+    const dialog = await screen.findByRole('dialog')
+    const scene = container.querySelector('[data-slot=scene-shell]')
+    await waitFor(() => expect(scene?.contains(dialog)).toBe(true))
   })
 })

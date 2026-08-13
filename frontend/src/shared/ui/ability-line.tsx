@@ -1,16 +1,10 @@
 import type { FactCategory } from '@tormenta20/t20-data'
-import {
-  Eye,
-  Footprints,
-  type LucideIcon,
-  Shield,
-  ShieldCheck,
-  Sparkles,
-  Zap,
-} from 'lucide-react'
+import { Eye, Footprints, Shield, ShieldCheck, Sparkles, Zap } from 'lucide-solid'
+import { Dynamic } from 'solid-js/web'
+import type { Component } from 'solid-js'
 
 /** Category → icon, so a list of abilities/facts gets scannable eye-anchors. */
-export const ABILITY_ICON: Record<FactCategory, LucideIcon> = {
+export const ABILITY_ICON: Record<FactCategory, Component<{ class?: string }>> = {
   sense: Eye,
   dr: Shield,
   immunity: ShieldCheck,
@@ -21,30 +15,28 @@ export const ABILITY_ICON: Record<FactCategory, LucideIcon> = {
 
 /**
  * One ability/benefit row: a category icon + bold name + a two-line-clamped
- * description. Shared by the character-select info panel and the creation
- * wizard's grant previews so abilities render identically across both screens.
- * Render inside a <ul>.
+ * description. Shared by every surface that lists abilities, so they read
+ * identically wherever they appear. Render inside a `<ul>`.
+ *
+ * @example <AbilityLine category="movement" name="Deslocamento" description="9m" />
  */
-export function AbilityLine({
-  category,
-  name,
-  description,
-}: {
+export function AbilityLine(props: {
   category?: FactCategory
   name: string
   description: string
 }) {
-  const Icon = category ? ABILITY_ICON[category] : Sparkles
+  const icon = () => (props.category ? ABILITY_ICON[props.category] : Sparkles)
   return (
-    <li className="flex gap-2">
-      <Icon
-        className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-        aria-hidden
+    <li class="flex gap-2">
+      <Dynamic
+        component={icon()}
+        class="mt-0.5 size-4 shrink-0 text-muted-foreground"
+        aria-hidden="true"
       />
-      <div className="min-w-0">
-        <p className="text-xs font-semibold">{name}</p>
-        <p className="line-clamp-2 text-[11px] leading-snug text-muted-foreground">
-          {description}
+      <div class="min-w-0">
+        <p class="text-xs font-semibold">{props.name}</p>
+        <p class="line-clamp-2 text-[11px] leading-snug text-muted-foreground">
+          {props.description}
         </p>
       </div>
     </li>

@@ -1,160 +1,119 @@
-import * as React from "react"
-import { XIcon } from "lucide-react"
-import { Dialog as DialogPrimitive } from "radix-ui"
+import { Dialog as KDialog } from '@kobalte/core/dialog'
+import { XIcon } from 'lucide-solid'
+import { type ComponentProps, Show, splitProps } from 'solid-js'
+import { useSceneContainer } from '@/shared/lib/scene-container'
+import { cn } from '@/shared/lib/utils'
 
-import { cn } from "@/shared/lib/utils"
-import { useSceneContainer } from "@/shared/lib/scene-container"
-import { Button } from "@/shared/ui/button"
+/**
+ * Modal dialog on Kobalte. Radix's `data-[state=open|closed]` becomes
+ * `data-[expanded]` / `data-[closed]`; everything else keeps the shadcn look.
+ *
+ * Portals into the enclosing grimório scene (`useSceneContainer`) so it
+ * inherits the scene's token scope; outside a scene it falls back to body, and
+ * an explicit `mount` always wins.
+ *
+ * @example
+ * <Dialog>
+ *   <DialogTrigger>Abrir</DialogTrigger>
+ *   <DialogContent><DialogTitle>Confirmar</DialogTitle></DialogContent>
+ * </Dialog>
+ */
+export const Dialog = KDialog
+export const DialogTrigger = KDialog.Trigger
+export const DialogClose = KDialog.CloseButton
 
-function Dialog({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />
-}
-
-function DialogTrigger({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
-  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
-}
-
-function DialogPortal({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Portal>) {
-  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
-}
-
-function DialogClose({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Close>) {
-  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
-}
-
-function DialogOverlay({
-  className,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+export function DialogOverlay(props: ComponentProps<typeof KDialog.Overlay>) {
+  const [local, rest] = splitProps(props, ['class'])
   return (
-    <DialogPrimitive.Overlay
+    <KDialog.Overlay
       data-slot="dialog-overlay"
-      className={cn(
-        "fixed inset-0 z-50 bg-black/50 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
-        className
+      class={cn(
+        'fixed inset-0 z-50 bg-black/50 data-[closed]:animate-out data-[closed]:fade-out-0 data-[expanded]:animate-in data-[expanded]:fade-in-0',
+        local.class,
       )}
-      {...props}
+      {...rest}
     />
   )
 }
 
-function DialogContent({
-  className,
-  children,
-  showCloseButton = true,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content> & {
+export type DialogContentProps = ComponentProps<typeof KDialog.Content> & {
   showCloseButton?: boolean
-}) {
-  // Inside a grimório scene, portal into the scene so tokens are inherited
-  // (otherwise the dialog renders shadcn over the body). Null → body → shadcn.
-  const container = useSceneContainer()
+  /** Portal target. Defaults to the enclosing grimório scene (so the dialog
+   *  inherits its tokens), else document.body. */
+  mount?: Node
+}
+
+export function DialogContent(props: DialogContentProps) {
+  const [local, rest] = splitProps(props, ['class', 'children', 'showCloseButton', 'mount'])
+  const scene = useSceneContainer()
   return (
-    <DialogPortal data-slot="dialog-portal" container={container ?? undefined}>
+    <KDialog.Portal mount={local.mount ?? scene() ?? undefined}>
       <DialogOverlay />
-      <DialogPrimitive.Content
+      <KDialog.Content
         data-slot="dialog-content"
-        className={cn(
-          "fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border bg-background p-6 shadow-lg duration-200 outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 sm:max-w-lg",
-          className
+        class={cn(
+          'fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border bg-background p-6 shadow-lg duration-200 outline-none data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95 data-[expanded]:animate-in data-[expanded]:fade-in-0 data-[expanded]:zoom-in-95 sm:max-w-lg',
+          local.class,
         )}
-        {...props}
+        {...rest}
       >
-        {children}
-        {showCloseButton && (
-          <DialogPrimitive.Close
+        {local.children}
+        <Show when={local.showCloseButton ?? true}>
+          <KDialog.CloseButton
             data-slot="dialog-close"
-            className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+            // Kobalte defaults this to aria-label="Dismiss", which OVERRIDES any
+            // sr-only text inside — the app is pt-BR, so name it explicitly.
+            aria-label="Fechar"
+            class="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0"
           >
-            <XIcon />
-            <span className="sr-only">Close</span>
-          </DialogPrimitive.Close>
-        )}
-      </DialogPrimitive.Content>
-    </DialogPortal>
+            <XIcon class="size-4" />
+          </KDialog.CloseButton>
+        </Show>
+      </KDialog.Content>
+    </KDialog.Portal>
   )
 }
 
-function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
+export function DialogHeader(props: ComponentProps<'div'>) {
+  const [local, rest] = splitProps(props, ['class'])
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-2 text-center sm:text-left", className)}
-      {...props}
+      class={cn('flex flex-col gap-2 text-center sm:text-left', local.class)}
+      {...rest}
     />
   )
 }
 
-function DialogFooter({
-  className,
-  showCloseButton = false,
-  children,
-  ...props
-}: React.ComponentProps<"div"> & {
-  showCloseButton?: boolean
-}) {
+export function DialogFooter(props: ComponentProps<'div'>) {
+  const [local, rest] = splitProps(props, ['class'])
   return (
     <div
       data-slot="dialog-footer"
-      className={cn(
-        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
-        className
-      )}
-      {...props}
-    >
-      {children}
-      {showCloseButton && (
-        <DialogPrimitive.Close asChild>
-          <Button variant="outline">Close</Button>
-        </DialogPrimitive.Close>
-      )}
-    </div>
+      class={cn('flex flex-col-reverse gap-2 sm:flex-row sm:justify-end', local.class)}
+      {...rest}
+    />
   )
 }
 
-function DialogTitle({
-  className,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Title>) {
+export function DialogTitle(props: ComponentProps<typeof KDialog.Title>) {
+  const [local, rest] = splitProps(props, ['class'])
   return (
-    <DialogPrimitive.Title
+    <KDialog.Title
       data-slot="dialog-title"
-      className={cn("text-lg leading-none font-semibold", className)}
-      {...props}
+      class={cn('text-lg leading-none font-semibold', local.class)}
+      {...rest}
     />
   )
 }
 
-function DialogDescription({
-  className,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Description>) {
+export function DialogDescription(props: ComponentProps<typeof KDialog.Description>) {
+  const [local, rest] = splitProps(props, ['class'])
   return (
-    <DialogPrimitive.Description
+    <KDialog.Description
       data-slot="dialog-description"
-      className={cn("text-sm text-muted-foreground", className)}
-      {...props}
+      class={cn('text-sm text-muted-foreground', local.class)}
+      {...rest}
     />
   )
-}
-
-export {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogOverlay,
-  DialogPortal,
-  DialogTitle,
-  DialogTrigger,
 }

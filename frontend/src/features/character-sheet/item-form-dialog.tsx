@@ -1,30 +1,24 @@
-import { type ReactNode, useState } from 'react'
-import { useForm } from '@tanstack/react-form'
+import { type JSX, createSignal } from 'solid-js'
 import { z } from 'zod'
-import { Button } from '@/shared/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/shared/ui/dialog'
-import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
-import { Input } from '@/shared/ui/input'
-import { NumberInput } from '@/shared/ui/number-input'
 import type { CreateItemInput } from '@/shared/api/api'
-import { accentStrong, dimText } from '@/shared/lib/sheet-theme'
-import { ITEM_DIALOG_CONTENT, ItemDialogFooter } from './item-dialog-kit'
-import { cn } from '@/shared/lib/utils'
+import type { FieldErrors } from '@/shared/lib/form-errors'
+import { Button } from '@/shared/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { DialogInlineError } from '@/shared/ui/dialog-inline-error'
+import { FieldFrame, isInvalid } from '@/shared/ui/field-frame'
+import { NumberInput } from '@/shared/ui/number-input'
+import { TextField } from '@/shared/ui/text-field'
+import {
+  ITEM_DIALOG_CONTENT,
+  ITEM_DIALOG_TITLE,
+  ItemDialogFooter,
+} from './item-dialog-kit'
+import { itemWriteMessage } from './item-mutations'
 
 /** A custom inventory item: a name plus a whole-number quantity and a load in
  *  half-slot increments (T20 tracks encumbrance in 0,5-espaço steps). */
 const itemFormSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, 'Informe um nome.')
-    .max(80, 'Máximo 80 caracteres.'),
+  name: z.string().trim().min(1, 'Informe um nome.').max(80, 'Máximo 80 caracteres.'),
   quantity: z
     .number()
     .int('Quantidade deve ser inteiro ≥ 1.')
@@ -37,167 +31,132 @@ const itemFormSchema = z.object({
     .refine((v) => Number.isInteger(v * 2), 'Espaços deve ser múltiplo de 0,5.'),
 })
 
-/**
- * Form dialog used for both "novo item custom" (create) and per-item
- * edit. `initial` seeds the form; leave undefined for create. The
- * shape passes name/quantity/slots — catalog-based items go through
- * `AddCatalogItemDialog` instead.
- */
-export function ItemFormDialog({
-  title,
-  submitLabel,
-  trigger,
-  initial,
-  onSubmit,
-}: {
+export type ItemFormValues = { name: string; quantity: number; slots: number }
+
+export type ItemFormDialogProps = {
   title: string
   submitLabel: string
-  trigger: ReactNode
-  initial?: Partial<CreateItemInput>
-  onSubmit: (input: CreateItemInput, onError: (e: Error) => void) => void
-}) {
-  const [open, setOpen] = useState(false)
-  const [formError, setFormError] = useState<string | null>(null)
+  /** Receives the opener; Kobalte has no `asChild`, and every caller brings its
+   *  own labelled button. */
+  trigger: (open: () => void) => JSX.Element
+  /** Seeds the form when editing; leave undefined to create. */
+  initial?: ItemFormValues
+  onSubmit: (input: CreateItemInput) => Promise<void>
+}
 
-  const form = useForm({
-    defaultValues: {
-      name: initial?.name ?? '',
-      quantity: initial?.quantity ?? 1,
-      slots: initial?.slots ?? 1,
-    },
-    validators: { onSubmit: itemFormSchema },
-    onSubmit: ({ value }) => {
-      setFormError(null)
-      onSubmit(
-        { name: value.name.trim(), quantity: value.quantity, slots: value.slots },
-        (e) => setFormError(e.message),
-      )
+/**
+ * The form behind both "novo item custom" and per-item edit. Catalog-based
+ * items go through the catálogo dialog instead — this one only ever carries
+ * name/quantity/slots.
+ *
+ * @example
+ * <ItemFormDialog title="Novo item" submitLabel="Adicionar"
+ *   trigger={(open) => <Button onClick={open}>Custom</Button>}
+ *   onSubmit={(input) => actions().add(input)} />
+ */
+export function ItemFormDialog(props: ItemFormDialogProps) {
+  const [open, setOpen] = createSignal(false)
+  const [name, setName] = createSignal(props.initial?.name ?? '')
+  const [quantity, setQuantity] = createSignal(props.initial?.quantity ?? 1)
+  const [slots, setSlots] = createSignal(props.initial?.slots ?? 1)
+  const [fieldErrors, setFieldErrors] = createSignal<FieldErrors>({})
+  const [formError, setFormError] = createSignal<string | null>(null)
+  const [pending, setPending] = createSignal(false)
+
+  /** Reopening must not show the last attempt's leftovers. */
+  const reset = () => {
+    setName(props.initial?.name ?? '')
+    setQuantity(props.initial?.quantity ?? 1)
+    setSlots(props.initial?.slots ?? 1)
+    setFieldErrors({})
+    setFormError(null)
+  }
+
+  const submit = async (event: SubmitEvent) => {
+    event.preventDefault()
+    setFormError(null)
+    const parsed = itemFormSchema.safeParse({
+      name: name(),
+      quantity: quantity(),
+      slots: slots(),
+    })
+    if (!parsed.success) {
+      setFieldErrors(z.flattenError(parsed.error).fieldErrors as FieldErrors)
+      return
+    }
+    setFieldErrors({})
+    setPending(true)
+    try {
+      await props.onSubmit(parsed.data)
       setOpen(false)
-      form.reset()
-    },
-  })
-
-  const close = (next: boolean) => {
-    setOpen(next)
-    if (!next) {
-      form.reset()
-      setFormError(null)
+      reset()
+    } catch (failure) {
+      setFormError(itemWriteMessage(failure, 'Não foi possível salvar o item.'))
+    } finally {
+      setPending(false)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={close}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent
-        className={cn(ITEM_DIALOG_CONTENT, 'border-border bg-muted text-foreground')}
-      >
-        <DialogHeader>
-          <DialogTitle className={cn(accentStrong)}>
-            {title}
-          </DialogTitle>
-        </DialogHeader>
-        <form
-          className="space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            form.handleSubmit()
-          }}
-        >
-          <form.Field name="name" validators={{ onChange: itemFormSchema.shape.name }}>
-            {(f) => {
-              const invalid = f.state.meta.isTouched && !f.state.meta.isValid
-              return (
-                <Field data-invalid={invalid}>
-                  <FieldLabel htmlFor={f.name}>Nome</FieldLabel>
-                  <Input
-                    id={f.name}
-                    value={f.state.value}
-                    onChange={(e) => f.handleChange(e.target.value)}
-                    onBlur={f.handleBlur}
-                    placeholder="Ex: Espada longa"
-                    autoFocus
-                    maxLength={80}
-                    aria-invalid={invalid}
-                  />
-                  {invalid && <FieldError errors={f.state.meta.errors} />}
-                </Field>
-              )
-            }}
-          </form.Field>
-          <div className="grid grid-cols-2 gap-3">
-            <form.Field
-              name="quantity"
-              validators={{ onChange: itemFormSchema.shape.quantity }}
-            >
-              {(f) => {
-                const invalid = f.state.meta.isTouched && !f.state.meta.isValid
-                return (
-                  <Field data-invalid={invalid}>
-                    <FieldLabel htmlFor={f.name}>Quantidade</FieldLabel>
-                    <NumberInput
-                      id={f.name}
-                      value={f.state.value}
-                      onChange={(v) => f.handleChange(v)}
-                      onBlur={f.handleBlur}
-                      min={1}
-                      max={9999}
-                      step={1}
-                      aria-invalid={invalid}
-                    />
-                    {invalid && <FieldError errors={f.state.meta.errors} />}
-                  </Field>
-                )
-              }}
-            </form.Field>
-            <form.Field
-              name="slots"
-              validators={{ onChange: itemFormSchema.shape.slots }}
-            >
-              {(f) => {
-                const invalid = f.state.meta.isTouched && !f.state.meta.isValid
-                return (
-                  <Field data-invalid={invalid}>
-                    <FieldLabel htmlFor={f.name}>Espaços</FieldLabel>
-                    <NumberInput
-                      id={f.name}
-                      value={f.state.value}
-                      onChange={(v) => f.handleChange(v)}
-                      onBlur={f.handleBlur}
-                      min={0.5}
-                      max={9999}
-                      step={0.5}
-                      aria-invalid={invalid}
-                    />
-                    {invalid && <FieldError errors={f.state.meta.errors} />}
-                  </Field>
-                )
-              }}
-            </form.Field>
-          </div>
-          <p className={cn('text-[11px]', dimText)}>
-            Espaços é múltiplo de 0,5 (ex.: 0,5 / 1 / 1,5).
-          </p>
-          {formError && (
-            <p className="text-xs text-destructive" role="alert">
-              {formError}
-            </p>
-          )}
-          <ItemDialogFooter>
-            <Button type="button" variant="outline" onClick={() => close(false)}>
-              Cancelar
-            </Button>
-            <form.Subscribe
-              selector={(s) => s.canSubmit}
-              children={(canSubmit) => (
-                <Button type="submit" disabled={!canSubmit}>
-                  {submitLabel}
-                </Button>
-              )}
+    <>
+      {props.trigger(() => {
+        reset()
+        setOpen(true)
+      })}
+      <Dialog open={open()} onOpenChange={setOpen}>
+        <DialogContent class={ITEM_DIALOG_CONTENT}>
+          <DialogHeader>
+            <DialogTitle class={ITEM_DIALOG_TITLE}>{props.title}</DialogTitle>
+          </DialogHeader>
+          <form class="space-y-4" onSubmit={submit} noValidate>
+            <TextField
+              name="item-name"
+              label="Nome"
+              value={name()}
+              onInput={setName}
+              errors={fieldErrors().name}
             />
-          </ItemDialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            <div class="grid grid-cols-2 gap-3">
+              <FieldFrame name="item-quantity" label="Quantidade" errors={fieldErrors().quantity}>
+                <NumberInput
+                  id="item-quantity"
+                  value={quantity()}
+                  onChange={setQuantity}
+                  min={1}
+                  max={9999}
+                  step={1}
+                  aria-invalid={isInvalid(fieldErrors().quantity)}
+                />
+              </FieldFrame>
+              <FieldFrame
+                name="item-slots"
+                label="Espaços"
+                hint="Múltiplo de 0,5 (ex.: 0,5 / 1 / 1,5)."
+                errors={fieldErrors().slots}
+              >
+                <NumberInput
+                  id="item-slots"
+                  value={slots()}
+                  onChange={setSlots}
+                  min={0.5}
+                  max={9999}
+                  step={0.5}
+                  aria-invalid={isInvalid(fieldErrors().slots)}
+                />
+              </FieldFrame>
+            </div>
+            <DialogInlineError message={formError()} />
+            <ItemDialogFooter>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={pending()}>
+                {pending() ? 'Salvando…' : props.submitLabel}
+              </Button>
+            </ItemDialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

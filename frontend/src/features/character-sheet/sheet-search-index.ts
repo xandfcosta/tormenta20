@@ -17,7 +17,7 @@ import {
   expertiseFromSheet,
 } from '@/entities/character/computed-sheet'
 import { parseClassChoices } from '@/entities/character/derived'
-import { parseActiveConditions } from './conditions-section'
+import { parseActiveConditions } from './active-conditions'
 
 export type SheetSearchEntry = {
   /** Display name ("Furtividade", "Totem Espiritual", "Adaga"). */

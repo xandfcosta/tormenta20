@@ -1,4 +1,4 @@
-import type { QueryClient } from '@tanstack/react-query'
+import type { QueryClient } from '@tanstack/solid-query'
 import { primeAbilities } from '@/shared/lib/abilities-cache'
 import { primeActivations } from '@/shared/lib/activation-cache'
 import { primeItemCatalog } from '@/shared/lib/catalog-cache'

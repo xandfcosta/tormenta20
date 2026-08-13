@@ -1,3 +1,4 @@
+import { For, Show } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
 import {
   type BagGroup,
@@ -6,225 +7,220 @@ import {
   purchasesTotal,
 } from './starting-equipment'
 
-const tibarFmt = (v: number) =>
-  v.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
+const tibarFmt = (value: number) =>
+  value.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
 
-/**
- * "Sua bagagem" — live preview of the inventory this step will save, grouped
- * by source. Ghost lines (◇ pendente) mark unmade choices and scroll-focus
- * their chooser. Fully derived from form state; the slots bar and wallet chip
- * are the step's only gauges.
- */
-export function BagagemPanel({
-  groups,
-  slotsUsed,
-  slotsCapacity,
-  tibar,
-  purchases,
-  onPurchaseQty,
-}: {
+export type BagagemPanelProps = {
   groups: BagGroup[]
   slotsUsed: number
   slotsCapacity: number
   tibar: number
   purchases: PurchaseMap
   onPurchaseQty: (id: string, qty: number) => void
-}) {
-  const spent = purchasesTotal(purchases)
-  const remaining = tibar - spent
-  const over = slotsUsed > slotsCapacity
+}
+
+/**
+ * "Sua bagagem" — live preview of the inventory this step will save, grouped by
+ * source. Ghost lines (◇ pendente) mark choices not yet made and scroll-focus
+ * their chooser. Wholly derived from the draft; the slots bar and the wallet
+ * are the step's only gauges.
+ */
+export function BagagemPanel(props: BagagemPanelProps) {
+  const spent = () => purchasesTotal(props.purchases)
+  const remaining = () => props.tibar - spent()
+  const over = () => props.slotsUsed > props.slotsCapacity
+
   return (
-    <aside className="space-y-2 rounded-lg border border-border bg-card p-3 lg:sticky lg:top-4">
-      <p className="font-display text-sm tracking-wide">Sua bagagem</p>
-      <SlotsBar used={slotsUsed} capacity={slotsCapacity} over={over} />
-      <WalletChip tibar={tibar} spent={spent} remaining={remaining} />
-      <div className="space-y-2 border-t border-border pt-2">
-        {groups.map((g) => (
-          <BagGroupBlock
-            key={g.title}
-            group={g}
-            onPurchaseQty={onPurchaseQty}
-            purchases={purchases}
-          />
-        ))}
+    <aside class="space-y-2 rounded-md border border-grimorio-iron bg-muted/20 p-3 lg:sticky lg:top-0">
+      <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-grimorio-gold">
+        Sua bagagem
+      </p>
+      <SlotsBar used={props.slotsUsed} capacity={props.slotsCapacity} over={over()} />
+      <Wallet tibar={props.tibar} spent={spent()} remaining={remaining()} />
+      <div class="space-y-2 border-t border-grimorio-iron pt-2">
+        <For each={props.groups}>
+          {(group) => (
+            <BagGroupBlock
+              group={group}
+              purchases={props.purchases}
+              onPurchaseQty={props.onPurchaseQty}
+            />
+          )}
+        </For>
       </div>
     </aside>
   )
 }
 
-function SlotsBar({
-  used,
-  capacity,
-  over,
-}: {
-  used: number
-  capacity: number
-  over: boolean
-}) {
-  const pct = capacity > 0 ? Math.min(100, (used / capacity) * 100) : 0
+function SlotsBar(props: { used: number; capacity: number; over: boolean }) {
+  const percent = () =>
+    props.capacity > 0 ? Math.min(100, (props.used / props.capacity) * 100) : 0
+
   return (
-    <div className="space-y-1">
-      <div className="h-2 overflow-hidden rounded-full bg-muted">
+    <div class="space-y-1">
+      <div
+        role="progressbar"
+        aria-label="Espaços de inventário"
+        aria-valuenow={props.used}
+        aria-valuemin={0}
+        aria-valuemax={props.capacity}
+        class="h-2 overflow-hidden rounded-full bg-grimorio-iron"
+      >
         <div
-          className={cn(
+          // `--hp-critical` for overweight, not `--hp-hurt`: amber sits a hair
+          // from the gold fill and would read as "full" instead of "too much".
+          class={cn(
             'h-full rounded-full transition-all',
-            over ? 'bg-[color:var(--hp-hurt)]' : 'bg-primary',
+            props.over ? 'bg-[var(--hp-critical)]' : 'bg-grimorio-gold',
           )}
-          style={{ width: `${pct}%` }}
+          style={{ width: `${percent()}%` }}
         />
       </div>
       <p
-        className={cn(
+        class={cn(
           'text-[11px]',
-          over
-            ? 'font-semibold text-[color:var(--hp-hurt)]'
-            : 'text-muted-foreground',
+          props.over ? 'font-semibold text-[color:var(--hp-hurt)]' : 'text-muted-foreground',
         )}
       >
-        Espaços {used}/{capacity} (10 + 2×FOR)
-        {over ? ' — sobrecarregado (p141)' : ''}
+        Espaços {props.used}/{props.capacity} (10 + 2×FOR)
+        {props.over ? ' — sobrecarregado (p141)' : ''}
       </p>
     </div>
   )
 }
 
-function WalletChip({
-  tibar,
-  spent,
-  remaining,
-}: {
-  tibar: number
-  spent: number
-  remaining: number
-}) {
+function Wallet(props: { tibar: number; spent: number; remaining: number }) {
   return (
     <p
-      className={cn(
+      class={cn(
         'text-xs',
-        remaining < 0
-          ? 'font-semibold text-[color:var(--hp-hurt)]'
-          : 'text-foreground',
+        props.remaining < 0 ? 'font-semibold text-[color:var(--hp-hurt)]' : 'text-foreground',
       )}
     >
-      ⛃ T$ {tibarFmt(tibar)}
-      {spent > 0 && (
-        <>
-          {' '}· gasto {tibarFmt(spent)} →{' '}
-          <span className="font-semibold">{tibarFmt(remaining)}</span>
-          {remaining < 0 ? ' — remova itens' : ''}
-        </>
-      )}
+      <span aria-hidden="true">⛃ </span>T$ {tibarFmt(props.tibar)}
+      <Show when={props.spent > 0}>
+        <> · gasto {tibarFmt(props.spent)} → </>
+        <span class="font-semibold">{tibarFmt(props.remaining)}</span>
+        <Show when={props.remaining < 0}> — remova itens</Show>
+      </Show>
     </p>
   )
 }
 
-function BagGroupBlock({
-  group,
-  purchases,
-  onPurchaseQty,
-}: {
+function BagGroupBlock(props: {
   group: BagGroup
   purchases: PurchaseMap
   onPurchaseQty: (id: string, qty: number) => void
 }) {
   return (
-    <div className="space-y-0.5">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-        {group.title}
-        {group.title === 'Kit' ? ' · automático' : ''}
+    <div class="space-y-0.5">
+      <p class="font-heading text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+        {props.group.title}
+        {props.group.title === 'Kit' ? ' · automático' : ''}
       </p>
-      <ul className="space-y-0.5">
-        {group.lines.map((line, i) => (
-          <BagLineRow
-            key={line.kind === 'item' ? `${line.name}-${i}` : line.label}
-            line={line}
-            isPurchase={group.title === 'Comprado'}
-            purchases={purchases}
-            onPurchaseQty={onPurchaseQty}
-          />
-        ))}
+      <ul class="space-y-0.5">
+        <For each={props.group.lines}>
+          {(line) => (
+            <BagLineRow
+              line={line}
+              isPurchase={props.group.title === 'Comprado'}
+              purchases={props.purchases}
+              onPurchaseQty={props.onPurchaseQty}
+            />
+          )}
+        </For>
       </ul>
     </div>
   )
 }
 
-function BagLineRow({
-  line,
-  isPurchase,
-  purchases,
-  onPurchaseQty,
-}: {
+function BagLineRow(props: {
   line: BagLine
   isPurchase: boolean
   purchases: PurchaseMap
   onPurchaseQty: (id: string, qty: number) => void
 }) {
-  if (line.kind === 'ghost') {
-    return (
-      <li>
-        <button
-          type="button"
-          onClick={() =>
-            document
-              .getElementById(line.anchor)
-              ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-          }
-          className="flex w-full items-center gap-1 rounded border border-dashed border-[color:var(--hp-hurt)]/60 px-1.5 py-0.5 text-left text-[11px] text-[color:var(--hp-hurt)] hover:bg-accent"
-        >
-          ◇ {line.label} · pendente
-        </button>
-      </li>
-    )
-  }
-  const qty = line.catalogId ? (purchases[line.catalogId] ?? 0) : 0
+  const item = () => (props.line.kind === 'item' ? props.line : null)
+
   return (
-    <li className="flex items-center gap-1 text-[11px]">
-      <span className="min-w-0 flex-1 truncate">
-        · {line.name}
-        {line.qty > 1 ? ` ×${line.qty}` : ''}
-        {line.price !== undefined && (
-          <span className="text-muted-foreground">
-            {' '}· T$ {tibarFmt(line.price * line.qty)}
+    <Show when={item()} fallback={<GhostRow line={props.line} />}>
+      {(item) => (
+        <li class="flex items-center gap-1 text-[11px]">
+          <span class="min-w-0 flex-1 truncate">
+            · {item().name}
+            {item().qty > 1 ? ` ×${item().qty}` : ''}
+            <Show when={item().price !== undefined}>
+              <span class="text-muted-foreground">
+                {' '}
+                · T$ {tibarFmt((item().price ?? 0) * item().qty)}
+              </span>
+            </Show>
           </span>
-        )}
-      </span>
-      <span
-        className="shrink-0 text-[10px] text-muted-foreground"
-        title="Espaços de inventário ocupados (p141)"
-      >
-        {line.slots * line.qty > 0 ? `${line.slots * line.qty} esp.` : '—'}
-      </span>
-      {isPurchase && line.catalogId && (
-        <span className="flex shrink-0 items-center gap-0.5">
-          <BagQty label={`Remover ${line.name}`} onClick={() => onPurchaseQty(line.catalogId as string, qty - 1)}>
-            −
-          </BagQty>
-          <BagQty label={`Comprar ${line.name}`} onClick={() => onPurchaseQty(line.catalogId as string, qty + 1)}>
-            +
-          </BagQty>
-        </span>
+          <span class="shrink-0 text-[10px] text-muted-foreground">
+            {item().slots * item().qty > 0 ? `${item().slots * item().qty} esp.` : '—'}
+          </span>
+          <Show when={props.isPurchase && item().catalogId}>
+            {(catalogId) => (
+              <span class="flex shrink-0 items-center gap-0.5">
+                <QtyStep
+                  label={`Remover ${item().name}`}
+                  onClick={() =>
+                    props.onPurchaseQty(catalogId(), (props.purchases[catalogId()] ?? 0) - 1)
+                  }
+                >
+                  −
+                </QtyStep>
+                <QtyStep
+                  label={`Comprar ${item().name}`}
+                  onClick={() =>
+                    props.onPurchaseQty(catalogId(), (props.purchases[catalogId()] ?? 0) + 1)
+                  }
+                >
+                  +
+                </QtyStep>
+              </span>
+            )}
+          </Show>
+        </li>
       )}
-    </li>
+    </Show>
   )
 }
 
-function BagQty({
-  label,
-  onClick,
-  children,
-}: {
-  label: string
-  onClick: () => void
-  children: React.ReactNode
-}) {
+/** A choice not yet made. Clicking it walks the player to the chooser that
+ *  fills it, which is the whole point of showing the hole. */
+function GhostRow(props: { line: BagLine }) {
+  const ghost = () => (props.line.kind === 'ghost' ? props.line : null)
+  return (
+    <Show when={ghost()}>
+      {(line) => (
+        <li>
+          <button
+            type="button"
+            onClick={() =>
+              document
+                .getElementById(line().anchor)
+                ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            }
+            class="flex w-full items-center gap-1 rounded border border-dashed border-[color:var(--hp-hurt)]/60 px-1.5 py-0.5 text-left text-[11px] text-[color:var(--hp-hurt)] hover:bg-accent"
+          >
+            ◇ {line().label} · pendente
+          </button>
+        </li>
+      )}
+    </Show>
+  )
+}
+
+function QtyStep(props: { label: string; onClick: () => void; children: string }) {
   return (
     <button
       type="button"
-      aria-label={label}
-      onClick={onClick}
-      className="flex size-5 items-center justify-center rounded border border-border text-xs hover:bg-accent"
+      aria-label={props.label}
+      onClick={() => props.onClick()}
+      class="flex size-5 items-center justify-center rounded border border-grimorio-iron text-xs hover:bg-accent"
     >
-      {children}
+      {props.children}
     </button>
   )
 }

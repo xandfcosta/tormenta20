@@ -1,66 +1,50 @@
-import type { ReactNode } from 'react'
+import type { JSX, ParentProps } from 'solid-js'
+import { Show } from 'solid-js'
 
 /**
- * AuthShell — split-screen frame shared by /login and /register.
+ * Split-screen frame shared by /login and /register: a brand panel on the left
+ * (lg+) and the form on the right; on phones the panel is hidden and its
+ * wordmark collapses above the form.
  *
- * Desktop (lg+): two columns — a brand panel on the left, the form on the
- * right. Phone: the brand panel is hidden and its wordmark collapses into a
- * compact header above the form, which scrolls if it overflows. Rendered in
- * the root's `bare` shell (no app nav), so it owns the whole viewport.
- *
- * Pure layout: pages pass their heading + form in; no routing/auth here.
+ * Pure layout — no routing or auth here.
  */
-export function AuthShell({
-  title,
-  subtitle,
-  children,
-  footer,
-}: {
-  title: string
-  subtitle?: string
-  children: ReactNode
-  footer?: ReactNode
-}) {
+export function AuthShell(
+  props: ParentProps<{ title: string; subtitle?: string; footer?: JSX.Element }>,
+) {
   return (
-    <div className="grid min-h-0 flex-1 lg:grid-cols-2">
+    <div class="grid min-h-dvh lg:grid-cols-2">
       <AuthBrandPanel />
-      <main className="flex flex-col overflow-y-auto px-6 py-10 sm:px-10">
-        <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6">
-          <p className="text-lg font-semibold tracking-tight lg:hidden">
-            Tormenta 20
-          </p>
-          <div className="space-y-1.5">
-            <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-            {subtitle && (
-              <p className="text-sm text-muted-foreground">{subtitle}</p>
-            )}
+      <main class="flex flex-col overflow-y-auto px-6 py-10 sm:px-10">
+        <div class="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6">
+          <p class="text-lg font-semibold tracking-tight lg:hidden">Tormenta 20</p>
+          <div class="space-y-1.5">
+            <h1 class="text-2xl font-semibold tracking-tight">{props.title}</h1>
+            <Show when={props.subtitle}>
+              {(subtitle) => <p class="text-sm text-muted-foreground">{subtitle()}</p>}
+            </Show>
           </div>
-          {children}
-          {footer && (
-            <p className="text-center text-sm text-muted-foreground">{footer}</p>
-          )}
+          {props.children}
+          <Show when={props.footer}>
+            {(footer) => <p class="text-center text-sm text-muted-foreground">{footer()}</p>}
+          </Show>
         </div>
       </main>
     </div>
   )
 }
 
-/** Left brand column — desktop only; phone shows the wordmark inline instead. */
+/** Left brand column — desktop only; phones show the wordmark inline instead. */
 function AuthBrandPanel() {
   return (
-    <aside className="hidden flex-col justify-between border-r border-border bg-muted p-10 lg:flex">
-      <p className="text-lg font-semibold tracking-tight">Tormenta 20</p>
-      <div className="space-y-3">
-        <p className="text-3xl font-semibold leading-tight tracking-tight">
-          Sua mesa, organizada.
-        </p>
-        <p className="max-w-sm text-muted-foreground">
+    <aside class="hidden flex-col justify-between border-r border-border bg-muted p-10 lg:flex">
+      <p class="text-lg font-semibold tracking-tight">Tormenta 20</p>
+      <div class="space-y-3">
+        <p class="text-3xl font-semibold leading-tight tracking-tight">Sua mesa, organizada.</p>
+        <p class="max-w-sm text-muted-foreground">
           Fichas, campanhas e sessões ao vivo — tudo em um só lugar.
         </p>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Gerenciador não-oficial de Tormenta 20.
-      </p>
+      <p class="text-xs text-muted-foreground">Gerenciador não-oficial de Tormenta 20.</p>
     </aside>
   )
 }

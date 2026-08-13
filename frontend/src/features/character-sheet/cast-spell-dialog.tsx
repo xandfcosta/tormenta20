@@ -1,14 +1,17 @@
-import { useMemo, useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Sparkles, Zap } from 'lucide-react'
-import type { CatalogSpell } from '@tormenta20/t20-data'
+import { useQueryClient } from '@tanstack/solid-query'
 import {
+  type CatalogSpell,
   SPELLCASTER_CLASSES,
-  highestCircleAtLevel,
   SPELL_BASE_PM_COST,
   firstErrorMessage,
   validateCast,
 } from '@tormenta20/t20-data'
+import { Sparkles, Zap } from 'lucide-solid'
+import { For, type JSX, Show, createMemo, createSignal } from 'solid-js'
+import { computedSheetFor } from '@/entities/character/computed-sheet'
+import { castableClassesFor, highestCastableCircle } from '@/entities/character/spell-rules'
+import { ApiError, type Character } from '@/shared/api/api'
+import { useConditionals } from '@/shared/stores/conditionals-context'
 import { Button } from '@/shared/ui/button'
 import {
   Dialog,
@@ -17,317 +20,254 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/shared/ui/dialog'
+import { DialogInlineError } from '@/shared/ui/dialog-inline-error'
 import { NumberInput } from '@/shared/ui/number-input'
-import { ApiError, api } from '@/shared/api/api'
-import type { CastSpellResult, Character } from '@/shared/api/api'
-import { invalidateCharacterDependents } from '@/entities/character/character-cache'
-import { useComputedSheet } from '@/entities/character/computed-sheet'
-import { characterQueryOptions } from '@/entities/character/queries'
-import { accentStrong, dimText } from '@/shared/lib/sheet-theme'
 import { cn } from '@/shared/lib/utils'
-
-type AugmentPick = { augmentIndex: number; stacks: number }
+import { augmentPicksFrom, augmentPmFor, isAugmentLocked } from './spell-augments'
+import { spellActions } from './spell-mutations'
 
 /**
- * Cast dialog — user picks stacks per augment (0 = not taken; `muda`
- * augments capped at 1). Shows a live PM total + per-spell limit
- * check. Server is authoritative — the client-side preview is only a
- * UX hint.
+ * Cast dialog — the player picks stacks per aprimoramento (0 = not taken;
+ * `muda` is a checkbox because it cannot stack), over a live PM total checked
+ * against the per-spell limit. The server is authoritative; this preview only
+ * spares a round-trip on the obvious refusals.
  *
- * `compact` renders the trigger icon-only below `sm` (row headers at
- * phone width) while keeping the labeled button on larger screens; the
- * aria-label carries the spell name either way.
+ * `compact` renders the trigger icon-only below `sm` (row headers at phone
+ * width) while keeping the labeled button on larger screens; the aria-label
+ * carries the spell name either way.
  */
-export function CastSpellDialog({
-  spell,
-  character,
-  disabled,
-  compact = false,
-}: {
+export function CastSpellDialog(props: {
   spell: CatalogSpell
   character: Character
   disabled?: boolean
   compact?: boolean
 }) {
-  const [open, setOpen] = useState(false)
-  const [stacksByIndex, setStacksByIndex] = useState<Map<number, number>>(
-    new Map(),
-  )
-  const [error, setError] = useState<string | null>(null)
-
-  const qc = useQueryClient()
-  const queryKey = characterQueryOptions(character.id).queryKey
-  const sheet = useComputedSheet(character)
+  const queryClient = useQueryClient()
+  const conditionals = useConditionals()
+  const [open, setOpen] = createSignal(false)
+  const [stacks, setStacks] = createSignal<ReadonlyMap<number, number>>(new Map())
+  const [pending, setPending] = createSignal(false)
+  const [error, setError] = createSignal<string | null>(null)
 
   /**
-   * Highest circle this character can CAST — gates aprimoramentos with
-   * `requiresCircle`. A power-granted spell on a non-caster (Bárbaro com
-   * Totem) is castable at its own circle only, so 2º+ upgrades lock
-   * (p42/p171: sem acesso a círculos maiores, sem aprimoramentos deles).
+   * Highest circle this character can CAST — gates aprimoramentos carrying
+   * `requiresCircle`. Never below the spell's own circle: a power-granted spell
+   * on a non-caster is castable at that circle, and only that one.
    */
-  const castableCircle = useMemo(() => {
-    const casters = character.classes.filter((c) =>
-      (SPELLCASTER_CLASSES as readonly string[]).includes(c.className),
-    )
-    const best = casters.reduce(
-      (top, c) =>
-        Math.max(
-          top,
-          highestCircleAtLevel(
-            c.className as (typeof SPELLCASTER_CLASSES)[number],
-            c.level,
-          ),
-        ),
-      0,
-    )
-    return Math.max(best, spell.circle)
-  }, [character.classes, spell.circle])
+  const castableCircle = createMemo(() =>
+    Math.max(
+      // Every caster class the character has, not just this spell's list: the
+      // gate is "what circles can you reach at all".
+      highestCastableCircle(props.character, castableClassesFor(props.character, SPELLCASTER_CLASSES)),
+      props.spell.circle,
+    ),
+  )
 
-  const augmentPicks: AugmentPick[] = useMemo(() => {
-    const out: AugmentPick[] = []
-    for (const [augmentIndex, stacks] of stacksByIndex) {
-      if (stacks > 0) out.push({ augmentIndex, stacks })
-    }
-    return out
-  }, [stacksByIndex])
-
-  const augmentPm = useMemo(
+  const picks = createMemo(() => augmentPicksFrom(stacks()))
+  const basePm = () => SPELL_BASE_PM_COST[props.spell.circle]
+  const totalPm = createMemo(() =>
+    props.spell.circle === 0 ? 0 : basePm() + augmentPmFor(props.spell.augments, picks()),
+  )
+  // The same number the Limite PM box shows, so the gate and the HUD never
+  // disagree.
+  const perSpellLimit = createMemo(
     () =>
-      augmentPicks.reduce(
-        (sum, p) => sum + spell.augments[p.augmentIndex].pmCost * p.stacks,
-        0,
-      ),
-    [augmentPicks, spell.augments],
+      computedSheetFor(props.character, conditionals.active(props.character.id)).pmLimit.total,
   )
-  const basePm = SPELL_BASE_PM_COST[spell.circle]
-  const totalPm = spell.circle === 0 ? 0 : basePm + augmentPm
-  // Same number as the Limite PM HUD box — caster-class level (PDF p224) plus
-  // pmLimit item bonuses — so the cast gate and the sheet never disagree.
-  const perSpellLimit = sheet.pmLimit.total
-  // Single source of truth for the cast preconditions (shared with the
-  // backend). Prep-requirement stays server-enforced — the cast button only
-  // shows for learned spells, and detecting the caster's prep rule client-side
-  // isn't needed to predict PM outcomes.
-  const castBlocked = firstErrorMessage(
-    validateCast({
-      circle: spell.circle,
-      totalPm,
-      pmLimit: perSpellLimit,
-      mpCurrent: character.mpCurrent,
-      needsPrep: false,
-      prepared: true,
-    }),
+  const blocked = createMemo(() =>
+    firstErrorMessage(
+      validateCast({
+        circle: props.spell.circle,
+        totalPm: totalPm(),
+        pmLimit: perSpellLimit(),
+        mpCurrent: props.character.mpCurrent,
+        // Preparation stays server-enforced: the Conjurar button only shows for
+        // learned spells, and predicting the prep rule here buys nothing.
+        needsPrep: false,
+        prepared: true,
+      }),
+    ),
   )
 
-  const cast = useMutation<CastSpellResult, Error, void, { prev?: Character }>({
-    mutationFn: () =>
-      api.characters.castSpell(character.id, spell.id, augmentPicks),
-    onMutate: async () => {
-      // Optimistic PM spend — validated above, so the server should agree.
-      await qc.cancelQueries({ queryKey })
-      const prev = qc.getQueryData<Character>(queryKey)
-      qc.setQueryData<Character>(queryKey, (c) =>
-        c ? { ...c, mpCurrent: Math.max(0, c.mpCurrent - totalPm) } : c,
-      )
-      return { prev }
-    },
-    // Delta merge: authoritative PM + drop any catalyst effect the cast consumed.
-    onSuccess: (delta) => {
-      qc.setQueryData<Character>(queryKey, (c) =>
-        c
-          ? {
-              ...c,
-              mpCurrent: delta.mpCurrent,
-              activeEffects: c.activeEffects.filter(
-                (e) => !delta.removedEffectIds.includes(e.id),
-              ),
-            }
-          : c,
-      )
-      invalidateCharacterDependents(qc, character.id)
-      setOpen(false)
-      setStacksByIndex(new Map())
+  const pickStacks = (index: number, next: number) => {
+    const map = new Map(stacks())
+    if (next <= 0) map.delete(index)
+    else map.set(index, next)
+    setStacks(map)
+  }
+
+  const close = (next: boolean) => {
+    setOpen(next)
+    if (!next) {
+      setStacks(new Map())
       setError(null)
-    },
-    onError: (e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(queryKey, ctx.prev)
-      setError(e instanceof ApiError ? e.message : 'Erro ao conjurar')
-    },
-  })
+    }
+  }
 
-  const setStacks = (index: number, next: number) => {
-    setStacksByIndex((prev) => {
-      const map = new Map(prev)
-      if (next <= 0) map.delete(index)
-      else map.set(index, next)
-      return map
-    })
+  const cast = async () => {
+    setPending(true)
+    setError(null)
+    try {
+      await spellActions(queryClient, props.character.id).cast(props.spell.id, picks())
+      close(false)
+    } catch (failure) {
+      // Inline, not a toast: the sonner region is a sibling of the open modal
+      // and Kobalte marks it aria-hidden.
+      setError(failure instanceof ApiError ? failure.message : 'Erro ao conjurar')
+    } finally {
+      setPending(false)
+    }
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(o) => {
-        setOpen(o)
-        if (!o) {
-          setStacksByIndex(new Map())
-          setError(null)
-        }
-      }}
-    >
-      <DialogTrigger asChild>
-        <Button
-          type="button"
-          size="sm"
-          variant="default"
-          className={cn('h-7 gap-1 text-xs', compact && 'shrink-0 px-2 sm:px-3')}
-          disabled={disabled}
-          aria-label={`Conjurar ${spell.name}`}
-        >
-          <Sparkles className="size-3.5" />
-          <span className={compact ? 'hidden sm:inline' : undefined}>
-            Conjurar
-          </span>
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 font-display tracking-wide">
-            <Zap className="size-5 text-[color:var(--primary)]" />
-            {spell.name}
-          </DialogTitle>
-          <DialogDescription>
-            Base {basePm} PM • Limite por magia {perSpellLimit} PM • PM
-            atual {character.mpCurrent} / {character.mpMax}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Button
+        type="button"
+        size="sm"
+        class={cn('h-7 gap-1 text-xs', props.compact && 'shrink-0 px-2 sm:px-3')}
+        disabled={props.disabled}
+        aria-label={`Conjurar ${props.spell.name}`}
+        onClick={() => setOpen(true)}
+      >
+        <Sparkles aria-hidden="true" class="size-3.5" />
+        <span class={props.compact ? 'hidden sm:inline' : undefined}>Conjurar</span>
+      </Button>
 
-        {spell.augments.length > 0 && spell.circle > 0 ? (
-          <div className="space-y-2">
-            <p
-              className={cn(
-                'text-[10px] uppercase tracking-widest',
-                dimText,
+      <Dialog open={open()} onOpenChange={close}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle class="flex items-center gap-2 font-heading tracking-wide">
+              <Zap aria-hidden="true" class="size-5 text-[color:var(--primary)]" />
+              {props.spell.name}
+            </DialogTitle>
+            <DialogDescription>
+              Base {basePm()} PM • Limite por magia {perSpellLimit()} PM • PM atual{' '}
+              {props.character.mpCurrent} / {props.character.mpMax}
+            </DialogDescription>
+          </DialogHeader>
+
+          <Show
+            when={props.spell.augments.length > 0 && props.spell.circle > 0}
+            fallback={
+              <p class="text-xs italic text-muted-foreground">
+                {props.spell.circle === 0
+                  ? 'Truques não aceitam aprimoramentos.'
+                  : 'Esta magia não possui aprimoramentos.'}
+              </p>
+            }
+          >
+            <div class="space-y-2">
+              <p class="text-[10px] uppercase tracking-widest text-muted-foreground">
+                Aprimoramentos
+              </p>
+              <ul class="space-y-2">
+                <For each={props.spell.augments}>
+                  {(augment, index) => (
+                    <AugmentRow
+                      augment={augment}
+                      index={index()}
+                      stacks={stacks().get(index()) ?? 0}
+                      locked={isAugmentLocked(augment, castableCircle())}
+                      onPick={(next) => pickStacks(index(), next)}
+                    />
+                  )}
+                </For>
+              </ul>
+            </div>
+          </Show>
+
+          <div class="flex items-center justify-between rounded-sm border border-border bg-muted px-3 py-2">
+            <span class="text-xs uppercase tracking-widest text-muted-foreground">
+              Custo total
+            </span>
+            <span
+              class={cn(
+                'font-mono text-lg font-bold',
+                blocked() ? 'text-red-400' : 'text-grimorio-gold',
               )}
             >
-              Aprimoramentos
-            </p>
-            <ul className="space-y-2">
-              {spell.augments.map((a, i) => {
-                const stacks = stacksByIndex.get(i) ?? 0
-                const lockedCircle =
-                  a.requiresCircle !== undefined && a.requiresCircle > castableCircle
-                return (
-                  <li
-                    key={i}
-                    className={cn(
-                      'flex flex-wrap items-start gap-2 rounded border border-border p-2',
-                      lockedCircle && 'opacity-50',
-                    )}
-                  >
-                    <div className="flex-1 space-y-0.5">
-                      <p className="text-xs">
-                        <span
-                          className={cn(
-                            'font-mono mr-2 text-[10px] uppercase tracking-widest',
-                            a.kind === 'muda'
-                              ? 'text-violet-700 dark:text-violet-300'
-                              : 'text-emerald-700 dark:text-emerald-300',
-                          )}
-                        >
-                          {a.kind}
-                        </span>
-                        +{a.pmCost} PM {a.kind === 'aumenta' ? 'cada' : ''}
-                        {lockedCircle && (
-                          <span className="ml-2 font-semibold text-red-700 dark:text-red-400">
-                            requer {a.requiresCircle}º círculo
-                          </span>
-                        )}
-                      </p>
-                      <p className="text-xs text-foreground ">
-                        {a.description}
-                      </p>
-                    </div>
-                    {a.kind === 'muda' ? (
-                      /* 'muda' é único por natureza — checkbox, não stepper. */
-                      <input
-                        type="checkbox"
-                        checked={stacks > 0}
-                        disabled={lockedCircle}
-                        onChange={(e) => setStacks(i, e.target.checked ? 1 : 0)}
-                        className="mt-1 size-5 accent-violet-600"
-                        aria-label={`Aprimoramento: ${a.description.slice(0, 40)}`}
-                      />
-                    ) : (
-                      <NumberInput
-                        value={stacks}
-                        onChange={(v) => setStacks(i, Math.max(0, v))}
-                        min={0}
-                        max={20}
-                        disabled={lockedCircle}
-                        className="w-20"
-                        aria-label={`Aprimoramento ${i} — stacks`}
-                      />
-                    )}
-                  </li>
-                )
-              })}
-            </ul>
+              {totalPm()} PM
+            </span>
           </div>
-        ) : (
-          <p className={cn('text-xs italic', dimText)}>
-            {spell.circle === 0
-              ? 'Truques não aceitam aprimoramentos.'
-              : 'Esta magia não possui aprimoramentos.'}
-          </p>
-        )}
 
-        <div
-          className={cn(
-            'flex items-center justify-between rounded-lg border px-3 py-2',
-            'border-border bg-muted  ',
-          )}
-        >
+          <Show when={blocked()}>
+            {(reason) => <p class="text-xs text-red-400">{reason()}</p>}
+          </Show>
+          <DialogInlineError message={error()} />
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => close(false)}>
+              Cancelar
+            </Button>
+            <Button disabled={pending() || Boolean(blocked())} onClick={() => void cast()}>
+              <Sparkles aria-hidden="true" class="mr-1 size-4" />
+              {pending() ? 'Conjurando…' : 'Conjurar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}
+
+function AugmentRow(props: {
+  augment: CatalogSpell['augments'][number]
+  index: number
+  stacks: number
+  locked: boolean
+  onPick: (stacks: number) => void
+}): JSX.Element {
+  return (
+    <li
+      class={cn(
+        'flex flex-wrap items-start gap-2 rounded-sm border border-border p-2',
+        props.locked && 'opacity-50',
+      )}
+    >
+      <div class="flex-1 space-y-0.5">
+        <p class="text-xs">
           <span
-            className={cn(
-              'text-xs uppercase tracking-widest',
-              dimText,
+            class={cn(
+              'mr-2 font-mono text-[10px] uppercase tracking-widest',
+              props.augment.kind === 'muda' ? 'text-violet-300' : 'text-emerald-300',
             )}
           >
-            Custo total
+            {props.augment.kind}
           </span>
-          <span
-            className={cn(
-              'font-mono text-lg font-bold',
-              castBlocked ? 'text-red-700 dark:text-red-400' : accentStrong,
-            )}
-          >
-            {totalPm} PM
-          </span>
-        </div>
-
-        {castBlocked && (
-          <p className="text-xs text-red-700 dark:text-red-400">
-            {castBlocked}
-          </p>
-        )}
-        {error && <p className="text-xs text-destructive">{error}</p>}
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancelar
-          </Button>
-          <Button
-            disabled={cast.isPending || Boolean(castBlocked)}
-            onClick={() => cast.mutate()}
-          >
-            <Sparkles className="mr-1 size-4" />
-            {cast.isPending ? 'Conjurando…' : 'Conjurar'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          +{props.augment.pmCost} PM {props.augment.kind === 'aumenta' ? 'cada' : ''}
+          <Show when={props.locked}>
+            <span class="ml-2 font-semibold text-red-400">
+              requer {props.augment.requiresCircle}º círculo
+            </span>
+          </Show>
+        </p>
+        <p class="text-xs text-foreground">{props.augment.description}</p>
+      </div>
+      <Show
+        when={props.augment.kind === 'muda'}
+        fallback={
+          <NumberInput
+            value={props.stacks}
+            onChange={(value) => props.onPick(Math.max(0, value))}
+            min={0}
+            max={20}
+            disabled={props.locked}
+            class="w-20"
+            aria-label={`Aprimoramento ${props.index + 1} — degraus`}
+          />
+        }
+      >
+        {/* 'muda' is single by nature — a checkbox, not a stepper. */}
+        <input
+          type="checkbox"
+          checked={props.stacks > 0}
+          disabled={props.locked}
+          onChange={(event) => props.onPick(event.currentTarget.checked ? 1 : 0)}
+          class="mt-1 size-5 accent-violet-600"
+          aria-label={`Aprimoramento: ${props.augment.description.slice(0, 40)}`}
+        />
+      </Show>
+    </li>
   )
 }

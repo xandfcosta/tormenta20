@@ -1,72 +1,47 @@
-import { render, screen } from '@testing-library/react'
-import { beforeAll, describe, expect, it } from 'vitest'
+import { render } from '@solidjs/testing-library'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { VirtualList } from './virtual-list'
 
-/**
- * jsdom has no layout engine or ResizeObserver, so react-virtual can't measure
- * a real viewport and would render zero rows. A no-op ResizeObserver plus a
- * fixed 256px-tall getBoundingClientRect give the virtualizer a viewport so it
- * renders the leading window — enough to prove the wrapper virtualizes (top
- * rows present, tail rows not).
- */
-class NoopResizeObserver {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
+type Row = { id: string; name: string }
 
-beforeAll(() => {
-  globalThis.ResizeObserver =
-    NoopResizeObserver as unknown as typeof ResizeObserver
-  Element.prototype.getBoundingClientRect = () =>
-    ({ width: 320, height: 256, top: 0, left: 0, right: 320, bottom: 256 }) as DOMRect
-  // react-virtual sizes the element scroller from clientHeight, which jsdom
-  // reports as 0 without a layout engine.
-  Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
-    configurable: true,
-    value: 256,
-  })
-})
-
-const ITEMS = Array.from({ length: 200 }, (_, i) => ({
-  id: i,
+const rows: Row[] = Array.from({ length: 400 }, (_, i) => ({
+  id: `row-${i}`,
   name: `Item ${i}`,
 }))
 
+afterEach(() => {
+  vi.restoreAllMocks()
+  document.body.innerHTML = ''
+})
+
+/**
+ * jsdom gives every element a zero-height rect, so the virtualizer's window is
+ * empty here and NO row is rendered — which is exactly why the crash this list
+ * caused in the catálogo dialog (index -1 → `items[-1].id`) could only be seen
+ * in a real browser. What is asserted below is what jsdom can honestly answer:
+ * the reserved scroll height and the out-of-range guard. The rendering itself
+ * is covered by `e2e/tests/character-bag.spec.ts`.
+ */
 describe('VirtualList', () => {
-  it('virtualizes: reserves full height but does not render the whole list', () => {
-    const { container } = render(
+  it('reserva a altura total da lista para o scroll', () => {
+    const { container } = render(() => (
       <VirtualList
-        className="h-64"
-        items={ITEMS}
-        estimateSize={40}
-        getKey={(it) => it.id}
-        renderItem={(it) => <span>{it.name}</span>}
-      />,
-    )
-    // Scroll container carries the caller's className + owns the scroll.
-    const scroll = container.firstElementChild as HTMLElement
-    expect(scroll.className).toContain('overflow-y-auto')
-    expect(scroll.className).toContain('h-64')
-    // Spacer reserves scroll height for every item (200 × 40 = 8000px).
-    const spacer = scroll.firstElementChild as HTMLElement
-    expect(spacer.style.height).toBe('8000px')
-    // A tail item far past the viewport is never in the DOM.
-    expect(screen.queryByText('Item 199')).not.toBeInTheDocument()
-    expect(
-      container.querySelectorAll('[data-index]').length,
-    ).toBeLessThan(ITEMS.length)
+        class="max-h-56"
+        items={rows}
+        estimateSize={34}
+        getKey={(row) => row.id}
+        renderItem={(row) => <button type="button">{row.name}</button>}
+      />
+    ))
+    const spacer = container.querySelector<HTMLElement>('.relative')
+    expect(spacer?.style.height).toBe(`${400 * 34}px`)
   })
 
-  it('renders no rows when empty', () => {
-    const { container } = render(
-      <VirtualList
-        items={[]}
-        getKey={(it: { id: number }) => it.id}
-        renderItem={() => <span>never</span>}
-      />,
-    )
-    expect(screen.queryByText('never')).not.toBeInTheDocument()
-    expect(container.querySelector('[data-index]')).toBeNull()
+  it('lista vazia não pergunta a chave de item nenhum', () => {
+    const getKey = vi.fn((row: Row) => row.id)
+    render(() => (
+      <VirtualList items={[]} getKey={getKey} renderItem={(row: Row) => <span>{row.name}</span>} />
+    ))
+    expect(getKey).not.toHaveBeenCalled()
   })
 })

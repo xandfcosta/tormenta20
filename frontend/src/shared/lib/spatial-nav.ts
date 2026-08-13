@@ -1,9 +1,12 @@
 /**
  * Pure geometry core for game-like on-screen navigation (ALE-55). No DOM, no
- * focus, no React — it takes element rectangles as data and answers "which id is
- * next in this direction?" so all the tricky math is unit-testable (jsdom has no
- * layout, so a pure core is the only way to test it). The React glue that reads
- * real rects and moves focus lives in `shared/ui/scene-nav`.
+ * focus, no framework — it takes element rectangles as data and answers "which
+ * id is next in this direction?" so all the tricky math is unit-testable (jsdom
+ * has no layout, so a pure core is the only way to test it). The glue that reads
+ * real rects and moves focus lives in `shared/lib/scene-nav`.
+ *
+ * Ported byte-for-byte from the React app (ALE-66): it never imported a
+ * framework, which is exactly why the geometry survived the migration untouched.
  */
 
 export type Dir = 'up' | 'down' | 'left' | 'right'

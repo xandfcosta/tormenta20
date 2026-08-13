@@ -7,7 +7,7 @@ import {
   type ActiveItem,
 } from '../../../items/engine'
 import type { Modifier } from '../../../items/types'
-import { getActivation } from '../../../power-activation'
+import { getActivation, maxStepsForLevel } from '../../../power-activation'
 import { classPowerModifiers } from '../index'
 
 /**
@@ -47,7 +47,7 @@ describe('Bardo — Inspiração como postura (p44)', () => {
     const spec = getActivation('class.bardo.inspiracao')!
     expect(spec.kind).toBe('stance')
     expect(spec.pmCost).toBe(2)
-    const steps = spec.scaling!.maxStepsForLevel
+    const steps = (level: number) => maxStepsForLevel(spec.scaling!, level)
     expect(steps(4)).toBe(0)
     expect(steps(5)).toBe(1)
     expect(steps(13)).toBe(3)

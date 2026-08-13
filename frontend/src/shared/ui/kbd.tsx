@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react'
+import { type ComponentProps, splitProps } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
 
 /**
@@ -7,14 +7,9 @@ import { cn } from '@/shared/lib/utils'
  * don't apply on touch, so the badge hides on tablet/phone. Renders inline so
  * it flows within the button/label text.
  *
- * @example
- * <Button>Abrir ficha <Kbd>⏎</Kbd></Button>
+ * @example <Button>Abrir ficha <Kbd>⏎</Kbd></Button>
  */
-export function Kbd({ className, ...props }: ComponentProps<'kbd'>) {
-  return (
-    <kbd
-      className={cn('ml-1 hidden text-[10px] opacity-70 xl:inline', className)}
-      {...props}
-    />
-  )
+export function Kbd(props: ComponentProps<'kbd'>) {
+  const [local, rest] = splitProps(props, ['class'])
+  return <kbd class={cn('ml-1 hidden text-[10px] opacity-70 xl:inline', local.class)} {...rest} />
 }

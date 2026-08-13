@@ -1,9 +1,10 @@
-import { Search } from 'lucide-react'
-import { useState } from 'react'
 import type { CatalogItem } from '@tormenta20/t20-data'
+import { Search } from 'lucide-solid'
+import { For, Show, createSignal } from 'solid-js'
+import { matchesQuery } from '@/shared/lib/fuzzy-filter'
+import { cn } from '@/shared/lib/utils'
 import { Input } from '@/shared/ui/input'
 import { VirtualList } from '@/shared/ui/virtual-list'
-import { cn } from '@/shared/lib/utils'
 import {
   type PurchaseMap,
   SHOP_CATEGORIES,
@@ -11,154 +12,157 @@ import {
   shopCatalog,
 } from './starting-equipment'
 
-const tibarFmt = (v: number) =>
-  `T$ ${v.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`
+const tibarFmt = (value: number) =>
+  `T$ ${value.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`
 
-/** One comparable stat token per item (dano, Defesa, or espaço). */
+/** One comparable stat per row: dano, Defesa, or the space it eats. */
 function itemStat(item: CatalogItem): string {
   if (item.weapon) return item.weapon.damage
-  const defense =
-    item.armor?.defense ?? item.shield?.defense ?? undefined
+  const defense = item.armor?.defense ?? item.shield?.defense
   if (defense !== undefined) return `Defesa +${defense}`
   return `${item.slots} espaço${item.slots === 1 ? '' : 's'}`
 }
 
-/**
- * Loja do Equipamento inicial (p140: o dinheiro inicial "pode ser usado para
- * comprar itens"). Search + category chips over the buyable catalog; each row
- * has a −/qty/+ stepper. Buying beyond the remaining T$ is blocked — raising
- * the T$ inicial field (GM) reopens the budget. `remaining` may be NEGATIVE
- * (money lowered after buying): shown truthfully so the player removes items.
- */
-export function StartingShop({
-  purchases,
-  remaining,
-  onChange,
-}: {
+export type StartingShopProps = {
   purchases: PurchaseMap
+  /** May be NEGATIVE when the money was lowered after buying — shown as-is so
+   *  the player removes items instead of wondering. */
   remaining: number
   onChange: (next: PurchaseMap) => void
-}) {
-  const [query, setQuery] = useState('')
-  const [category, setCategory] = useState<ShopCategoryKey>('all')
-  const q = query.trim().toLowerCase()
-  const items = shopCatalog(category).filter(
-    (i) => !q || i.name.toLowerCase().includes(q),
-  )
-  const hasPurchases = Object.values(purchases).some((qty) => qty > 0)
+}
+
+/**
+ * The starting shop (p140 — o dinheiro inicial pode comprar itens). Search and
+ * category chips over the buyable catalog, each row with a −/qty/+ stepper.
+ * Buying past the remaining T$ is blocked; raising the T$ field reopens it.
+ */
+export function StartingShop(props: StartingShopProps) {
+  const [query, setQuery] = createSignal('')
+  const [category, setCategory] = createSignal<ShopCategoryKey>('all')
+
+  const items = () =>
+    shopCatalog(category()).filter((item) => matchesQuery([item.name], query()))
+  const hasPurchases = () => Object.values(props.purchases).some((qty) => qty > 0)
+
   const setQty = (id: string, qty: number) => {
-    const next = { ...purchases }
+    const next = { ...props.purchases }
     if (qty <= 0) delete next[id]
     else next[id] = qty
-    onChange(next)
+    props.onChange(next)
   }
+
   return (
-    <div className="space-y-2">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+    <div class="space-y-2 rounded-md border border-grimorio-iron p-3">
+      <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
         Loja{' '}
         <span
-          className={cn(
+          class={cn(
             'normal-case tracking-normal',
-            remaining < 0 && 'font-semibold text-[color:var(--hp-hurt)]',
+            props.remaining < 0 && 'font-semibold text-[color:var(--hp-hurt)]',
           )}
         >
-          · restante {tibarFmt(remaining)}
+          · restante {tibarFmt(props.remaining)}
         </span>
       </p>
-      {remaining <= 0 && !hasPurchases ? (
-        <p className="rounded-md border border-dashed border-border p-2 text-xs text-muted-foreground">
-          Role ou defina seu dinheiro inicial acima para comprar itens.
-        </p>
-      ) : (
-        <>
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar item"
-              aria-label="Buscar item"
-              className="h-8 pl-7 text-xs"
-            />
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {SHOP_CATEGORIES.map((c) => (
+
+      <Show
+        when={props.remaining > 0 || hasPurchases()}
+        fallback={
+          <p class="rounded-md border border-dashed border-grimorio-iron p-2 text-xs text-muted-foreground">
+            Role ou defina seu dinheiro inicial acima para comprar itens.
+          </p>
+        }
+      >
+        <div class="relative">
+          <Search
+            class="pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <Input
+            type="search"
+            value={query()}
+            onInput={(event) => setQuery(event.currentTarget.value)}
+            placeholder="Buscar item"
+            aria-label="Buscar item"
+            class="pl-8"
+          />
+        </div>
+
+        <div class="flex flex-wrap gap-1.5">
+          <For each={SHOP_CATEGORIES}>
+            {(shopCategory) => (
               <button
-                key={c.key}
                 type="button"
-                aria-pressed={category === c.key}
-                onClick={() => setCategory(c.key)}
-                className={cn(
-                  'rounded-md border px-2.5 py-1.5 text-xs transition-colors sm:py-1',
-                  category === c.key
-                    ? 'border-primary bg-accent font-medium'
-                    : 'border-border text-muted-foreground hover:bg-accent',
+                aria-pressed={category() === shopCategory.key}
+                onClick={() => setCategory(shopCategory.key)}
+                class={cn(
+                  'rounded-md border px-2.5 py-1 text-xs transition-colors',
+                  category() === shopCategory.key
+                    ? 'border-grimorio-gold bg-accent font-medium text-grimorio-gold'
+                    : 'border-grimorio-iron text-muted-foreground hover:bg-accent',
                 )}
               >
-                {c.label}
+                {shopCategory.label}
               </button>
-            ))}
-          </div>
-          {items.length === 0 ? (
-            <p className="py-4 text-center text-xs text-muted-foreground">
-              Nenhum item encontrado{q ? ` para “${query.trim()}”` : ''}.
+            )}
+          </For>
+        </div>
+
+        <Show
+          when={items().length > 0}
+          fallback={
+            <p class="py-4 text-center text-xs text-muted-foreground">
+              Nenhum item encontrado{query().trim() ? ` para “${query().trim()}”` : ''}.
             </p>
-          ) : (
-            <VirtualList
-              items={items}
-              getKey={(i) => i.id}
-              estimateSize={48}
-              gap={4}
-              className="max-h-72 p-0.5"
-              renderItem={(item) => (
-                <ShopRow
-                  item={item}
-                  qty={purchases[item.id] ?? 0}
-                  canBuy={remaining >= item.price}
-                  onQty={(qty) => setQty(item.id, qty)}
-                />
-              )}
-            />
-          )}
-        </>
-      )}
+          }
+        >
+          <VirtualList
+            items={items()}
+            getKey={(item) => item.id}
+            estimateSize={52}
+            class="max-h-72 p-0.5"
+            renderItem={(item) => (
+              <ShopRow
+                item={item}
+                qty={props.purchases[item.id] ?? 0}
+                canBuy={props.remaining >= item.price}
+                onQty={(qty) => setQty(item.id, qty)}
+              />
+            )}
+          />
+        </Show>
+      </Show>
     </div>
   )
 }
 
-function ShopRow({
-  item,
-  qty,
-  canBuy,
-  onQty,
-}: {
+function ShopRow(props: {
   item: CatalogItem
   qty: number
   canBuy: boolean
   onQty: (qty: number) => void
 }) {
   return (
-    <div className="flex items-center gap-2 rounded-md border border-border p-2">
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-xs font-semibold">{item.name}</p>
-        <p className="text-[10px] text-muted-foreground">
-          {tibarFmt(item.price)} · {itemStat(item)}
+    <div class="flex items-center gap-2 rounded-md border border-grimorio-iron p-2">
+      <div class="min-w-0 flex-1">
+        <p class="truncate text-xs font-semibold">{props.item.name}</p>
+        <p class="text-[10px] text-muted-foreground">
+          {tibarFmt(props.item.price)} · {itemStat(props.item)}
         </p>
       </div>
-      <div className="flex items-center gap-1">
+      <div class="flex items-center gap-1">
         <QtyButton
-          label={`Remover ${item.name}`}
-          disabled={qty === 0}
-          onClick={() => onQty(qty - 1)}
+          label={`Remover ${props.item.name}`}
+          disabled={props.qty === 0}
+          onClick={() => props.onQty(props.qty - 1)}
         >
           −
         </QtyButton>
-        <span className="w-6 text-center font-mono text-xs">{qty}</span>
+        <span class="w-6 text-center font-mono text-xs">{props.qty}</span>
         <QtyButton
-          label={`Comprar ${item.name}`}
-          disabled={!canBuy}
-          title={canBuy ? undefined : `Saldo insuficiente (${tibarFmt(item.price)})`}
-          onClick={() => onQty(qty + 1)}
+          label={`Comprar ${props.item.name}`}
+          disabled={!props.canBuy}
+          onClick={() => props.onQty(props.qty + 1)}
         >
           +
         </QtyButton>
@@ -167,32 +171,24 @@ function ShopRow({
   )
 }
 
-function QtyButton({
-  label,
-  disabled,
-  title,
-  onClick,
-  children,
-}: {
+function QtyButton(props: {
   label: string
   disabled: boolean
-  title?: string
   onClick: () => void
-  children: React.ReactNode
+  children: string
 }) {
   return (
     <button
       type="button"
-      aria-label={label}
-      title={title}
-      disabled={disabled}
-      onClick={onClick}
-      className={cn(
-        'flex size-8 items-center justify-center rounded-md border border-border text-sm transition-colors sm:size-7',
-        disabled ? 'opacity-40' : 'hover:bg-accent',
+      aria-label={props.label}
+      disabled={props.disabled}
+      onClick={() => props.onClick()}
+      class={cn(
+        'flex size-8 items-center justify-center rounded-md border border-grimorio-iron text-sm transition-colors sm:size-7',
+        props.disabled ? 'opacity-40' : 'hover:bg-accent',
       )}
     >
-      {children}
+      {props.children}
     </button>
   )
 }

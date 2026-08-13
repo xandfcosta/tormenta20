@@ -1,23 +1,34 @@
 import { rankItem } from '@tanstack/match-sorter-utils'
-import type { FilterFn } from '@tanstack/react-table'
 
 /**
- * Project-owned fuzzy filter for TanStack Table (global or column filter).
- * Ranks the cell value against the query with `match-sorter`, which is
- * typo-tolerant and (by default) diacritic-insensitive — a good fit for the
- * accented Portuguese catalogs. Wrap the lib here so features never import
- * `match-sorter-utils` directly (frontend third-party-boundary rule).
+ * Typo-tolerant, diacritic-insensitive match — the search rule behind the
+ * roster and list filters. Matters for the accented Portuguese catalogs
+ * ("necromante" finds "Necromante", "anao" finds "Anão"). Wrapped here so
+ * features never import `match-sorter-utils` directly (third-party-boundary
+ * rule).
  *
- * Usage: `columnHelper.accessor('name', { filterFn: fuzzyFilter<Row>() })` or
- * the table option `globalFilterFn: fuzzyFilter<Row>()`. A factory so the
- * returned `FilterFn` is typed to the table's row shape (no `any` cast).
+ * DEVIATION from the React app: there, this was a `FilterFn` plugged into a
+ * headless react-table (v8). The Solid adapter is `@tanstack/solid-table`
+ * **v9** — a restructured library (explicit feature opt-in, a feature-typed
+ * filter-meta registry) whose wiring for a single client-side global filter
+ * over a handful of rows costs far more than it returns. The typo tolerance,
+ * which is the part that actually mattered, is preserved. A list that needs
+ * real sorting/faceting/virtualization should bring solid-table in properly.
+ *
+ * @example roster.filter((c) => matchesQuery([c.name, c.origin], query()))
  */
-export function fuzzyFilter<T>(): FilterFn<T> {
-  return (row, columnId, value, addMeta) => {
-    const search = String(value ?? '')
-    if (search.trim() === '') return true
-    const itemRank = rankItem(row.getValue(columnId), search)
-    addMeta({ itemRank })
-    return itemRank.passed
-  }
+export function fuzzyMatches(value: unknown, search: string): boolean {
+  if (search.trim() === '') return true
+  return rankItem(value, search).passed
+}
+
+/**
+ * True when ANY of the indexed fields matches — the multi-column equivalent of
+ * the table's global filter.
+ *
+ * @example matchesQuery([c.name, className, c.origin], 'necro')
+ */
+export function matchesQuery(fields: readonly unknown[], search: string): boolean {
+  if (search.trim() === '') return true
+  return fields.some((field) => fuzzyMatches(field, search))
 }

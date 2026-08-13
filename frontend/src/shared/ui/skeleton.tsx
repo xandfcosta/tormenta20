@@ -1,80 +1,52 @@
-import { cn } from "@/shared/lib/utils"
+import { For, type ComponentProps, splitProps } from 'solid-js'
+import { cn } from '@/shared/lib/utils'
 
-function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
+/** A pulsing placeholder block. Size it with utility classes. */
+export function Skeleton(props: ComponentProps<'div'>) {
+  const [local, rest] = splitProps(props, ['class'])
   return (
-    <div
-      data-slot="skeleton"
-      className={cn("animate-pulse rounded-md bg-accent", className)}
-      {...props}
-    />
+    <div data-slot="skeleton" class={cn('animate-pulse rounded-md bg-accent', local.class)} {...rest} />
   )
 }
 
-/** Vertical stack of card-shaped skeletons for list pages. */
-function SkeletonCardGrid({
-  count = 3,
-  className,
-}: {
-  count?: number
-  className?: string
-}) {
+/** Card-shaped skeletons for grid pages (roster, chronicles). */
+export function SkeletonCardGrid(props: { count?: number; class?: string }) {
+  const slots = () => Array.from({ length: props.count ?? 3 })
   return (
-    <div className={cn("grid gap-4 sm:grid-cols-2 lg:grid-cols-3", className)}>
-      {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="rounded-md border p-4">
-          <Skeleton className="h-5 w-3/4" />
-          <Skeleton className="mt-3 h-3 w-full" />
-          <Skeleton className="mt-2 h-3 w-2/3" />
-          <div className="mt-3 flex gap-2">
-            <Skeleton className="h-4 w-12" />
-            <Skeleton className="h-4 w-16" />
+    <div class={cn('grid gap-4 sm:grid-cols-2 lg:grid-cols-3', props.class)}>
+      <For each={slots()}>
+        {() => (
+          <div class="rounded-md border p-4">
+            <Skeleton class="h-5 w-3/4" />
+            <Skeleton class="mt-3 h-3 w-full" />
+            <Skeleton class="mt-2 h-3 w-2/3" />
+            <div class="mt-3 flex gap-2">
+              <Skeleton class="h-4 w-12" />
+              <Skeleton class="h-4 w-16" />
+            </div>
           </div>
-        </div>
-      ))}
+        )}
+      </For>
     </div>
   )
 }
 
-/** Vertical stack of row-shaped skeletons for table-ish lists. */
-function SkeletonRows({
-  count = 4,
-  className,
-}: {
-  count?: number
-  className?: string
-}) {
+/** Row-shaped skeletons for table-ish lists. */
+export function SkeletonRows(props: { count?: number; class?: string }) {
+  const slots = () => Array.from({ length: props.count ?? 4 })
   return (
-    <div className={cn("space-y-2", className)}>
-      {Array.from({ length: count }).map((_, i) => (
-        <div
-          key={i}
-          className="flex items-center justify-between rounded-md border p-3"
-        >
-          <div className="flex-1 space-y-1.5">
-            <Skeleton className="h-4 w-1/3" />
-            <Skeleton className="h-3 w-2/3" />
+    <div class={cn('space-y-2', props.class)}>
+      <For each={slots()}>
+        {() => (
+          <div class="flex items-center justify-between rounded-md border p-3">
+            <div class="flex-1 space-y-1.5">
+              <Skeleton class="h-4 w-1/3" />
+              <Skeleton class="h-3 w-2/3" />
+            </div>
+            <Skeleton class="h-5 w-16" />
           </div>
-          <Skeleton className="h-5 w-16" />
-        </div>
-      ))}
+        )}
+      </For>
     </div>
   )
 }
-
-/**
- * Generic full-page placeholder for the router's `defaultPendingComponent`,
- * shown while a blocking route `loader` awaits its first fetch instead of
- * freezing the previous page. Neutral header + block shape so it fits any
- * destination screen.
- */
-function RoutePendingSkeleton() {
-  return (
-    <div className="space-y-4 p-6">
-      <Skeleton className="h-8 w-56" />
-      <Skeleton className="h-32 w-full" />
-      <Skeleton className="h-40 w-full" />
-    </div>
-  )
-}
-
-export { Skeleton, SkeletonCardGrid, SkeletonRows, RoutePendingSkeleton }
