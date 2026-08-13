@@ -121,12 +121,21 @@ func condIntSabCar(n int) []Modifier {
 	return []Modifier{condByAttr("intelligence", n), condByAttr("wisdom", n), condByAttr("charisma", n)}
 }
 
-// desprevenidoMods é compartilhado porque a p394 define OUTRAS condições em
-// termos desta: "CEGO. O personagem fica desprevenido e lento", "AGARRADO. O
-// personagem fica desprevenido e imóvel". Compor em vez de copiar os números é o
-// que impede uma delas de ficar com metade do efeito — foi assim que o cego
-// perdeu a penalidade de Reflexos (ALE-112).
-var desprevenidoMods = []Modifier{condDefense(-5), condSkill("Reflexos", -5)}
+// As condições que a p394 usa para DEFINIR outras. Compor em vez de copiar os
+// números é o que impede uma derivada de ficar com metade do efeito — foi assim
+// que o cego perdeu a penalidade de Reflexos (ALE-112) e que cinco condições
+// ficaram sem efeito nenhum (ALE-115).
+var (
+	vulneravelMods   = []Modifier{condDefense(-2)}
+	desprevenidoMods = []Modifier{condDefense(-5), condSkill("Reflexos", -5)}
+	fracoMods        = condForDesCon(-2)
+	debilitadoMods   = condForDesCon(-5)
+	// "INDEFESO. O personagem fica desprevenido, MAS sofre −10 na Defesa, falha
+	// automaticamente em testes de Reflexos […]" — o "mas" faz o −10 SUBSTITUIR o
+	// −5 do desprevenido. A falha automática em Reflexos não é um número e não
+	// vira modificador (ALE-115).
+	indefesoMods = []Modifier{condDefense(-10)}
+)
 
 // comPlus devolve os modificadores de uma condição citada mais os próprios.
 func comPlus(base []Modifier, extra ...Modifier) []Modifier {
@@ -134,27 +143,52 @@ func comPlus(base []Modifier, extra ...Modifier) []Modifier {
 }
 
 // conditionModifierTable duplicates t20-data condition-modifiers.ts — keep in sync.
+// Cada linha derivada cita o texto da p394 que a obriga.
 var conditionModifierTable = map[string][]Modifier{
 	"abalado":      {condAllSkills(-2)},
 	"apavorado":    {condAllSkills(-5)},
-	"vulneravel":   {condDefense(-2)},
+	"vulneravel":   vulneravelMods,
 	"desprevenido": desprevenidoMods,
-	"indefeso":     {condDefense(-10)},
-	"fraco":        condForDesCon(-2),
-	"debilitado":   condForDesCon(-5),
+	"indefeso":     indefesoMods,
+	"fraco":        fracoMods,
+	"debilitado":   debilitadoMods,
 	"frustrado":    condIntSabCar(-2),
 	"esmorecido":   condIntSabCar(-5),
-	"fatigado":     append(condForDesCon(-2), condDefense(-2)),
-	"exausto":      append(condForDesCon(-5), condDefense(-2)),
+
+	// "ATORDOADO. O personagem fica desprevenido e não pode fazer ações."
+	"atordoado": desprevenidoMods,
+	// "SURPREENDIDO. O personagem fica desprevenido e não pode fazer ações."
+	"surpreendido": desprevenidoMods,
+	// "PARALISADO. Fica imóvel e indefeso […]"
+	"paralisado": indefesoMods,
+	// "INCONSCIENTE. O personagem fica indefeso e não pode fazer ações […]"
+	"inconsciente": indefesoMods,
+	// "PETRIFICADO. O personagem fica inconsciente e recebe redução de dano 8."
+	// A RD 8 não é modelável: não existe alvo de redução de dano para
+	// modificador — a RD do motor vem só de classe (ALE-115).
+	"petrificado": indefesoMods,
+
+	// "FATIGADO. O personagem fica fraco e vulnerável."
+	"fatigado": comPlus(fracoMods, vulneravelMods...),
+	// "EXAUSTO. O personagem fica debilitado, lento e vulnerável."
+	"exausto": comPlus(debilitadoMods, vulneravelMods...),
 	// "CEGO. O personagem fica desprevenido e lento […] e sofre −5 em testes de
 	// perícias baseadas em Força ou Destreza."
-	"cego":      comPlus(desprevenidoMods, condByAttr("strength", -5), condByAttr("dexterity", -5)),
+	"cego": comPlus(desprevenidoMods, condByAttr("strength", -5), condByAttr("dexterity", -5)),
+	// "AGARRADO. O personagem fica desprevenido e imóvel, sofre −2 em testes de
+	// ataque […]"
+	"agarrado": comPlus(desprevenidoMods, condAttack(-2)),
+	// "ENREDADO. O personagem fica lento, vulnerável e sofre −2 em testes de
+	// ataque."
+	"enredado": comPlus(vulneravelMods, condAttack(-2)),
+
 	"ofuscado":  {condAttack(-2), condSkill("Percepção", -2)},
 	"fascinado": {condSkill("Percepção", -5)},
 	"surdo":     {condSkill("Iniciativa", -5)},
-	"enredado":  {condDefense(-2), condAttack(-2)},
-	"agarrado":  {condDefense(-5), condSkill("Reflexos", -5), condAttack(-2)},
-	"caido":     {condSkill("Luta", -5)},
+	// "CAÍDO. […] sofre −5 em ataques corpo a corpo" — que no motor são testes de
+	// Luta. A Defesa direcional (−5 corpo a corpo, +5 à distância, e CUMULATIVA
+	// com outras condições) não é modelável: `defense` não tem escopo (ALE-115).
+	"caido": {condSkill("Luta", -5)},
 }
 
 // itemActiveItem ports the per-item branch of activeItemsFor's map: base +

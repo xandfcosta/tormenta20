@@ -941,6 +941,502 @@
       }
     ]
   },
+  "activeConditionals": [],
+  "sheetV2WithConditionals": {
+    "defense": {
+      "base": 13,
+      "itemBonus": 0,
+      "total": 13,
+      "dexApplied": true,
+      "contributions": []
+    },
+    "displacement": {
+      "base": 9,
+      "itemBonus": 0,
+      "total": 9,
+      "contributions": []
+    },
+    "flySpeed": 0,
+    "inventorySlots": 12,
+    "attributes": {
+      "strength": {
+        "total": 1,
+        "contributions": []
+      },
+      "dexterity": {
+        "total": 3,
+        "contributions": [
+          {
+            "source": "Raça: Elfo",
+            "amount": 1
+          }
+        ]
+      },
+      "constitution": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Elfo",
+            "amount": -1
+          }
+        ]
+      },
+      "intelligence": {
+        "total": 4,
+        "contributions": [
+          {
+            "source": "Raça: Elfo",
+            "amount": 2
+          }
+        ]
+      },
+      "wisdom": {
+        "total": 4,
+        "contributions": []
+      },
+      "charisma": {
+        "total": 3,
+        "contributions": []
+      }
+    },
+    "pmLimit": {
+      "base": 8,
+      "itemBonus": 0,
+      "total": 8,
+      "contributions": []
+    },
+    "bestBaseSpellCd": 18,
+    "spellCdByAttribute": {
+      "strength": 15,
+      "dexterity": 17,
+      "constitution": 15,
+      "intelligence": 18,
+      "wisdom": 18,
+      "charisma": 17
+    },
+    "spellDCBonus": {
+      "total": 0,
+      "contributions": []
+    },
+    "pmCostMod": {
+      "total": 0,
+      "contributions": []
+    },
+    "attackAll": {
+      "total": 0,
+      "contributions": []
+    },
+    "damageAll": {
+      "total": 0,
+      "contributions": []
+    },
+    "damageReduction": {
+      "total": 0,
+      "sources": []
+    },
+    "tempHpFuria": {
+      "total": 0,
+      "sources": []
+    },
+    "expertises": [
+      {
+        "name": "Acrobacia",
+        "attribute": "dexterity",
+        "base": 7,
+        "itemBonus": 0,
+        "total": 7,
+        "halfLevel": 4,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Adestramento",
+        "attribute": "charisma",
+        "base": 7,
+        "itemBonus": 0,
+        "total": 7,
+        "halfLevel": 4,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Atletismo",
+        "attribute": "strength",
+        "base": 9,
+        "itemBonus": 0,
+        "total": 9,
+        "halfLevel": 4,
+        "attrValue": 1,
+        "training": 4,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Atuação",
+        "attribute": "charisma",
+        "base": 7,
+        "itemBonus": 0,
+        "total": 7,
+        "halfLevel": 4,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Cavalgar",
+        "attribute": "dexterity",
+        "base": 7,
+        "itemBonus": 0,
+        "total": 7,
+        "halfLevel": 4,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Conhecimento",
+        "attribute": "intelligence",
+        "base": 8,
+        "itemBonus": 0,
+        "total": 8,
+        "halfLevel": 4,
+        "attrValue": 4,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Cura",
+        "attribute": "wisdom",
+        "base": 8,
+        "itemBonus": 0,
+        "total": 8,
+        "halfLevel": 4,
+        "attrValue": 4,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Diplomacia",
+        "attribute": "charisma",
+        "base": 7,
+        "itemBonus": 0,
+        "total": 7,
+        "halfLevel": 4,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Enganação",
+        "attribute": "charisma",
+        "base": 7,
+        "itemBonus": 0,
+        "total": 7,
+        "halfLevel": 4,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Fortitude",
+        "attribute": "constitution",
+        "base": 9,
+        "itemBonus": 0,
+        "total": 9,
+        "halfLevel": 4,
+        "attrValue": 1,
+        "training": 4,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Furtividade",
+        "attribute": "dexterity",
+        "base": 7,
+        "itemBonus": 0,
+        "total": 7,
+        "halfLevel": 4,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Guerra",
+        "attribute": "intelligence",
+        "base": 8,
+        "itemBonus": 0,
+        "total": 8,
+        "halfLevel": 4,
+        "attrValue": 4,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Iniciativa",
+        "attribute": "dexterity",
+        "base": 7,
+        "itemBonus": 0,
+        "total": 7,
+        "halfLevel": 4,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Intimidação",
+        "attribute": "charisma",
+        "base": 11,
+        "itemBonus": 1,
+        "total": 12,
+        "halfLevel": 4,
+        "attrValue": 3,
+        "training": 4,
+        "itemContributions": [
+          {
+            "source": "Bandana",
+            "amount": 1
+          }
+        ],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Intuição",
+        "attribute": "wisdom",
+        "base": 8,
+        "itemBonus": 0,
+        "total": 8,
+        "halfLevel": 4,
+        "attrValue": 4,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Investigação",
+        "attribute": "intelligence",
+        "base": 12,
+        "itemBonus": 0,
+        "total": 12,
+        "halfLevel": 4,
+        "attrValue": 4,
+        "training": 4,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Jogatina",
+        "attribute": "charisma",
+        "base": 7,
+        "itemBonus": 0,
+        "total": 7,
+        "halfLevel": 4,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Ladinagem",
+        "attribute": "dexterity",
+        "base": 7,
+        "itemBonus": 0,
+        "total": 7,
+        "halfLevel": 4,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Luta",
+        "attribute": "strength",
+        "base": 9,
+        "itemBonus": 0,
+        "total": 9,
+        "halfLevel": 4,
+        "attrValue": 1,
+        "training": 4,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Misticismo",
+        "attribute": "intelligence",
+        "base": 12,
+        "itemBonus": 2,
+        "total": 14,
+        "halfLevel": 4,
+        "attrValue": 4,
+        "training": 4,
+        "itemContributions": [
+          {
+            "source": "Raça: Elfo",
+            "amount": 2
+          }
+        ],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Nobreza",
+        "attribute": "intelligence",
+        "base": 8,
+        "itemBonus": 0,
+        "total": 8,
+        "halfLevel": 4,
+        "attrValue": 4,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Ofício",
+        "attribute": "intelligence",
+        "base": 8,
+        "itemBonus": 0,
+        "total": 8,
+        "halfLevel": 4,
+        "attrValue": 4,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Percepção",
+        "attribute": "wisdom",
+        "base": 12,
+        "itemBonus": 2,
+        "total": 14,
+        "halfLevel": 4,
+        "attrValue": 4,
+        "training": 4,
+        "itemContributions": [
+          {
+            "source": "Raça: Elfo",
+            "amount": 2
+          }
+        ],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Pilotagem",
+        "attribute": "dexterity",
+        "base": 7,
+        "itemBonus": 0,
+        "total": 7,
+        "halfLevel": 4,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Pontaria",
+        "attribute": "dexterity",
+        "base": 11,
+        "itemBonus": 0,
+        "total": 11,
+        "halfLevel": 4,
+        "attrValue": 3,
+        "training": 4,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Reflexos",
+        "attribute": "dexterity",
+        "base": 11,
+        "itemBonus": 0,
+        "total": 11,
+        "halfLevel": 4,
+        "attrValue": 3,
+        "training": 4,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Religião",
+        "attribute": "wisdom",
+        "base": 8,
+        "itemBonus": 0,
+        "total": 8,
+        "halfLevel": 4,
+        "attrValue": 4,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Sobrevivência",
+        "attribute": "wisdom",
+        "base": 8,
+        "itemBonus": 0,
+        "total": 8,
+        "halfLevel": 4,
+        "attrValue": 4,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Vontade",
+        "attribute": "wisdom",
+        "base": 12,
+        "itemBonus": 0,
+        "total": 12,
+        "halfLevel": 4,
+        "attrValue": 4,
+        "training": 4,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      }
+    ]
+  },
+  "weaponCardsWithConditionals": [
+    {
+      "name": "Adaga",
+      "skill": "Luta",
+      "attribute": "dexterity",
+      "attack": 11,
+      "expertise": {
+        "name": "Luta",
+        "attribute": "dexterity",
+        "base": 11,
+        "itemBonus": 0,
+        "total": 11,
+        "halfLevel": 4,
+        "attrValue": 3,
+        "training": 4,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      "attackAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damage": "1d4",
+      "strDamage": 1,
+      "damageBonus": 1,
+      "damageAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "critRange": 19,
+      "critMult": 2
+    }
+  ],
   "vitals": {
     "pvMax": 52,
     "pmMax": 52

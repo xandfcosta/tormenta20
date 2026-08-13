@@ -1,46 +1,46 @@
 {
-  "slug": "paladino-sagrado-nv11",
+  "slug": "tanque-exausto-atordoado-nv10",
   "char": {
-    "id": 6,
+    "id": 90,
     "ownerId": 1,
-    "name": "Paladino Sagrado Nv11",
-    "origin": "Aristocrata",
+    "name": "Tanque Exausto e Atordoado Nv10",
+    "origin": "Soldado",
     "god": "Khalmyr",
     "godPower": "",
     "tibar": 0,
-    "level": 11,
-    "hpMax": 103,
-    "hpCurrent": 89,
-    "mpMax": 38,
-    "mpCurrent": 38,
-    "strength": 3,
+    "level": 10,
+    "hpMax": 137,
+    "hpCurrent": 82,
+    "mpMax": 30,
+    "mpCurrent": 30,
+    "strength": 4,
     "dexterity": 1,
-    "constitution": 3,
+    "constitution": 4,
     "intelligence": 1,
     "wisdom": 2,
-    "charisma": 4,
+    "charisma": 1,
     "size": "Médio",
     "displacement": 9,
     "proficiencies": "[\"armas-simples\",\"armas-marciais\",\"armaduras-leves\",\"armaduras-pesadas\",\"escudos\"]",
     "raceAbilityChoices": "[]",
-    "raceAttributeChoices": "{\"floatingPicks\":[],\"ascendencia\":\"aggelus\"}",
+    "raceAttributeChoices": "{\"floatingPicks\":[]}",
     "secondaryRaceChoices": "[]",
     "originChoices": "[]",
     "classPowers": "[]",
     "classChoices": "{}",
     "powerChoices": "{}",
-    "activeConditions": "[]",
-    "createdAt": "2026-08-02T13:16:47.289Z",
-    "updatedAt": "2026-08-02T13:16:47.641Z",
+    "activeConditions": "[\"exausto\", \"atordoado\"]",
+    "createdAt": "2026-08-02T13:16:04.679Z",
+    "updatedAt": "2026-08-02T13:16:05.028Z",
     "races": [
       {
-        "race": "Suraggel"
+        "race": "Anão"
       }
     ],
     "classes": [
       {
-        "className": "Paladino",
-        "level": 11
+        "className": "Guerreiro",
+        "level": 10
       }
     ],
     "expertises": [
@@ -221,7 +221,7 @@
     ],
     "items": [
       {
-        "id": 23,
+        "id": 1,
         "catalogId": "armadura-completa",
         "name": "Armadura completa",
         "quantity": 1,
@@ -231,7 +231,7 @@
         "material": null
       },
       {
-        "id": 24,
+        "id": 2,
         "catalogId": "escudo-pesado",
         "name": "Escudo pesado",
         "quantity": 1,
@@ -241,7 +241,7 @@
         "material": null
       },
       {
-        "id": 25,
+        "id": 3,
         "catalogId": "machado-batalha",
         "name": "Machado de batalha",
         "quantity": 1,
@@ -251,7 +251,7 @@
         "material": null
       },
       {
-        "id": 26,
+        "id": 4,
         "catalogId": "balsamo-restaurador",
         "name": "Bálsamo restaurador",
         "quantity": 2,
@@ -261,49 +261,26 @@
         "material": null
       },
       {
-        "id": 27,
+        "id": 5,
         "catalogId": "cosmetico",
         "name": "Cosmético",
-        "quantity": 2,
+        "quantity": 1,
         "slots": 0.5,
         "equipped": null,
         "improvements": "[]",
         "material": null
       }
     ],
-    "activeEffects": [],
-    "spells": [
+    "activeEffects": [
       {
-        "id": 21,
-        "catalogSpellId": "curar-ferimentos",
-        "prepared": true,
-        "learnedAt": "2026-08-02T13:16:53.962Z"
-      },
-      {
-        "id": 22,
-        "catalogSpellId": "escudo-da-fe",
-        "prepared": true,
-        "learnedAt": "2026-08-02T13:16:54.768Z"
-      },
-      {
-        "id": 23,
-        "catalogSpellId": "abencoar-alimentos",
-        "prepared": true,
-        "learnedAt": "2026-08-02T13:16:55.531Z"
-      },
-      {
-        "id": 24,
-        "catalogSpellId": "voz-divina",
-        "prepared": false,
-        "learnedAt": "2026-08-02T13:16:56.314Z"
-      },
-      {
-        "id": 25,
-        "catalogSpellId": "tempestade-divina",
-        "prepared": false,
-        "learnedAt": "2026-08-02T13:16:56.707Z"
+        "id": 1,
+        "catalogId": "cosmetico",
+        "scope": "scene",
+        "modifiers": "[{\"target\":{\"k\":\"attribute\",\"name\":\"charisma\"},\"amount\":2,\"bonusType\":\"untyped\"}]",
+        "createdAt": "2026-08-02T13:16:10.757Z"
       }
-    ]
+    ],
+    "spells": []
   },
   "activeItems": [
     {
@@ -407,43 +384,118 @@
       "modifiers": []
     },
     {
-      "source": "Raça: Suraggel",
+      "source": "Cosmético (cena)",
       "equipped": "vested",
       "modifiers": [
-        {
-          "target": {
-            "k": "attribute",
-            "name": "wisdom"
-          },
-          "amount": 2,
-          "bonusType": "untyped",
-          "note": "Suraggel"
-        },
         {
           "target": {
             "k": "attribute",
             "name": "charisma"
           },
-          "amount": 1,
-          "bonusType": "untyped",
-          "note": "Suraggel"
+          "amount": 2,
+          "bonusType": "untyped"
         }
       ]
     },
     {
-      "source": "Abençoado",
+      "source": "Raça: Anão",
       "equipped": "vested",
       "modifiers": [
         {
           "target": {
-            "k": "maxPm"
+            "k": "attribute",
+            "name": "constitution"
+          },
+          "amount": 2,
+          "bonusType": "untyped",
+          "note": "Anão"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "wisdom"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Anão"
+        },
+        {
+          "target": {
+            "k": "attribute",
+            "name": "dexterity"
+          },
+          "amount": -1,
+          "bonusType": "untyped",
+          "note": "Anão"
+        },
+        {
+          "target": {
+            "k": "maxPv"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "maxPv"
           },
           "amount": 1,
           "bonusType": "untyped",
           "scale": {
-            "per": "attribute",
-            "attribute": "charisma"
+            "per": "level"
           }
+        }
+      ]
+    },
+    {
+      "source": "Condições",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "expertiseByAttribute",
+            "attribute": "strength"
+          },
+          "amount": -5,
+          "bonusType": "condition"
+        },
+        {
+          "target": {
+            "k": "expertiseByAttribute",
+            "attribute": "dexterity"
+          },
+          "amount": -5,
+          "bonusType": "condition"
+        },
+        {
+          "target": {
+            "k": "expertiseByAttribute",
+            "attribute": "constitution"
+          },
+          "amount": -5,
+          "bonusType": "condition"
+        },
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": -2,
+          "bonusType": "condition"
+        },
+        {
+          "target": {
+            "k": "defense"
+          },
+          "amount": -5,
+          "bonusType": "condition"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Reflexos"
+          },
+          "amount": -5,
+          "bonusType": "condition"
         }
       ]
     }
@@ -451,7 +503,7 @@
   "itemEffects": {
     "byTarget": {
       "defense": {
-        "total": 12,
+        "total": 7,
         "contributions": [
           {
             "source": "Armadura completa",
@@ -462,6 +514,11 @@
             "source": "Escudo pesado",
             "bonusType": "shield",
             "amount": 2
+          },
+          {
+            "source": "Condições",
+            "bonusType": "condition",
+            "amount": -5
           }
         ]
       },
@@ -490,35 +547,101 @@
           }
         ]
       },
-      "attribute:wisdom": {
+      "attribute:charisma": {
         "total": 2,
         "contributions": [
           {
-            "source": "Raça: Suraggel",
+            "source": "Cosmético (cena)",
+            "bonusType": "untyped",
+            "amount": 2
+          }
+        ]
+      },
+      "attribute:constitution": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": 2,
-            "note": "Suraggel"
+            "note": "Anão"
           }
         ]
       },
-      "attribute:charisma": {
+      "attribute:wisdom": {
         "total": 1,
         "contributions": [
           {
-            "source": "Raça: Suraggel",
+            "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": 1,
-            "note": "Suraggel"
+            "note": "Anão"
           }
         ]
       },
-      "maxPm": {
-        "total": 1,
+      "attribute:dexterity": {
+        "total": -1,
         "contributions": [
           {
-            "source": "Abençoado",
+            "source": "Raça: Anão",
+            "bonusType": "untyped",
+            "amount": -1,
+            "note": "Anão"
+          }
+        ]
+      },
+      "maxPv": {
+        "total": 3,
+        "contributions": [
+          {
+            "source": "Raça: Anão",
+            "bonusType": "untyped",
+            "amount": 2
+          },
+          {
+            "source": "Raça: Anão",
             "bonusType": "untyped",
             "amount": 1
+          }
+        ]
+      },
+      "expertiseByAttribute:strength": {
+        "total": -5,
+        "contributions": [
+          {
+            "source": "Condições",
+            "bonusType": "condition",
+            "amount": -5
+          }
+        ]
+      },
+      "expertiseByAttribute:dexterity": {
+        "total": -5,
+        "contributions": [
+          {
+            "source": "Condições",
+            "bonusType": "condition",
+            "amount": -5
+          }
+        ]
+      },
+      "expertiseByAttribute:constitution": {
+        "total": -5,
+        "contributions": [
+          {
+            "source": "Condições",
+            "bonusType": "condition",
+            "amount": -5
+          }
+        ]
+      },
+      "expertise:Reflexos": {
+        "total": -5,
+        "contributions": [
+          {
+            "source": "Condições",
+            "bonusType": "condition",
+            "amount": -5
           }
         ]
       }
@@ -533,8 +656,8 @@
   "sheetV2": {
     "defense": {
       "base": 10,
-      "itemBonus": 12,
-      "total": 22,
+      "itemBonus": 7,
+      "total": 17,
       "dexApplied": false,
       "contributions": [
         {
@@ -544,6 +667,10 @@
         {
           "source": "Escudo pesado",
           "amount": 2
+        },
+        {
+          "source": "Condições",
+          "amount": -5
         }
       ]
     },
@@ -559,57 +686,67 @@
       ]
     },
     "flySpeed": 0,
-    "inventorySlots": 16,
+    "inventorySlots": 18,
     "attributes": {
       "strength": {
-        "total": 3,
+        "total": 4,
         "contributions": []
       },
       "dexterity": {
-        "total": 1,
-        "contributions": []
+        "total": 0,
+        "contributions": [
+          {
+            "source": "Raça: Anão",
+            "amount": -1
+          }
+        ]
       },
       "constitution": {
-        "total": 3,
-        "contributions": []
+        "total": 6,
+        "contributions": [
+          {
+            "source": "Raça: Anão",
+            "amount": 2
+          }
+        ]
       },
       "intelligence": {
         "total": 1,
         "contributions": []
       },
       "wisdom": {
-        "total": 4,
+        "total": 3,
         "contributions": [
           {
-            "source": "Raça: Suraggel",
-            "amount": 2
+            "source": "Raça: Anão",
+            "amount": 1
           }
         ]
       },
       "charisma": {
-        "total": 5,
+        "total": 3,
         "contributions": [
           {
-            "source": "Raça: Suraggel",
-            "amount": 1
+            "source": "Cosmético (cena)",
+            "amount": 2
           }
         ]
       }
     },
     "pmLimit": {
-      "base": 11,
+      "base": 10,
       "itemBonus": 0,
-      "total": 11,
+      "total": 10,
       "contributions": []
     },
-    "bestBaseSpellCd": 19,
+    "bestBaseSpellCd": null,
     "spellCdByAttribute": {
-      "strength": 18,
-      "dexterity": 16,
-      "constitution": 18,
+      "strength": 19,
+      "dexterity": 15,
+      "constitution": 21,
       "intelligence": 16,
-      "wisdom": 19,
-      "charisma": 20
+      "wisdom": 18,
+      "charisma": 18
     },
     "spellDCBonus": {
       "total": 0,
@@ -639,13 +776,17 @@
       {
         "name": "Acrobacia",
         "attribute": "dexterity",
-        "base": 6,
-        "itemBonus": -7,
-        "total": -1,
+        "base": 5,
+        "itemBonus": -12,
+        "total": -7,
         "halfLevel": 5,
-        "attrValue": 1,
+        "attrValue": 0,
         "training": 0,
         "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          },
           {
             "source": "Penalidade de armadura",
             "amount": -7
@@ -656,11 +797,11 @@
       {
         "name": "Adestramento",
         "attribute": "charisma",
-        "base": 10,
+        "base": 8,
         "itemBonus": 0,
-        "total": 10,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 5,
+        "attrValue": 3,
         "training": 0,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -668,23 +809,28 @@
       {
         "name": "Atletismo",
         "attribute": "strength",
-        "base": 12,
-        "itemBonus": 0,
-        "total": 12,
+        "base": 13,
+        "itemBonus": -5,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 3,
+        "attrValue": 4,
         "training": 4,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Atuação",
         "attribute": "charisma",
-        "base": 10,
+        "base": 8,
         "itemBonus": 0,
-        "total": 10,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 5,
+        "attrValue": 3,
         "training": 0,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -692,13 +838,18 @@
       {
         "name": "Cavalgar",
         "attribute": "dexterity",
-        "base": 6,
-        "itemBonus": 0,
-        "total": 6,
+        "base": 5,
+        "itemBonus": -5,
+        "total": 0,
         "halfLevel": 5,
-        "attrValue": 1,
+        "attrValue": 0,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
@@ -716,11 +867,11 @@
       {
         "name": "Cura",
         "attribute": "wisdom",
-        "base": 9,
+        "base": 8,
         "itemBonus": 0,
-        "total": 9,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 4,
+        "attrValue": 3,
         "training": 0,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -728,11 +879,11 @@
       {
         "name": "Diplomacia",
         "attribute": "charisma",
-        "base": 10,
+        "base": 8,
         "itemBonus": 0,
-        "total": 10,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 5,
+        "attrValue": 3,
         "training": 0,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -740,11 +891,11 @@
       {
         "name": "Enganação",
         "attribute": "charisma",
-        "base": 10,
+        "base": 8,
         "itemBonus": 0,
-        "total": 10,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 5,
+        "attrValue": 3,
         "training": 0,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -752,25 +903,34 @@
       {
         "name": "Fortitude",
         "attribute": "constitution",
-        "base": 12,
-        "itemBonus": 0,
-        "total": 12,
+        "base": 15,
+        "itemBonus": -5,
+        "total": 10,
         "halfLevel": 5,
-        "attrValue": 3,
+        "attrValue": 6,
         "training": 4,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Furtividade",
         "attribute": "dexterity",
-        "base": 6,
-        "itemBonus": -7,
-        "total": -1,
+        "base": 5,
+        "itemBonus": -12,
+        "total": -7,
         "halfLevel": 5,
-        "attrValue": 1,
+        "attrValue": 0,
         "training": 0,
         "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          },
           {
             "source": "Penalidade de armadura",
             "amount": -7
@@ -793,23 +953,28 @@
       {
         "name": "Iniciativa",
         "attribute": "dexterity",
-        "base": 6,
-        "itemBonus": 0,
-        "total": 6,
+        "base": 5,
+        "itemBonus": -5,
+        "total": 0,
         "halfLevel": 5,
-        "attrValue": 1,
+        "attrValue": 0,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Intimidação",
         "attribute": "charisma",
-        "base": 14,
+        "base": 12,
         "itemBonus": 0,
-        "total": 14,
+        "total": 12,
         "halfLevel": 5,
-        "attrValue": 5,
+        "attrValue": 3,
         "training": 4,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -817,11 +982,11 @@
       {
         "name": "Intuição",
         "attribute": "wisdom",
-        "base": 9,
+        "base": 8,
         "itemBonus": 0,
-        "total": 9,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 4,
+        "attrValue": 3,
         "training": 0,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -841,11 +1006,11 @@
       {
         "name": "Jogatina",
         "attribute": "charisma",
-        "base": 10,
+        "base": 8,
         "itemBonus": 0,
-        "total": 10,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 5,
+        "attrValue": 3,
         "training": 0,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -853,13 +1018,17 @@
       {
         "name": "Ladinagem",
         "attribute": "dexterity",
-        "base": 6,
-        "itemBonus": -7,
-        "total": -1,
+        "base": 5,
+        "itemBonus": -12,
+        "total": -7,
         "halfLevel": 5,
-        "attrValue": 1,
+        "attrValue": 0,
         "training": 0,
         "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          },
           {
             "source": "Penalidade de armadura",
             "amount": -7
@@ -870,13 +1039,18 @@
       {
         "name": "Luta",
         "attribute": "strength",
-        "base": 12,
-        "itemBonus": 0,
-        "total": 12,
+        "base": 13,
+        "itemBonus": -5,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 3,
+        "attrValue": 4,
         "training": 4,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
@@ -918,11 +1092,11 @@
       {
         "name": "Percepção",
         "attribute": "wisdom",
-        "base": 13,
+        "base": 12,
         "itemBonus": 0,
-        "total": 13,
+        "total": 12,
         "halfLevel": 5,
-        "attrValue": 4,
+        "attrValue": 3,
         "training": 4,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -930,47 +1104,66 @@
       {
         "name": "Pilotagem",
         "attribute": "dexterity",
-        "base": 6,
-        "itemBonus": 0,
-        "total": 6,
+        "base": 5,
+        "itemBonus": -5,
+        "total": 0,
         "halfLevel": 5,
-        "attrValue": 1,
+        "attrValue": 0,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Pontaria",
         "attribute": "dexterity",
-        "base": 10,
-        "itemBonus": 0,
-        "total": 10,
+        "base": 9,
+        "itemBonus": -5,
+        "total": 4,
         "halfLevel": 5,
-        "attrValue": 1,
+        "attrValue": 0,
         "training": 4,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Reflexos",
         "attribute": "dexterity",
-        "base": 10,
-        "itemBonus": 0,
-        "total": 10,
+        "base": 9,
+        "itemBonus": -10,
+        "total": -1,
         "halfLevel": 5,
-        "attrValue": 1,
+        "attrValue": 0,
         "training": 4,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          },
+          {
+            "source": "Condições",
+            "amount": -5
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Religião",
         "attribute": "wisdom",
-        "base": 9,
+        "base": 8,
         "itemBonus": 0,
-        "total": 9,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 4,
+        "attrValue": 3,
         "training": 0,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -978,11 +1171,11 @@
       {
         "name": "Sobrevivência",
         "attribute": "wisdom",
-        "base": 9,
+        "base": 8,
         "itemBonus": 0,
-        "total": 9,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 4,
+        "attrValue": 3,
         "training": 0,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -990,11 +1183,11 @@
       {
         "name": "Vontade",
         "attribute": "wisdom",
-        "base": 13,
+        "base": 12,
         "itemBonus": 0,
-        "total": 13,
+        "total": 12,
         "halfLevel": 5,
-        "attrValue": 4,
+        "attrValue": 3,
         "training": 4,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -1005,8 +1198,8 @@
   "sheetV2WithConditionals": {
     "defense": {
       "base": 10,
-      "itemBonus": 12,
-      "total": 22,
+      "itemBonus": 7,
+      "total": 17,
       "dexApplied": false,
       "contributions": [
         {
@@ -1016,6 +1209,10 @@
         {
           "source": "Escudo pesado",
           "amount": 2
+        },
+        {
+          "source": "Condições",
+          "amount": -5
         }
       ]
     },
@@ -1031,57 +1228,67 @@
       ]
     },
     "flySpeed": 0,
-    "inventorySlots": 16,
+    "inventorySlots": 18,
     "attributes": {
       "strength": {
-        "total": 3,
+        "total": 4,
         "contributions": []
       },
       "dexterity": {
-        "total": 1,
-        "contributions": []
+        "total": 0,
+        "contributions": [
+          {
+            "source": "Raça: Anão",
+            "amount": -1
+          }
+        ]
       },
       "constitution": {
-        "total": 3,
-        "contributions": []
+        "total": 6,
+        "contributions": [
+          {
+            "source": "Raça: Anão",
+            "amount": 2
+          }
+        ]
       },
       "intelligence": {
         "total": 1,
         "contributions": []
       },
       "wisdom": {
-        "total": 4,
+        "total": 3,
         "contributions": [
           {
-            "source": "Raça: Suraggel",
-            "amount": 2
+            "source": "Raça: Anão",
+            "amount": 1
           }
         ]
       },
       "charisma": {
-        "total": 5,
+        "total": 3,
         "contributions": [
           {
-            "source": "Raça: Suraggel",
-            "amount": 1
+            "source": "Cosmético (cena)",
+            "amount": 2
           }
         ]
       }
     },
     "pmLimit": {
-      "base": 11,
+      "base": 10,
       "itemBonus": 0,
-      "total": 11,
+      "total": 10,
       "contributions": []
     },
-    "bestBaseSpellCd": 19,
+    "bestBaseSpellCd": null,
     "spellCdByAttribute": {
-      "strength": 18,
-      "dexterity": 16,
-      "constitution": 18,
+      "strength": 19,
+      "dexterity": 15,
+      "constitution": 21,
       "intelligence": 16,
-      "wisdom": 19,
-      "charisma": 20
+      "wisdom": 18,
+      "charisma": 18
     },
     "spellDCBonus": {
       "total": 0,
@@ -1111,13 +1318,17 @@
       {
         "name": "Acrobacia",
         "attribute": "dexterity",
-        "base": 6,
-        "itemBonus": -7,
-        "total": -1,
+        "base": 5,
+        "itemBonus": -12,
+        "total": -7,
         "halfLevel": 5,
-        "attrValue": 1,
+        "attrValue": 0,
         "training": 0,
         "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          },
           {
             "source": "Penalidade de armadura",
             "amount": -7
@@ -1128,11 +1339,11 @@
       {
         "name": "Adestramento",
         "attribute": "charisma",
-        "base": 10,
+        "base": 8,
         "itemBonus": 0,
-        "total": 10,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 5,
+        "attrValue": 3,
         "training": 0,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -1140,23 +1351,28 @@
       {
         "name": "Atletismo",
         "attribute": "strength",
-        "base": 12,
-        "itemBonus": 0,
-        "total": 12,
+        "base": 13,
+        "itemBonus": -5,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 3,
+        "attrValue": 4,
         "training": 4,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Atuação",
         "attribute": "charisma",
-        "base": 10,
+        "base": 8,
         "itemBonus": 0,
-        "total": 10,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 5,
+        "attrValue": 3,
         "training": 0,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -1164,13 +1380,18 @@
       {
         "name": "Cavalgar",
         "attribute": "dexterity",
-        "base": 6,
-        "itemBonus": 0,
-        "total": 6,
+        "base": 5,
+        "itemBonus": -5,
+        "total": 0,
         "halfLevel": 5,
-        "attrValue": 1,
+        "attrValue": 0,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
@@ -1188,11 +1409,11 @@
       {
         "name": "Cura",
         "attribute": "wisdom",
-        "base": 9,
+        "base": 8,
         "itemBonus": 0,
-        "total": 9,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 4,
+        "attrValue": 3,
         "training": 0,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -1200,11 +1421,11 @@
       {
         "name": "Diplomacia",
         "attribute": "charisma",
-        "base": 10,
+        "base": 8,
         "itemBonus": 0,
-        "total": 10,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 5,
+        "attrValue": 3,
         "training": 0,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -1212,11 +1433,11 @@
       {
         "name": "Enganação",
         "attribute": "charisma",
-        "base": 10,
+        "base": 8,
         "itemBonus": 0,
-        "total": 10,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 5,
+        "attrValue": 3,
         "training": 0,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -1224,25 +1445,34 @@
       {
         "name": "Fortitude",
         "attribute": "constitution",
-        "base": 12,
-        "itemBonus": 0,
-        "total": 12,
+        "base": 15,
+        "itemBonus": -5,
+        "total": 10,
         "halfLevel": 5,
-        "attrValue": 3,
+        "attrValue": 6,
         "training": 4,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Furtividade",
         "attribute": "dexterity",
-        "base": 6,
-        "itemBonus": -7,
-        "total": -1,
+        "base": 5,
+        "itemBonus": -12,
+        "total": -7,
         "halfLevel": 5,
-        "attrValue": 1,
+        "attrValue": 0,
         "training": 0,
         "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          },
           {
             "source": "Penalidade de armadura",
             "amount": -7
@@ -1265,23 +1495,28 @@
       {
         "name": "Iniciativa",
         "attribute": "dexterity",
-        "base": 6,
-        "itemBonus": 0,
-        "total": 6,
+        "base": 5,
+        "itemBonus": -5,
+        "total": 0,
         "halfLevel": 5,
-        "attrValue": 1,
+        "attrValue": 0,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Intimidação",
         "attribute": "charisma",
-        "base": 14,
+        "base": 12,
         "itemBonus": 0,
-        "total": 14,
+        "total": 12,
         "halfLevel": 5,
-        "attrValue": 5,
+        "attrValue": 3,
         "training": 4,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -1289,11 +1524,11 @@
       {
         "name": "Intuição",
         "attribute": "wisdom",
-        "base": 9,
+        "base": 8,
         "itemBonus": 0,
-        "total": 9,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 4,
+        "attrValue": 3,
         "training": 0,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -1313,11 +1548,11 @@
       {
         "name": "Jogatina",
         "attribute": "charisma",
-        "base": 10,
+        "base": 8,
         "itemBonus": 0,
-        "total": 10,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 5,
+        "attrValue": 3,
         "training": 0,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -1325,13 +1560,17 @@
       {
         "name": "Ladinagem",
         "attribute": "dexterity",
-        "base": 6,
-        "itemBonus": -7,
-        "total": -1,
+        "base": 5,
+        "itemBonus": -12,
+        "total": -7,
         "halfLevel": 5,
-        "attrValue": 1,
+        "attrValue": 0,
         "training": 0,
         "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          },
           {
             "source": "Penalidade de armadura",
             "amount": -7
@@ -1342,13 +1581,18 @@
       {
         "name": "Luta",
         "attribute": "strength",
-        "base": 12,
-        "itemBonus": 0,
-        "total": 12,
+        "base": 13,
+        "itemBonus": -5,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 3,
+        "attrValue": 4,
         "training": 4,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
@@ -1390,11 +1634,11 @@
       {
         "name": "Percepção",
         "attribute": "wisdom",
-        "base": 13,
+        "base": 12,
         "itemBonus": 0,
-        "total": 13,
+        "total": 12,
         "halfLevel": 5,
-        "attrValue": 4,
+        "attrValue": 3,
         "training": 4,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -1402,47 +1646,66 @@
       {
         "name": "Pilotagem",
         "attribute": "dexterity",
-        "base": 6,
-        "itemBonus": 0,
-        "total": 6,
+        "base": 5,
+        "itemBonus": -5,
+        "total": 0,
         "halfLevel": 5,
-        "attrValue": 1,
+        "attrValue": 0,
         "training": 0,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Pontaria",
         "attribute": "dexterity",
-        "base": 10,
-        "itemBonus": 0,
-        "total": 10,
+        "base": 9,
+        "itemBonus": -5,
+        "total": 4,
         "halfLevel": 5,
-        "attrValue": 1,
+        "attrValue": 0,
         "training": 4,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Reflexos",
         "attribute": "dexterity",
-        "base": 10,
-        "itemBonus": 0,
-        "total": 10,
+        "base": 9,
+        "itemBonus": -10,
+        "total": -1,
         "halfLevel": 5,
-        "attrValue": 1,
+        "attrValue": 0,
         "training": 4,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          },
+          {
+            "source": "Condições",
+            "amount": -5
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
         "name": "Religião",
         "attribute": "wisdom",
-        "base": 9,
+        "base": 8,
         "itemBonus": 0,
-        "total": 9,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 4,
+        "attrValue": 3,
         "training": 0,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -1450,11 +1713,11 @@
       {
         "name": "Sobrevivência",
         "attribute": "wisdom",
-        "base": 9,
+        "base": 8,
         "itemBonus": 0,
-        "total": 9,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 4,
+        "attrValue": 3,
         "training": 0,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -1462,11 +1725,11 @@
       {
         "name": "Vontade",
         "attribute": "wisdom",
-        "base": 13,
+        "base": 12,
         "itemBonus": 0,
-        "total": 13,
+        "total": 12,
         "halfLevel": 5,
-        "attrValue": 4,
+        "attrValue": 3,
         "training": 4,
         "itemContributions": [],
         "armorPenaltyApplied": 0
@@ -1478,17 +1741,22 @@
       "name": "Machado de batalha",
       "skill": "Luta",
       "attribute": "strength",
-      "attack": 12,
+      "attack": 8,
       "expertise": {
         "name": "Luta",
         "attribute": "strength",
-        "base": 12,
-        "itemBonus": 0,
-        "total": 12,
+        "base": 13,
+        "itemBonus": -5,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 3,
+        "attrValue": 4,
         "training": 4,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       "attackAll": {
@@ -1496,8 +1764,8 @@
         "contributions": []
       },
       "damage": "1d8",
-      "strDamage": 3,
-      "damageBonus": 3,
+      "strDamage": 4,
+      "damageBonus": 4,
       "damageAll": {
         "total": 0,
         "contributions": []
@@ -1507,8 +1775,8 @@
     }
   ],
   "vitals": {
-    "pvMax": 103,
-    "pmMax": 38
+    "pvMax": 137,
+    "pmMax": 30
   },
   "equippedFlags": [
     {
@@ -1529,17 +1797,22 @@
       "name": "Machado de batalha",
       "skill": "Luta",
       "attribute": "strength",
-      "attack": 12,
+      "attack": 8,
       "expertise": {
         "name": "Luta",
         "attribute": "strength",
-        "base": 12,
-        "itemBonus": 0,
-        "total": 12,
+        "base": 13,
+        "itemBonus": -5,
+        "total": 8,
         "halfLevel": 5,
-        "attrValue": 3,
+        "attrValue": 4,
         "training": 4,
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Condições",
+            "amount": -5
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       "attackAll": {
@@ -1547,8 +1820,8 @@
         "contributions": []
       },
       "damage": "1d8",
-      "strDamage": 3,
-      "damageBonus": 3,
+      "strDamage": 4,
+      "damageBonus": 4,
       "damageAll": {
         "total": 0,
         "contributions": []
