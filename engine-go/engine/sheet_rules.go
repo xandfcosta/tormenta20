@@ -50,22 +50,12 @@ func barbaroRdForLevel(level int) int {
 	return 0
 }
 
-// guerreiroRdForLevel NÃO CORRESPONDE AO LIVRO — ver ALE-111.
-//
-// Ele dá ao Guerreiro a progressão do Bárbaro (RD 2 no 5º, +2 a cada três) com
-// armadura pesada. O livro p65 tem outra coisa: "Especialização em Armadura.
-// Você recebe redução de dano 5 se estiver usando uma armadura pesada.
-// Pré-requisito: 12º nível de guerreiro" — um poder ESCOLHIDO, de 12º nível,
-// valor fixo. Um Guerreiro de 5º a 11º não deveria ter RD nenhuma.
-//
-// Mantido como está porque corrigir muda o número de personagens já criados; a
-// decisão está registrada. O teste fixa o comportamento atual de propósito.
-func guerreiroRdForLevel(level int, heavyArmor bool) int {
-	if !heavyArmor {
-		return 0
-	}
-	return barbaroRdForLevel(level)
-}
+// especializacaoArmaduraRd — "Especialização em Armadura": RD 5 com armadura
+// pesada, poder ESCOLHIDO com pré-requisito de 12º nível na classe. Existe igual
+// para Cavaleiro (p54) e Guerreiro (p65), e as duas descrições dizem que é
+// cumulativa com o Bastião.
+const especializacaoArmaduraRd = 5
+const especializacaoArmaduraLevel = 12
 
 // cavaleiroBastiaoRd — Caminho do Cavaleiro, livro p55: "Se estiver usando
 // armadura pesada, você recebe redução de dano 5". Escolhido no 5º nível, valor

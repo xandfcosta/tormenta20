@@ -52,6 +52,15 @@ const intSabCar = (n: number) => [
   byAttr('charisma', n),
 ]
 
+/**
+ * Compartilhado porque a p394 define OUTRAS condições em termos desta: "CEGO. O
+ * personagem fica desprevenido e lento", "AGARRADO. O personagem fica
+ * desprevenido e imóvel". Compor em vez de copiar os números é o que impede uma
+ * delas de ficar com metade do efeito — foi assim que o cego perdeu a
+ * penalidade de Reflexos (ALE-112).
+ */
+const DESPREVENIDO = [defense(-5), skill('Reflexos', -5)]
+
 export const CONDITION_MODIFIERS: Partial<Record<ConditionId, Modifier[]>> = {
   // Medo — penalidade global em perícias (inclui as resistências, que o motor
   // trata como perícias — casa com a expectativa do relator do ALE-28).
@@ -60,7 +69,7 @@ export const CONDITION_MODIFIERS: Partial<Record<ConditionId, Modifier[]>> = {
 
   // Defesa (e Reflexos, uma perícia dex).
   vulneravel: [defense(-2)],
-  desprevenido: [defense(-5), skill('Reflexos', -5)],
+  desprevenido: DESPREVENIDO,
   indefeso: [defense(-10)],
 
   // Penalidade em testes de atributo + perícias baseadas.
@@ -74,14 +83,17 @@ export const CONDITION_MODIFIERS: Partial<Record<ConditionId, Modifier[]>> = {
   exausto: [...forDesCon(-5), defense(-2)],
   // Cego: Desprevenido (Defesa −5, e Reflexos via Destreza) + −5 perícias de
   // Força/Destreza (o "lento" e "camuflagem total" ficam lembrete).
-  cego: [defense(-5), byAttr('strength', -5), byAttr('dexterity', -5)],
+  // "CEGO. O personagem fica desprevenido e lento […]" — as DUAS metades do
+  // desprevenido, não só a Defesa (ALE-112).
+  cego: [...DESPREVENIDO, byAttr('strength', -5), byAttr('dexterity', -5)],
 
   // Perícia específica / ataque.
   ofuscado: [attack(-2), skill('Percepção', -2)],
   fascinado: [skill('Percepção', -5)],
   surdo: [skill('Iniciativa', -5)],
   enredado: [defense(-2), attack(-2)], // Vulnerável + −2 ataques (lento = lembrete)
-  agarrado: [defense(-5), skill('Reflexos', -5), attack(-2)], // Desprevenido + −2 ataques
+  // "AGARRADO. O personagem fica desprevenido e imóvel, sofre −2 em ataque."
+  agarrado: [...DESPREVENIDO, attack(-2)],
   // Caído: −5 ataques corpo-a-corpo = −5 Luta (a Defesa direcional não é
   // modelável num único número).
   caido: [skill('Luta', -5)],

@@ -103,15 +103,28 @@ func pmCostMod(e ItemEffects) TotalContribs {
 	return totalContribsFor(e, ModifierTarget{K: "pmCost"})
 }
 
-// characterDamageReduction ports derived.ts: aggregate passive RD (Bárbaro p42,
-// Guerreiro heavy, Cavaleiro Bastião + Especialização). General RD takes the max;
-// Especialização stacks on top (explicit rule text).
+// characterDamageReduction aggregates the character's passive damage reduction.
+//
+// Book sources, all verified (ALE-111):
+//   - Bárbaro, p42: passive, RD 2 at 5th, +2 every three levels, cap 10 at 17th.
+//   - Cavaleiro "Bastião", p55: chosen path at 5th, RD 5 with heavy armour.
+//   - "Especialização em Armadura": a CHOSEN power requiring 12th level in the
+//     class, RD 5 with heavy armour — Cavaleiro p54, Guerreiro p65. Both texts
+//     say it is cumulative with Bastião, hence it adds on top instead of
+//     competing.
+//
+// General RD takes the max (two sources of the same kind don't add);
+// Especialização stacks on top, which is the book's own wording.
 func characterDamageReduction(ch Character, e ItemEffects) RdBreakdown {
 	heavy := e.Flags["armadura-pesada"]
 	chosen := parseChoiceSet(ch.ClassPowers)
-	has := func(suffix string) bool {
+	// Class-qualified: the power id is `class.<classe>.<poder>`, and matching by
+	// bare suffix would let a Guerreiro's pick satisfy the Cavaleiro's branch in
+	// a multiclasse.
+	hasPower := func(class, power string) bool {
+		want := "class." + class + "." + power
 		for _, id := range chosen.list {
-			if id == suffix || strings.HasSuffix(id, "."+suffix) {
+			if id == want || id == power {
 				return true
 			}
 		}
@@ -126,15 +139,19 @@ func characterDamageReduction(ch Character, e ItemEffects) RdBreakdown {
 				sources = append(sources, SourceAmount{"Bárbaro (p42)", rd})
 			}
 		case entry.ClassName == "Guerreiro" && heavy:
-			if rd := guerreiroRdForLevel(entry.Level, heavy); rd > 0 {
-				sources = append(sources, SourceAmount{"Guerreiro — armadura pesada", rd})
+			// p65: poder escolhido, 12º nível. NÃO é passivo nem escala — o motor
+			// dava a progressão do Bárbaro a todo Guerreiro desde o 5º (ALE-111).
+			if entry.Level >= especializacaoArmaduraLevel && hasPower("guerreiro", "especializacao-em-armadura") {
+				sources = append(sources, SourceAmount{"Especialização em Armadura", especializacaoArmaduraRd})
 			}
 		case entry.ClassName == "Cavaleiro" && heavy:
-			if entry.Level >= 5 && has("caminho-bastiao") {
+			if entry.Level >= 5 && hasPower("cavaleiro", "caminho-bastiao") {
 				sources = append(sources, SourceAmount{"Bastião — armadura pesada", cavaleiroBastiaoRd})
 			}
-			if has("especializacao-em-armadura") {
-				sources = append(sources, SourceAmount{"Especialização em Armadura", 5})
+			// p54: também 12º nível, e o texto diz explicitamente que é
+			// cumulativa com o Bastião.
+			if entry.Level >= especializacaoArmaduraLevel && hasPower("cavaleiro", "especializacao-em-armadura") {
+				sources = append(sources, SourceAmount{"Especialização em Armadura", especializacaoArmaduraRd})
 			}
 		}
 	}

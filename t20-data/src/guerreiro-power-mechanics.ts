@@ -5,7 +5,8 @@
  * PDF Cap 1 Guerreiro p64-67.
  *
  * Auto powers (Ataque Extra, Redução de Dano por nível, Especialidade
- * em Arma auto) já cobertos em `damage-reduction.guerreiroRdForLevel`
+ * em Arma auto). A RD do Guerreiro é o poder Especialização em Armadura (p65),
+ * de 12º nível — não há RD passiva por armadura pesada (ALE-111)
  * + progressão de classe.
  */
 

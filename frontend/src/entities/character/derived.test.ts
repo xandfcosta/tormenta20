@@ -1188,14 +1188,32 @@ describe('characterDamageReduction — RD junto da Defesa', () => {
     expect(rd.sources[0].source).toContain('Bárbaro')
   })
 
-  it('Guerreiro só tem RD em armadura pesada', () => {
-    const semArmadura = character({ classes: [{ className: 'Guerreiro', level: 8 }] })
-    expect(characterDamageReduction(semArmadura, characterEffects(semArmadura)).total).toBe(0)
-    const comArmadura = character({
-      classes: [{ className: 'Guerreiro', level: 8 }],
+  // O Guerreiro NÃO tem RD passiva. O livro p65 dá a ele "Especialização em
+  // Armadura": poder ESCOLHIDO, pré-requisito de 12º nível, RD 5 fixa com
+  // armadura pesada. Antes o motor lhe dava a progressão do Bárbaro desde o 5º
+  // nível, e este teste travava exatamente essa invenção (ALE-111).
+  it('Guerreiro sem o poder escolhido não tem RD, nem de armadura pesada', () => {
+    const guerreiro = character({
+      classes: [{ className: 'Guerreiro', level: 11 }],
       items: [heavyGear()],
     })
-    expect(characterDamageReduction(comArmadura, characterEffects(comArmadura)).total).toBe(4)
+
+    expect(characterDamageReduction(guerreiro, characterEffects(guerreiro)).total).toBe(0)
+  })
+
+  it('Guerreiro com Especialização em Armadura: RD 5 a partir do 12º, fixa', () => {
+    const comPoder = (level: number) =>
+      character({
+        classes: [{ className: 'Guerreiro', level }],
+        items: [heavyGear()],
+        classPowers: JSON.stringify(['class.guerreiro.especializacao-em-armadura']),
+      })
+
+    // Pré-requisito de nível: o poder escolhido cedo demais ainda não vale.
+    expect(characterDamageReduction(comPoder(11), characterEffects(comPoder(11))).total).toBe(0)
+    expect(characterDamageReduction(comPoder(12), characterEffects(comPoder(12))).total).toBe(5)
+    // Fixa: não escala como escalava a progressão inventada.
+    expect(characterDamageReduction(comPoder(20), characterEffects(comPoder(20))).total).toBe(5)
   })
 
   it('RD geral não acumula entre classes — vale a maior (p290)', () => {

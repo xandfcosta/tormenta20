@@ -138,22 +138,6 @@ export function barbaroRdForLevel(level: number): number {
   return 0
 }
 
-/**
- * Guerreiro Redução de Dano — starts nível 5 com RD 2 (só em armadura
- * pesada), +2 cada 3 níveis. Max RD 10 no 17º.
- */
-export function guerreiroRdForLevel(level: number, heavyArmor: boolean): number {
-  if (level < 1) {
-    throw new Error(`guerreiroRdForLevel: level must be ≥ 1, got ${level}`)
-  }
-  if (!heavyArmor) return 0
-  if (level >= 17) return 10
-  if (level >= 14) return 8
-  if (level >= 11) return 6
-  if (level >= 8) return 4
-  if (level >= 5) return 2
-  return 0
-}
 
 /** Cavaleiro Bastião (5º): RD 5 em armadura pesada. */
 export const CAVALEIRO_BASTIAO_RD = 5

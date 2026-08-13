@@ -9,7 +9,6 @@ import {
   applyDamageWithRdIgnore,
   barbaroRdForLevel,
   cavaleiroTotalRd,
-  guerreiroRdForLevel,
   type DamageResistanceProfile,
 } from '../damage-reduction'
 
@@ -215,20 +214,6 @@ describe('barbaroRdForLevel — p47', () => {
 
   it('throws se nível < 1', () => {
     expect(() => barbaroRdForLevel(0)).toThrow(/level/)
-  })
-})
-
-describe('guerreiroRdForLevel', () => {
-  it('sem armadura pesada → 0', () => {
-    expect(guerreiroRdForLevel(17, false)).toBe(0)
-  })
-
-  it('com armadura pesada nível 5+: RD 2', () => {
-    expect(guerreiroRdForLevel(5, true)).toBe(2)
-  })
-
-  it('escala até 10 no 17º', () => {
-    expect(guerreiroRdForLevel(17, true)).toBe(10)
   })
 })
 

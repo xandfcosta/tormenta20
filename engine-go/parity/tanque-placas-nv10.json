@@ -664,13 +664,8 @@
       "contributions": []
     },
     "damageReduction": {
-      "total": 4,
-      "sources": [
-        {
-          "source": "Guerreiro — armadura pesada",
-          "amount": 4
-        }
-      ]
+      "total": 0,
+      "sources": []
     },
     "tempHpFuria": {
       "total": 0,
