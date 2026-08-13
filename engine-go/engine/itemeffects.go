@@ -124,6 +124,18 @@ type ItemEffects struct {
 	Conditional []ConditionalEffect
 }
 
+// ItemEffectsWire é a forma que o ItemEffects assume NO FIO: as flags viram
+// array ordenado em vez do Set interno, e os nils viram vazios.
+//
+// Tem nome próprio (em vez de struct anônima) porque é o contrato que o gerador
+// de tipos TS emite — refletir a struct em memória produziria
+// `Flags: Record<string, boolean>`, que é mentira (ALE-108).
+type ItemEffectsWire struct {
+	ByTarget    map[string]AggregatedStat `json:"byTarget"`
+	Flags       []string                  `json:"flags"`
+	Conditional []ConditionalEffect       `json:"conditional"`
+}
+
 func (e ItemEffects) MarshalJSON() ([]byte, error) {
 	byTarget := e.ByTarget
 	if byTarget == nil {
@@ -133,11 +145,7 @@ func (e ItemEffects) MarshalJSON() ([]byte, error) {
 	if conditional == nil {
 		conditional = []ConditionalEffect{}
 	}
-	return json.Marshal(struct {
-		ByTarget    map[string]AggregatedStat `json:"byTarget"`
-		Flags       []string                  `json:"flags"`
-		Conditional []ConditionalEffect       `json:"conditional"`
-	}{byTarget, e.FlagList(), conditional})
+	return json.Marshal(ItemEffectsWire{byTarget, e.FlagList(), conditional})
 }
 
 // FlagList returns the active flag names sorted — the stable form for JSON and
