@@ -16,8 +16,8 @@ func nullToPtr(ns sql.NullString) *string {
 
 // writeJSON serializes body as JSON with the given status. A nil body writes just
 // the status line (204 responses). HTML escaping is off so `<`, `>`, `&` inside
-// the stored JSON-string columns (modifiers, choices) stay byte-identical to
-// Nest's JSON.stringify.
+// the stored JSON-string columns (modifiers, choices) reach the client verbatim
+// instead of as \u003c escapes.
 func writeJSON(w http.ResponseWriter, status int, body any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
@@ -28,8 +28,9 @@ func writeJSON(w http.ResponseWriter, status int, body any) {
 	}
 }
 
-// writeError emits a Nest-style error envelope: {"statusCode","message"}. Kept
-// minimal for B.0; the auth/validation slices extend it (fieldErrors, etc.).
+// writeError emits the plain error envelope: {"statusCode","message"}. When a
+// failure also carries per-field detail, use writeFieldError (validate.go) —
+// this one deliberately stays the minimal shape.
 func writeError(w http.ResponseWriter, status int, message string) {
 	writeJSON(w, status, map[string]any{"statusCode": status, "message": message})
 }

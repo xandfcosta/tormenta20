@@ -26,7 +26,7 @@ type consumeResult struct {
 	MpCurrent int64             `json:"mpCurrent"`
 }
 
-// handleConsumeItem ports CharacterItemsService.consumeItem: roll the instant
+// handleConsumeItem roll the instant
 // gain (clamped to max), create the scene/day effect (if any), decrement/remove
 // the item — all in one transaction. hpRolled/mpRolled override the dice.
 func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {

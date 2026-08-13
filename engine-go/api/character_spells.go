@@ -28,7 +28,7 @@ func spellRowFrom(s sqlcgen.CharacterSpell) spellRowDTO {
 	}
 }
 
-// handleLearnSpell ports CharacterSpellsService.learnSpell: adds a spell to the
+// handleLearnSpell adds a spell to the
 // grimoire (unprepared). 409 if already known. NOTE: the spell-exists check
 // (assertSpellExists) is deferred — the frontend only sends catalog ids.
 func (s *Server) handleLearnSpell(w http.ResponseWriter, r *http.Request) {

@@ -13,7 +13,7 @@ import (
 
 const manualTempHpCatalogID = "manual-temp-hp"
 
-// handleApplyEffect ports CharacterEffectsService.applyEffect: applies a manual
+// handleApplyEffect applies a manual
 // temp-HP pool, a spell buff, or (deferred) a power grant. NOTE: the powerId path
 // (activation-registry grants + server-side pool compute) is not yet ported.
 func (s *Server) handleApplyEffect(w http.ResponseWriter, r *http.Request) {
@@ -148,9 +148,9 @@ func (s *Server) applySpellBuffEffect(ctx context.Context, charID int64, spellID
 	return effectDTOFromUpsert(eff), http.StatusOK, nil
 }
 
-// applyPowerGrant ports the Nest powerId branch: resolve the power's activation grant and
+// applyPowerGrant is the powerId branch: resolve the power's activation grant and
 // apply it — a temp-HP pool scaled by (level + attribute total), or a fixed active-effect.
-// Unknown power / power without a grant → 400 (like the Nest registry lookup).
+// Unknown power / power without a grant → 400.
 func (s *Server) applyPowerGrant(w http.ResponseWriter, r *http.Request, row sqlcgen.Character, powerID string, scopeOverride *string) {
 	grant, ok := resolvePowerGrant(w, powerID)
 	if !ok {

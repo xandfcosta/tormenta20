@@ -335,3 +335,31 @@ func TestSessionRoutesRejectCrossCampaignAndNonOwner(t *testing.T) {
 func id64(v int64) string {
 	return strconv.FormatInt(v, 10)
 }
+
+// A descrição de campanha tinha DUAS grafias de "vazio": `handleCreateCampaign`
+// usava `trimmedNull` (só-espaços → string vazia) e `handleUpdateCampaign`
+// inlineava o trim gravando NULL. Mesma coluna, dois valores — o cliente recebia
+// `""` de um caminho e `null` do outro, para a mesma entrada do usuário.
+func TestCampaignDescriptionBlankIsTheSameEitherWay(t *testing.T) {
+	s := newTestServer(t)
+	gm := seedUser(t, s, "mestre@t20.local")
+
+	criada := authed(t, s, gm, http.MethodPost, "/campaigns",
+		`{"name":"Mesa Nova","description":"   "}`)
+	if criada.Code != http.StatusCreated && criada.Code != http.StatusOK {
+		t.Fatalf("criar: esperado 2xx, veio %d (%s)", criada.Code, criada.Body.String())
+	}
+	aoCriar := jsonField(t, criada, "description")
+
+	id := int64(jsonField(t, criada, "id").(float64))
+	editada := authed(t, s, gm, http.MethodPatch, "/campaigns/"+id64(id),
+		`{"description":"   "}`)
+	if editada.Code != http.StatusOK {
+		t.Fatalf("editar: esperado 200, veio %d (%s)", editada.Code, editada.Body.String())
+	}
+	aoEditar := jsonField(t, editada, "description")
+
+	if aoCriar != aoEditar {
+		t.Fatalf("mesma entrada, valores diferentes: criar deu %#v, editar deu %#v", aoCriar, aoEditar)
+	}
+}

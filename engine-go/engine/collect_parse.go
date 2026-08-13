@@ -51,8 +51,6 @@ func parseStringArray(raw string) []string {
 	return out
 }
 
-func parseImprovementIds(raw string) []string { return parseStringArray(raw) }
-
 func parseProficiencySet(raw string) map[string]bool { return toSet(parseStringArray(raw)) }
 
 // parseEffectModifiers ports derived.ts: a JSON Modifier[] blob, or empty.

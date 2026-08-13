@@ -80,8 +80,8 @@ func NewServer(cfg Config, database *sql.DB, catalogs *engine.Catalogs) *Server 
 }
 
 // Router builds the HTTP handler: shared middleware + domain routes. Routes carry
-// NO /api prefix — the Vite dev proxy strips it (rewrite ^/api → ""), matching the
-// Nest controllers so the frontend contract is unchanged at cutover.
+// NO /api prefix — in dev the Vite proxy strips it, and in production cmd/api
+// mounts this under http.StripPrefix("/api") while serving the SPA itself.
 func (s *Server) Router() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RealIP)
@@ -139,7 +139,7 @@ func (s *Server) Router() http.Handler {
 	})
 
 	r.Route("/characters", func(r chi.Router) {
-		// Public creation lists (the Nest options() route carries no guard).
+		// Public creation lists: the Forge reads them before anyone logs in.
 		r.Get("/options", s.handleCharacterOptions)
 		r.Group(func(r chi.Router) {
 			r.Use(s.requireAuth)

@@ -1,6 +1,6 @@
-// Command api is the Go port of the NestJS backend HTTP API. It opens + migrates
-// the SQLite database and serves the domain routes the frontend consumes via the
-// Vite /api proxy. Runs alongside the Nest server until the big-bang cutover.
+// Command api is the app's HTTP server. It opens + migrates the SQLite database
+// and serves the domain routes the frontend consumes — via the Vite proxy in
+// dev, and directly alongside the built SPA in production (STATIC_DIR).
 package main
 
 import (

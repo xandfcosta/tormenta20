@@ -75,7 +75,7 @@ func (s *Server) computeSheet(ctx context.Context, row sqlcgen.Character) (engin
 func (s *Server) syncLevelVitals(r *http.Request, id int64, dto CharacterDTO) (storedVitals, error) {
 	stored := storedVitals{HpMax: dto.HpMax, HpCurrent: dto.HpCurrent, MpMax: dto.MpMax, MpCurrent: dto.MpCurrent}
 	if s.catalogs == nil || len(dto.Classes) == 0 {
-		return stored, nil // no engine pools (0/0) → keep stored, matching Nest
+		return stored, nil // no engine pools (0/0) → keep what is stored
 	}
 	ec, err := engineCharacterFrom(dto)
 	if err != nil {

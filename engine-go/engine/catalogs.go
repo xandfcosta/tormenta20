@@ -10,7 +10,7 @@ import (
 // the SHAPES of the fetched catalogs (items, races, origins, class/general
 // powers, racas, tormenta-power ids) plus the sync lookups derived.ts reaches
 // through the frontend *-cache modules (getCatalogItem, getRace, getOrigin,
-// getOriginBenefit, getClassPower, getGeneralPower, ownedClassPowers,
+// getOriginBenefit, getGeneralPower, ownedClassPowers,
 // raceWithDeformidade, racaByName). Data comes from the same JSON the front
 // fetches — primed ONCE via PrimeEngineCatalogs. See PORT-PLAN.md §2.
 
@@ -176,15 +176,14 @@ func (o *orderedInts) UnmarshalJSON(b []byte) error {
 // ActiveItemsFor instead of the TS module-level caches (CLAUDE.md: deps by
 // parameter). Static + primed once, so no reactivity is needed.
 type Catalogs struct {
-	itemsByID      map[string]*CatalogItem
-	racesByID      map[string]*RaceDefinition
-	origins        []*OriginDefinition
-	classPowers    []*ClassPower
-	classPowerByID map[string]*ClassPower
-	generalByID    map[string]*GeneralPower
-	grantedByName  map[string]*GrantedPower
-	racasByName    map[string]*Raca
-	tormentaIDs    map[string]bool
+	itemsByID     map[string]*CatalogItem
+	racesByID     map[string]*RaceDefinition
+	origins       []*OriginDefinition
+	classPowers   []*ClassPower
+	generalByID   map[string]*GeneralPower
+	grantedByName map[string]*GrantedPower
+	racasByName   map[string]*Raca
+	tormentaIDs   map[string]bool
 }
 
 // enginePayload is the JSON shape the frontend GEN_ORACLE harness dumps to
@@ -209,13 +208,12 @@ func PrimeEngineCatalogs(raw []byte) (*Catalogs, error) {
 		return nil, fmt.Errorf("PrimeEngineCatalogs: bad catalog JSON: %w", err)
 	}
 	c := &Catalogs{
-		itemsByID:      make(map[string]*CatalogItem, len(p.Items)),
-		racesByID:      make(map[string]*RaceDefinition, len(p.Races)),
-		classPowerByID: make(map[string]*ClassPower, len(p.ClassPowers)),
-		generalByID:    make(map[string]*GeneralPower, len(p.GeneralPowers)),
-		grantedByName:  make(map[string]*GrantedPower, len(p.GrantedPowers)),
-		racasByName:    make(map[string]*Raca, len(p.Racas)),
-		tormentaIDs:    make(map[string]bool, len(p.TormentaIDs)),
+		itemsByID:     make(map[string]*CatalogItem, len(p.Items)),
+		racesByID:     make(map[string]*RaceDefinition, len(p.Races)),
+		generalByID:   make(map[string]*GeneralPower, len(p.GeneralPowers)),
+		grantedByName: make(map[string]*GrantedPower, len(p.GrantedPowers)),
+		racasByName:   make(map[string]*Raca, len(p.Racas)),
+		tormentaIDs:   make(map[string]bool, len(p.TormentaIDs)),
 	}
 	for i := range p.Items {
 		c.itemsByID[p.Items[i].ID] = &p.Items[i]
@@ -228,7 +226,6 @@ func PrimeEngineCatalogs(raw []byte) (*Catalogs, error) {
 	}
 	for i := range p.ClassPowers {
 		c.classPowers = append(c.classPowers, &p.ClassPowers[i])
-		c.classPowerByID[p.ClassPowers[i].ID] = &p.ClassPowers[i]
 	}
 	for i := range p.GeneralPowers {
 		c.generalByID[p.GeneralPowers[i].ID] = &p.GeneralPowers[i]
@@ -251,8 +248,6 @@ func PrimeEngineCatalogs(raw []byte) (*Catalogs, error) {
 func (c *Catalogs) getCatalogItem(id string) *CatalogItem { return c.itemsByID[id] }
 
 func (c *Catalogs) getRace(id string) *RaceDefinition { return c.racesByID[id] }
-
-func (c *Catalogs) getClassPower(id string) *ClassPower { return c.classPowerByID[id] }
 
 func (c *Catalogs) getGeneralPower(id string) *GeneralPower { return c.generalByID[id] }
 

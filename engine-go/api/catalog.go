@@ -15,7 +15,7 @@ func (s *Server) handleCatalogIndex(w http.ResponseWriter, _ *http.Request) {
 }
 
 // handleCatalogResource serves GET /catalog/:resource from the embedded JSON.
-// Unknown name → 404 with the accepted set (CatalogService.get).
+// Unknown name → 404 with the accepted set.
 func (s *Server) handleCatalogResource(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "resource")
 	body, ok := catalog.Resource(name)

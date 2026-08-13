@@ -2,6 +2,8 @@ package api
 
 import (
 	"fmt"
+	"slices"
+	"strings"
 
 	"t20engine/engine"
 )
@@ -60,7 +62,7 @@ func equipAxisError(catalog *engine.CatalogItem, equipped string) (topMsg, field
 	field := fmt.Sprintf("%q não é equipável", catalog.Name)
 	if len(allowed) > 0 {
 		expected = "null | " + quoteJoin(allowed)
-		field = fmt.Sprintf("%q só aceita %s", catalog.Name, join(allowed, " ou "))
+		field = fmt.Sprintf("%q só aceita %s", catalog.Name, strings.Join(allowed, " ou "))
 	}
 	top := fmt.Sprintf("equipped '%s' is invalid for %q (equip axis '%s') — expected %s",
 		equipped, catalog.Name, catalog.Equip, expected)
@@ -96,24 +98,10 @@ func slotsNotMultiple(slots float64) bool {
 	return doubled != float64(int64(doubled))
 }
 
+// contains is the package's one linear membership check — `slices.Contains`
+// exists, but this file predates the dependency and the loop is the same code.
 func contains(xs []string, x string) bool {
-	for _, v := range xs {
-		if v == x {
-			return true
-		}
-	}
-	return false
-}
-
-func join(xs []string, sep string) string {
-	out := ""
-	for i, x := range xs {
-		if i > 0 {
-			out += sep
-		}
-		out += x
-	}
-	return out
+	return slices.Contains(xs, x)
 }
 
 func quoteJoin(xs []string) string {
@@ -121,5 +109,5 @@ func quoteJoin(xs []string) string {
 	for i, x := range xs {
 		q[i] = "'" + x + "'"
 	}
-	return join(q, " | ")
+	return strings.Join(q, " | ")
 }

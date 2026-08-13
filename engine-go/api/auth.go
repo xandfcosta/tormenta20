@@ -43,7 +43,7 @@ type loginBody struct {
 }
 
 // handleRegister creates a user (bcrypt), issues the session cookie, returns the
-// AuthUser. 201 like the Nest @Post default; 409 on a duplicate email.
+// AuthUser. 201 on success; 409 on a duplicate email.
 func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 	var body registerBody
 	if !decodeJSON(w, r, &body) {
@@ -126,8 +126,8 @@ func (s *Server) issueSession(w http.ResponseWriter, user sqlcgen.User) bool {
 
 const sessionTTL = 7 * 24 * time.Hour
 
-// signToken mirrors AuthService.signToken: HS256 over {sub, email} with the
-// configured expiry. `sub` stays a NUMBER so Nest-issued cookies stay valid
+// signToken: HS256 over {sub, email} with the
+// configured expiry. `sub` is a NUMBER (not a string), which is the shape every
 // across the cutover (and vice versa).
 func (s *Server) signToken(user sqlcgen.User) (string, error) {
 	claims := jwt.MapClaims{
@@ -173,7 +173,7 @@ func (s *Server) sessionCookie(value string, maxAge int) *http.Cookie {
 	}
 }
 
-// parseExpiry handles the JWT_EXPIRES_IN forms the Nest config uses ("7d", "12h",
+// parseExpiry handles the JWT_EXPIRES_IN forms this config accepts ("7d", "12h",
 // "30m"). Falls back to 7 days on anything unrecognized.
 func parseExpiry(s string) time.Duration {
 	if s == "" {

@@ -151,7 +151,7 @@ func (c *Catalogs) itemActiveItem(it CharacterItem, prof map[string]bool) Active
 	if it.CatalogID != nil {
 		catalog = c.getCatalogItem(*it.CatalogID)
 	}
-	improvementIDs := parseImprovementIds(it.Improvements)
+	improvementIDs := parseStringArray(it.Improvements)
 
 	ownMods := []Modifier{}
 	if catalog != nil {

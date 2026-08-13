@@ -1,6 +1,7 @@
-// Package api is the HTTP layer of the Go port of the NestJS backend: chi router,
-// middleware (CORS + cookie/bearer JWT auth), and per-domain handlers. Deps live
-// here and in cmd/api — never in engine/, so the WASM build stays dep-free.
+// Package api is the app's HTTP layer: chi router, middleware (CORS +
+// cookie/bearer JWT auth), and per-domain handlers. Deps live here and in
+// cmd/api — never in engine/, so the WASM build stays dep-free.
+
 package api
 
 import (
@@ -8,8 +9,7 @@ import (
 	"strings"
 )
 
-// Config mirrors backend/.env. The Go API runs on its own PORT + DB file next to
-// the Nest server during the migration; the Vite proxy flips to it at cutover.
+// Config is the server's environment, read once at startup.
 type Config struct {
 	Port         string
 	DatabasePath string
@@ -32,7 +32,7 @@ type Config struct {
 	WSVitalsWriteThroughLive bool
 }
 
-// LoadConfig reads the environment with the same defaults as the Nest backend,
+// LoadConfig reads the environment. The defaults are the dev setup:
 // except PORT/DatabasePath default to non-conflicting values so both servers can
 // run side by side until the big-bang cutover.
 func LoadConfig() Config {

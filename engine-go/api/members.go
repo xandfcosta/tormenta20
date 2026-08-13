@@ -70,7 +70,7 @@ type combatant struct {
 // resolveCombatant resolves a character's tracker stats for an initiative entry, enforcing
 // the campaign rules: the character must be a member of the campaign, and the caller must
 // be either the character's owner or the campaign GM (owner). Transport-agnostic (the WS
-// gateway maps status→WsException). Mirrors CampaignMembersService.resolveCombatant — same
+// gateway maps status→WsException). — same
 // check order (character → campaign → membership → authorization).
 func (s *Server) resolveCombatant(ctx context.Context, callerID, campaignID, characterID int64) (combatant, int, error) {
 	ch, err := s.queries.GetCharacter(ctx, characterID)
@@ -105,7 +105,7 @@ func (s *Server) resolveCombatant(ctx context.Context, callerID, campaignID, cha
 }
 
 // listPlayerCombatants returns every player character in the campaign with live vitals —
-// the GM's one-shot "populate tracker". Mirrors CampaignMembersService.listPlayerCombatants.
+// the GM's one-shot "populate tracker".
 func (s *Server) listPlayerCombatants(ctx context.Context, campaignID int64) ([]combatant, error) {
 	rows, err := s.queries.ListMembers(ctx, campaignID)
 	if err != nil {
@@ -125,7 +125,7 @@ func (s *Server) listPlayerCombatants(ctx context.Context, campaignID int64) ([]
 }
 
 // listMemberCharacterIds returns the character id of every member (any role) — the set a
-// session-wide rest iterates over. Mirrors CampaignMembersService.listMemberCharacterIds.
+// session-wide rest iterates over.
 func (s *Server) listMemberCharacterIds(ctx context.Context, campaignID int64) ([]int64, error) {
 	rows, err := s.queries.ListMembers(ctx, campaignID)
 	if err != nil {

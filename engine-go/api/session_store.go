@@ -12,7 +12,7 @@ import (
 )
 
 // newUUID generates a random v4 UUID string for initiative entry ids (randomUUID() in the
-// Nest service). Injected into the store so tests can swap a deterministic generator.
+// service). Injected into the store so tests can swap a deterministic generator.
 func newUUID() string { return uuid.NewString() }
 
 // sessionStore holds each session's in-memory runtime state, guarding the pure mutations
@@ -172,7 +172,7 @@ func (st *sessionStore) writeThroughVitals(sessionID int64, entryID string) {
 }
 
 // load hydrates the session from Session.runtimeState on first access, then serves the
-// cached copy. Mirrors SessionStateService.load/hydrate.
+// cached copy./hydrate.
 func (st *sessionStore) load(ctx context.Context, sessionID int64) (*SessionRuntimeState, error) {
 	st.mu.Lock()
 	defer st.mu.Unlock()
@@ -233,7 +233,7 @@ func (st *sessionStore) persist(ctx context.Context, sessionID int64) (dirty, ch
 
 	st.mu.Lock()
 	defer st.mu.Unlock()
-	prev := st.dirty[sessionID] // absent ⇒ false (healthy), matching the Nest `?? false`
+	prev := st.dirty[sessionID] // absent ⇒ false (healthy)
 	dirty = err != nil
 	changed = prev != dirty
 	if dirty {
@@ -251,7 +251,6 @@ func (st *sessionStore) isDirty(sessionID int64) bool {
 	return st.dirty[sessionID]
 }
 
-// forget drops a session from memory (e.g. its DB row was deleted).
 // forget drops a session's in-memory tracker (e.g. on clear-tracker). It does NOT clear
 // the dirty flag: that would swallow the dirty→healthy recovery — a session left dirty
 // must still emit persistence-warning{dirty:false} on the next successful persist. The
@@ -264,7 +263,7 @@ func (st *sessionStore) forget(sessionID int64) {
 
 // refreshCharacterMaxes refreshes hpMax/mpMax on every entry carrying a characterId from
 // the DB rows (ceilings only; current untouched) so a mid-session level-up isn't capped at
-// the stale max. Best-effort like the Nest version: a DB blip logs and returns the current
+// the stale max. Best-effort: a DB blip logs and returns the current
 // snapshot rather than failing the get-session-state pull.
 func (st *sessionStore) refreshCharacterMaxes(ctx context.Context, sessionID int64) *SessionRuntimeState {
 	st.mu.Lock()

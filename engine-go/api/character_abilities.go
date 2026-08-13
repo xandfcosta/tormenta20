@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"t20engine/db/sqlcgen"
 )
@@ -35,12 +34,10 @@ func (s *Server) handleUpdateAbilities(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sets := []string{}
-	args := []any{}
+	var set setBuilder
 	resp := map[string]string{}
 	add := func(column string, value string) {
-		sets = append(sets, column+" = ?")
-		args = append(args, value)
+		set.add(column+" = ?", value)
 		resp[column] = value
 	}
 	if body.RaceAbilityChoices != nil {
@@ -58,16 +55,12 @@ func (s *Server) handleUpdateAbilities(w http.ResponseWriter, r *http.Request) {
 	if body.PowerChoices != nil {
 		add("powerChoices", compactJSON(*body.PowerChoices))
 	}
-	if len(sets) == 0 {
+	if set.empty() {
 		writeError(w, http.StatusBadRequest, "No fields to update")
 		return
 	}
 
-	sets = append(sets, "updatedAt = ?")
-	args = append(args, nowISO(), row.ID)
-	//nolint:gosec // SET clause is a fixed column allowlist, not input.
-	if _, err := s.db.ExecContext(r.Context(),
-		"UPDATE characters SET "+strings.Join(sets, ", ")+" WHERE id = ?", args...); err != nil {
+	if err := set.execTouched(r.Context(), s.db, "UPDATE characters", row.ID); err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not update abilities")
 		return
 	}

@@ -10,8 +10,8 @@ type ctxKey int
 const userCtxKey ctxKey = iota
 
 // requireAuth verifies the session (cookie or Bearer), loads the user, and stores
-// the AuthUser in context — mirrors JwtAuthGuard + JwtStrategy.validate (a stale
-// token whose user was deleted is rejected).
+// the AuthUser in context. A stale token whose user was deleted is rejected —
+// see TestRequireAuthRejectsMissingAndBrokenCredentials.
 func (s *Server) requireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token := s.extractToken(r)
@@ -35,7 +35,7 @@ func (s *Server) requireAuth(next http.Handler) http.Handler {
 }
 
 // extractToken reads the JWT from the session cookie, falling back to the
-// Authorization: Bearer header (same order as the Nest cookieExtractor chain).
+// Authorization: Bearer header, in that order.
 func (s *Server) extractToken(r *http.Request) string {
 	if c, err := r.Cookie(s.cfg.CookieName); err == nil && c.Value != "" {
 		return c.Value

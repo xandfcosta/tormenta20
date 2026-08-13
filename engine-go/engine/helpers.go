@@ -28,20 +28,6 @@ var accentFold = map[rune]rune{
 	'ç': 'c', 'ñ': 'n',
 }
 
-func maxInt(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-func minInt(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 func errf(format string, args ...any) error {
 	return fmt.Errorf(format, args...)
 }
