@@ -1,8 +1,6 @@
 import type {
   AttributeKey,
   BonusType,
-  CharacterInput,
-  ComputedSheet,
   ItemEffects,
   ModifierTarget,
 } from '@tormenta20/t20-data'
@@ -32,7 +30,7 @@ export type VitalPools = { pvMax: number; pmMax: number }
 
 /**
  * Lazy loader + typed wrapper for the engine-go rules engine compiled to WASM.
- * Runs the SAME Go rules as the backend `computeCharacterSheet` — single source
+ * Runs the SAME Go rules the server runs — single source
  * of truth, no TS derive duplication (project_front_decouple_catalog Fase 3:
  * compute is free, WASM ~0.28ms/sheet + a one-time 0.95MB load, and works
  * offline). Artifacts are built by `scripts/build-engine-wasm.sh` into
@@ -49,7 +47,6 @@ type GoRuntime = {
 }
 type GlobalWithGo = typeof globalThis & {
   Go?: new () => GoRuntime
-  computeCharacterSheet?: (inputJson: string) => string
   primeEngineCatalogs?: (payloadJson: string) => string
   computeSheetV2?: (charJson: string, conditionalsJson: string) => string
   computeEffects?: (charJson: string, conditionalsJson: string) => string
@@ -115,7 +112,7 @@ async function initEngine(): Promise<void> {
     fetch(WASM_URL),
     go.importObject,
   )
-  go.run(instance) // main() blocks on select{}; registers computeCharacterSheet
+  go.run(instance) // main() blocks on select{}; registers the engine globals
 }
 
 /** Load + instantiate the WASM engine once (cached). Warm it from the route
@@ -123,26 +120,6 @@ async function initEngine(): Promise<void> {
 export function ensureEngine(): Promise<void> {
   enginePromise ??= initEngine()
   return enginePromise
-}
-
-/** True once the engine global is registered — for a render-time gate. */
-export function isEngineReady(): boolean {
-  return typeof (globalThis as GlobalWithGo).computeCharacterSheet === 'function'
-}
-
-/**
- * Compute a character's sheet through the Go engine. Requires `ensureEngine()`
- * to have resolved. Mirrors backend `computeCharacterSheet` byte-for-byte
- * (verified by the bench oracle).
- */
-export function computeSheet(input: CharacterInput): ComputedSheet {
-  const fn = (globalThis as GlobalWithGo).computeCharacterSheet
-  if (!fn) throw new Error('engine-wasm: engine not ready — call ensureEngine() first')
-  const out = JSON.parse(fn(JSON.stringify(input))) as ComputedSheet & {
-    error?: string
-  }
-  if (out.error) throw new Error(`engine-wasm: ${out.error}`)
-  return out
 }
 
 /**

@@ -2,8 +2,7 @@
 
 // WASM entrypoint — exposes the Go rules engine to the browser so the front runs
 // the SAME rules as the server (single source, no TS duplication). Two engines
-// are exposed (see PORT-PLAN.md §1): the MVP `computeCharacterSheet` (flattened
-// CharacterInput) and the REAL derive — `primeEngineCatalogs` + `computeSheetV2`
+// The catalog-driven derive is exposed: `primeEngineCatalogs` + `computeSheetV2`
 // (raw Character → rich ComputedSheetV2 with every breakdown). The front primes
 // the catalogs once (same JSON `ensureCatalogs` fetches) then calls computeSheetV2
 // synchronously.
@@ -19,16 +18,6 @@ import (
 // primedCatalogs holds the catalogs after primeEngineCatalogs — computeSheetV2
 // needs them (the collection layer reads catalogs). One instance per page.
 var primedCatalogs *engine.Catalogs
-
-// computeSheet runs the MVP engine over a flattened CharacterInput.
-func computeSheet(_ js.Value, args []js.Value) any {
-	var in engine.CharacterInput
-	if err := json.Unmarshal([]byte(args[0].String()), &in); err != nil {
-		return errorJSON(err)
-	}
-	out, _ := json.Marshal(engine.ComputeCharacterSheet(&in))
-	return string(out)
-}
 
 // primeEngineCatalogs ingests the fetched-catalog JSON (items/races/origins/
 // classPowers/generalPowers/racas/tormentaPowerIds) into the shared Catalogs.
@@ -166,7 +155,6 @@ func errorJSON(err error) string {
 }
 
 func main() {
-	js.Global().Set("computeCharacterSheet", js.FuncOf(computeSheet))
 	js.Global().Set("primeEngineCatalogs", js.FuncOf(primeEngineCatalogs))
 	js.Global().Set("computeSheetV2", js.FuncOf(computeSheetV2))
 	js.Global().Set("computeEffects", js.FuncOf(computeEffects))
