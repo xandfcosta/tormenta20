@@ -2,6 +2,7 @@ import type { QueryClient } from '@tanstack/solid-query'
 import type { ClassChoices } from '@tormenta20/t20-data'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import { characterQueryOptions } from '@/entities/character/queries'
+import { createCharacterWrite } from './character-write'
 import {
   type Character,
   type UpdateAbilityChoicesInput,
@@ -35,6 +36,7 @@ export type ChoiceActions = {
  */
 export function choiceActions(queryClient: QueryClient, characterId: number): ChoiceActions {
   const queryKey = characterQueryOptions(characterId).queryKey
+  const characterWrite = createCharacterWrite(queryClient, characterId)
 
   /**
    * One optimistic blob write. `field` names both the request field and the
@@ -43,22 +45,21 @@ export function choiceActions(queryClient: QueryClient, characterId: number): Ch
    * spread whole (which would blank the blobs it never touched).
    */
   const write = async (field: ChoiceField, input: UpdateAbilityChoicesInput) => {
-    await queryClient.cancelQueries({ queryKey })
-    const previous = queryClient.getQueryData<Character>(queryKey)
-    queryClient.setQueryData<Character>(queryKey, (prev) =>
-      prev ? { ...prev, [field]: JSON.stringify(input[field]) } : prev,
-    )
     try {
-      const delta = await api.characters.updateAbilityChoices(characterId, input)
-      const stored = delta[field]
-      if (stored !== undefined) {
-        queryClient.setQueryData<Character>(queryKey, (prev) =>
-          prev ? { ...prev, [field]: stored } : prev,
-        )
-      }
-      invalidateCharacterDependents(queryClient, characterId)
+      await characterWrite(
+        (previous) => ({ ...previous, [field]: JSON.stringify(input[field]) }),
+        async () => {
+          const delta = await api.characters.updateAbilityChoices(characterId, input)
+          const stored = delta[field]
+          if (stored !== undefined) {
+            queryClient.setQueryData<Character>(queryKey, (prev) =>
+              prev ? { ...prev, [field]: stored } : prev,
+            )
+          }
+          invalidateCharacterDependents(queryClient, characterId)
+        },
+      )
     } catch (failure) {
-      if (previous) queryClient.setQueryData(queryKey, previous)
       toast.error('Falha ao salvar a escolha — a ficha voltou ao valor anterior')
       throw failure
     }

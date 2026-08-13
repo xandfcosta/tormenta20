@@ -1,6 +1,7 @@
 import type { QueryClient } from '@tanstack/solid-query'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import { characterQueryOptions } from '@/entities/character/queries'
+import { createCharacterWrite } from './character-write'
 import {
   type Character,
   type CharacterSpell,
@@ -31,6 +32,7 @@ export type SpellActions = {
  */
 export function spellActions(queryClient: QueryClient, characterId: number): SpellActions {
   const queryKey = characterQueryOptions(characterId).queryKey
+  const characterWrite = createCharacterWrite(queryClient, characterId)
 
   const patchSpells = (transform: (spells: CharacterSpell[]) => CharacterSpell[]) =>
     queryClient.setQueryData<Character>(queryKey, (prev) =>
@@ -38,21 +40,24 @@ export function spellActions(queryClient: QueryClient, characterId: number): Spe
     )
 
   /** Runs an optimistic spellbook edit, rolling the whole character back if the
-   *  server disagrees with the prediction. */
+   *  server disagrees with the prediction. The cancel/snapshot/rollback core is
+   *  shared (`createCharacterWrite`); what stays local is the spellbook slice
+   *  and this screen's failure toast. */
   const optimistic = async (
     paint: (spells: CharacterSpell[]) => CharacterSpell[],
     write: () => Promise<CharacterSpell[] | null>,
     failureMessage: string,
   ) => {
-    await queryClient.cancelQueries({ queryKey })
-    const previous = queryClient.getQueryData<Character>(queryKey)
-    patchSpells(paint)
     try {
-      const settled = await write()
-      if (settled) patchSpells(() => settled)
-      invalidateCharacterDependents(queryClient, characterId)
+      await characterWrite(
+        (previous) => ({ ...previous, spells: paint(previous.spells) }),
+        async () => {
+          const settled = await write()
+          if (settled) patchSpells(() => settled)
+          invalidateCharacterDependents(queryClient, characterId)
+        },
+      )
     } catch (failure) {
-      if (previous) queryClient.setQueryData(queryKey, previous)
       toast.error(failureMessage)
       throw failure
     }

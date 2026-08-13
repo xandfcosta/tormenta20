@@ -49,7 +49,10 @@ func casterLevelForPmLimit(ch Character) int {
 	return best
 }
 
-// pmLimitBreakdown ports derived.ts pmLimitTotal: max(1, caster level) + mods.
+// pmLimitBreakdown is the per-CHARACTER summary behind the HUD's "Limite PM"
+// tile: the best level across the character's spellcasting classes. It is a
+// SUMMARY, not the cap for any given spell — for that, use SpellPmLimit below,
+// which asks which class grants THAT spell (ALE-92).
 func pmLimitBreakdown(ch Character, e ItemEffects) ValueBreakdown {
 	base := maxInt(1, casterLevelForPmLimit(ch))
 	stat := StatFor(e, ModifierTarget{K: "pmLimit"})
@@ -170,4 +173,43 @@ func tempHpFromPowers(ch Character, e ItemEffects, furiaActive bool) TempHpBreak
 	}
 	amount := ch.Level + effectiveAttribute(ch, "strength", e)
 	return TempHpBreakdown{Total: amount, Sources: []SourceAmount{{"Alma de Bronze (Fúria, p41)", amount}}}
+}
+
+// SpellPmLimit is the p224 ceiling for ONE spell: the character's level in the
+// CLASS that grants it, or the character level when the source is not a class
+// (a race, an origin, a general power). `itemBonus` must be the RESOLVED
+// `pmLimit` total (`ComputedSheetV2.PmLimit.ItemBonus`) — never a raw sum over
+// equipped modifiers, which double-counts two `item`-typed bonuses and honours a
+// `wielded` condition on a merely vested item.
+//
+// This is the authority the cast gate hangs on, and it is NOT what
+// `pmLimitBreakdown` above returns: that one is the per-CHARACTER HUD summary
+// ("best caster level"), a defensible summary for a tile but the wrong number
+// for a specific spell. The two used to be separate implementations that
+// disagreed — the sheet offered a cap the server then refused (ALE-92).
+//
+// @example SpellPmLimit(bardo7Arcanista1, 0, []string{"Arcanista"}) // 1
+func SpellPmLimit(ch Character, itemBonus int, spellClasses []string) int {
+	grants := map[string]bool{}
+	for _, name := range spellClasses {
+		grants[name] = true
+	}
+	best := 0
+	for _, entry := range ch.Classes {
+		if grants[entry.ClassName] && entry.Level > best {
+			best = entry.Level
+		}
+	}
+	if best == 0 {
+		best = ch.Level // race/origin/power grant: character level
+	}
+	return maxInt(1, best) + itemBonus
+}
+
+// SpellPmLimitFor resolves the item bonus off the character's own sheet and
+// applies the p224 rule — the one call a transport (HTTP handler, WASM export)
+// should make, so no caller re-derives the bonus its own way.
+func (c *Catalogs) SpellPmLimitFor(ch Character, spellClasses []string) int {
+	sheet := c.ComputeSheetV2(ch, map[string]bool{})
+	return SpellPmLimit(ch, sheet.PmLimit.ItemBonus, spellClasses)
 }

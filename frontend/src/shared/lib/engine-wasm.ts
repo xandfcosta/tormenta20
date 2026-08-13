@@ -55,6 +55,7 @@ type GlobalWithGo = typeof globalThis & {
   computeEquippedFlags?: (itemsJson: string) => string
   pointBuyStatus?: (attrsJson: string) => string
   computeWeaponCards?: (charJson: string, conditionalsJson: string) => string
+  spellPmLimit?: (charJson: string, spellClassesJson: string) => string
 }
 
 /** Creation point-buy result (p17): total spent (null when a value is out of
@@ -263,4 +264,25 @@ export function computeWeaponCards(
   ) as WeaponCard[] | { error: string }
   if (!Array.isArray(out)) throw new Error(`engine-wasm: ${out.error}`)
   return out
+}
+
+/**
+ * The p224 PM ceiling for ONE spell: the level in the class that grants it, or
+ * the character level when the source is not a class.
+ *
+ * This is NOT `sheet.pmLimit.total` — that one is the per-character HUD summary
+ * ("best caster level"). The cast dialog used to gate on the summary, so a
+ * Bardo 7 / Arcanista 1 was offered 7 PM on an Arcanista spell and the server
+ * refused anything over 1 (ALE-92). Same Go function the cast handler runs.
+ *
+ * @example spellPmLimit(character, spell.classes) // 1
+ */
+export function spellPmLimit(char: Character, spellClasses: readonly string[]): number {
+  const fn = (globalThis as GlobalWithGo).spellPmLimit
+  if (!fn) throw new Error('engine-wasm: engine not ready — call ensureEngine() first')
+  const out = JSON.parse(fn(JSON.stringify(char), JSON.stringify(spellClasses))) as
+    | { limit: number }
+    | { error: string }
+  if ('error' in out) throw new Error(`engine-wasm: ${out.error}`)
+  return out.limit
 }

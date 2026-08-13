@@ -41,7 +41,12 @@ public surface.
 - **pages/** — screen composition. A component that leaves its Route's
   module uses `getRouteApi('<path>')`, not `Route.useX`.
 - **features/** — user-facing use-cases (session-tracker, character-sheet,
-  character-build, gm-tools, …).
+  character-build, gm-tools, …). A feature never imports another feature: if a
+  screen needs three of them side by side, **that screen is composition and
+  belongs in `pages/`**, not in a fourth feature. `features/session/` was exactly
+  that mistake — 8 files reaching sideways into three other features — and moving
+  it to `pages/sessions/` turned all 15 lateral imports downward without changing
+  a line of behaviour.
 - **entities/** — light: per-domain query options (`entities/*/queries.ts`) +
   derived logic. Domain **types + the `api` client stay in `shared/api`**
   (documented deviation).

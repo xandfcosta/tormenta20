@@ -2,6 +2,7 @@ import type { QueryClient } from '@tanstack/solid-query'
 import type { ConditionId } from '@tormenta20/t20-data'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import { characterQueryOptions } from '@/entities/character/queries'
+import { createCharacterWrite } from './character-write'
 import { type Character, api } from '@/shared/api/api'
 import { toast } from '@/shared/ui/sonner'
 
@@ -102,22 +103,22 @@ export function conditionActions(
   characterId: number,
 ): ConditionActions {
   const queryKey = characterQueryOptions(characterId).queryKey
+  const characterWrite = createCharacterWrite(queryClient, characterId)
 
   return {
     set: async (conditions) => {
-      await queryClient.cancelQueries({ queryKey })
-      const previous = queryClient.getQueryData<Character>(queryKey)
-      queryClient.setQueryData<Character>(queryKey, (prev) =>
-        prev ? { ...prev, activeConditions: JSON.stringify(conditions) } : prev,
-      )
       try {
-        const delta = await api.characters.updateConditions(characterId, conditions)
-        queryClient.setQueryData<Character>(queryKey, (prev) =>
-          prev ? { ...prev, activeConditions: delta.activeConditions } : prev,
+        await characterWrite(
+          (previous) => ({ ...previous, activeConditions: JSON.stringify(conditions) }),
+          async () => {
+            const delta = await api.characters.updateConditions(characterId, conditions)
+            queryClient.setQueryData<Character>(queryKey, (prev) =>
+              prev ? { ...prev, activeConditions: delta.activeConditions } : prev,
+            )
+            invalidateCharacterDependents(queryClient, characterId)
+          },
         )
-        invalidateCharacterDependents(queryClient, characterId)
       } catch (failure) {
-        if (previous) queryClient.setQueryData(queryKey, previous)
         toast.error('Falha ao salvar condições — a ficha voltou ao valor anterior')
         throw failure
       }

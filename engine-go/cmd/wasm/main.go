@@ -147,6 +147,26 @@ func pointBuyStatus(_ js.Value, args []js.Value) any {
 	return string(out)
 }
 
+// spellPmLimit answers the p224 ceiling for ONE spell — the number the cast
+// dialog must gate on. The client used to read the HUD's per-character summary
+// instead, which is a DIFFERENT number, and offered augments the server refused
+// (ALE-92). Requires primeEngineCatalogs. Args: (characterJson, spellClassesJson).
+func spellPmLimit(_ js.Value, args []js.Value) any {
+	if primedCatalogs == nil {
+		return `{"error":"engine catalogs not primed — call primeEngineCatalogs first"}`
+	}
+	var ch engine.Character
+	if err := json.Unmarshal([]byte(args[0].String()), &ch); err != nil {
+		return errorJSON(err)
+	}
+	var spellClasses []string
+	if err := json.Unmarshal([]byte(args[1].String()), &spellClasses); err != nil {
+		return errorJSON(err)
+	}
+	out, _ := json.Marshal(map[string]int{"limit": primedCatalogs.SpellPmLimitFor(ch, spellClasses)})
+	return string(out)
+}
+
 // errorJSON returns a JSON string carrying the error, matching the sheet
 // functions' shape so the TS wrapper reads `.error` uniformly.
 func errorJSON(err error) string {
@@ -163,5 +183,6 @@ func main() {
 	js.Global().Set("computeEquippedFlags", js.FuncOf(computeEquippedFlags))
 	js.Global().Set("pointBuyStatus", js.FuncOf(pointBuyStatus))
 	js.Global().Set("computeWeaponCards", js.FuncOf(computeWeaponCards))
+	js.Global().Set("spellPmLimit", js.FuncOf(spellPmLimit))
 	select {} // keep the runtime alive
 }

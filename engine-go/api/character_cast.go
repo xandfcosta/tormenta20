@@ -8,7 +8,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"t20engine/catalog"
 	"t20engine/db/sqlcgen"
-	"t20engine/engine"
 )
 
 // spellBasePmCost mirrors t20-data SPELL_BASE_PM_COST (PDF p171).
@@ -79,7 +78,16 @@ func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
 		totalPm = max(0, spellBasePmCost[spell.Circle]+augmentPm)
 	}
 
-	limit := spellPmLimitFor(int(dto.Level), dto.Classes, spell.Classes, pmLimitFromItems(s.catalogs, dto.Items))
+	// One rule, one place (ALE-92): the engine owns the p224 ceiling and resolves
+	// the item bonus the same way the sheet does. This handler used to carry its
+	// own copy, and the two disagreed on which class counts AND on how item
+	// bonuses stack — so the sheet offered a cap this gate then refused.
+	ec, err := engineCharacterFrom(dto)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Could not read character")
+		return
+	}
+	limit := s.catalogs.SpellPmLimitFor(ec, spell.Classes)
 	if spell.Circle > 0 && totalPm > limit {
 		writeJSON(w, http.StatusBadRequest, map[string]any{
 			"statusCode":  http.StatusBadRequest,
@@ -109,31 +117,6 @@ func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, castResult{MpCurrent: mpCurrent, RemovedEffectIDs: []int64{}})
-}
-
-// spellPmLimitFor is the per-use PM ceiling (p224): the level in the CLASS that
-// provides the ability, or the character level when no class does — a spell
-// granted by a race, origin or power. Item `pmLimit` bonuses add on top.
-//
-// It used to be `level/2`, from a Nest comment citing "p171 — ½ nível" that
-// misread the book: p171 defers to p224 and its own example spends the FULL
-// level ("um arcanista de 11º nível pode gastar até 11 PM"). The halving made
-// the server refuse casts the sheet correctly offered.
-func spellPmLimitFor(characterLevel int, classes []ClassDTO, spellClasses []string, itemBonus int) int {
-	onList := map[string]bool{}
-	for _, name := range spellClasses {
-		onList[name] = true
-	}
-	best := 0
-	for _, c := range classes {
-		if onList[c.ClassName] && int(c.Level) > best {
-			best = int(c.Level)
-		}
-	}
-	if best == 0 {
-		best = characterLevel
-	}
-	return max(1, best) + itemBonus
 }
 
 func findSpell(spells []SpellDTO, catalogSpellID string) *SpellDTO {
@@ -196,40 +179,4 @@ func validateAugments(spell catalog.Spell, picks []augmentPick) (int, string) {
 		total += a.PmCost * p.Stacks
 	}
 	return total, ""
-}
-
-// pmLimitFromItems ports pmLimitFromItems: sum of `pmLimit` modifiers on equipped
-// catalog items (base + improvements + material).
-func pmLimitFromItems(cats *engine.Catalogs, items []ItemDTO) int {
-	if cats == nil {
-		return 0
-	}
-	total := 0
-	for _, it := range items {
-		if it.Equipped == nil || it.CatalogID == nil {
-			continue
-		}
-		var mods []engine.Modifier
-		if base := cats.Item(*it.CatalogID); base != nil {
-			mods = append(mods, base.Modifiers...)
-		}
-		var imps []string
-		_ = json.Unmarshal([]byte(it.Improvements), &imps)
-		for _, impID := range imps {
-			if imp := cats.Item(impID); imp != nil {
-				mods = append(mods, imp.Modifiers...)
-			}
-		}
-		if it.Material != nil {
-			if mat := cats.Item(*it.Material); mat != nil {
-				mods = append(mods, mat.Modifiers...)
-			}
-		}
-		for _, m := range mods {
-			if m.Target.K == "pmLimit" {
-				total += m.Amount
-			}
-		}
-	}
-	return total
 }

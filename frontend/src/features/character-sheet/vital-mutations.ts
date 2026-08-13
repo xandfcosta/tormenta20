@@ -99,6 +99,10 @@ export function createVitalActions(
     }
   }
 
+  // Deliberately NOT `createCharacterWrite`: this is the only sheet write with a
+  // debounced burst. Three clicks send ONE PUT, and a failure rolls back to the
+  // value from before the whole burst — not to a snapshot per click, which is
+  // exactly what the shared helper takes. Keep the two apart.
   const setVital = (field: 'hpCurrent' | 'mpCurrent', max: number, next: number) => {
     const clamped = clampVital(next, max)
     const current = cached() ?? character()
