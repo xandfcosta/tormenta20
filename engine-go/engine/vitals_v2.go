@@ -43,8 +43,13 @@ func (c *Catalogs) ComputeVitals(ctx VitalContext) VitalPools {
 }
 
 // sumVitalGrants ports collectVitalGrants: sum maxPv/maxPm over owned abilities,
-// evaluating each scale, with the p225 dedupe (one attribute grant per
-// target+attribute — no somar duas vezes a Sabedoria no PM).
+// evaluating each scale, with the p226 dedupe — "o valor de um mesmo atributo
+// não se acumula em características do personagem. Ou seja, um clérigo/druida
+// não soma duas vezes sua Sabedoria nos pontos de mana". Por ALVO e ATRIBUTO:
+// dois atributos DIFERENTES no mesmo alvo continuam somando.
+//
+// A metade da DEFESA da mesma regra (o bucaneiro/nobre e o Carisma) não está
+// implementada — o resolveStack agrupa por bonusType, não por atributo (ALE-110).
 func (c *Catalogs) sumVitalGrants(ctx VitalContext) (pv, pm int) {
 	seen := map[string]bool{}
 	for _, m := range c.vitalGrantMods(ctx) {
