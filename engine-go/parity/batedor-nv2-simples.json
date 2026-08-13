@@ -325,27 +325,6 @@
   ],
   "itemEffects": {
     "byTarget": {
-      "defense": {
-        "total": 2,
-        "contributions": [
-          {
-            "source": "Armadura de couro",
-            "bonusType": "armor",
-            "amount": 2
-          }
-        ]
-      },
-      "expertiseAll": {
-        "total": -1,
-        "contributions": [
-          {
-            "source": "Armadura de couro",
-            "bonusType": "untyped",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ]
-      },
       "attribute:charisma": {
         "total": 2,
         "contributions": [
@@ -376,6 +355,27 @@
             "bonusType": "untyped",
             "amount": -2,
             "note": "Sílfide"
+          }
+        ]
+      },
+      "defense": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Armadura de couro",
+            "bonusType": "armor",
+            "amount": 2
+          }
+        ]
+      },
+      "expertiseAll": {
+        "total": -1,
+        "contributions": [
+          {
+            "source": "Armadura de couro",
+            "bonusType": "untyped",
+            "amount": -1,
+            "note": "Armadura de couro sem proficiência"
           }
         ]
       }
@@ -409,14 +409,18 @@
     "flySpeed": 0,
     "inventorySlots": 9,
     "attributes": {
-      "strength": {
-        "total": -1,
+      "charisma": {
+        "total": 3,
         "contributions": [
           {
             "source": "Raça: Sílfide",
-            "amount": -2
+            "amount": 2
           }
         ]
+      },
+      "constitution": {
+        "total": 2,
+        "contributions": []
       },
       "dexterity": {
         "total": 5,
@@ -427,26 +431,22 @@
           }
         ]
       },
-      "constitution": {
-        "total": 2,
-        "contributions": []
-      },
       "intelligence": {
         "total": 2,
         "contributions": []
       },
-      "wisdom": {
-        "total": 2,
-        "contributions": []
-      },
-      "charisma": {
-        "total": 3,
+      "strength": {
+        "total": -1,
         "contributions": [
           {
             "source": "Raça: Sílfide",
-            "amount": 2
+            "amount": -2
           }
         ]
+      },
+      "wisdom": {
+        "total": 2,
+        "contributions": []
       }
     },
     "pmLimit": {
@@ -457,12 +457,12 @@
     },
     "bestBaseSpellCd": null,
     "spellCdByAttribute": {
-      "strength": 10,
-      "dexterity": 16,
+      "charisma": 14,
       "constitution": 13,
+      "dexterity": 16,
       "intelligence": 13,
-      "wisdom": 13,
-      "charisma": 14
+      "strength": 10,
+      "wisdom": 13
     },
     "spellDCBonus": {
       "total": 0,
@@ -1038,14 +1038,18 @@
     "flySpeed": 0,
     "inventorySlots": 9,
     "attributes": {
-      "strength": {
-        "total": -1,
+      "charisma": {
+        "total": 3,
         "contributions": [
           {
             "source": "Raça: Sílfide",
-            "amount": -2
+            "amount": 2
           }
         ]
+      },
+      "constitution": {
+        "total": 2,
+        "contributions": []
       },
       "dexterity": {
         "total": 5,
@@ -1056,26 +1060,22 @@
           }
         ]
       },
-      "constitution": {
-        "total": 2,
-        "contributions": []
-      },
       "intelligence": {
         "total": 2,
         "contributions": []
       },
-      "wisdom": {
-        "total": 2,
-        "contributions": []
-      },
-      "charisma": {
-        "total": 3,
+      "strength": {
+        "total": -1,
         "contributions": [
           {
             "source": "Raça: Sílfide",
-            "amount": 2
+            "amount": -2
           }
         ]
+      },
+      "wisdom": {
+        "total": 2,
+        "contributions": []
       }
     },
     "pmLimit": {
@@ -1086,12 +1086,12 @@
     },
     "bestBaseSpellCd": null,
     "spellCdByAttribute": {
-      "strength": 10,
-      "dexterity": 16,
+      "charisma": 14,
       "constitution": 13,
+      "dexterity": 16,
       "intelligence": 13,
-      "wisdom": 13,
-      "charisma": 14
+      "strength": 10,
+      "wisdom": 13
     },
     "spellDCBonus": {
       "total": 0,

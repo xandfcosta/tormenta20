@@ -1,4 +1,5 @@
-import type { BonusType, ItemEffects, ModifierTarget } from '@tormenta20/t20-data'
+import type { BonusType, ItemEffects } from '@tormenta20/t20-data'
+import type { ModifierTarget } from '@/shared/api/item-types'
 import type { AttributeKey } from '@/shared/api/attribute-keys'
 import type { Character } from '@/shared/api/api'
 import type { ComputedSheetV2, WeaponCard } from './computed-sheet-v2'

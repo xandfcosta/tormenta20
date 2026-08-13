@@ -797,6 +797,22 @@
   ],
   "itemEffects": {
     "byTarget": {
+      "armorPenalty": {
+        "total": -5,
+        "contributions": [
+          {
+            "source": "Couraça",
+            "bonusType": "untyped",
+            "amount": -4
+          },
+          {
+            "source": "Couraça",
+            "bonusType": "untyped",
+            "amount": -1,
+            "note": "Reforçada: +1 na penalidade de armadura"
+          }
+        ]
+      },
       "attack:this": {
         "total": -2,
         "contributions": [
@@ -805,6 +821,139 @@
             "bonusType": "untyped",
             "amount": -2,
             "note": "desbalanceada: -2 em ataque"
+          }
+        ]
+      },
+      "attribute:charisma": {
+        "total": -1,
+        "contributions": [
+          {
+            "source": "Poderes da Tormenta",
+            "bonusType": "untyped",
+            "amount": -1,
+            "note": "1 poder(es) da Tormenta (p136)"
+          }
+        ]
+      },
+      "attribute:constitution": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Minotauro",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Minotauro"
+          }
+        ]
+      },
+      "attribute:strength": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Raça: Minotauro",
+            "bonusType": "untyped",
+            "amount": 2,
+            "note": "Minotauro"
+          }
+        ]
+      },
+      "attribute:wisdom": {
+        "total": -1,
+        "contributions": [
+          {
+            "source": "Raça: Minotauro",
+            "bonusType": "untyped",
+            "amount": -1,
+            "note": "Minotauro"
+          }
+        ]
+      },
+      "damage:all": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Instinto Selvagem +1",
+            "bonusType": "enhancement",
+            "amount": 1
+          }
+        ]
+      },
+      "defense": {
+        "total": 11,
+        "contributions": [
+          {
+            "source": "Couraça",
+            "bonusType": "armor",
+            "amount": 5
+          },
+          {
+            "source": "Couraça",
+            "bonusType": "enhancement",
+            "amount": 1,
+            "note": "Reforçada: +1 Defesa"
+          },
+          {
+            "source": "Raça: Minotauro",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Couro Rígido"
+          },
+          {
+            "source": "Pele de Ferro",
+            "bonusType": "untyped",
+            "amount": 4
+          }
+        ]
+      },
+      "expertise:Luta": {
+        "total": -2,
+        "contributions": [
+          {
+            "source": "Machado táurico",
+            "bonusType": "untyped",
+            "amount": -2,
+            "note": "desbalanceada: -2 em ataque"
+          }
+        ]
+      },
+      "expertise:Percepção": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Instinto Selvagem +1",
+            "bonusType": "enhancement",
+            "amount": 1
+          }
+        ]
+      },
+      "expertise:Reflexos": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Instinto Selvagem +1",
+            "bonusType": "enhancement",
+            "amount": 1
+          }
+        ]
+      },
+      "expertise:Vontade": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Origem: Refugiado",
+            "bonusType": "untyped",
+            "amount": 2
+          }
+        ]
+      },
+      "maneuver:agarrar": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Machado táurico",
+            "bonusType": "enhancement",
+            "amount": 2,
+            "note": "Equilibrada: +2 em manobras"
           }
         ]
       },
@@ -841,114 +990,6 @@
           }
         ]
       },
-      "maneuver:agarrar": {
-        "total": 2,
-        "contributions": [
-          {
-            "source": "Machado táurico",
-            "bonusType": "enhancement",
-            "amount": 2,
-            "note": "Equilibrada: +2 em manobras"
-          }
-        ]
-      },
-      "expertise:Luta": {
-        "total": -2,
-        "contributions": [
-          {
-            "source": "Machado táurico",
-            "bonusType": "untyped",
-            "amount": -2,
-            "note": "desbalanceada: -2 em ataque"
-          }
-        ]
-      },
-      "defense": {
-        "total": 11,
-        "contributions": [
-          {
-            "source": "Couraça",
-            "bonusType": "armor",
-            "amount": 5
-          },
-          {
-            "source": "Couraça",
-            "bonusType": "enhancement",
-            "amount": 1,
-            "note": "Reforçada: +1 Defesa"
-          },
-          {
-            "source": "Raça: Minotauro",
-            "bonusType": "untyped",
-            "amount": 1,
-            "note": "Couro Rígido"
-          },
-          {
-            "source": "Pele de Ferro",
-            "bonusType": "untyped",
-            "amount": 4
-          }
-        ]
-      },
-      "armorPenalty": {
-        "total": -5,
-        "contributions": [
-          {
-            "source": "Couraça",
-            "bonusType": "untyped",
-            "amount": -4
-          },
-          {
-            "source": "Couraça",
-            "bonusType": "untyped",
-            "amount": -1,
-            "note": "Reforçada: +1 na penalidade de armadura"
-          }
-        ]
-      },
-      "attribute:strength": {
-        "total": 2,
-        "contributions": [
-          {
-            "source": "Raça: Minotauro",
-            "bonusType": "untyped",
-            "amount": 2,
-            "note": "Minotauro"
-          }
-        ]
-      },
-      "attribute:constitution": {
-        "total": 1,
-        "contributions": [
-          {
-            "source": "Raça: Minotauro",
-            "bonusType": "untyped",
-            "amount": 1,
-            "note": "Minotauro"
-          }
-        ]
-      },
-      "attribute:wisdom": {
-        "total": -1,
-        "contributions": [
-          {
-            "source": "Raça: Minotauro",
-            "bonusType": "untyped",
-            "amount": -1,
-            "note": "Minotauro"
-          }
-        ]
-      },
-      "expertise:Vontade": {
-        "total": 2,
-        "contributions": [
-          {
-            "source": "Origem: Refugiado",
-            "bonusType": "untyped",
-            "amount": 2
-          }
-        ]
-      },
       "maxPm": {
         "total": 2,
         "contributions": [
@@ -961,47 +1002,6 @@
             "source": "Totem Espiritual",
             "bonusType": "untyped",
             "amount": 1
-          }
-        ]
-      },
-      "damage:all": {
-        "total": 1,
-        "contributions": [
-          {
-            "source": "Instinto Selvagem +1",
-            "bonusType": "enhancement",
-            "amount": 1
-          }
-        ]
-      },
-      "expertise:Percepção": {
-        "total": 1,
-        "contributions": [
-          {
-            "source": "Instinto Selvagem +1",
-            "bonusType": "enhancement",
-            "amount": 1
-          }
-        ]
-      },
-      "expertise:Reflexos": {
-        "total": 1,
-        "contributions": [
-          {
-            "source": "Instinto Selvagem +1",
-            "bonusType": "enhancement",
-            "amount": 1
-          }
-        ]
-      },
-      "attribute:charisma": {
-        "total": -1,
-        "contributions": [
-          {
-            "source": "Poderes da Tormenta",
-            "bonusType": "untyped",
-            "amount": -1,
-            "note": "1 poder(es) da Tormenta (p136)"
           }
         ]
       }
@@ -1166,18 +1166,14 @@
     "flySpeed": 0,
     "inventorySlots": 20,
     "attributes": {
-      "strength": {
-        "total": 5,
+      "charisma": {
+        "total": 1,
         "contributions": [
           {
-            "source": "Raça: Minotauro",
-            "amount": 2
+            "source": "Poderes da Tormenta",
+            "amount": -1
           }
         ]
-      },
-      "dexterity": {
-        "total": 1,
-        "contributions": []
       },
       "constitution": {
         "total": 1,
@@ -1188,24 +1184,28 @@
           }
         ]
       },
+      "dexterity": {
+        "total": 1,
+        "contributions": []
+      },
       "intelligence": {
         "total": -1,
         "contributions": []
+      },
+      "strength": {
+        "total": 5,
+        "contributions": [
+          {
+            "source": "Raça: Minotauro",
+            "amount": 2
+          }
+        ]
       },
       "wisdom": {
         "total": 1,
         "contributions": [
           {
             "source": "Raça: Minotauro",
-            "amount": -1
-          }
-        ]
-      },
-      "charisma": {
-        "total": 1,
-        "contributions": [
-          {
-            "source": "Poderes da Tormenta",
             "amount": -1
           }
         ]
@@ -1219,12 +1219,12 @@
     },
     "bestBaseSpellCd": null,
     "spellCdByAttribute": {
-      "strength": 18,
-      "dexterity": 14,
+      "charisma": 14,
       "constitution": 14,
+      "dexterity": 14,
       "intelligence": 12,
-      "wisdom": 14,
-      "charisma": 14
+      "strength": 18,
+      "wisdom": 14
     },
     "spellDCBonus": {
       "total": 0,
@@ -1703,18 +1703,14 @@
     "flySpeed": 0,
     "inventorySlots": 20,
     "attributes": {
-      "strength": {
-        "total": 5,
+      "charisma": {
+        "total": 1,
         "contributions": [
           {
-            "source": "Raça: Minotauro",
-            "amount": 2
+            "source": "Poderes da Tormenta",
+            "amount": -1
           }
         ]
-      },
-      "dexterity": {
-        "total": 1,
-        "contributions": []
       },
       "constitution": {
         "total": 1,
@@ -1725,24 +1721,28 @@
           }
         ]
       },
+      "dexterity": {
+        "total": 1,
+        "contributions": []
+      },
       "intelligence": {
         "total": -1,
         "contributions": []
+      },
+      "strength": {
+        "total": 5,
+        "contributions": [
+          {
+            "source": "Raça: Minotauro",
+            "amount": 2
+          }
+        ]
       },
       "wisdom": {
         "total": 1,
         "contributions": [
           {
             "source": "Raça: Minotauro",
-            "amount": -1
-          }
-        ]
-      },
-      "charisma": {
-        "total": 1,
-        "contributions": [
-          {
-            "source": "Poderes da Tormenta",
             "amount": -1
           }
         ]
@@ -1762,12 +1762,12 @@
     },
     "bestBaseSpellCd": null,
     "spellCdByAttribute": {
-      "strength": 18,
-      "dexterity": 14,
+      "charisma": 14,
       "constitution": 14,
+      "dexterity": 14,
       "intelligence": 12,
-      "wisdom": 14,
-      "charisma": 14
+      "strength": 18,
+      "wisdom": 14
     },
     "spellDCBonus": {
       "total": 0,

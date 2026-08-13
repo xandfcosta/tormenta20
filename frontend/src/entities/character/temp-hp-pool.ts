@@ -1,4 +1,4 @@
-import type { Modifier } from '@tormenta20/t20-data'
+import type { Modifier } from '@/shared/api/item-types'
 import type {
   ActiveEffect,
   ApplyDamageResult,

@@ -472,16 +472,6 @@
   ],
   "itemEffects": {
     "byTarget": {
-      "expertise:Intimidação": {
-        "total": 1,
-        "contributions": [
-          {
-            "source": "Bandana",
-            "bonusType": "item",
-            "amount": 1
-          }
-        ]
-      },
       "attribute:charisma": {
         "total": 4,
         "contributions": [
@@ -520,16 +510,6 @@
           }
         ]
       },
-      "maxPm": {
-        "total": 1,
-        "contributions": [
-          {
-            "source": "Caminho: Bruxo",
-            "bonusType": "untyped",
-            "amount": 1
-          }
-        ]
-      },
       "defense": {
         "total": -5,
         "contributions": [
@@ -537,6 +517,16 @@
             "source": "Condições",
             "bonusType": "condition",
             "amount": -5
+          }
+        ]
+      },
+      "expertise:Intimidação": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Bandana",
+            "bonusType": "item",
+            "amount": 1
           }
         ]
       },
@@ -550,7 +540,7 @@
           }
         ]
       },
-      "expertiseByAttribute:strength": {
+      "expertiseByAttribute:charisma": {
         "total": -5,
         "contributions": [
           {
@@ -580,6 +570,16 @@
           }
         ]
       },
+      "expertiseByAttribute:strength": {
+        "total": -5,
+        "contributions": [
+          {
+            "source": "Condições",
+            "bonusType": "condition",
+            "amount": -5
+          }
+        ]
+      },
       "expertiseByAttribute:wisdom": {
         "total": -5,
         "contributions": [
@@ -590,13 +590,13 @@
           }
         ]
       },
-      "expertiseByAttribute:charisma": {
-        "total": -5,
+      "maxPm": {
+        "total": 1,
         "contributions": [
           {
-            "source": "Condições",
-            "bonusType": "condition",
-            "amount": -5
+            "source": "Caminho: Bruxo",
+            "bonusType": "untyped",
+            "amount": 1
           }
         ]
       }
@@ -628,36 +628,6 @@
     "flySpeed": 0,
     "inventorySlots": 10,
     "attributes": {
-      "strength": {
-        "total": 0,
-        "contributions": []
-      },
-      "dexterity": {
-        "total": 3,
-        "contributions": []
-      },
-      "constitution": {
-        "total": 2,
-        "contributions": []
-      },
-      "intelligence": {
-        "total": 5,
-        "contributions": [
-          {
-            "source": "Raça: Qareen",
-            "amount": 1
-          }
-        ]
-      },
-      "wisdom": {
-        "total": 1,
-        "contributions": [
-          {
-            "source": "Raça: Qareen",
-            "amount": -1
-          }
-        ]
-      },
       "charisma": {
         "total": 7,
         "contributions": [
@@ -670,6 +640,36 @@
             "amount": 2
           }
         ]
+      },
+      "constitution": {
+        "total": 2,
+        "contributions": []
+      },
+      "dexterity": {
+        "total": 3,
+        "contributions": []
+      },
+      "intelligence": {
+        "total": 5,
+        "contributions": [
+          {
+            "source": "Raça: Qareen",
+            "amount": 1
+          }
+        ]
+      },
+      "strength": {
+        "total": 0,
+        "contributions": []
+      },
+      "wisdom": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Qareen",
+            "amount": -1
+          }
+        ]
       }
     },
     "pmLimit": {
@@ -680,12 +680,12 @@
     },
     "bestBaseSpellCd": 19,
     "spellCdByAttribute": {
-      "strength": 14,
-      "dexterity": 17,
+      "charisma": 21,
       "constitution": 16,
+      "dexterity": 17,
       "intelligence": 19,
-      "wisdom": 15,
-      "charisma": 21
+      "strength": 14,
+      "wisdom": 15
     },
     "spellDCBonus": {
       "total": 0,
@@ -1231,36 +1231,6 @@
     "flySpeed": 0,
     "inventorySlots": 10,
     "attributes": {
-      "strength": {
-        "total": 0,
-        "contributions": []
-      },
-      "dexterity": {
-        "total": 3,
-        "contributions": []
-      },
-      "constitution": {
-        "total": 2,
-        "contributions": []
-      },
-      "intelligence": {
-        "total": 5,
-        "contributions": [
-          {
-            "source": "Raça: Qareen",
-            "amount": 1
-          }
-        ]
-      },
-      "wisdom": {
-        "total": 1,
-        "contributions": [
-          {
-            "source": "Raça: Qareen",
-            "amount": -1
-          }
-        ]
-      },
       "charisma": {
         "total": 7,
         "contributions": [
@@ -1273,6 +1243,36 @@
             "amount": 2
           }
         ]
+      },
+      "constitution": {
+        "total": 2,
+        "contributions": []
+      },
+      "dexterity": {
+        "total": 3,
+        "contributions": []
+      },
+      "intelligence": {
+        "total": 5,
+        "contributions": [
+          {
+            "source": "Raça: Qareen",
+            "amount": 1
+          }
+        ]
+      },
+      "strength": {
+        "total": 0,
+        "contributions": []
+      },
+      "wisdom": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Qareen",
+            "amount": -1
+          }
+        ]
       }
     },
     "pmLimit": {
@@ -1283,12 +1283,12 @@
     },
     "bestBaseSpellCd": 19,
     "spellCdByAttribute": {
-      "strength": 14,
-      "dexterity": 17,
+      "charisma": 21,
       "constitution": 16,
+      "dexterity": 17,
       "intelligence": 19,
-      "wisdom": 15,
-      "charisma": 21
+      "strength": 14,
+      "wisdom": 15
     },
     "spellDCBonus": {
       "total": 0,

@@ -397,23 +397,13 @@
   ],
   "itemEffects": {
     "byTarget": {
-      "expertise:Intimidação": {
-        "total": 1,
-        "contributions": [
-          {
-            "source": "Bandana",
-            "bonusType": "item",
-            "amount": 1
-          }
-        ]
-      },
-      "attribute:intelligence": {
-        "total": 2,
+      "attribute:constitution": {
+        "total": -1,
         "contributions": [
           {
             "source": "Raça: Elfo",
             "bonusType": "untyped",
-            "amount": 2,
+            "amount": -1,
             "note": "Elfo"
           }
         ]
@@ -429,28 +419,23 @@
           }
         ]
       },
-      "attribute:constitution": {
-        "total": -1,
-        "contributions": [
-          {
-            "source": "Raça: Elfo",
-            "bonusType": "untyped",
-            "amount": -1,
-            "note": "Elfo"
-          }
-        ]
-      },
-      "maxPm": {
+      "attribute:intelligence": {
         "total": 2,
         "contributions": [
           {
             "source": "Raça: Elfo",
             "bonusType": "untyped",
-            "amount": 1
-          },
+            "amount": 2,
+            "note": "Elfo"
+          }
+        ]
+      },
+      "expertise:Intimidação": {
+        "total": 1,
+        "contributions": [
           {
-            "source": "Magias (1° círculo)",
-            "bonusType": "untyped",
+            "source": "Bandana",
+            "bonusType": "item",
             "amount": 1
           }
         ]
@@ -472,6 +457,21 @@
             "source": "Raça: Elfo",
             "bonusType": "untyped",
             "amount": 2
+          }
+        ]
+      },
+      "maxPm": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Raça: Elfo",
+            "bonusType": "untyped",
+            "amount": 1
+          },
+          {
+            "source": "Magias (1° círculo)",
+            "bonusType": "untyped",
+            "amount": 1
           }
         ]
       }
@@ -498,18 +498,9 @@
     "flySpeed": 0,
     "inventorySlots": 12,
     "attributes": {
-      "strength": {
-        "total": 1,
-        "contributions": []
-      },
-      "dexterity": {
+      "charisma": {
         "total": 3,
-        "contributions": [
-          {
-            "source": "Raça: Elfo",
-            "amount": 1
-          }
-        ]
+        "contributions": []
       },
       "constitution": {
         "total": 1,
@@ -517,6 +508,15 @@
           {
             "source": "Raça: Elfo",
             "amount": -1
+          }
+        ]
+      },
+      "dexterity": {
+        "total": 3,
+        "contributions": [
+          {
+            "source": "Raça: Elfo",
+            "amount": 1
           }
         ]
       },
@@ -529,12 +529,12 @@
           }
         ]
       },
-      "wisdom": {
-        "total": 4,
+      "strength": {
+        "total": 1,
         "contributions": []
       },
-      "charisma": {
-        "total": 3,
+      "wisdom": {
+        "total": 4,
         "contributions": []
       }
     },
@@ -546,12 +546,12 @@
     },
     "bestBaseSpellCd": 18,
     "spellCdByAttribute": {
-      "strength": 15,
-      "dexterity": 17,
+      "charisma": 17,
       "constitution": 15,
+      "dexterity": 17,
       "intelligence": 18,
-      "wisdom": 18,
-      "charisma": 17
+      "strength": 15,
+      "wisdom": 18
     },
     "spellDCBonus": {
       "total": 0,
@@ -963,18 +963,9 @@
     "flySpeed": 0,
     "inventorySlots": 12,
     "attributes": {
-      "strength": {
-        "total": 1,
-        "contributions": []
-      },
-      "dexterity": {
+      "charisma": {
         "total": 3,
-        "contributions": [
-          {
-            "source": "Raça: Elfo",
-            "amount": 1
-          }
-        ]
+        "contributions": []
       },
       "constitution": {
         "total": 1,
@@ -982,6 +973,15 @@
           {
             "source": "Raça: Elfo",
             "amount": -1
+          }
+        ]
+      },
+      "dexterity": {
+        "total": 3,
+        "contributions": [
+          {
+            "source": "Raça: Elfo",
+            "amount": 1
           }
         ]
       },
@@ -994,12 +994,12 @@
           }
         ]
       },
-      "wisdom": {
-        "total": 4,
+      "strength": {
+        "total": 1,
         "contributions": []
       },
-      "charisma": {
-        "total": 3,
+      "wisdom": {
+        "total": 4,
         "contributions": []
       }
     },
@@ -1011,12 +1011,12 @@
     },
     "bestBaseSpellCd": 18,
     "spellCdByAttribute": {
-      "strength": 15,
-      "dexterity": 17,
+      "charisma": 17,
       "constitution": 15,
+      "dexterity": 17,
       "intelligence": 18,
-      "wisdom": 18,
-      "charisma": 17
+      "strength": 15,
+      "wisdom": 18
     },
     "spellDCBonus": {
       "total": 0,

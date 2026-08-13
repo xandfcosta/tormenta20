@@ -1,4 +1,4 @@
-import type { Modifier } from '@tormenta20/t20-data'
+import type { Modifier } from '@/shared/api/item-types'
 
 // Attribute keys arrive raw (e.g. 'charisma') on catalog modifiers — map to
 // the pt-BR name so a row reads "Carisma +2" instead of "charisma +2".

@@ -45,7 +45,8 @@ export type UpdateExpertiseInput = {
   trained?: boolean
 }
 
-export type EquippedSlot = 'vested' | 'wielded' | 'wielded2'
+import type { EquippedSlot } from './bonus-types'
+export type { EquippedSlot }
 
 export type CharacterItem = {
   id: number

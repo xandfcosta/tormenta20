@@ -450,21 +450,6 @@
   ],
   "itemEffects": {
     "byTarget": {
-      "defense": {
-        "total": 12,
-        "contributions": [
-          {
-            "source": "Armadura completa",
-            "bonusType": "armor",
-            "amount": 10
-          },
-          {
-            "source": "Escudo pesado",
-            "bonusType": "shield",
-            "amount": 2
-          }
-        ]
-      },
       "armorPenalty": {
         "total": -7,
         "contributions": [
@@ -477,16 +462,6 @@
             "source": "Escudo pesado",
             "bonusType": "untyped",
             "amount": -2
-          }
-        ]
-      },
-      "displacement": {
-        "total": -3,
-        "contributions": [
-          {
-            "source": "Armadura completa",
-            "bonusType": "untyped",
-            "amount": -3
           }
         ]
       },
@@ -511,6 +486,17 @@
           }
         ]
       },
+      "attribute:dexterity": {
+        "total": -1,
+        "contributions": [
+          {
+            "source": "Raça: Anão",
+            "bonusType": "untyped",
+            "amount": -1,
+            "note": "Anão"
+          }
+        ]
+      },
       "attribute:wisdom": {
         "total": 1,
         "contributions": [
@@ -522,14 +508,28 @@
           }
         ]
       },
-      "attribute:dexterity": {
-        "total": -1,
+      "defense": {
+        "total": 12,
         "contributions": [
           {
-            "source": "Raça: Anão",
+            "source": "Armadura completa",
+            "bonusType": "armor",
+            "amount": 10
+          },
+          {
+            "source": "Escudo pesado",
+            "bonusType": "shield",
+            "amount": 2
+          }
+        ]
+      },
+      "displacement": {
+        "total": -3,
+        "contributions": [
+          {
+            "source": "Armadura completa",
             "bonusType": "untyped",
-            "amount": -1,
-            "note": "Anão"
+            "amount": -3
           }
         ]
       },
@@ -589,16 +589,12 @@
     "flySpeed": 0,
     "inventorySlots": 18,
     "attributes": {
-      "strength": {
-        "total": 4,
-        "contributions": []
-      },
-      "dexterity": {
-        "total": 0,
+      "charisma": {
+        "total": 3,
         "contributions": [
           {
-            "source": "Raça: Anão",
-            "amount": -1
+            "source": "Cosmético (cena)",
+            "amount": 2
           }
         ]
       },
@@ -611,8 +607,21 @@
           }
         ]
       },
+      "dexterity": {
+        "total": 0,
+        "contributions": [
+          {
+            "source": "Raça: Anão",
+            "amount": -1
+          }
+        ]
+      },
       "intelligence": {
         "total": 1,
+        "contributions": []
+      },
+      "strength": {
+        "total": 4,
         "contributions": []
       },
       "wisdom": {
@@ -621,15 +630,6 @@
           {
             "source": "Raça: Anão",
             "amount": 1
-          }
-        ]
-      },
-      "charisma": {
-        "total": 3,
-        "contributions": [
-          {
-            "source": "Cosmético (cena)",
-            "amount": 2
           }
         ]
       }
@@ -642,12 +642,12 @@
     },
     "bestBaseSpellCd": null,
     "spellCdByAttribute": {
-      "strength": 19,
-      "dexterity": 15,
+      "charisma": 18,
       "constitution": 21,
+      "dexterity": 15,
       "intelligence": 16,
-      "wisdom": 18,
-      "charisma": 18
+      "strength": 19,
+      "wisdom": 18
     },
     "spellDCBonus": {
       "total": 0,
@@ -1073,16 +1073,12 @@
     "flySpeed": 0,
     "inventorySlots": 18,
     "attributes": {
-      "strength": {
-        "total": 4,
-        "contributions": []
-      },
-      "dexterity": {
-        "total": 0,
+      "charisma": {
+        "total": 3,
         "contributions": [
           {
-            "source": "Raça: Anão",
-            "amount": -1
+            "source": "Cosmético (cena)",
+            "amount": 2
           }
         ]
       },
@@ -1095,8 +1091,21 @@
           }
         ]
       },
+      "dexterity": {
+        "total": 0,
+        "contributions": [
+          {
+            "source": "Raça: Anão",
+            "amount": -1
+          }
+        ]
+      },
       "intelligence": {
         "total": 1,
+        "contributions": []
+      },
+      "strength": {
+        "total": 4,
         "contributions": []
       },
       "wisdom": {
@@ -1105,15 +1114,6 @@
           {
             "source": "Raça: Anão",
             "amount": 1
-          }
-        ]
-      },
-      "charisma": {
-        "total": 3,
-        "contributions": [
-          {
-            "source": "Cosmético (cena)",
-            "amount": 2
           }
         ]
       }
@@ -1126,12 +1126,12 @@
     },
     "bestBaseSpellCd": null,
     "spellCdByAttribute": {
-      "strength": 19,
-      "dexterity": 15,
+      "charisma": 18,
       "constitution": 21,
+      "dexterity": 15,
       "intelligence": 16,
-      "wisdom": 18,
-      "charisma": 18
+      "strength": 19,
+      "wisdom": 18
     },
     "spellDCBonus": {
       "total": 0,

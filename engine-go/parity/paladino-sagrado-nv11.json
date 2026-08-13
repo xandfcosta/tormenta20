@@ -450,21 +450,6 @@
   ],
   "itemEffects": {
     "byTarget": {
-      "defense": {
-        "total": 12,
-        "contributions": [
-          {
-            "source": "Armadura completa",
-            "bonusType": "armor",
-            "amount": 10
-          },
-          {
-            "source": "Escudo pesado",
-            "bonusType": "shield",
-            "amount": 2
-          }
-        ]
-      },
       "armorPenalty": {
         "total": -7,
         "contributions": [
@@ -480,13 +465,14 @@
           }
         ]
       },
-      "displacement": {
-        "total": -3,
+      "attribute:charisma": {
+        "total": 1,
         "contributions": [
           {
-            "source": "Armadura completa",
+            "source": "Raça: Suraggel",
             "bonusType": "untyped",
-            "amount": -3
+            "amount": 1,
+            "note": "Suraggel"
           }
         ]
       },
@@ -501,14 +487,28 @@
           }
         ]
       },
-      "attribute:charisma": {
-        "total": 1,
+      "defense": {
+        "total": 12,
         "contributions": [
           {
-            "source": "Raça: Suraggel",
+            "source": "Armadura completa",
+            "bonusType": "armor",
+            "amount": 10
+          },
+          {
+            "source": "Escudo pesado",
+            "bonusType": "shield",
+            "amount": 2
+          }
+        ]
+      },
+      "displacement": {
+        "total": -3,
+        "contributions": [
+          {
+            "source": "Armadura completa",
             "bonusType": "untyped",
-            "amount": 1,
-            "note": "Suraggel"
+            "amount": -3
           }
         ]
       },
@@ -563,7 +563,16 @@
     "flySpeed": 0,
     "inventorySlots": 16,
     "attributes": {
-      "strength": {
+      "charisma": {
+        "total": 5,
+        "contributions": [
+          {
+            "source": "Raça: Suraggel",
+            "amount": 1
+          }
+        ]
+      },
+      "constitution": {
         "total": 3,
         "contributions": []
       },
@@ -571,12 +580,12 @@
         "total": 1,
         "contributions": []
       },
-      "constitution": {
-        "total": 3,
-        "contributions": []
-      },
       "intelligence": {
         "total": 1,
+        "contributions": []
+      },
+      "strength": {
+        "total": 3,
         "contributions": []
       },
       "wisdom": {
@@ -585,15 +594,6 @@
           {
             "source": "Raça: Suraggel",
             "amount": 2
-          }
-        ]
-      },
-      "charisma": {
-        "total": 5,
-        "contributions": [
-          {
-            "source": "Raça: Suraggel",
-            "amount": 1
           }
         ]
       }
@@ -606,12 +606,12 @@
     },
     "bestBaseSpellCd": 19,
     "spellCdByAttribute": {
-      "strength": 18,
-      "dexterity": 16,
+      "charisma": 20,
       "constitution": 18,
+      "dexterity": 16,
       "intelligence": 16,
-      "wisdom": 19,
-      "charisma": 20
+      "strength": 18,
+      "wisdom": 19
     },
     "spellDCBonus": {
       "total": 0,
@@ -1037,7 +1037,16 @@
     "flySpeed": 0,
     "inventorySlots": 16,
     "attributes": {
-      "strength": {
+      "charisma": {
+        "total": 5,
+        "contributions": [
+          {
+            "source": "Raça: Suraggel",
+            "amount": 1
+          }
+        ]
+      },
+      "constitution": {
         "total": 3,
         "contributions": []
       },
@@ -1045,12 +1054,12 @@
         "total": 1,
         "contributions": []
       },
-      "constitution": {
-        "total": 3,
-        "contributions": []
-      },
       "intelligence": {
         "total": 1,
+        "contributions": []
+      },
+      "strength": {
+        "total": 3,
         "contributions": []
       },
       "wisdom": {
@@ -1059,15 +1068,6 @@
           {
             "source": "Raça: Suraggel",
             "amount": 2
-          }
-        ]
-      },
-      "charisma": {
-        "total": 5,
-        "contributions": [
-          {
-            "source": "Raça: Suraggel",
-            "amount": 1
           }
         ]
       }
@@ -1080,12 +1080,12 @@
     },
     "bestBaseSpellCd": 19,
     "spellCdByAttribute": {
-      "strength": 18,
-      "dexterity": 16,
+      "charisma": 20,
       "constitution": 18,
+      "dexterity": 16,
       "intelligence": 16,
-      "wisdom": 19,
-      "charisma": 20
+      "strength": 18,
+      "wisdom": 19
     },
     "spellDCBonus": {
       "total": 0,

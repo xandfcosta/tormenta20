@@ -1,4 +1,4 @@
-import type { ConditionalEffect } from '@tormenta20/t20-data'
+import type { ConditionalEffect } from '@/shared/api/item-types'
 import { describe, expect, it } from 'vitest'
 import type { ConditionalEntry } from '@/entities/character/derived'
 import type { ActiveEffect, Character } from '@/shared/api/api'

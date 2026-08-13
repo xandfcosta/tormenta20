@@ -371,26 +371,6 @@
   ],
   "itemEffects": {
     "byTarget": {
-      "defense": {
-        "total": 2,
-        "contributions": [
-          {
-            "source": "Armadura de couro",
-            "bonusType": "armor",
-            "amount": 2
-          }
-        ]
-      },
-      "expertise:Intimidação": {
-        "total": 1,
-        "contributions": [
-          {
-            "source": "Bandana",
-            "bonusType": "item",
-            "amount": 1
-          }
-        ]
-      },
       "attribute:charisma": {
         "total": 2,
         "contributions": [
@@ -401,7 +381,7 @@
           }
         ]
       },
-      "attribute:strength": {
+      "attribute:constitution": {
         "total": 1,
         "contributions": [
           {
@@ -423,7 +403,7 @@
           }
         ]
       },
-      "attribute:constitution": {
+      "attribute:strength": {
         "total": 1,
         "contributions": [
           {
@@ -431,6 +411,26 @@
             "bonusType": "untyped",
             "amount": 1,
             "note": "Humano"
+          }
+        ]
+      },
+      "defense": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Armadura de couro",
+            "bonusType": "armor",
+            "amount": 2
+          }
+        ]
+      },
+      "expertise:Intimidação": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Bandana",
+            "bonusType": "item",
+            "amount": 1
           }
         ]
       }
@@ -462,8 +462,17 @@
     "flySpeed": 0,
     "inventorySlots": 20,
     "attributes": {
-      "strength": {
-        "total": 5,
+      "charisma": {
+        "total": 3,
+        "contributions": [
+          {
+            "source": "Cosmético (cena)",
+            "amount": 2
+          }
+        ]
+      },
+      "constitution": {
+        "total": 4,
         "contributions": [
           {
             "source": "Raça: Humano",
@@ -480,8 +489,12 @@
           }
         ]
       },
-      "constitution": {
-        "total": 4,
+      "intelligence": {
+        "total": 2,
+        "contributions": []
+      },
+      "strength": {
+        "total": 5,
         "contributions": [
           {
             "source": "Raça: Humano",
@@ -489,22 +502,9 @@
           }
         ]
       },
-      "intelligence": {
-        "total": 2,
-        "contributions": []
-      },
       "wisdom": {
         "total": 2,
         "contributions": []
-      },
-      "charisma": {
-        "total": 3,
-        "contributions": [
-          {
-            "source": "Cosmético (cena)",
-            "amount": 2
-          }
-        ]
       }
     },
     "pmLimit": {
@@ -515,12 +515,12 @@
     },
     "bestBaseSpellCd": null,
     "spellCdByAttribute": {
-      "strength": 19,
-      "dexterity": 18,
+      "charisma": 17,
       "constitution": 18,
+      "dexterity": 18,
       "intelligence": 16,
-      "wisdom": 16,
-      "charisma": 17
+      "strength": 19,
+      "wisdom": 16
     },
     "spellDCBonus": {
       "total": 0,
@@ -927,8 +927,17 @@
     "flySpeed": 0,
     "inventorySlots": 20,
     "attributes": {
-      "strength": {
-        "total": 5,
+      "charisma": {
+        "total": 3,
+        "contributions": [
+          {
+            "source": "Cosmético (cena)",
+            "amount": 2
+          }
+        ]
+      },
+      "constitution": {
+        "total": 4,
         "contributions": [
           {
             "source": "Raça: Humano",
@@ -945,8 +954,12 @@
           }
         ]
       },
-      "constitution": {
-        "total": 4,
+      "intelligence": {
+        "total": 2,
+        "contributions": []
+      },
+      "strength": {
+        "total": 5,
         "contributions": [
           {
             "source": "Raça: Humano",
@@ -954,22 +967,9 @@
           }
         ]
       },
-      "intelligence": {
-        "total": 2,
-        "contributions": []
-      },
       "wisdom": {
         "total": 2,
         "contributions": []
-      },
-      "charisma": {
-        "total": 3,
-        "contributions": [
-          {
-            "source": "Cosmético (cena)",
-            "amount": 2
-          }
-        ]
       }
     },
     "pmLimit": {
@@ -980,12 +980,12 @@
     },
     "bestBaseSpellCd": null,
     "spellCdByAttribute": {
-      "strength": 19,
-      "dexterity": 18,
+      "charisma": 17,
       "constitution": 18,
+      "dexterity": 18,
       "intelligence": 16,
-      "wisdom": 16,
-      "charisma": 17
+      "strength": 19,
+      "wisdom": 16
     },
     "spellDCBonus": {
       "total": 0,

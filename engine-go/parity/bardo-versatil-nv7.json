@@ -432,16 +432,6 @@
   ],
   "itemEffects": {
     "byTarget": {
-      "expertise:Intimidação": {
-        "total": 1,
-        "contributions": [
-          {
-            "source": "Bandana",
-            "bonusType": "item",
-            "amount": 1
-          }
-        ]
-      },
       "attribute:charisma": {
         "total": 1,
         "contributions": [
@@ -458,7 +448,7 @@
           }
         ]
       },
-      "attribute:strength": {
+      "attribute:constitution": {
         "total": 1,
         "contributions": [
           {
@@ -480,7 +470,7 @@
           }
         ]
       },
-      "attribute:constitution": {
+      "attribute:strength": {
         "total": 1,
         "contributions": [
           {
@@ -488,6 +478,16 @@
             "bonusType": "untyped",
             "amount": 1,
             "note": "Lefou"
+          }
+        ]
+      },
+      "expertise:Intimidação": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Bandana",
+            "bonusType": "item",
+            "amount": 1
           }
         ]
       },
@@ -545,8 +545,21 @@
     "flySpeed": 0,
     "inventorySlots": 14,
     "attributes": {
-      "strength": {
-        "total": 2,
+      "charisma": {
+        "total": 5,
+        "contributions": [
+          {
+            "source": "Cosmético (cena)",
+            "amount": 2
+          },
+          {
+            "source": "Raça: Lefou",
+            "amount": -1
+          }
+        ]
+      },
+      "constitution": {
+        "total": 3,
         "contributions": [
           {
             "source": "Raça: Lefou",
@@ -563,8 +576,12 @@
           }
         ]
       },
-      "constitution": {
-        "total": 3,
+      "intelligence": {
+        "total": 2,
+        "contributions": []
+      },
+      "strength": {
+        "total": 2,
         "contributions": [
           {
             "source": "Raça: Lefou",
@@ -572,26 +589,9 @@
           }
         ]
       },
-      "intelligence": {
-        "total": 2,
-        "contributions": []
-      },
       "wisdom": {
         "total": 1,
         "contributions": []
-      },
-      "charisma": {
-        "total": 5,
-        "contributions": [
-          {
-            "source": "Cosmético (cena)",
-            "amount": 2
-          },
-          {
-            "source": "Raça: Lefou",
-            "amount": -1
-          }
-        ]
       }
     },
     "pmLimit": {
@@ -602,12 +602,12 @@
     },
     "bestBaseSpellCd": 18,
     "spellCdByAttribute": {
-      "strength": 15,
-      "dexterity": 17,
+      "charisma": 18,
       "constitution": 16,
+      "dexterity": 17,
       "intelligence": 15,
-      "wisdom": 14,
-      "charisma": 18
+      "strength": 15,
+      "wisdom": 14
     },
     "spellDCBonus": {
       "total": 0,
@@ -1012,8 +1012,21 @@
     "flySpeed": 0,
     "inventorySlots": 14,
     "attributes": {
-      "strength": {
-        "total": 2,
+      "charisma": {
+        "total": 5,
+        "contributions": [
+          {
+            "source": "Cosmético (cena)",
+            "amount": 2
+          },
+          {
+            "source": "Raça: Lefou",
+            "amount": -1
+          }
+        ]
+      },
+      "constitution": {
+        "total": 3,
         "contributions": [
           {
             "source": "Raça: Lefou",
@@ -1030,8 +1043,12 @@
           }
         ]
       },
-      "constitution": {
-        "total": 3,
+      "intelligence": {
+        "total": 2,
+        "contributions": []
+      },
+      "strength": {
+        "total": 2,
         "contributions": [
           {
             "source": "Raça: Lefou",
@@ -1039,26 +1056,9 @@
           }
         ]
       },
-      "intelligence": {
-        "total": 2,
-        "contributions": []
-      },
       "wisdom": {
         "total": 1,
         "contributions": []
-      },
-      "charisma": {
-        "total": 5,
-        "contributions": [
-          {
-            "source": "Cosmético (cena)",
-            "amount": 2
-          },
-          {
-            "source": "Raça: Lefou",
-            "amount": -1
-          }
-        ]
       }
     },
     "pmLimit": {
@@ -1069,12 +1069,12 @@
     },
     "bestBaseSpellCd": 18,
     "spellCdByAttribute": {
-      "strength": 15,
-      "dexterity": 17,
+      "charisma": 18,
       "constitution": 16,
+      "dexterity": 17,
       "intelligence": 15,
-      "wisdom": 14,
-      "charisma": 18
+      "strength": 15,
+      "wisdom": 14
     },
     "spellDCBonus": {
       "total": 0,

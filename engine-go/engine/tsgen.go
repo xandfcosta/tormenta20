@@ -55,12 +55,34 @@ var tsKeyOverrides = map[string]string{
 var tsFieldTypeOverrides = map[string]string{
 	"ExpertiseBreakdown.attribute": "AttributeKey",
 	"WeaponCard.attribute":         "AttributeKey",
+	// O bonusType decide o EMPILHAMENTO — um valor fora da lista viraria um
+	// balde novo, somando em silêncio em vez de competir. Como `string` isso não
+	// dá erro nenhum.
+	"Modifier.bonusType":                "BonusType",
+	"Contribution.bonusType":            "BonusType",
+	"ConditionalEffect.bonusType":       "BonusType",
+	"ConditionalDisplayInput.bonusType": "BonusType",
+	"ActiveItem.equipped":               "EquipSlot | null",
 }
 
 // tsImported são tipos que o arquivo gerado REFERENCIA mas não declara — eles
 // vivem no TS escrito à mão porque são uniões de literais, que uma struct Go não
 // consegue expressar.
 var tsImported = []string{"AttributeKey"}
+
+// tsImportedFrom diz de qual módulo escrito à mão cada tipo importado vem.
+var tsBonusImported = []string{"BonusType"}
+
+// tsItemImported vem do vocabulário de item/modificador escrito à mão.
+var tsItemImported = []string{"ModifierTarget"}
+
+// tsNeverEmit são tipos que o arquivo gerado REFERENCIA mas nunca declara —
+// eles vêm dos módulos escritos à mão porque são uniões que uma struct Go não
+// expressa. Sem esta lista o emissor os declararia na forma achatada do Go e o
+// TS acusaria conflito com o import.
+var tsNeverEmit = map[string]bool{
+	"ModifierTarget": true,
+}
 
 // tsRootTypes são as raízes da fronteira: tudo o que o WASM devolve, mais as
 // entradas que ele recebe. O emissor caminha os campos e arrasta o que for
@@ -76,8 +98,6 @@ func tsRootTypes() []reflect.Type {
 		reflect.TypeOf(PointBuyStatus{}),
 		reflect.TypeOf(ConditionalDisplayRow{}),
 		reflect.TypeOf(ConditionalDisplayInput{}),
-		reflect.TypeOf(Modifier{}),
-		reflect.TypeOf(ActiveItem{}),
 	}
 }
 
@@ -106,6 +126,8 @@ func GenerateTypeScript() string {
 	var b strings.Builder
 	b.WriteString(tsHeader)
 	b.WriteString("\nimport type { " + strings.Join(tsImported, ", ") + " } from './attribute-keys'\n")
+	b.WriteString("import type { " + strings.Join(tsBonusImported, ", ") + " } from './bonus-types'\n")
+	b.WriteString("import type { " + strings.Join(tsItemImported, ", ") + " } from './item-types'\n")
 	for _, name := range names {
 		b.WriteString("\n")
 		b.WriteString(emitted[name])
@@ -121,6 +143,9 @@ func collectTSType(t reflect.Type, emitted map[string]string) {
 		return
 	}
 	if _, done := emitted[t.Name()]; done {
+		return
+	}
+	if tsNeverEmit[t.Name()] {
 		return
 	}
 	name := t.Name()
@@ -148,13 +173,16 @@ func collectTSType(t reflect.Type, emitted map[string]string) {
 		if skip {
 			continue
 		}
-		ts := tsTypeOf(field.Type, emitted)
 		qualified := t.Name() + "." + name
-		if key, ok := tsKeyOverrides[qualified]; ok {
-			ts = narrowRecordKey(ts, key)
-		}
-		if narrowed, ok := tsFieldTypeOverrides[qualified]; ok {
-			ts = narrowed
+		// O override é consultado ANTES de traduzir o tipo: `tsTypeOf` REGISTRA
+		// os structs que encontra, então perguntar depois já teria emitido a
+		// declaração que o override existe para evitar.
+		ts, overridden := tsFieldTypeOverrides[qualified]
+		if !overridden {
+			ts = tsTypeOf(field.Type, emitted)
+			if key, ok := tsKeyOverrides[qualified]; ok {
+				ts = narrowRecordKey(ts, key)
+			}
 		}
 		fmt.Fprintf(&b, "  %s%s: %s\n", name, optional, ts)
 	}

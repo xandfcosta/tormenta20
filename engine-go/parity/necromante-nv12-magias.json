@@ -398,13 +398,25 @@
   ],
   "itemEffects": {
     "byTarget": {
-      "expertise:Intimidação": {
+      "attribute:charisma": {
         "total": 1,
         "contributions": [
           {
-            "source": "Bandana",
-            "bonusType": "item",
-            "amount": 1
+            "source": "Raça: Osteon",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Osteon"
+          }
+        ]
+      },
+      "attribute:constitution": {
+        "total": -1,
+        "contributions": [
+          {
+            "source": "Raça: Osteon",
+            "bonusType": "untyped",
+            "amount": -1,
+            "note": "Osteon"
           }
         ]
       },
@@ -430,25 +442,13 @@
           }
         ]
       },
-      "attribute:charisma": {
+      "expertise:Intimidação": {
         "total": 1,
         "contributions": [
           {
-            "source": "Raça: Osteon",
-            "bonusType": "untyped",
-            "amount": 1,
-            "note": "Osteon"
-          }
-        ]
-      },
-      "attribute:constitution": {
-        "total": -1,
-        "contributions": [
-          {
-            "source": "Raça: Osteon",
-            "bonusType": "untyped",
-            "amount": -1,
-            "note": "Osteon"
+            "source": "Bandana",
+            "bonusType": "item",
+            "amount": 1
           }
         ]
       },
@@ -485,13 +485,14 @@
     "flySpeed": 0,
     "inventorySlots": 12,
     "attributes": {
-      "strength": {
-        "total": 1,
-        "contributions": []
-      },
-      "dexterity": {
-        "total": 2,
-        "contributions": []
+      "charisma": {
+        "total": 4,
+        "contributions": [
+          {
+            "source": "Raça: Osteon",
+            "amount": 1
+          }
+        ]
       },
       "constitution": {
         "total": 2,
@@ -502,6 +503,10 @@
           }
         ]
       },
+      "dexterity": {
+        "total": 2,
+        "contributions": []
+      },
       "intelligence": {
         "total": 6,
         "contributions": [
@@ -511,17 +516,12 @@
           }
         ]
       },
+      "strength": {
+        "total": 1,
+        "contributions": []
+      },
       "wisdom": {
         "total": 3,
-        "contributions": [
-          {
-            "source": "Raça: Osteon",
-            "amount": 1
-          }
-        ]
-      },
-      "charisma": {
-        "total": 4,
         "contributions": [
           {
             "source": "Raça: Osteon",
@@ -538,12 +538,12 @@
     },
     "bestBaseSpellCd": 22,
     "spellCdByAttribute": {
-      "strength": 17,
-      "dexterity": 18,
+      "charisma": 20,
       "constitution": 18,
+      "dexterity": 18,
       "intelligence": 22,
-      "wisdom": 19,
-      "charisma": 20
+      "strength": 17,
+      "wisdom": 19
     },
     "spellDCBonus": {
       "total": 0,
@@ -945,13 +945,14 @@
     "flySpeed": 0,
     "inventorySlots": 12,
     "attributes": {
-      "strength": {
-        "total": 1,
-        "contributions": []
-      },
-      "dexterity": {
-        "total": 2,
-        "contributions": []
+      "charisma": {
+        "total": 4,
+        "contributions": [
+          {
+            "source": "Raça: Osteon",
+            "amount": 1
+          }
+        ]
       },
       "constitution": {
         "total": 2,
@@ -962,6 +963,10 @@
           }
         ]
       },
+      "dexterity": {
+        "total": 2,
+        "contributions": []
+      },
       "intelligence": {
         "total": 6,
         "contributions": [
@@ -971,17 +976,12 @@
           }
         ]
       },
+      "strength": {
+        "total": 1,
+        "contributions": []
+      },
       "wisdom": {
         "total": 3,
-        "contributions": [
-          {
-            "source": "Raça: Osteon",
-            "amount": 1
-          }
-        ]
-      },
-      "charisma": {
-        "total": 4,
         "contributions": [
           {
             "source": "Raça: Osteon",
@@ -998,12 +998,12 @@
     },
     "bestBaseSpellCd": 22,
     "spellCdByAttribute": {
-      "strength": 17,
-      "dexterity": 18,
+      "charisma": 20,
       "constitution": 18,
+      "dexterity": 18,
       "intelligence": 22,
-      "wisdom": 19,
-      "charisma": 20
+      "strength": 17,
+      "wisdom": 19
     },
     "spellDCBonus": {
       "total": 0,

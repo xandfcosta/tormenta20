@@ -1,4 +1,5 @@
-import { applyActiveConditionals, barbaroRdForLevel, CAVALEIRO_BASTIAO_RD, carismaLossFromPowers, CLASS_SPELLCASTING_ATTRIBUTE, computeItemEffects, conditionModifiers, conditionalId, type ConditionId, DEFORMIDADE_PERICIA_BONUS, EXPERTISE_NAMES, type ExpertiseName, HOMEBREW_VESTED_OK, originModifiers, raceModifiers, requiredProficiency, resolveAtributoMod, resolveStack, spellcastingAttributeFor, spellSaveDc, statFor, trainingBonusForLevel, type ActiveItem, type CatalogItem, type ClassChoices, type ConditionalEffect, type ItemEffects, type Modifier, type Prerequisite } from '@tormenta20/t20-data'
+import { barbaroRdForLevel, CAVALEIRO_BASTIAO_RD, carismaLossFromPowers, CLASS_SPELLCASTING_ATTRIBUTE, conditionModifiers, conditionalId, type ConditionId, DEFORMIDADE_PERICIA_BONUS, EXPERTISE_NAMES, type ExpertiseName, HOMEBREW_VESTED_OK, originModifiers, raceModifiers, requiredProficiency, resolveAtributoMod, resolveStack, spellcastingAttributeFor, spellSaveDc, statFor, trainingBonusForLevel, type CatalogItem, type ClassChoices, type ItemEffects, type Prerequisite } from '@tormenta20/t20-data'
+import type { ActiveItem, ConditionalEffect, Modifier } from '@/shared/api/item-types'
 import { ATTRIBUTE_ABBR, type AttributeKey } from '@/shared/api/attribute-keys'
 // The abilities lookups + item catalog now read the fetched catalogs (primed by
 // the root loader) instead of the build-time t20-data data — keeps the ~149KB
@@ -763,24 +764,6 @@ export function characterEffects(
   return resolveEffects(character, activeConditionals)
 }
 
-/**
- * A mesma resolução em TypeScript — a IMPLEMENTAÇÃO DE REFERÊNCIA que gera o
- * oráculo de paridade.
- *
- * Chamada EXPLICITAMENTE, nunca por `if` de ambiente: quando o harness passou a
- * atravessar o choke point, o oráculo virou "o Go dizendo o que o Go acha", que
- * é a ilusão que a fatia 5 evita enquanto ainda existem duas implementações.
- * Morre com o `t20-data` (ALE-109).
- */
-export function tsCharacterEffects(
-  character: Character,
-  activeConditionals: ReadonlySet<string> = EMPTY_SET,
-): ItemEffects {
-  return applyActiveConditionals(
-    computeItemEffects(activeItemsFor(character)),
-    activeConditionals,
-  )
-}
 
 const EMPTY_SET: ReadonlySet<string> = new Set()
 

@@ -342,28 +342,7 @@
   ],
   "itemEffects": {
     "byTarget": {
-      "defense": {
-        "total": 2,
-        "contributions": [
-          {
-            "source": "Armadura de couro",
-            "bonusType": "armor",
-            "amount": 2
-          }
-        ]
-      },
-      "expertiseAll": {
-        "total": -1,
-        "contributions": [
-          {
-            "source": "Armadura de couro",
-            "bonusType": "untyped",
-            "amount": -1,
-            "note": "Armadura de couro sem proficiência"
-          }
-        ]
-      },
-      "attribute:intelligence": {
+      "attribute:charisma": {
         "total": 1,
         "contributions": [
           {
@@ -385,7 +364,7 @@
           }
         ]
       },
-      "attribute:charisma": {
+      "attribute:intelligence": {
         "total": 1,
         "contributions": [
           {
@@ -393,6 +372,27 @@
             "bonusType": "untyped",
             "amount": 1,
             "note": "Humano"
+          }
+        ]
+      },
+      "defense": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Armadura de couro",
+            "bonusType": "armor",
+            "amount": 2
+          }
+        ]
+      },
+      "expertiseAll": {
+        "total": -1,
+        "contributions": [
+          {
+            "source": "Armadura de couro",
+            "bonusType": "untyped",
+            "amount": -1,
+            "note": "Armadura de couro sem proficiência"
           }
         ]
       },
@@ -436,13 +436,14 @@
     "flySpeed": 0,
     "inventorySlots": 10,
     "attributes": {
-      "strength": {
-        "total": 0,
-        "contributions": []
-      },
-      "dexterity": {
-        "total": 2,
-        "contributions": []
+      "charisma": {
+        "total": 3,
+        "contributions": [
+          {
+            "source": "Raça: Humano",
+            "amount": 1
+          }
+        ]
       },
       "constitution": {
         "total": 3,
@@ -453,6 +454,10 @@
           }
         ]
       },
+      "dexterity": {
+        "total": 2,
+        "contributions": []
+      },
       "intelligence": {
         "total": 5,
         "contributions": [
@@ -462,18 +467,13 @@
           }
         ]
       },
+      "strength": {
+        "total": 0,
+        "contributions": []
+      },
       "wisdom": {
         "total": 1,
         "contributions": []
-      },
-      "charisma": {
-        "total": 3,
-        "contributions": [
-          {
-            "source": "Raça: Humano",
-            "amount": 1
-          }
-        ]
       }
     },
     "pmLimit": {
@@ -484,12 +484,12 @@
     },
     "bestBaseSpellCd": 15,
     "spellCdByAttribute": {
-      "strength": 10,
-      "dexterity": 12,
+      "charisma": 13,
       "constitution": 13,
+      "dexterity": 12,
       "intelligence": 15,
-      "wisdom": 11,
-      "charisma": 13
+      "strength": 10,
+      "wisdom": 11
     },
     "spellDCBonus": {
       "total": 0,
@@ -1065,13 +1065,14 @@
     "flySpeed": 0,
     "inventorySlots": 10,
     "attributes": {
-      "strength": {
-        "total": 0,
-        "contributions": []
-      },
-      "dexterity": {
-        "total": 2,
-        "contributions": []
+      "charisma": {
+        "total": 3,
+        "contributions": [
+          {
+            "source": "Raça: Humano",
+            "amount": 1
+          }
+        ]
       },
       "constitution": {
         "total": 3,
@@ -1082,6 +1083,10 @@
           }
         ]
       },
+      "dexterity": {
+        "total": 2,
+        "contributions": []
+      },
       "intelligence": {
         "total": 5,
         "contributions": [
@@ -1091,18 +1096,13 @@
           }
         ]
       },
+      "strength": {
+        "total": 0,
+        "contributions": []
+      },
       "wisdom": {
         "total": 1,
         "contributions": []
-      },
-      "charisma": {
-        "total": 3,
-        "contributions": [
-          {
-            "source": "Raça: Humano",
-            "amount": 1
-          }
-        ]
       }
     },
     "pmLimit": {
@@ -1113,12 +1113,12 @@
     },
     "bestBaseSpellCd": 15,
     "spellCdByAttribute": {
-      "strength": 10,
-      "dexterity": 12,
+      "charisma": 13,
       "constitution": 13,
+      "dexterity": 12,
       "intelligence": 15,
-      "wisdom": 11,
-      "charisma": 13
+      "strength": 10,
+      "wisdom": 11
     },
     "spellDCBonus": {
       "total": 0,

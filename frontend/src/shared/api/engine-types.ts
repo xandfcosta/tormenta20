@@ -8,12 +8,8 @@
 // para eles (ALE-108).
 
 import type { AttributeKey } from './attribute-keys'
-
-export type ActiveItem = {
-  source: string
-  equipped: string | null
-  modifiers: Modifier[]
-}
+import type { BonusType } from './bonus-types'
+import type { ModifierTarget } from './item-types'
 
 export type AggregatedStat = {
   total: number
@@ -61,7 +57,7 @@ export type ComputedSheetV2 = {
 
 export type ConditionalDisplayInput = {
   target: ModifierTarget
-  bonusType: string
+  bonusType: BonusType
   amount: number
 }
 
@@ -72,7 +68,7 @@ export type ConditionalDisplayRow = {
 
 export type ConditionalEffect = {
   source: string
-  bonusType: string
+  bonusType: BonusType
   amount: number
   note: string
   target: ModifierTarget
@@ -81,7 +77,7 @@ export type ConditionalEffect = {
 
 export type Contribution = {
   source: string
-  bonusType: string
+  bonusType: BonusType
   amount: number
   note?: string
 }
@@ -118,32 +114,6 @@ export type ItemEffects = {
   byTarget: Record<string, AggregatedStat>
   flags: string[]
   conditional: ConditionalEffect[]
-}
-
-export type Modifier = {
-  target: ModifierTarget
-  amount: number
-  bonusType: string
-  condition?: ModifierCondition | null
-  note?: string
-  scale?: VitalScale | null
-}
-
-export type ModifierCondition = {
-  c: string
-  type?: string
-  trait?: string
-  note?: string
-  flag?: string
-  label?: string
-}
-
-export type ModifierTarget = {
-  k: string
-  name?: string
-  attribute?: string
-  scope?: string
-  school?: string
 }
 
 export type PointBuyStatus = {
@@ -194,13 +164,6 @@ export type VitalContext = {
 export type VitalPools = {
   pvMax: number
   pmMax: number
-}
-
-export type VitalScale = {
-  per: string
-  step?: number
-  round?: string
-  attribute?: string
 }
 
 export type WeaponCard = {

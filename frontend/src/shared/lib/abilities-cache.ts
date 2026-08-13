@@ -1,17 +1,6 @@
-import {
-  type ClassChoiceSelections,
-  classPowerModifiersIn,
-  type ClassPower,
-  type Deus,
-  devotoOptionsIn,
-  type GeneralPower,
-  type GrantedPower,
-  type Modifier,
-  type OriginBenefit,
-  type OriginDefinition,
-  ownedClassPowersIn,
-  type RaceDefinition,
-} from '@tormenta20/t20-data'
+import { classPowerModifiersIn, type ClassPower, type Deus, devotoOptionsIn, type GeneralPower, type GrantedPower, type OriginBenefit, type OriginDefinition, ownedClassPowersIn, type RaceDefinition } from '@tormenta20/t20-data'
+import type { ClassChoiceSelections } from '@tormenta20/t20-data'
+import type { Modifier } from '@/shared/api/item-types'
 
 /**
  * Front-owned cache for the abilities cluster (races, origins, class powers,

@@ -351,17 +351,6 @@
   ],
   "itemEffects": {
     "byTarget": {
-      "attribute:intelligence": {
-        "total": 2,
-        "contributions": [
-          {
-            "source": "Raça: Kliren",
-            "bonusType": "untyped",
-            "amount": 2,
-            "note": "Kliren"
-          }
-        ]
-      },
       "attribute:charisma": {
         "total": 1,
         "contributions": [
@@ -369,6 +358,17 @@
             "source": "Raça: Kliren",
             "bonusType": "untyped",
             "amount": 1,
+            "note": "Kliren"
+          }
+        ]
+      },
+      "attribute:intelligence": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Raça: Kliren",
+            "bonusType": "untyped",
+            "amount": 2,
             "note": "Kliren"
           }
         ]
@@ -407,21 +407,21 @@
     "flySpeed": 0,
     "inventorySlots": 9,
     "attributes": {
-      "strength": {
-        "total": -1,
+      "charisma": {
+        "total": 2,
         "contributions": [
           {
             "source": "Raça: Kliren",
-            "amount": -1
+            "amount": 1
           }
         ]
       },
-      "dexterity": {
-        "total": 3,
-        "contributions": []
-      },
       "constitution": {
         "total": 2,
+        "contributions": []
+      },
+      "dexterity": {
+        "total": 3,
         "contributions": []
       },
       "intelligence": {
@@ -433,18 +433,18 @@
           }
         ]
       },
-      "wisdom": {
-        "total": 1,
-        "contributions": []
-      },
-      "charisma": {
-        "total": 2,
+      "strength": {
+        "total": -1,
         "contributions": [
           {
             "source": "Raça: Kliren",
-            "amount": 1
+            "amount": -1
           }
         ]
+      },
+      "wisdom": {
+        "total": 1,
+        "contributions": []
       }
     },
     "pmLimit": {
@@ -455,12 +455,12 @@
     },
     "bestBaseSpellCd": null,
     "spellCdByAttribute": {
-      "strength": 12,
-      "dexterity": 16,
+      "charisma": 15,
       "constitution": 15,
+      "dexterity": 16,
       "intelligence": 20,
-      "wisdom": 14,
-      "charisma": 15
+      "strength": 12,
+      "wisdom": 14
     },
     "spellDCBonus": {
       "total": 0,
@@ -857,21 +857,21 @@
     "flySpeed": 0,
     "inventorySlots": 9,
     "attributes": {
-      "strength": {
-        "total": -1,
+      "charisma": {
+        "total": 2,
         "contributions": [
           {
             "source": "Raça: Kliren",
-            "amount": -1
+            "amount": 1
           }
         ]
       },
-      "dexterity": {
-        "total": 3,
-        "contributions": []
-      },
       "constitution": {
         "total": 2,
+        "contributions": []
+      },
+      "dexterity": {
+        "total": 3,
         "contributions": []
       },
       "intelligence": {
@@ -883,18 +883,18 @@
           }
         ]
       },
-      "wisdom": {
-        "total": 1,
-        "contributions": []
-      },
-      "charisma": {
-        "total": 2,
+      "strength": {
+        "total": -1,
         "contributions": [
           {
             "source": "Raça: Kliren",
-            "amount": 1
+            "amount": -1
           }
         ]
+      },
+      "wisdom": {
+        "total": 1,
+        "contributions": []
       }
     },
     "pmLimit": {
@@ -905,12 +905,12 @@
     },
     "bestBaseSpellCd": null,
     "spellCdByAttribute": {
-      "strength": 12,
-      "dexterity": 16,
+      "charisma": 15,
       "constitution": 15,
+      "dexterity": 16,
       "intelligence": 20,
-      "wisdom": 14,
-      "charisma": 15
+      "strength": 12,
+      "wisdom": 14
     },
     "spellDCBonus": {
       "total": 0,

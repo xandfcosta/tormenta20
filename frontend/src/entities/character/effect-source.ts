@@ -1,5 +1,4 @@
 import {
-  computeItemEffects,
   type DisplayFact,
   type ItemFlag,
 } from '@tormenta20/t20-data'
@@ -8,7 +7,6 @@ import { getCatalogItem } from '@/shared/lib/catalog-cache'
 import { spellCatalog } from '@/shared/lib/spell-cache'
 import {
   computeEquippedFlags as engineComputeEquippedFlags,
-  type EquippedItemFlag,
 } from '@/shared/lib/engine-wasm'
 import type { CharacterItem } from '@/shared/api/api'
 
@@ -84,27 +82,3 @@ export function equippedItemFlagEffects(
   }))
 }
 
-/**
- * A IMPLEMENTAÇÃO DE REFERÊNCIA das bandeiras, que gera o oráculo. Chamada
- * explicitamente pelo harness, nunca por `if` de ambiente — atravessar o choke
- * point faria o oráculo virar "o Go dizendo o que o Go acha" (ALE-109).
- *
- * Per equipped catalog item, run
- * ONLY its base catalog modifiers through the item engine (so wear conditions
- * resolve like the sheet totals) and collect the flags, sorted per item for a
- * deterministic order matching the Go `ComputeEquippedFlags`.
- */
-export function tsEquippedItemFlags(items: readonly CharacterItem[]): EquippedItemFlag[] {
-  const out: EquippedItemFlag[] = []
-  for (const it of items) {
-    if (it.equipped === null || !it.catalogId) continue
-    const modifiers = getCatalogItem(it.catalogId)?.modifiers ?? []
-    const { flags } = computeItemEffects([
-      { source: it.name, equipped: it.equipped, modifiers },
-    ])
-    for (const flag of [...flags].sort()) {
-      out.push({ flag, source: it.name })
-    }
-  }
-  return out
-}
