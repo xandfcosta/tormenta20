@@ -137,7 +137,8 @@ function ownedModifiers(
 /**
  * Sum every `maxPv`/`maxPm` grant the character owns (untyped ⇒ stacks),
  * EXCEPT attribute-scaled grants of the same attribute+target, which apply
- * once — p225: "um personagem clérigo/druida não soma duas vezes sua
+ * once — p226: "o valor de um mesmo atributo não se acumula em características
+ * do personagem. Ou seja, um clérigo/druida não soma duas vezes sua
  * Sabedoria nos pontos de mana". Distinct scales (Poder Mágico per-level +
  * caminho attribute) still stack.
  */

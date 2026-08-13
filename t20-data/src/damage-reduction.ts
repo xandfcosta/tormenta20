@@ -3,10 +3,13 @@
  *
  * PDF refs:
  *  - RD core rules: Cap 5 p228-229 (definições Imunidade/Resistência/RD)
- *  - Order of operations: p225 (saves → halve → RD last)
+ *  - Order of operations: p226 (saves → halve → RD last)
  *  - Typed RD (redução de fogo/frio/corte): p230
- *  - Bárbaro RD: p42. Guerreiro: p56 (não reconferido — ver ALE-111)
- *  - Cavaleiro Bastião + Especialização (stack): p54-57
+ *  - Bárbaro RD: p42 (passiva, RD 2 no 5º nível, +2 a cada três, teto 10)
+ *  - Cavaleiro Bastião: p55. "Especialização em Armadura", poder ESCOLHIDO de
+ *    12º nível com RD 5 fixa em armadura pesada, cumulativa com o Bastião:
+ *    Cavaleiro p54, Guerreiro p65. O Guerreiro NÃO tem RD passiva — a
+ *    progressão que este módulo lhe dava não existe no livro (ALE-111).
  *  - Adamante RD: p133
  *
  * Regras chave:
