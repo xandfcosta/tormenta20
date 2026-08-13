@@ -88,7 +88,9 @@ outcome someone would notice breaking. Everything below follows from that.
 - Frontend has its own adapted rules: [frontend/CLAUDE.md](frontend/CLAUDE.md)
   (FSD layers, thin TanStack routes, styling tokens, vitest/tsgo/eslint).
   When working under `frontend/`, follow it in addition to this file.
-- The backend is `engine-go/` (Go): HTTP API on :3001, the rules engine, and
+- O backend `engine-go/` (Go) tem guia próprio: [engine-go/CLAUDE.md](engine-go/CLAUDE.md)
+  — regenerar oráculo é ato deliberado, citação de página conferida, o gerador de
+  tipos da fronteira, validação de schema dos catálogos. HTTP API on :3001, the rules engine, and
   the same engine compiled to WASM for the browser. One process serves the SPA,
   the API and the socket in production (`STATIC_DIR`) — there is no nginx and no
   compose. The NestJS backend was removed once nothing consumed it.
