@@ -16,12 +16,11 @@ import type { Modifier } from '@/shared/api/item-types'
  * Same contract as `catalog-cache.ts`: correctness rests on the cache being
  * primed (via the root loader's `ensureCatalogs`) BEFORE any consumer renders.
  * Catalogs are static + cached-forever, so by render time the primed value is
- * effectively constant and derived.ts needs no reactivity. Only the two
- * catalog-parametrized RULES (`ownedClassPowersIn`, `devotoOptionsIn`) are
- * imported from t20-data — both data-free, so they don't re-anchor the chunk.
- * The pure entity-modifier builders (`raceModifiers`/`originModifiers`) and the
- * slot/caminho tables stay imported straight from `@tormenta20/t20-data` by
- * consumers — they already tree-shake (data-free modules).
+ * effectively constant and derived.ts needs no reactivity. As duas REGRAS
+ * parametrizadas por catálogo (`ownedClassPowersIn`, `devotoOptionsIn`) e os
+ * construtores de modificador (`raceModifiers`/`originModifiers`) vêm de
+ * `shared/rules`, para onde mudaram quando o `t20-data` foi apagado (ALE-109) —
+ * todos data-free, então não reancoram o chunk.
  */
 let raceList: readonly RaceDefinition[] = []
 let racesById: ReadonlyMap<string, RaceDefinition> = new Map()

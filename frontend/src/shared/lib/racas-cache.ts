@@ -8,8 +8,9 @@ import type { Origem, OrigemItemGrant, Raca } from '@/shared/api/catalog-types'
  * helpers read them WITHOUT a build-time `import` of the ~20KB tables — fetched
  * from `GET /catalog/races` + `/catalog/origens` and cached instead
  * (project_front_decouple_catalog). Same prime-before-render contract as the
- * other *-cache modules. The pure `resolveAtributoMod` stays imported straight
- * from `@tormenta20/t20-data` (data-free after the ./racas-attr split).
+ * other *-cache modules. O `resolveAtributoMod` puro vem de `shared/rules`, para
+ * onde mudou quando o `t20-data` foi apagado (ALE-109) — data-free, tree-shaka
+ * sozinho.
  */
 let racasById: Readonly<Record<string, Raca>> = {}
 let racasArr: readonly Raca[] = []

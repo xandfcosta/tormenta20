@@ -3,8 +3,10 @@
  * app kept both in one 800-line file, over this project's 500-line ceiling.
  * Types live here, the client composes them there.
  *
- * Type-only imports from `@tormenta20/t20-data` erase at compile, so no catalog
- * DATA rides in the bundle — it is fetched from /catalog and cached.
+ * O vocabulário de domínio vive aqui e nos módulos vizinhos (`catalog-types`,
+ * `item-types`, `spell-types`…), para onde mudou quando o `t20-data` foi apagado
+ * (ALE-109). Nenhum DADO de catálogo entra no bundle: ele é buscado em /catalog
+ * e cacheado.
  */
 import type { ClassChoices } from '@/shared/api/catalog-types'
 import type { AttributeKey } from '@/shared/api/attribute-keys'
