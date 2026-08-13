@@ -22,7 +22,7 @@ var conditionIDs = toStringSet([]string{
 // handleUpdateConditions ports CharactersService.updateConditions: replace the
 // active book conditions after validating every id against the catalog.
 func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	row, ok := s.characterFor(w, r)
 	if !ok {
 		return
 	}
@@ -30,10 +30,6 @@ func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) 
 		ActiveConditions []string `json:"activeConditions"`
 	}
 	if !decodeJSON(w, r, &body) {
-		return
-	}
-	if _, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id); err != nil {
-		writeError(w, status, err.Error())
 		return
 	}
 	if body.ActiveConditions == nil {
@@ -53,7 +49,7 @@ func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) 
 	}
 	activeConditions := marshalStrings(&body.ActiveConditions)
 	if err := s.queries.UpdateConditions(r.Context(), sqlcgen.UpdateConditionsParams{
-		ActiveConditions: activeConditions, UpdatedAt: nowISO(), ID: id,
+		ActiveConditions: activeConditions, UpdatedAt: nowISO(), ID: row.ID,
 	}); err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not update conditions")
 		return

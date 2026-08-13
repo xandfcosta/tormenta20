@@ -1,14 +1,7 @@
+import { initials } from '@/shared/lib/initials'
 import { describe, expect, it } from 'vitest'
 import type { Character, RaceDefinition } from '@/shared/api/api'
-import {
-  characterFlavor,
-  initials,
-  isCreateSlot,
-  primaryClass,
-  primaryRole,
-  raceAbilityBlurbs,
-  stepRosterIndex,
-} from './select-helpers'
+import {characterFlavor, isCreateSlot, primaryClass, primaryRole, raceAbilityBlurbs, stepRosterIndex} from './select-helpers'
 
 function character(overrides: Partial<Character> = {}): Character {
   return {

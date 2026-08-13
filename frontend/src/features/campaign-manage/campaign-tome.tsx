@@ -1,6 +1,7 @@
+import { initials } from '@/shared/lib/initials'
 import { CalendarClock, ChevronRight } from 'lucide-solid'
 import { Show } from 'solid-js'
-import { campaignEmblemGradient, campaignInitials, roleLabel } from '@/entities/campaign/emblem'
+import {campaignEmblemGradient, roleLabel} from '@/entities/campaign/emblem'
 import type { Campaign, Session } from '@/shared/api/api'
 import { Button } from '@/shared/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
@@ -104,7 +105,7 @@ function TomeHeader(props: {
           class="flex size-14 shrink-0 items-center justify-center rounded-md border border-grimorio-iron font-display text-lg text-white/90 sm:size-16"
           style={{ background: campaignEmblemGradient(props.campaign.name) }}
         >
-          {campaignInitials(props.campaign.name)}
+          {initials(props.campaign.name)}
         </span>
         <div class="space-y-1">
           <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">

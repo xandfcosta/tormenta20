@@ -1,3 +1,4 @@
+import { initials } from '@/shared/lib/initials'
 import { cn } from '@/shared/lib/utils'
 
 export type CharacterPortraitProps = {
@@ -46,13 +47,3 @@ export function CharacterPortrait(props: CharacterPortraitProps) {
   )
 }
 
-/** First letters of the first two words, uppercased; `?` when there's no name. */
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return '?'
-  return parts
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join('')
-    .toUpperCase()
-}

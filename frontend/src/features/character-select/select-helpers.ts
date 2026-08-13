@@ -1,5 +1,5 @@
 import type { Character, RaceDefinition } from '@/shared/api/api'
-import { hueFromName } from '@/shared/lib/hue-from-name'
+import { hueGradient } from '@/shared/lib/hue-from-name'
 
 /**
  * Uppercased primary class + level — the T20 analog to a Valorant "role" tag.
@@ -38,31 +38,11 @@ export function characterFlavor(character: Character): string {
     .join(' • ')
 }
 
-/**
- * Up to two initials — the monogram standing in for portrait art everywhere in
- * this scene (stage, side peeks, filmstrip chips). One definition on purpose:
- * three copies of it drifted apart once already.
- *
- * @example initials('Thal, o Errante') // 'TO'
- */
-export function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return '?'
-  return parts
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join('')
-    .toUpperCase()
-}
-
-/**
- * The hue-derived gradient that fills a portrait frame until real art lands.
- * Same name always yields the same colours, so a hero is recognisable by its
- * palette across the stage, the peeks and the filmstrip.
- */
+/** A hero portrait's fill — the character-select palette, a hair brighter than a
+ *  campaign emblem's. Both are the same 155° formula with different first stops,
+ *  which is why the formula lives in `shared/lib` and only the preset is here. */
 export function portraitGradient(name: string): string {
-  const hue = hueFromName(name)
-  return `linear-gradient(155deg, oklch(0.55 0.15 ${hue}) 0%, oklch(0.30 0.09 ${hue}) 70%, oklch(0.22 0.06 ${hue}) 100%)`
+  return hueGradient(name, 0.55, 0.15)
 }
 
 /**

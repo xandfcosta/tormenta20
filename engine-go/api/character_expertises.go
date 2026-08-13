@@ -33,7 +33,7 @@ func expertiseDTO(name, attribute string, trained, custom int64) ExpertiseDTO {
 // handleAddExpertise ports addCustomExpertise: a user-named perícia (not a
 // builtin, not a duplicate), created trained + custom.
 func (s *Server) handleAddExpertise(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	character, ok := s.characterFor(w, r)
 	if !ok {
 		return
 	}
@@ -44,10 +44,6 @@ func (s *Server) handleAddExpertise(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &body) {
 		return
 	}
-	if _, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id); err != nil {
-		writeError(w, status, err.Error())
-		return
-	}
 	fields := FieldErrorMap{}
 	name := strings.TrimSpace(body.Name)
 	switch {
@@ -56,7 +52,7 @@ func (s *Server) handleAddExpertise(w http.ResponseWriter, r *http.Request) {
 	case expertiseNames[name]:
 		fields["name"] = []string{fmt.Sprintf("%q is a builtin expertise — pick another name", name)}
 	default:
-		if _, err := s.queries.GetExpertiseMeta(r.Context(), sqlcgen.GetExpertiseMetaParams{Characterid: id, Name: name}); err == nil {
+		if _, err := s.queries.GetExpertiseMeta(r.Context(), sqlcgen.GetExpertiseMetaParams{Characterid: character.ID, Name: name}); err == nil {
 			fields["name"] = []string{fmt.Sprintf("Expertise %q already exists", name)}
 		}
 	}
@@ -68,7 +64,7 @@ func (s *Server) handleAddExpertise(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	row, err := s.queries.CreateExpertise(r.Context(), sqlcgen.CreateExpertiseParams{
-		Characterid: id, Name: name, Attribute: body.Attribute, Trained: 1, Custom: 1,
+		Characterid: character.ID, Name: name, Attribute: body.Attribute, Trained: 1, Custom: 1,
 	})
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not create expertise")
@@ -80,7 +76,7 @@ func (s *Server) handleAddExpertise(w http.ResponseWriter, r *http.Request) {
 // handleUpdateExpertise ports updateExpertise: patch a BUILTIN perícia's attribute
 // and/or trained flag.
 func (s *Server) handleUpdateExpertise(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	character, ok := s.characterFor(w, r)
 	if !ok {
 		return
 	}
@@ -90,10 +86,6 @@ func (s *Server) handleUpdateExpertise(w http.ResponseWriter, r *http.Request) {
 		Trained   *bool   `json:"trained"`
 	}
 	if !decodeJSON(w, r, &body) {
-		return
-	}
-	if _, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id); err != nil {
-		writeError(w, status, err.Error())
 		return
 	}
 	if !expertiseNames[body.Name] {
@@ -111,7 +103,7 @@ func (s *Server) handleUpdateExpertise(w http.ResponseWriter, r *http.Request) {
 	row, err := s.queries.UpdateExpertise(r.Context(), sqlcgen.UpdateExpertiseParams{
 		Attribute:   nullString(body.Attribute),
 		Trained:     nullBool(body.Trained),
-		CharacterId: id,
+		CharacterId: character.ID,
 		Name:        body.Name,
 	})
 	if errors.Is(err, sql.ErrNoRows) {
@@ -128,7 +120,7 @@ func (s *Server) handleUpdateExpertise(w http.ResponseWriter, r *http.Request) {
 // handleDeleteExpertise ports deleteExpertise: only custom perícias can be
 // removed; builtins 400, missing 404.
 func (s *Server) handleDeleteExpertise(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	character, ok := s.characterFor(w, r)
 	if !ok {
 		return
 	}
@@ -136,11 +128,7 @@ func (s *Server) handleDeleteExpertise(w http.ResponseWriter, r *http.Request) {
 	if decoded, err := url.PathUnescape(name); err == nil {
 		name = decoded
 	}
-	if _, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id); err != nil {
-		writeError(w, status, err.Error())
-		return
-	}
-	meta, err := s.queries.GetExpertiseMeta(r.Context(), sqlcgen.GetExpertiseMetaParams{Characterid: id, Name: name})
+	meta, err := s.queries.GetExpertiseMeta(r.Context(), sqlcgen.GetExpertiseMetaParams{Characterid: character.ID, Name: name})
 	if errors.Is(err, sql.ErrNoRows) {
 		writeError(w, http.StatusNotFound, fmt.Sprintf("Expertise %q not found", name))
 		return

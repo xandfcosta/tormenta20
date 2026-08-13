@@ -1,7 +1,8 @@
+import { initials } from '@/shared/lib/initials'
 import { For, Show, createEffect } from 'solid-js'
 import type { Campaign } from '@/shared/api/api'
 import { cn } from '@/shared/lib/utils'
-import { campaignEmblemGradient, campaignInitials, roleLabel } from './campaign-select-helpers'
+import { campaignEmblemGradient, roleLabel } from '@/entities/campaign/emblem'
 
 export type CampaignRailProps = {
   campaigns: Campaign[]
@@ -93,7 +94,7 @@ function TabEntry(props: {
         class="flex size-8 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron font-display text-xs text-white/85"
         style={{ background: campaignEmblemGradient(props.campaign.name) }}
       >
-        {campaignInitials(props.campaign.name)}
+        {initials(props.campaign.name)}
       </span>
       <span class="flex min-w-0 flex-1 flex-col">
         <span class="truncate font-heading text-sm tracking-wide">{props.campaign.name}</span>

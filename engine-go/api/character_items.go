@@ -27,16 +27,12 @@ type createItemBody struct {
 // NOTE: overlay compatibility (improvements/material vs the item family) is not
 // yet validated here — the frontend pre-validates it; ported in a later slice.
 func (s *Server) handleAddItem(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	row, ok := s.characterFor(w, r)
 	if !ok {
 		return
 	}
 	var body createItemBody
 	if !decodeJSON(w, r, &body) {
-		return
-	}
-	if _, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id); err != nil {
-		writeError(w, status, err.Error())
 		return
 	}
 	if body.Quantity == nil {
@@ -90,7 +86,7 @@ func (s *Server) handleAddItem(w http.ResponseWriter, r *http.Request) {
 			writeAxisError(w, top, fieldMsg)
 			return
 		}
-		if msg, err := s.equipLimitCheck(r, id, 0, *body.Equipped); err != nil {
+		if msg, err := s.equipLimitCheck(r, row.ID, 0, *body.Equipped); err != nil {
 			writeError(w, http.StatusInternalServerError, "Could not check equip limits")
 			return
 		} else if msg != "" {
@@ -100,7 +96,7 @@ func (s *Server) handleAddItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	item, err := s.queries.CreateItem(r.Context(), sqlcgen.CreateItemParams{
-		Characterid:  id,
+		Characterid:  row.ID,
 		Catalogid:    nullString(body.CatalogID),
 		Name:         name,
 		Quantity:     *body.Quantity,
@@ -127,7 +123,7 @@ func (s *Server) handleAddItem(w http.ResponseWriter, r *http.Request) {
 // distinguished from an explicit null (unequip / clear material) — a *string
 // can't tell them apart. NOTE: overlay compatibility is deferred like addItem.
 func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	row, ok := s.characterFor(w, r)
 	if !ok {
 		return
 	}
@@ -139,12 +135,8 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &raw) {
 		return
 	}
-	if _, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id); err != nil {
-		writeError(w, status, err.Error())
-		return
-	}
 	item, err := s.queries.GetItem(r.Context(), itemID)
-	if errors.Is(err, sql.ErrNoRows) || (err == nil && item.Characterid != id) {
+	if errors.Is(err, sql.ErrNoRows) || (err == nil && item.Characterid != row.ID) {
 		writeError(w, http.StatusNotFound, fmt.Sprintf("Item %d not found", itemID))
 		return
 	}
@@ -194,7 +186,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 				writeAxisError(w, top, fieldMsg)
 				return
 			}
-			if msg, err := s.equipLimitCheck(r, id, itemID, *eq); err != nil {
+			if msg, err := s.equipLimitCheck(r, row.ID, itemID, *eq); err != nil {
 				writeError(w, http.StatusInternalServerError, "Could not check equip limits")
 				return
 			} else if msg != "" {
@@ -255,7 +247,7 @@ func ptrEq(a, b *string) bool {
 // handleDeleteItem ports CharacterItemsService.deleteItem: 404 if the item isn't
 // on this character; returns {id}.
 func (s *Server) handleDeleteItem(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	row, ok := s.characterFor(w, r)
 	if !ok {
 		return
 	}
@@ -263,12 +255,8 @@ func (s *Server) handleDeleteItem(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	if _, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id); err != nil {
-		writeError(w, status, err.Error())
-		return
-	}
 	item, err := s.queries.GetItem(r.Context(), itemID)
-	if errors.Is(err, sql.ErrNoRows) || (err == nil && item.Characterid != id) {
+	if errors.Is(err, sql.ErrNoRows) || (err == nil && item.Characterid != row.ID) {
 		writeError(w, http.StatusNotFound, fmt.Sprintf("Item %d not found", itemID))
 		return
 	}
@@ -303,12 +291,7 @@ func (s *Server) equipLimitCheck(r *http.Request, charID, excludeItemID int64, i
 // writeAxisError emits the equip-axis BadRequest: a custom top message + the
 // equipped field error (assertEquipAxisAllowed).
 func writeAxisError(w http.ResponseWriter, top, field string) {
-	writeJSON(w, http.StatusBadRequest, map[string]any{
-		"statusCode":  http.StatusBadRequest,
-		"error":       "Bad Request",
-		"message":     top,
-		"fieldErrors": FieldErrorMap{"equipped": {field}},
-	})
+	writeFieldError(w, http.StatusBadRequest, top, FieldErrorMap{"equipped": {field}})
 }
 
 // marshalStrings JSON-encodes a string slice, normalizing nil (absent or JSON

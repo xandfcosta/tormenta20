@@ -20,7 +20,7 @@ var proficiencyCategories = toStringSet([]string{
 // NOTE: classChoices sanitization (devoto/caminho validation vs the DEUS/CAMINHOS
 // catalogs) is deferred — the frontend pre-validates; stored as sent.
 func (s *Server) handleUpdateAbilities(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	row, ok := s.characterFor(w, r)
 	if !ok {
 		return
 	}
@@ -32,10 +32,6 @@ func (s *Server) handleUpdateAbilities(w http.ResponseWriter, r *http.Request) {
 		PowerChoices       *json.RawMessage `json:"powerChoices"`
 	}
 	if !decodeJSON(w, r, &body) {
-		return
-	}
-	if _, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id); err != nil {
-		writeError(w, status, err.Error())
 		return
 	}
 
@@ -68,7 +64,7 @@ func (s *Server) handleUpdateAbilities(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sets = append(sets, "updatedAt = ?")
-	args = append(args, nowISO(), id)
+	args = append(args, nowISO(), row.ID)
 	//nolint:gosec // SET clause is a fixed column allowlist, not input.
 	if _, err := s.db.ExecContext(r.Context(),
 		"UPDATE characters SET "+strings.Join(sets, ", ")+" WHERE id = ?", args...); err != nil {
@@ -81,7 +77,7 @@ func (s *Server) handleUpdateAbilities(w http.ResponseWriter, r *http.Request) {
 // handleUpdateProficiencies ports updateProficiencies: validate every category
 // against the catalog, dedup, store, return {proficiencies}.
 func (s *Server) handleUpdateProficiencies(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	row, ok := s.characterFor(w, r)
 	if !ok {
 		return
 	}
@@ -89,10 +85,6 @@ func (s *Server) handleUpdateProficiencies(w http.ResponseWriter, r *http.Reques
 		Proficiencies []string `json:"proficiencies"`
 	}
 	if !decodeJSON(w, r, &body) {
-		return
-	}
-	if _, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id); err != nil {
-		writeError(w, status, err.Error())
 		return
 	}
 	if body.Proficiencies == nil {
@@ -117,7 +109,7 @@ func (s *Server) handleUpdateProficiencies(w http.ResponseWriter, r *http.Reques
 	}
 	proficiencies := marshalStrings(&dedup)
 	if err := s.queries.SetProficiencies(r.Context(), sqlcgen.SetProficienciesParams{
-		Proficiencies: proficiencies, UpdatedAt: nowISO(), ID: id,
+		Proficiencies: proficiencies, UpdatedAt: nowISO(), ID: row.ID,
 	}); err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not update proficiencies")
 		return

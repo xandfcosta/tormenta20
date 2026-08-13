@@ -109,7 +109,7 @@ func (s *Server) restVitals(ctx context.Context, user AuthUser, characterID int6
 // handleAdjustEffect ports adjustActiveEffect: bump a temp-HP pool's amount by
 // tempHpDelta; delete when it hits 0 ({removed, id}), else return the effect.
 func (s *Server) handleAdjustEffect(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	row, ok := s.characterFor(w, r)
 	if !ok {
 		return
 	}
@@ -123,17 +123,13 @@ func (s *Server) handleAdjustEffect(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &body) {
 		return
 	}
-	if _, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id); err != nil {
-		writeError(w, status, err.Error())
-		return
-	}
 	if body.TempHpDelta == nil {
 		writeValidationError(w, FieldErrorMap{"tempHpDelta": {"tempHpDelta must be an integer number"}})
 		return
 	}
 	eff, err := s.queries.GetActiveEffect(r.Context(), effectID)
-	if errors.Is(err, sql.ErrNoRows) || (err == nil && eff.Characterid != id) {
-		writeError(w, http.StatusNotFound, fmt.Sprintf("Active effect %d not found for character %d", effectID, id))
+	if errors.Is(err, sql.ErrNoRows) || (err == nil && eff.Characterid != row.ID) {
+		writeError(w, http.StatusNotFound, fmt.Sprintf("Active effect %d not found for character %d", effectID, row.ID))
 		return
 	}
 	if err != nil {
@@ -180,7 +176,7 @@ func (s *Server) handleAdjustEffect(w http.ResponseWriter, r *http.Request) {
 // handleDeleteEffect ports removeActiveEffect: 404 if the effect isn't on this
 // character; returns {id}.
 func (s *Server) handleDeleteEffect(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	row, ok := s.characterFor(w, r)
 	if !ok {
 		return
 	}
@@ -188,12 +184,8 @@ func (s *Server) handleDeleteEffect(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	if _, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id); err != nil {
-		writeError(w, status, err.Error())
-		return
-	}
 	meta, err := s.queries.GetActiveEffectMeta(r.Context(), effectID)
-	if errors.Is(err, sql.ErrNoRows) || (err == nil && meta.Characterid != id) {
+	if errors.Is(err, sql.ErrNoRows) || (err == nil && meta.Characterid != row.ID) {
 		writeError(w, http.StatusNotFound, fmt.Sprintf("Active effect %d not found", effectID))
 		return
 	}

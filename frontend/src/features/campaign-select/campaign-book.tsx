@@ -1,3 +1,4 @@
+import { initials } from '@/shared/lib/initials'
 import { ChevronRight } from 'lucide-solid'
 import { Show } from 'solid-js'
 import type { Campaign } from '@/shared/api/api'
@@ -6,7 +7,7 @@ import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { CharacterPortrait } from '@/shared/ui/character-portrait'
 import { Kbd } from '@/shared/ui/kbd'
-import { campaignEmblemGradient, campaignInitials, roleLabel } from './campaign-select-helpers'
+import { campaignEmblemGradient, roleLabel } from '@/entities/campaign/emblem'
 import { createPageTurns } from './page-turns'
 
 const NOOP = () => {}
@@ -164,7 +165,7 @@ function ArtPage(props: { name: string; class?: string }) {
           class="absolute inset-0 flex select-none items-center justify-center font-display text-[4.5rem] leading-none text-white/15 sm:text-[7rem] lg:text-[8.5rem]"
           style={{ 'text-shadow': `0 0 48px oklch(0.55 0.15 ${hue()} / 0.5)` }}
         >
-          {campaignInitials(props.name)}
+          {initials(props.name)}
         </span>
         <span
           aria-hidden="true"

@@ -30,7 +30,7 @@ type consumeResult struct {
 // gain (clamped to max), create the scene/day effect (if any), decrement/remove
 // the item — all in one transaction. hpRolled/mpRolled override the dice.
 func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	row, ok := s.characterFor(w, r)
 	if !ok {
 		return
 	}
@@ -43,11 +43,6 @@ func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {
 		MpRolled *int64 `json:"mpRolled"`
 	}
 	if !decodeJSON(w, r, &body) {
-		return
-	}
-	row, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id)
-	if err != nil {
-		writeError(w, status, err.Error())
 		return
 	}
 	dto, err := s.loadCharacter(r.Context(), row)
@@ -98,7 +93,7 @@ func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {
 	var effect *EffectDTO
 	if spec.Scope != "instant" && hasModifiers(spec.Modifiers) {
 		eff, err := q.CreateActiveEffect(r.Context(), sqlcgen.CreateActiveEffectParams{
-			Characterid: id, Catalogid: cat.ID, Scope: spec.Scope, Modifiers: string(spec.Modifiers), Createdat: now,
+			Characterid: row.ID, Catalogid: cat.ID, Scope: spec.Scope, Modifiers: string(spec.Modifiers), Createdat: now,
 		})
 		if db.IsUniqueViolation(err) {
 			writeOncePerDay(w, cat.Name)
@@ -134,7 +129,7 @@ func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {
 		if hasMp {
 			mpCurrent = min(row.Mpmax, row.Mpcurrent+int64(mpGain))
 		}
-		if err := q.SetVitalsCurrent(r.Context(), sqlcgen.SetVitalsCurrentParams{HpCurrent: hpCurrent, MpCurrent: mpCurrent, UpdatedAt: now, ID: id}); err != nil {
+		if err := q.SetVitalsCurrent(r.Context(), sqlcgen.SetVitalsCurrentParams{HpCurrent: hpCurrent, MpCurrent: mpCurrent, UpdatedAt: now, ID: row.ID}); err != nil {
 			writeError(w, http.StatusInternalServerError, "Could not apply vitals")
 			return
 		}
@@ -150,11 +145,7 @@ func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func writeOncePerDay(w http.ResponseWriter, name string) {
-	writeJSON(w, http.StatusBadRequest, map[string]any{
-		"statusCode": http.StatusBadRequest, "error": "Bad Request",
-		"message":     fmt.Sprintf("%q already active for the day", name),
-		"fieldErrors": FieldErrorMap{"catalogId": {"Apenas uma porção por dia"}},
-	})
+	writeFieldError(w, http.StatusBadRequest, fmt.Sprintf("%q already active for the day", name), FieldErrorMap{"catalogId": {"Apenas uma porção por dia"}})
 }
 
 func findItemDTO(items []ItemDTO, itemID int64) *ItemDTO {

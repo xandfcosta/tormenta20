@@ -209,11 +209,7 @@ func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 	}
 	owner, err := s.queries.GetCharacterOwner(r.Context(), *body.CharacterID)
 	if errors.Is(err, sql.ErrNoRows) {
-		writeJSON(w, http.StatusBadRequest, map[string]any{
-			"statusCode": http.StatusBadRequest, "error": "Bad Request",
-			"message":     fmt.Sprintf("Character %d not found", *body.CharacterID),
-			"fieldErrors": FieldErrorMap{"characterId": {"Character does not exist"}},
-		})
+		writeFieldError(w, http.StatusBadRequest, fmt.Sprintf("Character %d not found", *body.CharacterID), FieldErrorMap{"characterId": {"Character does not exist"}})
 		return
 	}
 	if err != nil {
@@ -231,11 +227,7 @@ func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 	}
 	if role == "player" {
 		if hasPc, _ := s.queries.HasPlayerPc(r.Context(), sqlcgen.HasPlayerPcParams{Campaignid: cid, Ownerid: user.ID}); hasPc {
-			writeJSON(w, http.StatusConflict, map[string]any{
-				"statusCode": http.StatusConflict, "error": "Conflict",
-				"message":     fmt.Sprintf("You already have a character in campaign %d", cid),
-				"fieldErrors": FieldErrorMap{"characterId": {"Você já tem um personagem nesta campanha"}},
-			})
+			writeFieldError(w, http.StatusConflict, fmt.Sprintf("You already have a character in campaign %d", cid), FieldErrorMap{"characterId": {"Você já tem um personagem nesta campanha"}})
 			return
 		}
 	}
@@ -243,11 +235,7 @@ func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 	// its own copy. Dedupe on "this template already snapshotted here" rather
 	// than membership of the source (the source is never a member — the copy is).
 	if hasCopy, _ := s.campaignHasCopyOf(r.Context(), *body.CharacterID, cid); hasCopy {
-		writeJSON(w, http.StatusConflict, map[string]any{
-			"statusCode": http.StatusConflict, "error": "Conflict",
-			"message":     fmt.Sprintf("Character %d already in campaign %d", *body.CharacterID, cid),
-			"fieldErrors": FieldErrorMap{"characterId": {"Already a member"}},
-		})
+		writeFieldError(w, http.StatusConflict, fmt.Sprintf("Character %d already in campaign %d", *body.CharacterID, cid), FieldErrorMap{"characterId": {"Already a member"}})
 		return
 	}
 	// Clone the template into a campaign-scoped copy and add THAT to the mesa,

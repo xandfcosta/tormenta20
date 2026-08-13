@@ -1,10 +1,10 @@
+import { initials } from '@/shared/lib/initials'
 import { Link } from '@tanstack/solid-router'
 import { Plus } from 'lucide-solid'
 import { For, createEffect } from 'solid-js'
 import type { Character } from '@/shared/api/api'
 import { hueFromName } from '@/shared/lib/hue-from-name'
 import { cn } from '@/shared/lib/utils'
-import { initials } from './select-helpers'
 
 export type CharacterFilmstripProps = {
   roster: Character[]

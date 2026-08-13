@@ -35,13 +35,8 @@ func (s *Server) handleListCharacters(w http.ResponseWriter, r *http.Request) {
 // handleGetCharacter returns one character aggregate. Access = owner OR campaign
 // GM (CharactersService.findOne). 404 when missing, 403 when unauthorized.
 func (s *Server) handleGetCharacter(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	row, ok := s.characterFor(w, r)
 	if !ok {
-		return
-	}
-	row, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id)
-	if err != nil {
-		writeError(w, status, err.Error())
 		return
 	}
 	dto, err := s.loadCharacter(r.Context(), row)
@@ -50,6 +45,30 @@ func (s *Server) handleGetCharacter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, dto)
+}
+
+// characterFor is the preamble every character route repeats: read {id}, load
+// the row, enforce the read/mutation guard, and emit the right error. Returns
+// ok=false when it already wrote the response.
+//
+// Twenty-three handlers spelled these nine lines out, and the copy-paste left a
+// real inconsistency behind it: three of them (items, expertises, spells)
+// decoded the request body BEFORE authorizing, while the rest authorized first.
+// Going through one helper forces a single order — authorize, then read the
+// body — so an unauthorized caller can never reach a decoder.
+//
+// @example row, ok := s.characterFor(w, r); if !ok { return }
+func (s *Server) characterFor(w http.ResponseWriter, r *http.Request) (sqlcgen.Character, bool) {
+	id, ok := intParam(w, r, "id")
+	if !ok {
+		return sqlcgen.Character{}, false
+	}
+	row, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id)
+	if err != nil {
+		writeError(w, status, err.Error())
+		return sqlcgen.Character{}, false
+	}
+	return row, true
 }
 
 // authorizedCharacter loads a character and enforces the read/mutation guard
@@ -83,13 +102,8 @@ func (s *Server) authorizedCharacter(ctx context.Context, user AuthUser, id int6
 // consumer today (the front derives via WASM); provided for non-WASM clients + parity.
 // Active conditionals (stances) aren't applied — this is the base sheet.
 func (s *Server) handleGetSheet(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	row, ok := s.characterFor(w, r)
 	if !ok {
-		return
-	}
-	row, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id)
-	if err != nil {
-		writeError(w, status, err.Error())
 		return
 	}
 	if s.catalogs == nil {
