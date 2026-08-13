@@ -2,6 +2,7 @@ import type { QueryClient } from '@tanstack/solid-query'
 import { type ProficiencyEntry, characterProficiencies } from '@tormenta20/t20-data'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import { characterQueryOptions } from '@/entities/character/queries'
+import { createCharacterWrite } from './character-write'
 import { type Character, api } from '@/shared/api/api'
 import { toast } from '@/shared/ui/sonner'
 
@@ -65,24 +66,24 @@ export function proficiencyActions(
   characterId: number,
 ): ProficiencyActions {
   const queryKey = characterQueryOptions(characterId).queryKey
+  const characterWrite = createCharacterWrite(queryClient, characterId)
 
   return {
     set: async (categories) => {
-      await queryClient.cancelQueries({ queryKey })
-      const previous = queryClient.getQueryData<Character>(queryKey)
-      queryClient.setQueryData<Character>(queryKey, (prev) =>
-        prev ? { ...prev, proficiencies: JSON.stringify(categories) } : prev,
-      )
       try {
-        const delta = await api.characters.updateProficiencies(characterId, {
-          proficiencies: categories,
-        })
-        queryClient.setQueryData<Character>(queryKey, (prev) =>
-          prev ? { ...prev, proficiencies: delta.proficiencies } : prev,
+        await characterWrite(
+          (previous) => ({ ...previous, proficiencies: JSON.stringify(categories) }),
+          async () => {
+            const delta = await api.characters.updateProficiencies(characterId, {
+              proficiencies: categories,
+            })
+            queryClient.setQueryData<Character>(queryKey, (prev) =>
+              prev ? { ...prev, proficiencies: delta.proficiencies } : prev,
+            )
+            invalidateCharacterDependents(queryClient, characterId)
+          },
         )
-        invalidateCharacterDependents(queryClient, characterId)
       } catch (failure) {
-        if (previous) queryClient.setQueryData(queryKey, previous)
         toast.error('Falha ao salvar proficiências — a ficha voltou ao valor anterior')
         throw failure
       }

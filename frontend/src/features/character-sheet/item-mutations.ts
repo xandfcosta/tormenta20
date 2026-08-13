@@ -6,6 +6,7 @@ import {
 } from '@tormenta20/t20-data'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import { characterQueryOptions } from '@/entities/character/queries'
+import { createCharacterWrite } from './character-write'
 import {
   type Character,
   type CharacterItem,
@@ -191,22 +192,9 @@ export function itemWriteMessage(failure: unknown, fallback: string): string {
  */
 export function itemActions(queryClient: QueryClient, characterId: number): ItemActions {
   const queryKey = characterQueryOptions(characterId).queryKey
+  const optimistic = createCharacterWrite(queryClient, characterId)
   const cached = () => queryClient.getQueryData<Character>(queryKey)
 
-  async function optimistic(
-    apply: (previous: Character) => Character,
-    send: () => Promise<void>,
-  ): Promise<void> {
-    await queryClient.cancelQueries({ queryKey })
-    const previous = cached()
-    if (previous) queryClient.setQueryData<Character>(queryKey, apply(previous))
-    try {
-      await send()
-    } catch (failure) {
-      if (previous) queryClient.setQueryData<Character>(queryKey, previous)
-      throw failure
-    }
-  }
 
   return {
     add: (input) => {

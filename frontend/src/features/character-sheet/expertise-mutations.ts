@@ -1,6 +1,7 @@
 import type { QueryClient } from '@tanstack/solid-query'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import { characterQueryOptions } from '@/entities/character/queries'
+import { createCharacterWrite } from './character-write'
 import {
   type AttributeKey,
   type Character,
@@ -78,22 +79,8 @@ export function expertiseActions(
   characterId: number,
 ): ExpertiseActions {
   const queryKey = characterQueryOptions(characterId).queryKey
+  const optimistic = createCharacterWrite(queryClient, characterId)
 
-  /** Snapshot → optimistic write → server call → rollback on failure. */
-  async function optimistic(
-    apply: (previous: Character) => Character,
-    send: () => Promise<void>,
-  ): Promise<void> {
-    await queryClient.cancelQueries({ queryKey })
-    const previous = queryClient.getQueryData<Character>(queryKey)
-    if (previous) queryClient.setQueryData<Character>(queryKey, apply(previous))
-    try {
-      await send()
-    } catch (failure) {
-      if (previous) queryClient.setQueryData<Character>(queryKey, previous)
-      throw failure
-    }
-  }
 
   return {
     update: (name, patch) =>
