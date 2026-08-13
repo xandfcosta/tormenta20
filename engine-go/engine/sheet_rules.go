@@ -50,7 +50,16 @@ func barbaroRdForLevel(level int) int {
 	return 0
 }
 
-// guerreiroRdForLevel ports damage-reduction.ts: same progression, heavy armor only.
+// guerreiroRdForLevel NÃO CORRESPONDE AO LIVRO — ver ALE-111.
+//
+// Ele dá ao Guerreiro a progressão do Bárbaro (RD 2 no 5º, +2 a cada três) com
+// armadura pesada. O livro p65 tem outra coisa: "Especialização em Armadura.
+// Você recebe redução de dano 5 se estiver usando uma armadura pesada.
+// Pré-requisito: 12º nível de guerreiro" — um poder ESCOLHIDO, de 12º nível,
+// valor fixo. Um Guerreiro de 5º a 11º não deveria ter RD nenhuma.
+//
+// Mantido como está porque corrigir muda o número de personagens já criados; a
+// decisão está registrada. O teste fixa o comportamento atual de propósito.
 func guerreiroRdForLevel(level int, heavyArmor bool) int {
 	if !heavyArmor {
 		return 0
@@ -58,5 +67,9 @@ func guerreiroRdForLevel(level int, heavyArmor bool) int {
 	return barbaroRdForLevel(level)
 }
 
-// cavaleiroBastiaoRd ports damage-reduction.ts CAVALEIRO_BASTIAO_RD.
+// cavaleiroBastiaoRd — Caminho do Cavaleiro, livro p55: "Se estiver usando
+// armadura pesada, você recebe redução de dano 5". Escolhido no 5º nível, valor
+// fixo. Confirmado no livro; o Cavaleiro tem ainda outras duas fontes de RD 5
+// que o motor NÃO modela (Especialização em Armadura, p54, cumulativa com esta;
+// e Desprezar os Covardes, p54) — ver ALE-111.
 const cavaleiroBastiaoRd = 5

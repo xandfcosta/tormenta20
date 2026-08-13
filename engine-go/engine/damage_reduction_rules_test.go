@@ -51,12 +51,15 @@ func TestBarbaroRdStepsEveryThreeLevels(t *testing.T) {
 	}
 }
 
-// A RD do Guerreiro por armadura pesada existe no motor e reusa a progressão do
-// Bárbaro, mas NÃO foi localizada no livro: a p66 traz "Durão" (gastar 3 PM para
-// reduzir o dano à metade) e "Romper Resistências" (ignorar 10 pontos de RD),
-// que são outras coisas. Este teste fixa apenas o que o motor faz hoje, e o
-// comentário existe para que ninguém leia isso como regra confirmada — a
-// verificação está registrada na ALE-111.
+// A RD do Guerreiro por armadura pesada NÃO EXISTE no livro como está modelada.
+// Varredura completa do PDF (ALE-111): o que há é "Especialização em Armadura"
+// (p65), um poder ESCOLHIDO de 12º nível dando RD 5 fixa. A progressão que o
+// motor usa é a do Bárbaro, copiada — então um Guerreiro de 5º a 11º ganha RD
+// que não deveria ter.
+//
+// Este teste fixa o comportamento ATUAL de propósito: corrigir muda o número de
+// personagens já criados e é decisão do dono. Ele impede regressão silenciosa,
+// NÃO valida a regra.
 func TestGuerreiroRdRequiresHeavyArmor(t *testing.T) {
 	t.Run("sem armadura pesada não há RD, em nenhum nível", func(t *testing.T) {
 		for _, level := range []int{1, 5, 17, 20} {
