@@ -142,6 +142,14 @@ links, the browser Back button and the progress rail cannot then disagree.
 - A toast fired from inside a modal is NOT announced — the modal marks its
   siblings `aria-hidden` and the sonner region is a sibling. Errors from an
   action taken inside a dialog go INLINE (`DialogInlineError`).
+- The same `aria-hidden` breaks **`getByRole` locators while a dialog is open**:
+  everything behind the modal leaves the accessibility tree, so a role query
+  returns 0 while a DOM query (`getByText`) still returns the element. A test
+  that acts in a dialog and then asserts on the page behind it must wait for
+  `getByRole('dialog')` to be HIDDEN first — scoping alone makes it worse, not
+  better. A picker that lists the same names as the list it writes to (Aplicar
+  efeito → Efeitos ativos) turns that race into a strict-mode violation that
+  only shows on a slow machine.
 - **`modal={false}` still dismisses on outside interaction.** A panel meant
   to share the screen must also prevent `onInteractOutside` — see
   `shared/ui/side-panel`.
