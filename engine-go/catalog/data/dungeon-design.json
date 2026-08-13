@@ -1,0 +1,119 @@
+{
+  "sizes": [
+    "pequena",
+    "media",
+    "grande"
+  ],
+  "sizeTable": [
+    {
+      "size": "pequena",
+      "label": "Pequena",
+      "minRooms": 3,
+      "maxRooms": 6,
+      "pacing": "parte-de-sessao",
+      "maxSecondaryObjectives": 0,
+      "optionalObjectives": 1
+    },
+    {
+      "size": "media",
+      "label": "Média",
+      "minRooms": 7,
+      "maxRooms": 20,
+      "pacing": "sessao-inteira",
+      "maxSecondaryObjectives": 1,
+      "optionalObjectives": 2
+    },
+    {
+      "size": "grande",
+      "label": "Grande",
+      "minRooms": 21,
+      "maxRooms": 50,
+      "pacing": "aventura-inteira",
+      "maxSecondaryObjectives": 3,
+      "optionalObjectives": 3
+    }
+  ],
+  "roomsPerThreat": 3,
+  "ideas": [
+    {
+      "roll": 1,
+      "label": "Complexo de cavernas subterrâneas"
+    },
+    {
+      "roll": 2,
+      "label": "Mina abandonada"
+    },
+    {
+      "roll": 3,
+      "label": "Templo de um deus maligno"
+    },
+    {
+      "roll": 4,
+      "label": "Esgotos da cidade"
+    },
+    {
+      "roll": 5,
+      "label": "Castelo de um déspota"
+    },
+    {
+      "roll": 6,
+      "label": "Torre de um mago louco"
+    },
+    {
+      "roll": 7,
+      "label": "Moinho da vila"
+    },
+    {
+      "roll": 8,
+      "label": "Armazém no porto"
+    },
+    {
+      "roll": 9,
+      "label": "Ruínas de uma civilização perdida"
+    },
+    {
+      "roll": 10,
+      "label": "Fortaleza anã abandonada"
+    },
+    {
+      "roll": 11,
+      "label": "Mansão assombrada"
+    },
+    {
+      "roll": 12,
+      "label": "Prisão da cidade"
+    },
+    {
+      "roll": 13,
+      "label": "Caverna submersa"
+    },
+    {
+      "roll": 14,
+      "label": "Gruta usada como covil por um monstro"
+    },
+    {
+      "roll": 15,
+      "label": "Biblioteca mágica"
+    },
+    {
+      "roll": 16,
+      "label": "Galeão encalhado"
+    },
+    {
+      "roll": 17,
+      "label": "Labirinto feito para proteger um tesouro"
+    },
+    {
+      "roll": 18,
+      "label": "Manicômio repleto de vilões insanos"
+    },
+    {
+      "roll": 19,
+      "label": "Vulcão inativo"
+    },
+    {
+      "roll": 20,
+      "label": "Castelo nas nuvens"
+    }
+  ]
+}

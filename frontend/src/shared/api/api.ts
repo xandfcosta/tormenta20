@@ -1,3 +1,21 @@
+export type {
+  ChaseEventRow,
+  ClassTrainedExpertises,
+  DevotoTerms,
+  DungeonDesign,
+  DungeonIdea,
+  DungeonSizeRow,
+  GmTables,
+  RewardCastigoRow,
+  RollRangeRow,
+  RuinaRow,
+} from './rules-tables'
+import type {
+  ClassTrainedExpertises,
+  DevotoTerms,
+  DungeonDesign,
+  GmTables,
+} from './rules-tables'
 /**
  * HTTP client for the Go backend. Framework-agnostic on purpose — this file
  * carries no Solid import and ports ~1:1 from the React app. It grows one
@@ -260,6 +278,13 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
         request<Record<TormentaPowerId, TormentaPower>>('/catalog/tormenta-powers'),
       divinePowers: () => request<GrantedPowerOption[]>('/catalog/divine-powers'),
       activations: () => request<ActivationSpec[]>('/catalog/activations'),
+      // Tabelas de livro autoradas no servidor (ALE-102): eram as últimas que o
+      // front importava em tempo de build.
+      classExpertises: () =>
+        request<Record<string, ClassTrainedExpertises>>('/catalog/class-expertises'),
+      devotoTerms: () => request<DevotoTerms>('/catalog/devoto-terms'),
+      gmTables: () => request<GmTables>('/catalog/gm-tables'),
+      dungeonDesign: () => request<DungeonDesign>('/catalog/dungeon-design'),
     },
     campaigns: {
       list: () => request<Campaign[]>('/campaigns'),

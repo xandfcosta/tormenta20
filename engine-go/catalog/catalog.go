@@ -145,10 +145,18 @@ func LookupActivation(id string) (Activation, bool) {
 }
 
 // resources is the ordered CatalogService registry — the GET /catalog index.
+//
+// The last four are AUTHORED HERE rather than dumped from t20-data like the
+// others: they were the last book tables the front imported at BUILD time, so
+// they were the last catalog bytes in the bundle (ALE-102). Serving them is what
+// let those four t20-data modules die — the point is severing the dependency,
+// not the 8 KB. Their shape is pinned by `rules_tables_test.go`, which is the
+// schema validation that replaces per-field transcription tests.
 var resources = []string{
 	"spells", "bestiary", "items", "conditions", "deuses", "races", "origins",
 	"race-defs", "class-powers", "general-powers", "granted-powers", "origens",
 	"tormenta-powers", "divine-powers", "activations",
+	"class-expertises", "devoto-terms", "gm-tables", "dungeon-design",
 }
 
 var valid = func() map[string]bool {

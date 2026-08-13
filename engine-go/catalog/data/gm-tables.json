@@ -1,0 +1,142 @@
+{
+  "ruina": [
+    {
+      "rollMin": 1,
+      "rollMax": 2,
+      "outcome": "ameaca",
+      "label": "Uma ameaça (armadilha ou monstro, a critério do mestre)"
+    },
+    {
+      "rollMin": 3,
+      "rollMax": 4,
+      "outcome": "vazia",
+      "label": "Vazia"
+    },
+    {
+      "rollMin": 5,
+      "rollMax": 5,
+      "outcome": "ameaca-e-tesouro",
+      "label": "Uma ameaça e um tesouro"
+    },
+    {
+      "rollMin": 6,
+      "rollMax": 6,
+      "outcome": "tesouro",
+      "label": "Apenas um tesouro"
+    }
+  ],
+  "chaseEvents": [
+    {
+      "rollMin": 1,
+      "rollMax": 6,
+      "kind": "nenhum",
+      "test": null,
+      "cd": null,
+      "example": "—"
+    },
+    {
+      "rollMin": 7,
+      "rollMax": 8,
+      "kind": "obstaculo",
+      "test": "Força",
+      "cd": 15,
+      "example": "Pilha de caixotes bloqueia o caminho."
+    },
+    {
+      "rollMin": 9,
+      "rollMax": 10,
+      "kind": "obstaculo",
+      "test": "Acrobacia",
+      "cd": 20,
+      "example": "Frutas caídas deixam o piso escorregadio."
+    },
+    {
+      "rollMin": 11,
+      "rollMax": 12,
+      "kind": "obstaculo",
+      "test": "Reflexos",
+      "cd": 20,
+      "example": "Barris rolam pela rua."
+    },
+    {
+      "rollMin": 13,
+      "rollMax": 14,
+      "kind": "obstaculo",
+      "test": "Intimidação",
+      "cd": 20,
+      "example": "Multidão impede a passagem."
+    },
+    {
+      "rollMin": 15,
+      "rollMax": 16,
+      "kind": "atalho",
+      "test": "Adestramento",
+      "cd": 20,
+      "example": "Carroça na qual se pode tentar subir."
+    },
+    {
+      "rollMin": 17,
+      "rollMax": 18,
+      "kind": "atalho",
+      "test": "Força",
+      "cd": 15,
+      "example": "Caminho mais curto, mas bloqueado."
+    },
+    {
+      "rollMin": 19,
+      "rollMax": 20,
+      "kind": "atalho",
+      "test": "Percepção",
+      "cd": 20,
+      "example": "Ruelas labirínticas, nas quais se pode cortar caminho ou se perder."
+    }
+  ],
+  "rewardCastigo": [
+    {
+      "roll": 1,
+      "reward": "tesouro-riqueza",
+      "castigo": "ruina-menor"
+    },
+    {
+      "roll": 2,
+      "reward": "favor",
+      "castigo": "abalo"
+    },
+    {
+      "roll": 3,
+      "reward": "tesouro-item",
+      "castigo": "complicacao"
+    },
+    {
+      "roll": 4,
+      "reward": "informacao",
+      "castigo": "ferimento"
+    },
+    {
+      "roll": 5,
+      "reward": "tesouro-ambos",
+      "castigo": "maldicao"
+    },
+    {
+      "roll": 6,
+      "reward": "poder",
+      "castigo": "ruina-maior"
+    }
+  ],
+  "rewardLabels": {
+    "tesouro-riqueza": "Tesouro (riqueza)",
+    "favor": "Favor",
+    "tesouro-item": "Tesouro (item)",
+    "informacao": "Informação",
+    "tesouro-ambos": "Tesouro (ambos)",
+    "poder": "Poder"
+  },
+  "castigoLabels": {
+    "ruina-menor": "Ruína menor",
+    "abalo": "Abalo",
+    "complicacao": "Complicação",
+    "ferimento": "Ferimento",
+    "maldicao": "Maldição",
+    "ruina-maior": "Ruína maior"
+  }
+}
