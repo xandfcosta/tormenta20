@@ -1084,7 +1084,7 @@ export function pmCostMod(effects: ItemEffects): {
 /**
  * Redução de Dano agregada do personagem, para exibir junto da Defesa.
  * Fontes cobertas (todas passivas e deriváveis do estado da ficha):
- *  - Bárbaro: tabela p47 (2/4/6/8/10 nos níveis 5/8/11/14/17)
+ *  - Bárbaro: tabela p42 (2/4/6/8/10 nos níveis 5/8/11/14/17)
  *  - Guerreiro: mesma progressão, apenas em armadura pesada (flag
  *    'armadura-pesada' do engine)
  *  - Cavaleiro Caminho do Bastião (p55): RD 5 em armadura pesada
@@ -1108,7 +1108,7 @@ export function characterDamageReduction(
   for (const entry of character.classes) {
     if (entry.className === 'Bárbaro') {
       const rd = barbaroRdForLevel(entry.level)
-      if (rd > 0) sources.push({ source: 'Bárbaro (p47)', amount: rd })
+      if (rd > 0) sources.push({ source: 'Bárbaro (p42)', amount: rd })
     }
     if (entry.className === 'Guerreiro' && heavy) {
       const rd = guerreiroRdForLevel(entry.level, heavy)
