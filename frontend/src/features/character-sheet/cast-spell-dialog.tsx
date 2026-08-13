@@ -8,10 +8,12 @@ import {
 } from '@tormenta20/t20-data'
 import { Sparkles, Zap } from 'lucide-solid'
 import { For, type JSX, Show, createMemo, createSignal } from 'solid-js'
-import { computedSheetFor } from '@/entities/character/computed-sheet'
-import { castableClassesFor, highestCastableCircle } from '@/entities/character/spell-rules'
+import {
+  castableClassesFor,
+  highestCastableCircle,
+  spellPmLimitFor,
+} from '@/entities/character/spell-rules'
 import { ApiError, type Character } from '@/shared/api/api'
-import { useConditionals } from '@/shared/stores/conditionals-context'
 import { Button } from '@/shared/ui/button'
 import {
   Dialog,
@@ -44,7 +46,6 @@ export function CastSpellDialog(props: {
   compact?: boolean
 }) {
   const queryClient = useQueryClient()
-  const conditionals = useConditionals()
   const [open, setOpen] = createSignal(false)
   const [stacks, setStacks] = createSignal<ReadonlyMap<number, number>>(new Map())
   const [pending, setPending] = createSignal(false)
@@ -69,12 +70,12 @@ export function CastSpellDialog(props: {
   const totalPm = createMemo(() =>
     props.spell.circle === 0 ? 0 : basePm() + augmentPmFor(props.spell.augments, picks()),
   )
-  // The same number the Limite PM box shows, so the gate and the HUD never
-  // disagree.
-  const perSpellLimit = createMemo(
-    () =>
-      computedSheetFor(props.character, conditionals.active(props.character.id)).pmLimit.total,
-  )
+  // The PER-SPELL ceiling (p224), from the same Go function the cast handler
+  // runs. It deliberately does NOT match the HUD's "Limite PM" tile: that tile
+  // is a per-character summary ("best caster level"), and gating on it offered a
+  // Bardo 7 / Arcanista 1 seven PM on an Arcanista spell that the server then
+  // refused above 1 (ALE-92). When they differ, the spell's own class wins.
+  const perSpellLimit = createMemo(() => spellPmLimitFor(props.character, props.spell.classes))
   const blocked = createMemo(() =>
     firstErrorMessage(
       validateCast({

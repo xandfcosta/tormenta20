@@ -1,7 +1,7 @@
 import type { AttributeKey, SpellcasterClass } from '@tormenta20/t20-data'
 import { describe, expect, it } from 'vitest'
 import { makeCharacter } from './__fixtures__/character'
-import { bestSpellCd, castableClassesFor, highestCastableCircle } from './spell-rules'
+import { bestSpellCd, castableClassesFor, highestCastableCircle, spellPmLimitFor } from './spell-rules'
 
 const CD: Record<AttributeKey, number> = {
   strength: 10,
@@ -77,5 +77,44 @@ describe('highestCastableCircle', () => {
     const character = makeCharacter({ classes: [{ className: 'Guerreiro', level: 20 }] })
 
     expect(highestCastableCircle(character, [])).toBe(0)
+  })
+})
+
+/**
+ * ALE-92. O teto por magia é o número que o portão de conjurar usa, e ele
+ * DIVERGIA do servidor: a ficha oferecia o resumo do HUD ("maior nível
+ * conjurador") enquanto o servidor cobrava o nível na classe que fornece a
+ * magia. Multiclasse é o único caso que revela a diferença.
+ */
+describe('spellPmLimitFor (p224)', () => {
+  it('usa o nível NA CLASSE que fornece a magia, cheio', () => {
+    const arcanista11 = makeCharacter({ classes: [{ className: 'Arcanista', level: 11 }], level: 11 })
+
+    expect(spellPmLimitFor(arcanista11, ['Arcanista'])).toBe(11)
+  })
+
+  // O caso da issue: com o resumo do HUD isto daria 7, e o servidor recusaria
+  // qualquer aprimoramento acima de 1.
+  it('multiclasse conta só a classe da magia, não a maior', () => {
+    const bardoArcanista = makeCharacter({
+      classes: [
+        { className: 'Bardo', level: 7 },
+        { className: 'Arcanista', level: 1 },
+      ],
+      level: 8,
+    })
+
+    expect(spellPmLimitFor(bardoArcanista, ['Arcanista'])).toBe(1)
+    expect(spellPmLimitFor(bardoArcanista, ['Bardo'])).toBe(7)
+  })
+
+  it('magia de fonte que não é classe usa o nível de personagem', () => {
+    const barbaro8 = makeCharacter({ classes: [{ className: 'Bárbaro', level: 8 }], level: 8 })
+
+    expect(spellPmLimitFor(barbaro8, ['Arcanista'])).toBe(8)
+  })
+
+  it('nunca abaixo de 1', () => {
+    expect(spellPmLimitFor(makeCharacter({ classes: [], level: 0 }), [])).toBe(1)
   })
 })

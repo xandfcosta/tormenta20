@@ -7,6 +7,7 @@ import {
   highestCircleAtLevel,
 } from '@tormenta20/t20-data'
 import type { Character } from '@/shared/api/api'
+import { spellPmLimit } from '@/shared/lib/engine-wasm'
 
 /**
  * The character's spellcasting classes that appear on THIS spell's list — the
@@ -64,4 +65,36 @@ export function highestCastableCircle(
     if (circle > best) best = circle
   }
   return best
+}
+
+/**
+ * The p224 PM ceiling for ONE spell: the character's level in the CLASS that
+ * grants it, or the character level when the source is not a class (a race, an
+ * origin, a general power). Item `pmLimit` bonuses add on top, resolved.
+ *
+ * NOT the same number as the HUD's "Limite PM" tile, which summarises the
+ * character with "best caster level". Gating the cast dialog on the tile offered
+ * a Bardo 7 / Arcanista 1 seven PM on an Arcanista spell and the server refused
+ * anything over 1 (ALE-92).
+ *
+ * Choke point: production runs the Go engine — the SAME function the cast
+ * handler runs, which is the whole point. The TS branch below exists only so
+ * components can render in jsdom (no WASM there) and is dropped from the bundle
+ * by `import.meta.env.MODE`; it dies with the other five when the engine becomes
+ * the single authority (ALE-104).
+ *
+ * @example spellPmLimitFor(bardo7Arcanista1, ['Arcanista']) // 1
+ */
+export function spellPmLimitFor(
+  character: Character,
+  spellClasses: readonly string[],
+): number {
+  if (import.meta.env.MODE === 'test') {
+    const grants = new Set(spellClasses)
+    const best = character.classes
+      .filter((c) => grants.has(c.className))
+      .reduce((acc, c) => Math.max(acc, c.level), 0)
+    return Math.max(1, best === 0 ? character.level : best)
+  }
+  return spellPmLimit(character, spellClasses)
 }
