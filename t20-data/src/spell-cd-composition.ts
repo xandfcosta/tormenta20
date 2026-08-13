@@ -4,7 +4,7 @@
  * esotérico + Poderoso enchant + Fortalecimento Arcano.
  *
  * PDF refs:
- *  - Base CD: p171 — `spellSaveDc(casterLevel, keyMod)` já em `spells.ts`
+ *  - Base CD: p173 — `spellSaveDc(casterLevel, keyMod)` já em `spells.ts`
  *  - Especialista em Escola (p38 Arcanista): +2 CD escola escolhida
  *  - Magia Pungente (p38 Arcanista elective): +2 CD ao pagar +1 PM
  *  - Mitral esotérico (p167 item): +2 CD ao pagar +2 PM

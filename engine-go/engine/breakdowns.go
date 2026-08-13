@@ -74,7 +74,7 @@ type ComputedSheetV2 struct {
 	Attributes      map[string]AttributeBreakdown `json:"attributes"`
 	PmLimit         ValueBreakdown                `json:"pmLimit"`
 	BestBaseSpellCd *int                          `json:"bestBaseSpellCd"`
-	// SpellCdByAttribute is the spell save CD keyed by casting attribute (p171),
+	// SpellCdByAttribute is the spell save CD keyed by casting attribute (p173),
 	// so a spell row can pick the CD for any of its applicable classes without
 	// re-deriving (derived.ts computeBestCd).
 	SpellCdByAttribute map[string]int `json:"spellCdByAttribute"`

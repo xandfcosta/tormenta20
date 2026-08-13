@@ -664,7 +664,7 @@ describe('pmLimitTotal — PDF p224: limite = nível na classe conjuradora', () 
   })
 })
 
-describe('bestBaseSpellCd — CD = 10 + ½ nível + atributo-chave FINAL (PDF p171)', () => {
+describe('bestBaseSpellCd — CD = 10 + ½ nível + atributo-chave FINAL (PDF p173)', () => {
   // Regression: the CD used the RAW stored attribute, dropping racial/item
   // attribute bonuses (Necromante Osteon: CD 21 shown, 22 correct).
   it('folds attribute modifiers from effects into the key attribute', () => {

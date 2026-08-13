@@ -1,4 +1,5 @@
 import type { AttributeKey } from './attributes'
+import { SPELLCASTER_CLASSES, SPELL_PROGRESSION } from './class-spellcasting'
 
 /**
  * Magia — PDF book Cap 4 (p168-211). This module pins the **mechanics**
@@ -10,12 +11,12 @@ import type { AttributeKey } from './attributes'
 
 /**
  * Círculos de magia. Truques are círculo 0 — they cost 0 PM and ignore
- * the augment system. Círculos 1-5 follow the cost table on p171.
+ * the augment system. Círculos 1-5 follow the cost table on p170.
  */
 export type SpellCircle = 0 | 1 | 2 | 3 | 4 | 5
 
 /**
- * PDF p171 — Custo em PM por círculo. Truques are free. The cost is
+ * PDF p170, Tabela 4-1 — Custo em PM por círculo. Truques are free. The cost is
  * what's paid for the *base* effect; +PM aprimoramentos add on top.
  */
 export const SPELL_BASE_PM_COST: Readonly<Record<SpellCircle, number>> = {
@@ -136,20 +137,27 @@ export type SpellResistance = 'anula' | 'parcial' | 'metade' | 'desacredita'
 export type SpellSaveType = 'fortitude' | 'reflexos' | 'vontade' | 'none'
 
 /**
- * Atributo-chave de conjuração por classe (PDF p168, class entries).
- * Used to compute the spell save CD. Multi-class casters pick per
- * spell list at cast time.
+ * Atributo-chave de conjuração FIXADO pela entrada de classe (Bardo p44,
+ * Clérigo p57, Druida p61, Paladino/Orar p83).
+ *
+ * The Arcanista's row is only the FALLBACK: p37 says its key attribute is
+ * defined by the Caminho, so anything computing a CD must go through
+ * `spellcastingAttributeFor`. Membership here doubles as the "casts magias at
+ * all" predicate, which is why the Arcanista still has a row.
+ *
+ * Derived from SPELL_PROGRESSION so the atributo-chave is transcribed from the
+ * book exactly once — the second copy is what drifted (ALE-113).
  */
-export const CLASS_SPELLCASTING_ATTRIBUTE: Readonly<Record<string, AttributeKey>> = {
-  Arcanista: 'intelligence',
-  Bardo: 'charisma',
-  Clérigo: 'wisdom',
-  Druida: 'wisdom',
-  Paladino: 'wisdom',
-}
+export const CLASS_SPELLCASTING_ATTRIBUTE: Readonly<Record<string, AttributeKey>> =
+  Object.fromEntries(
+    SPELLCASTER_CLASSES.flatMap((className) => {
+      const attribute = SPELL_PROGRESSION[className].attribute
+      return attribute ? [[className, attribute] as const] : []
+    }),
+  )
 
 /**
- * Spell save CD per PDF p171:
+ * Spell save CD per PDF p173:
  *   CD = 10 + ½ nível do conjurador + modificador do atributo-chave
  * The "½ nível" is rounded down per T20 convention.
  */

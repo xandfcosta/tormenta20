@@ -80,6 +80,7 @@ export function CastSpellDialog(props: {
     firstErrorMessage(
       validateCast({
         circle: props.spell.circle,
+        basePm: basePm(),
         totalPm: totalPm(),
         pmLimit: perSpellLimit(),
         mpCurrent: props.character.mpCurrent,

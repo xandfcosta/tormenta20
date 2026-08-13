@@ -37,7 +37,7 @@ func inventorySlotsTotal(ch Character, e ItemEffects) int {
 func casterLevelForPmLimit(ch Character) int {
 	best, found := 0, false
 	for _, entry := range ch.Classes {
-		if classSpellcastingAttribute[entry.ClassName] == "" {
+		if !isSpellcastingClass(entry.ClassName) {
 			continue
 		}
 		found = true
@@ -64,12 +64,14 @@ func pmLimitBreakdown(ch Character, e ItemEffects) ValueBreakdown {
 	}
 }
 
-// bestBaseSpellCd ports derived.ts (p171): best CD over caster classes, using the
-// FINAL key attribute. Nil for non-casters.
+// bestBaseSpellCd is the best CD across the character's caster classes — p173:
+// 10 + metade do nível DO PERSONAGEM + atributo-chave. Uses the FINAL attribute,
+// so race and item bonuses count, and resolves the Arcanista's key attribute
+// through its Caminho. Nil for non-casters.
 func bestBaseSpellCd(ch Character, e ItemEffects) *int {
 	var best *int
 	for _, entry := range ch.Classes {
-		attr := classSpellcastingAttribute[entry.ClassName]
+		attr := spellcastingAttributeFor(ch, entry.ClassName)
 		if attr == "" {
 			continue
 		}

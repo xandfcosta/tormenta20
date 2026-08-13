@@ -530,7 +530,7 @@
       "total": 4,
       "contributions": []
     },
-    "bestBaseSpellCd": 18,
+    "bestBaseSpellCd": 15,
     "spellCdByAttribute": {
       "strength": 18,
       "dexterity": 16,

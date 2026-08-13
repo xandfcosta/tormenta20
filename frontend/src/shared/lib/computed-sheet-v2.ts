@@ -103,7 +103,7 @@ export type ComputedSheetV2 = {
   attributes: Record<AttributeKey, AttributeBreakdown>
   pmLimit: ValueBreakdown
   bestBaseSpellCd: number | null
-  /** Spell save CD per casting attribute (p171) — a spell row picks the CD for
+  /** Spell save CD per casting attribute (p173) — a spell row picks the CD for
    *  any of its applicable classes without re-deriving. */
   spellCdByAttribute: Record<AttributeKey, number>
   spellDCBonus: TotalContribs

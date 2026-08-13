@@ -32,17 +32,38 @@ describe('castableClassesFor', () => {
 })
 
 describe('bestSpellCd', () => {
+  const mago = makeCharacter({
+    classes: [
+      { className: 'Arcanista', level: 5 },
+      { className: 'Bardo', level: 3 },
+    ],
+    classChoices: JSON.stringify({ Arcanista: { caminho: 'mago' } }),
+  })
+
   // Multiclasse conjurador: vale a MELHOR CD entre as classes que podem lançar
-  // a magia — cada uma lança pelo seu próprio atributo-chave (p171).
+  // a magia — cada uma lança pelo seu próprio atributo-chave (p173).
   it('escolhe a maior CD entre as classes aplicáveis', () => {
     const classes: SpellcasterClass[] = ['Arcanista', 'Bardo']
 
-    // Arcanista lança por Int (18), Bardo por Car (14).
-    expect(bestSpellCd(classes, CD)).toBe(18)
+    // Arcanista mago lança por Int (18), Bardo por Car (14).
+    expect(bestSpellCd(mago, classes, CD)).toBe(18)
   })
 
   it('sem classe aplicável não há CD', () => {
-    expect(bestSpellCd([], CD)).toBeNull()
+    expect(bestSpellCd(mago, [], CD)).toBeNull()
+  })
+
+  // O atributo-chave do Arcanista vem do CAMINHO (p37), então a linha da magia
+  // tem de olhar o personagem e não só o nome da classe: o mesmo Arcanista
+  // feiticeiro lança por Carisma (ALE-113). Sem passar o personagem, os dois
+  // casos dariam 18.
+  it('Arcanista feiticeiro lança pelo Carisma, não pela Inteligência', () => {
+    const feiticeiro = makeCharacter({
+      classes: [{ className: 'Arcanista', level: 5 }],
+      classChoices: JSON.stringify({ Arcanista: { caminho: 'feiticeiro' } }),
+    })
+
+    expect(bestSpellCd(feiticeiro, ['Arcanista'], CD)).toBe(CD.charisma)
   })
 })
 
