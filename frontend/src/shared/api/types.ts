@@ -6,7 +6,8 @@
  * Type-only imports from `@tormenta20/t20-data` erase at compile, so no catalog
  * DATA rides in the bundle — it is fetched from /catalog and cached.
  */
-import type { AttributeKey, ClassChoices } from '@tormenta20/t20-data'
+import type { ClassChoices } from '@tormenta20/t20-data'
+import type { AttributeKey } from '@/shared/api/attribute-keys'
 
 export type { AttributeKey }
 

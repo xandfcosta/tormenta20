@@ -1,4 +1,5 @@
-import type { AttributeKey, CatalogSpell } from '@tormenta20/t20-data'
+import type { CatalogSpell } from '@tormenta20/t20-data'
+import type { AttributeKey } from '@/shared/api/attribute-keys'
 import { getClassPower } from '@/shared/lib/abilities-cache'
 import { spellByName } from '@/shared/lib/spell-cache'
 import type { Character } from '@/shared/api/api'

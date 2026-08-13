@@ -1,36 +1,5 @@
-import {
-  ATTRIBUTE_ABBR,
-  applyActiveConditionals,
-  barbaroRdForLevel,
-  CAVALEIRO_BASTIAO_RD,
-  carismaLossFromPowers,
-  CLASS_SPELLCASTING_ATTRIBUTE,
-  computeItemEffects,
-  conditionModifiers,
-  conditionalId,
-  type ConditionId,
-  DEFORMIDADE_PERICIA_BONUS,
-  EXPERTISE_NAMES,
-  type ExpertiseName,
-  HOMEBREW_VESTED_OK,
-  originModifiers,
-  raceModifiers,
-  requiredProficiency,
-  resolveAtributoMod,
-  resolveStack,
-  spellcastingAttributeFor,
-  spellSaveDc,
-  statFor,
-  trainingBonusForLevel,
-  type ActiveItem,
-  type AttributeKey,
-  type CatalogItem,
-  type ClassChoices,
-  type ConditionalEffect,
-  type ItemEffects,
-  type Modifier,
-  type Prerequisite,
-} from '@tormenta20/t20-data'
+import { applyActiveConditionals, barbaroRdForLevel, CAVALEIRO_BASTIAO_RD, carismaLossFromPowers, CLASS_SPELLCASTING_ATTRIBUTE, computeItemEffects, conditionModifiers, conditionalId, type ConditionId, DEFORMIDADE_PERICIA_BONUS, EXPERTISE_NAMES, type ExpertiseName, HOMEBREW_VESTED_OK, originModifiers, raceModifiers, requiredProficiency, resolveAtributoMod, resolveStack, spellcastingAttributeFor, spellSaveDc, statFor, trainingBonusForLevel, type ActiveItem, type CatalogItem, type ClassChoices, type ConditionalEffect, type ItemEffects, type Modifier, type Prerequisite } from '@tormenta20/t20-data'
+import { ATTRIBUTE_ABBR, type AttributeKey } from '@/shared/api/attribute-keys'
 // The abilities lookups + item catalog now read the fetched catalogs (primed by
 // the root loader) instead of the build-time t20-data data — keeps the ~149KB
 // abilities chunk + ~44KB item data out of the bundle. `raceModifiers` /

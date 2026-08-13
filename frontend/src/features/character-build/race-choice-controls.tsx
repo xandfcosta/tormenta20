@@ -1,4 +1,4 @@
-import { ATTRIBUTE_ABBR, ATTRIBUTE_KEYS, type AttributeKey } from '@tormenta20/t20-data'
+import { ATTRIBUTE_ABBR, ATTRIBUTE_KEYS, type AttributeKey } from '@/shared/api/attribute-keys'
 import { For, Match, Show, Switch } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
 import {

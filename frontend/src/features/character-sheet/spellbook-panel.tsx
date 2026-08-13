@@ -1,12 +1,5 @@
-import {
-  type AttributeKey,
-  type CatalogSpell,
-  SPELLCASTER_CLASSES,
-  SPELL_SCHOOLS,
-  type SpellCircle,
-  type SpellClassName,
-  type SpellSchool,
-} from '@tormenta20/t20-data'
+import { type CatalogSpell, SPELLCASTER_CLASSES, SPELL_SCHOOLS, type SpellCircle, type SpellClassName, type SpellSchool } from '@tormenta20/t20-data'
+import { type AttributeKey } from '@/shared/api/attribute-keys'
 import { BookOpen, Plus, Search } from 'lucide-solid'
 import { For, Show, createMemo, createSignal } from 'solid-js'
 import { computedSheetFor } from '@/entities/character/computed-sheet'

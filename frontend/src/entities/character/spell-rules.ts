@@ -1,11 +1,5 @@
-import {
-  SPELLCASTER_CLASSES,
-  type AttributeKey,
-  type SpellCircle,
-  type SpellcasterClass,
-  highestCircleAtLevel,
-  spellcastingAttributeFor,
-} from '@tormenta20/t20-data'
+import { SPELLCASTER_CLASSES, type SpellCircle, type SpellcasterClass, highestCircleAtLevel, spellcastingAttributeFor } from '@tormenta20/t20-data'
+import { type AttributeKey } from '@/shared/api/attribute-keys'
 import type { Character } from '@/shared/api/api'
 import { spellPmLimit } from '@/shared/lib/engine-wasm'
 import { arcanistaCaminhoOf } from './derived'

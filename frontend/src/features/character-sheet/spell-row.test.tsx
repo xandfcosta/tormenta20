@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
 import { render, screen, waitFor } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
-import type { AttributeKey } from '@tormenta20/t20-data'
+import type { AttributeKey } from '@/shared/api/attribute-keys'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { makeCharacter } from '@/entities/character/__fixtures__/character'
 import { characterQueryOptions } from '@/entities/character/queries'

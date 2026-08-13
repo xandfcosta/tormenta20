@@ -1,13 +1,6 @@
 import { useQueryClient } from '@tanstack/solid-query'
-import {
-  type AttributeKey,
-  type CatalogSpell,
-  SPELL_BASE_PM_COST,
-  type SpellcasterClass,
-  firstErrorMessage,
-  validateLearnSpell,
-  validateSpellLearned,
-} from '@tormenta20/t20-data'
+import { type CatalogSpell, SPELL_BASE_PM_COST, type SpellcasterClass, firstErrorMessage, validateLearnSpell, validateSpellLearned } from '@tormenta20/t20-data'
+import { type AttributeKey } from '@/shared/api/attribute-keys'
 import { BookPlus, BookX, Check, Sparkles } from 'lucide-solid'
 import { For, Show, createMemo, createSignal } from 'solid-js'
 import { bestSpellCd, castableClassesFor, highestCastableCircle } from '@/entities/character/spell-rules'

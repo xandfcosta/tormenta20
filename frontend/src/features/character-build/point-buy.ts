@@ -1,8 +1,5 @@
-import {
-  type AttributeKey,
-  pointBuySpent,
-  pointBuyWarnings,
-} from '@tormenta20/t20-data'
+import { pointBuySpent, pointBuyWarnings } from '@tormenta20/t20-data'
+import { type AttributeKey } from '@/shared/api/attribute-keys'
 import {
   pointBuyStatus as enginePointBuyStatus,
   type PointBuyStatus,

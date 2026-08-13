@@ -1,4 +1,4 @@
-import { ATTRIBUTE_ABBR, ATTRIBUTE_KEYS, type AttributeKey } from '@tormenta20/t20-data'
+import { ATTRIBUTE_ABBR, ATTRIBUTE_KEYS, type AttributeKey } from '@/shared/api/attribute-keys'
 import { TriangleAlert } from 'lucide-solid'
 import { For, type JSX, Show } from 'solid-js'
 import { totalClassLevel } from '@/features/character-build/class-entries'

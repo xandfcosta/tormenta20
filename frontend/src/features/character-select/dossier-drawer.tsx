@@ -1,4 +1,4 @@
-import { ATTRIBUTE_ABBR, ATTRIBUTE_KEYS } from '@tormenta20/t20-data'
+import { ATTRIBUTE_ABBR, ATTRIBUTE_KEYS } from '@/shared/api/attribute-keys'
 import { X } from 'lucide-solid'
 import { For, type JSX, Show } from 'solid-js'
 import type { Character, ComputedSheetV2 } from '@/shared/api/api'
