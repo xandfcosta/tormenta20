@@ -3,9 +3,6 @@
   "private": true,
   "scripts": {
     "dev": "concurrently -k -n api,front -c green,cyan \"pnpm -F @tormenta20/engine-go dev\" \"pnpm -F frontend dev\"",
-    "dev:nest": "concurrently -k -n t20,nest,front -c gray,yellow,cyan \"pnpm -F @tormenta20/t20-data dev\" \"pnpm -F backend dev\" \"API_TARGET=http://localhost:3000 pnpm -F frontend dev\"",
-    "dev:app": "concurrently -k -n back,front -c yellow,cyan \"pnpm -F backend dev\" \"API_TARGET=http://localhost:3000 pnpm -F frontend dev\"",
-    "dev:backend": "pnpm --filter backend run start:dev",
     "dev:frontend": "pnpm --filter frontend run dev",
     "build": "pnpm -r run build",
     "lint": "biome lint .",
@@ -13,10 +10,7 @@
     "test": "pnpm -r --filter '!e2e' run test",
     "test:e2e": "pnpm --filter e2e test",
     "typecheck": "pnpm -r run typecheck",
-    "prisma:generate": "pnpm --filter backend exec prisma generate",
-    "prisma:migrate": "pnpm --filter backend exec prisma migrate dev",
-    "db:migrate": "mkdir -p data && DATABASE_URL=file:../data/app.db pnpm --filter backend exec prisma migrate deploy",
-    "db:backup": "pnpm --filter backend run db:backup"
+    "start": "pnpm --filter frontend build && pnpm -F @tormenta20/engine-go start"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.0",
@@ -25,16 +19,10 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "@nestjs/core",
-      "@prisma/engines",
-      "better-sqlite3",
-      "prisma",
       "unrs-resolver",
       "@parcel/watcher",
       "esbuild",
-      "@swc/core",
-      "@tailwindcss/oxide",
-      "bcrypt"
+      "@tailwindcss/oxide"
     ]
   }
 }

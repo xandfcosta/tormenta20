@@ -5,7 +5,9 @@
   "type": "module",
   "description": "SolidJS client for the Tormenta 20 table manager. Talks to the Go API (engine-go, :3001).",
   "scripts": {
+    "predev": "bash scripts/build-engine-wasm.sh",
     "dev": "vite",
+    "prebuild": "bash scripts/build-engine-wasm.sh",
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
