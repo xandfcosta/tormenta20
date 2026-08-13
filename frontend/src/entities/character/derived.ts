@@ -17,6 +17,7 @@ import {
   raceModifiers,
   requiredProficiency,
   resolveAtributoMod,
+  resolveStack,
   spellcastingAttributeFor,
   spellSaveDc,
   statFor,
@@ -868,11 +869,18 @@ export function expertiseTotalWithItems(
     k: 'expertiseByAttribute',
     attribute: state.attribute,
   })
-  const itemContributions = [
+  // Uma perícia recebe modificador por TRÊS alvos, e somar os três totais deixa
+  // efeitos do mesmo tipo acumularem entre si — o que a p226 proíbe. Um
+  // personagem exausto E atordoado levava −10 em Reflexos (−5 pelas perícias de
+  // Destreza do debilitado, −5 pelo Reflexos do desprevenido) onde o livro manda
+  // aplicar só o mais severo. Resolver a CONCATENAÇÃO faz os três alvos
+  // competirem como um só número, que é o que a ficha mostra (ALE-116).
+  const merged = resolveStack([
     ...stat.contributions,
     ...allStat.contributions,
     ...byAttrStat.contributions,
-  ].map((c) => ({
+  ])
+  const itemContributions = merged.contributions.map((c) => ({
     source: c.source,
     amount: c.amount,
     ...(c.note ? { note: c.note } : {}),
@@ -889,7 +897,7 @@ export function expertiseTotalWithItems(
     }
   }
 
-  const itemBonus = stat.total + allStat.total + byAttrStat.total
+  const itemBonus = merged.total
   return {
     base,
     itemBonus: itemBonus + armorPenaltyApplied,
