@@ -185,7 +185,8 @@ func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects) E
 	stat := StatFor(e, ModifierTarget{K: "expertise", Name: state.Name})
 	allStat := StatFor(e, ModifierTarget{K: "expertiseAll"})
 	byAttrStat := StatFor(e, ModifierTarget{K: "expertiseByAttribute", Attribute: state.Attribute})
-	itemContribs := withNoteContribs(concatContribs(stat.Contributions, allStat.Contributions, byAttrStat.Contributions))
+	merged := resolveStack(concatContribs(stat.Contributions, allStat.Contributions, byAttrStat.Contributions))
+	itemContribs := withNoteContribs(merged.Contributions)
 
 	armorPenaltyApplied := 0
 	if armorPenaltyExpertises[state.Name] {
@@ -195,7 +196,7 @@ func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects) E
 		}
 	}
 
-	itemBonus := stat.Total + allStat.Total + byAttrStat.Total
+	itemBonus := merged.Total
 	return ExpertiseBreakdown{
 		Name:                state.Name,
 		Attribute:           state.Attribute,

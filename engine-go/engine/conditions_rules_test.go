@@ -197,6 +197,47 @@ func TestCegoAndAgarradoComposeDesprevenido(t *testing.T) {
 	}
 }
 
+// Uma perícia recebe modificador por TRÊS alvos distintos — `expertise` (a
+// própria), `expertiseAll` (todas) e `expertiseByAttribute` (as do atributo) — e
+// somar os três totais deixa efeitos do mesmo tipo acumularem entre si, o que a
+// p226 proíbe e a p394 repete para condições.
+//
+// O golden do `tanque-exausto-atordoado-nv10` foi quem mostrou: Reflexos levava
+// −10, porque o debilitado do exausto entra pelas perícias de Destreza e o
+// desprevenido do atordoado entra pelo Reflexos. Duas penalidades de condição
+// sobre o MESMO número da ficha (ALE-116).
+func TestConditionPenaltiesOnOneSkillDoNotStackAcrossTargets(t *testing.T) {
+	// Reflexos é uma perícia de Destreza — o alvo por onde o debilitado entra.
+	reflexos := CharacterExpertise{Name: "Reflexos", Attribute: "dexterity"}
+	ch := Character{Level: 10, Dexterity: 0, Expertises: []CharacterExpertise{reflexos}}
+
+	sheetFor := func(conds ...string) int {
+		mods := []Modifier{}
+		for _, id := range conds {
+			mods = append(mods, conditionModifiers(id)...)
+		}
+		vested := "vested"
+		e := ComputeItemEffects([]ActiveItem{{Source: "Condições", Equipped: &vested, Modifiers: mods}})
+		return expertiseBreakdown(ch, reflexos, e).ItemBonus
+	}
+
+	if got := sheetFor("desprevenido"); got != -5 {
+		t.Fatalf("só desprevenido: %d, want -5", got)
+	}
+	if got := sheetFor("debilitado"); got != -5 {
+		t.Fatalf("só debilitado: %d, want -5", got)
+	}
+	// As duas juntas continuam −5: "condições com os mesmos efeitos não se
+	// acumulam; aplique apenas os mais severos" (p394).
+	if got := sheetFor("debilitado", "desprevenido"); got != -5 {
+		t.Errorf("debilitado + desprevenido em Reflexos = %d, want -5 — somou os dois alvos", got)
+	}
+	// E o exemplo do personagem real que expôs o bug.
+	if got := sheetFor("exausto", "atordoado"); got != -5 {
+		t.Errorf("exausto + atordoado em Reflexos = %d, want -5", got)
+	}
+}
+
 // A p394 define VÁRIAS condições dizendo que o personagem "fica" outra. Quando
 // isso acontece, a condição derivada tem de carregar TODOS os números da citada
 // — foi por perder metade deles que o cego resistia melhor a área do que deveria

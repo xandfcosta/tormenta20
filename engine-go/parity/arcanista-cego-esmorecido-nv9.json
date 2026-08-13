@@ -1138,16 +1138,12 @@
         "name": "Reflexos",
         "attribute": "dexterity",
         "base": 11,
-        "itemBonus": -10,
-        "total": 1,
+        "itemBonus": -5,
+        "total": 6,
         "halfLevel": 4,
         "attrValue": 3,
         "training": 4,
         "itemContributions": [
-          {
-            "source": "Condições",
-            "amount": -5
-          },
           {
             "source": "Condições",
             "amount": -5
@@ -1743,16 +1739,12 @@
         "name": "Reflexos",
         "attribute": "dexterity",
         "base": 11,
-        "itemBonus": -10,
-        "total": 1,
+        "itemBonus": -5,
+        "total": 6,
         "halfLevel": 4,
         "attrValue": 3,
         "training": 4,
         "itemContributions": [
-          {
-            "source": "Condições",
-            "amount": -5
-          },
           {
             "source": "Condições",
             "amount": -5

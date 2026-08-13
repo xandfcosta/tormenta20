@@ -158,14 +158,18 @@ function describeCondition(m: Modifier): string {
 }
 
 /**
- * T20 non-stacking rules:
+ * T20 non-stacking rules (p226):
  *  - For a given target, modifiers sharing the same `bonusType` keep only
  *    the entry with the highest absolute amount (positive or negative).
  *  - 'untyped' modifiers stack freely with each other and with typed bonuses.
  *  - Result is the sum of one representative per typed bucket plus all
  *    untyped entries.
+ *
+ * Exported because "a given target" is not always ONE target key: a perícia
+ * collects from `expertise`, `expertiseAll` and `expertiseByAttribute`, and the
+ * three compete for a single number on the sheet (ALE-116).
  */
-function resolveStack(contribs: Contribution[]): AggregatedStat {
+export function resolveStack(contribs: Contribution[]): AggregatedStat {
   const byType = new Map<BonusType, Contribution[]>()
   for (const c of contribs) {
     const arr = byType.get(c.bonusType)

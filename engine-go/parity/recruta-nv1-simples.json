@@ -944,8 +944,8 @@
         "name": "Reflexos",
         "attribute": "dexterity",
         "base": 3,
-        "itemBonus": -7,
-        "total": -4,
+        "itemBonus": -5,
+        "total": -2,
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
@@ -953,10 +953,6 @@
           {
             "source": "Condições",
             "amount": -5
-          },
-          {
-            "source": "Condições",
-            "amount": -2
           }
         ],
         "armorPenaltyApplied": 0
@@ -1550,8 +1546,8 @@
         "name": "Reflexos",
         "attribute": "dexterity",
         "base": 3,
-        "itemBonus": -7,
-        "total": -4,
+        "itemBonus": -5,
+        "total": -2,
         "halfLevel": 0,
         "attrValue": 3,
         "training": 0,
@@ -1559,10 +1555,6 @@
           {
             "source": "Condições",
             "amount": -5
-          },
-          {
-            "source": "Condições",
-            "amount": -2
           }
         ],
         "armorPenaltyApplied": 0
