@@ -4,13 +4,14 @@ import { type JSX, Show, createMemo, createSignal } from 'solid-js'
 import { campaignMembersQueryOptions } from '@/entities/campaign/queries'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { BOTTOM_TAB, CharacterSheet } from '@/features/character-sheet/character-sheet'
+import { CharacterSheetSkeleton } from '@/features/character-sheet/character-sheet-skeleton'
 import { HeaderCard } from '@/features/session-tracker/header-card'
 import { InitiativeCard } from '@/features/session-tracker/initiative-card'
 import { PartyRoster } from '@/features/session-tracker/party-roster'
 import type { Session } from '@/shared/api/api'
 import { createMediaQuery } from '@/shared/lib/media-query'
+import { settledQuery } from '@/shared/lib/settled-query'
 import type { SessionRealtime } from '@/shared/realtime/realtime'
-import { Skeleton } from '@/shared/ui/skeleton'
 import { cn } from '@/shared/lib/utils'
 import { LiveSessionBanner, type LiveTurnState } from './live-session-banner'
 import { MatchControls, MatchRail } from './match-rail'
@@ -101,8 +102,16 @@ function PlayerSheet(props: { characterId: number | undefined; mobileBarSlot?: J
     enabled: props.characterId !== undefined,
   }))
 
+  // Never read `character.data` while pending: that suspends, and the nearest
+  // boundary is the one solid-router puts around the route match — the WHOLE
+  // match screen (banner, presença, a saída) was being detached while the
+  // player's own sheet loaded, leaving a blank page mid-session. The fallback
+  // below was written for this moment and could never paint, because the
+  // suspend happened before the `Show` was evaluated (ALE-96).
+  const sheet = () => settledQuery(character)
+
   return (
-    <Show when={character.data} fallback={<Skeleton class="h-full w-full" />}>
+    <Show when={sheet()} fallback={<CharacterSheetSkeleton />}>
       {(data) => (
         <CharacterSheet
           character={data()}

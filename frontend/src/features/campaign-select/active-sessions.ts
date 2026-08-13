@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/solid-query'
 import { type Accessor, createMemo } from 'solid-js'
 import { campaignSessionsQueryOptions } from '@/entities/session/queries'
+import { settledQuery } from '@/shared/lib/settled-query'
 import { activeSessionByCampaign } from './campaign-select-helpers'
 
 /**
@@ -32,5 +33,7 @@ export function createActiveSessionByCampaign(
       ),
   }))
 
-  return createMemo(() => activeSessionByCampaign(lists.data ?? []))
+  // `settledQuery`, não `.data`: ler pendente suspende o route match inteiro e
+  // a cena das Crônicas reanima (ALE-95/ALE-96).
+  return createMemo(() => activeSessionByCampaign(settledQuery(lists) ?? []))
 }

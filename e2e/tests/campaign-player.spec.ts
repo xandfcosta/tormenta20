@@ -72,4 +72,56 @@ test.describe('Campanha vista pelo jogador', () => {
     await expect(page.getByRole('button', { name: /Continuar a sessão/ })).toBeVisible()
     await expect(page.getByText('Sessão 5')).toBeVisible()
   })
+
+  /**
+   * ALE-96. Ler `.data` de uma query PENDENTE suspende, e o boundary mais
+   * próximo é o `Suspense` que o solid-router põe em todo route match — então a
+   * partida INTEIRA (banner "Ao vivo", presença, a saída) é desanexada enquanto
+   * a ficha do próprio jogador está em voo. O `PlayerSheet` tinha um Skeleton
+   * escrito para exatamente esse momento que nunca podia pintar, porque o
+   * suspend acontecia antes de o `Show` ser avaliado.
+   *
+   * Por que e2e: só um browser de verdade testemunha. Uma montagem em jsdom não
+   * tem router, logo não tem Suspense, e ali a leitura pendente devolve
+   * `undefined` e o Skeleton aparece — verde sobre a tela quebrada.
+   *
+   * A resposta da ficha fica SEGURA (não só atrasada) para que a asserção seja
+   * sobre um estado e não sobre uma corrida: enquanto o teste não soltar, a
+   * partida tem de continuar na tela.
+   */
+  test('a partida não some da tela enquanto a ficha do jogador carrega', async ({ page }) => {
+    await openSection(page, 'sessoes')
+
+    let release = (): void => {}
+    const held = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    let requested = (): void => {}
+    const inFlight = new Promise<void>((resolve) => {
+      requested = resolve
+    })
+    // O personagem 13 é o do jogador na mesa 1 (seed). A rota do /sheet não
+    // casa: o glob termina no id.
+    await page.route('**/api/characters/13', async (route) => {
+      requested()
+      await held
+      await route.continue()
+    })
+
+    await page.getByRole('button', { name: /Continuar a sessão/ }).click()
+
+    // Só olhar a tela DEPOIS que a ficha entrou em voo. Sem isto o teste
+    // apanha a janela em que a partida ainda está pintada — antes de os
+    // membros chegarem e a query do personagem começar — e passa por sorte.
+    await inFlight
+
+    // Um marco do shell da partida e um do bloco do jogador — o snapshot da
+    // falha original tinha SÓ a região de notificações, nada mais.
+    // "Ao vivo" sozinho é ambíguo: o rail da sessão também carrega o selo.
+    await expect(page.getByRole('link', { name: 'Sair da sessão' })).toBeVisible()
+    await expect(page.getByText(/· Sessão \d+/)).toBeVisible()
+
+    release()
+    await expect(page.getByRole('tab', { name: 'Mochila' })).toBeVisible()
+  })
 })

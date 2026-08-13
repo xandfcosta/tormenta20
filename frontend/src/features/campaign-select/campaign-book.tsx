@@ -247,21 +247,24 @@ function CharacterRow(props: { character: NonNullable<Campaign['character']> }) 
 function Actions(props: { isLive: boolean; onOpen: () => void; onResume: () => void }) {
   return (
     <div class="flex flex-wrap items-center gap-2 pt-1">
-      <Show
-        when={props.isLive}
-        fallback={
-          <Button size="lg" onClick={() => props.onOpen()}>
-            Abrir crônica <Kbd>⏎</Kbd>
-          </Button>
-        }
+      {/* `Abrir crônica` fica SEMPRE na primeira posição e no mesmo tamanho.
+          Desde a ALE-96 a cena pinta antes de saber se há sessão viva, e um
+          botão que muda de lugar quando o dado chega é a ALE-78 outra vez — a
+          ação some debaixo do cursor. Ao vivo ele só troca de preenchimento,
+          cedendo o destaque e o ⏎ para `Continuar a sessão`, que ENTRA à
+          direita em vez de empurrar. */}
+      <Button
+        size="lg"
+        variant={props.isLive ? 'outline' : 'default'}
+        onClick={() => props.onOpen()}
       >
+        Abrir crônica <Kbd>{props.isLive ? 'O' : '⏎'}</Kbd>
+      </Button>
+      <Show when={props.isLive}>
         <Button size="lg" onClick={() => props.onResume()}>
           Continuar a sessão
           <ChevronRight aria-hidden="true" class="ml-1 size-4" />
           <Kbd>⏎</Kbd>
-        </Button>
-        <Button variant="outline" onClick={() => props.onOpen()}>
-          Abrir crônica <Kbd>O</Kbd>
         </Button>
       </Show>
     </div>

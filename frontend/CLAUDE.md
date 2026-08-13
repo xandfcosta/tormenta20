@@ -124,6 +124,17 @@ links, the browser Back button and the progress rail cannot then disagree.
   for the PREVIOUS row's numbers — real values, wrong subject. Forward-only
   bug: going back is a cache hit and never suspends, so a test that arrows
   both ways passes over it (ALE-95).
+  Two things the roster case hid, both found on the live session (ALE-96).
+  **The re-animation is the mild symptom, not the defect.** Where the scene has
+  no enter animation to replay, the same suspend just leaves the screen BLANK
+  for as long as the fetch takes — the player's match went to nothing but the
+  toast region while their own sheet loaded. And **a `Show` fallback written
+  for that moment can never paint**, because the suspend happens before the
+  `Show` is evaluated: a skeleton that looks like careful loading UX is dead
+  code until the read is settled. **The reads in a query's `queryKey` and
+  `enabled` suspend exactly like the read of its result** — the options
+  accessor is a reactive scope like any other — so settling only the result
+  leaves the hook suspending anyway.
 
 ## Kobalte (headless UI)
 
@@ -236,8 +247,10 @@ links, the browser Back button and the progress rail cannot then disagree.
   `defineProperty` to set `animationName`.
 - The security boundary lives on the server — don't rely on UI gating for
   correctness; still gate UI by role for UX.
-- **The E2E suite is unstable in PARALLEL** — run `-j 1` before
-  investigating a failure. A spec that writes to the same seed needs
+- **The E2E suite runs in parallel, capped at 2 workers outside CI** — the
+  Playwright default (half the cores) over-subscribes a dev machine that also
+  has a browser open, and the failures come back as pure timeouts (ALE-93). A
+  spec that writes to the same seed still needs
   `test.describe.configure({ mode: 'serial' })` and a self-cleaning setup.
 - **Responsive validation is mandatory for any screen/layout change.** Before
   calling a UI task done, validate it at all six form factors — a scene must

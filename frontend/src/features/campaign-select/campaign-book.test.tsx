@@ -1,4 +1,4 @@
-import { render } from '@solidjs/testing-library'
+import { render, screen } from '@solidjs/testing-library'
 import { createSignal } from 'solid-js'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Campaign } from '@/shared/api/api'
@@ -62,6 +62,27 @@ function mountBook() {
   return setPick
 }
 
+/** Mounts with `isLive` under the test's control, as the page's query is. */
+function mountBookWithLive() {
+  const [live, setLive] = createSignal(false)
+  render(() => (
+    <CampaignBook
+      campaign={campaign(1)}
+      isLive={live()}
+      orderIds={[1]}
+      onOpen={() => {}}
+      onResume={() => {}}
+    />
+  ))
+  const actionLabels = () =>
+    screen
+      .getAllByRole('button')
+      .map((button) => button.textContent ?? '')
+      .filter((text) => /Abrir crônica|Continuar a sessão/.test(text))
+      .map((text) => (text.includes('Continuar') ? 'continuar' : 'abrir'))
+  return { setLive, actionLabels }
+}
+
 describe('CampaignBook — virada de folha', () => {
   it('em repouso não há folha virando', () => {
     mountBook()
@@ -105,6 +126,26 @@ describe('CampaignBook — virada de folha', () => {
     const second = leaf()
     expect(second).not.toBeNull()
     expect(second).not.toBe(first)
+  })
+
+  /**
+   * ALE-96. A cena das Crônicas passou a pintar ANTES de saber se a mesa tem
+   * sessão viva — o suspend que antes a segurava era o próprio defeito. Com
+   * isso o `isLive` vira verdadeiro com a linha de ações já na tela, e a ordem
+   * de ontem punha `Continuar a sessão` na frente: o `Abrir crônica` que o
+   * jogador estava mirando pulava para a segunda posição e o clique caía no
+   * botão vizinho. É a ALE-78 outra vez, e a ordem é o que a impede.
+   *
+   * Medido no browser antes do conserto: SEGURADO `["Abrir crônica"]`,
+   * ASSENTADO `["Continuar a sessão", "Abrir crônica"]`.
+   */
+  it('a sessão viva chegando não tira o "Abrir crônica" de baixo do cursor', () => {
+    const { setLive, actionLabels } = mountBookWithLive()
+    expect(actionLabels()).toEqual(['abrir'])
+
+    setLive(true)
+
+    expect(actionLabels()).toEqual(['abrir', 'continuar'])
   })
 
   it('a fila drena até o fim em vez de travar na primeira virada', () => {

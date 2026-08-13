@@ -3,6 +3,7 @@ import { type Accessor, createMemo } from 'solid-js'
 import { campaignsQueryOptions } from '@/entities/campaign/queries'
 import { campaignSessionsQueryOptions } from '@/entities/session/queries'
 import type { Session } from '@/shared/api/api'
+import { settledQuery } from '@/shared/lib/settled-query'
 
 /** Where a live session lives — enough to route into the match-mode screen. */
 export type ActiveSessionRef = { campaignId: number; sessionId: number }
@@ -39,17 +40,23 @@ export function createActiveSession(): Accessor<ActiveSessionRef | null> {
   const queryClient = useQueryClient()
   const campaigns = useQuery(() => campaignsQueryOptions)
 
+  // `settledQuery`, não `.data`: ler pendente suspende o route match inteiro e
+  // a cena do Hub reanima (ALE-95/ALE-96). Vale para as QUATRO leituras deste
+  // hook — a da chave e a do `enabled` suspendem tanto quanto a do resultado,
+  // porque as opções são avaliadas num escopo reativo como qualquer outra.
+  const settledCampaigns = () => settledQuery(campaigns)
+
   const sessionLists = useQuery(() => ({
-    queryKey: ['session-resume', (campaigns.data ?? []).map((c) => c.id)] as const,
-    enabled: campaigns.data !== undefined,
+    queryKey: ['session-resume', (settledCampaigns() ?? []).map((c) => c.id)] as const,
+    enabled: settledCampaigns() !== null,
     queryFn: async (): Promise<CampaignSessions[]> =>
       Promise.all(
-        (campaigns.data ?? []).map(async (campaign) => ({
+        (settledCampaigns() ?? []).map(async (campaign) => ({
           campaignId: campaign.id,
           sessions: await queryClient.ensureQueryData(campaignSessionsQueryOptions(campaign.id)),
         })),
       ),
   }))
 
-  return createMemo(() => firstActiveSession(sessionLists.data ?? []))
+  return createMemo(() => firstActiveSession(settledQuery(sessionLists) ?? []))
 }
