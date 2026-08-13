@@ -10,7 +10,7 @@ import (
 	"t20engine/db/sqlcgen"
 )
 
-// spellBasePmCost mirrors t20-data SPELL_BASE_PM_COST (PDF p171).
+// spellBasePmCost is Tabela 4-1, "Custo de Magias" (livro p170).
 var spellBasePmCost = map[int]int{0: 0, 1: 1, 2: 3, 3: 6, 4: 10, 5: 15}
 
 // alwaysPrepareClasses mirrors ALWAYS_PREPARE_CLASSES.
@@ -68,9 +68,10 @@ func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, augErr)
 		return
 	}
+	basePm := spellBasePmCost[spell.Circle]
 	totalPm := 0
 	if spell.Circle != 0 {
-		totalPm = max(0, spellBasePmCost[spell.Circle]+augmentPm)
+		totalPm = max(0, basePm+augmentPm)
 	}
 
 	// One rule, one place (ALE-92): the engine owns the p224 ceiling and resolves
@@ -83,7 +84,11 @@ func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	limit := s.catalogs.SpellPmLimitFor(ec, spell.Classes)
-	if spell.Circle > 0 && totalPm > limit {
+	// A ressalva entre parênteses da p224: "(mas você sempre pode usar a
+	// habilidade em seu custo mínimo)". O teto limita o gasto ADICIONAL — ele
+	// nunca torna inconjurável uma magia que o personagem já possui, o que
+	// acontecia com uma magia de círculo alto vinda de fora da classe.
+	if spell.Circle > 0 && totalPm > limit && totalPm > basePm {
 		writeFieldError(w, http.StatusBadRequest, fmt.Sprintf("PM cost %d exceeds per-spell limit %d", totalPm, limit), FieldErrorMap{"augments": {fmt.Sprintf("Limite PM excedido (%d)", limit)}})
 		return
 	}

@@ -39,7 +39,7 @@ export function SpellRow(props: {
   spell: CatalogSpell
   character: Character
   learned: CharacterSpell | null
-  /** Spell save CD per casting attribute, from the computed sheet (p171). */
+  /** Spell save CD per casting attribute, from the computed sheet (p173). */
   spellCdByAttribute: Record<AttributeKey, number>
   granted?: GrantedSpellMeta
 }) {
@@ -53,7 +53,7 @@ export function SpellRow(props: {
   const bestCd = () =>
     props.granted
       ? props.spellCdByAttribute[props.granted.keyAttribute]
-      : bestSpellCd(applicableClasses(), props.spellCdByAttribute)
+      : bestSpellCd(props.character, applicableClasses(), props.spellCdByAttribute)
   // A granted spell is castable at its own circle even for a non-caster.
   const canCast = () =>
     Boolean(props.granted) ||

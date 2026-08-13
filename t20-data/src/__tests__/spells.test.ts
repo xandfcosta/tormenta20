@@ -12,11 +12,12 @@ import {
   totalAugmentPm,
   type SpellAugment,
 } from '../spells'
+import { spellcastingAttributeFor } from '../class-spellcasting'
 
 /**
  * PDF book Cap 4 — Magia (p168-211). Pinned mechanics:
- *  - Custo em PM por círculo: 1/3/6/10/15 PM (truque = 0)
- *  - CD = 10 + ½ nível conjurador + atributo-chave
+ *  - Custo em PM por círculo (Tabela 4-1, p170): 1/3/6/10/15 PM (truque = 0)
+ *  - CD = 10 + ½ nível do PERSONAGEM + atributo-chave (p173)
  *  - Componentes default: gestos + palavras
  *  - 8 escolas
  *  - Sustentar: 1 PM/turno
@@ -25,7 +26,7 @@ import {
  *  - Concentração: CD 15 / 15+custo / 20+custo
  */
 
-describe('SPELL_BASE_PM_COST — PDF p171', () => {
+describe('SPELL_BASE_PM_COST — PDF p170', () => {
   it('matches the PM cost table exactly', () => {
     expect(SPELL_BASE_PM_COST[0]).toBe(0)
     expect(SPELL_BASE_PM_COST[1]).toBe(1)
@@ -82,23 +83,44 @@ describe('SUSTAIN_PM_PER_TURN — PDF p173', () => {
   })
 })
 
-describe('CLASS_SPELLCASTING_ATTRIBUTE — PDF class entries', () => {
-  it('Arcanista uses Inteligência', () => {
-    expect(CLASS_SPELLCASTING_ATTRIBUTE.Arcanista).toBe('intelligence')
-  })
-
-  it('Bardo uses Carisma', () => {
+/**
+ * O atributo-chave, ALE-113. O caso "Arcanista uses Inteligência" morava aqui,
+ * VERDE, defendendo uma regra que o livro não tem: a p37 diz "Seu atributo-chave
+ * para lançar magias é definido pelo seu Caminho", e o feiticeiro lança por
+ * Carisma. O exemplo trabalhado da p173 é justamente uma feiticeira.
+ *
+ * O mapa agora é só o que a entrada de classe FIXA (e o predicado de "lança
+ * magias"); quem calcula CD passa por `spellcastingAttributeFor`.
+ */
+describe('atributo-chave de conjuração', () => {
+  it('as classes de atributo fixo, direto do mapa', () => {
     expect(CLASS_SPELLCASTING_ATTRIBUTE.Bardo).toBe('charisma')
-  })
-
-  it('Clérigo, Druida, Paladino use Sabedoria', () => {
     expect(CLASS_SPELLCASTING_ATTRIBUTE.Clérigo).toBe('wisdom')
     expect(CLASS_SPELLCASTING_ATTRIBUTE.Druida).toBe('wisdom')
     expect(CLASS_SPELLCASTING_ATTRIBUTE.Paladino).toBe('wisdom')
   })
+
+  // p37: Bruxo e Mago → Inteligência, Feiticeiro → Carisma. Trocar o caminho e
+  // ver o mesmo atributo é exatamente o bug que chegou à tela.
+  it('o Arcanista segue o Caminho', () => {
+    expect(spellcastingAttributeFor('Arcanista', 'bruxo')).toBe('intelligence')
+    expect(spellcastingAttributeFor('Arcanista', 'mago')).toBe('intelligence')
+    expect(spellcastingAttributeFor('Arcanista', 'feiticeiro')).toBe('charisma')
+  })
+
+  it('sem caminho escolhido, o Arcanista cai em Inteligência', () => {
+    expect(spellcastingAttributeFor('Arcanista', undefined)).toBe('intelligence')
+    expect(spellcastingAttributeFor('Arcanista', 'lixo')).toBe('intelligence')
+  })
+
+  // O caminho só manda no Arcanista — passá-lo para outra classe não a move.
+  it('o caminho não contamina as outras classes', () => {
+    expect(spellcastingAttributeFor('Clérigo', 'feiticeiro')).toBe('wisdom')
+    expect(spellcastingAttributeFor('Guerreiro', 'mago')).toBeUndefined()
+  })
 })
 
-describe('spellSaveDc — PDF p171', () => {
+describe('spellSaveDc — PDF p173', () => {
   it('CD = 10 + ½ nível + atributo at level 1, mod +3 → 13', () => {
     expect(spellSaveDc(1, 3)).toBe(13)
   })

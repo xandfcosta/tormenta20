@@ -17,6 +17,7 @@ import {
   raceModifiers,
   requiredProficiency,
   resolveAtributoMod,
+  spellcastingAttributeFor,
   spellSaveDc,
   statFor,
   trainingBonusForLevel,
@@ -535,6 +536,17 @@ export function parseClassChoices(raw: string): ClassChoices {
   }
 }
 
+/**
+ * The character's Caminho do Arcanista, if any — the pick that decides the
+ * atributo-chave das magias (p37). `undefined` for a non-Arcanista or a sheet
+ * that has not made the 1st-level choice yet.
+ *
+ * @example arcanistaCaminhoOf(samira) // 'feiticeiro'
+ */
+export function arcanistaCaminhoOf(character: Character): string | undefined {
+  return parseClassChoices(character.classChoices).Arcanista?.caminho
+}
+
 function powerLabel(id: string): string {
   return getClassPower(id)?.name ?? getGeneralPower(id)?.name ?? id
 }
@@ -1030,19 +1042,22 @@ export function pmLimitTotal(
 }
 
 /**
- * Best spell save CD across the character's caster classes — PDF p171:
- * CD = 10 + ½ nível + modificador do atributo-chave. Uses the FINAL
- * attribute (attributeTotal), so racial/item bonuses count — the raw stored
- * attribute understated the CD (Necromante Osteon: 21 shown, 22 correct).
+ * Best spell save CD across the character's caster classes — PDF p173:
+ * CD = 10 + metade do nível DO PERSONAGEM + modificador do atributo-chave.
+ * Uses the FINAL attribute (attributeTotal), so racial/item bonuses count — the
+ * raw stored attribute understated the CD (Necromante Osteon: 21 shown, 22
+ * correct) — and resolves the Arcanista's atributo-chave through its Caminho
+ * (ALE-113).
  * Ex.: bestBaseSpellCd(arcanista12ComIntFinal6, effects) === 22
  */
 export function bestBaseSpellCd(
   character: Character,
   effects: ItemEffects,
 ): number | null {
+  const caminho = arcanistaCaminhoOf(character)
   let best: number | null = null
   for (const entry of character.classes) {
-    const attr = CLASS_SPELLCASTING_ATTRIBUTE[entry.className]
+    const attr = spellcastingAttributeFor(entry.className, caminho)
     if (!attr) continue
     const dc = spellSaveDc(character.level, attributeTotal(character, attr, effects))
     if (best === null || dc > best) best = dc

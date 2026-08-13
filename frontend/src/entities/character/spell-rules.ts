@@ -1,13 +1,14 @@
 import {
-  CLASS_SPELLCASTING_ATTRIBUTE,
   SPELLCASTER_CLASSES,
   type AttributeKey,
   type SpellCircle,
   type SpellcasterClass,
   highestCircleAtLevel,
+  spellcastingAttributeFor,
 } from '@tormenta20/t20-data'
 import type { Character } from '@/shared/api/api'
 import { spellPmLimit } from '@/shared/lib/engine-wasm'
+import { arcanistaCaminhoOf } from './derived'
 
 /**
  * The character's spellcasting classes that appear on THIS spell's list — the
@@ -29,18 +30,24 @@ export function castableClassesFor(
 
 /**
  * Best save CD among the classes able to cast this spell. Each class casts with
- * its own key attribute (p171), so a multiclass caster gets the better of them;
+ * its own key attribute (p173), so a multiclass caster gets the better of them;
  * the per-attribute map comes from the computed sheet, with race and item
  * bonuses already in.
  *
- * @example bestSpellCd(['Arcanista'], sheet.spellCdByAttribute) // 18
+ * Takes the character because the Arcanista's atributo-chave is not fixed by the
+ * class — it is defined by the Caminho (p37), and a Feiticeiro casts with
+ * Carisma (ALE-113).
+ *
+ * @example bestSpellCd(samira, ['Arcanista'], sheet.spellCdByAttribute) // 19
  */
 export function bestSpellCd(
+  character: Character,
   applicableClasses: readonly SpellcasterClass[],
   spellCdByAttribute: Record<AttributeKey, number>,
 ): number | null {
+  const caminho = arcanistaCaminhoOf(character)
   const cds = applicableClasses
-    .map((className) => CLASS_SPELLCASTING_ATTRIBUTE[className])
+    .map((className) => spellcastingAttributeFor(className, caminho))
     .filter((attribute): attribute is AttributeKey => Boolean(attribute))
     .map((attribute) => spellCdByAttribute[attribute])
   return cds.length > 0 ? Math.max(...cds) : null

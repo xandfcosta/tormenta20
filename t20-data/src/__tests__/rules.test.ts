@@ -81,7 +81,15 @@ describe('spell rules', () => {
   })
 
   it('validateCast enforces prep, PM limit, and current PM', () => {
-    const base = { circle: 1, totalPm: 2, pmLimit: 3, mpCurrent: 10, needsPrep: false, prepared: false }
+    const base = {
+      circle: 1,
+      basePm: 1,
+      totalPm: 2,
+      pmLimit: 3,
+      mpCurrent: 10,
+      needsPrep: false,
+      prepared: false,
+    }
     expect(isValid(validateCast(base))).toBe(true)
     expect(firstErrorMessage(validateCast({ ...base, needsPrep: true }))).toBe(
       'Magia precisa estar preparada',
@@ -92,9 +100,39 @@ describe('spell rules', () => {
     )
   })
 
+  // p224: "(mas você sempre pode usar a habilidade em seu custo mínimo)". Uma
+  // magia de círculo alto vinda de fora da classe tem teto abaixo do próprio
+  // custo base — sem a ressalva ela ficava permanentemente inconjurável, e o
+  // servidor recusava com "Limite PM excedido" para sempre.
+  it('o custo base passa mesmo acima do teto, mas um aprimoramento não', () => {
+    const foraDaClasse = {
+      circle: 2,
+      basePm: 3,
+      totalPm: 3,
+      pmLimit: 2,
+      mpCurrent: 10,
+      needsPrep: false,
+      prepared: true,
+    }
+    expect(isValid(validateCast(foraDaClasse))).toBe(true)
+    expect(firstErrorMessage(validateCast({ ...foraDaClasse, totalPm: 5 }))).toBe(
+      'Limite PM excedido (2)',
+    )
+  })
+
   it('truques (circle 0) skip the PM-limit check', () => {
     expect(
-      isValid(validateCast({ circle: 0, totalPm: 0, pmLimit: 0, mpCurrent: 0, needsPrep: false, prepared: false })),
+      isValid(
+        validateCast({
+          circle: 0,
+          basePm: 0,
+          totalPm: 0,
+          pmLimit: 0,
+          mpCurrent: 0,
+          needsPrep: false,
+          prepared: false,
+        }),
+      ),
     ).toBe(true)
   })
 })

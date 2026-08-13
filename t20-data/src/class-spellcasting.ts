@@ -148,6 +148,35 @@ export function arcanistaProgression(path: ArcanistaPath): SpellProgression {
   return { ...base, ...overrides }
 }
 
+export function isArcanistaPath(value: string | undefined): value is ArcanistaPath {
+  return value === 'bruxo' || value === 'feiticeiro' || value === 'mago'
+}
+
+/**
+ * Atributo-chave one of the character's classes casts with, honouring the
+ * Caminho do Arcanista — p37: "Seu atributo-chave para lançar magias é definido
+ * pelo seu Caminho". `undefined` for a class that does not cast.
+ *
+ * The rule was transcribed twice: right here (feiticeiro → Carisma) and wrong in
+ * `CLASS_SPELLCASTING_ATTRIBUTE`, which is the copy the CD actually read — so a
+ * Feiticeiro got PM from Carisma and CD from Inteligência (ALE-113). The map now
+ * derives from this table, which is why there is only one number to fix.
+ *
+ * @example spellcastingAttributeFor('Arcanista', 'feiticeiro') // 'charisma'
+ */
+export function spellcastingAttributeFor(
+  className: string,
+  arcanistaCaminho?: string,
+): AttributeKey | undefined {
+  if (className === 'Arcanista' && isArcanistaPath(arcanistaCaminho)) {
+    return arcanistaProgression(arcanistaCaminho).attribute ?? undefined
+  }
+  // Sem a escolha obrigatória do 1º nível, o Arcanista cai na entrada base
+  // (Inteligência), que é o atributo de dois dos três caminhos.
+  const prog = SPELL_PROGRESSION[className as SpellcasterClass]
+  return prog?.attribute ?? undefined
+}
+
 /**
  * Highest círculo the class can currently cast at the given character
  * level. Returns `0` if the class doesn't yet cast (Paladino at L1).

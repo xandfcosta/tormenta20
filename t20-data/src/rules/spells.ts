@@ -50,15 +50,19 @@ export function validateApplyBuff(hasBuff: boolean): ValidationError[] {
 }
 
 /**
- * Cast preconditions (PDF p171). `totalPm` is the already-composed cost (base +
- * augments − catalisador); this only checks the aggregate invariants so the
- * caller keeps ownership of the PM math. Mirrors backend `castSpell`:
+ * Cast preconditions. `totalPm` is the already-composed cost (base + augments −
+ * catalisador); this only checks the aggregate invariants so the caller keeps
+ * ownership of the PM math. Mirrors the Go `handleCastSpell`:
  *   - prepared casters must have the spell prepared;
- *   - circle > 0 spells: cost ≤ per-spell PM limit (⌊nível/2⌋ + item bonuses);
+ *   - circle > 0 spells: cost ≤ per-spell PM limit (p224), EXCEPT at the
+ *     spell's own base cost — "mas você sempre pode usar a habilidade em seu
+ *     custo mínimo" (p224). Without that clause a spell from outside the class
+ *     became permanently uncastable;
  *   - cost ≤ current PM.
  */
 export function validateCast(input: {
   circle: number
+  basePm: number
   totalPm: number
   pmLimit: number
   mpCurrent: number
@@ -69,7 +73,7 @@ export function validateCast(input: {
   if (input.needsPrep && !input.prepared) {
     errors.push({ field: 'prepared', message: 'Magia precisa estar preparada' })
   }
-  if (input.circle > 0 && input.totalPm > input.pmLimit) {
+  if (input.circle > 0 && input.totalPm > input.pmLimit && input.totalPm > input.basePm) {
     errors.push({
       field: 'augments',
       message: `Limite PM excedido (${input.pmLimit})`,
