@@ -1,4 +1,3 @@
-import { resolveConditionalDisplay as tsResolveConditionalDisplay } from '@tormenta20/t20-data'
 import {
   type ConditionalDisplayInput,
   type ConditionalDisplayRow,
@@ -23,8 +22,5 @@ export type { ConditionalDisplayInput, ConditionalDisplayRow }
 export function resolveStanceDisplay(
   rows: ConditionalDisplayInput[],
 ): ConditionalDisplayRow[] {
-  if (import.meta.env.MODE === 'test') {
-    return tsResolveConditionalDisplay(rows)
-  }
   return engineResolveConditionalDisplay(rows)
 }

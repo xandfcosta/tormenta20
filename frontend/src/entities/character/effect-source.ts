@@ -76,10 +76,7 @@ export type ItemFlagEffect = {
 export function equippedItemFlagEffects(
   items: readonly CharacterItem[],
 ): ItemFlagEffect[] {
-  const raw =
-    import.meta.env.MODE === 'test'
-      ? tsEquippedFlags(items)
-      : engineComputeEquippedFlags(items)
+  const raw = engineComputeEquippedFlags(items)
   return raw.map((f) => ({
     flag: f.flag as ItemFlag,
     label: ITEM_FLAG_LABEL[f.flag as ItemFlag],
@@ -88,12 +85,16 @@ export function equippedItemFlagEffects(
 }
 
 /**
- * The TS derivation kept as the parity oracle: per equipped catalog item, run
+ * A IMPLEMENTAÇÃO DE REFERÊNCIA das bandeiras, que gera o oráculo. Chamada
+ * explicitamente pelo harness, nunca por `if` de ambiente — atravessar o choke
+ * point faria o oráculo virar "o Go dizendo o que o Go acha" (ALE-109).
+ *
+ * Per equipped catalog item, run
  * ONLY its base catalog modifiers through the item engine (so wear conditions
  * resolve like the sheet totals) and collect the flags, sorted per item for a
  * deterministic order matching the Go `ComputeEquippedFlags`.
  */
-function tsEquippedFlags(items: readonly CharacterItem[]): EquippedItemFlag[] {
+export function tsEquippedItemFlags(items: readonly CharacterItem[]): EquippedItemFlag[] {
   const out: EquippedItemFlag[] = []
   for (const it of items) {
     if (it.equipped === null || !it.catalogId) continue

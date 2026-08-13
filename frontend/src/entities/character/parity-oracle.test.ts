@@ -20,11 +20,11 @@ import { describe, expect, it } from 'vitest'
 import type { Character } from '@/shared/api/api'
 import fixtures from './__fixtures__/character-input-parity.json'
 import { assembleSheetV2 } from './computed-sheet'
-import { activeItemsFor, allConditionals, characterEffects } from './derived'
-import { equippedItemFlagEffects } from './effect-source'
+import { activeItemsFor, allConditionals, tsCharacterEffects } from './derived'
+import { tsEquippedItemFlags } from './effect-source'
 import { assembleWeaponCards } from './weapon-cards'
 import { buildVitalContext } from './level-vitals'
-import { computeVitalPools } from './vital-pools'
+import { tsVitalPools } from './vital-pools'
 
 /**
  * PARITY HARNESS (PORT-PLAN.md §3) — the TDD backbone for the Go engine port.
@@ -37,6 +37,12 @@ import { computeVitalPools } from './vital-pools'
  *     array so JSON parity is order-independent, matching the Go MarshalJSON).
  *   - `sheetV2` — every derived.ts breakdown (`*Total` + RD/tempHp), the shape
  *     the Go `ComputeSheetV2` must reproduce (slice 3 / task #5).
+ *
+ * O harness chama as implementações de REFERÊNCIA em TypeScript
+ * (`tsCharacterEffects`, `tsVitalPools`) de propósito, e não os choke points do
+ * app: desde que os testes passaram a rodar o motor Go, atravessar o choke point
+ * faria o oráculo virar "o Go dizendo o que o Go acha" — a testemunha
+ * independente sumiria em silêncio, verde (ALE-109).
  *
  * The oracle files (`engine-go/parity/<slug>.json`) are committed. Regenerate
  * them whenever the TS rules change, while `derived.ts` is still the reference:
@@ -72,7 +78,7 @@ function conditionalIdsFor(char: Character): string[] {
  * sheet with furia off is always {0, []}).
  */
 function sheetV2For(char: Character) {
-  return assembleSheetV2(char, characterEffects(char, EMPTY_CONDITIONALS))
+  return assembleSheetV2(char, tsCharacterEffects(char, EMPTY_CONDITIONALS))
 }
 
 /** Serializable ItemEffects: Set → sorted array, mirroring the Go MarshalJSON. */
@@ -97,9 +103,9 @@ const chars = fixtures as { slug: string; char: Character }[]
  * `ActiveItemsFor` on the same raw input.
  */
 function oraclePayloadFor(slug: string, char: Character) {
-  const effects = characterEffects(char, EMPTY_CONDITIONALS)
+  const effects = tsCharacterEffects(char, EMPTY_CONDITIONALS)
   const conditionalIds = conditionalIdsFor(char)
-  const withConditionals = characterEffects(char, new Set(conditionalIds))
+  const withConditionals = tsCharacterEffects(char, new Set(conditionalIds))
   return {
     slug,
     char,
@@ -112,13 +118,10 @@ function oraclePayloadFor(slug: string, char: Character) {
     activeConditionals: conditionalIds,
     sheetV2WithConditionals: assembleSheetV2(char, withConditionals),
     weaponCardsWithConditionals: assembleWeaponCards(char, withConditionals),
-    vitals: computeVitalPools(buildVitalContext(char, effects, char.classes)),
+    vitals: tsVitalPools(buildVitalContext(char, effects, char.classes)),
     // Equipped-item flag provenance oracle (Fase A.3.3) — label dropped so it
     // mirrors the Go `ComputeEquippedFlags` ({flag, source}) shape.
-    equippedFlags: equippedItemFlagEffects(char.items).map((e) => ({
-      flag: e.flag,
-      source: e.source,
-    })),
+    equippedFlags: tsEquippedItemFlags(char.items),
     // Wielded-weapon formula cards oracle (WeaponFormulaCards port).
     weaponCards: assembleWeaponCards(char, effects),
   }
