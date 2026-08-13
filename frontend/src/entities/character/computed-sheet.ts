@@ -16,7 +16,6 @@ import {
   attributeTotal,
   bestBaseSpellCd,
   characterDamageReduction,
-  characterEffects,
   defenseTotal,
   displacementTotal,
   expertiseTotalWithItems,
@@ -135,9 +134,6 @@ function computeSheetUncached(
   char: Character,
   activeConditionals: ReadonlySet<string>,
 ): ComputedSheetV2 {
-  if (import.meta.env.MODE === 'test') {
-    return assembleSheetV2(char, characterEffects(char, activeConditionals))
-  }
   if (!areEngineCatalogsPrimed()) {
     throw new Error(
       'computed sheet: WASM engine not primed — ensureEngineCatalogs() must resolve before any sheet renders',

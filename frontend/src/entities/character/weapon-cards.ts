@@ -9,7 +9,6 @@ import {
 } from '@/shared/lib/engine-wasm'
 import {
   attributeTotal,
-  characterEffects,
   expertiseTotalWithItems,
   parseChoiceSet,
 } from './derived'
@@ -148,9 +147,6 @@ export function weaponCardsFor(
   char: Character,
   activeConditionals: ReadonlySet<string> = EMPTY_SET,
 ): WeaponCard[] {
-  if (import.meta.env.MODE === 'test') {
-    return assembleWeaponCards(char, characterEffects(char, activeConditionals))
-  }
   if (!areEngineCatalogsPrimed()) {
     throw new Error(
       'weapon cards: WASM engine not primed — ensureEngineCatalogs() must resolve before any sheet renders',

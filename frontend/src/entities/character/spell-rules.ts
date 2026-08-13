@@ -90,12 +90,5 @@ export function spellPmLimitFor(
   character: Character,
   spellClasses: readonly string[],
 ): number {
-  if (import.meta.env.MODE === 'test') {
-    const grants = new Set(spellClasses)
-    const best = character.classes
-      .filter((c) => grants.has(c.className))
-      .reduce((acc, c) => Math.max(acc, c.level), 0)
-    return Math.max(1, best === 0 ? character.level : best)
-  }
   return spellPmLimit(character, spellClasses)
 }

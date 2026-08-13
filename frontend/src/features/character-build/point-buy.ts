@@ -1,4 +1,3 @@
-import { pointBuySpent, pointBuyWarnings } from '@tormenta20/t20-data'
 import { type AttributeKey } from '@/shared/api/attribute-keys'
 import {
   pointBuyStatus as enginePointBuyStatus,
@@ -18,14 +17,5 @@ export type { PointBuyStatus }
 export function pointBuyStatusFor(
   attrs: Record<AttributeKey, number>,
 ): PointBuyStatus {
-  if (import.meta.env.MODE === 'test') {
-    let spent: number | null = null
-    try {
-      spent = pointBuySpent(attrs)
-    } catch {
-      spent = null
-    }
-    return { spent, warnings: pointBuyWarnings(attrs) }
-  }
   return enginePointBuyStatus(attrs)
 }

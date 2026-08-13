@@ -122,13 +122,14 @@ export async function ensureEngineCatalogs(qc: QueryClient): Promise<void> {
 /** Assemble the engine-catalog JSON from the (cached) fetched catalogs — the
  *  exact shape `engine.PrimeEngineCatalogs` / the parity dump expect. */
 async function buildEnginePayload(qc: QueryClient): Promise<string> {
-  const [items, races, origins, classPowers, generalPowers, racas, tormentaPowers] =
+  const [items, races, origins, classPowers, generalPowers, grantedPowers, racas, tormentaPowers] =
     await Promise.all([
       qc.ensureQueryData(itemCatalogQueryOptions),
       qc.ensureQueryData(raceDefsCatalogQueryOptions),
       qc.ensureQueryData(originsCatalogQueryOptions),
       qc.ensureQueryData(classPowersCatalogQueryOptions),
       qc.ensureQueryData(generalPowersCatalogQueryOptions),
+      qc.ensureQueryData(grantedPowersCatalogQueryOptions),
       qc.ensureQueryData(racasCatalogQueryOptions),
       qc.ensureQueryData(tormentaPowersCatalogQueryOptions),
     ])
@@ -138,6 +139,13 @@ async function buildEnginePayload(qc: QueryClient): Promise<string> {
     origins,
     classPowers,
     generalPowers,
+    // Os poderes CONCEDIDOS pelo deus faltavam aqui: o motor Go os aceita e o
+    // front nunca os mandava, então no navegador o `grantedByName` ficava vazio
+    // e um devoto de Wynna perdia os PM da Bênção do Mana na criação e no
+    // level-up otimista. O servidor acertava, porque prima com o dump inteiro —
+    // por isso a divergência só apareceu quando os testes passaram a rodar o
+    // motor de verdade (ALE-109).
+    grantedPowers,
     racas,
     tormentaPowerIds: Object.keys(tormentaPowers),
   })

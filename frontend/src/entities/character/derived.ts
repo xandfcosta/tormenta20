@@ -748,12 +748,6 @@ function resolveEffects(
   character: Character,
   activeConditionals: ReadonlySet<string>,
 ): ItemEffects {
-  if (import.meta.env.MODE === 'test') {
-    return applyActiveConditionals(
-      computeItemEffects(activeItemsFor(character)),
-      activeConditionals,
-    )
-  }
   if (!areEngineCatalogsPrimed()) {
     throw new Error(
       'sheet derive: WASM engine not primed — ensureEngineCatalogs() must resolve before any sheet renders',
@@ -767,6 +761,25 @@ export function characterEffects(
   activeConditionals: ReadonlySet<string> = EMPTY_SET,
 ): ItemEffects {
   return resolveEffects(character, activeConditionals)
+}
+
+/**
+ * A mesma resolução em TypeScript — a IMPLEMENTAÇÃO DE REFERÊNCIA que gera o
+ * oráculo de paridade.
+ *
+ * Chamada EXPLICITAMENTE, nunca por `if` de ambiente: quando o harness passou a
+ * atravessar o choke point, o oráculo virou "o Go dizendo o que o Go acha", que
+ * é a ilusão que a fatia 5 evita enquanto ainda existem duas implementações.
+ * Morre com o `t20-data` (ALE-109).
+ */
+export function tsCharacterEffects(
+  character: Character,
+  activeConditionals: ReadonlySet<string> = EMPTY_SET,
+): ItemEffects {
+  return applyActiveConditionals(
+    computeItemEffects(activeItemsFor(character)),
+    activeConditionals,
+  )
 }
 
 const EMPTY_SET: ReadonlySet<string> = new Set()
