@@ -472,6 +472,8 @@
       "itemBonus": 0,
       "total": 12,
       "dexApplied": true,
+      "vsMelee": 12,
+      "vsRanged": 12,
       "contributions": []
     },
     "displacement": {
@@ -930,6 +932,8 @@
       "itemBonus": 0,
       "total": 12,
       "dexApplied": true,
+      "vsMelee": 12,
+      "vsRanged": 12,
       "contributions": []
     },
     "displacement": {

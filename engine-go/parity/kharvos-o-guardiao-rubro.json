@@ -1134,6 +1134,8 @@
       "itemBonus": 11,
       "total": 22,
       "dexApplied": true,
+      "vsMelee": 22,
+      "vsRanged": 22,
       "contributions": [
         {
           "source": "Couraça",
@@ -1669,6 +1671,8 @@
       "itemBonus": 12,
       "total": 23,
       "dexApplied": true,
+      "vsMelee": 23,
+      "vsRanged": 23,
       "contributions": [
         {
           "source": "Couraça",

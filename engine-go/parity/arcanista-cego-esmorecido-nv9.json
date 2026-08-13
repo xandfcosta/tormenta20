@@ -610,6 +610,8 @@
       "itemBonus": -5,
       "total": 8,
       "dexApplied": true,
+      "vsMelee": 8,
+      "vsRanged": 8,
       "contributions": [
         {
           "source": "Condições",
@@ -1211,6 +1213,8 @@
       "itemBonus": -5,
       "total": 8,
       "dexApplied": true,
+      "vsMelee": 8,
+      "vsRanged": 8,
       "contributions": [
         {
           "source": "Condições",

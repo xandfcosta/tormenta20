@@ -69,10 +69,6 @@ func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	basePm := spellBasePmCost[spell.Circle]
-	totalPm := 0
-	if spell.Circle != 0 {
-		totalPm = max(0, basePm+augmentPm)
-	}
 
 	// One rule, one place (ALE-92): the engine owns the p224 ceiling and resolves
 	// the item bonus the same way the sheet does. This handler used to carry its
@@ -83,12 +79,18 @@ func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "Could not read character")
 		return
 	}
+	// p226: o modificador de custo entra AQUI, e não só na ficha — a redução era
+	// calculada, exibida no mosaico "Custo PM" e ignorada na hora de cobrar
+	// (ALE-110). O piso de 1 PM vem junto.
+	totalPm := s.catalogs.SpellPmCostFor(ec, basePm, augmentPm, map[string]bool{})
+	minPm := s.catalogs.SpellPmCostFor(ec, basePm, 0, map[string]bool{})
+
 	limit := s.catalogs.SpellPmLimitFor(ec, spell.Classes)
 	// A ressalva entre parênteses da p224: "(mas você sempre pode usar a
 	// habilidade em seu custo mínimo)". O teto limita o gasto ADICIONAL — ele
 	// nunca torna inconjurável uma magia que o personagem já possui, o que
 	// acontecia com uma magia de círculo alto vinda de fora da classe.
-	if spell.Circle > 0 && totalPm > limit && totalPm > basePm {
+	if spell.Circle > 0 && totalPm > limit && totalPm > minPm {
 		writeFieldError(w, http.StatusBadRequest, fmt.Sprintf("PM cost %d exceeds per-spell limit %d", totalPm, limit), FieldErrorMap{"augments": {fmt.Sprintf("Limite PM excedido (%d)", limit)}})
 		return
 	}

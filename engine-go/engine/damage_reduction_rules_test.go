@@ -143,3 +143,43 @@ func TestEspecializacaoEmArmadura(t *testing.T) {
 		}
 	})
 }
+
+// "PETRIFICADO. O personagem fica inconsciente e recebe redução de dano 8."
+// (p394). A RD 8 não era modelável enquanto não existia alvo de modificador para
+// redução de dano — a do motor vinha só de classe (ALE-115).
+func TestPetrificadoGrantsDamageReduction(t *testing.T) {
+	rd := func(conds []string, classes ...CharacterClass) RdBreakdown {
+		mods := []Modifier{}
+		for _, id := range conds {
+			mods = append(mods, conditionModifiers(id)...)
+		}
+		vested := "vested"
+		e := ComputeItemEffects([]ActiveItem{{Source: "Condições", Equipped: &vested, Modifiers: mods}})
+		e.Flags = map[string]bool{}
+		return characterDamageReduction(Character{Level: 10, Classes: classes}, e)
+	}
+
+	t.Run("petrificado sozinho dá RD 8", func(t *testing.T) {
+		if got := rd([]string{"petrificado"}).Total; got != 8 {
+			t.Errorf("RD = %d, want 8", got)
+		}
+	})
+
+	// p226: efeitos de origens diferentes acumulam. Uma estátua de bárbaro tem
+	// a RD da classe E a da condição.
+	t.Run("soma com a RD de classe, que é de outra origem", func(t *testing.T) {
+		barbaro := CharacterClass{ClassName: "Bárbaro", Level: 11} // RD 6 (p42)
+		if got := rd(nil, barbaro).Total; got != 6 {
+			t.Fatalf("só o Bárbaro: RD = %d, want 6", got)
+		}
+		if got := rd([]string{"petrificado"}, barbaro).Total; got != 14 {
+			t.Errorf("Bárbaro petrificado: RD = %d, want 14 (6 + 8)", got)
+		}
+	})
+
+	t.Run("sem condição nenhuma continua zero", func(t *testing.T) {
+		if got := rd(nil).Total; got != 0 {
+			t.Errorf("RD = %d, want 0", got)
+		}
+	})
+}
