@@ -1,21 +1,22 @@
+import { initials } from '@/shared/lib/initials'
 import { describe, expect, it } from 'vitest'
-import { campaignEmblemGradient, campaignInitials, roleLabel } from './emblem'
+import {campaignEmblemGradient, roleLabel} from './emblem'
 
-describe('campaignInitials', () => {
+describe('initials', () => {
   it('usa as iniciais das duas primeiras palavras', () => {
-    expect(campaignInitials('A Queda de Tauron')).toBe('AQ')
+    expect(initials('A Queda de Tauron')).toBe('AQ')
   })
 
   it('nome de uma palavra vira uma letra só', () => {
-    expect(campaignInitials('Tormenta')).toBe('T')
+    expect(initials('Tormenta')).toBe('T')
   })
 
   it('cai pra ? quando não há nome', () => {
-    expect(campaignInitials('   ')).toBe('?')
+    expect(initials('   ')).toBe('?')
   })
 
   it('ignora espaços extras entre as palavras', () => {
-    expect(campaignInitials('  Segredos   de Wynlla ')).toBe('SD')
+    expect(initials('  Segredos   de Wynlla ')).toBe('SD')
   })
 })
 

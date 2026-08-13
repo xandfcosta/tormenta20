@@ -1,8 +1,9 @@
 import type { Session } from '@/shared/api/api'
 
-// The chronicle's visual identity lives in entities/campaign (shared with the
-// detail tome); re-exported here so this feature's consumers stay unchanged.
-export { campaignEmblemGradient, campaignInitials, roleLabel } from '@/entities/campaign/emblem'
+// The chronicle's visual identity lives in entities/campaign, and consumers
+// import it from there directly — this file used to re-export it, which hid the
+// origin without buying anything (campaign-tome already went straight to the
+// source).
 
 export type CampaignSessions = { campaignId: number; sessions: Session[] | undefined }
 

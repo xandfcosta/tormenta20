@@ -1,6 +1,7 @@
+import { initials } from '@/shared/lib/initials'
+import { portraitGradient } from './select-helpers'
 import { Show } from 'solid-js'
 import type { Character } from '@/shared/api/api'
-import { initials, portraitGradient } from './select-helpers'
 
 export type PeekPortraitProps = {
   character: Character | null

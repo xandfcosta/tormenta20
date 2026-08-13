@@ -1,3 +1,5 @@
+import { initials } from '@/shared/lib/initials'
+import { portraitGradient } from './select-helpers'
 import { Show } from 'solid-js'
 import type { Character } from '@/shared/api/api'
 import { hueFromName } from '@/shared/lib/hue-from-name'
@@ -5,7 +7,7 @@ import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { Kbd } from '@/shared/ui/kbd'
 import { PeekPortrait } from './peek-portrait'
-import { initials, portraitGradient, primaryRole } from './select-helpers'
+import { primaryRole } from './select-helpers'
 
 export type CharacterStageProps = {
   selected: Character
@@ -128,7 +130,6 @@ function StagePortrait(props: { character: Character; hue: number; onOpen: () =>
     </button>
   )
 }
-
 
 /** Engraved Cinzel nameplate + class/race kicker. */
 function Nameplate(props: { character: Character; hue: number }) {
