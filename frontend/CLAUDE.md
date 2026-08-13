@@ -188,7 +188,29 @@ links, the browser Back button and the progress rail cannot then disagree.
 ## Tests
 
 - Run: `pnpm --filter frontend test` (vitest). Root `pnpm test` fans out.
-- Every new function gets a test; bug fixes get a regression test.
+- **Read the Tests section of the root [CLAUDE.md](../CLAUDE.md) first** — the
+  house philosophy is confidence in OUTCOMES, integration by default, E2E only
+  where a real browser is the only witness. What follows adapts it here.
+- **The default new test mounts a page** with a seeded `QueryClient` and a faked
+  API, and asserts what the screen shows after a real interaction. Models to
+  copy: `shared/ui/side-panel.test.tsx` (every case is a product decision),
+  `features/character-sheet/bag-panel.test.tsx` (real QueryClient + fixture +
+  `userEvent`, queried by role and accessible name), `shared/lib/scene-nav.test.tsx`
+  (real DOM, real keydown, asserts `document.activeElement`).
+- **Don't assert class names, DOM shape or `data-*` wiring.** Those break on any
+  legitimate restyle and prove nothing a user would notice.
+- **Don't re-derive the expected value by running the implementation** — an
+  assertion that reimplements the function body only fails if the language
+  breaks.
+- **Don't test what `t20-data` or the Go engine already owns.** A rule from the
+  book is tested where it is authored, once. The parity oracles prove the two
+  engines agree; re-asserting the same rule in a component is a third copy.
+- **Never test a branch that leaves the bundle.** The `import.meta.env.MODE ===
+  'test'` choke points exist so the TS derivation is dropped from production —
+  a test over that branch covers code no user runs.
+- Bug fixes get a regression test **proven red first**. When jsdom cannot see
+  the bug (animation timeline, real layout, virtualized rows measuring zero),
+  say so in the test's docstring and put it in e2e instead.
 - Mock I/O with **named fake classes** (`FakeFetch`, `FakeStorage`,
   `FakeRealtime`), not inline stubs. `@solidjs/testing-library` for
   components.
