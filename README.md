@@ -9,9 +9,9 @@ t20-data/  catálogos e regras puras, compartilhados pelo front e pelo motor
 e2e/       Playwright, fora do frontend de propósito
 ```
 
-O frontend era React até o cutover (ALE-76); a migração para SolidJS está
-contada em [MIGRATION.md](MIGRATION.md). O backend NestJS foi removido — o Go é
-o backend, e migra o próprio banco (goose embutido) ao subir.
+O frontend era React até o cutover (ALE-76), e o backend NestJS foi removido — o
+Go é o backend, e migra o próprio banco (goose embutido) ao subir. O histórico
+das duas migrações vive no `git log` e nas issues do Linear.
 
 ## Setup
 
