@@ -1,12 +1,6 @@
 import type { Character, CharacterExpertise } from '@/shared/api/api'
-import {
-  ATTRIBUTE_ABBR,
-  ATTRIBUTE_KEYS,
-  EXPERTISES as RAW_EXPERTISES,
-  trainingBonusForLevel,
-  type AttributeKey,
-  type ExpertiseName,
-} from '@tormenta20/t20-data'
+import { EXPERTISES as RAW_EXPERTISES, trainingBonusForLevel, type ExpertiseName } from '@tormenta20/t20-data'
+import { ATTRIBUTE_ABBR, ATTRIBUTE_KEYS, type AttributeKey } from '@/shared/api/attribute-keys'
 
 export { ATTRIBUTE_ABBR, ATTRIBUTE_KEYS, trainingBonusForLevel }
 export type { AttributeKey, ExpertiseName }

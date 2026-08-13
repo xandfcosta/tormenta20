@@ -1,4 +1,4 @@
-import type { AttributeKey } from '@tormenta20/t20-data'
+import type { AttributeKey } from '@/shared/api/attribute-keys'
 import { describe, expect, it } from 'vitest'
 import { pointBuyStatusFor } from './point-buy'
 

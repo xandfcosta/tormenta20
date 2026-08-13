@@ -1,9 +1,5 @@
-import {
-  type AttributeKey,
-  type ItemEffects,
-  spellSaveDc,
-  statFor,
-} from '@tormenta20/t20-data'
+import { type ItemEffects, spellSaveDc, statFor } from '@tormenta20/t20-data'
+import { type AttributeKey } from '@/shared/api/attribute-keys'
 import {
   areEngineCatalogsPrimed,
   computeSheetV2 as engineComputeSheetV2,

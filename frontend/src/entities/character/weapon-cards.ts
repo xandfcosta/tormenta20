@@ -1,9 +1,5 @@
-import {
-  type AttributeKey,
-  type ItemEffects,
-  type WeaponStats,
-  statFor,
-} from '@tormenta20/t20-data'
+import { type ItemEffects, type WeaponStats, statFor } from '@tormenta20/t20-data'
+import { type AttributeKey } from '@/shared/api/attribute-keys'
 import type { Character } from '@/shared/api/api'
 import { getCatalogItem } from '@/shared/lib/catalog-cache'
 import type { TotalContribs, WeaponCard } from '@/shared/lib/computed-sheet-v2'

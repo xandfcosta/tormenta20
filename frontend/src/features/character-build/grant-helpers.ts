@@ -1,12 +1,5 @@
-import {
-  ATTRIBUTE_ABBR,
-  ATTRIBUTE_KEYS,
-  type AttributeKey,
-  CLASS_VITALS,
-  carismaLossFromPowers,
-  type Raca,
-  type TormentaPowerId,
-} from '@tormenta20/t20-data'
+import { CLASS_VITALS, carismaLossFromPowers, type Raca, type TormentaPowerId } from '@tormenta20/t20-data'
+import { ATTRIBUTE_ABBR, ATTRIBUTE_KEYS, type AttributeKey } from '@/shared/api/attribute-keys'
 import {
   getOrigin,
   getOriginBenefit,

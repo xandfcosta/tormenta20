@@ -1,4 +1,4 @@
-import { ATTRIBUTE_ABBR, type AttributeKey } from '@tormenta20/t20-data'
+import { ATTRIBUTE_ABBR, type AttributeKey } from '@/shared/api/attribute-keys'
 import { ChevronRight } from 'lucide-solid'
 import { For, type JSX, Show, createSignal } from 'solid-js'
 import { AbilityLine } from '@/shared/ui/ability-line'
