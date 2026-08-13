@@ -5,7 +5,7 @@
  *  - RD core rules: Cap 5 p228-229 (definições Imunidade/Resistência/RD)
  *  - Order of operations: p225 (saves → halve → RD last)
  *  - Typed RD (redução de fogo/frio/corte): p230
- *  - Bárbaro/Guerreiro RD tables: p47/p56
+ *  - Bárbaro RD: p42. Guerreiro: p56 (não reconferido — ver ALE-111)
  *  - Cavaleiro Bastião + Especialização (stack): p54-57
  *  - Adamante RD: p133
  *
@@ -122,7 +122,7 @@ export function applyDamageWithRdIgnore(
 
 // ─── Class RD tables ────────────────────────────────────────────────
 /**
- * Bárbaro Redução de Dano (Tabela p47):
+ * Bárbaro Redução de Dano (p42):
  *  - 5º: 2, 8º: 4, 11º: 6, 14º: 8, 17º: 10
  *  - Antes de 5º: 0
  */

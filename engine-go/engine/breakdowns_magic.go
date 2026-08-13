@@ -103,7 +103,7 @@ func pmCostMod(e ItemEffects) TotalContribs {
 	return totalContribsFor(e, ModifierTarget{K: "pmCost"})
 }
 
-// characterDamageReduction ports derived.ts: aggregate passive RD (Bárbaro p47,
+// characterDamageReduction ports derived.ts: aggregate passive RD (Bárbaro p42,
 // Guerreiro heavy, Cavaleiro Bastião + Especialização). General RD takes the max;
 // Especialização stacks on top (explicit rule text).
 func characterDamageReduction(ch Character, e ItemEffects) RdBreakdown {
@@ -123,7 +123,7 @@ func characterDamageReduction(ch Character, e ItemEffects) RdBreakdown {
 		switch {
 		case entry.ClassName == "Bárbaro":
 			if rd := barbaroRdForLevel(entry.Level); rd > 0 {
-				sources = append(sources, SourceAmount{"Bárbaro (p47)", rd})
+				sources = append(sources, SourceAmount{"Bárbaro (p42)", rd})
 			}
 		case entry.ClassName == "Guerreiro" && heavy:
 			if rd := guerreiroRdForLevel(entry.Level, heavy); rd > 0 {

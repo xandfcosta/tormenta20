@@ -31,7 +31,9 @@ func spellSaveDc(casterLevel, keyAttributeMod int) int {
 	return 10 + casterLevel/2 + keyAttributeMod
 }
 
-// barbaroRdForLevel ports damage-reduction.ts (p47): 0/2/4/6/8/10 at 5/8/11/14/17.
+// barbaroRdForLevel is the Bárbaro's Redução de Dano — livro p42: RD 2 no 5º
+// nível, +2 a cada três níveis, teto de 10 no 17º. (A citação anterior dizia
+// p47, que é a página do Bucaneiro.)
 func barbaroRdForLevel(level int) int {
 	switch {
 	case level >= 17:
