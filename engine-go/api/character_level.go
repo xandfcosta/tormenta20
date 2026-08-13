@@ -98,7 +98,7 @@ func (s *Server) syncLevelVitals(r *http.Request, id int64, dto CharacterDTO) (s
 // pools. (Pools track class levels, so setting the total alone usually leaves
 // them unchanged.)
 func (s *Server) handleUpdateLevel(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	row, ok := s.characterFor(w, r)
 	if !ok {
 		return
 	}
@@ -108,17 +108,12 @@ func (s *Server) handleUpdateLevel(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &body) {
 		return
 	}
-	row, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id)
-	if err != nil {
-		writeError(w, status, err.Error())
-		return
-	}
 	if msg := levelRangeError(body.Level); msg != "" {
 		writeValidationError(w, FieldErrorMap{"level": {msg}})
 		return
 	}
 	if err := s.queries.SetCharacterLevel(r.Context(), sqlcgen.SetCharacterLevelParams{
-		Level: *body.Level, UpdatedAt: nowISO(), ID: id,
+		Level: *body.Level, UpdatedAt: nowISO(), ID: row.ID,
 	}); err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not update level")
 		return
@@ -129,7 +124,7 @@ func (s *Server) handleUpdateLevel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	dto.Level = *body.Level
-	vitals, err := s.syncLevelVitals(r, id, dto)
+	vitals, err := s.syncLevelVitals(r, row.ID, dto)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not sync vitals")
 		return
@@ -140,7 +135,7 @@ func (s *Server) handleUpdateLevel(w http.ResponseWriter, r *http.Request) {
 // handleUpdateClassLevel ports updateClassLevel: bump one class, recompute the
 // total (≤ 20 cap) and the derived pools with the level-shift.
 func (s *Server) handleUpdateClassLevel(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	row, ok := s.characterFor(w, r)
 	if !ok {
 		return
 	}
@@ -149,11 +144,6 @@ func (s *Server) handleUpdateClassLevel(w http.ResponseWriter, r *http.Request) 
 		Level     *int64 `json:"level"`
 	}
 	if !decodeJSON(w, r, &body) {
-		return
-	}
-	row, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id)
-	if err != nil {
-		writeError(w, status, err.Error())
 		return
 	}
 	if msg := levelRangeError(body.Level); msg != "" {
@@ -175,37 +165,27 @@ func (s *Server) handleUpdateClassLevel(w http.ResponseWriter, r *http.Request) 
 		total += dto.Classes[i].Level
 	}
 	if !found {
-		writeJSON(w, http.StatusBadRequest, map[string]any{
-			"statusCode":  http.StatusBadRequest,
-			"error":       "Bad Request",
-			"message":     fmt.Sprintf("Character does not have class %q", body.ClassName),
-			"fieldErrors": FieldErrorMap{"className": {"Class not on character"}},
-		})
+		writeFieldError(w, http.StatusBadRequest, fmt.Sprintf("Character does not have class %q", body.ClassName), FieldErrorMap{"className": {"Class not on character"}})
 		return
 	}
 	if total > 20 {
-		writeJSON(w, http.StatusBadRequest, map[string]any{
-			"statusCode":  http.StatusBadRequest,
-			"error":       "Bad Request",
-			"message":     fmt.Sprintf("Total level %d exceeds 20", total),
-			"fieldErrors": FieldErrorMap{"level": {"Sum of class levels capped at 20"}},
-		})
+		writeFieldError(w, http.StatusBadRequest, fmt.Sprintf("Total level %d exceeds 20", total), FieldErrorMap{"level": {"Sum of class levels capped at 20"}})
 		return
 	}
 	if _, err := s.queries.SetCharacterClassLevel(r.Context(), sqlcgen.SetCharacterClassLevelParams{
-		Level: *body.Level, CharacterId: id, ClassName: body.ClassName,
+		Level: *body.Level, CharacterId: row.ID, ClassName: body.ClassName,
 	}); err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not update class level")
 		return
 	}
 	if err := s.queries.SetCharacterLevel(r.Context(), sqlcgen.SetCharacterLevelParams{
-		Level: total, UpdatedAt: nowISO(), ID: id,
+		Level: total, UpdatedAt: nowISO(), ID: row.ID,
 	}); err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not update level")
 		return
 	}
 	dto.Level = total
-	vitals, err := s.syncLevelVitals(r, id, dto)
+	vitals, err := s.syncLevelVitals(r, row.ID, dto)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not sync vitals")
 		return

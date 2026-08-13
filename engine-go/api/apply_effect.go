@@ -17,7 +17,7 @@ const manualTempHpCatalogID = "manual-temp-hp"
 // temp-HP pool, a spell buff, or (deferred) a power grant. NOTE: the powerId path
 // (activation-registry grants + server-side pool compute) is not yet ported.
 func (s *Server) handleApplyEffect(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	row, ok := s.characterFor(w, r)
 	if !ok {
 		return
 	}
@@ -30,25 +30,16 @@ func (s *Server) handleApplyEffect(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &body) {
 		return
 	}
-	row, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id)
-	if err != nil {
-		writeError(w, status, err.Error())
-		return
-	}
 
 	switch {
 	case body.ManualTempHp != nil:
-		s.applyManualPool(w, r, id, *body.ManualTempHp, derefStr(body.Scope, "scene"))
+		s.applyManualPool(w, r, row.ID, *body.ManualTempHp, derefStr(body.Scope, "scene"))
 	case body.PowerID != nil:
 		s.applyPowerGrant(w, r, row, *body.PowerID, body.Scope)
 	case body.SpellID == nil:
-		writeJSON(w, http.StatusBadRequest, map[string]any{
-			"statusCode": http.StatusBadRequest, "error": "Bad Request",
-			"message":     "applyEffect requires spellId, powerId or manualTempHp",
-			"fieldErrors": FieldErrorMap{"spellId": {"Informe uma magia, um poder ou PV temporários"}},
-		})
+		writeFieldError(w, http.StatusBadRequest, "applyEffect requires spellId, powerId or manualTempHp", FieldErrorMap{"spellId": {"Informe uma magia, um poder ou PV temporários"}})
 	default:
-		dto, status, err := s.applySpellBuffEffect(r.Context(), id, *body.SpellID, body.Scope)
+		dto, status, err := s.applySpellBuffEffect(r.Context(), row.ID, *body.SpellID, body.Scope)
 		if err != nil {
 			writeDomainError(w, status, err)
 			return
@@ -59,11 +50,7 @@ func (s *Server) handleApplyEffect(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) applyManualPool(w http.ResponseWriter, r *http.Request, id, amount int64, scope string) {
 	if amount < 0 || amount > 9999 {
-		writeJSON(w, http.StatusBadRequest, map[string]any{
-			"statusCode": http.StatusBadRequest, "error": "Bad Request",
-			"message":     fmt.Sprintf("manualTempHp must be an integer >= 0 — got %d", amount),
-			"fieldErrors": FieldErrorMap{"manualTempHp": {"Informe um valor inteiro ≥ 0"}},
-		})
+		writeFieldError(w, http.StatusBadRequest, fmt.Sprintf("manualTempHp must be an integer >= 0 — got %d", amount), FieldErrorMap{"manualTempHp": {"Informe um valor inteiro ≥ 0"}})
 		return
 	}
 	if amount == 0 {
@@ -187,19 +174,11 @@ func (s *Server) applyPowerGrant(w http.ResponseWriter, r *http.Request, row sql
 func resolvePowerGrant(w http.ResponseWriter, powerID string) (*catalog.ActivationGrant, bool) {
 	spec, known := catalog.LookupActivation(powerID)
 	if !known {
-		writeJSON(w, http.StatusBadRequest, map[string]any{
-			"statusCode": http.StatusBadRequest, "error": "Bad Request",
-			"message":     fmt.Sprintf("Power %q not found in the activation registry", powerID),
-			"fieldErrors": FieldErrorMap{"powerId": {"Poder desconhecido"}},
-		})
+		writeFieldError(w, http.StatusBadRequest, fmt.Sprintf("Power %q not found in the activation registry", powerID), FieldErrorMap{"powerId": {"Poder desconhecido"}})
 		return nil, false
 	}
 	if spec.Grant == nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{
-			"statusCode": http.StatusBadRequest, "error": "Bad Request",
-			"message":     fmt.Sprintf("Power %q has no applicable grant", powerID),
-			"fieldErrors": FieldErrorMap{"powerId": {"Poder sem efeito aplicável"}},
-		})
+		writeFieldError(w, http.StatusBadRequest, fmt.Sprintf("Power %q has no applicable grant", powerID), FieldErrorMap{"powerId": {"Poder sem efeito aplicável"}})
 		return nil, false
 	}
 	return spec.Grant, true

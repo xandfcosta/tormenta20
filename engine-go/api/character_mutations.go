@@ -23,17 +23,12 @@ type vitalsResult struct {
 // (CharactersService.updateVitals). Rule-free — pure DB write behind the
 // owner/GM guard.
 func (s *Server) handleUpdateVitals(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	row, ok := s.characterFor(w, r)
 	if !ok {
 		return
 	}
 	var body vitalsBody
 	if !decodeJSON(w, r, &body) {
-		return
-	}
-	row, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id)
-	if err != nil {
-		writeError(w, status, err.Error())
 		return
 	}
 	if body.HpCurrent == nil && body.MpCurrent == nil {
@@ -57,7 +52,7 @@ func (s *Server) handleUpdateVitals(w http.ResponseWriter, r *http.Request) {
 		HpCurrent: nullInt(body.HpCurrent),
 		MpCurrent: nullInt(body.MpCurrent),
 		UpdatedAt: nowISO(),
-		ID:        id,
+		ID:        row.ID,
 	})
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not update vitals")
@@ -100,7 +95,7 @@ type applyDamageResult struct {
 // routing (drain pools, overflow to HP), persisting the drained/emptied effects
 // and the new HP. Returns the {hpCurrent, tempHpRemaining, drained} delta.
 func (s *Server) handleApplyDamage(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	row, ok := s.characterFor(w, r)
 	if !ok {
 		return
 	}
@@ -108,11 +103,6 @@ func (s *Server) handleApplyDamage(w http.ResponseWriter, r *http.Request) {
 		Amount *int64 `json:"amount"`
 	}
 	if !decodeJSON(w, r, &body) {
-		return
-	}
-	row, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id)
-	if err != nil {
-		writeError(w, status, err.Error())
 		return
 	}
 	switch {
@@ -127,7 +117,7 @@ func (s *Server) handleApplyDamage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	effects, err := s.queries.ListActiveEffectsByCharacter(r.Context(), id)
+	effects, err := s.queries.ListActiveEffectsByCharacter(r.Context(), row.ID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not load effects")
 		return
@@ -148,7 +138,7 @@ func (s *Server) handleApplyDamage(w http.ResponseWriter, r *http.Request) {
 	}
 	if plan.hpCurrent != int(row.Hpcurrent) {
 		if err := s.queries.SetHpCurrent(r.Context(), sqlcgen.SetHpCurrentParams{
-			HpCurrent: int64(plan.hpCurrent), UpdatedAt: nowISO(), ID: id,
+			HpCurrent: int64(plan.hpCurrent), UpdatedAt: nowISO(), ID: row.ID,
 		}); err != nil {
 			writeError(w, http.StatusInternalServerError, "Could not apply damage")
 			return

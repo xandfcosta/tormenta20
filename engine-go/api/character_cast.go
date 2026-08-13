@@ -31,7 +31,7 @@ type castResult struct {
 // PM, then deduct. NOTE: the catalisador scene-discount is deferred (rare edge);
 // removedEffectIds is therefore always empty.
 func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	row, ok := s.characterFor(w, r)
 	if !ok {
 		return
 	}
@@ -40,11 +40,6 @@ func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
 		Augments []augmentPick `json:"augments"`
 	}
 	if !decodeJSON(w, r, &body) {
-		return
-	}
-	row, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id)
-	if err != nil {
-		writeError(w, status, err.Error())
 		return
 	}
 	spell, known := catalog.LookupSpell(catalogSpellID)
@@ -89,21 +84,11 @@ func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
 	}
 	limit := s.catalogs.SpellPmLimitFor(ec, spell.Classes)
 	if spell.Circle > 0 && totalPm > limit {
-		writeJSON(w, http.StatusBadRequest, map[string]any{
-			"statusCode":  http.StatusBadRequest,
-			"error":       "Bad Request",
-			"message":     fmt.Sprintf("PM cost %d exceeds per-spell limit %d", totalPm, limit),
-			"fieldErrors": FieldErrorMap{"augments": {fmt.Sprintf("Limite PM excedido (%d)", limit)}},
-		})
+		writeFieldError(w, http.StatusBadRequest, fmt.Sprintf("PM cost %d exceeds per-spell limit %d", totalPm, limit), FieldErrorMap{"augments": {fmt.Sprintf("Limite PM excedido (%d)", limit)}})
 		return
 	}
 	if int64(totalPm) > dto.MpCurrent {
-		writeJSON(w, http.StatusBadRequest, map[string]any{
-			"statusCode":  http.StatusBadRequest,
-			"error":       "Bad Request",
-			"message":     fmt.Sprintf("Insufficient PM (need %d, have %d)", totalPm, dto.MpCurrent),
-			"fieldErrors": FieldErrorMap{"mpCurrent": {"Sem PM suficiente"}},
-		})
+		writeFieldError(w, http.StatusBadRequest, fmt.Sprintf("Insufficient PM (need %d, have %d)", totalPm, dto.MpCurrent), FieldErrorMap{"mpCurrent": {"Sem PM suficiente"}})
 		return
 	}
 
@@ -112,7 +97,7 @@ func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	mpCurrent := dto.MpCurrent - int64(totalPm)
-	if err := s.queries.SetMpCurrent(r.Context(), sqlcgen.SetMpCurrentParams{MpCurrent: mpCurrent, UpdatedAt: nowISO(), ID: id}); err != nil {
+	if err := s.queries.SetMpCurrent(r.Context(), sqlcgen.SetMpCurrentParams{MpCurrent: mpCurrent, UpdatedAt: nowISO(), ID: row.ID}); err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not cast spell")
 		return
 	}

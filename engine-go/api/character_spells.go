@@ -32,7 +32,7 @@ func spellRowFrom(s sqlcgen.CharacterSpell) spellRowDTO {
 // grimoire (unprepared). 409 if already known. NOTE: the spell-exists check
 // (assertSpellExists) is deferred — the frontend only sends catalog ids.
 func (s *Server) handleLearnSpell(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	character, ok := s.characterFor(w, r)
 	if !ok {
 		return
 	}
@@ -42,25 +42,16 @@ func (s *Server) handleLearnSpell(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &body) {
 		return
 	}
-	if _, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id); err != nil {
-		writeError(w, status, err.Error())
-		return
-	}
 	if body.CatalogSpellID == "" {
 		writeValidationError(w, FieldErrorMap{"catalogSpellId": {"catalogSpellId must be longer than or equal to 1 characters"}})
 		return
 	}
 	row, err := s.queries.CreateSpell(r.Context(), sqlcgen.CreateSpellParams{
-		Characterid: id, Catalogspellid: body.CatalogSpellID, Prepared: 0, Learnedat: nowISO(),
+		Characterid: character.ID, Catalogspellid: body.CatalogSpellID, Prepared: 0, Learnedat: nowISO(),
 	})
 	if err != nil {
 		if db.IsUniqueViolation(err) {
-			writeJSON(w, http.StatusConflict, map[string]any{
-				"statusCode":  http.StatusConflict,
-				"error":       "Conflict",
-				"message":     fmt.Sprintf("Spell %q already known", body.CatalogSpellID),
-				"fieldErrors": FieldErrorMap{"catalogSpellId": {"Already learned"}},
-			})
+			writeFieldError(w, http.StatusConflict, fmt.Sprintf("Spell %q already known", body.CatalogSpellID), FieldErrorMap{"catalogSpellId": {"Already learned"}})
 			return
 		}
 		writeError(w, http.StatusInternalServerError, "Could not learn spell")
@@ -72,17 +63,13 @@ func (s *Server) handleLearnSpell(w http.ResponseWriter, r *http.Request) {
 // handleUnlearnSpell ports unlearnSpell: removes the spell, returning
 // {catalogSpellId, removed}. removed=0 when it wasn't known (still 200).
 func (s *Server) handleUnlearnSpell(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	character, ok := s.characterFor(w, r)
 	if !ok {
 		return
 	}
 	catalogSpellID := chi.URLParam(r, "catalogSpellId")
-	if _, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id); err != nil {
-		writeError(w, status, err.Error())
-		return
-	}
 	removed, err := s.queries.DeleteSpell(r.Context(), sqlcgen.DeleteSpellParams{
-		Characterid: id, Catalogspellid: catalogSpellID,
+		Characterid: character.ID, Catalogspellid: catalogSpellID,
 	})
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not unlearn spell")
@@ -94,7 +81,7 @@ func (s *Server) handleUnlearnSpell(w http.ResponseWriter, r *http.Request) {
 // handleSetSpellPrepared ports setSpellPrepared: toggles the prepared flag; 404
 // (not 400) when the spell isn't learned, so the UI can say "aprenda primeiro".
 func (s *Server) handleSetSpellPrepared(w http.ResponseWriter, r *http.Request) {
-	id, ok := intParam(w, r, "id")
+	character, ok := s.characterFor(w, r)
 	if !ok {
 		return
 	}
@@ -105,16 +92,12 @@ func (s *Server) handleSetSpellPrepared(w http.ResponseWriter, r *http.Request) 
 	if !decodeJSON(w, r, &body) {
 		return
 	}
-	if _, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id); err != nil {
-		writeError(w, status, err.Error())
-		return
-	}
 	if body.Prepared == nil {
 		writeValidationError(w, FieldErrorMap{"prepared": {"prepared must be a boolean value"}})
 		return
 	}
 	row, err := s.queries.SetSpellPreparedByCatalog(r.Context(), sqlcgen.SetSpellPreparedByCatalogParams{
-		Prepared: boolToInt(*body.Prepared), CharacterId: id, CatalogSpellId: catalogSpellID,
+		Prepared: boolToInt(*body.Prepared), CharacterId: character.ID, CatalogSpellId: catalogSpellID,
 	})
 	if errors.Is(err, sql.ErrNoRows) {
 		writeError(w, http.StatusNotFound, fmt.Sprintf("Spell %q not in character's spellbook", catalogSpellID))
