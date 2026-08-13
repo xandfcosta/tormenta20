@@ -1,6 +1,10 @@
 package engine
 
-import "testing"
+import (
+	"path/filepath"
+	"strings"
+	"testing"
+)
 
 // Redução de dano do Bárbaro — livro p42.
 //
@@ -51,29 +55,91 @@ func TestBarbaroRdStepsEveryThreeLevels(t *testing.T) {
 	}
 }
 
-// A RD do Guerreiro por armadura pesada NÃO EXISTE no livro como está modelada.
-// Varredura completa do PDF (ALE-111): o que há é "Especialização em Armadura"
-// (p65), um poder ESCOLHIDO de 12º nível dando RD 5 fixa. A progressão que o
-// motor usa é a do Bárbaro, copiada — então um Guerreiro de 5º a 11º ganha RD
-// que não deveria ter.
+// "Especialização em Armadura" — Cavaleiro p54, Guerreiro p65: poder ESCOLHIDO
+// com pré-requisito de 12º nível na classe, RD 5 fixa, só com armadura pesada.
 //
-// Este teste fixa o comportamento ATUAL de propósito: corrigir muda o número de
-// personagens já criados e é decisão do dono. Ele impede regressão silenciosa,
-// NÃO valida a regra.
-func TestGuerreiroRdRequiresHeavyArmor(t *testing.T) {
-	t.Run("sem armadura pesada não há RD, em nenhum nível", func(t *testing.T) {
-		for _, level := range []int{1, 5, 17, 20} {
-			if got := guerreiroRdForLevel(level, false); got != 0 {
-				t.Errorf("nível %d sem armadura pesada: RD = %d, want 0", level, got)
+// O motor dava ao Guerreiro a progressão do BÁRBARO a partir do 5º nível, o que
+// não existe no livro: todo Guerreiro de 5 a 11 tinha RD que não deveria ter, e
+// do 12º em diante tinha o valor errado (ALE-111). Estes testes fixam a regra
+// certa, e não o comportamento antigo.
+func TestEspecializacaoEmArmadura(t *testing.T) {
+	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "parity"))
+	catalogs := primeFromDump(t, dir)
+
+	rd := func(class string, level int, powers string, heavy bool) int {
+		ch := Character{
+			Level:       level,
+			Classes:     []CharacterClass{{ClassName: class, Level: level}},
+			ClassPowers: powers,
+		}
+		e := ItemEffects{Flags: map[string]bool{}}
+		if heavy {
+			e.Flags["armadura-pesada"] = true
+		}
+		_ = catalogs
+		return characterDamageReduction(ch, e).Total
+	}
+	poder := func(class string) string {
+		return `["class.` + class + `.especializacao-em-armadura"]`
+	}
+
+	for _, class := range []string{"guerreiro", "cavaleiro"} {
+		nome := strings.ToUpper(class[:1]) + class[1:]
+		if class == "cavaleiro" {
+			nome = "Cavaleiro"
+		} else {
+			nome = "Guerreiro"
+		}
+
+		t.Run(nome+": sem o poder escolhido não há RD, em nenhum nível", func(t *testing.T) {
+			for _, level := range []int{5, 11, 12, 20} {
+				if got := rd(nome, level, `[]`, true); got != 0 {
+					t.Errorf("nível %d sem o poder: RD = %d, want 0", level, got)
+				}
 			}
+		})
+
+		t.Run(nome+": com o poder, só a partir do 12º nível", func(t *testing.T) {
+			if got := rd(nome, 11, poder(class), true); got != 0 {
+				t.Errorf("nível 11: RD = %d, want 0 — o pré-requisito é 12º", got)
+			}
+			if got := rd(nome, 12, poder(class), true); got != 5 {
+				t.Errorf("nível 12: RD = %d, want 5", got)
+			}
+		})
+
+		t.Run(nome+": RD 5 é FIXA, não escala com o nível", func(t *testing.T) {
+			if got := rd(nome, 20, poder(class), true); got != 5 {
+				t.Errorf("nível 20: RD = %d, want 5 — voltou a escalar?", got)
+			}
+		})
+
+		t.Run(nome+": sem armadura pesada não vale", func(t *testing.T) {
+			if got := rd(nome, 20, poder(class), false); got != 0 {
+				t.Errorf("sem armadura pesada: RD = %d, want 0", got)
+			}
+		})
+	}
+
+	// O poder é class-qualified: a escolha de uma classe não pode satisfazer a
+	// outra num multiclasse. Antes o casamento era por sufixo.
+	t.Run("a escolha de uma classe não vale para a outra", func(t *testing.T) {
+		if got := rd("Cavaleiro", 12, poder("guerreiro"), true); got != 0 {
+			t.Errorf("Cavaleiro com o poder do Guerreiro: RD = %d, want 0", got)
 		}
 	})
 
-	t.Run("com armadura pesada segue a progressão do Bárbaro", func(t *testing.T) {
-		for _, level := range []int{4, 5, 11, 20} {
-			if got, want := guerreiroRdForLevel(level, true), barbaroRdForLevel(level); got != want {
-				t.Errorf("nível %d: RD = %d, want %d", level, got, want)
-			}
+	// "cumulativa com a RD fornecida por Bastião" — as duas descrições se citam.
+	t.Run("Bastião e Especialização se ACUMULAM (p54/p55)", func(t *testing.T) {
+		ch := Character{
+			Level:   12,
+			Classes: []CharacterClass{{ClassName: "Cavaleiro", Level: 12}},
+			ClassPowers: `["class.cavaleiro.caminho-bastiao",` +
+				`"class.cavaleiro.especializacao-em-armadura"]`,
+		}
+		e := ItemEffects{Flags: map[string]bool{"armadura-pesada": true}}
+		if got := characterDamageReduction(ch, e).Total; got != 10 {
+			t.Errorf("Bastião + Especialização = %d, want 10", got)
 		}
 	})
 }

@@ -163,24 +163,37 @@ func TestConditionsApplyOnlyTheMostSevere(t *testing.T) {
 	})
 }
 
-// GAP CONHECIDO, fixado como está de propósito (ALE-112).
+// "CEGO. O personagem fica DESPREVENIDO e lento […]" e "AGARRADO. O personagem
+// fica desprevenido e imóvel" — as duas COMPÕEM o desprevenido inteiro, que é
+// "−5 na Defesa E EM REFLEXOS".
 //
-// "CEGO. O personagem fica DESPREVENIDO e lento […]" — e Desprevenido é "−5 na
-// Defesa E EM REFLEXOS". A tabela dá ao cego a metade da Defesa e NÃO a de
-// Reflexos, então um personagem cego resiste a área melhor do que deveria.
-//
-// O teste afirma o comportamento ATUAL para impedir regressão silenciosa; a
-// correção muda número de personagem e precisa dos dois motores + regeneração do
-// oráculo, então está registrada, não feita aqui.
-func TestCegoIsMissingTheReflexosHalfOfDesprevenido(t *testing.T) {
-	cego := conditionModifiers("cego")
-	if got := condTotal(cego, ModifierTarget{K: "defense"}); got != -5 {
-		t.Errorf("cego na Defesa = %d, want -5", got)
+// O cego tinha só a metade da Defesa (ALE-112): um personagem cego resistia a
+// área melhor do que deveria. Derivado do desprevenido em vez de repetido, então
+// mexer numa metade sem mexer na outra quebra aqui.
+func TestCegoAndAgarradoComposeDesprevenido(t *testing.T) {
+	desprevenido := conditionModifiers("desprevenido")
+	defense := ModifierTarget{K: "defense"}
+	reflexos := ModifierTarget{K: "expertise", Name: "Reflexos"}
+
+	for _, id := range []string{"cego", "agarrado"} {
+		mods := conditionModifiers(id)
+		for _, alvo := range []struct {
+			nome   string
+			target ModifierTarget
+		}{{"Defesa", defense}, {"Reflexos", reflexos}} {
+			got, want := condTotal(mods, alvo.target), condTotal(desprevenido, alvo.target)
+			if got != want {
+				t.Errorf("%s em %s = %d, want %d (o mesmo que desprevenido)", id, alvo.nome, got, want)
+			}
+		}
 	}
-	reflexos := condTotal(cego, ModifierTarget{K: "expertise", Name: "Reflexos"})
-	if reflexos != 0 {
-		t.Fatalf("cego agora penaliza Reflexos em %d — se isso foi intencional, "+
-			"feche a ALE-112 e troque este teste por um que exija -5", reflexos)
+
+	// E cada uma mantém o que tem de próprio além do desprevenido.
+	if got := condTotal(conditionModifiers("cego"), ModifierTarget{K: "expertiseByAttribute", Attribute: "strength"}); got != -5 {
+		t.Errorf("cego em perícias de Força = %d, want -5", got)
+	}
+	if got := condTotal(conditionModifiers("agarrado"), ModifierTarget{K: "attack", Scope: "all"}); got != -2 {
+		t.Errorf("agarrado em ataque = %d, want -2", got)
 	}
 }
 

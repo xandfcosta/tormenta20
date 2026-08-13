@@ -121,12 +121,24 @@ func condIntSabCar(n int) []Modifier {
 	return []Modifier{condByAttr("intelligence", n), condByAttr("wisdom", n), condByAttr("charisma", n)}
 }
 
+// desprevenidoMods é compartilhado porque a p394 define OUTRAS condições em
+// termos desta: "CEGO. O personagem fica desprevenido e lento", "AGARRADO. O
+// personagem fica desprevenido e imóvel". Compor em vez de copiar os números é o
+// que impede uma delas de ficar com metade do efeito — foi assim que o cego
+// perdeu a penalidade de Reflexos (ALE-112).
+var desprevenidoMods = []Modifier{condDefense(-5), condSkill("Reflexos", -5)}
+
+// comPlus devolve os modificadores de uma condição citada mais os próprios.
+func comPlus(base []Modifier, extra ...Modifier) []Modifier {
+	return append(append([]Modifier{}, base...), extra...)
+}
+
 // conditionModifierTable duplicates t20-data condition-modifiers.ts — keep in sync.
 var conditionModifierTable = map[string][]Modifier{
 	"abalado":      {condAllSkills(-2)},
 	"apavorado":    {condAllSkills(-5)},
 	"vulneravel":   {condDefense(-2)},
-	"desprevenido": {condDefense(-5), condSkill("Reflexos", -5)},
+	"desprevenido": desprevenidoMods,
 	"indefeso":     {condDefense(-10)},
 	"fraco":        condForDesCon(-2),
 	"debilitado":   condForDesCon(-5),
@@ -134,13 +146,15 @@ var conditionModifierTable = map[string][]Modifier{
 	"esmorecido":   condIntSabCar(-5),
 	"fatigado":     append(condForDesCon(-2), condDefense(-2)),
 	"exausto":      append(condForDesCon(-5), condDefense(-2)),
-	"cego":         {condDefense(-5), condByAttr("strength", -5), condByAttr("dexterity", -5)},
-	"ofuscado":     {condAttack(-2), condSkill("Percepção", -2)},
-	"fascinado":    {condSkill("Percepção", -5)},
-	"surdo":        {condSkill("Iniciativa", -5)},
-	"enredado":     {condDefense(-2), condAttack(-2)},
-	"agarrado":     {condDefense(-5), condSkill("Reflexos", -5), condAttack(-2)},
-	"caido":        {condSkill("Luta", -5)},
+	// "CEGO. O personagem fica desprevenido e lento […] e sofre −5 em testes de
+	// perícias baseadas em Força ou Destreza."
+	"cego":      comPlus(desprevenidoMods, condByAttr("strength", -5), condByAttr("dexterity", -5)),
+	"ofuscado":  {condAttack(-2), condSkill("Percepção", -2)},
+	"fascinado": {condSkill("Percepção", -5)},
+	"surdo":     {condSkill("Iniciativa", -5)},
+	"enredado":  {condDefense(-2), condAttack(-2)},
+	"agarrado":  {condDefense(-5), condSkill("Reflexos", -5), condAttack(-2)},
+	"caido":     {condSkill("Luta", -5)},
 }
 
 // itemActiveItem ports the per-item branch of activeItemsFor's map: base +

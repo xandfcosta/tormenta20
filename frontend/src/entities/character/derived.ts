@@ -3,7 +3,6 @@ import {
   applyActiveConditionals,
   barbaroRdForLevel,
   CAVALEIRO_BASTIAO_RD,
-  guerreiroRdForLevel,
   carismaLossFromPowers,
   CLASS_SPELLCASTING_ATTRIBUTE,
   computeItemEffects,
@@ -1085,24 +1084,33 @@ export function pmCostMod(effects: ItemEffects): {
  * Redução de Dano agregada do personagem, para exibir junto da Defesa.
  * Fontes cobertas (todas passivas e deriváveis do estado da ficha):
  *  - Bárbaro: tabela p42 (2/4/6/8/10 nos níveis 5/8/11/14/17)
- *  - Guerreiro: mesma progressão, apenas em armadura pesada (flag
- *    'armadura-pesada' do engine)
- *  - Cavaleiro Caminho do Bastião (p55): RD 5 em armadura pesada
- *  - Cavaleiro Especialização em Armadura (p54): RD 5 em armadura pesada,
- *    explicitamente CUMULATIVA com Bastião
+ *  - Cavaleiro Caminho do Bastião (p55): RD 5 em armadura pesada, escolhido no
+ *    5º nível
+ *  - Especialização em Armadura: poder ESCOLHIDO com pré-requisito de 12º nível
+ *    na classe, RD 5 fixa em armadura pesada — existe igual para Cavaleiro
+ *    (p54) e Guerreiro (p65), e as duas descrições dizem que é CUMULATIVA com
+ *    Bastião. O Guerreiro NÃO tem RD passiva: o motor dava a ele a progressão do
+ *    Bárbaro desde o 5º nível, o que não existe no livro (ALE-111).
  * RD geral não acumula entre fontes (vale a maior, p290) — exceto a
  * cumulatividade explícita acima.
  *
  * @example characterDamageReduction(barbaro8, effects).total // 4
  */
+/** "Especialização em Armadura" (Cavaleiro p54, Guerreiro p65): poder escolhido,
+ *  pré-requisito de 12º nível na classe, RD 5 fixa com armadura pesada. */
+const ESPECIALIZACAO_ARMADURA_RD = 5
+const ESPECIALIZACAO_ARMADURA_LEVEL = 12
+
 export function characterDamageReduction(
   character: Character,
   effects: ItemEffects,
 ): { total: number; sources: { source: string; amount: number }[] } {
   const heavy = effects.flags.has('armadura-pesada')
   const chosen = parseChoiceSet(character.classPowers)
-  const has = (suffix: string) =>
-    [...chosen].some((id) => id === suffix || id.endsWith(`.${suffix}`))
+  // Qualificado por classe: casar só pelo sufixo deixaria a escolha de uma
+  // classe satisfazer o ramo da outra num multiclasse.
+  const hasPower = (className: string, power: string) =>
+    [...chosen].some((id) => id === `class.${className}.${power}` || id === power)
 
   const sources: { source: string; amount: number }[] = []
   for (const entry of character.classes) {
@@ -1111,17 +1119,25 @@ export function characterDamageReduction(
       if (rd > 0) sources.push({ source: 'Bárbaro (p42)', amount: rd })
     }
     if (entry.className === 'Guerreiro' && heavy) {
-      const rd = guerreiroRdForLevel(entry.level, heavy)
-      if (rd > 0)
-        sources.push({ source: 'Guerreiro — armadura pesada', amount: rd })
-    }
-    if (entry.className === 'Cavaleiro' && heavy) {
-      if (entry.level >= 5 && has('caminho-bastiao'))
-        sources.push({ source: 'Bastião — armadura pesada', amount: CAVALEIRO_BASTIAO_RD })
-      if (has('especializacao-em-armadura'))
+      if (
+        entry.level >= ESPECIALIZACAO_ARMADURA_LEVEL &&
+        hasPower('guerreiro', 'especializacao-em-armadura')
+      )
         sources.push({
           source: 'Especialização em Armadura',
-          amount: 5,
+          amount: ESPECIALIZACAO_ARMADURA_RD,
+        })
+    }
+    if (entry.className === 'Cavaleiro' && heavy) {
+      if (entry.level >= 5 && hasPower('cavaleiro', 'caminho-bastiao'))
+        sources.push({ source: 'Bastião — armadura pesada', amount: CAVALEIRO_BASTIAO_RD })
+      if (
+        entry.level >= ESPECIALIZACAO_ARMADURA_LEVEL &&
+        hasPower('cavaleiro', 'especializacao-em-armadura')
+      )
+        sources.push({
+          source: 'Especialização em Armadura',
+          amount: ESPECIALIZACAO_ARMADURA_RD,
         })
     }
   }
