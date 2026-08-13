@@ -372,3 +372,40 @@ func TestCaidoDefenseIsDirectionalAndCumulative(t *testing.T) {
 		}
 	})
 }
+
+// "INDEFESO. O personagem fica desprevenido, mas sofre −10 na Defesa, FALHA
+// AUTOMATICAMENTE EM TESTES DE REFLEXOS e pode sofrer golpes de misericórdia."
+//
+// A falha automática não é um número: virá-la em −5 inventaria uma regra mais
+// branda que a do livro, e deixá-la de fora fazia um personagem inconsciente
+// rolar Reflexos normalmente. Vai como FLAG, que é o mecanismo do motor para
+// efeito booleano — a ficha mostra "falha automática" na linha em vez de um
+// total (ALE-115).
+func TestIndefesoAutoFailsReflexos(t *testing.T) {
+	vested := "vested"
+	flagsFor := func(ids ...string) map[string]bool {
+		mods := []Modifier{}
+		for _, id := range ids {
+			mods = append(mods, conditionModifiers(id)...)
+		}
+		return ComputeItemEffects([]ActiveItem{{Source: "Condições", Equipped: &vested, Modifiers: mods}}).Flags
+	}
+
+	if !flagsFor("indefeso")[autoFailReflexosFlag] {
+		t.Error("indefeso deveria marcar a falha automática em Reflexos")
+	}
+
+	// As condições que a p394 define COMO indefeso herdam a falha junto — foi por
+	// não compor que elas ficaram sem efeito nenhum (ALE-115).
+	for _, id := range []string{"paralisado", "inconsciente", "petrificado"} {
+		if !flagsFor(id)[autoFailReflexosFlag] {
+			t.Errorf("%s fica indefeso pelo livro, então falha em Reflexos", id)
+		}
+	}
+
+	// O desprevenido sozinho NÃO falha automaticamente — ele sofre −5, e é o
+	// "mas" do indefeso que troca a penalidade pela falha.
+	if flagsFor("desprevenido")[autoFailReflexosFlag] {
+		t.Error("desprevenido sofre −5 em Reflexos, não falha automática")
+	}
+}

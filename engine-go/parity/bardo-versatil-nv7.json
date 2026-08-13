@@ -987,7 +987,8 @@
         "itemContributions": [],
         "armorPenaltyApplied": 0
       }
-    ]
+    ],
+    "autoFailExpertises": []
   },
   "activeConditionals": [
     "Inspiração +1::expertiseAll::Sob Inspiração::1::morale",
@@ -1627,7 +1628,8 @@
         ],
         "armorPenaltyApplied": 0
       }
-    ]
+    ],
+    "autoFailExpertises": []
   },
   "weaponCardsWithConditionals": [
     {

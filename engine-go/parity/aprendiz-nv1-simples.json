@@ -1038,7 +1038,8 @@
         ],
         "armorPenaltyApplied": 0
       }
-    ]
+    ],
+    "autoFailExpertises": []
   },
   "activeConditionals": [],
   "sheetV2WithConditionals": {
@@ -1667,7 +1668,8 @@
         ],
         "armorPenaltyApplied": 0
       }
-    ]
+    ],
+    "autoFailExpertises": []
   },
   "weaponCardsWithConditionals": [
     {

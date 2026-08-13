@@ -53,6 +53,7 @@ export type ComputedSheetV2 = {
   damageReduction: RdBreakdown
   tempHpFuria: TempHpBreakdown
   expertises: ExpertiseBreakdown[]
+  autoFailExpertises: string[]
 }
 
 export type ConditionalDisplayInput = {

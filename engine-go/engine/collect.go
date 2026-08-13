@@ -118,6 +118,15 @@ func condForDesCon(n int) []Modifier {
 	return []Modifier{condByAttr("strength", n), condByAttr("dexterity", n), condByAttr("constitution", n)}
 }
 
+// autoFailReflexosFlag marca a falha AUTOMÁTICA em Reflexos do Indefeso (p394).
+// Booleano, não número: a ficha mostra "falha automática" na linha em vez de um
+// total, porque virá-la em −5 inventaria uma regra mais branda que a do livro.
+const autoFailReflexosFlag = "auto-fail-reflexos"
+
+func condFlag(name string) Modifier {
+	return Modifier{Target: ModifierTarget{K: "flag", Name: name}, Amount: 1, BonusType: "condition"}
+}
+
 // condDamageReduction — o Petrificado concede RD 8 (p394). Vai por modificador
 // como qualquer outra fonte, e não cravado no cálculo de RD, para que item e
 // magia possam conceder RD pelo mesmo caminho quando chegar a hora.
@@ -153,9 +162,9 @@ var (
 	debilitadoMods   = condForDesCon(-5)
 	// "INDEFESO. O personagem fica desprevenido, MAS sofre −10 na Defesa, falha
 	// automaticamente em testes de Reflexos […]" — o "mas" faz o −10 SUBSTITUIR o
-	// −5 do desprevenido. A falha automática em Reflexos não é um número e não
-	// vira modificador (ALE-115).
-	indefesoMods = []Modifier{condDefense(-10)}
+	// −5 do desprevenido. A falha automática em Reflexos não é número: vai como
+	// FLAG, que é o mecanismo do motor para efeito booleano.
+	indefesoMods = []Modifier{condDefense(-10), condFlag(autoFailReflexosFlag)}
 )
 
 // comPlus devolve os modificadores de uma condição citada mais os próprios.

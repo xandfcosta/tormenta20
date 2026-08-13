@@ -50,6 +50,7 @@ export const ITEM_FLAG_LABEL: Record<ItemFlag, string> = {
   'fatigue-on-sleep': 'Fadiga ao dormir',
   'reach-extends': 'Alcance ampliado',
   'armadura-pesada': 'Conta como armadura pesada',
+  'auto-fail-reflexos': 'Falha automática em Reflexos',
 }
 
 export type ItemFlagEffect = {

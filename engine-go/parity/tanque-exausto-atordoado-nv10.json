@@ -1190,7 +1190,8 @@
         "itemContributions": [],
         "armorPenaltyApplied": 0
       }
-    ]
+    ],
+    "autoFailExpertises": []
   },
   "activeConditionals": [],
   "sheetV2WithConditionals": {
@@ -1730,7 +1731,8 @@
         "itemContributions": [],
         "armorPenaltyApplied": 0
       }
-    ]
+    ],
+    "autoFailExpertises": []
   },
   "weaponCardsWithConditionals": [
     {

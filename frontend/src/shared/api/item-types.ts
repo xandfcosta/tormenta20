@@ -164,6 +164,10 @@ export type ItemFlag =
   /** Emitted by every armor-heavy piece while vested — read by flagOff
    *  conditions like Pele de Ferro ("se não estiver usando armadura pesada"). */
   | 'armadura-pesada'
+  /** Falha AUTOMÁTICA em Reflexos — o Indefeso e tudo que o livro define como
+   *  indefeso (p394). Booleano porque não é um número: a ficha mostra "falha
+   *  automática" na linha em vez de um total. */
+  | 'auto-fail-reflexos'
 
 export type ModifierCondition =
   | { c: 'always' }

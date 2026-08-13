@@ -1431,7 +1431,8 @@
         "itemContributions": [],
         "armorPenaltyApplied": 0
       }
-    ]
+    ],
+    "autoFailExpertises": []
   },
   "activeConditionals": [
     "Baluarte +10::defense::Baluarte — 1 PM, até o início do próximo turno::10::training",
@@ -1946,7 +1947,8 @@
         "itemContributions": [],
         "armorPenaltyApplied": 0
       }
-    ]
+    ],
+    "autoFailExpertises": []
   },
   "weaponCardsWithConditionals": [
     {

@@ -171,3 +171,28 @@ describe('ExpertisesPanel', () => {
     expect(screen.queryByLabelText('Remover Atletismo')).not.toBeInTheDocument()
   })
 })
+
+/**
+ * "INDEFESO. […] falha automaticamente em testes de Reflexos" (p394).
+ *
+ * O motor responde QUAIS perícias falham automaticamente
+ * (`sheet.autoFailExpertises`) em vez de a UI reinterpretar uma flag — a regra
+ * de que paralisado, inconsciente e petrificado implicam indefeso mora no Go.
+ * Aqui só se prova que a linha para de mostrar um número, porque um total ao
+ * lado de "falha automática" é a leitura errada na mesa (ALE-115).
+ */
+describe('Reflexos sob falha automática', () => {
+  it('a linha mostra falha automática em vez do total', async () => {
+    renderPanel(character({ activeConditions: '["paralisado"]' }))
+
+    const badge = await screen.findByRole('button', { name: /Falha automática/ })
+    expect(badge).toBeInTheDocument()
+    expect(badge).toHaveTextContent('—')
+  })
+
+  it('sem a condição, a mesma linha mostra o número', async () => {
+    renderPanel(character())
+
+    expect(screen.queryByRole('button', { name: /Falha automática/ })).not.toBeInTheDocument()
+  })
+})

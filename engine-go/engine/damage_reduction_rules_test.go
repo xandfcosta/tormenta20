@@ -183,3 +183,84 @@ func TestPetrificadoGrantsDamageReduction(t *testing.T) {
 		}
 	})
 }
+
+// "INSOLÊNCIA. Você soma seu Carisma na Defesa, LIMITADO PELO SEU NÍVEL. Esta
+// habilidade exige liberdade de movimentos; você não pode usá-la se estiver de
+// armadura pesada ou na condição imóvel." (Bucaneiro, p47)
+//
+// O teto vem da p226: "para classes, use seu nível NAQUELA CLASSE" — e o livro
+// dá o exemplo trabalhado ali mesmo: "um bucaneiro de 2º nível com Car 3 soma
+// +2 na Defesa. Quando subir para o 3º nível, passará a somar +3."
+//
+// Estava no catálogo SEM MODIFICADOR NENHUM: a habilidade aparecia na ficha e
+// não mexia na Defesa (ALE-115).
+func TestInsolenciaAddsCarismaCappedByClassLevel(t *testing.T) {
+	bucaneiro := func(level, carisma int, flags map[string]bool, conds string) DefenseBreakdown {
+		ch := Character{
+			Level: level, Charisma: carisma, ActiveConditions: conds,
+			Classes: []CharacterClass{{ClassName: "Bucaneiro", Level: level}},
+		}
+		e := ItemEffects{Flags: flags}
+		return defenseBreakdown(ch, e)
+	}
+	none := map[string]bool{}
+
+	// O exemplo do próprio livro, nos dois níveis que ele cita.
+	t.Run("o exemplo da p226: nível 2 com Car 3 soma +2, nível 3 soma +3", func(t *testing.T) {
+		if got := bucaneiro(2, 3, none, "[]").Total; got != 12 {
+			t.Errorf("nível 2, Car 3: Defesa = %d, want 12 (10 + 2, limitado pelo nível)", got)
+		}
+		if got := bucaneiro(3, 3, none, "[]").Total; got != 13 {
+			t.Errorf("nível 3, Car 3: Defesa = %d, want 13 (10 + 3)", got)
+		}
+	})
+
+	// Acima do Carisma o nível deixa de importar — o teto é o MENOR dos dois.
+	t.Run("nível alto não passa do Carisma", func(t *testing.T) {
+		if got := bucaneiro(10, 3, none, "[]").Total; got != 13 {
+			t.Errorf("nível 10, Car 3: Defesa = %d, want 13 — o teto é o menor dos dois", got)
+		}
+	})
+
+	t.Run("Carisma negativo não vira bônus nem penalidade", func(t *testing.T) {
+		if got := bucaneiro(5, -2, none, "[]").Total; got != 10 {
+			t.Errorf("Car −2: Defesa = %d, want 10", got)
+		}
+	})
+
+	// "exige liberdade de movimentos": as duas travas do livro.
+	t.Run("armadura pesada desliga", func(t *testing.T) {
+		heavy := map[string]bool{"armadura-pesada": true}
+		if got := bucaneiro(5, 3, heavy, "[]").Total; got != 10 {
+			t.Errorf("de armadura pesada: Defesa = %d, want 10 (sem Insolência)", got)
+		}
+	})
+
+	t.Run("a condição imóvel desliga", func(t *testing.T) {
+		if got := bucaneiro(5, 3, none, `["imovel"]`).Total; got != 10 {
+			t.Errorf("imóvel: Defesa = %d, want 10 (sem Insolência)", got)
+		}
+	})
+
+	// Multiclasse: o teto é o nível NA CLASSE, não o de personagem (p226).
+	t.Run("multiclasse limita pelo nível de Bucaneiro", func(t *testing.T) {
+		ch := Character{
+			Level: 10, Charisma: 5, ActiveConditions: "[]",
+			Classes: []CharacterClass{
+				{ClassName: "Guerreiro", Level: 8},
+				{ClassName: "Bucaneiro", Level: 2},
+			},
+		}
+		if got := defenseBreakdown(ch, ItemEffects{Flags: map[string]bool{}}).Total; got != 12 {
+			t.Errorf("Guerreiro 8 / Bucaneiro 2 com Car 5: Defesa = %d, want 12 (teto 2)", got)
+		}
+	})
+
+	t.Run("quem não é Bucaneiro não ganha nada", func(t *testing.T) {
+		ch := Character{Level: 5, Charisma: 5, ActiveConditions: "[]",
+			Classes: []CharacterClass{{ClassName: "Guerreiro", Level: 5}}}
+		if got := defenseBreakdown(ch, ItemEffects{Flags: map[string]bool{}}).Total; got != 10 {
+			t.Errorf("Guerreiro: Defesa = %d, want 10", got)
+		}
+	})
+}

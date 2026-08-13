@@ -1650,7 +1650,8 @@
         ],
         "armorPenaltyApplied": 0
       }
-    ]
+    ],
+    "autoFailExpertises": []
   },
   "activeConditionals": [
     "Fúria +3::attack:all::Em Fúria::3::morale",
@@ -2220,7 +2221,8 @@
         ],
         "armorPenaltyApplied": 0
       }
-    ]
+    ],
+    "autoFailExpertises": []
   },
   "weaponCardsWithConditionals": [
     {

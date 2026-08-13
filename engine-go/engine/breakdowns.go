@@ -94,6 +94,10 @@ type ComputedSheetV2 struct {
 	// (Alma de Bronze). The base sheet (furia off) is always {0, []}.
 	TempHpFuria TempHpBreakdown      `json:"tempHpFuria"`
 	Expertises  []ExpertiseBreakdown `json:"expertises"`
+	// Perícias em que o personagem FALHA AUTOMATICAMENTE — hoje só Reflexos, do
+	// Indefeso (p394). É o motor quem responde isso, e não a UI reinterpretando
+	// uma flag: a regra de quais condições implicam indefeso mora aqui.
+	AutoFailExpertises []string `json:"autoFailExpertises"`
 }
 
 // ComputeSheetV2 resolves the full breakdown sheet for a raw Character under the
@@ -126,6 +130,7 @@ func (c *Catalogs) ComputeSheetV2(ch Character, activeConditionals map[string]bo
 		DamageReduction:    characterDamageReduction(ch, effects),
 		TempHpFuria:        tempHpFromPowers(ch, effects, true),
 		Expertises:         expertises,
+		AutoFailExpertises: autoFailExpertises(effects),
 	}
 }
 
@@ -143,18 +148,62 @@ func defenseBreakdown(ch Character, e ItemEffects) DefenseBreakdown {
 	if dexApplied {
 		base += effectiveAttribute(ch, "dexterity", e)
 	}
+	insolencia := insolenciaDefense(ch, e)
 	melee := StatFor(e, ModifierTarget{K: "defense", Scope: "melee"})
 	ranged := StatFor(e, ModifierTarget{K: "defense", Scope: "ranged"})
-	total := base + stat.Total
+	total := base + stat.Total + insolencia
+	contribs := stat.Contributions
+	if insolencia > 0 {
+		contribs = concatContribs(contribs, []Contribution{
+			{Source: "Insolência (p47)", BonusType: "untyped", Amount: insolencia},
+		})
+	}
 	return DefenseBreakdown{
 		Base:          base,
-		ItemBonus:     stat.Total,
+		ItemBonus:     stat.Total + insolencia,
 		Total:         total,
 		DexApplied:    dexApplied,
 		VsMelee:       total + melee.Total,
 		VsRanged:      total + ranged.Total,
-		Contributions: withNoteContribs(concatContribs(stat.Contributions, melee.Contributions, ranged.Contributions)),
+		Contributions: withNoteContribs(concatContribs(contribs, melee.Contributions, ranged.Contributions)),
 	}
+}
+
+// insolenciaDefense — Bucaneiro p47: "Você soma seu Carisma na Defesa, limitado
+// pelo seu nível. Esta habilidade exige liberdade de movimentos; você não pode
+// usá-la se estiver de armadura pesada ou na condição imóvel."
+//
+// O teto é o nível NA CLASSE (p226, "Limites de Nível"), com exemplo trabalhado
+// na mesma página: "um bucaneiro de 2º nível com Car 3 soma +2 na Defesa".
+//
+// Vive aqui, e não como modificador de catálogo, porque o motor de itens não
+// avalia `scale` fora de PV/PM e não tem noção de TETO — a Insolência precisa
+// das duas coisas. Estava no catálogo sem modificador nenhum: aparecia na ficha
+// e não mexia na Defesa (ALE-115).
+func insolenciaDefense(ch Character, e ItemEffects) int {
+	if e.Flags["armadura-pesada"] || hasActiveCondition(ch, "imovel") {
+		return 0
+	}
+	level := 0
+	for _, entry := range ch.Classes {
+		if entry.ClassName == "Bucaneiro" && entry.Level > level {
+			level = entry.Level
+		}
+	}
+	if level == 0 {
+		return 0
+	}
+	return max(0, min(effectiveAttribute(ch, "charisma", e), level))
+}
+
+// hasActiveCondition reporta se a condição está ligada na ficha.
+func hasActiveCondition(ch Character, id string) bool {
+	for _, active := range parseStringArray(ch.ActiveConditions) {
+		if active == id {
+			return true
+		}
+	}
+	return false
 }
 
 // displacementBreakdown ports derived.ts displacementTotal (floored at 0).
@@ -254,6 +303,19 @@ func concatContribs(lists ...[]Contribution) []Contribution {
 	out := []Contribution{}
 	for _, l := range lists {
 		out = append(out, l...)
+	}
+	return out
+}
+
+// autoFailExpertises lista as perícias em que o personagem falha
+// AUTOMATICAMENTE. Hoje só Reflexos, pelo Indefeso (p394) e por tudo que o livro
+// define COMO indefeso — paralisado, inconsciente, petrificado.
+//
+// Devolve sempre uma lista (nunca nil) para o JSON trazer `[]` em vez de `null`.
+func autoFailExpertises(e ItemEffects) []string {
+	out := []string{}
+	if e.Flags[autoFailReflexosFlag] {
+		out = append(out, "Reflexos")
 	}
 	return out
 }

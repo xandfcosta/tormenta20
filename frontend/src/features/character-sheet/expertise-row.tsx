@@ -39,6 +39,9 @@ export function ExpertiseRow(props: ExpertiseRowProps) {
   const trainBonus = () => (state().trained ? trainingBonusForLevel(props.character.level) : 0)
   const itemBonus = () => entry()?.itemBonus ?? 0
   const locked = () => !!props.def.trainedOnly && !state().trained
+  // O Indefeso (e tudo que o livro define como indefeso) FALHA automaticamente
+  // em Reflexos — não é um número, então a linha não mostra total (p394).
+  const autoFail = () => props.sheet.autoFailExpertises.includes(props.def.name)
 
   return (
     <ExpertiseBreakdown
@@ -61,7 +64,7 @@ export function ExpertiseRow(props: ExpertiseRowProps) {
         {/* Both the badge and the name open the breakdown; the toggle, the
             attribute select and delete stay interactive — they are not
             triggers. Kobalte composes via `as=`, where Radix used `asChild`. */}
-        <DialogTrigger as={TotalBadge} total={total()} locked={locked()} />
+        <DialogTrigger as={TotalBadge} total={total()} locked={locked()} autoFail={autoFail()} />
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-1.5">
             <DialogTrigger
@@ -107,20 +110,27 @@ export function ExpertiseRow(props: ExpertiseRowProps) {
  * and still untrained) reads as a dashed, dimmed box — the old line-through was
  * illegible on small mono digits.
  */
-function TotalBadge(props: { total: number; locked: boolean }) {
+function TotalBadge(props: { total: number; locked: boolean; autoFail?: boolean }) {
+  // A falha automática não tem número para mostrar. O traço carrega o sentido
+  // visualmente e o rótulo acessível o diz por extenso — a composição continua
+  // no diálogo, porque o jogador ainda quer saber o que ele PERDEU.
+  const label = () =>
+    props.autoFail ? 'Falha automática — detalhar' : `Detalhar ${signed(props.total)}`
   return (
     <button
       {...props}
       type="button"
-      aria-label={`Detalhar ${signed(props.total)}`}
+      aria-label={label()}
       class={cn(
         'flex size-11 shrink-0 items-center justify-center rounded-sm border font-mono text-lg font-bold',
-        props.locked
-          ? 'border-dashed border-grimorio-iron text-muted-foreground/50'
-          : 'border-grimorio-iron bg-[var(--grimorio-panel-raised)] text-grimorio-gold',
+        props.autoFail
+          ? 'border-destructive/60 bg-destructive/10 text-destructive'
+          : props.locked
+            ? 'border-dashed border-grimorio-iron text-muted-foreground/50'
+            : 'border-grimorio-iron bg-[var(--grimorio-panel-raised)] text-grimorio-gold',
       )}
     >
-      {signed(props.total)}
+      {props.autoFail ? '—' : signed(props.total)}
     </button>
   )
 }
