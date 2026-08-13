@@ -113,7 +113,7 @@ type createCharacterBody struct {
 	SecondaryRaceChoices *json.RawMessage   `json:"secondaryRaceChoices"`
 }
 
-// handleCreateCharacter ports CharactersService.create: validate (assertCharacterRules
+// handleCreateCharacter validate (assertCharacterRules
 // + presence), seed the aggregate (character + races + classes + all expertises +
 // items) with the class-default proficiencies, then heal vitals from the engine.
 // NOTE: catalog @IsIn checks (races/origin/god/size) + classChoices sanitize are
@@ -236,7 +236,7 @@ func (s *Server) insertCharacter(r *http.Request, ownerID int64, name string, bo
 	for _, it := range body.Items {
 		if _, err := q.CreateItem(r.Context(), sqlcgen.CreateItemParams{
 			Characterid: id, Catalogid: nullString(it.CatalogID), Name: derefStr(it.Name, ""),
-			Quantity: derefI64(it.Quantity, 1), Slots: derefF64(it.Slots, 1),
+			Quantity: derefOr(it.Quantity, 1), Slots: derefF64(it.Slots, 1),
 			Equipped: nullString(it.Equipped), Improvements: "[]", Material: sql.NullString{}, Createdat: now,
 		}); err != nil {
 			return 0, err
@@ -282,13 +282,6 @@ func compactOrDefault(raw *json.RawMessage, def string) string {
 }
 
 func derefStr(p *string, def string) string {
-	if p == nil {
-		return def
-	}
-	return *p
-}
-
-func derefI64(p *int64, def int64) int64 {
 	if p == nil {
 		return def
 	}

@@ -35,8 +35,6 @@ func sessionDTO(s sqlcgen.Session) SessionDTO {
 	}
 }
 
-// ownedSession loads a session under an owned campaign (findOne), writing the
-// 404/403 and returning ok=false.
 // loadSessionInCampaign loads a session and asserts it belongs to the campaign —
 // transport-agnostic, no access check of its own. Shared by ownedSession (owner-only)
 // and the WS gateway's member-aware sessionForCaller so the "session belongs to the
@@ -54,7 +52,7 @@ func (s *Server) loadSessionInCampaign(ctx context.Context, campaignID, sessionI
 
 // sessionForCaller is the member-aware session resolver the WS gateway runs on every
 // session-scoped message: resolve the caller's role (gm/player) then load the session and
-// assert it belongs to the campaign. Mirrors SessionsService.findOneForCaller — the role is
+// assert it belongs to the campaign. — the role is
 // stashed on socket.data for per-action GM gating. Transport-agnostic (WS maps status/err).
 func (s *Server) sessionForCaller(ctx context.Context, userID, campaignID, sessionID int64) (sqlcgen.Session, string, int, error) {
 	role, status, err := s.resolveRole(ctx, userID, campaignID)
@@ -174,31 +172,25 @@ func (s *Server) handleUpdateSession(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.ownedSession(w, r, cid, sid); !ok {
 		return
 	}
-	sets := []string{}
-	args := []any{}
+	var set setBuilder
 	if body.SessionNumber != nil {
 		if *body.SessionNumber < 1 {
 			writeValidationError(w, FieldErrorMap{"sessionNumber": {"sessionNumber must not be less than 1"}})
 			return
 		}
-		sets, args = append(sets, "sessionNumber = ?"), append(args, *body.SessionNumber)
+		set.add("sessionNumber = ?", *body.SessionNumber)
 	}
 	if body.Title != nil {
-		sets = append(sets, "title = ?")
-		args = append(args, nullableArg(trimOrNull(body.Title)))
+		set.add("title = ?", nullableArg(trimOrNull(body.Title)))
 	}
 	if body.Notes != nil {
-		sets = append(sets, "notes = ?")
-		args = append(args, nullableArg(trimOrNull(body.Notes)))
+		set.add("notes = ?", nullableArg(trimOrNull(body.Notes)))
 	}
-	if len(sets) == 0 {
+	if set.empty() {
 		writeError(w, http.StatusBadRequest, "No fields to update")
 		return
 	}
-	sets = append(sets, "updatedAt = ?")
-	args = append(args, nowISO(), sid)
-	//nolint:gosec // fixed column allowlist.
-	if _, err := s.db.ExecContext(r.Context(), "UPDATE sessions SET "+strings.Join(sets, ", ")+" WHERE id = ?", args...); err != nil {
+	if err := set.execTouched(r.Context(), s.db, "UPDATE sessions", sid); err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not update session")
 		return
 	}
@@ -316,7 +308,10 @@ func (s *Server) handleClearTracker(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]int64{"id": sid})
 }
 
-// trimOrNull trims a string pointer, treating nil/empty as NULL.
+// trimOrNull trims a string pointer, treating nil AND whitespace-only as NULL.
+// The one spelling of "blank" for every nullable TEXT column: campaigns used to
+// have a second one (`trimmedNull`) that stored an empty string instead, so the
+// same input produced "" on create and null on update.
 func trimOrNull(p *string) sql.NullString {
 	if p == nil {
 		return sql.NullString{}

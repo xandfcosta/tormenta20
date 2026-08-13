@@ -32,7 +32,7 @@ type socketData struct {
 func (s *Server) SocketHandler() http.Handler {
 	// CORS must reflect the browser's Origin with credentials — the front connects
 	// through the Vite proxy, so the forwarded Origin (:5173) differs from the Go
-	// port and engine.io otherwise mishandles the WS handshake. Mirrors the Nest
+	// port and engine.io otherwise mishandles the WS handshake. Matches the
 	// gateway's `@WebSocketGateway({ cors: { origin: true, credentials: true } })`.
 	opts := socket.DefaultServerOptions()
 	opts.SetCors(&types.Cors{Origin: "*", Credentials: true})
@@ -46,7 +46,7 @@ func (s *Server) SocketHandler() http.Handler {
 }
 
 // onConnect authenticates the handshake (same cookie/JWT as HTTP); a bad handshake gets an
-// `unauthorized` emit + disconnect. Mirrors RealtimeGateway.handleConnection.
+// `unauthorized` emit + disconnect.
 func (g *realtimeGateway) onConnect(sock *socket.Socket) {
 	user, err := g.authenticate(sock)
 	if err != nil {
@@ -128,7 +128,7 @@ func (g *realtimeGateway) requireGm(sock *socket.Socket, role string) bool {
 }
 
 // onJoin resolves session access (stashing the role), joins the room, and tracks presence.
-// Ack: {joined: room}. Mirrors RealtimeGateway.joinSession.
+// Ack: {joined: room}.
 func (g *realtimeGateway) onJoin(sock *socket.Socket, args []any) {
 	ctx, ok := g.access(sock, args)
 	if !ok {
@@ -197,7 +197,7 @@ func (g *realtimeGateway) emitPresence(sessionID int64, roster []PresenceUser) {
 	})
 }
 
-// wsError signals a rejected message the way Nest's WsException filter does — an
+// wsError signals a rejected message to the client — an
 // `exception` event — instead of acking (the front's mutation emits pass no callback, and
 // corrupting a get-state ack with an error payload would poison the tracker).
 func (g *realtimeGateway) wsError(sock *socket.Socket, message string) {
@@ -217,7 +217,7 @@ func (g *realtimeGateway) mutateAndBroadcast(sock *socket.Socket, ctx msgCtx, mu
 }
 
 // emitSessionState broadcasts the tracker to the room and kicks off a fire-and-forget
-// persist. Mirrors RealtimeGateway.emitSessionState.
+// persist.
 func (g *realtimeGateway) emitSessionState(sessionID int64, state *SessionRuntimeState) {
 	g.io.To(socket.Room(sessionRoomName(sessionID))).Emit("session-state", state)
 	go g.persistAndWarn(sessionID)

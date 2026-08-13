@@ -18,7 +18,7 @@ type TempHpBreakdown struct {
 
 // flySpeedTotal ports derived.ts: fly speed from effects (0 = can't fly).
 func flySpeedTotal(e ItemEffects) int {
-	return maxInt(0, StatFor(e, ModifierTarget{K: "flySpeed"}).Total)
+	return max(0, StatFor(e, ModifierTarget{K: "flySpeed"}).Total)
 }
 
 // inventorySlotsTotal ports derived.ts (p141): 10 +2/Força (or −1/Força negativa)
@@ -41,7 +41,7 @@ func casterLevelForPmLimit(ch Character) int {
 			continue
 		}
 		found = true
-		best = maxInt(best, entry.Level)
+		best = max(best, entry.Level)
 	}
 	if !found {
 		return ch.Level
@@ -54,7 +54,7 @@ func casterLevelForPmLimit(ch Character) int {
 // SUMMARY, not the cap for any given spell — for that, use SpellPmLimit below,
 // which asks which class grants THAT spell (ALE-92).
 func pmLimitBreakdown(ch Character, e ItemEffects) ValueBreakdown {
-	base := maxInt(1, casterLevelForPmLimit(ch))
+	base := max(1, casterLevelForPmLimit(ch))
 	stat := StatFor(e, ModifierTarget{K: "pmLimit"})
 	return ValueBreakdown{
 		Base:          base,
@@ -148,7 +148,7 @@ func characterDamageReduction(ch Character, e ItemEffects) RdBreakdown {
 			especializacao += s.Amount
 			continue
 		}
-		general = maxInt(general, s.Amount)
+		general = max(general, s.Amount)
 	}
 	return RdBreakdown{Total: general + especializacao, Sources: sources}
 }
@@ -203,7 +203,7 @@ func SpellPmLimit(ch Character, itemBonus int, spellClasses []string) int {
 	if best == 0 {
 		best = ch.Level // race/origin/power grant: character level
 	}
-	return maxInt(1, best) + itemBonus
+	return max(1, best) + itemBonus
 }
 
 // SpellPmLimitFor resolves the item bonus off the character's own sheet and

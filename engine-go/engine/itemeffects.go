@@ -462,14 +462,14 @@ func ApplyActiveConditionals(effects ItemEffects, activeIds map[string]bool) Ite
 	if len(activeIds) == 0 {
 		return effects
 	}
-	order := []string{}
 	buckets := map[string][]Contribution{}
 	for key, agg := range effects.ByTarget {
 		buckets[key] = append([]Contribution{}, agg.Contributions...)
 	}
-	// Seed order from existing keys deterministically (byTarget iteration is
-	// random in Go); the final byTarget is a map so key order is irrelevant to
-	// comparison, but per-key contribution order must stay stable.
+	// Unlike ComputeItemEffects above, this one needs no key ordering: it emits a
+	// map, and per-key contribution order is already stable because each bucket
+	// is a slice appended in source order. The tracking slice here was built and
+	// then discarded (`_ = order`), which read as if ordering mattered.
 	remaining := []ConditionalEffect{}
 	for _, c := range effects.Conditional {
 		if !activeIds[ConditionalID(c)] {
@@ -480,9 +480,6 @@ func ApplyActiveConditionals(effects ItemEffects, activeIds map[string]bool) Ite
 			continue
 		}
 		key := targetKey(c.Target)
-		if _, ok := buckets[key]; !ok {
-			order = append(order, key)
-		}
 		fold := Contribution{Source: c.Source + " (cond.)", BonusType: c.BonusType, Amount: c.Amount}
 		if c.Note != "" {
 			fold.Note = c.Note
@@ -493,6 +490,5 @@ func ApplyActiveConditionals(effects ItemEffects, activeIds map[string]bool) Ite
 	for key := range buckets {
 		byTarget[key] = resolveStack(buckets[key])
 	}
-	_ = order
 	return ItemEffects{ByTarget: byTarget, Flags: effects.Flags, Conditional: remaining}
 }

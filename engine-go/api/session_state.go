@@ -58,7 +58,7 @@ type entryPatch struct {
 }
 
 // sortInitiative keeps the list DESC by initiative, ties broken by label using pt-BR
-// collation (accent-aware, e.g. "Ávila" < "Bravo") to match the Nest side's
+// collation (accent-aware, e.g. "Ávila" < "Bravo"), which is what the client's
 // String.localeCompare. The collator is created per call — used only within this single
 // sort goroutine, so no sharing/concurrency concern (Collator isn't concurrency-safe).
 func sortInitiative(st *SessionRuntimeState) {
@@ -101,7 +101,7 @@ func restoreTurn(st *SessionRuntimeState, id string) {
 }
 
 // addEntry appends a combatant (a fresh id is assigned via newID), re-sorts, and preserves
-// who is on turn. Errors when the tracker is full. Mirrors SessionStateService.addEntry.
+// who is on turn. Errors when the tracker is full.
 func addEntry(st *SessionRuntimeState, input InitiativeEntry, newID func() string) error {
 	if len(st.Initiative) >= initiativeMaxEntries {
 		return fmt.Errorf("Initiative tracker is full (max %d entries)", initiativeMaxEntries)
@@ -116,7 +116,7 @@ func addEntry(st *SessionRuntimeState, input InitiativeEntry, newID func() strin
 
 // upsertCharacterEntry adds a character's entry, or — if that character is already in the
 // tracker — updates only its initiative (a re-roll), keeping mid-combat hp/mp. Preserves
-// who is on turn. Mirrors SessionStateService.upsertCharacterEntry.
+// who is on turn.
 func upsertCharacterEntry(st *SessionRuntimeState, input InitiativeEntry, newID func() string) error {
 	idx := -1
 	if input.CharacterID != nil {
@@ -138,7 +138,7 @@ func upsertCharacterEntry(st *SessionRuntimeState, input InitiativeEntry, newID 
 }
 
 // updateEntry applies a partial patch to an entry (re-sorting + preserving turn only when
-// initiative changes). Errors if the entry is gone. Mirrors SessionStateService.updateEntry.
+// initiative changes). Errors if the entry is gone.
 func updateEntry(st *SessionRuntimeState, entryID string, patch entryPatch) error {
 	idx := findEntryIndex(st, entryID)
 	if idx < 0 {
@@ -176,8 +176,7 @@ func updateEntry(st *SessionRuntimeState, entryID string, patch entryPatch) erro
 }
 
 // removeEntry drops an entry and fixes turnIndex: shift left when a row before the current
-// turn leaves; wrap to a new round when the row on turn was the tail. Mirrors
-// SessionStateService.removeEntry.
+// turn leaves; wrap to a new round when the row on turn was the tail.
 func removeEntry(st *SessionRuntimeState, entryID string) error {
 	idx := findEntryIndex(st, entryID)
 	if idx < 0 {
@@ -199,7 +198,7 @@ func removeEntry(st *SessionRuntimeState, entryID string) error {
 
 // advanceTurn moves to the next combatant, wrapping to index 0 and bumping the round.
 // From the pre-combat state (turnIndex -1) it puts the first combatant on turn without
-// bumping the round. Mirrors SessionStateService.nextTurn.
+// bumping the round.
 func advanceTurn(st *SessionRuntimeState) {
 	if len(st.Initiative) == 0 {
 		return
@@ -226,7 +225,7 @@ func resetInitiative(st *SessionRuntimeState) {
 }
 
 // patchEntryVitals sets absolute hp/mp on an entry, clamped to its max when present.
-// Mirrors SessionStateService.patchVitals (the DB write-through lives in the store layer).
+// (the DB write-through lives in the store layer).
 func patchEntryVitals(st *SessionRuntimeState, entryID string, hpCurrent, mpCurrent *int64) error {
 	idx := findEntryIndex(st, entryID)
 	if idx < 0 {
@@ -243,7 +242,7 @@ func patchEntryVitals(st *SessionRuntimeState, entryID string, hpCurrent, mpCurr
 }
 
 // deltaEntryVitals applies an hp/mp delta ("sofreu 10 de dano" ⇒ hpDelta -10). Absent
-// current counts as 0. Mirrors SessionStateService.deltaVitals.
+// current counts as 0.
 func deltaEntryVitals(st *SessionRuntimeState, entryID string, hpDelta, mpDelta *int64) error {
 	idx := findEntryIndex(st, entryID)
 	if idx < 0 {

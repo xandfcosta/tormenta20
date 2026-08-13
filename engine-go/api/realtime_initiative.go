@@ -165,7 +165,7 @@ func (g *realtimeGateway) populateParty(sessionID int64, combatants []combatant)
 
 // materializeEntry resolves an initiative payload into a concrete entry — an NPC (label +
 // initiative) or a character (name/vitals pulled via resolveCombatant, with optional client
-// overrides). Mirrors RealtimeGateway.materializeEntry.
+// overrides).
 func (g *realtimeGateway) materializeEntry(callerID, campaignID int64, input map[string]any) (InitiativeEntry, error) {
 	if _, hasChar := intField(input, "characterId"); !hasChar {
 		return materializeNpcEntry(input)

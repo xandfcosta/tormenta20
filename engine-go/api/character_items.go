@@ -22,7 +22,7 @@ type createItemBody struct {
 	Material     *string   `json:"material"`
 }
 
-// handleAddItem ports CharacterItemsService.addItem: resolve name/slots from the
+// handleAddItem resolve name/slots from the
 // catalog, validate slots + equip axis + the 4-vested/2-hands caps, then create.
 // NOTE: overlay compatibility (improvements/material vs the item family) is not
 // yet validated here — the frontend pre-validates it; ported in a later slice.
@@ -117,7 +117,7 @@ func (s *Server) handleAddItem(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// handleUpdateItem ports CharacterItemsService.updateItem: partial patch of an
+// handleUpdateItem partial patch of an
 // item, validating slots + equip axis + the equip caps when `equipped` changes.
 // Decodes into a raw-field map so an ABSENT field (leave unchanged) is
 // distinguished from an explicit null (unequip / clear material) — a *string
@@ -145,15 +145,14 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sets := []string{}
-	args := []any{}
+	var set setBuilder
 	if v, has := raw["name"]; has {
 		var name string
 		if json.Unmarshal(v, &name) != nil {
 			writeError(w, http.StatusBadRequest, "Invalid name")
 			return
 		}
-		sets, args = append(sets, "name = ?"), append(args, strings.TrimSpace(name))
+		set.add("name = ?", strings.TrimSpace(name))
 	}
 	if v, has := raw["quantity"]; has {
 		var q int64
@@ -161,7 +160,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 			writeValidationError(w, FieldErrorMap{"quantity": {"quantity out of range [1, 9999]"}})
 			return
 		}
-		sets, args = append(sets, "quantity = ?"), append(args, q)
+		set.add("quantity = ?", q)
 	}
 	if v, has := raw["slots"]; has {
 		var sl float64
@@ -169,7 +168,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 			writeValidationError(w, FieldErrorMap{"slots": {"Slots must be a multiple of 0.5"}})
 			return
 		}
-		sets, args = append(sets, "slots = ?"), append(args, sl)
+		set.add("slots = ?", sl)
 	}
 	if v, has := raw["equipped"]; has {
 		var eq *string
@@ -194,7 +193,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		sets, args = append(sets, "equipped = ?"), append(args, nullString(eq))
+		set.add("equipped = ?", nullString(eq))
 	}
 	if v, has := raw["improvements"]; has {
 		var imp []string
@@ -202,7 +201,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusBadRequest, "Invalid improvements")
 			return
 		}
-		sets, args = append(sets, "improvements = ?"), append(args, marshalStrings(&imp))
+		set.add("improvements = ?", marshalStrings(&imp))
 	}
 	if v, has := raw["material"]; has {
 		var mat *string
@@ -210,17 +209,15 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusBadRequest, "Invalid material")
 			return
 		}
-		sets, args = append(sets, "material = ?"), append(args, nullString(mat))
+		set.add("material = ?", nullString(mat))
 	}
-	if len(sets) == 0 {
+	if set.empty() {
 		writeError(w, http.StatusBadRequest, "No fields to update")
 		return
 	}
 
-	args = append(args, itemID)
-	//nolint:gosec // SET clause is built from a fixed allowlist of columns, not input.
-	if _, err := s.db.ExecContext(r.Context(),
-		"UPDATE character_items SET "+strings.Join(sets, ", ")+" WHERE id = ?", args...); err != nil {
+	// No `execTouched`: character_items carries createdAt only.
+	if err := set.exec(r.Context(), s.db, "UPDATE character_items", itemID); err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not update item")
 		return
 	}
@@ -244,7 +241,7 @@ func ptrEq(a, b *string) bool {
 	return *a == *b
 }
 
-// handleDeleteItem ports CharacterItemsService.deleteItem: 404 if the item isn't
+// handleDeleteItem 404 if the item isn't
 // on this character; returns {id}.
 func (s *Server) handleDeleteItem(w http.ResponseWriter, r *http.Request) {
 	row, ok := s.characterFor(w, r)

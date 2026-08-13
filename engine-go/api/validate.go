@@ -11,7 +11,7 @@ import (
 	"unicode/utf8"
 )
 
-// FieldErrorMap mirrors the Nest validationExceptionFactory output: field →
+// FieldErrorMap is the validation error shape the client reads: field →
 // human messages. Emitted inside the {statusCode,error,message,fieldErrors} body.
 type FieldErrorMap map[string][]string
 

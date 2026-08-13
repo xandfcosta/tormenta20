@@ -26,7 +26,7 @@ type castResult struct {
 	RemovedEffectIDs []int64 `json:"removedEffectIds"`
 }
 
-// handleCastSpell ports CharactersSpellsService.castSpell: validate learned +
+// handleCastSpell validate learned +
 // prepared + augments, check the PM cost against the per-spell limit and current
 // PM, then deduct. NOTE: the catalisador scene-discount is deferred (rare edge);
 // removedEffectIds is therefore always empty.

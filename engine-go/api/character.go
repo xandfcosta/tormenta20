@@ -12,7 +12,7 @@ import (
 )
 
 // handleListCharacters returns the caller's own characters (newest-updated first),
-// each as the full aggregate — mirrors CharactersService.list.
+// each as the full aggregate —
 func (s *Server) handleListCharacters(w http.ResponseWriter, r *http.Request) {
 	user := currentUser(r)
 	rows, err := s.queries.ListCharactersByOwner(r.Context(), user.ID)
@@ -33,7 +33,7 @@ func (s *Server) handleListCharacters(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleGetCharacter returns one character aggregate. Access = owner OR campaign
-// GM (CharactersService.findOne). 404 when missing, 403 when unauthorized.
+// GM. 404 when missing, 403 when unauthorized.
 func (s *Server) handleGetCharacter(w http.ResponseWriter, r *http.Request) {
 	row, ok := s.characterFor(w, r)
 	if !ok {
@@ -118,7 +118,7 @@ func (s *Server) handleGetSheet(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, sheet)
 }
 
-// assertCharacterOwner is the strict owner-only check (mirrors CharactersService.assertOwner)
+// assertCharacterOwner is the strict owner-only check
 // the WS vitals gate uses: a player may edit only a character they own. Transport-agnostic.
 func (s *Server) assertCharacterOwner(ctx context.Context, userID, characterID int64) (int, error) {
 	owner, err := s.queries.GetCharacterOwner(ctx, characterID)

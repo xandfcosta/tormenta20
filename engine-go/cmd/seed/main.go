@@ -58,7 +58,7 @@ type seedSpell struct {
 	Prepared bool   `json:"prepared"`
 }
 
-// standardTrained is TRAINED_EXPERTISES from the Nest seed — every non-simple
+// standardTrained is TRAINED_EXPERTISES — every non-simple
 // character trains these, giving the skill list real totals. Simple PCs train none.
 var standardTrained = []string{
 	"Luta", "Atletismo", "Pontaria", "Reflexos", "Fortitude",

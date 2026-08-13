@@ -19,7 +19,7 @@ var conditionIDs = toStringSet([]string{
 	"sobrecarregado", "surdo", "surpreendido", "vulneravel",
 })
 
-// handleUpdateConditions ports CharactersService.updateConditions: replace the
+// handleUpdateConditions replace the
 // active book conditions after validating every id against the catalog.
 func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) {
 	row, ok := s.characterFor(w, r)

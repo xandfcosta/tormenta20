@@ -153,7 +153,7 @@ func displacementBreakdown(ch Character, e ItemEffects) ValueBreakdown {
 	return ValueBreakdown{
 		Base:          ch.Displacement,
 		ItemBonus:     stat.Total,
-		Total:         maxInt(0, ch.Displacement+stat.Total),
+		Total:         max(0, ch.Displacement+stat.Total),
 		Contributions: withNoteContribs(stat.Contributions),
 	}
 }

@@ -1,5 +1,5 @@
 // Package catalog serves the static reference data (spells, bestiary, items, …)
-// the frontend fetches from GET /catalog/:resource — byte-identical to the Nest
+// the frontend fetches from GET /catalog/:resource — the same payload the
 // CatalogService, exported from t20-data by the frontend catalog-export harness
 // and embedded here so the Go server needs no TS import.
 package catalog

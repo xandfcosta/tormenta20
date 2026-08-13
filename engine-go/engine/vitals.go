@@ -26,7 +26,7 @@ var classVitalsTable = map[string]classVitals{
 
 // pvPoolWithCon mirrors class-vitals.ts pvPoolWithCon (p34 min-1 floor).
 func pvPoolWithCon(v classVitals, level, con int) int {
-	perLevel := maxInt(1, v.pvPerLevel+con)
+	perLevel := max(1, v.pvPerLevel+con)
 	return v.pvInicial + con + (level-1)*perLevel
 }
 
@@ -45,7 +45,7 @@ func multiclassPvPool(classes []ClassEntry, con int) int {
 		if !ok {
 			continue
 		}
-		pv += c.Level * maxInt(1, entry.pvPerLevel+con)
+		pv += c.Level * max(1, entry.pvPerLevel+con)
 	}
 	return pv
 }

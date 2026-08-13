@@ -111,7 +111,7 @@ func (p *presenceRegistry) dropLocked(socketID string, sessionID int64) bool {
 
 // rosterLocked returns the session's roster deduped by userId — multi-tab collapses to one,
 // and a user counts as GM if any of their sockets is a GM. Sorted by userId for a
-// deterministic broadcast (Nest relies on Map insertion order; order is cosmetic here).
+// deterministic broadcast (order is cosmetic, but a stable one keeps diffs readable).
 // Caller holds mu.
 func (p *presenceRegistry) rosterLocked(sessionID int64) []PresenceUser {
 	room := p.presence[sessionID]

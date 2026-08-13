@@ -26,7 +26,6 @@ type restedVitals struct {
 
 // endScene expires the character's scene-scoped effects (owner-or-GM authorized first).
 // Transport-agnostic — the WS session-rest handler calls this per member character.
-// Mirrors CharacterEffectsService.endScene.
 func (s *Server) endScene(ctx context.Context, user AuthUser, characterID int64) (int, error) {
 	if _, status, err := s.authorizedCharacter(ctx, user, characterID); err != nil {
 		return status, err
@@ -37,7 +36,7 @@ func (s *Server) endScene(ctx context.Context, user AuthUser, characterID int64)
 	return http.StatusOK, nil
 }
 
-// endDay expires both scene- and day-scoped effects. Mirrors CharacterEffectsService.endDay.
+// endDay expires both scene- and day-scoped effects.
 func (s *Server) endDay(ctx context.Context, user AuthUser, characterID int64) (int, error) {
 	if _, status, err := s.authorizedCharacter(ctx, user, characterID); err != nil {
 		return status, err
@@ -83,7 +82,7 @@ func (s *Server) handleEndDay(w http.ResponseWriter, r *http.Request) {
 
 // restVitals applies the T20 night-rest recovery: PV/PM each gain floor(level × factor),
 // clamped to their max, then persists. Returns the new current values so the gateway can
-// mirror them onto the live tracker. Mirrors CharacterEffectsService.restVitals.
+// mirror them onto the live tracker.
 func (s *Server) restVitals(ctx context.Context, user AuthUser, characterID int64, condition string) (restedVitals, int, error) {
 	row, status, err := s.authorizedCharacter(ctx, user, characterID)
 	if err != nil {

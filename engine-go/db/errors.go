@@ -9,7 +9,7 @@ import (
 
 // IsUniqueViolation reports whether err is a SQLite UNIQUE constraint failure —
 // the backstop for racing inserts that pass an app-level pre-check (mirrors the
-// Nest backend's isPrismaUniqueViolation → P2002).
+// a unique constraint).
 func IsUniqueViolation(err error) bool {
 	var e *sqlite.Error
 	if errors.As(err, &e) {

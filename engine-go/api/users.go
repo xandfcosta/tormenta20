@@ -9,7 +9,7 @@ type userDTO struct {
 	CreatedAt string  `json:"createdAt"`
 }
 
-// handleListUsers ports UsersService.listVisibleTo: the caller + every user they
+// handleListUsers the caller + every user they
 // share a campaign with (as GM or player).
 func (s *Server) handleListUsers(w http.ResponseWriter, r *http.Request) {
 	user := currentUser(r)

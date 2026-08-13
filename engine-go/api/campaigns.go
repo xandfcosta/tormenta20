@@ -120,7 +120,7 @@ func (s *Server) handleCreateCampaign(w http.ResponseWriter, r *http.Request) {
 	}
 	now := nowISO()
 	c, err := s.queries.CreateCampaign(r.Context(), sqlcgen.CreateCampaignParams{
-		Ownerid: currentUser(r).ID, Name: name, Description: trimmedNull(body.Description),
+		Ownerid: currentUser(r).ID, Name: name, Description: trimOrNull(body.Description),
 		Createdat: now, Updatedat: now,
 	})
 	if err != nil {
@@ -145,33 +145,26 @@ func (s *Server) handleUpdateCampaign(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.ownedCampaign(w, r, id); !ok {
 		return
 	}
-	sets := []string{}
-	args := []any{}
+	var set setBuilder
 	if body.Name != nil {
 		name := strings.TrimSpace(*body.Name)
 		if name == "" || len([]rune(name)) > 120 {
 			writeValidationError(w, FieldErrorMap{"name": {"name must be between 1 and 120 characters"}})
 			return
 		}
-		sets, args = append(sets, "name = ?"), append(args, name)
+		set.add("name = ?", name)
 	}
 	if body.Description != nil {
-		desc := strings.TrimSpace(*body.Description)
-		sets = append(sets, "description = ?")
-		if desc == "" {
-			args = append(args, nil)
-		} else {
-			args = append(args, desc)
-		}
+		// Same helper as create: a whitespace-only description is NULL on both
+		// paths, or the client reads "" from one and null from the other for the
+		// very same input.
+		set.add("description = ?", nullableArg(trimOrNull(body.Description)))
 	}
-	if len(sets) == 0 {
+	if set.empty() {
 		writeError(w, http.StatusBadRequest, "No fields to update")
 		return
 	}
-	sets = append(sets, "updatedAt = ?")
-	args = append(args, nowISO(), id)
-	//nolint:gosec // fixed column allowlist.
-	if _, err := s.db.ExecContext(r.Context(), "UPDATE campaigns SET "+strings.Join(sets, ", ")+" WHERE id = ?", args...); err != nil {
+	if err := set.execTouched(r.Context(), s.db, "UPDATE campaigns", id); err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not update campaign")
 		return
 	}
@@ -242,9 +235,7 @@ func (s *Server) handleResolveInvite(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"campaignId": c.ID, "campaignName": c.Name})
 }
 
-// ownedCampaign loads a campaign and enforces owner-only access (the guard for
-// every campaign write), writing the 404/403 itself and returning ok=false.
-// resolveRole is the campaign-access domain rule (mirrors CampaignsService.resolveAccess),
+// resolveRole is the campaign-access domain rule,
 // transport-agnostic so both the HTTP handlers and the WS gateway can gate on it: the
 // owner is the "gm"; a user who owns a member character is a "player"; anyone else is
 // forbidden. Returns the role + an HTTP-ish status the caller maps to its transport.
@@ -289,13 +280,6 @@ func (s *Server) ownedCampaign(w http.ResponseWriter, r *http.Request, id int64)
 		return c, false
 	}
 	return c, true
-}
-
-func trimmedNull(p *string) sql.NullString {
-	if p == nil {
-		return sql.NullString{}
-	}
-	return sql.NullString{String: strings.TrimSpace(*p), Valid: true}
 }
 
 func generateInviteToken() string {

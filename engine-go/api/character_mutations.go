@@ -20,7 +20,7 @@ type vitalsResult struct {
 }
 
 // handleUpdateVitals clamps hp/mp current against the stored maxes
-// (CharactersService.updateVitals). Rule-free — pure DB write behind the
+// Rule-free — pure DB write behind the
 // owner/GM guard.
 func (s *Server) handleUpdateVitals(w http.ResponseWriter, r *http.Request) {
 	row, ok := s.characterFor(w, r)
@@ -91,7 +91,7 @@ type applyDamageResult struct {
 	Drained         []damageDrain `json:"drained"`
 }
 
-// handleApplyDamage ports CharacterTempHpService.applyDamage: temp-first damage
+// handleApplyDamage temp-first damage
 // routing (drain pools, overflow to HP), persisting the drained/emptied effects
 // and the new HP. Returns the {hpCurrent, tempHpRemaining, drained} delta.
 func (s *Server) handleApplyDamage(w http.ResponseWriter, r *http.Request) {
