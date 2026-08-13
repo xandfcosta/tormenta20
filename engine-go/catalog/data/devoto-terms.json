@@ -1,0 +1,98 @@
+{
+  "openTerms": [
+    "Quaisquer",
+    "Aventureiros (todas as classes)"
+  ],
+  "termToNames": {
+    "Aggelus": [
+      "Suraggel"
+    ],
+    "Sulfure": [
+      "Suraggel"
+    ],
+    "Qualquer duyshidakk": [
+      "Goblin"
+    ],
+    "Anões": [
+      "Anão"
+    ],
+    "Arcanistas": [
+      "Arcanista"
+    ],
+    "Bárbaros": [
+      "Bárbaro"
+    ],
+    "Bardos": [
+      "Bardo"
+    ],
+    "Bucaneiros": [
+      "Bucaneiro"
+    ],
+    "Caçadores": [
+      "Caçador"
+    ],
+    "Cavaleiros": [
+      "Cavaleiro"
+    ],
+    "Dahllan": [
+      "Dahllan"
+    ],
+    "Druidas": [
+      "Druida"
+    ],
+    "Elfos": [
+      "Elfo"
+    ],
+    "Goblins": [
+      "Goblin"
+    ],
+    "Golens": [
+      "Golem"
+    ],
+    "Guerreiros": [
+      "Guerreiro"
+    ],
+    "Hynne": [
+      "Hynne"
+    ],
+    "Inventores": [
+      "Inventor"
+    ],
+    "Kliren": [
+      "Kliren"
+    ],
+    "Ladinos": [
+      "Ladino"
+    ],
+    "Lutadores": [
+      "Lutador"
+    ],
+    "Medusas": [
+      "Medusa"
+    ],
+    "Minotauros": [
+      "Minotauro"
+    ],
+    "Nobres": [
+      "Nobre"
+    ],
+    "Osteon": [
+      "Osteon"
+    ],
+    "Paladinos": [
+      "Paladino"
+    ],
+    "Qareen": [
+      "Qareen"
+    ],
+    "Sereias/Tritões": [
+      "Sereia/Tritão"
+    ],
+    "Sílfides": [
+      "Sílfide"
+    ],
+    "Trogs": [
+      "Trog"
+    ]
+  }
+}

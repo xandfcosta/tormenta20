@@ -101,3 +101,29 @@ export const activationsCatalogQueryOptions = queryOptions({
   queryFn: api.catalog.activations,
   staleTime: Number.POSITIVE_INFINITY,
 })
+
+// Tabelas de livro autoradas no servidor (ALE-102) — eram as últimas que o front
+// importava em tempo de build. Buscadas uma vez e primadas como as outras.
+export const classExpertisesCatalogQueryOptions = queryOptions({
+  queryKey: ['catalog', 'class-expertises'] as const,
+  queryFn: api.catalog.classExpertises,
+  staleTime: Number.POSITIVE_INFINITY,
+})
+
+export const devotoTermsCatalogQueryOptions = queryOptions({
+  queryKey: ['catalog', 'devoto-terms'] as const,
+  queryFn: api.catalog.devotoTerms,
+  staleTime: Number.POSITIVE_INFINITY,
+})
+
+export const gmTablesCatalogQueryOptions = queryOptions({
+  queryKey: ['catalog', 'gm-tables'] as const,
+  queryFn: api.catalog.gmTables,
+  staleTime: Number.POSITIVE_INFINITY,
+})
+
+export const dungeonDesignCatalogQueryOptions = queryOptions({
+  queryKey: ['catalog', 'dungeon-design'] as const,
+  queryFn: api.catalog.dungeonDesign,
+  staleTime: Number.POSITIVE_INFINITY,
+})

@@ -1,19 +1,20 @@
+import type {
+  ChaseEventRow,
+  DungeonIdea,
+  RewardCastigoRow,
+  RuinaRow,
+} from '@/shared/api/api'
 import {
-  CASTIGO_LABELS,
-  type ChaseEventRow,
-  type DungeonIdea,
-  type DungeonSize,
-  REWARD_LABELS,
-  type RewardCastigoRow,
-  type RuinaRow,
+  castigoLabel,
   chaseEventFromRoll,
   classifyDungeonSize,
   dungeonIdeaFromRoll,
   dungeonSizeRow,
   plannedThreats,
   rewardCastigoFromRoll,
+  rewardLabel,
   ruinaFromRoll,
-} from '@tormenta20/t20-data'
+} from '@/features/gm-tools/improviso-rules'
 import { Dices } from 'lucide-solid'
 import { For, type JSX, Show, createMemo, createSignal } from 'solid-js'
 import { createRollHistory } from '@/features/gm-tools/roll-history'
@@ -22,7 +23,7 @@ import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
 
-const SIZE_LABEL: Record<DungeonSize, string> = {
+const SIZE_LABEL: Record<string, string> = {
   pequena: 'Pequena',
   media: 'Média',
   grande: 'Grande',
@@ -125,7 +126,7 @@ function RewardTable() {
       onClear={history.clear}
       entries={history.entries()}
       render={(row) =>
-        `Recompensa: ${REWARD_LABELS[row.reward]} · Castigo: ${CASTIGO_LABELS[row.castigo]}`
+        `Recompensa: ${rewardLabel(row.reward)} · Castigo: ${castigoLabel(row.castigo)}`
       }
     />
   )
@@ -195,7 +196,7 @@ function DungeonPlanner() {
   const [objective, setObjective] = createSignal('')
   const ideas = createRollHistory<DungeonIdea>()
 
-  const size = createMemo<DungeonSize | null>(() => classifyDungeonSize(Math.max(1, rooms())))
+  const size = createMemo<string | null>(() => classifyDungeonSize(Math.max(1, rooms())))
   const row = () => {
     const current = size()
     return current ? dungeonSizeRow(current) : null

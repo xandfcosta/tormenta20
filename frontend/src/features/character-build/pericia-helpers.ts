@@ -1,8 +1,5 @@
-import {
-  classExpertiseSlots,
-  EXPERTISE_NAMES,
-  raceFreeExpertiseCount,
-} from '@tormenta20/t20-data'
+import { EXPERTISE_NAMES, raceFreeExpertiseCount } from '@tormenta20/t20-data'
+import { classExpertiseSlots } from '@/entities/character/class-expertise-rules'
 
 export type PericiaPlan = {
   /** Auto-trained perícias (always granted). */

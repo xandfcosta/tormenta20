@@ -1,0 +1,319 @@
+{
+  "Arcanista": {
+    "fixed": [
+      "Misticismo",
+      "Vontade"
+    ],
+    "chooseCount": 2,
+    "choosePool": [
+      "Conhecimento",
+      "Diplomacia",
+      "Enganação",
+      "Guerra",
+      "Iniciativa",
+      "Intimidação",
+      "Intuição",
+      "Investigação",
+      "Nobreza",
+      "Ofício",
+      "Percepção"
+    ]
+  },
+  "Bárbaro": {
+    "fixed": [
+      "Fortitude",
+      "Luta"
+    ],
+    "chooseCount": 4,
+    "choosePool": [
+      "Adestramento",
+      "Atletismo",
+      "Cavalgar",
+      "Iniciativa",
+      "Intimidação",
+      "Ofício",
+      "Percepção",
+      "Pontaria",
+      "Sobrevivência",
+      "Vontade"
+    ]
+  },
+  "Bardo": {
+    "fixed": [
+      "Atuação",
+      "Reflexos"
+    ],
+    "chooseCount": 6,
+    "choosePool": [
+      "Acrobacia",
+      "Cavalgar",
+      "Conhecimento",
+      "Diplomacia",
+      "Enganação",
+      "Furtividade",
+      "Iniciativa",
+      "Intuição",
+      "Investigação",
+      "Jogatina",
+      "Ladinagem",
+      "Luta",
+      "Misticismo",
+      "Nobreza",
+      "Percepção",
+      "Pontaria",
+      "Vontade"
+    ]
+  },
+  "Bucaneiro": {
+    "fixed": [
+      "Reflexos"
+    ],
+    "eitherOr": {
+      "options": [
+        "Luta",
+        "Pontaria"
+      ]
+    },
+    "chooseCount": 4,
+    "choosePool": [
+      "Acrobacia",
+      "Atletismo",
+      "Atuação",
+      "Enganação",
+      "Fortitude",
+      "Furtividade",
+      "Iniciativa",
+      "Intimidação",
+      "Jogatina",
+      "Ofício",
+      "Percepção",
+      "Pilotagem"
+    ]
+  },
+  "Caçador": {
+    "fixed": [
+      "Sobrevivência"
+    ],
+    "eitherOr": {
+      "options": [
+        "Luta",
+        "Pontaria"
+      ]
+    },
+    "chooseCount": 6,
+    "choosePool": [
+      "Adestramento",
+      "Atletismo",
+      "Cavalgar",
+      "Cura",
+      "Fortitude",
+      "Furtividade",
+      "Iniciativa",
+      "Investigação",
+      "Ofício",
+      "Percepção",
+      "Reflexos"
+    ]
+  },
+  "Cavaleiro": {
+    "fixed": [
+      "Fortitude",
+      "Luta"
+    ],
+    "chooseCount": 2,
+    "choosePool": [
+      "Adestramento",
+      "Atletismo",
+      "Cavalgar",
+      "Diplomacia",
+      "Guerra",
+      "Iniciativa",
+      "Intimidação",
+      "Nobreza",
+      "Percepção",
+      "Vontade"
+    ]
+  },
+  "Clérigo": {
+    "fixed": [
+      "Religião",
+      "Vontade"
+    ],
+    "chooseCount": 2,
+    "choosePool": [
+      "Conhecimento",
+      "Cura",
+      "Diplomacia",
+      "Fortitude",
+      "Iniciativa",
+      "Intuição",
+      "Luta",
+      "Misticismo",
+      "Nobreza",
+      "Ofício",
+      "Percepção"
+    ]
+  },
+  "Druida": {
+    "fixed": [
+      "Sobrevivência",
+      "Vontade"
+    ],
+    "chooseCount": 4,
+    "choosePool": [
+      "Adestramento",
+      "Atletismo",
+      "Cavalgar",
+      "Conhecimento",
+      "Cura",
+      "Fortitude",
+      "Intuição",
+      "Luta",
+      "Misticismo",
+      "Ofício",
+      "Percepção",
+      "Religião"
+    ]
+  },
+  "Guerreiro": {
+    "fixed": [
+      "Fortitude"
+    ],
+    "eitherOr": {
+      "options": [
+        "Luta",
+        "Pontaria"
+      ]
+    },
+    "chooseCount": 2,
+    "choosePool": [
+      "Adestramento",
+      "Atletismo",
+      "Cavalgar",
+      "Guerra",
+      "Iniciativa",
+      "Intimidação",
+      "Ofício",
+      "Percepção",
+      "Reflexos"
+    ]
+  },
+  "Inventor": {
+    "fixed": [
+      "Ofício",
+      "Vontade"
+    ],
+    "chooseCount": 4,
+    "choosePool": [
+      "Conhecimento",
+      "Cura",
+      "Diplomacia",
+      "Fortitude",
+      "Iniciativa",
+      "Investigação",
+      "Luta",
+      "Misticismo",
+      "Percepção",
+      "Pilotagem",
+      "Pontaria"
+    ]
+  },
+  "Ladino": {
+    "fixed": [
+      "Ladinagem",
+      "Reflexos"
+    ],
+    "chooseCount": 8,
+    "choosePool": [
+      "Acrobacia",
+      "Atletismo",
+      "Atuação",
+      "Cavalgar",
+      "Conhecimento",
+      "Diplomacia",
+      "Enganação",
+      "Furtividade",
+      "Iniciativa",
+      "Intimidação",
+      "Intuição",
+      "Investigação",
+      "Jogatina",
+      "Luta",
+      "Ofício",
+      "Percepção",
+      "Pilotagem",
+      "Pontaria"
+    ]
+  },
+  "Lutador": {
+    "fixed": [
+      "Fortitude",
+      "Luta"
+    ],
+    "chooseCount": 4,
+    "choosePool": [
+      "Acrobacia",
+      "Adestramento",
+      "Atletismo",
+      "Enganação",
+      "Furtividade",
+      "Iniciativa",
+      "Intimidação",
+      "Ofício",
+      "Percepção",
+      "Pontaria",
+      "Reflexos"
+    ]
+  },
+  "Nobre": {
+    "fixed": [
+      "Vontade"
+    ],
+    "eitherOr": {
+      "options": [
+        "Diplomacia",
+        "Intimidação"
+      ]
+    },
+    "chooseCount": 4,
+    "choosePool": [
+      "Adestramento",
+      "Atuação",
+      "Cavalgar",
+      "Conhecimento",
+      "Enganação",
+      "Fortitude",
+      "Guerra",
+      "Iniciativa",
+      "Intuição",
+      "Investigação",
+      "Jogatina",
+      "Luta",
+      "Nobreza",
+      "Ofício",
+      "Percepção",
+      "Pontaria"
+    ]
+  },
+  "Paladino": {
+    "fixed": [
+      "Luta",
+      "Vontade"
+    ],
+    "chooseCount": 2,
+    "choosePool": [
+      "Adestramento",
+      "Atletismo",
+      "Cavalgar",
+      "Cura",
+      "Diplomacia",
+      "Fortitude",
+      "Guerra",
+      "Iniciativa",
+      "Intuição",
+      "Nobreza",
+      "Percepção",
+      "Religião"
+    ]
+  }
+}

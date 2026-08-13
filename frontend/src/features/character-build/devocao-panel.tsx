@@ -1,4 +1,5 @@
-import { type Deus, type GrantedPowerOption, devotoEligible } from '@tormenta20/t20-data'
+import type { Deus, GrantedPowerOption } from '@tormenta20/t20-data'
+import { devotoEligible } from '@/entities/character/devoto-rules'
 import { For, Show } from 'solid-js'
 import { deuses } from '@/shared/lib/abilities-cache'
 import { grantedPowerOptionsFor } from '@/shared/lib/divine-powers-cache'

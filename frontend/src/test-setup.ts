@@ -1,4 +1,7 @@
 import '@testing-library/jest-dom/vitest'
+import { readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import {
   ACTIVATION_SPECS,
   allGrantedPowerOptions,
@@ -21,6 +24,7 @@ import { primeItemCatalog } from './shared/lib/catalog-cache'
 import { primeDivinePowers } from './shared/lib/divine-powers-cache'
 import { primeRacas } from './shared/lib/racas-cache'
 import { primeRulesCatalogs } from './shared/lib/rules-catalog-cache'
+import { primeRulesTables } from './shared/lib/rules-tables-cache'
 import { primeSpellCatalog } from './shared/lib/spell-cache'
 
 /**
@@ -45,3 +49,22 @@ primeRacas(RACAS, ORIGENS)
 primeRulesCatalogs(CONDITIONS, TORMENTA_POWERS)
 primeDivinePowers(allGrantedPowerOptions())
 primeActivations(ACTIVATION_SPECS)
+
+/**
+ * As quatro tabelas que o SERVIDOR autora (ALE-102) não vêm mais do t20-data —
+ * elas moram no catálogo servido. Os testes leem os mesmos arquivos que o Go
+ * embute, então uma tabela editada vale para os dois lados na mesma hora.
+ */
+const catalogDir = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  '../../engine-go/catalog/data',
+)
+const servedTable = (name: string) =>
+  JSON.parse(readFileSync(resolve(catalogDir, `${name}.json`), 'utf8'))
+
+primeRulesTables({
+  classExpertises: servedTable('class-expertises'),
+  devotoTerms: servedTable('devoto-terms'),
+  gmTables: servedTable('gm-tables'),
+  dungeonDesign: servedTable('dungeon-design'),
+})
