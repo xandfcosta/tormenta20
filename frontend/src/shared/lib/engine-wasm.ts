@@ -1,4 +1,5 @@
-import type { BonusType, ItemEffects } from '@tormenta20/t20-data'
+import type { BonusType } from '@/shared/api/bonus-types'
+import type { ItemEffects } from '@/shared/api/item-types'
 import type { ModifierTarget } from '@/shared/api/item-types'
 import type { AttributeKey } from '@/shared/api/attribute-keys'
 import type { Character } from '@/shared/api/api'

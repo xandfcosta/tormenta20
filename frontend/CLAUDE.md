@@ -215,12 +215,14 @@ links, the browser Back button and the progress rail cannot then disagree.
 - **Don't re-derive the expected value by running the implementation** — an
   assertion that reimplements the function body only fails if the language
   breaks.
-- **Don't test what `t20-data` or the Go engine already owns.** A rule from the
+- **Don't test what the Go engine already owns.** A rule from the
   book is tested where it is authored, once. The parity oracles prove the two
   engines agree; re-asserting the same rule in a component is a third copy.
-- **Never test a branch that leaves the bundle.** The `import.meta.env.MODE ===
-  'test'` choke points exist so the TS derivation is dropped from production —
-  a test over that branch covers code no user runs.
+- **A suíte roda o MOTOR GO**, o mesmo que a produção usa: o `test-setup` carrega
+  o `.wasm` do disco (por isso o hook `pretest` o constrói). Os antigos choke
+  points `import.meta.env.MODE === 'test'`, que faziam os testes medirem uma
+  cópia TS que ninguém executava, morreram com o `t20-data` — e foi ao trocá-los
+  que apareceu um bug de produção que nenhum teste podia pegar antes (ALE-117).
 - Bug fixes get a regression test **proven red first**. When jsdom cannot see
   the bug (animation timeline, real layout, virtualized rows measuring zero),
   say so in the test's docstring and put it in e2e instead.

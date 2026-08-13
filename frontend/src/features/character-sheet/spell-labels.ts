@@ -1,4 +1,4 @@
-import type { SpellCircle, SpellSchool } from '@tormenta20/t20-data'
+import type { SpellCircle, SpellSchool } from '@/shared/api/spell-types'
 
 export const SCHOOL_LABEL: Record<SpellSchool, string> = {
   abjuracao: 'Abjuração',

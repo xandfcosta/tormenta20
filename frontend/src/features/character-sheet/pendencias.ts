@@ -1,4 +1,5 @@
-import { caminhoSlotFor, slotsForClassLevel } from '@tormenta20/t20-data'
+import { caminhoSlotFor } from '@/shared/rules/abilities-caminhos'
+import { slotsForClassLevel } from '@/shared/rules/abilities-classes-slots'
 import {
   allGeneralPowers,
   classPowersFor,

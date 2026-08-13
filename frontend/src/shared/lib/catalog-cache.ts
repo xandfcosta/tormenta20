@@ -1,4 +1,4 @@
-import type { CatalogItem } from '@tormenta20/t20-data'
+import type { CatalogItem } from '@/shared/api/item-types'
 
 /**
  * Front-owned catalog cache with SYNC accessors mirroring t20-data's

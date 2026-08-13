@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/solid-query'
-import type { ActivationSpec } from '@tormenta20/t20-data'
+import type { ActivationSpec } from '@/shared/api/catalog-types'
 import { Flame, Minus, Plus, Zap } from 'lucide-solid'
 import { For, type JSX, Show, createMemo, createSignal } from 'solid-js'
 import { computedSheetFor } from '@/entities/character/computed-sheet'

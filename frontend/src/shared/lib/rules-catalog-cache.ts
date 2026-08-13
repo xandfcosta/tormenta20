@@ -1,9 +1,4 @@
-import type {
-  Condition,
-  ConditionId,
-  TormentaPower,
-  TormentaPowerId,
-} from '@tormenta20/t20-data'
+import type { Condition, ConditionId, TormentaPower, TormentaPowerId } from '@/shared/api/catalog-types'
 
 /**
  * Front-owned cache for the rules reference records CONDITIONS (conditions.ts)

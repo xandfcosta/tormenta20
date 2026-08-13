@@ -1,4 +1,4 @@
-import type { GeneralPower } from '@tormenta20/t20-data'
+import type { GeneralPower } from '@/shared/api/catalog-types'
 import { Show, createMemo, createSignal } from 'solid-js'
 import { matchesQuery } from '@/shared/lib/fuzzy-filter'
 import { Button } from '@/shared/ui/button'

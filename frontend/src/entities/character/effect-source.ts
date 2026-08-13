@@ -1,7 +1,5 @@
-import {
-  type DisplayFact,
-  type ItemFlag,
-} from '@tormenta20/t20-data'
+import type { DisplayFact } from '@/shared/api/display-facts'
+import type { ItemFlag } from '@/shared/api/item-types'
 import { getActivation } from '@/shared/lib/activation-cache'
 import { getCatalogItem } from '@/shared/lib/catalog-cache'
 import { spellCatalog } from '@/shared/lib/spell-cache'

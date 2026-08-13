@@ -1,4 +1,4 @@
-import type { CatalogItem } from '@tormenta20/t20-data'
+import type { CatalogItem } from '@/shared/api/item-types'
 import type { Modifier } from '@/shared/api/item-types'
 import { For, type JSX, Show } from 'solid-js'
 import { FactChips } from './fact-chips'

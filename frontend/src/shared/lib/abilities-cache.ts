@@ -1,5 +1,7 @@
-import { classPowerModifiersIn, type ClassPower, type Deus, devotoOptionsIn, type GeneralPower, type GrantedPower, type OriginBenefit, type OriginDefinition, ownedClassPowersIn, type RaceDefinition } from '@tormenta20/t20-data'
-import type { ClassChoiceSelections } from '@tormenta20/t20-data'
+import { classPowerModifiersIn, ownedClassPowersIn } from '@/shared/rules/abilities-classes-ownership'
+import { devotoOptionsIn } from '@/shared/rules/abilities-devoto-options'
+import type { ClassPower, Deus, GeneralPower, GrantedPower, OriginBenefit, OriginDefinition, RaceDefinition } from '@/shared/api/catalog-types'
+import type { ClassChoiceSelections } from '@/shared/api/catalog-types'
 import type { Modifier } from '@/shared/api/item-types'
 
 /**

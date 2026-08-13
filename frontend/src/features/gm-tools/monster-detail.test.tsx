@@ -1,5 +1,5 @@
 import { render, screen } from '@solidjs/testing-library'
-import type { Monster } from '@tormenta20/t20-data'
+import type { Monster } from '@/shared/api/catalog-types'
 import { describe, expect, it } from 'vitest'
 import { MonsterDetail } from './monster-detail'
 

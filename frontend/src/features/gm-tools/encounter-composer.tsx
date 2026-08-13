@@ -1,4 +1,4 @@
-import { encounterXp } from '@tormenta20/t20-data'
+import { encounterXp } from '@/shared/rules/xp'
 import { Trash2 } from 'lucide-solid'
 import { For, type JSX, Show } from 'solid-js'
 import { cn } from '@/shared/lib/utils'

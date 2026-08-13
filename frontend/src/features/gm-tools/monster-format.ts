@@ -1,4 +1,4 @@
-import type { MonsterTipo } from '@tormenta20/t20-data'
+import type { MonsterTipo } from '@/shared/api/catalog-types'
 
 /** Ordered MonsterTipo list — the order the filter chips appear in. */
 export const MONSTER_TIPOS: readonly MonsterTipo[] = [

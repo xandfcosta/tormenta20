@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { CatalogItem } from '@tormenta20/t20-data'
+import type { CatalogItem } from '@/shared/api/item-types'
 import type { CharacterItem } from '@/shared/api/api'
 import { catalogEquipChips, equipBonuses } from './equip-bonuses'
 

@@ -1,9 +1,5 @@
-import {
-  DEFORMIDADE_PERICIA_BONUS,
-  DEFORMIDADE_SLOTS,
-  EXPERTISE_NAMES,
-  deformidadeAvailablePowers,
-} from '@tormenta20/t20-data'
+import { EXPERTISE_NAMES } from '@/shared/api/expertise-names'
+import { DEFORMIDADE_PERICIA_BONUS, DEFORMIDADE_SLOTS, deformidadeAvailablePowers } from '@/shared/rules/deformidade'
 import { Show } from 'solid-js'
 import { raceWithDeformidade } from '@/shared/lib/abilities-cache'
 import { tormentaPowersRecord } from '@/shared/lib/rules-catalog-cache'

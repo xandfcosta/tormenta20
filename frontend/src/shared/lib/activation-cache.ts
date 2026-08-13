@@ -1,4 +1,4 @@
-import type { ActivationSpec } from '@tormenta20/t20-data'
+import type { ActivationSpec } from '@/shared/api/catalog-types'
 
 /**
  * Front-owned cache for the power-activation registry (every power source's

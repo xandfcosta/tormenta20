@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/solid-query'
-import type { Monster } from '@tormenta20/t20-data'
+import type { Monster } from '@/shared/api/catalog-types'
 import { Show, createMemo } from 'solid-js'
 import { bestiaryCatalogQueryOptions } from '@/entities/catalog/queries'
 import { VirtualList } from '@/shared/ui/virtual-list'

@@ -1,4 +1,4 @@
-import { FLAG_ACTIVATIONS } from '@tormenta20/t20-data'
+import { FLAG_ACTIVATIONS } from '@/shared/rules/flag-activations'
 import type { ConditionalEntry } from '@/entities/character/derived'
 
 /** One row of the "Situação" list: a lone conditional, or every conditional

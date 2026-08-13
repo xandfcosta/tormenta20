@@ -1,4 +1,5 @@
-import { type ConditionId, conditionEffectSummary } from '@tormenta20/t20-data'
+import { conditionEffectSummary } from '@/shared/rules/condition-modifiers'
+import type { ConditionId } from '@/shared/api/catalog-types'
 import { For, Show, createMemo } from 'solid-js'
 import type { Character } from '@/shared/api/api'
 import { conditionsRecord } from '@/shared/lib/rules-catalog-cache'

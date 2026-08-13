@@ -1,4 +1,4 @@
-import type { ConditionId } from '@tormenta20/t20-data'
+import type { ConditionId } from '@/shared/api/catalog-types'
 import { conditionsRecord } from '@/shared/lib/rules-catalog-cache'
 
 /**

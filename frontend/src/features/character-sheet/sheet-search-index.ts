@@ -1,4 +1,4 @@
-import { EXPERTISES } from '@tormenta20/t20-data'
+import { EXPERTISES } from '@/shared/api/expertise-names'
 import {
   conditionsRecord,
   tormentaPowersRecord,

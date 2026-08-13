@@ -1,4 +1,4 @@
-import type { SpellcasterClass } from '@tormenta20/t20-data'
+import type { SpellcasterClass } from '@/shared/api/catalog-types'
 import type { AttributeKey } from '@/shared/api/attribute-keys'
 import { describe, expect, it } from 'vitest'
 import { makeCharacter } from './__fixtures__/character'

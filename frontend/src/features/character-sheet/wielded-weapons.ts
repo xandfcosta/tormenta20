@@ -1,4 +1,4 @@
-import type { WeaponStats } from '@tormenta20/t20-data'
+import type { WeaponStats } from '@/shared/api/item-types'
 import { getCatalogItem } from '@/shared/lib/catalog-cache'
 import type { Character } from '@/shared/api/api'
 

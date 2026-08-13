@@ -1,4 +1,4 @@
-import { CLASS_VITALS } from '@tormenta20/t20-data'
+import { CLASS_VITALS } from '@/shared/rules/class-vitals'
 import { ATTRIBUTE_KEYS, type AttributeKey } from '@/shared/api/attribute-keys'
 import { computeVitalPools, type VitalContext } from '@/entities/character/vital-pools'
 import {

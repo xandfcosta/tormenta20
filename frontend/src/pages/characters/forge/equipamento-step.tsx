@@ -1,8 +1,5 @@
-import {
-  STARTING_KIT_BASE_ITEMS,
-  STARTING_TIBARES_DICE,
-  type StartingKit,
-} from '@tormenta20/t20-data'
+import { STARTING_KIT_BASE_ITEMS, STARTING_TIBARES_DICE } from '@/shared/rules/class-starting-kits'
+import type { StartingKit } from '@/shared/api/catalog-types'
 import { For, type JSX, Show } from 'solid-js'
 import { BagagemPanel } from '@/features/character-build/bagagem-panel'
 import { useForge } from '@/features/character-build/forge-context'

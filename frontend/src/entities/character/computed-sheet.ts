@@ -1,4 +1,6 @@
-import { type ItemEffects, spellSaveDc, statFor } from '@tormenta20/t20-data'
+import { statFor } from '@/shared/rules/items-engine'
+import { spellSaveDc } from '@/shared/rules/spells'
+import type { ItemEffects } from '@/shared/api/item-types'
 import { type AttributeKey } from '@/shared/api/attribute-keys'
 import {
   areEngineCatalogsPrimed,

@@ -24,24 +24,8 @@ import type {
  * Only the READ endpoints the query layer needs are here; each scene brings its
  * own mutations when it lands, so the client never gets ahead of its consumers.
  */
-import type {
-  ActivationSpec,
-  CatalogItem,
-  CatalogSpell,
-  ClassPower,
-  Condition,
-  ConditionId,
-  Deus,
-  GeneralPower,
-  GrantedPower,
-  GrantedPowerOption,
-  Monster,
-  Origem,
-  OriginDefinition,
-  Raca,
-  TormentaPower,
-  TormentaPowerId,
-} from '@tormenta20/t20-data'
+import type { ActivationSpec, CatalogSpell, ClassPower, Condition, ConditionId, Deus, GeneralPower, GrantedPower, GrantedPowerOption, Monster, Origem, OriginDefinition, Raca, TormentaPower, TormentaPowerId } from '@/shared/api/catalog-types'
+import type { CatalogItem } from '@/shared/api/item-types'
 import type {
   AddMemberInput,
   ApplyDamageResult,

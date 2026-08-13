@@ -1,10 +1,6 @@
-import {
-  caminhoSlotFor,
-  type ClassChoices,
-  type PowerChoice,
-  type Prerequisite,
-  slotsForClassLevel,
-} from '@tormenta20/t20-data'
+import { caminhoSlotFor } from '@/shared/rules/abilities-caminhos'
+import { slotsForClassLevel } from '@/shared/rules/abilities-classes-slots'
+import type { ClassChoices, PowerChoice, Prerequisite } from '@/shared/api/catalog-types'
 import {
   allGeneralPowers,
   classPowersFor,

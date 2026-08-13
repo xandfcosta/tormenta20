@@ -9,8 +9,9 @@
  * with the Poderes block (ALE-87) as a Solid primitive.
  */
 
-import { FLAG_ACTIVATIONS, maxStepsForLevel } from '@tormenta20/t20-data'
-import type { ActivationSpec } from '@tormenta20/t20-data'
+import { FLAG_ACTIVATIONS } from '@/shared/rules/flag-activations'
+import { maxStepsForLevel } from '@/shared/rules/power-activation'
+import type { ActivationSpec } from '@/shared/api/catalog-types'
 import {
   activationSpecs,
   findActivationByName,

@@ -1,4 +1,4 @@
-import type { DisplayFact } from '@tormenta20/t20-data'
+import type { DisplayFact } from '@/shared/api/display-facts'
 import { For, Show } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
 

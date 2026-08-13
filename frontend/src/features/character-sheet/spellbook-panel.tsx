@@ -1,4 +1,7 @@
-import { type CatalogSpell, SPELLCASTER_CLASSES, SPELL_SCHOOLS, type SpellCircle, type SpellClassName, type SpellSchool } from '@tormenta20/t20-data'
+import { SPELL_SCHOOLS } from '@/shared/api/spell-types'
+import { SPELLCASTER_CLASSES } from '@/shared/rules/class-spellcasting'
+import type { CatalogSpell, SpellClassName } from '@/shared/api/catalog-types'
+import type { SpellCircle, SpellSchool } from '@/shared/api/spell-types'
 import { type AttributeKey } from '@/shared/api/attribute-keys'
 import { BookOpen, Plus, Search } from 'lucide-solid'
 import { For, Show, createMemo, createSignal } from 'solid-js'

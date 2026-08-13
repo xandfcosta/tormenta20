@@ -1,6 +1,4 @@
 import {
-} from '@tormenta20/t20-data'
-import {
   areEngineCatalogsPrimed,
   computeVitals as engineComputeVitals,
   type VitalContext,

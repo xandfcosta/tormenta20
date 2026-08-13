@@ -1,4 +1,4 @@
-import type { ClassPower, GeneralPower, PowerKind } from '@tormenta20/t20-data'
+import type { ClassPower, GeneralPower, PowerKind } from '@/shared/api/catalog-types'
 import { Check, Info } from 'lucide-solid'
 import { For, type JSX, Show } from 'solid-js'
 import type { PrerequisiteCheck } from '@/entities/character/derived'

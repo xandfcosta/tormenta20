@@ -1,4 +1,4 @@
-import { pointBuyCost } from '@tormenta20/t20-data'
+import { pointBuyCost } from '@/shared/rules/point-buy'
 import { ATTRIBUTE_KEYS, type AttributeKey } from '@/shared/api/attribute-keys'
 import type { AttributeMode } from '@/shared/stores/character-draft-store'
 import {

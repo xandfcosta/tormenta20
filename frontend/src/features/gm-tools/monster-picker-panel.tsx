@@ -1,4 +1,4 @@
-import type { Monster } from '@tormenta20/t20-data'
+import type { Monster } from '@/shared/api/catalog-types'
 import type { JSX } from 'solid-js'
 import { SidePanel } from '@/shared/ui/side-panel'
 import { MonsterPickerList } from './monster-picker-list'

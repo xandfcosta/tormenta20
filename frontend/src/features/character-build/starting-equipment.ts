@@ -1,9 +1,7 @@
-import {
-  type CatalogItem,
-  type StartingKit,
-  startingKitFor,
-  startingMoneyForLevel,
-} from '@tormenta20/t20-data'
+import { startingKitFor } from '@/shared/rules/class-starting-kits'
+import { startingMoneyForLevel } from '@/shared/rules/starting-money'
+import type { StartingKit } from '@/shared/api/catalog-types'
+import type { CatalogItem } from '@/shared/api/item-types'
 import { allCatalogItems, getCatalogItem } from '@/shared/lib/catalog-cache'
 import { origemItemGrantsByName, origensList } from '@/shared/lib/racas-cache'
 

@@ -1,4 +1,4 @@
-import type { Monster } from '@tormenta20/t20-data'
+import type { Monster } from '@/shared/api/catalog-types'
 import { computeGroupNd } from '@/shared/lib/encounter-math'
 
 /**

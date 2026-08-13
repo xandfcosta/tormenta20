@@ -1,4 +1,4 @@
-import type { CatalogSpell } from '@tormenta20/t20-data'
+import type { CatalogSpell } from '@/shared/api/catalog-types'
 import { describe, expect, it } from 'vitest'
 import { augmentPicksFrom, augmentPmFor, isAugmentLocked } from './spell-augments'
 

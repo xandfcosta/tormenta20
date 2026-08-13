@@ -1,5 +1,6 @@
 import type { QueryClient } from '@tanstack/solid-query'
-import { type ProficiencyEntry, characterProficiencies } from '@tormenta20/t20-data'
+import { characterProficiencies } from '@/shared/rules/proficiencies'
+import type { ProficiencyEntry } from '@/shared/api/catalog-types'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { createCharacterWrite } from './character-write'

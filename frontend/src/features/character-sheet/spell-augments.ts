@@ -1,4 +1,5 @@
-import type { CatalogSpell, SpellCircle } from '@tormenta20/t20-data'
+import type { CatalogSpell } from '@/shared/api/catalog-types'
+import type { SpellCircle } from '@/shared/api/spell-types'
 import type { SpellAugmentPick } from '@/shared/api/api'
 
 type Augment = CatalogSpell['augments'][number]

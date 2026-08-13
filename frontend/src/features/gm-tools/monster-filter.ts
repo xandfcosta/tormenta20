@@ -1,4 +1,4 @@
-import type { Monster, MonsterTipo } from '@tormenta20/t20-data'
+import type { Monster, MonsterTipo } from '@/shared/api/catalog-types'
 import { createSignal } from 'solid-js'
 import { matchesQuery } from '@/shared/lib/fuzzy-filter'
 import { clampToRange } from '@/shared/ui/number-input'

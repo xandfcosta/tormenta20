@@ -1,4 +1,4 @@
-import type { CatalogSpell } from '@tormenta20/t20-data'
+import type { CatalogSpell } from '@/shared/api/catalog-types'
 import { normalizeText } from '@/shared/lib/normalize-text'
 
 /**

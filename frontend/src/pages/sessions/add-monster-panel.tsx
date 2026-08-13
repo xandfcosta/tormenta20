@@ -1,4 +1,4 @@
-import type { Monster } from '@tormenta20/t20-data'
+import type { Monster } from '@/shared/api/catalog-types'
 import { Skull } from 'lucide-solid'
 import { createSignal } from 'solid-js'
 import { MonsterPickerPanel } from '@/features/gm-tools/monster-picker-panel'

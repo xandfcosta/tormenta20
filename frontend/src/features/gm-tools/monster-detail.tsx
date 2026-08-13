@@ -1,4 +1,4 @@
-import type { Monster } from '@tormenta20/t20-data'
+import type { Monster } from '@/shared/api/catalog-types'
 import { For, type JSX, Show } from 'solid-js'
 import { xpForNd } from '@/shared/lib/encounter-math'
 import { MONSTER_TIPO_LABEL, formatNd } from './monster-format'

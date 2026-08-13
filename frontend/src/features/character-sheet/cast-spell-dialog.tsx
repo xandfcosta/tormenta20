@@ -1,12 +1,9 @@
 import { useQueryClient } from '@tanstack/solid-query'
-import {
-  type CatalogSpell,
-  SPELLCASTER_CLASSES,
-  SPELL_BASE_PM_COST,
-  firstErrorMessage,
-  spellPmCostWithMods,
-  validateCast,
-} from '@tormenta20/t20-data'
+import { SPELLCASTER_CLASSES } from '@/shared/rules/class-spellcasting'
+import { spellPmCostWithMods, validateCast } from '@/shared/rules/rules-spells'
+import { firstErrorMessage } from '@/shared/rules/rules-types'
+import { SPELL_BASE_PM_COST } from '@/shared/rules/spells'
+import type { CatalogSpell } from '@/shared/api/catalog-types'
 import { Sparkles, Zap } from 'lucide-solid'
 import { For, type JSX, Show, createMemo, createSignal } from 'solid-js'
 import {

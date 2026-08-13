@@ -1,4 +1,4 @@
-import type { GrantedPowerOption } from '@tormenta20/t20-data'
+import type { GrantedPowerOption } from '@/shared/api/catalog-types'
 
 /**
  * Front-owned cache for the divine powers (poderes concedidos + rule text) the

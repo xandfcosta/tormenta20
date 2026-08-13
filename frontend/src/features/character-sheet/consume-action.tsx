@@ -1,4 +1,4 @@
-import type { CatalogItem } from '@tormenta20/t20-data'
+import type { CatalogItem } from '@/shared/api/item-types'
 import { type JSX, Show, createSignal } from 'solid-js'
 import type { ConsumeItemInput } from '@/shared/api/api'
 import { Button } from '@/shared/ui/button'

@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/solid-query'
-import type { ActivationSpec } from '@tormenta20/t20-data'
+import type { ActivationSpec } from '@/shared/api/catalog-types'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { makeCharacter } from '@/entities/character/__fixtures__/character'
 import { characterQueryOptions } from '@/entities/character/queries'

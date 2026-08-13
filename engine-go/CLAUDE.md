@@ -14,18 +14,20 @@ valioso do repositório: um único `lenda-nv20-maximo.json` fixa `pvMax 277`, a
 carta do Machado com ataque 21 e o breakdown, as 29 perícias com composição.
 
 ```
-GEN_ORACLE=1 pnpm --filter frontend test parity-oracle
+cd engine-go && go run ./cmd/genoracle
 ```
 
 > **O diff de um oráculo é revisado contra o LIVRO, nunca aceito porque "o teste
 > ficou verde".**
 
-Enquanto o `t20-data` existe, o oráculo tem duas testemunhas: ele é gerado pela
-implementação TS de referência (`tsCharacterEffects`, `tsVitalPools`,
-`tsEquippedItemFlags` — chamadas EXPLICITAMENTE pelo harness, nunca por `if` de
-ambiente) e conferido contra o Go. Quando o TS morrer, o oráculo passa a ser o Go
-descrevendo o Go, e **um bug no motor vira a nova verdade em silêncio**. A
-mitigação não é técnica, é de processo, e é a linha acima.
+**Esse momento já chegou.** O `t20-data` foi aposentado, então não há segunda
+implementação: o oráculo é o Go descrevendo o Go, e **um bug no motor vira a nova
+verdade em silêncio**. A mitigação não é técnica, é de processo, e é a linha
+acima.
+
+O que o oráculo ainda protege é enorme — a ficha inteira de 18 personagens, ponta
+a ponta, acusando qualquer número que mude sem ter sido pedido. O que ele deixou
+de provar é que DOIS motores concordam.
 
 Aprendido do jeito difícil: a paridade entre os dois motores esteve **perfeita**
 durante meses enquanto AMBOS erravam a RD do Guerreiro, que não existe no livro
@@ -64,9 +66,9 @@ Set e serializa um array).
 ## Catálogos
 
 `catalog/data/*.json` é embutido no binário e servido por `GET /catalog/:nome`.
-Quatro tabelas são **autoradas aqui** (perícias por classe, termos de devoto,
-tabelas do Improviso, desenho de masmorra); o resto ainda é despejado do
-`t20-data`.
+**Este é o único lugar onde catálogo é autorado** — mudar uma magia é editar um
+arquivo só. O front os busca por HTTP e o `test-setup` do vitest lê os mesmos
+arquivos, então uma edição vale para os dois lados na hora.
 
 O que protege dado transcrito é **validação de schema**
 (`catalog/rules_tables_test.go`), não um `expect` por campo: o risco é typo, não

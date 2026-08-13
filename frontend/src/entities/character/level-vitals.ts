@@ -1,4 +1,4 @@
-import { type ItemEffects } from '@tormenta20/t20-data'
+import type { ItemEffects } from '@/shared/api/item-types'
 import { ATTRIBUTE_KEYS, type AttributeKey } from '@/shared/api/attribute-keys'
 import type { Character } from '@/shared/api/api'
 import { attributeTotal, parseChoiceSet, parseClassChoices } from './derived'

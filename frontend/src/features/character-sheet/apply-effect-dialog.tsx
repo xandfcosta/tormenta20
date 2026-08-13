@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/solid-query'
-import type { CatalogSpell } from '@tormenta20/t20-data'
+import type { CatalogSpell } from '@/shared/api/catalog-types'
 import type { Modifier } from '@/shared/api/item-types'
 import { Plus } from 'lucide-solid'
 import { Show, createMemo, createSignal } from 'solid-js'

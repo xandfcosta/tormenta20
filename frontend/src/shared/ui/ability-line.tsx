@@ -1,4 +1,4 @@
-import type { FactCategory } from '@tormenta20/t20-data'
+import type { FactCategory } from '@/shared/api/display-facts'
 import { Eye, Footprints, Shield, ShieldCheck, Sparkles, Zap } from 'lucide-solid'
 import { Dynamic } from 'solid-js/web'
 import type { Component } from 'solid-js'

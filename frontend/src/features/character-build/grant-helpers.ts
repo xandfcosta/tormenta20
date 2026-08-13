@@ -1,4 +1,6 @@
-import { CLASS_VITALS, carismaLossFromPowers, type Raca, type TormentaPowerId } from '@tormenta20/t20-data'
+import { CLASS_VITALS } from '@/shared/rules/class-vitals'
+import { carismaLossFromPowers } from '@/shared/rules/tormenta-carisma'
+import type { Raca, TormentaPowerId } from '@/shared/api/catalog-types'
 import { ATTRIBUTE_ABBR, ATTRIBUTE_KEYS, type AttributeKey } from '@/shared/api/attribute-keys'
 import {
   getOrigin,

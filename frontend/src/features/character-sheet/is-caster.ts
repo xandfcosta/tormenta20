@@ -1,4 +1,4 @@
-import { SPELLCASTER_CLASSES } from '@tormenta20/t20-data'
+import { SPELLCASTER_CLASSES } from '@/shared/rules/class-spellcasting'
 import type { Character } from '@/shared/api/api'
 
 /**

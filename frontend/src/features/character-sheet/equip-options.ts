@@ -1,6 +1,6 @@
-import { HOMEBREW_VESTED_OK } from '@tormenta20/t20-data'
+import { HOMEBREW_VESTED_OK } from '@/shared/rules/items-homebrew'
 import { getCatalogItem } from '@/shared/lib/catalog-cache'
-import type { CatalogItem } from '@tormenta20/t20-data'
+import type { CatalogItem } from '@/shared/api/item-types'
 import type { CharacterItem, EquippedSlot } from '@/shared/api/api'
 
 export type EquipOption = { value: '' | EquippedSlot; label: string }

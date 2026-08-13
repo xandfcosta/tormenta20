@@ -1,4 +1,4 @@
-import { attributePresetForClass } from '@tormenta20/t20-data'
+import { attributePresetForClass } from '@/shared/rules/classes'
 import { ATTRIBUTE_KEYS, type AttributeKey } from '@/shared/api/attribute-keys'
 
 export type ClassEntry = { className: string; level: number }

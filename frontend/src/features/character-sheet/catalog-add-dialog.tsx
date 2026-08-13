@@ -1,4 +1,4 @@
-import type { CatalogItem } from '@tormenta20/t20-data'
+import type { CatalogItem } from '@/shared/api/item-types'
 import { Plus } from 'lucide-solid'
 import { For, Show, createMemo, createSignal } from 'solid-js'
 import type { CreateItemInput, EquippedSlot } from '@/shared/api/api'

@@ -1,4 +1,4 @@
-import type { OrigemItemGrant } from '@tormenta20/t20-data'
+import type { OrigemItemGrant } from '@/shared/api/catalog-types'
 import { For, type JSX, Show, Switch, Match } from 'solid-js'
 import { origemItemGrantsByName } from '@/shared/lib/racas-cache'
 import { cn } from '@/shared/lib/utils'

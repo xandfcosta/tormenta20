@@ -1,4 +1,4 @@
-import type { CatalogItem } from '@tormenta20/t20-data'
+import type { CatalogItem } from '@/shared/api/item-types'
 import { Search } from 'lucide-solid'
 import { For, Show, createSignal } from 'solid-js'
 import { matchesQuery } from '@/shared/lib/fuzzy-filter'

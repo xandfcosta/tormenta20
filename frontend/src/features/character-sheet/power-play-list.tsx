@@ -1,4 +1,4 @@
-import type { ActivationKind } from '@tormenta20/t20-data'
+import type { ActivationKind } from '@/shared/api/catalog-types'
 import { BookOpen, ChevronRight, Flame, Sparkles, Zap } from 'lucide-solid'
 import { For, Show, createMemo, createSignal } from 'solid-js'
 import { Dynamic } from 'solid-js/web'

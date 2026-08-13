@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/solid-query'
-import type { ProficiencyEntry } from '@tormenta20/t20-data'
+import type { ProficiencyEntry } from '@/shared/api/catalog-types'
 import { Check, X } from 'lucide-solid'
 import { For, createMemo, createSignal } from 'solid-js'
 import type { Character } from '@/shared/api/api'

@@ -1,4 +1,4 @@
-import type { RaceDefinition } from '@tormenta20/t20-data'
+import type { RaceDefinition } from '@/shared/api/catalog-types'
 import { Settings2 } from 'lucide-solid'
 import { For, type JSX, Show, createMemo, createSignal } from 'solid-js'
 import type { Character } from '@/shared/api/api'

@@ -1,4 +1,4 @@
-import { EXPERTISE_NAMES } from '@tormenta20/t20-data'
+import { EXPERTISE_NAMES } from '@/shared/api/expertise-names'
 import { describe, expect, it } from 'vitest'
 import { periciaBudget, periciaPlan } from './pericia-helpers'
 

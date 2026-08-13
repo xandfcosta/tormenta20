@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { getCatalogItem, type ItemFlag } from '@tormenta20/t20-data'
+import { getCatalogItem } from '@/shared/lib/catalog-cache'
+import type { ItemFlag } from '@/shared/api/item-types'
 import {
   describeModifierTarget,
   itemOverlayCatalogs,

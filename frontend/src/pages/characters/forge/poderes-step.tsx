@@ -1,4 +1,4 @@
-import { caminhoSlotFor } from '@tormenta20/t20-data'
+import { caminhoSlotFor } from '@/shared/rules/abilities-caminhos'
 import { Check, Lock, Search, X } from 'lucide-solid'
 import { For, Index, Show, createMemo, createSignal } from 'solid-js'
 import {

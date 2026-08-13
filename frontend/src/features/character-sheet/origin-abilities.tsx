@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/solid-query'
-import type { OriginBenefit, OriginDefinition } from '@tormenta20/t20-data'
+import type { OriginBenefit, OriginDefinition } from '@/shared/api/catalog-types'
 import { Check } from 'lucide-solid'
 import { For, Show, createMemo, createSignal } from 'solid-js'
 import type { Character } from '@/shared/api/api'

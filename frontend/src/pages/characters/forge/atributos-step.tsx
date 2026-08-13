@@ -1,4 +1,4 @@
-import { POINT_BUY_BUDGET, POINT_BUY_MAX, POINT_BUY_MIN } from '@tormenta20/t20-data'
+import { POINT_BUY_BUDGET, POINT_BUY_MAX, POINT_BUY_MIN } from '@/shared/rules/point-buy'
 import { ChevronDown, ChevronUp } from 'lucide-solid'
 import { For, Index, Show } from 'solid-js'
 import {

@@ -1,9 +1,7 @@
 import type { QueryClient } from '@tanstack/solid-query'
-import {
-  firstErrorMessage,
-  validateConsumeQuantity,
-  validateEquipChange,
-} from '@tormenta20/t20-data'
+import { validateEquipChange } from '@/shared/rules/rules-equip'
+import { validateConsumeQuantity } from '@/shared/rules/rules-inventory'
+import { firstErrorMessage } from '@/shared/rules/rules-types'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { createCharacterWrite } from './character-write'

@@ -1,5 +1,5 @@
-import { FLAG_ACTIVATIONS } from '@tormenta20/t20-data'
-import type { ActivationSpec } from '@tormenta20/t20-data'
+import { FLAG_ACTIVATIONS } from '@/shared/rules/flag-activations'
+import type { ActivationSpec } from '@/shared/api/catalog-types'
 import { stanceFlagOf } from '@/entities/character/power-rules'
 import type { SheetSearchEntry } from './sheet-search-index'
 

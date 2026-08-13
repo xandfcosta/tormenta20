@@ -1,10 +1,6 @@
 import { useQueryClient } from '@tanstack/solid-query'
-import {
-  type ClassChoiceBlob,
-  type ClassChoices,
-  type GeneralPower,
-  caminhoSlotFor,
-} from '@tormenta20/t20-data'
+import { caminhoSlotFor } from '@/shared/rules/abilities-caminhos'
+import type { ClassChoiceBlob, ClassChoices, GeneralPower } from '@/shared/api/catalog-types'
 import { For, type JSX, Show, createMemo, createSignal } from 'solid-js'
 import { electiveSlotUsage } from '@/entities/character/class-powers'
 import { evaluatePrerequisite, parseClassChoices } from '@/entities/character/derived'

@@ -1,6 +1,6 @@
 import type { QueryClient } from '@tanstack/solid-query'
-import { FLAG_ACTIVATIONS } from '@tormenta20/t20-data'
-import type { ActivationSpec } from '@tormenta20/t20-data'
+import { FLAG_ACTIVATIONS } from '@/shared/rules/flag-activations'
+import type { ActivationSpec } from '@/shared/api/catalog-types'
 import { allConditionals } from '@/entities/character/derived'
 import {
   type PowerUseContext,

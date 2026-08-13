@@ -1,4 +1,4 @@
-import type { ActivationSpec } from '@tormenta20/t20-data'
+import type { ActivationSpec } from '@/shared/api/catalog-types'
 import { resolveActivationSpec } from '@/entities/character/power-rules'
 import type { SheetSearchEntry } from './sheet-search-index'
 

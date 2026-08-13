@@ -1,4 +1,4 @@
-import { startingKitFor } from '@tormenta20/t20-data'
+import { startingKitFor } from '@/shared/rules/class-starting-kits'
 import { getCatalogItem } from '@/shared/lib/catalog-cache'
 import { type RaceChoiceState, appliedRaceDeltas } from './grant-helpers'
 

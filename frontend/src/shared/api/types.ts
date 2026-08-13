@@ -6,7 +6,7 @@
  * Type-only imports from `@tormenta20/t20-data` erase at compile, so no catalog
  * DATA rides in the bundle — it is fetched from /catalog and cached.
  */
-import type { ClassChoices } from '@tormenta20/t20-data'
+import type { ClassChoices } from '@/shared/api/catalog-types'
 import type { AttributeKey } from '@/shared/api/attribute-keys'
 
 export type { AttributeKey }
@@ -482,7 +482,7 @@ export type AbilityChoicesResult = {
 
 // --- computed sheet -----------------------------------------------------------
 
-import type { RaceDefinition } from '@tormenta20/t20-data'
+import type { RaceDefinition } from '@/shared/api/catalog-types'
 import type { ComputedSheetV2 } from '@/shared/lib/computed-sheet-v2'
 
 export type { RaceDefinition, ComputedSheetV2 }

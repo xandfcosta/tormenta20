@@ -1,4 +1,5 @@
-import type { CatalogItem, CatalogSpell, Condition } from '@tormenta20/t20-data'
+import type { CatalogSpell, Condition } from '@/shared/api/catalog-types'
+import type { CatalogItem } from '@/shared/api/item-types'
 import { Search } from 'lucide-solid'
 import { type JSX, Match, Show, Switch, createMemo, createSignal } from 'solid-js'
 import { allCatalogItems } from '@/shared/lib/catalog-cache'

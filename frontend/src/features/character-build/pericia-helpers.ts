@@ -1,4 +1,5 @@
-import { EXPERTISE_NAMES, raceFreeExpertiseCount } from '@tormenta20/t20-data'
+import { EXPERTISE_NAMES } from '@/shared/api/expertise-names'
+import { raceFreeExpertiseCount } from '@/shared/rules/race-expertises'
 import { classExpertiseSlots } from '@/entities/character/class-expertise-rules'
 
 export type PericiaPlan = {

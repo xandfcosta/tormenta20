@@ -1,6 +1,6 @@
 import { render, screen } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
-import type { Monster } from '@tormenta20/t20-data'
+import type { Monster } from '@/shared/api/catalog-types'
 import { describe, expect, it, vi } from 'vitest'
 import { type EnrichedGroup, enrichEncounter } from './encounter'
 import { EncounterComposer } from './encounter-composer'

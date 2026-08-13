@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/solid-query'
-import { FLAG_ACTIVATIONS } from '@tormenta20/t20-data'
+import { FLAG_ACTIVATIONS } from '@/shared/rules/flag-activations'
 import { Flame } from 'lucide-solid'
 import { For, Show, createMemo, createSignal } from 'solid-js'
 import { computedSheetFor } from '@/entities/character/computed-sheet'

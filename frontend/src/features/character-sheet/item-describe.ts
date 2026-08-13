@@ -1,5 +1,5 @@
 import { getCatalogItem } from '@/shared/lib/catalog-cache'
-import type { CatalogItem, ItemFlag } from '@tormenta20/t20-data'
+import type { CatalogItem, ItemFlag } from '@/shared/api/item-types'
 import type { Modifier } from '@/shared/api/item-types'
 import { signed } from './signed'
 

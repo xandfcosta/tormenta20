@@ -1,9 +1,5 @@
-import {
-  type Origem,
-  type OrigemItemGrant,
-  parseOrigemItem,
-  type Raca,
-} from '@tormenta20/t20-data'
+import { parseOrigemItem } from '@/shared/rules/origem-item-parse'
+import type { Origem, OrigemItemGrant, Raca } from '@/shared/api/catalog-types'
 
 /**
  * Front-owned cache for the racas.ts RACAS + origens.ts ORIGENS reference data

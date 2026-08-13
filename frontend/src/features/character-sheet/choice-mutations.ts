@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/solid-query'
-import type { ClassChoices } from '@tormenta20/t20-data'
+import type { ClassChoices } from '@/shared/api/catalog-types'
 import { invalidateCharacterDependents } from '@/entities/character/character-cache'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { createCharacterWrite } from './character-write'

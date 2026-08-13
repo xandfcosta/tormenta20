@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/solid-query'
-import type { ActivationAction, ActivationSpec, ActivationUses } from '@tormenta20/t20-data'
+import type { ActivationAction, ActivationSpec, ActivationUses } from '@/shared/api/catalog-types'
 import { Zap } from 'lucide-solid'
 import { Show, createMemo } from 'solid-js'
 import { allConditionals } from '@/entities/character/derived'

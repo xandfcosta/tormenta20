@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { conditionalId, statFor } from '@tormenta20/t20-data'
-import type { ClassChoices, ItemEffects } from '@tormenta20/t20-data'
+import { conditionalId, statFor } from '@/shared/rules/items-engine'
+import type { ClassChoices } from '@/shared/api/catalog-types'
+import type { ItemEffects } from '@/shared/api/item-types'
 import type { Character, CharacterItem } from '@/shared/api/api'
 import {
   armorPenaltyTotal,

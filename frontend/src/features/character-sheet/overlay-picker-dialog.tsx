@@ -1,4 +1,5 @@
-import { type CatalogItem, familyFor } from '@tormenta20/t20-data'
+import { familyFor } from '@/shared/api/item-classify'
+import type { CatalogItem } from '@/shared/api/item-types'
 import { Gem } from 'lucide-solid'
 import { For, Show, createMemo, createSignal } from 'solid-js'
 import { parseImprovementIds } from '@/entities/character/derived'

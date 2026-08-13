@@ -1,4 +1,4 @@
-import type { Deus } from '@tormenta20/t20-data'
+import type { Deus } from '@/shared/api/catalog-types'
 import { devotoTermsTable } from '@/shared/lib/rules-tables-cache'
 
 /**

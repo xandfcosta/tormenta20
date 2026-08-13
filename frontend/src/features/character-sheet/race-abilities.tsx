@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/solid-query'
-import type { RaceAbility, RaceDefinition } from '@tormenta20/t20-data'
+import type { RaceAbility, RaceDefinition } from '@/shared/api/catalog-types'
 import { For, Show, createMemo, createSignal } from 'solid-js'
 import type { AttributeKey, Character } from '@/shared/api/api'
 import { cn } from '@/shared/lib/utils'
