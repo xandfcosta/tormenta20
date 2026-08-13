@@ -100,7 +100,10 @@ export function ActiveEffectsSection(props: { character: Character }) {
           </p>
         }
       >
-        <ul class="mt-2 space-y-1">
+        {/* Nomeada porque o diálogo de aplicar lista os MESMOS nomes: sem um
+            alvo para escopar, "Escudo da Fé" casa a linha aplicada e a linha do
+            catálogo enquanto o diálogo ainda fecha. */}
+        <ul aria-label="Efeitos ativos" class="mt-2 space-y-1">
           <For each={effects()}>
             {(effect) => (
               <ActiveEffectRow

@@ -77,7 +77,16 @@ test.describe('Efeitos', () => {
     await search.fill('escudo')
     await page.getByRole('button', { name: /^Escudo da Fé/ }).click()
 
-    const applied = page.getByText('Escudo da Fé')
+    // Esperar o diálogo FECHAR antes de olhar a lista. Ele mostra o mesmo nome
+    // da magia, então um `getByText` solto corria contra o fechamento e, numa
+    // máquina lenta, casava dois elementos — o strict mode derrubava a suíte.
+    // Escopar sozinho não resolveria: enquanto o diálogo está aberto ele marca
+    // os irmãos `aria-hidden`, e aí a lista some da árvore de acessibilidade e
+    // um locator por ROLE não acha nada.
+    await expect(page.getByRole('dialog')).toBeHidden()
+    const applied = page
+      .getByRole('list', { name: 'Efeitos ativos' })
+      .getByText('Escudo da Fé')
     await expect(applied).toBeVisible()
 
     // The trigger and the confirm share a label — scope to the dialog.
