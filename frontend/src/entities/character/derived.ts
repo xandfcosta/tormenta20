@@ -890,22 +890,33 @@ export function defenseTotal(
   itemBonus: number
   total: number
   dexApplied: boolean
+  vsMelee: number
+  vsRanged: number
   contributions: { source: string; amount: number; note?: string }[]
 } {
   const stat = statFor(effects, { k: 'defense' })
   const dexApplied = !effects.flags.has('cannot-apply-dex-to-defense')
   const effectiveDex = attributeTotal(character, 'dexterity', effects)
   const base = 10 + (dexApplied ? effectiveDex : 0)
+  // Defesa DIRECIONAL: igual ao total na maioria das fichas, separada quando
+  // algo distingue a direção do ataque — hoje só o Caído (p394).
+  const melee = statFor(effects, { k: 'defense', scope: 'melee' })
+  const ranged = statFor(effects, { k: 'defense', scope: 'ranged' })
+  const total = base + stat.total
   return {
     base,
     itemBonus: stat.total,
-    total: base + stat.total,
+    total,
     dexApplied,
-    contributions: stat.contributions.map((c) => ({
-      source: c.source,
-      amount: c.amount,
-      ...(c.note ? { note: c.note } : {}),
-    })),
+    vsMelee: total + melee.total,
+    vsRanged: total + ranged.total,
+    contributions: [...stat.contributions, ...melee.contributions, ...ranged.contributions].map(
+      (c) => ({
+        source: c.source,
+        amount: c.amount,
+        ...(c.note ? { note: c.note } : {}),
+      }),
+    ),
   }
 }
 
@@ -1133,8 +1144,8 @@ export function characterDamageReduction(
         })
     }
   }
-  if (sources.length === 0) return { total: 0, sources }
-  // Maior RD geral + a Especialização (cumulativa por texto explícito).
+  // As de CLASSE competem entre si; a Especialização soma por cima, cumulativa
+  // por texto explícito.
   const especializacao = sources
     .filter((s) => s.source === 'Especialização em Armadura')
     .reduce((sum, s) => sum + s.amount, 0)
@@ -1144,7 +1155,17 @@ export function characterDamageReduction(
       .filter((s) => s.source !== 'Especialização em Armadura')
       .map((s) => s.amount),
   )
-  return { total: general + especializacao, sources }
+
+  // RD concedida por MODIFICADOR — hoje só a do Petrificado (p394). Soma por
+  // cima: a p226 diz que efeitos de origens diferentes acumulam, e uma estátua
+  // de bárbaro tem as duas.
+  const granted = statFor(effects, { k: 'damageReduction' })
+  for (const c of granted.contributions) {
+    sources.push({ source: c.source, amount: c.amount })
+  }
+
+  if (sources.length === 0) return { total: 0, sources }
+  return { total: general + especializacao + granted.total, sources }
 }
 
 /** True when the Fúria stance is switched on in the Efeitos tab. */

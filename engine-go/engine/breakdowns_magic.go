@@ -157,10 +157,8 @@ func characterDamageReduction(ch Character, e ItemEffects) RdBreakdown {
 			}
 		}
 	}
-	if len(sources) == 0 {
-		return RdBreakdown{Total: 0, Sources: sources}
-	}
-
+	// As de CLASSE competem entre si (duas RD gerais não somam), com a
+	// Especialização por cima porque as duas descrições dizem que é cumulativa.
 	especializacao, general := 0, 0
 	for _, s := range sources {
 		if s.Source == "Especialização em Armadura" {
@@ -169,7 +167,20 @@ func characterDamageReduction(ch Character, e ItemEffects) RdBreakdown {
 		}
 		general = max(general, s.Amount)
 	}
-	return RdBreakdown{Total: general + especializacao, Sources: sources}
+
+	// RD concedida por MODIFICADOR — hoje só a do Petrificado (p394). Soma por
+	// cima em vez de competir: a p226 diz que efeitos de origens diferentes
+	// acumulam, e uma estátua de bárbaro tem as duas. Entre si já vêm resolvidas
+	// pelo `bonusType` compartilhado, então duas condições não dobram.
+	granted := StatFor(e, ModifierTarget{K: "damageReduction"})
+	for _, c := range granted.Contributions {
+		sources = append(sources, SourceAmount{c.Source, c.Amount})
+	}
+
+	if len(sources) == 0 {
+		return RdBreakdown{Total: 0, Sources: sources}
+	}
+	return RdBreakdown{Total: general + especializacao + granted.Total, Sources: sources}
 }
 
 // tempHpFromPowers ports derived.ts: Alma de Bronze (Bárbaro p41) grants
@@ -231,4 +242,60 @@ func SpellPmLimit(ch Character, itemBonus int, spellClasses []string) int {
 func (c *Catalogs) SpellPmLimitFor(ch Character, spellClasses []string) int {
 	sheet := c.ComputeSheetV2(ch, map[string]bool{})
 	return SpellPmLimit(ch, sheet.PmLimit.ItemBonus, spellClasses)
+}
+
+// resolvePmCostMod aplica a regra da p226 às contribuições de custo de PM:
+//
+//	"Reduções de Custo. Reduções no custo de PM não são cumulativas."
+//
+// REDUÇÕES competem entre FONTES — a melhor vence — mas somam dentro de uma
+// fonte só, porque "os bônus dobram" da Força da Natureza (p63) é UMA habilidade
+// se duplicando, não duas se acumulando. O `resolveStack` comum não serve aqui:
+// ele compete por bonusType, e estas vêm todas como `untyped`.
+//
+// AUMENTOS (o Alquebrado, p394: "o custo em PM das habilidades aumenta em +1")
+// somam normalmente — o livro só proíbe o acúmulo das reduções.
+func resolvePmCostMod(contribs []Contribution) int {
+	bySource := map[string]int{}
+	order := []string{}
+	for _, c := range contribs {
+		if _, seen := bySource[c.Source]; !seen {
+			order = append(order, c.Source)
+		}
+		bySource[c.Source] += c.Amount
+	}
+
+	bestReduction, increases := 0, 0
+	for _, source := range order {
+		amount := bySource[source]
+		if amount < bestReduction {
+			bestReduction = amount
+		}
+		if amount > 0 {
+			increases += amount
+		}
+	}
+	return bestReduction + increases
+}
+
+// SpellPmCostFor é o que a magia CUSTA de fato: o valor da Tabela 4-1 mais os
+// aprimoramentos, com os modificadores de custo da p226 aplicados e o piso de
+// 1 PM ("uma habilidade nunca pode ter seu custo reduzido para menos de 1 PM").
+//
+// O truque continua de graça: ele custa zero por natureza, não por redução, e o
+// piso não alcança o que já era zero.
+//
+// O motor calculava o modificador e o mostrava na ficha, mas o portão de
+// conjurar o ignorava — um Druida de 20º nível pagava preço cheio enquanto o
+// mosaico "Custo PM" dizia −2 (ALE-110).
+//
+// @example SpellPmCostFor(druida20, 3, 0, nil) // 1
+func (c *Catalogs) SpellPmCostFor(ch Character, basePm, augmentPm int, conditionals map[string]bool) int {
+	raw := basePm + augmentPm
+	if raw <= 0 {
+		return 0
+	}
+	effects := ApplyActiveConditionals(ComputeItemEffects(c.ActiveItemsFor(ch)), conditionals)
+	mod := resolvePmCostMod(StatFor(effects, ModifierTarget{K: "pmCost"}).Contributions)
+	return max(1, raw+mod)
 }

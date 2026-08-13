@@ -91,6 +91,8 @@ export type DefenseBreakdown = {
   itemBonus: number
   total: number
   dexApplied: boolean
+  vsMelee: number
+  vsRanged: number
   contributions: BreakdownContribution[]
 }
 

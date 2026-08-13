@@ -174,6 +174,12 @@ func targetKey(t ModifierTarget) string {
 	case "attribute":
 		return "attribute:" + t.Name
 	case "defense":
+		// Escopo separa a Defesa DIRECIONAL do Caído da geral: chaves distintas
+		// não competem entre si, que é exatamente o que a p394 pede ao dizer que
+		// a dele é "cumulativa com outras condições".
+		if t.Scope != "" && t.Scope != "all" {
+			return "defense:" + t.Scope
+		}
 		return "defense"
 	case "defenseDexCap":
 		return "defenseDexCap"
@@ -193,6 +199,8 @@ func targetKey(t ModifierTarget) string {
 		return "pmLimit"
 	case "pmCost":
 		return "pmCost"
+	case "damageReduction":
+		return "damageReduction"
 	case "catalyst":
 		return "catalyst:" + t.School
 	case "spellDC":

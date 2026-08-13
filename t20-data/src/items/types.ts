@@ -117,7 +117,7 @@ export type ModifierTarget =
   | { k: 'expertiseRemovePenalty'; name: ExpertiseName }
   | { k: 'expertiseByAttribute'; attribute: AttributeKey }
   | { k: 'attribute'; name: AttributeKey }
-  | { k: 'defense' }
+  | { k: 'defense'; scope?: 'all' | 'melee' | 'ranged' }
   | { k: 'defenseDexCap' }
   | { k: 'resistance' }
   | { k: 'fearResistance' }
@@ -127,6 +127,8 @@ export type ModifierTarget =
   | { k: 'critMult' }
   | { k: 'pmLimit' }
   | { k: 'pmCost' }
+  /** Redução de dano concedida por modificador (Petrificado, p394). */
+  | { k: 'damageReduction' }
   /**
    * Catalisador — one-shot pmCost discount on the next magia of the
    * given school. Consumed on cast; the item consumer creates a

@@ -562,6 +562,8 @@
       "itemBonus": 12,
       "total": 22,
       "dexApplied": false,
+      "vsMelee": 22,
+      "vsRanged": 22,
       "contributions": [
         {
           "source": "Armadura completa",
@@ -1044,6 +1046,8 @@
       "itemBonus": 12,
       "total": 22,
       "dexApplied": false,
+      "vsMelee": 22,
+      "vsRanged": 22,
       "contributions": [
         {
           "source": "Armadura completa",

@@ -84,3 +84,41 @@ export function validateCast(input: {
   }
   return errors
 }
+
+/**
+ * Custo final de uma magia com os modificadores da p226 aplicados:
+ *
+ *   "Reduções de Custo. Reduções no custo de PM não são cumulativas. Uma
+ *    habilidade nunca pode ter seu custo reduzido para menos de 1 PM."
+ *
+ * REDUÇÕES competem entre FONTES — a melhor vence — mas somam dentro de uma
+ * fonte só, porque "os bônus dobram" da Força da Natureza (p63) é UMA habilidade
+ * se duplicando. AUMENTOS (Alquebrado, p394) somam normalmente: o livro só
+ * proíbe o acúmulo das reduções.
+ *
+ * Espelha `Catalogs.SpellPmCostFor` no Go, que é quem o servidor cobra — o
+ * diálogo precisa mostrar o mesmo número, senão promete um preço que a API
+ * recusa (ALE-110).
+ *
+ * @example spellPmCostWithMods(3, 0, [{ source: 'Força da Natureza', amount: -2 }]) // 1
+ */
+export function spellPmCostWithMods(
+  basePm: number,
+  augmentPm: number,
+  contributions: readonly { source: string; amount: number }[],
+): number {
+  const raw = basePm + augmentPm
+  if (raw <= 0) return 0
+
+  const bySource = new Map<string, number>()
+  for (const c of contributions) {
+    bySource.set(c.source, (bySource.get(c.source) ?? 0) + c.amount)
+  }
+  let bestReduction = 0
+  let increases = 0
+  for (const amount of bySource.values()) {
+    if (amount < bestReduction) bestReduction = amount
+    if (amount > 0) increases += amount
+  }
+  return Math.max(1, raw + bestReduction + increases)
+}

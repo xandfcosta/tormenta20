@@ -38,6 +38,15 @@ const skill = (name: ExpertiseName, n: number) => mod({ k: 'expertise', name }, 
 const byAttr = (attribute: AttributeKey, n: number) =>
   mod({ k: 'expertiseByAttribute', attribute }, n)
 const attack = (n: number) => mod({ k: 'attack', scope: 'all' }, n)
+// O único modificador de condição que não é penalidade em teste: o Alquebrado
+// encarece as habilidades do personagem.
+const pmCost = (n: number) => mod({ k: 'pmCost' }, n)
+// O Petrificado concede RD 8 (p394) — por modificador, como qualquer fonte.
+const damageReduction = (n: number) => mod({ k: 'damageReduction' }, n)
+// A Defesa DIRECIONAL do Caído (p394) — escopo separado para não competir com a
+// Defesa geral das outras condições, que é o que o "cumulativos" do livro pede.
+const defenseVs = (scope: 'melee' | 'ranged', n: number) =>
+  mod({ k: 'defense', scope }, n)
 
 // "-N em testes de Força/Destreza/Constituição e perícias baseadas" (Fraco…).
 const forDesCon = (n: number) => [
@@ -97,9 +106,8 @@ export const CONDITION_MODIFIERS: Partial<Record<ConditionId, Modifier[]>> = {
   paralisado: INDEFESO,
   // "INCONSCIENTE. O personagem fica indefeso e não pode fazer ações […]"
   inconsciente: INDEFESO,
-  // "PETRIFICADO. O personagem fica inconsciente e recebe redução de dano 8." A
-  // RD 8 não é modelável: não há alvo de redução de dano para modificador.
-  petrificado: INDEFESO,
+  // "PETRIFICADO. O personagem fica inconsciente e recebe redução de dano 8."
+  petrificado: [...INDEFESO, damageReduction(8)],
   // "FATIGADO. O personagem fica fraco e vulnerável."
   fatigado: [...FRACO, ...VULNERAVEL],
   // "EXAUSTO. O personagem fica debilitado, lento e vulnerável."
@@ -113,14 +121,18 @@ export const CONDITION_MODIFIERS: Partial<Record<ConditionId, Modifier[]>> = {
   // "ENREDADO. O personagem fica lento, vulnerável e sofre −2 em ataque."
   enredado: [...VULNERAVEL, attack(-2)],
 
+  // "ALQUEBRADO. O custo em pontos de mana das habilidades do personagem
+  // aumenta em +1." Aumento, não redução — soma normalmente (p226).
+  alquebrado: [pmCost(1)],
+
   // Perícia específica / ataque.
   ofuscado: [attack(-2), skill('Percepção', -2)],
   fascinado: [skill('Percepção', -5)],
   surdo: [skill('Iniciativa', -5)],
-  // "CAÍDO. […] sofre −5 em ataques corpo a corpo" — que no motor são testes de
-  // Luta. A Defesa direcional (−5 corpo a corpo, +5 à distância, e CUMULATIVA
-  // com outras condições) não é modelável: `defense` não tem escopo.
-  caido: [skill('Luta', -5)],
+  // "CAÍDO. O personagem sofre −5 na Defesa contra ataques corpo a corpo e
+  // recebe +5 na Defesa contra ataques à distância (cumulativos com outras
+  // condições). Além disso, sofre −5 em ataques corpo a corpo" — Luta no motor.
+  caido: [skill('Luta', -5), defenseVs('melee', -5), defenseVs('ranged', 5)],
 }
 
 /** Modifiers a condition applies to the sheet; `[]` for display-only conditions. */

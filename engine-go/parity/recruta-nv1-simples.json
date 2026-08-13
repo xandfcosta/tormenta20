@@ -415,6 +415,8 @@
       "itemBonus": -3,
       "total": 10,
       "dexApplied": true,
+      "vsMelee": 10,
+      "vsRanged": 10,
       "contributions": [
         {
           "source": "Armadura de couro",
@@ -1017,6 +1019,8 @@
       "itemBonus": -3,
       "total": 10,
       "dexApplied": true,
+      "vsMelee": 10,
+      "vsRanged": 10,
       "contributions": [
         {
           "source": "Armadura de couro",

@@ -307,3 +307,68 @@ func TestModelledConditionsExistInTheServedCatalog(t *testing.T) {
 		}
 	}
 }
+
+// "CAÍDO. O personagem sofre −5 na Defesa contra ataques corpo a corpo e recebe
+// +5 na Defesa contra ataques à distância (CUMULATIVOS COM OUTRAS CONDIÇÕES).
+// Além disso, sofre −5 em ataques corpo a corpo" (p394).
+//
+// Duas coisas incomuns numa linha só: a Defesa é DIRECIONAL, e o parêntese abre
+// uma exceção explícita à regra de não-acúmulo do cabeçalho da lista. As duas
+// caem no mesmo mecanismo — escopo no alvo — porque chaves diferentes não
+// competem no `resolveStack` (ALE-115).
+func TestCaidoDefenseIsDirectionalAndCumulative(t *testing.T) {
+	defenseFor := func(conds ...string) DefenseBreakdown {
+		mods := []Modifier{}
+		for _, id := range conds {
+			mods = append(mods, conditionModifiers(id)...)
+		}
+		vested := "vested"
+		e := ComputeItemEffects([]ActiveItem{{Source: "Condições", Equipped: &vested, Modifiers: mods}})
+		e.Flags = map[string]bool{}
+		return defenseBreakdown(Character{Level: 1, Dexterity: 0}, e)
+	}
+
+	t.Run("as duas direções saem do mesmo caído", func(t *testing.T) {
+		d := defenseFor("caido")
+		if d.Total != 10 {
+			t.Errorf("Defesa geral = %d, want 10 — o caído não deveria mexer nela", d.Total)
+		}
+		if d.VsMelee != 5 {
+			t.Errorf("contra corpo a corpo = %d, want 5 (10 − 5)", d.VsMelee)
+		}
+		if d.VsRanged != 15 {
+			t.Errorf("contra à distância = %d, want 15 (10 + 5)", d.VsRanged)
+		}
+	})
+
+	// O parêntese do livro: a Defesa do caído SOMA com a de outra condição, em vez
+	// de competir com ela como as condições normalmente fazem. Um caído e
+	// desprevenido leva −5 do desprevenido E −5 do caído contra corpo a corpo.
+	t.Run("cumulativo com outra condição, ao contrário do resto da lista", func(t *testing.T) {
+		d := defenseFor("caido", "desprevenido")
+		if d.Total != 5 {
+			t.Errorf("Defesa geral = %d, want 5 (o −5 do desprevenido)", d.Total)
+		}
+		if d.VsMelee != 0 {
+			t.Errorf("contra corpo a corpo = %d, want 0 (10 −5 desprevenido −5 caído)", d.VsMelee)
+		}
+		if d.VsRanged != 10 {
+			t.Errorf("contra à distância = %d, want 10 (10 −5 desprevenido +5 caído)", d.VsRanged)
+		}
+	})
+
+	// E as duas condições NÃO-direcionais continuam competindo entre si, que é a
+	// regra geral do cabeçalho — o escopo do caído não abriu buraco nela.
+	t.Run("as não-direcionais continuam competindo", func(t *testing.T) {
+		if d := defenseFor("desprevenido", "vulneravel"); d.Total != 5 {
+			t.Errorf("desprevenido + vulnerável = %d, want 5 (a pior, não a soma)", d.Total)
+		}
+	})
+
+	// "−5 em ataques corpo a corpo" — no motor, ataque corpo a corpo é teste de Luta.
+	t.Run("o −5 em ataques corpo a corpo é Luta", func(t *testing.T) {
+		if got := condTotal(conditionModifiers("caido"), ModifierTarget{K: "expertise", Name: "Luta"}); got != -5 {
+			t.Errorf("Luta = %d, want -5", got)
+		}
+	})
+}

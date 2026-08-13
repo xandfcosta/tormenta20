@@ -4,6 +4,7 @@ import {
   SPELLCASTER_CLASSES,
   SPELL_BASE_PM_COST,
   firstErrorMessage,
+  spellPmCostWithMods,
   validateCast,
 } from '@tormenta20/t20-data'
 import { Sparkles, Zap } from 'lucide-solid'
@@ -27,6 +28,7 @@ import { DialogInlineError } from '@/shared/ui/dialog-inline-error'
 import { NumberInput } from '@/shared/ui/number-input'
 import { cn } from '@/shared/lib/utils'
 import { augmentPicksFrom, augmentPmFor, isAugmentLocked } from './spell-augments'
+import { computedSheetFor } from '@/entities/character/computed-sheet'
 import { spellActions } from './spell-mutations'
 
 /**
@@ -67,8 +69,14 @@ export function CastSpellDialog(props: {
 
   const picks = createMemo(() => augmentPicksFrom(stacks()))
   const basePm = () => SPELL_BASE_PM_COST[props.spell.circle]
+  // p226 pelo mesmo caminho do servidor: a redução de custo entra aqui, não
+  // acumula entre fontes e nunca leva abaixo de 1 PM. Sem isto o diálogo
+  // prometia um preço e a API cobrava outro (ALE-110).
+  const pmCostContribs = () => computedSheetFor(props.character).pmCostMod.contributions
   const totalPm = createMemo(() =>
-    props.spell.circle === 0 ? 0 : basePm() + augmentPmFor(props.spell.augments, picks()),
+    props.spell.circle === 0
+      ? 0
+      : spellPmCostWithMods(basePm(), augmentPmFor(props.spell.augments, picks()), pmCostContribs()),
   )
   // The PER-SPELL ceiling (p224), from the same Go function the cast handler
   // runs. It deliberately does NOT match the HUD's "Limite PM" tile: that tile

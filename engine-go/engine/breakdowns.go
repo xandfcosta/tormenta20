@@ -24,10 +24,15 @@ type SourceAmount struct {
 }
 
 type DefenseBreakdown struct {
-	Base          int                     `json:"base"`
-	ItemBonus     int                     `json:"itemBonus"`
-	Total         int                     `json:"total"`
-	DexApplied    bool                    `json:"dexApplied"`
+	Base       int  `json:"base"`
+	ItemBonus  int  `json:"itemBonus"`
+	Total      int  `json:"total"`
+	DexApplied bool `json:"dexApplied"`
+	// Defesa contra ataques corpo a corpo e à distância. Iguais ao Total na
+	// maioria das fichas; separam-se quando algo é DIRECIONAL, hoje só o Caído
+	// (p394: −5 contra corpo a corpo, +5 contra à distância).
+	VsMelee       int                     `json:"vsMelee"`
+	VsRanged      int                     `json:"vsRanged"`
 	Contributions []BreakdownContribution `json:"contributions"`
 }
 
@@ -138,12 +143,17 @@ func defenseBreakdown(ch Character, e ItemEffects) DefenseBreakdown {
 	if dexApplied {
 		base += effectiveAttribute(ch, "dexterity", e)
 	}
+	melee := StatFor(e, ModifierTarget{K: "defense", Scope: "melee"})
+	ranged := StatFor(e, ModifierTarget{K: "defense", Scope: "ranged"})
+	total := base + stat.Total
 	return DefenseBreakdown{
 		Base:          base,
 		ItemBonus:     stat.Total,
-		Total:         base + stat.Total,
+		Total:         total,
 		DexApplied:    dexApplied,
-		Contributions: withNoteContribs(stat.Contributions),
+		VsMelee:       total + melee.Total,
+		VsRanged:      total + ranged.Total,
+		Contributions: withNoteContribs(concatContribs(stat.Contributions, melee.Contributions, ranged.Contributions)),
 	}
 }
 

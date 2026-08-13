@@ -51,13 +51,20 @@ func newCastServer(t *testing.T) *Server {
 // the three inputs every rule below turns on.
 func seedCaster(t *testing.T, s *Server, ownerID int64, className string, classLevel, mpCurrent int, spellID string) int64 {
 	t.Helper()
+	return seedCasterWithPowers(t, s, ownerID, className, classLevel, mpCurrent, spellID, "[]")
+}
+
+// seedCasterWithPowers é o mesmo, com poderes de classe escolhidos — o que traz
+// modificadores de custo de PM para dentro da conta.
+func seedCasterWithPowers(t *testing.T, s *Server, ownerID int64, className string, classLevel, mpCurrent int, spellID, classPowers string) int64 {
+	t.Helper()
 	ctx := context.Background()
 	id, err := s.queries.CreateCharacter(ctx, sqlcgen.CreateCharacterParams{
 		OwnerId: ownerID, Name: "Conjurador", Origin: "Estudioso", Level: int64(classLevel),
 		HpMax: 50, HpCurrent: 50, MpMax: int64(mpCurrent), MpCurrent: int64(mpCurrent),
 		Intelligence: 4, Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
-		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: "{}", PowerChoices: "{}",
+		OriginChoices: "[]", ClassPowers: classPowers, ClassChoices: "{}", PowerChoices: "{}",
 		CreatedAt: nowISO(), UpdatedAt: nowISO(),
 	})
 	if err != nil {
@@ -231,4 +238,47 @@ func TestCastRefusedWithoutEnoughPm(t *testing.T) {
 	if got := mpOf(t, s, char); got != 2 {
 		t.Errorf("PM = %d, want 2 — cobrou numa recusa", got)
 	}
+}
+
+// "Reduções de Custo. Reduções no custo de PM não são cumulativas. Uma
+// habilidade nunca pode ter seu custo reduzido para menos de 1 PM." (p226)
+//
+// O motor CALCULAVA o modificador de custo — a ficha tem um mosaico "Custo PM"
+// alimentado por ele — e o portão de conjurar o IGNORAVA por completo: um Druida
+// de 20º nível com Força da Natureza ("diminui o custo de todas as suas magias
+// em −2 PM", p63) pagava preço cheio, e a ficha dizia o contrário (ALE-110).
+func TestPmCostReductionIsAppliedAndFloored(t *testing.T) {
+	s := newCastServer(t)
+	owner := seedUser(t, s, "druida@t20.local")
+	char := seedCasterWithPowers(t, s, owner, "Druida", 20, 40, "bola-de-fogo",
+		`["class.druida.forca-da-natureza"]`)
+
+	t.Run("a redução sai do custo (3 PM de base − 2)", func(t *testing.T) {
+		antes := mpOf(t, s, char)
+		rec := castSpell(t, s, owner, char, "bola-de-fogo", `{"augments":[]}`)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("devolveu %d: %s", rec.Code, rec.Body.String())
+		}
+		if gasto := antes - mpOf(t, s, char); gasto != 1 {
+			t.Errorf("gastou %d PM, want 1 (3 de base − 2 da Força da Natureza)", gasto)
+		}
+	})
+
+	// O piso da p226: a redução nunca leva o custo abaixo de 1 PM. Uma magia de
+	// 1º círculo custa 1, e −2 não a torna gratuita.
+	t.Run("o piso de 1 PM segura a redução", func(t *testing.T) {
+		if _, err := s.queries.CreateSpell(context.Background(), sqlcgen.CreateSpellParams{
+			Characterid: char, Catalogspellid: "luz", Prepared: 1, Learnedat: nowISO(),
+		}); err != nil {
+			t.Fatalf("semear magia: %v", err)
+		}
+		antes := mpOf(t, s, char)
+		rec := castSpell(t, s, owner, char, "luz", `{"augments":[]}`)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("devolveu %d: %s", rec.Code, rec.Body.String())
+		}
+		if gasto := antes - mpOf(t, s, char); gasto != 1 {
+			t.Errorf("gastou %d PM, want 1 — o piso da p226 não segurou", gasto)
+		}
+	})
 }

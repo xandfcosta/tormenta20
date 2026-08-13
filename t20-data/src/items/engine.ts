@@ -60,7 +60,10 @@ export function targetKey(t: ModifierTarget): string {
     case 'attribute':
       return `attribute:${t.name}`
     case 'defense':
-      return 'defense'
+      // Escopo separa a Defesa DIRECIONAL do Caído da geral: chaves distintas
+      // não competem, que é o que a p394 pede ao chamá-la de "cumulativa com
+      // outras condições".
+      return t.scope && t.scope !== 'all' ? `defense:${t.scope}` : 'defense'
     case 'defenseDexCap':
       return 'defenseDexCap'
     case 'resistance':
@@ -79,6 +82,8 @@ export function targetKey(t: ModifierTarget): string {
       return 'pmLimit'
     case 'pmCost':
       return 'pmCost'
+    case 'damageReduction':
+      return 'damageReduction'
     case 'catalyst':
       return `catalyst:${t.school}`
     case 'spellDC':

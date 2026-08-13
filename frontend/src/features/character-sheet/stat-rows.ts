@@ -25,7 +25,27 @@ export function defenseRows(sheet: ComputedSheetV2): StatRow[] {
   const dexterity = sheet.defense.dexApplied
     ? { label: 'Destreza', amount: sheet.attributes.dexterity.total }
     : { label: 'Destreza (bloqueada por armadura pesada)', amount: 0, muted: true }
-  return [{ label: 'Base', amount: 10 }, dexterity, ...contributionRows(sheet.defense.contributions)]
+  return [
+    { label: 'Base', amount: 10 },
+    dexterity,
+    ...contributionRows(sheet.defense.contributions),
+    ...directionalDefenseRows(sheet),
+  ]
+}
+
+/**
+ * As duas Defesas DIRECIONAIS, mostradas só quando divergem da geral — hoje
+ * apenas o Caído as separa (p394: −5 contra corpo a corpo, +5 contra à
+ * distância). Um personagem em pé vê a mesma linha de sempre; um caído vê os
+ * dois números que de fato valem contra cada tipo de ataque.
+ */
+function directionalDefenseRows(sheet: ComputedSheetV2): StatRow[] {
+  const { total, vsMelee, vsRanged } = sheet.defense
+  if (vsMelee === total && vsRanged === total) return []
+  return [
+    { label: 'Contra corpo a corpo', amount: vsMelee - total },
+    { label: 'Contra ataques à distância', amount: vsRanged - total },
+  ]
 }
 
 /**

@@ -45,11 +45,23 @@ describe('CONDITION_MODIFIERS (ALE-28)', () => {
     ])
   })
 
-  it('Caído penaliza só Luta (corpo-a-corpo), não Pontaria', () => {
+  // O caído penaliza ATAQUE corpo a corpo (Luta, não Pontaria) e mexe na Defesa
+  // nas DUAS direções — "−5 contra ataques corpo a corpo e +5 contra ataques à
+  // distância" (p394). A versão anterior deste teste travava só a linha da Luta,
+  // e por isso a metade da Defesa passou anos ausente sem nada acusar.
+  it('Caído: −5 em Luta e Defesa direcional nos dois sentidos', () => {
     const mods = conditionModifiers('caido')
     expect(mods).toEqual([
       { target: { k: 'expertise', name: 'Luta' }, amount: -5, bonusType: 'condition' },
+      { target: { k: 'defense', scope: 'melee' }, amount: -5, bonusType: 'condition' },
+      { target: { k: 'defense', scope: 'ranged' }, amount: 5, bonusType: 'condition' },
     ])
+  })
+
+  // Pontaria fica de fora: o livro fala em ataques corpo a corpo.
+  it('Caído não toca Pontaria', () => {
+    const mods = conditionModifiers('caido')
+    expect(mods.some((m) => m.target.k === 'expertise' && m.target.name === 'Pontaria')).toBe(false)
   })
 
   it('condições só-lembrete não têm modificadores', () => {

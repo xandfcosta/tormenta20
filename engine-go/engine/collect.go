@@ -117,6 +117,27 @@ func condAttack(n int) Modifier {
 func condForDesCon(n int) []Modifier {
 	return []Modifier{condByAttr("strength", n), condByAttr("dexterity", n), condByAttr("constitution", n)}
 }
+
+// condDamageReduction — o Petrificado concede RD 8 (p394). Vai por modificador
+// como qualquer outra fonte, e não cravado no cálculo de RD, para que item e
+// magia possam conceder RD pelo mesmo caminho quando chegar a hora.
+// condDefenseVs é a Defesa DIRECIONAL do Caído (p394). Escopo separado para não
+// competir com a Defesa geral das outras condições — o livro diz, entre
+// parênteses, que a dele é "cumulativa com outras condições".
+func condDefenseVs(scope string, n int) Modifier {
+	return Modifier{Target: ModifierTarget{K: "defense", Scope: scope}, Amount: n, BonusType: "condition"}
+}
+
+func condDamageReduction(n int) Modifier {
+	return Modifier{Target: ModifierTarget{K: "damageReduction"}, Amount: n, BonusType: "condition"}
+}
+
+// condPmCost é o único modificador de condição que NÃO é penalidade em teste: o
+// Alquebrado encarece as habilidades do personagem.
+func condPmCost(n int) Modifier {
+	return Modifier{Target: ModifierTarget{K: "pmCost"}, Amount: n, BonusType: "condition"}
+}
+
 func condIntSabCar(n int) []Modifier {
 	return []Modifier{condByAttr("intelligence", n), condByAttr("wisdom", n), condByAttr("charisma", n)}
 }
@@ -164,9 +185,7 @@ var conditionModifierTable = map[string][]Modifier{
 	// "INCONSCIENTE. O personagem fica indefeso e não pode fazer ações […]"
 	"inconsciente": indefesoMods,
 	// "PETRIFICADO. O personagem fica inconsciente e recebe redução de dano 8."
-	// A RD 8 não é modelável: não existe alvo de redução de dano para
-	// modificador — a RD do motor vem só de classe (ALE-115).
-	"petrificado": indefesoMods,
+	"petrificado": comPlus(indefesoMods, condDamageReduction(8)),
 
 	// "FATIGADO. O personagem fica fraco e vulnerável."
 	"fatigado": comPlus(fracoMods, vulneravelMods...),
@@ -182,13 +201,22 @@ var conditionModifierTable = map[string][]Modifier{
 	// ataque."
 	"enredado": comPlus(vulneravelMods, condAttack(-2)),
 
+	// "ALQUEBRADO. O custo em pontos de mana das habilidades do personagem
+	// aumenta em +1." Aumento, não redução — soma normalmente (p226).
+	"alquebrado": {condPmCost(1)},
+
 	"ofuscado":  {condAttack(-2), condSkill("Percepção", -2)},
 	"fascinado": {condSkill("Percepção", -5)},
 	"surdo":     {condSkill("Iniciativa", -5)},
-	// "CAÍDO. […] sofre −5 em ataques corpo a corpo" — que no motor são testes de
-	// Luta. A Defesa direcional (−5 corpo a corpo, +5 à distância, e CUMULATIVA
-	// com outras condições) não é modelável: `defense` não tem escopo (ALE-115).
-	"caido": {condSkill("Luta", -5)},
+	// "CAÍDO. O personagem sofre −5 na Defesa contra ataques corpo a corpo e
+	// recebe +5 na Defesa contra ataques à distância (cumulativos com outras
+	// condições). Além disso, sofre −5 em ataques corpo a corpo" — que no motor
+	// são testes de Luta.
+	"caido": {
+		condSkill("Luta", -5),
+		condDefenseVs("melee", -5),
+		condDefenseVs("ranged", 5),
+	},
 }
 
 // itemActiveItem ports the per-item branch of activeItemsFor's map: base +
