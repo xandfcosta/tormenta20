@@ -3,6 +3,7 @@ package engine
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"strconv"
@@ -13,6 +14,36 @@ import (
 // equipped flags, weapon cards). They used to live in `parity_test.go` — the MVP
 // engine's own test — which is why deleting that engine required moving them
 // out first rather than dropping the file wholesale.
+
+// parityOracleCount é quantos personagens-oráculo existem. Vive aqui, uma vez:
+// seis suítes de paridade varriam o diretório com o mesmo laço e três delas
+// repetiam o número, então acrescentar uma fixture obrigava a caçar cópias.
+const parityOracleCount = 18
+
+// parityOracleSlugs lista os arquivos de oráculo em ordem estável. Os
+// `_`-prefixados são entrada compartilhada (`_catalogs.json`), não oráculo.
+//
+// A contagem é verificada aqui porque o modo de falha silencioso é o oposto do
+// esperado: uma fixture nova do lado TS sem regenerar não quebra nada, ela
+// simplesmente não é testada.
+func parityOracleSlugs(t *testing.T, dir string) []string {
+	t.Helper()
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatalf("ler o diretório de paridade %s: %v (rode o harness GEN_ORACLE do front)", dir, err)
+	}
+	var slugs []string
+	for _, e := range entries {
+		if filepath.Ext(e.Name()) == ".json" && e.Name()[0] != '_' {
+			slugs = append(slugs, e.Name())
+		}
+	}
+	sort.Strings(slugs)
+	if len(slugs) != parityOracleCount {
+		t.Fatalf("esperados %d oráculos, achados %d — regenere com `GEN_ORACLE=1 pnpm --filter frontend test parity-oracle`", parityOracleCount, len(slugs))
+	}
+	return slugs
+}
 
 func readJSON(t *testing.T, path string, dst any) {
 	t.Helper()

@@ -1,10 +1,8 @@
 package engine
 
 import (
-	"os"
 	"path/filepath"
 	"reflect"
-	"sort"
 	"testing"
 )
 
@@ -21,17 +19,7 @@ func TestEquippedFlagsParity(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "parity"))
 	catalogs := primeFromDump(t, dir)
 
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		t.Fatalf("read parity dir %s: %v (run the frontend GEN_ORACLE harness)", dir, err)
-	}
-	var slugs []string
-	for _, e := range entries {
-		if filepath.Ext(e.Name()) == ".json" && e.Name()[0] != '_' {
-			slugs = append(slugs, e.Name())
-		}
-	}
-	sort.Strings(slugs)
+	slugs := parityOracleSlugs(t, dir)
 
 	for _, slug := range slugs {
 		slug := slug

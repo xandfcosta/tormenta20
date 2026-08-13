@@ -1431,6 +1431,564 @@
       }
     ]
   },
+  "activeConditionals": [
+    "Baluarte +10::defense::Baluarte — 1 PM, até o início do próximo turno::10::training",
+    "Baluarte +10::resistance::Baluarte — 1 PM, até o início do próximo turno::10::training",
+    "Baluarte +2::defense::Baluarte — 1 PM, até o início do próximo turno::2::training",
+    "Baluarte +2::resistance::Baluarte — 1 PM, até o início do próximo turno::2::training",
+    "Baluarte +4::defense::Baluarte — 1 PM, até o início do próximo turno::4::training",
+    "Baluarte +4::resistance::Baluarte — 1 PM, até o início do próximo turno::4::training",
+    "Baluarte +6::defense::Baluarte — 1 PM, até o início do próximo turno::6::training",
+    "Baluarte +6::resistance::Baluarte — 1 PM, até o início do próximo turno::6::training",
+    "Baluarte +8::defense::Baluarte — 1 PM, até o início do próximo turno::8::training",
+    "Baluarte +8::resistance::Baluarte — 1 PM, até o início do próximo turno::8::training",
+    "Duelo +2::attack:all::contra o alvo do Duelo — 2 PM, até o fim da cena::2::training",
+    "Duelo +2::damage:all::contra o alvo do Duelo — 2 PM, até o fim da cena::2::training",
+    "Duelo +3::attack:all::contra o alvo do Duelo — 2 PM, até o fim da cena::3::training",
+    "Duelo +3::damage:all::contra o alvo do Duelo — 2 PM, até o fim da cena::3::training",
+    "Duelo +4::attack:all::contra o alvo do Duelo — 2 PM, até o fim da cena::4::training",
+    "Duelo +4::damage:all::contra o alvo do Duelo — 2 PM, até o fim da cena::4::training",
+    "Duelo +5::attack:all::contra o alvo do Duelo — 2 PM, até o fim da cena::5::training",
+    "Duelo +5::damage:all::contra o alvo do Duelo — 2 PM, até o fim da cena::5::training"
+  ],
+  "sheetV2WithConditionals": {
+    "defense": {
+      "base": 10,
+      "itemBonus": 22,
+      "total": 32,
+      "dexApplied": false,
+      "contributions": [
+        {
+          "source": "Armadura completa",
+          "amount": 10
+        },
+        {
+          "source": "Escudo pesado",
+          "amount": 2
+        },
+        {
+          "source": "Baluarte +10 (cond.)",
+          "amount": 10,
+          "note": "Baluarte — 1 PM, até o início do próximo turno"
+        }
+      ]
+    },
+    "displacement": {
+      "base": 9,
+      "itemBonus": -3,
+      "total": 6,
+      "contributions": [
+        {
+          "source": "Armadura completa",
+          "amount": -3
+        }
+      ]
+    },
+    "flySpeed": 0,
+    "inventorySlots": 20,
+    "attributes": {
+      "strength": {
+        "total": 5,
+        "contributions": []
+      },
+      "dexterity": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Anão",
+            "amount": -1
+          }
+        ]
+      },
+      "constitution": {
+        "total": 7,
+        "contributions": [
+          {
+            "source": "Raça: Anão",
+            "amount": 2
+          }
+        ]
+      },
+      "intelligence": {
+        "total": 1,
+        "contributions": []
+      },
+      "wisdom": {
+        "total": 3,
+        "contributions": [
+          {
+            "source": "Raça: Anão",
+            "amount": 1
+          }
+        ]
+      },
+      "charisma": {
+        "total": 3,
+        "contributions": []
+      }
+    },
+    "pmLimit": {
+      "base": 20,
+      "itemBonus": 0,
+      "total": 20,
+      "contributions": []
+    },
+    "bestBaseSpellCd": null,
+    "spellCdByAttribute": {
+      "strength": 25,
+      "dexterity": 21,
+      "constitution": 27,
+      "intelligence": 21,
+      "wisdom": 23,
+      "charisma": 23
+    },
+    "spellDCBonus": {
+      "total": 0,
+      "contributions": []
+    },
+    "pmCostMod": {
+      "total": 0,
+      "contributions": []
+    },
+    "attackAll": {
+      "total": 5,
+      "contributions": [
+        {
+          "source": "Duelo +5 (cond.)",
+          "amount": 5,
+          "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+        }
+      ]
+    },
+    "damageAll": {
+      "total": 5,
+      "contributions": [
+        {
+          "source": "Duelo +5 (cond.)",
+          "amount": 5,
+          "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+        }
+      ]
+    },
+    "damageReduction": {
+      "total": 0,
+      "sources": []
+    },
+    "tempHpFuria": {
+      "total": 0,
+      "sources": []
+    },
+    "expertises": [
+      {
+        "name": "Acrobacia",
+        "attribute": "dexterity",
+        "base": 11,
+        "itemBonus": -7,
+        "total": 4,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [
+          {
+            "source": "Penalidade de armadura",
+            "amount": -7
+          }
+        ],
+        "armorPenaltyApplied": -7
+      },
+      {
+        "name": "Adestramento",
+        "attribute": "charisma",
+        "base": 13,
+        "itemBonus": 0,
+        "total": 13,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Atletismo",
+        "attribute": "strength",
+        "base": 21,
+        "itemBonus": 0,
+        "total": 21,
+        "halfLevel": 10,
+        "attrValue": 5,
+        "training": 6,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Atuação",
+        "attribute": "charisma",
+        "base": 13,
+        "itemBonus": 0,
+        "total": 13,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Cavalgar",
+        "attribute": "dexterity",
+        "base": 11,
+        "itemBonus": 0,
+        "total": 11,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Conhecimento",
+        "attribute": "intelligence",
+        "base": 11,
+        "itemBonus": 0,
+        "total": 11,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Cura",
+        "attribute": "wisdom",
+        "base": 13,
+        "itemBonus": 0,
+        "total": 13,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Diplomacia",
+        "attribute": "charisma",
+        "base": 13,
+        "itemBonus": 0,
+        "total": 13,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Enganação",
+        "attribute": "charisma",
+        "base": 13,
+        "itemBonus": 0,
+        "total": 13,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Fortitude",
+        "attribute": "constitution",
+        "base": 23,
+        "itemBonus": 0,
+        "total": 23,
+        "halfLevel": 10,
+        "attrValue": 7,
+        "training": 6,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Furtividade",
+        "attribute": "dexterity",
+        "base": 11,
+        "itemBonus": -7,
+        "total": 4,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [
+          {
+            "source": "Penalidade de armadura",
+            "amount": -7
+          }
+        ],
+        "armorPenaltyApplied": -7
+      },
+      {
+        "name": "Guerra",
+        "attribute": "intelligence",
+        "base": 11,
+        "itemBonus": 0,
+        "total": 11,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Iniciativa",
+        "attribute": "dexterity",
+        "base": 11,
+        "itemBonus": 0,
+        "total": 11,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Intimidação",
+        "attribute": "charisma",
+        "base": 19,
+        "itemBonus": 0,
+        "total": 19,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 6,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Intuição",
+        "attribute": "wisdom",
+        "base": 13,
+        "itemBonus": 0,
+        "total": 13,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Investigação",
+        "attribute": "intelligence",
+        "base": 17,
+        "itemBonus": 0,
+        "total": 17,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 6,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Jogatina",
+        "attribute": "charisma",
+        "base": 13,
+        "itemBonus": 0,
+        "total": 13,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Ladinagem",
+        "attribute": "dexterity",
+        "base": 11,
+        "itemBonus": -7,
+        "total": 4,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [
+          {
+            "source": "Penalidade de armadura",
+            "amount": -7
+          }
+        ],
+        "armorPenaltyApplied": -7
+      },
+      {
+        "name": "Luta",
+        "attribute": "strength",
+        "base": 21,
+        "itemBonus": 0,
+        "total": 21,
+        "halfLevel": 10,
+        "attrValue": 5,
+        "training": 6,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Misticismo",
+        "attribute": "intelligence",
+        "base": 17,
+        "itemBonus": 0,
+        "total": 17,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 6,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Nobreza",
+        "attribute": "intelligence",
+        "base": 11,
+        "itemBonus": 0,
+        "total": 11,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Ofício",
+        "attribute": "intelligence",
+        "base": 11,
+        "itemBonus": 0,
+        "total": 11,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Percepção",
+        "attribute": "wisdom",
+        "base": 19,
+        "itemBonus": 0,
+        "total": 19,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 6,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Pilotagem",
+        "attribute": "dexterity",
+        "base": 11,
+        "itemBonus": 0,
+        "total": 11,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Pontaria",
+        "attribute": "dexterity",
+        "base": 17,
+        "itemBonus": 0,
+        "total": 17,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 6,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Reflexos",
+        "attribute": "dexterity",
+        "base": 17,
+        "itemBonus": 0,
+        "total": 17,
+        "halfLevel": 10,
+        "attrValue": 1,
+        "training": 6,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Religião",
+        "attribute": "wisdom",
+        "base": 13,
+        "itemBonus": 0,
+        "total": 13,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Sobrevivência",
+        "attribute": "wisdom",
+        "base": 13,
+        "itemBonus": 0,
+        "total": 13,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Vontade",
+        "attribute": "wisdom",
+        "base": 19,
+        "itemBonus": 0,
+        "total": 19,
+        "halfLevel": 10,
+        "attrValue": 3,
+        "training": 6,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      }
+    ]
+  },
+  "weaponCardsWithConditionals": [
+    {
+      "name": "Machado de batalha",
+      "skill": "Luta",
+      "attribute": "strength",
+      "attack": 26,
+      "expertise": {
+        "name": "Luta",
+        "attribute": "strength",
+        "base": 21,
+        "itemBonus": 0,
+        "total": 21,
+        "halfLevel": 10,
+        "attrValue": 5,
+        "training": 6,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      "attackAll": {
+        "total": 5,
+        "contributions": [
+          {
+            "source": "Duelo +5 (cond.)",
+            "amount": 5,
+            "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+          }
+        ]
+      },
+      "damage": "1d8",
+      "strDamage": 5,
+      "damageBonus": 10,
+      "damageAll": {
+        "total": 5,
+        "contributions": [
+          {
+            "source": "Duelo +5 (cond.)",
+            "amount": 5,
+            "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+          }
+        ]
+      },
+      "critRange": 20,
+      "critMult": 3
+    }
+  ],
   "vitals": {
     "pvMax": 277,
     "pmMax": 60

@@ -20,7 +20,7 @@ import { describe, expect, it } from 'vitest'
 import type { Character } from '@/shared/api/api'
 import fixtures from './__fixtures__/character-input-parity.json'
 import { assembleSheetV2 } from './computed-sheet'
-import { activeItemsFor, characterEffects } from './derived'
+import { activeItemsFor, allConditionals, characterEffects } from './derived'
 import { equippedItemFlagEffects } from './effect-source'
 import { assembleWeaponCards } from './weapon-cards'
 import { buildVitalContext } from './level-vitals'
@@ -29,7 +29,7 @@ import { computeVitalPools } from './vital-pools'
 /**
  * PARITY HARNESS (PORT-PLAN.md §3) — the TDD backbone for the Go engine port.
  *
- * For each of the 16 seed characters, dumps the CURRENT `derived.ts` output as
+ * For each of the 18 seed characters, dumps the CURRENT `derived.ts` output as
  * the golden oracle the Go engine (engine-go) is checked against:
  *   - `activeItems` — the collection-layer output; slice 2's target + the
  *     resolution engine's real-data input.
@@ -44,6 +44,25 @@ import { computeVitalPools } from './vital-pools'
  */
 
 const EMPTY_CONDITIONALS: ReadonlySet<string> = new Set()
+
+/**
+ * Every conditional opt-in the character could toggle, in a stable order.
+ *
+ * The oracles ran with this set EMPTY on all 16 seeds, so `applyActiveConditionals`
+ * — which folds an opt-in in and RE-RUNS `resolveStack` per target — had never
+ * been exercised on real data by any golden, on either engine (ALE-106). Three
+ * seeds carry conditionals; the richest is `bardo-versatil-nv7`, whose two
+ * Inspiração entries hit the SAME target with the SAME bonusType at +1 and +2,
+ * so turning both on must give +2 and not +3.
+ *
+ * For a character with no opt-ins this is identical to the base sheet — which is
+ * itself worth having, since it pins the fold as a no-op when nothing is on.
+ */
+function conditionalIdsFor(char: Character): string[] {
+  return allConditionals(char, EMPTY_CONDITIONALS)
+    .map((entry) => entry.id)
+    .sort()
+}
 
 /**
  * The full breakdown sheet the Go ComputeSheetV2 mirrors. Built from the shared
@@ -79,12 +98,20 @@ const chars = fixtures as { slug: string; char: Character }[]
  */
 function oraclePayloadFor(slug: string, char: Character) {
   const effects = characterEffects(char, EMPTY_CONDITIONALS)
+  const conditionalIds = conditionalIdsFor(char)
+  const withConditionals = characterEffects(char, new Set(conditionalIds))
   return {
     slug,
     char,
     activeItems: activeItemsFor(char),
     itemEffects: normalizeEffects(effects),
     sheetV2: sheetV2For(char),
+    // The same sheet with every opt-in toggled ON — the only golden coverage of
+    // the conditional fold (ALE-106). `activeConditionals` is dumped so the Go
+    // mirror toggles exactly the same ids instead of re-deriving them.
+    activeConditionals: conditionalIds,
+    sheetV2WithConditionals: assembleSheetV2(char, withConditionals),
+    weaponCardsWithConditionals: assembleWeaponCards(char, withConditionals),
     vitals: computeVitalPools(buildVitalContext(char, effects, char.classes)),
     // Equipped-item flag provenance oracle (Fase A.3.3) — label dropped so it
     // mirrors the Go `ComputeEquippedFlags` ({flag, source}) shape.
@@ -111,7 +138,7 @@ function readOracle(file: string): unknown {
   }
 }
 
-describe('parity oracle — derived.ts golden output for the 16 seed chars', () => {
+describe('parity oracle — derived.ts golden output for the 18 seed chars', () => {
   /**
    * Without GEN_ORACLE this COMPARES instead of just smoke-checking (ALE-100).
    *
@@ -123,7 +150,7 @@ describe('parity oracle — derived.ts golden output for the 16 seed chars', () 
    * up to date?" without overwriting them.
    */
   it('bate com o oráculo commitado de cada personagem da seed', () => {
-    expect(chars).toHaveLength(16)
+    expect(chars).toHaveLength(18)
     const shouldWrite = !!process.env.GEN_ORACLE
     if (shouldWrite) mkdirSync(oracleDir, { recursive: true })
 

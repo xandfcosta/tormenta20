@@ -1650,6 +1650,634 @@
       }
     ]
   },
+  "activeConditionals": [
+    "Fúria +3::attack:all::Em Fúria::3::morale",
+    "Fúria +3::damage:all::Em Fúria::3::morale",
+    "Fúria +3::expertise:Fortitude::Em Fúria::3::morale",
+    "Fúria +3::expertise:Vontade::Em Fúria::3::morale",
+    "Fúria::attack:all::Em Fúria::2::morale",
+    "Fúria::damage:all::Em Fúria::2::morale",
+    "Fúria::expertise:Fortitude::Em Fúria::2::morale",
+    "Fúria::expertise:Vontade::Em Fúria::2::morale",
+    "Machado táurico::expertise:Luta::Homebrew: Equilibrada anula a desbalanceada (-2 → 0)::2::untyped",
+    "Medalhão de prata::defense::Homebrew: esotérico vestido mantém o bônus (RAW exige empunhar, p159)::2::enhancement",
+    "Medalhão de prata::pmLimit::Homebrew: esotérico vestido mantém o bônus (RAW exige empunhar, p159)::1::enhancement"
+  ],
+  "sheetV2WithConditionals": {
+    "defense": {
+      "base": 11,
+      "itemBonus": 12,
+      "total": 23,
+      "dexApplied": true,
+      "contributions": [
+        {
+          "source": "Couraça",
+          "amount": 5
+        },
+        {
+          "source": "Medalhão de prata (cond.)",
+          "amount": 2,
+          "note": "Homebrew: esotérico vestido mantém o bônus (RAW exige empunhar, p159)"
+        },
+        {
+          "source": "Raça: Minotauro",
+          "amount": 1,
+          "note": "Couro Rígido"
+        },
+        {
+          "source": "Pele de Ferro",
+          "amount": 4
+        }
+      ]
+    },
+    "displacement": {
+      "base": 9,
+      "itemBonus": 0,
+      "total": 9,
+      "contributions": []
+    },
+    "flySpeed": 0,
+    "inventorySlots": 20,
+    "attributes": {
+      "strength": {
+        "total": 5,
+        "contributions": [
+          {
+            "source": "Raça: Minotauro",
+            "amount": 2
+          }
+        ]
+      },
+      "dexterity": {
+        "total": 1,
+        "contributions": []
+      },
+      "constitution": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Minotauro",
+            "amount": 1
+          }
+        ]
+      },
+      "intelligence": {
+        "total": -1,
+        "contributions": []
+      },
+      "wisdom": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Raça: Minotauro",
+            "amount": -1
+          }
+        ]
+      },
+      "charisma": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Poderes da Tormenta",
+            "amount": -1
+          }
+        ]
+      }
+    },
+    "pmLimit": {
+      "base": 7,
+      "itemBonus": 1,
+      "total": 8,
+      "contributions": [
+        {
+          "source": "Medalhão de prata (cond.)",
+          "amount": 1,
+          "note": "Homebrew: esotérico vestido mantém o bônus (RAW exige empunhar, p159)"
+        }
+      ]
+    },
+    "bestBaseSpellCd": null,
+    "spellCdByAttribute": {
+      "strength": 18,
+      "dexterity": 14,
+      "constitution": 14,
+      "intelligence": 12,
+      "wisdom": 14,
+      "charisma": 14
+    },
+    "spellDCBonus": {
+      "total": 0,
+      "contributions": []
+    },
+    "pmCostMod": {
+      "total": 0,
+      "contributions": []
+    },
+    "attackAll": {
+      "total": 3,
+      "contributions": [
+        {
+          "source": "Fúria +3 (cond.)",
+          "amount": 3,
+          "note": "Em Fúria"
+        }
+      ]
+    },
+    "damageAll": {
+      "total": 4,
+      "contributions": [
+        {
+          "source": "Instinto Selvagem +1",
+          "amount": 1
+        },
+        {
+          "source": "Fúria +3 (cond.)",
+          "amount": 3,
+          "note": "Em Fúria"
+        }
+      ]
+    },
+    "damageReduction": {
+      "total": 2,
+      "sources": [
+        {
+          "source": "Bárbaro (p42)",
+          "amount": 2
+        }
+      ]
+    },
+    "tempHpFuria": {
+      "total": 12,
+      "sources": [
+        {
+          "source": "Alma de Bronze (Fúria, p41)",
+          "amount": 12
+        }
+      ]
+    },
+    "expertises": [
+      {
+        "name": "Acrobacia",
+        "attribute": "dexterity",
+        "base": 4,
+        "itemBonus": -5,
+        "total": -1,
+        "halfLevel": 3,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [
+          {
+            "source": "Penalidade de armadura",
+            "amount": -5
+          }
+        ],
+        "armorPenaltyApplied": -5
+      },
+      {
+        "name": "Adestramento",
+        "attribute": "charisma",
+        "base": 4,
+        "itemBonus": 0,
+        "total": 4,
+        "halfLevel": 3,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Atletismo",
+        "attribute": "strength",
+        "base": 12,
+        "itemBonus": 0,
+        "total": 12,
+        "halfLevel": 3,
+        "attrValue": 5,
+        "training": 4,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Atuação",
+        "attribute": "charisma",
+        "base": 4,
+        "itemBonus": 0,
+        "total": 4,
+        "halfLevel": 3,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Cavalgar",
+        "attribute": "dexterity",
+        "base": 4,
+        "itemBonus": 0,
+        "total": 4,
+        "halfLevel": 3,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Conhecimento",
+        "attribute": "intelligence",
+        "base": 2,
+        "itemBonus": 0,
+        "total": 2,
+        "halfLevel": 3,
+        "attrValue": -1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Cura",
+        "attribute": "wisdom",
+        "base": 4,
+        "itemBonus": 0,
+        "total": 4,
+        "halfLevel": 3,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Diplomacia",
+        "attribute": "charisma",
+        "base": 4,
+        "itemBonus": 0,
+        "total": 4,
+        "halfLevel": 3,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Enganação",
+        "attribute": "charisma",
+        "base": 4,
+        "itemBonus": 0,
+        "total": 4,
+        "halfLevel": 3,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Fortitude",
+        "attribute": "constitution",
+        "base": 8,
+        "itemBonus": 3,
+        "total": 11,
+        "halfLevel": 3,
+        "attrValue": 1,
+        "training": 4,
+        "itemContributions": [
+          {
+            "source": "Fúria +3 (cond.)",
+            "amount": 3,
+            "note": "Em Fúria"
+          }
+        ],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Furtividade",
+        "attribute": "dexterity",
+        "base": 4,
+        "itemBonus": -5,
+        "total": -1,
+        "halfLevel": 3,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [
+          {
+            "source": "Penalidade de armadura",
+            "amount": -5
+          }
+        ],
+        "armorPenaltyApplied": -5
+      },
+      {
+        "name": "Guerra",
+        "attribute": "intelligence",
+        "base": 2,
+        "itemBonus": 0,
+        "total": 2,
+        "halfLevel": 3,
+        "attrValue": -1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Iniciativa",
+        "attribute": "dexterity",
+        "base": 8,
+        "itemBonus": 0,
+        "total": 8,
+        "halfLevel": 3,
+        "attrValue": 1,
+        "training": 4,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Intimidação",
+        "attribute": "charisma",
+        "base": 4,
+        "itemBonus": 0,
+        "total": 4,
+        "halfLevel": 3,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Intuição",
+        "attribute": "wisdom",
+        "base": 4,
+        "itemBonus": 0,
+        "total": 4,
+        "halfLevel": 3,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Investigação",
+        "attribute": "intelligence",
+        "base": 2,
+        "itemBonus": 0,
+        "total": 2,
+        "halfLevel": 3,
+        "attrValue": -1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Jogatina",
+        "attribute": "charisma",
+        "base": 4,
+        "itemBonus": 0,
+        "total": 4,
+        "halfLevel": 3,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Ladinagem",
+        "attribute": "dexterity",
+        "base": 4,
+        "itemBonus": -5,
+        "total": -1,
+        "halfLevel": 3,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [
+          {
+            "source": "Penalidade de armadura",
+            "amount": -5
+          }
+        ],
+        "armorPenaltyApplied": -5
+      },
+      {
+        "name": "Luta",
+        "attribute": "strength",
+        "base": 12,
+        "itemBonus": 0,
+        "total": 12,
+        "halfLevel": 3,
+        "attrValue": 5,
+        "training": 4,
+        "itemContributions": [
+          {
+            "source": "Machado táurico",
+            "amount": -2,
+            "note": "desbalanceada: -2 em ataque"
+          },
+          {
+            "source": "Machado táurico (cond.)",
+            "amount": 2,
+            "note": "Homebrew: Equilibrada anula a desbalanceada (-2 → 0)"
+          }
+        ],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Misticismo",
+        "attribute": "intelligence",
+        "base": 2,
+        "itemBonus": 0,
+        "total": 2,
+        "halfLevel": 3,
+        "attrValue": -1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Nobreza",
+        "attribute": "intelligence",
+        "base": 2,
+        "itemBonus": 0,
+        "total": 2,
+        "halfLevel": 3,
+        "attrValue": -1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Ofício",
+        "attribute": "intelligence",
+        "base": 2,
+        "itemBonus": 0,
+        "total": 2,
+        "halfLevel": 3,
+        "attrValue": -1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Percepção",
+        "attribute": "wisdom",
+        "base": 8,
+        "itemBonus": 1,
+        "total": 9,
+        "halfLevel": 3,
+        "attrValue": 1,
+        "training": 4,
+        "itemContributions": [
+          {
+            "source": "Instinto Selvagem +1",
+            "amount": 1
+          }
+        ],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Pilotagem",
+        "attribute": "dexterity",
+        "base": 4,
+        "itemBonus": 0,
+        "total": 4,
+        "halfLevel": 3,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Pontaria",
+        "attribute": "dexterity",
+        "base": 4,
+        "itemBonus": 0,
+        "total": 4,
+        "halfLevel": 3,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Reflexos",
+        "attribute": "dexterity",
+        "base": 4,
+        "itemBonus": 1,
+        "total": 5,
+        "halfLevel": 3,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [
+          {
+            "source": "Instinto Selvagem +1",
+            "amount": 1
+          }
+        ],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Religião",
+        "attribute": "wisdom",
+        "base": 4,
+        "itemBonus": 0,
+        "total": 4,
+        "halfLevel": 3,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Sobrevivência",
+        "attribute": "wisdom",
+        "base": 4,
+        "itemBonus": 0,
+        "total": 4,
+        "halfLevel": 3,
+        "attrValue": 1,
+        "training": 0,
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      {
+        "name": "Vontade",
+        "attribute": "wisdom",
+        "base": 8,
+        "itemBonus": 5,
+        "total": 13,
+        "halfLevel": 3,
+        "attrValue": 1,
+        "training": 4,
+        "itemContributions": [
+          {
+            "source": "Origem: Refugiado",
+            "amount": 2
+          },
+          {
+            "source": "Fúria +3 (cond.)",
+            "amount": 3,
+            "note": "Em Fúria"
+          }
+        ],
+        "armorPenaltyApplied": 0
+      }
+    ]
+  },
+  "weaponCardsWithConditionals": [
+    {
+      "name": "Machado táurico",
+      "skill": "Luta",
+      "attribute": "strength",
+      "attack": 15,
+      "expertise": {
+        "name": "Luta",
+        "attribute": "strength",
+        "base": 12,
+        "itemBonus": 0,
+        "total": 12,
+        "halfLevel": 3,
+        "attrValue": 5,
+        "training": 4,
+        "itemContributions": [
+          {
+            "source": "Machado táurico",
+            "amount": -2,
+            "note": "desbalanceada: -2 em ataque"
+          },
+          {
+            "source": "Machado táurico (cond.)",
+            "amount": 2,
+            "note": "Homebrew: Equilibrada anula a desbalanceada (-2 → 0)"
+          }
+        ],
+        "armorPenaltyApplied": 0
+      },
+      "attackAll": {
+        "total": 3,
+        "contributions": [
+          {
+            "source": "Fúria +3 (cond.)",
+            "amount": 3,
+            "note": "Em Fúria"
+          }
+        ]
+      },
+      "damage": "2d8",
+      "strDamage": 5,
+      "damageBonus": 9,
+      "damageAll": {
+        "total": 4,
+        "contributions": [
+          {
+            "source": "Instinto Selvagem +1",
+            "amount": 1
+          },
+          {
+            "source": "Fúria +3 (cond.)",
+            "amount": 3,
+            "note": "Em Fúria"
+          }
+        ]
+      },
+      "critRange": 20,
+      "critMult": 3
+    }
+  ],
   "vitals": {
     "pvMax": 67,
     "pmMax": 25

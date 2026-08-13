@@ -197,6 +197,54 @@ func TestCegoAndAgarradoComposeDesprevenido(t *testing.T) {
 	}
 }
 
+// A p394 define VÁRIAS condições dizendo que o personagem "fica" outra. Quando
+// isso acontece, a condição derivada tem de carregar TODOS os números da citada
+// — foi por perder metade deles que o cego resistia melhor a área do que deveria
+// (ALE-112). Este teste varre os pares direto do texto do livro, então uma
+// condição nova que cite outra e esqueça seus números cai aqui.
+//
+// Cinco delas não tinham modificador NENHUM: um personagem atordoado, paralisado
+// ou inconsciente ficava com a Defesa cheia (ALE-115).
+func TestConditionsThatImplyAnotherCarryItsNumbers(t *testing.T) {
+	pares := []struct {
+		condicao, implicada, citacao string
+	}{
+		{"atordoado", "desprevenido", "O personagem fica desprevenido e não pode fazer ações"},
+		{"surpreendido", "desprevenido", "O personagem fica desprevenido e não pode fazer ações"},
+		{"cego", "desprevenido", "O personagem fica desprevenido e lento"},
+		{"agarrado", "desprevenido", "O personagem fica desprevenido e imóvel"},
+		{"paralisado", "indefeso", "Fica imóvel e indefeso"},
+		{"inconsciente", "indefeso", "O personagem fica indefeso"},
+		{"petrificado", "indefeso", "O personagem fica inconsciente (que é indefeso) e recebe RD 8"},
+		{"fatigado", "fraco", "O personagem fica fraco e vulnerável"},
+		{"fatigado", "vulneravel", "O personagem fica fraco e vulnerável"},
+		{"exausto", "debilitado", "O personagem fica debilitado, lento e vulnerável"},
+		{"exausto", "vulneravel", "O personagem fica debilitado, lento e vulnerável"},
+		{"enredado", "vulneravel", "O personagem fica lento, vulnerável e sofre −2 em ataque"},
+	}
+	for _, p := range pares {
+		derivada := conditionModifiers(p.condicao)
+		for _, m := range conditionModifiers(p.implicada) {
+			got := condTotal(derivada, m.Target)
+			if got != m.Amount {
+				t.Errorf("%s em %s = %d, want %d — %q implica %s inteiro",
+					p.condicao, targetKey(m.Target), got, m.Amount, p.citacao, p.implicada)
+			}
+		}
+	}
+}
+
+// O Indefeso é o único que SUBSTITUI o número da condição que cita, em vez de
+// somar: "O personagem fica desprevenido, MAS sofre −10 na Defesa". O "mas" é a
+// palavra que muda tudo — −10, e não −5 nem −15.
+func TestIndefesoReplacesTheDesprevenidoDefense(t *testing.T) {
+	if got := condTotal(conditionModifiers("indefeso"), ModifierTarget{K: "defense"}); got != -10 {
+		t.Errorf("Defesa do indefeso = %d, want -10", got)
+	}
+	// "falha automaticamente em testes de Reflexos" não é um número, então não
+	// vira modificador — fica como lembrete na ficha (ALE-115).
+}
+
 // Sanidade cruzada: a tabela de modificadores vive no Go, e o catálogo que o
 // jogador VÊ é o JSON servido pelo /catalog. Uma condição com modificadores que
 // não esteja no catálogo nunca aparece na tela; uma do catálogo sem
