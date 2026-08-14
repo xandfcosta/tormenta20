@@ -25,8 +25,8 @@ import { VitalBar } from '@/shared/ui/vital-bar'
  */
 export function CombatantPanel(props: { entry: InitiativeEntry; onClose: () => void }) {
   return (
-    <section class="flex min-h-0 flex-col rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)]">
-      <header class="flex items-center justify-between gap-3 border-b border-grimorio-iron p-3 sm:px-4">
+    <section class="flex min-h-0 flex-1 flex-col">
+      <header class="flex shrink-0 items-center justify-between gap-3 border-b border-grimorio-iron p-3 sm:px-4">
         <h2 class="min-w-0 truncate font-heading text-lg uppercase tracking-wide text-grimorio-gold">
           {props.entry.label}
         </h2>
@@ -35,11 +35,13 @@ export function CombatantPanel(props: { entry: InitiativeEntry; onClose: () => v
         </Button>
       </header>
 
-      <div class="min-h-0 flex-1 overflow-y-auto">
-        <Show when={props.entry.characterId} fallback={<NpcCard entry={props.entry} />} keyed>
-          {(characterId) => <CharacterCard characterId={characterId} />}
-        </Show>
-      </div>
+      {/* SEM `overflow-y-auto` aqui: envolvendo tudo num contêiner que rola, a
+          barra de abas da ficha rolava junto — era preciso descer a tela
+          inteira para trocar de bloco. Agora o cartão é fixo e só o bloco ativo
+          da ficha rola, que é o que faz a cena caber numa tela (ALE-122). */}
+      <Show when={props.entry.characterId} fallback={<NpcCard entry={props.entry} />} keyed>
+        {(characterId) => <CharacterCard characterId={characterId} />}
+      </Show>
     </section>
   )
 }
@@ -74,13 +76,15 @@ function CharacterCard(props: { characterId: number }) {
     >
       {(data) => (
         <div class="flex min-h-0 flex-1 flex-col">
-          <CharacterHud character={data()} dense class="shrink-0 border-t-0" />
+          <div class="shrink-0">
+            <CharacterHud character={data()} dense class="border-t-0" />
           {/* "Você está caído" é a coisa mais frequente que um mestre declara
               em combate, e o editor já existia — mas só dentro da aba Efeitos,
               a três cliques. Aqui ele fica no cartão, junto do resto do que se
               faz no turno (ALE-122). */}
-          <div class="shrink-0 border-t border-grimorio-iron px-3 py-2 sm:px-4">
-            <ConditionsSection character={data()} />
+            <div class="border-t border-grimorio-iron px-3 py-2 sm:px-4">
+              <ConditionsSection character={data()} />
+            </div>
           </div>
           <div class="min-h-0 flex-1">
             <CharacterSheet

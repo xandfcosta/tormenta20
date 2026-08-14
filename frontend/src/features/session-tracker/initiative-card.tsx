@@ -40,6 +40,9 @@ export function InitiativeCard(props: {
   /** Abrir um combatente no painel ao lado. Ausente = ninguém seleciona nada. */
   onSelect?: (entryId: string) => void
   selectedId?: string | null
+  /** Falso quando a cena já tem a faixa de turno fixa — senão o mesmo
+   *  "Próximo turno" aparece duas vezes na tela (ALE-122). */
+  turnControls?: boolean
 }) {
   const [restCondition, setRestCondition] = createSignal<RestCondition>('normal')
   const myCharacterId = () => [...props.myCharacterIds][0]
@@ -57,7 +60,7 @@ export function InitiativeCard(props: {
             <span class="font-mono tabular-nums">Rodada {props.rt.state().round}</span>
           </div>
         </div>
-        <Show when={props.isGm}>
+        <Show when={props.isGm && props.turnControls !== false}>
           <div class="flex flex-wrap justify-end gap-2">
             <Button size="sm" disabled={!props.rt.isConnected()} onClick={props.rt.nextTurn}>
               Próximo turno
