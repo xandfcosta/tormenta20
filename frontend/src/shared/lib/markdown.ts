@@ -19,14 +19,28 @@ export type Inline =
   | { kind: 'code'; text: string }
   | { kind: 'link'; text: string; href: string }
 
+/**
+ * Um item de lista. `task` só existe em `- [ ]` / `- [x]`, e carrega a LINHA da
+ * origem para que marcar o checkbox reescreva o texto do mestre — sem isso o
+ * controle seria enfeite, e o estado moraria fora da nota.
+ */
+export type ListItem = {
+  spans: Inline[]
+  task?: { checked: boolean; line: number }
+}
+
 export type Block =
   | { kind: 'heading'; level: 1 | 2 | 3; spans: Inline[] }
-  | { kind: 'paragraph'; spans: Inline[] }
-  | { kind: 'list'; ordered: boolean; items: Inline[][] }
+  /** Cada linha digitada é uma linha na tela: numa nota de mesa a quebra é
+   *  intencional, e juntá-las como o markdown padrão manda transformava trinta
+   *  linhas de anotação num parágrafo só (ALE-122). */
+  | { kind: 'paragraph'; lines: Inline[][] }
+  | { kind: 'list'; ordered: boolean; items: ListItem[] }
   | { kind: 'quote'; spans: Inline[] }
   | { kind: 'rule' }
 
 const HEADING = /^(#{1,3})\s+(.*)$/
+const TASK = /^[-*]\s+\[([ xX])\]\s*(.*)$/
 const BULLET = /^[-*]\s+(.*)$/
 const ORDERED = /^\d+[.)]\s+(.*)$/
 const QUOTE = /^>\s?(.*)$/
@@ -38,7 +52,7 @@ export function parseMarkdown(source: string): Block[] {
 
   const flushParagraph = () => {
     if (paragraph.length === 0) return
-    blocks.push({ kind: 'paragraph', spans: parseInline(paragraph.join(' ')) })
+    blocks.push({ kind: 'paragraph', lines: paragraph.map(parseInline) })
     paragraph = []
   }
 
@@ -88,16 +102,40 @@ export function parseMarkdown(source: string): Block[] {
  */
 function collectList(lines: string[], start: number, blocks: Block[]): number {
   const ordered = ORDERED.test(lines[start].trim())
-  const items: Inline[][] = []
+  const items: ListItem[] = []
   let index = start
   for (; index < lines.length; index++) {
     const line = lines[index].trim()
     const match = ordered ? ORDERED.exec(line) : BULLET.exec(line)
     if (!match) break
-    items.push(parseInline(match[1]))
+    items.push(toItem(line, index, match[1]))
   }
   blocks.push({ kind: 'list', ordered, items })
   return index - 1
+}
+
+/**
+ * Marca ou desmarca a tarefa da linha `line`, devolvendo o texto novo — o
+ * estado do checkbox mora na NOTA, não ao lado dela.
+ *
+ * @example toggleTaskLine('- [ ] dar XP', 0, true) // '- [x] dar XP'
+ */
+export function toggleTaskLine(source: string, line: number, checked: boolean): string {
+  const lines = source.replace(/\r\n/g, '\n').split('\n')
+  const current = lines[line]
+  if (current === undefined || !TASK.test(current.trim())) return source
+  lines[line] = current.replace(/\[[ xX]\]/, checked ? '[x]' : '[ ]')
+  return lines.join('\n')
+}
+
+/** `- [ ] dar XP` é um item com estado; qualquer outro é um item comum. */
+function toItem(line: string, index: number, text: string): ListItem {
+  const task = TASK.exec(line)
+  if (!task) return { spans: parseInline(text) }
+  return {
+    spans: parseInline(task[2]),
+    task: { checked: task[1].toLowerCase() === 'x', line: index },
+  }
 }
 
 const INLINE = /(`[^`]+`)|(\*\*[^*]+\*\*)|(\*[^*]+\*|_[^_]+_)|(\[[^\]]+\]\([^)]+\))/

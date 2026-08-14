@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/solid-query'
 import { Show, createSignal, onCleanup } from 'solid-js'
 import { campaignSessionQueryOptions } from '@/entities/session/queries'
 import { ApiError, type Session, api } from '@/shared/api/api'
+import { toggleTaskLine } from '@/shared/lib/markdown'
 import { MarkdownView } from '@/shared/ui/markdown-view'
 import { Textarea } from '@/shared/ui/textarea'
 
@@ -53,6 +54,14 @@ export function SessionNotes(props: { campaignId: number; session: Session }) {
     timer = setTimeout(() => void save(), AUTOSAVE_DELAY_MS)
   }
 
+  /** Marcar a tarefa reescreve a NOTA, e salva na hora: um clique é uma
+   *  decisão inteira, não uma digitação no meio de uma frase. */
+  const toggleTask = (line: number, checked: boolean) => {
+    setDraft((current) => toggleTaskLine(current, line, checked))
+    clearTimeout(timer)
+    void save()
+  }
+
   onCleanup(() => {
     clearTimeout(timer)
     void save() // trocar de aba desmonta esta região; o texto não pode ir junto
@@ -78,7 +87,7 @@ export function SessionNotes(props: { campaignId: number; session: Session }) {
             when={draft().trim()}
             fallback={<p class="text-sm text-muted-foreground">Nenhuma nota ainda.</p>}
           >
-            <MarkdownView source={draft()} />
+            <MarkdownView source={draft()} onToggleTask={toggleTask} />
           </Show>
         </div>
       </div>

@@ -50,6 +50,27 @@ describe('SessionNotes', () => {
     expect(screen.getByText('fugiu').tagName).toBe('STRONG')
   })
 
+  // Numa nota de mesa a quebra de linha é intencional: o markdown padrão
+  // juntaria as três num parágrafo corrido.
+  it('cada linha digitada vira uma linha na prévia', async () => {
+    const { user, container } = renderNotes()
+
+    await user.type(screen.getByLabelText('Notas da sessão'), 'ogro fugiu\ngoblins ficaram\nchoveu')
+
+    expect(container.querySelectorAll('br')).toHaveLength(2)
+  })
+
+  // Marcar a tarefa reescreve a NOTA — o estado do checkbox não pode morar ao
+  // lado do texto, senão some quando a sessão é reaberta.
+  it('marcar a tarefa reescreve a linha e salva na hora', async () => {
+    const { user, update } = renderNotes('# Cena\n- [ ] dar XP')
+
+    await user.click(screen.getByRole('checkbox', { name: 'dar XP' }))
+
+    expect(update).toHaveBeenCalledWith(3, 7, { notes: '# Cena\n- [x] dar XP' })
+    expect(screen.getByLabelText('Notas da sessão')).toHaveValue('# Cena\n- [x] dar XP')
+  })
+
   it('salva sozinha depois da pausa, sem botão de salvar', async () => {
     const { user, update } = renderNotes()
 

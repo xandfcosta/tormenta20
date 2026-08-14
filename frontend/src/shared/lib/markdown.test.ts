@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { parseInline, parseMarkdown } from './markdown'
+import { parseInline, parseMarkdown, toggleTaskLine } from './markdown'
 
 describe('parseMarkdown', () => {
-  it('separa parágrafos por linha em branco e junta as linhas de um', () => {
+  // A quebra que o mestre digitou é a quebra que ele vê: o markdown padrão
+  // junta linhas seguidas num parágrafo só, e trinta linhas de anotação viravam
+  // uma frase corrida.
+  it('preserva a quebra de linha dentro do parágrafo', () => {
     expect(parseMarkdown('o ogro fugiu\npela ponte\n\ne voltou')).toEqual([
-      { kind: 'paragraph', spans: [{ kind: 'text', text: 'o ogro fugiu pela ponte' }] },
-      { kind: 'paragraph', spans: [{ kind: 'text', text: 'e voltou' }] },
+      {
+        kind: 'paragraph',
+        lines: [[{ kind: 'text', text: 'o ogro fugiu' }], [{ kind: 'text', text: 'pela ponte' }]],
+      },
+      { kind: 'paragraph', lines: [[{ kind: 'text', text: 'e voltou' }]] },
     ])
   })
 
@@ -21,9 +27,9 @@ describe('parseMarkdown', () => {
       kind: 'list',
       ordered: false,
       items: [
-        [{ kind: 'text', text: 'ogro' }],
-        [{ kind: 'text', text: 'goblin' }],
-        [{ kind: 'text', text: 'zumbi' }],
+        { spans: [{ kind: 'text', text: 'ogro' }] },
+        { spans: [{ kind: 'text', text: 'goblin' }] },
+        { spans: [{ kind: 'text', text: 'zumbi' }] },
       ],
     })
   })
@@ -41,8 +47,35 @@ describe('parseMarkdown', () => {
   // o mestre escreveu no meio da sessão é o pior desfecho possível.
   it('deixa o que não reconhece passar como texto', () => {
     expect(parseMarkdown('| tabela | não |')).toEqual([
-      { kind: 'paragraph', spans: [{ kind: 'text', text: '| tabela | não |' }] },
+      { kind: 'paragraph', lines: [[{ kind: 'text', text: '| tabela | não |' }]] },
     ])
+  })
+
+  // A tarefa carrega a LINHA da origem: é por ela que marcar o checkbox
+  // reescreve a nota, em vez de guardar o estado ao lado dela.
+  it('lê tarefa marcada e desmarcada com a linha de origem', () => {
+    const [block] = parseMarkdown('- [ ] dar XP\n- [x] anotar tesouro')
+    expect(block).toEqual({
+      kind: 'list',
+      ordered: false,
+      items: [
+        { spans: [{ kind: 'text', text: 'dar XP' }], task: { checked: false, line: 0 } },
+        { spans: [{ kind: 'text', text: 'anotar tesouro' }], task: { checked: true, line: 1 } },
+      ],
+    })
+  })
+})
+
+describe('toggleTaskLine', () => {
+  it('marca e desmarca a linha pedida, sem tocar nas outras', () => {
+    const source = '# Cena\n- [ ] dar XP\n- [x] tesouro'
+    expect(toggleTaskLine(source, 1, true)).toBe('# Cena\n- [x] dar XP\n- [x] tesouro')
+    expect(toggleTaskLine(source, 2, false)).toBe('# Cena\n- [ ] dar XP\n- [ ] tesouro')
+  })
+
+  it('devolve o texto intacto quando a linha não é uma tarefa', () => {
+    expect(toggleTaskLine('só texto', 0, true)).toBe('só texto')
+    expect(toggleTaskLine('- [ ] dar XP', 9, true)).toBe('- [ ] dar XP')
   })
 })
 

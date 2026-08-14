@@ -135,7 +135,11 @@ function TurnBar(props: {
         )}
       </Show>
 
-      <div class="ml-auto flex items-center gap-2">
+      <div class="ml-auto flex flex-wrap items-center justify-end gap-2">
+        {/* Ações rápidas do fim de cena, ao lado do turno: eram duas linhas
+            dentro do menu da sessão, e o mestre descansa o grupo com muito mais
+            frequência do que renomeia a sessão (ALE-122). */}
+        <RestControls rt={props.rt} />
         <Button size="sm" disabled={!props.rt.isConnected()} onClick={props.rt.nextTurn}>
           Próximo turno
         </Button>
@@ -159,7 +163,6 @@ function TurnBar(props: {
             </Button>
           )}
         >
-          <RestControls rt={props.rt} />
           <HeaderCard campaignId={props.campaignId} session={props.session} isGm />
           <div class="flex justify-end">
             <DeleteSessionButton

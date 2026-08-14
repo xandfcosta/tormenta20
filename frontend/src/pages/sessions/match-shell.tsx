@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/solid-router'
 import { LogOut } from 'lucide-solid'
-import type { JSX } from 'solid-js'
+import { type JSX, createSignal } from 'solid-js'
+import { SceneContainerProvider } from '@/shared/lib/scene-container'
 import { buttonVariants } from '@/shared/ui/button'
 import { cn } from '@/shared/lib/utils'
 
@@ -16,12 +17,21 @@ export function MatchShell(props: {
   bar?: JSX.Element
   children: JSX.Element
 }) {
+  // Publicado para os overlays (Dialog/Select/Popover) portarem para DENTRO da
+  // cena. A partida carrega o escopo de tokens mas não o publicava, então todo
+  // diálogo da sessão ao vivo — "Reiniciar o combate?", o ajuste de PV, o
+  // descanso de dia — abria em shadcn CLARO sobre a mesa escura (ALE-122).
+  const [sceneEl, setSceneEl] = createSignal<HTMLElement | null>(null)
+
   return (
     // `scene-grimorio` is the TOKEN SCOPE, not a skin: without it the whole
     // match renders in shadcn's light defaults. Match mode owns the viewport,
     // so it carries the scope itself instead of going through SceneShell,
     // which brings a back button and a title bar this screen already has.
-    <div class="scene-grimorio flex h-dvh min-h-0 flex-col bg-background text-foreground">
+    <div
+      ref={setSceneEl}
+      class="scene-grimorio flex h-dvh min-h-0 flex-col bg-background text-foreground"
+    >
       <header class="flex items-center justify-between gap-3 border-b border-grimorio-iron bg-[var(--grimorio-panel)] px-3 py-2 sm:px-4">
         <p class="min-w-0 flex-1 truncate font-heading tracking-wide text-grimorio-gold">
           {props.title}
@@ -40,7 +50,9 @@ export function MatchShell(props: {
           </Link>
         </div>
       </header>
-      <div class="min-h-0 flex-1 overflow-y-auto">{props.children}</div>
+      <div class="min-h-0 flex-1 overflow-y-auto">
+        <SceneContainerProvider element={sceneEl}>{props.children}</SceneContainerProvider>
+      </div>
     </div>
   )
 }
