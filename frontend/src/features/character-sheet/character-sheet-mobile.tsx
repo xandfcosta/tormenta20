@@ -23,6 +23,8 @@ export type CharacterSheetMobileProps = {
   /** Merged into the bottom bar so a phone never stacks two bars. */
   barSlot?: JSX.Element
   inSession?: boolean
+  /** Sem o HUD: quem monta já mostra o cartão de combate acima (ALE-122). */
+  hudless?: boolean
   tab: string
   onTabChange: (value: string) => void
 }
@@ -61,8 +63,11 @@ export function CharacterSheetMobile(props: CharacterSheetMobileProps) {
       </div>
 
       {/* Above the tab bar, below the block: PV/PM stay reachable from every
-          block — at the table they are what the player touches most. */}
-      <CharacterHud character={props.character} class="shrink-0" />
+          block — at the table they are what the player touches most. Omitido
+          quando quem monta já mostra o cartão de combate acima (ALE-122). */}
+      <Show when={!props.hudless}>
+        <CharacterHud character={props.character} class="shrink-0" />
+      </Show>
 
       {/* The bar sits on the very bottom edge, so under `viewport-fit=cover`
           (fullscreen / standalone) the home indicator would cross the icons. */}

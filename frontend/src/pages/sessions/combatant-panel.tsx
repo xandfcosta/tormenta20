@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/solid-query'
 import { X } from 'lucide-solid'
-import { Show } from 'solid-js'
+import { Show, createSignal } from 'solid-js'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { CharacterHud } from '@/features/character-sheet/character-hud'
+import { CharacterSheet } from '@/features/character-sheet/character-sheet'
 import type { InitiativeEntry } from '@/shared/realtime/realtime'
 import { settledQuery } from '@/shared/lib/settled-query'
 import { Button } from '@/shared/ui/button'
@@ -42,8 +43,19 @@ export function CombatantPanel(props: { entry: InitiativeEntry; onClose: () => v
   )
 }
 
-/** O cartão de um PC: os vitais editáveis e os atributos, do próprio HUD da ficha. */
+/**
+ * O PC: o cartão de combate em cima, a ficha inteira embaixo.
+ *
+ * A ordem é a regra — os verbos do mestre em combate são aplicar dano e
+ * conferir um número, e seis abas não respondem nenhum deles em um clique. As
+ * abas ficam para quando a pergunta for mesmo "quanto ele carrega na mochila?".
+ *
+ * A ficha entra no layout de UM BLOCO POR VEZ mesmo em janela larga: aqui ela
+ * vive numa coluna de 616–936px, e a escolha automática dela olha a JANELA —
+ * numa de 1920 ela pegaria o layout largo dentro da coluna e cortaria.
+ */
 function CharacterCard(props: { characterId: number }) {
+  const [tab, setTab] = createSignal('expertises')
   const character = useQuery(() => characterQueryOptions(props.characterId))
   // `settledQuery` e não `.data`: a leitura pendente suspende e desanexa a cena
   // inteira, deixando a tela em branco no lugar do esqueleto (ALE-96/121).
@@ -59,7 +71,21 @@ function CharacterCard(props: { characterId: number }) {
         </div>
       }
     >
-      {(data) => <CharacterHud character={data()} dense class="border-t-0" />}
+      {(data) => (
+        <div class="flex min-h-0 flex-1 flex-col">
+          <CharacterHud character={data()} dense class="shrink-0 border-t-0" />
+          <div class="min-h-0 flex-1">
+            <CharacterSheet
+              character={data()}
+              tab={tab()}
+              onTabChange={setTab}
+              inSession
+              compact
+              hudless
+            />
+          </div>
+        </div>
+      )}
     </Show>
   )
 }

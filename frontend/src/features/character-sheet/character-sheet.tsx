@@ -12,6 +12,15 @@ export type CharacterSheetProps = {
   mobileBarSlot?: JSX.Element
   /** In a live session the sheet blends into the session chrome. */
   inSession?: boolean
+  /**
+   * Força o layout de um-bloco-por-vez. As media queries daqui são de JANELA, e
+   * a ficha também é usada numa COLUNA (o painel do combatente na tela do
+   * mestre): numa janela de 1920 ela escolheria o layout largo dentro de 616px
+   * e cortaria (ALE-122).
+   */
+  compact?: boolean
+  /** Sem o HUD: quem monta já mostra o cartão de combate acima. */
+  hudless?: boolean
   tab: string
   onTabChange: (value: string) => void
 }
@@ -36,12 +45,13 @@ export function CharacterSheet(props: CharacterSheetProps) {
 
   return (
     <Show
-      when={isDesktop()}
+      when={isDesktop() && !props.compact}
       fallback={
         <CharacterSheetMobile
           character={props.character}
           barSlot={props.mobileBarSlot}
           inSession={props.inSession}
+          hudless={props.hudless}
           tab={props.tab}
           onTabChange={props.onTabChange}
         />
@@ -50,6 +60,7 @@ export function CharacterSheet(props: CharacterSheetProps) {
       <CharacterSheetDesktop
         character={props.character}
         inSession={props.inSession}
+        hudless={props.hudless}
         tab={props.tab}
         onTabChange={props.onTabChange}
       />

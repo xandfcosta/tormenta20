@@ -9,6 +9,8 @@ import { SHEET_PANELS, resolveSheetTab } from './sheet-sections'
 export type CharacterSheetDesktopProps = {
   character: Character
   inSession?: boolean
+  /** Sem o HUD: quem monta já mostra o cartão de combate acima (ALE-122). */
+  hudless?: boolean
   tab: string
   onTabChange: (value: string) => void
 }
@@ -33,7 +35,10 @@ export function CharacterSheetDesktop(props: CharacterSheetDesktopProps) {
     <div
       data-sheet-root
       class={cn(
-        'grid h-full min-h-0 grid-rows-[1fr_auto] gap-3 overflow-hidden',
+        // Sem o HUD a segunda faixa do grid deixa de existir, senão sobra uma
+        // linha vazia embaixo do conteúdo (ALE-122).
+        'grid h-full min-h-0 gap-3 overflow-hidden',
+        props.hudless ? 'grid-rows-[1fr]' : 'grid-rows-[1fr_auto]',
         !props.inSession && 'p-3',
       )}
     >
@@ -95,7 +100,9 @@ export function CharacterSheetDesktop(props: CharacterSheetDesktopProps) {
 
       {/* The `auto` row of the grid: the HUD is chrome every block sits above,
           not a block of its own. */}
-      <CharacterHud character={props.character} class="rounded-sm" />
+      <Show when={!props.hudless}>
+        <CharacterHud character={props.character} class="rounded-sm" />
+      </Show>
     </div>
   )
 }

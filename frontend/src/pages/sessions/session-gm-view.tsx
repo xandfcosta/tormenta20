@@ -46,7 +46,11 @@ export function SessionGmView(props: {
   const selected = createMemo(
     () => props.rt.state().initiative.find((entry) => entry.id === selectedId()) ?? null,
   )
-  const sideBySide = createMediaQuery('(min-width: 1280px)')
+  // 1700 e não 1280: MEDIDO. A ficha dentro do painel só fica limpa a partir de
+  // ~940px, porque os painéis internos dela (a grade de perícias, por exemplo)
+  // também decidem por JANELA — a 812px são 22 elementos cortados, a 1092 são 0.
+  // Abaixo disso vale a regra que o app já usa: uma superfície por vez.
+  const sideBySide = createMediaQuery('(min-width: 1700px)')
   const trackerVisible = () => selected() === null || sideBySide()
 
   return (
@@ -56,7 +60,8 @@ export function SessionGmView(props: {
       <div
         class={cn(
           'grid min-h-0 flex-1 gap-4',
-          selected() && sideBySide() && 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)]',
+          // Assimétrico: o combate tolera estreitar melhor que a ficha.
+          selected() && sideBySide() && 'grid-cols-[minmax(0,5fr)_minmax(0,7fr)]',
         )}
       >
         <Show when={trackerVisible()}>
