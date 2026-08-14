@@ -1,3 +1,5 @@
+import { Settings2 } from 'lucide-solid'
+import { Show, createMemo, createSignal } from 'solid-js'
 import type { Session } from '@/shared/api/api'
 import type { SessionRealtime } from '@/shared/realtime/realtime'
 import { DeleteSessionButton } from '@/features/session-tracker/delete-session-button'
@@ -5,16 +7,31 @@ import { HeaderCard } from '@/features/session-tracker/header-card'
 import { InitiativeCard } from '@/features/session-tracker/initiative-card'
 import { NotesCard } from '@/features/session-tracker/notes-card'
 import { PartyRoster } from '@/features/session-tracker/party-roster'
+import { createMediaQuery } from '@/shared/lib/media-query'
+import { cn } from '@/shared/lib/utils'
+import { Button } from '@/shared/ui/button'
 import { AddMonsterPanel } from './add-monster-panel'
 import { CatalogPanel } from './catalog-panel'
+import { CombatantPanel } from './combatant-panel'
 import { EncounterPanel } from './encounter-panel'
-import { MatchPeek, MatchRail } from './match-rail'
+import { MatchControls, MatchPeek } from './match-rail'
 
 /**
- * The GM's match screen. The tracker is the primary surface; session controls
- * — status, notes, the destructive delete — sit in a rail beside it on wide
- * viewports and collapse into a bottom sheet on phones, so the tracker owns
- * the screen where the screen is small.
+ * A tela do mestre numa sessão ao vivo.
+ *
+ * Duas superfícies, não três (ALE-122): o rastreador e o combatente aberto. Os
+ * controles da sessão — bestiário, encontro, catálogos, notas, excluir — saíram
+ * da terceira coluna para o cabeçalho, porque são de baixa frequência e estavam
+ * ocupando largura permanente durante o combate.
+ *
+ * Os breakpoints deste app são de JANELA, não de caixa, então uma coluna
+ * estreita continuaria recebendo o layout largo: medido, a linha da iniciativa
+ * numa coluna de 24rem fica 4× mais alta E estoura na horizontal. Por isso as
+ * duas colunas só entram quando cabem de verdade (≥1280); abaixo disso o
+ * combatente OCUPA a coluna do rastreador, com a volta explícita.
+ *
+ * A largura cheia (o `max-w-6xl` saiu) devolve os ~40% de tela que morriam em
+ * 1920 — e devolve HAJA combatente aberto ou não.
  */
 export function SessionGmView(props: {
   campaignId: number
@@ -23,14 +40,85 @@ export function SessionGmView(props: {
   rt: SessionRealtime
   myCharacterIds: ReadonlySet<number>
 }) {
+  const [selectedId, setSelectedId] = createSignal<string | null>(null)
+  // Derivado do estado ao vivo, não guardado: os vitais da entrada mudam a cada
+  // pancada, e uma cópia mostraria o número de quando ela foi aberta.
+  const selected = createMemo(
+    () => props.rt.state().initiative.find((entry) => entry.id === selectedId()) ?? null,
+  )
+  const sideBySide = createMediaQuery('(min-width: 1280px)')
+  const trackerVisible = () => selected() === null || sideBySide()
+
   return (
-    <div class="mx-auto grid max-w-6xl gap-4 p-3 pb-20 sm:p-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:pb-4">
-      <div class="min-w-0 space-y-4">
-        <InitiativeCard rt={props.rt} isGm myCharacterIds={props.myCharacterIds} />
-        <PartyRoster campaignId={props.campaignId} />
+    <div class="flex h-full min-h-0 flex-col gap-3 p-3 pb-20 sm:p-4 lg:pb-4">
+      <SessionToolbar {...props} />
+
+      <div
+        class={cn(
+          'grid min-h-0 flex-1 gap-4',
+          selected() && sideBySide() && 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)]',
+        )}
+      >
+        <Show when={trackerVisible()}>
+          <div class="min-w-0 space-y-4 overflow-y-auto">
+            <InitiativeCard
+              rt={props.rt}
+              isGm
+              myCharacterIds={props.myCharacterIds}
+              onSelect={(entryId) => setSelectedId((current) => (current === entryId ? null : entryId))}
+              selectedId={selectedId()}
+            />
+            <PartyRoster campaignId={props.campaignId} />
+          </div>
+        </Show>
+
+        <Show when={selected()}>
+          {(entry) => (
+            <div class="flex min-h-0 flex-col gap-2">
+              <Show when={!sideBySide()}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  class="self-start"
+                  onClick={() => setSelectedId(null)}
+                >
+                  ◀ Voltar ao combate
+                </Button>
+              </Show>
+              <CombatantPanel entry={entry()} onClose={() => setSelectedId(null)} />
+            </div>
+          )}
+        </Show>
       </div>
-      <MatchRail title="Controles da sessão" peek={<MatchPeek rt={props.rt} />}>
-        {/* The GM's reach into the Mesa without leaving the match (ALE-75). */}
+    </div>
+  )
+}
+
+/**
+ * Os controles da sessão, atrás de um gatilho no cabeçalho. Mesma gramática que
+ * o rail já usava no telefone — só que agora em todas as larguras, porque a
+ * largura permanente pertence ao combate.
+ */
+function SessionToolbar(props: {
+  campaignId: number
+  sessionId: number
+  session: Session
+  rt: SessionRealtime
+}) {
+  return (
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <p class="text-sm text-muted-foreground">
+        <MatchPeek rt={props.rt} />
+      </p>
+      <MatchControls
+        title="Controles da sessão"
+        trigger={(open) => (
+          <Button size="sm" variant="outline" class="gap-1.5" onClick={open}>
+            <Settings2 aria-hidden="true" class="size-4" />
+            Controles
+          </Button>
+        )}
+      >
         <div class="space-y-2">
           <AddMonsterPanel rt={props.rt} />
           <EncounterPanel rt={props.rt} />
@@ -45,7 +133,7 @@ export function SessionGmView(props: {
             sessionNumber={props.session.sessionNumber}
           />
         </div>
-      </MatchRail>
+      </MatchControls>
     </div>
   )
 }

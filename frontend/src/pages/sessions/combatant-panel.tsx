@@ -1,0 +1,92 @@
+import { useQuery } from '@tanstack/solid-query'
+import { X } from 'lucide-solid'
+import { Show } from 'solid-js'
+import { characterQueryOptions } from '@/entities/character/queries'
+import { CharacterHud } from '@/features/character-sheet/character-hud'
+import type { InitiativeEntry } from '@/shared/realtime/realtime'
+import { settledQuery } from '@/shared/lib/settled-query'
+import { Button } from '@/shared/ui/button'
+import { Skeleton } from '@/shared/ui/skeleton'
+import { VitalBar } from '@/shared/ui/vital-bar'
+
+/**
+ * O combatente selecionado, na superfície principal do mestre (ALE-122).
+ *
+ * O que pinta PRIMEIRO é o cartão de combate, não a leitura: os verbos do
+ * mestre em combate são aplicar dano, aplicar condição e conferir um número —
+ * uma ficha de seis abas não responde nenhum deles em um clique. O `CharacterHud`
+ * já É esse cartão (PV/PM com o diálogo de ajuste, que digita o valor e mostra
+ * a prévia, e que roteia queda de PV como DANO, drenando PV temporários).
+ *
+ * Antes disto, alcançar a ficha de um jogador no meio de um turno era: sair da
+ * sessão → aba Membros → um link de 29×16 px → voltar → continuar a sessão.
+ */
+export function CombatantPanel(props: { entry: InitiativeEntry; onClose: () => void }) {
+  return (
+    <section class="flex min-h-0 flex-col rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)]">
+      <header class="flex items-center justify-between gap-3 border-b border-grimorio-iron p-3 sm:px-4">
+        <h2 class="min-w-0 truncate font-heading text-lg uppercase tracking-wide text-grimorio-gold">
+          {props.entry.label}
+        </h2>
+        <Button size="sm" variant="outline" aria-label="Fechar o combatente" onClick={props.onClose}>
+          <X aria-hidden="true" class="size-4" />
+        </Button>
+      </header>
+
+      <div class="min-h-0 flex-1 overflow-y-auto">
+        <Show when={props.entry.characterId} fallback={<NpcCard entry={props.entry} />} keyed>
+          {(characterId) => <CharacterCard characterId={characterId} />}
+        </Show>
+      </div>
+    </section>
+  )
+}
+
+/** O cartão de um PC: os vitais editáveis e os atributos, do próprio HUD da ficha. */
+function CharacterCard(props: { characterId: number }) {
+  const character = useQuery(() => characterQueryOptions(props.characterId))
+  // `settledQuery` e não `.data`: a leitura pendente suspende e desanexa a cena
+  // inteira, deixando a tela em branco no lugar do esqueleto (ALE-96/121).
+  const sheet = () => settledQuery(character)
+
+  return (
+    <Show
+      when={sheet()}
+      fallback={
+        <div class="space-y-3 p-3" role="status" aria-label="Carregando o combatente">
+          <Skeleton class="h-24 w-full" />
+          <Skeleton class="h-16 w-full" />
+        </div>
+      }
+    >
+      {(data) => <CharacterHud character={data()} dense class="border-t-0" />}
+    </Show>
+  )
+}
+
+/**
+ * Um NPC não tem ficha atrás dele — o rastreador É o registro. Mostra o que a
+ * entrada guarda; o bloco do monstro (DEF, ataques) vem da fatia que passa a
+ * guardar de qual criatura do bestiário ele veio.
+ */
+function NpcCard(props: { entry: InitiativeEntry }) {
+  return (
+    <div class="space-y-3 p-3 sm:p-4">
+      <Show
+        when={props.entry.hpMax !== undefined}
+        fallback={
+          <p class="text-sm text-muted-foreground">
+            Este NPC foi criado à mão e não tem vida registrada.
+          </p>
+        }
+      >
+        <VitalBar
+          kind="hp"
+          label="PV"
+          current={props.entry.hpCurrent ?? 0}
+          max={props.entry.hpMax ?? 0}
+        />
+      </Show>
+    </div>
+  )
+}

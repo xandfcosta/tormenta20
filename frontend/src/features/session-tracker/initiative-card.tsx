@@ -31,6 +31,9 @@ export function InitiativeCard(props: {
   rt: SessionRealtime
   isGm: boolean
   myCharacterIds: ReadonlySet<number>
+  /** Abrir um combatente no painel ao lado. Ausente = ninguém seleciona nada. */
+  onSelect?: (entryId: string) => void
+  selectedId?: string | null
 }) {
   const [restCondition, setRestCondition] = createSignal<RestCondition>('normal')
   const myCharacterId = () => [...props.myCharacterIds][0]
@@ -134,6 +137,8 @@ export function InitiativeCard(props: {
                 entry.characterId !== undefined && props.myCharacterIds.has(entry.characterId)
               return (
                 <InitiativeRow
+                  onSelect={props.onSelect && (() => props.onSelect?.(entry.id))}
+                  selected={props.selectedId === entry.id}
                   entry={entry}
                   onTurn={onTurn()}
                   focusOnTurn={onTurn() && isMine()}
@@ -156,6 +161,8 @@ export function InitiativeCard(props: {
 }
 
 function InitiativeRow(props: {
+  onSelect?: () => void
+  selected?: boolean
   entry: InitiativeEntry
   onTurn: boolean
   /** Scrolls into view when the viewer's OWN combatant takes its turn. */
@@ -179,6 +186,7 @@ function InitiativeRow(props: {
       data-on-turn={props.onTurn ? 'true' : 'false'}
       class={cn(
         'flex flex-col gap-2 rounded-sm border p-2.5 text-sm sm:flex-row sm:items-center sm:gap-3',
+        props.selected && 'ring-1 ring-[color:var(--primary)]',
         props.onTurn
           ? 'border-[color:var(--primary)]/60 bg-[color-mix(in_oklch,var(--primary)_6%,transparent)]'
           : 'border-border/60',
@@ -189,7 +197,18 @@ function InitiativeRow(props: {
           {props.entry.initiative}
         </span>
         <p class="flex min-w-0 flex-wrap items-center gap-1 font-medium">
-          <span class="truncate">{props.entry.label}</span>
+          {/* O NOME é o alvo do clique, não a linha: os botões de vitais moram
+              dentro dela, e um clique de linha os engoliria (ALE-122). */}
+          <Show when={props.onSelect} fallback={<span class="truncate">{props.entry.label}</span>}>
+            <button
+              type="button"
+              class="truncate underline-offset-4 hover:underline focus-visible:underline"
+              aria-pressed={props.selected}
+              onClick={() => props.onSelect?.()}
+            >
+              {props.entry.label}
+            </button>
+          </Show>
           <span
             class={cn(
               'rounded-sm px-1 text-[10px] uppercase tracking-widest',

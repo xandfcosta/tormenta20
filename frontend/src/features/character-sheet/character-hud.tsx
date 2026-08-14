@@ -28,7 +28,7 @@ import { createVitalActions } from './vital-mutations'
  * signal that changed, and `e2e/bench-tabs.mjs` is what settles whether the
  * floor came back (ALE-90).
  */
-export function CharacterHud(props: { character: Character; class?: string }) {
+export function CharacterHud(props: { character: Character; class?: string; dense?: boolean }) {
   const queryClient = useQueryClient()
   const conditionals = useConditionals()
   const active = createMemo(() => conditionals.active(props.character.id))
@@ -121,11 +121,16 @@ export function CharacterHud(props: { character: Character; class?: string }) {
           {/* Row A is the reactive numbers (defesa/ataques + as três
               resistências); row B is contextual — fórmulas de arma e o triplo
               de magia — com os atributos ao lado. */}
-          <div class="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+          {/* `dense`: as media queries daqui são de JANELA, e o HUD também é
+              usado numa COLUNA (o painel do combatente na tela do mestre). Numa
+              janela de 1920 o `xl:grid-cols-2` valia dentro de 936px e espremia
+              os atributos a 21px por caixa, sobrepondo-os ao cartão da arma —
+              medido, não suposto (ALE-122). */}
+          <div class={cn('grid gap-2', props.dense ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2')}>
             <CombatStats character={props.character} activeConditionals={active()} />
             <SavesStats character={props.character} activeConditionals={active()} />
           </div>
-          <div class="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+          <div class={cn('grid gap-2', props.dense ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2')}>
             <AttributesGrid
               character={props.character}
               activeConditionals={active()}
