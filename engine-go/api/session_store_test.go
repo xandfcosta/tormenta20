@@ -3,9 +3,9 @@ package api
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"sync"
 	"testing"
-	"time"
 
 	"t20engine/db/sqlcgen"
 )
@@ -136,55 +136,97 @@ func TestForgetPreservesDirtyForRecovery(t *testing.T) {
 	}
 }
 
-func TestStoreLiveWriteThrough(t *testing.T) {
+// O PV do rastreador É o PV da ficha (ALE-122). O mestre batia -5 na iniciativa
+// e a mesma tela mostrava 52/95 ali e 57/95 no card do grupo, porque o socket
+// escrevia num blob e só a ficha era lida. Substitui os testes da flag
+// `WS_VITALS_WRITETHROUGH_LIVE`, que protegiam um espelho opcional — e que
+// estava desligado em produção.
+func TestTrackerVitalsAreTheCharactersVitals(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	gm := seedUser(t, s, "gm@t.com")
-	charID := seedCharacter(t, s, gm, "A", 20, 30, 5, 10) // DB starts hp 20/30, mp 5/10
+	charID := seedCharacter(t, s, gm, "A", 20, 30, 5, 10) // hp 20/30, mp 5/10
 	sid := seedSession(t, s, seedCampaign(t, s, gm))
+	store := s.sessions
+	if _, err := store.load(ctx, sid); err != nil {
+		t.Fatalf("load: %v", err)
+	}
+	hp, hpm, mp, mpm := int64(20), int64(30), int64(5), int64(10)
+	e := charEntry("A", 12, charID)
+	e.HpCurrent, e.HpMax, e.MpCurrent, e.MpMax = &hp, &hpm, &mp, &mpm
+	if _, err := store.addInitiativeEntry(sid, e); err != nil {
+		t.Fatalf("add: %v", err)
+	}
+	entryID := store.getState(sid).Initiative[0].ID
 
-	seedEntry := func(store *sessionStore) string {
-		if _, err := store.load(ctx, sid); err != nil {
-			t.Fatalf("load: %v", err)
-		}
-		hp, hpm, mp, mpm := int64(20), int64(30), int64(5), int64(10)
-		e := charEntry("A", 12, charID)
-		e.HpCurrent, e.HpMax, e.MpCurrent, e.MpMax = &hp, &hpm, &mp, &mpm
-		if _, err := store.addInitiativeEntry(sid, e); err != nil {
-			t.Fatalf("add: %v", err)
-		}
-		return store.getState(sid).Initiative[0].ID
+	snap, err := store.deltaVitals(sid, entryID, ptrInt64(-8), ptrInt64(-2))
+	if err != nil {
+		t.Fatalf("delta: %v", err)
 	}
 
-	t.Run("on: mirrors PV to the character row", func(t *testing.T) {
-		store := newSessionStore(s.queries, newUUID, true)
-		id := seedEntry(store)
-		if _, err := store.deltaVitals(sid, id, ptrInt64(-8), nil); err != nil { // 20-8 → 12
-			t.Fatalf("delta: %v", err)
-		}
-		var got int64 = -1
-		for i := 0; i < 40; i++ { // write-through is async; poll the DB row
-			if row, err := s.queries.GetCharacter(ctx, charID); err == nil {
-				got = row.Hpcurrent
-				if got == 12 {
-					break
-				}
-			}
-			time.Sleep(25 * time.Millisecond)
-		}
-		if got != 12 {
-			t.Errorf("DB hpCurrent=%d, want 12 (written through)", got)
-		}
-	})
-	t.Run("off: leaves the character row untouched", func(t *testing.T) {
-		store := newSessionStore(s.queries, newUUID, false)
-		id := seedEntry(store)
-		_, _ = store.deltaVitals(sid, id, ptrInt64(-5), nil)
-		time.Sleep(150 * time.Millisecond) // give any (unwanted) goroutine time to run
-		if row, _ := s.queries.GetCharacter(ctx, charID); row.Hpcurrent != 12 {
-			t.Errorf("DB hpCurrent=%d, want 12 unchanged (write-through off; 12 from the prior subtest)", row.Hpcurrent)
-		}
-	})
+	// Sem espera: a gravação é o caminho, não um espelho assíncrono.
+	row, err := s.queries.GetCharacter(ctx, charID)
+	if err != nil {
+		t.Fatalf("carregar personagem: %v", err)
+	}
+	if row.Hpcurrent != 12 || row.Mpcurrent != 3 {
+		t.Errorf("ficha = %d/%d PV-PM, esperado 12/3", row.Hpcurrent, row.Mpcurrent)
+	}
+	// E a entrada espelha o que foi gravado — os dois números da tela são um só.
+	got := snap.Initiative[0]
+	if derefOr(got.HpCurrent, -1) != 12 || derefOr(got.MpCurrent, -1) != 3 {
+		t.Errorf("entrada = %d/%d, esperado espelhar a ficha (12/3)",
+			derefOr(got.HpCurrent, -1), derefOr(got.MpCurrent, -1))
+	}
+}
+
+// A pancada da sessão drena PV TEMPORÁRIOS antes dos reais, como a da ficha
+// sempre fez — antes o socket cobrava direto dos PV reais de quem estava sob
+// Armadura Arcana.
+func TestTrackerDamageDrainsTemporaryPoolsFirst(t *testing.T) {
+	s := newTestServer(t)
+	ctx := context.Background()
+	gm := seedUser(t, s, "gm@t.com")
+	charID := seedCharacter(t, s, gm, "A", 20, 30, 5, 10)
+	seedTempHpPool(t, s, charID, 5)
+	sid := seedSession(t, s, seedCampaign(t, s, gm))
+	store := s.sessions
+	if _, err := store.load(ctx, sid); err != nil {
+		t.Fatalf("load: %v", err)
+	}
+	hp, hpm := int64(20), int64(30)
+	e := charEntry("A", 12, charID)
+	e.HpCurrent, e.HpMax = &hp, &hpm
+	if _, err := store.addInitiativeEntry(sid, e); err != nil {
+		t.Fatalf("add: %v", err)
+	}
+	entryID := store.getState(sid).Initiative[0].ID
+
+	if _, err := store.deltaVitals(sid, entryID, ptrInt64(-8), nil); err != nil {
+		t.Fatalf("delta: %v", err)
+	}
+
+	// 5 absorvidos pelo pool, 3 nos PV reais.
+	row, _ := s.queries.GetCharacter(ctx, charID)
+	if row.Hpcurrent != 17 {
+		t.Errorf("PV = %d, esperado 17 (o pool de 5 absorveu antes)", row.Hpcurrent)
+	}
+	rows, _ := s.queries.ListActiveEffectsByCharacter(ctx, charID)
+	if len(parseTempHpPools(rows)) != 0 {
+		t.Errorf("o pool tinha de ter sido gasto, sobrou %+v", parseTempHpPools(rows))
+	}
+}
+
+// seedTempHpPool cria um pool de PV temporários como o que uma magia deixa.
+func seedTempHpPool(t *testing.T, s *Server, charID int64, amount int) {
+	t.Helper()
+	mods := fmt.Sprintf(`[{"target":{"k":"tempHp"},"amount":%d,"bonusType":"untyped"}]`, amount)
+	if _, err := s.queries.CreateActiveEffect(context.Background(), sqlcgen.CreateActiveEffectParams{
+		Characterid: charID, Catalogid: "armadura-arcana", Scope: "scene",
+		Modifiers: mods, Createdat: nowISO(),
+	}); err != nil {
+		t.Fatalf("semear pool temporário: %v", err)
+	}
 }
 
 // Concurrent mutations on one session must not race (run with -race) and must all land.

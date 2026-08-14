@@ -27,11 +27,9 @@ type sessionStore struct {
 	newID  func() string
 	q      *sqlcgen.Queries
 	// persistMus holds a per-session mutex (sessionID → *sync.Mutex) serializing that
-	// session's DB writes (runtime-state persist + vitals write-through) so concurrent
-	// mutations can't land out of order — WITHOUT coupling latency across sessions.
+	// session's runtime-state writes so concurrent mutations can't land out of order —
+	// WITHOUT coupling latency across sessions.
 	persistMus sync.Map
-	// liveWriteThrough mirrors vitals patch/delta back to the Character row (opt-in).
-	liveWriteThrough bool
 }
 
 // persistLock returns the per-session DB-write mutex, creating it on first use.
@@ -40,13 +38,12 @@ func (st *sessionStore) persistLock(sessionID int64) *sync.Mutex {
 	return m.(*sync.Mutex)
 }
 
-func newSessionStore(q *sqlcgen.Queries, newID func() string, liveWriteThrough bool) *sessionStore {
+func newSessionStore(q *sqlcgen.Queries, newID func() string) *sessionStore {
 	return &sessionStore{
-		states:           map[int64]*SessionRuntimeState{},
-		dirty:            map[int64]bool{},
-		newID:            newID,
-		q:                q,
-		liveWriteThrough: liveWriteThrough,
+		states: map[int64]*SessionRuntimeState{},
+		dirty:  map[int64]bool{},
+		newID:  newID,
+		q:      q,
 	}
 }
 
@@ -110,65 +107,35 @@ func (st *sessionStore) reset(sessionID int64) (*SessionRuntimeState, error) {
 	return st.apply(sessionID, func(s *SessionRuntimeState) error { resetInitiative(s); return nil })
 }
 
+// patchVitals fixa os vitais de uma entrada. Mesma regra do delta sobre quem é a
+// fonte; valor absoluto NÃO drena pool temporário, porque é uma afirmação sobre
+// o total e não uma pancada.
 func (st *sessionStore) patchVitals(sessionID int64, entryID string, hpCurrent, mpCurrent *int64) (*SessionRuntimeState, error) {
-	snap, err := st.apply(sessionID, func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hpCurrent, mpCurrent) })
-	st.maybeWriteThrough(sessionID, entryID, err)
-	return snap, err
+	charID := st.characterIDOf(sessionID, entryID)
+	if charID == nil {
+		return st.apply(sessionID, func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hpCurrent, mpCurrent) })
+	}
+	hp, mp, err := st.applyCharacterVitals(context.Background(), *charID, hpCurrent, mpCurrent)
+	if err != nil {
+		return nil, err
+	}
+	return st.apply(sessionID, func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hp, mp) })
 }
 
+// deltaVitals move os vitais de uma entrada. Se há personagem atrás dela, quem
+// manda é a FICHA: o delta é aplicado na linha do personagem (dano drenando PV
+// temporários, como o endpoint de dano) e a entrada espelha o resultado
+// (ALE-122). NPC não tem ficha — ali o rastreador é o registro.
 func (st *sessionStore) deltaVitals(sessionID int64, entryID string, hpDelta, mpDelta *int64) (*SessionRuntimeState, error) {
-	snap, err := st.apply(sessionID, func(s *SessionRuntimeState) error { return deltaEntryVitals(s, entryID, hpDelta, mpDelta) })
-	st.maybeWriteThrough(sessionID, entryID, err)
-	return snap, err
-}
-
-// maybeWriteThrough fires a fire-and-forget Character.update mirroring the entry's PV/PM
-// back to the DB, when opt-in via WS_VITALS_WRITETHROUGH_LIVE. Mirrors maybeLiveWriteThrough.
-func (st *sessionStore) maybeWriteThrough(sessionID int64, entryID string, err error) {
-	if err == nil && st.liveWriteThrough {
-		go st.writeThroughVitals(sessionID, entryID)
+	charID := st.characterIDOf(sessionID, entryID)
+	if charID == nil {
+		return st.apply(sessionID, func(s *SessionRuntimeState) error { return deltaEntryVitals(s, entryID, hpDelta, mpDelta) })
 	}
-}
-
-// writeThroughVitals mirrors the entry's current PV/PM onto the Character row, clamped to
-// the fresh DB max (the entry's cached max can drift after a mid-session level-up). Only
-// character entries with both vitals present; failures are logged, never surfaced.
-func (st *sessionStore) writeThroughVitals(sessionID int64, entryID string) {
-	// Same per-session lock as persist: serialize write-throughs so two concurrent vitals
-	// edits can't land out of order. Whoever runs last reads the CURRENT entry (below) and
-	// writes it, so the DB converges to the latest value.
-	pm := st.persistLock(sessionID)
-	pm.Lock()
-	defer pm.Unlock()
-
-	st.mu.Lock()
-	var entry *InitiativeEntry
-	if s := st.states[sessionID]; s != nil {
-		if idx := findEntryIndex(s, entryID); idx >= 0 {
-			e := s.Initiative[idx]
-			entry = &e
-		}
+	hp, mp, err := st.applyCharacterDelta(context.Background(), *charID, hpDelta, mpDelta)
+	if err != nil {
+		return nil, err
 	}
-	st.mu.Unlock()
-	if entry == nil || entry.CharacterID == nil || entry.HpCurrent == nil || entry.MpCurrent == nil {
-		return
-	}
-	ctx := context.Background()
-	rows, err := st.q.ListCharacterMaxes(ctx, []int64{*entry.CharacterID})
-	if err != nil || len(rows) == 0 {
-		if err != nil {
-			log.Printf("session %d write-through: load maxes failed (%v)", sessionID, err)
-		}
-		return
-	}
-	m := rows[0]
-	if err := st.q.SetVitalsCurrent(ctx, sqlcgen.SetVitalsCurrentParams{
-		HpCurrent: clampVital(*entry.HpCurrent, &m.Hpmax),
-		MpCurrent: clampVital(*entry.MpCurrent, &m.Mpmax),
-		UpdatedAt: nowISO(), ID: *entry.CharacterID,
-	}); err != nil {
-		log.Printf("session %d write-through failed for character %d: %v", sessionID, *entry.CharacterID, err)
-	}
+	return st.apply(sessionID, func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hp, mp) })
 }
 
 // load hydrates the session from Session.runtimeState on first access, then serves the

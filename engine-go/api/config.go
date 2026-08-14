@@ -59,10 +59,6 @@ type Config struct {
 	// routes /api/* to the domain (no Vite to strip the prefix). Empty in dev, where
 	// Vite serves the front and proxies /api + /socket.io.
 	StaticDir string
-	// WSVitalsWriteThroughLive mirrors every realtime vitals patch/delta back to the
-	// Character row (clamped to the fresh max), so a mid-combat page refresh sees the
-	// latest PV/PM. Opt-in (default off) — the session-end commit is the baseline.
-	WSVitalsWriteThroughLive bool
 }
 
 // LoadConfig loads `.env.<APP_ENV>` (or ENV_FILE, when set) and reads the
@@ -88,8 +84,6 @@ func LoadConfig() (Config, error) {
 		BackupDir:    env("BACKUP_DIR", "../backups"),
 		CatalogPath:  env("CATALOG_PATH", "parity/_catalogs.json"),
 		StaticDir:    env("STATIC_DIR", ""),
-
-		WSVitalsWriteThroughLive: os.Getenv("WS_VITALS_WRITETHROUGH_LIVE") == "1",
 	}, nil
 }
 

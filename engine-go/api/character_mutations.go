@@ -117,32 +117,13 @@ func (s *Server) handleApplyDamage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	effects, err := s.queries.ListActiveEffectsByCharacter(r.Context(), row.ID)
+	// A MESMA função que o rastreador da sessão chama (ALE-122): duas cópias da
+	// ordem de dano seriam duas regras, e foi exatamente isso que fez a pancada
+	// da sessão ignorar PV temporários enquanto a da ficha os drenava.
+	plan, err := applyDamagePlan(r.Context(), s.queries, row, int(*body.Amount))
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load effects")
+		writeError(w, http.StatusInternalServerError, "Could not apply damage")
 		return
-	}
-	plan := planDamage(parseTempHpPools(effects), int(row.Hpcurrent), int(*body.Amount))
-
-	for _, u := range plan.updates {
-		if err := s.queries.UpdateEffectModifiers(r.Context(), sqlcgen.UpdateEffectModifiersParams{Modifiers: u.modifiers, ID: u.effectID}); err != nil {
-			writeError(w, http.StatusInternalServerError, "Could not update effect")
-			return
-		}
-	}
-	for _, delID := range plan.deleteIDs {
-		if err := s.queries.DeleteEffectByID(r.Context(), delID); err != nil {
-			writeError(w, http.StatusInternalServerError, "Could not remove effect")
-			return
-		}
-	}
-	if plan.hpCurrent != int(row.Hpcurrent) {
-		if err := s.queries.SetHpCurrent(r.Context(), sqlcgen.SetHpCurrentParams{
-			HpCurrent: int64(plan.hpCurrent), UpdatedAt: nowISO(), ID: row.ID,
-		}); err != nil {
-			writeError(w, http.StatusInternalServerError, "Could not apply damage")
-			return
-		}
 	}
 	writeJSON(w, http.StatusOK, applyDamageResult{
 		HpCurrent: plan.hpCurrent, TempHpRemaining: plan.tempHpRemaining, Drained: plan.drained,

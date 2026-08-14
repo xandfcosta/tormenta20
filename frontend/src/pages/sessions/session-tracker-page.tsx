@@ -10,6 +10,7 @@ import { meQueryOptions } from '@/entities/user/queries'
 import { MatchShell } from '@/pages/sessions/match-shell'
 import { SessionGmView } from '@/pages/sessions/session-gm-view'
 import { SessionPlayerView } from '@/pages/sessions/session-player-view'
+import { createCharacterVitalsSync } from '@/features/session-tracker/character-vitals-sync'
 import { PresenceChips } from '@/features/session-tracker/presence-chips'
 import { myCharacterIdsOf } from '@/features/session-tracker/tracker-rules'
 import { createSessionSocket } from '@/shared/realtime/realtime'
@@ -61,6 +62,9 @@ export function SessionTrackerPage() {
   const rt = createSessionSocket(campaignId, sessionId)
   createTurnCue(rt, myCharacterIds)
   createRestCue(rt)
+  // A ficha e o card do grupo seguem o combate: sem isto o mestre bate -5 e vê
+  // o número antigo a 300px de distância (ALE-122).
+  createCharacterVitalsSync(rt, campaignId)
 
   const title = () => {
     const current = settledSession()
