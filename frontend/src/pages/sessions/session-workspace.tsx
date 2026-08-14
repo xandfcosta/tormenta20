@@ -2,7 +2,7 @@ import { BookMarked, NotebookPen, Skull, UserRound } from 'lucide-solid'
 import { Show } from 'solid-js'
 import { CatalogBrowser } from '@/features/gm-tools/catalog-browser'
 import { MonsterPickerList } from '@/features/gm-tools/monster-picker-list'
-import { NotesCard } from '@/features/session-tracker/notes-card'
+import { SessionNotes } from '@/features/session-tracker/session-notes'
 import type { Session } from '@/shared/api/api'
 import type { InitiativeEntry, SessionRealtime } from '@/shared/realtime/realtime'
 import { rollD20 } from '@/shared/lib/dice'
@@ -54,7 +54,7 @@ export function SessionWorkspace(props: SessionWorkspaceProps) {
       onChange={(value) => props.onTabChange(value as WorkspaceTab)}
       class="flex h-full min-h-0 min-w-0 flex-col rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)]"
     >
-      <TabsList class="flex w-full shrink-0 gap-1 border-b border-grimorio-iron p-1">
+      <TabsList class="@container flex w-full shrink-0 gap-1 border-b border-grimorio-iron p-1">
         <WorkspaceTabTrigger value="combatente" icon={UserRound} label="Combatente" />
         <WorkspaceTabTrigger value="bestiario" icon={Skull} label="Bestiário" />
         <WorkspaceTabTrigger value="catalogos" icon={BookMarked} label="Catálogos" />
@@ -92,23 +92,30 @@ export function SessionWorkspace(props: SessionWorkspaceProps) {
         <CatalogBrowser listClass="min-h-0 flex-1 pr-1" />
       </TabsContent>
 
-      <TabsContent value="notas" class="min-h-0 flex-1 overflow-y-auto p-2">
-        <NotesCard campaignId={props.campaignId} session={props.session} />
+      <TabsContent value="notas" class="flex min-h-0 flex-1 flex-col p-2">
+        <SessionNotes campaignId={props.campaignId} session={props.session} />
       </TabsContent>
     </Tabs>
   )
 }
 
-/** Ícone + rótulo: no meio de um combate, ícone sem rótulo é adivinhação. */
+/**
+ * Ícone + rótulo: no meio de um combate, ícone sem rótulo é adivinhação.
+ *
+ * O aperto é medido no CONTÊINER, não na viewport: as abas ocupam 7/12 da tela
+ * no desktop e a tela inteira no telefone, então a mesma largura de tela dá
+ * duas folgas diferentes. Sem `min-w-0` a última aba saía 15px para fora da
+ * faixa a 390px — o `flex-1` não encolhe abaixo do conteúdo (ALE-122).
+ */
 function WorkspaceTabTrigger(props: {
   value: WorkspaceTab
   icon: typeof Skull
   label: string
 }) {
   return (
-    <TabsTrigger value={props.value} class="flex-1 gap-1.5 px-3">
+    <TabsTrigger value={props.value} class="min-w-0 flex-1 gap-1 px-1 @sm:gap-1.5 @sm:px-3">
       <props.icon aria-hidden="true" class="size-4" />
-      <span class="text-xs">{props.label}</span>
+      <span class="truncate text-xs">{props.label}</span>
     </TabsTrigger>
   )
 }

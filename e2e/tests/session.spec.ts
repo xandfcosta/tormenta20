@@ -69,6 +69,34 @@ test.describe('Sessão ao vivo', () => {
     await expect(page.getByRole('heading', { name: 'Iniciativa' })).toBeVisible()
   })
 
+  /**
+   * A coluna da iniciativa é 5/12 da tela no shell do mestre, mas TODAS as
+   * quebras da linha eram por viewport (`sm:`): a 1024px o browser dava o
+   * layout largo a uma coluna de 412px e os botões de PV iam parar 141px FORA
+   * da área visível — inalcançáveis, e sem rolagem horizontal para chegar até
+   * eles. A medida certa é a do CONTÊINER (ALE-122).
+   *
+   * Por que e2e: só um browser mede layout. Em jsdom todo elemento tem largura
+   * zero, e a mesma asserção passa verde sobre a tela quebrada.
+   */
+  test('a 1024px os controles de PV ficam dentro da coluna da iniciativa', async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 768 })
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('button', { name: /^Ferir / }).first()).toBeVisible()
+
+    const tracker = page
+      .getByRole('heading', { name: 'Iniciativa' })
+      .locator('xpath=ancestor::section[1]')
+    const escaping = await tracker.evaluate((section) => {
+      const limit = section.getBoundingClientRect().right
+      return [...section.querySelectorAll('button')]
+        .filter((button) => button.getBoundingClientRect().right > limit)
+        .map((button) => button.getAttribute('aria-label') ?? button.textContent)
+    })
+
+    expect(escaping).toEqual([])
+  })
+
   test('Sair da sessão volta pra crônica', async ({ page }) => {
     await page.goto('/campaigns/1/sessions/4')
     await expect(page.getByRole('heading', { name: 'Iniciativa' })).toBeVisible()

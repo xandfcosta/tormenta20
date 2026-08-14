@@ -104,7 +104,12 @@ export function InitiativeCard(props: {
           <AddCombatantForm rt={props.rt} />
         </Show>
 
-        <div class="space-y-2">
+        {/* @container: a coluna da iniciativa é 5/12 da tela no shell do mestre
+            e a tela inteira para o jogador, então a mesma largura de VIEWPORT
+            dá folgas diferentes. Medido a 1024px, a linha em modo horizontal
+            estourava a coluna em 141px e os botões de PV ficavam fora da área
+            visível (ALE-122). */}
+        <div class="@container space-y-2">
           <For each={props.rt.state().initiative}>
             {(entry, index) => {
               const onTurn = () => index() === props.rt.state().turnIndex
@@ -162,15 +167,18 @@ function InitiativeRow(props: {
       ref={row}
       data-on-turn={props.onTurn ? 'true' : 'false'}
       class={cn(
-        'flex flex-col gap-2 rounded-sm border p-2.5 text-sm sm:flex-row sm:items-center sm:gap-3',
+        // Uma árvore só, quebrando por ORDEM: apertado, nome e botões dividem
+        // a primeira linha e as barras passam por baixo; largo, os três viram
+        // uma linha. Empilhar tudo custava uma linha por combatente.
+        'flex flex-wrap items-center gap-2 rounded-sm border p-2.5 text-sm @lg:flex-nowrap @lg:gap-3',
         props.selected && 'ring-1 ring-[color:var(--primary)]',
         props.onTurn
           ? 'border-[color:var(--primary)]/60 bg-[color-mix(in_oklch,var(--primary)_6%,transparent)]'
           : 'border-border/60',
       )}
     >
-      <div class="flex items-center gap-2">
-        <span class="rounded-sm border border-border px-1.5 font-mono text-xs tabular-nums">
+      <div class="order-1 flex min-w-0 flex-1 items-center gap-2">
+        <span class="shrink-0 rounded-sm border border-border px-1.5 font-mono text-xs tabular-nums">
           {props.entry.initiative}
         </span>
         <p class="flex min-w-0 flex-wrap items-center gap-1 font-medium">
@@ -205,7 +213,7 @@ function InitiativeRow(props: {
       </div>
 
       <Show when={hasHp() || hasMp()}>
-        <div class="flex-1 space-y-1.5 sm:min-w-[180px]">
+        <div class="order-3 w-full min-w-0 space-y-1.5 @lg:order-2 @lg:w-44 @lg:flex-none">
           <Show when={hasHp()}>
             <VitalBar
               kind="hp"
@@ -225,10 +233,12 @@ function InitiativeRow(props: {
         </div>
       </Show>
 
-      {/* Largura FIXA: sem isso as linhas com e sem barra de PV põem os botões
-          em posições diferentes, e o olho não forma coluna — era o serrilhado
-          que a auditoria mediu em três posições X no mesmo bloco. */}
-      <div class="flex shrink-0 items-center justify-end gap-1">
+      {/* Quem cede espaço é o NOME, não a barra: com a barra de largura fixa e
+          os botões colados à direita, as três colunas caem no mesmo X em todas
+          as linhas — o serrilhado que a auditoria mediu em três posições X. Do
+          outro jeito (nome fixo, barra elástica) a linha com barra estourava a
+          própria caixa em 26px na coluna de 578px. */}
+      <div class="order-2 ml-auto flex shrink-0 items-center justify-end gap-1 @lg:order-3">
         <Show when={props.can.editVitals}>
           {/* O MESMO arranjo da ficha: − + e o diálogo. Antes eram quatro
               botões de passo fixo, e 23 de dano custava seis cliques ou uma
