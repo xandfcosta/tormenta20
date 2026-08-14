@@ -5,7 +5,6 @@ pnpm workspace monorepo.
 ```
 engine-go/ Go: API (:3001), motor de regras, e o mesmo motor compilado pra WASM
 frontend/  Vite + SolidJS + TanStack Router/Query + Kobalte (Tailwind v4, CSS variables)
-t20-data/  catálogos e regras puras, compartilhados pelo front e pelo motor
 e2e/       Playwright, fora do frontend de propósito
 ```
 
@@ -31,10 +30,14 @@ pnpm dev:frontend        # só o Vite (/api e /socket.io proxiados pra :3001)
 O `predev` do frontend compila `engine-go` → WASM antes de subir o Vite, porque
 o app deriva a ficha pelo MESMO motor do servidor. Precisa do toolchain Go.
 
+A configuração vem de `engine-go/.env.development`, que é **versionado**: nada
+ali é segredo, e o servidor recusa subir em produção com aquele `JWT_SECRET`.
+Nenhum passo de setup — funciona no clone.
+
 ## Testes
 
 ```bash
-pnpm test                # unit: t20-data + frontend (NÃO inclui o e2e)
+pnpm test                # unit: frontend (NÃO inclui o e2e)
 pnpm test:e2e            # Playwright — exige os dois servers de pé (:5173 e :3001)
 cd engine-go && go test ./...
 ```
@@ -44,11 +47,29 @@ em paralelo, e disputar CPU com os vitest do front derruba o Playwright por
 timeout — e o job `ci`, que roda `pnpm test`, não instala browser nem sobe a API.
 No CI o e2e tem job próprio.
 
-## Build e produção
+## Produção (a mesa na LAN)
+
+Uma vez, no primeiro uso:
 
 ```bash
-pnpm build               # compila o WASM, o t20-data e o SPA
-pnpm start               # build do front + UM binário servindo tudo
+cp engine-go/.env.production.example engine-go/.env.production
+openssl rand -hex 32     # cole no JWT_SECRET do arquivo copiado
+```
+
+Depois, sempre:
+
+```bash
+pnpm build               # WASM + SPA + o binário do servidor
+pnpm start               # build + sobe em produção
+```
+
+O log termina com o endereço que os jogadores abrem no celular ou no laptop
+deles — o servidor escuta em todas as interfaces, então basta estar na mesma
+rede:
+
+```
+t20 production server listening on :3001 (db=./data/t20-prod.db)
+  players can open http://192.168.15.12:3001
 ```
 
 **A stack de produção é um processo só.** Com `STATIC_DIR` apontando para
@@ -57,13 +78,47 @@ assets, `/api/*` e o `/socket.io/` na mesma porta. Não há nginx, não há
 docker-compose e não há segundo runtime pra manter — foi por isso que os dois
 saíram quando o Nest saiu.
 
+### Backup do banco
+
+```bash
+pnpm db:backup           # produção — pode rodar com a mesa no ar
+pnpm db:backup dev
+```
+
+Sai um `backups/t20-production-AAAAMMDD-HHMMSS.db`, já conferido com
+`PRAGMA integrity_check`, e o comando de restauração impresso na tela.
+
+**Não copie o `.db` na mão.** Com WAL ligado, as transações recentes ainda estão
+no arquivo `-wal`: um `cp` do `.db` sozinho leva um banco velho e não acusa erro
+nenhum. Medido com a mesa no ar — o backup trazia a conta recém-criada e o `cp`
+do `.db` não tinha nem as tabelas. O script usa o `.backup` do sqlite3, que lê um
+snapshot coerente das duas partes.
+
+## Os dois ambientes
+
+`APP_ENV` escolhe o arquivo que o binário lê ao subir, e nada mais muda entre os
+dois — é o mesmo binário (ALE-119):
+
+| | dev (`pnpm dev`) | produção (`pnpm start`) |
+|---|---|---|
+| arquivo | `engine-go/.env.development` (versionado) | `engine-go/.env.production` (seu, não versionado) |
+| quem serve o SPA | Vite :5173, proxiando `/api` | o próprio binário, mesma porta da API |
+| banco | `engine-go/data/t20-dev.db` | `engine-go/data/t20-prod.db` |
+| CORS | libera `http://localhost:5173` | nenhum header: tudo é mesma-origem |
+| `JWT_SECRET` | público, no repositório | seu, e o boot **falha** sem ele |
+
+**O env do processo vence o arquivo**, então dá pra desviar sem editar nada:
+`PORT=4000 pnpm dev`. E `ENV_FILE=/caminho/outro.env` troca o arquivo inteiro.
+
 Variáveis (defaults em `engine-go/api/config.go`):
 
 | var | default | o que faz |
 |---|---|---|
+| `APP_ENV` | `development` | qual `.env.<APP_ENV>` carregar, e se o boot é validado |
 | `PORT` | `3001` | porta do servidor |
-| `DATABASE_URL` | `file:./t20-go.db` | arquivo SQLite; migra sozinho ao abrir |
-| `JWT_SECRET` | — | **troque**: assina os JWT de sessão |
-| `COOKIE_SECURE` | `false` | ligue quando houver TLS na frente |
+| `DATABASE_URL` | `file:./data/t20-dev.db` | arquivo SQLite; migra sozinho ao abrir |
+| `JWT_SECRET` | — | assina os JWT de sessão; **obrigatório em produção** |
+| `COOKIE_SECURE` | `false` | ligue quando houver TLS na frente — em HTTP na LAN, ligado, o browser descarta o cookie e o login não conclui |
+| `CORS_ORIGIN` | `http://localhost:5173` (vazio em produção) | a ÚNICA origem liberada; vazio = sem CORS |
 | `STATIC_DIR` | vazio | o `dist` do front; vazio = modo dev (o Vite serve) |
 | `CATALOG_PATH` | `parity/_catalogs.json` | catálogos dos validadores de mutação |

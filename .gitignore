@@ -3,6 +3,10 @@ dist
 .DS_Store
 .env
 .env.local
+# O env de produção carrega o segredo real da mesa; o de DEV é versionado de
+# propósito (valores públicos), então não entra aqui (ALE-119).
+.env.production
+.env.*.local
 *.log
 
 backend/dist

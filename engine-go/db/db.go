@@ -7,6 +7,8 @@ import (
 	"database/sql"
 	"embed"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/pressly/goose/v3"
 	_ "modernc.org/sqlite" // pure-Go SQLite driver (no cgo) — registers "sqlite"
@@ -19,6 +21,14 @@ var migrationsFS embed.FS
 // applies all pending goose migrations. Uses the pure-Go modernc driver so the
 // server cross-compiles cleanly like the rest of engine-go.
 func Open(path string) (*sql.DB, error) {
+	// Production keeps its database in its own directory (ALE-119), which does
+	// not exist on a first boot — and SQLite reports the missing directory as a
+	// plain "unable to open database file", which reads like a corrupt file.
+	if dir := filepath.Dir(path); dir != "." {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return nil, fmt.Errorf("create db dir %q: %w", dir, err)
+		}
+	}
 	dsn := fmt.Sprintf(
 		"file:%s?_pragma=foreign_keys(1)&_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)",
 		path,

@@ -1,6 +1,6 @@
 import { type Page, expect, test as setup } from '@playwright/test'
 
-// Seeded accounts from the Go backend (engine-go/t20-go.db). The GM owns
+// Seeded accounts from the Go backend (engine-go/data/t20-dev.db). The GM owns
 // campaign 1; the player is only a member of it — the pair the role-gating
 // specs need (ALE-24).
 const PASSWORD = process.env.E2E_PASSWORD ?? 'mestre123456'

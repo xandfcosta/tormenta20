@@ -1,6 +1,6 @@
 // Command seed regenerates engine-go/seed.sql — a pure-SQL dump of the dev
 // dataset (3 accounts, the diverse test roster, demo chronicles) that applies
-// instantly with `sqlite3 t20-go.db < seed.sql`, no API server (ALE-57).
+// instantly with `sqlite3 data/t20-dev.db < seed.sql`, no API server (ALE-57).
 //
 // It builds the data by driving the REAL HTTP handlers IN-PROCESS (httptest, no
 // network) into a throwaway migrated DB — so bcrypt hashes, engine-computed
@@ -110,7 +110,10 @@ func freshServer() (http.Handler, *sql.DB, func()) {
 	if err != nil {
 		log.Fatalf("db.Open: %v", err)
 	}
-	cfg := api.LoadConfig()
+	cfg, err := api.LoadConfig()
+	if err != nil {
+		log.Fatalf("config: %v", err)
+	}
 	cfg.DatabasePath = dbPath
 	if cfg.JWTSecret == "" {
 		cfg.JWTSecret = "seedgen"

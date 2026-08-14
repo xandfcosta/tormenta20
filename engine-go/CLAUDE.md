@@ -7,6 +7,18 @@ valem; o que está aqui estende ou sobrepõe.
 compilado para WASM que roda no navegador. Um processo serve a SPA, a API e o
 socket em produção (`STATIC_DIR`).
 
+## Ambientes
+
+`LoadConfig` lê `.env.<APP_ENV>` deste diretório antes do env do processo —
+**o processo vence o arquivo**, sempre (ALE-119). O `.env.development` é
+versionado porque nada nele é segredo; o `.env.production` é do dono da mesa e
+não entra no git.
+
+Configuração nova entra em `api/config.go` **e** nos dois arquivos `.env` — um
+default que só existe no Go é um default que ninguém descobre. Se a variável
+puder derrubar produção em silêncio (chave de assinatura, origem liberada),
+ela também entra em `Config.Validate`, que roda antes de o servidor escutar.
+
 ## Regenerar oráculo é ato deliberado
 
 Os JSONs em `parity/` são a rede de regressão da ficha inteira e o teste mais

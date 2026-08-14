@@ -10,7 +10,8 @@
     "test": "pnpm -r --filter '!e2e' run test",
     "test:e2e": "pnpm --filter e2e test",
     "typecheck": "pnpm -r run typecheck",
-    "start": "pnpm --filter frontend build && pnpm -F @tormenta20/engine-go start"
+    "start": "pnpm build && pnpm -F @tormenta20/engine-go start",
+    "db:backup": "bash scripts/backup-db.sh"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.0",

@@ -2,9 +2,10 @@
 # B.7 cutover: agora compila+reinicia a API Go (cmd/api :3001) — o server que o
 # front consome via proxy do Vite (/api + /socket.io). O WASM é buildado pelo
 # `predev` do frontend (scripts/build-engine-wasm.sh), então não é rebuildado aqui
-# a cada mudança em .go (mais rápido). O env (JWT_SECRET/PORT) vem do script
-# `dev` do engine-go. cmd/server (motor de bench :3002) continua existindo, só não
-# roda no dev.
+# a cada mudança em .go (mais rápido). O env (JWT_SECRET/PORT) vem do
+# `.env.development` deste diretório, lido pelo próprio binário (ALE-119) — o air
+# roda com o CWD aqui, então o arquivo é achado sem configurar caminho nenhum.
+# cmd/server (motor de bench :3002) continua existindo, só não roda no dev.
 root = "."
 tmp_dir = "tmp"
 

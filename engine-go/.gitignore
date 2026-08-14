@@ -1,8 +1,10 @@
 tmp/
 
-# Go API dev database (SQLite + WAL/SHM). Seeded from migrations; not tracked.
-t20-go.db
-t20-go.db-*
+# Binário de produção (`pnpm build`) e `data/`, onde vivem os DOIS bancos —
+# `t20-dev.db` e `t20-prod.db`, com seus WAL/SHM (ALE-119). Nenhum é rastreado:
+# o schema vem das migrações e o conteúdo é da máquina de quem roda.
+bin/
+data/
 *.db
 *.db-shm
 *.db-wal

@@ -86,12 +86,20 @@ func (s *Server) Router() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
-	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{s.cfg.CORSOrigin},
-		AllowedMethods:   []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
-		AllowCredentials: true,
-	}))
+	// No configured origin → no CORS middleware at all, which is production: the
+	// binary serves the SPA itself, so every call is same-origin and no other
+	// site has business reaching it. Mounting it with []string{""} would deny
+	// the same requests, but says it by accident; the guard also keeps a future
+	// list-valued CORS_ORIGIN away from go-chi's empty-list default, which is
+	// "allow ALL origins" — with credentials on, that is every website (ALE-119).
+	if s.cfg.CORSOrigin != "" {
+		r.Use(cors.Handler(cors.Options{
+			AllowedOrigins:   []string{s.cfg.CORSOrigin},
+			AllowedMethods:   []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},
+			AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
+			AllowCredentials: true,
+		}))
+	}
 
 	r.Get("/health", s.handleHealth)
 

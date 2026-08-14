@@ -1,10 +1,15 @@
 // Command api is the app's HTTP server. It opens + migrates the SQLite database
 // and serves the domain routes the frontend consumes — via the Vite proxy in
 // dev, and directly alongside the built SPA in production (STATIC_DIR).
+//
+// The environment comes from `.env.<APP_ENV>` next to the package (ALE-119):
+// `air` boots it as development, `pnpm start` as production.
 package main
 
 import (
+	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -15,7 +20,15 @@ import (
 )
 
 func main() {
-	cfg := api.LoadConfig()
+	cfg, err := api.LoadConfig()
+	if err != nil {
+		log.Fatalf("config: %v", err)
+	}
+	// Fatal, not a warning: a production boot with a forgeable signing key is
+	// worse than no boot at all, and a warning scrolls away.
+	if err := cfg.Validate(); err != nil {
+		log.Fatalf("config: %v", err)
+	}
 
 	database, err := db.Open(cfg.DatabasePath)
 	if err != nil {
@@ -23,38 +36,78 @@ func main() {
 	}
 	defer func() { _ = database.Close() }()
 
-	// Best-effort: prime the rules catalogs for the mutation validators. Auth +
-	// read + vitals work without them; item/creation writes need them.
-	var catalogs *engine.Catalogs
-	if raw, err := os.ReadFile(cfg.CatalogPath); err != nil {
-		log.Printf("catalogs: %v — mutation validators disabled", err)
-	} else if catalogs, err = engine.PrimeEngineCatalogs(raw); err != nil {
-		log.Printf("catalogs: prime failed: %v", err)
-		catalogs = nil
-	} else {
-		log.Printf("catalogs primed from %s", cfg.CatalogPath)
-	}
-
-	srv := api.NewServer(cfg, database, catalogs)
-
-	// The socket.io realtime gateway (B.6) lives at /socket.io/ in both modes.
-	mux := http.NewServeMux()
-	mux.Handle("/socket.io/", srv.SocketHandler())
-	if cfg.StaticDir != "" {
-		// Production single binary: serve the built front here + route /api/* to the
-		// domain (no Vite to strip the prefix), with an SPA fallback for client routes.
-		mux.Handle("/api/", http.StripPrefix("/api", srv.Router()))
-		mux.Handle("/", spaHandler(cfg.StaticDir))
-		log.Printf("serving built frontend from %s", cfg.StaticDir)
-	} else {
-		// Dev: Vite serves the front and strips /api before proxying to us.
-		mux.Handle("/", srv.Router())
-	}
-
-	log.Printf("t20 API listening on :%s (db=%s)", cfg.Port, cfg.DatabasePath)
+	srv := api.NewServer(cfg, database, primeCatalogs(cfg.CatalogPath))
+	mux := buildMux(cfg, srv)
+	announce(cfg) // last, so the address to open is the final line on the screen
 	if err := http.ListenAndServe(":"+cfg.Port, mux); err != nil {
 		log.Fatalf("listen: %v", err)
 	}
+}
+
+// primeCatalogs loads the rules catalogs for the mutation validators, best
+// effort: auth + read + vitals work without them; item/creation writes need them.
+func primeCatalogs(path string) *engine.Catalogs {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		log.Printf("catalogs: %v — mutation validators disabled", err)
+		return nil
+	}
+	catalogs, err := engine.PrimeEngineCatalogs(raw)
+	if err != nil {
+		log.Printf("catalogs: prime failed: %v", err)
+		return nil
+	}
+	log.Printf("catalogs primed from %s", path)
+	return catalogs
+}
+
+// buildMux wires the realtime gateway plus either the production single binary
+// (SPA + /api/* + socket on one port) or the dev shape, where Vite serves the
+// front and strips /api before proxying to us.
+func buildMux(cfg api.Config, srv *api.Server) *http.ServeMux {
+	mux := http.NewServeMux()
+	mux.Handle("/socket.io/", srv.SocketHandler())
+	if cfg.StaticDir == "" {
+		mux.Handle("/", srv.Router())
+		return mux
+	}
+	mux.Handle("/api/", http.StripPrefix("/api", srv.Router()))
+	mux.Handle("/", spaHandler(cfg.StaticDir))
+	log.Printf("serving built frontend from %s", cfg.StaticDir)
+	return mux
+}
+
+// announce prints where to point a browser. When this process serves the SPA it
+// also prints the LAN addresses, because the players open the app from their own
+// machines and the host would otherwise have to go read `ip addr` (ALE-119).
+func announce(cfg api.Config) {
+	log.Printf("t20 %s server listening on :%s (db=%s)", cfg.AppEnv, cfg.Port, cfg.DatabasePath)
+	if cfg.StaticDir == "" {
+		return
+	}
+	for _, url := range lanURLs(cfg.Port) {
+		log.Printf("  players can open %s", url)
+	}
+}
+
+// lanURLs lists this host's non-loopback IPv4 addresses as URLs. The server
+// binds every interface, so these already work — they are just not discoverable
+// from the log line above.
+func lanURLs(port string) []string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		log.Printf("interfaces: %v — LAN address unknown", err)
+		return nil
+	}
+	var urls []string
+	for _, addr := range addrs {
+		ipNet, ok := addr.(*net.IPNet)
+		if !ok || ipNet.IP.IsLoopback() || ipNet.IP.To4() == nil {
+			continue
+		}
+		urls = append(urls, fmt.Sprintf("http://%s:%s", ipNet.IP, port))
+	}
+	return urls
 }
 
 // spaHandler serves the built SPA from dir: an existing file (JS/CSS/wasm assets) is

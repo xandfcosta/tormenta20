@@ -108,7 +108,7 @@ jobs:
             sleep 0.5
           done
           curl -sf http://localhost:3001/health > /dev/null || { cat api.log; exit 1; }
-          sqlite3 t20-go.db ".timeout 5000" ".read seed.sql"
+          sqlite3 data/t20-dev.db ".timeout 5000" ".read seed.sql"
 
       # Playwright's `webServer` starts Vite (:5173), which proxies /api + /socket.io
       # to the API above.
