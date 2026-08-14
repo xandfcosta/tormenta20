@@ -1,10 +1,17 @@
 import { Show, createSignal } from 'solid-js'
 import { z } from 'zod'
+import { ApiError } from '@/shared/api/api'
 import { type FieldErrors, toSubmitFailure } from '@/shared/lib/form-errors'
 import { Button } from '@/shared/ui/button'
 import { TextField } from '@/shared/ui/text-field'
 
-export type RegisterInput = { email: string; password: string; name?: string }
+export type RegisterInput = {
+  email: string
+  password: string
+  name?: string
+  /** The single-use link from `?convite=`, when the player arrived with one. */
+  inviteToken?: string
+}
 
 const registerSchema = z
   .object({
@@ -25,9 +32,16 @@ const registerSchema = z
  * `confirm` never leaves this component; it only exists to catch a typo before
  * a password the player can't reproduce reaches the server.
  *
+ * The form submits with or without an invite: the ADMIN_EMAILS address creates
+ * the first account on a fresh machine and has no link to carry, so who may
+ * register is the SERVER's answer, never a guess made here (ALE-120).
+ *
  * @example <RegisterForm onSubmit={(input) => api.auth.register(input)} />
  */
-export function RegisterForm(props: { onSubmit: (input: RegisterInput) => Promise<void> }) {
+export function RegisterForm(props: {
+  onSubmit: (input: RegisterInput) => Promise<void>
+  inviteToken?: string
+}) {
   const [email, setEmail] = createSignal('')
   const [name, setName] = createSignal('')
   const [password, setPassword] = createSignal('')
@@ -57,11 +71,12 @@ export function RegisterForm(props: { onSubmit: (input: RegisterInput) => Promis
         email: parsed.data.email,
         password: parsed.data.password,
         name: parsed.data.name || undefined,
+        inviteToken: props.inviteToken,
       })
     } catch (error) {
       const failure = toSubmitFailure(error)
       setFieldErrors(failure.fieldErrors)
-      setFormError(failure.formError)
+      setFormError(inviteRefusal(error) ?? failure.formError)
     } finally {
       setSubmitting(false)
     }
@@ -106,6 +121,12 @@ export function RegisterForm(props: { onSubmit: (input: RegisterInput) => Promis
         errors={fieldErrors().confirm}
       />
 
+      <Show when={!props.inviteToken}>
+        <p class="text-sm text-muted-foreground">
+          Esta mesa é por convite: peça o link a quem administra.
+        </p>
+      </Show>
+
       <Show when={formError()}>
         {(message) => <p class="text-sm text-destructive">{message()}</p>}
       </Show>
@@ -115,4 +136,15 @@ export function RegisterForm(props: { onSubmit: (input: RegisterInput) => Promis
       </Button>
     </form>
   )
+}
+
+/**
+ * The server refuses a missing, spent or expired link with the same 403 — on
+ * purpose, since telling an anonymous caller which one only helps someone
+ * probing tokens. Its message is English (the whole API layer is); the player
+ * reads this instead.
+ */
+function inviteRefusal(error: unknown): string | null {
+  if (!(error instanceof ApiError) || error.status !== 403) return null
+  return 'Convite inválido ou expirado. Peça um link novo a quem administra a mesa.'
 }

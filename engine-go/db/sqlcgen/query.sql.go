@@ -35,6 +35,41 @@ func (q *Queries) CallerCharacterInCampaign(ctx context.Context, arg CallerChara
 	return i, err
 }
 
+const createAccountInvite = `-- name: CreateAccountInvite :one
+
+INSERT INTO account_invites (token, createdBy, createdAt, expiresAt)
+VALUES (?, ?, ?, ?)
+RETURNING id, token, createdby, createdat, expiresat, usedat, usedby
+`
+
+type CreateAccountInviteParams struct {
+	Token     string `json:"token"`
+	Createdby int64  `json:"createdby"`
+	Createdat string `json:"createdat"`
+	Expiresat string `json:"expiresat"`
+}
+
+// account invites (ALE-120)
+func (q *Queries) CreateAccountInvite(ctx context.Context, arg CreateAccountInviteParams) (AccountInvite, error) {
+	row := q.db.QueryRowContext(ctx, createAccountInvite,
+		arg.Token,
+		arg.Createdby,
+		arg.Createdat,
+		arg.Expiresat,
+	)
+	var i AccountInvite
+	err := row.Scan(
+		&i.ID,
+		&i.Token,
+		&i.Createdby,
+		&i.Createdat,
+		&i.Expiresat,
+		&i.Usedat,
+		&i.Usedby,
+	)
+	return i, err
+}
+
 const createActiveEffect = `-- name: CreateActiveEffect :one
 INSERT INTO active_effects (characterId, catalogId, scope, modifiers, createdAt)
 VALUES (?, ?, ?, ?, ?)
@@ -592,6 +627,25 @@ func (q *Queries) EndSession(ctx context.Context, arg EndSessionParams) (Session
 	return i, err
 }
 
+const getAccountInvite = `-- name: GetAccountInvite :one
+SELECT id, token, createdby, createdat, expiresat, usedat, usedby FROM account_invites WHERE token = ? LIMIT 1
+`
+
+func (q *Queries) GetAccountInvite(ctx context.Context, token string) (AccountInvite, error) {
+	row := q.db.QueryRowContext(ctx, getAccountInvite, token)
+	var i AccountInvite
+	err := row.Scan(
+		&i.ID,
+		&i.Token,
+		&i.Createdby,
+		&i.Createdat,
+		&i.Expiresat,
+		&i.Usedat,
+		&i.Usedby,
+	)
+	return i, err
+}
+
 const getActiveEffect = `-- name: GetActiveEffect :one
 SELECT id, characterId, catalogId, scope, modifiers, createdAt
 FROM active_effects WHERE id = ? LIMIT 1
@@ -853,6 +907,11 @@ const getUserByEmail = `-- name: GetUserByEmail :one
 SELECT id, email, name, passwordhash, createdat, updatedat FROM users WHERE email = ? LIMIT 1
 `
 
+// Comments here are ASCII-ONLY on purpose: sqlc measures the query with byte
+// offsets and rune-counted comments, so one accented letter above a query
+// silently truncates the generated SQL by one character (ALE-120 lost the
+// "ULL" of an `IS NULL`, which still compiled).
+//
 // Queries compiled by sqlc into db/sqlcgen. One camelCase column set means the
 // generated json tags already match the frontend contract (hpMax, catalogSpellId).
 // Grouped by domain; grows per Fase B slice.
@@ -1871,6 +1930,27 @@ func (q *Queries) SetVitalsCurrent(ctx context.Context, arg SetVitalsCurrentPara
 		arg.ID,
 	)
 	return err
+}
+
+const spendAccountInvite = `-- name: SpendAccountInvite :execrows
+UPDATE account_invites SET usedAt = ?, usedBy = ?
+WHERE id = ? AND usedAt IS NULL
+`
+
+type SpendAccountInviteParams struct {
+	Usedat sql.NullString `json:"usedat"`
+	Usedby sql.NullInt64  `json:"usedby"`
+	ID     int64          `json:"id"`
+}
+
+// Single use for real: `usedAt IS NULL` is what makes the second registration
+// with the same link a no-op, and the affected rows say which one won.
+func (q *Queries) SpendAccountInvite(ctx context.Context, arg SpendAccountInviteParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, spendAccountInvite, arg.Usedat, arg.Usedby, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const startSessionFresh = `-- name: StartSessionFresh :one

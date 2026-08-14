@@ -6,7 +6,7 @@ import { createAuthStore } from '@/shared/stores/auth-store'
 import { logout } from './logout'
 import { meQueryOptions } from './queries'
 
-const ALICE = { id: 1, email: 'mestre@t20.local', name: 'Mestre' }
+const ALICE = { id: 1, email: 'mestre@t20.local', name: 'Mestre', isAdmin: false }
 
 function loggedInWorld() {
   const http = new FakeFetch([FakeFetch.empty()])

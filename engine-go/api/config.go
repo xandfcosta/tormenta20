@@ -7,6 +7,7 @@ package api
 import (
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 )
 
@@ -28,7 +29,13 @@ const DevJWTSecret = "t20-dev-secret"
 
 // Config is the server's environment, read once at startup.
 type Config struct {
-	AppEnv       AppEnv
+	AppEnv AppEnv
+	// AdminEmails is the closed list of accounts that administer the table. The
+	// role lives HERE and not in a database column on purpose (ALE-120): there is
+	// no promote endpoint, so the only way to become admin is editing this file
+	// on the host — no HTTP bug can turn a player into one. The price is that
+	// changing it takes an edit plus a restart.
+	AdminEmails  []string
 	Port         string
 	DatabasePath string
 	JWTSecret    string
@@ -66,6 +73,7 @@ func LoadConfig() (Config, error) {
 	}
 	return Config{
 		AppEnv:       appEnv,
+		AdminEmails:  splitEmails(os.Getenv("ADMIN_EMAILS")),
 		Port:         env("PORT", "3001"),
 		DatabasePath: stripFilePrefix(env("DATABASE_URL", "file:./data/t20-dev.db")),
 		JWTSecret:    os.Getenv("JWT_SECRET"),
@@ -95,7 +103,31 @@ func (c Config) Validate() error {
 			secretFlaw(c.JWTSecret), c.AppEnv,
 		)
 	}
+	// Registration needs an invite, and only an admin can issue one: a server
+	// with no admin is a server nobody can ever join (ALE-120).
+	if len(c.AdminEmails) == 0 {
+		return fmt.Errorf("ADMIN_EMAILS is empty in %s — nobody could invite the players in", c.AppEnv)
+	}
 	return nil
+}
+
+// IsAdmin reports whether email administers the table. Case-insensitive, which
+// is only safe because registration and login normalize the same way — without
+// that, `Mestre@` could register as a SECOND account and be admin too.
+func (c Config) IsAdmin(email string) bool {
+	return slices.Contains(c.AdminEmails, normalizeEmail(email))
+}
+
+// splitEmails parses the comma-separated ADMIN_EMAILS, dropping blanks so a
+// trailing comma or an empty variable yields no admin rather than an empty one.
+func splitEmails(raw string) []string {
+	var emails []string
+	for _, part := range strings.Split(raw, ",") {
+		if email := normalizeEmail(part); email != "" {
+			emails = append(emails, email)
+		}
+	}
+	return emails
 }
 
 func secretFlaw(secret string) string {

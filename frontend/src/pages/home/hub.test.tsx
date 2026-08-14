@@ -70,6 +70,7 @@ describe('HubFooter', () => {
       sfxEnabled: false,
       onToggleSfx: vi.fn(),
       onToggleFullscreen: vi.fn(),
+      onInvite: vi.fn(),
       ...overrides,
     }
     render(() => <HubFooter {...props} />)
@@ -150,5 +151,22 @@ describe('HubFooter', () => {
     setup()
     await userEvent.setup().click(screen.getByRole('button', { name: 'Menu de Mestre' }))
     expect(await screen.findByRole('button', { name: 'Configurações' })).toBeDisabled()
+  })
+
+  // A porta do admin só existe para quem o servidor disse ser admin — e o
+  // gate de verdade é o `requireAdmin` do servidor, não este Show (ALE-120).
+  it('mostra "Convidar jogador" para o admin', async () => {
+    const props = setup({ canInvite: true })
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Menu de Mestre' }))
+    await user.click(await screen.findByRole('button', { name: 'Convidar jogador' }))
+    expect(props.onInvite).toHaveBeenCalledOnce()
+  })
+
+  it('esconde "Convidar jogador" de quem não é admin', async () => {
+    setup({ canInvite: false })
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Menu de Mestre' }))
+    expect(await screen.findByText('Sair')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Convidar jogador' })).not.toBeInTheDocument()
   })
 })

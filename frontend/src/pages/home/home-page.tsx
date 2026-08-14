@@ -4,6 +4,7 @@ import { PlayCircle, Scroll, Users2, Wand2 } from 'lucide-solid'
 import { createSignal } from 'solid-js'
 import { logout } from '@/entities/user/logout'
 import { meQueryOptions } from '@/entities/user/queries'
+import { InvitePlayer } from '@/features/account-invite/invite-player-dialog'
 import { createActiveSession } from '@/features/session-resume/active-session'
 import { SceneShell } from '@/shared/layout/scene-shell'
 import { createFullscreen } from '@/shared/lib/fullscreen'
@@ -29,6 +30,7 @@ export function HomePage() {
   const sfx = createSfx(ui)
   const fullscreen = createFullscreen()
   const [signingOut, setSigningOut] = createSignal(false)
+  const [inviting, setInviting] = createSignal(false)
 
   const name = () => me.data?.name ?? me.data?.email ?? 'Aventureiro'
 
@@ -94,7 +96,10 @@ export function HomePage() {
         fullscreenSupported={fullscreen.supported}
         fullscreenActive={fullscreen.active()}
         onToggleFullscreen={fullscreen.toggle}
+        canInvite={me.data?.isAdmin}
+        onInvite={() => setInviting(true)}
       />
+      <InvitePlayer open={inviting()} onOpenChange={setInviting} />
     </SceneShell>
   )
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createAuthStore } from './auth-store'
 
-const ALICE = { id: 1, email: 'mestre@t20.local', name: 'Mestre' }
+const ALICE = { id: 1, email: 'mestre@t20.local', name: 'Mestre', isAdmin: false }
 
 describe('createAuthStore', () => {
   it('começa deslogado', () => {

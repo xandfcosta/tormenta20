@@ -73,13 +73,12 @@ func main() {
 	if len(os.Args) > 1 {
 		out = os.Args[1]
 	}
-	handler, database, cleanup := freshServer()
-	defer cleanup()
-
 	var sf seedFile
 	if err := json.Unmarshal(seedData, &sf); err != nil {
 		log.Fatalf("seed-data.json: %v", err)
 	}
+	handler, database, cleanup := freshServer(seedEmails(sf))
+	defer cleanup()
 	total, seeded := 0, 0
 	for _, u := range sf.Users {
 		total += len(u.Characters)
@@ -98,9 +97,22 @@ func main() {
 	log.Printf("wrote %s — %d/%d characters across %d users", out, seeded, total, len(sf.Users))
 }
 
+// seedEmails lists the accounts this run creates. They go in as ADMIN_EMAILS so
+// registration works: since ALE-120 /auth/register demands an invite, and the
+// first account of an empty database has nobody to have invited it — the
+// generator is its own admin. Nothing of the role reaches seed.sql: it is
+// derived from the environment at request time and has no column.
+func seedEmails(sf seedFile) []string {
+	emails := make([]string, 0, len(sf.Users))
+	for _, u := range sf.Users {
+		emails = append(emails, u.Email)
+	}
+	return emails
+}
+
 // freshServer boots the real API against a throwaway migrated SQLite DB and
 // returns its in-process handler plus the DB (for the chronicle seed + dump).
-func freshServer() (http.Handler, *sql.DB, func()) {
+func freshServer(adminEmails []string) (http.Handler, *sql.DB, func()) {
 	dir, err := os.MkdirTemp("", "seedgen")
 	if err != nil {
 		log.Fatalf("tempdir: %v", err)
@@ -115,6 +127,7 @@ func freshServer() (http.Handler, *sql.DB, func()) {
 		log.Fatalf("config: %v", err)
 	}
 	cfg.DatabasePath = dbPath
+	cfg.AdminEmails = adminEmails
 	if cfg.JWTSecret == "" {
 		cfg.JWTSecret = "seedgen"
 	}

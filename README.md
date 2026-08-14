@@ -32,7 +32,8 @@ o app deriva a ficha pelo MESMO motor do servidor. Precisa do toolchain Go.
 
 A configuração vem de `engine-go/.env.development`, que é **versionado**: nada
 ali é segredo, e o servidor recusa subir em produção com aquele `JWT_SECRET`.
-Nenhum passo de setup — funciona no clone.
+Nenhum passo de setup — funciona no clone. O `mestre@t20.local` do seed já é
+admin ali, então o menu do Hub tem **Convidar jogador** desde o primeiro boot.
 
 ## Testes
 
@@ -72,6 +73,18 @@ t20 production server listening on :3001 (db=./data/t20-prod.db)
   players can open http://192.168.15.12:3001
 ```
 
+### Quem entra na mesa
+
+O registro **não é aberto**: quem administra gera um link de uso único (menu do
+Hub → **Convidar jogador**) e manda para o jogador, que abre e escolhe a própria
+senha. Sem isso, qualquer um que alcance `http://<ip>:3001` criaria conta —
+o preço de servir na LAN (ALE-120).
+
+Quem administra vem do `ADMIN_EMAILS`, e **só de lá**: não existe coluna de papel
+no banco nem tela para promover alguém, então virar admin exige editar o arquivo
+na máquina que hospeda a mesa. Esses e-mails são também a única exceção ao
+convite — é assim que você cria a sua própria conta num banco vazio.
+
 **A stack de produção é um processo só.** Com `STATIC_DIR` apontando para
 `frontend/dist`, o `cmd/api` serve o SPA (com fallback pras rotas de cliente), os
 assets, `/api/*` e o `/socket.io/` na mesma porta. Não há nginx, não há
@@ -106,6 +119,7 @@ dois — é o mesmo binário (ALE-119):
 | banco | `engine-go/data/t20-dev.db` | `engine-go/data/t20-prod.db` |
 | CORS | libera `http://localhost:5173` | nenhum header: tudo é mesma-origem |
 | `JWT_SECRET` | público, no repositório | seu, e o boot **falha** sem ele |
+| admin | `mestre@t20.local` (o do seed) | o seu, e o boot **falha** sem nenhum |
 
 **O env do processo vence o arquivo**, então dá pra desviar sem editar nada:
 `PORT=4000 pnpm dev`. E `ENV_FILE=/caminho/outro.env` troca o arquivo inteiro.
@@ -118,6 +132,7 @@ Variáveis (defaults em `engine-go/api/config.go`):
 | `PORT` | `3001` | porta do servidor |
 | `DATABASE_URL` | `file:./data/t20-dev.db` | arquivo SQLite; migra sozinho ao abrir |
 | `JWT_SECRET` | — | assina os JWT de sessão; **obrigatório em produção** |
+| `ADMIN_EMAILS` | — | quem administra, separado por vírgula; **obrigatório em produção** |
 | `COOKIE_SECURE` | `false` | ligue quando houver TLS na frente — em HTTP na LAN, ligado, o browser descarta o cookie e o login não conclui |
 | `CORS_ORIGIN` | `http://localhost:5173` (vazio em produção) | a ÚNICA origem liberada; vazio = sem CORS |
 | `STATIC_DIR` | vazio | o `dist` do front; vazio = modo dev (o Vite serve) |

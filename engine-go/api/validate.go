@@ -81,6 +81,14 @@ var emailRe = regexp.MustCompile(`^[^@\s]+@[^@\s]+\.[^@\s]+$`)
 
 func isEmail(s string) bool { return emailRe.MatchString(s) }
 
+// normalizeEmail is the single spelling of an account. Register and login both
+// run it, so `Mestre@T20.local` and `mestre@t20.local` are ONE account and not
+// two — which is what lets the admin check (Config.IsAdmin) ignore case without
+// opening a door: a case variant can no longer become a second admin (ALE-120).
+func normalizeEmail(email string) string {
+	return strings.ToLower(strings.TrimSpace(email))
+}
+
 func validateRegister(b registerBody) FieldErrorMap {
 	f := FieldErrorMap{}
 	if !isEmail(b.Email) {
@@ -112,8 +120,16 @@ func validateLogin(b loginBody) FieldErrorMap {
 
 // nowISO is the timestamp format stored in the TEXT DateTime columns (ISO-8601,
 // UTC, millisecond precision — what Prisma serialized).
+// isoLayout is the one spelling of a timestamp in this database. Shared so a
+// stored value parses back with the layout that wrote it (ALE-120).
+const isoLayout = "2006-01-02T15:04:05.000Z"
+
 func nowISO() string {
-	return time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
+	return isoAt(time.Now())
+}
+
+func isoAt(t time.Time) string {
+	return t.UTC().Format(isoLayout)
 }
 
 func parseInt(s string) (int, error) { return strconv.Atoi(strings.TrimSpace(s)) }

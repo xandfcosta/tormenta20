@@ -26,7 +26,7 @@ func (s *Server) authenticateHandshake(ctx context.Context, authToken, authHeade
 	if err != nil {
 		return AuthUser{}, errors.New("User no longer exists")
 	}
-	return authUserFrom(user), nil
+	return s.authUser(user), nil
 }
 
 // handshakeToken picks the JWT from the handshake sources in ws-auth.ts order: an explicit

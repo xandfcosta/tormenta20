@@ -1,3 +1,8 @@
+-- Comments here are ASCII-ONLY on purpose: sqlc measures the query with byte
+-- offsets and rune-counted comments, so one accented letter above a query
+-- silently truncates the generated SQL by one character (ALE-120 lost the
+-- "ULL" of an `IS NULL`, which still compiled).
+--
 -- Queries compiled by sqlc into db/sqlcgen. One camelCase column set means the
 -- generated json tags already match the frontend contract (hpMax, catalogSpellId).
 -- Grouped by domain; grows per Fase B slice.
@@ -342,3 +347,19 @@ FROM campaign_members m
 JOIN campaigns c ON c.id = m.campaignId
 WHERE m.characterId = ?
 ORDER BY m.addedAt ASC;
+
+-- account invites (ALE-120)
+
+-- name: CreateAccountInvite :one
+INSERT INTO account_invites (token, createdBy, createdAt, expiresAt)
+VALUES (?, ?, ?, ?)
+RETURNING *;
+
+-- name: GetAccountInvite :one
+SELECT * FROM account_invites WHERE token = ? LIMIT 1;
+
+-- Single use for real: `usedAt IS NULL` is what makes the second registration
+-- with the same link a no-op, and the affected rows say which one won.
+-- name: SpendAccountInvite :execrows
+UPDATE account_invites SET usedAt = ?, usedBy = ?
+WHERE id = ? AND usedAt IS NULL;

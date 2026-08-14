@@ -29,8 +29,22 @@ func (s *Server) requireAuth(next http.Handler) http.Handler {
 			writeError(w, http.StatusUnauthorized, "User no longer exists")
 			return
 		}
-		ctx := context.WithValue(r.Context(), userCtxKey, authUserFrom(user))
+		ctx := context.WithValue(r.Context(), userCtxKey, s.authUser(user))
 		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// requireAdmin gates the administration routes, and runs AFTER requireAuth —
+// it reads the identity that middleware attached. The answer comes from
+// ADMIN_EMAILS in the environment file, so the only way to gain it is editing
+// that file on the host: no request can grant it (ALE-120).
+func (s *Server) requireAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !currentUser(r).IsAdmin {
+			writeError(w, http.StatusForbidden, "Admin only")
+			return
+		}
+		next.ServeHTTP(w, r)
 	})
 }
 

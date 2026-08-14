@@ -117,8 +117,18 @@ func (s *Server) Router() http.Handler {
 
 	// Invite landing is anonymous (pre-login preview).
 	r.Get("/invites/{token}", s.handleResolveInvite)
+	// Account invite, a different thing from the campaign one above: this is the
+	// link that lets someone CREATE an account, so it is read before any session
+	// exists (ALE-120).
+	r.Get("/account-invites/{token}", s.handleResolveAccountInvite)
 
 	r.With(s.requireAuth).Get("/users", s.handleListUsers)
+
+	r.Route("/admin", func(r chi.Router) {
+		r.Use(s.requireAuth)
+		r.Use(s.requireAdmin)
+		r.Post("/invites", s.handleCreateAccountInvite)
+	})
 
 	r.Route("/campaigns", func(r chi.Router) {
 		r.Use(s.requireAuth)

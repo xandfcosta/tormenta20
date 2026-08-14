@@ -1,4 +1,13 @@
-import { LogOut, type LucideIcon, Maximize, Minimize, Settings, Volume2, VolumeX } from 'lucide-solid'
+import {
+  LogOut,
+  type LucideIcon,
+  Maximize,
+  Minimize,
+  Settings,
+  UserPlus,
+  Volume2,
+  VolumeX,
+} from 'lucide-solid'
 import { Dynamic } from 'solid-js/web'
 import { type ComponentProps, Show, splitProps } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
@@ -16,6 +25,9 @@ export type HubFooterProps = {
   fullscreenSupported?: boolean
   fullscreenActive?: boolean
   onToggleFullscreen?: () => void
+  /** True only for an ADMIN_EMAILS account — the real gate is the server (ALE-120). */
+  canInvite?: boolean
+  onInvite?: () => void
   class?: string
 }
 
@@ -71,6 +83,11 @@ export function HubFooter(props: HubFooterProps) {
               onClick={() => props.onToggleFullscreen?.()}
             >
               {props.fullscreenActive ? 'Sair da tela cheia' : 'Tela cheia'}
+            </QuickMenuItem>
+          </Show>
+          <Show when={props.canInvite}>
+            <QuickMenuItem icon={UserPlus} onClick={() => props.onInvite?.()}>
+              Convidar jogador
             </QuickMenuItem>
           </Show>
           <QuickMenuItem icon={Settings} disabled>

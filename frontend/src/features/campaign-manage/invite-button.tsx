@@ -1,9 +1,10 @@
-import { Check, Copy, RefreshCw, Share2 } from 'lucide-solid'
-import { Show, createSignal, onCleanup } from 'solid-js'
+import { RefreshCw, Share2 } from 'lucide-solid'
+import { Show, createSignal } from 'solid-js'
 import { api } from '@/shared/api/api'
 import { copyToClipboard } from '@/shared/lib/clipboard'
 import { toSubmitFailure } from '@/shared/lib/form-errors'
 import { Button } from '@/shared/ui/button'
+import { CopyLinkRow } from '@/shared/ui/copy-link-row'
 import {
   Dialog,
   DialogContent,
@@ -13,7 +14,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/shared/ui/dialog'
-import { Input } from '@/shared/ui/input'
 
 export type InviteDialogProps = {
   /** Mints a fresh token, invalidating whatever was shared before. */
@@ -80,7 +80,11 @@ export function InviteDialog(props: InviteDialogProps) {
         </DialogHeader>
 
         <Show when={inviteUrl()} fallback={<NoLinkYet />}>
-          {(url) => <InviteLinkRow url={url()} onCopy={props.onCopy} />}
+          {(url) => (
+            <CopyLinkRow url={url()} label="Link de convite" onCopy={props.onCopy}>
+              Rotacionar invalida este link e gera um novo.
+            </CopyLinkRow>
+          )}
         </Show>
 
         <Show when={error()}>{(message) => <p class="text-sm text-destructive">{message()}</p>}</Show>
@@ -109,33 +113,6 @@ function NoLinkYet() {
   return (
     <div class="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
       Nenhum link gerado. Clique em "Gerar link" para criar.
-    </div>
-  )
-}
-
-/** The minted link, read-only, with a copy button that acknowledges the copy. */
-function InviteLinkRow(props: { url: string; onCopy: (text: string) => Promise<void> }) {
-  const [copied, setCopied] = createSignal(false)
-  let timer: ReturnType<typeof setTimeout> | undefined
-  onCleanup(() => clearTimeout(timer))
-
-  const copy = async () => {
-    await props.onCopy(props.url)
-    setCopied(true)
-    timer = setTimeout(() => setCopied(false), 2000)
-  }
-
-  return (
-    <div class="space-y-3">
-      <div class="flex items-center gap-2">
-        <Input readOnly value={props.url} aria-label="Link de convite" class="font-mono text-xs" />
-        <Button type="button" variant="outline" size="sm" onClick={copy} aria-label="Copiar link">
-          <Show when={copied()} fallback={<Copy aria-hidden="true" class="size-4" />}>
-            <Check aria-hidden="true" class="size-4" />
-          </Show>
-        </Button>
-      </div>
-      <p class="text-xs text-muted-foreground">Rotacionar invalida este link e gera um novo.</p>
     </div>
   )
 }

@@ -75,6 +75,13 @@ Um tipo com `MarshalJSON` próprio **precisa** declarar sua forma de fio em
 struct em memória produziria um tipo que mente (o `ItemEffects` guarda flags num
 Set e serializa um array).
 
+## O sqlc trunca SQL por causa de comentário acentuado
+
+Comentário em `db/query.sql` é **ASCII**. O sqlc mede a query em bytes e conta o
+comentário em runas, então cada letra acentuada acima de uma query corta um
+caractere do SQL gerado — **em silêncio**. Na ALE-120 um comentário com três
+acentos gerou `WHERE id = ? AND usedAt IS N`, que ainda compilava.
+
 ## Catálogos
 
 `catalog/data/*.json` é embutido no binário e servido por `GET /catalog/:nome`.

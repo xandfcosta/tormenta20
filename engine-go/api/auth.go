@@ -21,10 +21,14 @@ type AuthUser struct {
 	ID    int64   `json:"id"`
 	Email string  `json:"email"`
 	Name  *string `json:"name"`
+	// IsAdmin is derived from ADMIN_EMAILS at every request, never stored: the
+	// role has no row to go stale against, and this is what the UI reads to show
+	// the admin door (ALE-120).
+	IsAdmin bool `json:"isAdmin"`
 }
 
-func authUserFrom(u sqlcgen.User) AuthUser {
-	out := AuthUser{ID: u.ID, Email: u.Email}
+func (s *Server) authUser(u sqlcgen.User) AuthUser {
+	out := AuthUser{ID: u.ID, Email: u.Email, IsAdmin: s.cfg.IsAdmin(u.Email)}
 	if u.Name.Valid {
 		out.Name = &u.Name.String
 	}
@@ -35,6 +39,9 @@ type registerBody struct {
 	Email    string  `json:"email"`
 	Password string  `json:"password"`
 	Name     *string `json:"name"`
+	// InviteToken is the single-use link the admin handed the player. Required
+	// for everyone but the ADMIN_EMAILS addresses (ALE-120).
+	InviteToken string `json:"inviteToken"`
 }
 
 type loginBody struct {
@@ -43,14 +50,21 @@ type loginBody struct {
 }
 
 // handleRegister creates a user (bcrypt), issues the session cookie, returns the
-// AuthUser. 201 on success; 409 on a duplicate email.
+// AuthUser. 201 on success; 409 on a duplicate email; 403 without a usable
+// invite. Since ALE-119 the app answers on the LAN, so registration is no longer
+// open — see registrationInvite.
 func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 	var body registerBody
 	if !decodeJSON(w, r, &body) {
 		return
 	}
+	body.Email = normalizeEmail(body.Email)
 	if fields := validateRegister(body); len(fields) > 0 {
 		writeValidationError(w, fields)
+		return
+	}
+	invite, ok := s.registrationInvite(w, r, body.Email, body.InviteToken)
+	if !ok {
 		return
 	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcryptCost)
@@ -59,25 +73,50 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	now := nowISO()
-	user, err := s.queries.CreateUser(r.Context(), sqlcgen.CreateUserParams{
+	user, err := s.createUser(r.Context(), sqlcgen.CreateUserParams{
 		Email:        body.Email,
 		Name:         nullString(body.Name),
 		Passwordhash: string(hash),
 		Createdat:    now,
 		Updatedat:    now,
-	})
+	}, invite)
 	if err != nil {
-		if db.IsUniqueViolation(err) {
-			writeError(w, http.StatusConflict, "Email already registered: "+body.Email)
-			return
-		}
-		writeError(w, http.StatusInternalServerError, "Could not create user")
+		writeRegisterError(w, err, body.Email)
 		return
 	}
 	if !s.issueSession(w, user) {
 		return
 	}
-	writeJSON(w, http.StatusCreated, authUserFrom(user))
+	writeJSON(w, http.StatusCreated, s.authUser(user))
+}
+
+// registrationInvite resolves the invite this registration has to spend. The
+// ADMIN_EMAILS addresses are the exception, and the only one: the owner must be
+// able to create their own account on a fresh machine, and "first to register
+// wins the crown" would hand that to whoever opens the page first (ALE-120).
+func (s *Server) registrationInvite(
+	w http.ResponseWriter, r *http.Request, email, token string,
+) (*sqlcgen.AccountInvite, bool) {
+	if s.cfg.IsAdmin(email) {
+		return nil, true
+	}
+	invite, ok := s.usableInvite(r.Context(), token)
+	if !ok {
+		writeError(w, http.StatusForbidden, inviteRejected)
+		return nil, false
+	}
+	return &invite, true
+}
+
+func writeRegisterError(w http.ResponseWriter, err error, email string) {
+	switch {
+	case db.IsUniqueViolation(err):
+		writeError(w, http.StatusConflict, "Email already registered: "+email)
+	case errors.Is(err, errInviteSpent):
+		writeError(w, http.StatusForbidden, inviteRejected)
+	default:
+		writeError(w, http.StatusInternalServerError, "Could not create user")
+	}
 }
 
 // handleLogin validates credentials, issues the cookie, returns AuthUser (200).
@@ -90,7 +129,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		writeValidationError(w, fields)
 		return
 	}
-	user, err := s.queries.GetUserByEmail(r.Context(), body.Email)
+	user, err := s.queries.GetUserByEmail(r.Context(), normalizeEmail(body.Email))
 	if err != nil || bcrypt.CompareHashAndPassword([]byte(user.Passwordhash), []byte(body.Password)) != nil {
 		writeError(w, http.StatusUnauthorized, "Invalid credentials")
 		return
@@ -98,7 +137,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	if !s.issueSession(w, user) {
 		return
 	}
-	writeJSON(w, http.StatusOK, authUserFrom(user))
+	writeJSON(w, http.StatusOK, s.authUser(user))
 }
 
 // handleLogout clears the session cookie (204).

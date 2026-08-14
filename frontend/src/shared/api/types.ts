@@ -19,11 +19,23 @@ export type AuthUser = {
   id: number
   email: string
   name: string | null
+  /**
+   * Comes from ADMIN_EMAILS on the server, recomputed per request — there is no
+   * role column to go stale (ALE-120). The UI reads it to show the admin door;
+   * the actual gate is the server's `requireAdmin`.
+   */
+  isAdmin: boolean
 }
 
 export type User = AuthUser & { createdAt: string }
 
 export type Credentials = { email: string; password: string }
+
+/**
+ * The single-use link that lets someone CREATE an account. Different thing from
+ * {@link CampaignInviteToken}, which brings an existing user into a mesa.
+ */
+export type AccountInvite = { token: string; expiresAt: string }
 
 // --- character ----------------------------------------------------------------
 

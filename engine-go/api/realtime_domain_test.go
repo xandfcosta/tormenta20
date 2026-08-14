@@ -13,14 +13,18 @@ import (
 // newTestServer spins a migrated temp SQLite + a catalog-less Server. The domain
 // helpers under test (authz + combatant resolution) never touch the engine, so a nil
 // catalog snapshot is fine — this is the seam the WS gateway will reuse.
-func newTestServer(t *testing.T) *Server {
+// newTestServer boots the real server on a throwaway migrated DB. adminEmails
+// is variadic so the dozens of callers that don't care about the role keep
+// reading as before (ALE-120).
+func newTestServer(t *testing.T, adminEmails ...string) *Server {
 	t.Helper()
 	database, err := db.Open(filepath.Join(t.TempDir(), "test.db"))
 	if err != nil {
 		t.Fatalf("open test db: %v", err)
 	}
 	t.Cleanup(func() { _ = database.Close() })
-	return NewServer(Config{JWTSecret: "test-secret", CookieName: "t20_session"}, database, nil)
+	cfg := Config{JWTSecret: "test-secret", CookieName: "t20_session", AdminEmails: adminEmails}
+	return NewServer(cfg, database, nil)
 }
 
 func seedUser(t *testing.T, s *Server, email string) int64 {

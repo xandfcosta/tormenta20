@@ -32,6 +32,7 @@ import type {
   ApplyEffectInput,
   ApplyEffectResult,
   CastSpellResult,
+  AccountInvite,
   AuthUser,
   Campaign,
   CampaignInvitePreview,
@@ -138,7 +139,11 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
 
   return {
     auth: {
-      register: (input: Credentials & { name?: string }) =>
+      /**
+       * `inviteToken` is required for everyone but the ADMIN_EMAILS addresses —
+       * the server answers 403 without a usable one (ALE-120).
+       */
+      register: (input: Credentials & { name?: string; inviteToken?: string }) =>
         request<AuthUser>('/auth/register', json(input)),
       login: (input: Credentials) => request<AuthUser>('/auth/login', json(input)),
       logout: () => request<void>('/auth/logout', { method: 'POST' }),
@@ -285,6 +290,13 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
       /** Public: resolves a shared token to the campaign it invites into. */
       resolve: (token: string) =>
         request<CampaignInvitePreview>(`/invites/${encodeURIComponent(token)}`),
+    },
+    accountInvites: {
+      /** Admin only: mints the link that lets ONE person create an account. */
+      create: () => request<AccountInvite>('/admin/invites', { method: 'POST' }),
+      /** Public: says whether a link is still good, before any account exists. */
+      resolve: (token: string) =>
+        request<AccountInvite>(`/account-invites/${encodeURIComponent(token)}`),
     },
     members: {
       list: (campaignId: number) => request<CampaignMember[]>(`/campaigns/${campaignId}/members`),

@@ -18,7 +18,9 @@ func TestValidateRefusesProductionWithoutItsOwnSecret(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := Config{AppEnv: EnvProduction, JWTSecret: tc.secret}.Validate()
+			cfg := Config{AppEnv: EnvProduction, JWTSecret: tc.secret, AdminEmails: []string{"dono@t20.local"}}
+
+			err := cfg.Validate()
 			if tc.wantErr != (err != nil) {
 				t.Fatalf("Validate() error = %v, wantErr %v", err, tc.wantErr)
 			}
@@ -26,6 +28,21 @@ func TestValidateRefusesProductionWithoutItsOwnSecret(t *testing.T) {
 				t.Errorf("the error must not echo the secret, got %q", err)
 			}
 		})
+	}
+}
+
+// Registration needs an invite and only an admin issues one, so a production
+// server with no admin is one nobody could ever join (ALE-120).
+func TestValidateRefusesProductionWithoutAnAdmin(t *testing.T) {
+	cfg := Config{AppEnv: EnvProduction, JWTSecret: "6f1c1a0d9e2b"}
+
+	err := cfg.Validate()
+
+	if err == nil {
+		t.Fatal("esperado erro sem ADMIN_EMAILS em produção")
+	}
+	if !strings.Contains(err.Error(), "ADMIN_EMAILS") {
+		t.Errorf("o erro tem de nomear a variável, veio %q", err)
 	}
 }
 
@@ -37,13 +54,14 @@ func TestValidateAcceptsDevelopmentWithoutASecret(t *testing.T) {
 }
 
 func TestLoadConfigReadsTheEnvironmentFile(t *testing.T) {
-	sandboxEnv(t, "PORT", "DATABASE_URL", "JWT_SECRET", "STATIC_DIR", "CORS_ORIGIN", "COOKIE_SECURE")
+	sandboxEnv(t, "PORT", "DATABASE_URL", "JWT_SECRET", "STATIC_DIR", "CORS_ORIGIN", "COOKIE_SECURE", "ADMIN_EMAILS")
 	t.Setenv("APP_ENV", string(EnvProduction))
 	t.Setenv("ENV_FILE", writeEnvFile(t, strings.Join([]string{
 		"PORT=8080",
 		"DATABASE_URL=file:./data/t20-prod.db",
 		"JWT_SECRET=6f1c1a0d9e2b",
 		"STATIC_DIR=../frontend/dist",
+		"ADMIN_EMAILS=Dono@T20.local",
 	}, "\n")))
 
 	cfg, err := LoadConfig()
@@ -57,6 +75,10 @@ func TestLoadConfigReadsTheEnvironmentFile(t *testing.T) {
 	// The DSN's "file:" prefix is stripped for the SQLite driver.
 	if cfg.DatabasePath != "./data/t20-prod.db" {
 		t.Errorf("DatabasePath = %q, want %q", cfg.DatabasePath, "./data/t20-prod.db")
+	}
+	// Normalized on the way in, which is what lets IsAdmin ignore case safely.
+	if !cfg.IsAdmin("dono@t20.local") || !cfg.IsAdmin("DONO@t20.local") {
+		t.Errorf("AdminEmails = %q, esperado reconhecer o dono em qualquer caixa", cfg.AdminEmails)
 	}
 	if err := cfg.Validate(); err != nil {
 		t.Errorf("the shipped production shape must validate: %v", err)

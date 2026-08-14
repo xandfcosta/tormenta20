@@ -8,6 +8,16 @@ import (
 	"database/sql"
 )
 
+type AccountInvite struct {
+	ID        int64          `json:"id"`
+	Token     string         `json:"token"`
+	Createdby int64          `json:"createdby"`
+	Createdat string         `json:"createdat"`
+	Expiresat string         `json:"expiresat"`
+	Usedat    sql.NullString `json:"usedat"`
+	Usedby    sql.NullInt64  `json:"usedby"`
+}
+
 type ActiveEffect struct {
 	ID          int64  `json:"id"`
 	Characterid int64  `json:"characterid"`

@@ -79,4 +79,39 @@ describe('RegisterForm', () => {
 
     expect(await screen.findByText('E-mail já cadastrado')).toBeInTheDocument()
   })
+
+  // O convite viaja na URL; o formulário só o repassa, e é o SERVIDOR que
+  // decide quem entra (ALE-120).
+  it('envia o convite que veio na URL', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined)
+    render(() => <RegisterForm onSubmit={onSubmit} inviteToken="abc123" />)
+
+    await fill({ ...VALID, confirm: VALID.password })
+
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ inviteToken: 'abc123' })),
+    )
+  })
+
+  // Sem convite o formulário CONTINUA submetendo: é assim que o dono cria a
+  // própria conta numa máquina nova. Bloquear aqui trancaria o servidor por fora.
+  it('sem convite, avisa e ainda deixa tentar', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined)
+    render(() => <RegisterForm onSubmit={onSubmit} />)
+
+    expect(screen.getByText(/mesa é por convite/i)).toBeInTheDocument()
+    await fill({ ...VALID, confirm: VALID.password })
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled())
+  })
+
+  it('traduz a recusa do convite em vez de mostrar a mensagem da API', async () => {
+    const onSubmit = vi.fn().mockRejectedValue(new ApiError(403, 'Invite is invalid or expired'))
+    render(() => <RegisterForm onSubmit={onSubmit} inviteToken="vencido" />)
+
+    await fill({ ...VALID, confirm: VALID.password })
+
+    expect(await screen.findByText(/Convite inválido ou expirado/)).toBeInTheDocument()
+    expect(screen.queryByText('Invite is invalid or expired')).not.toBeInTheDocument()
+  })
 })
