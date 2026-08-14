@@ -4,6 +4,7 @@ import { Show, createSignal } from 'solid-js'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { CharacterHud } from '@/features/character-sheet/character-hud'
 import { CharacterSheet } from '@/features/character-sheet/character-sheet'
+import { ConditionsSection } from '@/features/character-sheet/conditions-section'
 import type { InitiativeEntry } from '@/shared/realtime/realtime'
 import { settledQuery } from '@/shared/lib/settled-query'
 import { Button } from '@/shared/ui/button'
@@ -74,6 +75,13 @@ function CharacterCard(props: { characterId: number }) {
       {(data) => (
         <div class="flex min-h-0 flex-1 flex-col">
           <CharacterHud character={data()} dense class="shrink-0 border-t-0" />
+          {/* "Você está caído" é a coisa mais frequente que um mestre declara
+              em combate, e o editor já existia — mas só dentro da aba Efeitos,
+              a três cliques. Aqui ele fica no cartão, junto do resto do que se
+              faz no turno (ALE-122). */}
+          <div class="shrink-0 border-t border-grimorio-iron px-3 py-2 sm:px-4">
+            <ConditionsSection character={data()} />
+          </div>
           <div class="min-h-0 flex-1">
             <CharacterSheet
               character={data()}

@@ -5,19 +5,9 @@ import (
 	"net/http"
 	"strings"
 
+	"t20engine/catalog"
 	"t20engine/db/sqlcgen"
 )
-
-// conditionIDs mirrors t20-data conditions.ts CONDITION_IDS (PDF p394-395) — the
-// valid book conditions updateConditions accepts.
-var conditionIDs = toStringSet([]string{
-	"abalado", "agarrado", "alquebrado", "apavorado", "atordoado", "caido",
-	"cego", "confuso", "debilitado", "desprevenido", "doente", "em-chamas",
-	"enjoado", "enredado", "envenenado", "esmorecido", "exausto", "fascinado",
-	"fatigado", "fraco", "frustrado", "imovel", "inconsciente", "indefeso",
-	"lento", "ofuscado", "paralisado", "pasmo", "petrificado", "sangrando",
-	"sobrecarregado", "surdo", "surpreendido", "vulneravel",
-})
 
 // handleUpdateConditions replace the
 // active book conditions after validating every id against the catalog.
@@ -38,7 +28,7 @@ func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) 
 	}
 	var unknown []string
 	for _, c := range body.ActiveConditions {
-		if !conditionIDs[c] {
+		if !catalog.IsCondition(c) {
 			unknown = append(unknown, c)
 		}
 	}

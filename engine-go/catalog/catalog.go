@@ -8,6 +8,7 @@ import (
 	"embed"
 	"encoding/json"
 	"log"
+	"sort"
 	"sync"
 )
 
@@ -185,4 +186,45 @@ func Resource(name string) ([]byte, bool) {
 // Options returns the character-creation option lists JSON (/characters/options).
 func Options() ([]byte, error) {
 	return files.ReadFile("data/options.json")
+}
+
+var (
+	conditionsOnce sync.Once
+	conditionIDSet map[string]bool
+)
+
+// IsCondition reports whether id is a book condition (p394-395).
+//
+// Lê do CATÁLOGO, que é onde as condições são autoradas. A API tinha uma lista
+// de 34 ids escrita à mão ao lado das 35 do catálogo, e a que faltava —
+// `enfeitiçado` — dava 400 ao ser aplicada, tanto para o jogador quanto para o
+// mestre. Uma cópia da tabela do livro é uma cópia que desvia (ALE-122).
+func IsCondition(id string) bool {
+	conditionsOnce.Do(func() {
+		conditionIDSet = map[string]bool{}
+		b, err := files.ReadFile("data/conditions.json")
+		if err != nil {
+			return
+		}
+		var byID map[string]json.RawMessage
+		if json.Unmarshal(b, &byID) != nil {
+			return
+		}
+		for key := range byID {
+			conditionIDSet[key] = true
+		}
+	})
+	return conditionIDSet[id]
+}
+
+// ConditionIDs lists every book condition, for tests that must walk the table
+// instead of repeating it.
+func ConditionIDs() []string {
+	ids := make([]string, 0, len(conditionIDSet))
+	IsCondition("") // garante o parse antes de ler o mapa
+	for id := range conditionIDSet {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+	return ids
 }
