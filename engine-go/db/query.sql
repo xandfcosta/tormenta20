@@ -363,3 +363,6 @@ SELECT * FROM account_invites WHERE token = ? LIMIT 1;
 -- name: SpendAccountInvite :execrows
 UPDATE account_invites SET usedAt = ?, usedBy = ?
 WHERE id = ? AND usedAt IS NULL;
+
+-- name: ListAllCampaigns :many
+SELECT * FROM campaigns ORDER BY updatedAt DESC;

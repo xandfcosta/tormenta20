@@ -109,7 +109,7 @@ function TomeHeader(props: {
         </span>
         <div class="space-y-1">
           <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            {roleLabel(props.campaign.role)}
+            {roleLabel(props.campaign.role, props.campaign.ownerName)}
           </p>
           <h1 class="font-display text-3xl uppercase leading-tight tracking-wide text-grimorio-gold sm:text-4xl">
             {props.campaign.name}

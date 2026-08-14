@@ -54,8 +54,8 @@ func (s *Server) loadSessionInCampaign(ctx context.Context, campaignID, sessionI
 // session-scoped message: resolve the caller's role (gm/player) then load the session and
 // assert it belongs to the campaign. — the role is
 // stashed on socket.data for per-action GM gating. Transport-agnostic (WS maps status/err).
-func (s *Server) sessionForCaller(ctx context.Context, userID, campaignID, sessionID int64) (sqlcgen.Session, string, int, error) {
-	role, status, err := s.resolveRole(ctx, userID, campaignID)
+func (s *Server) sessionForCaller(ctx context.Context, user AuthUser, campaignID, sessionID int64) (sqlcgen.Session, string, int, error) {
+	role, status, err := s.resolveRole(ctx, user, campaignID)
 	if err != nil {
 		return sqlcgen.Session{}, "", status, err
 	}
@@ -112,7 +112,7 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 	// session before the socket connects — the WS gateway already gates on
 	// sessionForCaller, so mirror it here instead of the owner-only ownedSession
 	// (which 403'd invited players with "belongs to another user").
-	sess, _, status, err := s.sessionForCaller(r.Context(), currentUser(r).ID, cid, sid)
+	sess, _, status, err := s.sessionForCaller(r.Context(), currentUser(r), cid, sid)
 	if err != nil {
 		writeError(w, status, err.Error())
 		return

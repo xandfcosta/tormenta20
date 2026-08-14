@@ -108,7 +108,7 @@ func (g *realtimeGateway) access(sock *socket.Socket, args []any) (msgCtx, bool)
 		return msgCtx{}, false
 	}
 	data := sockData(sock)
-	_, role, _, err := g.s.sessionForCaller(context.Background(), data.user.ID, campaignID, sessionID)
+	_, role, _, err := g.s.sessionForCaller(context.Background(), data.user, campaignID, sessionID)
 	if err != nil {
 		g.wsError(sock, err.Error())
 		return msgCtx{}, false

@@ -1064,6 +1064,41 @@ func (q *Queries) ListActiveEffectsByCharacter(ctx context.Context, characterid 
 	return items, nil
 }
 
+const listAllCampaigns = `-- name: ListAllCampaigns :many
+SELECT id, ownerid, name, description, invitetoken, createdat, updatedat FROM campaigns ORDER BY updatedAt DESC
+`
+
+func (q *Queries) ListAllCampaigns(ctx context.Context) ([]Campaign, error) {
+	rows, err := q.db.QueryContext(ctx, listAllCampaigns)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Campaign{}
+	for rows.Next() {
+		var i Campaign
+		if err := rows.Scan(
+			&i.ID,
+			&i.Ownerid,
+			&i.Name,
+			&i.Description,
+			&i.Invitetoken,
+			&i.Createdat,
+			&i.Updatedat,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listCampaignsForCharacter = `-- name: ListCampaignsForCharacter :many
 SELECT m.id, m.campaignId, m.characterId, m.role, m.addedAt,
        c.name AS campaignName, c.description AS campaignDescription, c.updatedAt AS campaignUpdatedAt

@@ -186,7 +186,7 @@ function InfoPage(props: {
 }) {
   return (
     <div class="grimorio-parchment-bg flex flex-1 flex-col justify-center gap-4 p-6 sm:p-8 lg:p-12 xl:p-16">
-      <StatusLine role={roleLabel(props.campaign.role)} isLive={props.isLive} />
+      <StatusLine role={roleLabel(props.campaign.role, props.campaign.ownerName)} isLive={props.isLive} />
       <h2 class="font-display text-2xl uppercase leading-tight tracking-[0.05em] sm:text-[2rem] lg:text-4xl">
         {props.campaign.name}
       </h2>

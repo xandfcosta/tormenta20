@@ -11,7 +11,17 @@ export function campaignEmblemGradient(name: string): string {
   return hueGradient(name, 0.5, 0.14)
 }
 
-/** The caller's stance in a chronicle, as a scene label. */
-export function roleLabel(role: CampaignMemberRole | undefined): string {
+/**
+ * The caller's stance in a chronicle, as a scene label.
+ *
+ * A mesa that belongs to someone ELSE — which only an admin ever sees listed —
+ * says WHOSE it is instead of the stance: the server hands them the `gm` role
+ * there, and printing "Mestrando" would read as if the chronicle were theirs
+ * (ALE-120).
+ *
+ * @example roleLabel('gm', 'Bruna') // 'Mesa de Bruna'
+ */
+export function roleLabel(role: CampaignMemberRole | undefined, ownerName?: string | null): string {
+  if (ownerName) return `Mesa de ${ownerName}`
   return role === 'gm' ? 'Mestrando' : 'Jogando'
 }

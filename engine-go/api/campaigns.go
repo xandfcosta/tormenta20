@@ -36,11 +36,18 @@ type campaignListDTO struct {
 	CampaignDTO
 	Role      string                `json:"role"`
 	Character *campaignCharacterDTO `json:"character"`
+	// OwnerName is present ONLY on a mesa the caller does not own, which today
+	// means an admin seeing everyone's (ALE-120). Absent is the normal case, so
+	// the UI marks the exception instead of every row.
+	OwnerName *string `json:"ownerName,omitempty"`
 }
 
 type campaignDetailDTO struct {
 	CampaignDTO
 	Role string `json:"role"`
+	// Same rule as the list: present only on a mesa the caller does not own. It
+	// matters MORE here — this is the screen where you rename and delete.
+	OwnerName *string `json:"ownerName,omitempty"`
 }
 
 func campaignScalars(c sqlcgen.Campaign) CampaignDTO {
@@ -52,16 +59,25 @@ func campaignScalars(c sqlcgen.Campaign) CampaignDTO {
 
 func (s *Server) handleListCampaigns(w http.ResponseWriter, r *http.Request) {
 	user := currentUser(r)
-	rows, err := s.queries.ListCampaignsForUser(r.Context(), user.ID)
+	rows, err := s.visibleCampaigns(r.Context(), user)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not list campaigns")
 		return
 	}
+	owners := s.ownerNames(r.Context(), rows, user.ID)
 	out := make([]campaignListDTO, 0, len(rows))
 	for _, c := range rows {
 		item := campaignListDTO{CampaignDTO: campaignScalars(c), Role: "player"}
-		if c.Ownerid == user.ID {
+		switch {
+		case c.Ownerid == user.ID:
 			item.Role = "gm"
+		case user.IsAdmin:
+			// Someone else's mesa, in the list because the caller administers the
+			// table. The condition is IsAdmin and not "the owner map has a name":
+			// a player is also a non-owner here, and leaning on an empty map would
+			// make a future edit to ownerNames hand them "gm" in silence.
+			name := owners[c.Ownerid]
+			item.Role, item.OwnerName = "gm", &name
 		}
 		char, err := s.queries.CallerCharacterInCampaign(r.Context(), sqlcgen.CallerCharacterInCampaignParams{Campaignid: c.ID, Ownerid: user.ID})
 		if err == nil {
@@ -77,13 +93,58 @@ func (s *Server) handleListCampaigns(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, out)
 }
 
-// handleGetCampaign ports resolveAccess: owner → gm, member → player, else 403.
+// visibleCampaigns is what the caller may see listed: their own plus the ones
+// they play in — and, for the admin, every mesa in the table (ALE-120). Without
+// this the admin could reach another's mesa only by typing its URL.
+func (s *Server) visibleCampaigns(ctx context.Context, user AuthUser) ([]sqlcgen.Campaign, error) {
+	if user.IsAdmin {
+		return s.queries.ListAllCampaigns(ctx)
+	}
+	return s.queries.ListCampaignsForUser(ctx, user.ID)
+}
+
+// ownerNames labels the mesas the caller does not own, in ONE query — the list
+// is short but an N+1 here would grow with the table.
+func (s *Server) ownerNames(ctx context.Context, rows []sqlcgen.Campaign, callerID int64) map[int64]string {
+	var ids []int64
+	for _, c := range rows {
+		if c.Ownerid != callerID {
+			ids = append(ids, c.Ownerid)
+		}
+	}
+	names := make(map[int64]string, len(ids))
+	if len(ids) == 0 {
+		return names
+	}
+	users, err := s.queries.ListUsersByIDs(ctx, ids)
+	if err != nil {
+		return names
+	}
+	for _, u := range users {
+		names[u.ID] = displayName(u.Name, u.Email)
+	}
+	return names
+}
+
+// displayName prefers the chosen name and falls back to the e-mail, which is
+// what the player is called everywhere else in the app.
+func displayName(name sql.NullString, email string) string {
+	if name.Valid && name.String != "" {
+		return name.String
+	}
+	return email
+}
+
+// handleGetCampaign: owner → gm, member → player, else 403.
+//
+// It used to inline a COPY of resolveRole, which is how the same rule ended up
+// with two implementations — and why granting the admin access looked like it
+// needed a fourth edit. It calls the rule now (ALE-120).
 func (s *Server) handleGetCampaign(w http.ResponseWriter, r *http.Request) {
 	id, ok := intParam(w, r, "id")
 	if !ok {
 		return
 	}
-	user := currentUser(r)
 	c, err := s.queries.GetCampaign(r.Context(), id)
 	if errors.Is(err, sql.ErrNoRows) {
 		writeError(w, http.StatusNotFound, fmt.Sprintf("Campaign %d not found", id))
@@ -93,16 +154,21 @@ func (s *Server) handleGetCampaign(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "Could not load campaign")
 		return
 	}
-	role := "gm"
-	if c.Ownerid != user.ID {
-		isMember, _ := s.queries.IsCampaignMember(r.Context(), sqlcgen.IsCampaignMemberParams{Campaignid: id, Ownerid: user.ID})
-		if !isMember {
-			writeError(w, http.StatusForbidden, fmt.Sprintf("Campaign %d is not accessible", id))
-			return
-		}
-		role = "player"
+	user := currentUser(r)
+	role, status, err := s.roleIn(r.Context(), user, c)
+	if err != nil {
+		writeError(w, status, err.Error())
+		return
 	}
-	writeJSON(w, http.StatusOK, campaignDetailDTO{CampaignDTO: campaignScalars(c), Role: role})
+	out := campaignDetailDTO{CampaignDTO: campaignScalars(c), Role: role}
+	// IsAdmin, not merely "not the owner": a PLAYER is also a non-owner here, and
+	// marking their mesa would replace their "Jogando" with "Mesa de Fulano" —
+	// which is exactly what the e2e caught when this condition was looser.
+	if user.IsAdmin && c.Ownerid != user.ID {
+		name := s.ownerNames(r.Context(), []sqlcgen.Campaign{c}, user.ID)[c.Ownerid]
+		out.OwnerName = &name
+	}
+	writeJSON(w, http.StatusOK, out)
 }
 
 func (s *Server) handleCreateCampaign(w http.ResponseWriter, r *http.Request) {
@@ -239,7 +305,12 @@ func (s *Server) handleResolveInvite(w http.ResponseWriter, r *http.Request) {
 // transport-agnostic so both the HTTP handlers and the WS gateway can gate on it: the
 // owner is the "gm"; a user who owns a member character is a "player"; anyone else is
 // forbidden. Returns the role + an HTTP-ish status the caller maps to its transport.
-func (s *Server) resolveRole(ctx context.Context, userID, campaignID int64) (string, int, error) {
+// The admin enters ANY mesa as "gm" (ALE-120): the role already exists, carries
+// the tools they came to use, and nothing in the engine assumes a single GM —
+// presence de-duplicates per user and `requireGm` gates by role, not identity.
+// Two GMs can therefore drive initiative at once; that is the accepted cost of
+// letting the table's owner fix a player's mesa mid-session.
+func (s *Server) resolveRole(ctx context.Context, user AuthUser, campaignID int64) (string, int, error) {
 	c, err := s.queries.GetCampaign(ctx, campaignID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return "", http.StatusNotFound, fmt.Errorf("Campaign %d not found", campaignID)
@@ -247,19 +318,27 @@ func (s *Server) resolveRole(ctx context.Context, userID, campaignID int64) (str
 	if err != nil {
 		return "", http.StatusInternalServerError, errors.New("Could not load campaign")
 	}
-	if c.Ownerid == userID {
+	return s.roleIn(ctx, user, c)
+}
+
+// roleIn is the same rule over a campaign the caller ALREADY loaded, so a
+// handler that needs both the row and the role does not read it twice.
+func (s *Server) roleIn(ctx context.Context, user AuthUser, c sqlcgen.Campaign) (string, int, error) {
+	if c.Ownerid == user.ID || user.IsAdmin {
 		return "gm", http.StatusOK, nil
 	}
-	isMember, _ := s.queries.IsCampaignMember(ctx, sqlcgen.IsCampaignMemberParams{Campaignid: campaignID, Ownerid: userID})
+	isMember, _ := s.queries.IsCampaignMember(ctx, sqlcgen.IsCampaignMemberParams{Campaignid: c.ID, Ownerid: user.ID})
 	if !isMember {
-		return "", http.StatusForbidden, fmt.Errorf("Campaign %d is not accessible", campaignID)
+		return "", http.StatusForbidden, fmt.Errorf("Campaign %d is not accessible", c.ID)
 	}
 	return "player", http.StatusOK, nil
 }
 
 // loadOwnedCampaign is the owner-only campaign rule, transport-agnostic. The GM (owner)
-// alone passes; everyone else gets Forbidden.
-func (s *Server) loadOwnedCampaign(ctx context.Context, userID, id int64) (sqlcgen.Campaign, int, error) {
+// alone passes; everyone else gets Forbidden. This ONE function is the gate for six
+// call sites (rename/delete, invite, members, sessions), which is why the admin
+// bypass costs a single condition here (ALE-120).
+func (s *Server) loadOwnedCampaign(ctx context.Context, user AuthUser, id int64) (sqlcgen.Campaign, int, error) {
 	c, err := s.queries.GetCampaign(ctx, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return c, http.StatusNotFound, fmt.Errorf("Campaign %d not found", id)
@@ -267,14 +346,14 @@ func (s *Server) loadOwnedCampaign(ctx context.Context, userID, id int64) (sqlcg
 	if err != nil {
 		return c, http.StatusInternalServerError, errors.New("Could not load campaign")
 	}
-	if c.Ownerid != userID {
+	if c.Ownerid != user.ID && !user.IsAdmin {
 		return c, http.StatusForbidden, fmt.Errorf("Campaign %d belongs to another user", id)
 	}
 	return c, http.StatusOK, nil
 }
 
 func (s *Server) ownedCampaign(w http.ResponseWriter, r *http.Request, id int64) (sqlcgen.Campaign, bool) {
-	c, status, err := s.loadOwnedCampaign(r.Context(), currentUser(r).ID, id)
+	c, status, err := s.loadOwnedCampaign(r.Context(), currentUser(r), id)
 	if err != nil {
 		writeError(w, status, err.Error())
 		return c, false

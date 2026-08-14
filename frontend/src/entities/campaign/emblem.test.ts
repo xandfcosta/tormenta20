@@ -53,4 +53,15 @@ describe('roleLabel', () => {
   it('sem papel, assume jogando', () => {
     expect(roleLabel(undefined)).toBe('Jogando')
   })
+
+  // A mesa alheia só aparece para quem administra, e o servidor lhe dá o papel
+  // `gm` nela — dizer "Mestrando" ali afirmaria que a crônica é dele (ALE-120).
+  it('a mesa de outro diz de quem é, não o papel', () => {
+    expect(roleLabel('gm', 'Bruna')).toBe('Mesa de Bruna')
+  })
+
+  it('sem dono declarado, nada muda', () => {
+    expect(roleLabel('gm', null)).toBe('Mestrando')
+    expect(roleLabel('player', undefined)).toBe('Jogando')
+  })
 })

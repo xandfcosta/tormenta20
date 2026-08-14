@@ -49,7 +49,7 @@ func (s *Server) classDTOs(r *http.Request, characterID int64) []ClassDTO {
 // campaignAccess enforces owner-or-member read access (resolveAccess), writing
 // the 404/403 and returning false.
 func (s *Server) campaignAccess(w http.ResponseWriter, r *http.Request, campaignID int64) bool {
-	if _, status, err := s.resolveRole(r.Context(), currentUser(r).ID, campaignID); err != nil {
+	if _, status, err := s.resolveRole(r.Context(), currentUser(r), campaignID); err != nil {
 		writeError(w, status, err.Error())
 		return false
 	}

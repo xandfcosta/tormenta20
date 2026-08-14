@@ -251,6 +251,9 @@ export type Campaign = {
   /** Caller's role — the server resolves owner=gm vs member=player. Optional
    *  because older cached payloads may predate it. */
   role?: CampaignMemberRole
+  /** Present ONLY on a mesa the caller does not own — today, an admin seeing
+   *  everyone's (ALE-120). Absent is the normal case. */
+  ownerName?: string | null
   /** The caller's own member character here (null when they're the GM with no
    *  PC of their own). Only populated by GET /campaigns. */
   character?: {

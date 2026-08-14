@@ -88,21 +88,24 @@ func TestResolveRole(t *testing.T) {
 
 	cases := []struct {
 		name       string
-		userID     int64
+		caller     AuthUser
 		wantRole   string
 		wantStatus int
 	}{
-		{"owner is gm", gm, "gm", 200},
-		{"member is player", player, "player", 200},
-		{"stranger forbidden", stranger, "", 403},
+		{"owner is gm", AuthUser{ID: gm}, "gm", 200},
+		{"member is player", AuthUser{ID: player}, "player", 200},
+		{"stranger forbidden", AuthUser{ID: stranger}, "", 403},
+		// The admin enters any mesa as gm, and this is the rule the WS gateway
+		// runs too — it is what lets them join a live session (ALE-120).
+		{"admin is gm anywhere", AuthUser{ID: stranger, IsAdmin: true}, "gm", 200},
 	}
 	for _, c := range cases {
-		role, status, err := s.resolveRole(ctx, c.userID, campaignID)
+		role, status, err := s.resolveRole(ctx, c.caller, campaignID)
 		if role != c.wantRole || status != c.wantStatus {
 			t.Errorf("%s: role=%q status=%d err=%v, want role=%q status=%d", c.name, role, status, err, c.wantRole, c.wantStatus)
 		}
 	}
-	if _, status, _ := s.resolveRole(ctx, gm, 999999); status != 404 {
+	if _, status, _ := s.resolveRole(ctx, AuthUser{ID: gm}, 999999); status != 404 {
 		t.Errorf("missing campaign: status=%d, want 404", status)
 	}
 }
@@ -165,18 +168,18 @@ func TestSessionForCaller(t *testing.T) {
 	}
 
 	t.Run("gm gets session + role", func(t *testing.T) {
-		got, role, status, err := s.sessionForCaller(ctx, gm, campaignID, sess.ID)
+		got, role, status, err := s.sessionForCaller(ctx, AuthUser{ID: gm}, campaignID, sess.ID)
 		if err != nil || status != 200 || role != "gm" || got.ID != sess.ID {
 			t.Errorf("status=%d role=%q id=%d err=%v", status, role, got.ID, err)
 		}
 	})
 	t.Run("stranger forbidden before session load", func(t *testing.T) {
-		if _, _, status, _ := s.sessionForCaller(ctx, stranger, campaignID, sess.ID); status != 403 {
+		if _, _, status, _ := s.sessionForCaller(ctx, AuthUser{ID: stranger}, campaignID, sess.ID); status != 403 {
 			t.Errorf("status=%d, want 403", status)
 		}
 	})
 	t.Run("missing session 404", func(t *testing.T) {
-		if _, _, status, _ := s.sessionForCaller(ctx, gm, campaignID, 999999); status != 404 {
+		if _, _, status, _ := s.sessionForCaller(ctx, AuthUser{ID: gm}, campaignID, 999999); status != 404 {
 			t.Errorf("status=%d, want 404", status)
 		}
 	})

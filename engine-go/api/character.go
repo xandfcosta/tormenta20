@@ -81,7 +81,9 @@ func (s *Server) authorizedCharacter(ctx context.Context, user AuthUser, id int6
 	if err != nil {
 		return row, http.StatusInternalServerError, errors.New("Could not load character")
 	}
-	if row.Ownerid == user.ID {
+	// The admin passes the same door as the owner and the campaign's GM: a table
+	// they administer includes the sheets in it (ALE-120).
+	if row.Ownerid == user.ID || user.IsAdmin {
 		return row, http.StatusOK, nil
 	}
 	isGm, err := s.queries.IsCampaignGmForCharacter(ctx, sqlcgen.IsCampaignGmForCharacterParams{
