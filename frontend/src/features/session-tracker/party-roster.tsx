@@ -4,6 +4,7 @@ import { campaignMembersQueryOptions } from '@/entities/campaign/queries'
 import type { CampaignMember } from '@/shared/api/api'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { VitalBar } from '@/shared/ui/vital-bar'
+import { settledQuery } from '@/shared/lib/settled-query'
 
 type PartyCharacter = NonNullable<CampaignMember['character']>
 
@@ -15,7 +16,7 @@ type PartyCharacter = NonNullable<CampaignMember['character']>
 export function PartyRoster(props: { campaignId: number }) {
   const members = useQuery(() => campaignMembersQueryOptions(props.campaignId))
   const party = createMemo(() =>
-    (members.data ?? []).flatMap((member) =>
+    (settledQuery(members) ?? []).flatMap((member) =>
       member.role === 'player' && member.character ? [member.character] : [],
     ),
   )

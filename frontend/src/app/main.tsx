@@ -11,7 +11,18 @@ import '@/index.css'
 import { routeTree } from '../routeTree.gen'
 
 const queryClient = new QueryClient()
-const router = createRouter({ routeTree, context: { queryClient } })
+// `intent`: passar o cursor (ou o foco pelo teclado) em um link já busca o
+// chunk da cena e roda o loader dela, então o clique não paga mais esse tempo.
+// O atraso evita disparar em link que o mouse só atravessou.
+// `intent`: passar o cursor (ou o foco pelo teclado) em um link já busca o
+// chunk da cena e roda o loader dela, então o clique não paga mais esse tempo.
+// O atraso evita disparar em link que o mouse só atravessou.
+const router = createRouter({
+  routeTree,
+  context: { queryClient },
+  defaultPreload: 'intent',
+  defaultPreloadDelay: 60,
+})
 
 declare module '@tanstack/solid-router' {
   interface Register {

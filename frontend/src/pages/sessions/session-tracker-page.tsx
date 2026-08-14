@@ -13,6 +13,7 @@ import { SessionPlayerView } from '@/pages/sessions/session-player-view'
 import { PresenceChips } from '@/features/session-tracker/presence-chips'
 import { myCharacterIdsOf } from '@/features/session-tracker/tracker-rules'
 import { createSessionSocket } from '@/shared/realtime/realtime'
+import { settledQuery } from '@/shared/lib/settled-query'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { toast } from '@/shared/ui/sonner'
 
@@ -35,17 +36,38 @@ export function SessionTrackerPage() {
   const members = useQuery(() => campaignMembersQueryOptions(campaignId()))
   const me = useQuery(() => meQueryOptions)
 
-  const isGm = () => campaign.data?.role === 'gm'
-  const myCharacterIds = createMemo(() => myCharacterIdsOf(members.data ?? [], me.data?.id))
+  // TODAS as leituras passam por `settledQuery` (ALE-96 de novo, um andar
+  // acima): tocar `.data` de uma query PENDENTE suspende, e o `Suspense` que o
+  // solid-router põe em todo route match desanexa a cena inteira — ao clicar
+  // "Continuar sessão" o jogador via a tela EM BRANCO até os dados chegarem.
+  // O título é o pior deles, porque é prop do MatchShell: ele é avaliado ANTES
+  // do `Show`, então o Skeleton escrito para esse instante nunca podia pintar.
+  const settledSession = () => settledQuery(session)
+  const settledCampaign = () => settledQuery(campaign)
+
+  const isGm = () => settledCampaign()?.role === 'gm'
+  const myCharacterIds = createMemo(() =>
+    myCharacterIdsOf(settledQuery(members) ?? [], settledQuery(me)?.id),
+  )
+
+  // A cena só escolhe a view quando a CAMPANHA assentou: sem isso, `isGm` seria
+  // falso enquanto ela voa e o mestre veria a view do jogador piscar antes de
+  // trocar — que era justamente o que o suspend escondia.
+  const scene = createMemo(() => {
+    const current = settledSession()
+    return current && settledCampaign() ? current : null
+  })
 
   const rt = createSessionSocket(campaignId, sessionId)
   createTurnCue(rt, myCharacterIds)
   createRestCue(rt)
 
-  const title = () =>
-    session.data
-      ? `Sessão ${session.data.sessionNumber}${campaign.data ? ` · ${campaign.data.name}` : ''}`
-      : 'Sessão'
+  const title = () => {
+    const current = settledSession()
+    if (!current) return 'Sessão'
+    const mesa = settledCampaign()
+    return `Sessão ${current.sessionNumber}${mesa ? ` · ${mesa.name}` : ''}`
+  }
 
   return (
     <MatchShell
@@ -54,21 +76,12 @@ export function SessionTrackerPage() {
       bar={<PresenceChips users={rt.present()} />}
     >
       <Show
-        when={!session.isLoading}
+        when={!session.isError}
         fallback={
-          <div class="space-y-4 p-3 sm:p-4">
-            <Skeleton class="h-8 w-52" />
-            <Skeleton class="h-32 w-full" />
-            <Skeleton class="h-40 w-full" />
-          </div>
+          <p class="p-4 text-destructive">{(session.error as Error | null)?.message}</p>
         }
       >
-        <Show
-          when={session.data}
-          fallback={
-            <p class="p-4 text-destructive">{(session.error as Error | null)?.message}</p>
-          }
-        >
+        <Show when={scene()} fallback={<SessionSkeleton />}>
           {(data) => (
             <Show
               when={isGm()}
@@ -93,6 +106,21 @@ export function SessionTrackerPage() {
         </Show>
       </Show>
     </MatchShell>
+  )
+}
+
+/**
+ * O lugar do conteúdo enquanto a sessão carrega. Anunciado (`role="status"`)
+ * porque é o único sinal de que algo está acontecendo — e é o que prova, no
+ * e2e, que a cena não ficou em branco.
+ */
+function SessionSkeleton() {
+  return (
+    <div class="space-y-4 p-3 sm:p-4" role="status" aria-label="Carregando a sessão">
+      <Skeleton class="h-8 w-52" />
+      <Skeleton class="h-32 w-full" />
+      <Skeleton class="h-40 w-full" />
+    </div>
   )
 }
 

@@ -10,6 +10,7 @@ import { Button } from '@/shared/ui/button'
 import { rollD20 } from '@/shared/lib/dice'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { toast } from '@/shared/ui/sonner'
+import { settledQuery } from '@/shared/lib/settled-query'
 
 /**
  * The player rolls their OWN initiative: d20 + the Iniciativa perícia total
@@ -21,10 +22,8 @@ export function InitiativeRollButton(props: { characterId: number; rt: SessionRe
   const character = useQuery(() => characterQueryOptions(props.characterId))
 
   return (
-    <Show when={!character.isLoading} fallback={<Skeleton class="h-8 w-44" />}>
-      <Show when={character.data}>
-        {(data) => <RollButton character={data()} rt={props.rt} />}
-      </Show>
+    <Show when={settledQuery(character)} fallback={<Skeleton class="h-8 w-44" />}>
+      {(data) => <RollButton character={data()} rt={props.rt} />}
     </Show>
   )
 }

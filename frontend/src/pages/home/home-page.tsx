@@ -6,6 +6,7 @@ import { logout } from '@/entities/user/logout'
 import { meQueryOptions } from '@/entities/user/queries'
 import { InvitePlayer } from '@/features/account-invite/invite-player-dialog'
 import { createActiveSession } from '@/features/session-resume/active-session'
+import { createLiveSessionPrefetch } from '@/features/session-resume/prefetch-live-session'
 import { SceneShell } from '@/shared/layout/scene-shell'
 import { createFullscreen } from '@/shared/lib/fullscreen'
 import { createSceneNav } from '@/shared/lib/scene-nav'
@@ -27,6 +28,13 @@ export function HomePage() {
   const queryClient = useQueryClient()
   const me = useQuery(() => meQueryOptions)
   const activeSession = createActiveSession()
+  // A cena da partida é carregada enquanto o jogador ainda olha o menu, porque
+  // "Continuar sessão" é a ação primária e o trabalho dela é conhecido antes
+  // do clique.
+  createLiveSessionPrefetch(activeSession)
+  // A cena da partida é carregada enquanto o jogador ainda olha o menu, porque
+  // "Continuar sessão" é a ação primária e o trabalho dela é conhecido antes
+  // do clique.
   const sfx = createSfx(ui)
   const fullscreen = createFullscreen()
   const [signingOut, setSigningOut] = createSignal(false)

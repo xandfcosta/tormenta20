@@ -27,6 +27,48 @@ test.describe('Sessão ao vivo', () => {
     await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
   })
 
+  /**
+   * A mesma família da ALE-96, um andar acima. O `SessionTrackerPage` lia
+   * `session.data` e `campaign.data` para montar o TÍTULO, que é prop do
+   * `MatchShell` — avaliado antes do `Show`. A leitura pendente suspende, o
+   * `Suspense` que o solid-router põe em todo route match desanexa a cena
+   * inteira, e o que o jogador vê ao clicar "Continuar sessão" é a tela EM
+   * BRANCO. O Skeleton escrito para esse instante nunca podia pintar.
+   *
+   * Por que e2e: só um browser testemunha. Sem router não há Suspense, e em
+   * jsdom a leitura pendente devolve `undefined` e o Skeleton aparece — verde
+   * sobre a tela quebrada.
+   *
+   * A resposta da sessão fica SEGURA (não atrasada) para a asserção ser sobre
+   * um estado, não sobre uma corrida.
+   */
+  test('a cena da sessão não fica em branco enquanto os dados carregam', async ({ page }) => {
+    let release = (): void => {}
+    const held = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    let requested = (): void => {}
+    const inFlight = new Promise<void>((resolve) => {
+      requested = resolve
+    })
+    await page.route('**/api/campaigns/1/sessions/4', async (route) => {
+      requested()
+      await held
+      await route.continue()
+    })
+
+    await page.goto('/campaigns/1/sessions/4')
+    await inFlight
+
+    // O shell da partida continua na tela, e o lugar do conteúdo diz que está
+    // carregando — o snapshot da falha original não tinha NADA disso.
+    await expect(page.getByRole('link', { name: 'Sair da sessão' })).toBeVisible()
+    await expect(page.getByRole('status', { name: 'Carregando a sessão' })).toBeVisible()
+
+    release()
+    await expect(page.getByRole('heading', { name: 'Iniciativa' })).toBeVisible()
+  })
+
   test('Sair da sessão volta pra crônica', async ({ page }) => {
     await page.goto('/campaigns/1/sessions/4')
     await expect(page.getByRole('heading', { name: 'Iniciativa' })).toBeVisible()

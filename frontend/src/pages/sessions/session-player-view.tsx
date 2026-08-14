@@ -34,7 +34,8 @@ export function SessionPlayerView(props: {
   // A player may own many characters but joins a campaign with exactly one:
   // it is the roster member whose characterId is theirs.
   const myCharacterId = () =>
-    members.data?.find((member) => props.myCharacterIds.has(member.characterId))?.characterId
+    settledQuery(members)?.find((member) => props.myCharacterIds.has(member.characterId))
+      ?.characterId
 
   const turn = createMemo(() => playerTurnState(props.rt, props.myCharacterIds))
   const isMyTurn = () => turn().kind === 'mine'

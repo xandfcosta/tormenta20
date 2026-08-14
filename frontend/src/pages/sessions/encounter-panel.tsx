@@ -12,6 +12,7 @@ import { Button } from '@/shared/ui/button'
 import { SidePanel } from '@/shared/ui/side-panel'
 import { toast } from '@/shared/ui/sonner'
 import { MatchPeek } from './match-rail'
+import { settledQuery } from '@/shared/lib/settled-query'
 
 /**
  * Composes an encounter mid-session and pushes it into the initiative in one
@@ -28,7 +29,11 @@ export function EncounterPanel(props: { rt: SessionRealtime }) {
   const [open, setOpen] = createSignal(false)
   const [picking, setPicking] = createSignal(false)
 
-  const groups = createMemo(() => enrichEncounter(draft.entries(), bestiary.data ?? []))
+  // `settledQuery` e não `bestiary.data ?? []`: a leitura é que suspende, antes
+  // de o `??` importar — e o suspend desanexa a CENA inteira (ALE-96). Era o
+  // último branco ao entrar na sessão, porque o bestiário só é buscado depois
+  // da montagem.
+  const groups = createMemo(() => enrichEncounter(draft.entries(), settledQuery(bestiary) ?? []))
 
   const send = () => {
     const { entries, dropped } = encounterInitiativeEntries(
