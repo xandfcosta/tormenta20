@@ -26,7 +26,12 @@ export function MatchRail(props: {
     <Show
       when={isDesktop()}
       fallback={
-        <div class="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-grimorio-iron bg-[var(--grimorio-panel)] px-3 py-2">
+        <div
+          class="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-grimorio-iron bg-[var(--grimorio-panel)] px-3 py-2"
+          // Keeps the `py-2` floor and grows to clear the home indicator when
+          // the app runs edge-to-edge (`viewport-fit=cover`).
+          style={{ 'padding-bottom': 'max(0.5rem, env(safe-area-inset-bottom))' }}
+        >
           <div class="min-w-0 flex-1 truncate text-sm text-muted-foreground">{props.peek}</div>
           <MatchControls title={props.title}>{props.children}</MatchControls>
         </div>

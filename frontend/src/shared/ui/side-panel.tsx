@@ -81,9 +81,11 @@ export function SidePanel(props: SidePanelProps) {
             'fixed z-50 flex flex-col gap-3 border-grimorio-iron bg-[var(--grimorio-panel)] shadow-xl',
             'data-[closed]:animate-out data-[expanded]:animate-in',
             // Bottom sheet below the breakpoint; right-hand column above it.
-            'inset-x-0 bottom-0 max-h-[92dvh] rounded-t-lg border-t p-3',
+            // The bottom padding grows past the home indicator under
+            // `viewport-fit=cover`, keeping the p-3/p-4 floor of each layout.
+            'inset-x-0 bottom-0 max-h-[92dvh] rounded-t-lg border-t p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]',
             'data-[closed]:slide-out-to-bottom data-[expanded]:slide-in-from-bottom',
-            'xl:inset-y-0 xl:left-auto xl:right-0 xl:max-h-none xl:w-[26rem] xl:rounded-none xl:border-l xl:border-t-0 xl:p-4',
+            'xl:inset-y-0 xl:left-auto xl:right-0 xl:max-h-none xl:w-[26rem] xl:rounded-none xl:border-l xl:border-t-0 xl:p-4 xl:pb-[max(1rem,env(safe-area-inset-bottom))]',
             'xl:data-[closed]:slide-out-to-right xl:data-[expanded]:slide-in-from-right',
             local.class,
           )}

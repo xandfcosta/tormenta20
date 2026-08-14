@@ -1,6 +1,6 @@
-import { LogOut, type LucideIcon, Settings, Volume2, VolumeX } from 'lucide-solid'
+import { LogOut, type LucideIcon, Maximize, Minimize, Settings, Volume2, VolumeX } from 'lucide-solid'
 import { Dynamic } from 'solid-js/web'
-import { type ComponentProps, splitProps } from 'solid-js'
+import { type ComponentProps, Show, splitProps } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 
@@ -10,14 +10,24 @@ export type HubFooterProps = {
   logoutPending?: boolean
   sfxEnabled: boolean
   onToggleSfx: () => void
+  /** False on iPhone Safari, which has no Fullscreen API for elements: the item
+   *  is hidden rather than shown dead. Those players get a chrome-less app via
+   *  "Adicionar à Tela de Início" (the meta tags in index.html). */
+  fullscreenSupported?: boolean
+  fullscreenActive?: boolean
+  onToggleFullscreen?: () => void
   class?: string
 }
 
 /**
  * The player's identity strip at the foot of the Hub. The initialed portrait +
- * name triggers a quick menu (popover): the sound toggle, Configurações
- * (placeholder until a settings screen exists), and Sair. Pure — the page
- * injects the name and the callbacks.
+ * name triggers a quick menu (popover): the sound toggle, tela cheia (when the
+ * browser has the API), Configurações (placeholder until a settings screen
+ * exists), and Sair. Pure — the page injects the name and the callbacks.
+ *
+ * Fullscreen lives here, and not per scene, because it survives client-side
+ * navigation: the player turns it on once at the Hub and the whole session
+ * stays chrome-less.
  *
  * No theme toggle here on purpose: a game scene is intrinsically dark
  * (`.scene-grimorio`), so a light/dark switch would read as a dead control.
@@ -55,6 +65,14 @@ export function HubFooter(props: HubFooterProps) {
           >
             {props.sfxEnabled ? 'Som ligado' : 'Som desligado'}
           </QuickMenuItem>
+          <Show when={props.fullscreenSupported}>
+            <QuickMenuItem
+              icon={props.fullscreenActive ? Minimize : Maximize}
+              onClick={() => props.onToggleFullscreen?.()}
+            >
+              {props.fullscreenActive ? 'Sair da tela cheia' : 'Tela cheia'}
+            </QuickMenuItem>
+          </Show>
           <QuickMenuItem icon={Settings} disabled>
             Configurações
           </QuickMenuItem>

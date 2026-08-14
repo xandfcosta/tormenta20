@@ -64,7 +64,12 @@ export function CharacterSheetMobile(props: CharacterSheetMobileProps) {
           block — at the table they are what the player touches most. */}
       <CharacterHud character={props.character} class="shrink-0" />
 
-      <div class="w-full shrink-0 border-t border-border/60 bg-card/95 backdrop-blur">
+      {/* The bar sits on the very bottom edge, so under `viewport-fit=cover`
+          (fullscreen / standalone) the home indicator would cross the icons. */}
+      <div
+        class="w-full shrink-0 border-t border-border/60 bg-card/95 backdrop-blur"
+        style={{ 'padding-bottom': 'env(safe-area-inset-bottom)' }}
+      >
         <TabsList class="flex h-14 w-full items-stretch gap-0 rounded-none border-0 bg-transparent p-0 landscape:h-11">
           <For each={SHEET_PANELS}>
             {(section) => (

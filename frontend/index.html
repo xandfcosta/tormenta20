@@ -3,7 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- `viewport-fit=cover` is what makes `env(safe-area-inset-*)` resolve to
+         anything but 0 — without it the notch/home-indicator padding written in
+         scene-shell and the phone bars is dead code. Required for fullscreen and
+         for the standalone (Add to Home Screen) window, where the app owns the
+         whole panel. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- Add to Home Screen: on iPhone this is the ONLY route to a chrome-less
+         app (Safari has no Fullscreen API for elements), and it needs neither
+         HTTPS nor a service worker — which is what makes it work over the LAN. -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Tormenta 20" />
+    <!-- Edge-to-edge under the status bar; the safe-area padding above keeps the
+         content out from under it. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <!-- Fonts are self-hosted via @font-face in src/index.css (Cinzel, OFL) —
          no CDN, so the app works offline and under a strict CSP (ALE-35). -->
     <title>Tormenta 20</title>

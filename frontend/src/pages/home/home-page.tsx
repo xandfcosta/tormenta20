@@ -6,6 +6,7 @@ import { logout } from '@/entities/user/logout'
 import { meQueryOptions } from '@/entities/user/queries'
 import { createActiveSession } from '@/features/session-resume/active-session'
 import { SceneShell } from '@/shared/layout/scene-shell'
+import { createFullscreen } from '@/shared/lib/fullscreen'
 import { createSceneNav } from '@/shared/lib/scene-nav'
 import { createSfx } from '@/shared/lib/sfx'
 import { useAuth } from '@/shared/stores/auth-context'
@@ -26,6 +27,7 @@ export function HomePage() {
   const me = useQuery(() => meQueryOptions)
   const activeSession = createActiveSession()
   const sfx = createSfx(ui)
+  const fullscreen = createFullscreen()
   const [signingOut, setSigningOut] = createSignal(false)
 
   const name = () => me.data?.name ?? me.data?.email ?? 'Aventureiro'
@@ -89,6 +91,9 @@ export function HomePage() {
         logoutPending={signingOut()}
         sfxEnabled={ui.sfx()}
         onToggleSfx={ui.toggleSfx}
+        fullscreenSupported={fullscreen.supported}
+        fullscreenActive={fullscreen.active()}
+        onToggleFullscreen={fullscreen.toggle}
       />
     </SceneShell>
   )

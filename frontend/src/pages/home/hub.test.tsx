@@ -69,6 +69,7 @@ describe('HubFooter', () => {
       onLogout: vi.fn(),
       sfxEnabled: false,
       onToggleSfx: vi.fn(),
+      onToggleFullscreen: vi.fn(),
       ...overrides,
     }
     render(() => <HubFooter {...props} />)
@@ -119,6 +120,29 @@ describe('HubFooter', () => {
     setup({ logoutPending: true })
     await userEvent.setup().click(screen.getByRole('button', { name: 'Menu de Mestre' }))
     await waitFor(() => expect(screen.getByRole('button', { name: 'Sair' })).toBeDisabled())
+  })
+
+  it('alterna a tela cheia pelo menu rápido', async () => {
+    const props = setup({ fullscreenSupported: true })
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Menu de Mestre' }))
+    await user.click(await screen.findByRole('button', { name: 'Tela cheia' }))
+    expect(props.onToggleFullscreen).toHaveBeenCalledOnce()
+  })
+
+  it('em tela cheia o item vira a saída', async () => {
+    setup({ fullscreenSupported: true, fullscreenActive: true })
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Menu de Mestre' }))
+    expect(await screen.findByRole('button', { name: 'Sair da tela cheia' })).toBeInTheDocument()
+  })
+
+  // iPhone: o Safari não tem Fullscreen API para elementos, e um controle que
+  // não faz nada é pior que controle nenhum — lá o caminho é a Tela de Início.
+  it('esconde o item onde o browser não suporta', async () => {
+    setup({ fullscreenSupported: false })
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Menu de Mestre' }))
+    expect(await screen.findByText('Sair')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Tela cheia' })).not.toBeInTheDocument()
   })
 
   // Placeholder até existir tela de configurações — visível, mas inerte.
