@@ -79,7 +79,12 @@ export function SessionGmView(props: {
 
         <Show when={selected()}>
           {(entry) => (
-            <div class="flex min-h-0 flex-col gap-2">
+            // `min-w-0`: sem isso o painel adota a largura MÍNIMA DO CONTEÚDO
+            // e vaza da tela — em 390px ele ficava com 509px de largura, 131
+            // fora do visor, e uma checagem que compara os filhos contra a
+            // caixa DELE não acusa nada, porque a caixa é que está grande. Quem
+            // pegou foi o screenshot (ALE-122).
+            <div class="flex min-h-0 w-full min-w-0 flex-col gap-2">
               <Show when={!sideBySide()}>
                 <Button
                   size="sm"
