@@ -37,6 +37,33 @@ export type Credentials = { email: string; password: string }
  */
 export type AccountInvite = { token: string; expiresAt: string }
 
+// --- administração (ALE-120) --------------------------------------------------
+
+/** A conta como a tela de administração a vê: quem é, e o que se perde ao apagá-la. */
+export type AdminUser = {
+  id: number
+  email: string
+  name: string | null
+  isAdmin: boolean
+  campaigns: number
+  characters: number
+  createdAt: string
+}
+
+export type ServerStatus = {
+  environment: string
+  databasePath: string
+  databaseSize: number
+  users: number
+  campaigns: number
+  characters: number
+}
+
+export type Backup = { name: string; size: number; createdAt: string }
+
+/** Quem o link de redefinição abre — a conferência antes de digitar a senha. */
+export type PasswordResetTarget = { email: string }
+
 // --- character ----------------------------------------------------------------
 
 export type ExpertiseDef = { name: string; attribute: AttributeKey }

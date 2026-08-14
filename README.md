@@ -85,6 +85,13 @@ no banco nem tela para promover alguém, então virar admin exige editar o arqui
 na máquina que hospeda a mesa. Esses e-mails são também a única exceção ao
 convite — é assim que você cria a sua própria conta num banco vazio.
 
+O admin abre e edita **qualquer mesa** (as dos outros aparecem nas Crônicas
+marcadas com o dono) e tem a cena de **Administração** no menu do Hub: quem está
+na mesa e o que cada um tem, os convites em aberto, e o painel de servidor com
+backup. Duas ações sobre uma conta: gerar um **link de redefinição de senha** —
+você nunca digita nem vê a senha de ninguém — e **apagar**, que leva as fichas
+junto e passa as mesas dela para você.
+
 **A stack de produção é um processo só.** Com `STATIC_DIR` apontando para
 `frontend/dist`, o `cmd/api` serve o SPA (com fallback pras rotas de cliente), os
 assets, `/api/*` e o `/socket.io/` na mesma porta. Não há nginx, não há
@@ -100,6 +107,9 @@ pnpm db:backup dev
 
 Sai um `backups/t20-production-AAAAMMDD-HHMMSS.db`, já conferido com
 `PRAGMA integrity_check`, e o comando de restauração impresso na tela.
+
+A tela de administração tem o mesmo botão, e escreve no mesmo diretório — lá o
+Go usa `VACUUM INTO`, que é a mesma garantia sem depender do `sqlite3` do host.
 
 **Não copie o `.db` na mão.** Com WAL ligado, as transações recentes ainda estão
 no arquivo `-wal`: um `cp` do `.db` sozinho leva um banco velho e não acusa erro
@@ -136,4 +146,5 @@ Variáveis (defaults em `engine-go/api/config.go`):
 | `COOKIE_SECURE` | `false` | ligue quando houver TLS na frente — em HTTP na LAN, ligado, o browser descarta o cookie e o login não conclui |
 | `CORS_ORIGIN` | `http://localhost:5173` (vazio em produção) | a ÚNICA origem liberada; vazio = sem CORS |
 | `STATIC_DIR` | vazio | o `dist` do front; vazio = modo dev (o Vite serve) |
+| `BACKUP_DIR` | `../backups` | onde o `pnpm db:backup` e a tela de admin escrevem |
 | `CATALOG_PATH` | `parity/_catalogs.json` | catálogos dos validadores de mutação |

@@ -50,6 +50,10 @@ type Config struct {
 	// CatalogPath is the primeEngineCatalogs payload (items/races/…) the API loads
 	// at startup for its mutation validators. Defaults to the committed snapshot.
 	CatalogPath string
+	// BackupDir is where the admin screen writes snapshots — the same directory
+	// the `pnpm db:backup` script uses, so a backup made either way shows up in
+	// both places (ALE-120). Relative to engine-go/, which is the server's CWD.
+	BackupDir string
 	// StaticDir, when set, is the built frontend (frontend/dist) served by cmd/api in
 	// production: the server then owns the app + API + socket as a single binary and
 	// routes /api/* to the domain (no Vite to strip the prefix). Empty in dev, where
@@ -81,6 +85,7 @@ func LoadConfig() (Config, error) {
 		CookieName:   env("COOKIE_NAME", "t20_session"),
 		CookieSecure: os.Getenv("COOKIE_SECURE") == "true",
 		CORSOrigin:   env("CORS_ORIGIN", defaultCORSOrigin(appEnv)),
+		BackupDir:    env("BACKUP_DIR", "../backups"),
 		CatalogPath:  env("CATALOG_PATH", "parity/_catalogs.json"),
 		StaticDir:    env("STATIC_DIR", ""),
 

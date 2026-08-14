@@ -107,6 +107,8 @@ func (s *Server) Router() http.Handler {
 		r.Post("/register", s.handleRegister)
 		r.Post("/login", s.handleLogin)
 		r.Post("/logout", s.handleLogout)
+		// Anonymous: see /password-resets above.
+		r.Post("/reset-password", s.handleResetPassword)
 		r.With(s.requireAuth).Get("/me", s.handleMe)
 	})
 
@@ -124,10 +126,21 @@ func (s *Server) Router() http.Handler {
 
 	r.With(s.requireAuth).Get("/users", s.handleListUsers)
 
+	// Anonymous by necessity: whoever forgot their password cannot authenticate
+	// to change it. What guards it is the single-use token (ALE-120).
+	r.Get("/password-resets/{token}", s.handleResolvePasswordReset)
+
 	r.Route("/admin", func(r chi.Router) {
 		r.Use(s.requireAuth)
 		r.Use(s.requireAdmin)
+		r.Get("/users", s.handleAdminListUsers)
+		r.Delete("/users/{id}", s.handleAdminDeleteUser)
+		r.Post("/users/{id}/password-reset", s.handleAdminCreatePasswordReset)
+		r.Get("/invites", s.handleAdminListInvites)
 		r.Post("/invites", s.handleCreateAccountInvite)
+		r.Get("/status", s.handleAdminStatus)
+		r.Get("/backups", s.handleAdminListBackups)
+		r.Post("/backups", s.handleAdminCreateBackup)
 	})
 
 	r.Route("/campaigns", func(r chi.Router) {

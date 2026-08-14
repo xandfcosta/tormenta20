@@ -4,6 +4,7 @@ import {
   Maximize,
   Minimize,
   Settings,
+  ShieldCheck,
   UserPlus,
   Volume2,
   VolumeX,
@@ -28,6 +29,9 @@ export type HubFooterProps = {
   /** True only for an ADMIN_EMAILS account — the real gate is the server (ALE-120). */
   canInvite?: boolean
   onInvite?: () => void
+  /** Mesma origem do `canInvite`: o servidor diz, a UI só mostra (ALE-120). */
+  canAdminister?: boolean
+  onAdminister?: () => void
   class?: string
 }
 
@@ -88,6 +92,11 @@ export function HubFooter(props: HubFooterProps) {
           <Show when={props.canInvite}>
             <QuickMenuItem icon={UserPlus} onClick={() => props.onInvite?.()}>
               Convidar jogador
+            </QuickMenuItem>
+          </Show>
+          <Show when={props.canAdminister}>
+            <QuickMenuItem icon={ShieldCheck} onClick={() => props.onAdminister?.()}>
+              Administração
             </QuickMenuItem>
           </Show>
           <QuickMenuItem icon={Settings} disabled>

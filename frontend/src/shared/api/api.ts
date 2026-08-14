@@ -33,13 +33,17 @@ import type {
   ApplyEffectResult,
   CastSpellResult,
   AccountInvite,
+  AdminUser,
   AuthUser,
+  Backup,
   Campaign,
   CampaignInvitePreview,
   CampaignInviteToken,
   CampaignMember,
   Character,
   CharacterExpertise,
+  PasswordResetTarget,
+  ServerStatus,
   CharacterItem,
   CharacterOptions,
   CharacterSpell,
@@ -147,6 +151,9 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
         request<AuthUser>('/auth/register', json(input)),
       login: (input: Credentials) => request<AuthUser>('/auth/login', json(input)),
       logout: () => request<void>('/auth/logout', { method: 'POST' }),
+      /** Anônimo: quem esqueceu a senha não consegue autenticar para trocá-la. */
+      resetPassword: (input: { token: string; password: string }) =>
+        request<void>('/auth/reset-password', json(input)),
       me: () => request<AuthUser>('/auth/me'),
     },
     users: {
@@ -290,6 +297,24 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
       /** Public: resolves a shared token to the campaign it invites into. */
       resolve: (token: string) =>
         request<CampaignInvitePreview>(`/invites/${encodeURIComponent(token)}`),
+    },
+    admin: {
+      users: () => request<AdminUser[]>('/admin/users'),
+      /** Apaga a conta; as mesas dela passam para quem apagou. */
+      deleteUser: (id: number) =>
+        request<{ id: number; transferredCampaigns: number }>(`/admin/users/${id}`, del),
+      /** Gera o link de uso único; o jogador escolhe a própria senha. */
+      passwordReset: (id: number) =>
+        request<AccountInvite>(`/admin/users/${id}/password-reset`, { method: 'POST' }),
+      invites: () => request<AccountInvite[]>('/admin/invites'),
+      status: () => request<ServerStatus>('/admin/status'),
+      backups: () => request<Backup[]>('/admin/backups'),
+      createBackup: () => request<Backup>('/admin/backups', { method: 'POST' }),
+    },
+    passwordResets: {
+      /** Público: diz de quem é o link, ou 404 se ele não serve mais. */
+      resolve: (token: string) =>
+        request<PasswordResetTarget>(`/password-resets/${encodeURIComponent(token)}`),
     },
     accountInvites: {
       /** Admin only: mints the link that lets ONE person create an account. */

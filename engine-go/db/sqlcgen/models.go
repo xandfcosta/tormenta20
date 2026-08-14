@@ -125,6 +125,16 @@ type CharacterSpell struct {
 	Learnedat      string `json:"learnedat"`
 }
 
+type PasswordReset struct {
+	ID        int64          `json:"id"`
+	Token     string         `json:"token"`
+	Userid    int64          `json:"userid"`
+	Createdby int64          `json:"createdby"`
+	Createdat string         `json:"createdat"`
+	Expiresat string         `json:"expiresat"`
+	Usedat    sql.NullString `json:"usedat"`
+}
+
 type Session struct {
 	ID            int64          `json:"id"`
 	Campaignid    int64          `json:"campaignid"`

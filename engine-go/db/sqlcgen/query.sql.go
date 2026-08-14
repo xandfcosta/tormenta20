@@ -369,6 +369,43 @@ func (q *Queries) CreateMember(ctx context.Context, arg CreateMemberParams) (Cam
 	return i, err
 }
 
+const createPasswordReset = `-- name: CreatePasswordReset :one
+
+INSERT INTO password_resets (token, userId, createdBy, createdAt, expiresAt)
+VALUES (?, ?, ?, ?, ?)
+RETURNING id, token, userid, createdby, createdat, expiresat, usedat
+`
+
+type CreatePasswordResetParams struct {
+	Token     string `json:"token"`
+	Userid    int64  `json:"userid"`
+	Createdby int64  `json:"createdby"`
+	Createdat string `json:"createdat"`
+	Expiresat string `json:"expiresat"`
+}
+
+// password reset (ALE-120)
+func (q *Queries) CreatePasswordReset(ctx context.Context, arg CreatePasswordResetParams) (PasswordReset, error) {
+	row := q.db.QueryRowContext(ctx, createPasswordReset,
+		arg.Token,
+		arg.Userid,
+		arg.Createdby,
+		arg.Createdat,
+		arg.Expiresat,
+	)
+	var i PasswordReset
+	err := row.Scan(
+		&i.ID,
+		&i.Token,
+		&i.Userid,
+		&i.Createdby,
+		&i.Createdat,
+		&i.Expiresat,
+		&i.Usedat,
+	)
+	return i, err
+}
+
 const createRace = `-- name: CreateRace :exec
 INSERT INTO character_races (characterId, race) VALUES (?, ?)
 `
@@ -595,6 +632,15 @@ func (q *Queries) DeleteSpell(ctx context.Context, arg DeleteSpellParams) (int64
 		return 0, err
 	}
 	return result.RowsAffected()
+}
+
+const deleteUser = `-- name: DeleteUser :exec
+DELETE FROM users WHERE id = ?
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteUser, id)
+	return err
 }
 
 const endSession = `-- name: EndSession :one
@@ -874,6 +920,25 @@ func (q *Queries) GetMemberOwners(ctx context.Context, id int64) (GetMemberOwner
 		&i.Campaignid,
 		&i.Campaignowner,
 		&i.Characterowner,
+	)
+	return i, err
+}
+
+const getPasswordReset = `-- name: GetPasswordReset :one
+SELECT id, token, userid, createdby, createdat, expiresat, usedat FROM password_resets WHERE token = ? LIMIT 1
+`
+
+func (q *Queries) GetPasswordReset(ctx context.Context, token string) (PasswordReset, error) {
+	row := q.db.QueryRowContext(ctx, getPasswordReset, token)
+	var i PasswordReset
+	err := row.Scan(
+		&i.ID,
+		&i.Token,
+		&i.Userid,
+		&i.Createdby,
+		&i.Createdat,
+		&i.Expiresat,
+		&i.Usedat,
 	)
 	return i, err
 }
@@ -1547,6 +1612,43 @@ func (q *Queries) ListMembers(ctx context.Context, campaignid int64) ([]ListMemb
 	return items, nil
 }
 
+const listOpenAccountInvites = `-- name: ListOpenAccountInvites :many
+SELECT id, token, createdby, createdat, expiresat, usedat, usedby FROM account_invites
+WHERE usedAt IS NULL AND expiresAt > ?1
+ORDER BY createdAt DESC
+`
+
+func (q *Queries) ListOpenAccountInvites(ctx context.Context, now string) ([]AccountInvite, error) {
+	rows, err := q.db.QueryContext(ctx, listOpenAccountInvites, now)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AccountInvite{}
+	for rows.Next() {
+		var i AccountInvite
+		if err := rows.Scan(
+			&i.ID,
+			&i.Token,
+			&i.Createdby,
+			&i.Createdat,
+			&i.Expiresat,
+			&i.Usedat,
+			&i.Usedby,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listRacesByCharacter = `-- name: ListRacesByCharacter :many
 SELECT race FROM character_races WHERE characterId = ? ORDER BY id ASC
 `
@@ -1690,6 +1792,54 @@ func (q *Queries) ListUsersByIDs(ctx context.Context, ids []int64) ([]ListUsersB
 			&i.Email,
 			&i.Name,
 			&i.Createdat,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUsersWithCounts = `-- name: ListUsersWithCounts :many
+
+SELECT u.id, u.email, u.name, u.createdAt,
+  (SELECT COUNT(*) FROM campaigns c WHERE c.ownerId = u.id) AS campaigns,
+  (SELECT COUNT(*) FROM characters ch WHERE ch.ownerId = u.id) AS characters
+FROM users u ORDER BY u.createdAt
+`
+
+type ListUsersWithCountsRow struct {
+	ID         int64          `json:"id"`
+	Email      string         `json:"email"`
+	Name       sql.NullString `json:"name"`
+	Createdat  string         `json:"createdat"`
+	Campaigns  int64          `json:"campaigns"`
+	Characters int64          `json:"characters"`
+}
+
+// administration screen (ALE-120)
+func (q *Queries) ListUsersWithCounts(ctx context.Context) ([]ListUsersWithCountsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listUsersWithCounts)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListUsersWithCountsRow{}
+	for rows.Next() {
+		var i ListUsersWithCountsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Email,
+			&i.Name,
+			&i.Createdat,
+			&i.Campaigns,
+			&i.Characters,
 		); err != nil {
 			return nil, err
 		}
@@ -1988,6 +2138,25 @@ func (q *Queries) SpendAccountInvite(ctx context.Context, arg SpendAccountInvite
 	return result.RowsAffected()
 }
 
+const spendPasswordReset = `-- name: SpendPasswordReset :execrows
+UPDATE password_resets SET usedAt = ? WHERE id = ? AND usedAt IS NULL
+`
+
+type SpendPasswordResetParams struct {
+	Usedat sql.NullString `json:"usedat"`
+	ID     int64          `json:"id"`
+}
+
+// Same single-use guard as the account invite: the UPDATE, not the read, is
+// what decides who won.
+func (q *Queries) SpendPasswordReset(ctx context.Context, arg SpendPasswordResetParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, spendPasswordReset, arg.Usedat, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 const startSessionFresh = `-- name: StartSessionFresh :one
 UPDATE sessions SET status = 'active', startedAt = ?1, updatedAt = ?2
 WHERE id = ?3 RETURNING id, campaignid, title, sessionnumber, notes, status, startedat, endedat, createdat, updatedat, runtimestate
@@ -2016,6 +2185,47 @@ func (q *Queries) StartSessionFresh(ctx context.Context, arg StartSessionFreshPa
 		&i.Runtimestate,
 	)
 	return i, err
+}
+
+const tableCounts = `-- name: TableCounts :one
+SELECT
+  (SELECT COUNT(*) FROM users) AS users,
+  (SELECT COUNT(*) FROM campaigns) AS campaigns,
+  (SELECT COUNT(*) FROM characters) AS characters
+`
+
+type TableCountsRow struct {
+	Users      int64 `json:"users"`
+	Campaigns  int64 `json:"campaigns"`
+	Characters int64 `json:"characters"`
+}
+
+func (q *Queries) TableCounts(ctx context.Context) (TableCountsRow, error) {
+	row := q.db.QueryRowContext(ctx, tableCounts)
+	var i TableCountsRow
+	err := row.Scan(&i.Users, &i.Campaigns, &i.Characters)
+	return i, err
+}
+
+const transferCampaigns = `-- name: TransferCampaigns :execrows
+UPDATE campaigns SET ownerId = ?1, updatedAt = ?2
+WHERE ownerId = ?3
+`
+
+type TransferCampaignsParams struct {
+	NewOwnerId int64  `json:"newOwnerId"`
+	UpdatedAt  string `json:"updatedAt"`
+	OldOwnerId int64  `json:"oldOwnerId"`
+}
+
+// Deleting an account moves its mesas to the caller first, so the chronicle
+// survives the player leaving the table.
+func (q *Queries) TransferCampaigns(ctx context.Context, arg TransferCampaignsParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, transferCampaigns, arg.NewOwnerId, arg.UpdatedAt, arg.OldOwnerId)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const updateConditions = `-- name: UpdateConditions :exec
@@ -2085,6 +2295,21 @@ func (q *Queries) UpdateExpertise(ctx context.Context, arg UpdateExpertiseParams
 		&i.Custom,
 	)
 	return i, err
+}
+
+const updateUserPassword = `-- name: UpdateUserPassword :exec
+UPDATE users SET passwordHash = ?, updatedAt = ? WHERE id = ?
+`
+
+type UpdateUserPasswordParams struct {
+	Passwordhash string `json:"passwordhash"`
+	Updatedat    string `json:"updatedat"`
+	ID           int64  `json:"id"`
+}
+
+func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserPassword, arg.Passwordhash, arg.Updatedat, arg.ID)
+	return err
 }
 
 const updateVitals = `-- name: UpdateVitals :one

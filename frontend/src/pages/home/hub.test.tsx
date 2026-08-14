@@ -71,6 +71,7 @@ describe('HubFooter', () => {
       onToggleSfx: vi.fn(),
       onToggleFullscreen: vi.fn(),
       onInvite: vi.fn(),
+      onAdminister: vi.fn(),
       ...overrides,
     }
     render(() => <HubFooter {...props} />)
@@ -168,5 +169,20 @@ describe('HubFooter', () => {
     await userEvent.setup().click(screen.getByRole('button', { name: 'Menu de Mestre' }))
     expect(await screen.findByText('Sair')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Convidar jogador' })).not.toBeInTheDocument()
+  })
+
+  it('mostra "Administração" para o admin', async () => {
+    const props = setup({ canAdminister: true })
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Menu de Mestre' }))
+    await user.click(await screen.findByRole('button', { name: 'Administração' }))
+    expect(props.onAdminister).toHaveBeenCalledOnce()
+  })
+
+  it('esconde "Administração" de quem não é admin', async () => {
+    setup({ canAdminister: false })
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Menu de Mestre' }))
+    expect(await screen.findByText('Sair')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Administração' })).not.toBeInTheDocument()
   })
 })

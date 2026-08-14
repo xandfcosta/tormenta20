@@ -18,12 +18,19 @@ import (
 // reading as before (ALE-120).
 func newTestServer(t *testing.T, adminEmails ...string) *Server {
 	t.Helper()
-	database, err := db.Open(filepath.Join(t.TempDir(), "test.db"))
+	path := filepath.Join(t.TempDir(), "test.db")
+	database, err := db.Open(path)
 	if err != nil {
 		t.Fatalf("open test db: %v", err)
 	}
 	t.Cleanup(func() { _ = database.Close() })
-	cfg := Config{JWTSecret: "test-secret", CookieName: "t20_session", AdminEmails: adminEmails}
+	// DatabasePath carries the file actually opened, so the config does not lie
+	// about it — /admin/status reports it, and reporting a path that is not the
+	// one in use would send the owner looking at the wrong file (ALE-120).
+	cfg := Config{
+		JWTSecret: "test-secret", CookieName: "t20_session",
+		AdminEmails: adminEmails, DatabasePath: path,
+	}
 	return NewServer(cfg, database, nil)
 }
 

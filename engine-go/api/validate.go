@@ -94,15 +94,26 @@ func validateRegister(b registerBody) FieldErrorMap {
 	if !isEmail(b.Email) {
 		f["email"] = []string{"email must be an email"}
 	}
-	pw := utf8.RuneCountInString(b.Password)
-	if pw < 8 {
-		f["password"] = append(f["password"], "Password must be at least 8 characters")
-	}
-	if pw > 128 {
-		f["password"] = append(f["password"], "password must be shorter than or equal to 128 characters")
+	for field, messages := range validatePassword(b.Password) {
+		f[field] = messages
 	}
 	if b.Name != nil && utf8.RuneCountInString(*b.Name) > 80 {
 		f["name"] = []string{"name must be shorter than or equal to 80 characters"}
+	}
+	return f
+}
+
+// validatePassword is the ONE password rule, shared by registration and by the
+// reset link (ALE-120) — two spellings of "at least 8" would drift, and the
+// screen that ended up laxer would be the one that matters.
+func validatePassword(password string) FieldErrorMap {
+	f := FieldErrorMap{}
+	length := utf8.RuneCountInString(password)
+	if length < 8 {
+		f["password"] = append(f["password"], "Password must be at least 8 characters")
+	}
+	if length > 128 {
+		f["password"] = append(f["password"], "password must be shorter than or equal to 128 characters")
 	}
 	return f
 }

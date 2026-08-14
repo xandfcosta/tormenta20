@@ -98,6 +98,8 @@ export function HomePage() {
         onToggleFullscreen={fullscreen.toggle}
         canInvite={me.data?.isAdmin}
         onInvite={() => setInviting(true)}
+        canAdminister={me.data?.isAdmin}
+        onAdminister={() => navigate({ to: '/admin' })}
       />
       <InvitePlayer open={inviting()} onOpenChange={setInviting} />
     </SceneShell>

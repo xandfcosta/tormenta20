@@ -366,3 +366,49 @@ WHERE id = ? AND usedAt IS NULL;
 
 -- name: ListAllCampaigns :many
 SELECT * FROM campaigns ORDER BY updatedAt DESC;
+
+-- administration screen (ALE-120)
+
+-- name: ListUsersWithCounts :many
+SELECT u.id, u.email, u.name, u.createdAt,
+  (SELECT COUNT(*) FROM campaigns c WHERE c.ownerId = u.id) AS campaigns,
+  (SELECT COUNT(*) FROM characters ch WHERE ch.ownerId = u.id) AS characters
+FROM users u ORDER BY u.createdAt;
+
+-- name: ListOpenAccountInvites :many
+SELECT * FROM account_invites
+WHERE usedAt IS NULL AND expiresAt > sqlc.arg('now')
+ORDER BY createdAt DESC;
+
+-- Deleting an account moves its mesas to the caller first, so the chronicle
+-- survives the player leaving the table.
+-- name: TransferCampaigns :execrows
+UPDATE campaigns SET ownerId = sqlc.arg('newOwnerId'), updatedAt = sqlc.arg('updatedAt')
+WHERE ownerId = sqlc.arg('oldOwnerId');
+
+-- name: DeleteUser :exec
+DELETE FROM users WHERE id = ?;
+
+-- name: TableCounts :one
+SELECT
+  (SELECT COUNT(*) FROM users) AS users,
+  (SELECT COUNT(*) FROM campaigns) AS campaigns,
+  (SELECT COUNT(*) FROM characters) AS characters;
+
+-- password reset (ALE-120)
+
+-- name: CreatePasswordReset :one
+INSERT INTO password_resets (token, userId, createdBy, createdAt, expiresAt)
+VALUES (?, ?, ?, ?, ?)
+RETURNING *;
+
+-- name: GetPasswordReset :one
+SELECT * FROM password_resets WHERE token = ? LIMIT 1;
+
+-- Same single-use guard as the account invite: the UPDATE, not the read, is
+-- what decides who won.
+-- name: SpendPasswordReset :execrows
+UPDATE password_resets SET usedAt = ? WHERE id = ? AND usedAt IS NULL;
+
+-- name: UpdateUserPassword :exec
+UPDATE users SET passwordHash = ?, updatedAt = ? WHERE id = ?;
