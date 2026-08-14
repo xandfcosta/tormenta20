@@ -1,24 +1,15 @@
 import { Plus, Swords, Trash2 } from 'lucide-solid'
-import { For, Show, createEffect, createMemo, createSignal } from 'solid-js'
-import type { InitiativeEntry, RestCondition, SessionRealtime } from '@/shared/realtime/realtime'
-import { buffSpells } from '@/shared/lib/spell-cache'
+import { For, Show, createEffect, createSignal } from 'solid-js'
+import type { InitiativeEntry, SessionRealtime } from '@/shared/realtime/realtime'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { ResourceAdjustDialog } from '@/shared/ui/resource-adjust-dialog'
 import { ConnectionChip } from '@/shared/ui/connection-chip'
 import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
-import { Select } from '@/shared/ui/select'
 import { VitalBar } from '@/shared/ui/vital-bar'
 import { InitiativeRollButton } from './initiative-roll'
 import { type EntryPermissions, connectionStatus, entryPermissions } from './tracker-rules'
-
-const REST_OPTIONS: { value: RestCondition; label: string }[] = [
-  { value: 'ruim', label: 'Ruim (½ nível)' },
-  { value: 'normal', label: 'Normal (nível)' },
-  { value: 'confortavel', label: 'Confortável (2×)' },
-  { value: 'luxuosa', label: 'Luxuosa (3×)' },
-]
 
 /**
  * O passo de um clique. Shift multiplica por 5, como no HUD da ficha — combate
@@ -44,7 +35,6 @@ export function InitiativeCard(props: {
    *  "Próximo turno" aparece duas vezes na tela (ALE-122). */
   turnControls?: boolean
 }) {
-  const [restCondition, setRestCondition] = createSignal<RestCondition>('normal')
   const myCharacterId = () => [...props.myCharacterIds][0]
   const status = () => connectionStatus(props.rt.isConnected(), props.rt.error())
 
@@ -86,43 +76,18 @@ export function InitiativeCard(props: {
           <InitiativeRollButton characterId={myCharacterId()} rt={props.rt} />
         </Show>
 
+        {/* Só "Adicionar grupo" fica: os descansos são de uma vez por sessão e
+            viraram duas linhas na frente do combate — foram para o menu da
+            sessão, junto do resto do que se faz raramente (ALE-122). */}
         <Show when={props.isGm}>
-          <div class="flex flex-wrap items-center gap-2">
-            <Button
-              size="sm"
-              variant="secondary"
-              disabled={!props.rt.isConnected()}
-              onClick={props.rt.populateParty}
-            >
-              Adicionar grupo
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={!props.rt.isConnected()}
-              onClick={() => props.rt.rest('scene')}
-            >
-              Descanso de cena
-            </Button>
-            <div class="flex items-center gap-1">
-              <Select
-                aria-label="Qualidade do descanso"
-                size="sm"
-                class="w-[150px]"
-                options={REST_OPTIONS}
-                value={REST_OPTIONS.find((o) => o.value === restCondition()) ?? null}
-                onChange={(option) => setRestCondition(option?.value ?? 'normal')}
-              />
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={!props.rt.isConnected()}
-                onClick={() => props.rt.rest('day', restCondition())}
-              >
-                Descanso de dia
-              </Button>
-            </div>
-          </div>
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={!props.rt.isConnected()}
+            onClick={props.rt.populateParty}
+          >
+            Adicionar grupo
+          </Button>
         </Show>
 
         <Show when={props.rt.state().initiative.length === 0}>
@@ -131,6 +96,12 @@ export function InitiativeCard(props: {
               ? 'Sem combatentes ainda. Adicione abaixo.'
               : 'Aguardando o mestre montar a iniciativa.'}
           </p>
+        </Show>
+
+        {/* No TOPO: quem adiciona combatente faz isso ANTES de operar a lista,
+            e no fim ele exigia rolar a iniciativa inteira. */}
+        <Show when={props.isGm}>
+          <AddCombatantForm rt={props.rt} />
         </Show>
 
         <div class="space-y-2">
@@ -161,9 +132,6 @@ export function InitiativeCard(props: {
           </For>
         </div>
 
-        <Show when={props.isGm}>
-          <AddCombatantForm rt={props.rt} />
-        </Show>
       </div>
     </section>
   )
@@ -257,10 +225,10 @@ function InitiativeRow(props: {
         </div>
       </Show>
 
-      <div class="flex flex-wrap items-center justify-end gap-1">
-        <Show when={props.can.applyEffect}>
-          <ApplyEffectSelect onApply={props.onApplyEffect} />
-        </Show>
+      {/* Largura FIXA: sem isso as linhas com e sem barra de PV põem os botões
+          em posições diferentes, e o olho não forma coluna — era o serrilhado
+          que a auditoria mediu em três posições X no mesmo bloco. */}
+      <div class="flex shrink-0 items-center justify-end gap-1">
         <Show when={props.can.editVitals}>
           {/* O MESMO arranjo da ficha: − + e o diálogo. Antes eram quatro
               botões de passo fixo, e 23 de dano custava seis cliques ou uma
@@ -307,30 +275,6 @@ function InitiativeRow(props: {
         </Show>
       </div>
     </div>
-  )
-}
-
-/**
- * The GM pushes a spell buff onto a combatant. Picking fires immediately and
- * the control resets, so the same buff can be re-applied (refreshing a scene
- * buff) — buffs are never automatic, this is the explicit GM-targets-a-player
- * affordance.
- */
-function ApplyEffectSelect(props: { onApply: (spellId: string) => void }) {
-  // From the primed cache: a module const would evaluate before priming.
-  const options = createMemo(() => buffSpells().map((s) => ({ value: s.id, label: s.name })))
-  return (
-    <Select
-      aria-label="Aplicar efeito"
-      size="sm"
-      class="h-9 w-9 justify-center p-0 sm:h-8 sm:w-8"
-      options={options()}
-      value={null}
-      placeholder="✨"
-      onChange={(option) => {
-        if (option) props.onApply(option.value)
-      }}
-    />
   )
 }
 

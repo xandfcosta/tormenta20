@@ -54,7 +54,7 @@ export function SessionWorkspace(props: SessionWorkspaceProps) {
       onChange={(value) => props.onTabChange(value as WorkspaceTab)}
       class="flex h-full min-h-0 min-w-0 flex-col rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)]"
     >
-      <TabsList class="shrink-0 justify-start gap-1 overflow-x-auto border-b border-grimorio-iron p-1">
+      <TabsList class="flex w-full shrink-0 gap-1 border-b border-grimorio-iron p-1">
         <WorkspaceTabTrigger value="combatente" icon={UserRound} label="Combatente" />
         <WorkspaceTabTrigger value="bestiario" icon={Skull} label="Bestiário" />
         <WorkspaceTabTrigger value="catalogos" icon={BookMarked} label="Catálogos" />
@@ -70,7 +70,13 @@ export function SessionWorkspace(props: SessionWorkspaceProps) {
             </p>
           }
         >
-          {(entry) => <CombatantPanel entry={entry()} onClose={props.onCloseCombatant} />}
+          {(entry) => (
+            <CombatantPanel
+              entry={entry()}
+              onClose={props.onCloseCombatant}
+              onApplyEffect={(spellId) => props.rt.applyEffect(entry().id, spellId)}
+            />
+          )}
         </Show>
       </TabsContent>
 
@@ -100,7 +106,7 @@ function WorkspaceTabTrigger(props: {
   label: string
 }) {
   return (
-    <TabsTrigger value={props.value} class="gap-1.5 px-3">
+    <TabsTrigger value={props.value} class="flex-1 gap-1.5 px-3">
       <props.icon aria-hidden="true" class="size-4" />
       <span class="text-xs">{props.label}</span>
     </TabsTrigger>

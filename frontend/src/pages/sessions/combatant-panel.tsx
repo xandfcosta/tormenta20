@@ -3,6 +3,7 @@ import { X } from 'lucide-solid'
 import { Show, createSignal } from 'solid-js'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { CharacterHud } from '@/features/character-sheet/character-hud'
+import { ApplyEffectSelect } from '@/features/session-tracker/apply-effect-select'
 import { CharacterSheet } from '@/features/character-sheet/character-sheet'
 import { ConditionsSection } from '@/features/character-sheet/conditions-section'
 import type { InitiativeEntry } from '@/shared/realtime/realtime'
@@ -23,16 +24,27 @@ import { VitalBar } from '@/shared/ui/vital-bar'
  * Antes disto, alcançar a ficha de um jogador no meio de um turno era: sair da
  * sessão → aba Membros → um link de 29×16 px → voltar → continuar a sessão.
  */
-export function CombatantPanel(props: { entry: InitiativeEntry; onClose: () => void }) {
+export function CombatantPanel(props: {
+  entry: InitiativeEntry
+  onClose: () => void
+  /** Aplicar um buff neste combatente. Saiu da linha da iniciativa, onde um
+   *  select de 9px abria uma lista de 31 magias cobrindo a tela (ALE-122). */
+  onApplyEffect?: (spellId: string) => void
+}) {
   return (
     <section class="flex min-h-0 flex-1 flex-col">
       <header class="flex shrink-0 items-center justify-between gap-3 border-b border-grimorio-iron p-3 sm:px-4">
         <h2 class="min-w-0 truncate font-heading text-lg uppercase tracking-wide text-grimorio-gold">
           {props.entry.label}
         </h2>
-        <Button size="sm" variant="outline" aria-label="Fechar o combatente" onClick={props.onClose}>
-          <X aria-hidden="true" class="size-4" />
-        </Button>
+        <div class="flex shrink-0 items-center gap-2">
+          <Show when={props.onApplyEffect}>
+            {(apply) => <ApplyEffectSelect onApply={apply()} />}
+          </Show>
+          <Button size="sm" variant="outline" aria-label="Fechar o combatente" onClick={props.onClose}>
+            <X aria-hidden="true" class="size-4" />
+          </Button>
+        </div>
       </header>
 
       {/* SEM `overflow-y-auto` aqui: envolvendo tudo num contêiner que rola, a

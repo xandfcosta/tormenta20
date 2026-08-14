@@ -6,6 +6,7 @@ import { VirtualList } from '@/shared/ui/virtual-list'
 import { createMonsterFilter, filterMonsters } from './monster-filter'
 import { MonsterFilters } from './monster-filters'
 import { MONSTER_TIPO_LABEL, formatNd } from './monster-format'
+import { settledQuery } from '@/shared/lib/settled-query'
 
 export type MonsterPickerListProps = {
   onPick: (monster: Monster) => void
@@ -24,13 +25,17 @@ export type MonsterPickerListProps = {
 export function MonsterPickerList(props: MonsterPickerListProps) {
   const bestiary = useQuery(() => bestiaryCatalogQueryOptions)
   const filter = createMonsterFilter()
-  const shown = createMemo(() => filterMonsters(bestiary.data ?? [], filter.criteria()))
+  // `settledQuery` e não `.data ?? []`: a leitura pendente SUSPENDE, o
+  // `Suspense` do route match desanexa a cena e a tela pisca ao trocar para
+  // esta aba — quarta vez que esta armadilha aparece nesta issue (ALE-122).
+  const monsters = () => settledQuery(bestiary) ?? []
+  const shown = createMemo(() => filterMonsters(monsters(), filter.criteria()))
 
   return (
     <div class="flex min-h-0 flex-1 flex-col gap-2">
       <MonsterFilters filter={filter} idPrefix={props.idPrefix} />
       <p class="text-[11px] text-muted-foreground">
-        {shown().length} de {(bestiary.data ?? []).length}
+        {shown().length} de {monsters().length}
       </p>
       <Show
         when={shown().length > 0}

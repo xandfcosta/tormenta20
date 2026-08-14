@@ -5,6 +5,7 @@ import type { SessionRealtime } from '@/shared/realtime/realtime'
 import { DeleteSessionButton } from '@/features/session-tracker/delete-session-button'
 import { HeaderCard } from '@/features/session-tracker/header-card'
 import { InitiativeCard } from '@/features/session-tracker/initiative-card'
+import { RestControls } from '@/features/session-tracker/rest-controls'
 import { createMediaQuery } from '@/shared/lib/media-query'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
@@ -158,6 +159,7 @@ function TurnBar(props: {
             </Button>
           )}
         >
+          <RestControls rt={props.rt} />
           <HeaderCard campaignId={props.campaignId} session={props.session} isGm />
           <div class="flex justify-end">
             <DeleteSessionButton
