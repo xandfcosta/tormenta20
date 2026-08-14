@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { hpFillVar } from './character-hud'
-import { adjustPreview, clampResource } from './resource-adjust-dialog'
+import { hpFillVar } from '@/features/character-sheet/character-hud'
+import { adjustPreview, clampResource } from '@/shared/ui/resource-adjust-dialog'
 
 describe('clampResource', () => {
   it('prende entre 0 e o máximo e avisa que prendeu', () => {

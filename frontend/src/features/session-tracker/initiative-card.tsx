@@ -4,6 +4,7 @@ import type { InitiativeEntry, RestCondition, SessionRealtime } from '@/shared/r
 import { buffSpells } from '@/shared/lib/spell-cache'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
+import { ResourceAdjustDialog } from '@/shared/ui/resource-adjust-dialog'
 import { ConnectionChip } from '@/shared/ui/connection-chip'
 import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
@@ -19,8 +20,13 @@ const REST_OPTIONS: { value: RestCondition; label: string }[] = [
   { value: 'luxuosa', label: 'Luxuosa (3×)' },
 ]
 
-/** HP deltas the GM actually uses mid-combat — 1 and 5, both directions. */
-const HP_DELTAS = [-5, -1, 1, 5]
+/**
+ * O passo de um clique. Shift multiplica por 5, como no HUD da ficha — combate
+ * raramente cobra 1 de dano, e quatro botões fixos ocupavam a linha inteira sem
+ * dar conta de um crítico de 23 (ALE-122).
+ */
+const STEP = 1
+const SHIFT_STEP = 5
 
 /**
  * The initiative tracker: the primary surface of a live session. Everyone sees
@@ -253,19 +259,37 @@ function InitiativeRow(props: {
           <ApplyEffectSelect onApply={props.onApplyEffect} />
         </Show>
         <Show when={props.can.editVitals}>
-          <For each={HP_DELTAS}>
-            {(delta) => (
-              <Button
-                size="sm"
-                variant="outline"
-                class="h-9 min-w-9 font-mono tabular-nums sm:h-8 sm:min-w-8"
-                aria-label={`Ajustar PV de ${props.entry.label} em ${delta}`}
-                onClick={() => props.onDeltaHp(delta)}
-              >
-                {delta > 0 ? `+${delta}` : delta}
-              </Button>
-            )}
-          </For>
+          {/* O MESMO arranjo da ficha: − + e o diálogo. Antes eram quatro
+              botões de passo fixo, e 23 de dano custava seis cliques ou uma
+              conta de cabeça. O − vem depois do +, como no HUD, para um polegar
+              apressado não curar quando queria machucar. */}
+          <Button
+            size="sm"
+            variant="outline"
+            class="h-9 min-w-9 sm:h-8 sm:min-w-8"
+            aria-label={`Curar ${props.entry.label}`}
+            title="Clique = 1, Shift+clique = 5"
+            onClick={(event: MouseEvent) => props.onDeltaHp(event.shiftKey ? SHIFT_STEP : STEP)}
+          >
+            +
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            class="h-9 min-w-9 sm:h-8 sm:min-w-8"
+            aria-label={`Ferir ${props.entry.label}`}
+            title="Clique = 1, Shift+clique = 5"
+            onClick={(event: MouseEvent) => props.onDeltaHp(-(event.shiftKey ? SHIFT_STEP : STEP))}
+          >
+            −
+          </Button>
+          <ResourceAdjustDialog
+            label={`PV de ${props.entry.label}`}
+            current={props.entry.hpCurrent ?? 0}
+            max={props.entry.hpMax ?? 0}
+            onSetCurrent={(next) => props.onDeltaHp(next - (props.entry.hpCurrent ?? 0))}
+            triggerClass="h-9 min-w-9 sm:h-8 sm:min-w-8"
+          />
         </Show>
         <Show when={props.can.remove}>
           <Button

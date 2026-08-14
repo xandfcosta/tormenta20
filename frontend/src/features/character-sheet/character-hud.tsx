@@ -13,7 +13,7 @@ import { ConditionPips } from './condition-pips'
 import { ContextualStatBlocks } from './contextual-stat-blocks'
 import { LevelStepper } from './level-stepper'
 import { MobileDefChip } from './mobile-def-chip'
-import { type TempPoolControl, ResourceAdjustDialog } from './resource-adjust-dialog'
+import { type TempPoolControl, ResourceAdjustDialog } from '@/shared/ui/resource-adjust-dialog'
 import { ClassBadges, SheetIdentityText } from './sheet-identity'
 import { createVitalActions } from './vital-mutations'
 

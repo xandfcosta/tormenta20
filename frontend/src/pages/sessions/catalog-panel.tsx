@@ -34,8 +34,10 @@ export function CatalogPanel(props: { rt: SessionRealtime }) {
         description="Condições, magias, poderes e itens."
         header={<MatchPeek rt={props.rt} />}
       >
-        {/* Bounded: inside the panel the list shares height with the header. */}
-        <CatalogBrowser listClass="max-h-[60vh] min-h-0 flex-1 pr-1" />
+        {/* Sem teto de altura: dentro do painel a lista É o filho que rola, e
+            o `max-h-[60vh]` que estava aqui deixava um vão morto embaixo dela —
+            o scroll parava antes do fim do side sheet (ALE-122). */}
+        <CatalogBrowser listClass="min-h-0 flex-1 pr-1" />
       </SidePanel>
     </>
   )
