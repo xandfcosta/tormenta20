@@ -82,6 +82,21 @@ comentário em runas, então cada letra acentuada acima de uma query corta um
 caractere do SQL gerado — **em silêncio**. Na ALE-120 um comentário com três
 acentos gerou `WHERE id = ? AND usedAt IS N`, que ainda compilava.
 
+## O sqlc não enxerga `ALTER TABLE ADD COLUMN` de outro arquivo
+
+Medido no sqlc **v1.31.1** (ALE-124): uma coluna adicionada por `ALTER TABLE …
+ADD COLUMN` num arquivo de migração NOVO não entra no catálogo — toda query que
+a cita falha com `column "x" does not exist`, e o erro aponta a *query*, não a
+migração. Dentro do MESMO arquivo (`CREATE TABLE` + `ALTER` juntos) funciona, e
+as colunas assim adicionadas na `00002` continuam valendo porque… continuam
+valendo: regenerar não as perde. Não perca tempo com a forma do comentário nem
+com a seção `Down` — foi tudo testado.
+
+Saída prática: **tabela 1:1 em vez de coluna nova**. Foi o que a `00005` fez com
+o tabuleiro (`session_boards`), e de quebra "sessão sem tabuleiro" passou a ser
+dito pelo schema (a linha existe ou não existe) em vez de por convenção sobre um
+JSON vazio.
+
 ## Catálogos
 
 `catalog/data/*.json` é embutido no binário e servido por `GET /catalog/:nome`.

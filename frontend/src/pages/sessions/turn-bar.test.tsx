@@ -22,6 +22,9 @@ class FakeRealtime {
     return {
       state: () => ({ initiative: [] as InitiativeEntry[], round: 3, turnIndex: -1 }),
       isConnected: () => true,
+      // A cena do mestre passou a montar a região do tabuleiro (ALE-124): sem
+      // este acessor o fake mente sobre a forma do contrato e a tela quebra.
+      board: () => null,
       error: () => null,
       hasPersistenceWarning: () => false,
       present: () => [],

@@ -35,6 +35,36 @@ export type PresenceUser = {
   role: 'gm' | 'player'
 }
 
+/**
+ * Uma peça no tabuleiro (ALE-124). `x`/`y` são o canto superior-esquerdo em
+ * QUADRADOS — nunca em pixels: pixel amarraria a posição ao tamanho da tela, e o
+ * celular e o desktop passariam a discordar sobre onde o ogro está.
+ */
+export type BoardToken = {
+  id: string
+  label: string
+  x: number
+  y: number
+  /** Lado da peça em quadrados (T20 p107): 1, 2, 3 ou 6. */
+  footprint: number
+  kind: 'character' | 'npc' | 'object'
+  /** Linha da iniciativa correspondente — ausente em peça de cenário. */
+  entryId?: string
+  characterId?: number
+  /** O mestre escondeu a peça; o jogador nem a recebe (some no servidor). */
+  hidden?: boolean
+}
+
+export type BoardState = {
+  /** Sobe a cada mutação aceita: é o que deixa o cliente descartar broadcast atrasado. */
+  version: number
+  place: string
+  cols: number
+  rows: number
+  terrain: string
+  tokens: BoardToken[]
+}
+
 export type RestScope = 'scene' | 'day'
 export type RestCondition = 'ruim' | 'normal' | 'confortavel' | 'luxuosa'
 
@@ -92,6 +122,15 @@ export type SessionRealtime = {
   deltaVitals: (entryId: string, delta: { hpDelta?: number; mpDelta?: number }) => void
   /** GM applies a spell buff to a combatant. Never automatic — the GM targets. */
   applyEffect: (entryId: string, spellId: string, scope?: RestScope) => void
+  /** O tabuleiro da sessão — `null` quando o mestre não abriu nenhum. */
+  board: Accessor<BoardState | null>
+  openBoard: (place: string, cols: number, rows: number, terrain: string) => void
+  closeBoard: () => void
+  addToken: (token: Omit<BoardToken, 'id'>) => void
+  removeToken: (tokenId: string) => void
+  updateToken: (tokenId: string, patch: Partial<Omit<BoardToken, 'id'>>) => void
+  /** Traz para o tabuleiro quem já está na iniciativa. Idempotente. */
+  populateBoard: () => void
 }
 
 /**
@@ -115,6 +154,17 @@ export function createSessionSocket(
   const [hasPersistenceWarning, setHasPersistenceWarning] = createSignal(false)
   const [present, setPresent] = createSignal<PresenceUser[]>([])
   const [restFlash, setRestFlash] = createSignal<RestScope | null>(null)
+  const [board, setBoard] = createSignal<BoardState | null>(null)
+
+  // O broadcast atrasado é real: um `board-state` que ficou no buffer antes da
+  // queda chega DEPOIS da re-hidratação e faria a tela voltar no tempo. A versão
+  // é monotônica no servidor, então comparar é o bastante — e `null` (tabuleiro
+  // encerrado) sempre vale, porque encerrar é a única coisa que não tem versão.
+  const acceptBoard = (next: BoardState | null) => {
+    const current = board()
+    if (next && current && next.version < current.version) return
+    setBoard(next)
+  }
 
   let socket: SessionSocket | null = null
   const open = options.connect ?? connectSession
@@ -146,6 +196,7 @@ export function createSessionSocket(
       live.emit('join-session', scope, (ack: unknown) => {
         if (typeof ack !== 'object' || !ack || !('joined' in ack)) return
         live.emit('get-session-state', scope, (next: SessionRuntimeState) => setState(next))
+        live.emit('get-board-state', scope, (next: BoardState | null) => setBoard(next ?? null))
       })
     })
     live.on('disconnect', () => {
@@ -157,6 +208,7 @@ export function createSessionSocket(
       setError(payload?.message ?? 'Sem permissão nesta sessão'),
     )
     live.on('session-state', (next: SessionRuntimeState) => setState(next))
+    live.on('board-state', (next: BoardState | null) => acceptBoard(next ?? null))
     live.on('persistence-warning', (payload: { dirty?: boolean }) =>
       setHasPersistenceWarning(Boolean(payload?.dirty)),
     )
@@ -202,5 +254,14 @@ export function createSessionSocket(
     deltaVitals: (entryId, delta) => send('vitals-delta', { entryId, ...delta }),
     applyEffect: (entryId, spellId, scope) =>
       send('apply-effect', { entryId, spellId, scope }),
+
+    board,
+    openBoard: (place, cols, rows, terrain) => send('board-open', { place, cols, rows, terrain }),
+    closeBoard: () => send('board-close'),
+    // Achatado, não aninhado: é a forma que o servidor lê.
+    addToken: (token) => send('board-token-add', { ...token }),
+    removeToken: (tokenId) => send('board-token-remove', { tokenId }),
+    updateToken: (tokenId, patch) => send('board-token-update', { tokenId, patch }),
+    populateBoard: () => send('board-populate'),
   }
 }

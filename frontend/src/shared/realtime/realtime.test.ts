@@ -1,6 +1,7 @@
 import { createRoot } from 'solid-js'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+  type BoardState,
   type SessionSocket,
   type SessionRuntimeState,
   createSessionSocket,
@@ -214,6 +215,84 @@ describe('createSessionSocket — ações', () => {
         characterId: 42,
         initiative: 17,
       })
+    })
+  })
+})
+
+
+/**
+ * O tabuleiro (ALE-124) chega por um evento PRÓPRIO. O que se prova aqui é o
+ * contrato do fio: o broadcast vira sinal, e o atrasado é DESCARTADO.
+ */
+describe('o tabuleiro no fio', () => {
+  const TABULEIRO: BoardState = {
+    version: 4,
+    place: 'Taverna do Javali',
+    cols: 20,
+    rows: 15,
+    terrain: 'taverna',
+    tokens: [{ id: 't1', label: 'Ogro', x: 3, y: 4, footprint: 2, kind: 'npc' }],
+  }
+
+  it('o broadcast do tabuleiro vira sinal', () => {
+    withSocket((socket, rt) => {
+      socket.server('board-state', TABULEIRO)
+
+      expect(rt.board()?.place).toBe('Taverna do Javali')
+      expect(rt.board()?.tokens).toHaveLength(1)
+    })
+  })
+
+  // Encerrar chega como `null` — e `null` sempre vale, porque encerrar é a única
+  // mudança que não carrega versão.
+  it('encerrar apaga o tabuleiro da tela', () => {
+    withSocket((socket, rt) => {
+      socket.server('board-state', TABULEIRO)
+      socket.server('board-state', null)
+
+      expect(rt.board()).toBeNull()
+    })
+  })
+
+  // O caso invisível: um broadcast que ficou no buffer antes da queda chega
+  // DEPOIS da re-hidratação. Sem a guarda, a tela volta no tempo — e ninguém
+  // percebe, porque um tabuleiro atrasado ainda parece um tabuleiro.
+  it('um estado com versão MENOR que a atual é descartado', () => {
+    withSocket((socket, rt) => {
+      socket.server('board-state', TABULEIRO)
+      socket.server('board-state', { ...TABULEIRO, version: 2, place: 'Cripta' })
+
+      expect(rt.board()?.place).toBe('Taverna do Javali')
+      expect(rt.board()?.version).toBe(4)
+    })
+  })
+
+  it('entrar na sessão já pede o tabuleiro', () => {
+    const socket = new FakeSocket()
+    socket.ackWith = { 'join-session': { joined: 'session:7' } }
+    createRoot((dispose) => {
+      createSessionSocket(
+        () => 1,
+        () => 7,
+        { connect: () => socket },
+      )
+      socket.server('connect')
+      dispose()
+    })
+
+    expect(socket.emitsOf('get-board-state')).toHaveLength(1)
+  })
+
+  it('mover a peça sai com o id e o quadrado', () => {
+    const socket = withSocket((_socket, rt) => {
+      rt.updateToken('t1', { x: 5, y: 6 })
+    })
+
+    expect(socket.emitsOf('board-token-update')[0][0]).toEqual({
+      campaignId: 1,
+      sessionId: 7,
+      tokenId: 't1',
+      patch: { x: 5, y: 6 },
     })
   })
 })

@@ -13,6 +13,7 @@ import { createMediaQuery } from '@/shared/lib/media-query'
 import { settledQuery } from '@/shared/lib/settled-query'
 import type { SessionRealtime } from '@/shared/realtime/realtime'
 import { cn } from '@/shared/lib/utils'
+import { BoardRegion } from './board-region'
 import { LiveSessionBanner, type LiveTurnState } from './live-session-banner'
 import { MatchControls, MatchRail } from './match-rail'
 
@@ -40,10 +41,23 @@ export function SessionPlayerView(props: {
   const turn = createMemo(() => playerTurnState(props.rt, props.myCharacterIds))
   const isMyTurn = () => turn().kind === 'mine'
 
+  const activeEntryId = () => {
+    const live = props.rt.state()
+    return live.turnIndex >= 0 ? (live.initiative[live.turnIndex]?.id ?? null) : null
+  }
+
   const rail = () => (
     <>
       <HeaderCard campaignId={props.campaignId} session={props.session} isGm={false} />
       <InitiativeCard rt={props.rt} isGm={false} myCharacterIds={props.myCharacterIds} />
+      {/* Só aparece quando existe: um cartão dizendo "o mestre não abriu um
+          tabuleiro" seria ruído permanente no rail. Nesta fatia o jogador VÊ o
+          tabuleiro; mover a própria peça é a fatia do movimento (ALE-124). */}
+      <Show when={props.rt.board()}>
+        <div class="min-h-64">
+          <BoardRegion rt={props.rt} isGm={false} activeEntryId={activeEntryId()} />
+        </div>
+      </Show>
       <PartyRoster campaignId={props.campaignId} />
     </>
   )

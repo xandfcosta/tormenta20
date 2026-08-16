@@ -617,6 +617,15 @@ func (q *Queries) DeleteSession(ctx context.Context, id int64) error {
 	return err
 }
 
+const deleteSessionBoard = `-- name: DeleteSessionBoard :exec
+DELETE FROM session_boards WHERE sessionId = ?
+`
+
+func (q *Queries) DeleteSessionBoard(ctx context.Context, sessionid int64) error {
+	_, err := q.db.ExecContext(ctx, deleteSessionBoard, sessionid)
+	return err
+}
+
 const deleteSpell = `-- name: DeleteSpell :execrows
 DELETE FROM character_spells WHERE characterId = ? AND catalogSpellId = ?
 `
@@ -964,6 +973,19 @@ func (q *Queries) GetSession(ctx context.Context, id int64) (Session, error) {
 		&i.Runtimestate,
 	)
 	return i, err
+}
+
+const getSessionBoard = `-- name: GetSessionBoard :one
+
+SELECT state FROM session_boards WHERE sessionId = ? LIMIT 1
+`
+
+// board (ALE-124)
+func (q *Queries) GetSessionBoard(ctx context.Context, sessionid int64) (string, error) {
+	row := q.db.QueryRowContext(ctx, getSessionBoard, sessionid)
+	var state string
+	err := row.Scan(&state)
+	return state, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
@@ -1896,6 +1918,22 @@ type ResetSessionTrackerParams struct {
 
 func (q *Queries) ResetSessionTracker(ctx context.Context, arg ResetSessionTrackerParams) error {
 	_, err := q.db.ExecContext(ctx, resetSessionTracker, arg.RuntimeState, arg.UpdatedAt, arg.ID)
+	return err
+}
+
+const saveSessionBoard = `-- name: SaveSessionBoard :exec
+INSERT INTO session_boards (sessionId, state, updatedAt) VALUES (?, ?, ?)
+ON CONFLICT(sessionId) DO UPDATE SET state = excluded.state, updatedAt = excluded.updatedAt
+`
+
+type SaveSessionBoardParams struct {
+	Sessionid int64  `json:"sessionid"`
+	State     string `json:"state"`
+	Updatedat string `json:"updatedat"`
+}
+
+func (q *Queries) SaveSessionBoard(ctx context.Context, arg SaveSessionBoardParams) error {
+	_, err := q.db.ExecContext(ctx, saveSessionBoard, arg.Sessionid, arg.State, arg.Updatedat)
 	return err
 }
 

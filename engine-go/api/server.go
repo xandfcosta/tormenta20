@@ -22,6 +22,7 @@ type Server struct {
 	queries  *sqlcgen.Queries
 	catalogs *engine.Catalogs  // nil if the catalog snapshot failed to load
 	sessions *sessionStore     // in-memory realtime tracker state (B.6)
+	boards   *boardStore       // tabuleiro tático vivo por sessão (ALE-124)
 	presence *presenceRegistry // who's-online per session room (B.6)
 	// charMu serializes mutating HTTP requests per character (characterID → *sync.Mutex)
 	// so concurrent read-modify-write mutations (rapid damage/vitals clicks) can't lose
@@ -75,6 +76,7 @@ func NewServer(cfg Config, database *sql.DB, catalogs *engine.Catalogs) *Server 
 	return &Server{
 		cfg: cfg, db: database, queries: q, catalogs: catalogs,
 		sessions: newSessionStore(q, newUUID),
+		boards:   newBoardStore(q, newUUID),
 		presence: newPresenceRegistry(),
 	}
 }

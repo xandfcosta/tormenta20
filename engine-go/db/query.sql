@@ -340,6 +340,18 @@ WHERE id = sqlc.arg('id') RETURNING *;
 UPDATE sessions SET runtimeState = sqlc.arg('runtimeState'), updatedAt = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id');
 
+-- board (ALE-124)
+
+-- name: GetSessionBoard :one
+SELECT state FROM session_boards WHERE sessionId = ? LIMIT 1;
+
+-- name: SaveSessionBoard :exec
+INSERT INTO session_boards (sessionId, state, updatedAt) VALUES (?, ?, ?)
+ON CONFLICT(sessionId) DO UPDATE SET state = excluded.state, updatedAt = excluded.updatedAt;
+
+-- name: DeleteSessionBoard :exec
+DELETE FROM session_boards WHERE sessionId = ?;
+
 -- name: ListCampaignsForCharacter :many
 SELECT m.id, m.campaignId, m.characterId, m.role, m.addedAt,
        c.name AS campaignName, c.description AS campaignDescription, c.updatedAt AS campaignUpdatedAt

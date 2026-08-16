@@ -10,6 +10,7 @@ import { createMediaQuery } from '@/shared/lib/media-query'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
+import { BoardRegion } from './board-region'
 import { MatchControls } from './match-rail'
 import { type WorkspaceTab, SessionWorkspace } from './session-workspace'
 
@@ -38,13 +39,17 @@ export function SessionGmView(props: {
 }) {
   const [selectedId, setSelectedId] = createSignal<string | null>(null)
   const [tab, setTab] = createSignal<WorkspaceTab>('combatente')
-  const [region, setRegion] = createSignal<'combate' | 'mesa'>('combate')
+  const [region, setRegion] = createSignal<SceneRegion>('combate')
   // Derivado do estado ao vivo: os vitais mudam a cada pancada, e uma cópia
   // mostraria o número de quando o combatente foi aberto.
   const selected = createMemo(
     () => props.rt.state().initiative.find((entry) => entry.id === selectedId()) ?? null,
   )
   const sideBySide = createMediaQuery('(min-width: 1024px)')
+  // A 1536 cabem as TRÊS regiões lado a lado; entre 1024 e 1536 o tabuleiro
+  // divide o lugar com a mesa, porque uma grade de 20 quadrados abaixo de ~600px
+  // deixa o quadrado menor que o alvo tocável.
+  const threeUp = createMediaQuery('(min-width: 1536px)')
 
   const select = (entryId: string) => {
     setSelectedId((current) => (current === entryId ? null : entryId))
@@ -53,7 +58,16 @@ export function SessionGmView(props: {
   }
 
   const showTracker = () => sideBySide() || region() === 'combate'
-  const showWorkspace = () => sideBySide() || region() === 'mesa'
+  const showBoard = () => threeUp() || region() === 'tabuleiro'
+  const showWorkspace = () => (sideBySide() && !showBoardInstead()) || region() === 'mesa'
+  // Entre 1024 e 1536, tabuleiro e mesa disputam a mesma coluna: quem estiver
+  // escolhido ganha, e o seletor continua visível.
+  const showBoardInstead = () => !threeUp() && sideBySide() && region() === 'tabuleiro'
+
+  const activeEntryId = () => {
+    const live = props.rt.state()
+    return live.turnIndex >= 0 ? (live.initiative[live.turnIndex]?.id ?? null) : null
+  }
 
   return (
     <div class="flex h-full min-h-0 flex-col gap-2 p-2 sm:gap-3 sm:p-3">
@@ -64,14 +78,16 @@ export function SessionGmView(props: {
         rt={props.rt}
       />
 
-      <Show when={!sideBySide()}>
+      <Show when={!threeUp()}>
         <RegionSwitch region={region()} onRegion={setRegion} />
       </Show>
 
       <div
         class={cn(
           'grid min-h-0 flex-1 gap-3',
-          sideBySide() && 'grid-cols-[minmax(0,5fr)_minmax(0,7fr)]',
+          threeUp()
+            ? 'grid-cols-[minmax(0,4fr)_minmax(0,9fr)_minmax(0,5fr)]'
+            : sideBySide() && 'grid-cols-[minmax(0,5fr)_minmax(0,7fr)]',
         )}
       >
         <Show when={showTracker()}>
@@ -85,6 +101,10 @@ export function SessionGmView(props: {
               selectedId={selectedId()}
             />
           </div>
+        </Show>
+
+        <Show when={showBoard() || showBoardInstead()}>
+          <BoardRegion rt={props.rt} isGm activeEntryId={activeEntryId()} />
         </Show>
 
         <Show when={showWorkspace()}>
@@ -191,14 +211,14 @@ function TurnBar(props: {
   )
 }
 
-/** Uma região por vez onde não cabem duas — visível, nunca escondida. */
-function RegionSwitch(props: {
-  region: 'combate' | 'mesa'
-  onRegion: (region: 'combate' | 'mesa') => void
-}) {
+/** As três regiões da cena do mestre. */
+type SceneRegion = 'combate' | 'tabuleiro' | 'mesa'
+
+/** Uma região por vez onde não cabem três — visível, nunca escondida. */
+function RegionSwitch(props: { region: SceneRegion; onRegion: (region: SceneRegion) => void }) {
   return (
     <div class="flex shrink-0 gap-1">
-      <For each={['combate', 'mesa'] as const}>
+      <For each={['combate', 'tabuleiro', 'mesa'] as const}>
         {(value) => (
           <Button
             size="sm"

@@ -70,6 +70,13 @@ func (g *realtimeGateway) onConnect(sock *socket.Socket) {
 	sock.On("vitals-delta", func(args ...any) { g.onVitalsDelta(sock, args) })
 	sock.On("session-rest", func(args ...any) { g.onSessionRest(sock, args) })
 	sock.On("apply-effect", func(args ...any) { g.onApplyEffect(sock, args) })
+	sock.On("board-open", func(args ...any) { g.onBoardOpen(sock, args) })
+	sock.On("board-close", func(args ...any) { g.onBoardClose(sock, args) })
+	sock.On("get-board-state", func(args ...any) { g.onGetBoardState(sock, args) })
+	sock.On("board-token-add", func(args ...any) { g.onBoardTokenAdd(sock, args) })
+	sock.On("board-token-remove", func(args ...any) { g.onBoardTokenRemove(sock, args) })
+	sock.On("board-token-update", func(args ...any) { g.onBoardTokenUpdate(sock, args) })
+	sock.On("board-populate", func(args ...any) { g.onBoardPopulate(sock, args) })
 	sock.On("disconnect", func(...any) { g.onDisconnect(sock) })
 }
 

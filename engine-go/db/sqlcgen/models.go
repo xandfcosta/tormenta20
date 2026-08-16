@@ -149,6 +149,12 @@ type Session struct {
 	Runtimestate  string         `json:"runtimestate"`
 }
 
+type SessionBoard struct {
+	Sessionid int64  `json:"sessionid"`
+	State     string `json:"state"`
+	Updatedat string `json:"updatedat"`
+}
+
 type User struct {
 	ID           int64          `json:"id"`
 	Email        string         `json:"email"`

@@ -39,6 +39,16 @@ var gmGate = map[string]bool{
 	"session-rest":             true,
 	"apply-effect":             true,
 	"disconnect":               false, // do transporte, não da mesa
+	// Tabuleiro (ALE-124): abrir, montar e esconder peça é do mestre. Quem move a
+	// PRÓPRIA peça no próprio turno entra na fatia do movimento, e virá com regra
+	// mais fina (assertMovable), como os vitais.
+	"board-open":         true,
+	"board-close":        true,
+	"get-board-state":    false, // ler o tabuleiro é de todo mundo na mesa — REDIGIDO por papel
+	"board-token-add":    true,
+	"board-token-remove": true,
+	"board-token-update": true,
+	"board-populate":     true,
 }
 
 var (
@@ -49,7 +59,7 @@ var (
 func gatewaySource(t *testing.T) string {
 	t.Helper()
 	var all strings.Builder
-	for _, file := range []string{"realtime_gateway.go", "realtime_initiative.go", "realtime_vitals.go"} {
+	for _, file := range []string{"realtime_gateway.go", "realtime_initiative.go", "realtime_vitals.go", "realtime_board.go"} {
 		raw, err := os.ReadFile(file)
 		if err != nil {
 			t.Fatalf("ler %s: %v", file, err)
@@ -103,10 +113,15 @@ func TestGmGateOnEveryRegisteredEvent(t *testing.T) {
 	}
 }
 
-// stateExit é toda linha que ENTREGA o estado da sessão a um socket: o `Emit` do
-// broadcast e o `ack` que hidrata quem acabou de pedir. Ack de literal
-// (`{"joined": room}`) não é estado e fica de fora.
-var stateExit = regexp.MustCompile(`(?m)^.*(Emit\("session-state"|ackOK\(ctx\.ack, [^m]).*$`)
+// stateExit é toda linha que ENTREGA estado a um socket: o `Emit` do broadcast e
+// o `ack` que hidrata quem acabou de pedir. Ack de literal (`{"joined": room}`)
+// não é estado e fica de fora.
+//
+// O `board-state` entrou aqui junto com o primeiro emit do tabuleiro (ALE-124):
+// enquanto o regex só conhecia `session-state`, uma peça escondida podia sair
+// sem redação nenhuma e este teste passava verde — é assim que uma rede fica
+// cega, e o próprio arquivo avisa que é assim.
+var stateExit = regexp.MustCompile(`(?m)^.*(Emit\("(session|board)-state"|ackOK\(ctx\.ack, [^m]).*$`)
 
 // O PV oculto é do mestre, e o broadcast não é o único caminho do estado até a
 // tela: o `ack` do `get-session-state` responde a quem pediu, inclusive jogador.
@@ -124,6 +139,7 @@ func TestStateLeavesTheServerFilteredByRole(t *testing.T) {
 	for _, line := range lines {
 		filtered := strings.Contains(line, "stateForRole") ||
 			strings.Contains(line, "redactForPlayers") ||
+			strings.Contains(line, "boardForRole") ||
 			strings.Contains(line, `roleRoomName(sessionID, "gm")`)
 		if !filtered {
 			t.Errorf("estado sai sem filtro de papel:\n%s\ndiga para quem: stateForRole(ctx.role, …)"+
