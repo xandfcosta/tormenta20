@@ -1,4 +1,4 @@
-import { BookMarked, NotebookPen, Skull, UserRound } from 'lucide-solid'
+import { BookMarked, LayoutGrid, NotebookPen, Skull, UserRound } from 'lucide-solid'
 import { Show } from 'solid-js'
 import { CatalogBrowser } from '@/features/gm-tools/catalog-browser'
 import { MonsterPickerList } from '@/features/gm-tools/monster-picker-list'
@@ -8,10 +8,12 @@ import type { InitiativeEntry, SessionRealtime } from '@/shared/realtime/realtim
 import { rollD20 } from '@/shared/lib/dice'
 import { toast } from '@/shared/ui/sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import type { BoardViewport } from '@/features/battle-board/board-viewport'
+import { BoardRegion } from './board-region'
 import { CombatantPanel } from './combatant-panel'
 import { EncounterPanel } from './encounter-panel'
 
-export type WorkspaceTab = 'combatente' | 'bestiario' | 'catalogos' | 'notas'
+export type WorkspaceTab = 'combatente' | 'bestiario' | 'catalogos' | 'notas' | 'tabuleiro'
 
 export type SessionWorkspaceProps = {
   campaignId: number
@@ -21,6 +23,9 @@ export type SessionWorkspaceProps = {
   onTabChange: (tab: WorkspaceTab) => void
   selected: InitiativeEntry | null
   onCloseCombatant: () => void
+  /** A janela do tabuleiro, quando ele divide esta coluna (abaixo de 1536). */
+  boardView?: BoardViewport
+  activeEntryId?: string | null
 }
 
 /**
@@ -60,6 +65,13 @@ export function SessionWorkspace(props: SessionWorkspaceProps) {
         <WorkspaceTabTrigger value="bestiario" icon={Skull} label="Bestiário" />
         <WorkspaceTabTrigger value="catalogos" icon={BookMarked} label="Catálogos" />
         <WorkspaceTabTrigger value="notas" icon={NotebookPen} label="Notas" />
+        {/* O tabuleiro só é aba quando NÃO tem coluna própria (abaixo de 1536).
+            Uma faixa separada atravessando a tela inteira para trocar só a
+            coluna da direita era um controle desalinhado do próprio efeito —
+            aqui a barra fica exatamente sobre o que ela troca (ALE-130). */}
+        <Show when={props.boardView}>
+          <WorkspaceTabTrigger value="tabuleiro" icon={LayoutGrid} label="Tabuleiro" />
+        </Show>
       </TabsList>
 
       <TabsContent value="combatente" class="flex min-h-0 flex-1 flex-col">
@@ -96,6 +108,23 @@ export function SessionWorkspace(props: SessionWorkspaceProps) {
       <TabsContent value="notas" class="flex min-h-0 flex-1 flex-col p-2">
         <SessionNotes campaignId={props.campaignId} session={props.session} />
       </TabsContent>
+
+      {/* `Tabs` desmonta o conteúdo inativo, e é por isso que a JANELA do
+          tabuleiro (origem e zoom) mora na página: ela sobrevive à troca de aba.
+          O que se perde ao trocar é a peça selecionada, que é escolha de um
+          instante e não estado de cena. */}
+      <Show when={props.boardView}>
+        {(view) => (
+          <TabsContent value="tabuleiro" class="flex min-h-0 flex-1 flex-col p-2">
+            <BoardRegion
+              rt={props.rt}
+              isGm
+              view={view()}
+              activeEntryId={props.activeEntryId}
+            />
+          </TabsContent>
+        )}
+      </Show>
     </Tabs>
   )
 }

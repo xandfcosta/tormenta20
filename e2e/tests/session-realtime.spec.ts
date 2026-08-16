@@ -78,10 +78,10 @@ test.describe('Sessão ao vivo — dois clientes', () => {
       await telaDoMestre.getByRole('button', { name: 'Adicionar', exact: true }).click()
       await expect(telaDoMestre.getByText(figurante)).toBeVisible()
 
-      // Desktop Chrome do Playwright é 1280 de largura: abaixo de 1536 a cena do
-      // mestre mostra uma região por vez, então o tabuleiro precisa ser escolhido
-      // antes de existir na tela (ALE-124).
-      await telaDoMestre.getByRole('button', { name: 'tabuleiro', exact: true }).click()
+      // Desktop Chrome do Playwright é 1280 de largura: abaixo de 1536 o
+      // tabuleiro divide a coluna da direita com a mesa e é uma ABA dela — a
+      // barra fica exatamente sobre o que ela troca (ALE-130).
+      await telaDoMestre.getByRole('tab', { name: 'Tabuleiro' }).click()
       // O teste cuida do próprio terreno: a sessão da seed pode ter ficado com um
       // tabuleiro aberto de outra rodada (ou de alguém usando o app em dev), e
       // esperar pelo estado vazio faria a suíte falhar por causa do ambiente.

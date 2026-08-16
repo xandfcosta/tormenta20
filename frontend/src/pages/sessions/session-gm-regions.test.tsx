@@ -82,30 +82,49 @@ function renderCena() {
 beforeEach(() => comLargura({ sideBySide: true, threeUp: false }))
 
 describe('as regiões da cena do mestre em duas colunas', () => {
-  // A iniciativa é a espinha: em duas colunas ela não sai da tela, então
-  // oferecer "combate" seria oferecer um botão que não muda nada.
+  // Com as duas colunas na tela não existe seletor de região: a iniciativa é a
+  // espinha e fica sempre visível. Quem troca é a barra de abas da mesa, que
+  // fica EXATAMENTE sobre a coluna que ela troca — uma faixa atravessando a tela
+  // inteira para mudar só a direita é um controle desalinhado do efeito.
+  //
   // `findBy` na primeira busca: o RouterProvider monta a rota num microtask, e
   // uma busca síncrona olharia a árvore antes de a cena existir.
-  it('o seletor oferece só o que muda a tela', async () => {
+  it('não há seletor de região; o tabuleiro é aba da mesa', async () => {
     renderCena()
 
-    expect(await screen.findByRole('button', { name: 'tabuleiro' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'mesa' })).toBeInTheDocument()
+    expect(await screen.findByRole('tab', { name: /Tabuleiro/ })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'combate' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'mesa' })).not.toBeInTheDocument()
   })
 
-  it('escolher o tabuleiro TROCA o conteúdo da segunda coluna', async () => {
+  it('a aba do tabuleiro TROCA o conteúdo da coluna da direita', async () => {
     const user = renderCena()
 
-    // Começa na mesa: o workspace está lá, o tabuleiro não.
     expect(await screen.findByRole('tab', { name: /Combatente/ })).toBeInTheDocument()
     expect(screen.queryByText(/Nenhum tabuleiro aberto/)).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'tabuleiro' }))
+    await user.click(screen.getByRole('tab', { name: /Tabuleiro/ }))
 
     expect(screen.getByText(/Nenhum tabuleiro aberto/)).toBeInTheDocument()
-    expect(screen.queryByRole('tab', { name: /Combatente/ })).not.toBeInTheDocument()
-    // E a iniciativa continua na tela nas duas: ela é a espinha da cena.
+    // E a iniciativa continua na tela: ela é a espinha da cena.
+    expect(screen.getByRole('heading', { name: 'Iniciativa' })).toBeInTheDocument()
+  })
+})
+
+describe('as regiões da cena do mestre em três colunas', () => {
+  beforeEach(() => comLargura({ sideBySide: true, threeUp: true }))
+
+  // A partir de 1536 o tabuleiro tem COLUNA PRÓPRIA, e aí ele não pode ser
+  // também aba: seriam duas cópias do mesmo tabuleiro na mesma tela, cada uma
+  // com sua janela. A sabotagem que deixava a aba sempre visível passava verde
+  // antes deste teste existir.
+  it('o tabuleiro tem coluna e NÃO é aba', async () => {
+    renderCena()
+
+    expect(await screen.findByRole('tab', { name: /Combatente/ })).toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: /Tabuleiro/ })).not.toBeInTheDocument()
+    // Ele está na tela por conta própria, ao lado da mesa.
+    expect(screen.getByText(/Nenhum tabuleiro aberto/)).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Iniciativa' })).toBeInTheDocument()
   })
 })
@@ -113,16 +132,23 @@ describe('as regiões da cena do mestre em duas colunas', () => {
 describe('as regiões da cena do mestre numa coluna só', () => {
   beforeEach(() => comLargura({ sideBySide: false, threeUp: false }))
 
-  // Abaixo de 1024 cabe UMA região por vez, e aí "combate" volta a ser uma
-  // escolha de verdade — é a única forma de ver a iniciativa.
-  it('o seletor oferece as três, e o combate esconde as outras', async () => {
+  // Abaixo de 1024 cabe UMA região por vez, e aí "combate" é uma escolha de
+  // verdade: é a única forma de ver a iniciativa. O tabuleiro continua sendo
+  // aba da mesa, não uma terceira região.
+  it('o seletor tem duas regiões, e o combate esconde a mesa', async () => {
     const user = renderCena()
 
     expect(await screen.findByRole('button', { name: 'combate' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'mesa' })).toBeInTheDocument()
+
     await user.click(screen.getByRole('button', { name: 'combate' }))
 
     expect(screen.getByRole('heading', { name: 'Iniciativa' })).toBeInTheDocument()
     expect(screen.queryByRole('tab', { name: /Combatente/ })).not.toBeInTheDocument()
-    expect(screen.queryByText(/Nenhum tabuleiro aberto/)).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'mesa' }))
+
+    expect(screen.getByRole('tab', { name: /Tabuleiro/ })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Iniciativa' })).not.toBeInTheDocument()
   })
 })

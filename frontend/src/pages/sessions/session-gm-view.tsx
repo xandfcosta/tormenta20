@@ -61,19 +61,14 @@ export function SessionGmView(props: {
     setRegion('mesa')
   }
 
-  // Em DUAS colunas a iniciativa é a espinha e não sai da tela: o que alterna é
-  // a segunda coluna. Por isso o seletor muda de opções com a largura — com três
-  // opções ali, "combate" e "mesa" desenhavam a MESMA tela e só "tabuleiro"
-  // mudava alguma coisa (ALE-130, defeito meu da fatia 1 do tabuleiro).
-  const secondColumn = () => (region() === 'tabuleiro' ? 'tabuleiro' : 'mesa')
-  const regionOptions = () =>
-    sideBySide() ? (['tabuleiro', 'mesa'] as const) : (['combate', 'tabuleiro', 'mesa'] as const)
-
+  // Abaixo de 1536 o tabuleiro não tem coluna própria: ele vira ABA da mesa, ao
+  // lado de combatente/bestiário/catálogos/notas. Uma faixa separada
+  // atravessando a tela inteira para trocar só a coluna da direita era um
+  // controle desalinhado do próprio efeito — e antes disso ela chegou a oferecer
+  // duas opções que desenhavam a MESMA tela (ALE-130).
+  const boardHasOwnColumn = () => threeUp()
   const showTracker = () => sideBySide() || region() === 'combate'
-  const showBoard = () =>
-    threeUp() || (sideBySide() ? secondColumn() === 'tabuleiro' : region() === 'tabuleiro')
-  const showWorkspace = () =>
-    threeUp() || (sideBySide() ? secondColumn() === 'mesa' : region() === 'mesa')
+  const showWorkspace = () => sideBySide() || region() === 'mesa'
 
   const activeEntryId = () => {
     const live = props.rt.state()
@@ -89,12 +84,10 @@ export function SessionGmView(props: {
         rt={props.rt}
       />
 
-      <Show when={!threeUp()}>
-        <RegionSwitch
-          region={sideBySide() ? secondColumn() : region()}
-          options={regionOptions()}
-          onRegion={setRegion}
-        />
+      {/* O seletor só existe onde NÃO cabem duas colunas: com as duas na tela,
+          a iniciativa é a espinha e quem troca é a barra de abas da mesa. */}
+      <Show when={!sideBySide()}>
+        <RegionSwitch region={region()} onRegion={setRegion} />
       </Show>
 
       <div
@@ -118,7 +111,7 @@ export function SessionGmView(props: {
           </div>
         </Show>
 
-        <Show when={showBoard()}>
+        <Show when={boardHasOwnColumn()}>
           <BoardRegion rt={props.rt} isGm view={boardView} activeEntryId={activeEntryId()} />
         </Show>
 
@@ -131,6 +124,8 @@ export function SessionGmView(props: {
             onTabChange={setTab}
             selected={selected()}
             onCloseCombatant={() => setSelectedId(null)}
+            boardView={boardHasOwnColumn() ? undefined : boardView}
+            activeEntryId={activeEntryId()}
           />
         </Show>
       </div>
@@ -226,24 +221,15 @@ function TurnBar(props: {
   )
 }
 
-/** As três regiões da cena do mestre. */
-type SceneRegion = 'combate' | 'tabuleiro' | 'mesa'
+/** As duas regiões da cena onde só cabe uma por vez. O tabuleiro não está aqui:
+ *  abaixo de 1536 ele é ABA da mesa, e não região. */
+type SceneRegion = 'combate' | 'mesa'
 
-/**
- * O que a tela mostra onde não cabe tudo — visível, nunca escondido.
- *
- * As opções vêm de fora porque elas MUDAM com a largura: em duas colunas a
- * iniciativa está sempre na tela e só a segunda coluna alterna, então oferecer
- * "combate" ali seria oferecer um botão que não muda nada (ALE-130).
- */
-function RegionSwitch(props: {
-  region: SceneRegion
-  options: readonly SceneRegion[]
-  onRegion: (region: SceneRegion) => void
-}) {
+/** Uma região por vez onde não cabem duas — visível, nunca escondida. */
+function RegionSwitch(props: { region: SceneRegion; onRegion: (region: SceneRegion) => void }) {
   return (
     <div class="flex shrink-0 gap-1">
-      <For each={props.options}>
+      <For each={['combate', 'mesa'] as const}>
         {(value) => (
           <Button
             size="sm"
