@@ -83,6 +83,26 @@ describe('PericiasStep', () => {
     }
   })
 
+  /**
+   * p65, a lista do Guerreiro: "Luta (For) OU Pontaria (Des), Fortitude (Con),
+   * mais 2 a sua escolha entre ... Luta (For), ... Pontaria (Des) e Reflexos".
+   * O par aparece DE NOVO no bolo das duas escolhas — quem pega Pontaria de
+   * graça ainda pode treinar Luta gastando uma escolha. O catálogo não repetia o
+   * par, e como ele também é excluído do bolo livre, Luta ficava inalcançável na
+   * criação para quem escolhesse Pontaria.
+   */
+  it('quem escolhe Pontaria ainda pode treinar Luta gastando uma escolha (p65)', async () => {
+    const { draft } = renderStep(withClass())
+
+    await userEvent.click(screen.getByRole('button', { name: 'Pontaria', pressed: false }))
+    await userEvent.click(classBand().getByRole('button', { name: 'Luta' }))
+
+    expect(draft.values.trainedExpertises).toContain('Pontaria')
+    expect(draft.values.trainedExpertises).toContain('Luta')
+    // A gratuita é a do par; a segunda custa uma das duas escolhas.
+    expect(classBand().getByText(`1 de ${GUERREIRO_ESCOLHAS}`)).toBeInTheDocument()
+  })
+
   it('a cota da classe conta o que já foi marcado', async () => {
     renderStep(withClass())
 

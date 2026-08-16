@@ -85,7 +85,12 @@ export function periciaBudget(
   trained: string[],
 ): PericiaBudget {
   const set = new Set(trained)
-  const classPoolPicks = plan.classPool.filter((p) => set.has(p)).length
+  // O par "ou" também está no bolo (o livro o repete lá — p65 e as outras três
+  // classes com par), e UMA das duas é a concessão gratuita: sem descontá-la, a
+  // escolha grátis passaria a comer uma das escolhas pagas.
+  const granted = plan.eitherOr?.find((option) => set.has(option))
+  const classPoolPicks =
+    plan.classPool.filter((p) => set.has(p)).length - (granted && plan.classPool.includes(granted) ? 1 : 0)
   const freePoolPicks = plan.freePool.filter((p) => set.has(p)).length
   const classSpent = Math.min(classPoolPicks, plan.classCount)
   const freeSpent = classPoolPicks - classSpent + freePoolPicks

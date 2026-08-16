@@ -85,9 +85,11 @@
       "Iniciativa",
       "Intimidação",
       "Jogatina",
+      "Luta",
       "Ofício",
       "Percepção",
-      "Pilotagem"
+      "Pilotagem",
+      "Pontaria"
     ]
   },
   "Caçador": {
@@ -110,8 +112,10 @@
       "Furtividade",
       "Iniciativa",
       "Investigação",
+      "Luta",
       "Ofício",
       "Percepção",
+      "Pontaria",
       "Reflexos"
     ]
   },
@@ -193,8 +197,10 @@
       "Guerra",
       "Iniciativa",
       "Intimidação",
+      "Luta",
       "Ofício",
       "Percepção",
+      "Pontaria",
       "Reflexos"
     ]
   },
@@ -281,10 +287,12 @@
       "Atuação",
       "Cavalgar",
       "Conhecimento",
+      "Diplomacia",
       "Enganação",
       "Fortitude",
       "Guerra",
       "Iniciativa",
+      "Intimidação",
       "Intuição",
       "Investigação",
       "Jogatina",

@@ -169,7 +169,7 @@ function PericiaBands(props: {
           label="Da classe"
           spent={budget().classSpent}
           total={props.plan.classCount}
-          pool={props.plan.classPool}
+          pool={classBandPool(props.plan, props.trained)}
           trained={props.trained}
           // Class picks never hard-lock while free budget remains: the excess
           // spills into it, which is what the overflow notice explains.
@@ -196,6 +196,26 @@ function PericiaBands(props: {
       </Show>
     </>
   )
+}
+
+/**
+ * O bolo da classe como a BANDA o mostra.
+ *
+ * O livro repete o par "ou" dentro do bolo das escolhas (p65 e as outras três
+ * classes com par) justamente para que a OUTRA possa ser treinada com uma
+ * escolha paga. Na tela, porém, o par tem a sua própria linha, e mostrá-lo
+ * também aqui seria a mesma perícia duas vezes com significados diferentes.
+ *
+ * Então: enquanto o par não estiver resolvido, a banda esconde as duas (pegar
+ * uma delas ali seria pagar pelo que a linha de cima dá de graça); resolvido,
+ * ela passa a oferecer só a outra.
+ */
+function classBandPool(plan: PericiaPlan, trained: string[]): string[] {
+  const pair = plan.eitherOr
+  if (!pair) return plan.classPool
+  const granted = pair.find((option) => trained.includes(option))
+  const hidden = granted ? [granted] : pair
+  return plan.classPool.filter((name) => !hidden.includes(name))
 }
 
 /** One capped band: a bead counter over its own pool. */
