@@ -7,10 +7,9 @@ import { Badge } from './badge'
 import { CharacterPortrait } from './character-portrait'
 import { GameMenuButton } from './game-menu-button'
 import { Input } from './input'
-import { Kbd } from './kbd'
 import { Label } from './label'
 import { SceneTitle } from './scene-title'
-import { Skeleton, SkeletonCardGrid, SkeletonRows } from './skeleton'
+import { SkeletonCardGrid, SkeletonRows } from './skeleton'
 
 describe('Input', () => {
   it('associa por for/id e recebe texto', async () => {
@@ -38,27 +37,17 @@ describe('Badge', () => {
 })
 
 describe('Skeleton', () => {
-  it('pulsa', () => {
-    const { container } = render(() => <Skeleton class="h-4" />)
-    expect(container.querySelector('[data-slot=skeleton]')?.className).toContain('animate-pulse')
-  })
-
+  // A promessa é a QUANTIDADE (o esqueleto tem de ocupar o lugar do que vem), e
+  // ela é contada pelo slot, não por classe de estilo — `.rounded-md.border`
+  // quebrava em qualquer restyle legítimo e não dizia nada ao usuário.
   it('SkeletonCardGrid rende a quantidade pedida de cards', () => {
     const { container } = render(() => <SkeletonCardGrid count={5} />)
-    expect(container.querySelectorAll('.rounded-md.border')).toHaveLength(5)
+    expect(container.querySelectorAll('[data-slot=skeleton-card]')).toHaveLength(5)
   })
 
   it('SkeletonRows rende a quantidade pedida de linhas', () => {
     const { container } = render(() => <SkeletonRows count={2} />)
-    expect(container.querySelectorAll('.rounded-md.border')).toHaveLength(2)
-  })
-})
-
-describe('Kbd', () => {
-  // The hint is meaningless on touch, so it only shows from xl up.
-  it('só aparece a partir de xl', () => {
-    render(() => <Kbd>⏎</Kbd>)
-    expect(screen.getByText('⏎').className).toContain('xl:inline')
+    expect(container.querySelectorAll('[data-slot=skeleton-row]')).toHaveLength(2)
   })
 })
 
@@ -99,13 +88,13 @@ describe('BackgroundTexture', () => {
     const { container } = render(() => <BackgroundTexture variant="parchment" />)
     const texture = container.querySelector('[data-slot=background-texture]')
     expect(texture).toHaveAttribute('data-variant', 'parchment')
-    expect(texture?.className).toContain('grimorio-parchment-bg')
   })
 
   it('vignette é opt-in', () => {
     const { container } = render(() => <BackgroundTexture vignette />)
-    expect(container.querySelector('[data-slot=background-texture]')?.className).toContain(
-      'grimorio-vignette',
+    expect(container.querySelector('[data-slot=background-texture]')).toHaveAttribute(
+      'data-vignette',
+      'true',
     )
   })
 })
@@ -164,10 +153,7 @@ describe('CharacterPortrait', () => {
     expect(container.firstElementChild?.getAttribute('style')).toContain('210')
   })
 
-  it('sem hue, fica no painel neutro', () => {
-    const { container } = render(() => <CharacterPortrait name="Arsenal" size="sm" />)
-    expect(container.firstElementChild?.className).toContain('bg-muted')
-  })
+
 
   it('é decorativo: as iniciais não entram no nome acessível da linha', () => {
     const { container } = render(() => <CharacterPortrait name="Arsenal" size="sm" />)

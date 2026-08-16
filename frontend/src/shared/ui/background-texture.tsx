@@ -27,6 +27,9 @@ export function BackgroundTexture(props: BackgroundTextureProps) {
       aria-hidden="true"
       data-slot="background-texture"
       data-variant={variant()}
+      // Contrato observável do opt-in, como o `data-variant`: a classe é o
+      // estilo dele, e testar a classe amarra o teste ao CSS.
+      data-vignette={local.vignette ? 'true' : undefined}
       class={cn(
         'pointer-events-none absolute inset-0 -z-10',
         variant() === 'stone' ? 'grimorio-stone' : 'grimorio-parchment-bg',

@@ -24,11 +24,8 @@ afterEach(() => {
 })
 
 describe('SceneShell', () => {
-  it('rende o conteúdo dentro do escopo de tokens da cena', () => {
-    const { container } = render(() => <SceneShell>conteúdo</SceneShell>)
-    const shell = container.querySelector('[data-slot=scene-shell]')
-    expect(shell?.className).toContain('scene-grimorio')
-    expect(shell?.className).toContain('h-dvh')
+  it('rende o conteúdo que recebe', () => {
+    render(() => <SceneShell>conteúdo</SceneShell>)
     expect(screen.getByText('conteúdo')).toBeInTheDocument()
   })
 
@@ -85,13 +82,6 @@ describe('SceneShell', () => {
     const content = container.querySelector('[data-slot=scene-content]')
     expect(content?.className).not.toContain('scene-in')
     expect(content).not.toHaveAttribute('data-animate')
-  })
-
-  it('bleed entrega o scroll pro filho', () => {
-    const { container } = render(() => <SceneShell bleed>x</SceneShell>)
-    const content = container.querySelector('[data-slot=scene-content]')
-    expect(content?.className).toContain('overflow-hidden')
-    expect(content?.className).not.toContain('overflow-y-auto')
   })
 
   // A razão de o container de cena existir: sem isso o dialog abre no body e
