@@ -41,3 +41,30 @@ export async function expectNoHorizontalOverflow(
     expect(overflow, `rolagem horizontal @ ${vp.name} (${vp.width}×${vp.height})`).toBeLessThanOrEqual(1)
   }
 }
+
+/**
+ * Falha no primeiro formato em que a PÁGINA rola verticalmente.
+ *
+ * Isto é premissa de produto, não estética: a cena de jogo mostra tudo numa
+ * tela e o mestre não caça informação rolando no meio do combate. Estava
+ * afirmada em mensagem de commit ("verificado: não rola em 1920, 1024 nem
+ * 390") e em lugar nenhum que rodasse de novo — a próxima mudança de layout a
+ * quebraria em silêncio.
+ *
+ * Só um browser testemunha: em jsdom `scrollHeight` e `clientHeight` são ambos
+ * zero e a asserção passaria verde sobre uma cena de três telas de altura.
+ *
+ * @example await expectPageDoesNotScroll(page, VIEWPORTS)
+ */
+export async function expectPageDoesNotScroll(
+  page: Page,
+  viewports: readonly { name: string; width: number; height: number }[],
+): Promise<void> {
+  for (const vp of viewports) {
+    await page.setViewportSize({ width: vp.width, height: vp.height })
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollHeight - document.documentElement.clientHeight,
+    )
+    expect(overflow, `a página rola @ ${vp.name} (${vp.width}×${vp.height})`).toBeLessThanOrEqual(1)
+  }
+}

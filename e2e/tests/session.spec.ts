@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { VIEWPORTS, expectPageDoesNotScroll } from './support/viewports'
 
 const CAMPAIGN = 'Snapshot Test ALE-33' // the seed chronicle with a live session
 
@@ -129,6 +130,19 @@ test.describe('Sessão ao vivo', () => {
     await expect(page.getByText('Efeitos temporários de cena foram limpos.')).toBeVisible()
     // A aba viva é o que estava em jogo: numa aba travada isto nunca resolve.
     await expect(page.getByRole('button', { name: 'Próximo turno' })).toBeEnabled({ timeout: 5000 })
+  })
+
+  /**
+   * A premissa do app, dita pelo dono: "sensação de jogo, não ter scroll,
+   * mostrar os dados todos na tela". A cena do mestre foi reconstruída como
+   * shell por causa disso (ALE-122) e a verificação viveu só numa mensagem de
+   * commit. Aqui ela roda de novo a cada push, nos seis formatos.
+   */
+  test('a cena do mestre cabe na tela: a página não rola em nenhum formato', async ({ page }) => {
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('heading', { name: 'Iniciativa' })).toBeVisible()
+
+    await expectPageDoesNotScroll(page, VIEWPORTS)
   })
 
   test('Sair da sessão volta pra crônica', async ({ page }) => {
