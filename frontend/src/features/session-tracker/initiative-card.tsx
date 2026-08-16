@@ -42,14 +42,18 @@ export function InitiativeCard(props: {
   return (
     <section class="rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)]">
       <header class="flex flex-row items-start justify-between gap-3 border-b border-grimorio-iron p-3 sm:p-4">
-        <div class="space-y-2">
+        {/* Uma linha só: no celular deitado o cabeçalho e a faixa de turno
+            comiam metade dos 390px de altura antes de a lista começar. */}
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
           <h2 class="font-heading text-lg uppercase tracking-wide text-grimorio-gold">
             Iniciativa
           </h2>
-          <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <ConnectionChip status={status()} dirty={props.rt.hasPersistenceWarning()} />
+          <ConnectionChip status={status()} dirty={props.rt.hasPersistenceWarning()} />
+          {/* A rodada só sai aqui quando não há faixa de turno: com ela na tela
+              seriam dois "Rodada 1" a poucos pixels um do outro (ALE-122). */}
+          <Show when={props.turnControls !== false}>
             <span class="font-mono tabular-nums">Rodada {props.rt.state().round}</span>
-          </div>
+          </Show>
         </div>
         <Show when={props.isGm && props.turnControls !== false}>
           <div class="flex flex-wrap justify-end gap-2">

@@ -68,6 +68,7 @@ function renderCardWithRt(
   selectedId?: string | null,
   isGm = true,
   entries: InitiativeEntry[] = [OGRO, HEROI],
+  turnControls?: boolean,
 ) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const rt = new FakeRealtime(entries)
@@ -79,6 +80,7 @@ function renderCardWithRt(
         myCharacterIds={new Set<number>()}
         onSelect={onSelect}
         selectedId={selectedId}
+        turnControls={turnControls}
       />
     </QueryClientProvider>
   ))
@@ -248,5 +250,28 @@ describe('ocultar os PV de uma linha', () => {
     renderCardWithRt(undefined, null, false)
 
     expect(screen.queryByRole('button', { name: /(Ocultar|Revelar) PV de Ogro/ })).not.toBeInTheDocument()
+  })
+})
+
+
+/**
+ * Altura é recurso escasso: no celular deitado (844×390) a soma de cabeçalho,
+ * faixa de turno e seletor de região já come metade da tela antes de a lista
+ * começar. O que dava para cortar sem decisão de produto era a REPETIÇÃO — a
+ * faixa de turno fixa já diz a rodada, e o card dizia de novo a poucos pixels.
+ */
+describe('o card não repete o que a faixa de turno já diz', () => {
+  it('com a faixa na cena, a rodada não sai duas vezes', () => {
+    renderCardWithRt(undefined, null, true, [OGRO, HEROI], false)
+
+    expect(screen.queryByText(/Rodada/)).not.toBeInTheDocument()
+  })
+
+  // Sem faixa (a view do jogador usa o card sozinho), a rodada continua sendo
+  // do card: cortar nos dois casos deixaria a tela sem dizer em que rodada está.
+  it('sem a faixa, o card continua dizendo a rodada', () => {
+    renderCardWithRt(undefined, null, false)
+
+    expect(screen.getByText(/Rodada 1/)).toBeInTheDocument()
   })
 })
