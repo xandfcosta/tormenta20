@@ -34,6 +34,9 @@ class FakeSocket implements SessionSocket {
   }
 
   disconnect(): void {
+    // Entra na MESMA linha do tempo dos emits: sem isto não dá para afirmar que
+    // o `leave-session` saiu antes, que é a regra em jogo.
+    this.emitted.push({ event: '(disconnect)', args: [] })
     this.connected = false
     this.disconnectCount++
   }
@@ -96,12 +99,17 @@ describe('createSessionSocket — ciclo de vida', () => {
     })
   })
 
-  it('sai da sala antes de desconectar', () => {
+  // A ORDEM é a regra: desconectar antes de sair da sala deixa o servidor com
+  // presença fantasma até o timeout. A asserção antiga comparava o índice com o
+  // tamanho da lista — verdadeira para qualquer evento que exista — então media
+  // a existência de novo, não a ordem.
+  it('sai da sala ANTES de desconectar', () => {
     const socket = withSocket(() => {})
 
     const events = socket.emitted.map((e) => e.event)
     expect(events).toContain('leave-session')
-    expect(events.indexOf('leave-session')).toBeLessThan(events.length)
+    expect(socket.disconnectCount).toBe(1)
+    expect(events.indexOf('leave-session')).toBeLessThan(events.indexOf('(disconnect)'))
   })
 })
 

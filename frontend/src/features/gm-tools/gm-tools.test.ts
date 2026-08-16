@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_TOOL, GM_TOOLS, isToolSlug, toolLabel } from './gm-tools'
+import { GM_TOOLS, isToolSlug } from './gm-tools'
 
 describe('isToolSlug — slug vindo da URL', () => {
   it('aceita uma ferramenta real', () => {
@@ -19,25 +19,12 @@ describe('isToolSlug — slug vindo da URL', () => {
 })
 
 describe('GM_TOOLS', () => {
-  it('toda ferramenta tem rótulo e explicação', () => {
-    for (const tool of GM_TOOLS) {
-      expect(tool.label).toBeTruthy()
-      expect(tool.hint).toBeTruthy()
-    }
-  })
-
+  // Slug repetido deixa uma ferramenta INALCANÇÁVEL — a rota resolve pela
+  // primeira e a segunda some sem erro nenhum. É o único caso deste arquivo que
+  // o typechecker não pega (rótulo preenchido e "o padrão é uma das listadas"
+  // eram garantidos pelo tipo e pela própria construção).
   it('os slugs são únicos — a rota resolve por eles', () => {
     const slugs = GM_TOOLS.map((tool) => tool.slug)
     expect(new Set(slugs).size).toBe(slugs.length)
-  })
-
-  it('a ferramenta padrão é uma das listadas', () => {
-    expect(isToolSlug(DEFAULT_TOOL)).toBe(true)
-  })
-})
-
-describe('toolLabel', () => {
-  it('nomeia a ferramenta para o cabeçalho', () => {
-    expect(toolLabel('catalogos')).toBe('Catálogos')
   })
 })

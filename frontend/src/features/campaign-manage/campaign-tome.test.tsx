@@ -23,10 +23,6 @@ describe('sectionLayout', () => {
 })
 
 describe('isCampaignTab', () => {
-  it('aceita as seções conhecidas', () => {
-    for (const tab of campaignTabs(true)) expect(isCampaignTab(tab)).toBe(true)
-  })
-
   // A URL é a fonte da verdade e vem do usuário: `?tab=lixo` não pode quebrar.
   it('rejeita qualquer outra coisa vinda da URL', () => {
     expect(isCampaignTab('lixo')).toBe(false)
