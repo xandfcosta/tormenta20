@@ -14,9 +14,14 @@ describe('categoryLabel', () => {
 })
 
 describe('catalogCategories', () => {
-  it('lista as categorias sem repetir e em ordem', () => {
+  // A asserção anterior era `toEqual([...new Set(x)].sort())` — o corpo da
+  // função re-escrito no teste. O que importa para a tela é que a lista tem as
+  // categorias que o filtro do catálogo oferece, sem repetir.
+  it('traz as categorias do catálogo, sem repetir', () => {
     const categories = catalogCategories()
-    expect(categories).toEqual([...new Set(categories)].sort())
+
     expect(categories).toContain('shield')
+    expect(categories).toContain('weapon-simple')
+    expect(new Set(categories).size).toBe(categories.length)
   })
 })

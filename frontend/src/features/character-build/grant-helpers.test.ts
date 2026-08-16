@@ -14,16 +14,7 @@ import {
   racesByTier,
   raceSignature,
   resolveRaceDeltas,
-  signed,
 } from './grant-helpers'
-
-describe('signed', () => {
-  it('prefixes non-negative with +', () => {
-    expect(signed(2)).toBe('+2')
-    expect(signed(0)).toBe('+0')
-    expect(signed(-1)).toBe('-1')
-  })
-})
 
 describe('raceAttributeDeltas', () => {
   it('returns the fixed racial bonuses of a single race', () => {

@@ -44,12 +44,19 @@ describe('draftPowerPool', () => {
 })
 
 describe('facetTally', () => {
-  it('counts each source and the whole pool', () => {
+  // `tally.all === pool.length` era `all: pool.length` conferido contra si
+  // mesmo, e a soma das facetas fecha por construção. O que o chip promete ao
+  // jogador é a CONTAGEM daquela origem — e para o Lefou as três existem.
+  it('conta cada origem do que o chip vai mostrar', () => {
     const pool = draftPowerPool({ classes: guerreiro, races: ['Lefou'] }, {})
     const tally = facetTally(pool)
 
-    expect(tally.all).toBe(pool.length)
-    expect(tally.class + tally.general + tally.tormenta).toBe(tally.all)
+    expect(tally.class).toBe(pool.filter((p) => p.source === 'class').length)
+    expect(tally.class).toBeGreaterThan(0)
+    expect(tally.general).toBeGreaterThan(0)
+    // Só o Lefou abre os poderes da Tormenta (p23).
+    expect(tally.tormenta).toBeGreaterThan(0)
+    expect(facetTally(draftPowerPool({ classes: guerreiro, races: ['Humano'] }, {})).tormenta).toBe(0)
   })
 })
 
