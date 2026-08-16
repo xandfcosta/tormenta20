@@ -80,9 +80,17 @@ test.describe('Sessão ao vivo', () => {
    * zero, e a mesma asserção passa verde sobre a tela quebrada.
    */
   test('a 1024px os controles de PV ficam dentro da coluna da iniciativa', async ({ page }) => {
+    const alvo = `Alvo de layout ${Date.now()}`
     await page.setViewportSize({ width: 1024, height: 768 })
     await page.goto('/campaigns/1/sessions/4')
-    await expect(page.getByRole('button', { name: /^Ferir / }).first()).toBeVisible()
+    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+
+    // O teste cria o próprio combatente: a iniciativa da seed do CI está VAZIA,
+    // e esperar por uma linha que não existe fazia o teste falhar lá e passar
+    // aqui. Ele também o remove no fim, para a seed sair como entrou.
+    await page.getByLabel('Nome').fill(alvo)
+    await page.getByRole('button', { name: 'Adicionar', exact: true }).click()
+    await expect(page.getByRole('button', { name: `Ferir ${alvo}` })).toBeVisible()
 
     const tracker = page
       .getByRole('heading', { name: 'Iniciativa' })
@@ -93,6 +101,9 @@ test.describe('Sessão ao vivo', () => {
         .filter((button) => button.getBoundingClientRect().right > limit)
         .map((button) => button.getAttribute('aria-label') ?? button.textContent)
     })
+
+    await page.getByRole('button', { name: `Remover ${alvo}` }).click()
+    await expect(page.getByRole('button', { name: `Ferir ${alvo}` })).toBeHidden()
 
     expect(escaping).toEqual([])
   })
