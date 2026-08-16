@@ -99,12 +99,16 @@ export function SessionGmView(props: {
         )}
       >
         <Show when={showTracker()}>
-          <div class="flex min-h-0 min-w-0 flex-col overflow-y-auto">
+          {/* A coluna NÃO rola: quem rola é a lista, por dentro do card. Rolando
+              a coluna, o cabeçalho e as ações ("Adicionar grupo", "+ Combatente")
+              subiam junto e sumiam justo quando a lista ficava longa (ALE-131). */}
+          <div class="flex min-h-0 min-w-0 flex-col">
             <InitiativeCard
               rt={props.rt}
               isGm
               myCharacterIds={props.myCharacterIds}
               turnControls={false}
+              fillHeight
               onSelect={select}
               selectedId={selectedId()}
             />

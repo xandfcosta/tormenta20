@@ -35,14 +35,26 @@ export function InitiativeCard(props: {
   /** Falso quando a cena já tem a faixa de turno fixa — senão o mesmo
    *  "Próximo turno" aparece duas vezes na tela (ALE-122). */
   turnControls?: boolean
+  /** O card ocupa a altura que o pai dá e rola SÓ a lista por dentro. Verdadeiro
+   *  na cena do mestre, onde a coluna tem altura definida; falso no rail do
+   *  jogador, que já rola por fora e não daria altura nenhuma (ALE-131). */
+  fillHeight?: boolean
 }) {
   const myCharacterId = () => [...props.myCharacterIds][0]
   const [addOpen, setAddOpen] = createSignal(false)
   const status = () => connectionStatus(props.rt.isConnected(), props.rt.error())
 
   return (
-    <section class="rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)]">
-      <header class="flex flex-row items-start justify-between gap-3 border-b border-grimorio-iron p-3 sm:p-4">
+    <section
+      class={cn(
+        'rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)]',
+        // Sem isto, quem rola é a COLUNA inteira e o cabeçalho sobe junto: numa
+        // mesa de dez combatentes, adicionar o décimo primeiro exigia rolar de
+        // volta ao topo para achar o botão (ALE-131).
+        props.fillHeight && 'flex h-full min-h-0 flex-col',
+      )}
+    >
+      <header class="flex shrink-0 flex-row items-start justify-between gap-3 border-b border-grimorio-iron p-3 sm:p-4">
         {/* Uma linha só: no celular deitado o cabeçalho e a faixa de turno
             comiam metade dos 390px de altura antes de a lista começar. */}
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
@@ -73,7 +85,14 @@ export function InitiativeCard(props: {
         </Show>
       </header>
 
-      <div class="space-y-3 p-3 sm:p-4">
+      <div
+        class={cn(
+          'space-y-3 p-3 sm:p-4',
+          // As AÇÕES ficam ancoradas junto do cabeçalho: elas são o que o mestre
+          // procura quando a lista está longa, e eram justamente o que sumia.
+          props.fillHeight && 'flex min-h-0 flex-1 flex-col pb-0 sm:pb-0',
+        )}
+      >
         <Show when={props.rt.error()}>
           {(message) => <p class="text-sm text-destructive">Erro realtime: {message()}</p>}
         </Show>
@@ -131,7 +150,14 @@ export function InitiativeCard(props: {
             dá folgas diferentes. Medido a 1024px, a linha em modo horizontal
             estourava a coluna em 141px e os botões de PV ficavam fora da área
             visível (ALE-122). */}
-        <div class="@container space-y-2">
+        {/* Só a LISTA rola. É o mesmo conserto que a barra de abas da ficha já
+            recebeu (ALE-122): o cartão é fixo e só o bloco de dentro rola. */}
+        <div
+          class={cn(
+            '@container space-y-2',
+            props.fillHeight && '-mr-1 min-h-0 flex-1 overflow-y-auto pr-1 pb-3 sm:pb-4',
+          )}
+        >
           <For each={props.rt.state().initiative}>
             {(entry, index) => {
               const onTurn = () => index() === props.rt.state().turnIndex

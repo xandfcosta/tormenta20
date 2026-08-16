@@ -147,6 +147,60 @@ test.describe('Sessão ao vivo', () => {
   })
 
   /**
+   * Só a LISTA rola; o cabeçalho e as ações ficam ancorados (ALE-131).
+   *
+   * O defeito: quem rolava era a coluna inteira, então descer a lista levava
+   * embora "Adicionar grupo" e "+ Combatente" — numa mesa de dez combatentes,
+   * adicionar o décimo primeiro exigia rolar de volta ao topo.
+   *
+   * Por que e2e: é rolagem e altura REAIS. Em jsdom todo elemento mede zero,
+   * `scrollTop` nunca sai de zero e a mesma asserção passaria verde sobre a
+   * tela quebrada. A janela é baixa de propósito, para a lista transbordar com
+   * poucos combatentes — o teste traz os próprios, porque a iniciativa da seed
+   * do CI está vazia.
+   */
+  test('rolar a iniciativa não leva embora as ações', async ({ page }) => {
+    const nomes = [1, 2, 3, 4, 5].map((n) => `Fileira de teste ${Date.now()}-${n}`)
+    await page.setViewportSize({ width: 1280, height: 420 })
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+
+    await page.getByRole('button', { name: 'Combatente' }).click()
+    for (const nome of nomes) {
+      await page.getByLabel('Nome').fill(nome)
+      await page.getByRole('button', { name: 'Adicionar', exact: true }).click()
+      await expect(page.getByRole('button', { name: `Remover ${nome}` })).toBeVisible()
+    }
+
+    const acao = page.getByRole('button', { name: 'Adicionar grupo' })
+    await expect(acao).toBeInViewport()
+
+    // Rola a LISTA até o fim, não a página.
+    const rolou = await page.evaluate(() => {
+      const linha = document.querySelector('button[aria-label^="Iniciativa de"]')
+      const lista = linha?.closest('[class*="overflow-y-auto"]') as HTMLElement | null
+      if (!lista) return { achou: false, transbordou: false, rolou: 0 }
+      lista.scrollTop = lista.scrollHeight
+      return {
+        achou: true,
+        transbordou: lista.scrollHeight > lista.clientHeight + 8,
+        rolou: lista.scrollTop,
+      }
+    })
+
+    // Sem transbordo o teste não prova nada: seria uma rolagem que não aconteceu.
+    expect(rolou).toMatchObject({ achou: true, transbordou: true })
+    expect(rolou.rolou).toBeGreaterThan(0)
+    await expect(acao).toBeInViewport()
+    await expect(page.getByRole('heading', { name: 'Iniciativa' })).toBeInViewport()
+
+    for (const nome of nomes) {
+      await page.getByRole('button', { name: `Remover ${nome}` }).click()
+    }
+    await expect(page.getByRole('button', { name: `Remover ${nomes[0]}` })).toBeHidden()
+  })
+
+  /**
    * A armadilha mais reincidente do repositório (ALE-95/96/121/122, quatro vezes
    * só nesta issue): ler `.data` de uma query PENDENTE suspende, e o `Suspense`
    * que o router põe em todo route match DESANEXA a cena inteira — a tela pisca
