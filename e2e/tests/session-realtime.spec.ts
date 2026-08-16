@@ -128,8 +128,9 @@ test.describe('Sessão ao vivo — dois clientes', () => {
       await telaDoMestre.getByRole('dialog').getByRole('button', { name: 'Encerrar' }).click()
       await expect(telaDoJogador.getByRole('grid', { name: new RegExp(lugar) })).toBeHidden()
 
-      // Sai como entrou: o combatente do teste volta para fora da iniciativa.
-      await telaDoMestre.getByRole('button', { name: 'combate', exact: true }).click()
+      // Sai como entrou: o combatente do teste volta para fora da iniciativa. Não
+      // precisa trocar de região para isso — nesta largura a iniciativa é a
+      // espinha e fica sempre na tela; só a segunda coluna alterna (ALE-130).
       await telaDoMestre.getByRole('button', { name: `Remover ${figurante}` }).click()
       await expect(telaDoMestre.getByText(figurante)).toBeHidden()
     } finally {
