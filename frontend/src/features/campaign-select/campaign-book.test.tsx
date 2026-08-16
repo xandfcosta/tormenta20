@@ -42,9 +42,9 @@ const leaf = () => document.querySelector<HTMLElement>('.grimorio-leaf')
  * `animationName` pinned on — the component filters on that name and would
  * ignore a nameless event.
  */
-function endLeafAnimation() {
+function endLeafAnimation(name = 'grimorio-leaf-turn') {
   const event = new Event('animationend', { bubbles: true })
-  Object.defineProperty(event, 'animationName', { value: 'grimorio-leaf-turn' })
+  Object.defineProperty(event, 'animationName', { value: name })
   leaf()?.dispatchEvent(event)
 }
 
@@ -102,6 +102,23 @@ describe('CampaignBook — virada de folha', () => {
     setPick(campaign(2))
 
     endLeafAnimation()
+
+    expect(leaf()).toBeNull()
+  })
+
+  /**
+   * Voltar uma crônica anima com o espelho (`--rev`), e o `animationend` chega
+   * com OUTRO nome. O componente filtra por nome, e o teste só disparava o nome
+   * da ida: apagar o braço do `-rev` da produção deixava tudo verde, e na tela a
+   * folha da volta ficaria congelada sobre a lombada para sempre.
+   */
+  it('a folha da VOLTA também sai da frente quando a animação termina', () => {
+    const setPick = mountBook()
+    setPick(campaign(2))
+    endLeafAnimation()
+    setPick(campaign(1)) // de volta: dir = -1
+
+    endLeafAnimation('grimorio-leaf-turn-rev')
 
     expect(leaf()).toBeNull()
   })

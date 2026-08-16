@@ -52,7 +52,11 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
 
   return (
     <div ref={scrollRef} class={cn('overflow-y-auto', props.class)}>
-      <div class="relative w-full" style={{ height: `${virtualizer.getTotalSize()}px` }}>
+      <div
+        data-slot="virtual-spacer"
+        class="relative w-full"
+        style={{ height: `${virtualizer.getTotalSize()}px` }}
+      >
         <For each={virtualizer.getVirtualItems()}>
           {(row) => (
             <div

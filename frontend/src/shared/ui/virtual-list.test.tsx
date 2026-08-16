@@ -33,8 +33,10 @@ describe('VirtualList', () => {
         renderItem={(row) => <button type="button">{row.name}</button>}
       />
     ))
-    const spacer = container.querySelector<HTMLElement>('.relative')
-    expect(spacer?.style.height).toBe(`${400 * 34}px`)
+    // 400 linhas de 34px = 13600. O número é ESCRITO: `400 * 34` no teste é a
+    // mesma conta da implementação, e passaria verde com as duas erradas juntas.
+    const spacer = container.querySelector<HTMLElement>('[data-slot=virtual-spacer]')
+    expect(spacer?.style.height).toBe('13600px')
   })
 
   it('lista vazia não pergunta a chave de item nenhum', () => {
