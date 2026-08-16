@@ -137,6 +137,10 @@ func (g *realtimeGateway) onJoin(sock *socket.Socket, args []any) {
 	}
 	room := sessionRoomName(ctx.sessionID)
 	sock.Join(socket.Room(room))
+	// Sala por PAPEL: o estado sai duas vezes, inteiro para o mestre e redigido
+	// para os jogadores, em vez de um payload por socket. O papel é o do momento
+	// da entrada — quem for promovido no meio da sessão reentra (ALE-122).
+	sock.Join(socket.Room(roleRoomName(ctx.sessionID, ctx.role)))
 	g.trackPresence(sock, ctx.sessionID)
 	ackOK(ctx.ack, map[string]any{"joined": room})
 }
@@ -158,7 +162,9 @@ func (g *realtimeGateway) onLeave(sock *socket.Socket, args []any) {
 }
 
 // onGetState hydrates the tracker (first pull restores the persisted state), refreshes
-// character maxes from the DB, and acks the full state. Mirrors getSessionState.
+// character maxes from the DB, and acks the state COMO O PAPEL PODE VER — o ack é
+// um segundo caminho do estado até a tela, e redigir só o broadcast deixaria o PV
+// oculto sair inteiro na primeira carga.
 func (g *realtimeGateway) onGetState(sock *socket.Socket, args []any) {
 	ctx, ok := g.access(sock, args)
 	if !ok {
@@ -168,7 +174,7 @@ func (g *realtimeGateway) onGetState(sock *socket.Socket, args []any) {
 		g.wsError(sock, "Could not load session state")
 		return
 	}
-	ackOK(ctx.ack, g.s.sessions.refreshCharacterMaxes(context.Background(), ctx.sessionID))
+	ackOK(ctx.ack, stateForRole(ctx.role, g.s.sessions.refreshCharacterMaxes(context.Background(), ctx.sessionID)))
 }
 
 // onDisconnect drops the socket from every room and broadcasts each changed roster.
@@ -214,13 +220,15 @@ func (g *realtimeGateway) mutateAndBroadcast(sock *socket.Socket, ctx msgCtx, mu
 		return
 	}
 	g.emitSessionState(ctx.sessionID, state)
-	ackOK(ctx.ack, state)
+	ackOK(ctx.ack, stateForRole(ctx.role, state))
 }
 
 // emitSessionState broadcasts the tracker to the room and kicks off a fire-and-forget
 // persist.
 func (g *realtimeGateway) emitSessionState(sessionID int64, state *SessionRuntimeState) {
-	g.io.To(socket.Room(sessionRoomName(sessionID))).Emit("session-state", state)
+	g.io.To(socket.Room(roleRoomName(sessionID, "gm"))).Emit("session-state", state)
+	g.io.To(socket.Room(roleRoomName(sessionID, "player"))).
+		Emit("session-state", redactForPlayers(state))
 	go g.persistAndWarn(sessionID)
 }
 
@@ -241,6 +249,15 @@ func (g *realtimeGateway) persistAndWarn(sessionID int64) {
 
 func sessionRoomName(sessionID int64) string {
 	return "session:" + strconv.FormatInt(sessionID, 10)
+}
+
+// roleRoomName separa mestre de jogador dentro da sessão: é o que deixa o mesmo
+// evento sair com conteúdos diferentes sem montar um payload por socket.
+func roleRoomName(sessionID int64, role string) string {
+	if role != "gm" {
+		role = "player"
+	}
+	return sessionRoomName(sessionID) + ":" + role
 }
 
 func sockData(sock *socket.Socket) *socketData {

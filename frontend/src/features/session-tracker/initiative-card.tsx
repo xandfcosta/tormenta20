@@ -1,4 +1,4 @@
-import { Plus, Swords, Trash2 } from 'lucide-solid'
+import { Eye, EyeOff, Plus, Swords, Trash2 } from 'lucide-solid'
 import { For, Show, createEffect, createSignal } from 'solid-js'
 import type { InitiativeEntry, SessionRealtime } from '@/shared/realtime/realtime'
 import { cn } from '@/shared/lib/utils'
@@ -137,6 +137,11 @@ export function InitiativeCard(props: {
                       ? (initiative) => props.rt.updateEntry(entry.id, { initiative })
                       : undefined
                   }
+                  onHideHp={
+                    props.isGm
+                      ? (hpHidden) => props.rt.updateEntry(entry.id, { hpHidden })
+                      : undefined
+                  }
                 />
               )
             }}
@@ -161,6 +166,8 @@ function InitiativeRow(props: {
   onRemove: () => void
   /** Ausente para quem não pode reordenar — o número vira texto. */
   onInitiative?: (initiative: number) => void
+  /** Ausente para quem não decide o que a mesa vê. */
+  onHideHp?: (hidden: boolean) => void
 }) {
   let row: HTMLDivElement | undefined
   const hasHp = () => props.entry.hpMax !== undefined && props.entry.hpCurrent !== undefined
@@ -246,6 +253,15 @@ function InitiativeRow(props: {
         </p>
       </div>
 
+      {/* PV oculto: o jogador recebe a MARCA sem os números — "sem barra" e
+          "escondido" precisam ser coisas diferentes na tela, senão o segundo
+          vira silêncio e o jogador supõe (ALE-122). */}
+      <Show when={props.entry.hpHidden && !hasHp()}>
+        <span class="order-3 rounded-sm border border-dashed border-grimorio-iron px-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+          PV oculto
+        </span>
+      </Show>
+
       <Show when={hasHp() || hasMp()}>
         <div class="order-3 w-full min-w-0 space-y-1.5 @lg:order-2 @lg:w-44 @lg:flex-none">
           <Show when={hasHp()}>
@@ -305,6 +321,28 @@ function InitiativeRow(props: {
             onSetCurrent={(next) => props.onDeltaHp(next - (props.entry.hpCurrent ?? 0))}
             triggerClass="h-9 min-w-9 sm:h-8 sm:min-w-8"
           />
+        </Show>
+        {/* Esconder é do MESTRE e só faz sentido em linha com vida: o olho
+            fechado diz que a mesa não vê o número. */}
+        <Show when={hasHp() ? props.onHideHp : undefined}>
+          {(onHideHp) => (
+            <Button
+              size="sm"
+              variant="ghost"
+              class="h-9 w-9 sm:h-8 sm:w-8"
+              aria-pressed={props.entry.hpHidden === true}
+              aria-label={
+                props.entry.hpHidden
+                  ? `Revelar PV de ${props.entry.label}`
+                  : `Ocultar PV de ${props.entry.label}`
+              }
+              onClick={() => onHideHp()(props.entry.hpHidden !== true)}
+            >
+              <Show when={props.entry.hpHidden} fallback={<Eye aria-hidden="true" class="size-4" />}>
+                <EyeOff aria-hidden="true" class="size-4 text-grimorio-gold" />
+              </Show>
+            </Button>
+          )}
         </Show>
         <Show when={props.can.remove}>
           <Button

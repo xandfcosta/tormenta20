@@ -143,7 +143,7 @@ func (g *realtimeGateway) onPopulate(sock *socket.Socket, args []any) {
 		g.wsError(sock, addErr.Error())
 		return
 	}
-	ackOK(ctx.ack, state)
+	ackOK(ctx.ack, stateForRole(ctx.role, state))
 }
 
 // populateParty adds each not-yet-present player combatant at initiative 0 with live vitals,
@@ -258,6 +258,9 @@ func parseEntryPatch(v any) entryPatch {
 	if i, ok := intField(m, "initiative"); ok {
 		n := int(i)
 		p.Initiative = &n
+	}
+	if b, ok := m["hpHidden"].(bool); ok {
+		p.HpHidden = &b
 	}
 	for _, f := range []struct {
 		key string

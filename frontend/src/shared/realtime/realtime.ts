@@ -14,6 +14,8 @@ export type InitiativeEntry = {
   characterId?: number
   /** Verbete do bestiário de onde a linha veio — ausente em NPC digitado à mão. */
   monsterId?: string
+  /** O mestre escondeu os PV desta linha: o jogador recebe a marca, não os números. */
+  hpHidden?: boolean
   hpCurrent?: number
   hpMax?: number
   mpCurrent?: number

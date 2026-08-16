@@ -102,3 +102,32 @@ func TestGmGateOnEveryRegisteredEvent(t *testing.T) {
 		}
 	}
 }
+
+// stateExit é toda linha que ENTREGA o estado da sessão a um socket: o `Emit` do
+// broadcast e o `ack` que hidrata quem acabou de pedir. Ack de literal
+// (`{"joined": room}`) não é estado e fica de fora.
+var stateExit = regexp.MustCompile(`(?m)^.*(Emit\("session-state"|ackOK\(ctx\.ack, [^m]).*$`)
+
+// O PV oculto é do mestre, e o broadcast não é o único caminho do estado até a
+// tela: o `ack` do `get-session-state` responde a quem pediu, inclusive jogador.
+// Foi exatamente por aí que ele vazou (ALE-122) — a redação existia e o ack
+// passava por fora dela.
+//
+// Este teste lê o CÓDIGO porque não há cliente socket.io em Go: qualquer saída
+// nova de estado nasce vermelha até dizer para qual papel está saindo.
+func TestStateLeavesTheServerFilteredByRole(t *testing.T) {
+	lines := stateExit.FindAllString(gatewaySource(t), -1)
+	if len(lines) == 0 {
+		t.Fatal("nenhuma saída de estado reconhecida — a forma mudou e este teste ficou cego")
+	}
+
+	for _, line := range lines {
+		filtered := strings.Contains(line, "stateForRole") ||
+			strings.Contains(line, "redactForPlayers") ||
+			strings.Contains(line, `roleRoomName(sessionID, "gm")`)
+		if !filtered {
+			t.Errorf("estado sai sem filtro de papel:\n%s\ndiga para quem: stateForRole(ctx.role, …)"+
+				" no ack, ou a sala do mestre no emit", strings.TrimSpace(line))
+		}
+	}
+}

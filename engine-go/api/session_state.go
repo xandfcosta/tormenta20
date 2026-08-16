@@ -25,10 +25,14 @@ type InitiativeEntry struct {
 	// do monstro sem procurar no catálogo. Ausente em NPC digitado à mão — e é
 	// por isso que é ponteiro: "sem bloco" é diferente de "bloco vazio".
 	MonsterID *string `json:"monsterId,omitempty"`
-	HpCurrent *int64  `json:"hpCurrent,omitempty"`
-	HpMax     *int64  `json:"hpMax,omitempty"`
-	MpCurrent *int64  `json:"mpCurrent,omitempty"`
-	MpMax     *int64  `json:"mpMax,omitempty"`
+	// HpHidden esconde os PV desta linha dos JOGADORES: saber que o ogro está com
+	// 12 de 130 muda a decisão de quem está na mesa, e essa é a informação do
+	// mestre. Ponteiro porque a maioria das linhas não decide nada a respeito.
+	HpHidden  *bool  `json:"hpHidden,omitempty"`
+	HpCurrent *int64 `json:"hpCurrent,omitempty"`
+	HpMax     *int64 `json:"hpMax,omitempty"`
+	MpCurrent *int64 `json:"mpCurrent,omitempty"`
+	MpMax     *int64 `json:"mpMax,omitempty"`
 }
 
 // SessionRuntimeState is the live per-session tracker: a DESC-sorted initiative list, the
@@ -59,6 +63,7 @@ type entryPatch struct {
 	HpMax       *int64  `json:"hpMax"`
 	MpCurrent   *int64  `json:"mpCurrent"`
 	MpMax       *int64  `json:"mpMax"`
+	HpHidden    *bool   `json:"hpHidden"`
 }
 
 // sortInitiative keeps the list DESC by initiative, ties broken by label using pt-BR
@@ -170,6 +175,9 @@ func updateEntry(st *SessionRuntimeState, entryID string, patch entryPatch) erro
 	if patch.MpMax != nil {
 		e.MpMax = patch.MpMax
 	}
+	if patch.HpHidden != nil {
+		e.HpHidden = patch.HpHidden
+	}
 	if patch.Initiative != nil {
 		e.Initiative = *patch.Initiative
 		onTurn := turnEntryID(st)
@@ -240,6 +248,32 @@ func rewindTurn(st *SessionRuntimeState) {
 		return
 	}
 	st.TurnIndex = -1
+}
+
+// redactForPlayers devolve uma CÓPIA do estado sem os PV das linhas que o mestre
+// escondeu. A flag continua na cópia de propósito: o jogador precisa saber que
+// existe vida ali e que ela está oculta — sem isso, "sem barra" e "escondido"
+// viram a mesma coisa na tela, e o segundo é informação.
+func redactForPlayers(st *SessionRuntimeState) *SessionRuntimeState {
+	out := cloneState(st)
+	for i := range out.Initiative {
+		e := &out.Initiative[i]
+		if e.HpHidden != nil && *e.HpHidden {
+			e.HpCurrent, e.HpMax = nil, nil
+		}
+	}
+	return out
+}
+
+// stateForRole é o que UM socket pode ver. Existe porque o broadcast não é o
+// único caminho do estado até a tela: o `ack` do `get-state` hidrata o cliente e
+// responde a quem pediu. Papel desconhecido cai em jogador — errar para o lado
+// que mostra seria vazar por omissão (ALE-122).
+func stateForRole(role string, st *SessionRuntimeState) *SessionRuntimeState {
+	if role == "gm" {
+		return st
+	}
+	return redactForPlayers(st)
 }
 
 // resetInitiative clears the tracker but keeps the session tracked.

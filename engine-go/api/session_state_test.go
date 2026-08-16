@@ -297,6 +297,62 @@ func TestRewindTurn(t *testing.T) {
 	}
 }
 
+// Saber que o ogro está com 12 de 130 muda a decisão de quem está na mesa: essa
+// é informação do MESTRE, e ele decide linha a linha (ALE-122).
+func TestRedactForPlayers(t *testing.T) {
+	st := emptyRuntimeState()
+	id := counter()
+	_ = addEntry(st, npc("Ogro", 12), id)
+	_ = addEntry(st, npc("Bandido", 8), id)
+	oculto, aberto := int64(120), int64(130)
+	sim := true
+	st.Initiative[0].HpCurrent, st.Initiative[0].HpMax = &oculto, &aberto
+	st.Initiative[0].HpHidden = &sim
+	st.Initiative[1].HpCurrent, st.Initiative[1].HpMax = &oculto, &aberto
+
+	redigido := redactForPlayers(st)
+
+	if redigido.Initiative[0].HpCurrent != nil || redigido.Initiative[0].HpMax != nil {
+		t.Errorf("linha oculta vazou PV: %+v", redigido.Initiative[0])
+	}
+	// A flag FICA: sem ela, "sem barra" e "escondido" viram a mesma coisa na
+	// tela do jogador, e o segundo é informação.
+	if redigido.Initiative[0].HpHidden == nil || !*redigido.Initiative[0].HpHidden {
+		t.Error("a marca de oculto sumiu da cópia do jogador")
+	}
+	if redigido.Initiative[1].HpCurrent == nil || *redigido.Initiative[1].HpCurrent != 120 {
+		t.Errorf("linha aberta perdeu o PV: %+v", redigido.Initiative[1])
+	}
+	// O estado do MESTRE não pode ser tocado pela redação.
+	if st.Initiative[0].HpCurrent == nil || *st.Initiative[0].HpCurrent != 120 {
+		t.Error("a redação mexeu no estado original — o mestre perderia o número")
+	}
+}
+
+// O broadcast não é o único caminho: o `ack` do `get-state` é como o cliente
+// HIDRATA a tela, e ele responde a quem pediu — inclusive jogador. Redigir só o
+// broadcast deixaria o PV oculto sair inteiro na primeira carga (ALE-122).
+func TestStateForRole(t *testing.T) {
+	st := emptyRuntimeState()
+	_ = addEntry(st, npc("Ogro", 12), counter())
+	pv := int64(37)
+	sim := true
+	st.Initiative[0].HpCurrent, st.Initiative[0].HpMax = &pv, &pv
+	st.Initiative[0].HpHidden = &sim
+
+	if paraJogador := stateForRole("player", st); paraJogador.Initiative[0].HpCurrent != nil {
+		t.Error("o ack do jogador entregou o PV que o mestre escondeu")
+	}
+	if paraMestre := stateForRole("gm", st); paraMestre.Initiative[0].HpCurrent == nil {
+		t.Error("o mestre perdeu o próprio número")
+	}
+	// Papel desconhecido é tratado como jogador: errar para o lado que MOSTRA
+	// seria vazar por omissão.
+	if desconhecido := stateForRole("", st); desconhecido.Initiative[0].HpCurrent != nil {
+		t.Error("papel vazio recebeu estado inteiro")
+	}
+}
+
 func TestResetInitiative(t *testing.T) {
 	st := emptyRuntimeState()
 	_ = addEntry(st, npc("A", 1), counter())

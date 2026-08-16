@@ -67,9 +67,10 @@ function renderCardWithRt(
   onSelect?: (entryId: string) => void,
   selectedId?: string | null,
   isGm = true,
+  entries: InitiativeEntry[] = [OGRO, HEROI],
 ) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  const rt = new FakeRealtime([OGRO, HEROI])
+  const rt = new FakeRealtime(entries)
   const view = render(() => (
     <QueryClientProvider client={client}>
       <InitiativeCard
@@ -203,5 +204,49 @@ describe('adicionar combatente à mão', () => {
     expect(enviado).toMatchObject({ label: 'Figurante' })
     expect(enviado).not.toHaveProperty('hpCurrent')
     expect(enviado).not.toHaveProperty('hpMax')
+  })
+})
+
+
+/**
+ * PV de monstro é decisão do MESTRE, linha a linha (ALE-122). Saber que o ogro
+ * está com 12 de 130 muda o que a mesa faz no turno seguinte — e às vezes o
+ * mestre quer exatamente que saibam. O servidor apaga os números na cópia do
+ * jogador; o que se prova aqui é o controle e a marca.
+ */
+describe('ocultar os PV de uma linha', () => {
+  it('o mestre fecha o olho e o servidor recebe a marca', async () => {
+    const { rt, user } = renderCardWithRt()
+
+    await user.click(screen.getByRole('button', { name: 'Ocultar PV de Ogro' }))
+
+    expect(rt.updateEntry).toHaveBeenCalledWith('e2', { hpHidden: true })
+  })
+
+  it('já oculto, o mesmo botão revela', async () => {
+    const oculto = { ...OGRO, hpHidden: true } as unknown as InitiativeEntry
+    const { rt, user } = renderCardWithRt(undefined, null, true, [oculto, HEROI])
+
+    await user.click(screen.getByRole('button', { name: 'Revelar PV de Ogro' }))
+
+    expect(rt.updateEntry).toHaveBeenCalledWith('e2', { hpHidden: false })
+  })
+
+  // "Sem barra" e "escondido" precisam ser coisas DIFERENTES na tela do jogador:
+  // silêncio faria o jogador supor que o monstro está inteiro.
+  it('o jogador vê a marca no lugar dos números', () => {
+    // Como chega do servidor depois da redação: a flag fica, os PV somem.
+    const redigido = { ...OGRO, hpCurrent: undefined, hpMax: undefined, hpHidden: true }
+    renderCardWithRt(undefined, null, false, [redigido as unknown as InitiativeEntry, HEROI])
+
+    expect(screen.getByText('PV oculto')).toBeInTheDocument()
+    expect(screen.queryByText('130')).not.toBeInTheDocument()
+  })
+
+  // Quem não decide o que a mesa vê não pode ter o controle na linha.
+  it('o jogador não tem o olho', () => {
+    renderCardWithRt(undefined, null, false)
+
+    expect(screen.queryByRole('button', { name: /(Ocultar|Revelar) PV de Ogro/ })).not.toBeInTheDocument()
   })
 })
