@@ -1,6 +1,7 @@
 import { UserPlus } from 'lucide-solid'
 import { api } from '@/shared/api/api'
 import { copyToClipboard } from '@/shared/lib/clipboard'
+import { inviteRegisterUrl } from './invite-link'
 import { SingleUseLinkDialog } from '@/shared/ui/single-use-link-dialog'
 
 export type InvitePlayerDialogProps = {
@@ -30,7 +31,7 @@ export function InvitePlayerDialog(props: InvitePlayerDialogProps) {
       linkLabel="Link de convite"
       caption="Cada convite serve para UMA conta. Gere outro para o próximo jogador."
       onCreate={props.onCreate}
-      toUrl={(token) => `${window.location.origin}/register?convite=${encodeURIComponent(token)}`}
+      toUrl={(token) => inviteRegisterUrl(window.location.origin, token)}
       onCopy={props.onCopy}
     />
   )

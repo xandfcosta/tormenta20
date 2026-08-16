@@ -1,6 +1,7 @@
 import { For, Show } from 'solid-js'
 import type { AccountInvite } from '@/shared/api/api'
 import { CopyLinkRow } from '@/shared/ui/copy-link-row'
+import { inviteRegisterUrl } from '@/features/account-invite/invite-link'
 import { FramedPanel } from '@/shared/ui/framed-panel'
 
 export type OpenInvitesPanelProps = {
@@ -32,7 +33,7 @@ export function OpenInvitesPanel(props: OpenInvitesPanelProps) {
             {(invite) => (
               <li>
                 <CopyLinkRow
-                  url={`${window.location.origin}/register?convite=${encodeURIComponent(invite.token)}`}
+                  url={inviteRegisterUrl(window.location.origin, invite.token)}
                   label={`Link de convite ${invite.token.slice(0, 6)}`}
                   onCopy={props.onCopy}
                 >

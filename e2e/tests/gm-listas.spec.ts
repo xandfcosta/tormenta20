@@ -58,4 +58,5 @@ test.describe('Listas virtualizadas do mestre', () => {
 
     await expect(page.getByRole('region', { name: 'Criatura escolhida' })).toContainText('Ogro')
   })
+
 })
