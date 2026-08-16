@@ -62,11 +62,9 @@ export type ItemFlagEffect = {
 /**
  * Always-on flag effects carried by equipped items (heavy armor's
  * fatigue-on-sleep / armadura-pesada, …) with item provenance, for read-only
- * display in the Efeitos tab. Same MODE-gate as the other engine choke points:
- * production/dev runs the Go/WASM `ComputeEquippedFlags`; the TS branch below is
- * TEST-ONLY (parity oracle, no wasm in vitest) and is dead-code-eliminated from
- * the app bundle — taking `computeItemEffects` (the last effects-cru consumer)
- * with it. The pt-BR label is always mapped on this side.
+ * display in the Efeitos tab. Quem calcula é o Go/WASM `ComputeEquippedFlags`,
+ * em todos os ambientes — o ramo TS morreu com o `t20-data` (ALE-104) e o
+ * vitest carrega o mesmo `.wasm`. O rótulo pt-BR é mapeado deste lado.
  *
  * Usage: `equippedItemFlagEffects(character.items)` → `[{ flag, label, source }]`.
  */

@@ -8,11 +8,10 @@ export type { PointBuyStatus }
 
 /**
  * Creation point-buy status (p17) CHOKE POINT (migração TS→Go): total spent +
- * advisory warnings. Same MODE-gate as the other engine choke points — the TS
- * branch (t20-data `pointBuySpent` + `pointBuyWarnings`) is TEST-ONLY and DCE'd
- * from the app bundle; production runs the Go/WASM `PointBuyStatusFor`. Pure
- * rules, so no catalog priming — only the loaded engine. `pointBuySpent` throws
- * on out-of-range base values (free mode), so `spent` is null there.
+ * advisory warnings. Quem calcula é o Go/WASM `PointBuyStatusFor` em todos os
+ * ambientes — o ramo TS do `t20-data` não existe mais (ALE-104). Regras puras,
+ * sem priming de catálogo: só o motor carregado. O motor recusa base fora da
+ * faixa (modo livre), e nesse caso `spent` é nulo.
  */
 export function pointBuyStatusFor(
   attrs: Record<AttributeKey, number>,

@@ -135,9 +135,9 @@ function weaponCard(
 
 /**
  * Weapon-cards CHOKE POINT (migração TS→Go): the wielded-weapon formula cards via
- * the Go/WASM engine — the single source. Same MODE-gate as `computedSheetFor` —
- * production runs the engine; the TS branch (`assembleWeaponCards`) is TEST-ONLY
- * (parity oracle, no wasm) and DCE'd from the app bundle.
+ * the Go/WASM engine — the single source, em todos os ambientes. Não há mais
+ * ramo TS (`assembleWeaponCards` morreu com o `t20-data`, ALE-104): o vitest
+ * carrega o mesmo `.wasm` da produção.
  *
  * Takes the active conditionals as an ARGUMENT (the React version was a hook
  * reading the zustand store): the panel owns the store, this stays pure.

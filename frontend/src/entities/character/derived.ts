@@ -1,15 +1,12 @@
 import { EXPERTISE_NAMES } from '@/shared/api/expertise-names'
 import { originModifiers } from '@/shared/rules/abilities-origin-logic'
 import { raceModifiers } from '@/shared/rules/abilities-race-logic'
-import { spellcastingAttributeFor } from '@/shared/rules/class-spellcasting'
 import { conditionModifiers } from '@/shared/rules/condition-modifiers'
-import { CAVALEIRO_BASTIAO_RD, barbaroRdForLevel } from '@/shared/rules/damage-reduction'
 import { DEFORMIDADE_PERICIA_BONUS } from '@/shared/rules/deformidade'
 import { trainingBonusForLevel } from '@/shared/rules/expertises'
 import { conditionalId, resolveStack, statFor } from '@/shared/rules/items-engine'
 import { HOMEBREW_VESTED_OK } from '@/shared/rules/items-homebrew'
 import { resolveAtributoMod } from '@/shared/rules/racas-attr'
-import { CLASS_SPELLCASTING_ATTRIBUTE, spellSaveDc } from '@/shared/rules/spells'
 import { carismaLossFromPowers } from '@/shared/rules/tormenta-carisma'
 import { requiredProficiency } from '@/shared/api/item-classify'
 import type { ClassChoices, ConditionId, Prerequisite } from '@/shared/api/catalog-types'
@@ -752,14 +749,11 @@ export function isItemProficient(
  * The sheet derive's CHOKE POINT (Inc.2 task #7/#8): resolve a character's
  * `ItemEffects` through the Go/WASM engine — the single source of truth.
  *
- * In PRODUCTION/dev the engine runs the whole heavy derive (collection +
- * resolution) in Go. The TS branch below is TEST-ONLY: it keeps the TS derive as
- * the parity oracle + vitest backing so the unit suite needs no wasm. Because
- * `import.meta.env.MODE` is statically `'production'` in the app build, that
- * branch — and everything only it reaches (`activeItemsFor` + the whole
- * collection layer, `computeItemEffects`, `applyActiveConditionals`) — is
- * dead-code-eliminated, so the front bundle ships ONLY the Go engine (task #8).
- * Parity is proven byte-equal by the `itemEffects` oracle across the 16 seeds.
+ * O motor Go faz a derivação inteira (coleta + resolução) em TODOS os ambientes,
+ * inclusive nos testes: o `test-setup` do vitest carrega o mesmo `.wasm` que a
+ * produção usa. Não existe mais ramo TS de fallback nem `import.meta.env.MODE`
+ * aqui — eles morreram com o `t20-data` (ALE-104/117), e o que restou de TS
+ * neste arquivo é só o que a UI ainda monta por conta própria.
  */
 function resolveEffects(
   character: Character,
@@ -826,6 +820,37 @@ const ARMOR_PENALTY_EXPERTISES = new Set([
   'Ladinagem',
 ])
 
+/**
+ * Redução de Dano agregada do personagem, para exibir junto da Defesa.
+ * Fontes cobertas (todas passivas e deriváveis do estado da ficha):
+ *  - Bárbaro: tabela p42 (2/4/6/8/10 nos níveis 5/8/11/14/17)
+ *  - Cavaleiro Caminho do Bastião (p55): RD 5 em armadura pesada, escolhido no
+ *    5º nível
+ *  - Especialização em Armadura: poder ESCOLHIDO com pré-requisito de 12º nível
+ *    na classe, RD 5 fixa em armadura pesada — existe igual para Cavaleiro
+ *    (p54) e Guerreiro (p65), e as duas descrições dizem que é CUMULATIVA com
+ *    Bastião. O Guerreiro NÃO tem RD passiva: o motor dava a ele a progressão do
+ *    Bárbaro desde o 5º nível, o que não existe no livro (ALE-111).
+ * RD geral não acumula entre fontes (vale a maior, p290) — exceto a
+ * cumulatividade explícita acima.
+ *
+ * @example characterDamageReduction(barbaro8, effects).total // 4
+ */
+/**
+ * Effective attribute value = raw character attribute + sum of `attribute`
+ * target modifiers (race bonuses, items, active effects). Negative bonuses
+ * apply too.
+ */
+export function attributeTotal(
+  character: Character,
+  attr: AttributeKey,
+  effects: ItemEffects,
+): number {
+  const raw = character[attr]
+  const stat = statFor(effects, { k: 'attribute', name: attr })
+  return raw + stat.total
+}
+
 export function expertiseTotalWithItems(
   character: Character,
   state: CharacterExpertise,
@@ -891,322 +916,6 @@ export function expertiseTotalWithItems(
   }
 }
 
-/**
- * Defense total: 10 + Dex (capped if heavy armor) + armor + shield + other typed mods.
- */
-export function defenseTotal(
-  character: Character,
-  effects: ItemEffects,
-): {
-  base: number
-  itemBonus: number
-  total: number
-  dexApplied: boolean
-  vsMelee: number
-  vsRanged: number
-  contributions: { source: string; amount: number; note?: string }[]
-} {
-  const stat = statFor(effects, { k: 'defense' })
-  const dexApplied = !effects.flags.has('cannot-apply-dex-to-defense')
-  const effectiveDex = attributeTotal(character, 'dexterity', effects)
-  const base = 10 + (dexApplied ? effectiveDex : 0)
-  // Defesa DIRECIONAL: igual ao total na maioria das fichas, separada quando
-  // algo distingue a direção do ataque — hoje só o Caído (p394).
-  const melee = statFor(effects, { k: 'defense', scope: 'melee' })
-  const ranged = statFor(effects, { k: 'defense', scope: 'ranged' })
-  const total = base + stat.total
-  return {
-    base,
-    itemBonus: stat.total,
-    total,
-    dexApplied,
-    vsMelee: total + melee.total,
-    vsRanged: total + ranged.total,
-    contributions: [...stat.contributions, ...melee.contributions, ...ranged.contributions].map(
-      (c) => ({
-        source: c.source,
-        amount: c.amount,
-        ...(c.note ? { note: c.note } : {}),
-      }),
-    ),
-  }
-}
-
-export function displacementTotal(
-  character: Character,
-  effects: ItemEffects,
-): {
-  base: number
-  itemBonus: number
-  total: number
-  contributions: { source: string; amount: number; note?: string }[]
-} {
-  const stat = statFor(effects, { k: 'displacement' })
-  return {
-    base: character.displacement,
-    itemBonus: stat.total,
-    total: Math.max(0, character.displacement + stat.total),
-    contributions: stat.contributions.map((c) => ({
-      source: c.source,
-      amount: c.amount,
-      ...(c.note ? { note: c.note } : {}),
-    })),
-  }
-}
-
-/**
- * Fly speed (metros) granted by active effects — Voo and similar. Characters
- * have no innate fly base, so 0 means "can't fly" and the movement line hides
- * it. Shown, not folded into ground displacement.
- */
-export function flySpeedTotal(effects: ItemEffects): number {
-  return Math.max(0, statFor(effects, { k: 'flySpeed' }).total)
-}
-
-export function inventorySlotsTotal(
-  character: Character,
-  effects: ItemEffects,
-): number {
-  const effStr = attributeTotal(character, 'strength', effects)
-  // PDF p141 (Carga): "10 espaços, +2 por ponto de Força (ou –1 por ponto de
-  // Força negativo)". Math.abs here inflated negative-Str carriers (−2 → 14).
-  const base = effStr >= 0 ? 10 + 2 * effStr : 10 + effStr
-  const stat = statFor(effects, { k: 'inventorySlots' })
-  return base + stat.total
-}
-
-/**
- * Effective attribute value = raw character attribute + sum of `attribute`
- * target modifiers (race bonuses, items, active effects). Negative bonuses
- * apply too.
- */
-export function attributeTotal(
-  character: Character,
-  attr: AttributeKey,
-  effects: ItemEffects,
-): number {
-  const raw = character[attr]
-  const stat = statFor(effects, { k: 'attribute', name: attr })
-  return raw + stat.total
-}
-
-export function attributeContributions(
-  attr: AttributeKey,
-  effects: ItemEffects,
-): { source: string; amount: number; note?: string }[] {
-  return statFor(effects, { k: 'attribute', name: attr }).contributions.map(
-    (c) => ({ source: c.source, amount: c.amount }),
-  )
-}
-
-export function armorPenaltyTotal(effects: ItemEffects): number {
+function armorPenaltyTotal(effects: ItemEffects): number {
   return statFor(effects, { k: 'armorPenalty' }).total
-}
-
-/**
- * Caster level for the per-spell PM cap — PDF p224: "o máximo de PM que você
- * pode gastar por uso é igual ao seu nível NA CLASSE que fornece a
- * habilidade". Multiclass casters take the best spellcasting-class level;
- * non-casters fall back to character level (their Limite PM box is hidden).
- * Ex.: Guerreiro 4 / Arcanista 4 → 4 (not ½ do nível 8 do personagem).
- */
-export function casterLevelForPmLimit(character: Character): number {
-  const casterLevels = character.classes
-    .filter((c) => CLASS_SPELLCASTING_ATTRIBUTE[c.className] !== undefined)
-    .map((c) => c.level)
-  if (casterLevels.length === 0) return character.level
-  return Math.max(...casterLevels)
-}
-
-export function pmLimitTotal(
-  character: Character,
-  effects: ItemEffects,
-): {
-  base: number
-  itemBonus: number
-  total: number
-  contributions: { source: string; amount: number; note?: string }[]
-} {
-  const base = Math.max(1, casterLevelForPmLimit(character))
-  const stat = statFor(effects, { k: 'pmLimit' })
-  return {
-    base,
-    itemBonus: stat.total,
-    total: base + stat.total,
-    contributions: stat.contributions.map((c) => ({
-      source: c.source,
-      amount: c.amount,
-      ...(c.note ? { note: c.note } : {}),
-    })),
-  }
-}
-
-/**
- * Best spell save CD across the character's caster classes — PDF p173:
- * CD = 10 + metade do nível DO PERSONAGEM + modificador do atributo-chave.
- * Uses the FINAL attribute (attributeTotal), so racial/item bonuses count — the
- * raw stored attribute understated the CD (Necromante Osteon: 21 shown, 22
- * correct) — and resolves the Arcanista's atributo-chave through its Caminho
- * (ALE-113).
- * Ex.: bestBaseSpellCd(arcanista12ComIntFinal6, effects) === 22
- */
-export function bestBaseSpellCd(
-  character: Character,
-  effects: ItemEffects,
-): number | null {
-  const caminho = arcanistaCaminhoOf(character)
-  let best: number | null = null
-  for (const entry of character.classes) {
-    const attr = spellcastingAttributeFor(entry.className, caminho)
-    if (!attr) continue
-    const dc = spellSaveDc(character.level, attributeTotal(character, attr, effects))
-    if (best === null || dc > best) best = dc
-  }
-  return best
-}
-
-export function spellDCBonus(effects: ItemEffects): {
-  total: number
-  contributions: { source: string; amount: number; note?: string }[]
-} {
-  const stat = statFor(effects, { k: 'spellDC' })
-  return {
-    total: stat.total,
-    contributions: stat.contributions.map((c) => ({
-      source: c.source,
-      amount: c.amount,
-      ...(c.note ? { note: c.note } : {}),
-    })),
-  }
-}
-
-export function pmCostMod(effects: ItemEffects): {
-  total: number
-  contributions: { source: string; amount: number; note?: string }[]
-} {
-  const stat = statFor(effects, { k: 'pmCost' })
-  return {
-    total: stat.total,
-    contributions: stat.contributions.map((c) => ({
-      source: c.source,
-      amount: c.amount,
-      ...(c.note ? { note: c.note } : {}),
-    })),
-  }
-}
-
-/**
- * Redução de Dano agregada do personagem, para exibir junto da Defesa.
- * Fontes cobertas (todas passivas e deriváveis do estado da ficha):
- *  - Bárbaro: tabela p42 (2/4/6/8/10 nos níveis 5/8/11/14/17)
- *  - Cavaleiro Caminho do Bastião (p55): RD 5 em armadura pesada, escolhido no
- *    5º nível
- *  - Especialização em Armadura: poder ESCOLHIDO com pré-requisito de 12º nível
- *    na classe, RD 5 fixa em armadura pesada — existe igual para Cavaleiro
- *    (p54) e Guerreiro (p65), e as duas descrições dizem que é CUMULATIVA com
- *    Bastião. O Guerreiro NÃO tem RD passiva: o motor dava a ele a progressão do
- *    Bárbaro desde o 5º nível, o que não existe no livro (ALE-111).
- * RD geral não acumula entre fontes (vale a maior, p290) — exceto a
- * cumulatividade explícita acima.
- *
- * @example characterDamageReduction(barbaro8, effects).total // 4
- */
-/** "Especialização em Armadura" (Cavaleiro p54, Guerreiro p65): poder escolhido,
- *  pré-requisito de 12º nível na classe, RD 5 fixa com armadura pesada. */
-const ESPECIALIZACAO_ARMADURA_RD = 5
-const ESPECIALIZACAO_ARMADURA_LEVEL = 12
-
-export function characterDamageReduction(
-  character: Character,
-  effects: ItemEffects,
-): { total: number; sources: { source: string; amount: number }[] } {
-  const heavy = effects.flags.has('armadura-pesada')
-  const chosen = parseChoiceSet(character.classPowers)
-  // Qualificado por classe: casar só pelo sufixo deixaria a escolha de uma
-  // classe satisfazer o ramo da outra num multiclasse.
-  const hasPower = (className: string, power: string) =>
-    [...chosen].some((id) => id === `class.${className}.${power}` || id === power)
-
-  const sources: { source: string; amount: number }[] = []
-  for (const entry of character.classes) {
-    if (entry.className === 'Bárbaro') {
-      const rd = barbaroRdForLevel(entry.level)
-      if (rd > 0) sources.push({ source: 'Bárbaro (p42)', amount: rd })
-    }
-    if (entry.className === 'Guerreiro' && heavy) {
-      if (
-        entry.level >= ESPECIALIZACAO_ARMADURA_LEVEL &&
-        hasPower('guerreiro', 'especializacao-em-armadura')
-      )
-        sources.push({
-          source: 'Especialização em Armadura',
-          amount: ESPECIALIZACAO_ARMADURA_RD,
-        })
-    }
-    if (entry.className === 'Cavaleiro' && heavy) {
-      if (entry.level >= 5 && hasPower('cavaleiro', 'caminho-bastiao'))
-        sources.push({ source: 'Bastião — armadura pesada', amount: CAVALEIRO_BASTIAO_RD })
-      if (
-        entry.level >= ESPECIALIZACAO_ARMADURA_LEVEL &&
-        hasPower('cavaleiro', 'especializacao-em-armadura')
-      )
-        sources.push({
-          source: 'Especialização em Armadura',
-          amount: ESPECIALIZACAO_ARMADURA_RD,
-        })
-    }
-  }
-  // As de CLASSE competem entre si; a Especialização soma por cima, cumulativa
-  // por texto explícito.
-  const especializacao = sources
-    .filter((s) => s.source === 'Especialização em Armadura')
-    .reduce((sum, s) => sum + s.amount, 0)
-  const general = Math.max(
-    0,
-    ...sources
-      .filter((s) => s.source !== 'Especialização em Armadura')
-      .map((s) => s.amount),
-  )
-
-  // RD concedida por MODIFICADOR — hoje só a do Petrificado (p394). Soma por
-  // cima: a p226 diz que efeitos de origens diferentes acumulam, e uma estátua
-  // de bárbaro tem as duas.
-  const granted = statFor(effects, { k: 'damageReduction' })
-  for (const c of granted.contributions) {
-    sources.push({ source: c.source, amount: c.amount })
-  }
-
-  if (sources.length === 0) return { total: 0, sources }
-  return { total: general + especializacao + granted.total, sources }
-}
-
-/** True when the Fúria stance is switched on in the Efeitos tab. */
-export function isFuriaActive(entries: readonly ConditionalEntry[]): boolean {
-  return entries.some((e) => e.effect.flag === 'furia' && e.active)
-}
-
-/**
- * PV temporários concedidos por poderes disparados por postura ativa.
- * Coberto: Alma de Bronze (Bárbaro p41) — "quando entra em fúria, recebe
- * PV temporários = nível + Força". Exibição apenas (a pool não é
- * persistida; o jogador abate dano dela manualmente).
- *
- * @example tempHpFromPowers(barbaroComAlma, effects, true).total // nível + For
- */
-export function tempHpFromPowers(
-  character: Character,
-  effects: ItemEffects,
-  furiaActive: boolean,
-): { total: number; sources: { source: string; amount: number }[] } {
-  if (!furiaActive) return { total: 0, sources: [] }
-  const chosen = parseChoiceSet(character.classPowers)
-  const owns = [...chosen].some(
-    (id) => id === 'alma-de-bronze' || id.endsWith('.alma-de-bronze'),
-  )
-  if (!owns) return { total: 0, sources: [] }
-  const amount = character.level + attributeTotal(character, 'strength', effects)
-  return {
-    total: amount,
-    sources: [{ source: 'Alma de Bronze (Fúria, p41)', amount }],
-  }
 }

@@ -11,9 +11,9 @@ export type { ConditionalDisplayInput, ConditionalDisplayRow }
  * only winning conditional tiers — a Bárbaro 6's Fúria shows +3, not the
  * superseded +2 as well.
  *
- * Same MODE gate as the other engine choke points: the TS branch (t20-data
- * `resolveConditionalDisplay`) is TEST-ONLY and dead-code-eliminated from the
- * app bundle; production runs the Go/WASM `ResolveConditionalDisplay`. Pure
+ * Quem resolve é o Go/WASM `ResolveConditionalDisplay`, em todos os ambientes —
+ * o ramo TS do `t20-data` não existe mais (ALE-104), e o vitest carrega o mesmo
+ * `.wasm` da produção. Pure
  * resolver, so it needs no catalog priming — only the loaded engine, which the
  * stance list already depends on for its conditionals.
  *

@@ -12,12 +12,10 @@ const EMPTY_SET: ReadonlySet<string> = new Set()
 
 /**
  * The sheet-breakdown CHOKE POINT (Fase A): the rich `ComputedSheetV2` via the
- * Go/WASM engine — the single source of truth for every derived field. Same
- * MODE-gate as `resolveEffects`/`computeVitalPools`: in production/dev the engine
- * computes everything (o assembler TS morreu com o t20-data — ALE-109); era
- * TEST-ONLY, so it stays the parity oracle without wasm and is dead-code-
- * eliminated from the app bundle (`import.meta.env.MODE` is statically
- * `'production'` there). Parity is proven byte-equal by the `sheetV2` oracle.
+ * Go/WASM engine — the single source of truth for every derived field. Não há
+ * mais um assembler TS por trás (ele morreu com o `t20-data`, ALE-109) nem gate
+ * por `import.meta.env.MODE`: o motor calcula em produção, em dev e no vitest,
+ * que carrega o mesmo `.wasm`. O oráculo `sheetV2` fixa os números.
  */
 // Memo: computing a sheet crosses into the WASM engine (serialize char → Go →
 // compute → deserialize) — non-trivial, and ~10 sheet components call this with
