@@ -323,10 +323,11 @@ function InitiativeRow(props: {
 }
 
 /** GM-only "add combatant" row: a name, an initiative in the playable range,
- *  and PC/NPC. Resets to a fresh NPC row after each add. */
+ *  PV opcional e PC/NPC. Resets to a fresh NPC row after each add. */
 function AddCombatantForm(props: { rt: SessionRealtime }) {
   const [label, setLabel] = createSignal('')
   const [initiative, setInitiative] = createSignal(10)
+  const [hp, setHp] = createSignal(0)
   const [type, setType] = createSignal<'character' | 'npc'>('npc')
 
   const trimmed = () => label().trim()
@@ -335,9 +336,15 @@ function AddCombatantForm(props: { rt: SessionRealtime }) {
   const submit = (event: SubmitEvent) => {
     event.preventDefault()
     if (invalid() || !props.rt.isConnected()) return
-    props.rt.addEntry({ label: trimmed(), initiative: initiative(), type: type() })
+    // PV zero significa "sem vida registrada", e a linha fica sem barra: um
+    // capanga anônimo não precisa de PV, e uma barra 0/0 mentiria dizendo que
+    // ele está morto. Preenchido, os botões da linha passam a fazer algo — antes
+    // eles existiam e não tinham em que mexer (ALE-122).
+    const vitals = hp() > 0 ? { hpCurrent: hp(), hpMax: hp() } : {}
+    props.rt.addEntry({ label: trimmed(), initiative: initiative(), type: type(), ...vitals })
     setLabel('')
     setInitiative(10)
+    setHp(0)
     setType('npc')
   }
 
@@ -370,6 +377,12 @@ function AddCombatantForm(props: { rt: SessionRealtime }) {
           value={initiative()}
           onChange={setInitiative}
         />
+      </div>
+      <div class="w-20 space-y-1">
+        <label for="combatant-hp" class="text-[10px] uppercase tracking-widest text-muted-foreground">
+          PV
+        </label>
+        <NumberInput id="combatant-hp" min={0} max={999} value={hp()} onChange={setHp} />
       </div>
       <div class="flex gap-1">
         <Button

@@ -10,6 +10,7 @@ class FakeRealtime {
   // Os espiões vivem na INSTÂNCIA: criados dentro do `asRealtime()` eles nasciam
   // de novo a cada chamada, e o teste inspecionava um objeto diferente do que a
   // tela usou.
+  readonly addEntry = vi.fn()
   readonly updateEntry = vi.fn()
   readonly removeEntry = vi.fn()
   readonly deltaVitals = vi.fn()
@@ -25,7 +26,7 @@ class FakeRealtime {
       error: () => null,
       hasPersistenceWarning: () => false,
       present: () => [],
-      addEntry: vi.fn(),
+      addEntry: this.addEntry,
       updateEntry: this.updateEntry,
       removeEntry: this.removeEntry,
       nextTurn: vi.fn(),
@@ -168,5 +169,39 @@ describe('corrigir a iniciativa de quem já está na lista', () => {
     renderCardWithRt(undefined, null, false)
 
     expect(screen.queryByRole('button', { name: 'Iniciativa de Ogro' })).not.toBeInTheDocument()
+  })
+})
+
+/**
+ * NPC criado à mão nascia SEM vida, e a linha dele mostrava +/−/✎ que não tinham
+ * em que mexer — controles inertes, que prometem o que não fazem (ALE-122).
+ */
+describe('adicionar combatente à mão', () => {
+  it('com PV preenchido, o combatente entra com vida cheia', async () => {
+    const { rt, user } = renderCardWithRt()
+
+    await user.type(screen.getByLabelText('Nome'), 'Capanga')
+    const pv = screen.getByRole('spinbutton', { name: 'PV' })
+    await user.clear(pv)
+    await user.type(pv, '18')
+    await user.click(screen.getByRole('button', { name: 'Adicionar' }))
+
+    expect(rt.addEntry).toHaveBeenCalledWith(
+      expect.objectContaining({ label: 'Capanga', hpCurrent: 18, hpMax: 18 }),
+    )
+  })
+
+  // Zero é "sem vida registrada", não "morto": um capanga anônimo não precisa de
+  // PV, e uma barra 0/0 diria que ele já caiu.
+  it('sem PV, a entrada vai sem vida nenhuma', async () => {
+    const { rt, user } = renderCardWithRt()
+
+    await user.type(screen.getByLabelText('Nome'), 'Figurante')
+    await user.click(screen.getByRole('button', { name: 'Adicionar' }))
+
+    const enviado = rt.addEntry.mock.calls[0][0]
+    expect(enviado).toMatchObject({ label: 'Figurante' })
+    expect(enviado).not.toHaveProperty('hpCurrent')
+    expect(enviado).not.toHaveProperty('hpMax')
   })
 })
