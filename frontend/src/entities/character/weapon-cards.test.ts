@@ -56,9 +56,13 @@ describe('assembleWeaponCards — finesse (ALE-31)', () => {
   it('Adaga (sem Acuidade): dano continua com Força; com Acuidade vira Destreza', () => {
     const semAcu = card('adaga', { str: 1, dex: 3 })
     const comAcu = card('adaga', { str: 1, dex: 3, acuidade: true })
-    expect(semAcu.strDamage).toBe(semAcu.forTotal) // dano = Força (finesse inerente é só ataque)
-    expect(comAcu.strDamage).toBe(comAcu.dexTotal) // Acuidade leva Destreza pro dano
-    expect(comAcu.strDamage).toBeGreaterThan(semAcu.strDamage)
+    // Os números são do CENÁRIO (For 1, Des 3), não de outro campo do mesmo
+    // objeto: comparar `strDamage` com `forTotal` é a mesma conta dos dois lados
+    // da igualdade e passa verde com as duas erradas juntas.
+    // For 1 no cenário + 1 do Versátil do Humano (o fixture escolhe força entre
+    // os três atributos flutuantes) = 2.
+    expect(semAcu.strDamage).toBe(2)
+    expect(comAcu.strDamage).toBe(3) // Acuidade leva a Destreza (3) para o dano
   })
 
   it('Espada curta (leve, sem finesse) usa Força — a menos que tenha Acuidade', () => {

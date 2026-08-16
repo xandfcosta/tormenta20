@@ -104,13 +104,14 @@ describe('bumpClassLevel', () => {
     expect(after.hpCurrent).toBeGreaterThan(30)
   })
 
-  // Simétrico: o hpMax de referência é o que o MOTOR calcula para o nível 3
-  // (delta 0), não o valor guardado na ficha — que pode estar defasado.
+  // Guerreiro p65: "começa com 20 pontos de vida + Constituição e ganha 5 PV +
+  // Constituição por nível". CON 2, nível 3 → 22 + 7 + 7 = 36. O esperado é o
+  // LIVRO, não `bumpClassLevel(..., 0)` — comparar a descida com outra chamada
+  // da mesma função passaria verde com as duas erradas juntas.
   it('descer devolve o que o nível tinha dado', () => {
-    const atLevel3 = bumpClassLevel(character(), 'Guerreiro', 0)
     const up = bumpClassLevel(character(), 'Guerreiro', 1)
     const down = bumpClassLevel(up, 'Guerreiro', -1)
-    expect(down.hpMax).toBe(atLevel3.hpMax)
+    expect(down.hpMax).toBe(36)
     expect(down.level).toBe(3)
   })
 })
