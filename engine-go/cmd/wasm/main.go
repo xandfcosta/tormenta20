@@ -167,6 +167,41 @@ func spellPmLimit(_ js.Value, args []js.Value) any {
 	return string(out)
 }
 
+// boardPathCost mede um caminho no mapa de batalha (T20 p238) para a tela poder
+// mostrar o custo ENQUANTO o jogador arrasta, sem uma ida ao servidor por
+// quadrado. É a mesma função que o gateway roda quando o movimento é confirmado
+// — o front antecipa, o Go decide, e nunca existem duas implementações da regra.
+//
+// Pura: não precisa de `primeEngineCatalogs`.
+func boardPathCost(_ js.Value, args []js.Value) any {
+	var payload struct {
+		Path      []engine.Square `json:"path"`
+		Difficult []engine.Square `json:"difficult"`
+		Budget    int             `json:"budget"`
+	}
+	if err := json.Unmarshal([]byte(args[0].String()), &payload); err != nil {
+		return errorJSON(err)
+	}
+	terrain := engine.MoveTerrain{Difficult: map[engine.Square]bool{}}
+	for _, square := range payload.Difficult {
+		terrain.Difficult[square] = true
+	}
+	out, _ := json.Marshal(engine.PathCost(payload.Path, terrain, payload.Budget))
+	return string(out)
+}
+
+// boardBudget converte deslocamento em metros para quadrados (T20 p106).
+func boardBudget(_ js.Value, args []js.Value) any {
+	out, _ := json.Marshal(map[string]int{"squares": engine.SquaresForDisplacement(args[0].Float())})
+	return string(out)
+}
+
+// boardFootprint devolve o lado da peça em quadrados por tamanho (T20 p107).
+func boardFootprint(_ js.Value, args []js.Value) any {
+	out, _ := json.Marshal(map[string]int{"footprint": engine.FootprintForSize(args[0].String())})
+	return string(out)
+}
+
 // errorJSON returns a JSON string carrying the error, matching the sheet
 // functions' shape so the TS wrapper reads `.error` uniformly.
 func errorJSON(err error) string {
@@ -184,5 +219,8 @@ func main() {
 	js.Global().Set("pointBuyStatus", js.FuncOf(pointBuyStatus))
 	js.Global().Set("computeWeaponCards", js.FuncOf(computeWeaponCards))
 	js.Global().Set("spellPmLimit", js.FuncOf(spellPmLimit))
+	js.Global().Set("boardPathCost", js.FuncOf(boardPathCost))
+	js.Global().Set("boardBudget", js.FuncOf(boardBudget))
+	js.Global().Set("boardFootprint", js.FuncOf(boardFootprint))
 	select {} // keep the runtime alive
 }

@@ -9,13 +9,8 @@ import {
   DialogTitle,
 } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
-import { NumberInput } from '@/shared/ui/number-input'
 import { Select } from '@/shared/ui/select'
 import { TERRAIN_IDS, TERRAIN_LABEL } from './board-terrain'
-
-/** A faixa que o servidor aceita: 60 quadrados são 90m, o alcance longo (p224). */
-const MIN_SIDE = 4
-const MAX_SIDE = 60
 
 const TERRAIN_OPTIONS = TERRAIN_IDS.map((value) => ({ value, label: TERRAIN_LABEL[value] }))
 
@@ -34,17 +29,15 @@ const TERRAIN_OPTIONS = TERRAIN_IDS.map((value) => ({ value, label: TERRAIN_LABE
  * @example <OpenBoardDialog onOpen={rt.openBoard} trigger={(open) => <Button …/>} />
  */
 export function OpenBoardDialog(props: {
-  onOpen: (place: string, cols: number, rows: number, terrain: string) => void
+  onOpen: (place: string, terrain: string) => void
   trigger: (open: () => void) => JSX.Element
 }) {
   const [open, setOpen] = createSignal(false)
   const [place, setPlace] = createSignal('')
-  const [cols, setCols] = createSignal(20)
-  const [rows, setRows] = createSignal(15)
   const [terrain, setTerrain] = createSignal(TERRAIN_IDS[0])
 
   const confirm = () => {
-    props.onOpen(place().trim() || 'Cena', cols(), rows(), terrain())
+    props.onOpen(place().trim() || 'Cena', terrain())
     setOpen(false)
   }
 
@@ -56,7 +49,8 @@ export function OpenBoardDialog(props: {
           <DialogHeader>
             <DialogTitle>Abrir tabuleiro</DialogTitle>
             <DialogDescription>
-              Cada quadrado é 1,5m (p236), e o deslocamento padrão de 9m anda 6 quadrados (p106).
+              O tabuleiro não tem bordas: cada quadrado é 1,5m (p236) e a cena cresce para onde
+              a mesa for. O deslocamento padrão de 9m anda 6 quadrados (p106).
             </DialogDescription>
           </DialogHeader>
 
@@ -70,23 +64,6 @@ export function OpenBoardDialog(props: {
                 value={place()}
                 placeholder="Taverna do Javali"
                 onInput={(event) => setPlace(event.currentTarget.value)}
-              />
-            </div>
-
-            <div class="flex gap-2">
-              <NumberInput
-                aria-label="Colunas"
-                min={MIN_SIDE}
-                max={MAX_SIDE}
-                value={cols()}
-                onChange={setCols}
-              />
-              <NumberInput
-                aria-label="Linhas"
-                min={MIN_SIDE}
-                max={MAX_SIDE}
-                value={rows()}
-                onChange={setRows}
               />
             </div>
 

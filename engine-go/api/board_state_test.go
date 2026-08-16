@@ -14,63 +14,45 @@ func boardCounter() func() string {
 	return func() string { n++; return fmt.Sprintf("t%d", n) }
 }
 
-func openBoard(t *testing.T, cols, rows int) *BoardState {
+func openBoard(t *testing.T) *BoardState {
 	t.Helper()
-	b, err := newBoard("Taverna do Javali", cols, rows, "pedra")
-	if err != nil {
-		t.Fatalf("abrir tabuleiro %dx%d: %v", cols, rows, err)
-	}
-	return b
+	return newBoard("Taverna do Javali", "pedra")
 }
 
-func TestNewBoardRejectsUnplayableGrid(t *testing.T) {
-	if _, err := newBoard("Vazio", 0, 10, "pedra"); err == nil {
-		t.Error("grade de largura zero foi aceita")
-	}
-	// 60 quadrados são 90m, o alcance longo do livro (p224) — além disso não
-	// cabe em magia nenhuma nem em vista nenhuma.
-	if _, err := newBoard("Enorme", boardMaxSide+1, 10, "pedra"); err == nil {
-		t.Error("grade acima do teto foi aceita")
-	}
-}
-
-// Uma peça Grande ocupa 2×2 (T20 p107, Tab. 1-21): ancorada na última coluna,
-// metade dela ficaria fora da grade. A validação cobra o CORPO, não o canto.
-func TestTokenMustFitInsideTheGrid(t *testing.T) {
-	b := openBoard(t, 10, 10)
+// O plano NÃO tem bordas: quadrado negativo é lugar legítimo, e é para lá que a
+// cena cresce quando o mestre empurra a briga para a esquerda (ALE-124).
+func TestBoardHasNoEdges(t *testing.T) {
+	b := openBoard(t)
 	id := boardCounter()
 
-	if err := addToken(b, BoardToken{Label: "Ogro", Footprint: 2, X: 9, Y: 4}, id); err == nil {
-		t.Error("peça 2x2 na última coluna foi aceita e metade dela está fora")
+	if err := addToken(b, BoardToken{Label: "Batedor", X: -40, Y: -12}, id); err != nil {
+		t.Errorf("coordenada negativa recusada num plano infinito: %v", err)
 	}
-	if err := addToken(b, BoardToken{Label: "Ogro", Footprint: 2, X: 8, Y: 4}, id); err != nil {
-		t.Errorf("peça 2x2 que CABE foi recusada: %v", err)
-	}
-	if err := addToken(b, BoardToken{Label: "Rato", X: -1, Y: 0}, id); err == nil {
-		t.Error("posição negativa foi aceita")
+	if err := addToken(b, BoardToken{Label: "Ogro", Footprint: 2, X: 999, Y: 4}, id); err != nil {
+		t.Errorf("peça longe da origem recusada: %v", err)
 	}
 }
 
-// Crescer a peça é mover a borda dela sem mexer em X/Y: um Médio no canto que
-// vira Colossal (6×6, p107) sai da grade sem que ninguém tenha arrastado nada.
-func TestGrowingATokenIsAlsoBoundsChecked(t *testing.T) {
-	b := openBoard(t, 8, 8)
+// O limite de sanidade não é borda do mapa: é o guarda contra o cliente que
+// manda lixo, porque um número absurdo estoura a serialização e a tela de todo
+// mundo na mesa.
+func TestAbsurdCoordinatesAreRefused(t *testing.T) {
+	b := openBoard(t)
 	id := boardCounter()
-	if err := addToken(b, BoardToken{Label: "Dragão", X: 5, Y: 5}, id); err != nil {
-		t.Fatalf("adicionar: %v", err)
-	}
-	seis := 6
 
-	if err := updateToken(b, "t1", tokenPatch{Footprint: &seis}); err == nil {
-		t.Error("peça 6x6 ancorada em (5,5) numa grade 8x8 foi aceita")
+	if err := addToken(b, BoardToken{Label: "Lixo", X: boardCoordLimit + 1}, id); err == nil {
+		t.Error("coordenada absurda foi aceita")
 	}
-	if b.Tokens[0].Footprint != 1 {
-		t.Errorf("a peça recusada mudou assim mesmo: footprint %d", b.Tokens[0].Footprint)
+	if err := addToken(b, BoardToken{Label: "Lixo", Y: -(boardCoordLimit + 1)}, id); err == nil {
+		t.Error("coordenada absurda negativa foi aceita")
+	}
+	if len(b.Tokens) != 0 {
+		t.Errorf("a peça recusada entrou assim mesmo: %+v", b.Tokens)
 	}
 }
 
 func TestBoardVersionRisesOnEveryAcceptedChange(t *testing.T) {
-	b := openBoard(t, 10, 10)
+	b := openBoard(t)
 	id := boardCounter()
 	inicio := b.Version
 
@@ -81,7 +63,7 @@ func TestBoardVersionRisesOnEveryAcceptedChange(t *testing.T) {
 	}
 	// Recusa NÃO conta: uma versão que sobe sem o estado mudar faria o cliente
 	// descartar broadcast bom.
-	_ = addToken(b, BoardToken{Label: "Fora", X: 99}, id)
+	_ = addToken(b, BoardToken{Label: "Lixo", X: boardCoordLimit + 1}, id)
 	if b.Version != depoisDeAdicionar {
 		t.Error("uma mutação RECUSADA mexeu na versão")
 	}
@@ -95,7 +77,7 @@ func TestBoardVersionRisesOnEveryAcceptedChange(t *testing.T) {
 // em relação ao `hpHidden` da iniciativa, onde a linha sobrevive sem os números:
 // aqui a existência da peça é a emboscada (ALE-124).
 func TestHiddenTokenVanishesForPlayers(t *testing.T) {
-	b := openBoard(t, 10, 10)
+	b := openBoard(t)
 	id := boardCounter()
 	_ = addToken(b, BoardToken{Label: "Bandido", X: 1, Y: 1}, id)
 	_ = addToken(b, BoardToken{Label: "Assassino na viga", X: 2, Y: 2, Hidden: true}, id)
@@ -119,7 +101,7 @@ func TestHiddenTokenVanishesForPlayers(t *testing.T) {
 }
 
 func TestPopulateBoardIsIdempotent(t *testing.T) {
-	b := openBoard(t, 10, 10)
+	b := openBoard(t)
 	id := boardCounter()
 	st := emptyRuntimeState()
 	entryID := counter()

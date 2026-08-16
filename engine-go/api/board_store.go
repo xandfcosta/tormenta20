@@ -84,11 +84,8 @@ func (bs *boardStore) hydrateLocked(ctx context.Context, sessionID int64) {
 }
 
 // open abre (ou substitui) o tabuleiro da sessão.
-func (bs *boardStore) open(ctx context.Context, sessionID int64, place string, cols, rows int, terrain string) (*BoardState, error) {
-	b, err := newBoard(place, cols, rows, terrain)
-	if err != nil {
-		return nil, err
-	}
+func (bs *boardStore) open(ctx context.Context, sessionID int64, place, terrain string) *BoardState {
+	b := newBoard(place, terrain)
 	bs.mu.Lock()
 	defer bs.mu.Unlock()
 	bs.hydrateLocked(ctx, sessionID)
@@ -99,7 +96,7 @@ func (bs *boardStore) open(ctx context.Context, sessionID int64, place string, c
 		b.Version = old.Version + 1
 	}
 	bs.boards[sessionID] = b
-	return cloneBoard(b), nil
+	return cloneBoard(b)
 }
 
 // close encerra o tabuleiro: some da memória e do banco. As posições não são

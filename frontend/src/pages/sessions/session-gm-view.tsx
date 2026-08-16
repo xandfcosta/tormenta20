@@ -10,6 +10,7 @@ import { createMediaQuery } from '@/shared/lib/media-query'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
+import { createBoardViewport } from '@/features/battle-board/board-viewport'
 import { BoardRegion } from './board-region'
 import { MatchControls } from './match-rail'
 import { type WorkspaceTab, SessionWorkspace } from './session-workspace'
@@ -38,6 +39,9 @@ export function SessionGmView(props: {
   myCharacterIds: ReadonlySet<number>
 }) {
   const [selectedId, setSelectedId] = createSignal<string | null>(null)
+  // A JANELA do tabuleiro nasce aqui e não dentro da região: `Show` desmonta o
+  // conteúdo inativo, e o enquadramento morreria a cada troca de região.
+  const boardView = createBoardViewport()
   const [tab, setTab] = createSignal<WorkspaceTab>('combatente')
   const [region, setRegion] = createSignal<SceneRegion>('combate')
   // Derivado do estado ao vivo: os vitais mudam a cada pancada, e uma cópia
@@ -104,7 +108,7 @@ export function SessionGmView(props: {
         </Show>
 
         <Show when={showBoard() || showBoardInstead()}>
-          <BoardRegion rt={props.rt} isGm activeEntryId={activeEntryId()} />
+          <BoardRegion rt={props.rt} isGm view={boardView} activeEntryId={activeEntryId()} />
         </Show>
 
         <Show when={showWorkspace()}>

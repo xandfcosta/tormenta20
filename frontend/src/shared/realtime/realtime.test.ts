@@ -228,8 +228,6 @@ describe('o tabuleiro no fio', () => {
   const TABULEIRO: BoardState = {
     version: 4,
     place: 'Taverna do Javali',
-    cols: 20,
-    rows: 15,
     terrain: 'taverna',
     tokens: [{ id: 't1', label: 'Ogro', x: 3, y: 4, footprint: 2, kind: 'npc' }],
   }

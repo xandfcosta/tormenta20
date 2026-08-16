@@ -9,10 +9,11 @@ import (
 // carrega. Vinte tokens é uma mesa cheia; 200 é um acidente.
 const boardMaxTokens = 200
 
-// boardMaxSide — o maior lado aceito da grade, em quadrados. 60 quadrados são
-// 90m (T20 p236: 1 quadrado = 1,5m), que é o alcance longo do livro (p224): um
-// mapa maior que isso não cabe em nenhuma magia nem em nenhuma vista.
-const boardMaxSide = 60
+// boardCoordLimit — o tabuleiro é INFINITO e este número não é uma borda: é um
+// guarda contra lixo. 5000 quadrados são 7,5km (T20 p236: 1 quadrado = 1,5m), e
+// nenhuma cena de mesa chega perto disso; uma peça em 10^9 só pode ter vindo de
+// um cliente quebrado, e aceitá-la estouraria a serialização e a tela.
+const boardCoordLimit = 5000
 
 // BoardToken é uma peça no tabuleiro. X/Y são o canto superior-esquerdo em
 // QUADRADOS, nunca em pixels: pixel amarraria o estado a um tamanho de tela, e
@@ -39,7 +40,12 @@ type BoardToken struct {
 
 // BoardState é o tabuleiro vivo de uma sessão. Ausente (sem linha em
 // session_boards) = sessão sem tabuleiro, que é estado diferente de tabuleiro
-// vazio: o segundo desenharia uma grade de 0×0 na tela.
+// vazio: o segundo é uma cena aberta e ainda sem peça.
+//
+// NÃO tem largura nem altura: o plano é INFINITO nas quatro direções, e a peça
+// pode estar em coordenada negativa. Quem tem tamanho é a JANELA, que mora no
+// cliente — dois jogadores olhando pedaços diferentes da mesma cena é uma
+// propriedade, não um bug.
 type BoardState struct {
 	// Version sobe a cada mutação aceita. É o que vai permitir recusar um
 	// movimento proposto sobre um tabuleiro que já mudou, e o que deixa o
@@ -48,19 +54,13 @@ type BoardState struct {
 	// Place é o nome do lugar ("Taverna do Javali") — o mestre está montando uma
 	// cena, não uma planilha.
 	Place   string       `json:"place"`
-	Cols    int          `json:"cols"`
-	Rows    int          `json:"rows"`
 	Terrain string       `json:"terrain"`
 	Tokens  []BoardToken `json:"tokens"`
 }
 
-// newBoard abre um tabuleiro. Recusa grade fora da faixa jogável com o valor
-// ofendido na mensagem — quem chamou precisa saber o que mandou.
-func newBoard(place string, cols, rows int, terrain string) (*BoardState, error) {
-	if cols < 1 || cols > boardMaxSide || rows < 1 || rows > boardMaxSide {
-		return nil, fmt.Errorf("grade %dx%d fora da faixa: cada lado vai de 1 a %d quadrados", cols, rows, boardMaxSide)
-	}
-	return &BoardState{Version: 1, Place: place, Cols: cols, Rows: rows, Terrain: terrain, Tokens: []BoardToken{}}, nil
+// newBoard abre um tabuleiro vazio num plano sem bordas.
+func newBoard(place, terrain string) *BoardState {
+	return &BoardState{Version: 1, Place: place, Terrain: terrain, Tokens: []BoardToken{}}
 }
 
 // addToken põe uma peça no tabuleiro, recusando o que sairia da grade.
@@ -71,7 +71,7 @@ func addToken(b *BoardState, t BoardToken, newID func() string) error {
 	if t.Footprint <= 0 {
 		t.Footprint = 1
 	}
-	if err := assertInsideBoard(b, t); err != nil {
+	if err := assertSaneCoords(t); err != nil {
 		return err
 	}
 	t.ID = newID()
@@ -103,9 +103,8 @@ type tokenPatch struct {
 	Y         *int    `json:"y"`
 }
 
-// updateToken aplica o patch, validando a posição RESULTANTE — mudar só o
-// footprint pode jogar uma peça de 3×3 para fora da grade sem que ninguém tenha
-// mexido em X ou Y.
+// updateToken aplica o patch. Não há borda para respeitar — só o guarda contra
+// coordenada absurda, que é sobre lixo de cliente e não sobre o mapa.
 func updateToken(b *BoardState, tokenID string, patch tokenPatch) error {
 	for i := range b.Tokens {
 		t := &b.Tokens[i]
@@ -114,7 +113,7 @@ func updateToken(b *BoardState, tokenID string, patch tokenPatch) error {
 		}
 		next := *t
 		applyTokenPatch(&next, patch)
-		if err := assertInsideBoard(b, next); err != nil {
+		if err := assertSaneCoords(next); err != nil {
 			return err
 		}
 		*t = next
@@ -142,17 +141,21 @@ func applyTokenPatch(t *BoardToken, patch tokenPatch) {
 	}
 }
 
-// assertInsideBoard cobra a grade inteira da peça, e não só o canto: uma peça
-// Grande (2×2, p107) ancorada na última coluna teria metade do corpo fora.
-func assertInsideBoard(b *BoardState, t BoardToken) error {
-	side := t.Footprint
-	if side <= 0 {
-		side = 1
-	}
-	if t.X < 0 || t.Y < 0 || t.X+side > b.Cols || t.Y+side > b.Rows {
-		return fmt.Errorf("peça %dx%d em (%d,%d) sai da grade de %dx%d", side, side, t.X, t.Y, b.Cols, b.Rows)
+// assertSaneCoords recusa coordenada que só pode ter vindo de cliente quebrado.
+// Não é borda do mapa — o mapa não tem borda; é o guarda que impede um número
+// absurdo de estourar a serialização e a tela de todo mundo na mesa.
+func assertSaneCoords(t BoardToken) error {
+	if abs(t.X) > boardCoordLimit || abs(t.Y) > boardCoordLimit {
+		return fmt.Errorf("peça em (%d,%d) está além do limite de sanidade de %d quadrados", t.X, t.Y, boardCoordLimit)
 	}
 	return nil
+}
+
+func abs(v int) int {
+	if v < 0 {
+		return -v
+	}
+	return v
 }
 
 // populateBoard traz para o tabuleiro cada linha da iniciativa que ainda não
@@ -168,10 +171,7 @@ func populateBoard(b *BoardState, st *SessionRuntimeState, newID func() string) 
 			Label: entry.Label, Kind: entry.Type, Footprint: 1,
 			EntryID: strPtr(entry.ID), CharacterID: entry.CharacterID,
 		}
-		spot, ok := nextFreeSpot(b)
-		if !ok {
-			break // grade cheia: para em vez de empilhar todo mundo no canto
-		}
+		spot := nextFreeSpot(b)
 		token.X, token.Y = spot.x, spot.y
 		if err := addToken(b, token, newID); err != nil {
 			break
@@ -192,20 +192,25 @@ func hasTokenForEntry(b *BoardState, entryID string) bool {
 
 type boardSpot struct{ x, y int }
 
-// nextFreeSpot devolve o primeiro quadrado vazio em ordem de leitura. Não
-// precisa de offset: cada peça entra antes da busca seguinte, então a varredura
-// já enxerga quem acabou de chegar. Varredura simples porque o teto é de 200
-// peças — um índice espacial aqui seria estrutura para um problema que não existe.
-func nextFreeSpot(b *BoardState) (boardSpot, bool) {
-	for y := 0; y < b.Rows; y++ {
-		for x := 0; x < b.Cols; x++ {
-			if !occupied(b, x, y) {
-				return boardSpot{x, y}, true
-			}
+// nextFreeSpot devolve o primeiro quadrado vazio de uma fileira que começa na
+// origem e cresce para a direita, quebrando a cada dez quadrados. Num plano sem
+// bordas não existe "varrer a grade": existe um lugar combinado onde a peça
+// nova aparece, e a origem é ele — o mestre acha o grupo em "Centralizar".
+//
+// Não precisa de offset: cada peça entra antes da busca seguinte, então a
+// varredura já enxerga quem acabou de chegar.
+func nextFreeSpot(b *BoardState) boardSpot {
+	for i := 0; ; i++ {
+		spot := boardSpot{x: i % boardRowWidth, y: i / boardRowWidth}
+		if !occupied(b, spot.x, spot.y) {
+			return spot
 		}
 	}
-	return boardSpot{}, false
 }
+
+// boardRowWidth é o comprimento da fileira em que as peças novas nascem. Dez
+// quadrados são 15m: cabe numa tela e é a largura de uma sala.
+const boardRowWidth = 10
 
 func occupied(b *BoardState, x, y int) bool {
 	for _, t := range b.Tokens {

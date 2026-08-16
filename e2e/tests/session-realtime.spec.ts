@@ -95,14 +95,33 @@ test.describe('Sessão ao vivo — dois clientes', () => {
       await telaDoMestre.getByRole('dialog').getByRole('button', { name: 'Abrir' }).click()
       await expect(telaDoMestre.getByRole('grid', { name: new RegExp(lugar) })).toBeVisible()
 
-      // Sem recarregar nada: a grade chega pelo socket, na sala do JOGADOR.
       await expect(telaDoJogador.getByRole('grid', { name: new RegExp(lugar) })).toBeVisible()
 
       // E as peças também: "trazer a iniciativa" é o mestre montando a cena, e a
       // peça chega na tela do jogador com o nome de quem ela representa.
       await telaDoMestre.getByRole('button', { name: 'Trazer a iniciativa' }).click()
       await expect(
-        telaDoJogador.getByRole('button', { name: new RegExp(`^${figurante}, coluna`) }),
+        telaDoMestre.getByRole('button', { name: new RegExp(`^${figurante}, coluna`) }),
+      ).toBeVisible()
+
+      // O mestre PÕE a peça na origem antes de o jogador olhar, e isso não é
+      // conveniência de teste: a janela do jogador é pequena (o rail tem ~350px)
+      // e o plano é INFINITO, então "a peça está na tela dele" depende de ONDE
+      // ela está. Na origem é determinístico nos dois ambientes — e de quebra
+      // isto passa a provar o movimento atravessando as duas telas (ALE-124).
+      await telaDoMestre
+        .getByRole('button', { name: new RegExp(`^${figurante}, coluna`) })
+        .click()
+      // `exact` porque "Coluna 0, linha 0" é SUBSTRING de "Zumbi 1, coluna 0,
+      // linha 0" — a peça e o quadrado dela colidem no nome acessível. E o
+      // destino é (0,-1), um quadrado VAZIO: um clique num quadrado ocupado cai
+      // na peça que está por cima, não no quadrado.
+      await telaDoMestre
+        .getByRole('button', { name: 'Coluna 0, linha -1', exact: true })
+        .click()
+
+      await expect(
+        telaDoJogador.getByRole('button', { name: `${figurante}, coluna 0, linha -1` }),
       ).toBeVisible()
 
       await telaDoMestre.getByRole('button', { name: 'Encerrar o tabuleiro' }).click()

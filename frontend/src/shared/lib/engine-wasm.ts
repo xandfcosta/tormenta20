@@ -54,6 +54,9 @@ type GlobalWithGo = typeof globalThis & {
   pointBuyStatus?: (attrsJson: string) => string
   computeWeaponCards?: (charJson: string, conditionalsJson: string) => string
   spellPmLimit?: (charJson: string, spellClassesJson: string) => string
+  boardPathCost?: (payloadJson: string) => string
+  boardBudget?: (metres: number) => string
+  boardFootprint?: (size: string) => string
 }
 
 /** Creation point-buy result (p17): total spent (null when a value is out of
@@ -283,4 +286,65 @@ export function spellPmLimit(char: Character, spellClasses: readonly string[]): 
     | { error: string }
   if ('error' in out) throw new Error(`engine-wasm: ${out.error}`)
   return out.limit
+}
+
+
+/** Um quadrado do mapa de batalha, em coordenadas inteiras (T20 p236). */
+export type BoardSquare = { x: number; y: number }
+
+/** O veredito do motor sobre um caminho. Espelha o `engine.MoveCost`. */
+export type BoardMoveCost = {
+  /** Custo total em QUADRADOS — não em passos: uma diagonal é um passo que custa dois. */
+  squares: number
+  budget: number
+  legal: boolean
+  /** Índice do passo que estourou, ou -1 se coube: a tela pinta o trecho recusado. */
+  stoppedAt: number
+  reason?: string
+}
+
+/**
+ * Mede um caminho no tabuleiro pela regra do LIVRO: passo ortogonal custa 1
+ * quadrado, diagonal custa 2 ("mover-se na diagonal custa o dobro", p238), e
+ * entrar em terreno difícil dobra o passo ("3m de deslocamento por quadrado",
+ * p238). Orçamento negativo = sem limite (cena fora de combate).
+ *
+ * É o MESMO Go que o servidor roda ao confirmar o movimento: a tela antecipa
+ * para poder mostrar o custo enquanto o dedo arrasta, e a autoridade continua
+ * sendo uma só.
+ *
+ * @example boardPathCost([{x:0,y:0},{x:1,y:1}], [], 6) // { squares: 2, legal: true }
+ */
+export function boardPathCost(
+  path: readonly BoardSquare[],
+  difficult: readonly BoardSquare[],
+  budgetSquares: number,
+): BoardMoveCost {
+  const fn = (globalThis as GlobalWithGo).boardPathCost
+  if (!fn) throw new Error('engine-wasm: engine not ready — call ensureEngine() first')
+  const out = JSON.parse(fn(JSON.stringify({ path, difficult, budget: budgetSquares }))) as
+    | BoardMoveCost
+    | { error: string }
+  if ('error' in out) throw new Error(`engine-wasm: ${out.error}`)
+  return out
+}
+
+/**
+ * Deslocamento em metros → orçamento em quadrados (p106: 9m = 6 quadrados).
+ * Trunca: 10m não compra um sétimo quadrado.
+ */
+export function boardBudgetSquares(metres: number): number {
+  const fn = (globalThis as GlobalWithGo).boardBudget
+  if (!fn) throw new Error('engine-wasm: engine not ready — call ensureEngine() first')
+  return (JSON.parse(fn(metres)) as { squares: number }).squares
+}
+
+/**
+ * Lado da peça em quadrados pelo TAMANHO da criatura (p107, Tab. 1-21):
+ * Médio 1, Grande 2, Enorme 3, Colossal 6.
+ */
+export function boardFootprint(size: string): number {
+  const fn = (globalThis as GlobalWithGo).boardFootprint
+  if (!fn) throw new Error('engine-wasm: engine not ready — call ensureEngine() first')
+  return (JSON.parse(fn(size)) as { footprint: number }).footprint
 }

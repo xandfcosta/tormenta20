@@ -14,9 +14,7 @@ func TestBoardPersistsAndComesBack(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
-	if _, err := s.boards.open(ctx, sid, "Taverna do Javali", 20, 15, "taverna"); err != nil {
-		t.Fatalf("abrir: %v", err)
-	}
+	s.boards.open(ctx, sid, "Taverna do Javali", "taverna")
 	if _, err := s.boards.addToken(ctx, sid, BoardToken{Label: "Ogro", X: 3, Y: 4, Footprint: 2}); err != nil {
 		t.Fatalf("adicionar peça: %v", err)
 	}
@@ -29,8 +27,8 @@ func TestBoardPersistsAndComesBack(t *testing.T) {
 	if voltou == nil {
 		t.Fatal("o tabuleiro não voltou do banco")
 	}
-	if voltou.Place != "Taverna do Javali" || voltou.Cols != 20 || voltou.Rows != 15 {
-		t.Errorf("o lugar ou a grade se perderam: %+v", voltou)
+	if voltou.Place != "Taverna do Javali" || voltou.Terrain != "taverna" {
+		t.Errorf("o lugar ou o cenário se perderam: %+v", voltou)
 	}
 	if len(voltou.Tokens) != 1 || voltou.Tokens[0].X != 3 || voltou.Tokens[0].Y != 4 {
 		t.Errorf("a peça voltou fora do lugar: %+v", voltou.Tokens)
@@ -61,9 +59,7 @@ func TestClosingBoardErasesItFromDiskToo(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	if _, err := s.boards.open(ctx, sid, "Cripta", 10, 10, "pedra"); err != nil {
-		t.Fatalf("abrir: %v", err)
-	}
+	s.boards.open(ctx, sid, "Cripta", "pedra")
 	s.boards.persist(ctx, sid)
 
 	s.boards.close(ctx, sid)
@@ -83,19 +79,13 @@ func TestReopeningKeepsVersionMovingForward(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	primeiro, err := s.boards.open(ctx, sid, "Taverna", 10, 10, "taverna")
-	if err != nil {
-		t.Fatalf("abrir: %v", err)
-	}
+	primeiro := s.boards.open(ctx, sid, "Taverna", "taverna")
 	if _, err := s.boards.addToken(ctx, sid, BoardToken{Label: "Bandido"}); err != nil {
 		t.Fatalf("adicionar: %v", err)
 	}
 	antes := s.boards.get(ctx, sid).Version
 
-	segundo, err := s.boards.open(ctx, sid, "Masmorra", 12, 12, "pedra")
-	if err != nil {
-		t.Fatalf("reabrir: %v", err)
-	}
+	segundo := s.boards.open(ctx, sid, "Masmorra", "pedra")
 
 	if segundo.Version <= antes {
 		t.Errorf("a versão voltou no tempo: %d depois de %d (primeiro abriu em %d)",

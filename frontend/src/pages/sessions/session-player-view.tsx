@@ -13,6 +13,7 @@ import { createMediaQuery } from '@/shared/lib/media-query'
 import { settledQuery } from '@/shared/lib/settled-query'
 import type { SessionRealtime } from '@/shared/realtime/realtime'
 import { cn } from '@/shared/lib/utils'
+import { createBoardViewport } from '@/features/battle-board/board-viewport'
 import { BoardRegion } from './board-region'
 import { LiveSessionBanner, type LiveTurnState } from './live-session-banner'
 import { MatchControls, MatchRail } from './match-rail'
@@ -41,6 +42,8 @@ export function SessionPlayerView(props: {
   const turn = createMemo(() => playerTurnState(props.rt, props.myCharacterIds))
   const isMyTurn = () => turn().kind === 'mine'
 
+  const boardView = createBoardViewport()
+
   const activeEntryId = () => {
     const live = props.rt.state()
     return live.turnIndex >= 0 ? (live.initiative[live.turnIndex]?.id ?? null) : null
@@ -54,8 +57,13 @@ export function SessionPlayerView(props: {
           tabuleiro" seria ruído permanente no rail. Nesta fatia o jogador VÊ o
           tabuleiro; mover a própria peça é a fatia do movimento (ALE-124). */}
       <Show when={props.rt.board()}>
-        <div class="min-h-64">
-          <BoardRegion rt={props.rt} isGm={false} activeEntryId={activeEntryId()} />
+        {/* `flex h-72` e não `min-h-64`: a área do plano é `flex-1` dentro do
+            cartão, e num bloco sem altura ela colapsa para ZERO — o jogador
+            recebia o tabuleiro e não via grade nenhuma. Foi o e2e de dois
+            clientes que apanhou isso; em jsdom tudo mede zero e o teste de
+            integração passava verde por cima (ALE-124). */}
+        <div class="flex h-72">
+          <BoardRegion rt={props.rt} isGm={false} view={boardView} activeEntryId={activeEntryId()} />
         </div>
       </Show>
       <PartyRoster campaignId={props.campaignId} />

@@ -55,12 +55,16 @@ export type BoardToken = {
   hidden?: boolean
 }
 
+/**
+ * O tabuleiro da sessão. NÃO tem largura nem altura: o plano é infinito nas
+ * quatro direções e a peça pode estar em coordenada negativa. Quem tem tamanho é
+ * a JANELA, que mora no cliente — dois jogadores olhando pedaços diferentes da
+ * mesma cena é propriedade, não defeito (ALE-124).
+ */
 export type BoardState = {
   /** Sobe a cada mutação aceita: é o que deixa o cliente descartar broadcast atrasado. */
   version: number
   place: string
-  cols: number
-  rows: number
   terrain: string
   tokens: BoardToken[]
 }
@@ -124,7 +128,7 @@ export type SessionRealtime = {
   applyEffect: (entryId: string, spellId: string, scope?: RestScope) => void
   /** O tabuleiro da sessão — `null` quando o mestre não abriu nenhum. */
   board: Accessor<BoardState | null>
-  openBoard: (place: string, cols: number, rows: number, terrain: string) => void
+  openBoard: (place: string, terrain: string) => void
   closeBoard: () => void
   addToken: (token: Omit<BoardToken, 'id'>) => void
   removeToken: (tokenId: string) => void
@@ -256,7 +260,7 @@ export function createSessionSocket(
       send('apply-effect', { entryId, spellId, scope }),
 
     board,
-    openBoard: (place, cols, rows, terrain) => send('board-open', { place, cols, rows, terrain }),
+    openBoard: (place, terrain) => send('board-open', { place, terrain }),
     closeBoard: () => send('board-close'),
     // Achatado, não aninhado: é a forma que o servidor lê.
     addToken: (token) => send('board-token-add', { ...token }),

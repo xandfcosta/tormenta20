@@ -19,14 +19,8 @@ func (g *realtimeGateway) onBoardOpen(sock *socket.Socket, args []any) {
 	if !ok || !g.requireGm(sock, ctx.role) {
 		return
 	}
-	cols, _ := intField(ctx.body, "cols")
-	rows, _ := intField(ctx.body, "rows")
-	board, err := g.s.boards.open(context.Background(), ctx.sessionID,
-		stringField(ctx.body, "place"), int(cols), int(rows), stringField(ctx.body, "terrain"))
-	if err != nil {
-		g.wsError(sock, err.Error())
-		return
-	}
+	board := g.s.boards.open(context.Background(), ctx.sessionID,
+		stringField(ctx.body, "place"), stringField(ctx.body, "terrain"))
 	g.emitBoardState(ctx.sessionID, board)
 	ackOK(ctx.ack, boardForRole(ctx.role, board))
 }
