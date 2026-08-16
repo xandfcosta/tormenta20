@@ -57,6 +57,7 @@ test.describe('Sessão ao vivo — dois clientes', () => {
    */
   test('o tabuleiro que o mestre abre aparece na tela do jogador', async ({ browser }) => {
     const lugar = `Cripta de teste ${Date.now()}`
+    const figurante = `Peça de teste ${Date.now()}`
     const mestre = await browser.newContext({ storageState: '.auth/user.json' })
     const jogador = await browser.newContext({ storageState: '.auth/player.json' })
     const telaDoMestre = await mestre.newPage()
@@ -67,6 +68,15 @@ test.describe('Sessão ao vivo — dois clientes', () => {
       await telaDoJogador.goto('/campaigns/1/sessions/4')
       await expect(telaDoMestre.getByRole('status', { name: 'Conectado' })).toBeVisible()
       await expect(telaDoJogador.getByRole('status', { name: 'Conectado' })).toBeVisible()
+
+      // O teste traz o PRÓPRIO combatente: a iniciativa da seed do CI está VAZIA,
+      // e "trazer a iniciativa" para um tabuleiro sem ninguém não põe peça
+      // nenhuma — o teste passava aqui e falhava lá, que foi exatamente o que
+      // aconteceu no primeiro push (ALE-124).
+      await telaDoMestre.getByRole('button', { name: 'Combatente' }).click()
+      await telaDoMestre.getByLabel('Nome').fill(figurante)
+      await telaDoMestre.getByRole('button', { name: 'Adicionar', exact: true }).click()
+      await expect(telaDoMestre.getByText(figurante)).toBeVisible()
 
       // Desktop Chrome do Playwright é 1280 de largura: abaixo de 1536 a cena do
       // mestre mostra uma região por vez, então o tabuleiro precisa ser escolhido
@@ -88,13 +98,21 @@ test.describe('Sessão ao vivo — dois clientes', () => {
       // Sem recarregar nada: a grade chega pelo socket, na sala do JOGADOR.
       await expect(telaDoJogador.getByRole('grid', { name: new RegExp(lugar) })).toBeVisible()
 
-      // E as peças também: "trazer a iniciativa" é o mestre montando a cena.
+      // E as peças também: "trazer a iniciativa" é o mestre montando a cena, e a
+      // peça chega na tela do jogador com o nome de quem ela representa.
       await telaDoMestre.getByRole('button', { name: 'Trazer a iniciativa' }).click()
-      await expect(telaDoJogador.locator('button[aria-label*=", coluna "]').first()).toBeVisible()
+      await expect(
+        telaDoJogador.getByRole('button', { name: new RegExp(`^${figurante}, coluna`) }),
+      ).toBeVisible()
 
       await telaDoMestre.getByRole('button', { name: 'Encerrar o tabuleiro' }).click()
       await telaDoMestre.getByRole('dialog').getByRole('button', { name: 'Encerrar' }).click()
       await expect(telaDoJogador.getByRole('grid', { name: new RegExp(lugar) })).toBeHidden()
+
+      // Sai como entrou: o combatente do teste volta para fora da iniciativa.
+      await telaDoMestre.getByRole('button', { name: 'combate', exact: true }).click()
+      await telaDoMestre.getByRole('button', { name: `Remover ${figurante}` }).click()
+      await expect(telaDoMestre.getByText(figurante)).toBeHidden()
     } finally {
       await mestre.close()
       await jogador.close()
