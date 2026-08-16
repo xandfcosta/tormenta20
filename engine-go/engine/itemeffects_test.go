@@ -25,37 +25,25 @@ func TestTargetKeyDistinguishesAttackScopes(t *testing.T) {
 	}
 }
 
-func TestTargetKeyFullUnion(t *testing.T) {
+// A chave é o que decide o que COMPETE com o que na resolução: mesma chave,
+// mesmo tipo de bônus → só o maior vale. O teste antigo transcrevia os 28 braços
+// do `switch`, incluindo os vinte que devolvem o próprio nome (uma re-escrita da
+// implementação, que só falha se alguém renomear os dois lados junto), e deixava
+// de fora o ÚNICO braço que carrega regra do livro.
+func TestTargetKeyComposition(t *testing.T) {
+	// Os que COMPÕEM a chave com outro campo: é aqui que um esquecimento faria
+	// duas coisas diferentes competirem como se fossem a mesma.
 	cases := []struct {
 		target ModifierTarget
 		want   string
 	}{
 		{ModifierTarget{K: "expertise", Name: "Atletismo"}, "expertise:Atletismo"},
-		{ModifierTarget{K: "expertiseAll"}, "expertiseAll"},
 		{ModifierTarget{K: "expertiseRemovePenalty", Name: "Furtividade"}, "expertiseRemovePenalty:Furtividade"},
 		{ModifierTarget{K: "expertiseByAttribute", Attribute: "strength"}, "expertiseByAttribute:strength"},
 		{ModifierTarget{K: "attribute", Name: "wisdom"}, "attribute:wisdom"},
-		{ModifierTarget{K: "defense"}, "defense"},
-		{ModifierTarget{K: "defenseDexCap"}, "defenseDexCap"},
-		{ModifierTarget{K: "resistance"}, "resistance"},
-		{ModifierTarget{K: "fearResistance"}, "fearResistance"},
 		{ModifierTarget{K: "attack", Scope: "this"}, "attack:this"},
 		{ModifierTarget{K: "damage", Scope: "all"}, "damage:all"},
-		{ModifierTarget{K: "critRange"}, "critRange"},
-		{ModifierTarget{K: "critMult"}, "critMult"},
-		{ModifierTarget{K: "pmLimit"}, "pmLimit"},
-		{ModifierTarget{K: "pmCost"}, "pmCost"},
 		{ModifierTarget{K: "catalyst", School: "abjuracao"}, "catalyst:abjuracao"},
-		{ModifierTarget{K: "spellDC"}, "spellDC"},
-		{ModifierTarget{K: "inventorySlots"}, "inventorySlots"},
-		{ModifierTarget{K: "displacement"}, "displacement"},
-		{ModifierTarget{K: "flySpeed"}, "flySpeed"},
-		{ModifierTarget{K: "armorPenalty"}, "armorPenalty"},
-		{ModifierTarget{K: "armorPenaltyExpertises"}, "armorPenaltyExpertises"},
-		{ModifierTarget{K: "tempHp"}, "tempHp"},
-		{ModifierTarget{K: "tempMp"}, "tempMp"},
-		{ModifierTarget{K: "maxPv"}, "maxPv"},
-		{ModifierTarget{K: "maxPm"}, "maxPm"},
 		{ModifierTarget{K: "maneuver", Name: "derrubar"}, "maneuver:derrubar"},
 		{ModifierTarget{K: "flag", Name: "fatigue-on-sleep"}, "flag:fatigue-on-sleep"},
 	}
@@ -63,6 +51,27 @@ func TestTargetKeyFullUnion(t *testing.T) {
 		if got := targetKey(c.target); got != c.want {
 			t.Errorf("targetKey(%+v) = %q, want %q", c.target, got, c.want)
 		}
+	}
+}
+
+// A Defesa DIRECIONAL do Caído (p394: "-5 na Defesa contra ataques corpo a corpo",
+// cumulativa com outras condições) precisa de chave PRÓPRIA: se caísse na mesma
+// chave da Defesa geral, as duas competiriam pelo maior e uma sumiria — que é o
+// oposto do que o livro manda. Era o único braço do `switch` com regra atrás, e
+// o único que o teste anterior não cobria.
+func TestDefesaDirecionalNaoCompeteComAGeral(t *testing.T) {
+	geral := targetKey(ModifierTarget{K: "defense"})
+	todos := targetKey(ModifierTarget{K: "defense", Scope: "all"})
+	corpoACorpo := targetKey(ModifierTarget{K: "defense", Scope: "melee"})
+
+	if geral != "defense" || todos != "defense" {
+		t.Errorf("defesa geral=%q e escopo all=%q, queria as duas em \"defense\"", geral, todos)
+	}
+	if corpoACorpo == geral {
+		t.Fatalf("a Defesa contra corpo a corpo caiu na mesma chave da geral (%q): elas passariam a competir", corpoACorpo)
+	}
+	if corpoACorpo != "defense:melee" {
+		t.Errorf("chave direcional=%q, queria defense:melee", corpoACorpo)
 	}
 }
 
