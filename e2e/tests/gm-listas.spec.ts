@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { ensurePowersFixture } from './support/character'
 
 /**
  * As listas virtualizadas do MESTRE — bestiário e catálogos.
@@ -59,4 +60,37 @@ test.describe('Listas virtualizadas do mestre', () => {
     await expect(page.getByRole('region', { name: 'Criatura escolhida' })).toContainText('Ogro')
   })
 
+
+  /**
+   * A sexta e última lista virtualizada da auditoria: o pool de poderes gerais,
+   * dentro da ficha. Ele só pinta com o card da classe ABERTO, e o card abre
+   * sozinho quando há escolha pendente — por isso o teste CRIA um Guerreiro de
+   * 6º nível sem poder escolhido (três vagas em aberto) em vez de usar um
+   * personagem da seed, onde as vagas já estão gastas e a lista fica fechada.
+   *
+   * O herói é criado pela API na primeira rodada e REUSADO nas seguintes: o app
+   * não apaga personagem, então criar um por rodada entulharia o elenco.
+   */
+  test('o pool de poderes gerais da ficha pinta e filtra', async ({ page, request }) => {
+    const id = await ensurePowersFixture(request)
+    await page.goto(`/characters/${id}`)
+    await page.getByRole('tab', { name: /^Poderes/ }).click()
+    // O pool mora dentro do card da classe, e o card mora dentro do grupo
+    // "Classe" — os dois recolhidos, nada pinta e não há o que medir.
+    await page.getByRole('button', { name: /^Classe/ }).first().click()
+
+    // `textbox`, não `searchbox`: este campo não declara `type="search"` como os
+    // irmãos dele (bestiário e loja) — o papel segue o elemento, não o rótulo.
+    const busca = page.getByRole('textbox', { name: 'Buscar poder geral' })
+    await expect(busca).toBeVisible()
+    // A linha do pool é um `div` com caixa de marcar e o nome em texto — não um
+    // botão por linha, como nas outras listas.
+    await expect(page.getByText('Ataque Poderoso', { exact: true })).toBeVisible()
+
+    await busca.fill('esquiva')
+    await expect(page.getByText(/Esquiva/).first()).toBeVisible()
+    // O modo de falha da virtualização: guardar o que pintou primeiro.
+    await expect(page.getByText('Ataque Poderoso', { exact: true })).toHaveCount(0)
+  })
 })
+
