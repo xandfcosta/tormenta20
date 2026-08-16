@@ -12,7 +12,7 @@ import (
 // oracle (`vitals`, dumped from `enginePools`). Inc.3's target. The lone god-power
 // case is arcanista-erudito (Bênção do Mana). Regenerate:
 //
-//	GEN_ORACLE=1 pnpm --filter frontend test parity-oracle
+//	cd engine-go && go run ./cmd/genoracle
 func TestVitalsParity(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "parity"))
 	catalogs := primeFromDump(t, dir)

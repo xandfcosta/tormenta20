@@ -9,7 +9,7 @@ import (
 // TestSheetV2Parity proves the ported breakdown layer (ComputeSheetV2) on real
 // data: for each seed character it primes the catalogs, computes the full sheet
 // and asserts every breakdown matches the TS oracle (`sheetV2`, dumped by the
-// frontend GEN_ORACLE harness) semantically. This is slice 3 / task #5's target
+// gerado por `go run ./cmd/genoracle`) semantically. This is slice 3 / task #5's target
 // — the collection (slice 2) + resolution (slice 1) tests cover the upstream
 // halves.
 //
@@ -23,7 +23,7 @@ import (
 //
 // Regenerate the oracle when the TS rules change:
 //
-//	GEN_ORACLE=1 pnpm --filter frontend test parity-oracle
+//	cd engine-go && go run ./cmd/genoracle
 func TestSheetV2Parity(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "parity"))
 	catalogs := primeFromDump(t, dir)

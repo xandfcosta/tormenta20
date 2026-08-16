@@ -186,7 +186,7 @@ type Catalogs struct {
 	tormentaIDs   map[string]bool
 }
 
-// enginePayload is the JSON shape the frontend GEN_ORACLE harness dumps to
+// enginePayload is the JSON shape `cmd/genoracle` dumps to
 // engine-go/parity/_catalogs.json (mirrors ensureCatalogs' priming inputs).
 type enginePayload struct {
 	Items         []CatalogItem      `json:"items"`

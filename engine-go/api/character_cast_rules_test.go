@@ -38,7 +38,7 @@ func newCastServer(t *testing.T) *Server {
 	t.Cleanup(func() { _ = database.Close() })
 	raw, err := os.ReadFile(filepath.Join("..", "parity", "_catalogs.json"))
 	if err != nil {
-		t.Fatalf("ler catálogos: %v (rode o harness GEN_ORACLE do front)", err)
+		t.Fatalf("ler catálogos: %v (gere com `go run ./cmd/genoracle`)", err)
 	}
 	catalogs, err := engine.PrimeEngineCatalogs(raw)
 	if err != nil {

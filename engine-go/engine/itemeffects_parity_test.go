@@ -15,7 +15,7 @@ import (
 //
 // Regenerate the oracle when the TS rules change:
 //
-//	GEN_ORACLE=1 pnpm --filter frontend test parity-oracle
+//	cd engine-go && go run ./cmd/genoracle
 func TestItemEffectsParity(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "parity"))
 	slugs := parityOracleSlugs(t, dir)

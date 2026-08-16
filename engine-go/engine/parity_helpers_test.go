@@ -30,7 +30,7 @@ func parityOracleSlugs(t *testing.T, dir string) []string {
 	t.Helper()
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		t.Fatalf("ler o diretório de paridade %s: %v (rode o harness GEN_ORACLE do front)", dir, err)
+		t.Fatalf("ler o diretório de paridade %s: %v (gere com `go run ./cmd/genoracle`)", dir, err)
 	}
 	var slugs []string
 	for _, e := range entries {
@@ -40,7 +40,7 @@ func parityOracleSlugs(t *testing.T, dir string) []string {
 	}
 	sort.Strings(slugs)
 	if len(slugs) != parityOracleCount {
-		t.Fatalf("esperados %d oráculos, achados %d — regenere com `GEN_ORACLE=1 pnpm --filter frontend test parity-oracle`", parityOracleCount, len(slugs))
+		t.Fatalf("esperados %d oráculos, achados %d — regenere com `go run ./cmd/genoracle`", parityOracleCount, len(slugs))
 	}
 	return slugs
 }

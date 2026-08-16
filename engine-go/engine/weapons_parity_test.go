@@ -9,7 +9,7 @@ import (
 // TestWeaponCardsParity proves ComputeWeaponCards (WeaponFormulaCards) on real
 // data: for each seed character it primes the catalogs, assembles the wielded-
 // weapon cards and asserts they match the TS oracle (`weaponCards`, dumped by
-// the frontend GEN_ORACLE harness).
+// gerado por `go run ./cmd/genoracle`).
 //
 // Also with every conditional ON (ALE-106) — a card is exactly where an opt-in
 // like a Fúria that grants +2 em ataque and dano lands, and the base pass could
@@ -17,7 +17,7 @@ import (
 //
 // Regenerate the oracle when the TS rules change:
 //
-//	GEN_ORACLE=1 pnpm --filter frontend test parity-oracle
+//	cd engine-go && go run ./cmd/genoracle
 func TestWeaponCardsParity(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "parity"))
 	catalogs := primeFromDump(t, dir)

@@ -9,12 +9,12 @@ import (
 // TestEquippedFlagsParity proves ComputeEquippedFlags (effect-source.ts
 // equippedItemFlagEffects) on real data: for each seed character it primes the
 // catalogs, resolves the equipped-item flags, and asserts they match the TS
-// oracle (`equippedFlags`, dumped by the frontend GEN_ORACLE harness) — the last
+// oracle (`equippedFlags`, gerado por `go run ./cmd/genoracle`) — the last
 // effects-cru rule to move off TS (Fase A.3.3).
 //
 // Regenerate the oracle when the TS rules change:
 //
-//	GEN_ORACLE=1 pnpm --filter frontend test parity-oracle
+//	cd engine-go && go run ./cmd/genoracle
 func TestEquippedFlagsParity(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "parity"))
 	catalogs := primeFromDump(t, dir)
