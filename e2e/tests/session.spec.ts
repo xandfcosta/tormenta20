@@ -108,6 +108,29 @@ test.describe('Sessão ao vivo', () => {
     expect(escaping).toEqual([])
   })
 
+  /**
+   * O descanso de cena TRAVAVA a aba (ALE-122). O toast é uma árvore reativa de
+   * terceiro que, ao montar, mede a própria altura e escreve o valor num sinal;
+   * disparado de dentro de um `createEffect`, esse write caía no mesmo ciclo do
+   * efeito e o ciclo se realimentava — medido na aba travada: o toast medido
+   * 400 vezes com a mesma altura, `runUpdates` aninhado 78 níveis e subindo.
+   *
+   * Por que e2e: em jsdom todo elemento mede zero, então a medição que alimenta
+   * o laço nunca acontece e a mesma asserção passa verde sobre a aba morta. O
+   * teste exige o toast NA TELA (senão não haveria medição nenhuma) e depois
+   * exige que a página ainda responda.
+   */
+  test('descanso de cena avisa a mesa sem travar a aba', async ({ page }) => {
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+
+    await page.getByRole('button', { name: 'Descanso de cena' }).click()
+
+    await expect(page.getByText('Efeitos temporários de cena foram limpos.')).toBeVisible()
+    // A aba viva é o que estava em jogo: numa aba travada isto nunca resolve.
+    await expect(page.getByRole('button', { name: 'Próximo turno' })).toBeEnabled({ timeout: 5000 })
+  })
+
   test('Sair da sessão volta pra crônica', async ({ page }) => {
     await page.goto('/campaigns/1/sessions/4')
     await expect(page.getByRole('heading', { name: 'Iniciativa' })).toBeVisible()

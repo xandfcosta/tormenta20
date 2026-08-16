@@ -129,6 +129,23 @@ function SessionSkeleton() {
 }
 
 /**
+ * Dispara o toast FORA do ciclo de atualização que o originou.
+ *
+ * O toast vive numa árvore reativa de terceiro (solid-sonner) que, ao montar,
+ * mede a própria altura e escreve essa altura de volta num sinal. Chamado de
+ * dentro de um `createEffect`, esse write entra no MESMO ciclo do efeito que o
+ * chamou, e o ciclo se realimenta: medi a aba do mestre travada e o toast foi
+ * medido 400 vezes com a mesma altura (73,3px), com `runUpdates` aninhado 78
+ * níveis e subindo — a aba morre e a sessão vai junto (ALE-122).
+ *
+ * Um microtask separa os dois ciclos: o efeito termina, e só então o toast
+ * monta com a árvore dele em paz.
+ */
+function announce(fire: () => void): void {
+  queueMicrotask(fire)
+}
+
+/**
  * Toasts the moment the active combatant becomes one of the viewer's own
  * characters. The row highlight covers the persistent state; this is the
  * transient alert — and it lives on the page so it fires once per match, not
@@ -145,9 +162,11 @@ function createTurnCue(
     const isMyTurn =
       active?.characterId !== undefined && myCharacterIds().has(active.characterId)
     if (isMyTurn && !wasMyTurn) {
-      toast.success(`⚔️ Sua vez, ${active?.label}!`, {
-        description: 'Seu personagem está na iniciativa.',
-      })
+      announce(() =>
+        toast.success(`⚔️ Sua vez, ${active?.label}!`, {
+          description: 'Seu personagem está na iniciativa.',
+        }),
+      )
     }
     wasMyTurn = isMyTurn
   })
@@ -159,10 +178,12 @@ function createRestCue(rt: ReturnType<typeof createSessionSocket>) {
     const scope = rt.restFlash()
     if (!scope) return
     const day = scope === 'day'
-    toast.success(`Descanso de ${day ? 'dia' : 'cena'}`, {
-      description: day
-        ? 'PV/PM recuperados e efeitos temporários limpos.'
-        : 'Efeitos temporários de cena foram limpos.',
-    })
+    announce(() =>
+      toast.success(`Descanso de ${day ? 'dia' : 'cena'}`, {
+        description: day
+          ? 'PV/PM recuperados e efeitos temporários limpos.'
+          : 'Efeitos temporários de cena foram limpos.',
+      }),
+    )
   })
 }
