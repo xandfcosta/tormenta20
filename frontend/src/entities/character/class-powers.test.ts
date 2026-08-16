@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import type { ClassChoices } from '@/shared/api/catalog-types'
 import {
   chosenPowerLines,
   classPowerCandidates,
@@ -6,6 +7,7 @@ import {
   electiveSlotUsage,
   classChoiceSummary,
   type PowerOption,
+  powerBlockedReason,
   powerChoiceOptions,
   tormentaPowerOptions,
   usedSlots,
@@ -178,5 +180,48 @@ describe('electiveSlotUsage', () => {
     const demais = generalPowers.slice(0, 10).map((p) => p.id)
 
     expect(electiveSlotUsage('Bárbaro', 2, demais).remaining).toBe(0)
+  })
+})
+
+/**
+ * O que TRAVA um poder — e não tinha teste em camada nenhuma, nem aqui nem na
+ * tela (a lista da Forja é virtualizada: em jsdom nenhuma linha renderiza, então
+ * um teste de componente passaria verde sem olhar poder nenhum).
+ *
+ * O desfecho que o jogador nota: um poder que ele ainda não pode ter precisa
+ * estar inalcançável E dizer por quê. Oferecer e recusar depois é pior;
+ * oferecer sem explicar manda ele adivinhar.
+ */
+describe('powerBlockedReason', () => {
+  const semNada = { chosenIds: new Set<string>(), classChoices: {} as ClassChoices }
+
+  const doGuerreiro = (name: string) => {
+    const { classPowers } = classPowerCandidates('Guerreiro')
+    const found = classPowers.find((p) => p.name === name)
+    if (!found) throw new Error(`poder ${name} não está no catálogo do Guerreiro`)
+    return found
+  }
+
+  // "Especialização em Armadura. (...) Pré-requisito: 12º nível de guerreiro" (p65).
+  it('poder acima do nível é recusado dizendo o nível que falta', () => {
+    const poder = doGuerreiro('Especialização em Armadura')
+
+    expect(powerBlockedReason(poder, 3, semNada)).toBe('≥ Nv 12')
+    expect(powerBlockedReason(poder, 12, semNada)).toBeNull()
+  })
+
+  // Larva Explosiva pede outro poder da Tormenta antes (p137).
+  it('pré-requisito de poder é recusado até o outro estar escolhido', () => {
+    const larva = tormentaPowerOptions().find((p) => p.id === 'larva-explosiva')
+    if (!larva) throw new Error('larva-explosiva não está no catálogo')
+
+    const bloqueado = powerBlockedReason(larva, 20, semNada)
+    expect(bloqueado).not.toBeNull()
+
+    const comOOutro = {
+      chosenIds: new Set(larva.prerequisites.flatMap((p) => ('id' in p ? [p.id] : []))),
+      classChoices: {} as ClassChoices,
+    }
+    expect(powerBlockedReason(larva, 20, comOOutro)).toBeNull()
   })
 })
