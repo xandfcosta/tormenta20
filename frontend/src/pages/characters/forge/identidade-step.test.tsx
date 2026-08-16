@@ -91,11 +91,11 @@ describe('IdentidadeStep', () => {
     expect(draft.values.hpMax).toBe(25)
   })
 
-  it('não deixa o PV atual passar do máximo', () => {
-    renderStep()
-
-    expect(screen.getByRole('spinbutton', { name: /pv atual/i })).toHaveAttribute('max', '25')
-  })
+  // O `max` do input NÃO trava: digitar 99 grava 99 no rascunho e a recusa só
+  // chega do servidor, no fim da criação (provado em
+  // `api/character_create_http_test.go`). O teste que afirmava o atributo
+  // provava fiação e dava a impressão de trava — a garantia mora no servidor, e
+  // fechar o vão na tela é decisão de produto, não conserto de teste.
 
   it('abre a devoção ao escolher um deus e guarda o poder concedido', async () => {
     const { draft } = renderStep((d) => d.setValue('god', 'Khalmyr'))
