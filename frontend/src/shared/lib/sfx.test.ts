@@ -1,3 +1,4 @@
+import { FakeStorage } from '@/shared/test/fake-storage'
 import { describe, expect, it } from 'vitest'
 import { createUiStore } from '@/shared/stores/ui-store'
 import { createSfx } from './sfx'
@@ -11,27 +12,6 @@ class FakeSfxPlayer implements SfxPlayer {
   }
 }
 
-class FakeStorage implements Storage {
-  private readonly entries = new Map<string, string>()
-  get length() {
-    return this.entries.size
-  }
-  clear() {
-    this.entries.clear()
-  }
-  getItem(key: string) {
-    return this.entries.get(key) ?? null
-  }
-  key(index: number) {
-    return [...this.entries.keys()][index] ?? null
-  }
-  removeItem(key: string) {
-    this.entries.delete(key)
-  }
-  setItem(key: string, value: string) {
-    this.entries.set(key, value)
-  }
-}
 
 function world() {
   const player = new FakeSfxPlayer()

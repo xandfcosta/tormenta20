@@ -1,28 +1,7 @@
+import { FakeStorage } from '@/shared/test/fake-storage'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createUiStore, readStoredTheme } from './ui-store'
 
-/** Named fake for localStorage — no global patching. */
-class FakeStorage implements Storage {
-  private readonly entries = new Map<string, string>()
-  get length() {
-    return this.entries.size
-  }
-  clear() {
-    this.entries.clear()
-  }
-  getItem(key: string) {
-    return this.entries.get(key) ?? null
-  }
-  key(index: number) {
-    return [...this.entries.keys()][index] ?? null
-  }
-  removeItem(key: string) {
-    this.entries.delete(key)
-  }
-  setItem(key: string, value: string) {
-    this.entries.set(key, value)
-  }
-}
 
 describe('readStoredTheme', () => {
   it('cai em light sem nada salvo', () => {

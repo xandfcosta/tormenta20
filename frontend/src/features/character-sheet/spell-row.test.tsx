@@ -1,3 +1,4 @@
+import { FakeStorage } from '@/shared/test/fake-storage'
 import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
 import { render, screen, waitFor } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
@@ -17,28 +18,6 @@ import { SpellRow } from './spell-row'
  * (migration trap: the panel test would pass green against an empty list).
  */
 
-/** In-memory Storage double, so no test reaches a real localStorage. */
-class FakeStorage implements Storage {
-  private entries = new Map<string, string>()
-  get length() {
-    return this.entries.size
-  }
-  clear() {
-    this.entries.clear()
-  }
-  getItem(key: string) {
-    return this.entries.get(key) ?? null
-  }
-  key(index: number) {
-    return [...this.entries.keys()][index] ?? null
-  }
-  removeItem(key: string) {
-    this.entries.delete(key)
-  }
-  setItem(key: string, value: string) {
-    this.entries.set(key, value)
-  }
-}
 
 const CD: Record<AttributeKey, number> = {
   strength: 10,

@@ -105,16 +105,28 @@ describe('effectActions.endScene / endDay', () => {
 })
 
 describe('conditionActions.set', () => {
-  it('pinta a condição antes da resposta e assenta pelo blob do servidor', async () => {
+  // A resposta do servidor DIVERGE do palpite de propósito (como se o mestre
+  // tivesse aplicado "atordoado" no mesmo instante): com as duas iguais, o teste
+  // não distinguia a pintura otimista do que o servidor mandou, e passaria verde
+  // mesmo se a resposta fosse jogada fora.
+  it('pinta a condição antes da resposta e assenta pelo blob do SERVIDOR', async () => {
     const client = seeded()
     const api = await import('@/shared/api/api')
-    vi.spyOn(api.api.characters, 'updateConditions').mockResolvedValue({
-      activeConditions: '["cego"]',
+    let responder = (): void => {}
+    const resposta = new Promise<{ activeConditions: string }>((resolve) => {
+      responder = () => resolve({ activeConditions: '["cego","atordoado"]' })
     })
+    vi.spyOn(api.api.characters, 'updateConditions').mockReturnValue(resposta)
 
-    await conditionActions(client, CHARACTER_ID).set(['cego'])
-
+    const emVoo = conditionActions(client, CHARACTER_ID).set(['cego'])
+    // Um tick: a pintura acontece depois do `cancelQueries`, que é await. O que
+    // importa é que ela chega ANTES da resposta, e a resposta está segurada.
+    await new Promise((resolve) => setTimeout(resolve, 0))
     expect(cached(client)?.activeConditions).toBe('["cego"]')
+
+    responder()
+    await emVoo
+    expect(cached(client)?.activeConditions).toBe('["cego","atordoado"]')
   })
 
   it('falha devolve as condições anteriores', async () => {

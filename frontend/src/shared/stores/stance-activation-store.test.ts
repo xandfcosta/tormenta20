@@ -1,3 +1,4 @@
+import { FakeStorage } from '@/shared/test/fake-storage'
 import { describe, expect, it } from 'vitest'
 import {
   STANCE_ACTIVATIONS_STORAGE_KEY,
@@ -5,28 +6,6 @@ import {
   readStoredStanceActivations,
 } from './stance-activation-store'
 
-/** In-memory Storage double — the store must never reach a real localStorage. */
-class FakeStorage implements Storage {
-  private entries = new Map<string, string>()
-  get length() {
-    return this.entries.size
-  }
-  clear() {
-    this.entries.clear()
-  }
-  getItem(key: string) {
-    return this.entries.get(key) ?? null
-  }
-  key(index: number) {
-    return [...this.entries.keys()][index] ?? null
-  }
-  removeItem(key: string) {
-    this.entries.delete(key)
-  }
-  setItem(key: string, value: string) {
-    this.entries.set(key, value)
-  }
-}
 
 describe('readStoredStanceActivations', () => {
   it('lê a forma do zustand que o React grava', () => {

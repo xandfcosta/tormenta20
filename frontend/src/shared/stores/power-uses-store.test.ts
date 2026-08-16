@@ -1,3 +1,4 @@
+import { FakeStorage } from '@/shared/test/fake-storage'
 import { describe, expect, it } from 'vitest'
 import {
   POWER_USES_STORAGE_KEY,
@@ -5,28 +6,6 @@ import {
   readStoredPowerUses,
 } from './power-uses-store'
 
-/** In-memory Storage double — the store must never reach a real localStorage. */
-class FakeStorage implements Storage {
-  private entries = new Map<string, string>()
-  get length() {
-    return this.entries.size
-  }
-  clear() {
-    this.entries.clear()
-  }
-  getItem(key: string) {
-    return this.entries.get(key) ?? null
-  }
-  key(index: number) {
-    return [...this.entries.keys()][index] ?? null
-  }
-  removeItem(key: string) {
-    this.entries.delete(key)
-  }
-  setItem(key: string, value: string) {
-    this.entries.set(key, value)
-  }
-}
 
 const POWER = 'class.barbaro.golpe-poderoso'
 

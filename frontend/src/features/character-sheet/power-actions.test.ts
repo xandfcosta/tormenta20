@@ -1,3 +1,4 @@
+import { FakeStorage } from '@/shared/test/fake-storage'
 import { QueryClient } from '@tanstack/solid-query'
 import type { ActivationSpec } from '@/shared/api/catalog-types'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -10,28 +11,6 @@ import { createPowerUsesStore } from '@/shared/stores/power-uses-store'
 import { createStanceActivationStore } from '@/shared/stores/stance-activation-store'
 import { type PowerStores, powerActions } from './power-actions'
 
-/** In-memory Storage double, so no test reaches a real localStorage. */
-class FakeStorage implements Storage {
-  private entries = new Map<string, string>()
-  get length() {
-    return this.entries.size
-  }
-  clear() {
-    this.entries.clear()
-  }
-  getItem(key: string) {
-    return this.entries.get(key) ?? null
-  }
-  key(index: number) {
-    return [...this.entries.keys()][index] ?? null
-  }
-  removeItem(key: string) {
-    this.entries.delete(key)
-  }
-  setItem(key: string, value: string) {
-    this.entries.set(key, value)
-  }
-}
 
 const CHARACTER_ID = 1
 const furia = () => getActivation('class.barbaro.furia') as ActivationSpec

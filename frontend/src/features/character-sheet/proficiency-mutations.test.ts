@@ -80,16 +80,25 @@ const cached = (client: QueryClient) =>
   client.getQueryData<Character>(characterQueryOptions(CHARACTER_ID).queryKey)
 
 describe('proficiencyActions', () => {
-  it('pinta antes da resposta e assenta pelo blob do servidor', async () => {
+  // O servidor responde DIFERENTE do palpite de propósito: com a resposta igual
+  // ao que se pintou, o teste não distinguia a pintura do que o servidor mandou
+  // e passaria verde mesmo se a resposta fosse descartada.
+  it('pinta antes da resposta e assenta pelo blob do SERVIDOR', async () => {
     const client = seeded()
     const api = await import('@/shared/api/api')
-    vi.spyOn(api.api.characters, 'updateProficiencies').mockResolvedValue({
-      proficiencies: '["armas-marciais"]',
+    let responder = (): void => {}
+    const resposta = new Promise<{ proficiencies: string }>((resolve) => {
+      responder = () => resolve({ proficiencies: '["armas-marciais","escudos"]' })
     })
+    vi.spyOn(api.api.characters, 'updateProficiencies').mockReturnValue(resposta)
 
-    await proficiencyActions(client, CHARACTER_ID).set(['armas-marciais'])
-
+    const emVoo = proficiencyActions(client, CHARACTER_ID).set(['armas-marciais'])
+    await new Promise((resolve) => setTimeout(resolve, 0))
     expect(cached(client)?.proficiencies).toBe('["armas-marciais"]')
+
+    responder()
+    await emVoo
+    expect(cached(client)?.proficiencies).toBe('["armas-marciais","escudos"]')
   })
 
   it('falha devolve o blob anterior', async () => {

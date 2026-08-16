@@ -19,16 +19,29 @@ const cached = (client: QueryClient) =>
 afterEach(() => vi.restoreAllMocks())
 
 describe('choiceActions', () => {
-  it('pinta o poder escolhido antes da resposta e assenta pelo blob do servidor', async () => {
+  // A resposta DIVERGE do palpite (o servidor devolve o blob completo, com um
+  // poder que a ficha já tinha): igual, o teste não sabia dizer quem venceu.
+  it('pinta o poder escolhido antes da resposta e assenta pelo blob do SERVIDOR', async () => {
     const client = seeded()
     const api = await import('@/shared/api/api')
-    vi.spyOn(api.api.characters, 'updateAbilityChoices').mockResolvedValue({
-      classPowers: '["class.barbaro.alma-de-bronze"]',
+    let responder = (): void => {}
+    const resposta = new Promise<{ classPowers: string }>((resolve) => {
+      responder = () =>
+        resolve({ classPowers: '["class.barbaro.alma-de-bronze","class.barbaro.furia"]' })
     })
+    vi.spyOn(api.api.characters, 'updateAbilityChoices').mockReturnValue(resposta)
 
-    await choiceActions(client, CHARACTER_ID).setClassPowers(['class.barbaro.alma-de-bronze'])
-
+    const emVoo = choiceActions(client, CHARACTER_ID).setClassPowers([
+      'class.barbaro.alma-de-bronze',
+    ])
+    await new Promise((resolve) => setTimeout(resolve, 0))
     expect(cached(client)?.classPowers).toBe('["class.barbaro.alma-de-bronze"]')
+
+    responder()
+    await emVoo
+    expect(cached(client)?.classPowers).toBe(
+      '["class.barbaro.alma-de-bronze","class.barbaro.furia"]',
+    )
   })
 
   it('manda só o campo que mudou — o endpoint remenda um subconjunto', async () => {

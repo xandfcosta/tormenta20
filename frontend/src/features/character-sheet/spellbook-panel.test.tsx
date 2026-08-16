@@ -1,3 +1,4 @@
+import { FakeStorage } from '@/shared/test/fake-storage'
 import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
 import { render, screen } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
@@ -10,28 +11,6 @@ import { ConditionalsProvider } from '@/shared/stores/conditionals-context'
 import { createConditionalsStore } from '@/shared/stores/conditionals-store'
 import { SpellbookPanel } from './spellbook-panel'
 
-/** In-memory Storage double, so no test reaches a real localStorage. */
-class FakeStorage implements Storage {
-  private entries = new Map<string, string>()
-  get length() {
-    return this.entries.size
-  }
-  clear() {
-    this.entries.clear()
-  }
-  getItem(key: string) {
-    return this.entries.get(key) ?? null
-  }
-  key(index: number) {
-    return [...this.entries.keys()][index] ?? null
-  }
-  removeItem(key: string) {
-    this.entries.delete(key)
-  }
-  setItem(key: string, value: string) {
-    this.entries.set(key, value)
-  }
-}
 
 /** A real 1st-circle Arcanista spell out of the primed catalog. */
 function anArcanistaSpell() {

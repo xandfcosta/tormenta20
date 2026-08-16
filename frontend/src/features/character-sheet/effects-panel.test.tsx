@@ -1,3 +1,4 @@
+import { FakeStorage } from '@/shared/test/fake-storage'
 import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
 import { render, screen, waitFor, within } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
@@ -22,28 +23,6 @@ function effect(overrides: Partial<ActiveEffect> = {}): ActiveEffect {
   }
 }
 
-/** In-memory Storage double, so the stores never touch a real localStorage. */
-class FakeStorage implements Storage {
-  private entries = new Map<string, string>()
-  get length() {
-    return this.entries.size
-  }
-  clear() {
-    this.entries.clear()
-  }
-  getItem(key: string) {
-    return this.entries.get(key) ?? null
-  }
-  key(index: number) {
-    return [...this.entries.keys()][index] ?? null
-  }
-  removeItem(key: string) {
-    this.entries.delete(key)
-  }
-  setItem(key: string, value: string) {
-    this.entries.set(key, value)
-  }
-}
 
 function renderPanel(char: Character = makeCharacter()) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
