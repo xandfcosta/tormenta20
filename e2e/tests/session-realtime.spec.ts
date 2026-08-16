@@ -29,6 +29,9 @@ test.describe('Sessão ao vivo — dois clientes', () => {
       await expect(telaDoMestre.getByRole('status', { name: 'Conectado' })).toBeVisible()
       await expect(telaDoJogador.getByRole('status', { name: 'Conectado' })).toBeVisible()
 
+      // O formulário nasce fechado desde que se mediu o custo dele em altura
+      // (ALE-122): um clique no topo o abre.
+      await telaDoMestre.getByRole('button', { name: 'Combatente' }).click()
       await telaDoMestre.getByLabel('Nome').fill(eco)
       await telaDoMestre.getByRole('button', { name: 'Adicionar', exact: true }).click()
 

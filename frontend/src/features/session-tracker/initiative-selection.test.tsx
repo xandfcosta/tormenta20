@@ -180,8 +180,38 @@ describe('corrigir a iniciativa de quem já está na lista', () => {
  * em que mexer — controles inertes, que prometem o que não fazem (ALE-122).
  */
 describe('adicionar combatente à mão', () => {
+  // O formulário nasce FECHADO desde que se mediu o custo dele: 118px fixos
+  // acima da lista, que no celular deitado empurravam todos os combatentes
+  // para fora da tela (ALE-122).
+  async function abrirFormulario(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(screen.getByRole('button', { name: 'Combatente' }))
+  }
+
+  it('o formulário começa fechado e um clique o abre', async () => {
+    const { user } = renderCardWithRt()
+
+    expect(screen.queryByLabelText('Nome')).not.toBeInTheDocument()
+    await abrirFormulario(user)
+
+    expect(screen.getByLabelText('Nome')).toBeInTheDocument()
+  })
+
+  // Três capangas seguidos não podem custar três cliques a mais: quem abriu o
+  // formulário está adicionando, não terminou de adicionar.
+  it('continua aberto depois de adicionar', async () => {
+    const { rt, user } = renderCardWithRt()
+    await abrirFormulario(user)
+
+    await user.type(screen.getByLabelText('Nome'), 'Capanga')
+    await user.click(screen.getByRole('button', { name: 'Adicionar' }))
+
+    expect(rt.addEntry).toHaveBeenCalled()
+    expect(screen.getByLabelText('Nome')).toBeInTheDocument()
+  })
+
   it('com PV preenchido, o combatente entra com vida cheia', async () => {
     const { rt, user } = renderCardWithRt()
+    await abrirFormulario(user)
 
     await user.type(screen.getByLabelText('Nome'), 'Capanga')
     const pv = screen.getByRole('spinbutton', { name: 'PV' })
@@ -198,6 +228,7 @@ describe('adicionar combatente à mão', () => {
   // PV, e uma barra 0/0 diria que ele já caiu.
   it('sem PV, a entrada vai sem vida nenhuma', async () => {
     const { rt, user } = renderCardWithRt()
+    await abrirFormulario(user)
 
     await user.type(screen.getByLabelText('Nome'), 'Figurante')
     await user.click(screen.getByRole('button', { name: 'Adicionar' }))

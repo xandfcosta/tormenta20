@@ -37,6 +37,7 @@ export function InitiativeCard(props: {
   turnControls?: boolean
 }) {
   const myCharacterId = () => [...props.myCharacterIds][0]
+  const [addOpen, setAddOpen] = createSignal(false)
   const status = () => connectionStatus(props.rt.isConnected(), props.rt.error())
 
   return (
@@ -85,27 +86,43 @@ export function InitiativeCard(props: {
             viraram duas linhas na frente do combate — foram para o menu da
             sessão, junto do resto do que se faz raramente (ALE-122). */}
         <Show when={props.isGm}>
-          <Button
-            size="sm"
-            variant="secondary"
-            disabled={!props.rt.isConnected()}
-            onClick={props.rt.populateParty}
-          >
-            Adicionar grupo
-          </Button>
+          <div class="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={!props.rt.isConnected()}
+              onClick={props.rt.populateParty}
+            >
+              Adicionar grupo
+            </Button>
+            {/* O formulário aberto custava 118px FIXOS acima da lista: no celular
+                deitado a primeira linha de combatente nascia em y=427 de uma tela
+                de 390, ou seja, o mestre não via combatente nenhum. Um clique no
+                topo — não um menu escondido, que foi a queixa que trouxe o
+                formulário para cá (ALE-122). */}
+            <Button
+              size="sm"
+              variant={addOpen() ? 'default' : 'outline'}
+              aria-expanded={addOpen()}
+              onClick={() => setAddOpen(!addOpen())}
+            >
+              <Plus aria-hidden="true" class="size-4" />
+              Combatente
+            </Button>
+          </div>
         </Show>
 
         <Show when={props.rt.state().initiative.length === 0}>
           <p class="text-sm text-muted-foreground">
             {props.isGm
-              ? 'Sem combatentes ainda. Adicione abaixo.'
+              ? 'Sem combatentes ainda. Use "Adicionar grupo" ou "+ Combatente".'
               : 'Aguardando o mestre montar a iniciativa.'}
           </p>
         </Show>
 
-        {/* No TOPO: quem adiciona combatente faz isso ANTES de operar a lista,
-            e no fim ele exigia rolar a iniciativa inteira. */}
-        <Show when={props.isGm}>
+        {/* Fica ABERTO enquanto o mestre adiciona vários seguidos: fechar a cada
+            envio transformaria três capangas em três cliques a mais. */}
+        <Show when={props.isGm && addOpen()}>
           <AddCombatantForm rt={props.rt} />
         </Show>
 

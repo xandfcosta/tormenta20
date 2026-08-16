@@ -89,6 +89,7 @@ test.describe('Sessão ao vivo', () => {
     // O teste cria o próprio combatente: a iniciativa da seed do CI está VAZIA,
     // e esperar por uma linha que não existe fazia o teste falhar lá e passar
     // aqui. Ele também o remove no fim, para a seed sair como entrou.
+    await page.getByRole('button', { name: 'Combatente' }).click()
     await page.getByLabel('Nome').fill(alvo)
     await page.getByRole('button', { name: 'Adicionar', exact: true }).click()
     await expect(page.getByRole('button', { name: `Ferir ${alvo}` })).toBeVisible()
