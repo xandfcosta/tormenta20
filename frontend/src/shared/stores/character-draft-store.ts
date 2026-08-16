@@ -34,8 +34,6 @@ export type CharacterDraftStore = {
   setRaceChoice: (raceName: string, choice: RaceChoice) => void
   setAttributeMode: (mode: AttributeMode) => void
   reset: () => void
-  /** At least one structural choice made — gates a "continuar rascunho" prompt. */
-  hasResumable: () => boolean
 }
 
 const isPlainObject = (v: unknown): v is Record<string, unknown> =>
@@ -147,7 +145,5 @@ export function createCharacterDraftStore(
       setAttributeModeSignal('free')
       storage?.removeItem(CHARACTER_DRAFT_STORAGE_KEY)
     },
-
-    hasResumable: () => values.races.length > 0 || values.classes.length > 0,
   }
 }

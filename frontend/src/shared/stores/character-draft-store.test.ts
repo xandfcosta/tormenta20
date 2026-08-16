@@ -64,19 +64,6 @@ describe('createCharacterDraftStore', () => {
     expect(storage.getItem(CHARACTER_DRAFT_STORAGE_KEY)).toBeNull()
   })
 
-  it('hasResumable só conta escolha de identidade (raça ou classe)', () => {
-    const draft = createCharacterDraftStore(new FakeStorage())
-    expect(draft.hasResumable()).toBe(false)
-
-    // Um nome digitado sozinho não é rascunho: o prompt de "continuar" só
-    // aparece quando há uma escolha estrutural que valha a pena retomar.
-    draft.setValue('name', 'Aknor')
-    expect(draft.hasResumable()).toBe(false)
-
-    draft.setValue('races', ['Anão'])
-    expect(draft.hasResumable()).toBe(true)
-  })
-
   it('rehidrata do armazenamento numa sessão nova', () => {
     const storage = new FakeStorage()
     createCharacterDraftStore(storage).setValue('name', 'Aknor')

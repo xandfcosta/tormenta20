@@ -1,4 +1,3 @@
-import { EXPERTISE_NAMES } from '@/shared/api/expertise-names'
 import { describe, expect, it } from 'vitest'
 import { periciaBudget, periciaPlan } from './pericia-helpers'
 
@@ -26,21 +25,40 @@ describe('periciaPlan — class band vs free (Int + raça) band', () => {
     expect(plan?.freeCount).toBe(3)
   })
 
-  it('draws the free pool from perícias OUTSIDE the class list (book rule)', () => {
+  /**
+   * Arcanista, transcrito do LIVRO: "Misticismo (Int) e Vontade (Sab), mais 2 a
+   * sua escolha entre Conhecimento, Diplomacia, Enganação, Guerra, Iniciativa,
+   * Intimidação, Intuição, Investigação, Nobreza, Ofício e Percepção".
+   *
+   * A asserção anterior era "a união do conjunto com o complemento dele é o
+   * universo" — verdade por construção (`freePool` É `todas menos as da classe`),
+   * e o mesmo valia para a disjunção. Nenhuma das duas podia falhar.
+   */
+  it('o plano do Arcanista é o do livro, e o bolo livre é o que sobra dele', () => {
     const plan = periciaPlan('Arcanista', 2, [])
     if (!plan) throw new Error('expected a plan for Arcanista')
-    for (const name of plan.freePool) {
-      expect(plan.classPool).not.toContain(name)
-      expect(plan.fixed).not.toContain(name)
-    }
-    // Class pool + free pool + fixed + either-or cover the whole perícia space.
-    const union = new Set([
-      ...plan.fixed,
-      ...(plan.eitherOr ?? []),
-      ...plan.classPool,
-      ...plan.freePool,
+
+    expect(plan.fixed).toEqual(['Misticismo', 'Vontade'])
+    expect(plan.classCount).toBe(2)
+    expect(plan.eitherOr).toBeNull()
+    expect(plan.classPool).toEqual([
+      'Conhecimento',
+      'Diplomacia',
+      'Enganação',
+      'Guerra',
+      'Iniciativa',
+      'Intimidação',
+      'Intuição',
+      'Investigação',
+      'Nobreza',
+      'Ofício',
+      'Percepção',
     ])
-    expect(union.size).toBe(EXPERTISE_NAMES.length)
+    // O bolo LIVRE é o resto da lista de perícias: uma que a classe não oferece
+    // (Furtividade) está lá, e uma que ela oferece (Guerra) não está.
+    expect(plan.freePool).toContain('Furtividade')
+    expect(plan.freePool).not.toContain('Guerra')
+    expect(plan.freePool).not.toContain('Misticismo')
   })
 
   it('returns null for an unknown class', () => {
