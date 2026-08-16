@@ -12,6 +12,8 @@ export type InitiativeEntry = {
   initiative: number
   type: 'character' | 'npc'
   characterId?: number
+  /** Verbete do bestiário de onde a linha veio — ausente em NPC digitado à mão. */
+  monsterId?: string
   hpCurrent?: number
   hpMax?: number
   mpCurrent?: number

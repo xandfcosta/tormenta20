@@ -196,6 +196,13 @@ func materializeNpcEntry(input map[string]any) (InitiativeEntry, error) {
 	if hp, ok := intField(input, "hpMax"); ok {
 		entry.HpMax = &hp
 	}
+	// O id do bestiário vem do cliente porque é ele que escolheu o verbete; o
+	// servidor não valida contra o catálogo de propósito — um id desconhecido
+	// vira "sem bloco" na tela, não um erro que derruba a adição no meio do
+	// combate (ALE-122).
+	if monsterID := strings.TrimSpace(stringField(input, "monsterId")); monsterID != "" {
+		entry.MonsterID = &monsterID
+	}
 	return entry, nil
 }
 

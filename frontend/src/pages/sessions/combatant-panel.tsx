@@ -6,8 +6,10 @@ import { CharacterHud } from '@/features/character-sheet/character-hud'
 import { ApplyEffectSelect } from '@/features/session-tracker/apply-effect-select'
 import { CharacterSheet } from '@/features/character-sheet/character-sheet'
 import { ConditionsSection } from '@/features/character-sheet/conditions-section'
-import type { InitiativeEntry } from '@/shared/realtime/realtime'
+import { bestiaryCatalogQueryOptions } from '@/entities/catalog/queries'
+import { MonsterStatBlock } from '@/features/gm-tools/monster-stat-block'
 import { settledQuery } from '@/shared/lib/settled-query'
+import type { InitiativeEntry } from '@/shared/realtime/realtime'
 import { Button } from '@/shared/ui/button'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { VitalBar } from '@/shared/ui/vital-bar'
@@ -115,11 +117,21 @@ function CharacterCard(props: { characterId: number }) {
 }
 
 /**
- * Um NPC não tem ficha atrás dele — o rastreador É o registro. Mostra o que a
- * entrada guarda; o bloco do monstro (DEF, ataques) vem da fatia que passa a
- * guardar de qual criatura do bestiário ele veio.
+ * Um NPC não tem ficha atrás dele — o rastreador É o registro. A vida vem da
+ * entrada; o resto (DEF, ataques, habilidades) vem do verbete do bestiário de
+ * onde ele foi arrastado, pelo `monsterId` que a linha passou a guardar.
+ *
+ * `settledQuery` e não `bestiary.data`: a leitura pendente SUSPENDE e o
+ * `Suspense` do route match desanexa a cena inteira — é a armadilha que já
+ * apareceu quatro vezes nesta issue (ALE-122).
  */
 function NpcCard(props: { entry: InitiativeEntry }) {
+  const bestiary = useQuery(() => bestiaryCatalogQueryOptions)
+  const monster = () =>
+    props.entry.monsterId === undefined
+      ? undefined
+      : settledQuery(bestiary)?.find((creature) => creature.id === props.entry.monsterId)
+
   return (
     <div class="space-y-3 p-3 sm:p-4">
       <Show
@@ -137,6 +149,10 @@ function NpcCard(props: { entry: InitiativeEntry }) {
           max={props.entry.hpMax ?? 0}
         />
       </Show>
+
+      {/* Sem bloco quando a linha foi digitada à mão (não veio do bestiário) —
+          e o silêncio é a resposta certa: inventar zeros diria o que não é. */}
+      <Show when={monster()}>{(creature) => <MonsterStatBlock monster={creature()} />}</Show>
     </div>
   )
 }

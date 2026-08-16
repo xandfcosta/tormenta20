@@ -25,6 +25,7 @@ export function AddMonsterPanel(props: { rt: SessionRealtime }) {
       label: monster.name,
       initiative: rollD20(),
       type: 'npc',
+      monsterId: monster.id,
       hpCurrent: monster.hp,
       hpMax: monster.hp,
     })

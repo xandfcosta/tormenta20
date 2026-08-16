@@ -35,11 +35,12 @@ export type SessionWorkspaceProps = {
  * existe: a aba troca, o conteúdo ocupa a altura, e nada cobre o combate.
  */
 export function SessionWorkspace(props: SessionWorkspaceProps) {
-  const addMonster = (monster: { name: string; hp: number }) => {
+  const addMonster = (monster: { id: string; name: string; hp: number }) => {
     props.rt.addEntry({
       label: monster.name,
       initiative: rollD20(),
       type: 'npc',
+      monsterId: monster.id,
       hpCurrent: monster.hp,
       hpMax: monster.hp,
     })

@@ -21,10 +21,14 @@ type InitiativeEntry struct {
 	Initiative  int    `json:"initiative"`
 	Type        string `json:"type"` // "character" | "npc"
 	CharacterID *int64 `json:"characterId,omitempty"`
-	HpCurrent   *int64 `json:"hpCurrent,omitempty"`
-	HpMax       *int64 `json:"hpMax,omitempty"`
-	MpCurrent   *int64 `json:"mpCurrent,omitempty"`
-	MpMax       *int64 `json:"mpMax,omitempty"`
+	// MonsterID liga a linha ao verbete do bestiário, para o mestre abrir o bloco
+	// do monstro sem procurar no catálogo. Ausente em NPC digitado à mão — e é
+	// por isso que é ponteiro: "sem bloco" é diferente de "bloco vazio".
+	MonsterID *string `json:"monsterId,omitempty"`
+	HpCurrent *int64  `json:"hpCurrent,omitempty"`
+	HpMax     *int64  `json:"hpMax,omitempty"`
+	MpCurrent *int64  `json:"mpCurrent,omitempty"`
+	MpMax     *int64  `json:"mpMax,omitempty"`
 }
 
 // SessionRuntimeState is the live per-session tracker: a DESC-sorted initiative list, the

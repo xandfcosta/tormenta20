@@ -78,6 +78,8 @@ export function encounterDifficulty(gap: number): EncounterDifficulty {
  *  PV, which is the whole reason the copies are numbered. */
 export type EncounterInitiativeEntry = {
   label: string
+  /** Verbete do bestiário — o que deixa o bloco do monstro abrir na sessão. */
+  monsterId: string
   hpCurrent: number
   hpMax: number
 }
@@ -100,6 +102,9 @@ export function encounterInitiativeEntries(
   const all = groups.flatMap((group) =>
     Array.from({ length: group.quantity }, (_, i) => ({
       label: group.quantity === 1 ? group.monster.name : `${group.monster.name} ${i + 1}`,
+      // O verbete viaja junto: é por ele que o mestre abre o bloco do monstro
+      // depois, sem procurar no bestiário no meio do combate (ALE-122).
+      monsterId: group.monster.id,
       hpCurrent: group.monster.hp,
       hpMax: group.monster.hp,
     })),

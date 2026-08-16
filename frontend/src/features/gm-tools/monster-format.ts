@@ -1,4 +1,4 @@
-import type { MonsterTipo } from '@/shared/api/catalog-types'
+import type { MonsterSize, MonsterTipo } from '@/shared/api/catalog-types'
 
 /** Ordered MonsterTipo list — the order the filter chips appear in. */
 export const MONSTER_TIPOS: readonly MonsterTipo[] = [
@@ -20,6 +20,16 @@ export const MONSTER_TIPO_LABEL: Record<MonsterTipo, string> = {
   construto: 'Construto',
   espirito: 'Espírito',
   planar: 'Planar',
+}
+
+/** Rótulo por tamanho: o dado vem sem acento e em caixa baixa do catálogo. */
+export const MONSTER_SIZE_LABEL: Record<MonsterSize, string> = {
+  minusculo: 'Minúsculo',
+  pequeno: 'Pequeno',
+  medio: 'Médio',
+  grande: 'Grande',
+  enorme: 'Enorme',
+  colossal: 'Colossal',
 }
 
 /**
