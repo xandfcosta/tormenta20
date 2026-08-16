@@ -249,6 +249,54 @@ func TestAdvanceTurn(t *testing.T) {
 	}
 }
 
+// O turno ANTERIOR: um "Próximo turno" a mais é o erro mais comum da mesa, e
+// hoje o único conserto é dar a volta na iniciativa inteira — passando por todo
+// mundo de novo, o que também empurra a rodada. Voltar tem de desfazer, e isso
+// inclui a RODADA quando o passo cruza a virada.
+func TestRewindTurn(t *testing.T) {
+	st := emptyRuntimeState()
+	id := counter()
+	_ = addEntry(st, npc("A", 30), id)
+	_ = addEntry(st, npc("B", 20), id)
+
+	advanceTurn(st) // A, rodada 1
+	advanceTurn(st) // B
+	rewindTurn(st)
+	if st.TurnIndex != 0 || st.Round != 1 {
+		t.Fatalf("voltar um: turnIndex=%d round=%d, queria 0/1", st.TurnIndex, st.Round)
+	}
+
+	advanceTurn(st) // B
+	advanceTurn(st) // volta para A, rodada 2
+	if st.TurnIndex != 0 || st.Round != 2 {
+		t.Fatalf("preparo: turnIndex=%d round=%d, queria 0/2", st.TurnIndex, st.Round)
+	}
+	rewindTurn(st) // cruza a virada de volta: último da rodada 1
+	if st.TurnIndex != 1 || st.Round != 1 {
+		t.Errorf("voltar cruzando a virada: turnIndex=%d round=%d, queria 1/1", st.TurnIndex, st.Round)
+	}
+
+	// Antes do combate começar não há o que desfazer, e a rodada não pode ir a 0.
+	inicio := emptyRuntimeState()
+	_ = addEntry(inicio, npc("A", 30), counter())
+	rewindTurn(inicio)
+	if inicio.TurnIndex != -1 || inicio.Round != 0 {
+		t.Errorf("voltar antes do primeiro turno: turnIndex=%d round=%d, queria -1/0", inicio.TurnIndex, inicio.Round)
+	}
+
+	advanceTurn(inicio) // primeiro turno, rodada 1
+	rewindTurn(inicio)  // desfaz o primeiro: volta ao pré-combate
+	if inicio.TurnIndex != -1 || inicio.Round != 1 {
+		t.Errorf("desfazer o primeiro turno: turnIndex=%d round=%d, queria -1/1", inicio.TurnIndex, inicio.Round)
+	}
+
+	vazio := emptyRuntimeState()
+	rewindTurn(vazio)
+	if vazio.TurnIndex != -1 {
+		t.Errorf("voltar sem combatente é no-op, got %d", vazio.TurnIndex)
+	}
+}
+
 func TestResetInitiative(t *testing.T) {
 	st := emptyRuntimeState()
 	_ = addEntry(st, npc("A", 1), counter())

@@ -103,6 +103,10 @@ func (st *sessionStore) nextTurn(sessionID int64) (*SessionRuntimeState, error) 
 	return st.apply(sessionID, func(s *SessionRuntimeState) error { advanceTurn(s); return nil })
 }
 
+func (st *sessionStore) previousTurn(sessionID int64) (*SessionRuntimeState, error) {
+	return st.apply(sessionID, func(s *SessionRuntimeState) error { rewindTurn(s); return nil })
+}
+
 func (st *sessionStore) reset(sessionID int64) (*SessionRuntimeState, error) {
 	return st.apply(sessionID, func(s *SessionRuntimeState) error { resetInitiative(s); return nil })
 }

@@ -8,6 +8,7 @@ import { ConnectionChip } from '@/shared/ui/connection-chip'
 import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
 import { VitalBar } from '@/shared/ui/vital-bar'
+import { InitiativeEditDialog } from './initiative-edit-dialog'
 import { InitiativeRollButton } from './initiative-roll'
 import { type EntryPermissions, connectionStatus, entryPermissions } from './tracker-rules'
 
@@ -131,6 +132,11 @@ export function InitiativeCard(props: {
                   onDeltaHp={(delta) => props.rt.deltaVitals(entry.id, { hpDelta: delta })}
                   onApplyEffect={(spellId) => props.rt.applyEffect(entry.id, spellId)}
                   onRemove={() => props.rt.removeEntry(entry.id)}
+                  onInitiative={
+                    props.isGm
+                      ? (initiative) => props.rt.updateEntry(entry.id, { initiative })
+                      : undefined
+                  }
                 />
               )
             }}
@@ -153,6 +159,8 @@ function InitiativeRow(props: {
   onDeltaHp: (delta: number) => void
   onApplyEffect: (spellId: string) => void
   onRemove: () => void
+  /** Ausente para quem não pode reordenar — o número vira texto. */
+  onInitiative?: (initiative: number) => void
 }) {
   let row: HTMLDivElement | undefined
   const hasHp = () => props.entry.hpMax !== undefined && props.entry.hpCurrent !== undefined
@@ -178,9 +186,35 @@ function InitiativeRow(props: {
       )}
     >
       <div class="order-1 flex min-w-0 flex-1 items-center gap-2">
-        <span class="shrink-0 rounded-sm border border-border px-1.5 font-mono text-xs tabular-nums">
-          {props.entry.initiative}
-        </span>
+        {/* O número é BOTÃO para o mestre: "Adicionar grupo" entra com 0 e o
+            conserto antes era remover e adicionar de novo, perdendo PV e
+            condições no caminho (ALE-122). */}
+        <Show
+          when={props.onInitiative}
+          fallback={
+            <span class="shrink-0 rounded-sm border border-border px-1.5 font-mono text-xs tabular-nums">
+              {props.entry.initiative}
+            </span>
+          }
+        >
+          {(onInitiative) => (
+            <InitiativeEditDialog
+              label={props.entry.label}
+              current={props.entry.initiative}
+              onSave={onInitiative()}
+              trigger={(open) => (
+                <button
+                  type="button"
+                  onClick={open}
+                  aria-label={`Iniciativa de ${props.entry.label}`}
+                  class="shrink-0 rounded-sm border border-border px-1.5 font-mono text-xs tabular-nums transition-colors hover:border-grimorio-gold hover:text-grimorio-gold"
+                >
+                  {props.entry.initiative}
+                </button>
+              )}
+            />
+          )}
+        </Show>
         <p class="flex min-w-0 flex-wrap items-center gap-1 font-medium">
           {/* O NOME é o alvo do clique, não a linha: os botões de vitais moram
               dentro dela, e um clique de linha os engoliria (ALE-122). */}

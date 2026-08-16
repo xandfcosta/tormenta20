@@ -79,6 +79,8 @@ export type SessionRealtime = {
   updateEntry: (entryId: string, patch: Partial<InitiativeEntry>) => void
   removeEntry: (entryId: string) => void
   nextTurn: () => void
+  /** Desfaz um turno — inclusive a virada de rodada. */
+  previousTurn: () => void
   resetInitiative: () => void
   populateParty: () => void
   /** A player submits their own rolled initiative; upserts by characterId. */
@@ -187,6 +189,7 @@ export function createSessionSocket(
     updateEntry: (entryId, patch) => send('initiative-update', { entryId, patch }),
     removeEntry: (entryId) => send('initiative-remove', { entryId }),
     nextTurn: () => send('initiative-next-turn'),
+    previousTurn: () => send('initiative-previous-turn'),
     resetInitiative: () => send('initiative-reset'),
     populateParty: () => send('initiative-populate'),
     rollSelfInitiative: (characterId, initiative) =>

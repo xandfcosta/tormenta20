@@ -23,21 +23,22 @@ import (
 // gmGate declara, por evento, se ele é do MESTRE. As exceções são deliberadas e
 // estão anotadas uma a uma.
 var gmGate = map[string]bool{
-	"join-session":         false, // qualquer membro entra na sala
-	"leave-session":        false, // sair é de quem está
-	"get-session-state":    false, // ler o estado é de todo mundo na mesa
-	"initiative-add":       true,
-	"initiative-self":      false, // o JOGADOR rola a PRÓPRIA iniciativa: exceção deliberada
-	"initiative-update":    true,
-	"initiative-remove":    true,
-	"initiative-next-turn": true,
-	"initiative-reset":     true,
-	"initiative-populate":  true,
-	"vitals-patch":         false, // regra mais fina: assertVitalsEditable (mestre em qualquer um, jogador no próprio)
-	"vitals-delta":         false, // idem
-	"session-rest":         true,
-	"apply-effect":         true,
-	"disconnect":           false, // do transporte, não da mesa
+	"join-session":             false, // qualquer membro entra na sala
+	"leave-session":            false, // sair é de quem está
+	"get-session-state":        false, // ler o estado é de todo mundo na mesa
+	"initiative-add":           true,
+	"initiative-self":          false, // o JOGADOR rola a PRÓPRIA iniciativa: exceção deliberada
+	"initiative-update":        true,
+	"initiative-remove":        true,
+	"initiative-next-turn":     true,
+	"initiative-previous-turn": true,
+	"initiative-reset":         true,
+	"initiative-populate":      true,
+	"vitals-patch":             false, // regra mais fina: assertVitalsEditable (mestre em qualquer um, jogador no próprio)
+	"vitals-delta":             false, // idem
+	"session-rest":             true,
+	"apply-effect":             true,
+	"disconnect":               false, // do transporte, não da mesa
 }
 
 var (

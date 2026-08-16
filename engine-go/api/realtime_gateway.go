@@ -63,6 +63,7 @@ func (g *realtimeGateway) onConnect(sock *socket.Socket) {
 	sock.On("initiative-update", func(args ...any) { g.onInitiativeUpdate(sock, args) })
 	sock.On("initiative-remove", func(args ...any) { g.onInitiativeRemove(sock, args) })
 	sock.On("initiative-next-turn", func(args ...any) { g.onNextTurn(sock, args) })
+	sock.On("initiative-previous-turn", func(args ...any) { g.onPreviousTurn(sock, args) })
 	sock.On("initiative-reset", func(args ...any) { g.onResetInitiative(sock, args) })
 	sock.On("initiative-populate", func(args ...any) { g.onPopulate(sock, args) })
 	sock.On("vitals-patch", func(args ...any) { g.onVitalsPatch(sock, args) })

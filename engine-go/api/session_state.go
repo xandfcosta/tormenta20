@@ -221,6 +221,27 @@ func advanceTurn(st *SessionRuntimeState) {
 	}
 }
 
+// rewindTurn desfaz um "Próximo turno" — o erro mais comum da mesa, e cujo único
+// conserto até aqui era dar a volta na iniciativa inteira, o que empurrava a
+// rodada junto. Cruzar a virada de volta devolve a rodada; desfazer o primeiro
+// turno devolve ao pré-combate (turnIndex -1) sem zerar a rodada, porque a
+// rodada 1 JÁ começou e voltar não desfaz isso.
+func rewindTurn(st *SessionRuntimeState) {
+	if len(st.Initiative) == 0 || st.TurnIndex < 0 {
+		return
+	}
+	if st.TurnIndex > 0 {
+		st.TurnIndex--
+		return
+	}
+	if st.Round > 1 {
+		st.TurnIndex = len(st.Initiative) - 1
+		st.Round--
+		return
+	}
+	st.TurnIndex = -1
+}
+
 // resetInitiative clears the tracker but keeps the session tracked.
 func resetInitiative(st *SessionRuntimeState) {
 	st.Initiative = []InitiativeEntry{}

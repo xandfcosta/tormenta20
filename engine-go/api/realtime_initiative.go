@@ -98,6 +98,17 @@ func (g *realtimeGateway) onNextTurn(sock *socket.Socket, args []any) {
 	})
 }
 
+// onPreviousTurn (GM) desfaz um turno — inclusive a virada de rodada.
+func (g *realtimeGateway) onPreviousTurn(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok || !g.requireGm(sock, ctx.role) {
+		return
+	}
+	g.mutateAndBroadcast(sock, ctx, func() (*SessionRuntimeState, error) {
+		return g.s.sessions.previousTurn(ctx.sessionID)
+	})
+}
+
 // onResetInitiative (GM) clears the tracker.
 func (g *realtimeGateway) onResetInitiative(sock *socket.Socket, args []any) {
 	ctx, ok := g.access(sock, args)

@@ -7,6 +7,13 @@ import { InitiativeCard } from './initiative-card'
 
 /** Named fake for the session socket — o rastreador só lê estado aqui. */
 class FakeRealtime {
+  // Os espiões vivem na INSTÂNCIA: criados dentro do `asRealtime()` eles nasciam
+  // de novo a cada chamada, e o teste inspecionava um objeto diferente do que a
+  // tela usou.
+  readonly updateEntry = vi.fn()
+  readonly removeEntry = vi.fn()
+  readonly deltaVitals = vi.fn()
+
   constructor(private readonly entries: InitiativeEntry[]) {}
 
   asRealtime(): SessionRealtime {
@@ -19,12 +26,12 @@ class FakeRealtime {
       hasPersistenceWarning: () => false,
       present: () => [],
       addEntry: vi.fn(),
-      updateEntry: vi.fn(),
-      removeEntry: vi.fn(),
+      updateEntry: this.updateEntry,
+      removeEntry: this.removeEntry,
       nextTurn: vi.fn(),
       resetInitiative: vi.fn(),
       populateParty: vi.fn(),
-      deltaVitals: vi.fn(),
+      deltaVitals: this.deltaVitals,
       applyEffect: vi.fn(),
       rest: vi.fn(),
     } as unknown as SessionRealtime
@@ -51,20 +58,29 @@ const OGRO = {
 } as unknown as InitiativeEntry
 
 function renderCard(onSelect?: (entryId: string) => void, selectedId?: string | null) {
+  const { user } = renderCardWithRt(onSelect, selectedId)
+  return user
+}
+
+function renderCardWithRt(
+  onSelect?: (entryId: string) => void,
+  selectedId?: string | null,
+  isGm = true,
+) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const rt = new FakeRealtime([OGRO, HEROI])
-  render(() => (
+  const view = render(() => (
     <QueryClientProvider client={client}>
       <InitiativeCard
         rt={rt.asRealtime()}
-        isGm
+        isGm={isGm}
         myCharacterIds={new Set<number>()}
         onSelect={onSelect}
         selectedId={selectedId}
       />
     </QueryClientProvider>
   ))
-  return userEvent.setup()
+  return { ...view, rt, user: userEvent.setup() }
 }
 
 beforeEach(() => {
@@ -117,5 +133,40 @@ describe('seleção na iniciativa', () => {
 
     expect(screen.queryByRole('button', { name: 'Paladino Sagrado' })).not.toBeInTheDocument()
     expect(screen.getByText('Paladino Sagrado')).toBeInTheDocument()
+  })
+})
+
+/**
+ * "Adicionar grupo" entra com iniciativa 0 e, até aqui, o único conserto era
+ * REMOVER e adicionar de novo — perdendo PV e condições no caminho. O
+ * `initiative-update` existia no cliente e nunca era chamado por ninguém.
+ */
+describe('corrigir a iniciativa de quem já está na lista', () => {
+  it('o mestre reescreve o número e o servidor recebe a correção', async () => {
+    const { rt, user } = renderCardWithRt()
+
+    await user.click(screen.getByRole('button', { name: 'Iniciativa de Ogro' }))
+    const campo = screen.getByRole('spinbutton', { name: 'Iniciativa de Ogro' })
+    await user.clear(campo)
+    await user.type(campo, '17')
+    await user.click(screen.getByRole('button', { name: 'Salvar' }))
+
+    expect(rt.updateEntry).toHaveBeenCalledWith('e2', { initiative: 17 })
+  })
+
+  it('cancelar não manda nada', async () => {
+    const { rt, user } = renderCardWithRt()
+
+    await user.click(screen.getByRole('button', { name: 'Iniciativa de Ogro' }))
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    expect(rt.updateEntry).not.toHaveBeenCalled()
+  })
+
+  // Para o JOGADOR o número é texto: reordenar a mesa é do mestre.
+  it('o jogador não reordena a mesa', () => {
+    renderCardWithRt(undefined, null, false)
+
+    expect(screen.queryByRole('button', { name: 'Iniciativa de Ogro' })).not.toBeInTheDocument()
   })
 })

@@ -1,4 +1,4 @@
-import { Settings2, Swords } from 'lucide-solid'
+import { ChevronLeft, Settings2, Swords } from 'lucide-solid'
 import { For, Show, createMemo, createSignal } from 'solid-js'
 import type { Session } from '@/shared/api/api'
 import type { SessionRealtime } from '@/shared/realtime/realtime'
@@ -140,6 +140,20 @@ function TurnBar(props: {
             dentro do menu da sessão, e o mestre descansa o grupo com muito mais
             frequência do que renomeia a sessão (ALE-122). */}
         <RestControls rt={props.rt} />
+        {/* Um "Próximo turno" a mais é o erro mais comum da mesa, e o conserto
+            era dar a volta na iniciativa inteira — o que empurrava a rodada
+            junto. Fica ao LADO do avanço, mas discreto: desfazer é raro, avançar
+            é o botão mais clicado da sessão (ALE-122). */}
+        <Button
+          size="sm"
+          variant="ghost"
+          disabled={!props.rt.isConnected()}
+          aria-label="Turno anterior"
+          title="Turno anterior"
+          onClick={props.rt.previousTurn}
+        >
+          <ChevronLeft aria-hidden="true" class="size-4" />
+        </Button>
         <Button size="sm" disabled={!props.rt.isConnected()} onClick={props.rt.nextTurn}>
           Próximo turno
         </Button>
