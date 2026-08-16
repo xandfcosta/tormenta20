@@ -145,6 +145,54 @@ test.describe('Sessão ao vivo', () => {
     await expectPageDoesNotScroll(page, VIEWPORTS)
   })
 
+  /**
+   * A armadilha mais reincidente do repositório (ALE-95/96/121/122, quatro vezes
+   * só nesta issue): ler `.data` de uma query PENDENTE suspende, e o `Suspense`
+   * que o router põe em todo route match DESANEXA a cena inteira — a tela pisca
+   * ou fica em branco no meio do combate. `settledQuery` existe para isso e é
+   * lido em oito módulos; a prova de que funciona vinha de contar nós à mão
+   * depois de cada regressão, nunca de um teste.
+   *
+   * Aqui um MutationObserver testemunha o que o olho vê: o rastreador não pode
+   * ser REMOVIDO do DOM enquanto o mestre troca de aba e abre um combatente.
+   *
+   * Por que e2e: sem router não há Suspense, e em jsdom a leitura pendente
+   * devolve `undefined` — o mesmo teste passaria verde sobre a tela que pisca.
+   */
+  test('trocar de aba e abrir um combatente não desanexa a cena', async ({ page }) => {
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+
+    // Vigia o RASTREADOR: trocar de aba desmonta o conteúdo da aba anterior, e
+    // isso é normal; o que nunca pode acontecer é a lista de combate sair da
+    // tela — é ela que o suspend arranca junto com a cena.
+    await page.evaluate(() => {
+      const janela = window as unknown as { __desanexos: number }
+      janela.__desanexos = 0
+      const ehRastreador = (node: Node) =>
+        node instanceof HTMLElement &&
+        [...node.querySelectorAll('h2')].some((h) => h.textContent?.includes('Iniciativa'))
+      new MutationObserver((records) => {
+        for (const record of records) {
+          for (const node of record.removedNodes) {
+            if (ehRastreador(node)) janela.__desanexos++
+          }
+        }
+      }).observe(document.body, { childList: true, subtree: true })
+    })
+
+    for (const aba of ['Bestiário', 'Catálogos', 'Notas', 'Combatente']) {
+      await page.getByRole('tab', { name: aba }).click()
+      await expect(page.getByRole('tab', { name: aba })).toHaveAttribute('aria-selected', 'true')
+    }
+
+    const desanexos = await page.evaluate(
+      () => (window as unknown as { __desanexos: number }).__desanexos,
+    )
+    expect(desanexos, 'o rastreador foi removido do DOM (suspend desanexou a cena)').toBe(0)
+    await expect(page.getByRole('heading', { name: 'Iniciativa' })).toBeVisible()
+  })
+
   test('Sair da sessão volta pra crônica', async ({ page }) => {
     await page.goto('/campaigns/1/sessions/4')
     await expect(page.getByRole('heading', { name: 'Iniciativa' })).toBeVisible()
