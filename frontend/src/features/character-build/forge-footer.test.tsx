@@ -117,6 +117,24 @@ describe('ForgeFooter', () => {
     expect(onStep).toHaveBeenCalledWith(-1)
   })
 
+  /**
+   * O único lugar onde a recusa do servidor aparece na criação: o rodapé.
+   * A prop `error` existia e nenhum teste passava uma — quem apagasse o `Show`
+   * levaria o jogador a clicar "Criar" e não ver nada acontecer.
+   */
+  it('a recusa do servidor aparece anunciada como alerta', () => {
+    renderFooter(() => {}, { error: 'HP current cannot exceed HP max' })
+
+    const alerta = screen.getByRole('alert')
+    expect(alerta).toHaveTextContent('HP current cannot exceed HP max')
+  })
+
+  it('sem erro, não fica um alerta vazio na tela', () => {
+    renderFooter()
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
   it('no Resumo a ação vira Criar', async () => {
     const { onCreate } = renderFooter(
       (draft) => {

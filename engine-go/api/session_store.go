@@ -259,9 +259,23 @@ func (st *sessionStore) refreshCharacterMaxes(ctx context.Context, sessionID int
 		if fresh, ok := maxes[*e.CharacterID]; ok {
 			e.HpMax = ptrInt64(fresh.Hpmax)
 			e.MpMax = ptrInt64(fresh.Mpmax)
+			// O máximo pode ter ENCOLHIDO (nível abaixado, CON caída): sem aparar,
+			// a barra mostra 9/5 e a ficha se contradiz na tela — o mesmo par que
+			// a criação e o PATCH de vitais recusam.
+			clampCurrentTo(&e.HpCurrent, fresh.Hpmax)
+			clampCurrentTo(&e.MpCurrent, fresh.Mpmax)
 		}
 	}
 	return cloneState(s)
+}
+
+// clampCurrentTo apara o valor atual no novo máximo, deixando o ponteiro nulo
+// como está (entrada sem aquele recurso não ganha um zero do nada).
+func clampCurrentTo(current **int64, max int64) {
+	if *current == nil || **current <= max {
+		return
+	}
+	*current = ptrInt64(max)
 }
 
 func uniqueCharacterIDs(s *SessionRuntimeState) []int64 {

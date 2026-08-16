@@ -100,6 +100,41 @@ func TestStoreRefreshCharacterMaxes(t *testing.T) {
 	}
 }
 
+// O caso que faltava: o máximo ENCOLHE (o mestre baixou o nível, a CON caiu) e o
+// atual fica acima dele. Sem aparar, a barra do rastreador mostra 9/5 — mais de
+// 100% — enquanto o servidor recusa esse mesmo par em qualquer outro caminho
+// (criação e PATCH de vitais). O número que sobra não é "vida a mais": é uma
+// ficha que se contradiz na tela.
+func TestStoreRefreshClampsCurrentToNewMax(t *testing.T) {
+	s := newTestServer(t)
+	ctx := context.Background()
+	gm := seedUser(t, s, "gm@t.com")
+	sid := seedSession(t, s, seedCampaign(t, s, gm))
+	charID := seedCharacter(t, s, gm, "Encolheu", 5, 5, 2, 2) // máximos reais 5/2
+	store := s.sessions
+	if _, err := store.load(ctx, sid); err != nil {
+		t.Fatalf("load: %v", err)
+	}
+	// A entrada carrega máximos ANTIGOS (maiores) e um atual acima do novo teto.
+	e := charEntry("Encolheu", 12, charID)
+	velhoHpMax, atualHp := int64(30), int64(9)
+	velhoMpMax, atualMp := int64(10), int64(7)
+	e.HpMax, e.HpCurrent = &velhoHpMax, &atualHp
+	e.MpMax, e.MpCurrent = &velhoMpMax, &atualMp
+	if _, err := store.addInitiativeEntry(sid, e); err != nil {
+		t.Fatalf("add: %v", err)
+	}
+
+	entry := store.refreshCharacterMaxes(ctx, sid).Initiative[0]
+
+	if entry.HpCurrent == nil || *entry.HpCurrent != 5 {
+		t.Errorf("PV atual=%v, queria 5 (aparado no novo máximo)", entry.HpCurrent)
+	}
+	if entry.MpCurrent == nil || *entry.MpCurrent != 2 {
+		t.Errorf("PM atual=%v, queria 2 (aparado no novo máximo)", entry.MpCurrent)
+	}
+}
+
 func TestStoreDirtyOnPersistFailure(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
