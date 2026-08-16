@@ -74,6 +74,26 @@ func seedCharacter(t *testing.T, s *Server, ownerID int64, name string, hpCur, h
 	return id
 }
 
+// seedCharacterAtLevel: o nível importa para o descanso (a recuperação é o
+// nível × fator), e o `seedCharacter` fixa nível 1.
+func seedCharacterAtLevel(
+	t *testing.T, s *Server, ownerID int64, name string, level, hpCur, hpMax, mpCur, mpMax int64,
+) int64 {
+	t.Helper()
+	id, err := s.queries.CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
+		OwnerId: ownerID, Name: name, Origin: "Soldado", Level: level,
+		HpMax: hpMax, HpCurrent: hpCur, MpMax: mpMax, MpCurrent: mpCur,
+		Size: "Médio", Displacement: 9,
+		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
+		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: "{}", PowerChoices: "{}",
+		CreatedAt: nowISO(), UpdatedAt: nowISO(),
+	})
+	if err != nil {
+		t.Fatalf("seed character %q: %v", name, err)
+	}
+	return id
+}
+
 func seedMember(t *testing.T, s *Server, campaignID, characterID int64, role string) {
 	t.Helper()
 	if _, err := s.queries.CreateMember(context.Background(), sqlcgen.CreateMemberParams{
@@ -282,6 +302,27 @@ func TestRestVitals(t *testing.T) {
 			t.Errorf("got %+v, want unchanged 5/2", got)
 		}
 	})
+	// O EXEMPLO TRABALHADO do livro, p106: "Helior, elfo caçador de 7º nível,
+	// recupera 7 PV e 7 PM com uma noite de sono numa estalagem. Mas, como vive
+	// com o pé na estrada, dormindo ao relento, se acostumou a recuperar apenas
+	// 3 PV e 3 PM." Metade de 7 é 3,5, e o livro diz TRÊS — é o `math.Floor` da
+	// implementação, que os casos de nível 1 nunca exercitavam (floor(0,5) = 0
+	// não distingue arredondar para baixo de truncar de zerar).
+	t.Run("Helior, 7º nível: estalagem devolve 7, relento devolve 3 (p106)", func(t *testing.T) {
+		char := seedCharacterAtLevel(t, s, gmID, "Helior", 7, 1, 40, 1, 40)
+
+		normal, _, _ := s.restVitals(ctx, gm, char, "normal")
+		if normal.hpCurrent != 8 || normal.mpCurrent != 8 {
+			t.Errorf("estalagem: %+v, queria 1+7 em PV e PM", normal)
+		}
+
+		ferido := seedCharacterAtLevel(t, s, gmID, "Helior ao relento", 7, 1, 40, 1, 40)
+		ruim, _, _ := s.restVitals(ctx, gm, ferido, "ruim")
+		if ruim.hpCurrent != 4 || ruim.mpCurrent != 4 {
+			t.Errorf("relento: %+v, queria 1+3 em PV e PM (metade de 7 = 3, não 4)", ruim)
+		}
+	})
+
 	t.Run("unknown condition falls back to normal (gain 1)", func(t *testing.T) {
 		char := seedCharacter(t, s, gmID, "Default", 5, 20, 2, 8)
 		got, _, _ := s.restVitals(ctx, gm, char, "bogus")
