@@ -16,13 +16,17 @@ export default defineConfig({
   timeout: 30_000,
   expect: { timeout: 7_000 },
   fullyParallel: true,
-  // O padrão (metade dos núcleos → 4 aqui) satura uma máquina de dev que ainda
-  // roda browser e outro dev server: medido em 2026-08-13, 2 falhas por timeout
-  // PURO, pico de 32,3s contra o teto de 30s. Com 2 workers a MESMA máquina dá
-  // 41/41 em 1,9 min contra 3,0 min — capar saiu mais rápido, que é o sintoma
-  // de sobrescrição. O runner do CI é dedicado e o padrão já lhe dá 2 workers,
-  // com o teste mais lento em 11,6s, então lá fica o padrão (ALE-93).
-  workers: process.env.CI ? undefined : 2,
+  // Um worker por padrão na máquina de dev, dois no CI.
+  //
+  // Histórico: o padrão do Playwright (metade dos núcleos → 4 aqui) saturava e
+  // dava timeout PURO, com pico de 32,3s contra o teto de 30s; capar em 2 saiu
+  // MAIS rápido (1,9 min contra 3,0), que é o sintoma clássico de
+  // sobrescrição (ALE-93). Só que a máquina do dono ficou mais cheia desde
+  // então — dev server, API, o browser dele, o browser da automação — e a
+  // suíte passou a TRAVAR o laptop. Um worker troca ~2 min de relógio por uma
+  // máquina que continua usável enquanto a suíte roda, e quem quiser o
+  // paralelismo de volta passa E2E_WORKERS=2.
+  workers: Number(process.env.E2E_WORKERS ?? (process.env.CI ? 2 : 1)),
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: [['list'], ['html', { open: 'never' }]],
@@ -30,6 +34,12 @@ export default defineConfig({
     baseURL: BASE_URL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    launchOptions: {
+      // O Chromium usa /dev/shm para memória compartilhada e, quando ele acaba,
+      // o sistema começa a paginar — que é a hora em que a máquina inteira
+      // engasga. Este argumento manda usar arquivo temporário comum.
+      args: ['--disable-dev-shm-usage'],
+    },
   },
   projects: [
     // Logs in once via the UI and saves the session (localStorage token) so the
