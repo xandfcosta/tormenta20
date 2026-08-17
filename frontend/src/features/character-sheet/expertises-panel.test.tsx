@@ -93,11 +93,11 @@ describe('filterExpertises', () => {
   })
 })
 
-function renderPanel(char: Character = character()) {
+function renderPanel(char: Character = character(), glance = false) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(() => (
     <QueryClientProvider client={client}>
-      <ExpertisesPanel character={char} />
+      <ExpertisesPanel character={char} glance={glance} />
     </QueryClientProvider>
   ))
   return client
@@ -169,6 +169,48 @@ describe('ExpertisesPanel', () => {
     renderPanel(character({ expertises: [custom('Ferraria')] }))
     expect(screen.getByLabelText('Remover Ferraria')).toBeInTheDocument()
     expect(screen.queryByLabelText('Remover Atletismo')).not.toBeInTheDocument()
+  })
+})
+
+/**
+ * Na tela do mestre a perícia é uma CONSULTA: ele quer o número no meio do
+ * turno, não a matemática dele (ALE-145). As chips da linha repetem o diálogo
+ * de decomposição palavra por palavra e custam uma segunda linha por perícia.
+ *
+ * O que estes testes protegem não é "a chip sumiu" — é que a composição
+ * continua ALCANÇÁVEL depois de sumir da linha. Uma asserção só de ausência
+ * passaria verde se o diálogo tivesse ido junto.
+ */
+describe('Perícias na tela do mestre (glance)', () => {
+  it('a linha fica com o total e os controles, sem a composição', () => {
+    renderPanel(character(), true)
+
+    expect(screen.getByRole('switch', { name: 'Atletismo treinada' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Atletismo atributo')).toBeInTheDocument()
+    // ½ nível 5 e treino +6 num personagem de nível 10: as chips diziam isso na
+    // linha, uma vez por perícia.
+    expect(screen.queryByText('½lvl')).not.toBeInTheDocument()
+    expect(screen.queryByText('outros')).not.toBeInTheDocument()
+  })
+
+  it('a composição continua a um clique, no diálogo', async () => {
+    renderPanel(character(), true)
+    const user = userEvent.setup()
+
+    await user.click(screen.getAllByRole('button', { name: /^Detalhar/ })[0])
+
+    const dialog = await screen.findByRole('dialog')
+    expect(dialog).toHaveTextContent('½ nível')
+    expect(dialog).toHaveTextContent('Treino')
+    expect(dialog).toHaveTextContent('Outros')
+    expect(dialog).toHaveTextContent('Total')
+  })
+
+  it('na ficha do JOGADOR as chips continuam na linha', () => {
+    renderPanel(character(), false)
+
+    expect(screen.getAllByText('½lvl').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('outros').length).toBeGreaterThan(0)
   })
 })
 

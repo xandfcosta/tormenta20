@@ -11,6 +11,8 @@ export type CharacterSheetDesktopProps = {
   inSession?: boolean
   /** Sem o HUD: quem monta já mostra o cartão de combate acima (ALE-122). */
   hudless?: boolean
+  /** Ver `CharacterSheetProps.glance` — a ficha do mestre no painel. */
+  glance?: boolean
   tab: string
   onTabChange: (value: string) => void
 }
@@ -58,7 +60,11 @@ export function CharacterSheetDesktop(props: CharacterSheetDesktopProps) {
                 value={section.value}
                 class="m-0 flex h-full min-h-0 flex-col overflow-hidden"
               >
-                <Dynamic component={section.component} character={props.character} />
+                <Dynamic
+                component={section.component}
+                character={props.character}
+                glance={props.glance}
+              />
               </TabsContent>
             )}
           </For>

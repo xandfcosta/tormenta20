@@ -21,6 +21,12 @@ export type CharacterSheetProps = {
   compact?: boolean
   /** Sem o HUD: quem monta já mostra o cartão de combate acima. */
   hudless?: boolean
+  /**
+   * A ficha aberta pelo MESTRE no painel do combatente: os blocos mostram o
+   * número e escondem a matemática dele, que continua a um clique no diálogo
+   * de decomposição (ALE-145).
+   */
+  glance?: boolean
   tab: string
   onTabChange: (value: string) => void
 }
@@ -52,6 +58,7 @@ export function CharacterSheet(props: CharacterSheetProps) {
           barSlot={props.mobileBarSlot}
           inSession={props.inSession}
           hudless={props.hudless}
+          glance={props.glance}
           tab={props.tab}
           onTabChange={props.onTabChange}
         />
@@ -61,6 +68,7 @@ export function CharacterSheet(props: CharacterSheetProps) {
         character={props.character}
         inSession={props.inSession}
         hudless={props.hudless}
+        glance={props.glance}
         tab={props.tab}
         onTabChange={props.onTabChange}
       />

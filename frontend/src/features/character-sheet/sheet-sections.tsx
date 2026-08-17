@@ -24,12 +24,22 @@ import { SpellbookPanel } from './spellbook-panel'
  * see a later character. Rendered through `<Dynamic component={...}
  * character={...} />`, the prop stays a getter and the block tracks edits.
  */
+/**
+ * O que todo bloco da ficha recebe.
+ *
+ * `glance` é a ficha aberta pelo MESTRE no painel do combatente: ali ela é para
+ * CONSULTAR um número no meio do turno, não para ler a matemática dele. Quem
+ * usa hoje é o bloco Perícias, que sem isso gasta duas linhas por perícia
+ * repetindo o que o diálogo de decomposição já diz palavra por palavra.
+ */
+export type SheetPanelProps = { character: Character; glance?: boolean }
+
 export type SheetSection = {
   value: string
   label: string
   icon: Component<{ class?: string }>
   badge?: Component<{ character: Character }>
-  component: Component<{ character: Character }>
+  component: Component<SheetPanelProps>
   /** Dim (but keep) the tab when irrelevant for this character. */
   dim?: (character: Character) => boolean
 }

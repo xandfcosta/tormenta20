@@ -1,5 +1,5 @@
 import { Dumbbell, Star, Trash2 } from 'lucide-solid'
-import { For, Show } from 'solid-js'
+import { For, Show, splitProps } from 'solid-js'
 import {
   ATTRIBUTE_ABBR,
   ATTRIBUTE_KEYS,
@@ -24,11 +24,22 @@ export type ExpertiseRowProps = {
   onPatch: (patch: ExpertisePatch) => void
   /** Only custom "ofícios" can be deleted. */
   onDelete?: () => void
+  /**
+   * A linha do MESTRE, no painel do combatente: só o total e o nome, com os
+   * controles subindo para a linha do nome. Ver `SheetPanelProps.glance`.
+   */
+  glance?: boolean
 }
 
 /**
  * One perícia: its total (which opens the breakdown), the name, the trained
  * toggle, the attribute it keys off, and the chips that preview the math.
+ *
+ * As chips REPETEM o diálogo de decomposição palavra por palavra (½ nível,
+ * atributo, treino, outros), e isso custa uma segunda linha por perícia. Na
+ * ficha do jogador vale a pena: é a ficha dele e ele quer auditar o número sem
+ * abrir nada. Na tela do mestre não — ele quer o número (ALE-145), então em
+ * `glance` a linha fica só com o total, o nome e os dois controles.
  */
 export function ExpertiseRow(props: ExpertiseRowProps) {
   const state = () => expertiseStateFor(props.character, props.def)
@@ -55,16 +66,25 @@ export function ExpertiseRow(props: ExpertiseRowProps) {
       itemBonus={itemBonus()}
       contributions={entry()?.itemContributions ?? []}
     >
+      {/* `items-center` em glance: sem a segunda linha, alinhar pelo topo
+          deixava o nome fora do eixo da caixa do total. */}
       <div
         class={cn(
-          'flex items-start gap-2.5 rounded-sm border border-grimorio-iron p-2.5 transition-colors hover:border-grimorio-gold/50',
+          'flex gap-2.5 rounded-sm border border-grimorio-iron transition-colors hover:border-grimorio-gold/50',
           state().trained && 'bg-[var(--grimorio-panel)]',
+          props.glance ? 'items-center p-1.5' : 'items-start p-2.5',
         )}
       >
         {/* Both the badge and the name open the breakdown; the toggle, the
             attribute select and delete stay interactive — they are not
             triggers. Kobalte composes via `as=`, where Radix used `asChild`. */}
-        <DialogTrigger as={TotalBadge} total={total()} locked={locked()} autoFail={autoFail()} />
+        <DialogTrigger
+          as={TotalBadge}
+          total={total()}
+          locked={locked()}
+          autoFail={autoFail()}
+          compact={props.glance}
+        />
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-1.5">
             <DialogTrigger
@@ -77,6 +97,18 @@ export function ExpertiseRow(props: ExpertiseRowProps) {
             <Show when={props.def.trainedOnly}>
               <TrainedOnlyStar locked={locked()} />
             </Show>
+            {/* O seletor de atributo aparece numa das duas linhas, nunca nas
+                duas: é o MESMO componente com as mesmas props, só muda de
+                lugar. Sem chips embaixo, a segunda linha inteira deixa de
+                existir e a linha cai de ~68px para ~48px. */}
+            <Show when={props.glance}>
+              <AttributeSelect
+                name={props.def.name}
+                value={state().attribute}
+                sheet={props.sheet}
+                onChange={(attribute) => props.onPatch({ attribute })}
+              />
+            </Show>
             <TrainedToggle
               trained={state().trained}
               name={props.def.name}
@@ -86,19 +118,21 @@ export function ExpertiseRow(props: ExpertiseRowProps) {
               {(onDelete) => <DeleteExpertiseButton name={props.def.name} onDelete={onDelete()} />}
             </Show>
           </div>
-          <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
-            <AttributeSelect
-              name={props.def.name}
-              value={state().attribute}
-              sheet={props.sheet}
-              onChange={(attribute) => props.onPatch({ attribute })}
-            />
-            <Chip label="½lvl" value={String(halfLevel())} />
-            <Chip label="treino" value={signed(trainBonus())} />
-            <DialogTrigger as="button" type="button" class="inline-flex hover:brightness-110">
-              <Chip label="outros" value={signed(itemBonus())} />
-            </DialogTrigger>
-          </div>
+          <Show when={!props.glance}>
+            <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+              <AttributeSelect
+                name={props.def.name}
+                value={state().attribute}
+                sheet={props.sheet}
+                onChange={(attribute) => props.onPatch({ attribute })}
+              />
+              <Chip label="½lvl" value={String(halfLevel())} />
+              <Chip label="treino" value={signed(trainBonus())} />
+              <DialogTrigger as="button" type="button" class="inline-flex hover:brightness-110">
+                <Chip label="outros" value={signed(itemBonus())} />
+              </DialogTrigger>
+            </div>
+          </Show>
         </div>
       </div>
     </ExpertiseBreakdown>
@@ -110,19 +144,31 @@ export function ExpertiseRow(props: ExpertiseRowProps) {
  * and still untrained) reads as a dashed, dimmed box — the old line-through was
  * illegible on small mono digits.
  */
-function TotalBadge(props: { total: number; locked: boolean; autoFail?: boolean }) {
+function TotalBadge(props: {
+  total: number
+  locked: boolean
+  autoFail?: boolean
+  /** A caixa é o que fixa a altura da linha: 44px dela viram 32 em glance. */
+  compact?: boolean
+}) {
   // A falha automática não tem número para mostrar. O traço carrega o sentido
   // visualmente e o rótulo acessível o diz por extenso — a composição continua
   // no diálogo, porque o jogador ainda quer saber o que ele PERDEU.
   const label = () =>
     props.autoFail ? 'Falha automática — detalhar' : `Detalhar ${signed(props.total)}`
+  // `splitProps` e não `{...props}` cru: o resto vem do `DialogTrigger` (o
+  // `as=` do Kobalte injeta onClick e o estado do diálogo) e PRECISA chegar ao
+  // botão, mas os nossos quatro não são atributos de `<button>` — espalhados
+  // junto, viravam `total="10" locked="false"` no DOM.
+  const [, trigger] = splitProps(props, ['total', 'locked', 'autoFail', 'compact'])
   return (
     <button
-      {...props}
+      {...trigger}
       type="button"
       aria-label={label()}
       class={cn(
-        'flex size-11 shrink-0 items-center justify-center rounded-sm border font-mono text-lg font-bold',
+        'flex shrink-0 items-center justify-center rounded-sm border font-mono font-bold',
+        props.compact ? 'size-8 text-sm' : 'size-11 text-lg',
         props.autoFail
           ? 'border-destructive/60 bg-destructive/10 text-destructive'
           : props.locked

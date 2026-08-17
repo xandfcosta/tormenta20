@@ -123,6 +123,7 @@ function CharacterCard(props: { characterId: number; actions: JSX.Element }) {
               inSession
               compact
               hudless
+              glance
             />
           </div>
         </div>

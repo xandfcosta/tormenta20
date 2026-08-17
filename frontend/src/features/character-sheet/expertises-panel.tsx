@@ -14,6 +14,7 @@ import { AddCustomExpertiseDialog } from './add-custom-expertise-dialog'
 import { expertiseActions } from './expertise-mutations'
 import { ExpertiseRow } from './expertise-row'
 import { normalize } from './normalize'
+import type { SheetPanelProps } from './sheet-sections'
 
 // Resistências first — "teste de Reflexos!" is the hottest lookup at the table,
 // so they are pinned above the alphabetical rest.
@@ -48,7 +49,7 @@ export function filterExpertises(defs: ExpertiseDef[], query: string): Expertise
  * app wrapped in `memo()` so a tab switch would not re-run it. There is no
  * wrapper here; a switch touches only what reads the signal that changed.
  */
-export function ExpertisesPanel(props: { character: Character }) {
+export function ExpertisesPanel(props: SheetPanelProps) {
   const [query, setQuery] = createSignal('')
   const queryClient = useQueryClient()
   const actions = () => expertiseActions(queryClient, props.character.id)
@@ -90,7 +91,13 @@ export function ExpertisesPanel(props: { character: Character }) {
         </div>
       </div>
 
-      <div class="min-h-0 flex-1 overflow-auto px-2 py-1">
+      {/* @container e não `xl:`: a largura que decide o número de colunas é a
+          desta lista, não a da janela. Com `xl:grid-cols-2`, uma janela de 1920
+          quebrava em duas colunas DENTRO do painel do combatente (518px), dando
+          240px por cartão — e o nome da perícia, que é `flex-1 truncate`, era
+          espremido até desaparecer: sobravam o número e os controles, sem dizer
+          de QUE perícia. Mesma família da ALE-122. */}
+      <div class="@container min-h-0 flex-1 overflow-auto px-2 py-1">
         <Show
           when={visible().length > 0}
           fallback={
@@ -99,13 +106,14 @@ export function ExpertisesPanel(props: { character: Character }) {
             </p>
           }
         >
-          <div class="grid gap-2 xl:grid-cols-2">
+          <div class="grid gap-2 @[44rem]:grid-cols-2">
             <For each={visible()}>
               {(def) => (
                 <ExpertiseRow
                   character={props.character}
                   def={def}
                   sheet={sheet()}
+                  glance={props.glance}
                   onPatch={(patch) => actions().update(def.name, patch)}
                   onDelete={isCustom(def) ? () => actions().remove(def.name) : undefined}
                 />

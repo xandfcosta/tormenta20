@@ -25,6 +25,8 @@ export type CharacterSheetMobileProps = {
   inSession?: boolean
   /** Sem o HUD: quem monta já mostra o cartão de combate acima (ALE-122). */
   hudless?: boolean
+  /** Ver `CharacterSheetProps.glance` — a ficha do mestre no painel. */
+  glance?: boolean
   tab: string
   onTabChange: (value: string) => void
 }
@@ -63,7 +65,11 @@ export function CharacterSheetMobile(props: CharacterSheetMobileProps) {
               value={section.value}
               class="flex h-full min-h-0 flex-col overflow-hidden p-2"
             >
-              <Dynamic component={section.component} character={props.character} />
+              <Dynamic
+                component={section.component}
+                character={props.character}
+                glance={props.glance}
+              />
             </TabsContent>
           )}
         </For>
