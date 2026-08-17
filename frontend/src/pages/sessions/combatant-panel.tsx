@@ -36,8 +36,19 @@ export function CombatantPanel(props: {
 }) {
   const actions = (
     <>
-      <Show when={props.onApplyEffect}>{(apply) => <ApplyEffectSelect onApply={apply()} />}</Show>
-      <Button size="sm" variant="outline" aria-label="Fechar o combatente" onClick={props.onClose}>
+      {/* `min-w-0 flex-1`: na faixa este campo divide a linha com as condições
+          e com o fechar, e sem poder encolher ele empurrava o botão de fechar
+          para fora da tela a 390px — media 231px fixos (ALE-147). */}
+      <Show when={props.onApplyEffect}>
+        {(apply) => <ApplyEffectSelect onApply={apply()} class="min-w-[7rem] flex-1" />}
+      </Show>
+      <Button
+        size="sm"
+        variant="outline"
+        class="shrink-0"
+        aria-label="Fechar o combatente"
+        onClick={props.onClose}
+      >
         <X aria-hidden="true" class="size-4" />
       </Button>
     </>

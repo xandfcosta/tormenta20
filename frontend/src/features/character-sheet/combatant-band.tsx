@@ -3,6 +3,7 @@ import type { Character } from '@/shared/api/api'
 import { useConditionals } from '@/shared/stores/conditionals-context'
 import { CharacterPortrait } from '@/shared/ui/character-portrait'
 import { PickerCombobox } from '@/shared/ui/picker-combobox'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { ConditionChip, createConditionEditing } from './conditions-section'
 import { DefenseChip } from './defense-chip'
 import { VitalRows } from './vital-rows'
@@ -42,25 +43,47 @@ export function CombatantBand(props: { character: Character; actions?: JSX.Eleme
     // 616-936px numa janela de 1920, e foi exatamente essa confusão que espremeu
     // os atributos a 21px por caixa na ALE-122.
     <div class="@container shrink-0 border-b border-grimorio-iron bg-[var(--grimorio-panel)] px-3 py-1.5 sm:px-4">
+      {/* A ORDEM de quem cede espaço é a regra desta fileira, e a primeira
+          versão dela errou justamente isso (ALE-147): o nome era o único item
+          com `flex-1 min-w-0`, então era o único a encolher — com duas
+          condições ativas ele virava "AI", e as ações caíam numa segunda
+          fileira solta. Agora quem cede é o grupo de CONDIÇÕES, que é o que
+          cresce sozinho durante o combate, e ele tem para onde ceder: passa de
+          dois chips para o popover "⚠+N". */}
+      {/* Três grupos IRMÃOS num só wrap, cada um com o piso da própria largura
+          mínima. É o piso que impede a sobreposição: um grupo sem ele encolhe
+          abaixo do próprio conteúdo, e aí os filhos transbordam e são
+          desenhados por cima do grupo vizinho (foi o que aconteceu com os dois
+          seletores). Com piso, o wrap tem de mandar o grupo para a linha de
+          baixo — que é a quebra que se quer. */}
       <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <CharacterPortrait
-          name={props.character.name}
-          size="sm"
-          class="size-7 rounded-full border border-grimorio-iron text-[11px]"
-        />
-        {/* O nível é IRMÃO do nome, não filho: dentro do `truncate` ele era a
-            primeira coisa a sumir, e a 390px a faixa mostrava "Arcanista E…"
-            sem nível nenhum — justo um dos quatro itens que o dono pediu. */}
-        <h2 class="min-w-0 flex-1 truncate font-heading text-sm font-bold tracking-tight">
-          {props.character.name}
-        </h2>
-        <span class="shrink-0 font-mono text-xs text-muted-foreground">
-          Nv {props.character.level}
-        </span>
-        <DefenseChip character={props.character} activeConditionals={active()} />
-        <BandConditions character={props.character} conditions={conditions} />
+        <div class="flex min-w-[15rem] flex-1 items-center gap-2">
+          <CharacterPortrait
+            name={props.character.name}
+            size="sm"
+            class="size-7 rounded-full border border-grimorio-iron text-[11px]"
+          />
+          {/* Piso de 7rem: é o que garante ~14 caracteres de nome em qualquer
+              largura. O nível é IRMÃO do nome, não filho — dentro do `truncate`
+              ele era a primeira coisa a sumir a 390px. */}
+          <h2 class="min-w-[7rem] flex-1 truncate font-heading text-sm font-bold tracking-tight">
+            {props.character.name}
+          </h2>
+          <span class="shrink-0 font-mono text-xs text-muted-foreground">
+            Nv {props.character.level}
+          </span>
+          <DefenseChip character={props.character} activeConditionals={active()} />
+        </div>
+
+        {/* O piso muda com a largura porque o CONTEÚDO muda: abaixo de 30rem os
+            chips somem e sobra o gatilho "⚠ N" mais o seletor. */}
+        <div class="flex min-w-[9rem] flex-1 items-center gap-1 @[30rem]:min-w-[19rem]">
+          <BandConditions character={props.character} conditions={conditions} />
+        </div>
+        {/* Fechar o combatente é a saída da tela e aplicar efeito é verbo de
+            turno — nenhum dos dois pode ser empurrado para fora (ALE-147). */}
         <Show when={props.actions}>
-          <div class="flex shrink-0 items-center gap-2">{props.actions}</div>
+          <div class="flex min-w-[10rem] flex-1 items-center gap-2">{props.actions}</div>
         </Show>
       </div>
 
@@ -86,26 +109,63 @@ function BandConditions(props: {
   character: Character
   conditions: ReturnType<typeof createConditionEditing>
 }) {
+  const total = () => props.conditions.active().length
+
   return (
-    <div class="flex min-w-0 items-center gap-1">
-      <Show when={props.conditions.active().length > 0}>
-        <ul class="flex flex-wrap items-center gap-1">
-          <For each={props.conditions.active()}>
-            {(id) => (
-              <ConditionChip id={id} compact onRemove={() => props.conditions.remove(id)} />
-            )}
-          </For>
-        </ul>
+    <div class="flex min-w-0 flex-1 items-center gap-1">
+      {/* Os chips são o atalho de leitura, e SOMEM primeiro: abaixo de 30rem a
+          fileira não tem largura para eles e para os dois seletores ao mesmo
+          tempo — medido a 390px, onde ela estourava em 28px e levava o botão de
+          fechar para fora da tela (ALE-147). O gatilho abaixo continua dizendo
+          quantas são, então nada fica escondido sem aviso. */}
+      {/* `shrink-0`, não `min-w-0`: com `min-w-0` esta caixa encolhia ABAIXO do
+          próprio conteúdo e os chips transbordavam dela — o seletor era
+          desenhado por cima do segundo chip. Encolher aqui é seguro de proibir
+          porque a lista é limitada a dois; o resto vive no popover. */}
+      <ul class="hidden shrink-0 items-center gap-1 @[30rem]:flex">
+        <For each={props.conditions.active().slice(0, VISIBLE_CONDITIONS)}>
+          {(id) => <ConditionChip id={id} compact onRemove={() => props.conditions.remove(id)} />}
+        </For>
+      </ul>
+      {/* Uma condição a mais nunca alarga a fileira: entra no popover, e lá
+          continua removível. Sem isto, uma cena com cinco condições reproduz a
+          ALE-147 — os chips cresciam sem limite e comiam o nome. */}
+      <Show when={total() > 0}>
+        <Popover>
+          <PopoverTrigger
+            as="button"
+            type="button"
+            aria-label={
+              total() === 1 ? 'Ver a condição ativa' : `Ver as ${total()} condições ativas`
+            }
+            class="shrink-0 rounded border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/15 px-1.5 py-px text-[11px] font-semibold text-[color:var(--hp-hurt)]"
+          >
+            ⚠ {total()}
+          </PopoverTrigger>
+          <PopoverContent class="w-64">
+            <ul class="flex flex-wrap gap-1.5">
+              <For each={props.conditions.active()}>
+                {(id) => <ConditionChip id={id} onRemove={() => props.conditions.remove(id)} />}
+              </For>
+            </ul>
+          </PopoverContent>
+        </Popover>
       </Show>
-      <div class="w-36 shrink-0">
-        <PickerCombobox
-          options={props.conditions.options()}
-          onPick={props.conditions.add}
-          aria-label="Aplicar condição"
-          placeholder="+ condição…"
-          emptyMessage="Nenhuma."
-        />
-      </div>
+      <PickerCombobox
+        class="min-w-[6rem] flex-1"
+        options={props.conditions.options()}
+        onPick={props.conditions.add}
+        aria-label="Aplicar condição"
+        placeholder="+ condição…"
+        emptyMessage="Nenhuma."
+      />
     </div>
   )
 }
+
+/**
+ * Quantos chips de condição cabem na fileira antes de o resto viver só no
+ * popover. Dois, e não os três do `ConditionPips`: aqui eles dividem a linha
+ * com o seletor de aplicar e com as ações do painel.
+ */
+const VISIBLE_CONDITIONS = 2

@@ -8,7 +8,12 @@ import { PickerCombobox } from '@/shared/ui/picker-combobox'
  * buff) — buffs are never automatic, this is the explicit GM-targets-a-player
  * affordance.
  */
-export function ApplyEffectSelect(props: { onApply: (spellId: string) => void }) {
+export function ApplyEffectSelect(props: {
+  onApply: (spellId: string) => void
+  /** Deixa quem monta decidir se o campo pode encolher — na faixa do
+   *  combatente ele divide a linha com as condições e o fechar (ALE-147). */
+  class?: string
+}) {
   // From the primed cache: a module const would evaluate before priming.
   const options = createMemo(() => buffSpells().map((s) => ({ value: s.id, label: s.name })))
   // Um seletor COM BUSCA, não um select cru: são 31 magias, e a lista crua
@@ -16,6 +21,7 @@ export function ApplyEffectSelect(props: { onApply: (spellId: string) => void })
   // usam, pelo mesmo motivo (ALE-122).
   return (
     <PickerCombobox
+      class={props.class}
       options={options()}
       onPick={props.onApply}
       aria-label="Aplicar efeito"

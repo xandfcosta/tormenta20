@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
-import { render, screen } from '@solidjs/testing-library'
+import { render, screen, within } from '@solidjs/testing-library'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { makeCharacter } from '@/entities/character/__fixtures__/character'
 import { ConditionalsProvider } from '@/shared/stores/conditionals-context'
@@ -7,13 +8,17 @@ import { createConditionalsStore } from '@/shared/stores/conditionals-store'
 import { FakeStorage } from '@/shared/test/fake-storage'
 import { CombatantBand } from './combatant-band'
 
-function renderBand() {
+function renderBand(activeConditions?: string) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(() => (
     <QueryClientProvider client={client}>
       <ConditionalsProvider store={createConditionalsStore(new FakeStorage())}>
         <CombatantBand
-          character={makeCharacter({ name: 'Paladino Sagrado', level: 9 })}
+          character={makeCharacter({
+            name: 'Paladino Sagrado',
+            level: 9,
+            ...(activeConditions ? { activeConditions } : {}),
+          })}
           actions={<button type="button">Fechar o combatente</button>}
         />
       </ConditionalsProvider>
@@ -53,6 +58,38 @@ describe('CombatantBand', () => {
     expect(screen.queryByText('Atq Dist')).not.toBeInTheDocument()
     expect(screen.queryByText('Fort')).not.toBeInTheDocument()
     expect(screen.queryByText('INT')).not.toBeInTheDocument()
+  })
+
+  /**
+   * A ALE-147: as condições eram o único conteúdo da faixa que crescia sozinho
+   * durante o combate, e cresciam sem limite. Com duas ativas o nome do
+   * combatente já virava "AI" e as ações iam para fora da tela.
+   *
+   * O que este teste protege é o LIMITE, que é o que impede o crescimento —
+   * a largura resultante é assunto do browser (e da asserção em `session.spec`).
+   */
+  it('acima do limite, os chips param de crescer e o resto vai para o popover', async () => {
+    renderBand('["abalado","agarrado","cego","atordoado"]')
+    const user = userEvent.setup()
+
+    // Dois chips na fileira, e o gatilho diz o TOTAL — nada fica escondido sem
+    // aviso de que existe.
+    expect(screen.getAllByRole('button', { name: /^Remover condição/ })).toHaveLength(2)
+    const gatilho = screen.getByRole('button', { name: 'Ver as 4 condições ativas' })
+
+    // E as quatro continuam removíveis por dentro dele.
+    await user.click(gatilho)
+    const popover = await screen.findByRole('dialog')
+    expect(within(popover).getAllByRole('button', { name: /^Remover condição/ })).toHaveLength(4)
+  })
+
+  it('com condições ativas, nome e ações continuam na faixa', () => {
+    renderBand('["abalado","agarrado","cego","atordoado"]')
+
+    expect(screen.getByRole('heading', { name: 'Paladino Sagrado' })).toBeInTheDocument()
+    expect(screen.getByText('Nv 9')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Fechar o combatente' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Aplicar condição')).toBeInTheDocument()
   })
 
   it('o nível sobrevive ao truncamento do nome', () => {

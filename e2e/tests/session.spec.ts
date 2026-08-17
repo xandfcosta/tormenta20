@@ -198,12 +198,40 @@ test.describe('Sessão ao vivo', () => {
     const abaDaFicha = page.getByRole('tab', { name: 'Perícias' })
     await expect(abaDaFicha).toBeVisible()
 
+    // COM CONDIÇÕES ATIVAS, que é o estado em que a faixa quebrou (ALE-147):
+    // elas são o único conteúdo dela que cresce sozinho durante o combate, e
+    // com a fileira vazia nenhuma asserção via o defeito.
+    for (const [i, condicao] of ['Abalado', 'Agarrado', 'Cego'].entries()) {
+      const seletor = page.getByLabel('Aplicar condição')
+      await seletor.click()
+      await seletor.fill(condicao)
+      await page.getByRole('option', { name: condicao, exact: true }).first().click()
+      // Espera pelo GATILHO, não pelo chip: acima de duas condições a terceira
+      // vive dentro do popover e o botão de remover dela nem está no DOM.
+      const rotulo = i === 0 ? 'Ver a condição ativa' : `Ver as ${i + 1} condições ativas`
+      await expect(page.getByRole('button', { name: rotulo })).toBeVisible()
+    }
+    await page.keyboard.press('Escape')
+
+    const nomeNaFaixa = page.getByRole('heading', { name: nomeDoPc })
+    const fechar = page.getByRole('button', { name: 'Fechar o combatente' })
+
     for (const viewport of VIEWPORTS) {
       await page.setViewportSize({ width: viewport.width, height: viewport.height })
       // Abaixo de 1024 a cena mostra uma região por vez: a ficha vive na mesa.
       const mesa = page.getByRole('button', { name: 'mesa', exact: true })
       if (await mesa.isVisible()) await mesa.click()
       await expect(abaDaFicha, `${viewport.name}: a barra de abas saiu da tela`).toBeInViewport()
+
+      // As duas garantias que a ALE-147 quebrou. O nome é o que diz DE QUEM é a
+      // ficha, e as condições o espremeram até "AI" (duas letras); fechar é a
+      // saída da tela, e ele saiu dela. Ambas nos seis formatos.
+      const largura = await nomeNaFaixa.evaluate((el) => el.getBoundingClientRect().width)
+      expect(
+        largura,
+        `${viewport.name}: o nome do combatente ficou com ${Math.round(largura)}px`,
+      ).toBeGreaterThanOrEqual(100)
+      await expect(fechar, `${viewport.name}: fechar o combatente saiu da tela`).toBeInViewport()
 
       // O celular deitado fica FORA desta conta, e o motivo é medido, não
       // conveniência: dos 390px de altura, 179 são cromo da CENA (cabeçalho 49
@@ -221,8 +249,22 @@ test.describe('Sessão ao vivo', () => {
       ).toBeLessThanOrEqual(0.35)
     }
 
-    // Sai como entrou: tira da iniciativa só quem ESTE teste pôs.
+    // Sai como entrou. As condições ficam GRAVADAS na ficha, então tirá-las é
+    // obrigação deste teste — sem isto elas se acumulam entre execuções e a
+    // próxima roda contra uma ficha que ninguém montou (F.I.R.S.T: repetível).
     await page.setViewportSize({ width: 1920, height: 1080 })
+    const gatilho = page.getByRole('button', { name: /^Ver as? .*condi/ })
+    for (let i = 0; i < 5 && (await gatilho.count()) > 0; i++) {
+      // Sai por dentro do popover, onde as três estão listadas juntas.
+      await gatilho.click()
+      const painel = page.getByRole('dialog')
+      await painel.getByRole('button', { name: /^Remover condição/ }).first().click()
+      await page.keyboard.press('Escape')
+      await expect(painel).toBeHidden()
+    }
+    await expect(gatilho).toHaveCount(0)
+
+    // Tira da iniciativa só quem ESTE teste pôs.
     for (const label of await novosDesde(page, antes)) {
       await page.getByRole('button', { name: `Remover ${label}` }).click()
     }
