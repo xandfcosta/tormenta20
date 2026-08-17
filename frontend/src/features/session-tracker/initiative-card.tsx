@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Plus, Swords, Trash2 } from 'lucide-solid'
+import { Eye, EyeOff, Pencil, Plus, Swords, Trash2, X } from 'lucide-solid'
 import { For, Show, createEffect, createSignal } from 'solid-js'
 import type { InitiativeEntry, SessionRealtime } from '@/shared/realtime/realtime'
 import { cn } from '@/shared/lib/utils'
@@ -10,7 +10,15 @@ import { NumberInput } from '@/shared/ui/number-input'
 import { VitalBar } from '@/shared/ui/vital-bar'
 import { InitiativeEditDialog } from './initiative-edit-dialog'
 import { InitiativeRollButton } from './initiative-roll'
-import { type EntryPermissions, connectionStatus, entryPermissions } from './tracker-rules'
+import { toast } from '@/shared/ui/sonner'
+import { createPartyFeedback } from './party-feedback'
+import {
+  type ActionVerb,
+  type EntryPermissions,
+  connectionStatus,
+  entryPermissions,
+  reservedVerbs,
+} from './tracker-rules'
 
 /**
  * O passo de um clique. Shift multiplica por 5, como no HUD da ficha — combate
@@ -46,6 +54,14 @@ export function InitiativeCard(props: {
   const myCharacterId = () => [...props.myCharacterIds][0]
   const [addOpen, setAddOpen] = createSignal(false)
   const status = () => connectionStatus(props.rt.isConnected(), props.rt.error())
+  // Nasce UMA vez: guarda o instantâneo de quem já estava na lista e o timer da
+  // espera pelo broadcast.
+  const anunciarGrupo = createPartyFeedback(() => props.rt.state().initiative, toast)
+  const reserved = () =>
+    reservedVerbs(props.rt.state().initiative, {
+      isGm: props.isGm,
+      myCharacterIds: props.myCharacterIds,
+    })
 
   return (
     <section
@@ -111,11 +127,18 @@ export function InitiativeCard(props: {
             sessão, junto do resto do que se faz raramente (ALE-122). */}
         <Show when={props.isGm}>
           <div class="flex flex-wrap gap-2">
+            {/* `outline` e não `secondary`: preenchido de cinza, com o foco
+                visível depois do clique, ele LIA como desabilitado — e continua
+                clicável, porque `populateParty` é idempotente. O aviso conta o
+                que aconteceu, que é o que faltava (ALE-135). */}
             <Button
               size="sm"
-              variant="secondary"
+              variant="outline"
               disabled={!props.rt.isConnected()}
-              onClick={props.rt.populateParty}
+              onClick={() => {
+                anunciarGrupo()
+                props.rt.populateParty()
+              }}
             >
               Adicionar grupo
             </Button>
@@ -130,8 +153,10 @@ export function InitiativeCard(props: {
               aria-expanded={addOpen()}
               onClick={() => setAddOpen(!addOpen())}
             >
-              <Plus aria-hidden="true" class="size-4" />
-              Combatente
+              <Show when={addOpen()} fallback={<Plus aria-hidden="true" class="size-4" />}>
+                <X aria-hidden="true" class="size-4" />
+              </Show>
+              {addOpen() ? 'Fechar' : 'Combatente'}
             </Button>
           </div>
         </Show>
@@ -147,7 +172,7 @@ export function InitiativeCard(props: {
         {/* Fica ABERTO enquanto o mestre adiciona vários seguidos: fechar a cada
             envio transformaria três capangas em três cliques a mais. */}
         <Show when={props.isGm && addOpen()}>
-          <AddCombatantForm rt={props.rt} />
+          <AddCombatantForm rt={props.rt} onClose={() => setAddOpen(false)} />
         </Show>
 
         {/* @container: a coluna da iniciativa é 5/12 da tela no shell do mestre
@@ -181,6 +206,7 @@ export function InitiativeCard(props: {
                   onTurn={onTurn()}
                   focusOnTurn={onTurn() && isMine()}
                   can={can()}
+                  reserved={reserved()}
                   onDeltaHp={(delta) => props.rt.deltaVitals(entry.id, { hpDelta: delta })}
                   onApplyEffect={(spellId) => props.rt.applyEffect(entry.id, spellId)}
                   onRemove={() => props.rt.removeEntry(entry.id)}
@@ -213,6 +239,8 @@ function InitiativeRow(props: {
   /** Scrolls into view when the viewer's OWN combatant takes its turn. */
   focusOnTurn: boolean
   can: EntryPermissions
+  /** Os verbos que a LISTA reserva na coluna de ações (ALE-141). */
+  reserved: ActionVerb[]
   onDeltaHp: (delta: number) => void
   onApplyEffect: (spellId: string) => void
   onRemove: () => void
@@ -268,13 +296,19 @@ function InitiativeRow(props: {
               current={props.entry.initiative}
               onSave={onInitiative()}
               trigger={(open) => (
+                // Parecia CHIP de leitura, igual ao rótulo "NPC" ao lado, e o
+                // dono concluiu da tela que a iniciativa não podia ser mudada —
+                // sendo que o diálogo existe desde a ALE-122. O lápis e o
+                // cursor dizem que é controle; o rótulo diz o verbo (ALE-134).
                 <button
                   type="button"
                   onClick={open}
-                  aria-label={`Iniciativa de ${props.entry.label}`}
-                  class="shrink-0 rounded-sm border border-border px-1.5 font-mono text-xs tabular-nums transition-colors hover:border-grimorio-gold hover:text-grimorio-gold"
+                  aria-label={`Mudar a iniciativa de ${props.entry.label}`}
+                  title={`Mudar a iniciativa de ${props.entry.label}`}
+                  class="flex shrink-0 cursor-pointer items-center gap-1 rounded-sm border border-border bg-[var(--grimorio-panel-raised)] px-1.5 font-mono text-xs tabular-nums transition-colors hover:border-grimorio-gold hover:text-grimorio-gold"
                 >
                   {props.entry.initiative}
+                  <Pencil aria-hidden="true" class="size-2.5 text-muted-foreground" />
                 </button>
               )}
             />
@@ -346,7 +380,14 @@ function InitiativeRow(props: {
           as linhas — o serrilhado que a auditoria mediu em três posições X. Do
           outro jeito (nome fixo, barra elástica) a linha com barra estourava a
           própria caixa em 26px na coluna de 578px. */}
+      {/* Cada verbo tem o SEU lugar, reservado pela lista inteira: sem isto o
+          conjunto mudava por linha e a fileira encolhia, então o `+` de uma
+          caía onde estava o lápis de outra e o olho não formava coluna
+          (ALE-141). Quem não tem o verbo deixa o espaço vazio. */}
       <div class="order-2 ml-auto flex shrink-0 items-center justify-end gap-1 @lg:order-3">
+        <Show when={props.reserved.includes('vitals') && !props.can.editVitals}>
+          <span aria-hidden="true" class="h-9 w-[7.75rem] sm:h-8 sm:w-[7rem]" />
+        </Show>
         <Show when={props.can.editVitals}>
           {/* O MESMO arranjo da ficha: − + e o diálogo. Antes eram quatro
               botões de passo fixo, e 23 de dano custava seis cliques ou uma
@@ -357,7 +398,7 @@ function InitiativeRow(props: {
             variant="outline"
             class="h-9 min-w-9 sm:h-8 sm:min-w-8"
             aria-label={`Curar ${props.entry.label}`}
-            title="Clique = 1, Shift+clique = 5"
+            title={`Curar ${props.entry.label} — clique 1, Shift+clique 5`}
             onClick={(event: MouseEvent) => props.onDeltaHp(event.shiftKey ? SHIFT_STEP : STEP)}
           >
             +
@@ -367,7 +408,7 @@ function InitiativeRow(props: {
             variant="outline"
             class="h-9 min-w-9 sm:h-8 sm:min-w-8"
             aria-label={`Ferir ${props.entry.label}`}
-            title="Clique = 1, Shift+clique = 5"
+            title={`Ferir ${props.entry.label} — clique 1, Shift+clique 5`}
             onClick={(event: MouseEvent) => props.onDeltaHp(-(event.shiftKey ? SHIFT_STEP : STEP))}
           >
             −
@@ -382,6 +423,9 @@ function InitiativeRow(props: {
         </Show>
         {/* Esconder é do MESTRE e só faz sentido em linha com vida: o olho
             fechado diz que a mesa não vê o número. */}
+        <Show when={props.reserved.includes('hide') && !(hasHp() && props.onHideHp)}>
+          <span aria-hidden="true" class="h-9 w-9 sm:h-8 sm:w-8" />
+        </Show>
         <Show when={hasHp() ? props.onHideHp : undefined}>
           {(onHideHp) => (
             <Button
@@ -394,6 +438,14 @@ function InitiativeRow(props: {
                   ? `Revelar PV de ${props.entry.label}`
                   : `Ocultar PV de ${props.entry.label}`
               }
+              // O ícone sozinho não conta que o que se esconde é dos JOGADORES,
+              // e sem `title` quem enxerga a tela não recebia nada — o nome
+              // acessível resolvia só para leitor de tela (ALE-133).
+              title={
+                props.entry.hpHidden
+                  ? `Revelar os PV de ${props.entry.label} para os jogadores`
+                  : `Ocultar os PV de ${props.entry.label} dos jogadores`
+              }
               onClick={() => onHideHp()(props.entry.hpHidden !== true)}
             >
               <Show when={props.entry.hpHidden} fallback={<Eye aria-hidden="true" class="size-4" />}>
@@ -402,12 +454,16 @@ function InitiativeRow(props: {
             </Button>
           )}
         </Show>
+        <Show when={props.reserved.includes('remove') && !props.can.remove}>
+          <span aria-hidden="true" class="h-9 w-9 sm:h-8 sm:w-8" />
+        </Show>
         <Show when={props.can.remove}>
           <Button
             size="sm"
             variant="ghost"
             class="h-9 w-9 sm:h-8 sm:w-8"
             aria-label={`Remover ${props.entry.label}`}
+            title={`Remover ${props.entry.label} da iniciativa`}
             onClick={() => props.onRemove()}
           >
             <Trash2 aria-hidden="true" class="size-4" />
@@ -420,7 +476,7 @@ function InitiativeRow(props: {
 
 /** GM-only "add combatant" row: a name, an initiative in the playable range,
  *  PV opcional e PC/NPC. Resets to a fresh NPC row after each add. */
-function AddCombatantForm(props: { rt: SessionRealtime }) {
+function AddCombatantForm(props: { rt: SessionRealtime; onClose: () => void }) {
   const [label, setLabel] = createSignal('')
   const [initiative, setInitiative] = createSignal(10)
   const [hp, setHp] = createSignal(0)
@@ -444,10 +500,26 @@ function AddCombatantForm(props: { rt: SessionRealtime }) {
     setType('npc')
   }
 
+  const cancelar = () => {
+    setLabel('')
+    setInitiative(10)
+    setHp(0)
+    setType('npc')
+    props.onClose()
+  }
+
   return (
     <form
       class="mt-3 flex flex-wrap items-end gap-2 rounded-sm border border-dashed border-border p-3"
       onSubmit={submit}
+      // Esc é o gesto que todo mundo tenta primeiro num formulário aberto por
+      // engano, e o formulário não tinha saída nenhuma além do mesmo gatilho
+      // que o abriu — o que não estava dito em lugar algum (ALE-136).
+      onKeyDown={(event) => {
+        if (event.key !== 'Escape') return
+        event.preventDefault()
+        cancelar()
+      }}
       noValidate
     >
       <div class="min-w-[160px] flex-1 space-y-1">
@@ -498,8 +570,14 @@ function AddCombatantForm(props: { rt: SessionRealtime }) {
           NPC
         </Button>
       </div>
+      {/* "Adicionar" MANTÉM o formulário aberto de propósito — três capangas
+          seguidos não podem custar três cliques (ALE-122). Quem fecha é o
+          Cancelar, que também limpa o que foi digitado. */}
       <Button type="submit" disabled={!props.rt.isConnected() || invalid()}>
         <Plus aria-hidden="true" class="mr-1 size-4" /> Adicionar
+      </Button>
+      <Button type="button" variant="ghost" onClick={cancelar}>
+        Cancelar
       </Button>
     </form>
   )

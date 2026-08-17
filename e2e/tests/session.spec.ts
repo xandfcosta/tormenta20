@@ -383,6 +383,45 @@ test.describe('Sessão ao vivo', () => {
     }
   })
 
+  /**
+   * Cada verbo da linha da iniciativa ocupa a MESMA coluna em todas as linhas.
+   *
+   * O conjunto de botões muda por linha com razão — o olho só existe em linha
+   * com vida, remover só para o mestre —, mas a POSIÇÃO não podia mudar junto:
+   * a fileira encolhia e o `+` de uma linha caía onde estava o lápis de outra.
+   * Medido antes: "Curar" aparecia em dois X (256 e 220), "Ferir" em 294 e 258
+   * — 36px de deslocamento, que é a largura de um botão (ALE-141).
+   *
+   * Só o browser mede isto; em jsdom todo elemento fica em x=0 e a asserção
+   * passaria verde sobre qualquer serrilhado.
+   */
+  test('os verbos da linha da iniciativa ficam na mesma coluna', async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 })
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+
+    // Precisa de linhas HETEROGÊNEAS: os PCs da campanha entram com vida (e
+    // portanto com olho), e a seed tem NPC sem vida, que é o caso sem olho.
+    const antes = await labelsNaIniciativa(page)
+    await page.getByRole('button', { name: 'Adicionar grupo' }).click()
+    await expect(page.locator('[role="progressbar"][aria-label^="PM "]').first()).toBeVisible()
+
+    const desalinhados = await page.evaluate(() => {
+      const fora: string[] = []
+      for (const verbo of ['Curar', 'Ferir', 'Editar PV', 'Ocultar PV', 'Remover']) {
+        const botoes = [...document.querySelectorAll(`button[aria-label^="${verbo} "]`)]
+        const colunas = new Set(botoes.map((b) => Math.round(b.getBoundingClientRect().x)))
+        if (colunas.size > 1) fora.push(`${verbo}: ${[...colunas].join(', ')}`)
+      }
+      return fora
+    })
+    expect(desalinhados, 'verbo em mais de uma coluna').toEqual([])
+
+    for (const label of await novosDesde(page, antes)) {
+      await page.getByRole('button', { name: `Remover ${label}` }).click()
+    }
+  })
+
   /** Os rótulos que estão na iniciativa agora. */
   async function labelsNaIniciativa(page: Page): Promise<string[]> {
     return page.$$eval('button[aria-label^="Remover "]', (bs) =>
@@ -427,7 +466,10 @@ test.describe('Sessão ao vivo', () => {
 
     // Rola a LISTA até o fim, não a página.
     const rolou = await page.evaluate(() => {
-      const linha = document.querySelector('button[aria-label^="Iniciativa de"]')
+      // "Mudar a iniciativa de X" desde a ALE-134: o rótulo passou a dizer o
+      // VERBO, porque o número parecia chip de leitura e ninguém descobria que
+      // ele abre o diálogo.
+      const linha = document.querySelector('button[aria-label^="Mudar a iniciativa de"]')
       const lista = linha?.closest('[class*="overflow-y-auto"]') as HTMLElement | null
       if (!lista) return { achou: false, transbordou: false, rolou: 0 }
       lista.scrollTop = lista.scrollHeight

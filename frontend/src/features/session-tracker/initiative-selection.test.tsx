@@ -149,7 +149,7 @@ describe('corrigir a iniciativa de quem já está na lista', () => {
   it('o mestre reescreve o número e o servidor recebe a correção', async () => {
     const { rt, user } = renderCardWithRt()
 
-    await user.click(screen.getByRole('button', { name: 'Iniciativa de Ogro' }))
+    await user.click(screen.getByRole('button', { name: 'Mudar a iniciativa de Ogro' }))
     const campo = screen.getByRole('spinbutton', { name: 'Iniciativa de Ogro' })
     await user.clear(campo)
     await user.type(campo, '17')
@@ -161,7 +161,7 @@ describe('corrigir a iniciativa de quem já está na lista', () => {
   it('cancelar não manda nada', async () => {
     const { rt, user } = renderCardWithRt()
 
-    await user.click(screen.getByRole('button', { name: 'Iniciativa de Ogro' }))
+    await user.click(screen.getByRole('button', { name: 'Mudar a iniciativa de Ogro' }))
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
 
     expect(rt.updateEntry).not.toHaveBeenCalled()
@@ -171,7 +171,7 @@ describe('corrigir a iniciativa de quem já está na lista', () => {
   it('o jogador não reordena a mesa', () => {
     renderCardWithRt(undefined, null, false)
 
-    expect(screen.queryByRole('button', { name: 'Iniciativa de Ogro' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Mudar a iniciativa de Ogro' })).not.toBeInTheDocument()
   })
 })
 
@@ -304,5 +304,63 @@ describe('o card não repete o que a faixa de turno já diz', () => {
     renderCardWithRt(undefined, null, false)
 
     expect(screen.getByText(/Rodada 1/)).toBeInTheDocument()
+  })
+})
+
+/**
+ * O formulário de adicionar combatente não tinha saída própria (ALE-136): o
+ * mesmo "+ Combatente" abria e fechava, mas isso não estava dito em lugar
+ * nenhum, e quem abriu por engano ficava olhando um bloco de campos na frente
+ * da lista.
+ *
+ * O que NÃO muda: "Adicionar" mantém o formulário aberto de propósito — três
+ * capangas seguidos não podem custar três cliques (ALE-122). Quem fecha é o
+ * Cancelar.
+ */
+describe('sair do formulário de adicionar combatente', () => {
+  const abrir = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.click(screen.getByRole('button', { name: /Combatente/ }))
+    expect(screen.getByLabelText('Nome')).toBeInTheDocument()
+  }
+
+  it('Cancelar fecha e esquece o que foi digitado', async () => {
+    const { user } = renderCardWithRt()
+    await abrir(user)
+
+    await user.type(screen.getByLabelText('Nome'), 'Goblin arqueiro')
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    expect(screen.queryByLabelText('Nome')).not.toBeInTheDocument()
+
+    // Reabrir traz campo limpo, não o rascunho de uma ação desistida.
+    await abrir(user)
+    expect(screen.getByLabelText('Nome')).toHaveValue('')
+  })
+
+  it('Esc fecha — é o gesto que todo mundo tenta primeiro', async () => {
+    const { user } = renderCardWithRt()
+    await abrir(user)
+
+    await user.type(screen.getByLabelText('Nome'), 'Goblin{Escape}')
+
+    expect(screen.queryByLabelText('Nome')).not.toBeInTheDocument()
+  })
+
+  it('Adicionar NÃO fecha: o mestre põe vários seguidos', async () => {
+    const { rt, user } = renderCardWithRt()
+    await abrir(user)
+
+    await user.type(screen.getByLabelText('Nome'), 'Goblin arqueiro')
+    await user.click(screen.getByRole('button', { name: /^Adicionar$/ }))
+
+    expect(rt.addEntry).toHaveBeenCalled()
+    expect(screen.getByLabelText('Nome')).toBeInTheDocument()
+  })
+
+  it('o gatilho diz que está aberto', async () => {
+    const { user } = renderCardWithRt()
+    await abrir(user)
+
+    expect(screen.getByRole('button', { name: 'Fechar' })).toHaveAttribute('aria-expanded', 'true')
   })
 })

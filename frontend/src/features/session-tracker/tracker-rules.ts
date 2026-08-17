@@ -40,6 +40,35 @@ export type EntryPermissions = {
 }
 
 /**
+ * Os verbos que a LISTA reserva na coluna de ações — a união do que cada linha
+ * oferece (ALE-141).
+ *
+ * O olho só existe em linha com vida e remover só para o mestre, então cada
+ * linha tinha um conjunto diferente e a fileira encolhia: o `+` de uma caía
+ * onde estava o lápis de outra. Reservando por LISTA, o lugar de cada verbo é
+ * o mesmo em todas as linhas e quem não o tem deixa o espaço vazio.
+ *
+ * É a união, e não "sempre os cinco", porque no rail do jogador ninguém remove
+ * nem esconde PV — reservar aquilo ali seria buraco permanente.
+ *
+ * @example reservedVerbs(entries, { isGm: true, myCharacterIds }) // ['vitals','hide','remove']
+ */
+export function reservedVerbs(
+  entries: readonly InitiativeEntry[],
+  viewer: { isGm: boolean; myCharacterIds: ReadonlySet<number> },
+): ActionVerb[] {
+  const permissoes = entries.map((entry) => entryPermissions(entry, viewer))
+  const reservados: ActionVerb[] = []
+  if (permissoes.some((can) => can.editVitals)) reservados.push('vitals')
+  if (viewer.isGm && entries.some((entry) => entry.hpMax !== undefined)) reservados.push('hide')
+  if (permissoes.some((can) => can.remove)) reservados.push('remove')
+  return reservados
+}
+
+/** Um lugar na coluna de ações. `vitals` são os três de PV, que andam juntos. */
+export type ActionVerb = 'vitals' | 'hide' | 'remove'
+
+/**
  * What the viewer may do to one row. Mirrors the server's rule — the UI only
  * avoids offering what would be refused, it does not decide anything: the GM
  * edits everyone, a player edits their OWN character, and only the GM pushes

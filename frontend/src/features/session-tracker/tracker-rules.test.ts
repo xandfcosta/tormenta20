@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import type { InitiativeEntry } from '@/shared/realtime/realtime'
-import { connectionStatus, entryPermissions, myCharacterIdsOf } from './tracker-rules'
+import {
+  connectionStatus,
+  entryPermissions,
+  myCharacterIdsOf,
+  reservedVerbs,
+} from './tracker-rules'
 
 const entry = (overrides: Partial<InitiativeEntry> = {}): InitiativeEntry => ({
   id: 'a',
@@ -90,5 +95,52 @@ describe('entryPermissions', () => {
     const can = entryPermissions(entry(), { isGm: false, myCharacterIds: mine })
 
     expect(can.editVitals).toBe(false)
+  })
+})
+
+/**
+ * A coluna de ações (ALE-141). O olho só existe em linha com vida e remover só
+ * para o mestre, então cada linha tinha um conjunto diferente e a fileira
+ * encolhia — o `+` de uma caía onde estava o lápis de outra.
+ *
+ * A regra é reservar por LISTA, não por linha: o lugar de cada verbo é o mesmo
+ * em todas, e quem não o tem deixa o espaço vazio. E é a UNIÃO do que a lista
+ * oferece, não os três sempre — no rail do jogador ninguém remove nem esconde
+ * PV, e reservar aquilo ali seria buraco permanente.
+ */
+describe('reservedVerbs', () => {
+  const mine = new Set([7])
+
+  it('o mestre reserva os três quando há linha com vida', () => {
+    const lista = [entry({ hpMax: 30 }), entry({ id: 'b' })]
+
+    expect(reservedVerbs(lista, { isGm: true, myCharacterIds: mine })).toEqual([
+      'vitals',
+      'hide',
+      'remove',
+    ])
+  })
+
+  // Esconder PV do que não tem PV não significa nada: sem nenhuma linha com
+  // vida, o lugar do olho não se reserva.
+  it('sem ninguém com vida, o olho não ocupa lugar', () => {
+    const lista = [entry(), entry({ id: 'b' })]
+
+    expect(reservedVerbs(lista, { isGm: true, myCharacterIds: mine })).toEqual([
+      'vitals',
+      'remove',
+    ])
+  })
+
+  it('o jogador com personagem na mesa reserva só os vitais', () => {
+    const lista = [entry({ characterId: 7, type: 'character', hpMax: 20 }), entry({ id: 'b' })]
+
+    expect(reservedVerbs(lista, { isGm: false, myCharacterIds: mine })).toEqual(['vitals'])
+  })
+
+  it('o jogador sem personagem na mesa não reserva nada', () => {
+    const lista = [entry({ characterId: 8, type: 'character', hpMax: 20 })]
+
+    expect(reservedVerbs(lista, { isGm: false, myCharacterIds: mine })).toEqual([])
   })
 })
