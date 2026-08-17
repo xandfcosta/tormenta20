@@ -5,6 +5,8 @@ import type { SessionRealtime } from '@/shared/realtime/realtime'
 import { DeleteSessionButton } from '@/features/session-tracker/delete-session-button'
 import { HeaderCard } from '@/features/session-tracker/header-card'
 import { InitiativeCard } from '@/features/session-tracker/initiative-card'
+import { CreatureBlockDialog } from '@/features/gm-tools/creature-block-dialog'
+import { blankCreatureBlock } from '@/shared/api/creature-types'
 import { TurnControls, TurnCounter } from '@/features/session-tracker/turn-controls'
 import { RestControls } from '@/features/session-tracker/rest-controls'
 import { createMediaQuery } from '@/shared/lib/media-query'
@@ -40,6 +42,10 @@ export function SessionGmView(props: {
   myCharacterIds: ReadonlySet<number>
 }) {
   const [selectedId, setSelectedId] = createSignal<string | null>(null)
+  // O "NPC completo" pedido na forma de adicionar, esperando o bloco (ALE-137).
+  const [pendingCreature, setPendingCreature] = createSignal<
+    { label: string; initiative: number; hp: number } | undefined
+  >()
   // A JANELA do tabuleiro nasce aqui e não dentro da região: `Show` desmonta o
   // conteúdo inativo, e o enquadramento morreria a cada troca de região.
   const boardView = createBoardViewport()
@@ -104,6 +110,33 @@ export function SessionGmView(props: {
               a coluna, o cabeçalho e as ações ("Adicionar grupo", "+ Combatente")
               subiam junto e sumiam justo quando a lista ficava longa (ALE-131). */}
           <div class="flex min-h-0 min-w-0 flex-col">
+            {/* O "NPC completo" da ALE-137: a forma da iniciativa emite a
+                intenção, e é AQUI que o editor de bloco abre — a página é o
+                único lugar que pode compor `session-tracker` com `gm-tools`.
+                Ao salvar, a linha e o bloco nascem juntos e já ligados. */}
+            <Show when={pendingCreature()}>
+              {(seed) => (
+                <CreatureBlockDialog
+                  campaignId={props.campaignId}
+                  seed={{
+                    name: seed().label,
+                    block: { ...blankCreatureBlock(), hp: seed().hp > 0 ? seed().hp : 10 },
+                  }}
+                  onSaved={(creature) => {
+                    props.rt.addEntry({
+                      label: seed().label,
+                      initiative: seed().initiative,
+                      type: 'npc',
+                      creatureId: creature.id,
+                      hpCurrent: creature.block.hp,
+                      hpMax: creature.block.hp,
+                    })
+                    setPendingCreature(undefined)
+                  }}
+                  onDismiss={() => setPendingCreature(undefined)}
+                />
+              )}
+            </Show>
             <InitiativeCard
               rt={props.rt}
               isGm
@@ -112,6 +145,7 @@ export function SessionGmView(props: {
               fillHeight
               onSelect={select}
               selectedId={selectedId()}
+              onDetailedAdd={setPendingCreature}
             />
           </div>
         </Show>

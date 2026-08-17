@@ -51,6 +51,14 @@ export function InitiativeCard(props: {
    *  na cena do mestre, onde a coluna tem altura definida; falso no rail do
    *  jogador, que já rola por fora e não daria altura nenhuma (ALE-131). */
   fillHeight?: boolean
+  /**
+   * O mestre pediu um NPC COMPLETO (ALE-137). A forma só emite a intenção com o
+   * que já foi digitado; quem abre o editor de bloco é a PÁGINA, porque o
+   * diálogo mora em `gm-tools` e uma feature não importa outra.
+   *
+   * Ausente = a escolha simples/completo nem aparece.
+   */
+  onDetailedAdd?: (seed: { label: string; initiative: number; hp: number }) => void
 }) {
   const myCharacterId = () => [...props.myCharacterIds][0]
   const [addOpen, setAddOpen] = createSignal(false)
@@ -183,7 +191,11 @@ export function InitiativeCard(props: {
         {/* Fica ABERTO enquanto o mestre adiciona vários seguidos: fechar a cada
             envio transformaria três capangas em três cliques a mais. */}
         <Show when={props.isGm && addOpen()}>
-          <AddCombatantForm rt={props.rt} onClose={() => setAddOpen(false)} />
+          <AddCombatantForm
+            rt={props.rt}
+            onClose={() => setAddOpen(false)}
+            onDetailedAdd={props.onDetailedAdd}
+          />
         </Show>
 
         {/* @container: a coluna da iniciativa é 5/12 da tela no shell do mestre
@@ -487,11 +499,20 @@ function InitiativeRow(props: {
 
 /** GM-only "add combatant" row: a name, an initiative in the playable range,
  *  PV opcional e PC/NPC. Resets to a fresh NPC row after each add. */
-function AddCombatantForm(props: { rt: SessionRealtime; onClose: () => void }) {
+function AddCombatantForm(props: {
+  rt: SessionRealtime
+  onClose: () => void
+  onDetailedAdd?: (seed: { label: string; initiative: number; hp: number }) => void
+}) {
   const [label, setLabel] = createSignal('')
   const [initiative, setInitiative] = createSignal(10)
   const [hp, setHp] = createSignal(0)
   const [type, setType] = createSignal<'character' | 'npc'>('npc')
+  // "Simples" é o caminho rápido do meio do combate (capanga e figurante) e
+  // "completo" o do vilão recorrente — os dois caminhos declarados na hora de
+  // criar, como a ALE-137 pediu. Só faz sentido em NPC: personagem já tem ficha.
+  const [detailed, setDetailed] = createSignal(false)
+  const wantsDetail = () => detailed() && type() === 'npc' && props.onDetailedAdd !== undefined
 
   const trimmed = () => label().trim()
   const invalid = () => trimmed().length === 0 || trimmed().length > 60
@@ -503,6 +524,15 @@ function AddCombatantForm(props: { rt: SessionRealtime; onClose: () => void }) {
     // capanga anônimo não precisa de PV, e uma barra 0/0 mentiria dizendo que
     // ele está morto. Preenchido, os botões da linha passam a fazer algo — antes
     // eles existiam e não tinham em que mexer (ALE-122).
+    if (wantsDetail()) {
+      // A linha nasce junto com o bloco, e quem cria as duas é a página: aqui
+      // só sai o que já foi digitado, para o editor abrir preenchido.
+      props.onDetailedAdd?.({ label: trimmed(), initiative: initiative(), hp: hp() })
+      setLabel('')
+      setInitiative(10)
+      setHp(0)
+      return
+    }
     const vitals = hp() > 0 ? { hpCurrent: hp(), hpMax: hp() } : {}
     props.rt.addEntry({ label: trimmed(), initiative: initiative(), type: type(), ...vitals })
     setLabel('')
@@ -581,11 +611,37 @@ function AddCombatantForm(props: { rt: SessionRealtime; onClose: () => void }) {
           NPC
         </Button>
       </div>
+      <Show when={type() === 'npc' && props.onDetailedAdd}>
+        <div class="flex gap-1">
+          <Button
+            type="button"
+            size="sm"
+            variant={detailed() ? 'outline' : 'default'}
+            aria-pressed={!detailed()}
+            title="Nome, iniciativa e PV — o capanga do meio do combate"
+            onClick={() => setDetailed(false)}
+          >
+            Simples
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={detailed() ? 'default' : 'outline'}
+            aria-pressed={detailed()}
+            title="Abre o bloco de criatura: defesa, resistências, perícias, equipamento"
+            onClick={() => setDetailed(true)}
+          >
+            Completo
+          </Button>
+        </div>
+      </Show>
+
       {/* "Adicionar" MANTÉM o formulário aberto de propósito — três capangas
           seguidos não podem custar três cliques (ALE-122). Quem fecha é o
           Cancelar, que também limpa o que foi digitado. */}
       <Button type="submit" disabled={!props.rt.isConnected() || invalid()}>
-        <Plus aria-hidden="true" class="mr-1 size-4" /> Adicionar
+        <Plus aria-hidden="true" class="mr-1 size-4" />
+        {wantsDetail() ? 'Detalhar e adicionar' : 'Adicionar'}
       </Button>
       <Button type="button" variant="ghost" onClick={cancelar}>
         Cancelar

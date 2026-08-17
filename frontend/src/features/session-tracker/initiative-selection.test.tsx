@@ -69,6 +69,7 @@ function renderCardWithRt(
   isGm = true,
   entries: InitiativeEntry[] = [OGRO, HEROI],
   turnControls?: boolean,
+  onDetailedAdd?: (seed: { label: string; initiative: number; hp: number }) => void,
 ) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const rt = new FakeRealtime(entries)
@@ -81,6 +82,7 @@ function renderCardWithRt(
         onSelect={onSelect}
         selectedId={selectedId}
         turnControls={turnControls}
+        onDetailedAdd={onDetailedAdd}
       />
     </QueryClientProvider>
   ))
@@ -362,5 +364,57 @@ describe('sair do formulário de adicionar combatente', () => {
     await abrir(user)
 
     expect(screen.getByRole('button', { name: 'Fechar' })).toHaveAttribute('aria-expanded', 'true')
+  })
+})
+
+/**
+ * Os dois caminhos declarados na hora de criar (ALE-137): "simples" é o capanga
+ * do meio do combate, "completo" é o vilão recorrente que ganha bloco de
+ * criatura — a forma do livro, que já traz perícias, equipamento e PM.
+ *
+ * A forma só EMITE a intenção: quem abre o editor de bloco é a página, porque o
+ * diálogo mora em `gm-tools` e uma feature não importa outra.
+ */
+describe('adicionar NPC simples ou completo', () => {
+  const abrir = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.click(screen.getByRole('button', { name: /Combatente/ }))
+  }
+
+  it('sem quem receba a intenção, a escolha nem aparece', async () => {
+    const { user } = renderCardWithRt()
+    await abrir(user)
+
+    expect(screen.queryByRole('button', { name: 'Completo' })).not.toBeInTheDocument()
+  })
+
+  it('completo emite a intenção e NÃO cria a linha sozinho', async () => {
+    const pedidos: { label: string; initiative: number; hp: number }[] = []
+    const { rt, user } = renderCardWithRt(undefined, null, true, [OGRO, HEROI], undefined, (seed) =>
+      pedidos.push(seed),
+    )
+    await abrir(user)
+
+    await user.type(screen.getByLabelText('Nome'), 'Chefe bandido')
+    await user.click(screen.getByRole('button', { name: 'Completo' }))
+    await user.click(screen.getByRole('button', { name: /Detalhar e adicionar/ }))
+
+    expect(pedidos).toEqual([{ label: 'Chefe bandido', initiative: 10, hp: 0 }])
+    // A linha nasce junto com o BLOCO, e quem cria os dois é a página: criá-la
+    // aqui deixaria um NPC sem bloco se o mestre desistisse do editor.
+    expect(rt.addEntry).not.toHaveBeenCalled()
+  })
+
+  it('simples continua criando a linha direto', async () => {
+    const pedidos: unknown[] = []
+    const { rt, user } = renderCardWithRt(undefined, null, true, [OGRO, HEROI], undefined, (seed) =>
+      pedidos.push(seed),
+    )
+    await abrir(user)
+
+    await user.type(screen.getByLabelText('Nome'), 'Capanga')
+    await user.click(screen.getByRole('button', { name: /^Adicionar$/ }))
+
+    expect(rt.addEntry).toHaveBeenCalled()
+    expect(pedidos).toEqual([])
   })
 })

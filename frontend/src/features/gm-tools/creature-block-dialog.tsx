@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/solid-query'
-import { type JSX, Show, createSignal } from 'solid-js'
+import { type JSX, Show, createSignal, onMount } from 'solid-js'
 import { createStore, unwrap } from 'solid-js/store'
 import type { CampaignCreature, CreatureBlock } from '@/shared/api/creature-types'
 import { blankCreatureBlock } from '@/shared/api/creature-types'
@@ -39,7 +39,14 @@ export function CreatureBlockDialog(props: {
   /** Bloco de partida ao criar — o "editar este ogro" copia o verbete. */
   seed?: { name: string; block: CreatureBlock }
   onSaved?: (creature: CampaignCreature) => void
-  trigger: (open: () => void) => JSX.Element
+  /**
+   * Ausente = o diálogo foi montado JÁ para ser usado e abre sozinho — é o
+   * caminho do "NPC completo", onde a decisão de abrir já foi tomada na forma
+   * de adicionar. Com gatilho, quem abre é o clique.
+   */
+  trigger?: (open: () => void) => JSX.Element
+  /** Fechado sem salvar. Quem montou precisa saber para desmontar. */
+  onDismiss?: () => void
 }) {
   const queryClient = useQueryClient()
   const [open, setOpen] = createSignal(false)
@@ -79,13 +86,23 @@ export function CreatureBlockDialog(props: {
     }
   }
 
+  // Sem gatilho, abrir é a razão de ele existir na árvore.
+  onMount(() => {
+    if (!props.trigger) start()
+  })
+
+  const close = () => {
+    setOpen(false)
+    props.onDismiss?.()
+  }
+
   return (
-    <Dialog open={open()} onOpenChange={(next) => (next ? start() : setOpen(false))}>
+    <Dialog open={open()} onOpenChange={(next) => (next ? start() : close())}>
       {/* Sem `DialogTrigger`: ele envolve o filho num `span role="button"`, e
           o resultado eram DOIS botões com o mesmo nome acessível em volta do
           mesmo clique. O diálogo já é controlado, então quem abre é o `start`
           que a própria função de gatilho recebe. */}
-      {props.trigger(start)}
+      <Show when={props.trigger}>{(trigger) => trigger()(start)}</Show>
       <DialogContent class="max-h-[85vh] w-[calc(100vw-1.5rem)] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle class="font-heading uppercase tracking-wide text-grimorio-gold">
@@ -116,7 +133,7 @@ export function CreatureBlockDialog(props: {
         <Show when={failure()}>{(message) => <DialogInlineError message={message()} />}</Show>
 
         <DialogFooter>
-          <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
+          <Button type="button" variant="ghost" onClick={close}>
             Cancelar
           </Button>
           <Button type="button" disabled={saving() || name().trim() === ''} onClick={save}>
