@@ -38,6 +38,15 @@ type Campaign struct {
 	Updatedat   string         `json:"updatedat"`
 }
 
+type CampaignCreature struct {
+	ID         int64  `json:"id"`
+	Campaignid int64  `json:"campaignid"`
+	Name       string `json:"name"`
+	Block      string `json:"block"`
+	Createdat  string `json:"createdat"`
+	Updatedat  string `json:"updatedat"`
+}
+
 type CampaignMember struct {
 	ID          int64  `json:"id"`
 	Campaignid  int64  `json:"campaignid"`

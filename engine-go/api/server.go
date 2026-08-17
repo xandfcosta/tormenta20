@@ -159,6 +159,14 @@ func (s *Server) Router() http.Handler {
 			r.Patch("/{id}", s.handleUpdateMemberRole)
 			r.Delete("/{id}", s.handleRemoveMember)
 		})
+		// Bloco de criatura do mestre (ALE-137). Só o mestre lê e escreve — o
+		// jogador continua vendo nome e barra de PV pela iniciativa.
+		r.Route("/{campaignId}/creatures", func(r chi.Router) {
+			r.Get("/", s.handleListCreatures)
+			r.Post("/", s.handleCreateCreature)
+			r.Patch("/{id}", s.handleUpdateCreature)
+			r.Delete("/{id}", s.handleDeleteCreature)
+		})
 		r.Route("/{campaignId}/sessions", func(r chi.Router) {
 			r.Get("/", s.handleListSessions)
 			r.Post("/", s.handleCreateSession)

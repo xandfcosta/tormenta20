@@ -146,6 +146,40 @@ func (q *Queries) CreateCampaign(ctx context.Context, arg CreateCampaignParams) 
 	return i, err
 }
 
+const createCampaignCreature = `-- name: CreateCampaignCreature :one
+INSERT INTO campaign_creatures (campaignId, name, block, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?)
+RETURNING id, campaignid, name, block, createdat, updatedat
+`
+
+type CreateCampaignCreatureParams struct {
+	Campaignid int64  `json:"campaignid"`
+	Name       string `json:"name"`
+	Block      string `json:"block"`
+	Createdat  string `json:"createdat"`
+	Updatedat  string `json:"updatedat"`
+}
+
+func (q *Queries) CreateCampaignCreature(ctx context.Context, arg CreateCampaignCreatureParams) (CampaignCreature, error) {
+	row := q.db.QueryRowContext(ctx, createCampaignCreature,
+		arg.Campaignid,
+		arg.Name,
+		arg.Block,
+		arg.Createdat,
+		arg.Updatedat,
+	)
+	var i CampaignCreature
+	err := row.Scan(
+		&i.ID,
+		&i.Campaignid,
+		&i.Name,
+		&i.Block,
+		&i.Createdat,
+		&i.Updatedat,
+	)
+	return i, err
+}
+
 const createCharacter = `-- name: CreateCharacter :one
 INSERT INTO characters (
   ownerId, name, origin, god, godPower, tibar, level, hpMax, hpCurrent, mpMax, mpCurrent,
@@ -535,6 +569,15 @@ func (q *Queries) DeleteCampaign(ctx context.Context, id int64) error {
 	return err
 }
 
+const deleteCampaignCreature = `-- name: DeleteCampaignCreature :exec
+DELETE FROM campaign_creatures WHERE id = ?
+`
+
+func (q *Queries) DeleteCampaignCreature(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteCampaignCreature, id)
+	return err
+}
+
 const deleteEffectByID = `-- name: DeleteEffectByID :exec
 DELETE FROM active_effects WHERE id = ?
 `
@@ -777,6 +820,24 @@ func (q *Queries) GetCampaignByToken(ctx context.Context, invitetoken sql.NullSt
 	row := q.db.QueryRowContext(ctx, getCampaignByToken, invitetoken)
 	var i GetCampaignByTokenRow
 	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const getCampaignCreature = `-- name: GetCampaignCreature :one
+SELECT id, campaignid, name, block, createdat, updatedat FROM campaign_creatures WHERE id = ? LIMIT 1
+`
+
+func (q *Queries) GetCampaignCreature(ctx context.Context, id int64) (CampaignCreature, error) {
+	row := q.db.QueryRowContext(ctx, getCampaignCreature, id)
+	var i CampaignCreature
+	err := row.Scan(
+		&i.ID,
+		&i.Campaignid,
+		&i.Name,
+		&i.Block,
+		&i.Createdat,
+		&i.Updatedat,
+	)
 	return i, err
 }
 
@@ -1170,6 +1231,42 @@ func (q *Queries) ListAllCampaigns(ctx context.Context) ([]Campaign, error) {
 			&i.Name,
 			&i.Description,
 			&i.Invitetoken,
+			&i.Createdat,
+			&i.Updatedat,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listCampaignCreatures = `-- name: ListCampaignCreatures :many
+SELECT id, campaignid, name, block, createdat, updatedat FROM campaign_creatures WHERE campaignId = ? ORDER BY name
+`
+
+// Creature blocks a GM authors for a campaign (ALE-137). Listed by name because
+// that is how the GM looks for one; the rest of the block is JSON.
+func (q *Queries) ListCampaignCreatures(ctx context.Context, campaignid int64) ([]CampaignCreature, error) {
+	rows, err := q.db.QueryContext(ctx, listCampaignCreatures, campaignid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CampaignCreature{}
+	for rows.Next() {
+		var i CampaignCreature
+		if err := rows.Scan(
+			&i.ID,
+			&i.Campaignid,
+			&i.Name,
+			&i.Block,
 			&i.Createdat,
 			&i.Updatedat,
 		); err != nil {
@@ -2264,6 +2361,38 @@ func (q *Queries) TransferCampaigns(ctx context.Context, arg TransferCampaignsPa
 		return 0, err
 	}
 	return result.RowsAffected()
+}
+
+const updateCampaignCreature = `-- name: UpdateCampaignCreature :one
+UPDATE campaign_creatures SET name = ?, block = ?, updatedAt = ?
+WHERE id = ?
+RETURNING id, campaignid, name, block, createdat, updatedat
+`
+
+type UpdateCampaignCreatureParams struct {
+	Name      string `json:"name"`
+	Block     string `json:"block"`
+	Updatedat string `json:"updatedat"`
+	ID        int64  `json:"id"`
+}
+
+func (q *Queries) UpdateCampaignCreature(ctx context.Context, arg UpdateCampaignCreatureParams) (CampaignCreature, error) {
+	row := q.db.QueryRowContext(ctx, updateCampaignCreature,
+		arg.Name,
+		arg.Block,
+		arg.Updatedat,
+		arg.ID,
+	)
+	var i CampaignCreature
+	err := row.Scan(
+		&i.ID,
+		&i.Campaignid,
+		&i.Name,
+		&i.Block,
+		&i.Createdat,
+		&i.Updatedat,
+	)
+	return i, err
 }
 
 const updateConditions = `-- name: UpdateConditions :exec

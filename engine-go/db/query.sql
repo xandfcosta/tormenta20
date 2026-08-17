@@ -424,3 +424,24 @@ UPDATE password_resets SET usedAt = ? WHERE id = ? AND usedAt IS NULL;
 
 -- name: UpdateUserPassword :exec
 UPDATE users SET passwordHash = ?, updatedAt = ? WHERE id = ?;
+
+-- Creature blocks a GM authors for a campaign (ALE-137). Listed by name because
+-- that is how the GM looks for one; the rest of the block is JSON.
+-- name: ListCampaignCreatures :many
+SELECT * FROM campaign_creatures WHERE campaignId = ? ORDER BY name;
+
+-- name: GetCampaignCreature :one
+SELECT * FROM campaign_creatures WHERE id = ? LIMIT 1;
+
+-- name: CreateCampaignCreature :one
+INSERT INTO campaign_creatures (campaignId, name, block, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?)
+RETURNING *;
+
+-- name: UpdateCampaignCreature :one
+UPDATE campaign_creatures SET name = ?, block = ?, updatedAt = ?
+WHERE id = ?
+RETURNING *;
+
+-- name: DeleteCampaignCreature :exec
+DELETE FROM campaign_creatures WHERE id = ?;
