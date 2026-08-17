@@ -214,6 +214,13 @@ func materializeNpcEntry(input map[string]any) (InitiativeEntry, error) {
 	if monsterID := strings.TrimSpace(stringField(input, "monsterId")); monsterID != "" {
 		entry.MonsterID = &monsterID
 	}
+	// O bloco de criatura do mestre (ALE-137). Mesma escolha do `monsterId`: o
+	// servidor não confere se a criatura existe, porque um id órfão vira "sem
+	// bloco" na tela e não um erro no meio do combate. Quem confere o dono é a
+	// rota HTTP que serve o bloco, e ela só responde ao mestre.
+	if creatureID, ok := intField(input, "creatureId"); ok && creatureID > 0 {
+		entry.CreatureID = &creatureID
+	}
 	return entry, nil
 }
 
@@ -268,6 +275,11 @@ func parseEntryPatch(v any) entryPatch {
 	}{
 		{"characterId", &p.CharacterID}, {"hpCurrent", &p.HpCurrent},
 		{"hpMax", &p.HpMax}, {"mpCurrent", &p.MpCurrent}, {"mpMax", &p.MpMax},
+		// Sem esta linha o cliente manda `creatureId` e o servidor DESCARTA em
+		// silêncio, com tudo compilando: campo novo na struct não entra sozinho
+		// numa lista escrita à mão. Foi o segundo caso do mesmo mecanismo no
+		// mesmo dia — o outro era o `cloneState` zerando o contador de turnos.
+		{"creatureId", &p.CreatureID},
 	} {
 		if i, ok := intField(m, f.key); ok {
 			v := i

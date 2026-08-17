@@ -25,6 +25,11 @@ type InitiativeEntry struct {
 	// do monstro sem procurar no catálogo. Ausente em NPC digitado à mão — e é
 	// por isso que é ponteiro: "sem bloco" é diferente de "bloco vazio".
 	MonsterID *string `json:"monsterId,omitempty"`
+	// CreatureID liga a linha ao bloco de criatura que o MESTRE escreveu
+	// (ALE-137). Diferente do `MonsterID`, que aponta para o verbete imutável do
+	// livro: este é editável e pertence à campanha, e é o que responde "o ogro
+	// que eu modifiquei". Uma linha tem um ou outro, nunca os dois.
+	CreatureID *int64 `json:"creatureId,omitempty"`
 	// HpHidden esconde os PV desta linha dos JOGADORES: saber que o ogro está com
 	// 12 de 130 muda a decisão de quem está na mesa, e essa é a informação do
 	// mestre. Ponteiro porque a maioria das linhas não decide nada a respeito.
@@ -68,6 +73,10 @@ type entryPatch struct {
 	MpCurrent   *int64  `json:"mpCurrent"`
 	MpMax       *int64  `json:"mpMax"`
 	HpHidden    *bool   `json:"hpHidden"`
+	// CreatureID liga a linha ao bloco de criatura do mestre depois de a linha
+	// já existir — é o "detalhar este NPC" (ALE-137), que cria o bloco e o
+	// prende ao combatente que já estava na mesa.
+	CreatureID *int64 `json:"creatureId"`
 }
 
 // sortInitiative keeps the list DESC by initiative, ties broken by label using pt-BR
@@ -181,6 +190,9 @@ func updateEntry(st *SessionRuntimeState, entryID string, patch entryPatch) erro
 	}
 	if patch.HpHidden != nil {
 		e.HpHidden = patch.HpHidden
+	}
+	if patch.CreatureID != nil {
+		e.CreatureID = patch.CreatureID
 	}
 	if patch.Initiative != nil {
 		e.Initiative = *patch.Initiative

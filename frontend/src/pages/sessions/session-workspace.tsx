@@ -86,8 +86,24 @@ export function SessionWorkspace(props: SessionWorkspaceProps) {
           {(entry) => (
             <CombatantPanel
               entry={entry()}
+              campaignId={props.campaignId}
               onClose={props.onCloseCombatant}
               onApplyEffect={(spellId) => props.rt.applyEffect(entry().id, spellId)}
+              onLinkCreature={(creature) => {
+                const linha = entry()
+                // A linha herda a VIDA do bloco quando não tem nenhuma: sem
+                // isto a tela se contradiz — o painel dizia "não tem vida
+                // registrada" com o bloco declarando 30 PV logo abaixo, e a
+                // barra do rastreador não teria o que rastrear (ALE-137).
+                // Quem já tem vida não é tocado: ela é estado de combate, e o
+                // bloco descreve a criatura, não o dano de agora.
+                props.rt.updateEntry(linha.id, {
+                  creatureId: creature.id,
+                  ...(linha.hpMax === undefined
+                    ? { hpCurrent: creature.block.hp, hpMax: creature.block.hp }
+                    : {}),
+                })
+              }}
             />
           )}
         </Show>

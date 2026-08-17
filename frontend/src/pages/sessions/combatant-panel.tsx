@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/solid-query'
-import { X } from 'lucide-solid'
+import { Pencil, X } from 'lucide-solid'
 import { type JSX, Show, createSignal } from 'solid-js'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { CombatantBand } from '@/features/character-sheet/combatant-band'
@@ -7,6 +7,12 @@ import { ApplyEffectSelect } from '@/features/session-tracker/apply-effect-selec
 import { CharacterSheet } from '@/features/character-sheet/character-sheet'
 import { bestiaryCatalogQueryOptions } from '@/entities/catalog/queries'
 import { MonsterStatBlock } from '@/features/gm-tools/monster-stat-block'
+import { CreatureBlockDialog } from '@/features/gm-tools/creature-block-dialog'
+import { CreatureStatBlock } from '@/features/gm-tools/creature-stat-block'
+import { creatureFromMonster } from '@/features/gm-tools/creature-from-monster'
+import { campaignCreaturesQueryOptions } from '@/entities/creature/queries'
+import { blankCreatureBlock } from '@/shared/api/creature-types'
+import type { CampaignCreature } from '@/shared/api/creature-types'
 import { settledQuery } from '@/shared/lib/settled-query'
 import type { InitiativeEntry } from '@/shared/realtime/realtime'
 import { Button } from '@/shared/ui/button'
@@ -30,9 +36,15 @@ import { VitalBar } from '@/shared/ui/vital-bar'
 export function CombatantPanel(props: {
   entry: InitiativeEntry
   onClose: () => void
+  /** A campanha dona dos blocos de criatura do mestre (ALE-137). */
+  campaignId: number
   /** Aplicar um buff neste combatente. Saiu da linha da iniciativa, onde um
    *  select de 9px abria uma lista de 31 magias cobrindo a tela (ALE-122). */
   onApplyEffect?: (spellId: string) => void
+  /** Liga esta linha ao bloco recém-criado. Recebe a criatura inteira porque
+   *  quem liga também decide o que herdar dela (a vida, quando a linha não
+   *  tem). */
+  onLinkCreature?: (creature: CampaignCreature) => void
 }) {
   const actions = (
     <>
@@ -66,7 +78,14 @@ export function CombatantPanel(props: {
           faixa, mantém o seu. */}
       <Show
         when={props.entry.characterId}
-        fallback={<NpcHeader entry={props.entry} actions={actions} />}
+        fallback={
+          <NpcHeader
+            entry={props.entry}
+            actions={actions}
+            campaignId={props.campaignId}
+            onLinkCreature={props.onLinkCreature}
+          />
+        }
         keyed
       >
         {(characterId) => <CharacterCard characterId={characterId} actions={actions} />}
@@ -76,7 +95,12 @@ export function CombatantPanel(props: {
 }
 
 /** O NPC não tem ficha atrás dele, então o nome dele mora num cabeçalho. */
-function NpcHeader(props: { entry: InitiativeEntry; actions: JSX.Element }) {
+function NpcHeader(props: {
+  entry: InitiativeEntry
+  actions: JSX.Element
+  campaignId: number
+  onLinkCreature?: (creature: CampaignCreature) => void
+}) {
   return (
     <>
       <header class="flex shrink-0 items-center justify-between gap-3 border-b border-grimorio-iron p-3 sm:px-4">
@@ -85,7 +109,11 @@ function NpcHeader(props: { entry: InitiativeEntry; actions: JSX.Element }) {
         </h2>
         <div class="flex shrink-0 items-center gap-2">{props.actions}</div>
       </header>
-      <NpcCard entry={props.entry} />
+      <NpcCard
+        entry={props.entry}
+        campaignId={props.campaignId}
+        onLinkCreature={props.onLinkCreature}
+      />
     </>
   )
 }
@@ -144,20 +172,36 @@ function CharacterCard(props: { characterId: number; actions: JSX.Element }) {
 }
 
 /**
- * Um NPC não tem ficha atrás dele — o rastreador É o registro. A vida vem da
- * entrada; o resto (DEF, ataques, habilidades) vem do verbete do bestiário de
- * onde ele foi arrastado, pelo `monsterId` que a linha passou a guardar.
+ * Um NPC não tem ficha de personagem atrás dele: o livro modela NPC e monstro
+ * na MESMA forma — "BANDIDO · ND 1/4 · Humanoide (humano) Médio" (p289) tem o
+ * bloco do Ogro. Então aqui há três casos, do mais completo ao mais pobre:
  *
- * `settledQuery` e não `bestiary.data`: a leitura pendente SUSPENDE e o
- * `Suspense` do route match desanexa a cena inteira — é a armadilha que já
- * apareceu quatro vezes nesta issue (ALE-122).
+ * 1. **Bloco do MESTRE** (`creatureId`): editável, é a resposta da ALE-137 ao
+ *    "o mestre não pode mudar nada do NPC".
+ * 2. **Verbete do livro** (`monsterId`): consulta, imutável — e um botão para
+ *    copiá-lo num bloco próprio quando o mestre quiser modificá-lo.
+ * 3. **Digitado à mão**: só a barra de PV, com o convite a detalhar.
+ *
+ * `settledQuery` e não `.data`: a leitura pendente SUSPENDE e o `Suspense` do
+ * route match desanexa a cena inteira — a armadilha que já apareceu quatro
+ * vezes nesta issue (ALE-122).
  */
-function NpcCard(props: { entry: InitiativeEntry }) {
+function NpcCard(props: {
+  entry: InitiativeEntry
+  campaignId: number
+  /** Liga a linha ao bloco recém-criado, para o painel abrir nele da próxima. */
+  onLinkCreature?: (creature: CampaignCreature) => void
+}) {
   const bestiary = useQuery(() => bestiaryCatalogQueryOptions)
+  const creatures = useQuery(() => campaignCreaturesQueryOptions(props.campaignId))
   const monster = () =>
     props.entry.monsterId === undefined
       ? undefined
       : settledQuery(bestiary)?.find((creature) => creature.id === props.entry.monsterId)
+  const creature = () =>
+    props.entry.creatureId === undefined
+      ? undefined
+      : settledQuery(creatures)?.find((c) => c.id === props.entry.creatureId)
 
   return (
     <div class="space-y-3 p-3 sm:p-4">
@@ -177,9 +221,60 @@ function NpcCard(props: { entry: InitiativeEntry }) {
         />
       </Show>
 
-      {/* Sem bloco quando a linha foi digitada à mão (não veio do bestiário) —
-          e o silêncio é a resposta certa: inventar zeros diria o que não é. */}
-      <Show when={monster()}>{(creature) => <MonsterStatBlock monster={creature()} />}</Show>
+      {/* O bloco do mestre ganha do verbete: se ele modificou o ogro, é o ogro
+          dele que vale na mesa. */}
+      <Show
+        when={creature()}
+        fallback={
+          <Show when={monster()}>
+            {(verbete) => (
+              <div class="space-y-3">
+                <MonsterStatBlock monster={verbete()} />
+                <CreatureBlockDialog
+                  campaignId={props.campaignId}
+                  seed={{ name: verbete().name, block: creatureFromMonster(verbete()) }}
+                  onSaved={(saved) => props.onLinkCreature?.(saved)}
+                  trigger={(open) => (
+                    <Button type="button" size="sm" variant="outline" onClick={open}>
+                      <Pencil aria-hidden="true" class="size-3.5" /> Detalhar este {verbete().name}
+                    </Button>
+                  )}
+                />
+              </div>
+            )}
+          </Show>
+        }
+      >
+        {(bloco) => (
+          <div class="space-y-3">
+            <CreatureStatBlock block={bloco().block} />
+            <CreatureBlockDialog
+              campaignId={props.campaignId}
+              creature={bloco()}
+              trigger={(open) => (
+                <Button type="button" size="sm" variant="outline" onClick={open}>
+                  <Pencil aria-hidden="true" class="size-3.5" /> Editar bloco
+                </Button>
+              )}
+            />
+          </div>
+        )}
+      </Show>
+
+      {/* Digitado à mão e sem bloco: o convite a detalhar é o que faltava — o
+          mestre guardava PM, perícias e itens na cabeça ou num papel. */}
+      <Show when={!creature() && !monster()}>
+        <CreatureBlockDialog
+          campaignId={props.campaignId}
+          seed={{ name: props.entry.label, block: blankCreatureBlock() }}
+          onSaved={(saved) => props.onLinkCreature?.(saved)}
+          trigger={(open) => (
+            <Button type="button" size="sm" variant="outline" onClick={open}>
+              <Pencil aria-hidden="true" class="size-3.5" /> Detalhar este NPC
+            </Button>
+          )}
+        />
+      </Show>
     </div>
   )
 }

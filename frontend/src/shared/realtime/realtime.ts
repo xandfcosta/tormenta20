@@ -14,6 +14,12 @@ export type InitiativeEntry = {
   characterId?: number
   /** Verbete do bestiário de onde a linha veio — ausente em NPC digitado à mão. */
   monsterId?: string
+  /**
+   * Bloco de criatura que o MESTRE escreveu (ALE-137). Diferente do
+   * `monsterId`, que aponta para o verbete imutável do livro: este é editável e
+   * pertence à campanha. Uma linha tem um ou outro, nunca os dois.
+   */
+  creatureId?: number
   /** O mestre escondeu os PV desta linha: o jogador recebe a marca, não os números. */
   hpHidden?: boolean
   hpCurrent?: number

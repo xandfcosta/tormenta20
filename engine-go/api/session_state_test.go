@@ -526,3 +526,26 @@ func TestCloneStatePreservaTodosOsCampos(t *testing.T) {
 		t.Fatal("a cópia compartilhou a fatia com o original")
 	}
 }
+
+// "Detalhar este NPC" (ALE-137): o bloco nasce depois de a linha já existir, e
+// a ligação é uma correção da linha — sem isto o mestre teria de remover o
+// combatente e adicioná-lo de novo, perdendo PV e condições no caminho, que é
+// exatamente o atalho que a ALE-122 aboliu.
+func TestLigarBlocoDeCriaturaNaLinhaQueJaExiste(t *testing.T) {
+	st := emptyRuntimeState()
+	id := counter()
+	_ = addEntry(st, npc("Capanga", 12), id)
+
+	criatura := int64(7)
+	if err := updateEntry(st, "e1", entryPatch{CreatureID: &criatura}); err != nil {
+		t.Fatalf("ligar: %v", err)
+	}
+	if st.Initiative[0].CreatureID == nil || *st.Initiative[0].CreatureID != 7 {
+		t.Fatalf("criatura não ficou ligada: %+v", st.Initiative[0].CreatureID)
+	}
+
+	// E a ligação não mexe no resto da linha: PV e nome continuam onde estavam.
+	if st.Initiative[0].Label != "Capanga" {
+		t.Errorf("a ligação mexeu no nome: %q", st.Initiative[0].Label)
+	}
+}

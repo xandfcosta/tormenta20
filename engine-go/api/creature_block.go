@@ -59,6 +59,9 @@ type CreatureAttack struct {
 	// Ranged separa "Corpo a Corpo" de "À Distância", que no livro são duas
 	// linhas diferentes do mesmo bloco.
 	Ranged bool `json:"ranged,omitempty"`
+	// Special é a nota entre parênteses da linha de ataque ("mais agarrar"),
+	// que o livro escreve em prosa.
+	Special string `json:"special,omitempty"`
 }
 
 // CreatureSkill é uma perícia da linha "Perícias Furtividade +5" (p289).

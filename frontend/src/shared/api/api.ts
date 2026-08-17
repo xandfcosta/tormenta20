@@ -25,6 +25,7 @@ import type {
  * own mutations when it lands, so the client never gets ahead of its consumers.
  */
 import type { ActivationSpec, CatalogSpell, ClassPower, Condition, ConditionId, Deus, GeneralPower, GrantedPower, GrantedPowerOption, Monster, Origem, OriginDefinition, Raca, TormentaPower, TormentaPowerId } from '@/shared/api/catalog-types'
+import type { CampaignCreature, CreatureInput } from '@/shared/api/creature-types'
 import type { CatalogItem } from '@/shared/api/item-types'
 import type {
   AddMemberInput,
@@ -292,6 +293,22 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
       /** Mints a fresh invite token — any link shared before this 404s. */
       rotateInvite: (id: number) =>
         request<CampaignInviteToken>(`/campaigns/${id}/invite`, { method: 'POST' }),
+    },
+    /**
+     * Blocos de criatura que o MESTRE escreveu para a campanha (ALE-137). O
+     * servidor responde 403 ao jogador até no GET: o bloco é informação do
+     * mestre, e o jogador vê a criatura pela iniciativa — nome e barra de PV,
+     * com a regra de PV oculto.
+     */
+    creatures: {
+      list: (campaignId: number) =>
+        request<CampaignCreature[]>(`/campaigns/${campaignId}/creatures`),
+      create: (campaignId: number, input: CreatureInput) =>
+        request<CampaignCreature>(`/campaigns/${campaignId}/creatures`, json(input)),
+      update: (campaignId: number, id: number, input: CreatureInput) =>
+        request<CampaignCreature>(`/campaigns/${campaignId}/creatures/${id}`, patch(input)),
+      delete: (campaignId: number, id: number) =>
+        request<void>(`/campaigns/${campaignId}/creatures/${id}`, del),
     },
     invites: {
       /** Public: resolves a shared token to the campaign it invites into. */
