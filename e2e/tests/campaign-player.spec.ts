@@ -1,4 +1,5 @@
 import { type Page, expect, test } from '@playwright/test'
+import { VIEWPORTS } from './support/viewports'
 
 /**
  * The campaign scene seen by a PLAYER, not the GM (ALE-24). Every other spec
@@ -124,4 +125,45 @@ test.describe('Campanha vista pelo jogador', () => {
     release()
     await expect(page.getByRole('tab', { name: 'Mochila' })).toBeVisible()
   })
+})
+
+/**
+ * O HUD do jogador DENTRO da sessão (ALE-127).
+ *
+ * O dono mandou um print em que as caixas de estatística não fechavam a mesma
+ * linha de base e "ATQ DIST" quebrava em duas linhas enquanto as vizinhas não —
+ * o HUD estava espremido no rail de 22rem que a sessão dava a ele. A ALE-129
+ * tirou o rail e deu a tela inteira à ficha, e com isso o desalinhamento sumiu.
+ *
+ * Este teste existe para ele não VOLTAR, e é da classe de asserção que faltava
+ * na suíte: RELAÇÃO entre caixas irmãs. "A página não rola" nunca veria isto.
+ */
+test('as caixas do HUD fecham a mesma linha em todo formato', async ({ page }) => {
+  await page.goto('/campaigns/1/sessions/4')
+  await expect(page.getByRole('button', { name: /Minha ficha/ })).toBeVisible()
+
+  for (const viewport of VIEWPORTS) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height })
+    const medida = await page.evaluate(() => {
+      // As caixas trazem rótulo e número colados: "Defesa16", "Atq Dist+11".
+      const padrao = /^(Defesa|Atq CaC|Atq Dist|Fort|Refl|Vont)[+\-−]?\d/
+      const caixas = [...document.querySelectorAll('button')]
+        .filter((b) => padrao.test((b.textContent ?? '').trim()))
+        .map((b) => ({
+          alto: Math.round(b.getBoundingClientRect().height),
+          rotulo: Math.round(b.querySelector('span')?.getBoundingClientRect().height ?? 0),
+        }))
+        .filter((c) => c.alto > 0) // no telefone o HUD largo dá lugar à seção Vitais
+      if (caixas.length === 0) return null
+      const alturas = caixas.map((c) => c.alto)
+      const rotulos = caixas.map((c) => c.rotulo)
+      return {
+        desvioAltura: Math.max(...alturas) - Math.min(...alturas),
+        rotuloQuebrou: Math.max(...rotulos) > Math.min(...rotulos),
+      }
+    })
+    if (medida === null) continue
+    expect(medida.desvioAltura, `${viewport.name}: as caixas do HUD têm alturas diferentes`).toBe(0)
+    expect(medida.rotuloQuebrou, `${viewport.name}: um rótulo quebrou e os outros não`).toBe(false)
+  }
 })
