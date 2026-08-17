@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { type Page, expect, test } from '@playwright/test'
 import { VIEWPORTS, expectPageDoesNotScroll } from './support/viewports'
 
 const CAMPAIGN = 'Snapshot Test ALE-33' // the seed chronicle with a live session
@@ -167,10 +167,27 @@ test.describe('Sessão ao vivo', () => {
     await page.goto('/campaigns/1/sessions/4')
     await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
 
-    // O PC da seed: a ficha dele é o conteúdo mais alto que entra na região. O
-    // nome aparece em vários lugares (a linha, os botões de PV, o grupo), então
-    // o alvo é o botão de SELEÇÃO — o que tem `aria-pressed`.
-    await page.locator('button[aria-pressed]', { hasText: 'Arcanista Erudito Nv9' }).first().click()
+    // O teste traz o PRÓPRIO grupo: a iniciativa da seed do CI está VAZIA, e
+    // depender de um PC que só existe no banco de dev já quebrou o CI três vezes
+    // nesta issue. "Adicionar grupo" é idempotente e traz os PCs da campanha.
+    const antes = await labelsNaIniciativa(page)
+    await page.getByRole('button', { name: 'Adicionar grupo' }).click()
+    await expect(page.locator('[role="progressbar"][aria-label^="PM "]').first()).toBeVisible()
+
+    // A barra de PM é o sinal de que a linha tem PERSONAGEM atrás dela — o
+    // crachá "PC" mora fora do botão, e casar por texto pegaria "NPC" junto.
+    const nomeDoPc = await page.evaluate(() => {
+      const barra = document.querySelector('[role="progressbar"][aria-label^="PM "]')
+      // Sobe até a LINHA — `closest('[class*=rounded]')` pararia no invólucro da
+      // própria barra, que também é arredondado.
+      let no: HTMLElement | null = barra as HTMLElement | null
+      while (no && !no.querySelector('button[aria-pressed]')) no = no.parentElement
+      return no?.querySelector('button[aria-pressed]')?.textContent?.trim() ?? ''
+    })
+    expect(nomeDoPc, 'não achei uma linha de personagem na iniciativa').not.toBe('')
+
+    // Só um PC tem ficha atrás dele — é o conteúdo mais alto que entra na região.
+    await page.locator('button[aria-pressed]', { hasText: nomeDoPc }).first().click()
     const abaDaFicha = page.getByRole('tab', { name: 'Perícias' })
     await expect(abaDaFicha).toBeVisible()
 
@@ -181,7 +198,26 @@ test.describe('Sessão ao vivo', () => {
       if (await mesa.isVisible()) await mesa.click()
       await expect(abaDaFicha, `${viewport.name}: a barra de abas saiu da tela`).toBeInViewport()
     }
+
+    // Sai como entrou: tira da iniciativa só quem ESTE teste pôs.
+    await page.setViewportSize({ width: 1920, height: 1080 })
+    for (const label of await novosDesde(page, antes)) {
+      await page.getByRole('button', { name: `Remover ${label}` }).click()
+    }
   })
+
+  /** Os rótulos que estão na iniciativa agora. */
+  async function labelsNaIniciativa(page: Page): Promise<string[]> {
+    return page.$$eval('button[aria-label^="Remover "]', (bs) =>
+      bs.map((b) => (b.getAttribute('aria-label') ?? '').replace('Remover ', '')),
+    )
+  }
+
+  /** Quem entrou na lista depois do instantâneo — o que este teste tem de limpar. */
+  async function novosDesde(page: Page, antes: string[]): Promise<string[]> {
+    const agora = await labelsNaIniciativa(page)
+    return agora.filter((label) => !antes.includes(label))
+  }
 
   /**
    * Só a LISTA rola; o cabeçalho e as ações ficam ancorados (ALE-131).
