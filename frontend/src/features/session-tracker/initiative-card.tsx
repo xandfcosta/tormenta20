@@ -238,7 +238,13 @@ function InitiativeRow(props: {
         // a primeira linha e as barras passam por baixo; largo, os três viram
         // uma linha. Empilhar tudo custava uma linha por combatente.
         'flex flex-wrap items-center gap-2 rounded-sm border p-2.5 text-sm @lg:flex-nowrap @lg:gap-3',
-        props.selected && 'ring-1 ring-[color:var(--primary)]',
+        // `ring-inset`: o anel do Tailwind é `box-shadow`, desenhado FORA da
+        // caixa e sem ocupar layout, e a lista rola dentro de um contêiner que
+        // recorta o que passa das bordas dele. A linha selecionada encosta no
+        // topo desse contêiner (medido: folga ZERO, e ele não tem respiro em
+        // cima), então o lado de cima do anel era cortado e sobrava um traço
+        // atravessado (ALE-150). Por dentro, ele não depende do vizinho.
+        props.selected && 'inset-ring-1 inset-ring-[color:var(--primary)]',
         props.onTurn
           ? 'border-[color:var(--primary)]/60 bg-[color-mix(in_oklch,var(--primary)_6%,transparent)]'
           : 'border-border/60',

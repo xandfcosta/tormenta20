@@ -78,6 +78,11 @@ export function CatalogBrowser(props: CatalogBrowserProps) {
       <Show
         when={searching()}
         fallback={
+          // `flex flex-col` em cada TabsContent, e não só `min-h-0 flex-1`: o
+          // painel de aba é um BLOCO, então o `flex-1` do filho não valia nada
+          // e nada limitava a altura dele — a lista crescia até a altura do
+          // conteúdo e vazava 1854-2566px para fora do cartão, nos seis
+          // formatos, sem a página rolar (ALE-149).
           <Tabs defaultValue="conditions" class="flex min-h-0 flex-1 flex-col gap-2">
             <TabsList class="max-w-full self-start overflow-x-auto">
               <TabsTrigger value="conditions">Condições</TabsTrigger>
@@ -86,7 +91,14 @@ export function CatalogBrowser(props: CatalogBrowserProps) {
               <TabsTrigger value="items">Itens</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="conditions" class="min-h-0 flex-1">
+            {/* `flex flex-col` em cada painel, e não só `min-h-0 flex-1`: o
+                painel de aba é um BLOCO, então o `flex-1` do filho não valia
+                nada e nada limitava a altura dele — a lista crescia até a
+                altura do conteúdo e vazava para FORA do cartão, medido em
+                1854-2566px nos seis formatos, e sem a página rolar, que é
+                por que a asserção "a cena não rola" ficava verde por cima
+                (ALE-149). */}
+            <TabsContent value="conditions" class="flex min-h-0 flex-1 flex-col">
               <CatalogTab
                 entries={conditions()}
                 estimateSize={88}
@@ -95,7 +107,7 @@ export function CatalogBrowser(props: CatalogBrowserProps) {
                 renderRow={(condition) => <ConditionRow condition={condition} />}
               />
             </TabsContent>
-            <TabsContent value="spells" class="min-h-0 flex-1">
+            <TabsContent value="spells" class="flex min-h-0 flex-1 flex-col">
               <CatalogTab
                 entries={spells()}
                 estimateSize={140}
@@ -104,7 +116,7 @@ export function CatalogBrowser(props: CatalogBrowserProps) {
                 renderRow={(spell) => <SpellCatalogRow spell={spell} />}
               />
             </TabsContent>
-            <TabsContent value="powers" class="min-h-0 flex-1">
+            <TabsContent value="powers" class="flex min-h-0 flex-1 flex-col">
               <CatalogTab
                 entries={powers()}
                 estimateSize={100}
@@ -113,7 +125,7 @@ export function CatalogBrowser(props: CatalogBrowserProps) {
                 renderRow={(power) => <PowerCatalogRow power={power} />}
               />
             </TabsContent>
-            <TabsContent value="items" class="min-h-0 flex-1">
+            <TabsContent value="items" class="flex min-h-0 flex-1 flex-col">
               <CatalogTab
                 entries={items()}
                 estimateSize={84}

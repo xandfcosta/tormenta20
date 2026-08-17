@@ -22,7 +22,13 @@ export function BagEquippedStrip(props: BagEquippedStripProps) {
   const vestedSlots = () => [0, 1, 2, 3].map((i) => props.partition.vested[i])
 
   return (
-    <div class="grid gap-3 lg:grid-cols-[1fr_2fr]">
+    // @container e não `lg:`: esta tira vive tanto na ficha larga do jogador
+    // quanto numa COLUNA de 518px (o painel do combatente do mestre). Por
+    // viewport, numa janela de 1920 ela pegava o layout lado a lado dentro dos
+    // 518px e os seis cartões ficavam com 72px cada — nome truncado em "A…" e o
+    // crachá de bônus saindo por cima do cartão vizinho (ALE-148). Mesma
+    // armadilha da ALE-122 e da lista de perícias na ALE-145.
+    <div class="@container grid gap-3 @[44rem]:grid-cols-[1fr_2fr]">
       <PoolBox title="Mãos" count={props.partition.handsUsed} max={2}>
         <Show
           when={props.partition.twoHand}
@@ -79,7 +85,9 @@ function PoolBox(
   props: ParentProps<{ title: string; count: number; max: number; columns?: 2 | 4 }>,
 ) {
   return (
-    <div class="space-y-1.5">
+    // Contêiner PRÓPRIO: quantas colunas cabem depende da largura DESTE box,
+    // que é 1/3 ou 2/3 da tira quando ela está lado a lado.
+    <div class="@container space-y-1.5">
       <div class="flex items-baseline justify-between">
         <h3 class="font-heading text-[10px] font-bold uppercase tracking-widest text-grimorio-gold">
           {props.title}
@@ -93,7 +101,7 @@ function PoolBox(
           {props.count}/{props.max}
         </span>
       </div>
-      <div class={cn('grid grid-cols-2 gap-2', props.columns === 4 && 'sm:grid-cols-4')}>
+      <div class={cn('grid grid-cols-2 gap-2', props.columns === 4 && '@[28rem]:grid-cols-4')}>
         {props.children}
       </div>
     </div>
@@ -152,7 +160,14 @@ function EquippedChips(props: { item: CharacterItem }) {
       <span class="mt-1 flex flex-wrap gap-1">
         <For each={chips()}>
           {(chip) => (
-            <span class="rounded-full border border-border bg-muted px-1.5 py-0.5 text-[10px] text-foreground">
+            // `max-w-full truncate`: um chip é uma caixa indivisível, então
+            // `flex-wrap` não o quebra — "Perícia Intimidação +1" simplesmente
+            // saía do cartão e era desenhado por cima do vizinho (ALE-148). O
+            // `title` guarda o texto inteiro para quem passar o mouse.
+            <span
+              title={chip}
+              class="max-w-full truncate rounded-full border border-border bg-muted px-1.5 py-0.5 text-[10px] text-foreground"
+            >
               {chip}
             </span>
           )}

@@ -297,6 +297,92 @@ test.describe('Sessão ao vivo', () => {
     })
   }
 
+  /**
+   * Nenhum filho pode ser pintado para FORA do pai dentro da ficha do
+   * combatente.
+   *
+   * Três defeitos do mesmo mecanismo apareceram no mesmo dia, todos reportados
+   * pelo dono com print: os cartões de equipados da Mochila com 72px e o crachá
+   * de bônus por cima do vizinho (ALE-148), o nome da perícia espremido a zero
+   * (ALE-145) e a lista do Catálogos passando do cartão (ALE-149). A causa é
+   * sempre a mesma: um bloco decide layout por breakpoint de JANELA (`sm:`,
+   * `lg:`, `xl:`) enquanto vive numa coluna de 518px — numa janela de 1920 a
+   * media casa e o bloco pega o layout largo dentro do espaço estreito.
+   *
+   * Por isso este teste roda só a 1920: é a largura em que janela e contêiner
+   * mais discordam. Num viewport estreito as duas concordam e o defeito some.
+   *
+   * Só o browser mede isto — em jsdom todo elemento tem largura zero e a mesma
+   * asserção passa verde sobre a tela quebrada.
+   */
+  test('a 1920px nenhum filho é pintado para fora do pai na ficha do combatente', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 })
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+
+    const antes = await labelsNaIniciativa(page)
+    await page.getByRole('button', { name: 'Adicionar grupo' }).click()
+    await expect(page.locator('[role="progressbar"][aria-label^="PM "]').first()).toBeVisible()
+    const nomeDoPc = await page.evaluate(() => {
+      const barra = document.querySelector('[role="progressbar"][aria-label^="PM "]')
+      let no: HTMLElement | null = barra as HTMLElement | null
+      while (no && !no.querySelector('button[aria-pressed]')) no = no.parentElement
+      return no?.querySelector('button[aria-pressed]')?.textContent?.trim() ?? ''
+    })
+    await page.locator('button[aria-pressed]', { hasText: nomeDoPc }).first().click()
+
+    // Os blocos com GRADE, que são os que quebram por medida errada. Cada um
+    // espera por um conteúdo SEU — o clique na aba não garante que o bloco já
+    // pintou, e medir antes disso mede a tela anterior.
+    const BLOCOS = [
+      { aba: 'Perícias', pinta: 'Fortitude' },
+      { aba: 'Combate', pinta: 'Atq CaC' },
+      { aba: 'Mochila', pinta: 'Mãos' },
+    ]
+    // Escopo na SEÇÃO do combatente: "Combate" também é o nome do seletor de
+    // região da cena, e sem escopo o localizador casa os dois.
+    const painel = page.locator('section', {
+      has: page.getByRole('progressbar', { name: 'Vida' }),
+    })
+    for (const { aba: bloco, pinta } of BLOCOS) {
+      await painel.getByRole('tab', { name: bloco }).click()
+      await expect(page.getByText(pinta, { exact: true }).first()).toBeVisible()
+
+      const escapando = await page.evaluate(() => {
+        const vida = document.querySelector('[role="progressbar"][aria-label="Vida"]')
+        let coluna: HTMLElement | null = vida as HTMLElement | null
+        while (coluna && coluna.tagName !== 'SECTION') coluna = coluna.parentElement
+
+        // A relação é FILHO contra PAI, não contra a coluna: o crachá de bônus
+        // vazava 6px do cartão dele e era pintado sobre o vizinho, muito antes
+        // de chegar perto da borda da coluna. Uma asserção contra a coluna
+        // passava verde por cima disso — foi a primeira versão deste teste.
+        return [...coluna!.querySelectorAll('*')]
+          .filter((el) => {
+            const pai = el.parentElement
+            if (!pai) return false
+            const estilo = getComputedStyle(el)
+            // Absoluto sai do fluxo de propósito (o ✕ de desequipar), e um pai
+            // que rola na horizontal contém o filho rolando.
+            if (estilo.position === 'absolute' || estilo.position === 'fixed') return false
+            if (getComputedStyle(pai).overflowX !== 'visible') return false
+            const r = el.getBoundingClientRect()
+            return r.width > 0 && r.right > pai.getBoundingClientRect().right + 1
+          })
+          .map((el) => (el.textContent ?? '').trim().slice(0, 30))
+          .slice(0, 5)
+      })
+      expect(escapando, `${bloco}: filho pintado para fora do pai`).toEqual([])
+    }
+
+    // Sai como entrou.
+    for (const label of await novosDesde(page, antes)) {
+      await page.getByRole('button', { name: `Remover ${label}` }).click()
+    }
+  })
+
   /** Os rótulos que estão na iniciativa agora. */
   async function labelsNaIniciativa(page: Page): Promise<string[]> {
     return page.$$eval('button[aria-label^="Remover "]', (bs) =>

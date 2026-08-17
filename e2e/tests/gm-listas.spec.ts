@@ -44,6 +44,29 @@ test.describe('Listas virtualizadas do mestre', () => {
     // uma busca sem resultado, nada de "espada" pode sobreviver na tela.
     await busca.fill('zzzzzz')
     await expect(page.getByText(/Espada longa/)).toHaveCount(0)
+
+    // E o terceiro, que só o browser vê: a lista TERMINAR fora do cartão.
+    // O painel de aba é um bloco, então o `flex-1` do filho não limitava altura
+    // nenhuma e a lista descia até a borda da janela, 12px além do cartão —
+    // sem a página rolar, porque a cena inteira é `overflow-hidden`, e por isso
+    // "a cena do mestre não rola" ficava verde por cima (ALE-149).
+    await busca.fill('')
+    await expect(page.getByText('Abalado')).toBeVisible()
+    const vazamento = await page.evaluate(() => {
+      const rolante = [...document.querySelectorAll('*')].find((el) => {
+        const estilo = getComputedStyle(el)
+        return (
+          /(auto|scroll)/.test(estilo.overflowY) &&
+          el.scrollHeight > el.clientHeight + 4 &&
+          (el.textContent ?? '').includes('Abalado')
+        )
+      })
+      if (!rolante) throw new Error('não achei a lista de condições rolando')
+      const cartao = document.querySelector('[role="tablist"]')?.parentElement
+      if (!cartao) throw new Error('não achei o cartão do workspace')
+      return Math.round(rolante.getBoundingClientRect().bottom - cartao.getBoundingClientRect().bottom)
+    })
+    expect(vazamento, `a lista passou ${vazamento}px do fundo do cartão`).toBeLessThanOrEqual(0)
   })
 
   test('a ferramenta Bestiário pinta a lista e abre a criatura escolhida', async ({ page }) => {
