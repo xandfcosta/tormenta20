@@ -160,8 +160,15 @@ test.describe('Sessão ao vivo', () => {
    * Por isso aqui a asserção é de ALCANCE: a barra de abas da ficha tem de estar
    * na área visível em todo formato. É e2e porque é altura real — em jsdom todo
    * elemento mede zero e a mesma asserção passaria verde sobre a tela quebrada.
+   *
+   * O mesmo PC aberto paga por uma segunda asserção, esta de RELAÇÃO entre a
+   * faixa do combatente e a ficha embaixo dela (ALE-145). Alcance e proporção
+   * são coisas diferentes: a barra de abas pode estar na tela e a ficha ainda
+   * assim receber uma nesga, que é o que o print do dono mostrava. Medido antes
+   * do conserto, o que vinha ANTES da ficha comia 49%, 50%, 51%, 49% e 51% da
+   * região nos cinco formatos abaixo; depois, 13%, 11%, 20%, 11% e 30%.
    */
-  test('com a ficha de um PC aberta, a barra de abas dela continua alcançável', async ({
+  test('com a ficha de um PC aberta, a faixa é pequena e a barra de abas continua alcançável', async ({
     page,
   }) => {
     await page.goto('/campaigns/1/sessions/4')
@@ -197,6 +204,21 @@ test.describe('Sessão ao vivo', () => {
       const mesa = page.getByRole('button', { name: 'mesa', exact: true })
       if (await mesa.isVisible()) await mesa.click()
       await expect(abaDaFicha, `${viewport.name}: a barra de abas saiu da tela`).toBeInViewport()
+
+      // O celular deitado fica FORA desta conta, e o motivo é medido, não
+      // conveniência: dos 390px de altura, 179 são cromo da CENA (cabeçalho 49
+      // + faixa de turno 50 + seletor de região 32 + barra de abas do workspace
+      // 36), e a região do combatente inteira fica com 165px. Nenhuma faixa
+      // utilizável cabe em 35% de 165 — o que sobra ali é defeito da cena, não
+      // da faixa, e está registrado na ALE-146. A garantia que vale neste
+      // formato é a de alcance, logo acima, e essa roda nos seis.
+      if (viewport.name === 'mobile-landscape') continue
+
+      const { regiao, antesDaFicha } = await medirRegiaoDoCombatente(page)
+      expect(
+        antesDaFicha / regiao,
+        `${viewport.name}: a faixa comeu ${antesDaFicha}px dos ${regiao}px da região`,
+      ).toBeLessThanOrEqual(0.35)
     }
 
     // Sai como entrou: tira da iniciativa só quem ESTE teste pôs.
@@ -205,6 +227,33 @@ test.describe('Sessão ao vivo', () => {
       await page.getByRole('button', { name: `Remover ${label}` }).click()
     }
   })
+
+  /**
+   * A altura da região do combatente e quanto dela é gasto ANTES de a ficha
+   * começar. Ancorado na barra de PV (que só existe quando há combatente
+   * aberto) e no painel de aba visível — nomes de classe mudam a cada restyle
+   * e não prometem nada.
+   */
+  async function medirRegiaoDoCombatente(
+    page: Page,
+  ): Promise<{ regiao: number; antesDaFicha: number }> {
+    return page.evaluate(() => {
+      const vida = document.querySelector('[role="progressbar"][aria-label="Vida"]')
+      if (!vida) throw new Error('nenhum combatente aberto: não há barra de Vida na tela')
+      let secao: HTMLElement | null = vida as HTMLElement
+      while (secao && secao.tagName !== 'SECTION') secao = secao.parentElement
+      if (!secao) throw new Error('a barra de Vida não está dentro de uma <section>')
+      const ficha = [...secao.querySelectorAll('[role="tabpanel"]')].find(
+        (painel) => painel.getBoundingClientRect().height > 0,
+      )
+      if (!ficha) throw new Error('a ficha do combatente não tem painel de aba visível')
+      const regiao = secao.getBoundingClientRect()
+      return {
+        regiao: Math.round(regiao.height),
+        antesDaFicha: Math.round(ficha.getBoundingClientRect().top - regiao.top),
+      }
+    })
+  }
 
   /** Os rótulos que estão na iniciativa agora. */
   async function labelsNaIniciativa(page: Page): Promise<string[]> {

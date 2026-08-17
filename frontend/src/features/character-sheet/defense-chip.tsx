@@ -4,11 +4,15 @@ import type { Character } from '@/shared/api/api'
 import { cn } from '@/shared/lib/utils'
 
 /**
- * Compact DEF chip for the viewports where the stats cluster is hidden (<md):
- * "does a 17 hit me?" has to be answerable without switching blocks. Read-only
- * — the full breakdown lives in the desktop Defesa box.
+ * Compact DEF chip: "does a 17 hit me?" has to be answerable without switching
+ * blocks. Read-only — the full breakdown lives in the Defesa box of the Combate
+ * tab.
+ *
+ * Nasceu para os viewports onde o cluster de números é `hidden` (<md) e por
+ * isso se chamava `MobileDefChip`; a faixa do combatente do mestre usa o mesmo
+ * chip em qualquer largura (ALE-145), então o nome deixou de dizer a verdade.
  */
-export function MobileDefChip(props: {
+export function DefenseChip(props: {
   character: Character
   activeConditionals: ReadonlySet<string>
   class?: string

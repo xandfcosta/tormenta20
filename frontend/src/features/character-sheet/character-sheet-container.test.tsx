@@ -30,7 +30,7 @@ beforeEach(() => {
   }))
 })
 
-function renderSheet(props: { compact?: boolean; hudless?: boolean }) {
+function renderSheet(props: { compact?: boolean; hudless?: boolean; tab?: string }) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(() => (
     <QueryClientProvider client={client}>
@@ -51,7 +51,7 @@ function renderSheet(props: { compact?: boolean; hudless?: boolean }) {
 }
 
 describe('CharacterSheet numa coluna', () => {
-  // Os dois layouts têm as mesmas seis abas com os mesmos nomes ACESSÍVEIS —
+  // Os dois layouts têm as mesmas abas com os mesmos nomes ACESSÍVEIS —
   // contá-las não distingue um do outro (a primeira versão deste teste passou
   // verde sobre a implementação sabotada por isso). O que o usuário vê difere:
   // no largo o rótulo é TEXTO ao lado do ícone, no estreito a aba é só ícone.
@@ -80,5 +80,21 @@ describe('CharacterSheet numa coluna', () => {
     renderSheet({ compact: true })
 
     expect(screen.getByText('Vida')).toBeInTheDocument()
+  })
+
+  /**
+   * Defesa, ataques, resistências, atributos e fórmulas de arma não tinham aba
+   * nenhuma: moravam só no `CharacterHud`, que os esconde abaixo de `md`. Num
+   * telefone o jogador nunca via os próprios ataques, e tirá-los da faixa do
+   * combatente sem lhes dar casa teria apagado a informação da tela do mestre
+   * também (ALE-145).
+   */
+  it('a aba Combate dá casa aos números que saíram da faixa do combatente', () => {
+    renderSheet({ compact: true, hudless: true, tab: 'combat' })
+
+    expect(screen.getByText('Atq CaC')).toBeInTheDocument()
+    expect(screen.getByText('Atq Dist')).toBeInTheDocument()
+    expect(screen.getByText('Fort')).toBeInTheDocument()
+    expect(screen.getByText('INT')).toBeInTheDocument()
   })
 })

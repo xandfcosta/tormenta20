@@ -1,10 +1,11 @@
-import { Backpack, BadgeCheck, BookOpen, ScrollText, ToggleRight, Zap } from 'lucide-solid'
+import { Backpack, BadgeCheck, BookOpen, ScrollText, Swords, ToggleRight, Zap } from 'lucide-solid'
 import type { Component } from 'solid-js'
 import { grantedSpells } from '@/entities/character/granted-spells'
 import type { Character } from '@/shared/api/api'
 import { AbilitiesPanel } from './abilities-panel'
 import { AbilitiesPendingBadge } from './abilities-pending-badge'
 import { BagPanel } from './bag-panel'
+import { CombatPanel } from './combat-panel'
 import { EffectsCountBadge } from './effects-count-badge'
 import { EffectsPanel } from './effects-panel'
 import { isCasterCharacter } from './is-caster'
@@ -44,10 +45,9 @@ export function resolveSheetTab(tab: string): string {
 }
 
 /**
- * The non-vitals blocks. The phone layout prepends a "Vitais" section; the
- * desktop layout renders vitals in the HUD and keeps these as the rail.
- * Campaign membership is managed on the campaign screens (ALE-32), so there is
- * no "Campanhas" block.
+ * The non-vitals blocks: PV/PM live in the HUD (or, no painel do combatente, na
+ * `CombatantBand`), never here. Campaign membership is managed on the campaign
+ * screens (ALE-32), so there is no "Campanhas" block.
  *
  * The React file wrapped every panel in `memo()` — its comment explains that
  * without it a tab switch re-ran EVERY mounted panel, costing 250–540ms. There
@@ -62,6 +62,14 @@ export const SHEET_PANELS: SheetSection[] = [
     label: 'Perícias',
     icon: ScrollText,
     component: ExpertisesPanel,
+  },
+  // Defesa, ataques, resistências, atributos e arma. Não tinham bloco nenhum
+  // até a ALE-145: viviam só no `CharacterHud`, que os esconde abaixo de `md`.
+  {
+    value: 'combat',
+    label: 'Combate',
+    icon: Swords,
+    component: CombatPanel,
   },
   {
     value: 'bag',

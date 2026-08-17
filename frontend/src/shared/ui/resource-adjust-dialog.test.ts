@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { hpFillVar } from '@/features/character-sheet/character-hud'
+import { hpFillVar } from '@/shared/ui/vital-bar'
 import { adjustPreview, clampResource } from '@/shared/ui/resource-adjust-dialog'
 
 describe('clampResource', () => {
