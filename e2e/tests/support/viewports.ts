@@ -68,3 +68,28 @@ export async function expectPageDoesNotScroll(
     expect(overflow, `a página rola @ ${vp.name} (${vp.width}×${vp.height})`).toBeLessThanOrEqual(1)
   }
 }
+
+/**
+ * Falha quando um elemento ESSENCIAL fica fora da área visível — mesmo que a
+ * página não role.
+ *
+ * Esta é a asserção que faltava, e a ausência dela tem mecanismo: a cena é feita
+ * de `overflow-hidden` e `min-h-0` para a página NÃO rolar, e cada um deles
+ * ABSORVE o estouro de um filho. O sintoma some da raiz e some da asserção — foi
+ * assim que "a cena do mestre cabe na tela" ficou verde enquanto a barra de abas
+ * da ficha ia parar em y=872 numa janela de 860, inalcançável (ALE-125).
+ *
+ * Recebe LOCALIZADORES, não seletores, porque o que se quer proteger é uma coisa
+ * que o usuário precisa alcançar, e o nome acessível é como ela se identifica.
+ *
+ * @example await expectAlcancavel(page, [page.getByRole('tab', { name: 'Perícias' })])
+ */
+export async function expectAlcancavel(
+  page: Page,
+  localizadores: readonly ReturnType<Page['getByRole']>[],
+): Promise<void> {
+  for (const alvo of localizadores) {
+    await expect(alvo).toBeVisible()
+    await expect(alvo, 'está no DOM mas fora da área visível').toBeInViewport()
+  }
+}

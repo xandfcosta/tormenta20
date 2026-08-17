@@ -46,10 +46,17 @@ export function CharacterSheetMobile(props: CharacterSheetMobileProps) {
       onChange={(value) => props.onTabChange(value)}
       class="flex h-full min-h-0 w-full min-w-0 flex-col"
     >
-      {/* min-h-40 floor: on a short viewport (phone landscape) the shrink-0 bar
-          would squeeze this flex-1 area to 0px and the active block's header
-          would vanish under the top nav. With a floor the shell scrolls. */}
-      <div class="min-h-40 min-w-0 flex-1 overflow-hidden">
+      {/* Este bloco CEDE (`min-h-0`), e a barra de abas nunca é empurrada para
+          fora. Aqui havia um piso de `min-h-40`, posto para o cabeçalho do bloco
+          ativo não sumir no celular deitado — mas ele custou caro em outro
+          lugar: dentro do painel do combatente do mestre a ficha recebe ~145px,
+          menos que os 160 do piso, e a barra ia parar em y=872 numa janela de
+          860. Ficava INALCANÇÁVEL, e sem a página rolar, então nenhuma asserção
+          de "a página não rola" via nada (ALE-125).
+          O piso protegia o caso raro; a barra fora da tela é o caso que impede
+          de usar a ficha. Onde há espaço (celular deitado dá ~300px), ceder não
+          muda nada. */}
+      <div class="min-h-0 min-w-0 flex-1 overflow-hidden">
         <For each={SHEET_PANELS}>
           {(section) => (
             <TabsContent

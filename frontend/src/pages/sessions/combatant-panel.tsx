@@ -90,7 +90,13 @@ function CharacterCard(props: { characterId: number }) {
     >
       {(data) => (
         <div class="flex min-h-0 flex-1 flex-col">
-          <div class="shrink-0">
+          {/* O cartão é fixo, mas com TETO: numa faixa baixa (celular deitado)
+              ele fica mais alto que a tela inteira e empurra a ficha para
+              baixo — a barra de abas dela ia parar em y=907 numa janela de 390,
+              inalcançável e sem a página rolar (ALE-125). Com o teto, quem não
+              couber rola DENTRO do cartão e a ficha nunca perde o lugar dela.
+              A altura do cartão em si é assunto da ALE-127. */}
+          <div class="max-h-[45%] min-h-0 shrink-0 overflow-y-auto">
             <CharacterHud character={data()} dense class="border-t-0" />
           {/* "Você está caído" é a coisa mais frequente que um mestre declara
               em combate, e o editor já existia — mas só dentro da aba Efeitos,

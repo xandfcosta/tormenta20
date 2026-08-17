@@ -147,6 +147,43 @@ test.describe('Sessão ao vivo', () => {
   })
 
   /**
+   * A cena cabe na tela COM UM COMBATENTE ABERTO — que é o estado em que a mesa
+   * de verdade fica (ALE-125).
+   *
+   * O teste vizinho ("a cena do mestre cabe na tela") mede a cena VAZIA e ficou
+   * verde enquanto este defeito existia: abrir a ficha de um PC empurrava a
+   * barra de abas dela para fora da área visível, e como todo contêiner da cena
+   * tem `overflow-hidden` (posto ali justamente para a página não rolar), o
+   * sintoma nunca chegava à raiz. Nenhuma asserção de "a página não rola" podia
+   * vê-lo.
+   *
+   * Por isso aqui a asserção é de ALCANCE: a barra de abas da ficha tem de estar
+   * na área visível em todo formato. É e2e porque é altura real — em jsdom todo
+   * elemento mede zero e a mesma asserção passaria verde sobre a tela quebrada.
+   */
+  test('com a ficha de um PC aberta, a barra de abas dela continua alcançável', async ({
+    page,
+  }) => {
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+
+    // O PC da seed: a ficha dele é o conteúdo mais alto que entra na região. O
+    // nome aparece em vários lugares (a linha, os botões de PV, o grupo), então
+    // o alvo é o botão de SELEÇÃO — o que tem `aria-pressed`.
+    await page.locator('button[aria-pressed]', { hasText: 'Arcanista Erudito Nv9' }).first().click()
+    const abaDaFicha = page.getByRole('tab', { name: 'Perícias' })
+    await expect(abaDaFicha).toBeVisible()
+
+    for (const viewport of VIEWPORTS) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height })
+      // Abaixo de 1024 a cena mostra uma região por vez: a ficha vive na mesa.
+      const mesa = page.getByRole('button', { name: 'mesa', exact: true })
+      if (await mesa.isVisible()) await mesa.click()
+      await expect(abaDaFicha, `${viewport.name}: a barra de abas saiu da tela`).toBeInViewport()
+    }
+  })
+
+  /**
    * Só a LISTA rola; o cabeçalho e as ações ficam ancorados (ALE-131).
    *
    * O defeito: quem rolava era a coluna inteira, então descer a lista levava
