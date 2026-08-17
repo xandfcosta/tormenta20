@@ -30,6 +30,12 @@ type InitiativeEntry struct {
 	// livro: este é editável e pertence à campanha, e é o que responde "o ogro
 	// que eu modifiquei". Uma linha tem um ou outro, nunca os dois.
 	CreatureID *int64 `json:"creatureId,omitempty"`
+	// Conditions são as condições do livro ativas nesta linha (p394-395).
+	// Moram na LINHA e não no bloco de criatura pelo mesmo motivo que os PV
+	// atuais: condição é estado de combate, e o vilão recorrente não volta na
+	// semana seguinte ainda caído. Para PC a fonte continua sendo a ficha —
+	// aqui é o caminho do NPC, que ficha não tem (ALE-122).
+	Conditions []string `json:"conditions,omitempty"`
 	// HpHidden esconde os PV desta linha dos JOGADORES: saber que o ogro está com
 	// 12 de 130 muda a decisão de quem está na mesa, e essa é a informação do
 	// mestre. Ponteiro porque a maioria das linhas não decide nada a respeito.
@@ -73,6 +79,10 @@ type entryPatch struct {
 	MpCurrent   *int64  `json:"mpCurrent"`
 	MpMax       *int64  `json:"mpMax"`
 	HpHidden    *bool   `json:"hpHidden"`
+	// Conditions substitui a lista inteira, como o endpoint da ficha faz: um
+	// patch por condição exigiria dizer "some" e "tire", e a tela sempre sabe o
+	// conjunto final.
+	Conditions *[]string `json:"conditions"`
 	// CreatureID liga a linha ao bloco de criatura do mestre depois de a linha
 	// já existir — é o "detalhar este NPC" (ALE-137), que cria o bloco e o
 	// prende ao combatente que já estava na mesa.
@@ -193,6 +203,9 @@ func updateEntry(st *SessionRuntimeState, entryID string, patch entryPatch) erro
 	}
 	if patch.CreatureID != nil {
 		e.CreatureID = patch.CreatureID
+	}
+	if patch.Conditions != nil {
+		e.Conditions = *patch.Conditions
 	}
 	if patch.Initiative != nil {
 		e.Initiative = *patch.Initiative

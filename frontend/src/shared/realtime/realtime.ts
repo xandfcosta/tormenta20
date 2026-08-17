@@ -20,6 +20,13 @@ export type InitiativeEntry = {
    * pertence à campanha. Uma linha tem um ou outro, nunca os dois.
    */
   creatureId?: number
+  /**
+   * Condições do livro ativas nesta linha (p394-395). Para PC a fonte é a
+   * FICHA; aqui é o caminho do NPC, que ficha não tem (ALE-122). Estado de
+   * combate, como os PV atuais — o bloco de criatura descreve o vilão, não o
+   * turno dele.
+   */
+  conditions?: string[]
   /** O mestre escondeu os PV desta linha: o jogador recebe a marca, não os números. */
   hpHidden?: boolean
   hpCurrent?: number

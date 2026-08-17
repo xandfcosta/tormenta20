@@ -10,6 +10,7 @@ import { MonsterStatBlock } from '@/features/gm-tools/monster-stat-block'
 import { CreatureBlockDialog } from '@/features/gm-tools/creature-block-dialog'
 import { CreatureStatBlock } from '@/features/gm-tools/creature-stat-block'
 import { creatureFromMonster } from '@/features/gm-tools/creature-from-monster'
+import { NpcConditions } from '@/features/gm-tools/npc-conditions'
 import { campaignCreaturesQueryOptions } from '@/entities/creature/queries'
 import { blankCreatureBlock } from '@/shared/api/creature-types'
 import type { CampaignCreature } from '@/shared/api/creature-types'
@@ -45,6 +46,8 @@ export function CombatantPanel(props: {
    *  quem liga também decide o que herdar dela (a vida, quando a linha não
    *  tem). */
   onLinkCreature?: (creature: CampaignCreature) => void
+  /** Condições do NPC: elas moram na LINHA, porque NPC não tem ficha. */
+  onConditions?: (conditions: string[]) => void
 }) {
   const actions = (
     <>
@@ -84,6 +87,7 @@ export function CombatantPanel(props: {
             actions={actions}
             campaignId={props.campaignId}
             onLinkCreature={props.onLinkCreature}
+            onConditions={props.onConditions}
           />
         }
         keyed
@@ -100,6 +104,7 @@ function NpcHeader(props: {
   actions: JSX.Element
   campaignId: number
   onLinkCreature?: (creature: CampaignCreature) => void
+  onConditions?: (conditions: string[]) => void
 }) {
   return (
     <>
@@ -113,6 +118,7 @@ function NpcHeader(props: {
         entry={props.entry}
         campaignId={props.campaignId}
         onLinkCreature={props.onLinkCreature}
+        onConditions={props.onConditions}
       />
     </>
   )
@@ -191,6 +197,7 @@ function NpcCard(props: {
   campaignId: number
   /** Liga a linha ao bloco recém-criado, para o painel abrir nele da próxima. */
   onLinkCreature?: (creature: CampaignCreature) => void
+  onConditions?: (conditions: string[]) => void
 }) {
   const bestiary = useQuery(() => bestiaryCatalogQueryOptions)
   const creatures = useQuery(() => campaignCreaturesQueryOptions(props.campaignId))
@@ -219,6 +226,14 @@ function NpcCard(props: {
           current={props.entry.hpCurrent ?? 0}
           max={props.entry.hpMax ?? 0}
         />
+      </Show>
+
+      {/* "Você está caído" é o que o mestre mais declara, e até aqui só o PC
+          podia recebê-lo — o NPC não tem ficha onde guardar (ALE-122). */}
+      <Show when={props.onConditions}>
+        {(aplicar) => (
+          <NpcConditions active={props.entry.conditions} onChange={aplicar()} />
+        )}
       </Show>
 
       {/* O bloco do mestre ganha do verbete: se ele modificou o ogro, é o ogro

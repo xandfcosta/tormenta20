@@ -89,6 +89,7 @@ export function SessionWorkspace(props: SessionWorkspaceProps) {
               campaignId={props.campaignId}
               onClose={props.onCloseCombatant}
               onApplyEffect={(spellId) => props.rt.applyEffect(entry().id, spellId)}
+              onConditions={(conditions) => props.rt.updateEntry(entry().id, { conditions })}
               onLinkCreature={(creature) => {
                 const linha = entry()
                 // A linha herda a VIDA do bloco quando não tem nenhuma: sem

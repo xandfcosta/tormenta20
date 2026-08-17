@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	socket "github.com/zishang520/socket.io/servers/socket/v3"
+
+	"t20engine/catalog"
 )
 
 // Initiative-tracker socket handlers. All GM-gated except initiative-self (a player rolls
@@ -286,6 +288,10 @@ func parseEntryPatch(v any) entryPatch {
 			*f.dst = &v
 		}
 	}
+	if raw, ok := m["conditions"]; ok {
+		list := parseConditions(raw)
+		p.Conditions = &list
+	}
 	return p
 }
 
@@ -295,4 +301,25 @@ func overrideInt(m map[string]any, key string, def int64) *int64 {
 		return ptrInt64(v)
 	}
 	return ptrInt64(def)
+}
+
+// parseConditions filtra pelo CATÁLOGO, que é onde as condições são autoradas.
+// Uma lista escrita à mão aqui seria a segunda cópia da tabela do livro, e a
+// primeira já desviou uma vez: faltava `enfeitiçado`, e aplicá-la dava 400
+// (ALE-122). Id desconhecido é descartado em silêncio de propósito — a
+// alternativa seria derrubar a aplicação inteira no meio do combate por causa
+// de um item.
+func parseConditions(raw any) []string {
+	items, _ := raw.([]any)
+	out := []string{}
+	seen := map[string]bool{}
+	for _, item := range items {
+		id, _ := item.(string)
+		if id == "" || seen[id] || !catalog.IsCondition(id) {
+			continue
+		}
+		seen[id] = true
+		out = append(out, id)
+	}
+	return out
 }
