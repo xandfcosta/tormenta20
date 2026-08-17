@@ -28,6 +28,9 @@ test.describe('Sessão ao vivo — dois clientes', () => {
       // Os DOIS conectados antes de agir: sem isso o teste mede uma corrida.
       await expect(telaDoMestre.getByRole('status', { name: 'Conectado' })).toBeVisible()
       await expect(telaDoJogador.getByRole('status', { name: 'Conectado' })).toBeVisible()
+      // A cena do jogador tem TRÊS superfícies e abre na ficha dele (ALE-129):
+      // a iniciativa mora na Mesa, e é lá que ele olha para acompanhar o combate.
+      await telaDoJogador.getByRole('button', { name: /Mesa/ }).click()
 
       // O formulário nasce fechado desde que se mediu o custo dele em altura
       // (ALE-122): um clique no topo o abre.
@@ -68,6 +71,8 @@ test.describe('Sessão ao vivo — dois clientes', () => {
       await telaDoJogador.goto('/campaigns/1/sessions/4')
       await expect(telaDoMestre.getByRole('status', { name: 'Conectado' })).toBeVisible()
       await expect(telaDoJogador.getByRole('status', { name: 'Conectado' })).toBeVisible()
+      // O jogador vai para a superfície do tabuleiro — é onde ele o vê agora.
+      await telaDoJogador.getByRole('button', { name: /Tabuleiro/ }).click()
 
       // O teste traz o PRÓPRIO combatente: a iniciativa da seed do CI está VAZIA,
       // e "trazer a iniciativa" para um tabuleiro sem ninguém não põe peça

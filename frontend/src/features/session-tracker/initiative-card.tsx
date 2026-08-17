@@ -35,6 +35,9 @@ export function InitiativeCard(props: {
   /** Falso quando a cena já tem a faixa de turno fixa — senão o mesmo
    *  "Próximo turno" aparece duas vezes na tela (ALE-122). */
   turnControls?: boolean
+  /** Falso quando a cena já mostra o estado da conexão em outro lugar — dois
+   *  chips a poucos centímetros seriam a mesma informação duas vezes. */
+  connectionChip?: boolean
   /** O card ocupa a altura que o pai dá e rola SÓ a lista por dentro. Verdadeiro
    *  na cena do mestre, onde a coluna tem altura definida; falso no rail do
    *  jogador, que já rola por fora e não daria altura nenhuma (ALE-131). */
@@ -61,7 +64,9 @@ export function InitiativeCard(props: {
           <h2 class="font-heading text-lg uppercase tracking-wide text-grimorio-gold">
             Iniciativa
           </h2>
-          <ConnectionChip status={status()} dirty={props.rt.hasPersistenceWarning()} />
+          <Show when={props.connectionChip !== false}>
+            <ConnectionChip status={status()} dirty={props.rt.hasPersistenceWarning()} />
+          </Show>
           {/* A rodada só sai aqui quando não há faixa de turno: com ela na tela
               seriam dois "Rodada 1" a poucos pixels um do outro (ALE-122). */}
           <Show when={props.turnControls !== false}>
