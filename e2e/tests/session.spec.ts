@@ -147,6 +147,43 @@ test.describe('Sessão ao vivo', () => {
   })
 
   /**
+   * EXATAMENTE um "Próximo turno" na tela, em todo formato (ALE-142).
+   *
+   * O par de turno mora no cabeçalho da iniciativa, mas abaixo de 1024 a cena
+   * mostra uma região por vez e a iniciativa pode não estar na tela — então a
+   * faixa fixa guarda o avanço ali. São duas instâncias do mesmo controle,
+   * separadas por `lg:hidden` / `hidden lg:flex`, e o desenho inteiro depende
+   * de nunca aparecerem juntas: duas seriam o defeito que a ALE-122 já tinha
+   * consertado uma vez (o mesmo "Próximo turno" duas vezes na tela).
+   *
+   * Zero também é falha, e é a mais grave: sem o avanço o mestre não joga.
+   */
+  test('há um e só um avanço de turno na tela, em todo formato', async ({ page }) => {
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('heading', { name: 'Iniciativa' })).toBeVisible()
+
+    for (const viewport of VIEWPORTS) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height })
+
+      // As DUAS regiões, e a de combate é a que importa: com a mesa aberta a
+      // iniciativa nem existe na página, então contar só ali nunca veria duas.
+      // Aprendido tentando sabotar este teste — a primeira versão passava verde
+      // com o par duplicado, porque só olhava a mesa.
+      for (const regiao of ['mesa', 'combate']) {
+        const botao = page.getByRole('button', { name: regiao, exact: true })
+        if (!(await botao.isVisible())) continue
+        await botao.click()
+        const naRegiao = page.getByRole('button', { name: 'Próximo turno' })
+        await expect(naRegiao, `${viewport.name}/${regiao}: avanços na tela`).toHaveCount(1)
+      }
+
+      const avancos = page.getByRole('button', { name: 'Próximo turno' })
+      await expect(avancos, `${viewport.name}: avanços de turno na tela`).toHaveCount(1)
+      await expect(avancos, `${viewport.name}: o avanço saiu da tela`).toBeInViewport()
+    }
+  })
+
+  /**
    * A cena cabe na tela COM UM COMBATENTE ABERTO — que é o estado em que a mesa
    * de verdade fica (ALE-125).
    *

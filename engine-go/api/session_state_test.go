@@ -1,6 +1,9 @@
 package api
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 // counter returns a deterministic id generator ("e1", "e2", …) so tests can assert on
 // order/turn behavior without random UUIDs.
@@ -420,4 +423,106 @@ func TestPatchAndDeltaVitals(t *testing.T) {
 			t.Error("expected not-found error")
 		}
 	})
+}
+
+// O contador de turnos do combate (ALE-142). Ele é CONTADO e não derivado, e
+// este teste é a razão: rodada × tamanho da lista mente assim que a lista muda
+// no meio do combate — e mudar no meio é o normal numa mesa, porque capanga
+// morre e reforço chega.
+func TestTurnsTakenSobreviveAListaMudar(t *testing.T) {
+	st := emptyRuntimeState()
+	id := counter()
+	_ = addEntry(st, npc("A", 30), id)
+	_ = addEntry(st, npc("B", 20), id)
+	_ = addEntry(st, npc("C", 10), id)
+
+	advanceTurn(st) // A
+	advanceTurn(st) // B
+	advanceTurn(st) // C
+	advanceTurn(st) // volta em A, rodada 2
+	if st.TurnsTaken != 4 || st.Round != 2 {
+		t.Fatalf("quatro turnos: turnsTaken=%d round=%d, want 4/2", st.TurnsTaken, st.Round)
+	}
+
+	// C morre. A conta derivada diria rodada 2 × 2 = 4 daqui em diante e passaria
+	// a discordar de si mesma; o contador não se mexe, porque os quatro turnos
+	// aconteceram.
+	if err := removeEntry(st, "e3"); err != nil {
+		t.Fatalf("remover C: %v", err)
+	}
+	if st.TurnsTaken != 4 {
+		t.Fatalf("remover não conta turno: turnsTaken=%d, want 4", st.TurnsTaken)
+	}
+
+	advanceTurn(st)
+	if st.TurnsTaken != 5 {
+		t.Fatalf("depois da remoção: turnsTaken=%d, want 5", st.TurnsTaken)
+	}
+}
+
+// Voltar o turno desconta: o contador diz o que JÁ aconteceu, e desfazer diz
+// que não aconteceu. Nunca abaixo de zero, senão o pré-combate ficaria devendo.
+func TestTurnsTakenVoltaComRewind(t *testing.T) {
+	st := emptyRuntimeState()
+	id := counter()
+	_ = addEntry(st, npc("A", 30), id)
+	_ = addEntry(st, npc("B", 20), id)
+
+	advanceTurn(st)
+	advanceTurn(st)
+	rewindTurn(st)
+	if st.TurnsTaken != 1 {
+		t.Fatalf("depois de voltar: turnsTaken=%d, want 1", st.TurnsTaken)
+	}
+
+	rewindTurn(st) // volta ao pré-combate
+	rewindTurn(st) // no-op: não há turno para desfazer
+	if st.TurnsTaken != 0 || st.TurnIndex != -1 {
+		t.Fatalf("pré-combate: turnsTaken=%d turnIndex=%d, want 0/-1", st.TurnsTaken, st.TurnIndex)
+	}
+}
+
+// Reiniciar apaga o combate, e o contador vai junto — senão a rodada 1 do
+// combate seguinte nasceria dizendo "turno 14".
+func TestResetZeraOsTurnos(t *testing.T) {
+	st := emptyRuntimeState()
+	id := counter()
+	_ = addEntry(st, npc("A", 30), id)
+	advanceTurn(st)
+	advanceTurn(st)
+
+	resetInitiative(st)
+
+	if st.TurnsTaken != 0 {
+		t.Fatalf("reset: turnsTaken=%d, want 0", st.TurnsTaken)
+	}
+}
+
+// A cópia do estado é o que vai para o socket e para o banco — o valor na
+// memória do servidor não é o que a mesa vê. Quando o `cloneState` listava os
+// campos um a um, o `TurnsTaken` novo ficou de fora e a cópia zerava o contador
+// em silêncio, com tudo compilando (ALE-142).
+//
+// Este teste não confere um campo: confere que NENHUM se perde na cópia, que é
+// a garantia que a lista-de-campos não dava.
+func TestCloneStatePreservaTodosOsCampos(t *testing.T) {
+	st := emptyRuntimeState()
+	id := counter()
+	_ = addEntry(st, npc("A", 30), id)
+	_ = addEntry(st, npc("B", 20), id)
+	advanceTurn(st)
+	advanceTurn(st)
+
+	copia := cloneState(st)
+
+	// DeepEqual e não campo a campo: conferir os campos que eu lembrar repete
+	// exatamente o erro que este teste existe para pegar.
+	if !reflect.DeepEqual(copia, st) {
+		t.Fatalf("a cópia divergiu do original:\n copia=%+v\n orig =%+v", *copia, *st)
+	}
+	// E é cópia DE VERDADE: mexer numa não pode mexer na outra.
+	copia.Initiative[0].Label = "mexido"
+	if st.Initiative[0].Label == "mexido" {
+		t.Fatal("a cópia compartilhou a fatia com o original")
+	}
 }

@@ -26,6 +26,13 @@ export type SessionRuntimeState = {
   initiative: InitiativeEntry[]
   round: number
   turnIndex: number
+  /**
+   * Turnos desde o começo do combate. Vem CONTADO do servidor porque a conta
+   * derivada (rodada × tamanho da lista) mente assim que alguém entra ou morre
+   * no meio — que é o normal numa mesa (ALE-142). Opcional: uma sessão gravada
+   * antes deste campo volta sem ele.
+   */
+  turnsTaken?: number
 }
 
 /** Someone connected to the session room (deduped by userId server-side). */
@@ -84,7 +91,7 @@ export type SessionSocket = {
   disconnect: () => void
 }
 
-const EMPTY_STATE: SessionRuntimeState = { initiative: [], round: 0, turnIndex: -1 }
+const EMPTY_STATE: SessionRuntimeState = { initiative: [], round: 0, turnIndex: -1, turnsTaken: 0 }
 
 /** How long the rest banner stays up before it reads as stale state. */
 const REST_FLASH_MS = 4000

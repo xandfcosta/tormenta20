@@ -10,6 +10,7 @@ import { NumberInput } from '@/shared/ui/number-input'
 import { VitalBar } from '@/shared/ui/vital-bar'
 import { InitiativeEditDialog } from './initiative-edit-dialog'
 import { InitiativeRollButton } from './initiative-roll'
+import { TurnControls, TurnCounter } from './turn-controls'
 import { toast } from '@/shared/ui/sonner'
 import { createPartyFeedback } from './party-feedback'
 import {
@@ -86,14 +87,24 @@ export function InitiativeCard(props: {
           {/* A rodada só sai aqui quando não há faixa de turno: com ela na tela
               seriam dois "Rodada 1" a poucos pixels um do outro (ALE-122). */}
           <Show when={props.turnControls !== false}>
-            <span class="font-mono tabular-nums">Rodada {props.rt.state().round}</span>
+            <TurnCounter state={props.rt.state()} class="text-xs" />
           </Show>
         </div>
-        <Show when={props.isGm && props.turnControls !== false}>
-          <div class="flex flex-wrap justify-end gap-2">
-            <Button size="sm" disabled={!props.rt.isConnected()} onClick={props.rt.nextTurn}>
-              Próximo turno
-            </Button>
+        <div class="flex flex-wrap items-center justify-end gap-2">
+          {/* O turno é uma posição NA LISTA, então o controle mora ao lado dela
+              (ALE-142). Só a partir de 1024: abaixo disso a cena mostra uma
+              região por vez e quem guarda o avanço é a faixa fixa, que nesse
+              caso é a única na tela. Este cabeçalho já é ancorado desde a
+              ALE-131 (só a lista rola), então o botão não sai da tela. */}
+          <Show when={props.isGm}>
+            <TurnControls
+              class={props.turnControls === false ? 'hidden lg:flex' : undefined}
+              connected={props.rt.isConnected()}
+              onPrevious={props.rt.previousTurn}
+              onNext={props.rt.nextTurn}
+            />
+          </Show>
+          <Show when={props.isGm && props.turnControls !== false}>
             <Button
               size="sm"
               variant="outline"
@@ -102,8 +113,8 @@ export function InitiativeCard(props: {
             >
               Reset
             </Button>
-          </div>
-        </Show>
+          </Show>
+        </div>
       </header>
 
       <div

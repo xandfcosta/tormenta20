@@ -1,10 +1,11 @@
-import { ChevronLeft, Settings2, Swords } from 'lucide-solid'
+import { Settings2, Swords } from 'lucide-solid'
 import { For, Show, createMemo, createSignal } from 'solid-js'
 import type { Session } from '@/shared/api/api'
 import type { SessionRealtime } from '@/shared/realtime/realtime'
 import { DeleteSessionButton } from '@/features/session-tracker/delete-session-button'
 import { HeaderCard } from '@/features/session-tracker/header-card'
 import { InitiativeCard } from '@/features/session-tracker/initiative-card'
+import { TurnControls, TurnCounter } from '@/features/session-tracker/turn-controls'
 import { RestControls } from '@/features/session-tracker/rest-controls'
 import { createMediaQuery } from '@/shared/lib/media-query'
 import { cn } from '@/shared/lib/utils'
@@ -157,9 +158,7 @@ function TurnBar(props: {
 
   return (
     <div class="flex shrink-0 flex-wrap items-center gap-2 rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)] px-3 py-2">
-      <span class="font-mono text-sm tabular-nums text-muted-foreground">
-        Rodada {state().round}
-      </span>
+      <TurnCounter state={state()} />
       <Show when={active()}>
         {(entry) => (
           <span class="flex min-w-0 items-center gap-1.5 font-heading text-sm uppercase tracking-wide text-grimorio-gold">
@@ -170,27 +169,27 @@ function TurnBar(props: {
       </Show>
 
       <div class="ml-auto flex flex-wrap items-center justify-end gap-2">
+        {/* O par mudou de casa: ele mora no cabeçalho da INICIATIVA, ao lado da
+            lista que percorre (ALE-142). O que fica aqui é só o avanço, e SÓ
+            abaixo de 1024 — lá a cena mostra uma região por vez, e com "Mesa"
+            aberta a iniciativa não está na tela: sem isto o mestre perderia o
+            botão mais clicado da sessão justamente ao abrir a ficha de alguém.
+            Nunca os dois ao mesmo tempo, porque um é `lg:hidden` e o outro
+            `hidden lg:flex`.
+            Ele vem ANTES dos descansos para não encostar no "Reiniciar", que
+            apaga o combate inteiro: a ALE-122 afastou os dois de propósito, e
+            pôr o avanço no fim da fileira desfazia isso no celular. */}
+        <TurnControls
+          onlyNext
+          class="lg:hidden"
+          connected={props.rt.isConnected()}
+          onPrevious={props.rt.previousTurn}
+          onNext={props.rt.nextTurn}
+        />
         {/* Ações rápidas do fim de cena, ao lado do turno: eram duas linhas
             dentro do menu da sessão, e o mestre descansa o grupo com muito mais
             frequência do que renomeia a sessão (ALE-122). */}
         <RestControls rt={props.rt} />
-        {/* Um "Próximo turno" a mais é o erro mais comum da mesa, e o conserto
-            era dar a volta na iniciativa inteira — o que empurrava a rodada
-            junto. Fica ao LADO do avanço, mas discreto: desfazer é raro, avançar
-            é o botão mais clicado da sessão (ALE-122). */}
-        <Button
-          size="sm"
-          variant="ghost"
-          disabled={!props.rt.isConnected()}
-          aria-label="Turno anterior"
-          title="Turno anterior"
-          onClick={props.rt.previousTurn}
-        >
-          <ChevronLeft aria-hidden="true" class="size-4" />
-        </Button>
-        <Button size="sm" disabled={!props.rt.isConnected()} onClick={props.rt.nextTurn}>
-          Próximo turno
-        </Button>
         <ConfirmDialog
           title="Reiniciar o combate?"
           description="A iniciativa, a rodada e o turno voltam a zero, e os combatentes saem da lista."

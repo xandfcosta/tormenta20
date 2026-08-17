@@ -43,6 +43,10 @@ type SessionRuntimeState struct {
 	Initiative []InitiativeEntry `json:"initiative"`
 	Round      int               `json:"round"`
 	TurnIndex  int               `json:"turnIndex"`
+	// TurnsTaken conta os turnos desde o começo do combate, e é CONTADO em vez
+	// de derivado: rodada × tamanho da lista mente assim que alguém entra ou
+	// morre no meio do combate, que é o normal numa mesa (ALE-142).
+	TurnsTaken int `json:"turnsTaken"`
 }
 
 // emptyRuntimeState is a fresh mutable tracker. Each call returns a new slice so different
@@ -220,9 +224,11 @@ func advanceTurn(st *SessionRuntimeState) {
 		if st.Round < 1 {
 			st.Round = 1
 		}
+		st.TurnsTaken++
 		return
 	}
 	st.TurnIndex++
+	st.TurnsTaken++
 	if st.TurnIndex >= len(st.Initiative) {
 		st.TurnIndex = 0
 		st.Round++
@@ -237,6 +243,11 @@ func advanceTurn(st *SessionRuntimeState) {
 func rewindTurn(st *SessionRuntimeState) {
 	if len(st.Initiative) == 0 || st.TurnIndex < 0 {
 		return
+	}
+	// Desfazer um turno desconta um turno: o contador é o que JÁ aconteceu, e
+	// voltar diz que não aconteceu.
+	if st.TurnsTaken > 0 {
+		st.TurnsTaken--
 	}
 	if st.TurnIndex > 0 {
 		st.TurnIndex--
@@ -281,6 +292,7 @@ func resetInitiative(st *SessionRuntimeState) {
 	st.Initiative = []InitiativeEntry{}
 	st.Round = 0
 	st.TurnIndex = -1
+	st.TurnsTaken = 0
 }
 
 // patchEntryVitals sets absolute hp/mp on an entry, clamped to its max when present.

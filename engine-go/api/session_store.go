@@ -50,10 +50,17 @@ func newSessionStore(q *sqlcgen.Queries, newID func() string) *sessionStore {
 // cloneState copies the state for broadcast. The entry structs are copied by value; their
 // *int64 vitals are shared but never mutated in place (patch/delta always assign a fresh
 // pointer), so the snapshot is safe to serialize outside the lock.
+// cloneState copia por VALOR e só depois recria a fatia. A versão anterior
+// listava os campos um a um, e listar campos é uma lista que envelhece: ao
+// entrar o `TurnsTaken` (ALE-142) a cópia continuou compilando e passou a zerar
+// o contador em silêncio — e é a cópia que vai para o socket e para o banco, de
+// modo que o valor certo existia só na memória do servidor. Assim, campo novo
+// vem junto sem ninguém precisar lembrar.
 func cloneState(s *SessionRuntimeState) *SessionRuntimeState {
-	entries := make([]InitiativeEntry, len(s.Initiative))
-	copy(entries, s.Initiative)
-	return &SessionRuntimeState{Initiative: entries, Round: s.Round, TurnIndex: s.TurnIndex}
+	out := *s
+	out.Initiative = make([]InitiativeEntry, len(s.Initiative))
+	copy(out.Initiative, s.Initiative)
+	return &out
 }
 
 func (st *sessionStore) getOrCreateLocked(sessionID int64) *SessionRuntimeState {
