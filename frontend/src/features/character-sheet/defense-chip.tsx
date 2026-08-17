@@ -24,7 +24,11 @@ export function DefenseChip(props: {
     <span
       role="img"
       class={cn(
-        'flex items-center gap-1 rounded-md border border-destructive/50 px-1.5 py-0.5',
+        // `shrink-0`: um chip com número não pode encolher abaixo do próprio
+        // conteúdo — encolhendo, o escudo e o "16" são pintados 2px para fora
+        // da própria caixa. Achado pela `expectNadaEscapa` da ALE-144, que é
+        // exatamente o tipo de defeito que nenhuma asserção antiga via.
+        'flex shrink-0 items-center gap-1 rounded-md border border-destructive/50 px-1.5 py-0.5',
         'font-mono text-sm font-bold text-destructive',
         props.class,
       )}

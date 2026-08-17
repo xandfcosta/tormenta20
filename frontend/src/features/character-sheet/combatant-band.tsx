@@ -50,14 +50,18 @@ export function CombatantBand(props: { character: Character; actions?: JSX.Eleme
           fileira solta. Agora quem cede é o grupo de CONDIÇÕES, que é o que
           cresce sozinho durante o combate, e ele tem para onde ceder: passa de
           dois chips para o popover "⚠+N". */}
-      {/* Três grupos IRMÃOS num só wrap, cada um com o piso da própria largura
-          mínima. É o piso que impede a sobreposição: um grupo sem ele encolhe
-          abaixo do próprio conteúdo, e aí os filhos transbordam e são
-          desenhados por cima do grupo vizinho (foi o que aconteceu com os dois
-          seletores). Com piso, o wrap tem de mandar o grupo para a linha de
-          baixo — que é a quebra que se quer. */}
+      {/* Três grupos IRMÃOS num só wrap, cada um com piso de largura MÍNIMA DO
+          PRÓPRIO CONTEÚDO (`min-w-min`). É o piso que impede a sobreposição: um
+          grupo sem ele encolhe abaixo do que cabe, e aí os filhos transbordam e
+          são desenhados por cima do vizinho. Com piso, o wrap é obrigado a
+          mandar o grupo para a linha de baixo — que é a quebra que se quer.
+
+          `min-w-min` e não um valor em rem: eu escrevi `min-w-[15rem]` aqui e
+          ele ficou 8px MENOR que o conteúdo real, então o chip de Defesa era
+          pintado 2px fora do grupo. Número mágico envelhece a cada campo que
+          entra na faixa; `min-content` se mantém sozinho (ALE-144). */}
       <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <div class="flex min-w-[15rem] flex-1 items-center gap-2">
+        <div class="flex min-w-min flex-1 items-center gap-2">
           <CharacterPortrait
             name={props.character.name}
             size="sm"
@@ -77,13 +81,13 @@ export function CombatantBand(props: { character: Character; actions?: JSX.Eleme
 
         {/* O piso muda com a largura porque o CONTEÚDO muda: abaixo de 30rem os
             chips somem e sobra o gatilho "⚠ N" mais o seletor. */}
-        <div class="flex min-w-[9rem] flex-1 items-center gap-1 @[30rem]:min-w-[19rem]">
+        <div class="flex min-w-min flex-1 items-center gap-1">
           <BandConditions character={props.character} conditions={conditions} />
         </div>
         {/* Fechar o combatente é a saída da tela e aplicar efeito é verbo de
             turno — nenhum dos dois pode ser empurrado para fora (ALE-147). */}
         <Show when={props.actions}>
-          <div class="flex min-w-[10rem] flex-1 items-center gap-2">{props.actions}</div>
+          <div class="flex min-w-min flex-1 items-center gap-2">{props.actions}</div>
         </Show>
       </div>
 

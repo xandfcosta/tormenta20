@@ -15,6 +15,10 @@ const HERO = 'Tanque Placas Nv10'
  *
  * Read-only on purpose: it opens dialogs and filters, and never writes, so it
  * leaves the seed exactly as it found it (F.I.R.S.T — repeatable).
+ *
+ * "A ficha do item abre pelo tile guardado" saiu na ALE-144: a mochila fora do
+ * diálogo não tem lista virtualizada, e `features/character-sheet/bag-panel.test.tsx`
+ * já prova o mesmo desfecho montando o painel de verdade.
  */
 test.describe('Mochila', () => {
   test('abre o catálogo e filtra pelo nome sem derrubar a cena', async ({ page }) => {
@@ -39,16 +43,4 @@ test.describe('Mochila', () => {
     await expect(search).toBeHidden()
   })
 
-  test('a ficha do item abre pelo tile guardado', async ({ page }) => {
-    await page.goto('/characters')
-    await openSheetFromRoster(page, HERO)
-    await page.getByRole('tab', { name: 'Mochila' }).click()
-
-    await page.getByRole('button', { name: 'Abrir Bálsamo restaurador' }).click()
-    const sheet = page.getByRole('dialog').filter({ hasText: 'Bálsamo restaurador' })
-    await expect(sheet).toBeVisible()
-    // A consumível offers "Usar" and no equip slot to move into.
-    await expect(sheet.getByRole('button', { name: 'Usar' })).toBeVisible()
-    await expect(sheet.getByRole('button', { name: /Empunhar/ })).toHaveCount(0)
-  })
 })

@@ -19,14 +19,17 @@ test.describe('Detalhe da campanha', () => {
 })
 
 /**
- * The GM's write block (ALE-79). Every case stops SHORT of a destructive write:
- * the seed is shared with the other specs, so editing is opened and cancelled,
- * and deleting only gets as far as the confirmation.
- */
-/**
- * Criar campanha e entrar por convite (ALE-80). The create case writes for
- * real, so it DELETES what it made — the seed is shared with every other spec
- * and a run that leaves campaigns behind poisons the next one.
+ * Criar e excluir uma crônica (ALE-79, ALE-80): o único caso daqui que ESCREVE
+ * de verdade, e por isso ele apaga o que criou — a seed é compartilhada com
+ * todos os specs e uma execução que deixa campanha para trás envenena a
+ * próxima.
+ *
+ * O bloco "Entrar por convite" saiu na ALE-144: resolução do alvo
+ * (`entities/campaign/join-target.test.ts`), prévia do convite
+ * (`entities/queries.test.ts`) e convite morto
+ * (`features/campaign-join/hero-picker.test.tsx`) já respondem em vitest, e a
+ * página `/campaigns/join` continua sendo carregada nos seis formatos pelo
+ * bloco responsivo abaixo.
  */
 test.describe('Abrir e fechar uma crônica', () => {
   test('criar leva direto para a nova crônica, e excluir traz de volta', async ({
@@ -48,43 +51,6 @@ test.describe('Abrir e fechar uma crônica', () => {
     await page.getByRole('button', { name: /Excluir campanha/ }).click()
     await page.getByRole('dialog').getByRole('button', { name: 'Excluir' }).click()
     await expect(page).toHaveURL(/\/campaigns$/)
-  })
-
-  test('nome em branco não cria nada', async ({ page }) => {
-    await page.goto('/campaigns/new')
-
-    await page.getByRole('button', { name: 'Abrir crônica' }).click()
-
-    await expect(page.getByText('Nome é obrigatório')).toBeVisible()
-    await expect(page).toHaveURL(/\/campaigns\/new/)
-  })
-})
-
-test.describe('Entrar por convite', () => {
-  test('o link de convite abre a carta com o token', async ({ page }) => {
-    await page.goto('/join/um-token-qualquer')
-
-    // The /join/$token shim hands off to the real form.
-    await expect(page).toHaveURL(/\/campaigns\/join\?token=um-token-qualquer/)
-    await expect(page.getByRole('heading', { name: 'Entrar na mesa' })).toBeVisible()
-  })
-
-  // Um token morto tem que DIZER que morreu; sem isso o jogador só vê um botão
-  // desabilitado e não sabe que precisa pedir outro link.
-  test('convite expirado explica o que fazer', async ({ page }) => {
-    await page.goto('/campaigns/join?token=token-que-nao-existe')
-
-    await expect(page.getByText(/Convite inválido ou expirado/)).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Entrar na mesa' })).toBeDisabled()
-  })
-
-  test('sem convite, pede o número da mesa e o herói', async ({ page }) => {
-    await page.goto('/campaigns/join')
-
-    await expect(page.getByLabel('Número da campanha')).toBeVisible()
-    await expect(page.getByText('Qual herói entra na mesa?')).toBeVisible()
-    // Nada escolhido ainda → não dá para entrar.
-    await expect(page.getByRole('button', { name: 'Entrar na mesa' })).toBeDisabled()
   })
 })
 

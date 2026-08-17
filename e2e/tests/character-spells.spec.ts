@@ -13,6 +13,10 @@ const CASTER = 'Necromante Nv12 Magias'
  *
  * Read-only: it opens dialogs and filters, never writes, so the seed is left as
  * found (F.I.R.S.T — repeatable).
+ *
+ * O diálogo de conjurar saiu na ALE-144: a soma dos aprimoramentos é ARITMÉTICA
+ * e mora em `features/character-sheet/spell-augments.test.ts`, que cobre oito
+ * casos onde aqui cabia um.
  */
 test.describe('Grimório', () => {
   test('lista as magias aprendidas com custo e CD', async ({ page }) => {
@@ -49,20 +53,4 @@ test.describe('Grimório', () => {
     await expect(dialog.getByText('Bola de Fogo')).toHaveCount(0)
   })
 
-  test('o diálogo de conjurar soma os aprimoramentos', async ({ page }) => {
-    await page.goto('/characters')
-    await openSheetFromRoster(page, CASTER)
-    await page.getByRole('tab', { name: 'Magias' }).click()
-
-    await page.getByRole('button', { name: 'Conjurar Bola de Fogo' }).click()
-    const dialog = page.getByRole('dialog')
-    await expect(dialog.getByText('3 PM', { exact: true })).toBeVisible()
-
-    // Bola de Fogo: base 3 + 3 degraus de "aumenta" a 2 PM cada = 9.
-    await dialog.getByRole('spinbutton', { name: /Aprimoramento 1/ }).fill('3')
-    await expect(dialog.getByText('9 PM', { exact: true })).toBeVisible()
-
-    await dialog.getByRole('button', { name: 'Cancelar' }).click()
-    await expect(dialog).toBeHidden()
-  })
 })
