@@ -193,8 +193,11 @@ func TestMoveHandlersResolveOwnershipOnTheServer(t *testing.T) {
 // (cross-site WebSocket hijacking). Numa LAN doméstica o risco prático é baixo,
 // mas o binário não pode ter duas políticas.
 func TestSocketOriginFollowsTheHttpPolicy(t *testing.T) {
-	producao := &Server{cfg: Config{CORSOrigin: ""}}                 // serve a própria SPA
-	dev := &Server{cfg: Config{CORSOrigin: "http://localhost:5173"}} // atrás do proxy do Vite
+	producao := &Server{cfg: Config{}} // serve a própria SPA
+	// Atrás do proxy do Vite, e com os TRÊS apelidos da mesma origem: para o
+	// browser eles são origens diferentes, e a que ficar de fora perde o socket
+	// (ALE-185).
+	dev := &Server{cfg: Config{CORSOrigins: splitOrigins(devCORSOrigins)}}
 
 	casos := []struct {
 		nome   string
@@ -207,7 +210,14 @@ func TestSocketOriginFollowsTheHttpPolicy(t *testing.T) {
 		{"produção, site de terceiro", producao, "https://site-do-mal.example", "192.168.1.5:3001", false},
 		{"produção, mesmo host em outra porta", producao, "http://192.168.1.5:9999", "192.168.1.5:3001", false},
 		{"dev, a origem declarada", dev, "http://localhost:5173", "localhost:3001", true},
+		{"dev, o loopback IPv6 (que é o que o Vite escuta)", dev, "http://[::1]:5173", "localhost:3001", true},
+		{"dev, o loopback IPv4", dev, "http://127.0.0.1:5173", "localhost:3001", true},
 		{"dev, qualquer outra", dev, "http://localhost:4444", "localhost:3001", false},
+		// A mesa na LAN não precisa de CORS_ORIGIN nenhum: em produção o binário
+		// serve a própria SPA, então quem abre pelo IP da rede é MESMA ORIGEM —
+		// é o primeiro caso desta tabela, e é a resposta para "quando eu abrir
+		// a LAN, o CORS vai barrar os outros?" (ALE-185).
+		{"dev, a LAN que não foi declarada", dev, "http://192.168.1.5:5173", "192.168.1.5:3001", false},
 		// Sem `Origin` passa de propósito: o navegador não manda esse cabeçalho
 		// em GET de mesma origem, que é o transporte de polling em produção.
 		// Quem guarda a sala aí é o JWT do handshake.
@@ -224,7 +234,7 @@ func TestSocketOriginFollowsTheHttpPolicy(t *testing.T) {
 // E o guarda roda ANTES do engine.io: o handshake de terceiro nem chega lá.
 func TestAThirdPartyHandshakeIsRefused(t *testing.T) {
 	s := newTestServer(t)
-	s.cfg.CORSOrigin = "" // produção: mesma origem
+	s.cfg.CORSOrigins = nil // produção: mesma origem
 
 	handler := s.SocketHandler()
 	req := httptest.NewRequest(http.MethodGet, "/socket.io/?EIO=4&transport=polling", nil)
@@ -243,7 +253,7 @@ func TestAThirdPartyHandshakeIsRefused(t *testing.T) {
 // seria o defeito seguinte.
 func TestTheOwnAppStillHandshakes(t *testing.T) {
 	s := newTestServer(t)
-	s.cfg.CORSOrigin = ""
+	s.cfg.CORSOrigins = nil
 
 	req := httptest.NewRequest(http.MethodGet, "/socket.io/?EIO=4&transport=polling", nil)
 	req.Host = "192.168.1.5:3001"

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -68,9 +69,11 @@ func (s *Server) guardSocketOrigin(next http.Handler) http.Handler {
 }
 
 // socketOriginAllowed espelha a decisão do HTTP: com `CORS_ORIGIN` declarado
-// (desenvolvimento, atrás do proxy do Vite), vale aquela origem; sem ele
+// (desenvolvimento, atrás do proxy do Vite), valem aquelas origens; sem ele
 // (produção, onde este binário serve a própria SPA), vale a MESMA origem do
-// pedido.
+// pedido — e é por esse caminho que a mesa na LAN passa, porque quem abre
+// `http://192.168.0.10:3001` manda essa origem e bate com o próprio Host
+// (ALE-185).
 //
 // Requisição SEM `Origin` passa, e isso é deliberado: o navegador não manda
 // esse cabeçalho em GET de mesma origem, que é justamente o transporte de
@@ -80,8 +83,8 @@ func (s *Server) socketOriginAllowed(origin, host string) bool {
 	if origin == "" {
 		return true
 	}
-	if s.cfg.CORSOrigin != "" {
-		return origin == s.cfg.CORSOrigin
+	if len(s.cfg.CORSOrigins) > 0 {
+		return slices.Contains(s.cfg.CORSOrigins, origin)
 	}
 	parsed, err := url.Parse(origin)
 	if err != nil {

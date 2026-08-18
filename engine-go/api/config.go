@@ -45,11 +45,12 @@ type Config struct {
 	JWTExpiresIn string
 	CookieName   string
 	CookieSecure bool
-	// CORSOrigin is the ONE browser origin allowed to call the API cross-origin —
-	// the Vite dev server. Empty means no CORS middleware at all, which is the
-	// production shape: the binary serves the SPA itself, so every call is
-	// same-origin and no other site has any business reaching it.
-	CORSOrigin string
+	// CORSOrigins are the browser origins allowed to call the API cross-origin:
+	// the Vite dev server, under every alias someone may actually type. Empty
+	// means no CORS middleware at all, which is the production shape — the
+	// binary serves the SPA itself, so every call is same-origin and no other
+	// site has any business reaching it.
+	CORSOrigins []string
 	// CatalogPath is the primeEngineCatalogs payload (items/races/…) the API loads
 	// at startup for its mutation validators. Defaults to the committed snapshot.
 	CatalogPath string
@@ -89,7 +90,7 @@ func LoadConfig() (Config, error) {
 		JWTExpiresIn: env("JWT_EXPIRES_IN", "7d"),
 		CookieName:   env("COOKIE_NAME", "t20_session"),
 		CookieSecure: os.Getenv("COOKIE_SECURE") == "true",
-		CORSOrigin:   env("CORS_ORIGIN", defaultCORSOrigin(appEnv)),
+		CORSOrigins:  splitOrigins(env("CORS_ORIGIN", defaultCORSOrigin(appEnv))),
 		BackupDir:    env("BACKUP_DIR", "../backups"),
 		BackupEvery:  envDuration("BACKUP_EVERY", 24*time.Hour),
 		BackupKeep:   envInt("BACKUP_KEEP", 7),
@@ -147,14 +148,38 @@ func secretFlaw(secret string) string {
 	return "the public development secret"
 }
 
-// defaultCORSOrigin: dev needs the Vite origin (:5173) whitelisted because the
-// SPA is served by a different port than the API. Production serves both from
-// this binary, so the default is "no cross-origin caller".
+// devCORSOrigins: dev needs the Vite origin whitelisted because the SPA is
+// served by a different port than the API — and it needs EVERY alias of it,
+// because `localhost`, `[::1]` and `127.0.0.1` are the same dev server but
+// three different origins to the browser. Whichever one is not listed loses the
+// socket to a 403 that reaches the screen as "RECONECTANDO…" forever, with no
+// error anywhere (ALE-185).
+//
+// A máquina na LAN entra aqui também: em desenvolvimento, quem abrir pelo IP da
+// rede acrescenta `http://<ip-da-máquina>:5173` a esta lista. Em PRODUÇÃO nada
+// disso é preciso — um binário só serve SPA, API e socket, então o cliente da
+// LAN é MESMA ORIGEM e passa pelo caminho de baixo do socketOriginAllowed.
+const devCORSOrigins = "http://localhost:5173,http://[::1]:5173,http://127.0.0.1:5173"
+
 func defaultCORSOrigin(appEnv AppEnv) string {
 	if appEnv == EnvProduction {
 		return ""
 	}
-	return "http://localhost:5173"
+	return devCORSOrigins
+}
+
+// splitOrigins parses the comma-separated CORS_ORIGIN, dropping blanks: a
+// trailing comma must yield NO origin rather than an empty one, and an empty
+// one is worse than none — go-chi reads an empty AllowedOrigins list as "allow
+// ALL", which with credentials on is every website (ALE-119).
+func splitOrigins(raw string) []string {
+	var origins []string
+	for _, part := range strings.Split(raw, ",") {
+		if origin := strings.TrimSpace(part); origin != "" {
+			origins = append(origins, origin)
+		}
+	}
+	return origins
 }
 
 func env(key, fallback string) string {

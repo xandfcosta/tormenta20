@@ -8,7 +8,7 @@ export type GatedAudioContext = {
 /** Where the first user gesture is heard — `window` in the app, a fake in the
  *  tests (project rule: browser I/O comes in as a parameter). */
 export type GestureTarget = {
-  addEventListener(type: string, listener: () => void): void
+  addEventListener(type: string, listener: () => void, options?: { capture?: boolean }): void
 }
 
 /**
@@ -43,10 +43,16 @@ export class AudioGate<T extends GatedAudioContext> {
     private readonly openContext: () => T | null,
     gestures: GestureTarget,
   ) {
+    // CAPTURA, e não borbulha: a captura corre da janela para BAIXO, antes de
+    // qualquer componente ver o evento. Medido — o clique numa área neutra
+    // armava o áudio e o clique num CONTROLE não, porque o componente chama
+    // `stopPropagation` no `pointerdown` e o evento morria antes da janela.
+    // Quem só clica em controles nunca teria som (ALE-185).
+    //
     // Subscribed for good, not `once`: mobile browsers park the context when
     // the tab goes to the background, and the next gesture has to revive it.
     for (const gesture of ARMING_GESTURES) {
-      gestures.addEventListener(gesture, () => this.arm())
+      gestures.addEventListener(gesture, () => this.arm(), { capture: true })
     }
   }
 

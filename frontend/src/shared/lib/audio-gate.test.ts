@@ -20,7 +20,7 @@ class FakeAudioContext implements GatedAudioContext {
 /** Named fake for `window` — the test fires the gesture by hand. */
 class FakeGestures implements GestureTarget {
   private readonly listeners = new Map<string, (() => void)[]>()
-  addEventListener(type: string, listener: () => void): void {
+  addEventListener(type: string, listener: () => void, _options?: { capture?: boolean }): void {
     this.listeners.set(type, [...(this.listeners.get(type) ?? []), listener])
   }
   fire(type: string): void {
@@ -84,5 +84,28 @@ describe('AudioGate', () => {
 
     expect(opened).toHaveLength(1)
     expect(gate.ready()).toBe(ctx)
+  })
+})
+
+/**
+ * O evento tem de ser ouvido na CAPTURA. Medido no browser: clicar numa área
+ * neutra armava o áudio e clicar num CONTROLE não — o componente chama
+ * `stopPropagation` no `pointerdown`, e na fase de borbulha o evento morre
+ * antes de chegar à janela. Quem só clica em botões nunca teria som (ALE-185).
+ *
+ * Este caso usa DOM de verdade porque a regra é sobre PROPAGAÇÃO, e um alvo
+ * falso teria de reimplementar exatamente a coisa que está sendo testada.
+ */
+describe('AudioGate no DOM real', () => {
+  it('arma mesmo quando o controle clicado engole o evento', () => {
+    const botao = document.createElement('button')
+    document.body.append(botao)
+    botao.addEventListener('pointerdown', (event) => event.stopPropagation())
+    const gate = new AudioGate(() => new FakeAudioContext('running'), window)
+
+    botao.dispatchEvent(new Event('pointerdown', { bubbles: true }))
+
+    expect(gate.ready()).not.toBeNull()
+    botao.remove()
   })
 })

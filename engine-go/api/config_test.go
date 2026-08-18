@@ -90,7 +90,7 @@ func TestLoadConfigReadsTheEnvironmentFile(t *testing.T) {
 func TestLoadConfigDefaultsCORSPerEnvironment(t *testing.T) {
 	cases := map[AppEnv]string{
 		EnvProduction:  "",
-		EnvDevelopment: "http://localhost:5173",
+		EnvDevelopment: devCORSOrigins,
 	}
 	for appEnv, want := range cases {
 		t.Run(string(appEnv), func(t *testing.T) {
@@ -103,8 +103,42 @@ func TestLoadConfigDefaultsCORSPerEnvironment(t *testing.T) {
 			if err != nil {
 				t.Fatalf("LoadConfig: %v", err)
 			}
-			if cfg.CORSOrigin != want {
-				t.Errorf("CORSOrigin = %q, want %q", cfg.CORSOrigin, want)
+			if got := strings.Join(cfg.CORSOrigins, ","); got != want {
+				t.Errorf("CORSOrigins = %q, want %q", got, want)
+			}
+		})
+	}
+}
+
+// A lista é o que permite os três apelidos do mesmo servidor de dev (e o IP da
+// LAN, quando alguém abre a mesa pela rede em desenvolvimento). Espaço em
+// branco e vírgula sobrando somem: uma origem VAZIA seria pior que nenhuma,
+// porque o go-chi lê lista vazia como "aceite TODAS" (ALE-119).
+func TestCORSOriginParsesAList(t *testing.T) {
+	casos := []struct {
+		nome string
+		raw  string
+		quer []string
+	}{
+		{"uma só", "http://localhost:5173", []string{"http://localhost:5173"}},
+		{
+			"os apelidos do loopback",
+			"http://localhost:5173, http://[::1]:5173 ,http://127.0.0.1:5173",
+			[]string{"http://localhost:5173", "http://[::1]:5173", "http://127.0.0.1:5173"},
+		},
+		{"vírgula sobrando", "http://localhost:5173,,", []string{"http://localhost:5173"}},
+		{"vazio não vira origem vazia", "  ,  ", nil},
+	}
+	for _, caso := range casos {
+		t.Run(caso.nome, func(t *testing.T) {
+			got := splitOrigins(caso.raw)
+			if len(got) != len(caso.quer) {
+				t.Fatalf("splitOrigins(%q) = %q, queria %q", caso.raw, got, caso.quer)
+			}
+			for i, origem := range caso.quer {
+				if got[i] != origem {
+					t.Errorf("origem %d = %q, queria %q", i, got[i], origem)
+				}
 			}
 		})
 	}
