@@ -171,6 +171,20 @@ manual e poda os mais antigos. Zero em qualquer um dos dois desliga. A poda só
 alcança o que a listagem reconhece como backup — arquivo estranho na pasta não é
 candidato.
 
+## O socket segue a MESMA política de origem do HTTP
+
+O `SetCors` do socket.io reflete qualquer origem, e refletir com credenciais
+deixa um site de terceiros abrir o handshake do engine.io com o cookie do
+usuário. Por isso o handler é embrulhado pelo `guardSocketOrigin` (ALE-158): com
+`CORS_ORIGIN` declarado (dev, atrás do proxy do Vite) vale aquela origem; sem
+ele (produção, onde o binário serve a própria SPA) vale a mesma origem do
+pedido.
+
+Requisição **sem** `Origin` passa de propósito: o navegador não manda esse
+cabeçalho em GET de mesma origem, que é justamente o transporte de polling em
+produção — exigi-lo derrubaria o caminho normal. Quem guarda a sala nesse caso é
+o JWT do handshake.
+
 ## Catálogos
 
 `catalog/data/*.json` é embutido no binário e servido por `GET /catalog/:nome`.

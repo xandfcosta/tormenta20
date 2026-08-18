@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -42,7 +43,51 @@ func (s *Server) SocketHandler() http.Handler {
 			g.onConnect(sock)
 		}
 	})
-	return g.io.ServeHandler(nil)
+	// A política de origem do socket passa a ser a MESMA do HTTP (ALE-158): o
+	// `SetCors` acima reflete qualquer origem, e refletir com credenciais deixa
+	// um site de terceiros abrir o handshake com o cookie do usuário.
+	return s.guardSocketOrigin(g.io.ServeHandler(nil))
+}
+
+// guardSocketOrigin recusa o handshake de uma origem que a política não
+// autoriza, ANTES de o engine.io ver a requisição.
+//
+// O `Router()` já tinha o guarda cuidadoso do ALE-119 e o socket não tinha
+// nenhum, o que é contradição dentro do mesmo binário: o mesmo cookie que o
+// HTTP protege abria uma sala ao vivo pelo socket (cross-site WebSocket
+// hijacking). Numa LAN doméstica o risco prático é baixo, mas a política é uma
+// só ou não é política.
+func (s *Server) guardSocketOrigin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !s.socketOriginAllowed(r.Header.Get("Origin"), r.Host) {
+			http.Error(w, "origin not allowed", http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// socketOriginAllowed espelha a decisão do HTTP: com `CORS_ORIGIN` declarado
+// (desenvolvimento, atrás do proxy do Vite), vale aquela origem; sem ele
+// (produção, onde este binário serve a própria SPA), vale a MESMA origem do
+// pedido.
+//
+// Requisição SEM `Origin` passa, e isso é deliberado: o navegador não manda
+// esse cabeçalho em GET de mesma origem, que é justamente o transporte de
+// polling do socket.io em produção — exigi-lo derrubaria o caminho normal. Quem
+// continua guardando a sala nesse caso é o JWT do handshake, que não mudou.
+func (s *Server) socketOriginAllowed(origin, host string) bool {
+	if origin == "" {
+		return true
+	}
+	if s.cfg.CORSOrigin != "" {
+		return origin == s.cfg.CORSOrigin
+	}
+	parsed, err := url.Parse(origin)
+	if err != nil {
+		return false
+	}
+	return parsed.Host == host
 }
 
 // onConnect authenticates the handshake (same cookie/JWT as HTTP); a bad handshake gets an

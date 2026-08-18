@@ -1,6 +1,8 @@
 package api
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"regexp"
 	"strings"
@@ -180,5 +182,77 @@ func TestMoveHandlersResolveOwnershipOnTheServer(t *testing.T) {
 	}
 	if found == 0 {
 		t.Fatal("nenhum handler de movimento reconhecido — o nome dos eventos mudou e este teste ficou cego")
+	}
+}
+
+// A política de origem do socket é a MESMA do HTTP (ALE-158).
+//
+// O `Router()` tinha o guarda do ALE-119 e o socket não tinha nenhum: o
+// `SetCors` reflete qualquer origem, e refletir COM credenciais deixa um site
+// de terceiros abrir o handshake do engine.io com o cookie do usuário
+// (cross-site WebSocket hijacking). Numa LAN doméstica o risco prático é baixo,
+// mas o binário não pode ter duas políticas.
+func TestSocketOriginFollowsTheHttpPolicy(t *testing.T) {
+	producao := &Server{cfg: Config{CORSOrigin: ""}}                 // serve a própria SPA
+	dev := &Server{cfg: Config{CORSOrigin: "http://localhost:5173"}} // atrás do proxy do Vite
+
+	casos := []struct {
+		nome   string
+		s      *Server
+		origin string
+		host   string
+		quer   bool
+	}{
+		{"produção, mesma origem", producao, "http://192.168.1.5:3001", "192.168.1.5:3001", true},
+		{"produção, site de terceiro", producao, "https://site-do-mal.example", "192.168.1.5:3001", false},
+		{"produção, mesmo host em outra porta", producao, "http://192.168.1.5:9999", "192.168.1.5:3001", false},
+		{"dev, a origem declarada", dev, "http://localhost:5173", "localhost:3001", true},
+		{"dev, qualquer outra", dev, "http://localhost:4444", "localhost:3001", false},
+		// Sem `Origin` passa de propósito: o navegador não manda esse cabeçalho
+		// em GET de mesma origem, que é o transporte de polling em produção.
+		// Quem guarda a sala aí é o JWT do handshake.
+		{"sem Origin (polling de mesma origem)", producao, "", "192.168.1.5:3001", true},
+	}
+	for _, caso := range casos {
+		if got := caso.s.socketOriginAllowed(caso.origin, caso.host); got != caso.quer {
+			t.Errorf("%s: origem %q contra host %q deu %v, queria %v",
+				caso.nome, caso.origin, caso.host, got, caso.quer)
+		}
+	}
+}
+
+// E o guarda roda ANTES do engine.io: o handshake de terceiro nem chega lá.
+func TestAThirdPartyHandshakeIsRefused(t *testing.T) {
+	s := newTestServer(t)
+	s.cfg.CORSOrigin = "" // produção: mesma origem
+
+	handler := s.SocketHandler()
+	req := httptest.NewRequest(http.MethodGet, "/socket.io/?EIO=4&transport=polling", nil)
+	req.Host = "192.168.1.5:3001"
+	req.Header.Set("Origin", "https://site-do-mal.example")
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusForbidden {
+		t.Errorf("handshake de terceiro respondeu %d, esperava 403", rec.Code)
+	}
+}
+
+// O caminho normal continua funcionando — um guarda que fecha a porta da mesa
+// seria o defeito seguinte.
+func TestTheOwnAppStillHandshakes(t *testing.T) {
+	s := newTestServer(t)
+	s.cfg.CORSOrigin = ""
+
+	req := httptest.NewRequest(http.MethodGet, "/socket.io/?EIO=4&transport=polling", nil)
+	req.Host = "192.168.1.5:3001"
+	req.Header.Set("Origin", "http://192.168.1.5:3001")
+	rec := httptest.NewRecorder()
+
+	s.SocketHandler().ServeHTTP(rec, req)
+
+	if rec.Code == http.StatusForbidden {
+		t.Errorf("o próprio app foi recusado no handshake: %d %s", rec.Code, rec.Body.String())
 	}
 }
