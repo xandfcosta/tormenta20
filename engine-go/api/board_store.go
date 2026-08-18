@@ -78,19 +78,34 @@ func (bs *boardStore) get(ctx context.Context, sessionID int64) *BoardState {
 	return cloneBoard(bs.boards[sessionID])
 }
 
+// hydrateLocked traz o tabuleiro do banco na primeira leitura da sessão.
+//
+// O `loaded` só é marcado no SUCESSO, e essa ordem é a correção da ALE-155.
+// Marcando antes da query, um erro transiente de banco na primeira leitura
+// ficava cacheado como "esta sessão não tem tabuleiro" **até o processo
+// reiniciar** — a falha de LEITURA com o mesmo modo silencioso que a de
+// gravação tinha antes da ALE-124.
+//
+// `sql.ErrNoRows` é a exceção deliberada: "sessão sem tabuleiro" é uma resposta
+// legítima e definitiva, então ela MARCA e evita uma ida ao disco por mensagem.
+// Qualquer outro erro deixa a sessão sem marca, e a mensagem seguinte tenta de
+// novo.
 func (bs *boardStore) hydrateLocked(ctx context.Context, sessionID int64) {
 	if bs.loaded[sessionID] {
 		return
 	}
-	bs.loaded[sessionID] = true
 	blob, err := bs.q.GetSessionBoard(ctx, sessionID)
 	if errors.Is(err, sql.ErrNoRows) {
-		return // sessão sem tabuleiro: ausência é resposta, não falha
-	}
-	if err != nil {
-		log.Printf("session %d: board load failed (%v)", sessionID, err)
+		bs.loaded[sessionID] = true // ausência é resposta, não falha
 		return
 	}
+	if err != nil {
+		// Sem marcar: a próxima mensagem tenta de novo em vez de servir um
+		// "sem tabuleiro" que só existe porque o banco piscou.
+		log.Printf("session %d: board load failed (%v); tentará de novo", sessionID, err)
+		return
+	}
+	bs.loaded[sessionID] = true
 	var parsed BoardState
 	if err := json.Unmarshal([]byte(blob), &parsed); err != nil {
 		log.Printf("session %d: board blob malformed (%v); tratando como sem tabuleiro", sessionID, err)
@@ -120,14 +135,31 @@ func (bs *boardStore) open(ctx context.Context, sessionID int64, place, terrain 
 
 // close encerra o tabuleiro: some da memória e do banco. As posições não são
 // arquivadas AINDA — os Lugares da crônica são fatia própria (ALE-124).
-func (bs *boardStore) close(ctx context.Context, sessionID int64) {
+//
+// Devolve as transições de saúde como o `persist`, e pelo mesmo motivo
+// (ALE-155): se o DELETE falha, a memória diz "fechado" e o banco mantém a
+// linha — no próximo boot o tabuleiro FANTASMA volta, com as peças de uma cena
+// que a mesa já encerrou. Antes isso morria numa linha de log.
+func (bs *boardStore) close(ctx context.Context, sessionID int64) (dirty, changed bool) {
 	bs.mu.Lock()
 	delete(bs.boards, sessionID)
 	bs.loaded[sessionID] = true
 	bs.mu.Unlock()
-	if err := bs.q.DeleteSessionBoard(ctx, sessionID); err != nil {
+
+	err := bs.q.DeleteSessionBoard(ctx, sessionID)
+
+	bs.mu.Lock()
+	defer bs.mu.Unlock()
+	prev := bs.dirty[sessionID]
+	dirty = err != nil
+	changed = prev != dirty
+	if dirty {
+		bs.dirty[sessionID] = true
 		log.Printf("session %d: board delete failed (%v)", sessionID, err)
+		return dirty, changed
 	}
+	delete(bs.dirty, sessionID)
+	return dirty, changed
 }
 
 // apply roda uma mutação pura sob a trava e devolve o instantâneo para o

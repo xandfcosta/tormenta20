@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"errors"
+	"log"
 
 	socket "github.com/zishang520/socket.io/servers/socket/v3"
 )
@@ -85,43 +86,59 @@ func (g *realtimeGateway) onSessionRest(sock *socket.Socket, args []any) {
 	if condition == "" {
 		condition = "normal"
 	}
-	healed, total, err := g.restParty(sockData(sock).user, ctx.campaignID, ctx.sessionID, scope, condition)
+	done, total, err := g.restParty(sockData(sock).user, ctx.campaignID, ctx.sessionID, scope, condition)
 	if err != nil {
 		g.wsError(sock, "Could not load campaign members")
 		return
 	}
-	if healed > 0 {
+	if done > 0 {
 		g.emitSessionState(ctx.sessionID, g.s.sessions.getState(ctx.sessionID))
 	}
 	g.io.To(socket.Room(sessionRoomName(ctx.sessionID))).Emit("session-rest", map[string]any{
 		"sessionId": ctx.sessionID, "scope": scope, "condition": condition,
 	})
-	ackOK(ctx.ack, map[string]any{"rested": scope, "characters": total, "healed": healed})
+	// `healed` continua no ack pelo nome antigo (o cliente o lê), mas agora ele
+	// conta os dois escopos: encerrar cena que falha deixa de somar, e o mestre
+	// consegue ver "3 de 5" em vez de um "descansou" que não é verdade inteira.
+	ackOK(ctx.ack, map[string]any{"rested": scope, "characters": total, "healed": done})
 }
 
-// restParty applies the rest to every member character (end-scene, or end-day + heal +
-// mirror), returning how many healed and the total member count. Best-effort per character.
-func (g *realtimeGateway) restParty(user AuthUser, campaignID, sessionID int64, scope, condition string) (healed, total int, err error) {
+// restParty aplica o descanso a cada personagem do grupo (encerrar cena, ou
+// encerrar dia + curar + espelhar) e devolve quantos DERAM CERTO e o total.
+//
+// Best-effort por personagem de propósito — uma ficha que falha não pode
+// impedir o descanso das outras quatro. Mas o resultado é CONTADO e volta no
+// ack (ALE-155): antes, o encerrar-cena era `_, _ =` e nem entrava na conta, de
+// modo que o mestre lia "descansou" enquanto duas de cinco fichas não tinham
+// descansado. Best-effort é sobre continuar apesar da falha, não sobre esconder
+// que ela houve.
+func (g *realtimeGateway) restParty(user AuthUser, campaignID, sessionID int64, scope, condition string) (done, total int, err error) {
 	charIDs, err := g.s.listMemberCharacterIds(context.Background(), campaignID)
 	if err != nil {
 		return 0, 0, err
 	}
 	for _, cid := range charIDs {
 		if scope != "day" {
-			_, _ = g.s.endScene(context.Background(), user, cid)
+			if _, e := g.s.endScene(context.Background(), user, cid); e != nil {
+				log.Printf("session %d: encerrar cena do personagem %d falhou (%v)", sessionID, cid, e)
+				continue
+			}
+			done++
 			continue
 		}
 		if _, e := g.s.endDay(context.Background(), user, cid); e != nil {
+			log.Printf("session %d: encerrar dia do personagem %d falhou (%v)", sessionID, cid, e)
 			continue
 		}
 		vitals, _, e := g.s.restVitals(context.Background(), user, cid, condition)
 		if e != nil {
+			log.Printf("session %d: descanso do personagem %d falhou (%v)", sessionID, cid, e)
 			continue
 		}
 		g.mirrorVitalsToTracker(sessionID, cid, vitals)
-		healed++
+		done++
 	}
-	return healed, len(charIDs), nil
+	return done, len(charIDs), nil
 }
 
 // mirrorVitalsToTracker copies freshly-persisted PV/PM onto the matching live tracker entry

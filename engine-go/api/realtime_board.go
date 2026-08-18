@@ -35,7 +35,11 @@ func (g *realtimeGateway) onBoardClose(sock *socket.Socket, args []any) {
 	if !ok || !g.requireGm(sock, ctx.role) {
 		return
 	}
-	g.s.boards.close(context.Background(), ctx.sessionID)
+	// O aviso de gravação vale para o fechar também: um DELETE que falha deixa
+	// o tabuleiro fantasma no banco, e a mesa precisa saber (ALE-155).
+	if dirty, changed := g.s.boards.close(context.Background(), ctx.sessionID); changed {
+		g.warnPersistence(ctx.sessionID, dirty)
+	}
 	g.emitBoardState(ctx.sessionID, nil)
 	ackOK(ctx.ack, map[string]any{"closed": true})
 }
@@ -167,10 +171,15 @@ func (g *realtimeGateway) emitBoardState(sessionID int64, board *BoardState) {
 // Sem isto, uma falha permanente de gravação fica invisível: foi assim que o
 // tabuleiro passou um dia vivendo só em memória, com a tela impecável (ALE-124).
 func (g *realtimeGateway) persistBoardAndWarn(sessionID int64) {
-	dirty, changed := g.s.boards.persist(context.Background(), sessionID)
-	if !changed {
-		return
+	if dirty, changed := g.s.boards.persist(context.Background(), sessionID); changed {
+		g.warnPersistence(sessionID, dirty)
 	}
+}
+
+// warnPersistence conta à sala que a gravação começou (ou deixou) de falhar. É
+// o MESMO evento do rastreador, então a tela que já mostra o aviso cobre o
+// tabuleiro sem uma linha nova.
+func (g *realtimeGateway) warnPersistence(sessionID int64, dirty bool) {
 	g.io.To(socket.Room(sessionRoomName(sessionID))).Emit("persistence-warning", map[string]any{
 		"sessionId": sessionID, "dirty": dirty,
 	})

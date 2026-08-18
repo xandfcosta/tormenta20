@@ -2,3 +2,14 @@ packages:
   - frontend
   - engine-go
   - e2e
+
+# Pacotes autorizados a rodar script de instalação (o pnpm 11 bloqueia por
+# padrão, e o ajuste saiu do campo `pnpm` do package.json, onde passou a ser
+# IGNORADO em silêncio). Todos aqui compilam binário nativo e não funcionam sem
+# o script: o resolver do biome, o watcher do vite, o esbuild e o oxide do
+# Tailwind.
+onlyBuiltDependencies:
+  - unrs-resolver
+  - "@parcel/watcher"
+  - esbuild
+  - "@tailwindcss/oxide"

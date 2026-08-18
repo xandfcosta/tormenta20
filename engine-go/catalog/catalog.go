@@ -123,6 +123,14 @@ var (
 	activationsByID map[string]Activation
 )
 
+// ActivationsLoaded diz se as concessões de poder foram carregadas. Existe para
+// o `/health` poder ANUNCIAR a degradação: sem elas o servidor sobe e funciona,
+// mas poder nenhum concede nada, e isso morria numa linha de log (ALE-155).
+func ActivationsLoaded() bool {
+	_, _ = LookupActivation("") // força o `sync.Once`, senão isto responde antes da carga
+	return len(activationsByID) > 0
+}
+
 // LookupActivation returns the parsed activation spec by id, or (zero, false) if unknown.
 func LookupActivation(id string) (Activation, bool) {
 	activationsOnce.Do(func() {

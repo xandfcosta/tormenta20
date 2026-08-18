@@ -2,7 +2,12 @@ package api
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
+
+	"t20engine/engine"
 )
 
 // O tabuleiro sobrevive ao reinício do servidor — a memória é a verdade da
@@ -135,5 +140,169 @@ func TestBoardPersistFailureIsReported(t *testing.T) {
 	}
 	if dirty, changed := s.boards.persist(ctx, sid); dirty || !changed {
 		t.Errorf("a recuperação não foi anunciada: dirty=%v changed=%v", dirty, changed)
+	}
+}
+
+// Um erro TRANSIENTE de leitura não pode virar "esta sessão não tem tabuleiro"
+// até o processo reiniciar (ALE-155).
+//
+// Este é o gêmeo do defeito da gravação, e o mecanismo é o mesmo: o
+// `hydrateLocked` marcava a sessão como já consultada ANTES da query, então uma
+// falha de banco na primeira leitura ficava cacheada. A mesa via um tabuleiro
+// vazio, o mestre reabria, e o de verdade continuava no disco.
+func TestATransientReadFailureIsRetried(t *testing.T) {
+	s := newTestServer(t)
+	ctx := context.Background()
+	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
+
+	s.boards.open(ctx, sid, "Cripta", "pedra")
+	if _, err := s.boards.addToken(ctx, sid, BoardToken{Label: "Ogro", X: 1, Y: 1}); err != nil {
+		t.Fatalf("adicionar peça: %v", err)
+	}
+	s.boards.persist(ctx, sid)
+
+	// Um servidor frio sobre o mesmo banco, e a leitura falha: é o disco
+	// piscando no primeiro acesso à sessão.
+	frio := newBoardStore(s.queries, newUUID)
+	if _, err := s.db.Exec("ALTER TABLE session_boards RENAME TO session_boards_escondida"); err != nil {
+		t.Fatalf("esconder a tabela: %v", err)
+	}
+	if vazio := frio.get(ctx, sid); vazio != nil {
+		t.Fatalf("leitura falhou e mesmo assim devolveu tabuleiro: %+v", vazio)
+	}
+
+	// O disco volta. A próxima leitura tem de ACHAR o tabuleiro — se a falha
+	// tivesse sido cacheada, esta sessão ficaria sem tabuleiro para sempre.
+	if _, err := s.db.Exec("ALTER TABLE session_boards_escondida RENAME TO session_boards"); err != nil {
+		t.Fatalf("devolver a tabela: %v", err)
+	}
+	voltou := frio.get(ctx, sid)
+
+	if voltou == nil {
+		t.Fatal("a falha transiente ficou cacheada: a sessão perdeu o tabuleiro até o próximo reinício")
+	}
+	if len(voltou.Tokens) != 1 {
+		t.Errorf("o tabuleiro voltou incompleto: %+v", voltou.Tokens)
+	}
+}
+
+// "Sessão sem tabuleiro" é resposta DEFINITIVA e continua sendo cacheada: sem
+// isso, toda mensagem de uma sessão sem tabuleiro iria ao disco.
+func TestNoBoardIsStillCached(t *testing.T) {
+	s := newTestServer(t)
+	ctx := context.Background()
+	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
+
+	if b := s.boards.get(ctx, sid); b != nil {
+		t.Fatalf("sessão nova veio com tabuleiro: %+v", b)
+	}
+	// Com a tabela fora do ar, uma segunda leitura só pode responder se estiver
+	// respondendo de memória.
+	if _, err := s.db.Exec("DROP TABLE session_boards"); err != nil {
+		t.Fatalf("derrubar a tabela: %v", err)
+	}
+	if b := s.boards.get(ctx, sid); b != nil {
+		t.Errorf("a segunda leitura foi ao disco em vez de lembrar: %+v", b)
+	}
+}
+
+// Encerrar o tabuleiro também avisa quando a gravação falha: sem isso a memória
+// diz "fechado", o banco mantém a linha, e no próximo boot o tabuleiro fantasma
+// volta com as peças de uma cena que a mesa já encerrou (ALE-155).
+func TestClosingReportsAFailedDelete(t *testing.T) {
+	s := newTestServer(t)
+	ctx := context.Background()
+	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
+	s.boards.open(ctx, sid, "Cripta", "pedra")
+	s.boards.persist(ctx, sid)
+
+	if _, err := s.db.Exec("DROP TABLE session_boards"); err != nil {
+		t.Fatalf("derrubar a tabela: %v", err)
+	}
+	dirty, changed := s.boards.close(ctx, sid)
+
+	if !dirty || !changed {
+		t.Fatalf("o encerramento falhou e ninguém soube: dirty=%v changed=%v", dirty, changed)
+	}
+}
+
+// O `/health` conta a degradação em vez de dizer "ok" sempre (ALE-155).
+//
+// O boot é best-effort de propósito — sem catálogo, autenticação, leitura e
+// vitais continuam de pé —, mas a degradação só existia numa linha de log
+// enquanto os handlers que precisam do catálogo devolviam 503 no meio de uma
+// jogada.
+func TestHealthReportsADegradedBoot(t *testing.T) {
+	// O servidor de teste sobe SEM catálogo — que é exatamente o estado
+	// degradado que o boot de produção assume quando o arquivo falta.
+	s := newTestServer(t)
+
+	degradado := healthBody(t, s)
+
+	if degradado["status"] != "degraded" {
+		t.Fatalf("sem catálogo o health disse %v", degradado)
+	}
+	lista, _ := degradado["degraded"].([]any)
+	if len(lista) == 0 || lista[0] != "catalogs" {
+		t.Errorf("o health não disse O QUE está degradado: %v", degradado)
+	}
+
+	// Com catálogo, volta a "ok". Isto prova o ANÚNCIO, não que o catálogo
+	// esteja correto — quem prova isso é a validação de schema do `catalog`.
+	s.catalogs = &engine.Catalogs{}
+	if saudavel := healthBody(t, s); saudavel["status"] != "ok" {
+		t.Fatalf("servidor inteiro respondeu %v", saudavel)
+	}
+}
+
+func healthBody(t *testing.T, s *Server) map[string]any {
+	t.Helper()
+	rec := httptest.NewRecorder()
+	s.Router().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/health", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("health respondeu %d — reiniciar não conserta arquivo faltando", rec.Code)
+	}
+	var body map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("corpo do health: %v", err)
+	}
+	return body
+}
+
+// O descanso do grupo CONTA quem não descansou (ALE-155).
+//
+// Best-effort por personagem continua certo — uma ficha que falha não pode
+// impedir o descanso das outras quatro. O que estava errado era o silêncio: o
+// encerrar-cena era `_, _ =` e nem entrava na conta, então o mestre lia
+// "descansou" enquanto duas de cinco fichas não tinham descansado.
+func TestPartyRestCountsWhoActuallyRested(t *testing.T) {
+	s := newTestServer(t)
+	gm := seedUser(t, s, "gm@t.com")
+	campaignID := seedCampaign(t, s, gm)
+	sid := seedSession(t, s, campaignID)
+	heroi := seedCharacter(t, s, gm, "Tanque", 10, 20, 2, 5)
+	seedMember(t, s, campaignID, heroi, "player")
+	user := AuthUser{ID: gm, Email: "gm@t.com"}
+
+	g := &realtimeGateway{s: s}
+	done, total, err := g.restParty(user, campaignID, sid, "scene", "normal")
+	if err != nil || total != 1 || done != 1 {
+		t.Fatalf("descanso saudável deu done=%d total=%d err=%v", done, total, err)
+	}
+
+	// O disco pisca no meio do descanso do grupo.
+	if _, err := s.db.Exec("DROP TABLE active_effects"); err != nil {
+		t.Fatalf("derrubar a tabela: %v", err)
+	}
+	done, total, err = g.restParty(user, campaignID, sid, "scene", "normal")
+
+	if err != nil {
+		t.Fatalf("uma ficha que falha não pode derrubar o descanso inteiro: %v", err)
+	}
+	if total != 1 {
+		t.Errorf("o total deixou de contar o grupo: %d", total)
+	}
+	if done != 0 {
+		t.Errorf("contou %d como descansados, e nenhum descansou — é o mestre lendo uma verdade pela metade", done)
 	}
 }
