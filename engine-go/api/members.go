@@ -253,7 +253,13 @@ func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 		writeFieldError(w, http.StatusConflict, fmt.Sprintf("Character %d already in campaign %d", *body.CharacterID, cid), FieldErrorMap{"characterId": {"Already a member"}})
 		return
 	}
-	m, err := s.joinCampaign(r.Context(), *body.CharacterID, cid, role)
+	m, err := s.joinCampaign(r.Context(), *body.CharacterID, cid, user.ID, role)
+	if errors.Is(err, errAlreadyInCampaign) {
+		// Perdeu a corrida para um pedido simultâneo: o desfecho é o mesmo 409
+		// que a checagem de fora daria, e não um 500 que culparia o servidor.
+		writeFieldError(w, http.StatusConflict, fmt.Sprintf("Character %d already in campaign %d", *body.CharacterID, cid), FieldErrorMap{"characterId": {"Already a member"}})
+		return
+	}
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not add member")
 		return
@@ -343,12 +349,26 @@ func (s *Server) handleRemoveMember(w http.ResponseWriter, r *http.Request) {
 //
 // A cópia existe porque a ficha da mesa é um instantâneo (ALE-33): editar
 // durante a sessão não pode vazar para as outras campanhas.
-func (s *Server) joinCampaign(ctx context.Context, sourceID, campaignID int64, role string) (sqlcgen.CampaignMember, error) {
+func (s *Server) joinCampaign(ctx context.Context, sourceID, campaignID, ownerID int64, role string) (sqlcgen.CampaignMember, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return sqlcgen.CampaignMember{}, err
 	}
 	defer func() { _ = tx.Rollback() }()
+
+	// A checagem é REFEITA aqui dentro, e é isto que fecha a corrida.
+	//
+	// A de fora existe para a mensagem amigável e para o caminho rápido; ela
+	// roda sem transação, então dois pedidos simultâneos passam os dois por
+	// ela. Com o `_txlock=immediate` (ALE-156), a transação já nasce com a
+	// trava de escrita, então o segundo pedido ESPERA o primeiro terminar — e
+	// esta releitura enxerga o que ele gravou.
+	//
+	// É a mesma forma do commit de movimento no tabuleiro, que reconfere a vez:
+	// entre decidir e escrever, a mesa pode ter mudado.
+	if err := assertCanJoin(ctx, s.queries.WithTx(tx), tx, sourceID, campaignID, ownerID, role); err != nil {
+		return sqlcgen.CampaignMember{}, err
+	}
 
 	copyID, err := cloneCharacterTx(ctx, tx, sourceID, campaignID)
 	if err != nil {
@@ -361,4 +381,34 @@ func (s *Server) joinCampaign(ctx context.Context, sourceID, campaignID int64, r
 		return sqlcgen.CampaignMember{}, err
 	}
 	return member, tx.Commit()
+}
+
+// errAlreadyInCampaign: a releitura dentro da transação achou o que a checagem
+// de fora não tinha achado — alguém ganhou a corrida.
+var errAlreadyInCampaign = errors.New("personagem já está na campanha")
+
+// assertCanJoin repete, DENTRO da transação, as duas travas que o handler já
+// tentou por fora. Repetição de propósito: a de fora é pela mensagem, esta é
+// pela verdade (ALE-156).
+func assertCanJoin(ctx context.Context, q *sqlcgen.Queries, tx *sql.Tx, sourceID, campaignID, ownerID int64, role string) error {
+	if role == "player" {
+		hasPc, err := q.HasPlayerPc(ctx, sqlcgen.HasPlayerPcParams{Campaignid: campaignID, Ownerid: ownerID})
+		if err != nil {
+			return err
+		}
+		if hasPc {
+			return errAlreadyInCampaign
+		}
+	}
+	var hasCopy bool
+	err := tx.QueryRowContext(ctx,
+		`SELECT EXISTS(SELECT 1 FROM characters WHERE sourceCharacterId = ? AND campaignId = ?)`,
+		sourceID, campaignID).Scan(&hasCopy)
+	if err != nil {
+		return err
+	}
+	if hasCopy {
+		return errAlreadyInCampaign
+	}
+	return nil
 }

@@ -29,8 +29,21 @@ func Open(path string) (*sql.DB, error) {
 			return nil, fmt.Errorf("create db dir %q: %w", dir, err)
 		}
 	}
+	// `_txlock=immediate`: toda transação pega a trava de ESCRITA já no BEGIN,
+	// em vez do `DEFERRED` padrão, que só a pega na primeira escrita (ALE-156).
+	//
+	// Sem isso, duas requisições simultâneas leem antes de qualquer uma
+	// escrever, e as duas passam por uma trava de unicidade que é decidida no
+	// código — foi o caso de "um personagem por jogador em cada mesa". Com o
+	// lock no BEGIN, a segunda espera a primeira terminar e sua checagem já
+	// enxerga o que a primeira gravou.
+	//
+	// O preço é serializar os ESCRITORES entre si; leitura fora de transação
+	// continua livre (WAL), e as oito transações do app são todas de escrita.
+	// Numa mesa doméstica isso é de graça, e o `busy_timeout` acima é quem
+	// cobre a espera.
 	dsn := fmt.Sprintf(
-		"file:%s?_pragma=foreign_keys(1)&_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)",
+		"file:%s?_pragma=foreign_keys(1)&_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_txlock=immediate",
 		path,
 	)
 	sqlDB, err := sql.Open("sqlite", dsn)

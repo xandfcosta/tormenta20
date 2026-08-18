@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"sync"
 	"testing"
 
 	"t20engine/db/sqlcgen"
@@ -217,4 +218,71 @@ func copiesOf(t *testing.T, s *Server, sourceID int64) int {
 		t.Fatalf("contar cópias: %v", err)
 	}
 	return n
+}
+
+// Dois cliques ao mesmo tempo não fazem dois personagens (ALE-156).
+//
+// A trava de unicidade é decidida no CÓDIGO, não no schema: uma pergunta ao
+// banco seguida de uma escrita. Sem cuidado, dois pedidos simultâneos fazem as
+// duas perguntas ANTES de qualquer escrita, recebem "não" os dois, e a mesa
+// termina com dois personagens do mesmo jogador.
+//
+// Duas coisas resolvem, e MEDIDAS elas fazem trabalhos diferentes:
+//
+//   - a checagem REFEITA dentro da transação é o que torna o resultado CORRETO.
+//     Sem ela, oito pedidos criaram QUATRO membros. A checagem de fora roda sem
+//     transação nenhuma, então todos passam por ela.
+//   - `_txlock=immediate` é o que torna o resultado HONESTO. Sem ele, um dos
+//     perdedores recebe 500: com transação deferida, o SQLite recusa a escrita
+//     sobre um snapshot que mudou (o correto), mas isso chega ao jogador como
+//     erro do servidor. Com a trava no BEGIN, o perdedor espera, relê e recebe
+//     o 409 que descreve o que houve — alguém chegou antes.
+//
+// Medido: sem `_txlock`, [409 409 500 409 409 201 409 409]; com ele, sete 409 e
+// um 201.
+//
+// Oito pedidos porque um par é pouco para expor uma corrida: se ela existir, é
+// quase certo que apareça, e o teste continua determinístico quando não existe.
+func TestSimultaneousJoinsCreateOneMember(t *testing.T) {
+	f := newMemberFixture(t)
+	mesa := seedCampaign(t, f.s, f.owner)
+	heroi := seedCharacter(t, f.s, f.owner, "Herói Disputado", 10, 10, 0, 0)
+
+	const pedidos = 8
+	var wg sync.WaitGroup
+	codigos := make([]int, pedidos)
+	for i := 0; i < pedidos; i++ {
+		wg.Add(1)
+		go func(n int) {
+			defer wg.Done()
+			codigos[n] = f.addMember(t, f.owner, mesa, heroi)
+		}(i)
+	}
+	wg.Wait()
+
+	criados := 0
+	for _, code := range codigos {
+		if code == http.StatusCreated {
+			criados++
+		}
+	}
+	if criados != 1 {
+		t.Errorf("%d pedidos simultâneos criaram %d membros (códigos %v), esperava 1", pedidos, criados, codigos)
+	}
+	if n := membersOf(t, f.s, mesa); n != 1 {
+		t.Errorf("a mesa ficou com %d membros", n)
+	}
+	// E nenhuma cópia sobrando: o pedido que perde a corrida desfaz o clone.
+	if copias := copiesOf(t, f.s, heroi); copias != 1 {
+		t.Errorf("sobraram %d cópias do herói, esperava 1", copias)
+	}
+	// Quem perde a corrida merece a resposta CERTA: 409 diz "alguém chegou
+	// antes"; 500 diria "o servidor quebrou", que é falso e manda o jogador
+	// tentar de novo achando que o app está com defeito.
+	for _, code := range codigos {
+		if code == http.StatusInternalServerError {
+			t.Errorf("um perdedor recebeu 500 em vez de 409 (códigos %v)", codigos)
+			break
+		}
+	}
 }

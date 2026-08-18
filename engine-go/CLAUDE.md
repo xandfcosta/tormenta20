@@ -133,6 +133,23 @@ Consequência a saber: um banco alterado por fora (um `goose down` parcial, um
 backup anterior restaurado) agora **não sobe**. É deliberado — gravar no vazio
 em silêncio é pior.
 
+## Transação pega a trava no BEGIN (`_txlock=immediate`)
+
+A conexão abre com `_txlock=immediate`, e não com o `DEFERRED` padrão (ALE-156).
+
+O motivo: travas de unicidade decididas no CÓDIGO (pergunta ao banco, depois
+escreve) não sobrevivem a dois pedidos simultâneos, porque as duas perguntas
+acontecem antes de qualquer escrita. Quem torna o resultado **correto** é
+refazer a checagem DENTRO da transação; o `immediate` é o que o torna
+**honesto** — medido, sem ele um dos perdedores recebe 500 (o SQLite recusa a
+escrita sobre snapshot mudado, o que está certo, mas chega ao jogador como erro
+do servidor), e com ele o perdedor espera, relê e recebe o 409 que descreve o
+que houve.
+
+Custo: os escritores serializam entre si. As oito transações do app são todas de
+escrita e leitura fora de transação continua livre (WAL), então numa mesa
+doméstica isso é de graça; o `busy_timeout(5000)` cobre a espera.
+
 ## Catálogos
 
 `catalog/data/*.json` é embutido no binário e servido por `GET /catalog/:nome`.
