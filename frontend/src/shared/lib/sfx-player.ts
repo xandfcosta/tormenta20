@@ -1,3 +1,5 @@
+import { AudioGate } from './audio-gate'
+
 /** UI sound cues. Kept tiny + synthesized (no audio assets → CSP/offline-safe,
  *  zero bytes shipped). `open`/`back` are the diegetic enter/exit pair (diving
  *  into a chronicle rises; popping back with Esc falls). */
@@ -31,31 +33,32 @@ const CUES: Record<SfxName, Blip> = {
 /** Web Audio implementation. Every entry point is guarded so a missing/blocked
  *  AudioContext degrades to silence — sound is a nicety, never an app error. */
 export class WebAudioSfxPlayer implements SfxPlayer {
-  private ctx: AudioContext | null = null
+  /** The gate comes in as a parameter: it owns the autoplay rule, and tests
+   *  exercise that rule against it directly (`audio-gate.test.ts`). */
+  constructor(private readonly gate: AudioGate<AudioContext> = browserAudioGate()) {}
 
   play(name: SfxName): void {
     try {
-      const ctx = this.context()
-      if (!ctx) return
-      // Autoplay policy parks the context until a gesture; play() is only
-      // ever called from a click/hover, so resuming here is allowed.
-      if (ctx.state === 'suspended') void ctx.resume()
-      blip(ctx, CUES[name])
+      // Null until the player's first gesture built the context — scheduling
+      // into a parked context is exactly how the cue got lost (ALE-165).
+      const ctx = this.gate.ready()
+      if (ctx) blip(ctx, CUES[name])
     } catch {
       // swallow — audio must never break the UI
     }
   }
+}
 
-  private context(): AudioContext | null {
-    if (this.ctx) return this.ctx
-    const Ctor =
-      window.AudioContext ??
-      (window as unknown as { webkitAudioContext?: typeof AudioContext })
-        .webkitAudioContext
-    if (!Ctor) return null
-    this.ctx = new Ctor()
-    return this.ctx
-  }
+/** Browser wiring: the shared context is born from the first gesture on `window`. */
+function browserAudioGate(): AudioGate<AudioContext> {
+  return new AudioGate(openAudioContext, window)
+}
+
+function openAudioContext(): AudioContext | null {
+  const Ctor =
+    window.AudioContext ??
+    (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+  return Ctor ? new Ctor() : null
 }
 
 function blip(ctx: AudioContext, { type, from, to, dur, gain }: Blip): void {

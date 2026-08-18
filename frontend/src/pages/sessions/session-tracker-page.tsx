@@ -14,6 +14,8 @@ import { createCharacterVitalsSync } from '@/features/session-tracker/character-
 import { PresenceChips } from '@/features/session-tracker/presence-chips'
 import { myCharacterIdsOf } from '@/features/session-tracker/tracker-rules'
 import { createSessionSocket } from '@/shared/realtime/realtime'
+import { createSfx, createSfxToggle } from '@/shared/lib/sfx'
+import { useUi } from '@/shared/stores/ui-context'
 import { settledQuery } from '@/shared/lib/settled-query'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { toast } from '@/shared/ui/sonner'
@@ -36,6 +38,8 @@ export function SessionTrackerPage() {
   const campaign = useQuery(() => campaignQueryOptions(campaignId()))
   const members = useQuery(() => campaignMembersQueryOptions(campaignId()))
   const me = useQuery(() => meQueryOptions)
+  const ui = useUi()
+  const toggleSfx = createSfxToggle(ui, createSfx(ui))
 
   // TODAS as leituras passam por `settledQuery` (ALE-96 de novo, um andar
   // acima): tocar `.data` de uma query PENDENTE suspende, e o `Suspense` que o
@@ -78,6 +82,8 @@ export function SessionTrackerPage() {
       campaignId={campaignId()}
       title={title()}
       bar={<PresenceChips users={rt.present()} />}
+      sfxEnabled={ui.sfx()}
+      onToggleSfx={toggleSfx}
     >
       <Show
         when={!session.isError}

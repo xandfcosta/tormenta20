@@ -10,7 +10,7 @@ import { createLiveSessionPrefetch } from '@/features/session-resume/prefetch-li
 import { SceneShell } from '@/shared/layout/scene-shell'
 import { createFullscreen } from '@/shared/lib/fullscreen'
 import { createSceneNav } from '@/shared/lib/scene-nav'
-import { createSfx } from '@/shared/lib/sfx'
+import { createSfx, createSfxToggle } from '@/shared/lib/sfx'
 import { useAuth } from '@/shared/stores/auth-context'
 import { useUi } from '@/shared/stores/ui-context'
 import { HubFooter } from './hub-footer'
@@ -36,6 +36,7 @@ export function HomePage() {
   // "Continuar sessão" é a ação primária e o trabalho dela é conhecido antes
   // do clique.
   const sfx = createSfx(ui)
+  const toggleSfx = createSfxToggle(ui, sfx)
   const fullscreen = createFullscreen()
   const [signingOut, setSigningOut] = createSignal(false)
   const [inviting, setInviting] = createSignal(false)
@@ -100,7 +101,7 @@ export function HomePage() {
         onLogout={signOut}
         logoutPending={signingOut()}
         sfxEnabled={ui.sfx()}
-        onToggleSfx={ui.toggleSfx}
+        onToggleSfx={toggleSfx}
         fullscreenSupported={fullscreen.supported}
         fullscreenActive={fullscreen.active()}
         onToggleFullscreen={fullscreen.toggle}

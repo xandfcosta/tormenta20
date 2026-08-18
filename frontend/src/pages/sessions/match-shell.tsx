@@ -1,8 +1,8 @@
 import { Link } from '@tanstack/solid-router'
-import { LogOut } from 'lucide-solid'
-import { type JSX, createSignal } from 'solid-js'
+import { LogOut, Volume2, VolumeX } from 'lucide-solid'
+import { type JSX, Show, createSignal } from 'solid-js'
 import { SceneContainerProvider } from '@/shared/lib/scene-container'
-import { buttonVariants } from '@/shared/ui/button'
+import { Button, buttonVariants } from '@/shared/ui/button'
 import { cn } from '@/shared/lib/utils'
 
 /**
@@ -15,6 +15,10 @@ export function MatchShell(props: {
   title: string
   /** Right-hand slot — presence chips today. */
   bar?: JSX.Element
+  /** O som se liga e desliga AQUI, e não só no Hub: mudar de ideia sobre áudio
+   *  no meio de uma sessão ao vivo não pode custar sair da mesa (ALE-165). */
+  sfxEnabled: boolean
+  onToggleSfx: () => void
   children: JSX.Element
 }) {
   // Publicado para os overlays (Dialog/Select/Popover) portarem para DENTRO da
@@ -38,6 +42,17 @@ export function MatchShell(props: {
         </p>
         <div class="flex items-center gap-2">
           {props.bar}
+          <Button
+            variant="outline"
+            size="icon-sm"
+            aria-label={props.sfxEnabled ? 'Desligar o som' : 'Ligar o som'}
+            aria-pressed={props.sfxEnabled}
+            onClick={() => props.onToggleSfx()}
+          >
+            <Show when={props.sfxEnabled} fallback={<VolumeX aria-hidden="true" class="size-4" />}>
+              <Volume2 aria-hidden="true" class="size-4" />
+            </Show>
+          </Button>
           {/* No `asChild` in Solid: a link that looks like a button IS a link
               wearing the button classes. */}
           <Link

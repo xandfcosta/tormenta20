@@ -1,7 +1,7 @@
 import { FakeStorage } from '@/shared/test/fake-storage'
 import { describe, expect, it } from 'vitest'
 import { createUiStore } from '@/shared/stores/ui-store'
-import { createSfx } from './sfx'
+import { createSfx, createSfxToggle } from './sfx'
 import type { SfxName, SfxPlayer } from './sfx-player'
 
 /** Named fake for the audio backend — no Web Audio in the tests. */
@@ -13,10 +13,10 @@ class FakeSfxPlayer implements SfxPlayer {
 }
 
 
-function world() {
+function world(coarsePointer = false) {
   const player = new FakeSfxPlayer()
   const ui = createUiStore(new FakeStorage())
-  return { player, ui, sfx: createSfx(ui, () => player) }
+  return { player, ui, sfx: createSfx(ui, () => player, () => coarsePointer) }
 }
 
 describe('createSfx', () => {
@@ -44,5 +44,35 @@ describe('createSfx', () => {
     ui.setSfx(false)
     sfx('back')
     expect(player.played).toEqual(['open'])
+  })
+
+  // No celular o `hover` dispara no MESMO toque que dispara o `select`, e a
+  // pressão única vira som duplo (ALE-165).
+  it('cala o hover em tela de toque, sem calar o select', () => {
+    const { player, ui, sfx } = world(true)
+    ui.setSfx(true)
+    sfx('hover')
+    sfx('select')
+    expect(player.played).toEqual(['select'])
+  })
+})
+
+describe('createSfxToggle', () => {
+  // O clique que liga o som é o gesto que destrava o áudio: é o primeiro
+  // instante em que uma confirmação pode ser OUVIDA, e o silêncio nesse
+  // instante é o que fazia o jogador achar que o som não funcionava.
+  it('ligar o som responde com um cue', () => {
+    const { player, ui, sfx } = world()
+    createSfxToggle(ui, sfx)()
+    expect(ui.sfx()).toBe(true)
+    expect(player.played).toEqual(['select'])
+  })
+
+  it('desligar o som não toca nada', () => {
+    const { player, ui, sfx } = world()
+    ui.setSfx(true)
+    createSfxToggle(ui, sfx)()
+    expect(ui.sfx()).toBe(false)
+    expect(player.played).toEqual([])
   })
 })
