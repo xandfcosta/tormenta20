@@ -506,6 +506,53 @@ test.describe('Sessão ao vivo', () => {
     }
   })
 
+  /**
+   * Sem tabuleiro aberto, o palco vazio devolve a largura para quem trabalha
+   * (ALE-161).
+   *
+   * Medido antes: a 1920 a coluna do tabuleiro exibia 954px de "Nenhum
+   * tabuleiro aberto" enquanto quatro dos nove nomes truncavam na coluna de
+   * 424px ao lado — e o nome do combatente é o que o mestre fala em voz alta.
+   *
+   * Por que e2e: é largura de grade REAL respondendo a media query. Em jsdom
+   * todo elemento mede zero e a mesma asserção passaria verde sobre a tela
+   * quebrada.
+   */
+  test('sem tabuleiro, a iniciativa fica com o espaço e os nomes cabem', async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 })
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+    // A cena precisa estar SEM tabuleiro: é esse o estado sob teste.
+    await expect(page.getByText('Nenhum tabuleiro aberto')).toBeVisible()
+    // Instantâneo ANTES: só o que este teste trouxer é dele para remover. A
+    // primeira versão passava `[]` aqui e limpou a iniciativa INTEIRA da seed
+    // compartilhada — e, sem combatente nenhum, a asserção não tinha o que
+    // medir e passava verde sobre a tela quebrada.
+    const antes = await labelsNaIniciativa(page)
+    await page.getByRole('button', { name: 'Adicionar grupo' }).click()
+    await expect(page.locator('[role="progressbar"][aria-label^="PM "]').first()).toBeVisible()
+
+    // O nome da linha é um BOTÃO (clicar nele abre o combatente) com
+    // `truncate` — medir o `scrollWidth` dele é o que diz se o texto coube.
+    const nomes = await page.$$eval('button.truncate', (botoes) =>
+      botoes.map((botao) => ({
+        texto: (botao.textContent ?? '').trim(),
+        mostra: botao.clientWidth,
+        precisa: botao.scrollWidth,
+      })),
+    )
+
+    expect(nomes.length, 'nenhum nome medido — o seletor não casou a linha da iniciativa').toBeGreaterThan(0)
+    const cortados = nomes
+      .filter((nome) => nome.precisa > nome.mostra)
+      .map((nome) => `${nome.texto}: ${nome.mostra}/${nome.precisa}`)
+    expect(cortados, 'nome de combatente truncado com o palco do tabuleiro vazio ao lado').toEqual([])
+
+    for (const label of await novosDesde(page, antes)) {
+      await page.getByRole('button', { name: `Remover ${label}` }).click()
+    }
+  })
+
   /** Os rótulos que estão na iniciativa agora. */
   async function labelsNaIniciativa(page: Page): Promise<string[]> {
     return page.$$eval('button[aria-label^="Remover "]', (bs) =>

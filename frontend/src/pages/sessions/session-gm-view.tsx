@@ -1,5 +1,5 @@
 import { Settings2, Swords } from 'lucide-solid'
-import { For, Show, createMemo, createSignal } from 'solid-js'
+import { For, Show, createEffect, createMemo, createSignal } from 'solid-js'
 import type { Session } from '@/shared/api/api'
 import type { SessionRealtime } from '@/shared/realtime/realtime'
 import { DeleteSessionButton } from '@/features/session-tracker/delete-session-button'
@@ -74,6 +74,26 @@ export function SessionGmView(props: {
   // controle desalinhado do próprio efeito — e antes disso ela chegou a oferecer
   // duas opções que desenhavam a MESMA tela (ALE-130).
   const boardHasOwnColumn = () => threeUp()
+  const hasBoard = () => props.rt.board() !== null
+
+  // Abaixo de 1536 o tabuleiro é ABA, e a aba ativa continuava sendo
+  // "combatente" — o mestre abria o tabuleiro e o app não o mostrava em lugar
+  // nenhum, com 830×745px dizendo "clique num combatente" (ALE-161).
+  //
+  // O gatilho é a TRANSIÇÃO de "sem tabuleiro" para "com tabuleiro", e não o
+  // estado: reagir ao estado brigaria com o mestre que foi de propósito ao
+  // bestiário com o tabuleiro aberto. E não troca se ele já escolheu um
+  // combatente — o tabuleiro chega pelo socket e não pode roubar a tela de
+  // quem já está olhando outra coisa.
+  let tinhaTabuleiro = false
+  createEffect(() => {
+    const agora = hasBoard()
+    const abriu = agora && !tinhaTabuleiro
+    tinhaTabuleiro = agora
+    if (abriu && !boardHasOwnColumn() && selectedId() === null) {
+      setTab('tabuleiro')
+    }
+  })
   const showTracker = () => sideBySide() || region() === 'combate'
   const showWorkspace = () => sideBySide() || region() === 'mesa'
 
@@ -100,9 +120,17 @@ export function SessionGmView(props: {
       <div
         class={cn(
           'grid min-h-0 flex-1 gap-3',
-          threeUp()
-            ? 'grid-cols-[minmax(0,4fr)_minmax(0,9fr)_minmax(0,5fr)]'
-            : sideBySide() && 'grid-cols-[minmax(0,5fr)_minmax(0,7fr)]',
+          // Com o tabuleiro ABERTO o 4/9/5 está certo — a coluna do meio fica
+          // cheia. O defeito era ele ser FIXO: sem tabuleiro, 954px de 1920
+          // exibiam "Nenhum tabuleiro aberto" enquanto quatro dos nove nomes
+          // truncavam na coluna de 424px ao lado (ALE-161). Sem tabuleiro, o
+          // convite para abrir um cabe numa faixa estreita e o resto volta
+          // para a iniciativa, que é quem trabalha.
+          threeUp() &&
+            (hasBoard()
+              ? 'grid-cols-[minmax(0,4fr)_minmax(0,9fr)_minmax(0,5fr)]'
+              : 'grid-cols-[minmax(0,7fr)_minmax(0,3fr)_minmax(0,5fr)]'),
+          !threeUp() && sideBySide() && 'grid-cols-[minmax(0,5fr)_minmax(0,7fr)]',
         )}
       >
         <Show when={showTracker()}>

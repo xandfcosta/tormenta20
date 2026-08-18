@@ -7,8 +7,10 @@ import {
   createRootRoute,
   createRouter,
 } from '@tanstack/solid-router'
+import { createSignal } from 'solid-js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Session } from '@/shared/api/api'
+import type { BoardState } from '@/shared/realtime/realtime'
 import type { SessionRealtime } from '@/shared/realtime/realtime'
 import { SessionGmView } from './session-gm-view'
 
@@ -24,6 +26,13 @@ import { SessionGmView } from './session-gm-view'
  * exatamente esse tipo de asserção que deixou o defeito passar.
  */
 class FakeRealtime {
+  private readonly live = createSignal<BoardState | null>(null)
+
+  /** Abre o tabuleiro DEPOIS da montagem, que é como ele chega: pelo socket. */
+  abrirTabuleiro() {
+    this.live[1]({ version: 1, place: 'Cripta', terrain: 'pedra', tokens: [] })
+  }
+
   asRealtime(): SessionRealtime {
     return {
       state: () => ({ initiative: [], round: 1, turnIndex: -1 }),
@@ -32,7 +41,7 @@ class FakeRealtime {
       hasPersistenceWarning: () => false,
       present: () => [],
       restFlash: () => null,
-      board: () => null,
+      board: this.live[0],
       rest: vi.fn(),
       nextTurn: vi.fn(),
       previousTurn: vi.fn(),
@@ -57,7 +66,7 @@ function comLargura(faixa: { sideBySide: boolean; threeUp: boolean }) {
   })) as unknown as typeof window.matchMedia
 }
 
-function renderCena() {
+function renderCena(rt: FakeRealtime = new FakeRealtime()) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   // Router de memória porque a cena tem links (sair da sessão, ficha) — mesmo
   // arreio do `match-shell.test.tsx`.
@@ -68,7 +77,7 @@ function renderCena() {
           campaignId={1}
           sessionId={4}
           session={SESSAO}
-          rt={new FakeRealtime().asRealtime()}
+          rt={rt.asRealtime()}
           myCharacterIds={new Set<number>()}
         />
       </QueryClientProvider>
@@ -150,5 +159,45 @@ describe('as regiões da cena do mestre numa coluna só', () => {
 
     expect(screen.getByRole('tab', { name: /Tabuleiro/ })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Iniciativa' })).not.toBeInTheDocument()
+  })
+})
+
+/**
+ * Abrir o tabuleiro tem de MOSTRAR o tabuleiro (ALE-161).
+ *
+ * Abaixo de 1536 ele não tem coluna própria: é aba da mesa. E a aba ativa
+ * continuava sendo "combatente", então o mestre num laptop de 1440 abria o
+ * tabuleiro e via 830×745px dizendo "clique no nome de um combatente" — o
+ * tabuleiro existia, com peças, e não aparecia em lugar nenhum.
+ *
+ * O gatilho é a TRANSIÇÃO (o tabuleiro chega pelo socket), não o estado: reagir
+ * ao estado brigaria com o mestre que foi de propósito ao bestiário.
+ */
+describe('abrir o tabuleiro abaixo de 1536', () => {
+  it('traz a aba do tabuleiro para a frente', async () => {
+    const rt = new FakeRealtime()
+    renderCena(rt)
+    await screen.findByRole('tab', { name: /Tabuleiro/ })
+    // Antes de abrir, quem manda é o combatente.
+    expect(screen.getByText(/Clique no nome de um combatente/)).toBeInTheDocument()
+
+    rt.abrirTabuleiro()
+
+    expect(await screen.findByText('Cripta')).toBeInTheDocument()
+    expect(screen.queryByText(/Clique no nome de um combatente/)).not.toBeInTheDocument()
+  })
+
+  // A troca acontece uma vez, na transição. Depois dela o mestre manda: ir ao
+  // bestiário com o tabuleiro aberto não pode ser desfeito pela própria cena.
+  it('não rouba a aba de volta depois que o mestre escolhe outra', async () => {
+    const rt = new FakeRealtime()
+    const user = renderCena(rt)
+    await screen.findByRole('tab', { name: /Tabuleiro/ })
+    rt.abrirTabuleiro()
+    await screen.findByText('Cripta')
+
+    await user.click(screen.getByRole('tab', { name: /Bestiário/ }))
+
+    expect(screen.queryByText('Cripta')).not.toBeInTheDocument()
   })
 })
