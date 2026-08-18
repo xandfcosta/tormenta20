@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 )
 
@@ -18,6 +19,22 @@ func (s *Server) cloneCharacterForCampaign(ctx context.Context, sourceID, campai
 		return 0, err
 	}
 	defer func() { _ = tx.Rollback() }()
+	destID, err := cloneCharacterTx(ctx, tx, sourceID, campaignID)
+	if err != nil {
+		return 0, err
+	}
+	return destID, tx.Commit()
+}
+
+// cloneCharacterTx é o clone SEM dono da transação, para quem precisa que a
+// cópia e o que vem depois dela caiam ou vivam juntos.
+//
+// Existe por causa da ALE-156: a entrada na mesa clonava numa transação e
+// inseria o membro em outra, então um `CreateMember` que falhasse deixava a
+// cópia órfã — e a cópia órfã é pior que nada, porque o `campaignHasCopyOf`
+// passa a responder "já está na mesa" e o herói fica impedido de entrar PARA
+// SEMPRE, sem membro nenhum para remover.
+func cloneCharacterTx(ctx context.Context, tx *sql.Tx, sourceID, campaignID int64) (int64, error) {
 	now := nowISO()
 
 	res, err := tx.ExecContext(ctx, `
@@ -70,7 +87,7 @@ FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 		}
 	}
 
-	return destID, tx.Commit()
+	return destID, nil
 }
 
 // campaignHasCopyOf reports whether `sourceID` was already snapshotted into

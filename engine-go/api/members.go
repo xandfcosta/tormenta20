@@ -225,8 +225,18 @@ func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 		writeValidationError(w, FieldErrorMap{"role": {"role must be one of: player, gm"}})
 		return
 	}
+	// As duas travas abaixo falhavam ABERTAS (ALE-156): o erro era descartado
+	// com `_`, e um erro de banco virava `false`, que significa "pode entrar".
+	// Eram as únicas checagens do repositório que um erro ABRIA — as outras
+	// engolem o erro e NEGAM (mentem o status, não a decisão). Checagem de
+	// autorização ou de unicidade nunca descarta erro: na dúvida, nega.
 	if role == "player" {
-		if hasPc, _ := s.queries.HasPlayerPc(r.Context(), sqlcgen.HasPlayerPcParams{Campaignid: cid, Ownerid: user.ID}); hasPc {
+		hasPc, err := s.queries.HasPlayerPc(r.Context(), sqlcgen.HasPlayerPcParams{Campaignid: cid, Ownerid: user.ID})
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "Could not check existing characters")
+			return
+		}
+		if hasPc {
 			writeFieldError(w, http.StatusConflict, fmt.Sprintf("You already have a character in campaign %d", cid), FieldErrorMap{"characterId": {"Você já tem um personagem nesta campanha"}})
 			return
 		}
@@ -234,20 +244,16 @@ func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 	// Snapshot model (ALE-33): the roster character is a template; a mesa holds
 	// its own copy. Dedupe on "this template already snapshotted here" rather
 	// than membership of the source (the source is never a member — the copy is).
-	if hasCopy, _ := s.campaignHasCopyOf(r.Context(), *body.CharacterID, cid); hasCopy {
+	hasCopy, err := s.campaignHasCopyOf(r.Context(), *body.CharacterID, cid)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Could not check campaign roster")
+		return
+	}
+	if hasCopy {
 		writeFieldError(w, http.StatusConflict, fmt.Sprintf("Character %d already in campaign %d", *body.CharacterID, cid), FieldErrorMap{"characterId": {"Already a member"}})
 		return
 	}
-	// Clone the template into a campaign-scoped copy and add THAT to the mesa,
-	// so editing the sheet during play never leaks to other campaigns.
-	copyID, err := s.cloneCharacterForCampaign(r.Context(), *body.CharacterID, cid)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not snapshot character for campaign")
-		return
-	}
-	m, err := s.queries.CreateMember(r.Context(), sqlcgen.CreateMemberParams{
-		Campaignid: cid, Characterid: copyID, Role: role, Addedat: nowISO(),
-	})
+	m, err := s.joinCampaign(r.Context(), *body.CharacterID, cid, role)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not add member")
 		return
@@ -324,4 +330,35 @@ func (s *Server) handleRemoveMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]int64{"id": mid})
+}
+
+// joinCampaign clona o personagem para a mesa e cria o membro NA MESMA
+// transação (ALE-156).
+//
+// Eram duas antes, e a que falhava era a segunda: um `CreateMember` com erro
+// deixava a cópia órfã no banco — e cópia órfã é pior que nada, porque o
+// `campaignHasCopyOf` passa a responder "já está na mesa" e o herói fica
+// impedido de entrar para sempre, sem membro nenhum que se possa remover para
+// desfazer.
+//
+// A cópia existe porque a ficha da mesa é um instantâneo (ALE-33): editar
+// durante a sessão não pode vazar para as outras campanhas.
+func (s *Server) joinCampaign(ctx context.Context, sourceID, campaignID int64, role string) (sqlcgen.CampaignMember, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return sqlcgen.CampaignMember{}, err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	copyID, err := cloneCharacterTx(ctx, tx, sourceID, campaignID)
+	if err != nil {
+		return sqlcgen.CampaignMember{}, err
+	}
+	member, err := s.queries.WithTx(tx).CreateMember(ctx, sqlcgen.CreateMemberParams{
+		Campaignid: campaignID, Characterid: copyID, Role: role, Addedat: nowISO(),
+	})
+	if err != nil {
+		return sqlcgen.CampaignMember{}, err
+	}
+	return member, tx.Commit()
 }
