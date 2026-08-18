@@ -10,6 +10,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -110,4 +111,62 @@ func fileSize(path string) int64 {
 		return 0
 	}
 	return info.Size()
+}
+
+// ScheduleBackups faz o backup periódico e apaga os mais antigos (ALE-157).
+//
+// O backup manual já existia e já fazia a coisa certa — `VACUUM INTO`, que lê
+// um instantâneo coerente do `.db` MAIS o `-wal` —, mas dependia de alguém
+// lembrar, e backup que depende de memória humana é backup que não existe na
+// noite em que importa.
+//
+// Roda em goroutine própria e morre com o contexto do processo, junto com o
+// desligamento gracioso. Não faz backup NO BOOT: subir o servidor três vezes
+// seguidas para mexer numa configuração não deve encher a pasta.
+func (s *Server) ScheduleBackups(ctx context.Context) {
+	if s.cfg.BackupEvery <= 0 || s.cfg.BackupKeep <= 0 {
+		log.Printf("backup automático desligado (a cada %s, guardando %d)", s.cfg.BackupEvery, s.cfg.BackupKeep)
+		return
+	}
+	log.Printf("backup automático a cada %s, guardando os %d últimos em %s",
+		s.cfg.BackupEvery, s.cfg.BackupKeep, s.cfg.BackupDir)
+
+	ticker := time.NewTicker(s.cfg.BackupEvery)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case at := <-ticker.C:
+			name, err := s.backupDatabase(ctx, at)
+			if err != nil {
+				// Best-effort de propósito: a mesa não pode parar porque o
+				// disco encheu. Mas o erro é DITO, não engolido (ALE-155).
+				log.Printf("backup automático falhou: %v", err)
+				continue
+			}
+			log.Printf("backup automático: %s", name)
+			s.pruneBackups()
+		}
+	}
+}
+
+// pruneBackups apaga os backups além do teto, do mais antigo para o mais novo.
+//
+// Apaga só o que ELE mesmo reconhece como backup — a mesma listagem que a tela
+// de administração usa, que já filtra por extensão `.db` no diretório
+// configurado. Um arquivo qualquer largado ali não é candidato a ser apagado.
+func (s *Server) pruneBackups() {
+	backups := s.listBackups() // mais novo primeiro
+	if len(backups) <= s.cfg.BackupKeep {
+		return
+	}
+	for _, old := range backups[s.cfg.BackupKeep:] {
+		path := filepath.Join(s.cfg.BackupDir, old.Name)
+		if err := os.Remove(path); err != nil {
+			log.Printf("não consegui apagar o backup antigo %s: %v", old.Name, err)
+			continue
+		}
+		log.Printf("backup antigo removido: %s", old.Name)
+	}
 }

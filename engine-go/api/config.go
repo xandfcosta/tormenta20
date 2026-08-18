@@ -6,9 +6,12 @@ package api
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // AppEnv names the environment. It picks which `.env.<AppEnv>` file LoadConfig
@@ -54,6 +57,12 @@ type Config struct {
 	// the `pnpm db:backup` script uses, so a backup made either way shows up in
 	// both places (ALE-120). Relative to engine-go/, which is the server's CWD.
 	BackupDir string
+	// BackupEvery é o intervalo do backup automático, e BackupKeep quantos
+	// arquivos ficam. Um backup que depende de alguém lembrar é um backup que
+	// não existe na noite em que importa (ALE-157). Zero em qualquer um dos
+	// dois DESLIGA o automático — a mesa é do dono, e ele pode não querer.
+	BackupEvery time.Duration
+	BackupKeep  int
 	// StaticDir, when set, is the built frontend (frontend/dist) served by cmd/api in
 	// production: the server then owns the app + API + socket as a single binary and
 	// routes /api/* to the domain (no Vite to strip the prefix). Empty in dev, where
@@ -82,6 +91,8 @@ func LoadConfig() (Config, error) {
 		CookieSecure: os.Getenv("COOKIE_SECURE") == "true",
 		CORSOrigin:   env("CORS_ORIGIN", defaultCORSOrigin(appEnv)),
 		BackupDir:    env("BACKUP_DIR", "../backups"),
+		BackupEvery:  envDuration("BACKUP_EVERY", 24*time.Hour),
+		BackupKeep:   envInt("BACKUP_KEEP", 7),
 		CatalogPath:  env("CATALOG_PATH", "parity/_catalogs.json"),
 		StaticDir:    env("STATIC_DIR", ""),
 	}, nil
@@ -156,4 +167,33 @@ func env(key, fallback string) string {
 // stripFilePrefix turns a Prisma-style "file:./dev.db" URL into a plain path.
 func stripFilePrefix(url string) string {
 	return strings.TrimPrefix(url, "file:")
+}
+
+// envDuration lê uma duração ("24h", "30m"). Valor inválido cai no padrão com
+// aviso, em vez de derrubar o boot: um erro de digitação no `.env` não pode
+// impedir a mesa de começar.
+func envDuration(key string, fallback time.Duration) time.Duration {
+	raw := os.Getenv(key)
+	if raw == "" {
+		return fallback
+	}
+	parsed, err := time.ParseDuration(raw)
+	if err != nil {
+		log.Printf("config: %s=%q não é uma duração válida; usando %s", key, raw, fallback)
+		return fallback
+	}
+	return parsed
+}
+
+func envInt(key string, fallback int) int {
+	raw := os.Getenv(key)
+	if raw == "" {
+		return fallback
+	}
+	parsed, err := strconv.Atoi(raw)
+	if err != nil {
+		log.Printf("config: %s=%q não é um número; usando %d", key, raw, fallback)
+		return fallback
+	}
+	return parsed
 }

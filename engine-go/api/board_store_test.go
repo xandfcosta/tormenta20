@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
+	"time"
 
 	"t20engine/engine"
 )
@@ -304,5 +307,86 @@ func TestPartyRestCountsWhoActuallyRested(t *testing.T) {
 	}
 	if done != 0 {
 		t.Errorf("contou %d como descansados, e nenhum descansou — é o mestre lendo uma verdade pela metade", done)
+	}
+}
+
+// O backup automático guarda os N últimos e apaga o resto (ALE-157).
+//
+// O backup manual já fazia a coisa certa; o que faltava era ele não depender de
+// alguém lembrar. E a retenção é parte do recurso: sem ela, backup diário enche
+// o disco do dono em silêncio, o que é uma forma nova de perder a mesa.
+func TestBackupPruningKeepsTheNewest(t *testing.T) {
+	s := newTestServer(t)
+	s.cfg.BackupDir = t.TempDir()
+	s.cfg.BackupKeep = 2
+	ctx := context.Background()
+
+	// Três snapshots com carimbo de hora distinto — o nome do arquivo carrega a
+	// data, então precisam ser horas diferentes para não colidir.
+	base := time.Date(2026, 8, 18, 3, 0, 0, 0, time.UTC)
+	nomes := []string{}
+	for i := 0; i < 3; i++ {
+		nome, err := s.backupDatabase(ctx, base.Add(time.Duration(i)*time.Hour))
+		if err != nil {
+			t.Fatalf("backup %d: %v", i, err)
+		}
+		nomes = append(nomes, nome)
+	}
+
+	s.pruneBackups()
+
+	restantes := s.listBackups()
+	if len(restantes) != 2 {
+		t.Fatalf("sobraram %d backups, esperava 2: %+v", len(restantes), restantes)
+	}
+	// O mais ANTIGO é quem sai.
+	for _, b := range restantes {
+		if b.Name == nomes[0] {
+			t.Errorf("o backup mais antigo sobreviveu à poda: %s", b.Name)
+		}
+	}
+}
+
+// Um arquivo que não é backup não vira candidato a ser apagado: a poda só
+// alcança o que a própria listagem reconhece.
+func TestBackupPruningIgnoresStrangers(t *testing.T) {
+	s := newTestServer(t)
+	s.cfg.BackupDir = t.TempDir()
+	s.cfg.BackupKeep = 1
+	intruso := filepath.Join(s.cfg.BackupDir, "anotacoes-do-mestre.txt")
+	if err := os.WriteFile(intruso, []byte("a taverna pega fogo"), 0o644); err != nil {
+		t.Fatalf("escrever intruso: %v", err)
+	}
+
+	base := time.Date(2026, 8, 18, 3, 0, 0, 0, time.UTC)
+	for i := 0; i < 2; i++ {
+		if _, err := s.backupDatabase(context.Background(), base.Add(time.Duration(i)*time.Hour)); err != nil {
+			t.Fatalf("backup %d: %v", i, err)
+		}
+	}
+	s.pruneBackups()
+
+	if _, err := os.Stat(intruso); err != nil {
+		t.Errorf("a poda apagou um arquivo que não é backup: %v", err)
+	}
+}
+
+// Intervalo (ou teto) zero DESLIGA o automático, sem laço nenhum girando: a
+// mesa é do dono, e ele pode não querer backup automático.
+func TestBackupSchedulerStaysOffWhenDisabled(t *testing.T) {
+	s := newTestServer(t)
+	s.cfg.BackupDir = t.TempDir()
+	s.cfg.BackupEvery = 0
+
+	pronto := make(chan struct{})
+	go func() { s.ScheduleBackups(context.Background()); close(pronto) }()
+
+	select {
+	case <-pronto:
+	case <-time.After(2 * time.Second):
+		t.Fatal("o agendador ficou girando com o backup desligado")
+	}
+	if n := len(s.listBackups()); n != 0 {
+		t.Errorf("fez %d backups com o automático desligado", n)
 	}
 }

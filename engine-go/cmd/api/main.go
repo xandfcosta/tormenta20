@@ -7,14 +7,19 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"mime"
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
+	"time"
 
 	"t20engine/api"
 	"t20engine/db"
@@ -40,10 +45,69 @@ func main() {
 
 	srv := api.NewServer(cfg, database, primeCatalogs(cfg.CatalogPath))
 	mux := buildMux(cfg, srv)
+
+	// Um sinal encerra a mesa com ordem, em vez de no meio de uma gravação
+	// (ALE-157): sem isto, um Ctrl-C durante um `VACUUM INTO` ou um persist do
+	// rastreador morria no meio, e o `defer database.Close()` acima NUNCA
+	// rodava — o processo morre por sinal antes de qualquer defer.
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	go srv.ScheduleBackups(ctx)
+
 	announce(cfg) // last, so the address to open is the final line on the screen
-	if err := http.ListenAndServe(":"+cfg.Port, mux); err != nil {
+	if err := serve(ctx, cfg, mux); err != nil {
 		log.Fatalf("listen: %v", err)
 	}
+}
+
+// httpServerFor monta o servidor com os timeouts da casa. Separado da `serve`
+// para os testes poderem afirmar as escolhas — inclusive a AUSÊNCIA do
+// `WriteTimeout`, que é a mais fácil de alguém "consertar" sem saber.
+func httpServerFor(cfg api.Config, mux http.Handler) *http.Server {
+	return &http.Server{
+		Addr:              ":" + cfg.Port,
+		Handler:           mux,
+		ReadHeaderTimeout: 5 * time.Second,
+		IdleTimeout:       120 * time.Second,
+	}
+}
+
+// serve sobe o HTTP e espera o sinal para desligar com ordem.
+//
+// Os timeouts são escolhidos, não copiados de um exemplo (ALE-157):
+//
+//   - `ReadHeaderTimeout` existe porque sem ele uma conexão que abre e nunca
+//     manda o cabeçalho segura uma goroutine para sempre (slowloris);
+//   - `IdleTimeout` recolhe conexões ociosas do keep-alive;
+//   - `WriteTimeout` fica de FORA de propósito. Ele mataria o socket.io, que é
+//     conexão longa por natureza, e o download do wasm de 780 KB numa rede
+//     ruim. É o timeout que parece obrigatório e é justamente o errado aqui.
+func serve(ctx context.Context, cfg api.Config, mux http.Handler) error {
+	server := httpServerFor(cfg, mux)
+	falhou := make(chan error, 1)
+	go func() {
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			falhou <- err
+		}
+	}()
+
+	select {
+	case err := <-falhou:
+		return err
+	case <-ctx.Done():
+	}
+
+	log.Print("encerrando: esperando as requisições em curso")
+	// A janela existe para a gravação em curso terminar; passado o prazo, o
+	// desligamento continua — travar o encerramento seria trocar um problema
+	// por outro.
+	prazo, cancelar := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancelar()
+	if err := server.Shutdown(prazo); err != nil {
+		log.Printf("encerramento forçado: %v", err)
+	}
+	return nil
 }
 
 // primeCatalogs loads the rules catalogs for the mutation validators, best
@@ -149,6 +213,7 @@ func serveMaybeCompressed(w http.ResponseWriter, r *http.Request, file string) {
 	// Sem `Vary`, um proxy no meio serviria a resposta comprimida para quem não
 	// aceita — e o contrário, que é pior.
 	w.Header().Set("Vary", "Accept-Encoding")
+	w.Header().Set("Cache-Control", cacheControlFor(file))
 
 	for _, variant := range []struct{ encoding, ext string }{{"br", ".br"}, {"gzip", ".gz"}} {
 		if !acceptsEncoding(r.Header.Get("Accept-Encoding"), variant.encoding) {
@@ -162,6 +227,24 @@ func serveMaybeCompressed(w http.ResponseWriter, r *http.Request, file string) {
 		return
 	}
 	http.ServeFile(w, r, file)
+}
+
+// cacheControlFor decide por quanto tempo o navegador pode guardar (ALE-157).
+//
+// O Vite carimba um hash no nome de cada asset (`admin-BvY0grFM.js`), então
+// aquele arquivo NUNCA muda: mudar o conteúdo muda o nome. Isso é o que
+// autoriza `immutable` por um ano — sem hash no nome seria mentira, e um
+// jogador ficaria com a versão velha até limpar o cache.
+//
+// O resto revalida a cada carga: o `index.html` porque é ele quem aponta para
+// os assets novos (guardá-lo congelaria o app inteiro numa versão), e o
+// `t20.wasm` porque não é hasheado — a revalidação custa um 304 vazio, que o
+// `ServeFile` já responde pelo `Last-Modified`.
+func cacheControlFor(file string) string {
+	if strings.Contains(filepath.ToSlash(file), "/assets/") {
+		return "public, max-age=31536000, immutable"
+	}
+	return "no-cache"
 }
 
 // acceptsEncoding responde se o cabeçalho lista a codificação. Comparação por

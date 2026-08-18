@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -57,8 +58,23 @@ func writeDomainError(w http.ResponseWriter, status int, err error) {
 
 // decodeJSON reads a JSON body into dst; on malformed input it writes a 400 and
 // returns false so the handler can bail.
+// maxBodyBytes é o teto de um corpo de requisição. Um megabyte é folgado para
+// tudo que este app manda — a ficha inteira de nível 20 serializada dá ~40 KB —
+// e o que ele impede é um corpo sem fim segurando memória e goroutine (ALE-157).
+const maxBodyBytes = 1 << 20
+
 func decodeJSON(w http.ResponseWriter, r *http.Request, dst any) bool {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
 	if err := json.NewDecoder(r.Body).Decode(dst); err != nil {
+		// Corpo grande demais tem resposta PRÓPRIA: dizer "JSON inválido" para
+		// um JSON perfeitamente válido mandaria quem escreveu o cliente
+		// procurar defeito onde não há.
+		var tooLarge *http.MaxBytesError
+		if errors.As(err, &tooLarge) {
+			writeError(w, http.StatusRequestEntityTooLarge,
+				fmt.Sprintf("O corpo da requisição passa de %d bytes", tooLarge.Limit))
+			return false
+		}
 		writeError(w, http.StatusBadRequest, "Invalid JSON body")
 		return false
 	}

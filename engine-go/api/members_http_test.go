@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 
@@ -284,5 +285,37 @@ func TestSimultaneousJoinsCreateOneMember(t *testing.T) {
 			t.Errorf("um perdedor recebeu 500 em vez de 409 (códigos %v)", codigos)
 			break
 		}
+	}
+}
+
+// Corpo grande demais tem resposta PRÓPRIA (ALE-157).
+//
+// Sem teto, o `decodeJSON` lia o que viesse e um corpo sem fim segurava memória
+// e goroutine. E o 413 importa tanto quanto o teto: dizer "JSON inválido" para
+// um JSON perfeitamente válido mandaria quem escreveu o cliente procurar
+// defeito de sintaxe onde o problema é tamanho.
+func TestAnOversizedBodyIsRefusedBySize(t *testing.T) {
+	f := newMemberFixture(t)
+	gigante := `{"characterId":1,"role":"player","lixo":"` + strings.Repeat("a", 2<<20) + `"}`
+
+	rec := authed(t, f.s, f.owner, http.MethodPost,
+		"/campaigns/"+strconv.FormatInt(f.campaignID, 10)+"/members", gigante)
+
+	if rec.Code != http.StatusRequestEntityTooLarge {
+		t.Fatalf("corpo de 2 MB respondeu %d, esperava 413", rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), "corpo da requisição") {
+		t.Errorf("a mensagem não explica que o problema é TAMANHO: %s", rec.Body.String())
+	}
+}
+
+// E um corpo normal continua passando — o teto não pode estreitar o uso real.
+func TestANormalBodyStillPasses(t *testing.T) {
+	f := newMemberFixture(t)
+	heroi := seedCharacter(t, f.s, f.owner, "Herói Comum", 10, 10, 0, 0)
+	mesa := seedCampaign(t, f.s, f.owner)
+
+	if code := f.addMember(t, f.owner, mesa, heroi); code != http.StatusCreated {
+		t.Errorf("corpo normal respondeu %d", code)
 	}
 }

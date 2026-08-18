@@ -150,6 +150,27 @@ Custo: os escritores serializam entre si. As oito transações do app são todas
 escrita e leitura fora de transação continua livre (WAL), então numa mesa
 doméstica isso é de graça; o `busy_timeout(5000)` cobre a espera.
 
+## Timeouts, encerramento e backup
+
+O servidor tem `ReadHeaderTimeout` (5s) e `IdleTimeout` (120s), e **não tem
+`WriteTimeout` de propósito** (ALE-157): ele mataria o socket.io, que é conexão
+longa por natureza, e o download do wasm numa rede ruim. É o timeout que parece
+obrigatório e é justamente o errado aqui — há teste afirmando a AUSÊNCIA dele.
+
+Um sinal encerra com ordem (`signal.NotifyContext` + `Shutdown`, janela de 10s).
+Antes, um Ctrl-C no meio de um `VACUUM INTO` morria no meio e o
+`defer database.Close()` nunca rodava — defer não roda quando o processo morre
+por sinal.
+
+Corpo de requisição tem teto de 1 MB no `decodeJSON`, com **413 próprio**: dizer
+"JSON inválido" para um JSON válido manda procurar defeito de sintaxe onde o
+problema é tamanho.
+
+O backup automático (`BACKUP_EVERY`, `BACKUP_KEEP`) usa o mesmo `VACUUM INTO` do
+manual e poda os mais antigos. Zero em qualquer um dos dois desliga. A poda só
+alcança o que a listagem reconhece como backup — arquivo estranho na pasta não é
+candidato.
+
 ## Catálogos
 
 `catalog/data/*.json` é embutido no binário e servido por `GET /catalog/:nome`.

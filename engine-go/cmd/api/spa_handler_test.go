@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"t20engine/api"
 	"testing"
 )
 
@@ -111,5 +112,49 @@ func TestClientRouteFallsBackToTheIndex(t *testing.T) {
 	}
 	if got := res.Header.Get("Content-Type"); got == "" {
 		t.Error("o index saiu sem Content-Type")
+	}
+}
+
+// Quanto tempo o navegador pode guardar cada coisa (ALE-157).
+func TestHashedAssetsAreImmutableAndTheRestRevalidates(t *testing.T) {
+	dir := dist(t)
+	if err := os.MkdirAll(filepath.Join(dir, "assets"), 0o755); err != nil {
+		t.Fatalf("criar assets: %v", err)
+	}
+	// O Vite carimba o hash NO NOME: este arquivo nunca muda de conteúdo.
+	if err := os.WriteFile(filepath.Join(dir, "assets", "admin-BvY0grFM.js"), []byte("console.log(1)"), 0o644); err != nil {
+		t.Fatalf("escrever asset: %v", err)
+	}
+
+	asset := pedir(t, dir, "/assets/admin-BvY0grFM.js", "")
+	if got := asset.Header.Get("Cache-Control"); got != "public, max-age=31536000, immutable" {
+		t.Errorf("asset hasheado com Cache-Control %q — o hash no nome é o que autoriza guardar para sempre", got)
+	}
+
+	// O index aponta para os assets novos: guardá-lo congelaria o app inteiro
+	// numa versão antiga, com os arquivos novos já publicados ao lado.
+	if got := pedir(t, dir, "/", "").Header.Get("Cache-Control"); got != "no-cache" {
+		t.Errorf("index com Cache-Control %q, esperava no-cache", got)
+	}
+	// O wasm NÃO é hasheado — revalidar custa um 304 vazio.
+	if got := pedir(t, dir, "/t20.wasm", "").Header.Get("Cache-Control"); got != "no-cache" {
+		t.Errorf("wasm com Cache-Control %q, esperava no-cache", got)
+	}
+}
+
+// Os timeouts são escolhidos: o que falta é tão importante quanto o que está.
+func TestServerTimeoutsProtectWithoutKillingLongResponses(t *testing.T) {
+	server := httpServerFor(api.Config{Port: "0"}, http.NewServeMux())
+
+	if server.ReadHeaderTimeout == 0 {
+		t.Error("sem ReadHeaderTimeout: uma conexão que nunca manda cabeçalho segura uma goroutine para sempre")
+	}
+	if server.IdleTimeout == 0 {
+		t.Error("sem IdleTimeout: conexão ociosa de keep-alive nunca é recolhida")
+	}
+	// O que NÃO pode existir: `WriteTimeout` mataria o socket.io, que é conexão
+	// longa por natureza, e o download do wasm de 780 KB numa rede ruim.
+	if server.WriteTimeout != 0 {
+		t.Errorf("WriteTimeout=%s derruba o socket ao vivo e o download do wasm", server.WriteTimeout)
 	}
 }
