@@ -227,3 +227,44 @@ export async function expectDentroDaJanela(page: Page, raiz = 'body'): Promise<v
     `alcançável por ninguém: fora da janela de ${page.viewportSize()?.width}×${page.viewportSize()?.height} e sem rolagem que chegue lá`,
   ).toEqual([])
 }
+
+/**
+ * Nenhum contêiner DENTRO da cena rola de lado (ALE-178).
+ *
+ * A regra da casa é que a cena não rola horizontalmente, e o
+ * `expectNoHorizontalOverflow` a afirma — só que na RAIZ. Quando o estouro
+ * acontece num painel interno, a raiz continua limpa e a asserção passa: é o
+ * mesmo ponto cego que já custou o `expectNadaEscapa` e o `expectDentroDaJanela`.
+ *
+ * O caso que trouxe esta aqui: com o tabuleiro povoado a 390px, a fileira de
+ * controles do cabeçalho empurrava o ✕ de encerrar para x=466 numa tela de 390.
+ * Ele não estava inalcançável — o painel rolava, `scrollWidth` 545 contra 390 de
+ * largura —, mas rolar de lado para achar o botão de fechar é a experiência que
+ * a regra existe para impedir. O `expectDentroDaJanela` passava verde com razão,
+ * porque pela definição dele havia como chegar lá.
+ *
+ * Ignora quem rola de lado DE PROPÓSITO, marcado com `data-rola-lado`.
+ *
+ * @example await expectNadaRolaDeLado(page, '.scene-grimorio')
+ */
+export async function expectNadaRolaDeLado(page: Page, raiz = 'body'): Promise<void> {
+  const rolando = await page.evaluate((seletorRaiz) => {
+    const root = document.querySelector(seletorRaiz as string)
+    if (!root) return null
+    return [...root.querySelectorAll<HTMLElement>('*')]
+      .filter((node) => {
+        if (node.closest('[data-rola-lado]')) return false
+        const estilo = getComputedStyle(node)
+        const podeRolar = estilo.overflowX === 'auto' || estilo.overflowX === 'scroll'
+        return podeRolar && node.scrollWidth > node.clientWidth + 1
+      })
+      .map((node) => {
+        const nome = node.getAttribute('aria-label') ?? node.className.slice(0, 40) ?? node.tagName
+        return `${nome}: conteúdo de ${node.scrollWidth}px numa caixa de ${node.clientWidth}px`
+      })
+      .slice(0, 5)
+  }, raiz)
+
+  expect(rolando, `a raiz ${raiz} não existe na tela`).not.toBeNull()
+  expect(rolando, 'painel rolando de lado dentro da cena, que não deveria rolar').toEqual([])
+}

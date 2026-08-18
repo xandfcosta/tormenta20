@@ -1,6 +1,8 @@
 import { Check, Crosshair, LayoutGrid, Minus, Plus, Undo2, Users, X } from 'lucide-solid'
 import { Show, createMemo, createSignal } from 'solid-js'
 import { pathBetween } from '@/features/battle-board/board-path'
+import { TokenActions } from '@/features/battle-board/token-actions'
+import { TokenDialog } from '@/features/battle-board/token-dialog'
 import { BoardView } from '@/features/battle-board/board-view'
 import { type BoardViewport, SQUARE_METRES } from '@/features/battle-board/board-viewport'
 import { OpenBoardDialog } from '@/features/battle-board/open-board-dialog'
@@ -72,10 +74,17 @@ export function BoardRegion(props: {
    * mestre POSICIONA (voo, empurrão, "pode ir"), e o jogador PROPÕE um
    * movimento que a mesa vê e alguém confirma.
    */
+  // De onde cada peça veio no último posicionamento DESTA tela. Memória local
+  // de propósito: um histórico no servidor seria muito estado para um problema
+  // que uma posição anterior resolve, e o `PendingMove` já é o desfazer do
+  // jogador (ALE-178).
+  const [ondeEstava, setOndeEstava] = createSignal<Record<string, { x: number; y: number }>>({})
+
   const placeSelected = (x: number, y: number) => {
     const token = selectedToken()
     if (!token) return
     if (props.isGm) {
+      setOndeEstava((atual) => ({ ...atual, [token.id]: { x: token.x, y: token.y } }))
       props.rt.updateToken(token.id, { x, y })
     } else {
       props.rt.proposeMove(token.id, pathBetween({ x: token.x, y: token.y }, { x, y }))
@@ -112,7 +121,11 @@ export function BoardRegion(props: {
                 {live().tokens.length} peças · 1 quadrado = {SQUARE_METRES.toFixed(1).replace('.', ',')}m
               </span>
 
-              <div class="ml-auto flex items-center gap-1">
+              {/* `flex-wrap` aqui também: o cabeçalho já quebrava, mas esta
+                  fileira de controles não, e a 390px "Trazer a iniciativa" saía
+                  cortado com o ✕ de encerrar INALCANÇÁVEL fora da tela
+                  (ALE-178). */}
+              <div class="ml-auto flex flex-wrap items-center justify-end gap-1">
                 <ViewControls view={props.view} onFit={() => props.view.fit(live().tokens)} />
                 <Show when={props.isGm}>
                   <Button
@@ -124,6 +137,17 @@ export function BoardRegion(props: {
                     <Users aria-hidden="true" class="size-4" />
                     Trazer a iniciativa
                   </Button>
+                  {/* A peça avulsa que a iniciativa não traz: a porta, o baú, o
+                      aliado sem turno. É o `kind: "object"` que o servidor
+                      sempre soube guardar e que nunca tinha como nascer. */}
+                  <TokenDialog
+                    onSave={(peca) => props.rt.addToken({ ...peca, x: 0, y: 0 })}
+                    trigger={(open) => (
+                      <Button size="sm" variant="secondary" onClick={open}>
+                        + Peça
+                      </Button>
+                    )}
+                  />
                   <ConfirmDialog
                     title="Encerrar o tabuleiro?"
                     description="As peças e as posições desta cena se perdem. A iniciativa e os PV continuam como estão."
@@ -159,6 +183,27 @@ export function BoardRegion(props: {
               onSelectToken={movableTokenIds().size > 0 ? selectToken : undefined}
               onPlaceToken={selectedTokenId() ? placeSelected : undefined}
             />
+
+            <Show when={props.isGm && selectedToken()}>
+              {(token) => (
+                <TokenActions
+                  token={token()}
+                  onUpdate={(patch) => props.rt.updateToken(token().id, patch)}
+                  onRemove={() => {
+                    props.rt.removeToken(token().id)
+                    setSelectedTokenId(null)
+                  }}
+                  onUndo={
+                    ondeEstava()[token().id] &&
+                    (() => {
+                      const antes = ondeEstava()[token().id]
+                      props.rt.updateToken(token().id, antes)
+                      setOndeEstava(({ [token().id]: _, ...resto }) => resto)
+                    })
+                  }
+                />
+              )}
+            </Show>
 
             <Show when={live().pending}>
               {(move) => (

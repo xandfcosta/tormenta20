@@ -1,6 +1,11 @@
 import { type Page, expect, test } from '@playwright/test'
 import { VIEWPORTS, expectPageDoesNotScroll } from './support/viewports'
-import { expectFormaColuna, expectNadaEscapa } from './support/geometry'
+import {
+  expectDentroDaJanela,
+  expectFormaColuna,
+  expectNadaEscapa,
+  expectNadaRolaDeLado,
+} from './support/geometry'
 
 const CAMPAIGN = 'Snapshot Test ALE-33' // the seed chronicle with a live session
 
@@ -551,6 +556,64 @@ test.describe('Sessão ao vivo', () => {
     for (const label of await novosDesde(page, antes)) {
       await page.getByRole('button', { name: `Remover ${label}` }).click()
     }
+  })
+
+  /**
+   * Com o tabuleiro ABERTO no telefone, todo controle continua alcançável
+   * (ALE-178).
+   *
+   * O defeito: o cabeçalho do tabuleiro quebrava linha, mas a fileira interna
+   * de controles não — a 390px "Trazer a iniciativa" saía cortado e o ✕ de
+   * encerrar ficava FORA da tela. Quem abrisse um tabuleiro pelo telefone não
+   * tinha como fechá-lo.
+   *
+   * Por que e2e: é a mesma família da ALE-160 — o alvo fora da janela sem eixo
+   * que role até ele, que só a medição contra a viewport real acusa.
+   */
+  test('com o tabuleiro aberto no telefone, nada some fora da tela', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+
+    const mesa = page.getByRole('button', { name: 'mesa', exact: true })
+    if (await mesa.isVisible()) await mesa.click()
+    await page.getByRole('tab', { name: 'Tabuleiro' }).click()
+
+    // Setup que se limpa sozinho: a seed é compartilhada e um tabuleiro
+    // esquecido aberto por uma execução anterior faria este teste procurar um
+    // botão que não existe — foi o que aconteceu quando a primeira versão
+    // falhou no meio e deixou a cena montada.
+    const encerrar = page.getByRole('button', { name: 'Encerrar o tabuleiro' })
+    if (await encerrar.isVisible().catch(() => false)) {
+      await encerrar.click()
+      await page.getByRole('dialog').getByRole('button', { name: 'Encerrar' }).click()
+    }
+    await page.getByRole('button', { name: 'Abrir tabuleiro' }).click()
+    await page.getByLabel('Lugar').fill('Cripta do teste')
+    await page.getByRole('button', { name: 'Abrir', exact: true }).click()
+    await expect(page.getByText('Cripta do teste')).toBeVisible()
+
+    // POVOAR é parte do teste, não cenário: com o tabuleiro vazio o cabeçalho
+    // diz "0 peças" e cabe; com nove, ele empurra os controles para fora. Medir
+    // a cena vazia era exatamente a cegueira que a ALE-144 documentou, e aqui
+    // ela custou uma versão deste teste que passava verde sobre o defeito.
+    await page.getByRole('button', { name: /Trazer a iniciativa/ }).click()
+    await expect(page.getByText(/9 peças/)).toBeVisible()
+
+    // Duas asserções, e cada uma diz uma coisa: nada fora da janela sem
+    // caminho, E nenhum painel rolando de lado. O defeito desta issue passava
+    // pela primeira com razão — o painel ROLAVA, então havia como chegar ao ✕
+    // — e é a segunda que o pega, porque rolar de lado atrás do botão de
+    // fechar é justamente o que a regra da casa proíbe.
+    await expectDentroDaJanela(page)
+    await expectNadaRolaDeLado(page, '.scene-grimorio')
+
+    // Encerra pelo próprio botão que o defeito escondia — a seed é
+    // compartilhada, e um tabuleiro esquecido aberto sobrevive ao reinício
+    // desde que a persistência passou a funcionar (ALE-124).
+    await page.getByRole('button', { name: 'Encerrar o tabuleiro' }).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Encerrar' }).click()
+    await expect(page.getByText('Nenhum tabuleiro aberto')).toBeVisible()
   })
 
   /** Os rótulos que estão na iniciativa agora. */

@@ -1,4 +1,4 @@
-import { render, screen } from '@solidjs/testing-library'
+import { render, screen, within } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { createBoardViewport } from '@/features/battle-board/board-viewport'
@@ -19,6 +19,8 @@ class FakeRealtime {
   readonly closeBoard = vi.fn()
   readonly populateBoard = vi.fn()
   readonly openBoard = vi.fn()
+  readonly removeToken = vi.fn()
+  readonly addToken = vi.fn()
   readonly proposeMove = vi.fn()
   readonly commitMove = vi.fn()
   readonly cancelMove = vi.fn()
@@ -39,6 +41,8 @@ class FakeRealtime {
       error: () => null,
       board: () => this.live,
       updateToken: this.updateToken,
+      removeToken: this.removeToken,
+      addToken: this.addToken,
       closeBoard: this.closeBoard,
       populateBoard: this.populateBoard,
       openBoard: this.openBoard,
@@ -335,5 +339,93 @@ describe('confirmar o movimento proposto', () => {
     expect(screen.getByText(/2 quadrados/)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Confirmar/ })).not.toBeInTheDocument()
     expect(screen.getByText('Aguardando confirmação.')).toBeInTheDocument()
+  })
+})
+
+/**
+ * O que o mestre faz com a peça (ALE-178).
+ *
+ * O servidor já sabia fazer tudo isto desde a primeira fatia — os eventos
+ * existem, com porta de mestre e teste — e nada tinha botão. O caso mais caro
+ * era o esconder: a redação da emboscada está implementada e testada no Go, e
+ * estava MORTA porque a tela não tinha como ligá-la.
+ *
+ * A redação em si não se repete aqui: ela é do Go e está congelada lá. O que se
+ * prova nesta camada é que a tela EMITE a intenção certa, e que o jogador não
+ * ganha o painel.
+ */
+describe('o painel da peça', () => {
+  const comPecas: BoardState = {
+    ...TABULEIRO,
+    tokens: [
+      { id: 't1', label: 'Ogro', x: 3, y: 2, footprint: 2, kind: 'npc', entryId: 'e1' },
+      { id: 't4', label: 'Porta', x: 1, y: 1, footprint: 1, kind: 'object', hidden: true },
+    ],
+  }
+
+  it('esconder manda a peça sumir da cópia do jogador', async () => {
+    const { rt, user } = renderRegion(true, comPecas)
+
+    await user.click(screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' }))
+    await user.click(screen.getByRole('button', { name: 'Esconder Ogro' }))
+
+    expect(rt.updateToken).toHaveBeenCalledWith('t1', { hidden: true })
+  })
+
+  // O rótulo diz o que vai ACONTECER, não o estado: "Esconder" numa peça já
+  // escondida mandaria o mestre esconder o que ele quer revelar.
+  it('na peça escondida, o botão oferece mostrar', async () => {
+    const { rt, user } = renderRegion(true, comPecas)
+
+    await user.click(screen.getByRole('button', { name: 'Porta, coluna 1, linha 1' }))
+    await user.click(screen.getByRole('button', { name: 'Mostrar Porta' }))
+
+    expect(rt.updateToken).toHaveBeenCalledWith('t4', { hidden: false })
+  })
+
+  it('tirar a peça pede confirmação e some com ela', async () => {
+    const { rt, user } = renderRegion(true, comPecas)
+
+    await user.click(screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' }))
+    await user.click(screen.getByRole('button', { name: 'Tirar Ogro' }))
+    const dialogo = await screen.findByRole('dialog')
+    await user.click(within(dialogo).getByRole('button', { name: 'Tirar' }))
+
+    expect(rt.removeToken).toHaveBeenCalledWith('t1')
+  })
+
+  // "Voltar para onde estava" é memória LOCAL da tela, não histórico no
+  // servidor: o mestre erra o quadrado e desfaz sem que a mesa veja um estado
+  // novo nascer só para isso.
+  it('depois de pousar, dá para voltar a peça para onde estava', async () => {
+    const { rt, user } = renderRegion(true, comPecas)
+
+    await user.click(screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' }))
+    await user.click(screen.getByRole('button', { name: 'Coluna 5, linha 3' }))
+    expect(rt.updateToken).toHaveBeenCalledWith('t1', { x: 5, y: 3 })
+
+    // A peça segue selecionada? Não: pousar solta. Seleciona de novo para desfazer.
+    await user.click(screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' }))
+    await user.click(screen.getByRole('button', { name: 'Voltar Ogro para onde estava' }))
+
+    expect(rt.updateToken).toHaveBeenLastCalledWith('t1', { x: 3, y: 2 })
+  })
+
+  // Sem ter movido, não há para onde voltar — e um botão que não faz nada é
+  // pior que botão nenhum.
+  it('sem ter movido, não oferece desfazer', async () => {
+    const { user } = renderRegion(true, comPecas)
+
+    await user.click(screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' }))
+
+    expect(screen.queryByRole('button', { name: /Voltar Ogro/ })).not.toBeInTheDocument()
+  })
+
+  it('o jogador não recebe o painel nem o botão de nova peça', () => {
+    renderRegion(false, comPecas, undefined, { myCharacterIds: new Set([77]) })
+
+    expect(screen.queryByRole('button', { name: /Esconder/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Tirar/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '+ Peça' })).not.toBeInTheDocument()
   })
 })
