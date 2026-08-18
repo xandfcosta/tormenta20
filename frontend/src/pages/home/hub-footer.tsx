@@ -13,6 +13,7 @@ import { Dynamic } from 'solid-js/web'
 import { type ComponentProps, Show, splitProps } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { Slider } from '@/shared/ui/slider'
 
 export type HubFooterProps = {
   name: string
@@ -20,6 +21,10 @@ export type HubFooterProps = {
   logoutPending?: boolean
   sfxEnabled: boolean
   onToggleSfx: () => void
+  /** 0–100. Só aparece com o som ligado: um slider sobre o mudo é controle
+   *  morto, e o que ele resolve é o sino do "Sua vez" alto demais (ALE-180). */
+  volume: number
+  onVolumeChange: (percent: number) => void
   /** False on iPhone Safari, which has no Fullscreen API for elements: the item
    *  is hidden rather than shown dead. Those players get a chrome-less app via
    *  "Adicionar à Tela de Início" (the meta tags in index.html). */
@@ -81,6 +86,15 @@ export function HubFooter(props: HubFooterProps) {
           >
             {props.sfxEnabled ? 'Som ligado' : 'Som desligado'}
           </QuickMenuItem>
+          <Show when={props.sfxEnabled}>
+            <Slider
+              class="px-2 pb-2 pt-1"
+              label="Volume"
+              value={props.volume}
+              onChange={props.onVolumeChange}
+              format={(percent) => `${percent}%`}
+            />
+          </Show>
           <Show when={props.fullscreenSupported}>
             <QuickMenuItem
               icon={props.fullscreenActive ? Minimize : Maximize}

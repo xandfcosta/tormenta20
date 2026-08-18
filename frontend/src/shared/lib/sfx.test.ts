@@ -7,8 +7,10 @@ import type { SfxName, SfxPlayer } from './sfx-player'
 /** Named fake for the audio backend — no Web Audio in the tests. */
 class FakeSfxPlayer implements SfxPlayer {
   readonly played: SfxName[] = []
-  play(name: SfxName): void {
+  readonly volumes: number[] = []
+  play(name: SfxName, volume: number): void {
     this.played.push(name)
+    this.volumes.push(volume)
   }
 }
 
@@ -74,5 +76,25 @@ describe('createSfxToggle', () => {
     createSfxToggle(ui, sfx)()
     expect(ui.sfx()).toBe(false)
     expect(player.played).toEqual([])
+  })
+})
+
+describe('volume', () => {
+  // O store guarda 0–100 (é o que o slider mostra) e o player quer 0–1: mandar
+  // 70 onde se espera 0,7 multiplicaria o ganho por setenta (ALE-180).
+  it('converte a porcentagem do store na escala do player', () => {
+    const { player, ui, sfx } = world()
+    ui.setSfx(true)
+    ui.setVolume(70)
+    sfx('turn')
+    expect(player.volumes).toEqual([0.7])
+  })
+
+  it('volume zero chega como zero, e o player é quem cala', () => {
+    const { player, ui, sfx } = world()
+    ui.setSfx(true)
+    ui.setVolume(0)
+    sfx('turn')
+    expect(player.volumes).toEqual([0])
   })
 })

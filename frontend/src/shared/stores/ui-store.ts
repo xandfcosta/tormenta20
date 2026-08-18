@@ -10,6 +10,10 @@ export type Theme = 'light' | 'dark'
  */
 const STORAGE_KEY = 't20-ui'
 
+/** Cheio por padrão: os cues foram afinados um a um nesse ganho, e o slider só
+ *  atenua a partir daí (ALE-180). */
+const FULL_VOLUME = 100
+
 export type UiStore = {
   theme: Accessor<Theme>
   setTheme: (theme: Theme) => void
@@ -19,9 +23,13 @@ export type UiStore = {
   sfx: Accessor<boolean>
   setSfx: (on: boolean) => void
   toggleSfx: () => void
+  /** 0–100. Alerta que só liga e desliga é alerta que se desliga: quem acha o
+   *  sino do "Sua vez" alto abaixa em vez de calar a mesa inteira (ALE-180). */
+  volume: Accessor<number>
+  setVolume: (percent: number) => void
 }
 
-type PersistedUi = { state?: { theme?: unknown; sfx?: unknown } }
+type PersistedUi = { state?: { theme?: unknown; sfx?: unknown; volume?: unknown } }
 
 function parseStored(raw: string | null): PersistedUi['state'] {
   if (!raw) return undefined
@@ -40,6 +48,17 @@ export function readStoredSfx(raw: string | null): boolean {
   return parseStored(raw)?.sfx === true
 }
 
+/** Qualquer coisa que não seja um número de 0 a 100 vira volume cheio: um
+ *  storage corrompido não pode emudecer a mesa nem estourar o ganho. */
+export function readStoredVolume(raw: string | null): number {
+  return clampVolume(parseStored(raw)?.volume)
+}
+
+function clampVolume(value: unknown): number {
+  if (typeof value !== 'number' || Number.isNaN(value)) return FULL_VOLUME
+  return Math.min(100, Math.max(0, Math.round(value)))
+}
+
 /**
  * Theme state. Applies the `dark` class to <html> on every change, so the
  * Tailwind `dark:` variant and the token overrides follow.
@@ -50,9 +69,11 @@ export function createUiStore(storage: Storage | undefined = globalThis.localSto
   const stored = storage?.getItem(STORAGE_KEY) ?? null
   const [theme, setThemeSignal] = createSignal<Theme>(readStoredTheme(stored))
   const [sfx, setSfxSignal] = createSignal(readStoredSfx(stored))
+  const [volume, setVolumeSignal] = createSignal(readStoredVolume(stored))
 
   const persist = () => {
-    storage?.setItem(STORAGE_KEY, JSON.stringify({ state: { theme: theme(), sfx: sfx() } }))
+    const state = { theme: theme(), sfx: sfx(), volume: volume() }
+    storage?.setItem(STORAGE_KEY, JSON.stringify({ state }))
   }
 
   const setTheme = (next: Theme) => {
@@ -66,6 +87,11 @@ export function createUiStore(storage: Storage | undefined = globalThis.localSto
     persist()
   }
 
+  const setVolume = (percent: number) => {
+    setVolumeSignal(clampVolume(percent))
+    persist()
+  }
+
   return {
     theme,
     setTheme,
@@ -73,5 +99,7 @@ export function createUiStore(storage: Storage | undefined = globalThis.localSto
     sfx,
     setSfx,
     toggleSfx: () => setSfx(!sfx()),
+    volume,
+    setVolume,
   }
 }

@@ -42,7 +42,7 @@ export function createSfx(
   return (name: SfxName): void => {
     if (!ui.sfx()) return
     if (name === 'hover' && isCoarsePointer()) return
-    audio.play(name)
+    audio.play(name, ui.volume() / 100)
   }
 }
 

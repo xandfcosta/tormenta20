@@ -102,6 +102,8 @@ export function HomePage() {
         logoutPending={signingOut()}
         sfxEnabled={ui.sfx()}
         onToggleSfx={toggleSfx}
+        volume={ui.volume()}
+        onVolumeChange={ui.setVolume}
         fullscreenSupported={fullscreen.supported}
         fullscreenActive={fullscreen.active()}
         onToggleFullscreen={fullscreen.toggle}

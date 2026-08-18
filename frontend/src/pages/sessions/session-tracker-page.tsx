@@ -13,6 +13,7 @@ import { SessionPlayerView } from '@/pages/sessions/session-player-view'
 import { createCharacterVitalsSync } from '@/features/session-tracker/character-vitals-sync'
 import { PresenceChips } from '@/features/session-tracker/presence-chips'
 import { myCharacterIdsOf } from '@/features/session-tracker/tracker-rules'
+import { createTurnCue } from '@/features/session-tracker/turn-cue'
 import { createSessionSocket } from '@/shared/realtime/realtime'
 import { createSfx, createSfxToggle } from '@/shared/lib/sfx'
 import { useUi } from '@/shared/stores/ui-context'
@@ -39,7 +40,8 @@ export function SessionTrackerPage() {
   const members = useQuery(() => campaignMembersQueryOptions(campaignId()))
   const me = useQuery(() => meQueryOptions)
   const ui = useUi()
-  const toggleSfx = createSfxToggle(ui, createSfx(ui))
+  const sfx = createSfx(ui)
+  const toggleSfx = createSfxToggle(ui, sfx)
 
   // TODAS as leituras passam por `settledQuery` (ALE-96 de novo, um andar
   // acima): tocar `.data` de uma query PENDENTE suspende, e o `Suspense` que o
@@ -64,7 +66,15 @@ export function SessionTrackerPage() {
   })
 
   const rt = createSessionSocket(campaignId, sessionId)
-  createTurnCue(rt, myCharacterIds)
+  createTurnCue(rt.state, myCharacterIds, {
+    notify: (label) =>
+      announce(() =>
+        toast.success(`⚔️ Sua vez, ${label}!`, {
+          description: 'Seu personagem está na iniciativa.',
+        }),
+      ),
+    sfx,
+  })
   createRestCue(rt)
   // A ficha e o card do grupo seguem o combate: sem isto o mestre bate -5 e vê
   // o número antigo a 300px de distância (ALE-122).
@@ -149,33 +159,6 @@ function SessionSkeleton() {
  */
 function announce(fire: () => void): void {
   queueMicrotask(fire)
-}
-
-/**
- * Toasts the moment the active combatant becomes one of the viewer's own
- * characters. The row highlight covers the persistent state; this is the
- * transient alert — and it lives on the page so it fires once per match, not
- * once per card mount.
- */
-function createTurnCue(
-  rt: ReturnType<typeof createSessionSocket>,
-  myCharacterIds: () => ReadonlySet<number>,
-) {
-  let wasMyTurn = false
-  createEffect(() => {
-    const state = rt.state()
-    const active = state.turnIndex >= 0 ? state.initiative[state.turnIndex] : undefined
-    const isMyTurn =
-      active?.characterId !== undefined && myCharacterIds().has(active.characterId)
-    if (isMyTurn && !wasMyTurn) {
-      announce(() =>
-        toast.success(`⚔️ Sua vez, ${active?.label}!`, {
-          description: 'Seu personagem está na iniciativa.',
-        }),
-      )
-    }
-    wasMyTurn = isMyTurn
-  })
 }
 
 /** The GM's rest broadcast → a toast for everyone in the room. */

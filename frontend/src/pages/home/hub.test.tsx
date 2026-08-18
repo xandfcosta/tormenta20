@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@solidjs/testing-library'
+import { fireEvent, render, screen, waitFor } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
 import { Scroll, Users2 } from 'lucide-solid'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -69,6 +69,8 @@ describe('HubFooter', () => {
       onLogout: vi.fn(),
       sfxEnabled: false,
       onToggleSfx: vi.fn(),
+      volume: 100,
+      onVolumeChange: vi.fn(),
       onToggleFullscreen: vi.fn(),
       onInvite: vi.fn(),
       onAdminister: vi.fn(),
@@ -108,6 +110,28 @@ describe('HubFooter', () => {
     setup({ sfxEnabled: true })
     await userEvent.setup().click(screen.getByRole('button', { name: 'Menu de Mestre' }))
     expect(await screen.findByRole('button', { name: 'Som ligado' })).toBeInTheDocument()
+  })
+
+  // Alerta que só liga e desliga é alerta que se desliga: quem achar o sino do
+  // "Sua vez" alto abaixa em vez de calar a mesa inteira (ALE-180).
+  it('com o som ligado, o volume se ajusta sem sair do menu', async () => {
+    const props = setup({ sfxEnabled: true, volume: 70 })
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Menu de Mestre' }))
+
+    const volume = await screen.findByRole('slider', { name: 'Volume' })
+    expect(volume).toHaveValue('70')
+
+    fireEvent.input(volume, { target: { value: '40' } })
+
+    expect(props.onVolumeChange).toHaveBeenCalledWith(40)
+  })
+
+  it('sem som, não oferece volume', async () => {
+    setup({ sfxEnabled: false })
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Menu de Mestre' }))
+    await screen.findByRole('button', { name: 'Som desligado' })
+    expect(screen.queryByRole('slider', { name: 'Volume' })).not.toBeInTheDocument()
   })
 
   it('sair chama o logout', async () => {
