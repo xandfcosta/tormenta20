@@ -216,7 +216,7 @@ func serveMaybeCompressed(w http.ResponseWriter, r *http.Request, file string) {
 	w.Header().Set("Cache-Control", cacheControlFor(file))
 
 	for _, variant := range []struct{ encoding, ext string }{{"br", ".br"}, {"gzip", ".gz"}} {
-		if !acceptsEncoding(r.Header.Get("Accept-Encoding"), variant.encoding) {
+		if !api.AcceptsEncoding(r.Header.Get("Accept-Encoding"), variant.encoding) {
 			continue
 		}
 		if info, err := os.Stat(file + variant.ext); err != nil || info.IsDir() {
@@ -245,23 +245,4 @@ func cacheControlFor(file string) string {
 		return "public, max-age=31536000, immutable"
 	}
 	return "no-cache"
-}
-
-// acceptsEncoding responde se o cabeçalho lista a codificação. Comparação por
-// token e não por `strings.Contains`: "gzip;q=0" é uma RECUSA explícita, e
-// aceitá-la mandaria conteúdo comprimido para quem disse que não quer.
-func acceptsEncoding(header, encoding string) bool {
-	for _, part := range strings.Split(header, ",") {
-		fields := strings.Split(strings.TrimSpace(part), ";")
-		if !strings.EqualFold(strings.TrimSpace(fields[0]), encoding) {
-			continue
-		}
-		for _, param := range fields[1:] {
-			if strings.EqualFold(strings.TrimSpace(param), "q=0") {
-				return false
-			}
-		}
-		return true
-	}
-	return false
 }

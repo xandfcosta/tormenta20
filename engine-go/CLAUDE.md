@@ -187,6 +187,13 @@ o JWT do handshake.
 
 ## Catálogos
 
+O catálogo viaja COMPRIMIDO (`writeCatalogJSON`, ALE-159): `spells` sozinho são
+179 KB crus e 40 KB em gzip, e o front os busca por HTTP de propósito (ALE-107),
+então esses bytes entram em toda carga fria. Comprimido UMA vez e guardado, não
+por requisição — o conteúdo vem de `go:embed` e não muda enquanto o binário for
+o mesmo. A leitura do `Accept-Encoding` é a MESMA da SPA (`api.AcceptsEncoding`),
+para o tratamento de `q=0` não divergir em duas cópias.
+
 `catalog/data/*.json` é embutido no binário e servido por `GET /catalog/:nome`.
 **Este é o único lugar onde catálogo é autorado** — mudar uma magia é editar um
 arquivo só. O front os busca por HTTP e o `test-setup` do vitest lê os mesmos
