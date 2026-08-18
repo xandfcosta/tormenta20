@@ -175,8 +175,15 @@ func abs(v int) int {
 }
 
 // populateBoard traz para o tabuleiro cada linha da iniciativa que ainda não
-// tem peça, em fileira a partir do canto. Idempotente de propósito, como o
-// `populateParty` do rastreador: clicar duas vezes não duplica ninguém.
+// tem peça, com os PERSONAGENS de um lado e o resto do outro. Idempotente de
+// propósito, como o `populateParty` do rastreador: clicar duas vezes não
+// duplica ninguém.
+//
+// Antes todos caíam numa fileira única no meio do mapa (ALE-166), e esse é o
+// estado em que o mestre encontra o tabuleiro no segundo em que o combate
+// começa, com a mesa esperando: ele tinha de arrastar nove peças, uma a uma,
+// antes de o tabuleiro servir para alguma coisa. Nascendo em dois lados, ele
+// AJUSTA em vez de DISTRIBUIR — e a informação de lado já existia na linha.
 func populateBoard(b *BoardState, st *SessionRuntimeState, newID func() string) int {
 	placed := 0
 	for _, entry := range st.Initiative {
@@ -187,7 +194,7 @@ func populateBoard(b *BoardState, st *SessionRuntimeState, newID func() string) 
 			Label: entry.Label, Kind: entry.Type, Footprint: 1,
 			EntryID: strPtr(entry.ID), CharacterID: entry.CharacterID,
 		}
-		spot := nextFreeSpot(b)
+		spot := clusterSpot(b, entry.Type == "character")
 		token.X, token.Y = spot.x, spot.y
 		if err := addToken(b, token, newID); err != nil {
 			break
@@ -195,6 +202,38 @@ func populateBoard(b *BoardState, st *SessionRuntimeState, newID func() string) 
 		placed++
 	}
 	return placed
+}
+
+// Os dois lados onde uma cena de combate começa, em quadrados.
+//
+// A distância entre as bordas é de 6 quadrados — 9m, o alcance curto do livro
+// (T20 p224). É perto o bastante para a briga começar sem ninguém andar meia
+// tela, e longe o bastante para o primeiro turno ainda ter escolha: aproximar,
+// atirar ou conjurar.
+const (
+	partySideX  = -5 // personagens: colunas -5, -4, -3
+	enemySideX  = 3  // o resto: colunas 3, 4, 5
+	clusterCols = 3
+)
+
+// clusterSpot devolve o primeiro quadrado livre do lado pedido, preenchendo em
+// blocos de três colunas que crescem para baixo.
+//
+// Continua havendo um lugar COMBINADO onde a peça nova aparece, que é o que um
+// plano infinito exige — só que agora são dois, um por lado. E continua
+// respeitando quem já está no tabuleiro: o mestre pode ter posicionado alguém
+// ali antes de trazer o resto.
+func clusterSpot(b *BoardState, isParty bool) boardSpot {
+	baseX := enemySideX
+	if isParty {
+		baseX = partySideX
+	}
+	for i := 0; ; i++ {
+		spot := boardSpot{x: baseX + i%clusterCols, y: i / clusterCols}
+		if !occupied(b, spot.x, spot.y) {
+			return spot
+		}
+	}
 }
 
 func hasTokenForEntry(b *BoardState, entryID string) bool {

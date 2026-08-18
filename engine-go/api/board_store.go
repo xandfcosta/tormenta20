@@ -179,8 +179,17 @@ func (bs *boardStore) apply(ctx context.Context, sessionID int64, fn func(*Board
 	return cloneBoard(b), nil
 }
 
-func (bs *boardStore) addToken(ctx context.Context, sessionID int64, t BoardToken) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, func(b *BoardState) error { return addToken(b, t, bs.newID) })
+// addToken põe a peça no tabuleiro. Sem posição declarada, ela nasce no
+// primeiro quadrado livre da fileira de entrada — senão duas peças criadas
+// seguidas ficariam uma em cima da outra (ALE-166).
+func (bs *boardStore) addToken(ctx context.Context, sessionID int64, t BoardToken, temPosicao bool) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error {
+		if !temPosicao {
+			spot := nextFreeSpot(b)
+			t.X, t.Y = spot.x, spot.y
+		}
+		return addToken(b, t, bs.newID)
+	})
 }
 
 func (bs *boardStore) removeToken(ctx context.Context, sessionID int64, tokenID string) (*BoardState, error) {

@@ -15,6 +15,14 @@ tmp_dir = "tmp"
   include_ext = ["go"]
   exclude_dir = ["tmp", "cmd/wasm/testdata"]
   stop_on_error = true
+  # O binário agora encerra com ORDEM (ALE-157): ele recebe o sinal e espera as
+  # requisições em curso. Sem estes dois, o air matava e subia o novo processo
+  # antes de o antigo soltar a porta, e o resultado era um "address already in
+  # use" seguido de MINUTOS servindo o binário anterior — com o código novo no
+  # fonte e o comportamento velho na tela, que é a pior combinação para depurar
+  # (aconteceu duas vezes, ALE-158 e ALE-166).
+  send_interrupt = true
+  kill_delay = "3s"
 
 [log]
   time = true

@@ -23,7 +23,7 @@ func TestBoardPersistsAndComesBack(t *testing.T) {
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
 	s.boards.open(ctx, sid, "Taverna do Javali", "taverna")
-	if _, err := s.boards.addToken(ctx, sid, BoardToken{Label: "Ogro", X: 3, Y: 4, Footprint: 2}); err != nil {
+	if _, err := s.boards.addToken(ctx, sid, BoardToken{Label: "Ogro", X: 3, Y: 4, Footprint: 2}, true); err != nil {
 		t.Fatalf("adicionar peça: %v", err)
 	}
 	s.boards.persist(ctx, sid)
@@ -58,7 +58,7 @@ func TestSessionWithoutBoardStaysWithout(t *testing.T) {
 	if b := s.boards.get(ctx, sid); b != nil {
 		t.Errorf("sessão nova já veio com tabuleiro: %+v", b)
 	}
-	if _, err := s.boards.addToken(ctx, sid, BoardToken{Label: "Ninguém"}); err == nil {
+	if _, err := s.boards.addToken(ctx, sid, BoardToken{Label: "Ninguém"}, false); err == nil {
 		t.Error("pôs peça num tabuleiro que não existe")
 	}
 }
@@ -88,7 +88,7 @@ func TestReopeningKeepsVersionMovingForward(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 	primeiro := s.boards.open(ctx, sid, "Taverna", "taverna")
-	if _, err := s.boards.addToken(ctx, sid, BoardToken{Label: "Bandido"}); err != nil {
+	if _, err := s.boards.addToken(ctx, sid, BoardToken{Label: "Bandido"}, false); err != nil {
 		t.Fatalf("adicionar: %v", err)
 	}
 	antes := s.boards.get(ctx, sid).Version
@@ -159,7 +159,7 @@ func TestATransientReadFailureIsRetried(t *testing.T) {
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
 	s.boards.open(ctx, sid, "Cripta", "pedra")
-	if _, err := s.boards.addToken(ctx, sid, BoardToken{Label: "Ogro", X: 1, Y: 1}); err != nil {
+	if _, err := s.boards.addToken(ctx, sid, BoardToken{Label: "Ogro", X: 1, Y: 1}, true); err != nil {
 		t.Fatalf("adicionar peça: %v", err)
 	}
 	s.boards.persist(ctx, sid)

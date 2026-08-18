@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"testing"
 
 	"t20engine/engine"
@@ -224,3 +225,104 @@ func TestCaminhoTemDeComecarNaPeca(t *testing.T) {
 
 func intPtr(v int) *int    { return &v }
 func boolPtr(v bool) *bool { return &v }
+
+// "Trazer a iniciativa" entrega uma CENA, não uma fila (ALE-166).
+//
+// Antes todos caíam numa fileira única no meio do mapa, e esse é o estado em
+// que o mestre encontra o tabuleiro no segundo em que o combate começa: ele
+// tinha de arrastar nove peças antes de a cena servir para alguma coisa.
+func TestPopulateStartsTheSidesApart(t *testing.T) {
+	st := emptyRuntimeState()
+	id := counter()
+	_ = addEntry(st, charEntry("Sílfide", 18, 7), id)
+	_ = addEntry(st, charEntry("Paladino", 15, 8), id)
+	_ = addEntry(st, npc("Ogro", 12), id)
+	_ = addEntry(st, npc("Goblin", 9), id)
+	b := newBoard("Cripta", "pedra")
+
+	populateBoard(b, st, boardCounter())
+
+	pcs, npcs := []BoardToken{}, []BoardToken{}
+	for _, token := range b.Tokens {
+		if token.Kind == "character" {
+			pcs = append(pcs, token)
+			continue
+		}
+		npcs = append(npcs, token)
+	}
+	if len(pcs) != 2 || len(npcs) != 2 {
+		t.Fatalf("separou %d personagens e %d do outro lado", len(pcs), len(npcs))
+	}
+
+	// Ninguém nasce dentro do bloco do outro lado.
+	for _, pc := range pcs {
+		for _, inimigo := range npcs {
+			if pc.X == inimigo.X && pc.Y == inimigo.Y {
+				t.Fatalf("%s e %s nasceram no mesmo quadrado", pc.Label, inimigo.Label)
+			}
+		}
+	}
+
+	// A distância entre as bordas é de 6 quadrados — 9m, o alcance CURTO do
+	// livro (T20 p224): perto o bastante para a briga começar sem ninguém
+	// atravessar meia tela, longe o bastante para o primeiro turno ter escolha.
+	maisADireitaDoGrupo, maisAEsquerdaDoInimigo := pcs[0].X, npcs[0].X
+	for _, pc := range pcs {
+		if pc.X > maisADireitaDoGrupo {
+			maisADireitaDoGrupo = pc.X
+		}
+	}
+	for _, inimigo := range npcs {
+		if inimigo.X < maisAEsquerdaDoInimigo {
+			maisAEsquerdaDoInimigo = inimigo.X
+		}
+	}
+	if vao := maisAEsquerdaDoInimigo - maisADireitaDoGrupo; vao < 4 {
+		t.Errorf("os dois lados nasceram a %d quadrados um do outro — perto demais para ser começo de combate", vao)
+	}
+}
+
+// Continua idempotente: clicar duas vezes não duplica ninguém, e quem já está
+// posicionado NÃO é movido — o mestre pode ter colocado o vilão onde queria
+// antes de trazer o resto.
+func TestPopulateLeavesWhoIsAlreadyThere(t *testing.T) {
+	st := emptyRuntimeState()
+	id := counter()
+	_ = addEntry(st, npc("Ogro", 12), id)
+	b := newBoard("Cripta", "pedra")
+	tokens := boardCounter()
+	_ = addToken(b, BoardToken{Label: "Ogro", X: 40, Y: 40, EntryID: strPtr("e1")}, tokens)
+
+	populateBoard(b, st, tokens)
+	populateBoard(b, st, tokens)
+
+	if len(b.Tokens) != 1 {
+		t.Fatalf("o tabuleiro ficou com %d peças, esperava 1", len(b.Tokens))
+	}
+	if b.Tokens[0].X != 40 || b.Tokens[0].Y != 40 {
+		t.Errorf("a peça já posicionada foi movida para (%d,%d)", b.Tokens[0].X, b.Tokens[0].Y)
+	}
+}
+
+// Duas peças avulsas criadas seguidas não nascem uma em cima da outra — o
+// defeito que o "+ Peça" da ALE-178 traria com a posição fixa em (0,0).
+func TestLoosePiecesDoNotStack(t *testing.T) {
+	b := newBoard("Cripta", "pedra")
+	tokens := boardCounter()
+
+	for _, nome := range []string{"Porta", "Baú", "Barril"} {
+		spot := nextFreeSpot(b)
+		if err := addToken(b, BoardToken{Label: nome, Kind: "object", X: spot.x, Y: spot.y}, tokens); err != nil {
+			t.Fatalf("criar %s: %v", nome, err)
+		}
+	}
+
+	vistos := map[string]bool{}
+	for _, token := range b.Tokens {
+		chave := fmt.Sprintf("%d,%d", token.X, token.Y)
+		if vistos[chave] {
+			t.Errorf("duas peças no mesmo quadrado %s", chave)
+		}
+		vistos[chave] = true
+	}
+}

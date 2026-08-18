@@ -61,8 +61,9 @@ func (g *realtimeGateway) onBoardTokenAdd(sock *socket.Socket, args []any) {
 	if !ok || !g.requireGm(sock, ctx.role) {
 		return
 	}
+	token, temPosicao := parseBoardToken(ctx.body)
 	g.mutateBoard(sock, ctx, func() (*BoardState, error) {
-		return g.s.boards.addToken(context.Background(), ctx.sessionID, parseBoardToken(ctx.body))
+		return g.s.boards.addToken(context.Background(), ctx.sessionID, token, temPosicao)
 	})
 }
 
@@ -185,17 +186,21 @@ func (g *realtimeGateway) warnPersistence(sessionID int64, dirty bool) {
 	})
 }
 
-// parseBoardToken lê a peça do corpo da mensagem. Posição ausente é (0,0) — o
-// canto é um lugar honesto para uma peça que ninguém posicionou.
-func parseBoardToken(body map[string]any) BoardToken {
+// parseBoardToken lê a peça do corpo da mensagem. Posição ausente vira o
+// primeiro quadrado livre da fileira de entrada — antes era (0,0) fixo, e com o
+// "+ Peça" da ALE-178 duas peças criadas seguidas nasciam UMA EM CIMA DA OUTRA
+// (ALE-166).
+func parseBoardToken(body map[string]any) (BoardToken, bool) {
 	token := BoardToken{
 		Label: stringField(body, "label"),
 		Kind:  stringField(body, "kind"),
 	}
-	if x, ok := intField(body, "x"); ok {
+	x, temX := intField(body, "x")
+	y, temY := intField(body, "y")
+	if temX {
 		token.X = int(x)
 	}
-	if y, ok := intField(body, "y"); ok {
+	if temY {
 		token.Y = int(y)
 	}
 	if footprint, ok := intField(body, "footprint"); ok {
@@ -210,7 +215,7 @@ func parseBoardToken(body map[string]any) BoardToken {
 	if hidden, ok := body["hidden"].(bool); ok {
 		token.Hidden = hidden
 	}
-	return token
+	return token, temX && temY
 }
 
 // parseTokenPatch lê só os campos PRESENTES: ausente é "não mexa", não "zere".
