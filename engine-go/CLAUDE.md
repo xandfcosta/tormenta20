@@ -117,6 +117,22 @@ RECUSA — um `strings.Contains` a leria como aceitação.
 Sem os irmãos comprimidos o app continua funcionando, só mais pesado: ausência é
 caminho normal, não erro.
 
+## O boot confere o SCHEMA, não o `goose_db_version`
+
+A migração pode CONSTAR aplicada sem a tabela existir. Aconteceu: a
+`session_boards` sumiu do banco de desenvolvimento com a 00005 marcada, o goose
+disse "no migrations to run", e o tabuleiro passou um dia vivendo só em memória
+— cada gravação falhando numa linha de log que ninguém lê (ALE-154).
+
+Por isso o `db.Open` roda `assertSchema` DEPOIS de migrar e **recusa subir**
+nomeando as tabelas que faltam. A lista de esperadas é lida das próprias
+migrações embutidas, nunca escrita à mão: lista à mão envelhece em silêncio, que
+é como este repositório já perdeu o `TurnsTaken` e o `creatureId` no mesmo dia.
+
+Consequência a saber: um banco alterado por fora (um `goose down` parcial, um
+backup anterior restaurado) agora **não sobe**. É deliberado — gravar no vazio
+em silêncio é pior.
+
 ## Catálogos
 
 `catalog/data/*.json` é embutido no binário e servido por `GET /catalog/:nome`.

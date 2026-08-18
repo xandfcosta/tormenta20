@@ -44,6 +44,12 @@ func Open(path string) (*sql.DB, error) {
 		_ = sqlDB.Close()
 		return nil, err
 	}
+	// Depois de migrar, CONFERIR: a migração constar aplicada não prova que a
+	// tabela existe (ALE-154).
+	if err := assertSchema(sqlDB, migrationsFS); err != nil {
+		_ = sqlDB.Close()
+		return nil, err
+	}
 	return sqlDB, nil
 }
 
