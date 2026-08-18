@@ -9,6 +9,7 @@
     "dev": "vite",
     "prebuild": "bash scripts/build-engine-wasm.sh",
     "build": "vite build",
+    "postbuild": "bash scripts/precompress-dist.sh",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "pretest": "bash scripts/build-engine-wasm.sh",

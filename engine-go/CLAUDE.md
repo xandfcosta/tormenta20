@@ -97,6 +97,26 @@ o tabuleiro (`session_boards`), e de quebra "sessão sem tabuleiro" passou a ser
 dito pelo schema (a linha existe ou não existe) em vez de por convenção sobre um
 JSON vazio.
 
+## A SPA sai PRÉ-COMPRIMIDA do build
+
+O `net/http` não comprime nada sozinho, e por isso o servidor mandava os 3,7 MB
+crus do `t20.wasm` para um navegador que pedia `gzip, br` — 4,9 MB de carga fria
+que comprimidos são 1,1 MB (ALE-153).
+
+Quem comprime é o BUILD (`frontend/scripts/precompress-dist.sh`, rodado pelo
+`postbuild`), gerando `.br` e `.gz` ao lado de cada asset; o `spaHandler` só
+escolhe a variante pelo `Accept-Encoding`. Comprimir na requisição seria gastar
+CPU da máquina do mestre a cada jogador que entra — brotli -q11 custa ~8s UMA vez
+no build.
+
+Duas armadilhas que os testes de `cmd/api` congelam: o `Content-Type` tem de sair
+do nome ORIGINAL (adivinhado pela extensão do irmão, o wasm vira
+`application/octet-stream` e o `instantiateStreaming` recusa), e `gzip;q=0` é uma
+RECUSA — um `strings.Contains` a leria como aceitação.
+
+Sem os irmãos comprimidos o app continua funcionando, só mais pesado: ausência é
+caminho normal, não erro.
+
 ## Catálogos
 
 `catalog/data/*.json` é embutido no binário e servido por `GET /catalog/:nome`.

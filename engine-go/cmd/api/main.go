@@ -9,10 +9,12 @@ package main
 import (
 	"fmt"
 	"log"
+	"mime"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"t20engine/api"
 	"t20engine/db"
@@ -114,15 +116,69 @@ func lanURLs(port string) []string {
 // served directly, anything else falls back to index.html so client-side (TanStack)
 // routes resolve on a hard refresh. Mirrors what the Vite dev server does implicitly.
 func spaHandler(dir string) http.Handler {
-	fileServer := http.FileServer(http.Dir(dir))
 	index := filepath.Join(dir, "index.html")
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Rooted Clean so "../" can't escape dir; serve the file when it exists.
 		p := filepath.Join(dir, filepath.Clean("/"+r.URL.Path))
 		if info, err := os.Stat(p); err == nil && !info.IsDir() {
-			fileServer.ServeHTTP(w, r)
+			serveMaybeCompressed(w, r, p)
 			return
 		}
-		http.ServeFile(w, r, index)
+		serveMaybeCompressed(w, r, index)
 	})
+}
+
+// serveMaybeCompressed entrega o irmão `.br`/`.gz` pré-comprimido quando o
+// navegador aceita e ele existe, e o arquivo cru quando não (ALE-153).
+//
+// O `net/http` não comprime nada sozinho, e ninguém percebeu: o navegador PEDE
+// `gzip, br` e recebia os 3,7 MB crus do `t20.wasm` — 4,9 MB de carga fria que
+// comprimidos são 1,1 MB. Comprimir na REQUISIÇÃO seria pagar CPU da máquina do
+// mestre a cada jogador que entra; o build pré-comprime uma vez
+// (`frontend/scripts/precompress-dist.sh`) e aqui só se escolhe a variante.
+//
+// Ausência de irmão é caminho normal, não erro: um build sem o passo de
+// compressão continua servindo o app, só mais pesado.
+func serveMaybeCompressed(w http.ResponseWriter, r *http.Request, file string) {
+	// O `Content-Type` sai do nome ORIGINAL: o `ServeFile` o adivinharia pela
+	// extensão do irmão, e `application/octet-stream` faz o
+	// `WebAssembly.instantiateStreaming` recusar o wasm.
+	if ctype := mime.TypeByExtension(filepath.Ext(file)); ctype != "" {
+		w.Header().Set("Content-Type", ctype)
+	}
+	// Sem `Vary`, um proxy no meio serviria a resposta comprimida para quem não
+	// aceita — e o contrário, que é pior.
+	w.Header().Set("Vary", "Accept-Encoding")
+
+	for _, variant := range []struct{ encoding, ext string }{{"br", ".br"}, {"gzip", ".gz"}} {
+		if !acceptsEncoding(r.Header.Get("Accept-Encoding"), variant.encoding) {
+			continue
+		}
+		if info, err := os.Stat(file + variant.ext); err != nil || info.IsDir() {
+			continue
+		}
+		w.Header().Set("Content-Encoding", variant.encoding)
+		http.ServeFile(w, r, file+variant.ext)
+		return
+	}
+	http.ServeFile(w, r, file)
+}
+
+// acceptsEncoding responde se o cabeçalho lista a codificação. Comparação por
+// token e não por `strings.Contains`: "gzip;q=0" é uma RECUSA explícita, e
+// aceitá-la mandaria conteúdo comprimido para quem disse que não quer.
+func acceptsEncoding(header, encoding string) bool {
+	for _, part := range strings.Split(header, ",") {
+		fields := strings.Split(strings.TrimSpace(part), ";")
+		if !strings.EqualFold(strings.TrimSpace(fields[0]), encoding) {
+			continue
+		}
+		for _, param := range fields[1:] {
+			if strings.EqualFold(strings.TrimSpace(param), "q=0") {
+				return false
+			}
+		}
+		return true
+	}
+	return false
 }
