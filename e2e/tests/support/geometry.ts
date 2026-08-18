@@ -171,3 +171,59 @@ export async function expectNadaEscapa(page: Page, pai: string, filhos = '*'): P
   expect(escapando, `o pai ${pai} não existe na tela`).not.toBeNull()
   expect(escapando, `pintado para fora do pai, dentro de ${pai}`).toEqual([])
 }
+
+/**
+ * Nada que se possa CLICAR fica fora da janela sem caminho até ele (ALE-160).
+ *
+ * Esta é a irmã que faltava ao `expectNadaEscapa`, e a lacuna era estrutural:
+ * aquela pula, DE PROPÓSITO, todo pai cujo `overflow-x` não é `visible` —
+ * porque ali transbordar é a função. Só que a cena inteira é feita de
+ * `overflow-x-hidden`, e foi por baixo dele que o botão "Convite" foi parar em
+ * x=392 numa tela de 390: fora da tela, sem rolagem que chegasse nele, com
+ * `document.scrollWidth` jurando que não havia estouro nenhum.
+ *
+ * A diferença que faz a asserção funcionar é `rolavel`: estar fora da viewport
+ * é NORMAL — é o que acontece com tudo abaixo da dobra de uma lista. O defeito
+ * é estar fora e **não haver eixo que role até lá**.
+ *
+ * Mede só o que é interativo, porque o que se perde quando isso quebra é a
+ * AÇÃO. E ignora `sr-only`, que mede ~1px por definição e acusaria em toda
+ * tela (o crachá de pendências da ficha é o caso conhecido).
+ *
+ * @example await expectDentroDaJanela(page, 'main')
+ */
+export async function expectDentroDaJanela(page: Page, raiz = 'body'): Promise<void> {
+  const fora = await page.evaluate((seletorRaiz) => {
+    const root = document.querySelector(seletorRaiz as string)
+    if (!root) return null
+    const rolavel = (node: Element, eixo: 'x' | 'y'): boolean => {
+      for (let atual: Element | null = node; atual; atual = atual.parentElement) {
+        const estilo = getComputedStyle(atual)
+        const overflow = eixo === 'x' ? estilo.overflowX : estilo.overflowY
+        if (overflow === 'auto' || overflow === 'scroll') return true
+      }
+      return false
+    }
+    const janela = { largura: window.innerWidth, altura: window.innerHeight }
+    return [...root.querySelectorAll('a, button, input, select, textarea, [role="button"]')]
+      .filter((node) => {
+        const r = node.getBoundingClientRect()
+        if (r.width <= 1 || r.height <= 1) return false // sr-only e afins
+        const foraX = r.right > janela.largura + 1 || r.left < -1
+        const foraY = r.bottom > janela.altura + 1 || r.top < -1
+        return (foraX && !rolavel(node, 'x')) || (foraY && !rolavel(node, 'y'))
+      })
+      .map((node) => {
+        const r = node.getBoundingClientRect()
+        const nome = node.getAttribute('aria-label') ?? (node.textContent ?? '').trim().slice(0, 24)
+        return `${nome || node.tagName} em x ${Math.round(r.left)}–${Math.round(r.right)}, y ${Math.round(r.top)}–${Math.round(r.bottom)}`
+      })
+      .slice(0, 5)
+  }, raiz)
+
+  expect(fora, `a raiz ${raiz} não existe na tela`).not.toBeNull()
+  expect(
+    fora,
+    `alcançável por ninguém: fora da janela de ${page.viewportSize()?.width}×${page.viewportSize()?.height} e sem rolagem que chegue lá`,
+  ).toEqual([])
+}

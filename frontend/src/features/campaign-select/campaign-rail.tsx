@@ -86,7 +86,11 @@ function TabEntry(props: {
         // (wider), takes the parchment of the open page, rounds its protruding
         // right tip, and sits on top (z-10) so its edges draw over neighbours.
         'lg:min-w-0 lg:rounded-none lg:[&:not(:first-child)]:-mt-px lg:first:rounded-tr-lg lg:last:rounded-br-lg',
-        props.active ? 'lg:z-10 lg:w-52 lg:rounded-r-lg lg:border-l-0' : 'lg:w-44',
+        // Largura medida contra o CONTEÚDO: com w-44/w-52 sobravam ~110px para
+        // o nome e seis campanhas truncavam em 37–81px, enquanto 545px de palco
+        // ficavam vazios ao lado (ALE-168). O `title` continua ali para o nome
+        // longo que não couber em nenhuma largura razoável.
+        props.active ? 'lg:z-10 lg:w-72 lg:rounded-r-lg lg:border-l-0' : 'lg:w-64',
       )}
     >
       <span

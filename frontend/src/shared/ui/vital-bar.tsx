@@ -32,7 +32,7 @@ export function VitalBar(props: {
   return (
     <div class={cn('flex items-center gap-1.5', props.class)}>
       <span
-        class="w-7 shrink-0 text-[9px] font-bold uppercase tracking-wider"
+        class="w-7 shrink-0 text-[10px] font-bold uppercase tracking-wider"
         style={{ color: `var(${fillVar()})` }}
       >
         {props.label}
@@ -50,7 +50,9 @@ export function VitalBar(props: {
           style={{ width: `${percent()}%`, background: `var(${fillVar()})` }}
         />
       </div>
-      <span class="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground">
+      {/* 13px e cor de texto normal, não 10px em muted: PV e PM eram o MENOR
+          texto da cena sendo os números mais lidos do combate (ALE-163). */}
+      <span class="shrink-0 font-mono text-[13px] tabular-nums text-foreground">
         {props.current}/{props.max}
       </span>
     </div>

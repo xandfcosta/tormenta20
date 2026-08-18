@@ -139,6 +139,11 @@
   --border: var(--grimorio-iron);
   --input: var(--grimorio-iron);
   --ring: var(--grimorio-gold);
+  /* O azul de PM sobe DENTRO da cena: no `:root` ele é 0.55, medido em 4.32:1
+     contra o painel — abaixo do mínimo de 4.5 para texto pequeno (ALE-163). O
+     `:root` fica como está porque ele também serve a superfície CLARA da
+     autenticação, onde clarear pioraria. */
+  --mp-arcane: oklch(0.66 0.16 250);
   --radius: 0.25rem;
   --font-display: var(--font-heading);
   background-color: var(--grimorio-bg);

@@ -60,11 +60,17 @@ export function CharacterSheetPage() {
   })
 
   return (
-    <SceneShell dense onBack={back} onEnter={() => sfx('open')}>
+    // `bleed`: a ficha é dona da própria altura e da própria rolagem — é
+    // exatamente o caso para o qual a prop existe. Antes daqui saía um
+    // `h-[calc(100dvh-7rem)]`, e os 7rem eram um número escrito à mão contra o
+    // cromo real: sobrava 43px em TODO formato, e em 844×390 a barra de abas da
+    // ficha ia parar em y=417 numa tela de 390 — a navegação inteira fora da
+    // tela (ALE-162). Altura medida, não estimada.
+    <SceneShell dense bleed onBack={back} onEnter={() => sfx('open')}>
       <Show
         when={!character.isLoading}
         fallback={
-          <div class="w-full space-y-4">
+          <div class="w-full space-y-4 p-4">
             <Skeleton class="h-8 w-56" />
             <Skeleton class="h-96 w-full" />
           </div>
@@ -72,10 +78,12 @@ export function CharacterSheetPage() {
       >
         <Show
           when={character.data}
-          fallback={<p class="text-destructive">{(character.error as Error | null)?.message}</p>}
+          fallback={
+            <p class="p-4 text-destructive">{(character.error as Error | null)?.message}</p>
+          }
         >
           {(data) => (
-            <div class="h-[calc(100dvh-7rem)] w-full">
+            <div class="h-full min-h-0 w-full">
               <CharacterSheet character={data()} tab={tab()} onTabChange={goToTab} />
               <SheetSearch character={data()} onNavigate={goToTab} />
             </div>

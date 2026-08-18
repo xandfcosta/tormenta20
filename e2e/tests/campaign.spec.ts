@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { expectDentroDaJanela } from './support/geometry'
 import { VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
 
 const CAMPAIGN = '/campaigns/1' // Snapshot Test ALE-33 (seed)
@@ -76,4 +77,25 @@ test.describe('Campanha — responsivo (sem overflow horizontal)', () => {
       await expectNoHorizontalOverflow(page, VIEWPORTS)
     })
   }
+
+  /**
+   * O defeito da ALE-160: a 390px os painéis da visão geral eram pintados 169px
+   * fora do pai, e o botão "Convite" ia parar em x 392–487 numa tela de 390 —
+   * fora da janela e sem eixo que rolasse até ele. A causa é `min-width: auto`
+   * em item de grid, que dimensiona a trilha pelo MIN-CONTENT: 457px numa caixa
+   * de 288.
+   *
+   * O `expectNoHorizontalOverflow` acima passava VERDE sobre isso, e não por
+   * descuido: o `overflow-x-hidden` da cena zera o `scrollWidth` da raiz. É
+   * preciso medir contra a JANELA, e é o que a asserção nova faz.
+   */
+  test('nada clicável fica fora da janela na crônica, em nenhum formato', async ({ page }) => {
+    await page.goto(`${CAMPAIGN}?tab=visao`)
+    await expect(page.getByRole('heading', { name: /Snapshot Test ALE-33/i })).toBeVisible()
+
+    for (const viewport of VIEWPORTS) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height })
+      await expectDentroDaJanela(page)
+    }
+  })
 })

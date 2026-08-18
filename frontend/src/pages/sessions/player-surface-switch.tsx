@@ -29,7 +29,12 @@ export function PlayerSurfaceSwitch(props: {
   onSurface: (surface: PlayerSurface) => void
 }) {
   return (
-    <div class="flex shrink-0 gap-1" role="group" aria-label="O que ver na sessão">
+    // `flex-1` e não `shrink-0`: com `shrink-0` o grupo tomava a largura do
+    // CONTEÚDO, e como cada aba é `flex-1 min-w-0 truncate`, esse mínimo é
+    // quase zero — as abas saíam "MINHA …" e "TABULE…" numa tela de 1920 com
+    // 85% da linha vazia ao lado (ALE-168). Ocupando a linha, os rótulos cabem
+    // onde há espaço e continuam truncando só onde falta.
+    <div class="flex min-w-0 flex-1 gap-1" role="group" aria-label="O que ver na sessão">
       <For each={SURFACES}>
         {(surface) => (
           <button

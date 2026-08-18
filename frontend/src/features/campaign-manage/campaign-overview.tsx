@@ -33,7 +33,13 @@ export function CampaignOverview(props: {
   return (
     <div class="space-y-6">
       <ChronicleSigils members={memberList()} sessions={sessionList()} />
-      <div class="grid gap-5 lg:grid-cols-2">
+      {/* `[&>*]:min-w-0`: item de grid tem `min-width: auto`, então a trilha é
+          dimensionada pelo MIN-CONTENT dos painéis — a 390px isso computava
+          `grid-template-columns: 457px` numa caixa de 288, e o botão "Convite"
+          ia parar em x=392 numa tela de 390, INALCANÇÁVEL (fora da viewport e
+          sem ancestral que role naquele eixo). O `overflow-x-hidden` da cena
+          absorvia o sintoma: `scrollWidth` acusava zero estouro (ALE-160). */}
+      <div class="grid gap-5 lg:grid-cols-2 [&>*]:min-w-0">
         <PartyMuster
           members={memberList()}
           isLoading={members.isLoading}
