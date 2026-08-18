@@ -95,3 +95,45 @@ func TestReopeningKeepsVersionMovingForward(t *testing.T) {
 		t.Errorf("a masmorra nasceu com as peças da taverna: %+v", segundo.Tokens)
 	}
 }
+
+// Gravação que falha PARA DE SER SILENCIOSA (ALE-124).
+//
+// Este teste existe por um defeito de verdade: a `session_boards` sumiu do
+// banco de desenvolvimento — a migração constava aplicada, a tabela não existia
+// — e o tabuleiro passou um dia inteiro vivendo só em memória. A tela estava
+// impecável, e cada gravação falhava numa linha de log que ninguém lê. O que
+// faltava não era a gravação: era a mesa SABER que ela parou.
+//
+// A transição é o que importa: avisa quando começa a falhar e avisa quando
+// volta, e não a cada mensagem — um aviso por tique de peça viraria ruído e
+// ninguém leria esse também.
+func TestBoardPersistFailureIsReported(t *testing.T) {
+	s := newTestServer(t)
+	ctx := context.Background()
+	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
+	s.boards.open(ctx, sid, "Cripta", "pedra")
+
+	if dirty, changed := s.boards.persist(ctx, sid); dirty || changed {
+		t.Fatalf("gravação saudável já saiu como falha: dirty=%v changed=%v", dirty, changed)
+	}
+
+	if _, err := s.db.Exec("DROP TABLE session_boards"); err != nil {
+		t.Fatalf("derrubar a tabela: %v", err)
+	}
+	dirty, changed := s.boards.persist(ctx, sid)
+	if !dirty || !changed {
+		t.Fatalf("a tabela sumiu e ninguém avisou: dirty=%v changed=%v", dirty, changed)
+	}
+	// Segunda falha seguida: continua falhando, mas NÃO é notícia nova.
+	if _, changed := s.boards.persist(ctx, sid); changed {
+		t.Error("a mesa levou um aviso a cada gravação, e não só na transição")
+	}
+
+	if _, err := s.db.Exec(`CREATE TABLE session_boards (
+		sessionId INTEGER PRIMARY KEY, state TEXT NOT NULL, updatedAt TEXT NOT NULL)`); err != nil {
+		t.Fatalf("recriar a tabela: %v", err)
+	}
+	if dirty, changed := s.boards.persist(ctx, sid); dirty || !changed {
+		t.Errorf("a recuperação não foi anunciada: dirty=%v changed=%v", dirty, changed)
+	}
+}

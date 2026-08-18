@@ -73,6 +73,28 @@ export type BoardToken = {
   characterId?: number
   /** O mestre escondeu a peça; o jogador nem a recebe (some no servidor). */
   hidden?: boolean
+  /**
+   * Orçamento de movimento em QUADRADOS (T20 p106: 9m = 6 quadrados). Vem do
+   * servidor, que o tira da ficha computada — a tela precisa dele antes de
+   * propor, para contar o gasto e acender o que dá para alcançar.
+   */
+  speedSquares?: number
+}
+
+/**
+ * Um movimento PROPOSTO e ainda não confirmado (ALE-124). É estado, e não um
+ * evento de arraste: são duas mensagens — soltar e confirmar —, então ele
+ * sobrevive à reconexão e a mesa inteira vê o caminho enquanto ele existe.
+ */
+export type PendingMove = {
+  tokenId: string
+  /** O caminho inteiro, do quadrado onde a peça está até o destino. */
+  path: { x: number; y: number }[]
+  /** Custo em quadrados (a diagonal custa dois, T20 p238). */
+  cost: number
+  /** Orçamento contra o qual foi medido, ou -1 quando não há. */
+  budget: number
+  byUserId: number
 }
 
 /**
@@ -87,6 +109,8 @@ export type BoardState = {
   place: string
   terrain: string
   tokens: BoardToken[]
+  /** O movimento proposto e ainda não confirmado — no máximo um. */
+  pending?: PendingMove | null
 }
 
 export type RestScope = 'scene' | 'day'
@@ -155,6 +179,15 @@ export type SessionRealtime = {
   updateToken: (tokenId: string, patch: Partial<Omit<BoardToken, 'id'>>) => void
   /** Traz para o tabuleiro quem já está na iniciativa. Idempotente. */
   populateBoard: () => void
+  /** Propõe um movimento: a mesa vê o caminho, e ninguém pousou ainda. */
+  proposeMove: (tokenId: string, path: { x: number; y: number }[]) => void
+  /**
+   * Confirma o movimento proposto. A `version` é a que o cliente tinha na mão:
+   * o servidor recusa se o tabuleiro mudou desde a proposta, em vez de escrever
+   * por cima de outra cena.
+   */
+  commitMove: (version: number) => void
+  cancelMove: () => void
 }
 
 /**
@@ -287,5 +320,8 @@ export function createSessionSocket(
     removeToken: (tokenId) => send('board-token-remove', { tokenId }),
     updateToken: (tokenId, patch) => send('board-token-update', { tokenId, patch }),
     populateBoard: () => send('board-populate'),
+    proposeMove: (tokenId, path) => send('board-move-propose', { tokenId, path }),
+    commitMove: (version) => send('board-move-commit', { version }),
+    cancelMove: () => send('board-move-cancel'),
   }
 }

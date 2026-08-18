@@ -142,3 +142,61 @@ func TestFootprintFollowsTheSizeTable(t *testing.T) {
 		t.Errorf("tamanho desconhecido virou %d", got)
 	}
 }
+
+// O alcance é um LOSANGO, não um quadrado — e essa é a consequência VISÍVEL da
+// diagonal dobrada (T20 p238): com 6 quadrados de deslocamento (9m, p106)
+// dá para andar 6 em linha reta e só 3 na diagonal.
+func TestAlcanceEUmLosangoPorCausaDaDiagonal(t *testing.T) {
+	reach := ReachableSquares(Square{X: 0, Y: 0}, 6, MoveTerrain{})
+
+	dentro := map[Square]bool{}
+	for _, s := range reach {
+		dentro[s] = true
+	}
+
+	if !dentro[Square{X: 6, Y: 0}] {
+		t.Error("seis quadrados em linha reta não alcançaram: o deslocamento de 9m anda 6 (p106)")
+	}
+	if !dentro[Square{X: 3, Y: 3}] {
+		t.Error("três diagonais custam 6 e deveriam caber no orçamento de 6")
+	}
+	if dentro[Square{X: 4, Y: 4}] {
+		t.Error("quatro diagonais custam 8 e passaram por um orçamento de 6: a diagonal não está dobrando")
+	}
+	if dentro[Square{X: 7, Y: 0}] {
+		t.Error("sete quadrados em linha reta passaram por um orçamento de 6")
+	}
+	// A origem não é destino: acender a casa onde a peça já está seria oferecer
+	// um movimento que não move.
+	if dentro[Square{X: 0, Y: 0}] {
+		t.Error("a origem entrou na lista de casas alcançáveis")
+	}
+}
+
+// Sem orçamento não há casas acesas: fora de combate a régua mede, mas não há
+// limite para desenhar, e uma busca sem teto não termina num plano infinito.
+func TestSemOrcamentoNaoHaAlcanceParaAcender(t *testing.T) {
+	if got := ReachableSquares(Square{X: 2, Y: 2}, -1, MoveTerrain{}); len(got) != 0 {
+		t.Errorf("orçamento negativo devolveu %d casas, esperava nenhuma", len(got))
+	}
+}
+
+// Terreno difícil encolhe o alcance pela mesma conta do passo (p238): 3m por
+// quadrado, ou seja, o dobro.
+func TestTerrenoDificilEncolheOAlcance(t *testing.T) {
+	lama := MoveTerrain{Difficult: map[Square]bool{{X: 1, Y: 0}: true, {X: 2, Y: 0}: true}}
+
+	reach := ReachableSquares(Square{X: 0, Y: 0}, 4, MoveTerrain{})
+	naLama := ReachableSquares(Square{X: 0, Y: 0}, 4, lama)
+
+	if len(naLama) >= len(reach) {
+		t.Errorf("a lama não encolheu o alcance: %d contra %d", len(naLama), len(reach))
+	}
+	// (3,0) custa 5 por qualquer caminho: pela linha da lama, 1+2+2; pelo
+	// contorno diagonal, 2 (diagonal) + 1 + 2 (diagonal). Os dois passam de 4.
+	for _, s := range naLama {
+		if s == (Square{X: 3, Y: 0}) {
+			t.Error("(3,0) alcançado com 4 quadrados atravessando dois de terreno difícil")
+		}
+	}
+}

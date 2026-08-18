@@ -2,8 +2,11 @@ package api
 
 import (
 	"context"
+	"log"
 
 	socket "github.com/zishang520/socket.io/servers/socket/v3"
+
+	"t20engine/engine"
 )
 
 // Handlers do tabuleiro tático (ALE-124). Todos do MESTRE nesta fatia: quem move
@@ -92,15 +95,48 @@ func (g *realtimeGateway) onBoardTokenUpdate(sock *socket.Socket, args []any) {
 	})
 }
 
-// onBoardPopulate (mestre) traz para o tabuleiro quem já está na iniciativa.
+// onBoardPopulate (mestre) traz para o tabuleiro quem já está na iniciativa, já
+// com o deslocamento de cada personagem medido.
+//
+// O orçamento entra AQUI e não na tela: sem ele a peça nasceria sem alcance, e
+// o jogador só descobriria quanto anda ao tentar mover. A conta é do motor
+// (`Displacement.Total`), então a armadura pesada já chega descontada.
 func (g *realtimeGateway) onBoardPopulate(sock *socket.Socket, args []any) {
 	ctx, ok := g.access(sock, args)
 	if !ok || !g.requireGm(sock, ctx.role) {
 		return
 	}
-	g.mutateBoard(sock, ctx, func() (*BoardState, error) {
-		return g.s.boards.populate(context.Background(), ctx.sessionID, g.s.sessions.getState(ctx.sessionID))
-	})
+	board, err := g.s.boards.populate(context.Background(), ctx.sessionID, g.s.sessions.getState(ctx.sessionID))
+	if err != nil {
+		g.wsError(sock, err.Error())
+		return
+	}
+	if speeds := g.speedsForBoard(board); len(speeds) > 0 {
+		if withSpeeds, err := g.s.boards.setSpeeds(context.Background(), ctx.sessionID, speeds); err == nil {
+			board = withSpeeds
+		}
+	}
+	g.emitBoardState(ctx.sessionID, board)
+	ackOK(ctx.ack, boardForRole(ctx.role, board))
+}
+
+// speedsForBoard mede o deslocamento das peças de personagem que ainda não têm
+// um. Só as que faltam: recomputar a ficha de todo mundo a cada "trazer o grupo"
+// seria pagar caro por um número que não muda sozinho.
+func (g *realtimeGateway) speedsForBoard(board *BoardState) map[string]int {
+	speeds := map[string]int{}
+	if board == nil {
+		return speeds
+	}
+	for _, token := range board.Tokens {
+		if token.CharacterID == nil || token.SpeedSquares > 0 {
+			continue
+		}
+		if squares := g.speedSquaresFor(*token.CharacterID); squares > 0 {
+			speeds[token.ID] = squares
+		}
+	}
+	return speeds
 }
 
 // mutateBoard é a cauda comum: muta, transmite, responde e persiste. Espelha o
@@ -121,7 +157,23 @@ func (g *realtimeGateway) mutateBoard(sock *socket.Socket, ctx msgCtx, mutate fu
 func (g *realtimeGateway) emitBoardState(sessionID int64, board *BoardState) {
 	g.io.To(socket.Room(roleRoomName(sessionID, "gm"))).Emit("board-state", board)
 	g.io.To(socket.Room(roleRoomName(sessionID, "player"))).Emit("board-state", boardForRole("player", board))
-	go g.s.boards.persist(context.Background(), sessionID)
+	go g.persistBoardAndWarn(sessionID)
+}
+
+// persistBoardAndWarn grava e avisa a mesa quando a gravação começa (ou deixa)
+// de falhar — o MESMO evento do rastreador, então a tela que já mostra o aviso
+// cobre o tabuleiro sem uma linha nova.
+//
+// Sem isto, uma falha permanente de gravação fica invisível: foi assim que o
+// tabuleiro passou um dia vivendo só em memória, com a tela impecável (ALE-124).
+func (g *realtimeGateway) persistBoardAndWarn(sessionID int64) {
+	dirty, changed := g.s.boards.persist(context.Background(), sessionID)
+	if !changed {
+		return
+	}
+	g.io.To(socket.Room(sessionRoomName(sessionID))).Emit("persistence-warning", map[string]any{
+		"sessionId": sessionID, "dirty": dirty,
+	})
 }
 
 // parseBoardToken lê a peça do corpo da mensagem. Posição ausente é (0,0) — o
@@ -178,4 +230,127 @@ func parseTokenPatch(raw any) tokenPatch {
 		patch.Y = &row
 	}
 	return patch
+}
+
+// Movimento (ALE-124, fatia 3). Estes três NÃO passam pelo `requireGm`: a regra
+// é mais fina e mora no `assertMovable` — o mestre move qualquer peça, o
+// jogador move a própria na vez dela, e fora de combate cada um anda com a sua.
+// É a mesma forma dos vitais, onde a porta larga esconderia a regra que importa.
+
+// onBoardMovePropose mede o caminho e guarda o provisório para a mesa ver.
+func (g *realtimeGateway) onBoardMovePropose(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok {
+		return
+	}
+	tokenID := stringField(ctx.body, "tokenId")
+	path := parseSquarePath(ctx.body["path"])
+	if tokenID == "" || len(path) < 2 {
+		g.wsError(sock, "tokenId e um caminho com origem e destino são obrigatórios")
+		return
+	}
+	by, speed := g.moverFor(ctx, tokenID)
+	g.mutateBoard(sock, ctx, func() (*BoardState, error) {
+		return g.s.boards.proposeMove(context.Background(), ctx.sessionID,
+			g.s.sessions.getState(ctx.sessionID), tokenID, path, by, speed)
+	})
+}
+
+// onBoardMoveCommit pousa a peça. A versão vem do cliente e é o que recusa um
+// commit escrito sobre uma cena que já mudou.
+func (g *realtimeGateway) onBoardMoveCommit(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok {
+		return
+	}
+	version, _ := intField(ctx.body, "version")
+	by, _ := g.moverFor(ctx, pendingTokenOf(g.s.boards.get(context.Background(), ctx.sessionID)))
+	g.mutateBoard(sock, ctx, func() (*BoardState, error) {
+		return g.s.boards.commitMove(context.Background(), ctx.sessionID,
+			g.s.sessions.getState(ctx.sessionID), version, by)
+	})
+}
+
+// onBoardMoveCancel joga fora o provisório sem mexer na peça.
+func (g *realtimeGateway) onBoardMoveCancel(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok {
+		return
+	}
+	by, _ := g.moverFor(ctx, pendingTokenOf(g.s.boards.get(context.Background(), ctx.sessionID)))
+	g.mutateBoard(sock, ctx, func() (*BoardState, error) {
+		return g.s.boards.cancelMove(context.Background(), ctx.sessionID, by)
+	})
+}
+
+// moverFor resolve, contra o BANCO, as duas coisas que o cliente não pode
+// afirmar sobre si: se a peça é de um personagem dele, e quanto ela anda.
+//
+// O deslocamento sai do MOTOR (`sheet.Displacement.Total`), não da coluna crua:
+// a armadura pesada tira metros, e o número da mesa tem de ser o mesmo que o
+// jogador lê na própria ficha. Falha de banco devolve orçamento zero, que a
+// peça traduz para o padrão do livro — a mesa não para porque o disco piscou.
+func (g *realtimeGateway) moverFor(ctx msgCtx, tokenID string) (mover, int) {
+	by := mover{userID: ctx.userID, role: ctx.role}
+	if by.role == "gm" || tokenID == "" {
+		return by, 0
+	}
+	token := findToken(g.s.boards.get(context.Background(), ctx.sessionID), tokenID)
+	if token == nil || token.CharacterID == nil {
+		return by, 0
+	}
+	owner, err := g.s.queries.GetCharacterOwner(context.Background(), *token.CharacterID)
+	if err != nil {
+		log.Printf("board: dono do personagem %d não resolvido (%v)", *token.CharacterID, err)
+		return by, 0
+	}
+	by.ownsCharacter = owner == ctx.userID
+	return by, g.speedSquaresFor(*token.CharacterID)
+}
+
+// speedSquaresFor calcula o orçamento em quadrados a partir da ficha computada.
+func (g *realtimeGateway) speedSquaresFor(characterID int64) int {
+	row, err := g.s.queries.GetCharacter(context.Background(), characterID)
+	if err != nil {
+		return 0
+	}
+	sheet, err := g.s.computeSheet(context.Background(), row)
+	if err != nil {
+		log.Printf("board: ficha do personagem %d não computada (%v)", characterID, err)
+		return 0
+	}
+	return engine.SquaresForDisplacement(float64(sheet.Displacement.Total))
+}
+
+// findToken num tabuleiro possivelmente ausente — a leitura do gateway acontece
+// fora da trava, e "sem tabuleiro" é resposta legítima.
+func pendingTokenOf(b *BoardState) string {
+	if b == nil || b.Pending == nil {
+		return ""
+	}
+	return b.Pending.TokenID
+}
+
+// parseSquarePath lê o caminho do corpo. Item que não é um par de números é
+// DESCARTADO em silêncio, e o caminho encurtado será recusado pela medição —
+// derrubar a mensagem inteira por causa de um item deixaria a peça presa.
+func parseSquarePath(raw any) []engine.Square {
+	list, ok := raw.([]any)
+	if !ok {
+		return nil
+	}
+	path := make([]engine.Square, 0, len(list))
+	for _, item := range list {
+		square, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+		x, okX := intField(square, "x")
+		y, okY := intField(square, "y")
+		if !okX || !okY {
+			continue
+		}
+		path = append(path, engine.Square{X: int(x), Y: int(y)})
+	}
+	return path
 }

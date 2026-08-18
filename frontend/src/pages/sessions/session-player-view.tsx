@@ -121,6 +121,7 @@ export function SessionPlayerView(props: {
             isGm={false}
             view={boardView}
             activeEntryId={activeEntryId()}
+            myCharacterIds={props.myCharacterIds}
           />
         </div>
       </Show>

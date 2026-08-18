@@ -55,6 +55,7 @@ type GlobalWithGo = typeof globalThis & {
   computeWeaponCards?: (charJson: string, conditionalsJson: string) => string
   spellPmLimit?: (charJson: string, spellClassesJson: string) => string
   boardPathCost?: (payloadJson: string) => string
+  boardReach?: (payloadJson: string) => string
   boardBudget?: (metres: number) => string
   boardFootprint?: (size: string) => string
 }
@@ -324,6 +325,29 @@ export function boardPathCost(
   if (!fn) throw new Error('engine-wasm: engine not ready — call ensureEngine() first')
   const out = JSON.parse(fn(JSON.stringify({ path, difficult, budget: budgetSquares }))) as
     | BoardMoveCost
+    | { error: string }
+  if ('error' in out) throw new Error(`engine-wasm: ${out.error}`)
+  return out
+}
+
+/**
+ * As casas ALCANÇÁVEIS a partir de um quadrado, dentro do orçamento (p238).
+ *
+ * Uma chamada por seleção, não uma por casa. O resultado é um LOSANGO e não um
+ * quadrado — a diagonal custa o dobro —, e é isso que a tela acende: a forma
+ * ensina a regra sem ninguém explicar.
+ *
+ * @example boardReach({x:0,y:0}, [], 2).length // 12
+ */
+export function boardReach(
+  from: BoardSquare,
+  difficult: readonly BoardSquare[],
+  budgetSquares: number,
+): BoardSquare[] {
+  const fn = (globalThis as GlobalWithGo).boardReach
+  if (!fn) throw new Error('engine-wasm: engine not ready — call ensureEngine() first')
+  const out = JSON.parse(fn(JSON.stringify({ from, difficult, budget: budgetSquares }))) as
+    | BoardSquare[]
     | { error: string }
   if ('error' in out) throw new Error(`engine-wasm: ${out.error}`)
   return out

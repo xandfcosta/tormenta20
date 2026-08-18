@@ -1,6 +1,9 @@
 package engine
 
-import "fmt"
+import (
+	"fmt"
+	"sort"
+)
 
 // Movimento no mapa de batalha (Tormenta 20, p236-238).
 //
@@ -156,4 +159,82 @@ func abs(v int) int {
 		return -v
 	}
 	return v
+}
+
+// ReachableSquares devolve todo quadrado que a criatura ALCANÇA com o orçamento
+// dado, partindo de `from` (T20 p238).
+//
+// Existe para a tela poder ACENDER as casas alcançáveis em vez de fazer a mesa
+// contar quadrado — e mora aqui, e não no cliente, porque a conta é a mesma
+// regra do livro: quem escrevesse uma cópia em TS acabaria com duas verdades
+// sobre a diagonal, que foi exatamente o que a ALE-104 apagou.
+//
+// O resultado NÃO é um quadrado de lado `budget`: como a diagonal custa o
+// dobro, o alcance é um LOSANGO — com 6 quadrados de deslocamento dá para
+// andar 6 em linha reta e só 3 na diagonal. É a forma que ensina a regra sem
+// ninguém explicar.
+//
+// Dijkstra e não um losango calculado de cabeça: o terreno difícil (fatia do
+// mapa) muda o custo por casa, e a busca já vai estar pronta para ele. A área
+// é limitada pelo orçamento, então o custo é O(budget²).
+//
+//	ReachableSquares(Square{0, 0}, 2, MoveTerrain{}) // → 12 quadrados (o losango de raio 2)
+func ReachableSquares(from Square, budget int, terrain MoveTerrain) []Square {
+	if budget <= 0 {
+		return []Square{}
+	}
+	cost := map[Square]int{from: 0}
+	frontier := []Square{from}
+	for len(frontier) > 0 {
+		current := frontier[0]
+		frontier = frontier[1:]
+		for _, next := range neighbours(current) {
+			step, err := stepCost(current, next, terrain)
+			if err != nil {
+				continue
+			}
+			total := cost[current] + step
+			if total > budget {
+				continue
+			}
+			if seen, ok := cost[next]; ok && seen <= total {
+				continue
+			}
+			cost[next] = total
+			frontier = append(frontier, next)
+		}
+	}
+	out := make([]Square, 0, len(cost))
+	for square := range cost {
+		if square != from {
+			out = append(out, square)
+		}
+	}
+	sortSquares(out)
+	return out
+}
+
+func neighbours(s Square) []Square {
+	out := make([]Square, 0, 8)
+	for dy := -1; dy <= 1; dy++ {
+		for dx := -1; dx <= 1; dx++ {
+			if dx == 0 && dy == 0 {
+				continue
+			}
+			out = append(out, Square{X: s.X + dx, Y: s.Y + dy})
+		}
+	}
+	return out
+}
+
+// sortSquares dá ordem estável à saída: um mapa em Go itera fora de ordem, e um
+// resultado que muda de ordem a cada chamada faria a lista do cliente
+// reconciliar tudo sem nada ter mudado.
+func sortSquares(list []Square) {
+	sort.Slice(list, func(i, j int) bool {
+		if list[i].Y != list[j].Y {
+			return list[i].Y < list[j].Y
+		}
+		return list[i].X < list[j].X
+	})
 }

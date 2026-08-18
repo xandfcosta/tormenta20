@@ -19,12 +19,22 @@ class FakeRealtime {
   readonly closeBoard = vi.fn()
   readonly populateBoard = vi.fn()
   readonly openBoard = vi.fn()
+  readonly proposeMove = vi.fn()
+  readonly commitMove = vi.fn()
+  readonly cancelMove = vi.fn()
 
-  constructor(private readonly live: BoardState | null) {}
+  constructor(
+    private readonly live: BoardState | null,
+    private readonly turnIndex = -1,
+  ) {}
 
   asRealtime(): SessionRealtime {
     return {
-      state: () => ({ initiative: [], round: 1, turnIndex: -1 }),
+      state: () => ({
+        initiative: [{ id: 'e1', label: 'Sílfide Ladina', initiative: 18, type: 'character' }],
+        round: 1,
+        turnIndex: this.turnIndex,
+      }),
       isConnected: () => true,
       error: () => null,
       board: () => this.live,
@@ -32,6 +42,9 @@ class FakeRealtime {
       closeBoard: this.closeBoard,
       populateBoard: this.populateBoard,
       openBoard: this.openBoard,
+      proposeMove: this.proposeMove,
+      commitMove: this.commitMove,
+      cancelMove: this.cancelMove,
     } as unknown as SessionRealtime
   }
 }
@@ -49,8 +62,13 @@ const TABULEIRO: BoardState = {
   ],
 }
 
-function renderRegion(isGm: boolean, live: BoardState | null = TABULEIRO, activeEntryId?: string) {
-  const rt = new FakeRealtime(live)
+function renderRegion(
+  isGm: boolean,
+  live: BoardState | null = TABULEIRO,
+  activeEntryId?: string,
+  jogador: { myCharacterIds?: ReadonlySet<number>; turnIndex?: number } = {},
+) {
+  const rt = new FakeRealtime(live, jogador.turnIndex ?? -1)
   // A janela nasce fora da região, como na página: ela precisa sobreviver à
   // troca de região, e o teste monta a mesma composição que a cena monta.
   const view = createBoardViewport()
@@ -59,7 +77,13 @@ function renderRegion(isGm: boolean, live: BoardState | null = TABULEIRO, active
   // em jsdom todo elemento mede zero e o ResizeObserver nem existe.
   view.centerOn(0, 0)
   render(() => (
-    <BoardRegion rt={rt.asRealtime()} isGm={isGm} view={view} activeEntryId={activeEntryId} />
+    <BoardRegion
+      rt={rt.asRealtime()}
+      isGm={isGm}
+      view={view}
+      activeEntryId={activeEntryId}
+      myCharacterIds={jogador.myCharacterIds}
+    />
   ))
   return { rt, user: userEvent.setup(), view }
 }
@@ -93,9 +117,14 @@ describe('o tabuleiro na cena', () => {
     const ogro = screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' })
 
     await user.click(ogro)
-    await user.click(ogro)
-    await user.click(screen.getByRole('button', { name: 'Coluna 5, linha 3' }))
+    expect(screen.getByRole('button', { name: 'Coluna 5, linha 3' })).toBeInTheDocument()
 
+    await user.click(ogro)
+
+    // Sem peça na mão não há onde pousar: os quadrados só existem enquanto
+    // alguém está movendo. Antes eles ficavam sempre na árvore, e eram
+    // centenas de botões inertes no leitor de tela (ALE-124).
+    expect(screen.queryByRole('button', { name: 'Coluna 5, linha 3' })).not.toBeInTheDocument()
     expect(rt.updateToken).not.toHaveBeenCalled()
   })
 
@@ -169,5 +198,142 @@ describe('o tabuleiro na cena', () => {
     await user.click(screen.getByRole('button', { name: 'Abrir' }))
 
     expect(rt.openBoard).toHaveBeenCalledWith('Cripta', 'pedra')
+  })
+})
+
+
+/**
+ * Mover a peça (ALE-124, fatia 3).
+ *
+ * A trava de verdade é do servidor (`assertMovable`, provado em
+ * `api/board_move_test.go`); o que se prova AQUI é a outra metade: que a tela
+ * oferece o movimento a quem pode e não o oferece a quem não pode, e que o que
+ * ela manda para o servidor é o caminho certo.
+ */
+const MEU_HEROI = new Set([77])
+
+const COM_JOGADOR: BoardState = {
+  ...TABULEIRO,
+  tokens: [
+    { id: 't1', label: 'Ogro', x: 3, y: 2, footprint: 2, kind: 'npc', entryId: 'e2' },
+    {
+      id: 't2',
+      label: 'Sílfide Ladina',
+      x: 6,
+      y: 5,
+      footprint: 1,
+      kind: 'character',
+      entryId: 'e1',
+      characterId: 77,
+      speedSquares: 6,
+    },
+  ],
+}
+
+describe('o jogador move a própria peça', () => {
+  it('na própria vez, clicar numa casa acesa PROPÕE o caminho', async () => {
+    const { rt, user } = renderRegion(false, COM_JOGADOR, 'e1', {
+      myCharacterIds: MEU_HEROI,
+      turnIndex: 0,
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Sílfide Ladina, coluna 6, linha 5' }))
+    await user.click(screen.getByRole('button', { name: 'Coluna 8, linha 5' }))
+
+    // Caminho, e não destino: o custo depende do percurso (a diagonal custa o
+    // dobro, T20 p238), e é o servidor que cobra.
+    expect(rt.proposeMove).toHaveBeenCalledWith('t2', [
+      { x: 6, y: 5 },
+      { x: 7, y: 5 },
+      { x: 8, y: 5 },
+    ])
+    // A peça NÃO é reposicionada por fora do fluxo de proposta.
+    expect(rt.updateToken).not.toHaveBeenCalled()
+  })
+
+  // O losango é a regra na tela: com 6 quadrados dá para andar 6 em linha reta
+  // e só 3 na diagonal (p238). A casa fora do alcance não responde ao clique.
+  it('a casa além do deslocamento não aceita a peça', async () => {
+    const { rt, user } = renderRegion(false, COM_JOGADOR, 'e1', {
+      myCharacterIds: MEU_HEROI,
+      turnIndex: 0,
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Sílfide Ladina, coluna 6, linha 5' }))
+    // (0,0) está DENTRO da janela e a 11 quadrados de (6,5) — bem além dos 6.
+    const longe = screen.getByRole('button', { name: 'Coluna 0, linha 0' })
+
+    expect(longe).toBeDisabled()
+    await user.click(longe)
+    expect(rt.proposeMove).not.toHaveBeenCalled()
+  })
+
+  it('fora da própria vez a peça nem responde', () => {
+    renderRegion(false, COM_JOGADOR, 'e2', { myCharacterIds: MEU_HEROI, turnIndex: 1 })
+
+    expect(screen.getByRole('button', { name: 'Sílfide Ladina, coluna 6, linha 5' })).toBeDisabled()
+  })
+
+  it('a peça de outro não responde nem na vez dela', () => {
+    renderRegion(false, COM_JOGADOR, 'e2', { myCharacterIds: MEU_HEROI, turnIndex: 1 })
+
+    expect(screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' })).toBeDisabled()
+  })
+})
+
+describe('confirmar o movimento proposto', () => {
+  const PROPOSTO: BoardState = {
+    ...COM_JOGADOR,
+    pending: {
+      tokenId: 't2',
+      path: [
+        { x: 6, y: 5 },
+        { x: 7, y: 5 },
+        { x: 8, y: 5 },
+      ],
+      cost: 2,
+      budget: 6,
+      byUserId: 42,
+    },
+  }
+
+  // Quadrado é a unidade da REGRA (p236) e metro é a unidade da conversa na
+  // mesa: a barra diz os dois, e diz o orçamento, porque "2" sem "de 6" não
+  // responde o que o jogador está perguntando.
+  it('a barra diz o custo em quadrados, em metros e contra o orçamento', () => {
+    renderRegion(false, PROPOSTO, 'e1', { myCharacterIds: MEU_HEROI, turnIndex: 0 })
+
+    expect(screen.getByText(/2 quadrados \(3,0m\) de 6/)).toBeInTheDocument()
+  })
+
+  it('confirmar manda a VERSÃO que o cliente tinha na mão', async () => {
+    const { rt, user } = renderRegion(false, PROPOSTO, 'e1', {
+      myCharacterIds: MEU_HEROI,
+      turnIndex: 0,
+    })
+
+    await user.click(screen.getByRole('button', { name: /Confirmar/ }))
+
+    // Sem a versão o servidor não teria como recusar um commit escrito sobre
+    // uma cena que já mudou.
+    expect(rt.commitMove).toHaveBeenCalledWith(PROPOSTO.version)
+  })
+
+  it('o mestre confirma pelo jogador', async () => {
+    const { rt, user } = renderRegion(true, PROPOSTO, 'e1')
+
+    await user.click(screen.getByRole('button', { name: /Confirmar/ }))
+
+    expect(rt.commitMove).toHaveBeenCalledWith(PROPOSTO.version)
+  })
+
+  // Quem não decide continua VENDO: é essa a razão de o provisório ser estado, e
+  // não um arraste privado dentro do cliente de quem move.
+  it('quem não decide vê o caminho, mas não os botões', () => {
+    renderRegion(false, PROPOSTO, 'e1', { myCharacterIds: new Set([999]), turnIndex: 0 })
+
+    expect(screen.getByText(/2 quadrados/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Confirmar/ })).not.toBeInTheDocument()
+    expect(screen.getByText('Aguardando confirmação.')).toBeInTheDocument()
   })
 })

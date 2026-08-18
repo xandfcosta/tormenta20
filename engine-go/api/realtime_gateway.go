@@ -77,6 +77,9 @@ func (g *realtimeGateway) onConnect(sock *socket.Socket) {
 	sock.On("board-token-remove", func(args ...any) { g.onBoardTokenRemove(sock, args) })
 	sock.On("board-token-update", func(args ...any) { g.onBoardTokenUpdate(sock, args) })
 	sock.On("board-populate", func(args ...any) { g.onBoardPopulate(sock, args) })
+	sock.On("board-move-propose", func(args ...any) { g.onBoardMovePropose(sock, args) })
+	sock.On("board-move-commit", func(args ...any) { g.onBoardMoveCommit(sock, args) })
+	sock.On("board-move-cancel", func(args ...any) { g.onBoardMoveCancel(sock, args) })
 	sock.On("disconnect", func(...any) { g.onDisconnect(sock) })
 }
 

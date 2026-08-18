@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"t20engine/db/sqlcgen"
+	"t20engine/engine"
 )
 
 // errNoBoard é a resposta a "mexa no tabuleiro" quando a sessão não tem um. É
@@ -29,12 +30,21 @@ type boardStore struct {
 	// loaded marca a sessão já consultada no banco, para "sem tabuleiro" não
 	// virar uma ida ao disco por mensagem.
 	loaded map[int64]bool
-	newID  func() string
-	q      *sqlcgen.Queries
+	// dirty: a última gravação falhou. Espelha o do rastreador, e é o que
+	// transforma "gravação falhando em silêncio" em aviso na tela da mesa.
+	dirty map[int64]bool
+	newID func() string
+	q     *sqlcgen.Queries
 }
 
 func newBoardStore(q *sqlcgen.Queries, newID func() string) *boardStore {
-	return &boardStore{boards: map[int64]*BoardState{}, loaded: map[int64]bool{}, newID: newID, q: q}
+	return &boardStore{
+		boards: map[int64]*BoardState{},
+		loaded: map[int64]bool{},
+		dirty:  map[int64]bool{},
+		newID:  newID,
+		q:      q,
+	}
 }
 
 // cloneBoard copia o tabuleiro para o broadcast. As peças são valores; a cópia
@@ -47,6 +57,15 @@ func cloneBoard(b *BoardState) *BoardState {
 	out := *b
 	out.Tokens = make([]BoardToken, len(b.Tokens))
 	copy(out.Tokens, b.Tokens)
+	// O provisório é PONTEIRO, e uma cópia rasa deixaria o instantâneo do
+	// broadcast apontando para o mesmo movimento que a mensagem seguinte
+	// substitui. É a família de defeito da `cloneState` (ALE-132): o que sai
+	// no fio tem de ser cópia de verdade.
+	if b.Pending != nil {
+		pending := *b.Pending
+		pending.Path = append([]engine.Square(nil), b.Pending.Path...)
+		out.Pending = &pending
+	}
 	return &out
 }
 
@@ -144,23 +163,79 @@ func (bs *boardStore) populate(ctx context.Context, sessionID int64, st *Session
 	return bs.apply(ctx, sessionID, func(b *BoardState) error { populateBoard(b, st, bs.newID); return nil })
 }
 
-// persist grava o tabuleiro. Best-effort como o do rastreador: a mesa não pode
-// parar porque o disco piscou, e a memória continua sendo a verdade da sessão.
-func (bs *boardStore) persist(ctx context.Context, sessionID int64) {
+// setSpeeds grava o orçamento de várias peças de uma vez. Uma mutação só, e um
+// broadcast só: um `updateToken` por peça faria a mesa receber seis tabuleiros
+// seguidos ao trazer o grupo.
+func (bs *boardStore) setSpeeds(ctx context.Context, sessionID int64, speeds map[string]int) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error {
+		for i := range b.Tokens {
+			if squares, ok := speeds[b.Tokens[i].ID]; ok && squares > 0 {
+				b.Tokens[i].SpeedSquares = squares
+			}
+		}
+		b.Version++
+		return nil
+	})
+}
+
+// persist grava o tabuleiro e devolve as transições de saúde, como o do
+// rastreador: a mesa não para porque o disco piscou, mas ela precisa SABER
+// quando parou de gravar.
+//
+// Esta devolução nasceu de um defeito real: a tabela `session_boards` sumiu do
+// banco de desenvolvimento (a migração constava aplicada e a tabela não
+// existia), e o tabuleiro passou um dia vivendo só em memória — cada gravação
+// falhava numa linha de log que ninguém lê, e na tela estava tudo perfeito até
+// o processo reiniciar. Falha permanente de gravação não é "o disco piscou".
+func (bs *boardStore) persist(ctx context.Context, sessionID int64) (dirty, changed bool) {
 	bs.mu.Lock()
 	b := cloneBoard(bs.boards[sessionID])
 	bs.mu.Unlock()
 	if b == nil {
-		return
+		return false, false
 	}
 	blob, err := json.Marshal(b)
 	if err != nil {
 		log.Printf("session %d: board marshal failed (%v)", sessionID, err)
-		return
+		return false, false
 	}
-	if err := bs.q.SaveSessionBoard(ctx, sqlcgen.SaveSessionBoardParams{
+	err = bs.q.SaveSessionBoard(ctx, sqlcgen.SaveSessionBoardParams{
 		Sessionid: sessionID, State: string(blob), Updatedat: nowISO(),
-	}); err != nil {
+	})
+
+	bs.mu.Lock()
+	defer bs.mu.Unlock()
+	prev := bs.dirty[sessionID] // ausente ⇒ false (saudável)
+	dirty = err != nil
+	changed = prev != dirty
+	if dirty {
+		bs.dirty[sessionID] = true
 		log.Printf("session %d: board persist failed (%v)", sessionID, err)
+		return dirty, changed
 	}
+	delete(bs.dirty, sessionID)
+	return dirty, changed
+}
+
+// proposeMove, commitMove e cancelMove são as três portas do movimento (ALE-124).
+// A posse e o orçamento chegam RESOLVIDOS do gateway: quem consulta o banco é
+// ele, e a trava daqui não pode esperar por I/O.
+
+func (bs *boardStore) proposeMove(ctx context.Context, sessionID int64, st *SessionRuntimeState, tokenID string, path []engine.Square, by mover, speedSquares int) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error {
+		// O orçamento fresco do motor entra na peça ANTES da medição: sem isso,
+		// a armadura vestida no meio da sessão só valeria no movimento seguinte.
+		if token := findToken(b, tokenID); token != nil && speedSquares > 0 {
+			token.SpeedSquares = speedSquares
+		}
+		return proposeMove(b, st, tokenID, path, by)
+	})
+}
+
+func (bs *boardStore) commitMove(ctx context.Context, sessionID int64, st *SessionRuntimeState, version int64, by mover) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error { return commitMove(b, st, version, by) })
+}
+
+func (bs *boardStore) cancelMove(ctx context.Context, sessionID int64, by mover) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error { return cancelMove(b, by) })
 }

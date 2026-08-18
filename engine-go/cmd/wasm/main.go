@@ -190,6 +190,29 @@ func boardPathCost(_ js.Value, args []js.Value) any {
 	return string(out)
 }
 
+// boardReach devolve as casas ALCANÇÁVEIS a partir de um quadrado (T20 p238),
+// para a tela acender o losango em vez de fazer a mesa contar. Uma chamada por
+// seleção, e não uma por casa: o cliente não sabe somar diagonal, e é bom que
+// não saiba.
+//
+// Pura: não precisa de `primeEngineCatalogs`.
+func boardReach(_ js.Value, args []js.Value) any {
+	var payload struct {
+		From      engine.Square   `json:"from"`
+		Difficult []engine.Square `json:"difficult"`
+		Budget    int             `json:"budget"`
+	}
+	if err := json.Unmarshal([]byte(args[0].String()), &payload); err != nil {
+		return errorJSON(err)
+	}
+	terrain := engine.MoveTerrain{Difficult: map[engine.Square]bool{}}
+	for _, square := range payload.Difficult {
+		terrain.Difficult[square] = true
+	}
+	out, _ := json.Marshal(engine.ReachableSquares(payload.From, payload.Budget, terrain))
+	return string(out)
+}
+
 // boardBudget converte deslocamento em metros para quadrados (T20 p106).
 func boardBudget(_ js.Value, args []js.Value) any {
 	out, _ := json.Marshal(map[string]int{"squares": engine.SquaresForDisplacement(args[0].Float())})
@@ -220,6 +243,7 @@ func main() {
 	js.Global().Set("computeWeaponCards", js.FuncOf(computeWeaponCards))
 	js.Global().Set("spellPmLimit", js.FuncOf(spellPmLimit))
 	js.Global().Set("boardPathCost", js.FuncOf(boardPathCost))
+	js.Global().Set("boardReach", js.FuncOf(boardReach))
 	js.Global().Set("boardBudget", js.FuncOf(boardBudget))
 	js.Global().Set("boardFootprint", js.FuncOf(boardFootprint))
 	select {} // keep the runtime alive

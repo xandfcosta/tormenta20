@@ -1,9 +1,11 @@
-import { Crosshair, LayoutGrid, Minus, Plus, Users, X } from 'lucide-solid'
-import { Show, createSignal } from 'solid-js'
+import { Check, Crosshair, LayoutGrid, Minus, Plus, Undo2, Users, X } from 'lucide-solid'
+import { Show, createMemo, createSignal } from 'solid-js'
+import { pathBetween } from '@/features/battle-board/board-path'
 import { BoardView } from '@/features/battle-board/board-view'
 import { type BoardViewport, SQUARE_METRES } from '@/features/battle-board/board-viewport'
 import { OpenBoardDialog } from '@/features/battle-board/open-board-dialog'
-import type { SessionRealtime } from '@/shared/realtime/realtime'
+import { boardReach } from '@/shared/lib/engine-wasm'
+import type { BoardState, BoardToken, SessionRealtime } from '@/shared/realtime/realtime'
 import { Button } from '@/shared/ui/button'
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
 
@@ -26,20 +28,72 @@ export function BoardRegion(props: {
   view: BoardViewport
   /** Linha da iniciativa na vez: a peça dela ganha o anel dourado. */
   activeEntryId?: string | null
+  /** Os personagens DESTE espectador. Vazio para o mestre, que move qualquer um. */
+  myCharacterIds?: ReadonlySet<number>
 }) {
   const [selectedTokenId, setSelectedTokenId] = createSignal<string | null>(null)
   const board = () => props.rt.board()
+
+  // A vez é do RASTREADOR: o tabuleiro pergunta, não guarda uma cópia — duas
+  // cópias da vez divergiriam no primeiro turno passado com o tabuleiro fechado.
+  const inCombat = () => props.rt.state().turnIndex >= 0
+  const isMine = (token: BoardToken) =>
+    token.characterId !== undefined && (props.myCharacterIds?.has(token.characterId) ?? false)
+
+  // Espelho da regra do servidor (`assertMovable`), e só para AFFORDANCE: a
+  // trava é do Go, e uma peça que não responde ao clique é UX, não segurança.
+  const canMove = (token: BoardToken) =>
+    props.isGm || (isMine(token) && (!inCombat() || token.entryId === props.activeEntryId))
+
+  const movableTokenIds = createMemo(
+    () => new Set((board()?.tokens ?? []).filter(canMove).map((token) => token.id)),
+  )
 
   // Selecionar de novo a mesma peça DESSELECIONA: sem isso não há como largar a
   // peça sem posicioná-la, e o próximo clique num quadrado a moveria sem querer.
   const selectToken = (tokenId: string) =>
     setSelectedTokenId((current) => (current === tokenId ? null : tokenId))
 
+  const selectedToken = () => board()?.tokens.find((token) => token.id === selectedTokenId())
+
+  /**
+   * As casas acesas. O mestre não tem nenhuma — ele posiciona sem orçamento, e
+   * acender um losango para ele seria inventar um limite que o livro não lhe
+   * impõe. Fora de combate também não há: ali não existe deslocamento de turno.
+   */
+  const reachable = createMemo(() => {
+    const token = selectedToken()
+    if (!token || props.isGm || !inCombat() || !token.speedSquares) return undefined
+    return boardReach({ x: token.x, y: token.y }, [], token.speedSquares)
+  })
+
+  /**
+   * Pousar a peça. São dois caminhos porque são duas coisas diferentes: o
+   * mestre POSICIONA (voo, empurrão, "pode ir"), e o jogador PROPÕE um
+   * movimento que a mesa vê e alguém confirma.
+   */
   const placeSelected = (x: number, y: number) => {
-    const tokenId = selectedTokenId()
-    if (!tokenId) return
-    props.rt.updateToken(tokenId, { x, y })
+    const token = selectedToken()
+    if (!token) return
+    if (props.isGm) {
+      props.rt.updateToken(token.id, { x, y })
+    } else {
+      props.rt.proposeMove(token.id, pathBetween({ x: token.x, y: token.y }, { x, y }))
+    }
     setSelectedTokenId(null)
+  }
+
+  /**
+   * Quem decide o provisório: o mestre por qualquer um — é ele quem toca a mesa
+   * quando o jogador travou ou caiu da rede — e o jogador só sobre a própria
+   * peça. Quem não decide continua VENDO o caminho: é essa a razão de o
+   * provisório ser estado e não um arraste privado.
+   */
+  const decidesPending = () => {
+    const move = board()?.pending
+    if (!move) return false
+    const token = board()?.tokens.find((piece) => piece.id === move.tokenId)
+    return props.isGm || (token !== undefined && isMine(token))
   }
 
   return (
@@ -96,23 +150,82 @@ export function BoardRegion(props: {
               view={props.view}
               activeEntryId={props.activeEntryId}
               selectedTokenId={selectedTokenId()}
-              onSelectToken={props.isGm ? selectToken : undefined}
-              onPlaceToken={props.isGm ? placeSelected : undefined}
+              movableTokenIds={movableTokenIds()}
+              reachable={reachable()}
+              pending={live().pending}
+              // Quem não pode mover NENHUMA peça também não seleciona: sem isso
+              // a camada de quadrados nasceria com centenas de botões inertes
+              // na árvore de quem só assiste.
+              onSelectToken={movableTokenIds().size > 0 ? selectToken : undefined}
+              onPlaceToken={selectedTokenId() ? placeSelected : undefined}
             />
+
+            <Show when={live().pending}>
+              {(move) => (
+                <MoveBar
+                  move={move()}
+                  canDecide={decidesPending()}
+                  onConfirm={() => props.rt.commitMove(live().version)}
+                  onCancel={props.rt.cancelMove}
+                />
+              )}
+            </Show>
 
             {/* A dica só existe no momento em que ela é ACIONÁVEL: como linha
                 permanente, ela custava 26px de altura em todo formato para dizer
                 o óbvio, e no celular deitado isso é uma fileira inteira de
                 quadrados a menos (ALE-124). */}
-            <Show when={props.isGm && selectedTokenId()}>
+            <Show when={selectedTokenId() && !live().pending}>
               <p class="shrink-0 border-t border-grimorio-iron px-3 py-1 text-[11px] text-grimorio-gold">
-                Clique num quadrado para pousar a peça.
+                {props.isGm
+                  ? 'Clique num quadrado para pousar a peça.'
+                  : 'Clique numa casa acesa para propor o movimento.'}
               </p>
             </Show>
           </>
         )}
       </Show>
     </section>
+  )
+}
+
+/**
+ * A barra do movimento proposto (ALE-124).
+ *
+ * Diz o custo em QUADRADOS e em metros: quadrado é a unidade da regra (T20
+ * p236) e metro é a unidade da conversa na mesa. E diz o orçamento ao lado,
+ * porque "4" sem "de 6" não responde a pergunta que o jogador tem.
+ *
+ * Quem não decide continua lendo a barra: a mesa inteira vê para onde a peça
+ * está indo, que é a razão de o provisório ser estado e não arraste privado.
+ */
+function MoveBar(props: {
+  move: NonNullable<BoardState['pending']>
+  canDecide: boolean
+  onConfirm: () => void
+  onCancel: () => void
+}) {
+  const metres = () => (props.move.cost * SQUARE_METRES).toFixed(1).replace('.', ',')
+
+  return (
+    <div class="flex shrink-0 flex-wrap items-center gap-2 border-t border-grimorio-iron px-3 py-1.5">
+      <p class="font-mono text-[11px] tabular-nums text-grimorio-gold">
+        {props.move.cost} {props.move.cost === 1 ? 'quadrado' : 'quadrados'} ({metres()}m)
+        {props.move.budget >= 0 ? ` de ${props.move.budget}` : ' · sem limite de turno'}
+      </p>
+      <Show when={props.canDecide} fallback={<span class="text-[11px] text-muted-foreground">Aguardando confirmação.</span>}>
+        <div class="ml-auto flex items-center gap-1">
+          <Button size="sm" variant="ghost" onClick={() => props.onCancel()}>
+            <Undo2 aria-hidden="true" class="size-4" />
+            Refazer
+          </Button>
+          <Button size="sm" onClick={() => props.onConfirm()}>
+            <Check aria-hidden="true" class="size-4" />
+            Confirmar
+          </Button>
+        </div>
+      </Show>
+    </div>
   )
 }
 

@@ -2,6 +2,8 @@ package api
 
 import (
 	"fmt"
+
+	"t20engine/engine"
 )
 
 // boardMaxTokens — teto de peças num tabuleiro. Espelha o `initiativeMaxEntries`
@@ -36,6 +38,12 @@ type BoardToken struct {
 	// onde a linha SOBREVIVE sem os números — aqui a peça some inteira da cópia
 	// do jogador, porque a existência dela é a emboscada.
 	Hidden bool `json:"hidden,omitempty"`
+	// SpeedSquares é o orçamento de movimento da peça em QUADRADOS (T20 p106:
+	// 9m = 6 quadrados). Mora na peça porque a tela precisa dele ANTES de
+	// propor — para contar o gasto e acender o que dá para alcançar —, e é
+	// re-sincronizado do motor a cada proposta, como o `refreshCharacterMaxes`
+	// faz com o `hpMax`. Zero = nunca medido; vale o padrão do livro.
+	SpeedSquares int `json:"speedSquares,omitempty"`
 }
 
 // BoardState é o tabuleiro vivo de uma sessão. Ausente (sem linha em
@@ -56,6 +64,8 @@ type BoardState struct {
 	Place   string       `json:"place"`
 	Terrain string       `json:"terrain"`
 	Tokens  []BoardToken `json:"tokens"`
+	// Pending é o movimento proposto e ainda não confirmado — no máximo um.
+	Pending *PendingMove `json:"pending,omitempty"`
 }
 
 // newBoard abre um tabuleiro vazio num plano sem bordas.
@@ -88,6 +98,12 @@ func removeToken(b *BoardState, tokenID string) {
 			continue
 		}
 		b.Tokens = append(b.Tokens[:i], b.Tokens[i+1:]...)
+		// O provisório daquela peça morre com ela: um movimento proposto para
+		// quem não está mais no tabuleiro nunca poderia ser confirmado, e
+		// ficaria pendurado no estado de todo mundo.
+		if b.Pending != nil && b.Pending.TokenID == tokenID {
+			b.Pending = nil
+		}
 		b.Version++
 		return
 	}
@@ -243,13 +259,202 @@ func boardForRole(role string, b *BoardState) *BoardState {
 func redactBoardForPlayers(b *BoardState) *BoardState {
 	out := *b
 	out.Tokens = make([]BoardToken, 0, len(b.Tokens))
+	hidden := map[string]bool{}
 	for _, t := range b.Tokens {
 		if t.Hidden {
+			hidden[t.ID] = true
 			continue
 		}
 		out.Tokens = append(out.Tokens, t)
+	}
+	// O provisório de uma peça escondida entregaria a emboscada por outro
+	// caminho: um caminho desenhado saindo do nada é a peça sem o círculo.
+	if out.Pending != nil && hidden[out.Pending.TokenID] {
+		out.Pending = nil
 	}
 	return &out
 }
 
 func strPtr(s string) *string { return &s }
+
+// PendingMove é um movimento PROPOSTO e ainda não confirmado (ALE-124).
+//
+// Ele é ESTADO, e não um evento de arraste no fio. Todo broadcast desta casa
+// carrega o estado inteiro; um fantasma a 60fps seriam kilobytes por quadro
+// vezes N clientes, e outras tantas gravações do blob por segundo. Como estado,
+// são duas mensagens — soltar e confirmar —, o provisório sobrevive à
+// reconexão, e ele é redigível por papel como qualquer outra parte do tabuleiro.
+//
+// No máximo UM por tabuleiro: dois movimentos provisórios simultâneos são duas
+// verdades sobre a mesma cena, e a mesa não teria como saber qual confirmar.
+type PendingMove struct {
+	TokenID string `json:"tokenId"`
+	// Path é o caminho INTEIRO, do quadrado onde a peça está até o destino. O
+	// custo depende do percurso (diagonal custa o dobro, T20 p238), então
+	// guardar só o destino perderia a conta que a mesa acabou de ver.
+	Path []engine.Square `json:"path"`
+	Cost int             `json:"cost"`
+	// Budget é o orçamento contra o qual o caminho foi medido, em quadrados, ou
+	// -1 quando não há (mestre, ou cena fora de combate).
+	Budget int `json:"budget"`
+	// ByUserID é quem propôs. O mestre confirma por qualquer um; o jogador só
+	// confirma o que ele mesmo propôs.
+	ByUserID int64 `json:"byUserId"`
+}
+
+// boardDefaultSpeedSquares é o orçamento de quem não declarou deslocamento: 9m,
+// o padrão do livro (T20 p106), que são 6 quadrados. Vale para o capanga que o
+// mestre digitou à mão — inventar zero o deixaria pregado no chão, e inventar
+// infinito tiraria a regra da mesa.
+const boardDefaultSpeedSquares = 6
+
+// speedOf devolve o orçamento da peça em quadrados, com o padrão do livro para
+// quem nunca teve o deslocamento medido.
+func speedOf(t BoardToken) int {
+	if t.SpeedSquares > 0 {
+		return t.SpeedSquares
+	}
+	return boardDefaultSpeedSquares
+}
+
+// findToken devolve o ponteiro para a peça viva (para mutação) ou nil.
+func findToken(b *BoardState, tokenID string) *BoardToken {
+	for i := range b.Tokens {
+		if b.Tokens[i].ID == tokenID {
+			return &b.Tokens[i]
+		}
+	}
+	return nil
+}
+
+// mover descreve quem está tentando mexer numa peça. O papel vem do socket e a
+// posse do banco; a decisão de deixar ou não é a função abaixo.
+type mover struct {
+	userID int64
+	role   string
+	// ownsCharacter: a peça é de um personagem DESTE usuário. Resolvido no
+	// gateway, contra o banco — o cliente não é fonte de posse.
+	ownsCharacter bool
+}
+
+// assertMovable responde "esta pessoa pode mover esta peça agora?" e, quando
+// pode, com QUANTO de orçamento (T20 p106; -1 = sem orçamento).
+//
+// Três regras, e as duas exceções são deliberadas:
+//   - o MESTRE move qualquer peça, a qualquer hora, sem orçamento — é a saída
+//     para voo, empurrão, teleporte e "pode ir";
+//   - FORA DE COMBATE (`turnIndex` < 0) não existe vez nem deslocamento de
+//     turno: cada um anda com a própria peça, e o contador só informa;
+//   - em combate, o jogador move a própria peça só na vez dela.
+func assertMovable(b *BoardState, st *SessionRuntimeState, tokenID string, by mover) (*BoardToken, int, error) {
+	token := findToken(b, tokenID)
+	if token == nil {
+		return nil, 0, fmt.Errorf("peça %q não está no tabuleiro", tokenID)
+	}
+	if by.role == "gm" {
+		return token, -1, nil
+	}
+	if !by.ownsCharacter {
+		return nil, 0, fmt.Errorf("a peça %q não é sua", token.Label)
+	}
+	if st == nil || st.TurnIndex < 0 {
+		return token, -1, nil
+	}
+	if !isTokenOnTurn(token, st) {
+		return nil, 0, fmt.Errorf("não é a vez de %s", token.Label)
+	}
+	return token, speedOf(*token), nil
+}
+
+// isTokenOnTurn amarra a peça à LINHA da iniciativa: a vez não é copiada para o
+// tabuleiro, ela é perguntada ao rastreador — duas cópias da vez divergiriam no
+// primeiro turno passado com o tabuleiro fechado.
+func isTokenOnTurn(token *BoardToken, st *SessionRuntimeState) bool {
+	if token.EntryID == nil || st.TurnIndex < 0 || st.TurnIndex >= len(st.Initiative) {
+		return false
+	}
+	return st.Initiative[st.TurnIndex].ID == *token.EntryID
+}
+
+// proposeMove mede o caminho e guarda o provisório. Recusa o que estoura o
+// deslocamento: a decisão do dono é BLOQUEAR no limite, e as saídas são o
+// mestre (sem orçamento) e a cena fora de combate.
+func proposeMove(b *BoardState, st *SessionRuntimeState, tokenID string, path []engine.Square, by mover) error {
+	token, budget, err := assertMovable(b, st, tokenID, by)
+	if err != nil {
+		return err
+	}
+	if len(path) < 2 {
+		return fmt.Errorf("o caminho tem %d quadrados: precisa de origem e destino", len(path))
+	}
+	if path[0].X != token.X || path[0].Y != token.Y {
+		return fmt.Errorf("o caminho começa em (%d,%d) e a peça está em (%d,%d)", path[0].X, path[0].Y, token.X, token.Y)
+	}
+	// Terreno difícil ainda não existe no estado (é a fatia do mapa): a régua
+	// já sabe cobrá-lo, e o mapa vazio custa o que o chão limpo custa.
+	cost := engine.PathCost(path, engine.MoveTerrain{}, budget)
+	if !cost.Legal {
+		return fmt.Errorf("%s", cost.Reason)
+	}
+	if err := assertSaneCoords(BoardToken{X: path[len(path)-1].X, Y: path[len(path)-1].Y}); err != nil {
+		return err
+	}
+	b.Pending = &PendingMove{TokenID: tokenID, Path: path, Cost: cost.Squares, Budget: budget, ByUserID: by.userID}
+	b.Version++
+	return nil
+}
+
+// commitMove pousa a peça no fim do caminho proposto.
+//
+// `version` é a versão que o proponente tinha na mão: se o tabuleiro mudou
+// desde a proposta, o commit é RECUSADO em vez de aplicado sobre outra cena.
+// Isso mata os três casos que o last-write-wins quebra — dois clientes na mesma
+// peça, o mestre arrastando enquanto o jogador confirma, e o broadcast atrasado
+// que chega depois da re-hidratação. Versão 0 = "não sei em que versão eu
+// estava", aceita, porque recusar um cliente honesto e desatualizado seria
+// pior que aplicar o que ele acabou de ver na tela.
+func commitMove(b *BoardState, st *SessionRuntimeState, version int64, by mover) error {
+	pending, err := pendingFor(b, by)
+	if err != nil {
+		return err
+	}
+	if version > 0 && version != b.Version {
+		return fmt.Errorf("o tabuleiro mudou (versão %d, você viu a %d): refaça o movimento", b.Version, version)
+	}
+	// A vez é conferida DE NOVO na confirmação: entre propor e confirmar o
+	// mestre pode ter passado o turno, e o que vale é a mesa no instante em que
+	// a peça pousa. O mestre confirma por qualquer um, então ele passa por aqui
+	// sem restrição.
+	token, _, err := assertMovable(b, st, pending.TokenID, by)
+	if err != nil {
+		return err
+	}
+	destination := pending.Path[len(pending.Path)-1]
+	token.X, token.Y = destination.X, destination.Y
+	b.Pending = nil
+	b.Version++
+	return nil
+}
+
+// cancelMove desfaz o provisório sem mexer na peça.
+func cancelMove(b *BoardState, by mover) error {
+	if _, err := pendingFor(b, by); err != nil {
+		return err
+	}
+	b.Pending = nil
+	b.Version++
+	return nil
+}
+
+// pendingFor devolve o provisório se esta pessoa pode decidir sobre ele. O
+// mestre decide por qualquer um — é ele quem toca a mesa quando o jogador
+// travou ou caiu da rede —, e o jogador só sobre o que ele mesmo propôs.
+func pendingFor(b *BoardState, by mover) (*PendingMove, error) {
+	if b.Pending == nil {
+		return nil, fmt.Errorf("não há movimento proposto para confirmar")
+	}
+	if by.role != "gm" && b.Pending.ByUserID != by.userID {
+		return nil, fmt.Errorf("o movimento proposto não é seu")
+	}
+	return b.Pending, nil
+}

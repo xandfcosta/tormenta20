@@ -39,9 +39,10 @@ var gmGate = map[string]bool{
 	"session-rest":             true,
 	"apply-effect":             true,
 	"disconnect":               false, // do transporte, não da mesa
-	// Tabuleiro (ALE-124): abrir, montar e esconder peça é do mestre. Quem move a
-	// PRÓPRIA peça no próprio turno entra na fatia do movimento, e virá com regra
-	// mais fina (assertMovable), como os vitais.
+	// Tabuleiro (ALE-124): abrir, montar e esconder peça é do mestre. Mover tem
+	// regra mais fina (assertMovable) e por isso NÃO leva a porta larga — igual
+	// aos vitais: o mestre move qualquer peça, o jogador move a própria na vez
+	// dela, e fora de combate cada um anda com a sua.
 	"board-open":         true,
 	"board-close":        true,
 	"get-board-state":    false, // ler o tabuleiro é de todo mundo na mesa — REDIGIDO por papel
@@ -49,6 +50,9 @@ var gmGate = map[string]bool{
 	"board-token-remove": true,
 	"board-token-update": true,
 	"board-populate":     true,
+	"board-move-propose": false, // assertMovable: papel, posse e a VEZ
+	"board-move-cancel":  false, // desfaz o próprio provisório; o mestre desfaz o de qualquer um
+	"board-move-commit":  false, // idem
 }
 
 var (
@@ -145,5 +149,36 @@ func TestStateLeavesTheServerFilteredByRole(t *testing.T) {
 			t.Errorf("estado sai sem filtro de papel:\n%s\ndiga para quem: stateForRole(ctx.role, …)"+
 				" no ack, ou a sala do mestre no emit", strings.TrimSpace(line))
 		}
+	}
+}
+
+// Quem MOVE peça resolve posse e orçamento contra o BANCO.
+//
+// O `gmGate` acima diz que os handlers de movimento não levam a porta larga do
+// mestre — e é isso mesmo, porque a regra é mais fina. O risco que sobra é o
+// inverso: um handler novo de movimento que acredita no papel que o CLIENTE
+// mandou, ou no orçamento que ele mandou junto. As duas coisas se resolvem em
+// `moverFor`, que lê o dono do personagem e o deslocamento da ficha computada.
+//
+// Como os outros invariantes deste arquivo, isto se lê do FONTE: não existe
+// cliente socket.io em Go para chamar o handler num teste.
+func TestMoveHandlersResolveOwnershipOnTheServer(t *testing.T) {
+	source := gatewaySource(t)
+	matches := registration.FindAllStringSubmatch(source, -1)
+
+	found := 0
+	for _, match := range matches {
+		event, handler := match[1], match[2]
+		if !strings.HasPrefix(event, "board-move") {
+			continue
+		}
+		found++
+		if !strings.Contains(handlerBody(t, source, handler), "g.moverFor(") {
+			t.Errorf("%s (%s) move peça sem resolver quem é o autor no servidor:"+
+				" chame g.moverFor(ctx, tokenId) em vez de confiar no corpo da mensagem", event, handler)
+		}
+	}
+	if found == 0 {
+		t.Fatal("nenhum handler de movimento reconhecido — o nome dos eventos mudou e este teste ficou cego")
 	}
 }
