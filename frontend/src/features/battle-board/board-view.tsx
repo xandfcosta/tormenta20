@@ -5,6 +5,7 @@ import { hueGradient } from '@/shared/lib/hue-from-name'
 import { initials } from '@/shared/lib/initials'
 import { cn } from '@/shared/lib/utils'
 import { TERRAIN_STYLE } from './board-terrain'
+import { TOKEN_PIECE_ATTR, createBoardGestures } from './board-gestures'
 import { type BoardViewport, isVisible } from './board-viewport'
 
 /**
@@ -51,6 +52,10 @@ export function BoardView(props: {
     rows: view().rows(),
   })
 
+  // Nasce UMA vez: guarda quais ponteiros estão no vidro entre um evento e o
+  // seguinte (ALE-140).
+  const gestures = createBoardGestures(view)
+
   let host: HTMLDivElement | undefined
   const observe = (element: HTMLDivElement) => {
     host = element
@@ -79,9 +84,20 @@ export function BoardView(props: {
         // como `background-position` — o número nunca cresce com o pan.
         'background-size': `${view().cellPx()}px ${view().cellPx()}px`,
         'background-position': `${-view().originX() * view().cellPx()}px ${-view().originY() * view().cellPx()}px`,
+        // Só nesta superfície: sem isto, no telefone o arraste rola a PÁGINA em
+        // vez de mover a vista, e o tabuleiro fica navegável só pelos botões.
+        'touch-action': 'none',
       }}
+      onPointerDown={gestures.onPointerDown}
+      onPointerMove={gestures.onPointerMove}
+      onPointerUp={gestures.onPointerUp}
+      onPointerCancel={gestures.onPointerUp}
+      onWheel={gestures.onWheel}
       role="grid"
-      aria-label={`Tabuleiro: ${props.board.place}, janela em coluna ${view().originX()}, linha ${view().originY()}`}
+      // A coluna e a linha são arredondadas porque a origem passou a ser
+      // fracionária com o arraste (ALE-140), e "janela em coluna −7,3125" não é
+      // uma frase que se ouça.
+      aria-label={`Tabuleiro: ${props.board.place}, janela em coluna ${Math.round(view().originX())}, linha ${Math.round(view().originY())}`}
     >
       <Show when={props.onPlaceToken}>
         {(place) => (
@@ -121,13 +137,17 @@ function SquareLayer(props: {
   onPlace: (x: number, y: number) => void
   reachable?: readonly BoardSquare[]
 }) {
-  const squares = () => {
-    const { cols, rows, originX, originY } = props.view
-    return Array.from({ length: cols() * rows() }, (_, index) => ({
-      x: originX() + (index % cols()),
-      y: originY() + Math.floor(index / cols()),
+  // A origem é fracionária desde o arraste (ALE-140), mas casa é coisa inteira:
+  // a camada começa no quadrado de baixo e se desloca pelo RESTO, com uma
+  // coluna e uma linha a mais para cobrir a fresta que o deslocamento abre.
+  const first = () => ({ x: Math.floor(props.view.originX()), y: Math.floor(props.view.originY()) })
+  const cols = () => props.view.cols() + 1
+  const rows = () => props.view.rows() + 1
+  const squares = () =>
+    Array.from({ length: cols() * rows() }, (_, index) => ({
+      x: first().x + (index % cols()),
+      y: first().y + Math.floor(index / cols()),
     }))
-  }
 
   // Um `Set` de chaves e não um `some` por quadrado: a janela tem centenas de
   // casas e o alcance dezenas, e o produto dos dois seria refeito a cada
@@ -143,8 +163,9 @@ function SquareLayer(props: {
     <div
       class="absolute inset-0 grid"
       style={{
-        'grid-template-columns': `repeat(${props.view.cols()}, ${props.view.cellPx()}px)`,
+        'grid-template-columns': `repeat(${cols()}, ${props.view.cellPx()}px)`,
         'grid-auto-rows': `${props.view.cellPx()}px`,
+        transform: `translate(${(first().x - props.view.originX()) * props.view.cellPx()}px, ${(first().y - props.view.originY()) * props.view.cellPx()}px)`,
       }}
     >
       <For each={squares()}>
@@ -246,6 +267,8 @@ function TokenPiece(props: {
   return (
     <button
       type="button"
+      // Marca que o arraste consulta: começar o gesto NA PEÇA não move a vista.
+      {...{ [TOKEN_PIECE_ATTR]: '' }}
       class={cn(
         'absolute flex items-center justify-center rounded-full border-2 p-0.5 text-[0.6rem] font-semibold uppercase text-white transition-shadow',
         props.onTurn

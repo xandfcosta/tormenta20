@@ -1,6 +1,6 @@
 import { createRoot } from 'solid-js'
 import { describe, expect, it } from 'vitest'
-import { createBoardViewport, isVisible } from './board-viewport'
+import { MAX_CELL_PX, MIN_CELL_PX, createBoardViewport, isVisible } from './board-viewport'
 
 /**
  * A janela sobre o plano infinito (ALE-124). O que se prova aqui é o que a mesa
@@ -95,6 +95,106 @@ describe('a janela do tabuleiro', () => {
 
       expect(view.originX()).toBe(-10)
       expect(view.originY()).toBe(-5)
+    })
+  })
+})
+
+/**
+ * Os gestos do mouse e do toque (ALE-140). O gesto em si é e2e — em jsdom não
+ * existe `setPointerCapture`, nem coordenada, nem layout. O que se prova aqui é
+ * a GEOMETRIA que o gesto usa, que é onde um erro de sinal ou de escala passaria
+ * despercebido até a mesa se perder no plano.
+ */
+describe('a janela sob o dedo e a roda', () => {
+  it('arrastar move a vista para o lado contrário do dedo', () => {
+    withViewport((view) => {
+      view.measure(880, 440) // quadrado de 44px, origem em -10
+
+      view.panPixels(44, 0) // puxa o mapa para a DIREITA
+
+      // Puxar para a direita mostra o que está à esquerda: a origem DIMINUI.
+      expect(view.originX()).toBe(-11)
+    })
+  })
+
+  it('arrastar meio quadrado move meio quadrado, e não zero', () => {
+    withViewport((view) => {
+      view.measure(880, 440)
+
+      view.panPixels(22, 0)
+
+      // A origem é fracionária de propósito: sem casas decimais o mapa pularia
+      // 44px atrás do dedo em vez de segui-lo.
+      expect(view.originX()).toBeCloseTo(-10.5, 5)
+    })
+  })
+
+  // A âncora é a diferença entre navegar e se perder: dar zoom na briga não pode
+  // jogar a briga para fora da tela.
+  it('o zoom da roda mantém sob o ponteiro o quadrado que estava lá', () => {
+    withViewport((view) => {
+      view.measure(880, 440)
+      const ponteiro = { x: 220, y: 132 }
+      const quadradoX = view.originX() + ponteiro.x / view.cellPx()
+      const quadradoY = view.originY() + ponteiro.y / view.cellPx()
+
+      view.zoom(8, ponteiro)
+
+      expect(view.cellPx()).toBe(52)
+      expect(view.originX() + ponteiro.x / view.cellPx()).toBeCloseTo(quadradoX, 5)
+      expect(view.originY() + ponteiro.y / view.cellPx()).toBeCloseTo(quadradoY, 5)
+    })
+  })
+
+  // Sem âncora o ponto fixo é o CENTRO, que é o que os botões −/+ querem.
+  it('sem âncora, o zoom segura o centro da janela', () => {
+    withViewport((view) => {
+      view.measure(880, 440)
+      const centroX = view.originX() + view.cols() / 2
+
+      view.zoom(8)
+
+      expect(view.originX() + (880 / view.cellPx()) / 2).toBeCloseTo(centroX, 5)
+    })
+  })
+
+  /**
+   * O zoom muda quantos quadrados cabem SEM a caixa mudar de tamanho, então o
+   * ResizeObserver não dispara. Antes da ALE-140 a contagem ficava a do zoom
+   * anterior até alguém redimensionar a janela do browser — e a camada de casas
+   * clicáveis, que é desenhada por essa contagem, sobrava ou faltava na tela.
+   */
+  it('aproximar reconta quantos quadrados cabem', () => {
+    withViewport((view) => {
+      view.measure(880, 440)
+      expect(view.cols()).toBe(20)
+
+      view.zoom(8) // 44 → 52px
+
+      expect(view.cols()).toBe(Math.floor(880 / 52))
+      expect(view.rows()).toBe(Math.floor(440 / 52))
+    })
+  })
+
+  it('a pinça multiplica: dobrar a distância entre os dedos dobra o quadrado', () => {
+    withViewport((view) => {
+      view.measure(880, 440)
+
+      view.zoomByFactor(2, { x: 0, y: 0 })
+
+      expect(view.cellPx()).toBe(88)
+    })
+  })
+
+  it('nem a roda nem a pinça passam do teto e do piso', () => {
+    withViewport((view) => {
+      view.measure(880, 440)
+
+      view.zoomByFactor(10, { x: 0, y: 0 })
+      expect(view.cellPx()).toBe(MAX_CELL_PX)
+
+      view.zoomByFactor(0.01, { x: 0, y: 0 })
+      expect(view.cellPx()).toBe(MIN_CELL_PX)
     })
   })
 })

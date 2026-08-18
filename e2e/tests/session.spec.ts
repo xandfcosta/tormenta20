@@ -642,6 +642,131 @@ test.describe('Sessão ao vivo', () => {
    * poucos combatentes — o teste traz os próprios, porque a iniciativa da seed
    * do CI está vazia.
    */
+  /**
+   * Arrastar move a VISTA e a roda dá zoom ANCORADO no ponteiro (ALE-140).
+   *
+   * Por que e2e, e aqui não há dúvida: o gesto é `setPointerCapture` mais
+   * coordenada real mais layout real, e em jsdom não existe nenhum dos três —
+   * tudo mede zero e a asserção passaria verde sobre um tabuleiro parado.
+   *
+   * As duas asserções que importam são de RELAÇÃO, não de valor: a janela ANDOU
+   * para o lado certo, e o quadrado que estava sob o ponteiro CONTINUOU sob o
+   * ponteiro depois do zoom. E, no meio, a que pega o defeito clássico do
+   * arraste: com uma peça selecionada, puxar o mapa não pode POUSAR a peça.
+   */
+  test('o tabuleiro anda com o arraste, e o zoom fica ancorado no ponteiro', async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 })
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+
+    // Setup que se limpa sozinho: a seed é compartilhada e um tabuleiro
+    // esquecido aberto por outra execução faria este teste procurar um botão
+    // que não existe.
+    const encerrar = page.getByRole('button', { name: 'Encerrar o tabuleiro' })
+    if (await encerrar.isVisible().catch(() => false)) {
+      await encerrar.click()
+      await page.getByRole('dialog').getByRole('button', { name: 'Encerrar' }).click()
+    }
+    await page.getByRole('button', { name: 'Abrir tabuleiro' }).click()
+    await page.getByLabel('Lugar').fill('Arena do arraste')
+    await page.getByRole('button', { name: 'Abrir', exact: true }).click()
+    await page.getByRole('button', { name: /Trazer a iniciativa/ }).click()
+    // Quantas peças não importa aqui, e prender o número tornaria este teste
+    // refém do tamanho da iniciativa da seed — que muda quando outro teste
+    // deixa resto para trás. O que importa é que HÁ peça para medir.
+    await expect(page.getByText(/[1-9]\d* peças/)).toBeVisible()
+
+    const plano = page.getByRole('grid', { name: /^Tabuleiro:/ })
+
+    // Com uma peça SELECIONADA a superfície inteira vira casa clicável, e é
+    // nesse estado que o arraste tem de continuar sendo arraste — e o TOQUE tem
+    // de continuar sendo toque.
+    const peca = plano.getByRole('button', { name: /^Ogro, coluna/ })
+    await peca.click()
+    const ondeEstava = await peca.getAttribute('aria-label')
+
+    // A caixa é medida DEPOIS de selecionar: a barra de ações da peça nasce
+    // embaixo e ENCOLHE o tabuleiro. Medindo antes, o arraste deste teste caía
+    // sobre a barra e a janela não andava — o teste acusava a tela, e a tela
+    // estava certa.
+    await expect(page.getByRole('button', { name: 'Esconder Ogro' })).toBeVisible()
+    const caixa = await plano.boundingBox()
+    if (!caixa) throw new Error('o tabuleiro não tem caixa — a cena não montou')
+
+    const colunaDe = async () => {
+      const rotulo = (await plano.getAttribute('aria-label')) ?? ''
+      return Number(rotulo.match(/coluna (-?\d+)/)?.[1])
+    }
+    const colunaAntes = await colunaDe()
+
+    // Puxa o mapa para a DIREITA, longe da peça para o gesto não começar nela.
+    const y = caixa.y + caixa.height - 30
+    await page.mouse.move(caixa.x + 100, y)
+    await page.mouse.down()
+    await page.mouse.move(caixa.x + 300, y, { steps: 12 })
+    await page.mouse.up()
+
+    // Puxar para a direita mostra o que está à ESQUERDA: a coluna diminui. São
+    // 200px sobre quadrados de 44px, então são uns 4 quadrados — a asserção é
+    // de direção e ordem de grandeza, não do número exato, que depende do zoom.
+    const colunaDepois = await colunaDe()
+    expect(colunaDepois, 'a janela não andou com o arraste').toBeLessThan(colunaAntes - 2)
+
+    /*
+     * E o TOQUE continua pousando a peça. Esta é a asserção que pegou a pior
+     * regressão desta issue: capturar o ponteiro logo no `pointerdown` faz o
+     * browser reapontar o `click` para a superfície, e aí TODO clique numa casa
+     * morre — o mestre perde a única forma de posicionar. A captura só pode
+     * acontecer depois de o gesto virar arraste.
+     *
+     * O caminho oposto ("o arraste não pousa a peça") não está afirmado aqui de
+     * propósito: eu escrevi essa asserção, não consegui vê-la VERMELHA nem
+     * removendo a captura, e asserção que não falha não protege nada.
+     */
+    const casa = plano.getByRole('button', { name: /^Coluna/ }).first()
+    const quadrado = await casa.boundingBox()
+    const naTela = await peca.boundingBox()
+    if (!quadrado || !naTela) throw new Error('sem casa ou sem peça para medir o toque')
+    const vizinha = {
+      x: Math.min(naTela.x + 2.5 * quadrado.width, caixa.x + caixa.width - quadrado.width),
+      y: naTela.y + naTela.height / 2,
+    }
+
+    await page.mouse.move(vizinha.x, vizinha.y)
+    await page.mouse.down()
+    await page.mouse.move(vizinha.x + 10, vizinha.y, { steps: 4 })
+    await page.mouse.up()
+
+    // Sem clicar na peça de novo: ela CONTINUA selecionada (selecionar de novo
+    // desselecionaria, que é como se larga a peça sem posicioná-la).
+    await page.mouse.click(vizinha.x, vizinha.y)
+    await expect(
+      peca,
+      'o toque simples deixou de pousar a peça — o mestre perdeu como posicionar',
+    ).not.toHaveAttribute('aria-label', ondeEstava ?? '')
+
+    // O zoom ancorado: o ponteiro no centro da peça, e a peça continua ali.
+    const antesDoZoom = await peca.boundingBox()
+    if (!antesDoZoom) throw new Error('a peça saiu da tela antes do zoom')
+    const centro = {
+      x: antesDoZoom.x + antesDoZoom.width / 2,
+      y: antesDoZoom.y + antesDoZoom.height / 2,
+    }
+    await page.mouse.move(centro.x, centro.y)
+    await page.mouse.wheel(0, -120)
+
+    const depoisDoZoom = await peca.boundingBox()
+    if (!depoisDoZoom) throw new Error('o zoom jogou a peça para fora da tela')
+    expect(depoisDoZoom.width, 'a roda não deu zoom').toBeGreaterThan(antesDoZoom.width)
+    // 4px de folga: o quadrado cresce em número inteiro de pixels, e a peça é
+    // centrada dentro dele.
+    expect(Math.abs(depoisDoZoom.x + depoisDoZoom.width / 2 - centro.x)).toBeLessThan(4)
+    expect(Math.abs(depoisDoZoom.y + depoisDoZoom.height / 2 - centro.y)).toBeLessThan(4)
+
+    await page.getByRole('button', { name: 'Encerrar o tabuleiro' }).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Encerrar' }).click()
+  })
+
   test('rolar a iniciativa não leva embora as ações', async ({ page }) => {
     const nomes = [1, 2, 3, 4, 5].map((n) => `Fileira de teste ${Date.now()}-${n}`)
     await page.setViewportSize({ width: 1280, height: 420 })
