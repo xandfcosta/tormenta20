@@ -234,3 +234,84 @@ func novoIDFixo() func() string {
 		return fmt.Sprintf("copia%d", n)
 	}
 }
+
+/*
+O lugar marcado no mapa (ALE-195).
+
+Nem tudo que importa é criatura ou móvel: a armadilha, a porta que range, o
+ponto de encontro. Até aqui o mestre só tinha a saída de criar uma PEÇA
+`object`, e peça ocupa quadrado, entra na conta de quem o gabarito pega e vira
+alvo. O marcador aponta e mais nada.
+*/
+
+// Ele nasce ESCONDIDO e some inteiro da cópia do jogador — a mesma redação da
+// peça, e não uma segunda política.
+func TestOMarcadorEscondidoSomeParaOJogador(t *testing.T) {
+	b := newBoard("Cripta", "cripta")
+	if err := addMarker(b, BoardMarker{X: 2, Y: 3, Text: "1A", Color: "carmim", Hidden: true}, novoIDFixo()); err != nil {
+		t.Fatalf("marcar: %v", err)
+	}
+	if err := addMarker(b, BoardMarker{X: 5, Y: 5, Text: "B", Color: "ouro"}, novoIDFixo()); err != nil {
+		t.Fatalf("marcar: %v", err)
+	}
+
+	daMesa := boardForRole("player", b)
+
+	if len(b.Markers) != 2 {
+		t.Fatalf("o mestre ficou com %d marcadores", len(b.Markers))
+	}
+	if len(daMesa.Markers) != 1 || daMesa.Markers[0].Text != "B" {
+		t.Errorf("a mesa recebeu %+v; o escondido tinha de sumir inteiro", daMesa.Markers)
+	}
+}
+
+// O rótulo tem DUAS letras, cortadas em runas: "Ê2A" não pode virar meio
+// caractere na tela.
+func TestOMarcadorCabeEmDuasLetras(t *testing.T) {
+	b := newBoard("Cripta", "cripta")
+	if err := addMarker(b, BoardMarker{X: 0, Y: 0, Text: "Ê2A", Color: "azul"}, novoIDFixo()); err != nil {
+		t.Fatalf("marcar: %v", err)
+	}
+
+	if got := b.Markers[0].Text; got != "Ê2" {
+		t.Errorf("o rótulo ficou %q, esperado %q", got, "Ê2")
+	}
+}
+
+// A cor vem de um conjunto FECHADO: ela vira classe na tela, e aceitar qualquer
+// string deixaria o cliente escrever CSS no estado da mesa.
+func TestACorDoMarcadorEDeUmConjuntoFechado(t *testing.T) {
+	b := newBoard("Cripta", "cripta")
+	if err := addMarker(b, BoardMarker{X: 0, Y: 0, Text: "X", Color: "url(javascript:alert(1))"}, novoIDFixo()); err != nil {
+		t.Fatalf("marcar: %v", err)
+	}
+
+	if got := b.Markers[0].Color; got != "ouro" {
+		t.Errorf("a cor virou %q; fora do conjunto ela tem de cair no padrão", got)
+	}
+	// E o mesmo vale ao ALTERAR: o patch não é uma porta de trás.
+	fora := "vermelho-do-cliente"
+	if err := updateMarker(b, b.Markers[0].ID, markerPatch{Color: &fora}); err != nil {
+		t.Fatalf("alterar: %v", err)
+	}
+	if got := b.Markers[0].Color; got != "ouro" {
+		t.Errorf("o patch escreveu a cor %q", got)
+	}
+}
+
+// Revelar é o gesto seguinte a marcar, e é o que a mesa vê mudar.
+func TestRevelarOMarcadorOEntregaAMesa(t *testing.T) {
+	b := newBoard("Cripta", "cripta")
+	if err := addMarker(b, BoardMarker{X: 1, Y: 1, Text: "A", Color: "ouro", Hidden: true}, novoIDFixo()); err != nil {
+		t.Fatalf("marcar: %v", err)
+	}
+	visivel := false
+
+	if err := updateMarker(b, b.Markers[0].ID, markerPatch{Hidden: &visivel}); err != nil {
+		t.Fatalf("revelar: %v", err)
+	}
+
+	if len(boardForRole("player", b).Markers) != 1 {
+		t.Error("revelado, o marcador continuou fora da cópia da mesa")
+	}
+}

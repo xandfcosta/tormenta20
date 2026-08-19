@@ -159,6 +159,88 @@ func (g *realtimeGateway) onBoardTokenDuplicate(sock *socket.Socket, args []any)
 	})
 }
 
+// onBoardMarkerAdd (mestre) marca um LUGAR do mapa que não é peça (ALE-195).
+//
+// Nasce ESCONDIDO por padrão, como o pin do Roll20: o mestre marca a armadilha
+// antes de a mesa chegar nela, e revelar é o gesto seguinte.
+func (g *realtimeGateway) onBoardMarkerAdd(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok || !g.requireGm(sock, ctx.role) {
+		return
+	}
+	x, temX := intField(ctx.body, "x")
+	y, temY := intField(ctx.body, "y")
+	if !temX || !temY {
+		g.wsError(sock, "x and y are required")
+		return
+	}
+	escondido, informado := ctx.body["hidden"].(bool)
+	if !informado {
+		escondido = true
+	}
+	marker := BoardMarker{
+		X: int(x), Y: int(y),
+		Text:   stringField(ctx.body, "text"),
+		Color:  stringField(ctx.body, "color"),
+		Hidden: escondido,
+	}
+	g.mutateBoard(sock, ctx, func() (*BoardState, error) {
+		return g.s.boards.addMarker(context.Background(), ctx.sessionID, marker)
+	})
+}
+
+// onBoardMarkerUpdate (mestre) revela, esconde, renomeia ou recolore.
+func (g *realtimeGateway) onBoardMarkerUpdate(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok || !g.requireGm(sock, ctx.role) {
+		return
+	}
+	markerID := stringField(ctx.body, "markerId")
+	if markerID == "" {
+		g.wsError(sock, "markerId is required")
+		return
+	}
+	patch := parseMarkerPatch(ctx.body["patch"])
+	g.mutateBoard(sock, ctx, func() (*BoardState, error) {
+		return g.s.boards.updateMarker(context.Background(), ctx.sessionID, markerID, patch)
+	})
+}
+
+// onBoardMarkerRemove (mestre) tira o lugar marcado.
+func (g *realtimeGateway) onBoardMarkerRemove(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok || !g.requireGm(sock, ctx.role) {
+		return
+	}
+	markerID := stringField(ctx.body, "markerId")
+	if markerID == "" {
+		g.wsError(sock, "markerId is required")
+		return
+	}
+	g.mutateBoard(sock, ctx, func() (*BoardState, error) {
+		return g.s.boards.removeMarker(context.Background(), ctx.sessionID, markerID)
+	})
+}
+
+// parseMarkerPatch lê só os campos PRESENTES.
+func parseMarkerPatch(raw any) markerPatch {
+	patch := markerPatch{}
+	m, ok := raw.(map[string]any)
+	if !ok {
+		return patch
+	}
+	if text, ok := m["text"].(string); ok {
+		patch.Text = &text
+	}
+	if color, ok := m["color"].(string); ok {
+		patch.Color = &color
+	}
+	if hidden, ok := m["hidden"].(bool); ok {
+		patch.Hidden = &hidden
+	}
+	return patch
+}
+
 // onBoardPlaces (mestre) lista os lugares guardados da crônica.
 //
 // Só o mestre: o acervo de cenas é preparação, e saber que existe uma "Cripta

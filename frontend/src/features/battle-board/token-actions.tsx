@@ -1,6 +1,8 @@
 import { Copy, Eye, EyeOff, Pencil, Trash2, Undo2 } from 'lucide-solid'
+import { For } from 'solid-js'
 import { Show } from 'solid-js'
-import type { BoardToken } from '@/shared/realtime/realtime'
+import type { BoardMarker, BoardToken } from '@/shared/realtime/realtime'
+import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
 import { TokenDialog } from './token-dialog'
@@ -108,4 +110,94 @@ export function TokenActions(props: {
       </Show>
     </div>
   )
+}
+
+/** As cores que o servidor aceita, com o nome que a mesa usa. */
+const MARKER_COLORS: { id: BoardMarker['color']; label: string; swatch: string }[] = [
+  { id: 'ouro', label: 'Ouro', swatch: 'bg-grimorio-gold' },
+  { id: 'carmim', label: 'Carmim', swatch: 'bg-[color:var(--primary)]' },
+  { id: 'azul', label: 'Azul', swatch: 'bg-[#3f6fb0]' },
+  { id: 'verde', label: 'Verde', swatch: 'bg-[#3f8f52]' },
+]
+
+/**
+ * O que o mestre faz com o LUGAR marcado (ALE-195).
+ *
+ * O verbo que importa é REVELAR: o marcador nasce escondido porque marcar a
+ * armadilha antes de a mesa chegar nela é o motivo de ele existir, e mostrar é
+ * o gesto do momento em que alguém pisa.
+ *
+ * A cor é escolha de UM clique e não um seletor: são quatro, e o mestre está no
+ * meio da cena.
+ */
+export function MarkerActions(props: {
+  marker: BoardMarker
+  onUpdate: (patch: Partial<Omit<BoardMarker, 'id' | 'x' | 'y'>>) => void
+  onRemove: () => void
+}) {
+  return (
+    <div class="flex flex-wrap items-center gap-1 border-t border-grimorio-iron px-3 py-1.5">
+      <span class="mr-1 text-[11px] text-grimorio-gold">
+        Marcador {props.marker.text || '—'}
+      </span>
+
+      <For each={MARKER_COLORS}>
+        {(cor) => (
+          <Button
+            size="sm"
+            variant="ghost"
+            aria-label={`Cor ${cor.label}`}
+            aria-pressed={props.marker.color === cor.id}
+            onClick={() => props.onUpdate({ color: cor.id })}
+          >
+            <span
+              aria-hidden="true"
+              class={cn(
+                'size-3.5 rounded-full',
+                cor.swatch,
+                props.marker.color === cor.id && 'ring-2 ring-white',
+              )}
+            />
+          </Button>
+        )}
+      </For>
+
+      <Button
+        size="sm"
+        variant="ghost"
+        aria-label={props.marker.hidden ? `Mostrar marcador ${props.marker.text}` : `Esconder marcador ${props.marker.text}`}
+        onClick={() => props.onUpdate({ hidden: !props.marker.hidden })}
+      >
+        <Show when={props.marker.hidden} fallback={<Eye aria-hidden="true" class="size-4" />}>
+          <EyeOff aria-hidden="true" class="size-4 text-grimorio-gold" />
+        </Show>
+      </Button>
+
+      <Button
+        size="sm"
+        variant="ghost"
+        aria-label={`Apagar marcador ${props.marker.text}`}
+        onClick={() => props.onRemove()}
+      >
+        <Trash2 aria-hidden="true" class="size-4" />
+      </Button>
+    </div>
+  )
+}
+
+/**
+ * A próxima letra livre para um marcador novo (ALE-195).
+ *
+ * Quem está apontando a armadilha no meio da cena não quer digitar, e "A", "B",
+ * "C" é como a mesa fala de lugares num mapa. Esgotadas as letras, cai em "??"
+ * — que é feio de propósito: com 26 marcadores na tela, o rótulo já não é o que
+ * distingue nada.
+ */
+export function nextMarkerText(markers: readonly BoardMarker[]): string {
+  const usadas = new Set(markers.map((m) => m.text))
+  for (let i = 0; i < 26; i++) {
+    const letra = String.fromCharCode(65 + i)
+    if (!usadas.has(letra)) return letra
+  }
+  return '??'
 }

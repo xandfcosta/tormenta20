@@ -1,6 +1,6 @@
 import { For, Index, Show, onCleanup } from 'solid-js'
 import type { BoardSquare } from '@/shared/lib/engine-wasm'
-import type { BoardState, BoardToken, PendingMove } from '@/shared/realtime/realtime'
+import type { BoardMarker, BoardState, BoardToken, PendingMove } from '@/shared/realtime/realtime'
 import { cn } from '@/shared/lib/utils'
 import { hpFillVar } from '@/shared/ui/vital-bar'
 import { createPrefersReducedMotion } from '@/shared/lib/media-query'
@@ -63,6 +63,10 @@ export function BoardView(props: {
   onPaintSquare?: (x: number, y: number, secondary: boolean) => void
   /** As casas cobertas pelo gabarito de área, quando há um (T20 p225). */
   area?: readonly BoardSquare[]
+  /** Ausente = os marcadores são só desenho (é a vista do jogador, e o lugar
+   *  apontado não é para ele mexer). */
+  onSelectMarker?: (markerId: string) => void
+  selectedMarkerId?: string | null
   /** As duas pontas da régua, quando a mesa está medindo (T20 p224). */
   ruler?: { from: BoardSquare; to: BoardSquare } | null
   /** O teclado da superfície (ALE-194): quem interpreta as teclas é a cena, que
@@ -175,6 +179,21 @@ export function BoardView(props: {
       <AreaLayer view={view()} squares={props.area ?? []} />
 
       <Show when={props.pending}>{(move) => <PendingPath move={move()} view={view()} />}</Show>
+
+      {/* Os LUGARES apontados (ALE-195). Vêm ANTES das peças na árvore: o
+          marcador é chão, e a peça que pisa nele fica por cima. */}
+      <Index each={props.board.markers ?? []}>
+        {(marker) => (
+          <Show when={isVisible({ x: marker().x, y: marker().y, footprint: 1 } as BoardToken, window())}>
+            <MapMarker
+              marker={marker()}
+              view={view()}
+              selected={props.selectedMarkerId === marker().id}
+              onSelect={props.onSelectMarker}
+            />
+          </Show>
+        )}
+      </Index>
 
       <Show when={props.ruler}>{(linha) => <RulerLine ends={linha()} view={view()} />}</Show>
 
@@ -383,6 +402,61 @@ function PendingPath(props: { move: PendingMove; view: BoardViewport }) {
         stroke-width="1.5"
       />
     </svg>
+  )
+}
+
+/** As cores do marcador, do conjunto fechado que o servidor aceita. */
+const MARKER_COLOR: Record<string, string> = {
+  ouro: 'bg-grimorio-gold text-grimorio-parchment-ink',
+  carmim: 'bg-[color:var(--primary)] text-white',
+  azul: 'bg-[#3f6fb0] text-white',
+  verde: 'bg-[#3f8f52] text-white',
+}
+
+/**
+ * Um lugar marcado no mapa (ALE-195): duas letras num selo preso ao quadrado.
+ *
+ * Menor que a casa e encostado na quina, e isso é para ele NÃO parecer peça: o
+ * marcador não ocupa quadrado, não é alvo e não entra na conta de área — quem
+ * o confunde com criatura conta errado quem a bola de fogo pega.
+ */
+function MapMarker(props: {
+  marker: BoardMarker
+  view: BoardViewport
+  selected: boolean
+  onSelect?: (markerId: string) => void
+}) {
+  const lado = () => Math.max(14, props.view.cellPx() * 0.5)
+  const canto = () => ({
+    left: `${(props.marker.x - props.view.originX()) * props.view.cellPx() + 2}px`,
+    top: `${(props.marker.y - props.view.originY()) * props.view.cellPx() + 2}px`,
+    width: `${lado()}px`,
+    height: `${lado()}px`,
+    'font-size': `${Math.max(8, lado() * 0.5)}px`,
+  })
+
+  return (
+    <button
+      type="button"
+      {...{ [TOKEN_PIECE_ATTR]: '' }}
+      class={cn(
+        'absolute grid place-items-center rounded-[3px] font-heading font-semibold uppercase leading-none shadow-[0_1px_2px_oklch(0_0_0/0.5)]',
+        MARKER_COLOR[props.marker.color] ?? MARKER_COLOR.ouro,
+        // Escondido: só o mestre o recebe, e ele precisa ver que a mesa não vê.
+        props.marker.hidden && 'opacity-60 outline-1 outline-dashed outline-white/70',
+        props.selected && 'ring-2 ring-white',
+        !props.onSelect && 'pointer-events-none',
+      )}
+      style={canto()}
+      aria-label={`Marcador ${props.marker.text || 'sem rótulo'}, coluna ${props.marker.x}, linha ${props.marker.y}${
+        props.marker.hidden ? ', escondido dos jogadores' : ''
+      }`}
+      aria-pressed={props.selected}
+      disabled={!props.onSelect}
+      onClick={() => props.onSelect?.(props.marker.id)}
+    >
+      {props.marker.text}
+    </button>
   )
 }
 

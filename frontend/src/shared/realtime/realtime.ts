@@ -61,6 +61,23 @@ export type PresenceUser = {
  * QUADRADOS — nunca em pixels: pixel amarraria a posição ao tamanho da tela, e o
  * celular e o desktop passariam a discordar sobre onde o ogro está.
  */
+/**
+ * Um LUGAR marcado no mapa que não é peça (ALE-195): a armadilha, a porta que
+ * range, o ponto de encontro. Não ocupa quadrado e não entra na conta de nada —
+ * ele aponta.
+ */
+export type BoardMarker = {
+  id: string
+  x: number
+  y: number
+  /** Duas letras, cortadas no servidor ("1A", "B3"). */
+  text: string
+  /** Conjunto FECHADO no servidor: cor vira classe, e classe não é campo livre. */
+  color: 'ouro' | 'carmim' | 'azul' | 'verde'
+  /** Nasce escondido e o mestre revela; o jogador nem o recebe (some no servidor). */
+  hidden?: boolean
+}
+
 export type BoardToken = {
   id: string
   label: string
@@ -115,6 +132,8 @@ export type BoardState = {
   difficult?: BoardSquare[]
   /** O movimento proposto e ainda não confirmado — no máximo um. */
   pending?: PendingMove | null
+  /** Os lugares apontados no mapa (ALE-195). */
+  markers?: BoardMarker[]
 }
 
 /** Uma cena guardada da crônica (ALE-124, fatia 5). Sem as peças: a lista serve
@@ -205,6 +224,11 @@ export type SessionRealtime = {
   /** Põe outra peça igual ao lado. Quem NUMERA a cópia é o servidor: dois
    *  clientes duplicando ao mesmo tempo não podem inventar o mesmo "Zumbi 3". */
   duplicateToken: (tokenId: string) => void
+  /** Marca um LUGAR do mapa (ALE-195). Nasce ESCONDIDO: o mestre marca a
+   *  armadilha antes de a mesa chegar nela, e revelar é o gesto seguinte. */
+  addMarker: (marker: Omit<BoardMarker, 'id'>) => void
+  updateMarker: (markerId: string, patch: Partial<Omit<BoardMarker, 'id' | 'x' | 'y'>>) => void
+  removeMarker: (markerId: string) => void
   /** Traz para o tabuleiro quem já está na iniciativa. Idempotente. */
   populateBoard: () => void
   /** Marca ou apaga UMA casa como terreno difícil (mestre). Explícito e não
@@ -392,6 +416,9 @@ export function createSessionSocket(
     removeToken: (tokenId) => send('board-token-remove', { tokenId }),
     updateToken: (tokenId, patch) => send('board-token-update', { tokenId, patch }),
     duplicateToken: (tokenId) => send('board-token-duplicate', { tokenId }),
+    addMarker: (marker) => send('board-marker-add', { ...marker }),
+    updateMarker: (markerId, patch) => send('board-marker-update', { markerId, patch }),
+    removeMarker: (markerId) => send('board-marker-remove', { markerId }),
     populateBoard: () => send('board-populate'),
     paintTerrain: (x, y, difficult) => send('board-terrain-paint', { x, y, difficult }),
     listPlaces: () => ask('board-places', {}, readPlaces),

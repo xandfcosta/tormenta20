@@ -39,6 +39,9 @@ class FakeRealtime {
   scene: BoardState | null = null
   readonly savePlace = vi.fn(() => Promise.resolve(this.places))
   readonly duplicateToken = vi.fn()
+  readonly addMarker = vi.fn()
+  readonly updateMarker = vi.fn()
+  readonly removeMarker = vi.fn()
   readonly proposeMove = vi.fn()
   readonly commitMove = vi.fn()
   readonly cancelMove = vi.fn()
@@ -70,6 +73,9 @@ class FakeRealtime {
       board: this.board,
       updateToken: this.updateToken,
       duplicateToken: this.duplicateToken,
+      addMarker: this.addMarker,
+      updateMarker: this.updateMarker,
+      removeMarker: this.removeMarker,
       removeToken: this.removeToken,
       addToken: this.addToken,
       closeBoard: this.closeBoard,
@@ -1327,5 +1333,54 @@ describe('a peça conta os PV', () => {
 
     expect(screen.queryByRole('button', { name: /caída/ })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' })).toBeInTheDocument()
+  })
+})
+
+
+/**
+ * O lugar marcado no mapa (ALE-195).
+ *
+ * Nem tudo que importa é criatura ou móvel: a armadilha, a porta que range, o
+ * ponto de encontro. A saída de hoje é criar uma PEÇA de cenário — e peça ocupa
+ * quadrado, vira alvo e entra na conta de quem o gabarito pega.
+ */
+describe('marcar um lugar', () => {
+  const COM_MARCADOR: BoardState = {
+    ...TABULEIRO,
+    markers: [{ id: 'm1', x: 1, y: 1, text: 'A', color: 'ouro', hidden: true }],
+  }
+
+  it('o mestre marca a casa, e o marcador nasce ESCONDIDO com a próxima letra', async () => {
+    const { rt, user } = renderRegion(true, COM_MARCADOR)
+
+    await user.click(screen.getByRole('button', { name: 'Marcar um lugar' }))
+    await user.click(screen.getByRole('button', { name: 'Coluna 5, linha 3' }))
+
+    // "A" já está em uso: o próximo é o "B". Quem aponta a armadilha no meio da
+    // cena não quer digitar.
+    expect(rt.addMarker).toHaveBeenCalledWith({ x: 5, y: 3, text: 'B', color: 'ouro', hidden: true })
+  })
+
+  // Revelar é o verbo que importa: marcar antes e mostrar quando alguém pisa.
+  it('o mestre revela o marcador escondido', async () => {
+    const { rt, user } = renderRegion(true, COM_MARCADOR)
+
+    await user.click(screen.getByRole('button', { name: /^Marcador A,.*escondido dos jogadores$/ }))
+    await user.click(screen.getByRole('button', { name: 'Mostrar marcador A' }))
+
+    expect(rt.updateMarker).toHaveBeenCalledWith('m1', { hidden: false })
+  })
+
+  // O marcador do jogador é DESENHO: o lugar apontado não é para ele mexer, e o
+  // escondido nem chega até ele (o servidor o apaga da cópia).
+  it('o jogador não mexe no marcador', () => {
+    const visivel: BoardState = {
+      ...TABULEIRO,
+      markers: [{ id: 'm2', x: 1, y: 1, text: 'C', color: 'carmim' }],
+    }
+    renderRegion(false, visivel)
+
+    expect(screen.getByRole('button', { name: /^Marcador C,/ })).toBeDisabled()
+    expect(screen.queryByRole('button', { name: 'Marcar um lugar' })).not.toBeInTheDocument()
   })
 })

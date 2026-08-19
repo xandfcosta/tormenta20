@@ -1,4 +1,4 @@
-import { Brush, Eraser, Eye, Library, Radar, Ruler as RulerIcon, Users, X } from 'lucide-solid'
+import { Brush, Eraser, Eye, Library, MapPin, Radar, Ruler as RulerIcon, Users, X } from 'lucide-solid'
 import { Show, createEffect, createMemo, createSignal, on } from 'solid-js'
 import { boardKeyAction } from '@/features/battle-board/board-keys'
 import { createAreaTemplate } from '@/features/battle-board/area-template'
@@ -10,7 +10,7 @@ import { type BoardViewport, SQUARE_METRES } from '@/features/battle-board/board
 import { EmptyBoard } from '@/features/battle-board/empty-board'
 import { PlaceEditor } from '@/features/battle-board/place-editor'
 import { PlacesDialog } from '@/features/battle-board/places-list'
-import { TokenActions } from '@/features/battle-board/token-actions'
+import { MarkerActions, TokenActions, nextMarkerText } from '@/features/battle-board/token-actions'
 import { TokenDialog } from '@/features/battle-board/token-dialog'
 import { SceneContainerProvider, useSceneContainer } from '@/shared/lib/scene-container'
 import { createFullscreen } from '@/shared/lib/fullscreen'
@@ -187,6 +187,29 @@ export function BoardRegion(props: {
     setSelectedTokenId(null)
     setMeasuring(false)
     setTemplating((ligado) => !ligado)
+  }
+
+  /**
+   * Marcar um LUGAR do mapa que não é peça (ALE-195): a armadilha, a porta que
+   * range. Enquanto o modo está ligado, a casa clicada RECEBE um marcador —
+   * mesma gramática do pincel e da régua, porque o clique já tem dono.
+   *
+   * O rótulo nasce sozinho na próxima letra livre: quem está apontando a
+   * armadilha no meio da cena não quer digitar, e "A", "B", "C" é como a mesa
+   * fala de lugares num mapa.
+   */
+  const [marking, setMarking] = createSignal(false)
+  const [selectedMarkerId, setSelectedMarkerId] = createSignal<string | null>(null)
+  const toggleMarking = () => {
+    setSelectedMarkerId(null)
+    setSelectedTokenId(null)
+    setMeasuring(false)
+    setTemplating(false)
+    setMarking((ligado) => !ligado)
+  }
+  const selectedMarker = () => board()?.markers?.find((m) => m.id === selectedMarkerId())
+  const markAt = (x: number, y: number) => {
+    props.rt.addMarker({ x, y, text: nextMarkerText(board()?.markers ?? []), color: 'ouro', hidden: true })
   }
 
   // A tela cheia é do TABULEIRO e não da página: pôr a página inteira em tela
@@ -447,6 +470,16 @@ export function BoardRegion(props: {
                   </Button>
                   <Button
                     size="sm"
+                    variant={marking() ? 'default' : 'ghost'}
+                    aria-pressed={marking()}
+                    aria-label="Marcar um lugar"
+                    title="Marcar um lugar"
+                    onClick={toggleMarking}
+                  >
+                    <MapPin aria-hidden="true" class="size-4" />
+                  </Button>
+                  <Button
+                    size="sm"
                     variant={tool() === 'brush' ? 'default' : 'ghost'}
                     aria-pressed={tool() === 'brush'}
                     onClick={() => useTool('brush')}
@@ -548,13 +581,17 @@ export function BoardRegion(props: {
                   ? ruler.pick
                   : templating()
                     ? area.pick
-                    : !painting() && selectedTokenId()
-                      ? placeSelected
-                      : undefined
+                    : marking()
+                      ? markAt
+                      : !painting() && selectedTokenId()
+                        ? placeSelected
+                        : undefined
               }
               // Com a régua ligada, TODA casa responde: mede-se para onde não
               // se pode andar, que é justamente a pergunta do ataque.
-              reachable={measuring() || templating() ? undefined : reachable()}
+              reachable={measuring() || templating() || marking() ? undefined : reachable()}
+              onSelectMarker={props.isGm ? setSelectedMarkerId : undefined}
+              selectedMarkerId={selectedMarkerId()}
               area={area.squares()}
               ruler={ruler.from() && ruler.to() ? { from: ruler.from()!, to: ruler.to()! } : null}
               difficult={cena(live()).difficult}
@@ -601,6 +638,19 @@ export function BoardRegion(props: {
 
             <Show when={ruler.reading()}>
               {(leitura) => <RulerBar reading={leitura()} onClose={toggleRuler} />}
+            </Show>
+
+            <Show when={props.isGm && selectedMarker()}>
+              {(marker) => (
+                <MarkerActions
+                  marker={marker()}
+                  onUpdate={(patch) => props.rt.updateMarker(marker().id, patch)}
+                  onRemove={() => {
+                    props.rt.removeMarker(marker().id)
+                    setSelectedMarkerId(null)
+                  }}
+                />
+              )}
             </Show>
 
             <Show when={live().pending}>

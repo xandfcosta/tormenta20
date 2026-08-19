@@ -49,6 +49,29 @@ type BoardToken struct {
 	SpeedSquares int `json:"speedSquares,omitempty"`
 }
 
+// BoardMarker é um LUGAR marcado no mapa que não é uma peça (ALE-195): a
+// armadilha, a porta que range, o ponto de encontro.
+//
+// Nem tudo que importa no mapa é criatura ou móvel. Até agora o mestre só tinha
+// a saída de criar uma PEÇA `object` para dizer "a armadilha é aqui", e peça
+// ocupa quadrado, entra na conta de quem está na área e aparece na lista de
+// quem o gabarito pega. O marcador não ocupa nada: ele aponta.
+//
+// Texto de DUAS letras ("1A", "B3") e cor de um conjunto fechado — é o que o
+// Roll20 dá de graça no pin dele, e é justamente o que a decisão de síntese
+// desta casa já dispensa de asset.
+type BoardMarker struct {
+	ID    string `json:"id"`
+	X     int    `json:"x"`
+	Y     int    `json:"y"`
+	Text  string `json:"text"`
+	Color string `json:"color"`
+	// Hidden: nasce escondido e o mestre revela, pela MESMA redação por papel da
+	// peça — uma segunda política sobre o que a mesa vê seria a forma mais fácil
+	// de vazar a armadilha.
+	Hidden bool `json:"hidden,omitempty"`
+}
+
 // BoardState é o tabuleiro vivo de uma sessão. Ausente (sem linha em
 // session_boards) = sessão sem tabuleiro, que é estado diferente de tabuleiro
 // vazio: o segundo é uma cena aberta e ainda sem peça.
@@ -71,6 +94,9 @@ type BoardState struct {
 	// um mapa do tabuleiro: o plano é infinito, então não existe "todas as
 	// casas" para preencher — existem as poucas que o mestre pintou.
 	Difficult []engine.Square `json:"difficult,omitempty"`
+	// Markers são os LUGARES apontados no mapa (ALE-195). Não são peças: não
+	// ocupam quadrado e não entram na conta de nada.
+	Markers []BoardMarker `json:"markers,omitempty"`
 	// Pending é o movimento proposto e ainda não confirmado — no máximo um.
 	Pending *PendingMove `json:"pending,omitempty"`
 }
@@ -263,6 +289,84 @@ func applyTokenPatch(t *BoardToken, patch tokenPatch) {
 	}
 }
 
+// markerColors é o conjunto FECHADO de cores do marcador. Fechado porque a cor
+// vira classe na tela: aceitar qualquer string deixaria o cliente escrever CSS
+// no estado da mesa.
+var markerColors = map[string]bool{"ouro": true, "carmim": true, "azul": true, "verde": true}
+
+// boardMaxMarkers — teto de marcadores, pelo mesmo motivo do teto de peças: o
+// estado inteiro viaja em todo broadcast.
+const boardMaxMarkers = 100
+
+// addMarker põe um lugar marcado no mapa.
+func addMarker(b *BoardState, m BoardMarker, newID func() string) error {
+	if len(b.Markers) >= boardMaxMarkers {
+		return fmt.Errorf("o tabuleiro já tem %d marcadores (teto %d)", len(b.Markers), boardMaxMarkers)
+	}
+	if abs(m.X) > boardCoordLimit || abs(m.Y) > boardCoordLimit {
+		return fmt.Errorf("marcador em (%d,%d) está além do limite de sanidade de %d quadrados", m.X, m.Y, boardCoordLimit)
+	}
+	if !markerColors[m.Color] {
+		m.Color = "ouro"
+	}
+	m.Text = trimMarkerText(m.Text)
+	m.ID = newID()
+	b.Markers = append(b.Markers, m)
+	b.Version++
+	return nil
+}
+
+// trimMarkerText corta o rótulo em DUAS letras — em runas e não em bytes, senão
+// "Ê2" viraria meio caractere e a tela desenharia lixo.
+func trimMarkerText(text string) string {
+	runas := []rune(strings.TrimSpace(text))
+	if len(runas) > 2 {
+		runas = runas[:2]
+	}
+	return string(runas)
+}
+
+// updateMarker altera texto, cor ou o ocultamento — a posição não muda porque
+// marcador que anda é peça, e peça já existe.
+func updateMarker(b *BoardState, markerID string, patch markerPatch) error {
+	for i := range b.Markers {
+		if b.Markers[i].ID != markerID {
+			continue
+		}
+		if patch.Text != nil {
+			b.Markers[i].Text = trimMarkerText(*patch.Text)
+		}
+		if patch.Color != nil && markerColors[*patch.Color] {
+			b.Markers[i].Color = *patch.Color
+		}
+		if patch.Hidden != nil {
+			b.Markers[i].Hidden = *patch.Hidden
+		}
+		b.Version++
+		return nil
+	}
+	return fmt.Errorf("marcador %q não está no tabuleiro", markerID)
+}
+
+// markerPatch é a alteração parcial: ausente é "não mexa", não "zere".
+type markerPatch struct {
+	Text   *string `json:"text"`
+	Color  *string `json:"color"`
+	Hidden *bool   `json:"hidden"`
+}
+
+// removeMarker tira o lugar marcado. Some em silêncio se já não está lá.
+func removeMarker(b *BoardState, markerID string) {
+	for i, m := range b.Markers {
+		if m.ID != markerID {
+			continue
+		}
+		b.Markers = append(b.Markers[:i], b.Markers[i+1:]...)
+		b.Version++
+		return
+	}
+}
+
 // assertSaneCoords recusa coordenada que só pode ter vindo de cliente quebrado.
 // Não é borda do mapa — o mapa não tem borda; é o guarda que impede um número
 // absurdo de estourar a serialização e a tela de todo mundo na mesa.
@@ -411,6 +515,16 @@ func redactBoardForPlayers(b *BoardState) *BoardState {
 			continue
 		}
 		out.Tokens = append(out.Tokens, t)
+	}
+	// O marcador escondido some INTEIRO, como a peça: o mestre marca a armadilha
+	// antes da mesa chegar nela, e um marcador "presente porém anônimo" diria à
+	// mesa exatamente onde não pisar (ALE-195).
+	out.Markers = make([]BoardMarker, 0, len(b.Markers))
+	for _, marker := range b.Markers {
+		if marker.Hidden {
+			continue
+		}
+		out.Markers = append(out.Markers, marker)
 	}
 	// O provisório de uma peça escondida entregaria a emboscada por outro
 	// caminho: um caminho desenhado saindo do nada é a peça sem o círculo.

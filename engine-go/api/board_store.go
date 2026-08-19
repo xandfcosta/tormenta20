@@ -57,6 +57,10 @@ func cloneBoard(b *BoardState) *BoardState {
 	out := *b
 	out.Tokens = make([]BoardToken, len(b.Tokens))
 	copy(out.Tokens, b.Tokens)
+	// Os marcadores são valores, mas a FATIA é compartilhada: sem a cópia, uma
+	// mensagem concorrente mexeria no que já está sendo serializado (ALE-132).
+	out.Markers = make([]BoardMarker, len(b.Markers))
+	copy(out.Markers, b.Markers)
 	// O provisório é PONTEIRO, e uma cópia rasa deixaria o instantâneo do
 	// broadcast apontando para o mesmo movimento que a mensagem seguinte
 	// substitui. É a família de defeito da `cloneState` (ALE-132): o que sai
@@ -206,6 +210,19 @@ func (bs *boardStore) duplicateToken(ctx context.Context, sessionID int64, token
 
 func (bs *boardStore) updateToken(ctx context.Context, sessionID int64, tokenID string, patch tokenPatch) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, func(b *BoardState) error { return updateToken(b, tokenID, patch) })
+}
+
+// Marcadores (ALE-195): o lugar apontado no mapa que não é peça.
+func (bs *boardStore) addMarker(ctx context.Context, sessionID int64, m BoardMarker) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error { return addMarker(b, m, bs.newID) })
+}
+
+func (bs *boardStore) updateMarker(ctx context.Context, sessionID int64, markerID string, patch markerPatch) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error { return updateMarker(b, markerID, patch) })
+}
+
+func (bs *boardStore) removeMarker(ctx context.Context, sessionID int64, markerID string) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error { removeMarker(b, markerID); return nil })
 }
 
 func (bs *boardStore) paintTerrain(ctx context.Context, sessionID int64, square engine.Square, difficult bool) (*BoardState, error) {
