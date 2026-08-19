@@ -2,7 +2,9 @@ import { For, Index, Show, onCleanup } from 'solid-js'
 import type { BoardSquare } from '@/shared/lib/engine-wasm'
 import type { BoardState, BoardToken, PendingMove } from '@/shared/realtime/realtime'
 import { cn } from '@/shared/lib/utils'
-import { TERRAIN_STYLE, gridLinesFor } from './board-terrain'
+import { hpFillVar } from '@/shared/ui/vital-bar'
+import { createPrefersReducedMotion } from '@/shared/lib/media-query'
+import { TERRAIN_AMBIENCE, TERRAIN_STYLE, gridLinesFor } from './board-terrain'
 import { TOKEN_PIECE_ATTR, createBoardGestures } from './board-gestures'
 import { type BoardViewport, isVisible } from './board-viewport'
 import { tokenAppearance } from './token-appearance'
@@ -34,6 +36,12 @@ export function BoardView(props: {
   onSquareClick?: (x: number, y: number) => void
   /** Peça cuja linha está na vez: o anel dourado é o mesmo sinal da iniciativa. */
   activeEntryId?: string | null
+  /**
+   * Quanto de PV resta a cada linha da iniciativa, em porcentagem (ALE-188).
+   * Ausente para quem não tem número — inclusive para o JOGADOR quando o mestre
+   * ocultou os PV, e é assim que a redação por papel chega até a peça.
+   */
+  health?: ReadonlyMap<string, number>
   /** Peça cuja linha da iniciativa está sob o ponteiro (ALE-189): ela ACENDE,
    *  para o mestre parar de procurar o ogro entre nove peças com a mesa
    *  esperando. */
@@ -135,6 +143,19 @@ export function BoardView(props: {
         }}
       />
 
+      {/* O ambiente do lugar: UMA camada, entre o chão e tudo o mais. Ela não
+          rola com a janela de propósito — é luz do lugar, não textura do
+          terreno, e luz não anda quando a câmera anda (ALE-188). */}
+      <Show when={TERRAIN_AMBIENCE[props.board.terrain]}>
+        {(ambiente) => (
+          <div
+            aria-hidden="true"
+            class="pointer-events-none absolute inset-0"
+            style={{ 'background-image': ambiente() }}
+          />
+        )}
+      </Show>
+
       <Show when={props.onSquareClick}>
         {(place) => (
           <SquareLayer
@@ -186,6 +207,7 @@ export function BoardView(props: {
                 props.highlightEntryId !== null &&
                 token().entryId === props.highlightEntryId
               }
+              health={token().entryId ? props.health?.get(token().entryId ?? '') : undefined}
               onSelect={props.onSelectToken}
             />
           </Show>
@@ -313,20 +335,32 @@ function DifficultLayer(props: { view: BoardViewport; squares: readonly BoardSqu
  * quadrados, e não uma sequência de coordenadas.
  */
 function PendingPath(props: { move: PendingMove; view: BoardViewport }) {
-  const points = () => {
-    const cell = props.view.cellPx()
-    return props.move.path
-      .map((square) => {
-        const x = (square.x - props.view.originX()) * cell + cell / 2
-        const y = (square.y - props.view.originY()) * cell + cell / 2
-        return `${x},${y}`
-      })
-      .join(' ')
-  }
-  const destination = () => props.move.path[props.move.path.length - 1]
+  const centro = (square: BoardSquare) => ({
+    x: (square.x - props.view.originX()) * props.view.cellPx() + props.view.cellPx() / 2,
+    y: (square.y - props.view.originY()) * props.view.cellPx() + props.view.cellPx() / 2,
+  })
+  const points = () => props.move.path.map((square) => `${centro(square).x},${centro(square).y}`).join(' ')
+  const origem = () => centro(props.move.path[0] ?? { x: 0, y: 0 })
+  const destino = () => centro(props.move.path[props.move.path.length - 1] ?? { x: 0, y: 0 })
+  const meia = () => props.view.cellPx() / 2
+  // Formigas marchando, e elas ficam SOB o `prefers-reduced-motion` por conta
+  // própria: o bloco global de CSS que zera animação não alcança SMIL (ALE-188).
+  const parado = createPrefersReducedMotion()
 
   return (
     <svg class="pointer-events-none absolute inset-0 size-full" aria-hidden="true">
+      {/* De ONDE a peça saiu: confirmada a proposta ela some, e sem a marca
+          ninguém lembra do lugar de onde ela veio. */}
+      <circle
+        cx={origem().x}
+        cy={origem().y}
+        r={meia() * 0.55}
+        fill="none"
+        stroke="var(--grimorio-gold)"
+        stroke-width="1.5"
+        stroke-dasharray="3 3"
+        opacity="0.7"
+      />
       <polyline
         points={points()}
         fill="none"
@@ -334,14 +368,19 @@ function PendingPath(props: { move: PendingMove; view: BoardViewport }) {
         stroke-width="3"
         stroke-linejoin="round"
         stroke-dasharray="6 4"
-      />
-      <rect
-        x={(destination().x - props.view.originX()) * props.view.cellPx()}
-        y={(destination().y - props.view.originY()) * props.view.cellPx()}
-        width={props.view.cellPx()}
-        height={props.view.cellPx()}
+      >
+        <Show when={!parado()}>
+          <animate attributeName="stroke-dashoffset" from="20" to="0" dur="1s" repeatCount="indefinite" />
+        </Show>
+      </polyline>
+      {/* O destino no LOSANGO, que é o vocabulário do alcance nesta casa — o
+          retângulo cheio dizia "casa pintada", que é outra coisa. */}
+      <polygon
+        points={`${destino().x},${destino().y - meia() * 0.8} ${destino().x + meia() * 0.8},${destino().y} ${destino().x},${destino().y + meia() * 0.8} ${destino().x - meia() * 0.8},${destino().y}`}
         fill="var(--grimorio-gold)"
-        opacity="0.25"
+        opacity="0.3"
+        stroke="var(--grimorio-gold)"
+        stroke-width="1.5"
       />
     </svg>
   )
@@ -416,6 +455,9 @@ function TokenPiece(props: {
   onTurn: boolean
   /** A linha desta peça está sob o ponteiro na iniciativa (ALE-189). */
   highlighted: boolean
+  /** PV restante em porcentagem, quando esta peça tem linha na iniciativa e
+   *  quem está olhando pode ver os números (ALE-188). */
+  health?: number
   /** Este espectador pode pegar esta peça agora. */
   movable: boolean
   onSelect?: (tokenId: string) => void
@@ -477,6 +519,10 @@ function TokenPiece(props: {
         // idêntica a uma peça visível — a emboscada dependia de ele lembrar de
         // cabeça quem estava escondido (ALE-178, ALE-179).
         props.token.hidden && 'border-dashed opacity-55',
+        // CAÍDA a 0 PV: a peça perde a cor e o monograma deita. O mestre olha o
+        // MAPA para decidir o foco do turno, e até agora precisava voltar os
+        // olhos para a lista só para saber quem já está no chão (ALE-188).
+        props.health === 0 && 'saturate-0 opacity-70',
         (!props.onSelect || !props.movable) && 'pointer-events-none',
       )}
       style={{
@@ -488,17 +534,44 @@ function TokenPiece(props: {
       // num plano infinito a coordenada pode ser negativa, e traduzi-la para
       // "coluna 1" seria mentir sobre onde a peça está. E diz também o que só a
       // aparência dizia: quem lê por leitor de tela tem o mesmo direito ao
-      // segredo da emboscada.
+      // segredo da emboscada — e o mesmo vale para quem caiu, que é a peça que
+      // o mestre precisa parar de atacar (ALE-188). O FERIDO fica só no filete:
+      // anunciar "ferido" em toda peça machucada encheria a leitura de uma
+      // informação que a iniciativa já dá com número exato.
       aria-label={`${props.token.label}, coluna ${props.token.x}, linha ${props.token.y}${
         props.token.hidden ? ', escondida dos jogadores' : ''
-      }`}
+      }${props.health === 0 ? ', caída' : ''}`}
       aria-pressed={props.selected}
       disabled={!props.onSelect || !props.movable}
       onClick={() => props.onSelect?.(props.token.id)}
     >
       <Show when={showsMonogram()}>
-        <span aria-hidden="true" style={{ 'text-shadow': '0 1px 2px oklch(0 0 0/0.7)' }}>
+        <span
+          aria-hidden="true"
+          class={cn(props.health === 0 && 'rotate-90')}
+          style={{ 'text-shadow': '0 1px 2px oklch(0 0 0/0.7)' }}
+        >
           {look().monogram}
+        </span>
+      </Show>
+
+      {/* O FILETE de PV: 3px no rodapé da peça, com a mesma cor que a barra da
+          ficha e da iniciativa usam na mesma fração (`hpFillVar`) — uma segunda
+          régua de "quão mal" seria duas verdades sobre o mesmo personagem.
+          Só aparece abaixo do cheio: a peça inteira já diz que está inteira, e
+          um filete verde em nove peças é ruído em toda rodada. */}
+      <Show when={props.health !== undefined && props.health < 100}>
+        <span
+          aria-hidden="true"
+          class="absolute inset-x-0.5 bottom-0.5 h-[3px] overflow-hidden rounded-full bg-black/50"
+        >
+          <span
+            class="block h-full rounded-full"
+            style={{
+              width: `${Math.max(0, props.health ?? 0)}%`,
+              background: `var(${hpFillVar(props.health ?? 0)})`,
+            }}
+          />
         </span>
       </Show>
       {/* O número da instância em PERGAMINHO: "eu ataco o Zumbi 3" precisa de

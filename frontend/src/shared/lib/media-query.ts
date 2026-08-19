@@ -11,6 +11,11 @@ import { type Accessor, createSignal, onCleanup } from 'solid-js'
  * @example const isDesktop = createMediaQuery('(min-width: 1024px)')
  */
 export function createMediaQuery(query: string): Accessor<boolean> {
+  // Ambiente sem `matchMedia` responde FALSO em vez de explodir: o jsdom da
+  // suíte não o implementa, e um componente que só usa a media query para
+  // decidir juice não pode derrubar a tela inteira por causa disso. É o mesmo
+  // guarda que o `sfx.ts` já fazia com `(pointer: coarse)`.
+  if (typeof window.matchMedia !== 'function') return () => false
   const list = window.matchMedia(query)
   const [matches, setMatches] = createSignal(list.matches)
   const onChange = () => setMatches(list.matches)

@@ -201,6 +201,24 @@ export function BoardRegion(props: {
   const cenaDaPartida = useSceneContainer()
   const alvoDosOverlays = () => (fullscreen.active() ? sceneEl() : cenaDaPartida())
   const board = () => props.rt.board()
+  /**
+   * Quanto de PV resta em cada linha, para a peça mostrar (ALE-188). Derivado
+   * da INICIATIVA, que é onde os vitais vivem: copiá-los para o tabuleiro seria
+   * uma segunda verdade sobre a mesma criatura.
+   *
+   * A entrada sem números fica FORA do mapa, e é assim que a redação por papel
+   * chega até a peça sem uma segunda política: quando o mestre oculta os PV, o
+   * servidor já apaga `hpCurrent`/`hpMax` da cópia do jogador (`redactForPlayers`),
+   * então o filete simplesmente não existe para ele.
+   */
+  const health = createMemo(() => {
+    const porLinha = new Map<string, number>()
+    for (const entry of props.rt.state().initiative) {
+      if (entry.hpCurrent === undefined || entry.hpMax === undefined || entry.hpMax <= 0) continue
+      porLinha.set(entry.id, Math.max(0, Math.round((entry.hpCurrent / entry.hpMax) * 100)))
+    }
+    return porLinha
+  })
   /** O que a tela DESENHA: a cópia da mesa enquanto a lente está ligada, e o
    *  tabuleiro do mestre no resto do tempo. Os CONTROLES continuam sendo os
    *  dele — a lente é sobre a cena, não sobre as ferramentas: ele confere a
@@ -513,6 +531,7 @@ export function BoardRegion(props: {
               view={props.view}
               activeEntryId={props.activeEntryId}
               highlightEntryId={props.highlightEntryId}
+              health={health()}
               selectedTokenId={selectedTokenId()}
               movableTokenIds={movableTokenIds()}
               pending={cena(live()).pending}

@@ -48,15 +48,19 @@ class FakeRealtime {
     // peça), e é por essa mudança que a lente do ALE-193 tem de re-perguntar.
     private readonly board: () => BoardState | null,
     private readonly turnIndex = -1,
+    /** Vitais por linha, quando o teste quer o filete de PV da peça (ALE-188).
+     *  Ausentes = a linha não tem números, que é o que o servidor manda ao
+     *  jogador quando o mestre oculta os PV. */
+    private readonly vitals: Record<string, { hpCurrent: number; hpMax: number }> = {},
   ) {}
 
   asRealtime(): SessionRealtime {
     return {
       state: () => ({
         initiative: [
-          { id: 'e1', label: 'Sílfide Ladina', initiative: 18, type: 'character' },
-          { id: 'e2', label: 'Ogro', initiative: 12, type: 'npc' },
-          { id: 'e3', label: 'Batedor Élfico', initiative: 9, type: 'character' },
+          { id: 'e1', label: 'Sílfide Ladina', initiative: 18, type: 'character', ...this.vitals.e1 },
+          { id: 'e2', label: 'Ogro', initiative: 12, type: 'npc', ...this.vitals.e2 },
+          { id: 'e3', label: 'Batedor Élfico', initiative: 9, type: 'character', ...this.vitals.e3 },
         ],
         round: 1,
         turnIndex: this.turnIndex,
@@ -113,10 +117,15 @@ function renderRegion(
     turnIndex?: number
     places?: BoardPlace[]
     scene?: BoardState
+    vitals?: Record<string, { hpCurrent: number; hpMax: number }>
   } = {},
   onOpenCombatant = vi.fn(),
 ) {
-  const rt = new FakeRealtime(typeof live === 'function' ? live : () => live, jogador.turnIndex ?? -1)
+  const rt = new FakeRealtime(
+    typeof live === 'function' ? live : () => live,
+    jogador.turnIndex ?? -1,
+    jogador.vitals,
+  )
   rt.places = jogador.places ?? []
   rt.scene = jogador.scene ?? null
   // A janela nasce fora da região, como na página: ela precisa sobreviver à
@@ -1287,5 +1296,36 @@ describe('duplicar peça', () => {
     await user.click(screen.getByRole('button', { name: 'Sílfide Ladina, coluna 6, linha 5' }))
 
     expect(screen.queryByRole('button', { name: /Duplicar/ })).not.toBeInTheDocument()
+  })
+})
+
+
+/**
+ * PV e caído na peça (ALE-188).
+ *
+ * O mestre olha o MAPA para decidir o foco do turno — "quem eu derrubo neste
+ * turno" é a decisão tática da rodada — e precisava voltar os olhos para a
+ * LISTA só para saber quem está caindo.
+ *
+ * O filete de PV é desenho, e a casa não afirma classe em teste. O que se prova
+ * aqui é o que muda para quem LÊ a tela: a peça caída se anuncia, e a redação
+ * por papel a alcança.
+ */
+describe('a peça conta os PV', () => {
+  it('a 0 PV a peça se anuncia caída', () => {
+    renderRegion(true, TABULEIRO, undefined, { vitals: { e1: { hpCurrent: 0, hpMax: 130 } } })
+
+    // O Ogro é a peça da linha `e1` neste tabuleiro.
+    expect(screen.getByRole('button', { name: /^Ogro,.*caída$/ })).toBeInTheDocument()
+  })
+
+  // O PV oculto é redação por papel: o servidor apaga os números da cópia do
+  // jogador (`redactForPlayers`), então a peça não tem o que mostrar — e é
+  // assim que a política chega ao tabuleiro sem uma SEGUNDA política.
+  it('sem os números, a peça do jogador não diz nada de PV', () => {
+    renderRegion(false, TABULEIRO, undefined, {})
+
+    expect(screen.queryByRole('button', { name: /caída/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' })).toBeInTheDocument()
   })
 })
