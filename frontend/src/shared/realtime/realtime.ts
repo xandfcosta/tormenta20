@@ -183,8 +183,10 @@ export type SessionRealtime = {
   updateToken: (tokenId: string, patch: Partial<Omit<BoardToken, 'id'>>) => void
   /** Traz para o tabuleiro quem já está na iniciativa. Idempotente. */
   populateBoard: () => void
-  /** Alterna UMA casa como terreno difícil (mestre). */
-  paintTerrain: (x: number, y: number) => void
+  /** Marca ou apaga UMA casa como terreno difícil (mestre). Explícito e não
+   *  alternado: o pincel pinta ARRASTANDO, e o arraste passa duas vezes pela
+   *  mesma casa. */
+  paintTerrain: (x: number, y: number, difficult: boolean) => void
   /** Propõe um movimento: a mesa vê o caminho, e ninguém pousou ainda. */
   proposeMove: (tokenId: string, path: { x: number; y: number }[]) => void
   /**
@@ -326,7 +328,7 @@ export function createSessionSocket(
     removeToken: (tokenId) => send('board-token-remove', { tokenId }),
     updateToken: (tokenId, patch) => send('board-token-update', { tokenId, patch }),
     populateBoard: () => send('board-populate'),
-    paintTerrain: (x, y) => send('board-terrain-paint', { x, y }),
+    paintTerrain: (x, y, difficult) => send('board-terrain-paint', { x, y, difficult }),
     proposeMove: (tokenId, path) => send('board-move-propose', { tokenId, path }),
     commitMove: (version) => send('board-move-commit', { version }),
     cancelMove: () => send('board-move-cancel'),

@@ -347,8 +347,8 @@ func TestOTerrenoPintadoEncareceOCaminho(t *testing.T) {
 	b.Pending = nil
 
 	// O mestre pinta DUAS casas do caminho: cada uma passa a custar 2.
-	paintTerrain(b, engine.Square{X: 2, Y: 0})
-	paintTerrain(b, engine.Square{X: 3, Y: 0})
+	paintTerrain(b, engine.Square{X: 2, Y: 0}, true)
+	paintTerrain(b, engine.Square{X: 3, Y: 0}, true)
 
 	if err := proposeMove(b, st, "t1", reto, jogadorDono); err != nil {
 		t.Fatalf("seis quadrados de custo num deslocamento de seis foram recusados: %v", err)
@@ -358,25 +358,31 @@ func TestOTerrenoPintadoEncareceOCaminho(t *testing.T) {
 	}
 }
 
-// Pintar é ALTERNAR: o segundo clique na mesma casa apaga. Sem isso o mestre
-// não teria como desfazer o brejo que pintou errado.
-func TestPintarDeNovoApagaOTerreno(t *testing.T) {
+// Quem apaga é a BORRACHA, mandando `false` — e pintar duas vezes a mesma casa
+// tem de ser inofensivo, porque o pincel pinta arrastando e o arraste passa
+// pela mesma casa várias vezes. Alternar faria a casa piscar debaixo do dedo.
+func TestPintarEApagarSaoExplicitosEIdempotentes(t *testing.T) {
 	b, _ := mesaEmCombate(t)
 	casa := engine.Square{X: 2, Y: 0}
 
-	paintTerrain(b, casa)
+	paintTerrain(b, casa, true)
 	if len(b.Difficult) != 1 {
 		t.Fatalf("pintar não marcou a casa: %+v", b.Difficult)
 	}
 	versaoDepoisDePintar := b.Version
 
-	paintTerrain(b, casa)
+	// O arraste passando de novo: nada muda, e a versão NÃO sobe à toa — cada
+	// subida é um broadcast para a mesa inteira.
+	paintTerrain(b, casa, true)
+	if len(b.Difficult) != 1 || b.Version != versaoDepoisDePintar {
+		t.Errorf("pintar de novo mexeu no estado: %d casas, versão %d", len(b.Difficult), b.Version)
+	}
+
+	paintTerrain(b, casa, false)
 
 	if len(b.Difficult) != 0 {
-		t.Errorf("pintar de novo não apagou: %+v", b.Difficult)
+		t.Errorf("a borracha não apagou: %+v", b.Difficult)
 	}
-	// A versão sobe nas DUAS, senão o cliente com broadcast em voo não sabe que
-	// o chão mudou de volta.
 	if b.Version <= versaoDepoisDePintar {
 		t.Errorf("apagar não subiu a versão: %d", b.Version)
 	}

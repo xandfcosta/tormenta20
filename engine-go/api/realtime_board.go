@@ -115,8 +115,15 @@ func (g *realtimeGateway) onBoardTerrainPaint(sock *socket.Socket, args []any) {
 		g.wsError(sock, "x and y are required")
 		return
 	}
+	// Ausente é PINTAR: o pincel é o caso comum, e a borracha diz `false`.
+	difficult, informado := ctx.body["difficult"].(bool)
+	if !informado {
+		difficult = true
+	}
 	g.mutateBoard(sock, ctx, func() (*BoardState, error) {
-		return g.s.boards.paintTerrain(context.Background(), ctx.sessionID, engine.Square{X: int(x), Y: int(y)})
+		return g.s.boards.paintTerrain(
+			context.Background(), ctx.sessionID, engine.Square{X: int(x), Y: int(y)}, difficult,
+		)
 	})
 }
 

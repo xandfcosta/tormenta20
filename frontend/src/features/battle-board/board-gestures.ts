@@ -39,15 +39,38 @@ type Point = { x: number; y: number }
  * @example const gestos = createBoardGestures(() => props.view)
  *          <div {...gestos} />
  */
-export function createBoardGestures(view: () => BoardViewport) {
+export function createBoardGestures(
+  view: () => BoardViewport,
+  /** Quando devolve uma função, o arraste PINTA em vez de mover a vista — é o
+   *  pincel do mestre (ALE-124). Devolver null é o estado normal. */
+  painter: () => ((x: number, y: number, secondary: boolean) => void) | null = () => null,
+) {
   const pointers = new Map<number, Point>()
   let travelled = 0
   let pinchSpread = 0
+  /** A última casa pintada neste gesto: sem isto o mesmo quadrado é repintado a
+   *  cada pixel do arraste, e cada repintura é uma mensagem no fio. */
+  let lastPainted = ''
+  /** O gesto começou com o botão direito: apaga em vez de pintar. */
+  let secondaryDrag = false
 
   const onPointerDown = (event: PointerEvent) => {
     if (startsOnToken(event)) return
     pointers.set(event.pointerId, pointOf(event))
     travelled = 0
+    lastPainted = ''
+    const paint = painter()
+    if (paint) {
+      // Com o pincel na mão o gesto é OUTRO: captura já no toque, porque cada
+      // pixel arrastado é tinta e não há clique nenhum a preservar.
+      const host = event.currentTarget as HTMLElement
+      capturar(host, event.pointerId)
+      // `button` 2 é o direito no `pointerdown`; no `pointermove` ele vale −1 e
+      // quem carrega a verdade é a máscara `buttons`.
+      secondaryDrag = event.button === 2
+      paintUnder(host, pointOf(event), paint, secondaryDrag)
+      return
+    }
     if (pointers.size === 2) pinchSpread = spreadOf(pointers)
   }
 
@@ -58,6 +81,11 @@ export function createBoardGestures(view: () => BoardViewport) {
     pointers.set(event.pointerId, point)
     travelled += Math.abs(point.x - previous.x) + Math.abs(point.y - previous.y)
     const host = event.currentTarget as HTMLElement
+    const paint = painter()
+    if (paint) {
+      paintUnder(host, point, paint, secondaryDrag || (event.buttons & 2) !== 0)
+      return
+    }
     capturarSeVirouArraste(host, event.pointerId)
     if (pointers.size >= 2) {
       pinch(host)
@@ -66,11 +94,41 @@ export function createBoardGestures(view: () => BoardViewport) {
     view().panPixels(point.x - previous.x, point.y - previous.y)
   }
 
+  /** A casa sob o ponteiro, pintada uma vez só por gesto. A conta é a da janela
+   *  — origem mais pixels sobre o tamanho do quadrado — e não um
+   *  `elementFromPoint`: a camada de casas clicáveis só existe para quem
+   *  posiciona peça, e o pincel não depende dela. */
+  const paintUnder = (
+    host: HTMLElement,
+    point: Point,
+    paint: (x: number, y: number, secondary: boolean) => void,
+    secondary: boolean,
+  ) => {
+    const local = anchorIn(host, point)
+    const { x, y } = view().squareAt(local.x, local.y)
+    const key = `${x},${y}`
+    if (key === lastPainted) return
+    lastPainted = key
+    paint(x, y, secondary)
+  }
+
   /** Ver a nota da função: capturar cedo demais mata o clique que pousa a peça. */
   const capturarSeVirouArraste = (host: HTMLElement, pointerId: number) => {
     if (travelled <= DRAG_SLOP_PX) return
     if (host.hasPointerCapture?.(pointerId)) return
-    host.setPointerCapture?.(pointerId)
+    capturar(host, pointerId)
+  }
+
+  /** Capturar LANÇA quando o ponteiro não está mais ativo (o dedo saiu entre o
+   *  evento e este código, ou o evento nem é de um ponteiro real). Sem o guarda,
+   *  esse throw mata o handler no meio e o gesto inteiro se perde — foi
+   *  exatamente o que aconteceu ao dirigir o pincel por evento sintético. */
+  const capturar = (host: HTMLElement, pointerId: number) => {
+    try {
+      host.setPointerCapture?.(pointerId)
+    } catch {
+      // sem captura o arraste ainda funciona; só não sobrevive a sair da caixa
+    }
   }
 
   const pinch = (host: HTMLElement) => {
@@ -85,6 +143,8 @@ export function createBoardGestures(view: () => BoardViewport) {
   const onPointerUp = (event: PointerEvent) => {
     pointers.delete(event.pointerId)
     pinchSpread = 0
+    lastPainted = ''
+    secondaryDrag = false
   }
 
   const onWheel = (event: WheelEvent) => {
@@ -97,7 +157,12 @@ export function createBoardGestures(view: () => BoardViewport) {
     view().zoom(step, anchorIn(host, pointOf(event)))
   }
 
-  return { onPointerDown, onPointerMove, onPointerUp, onWheel }
+  /** Sem isto o botão direito abre o menu do browser no meio do apagar. */
+  const onContextMenu = (event: MouseEvent) => {
+    if (painter()) event.preventDefault()
+  }
+
+  return { onPointerDown, onPointerMove, onPointerUp, onWheel, onContextMenu }
 }
 
 function pointOf(event: { clientX: number; clientY: number }): Point {

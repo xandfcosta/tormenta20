@@ -77,6 +77,7 @@ function renderRegion(
   live: BoardState | null = TABULEIRO,
   activeEntryId?: string,
   jogador: { myCharacterIds?: ReadonlySet<number>; turnIndex?: number } = {},
+  onOpenCombatant = vi.fn(),
 ) {
   const rt = new FakeRealtime(live, jogador.turnIndex ?? -1)
   // A janela nasce fora da região, como na página: ela precisa sobreviver à
@@ -86,16 +87,38 @@ function renderRegion(
   // tanto o quadrado (3,2) quanto o negativo (−4,−3) sem depender de medição —
   // em jsdom todo elemento mede zero e o ResizeObserver nem existe.
   view.centerOn(0, 0)
-  render(() => (
+  const view0 = render(() => (
     <BoardRegion
       rt={rt.asRealtime()}
       isGm={isGm}
       view={view}
       activeEntryId={activeEntryId}
       myCharacterIds={jogador.myCharacterIds}
+      onOpenCombatant={onOpenCombatant}
     />
   ))
-  return { rt, user: userEvent.setup(), view }
+  return { ...view0, rt, user: userEvent.setup(), view, onOpenCombatant }
+}
+
+/** Um toque com o botão DIREITO, que é a borracha rápida. */
+function apagaComOBotaoDireito(container: HTMLElement) {
+  const plano = container.querySelector('[role="grid"]')
+  if (!plano) throw new Error('o tabuleiro não montou')
+  const toque = new Event('pointerdown', { bubbles: true })
+  Object.assign(toque, { pointerId: 1, clientX: 10, clientY: 10, button: 2, buttons: 2 })
+  plano.dispatchEvent(toque)
+}
+
+/** Um toque na superfície do tabuleiro. `PointerEvent` não existe em jsdom, e o
+ *  que o gesto lê são `pointerId`/`clientX`/`clientY` — um `Event` com esses
+ *  campos serve, e é o mesmo truque que o guia do front registra para
+ *  `AnimationEvent`. */
+function tocaOTabuleiro(container: HTMLElement) {
+  const plano = container.querySelector('[role="grid"]')
+  if (!plano) throw new Error('o tabuleiro não montou')
+  const toque = new Event('pointerdown', { bubbles: true })
+  Object.assign(toque, { pointerId: 1, clientX: 10, clientY: 10 })
+  plano.dispatchEvent(toque)
 }
 
 describe('o tabuleiro na cena', () => {
@@ -174,16 +197,16 @@ describe('o tabuleiro na cena', () => {
       ...TABULEIRO,
       tokens: [{ id: 't9', label: 'Sentinela Distante', x: 60, y: 0, footprint: 1, kind: 'npc' }],
     }
-    const { user, view } = renderRegion(true, longe)
+    const { view } = renderRegion(true, longe)
 
     expect(screen.queryByRole('button', { name: /Sentinela Distante/ })).not.toBeInTheDocument()
 
-    const passos = Math.ceil(60 / Math.max(1, Math.floor(view.cols() / 3)))
-    for (let i = 0; i < passos; i++) {
-      await user.click(screen.getByRole('button', { name: 'Mover a vista para a direita' }))
-    }
+    // A vista anda pela JANELA, que é da página — os botões de seta saíram
+    // quando arrastar passou a fazer o mesmo melhor, e o arraste é pixel e
+    // layout, que jsdom não tem (isso é e2e).
+    view.centerOn(60, 0)
 
-    expect(screen.getByRole('button', { name: /Sentinela Distante/ })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /Sentinela Distante/ })).toBeInTheDocument()
   })
 
   // "Centralizar" enquadra as PEÇAS e não a origem: num plano infinito o centro
@@ -525,14 +548,18 @@ describe('o painel da peça', () => {
    * cobrá-lo — o `PathCost` recebe o chão e o `boardReach` também — e o estado
    * não tinha onde guardá-lo: o mestre não tinha como DECLARAR o brejo.
    */
-  it('com o pincel ligado, a casa clicada vira terreno difícil em vez de receber a peça', async () => {
-    const { rt, user } = renderRegion(true)
+  it('com o pincel ligado, tocar o tabuleiro pinta em vez de pousar a peça', async () => {
+    const { rt, user, container } = renderRegion(true)
+    await user.click(screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' }))
 
     await user.click(screen.getByRole('button', { name: 'Terreno' }))
-    await user.click(screen.getByRole('button', { name: 'Coluna 1, linha 1' }))
+    tocaOTabuleiro(container)
 
-    expect(rt.paintTerrain).toHaveBeenCalledWith(1, 1)
-    // A peça NÃO foi posicionada: o mestre está pintando o chão.
+    // A CASA exata é conta de pixel, e em jsdom tudo mede zero — a conversão
+    // px→quadrado é provada em `board-viewport.test.ts` e o resto é e2e. O que
+    // se prova aqui é a ESCOLHA: pintou, e não pousou.
+    expect(rt.paintTerrain).toHaveBeenCalled()
+    expect(rt.paintTerrain.mock.calls[0]?.[2]).toBe(true)
     expect(rt.updateToken).not.toHaveBeenCalled()
   })
 
@@ -563,5 +590,93 @@ describe('o painel da peça', () => {
     renderRegion(false)
 
     expect(screen.queryByRole('button', { name: 'Terreno' })).not.toBeInTheDocument()
+  })
+
+  /**
+   * A borracha é ferramenta IRMÃ do pincel, e não "clicar de novo apaga": com o
+   * pincel pintando por arraste, alternar faria a casa piscar entre brejo e
+   * chão limpo debaixo do dedo.
+   */
+  it('a borracha manda APAGAR, e é ferramenta irmã do pincel', async () => {
+    const comBrejo: BoardState = { ...TABULEIRO, difficult: [{ x: 1, y: 1 }] }
+    const { rt, user, container } = renderRegion(true, comBrejo)
+
+    await user.click(screen.getByRole('button', { name: 'Terreno' }))
+    await user.click(screen.getByRole('button', { name: 'Apagar terreno' }))
+    tocaOTabuleiro(container)
+
+    expect(rt.paintTerrain).toHaveBeenCalledTimes(1)
+    expect(rt.paintTerrain.mock.calls[0]?.[2]).toBe(false)
+  })
+
+  // Sem ferramenta na mão, o tabuleiro volta a ser tabuleiro.
+  it('sem pincel, tocar o tabuleiro não pinta nada', async () => {
+    const { rt, user, container } = renderRegion(true)
+    await user.click(screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' }))
+
+    tocaOTabuleiro(container)
+
+    expect(rt.paintTerrain).not.toHaveBeenCalled()
+  })
+
+  // As setas e o −/+ saíram: arrastar e a roda fazem o mesmo, melhor, e o
+  // cabeçalho já quebrava linha no telefone com seis botões a mais.
+  it('o cabeçalho não carrega mais os controles que o gesto faz', () => {
+    renderRegion(true)
+
+    expect(screen.queryByRole('button', { name: 'Mover a vista para a esquerda' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Aproximar' })).toBeNull()
+    // O que gesto nenhum faz continua: achar o grupo num plano infinito.
+    expect(screen.getByRole('button', { name: 'Centralizar nas peças' })).toBeInTheDocument()
+  })
+
+  /**
+   * O botão direito apaga — é o gesto que todo editor de mapa tem — e a
+   * ferramenta selecionada muda JUNTO: a tela não pode dizer "pincel" enquanto
+   * a mão apaga.
+   */
+  it('o botão direito apaga, e a ferramenta na tela conta a verdade', async () => {
+    const { rt, user, container } = renderRegion(true)
+    await user.click(screen.getByRole('button', { name: 'Terreno' }))
+
+    apagaComOBotaoDireito(container)
+
+    expect(rt.paintTerrain.mock.calls[0]?.[2]).toBe(false)
+    expect(screen.getByRole('button', { name: 'Apagar terreno' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+  })
+
+  /**
+   * A peça e a linha da iniciativa são a MESMA criatura: apontar a peça e ter de
+   * procurar o nome na lista para ver os PV é trabalho que o app pode poupar.
+   */
+  it('escolher a peça abre o combatente dela', async () => {
+    const { user, onOpenCombatant } = renderRegion(true)
+
+    await user.click(screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' }))
+
+    expect(onOpenCombatant).toHaveBeenCalledWith('e1')
+  })
+
+  // Largar a peça não é abrir ninguém: o segundo clique desseleciona.
+  it('desselecionar não reabre o combatente', async () => {
+    const { user, onOpenCombatant } = renderRegion(true)
+    const peca = screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' })
+
+    await user.click(peca)
+    await user.click(peca)
+
+    expect(onOpenCombatant).toHaveBeenCalledTimes(1)
+  })
+
+  // A peça avulsa (porta, baú) não tem linha na iniciativa — e não há ficha.
+  it('a peça sem linha na iniciativa não abre combatente nenhum', async () => {
+    const { user, onOpenCombatant } = renderRegion(true)
+
+    await user.click(screen.getByRole('button', { name: 'Sílfide Ladina, coluna 6, linha 5' }))
+
+    expect(onOpenCombatant).not.toHaveBeenCalled()
   })
 })

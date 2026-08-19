@@ -176,6 +176,20 @@ describe('a janela sob o dedo e a roda', () => {
     })
   })
 
+  // O pincel pergunta "que casa está sob o dedo?" a cada pixel do arraste, e a
+  // resposta é a CASA em que o ponto caiu — `floor`, não a mais próxima.
+  it('diz que casa está sob o ponto da tela', () => {
+    withViewport((view) => {
+      view.measure(880, 440) // quadrado de 44px, origem em (−10,−5)
+
+      expect(view.squareAt(0, 0)).toEqual({ x: -10, y: -5 })
+      // 43px ainda é a mesma casa; 44 já é a seguinte.
+      expect(view.squareAt(43, 0)).toEqual({ x: -10, y: -5 })
+      expect(view.squareAt(44, 0)).toEqual({ x: -9, y: -5 })
+      expect(view.squareAt(440, 220)).toEqual({ x: 0, y: 0 })
+    })
+  })
+
   it('a pinça multiplica: dobrar a distância entre os dedos dobra o quadrado', () => {
     withViewport((view) => {
       view.measure(880, 440)

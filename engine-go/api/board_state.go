@@ -445,19 +445,26 @@ func proposeMove(b *BoardState, st *SessionRuntimeState, tokenID string, path []
 	return nil
 }
 
-// paintTerrain marca ou desmarca UMA casa como terreno difícil (T20 p238).
+// paintTerrain marca ou apaga UMA casa como terreno difícil (T20 p238).
 //
-// Alterna em vez de receber o estado desejado: o mestre pinta clicando, e o
-// clique de novo apaga — mandar "difícil: true" duas vezes seguidas viraria uma
-// pergunta sobre o que a tela achava que estava lá, e a tela pode estar
-// desatualizada por um broadcast em voo.
-func paintTerrain(b *BoardState, square engine.Square) {
+// Recebe o valor DESEJADO e não alterna, e a razão mudou junto com a tela: o
+// pincel pinta ARRASTANDO, e o arraste passa pela mesma casa mais de uma vez —
+// alternar faria a casa piscar entre brejo e chão limpo debaixo do dedo. Com o
+// valor explícito a mensagem é idempotente, que é o que um arraste precisa.
+// Quem apaga é a borracha, que manda `false`.
+func paintTerrain(b *BoardState, square engine.Square, difficult bool) {
 	for i, existente := range b.Difficult {
 		if existente == square {
+			if difficult {
+				return // já é brejo: nada mudou, e a versão não sobe à toa
+			}
 			b.Difficult = append(b.Difficult[:i], b.Difficult[i+1:]...)
 			b.Version++
 			return
 		}
+	}
+	if !difficult {
+		return
 	}
 	b.Difficult = append(b.Difficult, square)
 	b.Version++

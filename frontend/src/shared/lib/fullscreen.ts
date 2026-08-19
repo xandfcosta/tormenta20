@@ -54,7 +54,10 @@ function leave(doc: FullscreenDocument): Promise<void> | void {
  *
  * @example const fs = createFullscreen(); <button onClick={fs.toggle} disabled={!fs.supported} />
  */
-export function createFullscreen(doc: Document = document): FullscreenController {
+export function createFullscreen(
+  doc: Document = document,
+  element: () => HTMLElement | null = () => doc.documentElement,
+): FullscreenController {
   const target = doc as FullscreenDocument
   const [active, setActive] = createSignal(currentElement(target) !== null)
 
@@ -67,7 +70,11 @@ export function createFullscreen(doc: Document = document): FullscreenController
   })
 
   const toggle = () => {
-    const root = target.documentElement as FullscreenElement
+    // O ALVO é parâmetro desde que o tabuleiro passou a ter tela cheia própria
+    // (ALE-124): o Hub quer a página inteira, e a mesa quer só o mapa — pôr a
+    // página inteira em tela cheia deixaria o tabuleiro do mesmo tamanho,
+    // dividindo a tela com a iniciativa, que é justamente o que se quer sair.
+    const root = (element() ?? target.documentElement) as FullscreenElement
     // A refused request (gesture expired, embedded without `allow`) rejects;
     // there is nothing to recover — the screen simply stays as it is.
     void Promise.resolve(currentElement(target) ? leave(target) : enter(root)).catch(

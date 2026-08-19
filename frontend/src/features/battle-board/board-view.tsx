@@ -45,6 +45,8 @@ export function BoardView(props: {
   /** As casas que custam o dobro (T20 p238). Público: chão acidentado é coisa
    *  que se vê, e a mesa precisa ver o mesmo mapa que a régua cobra. */
   difficult?: readonly BoardSquare[]
+  /** Presente = ferramenta na mão: arrastar PINTA em vez de mover a vista. */
+  onPaintSquare?: (x: number, y: number, secondary: boolean) => void
 }) {
   const view = () => props.view
   const window = () => ({
@@ -56,7 +58,7 @@ export function BoardView(props: {
 
   // Nasce UMA vez: guarda quais ponteiros estão no vidro entre um evento e o
   // seguinte (ALE-140).
-  const gestures = createBoardGestures(view)
+  const gestures = createBoardGestures(view, () => props.onPaintSquare ?? null)
 
   let host: HTMLDivElement | undefined
   const observe = (element: HTMLDivElement) => {
@@ -92,6 +94,7 @@ export function BoardView(props: {
       onPointerUp={gestures.onPointerUp}
       onPointerCancel={gestures.onPointerUp}
       onWheel={gestures.onWheel}
+      onContextMenu={gestures.onContextMenu}
       role="grid"
       // A coluna e a linha são arredondadas porque a origem passou a ser
       // fracionária com o arraste (ALE-140), e "janela em coluna −7,3125" não é
@@ -228,8 +231,13 @@ function SquareLayer(props: {
  * jogador precisa enxergar o que a régua vai lhe cobrar (ALE-124, fatia 4).
  *
  * Camada só de pintura, sem nós clicáveis: quem clica é a `SquareLayer`, que só
- * existe para quem pode agir. Hachura e não cor chapada — a peça fica por cima,
- * e um bloco sólido esconderia o que importa.
+ * existe para quem pode agir.
+ *
+ * NÃO é hachura diagonal, e isso foi corrigido depois de ver na tela: listras
+ * na diagonal são o vocabulário universal de "desabilitado, não passe", e
+ * terreno difícil é o contrário disso — passa-se, só que devagar. O que ficou é
+ * chão MOLE: um borrão quente por baixo e tufos claros espalhados, que leem
+ * como lama e mato em vez de fita de obra.
  */
 function DifficultLayer(props: { view: BoardViewport; squares: readonly BoardSquare[] }) {
   const cell = () => props.view.cellPx()
@@ -238,7 +246,7 @@ function DifficultLayer(props: { view: BoardViewport; squares: readonly BoardSqu
       <For each={props.squares}>
         {(square) => (
           <div
-            class="absolute bg-[repeating-linear-gradient(135deg,rgba(255,255,255,.16)_0_3px,transparent_3px_8px)] inset-ring-1 inset-ring-white/15"
+            class="absolute bg-[radial-gradient(circle_at_28%_32%,rgba(255,255,255,.22)_0_1.5px,transparent_2px),radial-gradient(circle_at_68%_58%,rgba(255,255,255,.18)_0_1.5px,transparent_2px),radial-gradient(circle_at_45%_80%,rgba(255,255,255,.14)_0_1px,transparent_1.5px),radial-gradient(ellipse_at_center,oklch(0.55_0.07_75/0.30),oklch(0.45_0.05_75/0.16))]"
             style={{
               left: `${(square.x - props.view.originX()) * cell()}px`,
               top: `${(square.y - props.view.originY()) * cell()}px`,

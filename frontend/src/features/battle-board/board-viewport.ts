@@ -112,6 +112,15 @@ export function createBoardViewport() {
     setOriginY((y) => y + dySquares)
   }
 
+  /** O quadrado sob um ponto da vista, em pixels a partir da quina dela. A
+   *  conta mora aqui pelo mesmo motivo do `panPixels`: é o único lugar que
+   *  conhece o tamanho do quadrado na tela. `floor` e não `round` porque o
+   *  quadrado é a CASA em que o ponto caiu, não a mais próxima. */
+  const squareAt = (px: number, py: number) => ({
+    x: Math.floor(originX() + px / cellPx()),
+    y: Math.floor(originY() + py / cellPx()),
+  })
+
   /** Arrastar entrega PIXELS, e a conversão para quadrado mora aqui — é o único
    *  lugar que conhece o tamanho do quadrado na tela. O sinal é invertido de
    *  propósito: puxar o mapa para a direita mostra o que está à ESQUERDA. */
@@ -181,6 +190,7 @@ export function createBoardViewport() {
     measure,
     pan,
     panPixels,
+    squareAt,
     centerOn,
     zoom,
     zoomByFactor,

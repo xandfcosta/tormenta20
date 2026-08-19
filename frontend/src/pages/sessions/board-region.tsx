@@ -1,4 +1,15 @@
-import { Brush, Check, Crosshair, LayoutGrid, Minus, Plus, Undo2, Users, X } from 'lucide-solid'
+import {
+  Brush,
+  Check,
+  Crosshair,
+  Eraser,
+  LayoutGrid,
+  Maximize,
+  Minimize,
+  Undo2,
+  Users,
+  X,
+} from 'lucide-solid'
 import { For, Show, createMemo, createSignal } from 'solid-js'
 import { pathBetween } from '@/features/battle-board/board-path'
 import { TokenActions } from '@/features/battle-board/token-actions'
@@ -7,6 +18,8 @@ import { BoardView } from '@/features/battle-board/board-view'
 import { type BoardViewport, SQUARE_METRES } from '@/features/battle-board/board-viewport'
 import { OpenBoardDialog } from '@/features/battle-board/open-board-dialog'
 import { upcomingTurns } from '@/features/session-tracker/tracker-rules'
+import { SceneContainerProvider, useSceneContainer } from '@/shared/lib/scene-container'
+import { type FullscreenController, createFullscreen } from '@/shared/lib/fullscreen'
 import { boardReach } from '@/shared/lib/engine-wasm'
 import type {
   BoardState,
@@ -39,12 +52,40 @@ export function BoardRegion(props: {
   activeEntryId?: string | null
   /** Os personagens DESTE espectador. Vazio para o mestre, que move qualquer um. */
   myCharacterIds?: ReadonlySet<number>
+  /** Clicar na peça também ABRE o combatente dela: a peça e a linha da
+   *  iniciativa são a mesma criatura, e o mestre não deveria ter de procurar o
+   *  nome na lista para ver os PV de quem ele acabou de apontar. */
+  onOpenCombatant?: (entryId: string) => void
 }) {
   const [selectedTokenId, setSelectedTokenId] = createSignal<string | null>(null)
-  // O pincel é MODO e não gesto: enquanto ele está ligado, a casa clicada vira
-  // terreno difícil em vez de receber a peça. Modo porque o clique numa casa já
-  // tem dono (pousar), e porque um gesto com tecla não existe no toque.
-  const [painting, setPainting] = createSignal(false)
+  // O pincel é MODO e não gesto: enquanto ele está ligado, a casa clicada (ou
+  // arrastada) vira terreno difícil em vez de receber a peça. Modo porque o
+  // clique numa casa já tem dono — pousar —, e porque gesto com tecla não
+  // existe no toque. A BORRACHA é modo irmão em vez de "clicar de novo apaga":
+  // arrastando, alternar faria a casa piscar debaixo do dedo.
+  const [tool, setTool] = createSignal<'brush' | 'eraser' | null>(null)
+  const painting = () => tool() !== null
+  const useTool = (wanted: 'brush' | 'eraser') =>
+    setTool((atual) => (atual === wanted ? null : wanted))
+  /**
+   * O botão direito apaga — o gesto que todo editor de mapa tem — e a ferramenta
+   * SELECIONADA muda junto, senão a tela diria "pincel" enquanto a mão apaga.
+   */
+  const paintSquare = (x: number, y: number, secondary: boolean) => {
+    if (secondary) setTool('eraser')
+    props.rt.paintTerrain(x, y, !secondary && tool() === 'brush')
+  }
+  // A tela cheia é do TABULEIRO e não da página: pôr a página inteira em tela
+  // cheia deixaria o mapa do mesmo tamanho, dividindo a tela com a iniciativa.
+  const [sceneEl, setSceneEl] = createSignal<HTMLElement | null>(null)
+  const fullscreen = createFullscreen(document, sceneEl)
+  // Em tela cheia, o alvo dos overlays passa a ser o PRÓPRIO tabuleiro: o
+  // elemento em tela cheia é o único que o browser desenha na top layer, e o
+  // diálogo portava para a cena da partida, que está fora dele. Clicar em
+  // "Encerrar" não mostrava nada, e o diálogo só aparecia ao SAIR da tela
+  // cheia — com o mestre achando que o botão não funcionou.
+  const cenaDaPartida = useSceneContainer()
+  const alvoDosOverlays = () => (fullscreen.active() ? sceneEl() : cenaDaPartida())
   const board = () => props.rt.board()
 
   // A vez é do RASTREADOR: o tabuleiro pergunta, não guarda uma cópia — duas
@@ -64,8 +105,13 @@ export function BoardRegion(props: {
 
   // Selecionar de novo a mesma peça DESSELECIONA: sem isso não há como largar a
   // peça sem posicioná-la, e o próximo clique num quadrado a moveria sem querer.
-  const selectToken = (tokenId: string) =>
-    setSelectedTokenId((current) => (current === tokenId ? null : tokenId))
+  const selectToken = (tokenId: string) => {
+    const escolhida = selectedTokenId() !== tokenId
+    setSelectedTokenId(escolhida ? tokenId : null)
+    if (!escolhida) return
+    const entryId = board()?.tokens.find((peca) => peca.id === tokenId)?.entryId
+    if (entryId) props.onOpenCombatant?.(entryId)
+  }
 
   const selectedToken = () => board()?.tokens.find((token) => token.id === selectedTokenId())
 
@@ -92,14 +138,6 @@ export function BoardRegion(props: {
   // que uma posição anterior resolve, e o `PendingMove` já é o desfazer do
   // jogador (ALE-178).
   const [ondeEstava, setOndeEstava] = createSignal<Record<string, { x: number; y: number }>>({})
-
-  const onSquare = (x: number, y: number) => {
-    if (painting()) {
-      props.rt.paintTerrain(x, y)
-      return
-    }
-    placeSelected(x, y)
-  }
 
   const placeSelected = (x: number, y: number) => {
     const token = selectedToken()
@@ -130,7 +168,13 @@ export function BoardRegion(props: {
     // `w-full flex-1`: no rail do jogador o cartão é filho de um flex, e sem
     // isso ele encolhe para o conteúdo — medido em 138px de 352 disponíveis,
     // ou seja, o tabuleiro virava uma tira estreita (ALE-124).
-    <section class="@container flex w-full min-h-0 min-w-0 flex-1 flex-col rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)]">
+    <SceneContainerProvider element={alvoDosOverlays}>
+      <section
+        ref={setSceneEl}
+        // O escopo de tokens vai junto: em tela cheia o `::backdrop` é preto e
+        // a seção precisa pintar o próprio fundo.
+        class="scene-grimorio @container flex w-full min-h-0 min-w-0 flex-1 flex-col rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)]"
+      >
       <Show when={board()} fallback={<EmptyBoard isGm={props.isGm} onOpen={props.rt.openBoard} />}>
         {(live) => (
           <>
@@ -147,16 +191,29 @@ export function BoardRegion(props: {
                   cortado com o ✕ de encerrar INALCANÇÁVEL fora da tela
                   (ALE-178). */}
               <div class="ml-auto flex flex-wrap items-center justify-end gap-1">
-                <ViewControls view={props.view} onFit={() => props.view.fit(live().tokens)} />
+                <ViewControls
+                  view={props.view}
+                  onFit={() => props.view.fit(live().tokens)}
+                  fullscreen={fullscreen}
+                />
                 <Show when={props.isGm}>
                   <Button
                     size="sm"
-                    variant={painting() ? 'default' : 'ghost'}
-                    aria-pressed={painting()}
-                    onClick={() => setPainting((ligado) => !ligado)}
+                    variant={tool() === 'brush' ? 'default' : 'ghost'}
+                    aria-pressed={tool() === 'brush'}
+                    onClick={() => useTool('brush')}
                   >
                     <Brush aria-hidden="true" class="size-4" />
                     Terreno
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={tool() === 'eraser' ? 'default' : 'ghost'}
+                    aria-pressed={tool() === 'eraser'}
+                    aria-label="Apagar terreno"
+                    onClick={() => useTool('eraser')}
+                  >
+                    <Eraser aria-hidden="true" class="size-4" />
                   </Button>
                   <Button
                     size="sm"
@@ -213,10 +270,14 @@ export function BoardRegion(props: {
               // a camada de quadrados nasceria com centenas de botões inertes
               // na árvore de quem só assiste.
               onSelectToken={movableTokenIds().size > 0 ? selectToken : undefined}
-              // Com o pincel ligado, TODA casa responde — não só quando há peça
-              // na mão: o mestre está pintando o chão, não posicionando.
-              onPlaceToken={painting() || selectedTokenId() ? onSquare : undefined}
+              // Com a ferramenta na mão o pincel é DONO da superfície: sem
+              // isto o mesmo clique pintava duas vezes (o gesto e o botão da
+              // casa), e com uma peça selecionada ele ainda a pousava no meio
+              // do desenho.
+              onPlaceToken={!painting() && selectedTokenId() ? placeSelected : undefined}
               difficult={live().difficult}
+              // Arrastar com a ferramenta na mão PINTA em vez de mover a vista.
+              onPaintSquare={painting() ? paintSquare : undefined}
             />
 
             <Show when={props.isGm && selectedToken()}>
@@ -265,7 +326,8 @@ export function BoardRegion(props: {
           </>
         )}
       </Show>
-    </section>
+      </section>
+    </SceneContainerProvider>
   )
 }
 
@@ -316,49 +378,43 @@ function MoveBar(props: {
  * "Centralizar" enquadra as PEÇAS, e não a origem: o centro de um plano infinito
  * não significa nada — o que o mestre quer é achar o grupo.
  */
-function ViewControls(props: { view: BoardViewport; onFit: () => void }) {
-  const step = () => Math.max(1, Math.floor(props.view.cols() / 3))
-
+/**
+ * Os controles da vista. As quatro setas e o −/+ saíram (ALE-124): arrastar e a
+ * roda/pinça fazem o mesmo melhor e sem ocupar seis lugares num cabeçalho que
+ * já quebrava linha no telefone. Fica o que gesto nenhum faz — achar o grupo
+ * num plano infinito — e entra a tela cheia, que é do TABULEIRO e não da
+ * página: em tela cheia da página o mapa continuaria dividindo espaço com a
+ * iniciativa, que é justamente o que se quer sair.
+ */
+function ViewControls(props: {
+  view: BoardViewport
+  onFit: () => void
+  fullscreen: FullscreenController
+}) {
   return (
     <div class="flex items-center gap-0.5">
-      <PanButton label="Mover a vista para a esquerda" onClick={() => props.view.pan(-step(), 0)}>
-        ←
-      </PanButton>
-      <PanButton label="Mover a vista para cima" onClick={() => props.view.pan(0, -step())}>
-        ↑
-      </PanButton>
-      <PanButton label="Mover a vista para baixo" onClick={() => props.view.pan(0, step())}>
-        ↓
-      </PanButton>
-      <PanButton label="Mover a vista para a direita" onClick={() => props.view.pan(step(), 0)}>
-        →
-      </PanButton>
-      <Button size="sm" variant="ghost" aria-label="Afastar" onClick={() => props.view.zoom(-8)}>
-        <Minus aria-hidden="true" class="size-4" />
-      </Button>
-      <Button size="sm" variant="ghost" aria-label="Aproximar" onClick={() => props.view.zoom(8)}>
-        <Plus aria-hidden="true" class="size-4" />
-      </Button>
       <Button size="sm" variant="ghost" aria-label="Centralizar nas peças" onClick={props.onFit}>
         <Crosshair aria-hidden="true" class="size-4" />
       </Button>
+      <Show when={props.fullscreen.supported}>
+        <Button
+          size="sm"
+          variant="ghost"
+          aria-label={props.fullscreen.active() ? 'Sair da tela cheia' : 'Tabuleiro em tela cheia'}
+          onClick={props.fullscreen.toggle}
+        >
+          <Show
+            when={props.fullscreen.active()}
+            fallback={<Maximize aria-hidden="true" class="size-4" />}
+          >
+            <Minimize aria-hidden="true" class="size-4" />
+          </Show>
+        </Button>
+      </Show>
     </div>
   )
 }
 
-function PanButton(props: { label: string; onClick: () => void; children: string }) {
-  return (
-    <Button
-      size="sm"
-      variant="ghost"
-      class="h-8 w-8 font-mono"
-      aria-label={props.label}
-      onClick={props.onClick}
-    >
-      <span aria-hidden="true">{props.children}</span>
-    </Button>
-  )
-}
 
 /**
  * Sessão sem tabuleiro. O estado vazio é do MESTRE: o jogador não abre cena, e

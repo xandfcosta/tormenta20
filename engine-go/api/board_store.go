@@ -200,8 +200,11 @@ func (bs *boardStore) updateToken(ctx context.Context, sessionID int64, tokenID 
 	return bs.apply(ctx, sessionID, func(b *BoardState) error { return updateToken(b, tokenID, patch) })
 }
 
-func (bs *boardStore) paintTerrain(ctx context.Context, sessionID int64, square engine.Square) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, func(b *BoardState) error { paintTerrain(b, square); return nil })
+func (bs *boardStore) paintTerrain(ctx context.Context, sessionID int64, square engine.Square, difficult bool) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error {
+		paintTerrain(b, square, difficult)
+		return nil
+	})
 }
 
 func (bs *boardStore) populate(ctx context.Context, sessionID int64, st *SessionRuntimeState) (*BoardState, error) {

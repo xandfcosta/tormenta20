@@ -68,6 +68,20 @@ export function SessionGmView(props: {
     setRegion('mesa')
   }
 
+  /**
+   * Da PEÇA para a ficha: clicar na peça abre o combatente dela no painel.
+   *
+   * A aba só troca onde o tabuleiro TEM coluna própria. Abaixo de 1536 ele é
+   * ABA da mesa, e abrir o combatente ali substituiria o tabuleiro pela ficha —
+   * tirando da tela exatamente o que a pessoa estava olhando quando clicou. É a
+   * mesma regra da ALE-161: nada rouba a tela de quem já está olhando outra
+   * coisa.
+   */
+  const openCombatantFromBoard = (entryId: string) => {
+    setSelectedId(entryId)
+    if (boardHasOwnColumn()) setTab('combatente')
+  }
+
   // Abaixo de 1536 o tabuleiro não tem coluna própria: ele vira ABA da mesa, ao
   // lado de combatente/bestiário/catálogos/notas. Uma faixa separada
   // atravessando a tela inteira para trocar só a coluna da direita era um
@@ -179,7 +193,13 @@ export function SessionGmView(props: {
         </Show>
 
         <Show when={boardHasOwnColumn()}>
-          <BoardRegion rt={props.rt} isGm view={boardView} activeEntryId={activeEntryId()} />
+          <BoardRegion
+            rt={props.rt}
+            isGm
+            view={boardView}
+            activeEntryId={activeEntryId()}
+            onOpenCombatant={openCombatantFromBoard}
+          />
         </Show>
 
         <Show when={showWorkspace()}>
