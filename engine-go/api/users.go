@@ -9,8 +9,12 @@ type userDTO struct {
 	CreatedAt string  `json:"createdAt"`
 }
 
-// handleListUsers the caller + every user they
-// share a campaign with (as GM or player).
+// handleListUsers devolve o chamador mais quem ele enxerga por MESA, e a
+// visibilidade é sempre pelo eixo mestre↔jogador: o mestre vê os donos dos
+// personagens das mesas dele, o jogador vê os mestres das mesas em que joga.
+// Dois jogadores da mesma crônica NÃO se veem — o comentário antigo dizia
+// "todo usuário com quem compartilha uma campanha", que é mais do que as duas
+// queries fazem (ALE-186).
 func (s *Server) handleListUsers(w http.ResponseWriter, r *http.Request) {
 	user := currentUser(r)
 	ids := map[int64]bool{user.ID: true}

@@ -91,9 +91,9 @@ func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {
 	now := nowISO()
 
 	var effect *EffectDTO
-	if spec.Scope != "instant" && hasModifiers(spec.Modifiers) {
+	if wantsEffectRow(spec) {
 		eff, err := q.CreateActiveEffect(r.Context(), sqlcgen.CreateActiveEffectParams{
-			Characterid: row.ID, Catalogid: cat.ID, Scope: spec.Scope, Modifiers: string(spec.Modifiers), Createdat: now,
+			Characterid: row.ID, Catalogid: cat.ID, Scope: spec.Scope, Modifiers: effectModifiers(spec.Modifiers), Createdat: now,
 		})
 		if db.IsUniqueViolation(err) {
 			writeOncePerDay(w, cat.Name)
@@ -172,6 +172,29 @@ func rollGain(rolled *int64, instant *catalog.Instant, isHp bool) (int, bool) {
 		return int(*rolled), true
 	}
 	return rollAverage(g.Dice, g.Bonus), true
+}
+
+// wantsEffectRow decide se a dose deixa LINHA de efeito. A linha é duas coisas
+// ao mesmo tempo: o que a ficha mostra em "Efeitos ativos" e o MARCADOR de que
+// a porção do dia já foi consumida — é ela que o `oncePerDay` lá em cima
+// procura, e é ela que o UNIQUE (characterId, catalogId, scope) protege.
+//
+// Exigir modificadores para criá-la matava a regra da porção diária inteira:
+// os cinco pratos que o catálogo marca como `oncePerDay` (gorad quente,
+// macarrão de Yuvalin, batata valkariana, prato do aventureiro, sopa de peixe)
+// só curam, nenhum tem modificador — então nunca havia marcador para achar, e
+// a mesa comia o mesmo prato a manhã inteira (ALE-186).
+func wantsEffectRow(spec *catalog.Consumable) bool {
+	return spec.Scope != "instant" && (spec.OncePerDay || hasModifiers(spec.Modifiers))
+}
+
+// effectModifiers normaliza o blob do catálogo. A coluna é NOT NULL e a ficha
+// faz JSON.parse nela: o marcador sem modificador guarda "[]" e não "".
+func effectModifiers(raw json.RawMessage) string {
+	if !hasModifiers(raw) {
+		return "[]"
+	}
+	return string(raw)
 }
 
 func hasModifiers(raw json.RawMessage) bool {
