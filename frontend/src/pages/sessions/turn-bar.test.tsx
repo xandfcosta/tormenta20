@@ -25,6 +25,9 @@ class FakeRealtime {
       // A cena do mestre passou a montar a região do tabuleiro (ALE-124): sem
       // este acessor o fake mente sobre a forma do contrato e a tela quebra.
       board: () => null,
+      // O acervo de Lugares é do mestre e chega por PERGUNTA, não pelo snapshot
+      // (ALE-124, fatia 5): o fake responde vazio.
+      listPlaces: () => Promise.resolve([]),
       error: () => null,
       hasPersistenceWarning: () => false,
       present: () => [],

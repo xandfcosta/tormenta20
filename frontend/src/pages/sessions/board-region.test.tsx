@@ -1,8 +1,8 @@
-import { cleanup, render, screen, within } from '@solidjs/testing-library'
+import { cleanup, render, screen, waitFor, within } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { createBoardViewport } from '@/features/battle-board/board-viewport'
-import type { BoardState, SessionRealtime } from '@/shared/realtime/realtime'
+import type { BoardPlace, BoardState, SessionRealtime } from '@/shared/realtime/realtime'
 import { BoardRegion } from './board-region'
 
 /**
@@ -22,6 +22,9 @@ class FakeRealtime {
   readonly removeToken = vi.fn()
   readonly addToken = vi.fn()
   readonly paintTerrain = vi.fn()
+  readonly reopenPlace = vi.fn()
+  /** O acervo chega por PERGUNTA e não pelo snapshot (ALE-124, fatia 5). */
+  places: BoardPlace[] = []
   readonly proposeMove = vi.fn()
   readonly commitMove = vi.fn()
   readonly cancelMove = vi.fn()
@@ -51,6 +54,12 @@ class FakeRealtime {
       closeBoard: this.closeBoard,
       populateBoard: this.populateBoard,
       paintTerrain: this.paintTerrain,
+      listPlaces: () => Promise.resolve(this.places),
+      reopenPlace: this.reopenPlace,
+      removePlace: (placeId: number) => {
+        this.places = this.places.filter((lugar) => lugar.id !== placeId)
+        return Promise.resolve(this.places)
+      },
       openBoard: this.openBoard,
       proposeMove: this.proposeMove,
       commitMove: this.commitMove,
@@ -76,10 +85,11 @@ function renderRegion(
   isGm: boolean,
   live: BoardState | null = TABULEIRO,
   activeEntryId?: string,
-  jogador: { myCharacterIds?: ReadonlySet<number>; turnIndex?: number } = {},
+  jogador: { myCharacterIds?: ReadonlySet<number>; turnIndex?: number; places?: BoardPlace[] } = {},
   onOpenCombatant = vi.fn(),
 ) {
   const rt = new FakeRealtime(live, jogador.turnIndex ?? -1)
+  rt.places = jogador.places ?? []
   // A janela nasce fora da região, como na página: ela precisa sobreviver à
   // troca de região, e o teste monta a mesma composição que a cena monta.
   const view = createBoardViewport()
@@ -678,5 +688,55 @@ describe('o painel da peça', () => {
     await user.click(screen.getByRole('button', { name: 'Sílfide Ladina, coluna 6, linha 5' }))
 
     expect(onOpenCombatant).not.toHaveBeenCalled()
+  })
+
+})
+
+/**
+ * Lugares da crônica (ALE-124, fatia 5). A épica prometia que encerrar ARQUIVA —
+ * "taverna → masmorra → de volta à taverna, com tudo onde estava" — e até esta
+ * fatia encerrar DESTRUÍA a cena montada. Era a única promessa que o código
+ * contradizia.
+ */
+describe('os lugares guardados da crônica', () => {
+  const TAVERNA: BoardPlace = {
+    id: 7,
+    name: 'Taverna do Javali',
+    tokens: 9,
+    updatedAt: '2026-08-19T00:00:00Z',
+  }
+
+  it('sem tabuleiro, o mestre reabre uma cena guardada', async () => {
+    const { rt, user } = renderRegion(true, null, undefined, { places: [TAVERNA] })
+
+    // A contagem é o que faz o mestre reconhecer a cena: "a taverna, aquela dos nove".
+    expect(await screen.findByText('9 peças')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Reabrir' }))
+
+    expect(rt.reopenPlace).toHaveBeenCalledWith(7)
+  })
+
+  // Apagar é o único caminho que destrói uma cena montada — e o único que
+  // pergunta antes.
+  it('apagar um lugar pede confirmação', async () => {
+    const { user } = renderRegion(true, null, undefined, { places: [TAVERNA] })
+
+    await user.click(await screen.findByRole('button', { name: 'Apagar Taverna do Javali' }))
+    const dialogo = await screen.findByRole('dialog')
+
+    expect(within(dialogo).getByText(/Apagar Taverna do Javali\?/)).toBeInTheDocument()
+    await user.click(within(dialogo).getByRole('button', { name: 'Apagar' }))
+    await waitFor(() => expect(screen.queryByText('Taverna do Javali')).not.toBeInTheDocument())
+  })
+
+  // O acervo é preparação do mestre: saber que existe uma "Cripta do
+  // Necromante" guardada é meio caminho da surpresa.
+  it('o jogador não vê o acervo de cenas', async () => {
+    renderRegion(false, null, undefined, { places: [TAVERNA] })
+
+    await waitFor(() =>
+      expect(screen.getByText('O mestre ainda não abriu um tabuleiro.')).toBeInTheDocument(),
+    )
+    expect(screen.queryByText('Lugares da crônica')).not.toBeInTheDocument()
   })
 })

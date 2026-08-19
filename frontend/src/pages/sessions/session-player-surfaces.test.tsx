@@ -33,6 +33,9 @@ class FakeRealtime {
       present: () => [],
       restFlash: () => null,
       board: () => null,
+      // O acervo de Lugares é do mestre e chega por PERGUNTA, não pelo snapshot
+      // (ALE-124, fatia 5): o fake responde vazio.
+      listPlaces: () => Promise.resolve([]),
       rollSelfInitiative: vi.fn(),
       openBoard: vi.fn(),
     } as unknown as SessionRealtime

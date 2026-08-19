@@ -52,7 +52,10 @@ var gmGate = map[string]bool{
 	"board-token-remove":  true,
 	"board-token-update":  true,
 	"board-populate":      true,
-	"board-terrain-paint": true,  // o chão é da cena, e a cena é do mestre
+	"board-terrain-paint": true, // o chão é da cena, e a cena é do mestre
+	"board-places":        true, // o acervo de cenas guardadas é preparação do mestre
+	"board-reopen":        true,
+	"board-place-remove":  true,
 	"board-move-propose":  false, // assertMovable: papel, posse e a VEZ
 	"board-move-cancel":   false, // desfaz o próprio provisório; o mestre desfaz o de qualquer um
 	"board-move-commit":   false, // idem

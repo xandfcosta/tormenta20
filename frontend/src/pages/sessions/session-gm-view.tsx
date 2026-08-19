@@ -292,14 +292,18 @@ function TurnBar(props: {
             </Button>
           )}
         >
-          <HeaderCard campaignId={props.campaignId} session={props.session} isGm />
-          <div class="flex justify-end">
-            <DeleteSessionButton
-              campaignId={props.campaignId}
-              sessionId={props.sessionId}
-              sessionNumber={props.session.sessionNumber}
-            />
-          </div>
+          <HeaderCard
+            campaignId={props.campaignId}
+            session={props.session}
+            isGm
+            danger={
+              <DeleteSessionButton
+                campaignId={props.campaignId}
+                sessionId={props.sessionId}
+                sessionNumber={props.session.sessionNumber}
+              />
+            }
+          />
         </MatchControls>
       </div>
     </div>

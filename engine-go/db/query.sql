@@ -445,3 +445,31 @@ RETURNING *;
 
 -- name: DeleteCampaignCreature :exec
 DELETE FROM campaign_creatures WHERE id = ?;
+
+-- Lugares da cronica (ALE-124, fatia 5): a cena montada que sobrevive ao fim do
+-- tabuleiro. Listados por nome porque e por ele que o mestre procura a taverna;
+-- o resto da cena e JSON, mesmo arranjo do bloco de criatura.
+-- name: ListCampaignPlaces :many
+SELECT * FROM campaign_places WHERE campaignId = ? ORDER BY name;
+
+-- name: GetCampaignPlace :one
+SELECT * FROM campaign_places WHERE id = ? LIMIT 1;
+
+-- Arquivar sobrescreve o lugar de mesmo nome na mesma cronica: o mestre que
+-- reabre a taverna, move duas pecas e encerra de novo espera UMA taverna, e nao
+-- uma pilha de tavernas quase iguais.
+-- name: SaveCampaignPlace :one
+INSERT INTO campaign_places (campaignId, name, state, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?)
+RETURNING *;
+
+-- name: UpdateCampaignPlace :one
+UPDATE campaign_places SET state = ?, updatedAt = ?
+WHERE id = ?
+RETURNING *;
+
+-- name: FindCampaignPlaceByName :one
+SELECT * FROM campaign_places WHERE campaignId = ? AND name = ? LIMIT 1;
+
+-- name: DeleteCampaignPlace :exec
+DELETE FROM campaign_places WHERE id = ?;

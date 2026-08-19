@@ -30,10 +30,24 @@ func (g *realtimeGateway) onBoardOpen(sock *socket.Socket, args []any) {
 
 // onBoardClose (mestre) encerra o tabuleiro. O `nil` no broadcast é a mensagem:
 // "esta sessão não tem tabuleiro" é estado de verdade, e não uma grade vazia.
+//
+// Encerrar ARQUIVA (ALE-124, fatia 5): a cena vira um Lugar da crônica com as
+// peças onde estavam, para reabrir na semana seguinte sem remontar nada. Até
+// aqui encerrar DESTRUÍA, e era a única promessa da épica que o código
+// contradizia. Quem destrói é "Apagar o lugar", com confirmação.
 func (g *realtimeGateway) onBoardClose(sock *socket.Socket, args []any) {
 	ctx, ok := g.access(sock, args)
 	if !ok || !g.requireGm(sock, ctx.role) {
 		return
+	}
+	// Arquiva ANTES de fechar, e a falha ao arquivar não impede o fechar: o
+	// mestre mandou tirar a cena da mesa, e recusar isso porque o acervo falhou
+	// deixaria a mesa presa numa cena que já acabou. O aviso de persistência
+	// abaixo é quem conta a verdade.
+	if atual := g.s.boards.get(context.Background(), ctx.sessionID); atual != nil {
+		if err := g.s.boards.archive(context.Background(), ctx.campaignID, atual); err != nil {
+			log.Printf("session %d: falha ao arquivar o lugar (%v)", ctx.sessionID, err)
+		}
 	}
 	// O aviso de gravação vale para o fechar também: um DELETE que falha deixa
 	// o tabuleiro fantasma no banco, e a mesa precisa saber (ALE-155).
@@ -98,6 +112,61 @@ func (g *realtimeGateway) onBoardTokenUpdate(sock *socket.Socket, args []any) {
 	g.mutateBoard(sock, ctx, func() (*BoardState, error) {
 		return g.s.boards.updateToken(context.Background(), ctx.sessionID, tokenID, patch)
 	})
+}
+
+// onBoardPlaces (mestre) lista os lugares guardados da crônica.
+//
+// Só o mestre: o acervo de cenas é preparação, e saber que existe uma "Cripta
+// do Necromante" guardada é meio caminho da surpresa. O jogador vê o lugar
+// quando ele chega à mesa.
+func (g *realtimeGateway) onBoardPlaces(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok || !g.requireGm(sock, ctx.role) {
+		return
+	}
+	ackOK(ctx.ack, map[string]any{"places": g.s.boards.places(context.Background(), ctx.campaignID)})
+}
+
+// onBoardReopen (mestre) põe um lugar guardado de volta na mesa.
+func (g *realtimeGateway) onBoardReopen(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok || !g.requireGm(sock, ctx.role) {
+		return
+	}
+	placeID, ok := intField(ctx.body, "placeId")
+	if !ok {
+		g.wsError(sock, "placeId is required")
+		return
+	}
+	board, err := g.s.boards.reopen(context.Background(), ctx.sessionID, placeID)
+	if err != nil {
+		g.wsError(sock, "não consegui reabrir o lugar")
+		return
+	}
+	if dirty, changed := g.s.boards.persist(context.Background(), ctx.sessionID); changed {
+		g.warnPersistence(ctx.sessionID, dirty)
+	}
+	g.emitBoardState(ctx.sessionID, board)
+	ackOK(ctx.ack, boardForRole(ctx.role, board))
+}
+
+// onBoardPlaceRemove (mestre) apaga um lugar do acervo. É o único caminho que
+// DESTRÓI uma cena montada, e por isso a tela pede confirmação.
+func (g *realtimeGateway) onBoardPlaceRemove(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok || !g.requireGm(sock, ctx.role) {
+		return
+	}
+	placeID, ok := intField(ctx.body, "placeId")
+	if !ok {
+		g.wsError(sock, "placeId is required")
+		return
+	}
+	if err := g.s.boards.removePlace(context.Background(), ctx.campaignID, placeID); err != nil {
+		g.wsError(sock, "não consegui apagar o lugar")
+		return
+	}
+	ackOK(ctx.ack, map[string]any{"places": g.s.boards.places(context.Background(), ctx.campaignID)})
 }
 
 // onBoardTerrainPaint (mestre) marca ou desmarca uma casa como terreno difícil.

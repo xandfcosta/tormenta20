@@ -117,6 +117,16 @@ export type BoardState = {
   pending?: PendingMove | null
 }
 
+/** Uma cena guardada da crônica (ALE-124, fatia 5). Sem as peças: a lista serve
+ *  para escolher onde jogar, e mandar a cena inteira de cada lugar seria mandar
+ *  o acervo do mestre a cada abertura de menu. */
+export type BoardPlace = {
+  id: number
+  name: string
+  tokens: number
+  updatedAt: string
+}
+
 export type RestScope = 'scene' | 'day'
 export type RestCondition = 'ruim' | 'normal' | 'confortavel' | 'luxuosa'
 
@@ -187,6 +197,12 @@ export type SessionRealtime = {
    *  alternado: o pincel pinta ARRASTANDO, e o arraste passa duas vezes pela
    *  mesma casa. */
   paintTerrain: (x: number, y: number, difficult: boolean) => void
+  /** Os lugares guardados da crônica (mestre). PERGUNTA com resposta, e não
+   *  estado de broadcast: o acervo é preparação, não muda com a cena, e mandá-lo
+   *  a cada snapshot seria carregar o armário do mestre em toda mensagem. */
+  listPlaces: () => Promise<BoardPlace[]>
+  reopenPlace: (placeId: number) => void
+  removePlace: (placeId: number) => Promise<BoardPlace[]>
   /** Propõe um movimento: a mesa vê o caminho, e ninguém pousou ainda. */
   proposeMove: (tokenId: string, path: { x: number; y: number }[]) => void
   /**
@@ -296,6 +312,25 @@ export function createSessionSocket(
     socket?.emit(event, { campaignId: campaignId(), sessionId: sessionId(), ...body })
   }
 
+  /** Pergunta e espera a resposta. Sem socket, devolve vazio em vez de pendurar
+   *  a tela numa promessa que nunca resolve. */
+  const askPlaces = (event: string, body: Record<string, unknown> = {}) =>
+    new Promise<BoardPlace[]>((resolve) => {
+      if (!socket) {
+        resolve([])
+        return
+      }
+      socket.emit(
+        event,
+        { campaignId: campaignId(), sessionId: sessionId(), ...body },
+        (ack: unknown) => {
+          const lugares =
+            typeof ack === 'object' && ack && 'places' in ack ? (ack as { places: BoardPlace[] }).places : []
+          resolve(lugares ?? [])
+        },
+      )
+    })
+
   return {
     state,
     isConnected,
@@ -329,6 +364,9 @@ export function createSessionSocket(
     updateToken: (tokenId, patch) => send('board-token-update', { tokenId, patch }),
     populateBoard: () => send('board-populate'),
     paintTerrain: (x, y, difficult) => send('board-terrain-paint', { x, y, difficult }),
+    listPlaces: () => askPlaces('board-places'),
+    reopenPlace: (placeId) => send('board-reopen', { placeId }),
+    removePlace: (placeId) => askPlaces('board-place-remove', { placeId }),
     proposeMove: (tokenId, path) => send('board-move-propose', { tokenId, path }),
     commitMove: (version) => send('board-move-commit', { version }),
     cancelMove: () => send('board-move-cancel'),

@@ -41,8 +41,17 @@ export function DeleteSessionButton(props: {
       confirmLabel="Excluir"
       onConfirm={() => void remove()}
       trigger={(open) => (
-        <Button variant="destructive" size="sm" disabled={pending()} onClick={open}>
-          <Trash2 aria-hidden="true" class="mr-1 size-3.5" /> Excluir sessão
+        // Contorno, e não `destructive`: numa faixa de ajuste o vermelho cheio
+        // fazia da ação mais rara e irreversível o elemento mais forte da tela.
+        // O vermelho vive na CONFIRMAÇÃO, que é onde a decisão acontece.
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={pending()}
+          onClick={open}
+          class="text-destructive hover:text-destructive"
+        >
+          <Trash2 aria-hidden="true" class="mr-1 size-3.5" /> Excluir
         </Button>
       )}
     />

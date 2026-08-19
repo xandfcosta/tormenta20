@@ -10,18 +10,20 @@ import {
   Users,
   X,
 } from 'lucide-solid'
-import { For, Show, createMemo, createSignal } from 'solid-js'
+import { For, Show, createEffect, createMemo, createSignal } from 'solid-js'
 import { pathBetween } from '@/features/battle-board/board-path'
 import { TokenActions } from '@/features/battle-board/token-actions'
 import { TokenDialog } from '@/features/battle-board/token-dialog'
 import { BoardView } from '@/features/battle-board/board-view'
 import { type BoardViewport, SQUARE_METRES } from '@/features/battle-board/board-viewport'
 import { OpenBoardDialog } from '@/features/battle-board/open-board-dialog'
+import { PlacesList } from '@/features/battle-board/places-list'
 import { upcomingTurns } from '@/features/session-tracker/tracker-rules'
 import { SceneContainerProvider, useSceneContainer } from '@/shared/lib/scene-container'
 import { type FullscreenController, createFullscreen } from '@/shared/lib/fullscreen'
 import { boardReach } from '@/shared/lib/engine-wasm'
 import type {
+  BoardPlace,
   BoardState,
   BoardToken,
   InitiativeEntry,
@@ -58,6 +60,19 @@ export function BoardRegion(props: {
   onOpenCombatant?: (entryId: string) => void
 }) {
   const [selectedTokenId, setSelectedTokenId] = createSignal<string | null>(null)
+  // O acervo de cenas guardadas. Buscado sob demanda e não pelo snapshot: ele
+  // não muda com a partida, e mandá-lo em toda mensagem seria carregar o
+  // armário do mestre a cada peça movida (ALE-124, fatia 5).
+  const [places, setPlaces] = createSignal<BoardPlace[]>([])
+  const refreshPlaces = () => {
+    if (!props.isGm) return
+    void props.rt.listPlaces().then(setPlaces)
+  }
+  // Recarrega quando a mesa FICA sem tabuleiro: encerrar acabou de guardar uma
+  // cena, e a lista tem de mostrá-la sem ninguém recarregar a página.
+  createEffect(() => {
+    if (props.rt.board() === null) refreshPlaces()
+  })
   // O pincel é MODO e não gesto: enquanto ele está ligado, a casa clicada (ou
   // arrastada) vira terreno difícil em vez de receber a peça. Modo porque o
   // clique numa casa já tem dono — pousar —, e porque gesto com tecla não
@@ -175,7 +190,18 @@ export function BoardRegion(props: {
         // a seção precisa pintar o próprio fundo.
         class="scene-grimorio @container flex w-full min-h-0 min-w-0 flex-1 flex-col rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)]"
       >
-      <Show when={board()} fallback={<EmptyBoard isGm={props.isGm} onOpen={props.rt.openBoard} />}>
+      <Show
+        when={board()}
+        fallback={
+          <EmptyBoard
+            isGm={props.isGm}
+            onOpen={props.rt.openBoard}
+            places={places()}
+            onReopen={props.rt.reopenPlace}
+            onRemovePlace={(placeId) => void props.rt.removePlace(placeId).then(setPlaces)}
+          />
+        }
+      >
         {(live) => (
           <>
             <header class="flex shrink-0 flex-wrap items-center gap-2 border-b border-grimorio-iron px-3 py-2">
@@ -420,9 +446,15 @@ function ViewControls(props: {
  * Sessão sem tabuleiro. O estado vazio é do MESTRE: o jogador não abre cena, e
  * dizer a ele "abra um tabuleiro" seria oferecer um botão que não existe.
  */
-function EmptyBoard(props: { isGm: boolean; onOpen: (place: string, terrain: string) => void }) {
+function EmptyBoard(props: {
+  isGm: boolean
+  onOpen: (place: string, terrain: string) => void
+  places: readonly BoardPlace[]
+  onReopen: (placeId: number) => void
+  onRemovePlace: (placeId: number) => void
+}) {
   return (
-    <div class="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+    <div class="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto p-6 text-center">
       <LayoutGrid aria-hidden="true" class="size-8 text-muted-foreground" />
       <p class="text-sm text-muted-foreground">
         {props.isGm
@@ -433,6 +465,13 @@ function EmptyBoard(props: { isGm: boolean; onOpen: (place: string, terrain: str
         <OpenBoardDialog
           onOpen={props.onOpen}
           trigger={(open) => <Button onClick={open}>Abrir tabuleiro</Button>}
+        />
+        {/* O acervo vem DEPOIS do botão de abrir: montar uma cena nova é o que
+            se faz na primeira noite, e reabrir é o que se faz nas outras. */}
+        <PlacesList
+          places={props.places}
+          onReopen={props.onReopen}
+          onRemove={props.onRemovePlace}
         />
       </Show>
     </div>

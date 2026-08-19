@@ -578,6 +578,15 @@ func (q *Queries) DeleteCampaignCreature(ctx context.Context, id int64) error {
 	return err
 }
 
+const deleteCampaignPlace = `-- name: DeleteCampaignPlace :exec
+DELETE FROM campaign_places WHERE id = ?
+`
+
+func (q *Queries) DeleteCampaignPlace(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteCampaignPlace, id)
+	return err
+}
+
 const deleteEffectByID = `-- name: DeleteEffectByID :exec
 DELETE FROM active_effects WHERE id = ?
 `
@@ -725,6 +734,29 @@ func (q *Queries) EndSession(ctx context.Context, arg EndSessionParams) (Session
 	return i, err
 }
 
+const findCampaignPlaceByName = `-- name: FindCampaignPlaceByName :one
+SELECT id, campaignid, name, state, createdat, updatedat FROM campaign_places WHERE campaignId = ? AND name = ? LIMIT 1
+`
+
+type FindCampaignPlaceByNameParams struct {
+	Campaignid int64  `json:"campaignid"`
+	Name       string `json:"name"`
+}
+
+func (q *Queries) FindCampaignPlaceByName(ctx context.Context, arg FindCampaignPlaceByNameParams) (CampaignPlace, error) {
+	row := q.db.QueryRowContext(ctx, findCampaignPlaceByName, arg.Campaignid, arg.Name)
+	var i CampaignPlace
+	err := row.Scan(
+		&i.ID,
+		&i.Campaignid,
+		&i.Name,
+		&i.State,
+		&i.Createdat,
+		&i.Updatedat,
+	)
+	return i, err
+}
+
 const getAccountInvite = `-- name: GetAccountInvite :one
 SELECT id, token, createdby, createdat, expiresat, usedat, usedby FROM account_invites WHERE token = ? LIMIT 1
 `
@@ -835,6 +867,24 @@ func (q *Queries) GetCampaignCreature(ctx context.Context, id int64) (CampaignCr
 		&i.Campaignid,
 		&i.Name,
 		&i.Block,
+		&i.Createdat,
+		&i.Updatedat,
+	)
+	return i, err
+}
+
+const getCampaignPlace = `-- name: GetCampaignPlace :one
+SELECT id, campaignid, name, state, createdat, updatedat FROM campaign_places WHERE id = ? LIMIT 1
+`
+
+func (q *Queries) GetCampaignPlace(ctx context.Context, id int64) (CampaignPlace, error) {
+	row := q.db.QueryRowContext(ctx, getCampaignPlace, id)
+	var i CampaignPlace
+	err := row.Scan(
+		&i.ID,
+		&i.Campaignid,
+		&i.Name,
+		&i.State,
 		&i.Createdat,
 		&i.Updatedat,
 	)
@@ -1267,6 +1317,43 @@ func (q *Queries) ListCampaignCreatures(ctx context.Context, campaignid int64) (
 			&i.Campaignid,
 			&i.Name,
 			&i.Block,
+			&i.Createdat,
+			&i.Updatedat,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listCampaignPlaces = `-- name: ListCampaignPlaces :many
+SELECT id, campaignid, name, state, createdat, updatedat FROM campaign_places WHERE campaignId = ? ORDER BY name
+`
+
+// Lugares da cronica (ALE-124, fatia 5): a cena montada que sobrevive ao fim do
+// tabuleiro. Listados por nome porque e por ele que o mestre procura a taverna;
+// o resto da cena e JSON, mesmo arranjo do bloco de criatura.
+func (q *Queries) ListCampaignPlaces(ctx context.Context, campaignid int64) ([]CampaignPlace, error) {
+	rows, err := q.db.QueryContext(ctx, listCampaignPlaces, campaignid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CampaignPlace{}
+	for rows.Next() {
+		var i CampaignPlace
+		if err := rows.Scan(
+			&i.ID,
+			&i.Campaignid,
+			&i.Name,
+			&i.State,
 			&i.Createdat,
 			&i.Updatedat,
 		); err != nil {
@@ -2018,6 +2105,43 @@ func (q *Queries) ResetSessionTracker(ctx context.Context, arg ResetSessionTrack
 	return err
 }
 
+const saveCampaignPlace = `-- name: SaveCampaignPlace :one
+INSERT INTO campaign_places (campaignId, name, state, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?)
+RETURNING id, campaignid, name, state, createdat, updatedat
+`
+
+type SaveCampaignPlaceParams struct {
+	Campaignid int64  `json:"campaignid"`
+	Name       string `json:"name"`
+	State      string `json:"state"`
+	Createdat  string `json:"createdat"`
+	Updatedat  string `json:"updatedat"`
+}
+
+// Arquivar sobrescreve o lugar de mesmo nome na mesma cronica: o mestre que
+// reabre a taverna, move duas pecas e encerra de novo espera UMA taverna, e nao
+// uma pilha de tavernas quase iguais.
+func (q *Queries) SaveCampaignPlace(ctx context.Context, arg SaveCampaignPlaceParams) (CampaignPlace, error) {
+	row := q.db.QueryRowContext(ctx, saveCampaignPlace,
+		arg.Campaignid,
+		arg.Name,
+		arg.State,
+		arg.Createdat,
+		arg.Updatedat,
+	)
+	var i CampaignPlace
+	err := row.Scan(
+		&i.ID,
+		&i.Campaignid,
+		&i.Name,
+		&i.State,
+		&i.Createdat,
+		&i.Updatedat,
+	)
+	return i, err
+}
+
 const saveSessionBoard = `-- name: SaveSessionBoard :exec
 INSERT INTO session_boards (sessionId, state, updatedAt) VALUES (?, ?, ?)
 ON CONFLICT(sessionId) DO UPDATE SET state = excluded.state, updatedAt = excluded.updatedAt
@@ -2389,6 +2513,32 @@ func (q *Queries) UpdateCampaignCreature(ctx context.Context, arg UpdateCampaign
 		&i.Campaignid,
 		&i.Name,
 		&i.Block,
+		&i.Createdat,
+		&i.Updatedat,
+	)
+	return i, err
+}
+
+const updateCampaignPlace = `-- name: UpdateCampaignPlace :one
+UPDATE campaign_places SET state = ?, updatedAt = ?
+WHERE id = ?
+RETURNING id, campaignid, name, state, createdat, updatedat
+`
+
+type UpdateCampaignPlaceParams struct {
+	State     string `json:"state"`
+	Updatedat string `json:"updatedat"`
+	ID        int64  `json:"id"`
+}
+
+func (q *Queries) UpdateCampaignPlace(ctx context.Context, arg UpdateCampaignPlaceParams) (CampaignPlace, error) {
+	row := q.db.QueryRowContext(ctx, updateCampaignPlace, arg.State, arg.Updatedat, arg.ID)
+	var i CampaignPlace
+	err := row.Scan(
+		&i.ID,
+		&i.Campaignid,
+		&i.Name,
+		&i.State,
 		&i.Createdat,
 		&i.Updatedat,
 	)
