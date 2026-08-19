@@ -1,6 +1,7 @@
-import { Check, Crosshair, Eye, Maximize, Minimize, Undo2 } from 'lucide-solid'
+import { Check, Crosshair, Eye, Maximize, Minimize, Undo2, X } from 'lucide-solid'
 import { Show } from 'solid-js'
 import type { BoardState } from '@/shared/realtime/realtime'
+import type { BoardMeasurement } from '@/shared/lib/engine-wasm'
 import { Button } from '@/shared/ui/button'
 import type { FullscreenController } from '@/shared/lib/fullscreen'
 import { type BoardViewport, SQUARE_METRES } from './board-viewport'
@@ -125,6 +126,36 @@ export function ViewControls(props: {
           </Show>
         </Button>
       </Show>
+    </div>
+  )
+}
+
+/**
+ * A leitura da régua (ALE-124, fatia 6).
+ *
+ * Diz a distância em QUADRADOS e em metros — quadrado é a unidade da regra
+ * (p236), metro é a unidade da conversa — e, principalmente, a FAIXA de alcance
+ * do livro (p224). É a faixa que responde a pergunta real: "10,5m" obriga o
+ * jogador a lembrar que curto são 9m, enquanto "alcance médio" já é a resposta.
+ */
+export function RulerBar(props: { reading: BoardMeasurement; onClose: () => void }) {
+  const metres = () => props.reading.metres.toFixed(1).replace('.', ',')
+  const faixa = () =>
+    props.reading.band === 'além'
+      ? 'além do alcance longo'
+      : `alcance ${props.reading.band}`
+
+  return (
+    <div
+      role="status"
+      class="flex shrink-0 flex-wrap items-center gap-2 border-t border-grimorio-iron px-3 py-1.5"
+    >
+      <p class="font-mono text-[11px] tabular-nums text-grimorio-gold">
+        {props.reading.squares} {props.reading.squares === 1 ? 'quadrado' : 'quadrados'} ({metres()}m) · {faixa()}
+      </p>
+      <Button size="sm" variant="ghost" class="ml-auto" aria-label="Guardar a régua" onClick={() => props.onClose()}>
+        <X aria-hidden="true" class="size-4" />
+      </Button>
     </div>
   )
 }

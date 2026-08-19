@@ -20,7 +20,7 @@ import { tokenAppearance } from './token-appearance'
  * um `<button>` de verdade com nome acessível que diz quem e onde — num canvas
  * isso viraria um DOM espelho invisível, escrito duas vezes.
  *
- * @example <BoardView board={board()} view={viewport} onPlaceToken={place} />
+ * @example <BoardView board={board()} view={viewport} onSquareClick={place} />
  */
 export function BoardView(props: {
   board: BoardState
@@ -28,8 +28,10 @@ export function BoardView(props: {
   /** Ausente = ninguém seleciona nada (a vista do jogador nesta fatia). */
   onSelectToken?: (tokenId: string) => void
   selectedTokenId?: string | null
-  /** Ausente para quem não posiciona peça — só o mestre, nesta fatia. */
-  onPlaceToken?: (x: number, y: number) => void
+  /** O que um clique num QUADRADO faz — pousar a peça na mão, ou fixar uma
+   *  ponta da régua. Ausente = a camada de casas nem existe, e com ela some um
+   *  campo minado de centenas de botões no leitor de tela. */
+  onSquareClick?: (x: number, y: number) => void
   /** Peça cuja linha está na vez: o anel dourado é o mesmo sinal da iniciativa. */
   activeEntryId?: string | null
   /**
@@ -47,6 +49,8 @@ export function BoardView(props: {
   difficult?: readonly BoardSquare[]
   /** Presente = ferramenta na mão: arrastar PINTA em vez de mover a vista. */
   onPaintSquare?: (x: number, y: number, secondary: boolean) => void
+  /** As duas pontas da régua, quando a mesa está medindo (T20 p224). */
+  ruler?: { from: BoardSquare; to: BoardSquare } | null
   /** O teclado da superfície (ALE-194): quem interpreta as teclas é a cena, que
    *  é quem sabe se há peça na mão e quem pode movê-la. */
   onKeyDown?: (event: KeyboardEvent) => void
@@ -125,7 +129,7 @@ export function BoardView(props: {
         }}
       />
 
-      <Show when={props.onPlaceToken}>
+      <Show when={props.onSquareClick}>
         {(place) => (
           <SquareLayer
             view={view()}
@@ -139,6 +143,8 @@ export function BoardView(props: {
       <DifficultLayer view={view()} squares={props.difficult ?? []} />
 
       <Show when={props.pending}>{(move) => <PendingPath move={move()} view={view()} />}</Show>
+
+      <Show when={props.ruler}>{(linha) => <RulerLine ends={linha()} view={view()} />}</Show>
 
       {/* `Index` sobre a lista INTEIRA do servidor, com a visibilidade num
           `Show` por peça — e as duas metades desta linha são consertos.
@@ -320,6 +326,40 @@ function PendingPath(props: { move: PendingMove; view: BoardViewport }) {
         height={props.view.cellPx()}
         fill="var(--grimorio-gold)"
         opacity="0.25"
+      />
+    </svg>
+  )
+}
+
+/**
+ * A linha da régua (ALE-124, fatia 6). Reta e contínua, ao contrário do caminho
+ * proposto, que é tracejado e dobra pelos quadrados: são coisas diferentes —
+ * um é por onde a peça VAI, a outra é a distância até onde se quer acertar.
+ */
+function RulerLine(props: { ends: { from: BoardSquare; to: BoardSquare }; view: BoardViewport }) {
+  const centro = (square: BoardSquare) => ({
+    x: (square.x - props.view.originX()) * props.view.cellPx() + props.view.cellPx() / 2,
+    y: (square.y - props.view.originY()) * props.view.cellPx() + props.view.cellPx() / 2,
+  })
+
+  return (
+    <svg class="pointer-events-none absolute inset-0 size-full" aria-hidden="true">
+      <line
+        x1={centro(props.ends.from).x}
+        y1={centro(props.ends.from).y}
+        x2={centro(props.ends.to).x}
+        y2={centro(props.ends.to).y}
+        stroke="var(--grimorio-gold)"
+        stroke-width="2"
+      />
+      <circle cx={centro(props.ends.from).x} cy={centro(props.ends.from).y} r="4" fill="var(--grimorio-gold)" />
+      <circle
+        cx={centro(props.ends.to).x}
+        cy={centro(props.ends.to).y}
+        r="6"
+        fill="none"
+        stroke="var(--grimorio-gold)"
+        stroke-width="2"
       />
     </svg>
   )

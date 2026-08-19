@@ -1131,3 +1131,57 @@ describe('o teclado do tabuleiro', () => {
     ])
   })
 })
+
+
+/**
+ * A régua da mesa (ALE-124, fatia 6).
+ *
+ * "Dá para acertar daqui?" é pergunta de toda rodada, e até aqui se respondia
+ * contando quadrado com o dedo na tela — que é justamente o que um tabuleiro
+ * digital deveria poupar.
+ *
+ * Estes testes rodam o MOTOR GO de verdade pelo wasm, o mesmo que o servidor
+ * usa: o que se prova não é a aritmética (essa está provada contra a p224 lá),
+ * é a LIGAÇÃO — o clique vira medida e a medida vira a frase que a mesa lê.
+ */
+describe('a régua', () => {
+  it('mede entre dois quadrados e diz a faixa de alcance do livro', async () => {
+    const { user } = renderRegion(true)
+
+    await user.click(screen.getByRole('button', { name: 'Régua' }))
+    await user.click(screen.getByRole('button', { name: 'Coluna 0, linha 0' }))
+    await user.click(screen.getByRole('button', { name: 'Coluna 4, linha 4' }))
+
+    // Quatro passos na diagonal são OITO quadrados: a diagonal custa o dobro
+    // (p238), e é a mesma régua do movimento — o alvo que outros jogos poriam
+    // no alcance curto, aqui está no médio (p224).
+    expect(screen.getByRole('status')).toHaveTextContent('8 quadrados (12,0m) · alcance médio')
+  })
+
+  // Medir é de quem joga, não só de quem mestra: quem pergunta "dá para acertar
+  // daqui?" é quem vai atacar.
+  it('o jogador também tem régua', async () => {
+    const { user } = renderRegion(false, COM_JOGADOR, 'e1', {
+      myCharacterIds: MEU_HEROI,
+      turnIndex: 0,
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Régua' }))
+    await user.click(screen.getByRole('button', { name: 'Coluna 0, linha 0' }))
+    await user.click(screen.getByRole('button', { name: 'Coluna 6, linha 0' }))
+
+    expect(screen.getByRole('status')).toHaveTextContent('6 quadrados (9,0m) · alcance curto')
+  })
+
+  // Com a régua na mão o clique numa casa MEDE: o clique já tinha dono, e dois
+  // donos para o mesmo gesto é como se perde a peça de lugar sem querer.
+  it('com a régua ligada, o clique não pousa a peça', async () => {
+    const { rt, user } = renderRegion(true)
+
+    await user.click(screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' }))
+    await user.click(screen.getByRole('button', { name: 'Régua' }))
+    await user.click(screen.getByRole('button', { name: 'Coluna 5, linha 3' }))
+
+    expect(rt.updateToken).not.toHaveBeenCalled()
+  })
+})

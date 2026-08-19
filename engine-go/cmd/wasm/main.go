@@ -213,6 +213,27 @@ func boardReach(_ js.Value, args []js.Value) any {
 	return string(out)
 }
 
+// boardMeasure é a RÉGUA da mesa: a distância entre dois quadrados, em
+// quadrados e em metros, com a faixa de alcance do livro (T20 p224).
+//
+// Mora no motor pela mesma razão do custo do caminho: a diagonal dobrada é
+// regra, e uma segunda implementação na tela seria uma segunda verdade. Aqui não
+// há ida ao servidor NENHUMA — a régua não muda estado e ninguém mais precisa
+// vê-la, então ela vive inteira no navegador.
+//
+// Pura: não precisa de `primeEngineCatalogs`.
+func boardMeasure(_ js.Value, args []js.Value) any {
+	var payload struct {
+		From engine.Square `json:"from"`
+		To   engine.Square `json:"to"`
+	}
+	if err := json.Unmarshal([]byte(args[0].String()), &payload); err != nil {
+		return errorJSON(err)
+	}
+	out, _ := json.Marshal(engine.Measure(payload.From, payload.To))
+	return string(out)
+}
+
 // boardBudget converte deslocamento em metros para quadrados (T20 p106).
 func boardBudget(_ js.Value, args []js.Value) any {
 	out, _ := json.Marshal(map[string]int{"squares": engine.SquaresForDisplacement(args[0].Float())})
@@ -244,6 +265,7 @@ func main() {
 	js.Global().Set("spellPmLimit", js.FuncOf(spellPmLimit))
 	js.Global().Set("boardPathCost", js.FuncOf(boardPathCost))
 	js.Global().Set("boardReach", js.FuncOf(boardReach))
+	js.Global().Set("boardMeasure", js.FuncOf(boardMeasure))
 	js.Global().Set("boardBudget", js.FuncOf(boardBudget))
 	js.Global().Set("boardFootprint", js.FuncOf(boardFootprint))
 	select {} // keep the runtime alive

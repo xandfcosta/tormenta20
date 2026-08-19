@@ -1,8 +1,9 @@
-import { Brush, Eraser, Eye, Library, Users, X } from 'lucide-solid'
+import { Brush, Eraser, Eye, Library, Ruler as RulerIcon, Users, X } from 'lucide-solid'
 import { Show, createEffect, createMemo, createSignal, on } from 'solid-js'
 import { boardKeyAction } from '@/features/battle-board/board-keys'
+import { createRuler } from '@/features/battle-board/ruler'
 import { pathBetween } from '@/features/battle-board/board-path'
-import { MoveBar, PlayerLensBar, ViewControls } from '@/features/battle-board/board-bars'
+import { MoveBar, PlayerLensBar, RulerBar, ViewControls } from '@/features/battle-board/board-bars'
 import { BoardView } from '@/features/battle-board/board-view'
 import { type BoardViewport, SQUARE_METRES } from '@/features/battle-board/board-viewport'
 import { EmptyBoard } from '@/features/battle-board/empty-board'
@@ -154,6 +155,22 @@ export function BoardRegion(props: {
     if (secondary) setTool('eraser')
     props.rt.paintTerrain(x, y, !secondary && tool() === 'brush')
   }
+  /**
+   * A régua (ALE-124, fatia 6). É de TODO MUNDO e não só do mestre: "dá para
+   * acertar daqui?" é pergunta de quem ataca, e hoje se responde contando
+   * quadrado com o dedo na tela.
+   *
+   * Enquanto ela está ligada o clique numa casa MEDE em vez de pousar a peça —
+   * mesma regra do pincel, e pela mesma razão: o clique já tem dono.
+   */
+  const ruler = createRuler()
+  const [measuring, setMeasuring] = createSignal(false)
+  const toggleRuler = () => {
+    ruler.clear()
+    setSelectedTokenId(null)
+    setMeasuring((ligada) => !ligada)
+  }
+
   // A tela cheia é do TABULEIRO e não da página: pôr a página inteira em tela
   // cheia deixaria o mapa do mesmo tamanho, dividindo a tela com a iniciativa.
   const [sceneEl, setSceneEl] = createSignal<HTMLElement | null>(null)
@@ -356,6 +373,17 @@ export function BoardRegion(props: {
                   onFit={() => props.view.fit(live().tokens)}
                   fullscreen={fullscreen}
                 />
+                {/* Fora do bloco do mestre de propósito: medir é de quem joga. */}
+                <Button
+                  size="sm"
+                  variant={measuring() ? 'default' : 'ghost'}
+                  aria-pressed={measuring()}
+                  aria-label="Régua"
+                  title="Régua"
+                  onClick={toggleRuler}
+                >
+                  <RulerIcon aria-hidden="true" class="size-4" />
+                </Button>
                 <Show when={props.isGm}>
                   {/* Ícone só, como a borracha: o cabeçalho acabou de perder
                       seis botões por ocupar o lugar de quem trabalha (ALE-124),
@@ -458,7 +486,6 @@ export function BoardRegion(props: {
               activeEntryId={props.activeEntryId}
               selectedTokenId={selectedTokenId()}
               movableTokenIds={movableTokenIds()}
-              reachable={reachable()}
               pending={cena(live()).pending}
               // Quem não pode mover NENHUMA peça também não seleciona: sem isso
               // a camada de quadrados nasceria com centenas de botões inertes
@@ -468,7 +495,17 @@ export function BoardRegion(props: {
               // isto o mesmo clique pintava duas vezes (o gesto e o botão da
               // casa), e com uma peça selecionada ele ainda a pousava no meio
               // do desenho.
-              onPlaceToken={!painting() && selectedTokenId() ? placeSelected : undefined}
+              onSquareClick={
+                measuring()
+                  ? ruler.pick
+                  : !painting() && selectedTokenId()
+                    ? placeSelected
+                    : undefined
+              }
+              // Com a régua ligada, TODA casa responde: mede-se para onde não
+              // se pode andar, que é justamente a pergunta do ataque.
+              reachable={measuring() ? undefined : reachable()}
+              ruler={ruler.from() && ruler.to() ? { from: ruler.from()!, to: ruler.to()! } : null}
               difficult={cena(live()).difficult}
               // Arrastar com a ferramenta na mão PINTA em vez de mover a vista.
               onPaintSquare={painting() ? paintSquare : undefined}
@@ -494,6 +531,10 @@ export function BoardRegion(props: {
                   }
                 />
               )}
+            </Show>
+
+            <Show when={ruler.reading()}>
+              {(leitura) => <RulerBar reading={leitura()} onClose={toggleRuler} />}
             </Show>
 
             <Show when={live().pending}>

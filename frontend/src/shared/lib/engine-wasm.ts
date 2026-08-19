@@ -56,6 +56,7 @@ type GlobalWithGo = typeof globalThis & {
   spellPmLimit?: (charJson: string, spellClassesJson: string) => string
   boardPathCost?: (payloadJson: string) => string
   boardReach?: (payloadJson: string) => string
+  boardMeasure?: (payloadJson: string) => string
   boardBudget?: (metres: number) => string
   boardFootprint?: (size: string) => string
 }
@@ -326,6 +327,33 @@ export function boardPathCost(
   const out = JSON.parse(fn(JSON.stringify({ path, difficult, budget: budgetSquares }))) as
     | BoardMoveCost
     | { error: string }
+  if ('error' in out) throw new Error(`engine-wasm: ${out.error}`)
+  return out
+}
+
+/** A leitura da régua entre dois quadrados — espelha o `Measurement` do Go. A
+ *  faixa é a do livro (T20 p224): curto até 6 quadrados, médio até 20, longo
+ *  até 60, e "além" do longo não é faixa, é fora de alcance. */
+export type BoardMeasurement = {
+  squares: number
+  metres: number
+  band: 'curto' | 'médio' | 'longo' | 'além'
+}
+
+/**
+ * A régua da mesa: a distância entre dois quadrados, com a faixa de alcance do
+ * livro (p224). "Dá para acertar daqui?" respondido sem ninguém contar quadrado.
+ *
+ * A diagonal custa o DOBRO, como no movimento (p238) — é decisão de mesa, e é o
+ * que impede duas réguas diferentes no mesmo mapa. Vive inteira no navegador:
+ * medir não muda estado e ninguém mais precisa ver.
+ *
+ * @example boardMeasure({x:0,y:0}, {x:4,y:4}) // { squares: 8, metres: 12, band: 'médio' }
+ */
+export function boardMeasure(from: BoardSquare, to: BoardSquare): BoardMeasurement {
+  const fn = (globalThis as GlobalWithGo).boardMeasure
+  if (!fn) throw new Error('engine-wasm: engine not ready — call ensureEngine() first')
+  const out = JSON.parse(fn(JSON.stringify({ from, to }))) as BoardMeasurement | { error: string }
   if ('error' in out) throw new Error(`engine-wasm: ${out.error}`)
   return out
 }

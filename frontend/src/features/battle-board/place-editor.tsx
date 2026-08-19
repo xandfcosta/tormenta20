@@ -158,7 +158,7 @@ export function PlaceEditor(props: {
         selectedTokenId={selectedTokenId()}
         movableTokenIds={new Set(tokens().map((peca) => peca.id))}
         onSelectToken={selectToken}
-        onPlaceToken={tool() === null && selectedTokenId() ? placeSelected : undefined}
+        onSquareClick={tool() === null && selectedTokenId() ? placeSelected : undefined}
         difficult={difficult()}
         onPaintSquare={tool() !== null ? paintSquare : undefined}
         onKeyDown={onKeyDown}
