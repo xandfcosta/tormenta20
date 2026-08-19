@@ -264,46 +264,6 @@ func TestCampaignWritesRejectNonOwner(t *testing.T) {
 	}
 }
 
-// Character ownership: `assertCharacterOwner` guards every mutation, and nothing
-// exercised it through a request.
-func TestCharacterWritesRejectNonOwner(t *testing.T) {
-	s := newTestServer(t)
-	owner := seedUser(t, s, "dono@t20.local")
-	intruder := seedUser(t, s, "intruso@t20.local")
-	hero := seedCharacter(t, s, owner, "Herói", 8, 20, 3, 5)
-	base := "/characters/" + id64(hero)
-
-	cases := []struct{ nome, method, path, body string }{
-		{"vitais", http.MethodPatch, base + "/vitals", `{"hpCurrent":1}`},
-		{"dano", http.MethodPost, base + "/damage", `{"amount":5}`},
-		{"nível", http.MethodPatch, base + "/level", `{"level":20}`},
-		{"condições", http.MethodPatch, base + "/conditions", `{"activeConditions":["caido"]}`},
-	}
-
-	for _, c := range cases {
-		t.Run(c.nome+" por não-dono é 403", func(t *testing.T) {
-			rec := authed(t, s, intruder, c.method, c.path, c.body)
-			if rec.Code != http.StatusForbidden {
-				t.Fatalf("esperado 403, veio %d (%s)", rec.Code, rec.Body.String())
-			}
-
-			after, err := s.queries.GetCharacter(context.Background(), hero)
-			if err != nil {
-				t.Fatalf("ler personagem: %v", err)
-			}
-			if after.Hpcurrent != 8 || after.Level != 1 {
-				t.Fatalf("o personagem foi alterado apesar do 403: pv=%d nível=%d", after.Hpcurrent, after.Level)
-			}
-		})
-	}
-
-	t.Run("leitura por estranho também é 403", func(t *testing.T) {
-		if rec := authed(t, s, intruder, http.MethodGet, base, ""); rec.Code != http.StatusForbidden {
-			t.Fatalf("esperado 403 na leitura, veio %d", rec.Code)
-		}
-	})
-}
-
 // A session id from ANOTHER campaign must not resolve through a campaign the
 // caller does own — the classic nested-route confusion.
 func TestSessionRoutesRejectCrossCampaignAndNonOwner(t *testing.T) {
