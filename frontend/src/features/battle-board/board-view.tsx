@@ -49,6 +49,8 @@ export function BoardView(props: {
   difficult?: readonly BoardSquare[]
   /** Presente = ferramenta na mão: arrastar PINTA em vez de mover a vista. */
   onPaintSquare?: (x: number, y: number, secondary: boolean) => void
+  /** As casas cobertas pelo gabarito de área, quando há um (T20 p225). */
+  area?: readonly BoardSquare[]
   /** As duas pontas da régua, quando a mesa está medindo (T20 p224). */
   ruler?: { from: BoardSquare; to: BoardSquare } | null
   /** O teclado da superfície (ALE-194): quem interpreta as teclas é a cena, que
@@ -141,6 +143,11 @@ export function BoardView(props: {
       </Show>
 
       <DifficultLayer view={view()} squares={props.difficult ?? []} />
+
+      {/* O gabarito vai ACIMA do terreno e ABAIXO das peças: ele é o que está
+          acontecendo no chão, e esconder a peça que ele pega seria esconder a
+          resposta que ele existe para dar. */}
+      <AreaLayer view={view()} squares={props.area ?? []} />
 
       <Show when={props.pending}>{(move) => <PendingPath move={move()} view={view()} />}</Show>
 
@@ -328,6 +335,29 @@ function PendingPath(props: { move: PendingMove; view: BoardViewport }) {
         opacity="0.25"
       />
     </svg>
+  )
+}
+
+/**
+ * As casas do gabarito de área (T20 p225). Camada de pintura, sem nós
+ * clicáveis: quem responde ao clique continua sendo a `SquareLayer`.
+ */
+function AreaLayer(props: { view: BoardViewport; squares: readonly BoardSquare[] }) {
+  return (
+    <For each={props.squares}>
+      {(casa) => (
+        <div
+          aria-hidden="true"
+          class="pointer-events-none absolute bg-grimorio-gold/25 ring-1 ring-inset ring-grimorio-gold/40"
+          style={{
+            left: `${(casa.x - props.view.originX()) * props.view.cellPx()}px`,
+            top: `${(casa.y - props.view.originY()) * props.view.cellPx()}px`,
+            width: `${props.view.cellPx()}px`,
+            height: `${props.view.cellPx()}px`,
+          }}
+        />
+      )}
+    </For>
   )
 }
 

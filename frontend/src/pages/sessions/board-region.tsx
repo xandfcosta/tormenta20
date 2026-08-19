@@ -1,9 +1,10 @@
-import { Brush, Eraser, Eye, Library, Ruler as RulerIcon, Users, X } from 'lucide-solid'
+import { Brush, Eraser, Eye, Library, Radar, Ruler as RulerIcon, Users, X } from 'lucide-solid'
 import { Show, createEffect, createMemo, createSignal, on } from 'solid-js'
 import { boardKeyAction } from '@/features/battle-board/board-keys'
+import { createAreaTemplate } from '@/features/battle-board/area-template'
 import { createRuler } from '@/features/battle-board/ruler'
 import { pathBetween } from '@/features/battle-board/board-path'
-import { MoveBar, PlayerLensBar, RulerBar, ViewControls } from '@/features/battle-board/board-bars'
+import { AreaBar, MoveBar, PlayerLensBar, RulerBar, ViewControls } from '@/features/battle-board/board-bars'
 import { BoardView } from '@/features/battle-board/board-view'
 import { type BoardViewport, SQUARE_METRES } from '@/features/battle-board/board-viewport'
 import { EmptyBoard } from '@/features/battle-board/empty-board'
@@ -168,7 +169,22 @@ export function BoardRegion(props: {
   const toggleRuler = () => {
     ruler.clear()
     setSelectedTokenId(null)
+    setTemplating(false)
     setMeasuring((ligada) => !ligada)
+  }
+
+  /**
+   * O gabarito de área (ALE-124, fatia 6b). Como a régua, é de todo mundo e é
+   * local — desenhar não muda a cena. A FORMA vem do motor, transcrita da
+   * figura da p225; aqui só mora a escolha e onde ela foi posta.
+   */
+  const area = createAreaTemplate(() => board()?.tokens ?? [])
+  const [templating, setTemplating] = createSignal(false)
+  const toggleTemplate = () => {
+    area.clear()
+    setSelectedTokenId(null)
+    setMeasuring(false)
+    setTemplating((ligado) => !ligado)
   }
 
   // A tela cheia é do TABULEIRO e não da página: pôr a página inteira em tela
@@ -384,6 +400,16 @@ export function BoardRegion(props: {
                 >
                   <RulerIcon aria-hidden="true" class="size-4" />
                 </Button>
+                <Button
+                  size="sm"
+                  variant={templating() ? 'default' : 'ghost'}
+                  aria-pressed={templating()}
+                  aria-label="Gabarito de área"
+                  title="Gabarito de área"
+                  onClick={toggleTemplate}
+                >
+                  <Radar aria-hidden="true" class="size-4" />
+                </Button>
                 <Show when={props.isGm}>
                   {/* Ícone só, como a borracha: o cabeçalho acabou de perder
                       seis botões por ocupar o lugar de quem trabalha (ALE-124),
@@ -498,13 +524,16 @@ export function BoardRegion(props: {
               onSquareClick={
                 measuring()
                   ? ruler.pick
-                  : !painting() && selectedTokenId()
-                    ? placeSelected
-                    : undefined
+                  : templating()
+                    ? area.pick
+                    : !painting() && selectedTokenId()
+                      ? placeSelected
+                      : undefined
               }
               // Com a régua ligada, TODA casa responde: mede-se para onde não
               // se pode andar, que é justamente a pergunta do ataque.
-              reachable={measuring() ? undefined : reachable()}
+              reachable={measuring() || templating() ? undefined : reachable()}
+              area={area.squares()}
               ruler={ruler.from() && ruler.to() ? { from: ruler.from()!, to: ruler.to()! } : null}
               difficult={cena(live()).difficult}
               // Arrastar com a ferramenta na mão PINTA em vez de mover a vista.
@@ -531,6 +560,20 @@ export function BoardRegion(props: {
                   }
                 />
               )}
+            </Show>
+
+            <Show when={templating()}>
+              <AreaBar
+                kind={area.kind()}
+                onKind={area.chooseKind}
+                size={area.size()}
+                onSize={area.setSize}
+                needsDirection={area.needsDirection()}
+                hasOrigin={area.origin() !== null}
+                hasDirection={area.direction() !== null}
+                inside={area.inside()}
+                onClose={toggleTemplate}
+              />
             </Show>
 
             <Show when={ruler.reading()}>

@@ -1,7 +1,8 @@
 import { Check, Crosshair, Eye, Maximize, Minimize, Undo2, X } from 'lucide-solid'
-import { Show } from 'solid-js'
+import { For, Show } from 'solid-js'
 import type { BoardState } from '@/shared/realtime/realtime'
-import type { BoardMeasurement } from '@/shared/lib/engine-wasm'
+import type { BoardAreaKind, BoardMeasurement } from '@/shared/lib/engine-wasm'
+import { NumberInput } from '@/shared/ui/number-input'
 import { Button } from '@/shared/ui/button'
 import type { FullscreenController } from '@/shared/lib/fullscreen'
 import { type BoardViewport, SQUARE_METRES } from './board-viewport'
@@ -154,6 +155,95 @@ export function RulerBar(props: { reading: BoardMeasurement; onClose: () => void
         {props.reading.squares} {props.reading.squares === 1 ? 'quadrado' : 'quadrados'} ({metres()}m) · {faixa()}
       </p>
       <Button size="sm" variant="ghost" class="ml-auto" aria-label="Guardar a régua" onClick={() => props.onClose()}>
+        <X aria-hidden="true" class="size-4" />
+      </Button>
+    </div>
+  )
+}
+
+/** Os quatro tipos de área do livro (p225), na ordem em que a mesa os usa. */
+const AREA_KINDS: { id: BoardAreaKind; label: string; medida: string }[] = [
+  { id: 'esfera', label: 'Esfera', medida: 'raio' },
+  { id: 'cone', label: 'Cone', medida: 'alcance' },
+  { id: 'linha', label: 'Linha', medida: 'comprimento' },
+  { id: 'quadrado', label: 'Quadrado', medida: 'lado' },
+]
+
+/**
+ * A barra do gabarito de área (ALE-124, fatia 6b).
+ *
+ * Ela existe para responder, sem discussão, a pergunta que trava o turno do
+ * conjurador: "se eu soltar aqui, quem pega?". Por isso a LISTA de quem está
+ * dentro é o que ela tem de maior — o desenho no mapa mostra onde, mas é o nome
+ * que resolve a dúvida, e é o nome que a mesa fala em voz alta.
+ *
+ * O tamanho é dito em quadrados E em metros: quadrado é a unidade do gabarito
+ * (p236) e metro é a unidade em que a magia está escrita na ficha.
+ */
+export function AreaBar(props: {
+  kind: BoardAreaKind
+  onKind: (kind: BoardAreaKind) => void
+  size: number
+  onSize: (size: number) => void
+  needsDirection: boolean
+  hasOrigin: boolean
+  hasDirection: boolean
+  inside: readonly { id: string; label: string }[]
+  onClose: () => void
+}) {
+  const medida = () => AREA_KINDS.find((k) => k.id === props.kind)?.medida ?? 'tamanho'
+  const metros = () => (props.size * SQUARE_METRES).toFixed(1).replace('.', ',')
+  const dica = () => {
+    if (!props.hasOrigin) return 'Clique numa casa para pôr o gabarito.'
+    if (props.needsDirection && !props.hasDirection) return 'Clique de novo para apontar.'
+    return props.inside.length === 0 ? 'Ninguém dentro.' : ''
+  }
+
+  return (
+    <div
+      role="status"
+      class="flex shrink-0 flex-wrap items-center gap-2 border-t border-grimorio-iron px-3 py-1.5"
+    >
+      <div class="flex items-center gap-0.5">
+        <For each={AREA_KINDS}>
+          {(area) => (
+            <Button
+              size="sm"
+              variant={props.kind === area.id ? 'default' : 'ghost'}
+              aria-pressed={props.kind === area.id}
+              onClick={() => props.onKind(area.id)}
+            >
+              {area.label}
+            </Button>
+          )}
+        </For>
+      </div>
+
+      <label class="text-[11px] text-muted-foreground" for="area-size">
+        {medida()}
+      </label>
+      <NumberInput
+        id="area-size"
+        class="w-20"
+        value={props.size}
+        min={1}
+        max={60}
+        spinnerLabel={medida()}
+        onChange={(valor) => props.onSize(valor)}
+      />
+      <span class="font-mono text-[11px] tabular-nums text-muted-foreground">{metros()}m</span>
+
+      <Show
+        when={props.inside.length > 0}
+        fallback={<span class="text-[11px] text-muted-foreground">{dica()}</span>}
+      >
+        <p class="min-w-0 flex-1 truncate text-[11px] text-grimorio-gold">
+          Pega {props.inside.length === 1 ? '1 peça' : `${props.inside.length} peças`}:{' '}
+          {props.inside.map((peca) => peca.label).join(', ')}
+        </p>
+      </Show>
+
+      <Button size="sm" variant="ghost" class="ml-auto" aria-label="Guardar o gabarito" onClick={() => props.onClose()}>
         <X aria-hidden="true" class="size-4" />
       </Button>
     </div>

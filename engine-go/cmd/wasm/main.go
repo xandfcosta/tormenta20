@@ -234,6 +234,30 @@ func boardMeasure(_ js.Value, args []js.Value) any {
 	return string(out)
 }
 
+// boardArea desenha um gabarito de área (T20 p225) para a tela.
+//
+// A FIGURA da p225 é a regra — o livro manda ver os modelos —, e ela está
+// transcrita no motor. Vem por WASM pelo mesmo motivo do custo do caminho: uma
+// segunda implementação da forma na tela seria uma segunda verdade sobre o que
+// a bola de fogo acerta.
+//
+// Pura: não precisa de `primeEngineCatalogs`.
+func boardArea(_ js.Value, args []js.Value) any {
+	var payload struct {
+		Origin engine.Square `json:"origin"`
+		Area   engine.Area   `json:"area"`
+	}
+	if err := json.Unmarshal([]byte(args[0].String()), &payload); err != nil {
+		return errorJSON(err)
+	}
+	casas := engine.AreaSquares(payload.Origin, payload.Area)
+	if casas == nil {
+		casas = []engine.Square{}
+	}
+	out, _ := json.Marshal(casas)
+	return string(out)
+}
+
 // boardBudget converte deslocamento em metros para quadrados (T20 p106).
 func boardBudget(_ js.Value, args []js.Value) any {
 	out, _ := json.Marshal(map[string]int{"squares": engine.SquaresForDisplacement(args[0].Float())})
@@ -266,6 +290,7 @@ func main() {
 	js.Global().Set("boardPathCost", js.FuncOf(boardPathCost))
 	js.Global().Set("boardReach", js.FuncOf(boardReach))
 	js.Global().Set("boardMeasure", js.FuncOf(boardMeasure))
+	js.Global().Set("boardArea", js.FuncOf(boardArea))
 	js.Global().Set("boardBudget", js.FuncOf(boardBudget))
 	js.Global().Set("boardFootprint", js.FuncOf(boardFootprint))
 	select {} // keep the runtime alive

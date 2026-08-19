@@ -57,6 +57,7 @@ type GlobalWithGo = typeof globalThis & {
   boardPathCost?: (payloadJson: string) => string
   boardReach?: (payloadJson: string) => string
   boardMeasure?: (payloadJson: string) => string
+  boardArea?: (payloadJson: string) => string
   boardBudget?: (metres: number) => string
   boardFootprint?: (size: string) => string
 }
@@ -354,6 +355,39 @@ export function boardMeasure(from: BoardSquare, to: BoardSquare): BoardMeasureme
   const fn = (globalThis as GlobalWithGo).boardMeasure
   if (!fn) throw new Error('engine-wasm: engine not ready — call ensureEngine() first')
   const out = JSON.parse(fn(JSON.stringify({ from, to }))) as BoardMeasurement | { error: string }
+  if ('error' in out) throw new Error(`engine-wasm: ${out.error}`)
+  return out
+}
+
+/** As categorias de área do livro (T20 p225). */
+export type BoardAreaKind = 'esfera' | 'cone' | 'linha' | 'quadrado'
+
+/** O gabarito a desenhar: tamanho SEMPRE em quadrados (raio, comprimento ou
+ *  lado), e a direção como passo unitário — ignorada pela esfera e pelo
+ *  quadrado, que não apontam para lugar nenhum. */
+export type BoardArea = {
+  kind: BoardAreaKind
+  size: number
+  direction: BoardSquare
+}
+
+/**
+ * As casas cobertas por um gabarito de área (T20 p225).
+ *
+ * A FIGURA da p225 é a regra — o livro manda ver os modelos — e ela está
+ * transcrita no motor Go, quadrado a quadrado. A tela só desenha o que o motor
+ * devolve: uma segunda implementação da forma aqui seria uma segunda verdade
+ * sobre o que a bola de fogo acerta.
+ *
+ * Na ESFERA a origem é a INTERSEÇÃO, dada pelo canto superior-esquerdo do
+ * quadrado clicado — o livro põe a esfera no encontro de quatro quadrados.
+ *
+ * @example boardArea({x:0,y:0}, {kind:'esfera', size:2, direction:{x:0,y:0}}) // 12 casas
+ */
+export function boardArea(origin: BoardSquare, area: BoardArea): BoardSquare[] {
+  const fn = (globalThis as GlobalWithGo).boardArea
+  if (!fn) throw new Error('engine-wasm: engine not ready — call ensureEngine() first')
+  const out = JSON.parse(fn(JSON.stringify({ origin, area }))) as BoardSquare[] | { error: string }
   if ('error' in out) throw new Error(`engine-wasm: ${out.error}`)
   return out
 }

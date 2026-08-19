@@ -1185,3 +1185,73 @@ describe('a régua', () => {
     expect(rt.updateToken).not.toHaveBeenCalled()
   })
 })
+
+
+/**
+ * Os gabaritos de área (ALE-124, fatia 6b — T20 p225).
+ *
+ * A pergunta que eles respondem trava o turno do conjurador: "se eu soltar a
+ * bola de fogo aqui, quem pega?". Ela se responde hoje apontando o dedo na tela
+ * e discutindo, com a mesa parada.
+ *
+ * A FORMA é do motor Go, transcrita da figura da p225 e provada lá contra as
+ * contagens dela. O que se prova aqui é a ligação e o cruzamento com as peças —
+ * e estes testes rodam o motor de verdade pelo wasm.
+ */
+describe('o gabarito de área', () => {
+  it('a esfera pega quem está debaixo dela, e a barra diz o nome', async () => {
+    const { user } = renderRegion(true)
+
+    await user.click(screen.getByRole('button', { name: 'Gabarito de área' }))
+    // O padrão é esfera de raio 2 — o "Raio de 3m" da figura, 12 casas.
+    // A interseção em (5,4) põe a área sobre (4,3) e (3,3), que são CORPO do
+    // Ogro (2×2 a partir de (3,2)), e deixa de fora a casa do canto dele: quem
+    // olhasse só a coordenada da peça diria que ela escapou.
+    await user.click(screen.getByRole('button', { name: 'Coluna 5, linha 4' }))
+
+    // Basta UM quadrado do corpo na área — exigir a peça inteira deixaria a
+    // Colossal de fora do próprio incêndio (p107).
+    expect(screen.getByRole('status')).toHaveTextContent('Pega 1 peça: Ogro')
+  })
+
+  // Cone e linha PRECISAM apontar, e a barra diz isso em vez de desenhar um
+  // gabarito para um lado que ninguém escolheu.
+  it('o cone pede a direção no segundo clique', async () => {
+    const { user } = renderRegion(true)
+
+    await user.click(screen.getByRole('button', { name: 'Gabarito de área' }))
+    await user.click(screen.getByRole('button', { name: 'Cone' }))
+    await user.click(screen.getByRole('button', { name: 'Aumentar alcance' }))
+    await user.click(screen.getByRole('button', { name: 'Coluna 0, linha 2' }))
+
+    expect(screen.getByRole('status')).toHaveTextContent('Clique de novo para apontar')
+
+    // Apontado para a direita, o cone de 3 quadrados alcança a coluna 3 e pega
+    // o Ogro, que ocupa (3,2).
+    await user.click(screen.getByRole('button', { name: 'Coluna 5, linha 2' }))
+
+    expect(screen.getByRole('status')).toHaveTextContent('Pega 1 peça: Ogro')
+  })
+
+  // Achado no BROWSER: trocar de gabarito mantinha a origem do anterior, e o
+  // primeiro clique depois da troca caía na regra do SEGUNDO clique — escolher
+  // "Cone" com uma esfera na tela desenhava um cone apontado a partir dela.
+  it('trocar de gabarito larga o que estava posto', async () => {
+    const { user } = renderRegion(true)
+
+    await user.click(screen.getByRole('button', { name: 'Gabarito de área' }))
+    await user.click(screen.getByRole('button', { name: 'Coluna 5, linha 4' }))
+    expect(screen.getByRole('status')).toHaveTextContent('Pega 1 peça: Ogro')
+
+    await user.click(screen.getByRole('button', { name: 'Cone' }))
+
+    expect(screen.getByRole('status')).toHaveTextContent('Clique numa casa para pôr o gabarito')
+  })
+
+  // Como a régua: quem pergunta "quem pega?" é quem vai conjurar.
+  it('o jogador também tem gabarito', async () => {
+    renderRegion(false, COM_JOGADOR, 'e1', { myCharacterIds: MEU_HEROI, turnIndex: 0 })
+
+    expect(screen.getByRole('button', { name: 'Gabarito de área' })).toBeInTheDocument()
+  })
+})
