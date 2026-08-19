@@ -131,7 +131,18 @@ function VitalRow(props: VitalRowProps) {
         aria-valuenow={props.current}
         aria-valuemin={0}
         aria-valuemax={props.max}
-        class="relative h-3.5 min-w-8 flex-1 overflow-hidden rounded-full border border-border bg-muted lg:h-2.5"
+        // O piso da barra é `min-w-4` e não `min-w-8`, e isto é conserto medido
+        // (ALE-196): a 375px a linha pedia 252px numa coluna de 243, e o piso
+        // antigo de 32px era o que não deixava caber — ela pintava para fora.
+        //
+        // Quem cede espaço é a BARRA, e não os botões: eles são alvo de toque (a
+        // ALE-177 mede que 56% dos alvos da ficha estão abaixo do mínimo) e a
+        // barra é indicador, com o número exato ao lado. A 375px ela fica com
+        // 23px — estreita, mas desenhada.
+        //
+        // Um `min-w-0` na linha também foi tentado e SAIU: com o piso corrigido
+        // ele não muda nada, e o teste de regressão continuou verde sem ele.
+        class="relative h-3.5 min-w-4 flex-1 overflow-hidden rounded-full border border-border bg-muted lg:h-2.5"
       >
         <div
           class="h-full transition-[width,background-color] duration-500 ease-out"
