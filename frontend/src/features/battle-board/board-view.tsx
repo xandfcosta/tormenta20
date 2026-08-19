@@ -1,4 +1,4 @@
-import { For, Show, onCleanup } from 'solid-js'
+import { For, Index, Show, onCleanup } from 'solid-js'
 import type { BoardSquare } from '@/shared/lib/engine-wasm'
 import type { BoardState, BoardToken, PendingMove } from '@/shared/realtime/realtime'
 import { cn } from '@/shared/lib/utils'
@@ -47,6 +47,9 @@ export function BoardView(props: {
   difficult?: readonly BoardSquare[]
   /** Presente = ferramenta na mão: arrastar PINTA em vez de mover a vista. */
   onPaintSquare?: (x: number, y: number, secondary: boolean) => void
+  /** O teclado da superfície (ALE-194): quem interpreta as teclas é a cena, que
+   *  é quem sabe se há peça na mão e quem pode movê-la. */
+  onKeyDown?: (event: KeyboardEvent) => void
 }) {
   const view = () => props.view
   const window = () => ({
@@ -95,6 +98,12 @@ export function BoardView(props: {
       onPointerCancel={gestures.onPointerUp}
       onWheel={gestures.onWheel}
       onContextMenu={gestures.onContextMenu}
+      onKeyDown={(event) => props.onKeyDown?.(event)}
+      // A superfície é FOCÁVEL para o teclado ter onde acontecer: quem clica no
+      // mapa e aperta uma seta espera que ela valha para o mapa, e sem foco a
+      // tecla vai para o `body` e rola a página (ALE-194). É UM ponto de
+      // tabulação antes das peças, que são botões e já vinham de graça.
+      tabIndex={0}
       role="grid"
       // A coluna e a linha são arredondadas porque a origem passou a ser
       // fracionária com o arraste (ALE-140), e "janela em coluna −7,3125" não é
@@ -131,22 +140,35 @@ export function BoardView(props: {
 
       <Show when={props.pending}>{(move) => <PendingPath move={move()} view={view()} />}</Show>
 
-      <For each={props.board.tokens.filter((token) => isVisible(token, window()))}>
+      {/* `Index` sobre a lista INTEIRA do servidor, com a visibilidade num
+          `Show` por peça — e as duas metades desta linha são consertos.
+          O `For` reconcilia por REFERÊNCIA e todo broadcast troca o estado
+          inteiro: cada peça virava um botão NOVO a cada mensagem da mesa e o
+          foco caía no `body` (com o teclado da ALE-194 isso aparecia como "a
+          primeira seta move e a segunda não faz nada"; para quem usa leitor de
+          tela, era perder o lugar sempre que qualquer peça se mexia).
+          E o `Index` sobre a lista FILTRADA tinha o defeito espelhado, medido no
+          browser: como quem ocupa cada índice muda quando a janela anda, o foco
+          escorregava para OUTRA peça em silêncio. Sobre a lista inteira o índice
+          é o do servidor, que não muda quando a vista anda. */}
+      <Index each={props.board.tokens}>
         {(token) => (
-          <TokenPiece
-            token={token}
-            view={view()}
-            selected={props.selectedTokenId === token.id}
-            movable={props.movableTokenIds?.has(token.id) ?? true}
-            onTurn={
-              props.activeEntryId !== undefined &&
-              props.activeEntryId !== null &&
-              token.entryId === props.activeEntryId
-            }
-            onSelect={props.onSelectToken}
-          />
+          <Show when={isVisible(token(), window())}>
+            <TokenPiece
+              token={token()}
+              view={view()}
+              selected={props.selectedTokenId === token().id}
+              movable={props.movableTokenIds?.has(token().id) ?? true}
+              onTurn={
+                props.activeEntryId !== undefined &&
+                props.activeEntryId !== null &&
+                token().entryId === props.activeEntryId
+              }
+              onSelect={props.onSelectToken}
+            />
+          </Show>
         )}
-      </For>
+      </Index>
     </div>
   )
 }

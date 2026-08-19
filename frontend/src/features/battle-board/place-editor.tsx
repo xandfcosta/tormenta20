@@ -3,6 +3,7 @@ import { Show, createMemo, createSignal, onMount } from 'solid-js'
 import type { BoardState, BoardToken } from '@/shared/realtime/realtime'
 import { Button } from '@/shared/ui/button'
 import { ViewControls } from './board-bars'
+import { boardKeyAction } from './board-keys'
 import { BoardView } from './board-view'
 import { createBoardViewport } from './board-viewport'
 import { TokenActions } from './token-actions'
@@ -78,6 +79,20 @@ export function PlaceEditor(props: {
   const addToken = (peca: Omit<BoardToken, 'id' | 'x' | 'y'>) =>
     setTokens((atual) => [...atual, { ...peca, id: draftTokenId(atual), x: 0, y: 0 }])
 
+  /** A mesma gramática de teclas do tabuleiro vivo (ALE-194): com peça na mão a
+   *  seta move a peça, sem peça move a janela. Aqui não há vez nem orçamento —
+   *  montar é posicionar livre —, então o passo é direto. */
+  const onKeyDown = (event: KeyboardEvent) => {
+    const acao = boardKeyAction(event)
+    if (!acao) return
+    event.preventDefault()
+    if (acao.kind === 'fit') return view.fit(tokens())
+    if (acao.kind === 'zoom') return view.zoom(acao.deltaPx)
+    const peca = selectedToken()
+    if (!peca) return view.pan(acao.dx, acao.dy)
+    patchToken(peca.id, { x: peca.x + acao.dx, y: peca.y + acao.dy })
+  }
+
   const paintSquare = (x: number, y: number, secondary: boolean) => {
     if (secondary) setTool('eraser')
     const apagar = secondary || tool() === 'eraser'
@@ -146,6 +161,7 @@ export function PlaceEditor(props: {
         onPlaceToken={tool() === null && selectedTokenId() ? placeSelected : undefined}
         difficult={difficult()}
         onPaintSquare={tool() !== null ? paintSquare : undefined}
+        onKeyDown={onKeyDown}
       />
 
       <Show when={selectedToken()}>

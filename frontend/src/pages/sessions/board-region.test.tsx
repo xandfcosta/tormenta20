@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor, within } from '@solidjs/testing-library'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
 import { createSignal } from 'solid-js'
 import { describe, expect, it, vi } from 'vitest'
@@ -973,5 +973,161 @@ describe('montar um lugar do acervo', () => {
 
     expect(rt.savePlace).not.toHaveBeenCalled()
     expect(await screen.findByRole('button', { name: /^Ogro,/ })).toBeInTheDocument()
+  })
+})
+
+
+/**
+ * O teclado na superfície (ALE-194).
+ *
+ * Duas dívidas se encontram aqui. A minha: ao tirar as quatro setas e o −/+ do
+ * cabeçalho (`c95d502`), mover e ampliar passaram a existir só no ponteiro. E a
+ * do teste prático do Roll20, que mostra o caminho certo — que não é devolver
+ * os botões: a seta move a PEÇA um quadrado, que é a unidade do estado.
+ *
+ * A regra que não pode quebrar: a seta chama o MESMO caminho do clique. O
+ * mestre posiciona livre, o jogador propõe — com a vez e o orçamento conferidos
+ * no servidor. Atalho que fura a regra do livro é pior que atalho nenhum.
+ */
+describe('o teclado do tabuleiro', () => {
+  const superficie = (container: HTMLElement) => {
+    const plano = container.querySelector('[role="grid"]')
+    if (!plano) throw new Error('o tabuleiro não montou')
+    return plano
+  }
+
+  it('com peça na mão, a seta move a peça um quadrado', async () => {
+    const { rt, user, container } = renderRegion(true)
+
+    await user.click(screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' }))
+    fireEvent.keyDown(superficie(container), { key: 'ArrowRight' })
+
+    expect(rt.updateToken).toHaveBeenCalledWith('t1', { x: 4, y: 2 })
+  })
+
+  // A peça continua na mão depois da seta: mover de um em um é o gesto, e
+  // largar a cada passo obrigaria a selecionar de novo para cada quadrado.
+  it('a peça continua selecionada, e a segunda seta continua de onde parou', async () => {
+    const [live, setLive] = createSignal<BoardState | null>(TABULEIRO)
+    const { rt, user, container } = renderRegion(true, live)
+
+    await user.click(screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' }))
+    fireEvent.keyDown(superficie(container), { key: 'ArrowRight' })
+    // O servidor responde com a peça no lugar novo, como responderia de verdade.
+    setLive({
+      ...TABULEIRO,
+      version: TABULEIRO.version + 1,
+      tokens: TABULEIRO.tokens.map((peca) => (peca.id === 't1' ? { ...peca, x: 4 } : peca)),
+    })
+    fireEvent.keyDown(superficie(container), { key: 'ArrowDown' })
+
+    expect(rt.updateToken).toHaveBeenLastCalledWith('t1', { x: 4, y: 3 })
+  })
+
+  // Sem peça na mão a seta move a JANELA: é o que os botões de seta davam ao
+  // teclado antes de saírem, e num plano infinito sem isso metade da cena fica
+  // inalcançável para quem não usa mouse.
+  it('sem peça na mão, a seta move a vista', () => {
+    const { container } = renderRegion(true)
+    const antes = superficie(container).getAttribute('aria-label')
+
+    fireEvent.keyDown(superficie(container), { key: 'ArrowRight' })
+
+    expect(superficie(container).getAttribute('aria-label')).not.toBe(antes)
+  })
+
+  // A tecla que responde "onde está o grupo?" num plano sem bordas.
+  it('Home enquadra as peças, inclusive as que estão fora da janela', async () => {
+    const longe: BoardState = {
+      ...TABULEIRO,
+      tokens: [{ id: 't9', label: 'Sentinela Distante', x: 60, y: 0, footprint: 1, kind: 'npc' }],
+    }
+    const { container } = renderRegion(true, longe)
+    expect(screen.queryByRole('button', { name: /Sentinela Distante/ })).not.toBeInTheDocument()
+
+    fireEvent.keyDown(superficie(container), { key: 'Home' })
+
+    expect(await screen.findByRole('button', { name: /Sentinela Distante/ })).toBeInTheDocument()
+  })
+
+  // O jogador PROPÕE pela seta, como propõe pelo clique: quem confere a vez e o
+  // orçamento é o servidor, e o atalho não pode ser um caminho por fora.
+  it('a seta do jogador propõe o caminho em vez de pousar a peça', async () => {
+    const { rt, user, container } = renderRegion(false, COM_JOGADOR, 'e1', {
+      myCharacterIds: MEU_HEROI,
+      turnIndex: 0,
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Sílfide Ladina, coluna 6, linha 5' }))
+    fireEvent.keyDown(superficie(container), { key: 'ArrowRight' })
+
+    expect(rt.proposeMove).toHaveBeenCalledWith('t2', [
+      { x: 6, y: 5 },
+      { x: 7, y: 5 },
+    ])
+    expect(rt.updateToken).not.toHaveBeenCalled()
+  })
+
+  /**
+   * O foco sobrevive ao broadcast (ALE-194).
+   *
+   * O `For` do Solid reconcilia por REFERÊNCIA, e todo broadcast desta casa
+   * troca o estado INTEIRO: cada peça virava um botão novo a cada mensagem da
+   * mesa, e o foco caía no `body`. Com o teclado o sintoma ficou visível — a
+   * primeira seta movia a peça e a segunda não fazia nada, porque a primeira
+   * tinha acabado de destruir o botão em foco. Quem usa leitor de tela perdia o
+   * lugar toda vez que QUALQUER peça se mexia.
+   *
+   * Achado no BROWSER, onde a tecla passa pelo foco de verdade; nos testes o
+   * evento era disparado na superfície e não via nada.
+   */
+  it('a peça em foco continua em foco quando outra peça se mexe', () => {
+    const [live, setLive] = createSignal<BoardState | null>(TABULEIRO)
+    renderRegion(true, live)
+    const ogro = screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' })
+    ogro.focus()
+
+    // O estado chega do SOCKET, então toda peça é um objeto NOVO — e é aí que
+    // o `For` recria tudo. Clonar só a que mudou faria este teste passar verde
+    // sobre o defeito, porque as referências das outras sobreviveriam.
+    setLive({
+      ...TABULEIRO,
+      version: TABULEIRO.version + 1,
+      tokens: TABULEIRO.tokens.map((peca) => ({ ...peca, x: peca.id === 't2' ? 7 : peca.x })),
+    })
+
+    expect(screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' })).toHaveFocus()
+  })
+
+  // A segunda seta continua do fim do caminho JÁ proposto: o provisório não
+  // move a peça, ele a promete — sem isso o jogador ficaria preso a um
+  // quadrado, propondo o mesmo passo de novo.
+  it('com um caminho proposto, a seta seguinte o ESTENDE', async () => {
+    const proposto: BoardState = {
+      ...COM_JOGADOR,
+      pending: {
+        tokenId: 't2',
+        path: [
+          { x: 6, y: 5 },
+          { x: 7, y: 5 },
+        ],
+        cost: 1,
+        budget: 6,
+        byUserId: 1,
+      },
+    }
+    const { rt, user, container } = renderRegion(false, proposto, 'e1', {
+      myCharacterIds: MEU_HEROI,
+      turnIndex: 0,
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Sílfide Ladina, coluna 6, linha 5' }))
+    fireEvent.keyDown(superficie(container), { key: 'ArrowRight' })
+
+    expect(rt.proposeMove).toHaveBeenCalledWith('t2', [
+      { x: 6, y: 5 },
+      { x: 7, y: 5 },
+      { x: 8, y: 5 },
+    ])
   })
 })

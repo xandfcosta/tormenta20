@@ -1,5 +1,6 @@
 import { Brush, Eraser, Eye, Library, Users, X } from 'lucide-solid'
 import { Show, createEffect, createMemo, createSignal, on } from 'solid-js'
+import { boardKeyAction } from '@/features/battle-board/board-keys'
 import { pathBetween } from '@/features/battle-board/board-path'
 import { MoveBar, PlayerLensBar, ViewControls } from '@/features/battle-board/board-bars'
 import { BoardView } from '@/features/battle-board/board-view'
@@ -225,7 +226,7 @@ export function BoardRegion(props: {
   // jogador (ALE-178).
   const [ondeEstava, setOndeEstava] = createSignal<Record<string, { x: number; y: number }>>({})
 
-  const placeSelected = (x: number, y: number) => {
+  const moveSelectedTo = (x: number, y: number) => {
     const token = selectedToken()
     if (!token) return
     if (props.isGm) {
@@ -234,7 +235,53 @@ export function BoardRegion(props: {
     } else {
       props.rt.proposeMove(token.id, pathBetween({ x: token.x, y: token.y }, { x, y }))
     }
+  }
+
+  /** O clique POUSA: move e larga a peça. Sem largar, o clique seguinte num
+   *  quadrado a moveria de novo sem querer. */
+  const placeSelected = (x: number, y: number) => {
+    moveSelectedTo(x, y)
     setSelectedTokenId(null)
+  }
+
+  /**
+   * O teclado da superfície (ALE-194). Com peça na mão a seta move a PEÇA um
+   * quadrado; sem peça, move a JANELA — a tecla sempre faz o que está em foco
+   * na cena, e é assim que volta ao teclado o que os botões de seta davam antes
+   * de saírem do cabeçalho (`c95d502`).
+   *
+   * A seta NÃO fura a regra: ela chama o mesmo caminho do clique, então o
+   * jogador continua propondo (com a vez e o orçamento conferidos no servidor)
+   * e o mestre continua posicionando livre. Um atalho que passa por fora da
+   * regra do livro seria pior que atalho nenhum.
+   */
+  const onBoardKeyDown = (event: KeyboardEvent) => {
+    const acao = boardKeyAction(event)
+    if (!acao) return
+    event.preventDefault()
+    if (acao.kind === 'fit') return props.view.fit(board()?.tokens ?? [])
+    if (acao.kind === 'zoom') return props.view.zoom(acao.deltaPx)
+    stepSelectedOrView(acao.dx, acao.dy)
+  }
+
+  const stepSelectedOrView = (dx: number, dy: number) => {
+    const token = selectedToken()
+    if (!token || !movableTokenIds().has(token.id)) return props.view.pan(dx, dy)
+    const de = nextStepOrigin(token, board()?.pending ?? null)
+    moveSelectedTo(de.x + dx, de.y + dy)
+  }
+
+  /**
+   * De onde a próxima seta conta: o FIM do caminho já proposto, quando há um, e
+   * a posição da peça quando não há. O provisório não move a peça — ele a
+   * promete —, então sem isto a segunda seta proporia o mesmo passo de novo e o
+   * jogador ficaria preso a um quadrado de distância.
+   */
+  const nextStepOrigin = (token: BoardToken, move: BoardState['pending']) => {
+    if (move && move.tokenId === token.id && move.path.length > 0) {
+      return move.path[move.path.length - 1]
+    }
+    return { x: token.x, y: token.y }
   }
 
   /**
@@ -425,6 +472,7 @@ export function BoardRegion(props: {
               difficult={cena(live()).difficult}
               // Arrastar com a ferramenta na mão PINTA em vez de mover a vista.
               onPaintSquare={painting() ? paintSquare : undefined}
+              onKeyDown={onBoardKeyDown}
             />
 
             <Show when={props.isGm && selectedToken()}>
