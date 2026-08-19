@@ -665,6 +665,57 @@ test.describe('Sessão ao vivo', () => {
     }
   })
 
+  /**
+   * A ficha aberta DENTRO da cena não vaza quando a coluna aperta (ALE-188).
+   *
+   * Achado pelo CI, e por um caminho que vale registrar: enquanto o clique do
+   * teste dos ESTADOS caía no botão do som, a ficha nunca abria lá e a tela
+   * quebrada passava VERDE. Consertado o clique, o runner acusou cinco linhas
+   * de perícia pintando para fora do pai.
+   *
+   * O defeito: item de grade não encolhe abaixo do conteúdo e o `<select>` de
+   * atributo tem largura intrínseca — bastavam ~15px a menos na coluna para a
+   * linha inteira transbordar. Quinze pixels é o que a barra de rolagem CLÁSSICA
+   * ocupa (Linux e Windows a desenham dentro da caixa; a sobreposta do meu
+   * desktop não ocupa nada), e é por isso que a tela passava aqui e vazava lá.
+   *
+   * Por isso este teste mede a 375 — os 390 do menor formato da casa MENOS a
+   * barra — em vez de depender do tipo de barra da máquina. Medido antes do
+   * conserto: 6px de sobra a 375, 21px a 360.
+   */
+  test('a ficha aberta na cena não vaza com a coluna apertada', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 844 })
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+
+    const antes = await labelsNaIniciativa(page)
+    await page.getByRole('button', { name: 'Adicionar grupo' }).click()
+    await expect(page.locator('[role="progressbar"][aria-label^="PM "]').first()).toBeVisible()
+
+    const iniciativa = page
+      .getByRole('heading', { name: 'Iniciativa' })
+      .locator('xpath=ancestor::section[1]')
+    const nome = await iniciativa.evaluate((secao) => {
+      const barra = secao.querySelector('[role="progressbar"][aria-label^="PM "]')
+      let no: HTMLElement | null = barra as HTMLElement | null
+      while (no && no !== secao && !no.querySelector('button[aria-pressed]')) no = no.parentElement
+      return no?.querySelector('button[aria-pressed]')?.textContent?.trim() ?? ''
+    })
+    if (!nome) throw new Error('nenhum PC na iniciativa: a lista mudou no meio do teste')
+    await iniciativa.locator('button[aria-pressed]', { hasText: nome }).first().click()
+
+    const mesa = page.getByRole('button', { name: 'mesa', exact: true })
+    if (await mesa.isVisible()) await mesa.click()
+    await page.getByRole('tab', { name: 'Perícias' }).click()
+    await expect(page.getByRole('heading', { name: 'Perícias' })).toBeVisible()
+
+    await expectNadaEscapa(page, '.scene-grimorio')
+
+    for (const label of await novosDesde(page, antes)) {
+      await page.getByRole('button', { name: `Remover ${label}` }).click()
+    }
+  })
+
   /** Os rótulos que estão na iniciativa agora. */
   async function labelsNaIniciativa(page: Page): Promise<string[]> {
     return page.$$eval('button[aria-label^="Remover "]', (bs) =>

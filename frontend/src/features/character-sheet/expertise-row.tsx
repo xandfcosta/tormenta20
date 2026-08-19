@@ -70,7 +70,13 @@ export function ExpertiseRow(props: ExpertiseRowProps) {
           deixava o nome fora do eixo da caixa do total. */}
       <div
         class={cn(
-          'flex gap-2.5 rounded-sm border border-grimorio-iron transition-colors hover:border-grimorio-gold/50',
+          // `min-w-0`: item de grade/flex não encolhe abaixo do conteúdo por
+          // padrão, e o `<select>` de atributo tem largura intrínseca — bastava
+          // o painel perder ~15px (a barra de rolagem CLÁSSICA, que Linux e
+          // Windows desenham DENTRO da caixa, ao contrário da sobreposta) para
+          // a linha inteira pintar para fora do pai a 390px. Medido: 6px de
+          // sobra a 375 e 21px a 360.
+          'flex min-w-0 gap-2.5 rounded-sm border border-grimorio-iron transition-colors hover:border-grimorio-gold/50',
           state().trained && 'bg-[var(--grimorio-panel)]',
           props.glance ? 'items-center p-1.5' : 'items-start p-2.5',
         )}
@@ -256,7 +262,10 @@ function AttributeSelect(props: {
       value={props.value}
       onChange={(event) => props.onChange(event.currentTarget.value as AttributeKey)}
       aria-label={`${props.name} atributo`}
-      class="h-6 cursor-pointer rounded-full border border-grimorio-iron bg-transparent px-2 font-mono text-[11px] outline-none focus:ring-2 focus:ring-ring"
+      // `min-w-0 max-w-full`: o `<select>` nativo se dimensiona pela opção mais
+      // larga, e sem isto é ele quem empurra a linha para fora quando a coluna
+      // aperta.
+      class="h-6 min-w-0 max-w-full cursor-pointer rounded-full border border-grimorio-iron bg-transparent px-2 font-mono text-[11px] outline-none focus:ring-2 focus:ring-ring"
     >
       <For each={ATTRIBUTE_KEYS}>
         {(key) => (
