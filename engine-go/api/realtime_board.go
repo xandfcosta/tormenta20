@@ -69,6 +69,29 @@ func (g *realtimeGateway) onGetBoardState(sock *socket.Socket, args []any) {
 	ackOK(ctx.ack, boardForRole(ctx.role, g.s.boards.get(context.Background(), ctx.sessionID)))
 }
 
+// onBoardAsPlayer (mestre) devolve a cena COMO A MESA A VÊ (ALE-193).
+//
+// A cópia sai da MESMA função do broadcast (`boardForRole`), e o papel é o
+// literal "player" e não o de quem pediu: se fosse `ctx.role`, o mestre
+// receberia a própria cena de volta e o modo seria um espelho que não redige
+// nada — um botão que mente sobre a emboscada é pior que botão nenhum.
+//
+// Por que uma PERGUNTA e não um segundo broadcast: conferir a emboscada é ato
+// do mestre, dura segundos e acontece uma vez por cena. Mandar a cópia redigida
+// para a sala do mestre em todo movimento seria dobrar o tráfego da mesa
+// inteira para atender quem não está olhando.
+//
+// Até aqui a única forma de responder "o que a mesa está vendo?" era abrir DOIS
+// navegadores com dois logins — foi literalmente assim que a ALE-178 foi
+// verificada, e está escrito no commit dela.
+func (g *realtimeGateway) onBoardAsPlayer(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok || !g.requireGm(sock, ctx.role) {
+		return
+	}
+	ackOK(ctx.ack, boardForRole("player", g.s.boards.get(context.Background(), ctx.sessionID)))
+}
+
 // onBoardTokenAdd (mestre) põe uma peça no tabuleiro.
 func (g *realtimeGateway) onBoardTokenAdd(sock *socket.Socket, args []any) {
 	ctx, ok := g.access(sock, args)

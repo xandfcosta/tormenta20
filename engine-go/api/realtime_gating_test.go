@@ -53,6 +53,7 @@ var gmGate = map[string]bool{
 	"board-token-update":  true,
 	"board-populate":      true,
 	"board-terrain-paint": true, // o chão é da cena, e a cena é do mestre
+	"board-as-player":     true, // "ver como jogador" é a lente do mestre sobre a própria cena
 	"board-places":        true, // o acervo de cenas guardadas é preparação do mestre
 	"board-reopen":        true,
 	"board-place-remove":  true,
@@ -155,6 +156,27 @@ func TestStateLeavesTheServerFilteredByRole(t *testing.T) {
 			t.Errorf("estado sai sem filtro de papel:\n%s\ndiga para quem: stateForRole(ctx.role, …)"+
 				" no ack, ou a sala do mestre no emit", strings.TrimSpace(line))
 		}
+	}
+}
+
+// "Ver como jogador" redige para o JOGADOR, e não para quem pediu (ALE-193).
+//
+// O teste acima já obriga toda saída de estado a passar por um filtro de papel,
+// e o `boardForRole(ctx.role, …)` satisfaz aquela regra — só que aqui `ctx.role`
+// é "gm", então o mestre receberia a PRÓPRIA cena de volta: o botão acenderia,
+// a peça escondida continuaria na tela, e ele concluiria que a mesa está vendo
+// a emboscada. Um modo que mente sobre o segredo é pior que não ter modo.
+//
+// É lido do fonte pela razão de sempre nesta casa: não existe cliente socket.io
+// em Go, e este handler só é alcançável por um socket.
+func TestVerComoJogadorRedigeParaAMesaENaoParaQuemPediu(t *testing.T) {
+	body := handlerBody(t, gatewaySource(t), "onBoardAsPlayer")
+
+	if !strings.Contains(body, `boardForRole("player"`) {
+		t.Errorf("o ack de board-as-player não redige para o jogador:\n%s", body)
+	}
+	if strings.Contains(body, "boardForRole(ctx.role") {
+		t.Error("board-as-player redige para o papel de QUEM PEDIU: o mestre receberia a própria cena de volta")
 	}
 }
 

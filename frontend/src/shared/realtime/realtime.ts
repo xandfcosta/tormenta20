@@ -152,6 +152,17 @@ const REST_FLASH_MS = 4000
  * WS handshake picks it up with `withCredentials`. The token override exists
  * for headless clients.
  */
+/** O acervo chega embrulhado em `{ places }`; ack de outra forma é lista vazia. */
+const readPlaces = (ack: unknown): BoardPlace[] =>
+  typeof ack === 'object' && ack !== null && 'places' in ack
+    ? ((ack as { places: BoardPlace[] }).places ?? [])
+    : []
+
+/** A `version` é o que distingue um tabuleiro de um ack de erro ou de "esta
+ *  sessão não tem tabuleiro" — que é `null` de verdade, não grade vazia. */
+const readBoard = (ack: unknown): BoardState | null =>
+  typeof ack === 'object' && ack !== null && 'version' in ack ? (ack as BoardState) : null
+
 export function connectSession(token?: string): SessionSocket {
   return io(window.location.origin, {
     withCredentials: true,
@@ -201,6 +212,13 @@ export type SessionRealtime = {
    *  estado de broadcast: o acervo é preparação, não muda com a cena, e mandá-lo
    *  a cada snapshot seria carregar o armário do mestre em toda mensagem. */
   listPlaces: () => Promise<BoardPlace[]>
+  /**
+   * A cena COMO A MESA A VÊ (ALE-193). Vem do SERVIDOR de propósito: é
+   * literalmente a cópia que o broadcast manda ao jogador, redigida pela mesma
+   * função (`boardForRole`) — não por uma segunda regra escrita na tela.
+   * `null` quando não há tabuleiro (ou socket).
+   */
+  boardAsPlayer: () => Promise<BoardState | null>
   reopenPlace: (placeId: number) => void
   removePlace: (placeId: number) => Promise<BoardPlace[]>
   /** Propõe um movimento: a mesa vê o caminho, e ninguém pousou ainda. */
@@ -312,22 +330,18 @@ export function createSessionSocket(
     socket?.emit(event, { campaignId: campaignId(), sessionId: sessionId(), ...body })
   }
 
-  /** Pergunta e espera a resposta. Sem socket, devolve vazio em vez de pendurar
-   *  a tela numa promessa que nunca resolve. */
-  const askPlaces = (event: string, body: Record<string, unknown> = {}) =>
-    new Promise<BoardPlace[]>((resolve) => {
+  /** Pergunta e espera a resposta. Sem socket, o `read` responde por `null` em
+   *  vez de pendurar a tela numa promessa que nunca resolve. */
+  const ask = <T>(event: string, body: Record<string, unknown>, read: (ack: unknown) => T) =>
+    new Promise<T>((resolve) => {
       if (!socket) {
-        resolve([])
+        resolve(read(null))
         return
       }
       socket.emit(
         event,
         { campaignId: campaignId(), sessionId: sessionId(), ...body },
-        (ack: unknown) => {
-          const lugares =
-            typeof ack === 'object' && ack && 'places' in ack ? (ack as { places: BoardPlace[] }).places : []
-          resolve(lugares ?? [])
-        },
+        (ack: unknown) => resolve(read(ack)),
       )
     })
 
@@ -364,9 +378,10 @@ export function createSessionSocket(
     updateToken: (tokenId, patch) => send('board-token-update', { tokenId, patch }),
     populateBoard: () => send('board-populate'),
     paintTerrain: (x, y, difficult) => send('board-terrain-paint', { x, y, difficult }),
-    listPlaces: () => askPlaces('board-places'),
+    listPlaces: () => ask('board-places', {}, readPlaces),
     reopenPlace: (placeId) => send('board-reopen', { placeId }),
-    removePlace: (placeId) => askPlaces('board-place-remove', { placeId }),
+    removePlace: (placeId) => ask('board-place-remove', { placeId }, readPlaces),
+    boardAsPlayer: () => ask('board-as-player', {}, readBoard),
     proposeMove: (tokenId, path) => send('board-move-propose', { tokenId, path }),
     commitMove: (version) => send('board-move-commit', { version }),
     cancelMove: () => send('board-move-cancel'),

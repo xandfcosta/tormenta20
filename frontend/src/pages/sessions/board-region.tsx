@@ -3,6 +3,7 @@ import {
   Check,
   Crosshair,
   Eraser,
+  Eye,
   LayoutGrid,
   Maximize,
   Minimize,
@@ -10,7 +11,7 @@ import {
   Users,
   X,
 } from 'lucide-solid'
-import { For, Show, createEffect, createMemo, createSignal } from 'solid-js'
+import { For, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
 import { pathBetween } from '@/features/battle-board/board-path'
 import { TokenActions } from '@/features/battle-board/token-actions'
 import { TokenDialog } from '@/features/battle-board/token-dialog'
@@ -73,6 +74,57 @@ export function BoardRegion(props: {
   createEffect(() => {
     if (props.rt.board() === null) refreshPlaces()
   })
+  /**
+   * "Ver como jogador" (ALE-193): a lente do mestre sobre a própria cena.
+   *
+   * A cópia vem do SERVIDOR e não de uma segunda regra escrita aqui — é
+   * literalmente o que o broadcast manda à mesa, redigido pelo mesmo
+   * `boardForRole` do Go. Até agora, conferir a emboscada exigia abrir DOIS
+   * navegadores com dois logins; foi assim que a ALE-178 foi verificada.
+   *
+   * O modo É a cópia: ele acende quando ela chega, e por isso a peça escondida
+   * nunca pisca na tela entre o clique e a resposta.
+   */
+  const [playerCopy, setPlayerCopy] = createSignal<BoardState | null>(null)
+  const asPlayer = () => playerCopy() !== null
+  // Cada pedido leva um número: a resposta de um pedido VELHO — o mestre saiu
+  // da lente enquanto ela vinha — não pode reacendê-la sozinha.
+  let pedido = 0
+  const askPlayerCopy = () => {
+    const meu = ++pedido
+    void props.rt.boardAsPlayer().then((copia) => {
+      if (meu === pedido) setPlayerCopy(copia)
+    })
+  }
+  const sairDaLente = () => {
+    pedido++
+    setPlayerCopy(null)
+  }
+  const verComoJogador = () => {
+    if (asPlayer()) return sairDaLente()
+    // Largar a peça na mão: com a lente ligada ela pode estar invisível, e
+    // pousar às cegas é o contrário de conferir.
+    setSelectedTokenId(null)
+    askPlayerCopy()
+  }
+  /**
+   * Cada mutação re-pergunta: uma lente que mostra a cena de dois movimentos
+   * atrás responde a pergunta errada. Até a resposta chegar fica a cópia
+   * ANTERIOR, nunca a do mestre — a peça escondida piscando faria ele duvidar
+   * do que a mesa viu.
+   */
+  createEffect(
+    on(
+      () => props.rt.board()?.version,
+      (version) => {
+        if (!asPlayer()) return
+        if (version === undefined) return sairDaLente() // a cena acabou
+        askPlayerCopy()
+      },
+      { defer: true },
+    ),
+  )
+
   // O pincel é MODO e não gesto: enquanto ele está ligado, a casa clicada (ou
   // arrastada) vira terreno difícil em vez de receber a peça. Modo porque o
   // clique numa casa já tem dono — pousar —, e porque gesto com tecla não
@@ -102,6 +154,14 @@ export function BoardRegion(props: {
   const cenaDaPartida = useSceneContainer()
   const alvoDosOverlays = () => (fullscreen.active() ? sceneEl() : cenaDaPartida())
   const board = () => props.rt.board()
+  /** O que a tela DESENHA: a cópia da mesa enquanto a lente está ligada, e o
+   *  tabuleiro do mestre no resto do tempo. Os CONTROLES continuam sendo os
+   *  dele — a lente é sobre a cena, não sobre as ferramentas: ele confere a
+   *  emboscada sem parar de montá-la. */
+  const cena = (aberto: BoardState) => playerCopy() ?? aberto
+  /** Quantas peças a mesa NÃO está vendo — é a resposta que o mestre foi
+   *  procurar, e ela não se lê contando o que sumiu da tela. */
+  const hiddenCount = () => (board()?.tokens ?? []).filter((peca) => peca.hidden).length
 
   // A vez é do RASTREADOR: o tabuleiro pergunta, não guarda uma cópia — duas
   // cópias da vez divergiriam no primeiro turno passado com o tabuleiro fechado.
@@ -223,6 +283,20 @@ export function BoardRegion(props: {
                   fullscreen={fullscreen}
                 />
                 <Show when={props.isGm}>
+                  {/* Ícone só, como a borracha: o cabeçalho acabou de perder
+                      seis botões por ocupar o lugar de quem trabalha (ALE-124),
+                      e quem nomeia o modo em texto é a tira de aviso abaixo —
+                      que só existe enquanto ele está ligado. */}
+                  <Button
+                    size="sm"
+                    variant={asPlayer() ? 'default' : 'ghost'}
+                    aria-pressed={asPlayer()}
+                    aria-label="Ver como jogador"
+                    title="Ver como jogador"
+                    onClick={verComoJogador}
+                  >
+                    <Eye aria-hidden="true" class="size-4" />
+                  </Button>
                   <Button
                     size="sm"
                     variant={tool() === 'brush' ? 'default' : 'ghost'}
@@ -263,7 +337,7 @@ export function BoardRegion(props: {
                   />
                   <ConfirmDialog
                     title="Encerrar o tabuleiro?"
-                    description="As peças e as posições desta cena se perdem. A iniciativa e os PV continuam como estão."
+                    description="A cena vai para os Lugares da crônica, com as peças onde estão, e você a reabre quando quiser. A iniciativa e os PV continuam como estão."
                     confirmLabel="Encerrar"
                     destructive
                     onConfirm={props.rt.closeBoard}
@@ -282,16 +356,20 @@ export function BoardRegion(props: {
               </div>
             </header>
 
+            <Show when={asPlayer()}>
+              <PlayerLensBar hidden={hiddenCount()} onExit={sairDaLente} />
+            </Show>
+
             <TurnStrip rt={props.rt} hidden={props.isGm} />
 
             <BoardView
-              board={live()}
+              board={cena(live())}
               view={props.view}
               activeEntryId={props.activeEntryId}
               selectedTokenId={selectedTokenId()}
               movableTokenIds={movableTokenIds()}
               reachable={reachable()}
-              pending={live().pending}
+              pending={cena(live()).pending}
               // Quem não pode mover NENHUMA peça também não seleciona: sem isso
               // a camada de quadrados nasceria com centenas de botões inertes
               // na árvore de quem só assiste.
@@ -301,7 +379,7 @@ export function BoardRegion(props: {
               // casa), e com uma peça selecionada ele ainda a pousava no meio
               // do desenho.
               onPlaceToken={!painting() && selectedTokenId() ? placeSelected : undefined}
-              difficult={live().difficult}
+              difficult={cena(live()).difficult}
               // Arrastar com a ferramenta na mão PINTA em vez de mover a vista.
               onPaintSquare={painting() ? paintSquare : undefined}
             />
@@ -354,6 +432,38 @@ export function BoardRegion(props: {
       </Show>
       </section>
     </SceneContainerProvider>
+  )
+}
+
+/**
+ * A tira da lente do mestre (ALE-193).
+ *
+ * Existe porque um modo que se esquece é pior que nenhum: o mestre que não
+ * percebe que está na vista da mesa não vê a peça que ele mesmo escondeu, e vai
+ * concluir que ela sumiu. Por isso ela é PERSISTENTE, nomeia o modo em texto e
+ * carrega a própria saída.
+ *
+ * E diz o NÚMERO de peças escondidas, que é a pergunta que trouxe o mestre até
+ * aqui — "a emboscada está mesmo invisível?". Contar o que sumiu da tela não é
+ * resposta: ele não sabe o que não está vendo.
+ */
+function PlayerLensBar(props: { hidden: number; onExit: () => void }) {
+  return (
+    <div
+      role="status"
+      class="flex shrink-0 flex-wrap items-center gap-2 border-b border-grimorio-gold/40 bg-grimorio-gold/10 px-3 py-1 text-[11px] text-grimorio-gold"
+    >
+      <Eye aria-hidden="true" class="size-3.5 shrink-0" />
+      <p>
+        Você está vendo a cena como a mesa.
+        {props.hidden > 0
+          ? ` ${props.hidden} ${props.hidden === 1 ? 'peça escondida não aparece' : 'peças escondidas não aparecem'}.`
+          : ' Nenhuma peça escondida nesta cena.'}
+      </p>
+      <Button size="sm" variant="ghost" class="ml-auto" onClick={() => props.onExit()}>
+        Voltar à vista do mestre
+      </Button>
+    </div>
   )
 }
 

@@ -1,5 +1,6 @@
 import { cleanup, render, screen, waitFor, within } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
+import { createSignal } from 'solid-js'
 import { describe, expect, it, vi } from 'vitest'
 import { createBoardViewport } from '@/features/battle-board/board-viewport'
 import type { BoardPlace, BoardState, SessionRealtime } from '@/shared/realtime/realtime'
@@ -25,12 +26,22 @@ class FakeRealtime {
   readonly reopenPlace = vi.fn()
   /** O acervo chega por PERGUNTA e não pelo snapshot (ALE-124, fatia 5). */
   places: BoardPlace[] = []
+  /** A cópia que o SERVIDOR redige (ALE-193): aqui o fake faz o que o Go faz —
+   *  `boardForRole("player", …)`, que apaga a peça escondida da cópia da mesa. */
+  readonly boardAsPlayer = vi.fn(() => {
+    const aberto = this.board()
+    return Promise.resolve(
+      aberto ? { ...aberto, tokens: aberto.tokens.filter((peca) => !peca.hidden) } : null,
+    )
+  })
   readonly proposeMove = vi.fn()
   readonly commitMove = vi.fn()
   readonly cancelMove = vi.fn()
 
   constructor(
-    private readonly live: BoardState | null,
+    // Accessor e não valor: a cena muda no meio do teste (o mestre revela uma
+    // peça), e é por essa mudança que a lente do ALE-193 tem de re-perguntar.
+    private readonly board: () => BoardState | null,
     private readonly turnIndex = -1,
   ) {}
 
@@ -47,7 +58,7 @@ class FakeRealtime {
       }),
       isConnected: () => true,
       error: () => null,
-      board: () => this.live,
+      board: this.board,
       updateToken: this.updateToken,
       removeToken: this.removeToken,
       addToken: this.addToken,
@@ -55,6 +66,7 @@ class FakeRealtime {
       populateBoard: this.populateBoard,
       paintTerrain: this.paintTerrain,
       listPlaces: () => Promise.resolve(this.places),
+      boardAsPlayer: this.boardAsPlayer,
       reopenPlace: this.reopenPlace,
       removePlace: (placeId: number) => {
         this.places = this.places.filter((lugar) => lugar.id !== placeId)
@@ -81,14 +93,17 @@ const TABULEIRO: BoardState = {
   ],
 }
 
+/** A cena que o teste monta: fixa, ou um sinal quando ela muda no meio. */
+type CenaDoTeste = BoardState | null | (() => BoardState | null)
+
 function renderRegion(
   isGm: boolean,
-  live: BoardState | null = TABULEIRO,
+  live: CenaDoTeste = TABULEIRO,
   activeEntryId?: string,
   jogador: { myCharacterIds?: ReadonlySet<number>; turnIndex?: number; places?: BoardPlace[] } = {},
   onOpenCombatant = vi.fn(),
 ) {
-  const rt = new FakeRealtime(live, jogador.turnIndex ?? -1)
+  const rt = new FakeRealtime(typeof live === 'function' ? live : () => live, jogador.turnIndex ?? -1)
   rt.places = jogador.places ?? []
   // A janela nasce fora da região, como na página: ela precisa sobreviver à
   // troca de região, e o teste monta a mesma composição que a cena monta.
@@ -181,6 +196,8 @@ describe('o tabuleiro na cena', () => {
     expect(screen.queryByRole('button', { name: 'Coluna 5, linha 3' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Encerrar o tabuleiro' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Trazer a iniciativa/ })).not.toBeInTheDocument()
+    // A lente do mestre é dele: quem já É a mesa não tem o que conferir.
+    expect(screen.queryByRole('button', { name: 'Ver como jogador' })).not.toBeInTheDocument()
   })
 
   it('sem tabuleiro, só o mestre vê como abrir um', () => {
@@ -738,5 +755,86 @@ describe('os lugares guardados da crônica', () => {
       expect(screen.getByText('O mestre ainda não abriu um tabuleiro.')).toBeInTheDocument(),
     )
     expect(screen.queryByText('Lugares da crônica')).not.toBeInTheDocument()
+  })
+})
+
+/**
+ * "Ver como jogador" (ALE-193).
+ *
+ * A redação por papel já era forte e testada — a peça escondida some INTEIRA da
+ * cópia da mesa (`redactBoardForPlayers`) —, mas o mestre não tinha como olhar
+ * o resultado: conferir a emboscada exigia abrir DOIS navegadores com dois
+ * logins, que foi literalmente como a ALE-178 foi verificada.
+ *
+ * O que se prova aqui é o que o mestre nota: a peça escondida some da cena
+ * dele, a tira diz quantas são, e a lente ACOMPANHA a cena em vez de congelar
+ * no instante em que foi ligada.
+ */
+describe('a lente do mestre sobre a cena da mesa', () => {
+  const ASSASSINO = {
+    id: 't4',
+    label: 'Assassino',
+    x: 2,
+    y: 2,
+    footprint: 1,
+    kind: 'npc' as const,
+    hidden: true,
+  }
+  const EMBOSCADA: BoardState = { ...TABULEIRO, tokens: [...TABULEIRO.tokens, ASSASSINO] }
+
+  it('a peça escondida some da cena, e a tira diz quantas a mesa não vê', async () => {
+    const { user } = renderRegion(true, EMBOSCADA)
+    expect(screen.getByRole('button', { name: /^Assassino,/ })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Ver como jogador' }))
+
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: /^Assassino,/ })).not.toBeInTheDocument(),
+    )
+    // O número é a resposta que trouxe o mestre até aqui: contar o que sumiu da
+    // tela não serve, porque ele não sabe o que não está vendo.
+    expect(screen.getByRole('status')).toHaveTextContent('1 peça escondida não aparece')
+    // A lente é sobre a CENA, não sobre as ferramentas: ele confere a emboscada
+    // sem parar de montá-la.
+    expect(screen.getByRole('button', { name: /Trazer a iniciativa/ })).toBeInTheDocument()
+  })
+
+  // Um modo que se esquece é pior que nenhum: o mestre que não percebe onde
+  // está conclui que a peça que ele mesmo escondeu sumiu de verdade.
+  it('a saída é a própria tira, e a cena do mestre volta inteira', async () => {
+    const { user } = renderRegion(true, EMBOSCADA)
+    await user.click(screen.getByRole('button', { name: 'Ver como jogador' }))
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: /^Assassino,/ })).not.toBeInTheDocument(),
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Voltar à vista do mestre' }))
+
+    expect(await screen.findByRole('button', { name: /^Assassino,/ })).toBeInTheDocument()
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
+  // A cena muda embaixo da lente o tempo todo — é o mestre montando. Uma lente
+  // congelada no instante em que foi ligada responde a pergunta de dois
+  // movimentos atrás, que é a pergunta errada.
+  it('revelar a peça enquanto a lente está ligada mostra a mesa passando a vê-la', async () => {
+    const [live, setLive] = createSignal<BoardState | null>(EMBOSCADA)
+    const { user, rt } = renderRegion(true, live)
+
+    await user.click(screen.getByRole('button', { name: 'Ver como jogador' }))
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: /^Assassino,/ })).not.toBeInTheDocument(),
+    )
+
+    // O mestre revela a peça: é a mesma mutação que o servidor transmitiria,
+    // com a versão subindo.
+    setLive({
+      ...EMBOSCADA,
+      version: EMBOSCADA.version + 1,
+      tokens: [...TABULEIRO.tokens, { ...ASSASSINO, hidden: false }],
+    })
+
+    expect(await screen.findByRole('button', { name: /^Assassino,/ })).toBeInTheDocument()
+    expect(rt.boardAsPlayer).toHaveBeenCalledTimes(2)
   })
 })
