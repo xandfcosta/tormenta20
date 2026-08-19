@@ -326,3 +326,58 @@ func TestLoosePiecesDoNotStack(t *testing.T) {
 		vistos[chave] = true
 	}
 }
+
+// O terreno que o mestre PINTA chega à régua (ALE-124, fatia 4).
+//
+// A conta do dobro é do motor e está provada contra a p238 em
+// `engine/board_movement_rules_test.go`. O que se prova AQUI é a ligação, que é
+// onde ela pode se perder: até esta fatia o estado nem tinha onde guardar o
+// chão, e o `proposeMove` chamava a régua com um mapa VAZIO — o mestre pintava
+// o brejo e a peça o atravessava como se fosse pedra lisa.
+func TestOTerrenoPintadoEncareceOCaminho(t *testing.T) {
+	b, st := mesaEmCombate(t)
+	// Quatro passos ortogonais custam 4 de 6 — cabe com folga.
+	reto := caminho([2]int{0, 0}, [2]int{1, 0}, [2]int{2, 0}, [2]int{3, 0}, [2]int{4, 0})
+	if err := proposeMove(b, st, "t1", reto, jogadorDono); err != nil {
+		t.Fatalf("caminho de quatro quadrados em chão limpo foi recusado: %v", err)
+	}
+	if b.Pending.Cost != 4 {
+		t.Fatalf("chão limpo custou %d, esperado 4", b.Pending.Cost)
+	}
+	b.Pending = nil
+
+	// O mestre pinta DUAS casas do caminho: cada uma passa a custar 2.
+	paintTerrain(b, engine.Square{X: 2, Y: 0})
+	paintTerrain(b, engine.Square{X: 3, Y: 0})
+
+	if err := proposeMove(b, st, "t1", reto, jogadorDono); err != nil {
+		t.Fatalf("seis quadrados de custo num deslocamento de seis foram recusados: %v", err)
+	}
+	if b.Pending.Cost != 6 {
+		t.Errorf("com duas casas difíceis o caminho custou %d, esperado 6 (T20 p238)", b.Pending.Cost)
+	}
+}
+
+// Pintar é ALTERNAR: o segundo clique na mesma casa apaga. Sem isso o mestre
+// não teria como desfazer o brejo que pintou errado.
+func TestPintarDeNovoApagaOTerreno(t *testing.T) {
+	b, _ := mesaEmCombate(t)
+	casa := engine.Square{X: 2, Y: 0}
+
+	paintTerrain(b, casa)
+	if len(b.Difficult) != 1 {
+		t.Fatalf("pintar não marcou a casa: %+v", b.Difficult)
+	}
+	versaoDepoisDePintar := b.Version
+
+	paintTerrain(b, casa)
+
+	if len(b.Difficult) != 0 {
+		t.Errorf("pintar de novo não apagou: %+v", b.Difficult)
+	}
+	// A versão sobe nas DUAS, senão o cliente com broadcast em voo não sabe que
+	// o chão mudou de volta.
+	if b.Version <= versaoDepoisDePintar {
+		t.Errorf("apagar não subiu a versão: %d", b.Version)
+	}
+}

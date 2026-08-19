@@ -45,16 +45,17 @@ var gmGate = map[string]bool{
 	// regra mais fina (assertMovable) e por isso NÃO leva a porta larga — igual
 	// aos vitais: o mestre move qualquer peça, o jogador move a própria na vez
 	// dela, e fora de combate cada um anda com a sua.
-	"board-open":         true,
-	"board-close":        true,
-	"get-board-state":    false, // ler o tabuleiro é de todo mundo na mesa — REDIGIDO por papel
-	"board-token-add":    true,
-	"board-token-remove": true,
-	"board-token-update": true,
-	"board-populate":     true,
-	"board-move-propose": false, // assertMovable: papel, posse e a VEZ
-	"board-move-cancel":  false, // desfaz o próprio provisório; o mestre desfaz o de qualquer um
-	"board-move-commit":  false, // idem
+	"board-open":          true,
+	"board-close":         true,
+	"get-board-state":     false, // ler o tabuleiro é de todo mundo na mesa — REDIGIDO por papel
+	"board-token-add":     true,
+	"board-token-remove":  true,
+	"board-token-update":  true,
+	"board-populate":      true,
+	"board-terrain-paint": true,  // o chão é da cena, e a cena é do mestre
+	"board-move-propose":  false, // assertMovable: papel, posse e a VEZ
+	"board-move-cancel":   false, // desfaz o próprio provisório; o mestre desfaz o de qualquer um
+	"board-move-commit":   false, // idem
 }
 
 var (

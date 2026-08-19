@@ -1,4 +1,4 @@
-import { render, screen, within } from '@solidjs/testing-library'
+import { cleanup, render, screen, within } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { createBoardViewport } from '@/features/battle-board/board-viewport'
@@ -21,6 +21,7 @@ class FakeRealtime {
   readonly openBoard = vi.fn()
   readonly removeToken = vi.fn()
   readonly addToken = vi.fn()
+  readonly paintTerrain = vi.fn()
   readonly proposeMove = vi.fn()
   readonly commitMove = vi.fn()
   readonly cancelMove = vi.fn()
@@ -49,6 +50,7 @@ class FakeRealtime {
       addToken: this.addToken,
       closeBoard: this.closeBoard,
       populateBoard: this.populateBoard,
+      paintTerrain: this.paintTerrain,
       openBoard: this.openBoard,
       proposeMove: this.proposeMove,
       commitMove: this.commitMove,
@@ -276,6 +278,39 @@ describe('o jogador move a própria peça', () => {
     expect(rt.proposeMove).not.toHaveBeenCalled()
   })
 
+  /**
+   * O brejo entra na conta ANTES do clique: com o chão pintado, o losango de
+   * alcance encolhe sozinho. Sem isto o jogador via a casa acesa, clicava, e o
+   * servidor recusava — a regra do livro chegava como erro em vez de chegar
+   * como desenho (T20 p238, ALE-124 fatia 4).
+   */
+  it('o terreno difícil encolhe o losango antes do clique', async () => {
+    const semBrejo = renderRegion(false, COM_JOGADOR, 'e1', {
+      myCharacterIds: MEU_HEROI,
+      turnIndex: 0,
+    })
+    await semBrejo.user.click(
+      screen.getByRole('button', { name: 'Sílfide Ladina, coluna 6, linha 5' }),
+    )
+    // Seis quadrados em linha reta é exatamente o deslocamento: a última casa
+    // do alcance responde. (A oeste porque a janela do teste vai de −10 a 9.)
+    expect(screen.getByRole('button', { name: 'Coluna 0, linha 5' })).toBeEnabled()
+    cleanup()
+
+    // Uma casa de brejo no meio do caminho custa 2 em vez de 1, e a ponta do
+    // losango deixa de caber no orçamento.
+    // O brejo colado na peça: entrar nele custa 2, e contornar pela diagonal
+    // custa 2 também (p238) — não há caminho de 6 até a ponta.
+    const comBrejo: BoardState = { ...COM_JOGADOR, difficult: [{ x: 5, y: 5 }] }
+    const { user } = renderRegion(false, comBrejo, 'e1', {
+      myCharacterIds: MEU_HEROI,
+      turnIndex: 0,
+    })
+    await user.click(screen.getByRole('button', { name: 'Sílfide Ladina, coluna 6, linha 5' }))
+
+    expect(screen.getByRole('button', { name: 'Coluna 0, linha 5' })).toBeDisabled()
+  })
+
   it('fora da própria vez a peça nem responde', () => {
     renderRegion(false, COM_JOGADOR, 'e2', { myCharacterIds: MEU_HEROI, turnIndex: 1 })
 
@@ -483,5 +518,50 @@ describe('o painel da peça', () => {
     renderRegion(false, TABULEIRO, undefined, { turnIndex: -1 })
 
     expect(screen.queryByText('Na vez')).not.toBeInTheDocument()
+  })
+
+  /**
+   * O terreno difícil (T20 p238) é a fatia 4 da ALE-124. O motor sempre soube
+   * cobrá-lo — o `PathCost` recebe o chão e o `boardReach` também — e o estado
+   * não tinha onde guardá-lo: o mestre não tinha como DECLARAR o brejo.
+   */
+  it('com o pincel ligado, a casa clicada vira terreno difícil em vez de receber a peça', async () => {
+    const { rt, user } = renderRegion(true)
+
+    await user.click(screen.getByRole('button', { name: 'Terreno' }))
+    await user.click(screen.getByRole('button', { name: 'Coluna 1, linha 1' }))
+
+    expect(rt.paintTerrain).toHaveBeenCalledWith(1, 1)
+    // A peça NÃO foi posicionada: o mestre está pintando o chão.
+    expect(rt.updateToken).not.toHaveBeenCalled()
+  })
+
+  // Sem o pincel, a mesma casa continua sendo onde a peça pousa.
+  it('sem o pincel, a casa continua pousando a peça', async () => {
+    const { rt, user } = renderRegion(true)
+
+    await user.click(screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' }))
+    await user.click(screen.getByRole('button', { name: 'Coluna 1, linha 1' }))
+
+    expect(rt.updateToken).toHaveBeenCalledWith('t1', { x: 1, y: 1 })
+    expect(rt.paintTerrain).not.toHaveBeenCalled()
+  })
+
+  // O chão é público: o jogador precisa ver o que a régua vai lhe cobrar.
+  it('a casa difícil se anuncia, e para o jogador também', async () => {
+    const comBrejo: BoardState = { ...TABULEIRO, difficult: [{ x: 1, y: 1 }] }
+    const { user } = renderRegion(true, comBrejo)
+
+    await user.click(screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' }))
+
+    expect(
+      screen.getByRole('button', { name: 'Coluna 1, linha 1, terreno difícil' }),
+    ).toBeInTheDocument()
+  })
+
+  it('o jogador não ganha o pincel: o chão é da cena, e a cena é do mestre', () => {
+    renderRegion(false)
+
+    expect(screen.queryByRole('button', { name: 'Terreno' })).not.toBeInTheDocument()
   })
 })

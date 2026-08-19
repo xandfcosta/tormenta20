@@ -42,6 +42,9 @@ export function BoardView(props: {
   pending?: PendingMove | null
   /** Peças que ESTE espectador pode pegar; as outras não respondem ao clique. */
   movableTokenIds?: ReadonlySet<string>
+  /** As casas que custam o dobro (T20 p238). Público: chão acidentado é coisa
+   *  que se vê, e a mesa precisa ver o mesmo mapa que a régua cobra. */
+  difficult?: readonly BoardSquare[]
 }) {
   const view = () => props.view
   const window = () => ({
@@ -112,9 +115,16 @@ export function BoardView(props: {
 
       <Show when={props.onPlaceToken}>
         {(place) => (
-          <SquareLayer view={view()} onPlace={place()} reachable={props.reachable} />
+          <SquareLayer
+            view={view()}
+            onPlace={place()}
+            reachable={props.reachable}
+            difficult={props.difficult}
+          />
         )}
       </Show>
+
+      <DifficultLayer view={view()} squares={props.difficult ?? []} />
 
       <Show when={props.pending}>{(move) => <PendingPath move={move()} view={view()} />}</Show>
 
@@ -147,6 +157,7 @@ function SquareLayer(props: {
   view: BoardViewport
   onPlace: (x: number, y: number) => void
   reachable?: readonly BoardSquare[]
+  difficult?: readonly BoardSquare[]
 }) {
   // A origem é fracionária desde o arraste (ALE-140), mas casa é coisa inteira:
   // a camada começa no quadrado de baixo e se desloca pelo RESTO, com uma
@@ -165,6 +176,8 @@ function SquareLayer(props: {
   // reconciliação.
   const lit = () =>
     props.reachable && new Set(props.reachable.map((square) => `${square.x},${square.y}`))
+  const hardKeys = () =>
+    props.difficult && new Set(props.difficult.map((square) => `${square.x},${square.y}`))
   const canPlace = (x: number, y: number) => {
     const acesas = lit()
     return !acesas || acesas.has(`${x},${y}`)
@@ -197,9 +210,41 @@ function SquareLayer(props: {
                 'bg-[color:var(--grimorio-gold)]/12 inset-ring-1 inset-ring-[color:var(--grimorio-gold)]/30',
               !canPlace(square.x, square.y) && 'cursor-default hover:bg-transparent',
             )}
-            aria-label={`Coluna ${square.x}, linha ${square.y}`}
+            aria-label={`Coluna ${square.x}, linha ${square.y}${
+              hardKeys()?.has(`${square.x},${square.y}`) ? ', terreno difícil' : ''
+            }`}
             disabled={!canPlace(square.x, square.y)}
             onClick={() => props.onPlace(square.x, square.y)}
+          />
+        )}
+      </For>
+    </div>
+  )
+}
+
+/**
+ * O chão que custa o dobro (T20 p238), desenhado para a mesa INTEIRA — inclusive
+ * para quem não posiciona peça, porque terreno acidentado é coisa que se vê e o
+ * jogador precisa enxergar o que a régua vai lhe cobrar (ALE-124, fatia 4).
+ *
+ * Camada só de pintura, sem nós clicáveis: quem clica é a `SquareLayer`, que só
+ * existe para quem pode agir. Hachura e não cor chapada — a peça fica por cima,
+ * e um bloco sólido esconderia o que importa.
+ */
+function DifficultLayer(props: { view: BoardViewport; squares: readonly BoardSquare[] }) {
+  const cell = () => props.view.cellPx()
+  return (
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0">
+      <For each={props.squares}>
+        {(square) => (
+          <div
+            class="absolute bg-[repeating-linear-gradient(135deg,rgba(255,255,255,.16)_0_3px,transparent_3px_8px)] inset-ring-1 inset-ring-white/15"
+            style={{
+              left: `${(square.x - props.view.originX()) * cell()}px`,
+              top: `${(square.y - props.view.originY()) * cell()}px`,
+              width: `${cell()}px`,
+              height: `${cell()}px`,
+            }}
           />
         )}
       </For>

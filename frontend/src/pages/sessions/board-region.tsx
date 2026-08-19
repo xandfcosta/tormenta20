@@ -1,4 +1,4 @@
-import { Check, Crosshair, LayoutGrid, Minus, Plus, Undo2, Users, X } from 'lucide-solid'
+import { Brush, Check, Crosshair, LayoutGrid, Minus, Plus, Undo2, Users, X } from 'lucide-solid'
 import { For, Show, createMemo, createSignal } from 'solid-js'
 import { pathBetween } from '@/features/battle-board/board-path'
 import { TokenActions } from '@/features/battle-board/token-actions'
@@ -41,6 +41,10 @@ export function BoardRegion(props: {
   myCharacterIds?: ReadonlySet<number>
 }) {
   const [selectedTokenId, setSelectedTokenId] = createSignal<string | null>(null)
+  // O pincel é MODO e não gesto: enquanto ele está ligado, a casa clicada vira
+  // terreno difícil em vez de receber a peça. Modo porque o clique numa casa já
+  // tem dono (pousar), e porque um gesto com tecla não existe no toque.
+  const [painting, setPainting] = createSignal(false)
   const board = () => props.rt.board()
 
   // A vez é do RASTREADOR: o tabuleiro pergunta, não guarda uma cópia — duas
@@ -73,7 +77,9 @@ export function BoardRegion(props: {
   const reachable = createMemo(() => {
     const token = selectedToken()
     if (!token || props.isGm || !inCombat() || !token.speedSquares) return undefined
-    return boardReach({ x: token.x, y: token.y }, [], token.speedSquares)
+    // O losango passa a CONTORNAR o brejo sozinho: é o mesmo motor que o
+    // servidor usa para cobrar o caminho (T20 p238).
+    return boardReach({ x: token.x, y: token.y }, board()?.difficult ?? [], token.speedSquares)
   })
 
   /**
@@ -86,6 +92,14 @@ export function BoardRegion(props: {
   // que uma posição anterior resolve, e o `PendingMove` já é o desfazer do
   // jogador (ALE-178).
   const [ondeEstava, setOndeEstava] = createSignal<Record<string, { x: number; y: number }>>({})
+
+  const onSquare = (x: number, y: number) => {
+    if (painting()) {
+      props.rt.paintTerrain(x, y)
+      return
+    }
+    placeSelected(x, y)
+  }
 
   const placeSelected = (x: number, y: number) => {
     const token = selectedToken()
@@ -135,6 +149,15 @@ export function BoardRegion(props: {
               <div class="ml-auto flex flex-wrap items-center justify-end gap-1">
                 <ViewControls view={props.view} onFit={() => props.view.fit(live().tokens)} />
                 <Show when={props.isGm}>
+                  <Button
+                    size="sm"
+                    variant={painting() ? 'default' : 'ghost'}
+                    aria-pressed={painting()}
+                    onClick={() => setPainting((ligado) => !ligado)}
+                  >
+                    <Brush aria-hidden="true" class="size-4" />
+                    Terreno
+                  </Button>
                   <Button
                     size="sm"
                     variant="secondary"
@@ -190,7 +213,10 @@ export function BoardRegion(props: {
               // a camada de quadrados nasceria com centenas de botões inertes
               // na árvore de quem só assiste.
               onSelectToken={movableTokenIds().size > 0 ? selectToken : undefined}
-              onPlaceToken={selectedTokenId() ? placeSelected : undefined}
+              // Com o pincel ligado, TODA casa responde — não só quando há peça
+              // na mão: o mestre está pintando o chão, não posicionando.
+              onPlaceToken={painting() || selectedTokenId() ? onSquare : undefined}
+              difficult={live().difficult}
             />
 
             <Show when={props.isGm && selectedToken()}>

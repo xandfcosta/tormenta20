@@ -1,5 +1,6 @@
 import { type Accessor, createRenderEffect, createSignal, onCleanup } from 'solid-js'
 import { io } from 'socket.io-client'
+import type { BoardSquare } from '@/shared/lib/engine-wasm'
 
 /**
  * Session runtime state, mirroring the backend `SessionRuntimeState`. The
@@ -109,6 +110,9 @@ export type BoardState = {
   place: string
   terrain: string
   tokens: BoardToken[]
+  /** As casas que custam o dobro (T20 p238). Lista ESPARSA: o plano é infinito,
+   *  então não existe "todas as casas" — existem as poucas que o mestre pintou. */
+  difficult?: BoardSquare[]
   /** O movimento proposto e ainda não confirmado — no máximo um. */
   pending?: PendingMove | null
 }
@@ -179,6 +183,8 @@ export type SessionRealtime = {
   updateToken: (tokenId: string, patch: Partial<Omit<BoardToken, 'id'>>) => void
   /** Traz para o tabuleiro quem já está na iniciativa. Idempotente. */
   populateBoard: () => void
+  /** Alterna UMA casa como terreno difícil (mestre). */
+  paintTerrain: (x: number, y: number) => void
   /** Propõe um movimento: a mesa vê o caminho, e ninguém pousou ainda. */
   proposeMove: (tokenId: string, path: { x: number; y: number }[]) => void
   /**
@@ -320,6 +326,7 @@ export function createSessionSocket(
     removeToken: (tokenId) => send('board-token-remove', { tokenId }),
     updateToken: (tokenId, patch) => send('board-token-update', { tokenId, patch }),
     populateBoard: () => send('board-populate'),
+    paintTerrain: (x, y) => send('board-terrain-paint', { x, y }),
     proposeMove: (tokenId, path) => send('board-move-propose', { tokenId, path }),
     commitMove: (version) => send('board-move-commit', { version }),
     cancelMove: () => send('board-move-cancel'),

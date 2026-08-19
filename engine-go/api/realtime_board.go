@@ -100,6 +100,26 @@ func (g *realtimeGateway) onBoardTokenUpdate(sock *socket.Socket, args []any) {
 	})
 }
 
+// onBoardTerrainPaint (mestre) marca ou desmarca uma casa como terreno difícil.
+//
+// Só o mestre pinta o chão, e por isso leva a porta larga: terreno difícil muda
+// quanto CADA peça anda (T20 p238), então é regra da cena, não da peça.
+func (g *realtimeGateway) onBoardTerrainPaint(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok || !g.requireGm(sock, ctx.role) {
+		return
+	}
+	x, temX := intField(ctx.body, "x")
+	y, temY := intField(ctx.body, "y")
+	if !temX || !temY {
+		g.wsError(sock, "x and y are required")
+		return
+	}
+	g.mutateBoard(sock, ctx, func() (*BoardState, error) {
+		return g.s.boards.paintTerrain(context.Background(), ctx.sessionID, engine.Square{X: int(x), Y: int(y)})
+	})
+}
+
 // onBoardPopulate (mestre) traz para o tabuleiro quem já está na iniciativa, já
 // com o deslocamento de cada personagem medido.
 //

@@ -64,6 +64,10 @@ type BoardState struct {
 	Place   string       `json:"place"`
 	Terrain string       `json:"terrain"`
 	Tokens  []BoardToken `json:"tokens"`
+	// Difficult são as casas que custam o dobro (T20 p238). Lista ESPARSA, e não
+	// um mapa do tabuleiro: o plano é infinito, então não existe "todas as
+	// casas" para preencher — existem as poucas que o mestre pintou.
+	Difficult []engine.Square `json:"difficult,omitempty"`
 	// Pending é o movimento proposto e ainda não confirmado — no máximo um.
 	Pending *PendingMove `json:"pending,omitempty"`
 }
@@ -429,9 +433,7 @@ func proposeMove(b *BoardState, st *SessionRuntimeState, tokenID string, path []
 	if path[0].X != token.X || path[0].Y != token.Y {
 		return fmt.Errorf("o caminho começa em (%d,%d) e a peça está em (%d,%d)", path[0].X, path[0].Y, token.X, token.Y)
 	}
-	// Terreno difícil ainda não existe no estado (é a fatia do mapa): a régua
-	// já sabe cobrá-lo, e o mapa vazio custa o que o chão limpo custa.
-	cost := engine.PathCost(path, engine.MoveTerrain{}, budget)
+	cost := engine.PathCost(path, moveTerrainOf(b), budget)
 	if !cost.Legal {
 		return fmt.Errorf("%s", cost.Reason)
 	}
@@ -441,6 +443,38 @@ func proposeMove(b *BoardState, st *SessionRuntimeState, tokenID string, path []
 	b.Pending = &PendingMove{TokenID: tokenID, Path: path, Cost: cost.Squares, Budget: budget, ByUserID: by.userID}
 	b.Version++
 	return nil
+}
+
+// paintTerrain marca ou desmarca UMA casa como terreno difícil (T20 p238).
+//
+// Alterna em vez de receber o estado desejado: o mestre pinta clicando, e o
+// clique de novo apaga — mandar "difícil: true" duas vezes seguidas viraria uma
+// pergunta sobre o que a tela achava que estava lá, e a tela pode estar
+// desatualizada por um broadcast em voo.
+func paintTerrain(b *BoardState, square engine.Square) {
+	for i, existente := range b.Difficult {
+		if existente == square {
+			b.Difficult = append(b.Difficult[:i], b.Difficult[i+1:]...)
+			b.Version++
+			return
+		}
+	}
+	b.Difficult = append(b.Difficult, square)
+	b.Version++
+}
+
+// moveTerrainOf traduz a lista esparsa para o que o motor cobra. A conversão
+// mora aqui e não no motor porque o motor não conhece tabuleiro: ele responde
+// sobre um caminho e um chão, e quem tem chão é o estado.
+func moveTerrainOf(b *BoardState) engine.MoveTerrain {
+	if len(b.Difficult) == 0 {
+		return engine.MoveTerrain{}
+	}
+	difficult := make(map[engine.Square]bool, len(b.Difficult))
+	for _, square := range b.Difficult {
+		difficult[square] = true
+	}
+	return engine.MoveTerrain{Difficult: difficult}
 }
 
 // commitMove pousa a peça no fim do caminho proposto.
