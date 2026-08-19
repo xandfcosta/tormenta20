@@ -202,6 +202,9 @@ export type SessionRealtime = {
   addToken: (token: Omit<BoardToken, 'id'>) => void
   removeToken: (tokenId: string) => void
   updateToken: (tokenId: string, patch: Partial<Omit<BoardToken, 'id'>>) => void
+  /** Põe outra peça igual ao lado. Quem NUMERA a cópia é o servidor: dois
+   *  clientes duplicando ao mesmo tempo não podem inventar o mesmo "Zumbi 3". */
+  duplicateToken: (tokenId: string) => void
   /** Traz para o tabuleiro quem já está na iniciativa. Idempotente. */
   populateBoard: () => void
   /** Marca ou apaga UMA casa como terreno difícil (mestre). Explícito e não
@@ -388,6 +391,7 @@ export function createSessionSocket(
     addToken: (token) => send('board-token-add', { ...token }),
     removeToken: (tokenId) => send('board-token-remove', { tokenId }),
     updateToken: (tokenId, patch) => send('board-token-update', { tokenId, patch }),
+    duplicateToken: (tokenId) => send('board-token-duplicate', { tokenId }),
     populateBoard: () => send('board-populate'),
     paintTerrain: (x, y, difficult) => send('board-terrain-paint', { x, y, difficult }),
     listPlaces: () => ask('board-places', {}, readPlaces),

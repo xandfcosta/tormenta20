@@ -196,6 +196,14 @@ func (bs *boardStore) removeToken(ctx context.Context, sessionID int64, tokenID 
 	return bs.apply(ctx, sessionID, func(b *BoardState) error { removeToken(b, tokenID); return nil })
 }
 
+// duplicateToken põe outra igual ao lado, numerada pelo SERVIDOR: dois clientes
+// duplicando ao mesmo tempo não podem inventar o mesmo "Zumbi 3" (ALE-192).
+func (bs *boardStore) duplicateToken(ctx context.Context, sessionID int64, tokenID string) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error {
+		return duplicateToken(b, tokenID, bs.newID)
+	})
+}
+
 func (bs *boardStore) updateToken(ctx context.Context, sessionID int64, tokenID string, patch tokenPatch) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, func(b *BoardState) error { return updateToken(b, tokenID, patch) })
 }

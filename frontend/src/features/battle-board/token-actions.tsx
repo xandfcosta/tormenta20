@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Pencil, Trash2, Undo2 } from 'lucide-solid'
+import { Copy, Eye, EyeOff, Pencil, Trash2, Undo2 } from 'lucide-solid'
 import { Show } from 'solid-js'
 import type { BoardToken } from '@/shared/realtime/realtime'
 import { Button } from '@/shared/ui/button'
@@ -27,6 +27,9 @@ export function TokenActions(props: {
   onRemove: () => void
   /** Ausente = a peça não foi movida nesta sessão de tela, então não há para onde voltar. */
   onUndo?: () => void
+  /** Ausente = duplicar não está disponível (o rascunho do lugar guarda a cena
+   *  inteira de uma vez e numera na gravação, não por mensagem). */
+  onDuplicate?: () => void
 }) {
   return (
     <div class="flex flex-wrap items-center gap-1 border-t border-grimorio-iron px-3 py-1.5">
@@ -55,6 +58,22 @@ export function TokenActions(props: {
           <EyeOff aria-hidden="true" class="size-4 text-grimorio-gold" />
         </Show>
       </Button>
+
+      {/* "Mais um zumbi" é a operação mais repetida ao montar encontro, e ela
+          custava abrir a forma e digitar o nome de uma criatura idêntica à que
+          já está ali ao lado. Quem NUMERA é o servidor (ALE-192). */}
+      <Show when={props.onDuplicate}>
+        {(duplicar) => (
+          <Button
+            size="sm"
+            variant="ghost"
+            aria-label={`Duplicar ${props.token.label}`}
+            onClick={() => duplicar()()}
+          >
+            <Copy aria-hidden="true" class="size-4" />
+          </Button>
+        )}
+      </Show>
 
       <Show when={props.onUndo}>
         {(undo) => (

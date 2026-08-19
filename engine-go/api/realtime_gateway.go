@@ -124,6 +124,7 @@ func (g *realtimeGateway) onConnect(sock *socket.Socket) {
 	sock.On("board-as-player", func(args ...any) { g.onBoardAsPlayer(sock, args) })
 	sock.On("board-token-add", func(args ...any) { g.onBoardTokenAdd(sock, args) })
 	sock.On("board-token-remove", func(args ...any) { g.onBoardTokenRemove(sock, args) })
+	sock.On("board-token-duplicate", func(args ...any) { g.onBoardTokenDuplicate(sock, args) })
 	sock.On("board-token-update", func(args ...any) { g.onBoardTokenUpdate(sock, args) })
 	sock.On("board-populate", func(args ...any) { g.onBoardPopulate(sock, args) })
 	sock.On("board-terrain-paint", func(args ...any) { g.onBoardTerrainPaint(sock, args) })

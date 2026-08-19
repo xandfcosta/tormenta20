@@ -139,6 +139,26 @@ func (g *realtimeGateway) onBoardTokenUpdate(sock *socket.Socket, args []any) {
 	})
 }
 
+// onBoardTokenDuplicate (mestre) põe outra peça igual ao lado.
+//
+// Quem numera é o SERVIDOR: varrer as peças de mesma espécie e achar o próximo
+// número livre é decisão sobre o estado, e a tela não pode adivinhar um número
+// que outro cliente acabou de usar (ALE-192).
+func (g *realtimeGateway) onBoardTokenDuplicate(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok || !g.requireGm(sock, ctx.role) {
+		return
+	}
+	tokenID := stringField(ctx.body, "tokenId")
+	if tokenID == "" {
+		g.wsError(sock, "tokenId is required")
+		return
+	}
+	g.mutateBoard(sock, ctx, func() (*BoardState, error) {
+		return g.s.boards.duplicateToken(context.Background(), ctx.sessionID, tokenID)
+	})
+}
+
 // onBoardPlaces (mestre) lista os lugares guardados da crônica.
 //
 // Só o mestre: o acervo de cenas é preparação, e saber que existe uma "Cripta

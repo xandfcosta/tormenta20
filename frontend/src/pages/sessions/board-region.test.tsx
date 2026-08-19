@@ -38,6 +38,7 @@ class FakeRealtime {
    *  PERGUNTA — a lista viaja só com nome e contagem. */
   scene: BoardState | null = null
   readonly savePlace = vi.fn(() => Promise.resolve(this.places))
+  readonly duplicateToken = vi.fn()
   readonly proposeMove = vi.fn()
   readonly commitMove = vi.fn()
   readonly cancelMove = vi.fn()
@@ -64,6 +65,7 @@ class FakeRealtime {
       error: () => null,
       board: this.board,
       updateToken: this.updateToken,
+      duplicateToken: this.duplicateToken,
       removeToken: this.removeToken,
       addToken: this.addToken,
       closeBoard: this.closeBoard,
@@ -1253,5 +1255,37 @@ describe('o gabarito de área', () => {
     renderRegion(false, COM_JOGADOR, 'e1', { myCharacterIds: MEU_HEROI, turnIndex: 0 })
 
     expect(screen.getByRole('button', { name: 'Gabarito de área' })).toBeInTheDocument()
+  })
+})
+
+
+/**
+ * Duplicar peça (ALE-192).
+ *
+ * "Mais um zumbi" é a operação mais repetida ao montar encontro, e ela custava
+ * abrir a forma e digitar o nome de uma criatura idêntica à que já está ali ao
+ * lado. Quem NUMERA a cópia é o servidor — a regra e a prova de que "Zumbi 1"
+ * vira "Zumbi 3" estão no Go, com a mesma tabela de exemplos do parser de
+ * aparência. Aqui se prova o caminho: o mestre tem o botão e o jogador não.
+ */
+describe('duplicar peça', () => {
+  it('o mestre duplica a peça selecionada', async () => {
+    const { rt, user } = renderRegion(true)
+
+    await user.click(screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' }))
+    await user.click(screen.getByRole('button', { name: 'Duplicar Ogro' }))
+
+    expect(rt.duplicateToken).toHaveBeenCalledWith('t1')
+  })
+
+  it('o jogador não duplica peça nenhuma', async () => {
+    const { user } = renderRegion(false, COM_JOGADOR, 'e1', {
+      myCharacterIds: MEU_HEROI,
+      turnIndex: 0,
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Sílfide Ladina, coluna 6, linha 5' }))
+
+    expect(screen.queryByRole('button', { name: /Duplicar/ })).not.toBeInTheDocument()
   })
 })

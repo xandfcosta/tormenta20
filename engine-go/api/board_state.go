@@ -2,6 +2,9 @@ package api
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
 
 	"t20engine/engine"
 )
@@ -92,6 +95,105 @@ func addToken(b *BoardState, t BoardToken, newID func() string) error {
 	b.Tokens = append(b.Tokens, t)
 	b.Version++
 	return nil
+}
+
+// instanceSuffix é o número que a mesa usa para contar iguais: "Zumbi 3".
+//
+// A MESMA convenção vive na tela, em `token-appearance.ts`, onde ela decide a
+// cor e o selo da peça (ALE-179) — e as duas precisam concordar, senão a cópia
+// nasce com um nome que o desenho colore como outra espécie. Os dois testes
+// carregam a mesma tabela de exemplos de propósito, com a mesma armadilha: o
+// número no MEIO do nome ("Recruta Nv1 Simples") não é instância.
+var instanceSuffix = regexp.MustCompile(`^(.*\S)\s+(\d{1,3})$`)
+
+// speciesOf separa a espécie do número da instância.
+func speciesOf(label string) (string, int) {
+	match := instanceSuffix.FindStringSubmatch(strings.TrimSpace(label))
+	if match == nil {
+		return strings.TrimSpace(label), 0
+	}
+	numero, err := strconv.Atoi(match[2])
+	if err != nil {
+		return strings.TrimSpace(label), 0
+	}
+	return match[1], numero
+}
+
+// nextInstanceLabel devolve o rótulo da cópia: a mesma espécie com o MENOR
+// número livre.
+//
+// Menor livre e não "maior mais um": depois de tirar o Zumbi 2 do tabuleiro, a
+// próxima cópia volta a ser o Zumbi 2 e a numeração continua colada — uma mesa
+// com "Zumbi 1, 3 e 7" faz a pessoa procurar os que não existem. A peça SEM
+// número conta como a instância 1, senão duplicar o "Ogro" produziria um
+// "Ogro 1" que ninguém distingue do original.
+//
+// O original NUNCA é renomeado: ele pode estar amarrado a uma linha da
+// iniciativa, e mudar o nome dele por baixo faria a lista e o mapa discordarem
+// sobre quem é quem.
+func nextInstanceLabel(b *BoardState, label string) string {
+	especie, _ := speciesOf(label)
+	usados := map[int]bool{}
+	for _, token := range b.Tokens {
+		outra, numero := speciesOf(token.Label)
+		if outra != especie {
+			continue
+		}
+		if numero == 0 {
+			numero = 1 // a peça sem número ocupa o 1
+		}
+		usados[numero] = true
+	}
+	for numero := 1; ; numero++ {
+		if !usados[numero] {
+			return fmt.Sprintf("%s %d", especie, numero)
+		}
+	}
+}
+
+// duplicateToken põe outra igual no tabuleiro — "mais um zumbi" é a operação
+// mais repetida ao montar encontro (ALE-192).
+//
+// A cópia leva o corpo (rótulo renumerado, tamanho, tipo e o ocultamento: o
+// segundo zumbi da emboscada também está escondido) e NÃO leva o vínculo:
+// `entryId` e `characterId` ficam para trás porque a cópia é uma peça nova, não
+// a mesma linha da iniciativa nem o mesmo personagem.
+func duplicateToken(b *BoardState, tokenID string, newID func() string) error {
+	original := findToken(b, tokenID)
+	if original == nil {
+		return fmt.Errorf("peça %q não está no tabuleiro", tokenID)
+	}
+	copia := *original
+	copia.EntryID = nil
+	copia.CharacterID = nil
+	copia.SpeedSquares = original.SpeedSquares
+	copia.Label = nextInstanceLabel(b, original.Label)
+	spot := freeSpotNear(b, boardSpot{x: original.X, y: original.Y})
+	copia.X, copia.Y = spot.x, spot.y
+	return addToken(b, copia, newID)
+}
+
+// freeSpotNear acha o primeiro quadrado livre em volta de um ponto, em anéis
+// que crescem.
+//
+// AO LADO do original, e não na fileira de entrada: quem duplica o zumbi que
+// está no canto do mapa espera o irmão dele ali do lado, não a dez quadrados de
+// distância no lugar combinado onde as peças avulsas nascem (ALE-166).
+func freeSpotNear(b *BoardState, from boardSpot) boardSpot {
+	for anel := 1; anel <= boardCoordLimit; anel++ {
+		for dy := -anel; dy <= anel; dy++ {
+			for dx := -anel; dx <= anel; dx++ {
+				if abs(dx) != anel && abs(dy) != anel {
+					continue // o miolo já foi visto nos anéis de dentro
+				}
+				spot := boardSpot{x: from.x + dx, y: from.y + dy}
+				if !occupied(b, spot.x, spot.y) {
+					return spot
+				}
+			}
+		}
+	}
+	return from
 }
 
 // removeToken tira a peça do tabuleiro. Some em silêncio se ela já não está lá:

@@ -549,6 +549,7 @@ export function BoardRegion(props: {
                 <TokenActions
                   token={token()}
                   onUpdate={(patch) => props.rt.updateToken(token().id, patch)}
+                  onDuplicate={() => props.rt.duplicateToken(token().id)}
                   onRemove={() => {
                     props.rt.removeToken(token().id)
                     setSelectedTokenId(null)
