@@ -1,11 +1,11 @@
-import { type Page, expect, test } from '@playwright/test'
-import { VIEWPORTS, expectPageDoesNotScroll } from './support/viewports'
+import { expect, type Page, test } from '@playwright/test'
 import {
   expectDentroDaJanela,
   expectFormaColuna,
   expectNadaEscapa,
   expectNadaRolaDeLado,
 } from './support/geometry'
+import { expectPageDoesNotScroll, VIEWPORTS } from './support/viewports'
 
 const CAMPAIGN = 'Snapshot Test ALE-33' // the seed chronicle with a live session
 
@@ -713,6 +713,54 @@ test.describe('Sessão ao vivo', () => {
 
     for (const label of await novosDesde(page, antes)) {
       await page.getByRole('button', { name: `Remover ${label}` }).click()
+    }
+  })
+
+  /**
+   * Com o acervo cheio, "Abrir tabuleiro" continua alcançável (ALE-124).
+   *
+   * A cena vazia passou a mostrar os Lugares da crônica (fatia 5), e ela
+   * centrava o conteúdo com `justify-center` DENTRO de uma caixa que rola.
+   * Centrar conteúdo que transborda empurra o TOPO para fora da área rolável —
+   * e o topo aqui é justamente o botão de abrir. O mestre com algumas cenas
+   * guardadas perdia o botão de abrir a próxima.
+   *
+   * É a mesma família do ✕ inalcançável da ALE-178, e foi assim que ele
+   * apareceu: a spec dos dois clientes começou a pendurar em "Abrir tabuleiro",
+   * e o trace mostrou o clique sendo INTERCEPTADO pelo painel da aba — o botão
+   * estava clipado fora do alcance.
+   *
+   * A janela é BAIXA de propósito: é o que faz o conteúdo transbordar sem
+   * depender de quantas cenas a crônica juntou.
+   */
+  test('com o acervo cheio, o botão de abrir tabuleiro continua alcançável', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 400 })
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+    await page.getByRole('tab', { name: 'Tabuleiro' }).click()
+    await encerraOTabuleiroSeHouver(page)
+
+    // O acervo do teste: abrir e encerrar ARQUIVA a cena (fatia 5), então três
+    // idas e voltas deixam três lugares na lista.
+    const guardados = [1, 2, 3].map((n) => `Cena de teste ${SUFIXO}-${n}`)
+    for (const lugar of guardados) {
+      await page.getByRole('button', { name: 'Abrir tabuleiro' }).click()
+      await page.locator('#board-place').fill(lugar)
+      await page.getByRole('dialog').getByRole('button', { name: 'Abrir' }).click()
+      await expect(page.getByRole('grid', { name: new RegExp(lugar) })).toBeVisible()
+      await encerraOTabuleiroSeHouver(page)
+    }
+
+    // A prova: com a lista na tela, o botão continua clicável — e o diálogo
+    // abre. Um `toBeVisible` não bastaria: o botão ESTAVA visível para o
+    // navegador, e o que falhava era o clique chegar nele.
+    await page.getByRole('button', { name: 'Abrir tabuleiro' }).click()
+    await expect(page.getByRole('dialog')).toBeVisible()
+    await page.getByRole('dialog').getByRole('button', { name: 'Cancelar' }).click()
+
+    for (const lugar of guardados) {
+      await page.getByRole('button', { name: `Apagar ${lugar}` }).click()
+      await page.getByRole('dialog').getByRole('button', { name: 'Apagar' }).click()
     }
   })
 
