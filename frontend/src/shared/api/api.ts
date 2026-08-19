@@ -74,7 +74,6 @@ import type {
   SpellAugmentPick,
   UnlearnSpellResult,
   UpdateVitalsInput,
-  User,
   VitalsResult,
 } from './types'
 
@@ -156,9 +155,6 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
       resetPassword: (input: { token: string; password: string }) =>
         request<void>('/auth/reset-password', json(input)),
       me: () => request<AuthUser>('/auth/me'),
-    },
-    users: {
-      list: () => request<User[]>('/users'),
     },
     characters: {
       list: () => request<Character[]>('/characters'),

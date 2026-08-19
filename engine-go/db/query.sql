@@ -259,16 +259,6 @@ SELECT ch.id, ch.name, ch.level FROM campaign_members m
 JOIN characters ch ON ch.id = m.characterId
 WHERE m.campaignId = ? AND ch.ownerId = ? LIMIT 1;
 
--- name: VisiblePlayerOwners :many
-SELECT DISTINCT ch.ownerId FROM campaign_members m
-JOIN campaigns c ON c.id = m.campaignId JOIN characters ch ON ch.id = m.characterId
-WHERE c.ownerId = ?;
-
--- name: VisibleGmOwners :many
-SELECT DISTINCT c.ownerId FROM campaign_members m
-JOIN campaigns c ON c.id = m.campaignId JOIN characters ch ON ch.id = m.characterId
-WHERE ch.ownerId = ?;
-
 -- name: ListUsersByIDs :many
 SELECT id, email, name, createdAt FROM users WHERE id IN (sqlc.slice('ids')) ORDER BY createdAt DESC;
 

@@ -121,7 +121,6 @@ func TestProtectedRoutesRejectAnonymous(t *testing.T) {
 
 	protected := []struct{ method, path string }{
 		{http.MethodGet, "/auth/me"},
-		{http.MethodGet, "/users"},
 		{http.MethodGet, "/campaigns"},
 		{http.MethodPost, "/campaigns"},
 		{http.MethodGet, "/campaigns/1"},

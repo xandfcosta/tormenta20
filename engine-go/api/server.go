@@ -126,7 +126,6 @@ func (s *Server) Router() http.Handler {
 	// exists (ALE-120).
 	r.Get("/account-invites/{token}", s.handleResolveAccountInvite)
 
-	r.With(s.requireAuth).Get("/users", s.handleListUsers)
 
 	// Anonymous by necessity: whoever forgot their password cannot authenticate
 	// to change it. What guards it is the single-use token (ALE-120).

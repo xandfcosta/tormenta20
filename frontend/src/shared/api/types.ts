@@ -27,8 +27,6 @@ export type AuthUser = {
   isAdmin: boolean
 }
 
-export type User = AuthUser & { createdAt: string }
-
 export type Credentials = { email: string; password: string }
 
 /**

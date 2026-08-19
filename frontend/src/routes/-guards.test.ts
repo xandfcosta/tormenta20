@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/solid-query'
 import { describe, expect, it } from 'vitest'
 import { meQueryOptions } from '@/entities/user/queries'
-import type { User } from '@/shared/api/api'
+import type { AuthUser } from '@/shared/api/api'
 import { requireAdmin, requireSession } from './-guards'
 
 /**
@@ -9,14 +9,14 @@ import { requireAdmin, requireSession } from './-guards'
  * que se nota: abrir um link direto de uma cena, cair no login e — depois de
  * entrar — parar na home em vez do lugar para onde se ia.
  */
-function guardArgs(user: User | null, href = '/campaigns/7') {
+function guardArgs(user: AuthUser | null, href = '/campaigns/7') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   queryClient.setQueryData(meQueryOptions.queryKey, user)
   return { context: { queryClient }, location: { href } }
 }
 
-function makeUser(overrides: Partial<User> = {}): User {
-  return { id: 1, email: 'a@t20.local', isAdmin: false, ...overrides } as User
+function makeUser(overrides: Partial<AuthUser> = {}): AuthUser {
+  return { id: 1, email: 'a@t20.local', isAdmin: false, ...overrides } as AuthUser
 }
 
 /**
