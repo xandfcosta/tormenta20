@@ -1,10 +1,10 @@
 import { useQueryClient } from '@tanstack/solid-query'
 import { ChevronDown, ChevronUp } from 'lucide-solid'
-import { For, Show, createSignal } from 'solid-js'
+import { createSignal, For, Show } from 'solid-js'
 import type { Character } from '@/shared/api/api'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
-import { MAX_LEVEL, eligibleClasses, levelActions } from './level-mutations'
+import { eligibleClasses, levelActions, MAX_LEVEL } from './level-mutations'
 
 /**
  * Total level with its stepper. A single-class character steps straight; a
@@ -69,8 +69,15 @@ export function LevelStepper(props: { character: Character }) {
             character={props.character}
             direction={direction()}
             onPick={(className) => {
+              // A direção é lida ANTES de fechar o picker, e a ordem é o
+              // conserto (ALE-197): `direction` é o acessor do `Show`, e depois
+              // de `setPicking(null)` a condição já é falsa — lê-lo LANÇA
+              // "Attempting to access a stale value from <Show>". O throw
+              // morria no handler, então o multiclasse clicava a classe, via o
+              // diálogo fechar e o nível não mudava. Nada aparecia na tela.
+              const chosen = direction()
               setPicking(null)
-              void bump(className, direction())
+              void bump(className, chosen)
             }}
             onClose={() => setPicking(null)}
           />
