@@ -15,6 +15,14 @@ const CAMPAIGN = 'Snapshot Test ALE-33' // the seed chronicle with a live sessio
  * Read-only once inside: asserts the socket.io gateway connected, without
  * touching initiative/turns, so the seed survives the run untouched.
  */
+/**
+ * SERIAL: todos estes testes escrevem na sessão 4 da seed — abrem tabuleiro,
+ * povoam a iniciativa, ferem, removem. Em paralelo eles se atropelam, e o
+ * sintoma não parece corrida: é um número que não bate ou um clique que cai no
+ * botão errado (ALE-124). A regra da casa já dizia isto; faltava aplicá-la.
+ */
+test.describe.configure({ mode: 'serial' })
+
 test.describe('Sessão ao vivo', () => {
   test('Crônicas → campanha → continuar a sessão (realtime conectado)', async ({ page }) => {
     await page.goto('/campaigns')
@@ -189,13 +197,27 @@ test.describe('Sessão ao vivo', () => {
         montar: async () => {
           // A barra de PM é o sinal de que a linha tem PERSONAGEM atrás dela —
           // o crachá "PC" mora fora do botão e casar por texto pegaria "NPC".
-          const nome = await page.evaluate(() => {
-            const barra = document.querySelector('[role="progressbar"][aria-label^="PM "]')
+          //
+          // A busca é ESCOPADA na iniciativa e falha alto quando não acha: a
+          // primeira versão procurava `button[aria-pressed]` na PÁGINA inteira
+          // com o nome achado, e quando o nome vinha vazio — porque outro
+          // worker tinha mexido na lista no meio do caminho — o `hasText: ''`
+          // casava o primeiro botão de estado da tela e o teste clicava no
+          // BOTÃO DO SOM. Ele então esperava 30s pela ficha, e o relatório do
+          // CI mostrava o som ligado como única pista.
+          const iniciativa = page
+            .getByRole('heading', { name: 'Iniciativa' })
+            .locator('xpath=ancestor::section[1]')
+          const nome = await iniciativa.evaluate((secao) => {
+            const barra = secao.querySelector('[role="progressbar"][aria-label^="PM "]')
             let no: HTMLElement | null = barra as HTMLElement | null
-            while (no && !no.querySelector('button[aria-pressed]')) no = no.parentElement
+            while (no && no !== secao && !no.querySelector('button[aria-pressed]')) {
+              no = no.parentElement
+            }
             return no?.querySelector('button[aria-pressed]')?.textContent?.trim() ?? ''
           })
-          await page.locator('button[aria-pressed]', { hasText: nome }).first().click()
+          if (!nome) throw new Error('nenhum PC na iniciativa: a lista mudou no meio do teste')
+          await iniciativa.locator('button[aria-pressed]', { hasText: nome }).first().click()
           await expect(page.getByRole('tab', { name: 'Perícias' })).toBeVisible()
         },
       },
@@ -527,7 +549,10 @@ test.describe('Sessão ao vivo', () => {
     await page.setViewportSize({ width: 1920, height: 1080 })
     await page.goto('/campaigns/1/sessions/4')
     await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
-    // A cena precisa estar SEM tabuleiro: é esse o estado sob teste.
+    // A cena precisa estar SEM tabuleiro: é esse o estado sob teste, e garanti-lo
+    // é do teste. Esperar que o anterior tenha limpado é o acoplamento que
+    // derrubou esta suíte no CI — a ordem entre os testes não é contrato.
+    await encerraOTabuleiroSeHouver(page)
     await expect(page.getByText('Nenhum tabuleiro aberto')).toBeVisible()
     // Instantâneo ANTES: só o que este teste trouxer é dele para remover. A
     // primeira versão passava `[]` aqui e limpou a iniciativa INTEIRA da seed
@@ -575,6 +600,20 @@ test.describe('Sessão ao vivo', () => {
     await page.goto('/campaigns/1/sessions/4')
     await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
 
+    // As PEÇAS deste teste são criadas por ele, e na região onde isso é
+    // possível: a 390px a cena mostra uma região por vez, e "Adicionar
+    // grupo"/"Combatente" moram no COMBATE, não na aba do tabuleiro. Contar com
+    // a iniciativa da seed era o acoplamento que derrubou este teste no CI, onde
+    // ela nasce VAZIA.
+    const combate = page.getByRole('button', { name: 'combate', exact: true })
+    if (await combate.isVisible()) await combate.click()
+    await page.getByRole('button', { name: 'Combatente' }).click()
+    for (const nome of PECAS_DO_TELEFONE) {
+      await page.getByLabel('Nome').fill(nome)
+      await page.getByRole('button', { name: 'Adicionar', exact: true }).click()
+      await expect(page.getByRole('button', { name: `Remover ${nome}` })).toBeVisible()
+    }
+
     const mesa = page.getByRole('button', { name: 'mesa', exact: true })
     if (await mesa.isVisible()) await mesa.click()
     await page.getByRole('tab', { name: 'Tabuleiro' }).click()
@@ -583,22 +622,24 @@ test.describe('Sessão ao vivo', () => {
     // esquecido aberto por uma execução anterior faria este teste procurar um
     // botão que não existe — foi o que aconteceu quando a primeira versão
     // falhou no meio e deixou a cena montada.
-    const encerrar = page.getByRole('button', { name: 'Encerrar o tabuleiro' })
-    if (await encerrar.isVisible().catch(() => false)) {
-      await encerrar.click()
-      await page.getByRole('dialog').getByRole('button', { name: 'Encerrar' }).click()
-    }
+    await encerraOTabuleiroSeHouver(page)
     await page.getByRole('button', { name: 'Abrir tabuleiro' }).click()
     await page.getByLabel('Lugar').fill('Cripta do teste')
     await page.getByRole('button', { name: 'Abrir', exact: true }).click()
     await expect(page.getByText('Cripta do teste')).toBeVisible()
 
     // POVOAR é parte do teste, não cenário: com o tabuleiro vazio o cabeçalho
-    // diz "0 peças" e cabe; com nove, ele empurra os controles para fora. Medir
-    // a cena vazia era exatamente a cegueira que a ALE-144 documentou, e aqui
-    // ela custou uma versão deste teste que passava verde sobre o defeito.
+    // diz "0 peças" e cabe; cheio, ele empurra os controles para fora. Medir a
+    // cena vazia era exatamente a cegueira que a ALE-144 documentou, e aqui ela
+    // custou uma versão deste teste que passava verde sobre o defeito.
+    //
+    // O que este teste precisa é de um cabeçalho CHEIO, não de um NÚMERO. Ele já
+    // prendeu "9 peças" — o tamanho da iniciativa que o banco de
+    // desenvolvimento acumulou — e caiu no CI, onde a seed nasce vazia e o
+    // cabeçalho dizia "4 peças". Contar a lista antes de povoar também não
+    // serve: outro worker mexe nela entre a contagem e o clique.
     await page.getByRole('button', { name: /Trazer a iniciativa/ }).click()
-    await expect(page.getByText(/9 peças/)).toBeVisible()
+    await expect(page.getByText(/[1-9]\d* peças/)).toBeVisible()
 
     // Duas asserções, e cada uma diz uma coisa: nada fora da janela sem
     // caminho, E nenhum painel rolando de lado. O defeito desta issue passava
@@ -608,12 +649,20 @@ test.describe('Sessão ao vivo', () => {
     await expectDentroDaJanela(page)
     await expectNadaRolaDeLado(page, '.scene-grimorio')
 
-    // Encerra pelo próprio botão que o defeito escondia — a seed é
-    // compartilhada, e um tabuleiro esquecido aberto sobrevive ao reinício
-    // desde que a persistência passou a funcionar (ALE-124).
+    // Encerra pelo próprio botão que o defeito escondia — isto é asserção
+    // disfarçada de limpeza: se o ✕ tivesse saído da tela, o clique não
+    // aconteceria. E a seed é compartilhada: um tabuleiro esquecido aberto
+    // sobrevive ao reinício desde que a persistência passou a funcionar
+    // (ALE-124), e o teste seguinte pode ser o que EXIGE a mesa vazia.
     await page.getByRole('button', { name: 'Encerrar o tabuleiro' }).click()
     await page.getByRole('dialog').getByRole('button', { name: 'Encerrar' }).click()
     await expect(page.getByText('Nenhum tabuleiro aberto')).toBeVisible()
+
+    // E leva embora os combatentes que criou, na região onde eles moram.
+    if (await combate.isVisible()) await combate.click()
+    for (const nome of PECAS_DO_TELEFONE) {
+      await page.getByRole('button', { name: `Remover ${nome}` }).click()
+    }
   })
 
   /** Os rótulos que estão na iniciativa agora. */
@@ -621,6 +670,19 @@ test.describe('Sessão ao vivo', () => {
     return page.$$eval('button[aria-label^="Remover "]', (bs) =>
       bs.map((b) => (b.getAttribute('aria-label') ?? '').replace('Remover ', '')),
     )
+  }
+
+  /**
+   * Encerra o tabuleiro que estiver aberto. Chamado por quem PRECISA da cena
+   * vazia e por quem abre uma cena, no fim — a seed é compartilhada e a ordem
+   * dos testes não é contrato.
+   */
+  async function encerraOTabuleiroSeHouver(page: Page): Promise<void> {
+    const encerrar = page.getByRole('button', { name: 'Encerrar o tabuleiro' })
+    if (!(await encerrar.isVisible().catch(() => false))) return
+    await encerrar.click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Encerrar' }).click()
+    await expect(page.getByText('Nenhum tabuleiro aberto')).toBeVisible()
   }
 
   /** Quem entrou na lista depois do instantâneo — o que este teste tem de limpar. */
@@ -654,6 +716,19 @@ test.describe('Sessão ao vivo', () => {
    * ponteiro depois do zoom. E, no meio, a que pega o defeito clássico do
    * arraste: com uma peça selecionada, puxar o mapa não pode POUSAR a peça.
    */
+  /**
+   * Os combatentes que estes testes criam para ter o que medir — com nome ÚNICO
+   * por execução, como o `session-realtime.spec.ts` já fazia.
+   *
+   * O nome fixo parecia bastar porque o teste se limpa no fim; só que a limpeza
+   * não roda quando ele FALHA no meio, e aí a execução seguinte encontra DUAS
+   * peças com o mesmo nome — foi assim que este teste passou a falhar por causa
+   * do lixo que ele mesmo tinha deixado.
+   */
+  const SUFIXO = Date.now()
+  const PECAS_DO_TELEFONE = [`Peça de telefone A ${SUFIXO}`, `Peça de telefone B ${SUFIXO}`]
+  const ALVO_DO_ARRASTE = `Alvo do arraste ${SUFIXO}`
+
   test('o tabuleiro anda com o arraste, e o zoom fica ancorado no ponteiro', async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 })
     await page.goto('/campaigns/1/sessions/4')
@@ -662,14 +737,20 @@ test.describe('Sessão ao vivo', () => {
     // Setup que se limpa sozinho: a seed é compartilhada e um tabuleiro
     // esquecido aberto por outra execução faria este teste procurar um botão
     // que não existe.
-    const encerrar = page.getByRole('button', { name: 'Encerrar o tabuleiro' })
-    if (await encerrar.isVisible().catch(() => false)) {
-      await encerrar.click()
-      await page.getByRole('dialog').getByRole('button', { name: 'Encerrar' }).click()
-    }
+    await encerraOTabuleiroSeHouver(page)
     await page.getByRole('button', { name: 'Abrir tabuleiro' }).click()
     await page.getByLabel('Lugar').fill('Arena do arraste')
     await page.getByRole('button', { name: 'Abrir', exact: true }).click()
+    // A peça deste teste é CRIADA por ele. Prender um nome da seed (era o
+    // "Ogro") fazia o teste depender da iniciativa que o banco de
+    // desenvolvimento acumulou: no CI, onde a seed nasce com a iniciativa
+    // VAZIA, ele esperava 30s por uma peça que nunca existiu. Prender o número
+    // já tinha sido corrigido antes; o nome tinha ficado.
+    await page.getByRole('button', { name: 'Combatente' }).click()
+    await page.getByLabel('Nome').fill(ALVO_DO_ARRASTE)
+    await page.getByRole('button', { name: 'Adicionar', exact: true }).click()
+    await expect(page.getByRole('button', { name: `Remover ${ALVO_DO_ARRASTE}` })).toBeVisible()
+
     await page.getByRole('button', { name: /Trazer a iniciativa/ }).click()
     // Quantas peças não importa aqui, e prender o número tornaria este teste
     // refém do tamanho da iniciativa da seed — que muda quando outro teste
@@ -681,7 +762,7 @@ test.describe('Sessão ao vivo', () => {
     // Com uma peça SELECIONADA a superfície inteira vira casa clicável, e é
     // nesse estado que o arraste tem de continuar sendo arraste — e o TOQUE tem
     // de continuar sendo toque.
-    const peca = plano.getByRole('button', { name: /^Ogro, coluna/ })
+    const peca = plano.getByRole('button', { name: new RegExp(`^${ALVO_DO_ARRASTE}, coluna`) })
     await peca.click()
     const ondeEstava = await peca.getAttribute('aria-label')
 
@@ -689,7 +770,7 @@ test.describe('Sessão ao vivo', () => {
     // embaixo e ENCOLHE o tabuleiro. Medindo antes, o arraste deste teste caía
     // sobre a barra e a janela não andava — o teste acusava a tela, e a tela
     // estava certa.
-    await expect(page.getByRole('button', { name: 'Esconder Ogro' })).toBeVisible()
+    await expect(page.getByRole('button', { name: `Esconder ${ALVO_DO_ARRASTE}` })).toBeVisible()
     const caixa = await plano.boundingBox()
     if (!caixa) throw new Error('o tabuleiro não tem caixa — a cena não montou')
 
@@ -763,8 +844,13 @@ test.describe('Sessão ao vivo', () => {
     expect(Math.abs(depoisDoZoom.x + depoisDoZoom.width / 2 - centro.x)).toBeLessThan(4)
     expect(Math.abs(depoisDoZoom.y + depoisDoZoom.height / 2 - centro.y)).toBeLessThan(4)
 
+    // Limpa o que criou, e nesta ordem: a cena primeiro (o teste seguinte pode
+    // ser o que EXIGE a mesa vazia), o combatente depois. A seed é
+    // compartilhada, e um esquecido engorda a lista de todo mundo.
     await page.getByRole('button', { name: 'Encerrar o tabuleiro' }).click()
     await page.getByRole('dialog').getByRole('button', { name: 'Encerrar' }).click()
+    await expect(page.getByText('Nenhum tabuleiro aberto')).toBeVisible()
+    await page.getByRole('button', { name: `Remover ${ALVO_DO_ARRASTE}` }).click()
   })
 
   test('rolar a iniciativa não leva embora as ações', async ({ page }) => {

@@ -297,6 +297,13 @@ function InitiativeRow(props: {
   })
 
   return (
+    // A regra existe para o `div` que AGE como botão sem acesso por teclado, e
+    // não é o caso: estes handlers só ACENDEM a peça correspondente no mapa
+    // (ALE-189), nada aqui é acionável, e o `focusin`/`focusout` está junto do
+    // ponteiro exatamente para quem navega por teclado ter o mesmo realce. Dar
+    // um `role` à linha só para calar o linter mudaria a árvore de
+    // acessibilidade por causa de um realce visual.
+    // biome-ignore lint/a11y/noStaticElementInteractions: realce sem ação, com o equivalente de teclado ao lado
     <div
       ref={row}
       onMouseEnter={() => props.onHover?.(true)}

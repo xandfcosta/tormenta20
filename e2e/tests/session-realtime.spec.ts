@@ -14,6 +14,18 @@ import { expect, test } from '@playwright/test'
  * Escreve na seed e limpa atrás de si: o combatente tem nome único e sai no
  * fim, então a iniciativa termina como começou.
  */
+/**
+ * Esta spec dirige a sessão 5, e o `session.spec.ts` dirige a 4 — as duas são da
+ * MESMA crônica (o jogador da seed é membro dela), e é essa separação que as
+ * deixa correr em paralelo no CI sem se atropelar. Antes as duas escreviam na
+ * sessão 4, e o sintoma não parecia corrida: era um número que não batia ou um
+ * clique que caía no botão errado.
+ *
+ * SERIAL por dentro pelo mesmo motivo de sempre: estes testes escrevem uns
+ * sobre os outros.
+ */
+test.describe.configure({ mode: 'serial' })
+
 test.describe('Sessão ao vivo — dois clientes', () => {
   test('o que o mestre adiciona aparece na tela do jogador', async ({ browser }) => {
     const eco = `Eco de teste ${Date.now()}`
@@ -23,8 +35,8 @@ test.describe('Sessão ao vivo — dois clientes', () => {
     const telaDoJogador = await jogador.newPage()
 
     try {
-      await telaDoMestre.goto('/campaigns/1/sessions/4')
-      await telaDoJogador.goto('/campaigns/1/sessions/4')
+      await telaDoMestre.goto('/campaigns/1/sessions/5')
+      await telaDoJogador.goto('/campaigns/1/sessions/5')
       // Os DOIS conectados antes de agir: sem isso o teste mede uma corrida.
       await expect(telaDoMestre.getByRole('status', { name: 'Conectado' })).toBeVisible()
       await expect(telaDoJogador.getByRole('status', { name: 'Conectado' })).toBeVisible()
@@ -67,8 +79,8 @@ test.describe('Sessão ao vivo — dois clientes', () => {
     const telaDoJogador = await jogador.newPage()
 
     try {
-      await telaDoMestre.goto('/campaigns/1/sessions/4')
-      await telaDoJogador.goto('/campaigns/1/sessions/4')
+      await telaDoMestre.goto('/campaigns/1/sessions/5')
+      await telaDoJogador.goto('/campaigns/1/sessions/5')
       await expect(telaDoMestre.getByRole('status', { name: 'Conectado' })).toBeVisible()
       await expect(telaDoJogador.getByRole('status', { name: 'Conectado' })).toBeVisible()
       // O jogador vai para a superfície do tabuleiro — é onde ele o vê agora.
