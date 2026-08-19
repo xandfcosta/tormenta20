@@ -150,7 +150,9 @@ func (g *realtimeGateway) onBoardPlaces(sock *socket.Socket, args []any) {
 	ackOK(ctx.ack, map[string]any{"places": g.s.boards.places(context.Background(), ctx.campaignID)})
 }
 
-// onBoardReopen (mestre) põe um lugar guardado de volta na mesa.
+// onBoardReopen (mestre) põe um lugar guardado na mesa, guardando a cena que
+// estava lá. É por aqui que o mestre TROCA de cena com a mesa jogando — taverna
+// → cripta → de volta à taverna — sem encerrar nada (ALE-191).
 func (g *realtimeGateway) onBoardReopen(sock *socket.Socket, args []any) {
 	ctx, ok := g.access(sock, args)
 	if !ok || !g.requireGm(sock, ctx.role) {
@@ -161,9 +163,13 @@ func (g *realtimeGateway) onBoardReopen(sock *socket.Socket, args []any) {
 		g.wsError(sock, "placeId is required")
 		return
 	}
-	board, err := g.s.boards.reopen(context.Background(), ctx.sessionID, placeID)
+	// `showPlace` e não `reopen`: a cena que está na mesa vai para o acervo
+	// ANTES de sair de cena, e o erro chega com a razão — "não consegui guardar
+	// a Taverna" é a diferença entre o mestre tentar de novo e o mestre achar
+	// que o botão não funciona (ALE-191).
+	board, err := g.s.boards.showPlace(context.Background(), ctx.campaignID, ctx.sessionID, placeID)
 	if err != nil {
-		g.wsError(sock, "não consegui reabrir o lugar")
+		g.wsError(sock, err.Error())
 		return
 	}
 	if dirty, changed := g.s.boards.persist(context.Background(), ctx.sessionID); changed {

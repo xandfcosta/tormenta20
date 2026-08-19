@@ -147,3 +147,70 @@ func TestNaoSeApagaLugarDeOutraCronica(t *testing.T) {
 		t.Error("o lugar sumiu mesmo com a recusa")
 	}
 }
+
+/*
+Trocar de cena com a mesa jogando (ALE-191).
+
+Até aqui a lista de Lugares só aparecia na cena VAZIA, então "mostrar outro
+lugar à mesa" era um caminho que a tela não abria — e o `reopen`, por baixo,
+trocava o tabuleiro vivo sem guardar o que estava nele. Abrir o caminho sem
+consertar isso mataria a taverna no clique que traz a cripta.
+*/
+
+// A cena que estava na mesa vai para o acervo ANTES de sair de cena.
+func TestTrocarDeCenaGuardaAQueEstavaNaMesa(t *testing.T) {
+	s, campanha, sessao := mesaComTaverna(t)
+	ctx := context.Background()
+	cripta := &BoardState{Version: 1, Place: "Cripta do Necromante", Tokens: []BoardToken{
+		{ID: "c1", Label: "Necromante", X: 2, Y: 2, Footprint: 1},
+	}}
+	if err := s.boards.archive(ctx, campanha, cripta); err != nil {
+		t.Fatalf("guardar a cripta: %v", err)
+	}
+	guardada := s.boards.places(ctx, campanha)[0]
+
+	naMesa, err := s.boards.showPlace(ctx, campanha, sessao, guardada.ID)
+	if err != nil {
+		t.Fatalf("mostrar a cripta à mesa: %v", err)
+	}
+
+	if naMesa.Place != "Cripta do Necromante" {
+		t.Errorf("a mesa ficou com %q", naMesa.Place)
+	}
+	// E a taverna continua existindo, com a peça onde estava: é ela que o
+	// mestre reabre depois que o grupo sair da cripta.
+	taverna := placeNamed(t, s.boards.places(ctx, campanha), "Taverna do Javali")
+	if taverna.Tokens != 1 {
+		t.Errorf("a taverna guardada tem %d peças, esperado 1", taverna.Tokens)
+	}
+}
+
+// O id do lugar vem do cliente: sem conferir a crônica, um mestre puxaria para
+// a própria mesa a cena de OUTRA campanha — a mesma posse que o apagar confere.
+func TestNaoSeMostraNaMesaACenaDeOutraCronica(t *testing.T) {
+	s, campanha, sessao := mesaComTaverna(t)
+	ctx := context.Background()
+	outra := seedCampaign(t, s, seedUser(t, s, "vizinho@t.com"))
+	if err := s.boards.archive(ctx, outra, &BoardState{Version: 1, Place: "Cripta alheia"}); err != nil {
+		t.Fatalf("guardar a cena da outra mesa: %v", err)
+	}
+	alheia := s.boards.places(ctx, outra)[0]
+
+	if _, err := s.boards.showPlace(ctx, campanha, sessao, alheia.ID); err == nil {
+		t.Fatal("mostrou à mesa a cena de outra crônica")
+	}
+	if naMesa := s.boards.get(ctx, sessao); naMesa == nil || naMesa.Place != "Taverna do Javali" {
+		t.Errorf("a recusa mexeu na cena que estava na mesa: %+v", naMesa)
+	}
+}
+
+func placeNamed(t *testing.T, lugares []Place, nome string) Place {
+	t.Helper()
+	for _, lugar := range lugares {
+		if lugar.Name == nome {
+			return lugar
+		}
+	}
+	t.Fatalf("%q não está no acervo: %+v", nome, lugares)
+	return Place{}
+}

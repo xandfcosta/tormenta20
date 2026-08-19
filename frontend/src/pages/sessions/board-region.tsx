@@ -4,6 +4,7 @@ import {
   Crosshair,
   Eraser,
   Eye,
+  Library,
   LayoutGrid,
   Maximize,
   Minimize,
@@ -18,7 +19,7 @@ import { TokenDialog } from '@/features/battle-board/token-dialog'
 import { BoardView } from '@/features/battle-board/board-view'
 import { type BoardViewport, SQUARE_METRES } from '@/features/battle-board/board-viewport'
 import { OpenBoardDialog } from '@/features/battle-board/open-board-dialog'
-import { PlacesList } from '@/features/battle-board/places-list'
+import { PlacesDialog, PlacesList } from '@/features/battle-board/places-list'
 import { upcomingTurns } from '@/features/session-tracker/tracker-rules'
 import { SceneContainerProvider, useSceneContainer } from '@/shared/lib/scene-container'
 import { type FullscreenController, createFullscreen } from '@/shared/lib/fullscreen'
@@ -74,6 +75,15 @@ export function BoardRegion(props: {
   createEffect(() => {
     if (props.rt.board() === null) refreshPlaces()
   })
+  // E recarrega quando a MESA TROCA de cena: mostrar a cripta guardou a taverna,
+  // e o acervo que o mestre abrir em seguida tem de mostrá-la (ALE-191).
+  createEffect(
+    on(
+      () => props.rt.board()?.place,
+      () => refreshPlaces(),
+      { defer: true },
+    ),
+  )
   /**
    * "Ver como jogador" (ALE-193): a lente do mestre sobre a própria cena.
    *
@@ -315,6 +325,21 @@ export function BoardRegion(props: {
                   >
                     <Eraser aria-hidden="true" class="size-4" />
                   </Button>
+                  {/* O acervo alcançável COM cena na mesa (ALE-191): trocar de
+                      cena não exige mais ENCERRAR o tabuleiro primeiro, com a
+                      mesa vendo a grade sumir e voltar. */}
+                  <PlacesDialog
+                    places={places()}
+                    onTable={live().place}
+                    onOpenList={refreshPlaces}
+                    onReopen={props.rt.reopenPlace}
+                    onRemove={(placeId) => void props.rt.removePlace(placeId).then(setPlaces)}
+                    trigger={(open) => (
+                      <Button size="sm" variant="ghost" aria-label="Lugares da crônica" onClick={open}>
+                        <Library aria-hidden="true" class="size-4" />
+                      </Button>
+                    )}
+                  />
                   <Button
                     size="sm"
                     variant="secondary"

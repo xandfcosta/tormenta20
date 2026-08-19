@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -75,7 +76,41 @@ func (bs *boardStore) places(ctx context.Context, campaignID int64) []Place {
 	return lugares
 }
 
-// reopen põe o lugar guardado de volta na mesa.
+// showPlace põe um lugar guardado na mesa — e GUARDA ANTES a cena que estava
+// lá (ALE-191).
+//
+// Sem isso, mostrar a cripta à mesa DESTRUÍA a taverna: o `reopen` troca o
+// tabuleiro vivo, e o que estava nele não ia para lugar nenhum. Até agora o
+// caminho era inalcançável, porque a lista de Lugares só aparecia na cena
+// vazia; é esta issue que o abre, ao deixar o mestre trocar de cena com a mesa
+// jogando.
+//
+// A falha ao guardar RECUSA a troca, e aqui a política é o oposto da do
+// encerrar: lá o mestre mandou tirar a cena da mesa e prendê-lo numa cena que
+// já acabou seria pior; aqui ele mandou trocar, e trocar em cima de um acervo
+// que não gravou é justamente perder a taverna.
+func (bs *boardStore) showPlace(ctx context.Context, campaignID, sessionID, placeID int64) (*BoardState, error) {
+	row, err := bs.q.GetCampaignPlace(ctx, placeID)
+	if err != nil {
+		return nil, err
+	}
+	// O id vem do cliente: sem conferir a crônica, um mestre puxaria para a
+	// própria mesa a cena de OUTRA campanha. É a mesma posse que o `removePlace`
+	// confere, e pelo mesmo motivo.
+	if row.Campaignid != campaignID {
+		return nil, errPlaceFromAnotherCampaign
+	}
+	if atual := bs.get(ctx, sessionID); atual != nil {
+		if err := bs.archive(ctx, campaignID, atual); err != nil {
+			return nil, fmt.Errorf("não consegui guardar %q antes de trocar de cena: %w", atual.Place, err)
+		}
+	}
+	return bs.reopen(ctx, sessionID, placeID)
+}
+
+// reopen põe o lugar guardado de volta na mesa. É a PRIMITIVA: não confere de
+// que crônica o lugar é, nem guarda a cena que estava na mesa — quem faz as
+// duas coisas é o `showPlace`, que é por onde o gateway entra.
 //
 // A VERSÃO continua a do tabuleiro que estava aberto, e não a que foi
 // arquivada: um cliente com a cena velha na mão precisa reconhecer esta como

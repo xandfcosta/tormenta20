@@ -198,6 +198,8 @@ describe('o tabuleiro na cena', () => {
     expect(screen.queryByRole('button', { name: /Trazer a iniciativa/ })).not.toBeInTheDocument()
     // A lente do mestre é dele: quem já É a mesa não tem o que conferir.
     expect(screen.queryByRole('button', { name: 'Ver como jogador' })).not.toBeInTheDocument()
+    // E o acervo de cenas é preparação do mestre (ALE-191).
+    expect(screen.queryByRole('button', { name: 'Lugares da crônica' })).not.toBeInTheDocument()
   })
 
   it('sem tabuleiro, só o mestre vê como abrir um', () => {
@@ -836,5 +838,60 @@ describe('a lente do mestre sobre a cena da mesa', () => {
 
     expect(await screen.findByRole('button', { name: /^Assassino,/ })).toBeInTheDocument()
     expect(rt.boardAsPlayer).toHaveBeenCalledTimes(2)
+  })
+})
+
+/**
+ * Trocar de cena com a mesa jogando (ALE-191).
+ *
+ * Até aqui os Lugares só existiam na tela VAZIA: para levar o grupo da taverna
+ * à cripta, o mestre tinha de ENCERRAR o tabuleiro — a mesa via a grade sumir e
+ * voltar — e o `reopen`, por baixo, trocava a cena viva sem guardar o que estava
+ * nela. Quem guarda agora é o servidor; o que se prova aqui é o caminho na tela.
+ */
+describe('mostrar outro lugar à mesa', () => {
+  const CRIPTA: BoardPlace = {
+    id: 12,
+    name: 'Cripta do Necromante',
+    tokens: 6,
+    updatedAt: '2026-08-19T00:00:00Z',
+  }
+  // O acervo guarda TAMBÉM a cena que está na mesa: ela foi arquivada na última
+  // vez que o mestre a encerrou, e é assim que ele a reconhece na lista.
+  const TAVERNA: BoardPlace = {
+    id: 7,
+    name: 'Taverna do Javali',
+    tokens: 9,
+    updatedAt: '2026-08-19T00:00:00Z',
+  }
+
+  it('o mestre troca de cena pelo acervo, sem encerrar o tabuleiro', async () => {
+    const { rt, user } = renderRegion(true, TABULEIRO, undefined, { places: [TAVERNA, CRIPTA] })
+
+    await user.click(screen.getByRole('button', { name: 'Lugares da crônica' }))
+    await user.click(await screen.findByRole('button', { name: /Mostrar à mesa/ }))
+
+    // A pergunta nomeia as DUAS cenas: para onde a mesa vai, e o que acontece
+    // com a que estava lá.
+    const dialogos = await screen.findAllByRole('dialog')
+    const pergunta = dialogos[dialogos.length - 1]
+    expect(within(pergunta).getByText(/Mostrar Cripta do Necromante à mesa\?/)).toBeInTheDocument()
+    expect(within(pergunta).getByText(/Taverna do Javali, vai para os Lugares/)).toBeInTheDocument()
+
+    await user.click(within(pergunta).getByRole('button', { name: 'Mostrar à mesa' }))
+
+    expect(rt.reopenPlace).toHaveBeenCalledWith(12)
+  })
+
+  // Mandar para a mesa o que já está nela é um caminho que só pode confundir —
+  // e, no servidor, seria guardar a taverna para reabrir a taverna.
+  it('a cena que já está na mesa não se oferece para ir à mesa', async () => {
+    const { user } = renderRegion(true, TABULEIRO, undefined, { places: [TAVERNA, CRIPTA] })
+
+    await user.click(screen.getByRole('button', { name: 'Lugares da crônica' }))
+    const acervo = await screen.findByRole('dialog')
+
+    expect(within(acervo).getByText('Na mesa')).toBeInTheDocument()
+    expect(within(acervo).getAllByRole('button', { name: /Mostrar à mesa/ })).toHaveLength(1)
   })
 })
