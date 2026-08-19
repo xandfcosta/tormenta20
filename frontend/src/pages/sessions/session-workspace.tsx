@@ -26,6 +26,8 @@ export type SessionWorkspaceProps = {
   /** A janela do tabuleiro, quando ele divide esta coluna (abaixo de 1536). */
   boardView?: BoardViewport
   activeEntryId?: string | null
+  /** A linha sob o ponteiro na iniciativa: a peça dela acende (ALE-189). */
+  highlightEntryId?: string | null
 }
 
 /**
@@ -138,6 +140,7 @@ export function SessionWorkspace(props: SessionWorkspaceProps) {
               isGm
               view={view()}
               activeEntryId={props.activeEntryId}
+              highlightEntryId={props.highlightEntryId}
             />
           </TabsContent>
         )}

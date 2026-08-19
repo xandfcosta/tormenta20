@@ -39,6 +39,8 @@ export function BoardRegion(props: {
   view: BoardViewport
   /** Linha da iniciativa na vez: a peça dela ganha o anel dourado. */
   activeEntryId?: string | null
+  /** Linha sob o ponteiro na iniciativa: a peça dela acende (ALE-189). */
+  highlightEntryId?: string | null
   /** Os personagens DESTE espectador. Vazio para o mestre, que move qualquer um. */
   myCharacterIds?: ReadonlySet<number>
   /** Clicar na peça também ABRE o combatente dela: a peça e a linha da
@@ -510,6 +512,7 @@ export function BoardRegion(props: {
               board={cena(live())}
               view={props.view}
               activeEntryId={props.activeEntryId}
+              highlightEntryId={props.highlightEntryId}
               selectedTokenId={selectedTokenId()}
               movableTokenIds={movableTokenIds()}
               pending={cena(live()).pending}

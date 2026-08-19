@@ -42,6 +42,16 @@ export function SessionGmView(props: {
   myCharacterIds: ReadonlySet<number>
 }) {
   const [selectedId, setSelectedId] = createSignal<string | null>(null)
+  /**
+   * A linha da iniciativa sob o ponteiro, para a peça dela ACENDER no mapa
+   * (ALE-189). Mora aqui porque é composição: a lista é do `session-tracker` e o
+   * tabuleiro é do `battle-board`, e nenhuma feature conhece a outra.
+   *
+   * Só na cena do MESTRE: na do jogador a iniciativa e o tabuleiro são
+   * superfícies diferentes e nunca aparecem juntas, então não haveria o que
+   * acender.
+   */
+  const [hoveredEntryId, setHoveredEntryId] = createSignal<string | null>(null)
   // O "NPC completo" pedido na forma de adicionar, esperando o bloco (ALE-137).
   const [pendingCreature, setPendingCreature] = createSignal<
     { label: string; initiative: number; hp: number } | undefined
@@ -188,6 +198,7 @@ export function SessionGmView(props: {
               onSelect={select}
               selectedId={selectedId()}
               onDetailedAdd={setPendingCreature}
+              onHoverEntry={setHoveredEntryId}
             />
           </div>
         </Show>
@@ -198,6 +209,7 @@ export function SessionGmView(props: {
             isGm
             view={boardView}
             activeEntryId={activeEntryId()}
+            highlightEntryId={hoveredEntryId()}
             onOpenCombatant={openCombatantFromBoard}
           />
         </Show>
@@ -213,6 +225,7 @@ export function SessionGmView(props: {
             onCloseCombatant={() => setSelectedId(null)}
             boardView={boardHasOwnColumn() ? undefined : boardView}
             activeEntryId={activeEntryId()}
+            highlightEntryId={hoveredEntryId()}
           />
         </Show>
       </div>

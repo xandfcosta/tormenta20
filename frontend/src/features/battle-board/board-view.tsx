@@ -34,6 +34,10 @@ export function BoardView(props: {
   onSquareClick?: (x: number, y: number) => void
   /** Peça cuja linha está na vez: o anel dourado é o mesmo sinal da iniciativa. */
   activeEntryId?: string | null
+  /** Peça cuja linha da iniciativa está sob o ponteiro (ALE-189): ela ACENDE,
+   *  para o mestre parar de procurar o ogro entre nove peças com a mesa
+   *  esperando. */
+  highlightEntryId?: string | null
   /**
    * As casas que a peça selecionada ALCANÇA (T20 p238, medidas pelo motor).
    * Ausente = ninguém está medindo movimento, e todo quadrado aceita a peça —
@@ -176,6 +180,11 @@ export function BoardView(props: {
                 props.activeEntryId !== undefined &&
                 props.activeEntryId !== null &&
                 token().entryId === props.activeEntryId
+              }
+              highlighted={
+                props.highlightEntryId !== undefined &&
+                props.highlightEntryId !== null &&
+                token().entryId === props.highlightEntryId
               }
               onSelect={props.onSelectToken}
             />
@@ -405,6 +414,8 @@ function TokenPiece(props: {
   view: BoardViewport
   selected: boolean
   onTurn: boolean
+  /** A linha desta peça está sob o ponteiro na iniciativa (ALE-189). */
+  highlighted: boolean
   /** Este espectador pode pegar esta peça agora. */
   movable: boolean
   onSelect?: (tokenId: string) => void
@@ -457,6 +468,11 @@ function TokenPiece(props: {
         // perigoso do tabuleiro merece o sinal mais claro, e geometria não
         // disputa canal com o ouro da vez.
         props.selected && '-translate-y-0.5 scale-105 shadow-lg shadow-black/60 ring-2 ring-white/80',
+        // APONTADA da lista: um terceiro sinal, que não pode colidir com os dois
+        // que já existem — o ouro é a VEZ e o erguer é a peça na mão (ALE-179).
+        // Contorno com folga, desenhado FORA da caixa: ele não muda o tamanho da
+        // peça nem disputa a borda, e some no `mouseleave`.
+        props.highlighted && 'outline-2 outline-offset-2 outline-white',
         // Escondida: o mestre é o ÚNICO que a recebe, e até agora ela era
         // idêntica a uma peça visível — a emboscada dependia de ele lembrar de
         // cabeça quem estava escondido (ALE-178, ALE-179).

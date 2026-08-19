@@ -59,6 +59,15 @@ export function InitiativeCard(props: {
    * Ausente = a escolha simples/completo nem aparece.
    */
   onDetailedAdd?: (seed: { label: string; initiative: number; hp: number }) => void
+  /**
+   * A linha sob o ponteiro (ALE-189). A cena usa isso para ACENDER a peça
+   * correspondente no tabuleiro: "agora é o Ogro" custava procurar o ogro entre
+   * nove peças, com a mesa esperando, e essa busca é a operação mais repetida
+   * do combate.
+   *
+   * Ausente = ninguém está ouvindo, e a linha não gasta um handler por peça.
+   */
+  onHoverEntry?: (entryId: string | null) => void
 }) {
   const myCharacterId = () => [...props.myCharacterIds][0]
   const [addOpen, setAddOpen] = createSignal(false)
@@ -223,6 +232,10 @@ export function InitiativeCard(props: {
                 entry.characterId !== undefined && props.myCharacterIds.has(entry.characterId)
               return (
                 <InitiativeRow
+                  onHover={
+                    props.onHoverEntry &&
+                    ((dentro) => props.onHoverEntry?.(dentro ? entry.id : null))
+                  }
                   onSelect={props.onSelect && (() => props.onSelect?.(entry.id))}
                   selected={props.selectedId === entry.id}
                   entry={entry}
@@ -255,6 +268,9 @@ export function InitiativeCard(props: {
 }
 
 function InitiativeRow(props: {
+  /** Chamado ao entrar e ao sair do ponteiro — e também do FOCO, para quem
+   *  navega por teclado ter o mesmo apontar (ALE-189). */
+  onHover?: (dentro: boolean) => void
   onSelect?: () => void
   selected?: boolean
   entry: InitiativeEntry
@@ -283,6 +299,10 @@ function InitiativeRow(props: {
   return (
     <div
       ref={row}
+      onMouseEnter={() => props.onHover?.(true)}
+      onMouseLeave={() => props.onHover?.(false)}
+      onFocusIn={() => props.onHover?.(true)}
+      onFocusOut={() => props.onHover?.(false)}
       data-on-turn={props.onTurn ? 'true' : 'false'}
       class={cn(
         // Uma árvore só, quebrando por ORDEM: apertado, nome e botões dividem

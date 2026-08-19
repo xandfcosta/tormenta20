@@ -70,6 +70,7 @@ function renderCardWithRt(
   entries: InitiativeEntry[] = [OGRO, HEROI],
   turnControls?: boolean,
   onDetailedAdd?: (seed: { label: string; initiative: number; hp: number }) => void,
+  onHoverEntry?: (entryId: string | null) => void,
 ) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const rt = new FakeRealtime(entries)
@@ -83,6 +84,7 @@ function renderCardWithRt(
         selectedId={selectedId}
         turnControls={turnControls}
         onDetailedAdd={onDetailedAdd}
+        onHoverEntry={onHoverEntry}
       />
     </QueryClientProvider>
   ))
@@ -416,5 +418,31 @@ describe('adicionar NPC simples ou completo', () => {
 
     expect(rt.addEntry).toHaveBeenCalled()
     expect(pedidos).toEqual([])
+  })
+})
+
+/**
+ * A linha diz quem está sob o ponteiro (ALE-189).
+ *
+ * É por este aviso que a cena ACENDE a peça no mapa: "agora é o Ogro" custava
+ * procurar o ogro entre nove peças, com a mesa esperando, e essa busca é a
+ * operação mais repetida do combate inteiro.
+ *
+ * O que se prova aqui é o CONTRATO — quem entrou e que saiu —, e não o
+ * contorno na peça: realce é classe, e a casa não afirma classe em teste. O
+ * desenho foi conferido no browser.
+ */
+describe('a linha avisa quem está sob o ponteiro', () => {
+  it('avisa o id ao entrar e o nulo ao sair', async () => {
+    const onHoverEntry = vi.fn()
+    const { user } = renderCardWithRt(undefined, null, true, [OGRO, HEROI], undefined, undefined, onHoverEntry)
+
+    const linha = screen.getByText('Ogro').closest('div[data-on-turn]')
+    if (!linha) throw new Error('a linha da iniciativa não montou')
+    await user.hover(linha)
+    expect(onHoverEntry).toHaveBeenCalledWith('e2')
+
+    await user.unhover(linha)
+    expect(onHoverEntry).toHaveBeenLastCalledWith(null)
   })
 })
