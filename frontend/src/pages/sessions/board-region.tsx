@@ -1,13 +1,20 @@
 import { Check, Crosshair, LayoutGrid, Minus, Plus, Undo2, Users, X } from 'lucide-solid'
-import { Show, createMemo, createSignal } from 'solid-js'
+import { For, Show, createMemo, createSignal } from 'solid-js'
 import { pathBetween } from '@/features/battle-board/board-path'
 import { TokenActions } from '@/features/battle-board/token-actions'
 import { TokenDialog } from '@/features/battle-board/token-dialog'
 import { BoardView } from '@/features/battle-board/board-view'
 import { type BoardViewport, SQUARE_METRES } from '@/features/battle-board/board-viewport'
 import { OpenBoardDialog } from '@/features/battle-board/open-board-dialog'
+import { upcomingTurns } from '@/features/session-tracker/tracker-rules'
 import { boardReach } from '@/shared/lib/engine-wasm'
-import type { BoardState, BoardToken, SessionRealtime } from '@/shared/realtime/realtime'
+import type {
+  BoardState,
+  BoardToken,
+  InitiativeEntry,
+  SessionRealtime,
+} from '@/shared/realtime/realtime'
+import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
 
@@ -168,6 +175,8 @@ export function BoardRegion(props: {
                 </Show>
               </div>
             </header>
+
+            <TurnStrip rt={props.rt} hidden={props.isGm} />
 
             <BoardView
               board={live()}
@@ -345,5 +354,50 @@ function EmptyBoard(props: { isGm: boolean; onOpen: (place: string, terrain: str
         />
       </Show>
     </div>
+  )
+}
+
+/**
+ * Quem está na vez e quem vem depois, sem sair do mapa (ALE-179).
+ *
+ * Só para o JOGADOR: o mestre tem a iniciativa inteira numa coluna ao lado, e
+ * repetir três nomes ali seria ruído. Na tela do jogador o tabuleiro ocupa a
+ * superfície toda, e para saber se ele é o próximo ele precisava trocar de aba
+ * — no meio do turno de outra pessoa, que é quando se decide o que fazer.
+ *
+ * Fora de combate a tira some: não há vez de ninguém para anunciar.
+ */
+function TurnStrip(props: { rt: SessionRealtime; hidden: boolean }) {
+  const fila = createMemo(() =>
+    props.hidden ? [] : upcomingTurns(props.rt.state().initiative, props.rt.state().turnIndex, 3),
+  )
+
+  return (
+    <Show when={fila().length > 0}>
+      <div class="flex shrink-0 items-center gap-2 overflow-hidden border-b border-grimorio-iron px-3 py-1.5 text-[11px]">
+        <span class="shrink-0 font-heading uppercase tracking-wide text-grimorio-gold">
+          Na vez
+        </span>
+        <For each={fila()}>
+          {(entrada: InitiativeEntry, posicao: () => number) => (
+            <>
+              <Show when={posicao() > 0}>
+                <span aria-hidden="true" class="shrink-0 text-muted-foreground">
+                  ›
+                </span>
+              </Show>
+              <span
+                class={cn(
+                  'min-w-0 truncate',
+                  posicao() === 0 ? 'font-semibold text-foreground' : 'text-muted-foreground',
+                )}
+              >
+                {entrada.label}
+              </span>
+            </>
+          )}
+        </For>
+      </div>
+    </Show>
   )
 }

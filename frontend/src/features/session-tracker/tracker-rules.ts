@@ -88,3 +88,27 @@ export function entryPermissions(
     applyEffect: viewer.isGm && entry.characterId !== undefined,
   }
 }
+
+/**
+ * Quem está na vez e quem vem depois, na ORDEM DA MESA (ALE-179).
+ *
+ * A lista é circular: depois do último vem o primeiro, com a rodada seguinte —
+ * cortar no fim deixaria a tira vazia justamente no turno em que saber "quem
+ * vem depois" mais importa, o último antes de virar a rodada.
+ *
+ * Fora de combate (`turnIndex` −1) não há vez de ninguém e não há fila.
+ *
+ * @example upcomingTurns(initiative, 7, 3) // [atual, próximo, seguinte]
+ */
+export function upcomingTurns(
+  initiative: readonly InitiativeEntry[],
+  turnIndex: number,
+  count: number,
+): InitiativeEntry[] {
+  if (turnIndex < 0 || initiative.length === 0) return []
+  return Array.from({ length: Math.min(count, initiative.length) }, (_, step) => {
+    const entry = initiative[(turnIndex + step) % initiative.length]
+    if (!entry) throw new Error(`iniciativa sem entrada no passo ${step} (turno ${turnIndex})`)
+    return entry
+  })
+}

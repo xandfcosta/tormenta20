@@ -1,12 +1,11 @@
 import { For, Show, onCleanup } from 'solid-js'
 import type { BoardSquare } from '@/shared/lib/engine-wasm'
 import type { BoardState, BoardToken, PendingMove } from '@/shared/realtime/realtime'
-import { hueGradient } from '@/shared/lib/hue-from-name'
-import { initials } from '@/shared/lib/initials'
 import { cn } from '@/shared/lib/utils'
-import { TERRAIN_STYLE } from './board-terrain'
+import { TERRAIN_STYLE, gridLinesFor } from './board-terrain'
 import { TOKEN_PIECE_ATTR, createBoardGestures } from './board-gestures'
 import { type BoardViewport, isVisible } from './board-viewport'
+import { tokenAppearance } from './token-appearance'
 
 /**
  * O tabuleiro tático desenhado (ALE-124).
@@ -76,14 +75,11 @@ export function BoardView(props: {
         // some — a peça chega pelo socket e não há grade para desenhá-la. Um
         // tabuleiro nunca pode ser uma caixa de altura zero (ALE-124).
         'relative min-h-48 min-w-0 flex-1 overflow-hidden',
+        // O CHÃO fica no hospedeiro e SEM `background-size`: é o que devolve ao
+        // lugar o gradiente inteiro em vez de um ladrilho de 44px (ALE-179).
         TERRAIN_STYLE[props.board.terrain] ?? TERRAIN_STYLE.pedra,
       )}
       style={{
-        // A grade é FUNDO, não nós: um `repeating-linear-gradient` cobre a
-        // janela inteira em zero elementos, e o deslocamento da origem entra
-        // como `background-position` — o número nunca cresce com o pan.
-        'background-size': `${view().cellPx()}px ${view().cellPx()}px`,
-        'background-position': `${-view().originX() * view().cellPx()}px ${-view().originY() * view().cellPx()}px`,
         // Só nesta superfície: sem isto, no telefone o arraste rola a PÁGINA em
         // vez de mover a vista, e o tabuleiro fica navegável só pelos botões.
         'touch-action': 'none',
@@ -99,6 +95,21 @@ export function BoardView(props: {
       // uma frase que se ouça.
       aria-label={`Tabuleiro: ${props.board.place}, janela em coluna ${Math.round(view().originX())}, linha ${Math.round(view().originY())}`}
     >
+      {/* A grade é FUNDO, não nós: duas faixas cruzadas cobrem a janela inteira
+          em ZERO elementos por quadrado, e o deslocamento da origem entra como
+          `background-position` — o número nunca cresce com o pan. Camada
+          própria desde a ALE-179, para o `background-size` do quadrado não
+          ladrilhar também o chão. */}
+      <div
+        aria-hidden="true"
+        class="pointer-events-none absolute inset-0"
+        style={{
+          'background-image': gridLinesFor(props.board.terrain),
+          'background-size': `${view().cellPx()}px ${view().cellPx()}px`,
+          'background-position': `${-view().originX() * view().cellPx()}px ${-view().originY() * view().cellPx()}px`,
+        }}
+      />
+
       <Show when={props.onPlaceToken}>
         {(place) => (
           <SquareLayer view={view()} onPlace={place()} reachable={props.reachable} />
@@ -254,15 +265,25 @@ function TokenPiece(props: {
   onSelect?: (tokenId: string) => void
 }) {
   const side = () => Math.max(1, props.token.footprint)
+  const sizePx = () => side() * props.view.cellPx()
+  const look = () => tokenAppearance(props.token.label)
   const box = () => {
     const cell = props.view.cellPx()
     return {
       left: `${(props.token.x - props.view.originX()) * cell}px`,
       top: `${(props.token.y - props.view.originY()) * cell}px`,
-      width: `${side() * cell}px`,
-      height: `${side() * cell}px`,
+      width: `${sizePx()}px`,
+      height: `${sizePx()}px`,
     }
   }
+
+  // O monograma some quando a peça fica pequena demais para ele: duas letras
+  // espremidas num disco de 20px viram mancha, e o nome acessível continua no
+  // botão de qualquer forma.
+  const showsMonogram = () => sizePx() >= 26
+  // Tipo derivado da CAIXA, e não fixo: o mesmo 9,6px servia o disco de 20px e
+  // a Colossal de 576px (6×6 quadrados no zoom máximo), sussurrando nos dois.
+  const fontPx = () => Math.min(44, Math.max(10, sizePx() * 0.3))
 
   return (
     <button
@@ -270,23 +291,70 @@ function TokenPiece(props: {
       // Marca que o arraste consulta: começar o gesto NA PEÇA não move a vista.
       {...{ [TOKEN_PIECE_ATTR]: '' }}
       class={cn(
-        'absolute flex items-center justify-center rounded-full border-2 p-0.5 text-[0.6rem] font-semibold uppercase text-white transition-shadow',
+        'absolute flex items-center justify-center border-2 p-0.5 font-heading font-semibold uppercase leading-none text-white transition-[transform,box-shadow]',
+        // A FORMA é canal de informação, e canal que não é cor: varrer o
+        // tabuleiro e separar "nós" de "eles" sem ler rótulo é o que o mestre
+        // faz vinte vezes por rodada. Objeto não é criatura — a porta e o baú
+        // saem do vocabulário de matiz e ficam em ferro (ALE-179).
+        props.token.kind === 'character' && 'rounded-full',
+        props.token.kind === 'npc' && 'rounded-[3px]',
+        props.token.kind === 'object' &&
+          'rounded-none border-grimorio-iron-light bg-[var(--grimorio-panel)] text-muted-foreground',
+        // Brilho no topo e sombra de assento: é o que faz o disco ler como peça
+        // pousada na mesa em vez de círculo de dashboard.
         props.onTurn
           ? 'border-grimorio-gold shadow-[0_0_0_3px_var(--grimorio-gold)]'
-          : 'border-black/40',
-        props.selected && 'ring-2 ring-[color:var(--primary)] ring-offset-1 ring-offset-black/40',
+          : 'border-grimorio-iron shadow-[inset_0_1px_0_oklch(1_0_0/0.18),0_1px_2px_oklch(0_0_0/0.5)]',
+        // SELECIONADA se ERGUE, e isso não é enfeite: o anel era
+        // `--primary`, que nesta paleta é o carmim de sangue — a mesma cor que
+        // o código já tinha recusado para a casa acesa porque "lê como
+        // proibido". Com a peça na mão, o próximo clique MOVE; o estado mais
+        // perigoso do tabuleiro merece o sinal mais claro, e geometria não
+        // disputa canal com o ouro da vez.
+        props.selected && '-translate-y-0.5 scale-105 shadow-lg shadow-black/60 ring-2 ring-white/80',
+        // Escondida: o mestre é o ÚNICO que a recebe, e até agora ela era
+        // idêntica a uma peça visível — a emboscada dependia de ele lembrar de
+        // cabeça quem estava escondido (ALE-178, ALE-179).
+        props.token.hidden && 'border-dashed opacity-55',
         (!props.onSelect || !props.movable) && 'pointer-events-none',
       )}
-      style={{ ...box(), background: hueGradient(props.token.label, 0.55, 0.15) }}
+      style={{
+        ...box(),
+        ...(props.token.kind === 'object' ? {} : { background: look().background }),
+        'font-size': `${fontPx()}px`,
+      }}
       // O nome acessível diz QUEM e ONDE, com o número que o servidor guarda:
       // num plano infinito a coordenada pode ser negativa, e traduzi-la para
-      // "coluna 1" seria mentir sobre onde a peça está.
-      aria-label={`${props.token.label}, coluna ${props.token.x}, linha ${props.token.y}`}
+      // "coluna 1" seria mentir sobre onde a peça está. E diz também o que só a
+      // aparência dizia: quem lê por leitor de tela tem o mesmo direito ao
+      // segredo da emboscada.
+      aria-label={`${props.token.label}, coluna ${props.token.x}, linha ${props.token.y}${
+        props.token.hidden ? ', escondida dos jogadores' : ''
+      }`}
       aria-pressed={props.selected}
       disabled={!props.onSelect || !props.movable}
       onClick={() => props.onSelect?.(props.token.id)}
     >
-      <span aria-hidden="true">{initials(props.token.label)}</span>
+      <Show when={showsMonogram()}>
+        <span aria-hidden="true" style={{ 'text-shadow': '0 1px 2px oklch(0 0 0/0.7)' }}>
+          {look().monogram}
+        </span>
+      </Show>
+      {/* O número da instância em PERGAMINHO: "eu ataco o Zumbi 3" precisa de
+          resposta num relance, e o monograma sozinho não distingue os três. */}
+      <Show when={look().instance && showsMonogram()}>
+        <span
+          aria-hidden="true"
+          class="absolute -bottom-0.5 -right-0.5 grid place-items-center rounded-full bg-grimorio-parchment font-mono text-grimorio-parchment-ink"
+          style={{
+            width: `${Math.max(12, sizePx() * 0.34)}px`,
+            height: `${Math.max(12, sizePx() * 0.34)}px`,
+            'font-size': `${Math.max(8, sizePx() * 0.22)}px`,
+          }}
+        >
+          {look().instance}
+        </span>
+      </Show>
     </button>
   )
 }

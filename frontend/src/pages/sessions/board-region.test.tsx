@@ -33,7 +33,11 @@ class FakeRealtime {
   asRealtime(): SessionRealtime {
     return {
       state: () => ({
-        initiative: [{ id: 'e1', label: 'Sílfide Ladina', initiative: 18, type: 'character' }],
+        initiative: [
+          { id: 'e1', label: 'Sílfide Ladina', initiative: 18, type: 'character' },
+          { id: 'e2', label: 'Ogro', initiative: 12, type: 'npc' },
+          { id: 'e3', label: 'Batedor Élfico', initiative: 9, type: 'character' },
+        ],
         round: 1,
         turnIndex: this.turnIndex,
       }),
@@ -377,7 +381,12 @@ describe('o painel da peça', () => {
   it('na peça escondida, o botão oferece mostrar', async () => {
     const { rt, user } = renderRegion(true, comPecas)
 
-    await user.click(screen.getByRole('button', { name: 'Porta, coluna 1, linha 1' }))
+    // O nome acessível da peça escondida ANUNCIA o segredo desde a ALE-179:
+    // quem lê por leitor de tela tem o mesmo direito de saber o que a borda
+    // tracejada conta para quem enxerga.
+    await user.click(
+      screen.getByRole('button', { name: 'Porta, coluna 1, linha 1, escondida dos jogadores' }),
+    )
     await user.click(screen.getByRole('button', { name: 'Mostrar Porta' }))
 
     expect(rt.updateToken).toHaveBeenCalledWith('t4', { hidden: false })
@@ -427,5 +436,52 @@ describe('o painel da peça', () => {
     expect(screen.queryByRole('button', { name: /Esconder/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Tirar/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '+ Peça' })).not.toBeInTheDocument()
+  })
+
+  /**
+   * A emboscada da ALE-178 mora numa peça que o jogador NÃO recebe — e até a
+   * ALE-179 ela era, no tabuleiro do mestre, idêntica a uma peça visível. O
+   * segredo dependia de ele lembrar de cabeça quem estava escondido, com a mesa
+   * esperando.
+   */
+  it('a peça escondida se anuncia ao mestre, e só a ele', () => {
+    renderRegion(true, comPecas)
+
+    expect(
+      screen.getByRole('button', { name: /^Porta, .*escondida dos jogadores$/ }),
+    ).toBeInTheDocument()
+    // A visível não carrega o aviso: o anúncio é do ESTADO, não do vocabulário.
+    expect(screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' })).toBeInTheDocument()
+  })
+
+  /**
+   * Na tela do jogador o tabuleiro ocupa a superfície inteira, e até a ALE-179
+   * saber se ele era o próximo custava TROCAR DE ABA — no meio do turno de
+   * outra pessoa, que é justamente quando se decide o que fazer.
+   */
+  it('o jogador vê quem está na vez e quem vem depois sem sair do mapa', () => {
+    renderRegion(false, TABULEIRO, 'e2', { turnIndex: 1 })
+
+    const tira = screen.getByText('Na vez').parentElement
+    if (!tira) throw new Error('a tira da vez não montou')
+    // A ordem é a da mesa a partir de quem joga agora, e a lista é CIRCULAR:
+    // depois do último vem o primeiro, com a rodada seguinte.
+    expect(within(tira).getByText('Ogro')).toBeInTheDocument()
+    expect(within(tira).getByText('Batedor Élfico')).toBeInTheDocument()
+    expect(within(tira).getByText('Sílfide Ladina')).toBeInTheDocument()
+  })
+
+  // O mestre tem a iniciativa inteira numa coluna ao lado: repetir três nomes
+  // sobre o mapa dele seria ruído sobre informação que já está na tela.
+  it('o mestre não ganha a tira: ele já tem a iniciativa inteira ao lado', () => {
+    renderRegion(true, TABULEIRO, 'e2', { turnIndex: 1 })
+
+    expect(screen.queryByText('Na vez')).not.toBeInTheDocument()
+  })
+
+  it('fora de combate não há vez para anunciar', () => {
+    renderRegion(false, TABULEIRO, undefined, { turnIndex: -1 })
+
+    expect(screen.queryByText('Na vez')).not.toBeInTheDocument()
   })
 })
