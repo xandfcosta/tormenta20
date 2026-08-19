@@ -56,6 +56,8 @@ var gmGate = map[string]bool{
 	"board-as-player":     true, // "ver como jogador" é a lente do mestre sobre a própria cena
 	"board-places":        true, // o acervo de cenas guardadas é preparação do mestre
 	"board-reopen":        true,
+	"board-place-scene":   true, // a cena guardada é preparação: o jogador não a pede
+	"board-place-save":    true, // montar o lugar é do mestre, e não toca na mesa
 	"board-place-remove":  true,
 	"board-move-propose":  false, // assertMovable: papel, posse e a VEZ
 	"board-move-cancel":   false, // desfaz o próprio provisório; o mestre desfaz o de qualquer um

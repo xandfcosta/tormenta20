@@ -144,6 +144,94 @@ func (bs *boardStore) reopen(ctx context.Context, sessionID, placeID int64) (*Bo
 	return cloneBoard(&guardado), nil
 }
 
+// placeScene devolve a cena INTEIRA de um lugar guardado — é o que o mestre
+// monta sem pôr nada na mesa (ALE-191, fatia 2).
+//
+// A lista de lugares viaja sem as cenas de propósito (só nome e contagem), e é
+// por isso que existe esta segunda pergunta: baixar o acervo inteiro para
+// desenhar um menu seria pagar caro por um número, mas para EDITAR é a cena que
+// se precisa.
+func (bs *boardStore) placeScene(ctx context.Context, campaignID, placeID int64) (*BoardState, error) {
+	row, err := bs.q.GetCampaignPlace(ctx, placeID)
+	if err != nil {
+		return nil, err
+	}
+	if row.Campaignid != campaignID {
+		return nil, errPlaceFromAnotherCampaign
+	}
+	var cena BoardState
+	if err := json.Unmarshal([]byte(row.State), &cena); err != nil {
+		return nil, err
+	}
+	if cena.Tokens == nil {
+		cena.Tokens = []BoardToken{}
+	}
+	// O nome vem da COLUNA, como no reabrir: ele é o que a lista mostra, e ter
+	// duas verdades sobre como o lugar se chama é como elas divergem.
+	cena.Place = row.Name
+	cena.Pending = nil
+	return &cena, nil
+}
+
+// savePlaceScene grava a cena que o mestre montou, sem tocar na mesa.
+//
+// Este é o ÚNICO lugar do tabuleiro onde um estado inteiro chega pelo cliente —
+// nos outros o cliente manda a intenção ("mova esta peça") e o servidor produz o
+// estado. É deliberado: o rascunho não tem concorrência (só o mestre o vê),
+// não tem broadcast e não tem vez, então um handler por gesto seria protocolo
+// para nada. O preço é este: o que chega tem de ser CONFERIDO antes de virar
+// acervo, senão um cliente quebrado guarda lixo que só aparece quando a cena
+// chega à mesa.
+func (bs *boardStore) savePlaceScene(ctx context.Context, campaignID, placeID int64, cena *BoardState) error {
+	row, err := bs.q.GetCampaignPlace(ctx, placeID)
+	if err != nil {
+		return err
+	}
+	if row.Campaignid != campaignID {
+		return errPlaceFromAnotherCampaign
+	}
+	if err := sanitizeScene(cena, bs.newID); err != nil {
+		return err
+	}
+	cena.Place = row.Name
+	blob, err := json.Marshal(cena)
+	if err != nil {
+		return err
+	}
+	_, err = bs.q.UpdateCampaignPlace(ctx, sqlcgen.UpdateCampaignPlaceParams{
+		State: string(blob), Updatedat: time.Now().UTC().Format(time.RFC3339), ID: placeID,
+	})
+	return err
+}
+
+// sanitizeScene aplica à cena que chegou do cliente as MESMAS regras que o
+// tabuleiro vivo aplica peça a peça: teto de peças, coordenada sã e tamanho
+// mínimo. Recusa em vez de corrigir o que não dá para corrigir sem inventar —
+// uma peça em (10^9, 0) não tem posição "quase certa".
+//
+// A peça nova nasce sem id (o cliente não cunha id de servidor) e ganha um
+// aqui; o provisório não existe em acervo, porque ele é de uma cena que está
+// acontecendo.
+func sanitizeScene(cena *BoardState, newID func() string) error {
+	if len(cena.Tokens) > boardMaxTokens {
+		return fmt.Errorf("a cena tem %d peças (teto %d)", len(cena.Tokens), boardMaxTokens)
+	}
+	for i := range cena.Tokens {
+		token := &cena.Tokens[i]
+		if token.Footprint <= 0 {
+			token.Footprint = 1
+		}
+		if err := assertSaneCoords(*token); err != nil {
+			return err
+		}
+		if token.ID == "" {
+			token.ID = newID()
+		}
+	}
+	cena.Pending = nil
+	return nil
+}
+
 // countTokens conta as peças sem desserializar a cena inteira num tipo — a
 // lista de lugares só quer o número, e um `Place` inteiro por linha seria ler o
 // acervo do mestre para desenhar um menu.

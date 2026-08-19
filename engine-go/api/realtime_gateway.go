@@ -129,6 +129,8 @@ func (g *realtimeGateway) onConnect(sock *socket.Socket) {
 	sock.On("board-terrain-paint", func(args ...any) { g.onBoardTerrainPaint(sock, args) })
 	sock.On("board-places", func(args ...any) { g.onBoardPlaces(sock, args) })
 	sock.On("board-reopen", func(args ...any) { g.onBoardReopen(sock, args) })
+	sock.On("board-place-scene", func(args ...any) { g.onBoardPlaceScene(sock, args) })
+	sock.On("board-place-save", func(args ...any) { g.onBoardPlaceSave(sock, args) })
 	sock.On("board-place-remove", func(args ...any) { g.onBoardPlaceRemove(sock, args) })
 	sock.On("board-move-propose", func(args ...any) { g.onBoardMovePropose(sock, args) })
 	sock.On("board-move-commit", func(args ...any) { g.onBoardMoveCommit(sock, args) })

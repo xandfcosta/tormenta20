@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"strings"
 	"testing"
 )
 
@@ -213,4 +214,93 @@ func placeNamed(t *testing.T, lugares []Place, nome string) Place {
 	}
 	t.Fatalf("%q não está no acervo: %+v", nome, lugares)
 	return Place{}
+}
+
+/*
+Montar o lugar sem pôr nada na mesa (ALE-191, fatia 2).
+
+É o único ponto do tabuleiro onde o estado inteiro chega pelo CLIENTE — nos
+outros ele manda a intenção e o servidor produz o estado. O rascunho não tem
+concorrência, broadcast nem vez, então um handler por gesto seria protocolo para
+nada; o preço é conferir o que chega antes de virar acervo.
+*/
+
+// A cena montada volta inteira na próxima vez que o mestre a abrir — e a peça
+// nova, que nasceu sem id no cliente, ganha um.
+func TestMontarOLugarGuardaACenaComIdParaAPecaNova(t *testing.T) {
+	s, campanha, sessao := mesaComTaverna(t)
+	ctx := context.Background()
+	if err := s.boards.archive(ctx, campanha, s.boards.get(ctx, sessao)); err != nil {
+		t.Fatalf("guardar a taverna: %v", err)
+	}
+	lugar := s.boards.places(ctx, campanha)[0]
+
+	montada := &BoardState{Place: "nome que o cliente inventou", Tokens: []BoardToken{
+		{Label: "Necromante", X: 4, Y: 4, Footprint: 2},
+	}}
+	if err := s.boards.savePlaceScene(ctx, campanha, lugar.ID, montada); err != nil {
+		t.Fatalf("guardar a cena montada: %v", err)
+	}
+
+	volta, err := s.boards.placeScene(ctx, campanha, lugar.ID)
+	if err != nil {
+		t.Fatalf("reabrir para montar: %v", err)
+	}
+	if len(volta.Tokens) != 1 || volta.Tokens[0].Label != "Necromante" {
+		t.Fatalf("a cena montada não voltou: %+v", volta.Tokens)
+	}
+	if volta.Tokens[0].ID == "" {
+		t.Error("a peça nova voltou sem id: nada consegue selecioná-la depois")
+	}
+	// O NOME é da coluna: o rascunho não renomeia o lugar por baixo do pano.
+	if volta.Place != "Taverna do Javali" {
+		t.Errorf("o lugar passou a se chamar %q", volta.Place)
+	}
+	// E a MESA não foi tocada: montar é preparação.
+	if naMesa := s.boards.get(ctx, sessao); naMesa == nil || len(naMesa.Tokens) != 1 {
+		t.Errorf("montar o lugar mexeu na cena que está na mesa: %+v", naMesa)
+	}
+}
+
+// O estado chega do cliente, então o que ele afirma é conferido: uma peça em
+// coordenada absurda estouraria a serialização e a tela de todo mundo quando a
+// cena chegasse à mesa — e o erro tem de dizer o valor ofensor.
+func TestCenaMontadaComCoordenadaAbsurdaERecusada(t *testing.T) {
+	s, campanha, sessao := mesaComTaverna(t)
+	ctx := context.Background()
+	if err := s.boards.archive(ctx, campanha, s.boards.get(ctx, sessao)); err != nil {
+		t.Fatalf("guardar a taverna: %v", err)
+	}
+	lugar := s.boards.places(ctx, campanha)[0]
+
+	absurda := &BoardState{Tokens: []BoardToken{{Label: "Fantasma", X: 9_000_000, Y: 0}}}
+	err := s.boards.savePlaceScene(ctx, campanha, lugar.ID, absurda)
+
+	if err == nil {
+		t.Fatal("guardou uma peça fora do limite de sanidade")
+	}
+	if !strings.Contains(err.Error(), "9000000") {
+		t.Errorf("o erro não diz o valor ofensor: %v", err)
+	}
+	if depois := s.boards.places(ctx, campanha)[0]; depois.Tokens != 1 {
+		t.Errorf("a recusa mexeu no acervo: o lugar ficou com %d peças", depois.Tokens)
+	}
+}
+
+// A mesma posse do apagar e do mostrar à mesa: o id vem do cliente.
+func TestNaoSeMontaOLugarDeOutraCronica(t *testing.T) {
+	s, campanha, _ := mesaComTaverna(t)
+	ctx := context.Background()
+	outra := seedCampaign(t, s, seedUser(t, s, "vizinha@t.com"))
+	if err := s.boards.archive(ctx, outra, &BoardState{Version: 1, Place: "Cripta alheia"}); err != nil {
+		t.Fatalf("guardar a cena da outra mesa: %v", err)
+	}
+	alheia := s.boards.places(ctx, outra)[0]
+
+	if _, err := s.boards.placeScene(ctx, campanha, alheia.ID); err == nil {
+		t.Error("leu a cena de outra crônica")
+	}
+	if err := s.boards.savePlaceScene(ctx, campanha, alheia.ID, &BoardState{}); err == nil {
+		t.Error("escreveu na cena de outra crônica")
+	}
 }

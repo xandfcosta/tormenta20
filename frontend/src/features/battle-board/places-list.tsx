@@ -1,4 +1,4 @@
-import { Library, MonitorPlay, RotateCcw, Trash2 } from 'lucide-solid'
+import { Hammer, Library, MonitorPlay, RotateCcw, Trash2 } from 'lucide-solid'
 import { type JSX, For, Show, createSignal } from 'solid-js'
 import type { BoardPlace } from '@/shared/realtime/realtime'
 import { Button } from '@/shared/ui/button'
@@ -27,6 +27,8 @@ export function PlacesList(props: {
   places: readonly BoardPlace[]
   onReopen: (placeId: number) => void
   onRemove: (placeId: number) => void
+  /** Montar a cena sem pôr nada na mesa (ALE-191, fatia 2). */
+  onEdit?: (placeId: number) => void
   /** O nome da cena que está na mesa agora, quando há uma. */
   onTable?: string
 }) {
@@ -40,6 +42,7 @@ export function PlacesList(props: {
           places={props.places}
           onReopen={props.onReopen}
           onRemove={props.onRemove}
+          onEdit={props.onEdit}
           onTable={props.onTable}
         />
       </section>
@@ -53,6 +56,8 @@ function PlaceRows(props: {
   places: readonly BoardPlace[]
   onReopen: (placeId: number) => void
   onRemove: (placeId: number) => void
+  /** Montar a cena sem pôr nada na mesa (ALE-191, fatia 2). */
+  onEdit?: (placeId: number) => void
   onTable?: string
 }) {
   return (
@@ -67,6 +72,20 @@ function PlaceRows(props: {
               </p>
             </div>
             <PlaceAction place={place} onTable={props.onTable} onReopen={props.onReopen} />
+            {/* Montar acontece FORA da mesa: é a preparação da próxima sala
+                enquanto o grupo ainda está na taverna (ALE-191). */}
+            <Show when={props.onEdit}>
+              {(montar) => (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  aria-label={`Montar ${place.name}`}
+                  onClick={() => montar()(place.id)}
+                >
+                  <Hammer aria-hidden="true" class="size-3.5" />
+                </Button>
+              )}
+            </Show>
             {/* Apagar é o ÚNICO caminho que destrói uma cena montada — e por
                 isso é o único que pergunta. */}
             <ConfirmDialog
@@ -150,6 +169,7 @@ export function PlacesDialog(props: {
   places: readonly BoardPlace[]
   onReopen: (placeId: number) => void
   onRemove: (placeId: number) => void
+  onEdit: (placeId: number) => void
   onTable: string
   /** Chamado ao ABRIR: o acervo chega por pergunta, e ele pode ter mudado desde
    *  a última vez (a cena que acabou de sair da mesa está nele). */
@@ -191,6 +211,10 @@ export function PlacesDialog(props: {
                 setOpen(false)
               }}
               onRemove={props.onRemove}
+              onEdit={(placeId) => {
+                props.onEdit(placeId)
+                setOpen(false)
+              }}
               onTable={props.onTable}
             />
           </Show>

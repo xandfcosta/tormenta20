@@ -1,39 +1,21 @@
-import {
-  Brush,
-  Check,
-  Crosshair,
-  Eraser,
-  Eye,
-  Library,
-  LayoutGrid,
-  Maximize,
-  Minimize,
-  Undo2,
-  Users,
-  X,
-} from 'lucide-solid'
-import { For, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
+import { Brush, Eraser, Eye, Library, Users, X } from 'lucide-solid'
+import { Show, createEffect, createMemo, createSignal, on } from 'solid-js'
 import { pathBetween } from '@/features/battle-board/board-path'
-import { TokenActions } from '@/features/battle-board/token-actions'
-import { TokenDialog } from '@/features/battle-board/token-dialog'
+import { MoveBar, PlayerLensBar, ViewControls } from '@/features/battle-board/board-bars'
 import { BoardView } from '@/features/battle-board/board-view'
 import { type BoardViewport, SQUARE_METRES } from '@/features/battle-board/board-viewport'
-import { OpenBoardDialog } from '@/features/battle-board/open-board-dialog'
-import { PlacesDialog, PlacesList } from '@/features/battle-board/places-list'
-import { upcomingTurns } from '@/features/session-tracker/tracker-rules'
+import { EmptyBoard } from '@/features/battle-board/empty-board'
+import { PlaceEditor } from '@/features/battle-board/place-editor'
+import { PlacesDialog } from '@/features/battle-board/places-list'
+import { TokenActions } from '@/features/battle-board/token-actions'
+import { TokenDialog } from '@/features/battle-board/token-dialog'
 import { SceneContainerProvider, useSceneContainer } from '@/shared/lib/scene-container'
-import { type FullscreenController, createFullscreen } from '@/shared/lib/fullscreen'
+import { createFullscreen } from '@/shared/lib/fullscreen'
 import { boardReach } from '@/shared/lib/engine-wasm'
-import type {
-  BoardPlace,
-  BoardState,
-  BoardToken,
-  InitiativeEntry,
-  SessionRealtime,
-} from '@/shared/realtime/realtime'
-import { cn } from '@/shared/lib/utils'
+import type { BoardPlace, BoardState, BoardToken, SessionRealtime } from '@/shared/realtime/realtime'
 import { Button } from '@/shared/ui/button'
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
+import { TurnStrip } from './board-turn-strip'
 
 /**
  * O tabuleiro dentro da cena da sessão (ALE-124).
@@ -70,6 +52,25 @@ export function BoardRegion(props: {
     if (!props.isGm) return
     void props.rt.listPlaces().then(setPlaces)
   }
+  /**
+   * Montar um lugar do acervo (ALE-191, fatia 2). Enquanto o rascunho está
+   * aberto ele OCUPA a região: montar é preparação, e desenhar duas cenas lado
+   * a lado numa coluna que já divide espaço com a iniciativa seria dar metade
+   * do mapa para cada uma. A mesa não fica sabendo — nada aqui é transmitido.
+   */
+  const [editing, setEditing] = createSignal<{ placeId: number; scene: BoardState } | null>(null)
+  const editPlace = (placeId: number) => {
+    void props.rt.placeScene(placeId).then((cena) => {
+      if (cena) setEditing({ placeId, scene: cena })
+    })
+  }
+  const savePlace = (cena: BoardState) => {
+    const edicao = editing()
+    if (!edicao) return
+    void props.rt.savePlace(edicao.placeId, cena).then(setPlaces)
+    setEditing(null)
+  }
+
   // Recarrega quando a mesa FICA sem tabuleiro: encerrar acabou de guardar uma
   // cena, e a lista tem de mostrá-la sem ninguém recarregar a página.
   createEffect(() => {
@@ -254,6 +255,21 @@ export function BoardRegion(props: {
     // isso ele encolhe para o conteúdo — medido em 138px de 352 disponíveis,
     // ou seja, o tabuleiro virava uma tira estreita (ALE-124).
     <SceneContainerProvider element={alvoDosOverlays}>
+      {/* Enquanto o rascunho está aberto, a cena da mesa sai da tela em vez de
+          ficar escondida por CSS: duas cenas montadas ao mesmo tempo seriam
+          duas peças com o mesmo nome acessível na mesma árvore, e o leitor de
+          tela leria as duas. */}
+      <Show when={editing()}>
+        {(edicao) => (
+          <PlaceEditor
+            scene={edicao().scene}
+            onTable={board()?.place ?? null}
+            onSave={savePlace}
+            onClose={() => setEditing(null)}
+          />
+        )}
+      </Show>
+      <Show when={!editing()}>
       <section
         ref={setSceneEl}
         // O escopo de tokens vai junto: em tela cheia o `::backdrop` é preto e
@@ -268,6 +284,7 @@ export function BoardRegion(props: {
             onOpen={props.rt.openBoard}
             places={places()}
             onReopen={props.rt.reopenPlace}
+            onEdit={editPlace}
             onRemovePlace={(placeId) => void props.rt.removePlace(placeId).then(setPlaces)}
           />
         }
@@ -332,6 +349,7 @@ export function BoardRegion(props: {
                     places={places()}
                     onTable={live().place}
                     onOpenList={refreshPlaces}
+                    onEdit={editPlace}
                     onReopen={props.rt.reopenPlace}
                     onRemove={(placeId) => void props.rt.removePlace(placeId).then(setPlaces)}
                     trigger={(open) => (
@@ -456,204 +474,7 @@ export function BoardRegion(props: {
         )}
       </Show>
       </section>
+      </Show>
     </SceneContainerProvider>
-  )
-}
-
-/**
- * A tira da lente do mestre (ALE-193).
- *
- * Existe porque um modo que se esquece é pior que nenhum: o mestre que não
- * percebe que está na vista da mesa não vê a peça que ele mesmo escondeu, e vai
- * concluir que ela sumiu. Por isso ela é PERSISTENTE, nomeia o modo em texto e
- * carrega a própria saída.
- *
- * E diz o NÚMERO de peças escondidas, que é a pergunta que trouxe o mestre até
- * aqui — "a emboscada está mesmo invisível?". Contar o que sumiu da tela não é
- * resposta: ele não sabe o que não está vendo.
- */
-function PlayerLensBar(props: { hidden: number; onExit: () => void }) {
-  return (
-    <div
-      role="status"
-      class="flex shrink-0 flex-wrap items-center gap-2 border-b border-grimorio-gold/40 bg-grimorio-gold/10 px-3 py-1 text-[11px] text-grimorio-gold"
-    >
-      <Eye aria-hidden="true" class="size-3.5 shrink-0" />
-      <p>
-        Você está vendo a cena como a mesa.
-        {props.hidden > 0
-          ? ` ${props.hidden} ${props.hidden === 1 ? 'peça escondida não aparece' : 'peças escondidas não aparecem'}.`
-          : ' Nenhuma peça escondida nesta cena.'}
-      </p>
-      <Button size="sm" variant="ghost" class="ml-auto" onClick={() => props.onExit()}>
-        Voltar à vista do mestre
-      </Button>
-    </div>
-  )
-}
-
-/**
- * A barra do movimento proposto (ALE-124).
- *
- * Diz o custo em QUADRADOS e em metros: quadrado é a unidade da regra (T20
- * p236) e metro é a unidade da conversa na mesa. E diz o orçamento ao lado,
- * porque "4" sem "de 6" não responde a pergunta que o jogador tem.
- *
- * Quem não decide continua lendo a barra: a mesa inteira vê para onde a peça
- * está indo, que é a razão de o provisório ser estado e não arraste privado.
- */
-function MoveBar(props: {
-  move: NonNullable<BoardState['pending']>
-  canDecide: boolean
-  onConfirm: () => void
-  onCancel: () => void
-}) {
-  const metres = () => (props.move.cost * SQUARE_METRES).toFixed(1).replace('.', ',')
-
-  return (
-    <div class="flex shrink-0 flex-wrap items-center gap-2 border-t border-grimorio-iron px-3 py-1.5">
-      <p class="font-mono text-[11px] tabular-nums text-grimorio-gold">
-        {props.move.cost} {props.move.cost === 1 ? 'quadrado' : 'quadrados'} ({metres()}m)
-        {props.move.budget >= 0 ? ` de ${props.move.budget}` : ' · sem limite de turno'}
-      </p>
-      <Show when={props.canDecide} fallback={<span class="text-[11px] text-muted-foreground">Aguardando confirmação.</span>}>
-        <div class="ml-auto flex items-center gap-1">
-          <Button size="sm" variant="ghost" onClick={() => props.onCancel()}>
-            <Undo2 aria-hidden="true" class="size-4" />
-            Refazer
-          </Button>
-          <Button size="sm" onClick={() => props.onConfirm()}>
-            <Check aria-hidden="true" class="size-4" />
-            Confirmar
-          </Button>
-        </div>
-      </Show>
-    </div>
-  )
-}
-
-/**
- * Mover a vista e o zoom. Num plano INFINITO isto não é enfeite: sem uma forma
- * de andar com a janela, metade da cena fica inalcançável.
- *
- * "Centralizar" enquadra as PEÇAS, e não a origem: o centro de um plano infinito
- * não significa nada — o que o mestre quer é achar o grupo.
- */
-/**
- * Os controles da vista. As quatro setas e o −/+ saíram (ALE-124): arrastar e a
- * roda/pinça fazem o mesmo melhor e sem ocupar seis lugares num cabeçalho que
- * já quebrava linha no telefone. Fica o que gesto nenhum faz — achar o grupo
- * num plano infinito — e entra a tela cheia, que é do TABULEIRO e não da
- * página: em tela cheia da página o mapa continuaria dividindo espaço com a
- * iniciativa, que é justamente o que se quer sair.
- */
-function ViewControls(props: {
-  view: BoardViewport
-  onFit: () => void
-  fullscreen: FullscreenController
-}) {
-  return (
-    <div class="flex items-center gap-0.5">
-      <Button size="sm" variant="ghost" aria-label="Centralizar nas peças" onClick={props.onFit}>
-        <Crosshair aria-hidden="true" class="size-4" />
-      </Button>
-      <Show when={props.fullscreen.supported}>
-        <Button
-          size="sm"
-          variant="ghost"
-          aria-label={props.fullscreen.active() ? 'Sair da tela cheia' : 'Tabuleiro em tela cheia'}
-          onClick={props.fullscreen.toggle}
-        >
-          <Show
-            when={props.fullscreen.active()}
-            fallback={<Maximize aria-hidden="true" class="size-4" />}
-          >
-            <Minimize aria-hidden="true" class="size-4" />
-          </Show>
-        </Button>
-      </Show>
-    </div>
-  )
-}
-
-
-/**
- * Sessão sem tabuleiro. O estado vazio é do MESTRE: o jogador não abre cena, e
- * dizer a ele "abra um tabuleiro" seria oferecer um botão que não existe.
- */
-function EmptyBoard(props: {
-  isGm: boolean
-  onOpen: (place: string, terrain: string) => void
-  places: readonly BoardPlace[]
-  onReopen: (placeId: number) => void
-  onRemovePlace: (placeId: number) => void
-}) {
-  return (
-    <div class="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 overflow-y-auto p-6 text-center">
-      <LayoutGrid aria-hidden="true" class="size-8 text-muted-foreground" />
-      <p class="text-sm text-muted-foreground">
-        {props.isGm
-          ? 'Nenhum tabuleiro aberto. Vale para combate e para cena de interpretação.'
-          : 'O mestre ainda não abriu um tabuleiro.'}
-      </p>
-      <Show when={props.isGm}>
-        <OpenBoardDialog
-          onOpen={props.onOpen}
-          trigger={(open) => <Button onClick={open}>Abrir tabuleiro</Button>}
-        />
-        {/* O acervo vem DEPOIS do botão de abrir: montar uma cena nova é o que
-            se faz na primeira noite, e reabrir é o que se faz nas outras. */}
-        <PlacesList
-          places={props.places}
-          onReopen={props.onReopen}
-          onRemove={props.onRemovePlace}
-        />
-      </Show>
-    </div>
-  )
-}
-
-/**
- * Quem está na vez e quem vem depois, sem sair do mapa (ALE-179).
- *
- * Só para o JOGADOR: o mestre tem a iniciativa inteira numa coluna ao lado, e
- * repetir três nomes ali seria ruído. Na tela do jogador o tabuleiro ocupa a
- * superfície toda, e para saber se ele é o próximo ele precisava trocar de aba
- * — no meio do turno de outra pessoa, que é quando se decide o que fazer.
- *
- * Fora de combate a tira some: não há vez de ninguém para anunciar.
- */
-function TurnStrip(props: { rt: SessionRealtime; hidden: boolean }) {
-  const fila = createMemo(() =>
-    props.hidden ? [] : upcomingTurns(props.rt.state().initiative, props.rt.state().turnIndex, 3),
-  )
-
-  return (
-    <Show when={fila().length > 0}>
-      <div class="flex shrink-0 items-center gap-2 overflow-hidden border-b border-grimorio-iron px-3 py-1.5 text-[11px]">
-        <span class="shrink-0 font-heading uppercase tracking-wide text-grimorio-gold">
-          Na vez
-        </span>
-        <For each={fila()}>
-          {(entrada: InitiativeEntry, posicao: () => number) => (
-            <>
-              <Show when={posicao() > 0}>
-                <span aria-hidden="true" class="shrink-0 text-muted-foreground">
-                  ›
-                </span>
-              </Show>
-              <span
-                class={cn(
-                  'min-w-0 truncate',
-                  posicao() === 0 ? 'font-semibold text-foreground' : 'text-muted-foreground',
-                )}
-              >
-                {entrada.label}
-              </span>
-            </>
-          )}
-        </For>
-      </div>
-    </Show>
   )
 }

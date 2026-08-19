@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"log"
 
 	socket "github.com/zishang520/socket.io/servers/socket/v3"
@@ -196,6 +198,74 @@ func (g *realtimeGateway) onBoardPlaceRemove(sock *socket.Socket, args []any) {
 		return
 	}
 	ackOK(ctx.ack, map[string]any{"places": g.s.boards.places(context.Background(), ctx.campaignID)})
+}
+
+// onBoardPlaceScene (mestre) devolve a cena de um lugar guardado, para montar.
+//
+// O ack passa pelo `boardForRole` mesmo sendo porta de mestre: é estado saindo
+// do servidor, e a casa exige que toda saída diga para QUAL papel está saindo —
+// embrulhar num mapa faria a linha escapar do teste que lê o fonte, e é assim
+// que uma rede fica cega (ALE-124).
+func (g *realtimeGateway) onBoardPlaceScene(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok || !g.requireGm(sock, ctx.role) {
+		return
+	}
+	placeID, ok := intField(ctx.body, "placeId")
+	if !ok {
+		g.wsError(sock, "placeId is required")
+		return
+	}
+	cena, err := g.s.boards.placeScene(context.Background(), ctx.campaignID, placeID)
+	if err != nil {
+		g.wsError(sock, "não consegui abrir o lugar para montar")
+		return
+	}
+	ackOK(ctx.ack, boardForRole(ctx.role, cena))
+}
+
+// onBoardPlaceSave (mestre) guarda a cena montada no lugar, sem tocar na mesa.
+//
+// Não emite `board-state` NENHUM, e é isso que faz a preparação ser preparação:
+// a mesa continua na taverna e não fica sabendo que a cripta existe (ALE-191).
+func (g *realtimeGateway) onBoardPlaceSave(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok || !g.requireGm(sock, ctx.role) {
+		return
+	}
+	placeID, ok := intField(ctx.body, "placeId")
+	if !ok {
+		g.wsError(sock, "placeId is required")
+		return
+	}
+	cena, err := parseScene(ctx.body["scene"])
+	if err != nil {
+		g.wsError(sock, err.Error())
+		return
+	}
+	if err := g.s.boards.savePlaceScene(context.Background(), ctx.campaignID, placeID, cena); err != nil {
+		g.wsError(sock, err.Error())
+		return
+	}
+	ackOK(ctx.ack, map[string]any{"places": g.s.boards.places(context.Background(), ctx.campaignID)})
+}
+
+// parseScene lê a cena montada do corpo da mensagem. Passa pelo JSON de novo
+// porque o corpo chega como `map[string]any` genérico, e reconstruir o
+// `BoardState` campo a campo aqui seria uma segunda definição do formato de fio.
+func parseScene(raw any) (*BoardState, error) {
+	blob, err := json.Marshal(raw)
+	if err != nil {
+		return nil, fmt.Errorf("cena ilegível: %w", err)
+	}
+	var cena BoardState
+	if err := json.Unmarshal(blob, &cena); err != nil {
+		return nil, fmt.Errorf("cena ilegível: %w", err)
+	}
+	if cena.Tokens == nil {
+		cena.Tokens = []BoardToken{}
+	}
+	return &cena, nil
 }
 
 // onBoardTerrainPaint (mestre) marca ou desmarca uma casa como terreno difícil.

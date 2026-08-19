@@ -34,6 +34,10 @@ class FakeRealtime {
       aberto ? { ...aberto, tokens: aberto.tokens.filter((peca) => !peca.hidden) } : null,
     )
   })
+  /** Montar um lugar do acervo (ALE-191, fatia 2). A cena guardada chega por
+   *  PERGUNTA — a lista viaja só com nome e contagem. */
+  scene: BoardState | null = null
+  readonly savePlace = vi.fn(() => Promise.resolve(this.places))
   readonly proposeMove = vi.fn()
   readonly commitMove = vi.fn()
   readonly cancelMove = vi.fn()
@@ -67,6 +71,8 @@ class FakeRealtime {
       paintTerrain: this.paintTerrain,
       listPlaces: () => Promise.resolve(this.places),
       boardAsPlayer: this.boardAsPlayer,
+      placeScene: () => Promise.resolve(this.scene),
+      savePlace: this.savePlace,
       reopenPlace: this.reopenPlace,
       removePlace: (placeId: number) => {
         this.places = this.places.filter((lugar) => lugar.id !== placeId)
@@ -100,11 +106,17 @@ function renderRegion(
   isGm: boolean,
   live: CenaDoTeste = TABULEIRO,
   activeEntryId?: string,
-  jogador: { myCharacterIds?: ReadonlySet<number>; turnIndex?: number; places?: BoardPlace[] } = {},
+  jogador: {
+    myCharacterIds?: ReadonlySet<number>
+    turnIndex?: number
+    places?: BoardPlace[]
+    scene?: BoardState
+  } = {},
   onOpenCombatant = vi.fn(),
 ) {
   const rt = new FakeRealtime(typeof live === 'function' ? live : () => live, jogador.turnIndex ?? -1)
   rt.places = jogador.places ?? []
+  rt.scene = jogador.scene ?? null
   // A janela nasce fora da região, como na página: ela precisa sobreviver à
   // troca de região, e o teste monta a mesma composição que a cena monta.
   const view = createBoardViewport()
@@ -893,5 +905,73 @@ describe('mostrar outro lugar à mesa', () => {
 
     expect(within(acervo).getByText('Na mesa')).toBeInTheDocument()
     expect(within(acervo).getAllByRole('button', { name: /Mostrar à mesa/ })).toHaveLength(1)
+  })
+})
+
+
+/**
+ * Montar a próxima cena com a mesa jogando (ALE-191, fatia 2).
+ *
+ * O rascunho é LOCAL: o mestre monta, e só a gravação chega ao servidor. Nada
+ * daqui é transmitido — a mesa continua na taverna e não fica sabendo que a
+ * cripta existe, que é meio caminho da surpresa.
+ */
+describe('montar um lugar do acervo', () => {
+  const CRIPTA: BoardPlace = {
+    id: 12,
+    name: 'Cripta do Necromante',
+    tokens: 1,
+    updatedAt: '2026-08-19T00:00:00Z',
+  }
+  const CENA_DA_CRIPTA: BoardState = {
+    version: 4,
+    place: 'Cripta do Necromante',
+    terrain: 'masmorra',
+    tokens: [{ id: 'n1', label: 'Necromante', x: 1, y: 1, footprint: 1, kind: 'npc' }],
+  }
+
+  const montar = async () => {
+    const tudo = renderRegion(true, TABULEIRO, undefined, { places: [CRIPTA], scene: CENA_DA_CRIPTA })
+    await tudo.user.click(screen.getByRole('button', { name: 'Lugares da crônica' }))
+    await tudo.user.click(await screen.findByRole('button', { name: 'Montar Cripta do Necromante' }))
+    return tudo
+  }
+
+  it('o mestre monta a cripta enquanto a mesa continua na taverna', async () => {
+    await montar()
+
+    // A cena guardada está na tela para ser montada...
+    expect(await screen.findByRole('button', { name: /^Necromante,/ })).toBeInTheDocument()
+    // ...e o crachá diz, pelo NOME, o que a mesa está vendo enquanto isso.
+    expect(screen.getByRole('status')).toHaveTextContent(/A mesa continua vendo Taverna do Javali/)
+    // A cena da mesa sai da tela: são duas cenas, e desenhar as duas juntas
+    // faria o mestre montar sobre o mapa errado.
+    expect(screen.queryByRole('button', { name: /^Ogro,/ })).not.toBeInTheDocument()
+  })
+
+  it('a peça que nasce no rascunho pode ser posicionada, e a gravação leva tudo', async () => {
+    const { rt, user } = await montar()
+    await screen.findByRole('button', { name: /^Necromante,/ })
+
+    // Posicionar a peça que já estava guardada: selecionar e pousar.
+    await user.click(screen.getByRole('button', { name: /^Necromante,/ }))
+    await user.click(screen.getByRole('button', { name: 'Coluna 3, linha 2' }))
+    await user.click(screen.getByRole('button', { name: 'Guardar a cena' }))
+
+    expect(rt.savePlace).toHaveBeenCalledTimes(1)
+    const [placeId, cena] = rt.savePlace.mock.calls[0] as unknown as [number, BoardState]
+    expect(placeId).toBe(12)
+    expect(cena.tokens).toEqual([expect.objectContaining({ id: 'n1', x: 3, y: 2 })])
+  })
+
+  // Sair sem guardar é jogar o rascunho fora — e a mesa volta à tela inteira.
+  it('sair sem guardar não grava nada e devolve a cena da mesa', async () => {
+    const { rt, user } = await montar()
+    await screen.findByRole('button', { name: /^Necromante,/ })
+
+    await user.click(screen.getByRole('button', { name: 'Sair sem guardar' }))
+
+    expect(rt.savePlace).not.toHaveBeenCalled()
+    expect(await screen.findByRole('button', { name: /^Ogro,/ })).toBeInTheDocument()
   })
 })

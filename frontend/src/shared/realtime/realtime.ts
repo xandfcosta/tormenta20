@@ -219,6 +219,18 @@ export type SessionRealtime = {
    * `null` quando não há tabuleiro (ou socket).
    */
   boardAsPlayer: () => Promise<BoardState | null>
+  /**
+   * A cena INTEIRA de um lugar guardado, para o mestre montar (ALE-191). A
+   * lista viaja sem as cenas — nome e contagem —, então editar precisa desta
+   * segunda pergunta.
+   */
+  placeScene: (placeId: number) => Promise<BoardState | null>
+  /**
+   * Guarda a cena montada no lugar, SEM tocar na mesa: nenhum `board-state` sai
+   * daqui, e é isso que faz a preparação ser preparação. Devolve o acervo com a
+   * contagem já atualizada.
+   */
+  savePlace: (placeId: number, scene: BoardState) => Promise<BoardPlace[]>
   reopenPlace: (placeId: number) => void
   removePlace: (placeId: number) => Promise<BoardPlace[]>
   /** Propõe um movimento: a mesa vê o caminho, e ninguém pousou ainda. */
@@ -382,6 +394,8 @@ export function createSessionSocket(
     reopenPlace: (placeId) => send('board-reopen', { placeId }),
     removePlace: (placeId) => ask('board-place-remove', { placeId }, readPlaces),
     boardAsPlayer: () => ask('board-as-player', {}, readBoard),
+    placeScene: (placeId) => ask('board-place-scene', { placeId }, readBoard),
+    savePlace: (placeId, scene) => ask('board-place-save', { placeId, scene }, readPlaces),
     proposeMove: (tokenId, path) => send('board-move-propose', { tokenId, path }),
     commitMove: (version) => send('board-move-commit', { version }),
     cancelMove: () => send('board-move-cancel'),
