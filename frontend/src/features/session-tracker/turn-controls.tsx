@@ -3,40 +3,45 @@ import { Show } from 'solid-js'
 import type { SessionRuntimeState } from '@/shared/realtime/realtime'
 import { Button } from '@/shared/ui/button'
 import { cn } from '@/shared/lib/utils'
+import { nextTurnTarget } from './tracker-rules'
 
 /**
- * Voltar e avançar o turno, como PAR (ALE-132).
+ * Avançar o turno — o controle mais clicado do app (ALE-184).
  *
- * Eram um `‹` fantasma ao lado de um botão vermelho com texto: a mesma família
- * — os dois andam na ordem do combate — desenhada como coisas de naturezas
- * diferentes. Agora são dois ícones do mesmo tamanho num grupo com moldura
- * comum, e a hierarquia continua legível porque só o de avançar é preenchido.
+ * Era um `▶` de 32px no cabeçalho da coluna, do mesmo tamanho dos botões de
+ * descanso, que se usam uma vez por sessão. Três coisas mudaram e cada uma tem
+ * um porquê:
  *
- * O tooltip carrega o que o texto dizia: o dono pediu ícone para economizar
- * espaço, e sem `title` o botão mais clicado da mesa viraria adivinhação.
+ * 1. **Alvo grande** (44px, o mínimo de toque) — ele é clicado uma vez por
+ *    combatente, por rodada, a noite inteira.
+ * 2. **Diz o NOME de quem entra**: com `▶` o mestre contava a lista para saber
+ *    para onde ia. Agora ele LÊ.
+ * 3. **Fica no PÉ da coluna**, ancorado: entre o cabeçalho e a linha da vez
+ *    havia a lista inteira rolando.
  *
- * @example <TurnControls rt={rt} class="hidden lg:flex" />
+ * O par com o `‹` continua sendo par (ALE-132): voltar e avançar andam na
+ * mesma ordem do combate. O que muda é o peso — só o avanço é preenchido e
+ * largo, e o `‹` fica do tamanho de um ícone, porque desfazer turno é raro.
+ *
+ * @example <TurnAdvance state={rt.state()} connected onPrevious={…} onNext={…} />
  */
-export function TurnControls(props: {
+export function TurnAdvance(props: {
+  state: SessionRuntimeState
   connected: boolean
   onPrevious: () => void
   onNext: () => void
-  /** Só o avanço — a faixa fixa abaixo de 1024, onde a iniciativa some da tela. */
+  /** Sem o `‹` — a faixa fixa abaixo de 1024, onde só cabe o avanço. */
   onlyNext?: boolean
   class?: string
 }) {
+  const alvo = () => nextTurnTarget(props.state.initiative, props.state.turnIndex)
+
   return (
-    <div
-      class={cn(
-        'flex shrink-0 items-center gap-px rounded-md border border-grimorio-iron p-px',
-        props.class,
-      )}
-    >
+    <div class={cn('flex shrink-0 items-center gap-1', props.class)}>
       <Show when={!props.onlyNext}>
         <Button
-          size="sm"
-          variant="ghost"
-          class="size-8 rounded-[5px]"
+          variant="outline"
+          class="size-11 shrink-0"
           disabled={!props.connected}
           aria-label="Turno anterior"
           title="Turno anterior"
@@ -45,26 +50,30 @@ export function TurnControls(props: {
           <ChevronLeft aria-hidden="true" class="size-4" />
         </Button>
       </Show>
+      {/* `min-w-0` + `truncate` no rótulo: "Zumbi Putrefato Ancião" cabe na
+          coluna de 22rem empurrando a seta para fora sem isto. */}
       <Button
-        size="sm"
-        class="size-8 rounded-[5px]"
-        disabled={!props.connected}
-        aria-label="Próximo turno"
-        title="Próximo turno"
+        class="h-11 min-w-0 flex-1 justify-between gap-2 px-3 text-sm"
+        disabled={!props.connected || alvo().entry === null}
+        aria-label={alvo().label}
         onClick={() => props.onNext()}
       >
-        <ChevronRight aria-hidden="true" class="size-4" />
+        <span class="truncate">{alvo().label}</span>
+        <ChevronRight aria-hidden="true" class="size-4 shrink-0" />
       </Button>
     </div>
   )
 }
 
 /**
- * "Rodada 2 · Turno 6/7 · 14 no total" (ALE-142).
+ * "Rodada 2 · Turno 6/7".
  *
- * A posição na rodada sai do estado que já existia; o total vem CONTADO do
- * servidor, porque derivar de rodada × tamanho da lista mente assim que alguém
- * entra ou morre no meio do combate.
+ * A posição na rodada sai do estado que já existia. O TOTAL contado pelo
+ * servidor saiu do desenho na ALE-184: "Turno 9/9 · 6 no total" com nove linhas
+ * na lista lia como contradição — os dois números respondem perguntas
+ * diferentes (onde estou na volta × quantos turnos já se jogaram, que difere
+ * quando alguém entra ou morre no meio) e ninguém decifra isso no combate. O
+ * campo continua no estado; o que saiu foi a tinta.
  *
  * Antes do primeiro turno não há o que contar, então só a rodada aparece —
  * "Turno 0/7" diria que a rodada começou quando ela não começou.
@@ -77,10 +86,6 @@ export function TurnCounter(props: { state: SessionRuntimeState; class?: string 
       Rodada {props.state.round}
       <Show when={emCombate()}>
         {' · '}Turno {props.state.turnIndex + 1}/{props.state.initiative.length}
-      </Show>
-      <Show when={(props.state.turnsTaken ?? 0) > 0}>
-        {' · '}
-        {props.state.turnsTaken} no total
       </Show>
     </span>
   )

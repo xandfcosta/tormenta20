@@ -88,13 +88,27 @@ describe('faixa do turno', () => {
   })
 
   // Reiniciar apaga o combate inteiro e fica longe do avanço, atrás de
-  // confirmação — a proteção estava no lugar errado antes (ALE-122).
-  it('reiniciar continua pedindo confirmação', async () => {
+  // confirmação — a proteção estava no lugar errado antes (ALE-122). Na
+  // ALE-184 ele saiu da FAIXA e foi para o menu da sessão: continua atrás de
+  // confirmação, e agora também atrás de um menu, porque ocupava um lugar na
+  // fileira mais disputada da cena para algo que se usa quase nunca.
+  it('reiniciar saiu da faixa e continua pedindo confirmação', async () => {
     const { rt, user } = renderScene()
 
-    await user.click(screen.getByRole('button', { name: 'Reiniciar' }))
+    expect(screen.queryByRole('button', { name: 'Reiniciar' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Configurações da sessão' }))
+    await user.click(await screen.findByRole('button', { name: 'Reiniciar' }))
 
     expect(rt.resetInitiative).not.toHaveBeenCalled()
     expect(await screen.findByRole('dialog')).toHaveTextContent('Reiniciar o combate?')
+  })
+
+  // O avanço passa a dizer PARA ONDE vai (ALE-184): com a lista vazia não há
+  // destino, e prometer um nome seria inventá-lo.
+  it('sem combatentes, o avanço não promete nome nenhum', () => {
+    renderScene()
+
+    expect(screen.getAllByRole('button', { name: 'Próximo turno' })[0]).toBeDisabled()
   })
 })

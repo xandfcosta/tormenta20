@@ -4,6 +4,7 @@ import {
   connectionStatus,
   entryPermissions,
   myCharacterIdsOf,
+  nextTurnTarget,
   reservedVerbs,
 } from './tracker-rules'
 
@@ -142,5 +143,31 @@ describe('reservedVerbs', () => {
     const lista = [entry({ characterId: 8, type: 'character', hpMax: 20 })]
 
     expect(reservedVerbs(lista, { isGm: false, myCharacterIds: mine })).toEqual([])
+  })
+})
+
+describe('nextTurnTarget', () => {
+  const arwen = entry({ id: 'a', label: 'Arwen' })
+  const ogro = entry({ id: 'b', label: 'Ogro' })
+  const zumbi = entry({ id: 'c', label: 'Zumbi 1' })
+
+  it('anuncia QUEM entra, não o que o botão faz', () => {
+    expect(nextTurnTarget([arwen, ogro, zumbi], 0).label).toBe('Próximo: Ogro')
+  })
+
+  it('no último da lista, volta ao primeiro', () => {
+    // Circular como a tira do jogador (ALE-179): é no último turno da rodada
+    // que "quem vem depois" mais importa, e cortar ali deixaria o botão mudo.
+    expect(nextTurnTarget([arwen, ogro, zumbi], 2).label).toBe('Próximo: Arwen')
+  })
+
+  it('fora de combate o verbo é COMEÇAR, não "próximo"', () => {
+    // "Próximo: Arwen" mentiria sobre uma rodada que não começou — quem clica
+    // ali está começando o combate, e o primeiro da lista é quem entra.
+    expect(nextTurnTarget([arwen, ogro], -1).label).toBe('Começar: Arwen')
+  })
+
+  it('sem ninguém na lista, não inventa um nome', () => {
+    expect(nextTurnTarget([], -1)).toEqual({ label: 'Próximo turno', entry: null })
   })
 })

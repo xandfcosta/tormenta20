@@ -7,7 +7,7 @@ import { HeaderCard } from '@/features/session-tracker/header-card'
 import { InitiativeCard } from '@/features/session-tracker/initiative-card'
 import { CreatureBlockDialog } from '@/features/gm-tools/creature-block-dialog'
 import { blankCreatureBlock } from '@/shared/api/creature-types'
-import { TurnControls, TurnCounter } from '@/features/session-tracker/turn-controls'
+import { TurnAdvance, TurnCounter } from '@/features/session-tracker/turn-controls'
 import { RestControls } from '@/features/session-tracker/rest-controls'
 import { createMediaQuery } from '@/shared/lib/media-query'
 import { cn } from '@/shared/lib/utils'
@@ -274,9 +274,10 @@ function TurnBar(props: {
             Ele vem ANTES dos descansos para não encostar no "Reiniciar", que
             apaga o combate inteiro: a ALE-122 afastou os dois de propósito, e
             pôr o avanço no fim da fileira desfazia isso no celular. */}
-        <TurnControls
+        <TurnAdvance
           onlyNext
           class="lg:hidden"
+          state={state()}
           connected={props.rt.isConnected()}
           onPrevious={props.rt.previousTurn}
           onNext={props.rt.nextTurn}
@@ -285,18 +286,6 @@ function TurnBar(props: {
             dentro do menu da sessão, e o mestre descansa o grupo com muito mais
             frequência do que renomeia a sessão (ALE-122). */}
         <RestControls rt={props.rt} />
-        <ConfirmDialog
-          title="Reiniciar o combate?"
-          description="A iniciativa, a rodada e o turno voltam a zero, e os combatentes saem da lista."
-          confirmLabel="Reiniciar"
-          destructive
-          onConfirm={props.rt.resetInitiative}
-          trigger={(open) => (
-            <Button size="sm" variant="outline" disabled={!props.rt.isConnected()} onClick={open}>
-              Reiniciar
-            </Button>
-          )}
-        />
         <MatchControls
           title="Sessão"
           trigger={(open) => (
@@ -309,6 +298,30 @@ function TurnBar(props: {
             campaignId={props.campaignId}
             session={props.session}
             isGm
+            /* "Reiniciar" saiu da faixa de turno (ALE-184): ele apaga o combate
+               inteiro e se usa quase nunca, e ocupava um lugar na fileira mais
+               disputada da cena. Os DESCANSOS ficam onde estão — a ALE-122 os
+               tirou do menu de propósito, porque o mestre descansa o grupo com
+               muito mais frequência do que renomeia a sessão. */
+            resetCombat={
+              <ConfirmDialog
+                title="Reiniciar o combate?"
+                description="A iniciativa, a rodada e o turno voltam a zero, e os combatentes saem da lista."
+                confirmLabel="Reiniciar"
+                destructive
+                onConfirm={props.rt.resetInitiative}
+                trigger={(open) => (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={!props.rt.isConnected()}
+                    onClick={open}
+                  >
+                    Reiniciar
+                  </Button>
+                )}
+              />
+            }
             danger={
               <DeleteSessionButton
                 campaignId={props.campaignId}

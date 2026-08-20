@@ -7,6 +7,16 @@ import {
 } from './support/geometry'
 import { expectPageDoesNotScroll, VIEWPORTS } from './support/viewports'
 
+/**
+ * O avanço de turno, achado pelo nome que ele ANUNCIA (ALE-184): o botão diz
+ * "Próximo: Ogro" em combate e "Começar: Arwen" antes da primeira rodada, e cai
+ * para "Próximo turno" só quando não há ninguém na lista. Casar por prefixo é o
+ * que mantém o teste falando do CONTROLE e não do combatente da vez.
+ */
+function avancoDeTurno(page: Page) {
+  return page.getByRole('button', { name: /^(Próximo|Começar)/ })
+}
+
 const CAMPAIGN = 'Snapshot Test ALE-33' // the seed chronicle with a live session
 
 /**
@@ -144,7 +154,7 @@ test.describe('Sessão ao vivo', () => {
 
     await expect(page.getByText('Efeitos temporários de cena foram limpos.')).toBeVisible()
     // A aba viva é o que estava em jogo: numa aba travada isto nunca resolve.
-    await expect(page.getByRole('button', { name: 'Próximo turno' })).toBeEnabled({ timeout: 5000 })
+    await expect(avancoDeTurno(page)).toBeEnabled({ timeout: 5000 })
   })
 
   /**
@@ -249,7 +259,7 @@ test.describe('Sessão ao vivo', () => {
   })
 
   /**
-   * EXATAMENTE um "Próximo turno" na tela, em todo formato (ALE-142).
+   * EXATAMENTE um avanço de turno na tela, em todo formato (ALE-142).
    *
    * O par de turno mora no cabeçalho da iniciativa, mas abaixo de 1024 a cena
    * mostra uma região por vez e a iniciativa pode não estar na tela — então a
@@ -275,13 +285,19 @@ test.describe('Sessão ao vivo', () => {
         const botao = page.getByRole('button', { name: regiao, exact: true })
         if (!(await botao.isVisible())) continue
         await botao.click()
-        const naRegiao = page.getByRole('button', { name: 'Próximo turno' })
+        const naRegiao = avancoDeTurno(page)
         await expect(naRegiao, `${viewport.name}/${regiao}: avanços na tela`).toHaveCount(1)
       }
 
-      const avancos = page.getByRole('button', { name: 'Próximo turno' })
+      const avancos = avancoDeTurno(page)
       await expect(avancos, `${viewport.name}: avanços de turno na tela`).toHaveCount(1)
       await expect(avancos, `${viewport.name}: o avanço saiu da tela`).toBeInViewport()
+
+      // O tamanho é o ponto da ALE-184: 34px num controle clicado uma vez por
+      // combatente, por rodada, a noite inteira. 44 é o mínimo de toque, e só
+      // o browser real mede altura.
+      const caixa = await avancos.boundingBox()
+      expect(caixa?.height ?? 0, `${viewport.name}: altura do avanço`).toBeGreaterThanOrEqual(44)
     }
   })
 

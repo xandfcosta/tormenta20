@@ -112,3 +112,31 @@ export function upcomingTurns(
     return entry
   })
 }
+
+/** Quem entra no próximo clique de avançar, e como o botão o anuncia. */
+export type NextTurnTarget = { label: string; entry: InitiativeEntry | null }
+
+/**
+ * O rótulo do botão mais clicado da sessão (ALE-184).
+ *
+ * Ele diz PARA ONDE vai, não o que faz: o mestre lia "▶" e contava a lista
+ * para saber quem entrava. Fora de combate o verbo muda — "Próximo: Arwen"
+ * mentiria sobre uma rodada que ainda não começou, e quem clica ali está
+ * COMEÇANDO o combate.
+ *
+ * A volta é circular como em {@link upcomingTurns}: depois do último vem o
+ * primeiro, com a rodada seguinte.
+ *
+ * @example nextTurnTarget([arwen, ogro], 0) // { label: 'Próximo: Ogro', … }
+ */
+export function nextTurnTarget(
+  initiative: readonly InitiativeEntry[],
+  turnIndex: number,
+): NextTurnTarget {
+  // Lista vazia não tem para onde ir, e prometer um nome seria inventá-lo.
+  if (initiative.length === 0) return { label: 'Próximo turno', entry: null }
+  const emCombate = turnIndex >= 0
+  const entry = initiative[emCombate ? (turnIndex + 1) % initiative.length : 0]
+  if (!entry) throw new Error(`iniciativa sem entrada após o turno ${turnIndex}`)
+  return { label: `${emCombate ? 'Próximo' : 'Começar'}: ${entry.label}`, entry }
+}
