@@ -878,9 +878,21 @@ test.describe('Sessão ao vivo', () => {
     await page.getByRole('button', { name: 'Encerrar o tabuleiro' }).click()
     await page.getByRole('dialog').getByRole('button', { name: 'Encerrar' }).click()
     await expect(page.getByText('Nenhum tabuleiro aberto')).toBeVisible()
+    // O DIÁLOGO precisa ter ido embora antes de mexer na cena atrás dele: o
+    // Kobalte marca os irmãos do modal como `aria-hidden`, então enquanto ele
+    // fecha o `getByRole` não acha NADA da página — e um `if (isVisible())` dá
+    // falso em silêncio. Foi assim que esta limpeza parou de trocar de região
+    // no CI: ela pulava o clique, procurava "Remover" na região errada e
+    // estourava em 30s. A regra está no CLAUDE.md do front; o texto de
+    // "Nenhum tabuleiro aberto" aparece ANTES de o diálogo terminar de sair.
+    await expect(page.getByRole('dialog')).toBeHidden()
 
-    // E leva embora os combatentes que criou, na região onde eles moram.
-    if (await combate.isVisible()) await combate.click()
+    // E leva embora os combatentes que criou, na região onde eles moram. A
+    // troca de região é AFIRMADA, não tentada: pular em silêncio foi o defeito.
+    if (await combate.isVisible()) {
+      await combate.click()
+      await expect(combate).toHaveAttribute('aria-pressed', 'true')
+    }
     for (const nome of PECAS_DO_TELEFONE) {
       await page.getByRole('button', { name: `Remover ${nome}` }).click()
     }
