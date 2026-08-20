@@ -270,6 +270,53 @@ test.describe('Sessão ao vivo', () => {
   })
 
   /**
+   * O avanço trunca o nome LONGO em vez de pintar para fora (ALE-184).
+   *
+   * O botão anuncia quem entra, então o rótulo tem o tamanho do nome que o
+   * mestre digitou — e um invólucro que não encolhe fica com a largura de
+   * max-content: medido em 460px numa janela de 390. Esse era o `shrink-0` que
+   * eu herdei do par de ícones, onde o conteúdo media 32px fixos.
+   *
+   * Por que e2e: `truncate` só encolhe se TODO ancestral flex puder encolher, e
+   * o `min-width: auto` de um item flex é o min-content dele — que num
+   * `white-space: nowrap` é o texto inteiro. Isso é cascata de layout real; em
+   * jsdom todo elemento mede zero e a cadeia inteira passa verde.
+   *
+   * O CI achou isto antes de mim, e por um caminho torto: um nome de 32
+   * caracteres cabia na minha máquina e estourava na do runner, porque a
+   * quebra de linha da faixa depende da largura dos vizinhos, que depende da
+   * métrica da fonte instalada. O nome longo daqui torna a falha determinística
+   * nas duas.
+   */
+  test('o avanço trunca o nome longo em vez de estourar a faixa', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+
+    const combate = page.getByRole('button', { name: 'combate', exact: true })
+    if (await combate.isVisible()) await combate.click()
+
+    // O combatente é DESTE teste e sai no fim: a seed é compartilhada, e um
+    // nome de 47 caracteres esquecido na lista muda o que todo teste de layout
+    // depois dele mede.
+    const marca = Date.now()
+    const longo = `Zumbi Putrefato Ancião do Pântano ${marca}`
+    await page.getByRole('button', { name: 'Combatente' }).click()
+    await page.getByLabel('Nome').fill(longo)
+    await page.getByRole('button', { name: 'Adicionar', exact: true }).click()
+    await expect(page.getByRole('button', { name: `Remover ${longo}` })).toBeVisible()
+
+    try {
+      // O rótulo do avanço carrega o nome inteiro; o que não pode é a CAIXA
+      // dele passar da faixa.
+      await expect(avancoDeTurno(page)).toHaveAccessibleName(new RegExp(String(marca)))
+      await expectNadaEscapa(page, '.scene-grimorio')
+    } finally {
+      await page.getByRole('button', { name: `Remover ${longo}` }).click()
+    }
+  })
+
+  /**
    * EXATAMENTE um avanço de turno na tela, em todo formato (ALE-142).
    *
    * O par de turno mora no cabeçalho da iniciativa, mas abaixo de 1024 a cena

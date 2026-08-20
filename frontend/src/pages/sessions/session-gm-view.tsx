@@ -252,7 +252,7 @@ function TurnBar(props: {
   const active = () => (state().turnIndex >= 0 ? state().initiative[state().turnIndex] : undefined)
 
   return (
-    <div class="flex shrink-0 flex-wrap items-center gap-2 rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)] px-3 py-2">
+    <div class="flex min-w-0 shrink-0 flex-wrap items-center gap-2 rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)] px-3 py-2">
       <TurnCounter state={state()} />
       <Show when={active()}>
         {(entry) => (
@@ -263,7 +263,11 @@ function TurnBar(props: {
         )}
       </Show>
 
-      <div class="ml-auto flex flex-wrap items-center justify-end gap-2">
+      {/* `min-w-0` na cadeia inteira (ALE-184): o avanço trunca o nome do
+          próximo combatente, e `truncate` só encolhe se TODO ancestral flex
+          puder encolher — o `min-width: auto` padrão de um item flex é o
+          min-content dele, que num `white-space: nowrap` é o texto inteiro. */}
+      <div class="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
         {/* O par mudou de casa: ele mora no cabeçalho da INICIATIVA, ao lado da
             lista que percorre (ALE-142). O que fica aqui é só o avanço, e SÓ
             abaixo de 1024 — lá a cena mostra uma região por vez, e com "Mesa"

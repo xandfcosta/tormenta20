@@ -37,7 +37,13 @@ export function TurnAdvance(props: {
   const alvo = () => nextTurnTarget(props.state.initiative, props.state.turnIndex)
 
   return (
-    <div class={cn('flex shrink-0 items-center gap-1', props.class)}>
+    // `min-w-0` e NÃO `shrink-0` (ALE-184): o `shrink-0` veio do par de ícones,
+    // onde o conteúdo media 32px fixos. Agora o conteúdo é um rótulo de tamanho
+    // VARIÁVEL — o nome do próximo combatente —, e um invólucro que não encolhe
+    // fica com a largura de max-content: "Começar: Zumbi Putrefato Ancião do
+    // Pântano" mediu 460px numa janela de 390 e pintou para fora da faixa.
+    // Encolhendo, o rótulo trunca, que é para isso que ele tem `truncate`.
+    <div class={cn('flex min-w-0 items-center gap-1', props.class)}>
       <Show when={!props.onlyNext}>
         <Button
           variant="outline"
