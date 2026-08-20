@@ -155,7 +155,12 @@ test.describe('Sessão ao vivo — dois clientes', () => {
       // precisa trocar de região para isso — nesta largura a iniciativa é a
       // espinha e fica sempre na tela; só a segunda coluna alterna (ALE-130).
       await telaDoMestre.getByRole('button', { name: `Remover ${figurante}` }).click()
-      await expect(telaDoMestre.getByText(figurante)).toBeHidden()
+      // Escopado à LINHA, pelo mesmo motivo da asserção lá em cima: o avanço de
+      // turno anuncia o próximo combatente pelo nome (ALE-184), então esperar
+      // que o TEXTO suma casaria também com o rótulo do botão.
+      await expect(
+        telaDoMestre.getByRole('button', { name: figurante, exact: true }),
+      ).toBeHidden()
     } finally {
       await mestre.close()
       await jogador.close()
