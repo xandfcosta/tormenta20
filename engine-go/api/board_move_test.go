@@ -387,3 +387,31 @@ func TestPintarEApagarSaoExplicitosEIdempotentes(t *testing.T) {
 		t.Errorf("apagar não subiu a versão: %d", b.Version)
 	}
 }
+
+// O provisório carrega a CONTA, não só o total (ALE-190): quantos passos
+// dobraram por diagonal e quantos por terreno difícil. É esse estado que deixa
+// a tela NOMEAR a regra do livro em vez de refazer a aritmética em JavaScript —
+// uma segunda implementação livre para divergir do motor é a classe de defeito
+// que a ALE-104 apagou.
+func TestProvisorioCarregaAContaQueProduziuOCusto(t *testing.T) {
+	b, st := mesaEmCombate(t)
+	b.Difficult = []engine.Square{{X: 1, Y: 0}}
+
+	// Um reto no brejo (2) e uma diagonal limpa (2): custo 4, uma causa de cada.
+	err := proposeMove(b, st, "t1", caminho([2]int{0, 0}, [2]int{1, 0}, [2]int{2, 1}), jogadorDono)
+	if err != nil {
+		t.Fatalf("movimento legítimo recusado: %v", err)
+	}
+	if b.Pending == nil {
+		t.Fatal("nenhum provisório")
+	}
+	if b.Pending.Cost != 4 {
+		t.Fatalf("custo = %d, esperado 4 (2 do brejo + 2 da diagonal)", b.Pending.Cost)
+	}
+	if b.Pending.Diagonals != 1 || b.Pending.Difficult != 1 {
+		t.Errorf(
+			"a conta não viajou: diagonais=%d difícil=%d, esperado 1 e 1",
+			b.Pending.Diagonals, b.Pending.Difficult,
+		)
+	}
+}

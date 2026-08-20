@@ -110,6 +110,17 @@ export type PendingMove = {
   path: { x: number; y: number }[]
   /** Custo em quadrados (a diagonal custa dois, T20 p238). */
   cost: number
+  /**
+   * A CONTA que produziu o custo: quantos passos dobraram por serem diagonais e
+   * quantos por entrarem em terreno difícil (T20 p238).
+   *
+   * Vêm do servidor de propósito (ALE-190). A tela NOMEIA a regra que cobrou, e
+   * refazer essa aritmética aqui seria uma segunda implementação da regra do
+   * livro, livre para divergir do motor — exatamente o que a ALE-104 apagou.
+   * Um passo pode entrar nos dois: diagonal em terreno difícil custa quatro.
+   */
+  diagonals: number
+  difficult: number
   /** Orçamento contra o qual foi medido, ou -1 quando não há. */
   budget: number
   byUserId: number

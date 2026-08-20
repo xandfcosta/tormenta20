@@ -42,6 +42,16 @@ type MoveCost struct {
 	// caminho inteiro: quem estourou quer ver ONDE estourou.
 	StoppedAt int    `json:"stoppedAt"`
 	Reason    string `json:"reason,omitempty"`
+	// Diagonals e Difficult contam QUANTOS passos dobraram, e por qual das duas
+	// regras. Existem para a tela poder NOMEAR a regra que produziu o número
+	// (ALE-190) em vez de refazer a conta em JavaScript: o texto sai do mesmo
+	// laço que cobrou o caminho, então ele não tem como divergir do motor — que
+	// é a classe de defeito que a ALE-104 matou.
+	//
+	// Um passo pode entrar nos dois (diagonal EM terreno difícil custa 4), e
+	// por isso são dois contadores e não uma soma.
+	Diagonals int `json:"diagonals"`
+	Difficult int `json:"difficult"`
 }
 
 // stepCost devolve o custo de UM passo entre quadrados adjacentes, em quadrados.
@@ -56,19 +66,27 @@ type MoveCost struct {
 // frases separadas e NUNCA as compõe; a leitura desta casa é multiplicativa, ou
 // seja, uma diagonal em terreno difícil custa 4 quadrados (6m). É decisão de
 // mesa registrada, não texto do livro.
-func stepCost(from, to Square, terrain MoveTerrain) (int, error) {
+// stepDoubling diz por quais regras UM passo dobrou. Devolvido junto do custo
+// para que quem soma o caminho possa contar as causas sem repetir a decisão.
+type stepDoubling struct {
+	diagonal  bool
+	difficult bool
+}
+
+func stepCost(from, to Square, terrain MoveTerrain) (int, stepDoubling, error) {
 	dx, dy := abs(to.X-from.X), abs(to.Y-from.Y)
 	if dx > 1 || dy > 1 || (dx == 0 && dy == 0) {
-		return 0, fmt.Errorf("passo inválido de (%d,%d) para (%d,%d): o caminho tem de ser quadrado a quadrado", from.X, from.Y, to.X, to.Y)
+		return 0, stepDoubling{}, fmt.Errorf("passo inválido de (%d,%d) para (%d,%d): o caminho tem de ser quadrado a quadrado", from.X, from.Y, to.X, to.Y)
 	}
+	por := stepDoubling{diagonal: dx == 1 && dy == 1, difficult: terrain.Difficult[to]}
 	cost := 1
-	if dx == 1 && dy == 1 {
+	if por.diagonal {
 		cost = 2
 	}
-	if terrain.Difficult[to] {
+	if por.difficult {
 		cost *= 2
 	}
-	return cost, nil
+	return cost, por, nil
 }
 
 // PathCost soma o custo de um caminho, passo a passo, em quadrados (T20 p238).
@@ -81,11 +99,17 @@ func stepCost(from, to Square, terrain MoveTerrain) (int, error) {
 func PathCost(path []Square, terrain MoveTerrain, budgetSquares int) MoveCost {
 	out := MoveCost{Budget: budgetSquares, Legal: true, StoppedAt: -1}
 	for i := 1; i < len(path); i++ {
-		cost, err := stepCost(path[i-1], path[i], terrain)
+		cost, por, err := stepCost(path[i-1], path[i], terrain)
 		if err != nil {
 			return MoveCost{Budget: budgetSquares, Legal: false, StoppedAt: i, Reason: err.Error()}
 		}
 		out.Squares += cost
+		if por.diagonal {
+			out.Diagonals++
+		}
+		if por.difficult {
+			out.Difficult++
+		}
 		if budgetSquares >= 0 && out.Squares > budgetSquares && out.Legal {
 			out.Legal = false
 			out.StoppedAt = i
@@ -189,7 +213,7 @@ func ReachableSquares(from Square, budget int, terrain MoveTerrain) []Square {
 		current := frontier[0]
 		frontier = frontier[1:]
 		for _, next := range neighbours(current) {
-			step, err := stepCost(current, next, terrain)
+			step, _, err := stepCost(current, next, terrain)
 			if err != nil {
 				continue
 			}

@@ -200,3 +200,51 @@ func TestTerrenoDificilEncolheOAlcance(t *testing.T) {
 		}
 	}
 }
+
+// A CONTAGEM das dobras existe para a tela poder nomear a regra que produziu o
+// número (ALE-190), e por isso ela sai do mesmo laço que cobrou o caminho: um
+// texto escrito à mão no cliente poderia divergir do motor, que é a classe de
+// defeito que a ALE-104 matou.
+func TestPathCostCountsWhichRuleDoubledEachStep(t *testing.T) {
+	brejo := MoveTerrain{Difficult: map[Square]bool{{X: 2, Y: 0}: true}}
+
+	// Um reto limpo, um reto no brejo, uma diagonal limpa: 1 + 2 + 2 = 5.
+	custo := PathCost(path(Square{0, 0}, Square{1, 0}, Square{2, 0}, Square{3, 1}), brejo, -1)
+
+	if custo.Squares != 5 {
+		t.Fatalf("custo = %d quadrados, esperado 5 (1 reto + 2 brejo + 2 diagonal)", custo.Squares)
+	}
+	if custo.Diagonals != 1 {
+		t.Errorf("diagonais contadas = %d, esperado 1", custo.Diagonals)
+	}
+	if custo.Difficult != 1 {
+		t.Errorf("passos em terreno difícil contados = %d, esperado 1", custo.Difficult)
+	}
+}
+
+// Um passo pode dobrar pelas DUAS regras, e a leitura desta casa é
+// multiplicativa: uma diagonal em terreno difícil custa 4 quadrados (6m). Os
+// contadores registram as duas causas, senão a tela diria "terreno difícil"
+// sobre um passo que também era diagonal — e a mesa aprenderia a regra errada.
+func TestDiagonalInDifficultTerrainCountsBothRules(t *testing.T) {
+	brejo := MoveTerrain{Difficult: map[Square]bool{{X: 1, Y: 1}: true}}
+
+	custo := PathCost(path(Square{0, 0}, Square{1, 1}), brejo, -1)
+
+	if custo.Squares != 4 {
+		t.Fatalf("diagonal no brejo custou %d, esperado 4", custo.Squares)
+	}
+	if custo.Diagonals != 1 || custo.Difficult != 1 {
+		t.Errorf("um passo, duas causas: diagonais=%d difícil=%d, esperado 1 e 1", custo.Diagonals, custo.Difficult)
+	}
+}
+
+// Caminho reto e limpo não inventa dobra nenhuma: o zero é o que faz a tela
+// calar em vez de anunciar uma regra que não agiu.
+func TestStraightCleanPathCountsNoDoubling(t *testing.T) {
+	custo := PathCost(path(Square{0, 0}, Square{1, 0}, Square{2, 0}), MoveTerrain{}, 6)
+
+	if custo.Diagonals != 0 || custo.Difficult != 0 {
+		t.Errorf("caminho reto e limpo contou dobras: diagonais=%d difícil=%d", custo.Diagonals, custo.Difficult)
+	}
+}

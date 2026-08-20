@@ -553,6 +553,12 @@ type PendingMove struct {
 	// guardar só o destino perderia a conta que a mesa acabou de ver.
 	Path []engine.Square `json:"path"`
 	Cost int             `json:"cost"`
+	// Diagonals e Difficult são a CONTA que produziu o custo, não um resumo
+	// dela: quantos passos dobraram por serem diagonais e quantos por entrarem
+	// em terreno difícil (T20 p238). Viajam para a tela poder NOMEAR a regra
+	// em vez de refazer a aritmética em JavaScript (ALE-190).
+	Diagonals int `json:"diagonals"`
+	Difficult int `json:"difficult"`
 	// Budget é o orçamento contra o qual o caminho foi medido, em quadrados, ou
 	// -1 quando não há (mestre, ou cena fora de combate).
 	Budget int `json:"budget"`
@@ -656,7 +662,10 @@ func proposeMove(b *BoardState, st *SessionRuntimeState, tokenID string, path []
 	if err := assertSaneCoords(BoardToken{X: path[len(path)-1].X, Y: path[len(path)-1].Y}); err != nil {
 		return err
 	}
-	b.Pending = &PendingMove{TokenID: tokenID, Path: path, Cost: cost.Squares, Budget: budget, ByUserID: by.userID}
+	b.Pending = &PendingMove{
+		TokenID: tokenID, Path: path, Cost: cost.Squares, Budget: budget,
+		Diagonals: cost.Diagonals, Difficult: cost.Difficult, ByUserID: by.userID,
+	}
 	b.Version++
 	return nil
 }

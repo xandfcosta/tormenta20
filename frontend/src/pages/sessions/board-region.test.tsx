@@ -417,6 +417,9 @@ describe('confirmar o movimento proposto', () => {
       ],
       cost: 2,
       budget: 6,
+      // Caminho reto e limpo: nenhuma dobra a nomear (ALE-190).
+      diagonals: 0,
+      difficult: 0,
       byUserId: 42,
     },
   }
@@ -428,6 +431,28 @@ describe('confirmar o movimento proposto', () => {
     renderRegion(false, PROPOSTO, 'e1', { myCharacterIds: MEU_HEROI, turnIndex: 0 })
 
     expect(screen.getByText(/2 quadrados \(3,0m\) de 6/)).toBeInTheDocument()
+  })
+
+  // A REGRA ao lado do número (ALE-190). Sem ela o losango do alcance chega
+  // como mágica: o jogador aceita a forma e não aprende a contar — e na mesa
+  // presencial é ele quem vai contar quadrado no papel.
+  it('caminho reto e limpo não anuncia regra nenhuma', () => {
+    renderRegion(false, PROPOSTO, 'e1', { myCharacterIds: MEU_HEROI, turnIndex: 0 })
+
+    // Nada a nomear: os dois passos são retos e fora do brejo.
+    expect(screen.queryByText(/o dobro \(p238\)/)).not.toBeInTheDocument()
+  })
+
+  it('com diagonal e brejo no caminho, a barra nomeia as duas regras', () => {
+    const dobrado: BoardState = {
+      ...PROPOSTO,
+      pending: { ...PROPOSTO.pending!, cost: 5, diagonals: 1, difficult: 1 },
+    }
+    renderRegion(false, dobrado, 'e1', { myCharacterIds: MEU_HEROI, turnIndex: 0 })
+
+    // As contagens vêm do SERVIDOR, do mesmo laço que cobrou o caminho: a tela
+    // escolhe palavras, nunca refaz a aritmética do livro (ALE-104).
+    expect(screen.getByText('diagonal e terreno difícil custam o dobro (p238)')).toBeInTheDocument()
   })
 
   it('confirmar manda a VERSÃO que o cliente tinha na mão', async () => {
@@ -1130,6 +1155,8 @@ describe('o teclado do tabuleiro', () => {
         ],
         cost: 1,
         budget: 6,
+        diagonals: 0,
+        difficult: 0,
         byUserId: 1,
       },
     }

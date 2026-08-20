@@ -48,6 +48,35 @@ export function PlayerLensBar(props: { hidden: number; onExit: () => void }) {
 }
 
 /**
+ * A frase que NOMEIA a regra do livro que dobrou passos neste caminho
+ * (T20 p238, ALE-190).
+ *
+ * As contagens vêm do servidor, do mesmo laço que cobrou o caminho: refazer a
+ * aritmética aqui seria uma segunda implementação da regra, livre para divergir
+ * do motor — a classe de defeito que a ALE-104 apagou. Esta função só escolhe
+ * PALAVRAS.
+ *
+ * Caminho reto e limpo não diz nada: anunciar "nenhuma dobra" seria ruído na
+ * faixa onde a mesa lê o custo.
+ *
+ * @example regraQueDobrou(1, 0) // 'diagonal custa o dobro (p238)'
+ */
+export function regraQueDobrou(diagonais: number, dificil: number): string | null {
+  const partes: string[] = []
+  if (diagonais > 0) {
+    partes.push(diagonais === 1 ? 'diagonal' : `${diagonais} diagonais`)
+  }
+  if (dificil > 0) {
+    partes.push(dificil === 1 ? 'terreno difícil' : `${dificil} de terreno difícil`)
+  }
+  if (partes.length === 0) return null
+  // "custa" com uma causa, "custam" com duas: a frase é lida em voz alta na
+  // mesa junto com o número.
+  const verbo = partes.length === 1 && diagonais + dificil === 1 ? 'custa' : 'custam'
+  return `${partes.join(' e ')} ${verbo} o dobro (p238)`
+}
+
+/**
  * A barra do movimento proposto (ALE-124).
  *
  * Diz o custo em QUADRADOS e em metros: quadrado é a unidade da regra (T20
@@ -64,6 +93,7 @@ export function MoveBar(props: {
   onCancel: () => void
 }) {
   const metres = () => (props.move.cost * SQUARE_METRES).toFixed(1).replace('.', ',')
+  const regra = () => regraQueDobrou(props.move.diagonals, props.move.difficult)
 
   return (
     <div class="flex shrink-0 flex-wrap items-center gap-2 border-t border-grimorio-iron px-3 py-1.5">
@@ -71,6 +101,13 @@ export function MoveBar(props: {
         {props.move.cost} {props.move.cost === 1 ? 'quadrado' : 'quadrados'} ({metres()}m)
         {props.move.budget >= 0 ? ` de ${props.move.budget}` : ' · sem limite de turno'}
       </p>
+      {/* A REGRA que produziu o número, ao lado do número (ALE-190). Sem isto o
+          losango do alcance chega como mágica: o jogador aceita a forma e não
+          aprende a contar — e na mesa presencial é ele quem vai contar quadrado
+          no papel. */}
+      <Show when={regra()}>
+        {(texto) => <p class="text-[11px] text-muted-foreground">{texto()}</p>}
+      </Show>
       <Show when={props.canDecide} fallback={<span class="text-[11px] text-muted-foreground">Aguardando confirmação.</span>}>
         <div class="ml-auto flex items-center gap-1">
           <Button size="sm" variant="ghost" onClick={() => props.onCancel()}>

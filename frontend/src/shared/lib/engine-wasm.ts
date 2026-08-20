@@ -304,6 +304,11 @@ export type BoardMoveCost = {
   /** Índice do passo que estourou, ou -1 se coube: a tela pinta o trecho recusado. */
   stoppedAt: number
   reason?: string
+  /** Quantos passos dobraram por serem diagonais e quantos por terreno difícil
+   *  (T20 p238). A tela usa isto para NOMEAR a regra que cobrou (ALE-190) em
+   *  vez de refazer a conta — um passo pode entrar nos dois. */
+  diagonals: number
+  difficult: number
 }
 
 /**
