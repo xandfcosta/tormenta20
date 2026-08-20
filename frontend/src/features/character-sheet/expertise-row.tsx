@@ -8,6 +8,7 @@ import {
   trainingBonusForLevel,
 } from '@/entities/character/expertise'
 import { expertiseFromSheet } from '@/entities/character/computed-sheet'
+import { createMediaQuery } from '@/shared/lib/media-query'
 import type { AttributeKey, Character } from '@/shared/api/api'
 import type { ComputedSheetV2 } from '@/shared/lib/computed-sheet-v2'
 import { cn } from '@/shared/lib/utils'
@@ -42,6 +43,26 @@ export type ExpertiseRowProps = {
  * `glance` a linha fica só com o total, o nome e os dois controles.
  */
 export function ExpertiseRow(props: ExpertiseRowProps) {
+  /**
+   * O TELEFONE usa o mesmo arranjo do `glance` (ALE-183): o seletor de atributo
+   * sobe para a linha do nome e a fileira de chips deixa de existir. Medido a
+   * 390px, isso tira 27px dos 108 de cada perícia e leva a janela de rolagem de
+   * 4,3 para 5,7 perícias visíveis.
+   *
+   * Os chips não somem do app — eles REPETEM, palavra por palavra, o diálogo de
+   * decomposição que o próprio total abre. No telefone a auditoria fica a um
+   * toque em vez de ocupar um quarto de cada linha.
+   *
+   * A chave é largura + ORIENTAÇÃO, e não só largura: o celular DEITADO tem
+   * 844px de largura com 390 de altura, e é justamente onde 27px por linha
+   * custam mais caro (ALE-162). Altura é proibida — o teclado virtual a muda e
+   * reconstrói o componente no meio da digitação.
+   */
+  const telefone = createMediaQuery(
+    '(max-width: 639px), (max-width: 1023px) and (orientation: landscape)',
+  )
+  /** Sem a fileira de chips: por ser a ficha do mestre ou por ser telefone. */
+  const semChips = () => props.glance || telefone()
   const state = () => expertiseStateFor(props.character, props.def)
   // Every standard + custom perícia is on the sheet; `?? 0` is only a type guard.
   const entry = () => expertiseFromSheet(props.sheet, props.def.name)
@@ -78,7 +99,7 @@ export function ExpertiseRow(props: ExpertiseRowProps) {
           // sobra a 375 e 21px a 360.
           'flex min-w-0 gap-2.5 rounded-sm border border-grimorio-iron transition-colors hover:border-grimorio-gold/50',
           state().trained && 'bg-[var(--grimorio-panel)]',
-          props.glance ? 'items-center p-1.5' : 'items-start p-2.5',
+          semChips() ? 'items-center p-1.5' : 'items-start p-2.5',
         )}
       >
         {/* Both the badge and the name open the breakdown; the toggle, the
@@ -107,7 +128,7 @@ export function ExpertiseRow(props: ExpertiseRowProps) {
                 duas: é o MESMO componente com as mesmas props, só muda de
                 lugar. Sem chips embaixo, a segunda linha inteira deixa de
                 existir e a linha cai de ~68px para ~48px. */}
-            <Show when={props.glance}>
+            <Show when={semChips()}>
               <AttributeSelect
                 name={props.def.name}
                 value={state().attribute}
@@ -124,7 +145,7 @@ export function ExpertiseRow(props: ExpertiseRowProps) {
               {(onDelete) => <DeleteExpertiseButton name={props.def.name} onDelete={onDelete()} />}
             </Show>
           </div>
-          <Show when={!props.glance}>
+          <Show when={!semChips()}>
             <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
               <AttributeSelect
                 name={props.def.name}

@@ -215,6 +215,60 @@ describe('Perícias na tela do mestre (glance)', () => {
 })
 
 /**
+ * No TELEFONE a linha usa o mesmo arranjo do mestre (ALE-183).
+ *
+ * Medido a 390px: as chips custavam 27px dos 108 de cada perícia, e a janela de
+ * rolagem mostrava 4,3 perícias de vinte. Sem elas, 6,7 — rolar de quatro em
+ * quatro, numa área que não é a rolagem da página, é caro na mesa.
+ *
+ * As chips não somem do APP: elas repetem, palavra por palavra, o diálogo que o
+ * próprio total abre — e é por isso que dá para recuá-las sem perder a
+ * auditoria. O que NÃO pode sumir é o seletor de atributo, que é controle e não
+ * informação: ele sobe para a linha do nome, como no `glance`.
+ */
+describe('Perícias no telefone', () => {
+  /** O gate é largura + ORIENTAÇÃO: o celular deitado tem 844px de largura com
+   *  390 de altura, e é onde 27px por linha custam mais caro (ALE-162). */
+  const comoTelefone = () =>
+    vi.fn().mockImplementation((media: string) => ({
+      matches: media.includes('max-width: 639px') || media.includes('orientation: landscape'),
+      media,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }))
+
+  it('as chips saem da linha, e o seletor de atributo FICA', () => {
+    window.matchMedia = comoTelefone()
+
+    renderPanel(character(), false)
+
+    expect(screen.queryByText('½lvl')).not.toBeInTheDocument()
+    expect(screen.queryByText('outros')).not.toBeInTheDocument()
+    // Controle, não informação: sem ele o jogador não muda o atributo que a
+    // perícia usa, e isso não tem outro caminho na tela.
+    expect(screen.getByLabelText('Atletismo atributo')).toBeInTheDocument()
+    expect(screen.getByRole('switch', { name: 'Atletismo treinada' })).toBeInTheDocument()
+  })
+
+  it('a auditoria continua a um toque, no diálogo', async () => {
+    window.matchMedia = comoTelefone()
+    renderPanel(character(), false)
+    const user = userEvent.setup()
+
+    await user.click(screen.getAllByRole('button', { name: /^Detalhar/ })[0])
+
+    const dialog = await screen.findByRole('dialog')
+    expect(dialog).toHaveTextContent('½ nível')
+    expect(dialog).toHaveTextContent('Treino')
+    expect(dialog).toHaveTextContent('Outros')
+  })
+})
+
+/**
  * "INDEFESO. […] falha automaticamente em testes de Reflexos" (p394).
  *
  * O motor responde QUAIS perícias falham automaticamente

@@ -146,3 +146,45 @@ test('no celular deitado, a barra de abas da ficha fica na tela', async ({ page 
     '',
   )
 })
+
+/**
+ * No celular, o nome do herói cabe E o nível continua alterável (ALE-183).
+ *
+ * O defeito: a 390px o chip de Defesa e o stepper de nível dividiam a faixa com
+ * o nome, que truncava para "Tanqu…". A issue propunha tirar o stepper nesse
+ * formato — e isso seria tirar uma CAPACIDADE, não mover um controle: ele é o
+ * único lugar do app inteiro que muda o nível de um personagem, porque não há
+ * tela de edição e a Forja só cria. Ele desceu uma fileira, para junto dos
+ * selos de classe, onde havia folga.
+ *
+ * As duas asserções andam juntas de propósito: a primeira sozinha passaria
+ * verde com o stepper apagado, que é exatamente o conserto errado.
+ *
+ * Por que e2e: largura real e fonte real decidem se o nome trunca. Em jsdom
+ * todo elemento mede zero e nada nunca corta.
+ */
+test('no celular o nome do herói cabe, e o nível continua alterável', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await page.getByText('Meus Heróis').click()
+  await expect(page).toHaveURL(/\/characters$/)
+  await openSheetFromRoster(page, HERO)
+  await expect(page.getByRole('progressbar', { name: 'Vida' })).toBeVisible()
+
+  const cortado = await page.evaluate((nome) => {
+    const el = [...document.querySelectorAll<HTMLElement>('*')].find(
+      (n) => n.children.length === 0 && (n.textContent ?? '').trim().startsWith(nome),
+    )
+    return el ? { texto: (el.textContent ?? '').trim(), cortado: el.scrollWidth > el.clientWidth + 1 } : null
+  }, HERO)
+
+  expect(cortado, `não achei "${HERO}" no crachá`).not.toBeNull()
+  expect(cortado?.cortado, 'o nome do herói está truncado no crachá').toBe(false)
+
+  // E o nível continua na tela e clicável: alcançável não é o mesmo que
+  // presente, e subir de nível não tem outro caminho no app.
+  const nivel = page.getByRole('group', { name: 'Nível' })
+  await expect(nivel).toBeVisible()
+  await expect(nivel).toBeInViewport()
+  await expect(nivel.getByRole('button', { name: 'Aumentar nível' })).toBeEnabled()
+})

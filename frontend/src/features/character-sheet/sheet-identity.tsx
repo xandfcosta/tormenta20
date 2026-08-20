@@ -28,7 +28,16 @@ export function SheetIdentityText(props: SheetIdentityProps) {
 
   return (
     <div class="min-w-0">
-      <h1 class="truncate font-heading text-lg font-bold leading-tight tracking-tight sm:text-xl">
+      {/* `line-clamp-2` e não `truncate` (ALE-183): a faixa do nome tem 201px a
+          390px — o retrato de 96px e o chip de Defesa ficam com o resto —, e um
+          nome de 22 caracteres ("Necromante Nv12 Magias") precisa de 241. O
+          stepper de nível já desceu uma fileira e devolveu o que tinha para
+          devolver; os 40px que faltavam só sairiam do retrato ou da Defesa, e
+          nenhum dos dois vale menos que o nome.
+          Mesma decisão que o dono tomou na ALE-167 para o nome do combatente, e
+          pelo mesmo motivo: nome é o que se lê em voz alta na mesa. A segunda
+          linha só aparece quando ela é necessária. */}
+      <h1 class="line-clamp-2 font-heading text-lg font-bold leading-tight tracking-tight sm:text-xl">
         {props.character.name}
       </h1>
       <p class="line-clamp-1 text-xs leading-tight text-muted-foreground sm:line-clamp-2">

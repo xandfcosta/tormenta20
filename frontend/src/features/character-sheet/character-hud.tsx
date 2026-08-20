@@ -57,14 +57,22 @@ export function CharacterHud(props: { character: Character; class?: string }) {
                   activeConditionals={active()}
                   class="md:hidden"
                 />
-                <LevelStepper character={props.character} />
               </div>
             </div>
             {/* Class badges and condition pips share ONE row — a dedicated
-                conditions row doubled the nameplate height. */}
+                conditions row doubled the nameplate height. O STEPPER DE NÍVEL
+                desceu para cá (ALE-183): na faixa do nome ele disputava a
+                largura com o chip de Defesa e truncava o herói para "Tanqu…" a
+                390px. Aqui há folga, e nenhuma fileira nova é criada.
+
+                Ele NÃO podia simplesmente sair no telefone, que era a proposta
+                da issue: este stepper é o ÚNICO lugar do app que muda o nível
+                de um personagem — não existe tela de edição, e a Forja só cria.
+                Tirá-lo seria tirar a capacidade, não mover um controle. */}
             <div class="flex flex-wrap items-center gap-1">
               <ClassBadges character={props.character} />
               <ConditionPips character={props.character} mini />
+              <LevelStepper character={props.character} />
             </div>
             <VitalRows character={props.character} class="mt-auto" />
           </div>
