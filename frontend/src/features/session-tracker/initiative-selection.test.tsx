@@ -125,6 +125,21 @@ describe('seleção na iniciativa', () => {
     expect(onSelect).toHaveBeenCalledWith('e2')
   })
 
+  /**
+   * A VEZ é marcada na lista, e o selo é a marca que sobrevive a qualquer
+   * restyle (ALE-182). A cor NÃO se afirma aqui: cor é tinta, e afirmar nome de
+   * classe quebra em toda mudança legítima de estilo sem proteger nada que o
+   * usuário note. O que não pode acontecer é a lista deixar de dizer de quem é
+   * a vez — foi por isso que o tabuleiro ganhou o anel dourado na ALE-179, e é
+   * a única informação que as duas cenas precisam concordar.
+   */
+  it('a lista diz de quem é a vez', () => {
+    renderCard(vi.fn())
+
+    // `turnIndex: 0` no fake: o primeiro da lista está na vez.
+    expect(screen.getByText('Na vez')).toBeInTheDocument()
+  })
+
   it('marca quem está aberto', () => {
     renderCard(vi.fn(), 'e1')
 

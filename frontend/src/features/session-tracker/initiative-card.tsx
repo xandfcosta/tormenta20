@@ -84,7 +84,14 @@ export function InitiativeCard(props: {
   return (
     <section
       class={cn(
-        'rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)]',
+        // `grimorio-frame` no lugar da borda de ferro nua (ALE-182): é a MESMA
+        // borda de 1px que já estava aqui, mais o fio dourado por dentro e a
+        // sombra de assento que as cenas de navegação usam. A troca é de tinta
+        // — zero pixel de densidade —, e densidade era a primeira das duas
+        // condições da issue, porque esta cena é a mais apertada do app em
+        // 844×390. A segunda condição, frame, também está atendida: sombra
+        // ESTÁTICA não anima nada.
+        'grimorio-frame bg-[var(--grimorio-panel)]',
         // Sem isto, quem rola é a COLUNA inteira e o cabeçalho sobe junto: numa
         // mesa de dez combatentes, adicionar o décimo primeiro exigia rolar de
         // volta ao topo para achar o botão (ALE-131).
@@ -328,8 +335,13 @@ function InitiativeRow(props: {
         // cima), então o lado de cima do anel era cortado e sobrava um traço
         // atravessado (ALE-150). Por dentro, ele não depende do vizinho.
         props.selected && 'inset-ring-1 inset-ring-[color:var(--primary)]',
+        // OURO é a vez, nas DUAS cenas (ALE-182). O tabuleiro já dizia isso —
+        // a ALE-179 escolheu o anel dourado para a peça da vez e RECUSOU o
+        // `--primary` explicitamente, porque o carmim desta paleta "lê como
+        // proibido". A lista continuava dizendo a mesma coisa com a outra cor,
+        // e era o único lugar onde o vocabulário das duas cenas divergia.
         props.onTurn
-          ? 'border-[color:var(--primary)]/60 bg-[color-mix(in_oklch,var(--primary)_6%,transparent)]'
+          ? 'border-grimorio-gold/60 bg-[color-mix(in_oklch,var(--grimorio-gold)_6%,transparent)]'
           : 'border-border/60',
       )}
     >
@@ -410,7 +422,10 @@ function InitiativeRow(props: {
             {props.entry.type === 'character' ? 'PC' : 'NPC'}
           </span>
           <Show when={props.onTurn}>
-            <span class="inline-flex items-center gap-1 rounded-sm bg-primary px-1 text-[10px] uppercase tracking-widest text-primary-foreground">
+            {/* O mesmo par do marcador do tabuleiro (`bg-grimorio-gold` sobre
+                tinta de pergaminho): o selo e a borda da linha falam a mesma
+                cor, e ela é a mesma que a peça da vez usa no mapa. */}
+            <span class="inline-flex items-center gap-1 rounded-sm bg-grimorio-gold px-1 text-[10px] uppercase tracking-widest text-grimorio-parchment-ink">
               <Swords aria-hidden="true" class="size-3" /> Na vez
             </span>
           </Show>
