@@ -51,6 +51,13 @@ jobs:
             exit 1
           fi
 
+      # O typecheck NUNCA esteve no CI: até aqui, erro de tipo só aparecia na
+      # máquina de quem lembrasse de rodar `pnpm typecheck`. Com o TypeScript 7
+      # ele leva ~2s (eram ~13 no 6), então o passo custa menos que o `git
+      # checkout` do job e fecha o buraco.
+      - name: Typecheck
+        run: pnpm --filter frontend typecheck
+
       - name: Tests
         run: pnpm test
 
