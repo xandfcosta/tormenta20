@@ -58,12 +58,12 @@ export function RacePicker(props: RacePickerProps) {
     // O painel ENCOLHE mas não some, também como na sessão: o convite é o
     // que explica para que serve aquele lado, e apagá-lo deixaria o passo
     // sem dizer o que vem depois do clique.
-      <div
-        class={cn(
-          'grid gap-4 lg:min-h-0 lg:flex-1',
-          props.value.length === 0 ? 'lg:grid-cols-[3fr_1fr]' : 'lg:grid-cols-[1.15fr_1fr]',
-        )}
-      >
+    <div
+      class={cn(
+        'grid gap-4 lg:min-h-0 lg:flex-1',
+        props.value.length === 0 ? 'lg:grid-cols-[3fr_1fr]' : 'lg:grid-cols-[1.15fr_1fr]',
+      )}
+    >
       <div class="flex flex-col gap-3 lg:min-h-0">
         <div class="relative shrink-0">
           <Search
