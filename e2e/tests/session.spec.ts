@@ -427,6 +427,12 @@ test.describe('Sessão ao vivo', () => {
     const longo = `Zumbi Putrefato Ancião do Pântano ${marca}`
     await page.getByRole('button', { name: 'Combatente' }).click()
     await page.getByLabel('Nome').fill(longo)
+    // Iniciativa ALTA de propósito: o rótulo do avanço nomeia o PRÓXIMO da
+    // ordem, e com o valor padrão (0) qualquer resto deixado por outro teste
+    // empata e pode vir antes — foi assim que este guarda falhou no CI,
+    // anunciando o combatente de OUTRO teste. 99 põe o meu em primeiro sem
+    // depender de quem mais está na lista.
+    await page.locator('#combatant-initiative').fill('99')
     await page.getByRole('button', { name: 'Adicionar', exact: true }).click()
     await expect(page.getByRole('button', { name: `Remover ${longo}` })).toBeVisible()
 
