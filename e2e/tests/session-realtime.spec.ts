@@ -93,7 +93,13 @@ test.describe('Sessão ao vivo — dois clientes', () => {
       await telaDoMestre.getByRole('button', { name: 'Combatente' }).click()
       await telaDoMestre.getByLabel('Nome').fill(figurante)
       await telaDoMestre.getByRole('button', { name: 'Adicionar', exact: true }).click()
-      await expect(telaDoMestre.getByText(figurante)).toBeVisible()
+      // Escopado à LINHA da iniciativa, e não a "qualquer texto com esse nome":
+      // desde a ALE-184 o avanço de turno anuncia o próximo combatente pelo
+      // NOME, então o mesmo texto aparece na lista e dentro do botão — três
+      // ocorrências ao todo, contando a instância que o `lg:hidden` guarda.
+      await expect(
+        telaDoMestre.getByRole('button', { name: figurante, exact: true }),
+      ).toBeVisible()
 
       // Desktop Chrome do Playwright é 1280 de largura: abaixo de 1536 o
       // tabuleiro divide a coluna da direita com a mesa e é uma ABA dela — a

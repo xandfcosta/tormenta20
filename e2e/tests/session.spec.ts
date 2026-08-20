@@ -153,8 +153,19 @@ test.describe('Sessão ao vivo', () => {
     await page.getByRole('button', { name: 'Descanso de cena' }).click()
 
     await expect(page.getByText('Efeitos temporários de cena foram limpos.')).toBeVisible()
-    // A aba viva é o que estava em jogo: numa aba travada isto nunca resolve.
-    await expect(avancoDeTurno(page)).toBeEnabled({ timeout: 5000 })
+
+    // A aba viva é o que estava em jogo, e a sonda tem de provar RESPOSTA: um
+    // clique que só o main thread pode atender, e a tela mudando por causa
+    // dele. Numa aba travada isto nunca resolve.
+    //
+    // Antes a sonda era "o avanço de turno está habilitado", e ela quebrou no
+    // CI com a ALE-184: o botão agora TRAVA quando não há ninguém na
+    // iniciativa, e a seed do CI vem com a lista vazia. Uma sonda de vida que
+    // depende do estado do combate mede a coisa errada — passou aqui e falhou
+    // lá, com o app perfeitamente vivo nos dois.
+    await page.getByRole('button', { name: 'Configurações da sessão' }).click()
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 })
+    await page.keyboard.press('Escape')
   })
 
   /**
