@@ -270,6 +270,66 @@ test.describe('Sessão ao vivo', () => {
   })
 
   /**
+   * No celular deitado a lista mostra DOIS combatentes, não um (ALE-164).
+   *
+   * O defeito era de ocupação: em 844×390 o cabeçalho do painel e a fileira de
+   * "Adicionar grupo"/"+ Combatente" somavam 93px em duas faixas, a primeira
+   * linha nascia em y=301 e sobravam 89px de lista — UM combatente de nove,
+   * cortado ao meio, com 77% da tela virada moldura. Celular deitado é uma
+   * forma muito natural de segurar o telefone na mesa.
+   *
+   * As ações subiram para o cabeçalho, que ficou com o lado direito vazio na
+   * ALE-184: uma faixa de 65px no lugar de duas, primeira linha em y=261.
+   *
+   * O que se afirma é o RESULTADO (a segunda linha começa dentro da tela), e
+   * não a altura de nenhuma faixa: pixel de cromo é detalhe de implementação,
+   * "dá para ver dois combatentes" é a promessa.
+   *
+   * Por que e2e: ocupação de tela contra a janela real. Em jsdom todo elemento
+   * mede zero e qualquer arranjo "cabe".
+   */
+  test('no celular deitado, a lista mostra dois combatentes', async ({ page }) => {
+    await page.setViewportSize({ width: 844, height: 390 })
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+
+    const combate = page.getByRole('button', { name: 'combate', exact: true })
+    if (await combate.isVisible()) await combate.click()
+
+    // Os combatentes são DESTE teste e saem no fim — a seed é compartilhada, e
+    // contar com o que outro teste deixou é o acoplamento que já derrubou esta
+    // suíte no CI mais de uma vez.
+    const marca = Date.now()
+    const nomes = [`Alvo A ${marca}`, `Alvo B ${marca}`]
+    await page.getByRole('button', { name: 'Combatente' }).click()
+    for (const nome of nomes) {
+      await page.getByLabel('Nome').fill(nome)
+      await page.getByRole('button', { name: 'Adicionar', exact: true }).click()
+      await expect(page.getByRole('button', { name: `Remover ${nome}` })).toBeVisible()
+    }
+    // O formulário fica aberto enquanto se adiciona vários (ALE-122); fechá-lo
+    // é o que devolve a altura para a lista.
+    await page.getByRole('button', { name: 'Fechar' }).click()
+
+    try {
+      const linhas = page.getByRole('button', { name: /^Mudar a iniciativa de/ })
+      await expect(linhas.first()).toBeInViewport()
+      // METADE da segunda linha, e não "ela começa dentro da tela": com a
+      // fileira de ações de volta acima da lista, a segunda linha ainda NASCE
+      // em y=374, e só 16 dos 65px dela aparecem — a asserção fraca passava
+      // verde sobre o defeito, e eu só descobri isso ao sabotar. Ler o nome e
+      // os PV do segundo combatente é a promessa; um filete não é.
+      await expect(linhas.nth(1), 'só dá para ver um combatente').toBeInViewport({
+        ratio: 0.5,
+      })
+    } finally {
+      for (const nome of nomes) {
+        await page.getByRole('button', { name: `Remover ${nome}` }).click()
+      }
+    }
+  })
+
+  /**
    * O avanço trunca o nome LONGO em vez de pintar para fora (ALE-184).
    *
    * O botão anuncia quem entra, então o rótulo tem o tamanho do nome que o

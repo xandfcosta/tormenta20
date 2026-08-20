@@ -91,9 +91,17 @@ export function InitiativeCard(props: {
         props.fillHeight && 'flex h-full min-h-0 flex-col',
       )}
     >
-      <header class="flex shrink-0 flex-row items-start justify-between gap-3 border-b border-grimorio-iron p-3 sm:p-4">
-        {/* Uma linha só: no celular deitado o cabeçalho e a faixa de turno
-            comiam metade dos 390px de altura antes de a lista começar. */}
+      {/* As AÇÕES moram no cabeçalho (ALE-164), e não numa fileira própria
+          acima da lista. Em 844×390 as duas faixas somavam 93px e a lista
+          ficava com 89 — UM combatente de nove, cortado ao meio, com 77% da
+          tela virada moldura. Juntas viram uma faixa de 40px.
+
+          Cabem aqui porque o lado direito ficou VAZIO na ALE-184, quando o
+          avanço de turno desceu para o pé da coluna. E elas continuam
+          ancoradas junto do cabeçalho, que é a regra que a ALE-131 pôs: são o
+          que o mestre procura quando a lista está longa, e eram justamente o
+          que sumia ao rolar. */}
+      <header class="flex shrink-0 flex-row flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-grimorio-iron p-3 sm:p-4">
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
           <h2 class="font-heading text-lg uppercase tracking-wide text-grimorio-gold">
             Iniciativa
@@ -107,23 +115,6 @@ export function InitiativeCard(props: {
             <TurnCounter state={props.rt.state()} class="text-xs" />
           </Show>
         </div>
-      </header>
-
-      <div
-        class={cn(
-          'space-y-3 p-3 sm:p-4',
-          // As AÇÕES ficam ancoradas junto do cabeçalho: elas são o que o mestre
-          // procura quando a lista está longa, e eram justamente o que sumia.
-          props.fillHeight && 'flex min-h-0 flex-1 flex-col pb-0 sm:pb-0',
-        )}
-      >
-        <Show when={props.rt.error()}>
-          {(message) => <p class="text-sm text-destructive">Erro realtime: {message()}</p>}
-        </Show>
-
-        <Show when={!props.isGm && myCharacterId() !== undefined}>
-          <InitiativeRollButton characterId={myCharacterId()} rt={props.rt} />
-        </Show>
 
         {/* Só "Adicionar grupo" fica: os descansos são de uma vez por sessão e
             viraram duas linhas na frente do combate — foram para o menu da
@@ -162,6 +153,23 @@ export function InitiativeCard(props: {
               {addOpen() ? 'Fechar' : 'Combatente'}
             </Button>
           </div>
+        </Show>
+      </header>
+
+      <div
+        class={cn(
+          'space-y-3 p-3 sm:p-4',
+          // As AÇÕES ficam ancoradas junto do cabeçalho: elas são o que o mestre
+          // procura quando a lista está longa, e eram justamente o que sumia.
+          props.fillHeight && 'flex min-h-0 flex-1 flex-col pb-0 sm:pb-0',
+        )}
+      >
+        <Show when={props.rt.error()}>
+          {(message) => <p class="text-sm text-destructive">Erro realtime: {message()}</p>}
+        </Show>
+
+        <Show when={!props.isGm && myCharacterId() !== undefined}>
+          <InitiativeRollButton characterId={myCharacterId()} rt={props.rt} />
         </Show>
 
         <Show when={props.rt.state().initiative.length === 0}>
