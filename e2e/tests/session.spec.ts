@@ -34,6 +34,61 @@ const CAMPAIGN = 'Snapshot Test ALE-33' // the seed chronicle with a live sessio
 test.describe.configure({ mode: 'serial' })
 
 test.describe('Sessão ao vivo', () => {
+  /**
+   * A sessão 4 começa VAZIA, sempre — e isto é conserto, não zelo.
+   *
+   * Os testes daqui são serial e cada um limpa o que criou, mas limpeza que
+   * falha não limpa: um teste que estoura no meio deixa combatentes na seed
+   * COMPARTILHADA, e o próximo mede o lixo em vez do app. Isso já produziu, no
+   * mesmo dia, um guarda anunciando o combatente de outro teste, um estouro de
+   * layout que não reproduzia sozinho e três execuções de CI vermelhas cuja
+   * causa não era o código.
+   *
+   * O reinício é o mesmo gesto que o mestre tem na tela — a iniciativa, a
+   * rodada e o turno voltam a zero —, e deixa o arquivo começando de onde a
+   * seed do CI começa. Provado: com a sessão suja de propósito (três restos e
+   * rodada 7), sem isto o arquivo cai no teste do celular deitado; com isto,
+   * 23/23.
+   */
+  test.beforeAll(async ({ browser }) => {
+    const contexto = await browser.newContext({ storageState: '.auth/user.json' })
+    const page = await contexto.newPage()
+    try {
+      await page.goto('/campaigns/1/sessions/4')
+      await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+      await page.getByRole('button', { name: 'Configurações da sessão' }).click()
+      await page.getByRole('button', { name: 'Reiniciar' }).click()
+      // O painel de configurações É um diálogo, e o gatilho "Reiniciar" mora
+      // dentro dele: sem escopar pelo TÍTULO da confirmação, o localizador casa
+      // o gatilho e o botão de confirmar.
+      await page
+        .getByRole('dialog', { name: 'Reiniciar o combate?' })
+        .getByRole('button', { name: 'Reiniciar' })
+        .click()
+      // O broadcast do servidor é o que confirma: sem esperar por ele, o teste
+      // seguinte pode abrir a cena antes de a limpeza ter chegado.
+      await expect(page.getByText('Sem combatentes ainda')).toBeVisible()
+    } finally {
+      await contexto.close()
+    }
+  })
+
+  /**
+   * A sessão 4 começa VAZIA, sempre — e isto é conserto, não zelo.
+   *
+   * Os testes daqui são serial e cada um limpa o que criou, mas limpeza que
+   * falha não limpa: um teste que estoura no meio deixa combatentes na seed
+   * COMPARTILHADA, e o próximo mede o lixo em vez do app. Isso já produziu, no
+   * mesmo dia, um guarda anunciando o combatente de outro teste, um estouro de
+   * layout que não reproduzia sozinho e três execuções de CI vermelhas cuja
+   * causa não era o código.
+   *
+   * O reinício é o mesmo gesto que o mestre tem na tela — a iniciativa, a
+   * rodada e o turno voltam a zero —, e deixa o arquivo começando de onde a
+   * seed do CI começa. Sem isto, "passa aqui e falha lá" continua sendo função
+   * de quem rodou o quê antes.
+   */
+
   test('Crônicas → campanha → continuar a sessão (realtime conectado)', async ({ page }) => {
     await page.goto('/campaigns')
     // O estado "ao vivo" chega DEPOIS da lista (fan-out separado de sessões) e
