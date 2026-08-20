@@ -270,6 +270,64 @@ test.describe('Sessão ao vivo', () => {
   })
 
   /**
+   * O nome do combatente cabe INTEIRO no laptop (ALE-167).
+   *
+   * O nome é o que o mestre lê em voz alta na mesa, e reticências numa linha
+   * só cortavam quatro dos combatentes a 1440 e a 1024 — "agora é o Paladino
+   * Sagra…". O nome passou a quebrar em DUAS linhas (`line-clamp-2`) em vez de
+   * virar reticências.
+   *
+   * A medição é `scrollWidth`/`scrollHeight` contra o cliente: é assim que se
+   * pergunta ao DOM "sobrou texto escondido?", nos dois eixos — só a largura
+   * deixaria passar um nome cortado na segunda linha.
+   *
+   * Por que e2e: depende da fonte real e da largura real da coluna. Em jsdom
+   * todo elemento mede zero e nada nunca transborda.
+   */
+  test('o nome do combatente cabe inteiro no laptop', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+
+    // 22 caracteres, o comprimento do pior caso da seed ("Guerreiro Veterano
+    // Nv8"), com sufixo curto só para o teste achar e remover o que criou.
+    // O tamanho é a metade do teste que importa: com 20 caracteres o nome
+    // cabia por UM pixel e o guarda passava verde sobre o defeito — descobri
+    // isso sabotando, e é o segundo teste desta leva que a sabotagem salvou.
+    const nome = `Guerreiro Veterano ${Date.now() % 1000}`
+    await page.getByRole('button', { name: 'Combatente' }).click()
+    await page.getByLabel('Nome').fill(nome)
+    // COM PV, e isso é metade do teste: sem barras de vida a linha devolve os
+    // ~176px delas ao nome, ele cabe, e o guarda passa verde sobre o defeito.
+    // O caso real da mesa é um combatente COM vida.
+    await page.locator('#combatant-hp').fill('30')
+    await page.getByRole('button', { name: 'Adicionar', exact: true }).click()
+    await expect(page.getByRole('button', { name: `Remover ${nome}` })).toBeVisible()
+    await page.getByRole('button', { name: 'Fechar' }).click()
+
+    try {
+      const escondido = await page.evaluate((alvo) => {
+        const el = [...document.querySelectorAll<HTMLElement>('button, span')].find(
+          (n) => n.textContent?.trim() === alvo,
+        )
+        if (!el) return null
+        return {
+          largura: [Math.round(el.scrollWidth), Math.round(el.clientWidth)],
+          altura: [Math.round(el.scrollHeight), Math.round(el.clientHeight)],
+        }
+      }, nome)
+
+      expect(escondido, `não achei o nome "${nome}" na lista`).not.toBeNull()
+      const [precisaW, mostraW] = escondido?.largura ?? [0, 0]
+      const [precisaH, mostraH] = escondido?.altura ?? [0, 0]
+      expect(precisaW, 'o nome está cortado na largura').toBeLessThanOrEqual(mostraW + 1)
+      expect(precisaH, 'o nome está cortado na altura').toBeLessThanOrEqual(mostraH + 1)
+    } finally {
+      await page.getByRole('button', { name: `Remover ${nome}` }).click()
+    }
+  })
+
+  /**
    * No celular deitado a lista mostra DOIS combatentes, não um (ALE-164).
    *
    * O defeito era de ocupação: em 844×390 o cabeçalho do painel e a fileira de
@@ -696,20 +754,37 @@ test.describe('Sessão ao vivo', () => {
     await page.getByRole('button', { name: 'Adicionar grupo' }).click()
     await expect(page.locator('[role="progressbar"][aria-label^="PM "]').first()).toBeVisible()
 
-    // O nome da linha é um BOTÃO (clicar nele abre o combatente) com
-    // `truncate` — medir o `scrollWidth` dele é o que diz se o texto coube.
-    const nomes = await page.$$eval('button.truncate', (botoes) =>
-      botoes.map((botao) => ({
-        texto: (botao.textContent ?? '').trim(),
-        mostra: botao.clientWidth,
-        precisa: botao.scrollWidth,
-      })),
+    // O nome da linha é um BOTÃO cujo nome acessível É o do combatente, e é
+    // por aí que ele é achado: a primeira versão casava `button.truncate` e
+    // deixou de medir qualquer coisa quando a ALE-167 trocou a classe por
+    // `line-clamp-2` — o teste não acusou o defeito, acusou o próprio seletor.
+    // Medir os DOIS eixos: com o nome em duas linhas, só a largura deixaria
+    // passar um nome cortado embaixo.
+    const rotulos = await labelsNaIniciativa(page)
+    const nomes = await page.evaluate(
+      (labels) =>
+        labels.flatMap((label) => {
+          const el = [...document.querySelectorAll<HTMLElement>('button')].find(
+            (n) => n.textContent?.trim() === label,
+          )
+          return el
+            ? [
+                {
+                  texto: label,
+                  mostra: `${el.clientWidth}x${el.clientHeight}`,
+                  precisa: `${el.scrollWidth}x${el.scrollHeight}`,
+                  cortado: el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1,
+                },
+              ]
+            : []
+        }),
+      rotulos,
     )
 
     expect(nomes.length, 'nenhum nome medido — o seletor não casou a linha da iniciativa').toBeGreaterThan(0)
     const cortados = nomes
-      .filter((nome) => nome.precisa > nome.mostra)
-      .map((nome) => `${nome.texto}: ${nome.mostra}/${nome.precisa}`)
+      .filter((nome) => nome.cortado)
+      .map((nome) => `${nome.texto}: ${nome.mostra} para ${nome.precisa}`)
     expect(cortados, 'nome de combatente truncado com o palco do tabuleiro vazio ao lado').toEqual([])
 
     for (const label of await novosDesde(page, antes)) {

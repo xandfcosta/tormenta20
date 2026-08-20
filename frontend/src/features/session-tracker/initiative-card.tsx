@@ -372,10 +372,27 @@ function InitiativeRow(props: {
         <p class="flex min-w-0 flex-wrap items-center gap-1 font-medium">
           {/* O NOME é o alvo do clique, não a linha: os botões de vitais moram
               dentro dela, e um clique de linha os engoliria (ALE-122). */}
-          <Show when={props.onSelect} fallback={<span class="truncate">{props.entry.label}</span>}>
+          {/* `line-clamp-2` e não `truncate` (ALE-167): o nome é o que o mestre
+              LÊ EM VOZ ALTA na mesa, e reticências numa linha só o cortavam em
+              quatro dos combatentes a 1440 e a 1024 ("agora é o Paladino
+              Sagra…"). Duas linhas mostram o nome inteiro onde ele não cabe, e
+              não custam nada onde cabe — a caixa só cresce na linha que quebra.
+              O teto de duas continua existindo: um nome absurdo não pode empurrar
+              a lista inteira para fora da tela.
+
+              `min-w-0` vem JUNTO e não é enfeite: `line-clamp-2` desenha o
+              botão como `-webkit-box`, cujo `min-width: auto` é o min-content
+              — a palavra mais longa do nome. Sem ele o botão não encolhia e
+              empurrava o selo PC/NPC para fora da linha; o e2e da cena pegou
+              isso com quatro "PC" pintados fora do pai. É a armadilha nº37 do
+              guia do front outra vez, e desta vez do lado de dentro. */}
+          <Show
+            when={props.onSelect}
+            fallback={<span class="line-clamp-2 min-w-0">{props.entry.label}</span>}
+          >
             <button
               type="button"
-              class="truncate underline-offset-4 hover:underline focus-visible:underline"
+              class="line-clamp-2 min-w-0 text-left underline-offset-4 hover:underline focus-visible:underline"
               aria-pressed={props.selected}
               onClick={() => props.onSelect?.()}
             >
