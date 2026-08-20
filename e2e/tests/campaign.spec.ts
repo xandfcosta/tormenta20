@@ -98,4 +98,59 @@ test.describe('Campanha — responsivo (sem overflow horizontal)', () => {
       await expectDentroDaJanela(page)
     }
   })
+
+  /**
+   * ALE-176. A folha do grimório apertava o respiro por `max-height: 520px`, e
+   * essa consulta casa DUAS situações diferentes: o celular deitado, que é
+   * quem ela queria atender, e o celular EM PÉ com o teclado virtual aberto
+   * (390x844 vira ~390x494). Estas folhas hospedam campo de texto — "nova
+   * campanha" e o convite —, então o respiro encolhia debaixo do dedo no meio
+   * da digitação. É por isso que a regra da casa manda chavear por LARGURA.
+   *
+   * O teste afirma as DUAS metades de propósito. Só a primeira passaria verde
+   * com a tampa simplesmente APAGADA, que é o conserto errado: medido no
+   * deitado, com a tampa aparecem 89% do botão "Abrir crônica" e sem ela
+   * apenas 31% (y=379,6..412,7 numa janela de 390). O limiar de 0,8 fica com
+   * folga dos dois lados desse vão, e não é número mágico: está aqui porque a
+   * tampa não faz o botão CABER — ela o traz de quase escondido para quase
+   * inteiro, e prender `ratio: 1` seria exigir zero pixel de sobra, que é o
+   * tipo de asserção que a ALE-184 mostrou depender da fonte instalada.
+   *
+   * Só e2e: em jsdom não há viewport e nenhuma media query resolve.
+   */
+  test('o respiro da folha não muda quando o teclado abre, e o deitado continua cabendo', async ({
+    page,
+  }) => {
+    await page.goto('/campaigns/new')
+    await expect(page.getByRole('heading', { name: /Abrir nova crônica/i })).toBeVisible()
+
+    // A testemunha é o RESPIRO da folha, e ele se lê no valor computado e não
+    // na posição de um filho. Tentei os dois caminhos posicionais e os dois
+    // medem outra coisa: no vertical entram as margens automáticas que centram
+    // o formulário (173px numa janela alta contra 34 numa baixa, com o mesmo
+    // respiro nas duas), e no horizontal entra 1px de arredondamento de barra
+    // de rolagem — ruído da ordem do sinal, que era de 24px para 16.
+    const respiro = () =>
+      page
+        .locator('[data-tome-root]')
+        .evaluate((el) => `${getComputedStyle(el).paddingLeft}/${getComputedStyle(el).rowGap}`)
+
+    await page.setViewportSize({ width: 390, height: 844 })
+    const semTeclado = await respiro()
+
+    // O teclado virtual do celular não muda a largura, só a altura.
+    await page.setViewportSize({ width: 390, height: 494 })
+    const comTeclado = await respiro()
+
+    expect(
+      comTeclado,
+      'o respiro da folha encolheu quando o teclado abriu — ela está chaveando por ALTURA',
+    ).toBe(semTeclado)
+
+    await page.setViewportSize({ width: 844, height: 390 })
+    await expect(
+      page.getByRole('button', { name: /Abrir crônica/i }),
+      'no celular deitado o botão que fecha a tarefa saiu da tela',
+    ).toBeInViewport({ ratio: 0.8 })
+  })
 })

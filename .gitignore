@@ -1,5 +1,8 @@
 node_modules
 dist
+# O Playwright escreve aqui quando é invocado da RAIZ em vez de `e2e/` — o
+# .gitignore de lá só cobre o caminho relativo a ele.
+/test-results/
 .DS_Store
 .env
 .env.local

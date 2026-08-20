@@ -25,8 +25,16 @@ export function TomePage(props: ParentProps<{ class?: string }>) {
           class={cn(
             'grimorio-frame--stone flex min-h-[calc(100dvh-7rem)] flex-col gap-6 rounded-sm p-6 sm:p-10',
             // A phone held sideways has ~390px of height; full padding there
-            // pushes the content of a short leaf clean off the screen.
-            '[@media(max-height:520px)]:gap-3 [@media(max-height:520px)]:p-4',
+            // pushes the content of a short leaf clean off the screen — the
+            // "Abrir crônica" button ends at y=389 with this and at ~411
+            // without it. The key is width + ORIENTATION and not height
+            // (ALE-176): a `max-height` query also matches a phone held
+            // UPRIGHT with the virtual keyboard open (390x494), and these
+            // leaves host text fields — the spacing collapsed under the
+            // finger mid-typing. Same key as ALE-162, and for the same
+            // reason: a phone sideways has a tablet's width and a phone's
+            // height, which no width query alone can tell apart.
+            'max-lg:landscape:gap-3 max-lg:landscape:p-4',
             props.class,
           )}
         >

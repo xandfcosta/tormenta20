@@ -175,7 +175,17 @@ links, the browser Back button and the progress rail cannot then disagree.
   or overweight bar painted with it reads as "full". Use `--hp-critical`.
 - Media queries switch on **WIDTH only**. On a phone the virtual keyboard
   changes viewport HEIGHT, and a height-driven switch rebuilds the component
-  mid-typing and loses what was being searched.
+  mid-typing and loses what was being searched. A **CSS** height query costs
+  less than that and is still wrong: it does not remount anything, but the
+  keyboard turns 390×844 into ~390×494 and the spacing collapses under the
+  finger while the player types (ALE-176 — the grimório leaf hosts "nova
+  campanha" and the invite).
+- **A phone held sideways is `max-lg:landscape:`**, never a height query: it
+  has a tablet's WIDTH (844) and a phone's HEIGHT (390), so width alone can't
+  see it and `@container` can't either. Orientation does not change when the
+  keyboard opens, which is exactly why it is the safe half of the key. Used by
+  ALE-162 (`max-lg:landscape:hidden`, the sheet's derived block) and ALE-176
+  (the leaf's padding).
 - One DOM tree per component — a rail and its phone bar are the same list
   switching by class, not two `Show` branches that drift apart.
 - **A new file's arbitrary values are missing from the CSS until the dev
