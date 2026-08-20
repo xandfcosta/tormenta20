@@ -325,6 +325,76 @@ test.describe('Sessão ao vivo', () => {
   })
 
   /**
+   * O painel VAZIO não reserva a metade da tela (ALE-171).
+   *
+   * Entre 1024 e 1536 a cena tem duas colunas e a proporção era FIXA: o
+   * workspace ficava com 7/12 — 817px de 1440, 57% da tela — para dizer "clique
+   * no nome de um combatente", enquanto os nomes truncavam na coluna ao lado.
+   * É a mesma regra que a ALE-161 aplicou ao tabuleiro, e a mesma frase do
+   * CLAUDE.md do front: uma cena preenche o espaço que recebe.
+   *
+   * As DUAS metades são afirmadas. Só a primeira passaria verde com o painel
+   * apagado, que é o conserto errado: ele tem de VOLTAR a ter a largura quando
+   * há o que mostrar, senão a ficha do combatente é que fica espremida.
+   *
+   * Por que e2e: é largura de grade real respondendo a estado. Em jsdom todo
+   * elemento mede zero e as duas medidas dariam iguais.
+   */
+  test('o painel do combatente só reserva largura quando tem o que mostrar', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+
+    const antes = await labelsNaIniciativa(page)
+    await page.getByRole('button', { name: 'Adicionar grupo' }).click()
+    await expect(page.locator('[role="progressbar"][aria-label^="PM "]').first()).toBeVisible()
+
+    const larguras = () =>
+      page.evaluate(() => {
+        const h2 = [...document.querySelectorAll('h2')].find((n) =>
+          n.textContent?.includes('Iniciativa'),
+        )
+        const card = h2?.closest('section') as HTMLElement | null
+        const ws = document.querySelector('[role=tablist]')?.parentElement as HTMLElement | null
+        return {
+          iniciativa: card ? Math.round(card.getBoundingClientRect().width) : 0,
+          workspace: ws ? Math.round(ws.getBoundingClientRect().width) : 0,
+        }
+      })
+
+    try {
+      // VAZIO: quem trabalha é a lista, e ela fica com a maior parte.
+      const vazio = await larguras()
+      expect(vazio.iniciativa, 'a lista não recebeu a largura do painel vazio').toBeGreaterThan(
+        vazio.workspace,
+      )
+
+      // CHEIO: a ficha do combatente precisa da largura de volta.
+      const iniciativa = page
+        .getByRole('heading', { name: 'Iniciativa' })
+        .locator('xpath=ancestor::section[1]')
+      const nome = await iniciativa.evaluate((secao) => {
+        const barra = secao.querySelector('[role="progressbar"][aria-label^="PM "]')
+        let no: HTMLElement | null = barra as HTMLElement | null
+        while (no && no !== secao && !no.querySelector('button[aria-pressed]')) no = no.parentElement
+        return no?.querySelector('button[aria-pressed]')?.textContent?.trim() ?? ''
+      })
+      if (!nome) throw new Error('nenhum PC na iniciativa: a lista mudou no meio do teste')
+      await iniciativa.locator('button[aria-pressed]', { hasText: nome }).first().click()
+      await expect(page.getByRole('tab', { name: 'Perícias' })).toBeVisible()
+
+      const cheio = await larguras()
+      expect(cheio.workspace, 'o painel não retomou a largura com a ficha aberta').toBeGreaterThan(
+        cheio.iniciativa,
+      )
+    } finally {
+      for (const label of await novosDesde(page, antes)) {
+        await page.getByRole('button', { name: `Remover ${label}` }).click()
+      }
+    }
+  })
+
+  /**
    * O nome do combatente cabe INTEIRO no laptop (ALE-167).
    *
    * O nome é o que o mestre lê em voz alta na mesa, e reticências numa linha
@@ -1277,6 +1347,14 @@ test.describe('Sessão ao vivo', () => {
     expect(rolou.rolou).toBeGreaterThan(0)
     await expect(acao).toBeInViewport()
     await expect(page.getByRole('heading', { name: 'Iniciativa' })).toBeInViewport()
+
+    // O formulário fecha ANTES da limpeza, e isso não afrouxa nada: tudo o que
+    // este teste promete já foi afirmado acima, com ele aberto. Numa janela de
+    // 420px o formulário custa ~118px e deixa a LISTA com 16 — clicar no
+    // "Remover" de uma linha dentro de uma janela de 16px é o clique que o
+    // rodapé do avanço intercepta, e limpeza que falha deixa cinco combatentes
+    // na seed compartilhada para todo mundo depois.
+    await page.getByRole('button', { name: 'Fechar' }).click()
 
     for (const nome of nomes) {
       await page.getByRole('button', { name: `Remover ${nome}` }).click()

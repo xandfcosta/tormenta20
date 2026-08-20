@@ -121,6 +121,21 @@ export function SessionGmView(props: {
   const showTracker = () => sideBySide() || region() === 'combate'
   const showWorkspace = () => sideBySide() || region() === 'mesa'
 
+  /**
+   * O workspace está mostrando um painel VAZIO à espera de clique (ALE-171).
+   *
+   * É a mesma regra que a ALE-161 aplicou ao tabuleiro, e a mesma frase do
+   * CLAUDE.md do front: uma cena preenche o espaço que recebe. O que faltava
+   * era aplicá-la ao ESTADO — hoje a proporção era fixa, e entre 1024 e 1536 o
+   * workspace ficava com 7/12 (817px de 1440, 57% da tela) para dizer "clique
+   * no nome de um combatente" enquanto os nomes truncavam na coluna ao lado.
+   *
+   * A condição olha a aba ATIVA e não só a seleção: com o bestiário ou os
+   * catálogos abertos o painel está cheio, e encolhê-lo ali seria espremer uma
+   * lista que quer largura.
+   */
+  const workspaceVazio = () => tab() === 'combatente' && selectedId() === null
+
   const activeEntryId = () => {
     const live = props.rt.state()
     return live.turnIndex >= 0 ? (live.initiative[live.turnIndex]?.id ?? null) : null
@@ -154,7 +169,15 @@ export function SessionGmView(props: {
             (hasBoard()
               ? 'grid-cols-[minmax(0,4fr)_minmax(0,9fr)_minmax(0,5fr)]'
               : 'grid-cols-[minmax(0,7fr)_minmax(0,3fr)_minmax(0,5fr)]'),
-          !threeUp() && sideBySide() && 'grid-cols-[minmax(0,5fr)_minmax(0,7fr)]',
+          // Vazio, o painel devolve a largura para quem trabalha; cheio, ele a
+          // retoma. A troca acontece pelo clique do próprio mestre, então ela
+          // não rouba a tela de ninguém — que é a ressalva registrada na
+          // ALE-161 sobre o tabuleiro chegando pelo socket.
+          !threeUp() &&
+            sideBySide() &&
+            (workspaceVazio()
+              ? 'grid-cols-[minmax(0,7fr)_minmax(0,5fr)]'
+              : 'grid-cols-[minmax(0,5fr)_minmax(0,7fr)]'),
         )}
       >
         <Show when={showTracker()}>
