@@ -75,7 +75,20 @@ export function CharacterHud(props: { character: Character; class?: string }) {
             widths do not. Os mesmos números moram na aba Combate desde a
             ALE-145, que é como o telefone (onde este bloco é `hidden`) passou a
             alcançá-los. */}
-        <div class="hidden min-w-0 flex-1 flex-col justify-center gap-1.5 md:flex">
+        {/* `max-lg:landscape:hidden` (ALE-162): o gate era só de LARGURA, e o
+            celular deitado tem largura de tablet com altura de telefone — a
+            844×390 este bloco media 134px e, somado ao crachá de 152, deixava
+            a barra de abas em y=401 numa tela de 390. A navegação inteira da
+            ficha ficava inalcançável, e a página não rola.
+
+            Esconder aqui não esconde o dado: os mesmos números moram na aba
+            Combate desde a ALE-145, que é exatamente como o telefone em pé já
+            os alcança — este bloco sempre foi `hidden` lá.
+
+            A chave é largura + ORIENTAÇÃO, nunca altura: media query de altura
+            é proibida na casa porque o teclado virtual muda a altura e
+            reconstrói o componente no meio da digitação. */}
+        <div class="hidden min-w-0 flex-1 flex-col justify-center gap-1.5 md:flex max-lg:landscape:hidden">
           {/* Row A is the reactive numbers (defesa/ataques + as três
               resistências); row B is contextual — fórmulas de arma e o triplo
               de magia — com os atributos ao lado. */}

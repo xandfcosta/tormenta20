@@ -107,3 +107,42 @@ test('a linha de PV/PM não vaza a coluna numa tela apertada', async ({ page }) 
   expect(escapando, 'o bloco de PV/PM não foi encontrado').not.toBeNull()
   expect(escapando, 'a linha de PV/PM pintou para fora da coluna').toEqual([])
 })
+
+/**
+ * A navegação da ficha continua na tela no CELULAR DEITADO (ALE-162).
+ *
+ * O defeito: a 844×390 a barra de abas nascia em y=401 numa tela de 390, e a
+ * página não rola — a navegação inteira da ficha ficava inalcançável, com o
+ * jogador vendo só o crachá. Não dava para trocar de bloco.
+ *
+ * A causa é que o gate do bloco de derivados (Defesa, ataques, resistências,
+ * atributos) era só de LARGURA: 844 passa do `md`, então o bloco aparecia — e,
+ * abaixo do `lg`, empilhava. Media 134px somados aos 152 do crachá, numa caixa
+ * de 313. O celular deitado tem largura de tablet e altura de telefone.
+ *
+ * Esconder ali não esconde o dado: os mesmos números moram na aba Combate
+ * desde a ALE-145, que é como o telefone em pé sempre os alcançou.
+ *
+ * Por que e2e: é geometria contra a janela real. Em jsdom todo elemento mede
+ * zero e a barra "cabe" em qualquer formato.
+ */
+test('no celular deitado, a barra de abas da ficha fica na tela', async ({ page }) => {
+  await page.setViewportSize({ width: 844, height: 390 })
+  await page.goto('/')
+  await page.getByText('Meus Heróis').click()
+  await expect(page).toHaveURL(/\/characters$/)
+  await openSheetFromRoster(page, HERO)
+  await expect(page.getByRole('progressbar', { name: 'Vida' })).toBeVisible()
+
+  const barra = page.getByRole('tablist')
+  await expect(barra).toBeVisible()
+  await expect(barra, 'a barra de abas saiu da tela').toBeInViewport()
+
+  // E ela FUNCIONA: alcançável não é o mesmo que clicável, e é a troca de bloco
+  // que o defeito impedia.
+  await page.getByRole('tab', { name: 'Mochila' }).click()
+  await expect(page.getByRole('tab', { name: 'Mochila' })).toHaveAttribute(
+    'data-selected',
+    '',
+  )
+})
