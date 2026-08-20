@@ -49,7 +49,21 @@ export function RacePicker(props: RacePickerProps) {
     )
 
   return (
-    <div class="grid gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[1.15fr_1fr]">
+    // Enquanto NADA foi escolhido, o palco é do catálogo (ALE-171): o
+    // painel de detalhe reservava 871px de 1920 — 46% da tela — para dizer
+    // "escolha um para ver o que ele concede", enquanto os ladrilhos se
+    // espremiam ao lado. É a mesma regra que a ALE-161 aplicou ao tabuleiro
+    // e a ALE-171 à sessão, e a mesma frase do CLAUDE.md do front: uma cena
+    // preenche o espaço que recebe.
+    // O painel ENCOLHE mas não some, também como na sessão: o convite é o
+    // que explica para que serve aquele lado, e apagá-lo deixaria o passo
+    // sem dizer o que vem depois do clique.
+      <div
+        class={cn(
+          'grid gap-4 lg:min-h-0 lg:flex-1',
+          props.value.length === 0 ? 'lg:grid-cols-[3fr_1fr]' : 'lg:grid-cols-[1.15fr_1fr]',
+        )}
+      >
       <div class="flex flex-col gap-3 lg:min-h-0">
         <div class="relative shrink-0">
           <Search

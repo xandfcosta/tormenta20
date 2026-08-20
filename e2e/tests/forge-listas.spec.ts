@@ -57,3 +57,49 @@ test.describe('Forja — listas virtualizadas', () => {
     await expect(page.getByText(/^Adaga$/)).toHaveCount(0)
   })
 })
+
+/**
+ * O catálogo fica com o palco enquanto NADA foi escolhido (ALE-171).
+ *
+ * O painel de detalhe reservava 871px de 1920 — 46% da tela — para dizer
+ * "escolha uma raça para ver o que ela concede", enquanto os ladrilhos se
+ * espremiam ao lado. É a mesma regra que a ALE-161 aplicou ao tabuleiro e a
+ * ALE-171 à sessão: uma cena preenche o espaço que recebe.
+ *
+ * As DUAS metades são afirmadas. Só a primeira passaria verde com o painel
+ * apagado, que é o conserto errado: escolhida a raça, é o detalhe dela que
+ * precisa da largura — e o convite ENCOLHE mas não some, senão o passo deixa
+ * de dizer o que vem depois do clique.
+ *
+ * Por que e2e: é largura de grade real respondendo a estado. Em jsdom todo
+ * elemento mede zero e as duas medidas dariam iguais.
+ */
+test('na forja, o catálogo tem o palco até a primeira escolha', async ({ page }) => {
+  await page.setViewportSize({ width: 1920, height: 1080 })
+  await page.goto('/characters/new/raca')
+  await expect(page.getByRole('option', { name: /Humano/ }).first()).toBeVisible()
+
+  const colunas = () =>
+    page.evaluate(() => {
+      const grade = [...document.querySelectorAll<HTMLElement>('div')].find((n) =>
+        (n.className || '').toString().includes('grid gap-4 lg:min-h-0'),
+      )
+      const cols = grade ? getComputedStyle(grade).gridTemplateColumns : ''
+      return cols.split(' ').map((c) => Math.round(Number.parseFloat(c)))
+    })
+
+  const vazio = await colunas()
+  expect(vazio.length, 'a grade da forja não tem duas colunas a 1920').toBe(2)
+  expect(vazio[0], 'o catálogo não recebeu o palco com o painel vazio').toBeGreaterThan(vazio[1] * 2)
+  // O convite continua na tela: ele é o que explica para que serve aquele lado.
+  await expect(page.getByText(/Escolha uma raça para ver/)).toBeVisible()
+
+  await page.getByRole('option', { name: /Humano/ }).first().click()
+  await expect(page.getByText(/Escolha uma raça para ver/)).toBeHidden()
+
+  const escolhido = await colunas()
+  expect(
+    escolhido[1],
+    'o painel não retomou a largura com a raça escolhida',
+  ).toBeGreaterThan(vazio[1])
+})
