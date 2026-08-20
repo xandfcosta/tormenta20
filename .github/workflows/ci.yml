@@ -51,13 +51,6 @@ jobs:
             exit 1
           fi
 
-      # O typecheck NUNCA esteve no CI: até aqui, erro de tipo só aparecia na
-      # máquina de quem lembrasse de rodar `pnpm typecheck`. Com o TypeScript 7
-      # ele leva ~2s (eram ~13 no 6), então o passo custa menos que o `git
-      # checkout` do job e fecha o buraco.
-      - name: Typecheck
-        run: pnpm --filter frontend typecheck
-
       - name: Tests
         run: pnpm test
 
@@ -67,6 +60,19 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      # O typecheck NUNCA esteve no CI: até aqui, erro de tipo só aparecia na
+      # máquina de quem lembrasse de rodar `pnpm typecheck`. Com o TypeScript 7
+      # ele leva ~2s (eram ~13 no 6), então o passo custa menos que o `git
+      # checkout` do job e fecha o buraco.
+      #
+      # Ele vem DEPOIS do build de propósito: o `routeTree.gen.ts` é gerado e
+      # gitignored, e quem o escreve é o plugin do TanStack dentro de um
+      # comando vite. Num clone limpo, sem ele, o `tsc` reprova as 26 rotas de
+      # uma vez ("/campaigns/new is not assignable to parameter of type
+      # undefined") — foi assim que este passo estreou vermelho.
+      - name: Typecheck
+        run: pnpm --filter frontend typecheck
 
   e2e:
     name: e2e (playwright)
