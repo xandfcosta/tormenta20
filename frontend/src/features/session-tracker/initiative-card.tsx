@@ -427,7 +427,14 @@ function InitiativeRow(props: {
       </Show>
 
       <Show when={hasHp() || hasMp()}>
-        <div class="order-3 w-full min-w-0 space-y-1.5 @lg:order-2 @lg:w-44 @lg:flex-none">
+        {/* 7.5rem e não 11 (ALE-167): a barra é INDICADOR e o número exato está
+            ao lado dela, então quem cede largura é ela — o mesmo argumento da
+            ALE-196, onde a barra cedeu e os botões de toque não. Os 56px que
+            saem daqui vão para o NOME, que é a única coisa da linha que existe
+            para ser dita em voz alta na mesa e era a única que não cabia.
+            Continua LARGURA FIXA: é ela que mantém as três colunas no mesmo X
+            em todas as linhas, que é o serrilhado da ALE-141. */}
+        <div class="order-3 w-full min-w-0 space-y-1.5 @lg:order-2 @lg:w-30 @lg:flex-none">
           <Show when={hasHp()}>
             <VitalBar
               kind="hp"

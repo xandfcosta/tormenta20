@@ -288,6 +288,12 @@ test.describe('Sessão ao vivo', () => {
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/campaigns/1/sessions/4')
     await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+    // A largura da coluna da iniciativa é o que decide se o nome cabe, e com o
+    // tabuleiro ABERTO ela encolhe — no CI o nome passou a precisar de TRÊS
+    // linhas numa caixa de duas por causa disso. Garantir o estado é do teste:
+    // a ordem entre specs não é contrato, e o CI roda dois workers na mesma
+    // sessão (o mesmo motivo que o teste vizinho já documenta).
+    await encerraOTabuleiroSeHouver(page)
 
     // 22 caracteres, o comprimento do pior caso da seed ("Guerreiro Veterano
     // Nv8"), com sufixo curto só para o teste achar e remover o que criou.
