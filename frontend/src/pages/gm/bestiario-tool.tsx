@@ -58,8 +58,12 @@ export function BestiarioTool() {
       </div>
 
       <Show when={!bestiary.isPending} fallback={<BestiarySkeleton />}>
-        <div class="grid gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(16rem,22rem)_1fr]">
-          <div class="flex flex-col gap-2 lg:min-h-0">
+        {/* `min-h-0 flex-1` em TODAS as larguras, não só a partir de `lg`
+            (ALE-175): abaixo de `lg` a grade não esticava, a lista parava na
+            tampa de 45vh e o que sobrava era faixa morta — 243px medidos em
+            768×1024, um quarto da tela. */}
+        <div class="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(16rem,22rem)_1fr]">
+          <div class="flex min-h-0 flex-col gap-2">
             <MonsterFilters filter={filter} idPrefix="bestiario" />
 
             <Show
@@ -70,13 +74,19 @@ export function BestiarioTool() {
                 </p>
               }
             >
-              {/* Capped below lg so 80 rows do not bury the rest of the tool;
-                  beside the detail pane it simply fills its column. */}
+              {/* A tampa de 45vh SAIU (ALE-175). Ela existia para "80 linhas não
+                  enterrarem o resto da ferramenta" — mas abaixo de `lg` o resto
+                  da ferramenta é o painel de detalhe, que ali é `hidden`. A
+                  tampa protegia conteúdo que não existe naquele formato, e o
+                  preço era 243px mortos em 768×1024 com a lista mostrando 459px
+                  de 5216 de conteúdo.
+                  A lista é o ÚLTIMO elemento da coluna: quem a limita passa a
+                  ser a caixa, não um número de altura de viewport. */}
               <VirtualList
                 items={shown()}
                 getKey={(monster) => monster.id}
                 estimateSize={72}
-                class="max-h-[45vh] rounded-md border border-grimorio-iron p-1 lg:max-h-none lg:min-h-0 lg:flex-1"
+                class="min-h-0 flex-1 rounded-md border border-grimorio-iron p-1"
                 renderItem={(monster) => (
                   <MonsterRow
                     monster={monster}

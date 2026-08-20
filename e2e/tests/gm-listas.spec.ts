@@ -117,3 +117,43 @@ test.describe('Listas virtualizadas do mestre', () => {
   })
 })
 
+/**
+ * A lista do bestiário PREENCHE a coluna no tablet em pé (ALE-175).
+ *
+ * A lista tinha uma tampa de `45vh` cujo comentário dizia proteger "o resto da
+ * ferramenta" de 80 linhas. Mas abaixo de `lg` o resto da ferramenta é o painel
+ * de detalhe, que ali é `hidden`: a tampa protegia conteúdo que não existe
+ * naquele formato. O preço eram 243px mortos em 768×1024 — um quarto da tela —
+ * com a lista mostrando 459px de 5216 de conteúdo.
+ *
+ * O que se afirma é a FAIXA MORTA e não a altura da lista: altura é
+ * consequência do formato, e prendê-la seria prender o número errado. O que a
+ * cena promete é não deixar banda vazia embaixo do último elemento da coluna.
+ *
+ * Por que e2e: é caixa contra caixa em altura real. Em jsdom todo elemento mede
+ * zero e a faixa morta dá zero em qualquer arranjo.
+ */
+test('no tablet em pé, a lista do bestiário não deixa faixa morta', async ({ page }) => {
+  await page.setViewportSize({ width: 768, height: 1024 })
+  await page.goto('/gm/bestiario')
+  await expect(page.getByRole('button', { name: /ND / }).first()).toBeVisible()
+
+  const medida = await page.evaluate(() => {
+    const secao = document.querySelector('[aria-labelledby=mesa-bestiario]')
+    const lista = [...document.querySelectorAll<HTMLElement>('*')].find((n) =>
+      (n.className || '').toString().includes('flex-1 rounded-md border'),
+    )
+    if (!secao || !lista) return null
+    return {
+      faixaMorta: Math.round(
+        secao.getBoundingClientRect().bottom - lista.getBoundingClientRect().bottom,
+      ),
+      transbordou: lista.scrollHeight > lista.clientHeight + 8,
+    }
+  })
+
+  expect(medida, 'não achei a lista do bestiário').not.toBeNull()
+  // Sem transbordo a asserção não prova nada: seria uma lista que coube.
+  expect(medida?.transbordou, 'a lista não transbordou — o teste não mediu nada').toBe(true)
+  expect(medida?.faixaMorta ?? 999, 'faixa morta embaixo da lista').toBeLessThanOrEqual(8)
+})
