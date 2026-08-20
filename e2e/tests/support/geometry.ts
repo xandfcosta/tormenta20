@@ -268,3 +268,103 @@ export async function expectNadaRolaDeLado(page: Page, raiz = 'body'): Promise<v
   expect(rolando, `a raiz ${raiz} não existe na tela`).not.toBeNull()
   expect(rolando, 'painel rolando de lado dentro da cena, que não deveria rolar').toEqual([])
 }
+
+/**
+ * O palco não deixa BANDA VAZIA embaixo do que ele mostra (ALE-175).
+ *
+ * A regra da casa — "uma cena preenche o espaço que recebe" — nunca teve
+ * asserção VERTICAL: o `expectEnchePai` mede largura, e o defeito da ALE-175
+ * era altura. A lista do bestiário tinha uma tampa de `45vh` e, num tablet em
+ * pé, mostrava 459px de 5216 de conteúdo com 243px mortos embaixo — um quarto
+ * da tela pintada de nada, com a lista transbordando logo acima.
+ *
+ * Mede a banda vazia DEPOIS do último elemento do palco. Tinta é definida por
+ * exclusão de contêiner: conta a caixa de quem tem texto próprio, de quem é
+ * interativo e de quem é gráfico. Um `div` de arranjo não conta, porque é
+ * justamente ele quem se estica por cima da faixa morta e faria a medição
+ * jurar que o espaço está ocupado.
+ *
+ * Vão INTERNO não entra, e isso é decisão e não descuido: medida no bestiário,
+ * a cena tem 22px entre dois blocos, que é o `gap` do arranjo. Acusar isso
+ * seria brigar com o sistema de espaçamento; o defeito da ALE-175 nunca esteve
+ * no meio, eram 243px depois do fim da lista.
+ *
+ * O que este guarda NÃO faz é prender altura. Altura é consequência do formato
+ * e prendê-la seria prender o número errado; o que a cena promete é não deixar
+ * banda vazia depois do último elemento.
+ *
+ * Cuidados que a medição exige, os dois aprendidos na ALE-175:
+ * - o palco tem de estar TRANSBORDANDO, senão a faixa vazia é uma lista que
+ *   coube e a asserção não prova nada. Quem chama afirma isso antes.
+ * - ignora caixa de 1px, que é `sr-only` por definição e existe em toda tela.
+ *
+ * @example await expectSemFaixaMorta(page, '[aria-labelledby=mesa-bestiario]')
+ */
+export async function expectSemFaixaMorta(
+  page: Page,
+  palco: string,
+  maxPx = 8,
+): Promise<void> {
+  const medida = await page.evaluate(
+    ({ seletor }) => {
+      const raiz = document.querySelector(seletor as string)
+      if (!raiz) return null
+      const caixa = raiz.getBoundingClientRect()
+
+      const temTextoProprio = (node: Element) =>
+        [...node.childNodes].some((f) => f.nodeType === 3 && (f.textContent ?? '').trim() !== '')
+      const eGrafico = (node: Element) =>
+        ['IMG', 'SVG', 'CANVAS', 'VIDEO', 'INPUT', 'SELECT', 'TEXTAREA', 'HR'].includes(
+          node.tagName.toUpperCase(),
+        )
+
+      // O recorte tem de ser feito contra o contêiner que ROLA, e não só contra
+      // o palco: um item empurrado para fora de uma lista rolável continua
+      // reportando a caixa dele lá embaixo, e sem este passo ele "cobre" a
+      // faixa morta e a medição jura que o espaço está ocupado. Foi assim que
+      // a primeira versão desta primitiva passou verde pela sabotagem.
+      const janelaDoPai = (node: Element): DOMRect => {
+        for (let atual = node.parentElement; atual; atual = atual.parentElement) {
+          const estilo = getComputedStyle(atual)
+          if (estilo.overflowY === 'auto' || estilo.overflowY === 'scroll') {
+            return atual.getBoundingClientRect()
+          }
+          if (atual === raiz) break
+        }
+        return caixa
+      }
+
+      const tinta = [...raiz.querySelectorAll('*')]
+        .filter((node) => temTextoProprio(node) || eGrafico(node))
+        .map((node) => ({ r: node.getBoundingClientRect(), pai: janelaDoPai(node) }))
+        .filter(({ r }) => r.width > 1 && r.height > 1)
+        .map(({ r, pai }) => ({
+          topo: Math.max(r.top, pai.top, caixa.top),
+          base: Math.min(r.bottom, pai.bottom, caixa.bottom),
+        }))
+        .filter((f) => f.base > f.topo)
+        .sort((a, b) => a.topo - b.topo)
+
+      if (tinta.length === 0) return { faixa: Math.round(caixa.height), onde: 'o palco inteiro' }
+
+      // Mede a sobra DEPOIS do último elemento, e só ela. Vão INTERNO não entra
+      // de propósito: medido nesta mesma cena, há 22px entre y 301 e 323, que
+      // é o `gap` do arranjo — respiro que o design pede. Uma primitiva que o
+      // acusasse brigaria com o sistema de espaçamento em vez de proteger a
+      // cena, e o defeito da ALE-175 nunca esteve no meio: eram 243px depois
+      // do fim da lista.
+      const fim = tinta.reduce((maior, f) => Math.max(maior, f.base), caixa.top)
+      return {
+        faixa: Math.round(Math.max(0, caixa.bottom - fim)),
+        onde: `de y ${Math.round(fim)} até o fim do palco em ${Math.round(caixa.bottom)}`,
+      }
+    },
+    { seletor: palco },
+  )
+
+  expect(medida, `o palco ${palco} não existe na tela`).not.toBeNull()
+  expect(
+    medida?.faixa ?? 999,
+    `banda vazia de ${medida?.faixa}px ${medida?.onde} numa janela de ${page.viewportSize()?.height}px — o palco não preencheu o espaço que recebeu`,
+  ).toBeLessThanOrEqual(maxPx)
+}

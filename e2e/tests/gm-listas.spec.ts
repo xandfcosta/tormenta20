@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { ensurePowersFixture } from './support/character'
+import { expectSemFaixaMorta } from './support/geometry'
 
 /**
  * As listas virtualizadas do MESTRE — bestiário e catálogos.
@@ -138,22 +139,14 @@ test('no tablet em pé, a lista do bestiário não deixa faixa morta', async ({ 
   await page.goto('/gm/bestiario')
   await expect(page.getByRole('button', { name: /ND / }).first()).toBeVisible()
 
-  const medida = await page.evaluate(() => {
-    const secao = document.querySelector('[aria-labelledby=mesa-bestiario]')
-    const lista = [...document.querySelectorAll<HTMLElement>('*')].find((n) =>
-      (n.className || '').toString().includes('flex-1 rounded-md border'),
-    )
-    if (!secao || !lista) return null
-    return {
-      faixaMorta: Math.round(
-        secao.getBoundingClientRect().bottom - lista.getBoundingClientRect().bottom,
-      ),
-      transbordou: lista.scrollHeight > lista.clientHeight + 8,
-    }
-  })
-
-  expect(medida, 'não achei a lista do bestiário').not.toBeNull()
   // Sem transbordo a asserção não prova nada: seria uma lista que coube.
-  expect(medida?.transbordou, 'a lista não transbordou — o teste não mediu nada').toBe(true)
-  expect(medida?.faixaMorta ?? 999, 'faixa morta embaixo da lista').toBeLessThanOrEqual(8)
+  const transbordou = await page.evaluate(
+    () =>
+      [...document.querySelectorAll('*')].find(
+        (n) => n.scrollHeight > n.clientHeight + 8 && n.clientHeight > 100,
+      ) !== undefined,
+  )
+  expect(transbordou, 'a lista não transbordou — o teste não mediu nada').toBe(true)
+
+  await expectSemFaixaMorta(page, '[aria-labelledby=mesa-bestiario]')
 })
