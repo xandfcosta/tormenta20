@@ -37,11 +37,21 @@ describe('ConsumeAction', () => {
   it('consumível de ganho fixo aplica direto, sem diálogo', async () => {
     const onConsume = vi.fn()
     const user = renderAction('macarrao-de-yuvalin', onConsume)
+    const usar = screen.getByRole('button', { name: 'Usar' })
 
-    await user.click(screen.getByRole('button', { name: 'Usar' }))
+    await user.click(usar)
 
     expect(onConsume).toHaveBeenCalledWith()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+
+    // Tira o ponteiro do gatilho antes de acabar. SÓ este caminho — o de ganho
+    // fixo — embrulha o botão num `Tooltip`, e o `openDelay` padrão do Kobalte
+    // é de 700ms: o clique agenda a abertura, o teste termina em
+    // milissegundos, e o timer dispara depois do ambiente jsdom ser desmontado,
+    // com `window is not defined` que o vitest conta como falha do arquivo
+    // INTEIRO. Foi assim que o CI ficou vermelho uma vez sem nada relacionado
+    // ter mudado. Sair do gatilho cancela o agendamento.
+    await user.unhover(usar)
   })
 
   it('consumível de dado pede o resultado e soma o bônus do dado', async () => {
