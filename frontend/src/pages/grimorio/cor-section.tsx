@@ -27,6 +27,22 @@ const ACENTOS = [
   { classe: 'bg-grimorio-parchment', token: '--grimorio-parchment', nota: 'superfície clara' },
 ]
 
+/**
+ * Os quatro papéis, cada um com o par bloco + tinta (ALE-173, P3). Eles ficam
+ * lado a lado de propósito: é aqui que se vê que a cor de preencher e a de
+ * escrever NÃO podem ser a mesma — a de baixo passa de 4.5:1 e a de cima não.
+ */
+const PAPEIS = [
+  { classe: 'bg-penalty', token: '--penalty', nota: 'penalidade — bloco' },
+  { classe: 'bg-penalty-ink', token: '--penalty-ink', nota: 'penalidade — tinta' },
+  { classe: 'bg-bonus', token: '--bonus', nota: 'bônus — bloco' },
+  { classe: 'bg-bonus-ink', token: '--bonus-ink', nota: 'bônus — tinta' },
+  { classe: 'bg-arcane', token: '--arcane', nota: 'arcano — bloco' },
+  { classe: 'bg-arcane-ink', token: '--arcane-ink', nota: 'arcano — tinta' },
+  { classe: 'bg-warning', token: '--warning', nota: 'aviso — bloco' },
+  { classe: 'bg-warning-ink', token: '--warning-ink', nota: 'aviso — tinta' },
+]
+
 const VITAIS = [
   { classe: 'bg-[var(--hp-full)]', token: '--hp-full', nota: 'vida cheia' },
   { classe: 'bg-[var(--hp-hurt)]', token: '--hp-hurt', nota: 'ferido — LÊ como cheia' },
@@ -51,6 +67,15 @@ export function CorSection() {
         nota="Ouro é a vez, em TODA cena. A razão ao lado é contra o painel: abaixo de 4.5:1 a cor não serve de texto pequeno, só de bloco — e é por isso que a cena alcança cores cruas do Tailwind quando precisa ESCREVER em vermelho ou roxo (ALE-173, P3)."
       >
         {ACENTOS.map((c) => (
+          <ColorSwatch classe={c.classe} token={c.token} nota={c.nota} />
+        ))}
+      </SpecBlock>
+
+      <SpecBlock
+        titulo="Papéis — bloco e tinta"
+        nota="A cor de preencher e a de escrever são duas. As de bloco ficam abaixo de 4.5:1 e por isso só servem de fundo, barra e borda; as de tinta ficam todas na mesma luminosidade do dourado, e é com elas que se ESCREVE. O aviso e o dourado são vizinhos de matiz (70 e 85) — estão aqui um perto do outro para essa proximidade ser julgada, não descoberta depois."
+      >
+        {PAPEIS.map((c) => (
           <ColorSwatch classe={c.classe} token={c.token} nota={c.nota} />
         ))}
       </SpecBlock>

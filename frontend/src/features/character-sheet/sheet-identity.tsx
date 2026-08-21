@@ -77,7 +77,7 @@ function DisplacementBadge(props: { displacement: ValueBreakdown }) {
           type="button"
           class={cn(
             'cursor-help underline decoration-dotted underline-offset-2',
-            props.displacement.itemBonus < 0 ? 'text-destructive' : 'text-emerald-400',
+            props.displacement.itemBonus < 0 ? 'text-destructive' : 'text-bonus-ink',
           )}
         >
           {props.displacement.total}m

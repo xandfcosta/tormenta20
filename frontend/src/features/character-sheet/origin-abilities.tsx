@@ -134,8 +134,8 @@ function OriginBenefitRow(props: {
             class={cn(
               'rounded-none px-1 text-4xs uppercase tracking-wide',
               props.benefit.kind === 'pericia'
-                ? 'bg-emerald-500/20 text-emerald-100'
-                : 'bg-violet-500/20 text-violet-100',
+                ? 'bg-bonus/20 text-bonus-ink'
+                : 'bg-arcane/20 text-arcane-ink',
             )}
           >
             {props.benefit.kind === 'pericia' ? 'Perícia' : 'Poder'}

@@ -104,6 +104,33 @@
   --input: var(--grimorio-iron);
   --ring: var(--grimorio-gold);
 
+  /* Os quatro PAPÉIS semânticos, cada um com DUAS cores (ALE-173, P3).
+   *
+   * A cor de PREENCHER e a de ESCREVER não podem ser a mesma, e foi a folha do
+   * /grimorio que provou isso com número: as cores da casa foram afinadas para
+   * preencher — uma barra de vida, o fundo de um botão — e ficam entre 3,2 e
+   * 4,6:1 contra o painel, abaixo do mínimo de 4,5 da WCAG para texto pequeno.
+   * Por isso a cena escrevia com 74 cores CRUAS do Tailwind: não era preguiça,
+   * era compensação. `emerald-300` dá 11,3, `violet-300` dá 9,3, `red-400` dá
+   * 6,0 — todas confortáveis, e nenhuma com nome.
+   *
+   * As quatro tintas ficam na MESMA luminosidade perceptual (L 0.76), ancorada
+   * no dourado, que é a cor de escrita que a casa já tinha (L 0.80, 9,13:1).
+   * A croma de cada uma é a maior que ainda cabe no gamut sRGB — medida, não
+   * chutada: acima disso o navegador recorta e o token passa a mentir.
+   *
+   * `-ink` e não `-text` porque a metáfora é a da casa: com o que se ESCREVE
+   * na página. Lê-se `bg-warning` para o bloco e `text-warning-ink` para a
+   * letra. */
+  --bonus: var(--hp-full);
+  --bonus-ink: oklch(0.76 0.17 145); /* 8,47:1 */
+  --arcane: var(--grimorio-purple);
+  --arcane-ink: oklch(0.76 0.15 305); /* 7,59:1 */
+  --penalty: var(--grimorio-crimson);
+  --penalty-ink: oklch(0.76 0.13 25); /* 7,62:1 */
+  --warning: var(--hp-hurt);
+  --warning-ink: oklch(0.76 0.15 70); /* 7,80:1 */
+
   /* HP/PM bars — functional state colors, not decoration. */
   --hp-full: oklch(0.6 0.17 145);
   --hp-hurt: oklch(0.7 0.17 70);
@@ -271,6 +298,15 @@
    *
    * O CSS que chega ao navegador não muda: `bg-grimorio-panel` emite a mesma
    * declaração que o escape emitia. */
+  --color-bonus: var(--bonus);
+  --color-bonus-ink: var(--bonus-ink);
+  --color-arcane: var(--arcane);
+  --color-arcane-ink: var(--arcane-ink);
+  --color-penalty: var(--penalty);
+  --color-penalty-ink: var(--penalty-ink);
+  --color-warning: var(--warning);
+  --color-warning-ink: var(--warning-ink);
+
   --color-grimorio-bg: var(--grimorio-bg);
   --color-grimorio-bg-2: var(--grimorio-bg-2);
   --color-grimorio-panel: var(--grimorio-panel);

@@ -94,7 +94,7 @@ function TriggeredPassiveChip(props: { spec: ActivationSpec; character: Characte
     <span class={CHIP}>
       Passiva · gatilho: {props.spec.requiresFlag}{' '}
       <span
-        class={active() ? 'text-emerald-400' : 'opacity-40'}
+        class={active() ? 'text-bonus-ink' : 'opacity-40'}
         title={`${props.spec.requiresFlag} ${active() ? 'ativa' : 'inativa'}`}
       >
         {active() ? '●' : '○'}
@@ -126,7 +126,7 @@ function StanceSlot(props: { spec: ActivationSpec; character: Character }) {
   return (
     <>
       <span
-        class={cn(CHIP, 'border-violet-500/40 text-violet-300')}
+        class={cn(CHIP, 'border-arcane/40 text-arcane-ink')}
       >
         Postura · {props.spec.pmCost}
         {props.spec.scaling ? '+' : ''} PM
@@ -155,7 +155,7 @@ function StanceSlot(props: { spec: ActivationSpec; character: Character }) {
             type="button"
             size="sm"
             variant="ghost"
-            class="h-11 px-3 text-xs text-red-400 hover:bg-red-950/40 sm:h-6 sm:px-2 sm:text-2xs"
+            class="h-11 px-3 text-xs text-penalty-ink hover:bg-penalty/15 sm:h-6 sm:px-2 sm:text-2xs"
             aria-label={`Encerrar ${props.spec.name}`}
             onClick={() =>
               void actions(queryClient, props.character).deactivateStance(activeFlag())

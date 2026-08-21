@@ -114,7 +114,7 @@ function ProficiencyRow(props: {
   onToggle: () => void
 }) {
   return (
-    <li class={cn('rounded-sm text-xs', props.granted && 'bg-emerald-950/30')}>
+    <li class={cn('rounded-sm text-xs', props.granted && 'bg-bonus/10')}>
       <button
         type="button"
         onClick={() => props.onToggle()}
@@ -124,7 +124,7 @@ function ProficiencyRow(props: {
         class="flex w-full items-center gap-2 rounded-sm px-2 py-1 text-left transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
       >
         {props.granted ? (
-          <Check aria-hidden="true" class="size-3.5 text-emerald-400" />
+          <Check aria-hidden="true" class="size-3.5 text-bonus-ink" />
         ) : (
           <X aria-hidden="true" class="size-3.5 text-muted-foreground" />
         )}

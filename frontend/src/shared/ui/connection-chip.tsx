@@ -32,12 +32,12 @@ export function ConnectionChip(props: {
   const tone = () => {
     if (props.status === 'connected') {
       return props.dirty
-        ? 'border-amber-500/40 text-amber-300'
-        : 'border-emerald-500/40 text-emerald-300'
+        ? 'border-warning/40 text-warning-ink'
+        : 'border-bonus/40 text-bonus-ink'
     }
     return props.status === 'reconnecting'
-      ? 'border-amber-500/40 text-amber-300'
-      : 'border-destructive/50 text-red-300'
+      ? 'border-warning/40 text-warning-ink'
+      : 'border-destructive/50 text-penalty-ink'
   }
   const label = () =>
     props.dirty && props.status === 'connected'

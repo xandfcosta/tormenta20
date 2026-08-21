@@ -118,7 +118,7 @@ export function BagItemSheet(props: BagItemSheetProps) {
                   <Button
                     type="button"
                     variant="outline"
-                    class="w-full gap-2 text-emerald-400"
+                    class="w-full gap-2 text-bonus-ink"
                     onClick={open}
                   >
                     <Sparkles aria-hidden="true" class="size-4" />

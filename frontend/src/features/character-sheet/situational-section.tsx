@@ -138,7 +138,7 @@ function Amount(props: { amount: number; suffix?: string }) {
     <span
       class={cn(
         'shrink-0 font-mono font-semibold',
-        props.amount >= 0 ? 'text-emerald-300' : 'text-red-300',
+        props.amount >= 0 ? 'text-bonus-ink' : 'text-penalty-ink',
       )}
     >
       {signed(props.amount)}

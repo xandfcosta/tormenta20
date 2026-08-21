@@ -223,7 +223,7 @@ function TrainedOnlyStar(props: { locked: boolean }) {
           class={cn(
             'size-3',
             props.locked
-              ? 'fill-amber-500 text-amber-500'
+              ? 'fill-warning text-warning'
               : 'fill-none text-muted-foreground/60',
           )}
         />

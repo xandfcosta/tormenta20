@@ -115,7 +115,7 @@ export function EncounterComposer(props: EncounterComposerProps) {
                   type="button"
                   aria-label={`Remover ${group.monster.name}`}
                   onClick={() => props.onRemove(group.monster.id)}
-                  class="shrink-0 rounded-none p-1 text-muted-foreground transition-colors hover:text-[color:var(--hp-critical)]"
+                  class="shrink-0 rounded-none p-1 text-muted-foreground transition-colors hover:text-penalty-ink"
                 >
                   <Trash2 aria-hidden="true" class="size-4" />
                 </button>

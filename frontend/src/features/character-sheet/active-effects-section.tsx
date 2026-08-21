@@ -127,15 +127,18 @@ function ActiveEffectRow(props: { effect: ActiveEffect; onRemove: () => void }) 
   const facts = () => effectSourceFacts(props.effect.catalogId)
 
   return (
-    <li class="rounded-sm border border-emerald-500/25 bg-emerald-950/30 px-2 py-1.5">
+    <li class="rounded-sm border border-bonus/25 bg-bonus/10 px-2 py-1.5">
       <div class="flex items-center gap-2">
-        <Sparkles aria-hidden="true" class="size-3.5 shrink-0 text-emerald-300" />
+        <Sparkles aria-hidden="true" class="size-3.5 shrink-0 text-bonus-ink" />
         <span class="flex-1 truncate text-sm text-foreground">{name()}</span>
         <span
+          // A tinta clara não serve AQUI: este crachá é preenchimento FORTE
+          // (70%), e `text-bonus-ink` é a cor de escrever no painel, não sobre
+          // o próprio bônus. Sobre bloco cheio, a letra é a clara da casa.
           class={
             props.effect.scope === 'day'
               ? 'shrink-0 rounded-full bg-muted px-2 py-0.5 text-3xs font-bold uppercase tracking-widest text-foreground'
-              : 'shrink-0 rounded-full bg-emerald-500/70 px-2 py-0.5 text-3xs font-bold uppercase tracking-widest text-emerald-50'
+              : 'shrink-0 rounded-full bg-bonus/70 px-2 py-0.5 text-3xs font-bold uppercase tracking-widest text-grimorio-fg'
           }
         >
           {props.effect.scope === 'day' ? 'dia' : 'cena'}
@@ -144,7 +147,7 @@ function ActiveEffectRow(props: { effect: ActiveEffect; onRemove: () => void }) 
           type="button"
           variant="ghost"
           size="icon"
-          class="size-7 text-foreground hover:bg-red-950/40 hover:text-red-400"
+          class="size-7 text-foreground hover:bg-penalty/15 hover:text-penalty-ink"
           onClick={() => props.onRemove()}
           aria-label={`Remover ${name()}`}
         >

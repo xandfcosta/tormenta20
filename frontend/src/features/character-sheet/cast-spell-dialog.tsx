@@ -191,7 +191,7 @@ export function CastSpellDialog(props: {
             <span
               class={cn(
                 'font-mono text-lg font-bold',
-                blocked() ? 'text-red-400' : 'text-grimorio-gold',
+                blocked() ? 'text-penalty-ink' : 'text-grimorio-gold',
               )}
             >
               {totalPm()} PM
@@ -199,7 +199,7 @@ export function CastSpellDialog(props: {
           </div>
 
           <Show when={blocked()}>
-            {(reason) => <p class="text-xs text-red-400">{reason()}</p>}
+            {(reason) => <p class="text-xs text-penalty-ink">{reason()}</p>}
           </Show>
           <DialogInlineError message={error()} />
 
@@ -237,14 +237,14 @@ function AugmentRow(props: {
           <span
             class={cn(
               'mr-2 font-mono text-3xs uppercase tracking-widest',
-              props.augment.kind === 'muda' ? 'text-violet-300' : 'text-emerald-300',
+              props.augment.kind === 'muda' ? 'text-arcane-ink' : 'text-bonus-ink',
             )}
           >
             {props.augment.kind}
           </span>
           +{props.augment.pmCost} PM {props.augment.kind === 'aumenta' ? 'cada' : ''}
           <Show when={props.locked}>
-            <span class="ml-2 font-semibold text-red-400">
+            <span class="ml-2 font-semibold text-penalty-ink">
               requer {props.augment.requiresCircle}º círculo
             </span>
           </Show>

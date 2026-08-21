@@ -192,8 +192,8 @@ export function ClassPowerRow(props: {
                       check.prereq.kind === 'note'
                         ? 'text-foreground'
                         : check.met
-                          ? 'text-emerald-300'
-                          : 'text-red-300',
+                          ? 'text-bonus-ink'
+                          : 'text-penalty-ink',
                     )}
                   >
                     {check.reason}

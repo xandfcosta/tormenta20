@@ -64,7 +64,7 @@ export function ExpertiseBreakdown(props: ExpertiseBreakdownProps) {
               }}
             >
               <Show when={props.locked}>
-                <Lock aria-hidden="true" class="size-4 text-amber-500" />
+                <Lock aria-hidden="true" class="size-4 text-warning" />
               </Show>
               {signed(props.total)}
             </span>

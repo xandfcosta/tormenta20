@@ -21,10 +21,10 @@ const TONE: Record<StatTone, { trigger: string; label: string; value: string; to
     total: 'border-destructive/40 bg-destructive/10',
   },
   magic: {
-    trigger: 'border-violet-500/40 hover:bg-violet-500/10 focus-visible:ring-violet-500/60',
-    label: 'text-violet-300/80',
-    value: 'text-violet-100',
-    total: 'border-violet-500/40 bg-violet-950/30',
+    trigger: 'border-arcane/40 hover:bg-arcane/10 focus-visible:ring-arcane/60',
+    label: 'text-arcane-ink/80',
+    value: 'text-arcane-ink',
+    total: 'border-arcane/40 bg-arcane/10',
   },
 }
 

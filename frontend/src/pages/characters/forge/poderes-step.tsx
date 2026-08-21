@@ -446,7 +446,7 @@ function OrphanPowerCard(props: { id: string; onRemove: () => void }) {
           type="button"
           aria-label={`Remover ${props.id}`}
           onClick={() => props.onRemove()}
-          class="shrink-0 text-muted-foreground transition-colors hover:text-[color:var(--hp-critical)]"
+          class="shrink-0 text-muted-foreground transition-colors hover:text-penalty-ink"
         >
           <X aria-hidden="true" class="size-3.5" />
         </button>
@@ -473,7 +473,7 @@ function TakenPowerCard(props: {
           type="button"
           aria-label={`Remover ${props.option.name}`}
           onClick={() => props.onRemove()}
-          class="shrink-0 text-muted-foreground transition-colors hover:text-[color:var(--hp-critical)]"
+          class="shrink-0 text-muted-foreground transition-colors hover:text-penalty-ink"
         >
           <X aria-hidden="true" class="size-3.5" />
         </button>

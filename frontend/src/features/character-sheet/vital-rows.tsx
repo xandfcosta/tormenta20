@@ -154,7 +154,7 @@ function VitalRow(props: VitalRowProps) {
         <span class="font-bold">{props.current}</span>
         <span class="text-muted-foreground">/{props.max}</span>
         <Show when={temp() > 0}>
-          <span class="ml-1 font-bold text-emerald-400" title={props.tempTitle ?? 'PV temporários'}>
+          <span class="ml-1 font-bold text-bonus-ink" title={props.tempTitle ?? 'PV temporários'}>
             +{temp()}
           </span>
         </Show>
@@ -163,7 +163,7 @@ function VitalRow(props: VitalRowProps) {
             class={cn(
               'absolute -top-4 right-0 text-3xs font-bold',
               (delta() ?? 0) < 0
-                ? 'text-[color:var(--hp-critical)]'
+                ? 'text-penalty-ink'
                 : 'text-[color:var(--hp-full)]',
             )}
           >

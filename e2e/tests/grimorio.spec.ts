@@ -112,6 +112,67 @@ test.describe('Grimório — a folha de especificação', () => {
     expect(transparentes, 'amostra sem cor: o utilitário não existe no CSS').toEqual([])
   })
 
+  /**
+   * Toda TINTA alcança 4.5:1 contra o painel (ALE-173, P3).
+   *
+   * Esta é a razão de os quatro papéis terem duas cores. As de bloco foram
+   * afinadas para preencher — barra de vida, fundo de botão — e ficam entre
+   * 3,2 e 4,6:1, abaixo do mínimo da WCAG para texto pequeno. Era por isso que
+   * a cena escrevia com 74 cores CRUAS do Tailwind: não era desleixo, era
+   * compensação, e nenhuma delas tinha nome.
+   *
+   * O guarda afirma só a metade que é REGRA — tinta serve de texto. Não prende
+   * o valor de nenhuma: a paleta pode mudar de matiz, de croma ou de
+   * luminosidade sem deixar de ser legível, e prender o oklch tornaria isso
+   * impossível sem tocar no teste.
+   *
+   * Por que e2e: contraste exige converter oklch para sRGB, e só o navegador
+   * faz isso — `getComputedStyle` devolve o oklch cru, e ler aqueles três
+   * números como RGB dá razão inventada.
+   */
+  test('nenhuma tinta fica abaixo do mínimo de texto', async ({ page }) => {
+    await page.goto('/grimorio')
+    await expect(page.getByRole('heading', { name: 'Grimório' })).toBeVisible()
+
+    const fracas = await page.evaluate(() => {
+      const cena = document.querySelector('.scene-grimorio')
+      const tela = document.createElement('canvas')
+      tela.width = 1
+      tela.height = 1
+      const ctx = tela.getContext('2d')
+      if (!ctx || !cena) return ['a cena não montou']
+
+      const rgb = (css: string): [number, number, number] => {
+        ctx.clearRect(0, 0, 1, 1)
+        ctx.fillStyle = css
+        ctx.fillRect(0, 0, 1, 1)
+        const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data
+        return [r ?? 0, g ?? 0, b ?? 0]
+      }
+      const luz = (c: [number, number, number]) => {
+        const [r, g, b] = c.map((v) => {
+          const x = v / 255
+          return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4
+        })
+        return 0.2126 * (r ?? 0) + 0.7152 * (g ?? 0) + 0.0722 * (b ?? 0)
+      }
+      const estilo = getComputedStyle(cena)
+      const painel = luz(rgb(estilo.getPropertyValue('--grimorio-panel').trim()))
+
+      return ['--bonus-ink', '--arcane-ink', '--penalty-ink', '--warning-ink']
+        .map((token) => {
+          const valor = estilo.getPropertyValue(token).trim()
+          const [a, b] = [luz(rgb(valor)), painel].sort((x, y) => y - x)
+          const razao = ((a ?? 0) + 0.05) / ((b ?? 0) + 0.05)
+          return { token, razao: Number(razao.toFixed(2)) }
+        })
+        .filter((t) => t.razao < 4.5)
+        .map((t) => `${t.token} dá ${t.razao}:1`)
+    })
+
+    expect(fracas, 'tinta que não alcança texto — ela é cor de BLOCO').toEqual([])
+  })
+
   test('a folha cabe nos seis formatos', async ({ page }) => {
     await page.goto('/grimorio')
     await expect(page.getByRole('heading', { name: 'Grimório' })).toBeVisible()

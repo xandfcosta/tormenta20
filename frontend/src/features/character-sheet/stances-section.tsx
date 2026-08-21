@@ -114,7 +114,7 @@ function StanceCard(props: { group: StanceGroup; character: Character }) {
   )
 
   return (
-    <li class="rounded-none border border-violet-500/25 bg-violet-950/30 px-2 py-1.5">
+    <li class="rounded-none border border-arcane/25 bg-arcane/10 px-2 py-1.5">
       <div class="flex flex-wrap items-center gap-2">
         <button
           type="button"
@@ -122,7 +122,7 @@ function StanceCard(props: { group: StanceGroup; character: Character }) {
           aria-expanded={expanded()}
           class="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-left"
         >
-          <Flame aria-hidden="true" class="size-3.5 shrink-0 text-violet-300" />
+          <Flame aria-hidden="true" class="size-3.5 shrink-0 text-arcane-ink" />
           <span class="shrink-0 text-sm font-medium text-foreground">{activation().name}</span>
           <span class="min-w-0 truncate text-2xs text-muted-foreground">
             · {stanceSummary(props.group)}
@@ -134,7 +134,7 @@ function StanceCard(props: { group: StanceGroup; character: Character }) {
           type="button"
           size="sm"
           variant="ghost"
-          class="h-11 shrink-0 px-3 text-xs text-red-400 hover:bg-red-950/40 sm:h-6 sm:px-2 sm:text-2xs"
+          class="h-11 shrink-0 px-3 text-xs text-penalty-ink hover:bg-penalty/15 sm:h-6 sm:px-2 sm:text-2xs"
           aria-label={`Encerrar ${activation().name}`}
           onClick={() =>
             void actions(queryClient, props.character).deactivateStance(props.group.flag)
@@ -154,7 +154,7 @@ function StanceCard(props: { group: StanceGroup; character: Character }) {
                 <span
                   class={cn(
                     'shrink-0 font-mono font-semibold',
-                    entry.effect.amount >= 0 ? 'text-emerald-300' : 'text-red-300',
+                    entry.effect.amount >= 0 ? 'text-bonus-ink' : 'text-penalty-ink',
                   )}
                 >
                   {signed(entry.effect.amount)}
@@ -167,7 +167,7 @@ function StanceCard(props: { group: StanceGroup; character: Character }) {
               <span class="truncate text-muted-foreground">
                 Alma de Bronze — PV temporários (nível + For)
               </span>
-              <span class="shrink-0 font-mono font-semibold text-emerald-300">
+              <span class="shrink-0 font-mono font-semibold text-bonus-ink">
                 +{tempHp()?.total}
               </span>
             </li>

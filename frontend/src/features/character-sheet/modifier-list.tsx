@@ -18,8 +18,8 @@ export function ModifierList(props: { modifiers: readonly Modifier[]; class?: st
               <span
                 class={
                   modifier.amount >= 0
-                    ? 'font-mono font-semibold text-emerald-300'
-                    : 'font-mono font-semibold text-red-300'
+                    ? 'font-mono font-semibold text-bonus-ink'
+                    : 'font-mono font-semibold text-penalty-ink'
                 }
               >
                 {signed(modifier.amount)}

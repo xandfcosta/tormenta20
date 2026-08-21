@@ -168,7 +168,7 @@ function BlockersBanner(props: { items: Pendencia[] }) {
   return (
     <Show when={props.items.length > 0}>
       <div class="space-y-1 rounded-sm border border-[color:var(--hp-critical)]/60 bg-[color:var(--hp-critical)]/10 p-3">
-        <p class="flex items-center gap-1.5 text-xs font-semibold text-[color:var(--hp-critical)]">
+        <p class="flex items-center gap-1.5 text-xs font-semibold text-penalty-ink">
           <TriangleAlert aria-hidden="true" class="size-3.5" />
           Falta o essencial para forjar
         </p>

@@ -217,7 +217,7 @@ function StancePreview(props: { spec: ActivationSpec; character: Character; step
               <span class="truncate text-muted-foreground">
                 {describeConditionalTarget(entry.effect.target)}
               </span>
-              <span class="shrink-0 font-mono font-semibold text-emerald-300">
+              <span class="shrink-0 font-mono font-semibold text-bonus-ink">
                 {signed(entry.effect.amount)}
               </span>
             </li>
@@ -233,7 +233,7 @@ function StancePreview(props: { spec: ActivationSpec; character: Character; step
             <span class="truncate text-muted-foreground">
               Alma de Bronze: PV temp = nível + For
             </span>
-            <span class="shrink-0 font-mono font-semibold text-emerald-300">
+            <span class="shrink-0 font-mono font-semibold text-bonus-ink">
               +{tempHp()?.total}
             </span>
           </li>
@@ -252,13 +252,13 @@ function TotalRow(props: { total: number; remaining: number; blocked: boolean })
         <span
           class={cn(
             'font-mono text-lg font-bold',
-            props.blocked ? 'text-red-400' : 'text-grimorio-gold',
+            props.blocked ? 'text-penalty-ink' : 'text-grimorio-gold',
           )}
         >
           {props.total} PM
         </span>
       </div>
-      <p class={cn('text-2xs', props.blocked ? 'text-red-400' : 'text-muted-foreground')}>
+      <p class={cn('text-2xs', props.blocked ? 'text-penalty-ink' : 'text-muted-foreground')}>
         {props.blocked
           ? 'PM insuficiente para ativar'
           : `PM restante após ativar: ${props.remaining}`}

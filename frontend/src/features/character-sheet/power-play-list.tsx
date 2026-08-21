@@ -104,7 +104,7 @@ function PassivasDisclosure(props: {
         <Show when={!open()}>
           <For each={activeTriggeredPassives(props.passivas, props.activeFlags)}>
             {(power) => (
-              <p class="text-2xs text-emerald-300">
+              <p class="text-2xs text-bonus-ink">
                 ● gatilho ativo: {power.entry.name} ({gatilhoLabel(power.spec)})
               </p>
             )}

@@ -125,7 +125,7 @@ export function SpellRow(props: {
               {SPELL_BASE_PM_COST[props.spell.circle]} PM
             </span>
             <Show when={bestCd() !== null}>
-              <span class="font-mono text-xs text-violet-300">CD {bestCd()}</span>
+              <span class="font-mono text-xs text-arcane-ink">CD {bestCd()}</span>
             </Show>
             <Show when={props.granted} fallback={<LearnedBadge learned={props.learned} />}>
               {(granted) => (
@@ -180,7 +180,7 @@ export function SpellRow(props: {
                       <span
                         class={cn(
                           'text-3xs uppercase tracking-widest',
-                          augment.kind === 'muda' ? 'text-violet-300' : 'text-emerald-300',
+                          augment.kind === 'muda' ? 'text-arcane-ink' : 'text-bonus-ink',
                         )}
                       >
                         {augment.kind}
@@ -250,7 +250,7 @@ export function SpellRow(props: {
                       type="button"
                       size="sm"
                       variant="ghost"
-                      class="h-7 gap-1 text-xs text-red-400 hover:bg-red-950/40"
+                      class="h-7 gap-1 text-xs text-penalty-ink hover:bg-penalty/15"
                       disabled={pending()}
                       onClick={() => void unlearn()}
                     >
