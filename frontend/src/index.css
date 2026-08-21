@@ -99,9 +99,9 @@
  * it stays in glow / large titles, never small text. Applied via the scope
  * class `.scene-grimorio` (added by SceneShell, ALE-37) — the existing
  * shadcn screens are left untouched until each migrates scene-by-scene.
- * Contrast + look validated live at /grimorio before porting — e essa rota
- * NÃO existe mais (ALE-173). Quem for mexer nestes valores valida na cena que
- * os usa: sessão ao vivo, ficha e crônica, nos seis formatos. */
+ * Contraste e aparência se validam em /grimorio, a folha viva do sistema de
+ * desenho: ela desenha cada token com o utilitário de verdade e lê o valor
+ * resolvido do navegador, então não tem como discordar deste arquivo. */
 :root {
   --grimorio-bg: oklch(0.15 0.01 305);
   --grimorio-bg-2: oklch(0.19 0.012 305);
@@ -345,8 +345,8 @@
 @layer components {
   /* ── Grimório scene primitives (ALE-36) ───────────────────────────────
    * Decorative treatments shared by shared/ui/{background-texture,
-   * framed-panel,game-menu-button,scene-title}. A rota /grimorio onde isto foi
-   * afinado não existe mais (ALE-173) — valide na cena que usa a peça.
+   * framed-panel,game-menu-button,scene-title}. Afinado em /grimorio, que
+   * desenha cada uma destas peças com o componente real.
    * Decorative (backgrounds/glows) → literal oklch is fine here, same as the
    * functional HP/PM tokens. Reduced-motion is handled by the base layer. */
   .grimorio-stone {

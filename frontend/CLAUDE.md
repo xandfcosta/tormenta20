@@ -167,10 +167,22 @@ links, the browser Back button and the progress rail cannot then disagree.
 
 ## Styling
 
+- **`/grimorio` é a folha viva do sistema de desenho** — cor, raio,
+  tipografia, peças, foco e movimento numa tela só. Decisão de desenho se toma
+  OLHANDO ali, não imaginando. Duas regras a mantêm honesta: ela lê cada valor
+  do `getComputedStyle` do próprio nó (nunca transcreve um número) e desenha
+  com os componentes de verdade importados de `shared/ui` (nunca uma imitação
+  com as mesmas classes). É rota de quem constrói: fica fora do menu do Hub.
 - Tailwind v4 + the Controlled Decay / grimório tokens in `src/index.css`
   (`--primary`, `--card`, `--hp-full`, `--grimorio-gold`, Cinzel…). Use
   tokens (`bg-card`, `text-muted-foreground`, `[color:var(--primary)]`),
   not raw hex.
+- **Canto quadrado se escreve `rounded-none`.** A cena tem R=6px e a escala do
+  shadcn derivada dele: `none` 0, `sm` 2, `md` 4, `lg` 6, `xl` 10. Não baixe o
+  R: abaixo de 6px a fórmula (`sm = R−4`) DEGENERA e `sm` passa a valer zero,
+  que foi o defeito da ALE-173 — dois degraus com o mesmo pixel e ninguém
+  prevendo, lendo o TSX, se ia sair canto. Os raios cravados no CSS (moldura
+  5px, capa 10px, peça 3px) são medida de OBJETO e ficam fora da escala.
 - `--hp-hurt` is amber at hue 70, a hair from the gold at 85: an over-budget
   or overweight bar painted with it reads as "full". Use `--hp-critical`.
 - Media queries switch on **WIDTH only**. On a phone the virtual keyboard
