@@ -202,7 +202,7 @@ function GhostRow(props: { line: BagLine }) {
                 .getElementById(line().anchor)
                 ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
             }
-            class="flex w-full items-center gap-1 rounded border border-dashed border-[color:var(--hp-hurt)]/60 px-1.5 py-0.5 text-left text-[11px] text-[color:var(--hp-hurt)] hover:bg-accent"
+            class="flex w-full items-center gap-1 rounded-lg border border-dashed border-[color:var(--hp-hurt)]/60 px-1.5 py-0.5 text-left text-[11px] text-[color:var(--hp-hurt)] hover:bg-accent"
           >
             ◇ {line().label} · pendente
           </button>
@@ -218,7 +218,7 @@ function QtyStep(props: { label: string; onClick: () => void; children: string }
       type="button"
       aria-label={props.label}
       onClick={() => props.onClick()}
-      class="flex size-5 items-center justify-center rounded border border-grimorio-iron text-xs hover:bg-accent"
+      class="flex size-5 items-center justify-center rounded-lg border border-grimorio-iron text-xs hover:bg-accent"
     >
       {props.children}
     </button>

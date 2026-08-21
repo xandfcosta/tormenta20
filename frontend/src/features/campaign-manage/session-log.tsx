@@ -61,7 +61,7 @@ function SessionLogEntry(props: { session: Session; campaignId: number }) {
         to="/campaigns/$id/sessions/$sid"
         params={{ id: String(props.campaignId), sid: String(props.session.id) }}
         class={cn(
-          'flex items-center justify-between gap-3 rounded-sm border bg-[var(--grimorio-panel)] p-3 transition-colors',
+          'flex items-center justify-between gap-3 rounded-sm border bg-grimorio-panel p-3 transition-colors',
           isLive()
             ? 'border-[color:var(--hp-full)]/60 bg-[color:var(--hp-full)]/[0.06] hover:border-[color:var(--hp-full)]'
             : 'border-grimorio-iron hover:border-grimorio-gold',
@@ -98,7 +98,7 @@ function SessionSeal(props: { number: number; tone: SessionTone }) {
     <span
       aria-hidden="true"
       class={cn(
-        'absolute left-0 top-2.5 flex size-8 items-center justify-center rounded-full border bg-[var(--grimorio-bg)] font-heading text-sm',
+        'absolute left-0 top-2.5 flex size-8 items-center justify-center rounded-full border bg-grimorio-bg font-heading text-sm',
         SEAL_TONE[props.tone],
       )}
     >

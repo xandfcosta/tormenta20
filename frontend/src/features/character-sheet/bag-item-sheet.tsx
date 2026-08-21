@@ -82,7 +82,7 @@ export function BagItemSheet(props: BagItemSheetProps) {
             {props.item.name}
             <For each={overlays()}>
               {(name) => (
-                <span class="rounded border border-border bg-muted px-1 text-[10px] font-medium text-muted-foreground">
+                <span class="rounded-lg border border-border bg-muted px-1 text-[10px] font-medium text-muted-foreground">
                   {name}
                 </span>
               )}

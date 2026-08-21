@@ -87,7 +87,7 @@ function NpcConditionChip(props: { id: ConditionId; onRemove: () => void }) {
             type="button"
             aria-label={`Remover condição ${found().name}`}
             onClick={() => props.onRemove()}
-            class="rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+            class="rounded-lg p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
           >
             <X aria-hidden="true" class="size-3" />
           </button>

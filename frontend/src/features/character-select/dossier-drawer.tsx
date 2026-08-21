@@ -40,7 +40,7 @@ export function DossierDrawer(props: DossierDrawerProps) {
             type="button"
             aria-label="Fechar dossiê"
             onClick={() => props.onClose()}
-            class="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+            class="rounded-lg p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
           >
             <X class="size-4" />
           </button>

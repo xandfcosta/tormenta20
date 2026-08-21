@@ -48,7 +48,7 @@ function WeaponCardTile(props: { card: WeaponCard }) {
         type="button"
         aria-label={`Detalhamento de ${props.card.name}`}
         title={`${props.card.skill} ${signed(props.card.attack)} · dano ${damageLabel()} · crítico ${critLabel(props.card)}`}
-        class="flex cursor-pointer flex-col items-center rounded-sm border-2 border-destructive/50 bg-[var(--grimorio-panel)] p-2 text-center transition-colors hover:bg-destructive/10"
+        class="flex cursor-pointer flex-col items-center rounded-sm border-2 border-destructive/50 bg-grimorio-panel p-2 text-center transition-colors hover:bg-destructive/10"
       >
         <span class="max-w-full truncate text-[9px] font-bold uppercase tracking-widest text-destructive/80">
           {props.card.name}

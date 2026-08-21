@@ -27,7 +27,7 @@ export function MatchRail(props: {
       when={isDesktop()}
       fallback={
         <div
-          class="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-grimorio-iron bg-[var(--grimorio-panel)] px-3 py-2"
+          class="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-grimorio-iron bg-grimorio-panel px-3 py-2"
           // Keeps the `py-2` floor and grows to clear the home indicator when
           // the app runs edge-to-edge (`viewport-fit=cover`).
           style={{ 'padding-bottom': 'max(0.5rem, env(safe-area-inset-bottom))' }}

@@ -33,7 +33,7 @@ export function CharacterHud(props: { character: Character; class?: string }) {
   const active = createMemo(() => conditionals.active(props.character.id))
 
   return (
-    <div class={cn('border-t border-grimorio-iron bg-[var(--grimorio-panel)] px-3 py-2 sm:px-4', props.class)}>
+    <div class={cn('border-t border-grimorio-iron bg-grimorio-panel px-3 py-2 sm:px-4', props.class)}>
       {/* Below lg the attribute cluster stacks BELOW the nameplate: side by
           side it stretched the square portrait, which squeezed the PV/PM row
           until its −/+ buttons slid under the cluster and stopped being

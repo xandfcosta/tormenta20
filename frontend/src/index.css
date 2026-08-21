@@ -99,7 +99,9 @@
  * it stays in glow / large titles, never small text. Applied via the scope
  * class `.scene-grimorio` (added by SceneShell, ALE-37) — the existing
  * shadcn screens are left untouched until each migrates scene-by-scene.
- * Contrast + look validated live at /grimorio before porting. */
+ * Contrast + look validated live at /grimorio before porting — e essa rota
+ * NÃO existe mais (ALE-173). Quem for mexer nestes valores valida na cena que
+ * os usa: sessão ao vivo, ficha e crônica, nos seis formatos. */
 :root {
   --grimorio-bg: oklch(0.15 0.01 305);
   --grimorio-bg-2: oklch(0.19 0.012 305);
@@ -144,6 +146,29 @@
      `:root` fica como está porque ele também serve a superfície CLARA da
      autenticação, onde clarear pioraria. */
   --mp-arcane: oklch(0.66 0.16 250);
+  /* CANTO QUADRADO É A INTENÇÃO, não um acidente de escala (ALE-173): ferro
+   * forjado não tem canto macio. O que isso significa em pixel, MEDIDO dentro
+   * de uma cena, porque ninguém consegue prever lendo o TSX:
+   *
+   *   rounded-sm →  0px   (a classe de raio mais usada do app, 114 vezes)
+   *   rounded-md →  2px
+   *   rounded-lg →  4px
+   *
+   * A escala é derivada daqui por `--radius-*` no `@theme`, então mexer neste
+   * único valor move as três de uma vez — e move a cena inteira junto.
+   *
+   * Duas ressalvas que a auditoria pediu e a medição resolveu de outro jeito:
+   *
+   * `rounded` CRU (sem sufixo) é fixo em 4px e NÃO acompanha este valor. Ele
+   * coincide com `rounded-lg` hoje, e por isso as 12 ocorrências viraram
+   * `rounded-lg`: zero pixel de diferença agora, e elas passam a seguir a cena
+   * se este número mudar um dia.
+   *
+   * Os raios cravados mais abaixo (5px na moldura, 10px na capa do livro, 4px
+   * nas páginas, 3px na folha, 4px na barra de rolagem) NÃO são violação da
+   * escala e não devem ser alinhados a ela: são a medida de um OBJETO. A capa
+   * de um livro é fisicamente mais redonda que a folha dentro dela, e forçar
+   * as duas ao mesmo degrau desenharia um objeto que não existe. */
   --radius: 0.25rem;
   --font-display: var(--font-heading);
   background-color: var(--grimorio-bg);
@@ -238,6 +263,24 @@
   --color-grimorio-iron-light: var(--grimorio-iron-light);
   --color-grimorio-parchment: var(--grimorio-parchment);
   --color-grimorio-parchment-ink: var(--grimorio-parchment-ink);
+
+  /* As SUPERFÍCIES da cena (ALE-173). Elas existiam desde sempre logo acima,
+   * mas fora daqui — e um token que não entra no `@theme` não vira utilitário,
+   * então a cena inteira as escrevia como valor arbitrário: 37 ocorrências de
+   * `bg-[var(--grimorio-panel)]` e irmãs. Isso não é só verbosidade, é a
+   * armadilha registrada no guia do front: valor arbitrário de arquivo NOVO só
+   * existe no CSS depois de reiniciar o servidor de desenvolvimento, e o
+   * sintoma mente, porque os utilitários normais do mesmo elemento continuam
+   * valendo e a tela fica quase certa.
+   *
+   * O CSS que chega ao navegador não muda: `bg-grimorio-panel` emite a mesma
+   * declaração que o escape emitia. */
+  --color-grimorio-bg: var(--grimorio-bg);
+  --color-grimorio-bg-2: var(--grimorio-bg-2);
+  --color-grimorio-panel: var(--grimorio-panel);
+  --color-grimorio-panel-raised: var(--grimorio-panel-raised);
+  --color-grimorio-fg: var(--grimorio-fg);
+  --color-grimorio-fg-muted: var(--grimorio-fg-muted);
 }
 
 @layer base {
@@ -249,8 +292,11 @@
     @apply bg-background text-foreground antialiased;
   }
 
-  /* Kept as no-op-ish utilities so the ~25 usages compile; custom faces
-   * dropped — `font-display` is now the system sans, `font-hud` the mono. */
+  /* Kept as no-op-ish utilities so the usages compile; custom faces dropped —
+   * `font-display` is now the system sans. A irmã `.font-hud` foi APAGADA na
+   * ALE-173: ela era a utilidade dos números de jogo (mono + `tnum`), nasceu
+   * junto com esta e terminou com ZERO usos — quem quer números alinhados
+   * escreve `font-mono tabular-nums` direto, que é o que a cena inteira faz. */
   .font-display {
     font-family: var(--font-display);
   }
@@ -261,10 +307,6 @@
     font-optical-sizing: auto;
   }
 
-  .font-hud {
-    font-family: var(--font-mono);
-    font-feature-settings: 'tnum', 'zero';
-  }
 
   /* Hide native number spinners — replaced by the NumberInput buttons. */
   input[type="number"]::-webkit-outer-spin-button,
@@ -291,7 +333,8 @@
 @layer components {
   /* ── Grimório scene primitives (ALE-36) ───────────────────────────────
    * Decorative treatments shared by shared/ui/{background-texture,
-   * framed-panel,game-menu-button,scene-title}. Tuned live in /grimorio.
+   * framed-panel,game-menu-button,scene-title}. A rota /grimorio onde isto foi
+   * afinado não existe mais (ALE-173) — valide na cena que usa a peça.
    * Decorative (backgrounds/glows) → literal oklch is fine here, same as the
    * functional HP/PM tokens. Reduced-motion is handled by the base layer. */
   .grimorio-stone {

@@ -152,7 +152,7 @@ function Checkbox(props: { checked: boolean }) {
     <span
       aria-hidden="true"
       class={cn(
-        'flex size-5 shrink-0 items-center justify-center rounded border border-border',
+        'flex size-5 shrink-0 items-center justify-center rounded-lg border border-border',
         props.checked ? 'bg-muted text-foreground' : 'bg-transparent',
       )}
     >

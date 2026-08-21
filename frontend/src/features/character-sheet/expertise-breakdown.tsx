@@ -54,7 +54,7 @@ export function ExpertiseBreakdown(props: ExpertiseBreakdownProps) {
               />
             )}
           </For>
-          <div class="mt-2 flex items-center justify-between rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel-raised)] px-3 py-2">
+          <div class="mt-2 flex items-center justify-between rounded-sm border border-grimorio-iron bg-grimorio-panel-raised px-3 py-2">
             <span class="text-xs uppercase tracking-widest text-muted-foreground">Total</span>
             <span
               class="flex items-center gap-1.5 font-mono text-2xl font-bold"

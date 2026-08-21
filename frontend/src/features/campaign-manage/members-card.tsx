@@ -101,7 +101,7 @@ export function MemberPlate(props: MemberPlateProps) {
   const isGm = () => props.member.role === 'gm'
 
   return (
-    <div class="group relative flex items-center gap-3 rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)] p-3">
+    <div class="group relative flex items-center gap-3 rounded-sm border border-grimorio-iron bg-grimorio-panel p-3">
       <CharacterPortrait name={name()} size="sm" hue={hueFromName(name())} />
       <div class="min-w-0 flex-1">
         <p class="flex items-center gap-1.5 truncate font-medium text-foreground">

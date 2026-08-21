@@ -36,7 +36,7 @@ export function MatchShell(props: {
       ref={setSceneEl}
       class="scene-grimorio flex h-dvh min-h-0 flex-col bg-background text-foreground"
     >
-      <header class="flex items-center justify-between gap-3 border-b border-grimorio-iron bg-[var(--grimorio-panel)] px-3 py-2 sm:px-4">
+      <header class="flex items-center justify-between gap-3 border-b border-grimorio-iron bg-grimorio-panel px-3 py-2 sm:px-4">
         <p class="min-w-0 flex-1 truncate font-heading tracking-wide text-grimorio-gold">
           {props.title}
         </p>

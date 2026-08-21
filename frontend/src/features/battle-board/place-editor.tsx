@@ -106,7 +106,7 @@ export function PlaceEditor(props: {
     <SceneContainerProvider element={alvoDosOverlays}>
     <section
       ref={setSceneEl}
-      class="scene-grimorio @container flex w-full min-h-0 min-w-0 flex-1 flex-col rounded-sm border border-grimorio-gold/50 bg-[var(--grimorio-panel)]"
+      class="scene-grimorio @container flex w-full min-h-0 min-w-0 flex-1 flex-col rounded-sm border border-grimorio-gold/50 bg-grimorio-panel"
     >
       <header class="flex shrink-0 flex-wrap items-center gap-2 border-b border-grimorio-iron px-3 py-2">
         <h2 class="min-w-0 truncate font-heading text-sm uppercase tracking-wide text-grimorio-gold">

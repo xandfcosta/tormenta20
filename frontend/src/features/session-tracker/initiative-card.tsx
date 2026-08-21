@@ -103,7 +103,7 @@ export function InitiativeCard(props: {
         // condições da issue, porque esta cena é a mais apertada do app em
         // 844×390. A segunda condição, frame, também está atendida: sombra
         // ESTÁTICA não anima nada.
-        'grimorio-frame bg-[var(--grimorio-panel)]',
+        'grimorio-frame bg-grimorio-panel',
         // Sem isto, quem rola é a COLUNA inteira e o cabeçalho sobe junto: numa
         // mesa de dez combatentes, adicionar o décimo primeiro exigia rolar de
         // volta ao topo para achar o botão (ALE-131).
@@ -398,7 +398,7 @@ function InitiativeRow(props: {
                   onClick={open}
                   aria-label={`Mudar a iniciativa de ${props.entry.label}`}
                   title={`Mudar a iniciativa de ${props.entry.label}`}
-                  class="flex shrink-0 cursor-pointer items-center gap-1 rounded-sm border border-border bg-[var(--grimorio-panel-raised)] px-1.5 font-mono text-xs tabular-nums transition-colors hover:border-grimorio-gold hover:text-grimorio-gold"
+                  class="flex shrink-0 cursor-pointer items-center gap-1 rounded-sm border border-border bg-grimorio-panel-raised px-1.5 font-mono text-xs tabular-nums transition-colors hover:border-grimorio-gold hover:text-grimorio-gold"
                 >
                   {props.entry.initiative}
                   <Pencil aria-hidden="true" class="size-2.5 text-muted-foreground" />

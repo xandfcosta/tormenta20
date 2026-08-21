@@ -78,7 +78,7 @@ export function SidePanel(props: SidePanelProps) {
             if (sharesScreen()) event.preventDefault()
           }}
           class={cn(
-            'fixed z-50 flex flex-col gap-3 border-grimorio-iron bg-[var(--grimorio-panel)] shadow-xl',
+            'fixed z-50 flex flex-col gap-3 border-grimorio-iron bg-grimorio-panel shadow-xl',
             'data-[closed]:animate-out data-[expanded]:animate-in',
             // Bottom sheet below the breakpoint; right-hand column above it.
             // The bottom padding grows past the home indicator under

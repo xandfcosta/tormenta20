@@ -571,7 +571,7 @@ function TokenPiece(props: {
         props.token.kind === 'character' && 'rounded-full',
         props.token.kind === 'npc' && 'rounded-[3px]',
         props.token.kind === 'object' &&
-          'rounded-none border-grimorio-iron-light bg-[var(--grimorio-panel)] text-muted-foreground',
+          'rounded-none border-grimorio-iron-light bg-grimorio-panel text-muted-foreground',
         // Brilho no topo e sombra de assento: é o que faz o disco ler como peça
         // pousada na mesa em vez de círculo de dashboard.
         props.onTurn

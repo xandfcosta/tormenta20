@@ -42,7 +42,7 @@ export function ProficienciesPanel(props: { character: Character }) {
   }
 
   return (
-    <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)]">
+    <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-sm border border-grimorio-iron bg-grimorio-panel">
       <div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
         <h2 class="font-heading text-lg uppercase tracking-wide text-grimorio-gold">
           Proficiências
@@ -139,7 +139,7 @@ function ProficiencyRow(props: {
             tell an intentional manual toggle from the baseline. */}
         {props.entry.granted && (
           <span
-            class="ml-1 rounded bg-muted px-1 text-[9px] uppercase tracking-wider text-muted-foreground"
+            class="ml-1 rounded-lg bg-muted px-1 text-[9px] uppercase tracking-wider text-muted-foreground"
             title={`Padrão: ${props.entry.sources.join(', ')}`}
           >
             classe

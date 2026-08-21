@@ -26,7 +26,7 @@ export function LiveSessionBanner(props: {
         'sticky top-0 z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b px-3 py-2 transition-colors sm:px-4',
         mine()
           ? 'border-[color:var(--primary)]/60 bg-[color:var(--primary)]/10'
-          : 'border-grimorio-iron bg-[var(--grimorio-panel)]',
+          : 'border-grimorio-iron bg-grimorio-panel',
       )}
     >
       <p class="flex items-center gap-2">

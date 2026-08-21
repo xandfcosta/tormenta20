@@ -60,7 +60,7 @@ export function SessionWorkspace(props: SessionWorkspaceProps) {
     <Tabs
       value={props.tab}
       onChange={(value) => props.onTabChange(value as WorkspaceTab)}
-      class="grimorio-frame flex h-full min-h-0 min-w-0 flex-col bg-[var(--grimorio-panel)]"
+      class="grimorio-frame flex h-full min-h-0 min-w-0 flex-col bg-grimorio-panel"
     >
       <TabsList class="@container flex w-full shrink-0 gap-1 border-b border-grimorio-iron p-1">
         <WorkspaceTabTrigger value="combatente" icon={UserRound} label="Combatente" />

@@ -68,7 +68,7 @@ export function AbilitiesPanel(props: { character: Character }) {
     pendencias().filter((pendencia) => pendencia.source === source).length
 
   return (
-    <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)]">
+    <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-sm border border-grimorio-iron bg-grimorio-panel">
       <div class="shrink-0 border-b border-grimorio-iron px-3 py-2 sm:px-4">
         <h2 class="font-heading text-lg uppercase tracking-wide text-grimorio-gold">Poderes</h2>
       </div>

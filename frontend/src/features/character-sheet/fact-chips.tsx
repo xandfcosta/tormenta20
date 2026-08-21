@@ -15,7 +15,7 @@ export function FactChips(props: { facts: readonly DisplayFact[]; class?: string
       <ul class={cn('flex flex-wrap gap-1', props.class)}>
         <For each={props.facts}>
           {(fact) => (
-            <li class="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] leading-tight text-foreground">
+            <li class="rounded-lg border border-border bg-muted px-1.5 py-0.5 text-[10px] leading-tight text-foreground">
               {fact.text}
             </li>
           )}

@@ -73,7 +73,7 @@ function ChronicleSigils(props: { members: CampaignMember[]; sessions: Session[]
 
 function Sigil(props: { icon: JSX.Element; value: number; label: string }) {
   return (
-    <div class="flex flex-col items-center gap-1 rounded-sm border border-grimorio-iron bg-[var(--grimorio-panel)] px-3 py-4 text-center">
+    <div class="flex flex-col items-center gap-1 rounded-sm border border-grimorio-iron bg-grimorio-panel px-3 py-4 text-center">
       <span aria-hidden="true" class="text-grimorio-gold/70">
         {props.icon}
       </span>

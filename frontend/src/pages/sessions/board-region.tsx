@@ -397,7 +397,7 @@ export function BoardRegion(props: {
         ref={setSceneEl}
         // O escopo de tokens vai junto: em tela cheia o `::backdrop` é preto e
         // a seção precisa pintar o próprio fundo.
-        class="scene-grimorio grimorio-frame @container flex w-full min-h-0 min-w-0 flex-1 flex-col bg-[var(--grimorio-panel)]"
+        class="scene-grimorio grimorio-frame @container flex w-full min-h-0 min-w-0 flex-1 flex-col bg-grimorio-panel"
       >
       <Show
         when={board()}

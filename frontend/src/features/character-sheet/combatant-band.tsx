@@ -42,7 +42,7 @@ export function CombatantBand(props: { character: Character; actions?: JSX.Eleme
     // @container e não breakpoint de janela: esta faixa vive numa COLUNA de
     // 616-936px numa janela de 1920, e foi exatamente essa confusão que espremeu
     // os atributos a 21px por caixa na ALE-122.
-    <div class="@container shrink-0 border-b border-grimorio-iron bg-[var(--grimorio-panel)] px-3 py-1.5 sm:px-4">
+    <div class="@container shrink-0 border-b border-grimorio-iron bg-grimorio-panel px-3 py-1.5 sm:px-4">
       {/* A ORDEM de quem cede espaço é a regra desta fileira, e a primeira
           versão dela errou justamente isso (ALE-147): o nome era o único item
           com `flex-1 min-w-0`, então era o único a encolher — com duas
@@ -142,7 +142,7 @@ function BandConditions(props: {
             aria-label={
               total() === 1 ? 'Ver a condição ativa' : `Ver as ${total()} condições ativas`
             }
-            class="shrink-0 rounded border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/15 px-1.5 py-px text-[11px] font-semibold text-[color:var(--hp-hurt)]"
+            class="shrink-0 rounded-lg border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/15 px-1.5 py-px text-[11px] font-semibold text-[color:var(--hp-hurt)]"
           >
             ⚠ {total()}
           </PopoverTrigger>

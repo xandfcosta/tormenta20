@@ -275,7 +275,7 @@ function TurnBar(props: {
   const active = () => (state().turnIndex >= 0 ? state().initiative[state().turnIndex] : undefined)
 
   return (
-    <div class="grimorio-frame flex min-w-0 shrink-0 flex-wrap items-center gap-2 bg-[var(--grimorio-panel)] px-3 py-2">
+    <div class="grimorio-frame flex min-w-0 shrink-0 flex-wrap items-center gap-2 bg-grimorio-panel px-3 py-2">
       <TurnCounter state={state()} />
       <Show when={active()}>
         {(entry) => (

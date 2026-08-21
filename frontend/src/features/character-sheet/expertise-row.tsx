@@ -98,7 +98,7 @@ export function ExpertiseRow(props: ExpertiseRowProps) {
           // a linha inteira pintar para fora do pai a 390px. Medido: 6px de
           // sobra a 375 e 21px a 360.
           'flex min-w-0 gap-2.5 rounded-sm border border-grimorio-iron transition-colors hover:border-grimorio-gold/50',
-          state().trained && 'bg-[var(--grimorio-panel)]',
+          state().trained && 'bg-grimorio-panel',
           semChips() ? 'items-center p-1.5' : 'items-start p-2.5',
         )}
       >
@@ -200,7 +200,7 @@ function TotalBadge(props: {
           ? 'border-destructive/60 bg-destructive/10 text-destructive'
           : props.locked
             ? 'border-dashed border-grimorio-iron text-muted-foreground/50'
-            : 'border-grimorio-iron bg-[var(--grimorio-panel-raised)] text-grimorio-gold',
+            : 'border-grimorio-iron bg-grimorio-panel-raised text-grimorio-gold',
       )}
     >
       {props.autoFail ? '—' : signed(props.total)}
