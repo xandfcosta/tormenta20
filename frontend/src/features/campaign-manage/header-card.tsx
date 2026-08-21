@@ -6,6 +6,7 @@ import { type Campaign, type UpdateCampaignInput, api } from '@/shared/api/api'
 import { Button } from '@/shared/ui/button'
 import { FramedPanel } from '@/shared/ui/framed-panel'
 import { CampaignForm } from './campaign-form'
+import { SectionTitle } from '@/shared/ui/section-label'
 
 export type CampaignEditFormProps = {
   campaign: Campaign
@@ -23,9 +24,9 @@ export type CampaignEditFormProps = {
 export function CampaignEditForm(props: CampaignEditFormProps) {
   return (
     <FramedPanel>
-      <h2 class="mb-4 font-heading text-xl uppercase tracking-wide text-grimorio-gold">
+      <SectionTitle contexto="painel" class="text-xl mb-4">
         Editar campanha
-      </h2>
+      </SectionTitle>
       <CampaignForm
         initial={{
           name: props.campaign.name,
@@ -46,9 +47,9 @@ function CampaignLedger(props: { campaign: Campaign; onEdit: () => void }) {
     <FramedPanel>
       <div class="flex flex-row items-start justify-between gap-4">
         <div class="space-y-1">
-          <h2 class="font-heading text-xl uppercase tracking-wide text-grimorio-gold">
+          <SectionTitle contexto="painel" class="text-xl">
             {props.campaign.name}
-          </h2>
+          </SectionTitle>
           <p class="flex items-center gap-1 text-xs text-muted-foreground">
             <CalendarClock aria-hidden="true" class="size-3" />
             Criada em {new Date(props.campaign.createdAt).toLocaleDateString('pt-BR')}

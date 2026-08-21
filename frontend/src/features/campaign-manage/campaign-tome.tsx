@@ -10,6 +10,7 @@ import { CampaignOverview } from './campaign-overview'
 import { ConfigSection } from './config-section'
 import { MembersCard } from './members-card'
 import { SessionsCard } from './sessions-card'
+import { FieldLabel, SectionLabel } from '@/shared/ui/section-label'
 
 export type CampaignTab = 'visao' | 'sessoes' | 'membros' | 'config'
 
@@ -108,9 +109,9 @@ function TomeHeader(props: {
           {initials(props.campaign.name)}
         </span>
         <div class="space-y-1">
-          <p class="text-2xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+          <SectionLabel class="font-semibold">
             {roleLabel(props.campaign.role, props.campaign.ownerName)}
-          </p>
+          </SectionLabel>
           <h1 class="font-display text-3xl uppercase leading-tight tracking-wide text-grimorio-gold sm:text-4xl">
             {props.campaign.name}
           </h1>
@@ -148,10 +149,10 @@ function SessionAction(props: {
     >
       {(session) => (
         <div class="shrink-0 sm:text-right">
-          <p class="mb-1.5 flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-widest text-[color:var(--hp-full)] sm:justify-end">
+          <SectionLabel tom="inherit" class="mb-1.5 flex items-center gap-1.5 font-semibold text-[color:var(--hp-full)] sm:justify-end">
             <span class="size-2 animate-pulse rounded-full bg-[color:var(--hp-full)] motion-reduce:animate-none" />
             Sessão {session().sessionNumber} em andamento
-          </p>
+          </SectionLabel>
           <Button size="lg" onClick={() => props.onResume()}>
             Continuar a sessão
             <ChevronRight aria-hidden="true" class="ml-1 size-4" />
@@ -212,9 +213,9 @@ function Sections(props: {
             </TabsTrigger>
           </Show>
         </TabsList>
-        <p class="hidden px-2 text-3xs uppercase tracking-widest text-muted-foreground xl:block">
+        <FieldLabel as="p" class="hidden px-2 xl:block">
           ↑↓←→ navegar · PgUp/PgDn seção · Esc voltar
-        </p>
+        </FieldLabel>
       </div>
 
       <div

@@ -2,6 +2,7 @@ import { Flame } from 'lucide-solid'
 import type { Campaign } from '@/shared/api/api'
 import { DeleteCampaignButton } from './delete-campaign-button'
 import { CampaignHeaderCard } from './header-card'
+import { SectionLabel, SectionTitle } from '@/shared/ui/section-label'
 
 /**
  * Config as the tome's settings leaf: the chronicle's ledger (edit) over a
@@ -10,9 +11,9 @@ import { CampaignHeaderCard } from './header-card'
 export function ConfigSection(props: { campaign: Campaign }) {
   return (
     <div class="space-y-6">
-      <p class="text-2xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+      <SectionLabel class="font-semibold">
         Ajustes do tomo
-      </p>
+      </SectionLabel>
       <CampaignHeaderCard campaign={props.campaign} />
       <DangerZone campaign={props.campaign} />
     </div>
@@ -24,10 +25,10 @@ function DangerZone(props: { campaign: Campaign }) {
   return (
     <div class="flex flex-wrap items-center justify-between gap-3 rounded-none border border-[color:var(--grimorio-crimson)]/50 bg-[color:var(--grimorio-crimson)]/[0.06] p-4">
       <div class="space-y-1">
-        <p class="flex items-center gap-1.5 font-heading text-sm uppercase tracking-wide text-[color:var(--grimorio-crimson-bright)]">
+        <SectionTitle as="p" contexto="painel" tom="inherit" class="text-sm flex items-center gap-1.5 text-[color:var(--grimorio-crimson-bright)]">
           <Flame aria-hidden="true" class="size-4" />
           Zona de perigo
-        </p>
+        </SectionTitle>
         <p class="text-xs text-muted-foreground">
           Excluir a campanha remove todas as sessões e membros. Não pode ser desfeito.
         </p>

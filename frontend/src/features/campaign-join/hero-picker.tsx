@@ -4,6 +4,7 @@ import type { Character } from '@/shared/api/api'
 import { hueFromName } from '@/shared/lib/hue-from-name'
 import { cn } from '@/shared/lib/utils'
 import { CharacterPortrait } from '@/shared/ui/character-portrait'
+import { SectionLabel } from '@/shared/ui/section-label'
 
 export type HeroPickerProps = {
   characters: readonly Character[]
@@ -22,9 +23,9 @@ export type HeroPickerProps = {
 export function HeroPicker(props: HeroPickerProps) {
   return (
     <fieldset class="space-y-3">
-      <legend class="mb-3 text-2xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+      <SectionLabel as="legend" class="mb-3 font-semibold">
         Qual herói entra na mesa?
-      </legend>
+      </SectionLabel>
       {/* A 2-D region for the shared scene-nav grammar: arrows walk the plates
           by layout, Enter picks (the plates are real buttons). */}
       <div

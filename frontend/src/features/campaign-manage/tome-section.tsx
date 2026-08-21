@@ -1,5 +1,6 @@
 import type { JSX, ParentProps } from 'solid-js'
 import { Show } from 'solid-js'
+import { SectionLabel, SectionTitle } from '@/shared/ui/section-label'
 
 /**
  * A journal entry on the tome page: an illuminated Cinzel heading in gold with
@@ -14,12 +15,12 @@ export function TomeSection(
     <section class="space-y-4">
       <header class="flex flex-wrap items-end justify-between gap-3">
         <div class="space-y-1">
-          <p class="text-2xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+          <SectionLabel class="font-semibold">
             {props.eyebrow}
-          </p>
-          <h2 class="font-heading text-xl uppercase tracking-wide text-grimorio-gold sm:text-2xl">
+          </SectionLabel>
+          <SectionTitle contexto="painel" class="text-xl sm:text-2xl">
             {props.title}
-          </h2>
+          </SectionTitle>
         </div>
         <Show when={props.action}>{(action) => action()}</Show>
       </header>

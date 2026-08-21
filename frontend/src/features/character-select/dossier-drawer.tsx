@@ -5,6 +5,7 @@ import type { Character, ComputedSheetV2 } from '@/shared/api/api'
 import { cn } from '@/shared/lib/utils'
 import { FramedPanel } from '@/shared/ui/framed-panel'
 import type { AbilityBlurb } from './select-helpers'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 export type DossierDrawerProps = {
   character: Character
@@ -75,9 +76,9 @@ export function DossierDrawer(props: DossierDrawerProps) {
             <For each={ATTRIBUTE_KEYS}>
               {(key) => (
                 <div>
-                  <p class="text-4xs font-semibold uppercase text-muted-foreground">
+                  <FieldLabel as="p" class="text-4xs font-semibold">
                     {ATTRIBUTE_ABBR[key]}
-                  </p>
+                  </FieldLabel>
                   <p class="font-mono text-sm">
                     {props.sheet ? props.sheet.attributes[key].total : '—'}
                   </p>
@@ -100,9 +101,9 @@ export function DossierDrawer(props: DossierDrawerProps) {
 function DossierSection(props: { title: string; children: JSX.Element }) {
   return (
     <section class="mb-4 space-y-1.5">
-      <p class="text-3xs font-semibold uppercase tracking-widest text-grimorio-gold">
+      <FieldLabel as="p" tom="gold" class="font-semibold">
         {props.title}
-      </p>
+      </FieldLabel>
       {props.children}
     </section>
   )

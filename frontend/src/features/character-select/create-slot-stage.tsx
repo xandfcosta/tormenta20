@@ -3,6 +3,7 @@ import { Button } from '@/shared/ui/button'
 import { Kbd } from '@/shared/ui/kbd'
 import { PeekPortrait } from './peek-portrait'
 import { QuestionFrame } from './question-frame'
+import { SectionLabel } from '@/shared/ui/section-label'
 
 export type CreateSlotStageProps = {
   /** The last hero, peeking from the left — the way back into the roster. */
@@ -43,9 +44,9 @@ export function CreateSlotStage(props: CreateSlotStageProps) {
           <h2 class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-muted-foreground sm:text-4xl">
             Novo personagem
           </h2>
-          <p class="mt-1 text-2xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
+          <SectionLabel class="mt-1 font-semibold">
             Uma vaga vazia no grupo
-          </p>
+          </SectionLabel>
         </div>
         {/* An empty slot has no vitals and no summary line, and without their
             height the centred column pulled the portrait row down 40px on the
