@@ -63,15 +63,17 @@ describe('AbilitiesPanel', () => {
   it('as abas de fonte mostram quantas escolhas cada uma deve', () => {
     renderPanel()
 
-    // Origem sempre deve 2 benefícios num personagem recém-criado.
-    const origem = screen.getByRole('button', { name: /^Origem\s*\d*$/ })
-    expect(origem.textContent).toMatch(/\d/)
+    // Origem sempre deve 2 benefícios num personagem recém-criado, e a aba
+    // ANUNCIA o que o número significa: a pílula é `aria-hidden` e a linha
+    // `sr-only` ao lado diz "N escolhas pendentes" (ALE-173, P6). Antes o
+    // número era lido cru, e "Origem 2" não diz nada a quem não vê a pílula.
+    expect(screen.getByRole('button', { name: 'Origem, 1 escolha pendente' })).toBeTruthy()
   })
 
   it('trocar de aba mostra a seção daquela fonte', async () => {
     const { user } = renderPanel()
 
-    await user.click(screen.getByRole('button', { name: /^Classe\s*\d*$/ }))
+    await user.click(screen.getByRole('button', { name: /^Classe, / }))
 
     expect(await screen.findByText(/^Bardo 3$/)).toBeInTheDocument()
   })
@@ -105,7 +107,7 @@ describe('AbilitiesPanel', () => {
       .mockResolvedValue({ originChoices: '[]' })
     const { user } = renderPanel()
 
-    await user.click(screen.getByRole('button', { name: /^Origem\s*\d*$/ }))
+    await user.click(screen.getByRole('button', { name: 'Origem, 1 escolha pendente' }))
     const [first] = await screen.findAllByRole('button', { name: /^Selecionar benefício/ })
     await user.click(first)
 

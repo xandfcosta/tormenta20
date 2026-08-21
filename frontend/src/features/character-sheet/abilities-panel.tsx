@@ -6,6 +6,8 @@ import { getRace } from '@/shared/lib/abilities-cache'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { cn } from '@/shared/lib/utils'
+import { CountBadge } from '@/shared/ui/count-badge'
+import { escolhasPendentes } from './pendencias'
 import { ClassesSection } from './class-abilities'
 import type { CardFocus } from './collapsible-ability-card'
 import { OriginAbilitySection } from './origin-abilities'
@@ -93,14 +95,17 @@ export function AbilitiesPanel(props: { character: Character }) {
             variant={mode() === 'edit' ? 'default' : 'outline'}
             size="sm"
             class="h-8 shrink-0 gap-1 text-xs"
+            aria-label={
+              mode() === 'play' && pendencias().length > 0
+                ? `Editar poderes, ${escolhasPendentes(pendencias().length)}`
+                : undefined
+            }
             onClick={() => setMode(mode() === 'edit' ? 'play' : 'edit')}
           >
             <Settings2 aria-hidden="true" class="size-3.5" />
             {mode() === 'edit' ? 'Voltar ao jogo' : 'Editar poderes'}
             <Show when={mode() === 'play' && pendencias().length > 0}>
-              <span class="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-3xs font-bold leading-none text-white">
-                {pendencias().length}
-              </span>
+              <CountBadge count={pendencias().length} anunciadoPeloPai />
             </Show>
           </Button>
         </div>
@@ -188,6 +193,14 @@ function SourceTabs(props: {
             type="button"
             onClick={() => props.onPick(source.value)}
             aria-pressed={props.active === source.value}
+            // O nome vem do CONTROLE, não de uma linha `sr-only` dentro dele: o
+            // cálculo do nome acessível concatena os filhos sem separador, e a
+            // aba anunciava "Origem2" (ALE-173, P6).
+            aria-label={
+              props.countFor(source.value) > 0
+                ? `${source.label}, ${escolhasPendentes(props.countFor(source.value))}`
+                : source.label
+            }
             class={cn(
               '-mb-px flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-1.5 text-sm font-medium transition-colors',
               props.active === source.value
@@ -197,9 +210,7 @@ function SourceTabs(props: {
           >
             {source.label}
             <Show when={props.countFor(source.value) > 0}>
-              <span class="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-3xs font-bold leading-none text-white">
-                {props.countFor(source.value)}
-              </span>
+              <CountBadge count={props.countFor(source.value)} anunciadoPeloPai />
             </Show>
           </button>
         )}

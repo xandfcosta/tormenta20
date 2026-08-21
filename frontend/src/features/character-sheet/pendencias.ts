@@ -141,3 +141,14 @@ function slotsRemainingFor(
   ).length
   return Math.max(0, slotsForClassLevel(className, level).length - picks)
 }
+
+/**
+ * "1 escolha pendente" / "3 escolhas pendentes".
+ *
+ * O plural só apareceu quando o número passou a ser LIDO junto do rótulo: a
+ * pílula era `aria-hidden` sem nada ao lado, então ninguém ouvia "1 escolhas"
+ * (ALE-173, P6).
+ */
+export function escolhasPendentes(total: number): string {
+  return total === 1 ? '1 escolha pendente' : `${total} escolhas pendentes`
+}

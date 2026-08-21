@@ -1,5 +1,6 @@
 import { Show, createMemo } from 'solid-js'
 import type { Character } from '@/shared/api/api'
+import { CountBadge } from '@/shared/ui/count-badge'
 import { computePendencias } from './pendencias'
 
 /**
@@ -12,16 +13,7 @@ export function AbilitiesPendingBadge(props: { character: Character }) {
 
   return (
     <Show when={count() > 0}>
-      {/* Hidden from assistive tech with the meaning spelled out beside it: a
-          bare `aria-label` on a <span> has no role to carry it and announces
-          only the number. */}
-      <span
-        aria-hidden="true"
-        class="ml-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-3xs font-bold text-white"
-      >
-        {count()}
-      </span>
-      <span class="sr-only">{count()} escolhas pendentes</span>
+      <CountBadge count={count()} label={count() === 1 ? 'escolha pendente' : 'escolhas pendentes'} />
     </Show>
   )
 }

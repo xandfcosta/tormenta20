@@ -24,9 +24,12 @@ describe('EffectsCountBadge', () => {
 
   // Regressão: o rótulo morava num `aria-label` de <span>, que não tem papel
   // para carregá-lo — o leitor de tela anunciava só "2".
-  it('anuncia o que o número significa', () => {
+  // O plural concorda, e o teste antigo afirmava "1 efeitos ativos" — ele tinha
+  // congelado o defeito. Só ficou visível quando o número passou a ser lido
+  // junto do rótulo (ALE-173, P6).
+  it('anuncia o que o número significa, com o plural certo', () => {
     renderBadge(makeCharacter({ activeConditions: '["caido"]' }))
-    expect(screen.getByText('1 efeitos ativos')).toBeInTheDocument()
+    expect(screen.getByText('1 efeito ativo')).toBeInTheDocument()
     expect(screen.getByText('1')).toHaveAttribute('aria-hidden', 'true')
   })
 
