@@ -1,50 +1,53 @@
 import type { JSX, ParentProps } from 'solid-js'
 import { Show } from 'solid-js'
+import { SceneShell } from '@/shared/layout/scene-shell'
+import { FramedPanel } from '@/shared/ui/framed-panel'
 
 /**
- * Split-screen frame shared by /login and /register: a brand panel on the left
- * (lg+) and the form on the right; on phones the panel is hidden and its
- * wordmark collapses above the form.
+ * A porta do jogo: /login, /register e /redefinir-senha.
  *
- * Pure layout — no routing or auth here.
+ * Era o split-screen do shadcn — painel de marca à esquerda, formulário à
+ * direita — e era a última superfície do app que ainda falava a língua do
+ * template em vez da da casa (ALE-173). Agora usa a gramática da TELA-TÍTULO,
+ * a mesma do Hub: pedra com vinheta, o nome do jogo em Cinzel, e o formulário
+ * dentro de uma moldura de ferro no meio.
+ *
+ * O painel de marca morreu junto com a frase de vitrine que ele carregava
+ * ("Sua mesa, organizada…"): numa tela-título ela é redundante — quem chegou
+ * até a porta já sabe o que há dentro — e é linguagem de landing page, não a
+ * voz do grimório. Sobra o rodapé legal, que existe por outro motivo.
+ *
+ * Isto não é só pintura: virando cena, estas três telas passam a herdar o
+ * escopo `.scene-grimorio`, e com ele os tokens, a escala de raio e o
+ * tratamento de foco de todo o resto do app. Era a única superfície que
+ * resolvia no `:root` claro.
  */
 export function AuthShell(
   props: ParentProps<{ title: string; subtitle?: string; footer?: JSX.Element }>,
 ) {
   return (
-    <div class="grid min-h-dvh lg:grid-cols-2">
-      <AuthBrandPanel />
-      <main class="flex flex-col overflow-y-auto px-6 py-10 sm:px-10">
-        <div class="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6">
-          <p class="text-lg font-semibold tracking-tight lg:hidden">Tormenta 20</p>
+    <SceneShell title="Tormenta 20" kicker="— Grimório de Arton —">
+      <div class="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-5 py-6">
+        <FramedPanel class="space-y-5">
           <div class="space-y-1.5">
-            <h1 class="text-2xl font-semibold tracking-tight">{props.title}</h1>
+            <h2 class="font-heading text-lg uppercase tracking-[0.16em] text-grimorio-gold">
+              {props.title}
+            </h2>
             <Show when={props.subtitle}>
               {(subtitle) => <p class="text-sm text-muted-foreground">{subtitle()}</p>}
             </Show>
           </div>
           {props.children}
-          <Show when={props.footer}>
-            {(footer) => <p class="text-center text-sm text-muted-foreground">{footer()}</p>}
-          </Show>
-        </div>
-      </main>
-    </div>
-  )
-}
+        </FramedPanel>
 
-/** Left brand column — desktop only; phones show the wordmark inline instead. */
-function AuthBrandPanel() {
-  return (
-    <aside class="hidden flex-col justify-between border-r border-border bg-muted p-10 lg:flex">
-      <p class="text-lg font-semibold tracking-tight">Tormenta 20</p>
-      <div class="space-y-3">
-        <p class="text-3xl font-semibold leading-tight tracking-tight">Sua mesa, organizada.</p>
-        <p class="max-w-sm text-muted-foreground">
-          Fichas, campanhas e sessões ao vivo — tudo em um só lugar.
+        <Show when={props.footer}>
+          {(footer) => <p class="text-center text-sm text-muted-foreground">{footer()}</p>}
+        </Show>
+
+        <p class="text-center text-xs text-muted-foreground">
+          Gerenciador não-oficial de Tormenta 20.
         </p>
       </div>
-      <p class="text-xs text-muted-foreground">Gerenciador não-oficial de Tormenta 20.</p>
-    </aside>
+    </SceneShell>
   )
 }
