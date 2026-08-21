@@ -255,6 +255,17 @@ links, the browser Back button and the progress rail cannot then disagree.
   blows up far from the cause — use the fixture.
 - This jsdom has **no `AnimationEvent` constructor**: use `Event` +
   `defineProperty` to set `animationName`.
+- **Movimento reduzido não cobre nada que você escreve em JS.** A regra global
+  do `index.css` zera animação e transição DECLARATIVAS; `el.animate` passa por
+  baixo dela, e `scrollIntoView({behavior: 'smooth'})` EXPLÍCITO vence o
+  `scroll-behavior: auto !important` porque o argumento ganha da propriedade
+  CSS. Os dois precisam perguntar ao `createPrefersReducedMotion` (ALE-174).
+- **`document.getAnimations()` devolve `CSSTransition` também**, e um teste que
+  só conta o tamanho da lista passa VERDE com a animação desligada — a linha
+  da iniciativa tem `transition-colors` própria mais a da barra de vitais.
+  Filtre pelo TIPO (`a.constructor.name === 'Animation'` é WAAPI puro) e
+  espere ATIVAMENTE: a animação só começa quando o servidor responde, e ela
+  some sozinha em ~380ms (ALE-174).
 - The security boundary lives on the server — don't rely on UI gating for
   correctness; still gate UI by role for UX.
 - **The E2E suite runs in parallel, capped at 2 workers outside CI** — the
