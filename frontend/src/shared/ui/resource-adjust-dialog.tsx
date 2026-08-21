@@ -6,6 +6,7 @@ import { FieldFrame } from '@/shared/ui/field-frame'
 import { Label } from '@/shared/ui/label'
 import { NumberInput } from '@/shared/ui/number-input'
 import { cn } from '@/shared/lib/utils'
+import { FieldLabel } from './section-label'
 
 /** Clamp a projected total into [0, max], flagging when it hit a bound so the
  *  preview can say "(limitado)" instead of silently lying. */
@@ -204,7 +205,7 @@ function AdjustPreview(props: {
   return (
     <div class="flex items-center justify-between rounded-md border border-border bg-muted px-4 py-2">
       <div class="flex flex-col">
-        <span class="text-3xs uppercase tracking-widest text-muted-foreground">novo total</span>
+        <FieldLabel>novo total</FieldLabel>
         <span class="text-3xs text-muted-foreground">
           {props.current} {props.result.delta >= 0 ? '+' : '−'} {Math.abs(props.result.delta)}
           {props.result.clamped && ' (limitado)'}

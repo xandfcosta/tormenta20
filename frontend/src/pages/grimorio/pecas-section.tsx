@@ -3,6 +3,7 @@ import { Button } from '@/shared/ui/button'
 import { FramedPanel } from '@/shared/ui/framed-panel'
 import { Input } from '@/shared/ui/input'
 import { VitalBar } from '@/shared/ui/vital-bar'
+import { FieldLabel, SectionLabel, SectionTitle } from '@/shared/ui/section-label'
 import { SpecBlock, SpecSection } from './spec-primitives'
 
 /**
@@ -40,6 +41,20 @@ export function PecasSection() {
         {CHIPS.map((v) => (
           <Badge variant={v}>{v}</Badge>
         ))}
+      </SpecBlock>
+
+      <SpecBlock
+        titulo="Rótulos"
+        nota="Três papéis, não um com variantes: o de campo NÃO é cabeçalho de nada, e vesti-lo de Cinzel mudaria a cara da ficha em 60 lugares. Eram 208 ocorrências em 59 grafias (ALE-173, P2)."
+      >
+        <div class="w-full space-y-2">
+          <SectionTitle as="p">Distribua os atributos</SectionTitle>
+          <SectionLabel>Kit da classe</SectionLabel>
+          <p class="flex items-baseline gap-1">
+            <FieldLabel>for</FieldLabel>
+            <span class="font-mono tabular-nums text-foreground">+3</span>
+          </p>
+        </div>
       </SpecBlock>
 
       <SpecBlock titulo="Campo">

@@ -1,6 +1,7 @@
 import { Search } from 'lucide-solid'
 import { For, Show, createEffect, createSignal, onCleanup } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
+import { FieldLabel } from './section-label'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from './dialog'
 
 export type PaletteItem = {
@@ -147,9 +148,9 @@ export function CommandPalette(props: {
                 // `role="group"` would be the formal way, but each option is
                 // self-describing and the input announces the active one.
                 <div>
-                  <p class="px-2 pb-1 pt-2 text-3xs font-bold uppercase tracking-widest text-muted-foreground">
+                  <FieldLabel as="p" class="px-2 pb-1 pt-2 font-bold">
                     {group.heading}
-                  </p>
+                  </FieldLabel>
                   <For each={group.items}>
                     {(item, itemIndex) => (
                       <PaletteRow

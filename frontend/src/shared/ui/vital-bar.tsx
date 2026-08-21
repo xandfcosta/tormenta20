@@ -1,4 +1,5 @@
 import { cn } from '@/shared/lib/utils'
+import { FieldLabel } from './section-label'
 
 /**
  * HP fill token by ratio — the COLOR, not just the width, says "how bad".
@@ -31,12 +32,16 @@ export function VitalBar(props: {
 
   return (
     <div class={cn('flex items-center gap-1.5', props.class)}>
-      <span
-        class="w-7 shrink-0 text-3xs font-bold uppercase tracking-wider"
+      {/* O espaçamento sobe de `wider` para `widest` ao adotar o componente:
+          era a mesma intenção escrita um degrau diferente, e a caixa é fixa em
+          `w-7`, então nada se move. */}
+      <FieldLabel
+        tom="inherit"
+        class="w-7 shrink-0 font-bold"
         style={{ color: `var(${fillVar()})` }}
       >
         {props.label}
-      </span>
+      </FieldLabel>
       <div
         role="progressbar"
         aria-valuenow={props.current}

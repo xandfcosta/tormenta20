@@ -4,6 +4,7 @@ import { type JSX, Show, splitProps } from 'solid-js'
 import { createMediaQuery } from '@/shared/lib/media-query'
 import { useSceneContainer } from '@/shared/lib/scene-container'
 import { cn } from '@/shared/lib/utils'
+import { SectionTitle } from './section-label'
 
 /** Above this the panel shares the screen instead of taking it. Chosen to match
  *  where keyboard navigation turns on — the laptop the GM actually runs from. */
@@ -92,9 +93,11 @@ export function SidePanel(props: SidePanelProps) {
         >
           <div class="flex shrink-0 items-start gap-2">
             <div class="min-w-0 flex-1 space-y-0.5">
-              <KDialog.Title class="font-heading text-sm uppercase tracking-[0.16em] text-grimorio-gold">
+              {/* `as` leva a peça do Kobalte: é ela que registra o rótulo do
+                  diálogo, e trocá-la por uma tag solta tiraria isso. */}
+              <SectionTitle as={KDialog.Title} class="text-sm">
                 {local.title}
-              </KDialog.Title>
+              </SectionTitle>
               <Show when={local.description}>
                 {(description) => (
                   <KDialog.Description class="text-2xs text-muted-foreground">

@@ -1,5 +1,6 @@
 import { type JSX, Show, createSignal, onMount } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
+import { SectionLabel, SectionTitle } from '@/shared/ui/section-label'
 
 /**
  * As peças de que a folha de especificação é feita.
@@ -71,12 +72,9 @@ export function createComputedValue(
 export function SpecSection(props: { id: string; titulo: string; children: JSX.Element }) {
   return (
     <section id={props.id} aria-labelledby={`${props.id}-titulo`} class="scroll-mt-4 space-y-3">
-      <h2
-        id={`${props.id}-titulo`}
-        class="font-heading text-sm uppercase tracking-[0.18em] text-grimorio-gold"
-      >
+      <SectionTitle id={`${props.id}-titulo`} class="text-sm">
         {props.titulo}
-      </h2>
+      </SectionTitle>
       {props.children}
     </section>
   )
@@ -86,9 +84,7 @@ export function SpecSection(props: { id: string; titulo: string; children: JSX.E
 export function SpecBlock(props: { titulo: string; nota?: string; children: JSX.Element }) {
   return (
     <div class="space-y-2">
-      <p class="font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
-        {props.titulo}
-      </p>
+      <SectionLabel>{props.titulo}</SectionLabel>
       {props.nota && <p class="max-w-prose text-xs text-muted-foreground">{props.nota}</p>}
       <div class="flex flex-wrap gap-3">{props.children}</div>
     </div>
