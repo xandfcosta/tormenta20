@@ -42,11 +42,14 @@ export function CorSection() {
         nota="A pilha do escuro para o claro. Toda cena empilha nesta ordem: fundo, painel, painel elevado."
       >
         {SUPERFICIES.map((c) => (
-          <ColorSwatch classe={c.classe} token={c.token} nota={c.nota} />
+          <ColorSwatch superficie classe={c.classe} token={c.token} nota={c.nota} />
         ))}
       </SpecBlock>
 
-      <SpecBlock titulo="Acentos" nota="Ouro é a vez, em TODA cena — lista e tabuleiro dizem a mesma coisa com a mesma cor.">
+      <SpecBlock
+        titulo="Acentos"
+        nota="Ouro é a vez, em TODA cena. A razão ao lado é contra o painel: abaixo de 4.5:1 a cor não serve de texto pequeno, só de bloco — e é por isso que a cena alcança cores cruas do Tailwind quando precisa ESCREVER em vermelho ou roxo (ALE-173, P3)."
+      >
         {ACENTOS.map((c) => (
           <ColorSwatch classe={c.classe} token={c.token} nota={c.nota} />
         ))}

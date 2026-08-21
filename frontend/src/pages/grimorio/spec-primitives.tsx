@@ -1,4 +1,4 @@
-import { type JSX, createSignal, onMount } from 'solid-js'
+import { type JSX, Show, createSignal, onMount } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
 
 /**
@@ -13,6 +13,45 @@ import { cn } from '@/shared/lib/utils'
  *
  * A leitura é feita no `onMount` porque só existe caixa depois de montar.
  */
+
+/**
+ * Contraste de uma cor contra o painel da cena, medido de verdade.
+ *
+ * Passa pelo canvas de propósito: `getComputedStyle` devolve `oklch(...)` sem
+ * converter, e ler aqueles três números como se fossem RGB dá razão de
+ * contraste inventada — foi o que aconteceu na primeira versão desta medição, e
+ * ela jurou 2,02 onde o valor é 8,86. Pintar um pixel e ler de volta é o único
+ * jeito de sair do espaço de cor e chegar em sRGB.
+ */
+function contrasteNoPainel(cor: string): number | null {
+  const tela = document.createElement('canvas')
+  tela.width = 1
+  tela.height = 1
+  const ctx = tela.getContext('2d')
+  const cena = document.querySelector('.scene-grimorio')
+  if (!ctx || !cena) return null
+
+  const paraRgb = (css: string): [number, number, number] => {
+    ctx.clearRect(0, 0, 1, 1)
+    ctx.fillStyle = css
+    ctx.fillRect(0, 0, 1, 1)
+    const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data
+    return [r ?? 0, g ?? 0, b ?? 0]
+  }
+  const luminancia = ([r, g, b]: [number, number, number]) => {
+    const [lr, lg, lb] = [r, g, b].map((v) => {
+      const c = v / 255
+      return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+    })
+    return 0.2126 * (lr ?? 0) + 0.7152 * (lg ?? 0) + 0.0722 * (lb ?? 0)
+  }
+
+  const painel = getComputedStyle(cena).getPropertyValue('--grimorio-panel').trim()
+  const [claro, escuro] = [luminancia(paraRgb(cor)), luminancia(paraRgb(painel))].sort(
+    (a, b) => b - a,
+  )
+  return Number((((claro ?? 0) + 0.05) / ((escuro ?? 0) + 0.05)).toFixed(2))
+}
 
 /** Lê uma propriedade computada do próprio nó, depois que ele existe. */
 export function createComputedValue(
@@ -60,8 +99,20 @@ export function SpecBlock(props: { titulo: string; nota?: string; children: JSX.
  * Uma amostra de cor: o quadrado é pintado pelo utilitário REAL e a legenda é
  * o valor que o navegador resolveu para ele.
  */
-export function ColorSwatch(props: { classe: string; token: string; nota?: string }) {
+export function ColorSwatch(props: {
+  classe: string
+  token: string
+  nota?: string
+  /** Superfície não vira texto: para ela a razão contra o painel não diz nada. */
+  superficie?: boolean
+}) {
   const [cor, refCor] = createComputedValue('background-color')
+  // O contraste contra o PAINEL, que é o fundo em que quase todo texto da cena
+  // é lido. Ele responde o que o olho não responde sozinho: esta cor serve de
+  // TEXTO ou só de bloco? Medido, `--hp-full` dá 4,66 e o `emerald-400` que a
+  // ficha usa a centímetros dele dá 8,86 — dois verdes que parecem o mesmo
+  // papel e não são (ALE-173, P3).
+  const contraste = () => (props.superficie || cor() === '—' ? null : contrasteNoPainel(cor()))
   return (
     <figure class="w-40 space-y-1">
       <div
@@ -71,6 +122,18 @@ export function ColorSwatch(props: { classe: string; token: string; nota?: strin
       <figcaption class="space-y-0.5">
         <p class="font-mono text-2xs text-foreground">{props.token}</p>
         <p class="font-mono text-3xs text-muted-foreground">{cor()}</p>
+        <Show when={contraste()}>
+          {(razao) => (
+            <p
+              class={cn(
+                'font-mono text-3xs',
+                razao() >= 4.5 ? 'text-muted-foreground' : 'font-bold text-grimorio-gold',
+              )}
+            >
+              {razao()}:1 {razao() >= 4.5 ? 'no painel' : '— só bloco, não texto'}
+            </p>
+          )}
+        </Show>
         {props.nota && <p class="text-3xs text-muted-foreground">{props.nota}</p>}
       </figcaption>
     </figure>
