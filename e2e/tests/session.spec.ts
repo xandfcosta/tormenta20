@@ -31,6 +31,28 @@ const CAMPAIGN = 'Snapshot Test ALE-33' // the seed chronicle with a live sessio
  * sintoma não parece corrida: é um número que não bate ou um clique que cai no
  * botão errado (ALE-124). A regra da casa já dizia isto; faltava aplicá-la.
  */
+/**
+ * Quais linhas da iniciativa têm animação de JS rodando agora (ALE-174).
+ *
+ * Filtra pelo TIPO e isso não é detalhe: `document.getAnimations()` devolve
+ * também `CSSTransition` e `CSSAnimation`, e a linha da iniciativa tem
+ * `transition-colors` própria mais a da barra de vitais. Sem o filtro o teste
+ * passa VERDE com a animação desligada — foi o que aconteceu comigo, e só
+ * apareceu porque sabotei o conserto para conferir. As animações desta issue
+ * são WAAPI, que instancia `Animation` puro.
+ */
+async function linhasAnimadas(page: Page): Promise<string[]> {
+  return page.evaluate(() =>
+    document
+      .getAnimations()
+      .filter((a) => a.constructor.name === 'Animation')
+      .map((a) => (a.effect as KeyframeEffect | null)?.target)
+      .filter((alvo): alvo is Element => !!alvo)
+      .map((alvo) => alvo.closest('[data-entry-id]')?.getAttribute('data-entry-id'))
+      .filter((id): id is string => !!id),
+  )
+}
+
 test.describe.configure({ mode: 'serial' })
 
 test.describe('Sessão ao vivo', () => {
@@ -1408,6 +1430,146 @@ test.describe('Sessão ao vivo', () => {
     )
     expect(desanexos, 'o rastreador foi removido do DOM (suspend desanexou a cena)').toBe(0)
     await expect(page.getByRole('heading', { name: 'Iniciativa' })).toBeVisible()
+  })
+
+  /**
+   * O flash de dano toca SÓ na linha que sangrou (ALE-174).
+   *
+   * Numa lista de nove combatentes um número trocava sozinho pelo socket e
+   * ninguém via quem tinha sangrado. O flash resolve isso, mas o jeito ERRADO
+   * de fazê-lo é animação de entrada: o estado do socket chega como objeto novo
+   * a cada sync e o `For` reconcilia por REFERÊNCIA — medido, carimbei os seis
+   * botões desta lista e ZERO nós sobreviveram a um único sync. Uma animação de
+   * mount replayaria em TODAS as linhas a cada ponto de vida que muda em
+   * QUALQUER uma delas, que é o mecanismo da ALE-97.
+   *
+   * Por isso a asserção tem duas metades e a segunda é a que importa: uma
+   * linha animou, e as OUTRAS não. Só a primeira passaria verde sobre o
+   * conserto errado.
+   *
+   * Por que e2e: `getAnimations()` é a única testemunha, e ela não existe em
+   * jsdom — lá `el.animate` nem é função, e o módulo devolve nada de
+   * propósito para não derrubar a suíte.
+   */
+  test('ferir um combatente pisca a linha dele, e só a dele', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+
+    const combate = page.getByRole('button', { name: 'combate', exact: true })
+    if (await combate.isVisible()) await combate.click()
+
+    // Os combatentes são DESTE teste e saem no fim: a seed é compartilhada, e
+    // contar com o que outro teste deixou já derrubou esta suíte no CI.
+    const marca = Date.now()
+    const nomes = [`Ferido ${marca}`, `Intacto ${marca}`]
+    await page.getByRole('button', { name: 'Combatente' }).click()
+    for (const nome of nomes) {
+      await page.getByLabel('Nome').fill(nome)
+      await page.getByRole('spinbutton', { name: 'PV' }).fill('20')
+      await page.getByRole('button', { name: 'Adicionar', exact: true }).click()
+      await expect(page.getByRole('button', { name: `Remover ${nome}` })).toBeVisible()
+    }
+    await page.getByRole('button', { name: 'Fechar' }).click()
+
+    try {
+      const linhas = await page.evaluate(() =>
+        [...document.querySelectorAll('[data-entry-id]')].map((n) => ({
+          id: n.getAttribute('data-entry-id') ?? '',
+          nome: n.textContent?.slice(0, 40) ?? '',
+        })),
+      )
+      const ferido = linhas.find((l) => l.nome.includes(nomes[0] ?? ''))?.id
+      expect(ferido, 'não achei a linha do combatente ferido').toBeTruthy()
+
+      await page.getByRole('button', { name: `Ferir ${nomes[0]}` }).click()
+
+      // Espera ATIVA em vez de amostrar na hora: o flash só começa depois que
+      // o servidor devolve o novo PV, e uma amostra imediata pega a tela antes
+      // de a animação existir. Guarda o instantâneo do momento em que ela
+      // aparece, porque ela dura ~380ms e some sozinha.
+      let amostra: string[] = []
+      await expect
+        .poll(async () => {
+          amostra = await linhasAnimadas(page)
+          return amostra.length
+        }, { message: 'a linha que sangrou não piscou' })
+        .toBeGreaterThan(0)
+
+      expect(amostra, 'a linha que sangrou não piscou').toContain(ferido)
+      expect(
+        [...new Set(amostra)],
+        'a animação vazou para outras linhas — está disparando por MONTAGEM, não por diferença de valor',
+      ).toEqual([ferido])
+    } finally {
+      for (const nome of nomes) {
+        await page.getByRole('button', { name: `Remover ${nome}` }).click()
+        await expect(page.getByRole('button', { name: `Remover ${nome}` })).toBeHidden()
+      }
+    }
+  })
+
+  /**
+   * Passar o turno faz a linha que ENTRA na vez pulsar (ALE-174, P2).
+   *
+   * O anel dourado apenas teleportava de uma linha para outra, e numa lista de
+   * nove a mesa não via o holofote andar. O pulso é único e curto; o que ele
+   * compra é a resposta a "de quem é a vez agora?" sem ninguém procurar.
+   *
+   * Vale a mesma regra do flash e por isso a asserção também é dupla: uma
+   * linha pulsou, as outras não. Uma animação de entrada tocaria em todas,
+   * porque a lista inteira remonta a cada sync.
+   *
+   * Por que e2e: `getAnimations()` é a única testemunha e não existe em jsdom.
+   */
+  test('passar o turno pulsa a linha que entra na vez, e só ela', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+
+    const combate = page.getByRole('button', { name: 'combate', exact: true })
+    if (await combate.isVisible()) await combate.click()
+
+    const marca = Date.now()
+    const nomes = [`Vez A ${marca}`, `Vez B ${marca}`]
+    await page.getByRole('button', { name: 'Combatente' }).click()
+    for (const [i, nome] of nomes.entries()) {
+      await page.getByLabel('Nome').fill(nome)
+      // Iniciativas altas e distintas: sem isso a ordem depende do que a seed
+      // deixou, e o teste passaria a afirmar a sorte do empate.
+      await page.getByRole('spinbutton', { name: 'Iniciativa' }).fill(String(99 - i))
+      await page.getByRole('button', { name: 'Adicionar', exact: true }).click()
+      await expect(page.getByRole('button', { name: `Remover ${nome}` })).toBeVisible()
+    }
+    await page.getByRole('button', { name: 'Fechar' }).click()
+
+    try {
+      // Duas passadas: a primeira só ancora o "turno anterior" que a fábrica
+      // guarda; é a SEGUNDA que tem de animar.
+      const avancar = page.getByRole('button', { name: /^(Começar|Próximo):/ }).first()
+      await avancar.click()
+      await expect(page.getByRole('button', { name: /^Próximo:/ }).first()).toBeVisible()
+      await page.getByRole('button', { name: /^Próximo:/ }).first().click()
+
+      // Espera ATIVA: o pulso só começa quando o novo turno volta do servidor.
+      let amostra: string[] = []
+      await expect
+        .poll(async () => {
+          amostra = await linhasAnimadas(page)
+          return amostra.length
+        }, { message: 'nenhuma linha pulsou quando a vez mudou' })
+        .toBeGreaterThan(0)
+
+      expect(
+        [...new Set(amostra)].length,
+        'o pulso vazou para outras linhas — está disparando por MONTAGEM',
+      ).toBe(1)
+    } finally {
+      for (const nome of nomes) {
+        await page.getByRole('button', { name: `Remover ${nome}` }).click()
+        await expect(page.getByRole('button', { name: `Remover ${nome}` })).toBeHidden()
+      }
+    }
   })
 
   test('Sair da sessão volta pra crônica', async ({ page }) => {

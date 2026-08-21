@@ -13,6 +13,8 @@ import { InitiativeRollButton } from './initiative-roll'
 import { TurnAdvance, TurnCounter } from './turn-controls'
 import { toast } from '@/shared/ui/sonner'
 import { createPartyFeedback } from './party-feedback'
+import { createTurnJuice } from './turn-juice'
+import { createPrefersReducedMotion } from '@/shared/lib/media-query'
 import {
   type ActionVerb,
   type EntryPermissions,
@@ -75,6 +77,16 @@ export function InitiativeCard(props: {
   // Nasce UMA vez: guarda o instantâneo de quem já estava na lista e o timer da
   // espera pelo broadcast.
   const anunciarGrupo = createPartyFeedback(() => props.rt.state().initiative, toast)
+  // Nasce UMA vez, e é o cartão que o cria porque a LINHA remonta a cada sync:
+  // um `matchMedia` por linha viraria nove assinaturas novas por mensagem.
+  const parado = createPrefersReducedMotion()
+  let lista: HTMLDivElement | undefined
+  createTurnJuice({
+    palco: () => lista,
+    entradas: () => props.rt.state().initiative,
+    vez: () => props.rt.state().turnIndex,
+    parado,
+  })
   const reserved = () =>
     reservedVerbs(props.rt.state().initiative, {
       isGm: props.isGm,
@@ -205,6 +217,7 @@ export function InitiativeCard(props: {
         {/* Só a LISTA rola. É o mesmo conserto que a barra de abas da ficha já
             recebeu (ALE-122): o cartão é fixo e só o bloco de dentro rola. */}
         <div
+          ref={lista}
           class={cn(
             '@container space-y-2',
             props.fillHeight && '-mr-1 min-h-0 flex-1 overflow-y-auto pr-1 pb-3 sm:pb-4',
@@ -231,6 +244,7 @@ export function InitiativeCard(props: {
                   entry={entry}
                   onTurn={onTurn()}
                   focusOnTurn={onTurn() && isMine()}
+                  parado={parado()}
                   can={can()}
                   reserved={reserved()}
                   onDeltaHp={(delta) => props.rt.deltaVitals(entry.id, { hpDelta: delta })}
@@ -289,6 +303,8 @@ function InitiativeRow(props: {
   onTurn: boolean
   /** Scrolls into view when the viewer's OWN combatant takes its turn. */
   focusOnTurn: boolean
+  /** O leitor pediu ao sistema para minimizar movimento (WCAG 2.3.3). */
+  parado: boolean
   can: EntryPermissions
   /** Os verbos que a LISTA reserva na coluna de ações (ALE-141). */
   reserved: ActionVerb[]
@@ -305,7 +321,12 @@ function InitiativeRow(props: {
   const hasMp = () => props.entry.mpMax !== undefined
 
   createEffect(() => {
-    if (props.focusOnTurn) row?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    // `behavior: 'smooth'` EXPLÍCITO passa por cima do `scroll-behavior: auto
+    // !important` que a regra global de movimento reduzido põe — o argumento
+    // vence a propriedade CSS (ALE-174). Quem escolhe tem de perguntar.
+    if (props.focusOnTurn) {
+      row?.scrollIntoView({ block: 'center', behavior: props.parado ? 'auto' : 'smooth' })
+    }
   })
 
   return (
@@ -318,6 +339,9 @@ function InitiativeRow(props: {
     // biome-ignore lint/a11y/noStaticElementInteractions: realce sem ação, com o equivalente de teclado ao lado
     <div
       ref={row}
+      // O cartão acha a linha por aqui para animar o que MUDOU: a referência do
+      // nó não serve, porque a linha remonta a cada sync (ALE-174).
+      data-entry-id={props.entry.id}
       onMouseEnter={() => props.onHover?.(true)}
       onMouseLeave={() => props.onHover?.(false)}
       onFocusIn={() => props.onHover?.(true)}
@@ -327,7 +351,9 @@ function InitiativeRow(props: {
         // Uma árvore só, quebrando por ORDEM: apertado, nome e botões dividem
         // a primeira linha e as barras passam por baixo; largo, os três viram
         // uma linha. Empilhar tudo custava uma linha por combatente.
-        'flex flex-wrap items-center gap-2 rounded-sm border p-2.5 text-sm @lg:flex-nowrap @lg:gap-3',
+        // `relative` é o que ancora o véu do flash de dano/cura (ALE-174), que
+        // é criado e destruído em JS e se posiciona por `inset: 0`.
+        'relative flex flex-wrap items-center gap-2 rounded-sm border p-2.5 text-sm @lg:flex-nowrap @lg:gap-3',
         // `ring-inset`: o anel do Tailwind é `box-shadow`, desenhado FORA da
         // caixa e sem ocupar layout, e a lista rola dentro de um contêiner que
         // recorta o que passa das bordas dele. A linha selecionada encosta no
