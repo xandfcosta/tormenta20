@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 /** Os tamanhos que o livro usa para espaço ocupado (T20 p107, Tab. 1-21). O
  *  número de quadrados NÃO é escrito aqui: quem responde é o motor. */
@@ -71,9 +72,9 @@ export function TokenDialog(props: {
 
         <div class="space-y-3">
           <div class="space-y-1">
-            <label for="token-label" class="block text-3xs uppercase tracking-widest text-muted-foreground">
+            <FieldLabel for="token-label" as="label" class="block">
               Nome
-            </label>
+            </FieldLabel>
             <Input
               id="token-label"
               value={label()}
@@ -84,7 +85,7 @@ export function TokenDialog(props: {
           </div>
 
           <fieldset class="space-y-1">
-            <legend class="text-3xs uppercase tracking-widest text-muted-foreground">Tipo</legend>
+            <FieldLabel as="legend">Tipo</FieldLabel>
             <div class="flex gap-1">
               {TIPOS.map((tipo) => (
                 <Button
@@ -101,9 +102,9 @@ export function TokenDialog(props: {
           </fieldset>
 
           <fieldset class="space-y-1">
-            <legend class="text-3xs uppercase tracking-widest text-muted-foreground">
+            <FieldLabel as="legend">
               Tamanho
-            </legend>
+            </FieldLabel>
             <div class="flex flex-wrap gap-1">
               {TAMANHOS.map((nome) => (
                 <Button

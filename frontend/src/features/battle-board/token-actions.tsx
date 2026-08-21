@@ -6,6 +6,7 @@ import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
 import { TokenDialog } from './token-dialog'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 /**
  * O que o mestre faz com a peça selecionada (ALE-178).
@@ -104,9 +105,9 @@ export function TokenActions(props: {
       />
 
       <Show when={props.token.hidden}>
-        <span class="ml-auto text-3xs uppercase tracking-widest text-grimorio-gold">
+        <FieldLabel tom="gold" class="ml-auto">
           escondida dos jogadores
-        </span>
+        </FieldLabel>
       </Show>
     </div>
   )

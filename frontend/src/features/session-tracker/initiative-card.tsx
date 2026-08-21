@@ -22,6 +22,7 @@ import {
   entryPermissions,
   reservedVerbs,
 } from './tracker-rules'
+import { FieldLabel, SectionTitle } from '@/shared/ui/section-label'
 
 /**
  * O passo de um clique. Shift multiplica por 5, como no HUD da ficha — combate
@@ -122,9 +123,9 @@ export function InitiativeCard(props: {
           que sumia ao rolar. */}
       <header class="flex shrink-0 flex-row flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-grimorio-iron p-3 sm:p-4">
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-          <h2 class="font-heading text-lg uppercase tracking-wide text-grimorio-gold">
+          <SectionTitle contexto="painel">
             Iniciativa
-          </h2>
+          </SectionTitle>
           <Show when={props.connectionChip !== false}>
             <ConnectionChip status={status()} dirty={props.rt.hasPersistenceWarning()} />
           </Show>
@@ -451,9 +452,9 @@ function InitiativeRow(props: {
             {/* O mesmo par do marcador do tabuleiro (`bg-grimorio-gold` sobre
                 tinta de pergaminho): o selo e a borda da linha falam a mesma
                 cor, e ela é a mesma que a peça da vez usa no mapa. */}
-            <span class="inline-flex items-center gap-1 rounded-none bg-grimorio-gold px-1 text-3xs uppercase tracking-widest text-grimorio-parchment-ink">
+            <FieldLabel tom="inherit" class="inline-flex items-center gap-1 rounded-none bg-grimorio-gold px-1 text-grimorio-parchment-ink">
               <Swords aria-hidden="true" class="size-3" /> Na vez
-            </span>
+            </FieldLabel>
           </Show>
         </p>
       </div>
@@ -462,9 +463,9 @@ function InitiativeRow(props: {
           "escondido" precisam ser coisas diferentes na tela, senão o segundo
           vira silêncio e o jogador supõe (ALE-122). */}
       <Show when={props.entry.hpHidden && !hasHp()}>
-        <span class="order-3 rounded-none border border-dashed border-grimorio-iron px-1.5 text-3xs uppercase tracking-widest text-muted-foreground">
+        <FieldLabel class="order-3 rounded-none border border-dashed border-grimorio-iron px-1.5">
           PV oculto
-        </span>
+        </FieldLabel>
       </Show>
 
       <Show when={hasHp() || hasMp()}>
@@ -661,9 +662,9 @@ function AddCombatantForm(props: {
       noValidate
     >
       <div class="min-w-[160px] flex-1 space-y-1">
-        <label for="combatant-label" class="text-3xs uppercase tracking-widest text-muted-foreground">
+        <FieldLabel for="combatant-label" as="label">
           Nome
-        </label>
+        </FieldLabel>
         <Input
           id="combatant-label"
           value={label()}
@@ -673,9 +674,9 @@ function AddCombatantForm(props: {
         />
       </div>
       <div class="w-24 space-y-1">
-        <label for="combatant-initiative" class="text-3xs uppercase tracking-widest text-muted-foreground">
+        <FieldLabel for="combatant-initiative" as="label">
           Iniciativa
-        </label>
+        </FieldLabel>
         <NumberInput
           id="combatant-initiative"
           min={-5}
@@ -685,9 +686,9 @@ function AddCombatantForm(props: {
         />
       </div>
       <div class="w-20 space-y-1">
-        <label for="combatant-hp" class="text-3xs uppercase tracking-widest text-muted-foreground">
+        <FieldLabel for="combatant-hp" as="label">
           PV
-        </label>
+        </FieldLabel>
         <NumberInput id="combatant-hp" min={0} max={999} value={hp()} onChange={setHp} />
       </div>
       <div class="flex gap-1">

@@ -17,6 +17,7 @@ import { createBoardViewport } from '@/features/battle-board/board-viewport'
 import { BoardRegion } from './board-region'
 import { MatchControls } from './match-rail'
 import { type WorkspaceTab, SessionWorkspace } from './session-workspace'
+import { SectionTitle } from '@/shared/ui/section-label'
 
 /**
  * A cena do mestre como SHELL: cabe numa tela, sem rolagem de página — que é a
@@ -279,10 +280,10 @@ function TurnBar(props: {
       <TurnCounter state={state()} />
       <Show when={active()}>
         {(entry) => (
-          <span class="flex min-w-0 items-center gap-1.5 font-heading text-sm uppercase tracking-wide text-grimorio-gold">
+          <SectionTitle as="span" contexto="painel" class="text-sm flex min-w-0 items-center gap-1.5">
             <Swords aria-hidden="true" class="size-4 text-[color:var(--primary)]" />
             <span class="truncate">Vez de {entry().label}</span>
-          </span>
+          </SectionTitle>
         )}
       </Show>
 

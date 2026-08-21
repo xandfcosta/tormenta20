@@ -19,6 +19,7 @@ import type { BoardPlace, BoardState, BoardToken, SessionRealtime } from '@/shar
 import { Button } from '@/shared/ui/button'
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
 import { TurnStrip } from './board-turn-strip'
+import { SectionTitle } from '@/shared/ui/section-label'
 
 /**
  * O tabuleiro dentro da cena da sessão (ALE-124).
@@ -415,9 +416,9 @@ export function BoardRegion(props: {
         {(live) => (
           <>
             <header class="flex shrink-0 flex-wrap items-center gap-2 border-b border-grimorio-iron px-3 py-2">
-              <h2 class="min-w-0 truncate font-heading text-sm uppercase tracking-wide text-grimorio-gold">
+              <SectionTitle contexto="painel" class="text-sm min-w-0 truncate">
                 {live().place}
-              </h2>
+              </SectionTitle>
               <span class="font-mono text-2xs tabular-nums text-muted-foreground">
                 {live().tokens.length} peças · 1 quadrado = {SQUARE_METRES.toFixed(1).replace('.', ',')}m
               </span>

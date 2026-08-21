@@ -7,6 +7,7 @@ import { Button } from '@/shared/ui/button'
 import { DialogInlineError } from '@/shared/ui/dialog-inline-error'
 import { Input } from '@/shared/ui/input'
 import { cn } from '@/shared/lib/utils'
+import { SectionTitle } from '@/shared/ui/section-label'
 
 /**
  * Identidade e ciclo de vida da sessão: número, título, estado, e as ações de
@@ -74,9 +75,9 @@ export function HeaderCard(props: {
   return (
     <section class="divide-y divide-grimorio-iron">
       <header class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 pb-3">
-        <h2 class="font-heading text-sm uppercase tracking-wide text-grimorio-gold">
+        <SectionTitle contexto="painel" class="text-sm">
           Sessão {props.session.sessionNumber}
-        </h2>
+        </SectionTitle>
         <span
           class={cn(
             'rounded-none px-1.5 py-0.5 text-3xs uppercase tracking-widest',

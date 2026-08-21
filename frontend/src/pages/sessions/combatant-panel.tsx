@@ -19,6 +19,7 @@ import type { InitiativeEntry } from '@/shared/realtime/realtime'
 import { Button } from '@/shared/ui/button'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { VitalBar } from '@/shared/ui/vital-bar'
+import { SectionTitle } from '@/shared/ui/section-label'
 
 /**
  * O combatente selecionado, na superfície principal do mestre (ALE-122).
@@ -109,9 +110,9 @@ function NpcHeader(props: {
   return (
     <>
       <header class="flex shrink-0 items-center justify-between gap-3 border-b border-grimorio-iron p-3 sm:px-4">
-        <h2 class="min-w-0 truncate font-heading text-lg uppercase tracking-wide text-grimorio-gold">
+        <SectionTitle contexto="painel" class="min-w-0 truncate">
           {props.entry.label}
-        </h2>
+        </SectionTitle>
         <div class="flex shrink-0 items-center gap-2">{props.actions}</div>
       </header>
       <NpcCard

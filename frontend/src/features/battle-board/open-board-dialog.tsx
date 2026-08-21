@@ -11,6 +11,7 @@ import {
 import { Input } from '@/shared/ui/input'
 import { Select } from '@/shared/ui/select'
 import { TERRAIN_IDS, TERRAIN_LABEL } from './board-terrain'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 const TERRAIN_OPTIONS = TERRAIN_IDS.map((value) => ({ value, label: TERRAIN_LABEL[value] }))
 
@@ -56,9 +57,9 @@ export function OpenBoardDialog(props: {
 
           <div class="space-y-3">
             <div class="space-y-1">
-              <label class="text-xs uppercase tracking-wide text-muted-foreground" for="board-place">
+              <FieldLabel for="board-place" as="label" class="text-xs">
                 Lugar
-              </label>
+              </FieldLabel>
               <Input
                 id="board-place"
                 value={place()}

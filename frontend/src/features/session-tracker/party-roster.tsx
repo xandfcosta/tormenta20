@@ -5,6 +5,7 @@ import type { CampaignMember } from '@/shared/api/api'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { VitalBar } from '@/shared/ui/vital-bar'
 import { settledQuery } from '@/shared/lib/settled-query'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 type PartyCharacter = NonNullable<CampaignMember['character']>
 
@@ -25,9 +26,9 @@ export function PartyRoster(props: { campaignId: number }) {
     <Show when={!members.isLoading} fallback={<PartyRosterSkeleton />}>
       <Show when={party().length > 0}>
         <div class="space-y-1.5">
-          <h3 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          <FieldLabel as="h3" class="text-xs font-bold">
             Grupo
-          </h3>
+          </FieldLabel>
           <div class="grid gap-2 sm:grid-cols-2">
             <For each={party()}>{(character) => <PartyMember character={character} />}</For>
           </div>
@@ -58,9 +59,9 @@ function PartyMember(props: { character: PartyCharacter }) {
     <div class="space-y-1.5 rounded-none border border-border/60 bg-card/60 p-2.5">
       <div class="flex items-baseline justify-between gap-2">
         <span class="truncate font-medium">{props.character.name}</span>
-        <span class="shrink-0 rounded-none bg-muted px-1.5 text-3xs uppercase tracking-widest text-muted-foreground">
+        <FieldLabel class="shrink-0 rounded-none bg-muted px-1.5">
           Nv {props.character.level}
-        </span>
+        </FieldLabel>
       </div>
       <Show when={classes()}>
         {(line) => <p class="truncate text-xs text-muted-foreground">{line()}</p>}

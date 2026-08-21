@@ -4,6 +4,7 @@ import type { BoardPlace } from '@/shared/realtime/realtime'
 import { Button } from '@/shared/ui/button'
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { SectionLabel } from '@/shared/ui/section-label'
 
 /**
  * Os Lugares da crônica: as cenas que o mestre já montou (ALE-124, fatia 5).
@@ -35,9 +36,9 @@ export function PlacesList(props: {
   return (
     <Show when={props.places.length > 0}>
       <section class="w-full max-w-sm text-left">
-        <h3 class="mb-1 font-heading text-xs uppercase tracking-widest text-grimorio-gold">
+        <SectionLabel as="h3" tom="gold" class="text-xs mb-1">
           Lugares da crônica
-        </h3>
+        </SectionLabel>
         <PlaceRows
           places={props.places}
           onReopen={props.onReopen}

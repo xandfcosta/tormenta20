@@ -10,6 +10,7 @@ import { TokenActions } from './token-actions'
 import { TokenDialog } from './token-dialog'
 import { createFullscreen } from '@/shared/lib/fullscreen'
 import { SceneContainerProvider, useSceneContainer } from '@/shared/lib/scene-container'
+import { SectionTitle } from '@/shared/ui/section-label'
 
 /**
  * O mestre monta um lugar do acervo sem pôr nada na mesa (ALE-191, fatia 2).
@@ -109,10 +110,10 @@ export function PlaceEditor(props: {
       class="scene-grimorio @container flex w-full min-h-0 min-w-0 flex-1 flex-col rounded-none border border-grimorio-gold/50 bg-grimorio-panel"
     >
       <header class="flex shrink-0 flex-wrap items-center gap-2 border-b border-grimorio-iron px-3 py-2">
-        <h2 class="min-w-0 truncate font-heading text-sm uppercase tracking-wide text-grimorio-gold">
+        <SectionTitle contexto="painel" class="text-sm min-w-0 truncate">
           <Hammer aria-hidden="true" class="mr-1 inline size-4" />
           Montando {props.scene.place}
-        </h2>
+        </SectionTitle>
         <div class="ml-auto flex flex-wrap items-center justify-end gap-1">
           <ViewControls view={view} onFit={() => view.fit(tokens())} fullscreen={fullscreen} />
           <Button

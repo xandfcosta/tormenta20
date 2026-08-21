@@ -1,6 +1,7 @@
 import { Swords } from 'lucide-solid'
 import { Show } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
+import { FieldLabel, SectionLabel } from '@/shared/ui/section-label'
 
 /** Whose turn it is, from the player's point of view. */
 export type LiveTurnState =
@@ -31,9 +32,9 @@ export function LiveSessionBanner(props: {
     >
       <p class="flex items-center gap-2">
         <LivePip />
-        <span class="font-heading text-xs font-semibold uppercase tracking-widest text-[color:var(--hp-full)]">
+        <SectionLabel as="span" tom="inherit" class="text-xs font-semibold text-[color:var(--hp-full)]">
           Ao vivo
-        </span>
+        </SectionLabel>
         <span class="text-sm text-muted-foreground">· Sessão {props.sessionNumber}</span>
       </p>
       <div class="flex items-center gap-2 text-sm">
@@ -46,9 +47,9 @@ export function LiveSessionBanner(props: {
             </span>
           }
         >
-          <span class="flex animate-pulse items-center gap-1 rounded-none bg-[color:var(--primary)] px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-[color:var(--primary-foreground)]">
+          <FieldLabel tom="inherit" class="text-xs flex animate-pulse items-center gap-1 rounded-none bg-[color:var(--primary)] px-2 py-0.5 font-bold text-[color:var(--primary-foreground)]">
             <Swords aria-hidden="true" class="size-3.5" /> Sua vez
-          </span>
+          </FieldLabel>
         </Show>
       </div>
     </div>

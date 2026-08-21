@@ -5,6 +5,7 @@ import { ApiError, type Session, api } from '@/shared/api/api'
 import { toggleTaskLine } from '@/shared/lib/markdown'
 import { MarkdownView } from '@/shared/ui/markdown-view'
 import { Textarea } from '@/shared/ui/textarea'
+import { SectionTitle } from '@/shared/ui/section-label'
 
 const AUTOSAVE_DELAY_MS = 1200
 
@@ -70,7 +71,7 @@ export function SessionNotes(props: { campaignId: number; session: Session }) {
   return (
     <section class="@container flex h-full min-h-0 flex-col gap-2">
       <div class="flex shrink-0 items-center justify-between gap-2">
-        <h2 class="font-heading text-sm uppercase tracking-wide text-grimorio-gold">Notas</h2>
+        <SectionTitle contexto="painel" class="text-sm">Notas</SectionTitle>
         <SaveStatus saving={saving()} dirty={draft() !== saved()} error={error()} />
       </div>
 
