@@ -19,7 +19,7 @@ import { VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
 test.describe('A porta do jogo', () => {
   test.use({ storageState: { cookies: [], origins: [] } })
 
-  for (const rota of ['/login', '/register', '/redefinir-senha']) {
+  for (const rota of ['/login', '/redefinir-senha']) {
     test(`${rota} é escura como a mesa`, async ({ page }) => {
       await page.goto(rota)
       await expect(page.getByRole('heading', { name: 'Tormenta 20' })).toBeVisible()
@@ -45,6 +45,30 @@ test.describe('A porta do jogo', () => {
       ).toBe(cores?.mesa)
     })
   }
+
+  /**
+   * A tela de criar conta só abre com convite na mão (ALE-120).
+   *
+   * A porta já era fechada no SERVIDOR — registro sem convite usável responde
+   * 403 e o convite vale exatamente uma vez —, mas a tela ficava aberta e
+   * parecia um cadastro comum, com o login ainda anunciando "Sem conta? Criar
+   * uma" por herança do template. Quem não tinha convite atravessava um
+   * formulário inteiro para ser recusado no fim.
+   *
+   * As duas metades importam. Sem convite a rota devolve para o login: é o que
+   * fecha a porta. COM convite ela abre: é o que impede o conserto errado, que
+   * seria apagar a tela e com ela o único destino do link que o administrador
+   * entrega.
+   */
+  test('criar conta só abre com convite na mão', async ({ page }) => {
+    await page.goto('/register')
+    await expect(page).toHaveURL(/\/login/)
+    await expect(page.getByText(/por convite/i)).toBeVisible()
+
+    await page.goto('/register?convite=um-token-qualquer')
+    await expect(page).toHaveURL(/\/register/)
+    await expect(page.getByRole('button', { name: /Criar conta/i })).toBeVisible()
+  })
 
   test('a porta cabe nos seis formatos', async ({ page }) => {
     await page.goto('/login')

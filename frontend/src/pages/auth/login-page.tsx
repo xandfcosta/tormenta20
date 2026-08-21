@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/solid-query'
-import { Link, getRouteApi, useNavigate } from '@tanstack/solid-router'
+import { getRouteApi, useNavigate } from '@tanstack/solid-router'
 import { meQueryOptions } from '@/entities/user/queries'
 import { type Credentials, api } from '@/shared/api/api'
 import { AuthShell } from './auth-shell'
@@ -25,14 +25,11 @@ export function LoginPage() {
     <AuthShell
       title="Entrar"
       subtitle="Bem-vindo de volta, aventureiro."
-      footer={
-        <>
-          Sem conta?{' '}
-          <Link to="/register" class="underline underline-offset-4">
-            Criar uma
-          </Link>
-        </>
-      }
+      // Não há link para criar conta, e a ausência é a decisão (ALE-120): esta
+      // mesa é por convite, e quem tem um chega pela URL do convite, não por
+      // aqui. O link que existia era resto do template — ele anunciava uma
+      // porta que o servidor recusa com 403 para todo mundo menos o dono.
+      footer={<>Esta mesa é por convite — peça o link a quem administra.</>}
     >
       <LoginForm onSubmit={login} />
     </AuthShell>
