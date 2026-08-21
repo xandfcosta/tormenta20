@@ -1,6 +1,6 @@
 import { type VariantProps, cva } from 'class-variance-authority'
 import { Dynamic } from 'solid-js/web'
-import type { JSX, ParentProps, ValidComponent } from 'solid-js'
+import { type ComponentProps, type JSX, type ValidComponent, splitProps } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
 
 /**
@@ -51,7 +51,7 @@ const rotuloVariants = cva('uppercase', {
 
 export type RotuloTom = NonNullable<VariantProps<typeof rotuloVariants>['tom']>
 
-type RotuloProps = ParentProps<{
+type RotuloProps = Omit<ComponentProps<'span'>, 'style'> & {
   /**
    * O elemento que carrega a semântica do SÍTIO — ou um componente, porque no
    * kit o título de um painel é a peça do Kobalte que registra o rótulo do
@@ -59,22 +59,23 @@ type RotuloProps = ParentProps<{
    */
   as?: ValidComponent
   tom?: RotuloTom
-  id?: string
-  class?: string
   /** Só para cor que o CSS não sabe de antemão — a barra vital pinta o rótulo
    *  com a mesma variável do preenchimento, que muda com o valor. */
   style?: JSX.CSSProperties | string
-}>
+}
 
 function Rotulo(props: RotuloProps & { papel: 'titulo' | 'secao' | 'campo'; padrao: ValidComponent }) {
+  // O resto dos atributos passa direto: um rótulo vira `title` de dica, `for`
+  // de campo e `aria-*` conforme o sítio, e enumerá-los aqui só adiaria o
+  // próximo que faltasse.
+  const [local, rest] = splitProps(props, ['as', 'tom', 'class', 'papel', 'padrao', 'children'])
   return (
     <Dynamic
-      component={props.as ?? props.padrao}
-      id={props.id}
-      style={props.style}
-      class={cn(rotuloVariants({ papel: props.papel, tom: props.tom }), props.class)}
+      component={local.as ?? local.padrao}
+      class={cn(rotuloVariants({ papel: local.papel, tom: local.tom }), local.class)}
+      {...rest}
     >
-      {props.children}
+      {local.children}
     </Dynamic>
   )
 }
