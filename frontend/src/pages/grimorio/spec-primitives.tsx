@@ -47,7 +47,7 @@ export function SpecSection(props: { id: string; titulo: string; children: JSX.E
 export function SpecBlock(props: { titulo: string; nota?: string; children: JSX.Element }) {
   return (
     <div class="space-y-2">
-      <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+      <p class="font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
         {props.titulo}
       </p>
       {props.nota && <p class="max-w-prose text-xs text-muted-foreground">{props.nota}</p>}
@@ -69,9 +69,9 @@ export function ColorSwatch(props: { classe: string; token: string; nota?: strin
         class={cn('h-12 w-full rounded-sm border border-grimorio-iron', props.classe)}
       />
       <figcaption class="space-y-0.5">
-        <p class="font-mono text-[11px] text-foreground">{props.token}</p>
-        <p class="font-mono text-[10px] text-muted-foreground">{cor()}</p>
-        {props.nota && <p class="text-[10px] text-muted-foreground">{props.nota}</p>}
+        <p class="font-mono text-2xs text-foreground">{props.token}</p>
+        <p class="font-mono text-3xs text-muted-foreground">{cor()}</p>
+        {props.nota && <p class="text-3xs text-muted-foreground">{props.nota}</p>}
       </figcaption>
     </figure>
   )
@@ -94,8 +94,8 @@ export function RadiusSwatch(props: { classe: string; nome: string }) {
         )}
       />
       <figcaption>
-        <p class="font-mono text-[11px] text-foreground">{props.nome}</p>
-        <p class="font-mono text-[10px] text-grimorio-gold">{raio()}</p>
+        <p class="font-mono text-2xs text-foreground">{props.nome}</p>
+        <p class="font-mono text-3xs text-grimorio-gold">{raio()}</p>
       </figcaption>
     </figure>
   )

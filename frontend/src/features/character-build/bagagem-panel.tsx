@@ -32,7 +32,7 @@ export function BagagemPanel(props: BagagemPanelProps) {
 
   return (
     <aside class="space-y-2 rounded-sm border border-grimorio-iron bg-muted/20 p-3 lg:sticky lg:top-0">
-      <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-grimorio-gold">
+      <p class="font-heading text-2xs uppercase tracking-[0.16em] text-grimorio-gold">
         Sua bagagem
       </p>
       <SlotsBar used={props.slotsUsed} capacity={props.slotsCapacity} over={over()} />
@@ -78,7 +78,7 @@ function SlotsBar(props: { used: number; capacity: number; over: boolean }) {
       </div>
       <p
         class={cn(
-          'text-[11px]',
+          'text-2xs',
           props.over ? 'font-semibold text-[color:var(--hp-hurt)]' : 'text-muted-foreground',
         )}
       >
@@ -114,7 +114,7 @@ function BagGroupBlock(props: {
 }) {
   return (
     <div class="space-y-0.5">
-      <p class="font-heading text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+      <p class="font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground">
         {props.group.title}
         {props.group.title === 'Kit' ? ' · automático' : ''}
       </p>
@@ -145,7 +145,7 @@ function BagLineRow(props: {
   return (
     <Show when={item()} fallback={<GhostRow line={props.line} />}>
       {(item) => (
-        <li class="flex items-center gap-1 text-[11px]">
+        <li class="flex items-center gap-1 text-2xs">
           <span class="min-w-0 flex-1 truncate">
             · {item().name}
             {item().qty > 1 ? ` ×${item().qty}` : ''}
@@ -156,7 +156,7 @@ function BagLineRow(props: {
               </span>
             </Show>
           </span>
-          <span class="shrink-0 text-[10px] text-muted-foreground">
+          <span class="shrink-0 text-3xs text-muted-foreground">
             {item().slots * item().qty > 0 ? `${item().slots * item().qty} esp.` : '—'}
           </span>
           <Show when={props.isPurchase && item().catalogId}>
@@ -202,7 +202,7 @@ function GhostRow(props: { line: BagLine }) {
                 .getElementById(line().anchor)
                 ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
             }
-            class="flex w-full items-center gap-1 rounded-md border border-dashed border-[color:var(--hp-hurt)]/60 px-1.5 py-0.5 text-left text-[11px] text-[color:var(--hp-hurt)] hover:bg-accent"
+            class="flex w-full items-center gap-1 rounded-md border border-dashed border-[color:var(--hp-hurt)]/60 px-1.5 py-0.5 text-left text-2xs text-[color:var(--hp-hurt)] hover:bg-accent"
           >
             ◇ {line().label} · pendente
           </button>

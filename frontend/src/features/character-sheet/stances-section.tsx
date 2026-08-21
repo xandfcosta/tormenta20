@@ -124,7 +124,7 @@ function StanceCard(props: { group: StanceGroup; character: Character }) {
         >
           <Flame aria-hidden="true" class="size-3.5 shrink-0 text-violet-300" />
           <span class="shrink-0 text-sm font-medium text-foreground">{activation().name}</span>
-          <span class="min-w-0 truncate text-[11px] text-muted-foreground">
+          <span class="min-w-0 truncate text-2xs text-muted-foreground">
             · {stanceSummary(props.group)}
             {(tempHp()?.total ?? 0) > 0 ? ` · PV temp +${tempHp()?.total}` : ''}
             {` · ${pmPaid()} PM`}
@@ -134,7 +134,7 @@ function StanceCard(props: { group: StanceGroup; character: Character }) {
           type="button"
           size="sm"
           variant="ghost"
-          class="h-11 shrink-0 px-3 text-xs text-red-400 hover:bg-red-950/40 sm:h-6 sm:px-2 sm:text-[11px]"
+          class="h-11 shrink-0 px-3 text-xs text-red-400 hover:bg-red-950/40 sm:h-6 sm:px-2 sm:text-2xs"
           aria-label={`Encerrar ${activation().name}`}
           onClick={() =>
             void actions(queryClient, props.character).deactivateStance(props.group.flag)
@@ -144,7 +144,7 @@ function StanceCard(props: { group: StanceGroup; character: Character }) {
         </Button>
       </div>
       <Show when={expanded()}>
-        <ul class="ml-5 mt-1 space-y-0.5 text-[11px]">
+        <ul class="ml-5 mt-1 space-y-0.5 text-2xs">
           <For each={props.group.entries}>
             {(entry) => (
               <li class="flex items-center justify-between gap-2">

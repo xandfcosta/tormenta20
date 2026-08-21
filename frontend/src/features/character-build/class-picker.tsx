@@ -54,7 +54,7 @@ export function ClassTileGrid(props: ClassTileGridProps) {
                   {tile.className}
                   <span class="sr-only">{isPrimary() ? ' · classe principal' : ''}</span>
                 </p>
-                <p class="font-mono text-[10px] text-muted-foreground">
+                <p class="font-mono text-3xs text-muted-foreground">
                   PV {tile.pvInicial} · PM +{tile.mpPerLevel}/nv
                 </p>
               </div>

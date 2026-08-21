@@ -71,7 +71,7 @@ export function TokenDialog(props: {
 
         <div class="space-y-3">
           <div class="space-y-1">
-            <label for="token-label" class="block text-[10px] uppercase tracking-widest text-muted-foreground">
+            <label for="token-label" class="block text-3xs uppercase tracking-widest text-muted-foreground">
               Nome
             </label>
             <Input
@@ -84,7 +84,7 @@ export function TokenDialog(props: {
           </div>
 
           <fieldset class="space-y-1">
-            <legend class="text-[10px] uppercase tracking-widest text-muted-foreground">Tipo</legend>
+            <legend class="text-3xs uppercase tracking-widest text-muted-foreground">Tipo</legend>
             <div class="flex gap-1">
               {TIPOS.map((tipo) => (
                 <Button
@@ -101,7 +101,7 @@ export function TokenDialog(props: {
           </fieldset>
 
           <fieldset class="space-y-1">
-            <legend class="text-[10px] uppercase tracking-widest text-muted-foreground">
+            <legend class="text-3xs uppercase tracking-widest text-muted-foreground">
               Tamanho
             </legend>
             <div class="flex flex-wrap gap-1">

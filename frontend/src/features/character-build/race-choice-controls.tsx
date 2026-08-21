@@ -79,7 +79,7 @@ function FloatingPicker(props: {
 
   return (
     <div class="space-y-1.5">
-      <p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+      <p class="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
         Distribua +{props.meta.value} em {props.meta.count} atributos · {placed()}/
         {props.meta.count}
       </p>
@@ -112,7 +112,7 @@ function FloatingPicker(props: {
       </div>
       <Show when={props.meta.penalty}>
         {(penalty) => (
-          <p class="text-[11px] text-muted-foreground">
+          <p class="text-2xs text-muted-foreground">
             Penalidade fixa:{' '}
             <span class="font-mono">
               −{Math.abs(penalty().value)} {ATTRIBUTE_ABBR[penalty().attribute]}
@@ -132,7 +132,7 @@ function SubracePicker(props: {
 }) {
   return (
     <div class="space-y-1.5">
-      <p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+      <p class="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
         Escolha a ascendência
       </p>
       <div class="grid gap-1.5 sm:grid-cols-2">

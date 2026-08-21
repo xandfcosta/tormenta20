@@ -10,7 +10,7 @@ import { CampaignHeaderCard } from './header-card'
 export function ConfigSection(props: { campaign: Campaign }) {
   return (
     <div class="space-y-6">
-      <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+      <p class="text-2xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
         Ajustes do tomo
       </p>
       <CampaignHeaderCard campaign={props.campaign} />

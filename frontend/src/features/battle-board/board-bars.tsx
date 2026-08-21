@@ -31,7 +31,7 @@ export function PlayerLensBar(props: { hidden: number; onExit: () => void }) {
   return (
     <div
       role="status"
-      class="flex shrink-0 flex-wrap items-center gap-2 border-b border-grimorio-gold/40 bg-grimorio-gold/10 px-3 py-1 text-[11px] text-grimorio-gold"
+      class="flex shrink-0 flex-wrap items-center gap-2 border-b border-grimorio-gold/40 bg-grimorio-gold/10 px-3 py-1 text-2xs text-grimorio-gold"
     >
       <Eye aria-hidden="true" class="size-3.5 shrink-0" />
       <p>
@@ -97,7 +97,7 @@ export function MoveBar(props: {
 
   return (
     <div class="flex shrink-0 flex-wrap items-center gap-2 border-t border-grimorio-iron px-3 py-1.5">
-      <p class="font-mono text-[11px] tabular-nums text-grimorio-gold">
+      <p class="font-mono text-2xs tabular-nums text-grimorio-gold">
         {props.move.cost} {props.move.cost === 1 ? 'quadrado' : 'quadrados'} ({metres()}m)
         {props.move.budget >= 0 ? ` de ${props.move.budget}` : ' · sem limite de turno'}
       </p>
@@ -106,9 +106,9 @@ export function MoveBar(props: {
           aprende a contar — e na mesa presencial é ele quem vai contar quadrado
           no papel. */}
       <Show when={regra()}>
-        {(texto) => <p class="text-[11px] text-muted-foreground">{texto()}</p>}
+        {(texto) => <p class="text-2xs text-muted-foreground">{texto()}</p>}
       </Show>
-      <Show when={props.canDecide} fallback={<span class="text-[11px] text-muted-foreground">Aguardando confirmação.</span>}>
+      <Show when={props.canDecide} fallback={<span class="text-2xs text-muted-foreground">Aguardando confirmação.</span>}>
         <div class="ml-auto flex items-center gap-1">
           <Button size="sm" variant="ghost" onClick={() => props.onCancel()}>
             <Undo2 aria-hidden="true" class="size-4" />
@@ -188,7 +188,7 @@ export function RulerBar(props: { reading: BoardMeasurement; onClose: () => void
       role="status"
       class="flex shrink-0 flex-wrap items-center gap-2 border-t border-grimorio-iron px-3 py-1.5"
     >
-      <p class="font-mono text-[11px] tabular-nums text-grimorio-gold">
+      <p class="font-mono text-2xs tabular-nums text-grimorio-gold">
         {props.reading.squares} {props.reading.squares === 1 ? 'quadrado' : 'quadrados'} ({metres()}m) · {faixa()}
       </p>
       <Button size="sm" variant="ghost" class="ml-auto" aria-label="Guardar a régua" onClick={() => props.onClose()}>
@@ -256,7 +256,7 @@ export function AreaBar(props: {
         </For>
       </div>
 
-      <label class="text-[11px] text-muted-foreground" for="area-size">
+      <label class="text-2xs text-muted-foreground" for="area-size">
         {medida()}
       </label>
       <NumberInput
@@ -268,13 +268,13 @@ export function AreaBar(props: {
         spinnerLabel={medida()}
         onChange={(valor) => props.onSize(valor)}
       />
-      <span class="font-mono text-[11px] tabular-nums text-muted-foreground">{metros()}m</span>
+      <span class="font-mono text-2xs tabular-nums text-muted-foreground">{metros()}m</span>
 
       <Show
         when={props.inside.length > 0}
-        fallback={<span class="text-[11px] text-muted-foreground">{dica()}</span>}
+        fallback={<span class="text-2xs text-muted-foreground">{dica()}</span>}
       >
-        <p class="min-w-0 flex-1 truncate text-[11px] text-grimorio-gold">
+        <p class="min-w-0 flex-1 truncate text-2xs text-grimorio-gold">
           Pega {props.inside.length === 1 ? '1 peça' : `${props.inside.length} peças`}:{' '}
           {props.inside.map((peca) => peca.label).join(', ')}
         </p>

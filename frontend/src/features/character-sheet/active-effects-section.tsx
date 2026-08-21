@@ -65,7 +65,7 @@ export function ActiveEffectsSection(props: { character: Character }) {
                 type="button"
                 variant="outline"
                 size="sm"
-                class="h-6 px-2 text-[11px]"
+                class="h-6 px-2 text-2xs"
                 onClick={open}
               >
                 Encerrar cena
@@ -83,7 +83,7 @@ export function ActiveEffectsSection(props: { character: Character }) {
                 type="button"
                 variant="outline"
                 size="sm"
-                class="h-6 px-2 text-[11px]"
+                class="h-6 px-2 text-2xs"
                 onClick={open}
               >
                 Encerrar dia
@@ -134,8 +134,8 @@ function ActiveEffectRow(props: { effect: ActiveEffect; onRemove: () => void }) 
         <span
           class={
             props.effect.scope === 'day'
-              ? 'shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-foreground'
-              : 'shrink-0 rounded-full bg-emerald-500/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-emerald-50'
+              ? 'shrink-0 rounded-full bg-muted px-2 py-0.5 text-3xs font-bold uppercase tracking-widest text-foreground'
+              : 'shrink-0 rounded-full bg-emerald-500/70 px-2 py-0.5 text-3xs font-bold uppercase tracking-widest text-emerald-50'
           }
         >
           {props.effect.scope === 'day' ? 'dia' : 'cena'}
@@ -153,11 +153,11 @@ function ActiveEffectRow(props: { effect: ActiveEffect; onRemove: () => void }) 
       </div>
       <ModifierList
         modifiers={modifiers()}
-        class="ml-5 mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px]"
+        class="ml-5 mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-2xs"
       />
       <FactChips facts={facts()} class="ml-5 mt-1" />
       <Show when={modifiers().length === 0 && facts().length === 0}>
-        <p class="ml-5 mt-1 text-[11px] italic text-muted-foreground">Sem efeito mecânico</p>
+        <p class="ml-5 mt-1 text-2xs italic text-muted-foreground">Sem efeito mecânico</p>
       </Show>
     </li>
   )

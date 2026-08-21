@@ -242,7 +242,7 @@ function TrainedToggle(props: { trained: boolean; name: string; onToggle: (next:
       aria-label={`${props.name} treinada`}
       onClick={() => props.onToggle(!props.trained)}
       class={cn(
-        'inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider transition-colors',
+        'inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-3xs uppercase tracking-wider transition-colors',
         props.trained
           ? 'border-grimorio-gold/60 text-grimorio-gold'
           : 'border-grimorio-iron text-muted-foreground hover:border-grimorio-gold/40',
@@ -286,7 +286,7 @@ function AttributeSelect(props: {
       // `min-w-0 max-w-full`: o `<select>` nativo se dimensiona pela opção mais
       // larga, e sem isto é ele quem empurra a linha para fora quando a coluna
       // aperta.
-      class="h-6 min-w-0 max-w-full cursor-pointer rounded-full border border-grimorio-iron bg-transparent px-2 font-mono text-[11px] outline-none focus:ring-2 focus:ring-ring"
+      class="h-6 min-w-0 max-w-full cursor-pointer rounded-full border border-grimorio-iron bg-transparent px-2 font-mono text-2xs outline-none focus:ring-2 focus:ring-ring"
     >
       <For each={ATTRIBUTE_KEYS}>
         {(key) => (
@@ -301,7 +301,7 @@ function AttributeSelect(props: {
 
 function Chip(props: { label: string; value: string }) {
   return (
-    <span class="inline-flex items-center gap-1 rounded-full border border-grimorio-iron px-2 py-0.5 text-[10px] text-muted-foreground">
+    <span class="inline-flex items-center gap-1 rounded-full border border-grimorio-iron px-2 py-0.5 text-3xs text-muted-foreground">
       <span class="uppercase tracking-wider">{props.label}</span>
       <span class="font-mono text-foreground">{props.value}</span>
     </span>

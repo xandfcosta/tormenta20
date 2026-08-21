@@ -62,7 +62,7 @@ export function StatBox(props: StatBoxProps) {
       >
         <span
           class={cn(
-            'flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest',
+            'flex items-center gap-1 text-4xs font-bold uppercase tracking-widest',
             tone().label,
           )}
         >
@@ -73,7 +73,7 @@ export function StatBox(props: StatBoxProps) {
         <Show when={props.sub}>
           {(sub) => (
             <span
-              class={cn('text-[10px] font-semibold uppercase tracking-widest', tone().label)}
+              class={cn('text-3xs font-semibold uppercase tracking-widest', tone().label)}
             >
               {sub()}
             </span>
@@ -138,7 +138,7 @@ export function StatRowLine(props: { row: StatRow }) {
       {/* Wrap, never truncate: a nowrap note becomes the grid's min-content and
           inflates the whole dialog past its max-width. */}
       <Show when={props.row.note}>
-        {(note) => <p class="text-[11px] leading-snug text-muted-foreground">{note()}</p>}
+        {(note) => <p class="text-2xs leading-snug text-muted-foreground">{note()}</p>}
       </Show>
     </li>
   )

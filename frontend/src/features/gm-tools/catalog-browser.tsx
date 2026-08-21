@@ -162,7 +162,7 @@ function CatalogTab<T>(props: {
 }) {
   return (
     <div class="flex min-h-0 flex-1 flex-col gap-1.5">
-      <p class="text-[11px] text-muted-foreground">{props.entries.length} entradas</p>
+      <p class="text-2xs text-muted-foreground">{props.entries.length} entradas</p>
       <VirtualList
         items={props.entries}
         getKey={props.getKey}
@@ -202,7 +202,7 @@ function UnifiedResults(props: {
       }
     >
       <div class="flex min-h-0 flex-1 flex-col gap-1.5">
-        <p class="text-[11px] text-muted-foreground">
+        <p class="text-2xs text-muted-foreground">
           {hits()} resultado{hits() === 1 ? '' : 's'} em todos os catálogos
         </p>
         <VirtualList
@@ -222,7 +222,7 @@ function ResultRow(props: { row: CatalogResultRow }) {
     <Switch>
       <Match when={props.row.kind === 'header' && props.row}>
         {(row) => (
-          <p class="pt-1 font-heading text-[11px] uppercase tracking-[0.16em] text-grimorio-gold">
+          <p class="pt-1 font-heading text-2xs uppercase tracking-[0.16em] text-grimorio-gold">
             {row().label} · {row().count}
           </p>
         )}

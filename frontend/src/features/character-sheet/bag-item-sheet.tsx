@@ -82,7 +82,7 @@ export function BagItemSheet(props: BagItemSheetProps) {
             {props.item.name}
             <For each={overlays()}>
               {(name) => (
-                <span class="rounded-md border border-border bg-muted px-1 text-[10px] font-medium text-muted-foreground">
+                <span class="rounded-md border border-border bg-muted px-1 text-3xs font-medium text-muted-foreground">
                   {name}
                 </span>
               )}
@@ -210,7 +210,7 @@ function AppliedOverlays(props: { item: CharacterItem }) {
   return (
     <Show when={overlays().length > 0}>
       <div class="space-y-1 text-xs">
-        <p class="text-[10px] uppercase tracking-widest text-muted-foreground">
+        <p class="text-3xs uppercase tracking-widest text-muted-foreground">
           Melhorias & material
         </p>
         <For each={overlays()}>

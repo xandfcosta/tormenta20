@@ -55,7 +55,7 @@ export function LevelStepper(props: { character: Character }) {
           onClick={() => step('down')}
         />
         <div class="flex flex-col items-center leading-none">
-          <p class="text-[8px] uppercase tracking-widest text-muted-foreground sm:text-[9px]">Nv</p>
+          <p class="text-[8px] uppercase tracking-widest text-muted-foreground sm:text-4xs">Nv</p>
           <p class="w-5 text-center text-lg font-bold leading-none text-grimorio-gold sm:w-7 sm:text-2xl">
             {props.character.level}
           </p>

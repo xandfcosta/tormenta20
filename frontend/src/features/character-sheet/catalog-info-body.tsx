@@ -85,7 +85,7 @@ export function CatalogInfoBody(props: { catalog: CatalogItem }) {
 function InfoBlock(props: { title: string; children: JSX.Element }) {
   return (
     <div class="space-y-0.5">
-      <p class="text-[10px] uppercase tracking-widest text-muted-foreground">{props.title}</p>
+      <p class="text-3xs uppercase tracking-widest text-muted-foreground">{props.title}</p>
       {props.children}
     </div>
   )
@@ -101,9 +101,9 @@ function ModifierLine(props: { modifier: Modifier }) {
         <span class="font-mono">{signed(props.modifier.amount)}</span>
       </Show>
       <span>{describeModifierTarget(props.modifier.target)}</span>
-      <span class="text-[10px] text-muted-foreground">[{props.modifier.bonusType}]</span>
+      <span class="text-3xs text-muted-foreground">[{props.modifier.bonusType}]</span>
       <Show when={condition()}>
-        {(text) => <span class="text-[10px] text-muted-foreground">— {text()}</span>}
+        {(text) => <span class="text-3xs text-muted-foreground">— {text()}</span>}
       </Show>
     </li>
   )

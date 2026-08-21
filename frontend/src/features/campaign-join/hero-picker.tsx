@@ -22,7 +22,7 @@ export type HeroPickerProps = {
 export function HeroPicker(props: HeroPickerProps) {
   return (
     <fieldset class="space-y-3">
-      <legend class="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+      <legend class="mb-3 text-2xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
         Qual herói entra na mesa?
       </legend>
       {/* A 2-D region for the shared scene-nav grammar: arrows walk the plates

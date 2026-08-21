@@ -35,7 +35,7 @@ export function AbilityLine(props: {
       />
       <div class="min-w-0">
         <p class="text-xs font-semibold">{props.name}</p>
-        <p class="line-clamp-2 text-[11px] leading-snug text-muted-foreground">
+        <p class="line-clamp-2 text-2xs leading-snug text-muted-foreground">
           {props.description}
         </p>
       </div>

@@ -125,7 +125,7 @@ export function ClassBadges(props: { character: Character; class?: string }) {
     <div class={cn('flex gap-1', props.class)}>
       <For each={props.character.classes}>
         {(entry) => (
-          <Badge class="px-1.5 py-0 text-[10px] leading-tight sm:px-2 sm:py-0.5 sm:text-xs">
+          <Badge class="px-1.5 py-0 text-3xs leading-tight sm:px-2 sm:py-0.5 sm:text-xs">
             {entry.className} {entry.level}
           </Badge>
         )}

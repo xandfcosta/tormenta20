@@ -17,7 +17,7 @@ export function AbilitiesPendingBadge(props: { character: Character }) {
           only the number. */}
       <span
         aria-hidden="true"
-        class="ml-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-white"
+        class="ml-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-3xs font-bold text-white"
       >
         {count()}
       </span>

@@ -204,8 +204,8 @@ function AdjustPreview(props: {
   return (
     <div class="flex items-center justify-between rounded-md border border-border bg-muted px-4 py-2">
       <div class="flex flex-col">
-        <span class="text-[10px] uppercase tracking-widest text-muted-foreground">novo total</span>
-        <span class="text-[10px] text-muted-foreground">
+        <span class="text-3xs uppercase tracking-widest text-muted-foreground">novo total</span>
+        <span class="text-3xs text-muted-foreground">
           {props.current} {props.result.delta >= 0 ? '+' : '−'} {Math.abs(props.result.delta)}
           {props.result.clamped && ' (limitado)'}
           {props.result.soak > 0 && ` · PV temp. absorvem ${props.result.soak}`}
@@ -255,7 +255,7 @@ function ManualTempHpField(props: { pool: TempPoolControl; onDone: () => void })
           Definir
         </Button>
       </div>
-      <p class="text-[10px] text-muted-foreground">
+      <p class="text-3xs text-muted-foreground">
         vale o maior — não acumulam (p256) · 0 remove o valor manual
       </p>
     </div>

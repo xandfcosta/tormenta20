@@ -53,6 +53,42 @@ test.describe('Grimório — a folha de especificação', () => {
   })
 
   /**
+   * A ladeira de tamanho é estritamente decrescente, sem dois degraus iguais.
+   *
+   * A casa acrescentou três tamanhos abaixo do piso do shadcn (`text-xs`, de
+   * 12px, pensado para formulário) porque a mesa é densa. Eles eram 321 valores
+   * arbitrários sem nome, e é justamente enquanto um degrau não tem nome que
+   * ninguém percebe quando dois passam a valer a mesma coisa — foi o que
+   * aconteceu com o raio antes da ALE-173.
+   *
+   * A asserção é a FORMA e não os números, pela mesma razão do guarda do raio.
+   */
+  test('a ladeira de tamanho não tem dois degraus iguais', async ({ page }) => {
+    await page.goto('/grimorio')
+    await expect(page.getByRole('heading', { name: 'Grimório' })).toBeVisible()
+
+    const ordem = ['text-xs', 'text-2xs', 'text-3xs', 'text-4xs']
+    const degraus = await page.evaluate((nomes) => {
+      const cena = document.querySelector('.scene-grimorio') ?? document.body
+      return nomes.map((nome) => {
+        const alvo = document.createElement('span')
+        alvo.className = nome
+        cena.appendChild(alvo)
+        const px = Number.parseFloat(getComputedStyle(alvo).fontSize)
+        alvo.remove()
+        return { nome, px }
+      })
+    }, ordem)
+
+    for (let i = 1; i < degraus.length; i++) {
+      expect(
+        degraus[i]?.px ?? -1,
+        `${degraus[i]?.nome} não é menor que ${degraus[i - 1]?.nome} — dois degraus valendo o mesmo`,
+      ).toBeLessThan(degraus[i - 1]?.px ?? 0)
+    }
+  })
+
+  /**
    * As legendas vêm do navegador, não da mão de quem escreveu a página.
    *
    * Se uma amostra ficar sem cor resolvida, o utilitário que ela desenha deixou

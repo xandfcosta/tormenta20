@@ -85,7 +85,7 @@ export function ResumoStep() {
         <For each={totals()}>
           {(attribute) => (
             <span class="flex items-baseline gap-1">
-              <span aria-hidden="true" class="text-[10px] uppercase tracking-widest text-muted-foreground">
+              <span aria-hidden="true" class="text-3xs uppercase tracking-widest text-muted-foreground">
                 {attribute.abbr}
               </span>
               <span aria-hidden="true" class="tabular-nums text-foreground">
@@ -174,7 +174,7 @@ function BlockersBanner(props: { items: Pendencia[] }) {
         </p>
         <ul class="space-y-0.5">
           <For each={props.items}>
-            {(item) => <li class="text-[11px] text-foreground">· {item.label}</li>}
+            {(item) => <li class="text-2xs text-foreground">· {item.label}</li>}
           </For>
         </ul>
       </div>
@@ -195,7 +195,7 @@ function PendenciasBanner(props: { items: Pendencia[] }) {
         </p>
         <ul class="space-y-0.5">
           <For each={props.items}>
-            {(item) => <li class="text-[11px] text-muted-foreground">· {item.label}</li>}
+            {(item) => <li class="text-2xs text-muted-foreground">· {item.label}</li>}
           </For>
         </ul>
       </div>
@@ -206,7 +206,7 @@ function PendenciasBanner(props: { items: Pendencia[] }) {
 function Stat(props: { label: string; abbr: string; value: number; suffix?: string }) {
   return (
     <span class="flex items-baseline gap-1">
-      <span aria-hidden="true" class="text-[10px] uppercase tracking-widest text-muted-foreground">
+      <span aria-hidden="true" class="text-3xs uppercase tracking-widest text-muted-foreground">
         {props.abbr}
       </span>
       <span aria-hidden="true" class="text-lg tabular-nums text-grimorio-gold">
@@ -226,16 +226,16 @@ function SummaryCard(props: { title: string; lines: string[]; empty: string }): 
       aria-label={props.title}
       class="space-y-1 rounded-sm border border-grimorio-iron bg-muted/10 p-3"
     >
-      <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-grimorio-gold">
+      <p class="font-heading text-2xs uppercase tracking-[0.16em] text-grimorio-gold">
         {props.title}
       </p>
       <Show
         when={props.lines.length > 0}
-        fallback={<p class="text-[11px] text-muted-foreground">{props.empty}</p>}
+        fallback={<p class="text-2xs text-muted-foreground">{props.empty}</p>}
       >
         <ul class="space-y-0.5">
           <For each={props.lines}>
-            {(line) => <li class="text-[11px] text-foreground">· {line}</li>}
+            {(line) => <li class="text-2xs text-foreground">· {line}</li>}
           </For>
         </ul>
       </Show>

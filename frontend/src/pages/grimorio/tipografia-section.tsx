@@ -2,12 +2,13 @@ import { createComputedValue, SpecBlock, SpecSection } from './spec-primitives'
 import { cn } from '@/shared/lib/utils'
 
 /**
- * As três famílias e a ladeira de tamanho — com o buraco dela à vista.
+ * As três famílias e a ladeira de tamanho inteira.
  *
- * O buraco é o assunto do P2 da ALE-173: a cena escreve 286 tamanhos ABAIXO do
- * menor degrau declarado (`text-[11px]` ×158, `text-[10px]` ×120, `text-[9px]`
- * ×21), e nenhum deles tem nome. Enquanto não tiverem, esta folha os mostra
- * como o que são: valores arbitrários, fora da escala, repetidos às centenas.
+ * A metade de baixo dela é a que esta casa usa de verdade e a que o shadcn não
+ * tem: `text-xs`, de 12px, é o PISO dele, pensado para formulário — e a mesa é
+ * densa por natureza, com nove combatentes e seus vitais numa coluna. Os três
+ * degraus abaixo eram escritos como valor arbitrário 321 vezes, sem nome
+ * nenhum, até a ALE-173 declará-los.
  */
 
 const FAMILIAS = [
@@ -25,10 +26,11 @@ const DEGRAUS = [
   { classe: 'text-xs', nome: 'text-xs' },
 ]
 
-const SEM_NOME = [
-  { classe: 'text-[11px]', nome: 'text-[11px]', usos: '158 usos' },
-  { classe: 'text-[10px]', nome: 'text-[10px]', usos: '120 usos' },
-  { classe: 'text-[9px]', nome: 'text-[9px]', usos: '21 usos' },
+/** Os três que a casa acrescentou abaixo do piso do shadcn (ALE-173). */
+const DEGRAUS_DA_CASA = [
+  { classe: 'text-2xs', nome: 'text-2xs', uso: 'rótulo de seção' },
+  { classe: 'text-3xs', nome: 'text-3xs', uso: 'rótulo de campo' },
+  { classe: 'text-4xs', nome: 'text-4xs', uso: 'crachá' },
 ]
 
 function LinhaDeTexto(props: { classe: string; nome: string; nota?: string }) {
@@ -38,12 +40,12 @@ function LinhaDeTexto(props: { classe: string; nome: string; nota?: string }) {
       <span ref={refTamanho} class={cn('min-w-0 flex-1 truncate', props.classe)}>
         O mestre rolou 17 e o ogro caiu
       </span>
-      <span class="shrink-0 font-mono text-[11px] text-muted-foreground">{props.nome}</span>
-      <span class="w-14 shrink-0 text-right font-mono text-[11px] text-grimorio-gold">
+      <span class="shrink-0 font-mono text-2xs text-muted-foreground">{props.nome}</span>
+      <span class="w-14 shrink-0 text-right font-mono text-2xs text-grimorio-gold">
         {tamanho()}
       </span>
       {props.nota && (
-        <span class="w-20 shrink-0 text-right text-[10px] text-muted-foreground">{props.nota}</span>
+        <span class="w-20 shrink-0 text-right text-3xs text-muted-foreground">{props.nota}</span>
       )}
     </div>
   )
@@ -60,7 +62,7 @@ export function TipografiaSection() {
         </div>
       </SpecBlock>
 
-      <SpecBlock titulo="A escala declarada">
+      <SpecBlock titulo="A escala do shadcn">
         <div class="w-full">
           {DEGRAUS.map((d) => (
             <LinhaDeTexto classe={d.classe} nome={d.nome} />
@@ -69,12 +71,12 @@ export function TipografiaSection() {
       </SpecBlock>
 
       <SpecBlock
-        titulo="Abaixo da escala, sem nome"
-        nota="Três tamanhos que a cena usa às centenas e que nenhum token declara. Enquanto seguirem arbitrários, cada um paga a armadilha do valor que só existe no CSS depois de reiniciar o servidor."
+        titulo="Abaixo do piso do shadcn"
+        nota="O `text-xs` de 12px é o menor degrau que o shadcn tem, e ele foi pensado para formulário. A mesa é densa, então a casa acrescentou três abaixo — eram 321 valores arbitrários sem nome antes da ALE-173."
       >
         <div class="w-full">
-          {SEM_NOME.map((d) => (
-            <LinhaDeTexto classe={d.classe} nome={d.nome} nota={d.usos} />
+          {DEGRAUS_DA_CASA.map((d) => (
+            <LinhaDeTexto classe={d.classe} nome={d.nome} nota={d.uso} />
           ))}
         </div>
       </SpecBlock>

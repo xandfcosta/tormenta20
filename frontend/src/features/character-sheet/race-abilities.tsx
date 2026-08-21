@@ -79,7 +79,7 @@ export function RaceAbilitySection(props: {
           {(ability) => (
             <li class="rounded-none border border-border p-2">
               <p class="text-xs font-semibold text-grimorio-gold">{ability.name}</p>
-              <p class="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+              <p class="mt-0.5 text-2xs leading-snug text-muted-foreground">
                 {ability.description}
               </p>
               <FactChips facts={ability.facts ?? []} class="mt-1" />
@@ -118,7 +118,7 @@ function RaceVariantPicker(props: {
             title={variant.description}
             aria-pressed={variant.id === props.selected}
             class={cn(
-              'rounded-none border border-border px-2 py-0.5 text-[11px] transition-colors',
+              'rounded-none border border-border px-2 py-0.5 text-2xs transition-colors',
               variant.id === props.selected
                 ? 'bg-muted font-semibold text-foreground'
                 : 'text-foreground hover:bg-muted',

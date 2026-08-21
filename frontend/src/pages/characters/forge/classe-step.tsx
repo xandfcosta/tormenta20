@@ -194,7 +194,7 @@ function ChosenClass(props: {
         <div class="w-24">
           <label
             for={levelId()}
-            class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
+            class="mb-1 block text-2xs font-semibold uppercase tracking-wide text-muted-foreground"
           >
             Nível
           </label>

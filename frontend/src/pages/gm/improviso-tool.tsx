@@ -55,7 +55,7 @@ export function ImprovisoTool() {
 
       <div class="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
         <div>
-          <p class="mb-2 font-heading text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+          <p class="mb-2 font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
             Tabelas do Cap 6
           </p>
           <div class="grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -66,7 +66,7 @@ export function ImprovisoTool() {
         </div>
 
         <div class="border-t border-grimorio-iron pt-4">
-          <p class="mb-2 font-heading text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+          <p class="mb-2 font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
             Masmorra
           </p>
           <DungeonPlanner />
@@ -145,10 +145,10 @@ function TableCard<T>(props: {
   return (
     <div class="space-y-2 rounded-sm border border-grimorio-iron p-3">
       <div class="flex flex-wrap items-baseline justify-between gap-2">
-        <p class="font-heading text-[11px] uppercase tracking-[0.14em] text-grimorio-gold">
+        <p class="font-heading text-2xs uppercase tracking-[0.14em] text-grimorio-gold">
           {props.title}
         </p>
-        <p class="font-mono text-[10px] text-muted-foreground">
+        <p class="font-mono text-3xs text-muted-foreground">
           {props.dice} · {props.page}
         </p>
       </div>
@@ -167,13 +167,13 @@ function TableCard<T>(props: {
 
       <Show
         when={props.entries.length > 0}
-        fallback={<p class="text-[11px] text-muted-foreground">Ainda não rolado.</p>}
+        fallback={<p class="text-2xs text-muted-foreground">Ainda não rolado.</p>}
       >
         <ul class="space-y-1">
           <For each={props.entries}>
             {(entry, index) => (
               <li
-                class="flex gap-2 text-[11px]"
+                class="flex gap-2 text-2xs"
                 classList={{ 'text-foreground': index() === 0, 'text-muted-foreground': index() > 0 }}
               >
                 <span class="shrink-0 font-mono text-grimorio-gold">{entry.roll}</span>
@@ -209,7 +209,7 @@ function DungeonPlanner() {
           <div class="space-y-1">
             <label
               for="dungeon-rooms"
-              class="block font-heading text-[10px] uppercase tracking-[0.14em] text-muted-foreground"
+              class="block font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground"
             >
               Salas
             </label>
@@ -227,7 +227,7 @@ function DungeonPlanner() {
           <div class="min-w-48 flex-1 space-y-1">
             <label
               for="dungeon-objective"
-              class="block font-heading text-[10px] uppercase tracking-[0.14em] text-muted-foreground"
+              class="block font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground"
             >
               Objetivo
             </label>
@@ -242,7 +242,7 @@ function DungeonPlanner() {
 
         <Show when={row()}>
           {(sizeRow) => (
-            <p class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+            <p class="flex flex-wrap gap-x-3 gap-y-1 text-2xs text-muted-foreground">
               <span class="text-grimorio-gold">{SIZE_LABEL[sizeRow().size]}</span>
               <span>{plannedThreats(Math.max(1, rooms()))} ameaças</span>
               <span>{PACING_LABEL[sizeRow().pacing] ?? sizeRow().pacing}</span>

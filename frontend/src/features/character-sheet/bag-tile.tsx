@@ -57,7 +57,7 @@ export function BagTile(props: BagTileProps) {
       class="relative flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-none border border-grimorio-iron bg-grimorio-panel p-2 text-center transition-colors hover:border-grimorio-gold/50"
     >
       <Show when={props.item.quantity > 1}>
-        <span class="absolute top-1 right-1 rounded-full bg-accent px-1.5 font-mono text-[10px] font-semibold text-grimorio-gold">
+        <span class="absolute top-1 right-1 rounded-full bg-accent px-1.5 font-mono text-3xs font-semibold text-grimorio-gold">
           ×{props.item.quantity}
         </span>
       </Show>
@@ -72,11 +72,11 @@ export function BagTile(props: BagTileProps) {
         aria-hidden="true"
         class="size-5 text-muted-foreground"
       />
-      <span class="line-clamp-2 w-full text-[11px] leading-tight text-foreground">
+      <span class="line-clamp-2 w-full text-2xs leading-tight text-foreground">
         {props.item.name}
       </span>
       <Show when={overlays().length > 0}>
-        <span class="line-clamp-1 w-full text-[9px] text-muted-foreground">
+        <span class="line-clamp-1 w-full text-4xs text-muted-foreground">
           {overlays().join(' · ')}
         </span>
       </Show>

@@ -39,7 +39,7 @@ export function DeformidadeControls(props: DeformidadeControlsProps) {
   return (
     <Show when={raceWithDeformidade([props.raceName])}>
       <div class="space-y-1.5">
-        <p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        <p class="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
           Deformidade · {DEFORMIDADE_SLOTS} bônus de +{DEFORMIDADE_PERICIA_BONUS}
         </p>
 
@@ -72,7 +72,7 @@ export function DeformidadeControls(props: DeformidadeControlsProps) {
               : set({ pericias: draft().pericias.slice(0, 1), tormentaPower: NONE })
           }
         />
-        <p class="text-[10px] text-muted-foreground">
+        <p class="text-3xs text-muted-foreground">
           Cada bônus conta como poder da Tormenta (exceto para perda de Carisma).
         </p>
       </div>
@@ -85,7 +85,7 @@ function SlotRow(props: { index: number; children: import('solid-js').JSX.Elemen
     <div class="flex items-center gap-2">
       <span
         aria-hidden="true"
-        class="w-4 shrink-0 text-center font-mono text-[11px] text-muted-foreground"
+        class="w-4 shrink-0 text-center font-mono text-2xs text-muted-foreground"
       >
         {props.index + 1}
       </span>
@@ -152,7 +152,7 @@ function TormentaPowerSlot(props: {
         />
       </SlotRow>
       <Show when={props.draft.tormentaPower}>
-        <p class="pl-6 text-[10px] text-[color:var(--hp-hurt)]">
+        <p class="pl-6 text-3xs text-[color:var(--hp-hurt)]">
           −1 Carisma (poder da Tormenta, p136)
         </p>
       </Show>
@@ -167,7 +167,7 @@ function SwapToggle(props: { on: boolean; onToggle: () => void }) {
       aria-pressed={props.on}
       onClick={() => props.onToggle()}
       class={cn(
-        'flex w-full items-center gap-2 rounded-sm border px-2 py-1 text-left text-[11px] transition-colors',
+        'flex w-full items-center gap-2 rounded-sm border px-2 py-1 text-left text-2xs transition-colors',
         props.on
           ? 'border-grimorio-gold bg-accent'
           : 'border-grimorio-iron text-muted-foreground hover:bg-accent',

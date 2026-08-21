@@ -70,7 +70,7 @@ export function UsePowerDialog(props: {
               type="button"
               size="sm"
               variant="outline"
-              class="h-11 px-3 text-xs sm:h-6 sm:px-2 sm:text-[11px]"
+              class="h-11 px-3 text-xs sm:h-6 sm:px-2 sm:text-2xs"
               aria-label={`Ativar ${props.spec.name}`}
               onClick={() => setOpen(true)}
             >
@@ -135,7 +135,7 @@ function StepperRow(props: {
       <div class="flex items-center justify-between gap-2 rounded-none border border-border p-2">
         <div class="min-w-0 flex-1 space-y-0.5">
           <p class="text-xs text-foreground">{props.stepLabel}</p>
-          <p class="text-[11px] text-muted-foreground">
+          <p class="text-2xs text-muted-foreground">
             +{props.stepPm} PM por passo · máx {props.maxSteps} pelo nível de classe
           </p>
         </div>
@@ -210,7 +210,7 @@ function StancePreview(props: { spec: ActivationSpec; character: Character; step
 
   return (
     <ItemDialogSection title="Efeito ao ativar">
-      <ul class="space-y-0.5 text-[11px]">
+      <ul class="space-y-0.5 text-2xs">
         <For each={modifiers()}>
           {(entry) => (
             <li class="flex items-center justify-between gap-2">
@@ -258,7 +258,7 @@ function TotalRow(props: { total: number; remaining: number; blocked: boolean })
           {props.total} PM
         </span>
       </div>
-      <p class={cn('text-[11px]', props.blocked ? 'text-red-400' : 'text-muted-foreground')}>
+      <p class={cn('text-2xs', props.blocked ? 'text-red-400' : 'text-muted-foreground')}>
         {props.blocked
           ? 'PM insuficiente para ativar'
           : `PM restante após ativar: ${props.remaining}`}

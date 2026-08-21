@@ -286,7 +286,7 @@ export function CharactersListPage() {
               (≥xl). Hidden on tablet/phone — the keys don't apply there.
               "abrir" and not "abrir ficha": on the create slot Enter opens the
               Forge, and the hint has to be true in both positions. */}
-          <p class="hidden pt-1 text-center text-[11px] text-muted-foreground xl:block">
+          <p class="hidden pt-1 text-center text-2xs text-muted-foreground xl:block">
             ← → navegar · Enter abrir · D dossiê · / buscar
           </p>
         </div>

@@ -89,7 +89,7 @@ function PoolBox(
     // que é 1/3 ou 2/3 da tira quando ela está lado a lado.
     <div class="@container space-y-1.5">
       <div class="flex items-baseline justify-between">
-        <h3 class="font-heading text-[10px] font-bold uppercase tracking-widest text-grimorio-gold">
+        <h3 class="font-heading text-3xs font-bold uppercase tracking-widest text-grimorio-gold">
           {props.title}
         </h3>
         <span
@@ -130,7 +130,7 @@ function EquippedCard(props: {
             aria-label={`Abrir ${item().name}`}
             class="block w-[calc(100%-1.5rem)] text-left"
           >
-            <span class="block text-[9px] uppercase tracking-widest text-muted-foreground">
+            <span class="block text-4xs uppercase tracking-widest text-muted-foreground">
               {props.label}
             </span>
             <span class="block truncate text-sm font-semibold text-grimorio-gold" title={item().name}>
@@ -166,7 +166,7 @@ function EquippedChips(props: { item: CharacterItem }) {
             // `title` guarda o texto inteiro para quem passar o mouse.
             <span
               title={chip}
-              class="max-w-full truncate rounded-full border border-border bg-muted px-1.5 py-0.5 text-[10px] text-foreground"
+              class="max-w-full truncate rounded-full border border-border bg-muted px-1.5 py-0.5 text-3xs text-foreground"
             >
               {chip}
             </span>
@@ -185,7 +185,7 @@ function EmptySlot(props: { label: string; wide?: boolean }) {
         props.wide && 'col-span-2',
       )}
     >
-      <span class="text-[9px] uppercase tracking-widest text-muted-foreground">{props.label}</span>
+      <span class="text-4xs uppercase tracking-widest text-muted-foreground">{props.label}</span>
       <span class="text-xs text-muted-foreground">vazio</span>
     </div>
   )

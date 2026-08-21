@@ -165,7 +165,7 @@ export function CastSpellDialog(props: {
             }
           >
             <div class="space-y-2">
-              <p class="text-[10px] uppercase tracking-widest text-muted-foreground">
+              <p class="text-3xs uppercase tracking-widest text-muted-foreground">
                 Aprimoramentos
               </p>
               <ul class="space-y-2">
@@ -236,7 +236,7 @@ function AugmentRow(props: {
         <p class="text-xs">
           <span
             class={cn(
-              'mr-2 font-mono text-[10px] uppercase tracking-widest',
+              'mr-2 font-mono text-3xs uppercase tracking-widest',
               props.augment.kind === 'muda' ? 'text-violet-300' : 'text-emerald-300',
             )}
           >

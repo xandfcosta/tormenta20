@@ -418,7 +418,7 @@ export function BoardRegion(props: {
               <h2 class="min-w-0 truncate font-heading text-sm uppercase tracking-wide text-grimorio-gold">
                 {live().place}
               </h2>
-              <span class="font-mono text-[11px] tabular-nums text-muted-foreground">
+              <span class="font-mono text-2xs tabular-nums text-muted-foreground">
                 {live().tokens.length} peças · 1 quadrado = {SQUARE_METRES.toFixed(1).replace('.', ',')}m
               </span>
 
@@ -669,7 +669,7 @@ export function BoardRegion(props: {
                 o óbvio, e no celular deitado isso é uma fileira inteira de
                 quadrados a menos (ALE-124). */}
             <Show when={selectedTokenId() && !live().pending}>
-              <p class="shrink-0 border-t border-grimorio-iron px-3 py-1 text-[11px] text-grimorio-gold">
+              <p class="shrink-0 border-t border-grimorio-iron px-3 py-1 text-2xs text-grimorio-gold">
                 {props.isGm
                   ? 'Clique num quadrado para pousar a peça.'
                   : 'Clique numa casa acesa para propor o movimento.'}

@@ -23,7 +23,7 @@ export function InviteLetter(props: InviteLetterProps) {
     <div class="flex items-start gap-3 rounded-none border border-grimorio-gold/40 bg-grimorio-panel p-4">
       <Mail aria-hidden="true" class="mt-0.5 size-4 shrink-0 text-grimorio-gold" />
       <div class="min-w-0 flex-1 space-y-1">
-        <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+        <p class="text-2xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           Convite
         </p>
         <Switch>

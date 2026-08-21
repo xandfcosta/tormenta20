@@ -14,7 +14,7 @@ import type { JSX, ParentProps } from 'solid-js'
 export function TomeHeading(props: ParentProps<{ eyebrow: string; icon?: JSX.Element }>) {
   return (
     <header class="space-y-3 text-center [@media(max-height:520px)]:space-y-1.5">
-      <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground [@media(max-height:520px)]:hidden">
+      <p class="text-2xs font-semibold uppercase tracking-[0.22em] text-muted-foreground [@media(max-height:520px)]:hidden">
         {props.eyebrow}
       </p>
       <h1 class="font-display text-3xl uppercase leading-tight tracking-wide text-grimorio-gold sm:text-4xl [@media(max-height:520px)]:text-2xl">

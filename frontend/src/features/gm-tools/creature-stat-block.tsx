@@ -30,13 +30,13 @@ export function CreatureStatBlock(props: { block: CreatureBlock; bookPage?: numb
                 <span class="font-mono text-grimorio-gold">{signed(attack.attackBonus)}</span>
                 <span class="font-mono text-muted-foreground">{attack.damage}</span>
                 <Show when={attack.ranged}>
-                  <span class="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  <span class="text-3xs uppercase tracking-wide text-muted-foreground">
                     à distância
                   </span>
                 </Show>
                 <Show when={attack.special}>
                   {(special) => (
-                    <span class="text-[11px] text-muted-foreground">({special()})</span>
+                    <span class="text-2xs text-muted-foreground">({special()})</span>
                   )}
                 </Show>
               </p>
@@ -47,7 +47,7 @@ export function CreatureStatBlock(props: { block: CreatureBlock; bookPage?: numb
 
       <section
         aria-label="Identidade"
-        class="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[11px] text-muted-foreground"
+        class="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-2xs text-muted-foreground"
       >
         <span>
           ND {formatNd(props.block.nd)} · {MONSTER_TIPO_LABEL[props.block.tipo]} ·{' '}
@@ -71,7 +71,7 @@ export function CreatureStatBlock(props: { block: CreatureBlock; bookPage?: numb
 
       <section
         aria-label="Atributos e resistências"
-        class="grid grid-cols-3 gap-x-3 gap-y-1 text-[11px] sm:grid-cols-6"
+        class="grid grid-cols-3 gap-x-3 gap-y-1 text-2xs sm:grid-cols-6"
       >
         <For each={attributeCells(props.block)}>
           {(cell) => (
@@ -86,7 +86,7 @@ export function CreatureStatBlock(props: { block: CreatureBlock; bookPage?: numb
       <Show when={props.block.skills.length > 0}>
         <section aria-label="Perícias" class="space-y-1">
           <BlockTitle>Perícias</BlockTitle>
-          <p class="flex flex-wrap gap-x-3 text-[11px] text-muted-foreground">
+          <p class="flex flex-wrap gap-x-3 text-2xs text-muted-foreground">
             <For each={props.block.skills}>
               {(skill) => (
                 <span>
@@ -101,7 +101,7 @@ export function CreatureStatBlock(props: { block: CreatureBlock; bookPage?: numb
       <Show when={props.block.equipment || props.block.treasure}>
         <section
           aria-label="Equipamento e tesouro"
-          class="space-y-0.5 text-[11px] text-muted-foreground"
+          class="space-y-0.5 text-2xs text-muted-foreground"
         >
           <Show when={props.block.equipment}>
             {(equipment) => (
@@ -123,7 +123,7 @@ export function CreatureStatBlock(props: { block: CreatureBlock; bookPage?: numb
       <Show when={props.block.specialAbilities.length > 0}>
         <section aria-label="Habilidades" class="space-y-1">
           <BlockTitle>Habilidades</BlockTitle>
-          <ul class="ml-4 list-disc space-y-0.5 text-[11px] text-muted-foreground">
+          <ul class="ml-4 list-disc space-y-0.5 text-2xs text-muted-foreground">
             <For each={props.block.specialAbilities}>{(ability) => <li>{ability}</li>}</For>
           </ul>
         </section>
@@ -134,7 +134,7 @@ export function CreatureStatBlock(props: { block: CreatureBlock; bookPage?: numb
 
 function BlockTitle(props: { children: string }) {
   return (
-    <h4 class="font-heading text-[11px] uppercase tracking-[0.14em] text-grimorio-gold">
+    <h4 class="font-heading text-2xs uppercase tracking-[0.14em] text-grimorio-gold">
       {props.children}
     </h4>
   )

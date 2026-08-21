@@ -63,7 +63,7 @@ export function MonsterDetail(props: { monster: Monster }) {
                   </p>
                   <Show when={attack.special}>
                     {(special) => (
-                      <p class="text-[11px] text-muted-foreground">{special()}</p>
+                      <p class="text-2xs text-muted-foreground">{special()}</p>
                     )}
                   </Show>
                 </div>
@@ -87,7 +87,7 @@ export function MonsterDetail(props: { monster: Monster }) {
 function Section(props: { title: string; children: JSX.Element }) {
   return (
     <section>
-      <h4 class="mb-1 font-heading text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+      <h4 class="mb-1 font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
         {props.title}
       </h4>
       {props.children}
@@ -98,7 +98,7 @@ function Section(props: { title: string; children: JSX.Element }) {
 function Stat(props: { label: string; value: string | number }) {
   return (
     <div class="rounded-sm border border-grimorio-iron p-2 text-center">
-      <p class="text-[10px] uppercase tracking-wide text-muted-foreground">{props.label}</p>
+      <p class="text-3xs uppercase tracking-wide text-muted-foreground">{props.label}</p>
       <p class="text-sm font-semibold tabular-nums">{props.value}</p>
     </div>
   )

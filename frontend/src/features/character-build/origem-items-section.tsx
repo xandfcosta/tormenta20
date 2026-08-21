@@ -32,7 +32,7 @@ export function OrigemItemsSection(props: OrigemItemsSectionProps) {
   return (
     <Show when={props.originName}>
       <div class="space-y-1.5 rounded-sm border border-grimorio-iron p-3" id="chooser-origem">
-        <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+        <p class="font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
           Origem · {props.originName}
         </p>
         <Show
@@ -201,7 +201,7 @@ function PickRow(props: { label: string; pending: boolean; children: JSX.Element
       <p class="text-xs">
         {props.label}
         <Show when={props.pending}>
-          <span class="ml-1.5 text-[11px] text-[color:var(--hp-hurt)]">· escolha pendente</span>
+          <span class="ml-1.5 text-2xs text-[color:var(--hp-hurt)]">· escolha pendente</span>
         </Show>
       </p>
       {props.children}

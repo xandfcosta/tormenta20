@@ -139,7 +139,7 @@ function ProficiencyRow(props: {
             tell an intentional manual toggle from the baseline. */}
         {props.entry.granted && (
           <span
-            class="ml-1 rounded-md bg-muted px-1 text-[9px] uppercase tracking-wider text-muted-foreground"
+            class="ml-1 rounded-md bg-muted px-1 text-4xs uppercase tracking-wider text-muted-foreground"
             title={`Padrão: ${props.entry.sources.join(', ')}`}
           >
             classe

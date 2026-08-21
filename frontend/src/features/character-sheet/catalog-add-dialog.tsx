@@ -132,7 +132,7 @@ export function CatalogAddDialog(props: CatalogAddDialogProps) {
           </DialogHeader>
           <form class="space-y-4" onSubmit={submit} noValidate>
             <div class="space-y-1">
-              <span class="text-[10px] uppercase tracking-widest text-muted-foreground">item</span>
+              <span class="text-3xs uppercase tracking-widest text-muted-foreground">item</span>
               <div class="flex gap-2">
                 <Input
                   value={search()}
@@ -239,7 +239,7 @@ function CatalogRow(props: { catalog: CatalogItem; selected: boolean; onPick: ()
       class="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-sm transition-colors hover:bg-accent aria-pressed:bg-accent aria-pressed:text-grimorio-gold"
     >
       <span class="truncate">{props.catalog.name}</span>
-      <span class="shrink-0 text-[10px] text-muted-foreground">
+      <span class="shrink-0 text-3xs text-muted-foreground">
         {categoryLabel(props.catalog.category)}
       </span>
     </button>
@@ -250,7 +250,7 @@ function CatalogRow(props: { catalog: CatalogItem; selected: boolean; onPick: ()
  *  opening the full item sheet. */
 function CatalogPreview(props: { catalog: CatalogItem }) {
   return (
-    <div class="rounded-sm border border-border bg-muted px-3 py-2 text-[11px]">
+    <div class="rounded-sm border border-border bg-muted px-3 py-2 text-2xs">
       <p class="font-semibold text-grimorio-gold">{props.catalog.name}</p>
       <p class="text-muted-foreground">
         {categoryLabel(props.catalog.category)} • esp {formatLoad(props.catalog.slots)} • T${' '}

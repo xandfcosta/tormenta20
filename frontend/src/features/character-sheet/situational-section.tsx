@@ -50,7 +50,7 @@ function ItemFlagList(props: { effects: ItemFlagEffect[] }) {
   return (
     <Show when={props.effects.length > 0}>
       <div class="space-y-1">
-        <p class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        <p class="text-3xs font-bold uppercase tracking-widest text-muted-foreground">
           Sempre ativos (itens equipados)
         </p>
         <ul class="space-y-1">
@@ -59,7 +59,7 @@ function ItemFlagList(props: { effects: ItemFlagEffect[] }) {
               <li class="flex items-center gap-2 rounded-sm border border-border bg-muted px-2 py-1.5">
                 <Lock aria-hidden="true" class="size-3.5 shrink-0 text-muted-foreground" />
                 <span class="min-w-0 flex-1 truncate text-sm text-foreground">{effect.label}</span>
-                <span class="shrink-0 truncate text-[11px] text-muted-foreground">
+                <span class="shrink-0 truncate text-2xs text-muted-foreground">
                   {effect.source}
                 </span>
               </li>
@@ -180,11 +180,11 @@ function FlagGroupRow(props: {
         <div class="flex w-full items-center gap-3">
           <Checkbox checked={allActive()} />
           <span class="truncate text-sm font-medium text-foreground">{props.group.source}</span>
-          <span class="ml-auto truncate text-[11px] text-muted-foreground">
+          <span class="ml-auto truncate text-2xs text-muted-foreground">
             {props.group.label}
           </span>
         </div>
-        <ul class="ml-8 w-full space-y-0.5 text-[11px]">
+        <ul class="ml-8 w-full space-y-0.5 text-2xs">
           <For each={props.group.entries}>
             {(entry) => (
               <li class="flex items-center justify-between gap-2">
@@ -222,7 +222,7 @@ function ConditionalRow(props: { entry: ConditionalEntry; onToggle: () => void }
               suffix={describeConditionalTarget(props.entry.effect.target)}
             />
           </div>
-          <p class="truncate text-[11px] text-muted-foreground">{props.entry.effect.note}</p>
+          <p class="truncate text-2xs text-muted-foreground">{props.entry.effect.note}</p>
         </div>
       </button>
     </li>

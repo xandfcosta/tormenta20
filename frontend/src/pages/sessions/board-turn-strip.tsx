@@ -26,7 +26,7 @@ export function TurnStrip(props: { rt: SessionRealtime; hidden: boolean }) {
 
   return (
     <Show when={fila().length > 0}>
-      <div class="flex shrink-0 items-center gap-2 overflow-hidden border-b border-grimorio-iron px-3 py-1.5 text-[11px]">
+      <div class="flex shrink-0 items-center gap-2 overflow-hidden border-b border-grimorio-iron px-3 py-1.5 text-2xs">
         <span class="shrink-0 font-heading uppercase tracking-wide text-grimorio-gold">
           Na vez
         </span>

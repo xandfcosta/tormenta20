@@ -61,7 +61,7 @@ export function CollapsibleAbilityCard(props: {
           <span class="text-xs text-muted-foreground">{props.count}</span>
         </Show>
         <Show when={pending() > 0}>
-          <span class="ml-auto rounded-full bg-destructive px-2 py-0.5 text-[10px] font-bold text-white">
+          <span class="ml-auto rounded-full bg-destructive px-2 py-0.5 text-3xs font-bold text-white">
             {pending()} pendente{pending() > 1 ? 's' : ''}
           </span>
         </Show>

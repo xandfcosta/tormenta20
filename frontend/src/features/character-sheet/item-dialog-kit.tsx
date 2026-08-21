@@ -21,7 +21,7 @@ export const ITEM_DIALOG_TITLE =
 export function ItemDialogSection(props: ParentProps<{ title: string; class?: string }>) {
   return (
     <section class={cn('space-y-1.5', props.class)}>
-      <h3 class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+      <h3 class="text-3xs font-bold uppercase tracking-widest text-muted-foreground">
         {props.title}
       </h3>
       {props.children}
@@ -40,7 +40,7 @@ export function ItemDialogFooter(props: ParentProps<{ label?: string }>) {
     <div class="flex items-center justify-end gap-2 border-t border-border pt-3">
       <Show when={props.label}>
         {(label) => (
-          <span class="mr-auto text-[10px] uppercase tracking-widest text-muted-foreground">
+          <span class="mr-auto text-3xs uppercase tracking-widest text-muted-foreground">
             {label()}
           </span>
         )}

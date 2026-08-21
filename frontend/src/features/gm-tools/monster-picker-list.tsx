@@ -34,7 +34,7 @@ export function MonsterPickerList(props: MonsterPickerListProps) {
   return (
     <div class="flex min-h-0 flex-1 flex-col gap-2">
       <MonsterFilters filter={filter} idPrefix={props.idPrefix} />
-      <p class="text-[11px] text-muted-foreground">
+      <p class="text-2xs text-muted-foreground">
         {shown().length} de {monsters().length}
       </p>
       <Show
@@ -58,11 +58,11 @@ export function MonsterPickerList(props: MonsterPickerListProps) {
             >
               <p class="flex flex-wrap items-baseline gap-x-1.5 text-xs font-semibold">
                 {monster.name}
-                <span class="font-mono text-[10px] text-grimorio-gold">
+                <span class="font-mono text-3xs text-grimorio-gold">
                   ND {formatNd(monster.nd)}
                 </span>
               </p>
-              <p class="font-mono text-[10px] text-muted-foreground">
+              <p class="font-mono text-3xs text-muted-foreground">
                 {MONSTER_TIPO_LABEL[monster.tipo]} · PV {monster.hp} · DEF {monster.defesa}
               </p>
             </button>

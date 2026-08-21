@@ -32,7 +32,7 @@ export function VitalBar(props: {
   return (
     <div class={cn('flex items-center gap-1.5', props.class)}>
       <span
-        class="w-7 shrink-0 text-[10px] font-bold uppercase tracking-wider"
+        class="w-7 shrink-0 text-3xs font-bold uppercase tracking-wider"
         style={{ color: `var(${fillVar()})` }}
       >
         {props.label}

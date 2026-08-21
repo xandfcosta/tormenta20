@@ -14,7 +14,7 @@ export function TomeSection(
     <section class="space-y-4">
       <header class="flex flex-wrap items-end justify-between gap-3">
         <div class="space-y-1">
-          <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+          <p class="text-2xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             {props.eyebrow}
           </p>
           <h2 class="font-heading text-xl uppercase tracking-wide text-grimorio-gold sm:text-2xl">

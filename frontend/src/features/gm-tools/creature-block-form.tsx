@@ -319,7 +319,7 @@ function Field(props: { label: string; id: string; class?: string; children: unk
     <div class={props.class ?? 'w-28 space-y-1'}>
       <label
         for={props.id}
-        class="block text-[10px] uppercase tracking-widest text-muted-foreground"
+        class="block text-3xs uppercase tracking-widest text-muted-foreground"
       >
         {props.label}
       </label>
@@ -339,7 +339,7 @@ function Section(props: { title: string; children: unknown }) {
 
 function SectionTitle(props: { children: unknown }) {
   return (
-    <h4 class="font-heading text-[11px] uppercase tracking-[0.14em] text-grimorio-gold">
+    <h4 class="font-heading text-2xs uppercase tracking-[0.14em] text-grimorio-gold">
       {props.children as never}
     </h4>
   )

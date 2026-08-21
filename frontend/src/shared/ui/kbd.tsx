@@ -11,5 +11,5 @@ import { cn } from '@/shared/lib/utils'
  */
 export function Kbd(props: ComponentProps<'kbd'>) {
   const [local, rest] = splitProps(props, ['class'])
-  return <kbd class={cn('ml-1 hidden text-[10px] opacity-70 xl:inline', local.class)} {...rest} />
+  return <kbd class={cn('ml-1 hidden text-3xs opacity-70 xl:inline', local.class)} {...rest} />
 }

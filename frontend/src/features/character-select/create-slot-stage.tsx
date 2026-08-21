@@ -43,7 +43,7 @@ export function CreateSlotStage(props: CreateSlotStageProps) {
           <h2 class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-muted-foreground sm:text-4xl">
             Novo personagem
           </h2>
-          <p class="mt-1 text-[11px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">
+          <p class="mt-1 text-2xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
             Uma vaga vazia no grupo
           </p>
         </div>

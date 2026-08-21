@@ -43,7 +43,7 @@ export function ForgeBeads(props: ForgeBeadsProps) {
                   aria-current={state() === 'current' ? 'step' : undefined}
                   onClick={() => clickable() && props.onJump(step.slug)}
                   class={cn(
-                    'flex size-5 items-center justify-center rounded-full text-[9px] leading-none transition-colors',
+                    'flex size-5 items-center justify-center rounded-full text-4xs leading-none transition-colors',
                     // Enabled beads keep a pointer affordance; locked ones fade
                     // but stay in place, so the necklace never changes length.
                     clickable() && 'hover:scale-110 hover:text-grimorio-gold',

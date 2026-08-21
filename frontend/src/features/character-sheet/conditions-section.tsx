@@ -107,14 +107,14 @@ export function ConditionChip(props: {
       title={condition().description}
       class={cn(
         'flex items-center gap-1 rounded-sm border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/10 font-medium',
-        props.compact ? 'px-1.5 py-px text-[11px]' : 'px-2 py-1 text-xs',
+        props.compact ? 'px-1.5 py-px text-2xs' : 'px-2 py-1 text-xs',
       )}
     >
       {condition().name}
       {/* The applied mechanical effect, or "lembrete" for the conditions with
           no sheet-number impact (ALE-28). */}
       <Show when={!props.compact}>
-        <span class="text-[10px] font-normal text-muted-foreground">
+        <span class="text-3xs font-normal text-muted-foreground">
           {conditionEffectSummary(props.id)}
         </span>
       </Show>

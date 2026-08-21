@@ -75,7 +75,7 @@ export function DossierDrawer(props: DossierDrawerProps) {
             <For each={ATTRIBUTE_KEYS}>
               {(key) => (
                 <div>
-                  <p class="text-[9px] font-semibold uppercase text-muted-foreground">
+                  <p class="text-4xs font-semibold uppercase text-muted-foreground">
                     {ATTRIBUTE_ABBR[key]}
                   </p>
                   <p class="font-mono text-sm">
@@ -100,7 +100,7 @@ export function DossierDrawer(props: DossierDrawerProps) {
 function DossierSection(props: { title: string; children: JSX.Element }) {
   return (
     <section class="mb-4 space-y-1.5">
-      <p class="text-[10px] font-semibold uppercase tracking-widest text-grimorio-gold">
+      <p class="text-3xs font-semibold uppercase tracking-widest text-grimorio-gold">
         {props.title}
       </p>
       {props.children}
@@ -122,7 +122,7 @@ function AbilityList(props: { abilities: AbilityBlurb[] }) {
           {(ability) => (
             <li>
               <p class="text-xs font-semibold">{ability.name}</p>
-              <p class="text-[11px] leading-snug opacity-80">{ability.description}</p>
+              <p class="text-2xs leading-snug opacity-80">{ability.description}</p>
             </li>
           )}
         </For>

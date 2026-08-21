@@ -130,7 +130,7 @@ export function IdentidadeStep() {
         />
       </div>
 
-      <p class="text-[11px] text-muted-foreground">
+      <p class="text-2xs text-muted-foreground">
         Os máximos derivam da classe, Constituição, nível e poderes — só o atual é editável,
         para quem começa a história já ferido.
       </p>
@@ -177,13 +177,13 @@ function Field(props: {
     <div class="space-y-1">
       <label
         for={props.name}
-        class="font-heading text-[11px] uppercase tracking-[0.14em] text-muted-foreground"
+        class="font-heading text-2xs uppercase tracking-[0.14em] text-muted-foreground"
       >
         {props.label}
       </label>
       {props.children}
       <Show when={props.hint}>
-        {(hint) => <p class="text-[11px] text-muted-foreground/80">{hint()}</p>}
+        {(hint) => <p class="text-2xs text-muted-foreground/80">{hint()}</p>}
       </Show>
     </div>
   )
@@ -208,7 +208,7 @@ function VitalMeter(props: {
   return (
     <div class="space-y-2 rounded-sm border border-grimorio-iron bg-muted/10 p-3">
       <div class="flex items-baseline justify-between gap-2">
-        <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+        <p class="font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
           {props.label}
         </p>
         <p class="font-heading text-3xl tabular-nums text-grimorio-gold">
@@ -236,7 +236,7 @@ function VitalMeter(props: {
       <div class="flex items-center gap-2">
         <label
           for={`identidade-${props.kind}-current`}
-          class="text-[11px] uppercase tracking-wide text-muted-foreground"
+          class="text-2xs uppercase tracking-wide text-muted-foreground"
         >
           {props.abbr} atual
         </label>

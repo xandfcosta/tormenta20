@@ -78,7 +78,7 @@ function Sigil(props: { icon: JSX.Element; value: number; label: string }) {
         {props.icon}
       </span>
       <span class="font-heading text-3xl leading-none text-grimorio-gold">{props.value}</span>
-      <span class="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+      <span class="text-3xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
         {props.label}
       </span>
     </div>

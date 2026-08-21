@@ -63,7 +63,7 @@ export function ConditionRow(props: { condition: Condition }) {
         {props.condition.name}
         <For each={props.condition.tags}>
           {(tag) => (
-            <Badge variant="outline" class="text-[10px] uppercase">
+            <Badge variant="outline" class="text-3xs uppercase">
               {tag}
             </Badge>
           )}
@@ -86,8 +86,8 @@ export function SpellCatalogRow(props: { spell: CatalogSpell }) {
     <Row>
       <p class="flex flex-wrap items-center gap-1.5 font-medium">
         {props.spell.name}
-        <Badge class="text-[10px]">{props.spell.circle}º círculo</Badge>
-        <Badge variant="secondary" class="text-[10px]">
+        <Badge class="text-3xs">{props.spell.circle}º círculo</Badge>
+        <Badge variant="secondary" class="text-3xs">
           {SCHOOL_LABEL[props.spell.school] ?? props.spell.school}
         </Badge>
       </p>
@@ -115,7 +115,7 @@ export function PowerCatalogRow(props: { power: CatalogPower }) {
     <Row>
       <p class="flex flex-wrap items-center gap-1.5 font-medium">
         {props.power.name}
-        <Badge variant="outline" class="text-[10px]">
+        <Badge variant="outline" class="text-3xs">
           {props.power.source}
         </Badge>
       </p>
@@ -129,7 +129,7 @@ export function ItemCatalogRow(props: { item: CatalogItem }) {
     <Row>
       <p class="flex flex-wrap items-center gap-1.5 font-medium">
         {props.item.name}
-        <Badge variant="secondary" class="text-[10px]">
+        <Badge variant="secondary" class="text-3xs">
           {ITEM_CATEGORY_LABEL[props.item.category] ?? props.item.category}
         </Badge>
       </p>

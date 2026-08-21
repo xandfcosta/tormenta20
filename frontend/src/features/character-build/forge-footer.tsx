@@ -128,7 +128,7 @@ function Stat(props: { label: string; abbr: string; value: number; dim?: boolean
     <span class="flex items-baseline gap-1">
       <span
         aria-hidden="true"
-        class="text-[10px] uppercase tracking-widest text-muted-foreground"
+        class="text-3xs uppercase tracking-widest text-muted-foreground"
       >
         {props.abbr}
       </span>

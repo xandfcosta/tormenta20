@@ -98,7 +98,7 @@ export function AbilitiesPanel(props: { character: Character }) {
             <Settings2 aria-hidden="true" class="size-3.5" />
             {mode() === 'edit' ? 'Voltar ao jogo' : 'Editar poderes'}
             <Show when={mode() === 'play' && pendencias().length > 0}>
-              <span class="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-white">
+              <span class="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-3xs font-bold leading-none text-white">
                 {pendencias().length}
               </span>
             </Show>
@@ -197,7 +197,7 @@ function SourceTabs(props: {
           >
             {source.label}
             <Show when={props.countFor(source.value) > 0}>
-              <span class="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-white">
+              <span class="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-3xs font-bold leading-none text-white">
                 {props.countFor(source.value)}
               </span>
             </Show>
@@ -230,7 +230,7 @@ function FlatAbilityResults(props: { character: Character; query: string }) {
             <li class="rounded-none border border-border p-2">
               <div class="flex flex-wrap items-center gap-1.5">
                 <p class="text-xs font-semibold">{entry.name}</p>
-                <span class="rounded-none bg-muted px-1 py-0 text-[9px] text-muted-foreground">
+                <span class="rounded-none bg-muted px-1 py-0 text-4xs text-muted-foreground">
                   {entry.source}
                 </span>
                 <PowerActionSlot
@@ -239,7 +239,7 @@ function FlatAbilityResults(props: { character: Character; query: string }) {
                   class="ml-auto"
                 />
               </div>
-              <p class="mt-0.5 text-[11px] leading-snug text-muted-foreground">{entry.detail}</p>
+              <p class="mt-0.5 text-2xs leading-snug text-muted-foreground">{entry.detail}</p>
             </li>
           )}
         </For>

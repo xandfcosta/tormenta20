@@ -61,7 +61,7 @@ function ClassChoicesPicker(props: {
   return (
     <Show when={devotoOptions() !== null || showCaminho()}>
       <div class="mb-3 space-y-2">
-        <p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+        <p class="text-3xs font-semibold uppercase tracking-wide text-muted-foreground">
           Escolhas
         </p>
         <Show when={devotoOptions()}>
@@ -119,7 +119,7 @@ function ChoiceSelect(props: {
 
   return (
     <div>
-      <p class="mb-1 text-[11px] text-muted-foreground">{props.label}</p>
+      <p class="mb-1 text-2xs text-muted-foreground">{props.label}</p>
       <Select
         aria-label={props.ariaLabel}
         options={options()}
@@ -273,7 +273,7 @@ export function ClassesSection(props: {
 
 function GroupTitle(props: { children: JSX.Element }) {
   return (
-    <p class="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+    <p class="mb-1 text-3xs font-semibold uppercase tracking-wide text-muted-foreground">
       {props.children}
     </p>
   )

@@ -39,7 +39,7 @@ export function PeekPortrait(props: PeekPortraitProps) {
           <span class="absolute inset-0 flex select-none items-center justify-center font-display text-4xl text-white/20 sm:text-5xl">
             {initials(character().name)}
           </span>
-          <span class="absolute inset-x-0 bottom-0 line-clamp-2 bg-black/60 px-1 py-0.5 text-center text-[10px] leading-tight text-white">
+          <span class="absolute inset-x-0 bottom-0 line-clamp-2 bg-black/60 px-1 py-0.5 text-center text-3xs leading-tight text-white">
             {character().name}
           </span>
         </button>

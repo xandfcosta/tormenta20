@@ -66,7 +66,7 @@ export function ApplyEffectDialog(props: { character: Character }) {
         type="button"
         variant="outline"
         size="sm"
-        class="h-6 gap-1 px-2 text-[11px]"
+        class="h-6 gap-1 px-2 text-2xs"
         onClick={() => {
           setQuery('')
           setFormError(null)
@@ -126,7 +126,7 @@ function BuffRow(props: { spell: CatalogSpell; disabled: boolean; onPick: () => 
     >
       <div class="flex items-center justify-between gap-2">
         <span class="truncate text-sm font-medium text-foreground">{props.spell.name}</span>
-        <span class="shrink-0 text-[10px] uppercase text-muted-foreground">
+        <span class="shrink-0 text-3xs uppercase text-muted-foreground">
           {props.spell.buff?.defaultScope === 'day' ? 'dia' : 'cena'}
         </span>
       </div>

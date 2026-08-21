@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 /** Kind pill ("combate", "destino"…) shown next to a power's name. */
 export function PowerKindBadge(props: { kind: PowerKind }) {
   return (
-    <span class="rounded-none bg-muted px-1 py-px text-[9px] uppercase tracking-wide text-muted-foreground">
+    <span class="rounded-none bg-muted px-1 py-px text-4xs uppercase tracking-wide text-muted-foreground">
       {props.kind}
     </span>
   )
@@ -19,7 +19,7 @@ function LevelBadge(props: { label: string; tone?: 'auto' | 'gate' | 'locked' })
   return (
     <span
       class={cn(
-        'rounded-none px-1 py-px text-[9px] uppercase tracking-wide',
+        'rounded-none px-1 py-px text-4xs uppercase tracking-wide',
         tone() === 'auto' && 'bg-muted text-muted-foreground',
         tone() === 'gate' && 'border border-border text-muted-foreground',
         tone() === 'locked' && 'bg-destructive text-white',
@@ -114,7 +114,7 @@ export function GeneralPowerRow(props: {
           </Show>
         </div>
         <Show when={props.owned}>
-          <p class="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+          <p class="mt-0.5 text-2xs leading-snug text-muted-foreground">
             {props.power.description}
           </p>
         </Show>
@@ -179,7 +179,7 @@ export function ClassPowerRow(props: {
           </Show>
         </div>
         <Show when={!props.owned && (props.prereqChecks?.length ?? 0) > 0}>
-          <p class="mt-0.5 text-[10px] leading-snug">
+          <p class="mt-0.5 text-3xs leading-snug">
             <span class="font-semibold text-muted-foreground">Requer: </span>
             <For each={props.prereqChecks}>
               {(check, index) => (
@@ -204,7 +204,7 @@ export function ClassPowerRow(props: {
           </p>
         </Show>
         <Show when={inlineDescription()}>
-          <p class="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+          <p class="mt-0.5 text-2xs leading-snug text-muted-foreground">
             {props.power.description}
           </p>
         </Show>

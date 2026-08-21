@@ -49,14 +49,14 @@ export function DevocaoPanel(props: DevocaoPanelProps) {
             <DeusFacts deus={god()} />
 
             <Show when={!devotoEligible(god(), props.raceNames, props.classNames)}>
-              <p class="text-[11px] text-[color:var(--hp-hurt)]">
+              <p class="text-2xs text-[color:var(--hp-hurt)]">
                 Raça/classe fora da lista de devotos de {god().name} (p96) — negociado com o
                 mestre.
               </p>
             </Show>
 
             <div aria-label={`Poder concedido de ${god().name}`} class="grid gap-1.5">
-              <p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <p class="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Poder concedido · escolha 1 (p96)
               </p>
               <For each={powers()}>
@@ -70,7 +70,7 @@ export function DevocaoPanel(props: DevocaoPanelProps) {
               </For>
             </div>
 
-            <p class="text-[10px] text-muted-foreground">
+            <p class="text-3xs text-muted-foreground">
               Devoto segue as Obrigações &amp; Restrições do deus; violá-las custa todos os PM
               (p96).
             </p>
@@ -91,7 +91,7 @@ function DeusFacts(props: { deus: Deus }) {
 
   return (
     <Show when={facts().length > 0}>
-      <p class="text-[11px] text-muted-foreground">{facts().join(' · ')}</p>
+      <p class="text-2xs text-muted-foreground">{facts().join(' · ')}</p>
     </Show>
   )
 }
@@ -128,9 +128,9 @@ function GrantedPowerRow(props: {
       <span class="min-w-0 flex-1">
         <span class="flex flex-wrap items-baseline gap-1.5">
           <span class="text-xs font-semibold">{props.power.name}</span>
-          <span class="text-[10px] text-muted-foreground">· {meta()}</span>
+          <span class="text-3xs text-muted-foreground">· {meta()}</span>
         </span>
-        <span class="block text-[11px] leading-snug text-muted-foreground">
+        <span class="block text-2xs leading-snug text-muted-foreground">
           {props.power.description}
         </span>
       </span>

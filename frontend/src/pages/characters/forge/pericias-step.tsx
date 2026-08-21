@@ -109,7 +109,7 @@ function PericiaBands(props: {
 
       <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
         <Show when={props.plan.fixed.length > 0}>
-          <p class="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+          <p class="flex flex-wrap items-center gap-1.5 text-2xs text-muted-foreground">
             <span class="uppercase tracking-wide">Fixas:</span>
             <For each={props.plan.fixed}>
               {(name) => (
@@ -124,7 +124,7 @@ function PericiaBands(props: {
         <Show when={props.plan.eitherOr}>
           {(pair) => (
             <div class="flex flex-wrap items-center gap-1.5">
-              <span class="text-[11px] uppercase tracking-wide text-muted-foreground">
+              <span class="text-2xs uppercase tracking-wide text-muted-foreground">
                 Escolha uma:
               </span>
               <For each={pair()}>
@@ -151,7 +151,7 @@ function PericiaBands(props: {
 
       <Show when={overflowNotice(props.plan, props.trained)}>
         {(notice) => (
-          <p class="rounded-sm border border-grimorio-iron bg-muted/20 px-3 py-1.5 text-[11px] text-muted-foreground">
+          <p class="rounded-sm border border-grimorio-iron bg-muted/20 px-3 py-1.5 text-2xs text-muted-foreground">
             {notice()} A cota da classe acabou, então o excedente sai do orçamento livre.
           </p>
         )}
@@ -192,7 +192,7 @@ function PericiaBands(props: {
       </div>
 
       <Show when={missingNotice(missing())}>
-        {(notice) => <p class="text-[11px] text-[color:var(--hp-hurt)]">{notice()}</p>}
+        {(notice) => <p class="text-2xs text-[color:var(--hp-hurt)]">{notice()}</p>}
       </Show>
     </>
   )
@@ -238,19 +238,19 @@ function Band(props: {
       class={cn('flex min-h-0 flex-col gap-1.5', props.accent && 'lg:border-l lg:border-grimorio-iron lg:pl-4')}
     >
       <div class="flex flex-wrap items-baseline gap-x-2">
-        <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+        <p class="font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
           {props.accent ? '✦ ' : ''}
           {props.label}
         </p>
-        <p aria-hidden="true" class="flex gap-0.5 text-[10px] text-grimorio-gold">
+        <p aria-hidden="true" class="flex gap-0.5 text-3xs text-grimorio-gold">
           <For each={beads()}>{(filled) => <span>{filled ? '●' : '○'}</span>}</For>
         </p>
-        <p class="text-[11px] text-muted-foreground">
+        <p class="text-2xs text-muted-foreground">
           {props.spent} de {props.total}
         </p>
       </div>
       <Show when={props.subtitle}>
-        {(subtitle) => <p class="text-[11px] text-muted-foreground/80">{subtitle()}</p>}
+        {(subtitle) => <p class="text-2xs text-muted-foreground/80">{subtitle()}</p>}
       </Show>
 
       {/* auto-fill so the pool reflows whether the band owns half the stage or

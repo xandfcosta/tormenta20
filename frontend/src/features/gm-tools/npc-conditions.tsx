@@ -80,7 +80,7 @@ function NpcConditionChip(props: { id: ConditionId; onRemove: () => void }) {
           class="flex items-center gap-1 rounded-sm border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/10 px-2 py-1 text-xs font-medium"
         >
           {found().name}
-          <span class="text-[10px] font-normal text-muted-foreground">
+          <span class="text-3xs font-normal text-muted-foreground">
             {conditionEffectSummary(props.id)}
           </span>
           <button

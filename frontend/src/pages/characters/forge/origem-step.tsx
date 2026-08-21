@@ -179,13 +179,13 @@ function BenefitPicker(props: {
       {(g) => (
         <GrantBox title={g().name} class="flex flex-1 flex-col">
           <div class="flex flex-wrap items-baseline gap-x-2">
-            <p class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <p class="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
               Escolha {ORIGIN_BENEFIT_CAP} benefícios
             </p>
-            <p aria-hidden="true" class="flex gap-0.5 text-[10px] text-grimorio-gold">
+            <p aria-hidden="true" class="flex gap-0.5 text-3xs text-grimorio-gold">
               <For each={[0, 1]}>{(i) => <span>{i < props.picks.length ? '●' : '○'}</span>}</For>
             </p>
-            <p class="text-[11px] text-muted-foreground">
+            <p class="text-2xs text-muted-foreground">
               {props.picks.length} de {ORIGIN_BENEFIT_CAP}
             </p>
           </div>
@@ -216,7 +216,7 @@ function BenefitPicker(props: {
           </div>
 
           <Show when={remaining() > 0}>
-            <p class="text-[11px] text-[color:var(--hp-hurt)]">
+            <p class="text-2xs text-[color:var(--hp-hurt)]">
               {remaining() === 1
                 ? 'Falta 1 benefício'
                 : `Faltam ${remaining()} benefícios`}{' '}
@@ -266,12 +266,12 @@ function BenefitCard(props: {
           <span class="flex flex-wrap items-baseline gap-1.5">
             <span class="text-xs font-semibold">{props.name}</span>
             <Show when={props.poderUnico}>
-              <span class="font-heading text-[9px] uppercase tracking-[0.14em] text-grimorio-gold">
+              <span class="font-heading text-4xs uppercase tracking-[0.14em] text-grimorio-gold">
                 ✦ poder único
               </span>
             </Show>
           </span>
-          <span class="block text-[11px] leading-snug text-muted-foreground">
+          <span class="block text-2xs leading-snug text-muted-foreground">
             {props.description}
           </span>
         </span>
@@ -308,7 +308,7 @@ function FreePowerPicker(props: {
         aria-label={`Poder ${props.pool === 'combate' ? 'de combate' : 'da Tormenta'} concedido`}
       />
       <Show when={!selected()}>
-        <p class="text-[11px] text-[color:var(--hp-hurt)]">
+        <p class="text-2xs text-[color:var(--hp-hurt)]">
           Escolha o poder que este benefício concede.
         </p>
       </Show>

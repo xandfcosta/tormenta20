@@ -101,7 +101,7 @@ function VitalRow(props: VitalRowProps) {
   return (
     <div class="flex items-center gap-1.5 sm:gap-2">
       <span
-        class="w-9 shrink-0 text-[10px] font-bold uppercase tracking-wider"
+        class="w-9 shrink-0 text-3xs font-bold uppercase tracking-wider"
         style={{ color: `var(${fillVar()})` }}
       >
         {props.label}
@@ -161,7 +161,7 @@ function VitalRow(props: VitalRowProps) {
         <Show when={delta() !== null}>
           <span
             class={cn(
-              'absolute -top-4 right-0 text-[10px] font-bold',
+              'absolute -top-4 right-0 text-3xs font-bold',
               (delta() ?? 0) < 0
                 ? 'text-[color:var(--hp-critical)]'
                 : 'text-[color:var(--hp-full)]',

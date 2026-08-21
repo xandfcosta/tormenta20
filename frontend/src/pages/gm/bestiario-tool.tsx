@@ -159,14 +159,14 @@ function MonsterRow(props: { monster: Monster; selected: boolean; onOpen: () => 
     >
       <p class="flex flex-wrap items-baseline gap-x-1.5 text-xs font-semibold">
         {props.monster.name}
-        <span class="font-mono text-[10px] text-grimorio-gold">
+        <span class="font-mono text-3xs text-grimorio-gold">
           ND {formatNd(props.monster.nd)}
         </span>
-        <span class="text-[10px] font-normal text-muted-foreground">
+        <span class="text-3xs font-normal text-muted-foreground">
           {MONSTER_TIPO_LABEL[props.monster.tipo]} · {props.monster.size}
         </span>
       </p>
-      <p class="font-mono text-[10px] text-muted-foreground">
+      <p class="font-mono text-3xs text-muted-foreground">
         PV {props.monster.hp} · DEF {props.monster.defesa} · p{props.monster.bookPage}
       </p>
     </button>

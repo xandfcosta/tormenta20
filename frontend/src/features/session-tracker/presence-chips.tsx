@@ -17,7 +17,7 @@ export function PresenceChips(props: { users: PresenceUser[] }) {
           {(user) => (
             <span
               class={cn(
-                'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px]',
+                'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs',
                 user.role === 'gm'
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted text-foreground',

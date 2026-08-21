@@ -200,7 +200,7 @@ function ClassChoiceRow(props: {
 function ChoiceField(props: { label: string; children: import('solid-js').JSX.Element }) {
   return (
     <div class="space-y-1">
-      <p class="font-heading text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+      <p class="font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground">
         {props.label}
       </p>
       {props.children}
@@ -342,7 +342,7 @@ function PowerRow(props: {
           <span class="text-xs font-semibold">{props.option.name}</span>
           <span
             class={cn(
-              'shrink-0 text-[10px]',
+              'shrink-0 text-3xs',
               props.option.source === 'tormenta'
                 ? 'text-[color:var(--hp-hurt)]'
                 : 'text-muted-foreground',
@@ -352,13 +352,13 @@ function PowerRow(props: {
           </span>
           <Show when={blocked()}>
             {(reason) => (
-              <span class="rounded-none border border-grimorio-iron px-1 text-[9px] text-muted-foreground">
+              <span class="rounded-none border border-grimorio-iron px-1 text-4xs text-muted-foreground">
                 {reason()}
               </span>
             )}
           </Show>
         </span>
-        <span class="line-clamp-2 block text-[11px] leading-snug text-muted-foreground">
+        <span class="line-clamp-2 block text-2xs leading-snug text-muted-foreground">
           {props.option.description}
         </span>
       </span>
@@ -384,15 +384,15 @@ function TakenPowers(props: {
       class="flex flex-col gap-2 lg:min-h-0 lg:overflow-y-auto lg:pl-4 lg:border-l lg:border-grimorio-iron"
     >
       <div class="flex flex-wrap items-baseline gap-x-2">
-        <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-grimorio-gold">
+        <p class="font-heading text-2xs uppercase tracking-[0.16em] text-grimorio-gold">
           Seus poderes
         </p>
-        <p aria-hidden="true" class="flex gap-0.5 text-[10px] text-grimorio-gold">
+        <p aria-hidden="true" class="flex gap-0.5 text-3xs text-grimorio-gold">
           <Index each={Array.from({ length: props.ledger.total })}>
             {(_, i) => <span>{i < props.ledger.used ? '●' : '○'}</span>}
           </Index>
         </p>
-        <p class="text-[11px] text-muted-foreground">
+        <p class="text-2xs text-muted-foreground">
           {props.ledger.used} de {props.ledger.total}
         </p>
       </div>
@@ -422,14 +422,14 @@ function TakenPowers(props: {
 
       <For each={empties()}>
         {() => (
-          <p class="rounded-sm border border-dashed border-grimorio-iron p-3 text-center text-[11px] text-muted-foreground">
+          <p class="rounded-sm border border-dashed border-grimorio-iron p-3 text-center text-2xs text-muted-foreground">
             Vaga livre — escolha um poder ao lado.
           </p>
         )}
       </For>
 
       <Show when={props.chosenIds.length === 0 && props.ledger.total === 0}>
-        <p class="text-[11px] text-muted-foreground">Nenhuma vaga de poder neste nível.</p>
+        <p class="text-2xs text-muted-foreground">Nenhuma vaga de poder neste nível.</p>
       </Show>
     </section>
   )
@@ -451,7 +451,7 @@ function OrphanPowerCard(props: { id: string; onRemove: () => void }) {
           <X aria-hidden="true" class="size-3.5" />
         </button>
       </div>
-      <p class="text-[11px] text-[color:var(--hp-hurt)]">
+      <p class="text-2xs text-[color:var(--hp-hurt)]">
         Não está na lista da classe atual — ainda ocupa uma vaga.
       </p>
     </div>
@@ -515,7 +515,7 @@ function PowerChoicePicker(props: {
 
   return (
     <div class="space-y-1 border-t border-dashed border-grimorio-iron pt-1.5">
-      <p class="font-heading text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+      <p class="font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground">
         {props.choice.label}
         {props.choice.repeatable ? ` (${props.value.length})` : ''}
       </p>
@@ -531,7 +531,7 @@ function PowerChoicePicker(props: {
                 disabled={locked()}
                 onClick={() => toggle(option.id)}
                 class={cn(
-                  'rounded-sm border px-2 py-0.5 text-[11px] transition-colors',
+                  'rounded-sm border px-2 py-0.5 text-2xs transition-colors',
                   on()
                     ? 'border-grimorio-gold bg-accent'
                     : locked()
@@ -549,7 +549,7 @@ function PowerChoicePicker(props: {
         </For>
       </div>
       <Show when={props.value.length === 0}>
-        <p class="text-[10px] text-[color:var(--hp-hurt)]">
+        <p class="text-3xs text-[color:var(--hp-hurt)]">
           Escolha {props.choice.label.toLowerCase()}.
         </p>
       </Show>

@@ -112,7 +112,7 @@ function StatusPill(props: { meta: SessionStatusMeta }) {
   return (
     <span
       class={cn(
-        'inline-flex items-center gap-1.5 rounded-none border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider',
+        'inline-flex items-center gap-1.5 rounded-none border px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider',
         PILL_TONE[props.meta.tone],
       )}
     >

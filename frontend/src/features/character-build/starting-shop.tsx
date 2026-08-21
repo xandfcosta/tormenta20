@@ -53,7 +53,7 @@ export function StartingShop(props: StartingShopProps) {
 
   return (
     <div class="space-y-2 rounded-sm border border-grimorio-iron p-3">
-      <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+      <p class="font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
         Loja{' '}
         <span
           class={cn(
@@ -146,7 +146,7 @@ function ShopRow(props: {
     <div class="flex items-center gap-2 rounded-sm border border-grimorio-iron p-2">
       <div class="min-w-0 flex-1">
         <p class="truncate text-xs font-semibold">{props.item.name}</p>
-        <p class="text-[10px] text-muted-foreground">
+        <p class="text-3xs text-muted-foreground">
           {tibarFmt(props.item.price)} · {itemStat(props.item)}
         </p>
       </div>

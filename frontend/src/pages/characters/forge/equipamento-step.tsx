@@ -134,7 +134,7 @@ function KitChoosers(props: { kit: StartingKit }) {
 
   return (
     <div class="space-y-3 rounded-sm border border-grimorio-iron p-3">
-      <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+      <p class="font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
         Kit da classe{' '}
         <span class="normal-case tracking-normal">
           · {STARTING_KIT_BASE_ITEMS.join(' · ')} (automático)
@@ -178,7 +178,7 @@ function WeaponChooser(props: {
 
   return (
     <div class="min-w-52 space-y-1" id={props.anchor}>
-      <p class="font-heading text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+      <p class="font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground">
         {props.label}
       </p>
       <Select
@@ -208,7 +208,7 @@ function ArmorChooser(props: { kit: StartingKit }) {
       }
     >
       <div class="space-y-1.5" id="chooser-armadura">
-        <p class="font-heading text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+        <p class="font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground">
           Armadura{props.kit.armor === 'brunea' ? ' · brunea' : ' · leve a escolha'}
         </p>
         <div class="flex flex-wrap gap-1.5">
@@ -262,14 +262,14 @@ function ExtrasNote(props: { kit: StartingKit }) {
   return (
     <Show when={props.kit.extras.length > 0}>
       <div class="space-y-1 rounded-sm border border-grimorio-iron p-3">
-        <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+        <p class="font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
           Extras da classe
         </p>
         <For each={props.kit.extras}>
           {(extra) => (
             <p class="text-xs">
               {extra.description}
-              <span class="block text-[11px] text-muted-foreground">
+              <span class="block text-2xs text-muted-foreground">
                 {extra.source} — adicione o item escolhido na ficha.
               </span>
             </p>
@@ -291,7 +291,7 @@ function MoneyField(props: { level: number; tableMoney: number | null; origemRol
 
   return (
     <div class="space-y-1.5 rounded-sm border border-grimorio-iron p-3">
-      <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+      <p class="font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
         Dinheiro inicial · Tabela 3-1
       </p>
       <div class="flex flex-wrap items-center gap-2">

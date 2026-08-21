@@ -47,7 +47,7 @@ export function ConnectionChip(props: {
   return (
     <span
       class={cn(
-        'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-widest',
+        'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-3xs uppercase tracking-widest',
         tone(),
         props.class,
       )}

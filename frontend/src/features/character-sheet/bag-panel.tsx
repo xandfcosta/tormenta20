@@ -60,14 +60,14 @@ export function BagPanel(props: { character: Character }) {
       <div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
         <div class="min-w-0">
           <h2 class="font-heading text-lg uppercase tracking-wide text-grimorio-gold">Mochila</h2>
-          <p class="text-[10px] text-muted-foreground sm:text-xs">
+          <p class="text-3xs text-muted-foreground sm:text-xs">
             carga{' '}
             <span class={cn('font-mono', over() ? 'text-destructive' : 'text-foreground')}>
               {formatLoad(used())}
             </span>{' '}
             / {max()}
             <Show when={over()}>
-              <span class="ml-2 text-[10px] uppercase tracking-widest text-destructive">
+              <span class="ml-2 text-3xs uppercase tracking-widest text-destructive">
                 sobrecarga
               </span>
             </Show>
@@ -108,7 +108,7 @@ export function BagPanel(props: { character: Character }) {
 
         <div class="space-y-2">
           <div class="flex items-baseline justify-between">
-            <h3 class="font-heading text-[10px] font-bold uppercase tracking-widest text-grimorio-gold">
+            <h3 class="font-heading text-3xs font-bold uppercase tracking-widest text-grimorio-gold">
               Mochila (guardado)
             </h3>
             <span class="font-mono text-xs text-muted-foreground">
@@ -140,7 +140,7 @@ export function BagPanel(props: { character: Character }) {
                     onClick={() => setFilter(chip.key)}
                     aria-pressed={filter() === chip.key}
                     class={cn(
-                      'rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider transition-colors',
+                      'rounded-full border px-2 py-0.5 text-3xs uppercase tracking-wider transition-colors',
                       filter() === chip.key
                         ? 'border-grimorio-gold/60 bg-accent text-grimorio-gold'
                         : 'border-grimorio-iron text-muted-foreground hover:text-foreground',

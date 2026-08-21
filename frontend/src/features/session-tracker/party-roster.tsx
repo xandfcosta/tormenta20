@@ -58,7 +58,7 @@ function PartyMember(props: { character: PartyCharacter }) {
     <div class="space-y-1.5 rounded-none border border-border/60 bg-card/60 p-2.5">
       <div class="flex items-baseline justify-between gap-2">
         <span class="truncate font-medium">{props.character.name}</span>
-        <span class="shrink-0 rounded-none bg-muted px-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+        <span class="shrink-0 rounded-none bg-muted px-1.5 text-3xs uppercase tracking-widest text-muted-foreground">
           Nv {props.character.level}
         </span>
       </div>

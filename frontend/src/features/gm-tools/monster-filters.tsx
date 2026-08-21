@@ -60,7 +60,7 @@ export function MonsterFilters(props: {
                 aria-pressed={on()}
                 onClick={() => props.filter.toggleTipo(tipo)}
                 class={cn(
-                  'rounded-sm border px-2 py-0.5 text-[11px] transition-colors',
+                  'rounded-sm border px-2 py-0.5 text-2xs transition-colors',
                   on()
                     ? 'border-grimorio-gold bg-accent font-medium text-grimorio-gold'
                     : 'border-grimorio-iron text-muted-foreground hover:bg-accent',
@@ -86,7 +86,7 @@ function NdField(props: {
     <div class="space-y-1">
       <label
         for={props.id}
-        class="block font-heading text-[10px] uppercase tracking-[0.14em] text-muted-foreground"
+        class="block font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground"
       >
         {props.label}
       </label>

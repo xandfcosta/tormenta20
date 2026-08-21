@@ -67,7 +67,7 @@ function PlaceRows(props: {
           <li class="flex items-center gap-2 px-2 py-1.5">
             <div class="min-w-0 flex-1">
               <p class="truncate text-sm text-foreground">{place.name}</p>
-              <p class="text-[11px] text-muted-foreground">
+              <p class="text-2xs text-muted-foreground">
                 {place.tokens === 1 ? '1 peça' : `${place.tokens} peças`}
               </p>
             </div>
@@ -124,7 +124,7 @@ function PlaceAction(props: {
   return (
     <Show
       when={props.place.name !== props.onTable}
-      fallback={<span class="text-[11px] text-grimorio-gold">Na mesa</span>}
+      fallback={<span class="text-2xs text-grimorio-gold">Na mesa</span>}
     >
       <Show
         when={props.onTable}

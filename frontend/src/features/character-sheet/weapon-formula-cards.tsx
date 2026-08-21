@@ -50,13 +50,13 @@ function WeaponCardTile(props: { card: WeaponCard }) {
         title={`${props.card.skill} ${signed(props.card.attack)} · dano ${damageLabel()} · crítico ${critLabel(props.card)}`}
         class="flex cursor-pointer flex-col items-center rounded-none border-2 border-destructive/50 bg-grimorio-panel p-2 text-center transition-colors hover:bg-destructive/10"
       >
-        <span class="max-w-full truncate text-[9px] font-bold uppercase tracking-widest text-destructive/80">
+        <span class="max-w-full truncate text-4xs font-bold uppercase tracking-widest text-destructive/80">
           {props.card.name}
         </span>
         <span class="mt-0.5 font-mono text-sm font-bold leading-tight text-foreground">
           {signed(props.card.attack)} · {damageLabel()}
         </span>
-        <span class="text-[10px] text-muted-foreground">{critLabel(props.card)}</span>
+        <span class="text-3xs text-muted-foreground">{critLabel(props.card)}</span>
       </DialogTrigger>
 
       <DialogContent class="w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] p-4 sm:w-full sm:max-w-sm sm:p-6">

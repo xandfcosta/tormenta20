@@ -63,7 +63,7 @@ export function AtributosStep() {
       </Show>
 
       <Show when={anyRacePending(draft.values.races, draft.raceChoices)}>
-        <p class="text-[11px] text-[color:var(--hp-hurt)]">
+        <p class="text-2xs text-[color:var(--hp-hurt)]">
           Há escolhas de atributo de raça pendentes — os +1 não colocados não serão aplicados.
         </p>
       </Show>
@@ -111,7 +111,7 @@ function AttributePillar(props: {
     <div class="flex flex-col items-center justify-center gap-1 rounded-sm border border-grimorio-iron bg-muted/10 p-2 lg:py-4">
       <label
         for={fieldId()}
-        class="text-center font-heading text-[10px] uppercase tracking-[0.14em] text-muted-foreground"
+        class="text-center font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground"
       >
         {props.row.label}
       </label>
@@ -145,7 +145,7 @@ function AttributePillar(props: {
 
       {/* A dash, not "sem bônus de raça": the line exists to hold the column
           height steady, and six copies of a negative sentence is noise. */}
-      <p class="text-center text-[10px] leading-tight text-muted-foreground">
+      <p class="text-center text-3xs leading-tight text-muted-foreground">
         <Show
           when={props.row.raceDelta !== 0}
           fallback={
@@ -174,7 +174,7 @@ function AttributePillar(props: {
       </p>
 
       <Show when={props.showCost}>
-        <p class="text-[10px] tabular-nums text-muted-foreground">
+        <p class="text-3xs tabular-nums text-muted-foreground">
           {props.row.cost === null ? 'fora da tabela' : `${props.row.cost} pts`}
         </p>
       </Show>
@@ -271,7 +271,7 @@ function PointMeter(props: { spent: number | null; warnings: string[] }) {
         </p>
       </div>
       <For each={props.warnings}>
-        {(warning) => <p class="text-[11px] text-[color:var(--hp-hurt)]">{warning}</p>}
+        {(warning) => <p class="text-2xs text-[color:var(--hp-hurt)]">{warning}</p>}
       </For>
     </div>
   )

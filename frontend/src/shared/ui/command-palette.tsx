@@ -147,7 +147,7 @@ export function CommandPalette(props: {
                 // `role="group"` would be the formal way, but each option is
                 // self-describing and the input announces the active one.
                 <div>
-                  <p class="px-2 pb-1 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  <p class="px-2 pb-1 pt-2 text-3xs font-bold uppercase tracking-widest text-muted-foreground">
                     {group.heading}
                   </p>
                   <For each={group.items}>

@@ -149,7 +149,7 @@ function Nameplate(props: { character: Character; hue: number }) {
       >
         {props.character.name}
       </h2>
-      <p class="mt-1 text-[11px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">
+      <p class="mt-1 text-2xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
         {primaryRole(props.character)}
         {race() ? ` · ${race()}` : ''}
       </p>
@@ -181,7 +181,7 @@ function VitalsRow(props: { character: Character; defense: number | null }) {
 function Vital(props: { label: string; value: string; tone?: string; dim?: boolean }) {
   return (
     <span class={cn('flex items-baseline gap-1.5', props.dim && 'opacity-50')}>
-      <span class="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+      <span class="text-3xs font-semibold uppercase tracking-widest text-muted-foreground">
         {props.label}
       </span>
       <span class={cn('font-mono text-lg font-semibold', props.tone)}>{props.value}</span>

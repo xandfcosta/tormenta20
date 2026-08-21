@@ -28,7 +28,7 @@ const ACTION_LABEL: Record<ActivationAction, string> = {
 }
 
 const CHIP =
-  'shrink-0 rounded-full border border-border px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide text-muted-foreground'
+  'shrink-0 rounded-full border border-border px-1.5 py-px text-4xs font-semibold uppercase tracking-wide text-muted-foreground'
 
 function usesBadge(uses: ActivationUses): string | null {
   if (uses === null) return null
@@ -155,7 +155,7 @@ function StanceSlot(props: { spec: ActivationSpec; character: Character }) {
             type="button"
             size="sm"
             variant="ghost"
-            class="h-11 px-3 text-xs text-red-400 hover:bg-red-950/40 sm:h-6 sm:px-2 sm:text-[11px]"
+            class="h-11 px-3 text-xs text-red-400 hover:bg-red-950/40 sm:h-6 sm:px-2 sm:text-2xs"
             aria-label={`Encerrar ${props.spec.name}`}
             onClick={() =>
               void actions(queryClient, props.character).deactivateStance(activeFlag())
@@ -181,7 +181,7 @@ function FixedStanceActivateButton(props: {
       type="button"
       size="sm"
       variant="outline"
-      class="h-11 px-3 text-xs sm:h-6 sm:px-2 sm:text-[11px]"
+      class="h-11 px-3 text-xs sm:h-6 sm:px-2 sm:text-2xs"
       disabled={!decision().ok}
       title={decision().reason}
       aria-label={`Ativar ${props.spec.name}`}
@@ -218,7 +218,7 @@ function InstantUseButton(props: { spec: ActivationSpec; character: Character })
         type="button"
         size="sm"
         variant="outline"
-        class="h-11 px-3 text-xs sm:h-6 sm:px-2 sm:text-[11px]"
+        class="h-11 px-3 text-xs sm:h-6 sm:px-2 sm:text-2xs"
         disabled={!decision().ok}
         title={decision().reason}
         aria-label={`Usar ${props.spec.name}`}

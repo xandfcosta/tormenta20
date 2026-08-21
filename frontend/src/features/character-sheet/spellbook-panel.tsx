@@ -67,7 +67,7 @@ export function SpellbookPanel(props: { character: Character }) {
             <BookOpen aria-hidden="true" class="size-4" />
             Grimório
           </h2>
-          <p class="text-[10px] text-muted-foreground sm:text-xs">
+          <p class="text-3xs text-muted-foreground sm:text-xs">
             {learned().length} aprendida{learned().length === 1 ? '' : 's'}
           </p>
         </div>
@@ -82,7 +82,7 @@ export function SpellbookPanel(props: { character: Character }) {
 
       <Show when={granted().length > 0}>
         <div class="shrink-0 space-y-1 border-b border-grimorio-iron px-2 py-1">
-          <p class="px-2 pt-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          <p class="px-2 pt-1 text-3xs font-bold uppercase tracking-widest text-muted-foreground">
             Concedidas por poderes
           </p>
           <For each={granted()}>
@@ -103,7 +103,7 @@ export function SpellbookPanel(props: { character: Character }) {
         when={casterClasses().length > 0}
         fallback={
           <Show when={granted().length === 0}>
-            <p class="px-4 py-3 text-[11px] text-muted-foreground">
+            <p class="px-4 py-3 text-2xs text-muted-foreground">
               Este personagem não tem classe conjuradora.
             </p>
           </Show>

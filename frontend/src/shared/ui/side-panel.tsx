@@ -97,7 +97,7 @@ export function SidePanel(props: SidePanelProps) {
               </KDialog.Title>
               <Show when={local.description}>
                 {(description) => (
-                  <KDialog.Description class="text-[11px] text-muted-foreground">
+                  <KDialog.Description class="text-2xs text-muted-foreground">
                     {description()}
                   </KDialog.Description>
                 )}
@@ -115,7 +115,7 @@ export function SidePanel(props: SidePanelProps) {
 
           <Show when={local.header}>
             {(header) => (
-              <div class="shrink-0 rounded-sm border border-grimorio-iron bg-muted/20 px-2 py-1 text-[11px]">
+              <div class="shrink-0 rounded-sm border border-grimorio-iron bg-muted/20 px-2 py-1 text-2xs">
                 {header()}
               </div>
             )}

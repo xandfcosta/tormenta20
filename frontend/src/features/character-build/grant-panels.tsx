@@ -20,7 +20,7 @@ export function GrantBox(props: { title: string; class?: string; children: JSX.E
         props.class,
       )}
     >
-      <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-grimorio-gold">
+      <p class="font-heading text-2xs uppercase tracking-[0.16em] text-grimorio-gold">
         {props.title}
       </p>
       {props.children}
@@ -54,7 +54,7 @@ export function AbilityDisclosure(props: AbilityDisclosureProps) {
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open()}
-          class="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground"
+          class="flex items-center gap-1 text-2xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground"
         >
           <ChevronRight
             class={cn('size-3 transition-transform', open() && 'rotate-90')}
@@ -111,7 +111,7 @@ export function ClassGrantLines(props: ClassGrantLinesProps) {
     <>
       <Show when={grant().vitals}>
         {(vitals) => (
-          <p class="font-mono text-[11px] text-muted-foreground">
+          <p class="font-mono text-2xs text-muted-foreground">
             PV {vitals().pvInicial} inicial (+{vitals().pvPerLevel}/nível) · PM +
             {vitals().mpPerLevel}/nível
           </p>

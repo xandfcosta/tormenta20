@@ -439,7 +439,7 @@ function InitiativeRow(props: {
           </Show>
           <span
             class={cn(
-              'rounded-none px-1 text-[10px] uppercase tracking-widest',
+              'rounded-none px-1 text-3xs uppercase tracking-widest',
               props.entry.type === 'character'
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground',
@@ -451,7 +451,7 @@ function InitiativeRow(props: {
             {/* O mesmo par do marcador do tabuleiro (`bg-grimorio-gold` sobre
                 tinta de pergaminho): o selo e a borda da linha falam a mesma
                 cor, e ela é a mesma que a peça da vez usa no mapa. */}
-            <span class="inline-flex items-center gap-1 rounded-none bg-grimorio-gold px-1 text-[10px] uppercase tracking-widest text-grimorio-parchment-ink">
+            <span class="inline-flex items-center gap-1 rounded-none bg-grimorio-gold px-1 text-3xs uppercase tracking-widest text-grimorio-parchment-ink">
               <Swords aria-hidden="true" class="size-3" /> Na vez
             </span>
           </Show>
@@ -462,7 +462,7 @@ function InitiativeRow(props: {
           "escondido" precisam ser coisas diferentes na tela, senão o segundo
           vira silêncio e o jogador supõe (ALE-122). */}
       <Show when={props.entry.hpHidden && !hasHp()}>
-        <span class="order-3 rounded-none border border-dashed border-grimorio-iron px-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+        <span class="order-3 rounded-none border border-dashed border-grimorio-iron px-1.5 text-3xs uppercase tracking-widest text-muted-foreground">
           PV oculto
         </span>
       </Show>
@@ -661,7 +661,7 @@ function AddCombatantForm(props: {
       noValidate
     >
       <div class="min-w-[160px] flex-1 space-y-1">
-        <label for="combatant-label" class="text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label for="combatant-label" class="text-3xs uppercase tracking-widest text-muted-foreground">
           Nome
         </label>
         <Input
@@ -673,7 +673,7 @@ function AddCombatantForm(props: {
         />
       </div>
       <div class="w-24 space-y-1">
-        <label for="combatant-initiative" class="text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label for="combatant-initiative" class="text-3xs uppercase tracking-widest text-muted-foreground">
           Iniciativa
         </label>
         <NumberInput
@@ -685,7 +685,7 @@ function AddCombatantForm(props: {
         />
       </div>
       <div class="w-20 space-y-1">
-        <label for="combatant-hp" class="text-[10px] uppercase tracking-widest text-muted-foreground">
+        <label for="combatant-hp" class="text-3xs uppercase tracking-widest text-muted-foreground">
           PV
         </label>
         <NumberInput id="combatant-hp" min={0} max={999} value={hp()} onChange={setHp} />

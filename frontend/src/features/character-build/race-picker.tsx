@@ -137,7 +137,7 @@ function RaceTierGrid(props: {
   return (
     <Show when={props.names.length > 0}>
       <div class="space-y-1.5">
-        <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+        <p class="font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
           {props.label}
         </p>
         <div
@@ -179,8 +179,8 @@ function RaceTile(props: { name: string; selected: boolean; onToggle: () => void
       )}
     >
       <CharacterPortrait name={props.name} size="lg" hue={hue()} class="aspect-square text-2xl" />
-      <span class="w-full truncate text-center text-[11px] font-medium">{props.name}</span>
-      <span class="font-mono text-[10px] text-muted-foreground">
+      <span class="w-full truncate text-center text-2xs font-medium">{props.name}</span>
+      <span class="font-mono text-3xs text-muted-foreground">
         {raceSignature(props.name)}
       </span>
     </button>
@@ -206,7 +206,7 @@ function SelectedRaceDetail(props: {
           aria-pressed={active()}
           onClick={() => props.onChoice({ ...props.choice, applied: !props.choice.applied })}
           class={cn(
-            'flex w-full items-center gap-2 rounded-sm border px-2 py-1.5 text-left text-[11px] transition-colors',
+            'flex w-full items-center gap-2 rounded-sm border px-2 py-1.5 text-left text-2xs transition-colors',
             active()
               ? 'border-grimorio-gold bg-accent'
               : 'border-grimorio-iron text-muted-foreground hover:bg-accent',
@@ -235,7 +235,7 @@ function SelectedRaceDetail(props: {
           onChange={props.onChoice}
         />
         <Show when={racePending(props.name, props.choice)}>
-          <p class="text-[11px] text-[color:var(--hp-hurt)]">Escolha de atributo pendente.</p>
+          <p class="text-2xs text-[color:var(--hp-hurt)]">Escolha de atributo pendente.</p>
         </Show>
       </Show>
 

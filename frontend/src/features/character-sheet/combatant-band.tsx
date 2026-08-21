@@ -65,7 +65,7 @@ export function CombatantBand(props: { character: Character; actions?: JSX.Eleme
           <CharacterPortrait
             name={props.character.name}
             size="sm"
-            class="size-7 rounded-full border border-grimorio-iron text-[11px]"
+            class="size-7 rounded-full border border-grimorio-iron text-2xs"
           />
           {/* Piso de 7rem: é o que garante ~14 caracteres de nome em qualquer
               largura. O nível é IRMÃO do nome, não filho — dentro do `truncate`
@@ -142,7 +142,7 @@ function BandConditions(props: {
             aria-label={
               total() === 1 ? 'Ver a condição ativa' : `Ver as ${total()} condições ativas`
             }
-            class="shrink-0 rounded-md border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/15 px-1.5 py-px text-[11px] font-semibold text-[color:var(--hp-hurt)]"
+            class="shrink-0 rounded-md border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/15 px-1.5 py-px text-2xs font-semibold text-[color:var(--hp-hurt)]"
           >
             ⚠ {total()}
           </PopoverTrigger>

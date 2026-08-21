@@ -201,7 +201,7 @@ function InfoPage(props: {
 
 function StatusLine(props: { role: string; isLive: boolean }) {
   return (
-    <p class="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] opacity-70">
+    <p class="flex items-center gap-2 text-2xs font-semibold uppercase tracking-[0.22em] opacity-70">
       <span>{props.role}</span>
       <Show when={props.isLive}>
         <span aria-hidden="true">·</span>

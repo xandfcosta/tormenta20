@@ -73,7 +73,7 @@ function OriginPicker(props: { origin: OriginDefinition; character: Character })
 
   return (
     <>
-      <p class="mb-2 text-[11px] text-muted-foreground">
+      <p class="mb-2 text-2xs text-muted-foreground">
         Escolha {ORIGIN_BENEFIT_LIMIT} benefícios (perícia, poder geral, ou o poder único da
         origem). Restantes: <span class="font-semibold">{Math.max(0, remaining())}</span>
       </p>
@@ -118,7 +118,7 @@ function OriginBenefitRow(props: {
         aria-pressed={props.selected}
         aria-label={`${props.selected ? 'Remover' : 'Selecionar'} benefício: ${props.benefit.name}`}
         class={cn(
-          'mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-none border border-border text-[10px]',
+          'mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-none border border-border text-3xs',
           props.selected ? 'bg-muted text-foreground' : 'hover:bg-muted',
           (props.disabled || blocked()) && 'cursor-not-allowed opacity-40',
         )}
@@ -132,7 +132,7 @@ function OriginBenefitRow(props: {
           <p class="text-xs font-semibold text-grimorio-gold">{props.benefit.name}</p>
           <span
             class={cn(
-              'rounded-none px-1 text-[9px] uppercase tracking-wide',
+              'rounded-none px-1 text-4xs uppercase tracking-wide',
               props.benefit.kind === 'pericia'
                 ? 'bg-emerald-500/20 text-emerald-100'
                 : 'bg-violet-500/20 text-violet-100',
@@ -141,12 +141,12 @@ function OriginBenefitRow(props: {
             {props.benefit.kind === 'pericia' ? 'Perícia' : 'Poder'}
           </span>
           <Show when={props.isUnique}>
-            <span class="rounded-none bg-muted px-1 text-[9px] font-semibold uppercase tracking-wide text-foreground">
+            <span class="rounded-none bg-muted px-1 text-4xs font-semibold uppercase tracking-wide text-foreground">
               Único
             </span>
           </Show>
         </div>
-        <p class="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+        <p class="mt-0.5 text-2xs leading-snug text-muted-foreground">
           {props.benefit.description}
         </p>
       </div>

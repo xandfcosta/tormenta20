@@ -51,7 +51,7 @@ export function EncounterComposer(props: EncounterComposerProps) {
   return (
     <div class="flex min-h-0 flex-1 flex-col gap-3">
       <div class="flex flex-wrap items-end gap-3 rounded-sm border border-grimorio-iron p-3">
-        <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+        <p class="font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
           O grupo
         </p>
         <PartyField
@@ -98,7 +98,7 @@ export function EncounterComposer(props: EncounterComposerProps) {
               <li class="flex flex-wrap items-center gap-2 rounded-sm border border-grimorio-iron p-2">
                 <span class="min-w-0 flex-1">
                   <span class="block truncate text-xs font-semibold">{group.monster.name}</span>
-                  <span class="font-mono text-[10px] text-muted-foreground">
+                  <span class="font-mono text-3xs text-muted-foreground">
                     ND {formatNd(group.monster.nd)} · grupo ND {formatNd(round2(group.groupNd))}
                   </span>
                 </span>
@@ -148,7 +148,7 @@ function PartyField(props: {
     <div class="space-y-1">
       <label
         for={props.id}
-        class="block font-heading text-[10px] uppercase tracking-[0.14em] text-muted-foreground"
+        class="block font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground"
       >
         {props.label}
       </label>
@@ -169,7 +169,7 @@ function PartyField(props: {
 function Ledger(props: { label: string; value: string; color?: string }) {
   return (
     <p class="flex items-baseline gap-1.5">
-      <span class="font-heading text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+      <span class="font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground">
         {props.label}
       </span>
       <span

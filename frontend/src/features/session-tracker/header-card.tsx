@@ -79,7 +79,7 @@ export function HeaderCard(props: {
         </h2>
         <span
           class={cn(
-            'rounded-none px-1.5 py-0.5 text-[10px] uppercase tracking-widest',
+            'rounded-none px-1.5 py-0.5 text-3xs uppercase tracking-widest',
             status().tone === 'live' && 'bg-primary text-primary-foreground',
             status().tone === 'planned' && 'bg-muted text-muted-foreground',
             status().tone === 'ended' && 'border border-border text-muted-foreground',

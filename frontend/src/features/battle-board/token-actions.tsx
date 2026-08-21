@@ -35,7 +35,7 @@ export function TokenActions(props: {
 }) {
   return (
     <div class="flex flex-wrap items-center gap-1 border-t border-grimorio-iron px-3 py-1.5">
-      <span class="mr-1 min-w-0 truncate text-[11px] text-grimorio-gold">{props.token.label}</span>
+      <span class="mr-1 min-w-0 truncate text-2xs text-grimorio-gold">{props.token.label}</span>
 
       <TokenDialog
         token={props.token}
@@ -104,7 +104,7 @@ export function TokenActions(props: {
       />
 
       <Show when={props.token.hidden}>
-        <span class="ml-auto text-[10px] uppercase tracking-widest text-grimorio-gold">
+        <span class="ml-auto text-3xs uppercase tracking-widest text-grimorio-gold">
           escondida dos jogadores
         </span>
       </Show>
@@ -137,7 +137,7 @@ export function MarkerActions(props: {
 }) {
   return (
     <div class="flex flex-wrap items-center gap-1 border-t border-grimorio-iron px-3 py-1.5">
-      <span class="mr-1 text-[11px] text-grimorio-gold">
+      <span class="mr-1 text-2xs text-grimorio-gold">
         Marcador {props.marker.text || '—'}
       </span>
 

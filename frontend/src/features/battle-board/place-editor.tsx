@@ -193,7 +193,7 @@ function TableWatchingBar(props: { onTable: string | null }) {
   return (
     <div
       role="status"
-      class="flex shrink-0 flex-wrap items-center gap-2 border-b border-grimorio-gold/40 bg-grimorio-gold/10 px-3 py-1 text-[11px] text-grimorio-gold"
+      class="flex shrink-0 flex-wrap items-center gap-2 border-b border-grimorio-gold/40 bg-grimorio-gold/10 px-3 py-1 text-2xs text-grimorio-gold"
     >
       <p>
         {props.onTable

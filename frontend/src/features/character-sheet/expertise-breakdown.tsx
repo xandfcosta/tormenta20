@@ -94,7 +94,7 @@ function BreakdownRow(props: {
       {/* Wraps, never truncates: a nowrap note becomes min-content and can
           inflate the dialog past its max-width. */}
       <Show when={props.note}>
-        {(note) => <p class="text-[10px] leading-snug text-muted-foreground">{note()}</p>}
+        {(note) => <p class="text-3xs leading-snug text-muted-foreground">{note()}</p>}
       </Show>
     </div>
   )

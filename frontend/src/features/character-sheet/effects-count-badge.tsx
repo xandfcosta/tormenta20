@@ -24,7 +24,7 @@ export function EffectsCountBadge(props: { character: Character }) {
           assistive tech and the meaning spelled out beside it instead. */}
       <span
         class={cn(
-          'ml-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold',
+          'ml-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-3xs font-bold',
           total() > 0 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
         )}
         aria-hidden="true"

@@ -114,7 +114,7 @@ export function CreatureBlockDialog(props: {
           <div class="space-y-1">
             <label
               for="creature-name"
-              class="block text-[10px] uppercase tracking-widest text-muted-foreground"
+              class="block text-3xs uppercase tracking-widest text-muted-foreground"
             >
               Nome
             </label>

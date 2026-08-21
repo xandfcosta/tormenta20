@@ -67,7 +67,7 @@ export function ExpertisesPanel(props: SheetPanelProps) {
       <div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
         <div class="flex items-baseline gap-3">
           <h2 class="font-heading text-lg uppercase tracking-wide text-grimorio-gold">Perícias</h2>
-          <p class="text-[10px] text-muted-foreground sm:text-xs">
+          <p class="text-3xs text-muted-foreground sm:text-xs">
             treino +{trainingBonusForLevel(props.character.level)} • ½ nível{' '}
             {Math.floor(props.character.level / 2)}
           </p>

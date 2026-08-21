@@ -106,7 +106,7 @@ export function SpellRow(props: {
         >
           <span
             class={cn(
-              'rounded-none border border-border px-1 font-mono text-[10px]',
+              'rounded-none border border-border px-1 font-mono text-3xs',
               !canCast() && 'text-muted-foreground',
             )}
           >
@@ -118,7 +118,7 @@ export function SpellRow(props: {
             {props.spell.name}
           </span>
           <span class="ml-auto flex shrink-0 items-center gap-2">
-            <span class="hidden text-[10px] uppercase tracking-widest text-muted-foreground sm:inline">
+            <span class="hidden text-3xs uppercase tracking-widest text-muted-foreground sm:inline">
               {SCHOOL_LABEL[props.spell.school]}
             </span>
             <span class="font-mono text-xs text-grimorio-gold">
@@ -129,7 +129,7 @@ export function SpellRow(props: {
             </Show>
             <Show when={props.granted} fallback={<LearnedBadge learned={props.learned} />}>
               {(granted) => (
-                <span class="rounded-none border border-border px-1 text-[10px] uppercase tracking-widest">
+                <span class="rounded-none border border-border px-1 text-3xs uppercase tracking-widest">
                   {granted().sourcePower}
                 </span>
               )}
@@ -167,19 +167,19 @@ export function SpellRow(props: {
 
           <Show when={props.spell.augments.length > 0}>
             <div class="space-y-1">
-              <p class="text-[10px] uppercase tracking-widest text-muted-foreground">
+              <p class="text-3xs uppercase tracking-widest text-muted-foreground">
                 Aprimoramentos
               </p>
               <ul class="space-y-1">
                 <For each={props.spell.augments}>
                   {(augment) => (
                     <li class="flex items-start gap-2 rounded-none border border-border px-2 py-1">
-                      <span class="rounded-none border border-border px-1 font-mono text-[10px]">
+                      <span class="rounded-none border border-border px-1 font-mono text-3xs">
                         +{augment.pmCost} PM
                       </span>
                       <span
                         class={cn(
-                          'text-[10px] uppercase tracking-widest',
+                          'text-3xs uppercase tracking-widest',
                           augment.kind === 'muda' ? 'text-violet-300' : 'text-emerald-300',
                         )}
                       >
@@ -208,7 +208,7 @@ export function SpellRow(props: {
           </Show>
 
           <Show when={!canCast() && applicableClasses().length > 0}>
-            <p class="flex items-center gap-1 text-[11px] text-foreground">
+            <p class="flex items-center gap-1 text-2xs text-foreground">
               <Sparkles aria-hidden="true" class="size-3" />
               Círculo acima do máximo conjurável no nível atual.
             </p>
@@ -274,7 +274,7 @@ function LearnedBadge(props: { learned: CharacterSpell | null }) {
       {(learned) => (
         <span
           class={cn(
-            'rounded-none px-1 text-[10px] uppercase tracking-widest',
+            'rounded-none px-1 text-3xs uppercase tracking-widest',
             learned().prepared
               ? 'bg-primary text-primary-foreground'
               : 'bg-muted text-muted-foreground',
@@ -290,7 +290,7 @@ function LearnedBadge(props: { learned: CharacterSpell | null }) {
 function Stat(props: { label: string; value: string | number }) {
   return (
     <div class="flex items-baseline gap-1">
-      <span class="text-[10px] uppercase tracking-widest text-muted-foreground">
+      <span class="text-3xs uppercase tracking-widest text-muted-foreground">
         {props.label}
       </span>
       <span class="text-foreground">{props.value}</span>

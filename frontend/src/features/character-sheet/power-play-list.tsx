@@ -69,7 +69,7 @@ export function PowerPlayList(props: { character: Character }) {
 
 function GroupHeading(props: { children: string }) {
   return (
-    <h4 class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+    <h4 class="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
       {props.children}
     </h4>
   )
@@ -93,7 +93,7 @@ function PassivasDisclosure(props: {
           type="button"
           onClick={() => setOpen(!open())}
           aria-expanded={open()}
-          class="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground"
+          class="flex items-center gap-1 text-2xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground"
         >
           <ChevronRight
             aria-hidden="true"
@@ -104,7 +104,7 @@ function PassivasDisclosure(props: {
         <Show when={!open()}>
           <For each={activeTriggeredPassives(props.passivas, props.activeFlags)}>
             {(power) => (
-              <p class="text-[11px] text-emerald-300">
+              <p class="text-2xs text-emerald-300">
                 ● gatilho ativo: {power.entry.name} ({gatilhoLabel(power.spec)})
               </p>
             )}
@@ -155,12 +155,12 @@ function PlayPowerRow(props: { power: PlayPower; character: Character }) {
               class="size-3.5 shrink-0 text-muted-foreground"
             />
             <span class="text-xs font-semibold">{props.power.entry.name}</span>
-            <span class="rounded-none bg-muted px-1 py-0 text-[9px] text-muted-foreground">
+            <span class="rounded-none bg-muted px-1 py-0 text-4xs text-muted-foreground">
               {shortSourceLabel(props.power.entry.source)}
             </span>
           </span>
           <Show when={!open()}>
-            <span class="line-clamp-1 text-[11px] leading-snug text-muted-foreground">
+            <span class="line-clamp-1 text-2xs leading-snug text-muted-foreground">
               {props.power.entry.detail}
             </span>
           </Show>
@@ -172,7 +172,7 @@ function PlayPowerRow(props: { power: PlayPower; character: Character }) {
         />
       </div>
       <Show when={open()}>
-        <p class="mt-1 text-[11px] leading-snug text-muted-foreground">
+        <p class="mt-1 text-2xs leading-snug text-muted-foreground">
           {props.power.entry.detail}
           <Show when={props.power.spec}>
             {(spec) => <span class="ml-1 opacity-70">(p{spec().bookPage})</span>}
