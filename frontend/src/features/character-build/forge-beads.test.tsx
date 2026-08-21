@@ -2,10 +2,19 @@ import { render, screen } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { ForgeBeads } from './forge-beads'
+import { WIZARD_STEPS } from './wizard-steps'
 
 const renderBeads = (props?: Partial<Parameters<typeof ForgeBeads>[0]>) => {
   const onJump = vi.fn()
-  render(() => <ForgeBeads current="poderes" reachable={4} onJump={onJump} {...props} />)
+  render(() => (
+    <ForgeBeads
+      steps={WIZARD_STEPS}
+      current="poderes"
+      reachable={4}
+      onJump={onJump}
+      {...props}
+    />
+  ))
   return { onJump }
 }
 

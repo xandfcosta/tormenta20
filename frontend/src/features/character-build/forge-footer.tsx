@@ -5,7 +5,7 @@ import type { CharacterDraftStore } from '@/shared/stores/character-draft-store'
 import { totalClassLevel } from './class-entries'
 import { deriveDraftDefense } from './draft-defense'
 import { deriveDraftVitals } from './draft-vitals'
-import { type StepSlug, allStepsReady, stepIndex, stepReady } from './wizard-steps'
+import { type StepSlug, allStepsReady, stepIndex, stepReady, wizardSteps } from './wizard-steps'
 import { FieldLabel, SectionTitle } from '@/shared/ui/section-label'
 
 export type ForgeFooterProps = {
@@ -52,7 +52,7 @@ export function ForgeFooter(props: ForgeFooterProps) {
   const vitals = () => deriveDraftVitals(values(), raceChoices())
 
   const isLast = () => props.current === 'resumo'
-  const hasPrevious = () => stepIndex(props.current) > 0
+  const hasPrevious = () => stepIndex(props.current, wizardSteps(values())) > 0
   const canAdvance = () => stepReady(props.current, values(), raceChoices())
   const canCreate = () => allStepsReady(values(), raceChoices())
 

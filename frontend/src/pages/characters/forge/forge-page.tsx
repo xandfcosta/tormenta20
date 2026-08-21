@@ -13,6 +13,7 @@ import {
   type StepSlug,
   furthestReachableIndex,
   stepAt,
+  wizardSteps,
 } from '@/features/character-build/wizard-steps'
 import { SceneShell } from '@/shared/layout/scene-shell'
 import { createSfx } from '@/shared/lib/sfx'
@@ -59,7 +60,7 @@ export function ForgePage() {
     navigate({ to: '/characters/new/$step', params: { step: slug } })
   }
   const step = (delta: -1 | 1) => {
-    const target = stepAt(current(), delta)
+    const target = stepAt(current(), delta, wizardSteps(draft.values, current()))
     if (target) goTo(target)
   }
   const restart = () => {
@@ -81,6 +82,7 @@ export function ForgePage() {
       headerRight={
         <>
           <ForgeBeads
+            steps={wizardSteps(draft.values, current())}
             current={current()}
             reachable={furthestReachableIndex(draft.values, draft.raceChoices)}
             onJump={goTo}
@@ -92,8 +94,19 @@ export function ForgePage() {
             destructive
             onConfirm={restart}
             trigger={(open) => (
-              <Button type="button" variant="ghost" size="sm" onClick={open}>
-                <RotateCcw aria-hidden="true" class="mr-1 size-3.5" />
+              // Rebaixado de propósito: ele APAGA o rascunho inteiro e estava
+              // com o mesmo peso da trilha ao lado, que é o contrário do que
+              // um botão destrutivo deve pesar (ALE-169). O diálogo de
+              // confirmação continua sendo quem protege — isto é só parar de
+              // convidar.
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                class="text-2xs text-muted-foreground/70 hover:text-foreground"
+                onClick={open}
+              >
+                <RotateCcw aria-hidden="true" class="mr-1 size-3" />
                 Recomeçar
               </Button>
             )}

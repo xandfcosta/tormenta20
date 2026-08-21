@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { totalSlots } from '@/entities/character/class-powers'
 import type { RaceChoiceState } from './grant-helpers'
 
 /**
@@ -25,19 +26,65 @@ export const WIZARD_STEPS = [
 ] as const
 
 export type StepSlug = (typeof WIZARD_STEPS)[number]['slug']
+export type WizardStep = (typeof WIZARD_STEPS)[number]
 
-export function stepIndex(slug: StepSlug): number {
-  return WIZARD_STEPS.findIndex((s) => s.slug === slug)
+/**
+ * Os passos que ESTE personagem atravessa (ALE-169).
+ *
+ * `WIZARD_STEPS` continua sendo o catálogo — a URL tem de aceitar `poderes`
+ * mesmo quando ele não se aplica, senão um endereço guardado quebra —, mas a
+ * caminhada é derivada. O passo de Poderes some quando a classe não rende vaga
+ * nenhuma, e num personagem de nível 1 ela nunca rende: a primeira vaga é do
+ * SEGUNDO nível de uma classe. Como a forja só cria nível 1, todo personagem
+ * novo atravessava uma tela preta com uma frase e clicava Próximo.
+ *
+ * Derivar em vez de apagar é o que mantém isso honesto no dia em que a forja
+ * subir de nível: o passo volta sozinho, porque quem decide é a regra de vagas
+ * e não uma lista escrita à mão.
+ *
+ * `current` é a segunda metade, e existe para não precisar de redirecionamento:
+ * a caminhada são os passos que se aplicam MAIS aquele em que o jogador está.
+ * Quem chegou por um endereço guardado de um passo que saiu continua num lugar
+ * coerente — a trilha o mostra, o Próximo e o Voltar andam a partir dele — e
+ * ele some assim que o jogador sai. A alternativa era desviar num efeito, e
+ * desviar dentro de um efeito que OBSERVA a URL é um laço: a navegação muda a
+ * URL, que reexecuta o efeito, que navega. Custou um renderizador travado.
+ *
+ * @example wizardSteps(nivel1).length // 8
+ * @example wizardSteps(nivel1, 'poderes').length // 9
+ */
+export function wizardSteps(
+  v: CharacterFormValues,
+  current?: StepSlug,
+): readonly WizardStep[] {
+  return WIZARD_STEPS.filter(
+    (s) => s.slug !== 'poderes' || s.slug === current || totalSlots(v.classes) > 0,
+  )
+}
+
+/**
+ * A posição do passo na caminhada recebida, ou -1 se ele não faz parte dela.
+ *
+ * A lista vem por parâmetro de propósito: um padrão silencioso para
+ * `WIZARD_STEPS` faria cada chamador voltar a contar nove passos sem perceber,
+ * que é exatamente o defeito que `wizardSteps` existe para consertar.
+ */
+export function stepIndex(slug: StepSlug, steps: readonly WizardStep[]): number {
+  return steps.findIndex((s) => s.slug === slug)
 }
 
 /**
  * The step one walk away, or null at either end of the flow. Keeps "next" and
  * "previous" defined by the order above and nowhere else.
  *
- * @example stepAt('classe', -1) // 'raca'
+ * @example stepAt('classe', -1, wizardSteps(v)) // 'raca'
  */
-export function stepAt(current: StepSlug, delta: -1 | 1): StepSlug | null {
-  return WIZARD_STEPS[stepIndex(current) + delta]?.slug ?? null
+export function stepAt(
+  current: StepSlug,
+  delta: -1 | 1,
+  steps: readonly WizardStep[],
+): StepSlug | null {
+  return steps[stepIndex(current, steps) + delta]?.slug ?? null
 }
 
 /** Whether a string names a step — for validating a slug arriving from the URL. */
@@ -209,10 +256,14 @@ export function furthestReachableIndex(
   v: CharacterFormValues,
   raceChoices: RaceChoiceState,
 ): number {
-  for (let i = 0; i < WIZARD_STEPS.length; i++) {
-    if (!stepReady(WIZARD_STEPS[i].slug, v, raceChoices)) return i
+  // Índice DENTRO da caminhada deste personagem, não do catálogo: ele é
+  // comparado com a posição de cada conta da trilha, e as contas são a
+  // caminhada (ALE-169).
+  const steps = wizardSteps(v)
+  for (let i = 0; i < steps.length; i++) {
+    if (!stepReady(steps[i].slug, v, raceChoices)) return i
   }
-  return WIZARD_STEPS.length - 1
+  return steps.length - 1
 }
 
 /** True once every step is ready — gates the final "Criar" action. Pending
@@ -221,5 +272,5 @@ export function allStepsReady(
   v: CharacterFormValues,
   raceChoices: RaceChoiceState,
 ): boolean {
-  return WIZARD_STEPS.every((s) => stepReady(s.slug, v, raceChoices))
+  return wizardSteps(v).every((s) => stepReady(s.slug, v, raceChoices))
 }

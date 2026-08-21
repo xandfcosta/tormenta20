@@ -8,6 +8,7 @@ import {
   stepReady,
   WIZARD_STEPS,
   wizardDefaults,
+  wizardSteps,
 } from './wizard-steps'
 
 const complete: CharacterFormValues = {
@@ -78,7 +79,9 @@ describe('furthestReachableIndex', () => {
   })
 
   it('reaches the last step when every step is ready', () => {
-    expect(furthestReachableIndex(complete, {})).toBe(WIZARD_STEPS.length - 1)
+    // Da CAMINHADA deste personagem, não do catálogo: um Guerreiro de nível 1
+    // não tem passo de Poderes (ALE-169).
+    expect(furthestReachableIndex(complete, {})).toBe(wizardSteps(complete).length - 1)
   })
 })
 
@@ -93,13 +96,13 @@ describe('allStepsReady', () => {
 
 describe('stepAt — andar um passo', () => {
   it('avança e recua na ordem declarada', () => {
-    expect(stepAt('raca', 1)).toBe('classe')
-    expect(stepAt('classe', -1)).toBe('raca')
+    expect(stepAt('raca', 1, WIZARD_STEPS)).toBe('classe')
+    expect(stepAt('classe', -1, WIZARD_STEPS)).toBe('raca')
   })
 
   it('devolve null nas pontas (não circula)', () => {
-    expect(stepAt('raca', -1)).toBeNull()
-    expect(stepAt('resumo', 1)).toBeNull()
+    expect(stepAt('raca', -1, WIZARD_STEPS)).toBeNull()
+    expect(stepAt('resumo', 1, WIZARD_STEPS)).toBeNull()
   })
 })
 
@@ -111,5 +114,72 @@ describe('isStepSlug — slug vindo da URL', () => {
   it('recusa qualquer outra coisa', () => {
     expect(isStepSlug('inventario')).toBe(false)
     expect(isStepSlug('')).toBe(false)
+  })
+})
+
+/**
+ * A caminhada é derivada da regra, e não uma lista escrita à mão (ALE-169).
+ *
+ * O passo de Poderes era atravessado por TODO personagem novo como uma tela
+ * preta com uma frase, porque a forja cria nível 1 e a primeira vaga de poder
+ * é do SEGUNDO nível de uma classe.
+ */
+describe('wizardSteps — os passos que este personagem atravessa', () => {
+  it('tira Poderes quando a classe não rende vaga nenhuma', () => {
+    const slugs = wizardSteps(complete).map((s) => s.slug)
+
+    expect(slugs).not.toContain('poderes')
+    expect(slugs).toHaveLength(WIZARD_STEPS.length - 1)
+  })
+
+  it('devolve Poderes assim que existe uma vaga', () => {
+    const nivel2 = { ...complete, classes: [{ className: 'Guerreiro', level: 2 }] }
+
+    expect(wizardSteps(nivel2).map((s) => s.slug)).toContain('poderes')
+  })
+
+  it('nunca reordena nem inventa passo', () => {
+    const catalogo = WIZARD_STEPS.map((s) => s.slug)
+    const caminhada = wizardSteps(complete).map((s) => s.slug)
+
+    expect(caminhada).toEqual(catalogo.filter((slug) => caminhada.includes(slug)))
+  })
+
+  /** O endereço guardado de um passo que não se aplica não pode virar 404. */
+  it('o catálogo continua reconhecendo o slug fora da caminhada', () => {
+    expect(wizardSteps(complete).map((s) => s.slug)).not.toContain('poderes')
+    expect(isStepSlug('poderes')).toBe(true)
+  })
+})
+
+describe('stepAt — pula o passo que não se aplica', () => {
+  it('anda de Classe direto para Origem num nível 1', () => {
+    expect(stepAt('classe', 1, wizardSteps(complete))).toBe('origem')
+  })
+
+  it('e volta de Origem para Classe', () => {
+    expect(stepAt('origem', -1, wizardSteps(complete))).toBe('classe')
+  })
+})
+
+/**
+ * Um endereço guardado de um passo que saiu não pode virar beco sem saída, e a
+ * saída NÃO é redirecionar: desviar dentro de um efeito que observa a URL é um
+ * laço. A caminhada simplesmente inclui onde o jogador está.
+ */
+describe('wizardSteps — quem chega por URL no passo que saiu', () => {
+  it('inclui o passo em que o jogador está, mesmo sem vaga', () => {
+    expect(wizardSteps(complete, 'poderes').map((s) => s.slug)).toContain('poderes')
+  })
+
+  it('e ele some assim que o jogador sai', () => {
+    expect(wizardSteps(complete, 'origem').map((s) => s.slug)).not.toContain('poderes')
+  })
+
+  it('estando nele, o Próximo e o Voltar andam a partir dele', () => {
+    const caminhada = wizardSteps(complete, 'poderes')
+
+    expect(stepAt('poderes', 1, caminhada)).toBe('origem')
+    expect(stepAt('poderes', -1, caminhada)).toBe('classe')
   })
 })

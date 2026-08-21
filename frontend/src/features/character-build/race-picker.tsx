@@ -148,11 +148,14 @@ function RaceTierGrid(props: {
           // Column count tracks the space the grid actually gets, which is NOT
           // monotonic in viewport width: below lg the catalogue spans the whole
           // stage, at lg it gives half of it to the detail pane and needs fewer.
-          class="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-6 xl:grid-cols-8"
+          // Os mesmos números do passo de CLASSE, e de propósito: as duas telas
+          // pedem a mesma coisa, vivem no mesmo palco e agora se leem igual
+          // (ALE-169).
+          class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-3"
         >
           <For each={props.names}>
             {(name) => (
-              <RaceTile
+              <RaceRow
                 name={name}
                 selected={props.value.includes(name)}
                 onToggle={() => props.onToggle(name)}
@@ -165,7 +168,20 @@ function RaceTierGrid(props: {
   )
 }
 
-function RaceTile(props: { name: string; selected: boolean; onToggle: () => void }) {
+/**
+ * Uma linhagem como LINHA, a mesma peça que o passo de classe usa (ALE-169).
+ *
+ * Era um ladrilho cuja maior coisa era a INICIAL da raça, em 24px, com o nome
+ * de verdade em 11px embaixo. A inicial não identifica: `G` é Goblin e Golem,
+ * `H` é Humano e Hynne, `M` é Minotauro e Medusa, e `S` é Sereia, Sílfide E
+ * Suraggel. O jogador lia a letra errada e conferia no rodapé.
+ *
+ * Agora o nome é o maior elemento e a assinatura de atributo fica ao lado, que
+ * é exatamente o que o passo vizinho já fazia com `PV 16 · PM +4/nv`. A cor
+ * derivada do nome continua, porque ela nunca foi o problema — ela distingue
+ * sem precisar ser lida.
+ */
+function RaceRow(props: { name: string; selected: boolean; onToggle: () => void }) {
   const hue = () => hueFromName(props.name)
   return (
     <button
@@ -175,15 +191,15 @@ function RaceTile(props: { name: string; selected: boolean; onToggle: () => void
       onClick={() => props.onToggle()}
       style={props.selected ? { 'outline-color': `oklch(0.6 0.16 ${hue()})` } : undefined}
       class={cn(
-        'flex flex-col items-center gap-1 rounded-md border border-grimorio-iron p-1.5 transition-colors',
+        'flex items-center gap-2 rounded-md border border-grimorio-iron p-2 text-left transition-colors',
         props.selected ? 'bg-accent outline outline-2 outline-offset-2' : 'hover:bg-accent',
       )}
     >
-      <CharacterPortrait name={props.name} size="lg" hue={hue()} class="aspect-square text-2xl" />
-      <span class="w-full truncate text-center text-2xs font-medium">{props.name}</span>
-      <span class="font-mono text-3xs text-muted-foreground">
-        {raceSignature(props.name)}
-      </span>
+      <CharacterPortrait name={props.name} size="sm" hue={hue()} />
+      <div class="min-w-0">
+        <p class="line-clamp-2 text-sm font-medium leading-tight">{props.name}</p>
+        <p class="font-mono text-3xs text-muted-foreground">{raceSignature(props.name)}</p>
+      </div>
     </button>
   )
 }

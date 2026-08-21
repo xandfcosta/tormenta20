@@ -3,7 +3,7 @@ import { originGrant } from './grant-helpers'
 import { type RaceChoiceState, anyRacePending, appliedRaceDeltas } from './grant-helpers'
 import { periciaBudget, periciaPlan } from './pericia-helpers'
 import { draftPowerPool, powerLedger } from './power-pool'
-import { type CharacterFormValues, type StepSlug, WIZARD_STEPS, stepReady } from './wizard-steps'
+import { type CharacterFormValues, type StepSlug, stepReady, wizardSteps } from './wizard-steps'
 
 /** How many benefits an origin grants (p56). */
 const ORIGIN_BENEFIT_CAP = 2
@@ -61,10 +61,12 @@ export function creationBlockers(
   values: CharacterFormValues,
   raceChoices: RaceChoiceState,
 ): Pendencia[] {
-  return WIZARD_STEPS.filter((step) => !stepReady(step.slug, values, raceChoices)).map((step) => ({
-    step: step.slug,
-    label: BLOCKER_LABEL[step.slug],
-  }))
+  return wizardSteps(values)
+    .filter((step) => !stepReady(step.slug, values, raceChoices))
+    .map((step) => ({
+      step: step.slug,
+      label: BLOCKER_LABEL[step.slug],
+    }))
 }
 
 function racePendencias(
