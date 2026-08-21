@@ -768,6 +768,42 @@ test.describe('Sessão ao vivo', () => {
   })
 
   /**
+   * O modo "Lado a lado" das notas só existe onde ele CABE (ALE-139).
+   *
+   * Por que e2e: a decisão é a largura MEDIDA da região, via `ResizeObserver`.
+   * Em jsdom não há observador nem leiaute, a largura é zero e a regra responde
+   * "cabe" para sempre — o caminho estreito não existe em camada mais barata.
+   *
+   * Os dois formatos saem da MESMA página e a diferença entre eles é o que
+   * torna o teste interessante: a região de notas mede 801px numa janela de
+   * 1440 e 606px numa de 1920, porque a cena dá menos espaço ao workspace
+   * quando há mais o que mostrar. Maximizar a janela ESTREITA a região.
+   */
+  test('o modo lado a lado só aparece onde a região comporta duas colunas', async ({
+    page,
+  }) => {
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.getByRole('tab', { name: /Notas/i }).first().click()
+    const faixa = page.getByRole('group', { name: /Modo de visualização das notas/ })
+    await expect(faixa.getByRole('button', { name: 'Lado a lado' })).toBeVisible()
+    await expect(page.getByLabel('Notas da sessão')).toBeVisible()
+
+    // Região estreita: o modo duplo some, e "Escrever" assume — a faixa tem de
+    // dizer a verdade sobre o que está na tela, senão sobram dois botões e
+    // nenhum marcado.
+    await page.setViewportSize({ width: 1920, height: 1080 })
+    await page.waitForTimeout(600)
+    await expect(faixa.getByRole('button', { name: 'Lado a lado' })).toHaveCount(0)
+    await expect(faixa.getByRole('button', { name: 'Escrever' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+  })
+
+  /**
    * Os descansos saem da fileira de turno no palco BAIXO, e continuam
    * alcançáveis (ALE-146).
    *

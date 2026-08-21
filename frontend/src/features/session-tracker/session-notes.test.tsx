@@ -4,6 +4,8 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/shared/api/api'
 import type { Session } from '@/shared/api/api'
+import { FakeStorage } from '@/shared/test/fake-storage'
+import { NOTES_VIEW_KEY } from './notes-view'
 import { SessionNotes } from './session-notes'
 
 function makeSession(notes: string | null = null): Session {
@@ -21,16 +23,16 @@ function makeSession(notes: string | null = null): Session {
   }
 }
 
-function renderNotes(notes: string | null = null) {
+function renderNotes(notes: string | null = null, storage: Storage = new FakeStorage()) {
   const update = vi.spyOn(api.sessions, 'update').mockResolvedValue(makeSession(notes))
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
   const view = render(() => (
     <QueryClientProvider client={client}>
-      <SessionNotes campaignId={3} session={makeSession(notes)} />
+      <SessionNotes campaignId={3} session={makeSession(notes)} storage={storage} />
     </QueryClientProvider>
   ))
-  return { ...view, user, update }
+  return { ...view, user, update, storage }
 }
 
 describe('SessionNotes', () => {
@@ -92,5 +94,71 @@ describe('SessionNotes', () => {
     unmount()
 
     expect(update).toHaveBeenCalledWith(3, 7, { notes: 'tesouro: 300 TO' })
+  })
+})
+
+/**
+ * Os modos de visualização (ALE-139).
+ *
+ * Lado a lado FIXO desperdiçava a tela nos dois extremos: com uma nota de duas
+ * linhas, duas colunas quase vazias; com uma nota longa, escrever numa coluna
+ * estreita. O que se afirma aqui é o que o mestre VÊ e o que sobrevive ao
+ * recarregar — a regra pura mora em `notes-view.ts`.
+ */
+describe('SessionNotes — modos de visualização', () => {
+  beforeEach(() => vi.useFakeTimers())
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.restoreAllMocks()
+  })
+
+  it('em Ler, o texto cru sai da tela e o resultado fica', async () => {
+    const { user } = renderNotes('# Cena 1')
+
+    await user.click(screen.getByRole('button', { name: 'Ler' }))
+
+    expect(screen.queryByLabelText('Notas da sessão')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Cena 1' })).toBeInTheDocument()
+  })
+
+  it('em Escrever, o resultado sai e o editor ocupa tudo', async () => {
+    const { user } = renderNotes('# Cena 1')
+
+    await user.click(screen.getByRole('button', { name: 'Escrever' }))
+
+    expect(screen.getByLabelText('Notas da sessão')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Cena 1' })).not.toBeInTheDocument()
+  })
+
+  // É preferência de TRABALHO, não estado da sessão: o mestre não vai
+  // reescolher a cada aba que abre.
+  it('a escolha gruda', async () => {
+    const { user, storage } = renderNotes()
+
+    await user.click(screen.getByRole('button', { name: 'Ler' }))
+
+    expect(storage.getItem(NOTES_VIEW_KEY)).toBe('ler')
+  })
+
+  it('e volta escolhida na próxima montagem', () => {
+    const storage = new FakeStorage()
+    storage.setItem(NOTES_VIEW_KEY, 'ler')
+
+    renderNotes('# Cena 1', storage)
+
+    expect(screen.queryByLabelText('Notas da sessão')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ler' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  /** O padrão continua o de hoje: ninguém perde o arranjo que já usava. */
+  it('sem nada guardado, abre no lado a lado', () => {
+    renderNotes('# Cena 1')
+
+    expect(screen.getByLabelText('Notas da sessão')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Cena 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Lado a lado' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
   })
 })
