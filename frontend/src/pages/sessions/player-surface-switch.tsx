@@ -41,7 +41,7 @@ export function PlayerSurfaceSwitch(props: {
             type="button"
             aria-pressed={props.surface === surface.value}
             class={cn(
-              'flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-sm border px-2 py-1.5 text-xs uppercase tracking-wide transition-colors',
+              'flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-none border px-2 py-1.5 text-xs uppercase tracking-wide transition-colors',
               props.surface === surface.value
                 ? 'border-grimorio-gold bg-[color:var(--primary)]/15 text-grimorio-gold'
                 : 'border-grimorio-iron text-muted-foreground hover:text-foreground',

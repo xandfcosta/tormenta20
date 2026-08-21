@@ -73,7 +73,7 @@ export function CharacterSheetDesktop(props: CharacterSheetDesktopProps) {
         <TabsList
           data-nav-region="rail"
           data-nav-layout="column"
-          class="flex h-full shrink-0 flex-col gap-1 rounded-lg border bg-card p-1"
+          class="flex h-full shrink-0 flex-col gap-1 rounded-md border bg-card p-1"
         >
           <For each={SHEET_PANELS}>
             {(section) => (
@@ -107,7 +107,7 @@ export function CharacterSheetDesktop(props: CharacterSheetDesktopProps) {
       {/* The `auto` row of the grid: the HUD is chrome every block sits above,
           not a block of its own. */}
       <Show when={!props.hudless}>
-        <CharacterHud character={props.character} class="rounded-sm" />
+        <CharacterHud character={props.character} class="rounded-none" />
       </Show>
     </div>
   )

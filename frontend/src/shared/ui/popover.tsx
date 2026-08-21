@@ -30,7 +30,7 @@ export function PopoverContent(props: PopoverContentProps) {
       <KPopover.Content
         data-slot="popover-content"
         class={cn(
-          'z-50 w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-hidden data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95 data-[expanded]:animate-in data-[expanded]:fade-in-0 data-[expanded]:zoom-in-95',
+          'z-50 w-72 rounded-sm border bg-popover p-4 text-popover-foreground shadow-md outline-hidden data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95 data-[expanded]:animate-in data-[expanded]:fade-in-0 data-[expanded]:zoom-in-95',
           local.class,
         )}
         {...rest}

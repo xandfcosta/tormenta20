@@ -150,26 +150,38 @@
    * forjado não tem canto macio. O que isso significa em pixel, MEDIDO dentro
    * de uma cena, porque ninguém consegue prever lendo o TSX:
    *
-   *   rounded-sm →  0px   (a classe de raio mais usada do app, 114 vezes)
-   *   rounded-md →  2px
-   *   rounded-lg →  4px
+   *   rounded-none →  0px   (o canto quadrado, dito com todas as letras)
+   *   rounded-sm   →  2px
+   *   rounded-md   →  4px
+   *   rounded-lg   →  6px
+   *   rounded-xl   → 10px
    *
-   * A escala é derivada daqui por `--radius-*` no `@theme`, então mexer neste
-   * único valor move as três de uma vez — e move a cena inteira junto.
+   * A escala é derivada daqui pela fórmula do shadcn no `@theme`
+   * (`sm = R−4, md = R−2, lg = R, xl = R+4`), então mexer neste único valor
+   * move a ladeira inteira — e move a cena junto.
    *
-   * Duas ressalvas que a auditoria pediu e a medição resolveu de outro jeito:
+   * R era 4px, e nessa medida a fórmula DEGENERA: `sm` cai em zero e passa a
+   * significar "quadrado", que é trabalho do `rounded-none`. Ninguém conseguia
+   * prever, lendo o TSX, se `rounded-sm` ia desenhar canto ou não. Com R=6px a
+   * ladeira existe — 0/2/4/6/10 — e mantém a FORMA da do shadcn: três degraus
+   * parelhos e um salto no fim.
    *
-   * `rounded` CRU (sem sufixo) é fixo em 4px e NÃO acompanha este valor. Ele
-   * coincide com `rounded-lg` hoje, e por isso as 12 ocorrências viraram
-   * `rounded-lg`: zero pixel de diferença agora, e elas passam a seguir a cena
-   * se este número mudar um dia.
+   * A medida é a do ferro, não a do shadcn (que usa R=10px e dá 6/8/10/14).
+   * Isso foi medido antes de decidir: com R=10 nos nomes que a cena já usava,
+   * cerca de 124 elementos das três cenas saltariam de 0–2px para 6–8px de uma
+   * vez. Não é ajuste de escala, é outro produto — o ferro forjado vira cartão
+   * macio. Os dois degraus de cima (6px e 10px) ficam livres justamente para
+   * quem QUISER ser mais macio, e ninguém os usa ainda.
+   *
+   * `rounded` CRU (sem sufixo) é fixo em 4px e NÃO acompanha este valor; as 12
+   * ocorrências viraram degrau nomeado na ALE-173.
    *
    * Os raios cravados mais abaixo (5px na moldura, 10px na capa do livro, 4px
    * nas páginas, 3px na folha, 4px na barra de rolagem) NÃO são violação da
    * escala e não devem ser alinhados a ela: são a medida de um OBJETO. A capa
    * de um livro é fisicamente mais redonda que a folha dentro dela, e forçar
    * as duas ao mesmo degrau desenharia um objeto que não existe. */
-  --radius: 0.25rem;
+  --radius: 0.375rem;
   --font-display: var(--font-heading);
   background-color: var(--grimorio-bg);
   color: var(--grimorio-fg);

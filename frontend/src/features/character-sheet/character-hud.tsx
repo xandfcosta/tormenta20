@@ -46,7 +46,7 @@ export function CharacterHud(props: { character: Character; class?: string }) {
           <CharacterPortrait
             name={props.character.name}
             size="sm"
-            class="h-auto w-24 self-stretch rounded-sm border-2 border-grimorio-iron text-4xl"
+            class="h-auto w-24 self-stretch rounded-none border-2 border-grimorio-iron text-4xl"
           />
           <div class="flex min-w-0 flex-1 flex-col gap-1.5">
             <div class="flex items-start justify-between gap-2">

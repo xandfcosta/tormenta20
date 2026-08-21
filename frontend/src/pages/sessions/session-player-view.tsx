@@ -71,7 +71,7 @@ export function SessionPlayerView(props: {
   // player's turn, matching the banner.
   const frame = () =>
     cn(
-      'min-h-0 rounded-sm ring-1 transition-shadow',
+      'min-h-0 rounded-none ring-1 transition-shadow',
       isMyTurn() ? 'ring-2 ring-[color:var(--primary)]/60' : 'ring-[color:var(--primary)]/20',
     )
 

@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 /** Kind pill ("combate", "destino"…) shown next to a power's name. */
 export function PowerKindBadge(props: { kind: PowerKind }) {
   return (
-    <span class="rounded-sm bg-muted px-1 py-px text-[9px] uppercase tracking-wide text-muted-foreground">
+    <span class="rounded-none bg-muted px-1 py-px text-[9px] uppercase tracking-wide text-muted-foreground">
       {props.kind}
     </span>
   )
@@ -19,7 +19,7 @@ function LevelBadge(props: { label: string; tone?: 'auto' | 'gate' | 'locked' })
   return (
     <span
       class={cn(
-        'rounded-sm px-1 py-px text-[9px] uppercase tracking-wide',
+        'rounded-none px-1 py-px text-[9px] uppercase tracking-wide',
         tone() === 'auto' && 'bg-muted text-muted-foreground',
         tone() === 'gate' && 'border border-border text-muted-foreground',
         tone() === 'locked' && 'bg-destructive text-white',
@@ -40,7 +40,7 @@ function PowerCheckbox(props: { owned: boolean; disabled?: boolean; onToggle: ()
       aria-pressed={props.owned}
       aria-label={props.owned ? 'Remover poder' : 'Selecionar poder'}
       class={cn(
-        'mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-sm border',
+        'mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-none border',
         props.owned
           ? 'border-primary bg-primary text-primary-foreground'
           : 'border-border hover:bg-muted',
@@ -62,7 +62,7 @@ function PowerInfo(props: { text: string }) {
         as="button"
         type="button"
         aria-label="Ver descrição"
-        class="flex size-6 shrink-0 items-center justify-center rounded-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+        class="flex size-6 shrink-0 items-center justify-center rounded-none text-muted-foreground hover:bg-muted hover:text-foreground"
       >
         <Info aria-hidden="true" class="size-3.5" />
       </PopoverTrigger>
@@ -90,7 +90,7 @@ export function GeneralPowerRow(props: {
   return (
     <div
       class={cn(
-        'flex items-start gap-2 rounded-sm border border-border p-2',
+        'flex items-start gap-2 rounded-none border border-border p-2',
         props.owned && 'bg-muted',
       )}
     >
@@ -144,7 +144,7 @@ export function ClassPowerRow(props: {
   return (
     <li
       class={cn(
-        'flex items-start gap-2 rounded-sm border border-border p-2',
+        'flex items-start gap-2 rounded-none border border-border p-2',
         props.owned && 'bg-muted',
       )}
     >

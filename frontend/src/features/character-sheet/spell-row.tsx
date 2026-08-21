@@ -93,7 +93,7 @@ export function SpellRow(props: {
   return (
     <div
       class={cn(
-        'rounded-md border border-transparent px-2 py-1 hover:bg-accent/40',
+        'rounded-sm border border-transparent px-2 py-1 hover:bg-accent/40',
         open() && 'border-border',
       )}
     >
@@ -106,7 +106,7 @@ export function SpellRow(props: {
         >
           <span
             class={cn(
-              'rounded-sm border border-border px-1 font-mono text-[10px]',
+              'rounded-none border border-border px-1 font-mono text-[10px]',
               !canCast() && 'text-muted-foreground',
             )}
           >
@@ -129,7 +129,7 @@ export function SpellRow(props: {
             </Show>
             <Show when={props.granted} fallback={<LearnedBadge learned={props.learned} />}>
               {(granted) => (
-                <span class="rounded-sm border border-border px-1 text-[10px] uppercase tracking-widest">
+                <span class="rounded-none border border-border px-1 text-[10px] uppercase tracking-widest">
                   {granted().sourcePower}
                 </span>
               )}
@@ -173,8 +173,8 @@ export function SpellRow(props: {
               <ul class="space-y-1">
                 <For each={props.spell.augments}>
                   {(augment) => (
-                    <li class="flex items-start gap-2 rounded-sm border border-border px-2 py-1">
-                      <span class="rounded-sm border border-border px-1 font-mono text-[10px]">
+                    <li class="flex items-start gap-2 rounded-none border border-border px-2 py-1">
+                      <span class="rounded-none border border-border px-1 font-mono text-[10px]">
                         +{augment.pmCost} PM
                       </span>
                       <span
@@ -274,7 +274,7 @@ function LearnedBadge(props: { learned: CharacterSpell | null }) {
       {(learned) => (
         <span
           class={cn(
-            'rounded-sm px-1 text-[10px] uppercase tracking-widest',
+            'rounded-none px-1 text-[10px] uppercase tracking-widest',
             learned().prepared
               ? 'bg-primary text-primary-foreground'
               : 'bg-muted text-muted-foreground',

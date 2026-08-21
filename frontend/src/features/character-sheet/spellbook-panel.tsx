@@ -22,7 +22,7 @@ import { SpellRow } from './spell-row'
 const CIRCLES: readonly SpellCircle[] = [0, 1, 2, 3, 4, 5]
 
 const SELECT_CLASS =
-  'h-8 cursor-pointer rounded-md border border-input bg-transparent px-2 text-sm outline-none focus:ring-2 focus:ring-ring'
+  'h-8 cursor-pointer rounded-sm border border-input bg-transparent px-2 text-sm outline-none focus:ring-2 focus:ring-ring'
 
 /**
  * The character's grimoire: only the spells LEARNED, each with
@@ -60,7 +60,7 @@ export function SpellbookPanel(props: { character: Character }) {
   const granted = createMemo(() => grantedSpells(props.character))
 
   return (
-    <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-sm border border-grimorio-iron bg-grimorio-panel">
+    <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-none border border-grimorio-iron bg-grimorio-panel">
       <div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
         <div class="flex items-baseline gap-3">
           <h2 class="flex items-center gap-2 font-heading text-lg uppercase tracking-wide text-grimorio-gold">

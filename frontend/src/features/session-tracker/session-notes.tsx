@@ -82,7 +82,7 @@ export function SessionNotes(props: { campaignId: number; session: Session }) {
           aria-label="Notas da sessão"
           placeholder={'# Cena 1\n- O ogro **fugiu** pela ponte\n> "voltarei", ele disse'}
         />
-        <div class="min-h-0 overflow-y-auto rounded-md border border-grimorio-iron p-3">
+        <div class="min-h-0 overflow-y-auto rounded-sm border border-grimorio-iron p-3">
           <Show
             when={draft().trim()}
             fallback={<p class="text-sm text-muted-foreground">Nenhuma nota ainda.</p>}

@@ -89,7 +89,7 @@ export function SingleUseLinkDialog(props: SingleUseLinkDialogProps) {
         <Show
           when={url()}
           fallback={
-            <div class="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
+            <div class="rounded-sm border border-dashed p-4 text-center text-sm text-muted-foreground">
               Nenhum link gerado. Clique em "{props.createLabel}" para criar.
             </div>
           }

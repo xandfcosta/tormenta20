@@ -164,7 +164,7 @@ export function ResourceAdjustDialog(props: ResourceAdjustDialogProps) {
                         setAmount(quick)
                         setErrors([])
                       }}
-                      class="rounded-md border border-border px-2.5 py-1 text-xs hover:bg-accent"
+                      class="rounded-sm border border-border px-2.5 py-1 text-xs hover:bg-accent"
                     >
                       {quick}
                     </button>
@@ -202,7 +202,7 @@ function AdjustPreview(props: {
   result: ReturnType<typeof adjustPreview>
 }) {
   return (
-    <div class="flex items-center justify-between rounded-lg border border-border bg-muted px-4 py-2">
+    <div class="flex items-center justify-between rounded-md border border-border bg-muted px-4 py-2">
       <div class="flex flex-col">
         <span class="text-[10px] uppercase tracking-widest text-muted-foreground">novo total</span>
         <span class="text-[10px] text-muted-foreground">
@@ -230,7 +230,7 @@ function AdjustPreview(props: {
 function ManualTempHpField(props: { pool: TempPoolControl; onDone: () => void }) {
   const [value, setValue] = createSignal(props.pool.total)
   return (
-    <div class="space-y-2 rounded-lg border border-border bg-muted p-3">
+    <div class="space-y-2 rounded-md border border-border bg-muted p-3">
       <div class="flex items-baseline justify-between">
         <Label for="manual-temp-hp">PV temporários</Label>
         <span class="font-mono text-sm font-bold text-grimorio-gold">+{props.pool.total}</span>

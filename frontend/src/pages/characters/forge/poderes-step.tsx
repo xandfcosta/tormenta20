@@ -255,7 +255,7 @@ function Catalogue(props: {
               aria-pressed={props.facet === value}
               onClick={() => props.onFacet(value)}
               class={cn(
-                'rounded-md border px-2.5 py-1 text-xs transition-colors',
+                'rounded-sm border px-2.5 py-1 text-xs transition-colors',
                 props.facet === value
                   ? 'border-grimorio-gold bg-accent font-medium text-grimorio-gold'
                   : 'border-grimorio-iron text-muted-foreground hover:bg-accent',
@@ -279,7 +279,7 @@ function Catalogue(props: {
           items={shown()}
           getKey={(option) => option.id}
           estimateSize={64}
-          class="max-h-[45vh] rounded-md border border-grimorio-iron p-1 lg:max-h-none lg:min-h-0 lg:flex-1"
+          class="max-h-[45vh] rounded-sm border border-grimorio-iron p-1 lg:max-h-none lg:min-h-0 lg:flex-1"
           renderItem={(option) => (
             <PowerRow
               option={option}
@@ -321,7 +321,7 @@ function PowerRow(props: {
       disabled={locked()}
       onClick={() => props.onToggle()}
       class={cn(
-        'flex w-full items-start gap-2 rounded-md border p-2 text-left transition-colors',
+        'flex w-full items-start gap-2 rounded-sm border p-2 text-left transition-colors',
         props.selected
           ? 'border-grimorio-gold bg-accent'
           : locked()
@@ -329,7 +329,7 @@ function PowerRow(props: {
             : 'border-grimorio-iron hover:bg-accent',
       )}
     >
-      <span class="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron">
+      <span class="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-none border border-grimorio-iron">
         <Show when={props.selected}>
           <Check aria-hidden="true" class="size-3 text-grimorio-gold" />
         </Show>
@@ -352,7 +352,7 @@ function PowerRow(props: {
           </span>
           <Show when={blocked()}>
             {(reason) => (
-              <span class="rounded-sm border border-grimorio-iron px-1 text-[9px] text-muted-foreground">
+              <span class="rounded-none border border-grimorio-iron px-1 text-[9px] text-muted-foreground">
                 {reason()}
               </span>
             )}
@@ -422,7 +422,7 @@ function TakenPowers(props: {
 
       <For each={empties()}>
         {() => (
-          <p class="rounded-md border border-dashed border-grimorio-iron p-3 text-center text-[11px] text-muted-foreground">
+          <p class="rounded-sm border border-dashed border-grimorio-iron p-3 text-center text-[11px] text-muted-foreground">
             Vaga livre — escolha um poder ao lado.
           </p>
         )}
@@ -439,7 +439,7 @@ function TakenPowers(props: {
  *  until the player says otherwise — nothing is thrown away behind their back. */
 function OrphanPowerCard(props: { id: string; onRemove: () => void }) {
   return (
-    <div class="space-y-1 rounded-md border border-dashed border-[color:var(--hp-hurt)]/60 p-2">
+    <div class="space-y-1 rounded-sm border border-dashed border-[color:var(--hp-hurt)]/60 p-2">
       <div class="flex items-start gap-2">
         <p class="min-w-0 flex-1 text-xs font-semibold text-muted-foreground">{props.id}</p>
         <button
@@ -466,7 +466,7 @@ function TakenPowerCard(props: {
   onChoice: (ids: string[]) => void
 }) {
   return (
-    <div class="space-y-1.5 rounded-md border border-grimorio-gold/60 bg-accent/40 p-2">
+    <div class="space-y-1.5 rounded-sm border border-grimorio-gold/60 bg-accent/40 p-2">
       <div class="flex items-start gap-2">
         <p class="min-w-0 flex-1 text-xs font-semibold">{props.option.name}</p>
         <button
@@ -531,7 +531,7 @@ function PowerChoicePicker(props: {
                 disabled={locked()}
                 onClick={() => toggle(option.id)}
                 class={cn(
-                  'rounded-md border px-2 py-0.5 text-[11px] transition-colors',
+                  'rounded-sm border px-2 py-0.5 text-[11px] transition-colors',
                   on()
                     ? 'border-grimorio-gold bg-accent'
                     : locked()

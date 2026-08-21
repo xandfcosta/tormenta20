@@ -54,7 +54,7 @@ export function MonsterPickerList(props: MonsterPickerListProps) {
             <button
               type="button"
               onClick={() => props.onPick(monster)}
-              class="w-full rounded-md border border-grimorio-iron p-2 text-left transition-colors hover:bg-accent"
+              class="w-full rounded-sm border border-grimorio-iron p-2 text-left transition-colors hover:bg-accent"
             >
               <p class="flex flex-wrap items-baseline gap-x-1.5 text-xs font-semibold">
                 {monster.name}

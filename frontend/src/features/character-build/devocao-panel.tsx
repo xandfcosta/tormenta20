@@ -114,7 +114,7 @@ function GrantedPowerRow(props: {
       aria-pressed={props.selected}
       onClick={() => props.onPick()}
       class={cn(
-        'flex items-start gap-2 rounded-md border p-2 text-left transition-colors',
+        'flex items-start gap-2 rounded-sm border p-2 text-left transition-colors',
         props.selected
           ? 'border-grimorio-gold bg-accent'
           : 'border-grimorio-iron hover:bg-accent',

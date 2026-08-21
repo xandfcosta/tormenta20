@@ -113,7 +113,7 @@ function PericiaBands(props: {
             <span class="uppercase tracking-wide">Fixas:</span>
             <For each={props.plan.fixed}>
               {(name) => (
-                <span class="rounded-md border border-grimorio-gold/60 bg-accent px-2 py-0.5 text-xs text-foreground">
+                <span class="rounded-sm border border-grimorio-gold/60 bg-accent px-2 py-0.5 text-xs text-foreground">
                   {name}
                 </span>
               )}
@@ -134,7 +134,7 @@ function PericiaBands(props: {
                     aria-pressed={props.trained.includes(name)}
                     onClick={() => pickEitherOr(name, pair()[i() === 0 ? 1 : 0])}
                     class={cn(
-                      'rounded-md border px-3 py-1 text-xs transition-colors',
+                      'rounded-sm border px-3 py-1 text-xs transition-colors',
                       props.trained.includes(name)
                         ? 'border-grimorio-gold bg-accent text-grimorio-gold'
                         : 'border-grimorio-iron hover:bg-accent',
@@ -151,7 +151,7 @@ function PericiaBands(props: {
 
       <Show when={overflowNotice(props.plan, props.trained)}>
         {(notice) => (
-          <p class="rounded-md border border-grimorio-iron bg-muted/20 px-3 py-1.5 text-[11px] text-muted-foreground">
+          <p class="rounded-sm border border-grimorio-iron bg-muted/20 px-3 py-1.5 text-[11px] text-muted-foreground">
             {notice()} A cota da classe acabou, então o excedente sai do orçamento livre.
           </p>
         )}
@@ -267,7 +267,7 @@ function Band(props: {
                 disabled={itemLocked()}
                 onClick={() => props.onToggle(name)}
                 class={cn(
-                  'flex items-center gap-1.5 rounded-md border px-2 py-1 text-left text-xs transition-colors',
+                  'flex items-center gap-1.5 rounded-sm border px-2 py-1 text-left text-xs transition-colors',
                   selected()
                     ? 'border-grimorio-gold bg-accent'
                     : itemLocked()
@@ -275,7 +275,7 @@ function Band(props: {
                       : 'border-grimorio-iron hover:bg-accent',
                 )}
               >
-                <span class="flex size-3.5 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron">
+                <span class="flex size-3.5 shrink-0 items-center justify-center rounded-none border border-grimorio-iron">
                   <Show when={selected()}>
                     <Check aria-hidden="true" class="size-2.5 text-grimorio-gold" />
                   </Show>

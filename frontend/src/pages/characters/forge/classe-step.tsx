@@ -102,7 +102,7 @@ export function ClasseStep() {
 
       <Show when={presetUndo()}>
         {(undo) => (
-          <p class="flex flex-wrap items-center gap-2 rounded-md border border-grimorio-iron bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+          <p class="flex flex-wrap items-center gap-2 rounded-sm border border-grimorio-iron bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
             Atributos preenchidos com a sugestão de {undo().className}.
             <Button type="button" variant="outline" size="sm" onClick={undoPreset}>
               Desfazer
@@ -137,7 +137,7 @@ export function ClasseStep() {
           <Show
             when={entries().length > 0}
             fallback={
-              <p class="rounded-lg border border-dashed border-grimorio-iron p-4 text-center text-xs text-muted-foreground">
+              <p class="rounded-md border border-dashed border-grimorio-iron p-4 text-center text-xs text-muted-foreground">
                 Escolha um ofício para ver o que ele concede.
               </p>
             }

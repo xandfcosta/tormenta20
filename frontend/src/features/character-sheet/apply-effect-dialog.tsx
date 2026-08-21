@@ -93,13 +93,13 @@ export function ApplyEffectDialog(props: { character: Character }) {
             <Show
               when={matches().length > 0}
               fallback={
-                <p class="rounded-md border border-border bg-muted px-3 py-6 text-center text-sm text-muted-foreground">
+                <p class="rounded-sm border border-border bg-muted px-3 py-6 text-center text-sm text-muted-foreground">
                   Nenhuma magia com efeito aplicável.
                 </p>
               }
             >
               <VirtualList
-                class="max-h-72 rounded-md border border-border bg-muted"
+                class="max-h-72 rounded-sm border border-border bg-muted"
                 items={matches()}
                 estimateSize={60}
                 getKey={(spell) => spell.id}
@@ -122,7 +122,7 @@ function BuffRow(props: { spell: CatalogSpell; disabled: boolean; onPick: () => 
       type="button"
       disabled={props.disabled}
       onClick={() => props.onPick()}
-      class="flex w-full flex-col gap-1 rounded-md p-2 text-left transition-colors hover:bg-accent disabled:opacity-50"
+      class="flex w-full flex-col gap-1 rounded-sm p-2 text-left transition-colors hover:bg-accent disabled:opacity-50"
     >
       <div class="flex items-center justify-between gap-2">
         <span class="truncate text-sm font-medium text-foreground">{props.spell.name}</span>

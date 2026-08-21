@@ -28,7 +28,7 @@ export function CreateSlotStage(props: CreateSlotStageProps) {
           type="button"
           onClick={() => props.onOpen()}
           aria-label="Criar novo personagem"
-          class="aspect-[3/4] w-44 rounded-md border-2 border-dashed border-grimorio-iron transition-colors hover:border-grimorio-gold sm:w-56 lg:w-64"
+          class="aspect-[3/4] w-44 rounded-sm border-2 border-dashed border-grimorio-iron transition-colors hover:border-grimorio-gold sm:w-56 lg:w-64"
         >
           <QuestionFrame />
         </button>

@@ -92,7 +92,7 @@ export function AddCustomExpertiseDialog(props: AddCustomExpertiseDialogProps) {
               id="expertise-attribute"
               value={attribute()}
               onChange={(event) => setAttribute(event.currentTarget.value as AttributeKey)}
-              class="h-9 w-full cursor-pointer rounded-md border border-input bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+              class="h-9 w-full cursor-pointer rounded-sm border border-input bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
             >
               <For each={ATTRIBUTE_KEYS}>
                 {(key) => <option value={key}>{ATTRIBUTE_ABBR[key]}</option>}

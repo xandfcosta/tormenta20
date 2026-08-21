@@ -120,7 +120,7 @@ function EquippedCard(props: {
       {(item) => (
         <div
           class={cn(
-            'relative min-h-[3.75rem] rounded-sm border border-grimorio-gold/40 bg-grimorio-panel-raised px-2.5 py-2 text-left',
+            'relative min-h-[3.75rem] rounded-none border border-grimorio-gold/40 bg-grimorio-panel-raised px-2.5 py-2 text-left',
             props.wide && 'col-span-2',
           )}
         >
@@ -181,7 +181,7 @@ function EmptySlot(props: { label: string; wide?: boolean }) {
   return (
     <div
       class={cn(
-        'flex min-h-[3.75rem] flex-col justify-center rounded-sm border border-dashed border-grimorio-iron bg-grimorio-panel px-2.5 py-2',
+        'flex min-h-[3.75rem] flex-col justify-center rounded-none border border-dashed border-grimorio-iron bg-grimorio-panel px-2.5 py-2',
         props.wide && 'col-span-2',
       )}
     >

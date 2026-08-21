@@ -33,7 +33,7 @@ export function TooltipContent(props: TooltipContentProps) {
       <KTooltip.Content
         data-slot="tooltip-content"
         class={cn(
-          'z-50 w-fit animate-in rounded-md bg-foreground px-3 py-1.5 text-xs text-balance text-background fade-in-0 zoom-in-95 data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95',
+          'z-50 w-fit animate-in rounded-sm bg-foreground px-3 py-1.5 text-xs text-balance text-background fade-in-0 zoom-in-95 data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95',
           local.class,
         )}
         {...rest}

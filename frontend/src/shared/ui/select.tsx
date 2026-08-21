@@ -49,7 +49,7 @@ export function Select<T>(props: SelectProps<T>) {
       itemComponent={(itemProps) => (
         <KSelect.Item
           item={itemProps.item}
-          class="relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
+          class="relative flex w-full cursor-default items-center gap-2 rounded-none py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
         >
           <KSelect.ItemLabel>{itemProps.item.rawValue.label}</KSelect.ItemLabel>
           <KSelect.ItemIndicator class="absolute right-2 flex size-3.5 items-center justify-center">
@@ -63,7 +63,7 @@ export function Select<T>(props: SelectProps<T>) {
         data-size={props.size ?? 'default'}
         aria-label={props['aria-label']}
         class={cn(
-          "flex w-fit items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[size=default]:h-9 data-[size=sm]:h-8 dark:bg-input/30 dark:hover:bg-input/50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+          "flex w-fit items-center justify-between gap-2 rounded-sm border border-input bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[size=default]:h-9 data-[size=sm]:h-8 dark:bg-input/30 dark:hover:bg-input/50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
           props.class,
         )}
       >
@@ -77,7 +77,7 @@ export function Select<T>(props: SelectProps<T>) {
       <KSelect.Portal mount={props.mount ?? scene() ?? undefined}>
         <KSelect.Content
           data-slot="select-content"
-          class="z-50 min-w-32 overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[closed]:animate-out data-[closed]:fade-out-0 data-[expanded]:animate-in data-[expanded]:fade-in-0"
+          class="z-50 min-w-32 overflow-hidden rounded-sm border bg-popover text-popover-foreground shadow-md data-[closed]:animate-out data-[closed]:fade-out-0 data-[expanded]:animate-in data-[expanded]:fade-in-0"
         >
           <KSelect.Listbox class="p-1" />
         </KSelect.Content>

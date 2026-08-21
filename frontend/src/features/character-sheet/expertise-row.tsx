@@ -97,7 +97,7 @@ export function ExpertiseRow(props: ExpertiseRowProps) {
           // Windows desenham DENTRO da caixa, ao contrário da sobreposta) para
           // a linha inteira pintar para fora do pai a 390px. Medido: 6px de
           // sobra a 375 e 21px a 360.
-          'flex min-w-0 gap-2.5 rounded-sm border border-grimorio-iron transition-colors hover:border-grimorio-gold/50',
+          'flex min-w-0 gap-2.5 rounded-none border border-grimorio-iron transition-colors hover:border-grimorio-gold/50',
           state().trained && 'bg-grimorio-panel',
           semChips() ? 'items-center p-1.5' : 'items-start p-2.5',
         )}
@@ -194,7 +194,7 @@ function TotalBadge(props: {
       type="button"
       aria-label={label()}
       class={cn(
-        'flex shrink-0 items-center justify-center rounded-sm border font-mono font-bold',
+        'flex shrink-0 items-center justify-center rounded-none border font-mono font-bold',
         props.compact ? 'size-8 text-sm' : 'size-11 text-lg',
         props.autoFail
           ? 'border-destructive/60 bg-destructive/10 text-destructive'
@@ -260,7 +260,7 @@ function DeleteExpertiseButton(props: { name: string; onDelete: () => void }) {
       type="button"
       aria-label={`Remover ${props.name}`}
       onClick={() => props.onDelete()}
-      class="inline-flex shrink-0 rounded-sm p-1 text-muted-foreground transition-colors hover:text-destructive"
+      class="inline-flex shrink-0 rounded-none p-1 text-muted-foreground transition-colors hover:text-destructive"
     >
       <Trash2 aria-hidden="true" class="size-3.5" />
     </button>

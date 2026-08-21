@@ -81,7 +81,7 @@ export function MembersCard(props: { campaignId: number; isGm: boolean }) {
 /** No members yet — an empty muster awaiting the first hero. */
 function EmptyMuster() {
   return (
-    <div class="flex flex-col items-center gap-2 rounded-sm border border-dashed border-grimorio-iron px-4 py-10 text-center">
+    <div class="flex flex-col items-center gap-2 rounded-none border border-dashed border-grimorio-iron px-4 py-10 text-center">
       <Users aria-hidden="true" class="size-6 text-muted-foreground" />
       <p class="text-sm text-muted-foreground">Nenhum personagem inscrito ainda.</p>
     </div>
@@ -101,7 +101,7 @@ export function MemberPlate(props: MemberPlateProps) {
   const isGm = () => props.member.role === 'gm'
 
   return (
-    <div class="group relative flex items-center gap-3 rounded-sm border border-grimorio-iron bg-grimorio-panel p-3">
+    <div class="group relative flex items-center gap-3 rounded-none border border-grimorio-iron bg-grimorio-panel p-3">
       <CharacterPortrait name={name()} size="sm" hue={hueFromName(name())} />
       <div class="min-w-0 flex-1">
         <p class="flex items-center gap-1.5 truncate font-medium text-foreground">

@@ -67,7 +67,7 @@ export function ConditionsSection(props: { character: Character }) {
   const conditions = createConditionEditing(() => props.character)
 
   return (
-    <section class="space-y-2 rounded-sm border border-grimorio-iron p-3">
+    <section class="space-y-2 rounded-none border border-grimorio-iron p-3">
       <h3 class="font-heading text-sm uppercase tracking-wide text-grimorio-gold">
         Condições (p394)
       </h3>
@@ -106,7 +106,7 @@ export function ConditionChip(props: {
     <li
       title={condition().description}
       class={cn(
-        'flex items-center gap-1 rounded-md border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/10 font-medium',
+        'flex items-center gap-1 rounded-sm border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/10 font-medium',
         props.compact ? 'px-1.5 py-px text-[11px]' : 'px-2 py-1 text-xs',
       )}
     >
@@ -122,7 +122,7 @@ export function ConditionChip(props: {
         type="button"
         aria-label={`Remover condição ${condition().name}`}
         onClick={() => props.onRemove()}
-        class="rounded-lg p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+        class="rounded-md p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
       >
         <X aria-hidden="true" class="size-3" />
       </button>

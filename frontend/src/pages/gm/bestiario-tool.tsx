@@ -96,7 +96,7 @@ export function BestiarioTool() {
                 items={shown()}
                 getKey={(monster) => monster.id}
                 estimateSize={72}
-                class="min-h-0 flex-1 rounded-md border border-grimorio-iron p-1"
+                class="min-h-0 flex-1 rounded-sm border border-grimorio-iron p-1"
                 renderItem={(monster) => (
                   <MonsterRow
                     monster={monster}
@@ -151,7 +151,7 @@ function MonsterRow(props: { monster: Monster; selected: boolean; onOpen: () => 
       aria-pressed={props.selected}
       onClick={() => props.onOpen()}
       class={cn(
-        'w-full rounded-md border p-2 text-left transition-colors',
+        'w-full rounded-sm border p-2 text-left transition-colors',
         props.selected
           ? 'border-grimorio-gold bg-accent'
           : 'border-grimorio-iron hover:bg-accent',

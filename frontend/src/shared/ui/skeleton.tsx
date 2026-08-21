@@ -5,7 +5,7 @@ import { cn } from '@/shared/lib/utils'
 export function Skeleton(props: ComponentProps<'div'>) {
   const [local, rest] = splitProps(props, ['class'])
   return (
-    <div data-slot="skeleton" class={cn('animate-pulse rounded-md bg-accent', local.class)} {...rest} />
+    <div data-slot="skeleton" class={cn('animate-pulse rounded-sm bg-accent', local.class)} {...rest} />
   )
 }
 
@@ -16,7 +16,7 @@ export function SkeletonCardGrid(props: { count?: number; class?: string }) {
     <div class={cn('grid gap-4 sm:grid-cols-2 lg:grid-cols-3', props.class)}>
       <For each={slots()}>
         {() => (
-          <div data-slot="skeleton-card" class="rounded-md border p-4">
+          <div data-slot="skeleton-card" class="rounded-sm border p-4">
             <Skeleton class="h-5 w-3/4" />
             <Skeleton class="mt-3 h-3 w-full" />
             <Skeleton class="mt-2 h-3 w-2/3" />
@@ -38,7 +38,7 @@ export function SkeletonRows(props: { count?: number; class?: string }) {
     <div class={cn('space-y-2', props.class)}>
       <For each={slots()}>
         {() => (
-          <div data-slot="skeleton-row" class="flex items-center justify-between rounded-md border p-3">
+          <div data-slot="skeleton-row" class="flex items-center justify-between rounded-sm border p-3">
             <div class="flex-1 space-y-1.5">
               <Skeleton class="h-4 w-1/3" />
               <Skeleton class="h-3 w-2/3" />

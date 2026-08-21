@@ -32,7 +32,7 @@ export function DossierDrawer(props: DossierDrawerProps) {
         // Negative insets cancel the SceneShell dense content padding (p-4) so
         // the drawer sits flush against the scene edges instead of floating.
         // Keep in sync if that padding changes.
-        class="absolute -inset-y-4 -right-4 z-10 w-full max-w-sm overflow-y-auto border-l border-border bg-card/95 p-4 backdrop-blur duration-200 ease-out animate-in fade-in-0 slide-in-from-right-6 motion-reduce:animate-none sm:rounded-l-lg"
+        class="absolute -inset-y-4 -right-4 z-10 w-full max-w-sm overflow-y-auto border-l border-border bg-card/95 p-4 backdrop-blur duration-200 ease-out animate-in fade-in-0 slide-in-from-right-6 motion-reduce:animate-none sm:rounded-l-md"
       >
         <div class="mb-3 flex items-center justify-between">
           <h3 class="font-display text-lg tracking-wide">{props.character.name}</h3>
@@ -40,7 +40,7 @@ export function DossierDrawer(props: DossierDrawerProps) {
             type="button"
             aria-label="Fechar dossiê"
             onClick={() => props.onClose()}
-            class="rounded-lg p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+            class="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
           >
             <X class="size-4" />
           </button>

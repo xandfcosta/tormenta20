@@ -167,15 +167,15 @@ function SwapToggle(props: { on: boolean; onToggle: () => void }) {
       aria-pressed={props.on}
       onClick={() => props.onToggle()}
       class={cn(
-        'flex w-full items-center gap-2 rounded-md border px-2 py-1 text-left text-[11px] transition-colors',
+        'flex w-full items-center gap-2 rounded-sm border px-2 py-1 text-left text-[11px] transition-colors',
         props.on
           ? 'border-grimorio-gold bg-accent'
           : 'border-grimorio-iron text-muted-foreground hover:bg-accent',
       )}
     >
-      <span class="flex size-3.5 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron">
+      <span class="flex size-3.5 shrink-0 items-center justify-center rounded-none border border-grimorio-iron">
         <Show when={props.on}>
-          <span class="size-2 rounded-sm bg-grimorio-gold" />
+          <span class="size-2 rounded-none bg-grimorio-gold" />
         </Show>
       </span>
       Trocar o 2º bônus por um poder da Tormenta

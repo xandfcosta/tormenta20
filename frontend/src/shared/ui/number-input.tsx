@@ -110,7 +110,7 @@ function SpinnerButton(props: {
         'pointer-events-auto flex flex-1 items-center justify-center text-muted-foreground transition-colors',
         'hover:bg-accent/50 hover:text-foreground',
         'disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent',
-        props.direction === 'up' ? 'rounded-tr-md' : 'rounded-br-md',
+        props.direction === 'up' ? 'rounded-tr-sm' : 'rounded-br-sm',
       )}
     >
       {props.direction === 'up' ? (

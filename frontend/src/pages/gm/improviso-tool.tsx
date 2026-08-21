@@ -143,7 +143,7 @@ function TableCard<T>(props: {
   render: (result: T) => JSX.Element
 }) {
   return (
-    <div class="space-y-2 rounded-md border border-grimorio-iron p-3">
+    <div class="space-y-2 rounded-sm border border-grimorio-iron p-3">
       <div class="flex flex-wrap items-baseline justify-between gap-2">
         <p class="font-heading text-[11px] uppercase tracking-[0.14em] text-grimorio-gold">
           {props.title}
@@ -204,7 +204,7 @@ function DungeonPlanner() {
 
   return (
     <div class="grid gap-3 lg:grid-cols-2">
-      <div class="space-y-3 rounded-md border border-grimorio-iron p-3">
+      <div class="space-y-3 rounded-sm border border-grimorio-iron p-3">
         <div class="flex flex-wrap items-end gap-3">
           <div class="space-y-1">
             <label

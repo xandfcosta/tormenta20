@@ -61,7 +61,7 @@ function SessionLogEntry(props: { session: Session; campaignId: number }) {
         to="/campaigns/$id/sessions/$sid"
         params={{ id: String(props.campaignId), sid: String(props.session.id) }}
         class={cn(
-          'flex items-center justify-between gap-3 rounded-sm border bg-grimorio-panel p-3 transition-colors',
+          'flex items-center justify-between gap-3 rounded-none border bg-grimorio-panel p-3 transition-colors',
           isLive()
             ? 'border-[color:var(--hp-full)]/60 bg-[color:var(--hp-full)]/[0.06] hover:border-[color:var(--hp-full)]'
             : 'border-grimorio-iron hover:border-grimorio-gold',
@@ -81,7 +81,7 @@ function SessionLogEntry(props: { session: Session; campaignId: number }) {
         <div class="flex shrink-0 items-center gap-2">
           <StatusPill meta={meta()} />
           <Show when={isLive()}>
-            <span class="hidden items-center gap-1 rounded-sm bg-[color:var(--hp-full)]/15 px-2 py-1 text-xs font-semibold text-[color:var(--hp-full)] sm:inline-flex">
+            <span class="hidden items-center gap-1 rounded-none bg-[color:var(--hp-full)]/15 px-2 py-1 text-xs font-semibold text-[color:var(--hp-full)] sm:inline-flex">
               Entrar
               <ChevronRight aria-hidden="true" class="size-3.5" />
             </span>
@@ -112,7 +112,7 @@ function StatusPill(props: { meta: SessionStatusMeta }) {
   return (
     <span
       class={cn(
-        'inline-flex items-center gap-1.5 rounded-sm border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider',
+        'inline-flex items-center gap-1.5 rounded-none border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider',
         PILL_TONE[props.meta.tone],
       )}
     >

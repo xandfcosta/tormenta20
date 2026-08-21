@@ -157,7 +157,7 @@ function ArtPage(props: { name: string; class?: string }) {
       )}
     >
       <div
-        class="relative aspect-[16/10] w-full overflow-hidden rounded-sm border border-[color:var(--grimorio-parchment-ink)]/35 sm:aspect-auto sm:h-full"
+        class="relative aspect-[16/10] w-full overflow-hidden rounded-none border border-[color:var(--grimorio-parchment-ink)]/35 sm:aspect-auto sm:h-full"
         style={{ background: campaignEmblemGradient(props.name) }}
       >
         <span
@@ -232,7 +232,7 @@ function CharacterRow(props: { character: NonNullable<Campaign['character']> }) 
   const classes = () =>
     props.character.classes.map((c) => `${c.className} ${c.level}`).join(' / ')
   return (
-    <div class="flex w-full max-w-xs items-center gap-2 rounded-md border border-[color:var(--grimorio-parchment-ink)]/25 p-2">
+    <div class="flex w-full max-w-xs items-center gap-2 rounded-sm border border-[color:var(--grimorio-parchment-ink)]/25 p-2">
       <CharacterPortrait name={props.character.name} size="sm" />
       <div class="min-w-0">
         <p class="truncate font-medium">{props.character.name}</p>

@@ -52,7 +52,7 @@ const ITEM_CATEGORY_LABEL: Record<string, string> = {
 
 function Row(props: { children: JSX.Element }) {
   return (
-    <div class="rounded-md border border-grimorio-iron p-2.5 text-sm">{props.children}</div>
+    <div class="rounded-sm border border-grimorio-iron p-2.5 text-sm">{props.children}</div>
   )
 }
 

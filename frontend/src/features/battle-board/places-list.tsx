@@ -61,7 +61,7 @@ function PlaceRows(props: {
   onTable?: string
 }) {
   return (
-    <ul class="divide-y divide-grimorio-iron rounded-sm border border-grimorio-iron">
+    <ul class="divide-y divide-grimorio-iron rounded-none border border-grimorio-iron">
       <For each={props.places}>
         {(place) => (
           <li class="flex items-center gap-2 px-2 py-1.5">

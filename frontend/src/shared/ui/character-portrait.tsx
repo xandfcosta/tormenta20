@@ -26,7 +26,7 @@ export function CharacterPortrait(props: CharacterPortraitProps) {
   return (
     <div
       class={cn(
-        'flex shrink-0 items-center justify-center overflow-hidden rounded-lg font-semibold',
+        'flex shrink-0 items-center justify-center overflow-hidden rounded-md font-semibold',
         tinted() ? 'text-white' : 'bg-muted text-muted-foreground',
         props.size === 'lg' ? 'aspect-[3/4] w-full text-6xl' : 'size-11 text-sm',
         props.class,

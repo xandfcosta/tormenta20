@@ -60,7 +60,7 @@ export function MonsterFilters(props: {
                 aria-pressed={on()}
                 onClick={() => props.filter.toggleTipo(tipo)}
                 class={cn(
-                  'rounded-md border px-2 py-0.5 text-[11px] transition-colors',
+                  'rounded-sm border px-2 py-0.5 text-[11px] transition-colors',
                   on()
                     ? 'border-grimorio-gold bg-accent font-medium text-grimorio-gold'
                     : 'border-grimorio-iron text-muted-foreground hover:bg-accent',

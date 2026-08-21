@@ -353,7 +353,7 @@ function InitiativeRow(props: {
         // uma linha. Empilhar tudo custava uma linha por combatente.
         // `relative` é o que ancora o véu do flash de dano/cura (ALE-174), que
         // é criado e destruído em JS e se posiciona por `inset: 0`.
-        'relative flex flex-wrap items-center gap-2 rounded-sm border p-2.5 text-sm @lg:flex-nowrap @lg:gap-3',
+        'relative flex flex-wrap items-center gap-2 rounded-none border p-2.5 text-sm @lg:flex-nowrap @lg:gap-3',
         // `ring-inset`: o anel do Tailwind é `box-shadow`, desenhado FORA da
         // caixa e sem ocupar layout, e a lista rola dentro de um contêiner que
         // recorta o que passa das bordas dele. A linha selecionada encosta no
@@ -378,7 +378,7 @@ function InitiativeRow(props: {
         <Show
           when={props.onInitiative}
           fallback={
-            <span class="shrink-0 rounded-sm border border-border px-1.5 font-mono text-xs tabular-nums">
+            <span class="shrink-0 rounded-none border border-border px-1.5 font-mono text-xs tabular-nums">
               {props.entry.initiative}
             </span>
           }
@@ -398,7 +398,7 @@ function InitiativeRow(props: {
                   onClick={open}
                   aria-label={`Mudar a iniciativa de ${props.entry.label}`}
                   title={`Mudar a iniciativa de ${props.entry.label}`}
-                  class="flex shrink-0 cursor-pointer items-center gap-1 rounded-sm border border-border bg-grimorio-panel-raised px-1.5 font-mono text-xs tabular-nums transition-colors hover:border-grimorio-gold hover:text-grimorio-gold"
+                  class="flex shrink-0 cursor-pointer items-center gap-1 rounded-none border border-border bg-grimorio-panel-raised px-1.5 font-mono text-xs tabular-nums transition-colors hover:border-grimorio-gold hover:text-grimorio-gold"
                 >
                   {props.entry.initiative}
                   <Pencil aria-hidden="true" class="size-2.5 text-muted-foreground" />
@@ -439,7 +439,7 @@ function InitiativeRow(props: {
           </Show>
           <span
             class={cn(
-              'rounded-sm px-1 text-[10px] uppercase tracking-widest',
+              'rounded-none px-1 text-[10px] uppercase tracking-widest',
               props.entry.type === 'character'
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground',
@@ -451,7 +451,7 @@ function InitiativeRow(props: {
             {/* O mesmo par do marcador do tabuleiro (`bg-grimorio-gold` sobre
                 tinta de pergaminho): o selo e a borda da linha falam a mesma
                 cor, e ela é a mesma que a peça da vez usa no mapa. */}
-            <span class="inline-flex items-center gap-1 rounded-sm bg-grimorio-gold px-1 text-[10px] uppercase tracking-widest text-grimorio-parchment-ink">
+            <span class="inline-flex items-center gap-1 rounded-none bg-grimorio-gold px-1 text-[10px] uppercase tracking-widest text-grimorio-parchment-ink">
               <Swords aria-hidden="true" class="size-3" /> Na vez
             </span>
           </Show>
@@ -462,7 +462,7 @@ function InitiativeRow(props: {
           "escondido" precisam ser coisas diferentes na tela, senão o segundo
           vira silêncio e o jogador supõe (ALE-122). */}
       <Show when={props.entry.hpHidden && !hasHp()}>
-        <span class="order-3 rounded-sm border border-dashed border-grimorio-iron px-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+        <span class="order-3 rounded-none border border-dashed border-grimorio-iron px-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
           PV oculto
         </span>
       </Show>
@@ -648,7 +648,7 @@ function AddCombatantForm(props: {
 
   return (
     <form
-      class="mt-3 flex flex-wrap items-end gap-2 rounded-sm border border-dashed border-border p-3"
+      class="mt-3 flex flex-wrap items-end gap-2 rounded-none border border-dashed border-border p-3"
       onSubmit={submit}
       // Esc é o gesto que todo mundo tenta primeiro num formulário aberto por
       // engano, e o formulário não tinha saída nenhuma além do mesmo gatilho

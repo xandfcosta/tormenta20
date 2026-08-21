@@ -111,7 +111,7 @@ export function InviteDialog(props: InviteDialogProps) {
 /** Nothing minted yet — the dialog's resting state. */
 function NoLinkYet() {
   return (
-    <div class="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
+    <div class="rounded-sm border border-dashed p-4 text-center text-sm text-muted-foreground">
       Nenhum link gerado. Clique em "Gerar link" para criar.
     </div>
   )

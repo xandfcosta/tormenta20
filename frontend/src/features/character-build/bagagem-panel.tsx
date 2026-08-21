@@ -31,7 +31,7 @@ export function BagagemPanel(props: BagagemPanelProps) {
   const over = () => props.slotsUsed > props.slotsCapacity
 
   return (
-    <aside class="space-y-2 rounded-md border border-grimorio-iron bg-muted/20 p-3 lg:sticky lg:top-0">
+    <aside class="space-y-2 rounded-sm border border-grimorio-iron bg-muted/20 p-3 lg:sticky lg:top-0">
       <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-grimorio-gold">
         Sua bagagem
       </p>
@@ -202,7 +202,7 @@ function GhostRow(props: { line: BagLine }) {
                 .getElementById(line().anchor)
                 ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
             }
-            class="flex w-full items-center gap-1 rounded-lg border border-dashed border-[color:var(--hp-hurt)]/60 px-1.5 py-0.5 text-left text-[11px] text-[color:var(--hp-hurt)] hover:bg-accent"
+            class="flex w-full items-center gap-1 rounded-md border border-dashed border-[color:var(--hp-hurt)]/60 px-1.5 py-0.5 text-left text-[11px] text-[color:var(--hp-hurt)] hover:bg-accent"
           >
             ◇ {line().label} · pendente
           </button>
@@ -218,7 +218,7 @@ function QtyStep(props: { label: string; onClick: () => void; children: string }
       type="button"
       aria-label={props.label}
       onClick={() => props.onClick()}
-      class="flex size-5 items-center justify-center rounded-lg border border-grimorio-iron text-xs hover:bg-accent"
+      class="flex size-5 items-center justify-center rounded-md border border-grimorio-iron text-xs hover:bg-accent"
     >
       {props.children}
     </button>

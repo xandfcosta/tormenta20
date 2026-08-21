@@ -184,7 +184,7 @@ export function CastSpellDialog(props: {
             </div>
           </Show>
 
-          <div class="flex items-center justify-between rounded-sm border border-border bg-muted px-3 py-2">
+          <div class="flex items-center justify-between rounded-none border border-border bg-muted px-3 py-2">
             <span class="text-xs uppercase tracking-widest text-muted-foreground">
               Custo total
             </span>
@@ -228,7 +228,7 @@ function AugmentRow(props: {
   return (
     <li
       class={cn(
-        'flex flex-wrap items-start gap-2 rounded-sm border border-border p-2',
+        'flex flex-wrap items-start gap-2 rounded-none border border-border p-2',
         props.locked && 'opacity-50',
       )}
     >

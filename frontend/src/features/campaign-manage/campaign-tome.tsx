@@ -43,7 +43,7 @@ export function sectionLayout(tab: CampaignTab): 'grid' | 'column' {
 // the current section reads clearly on the vertical rail. Kobalte marks the
 // active trigger `data-selected` (Radix used data-[state=active]).
 const railTabClass =
-  'justify-start gap-2 rounded-sm px-3 py-2 text-muted-foreground data-[selected]:bg-grimorio-panel-raised data-[selected]:text-grimorio-gold data-[selected]:shadow-none sm:border-l-2 sm:border-transparent sm:data-[selected]:border-grimorio-gold'
+  'justify-start gap-2 rounded-none px-3 py-2 text-muted-foreground data-[selected]:bg-grimorio-panel-raised data-[selected]:text-grimorio-gold data-[selected]:shadow-none sm:border-l-2 sm:border-transparent sm:data-[selected]:border-grimorio-gold'
 
 export type CampaignTomeProps = {
   campaign: Campaign
@@ -102,7 +102,7 @@ function TomeHeader(props: {
       <div class="flex items-center gap-4">
         <span
           aria-hidden="true"
-          class="flex size-14 shrink-0 items-center justify-center rounded-md border border-grimorio-iron font-display text-lg text-white/90 sm:size-16"
+          class="flex size-14 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron font-display text-lg text-white/90 sm:size-16"
           style={{ background: campaignEmblemGradient(props.campaign.name) }}
         >
           {initials(props.campaign.name)}

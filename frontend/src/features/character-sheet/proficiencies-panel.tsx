@@ -42,7 +42,7 @@ export function ProficienciesPanel(props: { character: Character }) {
   }
 
   return (
-    <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-sm border border-grimorio-iron bg-grimorio-panel">
+    <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-none border border-grimorio-iron bg-grimorio-panel">
       <div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
         <h2 class="font-heading text-lg uppercase tracking-wide text-grimorio-gold">
           Proficiências
@@ -87,7 +87,7 @@ function ProficiencyGroup(props: {
   onToggle: (category: string) => void
 }) {
   return (
-    <section class="rounded-sm border border-grimorio-iron p-3">
+    <section class="rounded-none border border-grimorio-iron p-3">
       <h3 class="font-heading text-sm uppercase tracking-wide text-grimorio-gold">
         {props.title}
       </h3>
@@ -114,14 +114,14 @@ function ProficiencyRow(props: {
   onToggle: () => void
 }) {
   return (
-    <li class={cn('rounded-md text-xs', props.granted && 'bg-emerald-950/30')}>
+    <li class={cn('rounded-sm text-xs', props.granted && 'bg-emerald-950/30')}>
       <button
         type="button"
         onClick={() => props.onToggle()}
         disabled={props.disabled}
         aria-pressed={props.granted}
         aria-label={`${props.granted ? 'Remover' : 'Adicionar'} proficiência: ${props.entry.label}`}
-        class="flex w-full items-center gap-2 rounded-md px-2 py-1 text-left transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
+        class="flex w-full items-center gap-2 rounded-sm px-2 py-1 text-left transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
       >
         {props.granted ? (
           <Check aria-hidden="true" class="size-3.5 text-emerald-400" />
@@ -139,7 +139,7 @@ function ProficiencyRow(props: {
             tell an intentional manual toggle from the baseline. */}
         {props.entry.granted && (
           <span
-            class="ml-1 rounded-lg bg-muted px-1 text-[9px] uppercase tracking-wider text-muted-foreground"
+            class="ml-1 rounded-md bg-muted px-1 text-[9px] uppercase tracking-wider text-muted-foreground"
             title={`Padrão: ${props.entry.sources.join(', ')}`}
           >
             classe

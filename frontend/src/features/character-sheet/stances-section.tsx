@@ -75,7 +75,7 @@ export function StancesSection(props: { character: Character }) {
 
   return (
     <Show when={groups().length > 0}>
-      <section class="rounded-sm border border-grimorio-iron p-3">
+      <section class="rounded-none border border-grimorio-iron p-3">
         <h3 class="font-heading text-sm uppercase tracking-wide text-grimorio-gold">
           Posturas ativas
         </h3>
@@ -114,7 +114,7 @@ function StanceCard(props: { group: StanceGroup; character: Character }) {
   )
 
   return (
-    <li class="rounded-sm border border-violet-500/25 bg-violet-950/30 px-2 py-1.5">
+    <li class="rounded-none border border-violet-500/25 bg-violet-950/30 px-2 py-1.5">
       <div class="flex flex-wrap items-center gap-2">
         <button
           type="button"

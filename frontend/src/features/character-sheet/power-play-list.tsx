@@ -139,7 +139,7 @@ function PlayPowerRow(props: { power: PlayPower; character: Character }) {
   const icon = () => (props.power.spec ? KIND_ICON[props.power.spec.kind] : undefined) ?? BookOpen
 
   return (
-    <li class="rounded-sm border border-border p-2">
+    <li class="rounded-none border border-border p-2">
       <div class="flex flex-wrap items-start gap-1.5">
         <button
           type="button"
@@ -155,7 +155,7 @@ function PlayPowerRow(props: { power: PlayPower; character: Character }) {
               class="size-3.5 shrink-0 text-muted-foreground"
             />
             <span class="text-xs font-semibold">{props.power.entry.name}</span>
-            <span class="rounded-sm bg-muted px-1 py-0 text-[9px] text-muted-foreground">
+            <span class="rounded-none bg-muted px-1 py-0 text-[9px] text-muted-foreground">
               {shortSourceLabel(props.power.entry.source)}
             </span>
           </span>

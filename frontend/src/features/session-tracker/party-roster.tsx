@@ -43,8 +43,8 @@ function PartyRosterSkeleton() {
     <div class="space-y-1.5">
       <Skeleton class="h-3 w-16" />
       <div class="grid gap-2 sm:grid-cols-2">
-        <Skeleton class="h-24 w-full rounded-sm" />
-        <Skeleton class="h-24 w-full rounded-sm" />
+        <Skeleton class="h-24 w-full rounded-none" />
+        <Skeleton class="h-24 w-full rounded-none" />
       </div>
     </div>
   )
@@ -55,10 +55,10 @@ function PartyMember(props: { character: PartyCharacter }) {
     props.character.classes.map((c) => `${c.className} ${c.level}`).join(' / ')
 
   return (
-    <div class="space-y-1.5 rounded-sm border border-border/60 bg-card/60 p-2.5">
+    <div class="space-y-1.5 rounded-none border border-border/60 bg-card/60 p-2.5">
       <div class="flex items-baseline justify-between gap-2">
         <span class="truncate font-medium">{props.character.name}</span>
-        <span class="shrink-0 rounded-sm bg-muted px-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+        <span class="shrink-0 rounded-none bg-muted px-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
           Nv {props.character.level}
         </span>
       </div>

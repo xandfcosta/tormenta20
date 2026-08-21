@@ -286,7 +286,7 @@ function SkillsEditor(props: {
 }
 
 const SELECT =
-  'h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50'
+  'h-9 w-full rounded-sm border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50'
 
 /** Um campo numérico simples do bloco, ligado direto ao store. */
 function NumField(props: {

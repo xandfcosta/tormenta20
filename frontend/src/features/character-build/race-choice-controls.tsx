@@ -97,7 +97,7 @@ function FloatingPicker(props: {
                 onClick={() => toggle(attr)}
                 title={excluded() ? `Não pode aumentar ${ATTRIBUTE_ABBR[attr]}` : undefined}
                 class={cn(
-                  'rounded-md border px-2 py-1 font-mono text-xs transition-colors',
+                  'rounded-sm border px-2 py-1 font-mono text-xs transition-colors',
                   selected()
                     ? 'border-grimorio-gold bg-accent text-grimorio-gold'
                     : 'border-grimorio-iron',
@@ -143,7 +143,7 @@ function SubracePicker(props: {
               aria-pressed={props.choice.ascendencia === option}
               onClick={() => props.onChange({ ...props.choice, ascendencia: option })}
               class={cn(
-                'space-y-1 rounded-md border p-2 text-left transition-colors',
+                'space-y-1 rounded-sm border p-2 text-left transition-colors',
                 props.choice.ascendencia === option
                   ? 'border-grimorio-gold bg-accent'
                   : 'border-grimorio-iron hover:bg-accent',

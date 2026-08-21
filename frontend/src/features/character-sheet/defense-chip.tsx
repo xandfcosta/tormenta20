@@ -28,7 +28,7 @@ export function DefenseChip(props: {
         // conteúdo — encolhendo, o escudo e o "16" são pintados 2px para fora
         // da própria caixa. Achado pela `expectNadaEscapa` da ALE-144, que é
         // exatamente o tipo de defeito que nenhuma asserção antiga via.
-        'flex shrink-0 items-center gap-1 rounded-md border border-destructive/50 px-1.5 py-0.5',
+        'flex shrink-0 items-center gap-1 rounded-sm border border-destructive/50 px-1.5 py-0.5',
         'font-mono text-sm font-bold text-destructive',
         props.class,
       )}

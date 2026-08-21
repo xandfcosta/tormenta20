@@ -47,7 +47,7 @@ export function ActiveEffectsSection(props: { character: Character }) {
   }
 
   return (
-    <section class="rounded-sm border border-grimorio-iron p-3">
+    <section class="rounded-none border border-grimorio-iron p-3">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <h3 class="font-heading text-sm uppercase tracking-wide text-grimorio-gold">
           Efeitos ativos
@@ -127,7 +127,7 @@ function ActiveEffectRow(props: { effect: ActiveEffect; onRemove: () => void }) 
   const facts = () => effectSourceFacts(props.effect.catalogId)
 
   return (
-    <li class="rounded-md border border-emerald-500/25 bg-emerald-950/30 px-2 py-1.5">
+    <li class="rounded-sm border border-emerald-500/25 bg-emerald-950/30 px-2 py-1.5">
       <div class="flex items-center gap-2">
         <Sparkles aria-hidden="true" class="size-3.5 shrink-0 text-emerald-300" />
         <span class="flex-1 truncate text-sm text-foreground">{name()}</span>

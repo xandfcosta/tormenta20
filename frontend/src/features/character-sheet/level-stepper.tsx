@@ -47,7 +47,7 @@ export function LevelStepper(props: { character: Character }) {
           dropped silently. */}
       <fieldset
         aria-label="Nível"
-        class="flex items-center gap-0.5 rounded-sm border border-grimorio-iron bg-grimorio-panel-raised px-1 py-0.5 text-center sm:gap-1 sm:px-2 sm:py-1"
+        class="flex items-center gap-0.5 rounded-none border border-grimorio-iron bg-grimorio-panel-raised px-1 py-0.5 text-center sm:gap-1 sm:px-2 sm:py-1"
       >
         <StepButton
           direction="down"

@@ -156,7 +156,7 @@ export function CampaignJoinPage() {
 /** No characters yet — you can't sit at a table without someone to play. */
 function NoHeroes() {
   return (
-    <div class="flex flex-col items-center gap-3 rounded-sm border border-dashed border-grimorio-iron px-4 py-10 text-center">
+    <div class="flex flex-col items-center gap-3 rounded-none border border-dashed border-grimorio-iron px-4 py-10 text-center">
       <p class="text-sm text-muted-foreground">
         Você ainda não tem heróis. Crie um antes de entrar numa mesa.
       </p>

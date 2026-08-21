@@ -42,7 +42,7 @@ export function ClassTileGrid(props: ClassTileGridProps) {
               onClick={() => props.onToggle(tile.className)}
               style={selected() ? { 'outline-color': `oklch(0.6 0.16 ${hue()})` } : undefined}
               class={cn(
-                'flex items-center gap-2 rounded-lg border border-grimorio-iron p-2 text-left transition-colors',
+                'flex items-center gap-2 rounded-md border border-grimorio-iron p-2 text-left transition-colors',
                 selected()
                   ? 'bg-accent outline outline-2 outline-offset-2'
                   : 'hover:bg-accent',

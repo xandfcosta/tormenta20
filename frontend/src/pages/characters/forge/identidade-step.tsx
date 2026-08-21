@@ -206,7 +206,7 @@ function VitalMeter(props: {
   const fill = () => (props.kind === 'hp' ? 'var(--hp-full)' : 'var(--mp-arcane)')
 
   return (
-    <div class="space-y-2 rounded-md border border-grimorio-iron bg-muted/10 p-3">
+    <div class="space-y-2 rounded-sm border border-grimorio-iron bg-muted/10 p-3">
       <div class="flex items-baseline justify-between gap-2">
         <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
           {props.label}

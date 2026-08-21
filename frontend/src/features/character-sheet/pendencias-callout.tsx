@@ -15,13 +15,13 @@ export function PendenciasCallout(props: {
     <Show
       when={props.pendencias.length > 0}
       fallback={
-        <div class="flex items-center gap-2 rounded-sm border border-emerald-600/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300">
+        <div class="flex items-center gap-2 rounded-none border border-emerald-600/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300">
           <Check aria-hidden="true" class="size-4 shrink-0" />
           Todas as escolhas feitas.
         </div>
       }
     >
-      <div class="rounded-sm border border-amber-600/40 bg-amber-500/10 px-3 py-2">
+      <div class="rounded-none border border-amber-600/40 bg-amber-500/10 px-3 py-2">
         <p class="flex items-center gap-1.5 text-xs font-semibold text-amber-300">
           <AlertTriangle aria-hidden="true" class="size-3.5 shrink-0" /> Faltam escolhas
         </p>

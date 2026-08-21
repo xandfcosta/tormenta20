@@ -58,7 +58,7 @@ function HeroPlate(props: { character: Character; selected: boolean; onSelect: (
       aria-pressed={props.selected}
       onClick={() => props.onSelect()}
       class={cn(
-        'flex items-center gap-3 rounded-sm border bg-grimorio-panel p-3 text-left transition-colors',
+        'flex items-center gap-3 rounded-none border bg-grimorio-panel p-3 text-left transition-colors',
         props.selected
           ? 'border-grimorio-gold bg-grimorio-panel-raised'
           : 'border-grimorio-iron hover:border-grimorio-gold/60',

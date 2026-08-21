@@ -16,7 +16,7 @@ export function GrantBox(props: { title: string; class?: string; children: JSX.E
   return (
     <div
       class={cn(
-        'space-y-2 rounded-md border border-grimorio-iron bg-muted/20 p-3 text-sm',
+        'space-y-2 rounded-sm border border-grimorio-iron bg-muted/20 p-3 text-sm',
         props.class,
       )}
     >

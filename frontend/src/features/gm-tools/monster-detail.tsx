@@ -54,7 +54,7 @@ export function MonsterDetail(props: { monster: Monster }) {
           <div class="space-y-1">
             <For each={props.monster.attacks}>
               {(attack) => (
-                <div class="rounded-md border border-grimorio-iron p-2">
+                <div class="rounded-sm border border-grimorio-iron p-2">
                   <p class="text-xs font-semibold">
                     {attack.name}{' '}
                     <span class="font-mono text-muted-foreground">
@@ -97,7 +97,7 @@ function Section(props: { title: string; children: JSX.Element }) {
 
 function Stat(props: { label: string; value: string | number }) {
   return (
-    <div class="rounded-md border border-grimorio-iron p-2 text-center">
+    <div class="rounded-sm border border-grimorio-iron p-2 text-center">
       <p class="text-[10px] uppercase tracking-wide text-muted-foreground">{props.label}</p>
       <p class="text-sm font-semibold tabular-nums">{props.value}</p>
     </div>

@@ -47,11 +47,11 @@ function DesktopSheetSkeleton() {
         <div class="min-w-0 flex-1">
           <ContentLines />
         </div>
-        <div class="flex h-full w-32 shrink-0 flex-col gap-1 rounded-lg border bg-card p-1">
+        <div class="flex h-full w-32 shrink-0 flex-col gap-1 rounded-md border bg-card p-1">
           <For each={SHEET_PANELS}>{() => <Skeleton class="h-full flex-1" />}</For>
         </div>
       </div>
-      <Skeleton class="h-20 rounded-sm" />
+      <Skeleton class="h-20 rounded-none" />
     </div>
   )
 }
@@ -68,7 +68,7 @@ function PhoneSheetSkeleton() {
         <For each={SHEET_PANELS}>
           {() => (
             <div class="flex flex-1 items-center justify-center">
-              <Skeleton class="size-5 rounded-sm" />
+              <Skeleton class="size-5 rounded-none" />
             </div>
           )}
         </For>

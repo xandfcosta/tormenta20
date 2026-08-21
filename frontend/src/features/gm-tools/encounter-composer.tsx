@@ -50,7 +50,7 @@ export function EncounterComposer(props: EncounterComposerProps) {
 
   return (
     <div class="flex min-h-0 flex-1 flex-col gap-3">
-      <div class="flex flex-wrap items-end gap-3 rounded-md border border-grimorio-iron p-3">
+      <div class="flex flex-wrap items-end gap-3 rounded-sm border border-grimorio-iron p-3">
         <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
           O grupo
         </p>
@@ -72,7 +72,7 @@ export function EncounterComposer(props: EncounterComposerProps) {
         />
       </div>
 
-      <div class="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-md border border-grimorio-iron bg-muted/20 px-3 py-2">
+      <div class="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-sm border border-grimorio-iron bg-muted/20 px-3 py-2">
         <Ledger label="ND do encontro" value={formatNd(round2(nd()))} />
         <Ledger
           label="Dificuldade"
@@ -87,7 +87,7 @@ export function EncounterComposer(props: EncounterComposerProps) {
       <Show
         when={props.groups.length > 0}
         fallback={
-          <p class="rounded-md border border-dashed border-grimorio-iron p-4 text-center text-xs text-muted-foreground">
+          <p class="rounded-sm border border-dashed border-grimorio-iron p-4 text-center text-xs text-muted-foreground">
             Nenhuma criatura no encontro ainda.
           </p>
         }
@@ -95,7 +95,7 @@ export function EncounterComposer(props: EncounterComposerProps) {
         <ul class="space-y-1.5">
           <For each={props.groups}>
             {(group) => (
-              <li class="flex flex-wrap items-center gap-2 rounded-md border border-grimorio-iron p-2">
+              <li class="flex flex-wrap items-center gap-2 rounded-sm border border-grimorio-iron p-2">
                 <span class="min-w-0 flex-1">
                   <span class="block truncate text-xs font-semibold">{group.monster.name}</span>
                   <span class="font-mono text-[10px] text-muted-foreground">
@@ -115,7 +115,7 @@ export function EncounterComposer(props: EncounterComposerProps) {
                   type="button"
                   aria-label={`Remover ${group.monster.name}`}
                   onClick={() => props.onRemove(group.monster.id)}
-                  class="shrink-0 rounded-sm p-1 text-muted-foreground transition-colors hover:text-[color:var(--hp-critical)]"
+                  class="shrink-0 rounded-none p-1 text-muted-foreground transition-colors hover:text-[color:var(--hp-critical)]"
                 >
                   <Trash2 aria-hidden="true" class="size-4" />
                 </button>

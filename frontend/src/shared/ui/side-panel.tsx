@@ -83,7 +83,7 @@ export function SidePanel(props: SidePanelProps) {
             // Bottom sheet below the breakpoint; right-hand column above it.
             // The bottom padding grows past the home indicator under
             // `viewport-fit=cover`, keeping the p-3/p-4 floor of each layout.
-            'inset-x-0 bottom-0 max-h-[92dvh] rounded-t-lg border-t p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]',
+            'inset-x-0 bottom-0 max-h-[92dvh] rounded-t-md border-t p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]',
             'data-[closed]:slide-out-to-bottom data-[expanded]:slide-in-from-bottom',
             'xl:inset-y-0 xl:left-auto xl:right-0 xl:max-h-none xl:w-[26rem] xl:rounded-none xl:border-l xl:border-t-0 xl:p-4 xl:pb-[max(1rem,env(safe-area-inset-bottom))]',
             'xl:data-[closed]:slide-out-to-right xl:data-[expanded]:slide-in-from-right',
@@ -107,7 +107,7 @@ export function SidePanel(props: SidePanelProps) {
                 (gotcha #2). Hidden on the phone, where the bar below wins. */}
             <KDialog.CloseButton
               aria-label={`Fechar ${local.title}`}
-              class="hidden shrink-0 rounded-sm text-muted-foreground transition-colors hover:text-foreground xl:block"
+              class="hidden shrink-0 rounded-none text-muted-foreground transition-colors hover:text-foreground xl:block"
             >
               <X aria-hidden="true" class="size-4" />
             </KDialog.CloseButton>
@@ -115,7 +115,7 @@ export function SidePanel(props: SidePanelProps) {
 
           <Show when={local.header}>
             {(header) => (
-              <div class="shrink-0 rounded-md border border-grimorio-iron bg-muted/20 px-2 py-1 text-[11px]">
+              <div class="shrink-0 rounded-sm border border-grimorio-iron bg-muted/20 px-2 py-1 text-[11px]">
                 {header()}
               </div>
             )}
@@ -130,7 +130,7 @@ export function SidePanel(props: SidePanelProps) {
               without it the bar announces a word the app never shows. */}
           <KDialog.CloseButton
             aria-label="Fechar"
-            class="shrink-0 rounded-md border border-grimorio-iron px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground xl:hidden"
+            class="shrink-0 rounded-sm border border-grimorio-iron px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground xl:hidden"
           >
             Fechar
           </KDialog.CloseButton>

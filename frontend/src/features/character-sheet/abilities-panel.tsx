@@ -68,7 +68,7 @@ export function AbilitiesPanel(props: { character: Character }) {
     pendencias().filter((pendencia) => pendencia.source === source).length
 
   return (
-    <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-sm border border-grimorio-iron bg-grimorio-panel">
+    <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-none border border-grimorio-iron bg-grimorio-panel">
       <div class="shrink-0 border-b border-grimorio-iron px-3 py-2 sm:px-4">
         <h2 class="font-heading text-lg uppercase tracking-wide text-grimorio-gold">Poderes</h2>
       </div>
@@ -227,10 +227,10 @@ function FlatAbilityResults(props: { character: Character; query: string }) {
       <ul class="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
         <For each={results()}>
           {(entry) => (
-            <li class="rounded-sm border border-border p-2">
+            <li class="rounded-none border border-border p-2">
               <div class="flex flex-wrap items-center gap-1.5">
                 <p class="text-xs font-semibold">{entry.name}</p>
-                <span class="rounded-sm bg-muted px-1 py-0 text-[9px] text-muted-foreground">
+                <span class="rounded-none bg-muted px-1 py-0 text-[9px] text-muted-foreground">
                   {entry.source}
                 </span>
                 <PowerActionSlot

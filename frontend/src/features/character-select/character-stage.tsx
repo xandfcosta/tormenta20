@@ -115,7 +115,7 @@ function StagePortrait(props: { character: Character; hue: number; onOpen: () =>
       type="button"
       onClick={() => props.onOpen()}
       aria-label={`Abrir ficha de ${props.character.name}`}
-      class="relative aspect-[3/4] w-44 overflow-hidden rounded-md border-2 border-grimorio-iron transition-transform hover:scale-[1.01] sm:w-56 lg:w-64"
+      class="relative aspect-[3/4] w-44 overflow-hidden rounded-sm border-2 border-grimorio-iron transition-transform hover:scale-[1.01] sm:w-56 lg:w-64"
       style={{
         background: portraitGradient(props.character.name),
         // Iron frame + a thin gold filete (the 1px spread), then a soft glow in

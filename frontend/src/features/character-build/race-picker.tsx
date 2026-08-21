@@ -106,7 +106,7 @@ export function RacePicker(props: RacePickerProps) {
         <Show
           when={props.value.length > 0}
           fallback={
-            <p class="rounded-lg border border-dashed border-grimorio-iron p-4 text-center text-xs text-muted-foreground">
+            <p class="rounded-md border border-dashed border-grimorio-iron p-4 text-center text-xs text-muted-foreground">
               Escolha uma raça para ver o que ela concede.
             </p>
           }
@@ -174,7 +174,7 @@ function RaceTile(props: { name: string; selected: boolean; onToggle: () => void
       onClick={() => props.onToggle()}
       style={props.selected ? { 'outline-color': `oklch(0.6 0.16 ${hue()})` } : undefined}
       class={cn(
-        'flex flex-col items-center gap-1 rounded-lg border border-grimorio-iron p-1.5 transition-colors',
+        'flex flex-col items-center gap-1 rounded-md border border-grimorio-iron p-1.5 transition-colors',
         props.selected ? 'bg-accent outline outline-2 outline-offset-2' : 'hover:bg-accent',
       )}
     >
@@ -206,15 +206,15 @@ function SelectedRaceDetail(props: {
           aria-pressed={active()}
           onClick={() => props.onChoice({ ...props.choice, applied: !props.choice.applied })}
           class={cn(
-            'flex w-full items-center gap-2 rounded-md border px-2 py-1.5 text-left text-[11px] transition-colors',
+            'flex w-full items-center gap-2 rounded-sm border px-2 py-1.5 text-left text-[11px] transition-colors',
             active()
               ? 'border-grimorio-gold bg-accent'
               : 'border-grimorio-iron text-muted-foreground hover:bg-accent',
           )}
         >
-          <span class="flex size-3.5 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron">
+          <span class="flex size-3.5 shrink-0 items-center justify-center rounded-none border border-grimorio-iron">
             <Show when={active()}>
-              <span class="size-2 rounded-sm bg-grimorio-gold" />
+              <span class="size-2 rounded-none bg-grimorio-gold" />
             </Show>
           </span>
           Aplicar propriedades (negociado com o mestre)

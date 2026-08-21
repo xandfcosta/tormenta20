@@ -38,7 +38,7 @@ describe('Badge', () => {
 
 describe('Skeleton', () => {
   // A promessa é a QUANTIDADE (o esqueleto tem de ocupar o lugar do que vem), e
-  // ela é contada pelo slot, não por classe de estilo — `.rounded-md.border`
+  // ela é contada pelo slot, não por classe de estilo — `.rounded-sm.border`
   // quebrava em qualquer restyle legítimo e não dizia nada ao usuário.
   it('SkeletonCardGrid rende a quantidade pedida de cards', () => {
     const { container } = render(() => <SkeletonCardGrid count={5} />)

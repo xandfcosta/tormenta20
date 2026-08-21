@@ -299,7 +299,7 @@ export function CharactersListPage() {
 function EmptyStage() {
   return (
     <div class="flex min-h-0 flex-1 flex-col items-center justify-center gap-4">
-      <div class="aspect-[3/4] w-48 rounded-md border-2 border-dashed border-grimorio-iron">
+      <div class="aspect-[3/4] w-48 rounded-sm border-2 border-dashed border-grimorio-iron">
         <QuestionFrame />
       </div>
       <p class="font-heading text-xl uppercase tracking-[0.12em] text-foreground">

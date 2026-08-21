@@ -108,7 +108,7 @@ function AttributePillar(props: {
   const atMax = () => props.row.base >= props.max
 
   return (
-    <div class="flex flex-col items-center justify-center gap-1 rounded-md border border-grimorio-iron bg-muted/10 p-2 lg:py-4">
+    <div class="flex flex-col items-center justify-center gap-1 rounded-sm border border-grimorio-iron bg-muted/10 p-2 lg:py-4">
       <label
         for={fieldId()}
         class="text-center font-heading text-[10px] uppercase tracking-[0.14em] text-muted-foreground"
@@ -133,7 +133,7 @@ function AttributePillar(props: {
         max={props.max}
         value={props.row.base}
         onInput={(event) => props.onSet(Number(event.currentTarget.value) || 0)}
-        class="w-full rounded-md border border-grimorio-iron bg-transparent py-1 text-center font-heading text-4xl tabular-nums text-foreground outline-none focus-visible:border-grimorio-gold focus-visible:ring-2 focus-visible:ring-grimorio-gold/40"
+        class="w-full rounded-sm border border-grimorio-iron bg-transparent py-1 text-center font-heading text-4xl tabular-nums text-foreground outline-none focus-visible:border-grimorio-gold focus-visible:ring-2 focus-visible:ring-grimorio-gold/40"
       />
 
       <Step
@@ -194,7 +194,7 @@ function Step(props: {
       aria-label={props.label}
       disabled={props.disabled}
       onClick={() => props.onClick()}
-      class="flex h-5 w-full items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-grimorio-gold disabled:opacity-30 disabled:hover:text-muted-foreground"
+      class="flex h-5 w-full items-center justify-center rounded-none text-muted-foreground transition-colors hover:text-grimorio-gold disabled:opacity-30 disabled:hover:text-muted-foreground"
     >
       {props.direction === 'up' ? (
         <ChevronUp aria-hidden="true" class="size-4" />
@@ -220,7 +220,7 @@ function ModeToggle(props: { mode: AttributeMode; onMode: (mode: AttributeMode) 
             aria-pressed={props.mode === value}
             onClick={() => props.onMode(value)}
             class={cn(
-              'rounded-md border px-2.5 py-1 text-xs transition-colors',
+              'rounded-sm border px-2.5 py-1 text-xs transition-colors',
               props.mode === value
                 ? 'border-grimorio-gold bg-accent font-medium text-grimorio-gold'
                 : 'border-grimorio-iron text-muted-foreground hover:bg-accent',

@@ -32,7 +32,7 @@ export function GameMenuButton(props: GameMenuButtonProps) {
       data-active={local.active || undefined}
       aria-current={local.active ? 'page' : undefined}
       class={cn(
-        'grimorio-menu-item group flex min-h-11 w-full items-center gap-3 rounded-sm px-4 py-3 text-left',
+        'grimorio-menu-item group flex min-h-11 w-full items-center gap-3 rounded-none px-4 py-3 text-left',
         'font-heading text-lg tracking-wide text-foreground',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grimorio-gold',
         local.class,

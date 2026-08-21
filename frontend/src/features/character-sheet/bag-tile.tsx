@@ -54,7 +54,7 @@ export function BagTile(props: BagTileProps) {
       type="button"
       onClick={() => props.onOpen()}
       aria-label={`Abrir ${props.item.name}`}
-      class="relative flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-sm border border-grimorio-iron bg-grimorio-panel p-2 text-center transition-colors hover:border-grimorio-gold/50"
+      class="relative flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-none border border-grimorio-iron bg-grimorio-panel p-2 text-center transition-colors hover:border-grimorio-gold/50"
     >
       <Show when={props.item.quantity > 1}>
         <span class="absolute top-1 right-1 rounded-full bg-accent px-1.5 font-mono text-[10px] font-semibold text-grimorio-gold">

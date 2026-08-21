@@ -107,7 +107,7 @@ function OriginBenefitRow(props: {
   return (
     <li
       class={cn(
-        'flex gap-2 rounded-sm border border-border p-2',
+        'flex gap-2 rounded-none border border-border p-2',
         props.selected && 'bg-muted',
       )}
     >
@@ -118,7 +118,7 @@ function OriginBenefitRow(props: {
         aria-pressed={props.selected}
         aria-label={`${props.selected ? 'Remover' : 'Selecionar'} benefício: ${props.benefit.name}`}
         class={cn(
-          'mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-sm border border-border text-[10px]',
+          'mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-none border border-border text-[10px]',
           props.selected ? 'bg-muted text-foreground' : 'hover:bg-muted',
           (props.disabled || blocked()) && 'cursor-not-allowed opacity-40',
         )}
@@ -132,7 +132,7 @@ function OriginBenefitRow(props: {
           <p class="text-xs font-semibold text-grimorio-gold">{props.benefit.name}</p>
           <span
             class={cn(
-              'rounded-sm px-1 text-[9px] uppercase tracking-wide',
+              'rounded-none px-1 text-[9px] uppercase tracking-wide',
               props.benefit.kind === 'pericia'
                 ? 'bg-emerald-500/20 text-emerald-100'
                 : 'bg-violet-500/20 text-violet-100',
@@ -141,7 +141,7 @@ function OriginBenefitRow(props: {
             {props.benefit.kind === 'pericia' ? 'Perícia' : 'Poder'}
           </span>
           <Show when={props.isUnique}>
-            <span class="rounded-sm bg-muted px-1 text-[9px] font-semibold uppercase tracking-wide text-foreground">
+            <span class="rounded-none bg-muted px-1 text-[9px] font-semibold uppercase tracking-wide text-foreground">
               Único
             </span>
           </Show>

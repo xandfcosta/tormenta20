@@ -190,7 +190,7 @@ function PaletteRow(props: { item: PaletteItem; active: boolean; onHover: () => 
       onClick={() => props.item.onSelect()}
       onMouseMove={() => props.onHover()}
       class={cn(
-        'flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm',
+        'flex w-full cursor-pointer items-center gap-2 rounded-none px-2 py-1.5 text-left text-sm',
         props.active && 'bg-accent text-accent-foreground',
       )}
     >

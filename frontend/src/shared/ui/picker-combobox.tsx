@@ -83,7 +83,7 @@ export function PickerCombobox(props: PickerComboboxProps) {
       itemComponent={(itemProps) => (
         <KCombobox.Item
           item={itemProps.item}
-          class="flex w-full cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
+          class="flex w-full cursor-default items-center rounded-none px-2 py-1.5 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
         >
           <KCombobox.ItemLabel>{itemProps.item.rawValue.label}</KCombobox.ItemLabel>
         </KCombobox.Item>
@@ -92,16 +92,16 @@ export function PickerCombobox(props: PickerComboboxProps) {
       <KCombobox.Control class={cn('relative flex w-full items-center', props.class)}>
         <KCombobox.Input
           aria-label={props['aria-label']}
-          class="h-9 w-full rounded-md border border-input bg-transparent px-3 pr-9 text-sm outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30"
+          class="h-9 w-full rounded-sm border border-input bg-transparent px-3 pr-9 text-sm outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30"
         />
-        <KCombobox.Trigger class="absolute right-1 flex size-7 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground">
+        <KCombobox.Trigger class="absolute right-1 flex size-7 items-center justify-center rounded-none text-muted-foreground hover:text-foreground">
           <KCombobox.Icon>
             <ChevronDownIcon class="size-4" />
           </KCombobox.Icon>
         </KCombobox.Trigger>
       </KCombobox.Control>
       <KCombobox.Portal mount={props.mount ?? scene() ?? undefined}>
-        <KCombobox.Content class="z-50 min-w-32 overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[closed]:animate-out data-[closed]:fade-out-0 data-[expanded]:animate-in data-[expanded]:fade-in-0">
+        <KCombobox.Content class="z-50 min-w-32 overflow-hidden rounded-sm border bg-popover text-popover-foreground shadow-md data-[closed]:animate-out data-[closed]:fade-out-0 data-[expanded]:animate-in data-[expanded]:fade-in-0">
           {matches().length === 0 ? (
             <p class="px-3 py-4 text-center text-sm text-muted-foreground">
               {props.emptyMessage ?? 'Nada encontrado.'}

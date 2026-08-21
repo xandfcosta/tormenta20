@@ -76,7 +76,7 @@ export function OrigemStep() {
           <Show
             when={chosen()}
             fallback={
-              <p class="flex flex-1 items-center justify-center rounded-lg border border-dashed border-grimorio-iron p-4 text-center text-xs text-muted-foreground">
+              <p class="flex flex-1 items-center justify-center rounded-md border border-dashed border-grimorio-iron p-4 text-center text-xs text-muted-foreground">
                 Escolha uma origem para ver os benefícios que ela oferece.
               </p>
             }
@@ -127,7 +127,7 @@ function OriginList(props: {
       <div
         role="listbox"
         aria-label="Origens"
-        class="max-h-[40vh] overflow-y-auto rounded-md border border-grimorio-iron p-1 lg:max-h-none lg:min-h-0 lg:flex-1"
+        class="max-h-[40vh] overflow-y-auto rounded-sm border border-grimorio-iron p-1 lg:max-h-none lg:min-h-0 lg:flex-1"
       >
         <For each={props.names}>
           {(name) => (
@@ -137,7 +137,7 @@ function OriginList(props: {
               aria-selected={props.value === name}
               onClick={() => props.onPick(name)}
               class={cn(
-                'w-full truncate rounded-sm px-2 py-1.5 text-left text-xs transition-colors',
+                'w-full truncate rounded-none px-2 py-1.5 text-left text-xs transition-colors',
                 props.value === name
                   ? 'bg-accent font-medium text-grimorio-gold'
                   : 'text-muted-foreground hover:bg-accent hover:text-foreground',
@@ -241,7 +241,7 @@ function BenefitCard(props: {
   return (
     <div
       class={cn(
-        'rounded-md border p-2 transition-colors',
+        'rounded-sm border p-2 transition-colors',
         props.selected
           ? 'border-grimorio-gold bg-accent'
           : props.locked
@@ -257,7 +257,7 @@ function BenefitCard(props: {
         onClick={() => props.onToggle()}
         class="flex w-full items-start gap-2 text-left"
       >
-        <span class="mt-0.5 flex size-3.5 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron">
+        <span class="mt-0.5 flex size-3.5 shrink-0 items-center justify-center rounded-none border border-grimorio-iron">
           <Show when={props.selected}>
             <Check aria-hidden="true" class="size-2.5 text-grimorio-gold" />
           </Show>

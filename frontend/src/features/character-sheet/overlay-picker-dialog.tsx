@@ -199,7 +199,7 @@ function OverlayOption(props: {
 }) {
   return (
     <li>
-      <div class="flex items-start gap-2 rounded-md px-2 py-1 text-xs hover:bg-accent">
+      <div class="flex items-start gap-2 rounded-sm px-2 py-1 text-xs hover:bg-accent">
         <input
           type={props.kind}
           id={props.id}

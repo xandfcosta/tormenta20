@@ -133,7 +133,7 @@ function KitChoosers(props: { kit: StartingKit }) {
   const { draft } = useForge()
 
   return (
-    <div class="space-y-3 rounded-md border border-grimorio-iron p-3">
+    <div class="space-y-3 rounded-sm border border-grimorio-iron p-3">
       <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
         Kit da classe{' '}
         <span class="normal-case tracking-normal">
@@ -247,7 +247,7 @@ function Chip(props: { pressed: boolean; onClick: () => void; children: JSX.Elem
       aria-pressed={props.pressed}
       onClick={() => props.onClick()}
       class={cn(
-        'rounded-md border px-2.5 py-1.5 text-xs transition-colors sm:py-1',
+        'rounded-sm border px-2.5 py-1.5 text-xs transition-colors sm:py-1',
         props.pressed
           ? 'border-grimorio-gold bg-accent font-medium text-grimorio-gold'
           : 'border-grimorio-iron text-muted-foreground hover:bg-accent',
@@ -261,7 +261,7 @@ function Chip(props: { pressed: boolean; onClick: () => void; children: JSX.Elem
 function ExtrasNote(props: { kit: StartingKit }) {
   return (
     <Show when={props.kit.extras.length > 0}>
-      <div class="space-y-1 rounded-md border border-grimorio-iron p-3">
+      <div class="space-y-1 rounded-sm border border-grimorio-iron p-3">
         <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
           Extras da classe
         </p>
@@ -290,7 +290,7 @@ function MoneyField(props: { level: number; tableMoney: number | null; origemRol
   const rolled = () => draft.values.startingMoneyRolled ?? false
 
   return (
-    <div class="space-y-1.5 rounded-md border border-grimorio-iron p-3">
+    <div class="space-y-1.5 rounded-sm border border-grimorio-iron p-3">
       <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
         Dinheiro inicial · Tabela 3-1
       </p>
@@ -311,7 +311,7 @@ function MoneyField(props: { level: number; tableMoney: number | null; origemRol
             <button
               type="button"
               onClick={() => draft.setValue('tibar', (props.tableMoney ?? 0) + props.origemRolled)}
-              class="rounded-md border border-grimorio-iron px-2.5 py-1.5 text-xs hover:bg-accent"
+              class="rounded-sm border border-grimorio-iron px-2.5 py-1.5 text-xs hover:bg-accent"
             >
               Usar Tabela 3-1 (Nv {props.level}): T$ {(props.tableMoney ?? 0).toLocaleString('pt-BR')}
             </button>
@@ -327,7 +327,7 @@ function MoneyField(props: { level: number; tableMoney: number | null; origemRol
               })
             }}
             class={cn(
-              'rounded-md border border-grimorio-iron px-2.5 py-1.5 text-xs',
+              'rounded-sm border border-grimorio-iron px-2.5 py-1.5 text-xs',
               rolled() ? 'opacity-60' : 'hover:bg-accent',
             )}
           >

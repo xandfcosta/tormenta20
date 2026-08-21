@@ -52,7 +52,7 @@ export function StartingShop(props: StartingShopProps) {
   }
 
   return (
-    <div class="space-y-2 rounded-md border border-grimorio-iron p-3">
+    <div class="space-y-2 rounded-sm border border-grimorio-iron p-3">
       <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
         Loja{' '}
         <span
@@ -68,7 +68,7 @@ export function StartingShop(props: StartingShopProps) {
       <Show
         when={props.remaining > 0 || hasPurchases()}
         fallback={
-          <p class="rounded-md border border-dashed border-grimorio-iron p-2 text-xs text-muted-foreground">
+          <p class="rounded-sm border border-dashed border-grimorio-iron p-2 text-xs text-muted-foreground">
             Role ou defina seu dinheiro inicial acima para comprar itens.
           </p>
         }
@@ -96,7 +96,7 @@ export function StartingShop(props: StartingShopProps) {
                 aria-pressed={category() === shopCategory.key}
                 onClick={() => setCategory(shopCategory.key)}
                 class={cn(
-                  'rounded-md border px-2.5 py-1 text-xs transition-colors',
+                  'rounded-sm border px-2.5 py-1 text-xs transition-colors',
                   category() === shopCategory.key
                     ? 'border-grimorio-gold bg-accent font-medium text-grimorio-gold'
                     : 'border-grimorio-iron text-muted-foreground hover:bg-accent',
@@ -143,7 +143,7 @@ function ShopRow(props: {
   onQty: (qty: number) => void
 }) {
   return (
-    <div class="flex items-center gap-2 rounded-md border border-grimorio-iron p-2">
+    <div class="flex items-center gap-2 rounded-sm border border-grimorio-iron p-2">
       <div class="min-w-0 flex-1">
         <p class="truncate text-xs font-semibold">{props.item.name}</p>
         <p class="text-[10px] text-muted-foreground">
@@ -184,7 +184,7 @@ function QtyButton(props: {
       disabled={props.disabled}
       onClick={() => props.onClick()}
       class={cn(
-        'flex size-8 items-center justify-center rounded-md border border-grimorio-iron text-sm transition-colors sm:size-7',
+        'flex size-8 items-center justify-center rounded-sm border border-grimorio-iron text-sm transition-colors sm:size-7',
         props.disabled ? 'opacity-40' : 'hover:bg-accent',
       )}
     >

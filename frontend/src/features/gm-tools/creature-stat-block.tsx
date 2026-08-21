@@ -75,7 +75,7 @@ export function CreatureStatBlock(props: { block: CreatureBlock; bookPage?: numb
       >
         <For each={attributeCells(props.block)}>
           {(cell) => (
-            <span class="flex items-baseline justify-between gap-1 rounded-sm border border-grimorio-iron px-1.5 py-0.5">
+            <span class="flex items-baseline justify-between gap-1 rounded-none border border-grimorio-iron px-1.5 py-0.5">
               <span class="uppercase tracking-wide text-muted-foreground">{cell.label}</span>
               <span class="font-mono text-foreground">{signed(cell.value)}</span>
             </span>

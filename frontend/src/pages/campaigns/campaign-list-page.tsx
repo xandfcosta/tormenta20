@@ -265,7 +265,7 @@ function RoleFilterButtons(props: { role: RoleFilter; onRole: (role: RoleFilter)
 function NoCampaigns() {
   return (
     <div class="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-10">
-      <div class="flex size-24 items-center justify-center rounded-md border-2 border-dashed border-grimorio-iron">
+      <div class="flex size-24 items-center justify-center rounded-sm border-2 border-dashed border-grimorio-iron">
         <span class="select-none font-heading text-5xl text-grimorio-gold/30">✦</span>
       </div>
       <p class="font-heading text-xl uppercase tracking-[0.12em] text-foreground">

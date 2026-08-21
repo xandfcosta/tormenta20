@@ -23,8 +23,8 @@ export function ConditionPips(props: { character: Character; class?: string; min
 
   const chipClass = () =>
     props.mini
-      ? 'max-w-20 truncate rounded-lg border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/15 px-1 text-[9px] font-semibold uppercase tracking-wide text-[color:var(--hp-hurt)]'
-      : 'rounded-lg border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/15 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-[color:var(--hp-hurt)]'
+      ? 'max-w-20 truncate rounded-md border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/15 px-1 text-[9px] font-semibold uppercase tracking-wide text-[color:var(--hp-hurt)]'
+      : 'rounded-md border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/15 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-[color:var(--hp-hurt)]'
 
   return (
     <Show when={active().length > 0}>

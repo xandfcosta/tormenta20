@@ -132,7 +132,7 @@ function StepperRow(props: {
 }) {
   return (
     <ItemDialogSection title="PM extra">
-      <div class="flex items-center justify-between gap-2 rounded-sm border border-border p-2">
+      <div class="flex items-center justify-between gap-2 rounded-none border border-border p-2">
         <div class="min-w-0 flex-1 space-y-0.5">
           <p class="text-xs text-foreground">{props.stepLabel}</p>
           <p class="text-[11px] text-muted-foreground">
@@ -246,7 +246,7 @@ function StancePreview(props: { spec: ActivationSpec; character: Character; step
 /** Live total + pool-after line; red when the pool can't pay. */
 function TotalRow(props: { total: number; remaining: number; blocked: boolean }) {
   return (
-    <div class="rounded-sm border border-border bg-muted px-3 py-2">
+    <div class="rounded-none border border-border bg-muted px-3 py-2">
       <div class="flex items-center justify-between">
         <span class="text-xs uppercase tracking-widest text-muted-foreground">Custo total</span>
         <span

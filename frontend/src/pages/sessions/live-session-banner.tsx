@@ -46,7 +46,7 @@ export function LiveSessionBanner(props: {
             </span>
           }
         >
-          <span class="flex animate-pulse items-center gap-1 rounded-sm bg-[color:var(--primary)] px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-[color:var(--primary-foreground)]">
+          <span class="flex animate-pulse items-center gap-1 rounded-none bg-[color:var(--primary)] px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-[color:var(--primary-foreground)]">
             <Swords aria-hidden="true" class="size-3.5" /> Sua vez
           </span>
         </Show>

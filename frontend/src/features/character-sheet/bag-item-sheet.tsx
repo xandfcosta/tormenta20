@@ -82,7 +82,7 @@ export function BagItemSheet(props: BagItemSheetProps) {
             {props.item.name}
             <For each={overlays()}>
               {(name) => (
-                <span class="rounded-lg border border-border bg-muted px-1 text-[10px] font-medium text-muted-foreground">
+                <span class="rounded-md border border-border bg-muted px-1 text-[10px] font-medium text-muted-foreground">
                   {name}
                 </span>
               )}
@@ -131,7 +131,7 @@ export function BagItemSheet(props: BagItemSheetProps) {
         </Show>
 
         <ItemDialogSection title="Ficha do item">
-          <div class="max-h-[34vh] space-y-3 overflow-y-auto rounded-md border border-border bg-muted px-3 py-2">
+          <div class="max-h-[34vh] space-y-3 overflow-y-auto rounded-sm border border-border bg-muted px-3 py-2">
             <Show
               when={catalog()}
               fallback={

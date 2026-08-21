@@ -145,7 +145,7 @@ export function CatalogAddDialog(props: CatalogAddDialogProps) {
                   value={category()}
                   onChange={(event) => setCategory(event.currentTarget.value)}
                   aria-label="Categoria"
-                  class="h-9 max-w-[45%] cursor-pointer rounded-md border border-input bg-transparent px-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  class="h-9 max-w-[45%] cursor-pointer rounded-sm border border-input bg-transparent px-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option value="">Todas categorias</option>
                   <For each={catalogCategories()}>
@@ -156,13 +156,13 @@ export function CatalogAddDialog(props: CatalogAddDialogProps) {
               <Show
                 when={filtered().length > 0}
                 fallback={
-                  <p class="mt-1 rounded-md border border-border bg-muted px-3 py-4 text-center text-xs text-muted-foreground">
+                  <p class="mt-1 rounded-sm border border-border bg-muted px-3 py-4 text-center text-xs text-muted-foreground">
                     Nenhum item.
                   </p>
                 }
               >
                 <VirtualList
-                  class="mt-1 max-h-56 rounded-md border border-border bg-muted"
+                  class="mt-1 max-h-56 rounded-sm border border-border bg-muted"
                   items={filtered()}
                   estimateSize={34}
                   getKey={(entry) => entry.id}
@@ -204,7 +204,7 @@ export function CatalogAddDialog(props: CatalogAddDialogProps) {
                     onChange={(event) =>
                       setEquipped(event.currentTarget.value as '' | EquippedSlot)
                     }
-                    class="h-9 w-full cursor-pointer rounded-md border border-input bg-transparent px-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                    class="h-9 w-full cursor-pointer rounded-sm border border-input bg-transparent px-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                   >
                     <For each={equipChoices()}>
                       {(option) => <option value={option.value}>{option.label}</option>}
@@ -250,7 +250,7 @@ function CatalogRow(props: { catalog: CatalogItem; selected: boolean; onPick: ()
  *  opening the full item sheet. */
 function CatalogPreview(props: { catalog: CatalogItem }) {
   return (
-    <div class="rounded-md border border-border bg-muted px-3 py-2 text-[11px]">
+    <div class="rounded-sm border border-border bg-muted px-3 py-2 text-[11px]">
       <p class="font-semibold text-grimorio-gold">{props.catalog.name}</p>
       <p class="text-muted-foreground">
         {categoryLabel(props.catalog.category)} • esp {formatLoad(props.catalog.slots)} • T${' '}

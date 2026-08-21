@@ -77,7 +77,7 @@ export function RaceAbilitySection(props: {
       <ul class="space-y-2">
         <For each={props.race.abilities}>
           {(ability) => (
-            <li class="rounded-sm border border-border p-2">
+            <li class="rounded-none border border-border p-2">
               <p class="text-xs font-semibold text-grimorio-gold">{ability.name}</p>
               <p class="mt-0.5 text-[11px] leading-snug text-muted-foreground">
                 {ability.description}
@@ -118,7 +118,7 @@ function RaceVariantPicker(props: {
             title={variant.description}
             aria-pressed={variant.id === props.selected}
             class={cn(
-              'rounded-sm border border-border px-2 py-0.5 text-[11px] transition-colors',
+              'rounded-none border border-border px-2 py-0.5 text-[11px] transition-colors',
               variant.id === props.selected
                 ? 'bg-muted font-semibold text-foreground'
                 : 'text-foreground hover:bg-muted',

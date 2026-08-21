@@ -77,7 +77,7 @@ function NpcConditionChip(props: { id: ConditionId; onRemove: () => void }) {
       {(found) => (
         <li
           title={found().description}
-          class="flex items-center gap-1 rounded-md border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/10 px-2 py-1 text-xs font-medium"
+          class="flex items-center gap-1 rounded-sm border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/10 px-2 py-1 text-xs font-medium"
         >
           {found().name}
           <span class="text-[10px] font-normal text-muted-foreground">
@@ -87,7 +87,7 @@ function NpcConditionChip(props: { id: ConditionId; onRemove: () => void }) {
             type="button"
             aria-label={`Remover condição ${found().name}`}
             onClick={() => props.onRemove()}
-            class="rounded-lg p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+            class="rounded-md p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
           >
             <X aria-hidden="true" class="size-3" />
           </button>

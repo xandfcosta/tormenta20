@@ -42,7 +42,7 @@ export function CollapsibleAbilityCard(props: {
   const pending = () => props.pending ?? 0
 
   return (
-    <div ref={card} class="overflow-hidden rounded-sm border border-grimorio-iron bg-card">
+    <div ref={card} class="overflow-hidden rounded-none border border-grimorio-iron bg-card">
       <button
         type="button"
         onClick={() => setOpen(!open())}

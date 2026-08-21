@@ -23,7 +23,7 @@ export function TomePage(props: ParentProps<{ class?: string }>) {
         <div
           data-tome-root
           class={cn(
-            'grimorio-frame--stone flex min-h-[calc(100dvh-7rem)] flex-col gap-6 rounded-sm p-6 sm:p-10',
+            'grimorio-frame--stone flex min-h-[calc(100dvh-7rem)] flex-col gap-6 rounded-none p-6 sm:p-10',
             // A phone held sideways has ~390px of height; full padding there
             // pushes the content of a short leaf clean off the screen — the
             // "Abrir crônica" button ends at y=389 with this and at ~411

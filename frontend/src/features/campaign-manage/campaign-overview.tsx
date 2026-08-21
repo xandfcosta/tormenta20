@@ -73,7 +73,7 @@ function ChronicleSigils(props: { members: CampaignMember[]; sessions: Session[]
 
 function Sigil(props: { icon: JSX.Element; value: number; label: string }) {
   return (
-    <div class="flex flex-col items-center gap-1 rounded-sm border border-grimorio-iron bg-grimorio-panel px-3 py-4 text-center">
+    <div class="flex flex-col items-center gap-1 rounded-none border border-grimorio-iron bg-grimorio-panel px-3 py-4 text-center">
       <span aria-hidden="true" class="text-grimorio-gold/70">
         {props.icon}
       </span>
@@ -123,7 +123,7 @@ function PartyMuster(props: {
 function MusterChip(props: { member: CampaignMember }) {
   const name = () => memberName(props.member)
   return (
-    <span class="flex items-center gap-2 rounded-sm border border-grimorio-iron/60 py-1 pl-1 pr-2.5">
+    <span class="flex items-center gap-2 rounded-none border border-grimorio-iron/60 py-1 pl-1 pr-2.5">
       <CharacterPortrait name={name()} size="sm" hue={hueFromName(name())} />
       <span class="flex items-center gap-1 text-sm">
         <span class="max-w-[8rem] truncate font-medium">{name()}</span>

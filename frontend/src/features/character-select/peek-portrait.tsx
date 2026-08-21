@@ -33,7 +33,7 @@ export function PeekPortrait(props: PeekPortraitProps) {
           onClick={() => props.onClick()}
           title={character().name}
           aria-label={`${props.side === 'left' ? 'Anterior' : 'Próximo'}: ${character().name}`}
-          class="group relative aspect-[3/4] w-20 overflow-hidden rounded-md border border-grimorio-iron opacity-50 transition-all hover:opacity-80 sm:w-28 lg:w-32"
+          class="group relative aspect-[3/4] w-20 overflow-hidden rounded-sm border border-grimorio-iron opacity-50 transition-all hover:opacity-80 sm:w-28 lg:w-32"
           style={{ background: portraitGradient(character().name) }}
         >
           <span class="absolute inset-0 flex select-none items-center justify-center font-display text-4xl text-white/20 sm:text-5xl">

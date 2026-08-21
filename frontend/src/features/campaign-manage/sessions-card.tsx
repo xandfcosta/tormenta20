@@ -38,7 +38,7 @@ export function SessionsCard(props: { campaignId: number; isGm: boolean }) {
 /** No sessions yet — a blank page waiting for the first entry. */
 function EmptyLog(props: { isGm: boolean }) {
   return (
-    <div class="flex flex-col items-center gap-2 rounded-sm border border-dashed border-grimorio-iron px-4 py-10 text-center">
+    <div class="flex flex-col items-center gap-2 rounded-none border border-dashed border-grimorio-iron px-4 py-10 text-center">
       <ScrollText aria-hidden="true" class="size-6 text-muted-foreground" />
       <p class="text-sm text-muted-foreground">
         A crônica ainda não tem sessões.

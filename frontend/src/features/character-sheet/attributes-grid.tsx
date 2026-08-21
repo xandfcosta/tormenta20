@@ -34,7 +34,7 @@ export function AttributesGrid(props: {
 
 function AttributeBox(props: { label: string; value: number }) {
   return (
-    <div class="rounded-sm border-2 border-grimorio-iron bg-grimorio-panel p-2 text-center">
+    <div class="rounded-none border-2 border-grimorio-iron bg-grimorio-panel p-2 text-center">
       <p class="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
         {props.label}
       </p>

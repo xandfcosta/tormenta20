@@ -31,7 +31,7 @@ export function OrigemItemsSection(props: OrigemItemsSectionProps) {
 
   return (
     <Show when={props.originName}>
-      <div class="space-y-1.5 rounded-md border border-grimorio-iron p-3" id="chooser-origem">
+      <div class="space-y-1.5 rounded-sm border border-grimorio-iron p-3" id="chooser-origem">
         <p class="font-heading text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
           Origem · {props.originName}
         </p>
@@ -113,7 +113,7 @@ function OrigemGrantRow(props: {
                     aria-pressed={props.value === option}
                     onClick={() => props.onPick(props.value === option ? '' : option)}
                     class={cn(
-                      'rounded-md border px-2 py-0.5 text-xs transition-colors',
+                      'rounded-sm border px-2 py-0.5 text-xs transition-colors',
                       props.value === option
                         ? 'border-grimorio-gold bg-accent font-medium text-grimorio-gold'
                         : 'border-grimorio-iron text-muted-foreground hover:bg-accent',
@@ -164,7 +164,7 @@ function MoneyGrantButton(props: {
           disabled={rolled()}
           onClick={() => props.onRoll(rollDice(dice().count, dice().sides))}
           class={cn(
-            'rounded-md border border-grimorio-iron px-2.5 py-1 text-xs',
+            'rounded-sm border border-grimorio-iron px-2.5 py-1 text-xs',
             rolled() ? 'opacity-60' : 'hover:bg-accent',
           )}
         >

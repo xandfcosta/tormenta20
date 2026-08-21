@@ -22,7 +22,7 @@ export function ConfigSection(props: { campaign: Campaign }) {
 /** Sealed-in-crimson destructive zone — deleting the chronicle is irreversible. */
 function DangerZone(props: { campaign: Campaign }) {
   return (
-    <div class="flex flex-wrap items-center justify-between gap-3 rounded-sm border border-[color:var(--grimorio-crimson)]/50 bg-[color:var(--grimorio-crimson)]/[0.06] p-4">
+    <div class="flex flex-wrap items-center justify-between gap-3 rounded-none border border-[color:var(--grimorio-crimson)]/50 bg-[color:var(--grimorio-crimson)]/[0.06] p-4">
       <div class="space-y-1">
         <p class="flex items-center gap-1.5 font-heading text-sm uppercase tracking-wide text-[color:var(--grimorio-crimson-bright)]">
           <Flame aria-hidden="true" class="size-4" />

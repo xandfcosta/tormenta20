@@ -56,7 +56,7 @@ export function StatBox(props: StatBoxProps) {
         type="button"
         aria-label={`${props.label} ${display()}`}
         class={cn(
-          'relative flex cursor-pointer flex-col items-center rounded-sm border-2 bg-grimorio-panel p-2 text-center outline-none transition-colors focus-visible:ring-2',
+          'relative flex cursor-pointer flex-col items-center rounded-none border-2 bg-grimorio-panel p-2 text-center outline-none transition-colors focus-visible:ring-2',
           tone().trigger,
         )}
       >
@@ -92,7 +92,7 @@ export function StatBox(props: StatBoxProps) {
           <StatRowList rows={props.rows} />
           <div
             class={cn(
-              'flex items-center justify-between rounded-sm border px-3 py-2',
+              'flex items-center justify-between rounded-none border px-3 py-2',
               tone().total,
             )}
           >

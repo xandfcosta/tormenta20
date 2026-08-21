@@ -31,13 +31,13 @@ export function SituationalSection(props: { character: Character }) {
     <Show
       when={groups().length > 0 || flagEffects().length > 0}
       fallback={
-        <p class="rounded-sm border border-grimorio-iron p-6 text-center text-sm text-muted-foreground">
+        <p class="rounded-none border border-grimorio-iron p-6 text-center text-sm text-muted-foreground">
           Nenhum efeito condicional disponível. Equipe itens com modificadores situacionais
           (terreno, contexto, contra alvo) para vê-los aqui.
         </p>
       }
     >
-      <section class="space-y-2 rounded-sm border border-grimorio-iron p-3">
+      <section class="space-y-2 rounded-none border border-grimorio-iron p-3">
         <ItemFlagList effects={flagEffects()} />
         <ToggleableConditionals character={props.character} groups={groups()} />
       </section>
@@ -56,7 +56,7 @@ function ItemFlagList(props: { effects: ItemFlagEffect[] }) {
         <ul class="space-y-1">
           <For each={props.effects}>
             {(effect) => (
-              <li class="flex items-center gap-2 rounded-md border border-border bg-muted px-2 py-1.5">
+              <li class="flex items-center gap-2 rounded-sm border border-border bg-muted px-2 py-1.5">
                 <Lock aria-hidden="true" class="size-3.5 shrink-0 text-muted-foreground" />
                 <span class="min-w-0 flex-1 truncate text-sm text-foreground">{effect.label}</span>
                 <span class="shrink-0 truncate text-[11px] text-muted-foreground">
@@ -130,7 +130,7 @@ function ToggleableConditionals(props: { character: Character; groups: Condition
 }
 
 const ROW_CLASS =
-  'flex w-full rounded-md border border-border bg-muted px-2 py-1.5 text-left transition-colors hover:bg-accent'
+  'flex w-full rounded-sm border border-border bg-muted px-2 py-1.5 text-left transition-colors hover:bg-accent'
 
 /** Sign-colored amount, shared by both row kinds. */
 function Amount(props: { amount: number; suffix?: string }) {
@@ -152,7 +152,7 @@ function Checkbox(props: { checked: boolean }) {
     <span
       aria-hidden="true"
       class={cn(
-        'flex size-5 shrink-0 items-center justify-center rounded-lg border border-border',
+        'flex size-5 shrink-0 items-center justify-center rounded-md border border-border',
         props.checked ? 'bg-muted text-foreground' : 'bg-transparent',
       )}
     >

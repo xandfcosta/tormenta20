@@ -43,7 +43,7 @@ export function ToolRail(props: ToolRailProps) {
               onClick={() => props.onPick(tool.slug)}
               title={tool.hint}
               class={cn(
-                'flex shrink-0 items-center gap-2 rounded-md border px-3 py-2 text-left text-xs transition-colors lg:w-full',
+                'flex shrink-0 items-center gap-2 rounded-sm border px-3 py-2 text-left text-xs transition-colors lg:w-full',
                 active()
                   ? 'border-grimorio-gold bg-accent font-medium text-grimorio-gold'
                   : 'border-grimorio-iron text-muted-foreground hover:bg-accent hover:text-foreground',
