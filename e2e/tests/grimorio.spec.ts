@@ -236,6 +236,44 @@ test.describe('Grimório — a folha de especificação', () => {
     ).toHaveLength(1)
   })
 
+  /**
+   * A Cinzel não desce abaixo de 14px (ALE-173).
+   *
+   * Ela é serifada de display — contraste de traço alto e olhos pequenos —, e
+   * em 11px maiúscula com espaçamento largo vira desenho antes de virar texto.
+   * O dono apontou isso olhando esta folha, e a casa já tinha tomado a mesma
+   * decisão um degrau abaixo: o rótulo de campo, em 10px, nunca usou Cinzel.
+   * O cabeçalho de bloco era a exceção solta.
+   *
+   * O guarda vive aqui porque a folha desenha a família inteira com os
+   * componentes de verdade — se um deles voltar a usar Cinzel pequena, ela
+   * aparece aqui antes de aparecer em 43 telas.
+   *
+   * Por que e2e: a face resolvida só existe em browser. Em jsdom
+   * `font-family` devolve a string do CSS, não o que foi de fato usado.
+   */
+  test('a Cinzel não desce abaixo do piso de leitura', async ({ page }) => {
+    await page.goto('/grimorio')
+    await expect(page.getByRole('heading', { name: 'Grimório' })).toBeVisible()
+
+    const pequenas = await page.evaluate(() =>
+      [...document.querySelectorAll('*')]
+        .filter((n) => {
+          const cs = getComputedStyle(n)
+          if (!cs.fontFamily.startsWith('Cinzel')) return false
+          if (!(n.textContent ?? '').trim()) return false
+          return Number.parseFloat(cs.fontSize) < 14
+        })
+        .map((n) => `${Math.round(Number.parseFloat(getComputedStyle(n).fontSize))}px: ${(n.textContent ?? '').trim().slice(0, 24)}`)
+        .slice(0, 6),
+    )
+
+    expect(
+      pequenas,
+      'Cinzel abaixo de 14px — ela não se lê nesse tamanho, e o piso da casa é 14',
+    ).toEqual([])
+  })
+
   test('a folha cabe nos seis formatos', async ({ page }) => {
     await page.goto('/grimorio')
     await expect(page.getByRole('heading', { name: 'Grimório' })).toBeVisible()

@@ -177,6 +177,13 @@ links, the browser Back button and the progress rail cannot then disagree.
   (`--primary`, `--card`, `--hp-full`, `--grimorio-gold`, Cinzel…). Use
   tokens (`bg-card`, `text-muted-foreground`, `[color:var(--primary)]`),
   not raw hex.
+- **A Cinzel tem um PISO de leitura, e ele é 14px.** Ela é serifada de display
+  — contraste de traço alto, olhos pequenos — e abaixo disso, maiúscula e com
+  espaçamento largo, vira desenho antes de virar texto (ALE-173). Abaixo do
+  piso a casa escreve em sans: é o que o rótulo de campo (10px) sempre fez e o
+  que o cabeçalho de bloco (11px) passou a fazer. Subir o cabeçalho para 14px
+  foi medido e descartado por outro motivo — 14px é a medida do CORPO do texto,
+  e cabeçalho do mesmo tamanho do texto perde a hierarquia que ele cria.
 - **Canto quadrado se escreve `rounded-none`.** A cena tem R=6px e a escala do
   shadcn derivada dele: `none` 0, `sm` 2, `md` 4, `lg` 6, `xl` 10. Não baixe o
   R: abaixo de 6px a fórmula (`sm = R−4`) DEGENERA e `sm` passa a valer zero,

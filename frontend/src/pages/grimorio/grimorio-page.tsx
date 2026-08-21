@@ -73,7 +73,7 @@ export function GrimorioPage() {
           {TRILHA.map((item) => (
             <a
               href={`#${item.id}`}
-              class="shrink-0 rounded-none border border-grimorio-iron px-3 py-1.5 font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:border-grimorio-gold hover:text-grimorio-gold"
+              class="shrink-0 rounded-none border border-grimorio-iron px-3 py-1.5 text-2xs font-semibold uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:border-grimorio-gold hover:text-grimorio-gold"
             >
               {item.rotulo}
             </a>

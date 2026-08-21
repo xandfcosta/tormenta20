@@ -174,39 +174,6 @@ export function ComparaRotulo(props: {
 }
 
 /**
- * Várias grafias do mesmo rótulo, empilhadas, cada uma com o que resolve.
- *
- * Irmã do `ComparaRotulo`, para quando a escolha tem mais de duas saídas.
- */
-export function ComparaVarias(props: {
-  texto: string
-  opcoes: { classe: string; nome: string; nota?: string }[]
-}) {
-  return (
-    <div class="w-full space-y-3">
-      {props.opcoes.map((o) => (
-        <LinhaComparada texto={props.texto} classe={o.classe} nome={o.nome} nota={o.nota} />
-      ))}
-    </div>
-  )
-}
-
-function LinhaComparada(props: { texto: string; classe: string; nome: string; nota?: string }) {
-  const [tamanho, refTamanho] = createComputedValue('font-size')
-  return (
-    <div class="space-y-0.5">
-      <p ref={refTamanho} class={cn('uppercase text-grimorio-gold', props.classe)}>
-        {props.texto}
-      </p>
-      <p class="font-mono text-3xs text-muted-foreground">
-        {props.nome} · {tamanho()}
-        {props.nota ? ` · ${props.nota}` : ''}
-      </p>
-    </div>
-  )
-}
-
-/**
  * Uma amostra de raio: o canto desenhado pela classe, e ao lado o pixel que
  * ela virou DENTRO desta cena — que é a informação que ninguém consegue prever
  * lendo o TSX, porque a cena redefine o `--radius` (ALE-173).

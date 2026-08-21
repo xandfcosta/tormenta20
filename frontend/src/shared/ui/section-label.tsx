@@ -17,8 +17,8 @@ import { cn } from '@/shared/lib/utils'
  *
  * - `SectionTitle` — o título de uma seção da cena, Cinzel grande e dourado.
  *   20 usos, todos dourados, nenhum apagado.
- * - `SectionLabel` — o cabeçalho de um BLOCO, Cinzel 11px. 17 usos, 15 em `<p>`
- *   e 2 em `<h4>`, apagado por padrão e dourado quando o bloco é o assunto.
+ * - `SectionLabel` — o cabeçalho de um BLOCO, 11px. 17 usos, 15 em `<p>` e 2
+ *   em `<h4>`, apagado por padrão e dourado quando o bloco é o assunto.
  * - `FieldLabel` — o rótulo colado num VALOR, sem Cinzel, 10px, espaçamento
  *   mais largo. 60 usos, 37 em `<span>` — é o "FOR" ao lado do 16.
  *
@@ -26,6 +26,20 @@ import { cn } from '@/shared/lib/utils'
  * passaria a esconder que são coisas diferentes: o `FieldLabel` não é
  * cabeçalho de nada, e vesti-lo de Cinzel mudaria a cara da ficha em 60
  * lugares. Eles compartilham o `cva` e nada mais.
+ *
+ * **A Cinzel tem um PISO, e ele é 14px.** Ela é serifada de display: contraste
+ * de traço alto e olhos pequenos, e em 11px maiúscula com espaçamento largo
+ * ela vira desenho antes de virar texto — o dono apontou isso olhando a folha.
+ * A casa já tinha tomado essa decisão um degrau abaixo, no rótulo de campo de
+ * 10px, que nunca usou Cinzel; o cabeçalho de bloco era a exceção solta, e
+ * agora segue o mesmo piso. A voz da Cinzel fica onde ela lê bem: o título de
+ * seção em 18px e os títulos de cena.
+ *
+ * Subir o cabeçalho para 14px em vez disso foi medido e descartado por OUTRO
+ * motivo, não por densidade — custava 21px numa tela e 3px noutra, sem fazer
+ * nenhuma rolar mais. O problema é que 14px é a medida do CORPO do texto neste
+ * app, e um cabeçalho do mesmo tamanho do texto perde a hierarquia que ele
+ * existe para criar.
  *
  * O elemento é escolha de quem chama (`as`), porque a semântica é do SÍTIO e
  * não da aparência: o mesmo desenho é `<legend>` dentro de um `<fieldset>`,
@@ -37,7 +51,7 @@ const rotuloVariants = cva('uppercase', {
   variants: {
     papel: {
       titulo: 'font-heading text-lg',
-      secao: 'font-heading text-2xs tracking-[0.16em]',
+      secao: 'text-2xs font-semibold tracking-[0.16em]',
       campo: 'text-3xs tracking-widest',
     },
     /**
