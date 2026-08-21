@@ -92,7 +92,7 @@ export function PickerCombobox(props: PickerComboboxProps) {
       <KCombobox.Control class={cn('relative flex w-full items-center', props.class)}>
         <KCombobox.Input
           aria-label={props['aria-label']}
-          class="h-9 w-full rounded-sm border border-input bg-transparent px-3 pr-9 text-sm outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30"
+          class="h-9 w-full rounded-sm border border-input bg-transparent px-3 pr-9 text-sm outline-none transition-[color,box-shadow] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30"
         />
         <KCombobox.Trigger class="absolute right-1 flex size-7 items-center justify-center rounded-none text-muted-foreground hover:text-foreground">
           <KCombobox.Icon>

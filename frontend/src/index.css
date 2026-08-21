@@ -203,6 +203,29 @@
   background-color: var(--grimorio-gold);
 }
 
+/* A RECEITA DE FOCO DA CASA (ALE-173, P4).
+ *
+ * Havia três gramáticas e 12 combinações distintas: o anel do shadcn em sete
+ * arquivos do kit, o contorno dourado em três, quatro variantes avulsas — e
+ * 80 dos 84 `<button>` do app sem tratamento NENHUM, caindo no contorno padrão
+ * do navegador. Quem navega por teclado pagava isso a cada Tab: o realce
+ * mudava de cara conforme a tela.
+ *
+ * A regra é global e mora aqui, e não em cada componente, exatamente por causa
+ * desses 80: um utilitário por peça nunca alcança quem não pediu. Vale para
+ * tudo que recebe foco dentro de uma cena.
+ *
+ * Dourado porque é o vocabulário da casa — a mesma cor que diz "a vez" na
+ * lista e no tabuleiro. `outline` e não `box-shadow`: o anel do shadcn é
+ * sombra, desenhada FORA da caixa, e a lista da iniciativa já teve de trocar
+ * para `inset-ring` porque o contêiner que rola cortava o lado de cima
+ * (ALE-150). `outline` com offset pequeno sofre o mesmo corte, então o offset
+ * é 1px — o suficiente para separar da borda, pouco o bastante para caber. */
+.scene-grimorio :is(a, button, input, select, textarea, summary, [tabindex]:not([tabindex='-1'])):focus-visible {
+  outline: 2px solid var(--grimorio-gold);
+  outline-offset: 1px;
+}
+
 /* Scene-nav cursor (ALE-55): the focused item inside a nav region reads as
  * game-"selected" — the gold language already used by the filmstrip/rail — not
  * a default browser ring. We drive real .focus(), so :focus-visible fires. */

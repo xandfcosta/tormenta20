@@ -4,7 +4,7 @@ import { FramedPanel } from '@/shared/ui/framed-panel'
 import { Input } from '@/shared/ui/input'
 import { VitalBar } from '@/shared/ui/vital-bar'
 import { FieldLabel, SectionLabel, SectionTitle } from '@/shared/ui/section-label'
-import { ComparaRotulo, SpecBlock, SpecSection } from './spec-primitives'
+import { ComparaRotulo, ComparaVarias, SpecBlock, SpecSection } from './spec-primitives'
 
 /**
  * As peças do kit, desenhadas pelo componente DE VERDADE.
@@ -73,6 +73,21 @@ export function PecasSection() {
             nome: 'tracking-[0.16em]',
             onde: 'passos da forja, ferramentas do /gm, a porta',
           }}
+        />
+      </SpecBlock>
+
+      <SpecBlock
+        titulo="A Cinzel em tamanho pequeno — decisão pendente"
+        nota="A Cinzel é serifada de display: contraste de traço alto e olhos pequenos. Em 11px, maiúscula e com espaçamento largo, ela vira desenho antes de virar texto — e é assim que o cabeçalho de bloco aparece hoje, em ~144 lugares. O rótulo de CAMPO já não a usa, então a casa já tem um piso implícito entre 10 e 11px; a pergunta é onde ele deve ficar de verdade."
+      >
+        <ComparaVarias
+          texto="Kit da classe"
+          opcoes={[
+            { classe: 'font-heading text-2xs tracking-[0.16em]', nome: 'Cinzel 11px', nota: 'como está hoje' },
+            { classe: 'text-2xs font-semibold tracking-[0.16em]', nome: 'sans 11px', nota: 'mesma medida, outra face' },
+            { classe: 'font-heading text-xs tracking-[0.16em]', nome: 'Cinzel 12px', nota: 'sobe um degrau' },
+            { classe: 'font-heading text-sm tracking-[0.16em]', nome: 'Cinzel 14px', nota: 'sobe dois' },
+          ]}
         />
       </SpecBlock>
 

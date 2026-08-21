@@ -21,14 +21,20 @@ test.describe('Listas virtualizadas do mestre', () => {
 
     const busca = page.getByRole('searchbox', { name: 'Buscar criatura' })
     await expect(busca).toBeVisible()
-    // A linha só existe se a lista mediu e pintou.
-    const antes = await page.getByRole('button', { name: /ND / }).count()
+    // A linha só existe se a lista mediu e pintou — e a busca aparece ANTES
+    // disso. Contar no instante em que ela surge é uma corrida: o teste falhou
+    // duas vezes na suíte cheia com zero linhas, e o artefato mostrou a cena
+    // montada com a lista ainda vazia. Esperar a primeira linha não afrouxa a
+    // asserção, porque o que se promete é justamente que ela pinte.
+    const linhas = page.getByRole('button', { name: /ND / })
+    await expect(linhas.first()).toBeVisible()
+    const antes = await linhas.count()
     expect(antes).toBeGreaterThan(0)
 
     await busca.fill('ogro')
     // Mais de um ogro no bestiário (o comum e o ancião) — `first()` de propósito.
     await expect(page.getByRole('button', { name: /^Ogro/ }).first()).toBeVisible()
-    expect(await page.getByRole('button', { name: /ND / }).count()).toBeLessThan(antes)
+    expect(await linhas.count()).toBeLessThan(antes)
   })
 
   test('o catálogo da sessão pinta linhas e a busca as troca', async ({ page }) => {

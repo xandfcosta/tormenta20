@@ -60,7 +60,7 @@ export function HubFooter(props: HubFooterProps) {
       <Popover placement="top-start">
         <PopoverTrigger
           aria-label={`Menu de ${props.name}`}
-          class="group flex flex-1 items-center gap-3 rounded-none p-1 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grimorio-gold"
+          class="group flex flex-1 items-center gap-3 rounded-none p-1 text-left"
         >
           <span
             aria-hidden="true"
@@ -142,7 +142,7 @@ function QuickMenuItem(props: QuickMenuItemProps) {
       type="button"
       class={cn(
         'flex w-full items-center gap-2.5 rounded-none px-2.5 py-2 text-left font-heading text-sm tracking-wide transition-colors',
-        'hover:bg-accent focus-visible:bg-accent focus-visible:outline-none',
+        'hover:bg-accent focus-visible:bg-accent',
         'disabled:pointer-events-none disabled:opacity-50',
         local.danger ? 'text-grimorio-crimson-bright' : 'text-foreground',
         local.class,

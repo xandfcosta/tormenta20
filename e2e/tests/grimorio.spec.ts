@@ -173,6 +173,69 @@ test.describe('Grimório — a folha de especificação', () => {
     expect(fracas, 'tinta que não alcança texto — ela é cor de BLOCO').toEqual([])
   })
 
+  /**
+   * Todo foco da casa tem a MESMA cara (ALE-173, P4).
+   *
+   * Havia três gramáticas em 12 combinações — o anel do shadcn em sete
+   * arquivos do kit, o contorno dourado em três, quatro variantes avulsas — e
+   * 80 dos 84 `<button>` do app sem tratamento nenhum, caindo no contorno
+   * padrão do navegador. Quem navega por teclado pagava a cada Tab: o realce
+   * mudava de cara conforme a tela.
+   *
+   * Navega com TAB de verdade, e não com `.focus()`: foco programático não
+   * dispara `:focus-visible` num botão, então a sonda mediria "sem contorno" e
+   * passaria verde sobre qualquer coisa.
+   *
+   * O que se afirma é que os realces são IGUAIS ENTRE SI, não que sejam de uma
+   * cor específica: a paleta pode mudar sem a casa deixar de ter uma voz só.
+   * O cursor de navegação fica de fora de propósito — ele é outro estado,
+   * "você está pilotando por aqui", e diz isso com brilho em vez de contorno.
+   *
+   * Uma coisa que este guarda ENSINOU ao ser provado: pôr de volta uma receita
+   * num componente não o quebra, porque a regra global tem especificidade
+   * maior que um utilitário e vence. Isso é feição e não acaso — uma peça não
+   * consegue mais divergir sozinha. O que ele pega é a perda da uniformidade
+   * na RAIZ: tirar um tipo de elemento da regra, ou alguém escrever algo mais
+   * específico. Foi assim que ele ficou vermelho.
+   */
+  test('o realce de foco é o mesmo em toda a folha', async ({ page }) => {
+    await page.goto('/grimorio')
+    await expect(page.getByRole('heading', { name: 'Grimório' })).toBeVisible()
+
+    // UM Tab de verdade liga o modo teclado do navegador; a partir daí o foco
+    // programático também dispara `:focus-visible`, e dá para varrer a folha
+    // inteira em vez dos primeiros doze paradas. A primeira versão deste
+    // guarda tabulava doze vezes, só alcançava a trilha, e passou VERDE quando
+    // sabotei o botão do kit com uma receita própria.
+    await page.keyboard.press('Tab')
+
+    // Desliga a transição para MEDIR. As peças do kit têm `transition-all`, e o
+    // contorno vai mudando de alfa no caminho: sem isto a varredura devolve
+    // cinco "caras" que são o mesmo realce em cinco instantes do trajeto.
+    // Esperar cada uma assentar também funcionaria e custaria dez segundos.
+    await page.addStyleTag({ content: '*, *::before, *::after { transition: none !important }' })
+
+    const realces = await page.evaluate(async () => {
+      const focaveis = [...document.querySelectorAll('a, button, input, select, textarea')].filter(
+        (n) => (n as HTMLElement).offsetParent !== null && !n.closest('[data-nav-region]'),
+      )
+      const vistos = new Set<string>()
+      for (const alvo of focaveis) {
+        ;(alvo as HTMLElement).focus()
+        const cs = getComputedStyle(alvo)
+        if (cs.outlineStyle === 'none') continue
+        vistos.add(`${cs.outlineWidth} ${cs.outlineStyle} ${cs.outlineColor} off:${cs.outlineOffset}`)
+      }
+      return [...vistos]
+    })
+
+    expect(realces.length, 'ninguém recebeu realce — a varredura não achou foco').toBeGreaterThan(0)
+    expect(
+      realces,
+      'o foco tem mais de uma cara: voltou a haver receita por componente',
+    ).toHaveLength(1)
+  })
+
   test('a folha cabe nos seis formatos', async ({ page }) => {
     await page.goto('/grimorio')
     await expect(page.getByRole('heading', { name: 'Grimório' })).toBeVisible()

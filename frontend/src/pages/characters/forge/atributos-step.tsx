@@ -134,7 +134,7 @@ function AttributePillar(props: {
         max={props.max}
         value={props.row.base}
         onInput={(event) => props.onSet(Number(event.currentTarget.value) || 0)}
-        class="w-full rounded-sm border border-grimorio-iron bg-transparent py-1 text-center font-heading text-4xl tabular-nums text-foreground outline-none focus-visible:border-grimorio-gold focus-visible:ring-2 focus-visible:ring-grimorio-gold/40"
+        class="w-full rounded-sm border border-grimorio-iron bg-transparent py-1 text-center font-heading text-4xl tabular-nums text-foreground outline-none"
       />
 
       <Step

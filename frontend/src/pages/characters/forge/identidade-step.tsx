@@ -158,7 +158,7 @@ function Frontispiece(props: {
         required
         // `dark:bg-transparent` as well: the kit's Input paints `dark:bg-input/30`,
         // and a filled bar here reads as a form field instead of a title line.
-        class="h-auto max-w-2xl rounded-none border-x-0 border-t-0 border-b border-grimorio-gold/50 bg-transparent px-2 py-1 text-center font-heading text-2xl tracking-[0.06em] text-foreground shadow-none focus-visible:border-grimorio-gold focus-visible:ring-0 sm:text-3xl dark:bg-transparent"
+        class="h-auto max-w-2xl rounded-none border-x-0 border-t-0 border-b border-grimorio-gold/50 bg-transparent px-2 py-1 text-center font-heading text-2xl tracking-[0.06em] text-foreground shadow-none sm:text-3xl dark:bg-transparent"
       />
       <Show when={props.lineage}>
         <p class="text-xs text-muted-foreground">{props.lineage}</p>

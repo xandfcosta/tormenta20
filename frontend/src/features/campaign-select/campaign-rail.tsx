@@ -79,7 +79,7 @@ function TabEntry(props: {
       onClick={() => props.onSelect()}
       onMouseEnter={() => props.onHover()}
       class={cn(
-        'grimorio-book-tab flex min-w-52 shrink-0 items-center gap-2.5 rounded-sm px-3 py-2 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grimorio-gold',
+        'grimorio-book-tab flex min-w-52 shrink-0 items-center gap-2.5 rounded-sm px-3 py-2 text-left',
         // Desktop: a contiguous thumb-index down the book's fore-edge. Tabs
         // touch (gap-0) with collapsed borders (-mt-px), forming one solid
         // strip; the outer corners round. The active marker is pulled out

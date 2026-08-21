@@ -133,7 +133,7 @@ function BackControl(props: { onBack: () => void; label: string }) {
     <button
       type="button"
       onClick={() => props.onBack()}
-      class="inline-flex min-h-11 items-center gap-1 rounded-none px-3 font-heading text-sm tracking-wide text-muted-foreground transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grimorio-gold"
+      class="inline-flex min-h-11 items-center gap-1 rounded-none px-3 font-heading text-sm tracking-wide text-muted-foreground transition-colors hover:text-grimorio-gold"
     >
       <ChevronLeft aria-hidden="true" class="size-4" />
       {props.label}

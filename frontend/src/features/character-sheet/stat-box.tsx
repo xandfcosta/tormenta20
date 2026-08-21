@@ -15,13 +15,13 @@ export type StatTone = 'combat' | 'magic'
 
 const TONE: Record<StatTone, { trigger: string; label: string; value: string; total: string }> = {
   combat: {
-    trigger: 'border-destructive/50 hover:bg-destructive/10 focus-visible:ring-destructive/60',
+    trigger: 'border-destructive/50 hover:bg-destructive/10',
     label: 'text-destructive/80',
     value: 'text-foreground',
     total: 'border-destructive/40 bg-destructive/10',
   },
   magic: {
-    trigger: 'border-arcane/40 hover:bg-arcane/10 focus-visible:ring-arcane/60',
+    trigger: 'border-arcane/40 hover:bg-arcane/10',
     label: 'text-arcane-ink/80',
     value: 'text-arcane-ink',
     total: 'border-arcane/40 bg-arcane/10',
@@ -56,7 +56,7 @@ export function StatBox(props: StatBoxProps) {
         type="button"
         aria-label={`${props.label} ${display()}`}
         class={cn(
-          'relative flex cursor-pointer flex-col items-center rounded-none border-2 bg-grimorio-panel p-2 text-center outline-none transition-colors focus-visible:ring-2',
+          'relative flex cursor-pointer flex-col items-center rounded-none border-2 bg-grimorio-panel p-2 text-center outline-none transition-colors',
           tone().trigger,
         )}
       >

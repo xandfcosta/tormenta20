@@ -47,7 +47,7 @@ export function CollapsibleAbilityCard(props: {
         type="button"
         onClick={() => setOpen(!open())}
         aria-expanded={open()}
-        class="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+        class="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-accent"
       >
         <ChevronDown
           aria-hidden="true"

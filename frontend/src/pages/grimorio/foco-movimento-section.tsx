@@ -13,27 +13,45 @@ import { SpecBlock, SpecSection } from './spec-primitives'
  * mais barato de notar do que abrir uma sessão ao vivo e ferir um combatente.
  */
 
-/** As três gramáticas de foco que a auditoria contou, lado a lado (ALE-173, P4). */
+/**
+ * O foco, agora com uma receita só (ALE-173, P4).
+ *
+ * Eram três gramáticas em 12 combinações: o anel do shadcn no kit de
+ * formulário, o contorno dourado em três peças, quatro variantes avulsas — e
+ * 80 dos 84 botões do app sem nada, caindo no contorno padrão do navegador.
+ * A regra passou a ser global, e é por isso que as amostras abaixo não pedem
+ * realce nenhum: elas recebem.
+ */
 export function FocoSection() {
   return (
     <SpecSection id="foco" titulo="Foco">
       <SpecBlock
-        titulo="As três gramáticas"
-        nota="Navegue com Tab. Hoje convivem três tratamentos, e 75 dos 82 botões crus caem num quarto, acidental."
+        titulo="Uma receita só"
+        nota="Navegue com Tab: os quatro recebem o MESMO realce, e nenhum deles pede por ele. A regra é global e mora no index.css — era isso que faltava, porque um utilitário por peça nunca alcança quem não pediu, e 80 dos 84 botões do app não pediam (ALE-173, P4)."
       >
-        <Button variant="outline">anel do shadcn</Button>
-        <button
-          type="button"
-          class="rounded-none border border-grimorio-iron px-3 py-1.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-grimorio-gold"
-        >
-          contorno do grimório
+        <Button variant="outline">botão do kit</Button>
+        <button type="button" class="rounded-none border border-grimorio-iron px-3 py-1.5 text-sm">
+          botão cru, sem classe de foco
         </button>
-        <div data-nav-region="amostra">
-          <button
-            type="button"
-            class="rounded-none border border-grimorio-iron px-3 py-1.5 text-sm"
-          >
-            regra global (só dentro de data-nav-region)
+        <a
+          href="#foco"
+          class="rounded-none border border-grimorio-iron px-3 py-1.5 text-sm text-foreground"
+        >
+          link para esta seção
+        </a>
+        <input aria-label="Campo de exemplo" class="w-40" />
+      </SpecBlock>
+
+      <SpecBlock
+        titulo="O cursor de navegação é OUTRA coisa"
+        nota="Dentro de uma região de navegação, a seta move um cursor — e ele diz 'a tecla está AQUI' com o brilho dourado da casa, não com o contorno. São dois estados diferentes: um é 'o foco chegou', o outro é 'você está pilotando por aqui'."
+      >
+        <div data-nav-region="amostra" class="flex gap-2">
+          <button type="button" class="rounded-none border border-grimorio-iron px-3 py-1.5 text-sm">
+            item da região
+          </button>
+          <button type="button" class="rounded-none border border-grimorio-iron px-3 py-1.5 text-sm">
+            outro item
           </button>
         </div>
       </SpecBlock>
