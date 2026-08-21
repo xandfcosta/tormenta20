@@ -96,7 +96,7 @@ export function CombatantBand(props: { character: Character; actions?: JSX.Eleme
           metade dela. 30rem e não 34: a coluna do combatente mede 518px numa
           janela de 1920 (medido, não suposto — o shell do mestre é de três
           colunas ali), e a 34rem o formato MAIOR era o único a ficar empilhado. */}
-      <VitalRows character={props.character} class="mt-1 @[30rem]:grid-cols-2 @[30rem]:gap-x-4" />
+      <VitalRows character={props.character} class="mt-1 @lg:grid-cols-2 @lg:gap-x-4" />
     </div>
   )
 }
@@ -126,7 +126,7 @@ function BandConditions(props: {
           próprio conteúdo e os chips transbordavam dela — o seletor era
           desenhado por cima do segundo chip. Encolher aqui é seguro de proibir
           porque a lista é limitada a dois; o resto vive no popover. */}
-      <ul class="hidden shrink-0 items-center gap-1 @[30rem]:flex">
+      <ul class="hidden shrink-0 items-center gap-1 @lg:flex">
         <For each={props.conditions.active().slice(0, VISIBLE_CONDITIONS)}>
           {(id) => <ConditionChip id={id} compact onRemove={() => props.conditions.remove(id)} />}
         </For>

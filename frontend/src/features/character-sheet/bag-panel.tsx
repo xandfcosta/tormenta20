@@ -18,6 +18,7 @@ import { formatLoad, loadLimitLabel } from './item-describe'
 import { ItemFormDialog } from './item-form-dialog'
 import { itemActions, itemWriteMessage } from './item-mutations'
 import { FieldLabel, SectionLabel, SectionTitle } from '@/shared/ui/section-label'
+import { Panel } from '@/shared/ui/panel'
 
 /**
  * "Mochila" — the game-bag block that replaced the old Inventário table and
@@ -57,7 +58,7 @@ export function BagPanel(props: { character: Character }) {
   }
 
   return (
-    <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-none border border-grimorio-iron bg-grimorio-panel">
+    <Panel as="section" fillHeight>
       <div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
         <div class="min-w-0">
           <SectionTitle contexto="painel">Mochila</SectionTitle>
@@ -192,6 +193,6 @@ export function BagPanel(props: { character: Character }) {
           />
         )}
       </Show>
-    </section>
+    </Panel>
   )
 }

@@ -13,6 +13,7 @@ import { InviteButton } from './invite-button'
 import { memberName, sortRoster } from './members-card'
 import { SessionLog } from './session-log'
 import { TomeSection } from './tome-section'
+import { Panel } from '@/shared/ui/panel'
 
 /**
  * Visão geral: the chronicle's dashboard — sigils for the party/log at a
@@ -73,7 +74,7 @@ function ChronicleSigils(props: { members: CampaignMember[]; sessions: Session[]
 
 function Sigil(props: { icon: JSX.Element; value: number; label: string }) {
   return (
-    <div class="flex flex-col items-center gap-1 rounded-none border border-grimorio-iron bg-grimorio-panel px-3 py-4 text-center">
+    <Panel class="flex flex-col items-center gap-1 px-3 py-4 text-center">
       <span aria-hidden="true" class="text-grimorio-gold/70">
         {props.icon}
       </span>
@@ -81,7 +82,7 @@ function Sigil(props: { icon: JSX.Element; value: number; label: string }) {
       <span class="text-3xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
         {props.label}
       </span>
-    </div>
+    </Panel>
   )
 }
 

@@ -20,6 +20,7 @@ import { RaceAbilitySection } from './race-abilities'
 import { normalize } from './normalize'
 import { ownedAbilities } from './sheet-search-index'
 import { SectionTitle } from '@/shared/ui/section-label'
+import { Panel } from '@/shared/ui/panel'
 
 const SOURCE_TABS: { value: PendenciaSource; label: string }[] = [
   { value: 'raca', label: 'Raça' },
@@ -71,7 +72,7 @@ export function AbilitiesPanel(props: { character: Character }) {
     pendencias().filter((pendencia) => pendencia.source === source).length
 
   return (
-    <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-none border border-grimorio-iron bg-grimorio-panel">
+    <Panel as="section" fillHeight>
       <div class="shrink-0 border-b border-grimorio-iron px-3 py-2 sm:px-4">
         <SectionTitle contexto="painel">Poderes</SectionTitle>
       </div>
@@ -169,7 +170,7 @@ export function AbilitiesPanel(props: { character: Character }) {
           </Show>
         </Show>
       </div>
-    </section>
+    </Panel>
   )
 }
 

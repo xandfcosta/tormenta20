@@ -18,7 +18,7 @@ import { FieldLabel } from '@/shared/ui/section-label'
  * `class` decide a FORMA: a faixa passa uma consulta de contêiner para pôr os
  * dois lado a lado quando a coluna dá, o HUD deixa empilhado.
  *
- * @example <VitalRows character={character} class="@[34rem]:grid-cols-2" />
+ * @example <VitalRows character={character} class="@xl:grid-cols-2" />
  */
 export function VitalRows(props: { character: Character; class?: string }) {
   const queryClient = useQueryClient()

@@ -14,6 +14,7 @@ import {
   toggleProficiency,
 } from './proficiency-mutations'
 import { FieldLabel, SectionTitle } from '@/shared/ui/section-label'
+import { Panel } from '@/shared/ui/panel'
 
 /**
  * The Proficiências block: every weapon / armor / shield category the
@@ -43,7 +44,7 @@ export function ProficienciesPanel(props: { character: Character }) {
   }
 
   return (
-    <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-none border border-grimorio-iron bg-grimorio-panel">
+    <Panel as="section" fillHeight>
       <div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
         <SectionTitle contexto="painel">
           Proficiências
@@ -76,7 +77,7 @@ export function ProficienciesPanel(props: { character: Character }) {
           onToggle={(category) => void save(toggleProficiency(owned(), category))}
         />
       </div>
-    </section>
+    </Panel>
   )
 }
 

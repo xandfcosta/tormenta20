@@ -16,6 +16,7 @@ import { ExpertiseRow } from './expertise-row'
 import { normalize } from './normalize'
 import type { SheetPanelProps } from './sheet-sections'
 import { SectionTitle } from '@/shared/ui/section-label'
+import { Panel } from '@/shared/ui/panel'
 
 // Resistências first — "teste de Reflexos!" is the hottest lookup at the table,
 // so they are pinned above the alphabetical rest.
@@ -64,7 +65,7 @@ export function ExpertisesPanel(props: SheetPanelProps) {
   const isCustom = (def: ExpertiseDef) => !EXPERTISES.some((b) => b.name === def.name)
 
   return (
-    <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-none border border-grimorio-iron bg-grimorio-panel">
+    <Panel as="section" fillHeight>
       <div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
         <div class="flex items-baseline gap-3">
           <SectionTitle contexto="painel">Perícias</SectionTitle>
@@ -107,7 +108,7 @@ export function ExpertisesPanel(props: SheetPanelProps) {
             </p>
           }
         >
-          <div class="grid gap-2 @[44rem]:grid-cols-2">
+          <div class="grid gap-2 @2xl:grid-cols-2">
             <For each={visible()}>
               {(def) => (
                 <ExpertiseRow
@@ -123,6 +124,6 @@ export function ExpertisesPanel(props: SheetPanelProps) {
           </div>
         </Show>
       </div>
-    </section>
+    </Panel>
   )
 }

@@ -19,6 +19,7 @@ import { normalize } from './normalize'
 import { CIRCLE_LABEL, SCHOOL_LABEL } from './spell-labels'
 import { SpellRow } from './spell-row'
 import { FieldLabel, SectionTitle } from '@/shared/ui/section-label'
+import { Panel } from '@/shared/ui/panel'
 
 const CIRCLES: readonly SpellCircle[] = [0, 1, 2, 3, 4, 5]
 
@@ -61,7 +62,7 @@ export function SpellbookPanel(props: { character: Character }) {
   const granted = createMemo(() => grantedSpells(props.character))
 
   return (
-    <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-none border border-grimorio-iron bg-grimorio-panel">
+    <Panel as="section" fillHeight>
       <div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
         <div class="flex items-baseline gap-3">
           <SectionTitle contexto="painel" class="flex items-center gap-2">
@@ -134,7 +135,7 @@ export function SpellbookPanel(props: { character: Character }) {
           />
         </Show>
       </Show>
-    </section>
+    </Panel>
   )
 }
 

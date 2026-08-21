@@ -11,6 +11,7 @@ import { CharacterPortrait } from '@/shared/ui/character-portrait'
 import { SkeletonRows } from '@/shared/ui/skeleton'
 import { InviteButton } from './invite-button'
 import { TomeSection } from './tome-section'
+import { Panel } from '@/shared/ui/panel'
 
 /** GM first (the crest leads the muster), then the rest in arrival order. */
 export function sortRoster(members: readonly CampaignMember[]): CampaignMember[] {
@@ -101,7 +102,7 @@ export function MemberPlate(props: MemberPlateProps) {
   const isGm = () => props.member.role === 'gm'
 
   return (
-    <div class="group relative flex items-center gap-3 rounded-none border border-grimorio-iron bg-grimorio-panel p-3">
+    <Panel class="group relative flex items-center gap-3 p-3">
       <CharacterPortrait name={name()} size="sm" hue={hueFromName(name())} />
       <div class="min-w-0 flex-1">
         <p class="flex items-center gap-1.5 truncate font-medium text-foreground">
@@ -128,7 +129,7 @@ export function MemberPlate(props: MemberPlateProps) {
       <Show when={props.canRemove}>
         <RemoveMemberButton name={name()} onRemove={props.onRemove} />
       </Show>
-    </div>
+    </Panel>
   )
 }
 

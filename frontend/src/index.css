@@ -203,6 +203,23 @@
   background-color: var(--grimorio-gold);
 }
 
+/* A ESCALA DE CONTAINER É A DO TAILWIND, e limiar arbitrário não entra
+ * (ALE-173, P8).
+ *
+ * Havia sete limiares em dezessete usos — `@sm`, `@lg` e `@2xl` nomeados
+ * convivendo com `@[28rem]`, `@[30rem]`, `@[34rem]` e `@[44rem]` — e o oitavo
+ * autor inventaria um oitavo valor, porque não havia de onde escolher.
+ *
+ * A medição mostrou que eles não são sete decisões: todos respondem à MESMA
+ * pergunta, "cabe duas colunas nesta caixa?", medida com números ligeiramente
+ * diferentes. `@[28rem]` já era exatamente o `@md`; os outros três caíram no
+ * degrau vizinho — 30 para `@lg` (32), 34 para `@xl` (36) e 44 para `@2xl`
+ * (42). Nenhum dos seis formatos muda de arranjo por causa disso.
+ *
+ * Container query e não media query quando a decisão é sobre o espaço que a
+ * PEÇA recebe: a mesma tira de equipamento vive na ficha larga e no painel
+ * estreito da sessão, e a janela não sabe disso. */
+
 /* A RECEITA DE FOCO DA CASA (ALE-173, P4).
  *
  * Havia três gramáticas e 12 combinações distintas: o anel do shadcn em sete
