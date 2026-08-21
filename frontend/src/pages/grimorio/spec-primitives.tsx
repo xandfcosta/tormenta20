@@ -137,6 +137,43 @@ export function ColorSwatch(props: {
 }
 
 /**
+ * Duas grafias do MESMO rótulo, lado a lado, com o valor que cada uma resolve.
+ *
+ * Existe para a decisão que não se toma lendo: quando duas partes do app
+ * escrevem a mesma coisa de dois jeitos, a pergunta não é qual código está
+ * certo — é qual das duas o olho prefere. A legenda traz o pixel e onde cada
+ * uma vive hoje.
+ */
+export function ComparaRotulo(props: {
+  texto: string
+  a: { classe: string; nome: string; onde: string }
+  b: { classe: string; nome: string; onde: string }
+}) {
+  const [espA, refA] = createComputedValue('letter-spacing')
+  const [espB, refB] = createComputedValue('letter-spacing')
+  return (
+    <div class="w-full space-y-3">
+      <div class="space-y-0.5">
+        <p ref={refA} class={cn('font-heading uppercase text-grimorio-gold', props.a.classe)}>
+          {props.texto}
+        </p>
+        <p class="font-mono text-3xs text-muted-foreground">
+          {props.a.nome} → {espA()} · {props.a.onde}
+        </p>
+      </div>
+      <div class="space-y-0.5">
+        <p ref={refB} class={cn('font-heading uppercase text-grimorio-gold', props.b.classe)}>
+          {props.texto}
+        </p>
+        <p class="font-mono text-3xs text-muted-foreground">
+          {props.b.nome} → {espB()} · {props.b.onde}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+/**
  * Uma amostra de raio: o canto desenhado pela classe, e ao lado o pixel que
  * ela virou DENTRO desta cena — que é a informação que ninguém consegue prever
  * lendo o TSX, porque a cena redefine o `--radius` (ALE-173).

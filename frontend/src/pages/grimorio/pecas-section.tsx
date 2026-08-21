@@ -4,7 +4,7 @@ import { FramedPanel } from '@/shared/ui/framed-panel'
 import { Input } from '@/shared/ui/input'
 import { VitalBar } from '@/shared/ui/vital-bar'
 import { FieldLabel, SectionLabel, SectionTitle } from '@/shared/ui/section-label'
-import { SpecBlock, SpecSection } from './spec-primitives'
+import { ComparaRotulo, SpecBlock, SpecSection } from './spec-primitives'
 
 /**
  * As peças do kit, desenhadas pelo componente DE VERDADE.
@@ -55,6 +55,25 @@ export function PecasSection() {
             <span class="font-mono tabular-nums text-foreground">+3</span>
           </p>
         </div>
+      </SpecBlock>
+
+      <SpecBlock
+        titulo="O espaçamento do título — decisão pendente"
+        nota="O mesmo título, no mesmo tamanho, escrito de dois jeitos por partes diferentes do app. A divisão é limpa: apertado em painel de tela densa, folgado em passo de cena. No tamanho de 11px a proporção se INVERTE e o folgado ganha de 18 a 4 — o que sugere uma regra (quanto maior, mais apertado) em vez de descuido."
+      >
+        <ComparaRotulo
+          texto="Distribua os atributos"
+          a={{
+            classe: 'text-lg tracking-wide',
+            nome: 'tracking-wide',
+            onde: 'Mochila, Perícias, Grimório, iniciativa',
+          }}
+          b={{
+            classe: 'text-lg tracking-[0.16em]',
+            nome: 'tracking-[0.16em]',
+            onde: 'passos da forja, ferramentas do /gm, a porta',
+          }}
+        />
       </SpecBlock>
 
       <SpecBlock titulo="Campo">
