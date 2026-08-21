@@ -98,9 +98,7 @@ function PericiaBands(props: {
     <>
       <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <SectionTitle
-          id="forge-step-pericias"
-         
-        >
+          id="forge-step-pericias">
           Treine as perícias
         </SectionTitle>
         <p class="text-xs text-muted-foreground">

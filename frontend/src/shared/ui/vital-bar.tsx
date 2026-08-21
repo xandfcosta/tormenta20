@@ -38,8 +38,7 @@ export function VitalBar(props: {
       <FieldLabel
         tom="inherit"
         class="w-7 shrink-0 font-bold"
-        style={{ color: `var(${fillVar()})` }}
-      >
+        style={{ color: `var(${fillVar()})` }}>
         {props.label}
       </FieldLabel>
       <div

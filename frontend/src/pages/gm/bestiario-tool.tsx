@@ -48,9 +48,7 @@ export function BestiarioTool() {
     <section class="mesa-palco flex min-h-0 flex-1 flex-col gap-3" aria-labelledby="mesa-bestiario">
       <div class="flex flex-wrap items-baseline gap-x-3">
         <SectionTitle
-          id="mesa-bestiario"
-         
-        >
+          id="mesa-bestiario">
           Bestiário
         </SectionTitle>
         <p class="text-xs text-muted-foreground">

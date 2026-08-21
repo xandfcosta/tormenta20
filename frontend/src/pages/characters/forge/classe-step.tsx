@@ -82,9 +82,7 @@ export function ClasseStep() {
     <section class="flex min-h-0 flex-1 flex-col gap-3" aria-labelledby="forge-step-classe">
       <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <SectionTitle
-          id="forge-step-classe"
-         
-        >
+          id="forge-step-classe">
           Escolha o ofício
         </SectionTitle>
         <Show

@@ -1,15 +1,15 @@
-import { encounterXp } from '@/shared/rules/xp'
 import { Trash2 } from 'lucide-solid'
 import { For, type JSX, Show } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
+import { encounterXp } from '@/shared/rules/xp'
 import { NumberInput } from '@/shared/ui/number-input'
+import { SectionLabel } from '@/shared/ui/section-label'
 import {
   type EnrichedGroup,
   encounterDifficulty,
   encounterNd,
 } from './encounter'
 import { formatNd } from './monster-format'
-import { SectionLabel } from '@/shared/ui/section-label'
 
 const TONE_COLOR = {
   calm: 'var(--hp-full)',
@@ -73,13 +73,32 @@ export function EncounterComposer(props: EncounterComposerProps) {
         />
       </div>
 
-      <div class="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-sm border border-grimorio-iron bg-muted/20 px-3 py-2">
-        <Ledger label="ND do encontro" value={formatNd(round2(nd()))} />
-        <Ledger
-          label="Dificuldade"
-          value={difficulty().label}
-          color={TONE_COLOR[difficulty().tone]}
-        />
+      {/* O VEREDITO é o bloco principal, e isso é a issue (ALE-170): esta
+          ferramenta existe para responder "esse encontro é duro demais?", e a
+          resposta era uma faixa de 14px — mais discreta que o botão de
+          adicionar criatura logo abaixo. Agora o ND é o número grande e a
+          dificuldade vem ao lado com o peso que ela merece; o XP fica
+          secundário porque ele é consequência, não decisão. */}
+      <div class="flex flex-wrap items-center gap-x-8 gap-y-3 rounded-sm border border-grimorio-iron bg-muted/20 px-4 py-3">
+        <div class="flex items-baseline gap-3">
+          <SectionLabel as="span" class="text-3xs">
+            ND do encontro
+          </SectionLabel>
+          <span class="font-mono text-4xl leading-none text-grimorio-gold tabular-nums">
+            {formatNd(round2(nd()))}
+          </span>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <SectionLabel as="span" class="text-3xs">
+            Dificuldade
+          </SectionLabel>
+          <span
+            class="font-mono text-xl leading-none"
+            style={{ color: TONE_COLOR[difficulty().tone] }}
+          >
+            {difficulty().label}
+          </span>
+        </div>
         <Ledger label="XP por personagem" value={xpEach().toLocaleString('pt-BR')} />
       </div>
 

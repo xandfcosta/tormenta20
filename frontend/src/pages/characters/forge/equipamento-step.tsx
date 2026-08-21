@@ -69,9 +69,7 @@ export function EquipamentoStep() {
   return (
     <section class="flex min-h-0 flex-1 flex-col gap-3" aria-labelledby="forge-step-equipamento">
       <SectionTitle
-        id="forge-step-equipamento"
-       
-      >
+        id="forge-step-equipamento">
         O que você carrega
       </SectionTitle>
 

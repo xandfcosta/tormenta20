@@ -187,3 +187,42 @@ test('alargar a janela nunca tira uma coluna do bestiário', async ({ page }) =>
     [1920, 1440, 1200, 1100, 1040, 1024, 1000, 950, 900, 860, 844, 830, 812, 800, 768, 390],
   )
 })
+
+/**
+ * As colunas do catálogo seguem o PAINEL, e alargar nunca tira uma (ALE-170).
+ *
+ * Mesma classe de defeito que a ALE-172 consertou no bestiário, e por isso o
+ * mesmo guarda: a ferramenta divide a tela com a trilha do `/gm`, então largura
+ * de janela mente por centenas de pixels sobre quanto espaço o painel tem.
+ *
+ * A segunda asserção é a que só o browser faz. Numa lista VIRTUALIZADA "três
+ * colunas" não é grade de CSS — é o agrupamento dos dados antes de entregá-los.
+ * A grade pode declarar três colunas com um cartão só em cada fileira, e a tela
+ * fica com dois terços de vazio à direita enquanto o CSS jura que está certo.
+ * Contar os cartões DENTRO da fileira é o que separa as duas metades.
+ */
+test('alargar a janela nunca tira uma coluna do catálogo', async ({ page }) => {
+  await page.goto('/gm/catalogos')
+  await expect(page.locator('[data-index]').first()).toBeVisible()
+
+  await expectColunasMonotonicas(
+    page,
+    '[data-index] div.grid',
+    [1920, 1440, 1200, 1100, 1024, 1000, 900, 844, 768, 600, 390],
+  )
+
+  await page.setViewportSize({ width: 1920, height: 1080 })
+  await expect(page.locator('[data-index]').first()).toBeVisible()
+  const fileira = await page.evaluate(() => {
+    const grade = document.querySelector('[data-index] div.grid')
+    if (!grade) return null
+    return {
+      declaradas: getComputedStyle(grade).gridTemplateColumns.split(' ').filter(Boolean).length,
+      cartoes: grade.children.length,
+    }
+  })
+  expect(fileira, 'nenhuma fileira pintou em 1920').not.toBeNull()
+  expect(fileira?.cartoes, 'a grade declara colunas que a fileira não preenche').toBe(
+    fileira?.declaradas,
+  )
+})

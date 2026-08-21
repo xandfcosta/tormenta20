@@ -25,9 +25,7 @@ export function EncontrosTool() {
   return (
     <section class="flex min-h-0 flex-1 flex-col gap-3" aria-labelledby="mesa-encontros">
       <SectionTitle
-        id="mesa-encontros"
-       
-      >
+        id="mesa-encontros">
         Construtor de encontros
       </SectionTitle>
 

@@ -1,8 +1,8 @@
-import type { Monster } from '@/shared/api/catalog-types'
 import { For, type JSX, Show } from 'solid-js'
+import type { Monster } from '@/shared/api/catalog-types'
 import { xpForNd } from '@/shared/lib/encounter-math'
-import { MONSTER_TIPO_LABEL, formatNd } from './monster-format'
 import { FieldLabel, SectionLabel, SectionTitle } from '@/shared/ui/section-label'
+import { formatNd, MONSTER_TIPO_LABEL } from './monster-format'
 
 const signed = (n: number) => (n >= 0 ? `+${n}` : String(n))
 
@@ -31,24 +31,6 @@ export function MonsterDetail(props: { monster: Monster }) {
         <Stat label="Deslocamento" value={props.monster.deslocamento} />
       </div>
 
-      <Section title="Atributos">
-        <div class="grid grid-cols-3 gap-1 sm:grid-cols-6">
-          <Stat label="For" value={signed(props.monster.forca)} />
-          <Stat label="Des" value={signed(props.monster.destreza)} />
-          <Stat label="Con" value={signed(props.monster.constituicao)} />
-          <Stat label="Int" value={signed(props.monster.inteligencia)} />
-          <Stat label="Sab" value={signed(props.monster.sabedoria)} />
-          <Stat label="Car" value={signed(props.monster.carisma)} />
-        </div>
-      </Section>
-
-      <Section title="Resistências">
-        <div class="grid grid-cols-3 gap-1">
-          <Stat label="Fortitude" value={signed(props.monster.fortitude)} />
-          <Stat label="Reflexos" value={signed(props.monster.reflexos)} />
-          <Stat label="Vontade" value={signed(props.monster.vontade)} />
-        </div>
-      </Section>
 
       <Show when={props.monster.attacks.length > 0}>
         <Section title="Ataques">
@@ -81,6 +63,32 @@ export function MonsterDetail(props: { monster: Monster }) {
           </ul>
         </Section>
       </Show>
+
+      {/* Atributos e resistências vêm DEPOIS do que a criatura faz (ALE-170).
+          O mestre abre o bestiário no meio do combate para saber o que ela
+          rola AGORA, e antes disso ele atravessava doze estatísticas — três
+          vitais, seis atributos e três resistências — para chegar nos ataques.
+          O bloco que o próprio mestre escreve, o `CreatureStatBlock`, já põe
+          Ataques em primeiro: a casa sabia a ordem certa num lugar e não no
+          outro. */}
+      <Section title="Atributos">
+        <div class="grid grid-cols-3 gap-1 sm:grid-cols-6">
+          <Stat label="For" value={signed(props.monster.forca)} />
+          <Stat label="Des" value={signed(props.monster.destreza)} />
+          <Stat label="Con" value={signed(props.monster.constituicao)} />
+          <Stat label="Int" value={signed(props.monster.inteligencia)} />
+          <Stat label="Sab" value={signed(props.monster.sabedoria)} />
+          <Stat label="Car" value={signed(props.monster.carisma)} />
+        </div>
+      </Section>
+
+      <Section title="Resistências">
+        <div class="grid grid-cols-3 gap-1">
+          <Stat label="Fortitude" value={signed(props.monster.fortitude)} />
+          <Stat label="Reflexos" value={signed(props.monster.reflexos)} />
+          <Stat label="Vontade" value={signed(props.monster.vontade)} />
+        </div>
+      </Section>
     </div>
   )
 }

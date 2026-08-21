@@ -48,9 +48,7 @@ export function ImprovisoTool() {
   return (
     <section class="flex min-h-0 flex-1 flex-col gap-4" aria-labelledby="mesa-improviso">
       <SectionTitle
-        id="mesa-improviso"
-       
-      >
+        id="mesa-improviso">
         Improviso
       </SectionTitle>
 
@@ -154,6 +152,33 @@ function TableCard<T>(props: {
         </p>
       </div>
 
+      {/* O RESULTADO é o maior elemento do cartão, e isso é a issue inteira
+          (ALE-170): esta ferramenta existe para produzir uma linha, e essa
+          linha era 11px — menor que o botão que a pede, menor que o título,
+          o menor elemento da tela. Uma tabela de improviso boa se lê do outro
+          lado da mesa, porque quem rola é o mestre e quem ouve é a mesa.
+
+          O histórico continua pequeno de propósito: ele é referência, não
+          resposta. Antes os dois tinham o mesmo tamanho e a última rolagem se
+          perdia entre as anteriores. */}
+      <Show
+        when={props.entries[0]}
+        fallback={
+          <p class="py-2 text-sm text-muted-foreground">Ainda não rolado.</p>
+        }
+      >
+        {(ultima) => (
+          <div class="flex items-baseline gap-3 py-1">
+            <span class="shrink-0 font-mono text-3xl leading-none text-grimorio-gold tabular-nums">
+              {ultima().roll}
+            </span>
+            <span class="min-w-0 text-base leading-snug text-foreground">
+              {props.render(ultima().result)}
+            </span>
+          </div>
+        )}
+      </Show>
+
       <div class="flex flex-wrap items-center gap-2">
         <Button type="button" size="sm" variant="outline" onClick={props.onRoll}>
           <Dices aria-hidden="true" class="mr-1 size-4" />
@@ -166,24 +191,20 @@ function TableCard<T>(props: {
         </Show>
       </div>
 
-      <Show
-        when={props.entries.length > 0}
-        fallback={<p class="text-2xs text-muted-foreground">Ainda não rolado.</p>}
-      >
-        <ul class="space-y-1">
-          <For each={props.entries}>
-            {(entry, index) => (
-              <li
-                class="flex gap-2 text-2xs"
-                classList={{ 'text-foreground': index() === 0, 'text-muted-foreground': index() > 0 }}
-              >
-                <span class="shrink-0 font-mono text-grimorio-gold">{entry.roll}</span>
+      <Show when={props.entries.length > 1}>
+        <ul class="space-y-0.5 border-t border-grimorio-iron/40 pt-1.5">
+          <For each={props.entries.slice(1)}>
+            {(entry) => (
+              <li class="flex gap-2 text-2xs text-muted-foreground">
+                <span class="shrink-0 font-mono">{entry.roll}</span>
                 <span class="min-w-0">{props.render(entry.result)}</span>
               </li>
             )}
           </For>
         </ul>
       </Show>
+
+
     </div>
   )
 }

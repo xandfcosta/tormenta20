@@ -10,9 +10,7 @@ export function CatalogosTool() {
   return (
     <section class="flex min-h-0 flex-1 flex-col gap-3" aria-labelledby="mesa-catalogos">
       <SectionTitle
-        id="mesa-catalogos"
-       
-      >
+        id="mesa-catalogos">
         Catálogos
       </SectionTitle>
       <CatalogBrowser />

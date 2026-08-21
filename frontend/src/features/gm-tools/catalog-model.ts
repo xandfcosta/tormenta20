@@ -86,6 +86,97 @@ export type CatalogResultRow =
   | { kind: 'power'; key: string; value: CatalogPower }
   | { kind: 'item'; key: string; value: CatalogItem }
 
+/**
+ * Uma linha VISUAL da busca: ou um cabeçalho, que ocupa a largura toda, ou uma
+ * fileira de N resultados lado a lado.
+ *
+ * Existe porque a lista é VIRTUALIZADA (ALE-170): ela renderiza uma linha de
+ * dados por vez, então "duas ou três colunas" não é uma grade de CSS — é
+ * agrupar os dados antes de entregá-los.
+ */
+export type CatalogVisualRow =
+  | { kind: 'header'; key: string; label: string; count: number }
+  | { kind: 'cells'; key: string; cells: CatalogHitRow[] }
+
+/**
+ * Agrupa as linhas em fileiras de `columns` colunas.
+ *
+ * Duas regras, e as duas importam. Um cabeçalho fica SOZINHO na fileira dele —
+ * ele nomeia o grupo inteiro e não pode dividir espaço com um resultado. E o
+ * agrupamento REINICIA a cada cabeçalho: sem isso a última condição dividiria
+ * a fileira com a primeira magia, e o mestre leria duas coisas de catálogos
+ * diferentes lado a lado como se fossem irmãs.
+ *
+ * @example catalogVisualRows(linhas, 2) // [header, cells×2, cells×1, header, …]
+ */
+export function catalogVisualRows(
+  rows: readonly CatalogResultRow[],
+  columns: number,
+): CatalogVisualRow[] {
+  const fileiras: CatalogVisualRow[] = []
+  let grupo: CatalogHitRow[] = []
+
+  const fecha = () => {
+    for (const cells of emFileiras(grupo, columns)) {
+      fileiras.push({ kind: 'cells', key: `cells.${cells[0]?.key}`, cells })
+    }
+    grupo = []
+  }
+
+  for (const row of rows) {
+    if (row.kind !== 'header') {
+      grupo.push(row)
+      continue
+    }
+    fecha()
+    fileiras.push(row)
+  }
+  fecha()
+  return fileiras
+}
+
+/**
+ * Fatia uma lista em fileiras de `colunas` itens, com a última fileira curta.
+ *
+ * @example emFileiras(['a', 'b', 'c'], 2) // [['a', 'b'], ['c']]
+ */
+export function emFileiras<T>(itens: readonly T[], colunas: number): T[][] {
+  const largura = Math.max(1, Math.trunc(colunas))
+  const fileiras: T[][] = []
+  for (let i = 0; i < itens.length; i += largura) {
+    fileiras.push(itens.slice(i, i + largura))
+  }
+  return fileiras
+}
+
+/** Abaixo disto a prosa de uma magia vira uma fita de duas palavras por linha. */
+const LARGURA_MINIMA_DE_CARTAO = 360
+
+/** Acima de três a linha de texto fica curta demais para descrição de regra. */
+const MAXIMO_DE_COLUNAS = 3
+
+/**
+ * Quantas colunas cabem num painel de `largura` px.
+ *
+ * O teto de três não é estética: é a MEDIDA DE LEITURA. Num painel de 1920 uma
+ * coluna só dava ~122 caracteres por linha — mais que o dobro do confortável, e
+ * o olho perde a linha na volta. Três colunas põem isso em ~70, que é a faixa
+ * que a tipografia recomenda, e de quebra cabe três vezes mais condição na
+ * tela (ALE-170).
+ *
+ * Largura 0 significa "ainda não medi" e cai em uma coluna, que é o arranjo
+ * que sempre serve.
+ *
+ * @example catalogColumns(1200) // 3
+ */
+export function catalogColumns(largura: number): number {
+  const cabem = Math.floor(largura / LARGURA_MINIMA_DE_CARTAO)
+  return Math.min(MAXIMO_DE_COLUNAS, Math.max(1, cabem))
+}
+
+/** Uma linha da busca que É um resultado — tudo menos o cabeçalho de grupo. */
+export type CatalogHitRow = Exclude<CatalogResultRow, { kind: 'header' }>
+
 export type SearchableCatalogs = {
   conditions: readonly Condition[]
   spells: readonly CatalogSpell[]

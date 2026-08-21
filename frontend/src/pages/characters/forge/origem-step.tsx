@@ -50,9 +50,7 @@ export function OrigemStep() {
   return (
     <section class="flex min-h-0 flex-1 flex-col gap-3" aria-labelledby="forge-step-origem">
       <SectionTitle
-        id="forge-step-origem"
-       
-      >
+        id="forge-step-origem">
         De onde você veio
       </SectionTitle>
 

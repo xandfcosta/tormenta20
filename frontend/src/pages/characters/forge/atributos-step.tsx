@@ -51,9 +51,7 @@ export function AtributosStep() {
     <section class="flex min-h-0 flex-1 flex-col gap-3" aria-labelledby="forge-step-atributos">
       <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
         <SectionTitle
-          id="forge-step-atributos"
-         
-        >
+          id="forge-step-atributos">
           Distribua os atributos
         </SectionTitle>
         <ModeToggle mode={mode()} onMode={draft.setAttributeMode} />
