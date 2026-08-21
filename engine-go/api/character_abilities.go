@@ -29,6 +29,14 @@ func (s *Server) handleUpdateAbilities(w http.ResponseWriter, r *http.Request) {
 		ClassPowers        *[]string        `json:"classPowers"`
 		ClassChoices       *json.RawMessage `json:"classChoices"`
 		PowerChoices       *json.RawMessage `json:"powerChoices"`
+		// raceAttributeChoices entra aqui na ALE-169: a forja oferece criar o
+		// personagem com o bônus de atributo da raça por colocar ("dá para
+		// criar assim e terminar na ficha"), e sem esta coluna a ficha não
+		// tinha como terminar. Guardado como veio, igual aos vizinhos, e é
+		// seguro: o motor RECUSA uma escolha inválida — contagem errada,
+		// repetida ou no atributo proibido — e não aplica bônus nenhum, em vez
+		// de aplicar demais (engine/collect_rules.go, resolveFloating).
+		RaceAttributeChoices *json.RawMessage `json:"raceAttributeChoices"`
 	}
 	if !decodeJSON(w, r, &body) {
 		return
@@ -54,6 +62,9 @@ func (s *Server) handleUpdateAbilities(w http.ResponseWriter, r *http.Request) {
 	}
 	if body.PowerChoices != nil {
 		add("powerChoices", compactJSON(*body.PowerChoices))
+	}
+	if body.RaceAttributeChoices != nil {
+		add("raceAttributeChoices", compactJSON(*body.RaceAttributeChoices))
 	}
 	if set.empty() {
 		writeError(w, http.StatusBadRequest, "No fields to update")

@@ -1,4 +1,6 @@
 import { caminhoSlotFor } from '@/shared/rules/abilities-caminhos'
+import { resolveAtributoMod } from '@/shared/rules/racas-attr'
+import { racasList } from '@/shared/lib/racas-cache'
 import { slotsForClassLevel } from '@/shared/rules/abilities-classes-slots'
 import {
   allGeneralPowers,
@@ -7,6 +9,7 @@ import {
   getOrigin,
   getRace,
 } from '@/shared/lib/abilities-cache'
+import type { AttributeKey } from '@/shared/api/attribute-keys'
 import type { Character } from '@/shared/api/api'
 import { parseClassChoices } from '@/entities/character/derived'
 import { parseChoices } from './parse-choices'
@@ -50,6 +53,13 @@ function racePendencias(character: Character): Pendencia[] {
   for (const { race: raceId } of character.races) {
     const race = getRace(raceId)
     if (!race) continue
+    if (atributoDeRacaPendente(character, race.name)) {
+      out.push({
+        source: 'raca',
+        label: `Raça: distribuir o bônus de atributo de ${race.name}`,
+        cardId: `raca:${race.id}`,
+      })
+    }
     for (const ability of race.abilities) {
       if (!ability.variants) continue
       const picked = ability.variants.some((v) => choices.includes(v.id))
@@ -151,4 +161,49 @@ function slotsRemainingFor(
  */
 export function escolhasPendentes(total: number): string {
   return total === 1 ? '1 escolha pendente' : `${total} escolhas pendentes`
+}
+
+/**
+ * Se a raça ainda deve uma escolha de atributo — o `+1 ×3` do Humano, a
+ * ascendência do Suraggel (ALE-169).
+ *
+ * PERGUNTA à autoridade em vez de repetir a condição dela: o
+ * `resolveAtributoMod` já sabe quantas escolhas cada raça pede, que elas têm de
+ * ser distintas e qual atributo é proibido, e LANÇA quando a conta não fecha.
+ * Reescrever essas três regras aqui seria a asserção que se re-deriva da
+ * implementação, com a garantia de divergir no dia em que uma raça nova tiver
+ * uma quarta condição.
+ *
+ * Existe porque o Resumo da forja promete, por escrito, "dá para criar assim e
+ * terminar na ficha" — e a ficha não carregava esta pendência. O personagem
+ * ficava ilegal pelo livro ("Sua raça modifica seus atributos", p18) sem outro
+ * conserto além de refazer a forja.
+ */
+function atributoDeRacaPendente(character: Character, raceName: string): boolean {
+  const raca = racasList().find((r) => r.name === raceName)
+  if (!raca) return false
+  const escolha = lerEscolhaDeAtributo(character.raceAttributeChoices)
+  try {
+    resolveAtributoMod(raca, escolha)
+    return false
+  } catch {
+    return true
+  }
+}
+
+function lerEscolhaDeAtributo(raw: string): {
+  floatingPicks?: AttributeKey[]
+  ascendencia?: string
+} {
+  try {
+    const p = JSON.parse(raw) as { floatingPicks?: unknown; ascendencia?: unknown }
+    return {
+      floatingPicks: Array.isArray(p.floatingPicks)
+        ? (p.floatingPicks.filter((x) => typeof x === 'string') as AttributeKey[])
+        : [],
+      ascendencia: typeof p.ascendencia === 'string' ? p.ascendencia : undefined,
+    }
+  } catch {
+    return { floatingPicks: [] }
+  }
 }

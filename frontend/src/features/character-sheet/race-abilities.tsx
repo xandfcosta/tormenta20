@@ -1,7 +1,13 @@
 import { useQueryClient } from '@tanstack/solid-query'
 import type { RaceAbility, RaceDefinition } from '@/shared/api/catalog-types'
-import { For, Show, createMemo, createSignal } from 'solid-js'
-import type { AttributeKey, Character } from '@/shared/api/api'
+import { For, Match, Show, Switch, createMemo, createSignal } from 'solid-js'
+import type {
+  AttributeKey,
+  Character,
+  RaceAttributeChoicesInput,
+} from '@/shared/api/api'
+import { raceAttributeMeta } from '@/shared/lib/race-attribute-meta'
+import { RaceFloatingPicker, RaceSubracePicker } from '@/shared/ui/race-attribute-picker'
 import { cn } from '@/shared/lib/utils'
 import { choiceActions } from './choice-mutations'
 import { pickExclusive } from './choice-lists'
@@ -60,6 +66,37 @@ export function RaceAbilitySection(props: {
 
   const bonusLine = () => formatAttributeBonuses(props.race.attributeBonuses)
 
+  // A escolha de atributo que a forja deixa para depois. Ela promete, no passo
+  // de Resumo, "dá para criar assim e terminar na ficha" — e até a ALE-169 a
+  // ficha não tinha onde terminar. A meta vem do catálogo de raças (o
+  // `atributoMod`), não do `attributeBonuses` do catálogo de habilidades, que
+  // só cobre as raças de modificador FIXO.
+  // Acessores que estreitam, e não cast dentro do JSX: o `Match` não refina uma
+  // união discriminada sozinho, e um cast aqui sobreviveria ao dia em que
+  // alguém acrescentar um terceiro tipo de escolha racial. Mesmo idioma do
+  // controle da forja.
+  const meta = () => raceAttributeMeta(props.race.name)
+  const flutuante = () => {
+    const m = meta()
+    return m.kind === 'floating' ? m : null
+  }
+  const ascendencia = () => {
+    const m = meta()
+    return m.kind === 'subrace' ? m : null
+  }
+  const escolha = () => parseRaceAttrChoice(props.character.raceAttributeChoices)
+
+  const salvar = async (next: RaceAttributeChoicesInput) => {
+    setPending(true)
+    try {
+      await choiceActions(queryClient, props.character.id).setRaceAttributeChoices(next)
+    } catch {
+      // choiceActions já reverteu e avisou o jogador.
+    } finally {
+      setPending(false)
+    }
+  }
+
   return (
     <CollapsibleAbilityCard
       id={`raca:${props.race.id}`}
@@ -74,6 +111,36 @@ export function RaceAbilitySection(props: {
           </p>
         )}
       </Show>
+      <Switch>
+        <Match when={flutuante()} keyed>
+          {(m) => (
+            <div class="mb-2">
+              <RaceFloatingPicker
+                count={m.count}
+                value={m.value}
+                exclude={m.exclude}
+                penalty={m.penalty}
+                picks={(escolha().floatingPicks ?? []) as AttributeKey[]}
+                onChange={(floatingPicks) =>
+                  void salvar({ ...escolha(), floatingPicks })
+                }
+              />
+            </div>
+          )}
+        </Match>
+        <Match when={ascendencia()} keyed>
+          {(m) => (
+            <div class="mb-2">
+              <RaceSubracePicker
+                options={m.options}
+                value={escolha().ascendencia}
+                onChange={(ascendencia) => void salvar({ ...escolha(), ascendencia })}
+              />
+            </div>
+          )}
+        </Match>
+      </Switch>
+
       <ul class="space-y-2">
         <For each={props.race.abilities}>
           {(ability) => (
@@ -131,4 +198,22 @@ function RaceVariantPicker(props: {
       </For>
     </div>
   )
+}
+
+/**
+ * A escolha de atributo guardada no personagem. Tolerante por desenho: um blob
+ * inválido vira "nada escolhido", que é o mesmo que o motor entende.
+ */
+function parseRaceAttrChoice(raw: string): RaceAttributeChoicesInput {
+  try {
+    const p = JSON.parse(raw) as { floatingPicks?: unknown; ascendencia?: unknown }
+    return {
+      floatingPicks: Array.isArray(p.floatingPicks)
+        ? (p.floatingPicks.filter((x) => typeof x === 'string') as AttributeKey[])
+        : [],
+      ascendencia: typeof p.ascendencia === 'string' ? p.ascendencia : undefined,
+    }
+  } catch {
+    return { floatingPicks: [] }
+  }
 }

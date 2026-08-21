@@ -511,6 +511,8 @@ export type UpdateAbilityChoicesInput = {
   classPowers?: string[]
   classChoices?: ClassChoices
   powerChoices?: Record<string, string[]>
+  /** O bônus de atributo da raça, que a forja deixa para depois (ALE-169). */
+  raceAttributeChoices?: RaceAttributeChoicesInput
 }
 
 /** The server echoes back ONLY the blobs it wrote, each already JSON-encoded. */
@@ -520,6 +522,7 @@ export type AbilityChoicesResult = {
   classPowers?: string
   classChoices?: string
   powerChoices?: string
+  raceAttributeChoices?: string
 }
 
 // --- computed sheet -----------------------------------------------------------

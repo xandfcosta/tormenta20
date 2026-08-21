@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { makeCharacter } from '@/entities/character/__fixtures__/character'
 import { characterQueryOptions } from '@/entities/character/queries'
-import type { Character } from '@/shared/api/api'
+import { type Character, api } from '@/shared/api/api'
 import { ConditionalsProvider } from '@/shared/stores/conditionals-context'
 import { createConditionalsStore } from '@/shared/stores/conditionals-store'
 import { PowerUsesProvider } from '@/shared/stores/power-uses-context'
@@ -113,5 +113,40 @@ describe('AbilitiesPanel', () => {
 
     await waitFor(() => expect(update).toHaveBeenCalled())
     expect(update.mock.calls[0][1]).toHaveProperty('originChoices')
+  })
+})
+
+/**
+ * O bônus de atributo da raça, terminado na FICHA (ALE-169).
+ *
+ * A forja oferece criar sem colocar os +1 — o passo de Resumo diz "dá para
+ * criar assim e terminar na ficha" e nomeia a pendência. A ficha então não a
+ * listava e não tinha onde colocá-los: o personagem ficava ilegal pelo livro
+ * ("Sua raça modifica seus atributos", p18) sem conserto que não fosse refazer
+ * a forja. O fixture é um Humano com `raceAttributeChoices` vazio, que é
+ * exatamente o que a forja produz.
+ */
+describe('AbilitiesPanel — o +1 de raça que a forja deixou', () => {
+  it('mostra onde distribuir o bônus, com a conta do que falta', async () => {
+    renderPanel()
+
+    expect(await screen.findByText(/Distribua \+1 em 3 atributos · 0\/3/)).toBeInTheDocument()
+  })
+
+  it('clicar num atributo salva a escolha', async () => {
+    const { user, client } = renderPanel()
+    const escrito: unknown[] = []
+    vi.spyOn(api.characters, 'updateAbilityChoices').mockImplementation(
+      async (_id, input) => {
+        escrito.push(input)
+        return { raceAttributeChoices: JSON.stringify(input.raceAttributeChoices) }
+      },
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'FOR' }))
+
+    await waitFor(() => expect(escrito).toHaveLength(1))
+    expect(escrito[0]).toEqual({ raceAttributeChoices: { floatingPicks: ['strength'] } })
+    expect(client).toBeTruthy()
   })
 })

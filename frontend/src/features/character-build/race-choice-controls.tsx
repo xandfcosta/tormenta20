@@ -1,6 +1,4 @@
-import { ATTRIBUTE_ABBR, ATTRIBUTE_KEYS, type AttributeKey } from '@/shared/api/attribute-keys'
-import { For, Match, Show, Switch } from 'solid-js'
-import { cn } from '@/shared/lib/utils'
+import { Match, Switch } from 'solid-js'
 import {
   type RaceChoice,
   type RaceChoiceMeta,
@@ -8,7 +6,7 @@ import {
   resolveRaceDeltas,
 } from './grant-helpers'
 import { DeltaBadges } from './grant-panels'
-import { FieldLabel } from '@/shared/ui/section-label'
+import { RaceFloatingPicker, RaceSubracePicker } from '@/shared/ui/race-attribute-picker'
 
 export type RaceChoiceControlsProps = {
   raceName: string
@@ -21,6 +19,11 @@ export type RaceChoiceControlsProps = {
  * Osteon, Sereia) get +1 pills with the excluded attribute locked out and the
  * guaranteed penalty spelled out; subrace races (Suraggel) get ascendência
  * cards showing what each one is worth. Fixed races render nothing.
+ *
+ * As pastilhas em si moram em `shared/ui` desde a ALE-169: a FICHA precisa do
+ * mesmo controle, e ela é uma feature irmã — a FSD não deixa ela importar
+ * daqui. O que fica neste arquivo é o que é da forja: ler a meta da raça e
+ * mostrar a prévia dos deltas na ascendência.
  */
 export function RaceChoiceControls(props: RaceChoiceControlsProps) {
   const meta = () => raceChoiceMeta(props.raceName)
@@ -62,66 +65,15 @@ function FloatingPicker(props: {
   choice: RaceChoice
   onChange: (next: RaceChoice) => void
 }) {
-  const picks = () => props.choice.floatingPicks ?? []
-  // The excluded attribute never counts toward the quota, even if a stale draft
-  // carries it — otherwise the counter would claim a pick that grants nothing.
-  const placed = () => picks().filter((a) => a !== props.meta.exclude).length
-
-  const toggle = (attr: AttributeKey) => {
-    if (attr === props.meta.exclude) return
-    if (picks().includes(attr)) {
-      props.onChange({ ...props.choice, floatingPicks: picks().filter((a) => a !== attr) })
-      return
-    }
-    if (placed() < props.meta.count) {
-      props.onChange({ ...props.choice, floatingPicks: [...picks(), attr] })
-    }
-  }
-
   return (
-    <div class="space-y-1.5">
-      <FieldLabel as="p" class="text-2xs font-semibold">
-        Distribua +{props.meta.value} em {props.meta.count} atributos · {placed()}/
-        {props.meta.count}
-      </FieldLabel>
-      <div class="flex flex-wrap gap-1.5">
-        <For each={ATTRIBUTE_KEYS}>
-          {(attr) => {
-            const excluded = () => attr === props.meta.exclude
-            const selected = () => picks().includes(attr)
-            const full = () => placed() >= props.meta.count && !selected()
-            return (
-              <button
-                type="button"
-                aria-pressed={selected()}
-                disabled={excluded() || full()}
-                onClick={() => toggle(attr)}
-                title={excluded() ? `Não pode aumentar ${ATTRIBUTE_ABBR[attr]}` : undefined}
-                class={cn(
-                  'rounded-sm border px-2 py-1 font-mono text-xs transition-colors',
-                  selected()
-                    ? 'border-grimorio-gold bg-accent text-grimorio-gold'
-                    : 'border-grimorio-iron',
-                  (excluded() || full()) && 'opacity-40',
-                )}
-              >
-                {ATTRIBUTE_ABBR[attr]}
-              </button>
-            )
-          }}
-        </For>
-      </div>
-      <Show when={props.meta.penalty}>
-        {(penalty) => (
-          <p class="text-2xs text-muted-foreground">
-            Penalidade fixa:{' '}
-            <span class="font-mono">
-              −{Math.abs(penalty().value)} {ATTRIBUTE_ABBR[penalty().attribute]}
-            </span>
-          </p>
-        )}
-      </Show>
-    </div>
+    <RaceFloatingPicker
+      count={props.meta.count}
+      value={props.meta.value}
+      exclude={props.meta.exclude}
+      penalty={props.meta.penalty}
+      picks={props.choice.floatingPicks ?? []}
+      onChange={(floatingPicks) => props.onChange({ ...props.choice, floatingPicks })}
+    />
   )
 }
 
@@ -132,30 +84,13 @@ function SubracePicker(props: {
   onChange: (next: RaceChoice) => void
 }) {
   return (
-    <div class="space-y-1.5">
-      <FieldLabel as="p" class="text-2xs font-semibold">
-        Escolha a ascendência
-      </FieldLabel>
-      <div class="grid gap-1.5 sm:grid-cols-2">
-        <For each={props.options}>
-          {(option) => (
-            <button
-              type="button"
-              aria-pressed={props.choice.ascendencia === option}
-              onClick={() => props.onChange({ ...props.choice, ascendencia: option })}
-              class={cn(
-                'space-y-1 rounded-sm border p-2 text-left transition-colors',
-                props.choice.ascendencia === option
-                  ? 'border-grimorio-gold bg-accent'
-                  : 'border-grimorio-iron hover:bg-accent',
-              )}
-            >
-              <p class="text-xs font-semibold capitalize">{option}</p>
-              <DeltaBadges deltas={resolveRaceDeltas(props.raceName, { ascendencia: option })} />
-            </button>
-          )}
-        </For>
-      </div>
-    </div>
+    <RaceSubracePicker
+      options={props.options}
+      value={props.choice.ascendencia}
+      onChange={(ascendencia) => props.onChange({ ...props.choice, ascendencia })}
+      preview={(option) => (
+        <DeltaBadges deltas={resolveRaceDeltas(props.raceName, { ascendencia: option })} />
+      )}
+    />
   )
 }

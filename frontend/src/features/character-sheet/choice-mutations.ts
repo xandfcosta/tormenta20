@@ -5,6 +5,7 @@ import { characterQueryOptions } from '@/entities/character/queries'
 import { createCharacterWrite } from './character-write'
 import {
   type Character,
+  type RaceAttributeChoicesInput,
   type UpdateAbilityChoicesInput,
   api,
 } from '@/shared/api/api'
@@ -22,6 +23,10 @@ export type ChoiceActions = {
   setClassChoices: (choices: ClassChoices) => Promise<void>
   /** Sub-choices of a power, keyed by power id. */
   setPowerChoices: (choices: Record<string, string[]>) => Promise<void>
+  /** O bônus de atributo da raça — o `+1 ×3` do Humano, a ascendência do
+   *  Suraggel. A forja deixa criar sem, e é AQUI que ele é terminado
+   *  (ALE-169). */
+  setRaceAttributeChoices: (choice: RaceAttributeChoicesInput) => Promise<void>
 }
 
 /**
@@ -71,5 +76,7 @@ export function choiceActions(queryClient: QueryClient, characterId: number): Ch
     setRaceAbilityChoices: (ids) => write('raceAbilityChoices', { raceAbilityChoices: ids }),
     setClassChoices: (choices) => write('classChoices', { classChoices: choices }),
     setPowerChoices: (choices) => write('powerChoices', { powerChoices: choices }),
+    setRaceAttributeChoices: (choice) =>
+      write('raceAttributeChoices', { raceAttributeChoices: choice }),
   }
 }

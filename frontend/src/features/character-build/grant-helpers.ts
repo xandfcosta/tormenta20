@@ -10,6 +10,7 @@ import {
   raceWithDeformidade,
 } from '@/shared/lib/abilities-cache'
 import { racasByTier, racasList } from '@/shared/lib/racas-cache'
+import { raceAttributeMeta } from '@/shared/lib/race-attribute-meta'
 import { tormentaPowersRecord } from '@/shared/lib/rules-catalog-cache'
 
 /** No elective picks at creation — only auto-granted powers are previewed. */
@@ -271,21 +272,10 @@ export type RaceChoiceMeta =
   | { kind: 'subrace'; options: string[] }
 
 export function raceChoiceMeta(name: string): RaceChoiceMeta {
-  const mod = raceModel(name)?.atributoMod
-  if (!mod) return { kind: 'none' }
-  if (mod.kind === 'floating') {
-    return {
-      kind: 'floating',
-      count: mod.count,
-      value: mod.value,
-      exclude: mod.exclude,
-      penalty: mod.penalty,
-    }
-  }
-  if (mod.kind === 'subraca-gated') {
-    return { kind: 'subrace', options: Object.keys(mod.variants) }
-  }
-  return { kind: 'none' }
+  // Delegado desde a ALE-169: a FICHA precisa da mesma resposta e não pode
+  // importar desta feature, então a regra mudou para `shared/lib`. Este nome
+  // fica porque a forja inteira o usa.
+  return raceAttributeMeta(name)
 }
 
 /** Split the available race names into Comuns / Outras (tier), preserving
