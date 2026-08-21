@@ -5,6 +5,7 @@ import { cn } from '@/shared/lib/utils'
 import type { BagPartition } from './bag-slots'
 import { equipBonuses } from './equip-bonuses'
 import { itemOverlayNames } from './item-describe'
+import { FieldLabel, SectionLabel } from '@/shared/ui/section-label'
 
 export type BagEquippedStripProps = {
   partition: BagPartition
@@ -89,9 +90,9 @@ function PoolBox(
     // que é 1/3 ou 2/3 da tira quando ela está lado a lado.
     <div class="@container space-y-1.5">
       <div class="flex items-baseline justify-between">
-        <h3 class="font-heading text-3xs font-bold uppercase tracking-widest text-grimorio-gold">
+        <SectionLabel as="h3" tom="gold" class="text-3xs font-bold">
           {props.title}
-        </h3>
+        </SectionLabel>
         <span
           class={cn(
             'font-mono text-xs',
@@ -130,9 +131,9 @@ function EquippedCard(props: {
             aria-label={`Abrir ${item().name}`}
             class="block w-[calc(100%-1.5rem)] text-left"
           >
-            <span class="block text-4xs uppercase tracking-widest text-muted-foreground">
+            <FieldLabel class="text-4xs block">
               {props.label}
-            </span>
+            </FieldLabel>
             <span class="block truncate text-sm font-semibold text-grimorio-gold" title={item().name}>
               {item().name}
             </span>
@@ -185,7 +186,7 @@ function EmptySlot(props: { label: string; wide?: boolean }) {
         props.wide && 'col-span-2',
       )}
     >
-      <span class="text-4xs uppercase tracking-widest text-muted-foreground">{props.label}</span>
+      <FieldLabel class="text-4xs">{props.label}</FieldLabel>
       <span class="text-xs text-muted-foreground">vazio</span>
     </div>
   )

@@ -16,6 +16,7 @@ import {
 } from './conditional-target-label'
 import { signed } from './signed'
 import { usePowerActions } from './use-power-actions'
+import { SectionTitle } from '@/shared/ui/section-label'
 
 export type StanceGroup = { flag: string; entries: ConditionalEntry[] }
 
@@ -76,9 +77,9 @@ export function StancesSection(props: { character: Character }) {
   return (
     <Show when={groups().length > 0}>
       <section class="rounded-none border border-grimorio-iron p-3">
-        <h3 class="font-heading text-sm uppercase tracking-wide text-grimorio-gold">
+        <SectionTitle as="h3" contexto="painel" class="text-sm">
           Posturas ativas
-        </h3>
+        </SectionTitle>
         <ul class="mt-2 space-y-1">
           <For each={groups()}>
             {(group) => <StanceCard group={group} character={props.character} />}

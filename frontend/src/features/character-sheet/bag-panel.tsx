@@ -17,6 +17,7 @@ import { CatalogAddDialog } from './catalog-add-dialog'
 import { formatLoad, loadLimitLabel } from './item-describe'
 import { ItemFormDialog } from './item-form-dialog'
 import { itemActions, itemWriteMessage } from './item-mutations'
+import { FieldLabel, SectionLabel, SectionTitle } from '@/shared/ui/section-label'
 
 /**
  * "Mochila" — the game-bag block that replaced the old Inventário table and
@@ -59,7 +60,7 @@ export function BagPanel(props: { character: Character }) {
     <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-none border border-grimorio-iron bg-grimorio-panel">
       <div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
         <div class="min-w-0">
-          <h2 class="font-heading text-lg uppercase tracking-wide text-grimorio-gold">Mochila</h2>
+          <SectionTitle contexto="painel">Mochila</SectionTitle>
           <p class="text-3xs text-muted-foreground sm:text-xs">
             carga{' '}
             <span class={cn('font-mono', over() ? 'text-destructive' : 'text-foreground')}>
@@ -67,9 +68,9 @@ export function BagPanel(props: { character: Character }) {
             </span>{' '}
             / {max()}
             <Show when={over()}>
-              <span class="ml-2 text-3xs uppercase tracking-widest text-destructive">
+              <FieldLabel tom="inherit" class="ml-2 text-destructive">
                 sobrecarga
-              </span>
+              </FieldLabel>
             </Show>
             <span class="ml-2">
               • {loadLimitLabel(max(), sheet().attributes.strength.total)}
@@ -108,9 +109,9 @@ export function BagPanel(props: { character: Character }) {
 
         <div class="space-y-2">
           <div class="flex items-baseline justify-between">
-            <h3 class="font-heading text-3xs font-bold uppercase tracking-widest text-grimorio-gold">
+            <SectionLabel as="h3" tom="gold" class="text-3xs font-bold">
               Mochila (guardado)
-            </h3>
+            </SectionLabel>
             <span class="font-mono text-xs text-muted-foreground">
               {partition().stowed.length} ite{partition().stowed.length === 1 ? 'm' : 'ns'}
             </span>

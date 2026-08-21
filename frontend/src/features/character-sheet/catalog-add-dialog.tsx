@@ -20,6 +20,7 @@ import {
 import { formatLoad } from './item-describe'
 import { itemWriteMessage } from './item-mutations'
 import { normalize } from './normalize'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 /**
  * Catalog entries matching the picker's two filters. Accent-insensitive on
@@ -132,7 +133,7 @@ export function CatalogAddDialog(props: CatalogAddDialogProps) {
           </DialogHeader>
           <form class="space-y-4" onSubmit={submit} noValidate>
             <div class="space-y-1">
-              <span class="text-3xs uppercase tracking-widest text-muted-foreground">item</span>
+              <FieldLabel>item</FieldLabel>
               <div class="flex gap-2">
                 <Input
                   value={search()}

@@ -7,6 +7,7 @@ import type { StatsProps } from './combat-stats'
 import { signed } from './signed'
 import { StatRowList } from './stat-box'
 import { critLabel, weaponCardRows } from './stat-rows'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 /**
  * The wielded weapons as ready-to-roll formulas — "Machado · +10 · 1d12+7 ·
@@ -50,9 +51,9 @@ function WeaponCardTile(props: { card: WeaponCard }) {
         title={`${props.card.skill} ${signed(props.card.attack)} · dano ${damageLabel()} · crítico ${critLabel(props.card)}`}
         class="flex cursor-pointer flex-col items-center rounded-none border-2 border-destructive/50 bg-grimorio-panel p-2 text-center transition-colors hover:bg-destructive/10"
       >
-        <span class="max-w-full truncate text-4xs font-bold uppercase tracking-widest text-destructive/80">
+        <FieldLabel tom="inherit" class="text-4xs max-w-full truncate font-bold text-destructive/80">
           {props.card.name}
-        </span>
+        </FieldLabel>
         <span class="mt-0.5 font-mono text-sm font-bold leading-tight text-foreground">
           {signed(props.card.attack)} · {damageLabel()}
         </span>
@@ -68,17 +69,17 @@ function WeaponCardTile(props: { card: WeaponCard }) {
         </DialogHeader>
         <div class="space-y-3 text-sm">
           <div>
-            <p class="text-xs font-bold uppercase tracking-widest text-destructive/80">
+            <FieldLabel as="p" tom="inherit" class="text-xs font-bold text-destructive/80">
               Ataque ({props.card.skill}) {signed(props.card.attack)}
-            </p>
+            </FieldLabel>
             <div class="mt-1">
               <StatRowList rows={rows().attackRows} />
             </div>
           </div>
           <div>
-            <p class="text-xs font-bold uppercase tracking-widest text-destructive/80">
+            <FieldLabel as="p" tom="inherit" class="text-xs font-bold text-destructive/80">
               Dano {damageLabel()} · crítico {critLabel(props.card)}
-            </p>
+            </FieldLabel>
             <div class="mt-1">
               <Show
                 when={rows().damageRows.length > 0}

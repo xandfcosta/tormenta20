@@ -12,6 +12,7 @@ import { type CardFocus, CollapsibleAbilityCard } from './collapsible-ability-ca
 import { GeneralPowersPool } from './general-powers-pool'
 import { parseChoices } from './parse-choices'
 import { ClassPowerRow } from './power-rows'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 /** Value the Select uses for "no pick" — an empty option clears the choice. */
 const NO_CHOICE = ''
@@ -61,9 +62,9 @@ function ClassChoicesPicker(props: {
   return (
     <Show when={devotoOptions() !== null || showCaminho()}>
       <div class="mb-3 space-y-2">
-        <p class="text-3xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <FieldLabel as="p" class="font-semibold">
           Escolhas
-        </p>
+        </FieldLabel>
         <Show when={devotoOptions()}>
           {(deuses) => (
             <ChoiceSelect
@@ -273,9 +274,9 @@ export function ClassesSection(props: {
 
 function GroupTitle(props: { children: JSX.Element }) {
   return (
-    <p class="mb-1 text-3xs font-semibold uppercase tracking-wide text-muted-foreground">
+    <FieldLabel as="p" class="mb-1 font-semibold">
       {props.children}
-    </p>
+    </FieldLabel>
   )
 }
 

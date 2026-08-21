@@ -36,9 +36,25 @@ import { cn } from '@/shared/lib/utils'
 const rotuloVariants = cva('uppercase', {
   variants: {
     papel: {
-      titulo: 'font-heading text-lg tracking-[0.16em]',
+      titulo: 'font-heading text-lg',
       secao: 'font-heading text-2xs tracking-[0.16em]',
       campo: 'text-3xs tracking-widest',
+    },
+    /**
+     * O espaçamento do TÍTULO depende de onde ele está (ALE-173, P2). O código
+     * já dizia isso antes de alguém decidir: `tracking-wide` estava em painel
+     * de tela densa — Mochila, Perícias, Grimório, iniciativa — e `[0.16em]`
+     * em passo de forja, ferramenta do /gm e na porta. A divisão é limpa
+     * demais para ser deriva.
+     *
+     * A razão é de leitura: um passo de cena é o único assunto da tela e o
+     * título pode respirar; um cabeçalho de painel disputa espaço com nove
+     * outros, e apertar é o que o mantém legível ao lado dos vizinhos. Medido,
+     * 0,45px contra 2,88px no mesmo tamanho.
+     */
+    contexto: {
+      cena: '',
+      painel: '',
     },
     tom: {
       gold: 'text-grimorio-gold',
@@ -46,10 +62,20 @@ const rotuloVariants = cva('uppercase', {
       inherit: '',
     },
   },
-  defaultVariants: { papel: 'secao', tom: 'muted' },
+  // COMPOSTA, e não solta: `contexto` só vale para o TÍTULO. Como variante
+  // solta ela emitia um `tracking` em cima do que o papel já define, e o
+  // `FieldLabel` — que é `tracking-widest` — saía com o espaçamento do título,
+  // porque o último a entrar na string vence o merge. Peguei medindo o que
+  // cada variante emite, não lendo.
+  compoundVariants: [
+    { papel: 'titulo', contexto: 'cena', class: 'tracking-[0.16em]' },
+    { papel: 'titulo', contexto: 'painel', class: 'tracking-wide' },
+  ],
+  defaultVariants: { papel: 'secao', tom: 'muted', contexto: 'cena' },
 })
 
 export type RotuloTom = NonNullable<VariantProps<typeof rotuloVariants>['tom']>
+export type RotuloContexto = NonNullable<VariantProps<typeof rotuloVariants>['contexto']>
 
 type RotuloProps = Omit<ComponentProps<'span'>, 'style'> & {
   /**
@@ -59,6 +85,8 @@ type RotuloProps = Omit<ComponentProps<'span'>, 'style'> & {
    */
   as?: ValidComponent
   tom?: RotuloTom
+  /** Só o `SectionTitle` olha: apertado em painel denso, folgado em passo de cena. */
+  contexto?: RotuloContexto
   /** Só para cor que o CSS não sabe de antemão — a barra vital pinta o rótulo
    *  com a mesma variável do preenchimento, que muda com o valor. */
   style?: JSX.CSSProperties | string
@@ -68,11 +96,22 @@ function Rotulo(props: RotuloProps & { papel: 'titulo' | 'secao' | 'campo'; padr
   // O resto dos atributos passa direto: um rótulo vira `title` de dica, `for`
   // de campo e `aria-*` conforme o sítio, e enumerá-los aqui só adiaria o
   // próximo que faltasse.
-  const [local, rest] = splitProps(props, ['as', 'tom', 'class', 'papel', 'padrao', 'children'])
+  const [local, rest] = splitProps(props, [
+    'as',
+    'tom',
+    'contexto',
+    'class',
+    'papel',
+    'padrao',
+    'children',
+  ])
   return (
     <Dynamic
       component={local.as ?? local.padrao}
-      class={cn(rotuloVariants({ papel: local.papel, tom: local.tom }), local.class)}
+      class={cn(
+        rotuloVariants({ papel: local.papel, tom: local.tom, contexto: local.contexto }),
+        local.class,
+      )}
       {...rest}
     >
       {local.children}

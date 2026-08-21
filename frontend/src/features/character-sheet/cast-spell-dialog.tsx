@@ -27,6 +27,7 @@ import { cn } from '@/shared/lib/utils'
 import { augmentPicksFrom, augmentPmFor, isAugmentLocked } from './spell-augments'
 import { computedSheetFor } from '@/entities/character/computed-sheet'
 import { spellActions } from './spell-mutations'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 /**
  * Cast dialog — the player picks stacks per aprimoramento (0 = not taken;
@@ -165,9 +166,9 @@ export function CastSpellDialog(props: {
             }
           >
             <div class="space-y-2">
-              <p class="text-3xs uppercase tracking-widest text-muted-foreground">
+              <FieldLabel as="p">
                 Aprimoramentos
-              </p>
+              </FieldLabel>
               <ul class="space-y-2">
                 <For each={props.spell.augments}>
                   {(augment, index) => (
@@ -185,9 +186,9 @@ export function CastSpellDialog(props: {
           </Show>
 
           <div class="flex items-center justify-between rounded-none border border-border bg-muted px-3 py-2">
-            <span class="text-xs uppercase tracking-widest text-muted-foreground">
+            <FieldLabel class="text-xs">
               Custo total
-            </span>
+            </FieldLabel>
             <span
               class={cn(
                 'font-mono text-lg font-bold',

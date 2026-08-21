@@ -16,6 +16,7 @@ import {
 } from './power-play-groups'
 import { ownedPowerSpec } from './power-spec-resolver'
 import { ownedAbilities } from './sheet-search-index'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 /**
  * Play-mode Poderes list: AÇÕES ordered for the table on top, PASSIVAS
@@ -69,9 +70,9 @@ export function PowerPlayList(props: { character: Character }) {
 
 function GroupHeading(props: { children: string }) {
   return (
-    <h4 class="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+    <FieldLabel as="h4" class="text-2xs font-semibold">
       {props.children}
-    </h4>
+    </FieldLabel>
   )
 }
 

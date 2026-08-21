@@ -17,6 +17,7 @@ import { FactChips } from './fact-chips'
 import { ITEM_DIALOG_CONTENT, ITEM_DIALOG_TITLE } from './item-dialog-kit'
 import { ModifierList } from './modifier-list'
 import { normalize } from './normalize'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 /**
  * Manual self-apply of a spell buff as a scene/day ActiveEffect. A buff is
@@ -126,9 +127,9 @@ function BuffRow(props: { spell: CatalogSpell; disabled: boolean; onPick: () => 
     >
       <div class="flex items-center justify-between gap-2">
         <span class="truncate text-sm font-medium text-foreground">{props.spell.name}</span>
-        <span class="shrink-0 text-3xs uppercase text-muted-foreground">
+        <FieldLabel class="shrink-0">
           {props.spell.buff?.defaultScope === 'day' ? 'dia' : 'cena'}
-        </span>
+        </FieldLabel>
       </div>
       <ModifierList modifiers={modifiers()} />
       <FactChips facts={props.spell.buff?.facts ?? []} />

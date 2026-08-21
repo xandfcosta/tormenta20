@@ -42,6 +42,40 @@ describe('a família de rótulos', () => {
     expect(screen.getByRole('group', { name: 'Atributos' })).toBeTruthy()
   })
 
+  /**
+   * Cada papel mantém o PRÓPRIO espaçamento (ALE-173, P2).
+   *
+   * Esta é a única asserção de classe do arquivo, e ela existe porque o defeito
+   * que pega não tem outra testemunha: `contexto` nasceu como variante solta e
+   * emitia um `tracking` em cima do que o papel já definia — o rótulo de campo
+   * saía com o espaçamento do TÍTULO, porque o último a entrar na string vence
+   * o merge. Em jsdom nenhuma classe resolve, então medir o pixel não é opção;
+   * o que dá para afirmar é que os três não colidem.
+   *
+   * O contexto só existe para o título, e a divisão é decisão do dono: um passo
+   * de cena respira, um cabeçalho de painel disputa espaço com nove vizinhos.
+   */
+  it('cada papel guarda o próprio espaçamento', () => {
+    render(() => (
+      <div>
+        <SectionTitle as="p">cena</SectionTitle>
+        <SectionTitle as="p" contexto="painel">
+          painel
+        </SectionTitle>
+        <SectionLabel>bloco</SectionLabel>
+        <FieldLabel>campo</FieldLabel>
+      </div>
+    ))
+
+    const espacamento = (texto: string) =>
+      [...screen.getByText(texto).classList].filter((c) => c.startsWith('tracking-'))
+
+    expect(espacamento('cena')).toEqual(['tracking-[0.16em]'])
+    expect(espacamento('painel')).toEqual(['tracking-wide'])
+    expect(espacamento('bloco')).toEqual(['tracking-[0.16em]'])
+    expect(espacamento('campo')).toEqual(['tracking-widest'])
+  })
+
   it('o id chega, para o painel poder ser rotulado por ele', () => {
     render(() => <SectionTitle id="mesa-bestiario">Bestiário</SectionTitle>)
 

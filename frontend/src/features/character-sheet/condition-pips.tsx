@@ -6,6 +6,7 @@ import { conditionsRecord } from '@/shared/lib/rules-catalog-cache'
 import { cn } from '@/shared/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { parseActiveConditions } from './active-conditions'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 /**
  * The character's active conditions at a glance. Lives here, not inside the
@@ -61,12 +62,12 @@ export function ConditionPips(props: { character: Character; class?: string; min
 function ConditionDetail(props: { id: ConditionId }) {
   return (
     <div>
-      <p class="font-semibold uppercase">
+      <FieldLabel as="p" class="font-semibold">
         {conditionsRecord()[props.id].name}{' '}
         <span class="font-normal normal-case text-[color:var(--hp-hurt)]">
           {conditionEffectSummary(props.id)}
         </span>
-      </p>
+      </FieldLabel>
       <p class="text-muted-foreground">{conditionsRecord()[props.id].description}</p>
     </div>
   )

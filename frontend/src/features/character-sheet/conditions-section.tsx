@@ -9,6 +9,7 @@ import { cn } from '@/shared/lib/utils'
 import { PickerCombobox } from '@/shared/ui/picker-combobox'
 import { parseActiveConditions } from './active-conditions'
 import { conditionActions } from './effect-mutations'
+import { SectionTitle } from '@/shared/ui/section-label'
 
 export type ConditionEditing = {
   active: () => ConditionId[]
@@ -68,9 +69,9 @@ export function ConditionsSection(props: { character: Character }) {
 
   return (
     <section class="space-y-2 rounded-none border border-grimorio-iron p-3">
-      <h3 class="font-heading text-sm uppercase tracking-wide text-grimorio-gold">
+      <SectionTitle as="h3" contexto="painel" class="text-sm">
         Condições (p394)
-      </h3>
+      </SectionTitle>
       <Show when={conditions.active().length > 0}>
         <ul class="flex flex-wrap gap-1.5">
           <For each={conditions.active()}>

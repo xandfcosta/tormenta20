@@ -9,6 +9,7 @@ import { cn } from '@/shared/lib/utils'
 import { type ConditionalGroup, situationalGroups } from './conditional-groups'
 import { describeConditionalTarget } from './conditional-target-label'
 import { signed } from './signed'
+import { FieldLabel, SectionTitle } from '@/shared/ui/section-label'
 
 /**
  * "Situação" — the opt-in modifiers that depend on context (terrain, target
@@ -50,9 +51,9 @@ function ItemFlagList(props: { effects: ItemFlagEffect[] }) {
   return (
     <Show when={props.effects.length > 0}>
       <div class="space-y-1">
-        <p class="text-3xs font-bold uppercase tracking-widest text-muted-foreground">
+        <FieldLabel as="p" class="font-bold">
           Sempre ativos (itens equipados)
-        </p>
+        </FieldLabel>
         <ul class="space-y-1">
           <For each={props.effects}>
             {(effect) => (
@@ -90,9 +91,9 @@ function ToggleableConditionals(props: { character: Character; groups: Condition
   return (
     <Show when={props.groups.length > 0}>
       <div class="flex items-center justify-between gap-2">
-        <h3 class="font-heading text-sm uppercase tracking-wide text-grimorio-gold">
+        <SectionTitle as="h3" contexto="painel" class="text-sm">
           Situação — opt-in por contexto
-        </h3>
+        </SectionTitle>
         <Show when={activeCount() > 0}>
           <Button type="button" variant="ghost" size="sm" class="h-6 px-2 text-xs" onClick={clearShown}>
             Limpar

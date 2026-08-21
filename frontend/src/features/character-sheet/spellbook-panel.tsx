@@ -18,6 +18,7 @@ import { VirtualList } from '@/shared/ui/virtual-list'
 import { normalize } from './normalize'
 import { CIRCLE_LABEL, SCHOOL_LABEL } from './spell-labels'
 import { SpellRow } from './spell-row'
+import { FieldLabel, SectionTitle } from '@/shared/ui/section-label'
 
 const CIRCLES: readonly SpellCircle[] = [0, 1, 2, 3, 4, 5]
 
@@ -63,10 +64,10 @@ export function SpellbookPanel(props: { character: Character }) {
     <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-none border border-grimorio-iron bg-grimorio-panel">
       <div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
         <div class="flex items-baseline gap-3">
-          <h2 class="flex items-center gap-2 font-heading text-lg uppercase tracking-wide text-grimorio-gold">
+          <SectionTitle contexto="painel" class="flex items-center gap-2">
             <BookOpen aria-hidden="true" class="size-4" />
             Grimório
-          </h2>
+          </SectionTitle>
           <p class="text-3xs text-muted-foreground sm:text-xs">
             {learned().length} aprendida{learned().length === 1 ? '' : 's'}
           </p>
@@ -82,9 +83,9 @@ export function SpellbookPanel(props: { character: Character }) {
 
       <Show when={granted().length > 0}>
         <div class="shrink-0 space-y-1 border-b border-grimorio-iron px-2 py-1">
-          <p class="px-2 pt-1 text-3xs font-bold uppercase tracking-widest text-muted-foreground">
+          <FieldLabel as="p" class="px-2 pt-1 font-bold">
             Concedidas por poderes
-          </p>
+          </FieldLabel>
           <For each={granted()}>
             {(entry) => (
               <SpellRow

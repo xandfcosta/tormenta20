@@ -26,6 +26,7 @@ import {
 import { ItemFormDialog } from './item-form-dialog'
 import { type ItemActions, itemWriteMessage } from './item-mutations'
 import { OverlayPickerDialog, acceptsOverlays } from './overlay-picker-dialog'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 export type BagItemSheetProps = {
   item: CharacterItem
@@ -210,9 +211,9 @@ function AppliedOverlays(props: { item: CharacterItem }) {
   return (
     <Show when={overlays().length > 0}>
       <div class="space-y-1 text-xs">
-        <p class="text-3xs uppercase tracking-widest text-muted-foreground">
+        <FieldLabel as="p">
           Melhorias & material
-        </p>
+        </FieldLabel>
         <For each={overlays()}>
           {(overlay) => (
             <p>

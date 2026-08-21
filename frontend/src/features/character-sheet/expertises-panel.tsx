@@ -15,6 +15,7 @@ import { expertiseActions } from './expertise-mutations'
 import { ExpertiseRow } from './expertise-row'
 import { normalize } from './normalize'
 import type { SheetPanelProps } from './sheet-sections'
+import { SectionTitle } from '@/shared/ui/section-label'
 
 // Resistências first — "teste de Reflexos!" is the hottest lookup at the table,
 // so they are pinned above the alphabetical rest.
@@ -66,7 +67,7 @@ export function ExpertisesPanel(props: SheetPanelProps) {
     <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-none border border-grimorio-iron bg-grimorio-panel">
       <div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
         <div class="flex items-baseline gap-3">
-          <h2 class="font-heading text-lg uppercase tracking-wide text-grimorio-gold">Perícias</h2>
+          <SectionTitle contexto="painel">Perícias</SectionTitle>
           <p class="text-3xs text-muted-foreground sm:text-xs">
             treino +{trainingBonusForLevel(props.character.level)} • ½ nível{' '}
             {Math.floor(props.character.level / 2)}

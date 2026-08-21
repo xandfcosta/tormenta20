@@ -4,13 +4,14 @@ import { For, type JSX, Show } from 'solid-js'
 import type { PrerequisiteCheck } from '@/entities/character/derived'
 import { cn } from '@/shared/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 /** Kind pill ("combate", "destino"…) shown next to a power's name. */
 export function PowerKindBadge(props: { kind: PowerKind }) {
   return (
-    <span class="rounded-none bg-muted px-1 py-px text-4xs uppercase tracking-wide text-muted-foreground">
+    <FieldLabel class="text-4xs rounded-none bg-muted px-1 py-px">
       {props.kind}
-    </span>
+    </FieldLabel>
   )
 }
 

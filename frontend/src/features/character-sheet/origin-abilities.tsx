@@ -9,6 +9,7 @@ import { toggleWithLimit } from './choice-lists'
 import { choiceActions } from './choice-mutations'
 import { type CardFocus, CollapsibleAbilityCard } from './collapsible-ability-card'
 import { parseChoices } from './parse-choices'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 const ORIGIN_BENEFIT_LIMIT = 2
 
@@ -141,9 +142,9 @@ function OriginBenefitRow(props: {
             {props.benefit.kind === 'pericia' ? 'Perícia' : 'Poder'}
           </span>
           <Show when={props.isUnique}>
-            <span class="rounded-none bg-muted px-1 text-4xs font-semibold uppercase tracking-wide text-foreground">
+            <FieldLabel tom="inherit" class="text-4xs rounded-none bg-muted px-1 font-semibold text-foreground">
               Único
-            </span>
+            </FieldLabel>
           </Show>
         </div>
         <p class="mt-0.5 text-2xs leading-snug text-muted-foreground">

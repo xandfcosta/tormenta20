@@ -17,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { ExpertiseBreakdown } from './expertise-breakdown'
 import type { ExpertisePatch } from './expertise-mutations'
 import { signed } from './signed'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 export type ExpertiseRowProps = {
   character: Character
@@ -302,7 +303,7 @@ function AttributeSelect(props: {
 function Chip(props: { label: string; value: string }) {
   return (
     <span class="inline-flex items-center gap-1 rounded-full border border-grimorio-iron px-2 py-0.5 text-3xs text-muted-foreground">
-      <span class="uppercase tracking-wider">{props.label}</span>
+      <FieldLabel>{props.label}</FieldLabel>
       <span class="font-mono text-foreground">{props.value}</span>
     </span>
   )

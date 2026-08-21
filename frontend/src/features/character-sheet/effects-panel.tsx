@@ -3,6 +3,7 @@ import { ActiveEffectsSection } from './active-effects-section'
 import { ConditionsSection } from './conditions-section'
 import { SituationalSection } from './situational-section'
 import { StancesSection } from './stances-section'
+import { SectionTitle } from '@/shared/ui/section-label'
 
 /**
  * The Efeitos block — everything currently changing this character's numbers,
@@ -22,7 +23,7 @@ export function EffectsPanel(props: { character: Character }) {
   return (
     <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-none border border-grimorio-iron bg-grimorio-panel">
       <div class="shrink-0 border-b border-grimorio-iron px-3 py-2 sm:px-4">
-        <h2 class="font-heading text-lg uppercase tracking-wide text-grimorio-gold">Efeitos</h2>
+        <SectionTitle contexto="painel">Efeitos</SectionTitle>
       </div>
       <div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3 sm:p-4">
         <ConditionsSection character={props.character} />

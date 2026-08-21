@@ -4,6 +4,7 @@ import { ATTRIBUTE_ABBR, ATTRIBUTE_KEYS } from '@/entities/character/expertise'
 import type { Character } from '@/shared/api/api'
 import { cn } from '@/shared/lib/utils'
 import { signed } from './signed'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 /**
  * The six attribute boxes. `class` sets the column template, so the caller (HUD
@@ -35,9 +36,9 @@ export function AttributesGrid(props: {
 function AttributeBox(props: { label: string; value: number }) {
   return (
     <div class="rounded-none border-2 border-grimorio-iron bg-grimorio-panel p-2 text-center">
-      <p class="text-4xs font-bold uppercase tracking-widest text-muted-foreground">
+      <FieldLabel as="p" class="text-4xs font-bold">
         {props.label}
-      </p>
+      </FieldLabel>
       <p class="mt-0.5 text-2xl font-bold leading-none text-foreground">{signed(props.value)}</p>
     </div>
   )

@@ -11,6 +11,7 @@ import { ApplyEffectDialog } from './apply-effect-dialog'
 import { effectActions } from './effect-mutations'
 import { FactChips } from './fact-chips'
 import { ModifierList } from './modifier-list'
+import { SectionTitle } from '@/shared/ui/section-label'
 
 /**
  * "Efeitos ativos" — consumables and spell buffs that were used and are granting
@@ -49,9 +50,9 @@ export function ActiveEffectsSection(props: { character: Character }) {
   return (
     <section class="rounded-none border border-grimorio-iron p-3">
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <h3 class="font-heading text-sm uppercase tracking-wide text-grimorio-gold">
+        <SectionTitle as="h3" contexto="painel" class="text-sm">
           Efeitos ativos
-        </h3>
+        </SectionTitle>
         <div class="flex flex-wrap gap-1">
           <ApplyEffectDialog character={props.character} />
           <ConfirmDialog

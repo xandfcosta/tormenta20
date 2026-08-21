@@ -8,6 +8,7 @@ import { cn } from '@/shared/lib/utils'
 import { hpFillVar } from '@/shared/ui/vital-bar'
 import { type TempPoolControl, ResourceAdjustDialog } from '@/shared/ui/resource-adjust-dialog'
 import { createVitalActions } from './vital-mutations'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 /**
  * PV e PM com os controles de ajuste — o par que o HUD da ficha e a faixa do
@@ -100,12 +101,12 @@ function VitalRow(props: VitalRowProps) {
 
   return (
     <div class="flex items-center gap-1.5 sm:gap-2">
-      <span
-        class="w-9 shrink-0 text-3xs font-bold uppercase tracking-wider"
+      <FieldLabel
+       
         style={{ color: `var(${fillVar()})` }}
-      >
+       class="w-9 shrink-0 font-bold">
         {props.label}
-      </span>
+      </FieldLabel>
       {/* − sits on the far side of + so a greasy thumb never heals when it
           meant to hurt. Damage goes out UNCLAMPED: the server routes it
           temp-first, so a shift−5 at 3 PV still drains 5 from the pool. */}

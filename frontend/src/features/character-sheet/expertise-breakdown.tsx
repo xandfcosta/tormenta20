@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from '@/shared/ui/dialog'
 import { signed } from './signed'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 export type ExpertiseBreakdownProps = {
   name: string
@@ -55,7 +56,7 @@ export function ExpertiseBreakdown(props: ExpertiseBreakdownProps) {
             )}
           </For>
           <div class="mt-2 flex items-center justify-between rounded-none border border-grimorio-iron bg-grimorio-panel-raised px-3 py-2">
-            <span class="text-xs uppercase tracking-widest text-muted-foreground">Total</span>
+            <FieldLabel class="text-xs">Total</FieldLabel>
             <span
               class="flex items-center gap-1.5 font-mono text-2xl font-bold"
               classList={{

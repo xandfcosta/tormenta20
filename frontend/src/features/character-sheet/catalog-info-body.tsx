@@ -4,6 +4,7 @@ import { For, type JSX, Show } from 'solid-js'
 import { FactChips } from './fact-chips'
 import { describeCondition, describeModifierTarget, formatLoad } from './item-describe'
 import { signed } from './signed'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 /**
  * The item's full sheet — read inside two dialogs (the catálogo preview and the
@@ -85,7 +86,7 @@ export function CatalogInfoBody(props: { catalog: CatalogItem }) {
 function InfoBlock(props: { title: string; children: JSX.Element }) {
   return (
     <div class="space-y-0.5">
-      <p class="text-3xs uppercase tracking-widest text-muted-foreground">{props.title}</p>
+      <FieldLabel as="p">{props.title}</FieldLabel>
       {props.children}
     </div>
   )

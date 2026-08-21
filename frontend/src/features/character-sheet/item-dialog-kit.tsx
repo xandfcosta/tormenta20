@@ -1,6 +1,7 @@
 import type { ParentProps } from 'solid-js'
 import { Show } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 /**
  * Shared skeleton for every item dialog (bag sheet, melhorias picker,
@@ -21,9 +22,9 @@ export const ITEM_DIALOG_TITLE =
 export function ItemDialogSection(props: ParentProps<{ title: string; class?: string }>) {
   return (
     <section class={cn('space-y-1.5', props.class)}>
-      <h3 class="text-3xs font-bold uppercase tracking-widest text-muted-foreground">
+      <FieldLabel as="h3" class="font-bold">
         {props.title}
-      </h3>
+      </FieldLabel>
       {props.children}
     </section>
   )
@@ -40,9 +41,9 @@ export function ItemDialogFooter(props: ParentProps<{ label?: string }>) {
     <div class="flex items-center justify-end gap-2 border-t border-border pt-3">
       <Show when={props.label}>
         {(label) => (
-          <span class="mr-auto text-3xs uppercase tracking-widest text-muted-foreground">
+          <FieldLabel class="mr-auto">
             {label()}
-          </span>
+          </FieldLabel>
         )}
       </Show>
       {props.children}

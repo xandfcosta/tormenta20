@@ -19,6 +19,7 @@ import { ownedPowerSpec } from './power-spec-resolver'
 import { RaceAbilitySection } from './race-abilities'
 import { normalize } from './normalize'
 import { ownedAbilities } from './sheet-search-index'
+import { SectionTitle } from '@/shared/ui/section-label'
 
 const SOURCE_TABS: { value: PendenciaSource; label: string }[] = [
   { value: 'raca', label: 'Raça' },
@@ -72,7 +73,7 @@ export function AbilitiesPanel(props: { character: Character }) {
   return (
     <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-none border border-grimorio-iron bg-grimorio-panel">
       <div class="shrink-0 border-b border-grimorio-iron px-3 py-2 sm:px-4">
-        <h2 class="font-heading text-lg uppercase tracking-wide text-grimorio-gold">Poderes</h2>
+        <SectionTitle contexto="painel">Poderes</SectionTitle>
       </div>
 
       <div class="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden p-3 sm:p-4">

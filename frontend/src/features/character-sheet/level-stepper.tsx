@@ -5,6 +5,7 @@ import type { Character } from '@/shared/api/api'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { eligibleClasses, levelActions, MAX_LEVEL } from './level-mutations'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 /**
  * Total level with its stepper. A single-class character steps straight; a
@@ -55,7 +56,7 @@ export function LevelStepper(props: { character: Character }) {
           onClick={() => step('down')}
         />
         <div class="flex flex-col items-center leading-none">
-          <p class="text-[8px] uppercase tracking-widest text-muted-foreground sm:text-4xs">Nv</p>
+          <FieldLabel as="p" class="text-[8px] sm:text-4xs">Nv</FieldLabel>
           <p class="w-5 text-center text-lg font-bold leading-none text-grimorio-gold sm:w-7 sm:text-2xl">
             {props.character.level}
           </p>

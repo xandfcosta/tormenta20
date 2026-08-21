@@ -15,6 +15,7 @@ import { cn } from '@/shared/lib/utils'
 import { CastSpellDialog } from './cast-spell-dialog'
 import { CIRCLE_LABEL, SCHOOL_LABEL } from './spell-labels'
 import { spellActions } from './spell-mutations'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 /** A spell taught by a power (Totem Espiritual, p42). */
 export type GrantedSpellMeta = {
@@ -118,9 +119,9 @@ export function SpellRow(props: {
             {props.spell.name}
           </span>
           <span class="ml-auto flex shrink-0 items-center gap-2">
-            <span class="hidden text-3xs uppercase tracking-widest text-muted-foreground sm:inline">
+            <FieldLabel class="hidden sm:inline">
               {SCHOOL_LABEL[props.spell.school]}
-            </span>
+            </FieldLabel>
             <span class="font-mono text-xs text-grimorio-gold">
               {SPELL_BASE_PM_COST[props.spell.circle]} PM
             </span>
@@ -129,9 +130,9 @@ export function SpellRow(props: {
             </Show>
             <Show when={props.granted} fallback={<LearnedBadge learned={props.learned} />}>
               {(granted) => (
-                <span class="rounded-none border border-border px-1 text-3xs uppercase tracking-widest">
+                <FieldLabel class="rounded-none border border-border px-1">
                   {granted().sourcePower}
-                </span>
+                </FieldLabel>
               )}
             </Show>
           </span>
@@ -167,9 +168,9 @@ export function SpellRow(props: {
 
           <Show when={props.spell.augments.length > 0}>
             <div class="space-y-1">
-              <p class="text-3xs uppercase tracking-widest text-muted-foreground">
+              <FieldLabel as="p">
                 Aprimoramentos
-              </p>
+              </FieldLabel>
               <ul class="space-y-1">
                 <For each={props.spell.augments}>
                   {(augment) => (
@@ -290,9 +291,9 @@ function LearnedBadge(props: { learned: CharacterSpell | null }) {
 function Stat(props: { label: string; value: string | number }) {
   return (
     <div class="flex items-baseline gap-1">
-      <span class="text-3xs uppercase tracking-widest text-muted-foreground">
+      <FieldLabel>
         {props.label}
-      </span>
+      </FieldLabel>
       <span class="text-foreground">{props.value}</span>
     </div>
   )

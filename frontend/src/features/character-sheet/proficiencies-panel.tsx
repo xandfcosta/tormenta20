@@ -13,6 +13,7 @@ import {
   proficiencyCatalog,
   toggleProficiency,
 } from './proficiency-mutations'
+import { FieldLabel, SectionTitle } from '@/shared/ui/section-label'
 
 /**
  * The Proficiências block: every weapon / armor / shield category the
@@ -44,9 +45,9 @@ export function ProficienciesPanel(props: { character: Character }) {
   return (
     <section class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-none border border-grimorio-iron bg-grimorio-panel">
       <div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2 sm:px-4">
-        <h2 class="font-heading text-lg uppercase tracking-wide text-grimorio-gold">
+        <SectionTitle contexto="painel">
           Proficiências
-        </h2>
+        </SectionTitle>
         <Button
           type="button"
           variant="outline"
@@ -88,9 +89,9 @@ function ProficiencyGroup(props: {
 }) {
   return (
     <section class="rounded-none border border-grimorio-iron p-3">
-      <h3 class="font-heading text-sm uppercase tracking-wide text-grimorio-gold">
+      <SectionTitle as="h3" contexto="painel" class="text-sm">
         {props.title}
-      </h3>
+      </SectionTitle>
       <ul class="mt-2 space-y-1">
         <For each={props.entries}>
           {(entry) => (
@@ -138,12 +139,12 @@ function ProficiencyRow(props: {
         {/* "classe" marks what the class grants by default, so a player can
             tell an intentional manual toggle from the baseline. */}
         {props.entry.granted && (
-          <span
-            class="ml-1 rounded-md bg-muted px-1 text-4xs uppercase tracking-wider text-muted-foreground"
+          <FieldLabel
+           
             title={`Padrão: ${props.entry.sources.join(', ')}`}
-          >
+           class="text-4xs ml-1 rounded-md bg-muted px-1">
             classe
-          </span>
+          </FieldLabel>
         )}
       </button>
     </li>

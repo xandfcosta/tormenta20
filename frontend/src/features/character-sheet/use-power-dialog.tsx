@@ -26,6 +26,7 @@ import { describeConditionalTarget } from './conditional-target-label'
 import { ITEM_DIALOG_CONTENT, ItemDialogSection } from './item-dialog-kit'
 import { usePowerActions } from './use-power-actions'
 import { signed } from './signed'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 /**
  * Activation dialog for SCALING stances (Fúria p40: base 2 PM, +1 PM per +1
@@ -248,7 +249,7 @@ function TotalRow(props: { total: number; remaining: number; blocked: boolean })
   return (
     <div class="rounded-none border border-border bg-muted px-3 py-2">
       <div class="flex items-center justify-between">
-        <span class="text-xs uppercase tracking-widest text-muted-foreground">Custo total</span>
+        <FieldLabel class="text-xs">Custo total</FieldLabel>
         <span
           class={cn(
             'font-mono text-lg font-bold',
