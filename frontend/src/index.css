@@ -37,115 +37,17 @@
 /* Default shadcn neutral theme. Custom "Controlled Decay" palette stripped —
  * the app is on plain shadcn now, focused on function. The only kept
  * non-default tokens are the HP/PM bar colors (functional state signal). */
+/* A RAIZ é grimório, e isso deixou de ser redundância no dia em que a porta do
+ * jogo virou cena (ALE-173): com login, registro e redefinição dentro do
+ * `.scene-grimorio`, nenhuma tela do app resolvia mais a paleta clara do
+ * shadcn — e mesmo assim ela continuava pintando alguma coisa.
+ *
+ * O que ela pintava era o AVISO. O `Toaster` é irmão do `Outlet`, então ele
+ * fica fora de qualquer cena e resolvia aqui: medido, `oklch(1 0 0)` de fundo
+ * com texto quase preto, um cartão BRANCO sobre a mesa escura, em todo "Sua
+ * vez!", toda iniciativa rolada e todo erro. Conserto na causa: a raiz passa a
+ * ser a mesa, e quem nasce fora de cena nasce na cor certa. */
 :root {
-  --radius: 0.625rem;
-
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.141 0.005 285.823);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.006 285.885);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.705 0.015 286.067);
-
-  /* HP/PM bars — functional state colors, not decoration. */
-  --hp-full: oklch(0.6 0.17 145);
-  --hp-hurt: oklch(0.7 0.17 70);
-  --hp-critical: oklch(0.58 0.22 25);
-  --mp-arcane: oklch(0.55 0.15 250);
-}
-
-.dark {
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.21 0.006 285.885);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.552 0.016 285.938);
-
-  --hp-full: oklch(0.68 0.19 145);
-  --hp-hurt: oklch(0.75 0.19 70);
-  --hp-critical: oklch(0.65 0.23 25);
-  --mp-arcane: oklch(0.65 0.17 250);
-}
-
-/* ── Grimório theme (ALE-35) ────────────────────────────────────────────
- * Canonical palette for the game-like scenes. A scene reads intrinsically
- * dark (like a CRPG screen) regardless of the app's light/dark toggle, and
- * high-contrast: body text hits AAA, decorative purple is only AA-Large so
- * it stays in glow / large titles, never small text. Applied via the scope
- * class `.scene-grimorio` (added by SceneShell, ALE-37) — the existing
- * shadcn screens are left untouched until each migrates scene-by-scene.
- * Contraste e aparência se validam em /grimorio, a folha viva do sistema de
- * desenho: ela desenha cada token com o utilitário de verdade e lê o valor
- * resolvido do navegador, então não tem como discordar deste arquivo. */
-:root {
-  --grimorio-bg: oklch(0.15 0.01 305);
-  --grimorio-bg-2: oklch(0.19 0.012 305);
-  --grimorio-panel: oklch(0.225 0.014 300);
-  --grimorio-panel-raised: oklch(0.27 0.016 300);
-  --grimorio-fg: oklch(0.93 0.014 85);
-  --grimorio-fg-muted: oklch(0.74 0.02 85);
-  --grimorio-crimson: oklch(0.55 0.19 25);
-  --grimorio-crimson-bright: oklch(0.64 0.21 25);
-  --grimorio-purple: oklch(0.55 0.15 305);
-  --grimorio-gold: oklch(0.8 0.11 85);
-  --grimorio-iron: oklch(0.4 0.015 300);
-  --grimorio-iron-light: oklch(0.52 0.02 300);
-  --grimorio-parchment: oklch(0.9 0.035 80);
-  --grimorio-parchment-ink: oklch(0.28 0.03 60);
-}
-
-/* Remaps the shadcn semantic tokens inside a scene so any stock component
- * (card, button, input) adopts Grimório automatically, plus a sharper
- * iron-forged radius and Cinzel as the display face. */
-.scene-grimorio {
-  --background: var(--grimorio-bg);
-  --foreground: var(--grimorio-fg);
-  --card: var(--grimorio-panel);
-  --card-foreground: var(--grimorio-fg);
-  --popover: var(--grimorio-panel-raised);
-  --popover-foreground: var(--grimorio-fg);
-  --primary: var(--grimorio-crimson);
-  --primary-foreground: oklch(0.97 0.01 85);
-  --secondary: var(--grimorio-panel-raised);
-  --secondary-foreground: var(--grimorio-fg);
-  --muted: var(--grimorio-bg-2);
-  --muted-foreground: var(--grimorio-fg-muted);
-  --accent: var(--grimorio-panel-raised);
-  --accent-foreground: var(--grimorio-gold);
-  --destructive: var(--grimorio-crimson-bright);
-  --border: var(--grimorio-iron);
-  --input: var(--grimorio-iron);
-  --ring: var(--grimorio-gold);
-  /* O azul de PM sobe DENTRO da cena: no `:root` ele é 0.55, medido em 4.32:1
-     contra o painel — abaixo do mínimo de 4.5 para texto pequeno (ALE-163). O
-     `:root` fica como está porque ele também serve a superfície CLARA da
-     autenticação, onde clarear pioraria. */
-  --mp-arcane: oklch(0.66 0.16 250);
   /* CANTO QUADRADO É A INTENÇÃO, não um acidente de escala (ALE-173): ferro
    * forjado não tem canto macio. O que isso significa em pixel, MEDIDO dentro
    * de uma cena, porque ninguém consegue prever lendo o TSX:
@@ -182,6 +84,70 @@
    * de um livro é fisicamente mais redonda que a folha dentro dela, e forçar
    * as duas ao mesmo degrau desenharia um objeto que não existe. */
   --radius: 0.375rem;
+
+  --background: var(--grimorio-bg);
+  --foreground: var(--grimorio-fg);
+  --card: var(--grimorio-panel);
+  --card-foreground: var(--grimorio-fg);
+  --popover: var(--grimorio-panel-raised);
+  --popover-foreground: var(--grimorio-fg);
+  --primary: var(--grimorio-crimson);
+  --primary-foreground: oklch(0.97 0.01 85);
+  --secondary: var(--grimorio-panel-raised);
+  --secondary-foreground: var(--grimorio-fg);
+  --muted: var(--grimorio-bg-2);
+  --muted-foreground: var(--grimorio-fg-muted);
+  --accent: var(--grimorio-panel-raised);
+  --accent-foreground: var(--grimorio-gold);
+  --destructive: var(--grimorio-crimson-bright);
+  --border: var(--grimorio-iron);
+  --input: var(--grimorio-iron);
+  --ring: var(--grimorio-gold);
+
+  /* HP/PM bars — functional state colors, not decoration. */
+  --hp-full: oklch(0.6 0.17 145);
+  --hp-hurt: oklch(0.7 0.17 70);
+  --hp-critical: oklch(0.58 0.22 25);
+  /* 0.66 e não 0.55: medido, o mais escuro dá 4.32:1 contra o painel, abaixo do
+     mínimo de 4.5 para texto pequeno (ALE-163). O valor baixo existia porque a
+     raiz servia a superfície CLARA da autenticação, onde clarear piorava — e
+     essa superfície não existe mais. */
+  --mp-arcane: oklch(0.66 0.16 250);
+}
+/* ── Grimório theme (ALE-35) ────────────────────────────────────────────
+ * Canonical palette for the game-like scenes. A scene reads intrinsically
+ * dark (like a CRPG screen) regardless of the app's light/dark toggle, and
+ * high-contrast: body text hits AAA, decorative purple is only AA-Large so
+ * it stays in glow / large titles, never small text. Applied via the scope
+ * class `.scene-grimorio` (added by SceneShell, ALE-37) — the existing
+ * shadcn screens are left untouched until each migrates scene-by-scene.
+ * Contraste e aparência se validam em /grimorio, a folha viva do sistema de
+ * desenho: ela desenha cada token com o utilitário de verdade e lê o valor
+ * resolvido do navegador, então não tem como discordar deste arquivo. */
+:root {
+  --grimorio-bg: oklch(0.15 0.01 305);
+  --grimorio-bg-2: oklch(0.19 0.012 305);
+  --grimorio-panel: oklch(0.225 0.014 300);
+  --grimorio-panel-raised: oklch(0.27 0.016 300);
+  --grimorio-fg: oklch(0.93 0.014 85);
+  --grimorio-fg-muted: oklch(0.74 0.02 85);
+  --grimorio-crimson: oklch(0.55 0.19 25);
+  --grimorio-crimson-bright: oklch(0.64 0.21 25);
+  --grimorio-purple: oklch(0.55 0.15 305);
+  --grimorio-gold: oklch(0.8 0.11 85);
+  --grimorio-iron: oklch(0.4 0.015 300);
+  --grimorio-iron-light: oklch(0.52 0.02 300);
+  --grimorio-parchment: oklch(0.9 0.035 80);
+  --grimorio-parchment-ink: oklch(0.28 0.03 60);
+}
+
+/* Remaps the shadcn semantic tokens inside a scene so any stock component
+ * (card, button, input) adopts Grimório automatically, plus a sharper
+ * iron-forged radius and Cinzel as the display face. */
+/* A cena não redefine mais token de cor: a RAIZ já é grimório (ALE-173), e o
+ * bloco que morava aqui era cópia palavra por palavra dela. O que sobra é o que
+ * de fato só vale dentro de uma cena. */
+.scene-grimorio {
   --font-display: var(--font-heading);
   background-color: var(--grimorio-bg);
   color: var(--grimorio-fg);

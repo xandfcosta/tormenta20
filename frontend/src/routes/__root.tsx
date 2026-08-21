@@ -4,7 +4,6 @@ import { createEffect } from 'solid-js'
 import { ensureCatalogs, ensureEngineCatalogs } from '@/entities/catalog/ensure-catalogs'
 import { meQueryOptions } from '@/entities/user/queries'
 import { useAuth } from '@/shared/stores/auth-context'
-import { useUi } from '@/shared/stores/ui-context'
 import { Toaster } from '@/shared/ui/sonner'
 
 export type RouterContext = { queryClient: QueryClient }
@@ -37,12 +36,11 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 function RootLayout() {
   const context = Route.useRouteContext()
   const auth = useAuth()
-  const ui = useUi()
   createEffect(() => auth.setUser(context().user))
   return (
     <>
       <Outlet />
-      <Toaster theme={ui.theme()} />
+      <Toaster theme="dark" />
     </>
   )
 }

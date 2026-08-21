@@ -1572,6 +1572,51 @@ test.describe('Sessão ao vivo', () => {
     }
   })
 
+  /**
+   * O aviso é pintado na cor da MESA, não em branco (ALE-173).
+   *
+   * O `Toaster` é irmão do `Outlet`, então ele nasce fora de qualquer cena — e
+   * enquanto a raiz do documento carregava a paleta clara do shadcn, ele
+   * resolvia ALI: medido, `oklch(1 0 0)` de fundo com texto quase preto. Todo
+   * "Sua vez!", toda iniciativa rolada e todo erro eram um cartão branco sobre
+   * a mesa escura, e ninguém tinha reclamado porque o defeito parece decisão.
+   *
+   * Compara token com token lidos da cena, e não o oklch literal: prender a cor
+   * seria prender uma decisão de paleta que pode mudar sem o aviso deixar de
+   * pertencer à mesa.
+   *
+   * Por que e2e: o aviso só existe depois de disparado, e a cor dele depende de
+   * qual escopo o nó resolve. Em jsdom nenhuma variável CSS resolve.
+   */
+  test('o aviso da mesa é pintado na cor da mesa', async ({ page }) => {
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+
+    await page.getByRole('button', { name: 'Descanso de cena' }).click()
+    await expect(page.getByText('Efeitos temporários de cena foram limpos.')).toBeVisible()
+
+    // A testemunha é o token BRUTO da casa, não o `--popover`. Comparar com
+    // `--popover` parece mais direto e não prova nada: desde que a raiz virou
+    // grimório os dois são a MESMA variável, então apontar `--popover` para
+    // branco moveria os dois juntos e o teste passaria verde sobre o defeito.
+    // Descobri isso sabotando.
+    const cores = await page.evaluate(() => {
+      const aviso = document.querySelector('[data-sonner-toast]')
+      const cena = document.querySelector('.scene-grimorio')
+      if (!aviso || !cena) return null
+      return {
+        fundo: getComputedStyle(aviso).backgroundColor,
+        painelDaCasa: getComputedStyle(cena).getPropertyValue('--grimorio-panel-raised').trim(),
+      }
+    })
+
+    expect(cores, 'não achei o aviso na tela').not.toBeNull()
+    expect(
+      cores?.fundo,
+      'o aviso não é da mesa — ele nasce fora da cena e voltou a resolver uma paleta clara',
+    ).toBe(cores?.painelDaCasa)
+  })
+
   test('Sair da sessão volta pra crônica', async ({ page }) => {
     await page.goto('/campaigns/1/sessions/4')
     await expect(page.getByRole('heading', { name: 'Iniciativa' })).toBeVisible()

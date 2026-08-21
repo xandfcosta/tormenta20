@@ -1,12 +1,11 @@
 import { type Accessor, createSignal } from 'solid-js'
 
-export type Theme = 'light' | 'dark'
-
 /**
  * Persisted under the SAME key/shape the React app's zustand store used
- * (`t20-ui` → `{ state: { theme } }`) — index.html reads it before mount to
- * paint the right theme, and keeping the shape means a user switching between
- * the two apps during the migration doesn't lose their choice.
+ * (`t20-ui` → `{ state: { … } }`). O campo `theme` que morava aqui SAIU na
+ * ALE-173: o app tem uma identidade só — grimório escuro — desde que a porta
+ * do jogo virou cena, e o seletor claro/escuro nunca teve controle que o
+ * chamasse. Um valor antigo no storage é simplesmente ignorado.
  */
 const STORAGE_KEY = 't20-ui'
 
@@ -15,9 +14,6 @@ const STORAGE_KEY = 't20-ui'
 const FULL_VOLUME = 100
 
 export type UiStore = {
-  theme: Accessor<Theme>
-  setTheme: (theme: Theme) => void
-  toggleTheme: () => void
   /** UI sound cues (hover/select/scene transition). Off by default so the app
    *  never surprises with sound — the player opts in from the Hub. */
   sfx: Accessor<boolean>
@@ -29,7 +25,7 @@ export type UiStore = {
   setVolume: (percent: number) => void
 }
 
-type PersistedUi = { state?: { theme?: unknown; sfx?: unknown; volume?: unknown } }
+type PersistedUi = { state?: { sfx?: unknown; volume?: unknown } }
 
 function parseStored(raw: string | null): PersistedUi['state'] {
   if (!raw) return undefined
@@ -38,10 +34,6 @@ function parseStored(raw: string | null): PersistedUi['state'] {
   } catch {
     return undefined
   }
-}
-
-export function readStoredTheme(raw: string | null): Theme {
-  return parseStored(raw)?.theme === 'dark' ? 'dark' : 'light'
 }
 
 export function readStoredSfx(raw: string | null): boolean {
@@ -60,26 +52,18 @@ function clampVolume(value: unknown): number {
 }
 
 /**
- * Theme state. Applies the `dark` class to <html> on every change, so the
- * Tailwind `dark:` variant and the token overrides follow.
+ * Preferências de interface: som e volume.
  *
- * @example const ui = createUiStore(); ui.toggleTheme()
+ * @example const ui = createUiStore(); ui.toggleSfx()
  */
 export function createUiStore(storage: Storage | undefined = globalThis.localStorage): UiStore {
   const stored = storage?.getItem(STORAGE_KEY) ?? null
-  const [theme, setThemeSignal] = createSignal<Theme>(readStoredTheme(stored))
   const [sfx, setSfxSignal] = createSignal(readStoredSfx(stored))
   const [volume, setVolumeSignal] = createSignal(readStoredVolume(stored))
 
   const persist = () => {
-    const state = { theme: theme(), sfx: sfx(), volume: volume() }
+    const state = { sfx: sfx(), volume: volume() }
     storage?.setItem(STORAGE_KEY, JSON.stringify({ state }))
-  }
-
-  const setTheme = (next: Theme) => {
-    setThemeSignal(next)
-    document.documentElement.classList.toggle('dark', next === 'dark')
-    persist()
   }
 
   const setSfx = (on: boolean) => {
@@ -93,9 +77,6 @@ export function createUiStore(storage: Storage | undefined = globalThis.localSto
   }
 
   return {
-    theme,
-    setTheme,
-    toggleTheme: () => setTheme(theme() === 'dark' ? 'light' : 'dark'),
     sfx,
     setSfx,
     toggleSfx: () => setSfx(!sfx()),
