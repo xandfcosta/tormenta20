@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { InitiativeEntry } from '@/shared/realtime/realtime'
-import {
-  connectionStatus,
-  entryPermissions,
-  myCharacterIdsOf,
-  nextTurnTarget,
-  reservedVerbs,
-} from './tracker-rules'
+import { connectionStatus, entryPermissions, myCharacterIdsOf, nextTurnTarget, palcoBaixo, reservedVerbs } from './tracker-rules'
 
 const entry = (overrides: Partial<InitiativeEntry> = {}): InitiativeEntry => ({
   id: 'a',
@@ -169,5 +163,26 @@ describe('nextTurnTarget', () => {
 
   it('sem ninguém na lista, não inventa um nome', () => {
     expect(nextTurnTarget([], -1)).toEqual({ label: 'Próximo turno', entry: null })
+  })
+})
+
+/**
+ * O limiar que decide se a faixa de turno cabe em duas fileiras (ALE-146).
+ *
+ * É regra e não pintura: a mesma resposta governa o que fica na fileira E o
+ * que aparece dentro do menu da sessão, que nasce num portal fora do palco.
+ */
+describe('palcoBaixo', () => {
+  it('diz sim no palco do celular deitado', () => {
+    expect(palcoBaixo(325)).toBe(true)
+  })
+
+  it('diz não no palco do tablet em pé', () => {
+    expect(palcoBaixo(950)).toBe(false)
+  })
+
+  /** Antes da primeira medição a resposta tem de ser o arranjo de sempre. */
+  it('diz não enquanto não mediu', () => {
+    expect(palcoBaixo(0)).toBe(false)
   })
 })

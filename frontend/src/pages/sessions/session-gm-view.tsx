@@ -9,6 +9,8 @@ import { CreatureBlockDialog } from '@/features/gm-tools/creature-block-dialog'
 import { blankCreatureBlock } from '@/shared/api/creature-types'
 import { TurnAdvance, TurnCounter } from '@/features/session-tracker/turn-controls'
 import { RestControls } from '@/features/session-tracker/rest-controls'
+import { palcoBaixo } from '@/features/session-tracker/tracker-rules'
+import { createElementSize } from '@/shared/lib/element-size'
 import { createMediaQuery } from '@/shared/lib/media-query'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
@@ -137,18 +139,27 @@ export function SessionGmView(props: {
    */
   const workspaceVazio = () => tab() === 'combatente' && selectedId() === null
 
+  // A altura do PALCO, não da janela, e em JS e não em CSS: a mesma resposta
+  // governa o que fica na fileira de turno E o que aparece dentro do menu da
+  // sessão — e o menu nasce num portal fora do palco, onde consulta de
+  // contêiner não alcança (ALE-146).
+  const [palco, setPalco] = createSignal<HTMLDivElement>()
+  const tamanhoDoPalco = createElementSize(palco)
+  const palcoEstaBaixo = () => palcoBaixo(tamanhoDoPalco().height)
+
   const activeEntryId = () => {
     const live = props.rt.state()
     return live.turnIndex >= 0 ? (live.initiative[live.turnIndex]?.id ?? null) : null
   }
 
   return (
-    <div class="flex h-full min-h-0 flex-col gap-2 p-2 sm:gap-3 sm:p-3">
+    <div ref={setPalco} class="flex h-full min-h-0 flex-col gap-2 p-2 sm:gap-3 sm:p-3">
       <TurnBar
         campaignId={props.campaignId}
         sessionId={props.sessionId}
         session={props.session}
         rt={props.rt}
+        palcoBaixo={palcoEstaBaixo()}
       />
 
       {/* O seletor só existe onde NÃO cabem duas colunas: com as duas na tela,
@@ -271,6 +282,8 @@ function TurnBar(props: {
   sessionId: number
   session: Session
   rt: SessionRealtime
+  /** Palco curto demais para duas fileiras de cromo (ALE-146). */
+  palcoBaixo: boolean
 }) {
   const state = () => props.rt.state()
   const active = () => (state().turnIndex >= 0 ? state().initiative[state().turnIndex] : undefined)
@@ -312,8 +325,17 @@ function TurnBar(props: {
         />
         {/* Ações rápidas do fim de cena, ao lado do turno: eram duas linhas
             dentro do menu da sessão, e o mestre descansa o grupo com muito mais
-            frequência do que renomeia a sessão (ALE-122). */}
-        <RestControls rt={props.rt} />
+            frequência do que renomeia a sessão (ALE-122).
+
+            Elas VOLTAM para o menu quando o palco é baixo, e isso não desfaz a
+            ALE-122 — desfazê-la seria escondê-las onde há espaço. A 844×390
+            eram elas que faziam esta fileira enrolar em duas, e a segunda
+            fileira custava 46px de um palco onde o conteúdo já recebia 138
+            (ALE-146). O mestre que descansa o grupo num celular deitado paga um
+            toque a mais; o que perdia era a ficha inteira. */}
+        <Show when={!props.palcoBaixo}>
+          <RestControls rt={props.rt} />
+        </Show>
         <MatchControls
           title="Sessão"
           trigger={(open) => (
@@ -322,6 +344,11 @@ function TurnBar(props: {
             </Button>
           )}
         >
+          <Show when={props.palcoBaixo}>
+            <div class="mb-3 flex flex-wrap gap-2">
+              <RestControls rt={props.rt} />
+            </div>
+          </Show>
           <HeaderCard
             campaignId={props.campaignId}
             session={props.session}

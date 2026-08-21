@@ -723,13 +723,20 @@ test.describe('Sessão ao vivo', () => {
       ).toBeGreaterThanOrEqual(100)
       await expect(fechar, `${viewport.name}: fechar o combatente saiu da tela`).toBeInViewport()
 
-      // O celular deitado fica FORA desta conta, e o motivo é medido, não
-      // conveniência: dos 390px de altura, 179 são cromo da CENA (cabeçalho 49
-      // + faixa de turno 50 + seletor de região 32 + barra de abas do workspace
-      // 36), e a região do combatente inteira fica com 165px. Nenhuma faixa
-      // utilizável cabe em 35% de 165 — o que sobra ali é defeito da cena, não
-      // da faixa, e está registrado na ALE-146. A garantia que vale neste
-      // formato é a de alcance, logo acima, e essa roda nos seis.
+      // O celular deitado continua FORA desta conta, e a medição da ALE-146
+      // corrigiu os números que estavam aqui: o cromo não era 179px, era 252
+      // (65% da tela), porque a faixa de turno enrolava em DUAS fileiras e
+      // media 90px, não 50 — sozinha, mais que as duas barras de navegação
+      // somadas. A ALE-146 desenrolou a faixa (90 → 62px) e a região do
+      // combatente subiu de 138 para 153px.
+      //
+      // Ainda não é o bastante para a proporção: a faixa usa 89 dos 153, 58%,
+      // e o teto é 35%. O que falta é a OUTRA metade do cromo — o seletor de
+      // região (32px) e a barra de abas do workspace (36px), duas fileiras que
+      // navegam em níveis diferentes e que a ALE-146 deixou de fora de
+      // propósito. Enquanto elas forem duas, este formato não entra na conta.
+      // A garantia que vale aqui é a de ALCANCE, logo acima, e essa roda nos
+      // seis.
       if (viewport.name === 'mobile-landscape') continue
 
       const { regiao, antesDaFicha } = await medirRegiaoDoCombatente(page)
@@ -758,6 +765,51 @@ test.describe('Sessão ao vivo', () => {
     for (const label of await novosDesde(page, antes)) {
       await page.getByRole('button', { name: `Remover ${label}` }).click()
     }
+  })
+
+  /**
+   * Os descansos saem da fileira de turno no palco BAIXO, e continuam
+   * alcançáveis (ALE-146).
+   *
+   * A 844×390 a faixa de turno enrolava em duas fileiras e media 90px — mais
+   * que as duas barras de navegação somadas — num palco onde o conteúdo já
+   * recebia 138px. Com os descansos fora da fileira ela desenrola para 62.
+   *
+   * Por que e2e: a decisão é a ALTURA MEDIDA do palco, via `ResizeObserver`.
+   * Em jsdom não há observador nem leiaute, a altura é zero e a regra responde
+   * "não é baixo" para sempre — nenhuma camada mais barata consegue ver isto.
+   *
+   * As DUAS metades são afirmadas de propósito. Só a primeira passaria verde
+   * com o conserto errado, que é apagar os descansos do celular: eles têm de
+   * SUMIR da fileira e APARECER no menu.
+   */
+  test('no palco baixo os descansos vão para o menu, e continuam alcançáveis', async ({
+    page,
+  }) => {
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+
+    const naFileira = page.getByRole('button', { name: /Descanso de cena/ })
+
+    // Palco alto: eles ficam onde a ALE-122 os pôs.
+    await page.setViewportSize({ width: 768, height: 1024 })
+    await expect(naFileira, 'no tablet em pé o descanso saiu da fileira').toBeVisible()
+
+    // Palco baixo: saem da fileira...
+    await page.setViewportSize({ width: 844, height: 390 })
+    await expect(naFileira, 'no celular deitado o descanso continuou na fileira').toHaveCount(0)
+
+    // ...e estão no menu da sessão, que é o que separa "mudou de casa" de
+    // "sumiu".
+    await page.getByRole('button', { name: 'Configurações da sessão' }).click()
+    const painel = page.getByRole('dialog')
+    await expect(
+      painel.getByRole('button', { name: /Descanso de cena/ }),
+      'o descanso sumiu em vez de mudar de casa',
+    ).toBeVisible()
+
+    await page.keyboard.press('Escape')
+    await expect(painel).toBeHidden()
   })
 
   /**

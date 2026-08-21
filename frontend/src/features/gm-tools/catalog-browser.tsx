@@ -3,7 +3,7 @@ import { createMemo, createSignal, For, type JSX, Match, Show, Switch } from 'so
 import type { CatalogSpell, Condition } from '@/shared/api/catalog-types'
 import type { CatalogItem } from '@/shared/api/item-types'
 import { allCatalogItems } from '@/shared/lib/catalog-cache'
-import { createElementWidth } from '@/shared/lib/element-width'
+import { createElementWidth } from '@/shared/lib/element-size'
 import { conditionsList } from '@/shared/lib/rules-catalog-cache'
 import { spellCatalog } from '@/shared/lib/spell-cache'
 import { Input } from '@/shared/ui/input'

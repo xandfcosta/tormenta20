@@ -140,3 +140,33 @@ export function nextTurnTarget(
   if (!entry) throw new Error(`iniciativa sem entrada após o turno ${turnIndex}`)
   return { label: `${emCombate ? 'Próximo' : 'Começar'}: ${entry.label}`, entry }
 }
+
+/** Abaixo disto o palco da sessão não comporta duas fileiras de cromo. */
+const PALCO_BAIXO_PX = 416
+
+/**
+ * Se o palco da sessão está BAIXO demais para a faixa de turno em duas
+ * fileiras (ALE-146).
+ *
+ * Medido a 844×390 com uma ficha aberta: o cromo comia 252 dos 390px, 65% da
+ * tela, e a faixa de turno sozinha era 90px porque enrolava em duas fileiras —
+ * mais que as duas barras de navegação somadas. Sobravam 138px para o
+ * conteúdo, dos quais a faixa do combatente já usava 89.
+ *
+ * Altura e não largura, e é por isso que não é `@media`: 844×390 (celular
+ * deitado) e 768×1024 (tablet em pé) são larguras vizinhas com alturas
+ * opostas, e o tablet não tem problema nenhum. A regra da casa proíbe consulta
+ * de altura em `@media` porque o teclado virtual mexe na altura da JANELA
+ * (ALE-176) — aqui a altura medida é a do PALCO, e no único formato onde o
+ * teclado abriria ele já está muito abaixo do limiar, então não há chaveamento
+ * para o dedo sentir.
+ *
+ * Altura zero significa "ainda não medi" e responde NÃO, que é o arranjo de
+ * sempre.
+ *
+ * @example palcoBaixo(325) // true — celular deitado
+ * @example palcoBaixo(950) // false — tablet em pé
+ */
+export function palcoBaixo(alturaDoPalco: number): boolean {
+  return alturaDoPalco > 0 && alturaDoPalco < PALCO_BAIXO_PX
+}
