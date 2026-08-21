@@ -29,12 +29,17 @@ export function creatureFromMonster(monster: Monster): CreatureBlock {
     vontade: monster.vontade,
     hp: monster.hp,
     deslocamento: monster.deslocamento,
-    forca: monster.forca,
-    destreza: monster.destreza,
-    constituicao: monster.constituicao,
-    inteligencia: monster.inteligencia,
-    sabedoria: monster.sabedoria,
-    carisma: monster.carisma,
+    // Atributo AUSENTE no livro (o `Int —` do Zumbi) vira zero aqui, e isso é
+    // uma perda conhecida: o bloco do mestre é numérico e não sabe dizer
+    // "não tem" — dizer exigiria atravessar o struct do Go e o formulário, que
+    // é outra frente. A partir da cópia o bloco é DELE e ele edita; o catálogo,
+    // que é a fonte, guarda a ausência de verdade (ALE-151).
+    forca: monster.forca ?? 0,
+    destreza: monster.destreza ?? 0,
+    constituicao: monster.constituicao ?? 0,
+    inteligencia: monster.inteligencia ?? 0,
+    sabedoria: monster.sabedoria ?? 0,
+    carisma: monster.carisma ?? 0,
     attacks: monster.attacks.map((attack) => ({
       name: attack.name,
       attackBonus: attack.attackBonus,

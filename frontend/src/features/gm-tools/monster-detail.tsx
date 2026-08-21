@@ -4,7 +4,13 @@ import { xpForNd } from '@/shared/lib/encounter-math'
 import { FieldLabel, SectionLabel, SectionTitle } from '@/shared/ui/section-label'
 import { formatNd, MONSTER_TIPO_LABEL } from './monster-format'
 
-const signed = (n: number) => (n >= 0 ? `+${n}` : String(n))
+/**
+ * O modificador como o livro escreve, e o TRAVESSÃO quando ele não existe.
+ *
+ * "Int —" no Zumbi não é zero: é a ausência de Inteligência, e mostrar "+0"
+ * diria que ele tem a média de um humano (ALE-151).
+ */
+const signed = (n: number | null) => (n === null ? '—' : n >= 0 ? `+${n}` : String(n))
 
 /**
  * A creature's full stat block. Shared by the Bestiário's detail pane and (on

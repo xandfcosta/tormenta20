@@ -267,12 +267,18 @@ export type Monster = {
   size: MonsterSize
   hp: number
   defesa: number
-  forca: number
-  destreza: number
-  constituicao: number
-  inteligencia: number
-  sabedoria: number
-  carisma: number
+  /**
+   * Um atributo pode ser AUSENTE, e o livro escreve isso com travessão: o
+   * Zumbi e o Golem têm `Int —`, a Aparição tem `For —` (p297, p288, p298).
+   * Não é zero e muito menos –5: "não tem Inteligência" é outro estado, e a
+   * importação inventava um número onde o livro recusa dar um (ALE-151).
+   */
+  forca: number | null
+  destreza: number | null
+  constituicao: number | null
+  inteligencia: number | null
+  sabedoria: number | null
+  carisma: number | null
   fortitude: number
   reflexos: number
   vontade: number

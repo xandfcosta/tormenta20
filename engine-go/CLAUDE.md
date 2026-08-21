@@ -204,6 +204,27 @@ O que protege dado transcrito é **validação de schema**
 regressão. O que ela cobre é o que quebra tela — perícia que não existe, faixa de
 rolagem com buraco, termo de devoto apontando para raça inexistente.
 
+**E o que ela NÃO cobre é número errado.** Medido na ALE-151: 44 dos 80 verbetes
+do bestiário tinham atributo ou resistência trocados, vários com o número do
+verbete VIZINHO — a Serpe carregava as resistências do Ogro, e o schema estava
+verde o tempo todo, porque um inteiro no lugar de outro inteiro é um schema
+válido. Contra isso só serve conferir contra o livro:
+
+```
+python3 scripts/audit-bestiary.py            # relatório
+python3 scripts/audit-bestiary.py --aplicar  # escreve as correções
+```
+
+Rodar é **ato deliberado**, como o `genoracle`, e pela mesma razão: a ferramenta
+PROPÕE lendo o PDF, e é o diff revisado contra o livro que decide. Ela só aceita
+um bloco contíguo e completo cuja Defesa e Pontos de Vida já batam com o
+catálogo — essas duas âncoras é que dizem "é esta criatura".
+
+Uma armadilha que ela documenta e que vale para qualquer extração deste PDF: o
+`pdftotext -layout` junta colunas VIZINHAS na mesma linha de texto, então uma
+linha de atributos aparece colada à criatura errada. Ler por coordenada, nunca
+por layout.
+
 ## Testes
 
 - `go test ./...` — sem flag, sem setup.
