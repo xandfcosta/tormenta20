@@ -17,6 +17,7 @@ import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
 import { NumberInput } from '@/shared/ui/number-input'
+import { FieldLabel, SectionTitle } from '@/shared/ui/section-label'
 
 /**
  * Second step: the ofício. Same grammar as the lineage step — a grid of tiles,
@@ -80,12 +81,12 @@ export function ClasseStep() {
   return (
     <section class="flex min-h-0 flex-1 flex-col gap-3" aria-labelledby="forge-step-classe">
       <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h2
+        <SectionTitle
           id="forge-step-classe"
-          class="font-heading text-lg uppercase tracking-[0.16em] text-grimorio-gold"
+         
         >
           Escolha o ofício
-        </h2>
+        </SectionTitle>
         <Show
           when={entries().length > 1}
           fallback={
@@ -192,12 +193,12 @@ function ChosenClass(props: {
     >
       <div class="flex items-end gap-2">
         <div class="w-24">
-          <label
+          <FieldLabel
             for={levelId()}
-            class="mb-1 block text-2xs font-semibold uppercase tracking-wide text-muted-foreground"
-          >
+           
+           as="label" class="text-2xs mb-1 block font-semibold">
             Nível
-          </label>
+          </FieldLabel>
           <NumberInput
             id={levelId()}
             min={1}

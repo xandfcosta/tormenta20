@@ -10,6 +10,7 @@ import { anyRacePending, signed } from '@/features/character-build/grant-helpers
 import { pointBuyStatusFor } from '@/features/character-build/point-buy'
 import { cn } from '@/shared/lib/utils'
 import type { AttributeMode } from '@/shared/stores/character-draft-store'
+import { SectionLabel, SectionTitle } from '@/shared/ui/section-label'
 
 const FREE_MIN = -5
 const FREE_MAX = 10
@@ -49,12 +50,12 @@ export function AtributosStep() {
   return (
     <section class="flex min-h-0 flex-1 flex-col gap-3" aria-labelledby="forge-step-atributos">
       <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <h2
+        <SectionTitle
           id="forge-step-atributos"
-          class="font-heading text-lg uppercase tracking-[0.16em] text-grimorio-gold"
+         
         >
           Distribua os atributos
-        </h2>
+        </SectionTitle>
         <ModeToggle mode={mode()} onMode={draft.setAttributeMode} />
       </div>
 
@@ -109,12 +110,12 @@ function AttributePillar(props: {
 
   return (
     <div class="flex flex-col items-center justify-center gap-1 rounded-sm border border-grimorio-iron bg-muted/10 p-2 lg:py-4">
-      <label
+      <SectionLabel
         for={fieldId()}
-        class="text-center font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground"
-      >
+       
+       as="label" class="text-3xs text-center">
         {props.row.label}
-      </label>
+      </SectionLabel>
 
       <Step
         direction="up"

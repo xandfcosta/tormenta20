@@ -11,6 +11,7 @@ import {
   type ShopCategoryKey,
   shopCatalog,
 } from './starting-equipment'
+import { SectionLabel } from '@/shared/ui/section-label'
 
 const tibarFmt = (value: number) =>
   `T$ ${value.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`
@@ -53,7 +54,7 @@ export function StartingShop(props: StartingShopProps) {
 
   return (
     <div class="space-y-2 rounded-sm border border-grimorio-iron p-3">
-      <p class="font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
+      <SectionLabel>
         Loja{' '}
         <span
           class={cn(
@@ -63,7 +64,7 @@ export function StartingShop(props: StartingShopProps) {
         >
           · restante {tibarFmt(props.remaining)}
         </span>
-      </p>
+      </SectionLabel>
 
       <Show
         when={props.remaining > 0 || hasPurchases()}

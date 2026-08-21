@@ -6,6 +6,7 @@ import { totalClassLevel } from './class-entries'
 import { deriveDraftDefense } from './draft-defense'
 import { deriveDraftVitals } from './draft-vitals'
 import { type StepSlug, allStepsReady, stepIndex, stepReady } from './wizard-steps'
+import { FieldLabel, SectionTitle } from '@/shared/ui/section-label'
 
 export type ForgeFooterProps = {
   draft: CharacterDraftStore
@@ -69,9 +70,9 @@ export function ForgeFooter(props: ForgeFooterProps) {
       </Show>
       <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-3 py-2 sm:px-5">
       <div class="flex min-w-0 flex-1 items-baseline gap-2">
-        <p class="truncate font-heading text-sm uppercase tracking-[0.12em] text-foreground">
+        <SectionTitle as="p" tom="inherit" class="text-sm truncate text-foreground">
           {name()}
-        </p>
+        </SectionTitle>
         <p class="hidden min-w-0 truncate text-xs text-muted-foreground sm:block">
           {lineage()}
         </p>
@@ -126,12 +127,12 @@ export function ForgeFooter(props: ForgeFooterProps) {
 function Stat(props: { label: string; abbr: string; value: number; dim?: boolean }) {
   return (
     <span class="flex items-baseline gap-1">
-      <span
+      <FieldLabel
         aria-hidden="true"
-        class="text-3xs uppercase tracking-widest text-muted-foreground"
+       
       >
         {props.abbr}
-      </span>
+      </FieldLabel>
       <span
         aria-hidden="true"
         class={cn('tabular-nums', props.dim ? 'text-muted-foreground' : 'text-grimorio-gold')}

@@ -17,6 +17,7 @@ import {
 } from '@/shared/ui/dialog'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { VirtualList } from '@/shared/ui/virtual-list'
+import { SectionTitle } from '@/shared/ui/section-label'
 
 /**
  * Bestiário — filter and list on the left, the chosen creature's stat block on
@@ -46,12 +47,12 @@ export function BestiarioTool() {
   return (
     <section class="mesa-palco flex min-h-0 flex-1 flex-col gap-3" aria-labelledby="mesa-bestiario">
       <div class="flex flex-wrap items-baseline gap-x-3">
-        <h2
+        <SectionTitle
           id="mesa-bestiario"
-          class="font-heading text-lg uppercase tracking-[0.16em] text-grimorio-gold"
+         
         >
           Bestiário
-        </h2>
+        </SectionTitle>
         <p class="text-xs text-muted-foreground">
           {shown().length} de {all().length}
         </p>

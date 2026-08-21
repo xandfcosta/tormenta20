@@ -8,6 +8,7 @@ import {
   resolveRaceDeltas,
 } from './grant-helpers'
 import { DeltaBadges } from './grant-panels'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 export type RaceChoiceControlsProps = {
   raceName: string
@@ -79,10 +80,10 @@ function FloatingPicker(props: {
 
   return (
     <div class="space-y-1.5">
-      <p class="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+      <FieldLabel as="p" class="text-2xs font-semibold">
         Distribua +{props.meta.value} em {props.meta.count} atributos · {placed()}/
         {props.meta.count}
-      </p>
+      </FieldLabel>
       <div class="flex flex-wrap gap-1.5">
         <For each={ATTRIBUTE_KEYS}>
           {(attr) => {
@@ -132,9 +133,9 @@ function SubracePicker(props: {
 }) {
   return (
     <div class="space-y-1.5">
-      <p class="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+      <FieldLabel as="p" class="text-2xs font-semibold">
         Escolha a ascendência
-      </p>
+      </FieldLabel>
       <div class="grid gap-1.5 sm:grid-cols-2">
         <For each={props.options}>
           {(option) => (

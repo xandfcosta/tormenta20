@@ -17,6 +17,7 @@ import {
 } from './grant-helpers'
 import { AbilityDisclosure, DeltaBadges, GrantBox } from './grant-panels'
 import { RaceChoiceControls } from './race-choice-controls'
+import { SectionLabel } from '@/shared/ui/section-label'
 
 export type RacePickerProps = {
   /** Race names the backend offers. */
@@ -137,9 +138,9 @@ function RaceTierGrid(props: {
   return (
     <Show when={props.names.length > 0}>
       <div class="space-y-1.5">
-        <p class="font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
+        <SectionLabel>
           {props.label}
-        </p>
+        </SectionLabel>
         <div
           role="listbox"
           aria-label={props.label}

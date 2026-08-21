@@ -6,6 +6,7 @@ import { tormentaPowersRecord } from '@/shared/lib/rules-catalog-cache'
 import { cn } from '@/shared/lib/utils'
 import { Select, type SelectOption } from '@/shared/ui/select'
 import type { DeformidadeDraft, RaceChoice } from './grant-helpers'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 const NONE = ''
 
@@ -39,9 +40,9 @@ export function DeformidadeControls(props: DeformidadeControlsProps) {
   return (
     <Show when={raceWithDeformidade([props.raceName])}>
       <div class="space-y-1.5">
-        <p class="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <FieldLabel as="p" class="text-2xs font-semibold">
           Deformidade · {DEFORMIDADE_SLOTS} bônus de +{DEFORMIDADE_PERICIA_BONUS}
-        </p>
+        </FieldLabel>
 
         <PericiaSlot
           slot={0}

@@ -21,6 +21,7 @@ import { cn } from '@/shared/lib/utils'
 import { Input } from '@/shared/ui/input'
 import { Select } from '@/shared/ui/select'
 import { VirtualList } from '@/shared/ui/virtual-list'
+import { SectionLabel } from '@/shared/ui/section-label'
 
 const SOURCE_LABEL: Record<PowerOption['source'], string> = {
   class: 'classe',
@@ -200,9 +201,9 @@ function ClassChoiceRow(props: {
 function ChoiceField(props: { label: string; children: import('solid-js').JSX.Element }) {
   return (
     <div class="space-y-1">
-      <p class="font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground">
+      <SectionLabel class="text-3xs">
         {props.label}
-      </p>
+      </SectionLabel>
       {props.children}
     </div>
   )
@@ -384,9 +385,9 @@ function TakenPowers(props: {
       class="flex flex-col gap-2 lg:min-h-0 lg:overflow-y-auto lg:pl-4 lg:border-l lg:border-grimorio-iron"
     >
       <div class="flex flex-wrap items-baseline gap-x-2">
-        <p class="font-heading text-2xs uppercase tracking-[0.16em] text-grimorio-gold">
+        <SectionLabel tom="gold">
           Seus poderes
-        </p>
+        </SectionLabel>
         <p aria-hidden="true" class="flex gap-0.5 text-3xs text-grimorio-gold">
           <Index each={Array.from({ length: props.ledger.total })}>
             {(_, i) => <span>{i < props.ledger.used ? '●' : '○'}</span>}
@@ -515,10 +516,10 @@ function PowerChoicePicker(props: {
 
   return (
     <div class="space-y-1 border-t border-dashed border-grimorio-iron pt-1.5">
-      <p class="font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground">
+      <SectionLabel class="text-3xs">
         {props.choice.label}
         {props.choice.repeatable ? ` (${props.value.length})` : ''}
-      </p>
+      </SectionLabel>
       <div class="flex flex-wrap gap-1">
         <For each={options()}>
           {(option) => {

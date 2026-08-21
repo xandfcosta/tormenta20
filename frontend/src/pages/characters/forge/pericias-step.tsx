@@ -13,6 +13,7 @@ import {
   periciaPlan,
 } from '@/features/character-build/pericia-helpers'
 import { cn } from '@/shared/lib/utils'
+import { FieldLabel, SectionLabel, SectionTitle } from '@/shared/ui/section-label'
 
 /**
  * Sixth step: perícias. Two budgets with disjoint pools — the class list and
@@ -96,12 +97,12 @@ function PericiaBands(props: {
   return (
     <>
       <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h2
+        <SectionTitle
           id="forge-step-pericias"
-          class="font-heading text-lg uppercase tracking-[0.16em] text-grimorio-gold"
+         
         >
           Treine as perícias
-        </h2>
+        </SectionTitle>
         <p class="text-xs text-muted-foreground">
           {props.className} · INT {props.intTotal >= 0 ? `+${props.intTotal}` : props.intTotal}
         </p>
@@ -124,9 +125,9 @@ function PericiaBands(props: {
         <Show when={props.plan.eitherOr}>
           {(pair) => (
             <div class="flex flex-wrap items-center gap-1.5">
-              <span class="text-2xs uppercase tracking-wide text-muted-foreground">
+              <FieldLabel class="text-2xs">
                 Escolha uma:
-              </span>
+              </FieldLabel>
               <For each={pair()}>
                 {(name, i) => (
                   <button
@@ -238,10 +239,10 @@ function Band(props: {
       class={cn('flex min-h-0 flex-col gap-1.5', props.accent && 'lg:border-l lg:border-grimorio-iron lg:pl-4')}
     >
       <div class="flex flex-wrap items-baseline gap-x-2">
-        <p class="font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
+        <SectionLabel>
           {props.accent ? '✦ ' : ''}
           {props.label}
-        </p>
+        </SectionLabel>
         <p aria-hidden="true" class="flex gap-0.5 text-3xs text-grimorio-gold">
           <For each={beads()}>{(filled) => <span>{filled ? '●' : '○'}</span>}</For>
         </p>

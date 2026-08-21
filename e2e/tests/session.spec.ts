@@ -1114,6 +1114,14 @@ test.describe('Sessão ao vivo', () => {
    * depender de quantas cenas a crônica juntou.
    */
   test('com o acervo cheio, o botão de abrir tabuleiro continua alcançável', async ({ page }) => {
+    // Este é o teste mais LONGO da suíte: três idas e voltas de abrir e
+    // encerrar tabuleiro, cada uma um ciclo completo pelo socket, mais a
+    // limpeza. Sozinho leva ~11s; na suíte cheia ele estourava os 30 do teto e
+    // falhava com "Test timeout exceeded" — foi a instabilidade que apareceu
+    // duas vezes e que eu tinha anotado para perseguir. O teto triplicado é o
+    // conserto honesto: o teste não é lento por defeito, ele é longo por
+    // desenho, e encurtá-lo custaria a premissa do "acervo cheio".
+    test.slow()
     await page.setViewportSize({ width: 1280, height: 400 })
     await page.goto('/campaigns/1/sessions/4')
     await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
@@ -1123,26 +1131,70 @@ test.describe('Sessão ao vivo', () => {
     // O acervo do teste: abrir e encerrar ARQUIVA a cena (fatia 5), então três
     // idas e voltas deixam três lugares na lista.
     const guardados = [1, 2, 3].map((n) => `Cena de teste ${SUFIXO}-${n}`)
-    for (const lugar of guardados) {
+    try {
+      for (const lugar of guardados) {
+        await page.getByRole('button', { name: 'Abrir tabuleiro' }).click()
+        await page.locator('#board-place').fill(lugar)
+        await page.getByRole('dialog').getByRole('button', { name: 'Abrir' }).click()
+        await expect(page.getByRole('grid', { name: new RegExp(lugar) })).toBeVisible()
+        await encerraOTabuleiroSeHouver(page)
+      }
+
+      // A prova: com a lista na tela, o botão continua clicável — e o diálogo
+      // abre. Um `toBeVisible` não bastaria: o botão ESTAVA visível para o
+      // navegador, e o que falhava era o clique chegar nele.
       await page.getByRole('button', { name: 'Abrir tabuleiro' }).click()
-      await page.locator('#board-place').fill(lugar)
-      await page.getByRole('dialog').getByRole('button', { name: 'Abrir' }).click()
-      await expect(page.getByRole('grid', { name: new RegExp(lugar) })).toBeVisible()
-      await encerraOTabuleiroSeHouver(page)
-    }
-
-    // A prova: com a lista na tela, o botão continua clicável — e o diálogo
-    // abre. Um `toBeVisible` não bastaria: o botão ESTAVA visível para o
-    // navegador, e o que falhava era o clique chegar nele.
-    await page.getByRole('button', { name: 'Abrir tabuleiro' }).click()
-    await expect(page.getByRole('dialog')).toBeVisible()
-    await page.getByRole('dialog').getByRole('button', { name: 'Cancelar' }).click()
-
-    for (const lugar of guardados) {
-      await page.getByRole('button', { name: `Apagar ${lugar}` }).click()
-      await page.getByRole('dialog').getByRole('button', { name: 'Apagar' }).click()
+      await expect(page.getByRole('dialog')).toBeVisible()
+      await page.getByRole('dialog').getByRole('button', { name: 'Cancelar' }).click()
+    } finally {
+      await apagaOsLugares(page, guardados)
     }
   })
+
+  /**
+   * Apaga as cenas que o teste guardou, mesmo que ele tenha falhado no meio.
+   *
+   * Existe porque os lugares vivem atrás do SOCKET, e a varredura do `setup`
+   * — que é HTTP — não os alcança: uma falha no meio deixava as cenas no banco
+   * para sempre, e a lista só cresce, o que deixa esta cena mais lenta a cada
+   * falha num teste que já leva 8s. Achei 3 restos de execuções anteriores.
+   *
+   * É à prova de falha de propósito, e cada peça foi provada sabotando: uma
+   * falha costuma deixar um DIÁLOGO por cima, e sem fechá-lo o clique de
+   * apagar não chega no botão; e o erro da limpeza não pode escapar, senão ele
+   * substitui na saída o erro DE VERDADE que fez o teste falhar.
+   */
+  async function apagaOsLugares(page: Page, lugares: string[]): Promise<void> {
+    try {
+      // Fechar o diálogo é a PRIMEIRA coisa, e ESPERAR — nunca clicar. Duas
+      // versões minhas morreram aqui. A primeira não fechava nada: com o
+      // diálogo aberto o Kobalte marca os irmãos `aria-hidden` e `getByRole`
+      // devolve ZERO, então a limpeza rodava, não achava botão e ia embora
+      // calada (a armadilha está no guia do front). A segunda clicava em
+      // "Cancelar" e travava os 30 segundos do teste, porque no caminho FELIZ
+      // o diálogo já está fechando quando a limpeza começa — clicar num alvo
+      // em movimento faz o Playwright esperar estabilidade que nunca vem.
+      await page.keyboard.press('Escape')
+      await page
+        .getByRole('dialog')
+        .waitFor({ state: 'hidden', timeout: 5000 })
+        .catch(() => {})
+
+      for (const lugar of lugares) {
+        const apagar = page.getByRole('button', { name: `Apagar ${lugar}` })
+        if (!(await apagar.count())) continue
+        await apagar.click({ timeout: 5000 })
+        await page.getByRole('dialog').getByRole('button', { name: 'Apagar' }).click()
+        // Esperar o diálogo SUMIR antes da próxima volta, pelo mesmo motivo:
+        // enquanto ele fecha, os irmãos seguem `aria-hidden` e a volta seguinte
+        // não acha o botão dela — a limpeza apagava UMA e desistia calada.
+        await expect(page.getByRole('dialog')).toBeHidden({ timeout: 5000 })
+        await expect(apagar).toHaveCount(0, { timeout: 5000 })
+      }
+    } catch (erro) {
+      console.warn(`[limpeza] não consegui apagar todas as cenas: ${erro}`)
+    }
+  }
 
   /** Os rótulos que estão na iniciativa agora. */
   async function labelsNaIniciativa(page: Page): Promise<string[]> {

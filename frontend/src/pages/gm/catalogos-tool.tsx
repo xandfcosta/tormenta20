@@ -1,4 +1,5 @@
 import { CatalogBrowser } from '@/features/gm-tools/catalog-browser'
+import { SectionTitle } from '@/shared/ui/section-label'
 
 /**
  * Catálogos — condições, magias, poderes e itens numa busca só. The browser
@@ -8,12 +9,12 @@ import { CatalogBrowser } from '@/features/gm-tools/catalog-browser'
 export function CatalogosTool() {
   return (
     <section class="flex min-h-0 flex-1 flex-col gap-3" aria-labelledby="mesa-catalogos">
-      <h2
+      <SectionTitle
         id="mesa-catalogos"
-        class="font-heading text-lg uppercase tracking-[0.16em] text-grimorio-gold"
+       
       >
         Catálogos
-      </h2>
+      </SectionTitle>
       <CatalogBrowser />
     </section>
   )

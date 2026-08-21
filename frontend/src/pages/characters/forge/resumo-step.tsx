@@ -19,6 +19,7 @@ import {
 import { draftPowerPool } from '@/features/character-build/power-pool'
 import { bagagemGroups, startingLoadout } from '@/features/character-build/starting-equipment'
 import type { CharacterFormValues } from '@/features/character-build/wizard-steps'
+import { FieldLabel, SectionLabel, SectionTitle } from '@/shared/ui/section-label'
 
 /**
  * Last step: the character as a sheet, before it is one. Whatever is still
@@ -68,9 +69,9 @@ export function ResumoStep() {
       <PendenciasBanner items={pendencias()} />
 
       <div class="space-y-1 text-center">
-        <p class="font-heading text-2xl uppercase tracking-[0.12em] text-grimorio-gold sm:text-3xl">
+        <SectionTitle as="p" class="text-2xl sm:text-3xl">
           {values().name.trim() || 'Sem nome'}
-        </p>
+        </SectionTitle>
         <p class="text-xs text-muted-foreground">{lineage()}</p>
       </div>
 
@@ -85,9 +86,9 @@ export function ResumoStep() {
         <For each={totals()}>
           {(attribute) => (
             <span class="flex items-baseline gap-1">
-              <span aria-hidden="true" class="text-3xs uppercase tracking-widest text-muted-foreground">
+              <FieldLabel aria-hidden="true">
                 {attribute.abbr}
-              </span>
+              </FieldLabel>
               <span aria-hidden="true" class="tabular-nums text-foreground">
                 {signed(attribute.total)}
               </span>
@@ -206,9 +207,9 @@ function PendenciasBanner(props: { items: Pendencia[] }) {
 function Stat(props: { label: string; abbr: string; value: number; suffix?: string }) {
   return (
     <span class="flex items-baseline gap-1">
-      <span aria-hidden="true" class="text-3xs uppercase tracking-widest text-muted-foreground">
+      <FieldLabel aria-hidden="true">
         {props.abbr}
-      </span>
+      </FieldLabel>
       <span aria-hidden="true" class="text-lg tabular-nums text-grimorio-gold">
         {props.value}
         {props.suffix}
@@ -226,9 +227,9 @@ function SummaryCard(props: { title: string; lines: string[]; empty: string }): 
       aria-label={props.title}
       class="space-y-1 rounded-sm border border-grimorio-iron bg-muted/10 p-3"
     >
-      <p class="font-heading text-2xs uppercase tracking-[0.16em] text-grimorio-gold">
+      <SectionLabel tom="gold">
         {props.title}
-      </p>
+      </SectionLabel>
       <Show
         when={props.lines.length > 0}
         fallback={<p class="text-2xs text-muted-foreground">{props.empty}</p>}

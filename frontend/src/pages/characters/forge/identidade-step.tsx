@@ -7,6 +7,7 @@ import { cn } from '@/shared/lib/utils'
 import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
 import { Select } from '@/shared/ui/select'
+import { FieldLabel, SectionLabel } from '@/shared/ui/section-label'
 
 /**
  * Last step before the Resumo: who this person is. The name gets the top of the
@@ -175,12 +176,12 @@ function Field(props: {
 }) {
   return (
     <div class="space-y-1">
-      <label
+      <SectionLabel
         for={props.name}
-        class="font-heading text-2xs uppercase tracking-[0.14em] text-muted-foreground"
-      >
+       
+       as="label">
         {props.label}
-      </label>
+      </SectionLabel>
       {props.children}
       <Show when={props.hint}>
         {(hint) => <p class="text-2xs text-muted-foreground/80">{hint()}</p>}
@@ -208,9 +209,9 @@ function VitalMeter(props: {
   return (
     <div class="space-y-2 rounded-sm border border-grimorio-iron bg-muted/10 p-3">
       <div class="flex items-baseline justify-between gap-2">
-        <p class="font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
+        <SectionLabel>
           {props.label}
-        </p>
+        </SectionLabel>
         <p class="font-heading text-3xl tabular-nums text-grimorio-gold">
           <span aria-hidden="true">{props.max}</span>
           <span class="sr-only">
@@ -234,12 +235,12 @@ function VitalMeter(props: {
       </div>
 
       <div class="flex items-center gap-2">
-        <label
+        <FieldLabel
           for={`identidade-${props.kind}-current`}
-          class="text-2xs uppercase tracking-wide text-muted-foreground"
-        >
+         
+         as="label" class="text-2xs">
           {props.abbr} atual
-        </label>
+        </FieldLabel>
         <NumberInput
           id={`identidade-${props.kind}-current`}
           min={0}

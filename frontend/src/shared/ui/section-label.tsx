@@ -87,6 +87,12 @@ type RotuloProps = Omit<ComponentProps<'span'>, 'style'> & {
   tom?: RotuloTom
   /** Só o `SectionTitle` olha: apertado em painel denso, folgado em passo de cena. */
   contexto?: RotuloContexto
+  /**
+   * Presente porque o `as` promete polimorfismo de verdade: o mesmo desenho
+   * vira `<label>` ao lado de um campo, e um rótulo de formulário sem `for`
+   * não rotula nada. Biome cobra isso, e com razão.
+   */
+  for?: string
   /** Só para cor que o CSS não sabe de antemão — a barra vital pinta o rótulo
    *  com a mesma variável do preenchimento, que muda com o valor. */
   style?: JSX.CSSProperties | string

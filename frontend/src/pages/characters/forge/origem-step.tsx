@@ -10,6 +10,7 @@ import { matchesQuery } from '@/shared/lib/fuzzy-filter'
 import { cn } from '@/shared/lib/utils'
 import { Input } from '@/shared/ui/input'
 import { Select } from '@/shared/ui/select'
+import { FieldLabel, SectionLabel, SectionTitle } from '@/shared/ui/section-label'
 
 /** Every origin offers a pool and the character takes two of it (p56). */
 const ORIGIN_BENEFIT_CAP = 2
@@ -48,12 +49,12 @@ export function OrigemStep() {
 
   return (
     <section class="flex min-h-0 flex-1 flex-col gap-3" aria-labelledby="forge-step-origem">
-      <h2
+      <SectionTitle
         id="forge-step-origem"
-        class="font-heading text-lg uppercase tracking-[0.16em] text-grimorio-gold"
+       
       >
         De onde você veio
-      </h2>
+      </SectionTitle>
 
       {/* The name column is CAPPED, not proportional: a fraction of a 1920
           stage gives 600px to a column of short words while the detail — the
@@ -179,9 +180,9 @@ function BenefitPicker(props: {
       {(g) => (
         <GrantBox title={g().name} class="flex flex-1 flex-col">
           <div class="flex flex-wrap items-baseline gap-x-2">
-            <p class="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <FieldLabel as="p" class="text-2xs font-semibold">
               Escolha {ORIGIN_BENEFIT_CAP} benefícios
-            </p>
+            </FieldLabel>
             <p aria-hidden="true" class="flex gap-0.5 text-3xs text-grimorio-gold">
               <For each={[0, 1]}>{(i) => <span>{i < props.picks.length ? '●' : '○'}</span>}</For>
             </p>
@@ -266,9 +267,9 @@ function BenefitCard(props: {
           <span class="flex flex-wrap items-baseline gap-1.5">
             <span class="text-xs font-semibold">{props.name}</span>
             <Show when={props.poderUnico}>
-              <span class="font-heading text-4xs uppercase tracking-[0.14em] text-grimorio-gold">
+              <SectionLabel as="span" tom="gold" class="text-4xs">
                 ✦ poder único
-              </span>
+              </SectionLabel>
             </Show>
           </span>
           <span class="block text-2xs leading-snug text-muted-foreground">

@@ -6,6 +6,7 @@ import {
   type PurchaseMap,
   purchasesTotal,
 } from './starting-equipment'
+import { SectionLabel } from '@/shared/ui/section-label'
 
 const tibarFmt = (value: number) =>
   value.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
@@ -32,9 +33,9 @@ export function BagagemPanel(props: BagagemPanelProps) {
 
   return (
     <aside class="space-y-2 rounded-sm border border-grimorio-iron bg-muted/20 p-3 lg:sticky lg:top-0">
-      <p class="font-heading text-2xs uppercase tracking-[0.16em] text-grimorio-gold">
+      <SectionLabel tom="gold">
         Sua bagagem
-      </p>
+      </SectionLabel>
       <SlotsBar used={props.slotsUsed} capacity={props.slotsCapacity} over={over()} />
       <Wallet tibar={props.tibar} spent={spent()} remaining={remaining()} />
       <div class="space-y-2 border-t border-grimorio-iron pt-2">
@@ -114,10 +115,10 @@ function BagGroupBlock(props: {
 }) {
   return (
     <div class="space-y-0.5">
-      <p class="font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground">
+      <SectionLabel class="text-3xs">
         {props.group.title}
         {props.group.title === 'Kit' ? ' · automático' : ''}
-      </p>
+      </SectionLabel>
       <ul class="space-y-0.5">
         <For each={props.group.lines}>
           {(line) => (

@@ -20,6 +20,7 @@ import { totalClassLevel } from '@/features/character-build/class-entries'
 import { cn } from '@/shared/lib/utils'
 import { NumberInput } from '@/shared/ui/number-input'
 import { Select } from '@/shared/ui/select'
+import { SectionLabel, SectionTitle } from '@/shared/ui/section-label'
 
 /**
  * Seventh step: equipamento inicial (p140). Choosers on the left, the bag they
@@ -67,12 +68,12 @@ export function EquipamentoStep() {
 
   return (
     <section class="flex min-h-0 flex-1 flex-col gap-3" aria-labelledby="forge-step-equipamento">
-      <h2
+      <SectionTitle
         id="forge-step-equipamento"
-        class="font-heading text-lg uppercase tracking-[0.16em] text-grimorio-gold"
+       
       >
         O que você carrega
-      </h2>
+      </SectionTitle>
 
       <Show
         when={loadout()}
@@ -134,12 +135,12 @@ function KitChoosers(props: { kit: StartingKit }) {
 
   return (
     <div class="space-y-3 rounded-sm border border-grimorio-iron p-3">
-      <p class="font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
+      <SectionLabel>
         Kit da classe{' '}
         <span class="normal-case tracking-normal">
           · {STARTING_KIT_BASE_ITEMS.join(' · ')} (automático)
         </span>
-      </p>
+      </SectionLabel>
 
       <div class="flex flex-wrap gap-3">
         <WeaponChooser
@@ -178,9 +179,9 @@ function WeaponChooser(props: {
 
   return (
     <div class="min-w-52 space-y-1" id={props.anchor}>
-      <p class="font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground">
+      <SectionLabel class="text-3xs">
         {props.label}
-      </p>
+      </SectionLabel>
       <Select
         options={options()}
         value={selected()}
@@ -208,9 +209,9 @@ function ArmorChooser(props: { kit: StartingKit }) {
       }
     >
       <div class="space-y-1.5" id="chooser-armadura">
-        <p class="font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground">
+        <SectionLabel class="text-3xs">
           Armadura{props.kit.armor === 'brunea' ? ' · brunea' : ' · leve a escolha'}
-        </p>
+        </SectionLabel>
         <div class="flex flex-wrap gap-1.5">
           <For each={options()}>
             {(option) => {
@@ -262,9 +263,9 @@ function ExtrasNote(props: { kit: StartingKit }) {
   return (
     <Show when={props.kit.extras.length > 0}>
       <div class="space-y-1 rounded-sm border border-grimorio-iron p-3">
-        <p class="font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
+        <SectionLabel>
           Extras da classe
-        </p>
+        </SectionLabel>
         <For each={props.kit.extras}>
           {(extra) => (
             <p class="text-xs">
@@ -291,9 +292,9 @@ function MoneyField(props: { level: number; tableMoney: number | null; origemRol
 
   return (
     <div class="space-y-1.5 rounded-sm border border-grimorio-iron p-3">
-      <p class="font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
+      <SectionLabel>
         Dinheiro inicial · Tabela 3-1
-      </p>
+      </SectionLabel>
       <div class="flex flex-wrap items-center gap-2">
         <span class="text-sm">T$</span>
         <NumberInput

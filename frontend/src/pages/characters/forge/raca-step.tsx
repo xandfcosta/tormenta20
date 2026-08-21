@@ -1,6 +1,7 @@
 import { Show } from 'solid-js'
 import { RacePicker } from '@/features/character-build/race-picker'
 import { useForge } from '@/features/character-build/forge-context'
+import { SectionTitle } from '@/shared/ui/section-label'
 
 /**
  * First step of the Forja: the lineage. Everything downstream (attribute
@@ -13,12 +14,12 @@ export function RacaStep() {
   return (
     <section class="flex min-h-0 flex-1 flex-col gap-3" aria-labelledby="forge-step-raca">
       <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h2
+        <SectionTitle
           id="forge-step-raca"
-          class="font-heading text-lg uppercase tracking-[0.16em] text-grimorio-gold"
+         
         >
           Escolha a linhagem
-        </h2>
+        </SectionTitle>
         <Show
           when={draft.values.races.length > 1}
           fallback={

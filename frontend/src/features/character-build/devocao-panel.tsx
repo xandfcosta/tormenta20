@@ -5,6 +5,7 @@ import { deuses } from '@/shared/lib/abilities-cache'
 import { grantedPowerOptionsFor } from '@/shared/lib/divine-powers-cache'
 import { cn } from '@/shared/lib/utils'
 import { GrantBox } from './grant-panels'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 const ACTION_LABEL: Record<string, string> = {
   padrao: 'ação padrão',
@@ -56,9 +57,9 @@ export function DevocaoPanel(props: DevocaoPanelProps) {
             </Show>
 
             <div aria-label={`Poder concedido de ${god().name}`} class="grid gap-1.5">
-              <p class="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <FieldLabel as="p" class="text-2xs font-semibold">
                 Poder concedido · escolha 1 (p96)
-              </p>
+              </FieldLabel>
               <For each={powers()}>
                 {(power) => (
                   <GrantedPowerRow

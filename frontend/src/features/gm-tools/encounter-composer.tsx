@@ -9,6 +9,7 @@ import {
   encounterNd,
 } from './encounter'
 import { formatNd } from './monster-format'
+import { SectionLabel } from '@/shared/ui/section-label'
 
 const TONE_COLOR = {
   calm: 'var(--hp-full)',
@@ -51,9 +52,9 @@ export function EncounterComposer(props: EncounterComposerProps) {
   return (
     <div class="flex min-h-0 flex-1 flex-col gap-3">
       <div class="flex flex-wrap items-end gap-3 rounded-sm border border-grimorio-iron p-3">
-        <p class="font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
+        <SectionLabel>
           O grupo
-        </p>
+        </SectionLabel>
         <PartyField
           id="encounter-party-level"
           label="Nível"
@@ -146,12 +147,12 @@ function PartyField(props: {
 }) {
   return (
     <div class="space-y-1">
-      <label
+      <SectionLabel
         for={props.id}
-        class="block font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground"
-      >
+       
+       as="label" class="text-3xs block">
         {props.label}
-      </label>
+      </SectionLabel>
       <NumberInput
         id={props.id}
         min={props.min}
@@ -169,9 +170,9 @@ function PartyField(props: {
 function Ledger(props: { label: string; value: string; color?: string }) {
   return (
     <p class="flex items-baseline gap-1.5">
-      <span class="font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground">
+      <SectionLabel as="span" class="text-3xs">
         {props.label}
-      </span>
+      </SectionLabel>
       <span
         class={cn('font-mono text-sm', !props.color && 'text-grimorio-gold')}
         style={props.color ? { color: props.color } : undefined}

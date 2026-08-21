@@ -20,6 +20,7 @@ import {
   PowerCatalogRow,
   SpellCatalogRow,
 } from './catalog-rows'
+import { SectionLabel } from '@/shared/ui/section-label'
 
 export type CatalogBrowserProps = {
   /** Bounds the list's scroll area — the drawer gives it less room than the
@@ -222,9 +223,9 @@ function ResultRow(props: { row: CatalogResultRow }) {
     <Switch>
       <Match when={props.row.kind === 'header' && props.row}>
         {(row) => (
-          <p class="pt-1 font-heading text-2xs uppercase tracking-[0.16em] text-grimorio-gold">
+          <SectionLabel tom="gold" class="pt-1">
             {row().label} · {row().count}
-          </p>
+          </SectionLabel>
         )}
       </Match>
       <Match when={props.row.kind === 'condition' && props.row}>

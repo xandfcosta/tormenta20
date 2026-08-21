@@ -5,6 +5,7 @@ import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
 import { ND_MAX, ND_MIN, ND_STEP, type MonsterFilterStore } from './monster-filter'
 import { MONSTER_TIPOS, MONSTER_TIPO_LABEL } from './monster-format'
+import { SectionLabel } from '@/shared/ui/section-label'
 
 /**
  * The bestiary's filter controls. Shared by the Bestiário and by the
@@ -84,12 +85,12 @@ function NdField(props: {
 }) {
   return (
     <div class="space-y-1">
-      <label
+      <SectionLabel
         for={props.id}
-        class="block font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground"
-      >
+       
+       as="label" class="text-3xs block">
         {props.label}
-      </label>
+      </SectionLabel>
       <NumberInput
         id={props.id}
         min={ND_MIN}

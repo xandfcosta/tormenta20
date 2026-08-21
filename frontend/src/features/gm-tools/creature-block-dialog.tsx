@@ -15,6 +15,7 @@ import { DialogInlineError } from '@/shared/ui/dialog-inline-error'
 import { Input } from '@/shared/ui/input'
 import { CreatureBlockForm } from './creature-block-form'
 import { creatureActions } from './creature-mutations'
+import { FieldLabel } from '@/shared/ui/section-label'
 
 /**
  * Onde o mestre escreve o bloco de criatura (ALE-137) — a resposta à queixa que
@@ -112,12 +113,12 @@ export function CreatureBlockDialog(props: {
 
         <div class="space-y-4">
           <div class="space-y-1">
-            <label
+            <FieldLabel
               for="creature-name"
-              class="block text-3xs uppercase tracking-widest text-muted-foreground"
-            >
+             
+             as="label" class="block">
               Nome
-            </label>
+            </FieldLabel>
             <Input
               id="creature-name"
               value={name()}

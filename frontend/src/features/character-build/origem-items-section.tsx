@@ -5,6 +5,7 @@ import { cn } from '@/shared/lib/utils'
 import { Select } from '@/shared/ui/select'
 import { parseDiceNotation, rollDice } from '@/shared/lib/dice'
 import { shopCatalog, weaponOptions } from './starting-equipment'
+import { SectionLabel } from '@/shared/ui/section-label'
 
 /** Picked value per grant, keyed by the grant's verbatim label. */
 export type OrigemItemPicks = Record<string, string>
@@ -32,9 +33,9 @@ export function OrigemItemsSection(props: OrigemItemsSectionProps) {
   return (
     <Show when={props.originName}>
       <div class="space-y-1.5 rounded-sm border border-grimorio-iron p-3" id="chooser-origem">
-        <p class="font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
+        <SectionLabel>
           Origem · {props.originName}
-        </p>
+        </SectionLabel>
         <Show
           when={grants().length > 0}
           fallback={<p class="text-xs text-muted-foreground">Sem itens de origem.</p>}

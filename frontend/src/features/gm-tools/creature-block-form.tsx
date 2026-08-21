@@ -10,6 +10,7 @@ import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
 import { MONSTER_SIZE_LABEL, MONSTER_TIPO_LABEL, MONSTER_TIPOS } from './monster-format'
+import { FieldLabel, SectionLabel } from '@/shared/ui/section-label'
 
 const SIZES: CreatureSize[] = ['minusculo', 'pequeno', 'medio', 'grande', 'enorme', 'colossal']
 
@@ -168,7 +169,7 @@ function AttacksEditor(props: {
   return (
     <section class="space-y-2">
       <div class="flex items-center justify-between">
-        <SectionTitle>Ataques</SectionTitle>
+        <SectionLabel as="h4" tom="gold">Ataques</SectionLabel>
         <Button
           type="button"
           size="sm"
@@ -238,7 +239,7 @@ function SkillsEditor(props: {
   return (
     <section class="space-y-2">
       <div class="flex items-center justify-between">
-        <SectionTitle>Perícias</SectionTitle>
+        <SectionLabel as="h4" tom="gold">Perícias</SectionLabel>
         <Button
           type="button"
           size="sm"
@@ -317,12 +318,12 @@ function NumField(props: {
 function Field(props: { label: string; id: string; class?: string; children: unknown }) {
   return (
     <div class={props.class ?? 'w-28 space-y-1'}>
-      <label
+      <FieldLabel
         for={props.id}
-        class="block text-3xs uppercase tracking-widest text-muted-foreground"
-      >
+       
+       as="label" class="block">
         {props.label}
-      </label>
+      </FieldLabel>
       {props.children as never}
     </div>
   )
@@ -331,16 +332,9 @@ function Field(props: { label: string; id: string; class?: string; children: unk
 function Section(props: { title: string; children: unknown }) {
   return (
     <section class="space-y-2">
-      <SectionTitle>{props.title}</SectionTitle>
+      <SectionLabel as="h4" tom="gold">{props.title}</SectionLabel>
       <div class="flex flex-wrap gap-2">{props.children as never}</div>
     </section>
   )
 }
 
-function SectionTitle(props: { children: unknown }) {
-  return (
-    <h4 class="font-heading text-2xs uppercase tracking-[0.14em] text-grimorio-gold">
-      {props.children as never}
-    </h4>
-  )
-}

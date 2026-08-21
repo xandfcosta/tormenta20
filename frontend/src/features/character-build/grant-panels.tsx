@@ -6,6 +6,7 @@ import { Badge } from '@/shared/ui/badge'
 import { cn } from '@/shared/lib/utils'
 import type { GrantLine } from './grant-helpers'
 import { classGrant, signed } from './grant-helpers'
+import { SectionLabel } from '@/shared/ui/section-label'
 
 /**
  * Inline "what this pick grants" box, rendered live under a picker in the
@@ -20,9 +21,9 @@ export function GrantBox(props: { title: string; class?: string; children: JSX.E
         props.class,
       )}
     >
-      <p class="font-heading text-2xs uppercase tracking-[0.16em] text-grimorio-gold">
+      <SectionLabel tom="gold">
         {props.title}
-      </p>
+      </SectionLabel>
       {props.children}
     </div>
   )

@@ -1,6 +1,7 @@
 import { For, Show } from 'solid-js'
 import type { CreatureBlock } from '@/shared/api/creature-types'
 import { MONSTER_SIZE_LABEL, MONSTER_TIPO_LABEL, formatNd } from './monster-format'
+import { FieldLabel, SectionLabel } from '@/shared/ui/section-label'
 
 /**
  * O bloco de criatura na tela, seja ele o verbete do livro ou o que o MESTRE
@@ -30,9 +31,9 @@ export function CreatureStatBlock(props: { block: CreatureBlock; bookPage?: numb
                 <span class="font-mono text-grimorio-gold">{signed(attack.attackBonus)}</span>
                 <span class="font-mono text-muted-foreground">{attack.damage}</span>
                 <Show when={attack.ranged}>
-                  <span class="text-3xs uppercase tracking-wide text-muted-foreground">
+                  <FieldLabel>
                     à distância
-                  </span>
+                  </FieldLabel>
                 </Show>
                 <Show when={attack.special}>
                   {(special) => (
@@ -134,9 +135,9 @@ export function CreatureStatBlock(props: { block: CreatureBlock; bookPage?: numb
 
 function BlockTitle(props: { children: string }) {
   return (
-    <h4 class="font-heading text-2xs uppercase tracking-[0.14em] text-grimorio-gold">
+    <SectionLabel as="h4" tom="gold">
       {props.children}
-    </h4>
+    </SectionLabel>
   )
 }
 

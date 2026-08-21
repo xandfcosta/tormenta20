@@ -22,6 +22,7 @@ import { rollDice } from '@/shared/lib/dice'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
+import { SectionLabel, SectionTitle } from '@/shared/ui/section-label'
 
 const SIZE_LABEL: Record<string, string> = {
   pequena: 'Pequena',
@@ -46,18 +47,18 @@ const PACING_LABEL: Record<string, string> = {
 export function ImprovisoTool() {
   return (
     <section class="flex min-h-0 flex-1 flex-col gap-4" aria-labelledby="mesa-improviso">
-      <h2
+      <SectionTitle
         id="mesa-improviso"
-        class="font-heading text-lg uppercase tracking-[0.16em] text-grimorio-gold"
+       
       >
         Improviso
-      </h2>
+      </SectionTitle>
 
       <div class="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
         <div>
-          <p class="mb-2 font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
+          <SectionLabel class="mb-2">
             Tabelas do Cap 6
-          </p>
+          </SectionLabel>
           <div class="grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-3">
             <RuinaTable />
             <ChaseTable />
@@ -66,9 +67,9 @@ export function ImprovisoTool() {
         </div>
 
         <div class="border-t border-grimorio-iron pt-4">
-          <p class="mb-2 font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
+          <SectionLabel class="mb-2">
             Masmorra
-          </p>
+          </SectionLabel>
           <DungeonPlanner />
         </div>
       </div>
@@ -145,9 +146,9 @@ function TableCard<T>(props: {
   return (
     <div class="space-y-2 rounded-sm border border-grimorio-iron p-3">
       <div class="flex flex-wrap items-baseline justify-between gap-2">
-        <p class="font-heading text-2xs uppercase tracking-[0.14em] text-grimorio-gold">
+        <SectionLabel tom="gold">
           {props.title}
-        </p>
+        </SectionLabel>
         <p class="font-mono text-3xs text-muted-foreground">
           {props.dice} · {props.page}
         </p>
@@ -207,12 +208,12 @@ function DungeonPlanner() {
       <div class="space-y-3 rounded-sm border border-grimorio-iron p-3">
         <div class="flex flex-wrap items-end gap-3">
           <div class="space-y-1">
-            <label
+            <SectionLabel
               for="dungeon-rooms"
-              class="block font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground"
-            >
+             
+             as="label" class="text-3xs block">
               Salas
-            </label>
+            </SectionLabel>
             <NumberInput
               id="dungeon-rooms"
               min={1}
@@ -225,12 +226,12 @@ function DungeonPlanner() {
             />
           </div>
           <div class="min-w-48 flex-1 space-y-1">
-            <label
+            <SectionLabel
               for="dungeon-objective"
-              class="block font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground"
-            >
+             
+             as="label" class="text-3xs block">
               Objetivo
-            </label>
+            </SectionLabel>
             <Input
               id="dungeon-objective"
               value={objective()}

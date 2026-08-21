@@ -7,6 +7,7 @@ import { EncounterComposer } from '@/features/gm-tools/encounter-composer'
 import { createEncounterDraft } from '@/features/gm-tools/encounter-draft'
 import { MonsterPickerPanel } from '@/features/gm-tools/monster-picker-panel'
 import { Button } from '@/shared/ui/button'
+import { SectionTitle } from '@/shared/ui/section-label'
 
 /**
  * Construtor de encontros — the party, the creatures, and what the fight adds
@@ -23,12 +24,12 @@ export function EncontrosTool() {
 
   return (
     <section class="flex min-h-0 flex-1 flex-col gap-3" aria-labelledby="mesa-encontros">
-      <h2
+      <SectionTitle
         id="mesa-encontros"
-        class="font-heading text-lg uppercase tracking-[0.16em] text-grimorio-gold"
+       
       >
         Construtor de encontros
-      </h2>
+      </SectionTitle>
 
       <div class="min-h-0 flex-1 overflow-y-auto pr-1">
         <EncounterComposer

@@ -2,6 +2,7 @@ import { For } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
 import { romanNumeral } from '@/shared/lib/roman-numeral'
 import { WIZARD_STEPS, type StepSlug, stepIndex } from './wizard-steps'
+import { SectionLabel } from '@/shared/ui/section-label'
 
 export type ForgeBeadsProps = {
   current: StepSlug
@@ -68,9 +69,9 @@ export function ForgeBeads(props: ForgeBeadsProps) {
         >
           {romanNumeral(index() + 1)}
         </span>
-        <span class="truncate font-heading text-xs uppercase tracking-[0.16em] text-muted-foreground">
+        <SectionLabel as="span" class="text-xs truncate">
           {label()}
-        </span>
+        </SectionLabel>
         <span class="sr-only">
           Passo {index() + 1} de {WIZARD_STEPS.length} · {label()}
         </span>

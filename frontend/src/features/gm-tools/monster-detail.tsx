@@ -2,6 +2,7 @@ import type { Monster } from '@/shared/api/catalog-types'
 import { For, type JSX, Show } from 'solid-js'
 import { xpForNd } from '@/shared/lib/encounter-math'
 import { MONSTER_TIPO_LABEL, formatNd } from './monster-format'
+import { FieldLabel, SectionLabel, SectionTitle } from '@/shared/ui/section-label'
 
 const signed = (n: number) => (n >= 0 ? `+${n}` : String(n))
 
@@ -15,9 +16,9 @@ export function MonsterDetail(props: { monster: Monster }) {
     // attribute boxes stretched to ~220px each to hold two characters.
     <div class="max-w-4xl space-y-4 text-sm">
       <div class="space-y-0.5">
-        <h3 class="font-heading text-lg uppercase tracking-[0.14em] text-grimorio-gold">
+        <SectionTitle as="h3">
           {props.monster.name}
-        </h3>
+        </SectionTitle>
         <p class="text-xs text-muted-foreground">
           ND {formatNd(props.monster.nd)} · {MONSTER_TIPO_LABEL[props.monster.tipo]} ·{' '}
           {props.monster.size} · p{props.monster.bookPage} · XP {xpForNd(props.monster.nd)}
@@ -87,9 +88,9 @@ export function MonsterDetail(props: { monster: Monster }) {
 function Section(props: { title: string; children: JSX.Element }) {
   return (
     <section>
-      <h4 class="mb-1 font-heading text-2xs uppercase tracking-[0.16em] text-muted-foreground">
+      <SectionLabel as="h4" class="mb-1">
         {props.title}
-      </h4>
+      </SectionLabel>
       {props.children}
     </section>
   )
@@ -98,7 +99,7 @@ function Section(props: { title: string; children: JSX.Element }) {
 function Stat(props: { label: string; value: string | number }) {
   return (
     <div class="rounded-sm border border-grimorio-iron p-2 text-center">
-      <p class="text-3xs uppercase tracking-wide text-muted-foreground">{props.label}</p>
+      <FieldLabel as="p">{props.label}</FieldLabel>
       <p class="text-sm font-semibold tabular-nums">{props.value}</p>
     </div>
   )
