@@ -54,12 +54,48 @@ async function varrerCronicasDeTeste(page: Page): Promise<void> {
   if (restos.length > 0) console.log(`[setup] ${restos.length} crônica(s) de teste varrida(s)`)
 }
 
+/**
+ * Tira dos personagens da seed as condições que uma execução ANTERIOR deixou.
+ *
+ * O spec da sessão aplica Abalado, Agarrado e Cego para medir a faixa com a
+ * fileira cheia, e as tira no fim. Só que a limpeza dele mora no CORPO do
+ * teste: quando o teste falha por qualquer motivo, ela não roda, as condições
+ * ficam gravadas na ficha — e a partir daí ele falha PARA SEMPRE, porque o
+ * seletor não oferece uma condição que já está aplicada. Um teste que só passa
+ * numa seed limpa não é repetível (F.I.R.S.T), e este se envenenava sozinho.
+ *
+ * Varre no SETUP, que roda antes de tudo e não depende de nenhum teste ter
+ * terminado bem. Mesma escolha da varredura de crônicas acima.
+ *
+ * Roda nas DUAS sessões, e isso custou uma tentativa: `/api/characters` lista
+ * só o que a sessão POSSUI, e a ficha que o spec suja — o Arcanista Erudito —
+ * é do JOGADOR. Varrendo só com o mestre a limpeza achava zero e ia embora
+ * dizendo que tinha limpado.
+ */
+async function varrerCondicoesDeTeste(page: Page): Promise<void> {
+  const lista = await page.request.get('/api/characters')
+  expect(lista.ok(), 'a varredura de condições rodou sem sessão').toBe(true)
+  const fichas = (await lista.json()) as { id: number; activeConditions?: string }[]
+  let varridas = 0
+  for (const ficha of fichas) {
+    if (!ficha.activeConditions || ficha.activeConditions === '[]') continue
+    const limpou = await page.request.patch(`/api/characters/${ficha.id}/conditions`, {
+      data: { activeConditions: [] },
+    })
+    expect(limpou.ok(), `não consegui limpar as condições da ficha ${ficha.id}`).toBe(true)
+    varridas++
+  }
+  if (varridas > 0) console.log(`[setup] ${varridas} ficha(s) com condição de teste varrida(s)`)
+}
+
 setup('authenticate', async ({ page }) => {
   await signIn(page, GM_EMAIL, '.auth/user.json')
   await varrerCronicasDeTeste(page)
+  await varrerCondicoesDeTeste(page)
 })
 
 setup('authenticate as player', async ({ page }) => {
   await signIn(page, PLAYER_EMAIL, '.auth/player.json')
+  await varrerCondicoesDeTeste(page)
 })
 
