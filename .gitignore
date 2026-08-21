@@ -32,3 +32,4 @@ t20-book.pdf
 .playwright-mcp/
 frontend-solid/dist
 frontend-solid/src/routeTree.gen.ts
+__pycache__/

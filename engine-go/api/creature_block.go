@@ -68,6 +68,14 @@ type CreatureAttack struct {
 type CreatureSkill struct {
 	Name  string `json:"name"`
 	Bonus int    `json:"bonus"`
+	// Nota é o bônus CONDICIONAL que o livro escreve entre parênteses depois do
+	// número — "Furtividade +4 (+14 em pântanos)" na Hidra (p306). Irmã do
+	// `Special` do ataque, e pela mesma razão: é prosa que o livro grudou numa
+	// linha estruturada.
+	//
+	// Cuidado com o outro parêntese, que quer o oposto: `Ofício (armeiro) +2`
+	// vem ANTES do número e faz parte do NOME da perícia (ALE-151).
+	Nota string `json:"nota,omitempty"`
 }
 
 // creatureTipos são os tipos de criatura do livro. Fechado porque o livro os

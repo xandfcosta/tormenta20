@@ -37,7 +37,21 @@ type monsterRow struct {
 	Reflexos     *int   `json:"reflexos"`
 	Vontade      *int   `json:"vontade"`
 	Deslocamento string `json:"deslocamento"`
-	BookPage     int    `json:"bookPage"`
+	Iniciativa   *int   `json:"iniciativa"`
+	Percepcao    *int   `json:"percepcao"`
+	PM           *int   `json:"pm"`
+	Skills       *[]struct {
+		Name  string `json:"name"`
+		Bonus int    `json:"bonus"`
+		Nota  string `json:"nota"`
+	} `json:"skills"`
+	Equipamento *string `json:"equipamento"`
+	Tesouro     *string `json:"tesouro"`
+	// TreasureXp não existe mais: era `nd * 1000` nos OITENTA verbetes, a mesma
+	// conta do `xpForNd`, e o nome mentia. O ponteiro fica para o teste poder
+	// afirmar a AUSÊNCIA — sem ele, um campo ressuscitado passaria despercebido.
+	TreasureXp *int `json:"treasureXp"`
+	BookPage   int  `json:"bookPage"`
 }
 
 func lerBestiario(t *testing.T) []monsterRow {
@@ -78,6 +92,29 @@ func TestBestiarySchema(t *testing.T) {
 				t.Errorf("%q: %s ausente — nenhum verbete do livro omite isso", m.Name, nome)
 			}
 		}
+		// As linhas do bloco impresso que a ALE-151 devolveu. Iniciativa,
+		// Percepção e Tesouro existem em TODO verbete do livro; perícias e
+		// equipamento existem como CAMPO em todos, vazios em quem não tem.
+		for nome, v := range map[string]any{
+			"iniciativa": m.Iniciativa, "percepcao": m.Percepcao,
+		} {
+			if v == (*int)(nil) {
+				t.Errorf("%q: %s ausente — abre o bloco de toda criatura", m.Name, nome)
+			}
+		}
+		if m.Skills == nil {
+			t.Errorf("%q: skills ausente — vazio é uma lista vazia, não um buraco", m.Name)
+		}
+		if m.Equipamento == nil {
+			t.Errorf("%q: equipamento ausente — vazio é string vazia, não um buraco", m.Name)
+		}
+		if m.Tesouro == nil || *m.Tesouro == "" {
+			t.Errorf("%q: tesouro vazio — o livro dá um a todo verbete", m.Name)
+		}
+		if m.TreasureXp != nil {
+			t.Errorf("%q: treasureXp voltou — era nd*1000 duplicado, e o nome mentia", m.Name)
+		}
+
 		// O capítulo do bestiário. Uma página fora da faixa é transcrição
 		// errada, e foi assim que verbetes ficaram com números do vizinho.
 		if m.BookPage < 286 || m.BookPage > 316 {

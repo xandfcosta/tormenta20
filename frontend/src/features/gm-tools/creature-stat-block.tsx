@@ -54,6 +54,16 @@ export function CreatureStatBlock(props: { block: CreatureBlock; bookPage?: numb
           ND {formatNd(props.block.nd)} · {MONSTER_TIPO_LABEL[props.block.tipo]} ·{' '}
           {MONSTER_SIZE_LABEL[props.block.size]}
         </span>
+        {/* Iniciativa e Percepção abrem o bloco impresso (p289) e são as duas
+            primeiras coisas que o mestre rola numa cena. O modelo as tinha
+            desde a ALE-137 e esta tela nunca as mostrou — nem para as criaturas
+            que o próprio mestre escreve (ALE-151). */}
+        <span class="flex items-baseline gap-1">
+          INI <span class="font-mono text-sm text-foreground">{signed(props.block.iniciativa)}</span>
+        </span>
+        <span class="flex items-baseline gap-1">
+          PER <span class="font-mono text-sm text-foreground">{signed(props.block.percepcao)}</span>
+        </span>
         <span class="flex items-baseline gap-1">
           DEF <span class="font-mono text-sm text-foreground">{props.block.defesa}</span>
         </span>
@@ -92,6 +102,9 @@ export function CreatureStatBlock(props: { block: CreatureBlock; bookPage?: numb
               {(skill) => (
                 <span>
                   {skill.name} <span class="font-mono text-foreground">{signed(skill.bonus)}</span>
+                  {/* O bônus CONDICIONAL do livro, "(+14 em pântanos)": ele muda
+                      a rolagem e some se não for mostrado (ALE-151). */}
+                  <Show when={skill.nota}>{(nota) => <span> ({nota()})</span>}</Show>
                 </span>
               )}
             </For>

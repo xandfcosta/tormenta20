@@ -50,8 +50,17 @@ export type CreatureAttack = {
   special?: string
 }
 
-/** Uma perícia da linha "Perícias Furtividade +5". */
-export type CreatureSkill = { name: string; bonus: number }
+/**
+ * Uma perícia da linha "Perícias Furtividade +5".
+ *
+ * `nota` é o bônus CONDICIONAL entre parênteses DEPOIS do número — a Hidra tem
+ * "Furtividade +4 (+14 em pântanos)" (p306). Irmã do `special` do ataque, e
+ * pela mesma razão: prosa que o livro grudou numa linha estruturada.
+ *
+ * Cuidado com o outro parêntese, que quer o oposto: `Ofício (armeiro) +2` vem
+ * ANTES do número e faz parte do NOME da perícia (ALE-151).
+ */
+export type CreatureSkill = { name: string; bonus: number; nota?: string }
 
 /** Os tipos de criatura do livro — fechados porque o livro os fecha. */
 export type CreatureTipo =

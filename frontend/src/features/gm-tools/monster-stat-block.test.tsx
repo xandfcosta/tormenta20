@@ -34,7 +34,14 @@ const OGRO = {
     { name: 'Pedrada', attackBonus: 4, damage: '1d8+5', special: 'arremesso 9m' },
   ],
   specialAbilities: ['Faro.', 'Vulnerabilidade a luz: -2 em ataques sob luz do sol.'],
-  treasureXp: 900,
+  iniciativa: 4,
+  percepcao: 1,
+  skills: [
+    { name: 'Atletismo', bonus: 12 },
+    { name: 'Furtividade', bonus: 4, nota: '+14 em pântanos' },
+  ],
+  equipamento: 'Clava, peles',
+  tesouro: 'Padrão',
   bookPage: 300,
 } as unknown as Monster
 
@@ -87,5 +94,39 @@ describe('MonsterStatBlock', () => {
     render(() => <MonsterStatBlock monster={{ ...OGRO, specialAbilities: [] }} />)
 
     expect(screen.queryByRole('region', { name: 'Habilidades' })).not.toBeInTheDocument()
+  })
+})
+
+/**
+ * As linhas do bloco impresso que a importação tinha perdido (ALE-151).
+ *
+ * Iniciativa e Percepção abrem o bloco no livro e são as duas primeiras coisas
+ * que o mestre rola; Equipamento se perdeu INTEIRO — zero dos 80 verbetes o
+ * tinham — e Tesouro virava um número de XP que não era tesouro nenhum.
+ */
+describe('MonsterStatBlock — o que voltou do livro', () => {
+  it('abre com Iniciativa e Percepção, como o bloco impresso', () => {
+    render(() => <MonsterStatBlock monster={OGRO} />)
+
+    const identidade = within(screen.getByRole('region', { name: 'Identidade' }))
+    expect(identidade.getByText(/INI/)).toBeInTheDocument()
+    expect(identidade.getByText('+4')).toBeInTheDocument()
+    expect(identidade.getByText(/PER/)).toBeInTheDocument()
+  })
+
+  it('mostra as perícias com o bônus condicional entre parênteses', () => {
+    render(() => <MonsterStatBlock monster={OGRO} />)
+
+    const pericias = within(screen.getByRole('region', { name: 'Perícias' }))
+    expect(pericias.getByText(/Atletismo/)).toBeInTheDocument()
+    expect(pericias.getByText(/\+14 em pântanos/)).toBeInTheDocument()
+  })
+
+  it('fecha com Equipamento e Tesouro', () => {
+    render(() => <MonsterStatBlock monster={OGRO} />)
+
+    const fim = within(screen.getByRole('region', { name: 'Equipamento e tesouro' }))
+    expect(fim.getByText(/Clava, peles/)).toBeInTheDocument()
+    expect(fim.getByText(/Padrão/)).toBeInTheDocument()
   })
 })

@@ -23,7 +23,11 @@ const ogro = (over: Partial<Monster> = {}): Monster =>
     deslocamento: '9m (6q)',
     attacks: [{ name: 'Clava', attackBonus: 11, damage: '2d8+7' }],
     specialAbilities: [],
-    treasureXp: 0,
+    iniciativa: 3,
+    percepcao: 1,
+    skills: [{ name: 'Atletismo', bonus: 12 }],
+    equipamento: 'Clava',
+    tesouro: 'Padrão',
     bookPage: 293,
     ...over,
   }) as Monster
@@ -48,54 +52,36 @@ describe('creatureFromMonster', () => {
     expect(bloco.attacks).toEqual([{ name: 'Clava', attackBonus: 11, damage: '2d8+7' }])
   })
 
-  // Zero seria inventar número de livro. O editor mostra o campo vazio e o
-  // mestre decide — os dados voltam pela ALE-151.
-  it('deixa em branco o que a importação perdeu, em vez de chutar', () => {
+  // Antes da ALE-151 o catálogo não tinha estes campos, e este arquivo os
+  // deixava vazios com uma nota dizendo que voltariam. Voltaram.
+  it('traz os campos do livro que a importação tinha perdido', () => {
     const bloco = creatureFromMonster(ogro())
 
-    expect(bloco.equipment).toBe('')
-    expect(bloco.treasure).toBe('')
-    expect(bloco.iniciativa).toBe(0)
+    expect(bloco.iniciativa).toBe(3)
+    expect(bloco.percepcao).toBe(1)
+    expect(bloco.equipment).toBe('Clava')
+    expect(bloco.treasure).toBe('Padrão')
   })
 
-  // A linha "Perícias:" É o dado, só que virou texto na importação (37 dos 80
-  // verbetes). Estruturá-la evita o mestre redigitar o que o livro já diz.
-  it('estrutura a linha de perícias que virou texto', () => {
+  // As perícias vinham RASPADAS do texto de `specialAbilities`, porque era ali
+  // que a importação as tinha jogado. Agora são campo, e a raspagem morreu
+  // junto com o motivo dela.
+  it('as perícias vêm do campo, não do texto das habilidades', () => {
     const bloco = creatureFromMonster(
-      ogro({ specialAbilities: ['Perícias: Furtividade +5, Adestrar Animais +9.'] }),
+      ogro({
+        skills: [{ name: 'Furtividade', bonus: 4, nota: '+14 em pântanos' }],
+        specialAbilities: ['Faro.'],
+      }),
     )
 
-    expect(bloco.skills).toEqual([
-      { name: 'Furtividade', bonus: 5 },
-      { name: 'Adestrar Animais', bonus: 9 },
-    ])
-    expect(bloco.specialAbilities).toEqual([])
+    expect(bloco.skills).toEqual([{ name: 'Furtividade', bonus: 4, nota: '+14 em pântanos' }])
+    expect(bloco.specialAbilities).toEqual(['Faro.'])
   })
 
-  it('bônus negativo continua negativo', () => {
-    const bloco = creatureFromMonster(ogro({ specialAbilities: ['Perícias: Furtividade -1.'] }))
-
-    expect(bloco.skills).toEqual([{ name: 'Furtividade', bonus: -1 }])
-  })
-
-  // Perder a linha seria pior que não estruturá-la: o mestre ainda precisa
-  // LER o que o livro escreveu, mesmo que o parser não entenda a forma.
-  it('frase que não casa continua na lista de habilidades', () => {
-    const bloco = creatureFromMonster(
-      ogro({ specialAbilities: ['Perícias: veja o texto do capítulo.', 'Faro.'] }),
-    )
-
-    expect(bloco.skills).toEqual([])
-    expect(bloco.specialAbilities).toEqual(['Perícias: veja o texto do capítulo.', 'Faro.'])
-  })
-
-  // O caso do Centauro Xamã: "PM 20; Medo de Altura." mistura duas informações
-  // numa frase. Estruturar isso seria adivinhação — fica para a ALE-151, e a
-  // frase continua visível.
-  it('não tenta adivinhar PM de dentro de uma frase', () => {
-    const bloco = creatureFromMonster(ogro({ specialAbilities: ['PM 20; Medo de Altura.'] }))
-
-    expect(bloco.pm).toBeUndefined()
-    expect(bloco.specialAbilities).toEqual(['PM 20; Medo de Altura.'])
+  // O caso do Centauro Xamã: "PM 20; Medo de Altura." misturava duas
+  // informações numa frase. O PM virou campo e a frase virou o que ela é.
+  it('o PM vem do campo, e só existe em conjurador', () => {
+    expect(creatureFromMonster(ogro()).pm).toBeUndefined()
+    expect(creatureFromMonster(ogro({ pm: 20 })).pm).toBe(20)
   })
 })

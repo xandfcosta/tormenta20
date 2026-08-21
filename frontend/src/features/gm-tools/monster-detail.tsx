@@ -31,10 +31,18 @@ export function MonsterDetail(props: { monster: Monster }) {
         </p>
       </div>
 
-      <div class="grid grid-cols-3 gap-2">
+      {/* Iniciativa e Percepção são a PRIMEIRA linha do bloco impresso (p289),
+          e o mestre rola as duas antes de qualquer outra coisa no combate.
+          Elas não existiam no modelo até a ALE-151. */}
+      <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <Stat label="Iniciativa" value={signed(props.monster.iniciativa)} />
+        <Stat label="Percepção" value={signed(props.monster.percepcao)} />
         <Stat label="PV" value={props.monster.hp} />
         <Stat label="Defesa" value={props.monster.defesa} />
         <Stat label="Deslocamento" value={props.monster.deslocamento} />
+        <Show when={props.monster.pm !== undefined}>
+          <Stat label="PM" value={props.monster.pm ?? 0} />
+        </Show>
       </div>
 
 
@@ -70,6 +78,43 @@ export function MonsterDetail(props: { monster: Monster }) {
         </Section>
       </Show>
 
+      <Show when={props.monster.skills.length > 0}>
+        <Section title="Perícias">
+          <p class="text-xs">
+            <For each={props.monster.skills}>
+              {(skill, i) => (
+                <>
+                  {i() > 0 ? ' · ' : ''}
+                  {skill.name} <span class="font-mono">{signed(skill.bonus)}</span>
+                  <Show when={skill.nota}>
+                    {(nota) => <span class="text-muted-foreground"> ({nota()})</span>}
+                  </Show>
+                </>
+              )}
+            </For>
+          </p>
+        </Section>
+      </Show>
+
+      {/* Equipamento e Tesouro fecham o bloco impresso, e é onde o livro os põe.
+          O equipamento se perdeu INTEIRO na importação — zero dos 80 verbetes o
+          tinham — e o tesouro virava um número de XP (ALE-151). */}
+      <Show when={props.monster.equipamento}>
+        {(equipamento) => (
+          <Section title="Equipamento">
+            <p class="text-xs">{equipamento()}</p>
+          </Section>
+        )}
+      </Show>
+
+      <Show when={props.monster.tesouro}>
+        {(tesouro) => (
+          <Section title="Tesouro">
+            <p class="text-xs">{tesouro()}</p>
+          </Section>
+        )}
+      </Show>
+
       {/* Atributos e resistências vêm DEPOIS do que a criatura faz (ALE-170).
           O mestre abre o bestiário no meio do combate para saber o que ela
           rola AGORA, e antes disso ele atravessava doze estatísticas — três
@@ -101,7 +146,10 @@ export function MonsterDetail(props: { monster: Monster }) {
 
 function Section(props: { title: string; children: JSX.Element }) {
   return (
-    <section>
+    // `aria-label` e não só o `<h4>`: uma `<section>` SEM nome acessível não é
+    // uma região para o leitor de tela — ela vira uma caixa anônima, e o mestre
+    // que navega por regiões não consegue pular para Ataques (ALE-151).
+    <section aria-label={props.title}>
       <SectionLabel as="h4" class="mb-1">
         {props.title}
       </SectionLabel>

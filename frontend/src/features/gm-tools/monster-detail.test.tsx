@@ -1,4 +1,4 @@
-import { render, screen } from '@solidjs/testing-library'
+import { render, screen, within } from '@solidjs/testing-library'
 import type { Monster } from '@/shared/api/catalog-types'
 import { describe, expect, it } from 'vitest'
 import { MonsterDetail } from './monster-detail'
@@ -23,6 +23,11 @@ const GOBLIN = {
   deslocamento: '9m, escalada 9m',
   attacks: [{ name: 'Duas adagas', attackBonus: 7, damage: '1d4', special: 'crítico 19' }],
   specialAbilities: ['Visão no escuro.'],
+  iniciativa: 7,
+  percepcao: 3,
+  skills: [],
+  equipamento: 'Duas adagas, trapos',
+  tesouro: 'Nenhum',
   bookPage: 300,
 } as unknown as Monster
 
@@ -43,8 +48,11 @@ describe('MonsterDetail', () => {
   it('assina os modificadores, positivos e negativos', () => {
     render(() => <MonsterDetail monster={GOBLIN} />)
 
-    // Des +3 e Reflexos +3 — os dois assinados.
-    expect(screen.getAllByText('+3')).toHaveLength(2)
+    // Des +3 e Reflexos +3 — os dois assinados. Contados DENTRO da ficha:
+    // desde a ALE-151 a Percepção também é +3 e mora no cabeçalho, e um
+    // `getAllByText` da tela inteira passaria a contar três.
+    const ficha = within(screen.getByRole('region', { name: 'Atributos' }))
+    expect(ficha.getAllByText('+3')).toHaveLength(1)
     expect(screen.getAllByText('-1').length).toBeGreaterThan(0)
     expect(screen.getAllByText('+0').length).toBeGreaterThan(0)
   })
@@ -52,13 +60,22 @@ describe('MonsterDetail', () => {
   it('traz o ataque com bônus, dano e a nota especial', () => {
     render(() => <MonsterDetail monster={GOBLIN} />)
 
-    expect(screen.getByText('Duas adagas')).toBeInTheDocument()
+    expect(
+      within(screen.getByRole('region', { name: 'Ataques' })).getByText('Duas adagas'),
+    ).toBeInTheDocument()
     expect(screen.getByText(/\+7 · 1d4/)).toBeInTheDocument()
     expect(screen.getByText('crítico 19')).toBeInTheDocument()
   })
 
   it('omite as seções vazias em vez de mostrar título sozinho', () => {
-    const mudo = { ...GOBLIN, attacks: [], specialAbilities: [] } as unknown as Monster
+    const mudo = {
+      ...GOBLIN,
+      attacks: [],
+      specialAbilities: [],
+      skills: [],
+      equipamento: '',
+      tesouro: '',
+    } as unknown as Monster
     render(() => <MonsterDetail monster={mudo} />)
 
     expect(screen.queryByText('Ataques')).not.toBeInTheDocument()

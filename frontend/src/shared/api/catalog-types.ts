@@ -12,6 +12,7 @@
  * (`catalog/rules_tables_test.go`), que é onde o dado é autorado.
  */
 import type { AttributeKey } from './attribute-keys'
+import type { CreatureSkill } from './creature-types'
 import type { DisplayFact } from './display-facts'
 import type { ExpertiseName } from './expertise-names'
 import type { Modifier } from './item-types'
@@ -282,10 +283,37 @@ export type Monster = {
   fortitude: number
   reflexos: number
   vontade: number
+  /**
+   * As três linhas de cabeçalho do bloco impresso, que a importação perdeu
+   * inteiras e a ALE-151 devolveu: "Iniciativa +4, Percepção +1" (p289).
+   */
+  iniciativa: number
+  percepcao: number
+  /**
+   * Ausente na maioria: a linha "Pontos de Mana" só existe em conjurador, e um
+   * zero diria "tem mana e está sem", que é outro estado. Quinze dos 80 têm.
+   */
+  pm?: number
   deslocamento: string
   attacks: readonly MonsterAttack[]
+  /**
+   * A linha "Perícias" do livro, estruturada. Ela existia como TEXTO dentro de
+   * `specialAbilities` em 37 verbetes ("Perícias: Furtividade +5.") e em
+   * nenhum lugar nos outros — o mestre não tinha como filtrar nem somar.
+   */
+  skills: readonly CreatureSkill[]
+  /** A linha "Equipamento". Zero dos 80 verbetes a tinham antes da ALE-151. */
+  equipamento: string
+  /**
+   * A linha "Tesouro": "Nenhum", "Metade", "Padrão", "Dobro" — ou a frase
+   * inteira quando o livro descreve o que se extrai da criatura.
+   *
+   * Substitui o antigo `treasureXp`, que era `nd * 1000` nos OITENTA verbetes,
+   * a mesma conta do `xpForNd`, e cujo nome mentia: não tinha relação nenhuma
+   * com o Tesouro do livro.
+   */
+  tesouro: string
   specialAbilities: readonly string[]
-  treasureXp: number
   bookPage: number
 }
 
