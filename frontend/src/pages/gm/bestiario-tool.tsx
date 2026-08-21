@@ -44,7 +44,7 @@ export function BestiarioTool() {
   }
 
   return (
-    <section class="flex min-h-0 flex-1 flex-col gap-3" aria-labelledby="mesa-bestiario">
+    <section class="mesa-palco flex min-h-0 flex-1 flex-col gap-3" aria-labelledby="mesa-bestiario">
       <div class="flex flex-wrap items-baseline gap-x-3">
         <h2
           id="mesa-bestiario"
@@ -62,7 +62,17 @@ export function BestiarioTool() {
             (ALE-175): abaixo de `lg` a grade não esticava, a lista parava na
             tampa de 45vh e o que sobrava era faixa morta — 243px medidos em
             768×1024, um quarto da tela. */}
-        <div class="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(16rem,22rem)_1fr]">
+        {/* `@container` e não `lg:` (ALE-172): a decisão aqui é "cabe painel
+            lateral ao lado da lista?", que é uma pergunta sobre o espaço que
+            ESTA grade recebe, não sobre o tamanho da janela. Com o `lg:` a
+            resposta era não-monotônica — medido, um contêiner de 800px dava
+            DUAS colunas (janela 1024) e um de 968px dava UMA (janela 1000),
+            porque a coluna de ferramentas devolve largura à direita conforme a
+            janela encolhe. Crescer o espaço custava uma coluna.
+            50rem é o contêiner mais estreito que já mostrava duas colunas, de
+            modo que nenhum formato muda de cara: o que muda é só a faixa de
+            janela 1000–1023, que passa a ter o painel em vez do diálogo. */}
+        <div class="mesa-duas-colunas grid min-h-0 flex-1 gap-4">
           <div class="flex min-h-0 flex-col gap-2">
             <MonsterFilters filter={filter} idPrefix="bestiario" />
 
@@ -100,7 +110,7 @@ export function BestiarioTool() {
 
           <section
             aria-label="Criatura escolhida"
-            class="hidden lg:block lg:min-h-0 lg:overflow-y-auto lg:rounded-md lg:border lg:border-grimorio-iron lg:p-3"
+            class="mesa-painel"
           >
             <Show
               when={picked()}
@@ -165,9 +175,9 @@ function MonsterRow(props: { monster: Monster; selected: boolean; onOpen: () => 
 
 function BestiarySkeleton() {
   return (
-    <div class="grid gap-4 lg:flex-1 lg:grid-cols-[minmax(16rem,22rem)_1fr]">
+    <div class="mesa-duas-colunas grid gap-4">
       <Skeleton class="h-64 w-full" />
-      <Skeleton class="hidden h-64 w-full lg:block" />
+      <Skeleton class="mesa-painel h-64 w-full" />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { ensurePowersFixture } from './support/character'
-import { expectSemFaixaMorta } from './support/geometry'
+import { expectColunasMonotonicas, expectSemFaixaMorta } from './support/geometry'
 
 /**
  * As listas virtualizadas do MESTRE — bestiário e catálogos.
@@ -149,4 +149,35 @@ test('no tablet em pé, a lista do bestiário não deixa faixa morta', async ({ 
   expect(transbordou, 'a lista não transbordou — o teste não mediu nada').toBe(true)
 
   await expectSemFaixaMorta(page, '[aria-labelledby=mesa-bestiario]')
+})
+
+/**
+ * Crescer a janela nunca tira uma coluna do bestiário (ALE-172).
+ *
+ * O gate das duas colunas olhava a JANELA (`lg:`), e a coluna de ferramentas
+ * do `/gm` devolve largura à direita conforme a janela encolhe. O resultado
+ * era invertido: numa janela de 1024 o palco recebia 800px e mostrava DUAS
+ * colunas, e numa de 1000 recebia 968px e mostrava UMA. O mestre alargava a
+ * janela e perdia o painel de detalhe.
+ *
+ * A varredura é de LARGURA com altura fixa de propósito. A decisão real ali é
+ * "cabe painel lateral?", que tem duas dimensões: o mesmo contêiner de 812px
+ * cabe num tablet deitado (768px de altura) e não cabe num celular deitado
+ * (390px, onde a lista sobraria com 41px — menos que uma linha). Por isso o
+ * conserto é `container-type: size` com as duas condições, e por isso comparar
+ * caixas de alturas diferentes acusaria como defeito a exceção que É o
+ * conserto.
+ *
+ * Por que e2e: media/container query só resolve em browser de verdade. Em
+ * jsdom nenhuma consulta casa e a grade responde sempre a mesma coisa.
+ */
+test('alargar a janela nunca tira uma coluna do bestiário', async ({ page }) => {
+  await page.goto('/gm/bestiario')
+  await expect(page.getByRole('button', { name: /ND / }).first()).toBeVisible()
+
+  await expectColunasMonotonicas(
+    page,
+    '[aria-labelledby=mesa-bestiario] div.grid',
+    [1920, 1440, 1200, 1100, 1040, 1024, 1000, 950, 900, 860, 844, 830, 812, 800, 768, 390],
+  )
 })

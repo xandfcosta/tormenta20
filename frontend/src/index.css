@@ -324,6 +324,47 @@
   .grimorio-frame--stone {
     background: linear-gradient(var(--grimorio-panel-raised), var(--grimorio-panel));
   }
+
+  /* "Cabe painel lateral ao lado da lista?" (ALE-172). A pergunta é sobre o
+   * espaço que ESTE palco recebe, e ela tem DUAS dimensões: largura para as
+   * duas colunas e altura para a lista continuar valendo alguma coisa depois
+   * de dividir. Nenhuma consulta de LARGURA sozinha responde — medido, um
+   * contêiner de 812px vem tanto de um tablet deitado (768px de altura, onde
+   * o painel cabe) quanto de um celular deitado (390px, onde a lista sobra
+   * com 41px, menos que UMA linha).
+   *
+   * Por isso `container-type: size` e não o `@container` de largura do resto
+   * da casa: é o único mecanismo que enxerga as duas. Consulta de ALTURA em
+   * `@media` está proibida pela regra da casa (o teclado virtual muda a
+   * altura da janela, ALE-176) — aqui a altura medida é a do PALCO, e no
+   * único formato onde o teclado abriria (celular) o palco já está muito
+   * abaixo do limiar, então não há chaveamento para o dedo sentir.
+   *
+   * 50rem é o contêiner mais estreito que já mostrava duas colunas antes
+   * desta mudança, de modo que nenhum dos seis formatos muda de cara. */
+  .mesa-palco {
+    container-type: size;
+  }
+  /* O estado FECHADO mora aqui e não numa classe `hidden` do Tailwind: a
+   * camada de utilitários vence a de componentes, então um `hidden` no
+   * elemento apagaria o painel em toda largura. Os dois estados têm de morar
+   * na mesma camada para a consulta poder decidir. */
+  .mesa-painel {
+    display: none;
+  }
+  @container (min-width: 50rem) and (min-height: 30rem) {
+    .mesa-duas-colunas {
+      grid-template-columns: minmax(16rem, 22rem) 1fr;
+    }
+    .mesa-painel {
+      display: block;
+      min-height: 0;
+      overflow-y: auto;
+      border-radius: 0.375rem;
+      border: 1px solid var(--grimorio-iron);
+      padding: 0.75rem;
+    }
+  }
   /* Open-tome presentation for a focused chronicle (Crônicas). Leather cover +
    * parchment pages (the child .grimorio-parchment-bg) + a shaded central
    * spine, so it reads as a book rather than two cards. Decorative → literal

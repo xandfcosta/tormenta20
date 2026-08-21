@@ -368,3 +368,57 @@ export async function expectSemFaixaMorta(
     `banda vazia de ${medida?.faixa}px ${medida?.onde} numa janela de ${page.viewportSize()?.height}px — o palco não preencheu o espaço que recebeu`,
   ).toBeLessThanOrEqual(maxPx)
 }
+
+/**
+ * Crescer o contêiner nunca pode CUSTAR uma coluna (ALE-172).
+ *
+ * A contagem de colunas não é monotônica na JANELA — o `frontend/CLAUDE.md`
+ * já avisa disso, e por bom motivo: abaixo de `lg` um catálogo fica com o
+ * palco inteiro e precisa de MAIS colunas do que em `lg`, onde ele divide com
+ * um painel. Mas ela tem de ser monotônica no CONTÊINER, que é o espaço que a
+ * grade de fato recebe.
+ *
+ * O defeito que a batizou: no bestiário, um contêiner de 800px dava DUAS
+ * colunas e um de 968px dava UMA, porque o gate olhava a janela e a coluna de
+ * ferramentas devolve largura à direita conforme a janela encolhe.
+ *
+ * Varre LARGURAS com a altura FIXA, e isso é essencial: a decisão "cabe painel
+ * lateral?" tem duas dimensões, então um mesmo contêiner de 812px responde
+ * diferente num tablet deitado (768px de altura, cabe) e num celular deitado
+ * (390px, não cabe). Comparar caixas de alturas diferentes acusaria como
+ * defeito a exceção que é justamente o conserto.
+ *
+ * @example await expectColunasMonotonicas(page, 'section .grid', [1920, 1024, 900, 800])
+ */
+export async function expectColunasMonotonicas(
+  page: Page,
+  seletor: string,
+  larguras: number[],
+  altura = 900,
+): Promise<void> {
+  const medidas: { janela: number; conteiner: number; colunas: number }[] = []
+  for (const largura of larguras) {
+    await page.setViewportSize({ width: largura, height: altura })
+    const medida = await page.evaluate((sel) => {
+      const node = document.querySelector(sel as string)
+      if (!node) return null
+      return {
+        conteiner: Math.round(node.getBoundingClientRect().width),
+        colunas: getComputedStyle(node).gridTemplateColumns.split(' ').filter(Boolean).length,
+      }
+    }, seletor)
+    expect(medida, `${seletor} não existe em ${largura}×${altura}`).not.toBeNull()
+    if (medida) medidas.push({ janela: largura, ...medida })
+  }
+
+  const porConteiner = [...medidas].sort((a, b) => a.conteiner - b.conteiner)
+  const quedas = porConteiner
+    .map((atual, i) => ({ atual, antes: porConteiner[i - 1] }))
+    .filter(({ atual, antes }) => antes !== undefined && atual.colunas < antes.colunas)
+    .map(
+      ({ atual, antes }) =>
+        `contêiner de ${antes?.conteiner}px dá ${antes?.colunas} coluna(s) (janela ${antes?.janela}) e o de ${atual.conteiner}px dá ${atual.colunas} (janela ${atual.janela})`,
+    )
+
+  expect(quedas, 'crescer o contêiner custou uma coluna').toEqual([])
+}
