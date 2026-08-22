@@ -17,6 +17,10 @@ import { CatalogAddDialog } from './catalog-add-dialog'
 import { formatLoad, loadLimitLabel } from './item-describe'
 import { ItemFormDialog } from './item-form-dialog'
 import { itemActions, itemWriteMessage } from './item-mutations'
+import { TibarDialog } from './tibar-dialog'
+import { tibarAction } from './tibar-write'
+import { CargaMeter } from './carga-meter'
+import { formatTibar } from '@/shared/lib/format-tibar'
 import { FieldLabel, SectionLabel, SectionTitle } from '@/shared/ui/section-label'
 import { Panel } from '@/shared/ui/panel'
 
@@ -38,10 +42,14 @@ export function BagPanel(props: { character: Character }) {
   // The conditionals store lands with the Efeitos block (ALE-86); until then
   // the sheet computes against an empty opt-in set.
   const sheet = createMemo(() => computedSheetFor(props.character, new Set<string>()))
-  const max = () => sheet().inventorySlots
-  const used = () => props.character.items.reduce((total, it) => total + it.quantity * it.slots, 0)
-  const over = () => used() > max()
-  const percent = () => (max() > 0 ? Math.min(100, (used() / max()) * 100) : 0)
+  // A carga inteira vem do motor (p141) — espaços ocupados, limite e
+  // sobrecarga. A tela somava isto sozinha até a ALE-215, que é uma segunda
+  // implementação de regra do livro rodando no navegador.
+  const carga = () => sheet().carga
+  // Lê `props.character.id` no MOMENTO da escrita, como o `actions()` acima: a
+  // fábrica não guarda estado entre chamadas, e capturá-la no corpo congelaria o
+  // id do personagem que estava aberto na montagem.
+  const saveTibar = (tibar: number) => tibarAction(queryClient, props.character.id)(tibar)
 
   const partition = createMemo(() => partitionBag(props.character.items))
   const stowed = createMemo(() => filterStowed(partition().stowed, query(), filter()))
@@ -64,18 +72,31 @@ export function BagPanel(props: { character: Character }) {
           <SectionTitle contexto="painel">Mochila</SectionTitle>
           <p class="text-3xs text-muted-foreground sm:text-xs">
             carga{' '}
-            <span class={cn('font-mono', over() ? 'text-destructive' : 'text-foreground')}>
-              {formatLoad(used())}
+            <span
+              class={cn(
+                'font-mono',
+                carga().overloaded ? 'text-[color:var(--hp-critical)]' : 'text-foreground',
+              )}
+            >
+              {formatLoad(carga().used)}
             </span>{' '}
-            / {max()}
-            <Show when={over()}>
-              <FieldLabel tom="inherit" class="ml-2 text-destructive">
+            / {carga().limit}
+            <Show when={carga().overloaded}>
+              <FieldLabel tom="inherit" class="ml-2 text-[color:var(--hp-critical)]">
                 sobrecarga
               </FieldLabel>
             </Show>
             <span class="ml-2">
-              • {loadLimitLabel(max(), sheet().attributes.strength.total)}
+              • {loadLimitLabel(carga().limit, sheet().attributes.strength.total)}
             </span>
+          </p>
+          <p class="flex items-center gap-1.5 text-3xs text-muted-foreground sm:text-xs">
+            <span aria-hidden="true">⛃</span>
+            <span class="font-mono text-foreground">T$ {formatTibar(props.character.tibar)}</span>
+            <Show when={carga().coins > 0}>
+              <span>· {formatLoad(carga().coins)} espaço{carga().coins === 1 ? '' : 's'}</span>
+            </Show>
+            <TibarDialog tibar={props.character.tibar} onSave={saveTibar} />
           </p>
         </div>
         <div class="flex items-center gap-2">
@@ -118,12 +139,7 @@ export function BagPanel(props: { character: Character }) {
             </span>
           </div>
 
-          <div class="h-2 overflow-hidden rounded-full border border-grimorio-iron bg-muted">
-            <div
-              class={cn('h-full transition-all', over() ? 'bg-destructive' : 'bg-grimorio-gold')}
-              style={{ width: `${percent()}%` }}
-            />
-          </div>
+          <CargaMeter carga={carga()} />
 
           <div class="flex flex-wrap items-center gap-2">
             <Input

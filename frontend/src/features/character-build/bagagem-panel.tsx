@@ -1,4 +1,5 @@
 import { For, Show } from 'solid-js'
+import { formatTibar } from '@/shared/lib/format-tibar'
 import { cn } from '@/shared/lib/utils'
 import {
   type BagGroup,
@@ -7,9 +8,6 @@ import {
   purchasesTotal,
 } from './starting-equipment'
 import { SectionLabel } from '@/shared/ui/section-label'
-
-const tibarFmt = (value: number) =>
-  value.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
 
 export type BagagemPanelProps = {
   groups: BagGroup[]
@@ -98,10 +96,10 @@ function Wallet(props: { tibar: number; spent: number; remaining: number }) {
         props.remaining < 0 ? 'font-semibold text-[color:var(--hp-hurt)]' : 'text-foreground',
       )}
     >
-      <span aria-hidden="true">⛃ </span>T$ {tibarFmt(props.tibar)}
+      <span aria-hidden="true">⛃ </span>T$ {formatTibar(props.tibar)}
       <Show when={props.spent > 0}>
-        <> · gasto {tibarFmt(props.spent)} → </>
-        <span class="font-semibold">{tibarFmt(props.remaining)}</span>
+        <> · gasto {formatTibar(props.spent)} → </>
+        <span class="font-semibold">{formatTibar(props.remaining)}</span>
         <Show when={props.remaining < 0}> — remova itens</Show>
       </Show>
     </p>
@@ -153,7 +151,7 @@ function BagLineRow(props: {
             <Show when={item().price !== undefined}>
               <span class="text-muted-foreground">
                 {' '}
-                · T$ {tibarFmt((item().price ?? 0) * item().qty)}
+                · T$ {formatTibar((item().price ?? 0) * item().qty)}
               </span>
             </Show>
           </span>

@@ -400,12 +400,27 @@
     },
     "displacement": {
       "base": 9,
-      "itemBonus": 0,
-      "total": 9,
-      "contributions": []
+      "itemBonus": -3,
+      "total": 6,
+      "contributions": [
+        {
+          "source": "Sobrecarga (p141)",
+          "amount": -3
+        }
+      ]
     },
     "flySpeed": 0,
-    "inventorySlots": 9,
+    "carga": {
+      "items": 19,
+      "coins": 0,
+      "used": 19,
+      "limit": 9,
+      "max": 18,
+      "overloaded": true,
+      "overMax": true,
+      "armorPenalty": -5,
+      "displacementPenalty": -3
+    },
     "attributes": {
       "charisma": {
         "total": 2,
@@ -491,13 +506,18 @@
         "name": "Acrobacia",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": 0,
-        "total": 6,
+        "itemBonus": -5,
+        "total": 1,
         "halfLevel": 3,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [],
-        "armorPenaltyApplied": 0
+        "itemContributions": [
+          {
+            "source": "Sobrecarga (p141)",
+            "amount": -5
+          }
+        ],
+        "armorPenaltyApplied": -5
       },
       {
         "name": "Adestramento",
@@ -611,13 +631,18 @@
         "name": "Furtividade",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": 0,
-        "total": 6,
+        "itemBonus": -5,
+        "total": 1,
         "halfLevel": 3,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [],
-        "armorPenaltyApplied": 0
+        "itemContributions": [
+          {
+            "source": "Sobrecarga (p141)",
+            "amount": -5
+          }
+        ],
+        "armorPenaltyApplied": -5
       },
       {
         "name": "Guerra",
@@ -695,13 +720,18 @@
         "name": "Ladinagem",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": 0,
-        "total": 6,
+        "itemBonus": -5,
+        "total": 1,
         "halfLevel": 3,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [],
-        "armorPenaltyApplied": 0
+        "itemContributions": [
+          {
+            "source": "Sobrecarga (p141)",
+            "amount": -5
+          }
+        ],
+        "armorPenaltyApplied": -5
       },
       {
         "name": "Luta",
@@ -851,12 +881,27 @@
     },
     "displacement": {
       "base": 9,
-      "itemBonus": 0,
-      "total": 9,
-      "contributions": []
+      "itemBonus": -3,
+      "total": 6,
+      "contributions": [
+        {
+          "source": "Sobrecarga (p141)",
+          "amount": -3
+        }
+      ]
     },
     "flySpeed": 0,
-    "inventorySlots": 9,
+    "carga": {
+      "items": 19,
+      "coins": 0,
+      "used": 19,
+      "limit": 9,
+      "max": 18,
+      "overloaded": true,
+      "overMax": true,
+      "armorPenalty": -5,
+      "displacementPenalty": -3
+    },
     "attributes": {
       "charisma": {
         "total": 2,
@@ -942,13 +987,18 @@
         "name": "Acrobacia",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": 0,
-        "total": 6,
+        "itemBonus": -5,
+        "total": 1,
         "halfLevel": 3,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [],
-        "armorPenaltyApplied": 0
+        "itemContributions": [
+          {
+            "source": "Sobrecarga (p141)",
+            "amount": -5
+          }
+        ],
+        "armorPenaltyApplied": -5
       },
       {
         "name": "Adestramento",
@@ -1062,13 +1112,18 @@
         "name": "Furtividade",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": 0,
-        "total": 6,
+        "itemBonus": -5,
+        "total": 1,
         "halfLevel": 3,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [],
-        "armorPenaltyApplied": 0
+        "itemContributions": [
+          {
+            "source": "Sobrecarga (p141)",
+            "amount": -5
+          }
+        ],
+        "armorPenaltyApplied": -5
       },
       {
         "name": "Guerra",
@@ -1146,13 +1201,18 @@
         "name": "Ladinagem",
         "attribute": "dexterity",
         "base": 6,
-        "itemBonus": 0,
-        "total": 6,
+        "itemBonus": -5,
+        "total": 1,
         "halfLevel": 3,
         "attrValue": 3,
         "training": 0,
-        "itemContributions": [],
-        "armorPenaltyApplied": 0
+        "itemContributions": [
+          {
+            "source": "Sobrecarga (p141)",
+            "amount": -5
+          }
+        ],
+        "armorPenaltyApplied": -5
       },
       {
         "name": "Luta",

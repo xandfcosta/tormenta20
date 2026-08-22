@@ -72,10 +72,13 @@ type ExpertiseBreakdown struct {
 // ComputedSheetV2 aggregates every breakdown — the rich sheet the endgame WASM
 // boundary returns (replacing the front's derived.ts breakdown calls).
 type ComputedSheetV2 struct {
-	Defense         DefenseBreakdown              `json:"defense"`
-	Displacement    ValueBreakdown                `json:"displacement"`
-	FlySpeed        int                           `json:"flySpeed"`
-	InventorySlots  int                           `json:"inventorySlots"`
+	Defense      DefenseBreakdown `json:"defense"`
+	Displacement ValueBreakdown   `json:"displacement"`
+	FlySpeed     int              `json:"flySpeed"`
+	// Carga é a p141 inteira — os espaços ocupados, o limite e a sobrecarga.
+	// Ela substituiu o antigo `inventorySlots`, que dizia só o limite e deixava
+	// a outra metade da conta para a tela somar (ALE-215).
+	Carga           LoadBreakdown                 `json:"carga"`
 	Attributes      map[string]AttributeBreakdown `json:"attributes"`
 	PmLimit         ValueBreakdown                `json:"pmLimit"`
 	BestBaseSpellCd *int                          `json:"bestBaseSpellCd"`
@@ -104,6 +107,7 @@ type ComputedSheetV2 struct {
 // given active conditionals — the collection → resolution → breakdown pipeline.
 func (c *Catalogs) ComputeSheetV2(ch Character, activeConditionals map[string]bool) ComputedSheetV2 {
 	effects := ApplyActiveConditionals(ComputeItemEffects(c.ActiveItemsFor(ch)), activeConditionals)
+	carga := cargaBreakdown(ch, inventorySlotsTotal(ch, effects))
 
 	attrs := make(map[string]AttributeBreakdown, len(AttributeKeys))
 	for _, a := range AttributeKeys {
@@ -111,14 +115,14 @@ func (c *Catalogs) ComputeSheetV2(ch Character, activeConditionals map[string]bo
 	}
 	expertises := []ExpertiseBreakdown{}
 	for _, ex := range ch.Expertises {
-		expertises = append(expertises, expertiseBreakdown(ch, ex, effects))
+		expertises = append(expertises, expertiseBreakdown(ch, ex, effects, carga))
 	}
 
 	return ComputedSheetV2{
 		Defense:            defenseBreakdown(ch, effects),
-		Displacement:       displacementBreakdown(ch, effects),
+		Displacement:       displacementBreakdown(ch, effects, carga),
 		FlySpeed:           flySpeedTotal(effects),
-		InventorySlots:     inventorySlotsTotal(ch, effects),
+		Carga:              carga,
 		Attributes:         attrs,
 		PmLimit:            pmLimitBreakdown(ch, effects),
 		BestBaseSpellCd:    bestBaseSpellCd(ch, effects),
@@ -206,15 +210,31 @@ func hasActiveCondition(ch Character, id string) bool {
 	return false
 }
 
-// displacementBreakdown ports derived.ts displacementTotal (floored at 0).
-func displacementBreakdown(ch Character, e ItemEffects) ValueBreakdown {
+// displacementBreakdown ports derived.ts displacementTotal (floored at 0), mais
+// a sobrecarga: −3m enquanto a mochila passa do limite (p141). Ela entra como
+// contribuição nomeada porque um deslocamento que cai sem dizer por quê é lido
+// como defeito.
+func displacementBreakdown(ch Character, e ItemEffects, carga LoadBreakdown) ValueBreakdown {
 	stat := StatFor(e, ModifierTarget{K: "displacement"})
+	contribs := withNoteContribs(stat.Contributions)
+	bonus := stat.Total
+	if carga.DisplacementPenalty != 0 {
+		bonus += carga.DisplacementPenalty
+		contribs = append(contribs, sobrecargaContrib(carga.DisplacementPenalty))
+	}
 	return ValueBreakdown{
 		Base:          ch.Displacement,
-		ItemBonus:     stat.Total,
-		Total:         max(0, ch.Displacement+stat.Total),
-		Contributions: withNoteContribs(stat.Contributions),
+		ItemBonus:     bonus,
+		Total:         max(0, ch.Displacement+bonus),
+		Contributions: contribs,
 	}
+}
+
+// sobrecargaContrib nomeia a fonte uma vez só — ela aparece no deslocamento e
+// nas três perícias de penalidade de armadura, e duas grafias diferentes da
+// mesma penalidade leriam como duas penalidades.
+func sobrecargaContrib(amount int) BreakdownContribution {
+	return BreakdownContribution{Source: "Sobrecarga (p141)", Amount: amount}
 }
 
 // attributeBreakdown ports derived.ts attributeTotal + attributeContributions
@@ -231,8 +251,9 @@ func attributeBreakdown(ch Character, attr string, e ItemEffects) AttributeBreak
 var armorPenaltyExpertises = map[string]bool{"Acrobacia": true, "Furtividade": true, "Ladinagem": true}
 
 // expertiseBreakdown ports derived.ts expertiseTotalWithItems: ½ level + attr +
-// training + item mods (expertise/expertiseAll/expertiseByAttribute) + armor penalty.
-func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects) ExpertiseBreakdown {
+// training + item mods (expertise/expertiseAll/expertiseByAttribute) + armor
+// penalty — que desde a ALE-215 tem duas fontes, a armadura e a sobrecarga.
+func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects, carga LoadBreakdown) ExpertiseBreakdown {
 	halfLevel := ch.Level / 2
 	attrValue := effectiveAttribute(ch, state.Attribute, e)
 	training := 0
@@ -249,9 +270,9 @@ func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects) E
 
 	armorPenaltyApplied := 0
 	if armorPenaltyExpertises[state.Name] {
-		armorPenaltyApplied = StatFor(e, ModifierTarget{K: "armorPenalty"}).Total
-		if armorPenaltyApplied != 0 {
-			itemContribs = append(itemContribs, BreakdownContribution{Source: "Penalidade de armadura", Amount: armorPenaltyApplied})
+		for _, row := range armorPenaltyContribs(e, carga) {
+			armorPenaltyApplied += row.Amount
+			itemContribs = append(itemContribs, row)
 		}
 	}
 
@@ -268,6 +289,23 @@ func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects) E
 		ItemContributions:   itemContribs,
 		ArmorPenaltyApplied: armorPenaltyApplied,
 	}
+}
+
+// armorPenaltyContribs são as DUAS fontes de penalidade de armadura que a ficha
+// conhece: a das peças vestidas (p153, "Aplique a penalidade de armadura em
+// testes de Acrobacia, Furtividade e Ladinagem") e a sobrecarga, que a p141
+// descreve com essas mesmas palavras — "sofre penalidade de armadura –5". São
+// linhas separadas de propósito: somadas numa só, o jogador não descobre que
+// metade dela some ao largar peso.
+func armorPenaltyContribs(e ItemEffects, carga LoadBreakdown) []BreakdownContribution {
+	out := []BreakdownContribution{}
+	if item := StatFor(e, ModifierTarget{K: "armorPenalty"}).Total; item != 0 {
+		out = append(out, BreakdownContribution{Source: "Penalidade de armadura", Amount: item})
+	}
+	if carga.ArmorPenalty != 0 {
+		out = append(out, sobrecargaContrib(carga.ArmorPenalty))
+	}
+	return out
 }
 
 // totalContribsFor is the {total, contributions} shape for a single target

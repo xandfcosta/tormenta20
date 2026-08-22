@@ -1164,7 +1164,17 @@
       "contributions": []
     },
     "flySpeed": 0,
-    "inventorySlots": 20,
+    "carga": {
+      "items": 12.5,
+      "coins": 3,
+      "used": 15.5,
+      "limit": 20,
+      "max": 40,
+      "overloaded": false,
+      "overMax": false,
+      "armorPenalty": 0,
+      "displacementPenalty": 0
+    },
     "attributes": {
       "charisma": {
         "total": 1,
@@ -1702,7 +1712,17 @@
       "contributions": []
     },
     "flySpeed": 0,
-    "inventorySlots": 20,
+    "carga": {
+      "items": 12.5,
+      "coins": 3,
+      "used": 15.5,
+      "limit": 20,
+      "max": 40,
+      "overloaded": false,
+      "overMax": false,
+      "armorPenalty": 0,
+      "displacementPenalty": 0
+    },
     "attributes": {
       "charisma": {
         "total": 1,

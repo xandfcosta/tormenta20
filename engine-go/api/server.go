@@ -194,6 +194,7 @@ func (s *Server) Router() http.Handler {
 			r.Post("/{id}/end-scene", s.handleEndScene)
 			r.Post("/{id}/end-day", s.handleEndDay)
 			r.Patch("/{id}/vitals", s.handleUpdateVitals)
+			r.Patch("/{id}/tibar", s.handleUpdateTibar)
 			r.Post("/{id}/damage", s.handleApplyDamage)
 			r.Patch("/{id}/level", s.handleUpdateLevel)
 			r.Patch("/{id}/classes/level", s.handleUpdateClassLevel)
