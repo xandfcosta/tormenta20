@@ -173,7 +173,14 @@ const WIRE: [string, string, (rt: SessionRealtime) => void, Record<string, unkno
     (rt) => rt.removeMarker('m1'),
     { ...SCOPE, markerId: 'm1' },
   ],
-  ['traz a iniciativa', 'board-populate', (rt) => rt.populateBoard(), SCOPE],
+  // Quem vem para o mapa viaja por ID (ALE-204): rótulo faria a tela decidir o
+  // nome da peça, e é o servidor que numera os repetidos (ALE-192).
+  [
+    'traz quem o mestre escolheu',
+    'board-populate',
+    (rt) => rt.populateBoard(['e1', 'e3']),
+    { ...SCOPE, entryIds: ['e1', 'e3'] },
+  ],
   [
     'pinta o brejo',
     'board-terrain-paint',

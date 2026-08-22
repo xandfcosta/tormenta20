@@ -397,18 +397,25 @@ func (g *realtimeGateway) onBoardTerrainPaint(sock *socket.Socket, args []any) {
 	})
 }
 
-// onBoardPopulate (mestre) traz para o tabuleiro quem já está na iniciativa, já
-// com o deslocamento de cada personagem medido.
+// onBoardPopulate (mestre) traz para o tabuleiro as linhas da iniciativa que
+// ele ESCOLHEU, já com o deslocamento de cada personagem medido.
 //
 // O orçamento entra AQUI e não na tela: sem ele a peça nasceria sem alcance, e
 // o jogador só descobriria quanto anda ao tentar mover. A conta é do motor
 // (`Displacement.Total`), então a armadura pesada já chega descontada.
+//
+// O cliente manda IDS de linha, nunca rótulos (ALE-204): o nome que a peça leva
+// continua saindo da linha que o servidor guarda, e é isso que mantém os quatro
+// goblins numerados pelo servidor (ALE-192) sem o cliente inventar nome.
 func (g *realtimeGateway) onBoardPopulate(sock *socket.Socket, args []any) {
 	ctx, ok := g.access(sock, args)
 	if !ok || !g.requireGm(sock, ctx.role) {
 		return
 	}
-	board, err := g.s.boards.populate(context.Background(), ctx.sessionID, g.s.sessions.getState(ctx.sessionID))
+	board, err := g.s.boards.populate(
+		context.Background(), ctx.sessionID,
+		g.s.sessions.getState(ctx.sessionID), chosenEntries(ctx.body, "entryIds"),
+	)
 	if err != nil {
 		g.wsError(sock, err.Error())
 		return
@@ -420,6 +427,25 @@ func (g *realtimeGateway) onBoardPopulate(sock *socket.Socket, args []any) {
 	}
 	g.emitBoardState(ctx.sessionID, board)
 	ackOK(ctx.ack, boardForRole(ctx.role, board))
+}
+
+// chosenEntries lê do corpo as linhas que o mestre escolheu trazer (ALE-204).
+//
+// Ausente devolve nil — TODAS, o significado que o evento sempre teve e que uma
+// aba aberta antes desta mudança ainda manda. Lista vazia devolve conjunto
+// vazio, que não traz ninguém: os dois casos são diferentes de propósito.
+func chosenEntries(body map[string]any, key string) entrySelection {
+	raw, ok := body[key].([]any)
+	if !ok {
+		return nil
+	}
+	chosen := entrySelection{}
+	for _, item := range raw {
+		if id, ok := item.(string); ok {
+			chosen[id] = true
+		}
+	}
+	return chosen
 }
 
 // speedsForBoard mede o deslocamento das peças de personagem que ainda não têm

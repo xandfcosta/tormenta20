@@ -108,10 +108,10 @@ func TestPopulateBoardIsIdempotent(t *testing.T) {
 	_ = addEntry(st, npc("Ogro", 12), entryID)
 	_ = addEntry(st, npc("Bandido", 8), entryID)
 
-	if placed := populateBoard(b, st, id); placed != 2 {
+	if placed := populateBoard(b, st, id, nil); placed != 2 {
 		t.Errorf("primeira chamada colocou %d peças, esperado 2", placed)
 	}
-	if placed := populateBoard(b, st, id); placed != 0 {
+	if placed := populateBoard(b, st, id, nil); placed != 0 {
 		t.Errorf("segunda chamada colocou %d peças — quem já está no tabuleiro duplicou", placed)
 	}
 	if len(b.Tokens) != 2 {

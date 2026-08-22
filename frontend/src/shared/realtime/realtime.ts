@@ -269,8 +269,15 @@ export type SessionRealtime = {
   addMarker: (marker: Omit<BoardMarker, 'id'>) => void
   updateMarker: (markerId: string, patch: Partial<Omit<BoardMarker, 'id' | 'x' | 'y'>>) => void
   removeMarker: (markerId: string) => void
-  /** Traz para o tabuleiro quem já está na iniciativa. Idempotente. */
-  populateBoard: () => void
+  /**
+   * Traz para o tabuleiro as linhas NOMEADAS da iniciativa (ALE-204).
+   * Idempotente: quem já tem peça é ignorado, e quem não foi nomeado não nasce.
+   *
+   * Vão IDS e nunca rótulos: o nome da peça continua saindo da linha que o
+   * servidor guarda, que é o que mantém os quatro goblins numerados por ele
+   * (ALE-192) sem a tela inventar nome.
+   */
+  populateBoard: (entryIds: readonly string[]) => void
   /** Marca ou apaga UMA casa como terreno difícil (mestre). Explícito e não
    *  alternado: o pincel pinta ARRASTANDO, e o arraste passa duas vezes pela
    *  mesma casa. */
@@ -462,7 +469,7 @@ export function createSessionSocket(
     addMarker: (marker) => send('board-marker-add', { ...marker }),
     updateMarker: (markerId, patch) => send('board-marker-update', { markerId, patch }),
     removeMarker: (markerId) => send('board-marker-remove', { markerId }),
-    populateBoard: () => send('board-populate'),
+    populateBoard: (entryIds) => send('board-populate', { entryIds }),
     paintTerrain: (x, y, difficult) => send('board-terrain-paint', { x, y, difficult }),
     listPlaces: () => ask('board-places', {}, readPlaces),
     reopenPlace: (placeId) => send('board-reopen', { placeId }),
