@@ -88,7 +88,7 @@ export function MatchPeek(props: { rt: SessionRealtime }) {
       <Show when={active()}>
         {(entry) => (
           <>
-            <Swords aria-hidden="true" class="size-3.5 text-[color:var(--primary)]" />
+            <Swords aria-hidden="true" class="size-3.5 text-grimorio-crimson-bright" />
             <span class="truncate">{entry().label}</span>
           </>
         )}

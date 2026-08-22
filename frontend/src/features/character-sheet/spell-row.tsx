@@ -247,11 +247,18 @@ export function SpellRow(props: {
                       <Check aria-hidden="true" class="size-3.5" />
                       {learned().prepared ? 'Despreparar' : 'Preparar'}
                     </Button>
+                    {/* `destructive`, e isto é conserto (ALE-200): ele era
+                        `ghost` com a tinta de PENALIDADE — o vermelho mais
+                        claro dos três, o de "seu bônus é negativo" — ao lado
+                        de um "Despreparar" preenchido de vermelho. O botão que
+                        TIRA a magia da ficha era o mais apagado da linha, e o
+                        alternador reversível era o mais gritante. Com a ação
+                        virando dourada, os dois deixam de disputar. */}
                     <Button
                       type="button"
                       size="sm"
-                      variant="ghost"
-                      class="h-7 gap-1 text-xs text-penalty-ink hover:bg-penalty/15"
+                      variant="destructive"
+                      class="h-7 gap-1 text-xs"
                       disabled={pending()}
                       onClick={() => void unlearn()}
                     >
@@ -277,7 +284,7 @@ function LearnedBadge(props: { learned: CharacterSpell | null }) {
           class={cn(
             'rounded-none px-1 text-3xs uppercase tracking-widest',
             learned().prepared
-              ? 'bg-primary text-primary-foreground'
+              ? 'bg-marker text-marker-foreground'
               : 'bg-muted text-muted-foreground',
           )}
         >

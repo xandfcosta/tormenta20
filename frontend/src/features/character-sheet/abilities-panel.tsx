@@ -206,7 +206,7 @@ function SourceTabs(props: {
             class={cn(
               '-mb-px flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-1.5 text-sm font-medium transition-colors',
               props.active === source.value
-                ? 'border-primary text-foreground'
+                ? 'border-grimorio-crimson-bright text-foreground'
                 : 'border-transparent text-muted-foreground hover:text-foreground',
             )}
           >

@@ -111,7 +111,7 @@ function ItemView(props: {
         <li class="list-none -ml-5 flex items-start gap-2">
           <input
             type="checkbox"
-            class="mt-0.5 size-3.5 shrink-0 accent-[color:var(--primary)]"
+            class="mt-0.5 size-3.5 shrink-0 accent-grimorio-gold"
             checked={task().checked}
             disabled={props.onToggleTask === undefined}
             aria-label={props.item.spans.map((span) => span.text).join('')}
@@ -148,7 +148,7 @@ function SpanView(props: { span: Inline }) {
             href={link().href}
             target="_blank"
             rel="noreferrer noopener"
-            class="text-[color:var(--primary)] underline"
+            class="text-grimorio-gold underline"
           >
             {link().text}
           </a>

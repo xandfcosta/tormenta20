@@ -371,7 +371,7 @@ function InitiativeRow(props: {
         // topo desse contêiner (medido: folga ZERO, e ele não tem respiro em
         // cima), então o lado de cima do anel era cortado e sobrava um traço
         // atravessado (ALE-150). Por dentro, ele não depende do vizinho.
-        props.selected && 'inset-ring-1 inset-ring-[color:var(--primary)]',
+        props.selected && 'inset-ring-1 inset-ring-grimorio-crimson-bright',
         // OURO é a vez, nas DUAS cenas (ALE-182). O tabuleiro já dizia isso —
         // a ALE-179 escolheu o anel dourado para a peça da vez e RECUSOU o
         // `--primary` explicitamente, porque o carmim desta paleta "lê como
@@ -451,8 +451,11 @@ function InitiativeRow(props: {
           <span
             class={cn(
               'rounded-none px-1 text-3xs uppercase tracking-widest',
+              // `marker` e não `primary` (ALE-200): a primária virou dourada, e
+              // este crachá fica a poucos pixels do "NA VEZ", que já É dourado.
+              // Duas cores iguais dizendo coisas diferentes na mesma linha.
               props.entry.type === 'character'
-                ? 'bg-primary text-primary-foreground'
+                ? 'bg-marker text-marker-foreground'
                 : 'bg-muted text-muted-foreground',
             )}
           >

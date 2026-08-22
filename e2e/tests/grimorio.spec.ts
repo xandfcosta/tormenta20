@@ -174,6 +174,73 @@ test.describe('Grimório — a folha de especificação', () => {
   })
 
   /**
+   * Todo botão PREENCHIDO é legível sobre o próprio preenchimento (ALE-200).
+   *
+   * O guarda vizinho afirma que a TINTA alcança texto contra o painel. Este
+   * afirma a outra metade, que ninguém estava olhando: quando o botão tem fundo
+   * próprio, quem decide a legibilidade é o par fundo+texto DELE, não o painel
+   * atrás.
+   *
+   * Foi assim que o destrutivo passou despercebido. Branco sobre o
+   * crimson-bright dava **3,72:1** — abaixo dos 4,5 do AA —, e ele é o único
+   * vermelho da tela: o botão que APAGA era o menos legível do app. Trocado o
+   * preenchimento para o crimson base, o mesmo branco dá 5,35:1.
+   *
+   * Afirma a REGRA e não os valores: a paleta pode mudar de matiz, de croma ou
+   * de luminosidade sem deixar de ser legível. Prender o oklch tornaria
+   * qualquer repintura impossível sem tocar no teste — foi o cuidado que a
+   * ALE-173 registrou no guarda das tintas, e vale igual aqui.
+   *
+   * Por que e2e: converter oklch para sRGB é trabalho do navegador. Em jsdom o
+   * `getComputedStyle` devolve a variável CRUA, e ler aqueles três números como
+   * RGB dá uma razão inventada.
+   */
+  test('nenhum botão preenchido fica abaixo do mínimo de texto', async ({ page }) => {
+    await page.goto('/grimorio')
+    await expect(page.getByRole('heading', { name: 'Grimório' })).toBeVisible()
+
+    const fracos = await page.evaluate(() => {
+      const tela = document.createElement('canvas')
+      tela.width = 1
+      tela.height = 1
+      const ctx = tela.getContext('2d')
+      if (!ctx) return ['sem canvas']
+
+      const rgb = (css: string): [number, number, number, number] => {
+        ctx.clearRect(0, 0, 1, 1)
+        ctx.fillStyle = css
+        ctx.fillRect(0, 0, 1, 1)
+        const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data
+        return [r ?? 0, g ?? 0, b ?? 0, a ?? 0]
+      }
+      const luz = (c: [number, number, number, number]) => {
+        const [r, g, b] = [c[0], c[1], c[2]].map((v) => {
+          const x = v / 255
+          return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4
+        })
+        return 0.2126 * (r ?? 0) + 0.7152 * (g ?? 0) + 0.0722 * (b ?? 0)
+      }
+
+      return [...document.querySelectorAll<HTMLElement>('[data-slot="button"]')]
+        .map((botao) => {
+          const estilo = getComputedStyle(botao)
+          const fundo = rgb(estilo.backgroundColor)
+          // Só os PREENCHIDOS: `ghost`, `outline` e `link` são transparentes, e
+          // quem decide a legibilidade deles é o painel — que o guarda das
+          // tintas já cobre.
+          if (fundo[3] < 250) return null
+          const [a, b] = [luz(rgb(estilo.color)), luz(fundo)].sort((x, y) => y - x)
+          const razao = ((a ?? 0) + 0.05) / ((b ?? 0) + 0.05)
+          return { variante: botao.dataset.variant ?? '?', razao: Number(razao.toFixed(2)) }
+        })
+        .filter((b) => b !== null && b.razao < 4.5)
+        .map((b) => `${b?.variante} dá ${b?.razao}:1`)
+    })
+
+    expect(fracos, 'botão preenchido cujo texto não alcança o mínimo de leitura').toEqual([])
+  })
+
+  /**
    * Todo foco da casa tem a MESMA cara (ALE-173, P4).
    *
    * Havia três gramáticas em 12 combinações — o anel do shadcn em sete

@@ -91,15 +91,38 @@
   --card-foreground: var(--grimorio-fg);
   --popover: var(--grimorio-panel-raised);
   --popover-foreground: var(--grimorio-fg);
-  --primary: var(--grimorio-crimson);
-  --primary-foreground: oklch(0.97 0.01 85);
+  /* A AÇÃO — o que se clica para fazer a coisa acontecer (ALE-200).
+   *
+   * Era o crimson, e o crimson é também o destrutivo: `--destructive` é o mesmo
+   * matiz 25 com 0,09 de luminosidade de diferença. Medido, o olho não usa essa
+   * distância para decidir — e o print do dono mostrava "Despreparar"
+   * (rotineiro, preenchido de vermelho) parecendo mais perigoso que "Esquecer",
+   * que tira a magia da ficha.
+   *
+   * O dourado já era a cor da casa em tudo o que NÃO é botão: a vez na
+   * iniciativa, a peça selecionada, os títulos, o anel de foco. A ação era a
+   * única coisa fora dessa gramática.
+   *
+   * A tinta escura não é gosto: branco sobre este dourado dá 1,72:1, e a tinta
+   * de pergaminho dá 7,82:1. */
+  --primary: var(--grimorio-gold);
+  --primary-foreground: var(--grimorio-parchment-ink);
   --secondary: var(--grimorio-panel-raised);
   --secondary-foreground: var(--grimorio-fg);
   --muted: var(--grimorio-bg-2);
   --muted-foreground: var(--grimorio-fg-muted);
   --accent: var(--grimorio-panel-raised);
   --accent-foreground: var(--grimorio-gold);
-  --destructive: var(--grimorio-crimson-bright);
+  /* DESTRUIR — e é o crimson base, não o claro (ALE-200).
+   *
+   * Medido: branco sobre o crimson-bright dá 3,72:1, abaixo dos 4,5 que o AA
+   * pede para texto normal. O botão que apaga era o único vermelho da tela e
+   * era o menos legível dela. Sobre o crimson base o mesmo branco dá 5,35:1.
+   *
+   * Com isso o par fica na divisão que a folha do grimório já ensina: o crimson
+   * é o BLOCO (preencher) e o crimson-bright é a TINTA (escrever e contornar
+   * sobre fundo escuro, onde ele rende 4,61:1 contra o painel). */
+  --destructive: var(--grimorio-crimson);
   --border: var(--grimorio-iron);
   --input: var(--grimorio-iron);
   --ring: var(--grimorio-gold);
@@ -128,6 +151,21 @@
   --arcane-ink: oklch(0.76 0.15 305); /* 7,59:1 */
   --penalty: var(--grimorio-crimson);
   --penalty-ink: oklch(0.76 0.13 25); /* 7,62:1 */
+  /* O CRACHÁ que distingue um item do resto da lista — "PC", "Mestre",
+   * "AO VIVO", "Preparada". Não é ação e não é perigo: não se clica nele.
+   *
+   * Ele nasceu desta issue (ALE-200), e nasceu porque `--primary` estava
+   * fazendo três trabalhos ao mesmo tempo: a ação, o crachá e o tom de acento.
+   * Com a ação virando dourada, um `bg-primary` num crachá "PC" o pintaria de
+   * dourado ao lado do "NA VEZ", que JÁ é dourado — duas cores iguais dizendo
+   * coisas diferentes na mesma linha. Pinado no crimson, ele continua sendo o
+   * que sempre foi.
+   *
+   * A regra que separa os três: entre coisas CLICÁVEIS, dourado faz e crimson
+   * destrói. Crachá não é clicável, então ele fica com o crimson sem competir
+   * com nada. */
+  --marker: var(--grimorio-crimson);
+  --marker-foreground: oklch(0.97 0.01 85); /* 4,90:1 */
   --warning: var(--hp-hurt);
   --warning-ink: oklch(0.76 0.15 70); /* 7,80:1 */
 
@@ -344,6 +382,8 @@
   --color-arcane-ink: var(--arcane-ink);
   --color-penalty: var(--penalty);
   --color-penalty-ink: var(--penalty-ink);
+  --color-marker: var(--marker);
+  --color-marker-foreground: var(--marker-foreground);
   --color-warning: var(--warning);
   --color-warning-ink: var(--warning-ink);
 

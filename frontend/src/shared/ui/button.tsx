@@ -8,8 +8,11 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: 'bg-primary text-primary-foreground hover:bg-primary/90',
-        destructive:
-          'bg-destructive text-white hover:bg-destructive/90 dark:bg-destructive/60 dark:',
+        // Sem os `dark:` que vieram do shadcn: o app NÃO põe a classe `dark`
+        // em lugar nenhum — a paleta escura mora no `:root` —, então eles
+        // nunca aplicaram. Um deles era literalmente um `dark:` sem utilitário
+        // atrás, herdado com o kit.
+        destructive: 'bg-destructive text-white hover:bg-destructive/90',
         outline:
           'border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',

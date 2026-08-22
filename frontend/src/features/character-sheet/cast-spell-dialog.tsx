@@ -146,7 +146,7 @@ export function CastSpellDialog(props: {
         <DialogContent>
           <DialogHeader>
             <DialogTitle class="flex items-center gap-2 font-heading tracking-wide">
-              <Zap aria-hidden="true" class="size-5 text-[color:var(--primary)]" />
+              <Zap aria-hidden="true" class="size-5 text-grimorio-crimson-bright" />
               {props.spell.name}
             </DialogTitle>
             <DialogDescription>

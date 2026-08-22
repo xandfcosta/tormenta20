@@ -349,7 +349,7 @@ function TurnBar(props: {
       <Show when={active()}>
         {(entry) => (
           <SectionTitle as="span" contexto="painel" class="text-sm flex min-w-0 items-center gap-1.5">
-            <Swords aria-hidden="true" class="size-4 text-[color:var(--primary)]" />
+            <Swords aria-hidden="true" class="size-4 text-grimorio-crimson-bright" />
             <span class="truncate">Vez de {entry().label}</span>
           </SectionTitle>
         )}

@@ -19,10 +19,10 @@ const SUPERFICIES = [
 ]
 
 const ACENTOS = [
-  { classe: 'bg-grimorio-gold', token: '--grimorio-gold', nota: 'a VEZ, em toda cena' },
+  { classe: 'bg-grimorio-gold', token: '--grimorio-gold', nota: 'a VEZ e a AÇÃO (ALE-200)' },
   { classe: 'bg-grimorio-iron', token: '--grimorio-iron', nota: 'borda padrão' },
   { classe: 'bg-grimorio-iron-light', token: '--grimorio-iron-light', nota: 'borda em relevo' },
-  { classe: 'bg-grimorio-crimson', token: '--grimorio-crimson', nota: 'ação destrutiva' },
+  { classe: 'bg-grimorio-crimson', token: '--grimorio-crimson', nota: 'destruir, e o crachá' },
   { classe: 'bg-grimorio-purple', token: '--grimorio-purple', nota: 'arcano — ZERO usos' },
   { classe: 'bg-grimorio-parchment', token: '--grimorio-parchment', nota: 'superfície clara' },
 ]
@@ -41,6 +41,8 @@ const PAPEIS = [
   { classe: 'bg-arcane-ink', token: '--arcane-ink', nota: 'arcano — tinta' },
   { classe: 'bg-warning', token: '--warning', nota: 'aviso — bloco' },
   { classe: 'bg-warning-ink', token: '--warning-ink', nota: 'aviso — tinta' },
+  { classe: 'bg-marker', token: '--marker', nota: 'crachá — bloco' },
+  { classe: 'bg-marker-foreground', token: '--marker-foreground', nota: 'crachá — tinta' },
 ]
 
 const VITAIS = [
@@ -64,7 +66,7 @@ export function CorSection() {
 
       <SpecBlock
         titulo="Acentos"
-        nota="Ouro é a vez, em TODA cena. A razão ao lado é contra o painel: abaixo de 4.5:1 a cor não serve de texto pequeno, só de bloco — e é por isso que a cena alcança cores cruas do Tailwind quando precisa ESCREVER em vermelho ou roxo (ALE-173, P3)."
+        nota="Ouro é a vez E a ação: desde a ALE-200 ele preenche o botão principal, e o crimson ficou reservado para destruir. Antes os dois eram o MESMO matiz 25, separados por 0,09 de luminosidade — e no print do dono o botão rotineiro parecia mais perigoso que o que apaga. A razão ao lado é contra o painel: abaixo de 4.5:1 a cor não serve de texto pequeno, só de bloco — e é por isso que a cena alcança cores cruas do Tailwind quando precisa ESCREVER em vermelho ou roxo (ALE-173, P3)."
       >
         {ACENTOS.map((c) => (
           <ColorSwatch classe={c.classe} token={c.token} nota={c.nota} />

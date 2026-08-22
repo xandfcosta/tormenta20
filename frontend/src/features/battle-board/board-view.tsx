@@ -408,7 +408,7 @@ function PendingPath(props: { move: PendingMove; view: BoardViewport }) {
 /** As cores do marcador, do conjunto fechado que o servidor aceita. */
 const MARKER_COLOR: Record<string, string> = {
   ouro: 'bg-grimorio-gold text-grimorio-parchment-ink',
-  carmim: 'bg-[color:var(--primary)] text-white',
+  carmim: 'bg-grimorio-crimson text-white',
   azul: 'bg-[#3f6fb0] text-white',
   verde: 'bg-[#3f8f52] text-white',
 }

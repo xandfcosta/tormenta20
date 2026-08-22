@@ -25,8 +25,12 @@ export function LiveSessionBanner(props: {
     <div
       class={cn(
         'sticky top-0 z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b px-3 py-2 transition-colors sm:px-4',
+        // Dourado e não mais a primária genérica (ALE-200): a faixa acende
+        // porque é A VEZ do jogador, e dourado é exatamente o que diz "a vez"
+        // na iniciativa e no tabuleiro. Antes ela pegava carona no `--primary`,
+        // que era carmim por acidente e não por significado.
         mine()
-          ? 'border-[color:var(--primary)]/60 bg-[color:var(--primary)]/10'
+          ? 'border-grimorio-gold/60 bg-grimorio-gold/10'
           : 'border-grimorio-iron bg-grimorio-panel',
       )}
     >
@@ -47,7 +51,7 @@ export function LiveSessionBanner(props: {
             </span>
           }
         >
-          <FieldLabel tom="inherit" class="text-xs flex animate-pulse items-center gap-1 rounded-none bg-[color:var(--primary)] px-2 py-0.5 font-bold text-[color:var(--primary-foreground)]">
+          <FieldLabel tom="inherit" class="text-xs flex animate-pulse items-center gap-1 rounded-none bg-primary px-2 py-0.5 font-bold text-primary-foreground">
             <Swords aria-hidden="true" class="size-3.5" /> Sua vez
           </FieldLabel>
         </Show>

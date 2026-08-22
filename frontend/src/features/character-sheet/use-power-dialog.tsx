@@ -83,7 +83,7 @@ export function UsePowerDialog(props: {
             <DialogContent class={cn(ITEM_DIALOG_CONTENT, 'flex flex-col gap-3')}>
               <DialogHeader>
                 <DialogTitle class="flex items-center gap-2 font-heading tracking-wide">
-                  <Flame aria-hidden="true" class="size-5 text-[color:var(--primary)]" />
+                  <Flame aria-hidden="true" class="size-5 text-grimorio-crimson-bright" />
                   {props.spec.name}
                 </DialogTitle>
                 <DialogDescription>

@@ -141,7 +141,7 @@ export function TokenActions(props: {
 /** As cores que o servidor aceita, com o nome que a mesa usa. */
 const MARKER_COLORS: { id: BoardMarker['color']; label: string; swatch: string }[] = [
   { id: 'ouro', label: 'Ouro', swatch: 'bg-grimorio-gold' },
-  { id: 'carmim', label: 'Carmim', swatch: 'bg-[color:var(--primary)]' },
+  { id: 'carmim', label: 'Carmim', swatch: 'bg-grimorio-crimson' },
   { id: 'azul', label: 'Azul', swatch: 'bg-[#3f6fb0]' },
   { id: 'verde', label: 'Verde', swatch: 'bg-[#3f8f52]' },
 ]
