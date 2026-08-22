@@ -326,6 +326,15 @@ WHERE id = sqlc.arg('id') RETURNING *;
 UPDATE sessions SET status = 'ended', endedAt = sqlc.arg('endedAt'), updatedAt = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id') RETURNING *;
 
+-- name: HasLiveSessionForCharacter :one
+-- ALE-216: the character is at a table with a session RUNNING. 'active' is the
+-- only live status; 'planned' and 'ended' are not a table in progress.
+SELECT EXISTS (
+  SELECT 1 FROM campaign_members m
+  JOIN sessions s ON s.campaignId = m.campaignId
+  WHERE m.characterId = ? AND s.status = 'active'
+) AS atLiveTable;
+
 -- name: ResetSessionTracker :exec
 UPDATE sessions SET runtimeState = sqlc.arg('runtimeState'), updatedAt = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id');

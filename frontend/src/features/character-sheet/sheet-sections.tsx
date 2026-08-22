@@ -32,7 +32,16 @@ import { SpellbookPanel } from './spellbook-panel'
  * usa hoje é o bloco Perícias, que sem isso gasta duas linhas por perícia
  * repetindo o que o diálogo de decomposição já diz palavra por palavra.
  */
-export type SheetPanelProps = { character: Character; glance?: boolean }
+export type SheetPanelProps = {
+  character: Character
+  glance?: boolean
+  /**
+   * A ficha desenhada DENTRO de uma sessão ao vivo. Quem lê hoje é o bloco
+   * Efeitos: encerrar cena e encerrar dia somem, porque na mesa o descanso é
+   * decisão do mestre (ALE-216). Esconder é só UX — quem recusa é o handler.
+   */
+  inSession?: boolean
+}
 
 export type SheetSection = {
   value: string

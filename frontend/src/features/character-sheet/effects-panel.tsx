@@ -1,4 +1,4 @@
-import type { Character } from '@/shared/api/api'
+import type { SheetPanelProps } from './sheet-sections'
 import { ActiveEffectsSection } from './active-effects-section'
 import { ConditionsSection } from './conditions-section'
 import { SituationalSection } from './situational-section'
@@ -20,7 +20,7 @@ import { Panel } from '@/shared/ui/panel'
  *  4. `SituationalSection` — opt-in context modifiers (terrain, target type,
  *     homebrew item toggles). Client state, per character, in localStorage.
  */
-export function EffectsPanel(props: { character: Character }) {
+export function EffectsPanel(props: SheetPanelProps) {
   return (
     <Panel as="section" fillHeight>
       <div class="shrink-0 border-b border-grimorio-iron px-3 py-2 sm:px-4">
@@ -29,7 +29,7 @@ export function EffectsPanel(props: { character: Character }) {
       <div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3 sm:p-4">
         <ConditionsSection character={props.character} />
         <StancesSection character={props.character} />
-        <ActiveEffectsSection character={props.character} />
+        <ActiveEffectsSection character={props.character} inSession={props.inSession} />
         <SituationalSection character={props.character} />
       </div>
     </Panel>

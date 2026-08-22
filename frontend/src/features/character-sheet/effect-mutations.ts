@@ -96,6 +96,12 @@ export type ConditionActions = {
  * land on the numbers at once — the sheet recomputes off `activeConditions`
  * (ALE-28), so waiting for the round-trip would show stale defense.
  *
+ * Rolls back and RETHROWS without saying anything: telling the player is the
+ * caller's job, because where the failure has to be said depends on where the
+ * action was taken (ALE-216). Applying now happens inside a dialog, and a toast
+ * fired from an open modal is never announced — `createConditionEditing` toasts
+ * for the pickers outside one, the dialog shows `DialogInlineError`.
+ *
  * @example await conditionActions(queryClient, character.id).set(['caido'])
  */
 export function conditionActions(
@@ -106,22 +112,16 @@ export function conditionActions(
   const characterWrite = createCharacterWrite(queryClient, characterId)
 
   return {
-    set: async (conditions) => {
-      try {
-        await characterWrite(
-          (previous) => ({ ...previous, activeConditions: JSON.stringify(conditions) }),
-          async () => {
-            const delta = await api.characters.updateConditions(characterId, conditions)
-            queryClient.setQueryData<Character>(queryKey, (prev) =>
-              prev ? { ...prev, activeConditions: delta.activeConditions } : prev,
-            )
-            invalidateCharacterDependents(queryClient, characterId)
-          },
-        )
-      } catch (failure) {
-        toast.error('Falha ao salvar condições — a ficha voltou ao valor anterior')
-        throw failure
-      }
-    },
+    set: (conditions) =>
+      characterWrite(
+        (previous) => ({ ...previous, activeConditions: JSON.stringify(conditions) }),
+        async () => {
+          const delta = await api.characters.updateConditions(characterId, conditions)
+          queryClient.setQueryData<Character>(queryKey, (prev) =>
+            prev ? { ...prev, activeConditions: delta.activeConditions } : prev,
+          )
+          invalidateCharacterDependents(queryClient, characterId)
+        },
+      ),
   }
 }
