@@ -1,6 +1,6 @@
 import { FakeStorage } from '@/shared/test/fake-storage'
 import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
-import { render, screen, waitFor } from '@solidjs/testing-library'
+import { render, screen, waitFor, within } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
 import type { AttributeKey } from '@/shared/api/attribute-keys'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -153,6 +153,58 @@ describe('SpellRow', () => {
     await user.click(await screen.findByRole('button', { name: 'Preparar' }))
 
     await waitFor(() => expect(setPrepared).toHaveBeenCalledWith(1, spell.id, true))
+  })
+
+  /**
+   * Esquecer PERGUNTA antes (ALE-200).
+   *
+   * Ele é o único caminho que tira a magia da ficha, e ficava encostado no
+   * "Despreparar", que alterna um estado reversível num clique. A ALE-200
+   * separou os dois pela cor; a pergunta é a rede embaixo — um destrutivo de um
+   * clique só é o mesmo defeito que a ALE-122 consertou afastando o "Reiniciar"
+   * do "Próximo turno".
+   *
+   * São DOIS testes e não um com as duas metades, e o motivo é o overlay: o
+   * Kobalte marca tudo atrás do modal como `aria-hidden` e não desfaz isso ao
+   * fechar dentro do jsdom, então voltar a olhar a linha depois de cancelar
+   * encontra uma árvore inteira fora do alcance. Montagem limpa em cada um.
+   */
+  it('esquecer pergunta antes de tirar a magia', async () => {
+    const spell = firstCircleSpell()
+    const api = await import('@/shared/api/api')
+    const unlearn = vi
+      .spyOn(api.api.characters, 'unlearnSpell')
+      .mockResolvedValue({ catalogSpellId: spell.id, removed: 1 })
+    const { user } = renderRow({
+      learned: { id: 1, catalogSpellId: spell.id, prepared: false, learnedAt: '' },
+    })
+
+    await user.click(screen.getByRole('button', { expanded: false }))
+    await user.click(await screen.findByRole('button', { name: 'Esquecer' }))
+
+    const pergunta = await screen.findByRole('dialog')
+    expect(within(pergunta).getByText(new RegExp(spell.name))).toBeInTheDocument()
+    // A pergunta ABRIU e o endpoint ainda não foi chamado: é o clique que
+    // deixou de ser destrutivo, não só a tela que ganhou um aviso.
+    expect(unlearn, 'o clique tirou a magia antes de perguntar').not.toHaveBeenCalled()
+  })
+
+  it('confirmar a pergunta é o que tira a magia', async () => {
+    const spell = firstCircleSpell()
+    const api = await import('@/shared/api/api')
+    const unlearn = vi
+      .spyOn(api.api.characters, 'unlearnSpell')
+      .mockResolvedValue({ catalogSpellId: spell.id, removed: 1 })
+    const { user } = renderRow({
+      learned: { id: 1, catalogSpellId: spell.id, prepared: false, learnedAt: '' },
+    })
+
+    await user.click(screen.getByRole('button', { expanded: false }))
+    await user.click(await screen.findByRole('button', { name: 'Esquecer' }))
+    const pergunta = await screen.findByRole('dialog')
+    await user.click(within(pergunta).getByRole('button', { name: 'Esquecer' }))
+
+    await waitFor(() => expect(unlearn).toHaveBeenCalledWith(1, spell.id))
   })
 
   // Magia concedida por poder não tem linha de grimório pra gerenciar.

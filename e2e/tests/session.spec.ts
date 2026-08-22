@@ -801,6 +801,30 @@ test.describe('Sessão ao vivo', () => {
   async function medirRegiaoDoCombatente(
     page: Page,
   ): Promise<{ regiao: number; antesDaFicha: number }> {
+    // ESPERA a caixa assentar antes de medir. A ficha vive num diálogo `fixed`
+    // com altura em `vh`, e depois de um `setViewportSize` o
+    // `chrome-headless-shell` leva um quadro (às vezes mais) para reresolver
+    // isso — medindo na hora, a proporção sai contra a altura ANTERIOR e o
+    // teste acusa a tela por um defeito do renderizador. Foi assim que este
+    // guarda caiu três vezes na suíte cheia e passou isolado todas elas.
+    //
+    // O critério é genérico de propósito: duas leituras iguais em quadros
+    // seguidos. Afirmar "a altura tem de ser 92vh" copiaria a regra do CSS
+    // para dentro do teste, e aí ele passaria a proteger a cópia.
+    await page.waitForFunction(
+      () => {
+        const janela = window as unknown as { __ultimaAltura?: number }
+        const caixa = document.querySelector('[data-slot="dialog-content"]')
+        if (!caixa) return false
+        const agora = Math.round(caixa.getBoundingClientRect().height)
+        const estavel = janela.__ultimaAltura === agora
+        janela.__ultimaAltura = agora
+        return estavel
+      },
+      undefined,
+      { polling: 'raf', timeout: 5_000 },
+    )
+
     return page.evaluate(() => {
       const vida = document.querySelector('[role="progressbar"][aria-label="Vida"]')
       if (!vida) throw new Error('nenhum combatente aberto: não há barra de Vida na tela')

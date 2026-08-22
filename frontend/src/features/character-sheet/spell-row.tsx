@@ -10,6 +10,7 @@ import { bestSpellCd, castableClassesFor, highestCastableCircle } from '@/entiti
 import type { Character, CharacterSpell } from '@/shared/api/api'
 import { hasSpell } from '@/shared/lib/spell-cache'
 import { Button } from '@/shared/ui/button'
+import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
 import { toast } from '@/shared/ui/sonner'
 import { cn } from '@/shared/lib/utils'
 import { CastSpellDialog } from './cast-spell-dialog'
@@ -247,24 +248,40 @@ export function SpellRow(props: {
                       <Check aria-hidden="true" class="size-3.5" />
                       {learned().prepared ? 'Despreparar' : 'Preparar'}
                     </Button>
-                    {/* `destructive`, e isto é conserto (ALE-200): ele era
-                        `ghost` com a tinta de PENALIDADE — o vermelho mais
-                        claro dos três, o de "seu bônus é negativo" — ao lado
-                        de um "Despreparar" preenchido de vermelho. O botão que
-                        TIRA a magia da ficha era o mais apagado da linha, e o
-                        alternador reversível era o mais gritante. Com a ação
-                        virando dourada, os dois deixam de disputar. */}
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="destructive"
-                      class="h-7 gap-1 text-xs"
-                      disabled={pending()}
-                      onClick={() => void unlearn()}
-                    >
-                      <BookX aria-hidden="true" class="size-3.5" />
-                      Esquecer
-                    </Button>
+                    {/* `destructive` E com PERGUNTA, e as duas coisas são
+                        conserto (ALE-200).
+
+                        Ele era `ghost` com a tinta de PENALIDADE — o vermelho
+                        mais claro dos três, o de "seu bônus é negativo" — ao
+                        lado de um "Despreparar" preenchido de vermelho: o
+                        botão que TIRA a magia da ficha era o mais apagado da
+                        linha, e o alternador reversível era o mais gritante.
+
+                        A cor separou os dois; a pergunta é a rede embaixo. Um
+                        destrutivo de um clique só encostado num alternador é o
+                        mesmo defeito que a ALE-122 consertou afastando o
+                        "Reiniciar" do "Próximo turno" — e ali a proteção
+                        também estava no lugar errado. */}
+                    <ConfirmDialog
+                      title={`Esquecer ${props.spell.name}?`}
+                      description="A magia sai do grimório. Para tê-la de volta é preciso aprendê-la outra vez."
+                      confirmLabel="Esquecer"
+                      destructive
+                      onConfirm={() => void unlearn()}
+                      trigger={(open) => (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="destructive"
+                          class="h-7 gap-1 text-xs"
+                          disabled={pending()}
+                          onClick={open}
+                        >
+                          <BookX aria-hidden="true" class="size-3.5" />
+                          Esquecer
+                        </Button>
+                      )}
+                    />
                   </>
                 )}
               </Show>

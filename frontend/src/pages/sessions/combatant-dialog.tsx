@@ -52,17 +52,11 @@ export function CombatantDialog(props: {
         // `max-h`, senão o painel — que é `flex-1` por construção — não teria
         // de quem herdar altura e a ficha colapsaria em zero.
         //
-        // No telefone ela sobe para 92% da tela. Não é folga estética: com 88%
-        // a FAIXA do combatente ficava com 36% da região e o teto da ALE-145 é
-        // 35% — cada pixel a menos de altura sai da ficha, que é o que se veio
-        // ler.
-        //
-        // `vh` e NÃO `dvh`, ao contrário da folha de baixo do `SidePanel`.
-        // Medido: num elemento `fixed`, o `dvh` não recomputa ao redimensionar
-        // no `chrome-headless-shell` — o Chrome de verdade dava 776px a 390×844
-        // e o runner do e2e dava 451 na mesma página, o que fazia a proporção
-        // da faixa passar de 35% só ali. `vh` responde igual nos dois.
-        class="flex h-[92vh] w-full max-w-4xl flex-col gap-0 overflow-hidden p-0 sm:h-[min(88vh,52rem)] sm:max-w-4xl"
+        // A altura mora numa REGRA (`.dialogo-de-ficha` no index.css) e não num
+        // valor arbitrário: como `h-[92vh]` ela sumia do CSS de propósito
+        // nenhum, de forma intermitente, e derrubou o e2e três vezes. O porquê
+        // está escrito lá.
+        class="dialogo-de-ficha flex w-full max-w-4xl flex-col gap-0 overflow-hidden p-0 sm:max-w-4xl"
       >
         <SceneContainerProvider element={caixa}>
         <Show when={props.entry}>

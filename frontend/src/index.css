@@ -480,6 +480,28 @@
     background: linear-gradient(var(--grimorio-panel-raised), var(--grimorio-panel));
   }
 
+  /* A ALTURA do diálogo que hospeda uma ficha inteira (ALE-198).
+   *
+   * Regra e não utilitário porque é medida de OBJETO — a ficha, com a barra de
+   * blocos, decide o piso —, a mesma razão pela qual os raios de moldura vivem
+   * fora da escala. Escrita aqui ela também fica num lugar só, com o porquê
+   * junto, em vez de espalhada numa string de classes.
+   *
+   * `vh` e NÃO `dvh`: num elemento `fixed`, o `dvh` não recomputa ao
+   * redimensionar no `chrome-headless-shell`, que é o browser do e2e — medido,
+   * o mesmo diálogo a 390×844 dava 776px no Chrome de verdade e 451 no runner.
+   * O `vh` responde nos dois, mas ainda assim leva um quadro para assentar
+   * depois de um `setViewportSize`, e é por isso que a medição do e2e espera a
+   * altura parar de mudar antes de afirmar proporção. */
+  .dialogo-de-ficha {
+    height: 92vh;
+  }
+  @media (min-width: 40rem) {
+    .dialogo-de-ficha {
+      height: min(88vh, 52rem);
+    }
+  }
+
   /* "Cabe painel lateral ao lado da lista?" (ALE-172). A pergunta é sobre o
    * espaço que ESTE palco recebe, e ela tem DUAS dimensões: largura para as
    * duas colunas e altura para a lista continuar valendo alguma coisa depois
