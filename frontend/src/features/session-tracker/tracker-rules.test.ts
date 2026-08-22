@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { InitiativeEntry } from '@/shared/realtime/realtime'
 import {
+  connectedCharacterIds,
   connectionStatus,
   myCharacterIdsOf,
   nextTurnTarget,
@@ -65,6 +66,45 @@ describe('myCharacterIdsOf', () => {
  * em linha com vida, e sem a reserva a fileira encolhia na linha sem vida — o
  * `+` de uma caía onde estava o lápis de outra, 36px de deslocamento medidos.
  */
+/**
+ * Quem está na mesa AGORA (ALE-212).
+ *
+ * A tradução é o ponto: presença chega por usuário, elenco lista personagem, e
+ * a ponte é o `ownerId` do roster. Errar isso pinta o elenco inteiro de
+ * desconectado — ou pior, de conectado.
+ */
+describe('connectedCharacterIds', () => {
+  const membro = (characterId: number, ownerId: number) => ({
+    characterId,
+    character: { ownerId },
+  })
+
+  it('acende quem tem o dono na sala', () => {
+    const membros = [membro(12, 7), membro(15, 8)]
+
+    const acesos = connectedCharacterIds(membros, [{ userId: 7 }])
+
+    expect([...acesos]).toEqual([12])
+  })
+
+  // Uma pessoa só, dois heróis: ela está mesmo lá para os dois.
+  it('um dono com dois personagens acende os dois', () => {
+    const membros = [membro(12, 7), membro(15, 7)]
+
+    expect([...connectedCharacterIds(membros, [{ userId: 7 }])]).toEqual([12, 15])
+  })
+
+  it('membro sem ficha no roster não acende nada', () => {
+    const semFicha = [{ characterId: 12 }]
+
+    expect([...connectedCharacterIds(semFicha, [{ userId: 7 }])]).toEqual([])
+  })
+
+  it('sala vazia não acende ninguém', () => {
+    expect([...connectedCharacterIds([membro(12, 7)], [])]).toEqual([])
+  })
+})
+
 describe('reservaOOlho', () => {
   it('reserva quando alguma linha tem vida', () => {
     expect(reservaOOlho([entry({ hpMax: 30 }), entry({ id: 'b' })], true)).toBe(true)

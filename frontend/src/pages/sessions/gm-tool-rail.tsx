@@ -1,4 +1,4 @@
-import { BookMarked, NotebookPen, Skull, Swords } from 'lucide-solid'
+import { BookMarked, NotebookPen, Skull, Swords, Users } from 'lucide-solid'
 import type { LucideProps } from 'lucide-solid'
 import { type Component, type JSX, For } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
@@ -6,6 +6,10 @@ import { cn } from '@/shared/lib/utils'
 /** As consultas do mestre DENTRO da sessão, na ordem do trilho. Cada uma é um
  *  overlay, menos as notas, que abrem coluna (ALE-198). */
 export const SESSION_TOOLS = [
+  // O elenco vem PRIMEIRO: é quem existe na crônica, e as outras quatro são
+  // material de fora dela (o livro, os catálogos) ou o caderno da noite. A
+  // ALE-211 depois o recolhe no trilho da ESQUERDA, junto da fila.
+  { slug: 'elenco', label: 'Elenco', hint: 'Os jogadores e os NPCs desta crônica.' },
   { slug: 'bestiario', label: 'Bestiário', hint: 'Pôr uma criatura do livro na iniciativa.' },
   { slug: 'encontros', label: 'Encontros', hint: 'Combinar criaturas e mandar tudo de uma vez.' },
   { slug: 'catalogos', label: 'Catálogos', hint: 'Condições, magias, poderes e itens.' },
@@ -17,6 +21,7 @@ export type SessionTool = (typeof SESSION_TOOLS)[number]['slug']
 /** O ícone mora aqui e não no registro: o registro é uma regra, e um teste que
  *  o importa não deveria arrastar um pacote de ícones junto. */
 const TOOL_ICON: Record<SessionTool, Component<LucideProps>> = {
+  elenco: Users,
   bestiario: Skull,
   encontros: Swords,
   catalogos: BookMarked,

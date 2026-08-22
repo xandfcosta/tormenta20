@@ -34,6 +34,32 @@ export function myCharacterIdsOf(
 }
 
 /**
+ * Os personagens cujo DONO está conectado na sessão agora (ALE-212).
+ *
+ * A tradução é a razão de esta função existir: a presença chega por USUÁRIO
+ * (`present()` traz `userId`), e o elenco lista PERSONAGENS. A ponte é o
+ * `ownerId` do roster — o mesmo caminho que o `myCharacterIdsOf` usa, e pelo
+ * mesmo motivo: a ficha de um membro é o SNAPSHOT da campanha (ALE-33), e o
+ * único fio de volta até a pessoa olhando a tela é o dono registrado no roster.
+ *
+ * Um usuário com dois personagens na mesa acende os dois — é uma pessoa só, e
+ * ela está mesmo lá.
+ *
+ * @example connectedCharacterIds(members, rt.present()) // Set { 12, 15 }
+ */
+export function connectedCharacterIds(
+  members: readonly MemberLike[],
+  present: readonly { userId: number }[],
+): Set<number> {
+  const online = new Set(present.map((user) => user.userId))
+  return new Set(
+    members
+      .filter((member) => member.character && online.has(member.character.ownerId))
+      .map((member) => member.characterId),
+  )
+}
+
+/**
  * A lista reserva o lugar do OLHO — o único verbo cujo conjunto muda de linha
  * para linha (ALE-141).
  *

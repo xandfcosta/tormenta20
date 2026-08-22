@@ -20,6 +20,8 @@ import { SidePanel } from '@/shared/ui/side-panel'
 import { createBoardViewport } from '@/features/battle-board/board-viewport'
 import { AddMonsterPanel } from './add-monster-panel'
 import { BoardRegion } from './board-region'
+import { CastPanel } from './cast-panel'
+import { CastSheetDialog } from './cast-sheet-dialog'
 import { CatalogPanel } from './catalog-panel'
 import { CombatantDialog } from './combatant-dialog'
 import { EncounterPanel } from './encounter-panel'
@@ -64,6 +66,8 @@ export function SessionGmView(props: {
   session: Session
   rt: SessionRealtime
   myCharacterIds: ReadonlySet<number>
+  /** O nome da crônica, que a ficha do elenco precisa dizer (ALE-212). */
+  campaignName: string
 }) {
   const [selectedId, setSelectedId] = createSignal<string | null>(null)
   /**
@@ -85,6 +89,12 @@ export function SessionGmView(props: {
   const [queueOpen, setQueueOpen] = createSignal(false)
   /** As notas: coluna, não overlay, e por isso estado próprio. */
   const [notesOpen, setNotesOpen] = createSignal(false)
+  /**
+   * A ficha de um PC aberta pelo ELENCO (ALE-212). Estado SEPARADO do
+   * `selectedId`: aquele é a linha da iniciativa, e o elenco fala de quem pode
+   * nem estar na fila — que é o assunto inteiro da issue.
+   */
+  const [castCharacterId, setCastCharacterId] = createSignal<number | null>(null)
   // Derivado do estado ao vivo: os vitais mudam a cada pancada, e uma cópia
   // mostraria o número de quando o combatente foi aberto.
   const selected = createMemo(
@@ -318,6 +328,31 @@ export function SessionGmView(props: {
         rt={props.rt}
         open={tool() === 'catalogos'}
         onOpenChange={(open) => setTool(open ? 'catalogos' : null)}
+      />
+      <SidePanel
+        open={tool() === 'elenco'}
+        onOpenChange={(open) => setTool(open ? 'elenco' : null)}
+        title="Elenco"
+        description="Quem existe nesta crônica, dentro ou fora do combate."
+      >
+        <CastPanel
+          campaignId={props.campaignId}
+          present={props.rt.present()}
+          onOpenCharacter={(characterId) => {
+            // A gaveta FECHA ao escolher, pela mesma regra da fila (ALE-198): o
+            // gesto termina onde começou — abriu-se o elenco para achar alguém,
+            // achou-se. E um overlay por vez continua valendo: a ficha é modal
+            // e cobriria a gaveta de qualquer jeito.
+            setTool(null)
+            setCastCharacterId(characterId)
+          }}
+        />
+      </SidePanel>
+
+      <CastSheetDialog
+        characterId={castCharacterId()}
+        chronicle={props.campaignName}
+        onClose={() => setCastCharacterId(null)}
       />
 
       <CombatantDialog

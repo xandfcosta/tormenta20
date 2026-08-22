@@ -38,7 +38,7 @@ export function trilhoDaFila(page: Page): Locator {
  */
 export async function abreConsulta(
   page: Page,
-  consulta: 'Bestiário' | 'Encontros' | 'Catálogos' | 'Notas',
+  consulta: 'Elenco' | 'Bestiário' | 'Encontros' | 'Catálogos' | 'Notas',
 ): Promise<void> {
   await trilhoDeConsultas(page).getByRole('button', { name: consulta, exact: true }).click()
 }

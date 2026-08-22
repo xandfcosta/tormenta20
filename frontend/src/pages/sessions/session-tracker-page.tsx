@@ -120,6 +120,13 @@ export function SessionTrackerPage() {
                 session={data()}
                 rt={rt}
                 myCharacterIds={myCharacterIds()}
+                /* O nome da crônica desce como PROP e não por uma segunda
+                   query lá dentro: a página já o tem assentado, e a ficha do
+                   elenco precisa dele para dizer de qual snapshot se trata
+                   (ALE-212). Query nova ali seria a mesma leitura duas vezes,
+                   com a de baixo podendo estar pendente enquanto esta já
+                   respondeu. */
+                campaignName={settledCampaign()?.name ?? ''}
               />
             </Show>
           )}

@@ -105,6 +105,7 @@ function renderCena(rt: FakeRealtime = new FakeRealtime()) {
           session={SESSAO}
           rt={rt.asRealtime()}
           myCharacterIds={new Set<number>()}
+        campaignName="Snapshot Test ALE-33"
         />
       </QueryClientProvider>
     ),
