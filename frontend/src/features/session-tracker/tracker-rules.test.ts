@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import type { InitiativeEntry } from '@/shared/realtime/realtime'
-import { connectionStatus, entryPermissions, myCharacterIdsOf, nextTurnTarget, palcoBaixo, reservedVerbs } from './tracker-rules'
+import {
+  connectionStatus,
+  entryPermissions,
+  myCharacterIdsOf,
+  nextTurnTarget,
+  palcoBaixo,
+  reservedVerbs,
+  turnCounterLabel,
+} from './tracker-rules'
 
 const entry = (overrides: Partial<InitiativeEntry> = {}): InitiativeEntry => ({
   id: 'a',
@@ -162,7 +170,46 @@ describe('nextTurnTarget', () => {
   })
 
   it('sem ninguém na lista, não inventa um nome', () => {
-    expect(nextTurnTarget([], -1)).toEqual({ label: 'Próximo turno', entry: null })
+    expect(nextTurnTarget([], -1)).toEqual({ label: 'Ninguém na fila', entry: null })
+  })
+})
+
+/**
+ * A frase que diz ONDE a sessão está (ALE-210).
+ *
+ * São quatro estados exclusivos e a ordem entre eles é a regra: a cena existe
+ * antes da fila, e a fila existe antes do turno. É unitário porque é
+ * exatamente isso que carrega decisão — a composição na tela se prova em
+ * `pages/sessions/turn-bar.test.tsx`, onde o botão que acompanha a frase muda
+ * junto.
+ */
+describe('turnCounterLabel', () => {
+  const fila = [entry({ id: 'a' }), entry({ id: 'b' })]
+
+  it('sem cena, a rodada nem é mencionada', () => {
+    // "Rodada 0" antes de o mestre iniciar dizia que algo estava em curso.
+    expect(turnCounterLabel({ sceneActive: false, round: 0, turnIndex: -1, initiative: [] })).toBe(
+      'Fora de cena',
+    )
+  })
+
+  it('iniciada e ainda vazia, diz o que falta', () => {
+    // O primeiro instante do fluxo: iniciar abre a gaveta para montar a ordem.
+    expect(turnCounterLabel({ sceneActive: true, round: 0, turnIndex: -1, initiative: [] })).toBe(
+      'Em cena · ninguém na fila',
+    )
+  })
+
+  it('com fila e sem turno, conta quem está na fila', () => {
+    expect(
+      turnCounterLabel({ sceneActive: true, round: 0, turnIndex: -1, initiative: fila }),
+    ).toBe('Rodada 0 · 2 na fila')
+  })
+
+  it('em combate, volta a ser a posição na rodada', () => {
+    expect(turnCounterLabel({ sceneActive: true, round: 3, turnIndex: 1, initiative: fila })).toBe(
+      'Rodada 3 · Turno 2/2',
+    )
   })
 })
 

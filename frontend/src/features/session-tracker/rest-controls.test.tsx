@@ -26,7 +26,7 @@ describe('RestControls', () => {
   it('descanso de cena acontece no clique, sem diálogo', async () => {
     const { rt, user } = renderRest()
 
-    await user.click(screen.getByRole('button', { name: 'Descanso de cena' }))
+    await user.click(screen.getByRole('button', { name: 'Recuperar · cena' }))
 
     expect(rt.rest).toHaveBeenCalledWith('scene')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -36,7 +36,7 @@ describe('RestControls', () => {
   it('descanso de dia pergunta a qualidade e só descansa ao confirmar', async () => {
     const { rt, user } = renderRest()
 
-    await user.click(screen.getByRole('button', { name: 'Descanso de dia' }))
+    await user.click(screen.getByRole('button', { name: 'Recuperar · dia' }))
     expect(rt.rest).not.toHaveBeenCalled()
 
     await user.click(screen.getByRole('button', { name: /Qualidade do descanso/ }))
@@ -50,7 +50,7 @@ describe('RestControls', () => {
   it('cancelar fecha sem descansar', async () => {
     const { rt, user } = renderRest()
 
-    await user.click(screen.getByRole('button', { name: 'Descanso de dia' }))
+    await user.click(screen.getByRole('button', { name: 'Recuperar · dia' }))
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
 
     expect(rt.rest).not.toHaveBeenCalled()

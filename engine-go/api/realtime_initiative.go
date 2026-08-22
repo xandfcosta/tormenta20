@@ -111,6 +111,29 @@ func (g *realtimeGateway) onPreviousTurn(sock *socket.Socket, args []any) {
 	})
 }
 
+// onSceneStart (GM) liga a cena (ALE-210). É o gesto que abre a fila para a
+// mesa: até aqui `redactForPlayers` entregava rastreador vazio aos jogadores.
+func (g *realtimeGateway) onSceneStart(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok || !g.requireGm(sock, ctx.role) {
+		return
+	}
+	g.mutateAndBroadcast(sock, ctx, func() (*SessionRuntimeState, error) {
+		return g.s.sessions.startScene(ctx.sessionID)
+	})
+}
+
+// onSceneEnd (GM) desliga a cena, guardando a fila para a próxima.
+func (g *realtimeGateway) onSceneEnd(sock *socket.Socket, args []any) {
+	ctx, ok := g.access(sock, args)
+	if !ok || !g.requireGm(sock, ctx.role) {
+		return
+	}
+	g.mutateAndBroadcast(sock, ctx, func() (*SessionRuntimeState, error) {
+		return g.s.sessions.endScene(ctx.sessionID)
+	})
+}
+
 // onResetInitiative (GM) clears the tracker.
 func (g *realtimeGateway) onResetInitiative(sock *socket.Socket, args []any) {
 	ctx, ok := g.access(sock, args)

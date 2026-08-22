@@ -96,6 +96,8 @@ const WIRE: [string, string, (rt: SessionRealtime) => void, Record<string, unkno
   ['volta a vez', 'initiative-previous-turn', (rt) => rt.previousTurn(), SCOPE],
   ['zera a iniciativa', 'initiative-reset', (rt) => rt.resetInitiative(), SCOPE],
   ['traz o grupo', 'initiative-populate', (rt) => rt.populateParty(), SCOPE],
+  ['inicia a cena', 'session-scene-start', (rt) => rt.startScene(), SCOPE],
+  ['encerra a cena', 'session-scene-end', (rt) => rt.endScene(), SCOPE],
   [
     'o jogador rola a própria',
     'initiative-self',

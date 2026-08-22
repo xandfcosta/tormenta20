@@ -19,7 +19,12 @@ class FakeRealtime {
 
   asRealtime(): SessionRealtime {
     return {
-      state: () => ({ initiative: this.entries, round: 1, turnIndex: 0 }) as ReturnType<
+      state: () => ({
+        initiative: this.entries,
+        round: 1,
+        turnIndex: 0,
+        sceneActive: true,
+      }) as ReturnType<
         SessionRealtime['state']
       >,
       isConnected: () => true,

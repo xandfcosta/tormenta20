@@ -31,6 +31,10 @@ func TestStorePersistLoadRoundTrip(t *testing.T) {
 	if _, err := store.load(ctx, sid); err != nil {
 		t.Fatalf("initial load: %v", err)
 	}
+	// A cena precisa estar iniciada para o turno andar (ALE-210).
+	if _, err := store.startScene(sid); err != nil {
+		t.Fatalf("startScene: %v", err)
+	}
 	if _, err := store.addInitiativeEntry(sid, npc("Goblin", 15)); err != nil {
 		t.Fatalf("add: %v", err)
 	}
@@ -70,6 +74,35 @@ func TestStoreHydrateFromBlob(t *testing.T) {
 	}
 	if len(loaded.Initiative) != 1 || loaded.Initiative[0].Label != "Boss" || loaded.Round != 2 {
 		t.Errorf("hydrated %+v, want Boss/round 2", loaded)
+	}
+	// O blob é de ANTES da ALE-210 e não traz `sceneActive`; o zero de um bool é
+	// `false`, e sem esta dedução a mesa que parou na rodada 2 reabriria fora de
+	// cena e a fila sumiria dos jogadores até o mestre clicar em iniciar. O turno
+	// em curso é prova de que a cena estava ligada.
+	if !loaded.SceneActive {
+		t.Error("sessão reaberta no meio do turno voltou fora de cena — a mesa perde a fila")
+	}
+}
+
+// A recíproca da dedução acima, e é ela que impede o remendo de virar mentira:
+// blob antigo SEM turno em curso não inventa cena nenhuma. Uma sessão que
+// terminou o combate na semana passada reabre fora de cena, que é o certo.
+func TestBlobSemTurnoNaoInventaCena(t *testing.T) {
+	s := newTestServer(t)
+	ctx := context.Background()
+	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
+	blob := `{"initiative":[{"id":"x","label":"Boss","initiative":9,"type":"npc"}],"round":0,"turnIndex":-1}`
+	if err := s.queries.ResetSessionTracker(ctx, sqlcgen.ResetSessionTrackerParams{
+		RuntimeState: blob, UpdatedAt: nowISO(), ID: sid,
+	}); err != nil {
+		t.Fatalf("seed blob: %v", err)
+	}
+	loaded, err := s.sessions.load(ctx, sid)
+	if err != nil {
+		t.Fatalf("load: %v", err)
+	}
+	if loaded.SceneActive {
+		t.Error("blob sem turno acordou em cena — a fila iria para a mesa sem o mestre mandar")
 	}
 }
 

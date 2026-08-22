@@ -10,24 +10,32 @@ import {
   abreAFichaPelaGaveta,
   abreAFila,
   abreConsulta,
+  acionaOCiclo,
   cenaViva,
   fechaAFicha,
   fechaAFila,
+  garanteACena,
   labelsNaFila,
   labelsNaGaveta,
   primeiroDaFila,
+  trilhoDaFila,
   trilhoDeConsultas,
 } from './support/gm-scene'
 import { expectPageDoesNotScroll, VIEWPORTS } from './support/viewports'
 
 /**
  * O avanço de turno, achado pelo nome que ele ANUNCIA (ALE-184): o botão diz
- * "Próximo: Ogro" em combate e "Começar: Arwen" antes da primeira rodada, e cai
- * para "Próximo turno" só quando não há ninguém na lista. Casar por prefixo é o
- * que mantém o teste falando do CONTROLE e não do combatente da vez.
+ * "Próximo: Ogro" em combate, "Começar: Arwen" antes da primeira rodada e
+ * "Ninguém na fila" quando não há para onde ir. Casar por prefixo é o que
+ * mantém o teste falando do CONTROLE e não do combatente da vez.
+ *
+ * "Iniciar cena" fica DE FORA de propósito (ALE-210). Ele divide a vaga com o
+ * avanço mas não é um deles: é o começo do ciclo, e contá-lo aqui faria o
+ * guarda de "um e só um avanço" ficar verde numa tela que não tem avanço
+ * nenhum — que é justamente o zero que o guarda chama de falha mais grave.
  */
 function avancoDeTurno(page: Page) {
-  return page.getByRole('button', { name: /^(Próximo|Começar)/ })
+  return page.getByRole('button', { name: /^(Próximo|Começar|Ninguém na fila)/ })
 }
 
 const CAMPAIGN = 'Snapshot Test ALE-33' // the seed chronicle with a live session
@@ -91,15 +99,16 @@ test.describe('Sessão ao vivo', () => {
     try {
       await page.goto('/campaigns/1/sessions/4')
       await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
-      await page.getByRole('button', { name: 'Configurações da sessão' }).click()
-      await page.getByRole('button', { name: 'Reiniciar' }).click()
-      // O painel de configurações É um diálogo, e o gatilho "Reiniciar" mora
-      // dentro dele: sem escopar pelo TÍTULO da confirmação, o localizador casa
-      // o gatilho e o botão de confirmar.
-      await page
-        .getByRole('dialog', { name: 'Reiniciar o combate?' })
-        .getByRole('button', { name: 'Reiniciar' })
-        .click()
+      // "Reiniciar" saiu do menu da sessão para o pé do trilho na ALE-210, e só
+      // aparece quando há gente na fila: com a seed já limpa não existe o que
+      // reiniciar, e clicar incondicionalmente esperaria para sempre por um
+      // botão que a tela está CERTA em não desenhar. O trilho visível é o que
+      // diz que a árvore assentou — `count()` sozinho é instantâneo.
+      await expect(trilhoDaFila(page)).toBeVisible()
+      const reiniciar = page.getByRole('button', { name: 'Reiniciar o combate' })
+      if ((await reiniciar.count()) > 0) {
+        await acionaOCiclo(page, 'Reiniciar o combate', 'Reiniciar o combate?')
+      }
       // O broadcast do servidor é o que confirma: sem esperar por ele, o teste
       // seguinte pode abrir a cena antes de a limpeza ter chegado. A confirmação
       // é o TRILHO ficar sem itens — a lista com o "Sem combatentes ainda" mora
@@ -108,6 +117,11 @@ test.describe('Sessão ao vivo', () => {
       await expect
         .poll(async () => (await labelsNaFila(page)).length, { timeout: 7000 })
         .toBe(0)
+      // E a base fica EM CENA (ALE-210). O reiniciar desliga a cena junto, e
+      // sem isto todo teste que avança um turno teria de ligá-la de novo —
+      // vinte chamadas dizendo a mesma coisa. Quem fala DA cena a manipula
+      // explicitamente; para o resto, "em cena e vazia" é o começo do arquivo.
+      await garanteACena(page)
     } finally {
       await contexto.close()
     }
@@ -250,7 +264,7 @@ test.describe('Sessão ao vivo', () => {
     await page.goto('/campaigns/1/sessions/4')
     await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
 
-    await page.getByRole('button', { name: 'Descanso de cena' }).click()
+    await page.getByRole('button', { name: 'Recuperar · cena' }).click()
 
     await expect(page.getByText('Efeitos temporários de cena foram limpos.')).toBeVisible()
 
@@ -558,6 +572,9 @@ test.describe('Sessão ao vivo', () => {
   test('há um e só um avanço de turno na tela, em todo formato', async ({ page }) => {
     await page.goto('/campaigns/1/sessions/4')
     await expect(cenaViva(page)).toBeVisible()
+    // O avanço só existe DENTRO da cena (ALE-210): fora dela a vaga é do
+    // "Iniciar cena", e este guarda mede o avanço, não a vaga.
+    await garanteACena(page)
 
     for (const viewport of VIEWPORTS) {
       await page.setViewportSize({ width: viewport.width, height: viewport.height })
@@ -769,7 +786,7 @@ test.describe('Sessão ao vivo', () => {
     await page.goto('/campaigns/1/sessions/4')
     await expect(cenaViva(page)).toBeVisible()
 
-    const naFileira = page.getByRole('button', { name: /Descanso de cena/ })
+    const naFileira = page.getByRole('button', { name: /Recuperar · cena/ })
 
     // Palco alto: eles ficam onde a ALE-122 os pôs.
     await page.setViewportSize({ width: 768, height: 1024 })
@@ -784,7 +801,7 @@ test.describe('Sessão ao vivo', () => {
     await page.getByRole('button', { name: 'Configurações da sessão' }).click()
     const painel = page.getByRole('dialog')
     await expect(
-      painel.getByRole('button', { name: /Descanso de cena/ }),
+      painel.getByRole('button', { name: /Recuperar · cena/ }),
       'o descanso sumiu em vez de mudar de casa',
     ).toBeVisible()
 
@@ -1633,7 +1650,7 @@ test.describe('Sessão ao vivo', () => {
     await page.goto('/campaigns/1/sessions/4')
     await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
 
-    await page.getByRole('button', { name: 'Descanso de cena' }).click()
+    await page.getByRole('button', { name: 'Recuperar · cena' }).click()
     await expect(page.getByText('Efeitos temporários de cena foram limpos.')).toBeVisible()
 
     // A testemunha é o token BRUTO da casa, não o `--popover`. Comparar com

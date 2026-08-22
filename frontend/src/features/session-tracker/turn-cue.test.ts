@@ -11,6 +11,7 @@ const combate = (turnIndex: number): SessionRuntimeState => ({
   initiative: [linha('Ogro'), linha('Paladino Sagrado', 7)],
   round: 1,
   turnIndex,
+  sceneActive: true,
 })
 
 /**

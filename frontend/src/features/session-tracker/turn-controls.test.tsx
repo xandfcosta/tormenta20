@@ -11,6 +11,9 @@ const estado = (over: Partial<SessionRuntimeState> = {}): SessionRuntimeState =>
   round: 1,
   turnIndex: 0,
   turnsTaken: 1,
+  // Em cena por padrão: fora dela a faixa mostra "Iniciar cena" e não há turno
+  // para avançar (ALE-210).
+  sceneActive: true,
   ...over,
 })
 
@@ -103,6 +106,6 @@ describe('TurnAdvance', () => {
       />
     ))
 
-    expect(screen.getByRole('button', { name: 'Próximo turno' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Ninguém na fila' })).toBeDisabled()
   })
 })

@@ -133,12 +133,43 @@ export function nextTurnTarget(
   initiative: readonly InitiativeEntry[],
   turnIndex: number,
 ): NextTurnTarget {
-  // Lista vazia não tem para onde ir, e prometer um nome seria inventá-lo.
-  if (initiative.length === 0) return { label: 'Próximo turno', entry: null }
+  // Lista vazia não tem para onde ir, e prometer um nome seria inventá-lo. O
+  // rótulo diz o MOTIVO de estar desligado e não o verbo que não vai acontecer:
+  // desde a ALE-210 esta vaga só existe DENTRO da cena, e "em cena sem ninguém
+  // na fila" é o instante em que o mestre acabou de iniciar e vai montar a
+  // ordem — ali "Próximo turno" apagado não explica o que falta fazer.
+  if (initiative.length === 0) return { label: 'Ninguém na fila', entry: null }
   const emCombate = turnIndex >= 0
   const entry = initiative[emCombate ? (turnIndex + 1) % initiative.length : 0]
   if (!entry) throw new Error(`iniciativa sem entrada após o turno ${turnIndex}`)
   return { label: `${emCombate ? 'Próximo' : 'Começar'}: ${entry.label}`, entry }
+}
+
+/**
+ * A frase que diz ONDE a sessão está: fora de cena, em cena montando a ordem,
+ * ou em que turno de que rodada (ALE-210).
+ *
+ * É função e não JSX aninhado porque são quatro estados exclusivos, e o que
+ * decide entre eles é regra — a cena existe antes da fila, e a fila existe
+ * antes do turno. Escritos como `Show` dentro de `Show` os quatro viram três
+ * níveis de indentação onde nenhuma leitura é óbvia.
+ *
+ * "Rodada 0" aparece de propósito no terceiro caso: é o que a faixa já dizia
+ * antes desta issue, e a rodada só vira 1 no primeiro avanço.
+ *
+ * @example turnCounterLabel({ sceneActive: false, … }) // 'Fora de cena'
+ */
+export function turnCounterLabel(state: {
+  sceneActive: boolean
+  round: number
+  turnIndex: number
+  initiative: readonly InitiativeEntry[]
+}): string {
+  if (!state.sceneActive) return 'Fora de cena'
+  const naFila = state.initiative.length
+  if (naFila === 0) return 'Em cena · ninguém na fila'
+  if (state.turnIndex < 0) return `Rodada ${state.round} · ${naFila} na fila`
+  return `Rodada ${state.round} · Turno ${state.turnIndex + 1}/${naFila}`
 }
 
 /** Abaixo disto o palco da sessão não comporta duas fileiras de cromo. */

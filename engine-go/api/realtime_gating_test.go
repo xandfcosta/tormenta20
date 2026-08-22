@@ -36,6 +36,8 @@ var gmGate = map[string]bool{
 	"initiative-previous-turn": true,
 	"initiative-reset":         true,
 	"initiative-populate":      true,
+	"session-scene-start":      true, // quem decide que a cena começou é o mestre (ALE-210)
+	"session-scene-end":        true,
 	"vitals-patch":             false, // regra mais fina: assertVitalsEditable (mestre em qualquer um, jogador no próprio)
 	"vitals-delta":             false, // idem
 	"session-rest":             true,

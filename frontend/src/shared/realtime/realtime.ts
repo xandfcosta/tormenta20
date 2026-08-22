@@ -47,6 +47,17 @@ export type SessionRuntimeState = {
    * antes deste campo volta sem ele.
    */
   turnsTaken?: number
+  /**
+   * A CENA está iniciada (ALE-210). O mestre liga e desliga, e é este campo que
+   * decide se a mesa recebe fila — a trava é do SERVIDOR (`redactForPlayers`),
+   * e o que chega ao jogador fora de cena é rastreador vazio, não uma lista que
+   * a tela esconde.
+   *
+   * Não é derivável de `turnIndex >= 0`: iniciar a cena abre a gaveta para o
+   * mestre MONTAR a ordem, então "em cena, fila vazia" é o primeiro instante do
+   * fluxo — e ali não há turno nenhum para derivar.
+   */
+  sceneActive: boolean
 }
 
 /** Someone connected to the session room (deduped by userId server-side). */
@@ -172,7 +183,13 @@ export type SessionSocket = {
   disconnect: () => void
 }
 
-const EMPTY_STATE: SessionRuntimeState = { initiative: [], round: 0, turnIndex: -1, turnsTaken: 0 }
+const EMPTY_STATE: SessionRuntimeState = {
+  initiative: [],
+  round: 0,
+  turnIndex: -1,
+  turnsTaken: 0,
+  sceneActive: false,
+}
 
 /** How long the rest banner stays up before it reads as stale state. */
 const REST_FLASH_MS = 4000
@@ -217,6 +234,10 @@ export type SessionRealtime = {
   /** Desfaz um turno — inclusive a virada de rodada. */
   previousTurn: () => void
   resetInitiative: () => void
+  /** Liga a CENA (mestre): é o gesto que abre a fila para a mesa (ALE-210). */
+  startScene: () => void
+  /** Desliga a cena. GUARDA a fila — quem esvazia é o `resetInitiative`. */
+  endScene: () => void
   populateParty: () => void
   /** A player submits their own rolled initiative; upserts by characterId. */
   rollSelfInitiative: (characterId: number, initiative: number) => void
@@ -409,6 +430,10 @@ export function createSessionSocket(
     nextTurn: () => send('initiative-next-turn'),
     previousTurn: () => send('initiative-previous-turn'),
     resetInitiative: () => send('initiative-reset'),
+    // `session-*` e não `scene-*`: "cena" já é palavra ocupada no fio pelo lado
+    // do tabuleiro, onde `board-place-scene` é um mapa GUARDADO da crônica.
+    startScene: () => send('session-scene-start'),
+    endScene: () => send('session-scene-end'),
     populateParty: () => send('initiative-populate'),
     rollSelfInitiative: (characterId, initiative) =>
       send('initiative-self', { characterId, initiative }),

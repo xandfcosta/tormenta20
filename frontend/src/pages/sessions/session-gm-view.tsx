@@ -8,13 +8,13 @@ import { InitiativeCard } from '@/features/session-tracker/initiative-card'
 import { SessionNotes } from '@/features/session-tracker/session-notes'
 import { CreatureBlockDialog } from '@/features/gm-tools/creature-block-dialog'
 import { blankCreatureBlock } from '@/shared/api/creature-types'
-import { TurnAdvance, TurnCounter } from '@/features/session-tracker/turn-controls'
+import { SceneStart, TurnAdvance, TurnCounter } from '@/features/session-tracker/turn-controls'
+import { SceneCycleControls } from '@/features/session-tracker/scene-cycle-controls'
 import { RestControls } from '@/features/session-tracker/rest-controls'
 import { connectionStatus, palcoBaixo } from '@/features/session-tracker/tracker-rules'
 import { createElementSize } from '@/shared/lib/element-size'
 import { createMediaQuery } from '@/shared/lib/media-query'
 import { Button } from '@/shared/ui/button'
-import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
 import { ConnectionChip } from '@/shared/ui/connection-chip'
 import { SidePanel } from '@/shared/ui/side-panel'
 import { createBoardViewport } from '@/features/battle-board/board-viewport'
@@ -91,6 +91,17 @@ export function SessionGmView(props: {
     () => props.rt.state().initiative.find((entry) => entry.id === selectedId()) ?? null,
   )
   const railsFit = createMediaQuery(RAILS_FIT)
+  /**
+   * Há alguma ação de FIM de ciclo para oferecer (ALE-210). Encerrar exige
+   * cena, reiniciar exige fila, e sem nenhuma das duas o pé do trilho não deve
+   * existir: um elemento JSX é sempre verdadeiro, então `Show` lá dentro não
+   * resolveria — ele desenharia o vinco e o vão sobre nada. Visto na foto a
+   * 1920, com a sessão fora de cena e vazia.
+   */
+  const temFimDeCiclo = () => {
+    const live = props.rt.state()
+    return live.sceneActive || live.initiative.length > 0
+  }
 
   /**
    * Um overlay por vez. As notas são a exceção declarada: elas convivem com
@@ -142,6 +153,8 @@ export function SessionGmView(props: {
         session={props.session}
         rt={props.rt}
         palcoBaixo={palcoEstaBaixo()}
+        railsFit={railsFit()}
+        temFimDeCiclo={temFimDeCiclo()}
       />
 
       {/* O "NPC completo" da ALE-137: a forma da fila emite a intenção, e é AQUI
@@ -188,6 +201,24 @@ export function SessionGmView(props: {
             onOpenCombatant={openCombatant}
             onExpand={openQueue}
             onHoverEntry={setHoveredEntryId}
+            footer={
+              /* Encerrar e reiniciar moram no pé do trilho, longe da vaga do
+                 avanço: os três são o ciclo da cena, mas só o começo divide
+                 lugar com o botão mais clicado da sessão — juntar os outros
+                 dois ali repetiria o defeito que a ALE-122 consertou afastando
+                 o "Reiniciar" do "Próximo turno". Abaixo de 1024 o trilho não
+                 existe e eles reaparecem no menu da sessão, os MESMOS nós. */
+              temFimDeCiclo() ? (
+                <SceneCycleControls
+                  compact
+                  connected={props.rt.isConnected()}
+                  sceneActive={props.rt.state().sceneActive}
+                  hasQueue={props.rt.state().initiative.length > 0}
+                  onEnd={props.rt.endScene}
+                  onReset={props.rt.resetInitiative}
+                />
+              ) : undefined
+            }
           />
         </Show>
 
@@ -329,6 +360,13 @@ function TurnBar(props: {
   rt: SessionRealtime
   /** Palco curto demais para duas fileiras de cromo (ALE-146). */
   palcoBaixo: boolean
+  /** Os trilhos cabem ao lado do mapa. Vem de FORA e não de um segundo
+   *  `createMediaQuery`: duas assinaturas do mesmo limiar podem responder em
+   *  quadros diferentes, e o fim do ciclo apareceria nos dois lugares ou em
+   *  nenhum durante um quadro (ALE-210). */
+  railsFit: boolean
+  /** Há encerrar ou reiniciar a oferecer — senão o menu ganha uma fileira vazia. */
+  temFimDeCiclo: boolean
 }) {
   const state = () => props.rt.state()
   const active = () => (state().turnIndex >= 0 ? state().initiative[state().turnIndex] : undefined)
@@ -373,24 +411,40 @@ function TurnBar(props: {
             cada fileira come 46px de um palco que dá 390 (ALE-146). Abaixo do
             degrau fica só o avanço, que é exatamente o que havia antes; o
             desfazer de turno continua sendo do desktop.
-            Ele vem ANTES dos descansos para não encostar no "Reiniciar", que
-            apaga o combate inteiro: a ALE-122 afastou os dois de propósito, e
-            pôr o avanço no fim da fileira desfazia isso no celular. */}
-        <TurnAdvance
-          onlyNext
-          class="lg:hidden"
-          state={state()}
-          connected={props.rt.isConnected()}
-          onPrevious={props.rt.previousTurn}
-          onNext={props.rt.nextTurn}
-        />
-        <TurnAdvance
-          class="hidden lg:flex"
-          state={state()}
-          connected={props.rt.isConnected()}
-          onPrevious={props.rt.previousTurn}
-          onNext={props.rt.nextTurn}
-        />
+
+            A vaga continua vindo ANTES do resto da fileira, e a razão MUDOU na
+            ALE-210: era para não encostar no "Reiniciar", que saiu da faixa e
+            foi para o pé do trilho; agora é porque esta é a vaga do ciclo, e o
+            começo de uma cena vem antes das ações do fim dela. */}
+        {/* A vaga do avanço é a vaga do CICLO, e ela contém exatamente um
+            "começar" por vez (ALE-210): fora de cena, [Iniciar cena]; em cena,
+            o avanço, que já dizia "Começar: Fulano" antes do primeiro turno.
+            Dois botões de começar na mesma tela era o risco que a issue abria,
+            e uma vaga só é o que o impede — não uma regra escrita duas vezes.
+
+            É aqui e não no trilho esquerdo, contra a letra da issue, porque o
+            trilho não existe abaixo de 1024 (`railsFit`) e o mestre no celular
+            ficaria sem caminho nenhum para iniciar a cena. */}
+        <Show
+          when={state().sceneActive}
+          fallback={<SceneStart connected={props.rt.isConnected()} onStart={props.rt.startScene} />}
+        >
+          <TurnAdvance
+            onlyNext
+            class="lg:hidden"
+            state={state()}
+            connected={props.rt.isConnected()}
+            onPrevious={props.rt.previousTurn}
+            onNext={props.rt.nextTurn}
+          />
+          <TurnAdvance
+            class="hidden lg:flex"
+            state={state()}
+            connected={props.rt.isConnected()}
+            onPrevious={props.rt.previousTurn}
+            onNext={props.rt.nextTurn}
+          />
+        </Show>
         {/* Ações rápidas do fim de cena, ao lado do turno: eram duas linhas
             dentro do menu da sessão, e o mestre descansa o grupo com muito mais
             frequência do que renomeia a sessão (ALE-122).
@@ -402,6 +456,20 @@ function TurnBar(props: {
             (ALE-146). O mestre que descansa o grupo num celular deitado paga um
             toque a mais; o que perdia era a ficha inteira. */}
         <Show when={!props.palcoBaixo}>
+          {/* Um traço entre o CICLO e a RECUPERAÇÃO. Os dois grupos falam de
+              "cena" — encerrar uma e recuperar ao fim dela — e a ALE-210
+              separou as palavras ("Recuperar" veio do livro, p105); o vinco
+              separa o gesto, para o dedo não escorregar de um grupo ao outro.
+
+              Só a partir de `lg`, e isto foi medido nas fotos. O traço serve
+              para separar dois grupos que DIVIDEM a fileira; abaixo do degrau a
+              faixa já enrola e a quebra de linha separa melhor do que ele. As
+              duas tentativas de mantê-lo custaram caro a 390: solto, ele ficava
+              pendurado no fim da fileira de cima separando o avanço de nada;
+              amarrado à recuperação num invólucro, empurrava o menu para uma
+              QUARTA fileira de cromo — 32px a mais na tela mais apertada, por
+              um enfeite (ALE-146). */}
+          <div aria-hidden="true" class="mx-1 hidden h-6 w-px shrink-0 bg-grimorio-iron lg:block" />
           <RestControls rt={props.rt} />
         </Show>
         <MatchControls
@@ -417,34 +485,28 @@ function TurnBar(props: {
               <RestControls rt={props.rt} />
             </div>
           </Show>
+          {/* Abaixo de 1024 o trilho esquerdo não existe, e com ele sumiria o
+              fim do ciclo. Os MESMOS nós reaparecem aqui — o menu já era o
+              caminho de telefone da recuperação, e "Reiniciar" já morava neste
+              menu antes da ALE-210 (ALE-184). Ele deixou de ser uma linha do
+              `HeaderCard` porque agora tem um irmão: encerrar e reiniciar se
+              explicam UM AO OUTRO, e separá-los deixaria o mestre descobrir a
+              diferença apagando a fila por engano. */}
+          <Show when={!props.railsFit && props.temFimDeCiclo}>
+            <div class="mb-3 flex flex-wrap gap-2">
+              <SceneCycleControls
+                connected={props.rt.isConnected()}
+                sceneActive={props.rt.state().sceneActive}
+                hasQueue={props.rt.state().initiative.length > 0}
+                onEnd={props.rt.endScene}
+                onReset={props.rt.resetInitiative}
+              />
+            </div>
+          </Show>
           <HeaderCard
             campaignId={props.campaignId}
             session={props.session}
             isGm
-            /* "Reiniciar" saiu da faixa de turno (ALE-184): ele apaga o combate
-               inteiro e se usa quase nunca, e ocupava um lugar na fileira mais
-               disputada da cena. Os DESCANSOS ficam onde estão — a ALE-122 os
-               tirou do menu de propósito, porque o mestre descansa o grupo com
-               muito mais frequência do que renomeia a sessão. */
-            resetCombat={
-              <ConfirmDialog
-                title="Reiniciar o combate?"
-                description="A iniciativa, a rodada e o turno voltam a zero, e os combatentes saem da lista."
-                confirmLabel="Reiniciar"
-                destructive
-                onConfirm={props.rt.resetInitiative}
-                trigger={(open) => (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={!props.rt.isConnected()}
-                    onClick={open}
-                  >
-                    Reiniciar
-                  </Button>
-                )}
-              />
-            }
             danger={
               <DeleteSessionButton
                 campaignId={props.campaignId}

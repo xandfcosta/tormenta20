@@ -1,5 +1,5 @@
 import { PanelLeftOpen } from 'lucide-solid'
-import { For, Show } from 'solid-js'
+import { type JSX, For, Show } from 'solid-js'
 import { initials } from '@/shared/lib/initials'
 import { cn } from '@/shared/lib/utils'
 import type { InitiativeEntry } from '@/shared/realtime/realtime'
@@ -29,6 +29,12 @@ export function InitiativeRail(props: {
   onExpand: () => void
   /** Acende a peça correspondente no tabuleiro (ALE-189). */
   onHoverEntry?: (entryId: string | null) => void
+  /**
+   * O fim do ciclo da cena, ancorado no pé (ALE-210). Vem de fora porque o
+   * trilho não sabe o que é uma cena — ele desenha a fila; quem compõe fila e
+   * ciclo é a página.
+   */
+  footer?: JSX.Element
   class?: string
 }) {
   return (
@@ -65,6 +71,15 @@ export function InitiativeRail(props: {
           )}
         </For>
       </ul>
+
+      {/* Ancorado no PÉ e fora do `ul` que rola: com doze combatentes o
+          encerrar sairia da tela junto com a lista, que é o mesmo defeito que a
+          ALE-131 consertou na coluna e que o botão de abrir resolve no topo. */}
+      <Show when={props.footer}>
+        <div class="flex shrink-0 flex-col gap-1 border-t border-grimorio-iron pt-1">
+          {props.footer}
+        </div>
+      </Show>
     </nav>
   )
 }

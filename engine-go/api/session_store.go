@@ -118,6 +118,14 @@ func (st *sessionStore) reset(sessionID int64) (*SessionRuntimeState, error) {
 	return st.apply(sessionID, func(s *SessionRuntimeState) error { resetInitiative(s); return nil })
 }
 
+func (st *sessionStore) startScene(sessionID int64) (*SessionRuntimeState, error) {
+	return st.apply(sessionID, func(s *SessionRuntimeState) error { startScene(s); return nil })
+}
+
+func (st *sessionStore) endScene(sessionID int64) (*SessionRuntimeState, error) {
+	return st.apply(sessionID, func(s *SessionRuntimeState) error { endScene(s); return nil })
+}
+
 // patchVitals fixa os vitais de uma entrada. Mesma regra do delta sobre quem é a
 // fonte; valor absoluto NÃO drena pool temporário, porque é uma afirmação sobre
 // o total e não uma pancada.
@@ -179,6 +187,15 @@ func parseRuntimeBlob(blob string) *SessionRuntimeState {
 	}
 	if parsed.Initiative == nil {
 		parsed.Initiative = []InitiativeEntry{}
+	}
+	// Sessão gravada antes da ALE-210 volta sem `sceneActive`, e o zero de um
+	// bool é `false`: uma mesa que parou na rodada 3 reabriria "fora de cena" e a
+	// fila sumiria para os jogadores até o mestre clicar em iniciar. Um turno em
+	// curso é PROVA de que a cena estava ligada — depois desta issue não existe
+	// turno sem cena (`advanceTurn`), então isto não é remendo de migração: é a
+	// invariante afirmada onde o estado entra no processo.
+	if parsed.TurnIndex >= 0 {
+		parsed.SceneActive = true
 	}
 	return &parsed
 }

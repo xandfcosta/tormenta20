@@ -33,10 +33,6 @@ export function HeaderCard(props: {
   campaignId: number
   session: Session
   isGm: boolean
-  /** Reiniciar o combate (ALE-184). Mora aqui e não na faixa de turno: apaga a
-   *  iniciativa inteira e se usa quase nunca, enquanto a faixa é a fileira mais
-   *  disputada da cena. Quem o monta é a cena, que é dona do `rt`. */
-  resetCombat?: JSX.Element
   /** A zona de risco entra por baixo, como última faixa — quem a monta é a
    *  cena, porque excluir NAVEGA para fora da sessão. */
   danger?: JSX.Element
@@ -144,7 +140,7 @@ export function HeaderCard(props: {
       <Show when={props.isGm && props.session.status === 'planned'}>
         <SettingRow
           label="Iniciar sessão"
-          hint="A mesa passa a ver a cena ao vivo."
+          hint="A mesa passa a ver a partida ao vivo."
           action={
             <Button
               size="sm"
@@ -160,7 +156,7 @@ export function HeaderCard(props: {
       <Show when={props.isGm && props.session.status === 'active'}>
         <SettingRow
           label="Encerrar sessão"
-          hint="A mesa para de receber a cena. A crônica e as fichas ficam como estão."
+          hint="A partida sai do ar para a mesa. A crônica e as fichas ficam como estão."
           action={
             <Button
               size="sm"
@@ -171,14 +167,6 @@ export function HeaderCard(props: {
               Encerrar
             </Button>
           }
-        />
-      </Show>
-
-      <Show when={props.resetCombat}>
-        <SettingRow
-          label="Reiniciar o combate"
-          hint="A iniciativa, a rodada e o turno voltam a zero, e os combatentes saem da lista."
-          action={props.resetCombat}
         />
       </Show>
 

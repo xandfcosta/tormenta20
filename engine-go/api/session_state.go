@@ -58,6 +58,19 @@ type SessionRuntimeState struct {
 	// de derivado: rodada × tamanho da lista mente assim que alguém entra ou
 	// morre no meio do combate, que é o normal numa mesa (ALE-142).
 	TurnsTaken int `json:"turnsTaken"`
+	// SceneActive é a CENA como estado explícito (ALE-210): o mestre liga e
+	// desliga, e a mesa só recebe a fila enquanto ela está ligada.
+	//
+	// É campo NOVO e não `TurnIndex >= 0` mal nomeado, que era a resposta mais
+	// barata que a issue levantava. Ela não sobrevive ao PRIMEIRO instante do
+	// fluxo: iniciar a cena abre a gaveta para o mestre montar a ordem, então
+	// "cena iniciada, fila vazia" é obrigatório — e `advanceTurn` não tem para
+	// onde ir com a lista vazia, de modo que `TurnIndex` nunca chegaria a 0 ali.
+	//
+	// A recíproca também acontecia: hoje o mestre pode ter oito linhas na fila
+	// com `TurnIndex` −1, montando a briga antes de começar. Um campo só não
+	// consegue dizer "montando" e "fora de cena" ao mesmo tempo.
+	SceneActive bool `json:"sceneActive"`
 }
 
 // emptyRuntimeState is a fresh mutable tracker. Each call returns a new slice so different
@@ -240,8 +253,12 @@ func removeEntry(st *SessionRuntimeState, entryID string) error {
 // advanceTurn moves to the next combatant, wrapping to index 0 and bumping the round.
 // From the pre-combat state (turnIndex -1) it puts the first combatant on turn without
 // bumping the round.
+//
+// Sem CENA não avança (ALE-210). A guarda não é defensiva: ela é o que dá ao
+// estado uma direção única — turno só existe dentro de cena —, e é dela que
+// `parseRuntimeBlob` tira o direito de deduzir a cena de um turno em curso.
 func advanceTurn(st *SessionRuntimeState) {
-	if len(st.Initiative) == 0 {
+	if !st.SceneActive || len(st.Initiative) == 0 {
 		return
 	}
 	if st.TurnIndex < 0 {
@@ -286,11 +303,41 @@ func rewindTurn(st *SessionRuntimeState) {
 	st.TurnIndex = -1
 }
 
+// startScene liga a cena, e só isso: a ordem se monta DEPOIS. É por esse gesto
+// que a fila passa a existir para a mesa (ALE-210).
+func startScene(st *SessionRuntimeState) {
+	st.SceneActive = true
+}
+
+// endScene desliga a cena e devolve o combate ao começo — mas GUARDA a fila.
+//
+// Encerrar não é reiniciar, e essa é a única diferença entre os dois: quem
+// esvazia é o resetInitiative. O mestre que encerra a briga do castelo não pode
+// pagar oito goblins digitados de novo para recomeçá-la.
+func endScene(st *SessionRuntimeState) {
+	st.SceneActive = false
+	st.Round = 0
+	st.TurnIndex = -1
+	st.TurnsTaken = 0
+}
+
 // redactForPlayers devolve uma CÓPIA do estado sem os PV das linhas que o mestre
 // escondeu. A flag continua na cópia de propósito: o jogador precisa saber que
 // existe vida ali e que ela está oculta — sem isso, "sem barra" e "escondido"
 // viram a mesma coisa na tela, e o segundo é informação.
+//
+// Fora de cena o jogador não recebe fila NENHUMA (ALE-210). A trava mora aqui, e
+// não numa condição de render, porque não mandar é diferente de não desenhar: a
+// primeira é segurança, a segunda é UX. E mora nesta função em particular porque
+// ela é o gargalo pelo qual os DOIS caminhos do estado passam — o broadcast por
+// sala de papel e o ack do `get-session-state` (ALE-122).
 func redactForPlayers(st *SessionRuntimeState) *SessionRuntimeState {
+	if !st.SceneActive {
+		// Rastreador limpo e não `cloneState` com a lista zerada: a rodada e o
+		// contador de turnos também são da cena, e "rodada 7, ninguém na fila"
+		// é uma contradição que o jogador leria como defeito.
+		return emptyRuntimeState()
+	}
 	out := cloneState(st)
 	for i := range out.Initiative {
 		e := &out.Initiative[i]
@@ -312,12 +359,16 @@ func stateForRole(role string, st *SessionRuntimeState) *SessionRuntimeState {
 	return redactForPlayers(st)
 }
 
-// resetInitiative clears the tracker but keeps the session tracked.
+// resetInitiative clears the tracker but keeps the session tracked. Desliga a
+// cena junto (ALE-210): reiniciar é voltar ao ponto de partida, e o ponto de
+// partida é fora de cena com a fila vazia. Deixar a cena ligada aqui produziria
+// o estado "em cena, ninguém na fila" sem ninguém ter pedido por ele.
 func resetInitiative(st *SessionRuntimeState) {
 	st.Initiative = []InitiativeEntry{}
 	st.Round = 0
 	st.TurnIndex = -1
 	st.TurnsTaken = 0
+	st.SceneActive = false
 }
 
 // patchEntryVitals sets absolute hp/mp on an entry, clamped to its max when present.

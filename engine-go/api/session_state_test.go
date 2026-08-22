@@ -27,6 +27,15 @@ func itoa(n int) string {
 	return string(b)
 }
 
+// cenaEmCurso é o rastreador de uma cena JÁ INICIADA (ALE-210). Turno só existe
+// dentro de cena, e é o que quase todo teste daqui fala — o padrão de
+// `emptyRuntimeState` é fora de cena, que é o estado de uma sessão recém-aberta.
+func cenaEmCurso() *SessionRuntimeState {
+	st := emptyRuntimeState()
+	startScene(st)
+	return st
+}
+
 func npc(label string, init int) InitiativeEntry {
 	return InitiativeEntry{Label: label, Initiative: init, Type: "npc"}
 }
@@ -227,7 +236,7 @@ func TestRemoveEntryTurnBookkeeping(t *testing.T) {
 }
 
 func TestAdvanceTurn(t *testing.T) {
-	st := emptyRuntimeState()
+	st := cenaEmCurso()
 	id := counter()
 	_ = addEntry(st, npc("A", 30), id)
 	_ = addEntry(st, npc("B", 20), id) // order A,B
@@ -245,7 +254,7 @@ func TestAdvanceTurn(t *testing.T) {
 		t.Fatalf("wrap: turnIndex=%d round=%d, want 0/2", st.TurnIndex, st.Round)
 	}
 
-	empty := emptyRuntimeState()
+	empty := cenaEmCurso()
 	advanceTurn(empty)
 	if empty.TurnIndex != -1 {
 		t.Errorf("advance on empty must be a no-op, got %d", empty.TurnIndex)
@@ -257,7 +266,7 @@ func TestAdvanceTurn(t *testing.T) {
 // mundo de novo, o que também empurra a rodada. Voltar tem de desfazer, e isso
 // inclui a RODADA quando o passo cruza a virada.
 func TestRewindTurn(t *testing.T) {
-	st := emptyRuntimeState()
+	st := cenaEmCurso()
 	id := counter()
 	_ = addEntry(st, npc("A", 30), id)
 	_ = addEntry(st, npc("B", 20), id)
@@ -280,7 +289,7 @@ func TestRewindTurn(t *testing.T) {
 	}
 
 	// Antes do combate começar não há o que desfazer, e a rodada não pode ir a 0.
-	inicio := emptyRuntimeState()
+	inicio := cenaEmCurso()
 	_ = addEntry(inicio, npc("A", 30), counter())
 	rewindTurn(inicio)
 	if inicio.TurnIndex != -1 || inicio.Round != 0 {
@@ -293,7 +302,7 @@ func TestRewindTurn(t *testing.T) {
 		t.Errorf("desfazer o primeiro turno: turnIndex=%d round=%d, queria -1/1", inicio.TurnIndex, inicio.Round)
 	}
 
-	vazio := emptyRuntimeState()
+	vazio := cenaEmCurso()
 	rewindTurn(vazio)
 	if vazio.TurnIndex != -1 {
 		t.Errorf("voltar sem combatente é no-op, got %d", vazio.TurnIndex)
@@ -303,7 +312,7 @@ func TestRewindTurn(t *testing.T) {
 // Saber que o ogro está com 12 de 130 muda a decisão de quem está na mesa: essa
 // é informação do MESTRE, e ele decide linha a linha (ALE-122).
 func TestRedactForPlayers(t *testing.T) {
-	st := emptyRuntimeState()
+	st := cenaEmCurso()
 	id := counter()
 	_ = addEntry(st, npc("Ogro", 12), id)
 	_ = addEntry(st, npc("Bandido", 8), id)
@@ -336,7 +345,7 @@ func TestRedactForPlayers(t *testing.T) {
 // HIDRATA a tela, e ele responde a quem pediu — inclusive jogador. Redigir só o
 // broadcast deixaria o PV oculto sair inteiro na primeira carga (ALE-122).
 func TestStateForRole(t *testing.T) {
-	st := emptyRuntimeState()
+	st := cenaEmCurso()
 	_ = addEntry(st, npc("Ogro", 12), counter())
 	pv := int64(37)
 	sim := true
@@ -430,7 +439,7 @@ func TestPatchAndDeltaVitals(t *testing.T) {
 // no meio do combate — e mudar no meio é o normal numa mesa, porque capanga
 // morre e reforço chega.
 func TestTurnsTakenSobreviveAListaMudar(t *testing.T) {
-	st := emptyRuntimeState()
+	st := cenaEmCurso()
 	id := counter()
 	_ = addEntry(st, npc("A", 30), id)
 	_ = addEntry(st, npc("B", 20), id)
@@ -463,7 +472,7 @@ func TestTurnsTakenSobreviveAListaMudar(t *testing.T) {
 // Voltar o turno desconta: o contador diz o que JÁ aconteceu, e desfazer diz
 // que não aconteceu. Nunca abaixo de zero, senão o pré-combate ficaria devendo.
 func TestTurnsTakenVoltaComRewind(t *testing.T) {
-	st := emptyRuntimeState()
+	st := cenaEmCurso()
 	id := counter()
 	_ = addEntry(st, npc("A", 30), id)
 	_ = addEntry(st, npc("B", 20), id)
@@ -485,7 +494,7 @@ func TestTurnsTakenVoltaComRewind(t *testing.T) {
 // Reiniciar apaga o combate, e o contador vai junto — senão a rodada 1 do
 // combate seguinte nasceria dizendo "turno 14".
 func TestResetZeraOsTurnos(t *testing.T) {
-	st := emptyRuntimeState()
+	st := cenaEmCurso()
 	id := counter()
 	_ = addEntry(st, npc("A", 30), id)
 	advanceTurn(st)
@@ -506,7 +515,7 @@ func TestResetZeraOsTurnos(t *testing.T) {
 // Este teste não confere um campo: confere que NENHUM se perde na cópia, que é
 // a garantia que a lista-de-campos não dava.
 func TestCloneStatePreservaTodosOsCampos(t *testing.T) {
-	st := emptyRuntimeState()
+	st := cenaEmCurso()
 	id := counter()
 	_ = addEntry(st, npc("A", 30), id)
 	_ = addEntry(st, npc("B", 20), id)
@@ -547,5 +556,95 @@ func TestLigarBlocoDeCriaturaNaLinhaQueJaExiste(t *testing.T) {
 	// E a ligação não mexe no resto da linha: PV e nome continuam onde estavam.
 	if st.Initiative[0].Label != "Capanga" {
 		t.Errorf("a ligação mexeu no nome: %q", st.Initiative[0].Label)
+	}
+}
+
+// A CENA como estado explícito (ALE-210): fora dela o jogador não recebe fila
+// NENHUMA. É a trava do servidor, e ela mora em `redactForPlayers` de propósito
+// — não mandar é diferente de não desenhar, e esta função é o gargalo pelo qual
+// os dois caminhos do estado passam (o broadcast por sala e o ack do get-state).
+func TestForaDeCenaAFilaNaoSaiParaAMesa(t *testing.T) {
+	st := cenaEmCurso()
+	id := counter()
+	_ = addEntry(st, npc("Ogro", 20), id)
+	_ = addEntry(st, charEntry("Arcanista", 15, 7), id)
+	advanceTurn(st)
+
+	// Em cena, a mesa vê tudo o que sempre viu.
+	if emCena := redactForPlayers(st); len(emCena.Initiative) != 2 || emCena.Round != 1 {
+		t.Fatalf("em cena o jogador perdeu a fila: %+v", emCena)
+	}
+
+	endScene(st)
+
+	fora := redactForPlayers(st)
+	if len(fora.Initiative) != 0 {
+		t.Errorf("fora de cena a fila vazou para o jogador: %+v", fora.Initiative)
+	}
+	// A rodada e o contador vão junto: "rodada 1, ninguém na fila" é uma
+	// contradição que o jogador leria como defeito da tela.
+	if fora.Round != 0 || fora.TurnIndex != -1 || fora.TurnsTaken != 0 {
+		t.Errorf("fora de cena sobrou relógio de combate: %+v", fora)
+	}
+	// O ack é o outro caminho, e papel desconhecido cai em jogador.
+	if pedido := stateForRole("", st); len(pedido.Initiative) != 0 {
+		t.Errorf("o ack entregou a fila fora de cena: %+v", pedido.Initiative)
+	}
+	// E o MESTRE continua com a fila inteira — encerrar não é apagar.
+	if doMestre := stateForRole("gm", st); len(doMestre.Initiative) != 2 {
+		t.Errorf("o mestre perdeu a fila ao encerrar: %+v", doMestre.Initiative)
+	}
+}
+
+// Encerrar GUARDA a fila e zera a vez; quem esvazia é o reiniciar. Essa é a
+// única diferença entre os dois botões do ciclo, então ela é a asserção.
+func TestEncerrarGuardaAFilaEReiniciarEsvazia(t *testing.T) {
+	monta := func() *SessionRuntimeState {
+		st := cenaEmCurso()
+		id := counter()
+		_ = addEntry(st, npc("Goblin", 18), id)
+		_ = addEntry(st, npc("Ogro", 9), id)
+		advanceTurn(st)
+		advanceTurn(st)
+		return st
+	}
+
+	encerrada := monta()
+	endScene(encerrada)
+	if len(encerrada.Initiative) != 2 {
+		t.Errorf("encerrar apagou a fila: %+v", encerrada.Initiative)
+	}
+	if encerrada.SceneActive || encerrada.Round != 0 || encerrada.TurnIndex != -1 || encerrada.TurnsTaken != 0 {
+		t.Errorf("encerrar não voltou o combate ao começo: %+v", encerrada)
+	}
+
+	reiniciada := monta()
+	resetInitiative(reiniciada)
+	if len(reiniciada.Initiative) != 0 {
+		t.Errorf("reiniciar deixou combatente na fila: %+v", reiniciada.Initiative)
+	}
+	// Reiniciar volta ao PONTO DE PARTIDA, e o ponto de partida é fora de cena.
+	if reiniciada.SceneActive {
+		t.Error("reiniciar deixou a cena ligada, criando 'em cena com fila vazia' sem ninguém pedir")
+	}
+}
+
+// Sem cena o turno não anda. É a guarda que dá direção única ao estado — turno
+// só existe dentro de cena —, e é dela que `parseRuntimeBlob` tira o direito de
+// deduzir a cena de um turno em curso.
+func TestSemCenaOTurnoNaoAnda(t *testing.T) {
+	st := emptyRuntimeState()
+	_ = addEntry(st, npc("Ogro", 20), counter())
+
+	advanceTurn(st)
+
+	if st.TurnIndex != -1 || st.Round != 0 || st.TurnsTaken != 0 {
+		t.Fatalf("avançou fora de cena: %+v", st)
+	}
+	// E anda assim que a cena começa, pelo mesmo clique.
+	startScene(st)
+	advanceTurn(st)
+	if st.TurnIndex != 0 || st.Round != 1 {
+		t.Fatalf("em cena o avanço parou de funcionar: %+v", st)
 	}
 }

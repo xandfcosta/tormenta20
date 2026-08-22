@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { abreAFila } from './support/gm-scene'
+import { abreAFila, acionaOCiclo, garanteACena, labelsNaFila } from './support/gm-scene'
 
 /**
  * O realtime com DOIS clientes na mesma mesa — o mecanismo que só um browser
@@ -44,6 +44,10 @@ test.describe('Sessão ao vivo — dois clientes', () => {
       // A cena do jogador tem TRÊS superfícies e abre na ficha dele (ALE-129):
       // a iniciativa mora na Mesa, e é lá que ele olha para acompanhar o combate.
       await telaDoJogador.getByRole('button', { name: /Mesa/ }).click()
+      // Sem CENA o servidor não manda fila nenhuma para a mesa (ALE-210), e o
+      // eco chegaria só à tela do mestre — este teste passaria a medir a trava
+      // em vez do broadcast.
+      await garanteACena(telaDoMestre)
 
       // A fila do mestre é GAVETA desde a ALE-198, e é lá que mora a forma de
       // adicionar. O formulário dentro dela nasce fechado desde que se mediu o
@@ -57,6 +61,65 @@ test.describe('Sessão ao vivo — dois clientes', () => {
       await expect(telaDoJogador.getByText(eco)).toBeVisible()
 
       await fila.getByRole('button', { name: `Remover ${eco}` }).click()
+      await expect(telaDoJogador.getByText(eco)).toBeHidden()
+    } finally {
+      await mestre.close()
+      await jogador.close()
+    }
+  })
+
+  /**
+   * A CENA como cortina (ALE-210): o mestre desliga e a fila SOME da mesa,
+   * enquanto continua inteira na tela dele.
+   *
+   * É e2e pela mesma razão que os dois vizinhos, e o guia da casa nomeia
+   * exatamente esta: a trava vive em `redactForPlayers`, que alimenta as SALAS
+   * POR PAPEL — o mestre recebe o estado cheio e o jogador uma cópia redigida,
+   * pelo mesmo socket, no mesmo instante. Um handler que emitisse a cópia certa
+   * para a sala errada (ou o estado cheio para as duas) passaria por todo teste
+   * de unidade dos dois lados: o Go prova que a função redige, o vitest prova
+   * que a tela desenha o que recebe, e nenhum dos dois prova que a mensagem foi
+   * para a sala certa.
+   *
+   * As duas metades importam. Sumir da mesa é a regra; CONTINUAR na tela do
+   * mestre é o que separa "redigi o broadcast" de "apaguei a fila" — e a
+   * segunda leitura passaria verde afirmando só a primeira.
+   */
+  test('encerrar a cena tira a fila da mesa sem tirá-la do mestre', async ({ browser }) => {
+    const eco = `Cortina de teste ${Date.now()}`
+    const mestre = await browser.newContext({ storageState: '.auth/user.json' })
+    const jogador = await browser.newContext({ storageState: '.auth/player.json' })
+    const telaDoMestre = await mestre.newPage()
+    const telaDoJogador = await jogador.newPage()
+
+    try {
+      await telaDoMestre.goto('/campaigns/1/sessions/5')
+      await telaDoJogador.goto('/campaigns/1/sessions/5')
+      await expect(telaDoMestre.getByRole('status', { name: 'Conectado' })).toBeVisible()
+      await expect(telaDoJogador.getByRole('status', { name: 'Conectado' })).toBeVisible()
+      await telaDoJogador.getByRole('button', { name: /Mesa/ }).click()
+      await garanteACena(telaDoMestre)
+
+      const fila = await abreAFila(telaDoMestre)
+      await fila.getByRole('button', { name: 'Combatente' }).click()
+      await telaDoMestre.getByLabel('Nome').fill(eco)
+      await telaDoMestre.getByRole('button', { name: 'Adicionar', exact: true }).click()
+      await expect(telaDoJogador.getByText(eco)).toBeVisible()
+
+      // A gaveta é modal abaixo de 1280 e cobriria o pé do trilho.
+      await telaDoMestre.keyboard.press('Escape')
+      await expect(fila).toBeHidden()
+      await acionaOCiclo(telaDoMestre, 'Encerrar cena', 'Encerrar a cena?')
+
+      await expect(telaDoJogador.getByText(eco)).toBeHidden()
+      await expect.poll(async () => labelsNaFila(telaDoMestre)).toContain(eco)
+
+      // E volta pelo mesmo caminho: a fila estava guardada o tempo todo.
+      await garanteACena(telaDoMestre)
+      await expect(telaDoJogador.getByText(eco)).toBeVisible()
+
+      const limpando = await abreAFila(telaDoMestre)
+      await limpando.getByRole('button', { name: `Remover ${eco}` }).click()
       await expect(telaDoJogador.getByText(eco)).toBeHidden()
     } finally {
       await mestre.close()

@@ -114,6 +114,12 @@ func (g *realtimeGateway) onConnect(sock *socket.Socket) {
 	sock.On("initiative-previous-turn", func(args ...any) { g.onPreviousTurn(sock, args) })
 	sock.On("initiative-reset", func(args ...any) { g.onResetInitiative(sock, args) })
 	sock.On("initiative-populate", func(args ...any) { g.onPopulate(sock, args) })
+	// `session-*` e não `scene-*` (ALE-210): "cena" já é palavra ocupada no fio
+	// pelo lado do tabuleiro, onde `board-place-scene` significa um mapa GUARDADO
+	// da crônica. O ciclo vive no namespace da sessão, ao lado do `session-rest`,
+	// que é o outro verbo de sessão inteira.
+	sock.On("session-scene-start", func(args ...any) { g.onSceneStart(sock, args) })
+	sock.On("session-scene-end", func(args ...any) { g.onSceneEnd(sock, args) })
 	sock.On("vitals-patch", func(args ...any) { g.onVitalsPatch(sock, args) })
 	sock.On("vitals-delta", func(args ...any) { g.onVitalsDelta(sock, args) })
 	sock.On("session-rest", func(args ...any) { g.onSessionRest(sock, args) })

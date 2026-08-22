@@ -195,7 +195,11 @@ export function InitiativeCard(props: {
           {(message) => <p class="text-sm text-destructive">Erro realtime: {message()}</p>}
         </Show>
 
-        <Show when={!props.isGm && myCharacterId() !== undefined}>
+        {/* Só dentro da CENA (ALE-210). Fora dela o servidor não manda fila
+            nenhuma para a mesa, então rolar a própria iniciativa gravaria a
+            linha no rastreador do mestre e não mudaria nada na tela de quem
+            rolou — um botão que responde com o silêncio. */}
+        <Show when={!props.isGm && myCharacterId() !== undefined && props.rt.state().sceneActive}>
           <InitiativeRollButton characterId={myCharacterId()} rt={props.rt} />
         </Show>
 

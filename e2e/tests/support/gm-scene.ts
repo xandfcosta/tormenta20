@@ -176,3 +176,53 @@ export async function primeiroDaFila(page: Page): Promise<string> {
 function escapaRegex(texto: string): string {
   return texto.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
+
+/**
+ * Garante que há CENA em curso, e é IDEMPOTENTE (ALE-210).
+ *
+ * A cena virou estado que o mestre liga: sem ela não existe avanço de turno, e
+ * a fila nem sai do servidor para os jogadores. A seed nasce fora de cena — que
+ * é o estado de uma sessão recém-aberta —, então todo teste que fala de turno
+ * passa por aqui primeiro.
+ *
+ * Espera pela VAGA antes de decidir, e não por `isVisible` no "Iniciar cena":
+ * `isVisible` é instantâneo sem espera automática, e a faixa remonta ao cruzar
+ * 1024 — a armadilha que a `abreAFila` documenta logo acima.
+ */
+export async function garanteACena(page: Page): Promise<void> {
+  const vaga = page
+    .getByRole('button', { name: /^(Iniciar cena|Começar|Próximo|Ninguém na fila)/ })
+    .first()
+  await expect(vaga).toBeVisible()
+  const iniciar = page.getByRole('button', { name: 'Iniciar cena' })
+  if ((await iniciar.count()) === 0) return
+  await iniciar.click()
+  await expect(iniciar).toBeHidden()
+}
+
+/**
+ * Aciona o FIM do ciclo — encerrar ou reiniciar — e confirma.
+ *
+ * Os dois moram no pé do trilho a partir de 1024 e no menu da sessão abaixo
+ * disso: os mesmos nós em dois lugares, porque o trilho não existe no celular.
+ * O helper esconde essa escolha, que é de largura e não de comportamento.
+ */
+export async function acionaOCiclo(
+  page: Page,
+  botao: 'Encerrar cena' | 'Reiniciar o combate',
+  confirmacao: 'Encerrar a cena?' | 'Reiniciar o combate?',
+): Promise<void> {
+  const alvo = page.getByRole('button', { name: botao })
+  if ((await alvo.count()) === 0) {
+    await page.getByRole('button', { name: 'Configurações da sessão' }).click()
+    await expect(alvo).toBeVisible()
+  }
+  await alvo.click()
+  // Escopado pelo TÍTULO: o gatilho e o botão de confirmar têm nomes vizinhos,
+  // e sem o escopo o localizador casa os dois.
+  await page
+    .getByRole('dialog', { name: confirmacao })
+    .getByRole('button', { name: botao.startsWith('Encerrar') ? 'Encerrar' : 'Reiniciar' })
+    .click()
+  await expect(page.getByRole('dialog', { name: confirmacao })).toBeHidden()
+}

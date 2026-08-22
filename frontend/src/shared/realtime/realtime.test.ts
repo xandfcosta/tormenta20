@@ -56,6 +56,7 @@ const STATE: SessionRuntimeState = {
   initiative: [{ id: 'a', label: 'Goblin', initiative: 14, type: 'npc' }],
   round: 2,
   turnIndex: 0,
+  sceneActive: true,
 }
 
 function withSocket(run: (socket: FakeSocket, rt: ReturnType<typeof createSessionSocket>) => void) {

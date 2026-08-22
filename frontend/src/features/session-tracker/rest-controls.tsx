@@ -20,7 +20,14 @@ const REST_OPTIONS: { value: RestCondition; label: string }[] = [
 ]
 
 /**
- * Descanso de cena e de dia como AÇÕES RÁPIDAS da faixa do turno (ALE-122).
+ * Recuperação de cena e de dia como AÇÕES RÁPIDAS da faixa do turno (ALE-122).
+ *
+ * Diziam "Descanso de cena" e "Descanso de dia" até a ALE-210, e ali passaram a
+ * empatar com o "Encerrar cena" do ciclo — duas coisas diferentes com a mesma
+ * palavra na mesma tela. Quem cedeu foi este par, porque RECUPERAÇÃO é o termo
+ * do livro (p105) e diz o que o botão FAZ (devolve PV e PM), enquanto "descanso"
+ * dizia só quando se usa. O diálogo continua sendo o do descanso de dia: a
+ * qualidade é do descanso, não da recuperação.
  *
  * O descanso de cena não precisa de nada além do clique, então acontece no
  * clique. O de dia precisa da qualidade que a p105 usa para calcular a
@@ -48,7 +55,7 @@ export function RestControls(props: { rt: SessionRealtime }) {
         onClick={() => props.rt.rest('scene')}
       >
         <Hourglass aria-hidden="true" class="size-4" />
-        Descanso de cena
+        Recuperar · cena
       </Button>
 
       <Button
@@ -58,7 +65,7 @@ export function RestControls(props: { rt: SessionRealtime }) {
         onClick={() => setOpen(true)}
       >
         <Moon aria-hidden="true" class="size-4" />
-        Descanso de dia
+        Recuperar · dia
       </Button>
 
       <Dialog open={open()} onOpenChange={setOpen}>

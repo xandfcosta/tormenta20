@@ -1,9 +1,9 @@
-import { ChevronLeft, ChevronRight } from 'lucide-solid'
+import { ChevronLeft, ChevronRight, Play } from 'lucide-solid'
 import { Show } from 'solid-js'
 import type { SessionRuntimeState } from '@/shared/realtime/realtime'
 import { Button } from '@/shared/ui/button'
 import { cn } from '@/shared/lib/utils'
-import { nextTurnTarget } from './tracker-rules'
+import { nextTurnTarget, turnCounterLabel } from './tracker-rules'
 
 /**
  * Avançar o turno — o controle mais clicado do app (ALE-184).
@@ -81,18 +81,41 @@ export function TurnAdvance(props: {
  * quando alguém entra ou morre no meio) e ninguém decifra isso no combate. O
  * campo continua no estado; o que saiu foi a tinta.
  *
- * Antes do primeiro turno não há o que contar, então só a rodada aparece —
- * "Turno 0/7" diria que a rodada começou quando ela não começou.
+ * QUAL das quatro frases aparece é decisão de `turnCounterLabel`, e ela mora
+ * nas regras porque é regra: desde a ALE-210 a resposta depende de haver cena
+ * antes de haver fila, e de haver fila antes de haver turno. Aqui só sobrou a
+ * tinta.
  */
 export function TurnCounter(props: { state: SessionRuntimeState; class?: string }) {
-  const emCombate = () => props.state.turnIndex >= 0 && props.state.initiative.length > 0
-
   return (
     <span class={cn('font-mono text-sm tabular-nums text-muted-foreground', props.class)}>
-      Rodada {props.state.round}
-      <Show when={emCombate()}>
-        {' · '}Turno {props.state.turnIndex + 1}/{props.state.initiative.length}
-      </Show>
+      {turnCounterLabel(props.state)}
     </span>
+  )
+}
+
+/**
+ * O começo do ciclo da cena, na VAGA do avanço de turno (ALE-210).
+ *
+ * Ele ocupa o lugar do "Próximo turno" em vez de morar no trilho, e é por isso
+ * que nunca existem dois "começar" na tela: a vaga é uma só e contém um estado
+ * por vez — [Iniciar cena], depois [Começar: Fulano], depois [Próximo: Beltrano].
+ * A issue pedia o botão no trilho esquerdo, mas o trilho não existe abaixo de
+ * 1024 (`session-gm-view`, `railsFit`), e o mestre no celular ficaria sem
+ * caminho nenhum para iniciar.
+ *
+ * A altura é a mesma 44px do avanço, o mínimo de toque que a ALE-184 comprou:
+ * a vaga não pode mudar de tamanho quando troca de conteúdo.
+ */
+export function SceneStart(props: { connected: boolean; onStart: () => void; class?: string }) {
+  return (
+    <Button
+      class={cn('h-11 min-w-0 gap-2 px-3 text-sm', props.class)}
+      disabled={!props.connected}
+      onClick={() => props.onStart()}
+    >
+      <Play aria-hidden="true" class="size-4 shrink-0" />
+      <span class="truncate">Iniciar cena</span>
+    </Button>
   )
 }
