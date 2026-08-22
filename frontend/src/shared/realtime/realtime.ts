@@ -239,8 +239,16 @@ export type SessionRealtime = {
   /** Desliga a cena. GUARDA a fila — quem esvazia é o `resetInitiative`. */
   endScene: () => void
   populateParty: () => void
-  /** A player submits their own rolled initiative; upserts by characterId. */
-  rollSelfInitiative: (characterId: number, initiative: number) => void
+  /**
+   * O jogador registra a PRÓPRIA iniciativa mandando o D20 — nunca o total
+   * (ALE-213). O bônus da perícia é regra do livro, e quem soma é o Go: mandar
+   * o total já pronto punha a regra na tela, livre para divergir do motor.
+   *
+   * O d20 vem daqui de propósito, e é o único número que vem: a mesa que rola
+   * dado FÍSICO digita o que caiu, e nesse caminho não existe dado para o
+   * servidor rolar. Upsert por `characterId`, então re-registrar substitui.
+   */
+  rollSelfInitiative: (characterId: number, d20: number) => void
   rest: (scope: RestScope, condition?: RestCondition) => void
   patchVitals: (entryId: string, patch: { hpCurrent?: number; mpCurrent?: number }) => void
   deltaVitals: (entryId: string, delta: { hpDelta?: number; mpDelta?: number }) => void
@@ -435,8 +443,7 @@ export function createSessionSocket(
     startScene: () => send('session-scene-start'),
     endScene: () => send('session-scene-end'),
     populateParty: () => send('initiative-populate'),
-    rollSelfInitiative: (characterId, initiative) =>
-      send('initiative-self', { characterId, initiative }),
+    rollSelfInitiative: (characterId, d20) => send('initiative-self', { characterId, d20 }),
     rest: (scope, condition) => send('session-rest', { scope, condition }),
     patchVitals: (entryId, patch) => send('vitals-patch', { entryId, patch }),
     // Flat, not nested: this is the shape the server reads.

@@ -4,7 +4,6 @@ import { campaignMembersQueryOptions } from '@/entities/campaign/queries'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { CharacterSheet } from '@/features/character-sheet/character-sheet'
 import { CharacterSheetSkeleton } from '@/features/character-sheet/character-sheet-skeleton'
-import { HeaderCard } from '@/features/session-tracker/header-card'
 import { InitiativeCard } from '@/features/session-tracker/initiative-card'
 import { PartyRoster } from '@/features/session-tracker/party-roster'
 import { connectionStatus } from '@/features/session-tracker/tracker-rules'
@@ -108,7 +107,6 @@ export function SessionPlayerView(props: {
       <Show when={surface() === 'mesa'}>
         <SessionTable
           campaignId={props.campaignId}
-          session={props.session}
           rt={props.rt}
           myCharacterIds={props.myCharacterIds}
         />
@@ -152,13 +150,17 @@ function SemPersonagem() {
  */
 function SessionTable(props: {
   campaignId: number
-  session: Session
   rt: SessionRealtime
   myCharacterIds: ReadonlySet<number>
 }) {
   return (
     <div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3 sm:p-4">
-      <HeaderCard campaignId={props.campaignId} session={props.session} isGm={false} />
+      {/* O `HeaderCard` SAIU daqui (ALE-213). Para o jogador ele dizia três
+          coisas e as três já estavam na tela: o número da sessão (no topo E na
+          faixa), o crachá "AO VIVO" (na faixa) e um título que ele não edita.
+          Era uma quarta fileira de cromo antes do que a Mesa existe para
+          mostrar. Ele continua inteiro no menu do MESTRE, onde as linhas de
+          ajuste têm o que ajustar. */}
       <InitiativeCard
         rt={props.rt}
         isGm={false}

@@ -1,6 +1,13 @@
 package api
 
-import "testing"
+import (
+	"context"
+	"strings"
+	"testing"
+
+	"t20engine/db/sqlcgen"
+	"t20engine/engine"
+)
 
 // O patch que chega do socket é montado por uma LISTA de campos escrita à mão,
 // e uma lista assim envelhece: ao entrar o `creatureId` (ALE-137) o cliente
@@ -101,5 +108,112 @@ func TestCondicaoEntraESaiDaLinha(t *testing.T) {
 	_ = updateEntry(st, "e1", entryPatch{Conditions: &vazio})
 	if len(st.Initiative[0].Conditions) != 0 {
 		t.Fatalf("limpar deixou %v", st.Initiative[0].Conditions)
+	}
+}
+
+// A iniciativa do jogador é somada pelo SERVIDOR (ALE-213).
+//
+// Antes o cliente mandava o total já pronto e quem decidia o bônus da perícia
+// era o navegador — uma segunda implementação de regra do livro, livre para
+// divergir do motor, que é exatamente o que a ALE-104 apagou. Agora ele manda o
+// d20 e o Go pergunta à ficha COMPUTADA.
+//
+// O d20 continua vindo de fora, e de propósito: a mesa que rola dado FÍSICO
+// digita o número, e nesse caminho não existe dado para o servidor rolar.
+//
+// O nível 8 é o que torna o teste honesto. Metade do nível entra em toda
+// perícia — regra do motor, provada em `engine/` —, então o bônus é 4 e o 17
+// NÃO pode ter vindo do cliente, que mandou 13.
+func TestIniciativaDoJogadorEhSomadaPeloServidor(t *testing.T) {
+	f := newSelfInitiativeFixture(t)
+
+	entry, err := f.g.selfInitiativeEntry(f.player, f.campaignID, f.charID, 13)
+	if err != nil {
+		t.Fatalf("registrar: %v", err)
+	}
+
+	if entry.Initiative != 17 {
+		t.Errorf("iniciativa %d, queria 17 (d20 13 + ½ nível 8)", entry.Initiative)
+	}
+	if entry.CharacterID == nil || *entry.CharacterID != f.charID {
+		t.Errorf("a linha não ficou ligada ao personagem: %+v", entry)
+	}
+}
+
+// Um d20 é um d20. Fora de 1..20 o servidor recusa em vez de gravar: o campo é
+// DIGITADO pelo jogador (é para isso que ele existe), e um dedo escorregando no
+// teclado põe 133 na frente da fila inteira.
+func TestD20ForaDaFaixaEhRecusado(t *testing.T) {
+	f := newSelfInitiativeFixture(t)
+
+	for _, d20 := range []int64{0, -3, 21, 100} {
+		if _, err := f.g.selfInitiativeEntry(f.player, f.campaignID, f.charID, d20); err == nil {
+			t.Errorf("d20 %d passou", d20)
+		}
+	}
+	// E a fronteira dos dois lados vale: 1 e 20 são dados de verdade.
+	for _, d20 := range []int64{1, 20} {
+		if _, err := f.g.selfInitiativeEntry(f.player, f.campaignID, f.charID, d20); err != nil {
+			t.Errorf("d20 %d recusado: %v", d20, err)
+		}
+	}
+}
+
+// O "self" do `initiative-self` é o que separa este caminho dos outros, que são
+// todos do mestre: sem porta de papel, quem o guarda é o `resolveCombatant`, e
+// ele recusa quem não é dono do personagem.
+func TestRegistrarIniciativaDeOutroEhRecusado(t *testing.T) {
+	f := newSelfInitiativeFixture(t)
+
+	_, err := f.g.selfInitiativeEntry(f.intruder, f.campaignID, f.charID, 10)
+
+	if err == nil {
+		t.Fatal("um jogador registrou a iniciativa do personagem de outro")
+	}
+	if !strings.Contains(err.Error(), "neither the GM") {
+		t.Errorf("recusou pelo motivo errado: %v", err)
+	}
+}
+
+type selfInitiativeFixture struct {
+	g          *realtimeGateway
+	campaignID int64
+	charID     int64
+	player     int64
+	intruder   int64
+}
+
+// Personagem de NÍVEL 8 com a perícia Iniciativa na ficha: sem a linha da
+// perícia o motor não computa nada para ela, e o bônus cairia em zero — o teste
+// passaria verde sobre um servidor que não perguntou nada a ninguém.
+func newSelfInitiativeFixture(t *testing.T) selfInitiativeFixture {
+	t.Helper()
+	s := newTestServer(t)
+	ctx := context.Background()
+	catalogs, err := engine.PrimeEngineCatalogs([]byte(`{"items":[]}`))
+	if err != nil {
+		t.Fatalf("preparar catálogo: %v", err)
+	}
+	s.catalogs = catalogs
+
+	gm := seedUser(t, s, "mestre@t.com")
+	player := seedUser(t, s, "jogador@t.com")
+	intruder := seedUser(t, s, "intruso@t.com")
+	campaignID := seedCampaign(t, s, gm)
+	charID := seedCharacterAtLevel(t, s, player, "Arcanista", 8, 20, 30, 5, 10)
+	seedMember(t, s, campaignID, charID, "player")
+	if _, err := s.queries.CreateExpertise(ctx, sqlcgen.CreateExpertiseParams{
+		Characterid: charID, Name: "Iniciativa", Attribute: "dexterity", Trained: 0, Custom: 0,
+	}); err != nil {
+		t.Fatalf("semear perícia: %v", err)
+	}
+	// Intruso na MESMA mesa: recusar alguém de fora seria recusar pela membresia,
+	// e a regra que este teste mira é a POSSE do personagem.
+	intruderChar := seedCharacter(t, s, intruder, "Colega", 20, 30, 5, 10)
+	seedMember(t, s, campaignID, intruderChar, "player")
+
+	return selfInitiativeFixture{
+		g: &realtimeGateway{s: s}, campaignID: campaignID,
+		charID: charID, player: player, intruder: intruder,
 	}
 }

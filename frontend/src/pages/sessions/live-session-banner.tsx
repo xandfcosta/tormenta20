@@ -42,12 +42,20 @@ export function LiveSessionBanner(props: {
         <span class="text-sm text-muted-foreground">· Sessão {props.sessionNumber}</span>
       </p>
       <div class="flex items-center gap-2 text-sm">
-        <span class="text-muted-foreground">Rodada {props.round}</span>
+        {/* A rodada só aparece quando alguém está na vez (ALE-213). Ela sobrevive
+            ao fim de um combate — remover o último combatente devolve o turno a
+            −1 mas não zera a rodada —, e a faixa anunciava "Rodada 1 · Aguardando
+            iniciativa" com a fila vazia: um número de um combate que já acabou,
+            ao lado da frase que diz que nenhum começou. Visto na tela do
+            jogador. `idle` é exatamente "não há vez de ninguém". */}
+        <Show when={props.turn.kind !== 'idle'}>
+          <span class="text-muted-foreground">Rodada {props.round}</span>
+        </Show>
         <Show
           when={mine()}
           fallback={
             <span class="truncate text-muted-foreground">
-              {props.turn.kind === 'other' ? `· Vez de ${props.turn.label}` : '· Aguardando iniciativa'}
+              {props.turn.kind === 'other' ? `· Vez de ${props.turn.label}` : 'Aguardando iniciativa'}
             </span>
           }
         >

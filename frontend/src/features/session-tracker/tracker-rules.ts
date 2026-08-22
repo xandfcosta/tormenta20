@@ -33,61 +33,26 @@ export function myCharacterIdsOf(
   )
 }
 
-export type EntryPermissions = {
-  editVitals: boolean
-  remove: boolean
-  applyEffect: boolean
-}
-
 /**
- * Os verbos que a LISTA reserva na coluna de ações — a união do que cada linha
- * oferece (ALE-141).
+ * A lista reserva o lugar do OLHO — o único verbo cujo conjunto muda de linha
+ * para linha (ALE-141).
  *
- * O olho só existe em linha com vida e remover só para o mestre, então cada
- * linha tinha um conjunto diferente e a fileira encolhia: o `+` de uma caía
- * onde estava o lápis de outra. Reservando por LISTA, o lugar de cada verbo é
- * o mesmo em todas as linhas e quem não o tem deixa o espaço vazio.
+ * Sem a reserva a fileira encolhia na linha sem vida e o `+` de uma caía onde
+ * estava o lápis de outra; medido, "Curar" aparecia em dois X e "Ferir" em
+ * outros dois, 36px de deslocamento. Reservando por LISTA, quem não tem o verbo
+ * deixa o espaço vazio e a coluna se forma.
  *
- * É a união, e não "sempre os cinco", porque no rail do jogador ninguém remove
- * nem esconde PV — reservar aquilo ali seria buraco permanente.
+ * Só o olho, e é a ALE-213 que reduziu isto: a coluna de ações inteira passou a
+ * ser do MESTRE — a fila do jogador virou leitura —, e curar/ferir/editar/remover
+ * existem em todas as linhas dele. O que continua condicional é esconder PV, que
+ * só faz sentido em linha COM vida.
  *
- * @example reservedVerbs(entries, { isGm: true, myCharacterIds }) // ['vitals','hide','remove']
+ * @example reservaOOlho(entries, true) // true, se alguma linha tem vida
  */
-export function reservedVerbs(
-  entries: readonly InitiativeEntry[],
-  viewer: { isGm: boolean; myCharacterIds: ReadonlySet<number> },
-): ActionVerb[] {
-  const permissoes = entries.map((entry) => entryPermissions(entry, viewer))
-  const reservados: ActionVerb[] = []
-  if (permissoes.some((can) => can.editVitals)) reservados.push('vitals')
-  if (viewer.isGm && entries.some((entry) => entry.hpMax !== undefined)) reservados.push('hide')
-  if (permissoes.some((can) => can.remove)) reservados.push('remove')
-  return reservados
+export function reservaOOlho(entries: readonly InitiativeEntry[], isGm: boolean): boolean {
+  return isGm && entries.some((entry) => entry.hpMax !== undefined)
 }
 
-/** Um lugar na coluna de ações. `vitals` são os três de PV, que andam juntos. */
-export type ActionVerb = 'vitals' | 'hide' | 'remove'
-
-/**
- * What the viewer may do to one row. Mirrors the server's rule — the UI only
- * avoids offering what would be refused, it does not decide anything: the GM
- * edits everyone, a player edits their OWN character, and only the GM pushes
- * a buff (onto a row that actually has a sheet).
- *
- * @example entryPermissions(entry, { isGm: false, myCharacterIds })
- */
-export function entryPermissions(
-  entry: InitiativeEntry,
-  viewer: { isGm: boolean; myCharacterIds: ReadonlySet<number> },
-): EntryPermissions {
-  const isMine =
-    entry.characterId !== undefined && viewer.myCharacterIds.has(entry.characterId)
-  return {
-    editVitals: viewer.isGm || isMine,
-    remove: viewer.isGm,
-    applyEffect: viewer.isGm && entry.characterId !== undefined,
-  }
-}
 
 /**
  * Quem está na vez e quem vem depois, na ORDEM DA MESA (ALE-179).

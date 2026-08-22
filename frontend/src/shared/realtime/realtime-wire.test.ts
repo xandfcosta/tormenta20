@@ -99,10 +99,11 @@ const WIRE: [string, string, (rt: SessionRealtime) => void, Record<string, unkno
   ['inicia a cena', 'session-scene-start', (rt) => rt.startScene(), SCOPE],
   ['encerra a cena', 'session-scene-end', (rt) => rt.endScene(), SCOPE],
   [
-    'o jogador rola a própria',
+    // O D20, nunca o total (ALE-213): quem soma o bônus da perícia é o Go.
+    'o jogador registra a própria',
     'initiative-self',
     (rt) => rt.rollSelfInitiative(42, 17),
-    { ...SCOPE, characterId: 42, initiative: 17 },
+    { ...SCOPE, characterId: 42, d20: 17 },
   ],
   [
     'descansa',

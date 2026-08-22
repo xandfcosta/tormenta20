@@ -208,13 +208,14 @@ describe('createSessionSocket — ações', () => {
     })
   })
 
-  it('iniciativa própria manda o personagem e o valor rolado', () => {
+  // O D20, e nunca o total (ALE-213): quem soma o bônus da perícia é o Go.
+  it('iniciativa própria manda o personagem e o d20', () => {
     withSocket((socket, rt) => {
       rt.rollSelfInitiative(42, 17)
 
       expect(socket.emitsOf('initiative-self')[0][0]).toMatchObject({
         characterId: 42,
-        initiative: 17,
+        d20: 17,
       })
     })
   })

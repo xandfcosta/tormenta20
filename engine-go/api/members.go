@@ -56,6 +56,50 @@ func (s *Server) campaignAccess(w http.ResponseWriter, r *http.Request, campaign
 	return true
 }
 
+// initiativeBonus é o total da perícia Iniciativa do personagem (½ nível +
+// atributo + treino + itens), lido da ficha COMPUTADA pelo motor (ALE-213).
+//
+// Existe porque o total da rolagem passou a ser somado no servidor: a soma é
+// trivial, mas o BÔNUS é regra do livro, e deixá-lo na tela seria uma segunda
+// implementação livre para divergir do motor — o que a ALE-104 apagou. Aqui não
+// há segunda conta: é a mesma `ComputeSheetV2` que a ficha inteira usa.
+//
+// Vizinha do `resolveCombatant` porque é o mesmo assunto — o que o rastreador
+// precisa saber sobre um personagem — e transport-agnostic pela mesma razão.
+//
+// @example bonus, err := s.initiativeBonus(ctx, 7) // 8, para o Arcanista Nv9
+func (s *Server) initiativeBonus(ctx context.Context, characterID int64) (int64, error) {
+	if s.catalogs == nil {
+		return 0, errors.New("Rules catalog not loaded")
+	}
+	row, err := s.queries.GetCharacter(ctx, characterID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, fmt.Errorf("Character %d not found", characterID)
+	}
+	if err != nil {
+		return 0, errors.New("Could not load character")
+	}
+	sheet, err := s.computeSheet(ctx, row)
+	if err != nil {
+		return 0, errors.New("Could not compute sheet")
+	}
+	for _, ex := range sheet.Expertises {
+		if ex.Name == initiativeExpertise {
+			return int64(ex.Total), nil
+		}
+	}
+	// Ficha sem a perícia na lista é ficha sem classe (o motor não computa
+	// perícia nenhuma). Zero é a resposta honesta: o d20 sozinho vale, e recusar
+	// deixaria o jogador sem conseguir entrar na fila por causa de uma ficha
+	// incompleta — o que o mestre resolve na hora arrastando a ordem.
+	return 0, nil
+}
+
+// initiativeExpertise é o nome da perícia no catálogo. Escrito UMA vez porque a
+// string literal em dois lugares é como um typo sobrevive: o `for` acima não
+// acharia nada e devolveria zero em silêncio.
+const initiativeExpertise = "Iniciativa"
+
 // combatant is a character's tracker-relevant snapshot (name + live vitals) for an
 // initiative entry. Transport-agnostic — the WS gateway maps it into an InitiativeEntry.
 type combatant struct {

@@ -2,11 +2,10 @@ import { describe, expect, it } from 'vitest'
 import type { InitiativeEntry } from '@/shared/realtime/realtime'
 import {
   connectionStatus,
-  entryPermissions,
   myCharacterIdsOf,
   nextTurnTarget,
   palcoBaixo,
-  reservedVerbs,
+  reservaOOlho,
   turnCounterLabel,
 } from './tracker-rules'
 
@@ -57,94 +56,27 @@ describe('myCharacterIdsOf', () => {
   })
 })
 
-describe('entryPermissions', () => {
-  const mine = new Set([7])
-
-  it('o mestre edita e remove qualquer combatente', () => {
-    const can = entryPermissions(entry(), { isGm: true, myCharacterIds: mine })
-
-    expect(can.editVitals).toBe(true)
-    expect(can.remove).toBe(true)
-    expect(can.applyEffect).toBe(false)
-  })
-
-  it('o mestre aplica efeito só em quem tem ficha', () => {
-    const can = entryPermissions(entry({ characterId: 7 }), {
-      isGm: true,
-      myCharacterIds: mine,
-    })
-
-    expect(can.applyEffect).toBe(true)
-  })
-
-  // O jogador mexe nos PV do PRÓPRIO personagem — a mesma regra que o servidor
-  // aplica; a UI só evita oferecer o que seria recusado.
-  it('o jogador edita o próprio e mais nada', () => {
-    const meu = entryPermissions(entry({ characterId: 7, type: 'character' }), {
-      isGm: false,
-      myCharacterIds: mine,
-    })
-    const alheio = entryPermissions(entry({ characterId: 8, type: 'character' }), {
-      isGm: false,
-      myCharacterIds: mine,
-    })
-
-    expect(meu.editVitals).toBe(true)
-    expect(meu.remove).toBe(false)
-    expect(alheio.editVitals).toBe(false)
-  })
-
-  it('NPC não é de ninguém, então o jogador não mexe', () => {
-    const can = entryPermissions(entry(), { isGm: false, myCharacterIds: mine })
-
-    expect(can.editVitals).toBe(false)
-  })
-})
-
 /**
- * A coluna de ações (ALE-141). O olho só existe em linha com vida e remover só
- * para o mestre, então cada linha tinha um conjunto diferente e a fileira
- * encolhia — o `+` de uma caía onde estava o lápis de outra.
+ * A coluna de ações (ALE-141), reduzida pela ALE-213.
  *
- * A regra é reservar por LISTA, não por linha: o lugar de cada verbo é o mesmo
- * em todas, e quem não o tem deixa o espaço vazio. E é a UNIÃO do que a lista
- * oferece, não os três sempre — no rail do jogador ninguém remove nem esconde
- * PV, e reservar aquilo ali seria buraco permanente.
+ * A coluna inteira passou a ser do MESTRE — a fila do jogador virou leitura —,
+ * então curar/ferir/editar/remover existem em TODAS as linhas dele e não têm o
+ * que reservar. O que continua condicional é o OLHO: esconder PV só faz sentido
+ * em linha com vida, e sem a reserva a fileira encolhia na linha sem vida — o
+ * `+` de uma caía onde estava o lápis de outra, 36px de deslocamento medidos.
  */
-describe('reservedVerbs', () => {
-  const mine = new Set([7])
-
-  it('o mestre reserva os três quando há linha com vida', () => {
-    const lista = [entry({ hpMax: 30 }), entry({ id: 'b' })]
-
-    expect(reservedVerbs(lista, { isGm: true, myCharacterIds: mine })).toEqual([
-      'vitals',
-      'hide',
-      'remove',
-    ])
+describe('reservaOOlho', () => {
+  it('reserva quando alguma linha tem vida', () => {
+    expect(reservaOOlho([entry({ hpMax: 30 }), entry({ id: 'b' })], true)).toBe(true)
   })
 
-  // Esconder PV do que não tem PV não significa nada: sem nenhuma linha com
-  // vida, o lugar do olho não se reserva.
+  // Esconder PV do que não tem PV não significa nada.
   it('sem ninguém com vida, o olho não ocupa lugar', () => {
-    const lista = [entry(), entry({ id: 'b' })]
-
-    expect(reservedVerbs(lista, { isGm: true, myCharacterIds: mine })).toEqual([
-      'vitals',
-      'remove',
-    ])
+    expect(reservaOOlho([entry(), entry({ id: 'b' })], true)).toBe(false)
   })
 
-  it('o jogador com personagem na mesa reserva só os vitais', () => {
-    const lista = [entry({ characterId: 7, type: 'character', hpMax: 20 }), entry({ id: 'b' })]
-
-    expect(reservedVerbs(lista, { isGm: false, myCharacterIds: mine })).toEqual(['vitals'])
-  })
-
-  it('o jogador sem personagem na mesa não reserva nada', () => {
-    const lista = [entry({ characterId: 8, type: 'character', hpMax: 20 })]
-
-    expect(reservedVerbs(lista, { isGm: false, myCharacterIds: mine })).toEqual([])
+  it('para o jogador não há coluna nenhuma a reservar', () => {
+    expect(reservaOOlho([entry({ hpMax: 30 })], false)).toBe(false)
   })
 })
 

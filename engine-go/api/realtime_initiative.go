@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	socket "github.com/zishang520/socket.io/servers/socket/v3"
@@ -10,9 +11,9 @@ import (
 	"t20engine/catalog"
 )
 
-// Initiative-tracker socket handlers. All GM-gated except initiative-self (a player rolls
-// their own, authorized by resolveCombatant). Split out of realtime_gateway.go for the
-// 500-line file cap.
+// Initiative-tracker socket handlers. All GM-gated except initiative-self (a player
+// registers their own, authorized by resolveCombatant). Split out of realtime_gateway.go
+// for the 500-line file cap.
 
 // onInitiativeAdd (GM) materializes an entry (NPC or character) and appends it.
 func (g *realtimeGateway) onInitiativeAdd(sock *socket.Socket, args []any) {
@@ -35,24 +36,57 @@ func (g *realtimeGateway) onInitiativeAdd(sock *socket.Socket, args []any) {
 	})
 }
 
-// onInitiativeSelf lets a player roll their OWN initiative (NOT GM-gated — resolveCombatant
-// enforces they own the character). Upserts by characterId so a re-roll updates in place.
+// onInitiativeSelf lets a player register their OWN initiative (NOT GM-gated —
+// resolveCombatant enforces they own the character). Upserts by characterId so um
+// re-registro atualiza no lugar.
+//
+// O cliente manda o D20 e o SERVIDOR soma (ALE-213). Antes ele mandava o total
+// já somado, e isso punha uma regra do livro na tela: quem decidisse o bônus da
+// perícia Iniciativa seria o navegador, livre para divergir do motor — que é
+// exatamente a segunda implementação que a ALE-104 apagou. O d20 continua vindo
+// de fora, e vem de propósito: a mesa que rola dado FÍSICO digita o número, e
+// nesse caminho não existe dado para o servidor rolar.
 func (g *realtimeGateway) onInitiativeSelf(sock *socket.Socket, args []any) {
 	ctx, ok := g.access(sock, args)
 	if !ok {
 		return
 	}
-	if _, has := intField(ctx.body, "characterId"); !has {
+	charID, hasChar := intField(ctx.body, "characterId")
+	if !hasChar {
 		g.wsError(sock, "characterId is required")
 		return
 	}
-	entry, err := g.materializeEntry(ctx.userID, ctx.campaignID, ctx.body)
+	d20, _ := intField(ctx.body, "d20")
+	entry, err := g.selfInitiativeEntry(ctx.userID, ctx.campaignID, charID, d20)
 	if err != nil {
 		g.wsError(sock, err.Error())
 		return
 	}
 	g.mutateAndBroadcast(sock, ctx, func() (*SessionRuntimeState, error) {
 		return g.s.sessions.upsertInitiativeEntry(ctx.sessionID, entry)
+	})
+}
+
+// selfInitiativeEntry monta a linha de quem registra a PRÓPRIA iniciativa:
+// confere o d20, pergunta o bônus ao motor e soma.
+//
+// Transport-agnostic de propósito, como o `assertVitalsEditable`: é aqui que a
+// regra mora e é aqui que ela se prova, com o handler em volta traduzindo erro
+// em `exception`. Testar pelo socket exigiria um socket, e o que importa não é
+// o transporte.
+func (g *realtimeGateway) selfInitiativeEntry(callerID, campaignID, charID, d20 int64) (InitiativeEntry, error) {
+	if d20 < 1 || d20 > 20 {
+		return InitiativeEntry{}, fmt.Errorf("d20 must be an integer from 1 to 20, got %d", d20)
+	}
+	bonus, err := g.s.initiativeBonus(context.Background(), charID)
+	if err != nil {
+		return InitiativeEntry{}, err
+	}
+	// Um payload NOVO e não o corpo recebido: escrever no mapa do cliente faria a
+	// mensagem se reescrever a si mesma, e um `initiative` que ele tenha mandado
+	// junto venceria a conta do servidor.
+	return g.materializeEntry(callerID, campaignID, map[string]any{
+		"characterId": charID, "initiative": d20 + bonus,
 	})
 }
 

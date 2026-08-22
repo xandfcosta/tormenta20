@@ -15,13 +15,7 @@ import { toast } from '@/shared/ui/sonner'
 import { createPartyFeedback } from './party-feedback'
 import { createTurnJuice } from './turn-juice'
 import { createPrefersReducedMotion } from '@/shared/lib/media-query'
-import {
-  type ActionVerb,
-  type EntryPermissions,
-  connectionStatus,
-  entryPermissions,
-  reservedVerbs,
-} from './tracker-rules'
+import { connectionStatus, reservaOOlho } from './tracker-rules'
 import { FieldLabel, SectionTitle } from '@/shared/ui/section-label'
 
 /**
@@ -34,8 +28,8 @@ const SHIFT_STEP = 5
 
 /**
  * The initiative tracker: the primary surface of a live session. Everyone sees
- * the same order and the same bars; what changes by role is what you may TOUCH
- * (see `entryPermissions`).
+ * the same order and the same bars; a coluna de AÇÕES é do mestre e mais
+ * ninguém — a fila do jogador é leitura (ALE-213).
  */
 export function InitiativeCard(props: {
   rt: SessionRealtime
@@ -91,11 +85,7 @@ export function InitiativeCard(props: {
     vez: () => props.rt.state().turnIndex,
     parado,
   })
-  const reserved = () =>
-    reservedVerbs(props.rt.state().initiative, {
-      isGm: props.isGm,
-      myCharacterIds: props.myCharacterIds,
-    })
+  const reservaOlho = () => reservaOOlho(props.rt.state().initiative, props.isGm)
 
   return (
     <section
@@ -238,11 +228,6 @@ export function InitiativeCard(props: {
           <For each={props.rt.state().initiative}>
             {(entry, index) => {
               const onTurn = () => index() === props.rt.state().turnIndex
-              const can = () =>
-                entryPermissions(entry, {
-                  isGm: props.isGm,
-                  myCharacterIds: props.myCharacterIds,
-                })
               const isMine = () =>
                 entry.characterId !== undefined && props.myCharacterIds.has(entry.characterId)
               return (
@@ -257,10 +242,9 @@ export function InitiativeCard(props: {
                   onTurn={onTurn()}
                   focusOnTurn={onTurn() && isMine()}
                   parado={parado()}
-                  can={can()}
-                  reserved={reserved()}
+                  isGm={props.isGm}
+                  reservaOlho={reservaOlho()}
                   onDeltaHp={(delta) => props.rt.deltaVitals(entry.id, { hpDelta: delta })}
-                  onApplyEffect={(spellId) => props.rt.applyEffect(entry.id, spellId)}
                   onRemove={() => props.rt.removeEntry(entry.id)}
                   onInitiative={
                     props.isGm
@@ -320,11 +304,15 @@ function InitiativeRow(props: {
   focusOnTurn: boolean
   /** O leitor pediu ao sistema para minimizar movimento (WCAG 2.3.3). */
   parado: boolean
-  can: EntryPermissions
-  /** Os verbos que a LISTA reserva na coluna de ações (ALE-141). */
-  reserved: ActionVerb[]
+  /**
+   * A coluna de ações inteira é do MESTRE (ALE-213): a fila do jogador virou
+   * leitura, e o PV dele se mexe na ficha, que é a superfície ao lado — duas
+   * portas para o mesmo número faziam a Mesa parecer um painel de mestre menor.
+   */
+  isGm: boolean
+  /** A lista reserva o lugar do olho, que só existe em linha com vida (ALE-141). */
+  reservaOlho: boolean
   onDeltaHp: (delta: number) => void
-  onApplyEffect: (spellId: string) => void
   onRemove: () => void
   /** Ausente para quem não pode reordenar — o número vira texto. */
   onInitiative?: (initiative: number) => void
@@ -523,10 +511,7 @@ function InitiativeRow(props: {
           caía onde estava o lápis de outra e o olho não formava coluna
           (ALE-141). Quem não tem o verbo deixa o espaço vazio. */}
       <div class="order-2 ml-auto flex shrink-0 items-center justify-end gap-1 @lg:order-3">
-        <Show when={props.reserved.includes('vitals') && !props.can.editVitals}>
-          <span aria-hidden="true" class="h-9 w-[7.75rem] sm:h-8 sm:w-[7rem]" />
-        </Show>
-        <Show when={props.can.editVitals}>
+        <Show when={props.isGm}>
           {/* O MESMO arranjo da ficha: − + e o diálogo. Antes eram quatro
               botões de passo fixo, e 23 de dano custava seis cliques ou uma
               conta de cabeça. O − vem depois do +, como no HUD, para um polegar
@@ -561,7 +546,7 @@ function InitiativeRow(props: {
         </Show>
         {/* Esconder é do MESTRE e só faz sentido em linha com vida: o olho
             fechado diz que a mesa não vê o número. */}
-        <Show when={props.reserved.includes('hide') && !(hasHp() && props.onHideHp)}>
+        <Show when={props.reservaOlho && !(hasHp() && props.onHideHp)}>
           <span aria-hidden="true" class="h-9 w-9 sm:h-8 sm:w-8" />
         </Show>
         <Show when={hasHp() ? props.onHideHp : undefined}>
@@ -592,10 +577,7 @@ function InitiativeRow(props: {
             </Button>
           )}
         </Show>
-        <Show when={props.reserved.includes('remove') && !props.can.remove}>
-          <span aria-hidden="true" class="h-9 w-9 sm:h-8 sm:w-8" />
-        </Show>
-        <Show when={props.can.remove}>
+        <Show when={props.isGm}>
           <Button
             size="sm"
             variant="ghost"
