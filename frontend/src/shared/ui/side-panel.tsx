@@ -20,6 +20,14 @@ export type SidePanelProps = {
   header?: JSX.Element
   children: JSX.Element
   class?: string
+  /**
+   * De que borda a gaveta entra, acima do degrau. Padrão direita, que é onde
+   * moram as consultas do mestre (catálogo, bestiário). A ESQUERDA é da fila do
+   * combate: ela mora no trilho esquerdo, e uma gaveta que entrasse pelo outro
+   * lado faria o conteúdo atravessar a tela para longe do botão que o chamou
+   * (ALE-198).
+   */
+  side?: 'left' | 'right'
 }
 
 /**
@@ -47,6 +55,7 @@ export function SidePanel(props: SidePanelProps) {
     'header',
     'children',
     'class',
+    'side',
   ])
   const scene = useSceneContainer()
   const sharesScreen = createMediaQuery(SHARES_SCREEN)
@@ -86,8 +95,13 @@ export function SidePanel(props: SidePanelProps) {
             // `viewport-fit=cover`, keeping the p-3/p-4 floor of each layout.
             'inset-x-0 bottom-0 max-h-[92dvh] rounded-t-md border-t p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]',
             'data-[closed]:slide-out-to-bottom data-[expanded]:slide-in-from-bottom',
-            'xl:inset-y-0 xl:left-auto xl:right-0 xl:max-h-none xl:w-[26rem] xl:rounded-none xl:border-l xl:border-t-0 xl:p-4 xl:pb-[max(1rem,env(safe-area-inset-bottom))]',
-            'xl:data-[closed]:slide-out-to-right xl:data-[expanded]:slide-in-from-right',
+            'xl:inset-y-0 xl:max-h-none xl:w-[26rem] xl:rounded-none xl:border-t-0 xl:p-4 xl:pb-[max(1rem,env(safe-area-inset-bottom))]',
+            // Escrito por ramo e não por `cn`: `xl:left-auto` e `xl:left-0` são
+            // a MESMA propriedade, e deixar as duas na string entrega a decisão
+            // à ordem do merge em vez de ao lado pedido.
+            local.side === 'left'
+              ? 'xl:left-0 xl:right-auto xl:border-r xl:data-[closed]:slide-out-to-left xl:data-[expanded]:slide-in-from-left'
+              : 'xl:left-auto xl:right-0 xl:border-l xl:data-[closed]:slide-out-to-right xl:data-[expanded]:slide-in-from-right',
             local.class,
           )}
         >
@@ -130,9 +144,14 @@ export function SidePanel(props: SidePanelProps) {
               phone screen. Redundant with Esc and the X, never the only way.
               The explicit `aria-label` is not decoration — Kobalte's own
               English "Dismiss" OVERRIDES the visible text (gotcha #2), so
-              without it the bar announces a word the app never shows. */}
+              without it the bar announces a word the app never shows.
+
+              O rótulo NOMEIA o painel, como o ✕ do topo já fazia: "Fechar" nu
+              não diz fechar o quê, e dentro da gaveta da fila ele empatava com
+              o "Fechar" do formulário de adicionar — dois botões com o mesmo
+              nome acessível na mesma caixa (ALE-198). */}
           <KDialog.CloseButton
-            aria-label="Fechar"
+            aria-label={`Fechar ${local.title}`}
             class="shrink-0 rounded-sm border border-grimorio-iron px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground xl:hidden"
           >
             Fechar

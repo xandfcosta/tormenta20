@@ -274,6 +274,13 @@ links, the browser Back button and the progress rail cannot then disagree.
   blows up far from the cause — use the fixture.
 - This jsdom has **no `AnimationEvent` constructor**: use `Event` +
   `defineProperty` to set `animationName`.
+- **`dvh` num elemento `fixed` não recomputa ao redimensionar no
+  `chrome-headless-shell`**, que é o browser do e2e. Medido na ALE-198: o mesmo
+  diálogo a 390×844 dava 776px no Chrome de verdade e 451 no runner, e a
+  asserção de proporção falhava só ali — o app estava certo e o teste media o
+  browser. Em elemento `fixed`, `vh`. O `dvh` continua valendo para quem não é
+  `fixed` (a cena usa `h-dvh`) e para a folha de baixo do `SidePanel`, onde a
+  barra do navegador entrando e saindo é o caso real.
 - **Movimento reduzido não cobre nada que você escreve em JS.** A regra global
   do `index.css` zera animação e transição DECLARATIVAS; `el.animate` passa por
   baixo dela, e `scrollIntoView({behavior: 'smooth'})` EXPLÍCITO vence o

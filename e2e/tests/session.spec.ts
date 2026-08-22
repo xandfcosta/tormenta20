@@ -5,6 +5,19 @@ import {
   expectNadaEscapa,
   expectNadaRolaDeLado,
 } from './support/geometry'
+import {
+  abreAFicha,
+  abreAFichaPelaGaveta,
+  abreAFila,
+  abreConsulta,
+  cenaViva,
+  fechaAFicha,
+  fechaAFila,
+  labelsNaFila,
+  labelsNaGaveta,
+  primeiroDaFila,
+  trilhoDeConsultas,
+} from './support/gm-scene'
 import { expectPageDoesNotScroll, VIEWPORTS } from './support/viewports'
 
 /**
@@ -88,8 +101,13 @@ test.describe('Sessão ao vivo', () => {
         .getByRole('button', { name: 'Reiniciar' })
         .click()
       // O broadcast do servidor é o que confirma: sem esperar por ele, o teste
-      // seguinte pode abrir a cena antes de a limpeza ter chegado.
-      await expect(page.getByText('Sem combatentes ainda')).toBeVisible()
+      // seguinte pode abrir a cena antes de a limpeza ter chegado. A confirmação
+      // é o TRILHO ficar sem itens — a lista com o "Sem combatentes ainda" mora
+      // na gaveta desde a ALE-198, e abrir gaveta para confirmar uma limpeza
+      // seria medir o overlay em vez do estado.
+      await expect
+        .poll(async () => (await labelsNaFila(page)).length, { timeout: 7000 })
+        .toBe(0)
     } finally {
       await contexto.close()
     }
@@ -124,9 +142,11 @@ test.describe('Sessão ao vivo', () => {
     await page.getByRole('button', { name: 'Continuar a sessão' }).click()
     await expect(page).toHaveURL(/\/campaigns\/\d+\/sessions\/\d+$/)
 
-    await expect(page.getByRole('heading', { name: 'Iniciativa' })).toBeVisible()
+    // A superfície permanente é o TABULEIRO (ALE-198): é ele que prova que a
+    // cena montou. A iniciativa virou gaveta e não serve mais de âncora.
+    await expect(page.getByRole('navigation', { name: 'Consultas do mestre' })).toBeVisible()
     // The connection chip flips to "Conectado" only after the socket handshake.
-    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+    await expect(cenaViva(page)).toBeVisible()
   })
 
   /**
@@ -168,7 +188,7 @@ test.describe('Sessão ao vivo', () => {
     await expect(page.getByRole('status', { name: 'Carregando a sessão' })).toBeVisible()
 
     release()
-    await expect(page.getByRole('heading', { name: 'Iniciativa' })).toBeVisible()
+    await expect(cenaViva(page)).toBeVisible()
   })
 
   /**
@@ -190,14 +210,17 @@ test.describe('Sessão ao vivo', () => {
     // O teste cria o próprio combatente: a iniciativa da seed do CI está VAZIA,
     // e esperar por uma linha que não existe fazia o teste falhar lá e passar
     // aqui. Ele também o remove no fim, para a seed sair como entrou.
-    await page.getByRole('button', { name: 'Combatente' }).click()
+    // A lista mora na GAVETA desde a ALE-198, e a regra que este teste protege
+    // não mudou de lugar com ela: as quebras da linha são do CONTÊINER e não da
+    // viewport, e a gaveta é um contêiner mais estreito (26rem) do que a coluna
+    // de antes — se havia margem para o defeito voltar, é aqui.
+    const fila = await abreAFila(page)
+    await fila.getByRole('button', { name: 'Combatente' }).click()
     await page.getByLabel('Nome').fill(alvo)
     await page.getByRole('button', { name: 'Adicionar', exact: true }).click()
-    await expect(page.getByRole('button', { name: `Ferir ${alvo}` })).toBeVisible()
+    await expect(fila.getByRole('button', { name: `Ferir ${alvo}` })).toBeVisible()
 
-    const tracker = page
-      .getByRole('heading', { name: 'Iniciativa' })
-      .locator('xpath=ancestor::section[1]')
+    const tracker = fila.locator('section').first()
     const escaping = await tracker.evaluate((section) => {
       const limit = section.getBoundingClientRect().right
       return [...section.querySelectorAll('button')]
@@ -205,8 +228,8 @@ test.describe('Sessão ao vivo', () => {
         .map((button) => button.getAttribute('aria-label') ?? button.textContent)
     })
 
-    await page.getByRole('button', { name: `Remover ${alvo}` }).click()
-    await expect(page.getByRole('button', { name: `Ferir ${alvo}` })).toBeHidden()
+    await fila.getByRole('button', { name: `Remover ${alvo}` }).click()
+    await expect(fila.getByRole('button', { name: `Ferir ${alvo}` })).toBeHidden()
 
     expect(escaping).toEqual([])
   })
@@ -253,7 +276,7 @@ test.describe('Sessão ao vivo', () => {
    */
   test('a cena do mestre cabe na tela: a página não rola em nenhum formato', async ({ page }) => {
     await page.goto('/campaigns/1/sessions/4')
-    await expect(page.getByRole('heading', { name: 'Iniciativa' })).toBeVisible()
+    await expect(cenaViva(page)).toBeVisible()
 
     await expectPageDoesNotScroll(page, VIEWPORTS)
   })
@@ -278,51 +301,42 @@ test.describe('Sessão ao vivo', () => {
     await page.goto('/campaigns/1/sessions/4')
     await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
 
-    const antes = await labelsNaIniciativa(page)
+    const antes = await labelsNaFila(page)
     const cena = () => page.locator('.scene-grimorio').first()
 
+    /**
+     * Os estados são CUMULATIVOS e cada um deixa a cena como a encontrou de
+     * overlay: a medida é da geometria PERMANENTE, e um diálogo aberto por
+     * cima mediria o overlay em vez dela. Os dois estados de overlay
+     * (ficha, catálogos) medem com ele aberto de propósito — é ali que a cena
+     * de trás pode estourar — e fecham em seguida.
+     */
     const ESTADOS: { nome: string; montar: () => Promise<void> }[] = [
       { nome: 'vazia', montar: async () => {} },
       {
-        nome: 'grupo na iniciativa',
+        nome: 'grupo na fila',
         montar: async () => {
-          await page.getByRole('button', { name: 'Adicionar grupo' }).click()
+          const fila = await abreAFila(page)
+          await fila.getByRole('button', { name: 'Adicionar grupo' }).click()
           await expect(page.locator('[role="progressbar"][aria-label^="PM "]').first()).toBeVisible()
+          await fechaAFila(page)
         },
       },
       {
         nome: 'ficha de PC aberta',
         montar: async () => {
-          // A barra de PM é o sinal de que a linha tem PERSONAGEM atrás dela —
-          // o crachá "PC" mora fora do botão e casar por texto pegaria "NPC".
-          //
-          // A busca é ESCOPADA na iniciativa e falha alto quando não acha: a
-          // primeira versão procurava `button[aria-pressed]` na PÁGINA inteira
-          // com o nome achado, e quando o nome vinha vazio — porque outro
-          // worker tinha mexido na lista no meio do caminho — o `hasText: ''`
-          // casava o primeiro botão de estado da tela e o teste clicava no
-          // BOTÃO DO SOM. Ele então esperava 30s pela ficha, e o relatório do
-          // CI mostrava o som ligado como única pista.
-          const iniciativa = page
-            .getByRole('heading', { name: 'Iniciativa' })
-            .locator('xpath=ancestor::section[1]')
-          const nome = await iniciativa.evaluate((secao) => {
-            const barra = secao.querySelector('[role="progressbar"][aria-label^="PM "]')
-            let no: HTMLElement | null = barra as HTMLElement | null
-            while (no && no !== secao && !no.querySelector('button[aria-pressed]')) {
-              no = no.parentElement
-            }
-            return no?.querySelector('button[aria-pressed]')?.textContent?.trim() ?? ''
-          })
-          if (!nome) throw new Error('nenhum PC na iniciativa: a lista mudou no meio do teste')
-          await iniciativa.locator('button[aria-pressed]', { hasText: nome }).first().click()
+          // O primeiro da fila serve: o grupo acabou de entrar e são todos PCs.
+          // O trilho é o caminho de um clique, e o nome inteiro está no rótulo
+          // acessível dele — não é preciso caçar o texto dentro da linha.
+          await abreAFicha(page, await primeiroDaFila(page))
           await expect(page.getByRole('tab', { name: 'Perícias' })).toBeVisible()
         },
       },
       {
         nome: 'catálogos abertos',
         montar: async () => {
-          await page.getByRole('tab', { name: 'Catálogos' }).click()
+          await fechaAFicha(page)
+          await abreConsulta(page, 'Catálogos')
           await expect(page.getByText('Abalado')).toBeVisible()
         },
       },
@@ -332,8 +346,6 @@ test.describe('Sessão ao vivo', () => {
       await estado.montar()
       for (const viewport of VIEWPORTS) {
         await page.setViewportSize({ width: viewport.width, height: viewport.height })
-        const mesa = page.getByRole('button', { name: 'mesa', exact: true })
-        if (await mesa.isVisible()) await mesa.click()
         await expectPageDoesNotScroll(page, [viewport])
         await expectNadaEscapa(page, '.scene-grimorio')
       }
@@ -341,78 +353,10 @@ test.describe('Sessão ao vivo', () => {
       await expect(cena()).toBeVisible()
     }
 
+    await page.keyboard.press('Escape')
+    const paraLimpar = await abreAFila(page)
     for (const label of await novosDesde(page, antes)) {
-      await page.getByRole('button', { name: `Remover ${label}` }).click()
-    }
-  })
-
-  /**
-   * O painel VAZIO não reserva a metade da tela (ALE-171).
-   *
-   * Entre 1024 e 1536 a cena tem duas colunas e a proporção era FIXA: o
-   * workspace ficava com 7/12 — 817px de 1440, 57% da tela — para dizer "clique
-   * no nome de um combatente", enquanto os nomes truncavam na coluna ao lado.
-   * É a mesma regra que a ALE-161 aplicou ao tabuleiro, e a mesma frase do
-   * CLAUDE.md do front: uma cena preenche o espaço que recebe.
-   *
-   * As DUAS metades são afirmadas. Só a primeira passaria verde com o painel
-   * apagado, que é o conserto errado: ele tem de VOLTAR a ter a largura quando
-   * há o que mostrar, senão a ficha do combatente é que fica espremida.
-   *
-   * Por que e2e: é largura de grade real respondendo a estado. Em jsdom todo
-   * elemento mede zero e as duas medidas dariam iguais.
-   */
-  test('o painel do combatente só reserva largura quando tem o que mostrar', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 })
-    await page.goto('/campaigns/1/sessions/4')
-    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
-
-    const antes = await labelsNaIniciativa(page)
-    await page.getByRole('button', { name: 'Adicionar grupo' }).click()
-    await expect(page.locator('[role="progressbar"][aria-label^="PM "]').first()).toBeVisible()
-
-    const larguras = () =>
-      page.evaluate(() => {
-        const h2 = [...document.querySelectorAll('h2')].find((n) =>
-          n.textContent?.includes('Iniciativa'),
-        )
-        const card = h2?.closest('section') as HTMLElement | null
-        const ws = document.querySelector('[role=tablist]')?.parentElement as HTMLElement | null
-        return {
-          iniciativa: card ? Math.round(card.getBoundingClientRect().width) : 0,
-          workspace: ws ? Math.round(ws.getBoundingClientRect().width) : 0,
-        }
-      })
-
-    try {
-      // VAZIO: quem trabalha é a lista, e ela fica com a maior parte.
-      const vazio = await larguras()
-      expect(vazio.iniciativa, 'a lista não recebeu a largura do painel vazio').toBeGreaterThan(
-        vazio.workspace,
-      )
-
-      // CHEIO: a ficha do combatente precisa da largura de volta.
-      const iniciativa = page
-        .getByRole('heading', { name: 'Iniciativa' })
-        .locator('xpath=ancestor::section[1]')
-      const nome = await iniciativa.evaluate((secao) => {
-        const barra = secao.querySelector('[role="progressbar"][aria-label^="PM "]')
-        let no: HTMLElement | null = barra as HTMLElement | null
-        while (no && no !== secao && !no.querySelector('button[aria-pressed]')) no = no.parentElement
-        return no?.querySelector('button[aria-pressed]')?.textContent?.trim() ?? ''
-      })
-      if (!nome) throw new Error('nenhum PC na iniciativa: a lista mudou no meio do teste')
-      await iniciativa.locator('button[aria-pressed]', { hasText: nome }).first().click()
-      await expect(page.getByRole('tab', { name: 'Perícias' })).toBeVisible()
-
-      const cheio = await larguras()
-      expect(cheio.workspace, 'o painel não retomou a largura com a ficha aberta').toBeGreaterThan(
-        cheio.iniciativa,
-      )
-    } finally {
-      for (const label of await novosDesde(page, antes)) {
-        await page.getByRole('button', { name: `Remover ${label}` }).click()
-      }
+      await paraLimpar.getByRole('button', { name: `Remover ${label}` }).click()
     }
   })
 
@@ -434,13 +378,13 @@ test.describe('Sessão ao vivo', () => {
   test('o nome do combatente cabe inteiro no laptop', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/campaigns/1/sessions/4')
-    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
-    // A largura da coluna da iniciativa é o que decide se o nome cabe, e com o
-    // tabuleiro ABERTO ela encolhe — no CI o nome passou a precisar de TRÊS
-    // linhas numa caixa de duas por causa disso. Garantir o estado é do teste:
-    // a ordem entre specs não é contrato, e o CI roda dois workers na mesma
-    // sessão (o mesmo motivo que o teste vizinho já documenta).
+    await expect(cenaViva(page)).toBeVisible()
+    // A caixa que decide se o nome cabe é a GAVETA da fila (26rem), e não mais
+    // uma coluna cuja largura variava com o tabuleiro aberto (ALE-198). O
+    // encerra-se-houver continua: uma cena montada muda o que os testes
+    // seguintes medem, e a ordem entre specs não é contrato.
     await encerraOTabuleiroSeHouver(page)
+    const fila = await abreAFila(page)
 
     // 22 caracteres, o comprimento do pior caso da seed ("Guerreiro Veterano
     // Nv8"), com sufixo curto só para o teste achar e remover o que criou.
@@ -448,15 +392,15 @@ test.describe('Sessão ao vivo', () => {
     // cabia por UM pixel e o guarda passava verde sobre o defeito — descobri
     // isso sabotando, e é o segundo teste desta leva que a sabotagem salvou.
     const nome = `Guerreiro Veterano ${Date.now() % 1000}`
-    await page.getByRole('button', { name: 'Combatente' }).click()
+    await fila.getByRole('button', { name: 'Combatente' }).click()
     await page.getByLabel('Nome').fill(nome)
     // COM PV, e isso é metade do teste: sem barras de vida a linha devolve os
     // ~176px delas ao nome, ele cabe, e o guarda passa verde sobre o defeito.
     // O caso real da mesa é um combatente COM vida.
     await page.locator('#combatant-hp').fill('30')
     await page.getByRole('button', { name: 'Adicionar', exact: true }).click()
-    await expect(page.getByRole('button', { name: `Remover ${nome}` })).toBeVisible()
-    await page.getByRole('button', { name: 'Fechar' }).click()
+    await expect(fila.getByRole('button', { name: `Remover ${nome}` })).toBeVisible()
+    await fila.getByRole('button', { name: 'Fechar', exact: true }).click()
 
     try {
       const escondido = await page.evaluate((alvo) => {
@@ -476,7 +420,7 @@ test.describe('Sessão ao vivo', () => {
       expect(precisaW, 'o nome está cortado na largura').toBeLessThanOrEqual(mostraW + 1)
       expect(precisaH, 'o nome está cortado na altura').toBeLessThanOrEqual(mostraH + 1)
     } finally {
-      await page.getByRole('button', { name: `Remover ${nome}` }).click()
+      await fila.getByRole('button', { name: `Remover ${nome}` }).click()
     }
   })
 
@@ -492,6 +436,11 @@ test.describe('Sessão ao vivo', () => {
    * As ações subiram para o cabeçalho, que ficou com o lado direito vazio na
    * ALE-184: uma faixa de 65px no lugar de duas, primeira linha em y=261.
    *
+   * A promessa SOBREVIVEU à mudança de casa (ALE-198): a lista virou a folha de
+   * baixo do celular, com teto de 92dvh, e a pergunta continua sendo a mesma —
+   * numa tela de 390px de altura, dá para ler dois combatentes? O que mudou é
+   * que agora ela não divide a altura com a faixa do turno nem com o mapa.
+   *
    * O que se afirma é o RESULTADO (a segunda linha começa dentro da tela), e
    * não a altura de nenhuma faixa: pixel de cromo é detalhe de implementação,
    * "dá para ver dois combatentes" é a promessa.
@@ -502,28 +451,26 @@ test.describe('Sessão ao vivo', () => {
   test('no celular deitado, a lista mostra dois combatentes', async ({ page }) => {
     await page.setViewportSize({ width: 844, height: 390 })
     await page.goto('/campaigns/1/sessions/4')
-    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
-
-    const combate = page.getByRole('button', { name: 'combate', exact: true })
-    if (await combate.isVisible()) await combate.click()
+    await expect(cenaViva(page)).toBeVisible()
 
     // Os combatentes são DESTE teste e saem no fim — a seed é compartilhada, e
     // contar com o que outro teste deixou é o acoplamento que já derrubou esta
     // suíte no CI mais de uma vez.
     const marca = Date.now()
     const nomes = [`Alvo A ${marca}`, `Alvo B ${marca}`]
-    await page.getByRole('button', { name: 'Combatente' }).click()
+    const fila = await abreAFila(page)
+    await fila.getByRole('button', { name: 'Combatente' }).click()
     for (const nome of nomes) {
       await page.getByLabel('Nome').fill(nome)
       await page.getByRole('button', { name: 'Adicionar', exact: true }).click()
-      await expect(page.getByRole('button', { name: `Remover ${nome}` })).toBeVisible()
+      await expect(fila.getByRole('button', { name: `Remover ${nome}` })).toBeVisible()
     }
     // O formulário fica aberto enquanto se adiciona vários (ALE-122); fechá-lo
     // é o que devolve a altura para a lista.
-    await page.getByRole('button', { name: 'Fechar' }).click()
+    await fila.getByRole('button', { name: 'Fechar', exact: true }).click()
 
     try {
-      const linhas = page.getByRole('button', { name: /^Mudar a iniciativa de/ })
+      const linhas = fila.getByRole('button', { name: /^Mudar a iniciativa de/ })
       await expect(linhas.first()).toBeInViewport()
       // METADE da segunda linha, e não "ela começa dentro da tela": com a
       // fileira de ações de volta acima da lista, a segunda linha ainda NASCE
@@ -535,7 +482,7 @@ test.describe('Sessão ao vivo', () => {
       })
     } finally {
       for (const nome of nomes) {
-        await page.getByRole('button', { name: `Remover ${nome}` }).click()
+        await fila.getByRole('button', { name: `Remover ${nome}` }).click()
       }
     }
   })
@@ -562,17 +509,15 @@ test.describe('Sessão ao vivo', () => {
   test('o avanço trunca o nome longo em vez de estourar a faixa', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto('/campaigns/1/sessions/4')
-    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
-
-    const combate = page.getByRole('button', { name: 'combate', exact: true })
-    if (await combate.isVisible()) await combate.click()
+    await expect(cenaViva(page)).toBeVisible()
 
     // O combatente é DESTE teste e sai no fim: a seed é compartilhada, e um
     // nome de 47 caracteres esquecido na lista muda o que todo teste de layout
     // depois dele mede.
     const marca = Date.now()
     const longo = `Zumbi Putrefato Ancião do Pântano ${marca}`
-    await page.getByRole('button', { name: 'Combatente' }).click()
+    const fila = await abreAFila(page)
+    await fila.getByRole('button', { name: 'Combatente' }).click()
     await page.getByLabel('Nome').fill(longo)
     // Iniciativa ALTA de propósito: o rótulo do avanço nomeia o PRÓXIMO da
     // ordem, e com o valor padrão (0) qualquer resto deixado por outro teste
@@ -581,7 +526,10 @@ test.describe('Sessão ao vivo', () => {
     // depender de quem mais está na lista.
     await page.locator('#combatant-initiative').fill('99')
     await page.getByRole('button', { name: 'Adicionar', exact: true }).click()
-    await expect(page.getByRole('button', { name: `Remover ${longo}` })).toBeVisible()
+    await expect(fila.getByRole('button', { name: `Remover ${longo}` })).toBeVisible()
+    // A faixa a medir é a de TRÁS: com a gaveta aberta por cima, o que se
+    // mediria era o overlay.
+    await fechaAFila(page)
 
     try {
       // O rótulo do avanço carrega o nome inteiro; o que não pode é a CAIXA
@@ -589,25 +537,27 @@ test.describe('Sessão ao vivo', () => {
       await expect(avancoDeTurno(page)).toHaveAccessibleName(new RegExp(String(marca)))
       await expectNadaEscapa(page, '.scene-grimorio')
     } finally {
-      await page.getByRole('button', { name: `Remover ${longo}` }).click()
+      const paraLimpar = await abreAFila(page)
+      await paraLimpar.getByRole('button', { name: `Remover ${longo}` }).click()
     }
   })
 
   /**
    * EXATAMENTE um avanço de turno na tela, em todo formato (ALE-142).
    *
-   * O par de turno mora no cabeçalho da iniciativa, mas abaixo de 1024 a cena
-   * mostra uma região por vez e a iniciativa pode não estar na tela — então a
-   * faixa fixa guarda o avanço ali. São duas instâncias do mesmo controle,
-   * separadas por `lg:hidden` / `hidden lg:flex`, e o desenho inteiro depende
-   * de nunca aparecerem juntas: duas seriam o defeito que a ALE-122 já tinha
-   * consertado uma vez (o mesmo "Próximo turno" duas vezes na tela).
+   * O avanço mora na FAIXA DO TURNO em toda largura desde a ALE-198 — a fila
+   * virou gaveta, e o botão mais clicado da sessão não pode viver atrás de um
+   * clique. Continuam sendo duas instâncias separadas por `lg:hidden` /
+   * `hidden lg:flex`: abaixo do degrau só o avanço, acima dele o par com o
+   * `‹`, porque os 44px do desfazer não cabem no orçamento de cromo da faixa a
+   * 844×390 (ALE-146). O desenho inteiro depende de nunca aparecerem juntas —
+   * duas seriam o defeito que a ALE-122 já tinha consertado uma vez.
    *
    * Zero também é falha, e é a mais grave: sem o avanço o mestre não joga.
    */
   test('há um e só um avanço de turno na tela, em todo formato', async ({ page }) => {
     await page.goto('/campaigns/1/sessions/4')
-    await expect(page.getByRole('heading', { name: 'Iniciativa' })).toBeVisible()
+    await expect(cenaViva(page)).toBeVisible()
 
     for (const viewport of VIEWPORTS) {
       await page.setViewportSize({ width: viewport.width, height: viewport.height })
@@ -615,15 +565,9 @@ test.describe('Sessão ao vivo', () => {
       // As DUAS regiões, e a de combate é a que importa: com a mesa aberta a
       // iniciativa nem existe na página, então contar só ali nunca veria duas.
       // Aprendido tentando sabotar este teste — a primeira versão passava verde
-      // com o par duplicado, porque só olhava a mesa.
-      for (const regiao of ['mesa', 'combate']) {
-        const botao = page.getByRole('button', { name: regiao, exact: true })
-        if (!(await botao.isVisible())) continue
-        await botao.click()
-        const naRegiao = avancoDeTurno(page)
-        await expect(naRegiao, `${viewport.name}/${regiao}: avanços na tela`).toHaveCount(1)
-      }
-
+      // com o par duplicado, porque só olhava a mesa. Não há mais REGIÃO para
+      // alternar (ALE-198): a cena tem uma superfície permanente só, e contar
+      // na página inteira é agora a única contagem que existe.
       const avancos = avancoDeTurno(page)
       await expect(avancos, `${viewport.name}: avanços de turno na tela`).toHaveCount(1)
       await expect(avancos, `${viewport.name}: o avanço saiu da tela`).toBeInViewport()
@@ -662,29 +606,22 @@ test.describe('Sessão ao vivo', () => {
     page,
   }) => {
     await page.goto('/campaigns/1/sessions/4')
-    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+    await expect(cenaViva(page)).toBeVisible()
 
     // O teste traz o PRÓPRIO grupo: a iniciativa da seed do CI está VAZIA, e
     // depender de um PC que só existe no banco de dev já quebrou o CI três vezes
     // nesta issue. "Adicionar grupo" é idempotente e traz os PCs da campanha.
-    const antes = await labelsNaIniciativa(page)
-    await page.getByRole('button', { name: 'Adicionar grupo' }).click()
+    const antes = await labelsNaFila(page)
+    const fila = await abreAFila(page)
+    await fila.getByRole('button', { name: 'Adicionar grupo' }).click()
     await expect(page.locator('[role="progressbar"][aria-label^="PM "]').first()).toBeVisible()
+    await fechaAFila(page)
 
-    // A barra de PM é o sinal de que a linha tem PERSONAGEM atrás dela — o
-    // crachá "PC" mora fora do botão, e casar por texto pegaria "NPC" junto.
-    const nomeDoPc = await page.evaluate(() => {
-      const barra = document.querySelector('[role="progressbar"][aria-label^="PM "]')
-      // Sobe até a LINHA — `closest('[class*=rounded]')` pararia no invólucro da
-      // própria barra, que também é arredondado.
-      let no: HTMLElement | null = barra as HTMLElement | null
-      while (no && !no.querySelector('button[aria-pressed]')) no = no.parentElement
-      return no?.querySelector('button[aria-pressed]')?.textContent?.trim() ?? ''
-    })
-    expect(nomeDoPc, 'não achei uma linha de personagem na iniciativa').not.toBe('')
+    // O primeiro da fila serve: o grupo acabou de entrar e são todos PCs, que
+    // são os únicos com ficha atrás — o conteúdo mais alto que entra na região.
+    const nomeDoPc = await primeiroDaFila(page)
 
-    // Só um PC tem ficha atrás dele — é o conteúdo mais alto que entra na região.
-    await page.locator('button[aria-pressed]', { hasText: nomeDoPc }).first().click()
+    await abreAFicha(page, nomeDoPc)
     const abaDaFicha = page.getByRole('tab', { name: 'Perícias' })
     await expect(abaDaFicha).toBeVisible()
 
@@ -703,14 +640,15 @@ test.describe('Sessão ao vivo', () => {
     }
     await page.keyboard.press('Escape')
 
-    const nomeNaFaixa = page.getByRole('heading', { name: nomeDoPc })
+    // `exact` porque o diálogo da ficha tem um título só para leitor de tela,
+    // "Ficha de <nome>", e o casamento por nome do Playwright é SUBSTRING.
+    const nomeNaFaixa = page.getByRole('heading', { name: nomeDoPc, exact: true })
     const fechar = page.getByRole('button', { name: 'Fechar o combatente' })
 
     for (const viewport of VIEWPORTS) {
       await page.setViewportSize({ width: viewport.width, height: viewport.height })
-      // Abaixo de 1024 a cena mostra uma região por vez: a ficha vive na mesa.
-      const mesa = page.getByRole('button', { name: 'mesa', exact: true })
-      if (await mesa.isVisible()) await mesa.click()
+      // Sem região para alternar (ALE-198): a ficha é um diálogo, e ele está na
+      // tela em toda largura.
       await expect(abaDaFicha, `${viewport.name}: a barra de abas saiu da tela`).toBeInViewport()
 
       // As duas garantias que a ALE-147 quebrou. O nome é o que diz DE QUEM é a
@@ -723,20 +661,12 @@ test.describe('Sessão ao vivo', () => {
       ).toBeGreaterThanOrEqual(100)
       await expect(fechar, `${viewport.name}: fechar o combatente saiu da tela`).toBeInViewport()
 
-      // O celular deitado continua FORA desta conta, e a medição da ALE-146
-      // corrigiu os números que estavam aqui: o cromo não era 179px, era 252
-      // (65% da tela), porque a faixa de turno enrolava em DUAS fileiras e
-      // media 90px, não 50 — sozinha, mais que as duas barras de navegação
-      // somadas. A ALE-146 desenrolou a faixa (90 → 62px) e a região do
-      // combatente subiu de 138 para 153px.
-      //
-      // Ainda não é o bastante para a proporção: a faixa usa 89 dos 153, 58%,
-      // e o teto é 35%. O que falta é a OUTRA metade do cromo — o seletor de
-      // região (32px) e a barra de abas do workspace (36px), duas fileiras que
-      // navegam em níveis diferentes e que a ALE-146 deixou de fora de
-      // propósito. Enquanto elas forem duas, este formato não entra na conta.
-      // A garantia que vale aqui é a de ALCANCE, logo acima, e essa roda nos
-      // seis.
+      // O celular deitado continua FORA desta conta. A ALE-198 devolveu altura
+      // — a ficha virou diálogo e não divide mais a região com a faixa do turno
+      // nem com o seletor de região, que deixou de existir —, mas 390px de
+      // altura menos a moldura do diálogo ainda não dão os 65% que o teto de
+      // 35% exige da ficha. A garantia que vale aqui é a de ALCANCE, logo
+      // acima, e essa roda nos seis.
       if (viewport.name === 'mobile-landscape') continue
 
       const { regiao, antesDaFicha } = await medirRegiaoDoCombatente(page)
@@ -752,18 +682,28 @@ test.describe('Sessão ao vivo', () => {
     await page.setViewportSize({ width: 1920, height: 1080 })
     const gatilho = page.getByRole('button', { name: /^Ver as? .*condi/ })
     for (let i = 0; i < 5 && (await gatilho.count()) > 0; i++) {
-      // Sai por dentro do popover, onde as três estão listadas juntas.
+      // Sai por dentro do popover, onde as três estão listadas juntas. O
+      // popover é achado pelo que ele NÃO contém: desde a ALE-198 a ficha é ela
+      // mesma um diálogo, e `getByRole('dialog')` sozinho casa os dois — o de
+      // fora nunca fecha, e a espera estourava sobre uma limpeza que funcionou.
+      // Filtrar pelo que ele CONTÉM não resolve: com duas condições ou menos a
+      // própria faixa desenha os "Remover condição" soltos, dentro da ficha.
+      // A barra de blocos é o que só a ficha tem.
       await gatilho.click()
-      const painel = page.getByRole('dialog')
+      const painel = page
+        .getByRole('dialog')
+        .filter({ hasNot: page.getByRole('tab', { name: 'Perícias' }) })
       await painel.getByRole('button', { name: /^Remover condição/ }).first().click()
       await page.keyboard.press('Escape')
-      await expect(painel).toBeHidden()
+      await expect(painel).toHaveCount(0)
     }
     await expect(gatilho).toHaveCount(0)
 
-    // Tira da iniciativa só quem ESTE teste pôs.
+    // Tira da fila só quem ESTE teste pôs.
+    await fechaAFicha(page)
+    const paraLimpar = await abreAFila(page)
     for (const label of await novosDesde(page, antes)) {
-      await page.getByRole('button', { name: `Remover ${label}` }).click()
+      await paraLimpar.getByRole('button', { name: `Remover ${label}` }).click()
     }
   })
 
@@ -774,19 +714,22 @@ test.describe('Sessão ao vivo', () => {
    * Em jsdom não há observador nem leiaute, a largura é zero e a regra responde
    * "cabe" para sempre — o caminho estreito não existe em camada mais barata.
    *
-   * Os dois formatos saem da MESMA página e a diferença entre eles é o que
-   * torna o teste interessante: a região de notas mede 801px numa janela de
-   * 1440 e 606px numa de 1920, porque a cena dá menos espaço ao workspace
-   * quando há mais o que mostrar. Maximizar a janela ESTREITA a região.
+   * Os dois formatos saem da MESMA página, e a ALE-198 INVERTEU a direção que
+   * a ALE-139 tinha registrado aqui. Antes a região media 801px numa janela de
+   * 1440 e 606px numa de 1920 — maximizar a janela ESTREITAVA a região, porque
+   * a cena repartia o workspace por proporções condicionais. Agora a coluna das
+   * notas é uma fração do palco (40%, entre 22rem e 44rem): ~509px a 1440, onde
+   * o modo duplo NÃO cabe, e ~700px a 1920, onde cabe. Janela maior, região
+   * maior.
    */
   test('o modo lado a lado só aparece onde a região comporta duas colunas', async ({
     page,
   }) => {
     await page.goto('/campaigns/1/sessions/4')
-    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+    await expect(cenaViva(page)).toBeVisible()
 
-    await page.setViewportSize({ width: 1440, height: 900 })
-    await page.getByRole('tab', { name: /Notas/i }).first().click()
+    await page.setViewportSize({ width: 1920, height: 1080 })
+    await abreConsulta(page, 'Notas')
     const faixa = page.getByRole('group', { name: /Modo de visualização das notas/ })
     await expect(faixa.getByRole('button', { name: 'Lado a lado' })).toBeVisible()
     await expect(page.getByLabel('Notas da sessão')).toBeVisible()
@@ -794,13 +737,14 @@ test.describe('Sessão ao vivo', () => {
     // Região estreita: o modo duplo some, e "Escrever" assume — a faixa tem de
     // dizer a verdade sobre o que está na tela, senão sobram dois botões e
     // nenhum marcado.
-    await page.setViewportSize({ width: 1920, height: 1080 })
+    await page.setViewportSize({ width: 1440, height: 900 })
     await page.waitForTimeout(600)
     await expect(faixa.getByRole('button', { name: 'Lado a lado' })).toHaveCount(0)
     await expect(faixa.getByRole('button', { name: 'Escrever' })).toHaveAttribute(
       'aria-pressed',
       'true',
     )
+    await abreConsulta(page, 'Notas')
   })
 
   /**
@@ -823,7 +767,7 @@ test.describe('Sessão ao vivo', () => {
     page,
   }) => {
     await page.goto('/campaigns/1/sessions/4')
-    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+    await expect(cenaViva(page)).toBeVisible()
 
     const naFileira = page.getByRole('button', { name: /Descanso de cena/ })
 
@@ -898,18 +842,14 @@ test.describe('Sessão ao vivo', () => {
   }) => {
     await page.setViewportSize({ width: 1920, height: 1080 })
     await page.goto('/campaigns/1/sessions/4')
-    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+    await expect(cenaViva(page)).toBeVisible()
 
-    const antes = await labelsNaIniciativa(page)
-    await page.getByRole('button', { name: 'Adicionar grupo' }).click()
+    const antes = await labelsNaFila(page)
+    const fila = await abreAFila(page)
+    await fila.getByRole('button', { name: 'Adicionar grupo' }).click()
     await expect(page.locator('[role="progressbar"][aria-label^="PM "]').first()).toBeVisible()
-    const nomeDoPc = await page.evaluate(() => {
-      const barra = document.querySelector('[role="progressbar"][aria-label^="PM "]')
-      let no: HTMLElement | null = barra as HTMLElement | null
-      while (no && !no.querySelector('button[aria-pressed]')) no = no.parentElement
-      return no?.querySelector('button[aria-pressed]')?.textContent?.trim() ?? ''
-    })
-    await page.locator('button[aria-pressed]', { hasText: nomeDoPc }).first().click()
+    await fechaAFila(page)
+    await abreAFicha(page, await primeiroDaFila(page))
 
     // Os blocos com GRADE, que são os que quebram por medida errada. Cada um
     // espera por um conteúdo SEU — o clique na aba não garante que o bloco já
@@ -935,8 +875,10 @@ test.describe('Sessão ao vivo', () => {
     }
 
     // Sai como entrou.
+    await fechaAFicha(page)
+    const paraLimpar = await abreAFila(page)
     for (const label of await novosDesde(page, antes)) {
-      await page.getByRole('button', { name: `Remover ${label}` }).click()
+      await paraLimpar.getByRole('button', { name: `Remover ${label}` }).click()
     }
   })
 
@@ -955,12 +897,13 @@ test.describe('Sessão ao vivo', () => {
   test('os verbos da linha da iniciativa ficam na mesma coluna', async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 })
     await page.goto('/campaigns/1/sessions/4')
-    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+    await expect(cenaViva(page)).toBeVisible()
 
     // Precisa de linhas HETEROGÊNEAS: os PCs da campanha entram com vida (e
     // portanto com olho), e a seed tem NPC sem vida, que é o caso sem olho.
-    const antes = await labelsNaIniciativa(page)
-    await page.getByRole('button', { name: 'Adicionar grupo' }).click()
+    const antes = await labelsNaFila(page)
+    const fila = await abreAFila(page)
+    await fila.getByRole('button', { name: 'Adicionar grupo' }).click()
     await expect(page.locator('[role="progressbar"][aria-label^="PM "]').first()).toBeVisible()
 
     for (const verbo of ['Curar', 'Ferir', 'Editar PV', 'Ocultar PV', 'Remover']) {
@@ -968,74 +911,7 @@ test.describe('Sessão ao vivo', () => {
     }
 
     for (const label of await novosDesde(page, antes)) {
-      await page.getByRole('button', { name: `Remover ${label}` }).click()
-    }
-  })
-
-  /**
-   * Sem tabuleiro aberto, o palco vazio devolve a largura para quem trabalha
-   * (ALE-161).
-   *
-   * Medido antes: a 1920 a coluna do tabuleiro exibia 954px de "Nenhum
-   * tabuleiro aberto" enquanto quatro dos nove nomes truncavam na coluna de
-   * 424px ao lado — e o nome do combatente é o que o mestre fala em voz alta.
-   *
-   * Por que e2e: é largura de grade REAL respondendo a media query. Em jsdom
-   * todo elemento mede zero e a mesma asserção passaria verde sobre a tela
-   * quebrada.
-   */
-  test('sem tabuleiro, a iniciativa fica com o espaço e os nomes cabem', async ({ page }) => {
-    await page.setViewportSize({ width: 1920, height: 1080 })
-    await page.goto('/campaigns/1/sessions/4')
-    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
-    // A cena precisa estar SEM tabuleiro: é esse o estado sob teste, e garanti-lo
-    // é do teste. Esperar que o anterior tenha limpado é o acoplamento que
-    // derrubou esta suíte no CI — a ordem entre os testes não é contrato.
-    await encerraOTabuleiroSeHouver(page)
-    await expect(page.getByText('Nenhum tabuleiro aberto')).toBeVisible()
-    // Instantâneo ANTES: só o que este teste trouxer é dele para remover. A
-    // primeira versão passava `[]` aqui e limpou a iniciativa INTEIRA da seed
-    // compartilhada — e, sem combatente nenhum, a asserção não tinha o que
-    // medir e passava verde sobre a tela quebrada.
-    const antes = await labelsNaIniciativa(page)
-    await page.getByRole('button', { name: 'Adicionar grupo' }).click()
-    await expect(page.locator('[role="progressbar"][aria-label^="PM "]').first()).toBeVisible()
-
-    // O nome da linha é um BOTÃO cujo nome acessível É o do combatente, e é
-    // por aí que ele é achado: a primeira versão casava `button.truncate` e
-    // deixou de medir qualquer coisa quando a ALE-167 trocou a classe por
-    // `line-clamp-2` — o teste não acusou o defeito, acusou o próprio seletor.
-    // Medir os DOIS eixos: com o nome em duas linhas, só a largura deixaria
-    // passar um nome cortado embaixo.
-    const rotulos = await labelsNaIniciativa(page)
-    const nomes = await page.evaluate(
-      (labels) =>
-        labels.flatMap((label) => {
-          const el = [...document.querySelectorAll<HTMLElement>('button')].find(
-            (n) => n.textContent?.trim() === label,
-          )
-          return el
-            ? [
-                {
-                  texto: label,
-                  mostra: `${el.clientWidth}x${el.clientHeight}`,
-                  precisa: `${el.scrollWidth}x${el.scrollHeight}`,
-                  cortado: el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1,
-                },
-              ]
-            : []
-        }),
-      rotulos,
-    )
-
-    expect(nomes.length, 'nenhum nome medido — o seletor não casou a linha da iniciativa').toBeGreaterThan(0)
-    const cortados = nomes
-      .filter((nome) => nome.cortado)
-      .map((nome) => `${nome.texto}: ${nome.mostra} para ${nome.precisa}`)
-    expect(cortados, 'nome de combatente truncado com o palco do tabuleiro vazio ao lado').toEqual([])
-
-    for (const label of await novosDesde(page, antes)) {
-      await page.getByRole('button', { name: `Remover ${label}` }).click()
+      await fila.getByRole('button', { name: `Remover ${label}` }).click()
     }
   })
 
@@ -1054,25 +930,20 @@ test.describe('Sessão ao vivo', () => {
   test('com o tabuleiro aberto no telefone, nada some fora da tela', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto('/campaigns/1/sessions/4')
-    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+    await expect(cenaViva(page)).toBeVisible()
 
-    // As PEÇAS deste teste são criadas por ele, e na região onde isso é
-    // possível: a 390px a cena mostra uma região por vez, e "Adicionar
-    // grupo"/"Combatente" moram no COMBATE, não na aba do tabuleiro. Contar com
-    // a iniciativa da seed era o acoplamento que derrubou este teste no CI, onde
-    // ela nasce VAZIA.
-    const combate = page.getByRole('button', { name: 'combate', exact: true })
-    if (await combate.isVisible()) await combate.click()
-    await page.getByRole('button', { name: 'Combatente' }).click()
+    // As PEÇAS deste teste são criadas por ele: contar com a iniciativa da seed
+    // era o acoplamento que o derrubou no CI, onde ela nasce VAZIA. A forma
+    // mora na gaveta da fila (ALE-198), e o tabuleiro continua na tela por
+    // baixo dela — não há mais região para alternar.
+    const fila = await abreAFila(page)
+    await fila.getByRole('button', { name: 'Combatente' }).click()
     for (const nome of PECAS_DO_TELEFONE) {
       await page.getByLabel('Nome').fill(nome)
       await page.getByRole('button', { name: 'Adicionar', exact: true }).click()
-      await expect(page.getByRole('button', { name: `Remover ${nome}` })).toBeVisible()
+      await expect(fila.getByRole('button', { name: `Remover ${nome}` })).toBeVisible()
     }
-
-    const mesa = page.getByRole('button', { name: 'mesa', exact: true })
-    if (await mesa.isVisible()) await mesa.click()
-    await page.getByRole('tab', { name: 'Tabuleiro' }).click()
+    await fechaAFila(page)
 
     // Setup que se limpa sozinho: a seed é compartilhada e um tabuleiro
     // esquecido aberto por uma execução anterior faria este teste procurar um
@@ -1122,14 +993,10 @@ test.describe('Sessão ao vivo', () => {
     // "Nenhum tabuleiro aberto" aparece ANTES de o diálogo terminar de sair.
     await expect(page.getByRole('dialog')).toBeHidden()
 
-    // E leva embora os combatentes que criou, na região onde eles moram. A
-    // troca de região é AFIRMADA, não tentada: pular em silêncio foi o defeito.
-    if (await combate.isVisible()) {
-      await combate.click()
-      await expect(combate).toHaveAttribute('aria-pressed', 'true')
-    }
+    // E leva embora os combatentes que criou, na gaveta onde eles moram.
+    const paraLimpar = await abreAFila(page)
     for (const nome of PECAS_DO_TELEFONE) {
-      await page.getByRole('button', { name: `Remover ${nome}` }).click()
+      await paraLimpar.getByRole('button', { name: `Remover ${nome}` }).click()
     }
   })
 
@@ -1154,33 +1021,28 @@ test.describe('Sessão ao vivo', () => {
   test('a ficha aberta na cena não vaza com a coluna apertada', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 844 })
     await page.goto('/campaigns/1/sessions/4')
-    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+    await expect(cenaViva(page)).toBeVisible()
 
-    const antes = await labelsNaIniciativa(page)
-    await page.getByRole('button', { name: 'Adicionar grupo' }).click()
+    // A 375px o trilho da fila não existe (ele começa em 1024): quem lê a fila e
+    // quem abre a ficha é a própria gaveta, do começo ao fim.
+    const fila = await abreAFila(page)
+    const antes = await labelsNaGaveta(fila)
+    await fila.getByRole('button', { name: 'Adicionar grupo' }).click()
     await expect(page.locator('[role="progressbar"][aria-label^="PM "]').first()).toBeVisible()
-
-    const iniciativa = page
-      .getByRole('heading', { name: 'Iniciativa' })
-      .locator('xpath=ancestor::section[1]')
-    const nome = await iniciativa.evaluate((secao) => {
-      const barra = secao.querySelector('[role="progressbar"][aria-label^="PM "]')
-      let no: HTMLElement | null = barra as HTMLElement | null
-      while (no && no !== secao && !no.querySelector('button[aria-pressed]')) no = no.parentElement
-      return no?.querySelector('button[aria-pressed]')?.textContent?.trim() ?? ''
-    })
-    if (!nome) throw new Error('nenhum PC na iniciativa: a lista mudou no meio do teste')
-    await iniciativa.locator('button[aria-pressed]', { hasText: nome }).first().click()
-
-    const mesa = page.getByRole('button', { name: 'mesa', exact: true })
-    if (await mesa.isVisible()) await mesa.click()
+    const depois = await labelsNaGaveta(fila)
+    await abreAFichaPelaGaveta(page)
     await page.getByRole('tab', { name: 'Perícias' }).click()
     await expect(page.getByRole('heading', { name: 'Perícias' })).toBeVisible()
 
-    await expectNadaEscapa(page, '.scene-grimorio')
+    // A ficha é DIÁLOGO agora, e ela é o pai que interessa: `.scene-grimorio` é
+    // a cena de trás, e num telefone o diálogo cobre a tela inteira. Medir a
+    // cena de trás com o overlay aberto mediria o pai errado.
+    await expectNadaEscapa(page, 'section:has([role="progressbar"][aria-label="Vida"])')
 
-    for (const label of await novosDesde(page, antes)) {
-      await page.getByRole('button', { name: `Remover ${label}` }).click()
+    await fechaAFicha(page)
+    const paraLimpar = await abreAFila(page)
+    for (const label of depois.filter((nome) => !antes.includes(nome))) {
+      await paraLimpar.getByRole('button', { name: `Remover ${label}` }).click()
     }
   })
 
@@ -1192,6 +1054,11 @@ test.describe('Sessão ao vivo', () => {
    * Centrar conteúdo que transborda empurra o TOPO para fora da área rolável —
    * e o topo aqui é justamente o botão de abrir. O mestre com algumas cenas
    * guardadas perdia o botão de abrir a próxima.
+   *
+   * A ALE-198 tirou a LISTA daquela tela — o acervo virou um botão que abre o
+   * diálogo —, e este guarda continua valendo pelo mesmo motivo pelo qual ele
+   * nasceu: ele afirma que o botão de abrir RECEBE O CLIQUE numa janela baixa,
+   * e é essa a promessa, não o desenho de quem está ao lado dele.
    *
    * É a mesma família do ✕ inalcançável da ALE-178, e foi assim que ele
    * apareceu: a spec dos dois clientes começou a pendurar em "Abrir tabuleiro",
@@ -1212,8 +1079,7 @@ test.describe('Sessão ao vivo', () => {
     test.slow()
     await page.setViewportSize({ width: 1280, height: 400 })
     await page.goto('/campaigns/1/sessions/4')
-    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
-    await page.getByRole('tab', { name: 'Tabuleiro' }).click()
+    await expect(cenaViva(page)).toBeVisible()
     await encerraOTabuleiroSeHouver(page)
 
     // O acervo do teste: abrir e encerrar ARQUIVA a cena (fatia 5), então três
@@ -1284,13 +1150,6 @@ test.describe('Sessão ao vivo', () => {
     }
   }
 
-  /** Os rótulos que estão na iniciativa agora. */
-  async function labelsNaIniciativa(page: Page): Promise<string[]> {
-    return page.$$eval('button[aria-label^="Remover "]', (bs) =>
-      bs.map((b) => (b.getAttribute('aria-label') ?? '').replace('Remover ', '')),
-    )
-  }
-
   /**
    * Encerra o tabuleiro que estiver aberto. Chamado por quem PRECISA da cena
    * vazia e por quem abre uma cena, no fim — a seed é compartilhada e a ordem
@@ -1304,9 +1163,9 @@ test.describe('Sessão ao vivo', () => {
     await expect(page.getByText('Nenhum tabuleiro aberto')).toBeVisible()
   }
 
-  /** Quem entrou na lista depois do instantâneo — o que este teste tem de limpar. */
+  /** Quem entrou na fila depois do instantâneo — o que este teste tem de limpar. */
   async function novosDesde(page: Page, antes: string[]): Promise<string[]> {
-    const agora = await labelsNaIniciativa(page)
+    const agora = await labelsNaFila(page)
     return agora.filter((label) => !antes.includes(label))
   }
 
@@ -1351,7 +1210,7 @@ test.describe('Sessão ao vivo', () => {
   test('o tabuleiro anda com o arraste, e o zoom fica ancorado no ponteiro', async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 })
     await page.goto('/campaigns/1/sessions/4')
-    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+    await expect(cenaViva(page)).toBeVisible()
 
     // Setup que se limpa sozinho: a seed é compartilhada e um tabuleiro
     // esquecido aberto por outra execução faria este teste procurar um botão
@@ -1365,10 +1224,12 @@ test.describe('Sessão ao vivo', () => {
     // desenvolvimento acumulou: no CI, onde a seed nasce com a iniciativa
     // VAZIA, ele esperava 30s por uma peça que nunca existiu. Prender o número
     // já tinha sido corrigido antes; o nome tinha ficado.
-    await page.getByRole('button', { name: 'Combatente' }).click()
+    const fila = await abreAFila(page)
+    await fila.getByRole('button', { name: 'Combatente' }).click()
     await page.getByLabel('Nome').fill(ALVO_DO_ARRASTE)
     await page.getByRole('button', { name: 'Adicionar', exact: true }).click()
-    await expect(page.getByRole('button', { name: `Remover ${ALVO_DO_ARRASTE}` })).toBeVisible()
+    await expect(fila.getByRole('button', { name: `Remover ${ALVO_DO_ARRASTE}` })).toBeVisible()
+    await fechaAFila(page)
 
     await page.getByRole('button', { name: /Trazer a iniciativa/ }).click()
     // Quantas peças não importa aqui, e prender o número tornaria este teste
@@ -1469,23 +1330,25 @@ test.describe('Sessão ao vivo', () => {
     await page.getByRole('button', { name: 'Encerrar o tabuleiro' }).click()
     await page.getByRole('dialog').getByRole('button', { name: 'Encerrar' }).click()
     await expect(page.getByText('Nenhum tabuleiro aberto')).toBeVisible()
-    await page.getByRole('button', { name: `Remover ${ALVO_DO_ARRASTE}` }).click()
+    const paraLimpar = await abreAFila(page)
+    await paraLimpar.getByRole('button', { name: `Remover ${ALVO_DO_ARRASTE}` }).click()
   })
 
   test('rolar a iniciativa não leva embora as ações', async ({ page }) => {
     const nomes = [1, 2, 3, 4, 5].map((n) => `Fileira de teste ${Date.now()}-${n}`)
     await page.setViewportSize({ width: 1280, height: 420 })
     await page.goto('/campaigns/1/sessions/4')
-    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+    await expect(cenaViva(page)).toBeVisible()
 
-    await page.getByRole('button', { name: 'Combatente' }).click()
+    const fila = await abreAFila(page)
+    await fila.getByRole('button', { name: 'Combatente' }).click()
     for (const nome of nomes) {
       await page.getByLabel('Nome').fill(nome)
       await page.getByRole('button', { name: 'Adicionar', exact: true }).click()
-      await expect(page.getByRole('button', { name: `Remover ${nome}` })).toBeVisible()
+      await expect(fila.getByRole('button', { name: `Remover ${nome}` })).toBeVisible()
     }
 
-    const acao = page.getByRole('button', { name: 'Adicionar grupo' })
+    const acao = fila.getByRole('button', { name: 'Adicionar grupo' })
     await expect(acao).toBeInViewport()
 
     // Rola a LISTA até o fim, não a página.
@@ -1508,7 +1371,7 @@ test.describe('Sessão ao vivo', () => {
     expect(rolou).toMatchObject({ achou: true, transbordou: true })
     expect(rolou.rolou).toBeGreaterThan(0)
     await expect(acao).toBeInViewport()
-    await expect(page.getByRole('heading', { name: 'Iniciativa' })).toBeInViewport()
+    await expect(fila.getByRole('heading', { name: 'Iniciativa' })).toBeInViewport()
 
     // O formulário fecha ANTES da limpeza, e isso não afrouxa nada: tudo o que
     // este teste promete já foi afirmado acima, com ele aberto. Numa janela de
@@ -1516,12 +1379,12 @@ test.describe('Sessão ao vivo', () => {
     // "Remover" de uma linha dentro de uma janela de 16px é o clique que o
     // rodapé do avanço intercepta, e limpeza que falha deixa cinco combatentes
     // na seed compartilhada para todo mundo depois.
-    await page.getByRole('button', { name: 'Fechar' }).click()
+    await fila.getByRole('button', { name: 'Fechar', exact: true }).click()
 
     for (const nome of nomes) {
-      await page.getByRole('button', { name: `Remover ${nome}` }).click()
+      await fila.getByRole('button', { name: `Remover ${nome}` }).click()
     }
-    await expect(page.getByRole('button', { name: `Remover ${nomes[0]}` })).toBeHidden()
+    await expect(fila.getByRole('button', { name: `Remover ${nomes[0]}` })).toBeHidden()
   })
 
   /**
@@ -1532,44 +1395,60 @@ test.describe('Sessão ao vivo', () => {
    * lido em oito módulos; a prova de que funciona vinha de contar nós à mão
    * depois de cada regressão, nunca de um teste.
    *
-   * Aqui um MutationObserver testemunha o que o olho vê: o rastreador não pode
-   * ser REMOVIDO do DOM enquanto o mestre troca de aba e abre um combatente.
+   * Aqui um MutationObserver testemunha o que o olho vê: a CENA não pode ser
+   * removida do DOM enquanto o mestre percorre as consultas.
+   *
+   * O que se vigia mudou de dono com a ALE-198 e ficou mais forte: era a lista
+   * de combate, que hoje é overlay e some por desenho a cada fechar; agora é o
+   * TABULEIRO, a superfície permanente. Ele não pode piscar por nada — nem por
+   * abrir uma consulta, nem por um `Suspense` desanexando o route match.
    *
    * Por que e2e: sem router não há Suspense, e em jsdom a leitura pendente
    * devolve `undefined` — o mesmo teste passaria verde sobre a tela que pisca.
    */
-  test('trocar de aba e abrir um combatente não desanexa a cena', async ({ page }) => {
+  test('percorrer as consultas não desanexa a cena', async ({ page }) => {
     await page.goto('/campaigns/1/sessions/4')
-    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
+    await expect(cenaViva(page)).toBeVisible()
 
-    // Vigia o RASTREADOR: trocar de aba desmonta o conteúdo da aba anterior, e
-    // isso é normal; o que nunca pode acontecer é a lista de combate sair da
-    // tela — é ela que o suspend arranca junto com a cena.
     await page.evaluate(() => {
-      const janela = window as unknown as { __desanexos: number }
-      janela.__desanexos = 0
-      const ehRastreador = (node: Node) =>
+      const janela = window as unknown as { __desanexos: string[] }
+      janela.__desanexos = []
+      const ehACena = (node: Node) =>
         node instanceof HTMLElement &&
-        [...node.querySelectorAll('h2')].some((h) => h.textContent?.includes('Iniciativa'))
+        (node.classList.contains('scene-grimorio') || !!node.querySelector('.scene-grimorio'))
       new MutationObserver((records) => {
         for (const record of records) {
           for (const node of record.removedNodes) {
-            if (ehRastreador(node)) janela.__desanexos++
+            // Guarda QUEM saiu, não só quantos: "1 desanexo" não diz o que
+            // arrancar da cena, e o relatório do CI é tudo o que se tem.
+            if (ehACena(node)) {
+              const el = node as HTMLElement
+              janela.__desanexos.push(`${el.tagName}.${el.className}`.slice(0, 120))
+            }
           }
         }
       }).observe(document.body, { childList: true, subtree: true })
     })
 
-    for (const aba of ['Bestiário', 'Catálogos', 'Notas', 'Combatente']) {
-      await page.getByRole('tab', { name: aba }).click()
-      await expect(page.getByRole('tab', { name: aba })).toHaveAttribute('aria-selected', 'true')
+    // O BESTIÁRIO fica de fora, e não por conveniência: montar a
+    // `MonsterPickerList` desanexa a cena por um quadro, e isso é ANTERIOR a
+    // esta issue — o mesmo acontece pelo "Adicionar criatura" do Montar
+    // encontro, caminho que a ALE-198 não tocou. Medido: ~7ms depois do
+    // clique, sem requisição na rede, com o catálogo já em cache. Está na
+    // ALE-199; consertar lá é devolver "Bestiário" a esta lista.
+    for (const consulta of ['Encontros', 'Catálogos', 'Notas'] as const) {
+      await abreConsulta(page, consulta)
+      await expect(
+        trilhoDeConsultas(page).getByRole('button', { name: consulta, exact: true }),
+      ).toHaveAttribute('aria-pressed', 'true')
+      await abreConsulta(page, consulta)
     }
 
     const desanexos = await page.evaluate(
-      () => (window as unknown as { __desanexos: number }).__desanexos,
+      () => (window as unknown as { __desanexos: string[] }).__desanexos,
     )
-    expect(desanexos, 'o rastreador foi removido do DOM (suspend desanexou a cena)').toBe(0)
-    await expect(page.getByRole('heading', { name: 'Iniciativa' })).toBeVisible()
+    expect(desanexos, 'a cena foi removida do DOM (suspend desanexou o route match)').toEqual([])
+    await expect(page.locator('.scene-grimorio').first()).toBeVisible()
   })
 
   /**
@@ -1594,23 +1473,23 @@ test.describe('Sessão ao vivo', () => {
   test('ferir um combatente pisca a linha dele, e só a dele', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/campaigns/1/sessions/4')
-    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
-
-    const combate = page.getByRole('button', { name: 'combate', exact: true })
-    if (await combate.isVisible()) await combate.click()
+    await expect(cenaViva(page)).toBeVisible()
 
     // Os combatentes são DESTE teste e saem no fim: a seed é compartilhada, e
-    // contar com o que outro teste deixou já derrubou esta suíte no CI.
+    // contar com o que outro teste deixou já derrubou esta suíte no CI. A lista
+    // que anima é a da GAVETA (ALE-198), e ela fica aberta durante o teste —
+    // é ela que se está observando.
     const marca = Date.now()
     const nomes = [`Ferido ${marca}`, `Intacto ${marca}`]
-    await page.getByRole('button', { name: 'Combatente' }).click()
+    const fila = await abreAFila(page)
+    await fila.getByRole('button', { name: 'Combatente' }).click()
     for (const nome of nomes) {
       await page.getByLabel('Nome').fill(nome)
       await page.getByRole('spinbutton', { name: 'PV' }).fill('20')
       await page.getByRole('button', { name: 'Adicionar', exact: true }).click()
-      await expect(page.getByRole('button', { name: `Remover ${nome}` })).toBeVisible()
+      await expect(fila.getByRole('button', { name: `Remover ${nome}` })).toBeVisible()
     }
-    await page.getByRole('button', { name: 'Fechar' }).click()
+    await fila.getByRole('button', { name: 'Fechar', exact: true }).click()
 
     try {
       const linhas = await page.evaluate(() =>
@@ -1643,8 +1522,8 @@ test.describe('Sessão ao vivo', () => {
       ).toEqual([ferido])
     } finally {
       for (const nome of nomes) {
-        await page.getByRole('button', { name: `Remover ${nome}` }).click()
-        await expect(page.getByRole('button', { name: `Remover ${nome}` })).toBeHidden()
+        await fila.getByRole('button', { name: `Remover ${nome}` }).click()
+        await expect(fila.getByRole('button', { name: `Remover ${nome}` })).toBeHidden()
       }
     }
   })
@@ -1665,23 +1544,21 @@ test.describe('Sessão ao vivo', () => {
   test('passar o turno pulsa a linha que entra na vez, e só ela', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/campaigns/1/sessions/4')
-    await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
-
-    const combate = page.getByRole('button', { name: 'combate', exact: true })
-    if (await combate.isVisible()) await combate.click()
+    await expect(cenaViva(page)).toBeVisible()
 
     const marca = Date.now()
     const nomes = [`Vez A ${marca}`, `Vez B ${marca}`]
-    await page.getByRole('button', { name: 'Combatente' }).click()
+    const fila = await abreAFila(page)
+    await fila.getByRole('button', { name: 'Combatente' }).click()
     for (const [i, nome] of nomes.entries()) {
       await page.getByLabel('Nome').fill(nome)
       // Iniciativas altas e distintas: sem isso a ordem depende do que a seed
       // deixou, e o teste passaria a afirmar a sorte do empate.
       await page.getByRole('spinbutton', { name: 'Iniciativa' }).fill(String(99 - i))
       await page.getByRole('button', { name: 'Adicionar', exact: true }).click()
-      await expect(page.getByRole('button', { name: `Remover ${nome}` })).toBeVisible()
+      await expect(fila.getByRole('button', { name: `Remover ${nome}` })).toBeVisible()
     }
-    await page.getByRole('button', { name: 'Fechar' }).click()
+    await fila.getByRole('button', { name: 'Fechar', exact: true }).click()
 
     try {
       // Duas passadas: a primeira só ancora o "turno anterior" que a fábrica
@@ -1706,8 +1583,8 @@ test.describe('Sessão ao vivo', () => {
       ).toBe(1)
     } finally {
       for (const nome of nomes) {
-        await page.getByRole('button', { name: `Remover ${nome}` }).click()
-        await expect(page.getByRole('button', { name: `Remover ${nome}` })).toBeHidden()
+        await fila.getByRole('button', { name: `Remover ${nome}` }).click()
+        await expect(fila.getByRole('button', { name: `Remover ${nome}` })).toBeHidden()
       }
     }
   })
@@ -1759,7 +1636,7 @@ test.describe('Sessão ao vivo', () => {
 
   test('Sair da sessão volta pra crônica', async ({ page }) => {
     await page.goto('/campaigns/1/sessions/4')
-    await expect(page.getByRole('heading', { name: 'Iniciativa' })).toBeVisible()
+    await expect(cenaViva(page)).toBeVisible()
 
     // Um LINK, não um botão: sem `asChild` no Solid, um link com cara de botão
     // é um `<a>` vestindo as classes do botão (armadilha #6 do porte).

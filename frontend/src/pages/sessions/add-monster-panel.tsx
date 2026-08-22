@@ -1,10 +1,7 @@
 import type { Monster } from '@/shared/api/catalog-types'
-import { Skull } from 'lucide-solid'
-import { createSignal } from 'solid-js'
 import { MonsterPickerPanel } from '@/features/gm-tools/monster-picker-panel'
 import { rollD20 } from '@/shared/lib/dice'
 import type { SessionRealtime } from '@/shared/realtime/realtime'
-import { Button } from '@/shared/ui/button'
 import { toast } from '@/shared/ui/sonner'
 import { MatchPeek } from './match-rail'
 
@@ -16,10 +13,14 @@ import { MatchPeek } from './match-rail'
  * The panel STAYS OPEN across adds: an ambush is one trip, not six. On a wide
  * screen it is non-modal, so the tracker keeps taking clicks behind it — and
  * the round/turn peek rides in the panel header so the GM never loses the fio.
+ *
+ * Quem abre é o TRILHO das consultas: um overlay por vez (ALE-198).
  */
-export function AddMonsterPanel(props: { rt: SessionRealtime }) {
-  const [open, setOpen] = createSignal(false)
-
+export function AddMonsterPanel(props: {
+  rt: SessionRealtime
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
   const add = (monster: Monster) => {
     props.rt.addEntry({
       label: monster.name,
@@ -35,26 +36,13 @@ export function AddMonsterPanel(props: { rt: SessionRealtime }) {
   }
 
   return (
-    <>
-      <Button
-        type="button"
-        size="sm"
-        variant="secondary"
-        class="w-full gap-1.5"
-        disabled={!props.rt.isConnected()}
-        onClick={() => setOpen(true)}
-      >
-        <Skull aria-hidden="true" class="size-4" /> Adicionar do bestiário
-      </Button>
-
       <MonsterPickerPanel
-        open={open()}
-        onOpenChange={setOpen}
+        open={props.open}
+        onOpenChange={props.onOpenChange}
         title="Adicionar do bestiário"
         description="Entra na iniciativa com PV cheio e d20 rolado."
         header={<MatchPeek rt={props.rt} />}
         onPick={add}
       />
-    </>
   )
 }

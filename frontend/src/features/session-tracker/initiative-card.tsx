@@ -50,6 +50,9 @@ export function InitiativeCard(props: {
   /** Falso quando a cena já mostra o estado da conexão em outro lugar — dois
    *  chips a poucos centímetros seriam a mesma informação duas vezes. */
   connectionChip?: boolean
+  /** Falso quando quem hospeda o cartão já o nomeia — a gaveta da fila tem
+   *  título próprio, e "Iniciativa" saía duas vezes na mesma caixa (ALE-198). */
+  heading?: boolean
   /** O card ocupa a altura que o pai dá e rola SÓ a lista por dentro. Verdadeiro
    *  na cena do mestre, onde a coluna tem altura definida; falso no rail do
    *  jogador, que já rola por fora e não daria altura nenhuma (ALE-131). */
@@ -123,9 +126,13 @@ export function InitiativeCard(props: {
           que sumia ao rolar. */}
       <header class="flex shrink-0 flex-row flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-grimorio-iron p-3 sm:p-4">
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-          <SectionTitle contexto="painel">
-            Iniciativa
-          </SectionTitle>
+          {/* O título só sai quando a CENA não nomeia a região. Dentro da
+              gaveta ela já se chama "Iniciativa" no cabeçalho do painel, e a
+              palavra aparecia duas vezes com 40px entre elas — a mesma
+              repetição que a ALE-145 tirou do combatente. */}
+          <Show when={props.heading !== false}>
+            <SectionTitle contexto="painel">Iniciativa</SectionTitle>
+          </Show>
           <Show when={props.connectionChip !== false}>
             <ConnectionChip status={status()} dirty={props.rt.hasPersistenceWarning()} />
           </Show>
@@ -273,13 +280,16 @@ export function InitiativeCard(props: {
           mais clicado da sessão ficava a uma rolagem de distância do que ele
           controla. No pé ele fica perto da vez em qualquer tamanho de lista.
 
-          Só a partir de 1024: abaixo disso a cena mostra uma região por vez e
-          quem guarda o avanço é a faixa fixa — nunca os dois na tela. */}
+          Com `turnControls={false}` ele não aparece em largura nenhuma: quem o
+          guarda é a faixa fixa da cena, e nunca os dois na tela. Era `hidden
+          lg:block` — mostrava no desktop, onde a fila era uma COLUNA sempre
+          visível. Ela virou gaveta (ALE-198), e um avanço que só existe atrás
+          de um clique não serve ao botão mais clicado da sessão. */}
       <Show when={props.isGm}>
         <div
           class={cn(
             'shrink-0 border-t border-grimorio-iron p-3 sm:p-4',
-            props.turnControls === false && 'hidden lg:block',
+            props.turnControls === false && 'hidden',
           )}
         >
           <TurnAdvance

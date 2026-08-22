@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/solid-query'
-import { Plus, Swords } from 'lucide-solid'
+import { Plus } from 'lucide-solid'
 import { Show, createMemo, createSignal } from 'solid-js'
 import { bestiaryCatalogQueryOptions } from '@/entities/catalog/queries'
 import { enrichEncounter, encounterInitiativeEntries } from '@/features/gm-tools/encounter'
@@ -22,11 +22,16 @@ import { settledQuery } from '@/shared/lib/settled-query'
  * The server caps the tracker at 50 entries, so the push counts what is already
  * there and SAYS what did not fit instead of letting the surplus die as a
  * silent socket error halfway through the loop.
+ *
+ * Quem abre é o TRILHO das consultas: um overlay por vez (ALE-198).
  */
-export function EncounterPanel(props: { rt: SessionRealtime }) {
+export function EncounterPanel(props: {
+  rt: SessionRealtime
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
   const bestiary = useQuery(() => bestiaryCatalogQueryOptions)
   const draft = createEncounterDraft()
-  const [open, setOpen] = createSignal(false)
   const [picking, setPicking] = createSignal(false)
 
   // `settledQuery` e não `bestiary.data ?? []`: a leitura é que suspende, antes
@@ -53,21 +58,9 @@ export function EncounterPanel(props: { rt: SessionRealtime }) {
   }
 
   return (
-    <>
-      <Button
-        type="button"
-        size="sm"
-        variant="secondary"
-        class="w-full gap-1.5"
-        disabled={!props.rt.isConnected()}
-        onClick={() => setOpen(true)}
-      >
-        <Swords aria-hidden="true" class="size-4" /> Montar encontro
-      </Button>
-
       <SidePanel
-        open={open()}
-        onOpenChange={setOpen}
+        open={props.open}
+        onOpenChange={props.onOpenChange}
         title="Montar encontro"
         description="Combine criaturas e mande tudo para a iniciativa."
         header={<MatchPeek rt={props.rt} />}
@@ -118,6 +111,5 @@ export function EncounterPanel(props: { rt: SessionRealtime }) {
           </div>
         </Show>
       </SidePanel>
-    </>
   )
 }

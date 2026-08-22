@@ -4,55 +4,9 @@ import type { BoardPlace } from '@/shared/realtime/realtime'
 import { Button } from '@/shared/ui/button'
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
-import { SectionLabel } from '@/shared/ui/section-label'
 
-/**
- * Os Lugares da crônica: as cenas que o mestre já montou (ALE-124, fatia 5).
- *
- * Encerrar o tabuleiro ARQUIVA — a taverna com as nove peças onde ficaram volta
- * para cá e é reaberta na semana seguinte sem remontar nada. Antes desta fatia,
- * encerrar destruía a cena, e era a única promessa da épica que o código
- * contradizia.
- *
- * A lista mostra a contagem de peças e não a cena: é por ela que o mestre
- * reconhece "a taverna, aquela com os nove", e baixar o acervo inteiro para
- * desenhar um menu seria pagar caro por um número.
- *
- * Com uma cena NA MESA (`onTable`), reabrir vira TROCAR: o botão diz "Mostrar à
- * mesa" e pergunta antes, porque a troca acontece na tela de todo mundo no
- * mesmo instante — e porque ela move a cena atual para o acervo (ALE-191).
- *
- * @example <PlacesList places={lugares()} onReopen={rt.reopenPlace} onRemove={apagar} />
- */
-export function PlacesList(props: {
-  places: readonly BoardPlace[]
-  onReopen: (placeId: number) => void
-  onRemove: (placeId: number) => void
-  /** Montar a cena sem pôr nada na mesa (ALE-191, fatia 2). */
-  onEdit?: (placeId: number) => void
-  /** O nome da cena que está na mesa agora, quando há uma. */
-  onTable?: string
-}) {
-  return (
-    <Show when={props.places.length > 0}>
-      <section class="w-full max-w-sm text-left">
-        <SectionLabel as="h3" tom="gold" class="text-xs mb-1">
-          Lugares da crônica
-        </SectionLabel>
-        <PlaceRows
-          places={props.places}
-          onReopen={props.onReopen}
-          onRemove={props.onRemove}
-          onEdit={props.onEdit}
-          onTable={props.onTable}
-        />
-      </section>
-    </Show>
-  )
-}
-
-/** As linhas do acervo, sem título: dentro do diálogo quem nomeia é o cabeçalho
- *  dele, e repetir "Lugares da crônica" duas vezes na mesma caixa é ruído. */
+/** As linhas do acervo, sem título: quem nomeia é o cabeçalho do diálogo, e
+ *  repetir "Lugares da crônica" duas vezes na mesma caixa é ruído. */
 function PlaceRows(props: {
   places: readonly BoardPlace[]
   onReopen: (placeId: number) => void
@@ -156,13 +110,26 @@ function PlaceAction(props: {
 }
 
 /**
- * O acervo alcançável COM uma cena na mesa (ALE-191).
+ * Os Lugares da crônica: as cenas que o mestre já montou (ALE-124, fatia 5).
  *
- * Até aqui os Lugares só existiam na tela vazia, então trocar de cena obrigava a
- * ENCERRAR o tabuleiro primeiro — a mesa via a grade sumir e voltar. É um
- * diálogo e não uma lista fixa no cabeçalho porque o acervo é do preparo: ele é
- * consultado uma vez por cena e não merece largura permanente numa cena que já
- * disputa espaço com a iniciativa.
+ * Encerrar o tabuleiro ARQUIVA — a taverna com as nove peças onde ficaram volta
+ * para cá e é reaberta na semana seguinte sem remontar nada. A lista mostra a
+ * contagem de peças e não a cena: é por ela que o mestre reconhece "a taverna,
+ * aquela com os nove", e baixar o acervo inteiro para desenhar um menu seria
+ * pagar caro por um número.
+ *
+ * Com uma cena NA MESA (`onTable`), reabrir vira TROCAR: o botão diz "Mostrar à
+ * mesa" e pergunta antes, porque a troca acontece na tela de todo mundo no
+ * mesmo instante — e porque ela move a cena atual para o acervo (ALE-191).
+ *
+ * **Este é o ÚNICO desenho do acervo.** Até a ALE-198 ele tinha dois: este
+ * diálogo, e uma lista fixa dentro da tela de tabuleiro vazio. A lista fixa
+ * pagava largura permanente numa região que não tem largura para dar — sem
+ * tabuleiro aberto a coluna do meio recebia 3fr, 374px numa janela de 1920, e a
+ * lista com `max-w-sm` (384px) TRANSBORDAVA: a lixeira saía da tela. Na região
+ * larga do laptop (~840px) a mesma medida fixa deixava 456px de vão morto. O
+ * acervo é consulta do preparo — se abre uma vez por cena —, e consulta é
+ * exatamente o que um diálogo serve.
  *
  * @example <PlacesDialog places={lugares()} onOpenList={refresh} … />
  */
@@ -171,7 +138,9 @@ export function PlacesDialog(props: {
   onReopen: (placeId: number) => void
   onRemove: (placeId: number) => void
   onEdit: (placeId: number) => void
-  onTable: string
+  /** O nome da cena na mesa, quando há uma. Ausente na tela de tabuleiro vazio,
+   *  onde reabrir não troca nada e por isso não pergunta. */
+  onTable?: string
   /** Chamado ao ABRIR: o acervo chega por pergunta, e ele pode ter mudado desde
    *  a última vez (a cena que acabou de sair da mesa está nele). */
   onOpenList: () => void
@@ -187,8 +156,14 @@ export function PlacesDialog(props: {
     <>
       {props.trigger(abrir)}
       <Dialog open={open()} onOpenChange={setOpen}>
-        <DialogContent class="max-w-sm">
-          <DialogHeader>
+        {/* Teto de altura E rolagem por dentro: o acervo cresce com a crônica, e
+            sem isto o diálogo passava da janela nos dois sentidos — com 46
+            cenas guardadas o CABEÇALHO ficava acima do topo da tela, onde o
+            navegador não deixa chegar. Mesma família do ✕ inalcançável da
+            ALE-178. Quem rola é a LISTA, nunca o diálogo: o título e a
+            explicação ficam parados enquanto se procura a cena. */}
+        <DialogContent class="flex max-h-[85vh] max-w-md flex-col">
+          <DialogHeader class="shrink-0">
             <DialogTitle>
               <Library aria-hidden="true" class="mr-1 inline size-4" />
               Lugares da crônica
@@ -205,6 +180,7 @@ export function PlacesDialog(props: {
               </p>
             }
           >
+            <div class="min-h-0 flex-1 overflow-y-auto">
             <PlaceRows
               places={props.places}
               onReopen={(placeId) => {
@@ -218,6 +194,7 @@ export function PlacesDialog(props: {
               }}
               onTable={props.onTable}
             />
+            </div>
           </Show>
         </DialogContent>
       </Dialog>

@@ -62,19 +62,32 @@ describe('SidePanel', () => {
     expect(panel()).not.toHaveAttribute('data-nav-inline')
   })
 
-  it('o rótulo de fechar é em português, não o do Kobalte', () => {
+  // São DOIS fechares — o ✕ do topo (tela larga) e a barra do pé (telefone) —,
+  // e os dois se chamam pelo NOME DO PAINEL. Nenhum pode anunciar o "Dismiss"
+  // que o Kobalte põe por padrão, e nenhum pode dizer só "Fechar": dentro da
+  // gaveta da fila esse nome empatava com o do formulário de adicionar
+  // (ALE-198). Em jsdom os dois existem porque `xl:hidden` não pinta nada; no
+  // browser só um está na tela.
+  it('os fechares são em português e dizem o NOME do painel', () => {
     renderPanel(true)
 
-    expect(screen.getByRole('button', { name: 'Fechar Catálogos' })).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Fechar Catálogos' })).toHaveLength(2)
+    expect(screen.queryByRole('button', { name: 'Dismiss' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Fechar' })).not.toBeInTheDocument()
   })
 
   // O CloseButton do Kobalte sobrescreve o nome acessível com "Dismiss" em
-  // inglês, mesmo com "Fechar" escrito dentro dele (armadilha #2).
+  // inglês, mesmo com "Fechar" escrito dentro dele (armadilha #2). E o rótulo
+  // NOMEIA o painel: "Fechar" nu empatava com o "Fechar" do formulário que vive
+  // dentro da gaveta da fila (ALE-198).
   it('fecha pela barra de largura cheia, anunciada em português', async () => {
     const { onOpenChange } = renderPanel(false)
 
-    const bar = screen.getByRole('button', { name: 'Fechar' })
-    expect(bar).toHaveTextContent('Fechar')
+    // A BARRA é a que tem texto escrito dentro; o ✕ do topo é só o ícone.
+    const bar = screen
+      .getAllByRole('button', { name: 'Fechar Catálogos' })
+      .find((botao) => botao.textContent?.trim() === 'Fechar')
+    if (!bar) throw new Error('a barra de fechar não está na árvore')
     await userEvent.click(bar)
 
     expect(onOpenChange).toHaveBeenCalledWith(false)

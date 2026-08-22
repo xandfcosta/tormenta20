@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
-import { render, screen } from '@solidjs/testing-library'
+import { render, screen, waitFor, within } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
 import {
   RouterProvider,
@@ -10,23 +10,38 @@ import {
 import { createSignal } from 'solid-js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Session } from '@/shared/api/api'
-import type { BoardState } from '@/shared/realtime/realtime'
-import type { SessionRealtime } from '@/shared/realtime/realtime'
+import type { BoardState, InitiativeEntry, SessionRealtime } from '@/shared/realtime/realtime'
 import { SessionGmView } from './session-gm-view'
 
 /**
- * As regiões da cena do mestre (ALE-130).
+ * A geometria da cena do mestre (ALE-198).
  *
- * O defeito que motivou este arquivo: entre 1024 e 1536 o seletor oferecia três
- * opções e DUAS desenhavam a mesma tela — "combate" e "mesa" eram idênticas,
- * porque nessa faixa a iniciativa aparece sempre e só a segunda coluna alterna.
+ * O que se prova aqui é o que o mestre notaria: **o tabuleiro nunca sai da
+ * tela**, e tudo o mais é consulta que abre e fecha por cima dele. Antes desta
+ * issue a região permanente trocava de conteúdo por aba e de LARGURA por
+ * estado — quatro proporções condicionais, uma delas movendo a tela 255px em
+ * cima do clique do mestre.
  *
- * O que se prova aqui é a TROCA DE CONTEÚDO da segunda coluna. Um teste que
- * afirmasse "a iniciativa está na tela" passaria verde nos dois casos — foi
- * exatamente esse tipo de asserção que deixou o defeito passar.
+ * As asserções são de CONTEÚDO e não de pixel: em jsdom todo elemento mede
+ * zero, e afirmar largura aqui passaria verde sobre uma cena quebrada. O que
+ * prova a estabilidade é o mapa continuar montado enquanto se abre cada coisa
+ * — a largura fica para o e2e e para a validação nos seis formatos.
  */
+const ARCANISTA: InitiativeEntry = {
+  id: 'e1',
+  label: 'Arcanista Erudito',
+  initiative: 18,
+  type: 'npc',
+  hpCurrent: 42,
+  hpMax: 42,
+}
+
 class FakeRealtime {
   private readonly live = createSignal<BoardState | null>(null)
+  readonly updateEntry = vi.fn()
+  readonly applyEffect = vi.fn()
+
+  constructor(private readonly initiative: readonly InitiativeEntry[] = [ARCANISTA]) {}
 
   /** Abre o tabuleiro DEPOIS da montagem, que é como ele chega: pelo socket. */
   abrirTabuleiro() {
@@ -35,7 +50,7 @@ class FakeRealtime {
 
   asRealtime(): SessionRealtime {
     return {
-      state: () => ({ initiative: [], round: 1, turnIndex: -1 }),
+      state: () => ({ initiative: this.initiative, round: 1, turnIndex: 0 }),
       isConnected: () => true,
       error: () => null,
       hasPersistenceWarning: () => false,
@@ -51,16 +66,24 @@ class FakeRealtime {
       resetInitiative: vi.fn(),
       populateParty: vi.fn(),
       openBoard: vi.fn(),
+      addEntry: vi.fn(),
+      removeEntry: vi.fn(),
+      updateEntry: this.updateEntry,
+      applyEffect: this.applyEffect,
     } as unknown as SessionRealtime
   }
 }
 
 const SESSAO = { id: 4, campaignId: 1, sessionNumber: 4, status: 'active' } as unknown as Session
 
-/** Simula uma faixa de largura: cada media query responde o que o teste mandar. */
-function comLargura(faixa: { sideBySide: boolean; threeUp: boolean }) {
+/** Simula uma faixa de largura. A cena tem UM degrau agora — 1024, onde os
+ *  trilhos cabem ao lado do mapa —, contra os dois de antes. */
+function comTrilhos(cabem: boolean) {
   window.matchMedia = vi.fn().mockImplementation((media: string) => ({
-    matches: media.includes('1536') ? faixa.threeUp : faixa.sideBySide,
+    // 1280 é onde a gaveta deixa de ser modal e passa a dividir a tela
+    // (`SidePanel`): sem responder por ela, o teste ficaria preso na faixa em
+    // que tudo atrás do overlay sai da árvore acessível.
+    matches: media.includes('1024') || media.includes('1280') ? cabem : false,
     media,
     onchange: null,
     addEventListener: vi.fn(),
@@ -91,116 +114,141 @@ function renderCena(rt: FakeRealtime = new FakeRealtime()) {
   return userEvent.setup()
 }
 
-beforeEach(() => comLargura({ sideBySide: true, threeUp: false }))
+/** O mapa está montado. Sem tabuleiro aberto é o convite que o representa —
+ *  ele ocupa a MESMA região, e é isso que o torna a superfície permanente. */
+const mapaNaTela = () => screen.getByText(/Nenhum tabuleiro aberto/)
 
-describe('as regiões da cena do mestre em duas colunas', () => {
-  // Com as duas colunas na tela não existe seletor de região: a iniciativa é a
-  // espinha e fica sempre visível. Quem troca é a barra de abas da mesa, que
-  // fica EXATAMENTE sobre a coluna que ela troca — uma faixa atravessando a tela
-  // inteira para mudar só a direita é um controle desalinhado do efeito.
-  //
+beforeEach(() => comTrilhos(true))
+
+describe('a superfície permanente da cena do mestre', () => {
   // `findBy` na primeira busca: o RouterProvider monta a rota num microtask, e
   // uma busca síncrona olharia a árvore antes de a cena existir.
-  it('não há seletor de região; o tabuleiro é aba da mesa', async () => {
+  it('o tabuleiro está na tela sem ninguém pedir por ele', async () => {
     renderCena()
 
-    expect(await screen.findByRole('tab', { name: /Tabuleiro/ })).toBeInTheDocument()
+    expect(await screen.findByText(/Nenhum tabuleiro aberto/)).toBeInTheDocument()
+  })
+
+  // A queixa que abriu a issue: as abas tinham todas o mesmo tamanho, menos a de
+  // combatente sem ninguém selecionado, e a tela pulava. A resposta não foi
+  // igualar as larguras — foi tirar a região que trocava de conteúdo.
+  it('não há mais abas trocando a região, nem seletor de região', async () => {
+    renderCena()
+
+    await screen.findByText(/Nenhum tabuleiro aberto/)
+    expect(screen.queryByRole('tab', { name: /Combatente/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: /Tabuleiro/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'combate' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'mesa' })).not.toBeInTheDocument()
   })
 
-  it('a aba do tabuleiro TROCA o conteúdo da coluna da direita', async () => {
-    const user = renderCena()
-
-    expect(await screen.findByRole('tab', { name: /Combatente/ })).toBeInTheDocument()
-    expect(screen.queryByText(/Nenhum tabuleiro aberto/)).not.toBeInTheDocument()
-
-    await user.click(screen.getByRole('tab', { name: /Tabuleiro/ }))
-
-    expect(screen.getByText(/Nenhum tabuleiro aberto/)).toBeInTheDocument()
-    // E a iniciativa continua na tela: ela é a espinha da cena.
-    expect(screen.getByRole('heading', { name: 'Iniciativa' })).toBeInTheDocument()
-  })
-})
-
-describe('as regiões da cena do mestre em três colunas', () => {
-  beforeEach(() => comLargura({ sideBySide: true, threeUp: true }))
-
-  // A partir de 1536 o tabuleiro tem COLUNA PRÓPRIA, e aí ele não pode ser
-  // também aba: seriam duas cópias do mesmo tabuleiro na mesma tela, cada uma
-  // com sua janela. A sabotagem que deixava a aba sempre visível passava verde
-  // antes deste teste existir.
-  it('o tabuleiro tem coluna e NÃO é aba', async () => {
+  it('a fila do combate vive num trilho, com quem está na vez marcado', async () => {
     renderCena()
 
-    expect(await screen.findByRole('tab', { name: /Combatente/ })).toBeInTheDocument()
-    expect(screen.queryByRole('tab', { name: /Tabuleiro/ })).not.toBeInTheDocument()
-    // Ele está na tela por conta própria, ao lado da mesa.
-    expect(screen.getByText(/Nenhum tabuleiro aberto/)).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Iniciativa' })).toBeInTheDocument()
+    const trilho = await screen.findByRole('navigation', { name: 'Fila do combate' })
+    const item = within(trilho).getByRole('button', { name: /Arcanista Erudito/ })
+
+    // O nome inteiro e os PV vão no nome acessível: no trilho o que se vê são
+    // duas letras, e duas letras não são um nome.
+    expect(item).toHaveAccessibleName('Abrir Arcanista Erudito — PV 42 de 42 — na vez')
   })
 })
 
-describe('as regiões da cena do mestre numa coluna só', () => {
-  beforeEach(() => comLargura({ sideBySide: false, threeUp: false }))
-
-  // Abaixo de 1024 cabe UMA região por vez, e aí "combate" é uma escolha de
-  // verdade: é a única forma de ver a iniciativa. O tabuleiro continua sendo
-  // aba da mesa, não uma terceira região.
-  it('o seletor tem duas regiões, e o combate esconde a mesa', async () => {
+describe('a ficha do combatente como overlay', () => {
+  it('clicar no trilho abre a ficha SEM tirar o mapa da tela', async () => {
     const user = renderCena()
 
-    expect(await screen.findByRole('button', { name: 'combate' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'mesa' })).toBeInTheDocument()
+    const trilho = await screen.findByRole('navigation', { name: 'Fila do combate' })
+    await user.click(within(trilho).getByRole('button', { name: /Arcanista Erudito/ }))
 
-    await user.click(screen.getByRole('button', { name: 'combate' }))
+    expect(await screen.findByRole('dialog', { name: 'Ficha de Arcanista Erudito' })).toBeInTheDocument()
+    // O mapa continua montado por baixo: é ele que fica, e a ficha é a visita.
+    // A consulta é por TEXTO e não por papel de propósito — o diálogo modal
+    // marca tudo atrás como `aria-hidden`, e uma busca por papel devolveria
+    // zero sobre uma cena inteiramente correta (gotcha do guia do front).
+    expect(mapaNaTela()).toBeInTheDocument()
+  })
 
-    expect(screen.getByRole('heading', { name: 'Iniciativa' })).toBeInTheDocument()
-    expect(screen.queryByRole('tab', { name: /Combatente/ })).not.toBeInTheDocument()
+  it('fechar a ficha devolve a cena sem ela', async () => {
+    const user = renderCena()
 
-    await user.click(screen.getByRole('button', { name: 'mesa' }))
+    const trilho = await screen.findByRole('navigation', { name: 'Fila do combate' })
+    await user.click(within(trilho).getByRole('button', { name: /Arcanista Erudito/ }))
+    const ficha = await screen.findByRole('dialog', { name: 'Ficha de Arcanista Erudito' })
 
-    expect(screen.getByRole('tab', { name: /Tabuleiro/ })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Iniciativa' })).not.toBeInTheDocument()
+    await user.click(within(ficha).getByRole('button', { name: 'Fechar o combatente' }))
+
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Ficha de Arcanista Erudito' })).not.toBeInTheDocument(),
+    )
+    expect(mapaNaTela()).toBeInTheDocument()
   })
 })
 
-/**
- * Abrir o tabuleiro tem de MOSTRAR o tabuleiro (ALE-161).
- *
- * Abaixo de 1536 ele não tem coluna própria: é aba da mesa. E a aba ativa
- * continuava sendo "combatente", então o mestre num laptop de 1440 abria o
- * tabuleiro e via 830×745px dizendo "clique no nome de um combatente" — o
- * tabuleiro existia, com peças, e não aparecia em lugar nenhum.
- *
- * O gatilho é a TRANSIÇÃO (o tabuleiro chega pelo socket), não o estado: reagir
- * ao estado brigaria com o mestre que foi de propósito ao bestiário.
- */
-describe('abrir o tabuleiro abaixo de 1536', () => {
-  it('traz a aba do tabuleiro para a frente', async () => {
-    const rt = new FakeRealtime()
-    renderCena(rt)
-    await screen.findByRole('tab', { name: /Tabuleiro/ })
-    // Antes de abrir, quem manda é o combatente.
-    expect(screen.getByText(/Clique no nome de um combatente/)).toBeInTheDocument()
+describe('as consultas do mestre', () => {
+  it('escolher alguém na gaveta da fila FECHA a gaveta', async () => {
+    const user = renderCena()
 
-    rt.abrirTabuleiro()
+    const trilho = await screen.findByRole('navigation', { name: 'Fila do combate' })
+    await user.click(within(trilho).getByRole('button', { name: 'Abrir a iniciativa' }))
+    const gaveta = await screen.findByRole('dialog', { name: 'Iniciativa' })
 
-    expect(await screen.findByText('Cripta')).toBeInTheDocument()
-    expect(screen.queryByText(/Clique no nome de um combatente/)).not.toBeInTheDocument()
+    await user.click(within(gaveta).getByRole('button', { name: 'Arcanista Erudito' }))
+
+    // O gesto termina onde começou: abriu-se a fila para achar alguém, achou-se.
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Iniciativa' })).not.toBeInTheDocument(),
+    )
   })
 
-  // A troca acontece uma vez, na transição. Depois dela o mestre manda: ir ao
-  // bestiário com o tabuleiro aberto não pode ser desfeito pela própria cena.
-  it('não rouba a aba de volta depois que o mestre escolhe outra', async () => {
-    const rt = new FakeRealtime()
-    const user = renderCena(rt)
-    await screen.findByRole('tab', { name: /Tabuleiro/ })
-    rt.abrirTabuleiro()
-    await screen.findByText('Cripta')
+  // Um overlay por vez, nunca empilhados — é o que separa isto dos side sheets
+  // que a ALE-122 matou, onde um painel abria POR CIMA do outro.
+  it('abrir uma consulta fecha a gaveta da fila', async () => {
+    const user = renderCena()
 
-    await user.click(screen.getByRole('tab', { name: /Bestiário/ }))
+    const trilho = await screen.findByRole('navigation', { name: 'Fila do combate' })
+    await user.click(within(trilho).getByRole('button', { name: 'Abrir a iniciativa' }))
+    await screen.findByRole('dialog', { name: 'Iniciativa' })
 
-    expect(screen.queryByText('Cripta')).not.toBeInTheDocument()
+    const consultas = screen.getByRole('navigation', { name: 'Consultas do mestre' })
+    await user.click(within(consultas).getByRole('button', { name: 'Catálogos' }))
+
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Iniciativa' })).not.toBeInTheDocument(),
+    )
+    expect(await screen.findByRole('dialog', { name: 'Catálogos' })).toBeInTheDocument()
+  })
+
+  // As notas são a exceção declarada ao overlay: elas EMPURRAM o mapa em vez de
+  // cobri-lo, porque se escrevem enquanto se narra olhando o tabuleiro.
+  it('as notas abrem ao lado do mapa, não por cima dele', async () => {
+    const user = renderCena()
+
+    await screen.findByText(/Nenhum tabuleiro aberto/)
+    const consultas = screen.getByRole('navigation', { name: 'Consultas do mestre' })
+    await user.click(within(consultas).getByRole('button', { name: 'Notas' }))
+
+    // Os dois na tela ao mesmo tempo, e a nota NÃO é diálogo: fosse overlay,
+    // o mapa teria saído da árvore acessível junto.
+    expect(await screen.findByRole('textbox', { name: /Notas/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Notas' })).toHaveAttribute('aria-pressed', 'true')
+    expect(mapaNaTela()).toBeInTheDocument()
+  })
+})
+
+describe('abaixo do degrau dos trilhos', () => {
+  beforeEach(() => comTrilhos(false))
+
+  // A fila do combate não cabe como trilho num telefone: 64px são 16% da tela.
+  // Ela some, e o MESMO botão a alcança — um caminho só, em toda largura.
+  it('a fila sai da tela e o botão da fileira abre a mesma gaveta', async () => {
+    const user = renderCena()
+
+    await screen.findByText(/Nenhum tabuleiro aberto/)
+    expect(screen.queryByRole('button', { name: 'Abrir a iniciativa' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /Iniciativa · 1/ }))
+
+    expect(await screen.findByRole('dialog', { name: 'Iniciativa' })).toBeInTheDocument()
   })
 })

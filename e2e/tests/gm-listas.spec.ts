@@ -17,7 +17,11 @@ import { expectColunasMonotonicas, expectSemFaixaMorta } from './support/geometr
 test.describe('Listas virtualizadas do mestre', () => {
   test('o bestiário da sessão pinta linhas e o filtro troca o conjunto', async ({ page }) => {
     await page.goto('/campaigns/1/sessions/4')
-    await page.getByRole('tab', { name: 'Bestiário' }).click()
+    // O bestiário é GAVETA desde a ALE-198: a cena do mestre não tem mais abas,
+    // e quem chama as consultas é o trilho da direita.
+    await page.getByRole('navigation', { name: 'Consultas do mestre' })
+      .getByRole('button', { name: 'Bestiário' })
+      .click()
 
     const busca = page.getByRole('searchbox', { name: 'Buscar criatura' })
     await expect(busca).toBeVisible()
@@ -39,7 +43,9 @@ test.describe('Listas virtualizadas do mestre', () => {
 
   test('o catálogo da sessão pinta linhas e a busca as troca', async ({ page }) => {
     await page.goto('/campaigns/1/sessions/4')
-    await page.getByRole('tab', { name: 'Catálogos' }).click()
+    await page.getByRole('navigation', { name: 'Consultas do mestre' })
+      .getByRole('button', { name: 'Catálogos' })
+      .click()
 
     const busca = page.getByRole('searchbox', { name: 'Buscar nos catálogos' })
     await expect(busca).toBeVisible()

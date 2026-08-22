@@ -735,32 +735,40 @@ describe('o painel da peça', () => {
    * A peça e a linha da iniciativa são a MESMA criatura: apontar a peça e ter de
    * procurar o nome na lista para ver os PV é trabalho que o app pode poupar.
    */
-  it('escolher a peça abre o combatente dela', async () => {
+  /**
+   * PEGAR a peça e LER a ficha são gestos diferentes (ALE-198).
+   *
+   * Eram o mesmo clique enquanto a ficha era uma aba escondida atrás de um
+   * degrau de largura — abrir uma aba que ninguém está vendo não atrapalha
+   * ninguém. A ficha virou DIÁLOGO, e um diálogo entre o pegar e o pousar cobre
+   * o mapa: o clique do pousar caía dentro dele. Provado no e2e de dois
+   * clientes, que passou a estourar por timeout com o seletor "Aplicar
+   * efeito…" aberto por cima do tabuleiro no artefato.
+   */
+  it('escolher a peça NÃO abre a ficha: o clique é para pegar e mover', async () => {
     const { user, onOpenCombatant } = renderRegion(true)
 
     await user.click(screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' }))
 
+    expect(onOpenCombatant).not.toHaveBeenCalled()
+  })
+
+  it('o painel da peça abre a ficha de quem ela representa', async () => {
+    const { user, onOpenCombatant } = renderRegion(true)
+
+    await user.click(screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' }))
+    await user.click(screen.getByRole('button', { name: 'Ficha de Ogro' }))
+
     expect(onOpenCombatant).toHaveBeenCalledWith('e1')
   })
 
-  // Largar a peça não é abrir ninguém: o segundo clique desseleciona.
-  it('desselecionar não reabre o combatente', async () => {
-    const { user, onOpenCombatant } = renderRegion(true)
-    const peca = screen.getByRole('button', { name: 'Ogro, coluna 3, linha 2' })
-
-    await user.click(peca)
-    await user.click(peca)
-
-    expect(onOpenCombatant).toHaveBeenCalledTimes(1)
-  })
-
   // A peça avulsa (porta, baú) não tem linha na iniciativa — e não há ficha.
-  it('a peça sem linha na iniciativa não abre combatente nenhum', async () => {
-    const { user, onOpenCombatant } = renderRegion(true)
+  it('a peça sem linha na iniciativa não oferece ficha nenhuma', async () => {
+    const { user } = renderRegion(true)
 
     await user.click(screen.getByRole('button', { name: 'Sílfide Ladina, coluna 6, linha 5' }))
 
-    expect(onOpenCombatant).not.toHaveBeenCalled()
+    expect(screen.queryByRole('button', { name: /^Ficha de/ })).not.toBeInTheDocument()
   })
 
 })
@@ -779,12 +787,33 @@ describe('os lugares guardados da crônica', () => {
     updatedAt: '2026-08-19T00:00:00Z',
   }
 
+  /**
+   * O acervo é uma LISTA, e a tela vazia que o hospedava é a região mais
+   * estreita da cena — 374px numa janela de 1920, porque sem tabuleiro a
+   * coluna do meio recebe 3fr (ALE-161). Desenhada ali, a lista pedia os
+   * 384px do `max-w-sm` e TRANSBORDAVA: a lixeira saía da tela. Na região
+   * larga do laptop (~840px) a mesma medida fixa deixava 456px de vão morto.
+   *
+   * A lista sai da tela vazia e passa a viver só no diálogo que já existia
+   * para trocar de cena — um desenho só do acervo, em vez de dois (ALE-198).
+   */
+  it('a tela vazia não desenha o acervo: ela oferece o botão que o abre', async () => {
+    const { user } = renderRegion(true, null, undefined, { places: [TAVERNA] })
+
+    const abrir = await screen.findByRole('button', { name: /Lugares da crônica/ })
+    expect(screen.queryByText('9 peças')).not.toBeInTheDocument()
+
+    await user.click(abrir)
+    // A contagem é o que faz o mestre reconhecer a cena: "a taverna, aquela dos nove".
+    expect(within(await screen.findByRole('dialog')).getByText('9 peças')).toBeInTheDocument()
+  })
+
   it('sem tabuleiro, o mestre reabre uma cena guardada', async () => {
     const { rt, user } = renderRegion(true, null, undefined, { places: [TAVERNA] })
 
-    // A contagem é o que faz o mestre reconhecer a cena: "a taverna, aquela dos nove".
-    expect(await screen.findByText('9 peças')).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Reabrir' }))
+    await user.click(await screen.findByRole('button', { name: /Lugares da crônica/ }))
+    const dialogo = await screen.findByRole('dialog')
+    await user.click(within(dialogo).getByRole('button', { name: 'Reabrir' }))
 
     expect(rt.reopenPlace).toHaveBeenCalledWith(7)
   })
@@ -794,10 +823,13 @@ describe('os lugares guardados da crônica', () => {
   it('apagar um lugar pede confirmação', async () => {
     const { user } = renderRegion(true, null, undefined, { places: [TAVERNA] })
 
-    await user.click(await screen.findByRole('button', { name: 'Apagar Taverna do Javali' }))
-    const dialogo = await screen.findByRole('dialog')
+    await user.click(await screen.findByRole('button', { name: /Lugares da crônica/ }))
+    const acervo = await screen.findByRole('dialog')
+    await user.click(within(acervo).getByRole('button', { name: 'Apagar Taverna do Javali' }))
 
-    expect(within(dialogo).getByText(/Apagar Taverna do Javali\?/)).toBeInTheDocument()
+    // O confirmar é modal: ele marca o acervo atrás como `aria-hidden`, e a
+    // consulta por papel passa a devolver só ele (gotcha do guia do front).
+    const dialogo = await screen.findByRole('dialog', { name: /Apagar Taverna do Javali\?/ })
     await user.click(within(dialogo).getByRole('button', { name: 'Apagar' }))
     await waitFor(() => expect(screen.queryByText('Taverna do Javali')).not.toBeInTheDocument())
   })

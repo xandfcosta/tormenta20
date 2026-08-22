@@ -44,9 +44,10 @@ export function BoardRegion(props: {
   highlightEntryId?: string | null
   /** Os personagens DESTE espectador. Vazio para o mestre, que move qualquer um. */
   myCharacterIds?: ReadonlySet<number>
-  /** Clicar na peça também ABRE o combatente dela: a peça e a linha da
-   *  iniciativa são a mesma criatura, e o mestre não deveria ter de procurar o
-   *  nome na lista para ver os PV de quem ele acabou de apontar. */
+  /** Abrir a ficha de quem a peça representa — a peça e a linha da iniciativa
+   *  são a mesma criatura, e o mestre não deveria ter de procurar o nome na
+   *  lista para ver os PV de quem ele acabou de apontar. Chamado pelo botão do
+   *  painel da peça, e não pelo clique nela: o clique PEGA a peça (ALE-198). */
   onOpenCombatant?: (entryId: string) => void
 }) {
   const [selectedTokenId, setSelectedTokenId] = createSignal<string | null>(null)
@@ -269,13 +270,19 @@ export function BoardRegion(props: {
 
   // Selecionar de novo a mesma peça DESSELECIONA: sem isso não há como largar a
   // peça sem posicioná-la, e o próximo clique num quadrado a moveria sem querer.
+  //
+  // Selecionar NÃO abre mais a ficha (ALE-198). Ela abria junto até a ficha ser
+  // uma aba escondida atrás de um degrau de largura; agora é DIÁLOGO, e um
+  // diálogo entre o pegar e o pousar cobre o mapa — o clique do pousar caía
+  // dentro dele. Quem abre a ficha é o botão do painel da peça, que já existe e
+  // já é onde moram as ações dela.
   const selectToken = (tokenId: string) => {
-    const escolhida = selectedTokenId() !== tokenId
-    setSelectedTokenId(escolhida ? tokenId : null)
-    if (!escolhida) return
-    const entryId = board()?.tokens.find((peca) => peca.id === tokenId)?.entryId
-    if (entryId) props.onOpenCombatant?.(entryId)
+    setSelectedTokenId((atual) => (atual === tokenId ? null : tokenId))
   }
+
+  /** A linha da iniciativa por trás da peça, quando há uma. */
+  const entryOfToken = (tokenId: string) =>
+    board()?.tokens.find((peca) => peca.id === tokenId)?.entryId
 
   const selectedToken = () => board()?.tokens.find((token) => token.id === selectedTokenId())
 
@@ -410,6 +417,7 @@ export function BoardRegion(props: {
             onReopen={props.rt.reopenPlace}
             onEdit={editPlace}
             onRemovePlace={(placeId) => void props.rt.removePlace(placeId).then(setPlaces)}
+            onRefreshPlaces={refreshPlaces}
           />
         }
       >
@@ -607,6 +615,11 @@ export function BoardRegion(props: {
                   token={token()}
                   onUpdate={(patch) => props.rt.updateToken(token().id, patch)}
                   onDuplicate={() => props.rt.duplicateToken(token().id)}
+                  onOpenSheet={(() => {
+                    const entryId = entryOfToken(token().id)
+                    const abrir = props.onOpenCombatant
+                    return entryId && abrir ? () => abrir(entryId) : undefined
+                  })()}
                   onRemove={() => {
                     props.rt.removeToken(token().id)
                     setSelectedTokenId(null)

@@ -1,8 +1,5 @@
-import { BookMarked } from 'lucide-solid'
-import { createSignal } from 'solid-js'
 import { CatalogBrowser } from '@/features/gm-tools/catalog-browser'
 import type { SessionRealtime } from '@/shared/realtime/realtime'
-import { Button } from '@/shared/ui/button'
 import { SidePanel } from '@/shared/ui/side-panel'
 import { MatchPeek } from './match-rail'
 
@@ -11,25 +8,20 @@ import { MatchPeek } from './match-rail'
  * decision was made for: on a laptop the tracker stays live behind it, so the
  * GM reads "Abalado: −2 em testes de perícia" on the right and applies it to
  * the goblin on the left without closing anything (ALE-75).
+ *
+ * Quem abre é o TRILHO das consultas, não um gatilho interno: o trilho garante
+ * um overlay por vez, e um botão morando dentro do painel não teria como saber
+ * que outro está aberto (ALE-198).
  */
-export function CatalogPanel(props: { rt: SessionRealtime }) {
-  const [open, setOpen] = createSignal(false)
-
+export function CatalogPanel(props: {
+  rt: SessionRealtime
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
   return (
-    <>
-      <Button
-        type="button"
-        size="sm"
-        variant="secondary"
-        class="w-full gap-1.5"
-        onClick={() => setOpen(true)}
-      >
-        <BookMarked aria-hidden="true" class="size-4" /> Catálogos
-      </Button>
-
       <SidePanel
-        open={open()}
-        onOpenChange={setOpen}
+        open={props.open}
+        onOpenChange={props.onOpenChange}
         title="Catálogos"
         description="Condições, magias, poderes e itens."
         header={<MatchPeek rt={props.rt} />}
@@ -39,6 +31,5 @@ export function CatalogPanel(props: { rt: SessionRealtime }) {
             o scroll parava antes do fim do side sheet (ALE-122). */}
         <CatalogBrowser listClass="min-h-0 flex-1 pr-1" />
       </SidePanel>
-    </>
   )
 }

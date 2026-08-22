@@ -1,4 +1,4 @@
-import { Copy, Eye, EyeOff, Pencil, Trash2, Undo2 } from 'lucide-solid'
+import { Copy, Eye, EyeOff, Pencil, Trash2, Undo2, UserRound } from 'lucide-solid'
 import { For } from 'solid-js'
 import { Show } from 'solid-js'
 import type { BoardMarker, BoardToken } from '@/shared/realtime/realtime'
@@ -33,10 +33,35 @@ export function TokenActions(props: {
   /** Ausente = duplicar não está disponível (o rascunho do lugar guarda a cena
    *  inteira de uma vez e numera na gravação, não por mensagem). */
   onDuplicate?: () => void
+  /**
+   * Abrir a ficha de quem esta peça representa. Ausente quando a peça não tem
+   * linha na iniciativa atrás dela — uma porta, um barril — ou quando quem olha
+   * não é o mestre.
+   *
+   * É BOTÃO e não o clique na peça, e isso é conserto (ALE-198): o clique na
+   * peça PEGA a peça para mover, que é a operação mais repetida do combate.
+   * Fazendo-o abrir a ficha também, a ficha — que agora é diálogo — cobria o
+   * mapa entre pegar e pousar, e o pousar caía dentro dela. O gesto de mover
+   * fica intacto; ler a ficha é um segundo clique, explícito.
+   */
+  onOpenSheet?: () => void
 }) {
   return (
     <div class="flex flex-wrap items-center gap-1 border-t border-grimorio-iron px-3 py-1.5">
       <span class="mr-1 min-w-0 truncate text-2xs text-grimorio-gold">{props.token.label}</span>
+
+      <Show when={props.onOpenSheet}>
+        {(abrir) => (
+          <Button
+            size="sm"
+            variant="ghost"
+            aria-label={`Ficha de ${props.token.label}`}
+            onClick={() => abrir()()}
+          >
+            <UserRound aria-hidden="true" class="size-4" />
+          </Button>
+        )}
+      </Show>
 
       <TokenDialog
         token={props.token}

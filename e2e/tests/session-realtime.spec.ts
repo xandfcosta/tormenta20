@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { abreAFila } from './support/gm-scene'
 
 /**
  * O realtime com DOIS clientes na mesma mesa — o mecanismo que só um browser
@@ -44,16 +45,18 @@ test.describe('Sessão ao vivo — dois clientes', () => {
       // a iniciativa mora na Mesa, e é lá que ele olha para acompanhar o combate.
       await telaDoJogador.getByRole('button', { name: /Mesa/ }).click()
 
-      // O formulário nasce fechado desde que se mediu o custo dele em altura
-      // (ALE-122): um clique no topo o abre.
-      await telaDoMestre.getByRole('button', { name: 'Combatente' }).click()
+      // A fila do mestre é GAVETA desde a ALE-198, e é lá que mora a forma de
+      // adicionar. O formulário dentro dela nasce fechado desde que se mediu o
+      // custo dele em altura (ALE-122): um clique em "+ Combatente" o abre.
+      const fila = await abreAFila(telaDoMestre)
+      await fila.getByRole('button', { name: 'Combatente' }).click()
       await telaDoMestre.getByLabel('Nome').fill(eco)
       await telaDoMestre.getByRole('button', { name: 'Adicionar', exact: true }).click()
 
       // A tela do jogador não recarrega: o combatente chega pelo socket.
       await expect(telaDoJogador.getByText(eco)).toBeVisible()
 
-      await telaDoMestre.getByRole('button', { name: `Remover ${eco}` }).click()
+      await fila.getByRole('button', { name: `Remover ${eco}` }).click()
       await expect(telaDoJogador.getByText(eco)).toBeHidden()
     } finally {
       await mestre.close()
@@ -90,21 +93,19 @@ test.describe('Sessão ao vivo — dois clientes', () => {
       // e "trazer a iniciativa" para um tabuleiro sem ninguém não põe peça
       // nenhuma — o teste passava aqui e falhava lá, que foi exatamente o que
       // aconteceu no primeiro push (ALE-124).
-      await telaDoMestre.getByRole('button', { name: 'Combatente' }).click()
+      const fila = await abreAFila(telaDoMestre)
+      await fila.getByRole('button', { name: 'Combatente' }).click()
       await telaDoMestre.getByLabel('Nome').fill(figurante)
       await telaDoMestre.getByRole('button', { name: 'Adicionar', exact: true }).click()
-      // Escopado à LINHA da iniciativa, e não a "qualquer texto com esse nome":
-      // desde a ALE-184 o avanço de turno anuncia o próximo combatente pelo
-      // NOME, então o mesmo texto aparece na lista e dentro do botão — três
-      // ocorrências ao todo, contando a instância que o `lg:hidden` guarda.
-      await expect(
-        telaDoMestre.getByRole('button', { name: figurante, exact: true }),
-      ).toBeVisible()
+      // Escopado à LINHA dentro da gaveta, e não a "qualquer texto com esse
+      // nome": desde a ALE-184 o avanço de turno anuncia o próximo combatente
+      // pelo NOME, então o mesmo texto aparece na lista e dentro do botão.
+      await expect(fila.getByRole('button', { name: figurante, exact: true })).toBeVisible()
 
-      // Desktop Chrome do Playwright é 1280 de largura: abaixo de 1536 o
-      // tabuleiro divide a coluna da direita com a mesa e é uma ABA dela — a
-      // barra fica exatamente sobre o que ela troca (ALE-130).
-      await telaDoMestre.getByRole('tab', { name: 'Tabuleiro' }).click()
+      // O tabuleiro é a superfície PERMANENTE desde a ALE-198: ele já está na
+      // tela, e o que precisa sair da frente é a gaveta da fila.
+      await telaDoMestre.keyboard.press('Escape')
+      await expect(fila).toBeHidden()
       // O teste cuida do próprio terreno: a sessão da seed pode ter ficado com um
       // tabuleiro aberto de outra rodada (ou de alguém usando o app em dev), e
       // esperar pelo estado vazio faria a suíte falhar por causa do ambiente.
@@ -151,16 +152,15 @@ test.describe('Sessão ao vivo — dois clientes', () => {
       await telaDoMestre.getByRole('dialog').getByRole('button', { name: 'Encerrar' }).click()
       await expect(telaDoJogador.getByRole('grid', { name: new RegExp(lugar) })).toBeHidden()
 
-      // Sai como entrou: o combatente do teste volta para fora da iniciativa. Não
-      // precisa trocar de região para isso — nesta largura a iniciativa é a
-      // espinha e fica sempre na tela; só a segunda coluna alterna (ALE-130).
-      await telaDoMestre.getByRole('button', { name: `Remover ${figurante}` }).click()
+      // Sai como entrou: o combatente do teste volta para fora da iniciativa.
+      // Tirar alguém da fila é trabalho NA fila, e ela mora na gaveta desde a
+      // ALE-198 — o tabuleiro continua na tela por baixo.
+      const paraLimpar = await abreAFila(telaDoMestre)
+      await paraLimpar.getByRole('button', { name: `Remover ${figurante}` }).click()
       // Escopado à LINHA, pelo mesmo motivo da asserção lá em cima: o avanço de
       // turno anuncia o próximo combatente pelo nome (ALE-184), então esperar
       // que o TEXTO suma casaria também com o rótulo do botão.
-      await expect(
-        telaDoMestre.getByRole('button', { name: figurante, exact: true }),
-      ).toBeHidden()
+      await expect(paraLimpar.getByRole('button', { name: figurante, exact: true })).toBeHidden()
     } finally {
       await mestre.close()
       await jogador.close()

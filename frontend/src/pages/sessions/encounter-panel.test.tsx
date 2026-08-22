@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
 import { render, screen } from '@solidjs/testing-library'
+import { createSignal } from 'solid-js'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { InitiativeEntry, SessionRealtime } from '@/shared/realtime/realtime'
@@ -29,11 +30,17 @@ class FakeRealtime {
   }
 }
 
+/** O painel é CONTROLADO pelo trilho das consultas desde a ALE-198: quem o abre
+ *  é a cena, que garante um overlay por vez. O teste faz o papel do trilho. */
 function renderPanel(rt: FakeRealtime) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const [open, setOpen] = createSignal(false)
   render(() => (
     <QueryClientProvider client={client}>
-      <EncounterPanel rt={rt.asRealtime()} />
+      <button type="button" onClick={() => setOpen(true)}>
+        Montar encontro
+      </button>
+      <EncounterPanel rt={rt.asRealtime()} open={open()} onOpenChange={setOpen} />
     </QueryClientProvider>
   ))
 }
