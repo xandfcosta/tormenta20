@@ -1,4 +1,4 @@
-import { BookMarked, NotebookPen, Skull, Swords, Users } from 'lucide-solid'
+import { BookMarked, NotebookPen, Scale, Skull, Swords, Users } from 'lucide-solid'
 import type { LucideProps } from 'lucide-solid'
 import { type Component, type JSX, For } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
@@ -14,6 +14,11 @@ export const SESSION_TOOLS = [
   { slug: 'encontros', label: 'Encontros', hint: 'Combinar criaturas e mandar tudo de uma vez.' },
   { slug: 'catalogos', label: 'Catálogos', hint: 'Condições, magias, poderes e itens.' },
   { slug: 'notas', label: 'Notas', hint: 'O que aconteceu nesta sessão, ao lado do mapa.' },
+  // A segunda porta das regras opcionais (ALE-221). Ela entra no trilho e não
+  // inventa lugar novo porque o trilho JÁ é o lugar previsível de onde se chama
+  // o que se consulta e se fecha — e a chave é a mesma da aba de configuração
+  // da campanha, não um ajuste só desta sessão.
+  { slug: 'regras', label: 'Regras', hint: 'O que o app impõe nesta campanha.' },
 ] as const
 
 export type SessionTool = (typeof SESSION_TOOLS)[number]['slug']
@@ -26,6 +31,7 @@ const TOOL_ICON: Record<SessionTool, Component<LucideProps>> = {
   encontros: Swords,
   catalogos: BookMarked,
   notas: NotebookPen,
+  regras: Scale,
 }
 
 /**
@@ -79,7 +85,11 @@ export function GmToolRail(props: {
               title={tool.hint}
               onClick={() => props.onPick(tool.slug)}
               class={cn(
-                'flex shrink-0 items-center justify-center rounded-sm border px-2.5 py-2.5 transition-colors lg:px-0',
+                // `px-2` e não `px-2.5`: com a sexta consulta (Regras, ALE-221) a
+                // fileira passava 7px de 390 — e 7px não parecem roláveis, então
+                // o último ícone ficava cortado sem afordância nenhuma. Vale só
+                // na FILEIRA; na coluna o `lg:px-0` já zera o respiro lateral.
+                'flex shrink-0 items-center justify-center rounded-sm border px-2 py-2.5 transition-colors lg:px-0',
                 aberto()
                   ? 'border-grimorio-gold bg-accent text-grimorio-gold'
                   : 'border-grimorio-iron text-muted-foreground hover:bg-accent hover:text-foreground',

@@ -35,6 +35,13 @@ type Character struct {
 
 	Displacement int `json:"displacement"`
 
+	// IgnoredRules são as regras opcionais que a campanha desligou (ALE-221).
+	// Elas não pertencem ao personagem: pertencem à MESA, e chegam aqui porque o
+	// motor é uma função pura da entrada dele. Quem resolve a qual campanha a
+	// ficha responde é o servidor, no `loadCharacter`. Valor zero = tudo em
+	// vigor, que é o padrão do livro — ver `IgnoredRules`.
+	IgnoredRules IgnoredRules `json:"ignoredRules"`
+
 	Races         []CharacterRace      `json:"races"`
 	Classes       []CharacterClass     `json:"classes"`
 	Items         []CharacterItem      `json:"items"`

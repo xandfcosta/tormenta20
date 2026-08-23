@@ -86,6 +86,18 @@ export function BagPanel(props: { character: Character }) {
                 sobrecarga
               </FieldLabel>
             </Show>
+            {/* Com a regra desligada os espaços continuam contados — o livro
+                condiciona o desligamento a "desde que os jogadores não abusem"
+                (p141), e não dá para vigiar abuso sem ver o número. Sem esta
+                linha, porém, uma carga acima do limite e SEM alerta pareceria
+                defeito da tela (ALE-221). A frase é a do LIVRO, e ela diz de
+                quem é a decisão sem repetir a palavra "limite", que a linha já
+                usa duas vezes. */}
+            <Show when={!carga().enforced}>
+              <FieldLabel tom="inherit" class="ml-2">
+                a critério do mestre
+              </FieldLabel>
+            </Show>
             <span class="ml-2">
               • {loadLimitLabel(carga().limit, sheet().attributes.strength.total)}
             </span>

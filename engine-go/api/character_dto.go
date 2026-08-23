@@ -1,49 +1,58 @@
 package api
 
-import "t20engine/db/sqlcgen"
+import (
+	"t20engine/db/sqlcgen"
+	"t20engine/engine"
+)
 
 // CharacterDTO is the character aggregate the frontend consumes (shared/api/api.ts
 // `Character`). sqlc lowercases column identifiers, so the DB structs can't carry
 // the camelCase JSON contract — this hand-written shape does, and the mappers
 // below convert (bool from INTEGER, *string from NULL).
 type CharacterDTO struct {
-	ID                   int64          `json:"id"`
-	OwnerID              int64          `json:"ownerId"`
-	Name                 string         `json:"name"`
-	Origin               string         `json:"origin"`
-	God                  *string        `json:"god"`
-	GodPower             string         `json:"godPower"`
-	Tibar                float64        `json:"tibar"`
-	Level                int64          `json:"level"`
-	HpMax                int64          `json:"hpMax"`
-	HpCurrent            int64          `json:"hpCurrent"`
-	MpMax                int64          `json:"mpMax"`
-	MpCurrent            int64          `json:"mpCurrent"`
-	Strength             int64          `json:"strength"`
-	Dexterity            int64          `json:"dexterity"`
-	Constitution         int64          `json:"constitution"`
-	Intelligence         int64          `json:"intelligence"`
-	Wisdom               int64          `json:"wisdom"`
-	Charisma             int64          `json:"charisma"`
-	Size                 string         `json:"size"`
-	Displacement         int64          `json:"displacement"`
-	Proficiencies        string         `json:"proficiencies"`
-	RaceAbilityChoices   string         `json:"raceAbilityChoices"`
-	RaceAttributeChoices string         `json:"raceAttributeChoices"`
-	SecondaryRaceChoices string         `json:"secondaryRaceChoices"`
-	OriginChoices        string         `json:"originChoices"`
-	ClassPowers          string         `json:"classPowers"`
-	ClassChoices         string         `json:"classChoices"`
-	PowerChoices         string         `json:"powerChoices"`
-	ActiveConditions     string         `json:"activeConditions"`
-	CreatedAt            string         `json:"createdAt"`
-	UpdatedAt            string         `json:"updatedAt"`
-	Races                []RaceDTO      `json:"races"`
-	Classes              []ClassDTO     `json:"classes"`
-	Expertises           []ExpertiseDTO `json:"expertises"`
-	Items                []ItemDTO      `json:"items"`
-	ActiveEffects        []EffectDTO    `json:"activeEffects"`
-	Spells               []SpellDTO     `json:"spells"`
+	ID                   int64   `json:"id"`
+	OwnerID              int64   `json:"ownerId"`
+	Name                 string  `json:"name"`
+	Origin               string  `json:"origin"`
+	God                  *string `json:"god"`
+	GodPower             string  `json:"godPower"`
+	Tibar                float64 `json:"tibar"`
+	Level                int64   `json:"level"`
+	HpMax                int64   `json:"hpMax"`
+	HpCurrent            int64   `json:"hpCurrent"`
+	MpMax                int64   `json:"mpMax"`
+	MpCurrent            int64   `json:"mpCurrent"`
+	Strength             int64   `json:"strength"`
+	Dexterity            int64   `json:"dexterity"`
+	Constitution         int64   `json:"constitution"`
+	Intelligence         int64   `json:"intelligence"`
+	Wisdom               int64   `json:"wisdom"`
+	Charisma             int64   `json:"charisma"`
+	Size                 string  `json:"size"`
+	Displacement         int64   `json:"displacement"`
+	Proficiencies        string  `json:"proficiencies"`
+	RaceAbilityChoices   string  `json:"raceAbilityChoices"`
+	RaceAttributeChoices string  `json:"raceAttributeChoices"`
+	SecondaryRaceChoices string  `json:"secondaryRaceChoices"`
+	OriginChoices        string  `json:"originChoices"`
+	ClassPowers          string  `json:"classPowers"`
+	ClassChoices         string  `json:"classChoices"`
+	PowerChoices         string  `json:"powerChoices"`
+	ActiveConditions     string  `json:"activeConditions"`
+	CreatedAt            string  `json:"createdAt"`
+	UpdatedAt            string  `json:"updatedAt"`
+	// IgnoredRules são as regras opcionais desligadas para ESTA ficha (ALE-221).
+	// Não é campo do personagem: é a mesa dele, resolvida em `loadCharacter` e
+	// carimbada aqui para atravessar até o motor pelo `engineCharacterFrom`, que
+	// é um round-trip de JSON. Assim a ficha do servidor e a do navegador
+	// calculam com as mesmas regras sem nenhuma assinatura mudar.
+	IgnoredRules  engine.IgnoredRules `json:"ignoredRules"`
+	Races         []RaceDTO           `json:"races"`
+	Classes       []ClassDTO          `json:"classes"`
+	Expertises    []ExpertiseDTO      `json:"expertises"`
+	Items         []ItemDTO           `json:"items"`
+	ActiveEffects []EffectDTO         `json:"activeEffects"`
+	Spells        []SpellDTO          `json:"spells"`
 }
 
 type RaceDTO struct {

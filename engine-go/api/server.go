@@ -151,6 +151,9 @@ func (s *Server) Router() http.Handler {
 		r.Patch("/{id}", s.handleUpdateCampaign)
 		r.Delete("/{id}", s.handleDeleteCampaign)
 		r.Post("/{id}/invite", s.handleRotateInvite)
+		// Regras opcionais (ALE-221). PUT porque a tela manda o conjunto INTEIRO
+		// das regras desligadas, nunca um delta. Só o dono da campanha escreve.
+		r.Put("/{id}/rules", s.handleReplaceCampaignRules)
 		r.Route("/{campaignId}/members", func(r chi.Router) {
 			r.Get("/", s.handleListMembers)
 			r.Post("/", s.handleAddMember)

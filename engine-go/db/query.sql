@@ -476,3 +476,27 @@ SELECT * FROM campaign_places WHERE campaignId = ? AND name = ? LIMIT 1;
 
 -- name: DeleteCampaignPlace :exec
 DELETE FROM campaign_places WHERE id = ?;
+
+-- regras opcionais da campanha (ALE-221)
+
+-- name: ListIgnoredRulesForCampaign :many
+SELECT rule FROM campaign_ignored_rules WHERE campaignId = ? ORDER BY rule;
+
+-- name: ClearIgnoredRulesForCampaign :exec
+DELETE FROM campaign_ignored_rules WHERE campaignId = ?;
+
+-- name: IgnoreRuleInCampaign :exec
+INSERT INTO campaign_ignored_rules (campaignId, rule, updatedAt) VALUES (?, ?, ?)
+ON CONFLICT(campaignId, rule) DO UPDATE SET updatedAt = excluded.updatedAt;
+
+-- A regra so esta desligada para a ficha se TODAS as campanhas dela a
+-- desligaram. A mais estrita vence, e a ficha que nao pertence a campanha
+-- nenhuma calcula com tudo em vigor -- que e o padrao do livro. Escolher "a
+-- primeira campanha" seria arbitrario e mudaria com a ordem das linhas.
+-- name: ListIgnoredRulesForCharacter :many
+SELECT r.rule
+FROM campaign_ignored_rules r
+WHERE r.campaignId IN (SELECT m.campaignId FROM campaign_members m WHERE m.characterId = sqlc.arg('characterId'))
+GROUP BY r.rule
+HAVING COUNT(DISTINCT r.campaignId) = (SELECT COUNT(*) FROM campaign_members m2 WHERE m2.characterId = sqlc.arg('characterId'))
+ORDER BY r.rule;

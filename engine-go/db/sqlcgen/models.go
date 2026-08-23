@@ -47,6 +47,12 @@ type CampaignCreature struct {
 	Updatedat  string `json:"updatedat"`
 }
 
+type CampaignIgnoredRule struct {
+	Campaignid int64  `json:"campaignid"`
+	Rule       string `json:"rule"`
+	Updatedat  string `json:"updatedat"`
+}
+
 type CampaignMember struct {
 	ID          int64  `json:"id"`
 	Campaignid  int64  `json:"campaignid"`

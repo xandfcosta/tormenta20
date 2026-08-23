@@ -245,12 +245,30 @@ export type Character = {
   powerChoices: string
   createdAt: string
   updatedAt: string
+  /**
+   * As regras opcionais DESLIGADAS para esta ficha (ALE-221). Não é campo do
+   * personagem: é a mesa dele, resolvida pelo servidor a partir das campanhas
+   * de que ele participa. Ela viaja na ficha porque o motor WASM recebe a ficha
+   * inteira — é assim que o navegador calcula com as mesmas regras do servidor
+   * sem uma segunda chamada.
+   *
+   * Nomeia o que está DESLIGADO de propósito: o objeto vazio significa "tudo em
+   * vigor", que é o padrão do livro. Opcional porque payload em cache pode ser
+   * anterior a ela, e ausente é o lado seguro.
+   */
+  ignoredRules?: IgnoredRules
   races: { race: string }[]
   classes: CharacterClass[]
   expertises: CharacterExpertise[]
   items: CharacterItem[]
   activeEffects: ActiveEffect[]
   spells: CharacterSpell[]
+}
+
+/** Ver `Character.ignoredRules`. Uma chave por regra que a mesa pode desligar. */
+export type IgnoredRules = {
+  /** Limites de carga da p141 — o livro autoriza o mestre a ignorá-los. */
+  carga?: boolean
 }
 
 export type CharacterOptions = {
@@ -287,6 +305,9 @@ export type Campaign = {
     level: number
     classes: CharacterClass[]
   } | null
+  /** Identificadores das regras que esta campanha DESLIGOU (ALE-221). Só o
+   *  detalhe (GET /campaigns/{id}) o traz; a lista não precisa dele. */
+  ignoredRules?: string[]
 }
 
 export type CreateCampaignInput = {

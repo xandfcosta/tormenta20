@@ -127,6 +127,10 @@ export function SessionTrackerPage() {
                    com a de baixo podendo estar pendente enquanto esta já
                    respondeu. */
                 campaignName={settledCampaign()?.name ?? ''}
+                /* Mesma razão do nome: a gaveta de Regras lê a campanha, e uma
+                   query nova DENTRO da cena a desanexa — foi assim que o
+                   `aria-hidden` do Kobalte ficou preso na ALE-211. */
+                ignoredRules={settledCampaign()?.ignoredRules ?? []}
                 members={settledQuery(members) ?? []}
               />
             </Show>

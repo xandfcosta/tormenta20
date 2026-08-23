@@ -120,6 +120,33 @@ describe('BagPanel', () => {
     expect(aviso).toHaveTextContent('-3m de deslocamento')
   })
 
+  /**
+   * A campanha que desligou a regra de carga (ALE-221).
+   *
+   * Este teste atravessa o motor WASM de verdade — o `ignoredRules` viaja na
+   * ficha e é o Go que decide se há sobrecarga —, então ele protege o CANO
+   * inteiro e não a formatação. Sem ele, o dia em que a ficha parar de carregar
+   * o campo, a tela volta a punir uma mesa que dispensou a regra e nada acusa.
+   *
+   * As duas metades importam: a punição some E o número fica. O livro deixa o
+   * mestre ignorar a regra "desde que os jogadores não abusem" (p141), e quem
+   * vigia abuso precisa do número na tela.
+   */
+  it('com a regra desligada na campanha, não há sobrecarga — mas a conta continua', () => {
+    renderPanel(
+      character({
+        items: [item({ id: 1, quantity: 40, slots: 1 })],
+        ignoredRules: { carga: true },
+      }),
+    )
+
+    expect(screen.queryByText('sobrecarga')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Sobrecarregado \(p141\)/)).not.toBeInTheDocument()
+    expect(screen.getByText('a critério do mestre')).toBeInTheDocument()
+    expect(screen.getByText('40')).toBeInTheDocument()
+    expect(screen.getByText(/limite 18/)).toBeInTheDocument()
+  })
+
   it('a mochila vazia explica como encher', () => {
     renderPanel()
     expect(screen.getByText(/Mochila vazia/)).toBeInTheDocument()
