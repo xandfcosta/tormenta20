@@ -2210,6 +2210,22 @@ func (q *Queries) SetCharacterLevel(ctx context.Context, arg SetCharacterLevelPa
 	return err
 }
 
+const setCharacterTibar = `-- name: SetCharacterTibar :exec
+UPDATE characters SET tibar = ?1, updatedAt = ?2
+WHERE id = ?3
+`
+
+type SetCharacterTibarParams struct {
+	Tibar     float64 `json:"tibar"`
+	UpdatedAt string  `json:"updatedAt"`
+	ID        int64   `json:"id"`
+}
+
+func (q *Queries) SetCharacterTibar(ctx context.Context, arg SetCharacterTibarParams) error {
+	_, err := q.db.ExecContext(ctx, setCharacterTibar, arg.Tibar, arg.UpdatedAt, arg.ID)
+	return err
+}
+
 const setCharacterVitals = `-- name: SetCharacterVitals :exec
 UPDATE characters
 SET hpMax = ?1, hpCurrent = ?2,

@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
-import { render, screen } from '@solidjs/testing-library'
+import { render, screen, waitFor } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { characterQueryOptions } from '@/entities/character/queries'
 import type { Character, CharacterItem } from '@/shared/api/api'
 import { BagPanel } from './bag-panel'
 
@@ -64,6 +65,9 @@ function character(overrides: Partial<Character> = {}): Character {
 
 function renderPanel(char: Character = character()) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  // A escrita do tibar é otimista e pinta SOBRE o cache; sem a linha semeada
+  // ela não teria o que repintar e o teste mediria só a chamada de rede.
+  client.setQueryData(characterQueryOptions(char.id).queryKey, char)
   render(() => (
     <QueryClientProvider client={client}>
       <BagPanel character={char} />
@@ -86,7 +90,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  vi.clearAllMocks()
+  vi.restoreAllMocks()
   document.body.innerHTML = ''
 })
 
@@ -103,6 +107,17 @@ describe('BagPanel', () => {
   it('avisa a sobrecarga quando a carga passa do limite', () => {
     renderPanel(character({ items: [item({ id: 1, quantity: 40, slots: 1 })] }))
     expect(screen.getByText('sobrecarga')).toBeInTheDocument()
+  })
+
+  // A palavra "sobrecarga" sozinha não diz o que mudou na ficha. Os dois números
+  // saem do motor (p141), que é quem já os aplicou no deslocamento e nas
+  // perícias — a mochila MOSTRA a consequência, não a decora.
+  it('a sobrecarga diz a consequência mecânica, não só a palavra', () => {
+    renderPanel(character({ items: [item({ id: 1, quantity: 40, slots: 1 })] }))
+
+    const aviso = screen.getByText(/Sobrecarregado \(p141\)/)
+    expect(aviso).toHaveTextContent('-5 em Acrobacia, Furtividade e Ladinagem')
+    expect(aviso).toHaveTextContent('-3m de deslocamento')
   })
 
   it('a mochila vazia explica como encher', () => {
@@ -171,6 +186,30 @@ describe('BagPanel', () => {
 
     await user.click(screen.getByRole('button', { name: 'defesa' }))
     expect(screen.getByText('Nenhum item para esse filtro.')).toBeInTheDocument()
+  })
+
+  // O dinheiro é do personagem e o kit inicial já o concede (Tabela 3-1, p140):
+  // a mochila mostra o MESMO campo, não um segundo lugar onde ele mora.
+  it('mostra quantos tibares o personagem tem', () => {
+    renderPanel(character({ tibar: 1250.5 }))
+
+    expect(screen.getByText('T$ 1.250,5')).toBeInTheDocument()
+  })
+
+  it('o botão de tibares grava o saldo digitado', async () => {
+    const api = await import('@/shared/api/api')
+    const update = vi
+      .spyOn(api.api.characters, 'updateTibar')
+      .mockResolvedValue({ tibar: 300 })
+    const user = renderPanel(character({ tibar: 20 }))
+
+    await user.click(screen.getByRole('button', { name: 'Editar tibares' }))
+    const campo = screen.getByLabelText('T$')
+    await user.clear(campo)
+    await user.type(campo, '300')
+    await user.click(screen.getByRole('button', { name: 'Salvar' }))
+
+    await waitFor(() => expect(update).toHaveBeenCalledWith(1, { tibar: 300 }))
   })
 
   it('abrir um item leva à ficha dele com as ações de equipar', async () => {

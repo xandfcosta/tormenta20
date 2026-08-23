@@ -18,6 +18,10 @@ type Character struct {
 	Wisdom       int    `json:"wisdom"`
 	Charisma     int    `json:"charisma"`
 
+	// Tibar é o dinheiro do personagem, e ele é CARGA: cada mil moedas ocupam um
+	// espaço (p141). Por isso vive no motor e não só na tela (ALE-215).
+	Tibar float64 `json:"tibar"`
+
 	// JSON-encoded columns (parsed lazily, mirroring derived.ts parse helpers).
 	Proficiencies        string `json:"proficiencies"`
 	RaceAbilityChoices   string `json:"raceAbilityChoices"`
@@ -58,8 +62,13 @@ type CharacterClass struct {
 // CharacterItem mirrors the api.ts CharacterItem. Equipped is a pointer so the
 // null (unequipped) state is distinguishable from a wear slot.
 type CharacterItem struct {
-	CatalogID    *string `json:"catalogId"`
-	Name         string  `json:"name"`
+	CatalogID *string `json:"catalogId"`
+	Name      string  `json:"name"`
+	// Quantity e Slots são o que a linha PESA na mochila (p141). Ficaram de fora
+	// do espelho até a ALE-215 porque a coleção de efeitos não os lê — quem lê é
+	// a carga.
+	Quantity     int     `json:"quantity"`
+	Slots        float64 `json:"slots"`
 	Equipped     *string `json:"equipped"`
 	Improvements string  `json:"improvements"`
 	Material     *string `json:"material"`

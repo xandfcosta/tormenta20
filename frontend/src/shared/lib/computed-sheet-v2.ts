@@ -16,6 +16,7 @@ export type {
   ComputedSheetV2,
   DefenseBreakdown,
   ExpertiseBreakdown,
+  LoadBreakdown,
   RdBreakdown,
   SourceAmount,
   TempHpBreakdown,

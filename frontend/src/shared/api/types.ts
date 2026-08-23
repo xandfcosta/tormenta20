@@ -447,6 +447,13 @@ export type UpdateVitalsInput = {
 /** PATCH :id/vitals answers with the CLAMPED pair, never the whole character. */
 export type VitalsResult = { hpCurrent: number; mpCurrent: number }
 
+/** PATCH :id/tibar — o saldo INTEIRO, não um delta. É o mesmo campo que a Forja
+ *  preenche pela Tabela 3-1 (p140) e o mesmo que a carga lê (p141). */
+export type UpdateTibarInput = { tibar: number }
+
+/** PATCH :id/tibar devolve o valor gravado. */
+export type TibarResult = { tibar: number }
+
 /** POST :id/active-effects — one of `spellId` (spell buff), `powerId` (power
  *  grant) or `manualTempHp` (GM ad-hoc temp-PV pool; 0 clears it). Verified
  *  against the Go handler (`api/apply_effect.go`). */

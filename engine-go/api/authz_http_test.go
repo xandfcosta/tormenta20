@@ -145,6 +145,7 @@ func TestProtectedRoutesRejectAnonymous(t *testing.T) {
 		{http.MethodGet, "/characters/1/sheet"},
 		{http.MethodGet, "/characters/1/campaigns"},
 		{http.MethodPatch, "/characters/1/vitals"},
+		{http.MethodPatch, "/characters/1/tibar"},
 		{http.MethodPost, "/characters/1/damage"},
 		{http.MethodPatch, "/characters/1/level"},
 		{http.MethodPatch, "/characters/1/classes/level"},
