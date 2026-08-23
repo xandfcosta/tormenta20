@@ -1,0 +1,204 @@
+import { type Page, expect, test } from '@playwright/test'
+import { abreAFila, abreConsulta, cenaViva } from './support/gm-scene'
+
+/**
+ * As GAVETAS do mestre — o `SidePanel` que hospeda bestiário, encontros,
+ * catálogos, elenco, regras e a fila do combate desde a ALE-198.
+ *
+ * Duas promessas que SÓ um browser testemunha, e por isso estão aqui e não em
+ * unitário (ALE-207):
+ *
+ * 1. **O movimento.** jsdom não tem linha do tempo de animação: `getAnimations`
+ *    devolve lista vazia e qualquer asserção sobre o que se move passa verde
+ *    sobre uma gaveta que gira, some ou entra na diagonal. E o defeito que esta
+ *    suíte prende era exatamente esse — o `slide-in-from-bottom` da folha do
+ *    telefone continuava valendo acima do `xl`, somado ao `slide-in-from-right`
+ *    da coluna, e a gaveta entrava do canto INFERIOR direito, cruzando 958px de
+ *    altura numa janela de 1080.
+ * 2. **A largura.** É `clamp()` sobre `vw` resolvido pelo motor de leiaute, e
+ *    em jsdom não há leiaute nenhum — todo elemento mede zero.
+ *
+ * Só leitura: abre gaveta, mede, fecha. Nada escreve na seed.
+ */
+
+/** O instante ZERO do deslize, medido com a animação pausada. */
+type Deslize = {
+  /** As propriedades que os quadros animam. A promessa é: só `transform`. */
+  props: string[]
+  dx: number
+  dy: number
+  escalaX: number
+  escalaY: number
+  opacidade: string
+  largura: number
+}
+
+/**
+ * Instala o gravador ANTES do `goto`.
+ *
+ * `addInitScript` e não `evaluate`: o gravador precisa sobreviver a um
+ * recarregamento da página. Com `evaluate` ele mora numa navegação só, e um
+ * reload no meio (o HMR do dev server é o caso real) leva junto o ouvinte — o
+ * teste então falha com "nenhuma animação" sobre um app que anima certo.
+ *
+ * Pausa em `currentTime = 0` de propósito: lido solto dentro do
+ * `animationstart` o deslize já andou ~11% (medido), e a asserção sobre o
+ * percurso viraria uma corrida com o relógio do compositor. Pausado, o
+ * `getComputedStyle` resolve o `translate3d(100%, …)` em pixels exatos.
+ */
+async function gravaODeslize(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const gravadas: unknown[] = []
+    ;(window as unknown as { __deslizes: unknown[] }).__deslizes = gravadas
+
+    // `getAnimations` devolve CSSTransition junto, e contar o TAMANHO da lista
+    // passaria verde com a animação desligada (ALE-174). O que se afirma aqui é
+    // o conjunto de propriedades que os quadros tocam.
+    const propriedadesAnimadas = (animacoes: Animation[]): string[] =>
+      [
+        ...new Set(animacoes.flatMap((a) => a.effect?.getKeyframes().flatMap(Object.keys) ?? [])),
+      ].filter((chave) => !['offset', 'computedOffset', 'easing', 'composite'].includes(chave))
+
+    const noInstanteZero = (alvo: HTMLElement, animacoes: Animation[]) => {
+      for (const a of animacoes) {
+        a.pause()
+        a.currentTime = 0
+      }
+      const estilo = getComputedStyle(alvo)
+      const matriz = new DOMMatrix(estilo.transform)
+      const medida = {
+        dx: Math.round(matriz.e),
+        dy: Math.round(matriz.f),
+        escalaX: matriz.a,
+        escalaY: matriz.d,
+        opacidade: estilo.opacity,
+        largura: Math.round(alvo.getBoundingClientRect().width),
+      }
+      for (const a of animacoes) a.play()
+      return medida
+    }
+
+    document.addEventListener(
+      'animationstart',
+      (evento) => {
+        const alvo = evento.target as HTMLElement
+        if (alvo.getAttribute?.('role') !== 'dialog') return
+        const animacoes = alvo.getAnimations()
+        gravadas.push({ props: propriedadesAnimadas(animacoes), ...noInstanteZero(alvo, animacoes) })
+      },
+      true,
+    )
+  })
+}
+
+async function oDeslize(page: Page): Promise<Deslize> {
+  const gravadas = await page.evaluate(
+    () => (window as unknown as { __deslizes: Deslize[] }).__deslizes,
+  )
+  expect(gravadas, 'a gaveta abriu sem animação nenhuma').not.toHaveLength(0)
+  // A PRIMEIRA é a abertura que o gesto do teste provocou; um remonte posterior
+  // (HMR) empilharia outras atrás, e elas dizem a mesma coisa.
+  return gravadas[0]
+}
+
+/** A gaveta deslizou o próprio corpo, e não fez mais nada. */
+function expectSoODeslize(deslize: Deslize): void {
+  expect(deslize.props, 'os quadros animam mais que o deslize').toEqual(['transform'])
+  expect(deslize.opacidade, 'a gaveta desaparece em vez de deslizar').toBe('1')
+  expect(deslize.escalaX).toBe(1)
+  expect(deslize.escalaY).toBe(1)
+}
+
+async function larguraDaGaveta(page: Page, largura: number, altura: number): Promise<number> {
+  await page.setViewportSize({ width: largura, height: altura })
+  return page.getByRole('dialog').evaluate((no) => Math.round(no.getBoundingClientRect().width))
+}
+
+test.describe('As gavetas do mestre', () => {
+  test('a consulta entra deslizando pela direita, e só isso', async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 })
+    await gravaODeslize(page)
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(cenaViva(page)).toBeVisible()
+
+    await abreConsulta(page, 'Bestiário')
+    await expect(page.getByRole('dialog', { name: 'Bestiário' })).toBeVisible()
+
+    const deslize = await oDeslize(page)
+    expectSoODeslize(deslize)
+    // O percurso é o CORPO da gaveta, na horizontal, para dentro da tela. O
+    // `dy` é a metade que estava quebrada: valia a altura inteira da janela.
+    expect(deslize.dx, 'a gaveta da direita não parte de fora da borda direita').toBe(
+      deslize.largura,
+    )
+    expect(deslize.dy, 'a gaveta ainda entra pela diagonal').toBe(0)
+  })
+
+  test('a fila entra pela ESQUERDA, com o mesmo deslize', async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 })
+    await gravaODeslize(page)
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(cenaViva(page)).toBeVisible()
+
+    await abreAFila(page)
+
+    const deslize = await oDeslize(page)
+    expectSoODeslize(deslize)
+    expect(deslize.dx, 'a gaveta da fila não parte de fora da borda esquerda').toBe(
+      -deslize.largura,
+    )
+    expect(deslize.dy).toBe(0)
+  })
+
+  test('no telefone a folha sobe da borda de baixo', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await gravaODeslize(page)
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(cenaViva(page)).toBeVisible()
+
+    await abreConsulta(page, 'Bestiário')
+    await expect(page.getByRole('dialog', { name: 'Bestiário' })).toBeVisible()
+
+    const deslize = await oDeslize(page)
+    expectSoODeslize(deslize)
+    // Abaixo do degrau a gaveta é folha de baixo: o percurso é VERTICAL, e
+    // horizontal nenhum — ela ocupa a largura toda e não tem de onde vir.
+    expect(deslize.dx).toBe(0)
+    expect(deslize.dy).toBeGreaterThan(0)
+  })
+
+  test('a largura cresce com a janela e para no teto', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(cenaViva(page)).toBeVisible()
+    await abreConsulta(page, 'Catálogos')
+    await expect(page.getByRole('dialog', { name: 'Catálogos' })).toBeVisible()
+
+    // No degrau a gaveta tem a largura de sempre (26rem): alargar não podia
+    // mexer em quem já cabia.
+    const noDegrau = await larguraDaGaveta(page, 1280, 800)
+    expect(noDegrau).toBe(416)
+
+    const emCheio = await larguraDaGaveta(page, 1920, 1080)
+    expect(emCheio, 'a gaveta não cresceu com a janela').toBeGreaterThan(noDegrau)
+
+    const emMonitorGrande = await larguraDaGaveta(page, 2560, 1440)
+    expect(emMonitorGrande).toBeGreaterThan(emCheio)
+
+    // O TETO. Acima de 1280 o painel é não modal de propósito (ALE-75): o
+    // mestre lê a condição aqui e clica no rastreador atrás, e uma gaveta que
+    // crescesse sem parar acabaria cobrindo o que ele quer clicar.
+    const emUltrawide = await larguraDaGaveta(page, 3440, 1440)
+    expect(emUltrawide, 'a largura não tem teto').toBe(emMonitorGrande)
+
+    // E em toda largura sobram dois terços da janela para a cena.
+    for (const [janela, gaveta] of [
+      [1280, noDegrau],
+      [1920, emCheio],
+      [2560, emMonitorGrande],
+      [3440, emUltrawide],
+    ] as const) {
+      expect(gaveta / janela, `a gaveta come a cena @ ${janela}`).toBeLessThanOrEqual(1 / 3)
+    }
+  })
+})

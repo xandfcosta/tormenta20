@@ -44,6 +44,10 @@ export type SidePanelProps = {
  * virtual keyboard changes viewport height and a height-driven switch would
  * rebuild the panel mid-typing and lose what was being searched.
  *
+ * Acima do degrau a largura CRESCE com a janela até um teto, e a entrada e a
+ * saída são um deslize puro pela borda do `side` — um quadro de `transform` e
+ * nada mais (ALE-207).
+ *
  * @example <SidePanel open={open()} onOpenChange={setOpen} title="Catálogos">…</SidePanel>
  */
 export function SidePanel(props: SidePanelProps) {
@@ -89,19 +93,35 @@ export function SidePanel(props: SidePanelProps) {
           }}
           class={cn(
             'fixed z-50 flex flex-col gap-3 border-grimorio-iron bg-grimorio-panel shadow-xl',
-            'data-[closed]:animate-out data-[expanded]:animate-in',
+            // Só o deslize: um quadro de `transform` e nada de opacidade,
+            // escala ou desfoque (ALE-207). A troca de conteúdo destas
+            // superfícies custa tarefas longas de 55–133ms (ALE-174), e
+            // animação sobre a main thread ocupada gagueja — um `transform`
+            // puro fica no compositor e não disputa nada.
+            'side-panel-slide',
             // Bottom sheet below the breakpoint; right-hand column above it.
             // The bottom padding grows past the home indicator under
             // `viewport-fit=cover`, keeping the p-3/p-4 floor of each layout.
             'inset-x-0 bottom-0 max-h-[92dvh] rounded-t-md border-t p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]',
-            'data-[closed]:slide-out-to-bottom data-[expanded]:slide-in-from-bottom',
-            'xl:inset-y-0 xl:max-h-none xl:w-[26rem] xl:rounded-none xl:border-t-0 xl:p-4 xl:pb-[max(1rem,env(safe-area-inset-bottom))]',
+            '[--side-panel-from-x:0] [--side-panel-from-y:100%]',
+            // A largura CRESCE com a janela e tem teto: 26rem era 16% de uma
+            // tela de 2560 para uma lista de magias que quer largura (ALE-207).
+            // O piso é a largura de antes, e a 1280 o `clamp` cai nele — o
+            // ponto de quebra não muda de tamanho. O teto existe porque acima
+            // de 1280 o painel é NÃO modal de propósito (ALE-75): o mestre lê a
+            // condição aqui e clica no rastreador atrás, e uma gaveta que
+            // crescesse sem parar cobriria o que ele quer clicar.
+            'xl:inset-y-0 xl:max-h-none xl:w-[clamp(26rem,30vw,44rem)] xl:rounded-none xl:border-t-0 xl:p-4 xl:pb-[max(1rem,env(safe-area-inset-bottom))]',
             // Escrito por ramo e não por `cn`: `xl:left-auto` e `xl:left-0` são
             // a MESMA propriedade, e deixar as duas na string entrega a decisão
-            // à ordem do merge em vez de ao lado pedido.
+            // à ordem do merge em vez de ao lado pedido. Os DOIS eixos do
+            // deslize se reescrevem aqui pelo mesmo motivo, e por um a mais:
+            // deixar o `--side-panel-from-y` da folha de baixo valendo acima do
+            // `xl` foi exatamente o defeito da ALE-207 — a gaveta entrava na
+            // diagonal, do canto inferior, atravessando a altura da janela.
             local.side === 'left'
-              ? 'xl:left-0 xl:right-auto xl:border-r xl:data-[closed]:slide-out-to-left xl:data-[expanded]:slide-in-from-left'
-              : 'xl:left-auto xl:right-0 xl:border-l xl:data-[closed]:slide-out-to-right xl:data-[expanded]:slide-in-from-right',
+              ? 'xl:left-0 xl:right-auto xl:border-r xl:[--side-panel-from-x:-100%] xl:[--side-panel-from-y:0]'
+              : 'xl:left-auto xl:right-0 xl:border-l xl:[--side-panel-from-x:100%] xl:[--side-panel-from-y:0]',
             local.class,
           )}
         >
