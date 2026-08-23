@@ -140,6 +140,56 @@ test.describe('Administração (piloto Datastar)', () => {
    * E2E porque nada disto existe em jsdom: não há `showModal`, não há
    * `:modal`, e o foco é uma ficção.
    */
+  // O endereço antigo é favorito de quem administra: ele não pode quebrar. Sem
+  // `requireAdmin` no cliente de propósito — a rota do servidor tem o mesmo
+  // guarda, e essa é a fronteira.
+  test('o endereço antigo /admin encaminha para a cena nova', async ({ page }) => {
+    await page.goto('/admin')
+    await expect(page).toHaveURL(/\/piloto\/admin$/)
+    await expect(page.getByRole('heading', { name: 'Administração' })).toBeVisible()
+  })
+
+  /**
+   * O LINK DE UMA PESSOA NÃO PODE APARECER SOB O NOME DE OUTRA (ALE-242).
+   *
+   * O token chega por remendo do servidor num `<div>` fixo (`#reset-link`), e o
+   * diálogo é UM só reaproveitado por todas as linhas. Sem limpar ao abrir,
+   * gerar o link da primeira conta, fechar, e abrir a caixa da segunda mostra o
+   * link da PRIMEIRA sob o nome da SEGUNDA — e quem estiver com pressa entrega
+   * a chave da conta errada.
+   *
+   * E2E porque a garantia é de ESTADO DE DOM ATRAVESSANDO duas aberturas de um
+   * `<dialog>` nativo: em jsdom não há `showModal`, e o guarda em Go só
+   * consegue afirmar que a limpeza está escrita no marcador, não que ela
+   * acontece.
+   *
+   * Ele grava uma linha em `password_resets`, e isso é aceitável: nenhuma tela
+   * a lista e nenhuma asserção a conta. Cunhar CONVITE seria diferente — aquilo
+   * aparece num painel e a tela não sabe revogar —, e por isso aquela garantia
+   * ficou em Go.
+   */
+  test('o link de redefinição não vaza para a caixa do jogador seguinte', async ({ page }) => {
+    await page.goto('/piloto/admin')
+    const gatilhos = page.getByRole('button', { name: /^Redefinir a senha de/ })
+    await expect(gatilhos.first()).toBeVisible()
+
+    await gatilhos.first().click()
+    await page.getByRole('button', { name: 'Gerar link' }).click()
+    const campo = page.locator('#reset-url')
+    await expect(campo).toBeVisible()
+    const primeiro = await campo.inputValue()
+    expect(primeiro, 'o link nasceu sem token').toContain('token=')
+    // A origem é a do NAVEGADOR, e não a do servidor: com o `r.Host` o link
+    // nasceria apontando para a porta da API, que o proxy do Vite reescreve.
+    expect(primeiro).toContain(new URL(page.url()).origin)
+
+    await page.getByRole('button', { name: 'Fechar' }).click()
+    await gatilhos.nth(1).click()
+
+    await expect(page.locator('dialog#redefinir')).toBeVisible()
+    await expect(campo, 'o link do primeiro jogador sobreviveu na caixa do segundo').toHaveCount(0)
+  })
+
   test('o diálogo de apagar conta é modal, nomeado, e devolve o foco', async ({ page }) => {
     await page.goto('/piloto/admin')
     const gatilho = page.getByRole('button', { name: /^Apagar a conta de/ }).first()

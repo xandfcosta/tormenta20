@@ -10,12 +10,7 @@ export type {
   RollRangeRow,
   RuinaRow,
 } from './rules-tables'
-import type {
-  ClassTrainedExpertises,
-  DevotoTerms,
-  DungeonDesign,
-  GmTables,
-} from './rules-tables'
+
 /**
  * HTTP client for the Go backend. Framework-agnostic on purpose — this file
  * carries no Solid import and ports ~1:1 from the React app. It grows one
@@ -28,55 +23,56 @@ import type { ActivationSpec, CatalogSpell, ClassPower, Condition, ConditionId, 
 import type { CampaignCreature, CreatureInput } from '@/shared/api/creature-types'
 import type { CatalogItem } from '@/shared/api/item-types'
 import type {
+  ClassTrainedExpertises,
+  DevotoTerms,
+  DungeonDesign,
+  GmTables,
+} from './rules-tables'
+import type {
+  AbilityChoicesResult,
   AddMemberInput,
   ApplyDamageResult,
   ApplyEffectInput,
   ApplyEffectResult,
-  CastSpellResult,
-  AccountInvite,
-  AdminUser,
   AuthUser,
-  Backup,
   Campaign,
   CampaignInvitePreview,
   CampaignInviteToken,
   CampaignMember,
+  CastSpellResult,
   Character,
   CharacterExpertise,
-  PasswordResetTarget,
-  ServerStatus,
   CharacterItem,
   CharacterOptions,
   CharacterSpell,
   ClassLevelResult,
-  AbilityChoicesResult,
+  ComputedSheetV2,
   ConditionsResult,
-  PlayState,
-  PowerUseScope,
   ConsumeItemInput,
   ConsumeItemResult,
-  ComputedSheetV2,
-  EffectsClearedResult,
   CreateCampaignInput,
-  CreateExpertiseInput,
   CreateCharacterInput,
+  CreateExpertiseInput,
   CreateItemInput,
   CreateSessionInput,
-  ProficienciesResult,
   Credentials,
+  EffectsClearedResult,
+  PlayState,
+  PowerUseScope,
+  ProficienciesResult,
   RaceDefinition,
   Session,
-  UpdateCampaignInput,
-  UpdateExpertiseInput,
+  SpellAugmentPick,
+  TibarResult,
+  UnlearnSpellResult,
   UpdateAbilityChoicesInput,
+  UpdateCampaignInput,
   UpdateClassLevelInput,
+  UpdateExpertiseInput,
   UpdateItemInput,
   UpdateProficienciesInput,
   UpdateSessionInput,
   UpdateTibarInput,
-  TibarResult,
-  SpellAugmentPick,
-  UnlearnSpellResult,
   UpdateVitalsInput,
   VitalsResult,
 } from './types'
@@ -360,31 +356,6 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
       /** Public: resolves a shared token to the campaign it invites into. */
       resolve: (token: string) =>
         request<CampaignInvitePreview>(`/invites/${encodeURIComponent(token)}`),
-    },
-    admin: {
-      users: () => request<AdminUser[]>('/admin/users'),
-      /** Apaga a conta; as mesas dela passam para quem apagou. */
-      deleteUser: (id: number) =>
-        request<{ id: number; transferredCampaigns: number }>(`/admin/users/${id}`, del),
-      /** Gera o link de uso único; o jogador escolhe a própria senha. */
-      passwordReset: (id: number) =>
-        request<AccountInvite>(`/admin/users/${id}/password-reset`, { method: 'POST' }),
-      invites: () => request<AccountInvite[]>('/admin/invites'),
-      status: () => request<ServerStatus>('/admin/status'),
-      backups: () => request<Backup[]>('/admin/backups'),
-      createBackup: () => request<Backup>('/admin/backups', { method: 'POST' }),
-    },
-    passwordResets: {
-      /** Público: diz de quem é o link, ou 404 se ele não serve mais. */
-      resolve: (token: string) =>
-        request<PasswordResetTarget>(`/password-resets/${encodeURIComponent(token)}`),
-    },
-    accountInvites: {
-      /** Admin only: mints the link that lets ONE person create an account. */
-      create: () => request<AccountInvite>('/admin/invites', { method: 'POST' }),
-      /** Public: says whether a link is still good, before any account exists. */
-      resolve: (token: string) =>
-        request<AccountInvite>(`/account-invites/${encodeURIComponent(token)}`),
     },
     members: {
       list: (campaignId: number) => request<CampaignMember[]>(`/campaigns/${campaignId}/members`),

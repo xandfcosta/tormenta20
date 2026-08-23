@@ -1,6 +1,10 @@
 package api
 
 import (
+	"context"
+	"errors"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -126,4 +130,174 @@ func TestOBotaoDaLinhaAbreODialogoEmVezDeApagar(t *testing.T) {
 	if !strings.Contains(dialogo, "@post") {
 		t.Error("quem apaga é o botão do diálogo, e ele não posta")
 	}
+}
+
+// ── o link de redefinição (ALE-242) ──────────────────────────────────────────
+
+// Redefinir vale para TODA conta, inclusive a de quem está olhando — e é aí que
+// ele se separa do Apagar, que tem a guarda do `EhEu`. O admin que esqueceu a
+// própria senha usa esta mesma porta; sem isto ele fica de fora da única saída
+// que o app oferece.
+func TestRedefinirValeParaAPropriaContaTambem(t *testing.T) {
+	view := adminView{Jogadores: []adminJogador{
+		{ID: 1, Nome: "Dono", Email: "dono@t.com", EhEu: true},
+		{ID: 2, Nome: "Outro", Email: "outro@t.com", EhEu: false},
+	}}
+
+	html, err := renderFragmento(t.Context(), painelJogadores(view))
+	if err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	for _, quem := range []string{"Dono", "Outro"} {
+		if !strings.Contains(html, "Redefinir a senha de "+quem) {
+			t.Errorf("o painel não oferece redefinir a senha de %q", quem)
+		}
+	}
+	// E o contraste com o Apagar continua valendo, senão este teste passaria
+	// num painel que perdeu a guarda do `EhEu`.
+	if strings.Contains(html, "Apagar a conta de Dono") {
+		t.Error("o painel voltou a oferecer apagar a PRÓPRIA conta")
+	}
+}
+
+// O prazo é 24h e não os 7 dias do convite, e a diferença é de RISCO: o convite
+// abre uma conta que ainda não existe; este abre uma que já existe e tem fichas
+// dentro. Um link esquecido numa conversa vale mais para um estranho.
+func TestOLinkDeRedefinicaoValeVinteEQuatroHoras(t *testing.T) {
+	s := newTestServer(t)
+	dono := seedUser(t, s, "dono@t20.local")
+
+	antes := time.Now()
+	reset, err := s.mintPasswordReset(context.Background(), dono, dono)
+	if err != nil {
+		t.Fatalf("cunhar: %v", err)
+	}
+	expira, err := time.Parse(time.RFC3339, reset.Expiresat)
+	if err != nil {
+		t.Fatalf("expiresat %q não é RFC3339: %v", reset.Expiresat, err)
+	}
+	vida := expira.Sub(antes)
+	if vida < 23*time.Hour || vida > 25*time.Hour {
+		t.Errorf("o link vale %v, queria ~24h — o prazo do CONVITE é 7 dias e são coisas diferentes", vida)
+	}
+}
+
+// Conta inexistente devolve um erro NOMEADO, e não um erro qualquer: é o que
+// deixa quem chama escolher a resposta. A rota JSON traduz para 404, a cena do
+// piloto para um aviso na tela — e nenhuma das duas repete a consulta.
+func TestCunharParaContaInexistenteDizQueEhInexistente(t *testing.T) {
+	s := newTestServer(t)
+	dono := seedUser(t, s, "dono@t20.local")
+
+	_, err := s.mintPasswordReset(context.Background(), 999999, dono)
+	if !errors.Is(err, errUsuarioInexistente) {
+		t.Errorf("erro = %v, queria errUsuarioInexistente", err)
+	}
+}
+
+// O botão da linha ABRE o diálogo; quem posta é o de dentro. Mesma propriedade
+// do Apagar e pela mesma razão: gerar um link é um efeito no banco, e o
+// primeiro clique não deve produzi-lo.
+//
+// E ele LIMPA o `#reset-link` ao abrir. Isso não é zelo: sem limpar, gerar o
+// link da Ana, fechar, e abrir a caixa da Bia mostraria o link da ANA sob o
+// nome da BIA — link de redefinição entregue à pessoa errada. O e2e irmão prova
+// isso no navegador; aqui se afirma que a limpeza está no marcador.
+func TestOBotaoDeRedefinirAbreODialogoELimpaOLinkAnterior(t *testing.T) {
+	view := adminView{Jogadores: []adminJogador{{ID: 2, Nome: "Outro", EhEu: false}}}
+	linha, err := renderFragmento(t.Context(), painelJogadores(view))
+	if err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	if strings.Contains(linha, "@post") {
+		t.Error("o botão da linha posta direto — cunhar virou efeito do primeiro clique")
+	}
+	if !strings.Contains(linha, "reset-link") {
+		t.Error("abrir não limpa o link anterior — ele apareceria sob o nome errado")
+	}
+
+	dialogo, err := renderFragmento(t.Context(), dialogoRedefinir())
+	if err != nil {
+		t.Fatalf("render do diálogo: %v", err)
+	}
+	if !strings.Contains(dialogo, "@post") {
+		t.Error("quem cunha é o botão do diálogo, e ele não posta")
+	}
+}
+
+// O remendo carrega o CAMINHO e nunca a URL inteira: quem prefixa a origem é o
+// navegador. Com o `r.Host`, o link nasce apontando para a porta da API porque
+// o proxy do Vite reescreve o `Host` em desenvolvimento — e link de redefinição
+// existe para ser MANDADO, então host errado é link morto.
+func TestORemendoDoResetNaoCarregaOrigem(t *testing.T) {
+	html, err := renderFragmento(t.Context(), resetGerado("/redefinir-senha?token=abc"))
+	if err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	if strings.Contains(html, "http://") || strings.Contains(html, "https://") {
+		t.Error("o remendo trouxe origem — o link nasceria apontando para a máquina errada")
+	}
+	if !strings.Contains(html, "location.origin") {
+		t.Error("ninguém prefixa a origem no navegador — o campo ficaria com um caminho solto")
+	}
+}
+
+// Cunhar convite pela ADMINISTRAÇÃO remenda DUAS coisas: o link e o painel.
+//
+// O segundo é a diferença entre esta rota e a do Hub, e ele não é enfeite:
+// aqui a lista de convites está a três centímetros do botão, e sem remendá-la a
+// tela diz "Convites abertos (0)" logo depois de a pessoa abrir um. No Hub não
+// existe essa lista, e por isso lá basta o link.
+//
+// O guarda é em Go e não no navegador de propósito: cunhar grava uma linha que
+// a TELA não sabe revogar, então um e2e desta garantia deixaria lixo permanente
+// no banco de desenvolvimento a cada corrida — que é a família de problema da
+// ALE-238. Aqui o banco é descartável.
+func TestCunharPelaAdministracaoRemendaOPainelTambem(t *testing.T) {
+	s := newTestServer(t, "chefe@t20.local")
+	chefe := seedUser(t, s, "chefe@t20.local")
+
+	rec := pedeNoPiloto(t, s, chefe, http.MethodPost, "/piloto/admin/convites")
+	corpo := rec.Body.String()
+
+	if !strings.Contains(corpo, "convite-url") {
+		t.Errorf("o remendo do link não veio:\n%s", corpo)
+	}
+	if !strings.Contains(corpo, `id="painel-convites"`) {
+		t.Error("o painel de convites não foi remendado — a contagem ao lado do botão fica velha")
+	}
+	if !strings.Contains(corpo, "Convites abertos (1)") {
+		t.Errorf("o painel voltou sem contar o convite recém-cunhado:\n%s", corpo)
+	}
+}
+
+// A trava é do SERVIDOR: quem não administra não cunha, mesmo postando na mão.
+// A tela nem oferece o botão, mas isso é UX — a fronteira é aqui.
+func TestQuemNaoAdministraNaoAlcancaARotaDeConvite(t *testing.T) {
+	s := newTestServer(t, "chefe@t20.local")
+	seedUser(t, s, "chefe@t20.local")
+	qualquerUm := seedUser(t, s, "outro@t20.local")
+
+	rec := pedeNoPiloto(t, s, qualquerUm, http.MethodPost, "/piloto/admin/convites")
+	if rec.Code == http.StatusOK {
+		t.Errorf("a rota respondeu %d para quem não é admin", rec.Code)
+	}
+}
+
+// pedeNoPiloto bate no roteador do piloto, que é OUTRO que o `Router()` da API.
+func pedeNoPiloto(t *testing.T, s *Server, userID int64, metodo, caminho string) *httptest.ResponseRecorder {
+	t.Helper()
+	u, err := s.queries.GetUserByID(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("usuário: %v", err)
+	}
+	token, err := s.signToken(u)
+	if err != nil {
+		t.Fatalf("token: %v", err)
+	}
+	req := httptest.NewRequest(metodo, caminho, nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+	http.StripPrefix("/piloto", s.PilotoRouter()).ServeHTTP(rec, req)
+	return rec
 }

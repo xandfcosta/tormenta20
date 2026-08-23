@@ -1,5 +1,5 @@
 import { queryOptions } from '@tanstack/solid-query'
-import { ApiError, type ApiClient, type AuthUser, api } from '@/shared/api/api'
+import { type ApiClient, ApiError, type AuthUser, api } from '@/shared/api/api'
 
 /**
  * Reads the session, mapping 401 to "logged out".
@@ -27,15 +27,3 @@ export const meQueryOptions = queryOptions({
   retry: false,
 })
 
-/**
- * De quem é um link de redefinição, ou um erro se ele não serve mais (ALE-120).
- * Sem retry: um link morto é uma RESPOSTA ("peça outro"), não um soluço que
- * valha três idas ao servidor — a mesma regra do convite de campanha.
- */
-export const passwordResetQueryOptions = (token: string | undefined) =>
-  queryOptions({
-    queryKey: ['password-resets', token] as const,
-    queryFn: () => api.passwordResets.resolve(token as string),
-    enabled: !!token,
-    retry: false,
-  })

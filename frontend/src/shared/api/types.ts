@@ -8,8 +8,9 @@
  * (ALE-109). Nenhum DADO de catálogo entra no bundle: ele é buscado em /catalog
  * e cacheado.
  */
-import type { ClassChoices } from '@/shared/api/catalog-types'
+
 import type { AttributeKey } from '@/shared/api/attribute-keys'
+import type { ClassChoices } from '@/shared/api/catalog-types'
 
 export type { AttributeKey }
 
@@ -29,38 +30,14 @@ export type AuthUser = {
 
 export type Credentials = { email: string; password: string }
 
-/**
- * The single-use link that lets someone CREATE an account. Different thing from
- * {@link CampaignInviteToken}, which brings an existing user into a mesa.
- */
-export type AccountInvite = { token: string; expiresAt: string }
-
-// --- administração (ALE-120) --------------------------------------------------
-
-/** A conta como a tela de administração a vê: quem é, e o que se perde ao apagá-la. */
-export type AdminUser = {
-  id: number
-  email: string
-  name: string | null
-  isAdmin: boolean
-  campaigns: number
-  characters: number
-  createdAt: string
-}
-
-export type ServerStatus = {
-  environment: string
-  databasePath: string
-  databaseSize: number
-  users: number
-  campaigns: number
-  characters: number
-}
-
-export type Backup = { name: string; size: number; createdAt: string }
-
-/** Quem o link de redefinição abre — a conferência antes de digitar a senha. */
-export type PasswordResetTarget = { email: string }
+/* As formas do fio da ADMINISTRAÇÃO saíram daqui na ALE-242: `AccountInvite`,
+ * `AdminUser`, `ServerStatus`, `Backup` e `PasswordResetTarget`. A tela virou
+ * do servidor, e o navegador deixou de falar essas rotas — tipo sem falante é
+ * documentação que ninguém verifica.
+ *
+ * As ROTAS JSON continuam de pé em `engine-go/api/admin_*.go`, com os testes
+ * delas. Aposentá-las é decisão à parte, e vale para toda a migração: cada
+ * virada deixa órfã a rota JSON que alimentava a tela apagada. */
 
 // --- character ----------------------------------------------------------------
 
@@ -85,6 +62,7 @@ export type UpdateExpertiseInput = {
 }
 
 import type { EquippedSlot } from './bonus-types'
+
 export type { EquippedSlot }
 
 export type CharacterItem = {
@@ -589,7 +567,7 @@ export type AbilityChoicesResult = {
 import type { RaceDefinition } from '@/shared/api/catalog-types'
 import type { ComputedSheetV2 } from '@/shared/lib/computed-sheet-v2'
 
-export type { RaceDefinition, ComputedSheetV2 }
+export type { ComputedSheetV2, RaceDefinition }
 
 /**
  * GET /characters/:id/sheet returns the **flat `ComputedSheetV2`** the Go

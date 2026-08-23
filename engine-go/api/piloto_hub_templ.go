@@ -58,7 +58,7 @@ func hub(v hubView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = dialogoDeConvite().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = dialogoDeConvite("/piloto/convites").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -545,11 +545,18 @@ func classeDoItemRapido(perigo bool) string {
 // dialogoDeConvite cunha o link de conta (ALE-120): o admin gera, entrega, e
 // quem recebe escolhe a própria senha — o admin nunca vê senha nenhuma.
 //
+// A ROTA é parâmetro porque o diálogo vive em duas telas e elas precisam de
+// remendos DIFERENTES (ALE-242): no Hub só volta o link; na administração volta
+// o link E o painel de convites, senão a contagem ao lado dele fica velha na
+// cara de quem acabou de cunhar. O diálogo é um só de propósito — duas cópias
+// divergiriam, e é a mesma razão pela qual o `mintAccountInvite` saiu do
+// manipulador HTTP.
+//
 // O link chega por remendo do servidor (`#convite-link`), então ele NÃO passa
 // por sinal: um token de uso único em estado de cliente viajaria de volta ao
 // servidor em toda requisição seguinte da página, que é a mesma razão pela qual
 // a senha ficou fora dos sinais na ALE-229.
-func dialogoDeConvite() templ.Component {
+func dialogoDeConvite(rota string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -627,7 +634,7 @@ func dialogoDeConvite() templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = botao(varPrimaria, tamPadrao, "", templ.Attributes{
-			"type": "button", "data-on:click": "@post('/piloto/convites')",
+			"type": "button", "data-on:click": "@post('" + rota + "')",
 			"data-indicator:gerando": true, "data-attr:disabled": "$gerando",
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var25), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
@@ -681,7 +688,7 @@ func conviteGerado(caminho string) templ.Component {
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(caminho)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 257, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 264, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 		if templ_7745c5c3_Err != nil {

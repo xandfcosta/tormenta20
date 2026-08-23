@@ -38,6 +38,7 @@ const QUERIDOS = [
   'ChevronRight',
   'Search',
   'Plus',
+  'KeyRound',
 ]
 
 const indice = readFileSync(resolve(LUCIDE, 'lucide-solid.mjs'), 'utf8')
