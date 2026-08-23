@@ -106,6 +106,7 @@ function renderCena(rt: FakeRealtime = new FakeRealtime()) {
           rt={rt.asRealtime()}
           myCharacterIds={new Set<number>()}
         campaignName="Snapshot Test ALE-33"
+        ignoredRules={[]}
         members={[]}
         />
       </QueryClientProvider>

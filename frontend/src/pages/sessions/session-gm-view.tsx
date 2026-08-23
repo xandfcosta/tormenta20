@@ -3,6 +3,7 @@ import { Show, createMemo, createSignal } from 'solid-js'
 import type { Session } from '@/shared/api/api'
 import type { CampaignMember } from '@/shared/api/types'
 import type { SessionRealtime } from '@/shared/realtime/realtime'
+import { CampaignRulesCard } from '@/features/campaign-manage/campaign-rules-card'
 import { DeleteSessionButton } from '@/features/session-tracker/delete-session-button'
 import { HeaderCard } from '@/features/session-tracker/header-card'
 import { InitiativeCard } from '@/features/session-tracker/initiative-card'
@@ -69,6 +70,9 @@ export function SessionGmView(props: {
   myCharacterIds: ReadonlySet<number>
   /** O nome da campanha, que a ficha do elenco precisa dizer (ALE-212). */
   campaignName: string
+  /** As regras opcionais que esta campanha desligou (ALE-221). Prop e não
+   *  query pela mesma razão do roster abaixo. */
+  ignoredRules: readonly string[]
   /** O roster da campanha, JÁ ASSENTADO pela página. Desce como prop porque
    *  abrir consulta dentro da cena a desanexa (ALE-199, e de novo na ALE-211:
    *  com um diálogo aberto, o Kobalte deixa a cena `aria-hidden` para sempre). */
@@ -342,6 +346,21 @@ export function SessionGmView(props: {
             setTool(null)
             setCastCharacterId(characterId)
           }}
+        />
+      </SidePanel>
+
+      {/* A segunda porta das regras opcionais: a mesma chave da aba de
+          configuração da campanha, ao alcance de quem está narrando (ALE-221). */}
+      <SidePanel
+        open={tool() === 'regras'}
+        onOpenChange={(open) => setTool(open ? 'regras' : null)}
+        title="Regras"
+        description="O que o app impõe nesta campanha."
+      >
+        <CampaignRulesCard
+          campaignId={props.campaignId}
+          ignoredRules={props.ignoredRules}
+          heading={false}
         />
       </SidePanel>
 

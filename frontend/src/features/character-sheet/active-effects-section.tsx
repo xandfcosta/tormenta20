@@ -4,9 +4,7 @@ import { For, Show } from 'solid-js'
 import { parseEffectModifiers } from '@/entities/character/derived'
 import { effectSourceFacts, effectSourceName } from '@/entities/character/effect-source'
 import type { ActiveEffect, Character } from '@/shared/api/api'
-import { usePowerUses } from '@/shared/stores/power-uses-context'
 import { Button } from '@/shared/ui/button'
-import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
 import { ApplyEffectDialog } from './apply-effect-dialog'
 import { effectActions } from './effect-mutations'
 import { FactChips } from './fact-chips'
@@ -19,33 +17,21 @@ import { SectionTitle } from '@/shared/ui/section-label'
  * `/active-effects` endpoints own the list, and ending a scene or a day expires
  * the matching scope.
  *
- * The scene/day boundary also resets the local limited-power-use counters
- * ("usado 1/cena" in the Poderes block) — the same boundary in the book means
- * both, and letting them drift is how a player ends up with a spent power on a
- * fresh scene.
+ * Encerrar cena e encerrar dia NÃO moram aqui (ALE-223). Decisão do dono: as
+ * duas são do mestre e só existem durante uma sessão — descanso é decisão da
+ * mesa, e "mesa" é o que existe enquanto se joga, não enquanto se edita uma
+ * ficha. Quem as executa é o descanso da sessão; quem as recusa é o handler Go
+ * (`assertGmAtLiveTable`), porque esconder botão é UX e não fronteira.
+ *
+ * A fronteira de cena/dia também zera os contadores locais de uso por cena/dia
+ * ("usado 1/cena", no bloco Poderes). Isso passou a ser trabalho do
+ * `createRestCue`, que ouve o `session-rest` do mestre: enquanto o botão daqui
+ * existia, ele mascarava o fato de que o descanso da MESA nunca os zerou.
  */
-export function ActiveEffectsSection(props: { character: Character; inSession?: boolean }) {
+export function ActiveEffectsSection(props: { character: Character }) {
   const queryClient = useQueryClient()
-  const powerUses = usePowerUses()
   const actions = () => effectActions(queryClient, props.character.id)
   const effects = () => props.character.activeEffects ?? []
-
-  const endScene = async () => {
-    try {
-      await actions().endScene()
-      powerUses.resetScene(props.character.id)
-    } catch {
-      // effectActions already told the player; the counters stay put.
-    }
-  }
-  const endDay = async () => {
-    try {
-      await actions().endDay()
-      powerUses.resetDay(props.character.id)
-    } catch {
-      // idem
-    }
-  }
 
   return (
     <section class="rounded-none border border-grimorio-iron p-3">
@@ -55,49 +41,6 @@ export function ActiveEffectsSection(props: { character: Character; inSession?: 
         </SectionTitle>
         <div class="flex flex-wrap gap-1">
           <ApplyEffectDialog character={props.character} />
-          {/* Na mesa, encerrar cena e encerrar dia são do MESTRE: o descanso é
-              decisão da mesa, e um jogador expirando os buffs de cena no meio
-              do combate mexe no estado de todo mundo. O mestre tem os dois no
-              menu da sessão. Isto é só UX — quem RECUSA é o handler Go, porque
-              a ficha continua alcançável numa aba fora da sessão (ALE-216). */}
-          <Show when={!props.inSession}>
-            <ConfirmDialog
-              title="Encerrar cena?"
-              description="Limpa todos os efeitos de cena (buffs, poções ativas) e zera os usos por cena."
-              confirmLabel="Encerrar cena"
-              destructive={false}
-              onConfirm={() => void endScene()}
-              trigger={(open) => (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  class="h-6 px-2 text-2xs"
-                  onClick={open}
-                >
-                  Encerrar cena
-                </Button>
-              )}
-            />
-            <ConfirmDialog
-              title="Encerrar dia?"
-              description="Limpa efeitos de cena e de dia, e zera os usos por cena e por dia."
-              confirmLabel="Encerrar dia"
-              destructive={false}
-              onConfirm={() => void endDay()}
-              trigger={(open) => (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  class="h-6 px-2 text-2xs"
-                  onClick={open}
-                >
-                  Encerrar dia
-                </Button>
-              )}
-            />
-          </Show>
         </div>
       </div>
       <Show

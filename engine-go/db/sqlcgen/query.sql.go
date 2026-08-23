@@ -35,6 +35,15 @@ func (q *Queries) CallerCharacterInCampaign(ctx context.Context, arg CallerChara
 	return i, err
 }
 
+const clearIgnoredRulesForCampaign = `-- name: ClearIgnoredRulesForCampaign :exec
+DELETE FROM campaign_ignored_rules WHERE campaignId = ?
+`
+
+func (q *Queries) ClearIgnoredRulesForCampaign(ctx context.Context, campaignid int64) error {
+	_, err := q.db.ExecContext(ctx, clearIgnoredRulesForCampaign, campaignid)
+	return err
+}
+
 const createAccountInvite = `-- name: CreateAccountInvite :one
 
 INSERT INTO account_invites (token, createdBy, createdAt, expiresAt)
@@ -1182,6 +1191,22 @@ func (q *Queries) HasPlayerPc(ctx context.Context, arg HasPlayerPcParams) (bool,
 	return haspc, err
 }
 
+const ignoreRuleInCampaign = `-- name: IgnoreRuleInCampaign :exec
+INSERT INTO campaign_ignored_rules (campaignId, rule, updatedAt) VALUES (?, ?, ?)
+ON CONFLICT(campaignId, rule) DO UPDATE SET updatedAt = excluded.updatedAt
+`
+
+type IgnoreRuleInCampaignParams struct {
+	Campaignid int64  `json:"campaignid"`
+	Rule       string `json:"rule"`
+	Updatedat  string `json:"updatedat"`
+}
+
+func (q *Queries) IgnoreRuleInCampaign(ctx context.Context, arg IgnoreRuleInCampaignParams) error {
+	_, err := q.db.ExecContext(ctx, ignoreRuleInCampaign, arg.Campaignid, arg.Rule, arg.Updatedat)
+	return err
+}
+
 const isCampaignGmForCharacter = `-- name: IsCampaignGmForCharacter :one
 SELECT EXISTS (
   SELECT 1 FROM campaign_members m
@@ -1235,6 +1260,32 @@ func (q *Queries) IsCharacterMember(ctx context.Context, arg IsCharacterMemberPa
 	var ismember bool
 	err := row.Scan(&ismember)
 	return ismember, err
+}
+
+const isGmAtLiveTableForCharacter = `-- name: IsGmAtLiveTableForCharacter :one
+SELECT EXISTS (
+  SELECT 1 FROM campaign_members m
+  JOIN campaigns c ON c.id = m.campaignId
+  JOIN sessions s ON s.campaignId = m.campaignId
+  WHERE m.characterId = ?1
+    AND c.ownerId = ?2
+    AND s.status = 'active'
+) AS gmAtLiveTable
+`
+
+type IsGmAtLiveTableForCharacterParams struct {
+	CharacterId int64 `json:"characterId"`
+	OwnerId     int64 `json:"ownerId"`
+}
+
+// ALE-223: the caller OWNS a campaign that this character belongs to AND that
+// campaign has a session running. GM of campaign A with a live session in
+// campaign B does not count -- the two joins are on the same membership row.
+func (q *Queries) IsGmAtLiveTableForCharacter(ctx context.Context, arg IsGmAtLiveTableForCharacterParams) (bool, error) {
+	row := q.db.QueryRowContext(ctx, isGmAtLiveTableForCharacter, arg.CharacterId, arg.OwnerId)
+	var gmatlivetable bool
+	err := row.Scan(&gmatlivetable)
+	return gmatlivetable, err
 }
 
 const listActiveEffectsByCharacter = `-- name: ListActiveEffectsByCharacter :many
@@ -1717,6 +1768,71 @@ func (q *Queries) ListExpertisesByCharacter(ctx context.Context, characterid int
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listIgnoredRulesForCampaign = `-- name: ListIgnoredRulesForCampaign :many
+
+SELECT rule FROM campaign_ignored_rules WHERE campaignId = ? ORDER BY rule
+`
+
+// regras opcionais da campanha (ALE-221)
+func (q *Queries) ListIgnoredRulesForCampaign(ctx context.Context, campaignid int64) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, listIgnoredRulesForCampaign, campaignid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var rule string
+		if err := rows.Scan(&rule); err != nil {
+			return nil, err
+		}
+		items = append(items, rule)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listIgnoredRulesForCharacter = `-- name: ListIgnoredRulesForCharacter :many
+SELECT r.rule
+FROM campaign_ignored_rules r
+WHERE r.campaignId IN (SELECT m.campaignId FROM campaign_members m WHERE m.characterId = ?1)
+GROUP BY r.rule
+HAVING COUNT(DISTINCT r.campaignId) = (SELECT COUNT(*) FROM campaign_members m2 WHERE m2.characterId = ?1)
+ORDER BY r.rule
+`
+
+// A regra so esta desligada para a ficha se TODAS as campanhas dela a
+// desligaram. A mais estrita vence, e a ficha que nao pertence a campanha
+// nenhuma calcula com tudo em vigor -- que e o padrao do livro. Escolher "a
+// primeira campanha" seria arbitrario e mudaria com a ordem das linhas.
+func (q *Queries) ListIgnoredRulesForCharacter(ctx context.Context, characterid int64) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, listIgnoredRulesForCharacter, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var rule string
+		if err := rows.Scan(&rule); err != nil {
+			return nil, err
+		}
+		items = append(items, rule)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err

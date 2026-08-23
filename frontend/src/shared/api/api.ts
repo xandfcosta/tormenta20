@@ -141,6 +141,10 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
     method: 'PATCH',
     body: JSON.stringify(body),
   })
+  const put = (body: unknown): RequestInit => ({
+    method: 'PUT',
+    body: JSON.stringify(body),
+  })
   const del: RequestInit = { method: 'DELETE' }
 
   return {
@@ -294,6 +298,16 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
       /** Mints a fresh invite token — any link shared before this 404s. */
       rotateInvite: (id: number) =>
         request<CampaignInviteToken>(`/campaigns/${id}/invite`, { method: 'POST' }),
+      /**
+       * Substitui o conjunto INTEIRO das regras que a campanha desligou
+       * (ALE-221). PUT e não PATCH porque a tela sempre conhece o estado
+       * completo dos interruptores — um par ligar/desligar disputando a mesma
+       * regra terminaria num estado que ninguém pediu.
+       *
+       * @example api.campaigns.replaceRules(3, ['carga'])
+       */
+      replaceRules: (id: number, ignoredRules: readonly string[]) =>
+        request<{ ignoredRules: string[] }>(`/campaigns/${id}/rules`, put({ ignoredRules })),
     },
     /**
      * Blocos de criatura que o MESTRE escreveu para a campanha (ALE-137). O

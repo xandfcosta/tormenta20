@@ -34,8 +34,16 @@ type LoadBreakdown struct {
 	Coins float64 `json:"coins"`
 	Used  float64 `json:"used"`
 	// Limit é o mesmo número que a ficha chama de espaços de inventário.
-	Limit               int  `json:"limit"`
-	Max                 int  `json:"max"`
+	Limit int `json:"limit"`
+	Max   int `json:"max"`
+	// Enforced diz se a mesa está USANDO a regra de carga (ALE-221). Com ela
+	// desligada os espaços continuam contados — o livro pede que os jogadores
+	// "não abusem", e para isso é preciso ver o número —, mas o personagem não
+	// fica sobrecarregado e nenhuma penalidade sai daqui.
+	Enforced bool `json:"enforced"`
+	// Overloaded e OverMax são FALSE quando a regra está desligada, de propósito:
+	// "sobrecarregado" é a condição do livro, e ela não existe numa mesa que não
+	// usa a regra. Assim quem lê só este campo acerta sem saber do `Enforced`.
 	Overloaded          bool `json:"overloaded"`
 	OverMax             bool `json:"overMax"`
 	ArmorPenalty        int  `json:"armorPenalty"`
@@ -46,19 +54,25 @@ type LoadBreakdown struct {
 // limite é `inventorySlotsTotal`, e ele entra por parâmetro para os dois lados
 // da conta não divergirem.
 //
+// A conta dos espaços roda SEMPRE, mesmo com a regra desligada: o livro autoriza
+// o mestre a ignorá-la "desde que os jogadores não abusem" (p141), e não dá para
+// vigiar abuso sem ver o número. O que o interruptor governa é a consequência.
+//
 // @example cargaBreakdown(ch, 18).Overloaded // true com 19 espaços na mochila
 func cargaBreakdown(ch Character, limit int) LoadBreakdown {
 	items := itemSlotsUsed(ch.Items)
 	coins := coinSlots(ch.Tibar)
 	used := items + coins
+	enforced := !ch.IgnoredRules.Carga
 	out := LoadBreakdown{
 		Items:      items,
 		Coins:      coins,
 		Used:       used,
 		Limit:      limit,
 		Max:        limit * 2,
-		Overloaded: used > float64(limit),
-		OverMax:    used > float64(limit*2),
+		Enforced:   enforced,
+		Overloaded: enforced && used > float64(limit),
+		OverMax:    enforced && used > float64(limit*2),
 	}
 	if out.Overloaded {
 		out.ArmorPenalty = overloadArmorPenalty
