@@ -15,22 +15,35 @@ import (
 // handleListCharacters returns the caller's own characters (newest-updated first),
 // each as the full aggregate —
 func (s *Server) handleListCharacters(w http.ResponseWriter, r *http.Request) {
-	user := currentUser(r)
-	rows, err := s.queries.ListCharactersByOwner(r.Context(), user.ID)
+	out, err := s.characterList(r.Context(), currentUser(r).ID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not list characters")
 		return
 	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+// characterList é o elenco de quem chama, agregado.
+//
+// Transport-agnostic, e esta é a SEXTA vez que a migração encontra a mesma
+// forma — depois do `selfInitiativeEntry`, do `deleteAccount`, do trio da porta,
+// do `mintAccountInvite` e do `campaignList`. Seis é padrão, não anedota: uma
+// base com exatamente um transporte não tem por que separar regra de handler, e
+// o segundo transporte é o que cobra a conta (ALE-239).
+func (s *Server) characterList(ctx context.Context, ownerID int64) ([]CharacterDTO, error) {
+	rows, err := s.queries.ListCharactersByOwner(ctx, ownerID)
+	if err != nil {
+		return nil, err
+	}
 	out := make([]CharacterDTO, 0, len(rows))
 	for _, row := range rows {
-		dto, err := s.loadCharacter(r.Context(), row)
+		dto, err := s.loadCharacter(ctx, row)
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Could not load character")
-			return
+			return nil, err
 		}
 		out = append(out, dto)
 	}
-	writeJSON(w, http.StatusOK, out)
+	return out, nil
 }
 
 // handleGetCharacter returns one character aggregate. Access = owner OR campaign

@@ -1,0 +1,331 @@
+package api
+
+import (
+	"fmt"
+	"strconv"
+)
+
+// A cena de PERSONAGENS desenhada (ALE-239) — "palco + dossiê".
+//
+// Mesma mecânica da cena de campanhas: todos os palcos desenhados, o cursor é
+// sinal, e ele segue o FOCO do filme. A diferença de forma é a VAGA DE CRIAR:
+// ela é a última posição do cursor e não um link solto (ALE-98). Um `<a>` no
+// fim da fita pareceria igual e quebraria a gramática — as setas o pulariam,
+// porque elas andam entre itens do trilho e não entre links da página.
+//
+// A ANIMAÇÃO DE ENTRADA do palco não está aqui, e a ausência é a mesma da
+// virada de página: `animate-in` dispara no mount, e uma cena inteira desenhada
+// com `data-show` nunca monta. As duas foram para a ALE-235 juntas porque o
+// mecanismo é UM só.
+
+templ personagens(v personagensView) {
+	@barraDePersonagens(v)
+	if !v.TemAlgum {
+		@palcoDeCriar(true)
+		@filmeDePersonagens(v)
+	} else if v.FiltrouTudo {
+		@buscaSemHeroi()
+	} else {
+		<div class="flex min-h-0 flex-1 flex-col">
+			<div class="relative flex min-h-0 flex-1 items-center justify-center">
+				for _, h := range v.Herois {
+					@palcoDoHeroi(h)
+				}
+				// A vaga de criar é um palco como os outros, e o cursor pousa
+				// nela: `$cursor == 0` é a posição dela, porque nenhum id de
+				// personagem é zero.
+				@palcoDeCriar(false)
+			</div>
+			@filmeDePersonagens(v)
+		</div>
+		for _, h := range v.Herois {
+			@dossieDoHeroi(h)
+		}
+	}
+}
+
+templ barraDePersonagens(v personagensView) {
+	<div
+		class="flex w-full flex-wrap items-center gap-2 border-b border-grimorio-iron px-4 py-3"
+		data-signals={ fmt.Sprintf("{busca: %q, cursor: %d, dossie: false}", v.Busca, v.CursorID) }
+		data-on:keydown__window="(evt.key === 'd' || evt.key === 'D') && !/^(INPUT|TEXTAREA)$/.test(evt.target.tagName) && ($dossie = !$dossie)"
+	>
+		<a
+			href="/piloto/"
+			class="inline-flex min-h-11 items-center gap-1 px-3 font-heading text-sm tracking-wide text-muted-foreground outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>‹ Voltar</a>
+		<h1 class="font-heading text-xl tracking-wide text-foreground">Personagens</h1>
+		if v.TemAlgum {
+			<span class="text-sm text-muted-foreground">{ fmt.Sprintf("%d de %d", len(v.Herois), v.Total) }</span>
+			<div class="relative ml-auto w-full sm:w-56 md:w-64">
+				@icone("Search", "pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground")
+				<input
+					type="search"
+					name="busca"
+					data-busca
+					data-bind:busca
+					data-on:input__debounce.250ms="@get('/piloto/personagens')"
+					value={ v.Busca }
+					placeholder="Buscar personagem"
+					aria-label="Buscar personagem"
+					class="h-9 w-full rounded-sm border border-input bg-transparent pl-8 pr-3 text-base outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring md:text-sm"
+				/>
+			</div>
+		}
+	</div>
+}
+
+// ── o palco ──────────────────────────────────────────────────────────────────
+
+templ palcoDoHeroi(h heroiCartao) {
+	<div
+		data-show={ fmt.Sprintf("$cursor == %d", h.ID) }
+		class="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-2"
+	>
+		// A lavagem de luz no matiz do herói. Decorativa, e por isso fora da
+		// árvore de acessibilidade.
+		<div
+			aria-hidden="true"
+			class="pointer-events-none absolute inset-0 -z-10"
+			style={ "background: " + lavagemDoHeroi(h) }
+		></div>
+		<a
+			href={ templ.SafeURL("/characters/" + strconv.FormatInt(h.ID, 10)) }
+			aria-label={ "Abrir ficha de " + h.Nome }
+			class="relative aspect-[3/4] w-44 overflow-hidden rounded-sm border-2 border-grimorio-iron outline-none transition-transform hover:scale-[1.01] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:w-56 lg:w-64"
+			style={ "background: " + h.Gradiente }
+		>
+			<span aria-hidden="true" class="absolute inset-0 flex select-none items-center justify-center font-display text-[7rem] leading-none text-white/20 sm:text-[9rem]">
+				{ h.Iniciais }
+			</span>
+			<span aria-hidden="true" class="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-black/50 to-transparent"></span>
+		</a>
+		// `min-h-[2lh]` reserva SEMPRE duas linhas para o nome, e a unidade é
+		// `lh` para acompanhar o tamanho responsivo da fonte. Sem isso, um nome
+		// que quebra em duas linhas empurra a fileira do retrato 20px para cima
+		// e os cartões dançam ao percorrer o elenco (ALE-99).
+		<div class="max-w-2xl px-4 text-center">
+			<h2 class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl">{ h.Nome }</h2>
+			<p class="mt-1 font-heading text-xs font-semibold uppercase tracking-[0.22em] text-grimorio-gold">{ h.Papel }</p>
+		</div>
+		@vitaisDoHeroi(h)
+		<p class="max-w-xl px-4 text-center text-sm text-muted-foreground">{ h.Resumo }</p>
+		<div class="flex flex-wrap items-center justify-center gap-2">
+			<a href={ templ.SafeURL("/characters/" + strconv.FormatInt(h.ID, 10)) } class={ classesDoBotao(varPrimaria, tamGrande, "") }>
+				Abrir ficha
+				@tecla("⏎")
+			</a>
+			// O dossiê é do CLIENTE: ele já está desenhado, e abrir é revelar.
+			@botao(varSecundaria, tamPadrao, "", templ.Attributes{
+				"type": "button", "data-on:click": "$dossie = !$dossie",
+				"data-attr:aria-pressed": "$dossie",
+			}) {
+				Dossiê
+				@tecla("D")
+			}
+		</div>
+	</div>
+}
+
+// vitaisDoHeroi: DEF, PV e PM — nesta ordem, que é a da SPA.
+//
+// A Defesa vem PRIMEIRO e nunca some: quando não há motor ela é um travessão.
+// Uma coluna que aparece e desaparece faz o palco dançar ao trocar de herói, e
+// esse é o defeito que a ALE-99 consertou.
+//
+// PV e PM levam as cores da casa; o PM fica apagado quando o máximo é zero,
+// porque quem não tem mana não tem por que ler um "0/0" em destaque.
+templ vitaisDoHeroi(h heroiCartao) {
+	<dl class="flex items-center justify-center gap-5 text-sm">
+		@umVital("DEF", h.Defesa, "", false)
+		@umVital("PV", h.PV, "text-[color:var(--hp-full)]", false)
+		@umVital("PM", h.PM, "text-[color:var(--mp-arcane)]", h.SemMana)
+	</dl>
+}
+
+templ umVital(rotulo, valor, tom string, apagado bool) {
+	<div class={ "flex items-baseline gap-1.5", templ.KV("opacity-50", apagado) }>
+		<dt class="text-2xs font-bold uppercase tracking-[0.18em] text-muted-foreground">{ rotulo }</dt>
+		<dd class={ "font-mono text-lg font-semibold tabular-nums", tom }>{ valor }</dd>
+	</div>
+}
+
+// palcoDeCriar é a vaga do fim — e ela existe TAMBÉM com o elenco vazio, porque
+// aí ela é a única coisa que dá o que fazer.
+templ palcoDeCriar(sozinha bool) {
+	<div
+		if !sozinha {
+			data-show="$cursor == 0"
+		}
+		class="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-2"
+	>
+		<a
+			href="/characters/new"
+			aria-label="Forjar um novo herói"
+			class="flex aspect-[3/4] w-44 items-center justify-center rounded-sm border-2 border-dashed border-grimorio-iron-light text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:w-56 lg:w-64"
+		>
+			@icone("Plus", "size-16")
+		</a>
+		<div class="max-w-md px-4 text-center">
+			<h2 class="font-display text-2xl uppercase tracking-[0.05em] text-foreground">Forjar um herói</h2>
+			if sozinha {
+				<p class="mt-2 text-sm text-muted-foreground">
+					Seu elenco está vazio. O primeiro herói começa aqui.
+				</p>
+			}
+		</div>
+		<a href="/characters/new" class={ classesDoBotao(varPrimaria, tamGrande, "") }>Abrir a Forja</a>
+	</div>
+}
+
+// ── o filme ──────────────────────────────────────────────────────────────────
+
+// filmeDePersonagens é o índice: um salto direto para qualquer herói, que é o
+// que salva um elenco longo do "aperta a seta trinta vezes".
+templ filmeDePersonagens(v personagensView) {
+	<div
+		role="listbox"
+		aria-label="Personagens"
+		aria-orientation="horizontal"
+		data-nav-region="filme"
+		data-nav-layout="row"
+		class="flex shrink-0 items-center gap-2 overflow-x-auto border-t border-grimorio-iron px-4 py-3"
+	>
+		for _, h := range v.Herois {
+			@quadroDoFilme(h)
+		}
+		@quadroDeCriar(v.TemAlgum)
+	</div>
+}
+
+templ quadroDoFilme(h heroiCartao) {
+	<button
+		type="button"
+		role="option"
+		data-nav-item
+		data-cue-hover
+		aria-label={ h.Nome + " · " + h.Papel }
+		data-attr:aria-selected={ fmt.Sprintf("$cursor == %d ? 'true' : 'false'", h.ID) }
+		data-on:focusin={ fmt.Sprintf("$cursor = %d", h.ID) }
+		data-on:click={ fmt.Sprintf("$cursor = %d", h.ID) }
+		data-on:keydown={ fmt.Sprintf("evt.key === 'Enter' && (evt.preventDefault(), location.href = '/characters/%d')", h.ID) }
+		class="flex size-12 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron font-display text-xs text-white/85 outline-none transition-all hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-selected:border-grimorio-gold aria-selected:ring-1 aria-selected:ring-grimorio-gold"
+		style={ "background: " + h.Gradiente }
+	>
+		{ h.Iniciais }
+	</button>
+}
+
+templ quadroDeCriar(temAlgum bool) {
+	<button
+		type="button"
+		role="option"
+		data-nav-item
+		data-cue-hover
+		aria-label="Forjar um novo herói"
+		if temAlgum {
+			data-attr:aria-selected="$cursor == 0 ? 'true' : 'false'"
+			data-on:focusin="$cursor = 0"
+			data-on:click="$cursor = 0"
+		}
+		class="flex size-12 shrink-0 items-center justify-center rounded-sm border border-dashed border-grimorio-iron-light text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-selected:border-grimorio-gold aria-selected:text-grimorio-gold"
+	>
+		@icone("Plus", "size-5")
+	</button>
+}
+
+// ── o dossiê ─────────────────────────────────────────────────────────────────
+
+// dossieDoHeroi é a gaveta de detalhe. Ela é desenhada para todos e revelada
+// pelo par cursor+`$dossie`: abrir não pede nada ao servidor.
+//
+// As habilidades de raça vêm do catálogo EMBUTIDO (ver `piloto_racas.go`) — na
+// SPA a cena baixava o catálogo de raças para mostrar estas quatro linhas.
+templ dossieDoHeroi(h heroiCartao) {
+	<aside
+		data-show={ fmt.Sprintf("$dossie && $cursor == %d", h.ID) }
+		aria-label={ "Dossiê de " + h.Nome }
+		class="fixed inset-y-0 right-0 z-20 w-full max-w-sm overflow-y-auto border-l border-grimorio-iron bg-grimorio-panel-raised p-5 shadow-2xl"
+	>
+		<div class="flex items-start justify-between gap-3">
+			<h2 class="font-heading text-lg tracking-wide text-grimorio-gold">{ h.Nome }</h2>
+			@botao(varSecundaria, tamMinimo, "", templ.Attributes{
+				"type": "button", "data-on:click": "$dossie = false", "aria-label": "Fechar o dossiê",
+			}) {
+				✕
+			}
+		</div>
+		<dl class="mt-4 space-y-2 text-sm">
+			@linhaDoDossie("Raça", h.Raca)
+			@linhaDoDossie("Origem", h.Origem)
+			@linhaDoDossie("Classes", h.Classes)
+			@linhaDoDossie("Nível", strconv.FormatInt(h.Nivel, 10))
+		</dl>
+		if len(h.Dossie) > 0 {
+			<h3 class="mt-6 text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+				Habilidades de { h.Raca }
+			</h3>
+			<ul class="mt-2 space-y-3">
+				for _, hab := range h.Dossie {
+					<li>
+						<p class="font-heading text-sm tracking-wide text-foreground">{ hab.Nome }</p>
+						<p class="text-xs leading-relaxed text-muted-foreground">{ hab.Descricao }</p>
+					</li>
+				}
+			</ul>
+		}
+	</aside>
+}
+
+templ linhaDoDossie(rotulo, valor string) {
+	if valor != "" {
+		<div class="flex justify-between gap-3">
+			<dt class="shrink-0 text-muted-foreground">{ rotulo }</dt>
+			<dd class="text-right text-foreground">{ valor }</dd>
+		</div>
+	}
+}
+
+templ buscaSemHeroi() {
+	<div class="flex flex-1 items-center justify-center p-8">
+		<div class="max-w-md space-y-3 text-center">
+			<p class="text-sm text-muted-foreground">Nenhum herói combina com o que você buscou.</p>
+			@botao(varSecundaria, tamPequeno, "", templ.Attributes{
+				"type": "button", "data-on:click": "$busca = ''; @get('/piloto/personagens')",
+			}) {
+				Limpar a busca
+			}
+		</div>
+	</div>
+}
+
+// cenaDePersonagens embrulha a cena no elemento que o remendo da busca
+// substitui — o `id` é o que o morph casa.
+templ cenaDePersonagens(v personagensView) {
+	<div id="cena-personagens" class="flex min-h-0 flex-1 flex-col">
+		@personagens(v)
+	</div>
+}
+
+// tecla é a dica de atalho — o `Kbd` da SPA.
+//
+// Ela só é escrita onde a tecla FUNCIONA de verdade: uma dica que anuncia um
+// atalho morto é pior que dica nenhuma, porque ensina errado.
+//
+// A chamada tem de começar a LINHA. Escrita no meio de um texto
+// (`Abrir ficha @tecla("⏎")`), o templ a trata como texto literal e a página
+// mostra `@tecla("⏎")` na tela — medido. É a quarta restrição de sintaxe dele
+// que este porte encontra, depois das três de comentário dentro da lista de
+// atributos.
+//
+// Ela NÃO define cor, e isso é a coisa importante: herda a do que a contém, com
+// `opacity-70`. Eu tinha escrito `text-muted-foreground`, que é tinta de painel
+// ESCURO, e dentro do botão dourado deu 1,22:1 — o guarda de contraste pegou.
+// Uma dica de tecla aparece dentro de botões de cores diferentes, então cor
+// própria é cor errada em algum deles.
+//
+// E some abaixo de `xl`, como na SPA: a tecla não existe no toque, e anunciar
+// atalho para quem não tem teclado é ruído.
+templ tecla(rotulo string) {
+	<kbd class="ml-1 hidden text-3xs opacity-70 xl:inline">{ rotulo }</kbd>
+}
