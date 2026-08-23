@@ -20,6 +20,7 @@ export default defineConfig({
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
   },
+
   server: {
     port: 5173,
     proxy: {
@@ -37,6 +38,10 @@ export default defineConfig({
       // link vindo da SPA sairia da origem. Apagar esta entrada é a outra
       // metade da saída do piloto.
       '/piloto': { target: API_TARGET, changeOrigin: true },
+      // A raiz EXATA vai ao Go, que a desvia para o Hub (ALE-231). Chave em
+      // regex porque prefixo `'/'` casaria com o app inteiro. Sem isto o
+      // desvio só existiria em produção, e o e2e mediria outra coisa.
+      '^/$': { target: API_TARGET, changeOrigin: true },
     },
   },
   /**
@@ -65,6 +70,10 @@ export default defineConfig({
       // link vindo da SPA sairia da origem. Apagar esta entrada é a outra
       // metade da saída do piloto.
       '/piloto': { target: API_TARGET, changeOrigin: true },
+      // A raiz EXATA vai ao Go, que a desvia para o Hub (ALE-231). Chave em
+      // regex porque prefixo `'/'` casaria com o app inteiro. Sem isto o
+      // desvio só existiria em produção, e o e2e mediria outra coisa.
+      '^/$': { target: API_TARGET, changeOrigin: true },
     },
   },
   test: {

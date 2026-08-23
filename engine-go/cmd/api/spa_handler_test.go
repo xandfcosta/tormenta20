@@ -158,3 +158,46 @@ func TestServerTimeoutsProtectWithoutKillingLongResponses(t *testing.T) {
 		t.Errorf("WriteTimeout=%s derruba o socket ao vivo e o download do wasm", server.WriteTimeout)
 	}
 }
+
+// A PORTA DA FRENTE é um desvio do SERVIDOR (ALE-231): `/` leva ao Hub em
+// Datastar, e `/characters` continua sendo da SPA.
+//
+// O que este guarda protege é o PADRÃO, não o handler. `"/{$}"` casa a raiz
+// exata; `"/"` casaria o aplicativo inteiro, e o desvio engoliria todas as
+// rotas do cliente — um erro de um caractere que transformaria o app num laço
+// de redirecionamento.
+//
+// Ele também existe porque o desvio JÁ morou no lugar errado: dentro do
+// `spaHandler`, que em desenvolvimento nem é montado. Ali ele valia só em
+// produção, e o e2e mediria uma coisa enquanto o jogador via outra.
+func TestARaizDesviaParaOHubEORestoNao(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/{$}", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/piloto/", http.StatusFound)
+	})
+	mux.Handle("/", spaHandler(dist(t)))
+
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+	cliente := &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error {
+		return http.ErrUseLastResponse
+	}}
+
+	raiz, err := cliente.Get(srv.URL + "/")
+	if err != nil {
+		t.Fatalf("GET /: %v", err)
+	}
+	defer func() { _ = raiz.Body.Close() }()
+	if raiz.StatusCode != http.StatusFound || raiz.Header.Get("Location") != "/piloto/" {
+		t.Errorf("GET / = %d para %q, queria 302 para /piloto/", raiz.StatusCode, raiz.Header.Get("Location"))
+	}
+
+	rota, err := cliente.Get(srv.URL + "/characters/3")
+	if err != nil {
+		t.Fatalf("GET /characters/3: %v", err)
+	}
+	defer func() { _ = rota.Body.Close() }()
+	if rota.StatusCode != http.StatusOK {
+		t.Errorf("GET /characters/3 = %d — o desvio engoliu uma rota do cliente", rota.StatusCode)
+	}
+}
