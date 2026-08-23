@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { type Page, expect, test } from '@playwright/test'
 import { expectDentroDaJanela } from './support/geometry'
 import { VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
 
@@ -9,6 +9,119 @@ import { VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
  * folha continua DIZENDO A VERDADE. Uma folha de desenho que apodrece é pior
  * que nenhuma, porque quem consulta acredita nela.
  */
+/**
+ * As superfícies onde a casa ESCREVE em crimson, e como chegar a cada uma
+ * (ALE-237). Cena nova que escreva crimson entra aqui, ou nasce sem medição —
+ * a lição da issue é que um guarda de contraste só mede o que ele VISITA, e
+ * dois defeitos velhos sobreviveram anos porque nenhum guarda abria um popover
+ * nem entrava no livro de campanhas.
+ */
+const SUPERFICIES_COM_CRIMSON = [
+  {
+    onde: 'na folha do grimório',
+    abre: async (page: Page) => {
+      await page.goto('/grimorio')
+      await expect(page.getByRole('heading', { name: 'Grimório' })).toBeVisible()
+    },
+  },
+  {
+    onde: 'no menu do jogador',
+    abre: async (page: Page) => {
+      // O PAINEL ELEVADO, que é o `--popover`. Ele só existe depois do clique,
+      // e é literalmente por isso que nenhum guarda o tinha medido.
+      await page.goto('/')
+      await page.getByRole('button', { name: 'Menu de Mestre' }).click()
+      await expect(page.getByRole('button', { name: 'Sair' })).toBeVisible()
+    },
+  },
+  {
+    onde: 'no livro de campanhas',
+    abre: async (page: Page) => {
+      // O PERGAMINHO, que é creme e inverte a conta inteira. Ancorado no
+      // cabeçalho e NÃO em "Sessão ao vivo": exigir uma sessão viva seria uma
+      // asserção que mede o banco (ALE-238).
+      await page.goto('/campaigns')
+      await expect(page.getByRole('heading', { name: 'Campanhas' })).toBeVisible()
+    },
+  },
+] as const
+
+/**
+ * A razão de cada texto crimson VISÍVEL contra o fundo EFETIVO — subindo a
+ * árvore até o primeiro fundo opaco, que é exatamente onde os dois defeitos se
+ * escondiam: o elemento do texto é transparente e o painel de trás não é o que
+ * se imagina.
+ *
+ * Por que e2e: converter oklch para sRGB é trabalho do navegador; em jsdom o
+ * `getComputedStyle` devolve o oklch cru e ler aqueles três números como RGB
+ * dá razão inventada.
+ */
+async function crimsonsFracos(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const tela = document.createElement('canvas')
+    tela.width = 1
+    tela.height = 1
+    const ctx = tela.getContext('2d')
+    if (!ctx) return ['sem canvas']
+
+    const rgb = (css: string): [number, number, number, number] => {
+      ctx.clearRect(0, 0, 1, 1)
+      ctx.fillStyle = css
+      ctx.fillRect(0, 0, 1, 1)
+      const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data
+      return [r ?? 0, g ?? 0, b ?? 0, a ?? 0]
+    }
+    const luz = (c: [number, number, number, number]) => {
+      const [r, g, b] = [c[0], c[1], c[2]].map((v) => {
+        const x = v / 255
+        return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4
+      })
+      return 0.2126 * (r ?? 0) + 0.7152 * (g ?? 0) + 0.0722 * (b ?? 0)
+    }
+
+    /** Os TRÊS crimsons da casa, resolvidos em sRGB pelo navegador, e não
+     *  "qualquer coisa avermelhada": a primeira versão casava por aparência e
+     *  pegou junto o `--hp-critical`, que é vermelho da mesma família mas tem
+     *  outro dono e outro trabalho — ele preenche barra além de escrever, e
+     *  consertá-lo é escolha de desenho. Ficou medido na ALE-240. */
+    const raiz = getComputedStyle(document.documentElement)
+    const crimsons = [
+      '--grimorio-crimson',
+      '--grimorio-crimson-bright',
+      '--grimorio-parchment-crimson',
+    ].map((token) => rgb(raiz.getPropertyValue(token).trim()).slice(0, 3).join(','))
+
+    const fundoEfetivo = (el: HTMLElement) => {
+      let no: HTMLElement | null = el
+      while (no) {
+        const c = rgb(getComputedStyle(no).backgroundColor)
+        if (c[3] >= 250) return c
+        no = no.parentElement
+      }
+      return rgb('#000')
+    }
+
+    return [...document.querySelectorAll<HTMLElement>('*')]
+      .filter((el) => {
+        // Só quem PINTA texto próprio: um contêiner herda a cor e mediria a
+        // mesma tinta dez vezes, com o mesmo veredito.
+        const proprio = [...el.childNodes].some(
+          (n) => n.nodeType === Node.TEXT_NODE && n.textContent?.trim(),
+        )
+        return proprio && el.getBoundingClientRect().height > 0
+      })
+      .map((el) => {
+        const tinta = rgb(getComputedStyle(el).color)
+        if (!crimsons.includes([tinta[0], tinta[1], tinta[2]].join(','))) return null
+        const [a, b] = [luz(tinta), luz(fundoEfetivo(el))].sort((x, y) => y - x)
+        const razao = ((a ?? 0) + 0.05) / ((b ?? 0) + 0.05)
+        return { texto: el.textContent?.trim().slice(0, 28) ?? '', razao: Number(razao.toFixed(2)) }
+      })
+      .filter((t) => t !== null && t.razao < 4.5)
+      .map((t) => `"${t?.texto}" dá ${t?.razao}:1`)
+  })
+}
+
 test.describe('Grimório — a folha de especificação', () => {
   /**
    * A ladeira do raio é estritamente crescente e começa em zero.
@@ -239,6 +352,54 @@ test.describe('Grimório — a folha de especificação', () => {
 
     expect(fracos, 'botão preenchido cujo texto não alcança o mínimo de leitura').toEqual([])
   })
+
+  /**
+   * O CRIMSON É LEGÍVEL EM TODA SUPERFÍCIE ONDE ELE POUSA (ALE-237).
+   *
+   * Os dois guardas acima medem contra UMA superfície cada: o das tintas contra
+   * `--grimorio-panel`, o dos botões contra o preenchimento do próprio botão. O
+   * app tem três superfícies, e foi nas outras duas que dois defeitos moraram
+   * sem ninguém ver:
+   *
+   * | superfície            | onde                       | rendia   |
+   * | --------------------- | -------------------------- | -------- |
+   * | `panel`               | a folha do grimório        | 4,61:1   |
+   * | `panel-raised`        | "Sair", no menu do jogador | **4,07** |
+   * | `parchment`           | "Sessão ao vivo", no livro | **3,95** |
+   *
+   * A lição não é "faltavam dois consertos", é que **um guarda só mede o que
+   * ele VISITA**. Os dois defeitos eram velhos e o app tinha guarda de
+   * contraste o tempo todo — ele só nunca tinha ABERTO um popover nem entrado
+   * na cena de campanhas. Por isso este aqui NAVEGA: cena nova onde a casa
+   * escrever crimson entra na lista abaixo, ou nasce sem medição.
+   *
+   * Mede o fundo EFETIVO, subindo a árvore até o primeiro fundo opaco — é
+   * exatamente aí que os dois se escondiam, porque o elemento do texto é
+   * transparente e o painel de trás não é o que se imagina.
+   *
+   * Por que e2e: converter oklch para sRGB é trabalho do navegador; em jsdom o
+   * `getComputedStyle` devolve o oklch cru e ler aqueles três números como RGB
+   * dá razão inventada. E o popover só existe depois de um clique de verdade.
+   */
+  /**
+   * UM TESTE POR SUPERFÍCIE, e isso não é estilo: visitar `/grimorio` e depois
+   * navegar mais duas vezes no MESMO contexto derruba a terceira página em
+   * branco, com `net::ERR_INSUFFICIENT_RESOURCES` no console. A folha puxa o
+   * sistema de desenho inteiro como módulos soltos no servidor de
+   * desenvolvimento, e o Chromium estoura o limite de recursos por página.
+   * Isolado em quatro combinações: `/campaigns` sozinho e `/` → `/campaigns`
+   * montam; qualquer caminho que comece na folha e navegue duas vezes, não.
+   * É artefato do dev server — em produção a SPA sai empacotada —, mas ele
+   * mente igual, e um `expect` cansado dentro de um teste desses acusaria o
+   * app. Cada teste ganha página nova.
+   */
+  for (const cena of SUPERFICIES_COM_CRIMSON) {
+    test(`o crimson alcança texto ${cena.onde}`, async ({ page }) => {
+      await cena.abre(page)
+      const fracos = await crimsonsFracos(page)
+      expect(fracos, `crimson abaixo do mínimo de texto ${cena.onde}`).toEqual([])
+    })
+  }
 
   /**
    * Todo foco da casa tem a MESMA cara (ALE-173, P4).
