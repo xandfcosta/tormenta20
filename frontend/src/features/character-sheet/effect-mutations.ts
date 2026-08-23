@@ -108,7 +108,6 @@ export function conditionActions(
   queryClient: QueryClient,
   characterId: number,
 ): ConditionActions {
-  const queryKey = characterQueryOptions(characterId).queryKey
   const characterWrite = createCharacterWrite(queryClient, characterId)
 
   return {
@@ -116,10 +115,30 @@ export function conditionActions(
       characterWrite(
         (previous) => ({ ...previous, activeConditions: JSON.stringify(conditions) }),
         async () => {
-          const delta = await api.characters.updateConditions(characterId, conditions)
-          queryClient.setQueryData<Character>(queryKey, (prev) =>
-            prev ? { ...prev, activeConditions: delta.activeConditions } : prev,
-          )
+          // A RESPOSTA NÃO É ASSENTADA, e isso é o conserto da ALE-243.
+          //
+          // Ela costumava ser: `setQueryData(activeConditions: delta.…)`. Só
+          // que o servidor ECOA o pedido — `character_conditions.go` devolve
+          // `marshalStrings(&body.ActiveConditions)`, que é `json.Marshal` do
+          // mesmo array que o cliente mandou, byte a byte igual ao
+          // `JSON.stringify` da pintura acima. Ou seja, no caminho feliz aquela
+          // linha era um no-op.
+          //
+          // No caminho com pressa ela destruía dado. Aplicar condição é
+          // fire-and-forget e o payload sai do CACHE: com três cliques
+          // rápidos, a resposta do PRIMEIRO chega depois da pintura do
+          // segundo, devolve o cache a UM item, e o terceiro clique monta o
+          // pedido lendo esse cache — manda dois, e a condição do meio some
+          // sem erro nenhum. É estruturalmente impossível morder antes do
+          // terceiro gesto, porque os dois primeiros são confirmados pela
+          // pintura, que não depende da rede.
+          //
+          // Guardar a aplicação por número de sequência seria maquinaria para
+          // proteger algo que não faz nada. No dia em que a rota passar a
+          // devolver a LINHA LIDA DE VOLTA — aí ela carrega informação, e aí
+          // ela precisa das duas coisas: voltar a ser assentada E ser ignorada
+          // quando uma escrita mais nova já pintou por cima.
+          await api.characters.updateConditions(characterId, conditions)
           invalidateCharacterDependents(queryClient, characterId)
         },
       ),

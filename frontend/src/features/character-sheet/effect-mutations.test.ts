@@ -105,28 +105,85 @@ describe('effectActions.endScene / endDay', () => {
 })
 
 describe('conditionActions.set', () => {
-  // A resposta do servidor DIVERGE do palpite de propósito (como se o mestre
-  // tivesse aplicado "atordoado" no mesmo instante): com as duas iguais, o teste
-  // não distinguia a pintura otimista do que o servidor mandou, e passaria verde
-  // mesmo se a resposta fosse jogada fora.
-  it('pinta a condição antes da resposta e assenta pelo blob do SERVIDOR', async () => {
+  // A resposta do servidor é um ECO, e o teste que estava aqui não sabia disso.
+  //
+  // Ele afirmava "assenta pelo blob do SERVIDOR" e simulava uma resposta
+  // DIVERGENTE do palpite — "como se o mestre tivesse aplicado atordoado no
+  // mesmo instante". O servidor não pode fazer isso: `character_conditions.go`
+  // devolve `marshalStrings(&body.ActiveConditions)`, que é o array que o
+  // cliente mandou. O teste passava porque o mock mentia sobre o servidor, e
+  // ele documentava um contrato que não existe (ALE-243).
+  it('pinta a condição ANTES da resposta', async () => {
     const client = seeded()
     const api = await import('@/shared/api/api')
     let responder = (): void => {}
     const resposta = new Promise<{ activeConditions: string }>((resolve) => {
-      responder = () => resolve({ activeConditions: '["cego","atordoado"]' })
+      responder = () => resolve({ activeConditions: '["cego"]' })
     })
     vi.spyOn(api.api.characters, 'updateConditions').mockReturnValue(resposta)
 
     const emVoo = conditionActions(client, CHARACTER_ID).set(['cego'])
-    // Um tick: a pintura acontece depois do `cancelQueries`, que é await. O que
-    // importa é que ela chega ANTES da resposta, e a resposta está segurada.
+    // Um tick: a pintura acontece depois do `cancelQueries`, que é await.
     await new Promise((resolve) => setTimeout(resolve, 0))
     expect(cached(client)?.activeConditions).toBe('["cego"]')
 
     responder()
     await emVoo
-    expect(cached(client)?.activeConditions).toBe('["cego","atordoado"]')
+    expect(cached(client)?.activeConditions).toBe('["cego"]')
+  })
+
+  /**
+   * TRÊS CLIQUES RÁPIDOS NÃO PERDEM A DO MEIO (ALE-243).
+   *
+   * O defeito: aplicar era fire-and-forget, o payload saía do CACHE, e a
+   * resposta de cada escrita era assentada no cache assim que chegava. Com as
+   * respostas atrasadas, a do PRIMEIRO clique pousava depois da pintura do
+   * segundo e devolvia o cache a um item — e o terceiro clique montava o
+   * pedido lendo esse cache, mandando dois.
+   *
+   * O teste segura as três respostas e as solta FORA DE ORDEM, que é o pior
+   * caso. Não precisa de browser: a corrida é de promessas, e o jsdom as
+   * ordena igual.
+   *
+   * A asserção que morde é a ÚLTIMA: o que foi para o fio na terceira escrita.
+   * Afirmar só o cache final deixaria passar um conserto que arruma a tela e
+   * continua gravando errado no banco.
+   */
+  it('com as respostas atrasadas e fora de ordem, nenhuma condição some', async () => {
+    const client = seeded()
+    const api = await import('@/shared/api/api')
+
+    const soltar: (() => void)[] = []
+    const enviados: string[][] = []
+    vi.spyOn(api.api.characters, 'updateConditions').mockImplementation(
+      (_id: number, conditions: string[]) => {
+        enviados.push([...conditions])
+        return new Promise<{ activeConditions: string }>((resolve) => {
+          soltar.push(() => resolve({ activeConditions: JSON.stringify(conditions) }))
+        })
+      },
+    )
+
+    // O gesto real: quem clica não espera a resposta para clicar de novo, e o
+    // conjunto de cada clique é lido do cache na hora.
+    const daCache = () => JSON.parse(cached(client)?.activeConditions ?? '[]') as string[]
+    const acoes = conditionActions(client, CHARACTER_ID)
+    const emVoo: Promise<void>[] = []
+    for (const nova of ['abalado', 'agarrado', 'cego']) {
+      emVoo.push(acoes.set([...daCache(), nova] as never))
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    }
+
+    // Fora de ordem, e a primeira por ÚLTIMO — o pior caso.
+    for (const i of [1, 2, 0]) soltar[i]?.()
+    await Promise.all(emVoo)
+
+    expect(daCache()).toEqual(['abalado', 'agarrado', 'cego'])
+    expect(enviados[2], 'o terceiro pedido foi montado sobre um cache regredido').toEqual([
+      'abalado',
+      'agarrado',
+      'cego',
+    ])
   })
 
   it('falha devolve as condições anteriores', async () => {
