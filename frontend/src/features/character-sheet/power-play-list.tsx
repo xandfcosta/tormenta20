@@ -49,7 +49,7 @@ export function PowerPlayList(props: { character: Character }) {
           <GroupHeading>Ações</GroupHeading>
           <Show
             when={groups().acoes.length > 0}
-            fallback={<p class="text-xs italic text-muted-foreground">Nenhuma ação ativável.</p>}
+            fallback={<SemAcoes character={props.character} />}
           >
             <ul class="space-y-1.5">
               <For each={groups().acoes}>
@@ -65,6 +65,26 @@ export function PowerPlayList(props: { character: Character }) {
         />
       </div>
     </Show>
+  )
+}
+
+/**
+ * A seção AÇÕES FICA mesmo vazia, e explica (decisão do dono, ALE-217).
+ *
+ * Medido: um Arcanista de nível 20 tem ZERO ações ativáveis — 26 habilidades,
+ * todas passivas. Sumir com a seção faria a tela mudar de forma por classe, e
+ * duas pessoas na mesma mesa veriam layouts diferentes. Uma linha que ENSINA
+ * onde está o que ele procura custa 30px e resolve: quem conjura usa a aba
+ * Magias, e é para lá que a frase aponta — mas só para quem tem magia, senão
+ * ela manda o guerreiro para uma aba vazia.
+ */
+function SemAcoes(props: { character: Character }) {
+  const conjura = () => props.character.spells.length > 0
+  return (
+    <p class="text-xs italic text-muted-foreground">
+      Nenhuma ação ativável
+      {conjura() ? ' — suas magias estão na aba Magias.' : '. Suas habilidades são passivas.'}
+    </p>
   )
 }
 
