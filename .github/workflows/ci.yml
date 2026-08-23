@@ -40,6 +40,25 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # A folha do Datastar é um ARTEFATO COMMITADO (o `go:embed` não compila
+      # sem ela), e artefato commitado apodrece em silêncio: uma classe nova num
+      # template sem recompilar dá uma tela sem estilo, e nada reprova. Este
+      # passo é o mesmo padrão que o repositório já usa duas vezes — o
+      # `biome --write` logo abaixo e o `TestGeneratedTypesAreCurrent`.
+      #
+      # Ele existe porque a deriva JÁ aconteceu: a cópia em disco desta máquina
+      # estava um build atrás da commitada quando o guarda foi escrito (ALE-225).
+      - name: Recompile the Datastar stylesheet
+        run: ./engine-go/scripts/build-piloto-css.sh
+
+      - name: Fail if the stylesheet was stale
+        run: |
+          if ! git diff --quiet -- engine-go/api/piloto/static/; then
+            echo "::error::A folha do Datastar está desatualizada. Rode ./engine-go/scripts/build-piloto-css.sh e commite o resultado."
+            git diff --stat -- engine-go/api/piloto/static/
+            exit 1
+          fi
+
       - name: Biome lint (with fix)
         run: pnpm exec biome lint --write .
 
