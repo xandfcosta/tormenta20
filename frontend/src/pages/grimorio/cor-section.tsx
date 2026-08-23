@@ -82,6 +82,24 @@ export function CorSection() {
         ))}
       </SpecBlock>
 
+      {/* A terceira superfície, e a razão de ela ter bloco próprio: as duas
+          acima medem contra o painel ESCURO, e uma tinta de pergaminho medida
+          ali dá um número que não significa nada. O `--grimorio-parchment-crimson`
+          existe porque o crimson base sobre o creme dá 3,95:1 (ALE-237), e sem
+          um exemplo aqui a folha mentiria por omissão — quem consultasse a
+          paleta não saberia que a superfície clara tem tinta própria. */}
+      <SpecBlock
+        titulo="Tinta sobre pergaminho"
+        nota="O livro de campanhas é creme, e a conta inverte: o que é legível no painel escuro pode não ser aqui. O crimson base rende 3,95:1 sobre este fundo — abaixo do mínimo de texto —, e por isso a superfície clara tem tinta própria. Ela NÃO é um ajuste no crimson base: aquele é o `--destructive`, medido com branco por cima, e mexer nele mudaria o botão que apaga por um motivo que não é dele."
+      >
+        <div class="grimorio-parchment-bg flex items-center gap-3 rounded-sm p-3">
+          <span class="font-heading text-sm uppercase tracking-wide text-grimorio-parchment-crimson">
+            Sessão ao vivo
+          </span>
+          <code class="font-mono text-3xs text-grimorio-parchment-ink">--grimorio-parchment-crimson</code>
+        </div>
+      </SpecBlock>
+
       <SpecBlock
         titulo="Vitais"
         nota="O ferido e o dourado ficam lado a lado de propósito: eles são vizinhos de matiz (70 e 85), e é por isso que uma barra pintada de ferido lê como cheia."

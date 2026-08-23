@@ -205,6 +205,14 @@
   --grimorio-fg: oklch(0.93 0.014 85);
   --grimorio-fg-muted: oklch(0.74 0.02 85);
   --grimorio-crimson: oklch(0.55 0.19 25);
+  /* 0.67 e não os 0.64 originais (ALE-237). A ALE-200 mediu esta tinta contra
+   * `--grimorio-panel` e anotou 4,6:1 — mas o app tem DOIS painéis escuros, e
+   * sobre o `--grimorio-panel-raised` (que é o `--popover`) ela caía a 4,07:1,
+   * abaixo do AA. O "Sair" do menu do jogador vivia ali. Medidas cinco
+   * claridades no navegador: 0.67 é a MENOR que fecha nos dois (5,21 e 4,58).
+   * Ela não é preenchimento de nada com texto por cima — branco sobre ela dá
+   * 3,3:1 —, e é por isso que subir não custa: a ALE-200 já tinha movido o
+   * `--destructive` para o crimson base justamente por esse motivo. */
   --grimorio-crimson-bright: oklch(0.67 0.21 25);
   --grimorio-purple: oklch(0.55 0.15 305);
   --grimorio-gold: oklch(0.8 0.11 85);
@@ -212,20 +220,14 @@
   --grimorio-iron-light: oklch(0.52 0.02 300);
   --grimorio-parchment: oklch(0.9 0.035 80);
   --grimorio-parchment-ink: oklch(0.28 0.03 60);
-  /* A TINTA CRIMSON DO PERGAMINHO (ALE-234).
-   *
-   * O `--grimorio-crimson` é tinta de superfície ESCURA, e a folha do grimório
-   * tem duas superfícies. Medido: sobre o pergaminho ele rende 3,95:1, abaixo
-   * do AA — é o "Sessão ao vivo" do livro de campanhas, e o defeito existe nos
-   * DOIS stacks porque o guarda de contraste nunca tinha visitado a cena.
-   *
-   * Em 0.50 rende 4,9:1. Token próprio e NÃO um ajuste no `--grimorio-crimson`:
-   * aquele é o `--destructive`, cuja legibilidade a ALE-200 mediu com branco
-   * POR CIMA (5,35:1) — mexer nele para consertar tinta sobre creme mudaria o
-   * botão que apaga por um motivo que não é dele.
-   *
-   * É a terceira vez que a mesma família de defeito aparece: uma regra de tinta
-   * verificada contra UMA superfície, num app que tem várias. */
+  /* O crimson do PERGAMINHO, que é a terceira superfície (ALE-237). O
+   * `--grimorio-crimson` sobre o creme dá 3,95:1, e é o que "Sessão ao vivo"
+   * usava no livro de campanhas. Token PRÓPRIO e não um ajuste no crimson
+   * base: aquele é o `--destructive`, cuja legibilidade a ALE-200 mediu com
+   * BRANCO por cima — escurecê-lo para consertar tinta sobre creme mudaria o
+   * botão que apaga por um motivo que não é dele. 0.5 dá 4,9:1; 0.52 dá 4,50
+   * cravado, e ficar em cima da linha não deixa margem para o pergaminho
+   * mudar de tom um dia. */
   --grimorio-parchment-crimson: oklch(0.5 0.19 25);
 }
 
