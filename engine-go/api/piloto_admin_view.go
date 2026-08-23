@@ -3,6 +3,8 @@ package api
 import (
 	"context"
 	"fmt"
+	"math"
+	"time"
 )
 
 // A tela de ADMINISTRAÇÃO como dado — a segunda superfície do piloto (ALE-219).
@@ -98,7 +100,7 @@ func (s *Server) carregaAdmin(ctx context.Context, eu AuthUser) (adminView, erro
 		abertos = append(abertos, adminConvite{
 			Token:  c.Token,
 			Rotulo: "Link de convite " + primeiros(c.Token, 6),
-			Expira: c.Expiresat,
+			Expira: expiraEm(c.Expiresat, time.Now()),
 			URL:    "/register?convite=" + c.Token,
 		})
 	}
@@ -171,4 +173,33 @@ func emBytes(n int64) string {
 	default:
 		return fmt.Sprintf("%.1f MB", float64(n)/(k*k))
 	}
+}
+
+// expiraEm traduz o prazo do convite para o que o dono precisa saber: quanto
+// ainda dá para esperar. Porte do `expiryLabel` do `open-invites-panel.tsx`.
+//
+// Ele existe porque a MIGRAÇÃO O PERDEU. A primeira versão desta tela
+// renderizava o ISO cru — e as quatro asserções que o protegem na SPA teriam
+// pegado isso na hora, se eu as tivesse portado ANTES de escrever o template.
+// Fica como a medida mais honesta do custo de trocar de camada de teste: o que
+// se perde não é o teste, é a regra que ele guardava.
+//
+// ARREDONDA em vez de truncar: um convite recém-criado, com sete dias menos
+// alguns segundos, tem de dizer "7 dias" e não "6". E abaixo de um dia a escala
+// vira HORAS, com piso em 1 — "0 horas" não diz se dá tempo de mandar a
+// mensagem.
+func expiraEm(iso string, agora time.Time) string {
+	prazo, err := time.Parse(time.RFC3339, iso)
+	if err != nil {
+		return iso
+	}
+	restante := prazo.Sub(agora)
+	if dias := restante.Hours() / 24; dias >= 1 {
+		return plural(int64(math.Round(dias)), "dia", "dias")
+	}
+	horas := int64(math.Round(restante.Hours()))
+	if horas < 1 {
+		horas = 1
+	}
+	return plural(horas, "hora", "horas")
 }
