@@ -32,7 +32,18 @@ export default defineConfig({
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: BASE_URL,
-    trace: 'on-first-retry',
+    // `retain-on-failure` e NÃO `on-first-retry` (ALE-244). O segundo parece o
+    // padrão sensato e aqui era o mesmo que desligar: fora do CI `retries` é
+    // ZERO, então não há primeira retentativa e trace nunca era gravado —
+    // `e2e/test-results` sequer existia em disco. Duas sessões passaram um dia
+    // caçando um flake de 2/8 com o instrumento desligado, e a assinatura em
+    // que as duas se apoiaram ("é sempre na terceira") acabou não sendo
+    // verificável: não havia segunda amostra em lugar nenhum.
+    //
+    // O `retries: 0` local continua certo e é de propósito — retentativa
+    // ESCONDE flake, que é o que se está caçando. O que estava errado era só o
+    // gatilho do trace.
+    trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     launchOptions: {
       // O Chromium usa /dev/shm para memória compartilhada e, quando ele acaba,
