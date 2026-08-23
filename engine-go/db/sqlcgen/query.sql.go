@@ -2403,6 +2403,53 @@ func (q *Queries) ListUsersWithCounts(ctx context.Context) ([]ListUsersWithCount
 	return items, nil
 }
 
+const liveSessionsForUser = `-- name: LiveSessionsForUser :many
+SELECT s.campaignId AS campaignId, MIN(s.id) AS sessionId
+FROM sessions s
+JOIN campaigns c ON c.id = s.campaignId
+WHERE s.status = 'active'
+  AND (c.ownerId = ?1
+       OR c.id IN (
+         SELECT m.campaignId FROM campaign_members m
+         JOIN characters ch ON ch.id = m.characterId
+         WHERE ch.ownerId = ?1
+       ))
+GROUP BY s.campaignId
+`
+
+type LiveSessionsForUserRow struct {
+	Campaignid int64       `json:"campaignid"`
+	Sessionid  interface{} `json:"sessionid"`
+}
+
+// ALE-234: which of my campaigns have a session RUNNING, all in one query.
+// The SPA asked this with one request PER CAMPAIGN, twice over: once in the Hub
+// (createActiveSession) and once in the campaign scene
+// (createActiveSessionByCampaign). Two identical fan-outs in two screens is the
+// sign that the hole was in the API, not in the screens.
+func (q *Queries) LiveSessionsForUser(ctx context.Context, userid int64) ([]LiveSessionsForUserRow, error) {
+	rows, err := q.db.QueryContext(ctx, liveSessionsForUser, userid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []LiveSessionsForUserRow{}
+	for rows.Next() {
+		var i LiveSessionsForUserRow
+		if err := rows.Scan(&i.Campaignid, &i.Sessionid); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const removeCharacterConditional = `-- name: RemoveCharacterConditional :exec
 DELETE FROM character_conditionals WHERE characterId = ? AND conditionalId = ?
 `
