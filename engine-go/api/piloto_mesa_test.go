@@ -421,3 +421,44 @@ func TestMesaAvisaAssinantesEmCadaMutacao(t *testing.T) {
 		t.Errorf("sobraram %d ouvintes registrados depois da baixa", n)
 	}
 }
+
+// O campo vazio não pode virar um total (ALE-236).
+//
+// MEDIDO no navegador: o `data-bind` do Datastar escreve ZERO no sinal quando
+// um `<input type=number>` esvazia — digitar 7, apagar, e o sinal vai a 0. Sem
+// guarda, apagar para redigitar mostra "Total previsto 8" com bônus 8 e dado
+// nenhum: um total que não existe, lido no instante da decisão. Mesma família
+// da ALE-224, onde a prévia era o que impedia o erro silencioso.
+//
+// Este guarda pina a EXPRESSÃO, e digo isso em vez de fingir que ele pina o
+// comportamento. O teste comportamental exigiria a cena EM JOGO com o jogador
+// tendo personagem nela, e montar esse estado no e2e é entrar exatamente na
+// armadilha que a ALE-238 documenta: asserção que depende do estado do combate
+// mede o banco, não o app. A prova do comportamento foi a medição no navegador,
+// que está descrita acima e é reproduzível em três linhas.
+func TestPreviaDoD20NaoMenteComOCampoVazio(t *testing.T) {
+	bonus := int64(8)
+	html, err := renderFragmento(t.Context(), mesa(mesaView{
+		CampaignID: 7, SessionID: 42, SceneActive: true,
+		Turn: mesaTurn{Kind: "idle"},
+		Eu:   &mesaEu{CharacterID: 1, Nome: "Samira", Bonus: bonus},
+	}))
+	if err != nil {
+		t.Fatalf("render: %v", err)
+	}
+
+	// LITERAL e não escapado: o atributo é CONSTANTE, e o templ só escapa os
+	// dinâmicos — foi o que a ALE-227 mediu ao comparar as duas saídas byte a
+	// byte. Escrevi a forma escapada primeiro e o guarda nasceu vermelho por
+	// isso, o que ao menos provou que ele lê o HTML de verdade.
+	const faixa = "$d20 >= 1 && $d20 <= 20"
+	if !strings.Contains(html, faixa) {
+		t.Errorf("a prévia não é condicionada à faixa do dado — campo vazio vira um total inventado")
+	}
+	if !strings.Contains(html, "informe o dado") {
+		t.Error("sem dado, a linha não diz o que falta")
+	}
+	if !strings.Contains(html, "$registrando || !(") {
+		t.Error("o botão continua oferecendo uma ação que o servidor vai recusar")
+	}
+}

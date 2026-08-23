@@ -140,18 +140,40 @@ templ mesaRegistrar(v mesaView) {
 			>
 				🎲 Rolar
 			</button>
+			// A PRÉVIA some quando o dado não é um dado, e isso é conserto de um
+			// defeito medido (ALE-236, avisado pela outra sessão): o `data-bind`
+			// do Datastar escreve ZERO no sinal quando o campo numérico esvazia.
+			// Medido no navegador — digitar 7, apagar, e o sinal vai a 0.
+			//
+			// Sem isto, apagar para redigitar mostra "Total previsto 8" quando o
+			// bônus é 8 e não há dado nenhum: um total que não existe, lido no
+			// instante em que a pessoa está decidindo. É a mesma família da
+			// ALE-224, onde a prévia do saldo era o que impedia o erro
+			// silencioso — prévia que mente não é cosmético.
+			//
+			// A faixa vem do LIVRO (1..20) e o servidor já a recusa; o que se
+			// conserta aqui é a tela dizer a verdade antes do clique.
 			<p class="text-sm text-muted-foreground">
 				Bônus <span class="font-mono tabular-nums text-foreground">{ fmt.Sprint(v.Eu.Bonus) }</span>
-				· Total previsto <span class="font-mono tabular-nums text-foreground" data-text={ fmt.Sprintf("$d20 + %d", v.Eu.Bonus) }></span>
+				<span data-show="$d20 >= 1 && $d20 <= 20">
+					· Total previsto <span class="font-mono tabular-nums text-foreground" data-text={ fmt.Sprintf("$d20 + %d", v.Eu.Bonus) }></span>
+				</span>
+				<span data-show="!($d20 >= 1 && $d20 <= 20)" class="italic">· informe o dado (1 a 20)</span>
 			</p>
 		</div>
 		// Sai só o d20 no fio; o TOTAL é somado pelo servidor (ALE-213), que é
 		// quem tem a `ComputeSheetV2`. O `data-indicator` desliga o botão
 		// enquanto o POST voa — sem isso o duplo clique manda duas rolagens.
+		//
+		// E o botão fica desabilitado com o dado fora da faixa (ALE-236):
+		// oferecer uma ação que o servidor vai recusar é fazer a pessoa
+		// descobrir o erro DEPOIS de clicar, com a recusa em texto pequeno
+		// embaixo. O campo vazio conta como fora da faixa, porque o `data-bind`
+		// escreve ZERO no sinal quando ele esvazia.
 		<button
 			type="button"
 			data-indicator:registrando
-			data-attr:disabled="$registrando"
+			data-attr:disabled="$registrando || !($d20 >= 1 && $d20 <= 20)"
 			data-on:click={ fmt.Sprintf("@post('/piloto/mesa/%d/%d/iniciativa')", v.CampaignID, v.SessionID) }
 			class="bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-50"
 		>
