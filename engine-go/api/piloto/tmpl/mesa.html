@@ -1,5 +1,10 @@
 {{define "mesa"}}
-<main id="mesa" class="mx-auto flex min-h-dvh w-full max-w-3xl flex-col">
+{{/* A MEDIDA é da página, não da casca: a casca dá cromo e espaçamento, e cada
+     tela decide a própria largura de leitura. A Mesa é uma coluna — na SPA ela
+     vive dentro do palco da sessão —, enquanto o admin é uma grade de dois
+     painéis e ocupa o que recebe. Sem isto, as linhas da fila esticam 1500px e
+     o número da iniciativa fica a meia tela do nome. */}}
+<main id="mesa" class="mx-auto flex w-full max-w-3xl flex-col">
 
   {{/* A faixa AO VIVO (ALE-30). Acende em DOURADO na vez do jogador, porque
        dourado é o que já diz "a vez" na iniciativa e no tabuleiro (ALE-200). */}}
@@ -65,7 +70,7 @@
       <button type="button"
               data-indicator:registrando
               data-attr:disabled="$registrando"
-              data-on:click="@post('/mesa/{{.CampaignID}}/{{.SessionID}}/iniciativa')"
+              data-on:click="@post('/piloto/mesa/{{.CampaignID}}/{{.SessionID}}/iniciativa')"
               class="bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-50">
         Registrar
       </button>

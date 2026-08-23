@@ -137,7 +137,7 @@ func buildMux(cfg api.Config, srv *api.Server) *http.ServeMux {
 	// da SPA. Fora do `/api` de propósito — o jogador abre e favorita esta URL.
 	// Vive nos dois formatos porque o `ServeMux` casa pelo prefixo mais longo.
 	// Apagar esta linha é metade da saída do piloto.
-	mux.Handle("/mesa/", http.StripPrefix("/mesa", srv.MesaRouter()))
+	mux.Handle("/piloto/", http.StripPrefix("/piloto", srv.PilotoRouter()))
 	if cfg.StaticDir == "" {
 		mux.Handle("/", srv.Router())
 		return mux

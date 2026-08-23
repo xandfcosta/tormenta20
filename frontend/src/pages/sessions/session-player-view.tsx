@@ -176,7 +176,7 @@ function SessionTable(props: {
           bundle. O piloto vive AO LADO desta tela em vez de substituí-la, que é
           o que torna a comparação um clique e a saída uma linha. */}
       <a
-        href={`/mesa/${props.campaignId}/${props.sessionId}`}
+        href={`/piloto/mesa/${props.campaignId}/${props.sessionId}`}
         class="self-start text-xs text-muted-foreground underline underline-offset-4 outline-none hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
         Abrir esta Mesa renderizada pelo servidor (piloto)

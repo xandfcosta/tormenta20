@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"fmt"
+	"html/template"
 	"io/fs"
 	"net/http"
 	"strconv"
@@ -23,25 +25,35 @@ import (
 //
 // SAÍDA DO PILOTO: apagar `api/mesa*`, a linha do `buildMux` e a entrada do
 // proxy no `vite.config.ts`.
-func (s *Server) MesaRouter() http.Handler {
+func (s *Server) PilotoRouter() http.Handler {
 	r := chi.NewRouter()
 	// Os estáticos são anônimos: são o bundle do Datastar e a folha de estilo,
 	// e exigir sessão para eles só quebraria o cache.
-	r.Handle("/static/*", http.StripPrefix("/static/", mesaStaticHandler()))
+	r.Handle("/static/*", http.StripPrefix("/static/", pilotoStaticHandler()))
 	r.Group(func(r chi.Router) {
 		r.Use(s.requireAuth)
-		r.Get("/{campaignId}/{sessionId}", s.handleMesaPage)
-		r.Get("/{campaignId}/{sessionId}/stream", s.handleMesaStream)
-		r.Post("/{campaignId}/{sessionId}/iniciativa", s.handleMesaInitiative)
+		r.Get("/mesa/{campaignId}/{sessionId}", s.handleMesaPage)
+		r.Get("/mesa/{campaignId}/{sessionId}/stream", s.handleMesaStream)
+		r.Post("/mesa/{campaignId}/{sessionId}/iniciativa", s.handleMesaInitiative)
+	})
+	// A SEGUNDA superfície (ALE-219): a administração. Mesmo `requireAdmin` da
+	// API — a tela não decide quem pode ver, ela só deixa de oferecer o que o
+	// servidor recusaria.
+	r.Group(func(r chi.Router) {
+		r.Use(s.requireAuth)
+		r.Use(s.requireAdmin)
+		r.Get("/admin", s.handleAdminPiloto)
+		r.Post("/admin/usuarios/{id}/apagar", s.handleAdminPilotoApagar)
+		r.Post("/admin/backup", s.handleAdminPilotoBackup)
 	})
 	return r
 }
 
 // mesaStaticHandler serve o bundle e a folha embutidos.
-func mesaStaticHandler() http.Handler {
-	sub, err := fs.Sub(mesaFS, "mesa/static")
+func pilotoStaticHandler() http.Handler {
+	sub, err := fs.Sub(pilotoFS, "piloto/static")
 	if err != nil {
-		panic("mesa: static embutido ausente: " + err.Error())
+		panic("piloto: static embutido ausente: " + err.Error())
 	}
 	return http.FileServer(http.FS(sub))
 }
@@ -74,7 +86,17 @@ func (s *Server) handleMesaPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), status)
 		return
 	}
-	html, err := renderMesaPage(view)
+	corpo, err := renderFragmento("mesa", view)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	html, err := renderPagina(paginaPiloto{
+		Titulo: fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
+		Sinais: "{d20: 10, erro: ''}",
+		Init:   fmt.Sprintf("@get('/piloto/mesa/%d/%d/stream')", campaignID, sessionID),
+		Corpo:  template.HTML(corpo),
+	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

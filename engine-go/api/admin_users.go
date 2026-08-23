@@ -5,6 +5,7 @@ package api
 // senha e apagar. Tudo atrás de requireAdmin; a UI só decide o que MOSTRAR.
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
@@ -52,19 +53,33 @@ func (s *Server) handleAdminDeleteUser(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	caller := currentUser(r)
-	if id == caller.ID {
-		// Not paranoia: the admin list shows your own row, and the menu is the
-		// same one. Deleting yourself would take your mesas nowhere.
-		writeError(w, http.StatusBadRequest, "You cannot delete your own account")
-		return
-	}
-	moved, err := s.deleteUserKeepingMesas(r, id, caller.ID)
+	moved, status, err := s.deleteAccount(r, id, currentUser(r).ID)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not delete user")
+		writeError(w, status, err.Error())
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"id": id, "transferredCampaigns": moved})
+}
+
+// deleteAccount is the RULE behind the delete: you cannot remove your own
+// account, and the campaigns move to whoever removes it.
+//
+// Transport-agnostic on purpose. It was extracted when the pilot's admin screen
+// (ALE-219) needed the same rule from a second transport and found it welded to
+// the HTTP handler — the SECOND time the pilot hit that shape, after
+// `selfInitiativeEntry`, which was welded to the socket gateway. Two surfaces,
+// two rules pinned to whichever transport reached them first.
+func (s *Server) deleteAccount(r *http.Request, id, callerID int64) (int64, int, error) {
+	if id == callerID {
+		// Not paranoia: the admin list shows your own row, and the menu is the
+		// same one. Deleting yourself would take your mesas nowhere.
+		return 0, http.StatusBadRequest, errors.New("You cannot delete your own account")
+	}
+	moved, err := s.deleteUserKeepingMesas(r, id, callerID)
+	if err != nil {
+		return 0, http.StatusInternalServerError, errors.New("Could not delete user")
+	}
+	return moved, http.StatusOK, nil
 }
 
 // deleteUserKeepingMesas moves the campaigns and deletes the account in ONE

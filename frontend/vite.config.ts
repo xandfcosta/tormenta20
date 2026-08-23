@@ -36,7 +36,7 @@ export default defineConfig({
       // (cookie ignora porta), mas as fontes self-hosted de `public/` não, e o
       // link vindo da SPA sairia da origem. Apagar esta entrada é a outra
       // metade da saída do piloto.
-      '/mesa': { target: API_TARGET, changeOrigin: true },
+      '/piloto': { target: API_TARGET, changeOrigin: true },
     },
   },
   /**
@@ -64,7 +64,7 @@ export default defineConfig({
       // (cookie ignora porta), mas as fontes self-hosted de `public/` não, e o
       // link vindo da SPA sairia da origem. Apagar esta entrada é a outra
       // metade da saída do piloto.
-      '/mesa': { target: API_TARGET, changeOrigin: true },
+      '/piloto': { target: API_TARGET, changeOrigin: true },
     },
   },
   test: {

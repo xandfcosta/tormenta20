@@ -88,7 +88,7 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 // estado mandaria tudo sempre; e comparar campo a campo seria a lista que
 // envelhece — o defeito que o `cloneState` documenta ter tido com o `TurnsTaken`.
 func escreveMesa(sse *datastar.ServerSentEventGenerator, view mesaView, anterior [32]byte) [32]byte {
-	fragmento, err := renderMesaFragment(view)
+	fragmento, err := renderFragmento("mesa", view)
 	if err != nil {
 		return anterior
 	}

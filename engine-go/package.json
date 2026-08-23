@@ -11,7 +11,7 @@
     "vet": "go vet ./...",
     "seed": "SEED_API_URL=http://localhost:3001 go run ./cmd/seed",
     "build:wasm": "bash ../frontend/scripts/build-engine-wasm.sh",
-    "build:mesa-css": "bash ./scripts/build-mesa-css.sh",
-    "prebuild": "bash ./scripts/build-mesa-css.sh"
+    "build:piloto-css": "bash ./scripts/build-piloto-css.sh",
+    "prebuild": "bash ./scripts/build-piloto-css.sh"
   }
 }

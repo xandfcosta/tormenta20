@@ -15,6 +15,6 @@ cd "$raiz/frontend"
 # script de instalação está pendente de aprovação — irrelevante para gerar CSS.
 # O binário direto não tem essa porta.
 exec ./node_modules/.bin/tailwindcss \
-  --input "$raiz/engine-go/api/mesa/mesa.src.css" \
-  --output "$raiz/engine-go/api/mesa/static/mesa.css" \
+  --input "$raiz/engine-go/api/piloto/piloto.src.css" \
+  --output "$raiz/engine-go/api/piloto/static/piloto.css" \
   --minify
