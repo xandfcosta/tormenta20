@@ -260,3 +260,29 @@ por layout.
   o teste é a forma barata de provar que ele mede o que diz medir — foi assim que
   se descobriu que um teste de PV passava por acidente, porque em todos os casos
   a primeira classe também era a maior.
+
+## templ — as armadilhas que já custaram tempo
+
+As cenas do `piloto/` são `.templ` compiladas para `.go` por `go tool templ
+generate`. O `.templ` e o `_templ.go` andam juntos e o CI recusa o par
+desencontrado, no mesmo molde do `TestGeneratedTypesAreCurrent`. O que segue foi
+todo descoberto errando — está aqui para ninguém redescobrir:
+
+- **Comentário NÃO vive na lista de atributos de um elemento.** `// ...` entre
+  dois atributos derruba o parser com `malformed open element`, e a mensagem
+  aponta a linha do `<`, não a do comentário. Já aconteceu **cinco** vezes. O
+  comentário vai ACIMA do `templ`, ou acima do elemento inteiro.
+- **`@componente()` tem de COMEÇAR a linha.** No meio de um texto ele vira texto
+  literal, e a página mostra `@tecla("⏎")` escrito na tela — sem erro nenhum.
+- **Valor CONSTANTE de atributo sai literal; só o DINÂMICO é escapado.** Uma
+  aspa simples num literal fica aspa simples; a mesma string vinda de variável
+  vira `&#39;`. Importa quando se afirma HTML em teste.
+- **Regenerar não basta: o servidor precisa REINICIAR.** O `go run ./cmd/api`
+  compila uma vez, então depois do `templ generate` o processo continua servindo
+  o HTML antigo. Isto já produziu uma medição de layout inteira contra a página
+  velha — 74px de deslocamento "que não sumiam" depois do conserto, porque o
+  conserto não estava no ar.
+- **Classe nova exige `scripts/build-piloto-css.sh`.** O scanner do Tailwind lê
+  `../*.templ`, e só ele — por isso `classesDoBotao` mora no `.templ` e não no
+  `.go`. Classe que não passou pelo scanner simplesmente não existe na folha, e
+  o elemento aparece sem estilo em vez de dar erro.

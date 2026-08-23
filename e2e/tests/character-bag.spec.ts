@@ -22,7 +22,7 @@ const HERO = 'Tanque Placas Nv10'
  */
 test.describe('Mochila', () => {
   test('abre o catálogo e filtra pelo nome sem derrubar a cena', async ({ page }) => {
-    await page.goto('/characters')
+    await page.goto('/piloto/personagens')
     await openSheetFromRoster(page, HERO)
     await expect(page).toHaveURL(/\/characters\/\d+$/)
 

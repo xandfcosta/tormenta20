@@ -205,3 +205,31 @@ func lavagemDoHeroi(h heroiCartao) string {
 	return "radial-gradient(ellipse 60% 50% at 50% 42%, oklch(0.55 0.15 " +
 		strconv.Itoa(m) + " / 0.14), transparent 70%)"
 }
+
+// vizinho é o retrato APAGADO que ladeia o palco — o "peek" da SPA, portado na
+// virada da ALE-239 porque apagá-lo junto com a tela antiga seria perder uma
+// feature debaixo de uma migração.
+//
+// Ele carrega só o que o peek desenha, e não um `heroiCartao` inteiro: o peek
+// não mostra vitais, nem resumo, nem dossiê, e passar a estrutura cheia
+// convidaria a próxima pessoa a mostrar.
+type vizinho struct {
+	ID        int64
+	Nome      string
+	Iniciais  string
+	Gradiente string
+}
+
+// peekDe é o vizinho na posição `i` do trilho, ou nil quando `i` cai fora.
+//
+// Nil NÃO significa "não desenhe": significa espaçador. Sem a caixa vazia nas
+// pontas do elenco o palco escorrega para o lado ao chegar no primeiro ou no
+// último herói, que é a família de defeitos da ALE-99 — a mesma razão do
+// `min-h-[2lh]` no nome e do travessão na Defesa.
+func peekDe(herois []heroiCartao, i int) *vizinho {
+	if i < 0 || i >= len(herois) {
+		return nil
+	}
+	h := herois[i]
+	return &vizinho{ID: h.ID, Nome: h.Nome, Iniciais: h.Iniciais, Gradiente: h.Gradiente}
+}

@@ -20,7 +20,7 @@ const CASTER = 'Necromante Nv12 Magias'
  */
 test.describe('Grimório', () => {
   test('lista as magias aprendidas com custo e CD', async ({ page }) => {
-    await page.goto('/characters')
+    await page.goto('/piloto/personagens')
     await openSheetFromRoster(page, CASTER)
     await page.getByRole('tab', { name: 'Magias' }).click()
 
@@ -31,7 +31,7 @@ test.describe('Grimório', () => {
   })
 
   test('o catálogo filtra por nome e por círculo', async ({ page }) => {
-    await page.goto('/characters')
+    await page.goto('/piloto/personagens')
     await openSheetFromRoster(page, CASTER)
     await page.getByRole('tab', { name: 'Magias' }).click()
 
