@@ -274,6 +274,18 @@ links, the browser Back button and the progress rail cannot then disagree.
   blows up far from the cause — use the fixture.
 - This jsdom has **no `AnimationEvent` constructor**: use `Event` +
   `defineProperty` to set `animationName`.
+- **`clear()` e `{selectall}` NÃO esvaziam um `input[type=number]`** — ele não
+  tem API de seleção, então o `userEvent` não apaga nada e o dígito seguinte se
+  JUNTA ao que já estava (`2` + `3` = 23, depois clampado ao teto). Use
+  `{backspace}`. Isso custou duas vezes no mesmo dia: um teste da ALE-208 que
+  passava por acidente e uma conclusão errada na ALE-209 ("é coisa do jsdom"),
+  quando na verdade era o defeito de produção da ALE-236. Corolário: um teste
+  de campo numérico escrito com `clear()` está medindo outra coisa.
+- **O `min`/`max` do `NumberInput` governa só o SPINNER.** Digitar passa direto
+  por ele — quem prende é o CHAMADOR, e essa divisão é deliberada (clampar a
+  cada tecla brigaria com quem digita "12" num campo de mínimo 10). Campo novo
+  sem clamp no `onChange` é campo sem teto: foi assim que "Quantas" aceitou 99
+  cópias (ALE-236).
 - **`dvh` num elemento `fixed` não recomputa ao redimensionar no
   `chrome-headless-shell`**, que é o browser do e2e. Medido na ALE-198: o mesmo
   diálogo a 390×844 dava 776px no Chrome de verdade e 451 no runner, e a
