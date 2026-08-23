@@ -30,6 +30,10 @@ type sessionStore struct {
 	// session's runtime-state writes so concurrent mutations can't land out of order —
 	// WITHOUT coupling latency across sessions.
 	persistMus sync.Map
+	// ouvintes são os streams SSE acordados a cada mutação (piloto ALE-219, em
+	// mesa_watch.go). Guardados sob o MESMO `mu` das mutações, que é o que faz o
+	// aviso sair junto com a mudança e não depois dela.
+	ouvintes map[int64][]chan struct{}
 }
 
 // persistLock returns the per-session DB-write mutex, creating it on first use.
@@ -87,6 +91,8 @@ func (st *sessionStore) apply(sessionID int64, fn func(*SessionRuntimeState) err
 	if err := fn(s); err != nil {
 		return nil, err
 	}
+	// O funil das treze mutações é aqui, então o aviso também é (ALE-219).
+	st.avisarLocked(sessionID)
 	return cloneState(s), nil
 }
 

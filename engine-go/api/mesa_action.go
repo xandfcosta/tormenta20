@@ -1,9 +1,10 @@
 package api
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/starfederation/datastar-go/datastar"
 )
 
 // A única mutação da Mesa: o jogador registra a PRÓPRIA iniciativa (ALE-219).
@@ -12,8 +13,9 @@ import (
 // este gesto — e porque ele é a forma mais honesta de medir o Datastar num
 // caminho de escrita: o cliente manda o d20 e MAIS NADA, e a soma é do motor.
 
-// mesaSignals é o que o Datastar manda no corpo: os sinais da página, JSON cru
-// e sem embrulho (confirmado lendo o bundle v1.0.2 — `Y.body = JSON.stringify(signals)`).
+// mesaSignals é o que o Datastar manda: os sinais da página. Quem os lê é o
+// `datastar.ReadSignals` do SDK, que sabe de onde tirá-los — query string no
+// GET, corpo JSON nos outros métodos.
 //
 // Só o d20 é lido. Os outros sinais viajam junto porque o Datastar manda todos,
 // e ignorá-los aqui é o mesmo cuidado do `selfInitiativeEntry`, que monta um
@@ -28,37 +30,43 @@ func (s *Server) handleMesaInitiative(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	// Respondemos SEMPRE em SSE, inclusive na recusa: é o caminho de volta que
-	// o socket não tem. A ALE-213 deixou anotado que o cliente não escuta o
-	// `exception`, então lá uma recusa some em silêncio e o jogador clica
-	// olhando para uma tela que não muda. Aqui a resposta É a tela.
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-store")
+	// LER OS SINAIS PRIMEIRO. O `NewSSE` assume a resposta e fecha o corpo do
+	// pedido, então um `ReadSignals` depois dele encontra o corpo fechado e o
+	// próprio SDK devolve "are you sure you created the SSE ***AFTER*** the
+	// ReadSignals?". A ordem inversa passou VERDE em teste de handler e falhou no
+	// servidor de verdade: `httptest.NewRequest` não reproduz esse ciclo de vida
+	// (foi assim que o defeito apareceu — no navegador, não na suíte).
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20) // teto de 1 MB, como o `decodeJSON` da casa
+	var sinais mesaSignals
+	erroDeLeitura := datastar.ReadSignals(r, &sinais)
 
-	if err := s.registraIniciativaDaMesa(r, campaignID, sessionID); err != nil {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(patchSignalsEvent(mesaErroJSON(err.Error()))))
-		return
+	// Respondemos SEMPRE em SSE, inclusive na recusa: é o caminho de volta que o
+	// socket não tem. A ALE-213 deixou anotado que o cliente não escuta o
+	// `exception`, então lá uma recusa some em silêncio e o jogador clica olhando
+	// para uma tela que não muda. Aqui a resposta É a tela.
+	sse := datastar.NewSSE(w, r)
+	erro := ""
+	if erroDeLeitura != nil {
+		erro = fmt.Sprintf("não entendi o dado enviado: %v", erroDeLeitura)
+	} else if err := s.registraIniciativaDaMesa(r, campaignID, sessionID, sinais.D20); err != nil {
+		erro = err.Error()
 	}
-	w.WriteHeader(http.StatusOK)
-	// Limpa o erro anterior e mais nada: quem redesenha a fila é o stream, que
-	// já está aberto. Mandar o fragmento aqui TAMBÉM o desenharia duas vezes,
-	// por dois caminhos que podem discordar — o defeito que a ALE-122 consertou
-	// fazendo os dois caminhos passarem pelo mesmo gargalo.
-	_, _ = w.Write([]byte(patchSignalsEvent(mesaErroJSON(""))))
+	// Sai o sinal nos DOIS caminhos: no do erro para acender a frase, e no do
+	// acerto para APAGAR a frase anterior. Quem redesenha a fila é o stream, que
+	// já está aberto — mandar o fragmento aqui também o desenharia por dois
+	// caminhos que podem discordar, que é o defeito que a ALE-122 consertou.
+	_ = sse.MarshalAndPatchSignals(map[string]string{"erro": erro})
 }
 
 // registraIniciativaDaMesa é o caminho inteiro da escrita: autoriza, acha o
 // personagem de quem pediu, chama a REGRA e avisa as duas telas.
-func (s *Server) registraIniciativaDaMesa(r *http.Request, campaignID, sessionID int64) error {
+//
+// Recebe o `d20` já lido em vez de ler o corpo: quem lê é o handler, ANTES de
+// abrir o SSE, e a ordem é obrigatória (ver o comentário lá em cima).
+func (s *Server) registraIniciativaDaMesa(r *http.Request, campaignID, sessionID, d20 int64) error {
 	user := currentUser(r)
 	if _, _, _, err := s.sessionForCaller(r.Context(), user, campaignID, sessionID); err != nil {
 		return err
-	}
-	var sinais mesaSignals
-	// Teto de 1 MB como o `decodeJSON` da casa: um corpo sem limite é uma porta.
-	if err := json.NewDecoder(http.MaxBytesReader(nil, r.Body, 1<<20)).Decode(&sinais); err != nil {
-		return fmt.Errorf("não entendi o dado enviado: %w", err)
 	}
 	_, _, eu := s.mesaRoster(r.Context(), user, campaignID)
 	if eu == nil {
@@ -67,7 +75,7 @@ func (s *Server) registraIniciativaDaMesa(r *http.Request, campaignID, sessionID
 	// A REGRA, e ela é a mesma do socket: confere o d20 de 1 a 20, pergunta o
 	// bônus ao motor e soma. O piloto não tem uma segunda — se tivesse, mediria
 	// a cópia.
-	entry, err := s.selfInitiativeEntry(user.ID, campaignID, eu.CharacterID, sinais.D20)
+	entry, err := s.selfInitiativeEntry(user.ID, campaignID, eu.CharacterID, d20)
 	if err != nil {
 		return err
 	}
@@ -76,22 +84,11 @@ func (s *Server) registraIniciativaDaMesa(r *http.Request, campaignID, sessionID
 		return err
 	}
 	// O mestre está na SPA, ouvindo o socket. Sem este aviso a linha nova só
-	// apareceria para ele no próximo F5 — e é exatamente aqui que o custo de
-	// ter DOIS transportes aparece: cada escrita nova tem de lembrar dos dois.
+	// apareceria para ele no próximo F5 — e é exatamente aqui que o custo de ter
+	// DOIS transportes aparece: cada escrita nova tem de lembrar dos dois.
 	if s.rt == nil {
 		return fmt.Errorf("o tempo real não subiu; sua iniciativa foi gravada mas a mesa não foi avisada")
 	}
 	s.rt.emitSessionState(sessionID, estado)
 	return nil
-}
-
-// mesaErroJSON monta o patch do sinal `erro`. Passa pelo `json.Marshal` porque
-// a mensagem carrega o valor ofendido ("d20 must be an integer from 1 to 20,
-// got 47") e uma aspa solta ali quebraria o evento inteiro.
-func mesaErroJSON(msg string) string {
-	blob, err := json.Marshal(map[string]string{"erro": msg})
-	if err != nil {
-		return `{"erro":"erro inesperado"}`
-	}
-	return string(blob)
 }

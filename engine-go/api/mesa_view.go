@@ -19,7 +19,7 @@ type mesaView struct {
 	SessionID  int64
 	SessionNum int64
 	// SceneActive vem do estado JÁ REDIGIDO: fora de cena o `redactForPlayers`
-	// devolve rastreador limpo, então o falso aqui É a trava da ALE-210 e não
+	// devolve fila limpa, então o falso aqui É a trava da ALE-210 e não
 	// uma segunda decisão tomada na tela.
 	SceneActive bool
 	Round       int

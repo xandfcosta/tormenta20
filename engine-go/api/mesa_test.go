@@ -1,7 +1,10 @@
 package api
 
 import (
+	"bufio"
+	"compress/gzip"
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -51,23 +54,34 @@ func novoPiloto(t *testing.T) pilotoFixture {
 	}); err != nil {
 		t.Fatalf("semear perícia: %v", err)
 	}
+	// O gateway do socket, como em produção: é ele que preenche o `s.rt`, e sem
+	// ele a escrita pela página grava mas recusa dizendo que a mesa não foi
+	// avisada. Montá-lo aqui é o que põe a PONTE entre os dois transportes
+	// debaixo do teste — ela é o custo central do piloto e não pode ficar de fora.
+	_ = s.SocketHandler()
 	return pilotoFixture{s: s, mestre: mestre, jogador: jogador, campaignID: campaignID, sessionID: sessionID, charID: charID}
+}
+
+// token assina um JWT do usuário — o mesmo caminho do `authed` da casa.
+func (f pilotoFixture) token(t *testing.T, userID int64) string {
+	t.Helper()
+	user, err := f.s.queries.GetUserByID(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("usuário %d não existe: %v", userID, err)
+	}
+	tok, err := f.s.signToken(user)
+	if err != nil {
+		t.Fatalf("assinar token: %v", err)
+	}
+	return tok
 }
 
 // pede manda uma requisição autenticada pelo MesaRouter — que é outro roteador
 // que o `Router()` da API, e por isso o `authed` da casa não serve.
 func (f pilotoFixture) pede(t *testing.T, userID int64, method, path, body string) *httptest.ResponseRecorder {
 	t.Helper()
-	user, err := f.s.queries.GetUserByID(context.Background(), userID)
-	if err != nil {
-		t.Fatalf("usuário %d não existe: %v", userID, err)
-	}
-	token, err := f.s.signToken(user)
-	if err != nil {
-		t.Fatalf("assinar token: %v", err)
-	}
 	req := httptest.NewRequest(method, path, strings.NewReader(body))
-	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Authorization", "Bearer "+f.token(t, userID))
 	if body != "" {
 		req.Header.Set("Content-Type", "application/json")
 	}
@@ -78,6 +92,38 @@ func (f pilotoFixture) pede(t *testing.T, userID int64, method, path, body strin
 
 func (f pilotoFixture) urlDaMesa() string {
 	return "/mesa/" + strconv.FormatInt(f.campaignID, 10) + "/" + strconv.FormatInt(f.sessionID, 10)
+}
+
+// posta manda a escrita por um servidor HTTP DE VERDADE, e não pelo par
+// `httptest.NewRequest` + recorder.
+//
+// Isso não é preciosismo: o SDK do Datastar fecha o corpo do pedido ao criar o
+// gerador SSE, então `ReadSignals` depois do `NewSSE` falha com "body already
+// closed" — e o par de teste NÃO reproduz esse ciclo de vida. A ordem trocada
+// passou verde na suíte inteira e quebrou toda escrita no servidor real; o
+// defeito apareceu com um curl, não com um teste. Este helper existe para que
+// não apareça assim de novo.
+func (f pilotoFixture) posta(t *testing.T, userID int64, caminho, corpo string) string {
+	t.Helper()
+	srv := httptest.NewServer(http.StripPrefix("/mesa", f.s.MesaRouter()))
+	defer srv.Close()
+
+	req, err := http.NewRequest(http.MethodPost, srv.URL+caminho, strings.NewReader(corpo))
+	if err != nil {
+		t.Fatalf("montar pedido: %v", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+f.token(t, userID))
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("postar: %v", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+	lido, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("ler resposta: %v", err)
+	}
+	return string(lido)
 }
 
 // cena põe a sessão em cena com um ogro de PV OCULTOS e o PC do jogador.
@@ -166,8 +212,7 @@ func TestMesaRecusaD20ForaDaFaixaEDiz(t *testing.T) {
 	f := novoPiloto(t)
 	f.cena(t)
 
-	rec := f.pede(t, f.jogador, http.MethodPost, f.urlDaMesa()+"/iniciativa", `{"d20":47}`)
-	corpo := rec.Body.String()
+	corpo := f.posta(t, f.jogador, f.urlDaMesa()+"/iniciativa", `{"d20":47}`)
 
 	if !strings.HasPrefix(corpo, "event: datastar-patch-signals") {
 		t.Fatalf("a recusa não saiu como evento do Datastar, saiu como:\n%s", corpo)
@@ -198,8 +243,10 @@ func TestMesaRegistraIniciativaComTotalDoServidor(t *testing.T) {
 		t.Fatal("bônus zero: o fixture nasceu vácuo e este teste não provaria nada")
 	}
 
-	if rec := f.pede(t, f.jogador, http.MethodPost, f.urlDaMesa()+"/iniciativa", `{"d20":14}`); rec.Code != http.StatusOK {
-		t.Fatalf("code=%d", rec.Code)
+	// O corpo é conferido, e não só o código: com a ordem trocada o servidor
+	// devolve 200 com um erro DENTRO do sinal, e "deu 200" não é resposta.
+	if resposta := f.posta(t, f.jogador, f.urlDaMesa()+"/iniciativa", `{"d20":14}`); !strings.Contains(resposta, `{"erro":""}`) {
+		t.Fatalf("a escrita não foi aceita, respondeu:\n%s", resposta)
 	}
 
 	estado := f.s.sessions.getState(f.sessionID)
@@ -213,26 +260,6 @@ func TestMesaRegistraIniciativaComTotalDoServidor(t *testing.T) {
 		}
 	}
 	t.Fatal("a linha do jogador não entrou na fila")
-}
-
-// O formato do fio, que é onde um erro custa caro e não aparece: o Datastar
-// corta cada linha do `data:` no primeiro espaço e reagrupa por chave, então um
-// fragmento com quebra de linha mandado num `data:` só chegaria TRUNCADO — e a
-// tela mostraria meia página sem nenhum erro em lugar nenhum.
-//
-// Provado VERMELHO trocando o laço por um `data: elements ` único com o HTML
-// inteiro: a segunda linha deixou de ter prefixo.
-func TestPatchElementsQuebraCadaLinha(t *testing.T) {
-	evento := patchElementsEvent([]byte("<div id=\"x\">\n  <p>oi</p>\n</div>\n"))
-
-	querido := "event: datastar-patch-elements\n" +
-		"data: elements <div id=\"x\">\n" +
-		"data: elements   <p>oi</p>\n" +
-		"data: elements </div>\n" +
-		"\n"
-	if evento != querido {
-		t.Errorf("evento errado:\n--- veio ---\n%s\n--- queria ---\n%s", evento, querido)
-	}
 }
 
 // A vez é MINHA quando a linha na vez é de um personagem meu — e é "de outro"
@@ -294,5 +321,103 @@ func TestHpTomDeNosLimiares(t *testing.T) {
 		if got := hpTomDe(c.pct); got != c.tom {
 			t.Errorf("hpTomDe(%d) = %q, queria %q", c.pct, got, c.tom)
 		}
+	}
+}
+
+// A COMPRESSÃO do stream — o passo (a) da ordem combinada, e o ganho que domina
+// todos os outros: medido neste piloto, 52.332 bytes crus de três remendos viram
+// 2.513 em gzip e 1.827 em brotli. Ela é invisível na tela, então quem apagar o
+// `WithCompression()` multiplica a banda por vinte sem nada parecer errado — é
+// exatamente por isso que ela precisa de guarda.
+//
+// Servidor de verdade e `Accept-Encoding` escrito à mão de propósito: o
+// `http.Client` do Go põe o cabeçalho sozinho e descomprime por baixo do pano,
+// escondendo o `Content-Encoding` que este teste existe para ver.
+func TestMesaStreamComprime(t *testing.T) {
+	f := novoPiloto(t)
+	f.cena(t)
+	srv := httptest.NewServer(http.StripPrefix("/mesa", f.s.MesaRouter()))
+	defer srv.Close()
+
+	req, err := http.NewRequest(http.MethodGet, srv.URL+f.urlDaMesa()+"/stream", nil)
+	if err != nil {
+		t.Fatalf("montar pedido: %v", err)
+	}
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", "Bearer "+f.token(t, f.jogador))
+	// O stream não termina sozinho; o contexto é o que devolve o controle depois
+	// do primeiro quadro.
+	ctx, cancelar := context.WithCancel(context.Background())
+	defer cancelar()
+	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
+	if err != nil {
+		t.Fatalf("abrir stream: %v", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if got := resp.Header.Get("Content-Encoding"); got != "gzip" {
+		t.Fatalf("Content-Encoding = %q, queria gzip — o stream saiu cru", got)
+	}
+	zr, err := gzip.NewReader(resp.Body)
+	if err != nil {
+		t.Fatalf("o corpo não é gzip: %v", err)
+	}
+	// Lê UM evento — até a linha em branco que o fecha. Ler um buffer de tamanho
+	// fixo não serve: o fragmento tem ~17KB e a fila fica depois da faixa e do
+	// Grupo, então um buffer curto corta justamente o que interessa, e um longo
+	// bloquearia esperando quadros que só o batimento traria.
+	leitor := bufio.NewScanner(zr)
+	leitor.Buffer(make([]byte, 0, 64*1024), 1<<20)
+	var quadro strings.Builder
+	for leitor.Scan() {
+		linha := leitor.Text()
+		if linha == "" {
+			break
+		}
+		quadro.WriteString(linha)
+		quadro.WriteString("\n")
+	}
+
+	// As duas metades: veio no evento do Datastar E carrega a fila de verdade.
+	// Só a primeira passaria verde com um stream que comprime silêncio.
+	texto := quadro.String()
+	if !strings.Contains(texto, "datastar-patch-elements") {
+		t.Errorf("o primeiro quadro não é um patch do Datastar:\n%s", texto)
+	}
+	if !strings.Contains(texto, "Ogro cansado") {
+		t.Errorf("o primeiro quadro não trouxe a fila:\n%s", texto)
+	}
+}
+
+// O aviso do store — o passo (b). O que este teste afirma é a INVARIANTE que
+// torna o aviso confiável: `apply` é o funil das treze mutações da fila,
+// então nenhuma delas pode escapar sem cutucar quem escuta.
+func TestMesaAvisaAssinantesEmCadaMutacao(t *testing.T) {
+	f := novoPiloto(t)
+	aviso, parar := f.s.sessions.assinar(f.sessionID)
+
+	if _, err := f.s.sessions.startScene(f.sessionID); err != nil {
+		t.Fatalf("iniciar cena: %v", err)
+	}
+	select {
+	case <-aviso:
+	default:
+		t.Fatal("a mutação passou sem avisar quem escuta")
+	}
+
+	// Baixar a assinatura tem de PARAR o aviso: sem isto cada aba fechada deixa
+	// um canal para sempre, e o `avisarLocked` passa a percorrer uma lista que só
+	// cresce escrevendo em canais que ninguém lê.
+	parar()
+	if _, err := f.s.sessions.endScene(f.sessionID); err != nil {
+		t.Fatalf("encerrar cena: %v", err)
+	}
+	select {
+	case <-aviso:
+		t.Fatal("o ouvinte baixado continuou recebendo — a lista vaza")
+	default:
+	}
+	if n := len(f.s.sessions.ouvintes[f.sessionID]); n != 0 {
+		t.Errorf("sobraram %d ouvintes registrados depois da baixa", n)
 	}
 }
