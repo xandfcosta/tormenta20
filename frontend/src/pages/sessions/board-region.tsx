@@ -11,6 +11,7 @@ import { EmptyBoard } from '@/features/battle-board/empty-board'
 import { PlaceEditor } from '@/features/battle-board/place-editor'
 import { PlacesDialog } from '@/features/battle-board/places-list'
 import { MarkerActions, TokenActions, nextMarkerText } from '@/features/battle-board/token-actions'
+import { PopulateDialog, isPlayerEntry } from '@/features/battle-board/populate-dialog'
 import { TokenDialog } from '@/features/battle-board/token-dialog'
 import { SceneContainerProvider, useSceneContainer } from '@/shared/lib/scene-container'
 import { createFullscreen } from '@/shared/lib/fullscreen'
@@ -249,6 +250,31 @@ export function BoardRegion(props: {
    *  dele — a lente é sobre a cena, não sobre as ferramentas: ele confere a
    *  emboscada sem parar de montá-la. */
   const cena = (aberto: BoardState) => playerCopy() ?? aberto
+  /** As linhas que já têm peça no tabuleiro — a mesma pergunta que o servidor
+   *  faz antes de colocar alguém (é o que torna trazer idempotente), e o que
+   *  faz o diálogo escrever "já no mapa" em vez de esconder a linha. */
+  const linhasNoMapa = createMemo(
+    () => new Set((board()?.tokens ?? []).flatMap((peca) => (peca.entryId ? [peca.entryId] : []))),
+  )
+  /**
+   * O atalho do clique direito: só os JOGADORES, direto (ALE-204).
+   *
+   * Pôr os PCs no mapa é o gesto de abrir cena e não revela nada — eles sabem
+   * onde estão. Todo o resto é informação que o mestre controla, e informação
+   * que o mestre controla nunca sai por atalho.
+   *
+   * O `preventDefault` é pelo menu do browser, e não por disputa de gesto: a
+   * borracha de terreno (ALE-192/178) escuta na SUPERFÍCIE do mapa, que não é
+   * ancestral deste botão — o botão mora no cabeçalho, irmão do tabuleiro.
+   */
+  const trazerOsJogadores = (event: MouseEvent) => {
+    event.preventDefault()
+    const jogadores = props.rt
+      .state()
+      .initiative.filter((linha) => isPlayerEntry(linha) && !linhasNoMapa().has(linha.id))
+    props.rt.populateBoard(jogadores.map((linha) => linha.id))
+  }
+
   /** Quantas peças a mesa NÃO está vendo — é a resposta que o mestre foi
    *  procurar, e ela não se lê contando o que sumiu da tela. */
   const hiddenCount = () => (board()?.tokens ?? []).filter((peca) => peca.hidden).length
@@ -521,15 +547,29 @@ export function BoardRegion(props: {
                       </Button>
                     )}
                   />
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    disabled={!props.rt.isConnected()}
-                    onClick={props.rt.populateBoard}
-                  >
-                    <Users aria-hidden="true" class="size-4" />
-                    Trazer a iniciativa
-                  </Button>
+                  {/* Um botão, dois gestos, e o padrão é o SEGURO (ALE-204):
+                      esquerdo escolhe quem vem, direito traz só os jogadores.
+                      Trazer a fila inteira num clique punha no mapa o assassino
+                      montado para aparecer depois, e sobrava desfazer peça por
+                      peça. */}
+                  <PopulateDialog
+                    entries={props.rt.state().initiative}
+                    placedEntryIds={linhasNoMapa()}
+                    onPopulate={props.rt.populateBoard}
+                    trigger={(abrir) => (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={!props.rt.isConnected()}
+                        title="Escolher quem vem para o tabuleiro. Clique direito traz só os jogadores."
+                        onClick={abrir}
+                        onContextMenu={trazerOsJogadores}
+                      >
+                        <Users aria-hidden="true" class="size-4" />
+                        Trazer a iniciativa
+                      </Button>
+                    )}
+                  />
                   {/* A peça avulsa que a iniciativa não traz: a porta, o baú, o
                       aliado sem turno. É o `kind: "object"` que o servidor
                       sempre soube guardar e que nunca tinha como nascer. */}

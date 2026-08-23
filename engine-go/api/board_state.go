@@ -384,20 +384,36 @@ func abs(v int) int {
 	return v
 }
 
-// populateBoard traz para o tabuleiro cada linha da iniciativa que ainda não
-// tem peça, com os PERSONAGENS de um lado e o resto do outro. Idempotente de
-// propósito, como o `populateParty` do rastreador: clicar duas vezes não
-// duplica ninguém.
+// entrySelection nomeia as linhas da iniciativa que o mestre escolheu trazer
+// (ALE-204).
+//
+// Nil é TODAS, e isso não é conveniência: é o que `board-populate` sem
+// `entryIds` sempre significou, e uma aba aberta antes desta mudança continua
+// mandando exatamente isso. Lista VAZIA é diferente de ausente — "não escolhi"
+// não é "escolhi ninguém".
+type entrySelection map[string]bool
+
+func (s entrySelection) wants(entryID string) bool { return s == nil || s[entryID] }
+
+// populateBoard traz para o tabuleiro cada linha ESCOLHIDA da iniciativa que
+// ainda não tem peça, com os PERSONAGENS de um lado e o resto do outro.
+// Idempotente de propósito, como o `populateParty` do rastreador: clicar duas
+// vezes não duplica ninguém.
 //
 // Antes todos caíam numa fileira única no meio do mapa (ALE-166), e esse é o
 // estado em que o mestre encontra o tabuleiro no segundo em que o combate
 // começa, com a mesa esperando: ele tinha de arrastar nove peças, uma a uma,
 // antes de o tabuleiro servir para alguma coisa. Nascendo em dois lados, ele
 // AJUSTA em vez de DISTRIBUIR — e a informação de lado já existia na linha.
-func populateBoard(b *BoardState, st *SessionRuntimeState, newID func() string) int {
+//
+// A ESCOLHA entrou depois (ALE-204): trazer a fila inteira punha no mapa o
+// assassino que o mestre montou para aparecer no terceiro turno, e desfazer
+// era peça por peça. Quem não foi escolhido não nasce — nem escondido: peça
+// que não existe não vaza por bug de redação.
+func populateBoard(b *BoardState, st *SessionRuntimeState, newID func() string, chosen entrySelection) int {
 	placed := 0
 	for _, entry := range st.Initiative {
-		if hasTokenForEntry(b, entry.ID) {
+		if !chosen.wants(entry.ID) || hasTokenForEntry(b, entry.ID) {
 			continue
 		}
 		token := BoardToken{

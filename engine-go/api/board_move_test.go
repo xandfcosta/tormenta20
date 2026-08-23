@@ -240,7 +240,7 @@ func TestPopulateStartsTheSidesApart(t *testing.T) {
 	_ = addEntry(st, npc("Goblin", 9), id)
 	b := newBoard("Cripta", "pedra")
 
-	populateBoard(b, st, boardCounter())
+	populateBoard(b, st, boardCounter(), nil)
 
 	pcs, npcs := []BoardToken{}, []BoardToken{}
 	for _, token := range b.Tokens {
@@ -293,8 +293,8 @@ func TestPopulateLeavesWhoIsAlreadyThere(t *testing.T) {
 	tokens := boardCounter()
 	_ = addToken(b, BoardToken{Label: "Ogro", X: 40, Y: 40, EntryID: strPtr("e1")}, tokens)
 
-	populateBoard(b, st, tokens)
-	populateBoard(b, st, tokens)
+	populateBoard(b, st, tokens, nil)
+	populateBoard(b, st, tokens, nil)
 
 	if len(b.Tokens) != 1 {
 		t.Fatalf("o tabuleiro ficou com %d peças, esperava 1", len(b.Tokens))

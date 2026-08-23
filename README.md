@@ -8,6 +8,10 @@ frontend/  Vite + SolidJS + TanStack Router/Query + Kobalte (Tailwind v4, CSS va
 e2e/       Playwright, fora do frontend de propósito
 ```
 
+A linguagem do domínio mora em **[GLOSSARIO.md](GLOSSARIO.md)**: uma palavra por
+conceito, os sinônimos proibidos e a regra de quando se escreve em português e
+quando em inglês. Consulte antes de nomear algo que o usuário vá ler.
+
 O frontend era React até o cutover (ALE-76), e o backend NestJS foi removido — o
 Go é o backend, e migra o próprio banco (goose embutido) ao subir. O histórico
 das duas migrações vive no `git log` e nas issues do Linear.

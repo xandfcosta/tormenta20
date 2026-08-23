@@ -186,7 +186,12 @@ test.describe('Sessão ao vivo — dois clientes', () => {
 
       // E as peças também: "trazer a iniciativa" é o mestre montando a cena, e a
       // peça chega na tela do jogador com o nome de quem ela representa.
+      // "Todos" porque o figurante é um NPC digitado à mão, e o padrão do
+      // diálogo traz só os jogadores (ALE-204).
       await telaDoMestre.getByRole('button', { name: 'Trazer a iniciativa' }).click()
+      const quemVem = telaDoMestre.getByRole('dialog')
+      await quemVem.getByRole('button', { name: 'Todos' }).click()
+      await quemVem.getByRole('button', { name: /^Trazer \d/ }).click()
       await expect(
         telaDoMestre.getByRole('button', { name: new RegExp(`^${figurante}, coluna`) }),
       ).toBeVisible()

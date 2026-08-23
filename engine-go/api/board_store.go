@@ -232,8 +232,13 @@ func (bs *boardStore) paintTerrain(ctx context.Context, sessionID int64, square 
 	})
 }
 
-func (bs *boardStore) populate(ctx context.Context, sessionID int64, st *SessionRuntimeState) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, func(b *BoardState) error { populateBoard(b, st, bs.newID); return nil })
+func (bs *boardStore) populate(
+	ctx context.Context, sessionID int64, st *SessionRuntimeState, chosen entrySelection,
+) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error {
+		populateBoard(b, st, bs.newID, chosen)
+		return nil
+	})
 }
 
 // setSpeeds grava o orçamento de várias peças de uma vez. Uma mutação só, e um
