@@ -137,7 +137,14 @@
               {{end}}
               {{if .Condicoes}}
               <ul class="flex flex-wrap gap-1">
-                {{range .Condicoes}}<li class="bg-penalty px-1 text-[10px] font-bold uppercase tracking-widest text-penalty-ink">{{.}}</li>{{end}}
+                {{/* Fundo a 15% da MESMA cor e a cor como texto, que é o
+                     desenho do `condition-pips.tsx` da SPA — e não a tinta de
+                     penalidade sobre preenchimento sólido, que foi como eu
+                     escrevi primeiro: medido no navegador, aquilo dava 2,36:1
+                     contra os 4,5 do AA. É o mesmo erro que a ALE-200 consertou
+                     no botão destrutivo — tinta é para ESCREVER sobre o painel,
+                     não para escrever sobre o próprio preenchimento. */}}
+                {{range .Condicoes}}<li class="rounded-md border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/15 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-[color:var(--hp-hurt)]">{{.}}</li>{{end}}
               </ul>
               {{end}}
             </div>

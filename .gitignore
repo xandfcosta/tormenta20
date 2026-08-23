@@ -3,6 +3,10 @@ dist
 # O Playwright escreve aqui quando é invocado da RAIZ em vez de `e2e/` — o
 # .gitignore de lá só cobre o caminho relativo a ele.
 /test-results/
+# E o estado de login vai junto, pelo mesmo motivo. Isto NÃO é conveniência: os
+# arquivos guardam o cookie `t20_session` assinado, e eu já os commitei uma vez
+# por rodar `playwright test --config e2e/...` de fora da pasta `e2e` (ALE-219).
+/.auth/
 .DS_Store
 .env
 .env.local
