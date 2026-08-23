@@ -11,6 +11,42 @@ import (
 	"strings"
 )
 
+const addCharacterConditional = `-- name: AddCharacterConditional :exec
+INSERT INTO character_conditionals (characterId, conditionalId)
+VALUES (?, ?) ON CONFLICT DO NOTHING
+`
+
+type AddCharacterConditionalParams struct {
+	Characterid   int64  `json:"characterid"`
+	Conditionalid string `json:"conditionalid"`
+}
+
+func (q *Queries) AddCharacterConditional(ctx context.Context, arg AddCharacterConditionalParams) error {
+	_, err := q.db.ExecContext(ctx, addCharacterConditional, arg.Characterid, arg.Conditionalid)
+	return err
+}
+
+const bumpCharacterPowerUse = `-- name: BumpCharacterPowerUse :exec
+INSERT INTO character_power_uses (characterId, powerId, scope, used)
+VALUES (?, ?, ?, 1)
+ON CONFLICT (characterId, powerId, scope)
+DO UPDATE SET used = used + 1
+`
+
+type BumpCharacterPowerUseParams struct {
+	Characterid int64  `json:"characterid"`
+	Powerid     string `json:"powerid"`
+	Scope       string `json:"scope"`
+}
+
+// O upsert SOMA em vez de escrever o total: quem chama diz "gastei mais um",
+// nunca "agora sao tres". Mandar o total deixaria dois cliques rapidos gravarem
+// o mesmo numero e perderem um uso.
+func (q *Queries) BumpCharacterPowerUse(ctx context.Context, arg BumpCharacterPowerUseParams) error {
+	_, err := q.db.ExecContext(ctx, bumpCharacterPowerUse, arg.Characterid, arg.Powerid, arg.Scope)
+	return err
+}
+
 const callerCharacterInCampaign = `-- name: CallerCharacterInCampaign :one
 SELECT ch.id, ch.name, ch.level FROM campaign_members m
 JOIN characters ch ON ch.id = m.characterId
@@ -33,6 +69,47 @@ func (q *Queries) CallerCharacterInCampaign(ctx context.Context, arg CallerChara
 	var i CallerCharacterInCampaignRow
 	err := row.Scan(&i.ID, &i.Name, &i.Level)
 	return i, err
+}
+
+const clearCharacterConditionals = `-- name: ClearCharacterConditionals :exec
+DELETE FROM character_conditionals WHERE characterId = ?
+`
+
+func (q *Queries) ClearCharacterConditionals(ctx context.Context, characterid int64) error {
+	_, err := q.db.ExecContext(ctx, clearCharacterConditionals, characterid)
+	return err
+}
+
+const clearCharacterPowerUses = `-- name: ClearCharacterPowerUses :exec
+DELETE FROM character_power_uses WHERE characterId = ?
+`
+
+func (q *Queries) ClearCharacterPowerUses(ctx context.Context, characterid int64) error {
+	_, err := q.db.ExecContext(ctx, clearCharacterPowerUses, characterid)
+	return err
+}
+
+const clearCharacterPowerUsesByScope = `-- name: ClearCharacterPowerUsesByScope :exec
+DELETE FROM character_power_uses WHERE characterId = ? AND scope = ?
+`
+
+type ClearCharacterPowerUsesByScopeParams struct {
+	Characterid int64  `json:"characterid"`
+	Scope       string `json:"scope"`
+}
+
+func (q *Queries) ClearCharacterPowerUsesByScope(ctx context.Context, arg ClearCharacterPowerUsesByScopeParams) error {
+	_, err := q.db.ExecContext(ctx, clearCharacterPowerUsesByScope, arg.Characterid, arg.Scope)
+	return err
+}
+
+const clearCharacterStances = `-- name: ClearCharacterStances :exec
+DELETE FROM character_stances WHERE characterId = ?
+`
+
+func (q *Queries) ClearCharacterStances(ctx context.Context, characterid int64) error {
+	_, err := q.db.ExecContext(ctx, clearCharacterStances, characterid)
+	return err
 }
 
 const createAccountInvite = `-- name: CreateAccountInvite :one
@@ -1482,6 +1559,38 @@ func (q *Queries) ListCampaignsForUser(ctx context.Context, userid int64) ([]Cam
 	return items, nil
 }
 
+const listCharacterConditionals = `-- name: ListCharacterConditionals :many
+
+SELECT conditionalId FROM character_conditionals
+WHERE characterId = ? ORDER BY conditionalId
+`
+
+// Estado de mesa da ficha (ALE-222). Saiu do localStorage: o servidor e dono.
+// CUIDADO: conditionals (o opt-in do JOGADOR) nao e conditions (as do LIVRO,
+// que vivem na coluna characters.activeConditions). Ver C6 no GLOSSARIO.md.
+func (q *Queries) ListCharacterConditionals(ctx context.Context, characterid int64) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, listCharacterConditionals, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var conditionalid string
+		if err := rows.Scan(&conditionalid); err != nil {
+			return nil, err
+		}
+		items = append(items, conditionalid)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listCharacterMaxes = `-- name: ListCharacterMaxes :many
 SELECT id, hpMax, mpMax FROM characters WHERE id IN (/*SLICE:ids*/?)
 `
@@ -1512,6 +1621,74 @@ func (q *Queries) ListCharacterMaxes(ctx context.Context, ids []int64) ([]ListCh
 	for rows.Next() {
 		var i ListCharacterMaxesRow
 		if err := rows.Scan(&i.ID, &i.Hpmax, &i.Mpmax); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listCharacterPowerUses = `-- name: ListCharacterPowerUses :many
+SELECT powerId, scope, used FROM character_power_uses
+WHERE characterId = ? ORDER BY powerId, scope
+`
+
+type ListCharacterPowerUsesRow struct {
+	Powerid string `json:"powerid"`
+	Scope   string `json:"scope"`
+	Used    int64  `json:"used"`
+}
+
+func (q *Queries) ListCharacterPowerUses(ctx context.Context, characterid int64) ([]ListCharacterPowerUsesRow, error) {
+	rows, err := q.db.QueryContext(ctx, listCharacterPowerUses, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListCharacterPowerUsesRow{}
+	for rows.Next() {
+		var i ListCharacterPowerUsesRow
+		if err := rows.Scan(&i.Powerid, &i.Scope, &i.Used); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listCharacterStances = `-- name: ListCharacterStances :many
+SELECT flag, steps, pmPaid FROM character_stances
+WHERE characterId = ? ORDER BY flag
+`
+
+type ListCharacterStancesRow struct {
+	Flag   string `json:"flag"`
+	Steps  int64  `json:"steps"`
+	Pmpaid int64  `json:"pmpaid"`
+}
+
+func (q *Queries) ListCharacterStances(ctx context.Context, characterid int64) ([]ListCharacterStancesRow, error) {
+	rows, err := q.db.QueryContext(ctx, listCharacterStances, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListCharacterStancesRow{}
+	for rows.Next() {
+		var i ListCharacterStancesRow
+		if err := rows.Scan(&i.Flag, &i.Steps, &i.Pmpaid); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -2075,6 +2252,34 @@ func (q *Queries) ListUsersWithCounts(ctx context.Context) ([]ListUsersWithCount
 		return nil, err
 	}
 	return items, nil
+}
+
+const removeCharacterConditional = `-- name: RemoveCharacterConditional :exec
+DELETE FROM character_conditionals WHERE characterId = ? AND conditionalId = ?
+`
+
+type RemoveCharacterConditionalParams struct {
+	Characterid   int64  `json:"characterid"`
+	Conditionalid string `json:"conditionalid"`
+}
+
+func (q *Queries) RemoveCharacterConditional(ctx context.Context, arg RemoveCharacterConditionalParams) error {
+	_, err := q.db.ExecContext(ctx, removeCharacterConditional, arg.Characterid, arg.Conditionalid)
+	return err
+}
+
+const removeCharacterStance = `-- name: RemoveCharacterStance :exec
+DELETE FROM character_stances WHERE characterId = ? AND flag = ?
+`
+
+type RemoveCharacterStanceParams struct {
+	Characterid int64  `json:"characterid"`
+	Flag        string `json:"flag"`
+}
+
+func (q *Queries) RemoveCharacterStance(ctx context.Context, arg RemoveCharacterStanceParams) error {
+	_, err := q.db.ExecContext(ctx, removeCharacterStance, arg.Characterid, arg.Flag)
+	return err
 }
 
 const reopenSession = `-- name: ReopenSession :one
@@ -2739,4 +2944,28 @@ func (q *Queries) UpsertActiveEffect(ctx context.Context, arg UpsertActiveEffect
 		&i.Createdat,
 	)
 	return i, err
+}
+
+const upsertCharacterStance = `-- name: UpsertCharacterStance :exec
+INSERT INTO character_stances (characterId, flag, steps, pmPaid)
+VALUES (?, ?, ?, ?)
+ON CONFLICT (characterId, flag)
+DO UPDATE SET steps = excluded.steps, pmPaid = excluded.pmPaid
+`
+
+type UpsertCharacterStanceParams struct {
+	Characterid int64  `json:"characterid"`
+	Flag        string `json:"flag"`
+	Steps       int64  `json:"steps"`
+	Pmpaid      int64  `json:"pmpaid"`
+}
+
+func (q *Queries) UpsertCharacterStance(ctx context.Context, arg UpsertCharacterStanceParams) error {
+	_, err := q.db.ExecContext(ctx, upsertCharacterStance,
+		arg.Characterid,
+		arg.Flag,
+		arg.Steps,
+		arg.Pmpaid,
+	)
+	return err
 }

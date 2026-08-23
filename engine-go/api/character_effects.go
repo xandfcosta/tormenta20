@@ -33,6 +33,13 @@ func (s *Server) endScene(ctx context.Context, user AuthUser, characterID int64)
 	if err := s.queries.DeleteEffectsByScope(ctx, sqlcgen.DeleteEffectsByScopeParams{Characterid: characterID, Scope: "scene"}); err != nil {
 		return http.StatusInternalServerError, errors.New("Could not clear effects")
 	}
+	// Os usos "1/cena" e as posturas vao junto (ALE-222). Aqui e nao no
+	// `endScene` da SESSAO: este e o caminho que ja limpa a ficha, e e por onde
+	// os dois transportes passam. A colisao C1 do glossario mede o que custa
+	// escolher o outro — o `endScene` da sessao nao limpa efeito nenhum.
+	if err := s.clearScenePlayState(ctx, characterID); err != nil {
+		return http.StatusInternalServerError, errors.New("Could not clear the play state")
+	}
 	return http.StatusOK, nil
 }
 
@@ -43,6 +50,9 @@ func (s *Server) endDay(ctx context.Context, user AuthUser, characterID int64) (
 	}
 	if err := s.queries.DeleteSceneAndDayEffects(ctx, characterID); err != nil {
 		return http.StatusInternalServerError, errors.New("Could not clear effects")
+	}
+	if err := s.clearDayPlayState(ctx, characterID); err != nil {
+		return http.StatusInternalServerError, errors.New("Could not clear the play state")
 	}
 	return http.StatusOK, nil
 }

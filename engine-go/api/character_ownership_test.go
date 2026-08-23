@@ -25,7 +25,12 @@ import (
 // alguém escrever a linha dela. O risco real nunca foi a linha existente estar
 // errada — é a rota do mês que vem esquecer a porta.
 
-var characterRoute = regexp.MustCompile(`r\.(Get|Post|Patch|Delete)\("(/\{id\}[^"]*)", s\.(\w+)\)`)
+// `Put` entrou na ALE-222, e a ausência dele era um PONTO CEGO: a rota
+// `PUT /{id}/stances/{flag}` foi registrada e esta invariante não a viu, porque
+// o verbo não estava na alternância — das quatro rotas novas ela cobrou três.
+// Uma invariante que lê o router vale exatamente o que vale a lista de verbos
+// que ela reconhece.
+var characterRoute = regexp.MustCompile(`r\.(Get|Post|Put|Patch|Delete)\("(/\{id\}[^"]*)", s\.(\w+)\)`)
 
 // registeredCharacterRoutes lê o `r.Route("/characters", …)` do server.go.
 func registeredCharacterRoutes(t *testing.T) map[string]bool {
@@ -99,6 +104,11 @@ func characterIntruderCases(hero, item, effect int64) []intruderCase {
 		{http.MethodDelete, "/{id}/spells/{catalogSpellId}", base + "/spells/bola-de-fogo", ""},
 		{http.MethodPatch, "/{id}/spells/{catalogSpellId}/prepared", base + "/spells/bola-de-fogo/prepared", `{"prepared":true}`},
 		{http.MethodPost, "/{id}/spells/{catalogSpellId}/cast", base + "/spells/bola-de-fogo/cast", "{}"},
+		// O estado de JOGO da ficha (ALE-222).
+		{http.MethodPatch, "/{id}/conditionals", base + "/conditionals", `{"conditionals":["furia"]}`},
+		{http.MethodPost, "/{id}/power-uses", base + "/power-uses", `{"powerId":"furia","scope":"day"}`},
+		{http.MethodPut, "/{id}/stances/{flag}", base + "/stances/furia", `{"steps":1,"pmPaid":2}`},
+		{http.MethodDelete, "/{id}/stances/{flag}", base + "/stances/furia", ""},
 	}
 }
 

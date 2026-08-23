@@ -476,3 +476,56 @@ SELECT * FROM campaign_places WHERE campaignId = ? AND name = ? LIMIT 1;
 
 -- name: DeleteCampaignPlace :exec
 DELETE FROM campaign_places WHERE id = ?;
+
+-- Estado de mesa da ficha (ALE-222). Saiu do localStorage: o servidor e dono.
+-- CUIDADO: conditionals (o opt-in do JOGADOR) nao e conditions (as do LIVRO,
+-- que vivem na coluna characters.activeConditions). Ver C6 no GLOSSARIO.md.
+
+-- name: ListCharacterConditionals :many
+SELECT conditionalId FROM character_conditionals
+WHERE characterId = ? ORDER BY conditionalId;
+
+-- name: AddCharacterConditional :exec
+INSERT INTO character_conditionals (characterId, conditionalId)
+VALUES (?, ?) ON CONFLICT DO NOTHING;
+
+-- name: RemoveCharacterConditional :exec
+DELETE FROM character_conditionals WHERE characterId = ? AND conditionalId = ?;
+
+-- name: ClearCharacterConditionals :exec
+DELETE FROM character_conditionals WHERE characterId = ?;
+
+-- name: ListCharacterPowerUses :many
+SELECT powerId, scope, used FROM character_power_uses
+WHERE characterId = ? ORDER BY powerId, scope;
+
+-- O upsert SOMA em vez de escrever o total: quem chama diz "gastei mais um",
+-- nunca "agora sao tres". Mandar o total deixaria dois cliques rapidos gravarem
+-- o mesmo numero e perderem um uso.
+-- name: BumpCharacterPowerUse :exec
+INSERT INTO character_power_uses (characterId, powerId, scope, used)
+VALUES (?, ?, ?, 1)
+ON CONFLICT (characterId, powerId, scope)
+DO UPDATE SET used = used + 1;
+
+-- name: ClearCharacterPowerUsesByScope :exec
+DELETE FROM character_power_uses WHERE characterId = ? AND scope = ?;
+
+-- name: ClearCharacterPowerUses :exec
+DELETE FROM character_power_uses WHERE characterId = ?;
+
+-- name: ListCharacterStances :many
+SELECT flag, steps, pmPaid FROM character_stances
+WHERE characterId = ? ORDER BY flag;
+
+-- name: UpsertCharacterStance :exec
+INSERT INTO character_stances (characterId, flag, steps, pmPaid)
+VALUES (?, ?, ?, ?)
+ON CONFLICT (characterId, flag)
+DO UPDATE SET steps = excluded.steps, pmPaid = excluded.pmPaid;
+
+-- name: RemoveCharacterStance :exec
+DELETE FROM character_stances WHERE characterId = ? AND flag = ?;
+
+-- name: ClearCharacterStances :exec
+DELETE FROM character_stances WHERE characterId = ?;

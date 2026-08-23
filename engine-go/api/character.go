@@ -201,6 +201,13 @@ func (s *Server) loadCharacter(ctx context.Context, c sqlcgen.Character) (Charac
 			ID: sp.ID, CatalogSpellID: sp.Catalogspellid, Prepared: sp.Prepared != 0, LearnedAt: sp.Learnedat,
 		})
 	}
+
+	// O estado de JOGO (ALE-222). Vem junto e nao por endpoint proprio: separado,
+	// a ficha abriria com a Furia desligada e a ligaria um instante depois,
+	// piscando os numeros que ela muda.
+	if err := s.loadPlayState(ctx, c.ID, &dto); err != nil {
+		return dto, err
+	}
 	return dto, nil
 }
 
