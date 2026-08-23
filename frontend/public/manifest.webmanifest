@@ -1,0 +1,18 @@
+{
+  "id": "/",
+  "name": "Tormenta 20",
+  "short_name": "Tormenta 20",
+  "description": "A mesa de Tormenta 20: campanhas, fichas e a sessão ao vivo.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0c0a0f",
+  "theme_color": "#0c0a0f",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

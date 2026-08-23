@@ -102,6 +102,81 @@ assets, `/api/*` e o `/socket.io/` na mesma porta. Não há nginx, não há
 docker-compose e não há segundo runtime pra manter — foi por isso que os dois
 saíram quando o Nest saiu.
 
+### HTTPS na LAN, e o app instalado no telefone
+
+Em `http://` o navegador não considera a página **contexto seguro**, e é daí que
+vem o buraco. Medido neste servidor, com o mesmo endereço de LAN nos dois
+esquemas:
+
+| pelo `http://192.168.x.x:3001` | pelo `https://…` |
+|---|---|
+| `window.isSecureContext` **false** | **true** |
+| `'serviceWorker' in navigator` **false** | **true** |
+
+Sem contexto seguro nenhum service worker registra, e o Chrome do Android não
+oferece instalar: o "Adicionar à Tela de Início" devolve um **atalho**, uma aba
+comum com a barra de endereço de volta.
+
+Com HTTPS, o `manifest.webmanifest` que já está no `index.html` passa a valer e
+o app abre em janela própria nos **dois** sistemas. A **Tela cheia** do menu do
+Hub continua existindo e é outra coisa — é o gesto de quem não instalou, e é a
+saída do desktop (glossário, colisão C7).
+
+**Não há service worker, e a ausência é deliberada** (ALE-118, decisão 4 ainda
+aberta). Ele traria cache offline e traria junto o problema clássico da versão
+velha grudada, sem caminho óbvio para o jogador sair dela — e o app depende de
+buscar catálogo por HTTP (`GET /catalog/:nome`), então a estratégia de cache não
+é detalhe. Isso se decide antes de escrever, não depois.
+
+O TLS termina **neste processo**, não num proxy na frente: a stack de produção é
+um binário só, e é a decisão que o `engine-go/CLAUDE.md` registra.
+
+```bash
+# no .env.production
+TLS_CERT_FILE=/caminho/cert.pem
+TLS_KEY_FILE=/caminho/key.pem
+COOKIE_SECURE=true
+```
+
+O log passa a imprimir `https://…`, que é o endereço que a mesa digita. Quem
+digitar `http://` na mesma porta recebe um 400 do próprio Go — feio, mas
+visível.
+
+**Terminar o TLS fora também funciona** (um túnel, um proxy): deixe os dois
+caminhos vazios, mantenha `COOKIE_SECURE=true`, e o processo segue falando HTTP
+para quem está na frente.
+
+#### De onde vem o certificado — decisão em ABERTO
+
+As duas saídas, com o preço de cada uma. Nenhuma delas está feita neste
+repositório, e nenhuma delas se faz de dentro dele:
+
+| | `mkcert` | domínio próprio + Let's Encrypt (DNS-01) |
+|---|---|---|
+| custo por aparelho | instalar a CA em **cada** telefone que sentar à mesa | nenhum |
+| custo fixo | nenhum | ter um domínio e um DNS com API |
+| internet | nenhuma | só de **saída**, para renovar |
+| exposição | nenhuma | nenhuma — o registro A aponta para o IP **privado**, que só responde de dentro da rede |
+
+`mkcert` é o caminho de uma tarde; o DNS-01 é o que não cobra nada por telefone
+novo. Diferença que decide junto com a tabela: o `mkcert` emite para um IP se
+você pedir, e o Let's Encrypt só emite para **nome** — o que puxa a outra metade
+do problema.
+
+#### Chegar no app sem digitar um IP
+
+Hoje o jogador digita `http://192.168.15.3:3001`, um número que muda quando o
+roteador reinicia. Duas coisas baratas, na ordem em que valem a pena, e **as
+duas fora do código**:
+
+1. **Reserva de DHCP** no roteador, para o IP parar de mudar. Custa cinco
+   minutos e não exige nada deste repositório.
+2. **Um nome** (`t20.local` por mDNS, ou o nome da reserva) — e é para esse
+   nome que o certificado do passo anterior é emitido.
+
+Um QR code na tela do mestre resolveria o resto, e é trabalho de tela: está
+anotado na ALE-118, fora desta parte.
+
 ### Backup do banco
 
 ```bash
@@ -149,6 +224,7 @@ Variáveis (defaults em `engine-go/api/config.go`):
 | `ADMIN_EMAILS` | — | quem administra, separado por vírgula; **obrigatório em produção** |
 | `COOKIE_SECURE` | `false` | ligue quando houver TLS na frente — em HTTP na LAN, ligado, o browser descarta o cookie e o login não conclui |
 | `CORS_ORIGIN` | `http://localhost:5173` (vazio em produção) | a ÚNICA origem liberada; vazio = sem CORS |
+| `TLS_CERT_FILE` / `TLS_KEY_FILE` | vazios | o par de certificados; os DOIS preenchidos = este processo fala HTTPS, os dois vazios = HTTP. Meio par **derruba o boot** |
 | `STATIC_DIR` | vazio | o `dist` do front; vazio = modo dev (o Vite serve) |
 | `BACKUP_DIR` | `../backups` | onde o `pnpm db:backup` e a tela de admin escrevem |
 | `CATALOG_PATH` | `parity/_catalogs.json` | catálogos dos validadores de mutação |

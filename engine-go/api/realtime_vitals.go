@@ -113,32 +113,60 @@ func (g *realtimeGateway) onSessionRest(sock *socket.Socket, args []any) {
 // descansado. Best-effort é sobre continuar apesar da falha, não sobre esconder
 // que ela houve.
 func (g *realtimeGateway) restParty(user AuthUser, campaignID, sessionID int64, scope, condition string) (done, total int, err error) {
+	if scope != "day" {
+		return g.expirePartyScene(user, campaignID, sessionID)
+	}
 	charIDs, err := g.s.listMemberCharacterIds(context.Background(), campaignID)
 	if err != nil {
 		return 0, 0, err
 	}
 	for _, cid := range charIDs {
-		if scope != "day" {
-			if _, e := g.s.endScene(context.Background(), user, cid); e != nil {
-				log.Printf("session %d: encerrar cena do personagem %d falhou (%v)", sessionID, cid, e)
-				continue
-			}
+		if g.restCharacterDay(user, sessionID, cid, condition) {
 			done++
+		}
+	}
+	return done, len(charIDs), nil
+}
+
+// expirePartyScene expira a duração "cena" de TODA ficha do grupo: os efeitos
+// de escopo "scene", os usos "1/cena" e as posturas (o helper de domínio
+// `endScene` faz os três).
+//
+// É o caminho ÚNICO desde a ALE-220, e essa unificação É o conserto: o
+// "Encerrar cena" do mestre e a "Recuperar · cena" agora chamam ESTE helper.
+// Antes só a Recuperação passava por aqui, e encerrar a cena deixava a bênção
+// de duração "cena" viva na ficha — a colisão C1 do glossário.
+func (g *realtimeGateway) expirePartyScene(user AuthUser, campaignID, sessionID int64) (done, total int, err error) {
+	charIDs, err := g.s.listMemberCharacterIds(context.Background(), campaignID)
+	if err != nil {
+		return 0, 0, err
+	}
+	for _, cid := range charIDs {
+		if _, e := g.s.endScene(context.Background(), user, cid); e != nil {
+			log.Printf("session %d: encerrar cena do personagem %d falhou (%v)", sessionID, cid, e)
 			continue
 		}
-		if _, e := g.s.endDay(context.Background(), user, cid); e != nil {
-			log.Printf("session %d: encerrar dia do personagem %d falhou (%v)", sessionID, cid, e)
-			continue
-		}
-		vitals, _, e := g.s.restVitals(context.Background(), user, cid, condition)
-		if e != nil {
-			log.Printf("session %d: descanso do personagem %d falhou (%v)", sessionID, cid, e)
-			continue
-		}
-		g.mirrorVitalsToTracker(sessionID, cid, vitals)
 		done++
 	}
 	return done, len(charIDs), nil
+}
+
+// restCharacterDay encerra o dia de UMA ficha, cura e espelha os vitais no
+// rastreador. Devolve se a ficha inteira deu certo — meia ficha descansada não
+// conta, senão o ack diz "5 de 5" com dois PV que não foram gravados.
+func (g *realtimeGateway) restCharacterDay(user AuthUser, sessionID, characterID int64, condition string) bool {
+	ctx := context.Background()
+	if _, err := g.s.endDay(ctx, user, characterID); err != nil {
+		log.Printf("session %d: encerrar dia do personagem %d falhou (%v)", sessionID, characterID, err)
+		return false
+	}
+	vitals, _, err := g.s.restVitals(ctx, user, characterID, condition)
+	if err != nil {
+		log.Printf("session %d: descanso do personagem %d falhou (%v)", sessionID, characterID, err)
+		return false
+	}
+	g.mirrorVitalsToTracker(sessionID, characterID, vitals)
+	return true
 }
 
 // mirrorVitalsToTracker copies freshly-persisted PV/PM onto the matching live tracker entry

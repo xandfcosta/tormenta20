@@ -30,6 +30,8 @@ alguém já usou e que não voltam.
 | **mestre** | `role === 'gm'` | ~~GM~~ (na tela) | Quem conduz. `gm` continua no código e no fio. |
 | **elenco** | `cast` | — | Quem existe na campanha fora da iniciativa — jogadores e NPCs do mestre (ALE-212). |
 | **regra opcional** | `ignoredRules` | ~~regra da casa~~, ~~regra enforçada~~ | Regra do livro que o mestre pode desligar na campanha — o próprio T20 diz "O mestre pode ignorar essa regra" (p141). Na tela: **Regras da campanha**, e cada chave mostra a regra LIGADA. No código o campo nomeia o que está DESLIGADO, e isso é proposital: valor zero significa "tudo em vigor", que é o padrão do livro. Catálogo em ALE-221. |
+| **app instalado** | `manifest.webmanifest` | ~~atalho~~, ~~PWA~~ (na tela) | O app aberto pela própria janela, sem barra de endereço, depois de "Adicionar à Tela de Início". **Não é a Tela cheia** — ver a colisão C7. `atalho` é proibido porque é o que se ganha SEM manifest servido por HTTPS: um ícone que abre uma aba comum, com a barra de volta. |
+| **tela cheia** | `shared/lib/fullscreen.ts` | ~~fullscreen~~ (na tela) | O gesto do menu do Hub que estica a janela ATUAL pela Fullscreen API. Some quando a aba fecha, e o iPhone não o tem. Continua sendo a saída de quem não instalou (ALE-118). |
 
 ## B. O combate
 
@@ -78,12 +80,18 @@ uma decisão do dono antes do renome.
 4. a casca visual da UI (`SceneShell`, `scene-grimorio`, `SceneContainerProvider`, `scene-nav`).
 
 Consequência medida: `endScene` existe **três vezes** no pacote `api` —
-`session_state.go:317` e `session_store.go:125` desligam a cena, e
-`character_effects.go:29` limpa os efeitos de duração "cena" de UMA ficha. E as
-duas não conversam: `onSceneEnd` (`realtime_initiative.go:161`) **não limpa
-efeito nenhum**; quem limpa é a Recuperação com `scope='scene'`
-(`realtime_vitals.go:122`). O mestre encerra a cena e a bênção que dura "cena"
-continua na ficha. **Isso é bug, não nome** — e o nome foi o que o escondeu.
+`session_state.go` e `session_store.go` desligam a cena, e
+`character_effects.go` limpa a duração "cena" de UMA ficha. Os três nomes
+continuam, e o renome ainda espera decisão do dono.
+
+O BUG que a colisão escondia está fechado (ALE-220): `onSceneEnd` não limpava
+efeito nenhum, e quem limpava era só a Recuperação com `scope='scene'` — o
+mestre encerrava a cena e a bênção que dura "cena" continuava na ficha. Agora os
+dois gestos passam pelo MESMO `expirePartyScene`, e o livro é quem manda: "a
+habilidade dura uma cena inteira, encerrando-se quando esse momento da história
+acaba" (p227), e o início e o fim de uma cena são dados "pelo andamento da
+história" (p11) — que é o que o mestre declara ao clicar em Encerrar cena.
+**Era bug, não nome** — e o nome foi o que o escondeu.
 
 **C2 — `place` é rótulo, entidade e marcador.** `BoardState.Place` é a *string*
 com o nome da cena aberta; `BoardPlace{id, name, …}` é o lugar guardado, e o
@@ -132,6 +140,18 @@ espelhar a coluna não era opção. Não leia a assimetria como intenção.
 A tela não desambigua sozinha porque ela nem tenta: diz "Condições" de um lado
 e "Situação" do outro, que é a separação certa. É só no código que os dois se
 parecem.
+
+**C7 — "tela cheia" e "app instalado" resolvem o mesmo incômodo por caminhos
+diferentes, e a issue que os separou (ALE-118) quase os fundiu.** A tela cheia é
+um GESTO sobre a janela de agora: o jogador clica no menu do Hub, o browser
+estica, e fechar a aba desfaz. O app instalado é uma JANELA OUTRA, que o sistema
+guarda com ícone próprio e abre sem barra nenhuma.
+
+Não são etapas de uma mesma coisa e nenhum substitui o outro: o desktop e quem
+não instalou vivem do primeiro, e o iPhone não tem o primeiro (o Safari não
+expõe Fullscreen API para elemento), então lá o segundo é o único caminho.
+Escrever "tela cheia" no texto de instalar — ou o contrário — manda metade da
+mesa para o botão que o aparelho dela não tem.
 
 ---
 

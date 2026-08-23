@@ -16,6 +16,11 @@ import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
  * reiniciar é o único caminho que tira os combatentes da lista. Sem nomear isso
  * o mestre teria de descobrir a diferença apagando oito goblins por engano.
  *
+ * Desde a ALE-220 encerrar também EXPIRA a duração "cena" das fichas do grupo,
+ * e por isso a pergunta cresceu. É a única parte do gesto que não é reversível:
+ * a fila fica guardada, mas a bênção não volta. Uma confirmação que não nomeia
+ * o que apaga é pior do que nenhuma, porque ela ENSINA que o clique é barato.
+ *
  * "Reiniciar" SAI do menu de configurações da sessão, onde a ALE-184 o pôs por
  * falta de lugar melhor: agora existe o lugar, que é junto do resto do ciclo.
  *
@@ -41,13 +46,16 @@ export function SceneCycleControls(props: {
       <Show when={props.sceneActive}>
         <ConfirmDialog
           title="Encerrar a cena?"
-          description="A rodada e a vez voltam a zero e a mesa deixa de ver a fila. Os combatentes CONTINUAM na lista — para esvaziá-la, use Reiniciar."
+          description="A rodada e a vez voltam a zero e a mesa deixa de ver a fila. Nas fichas do grupo, os efeitos de duração cena, os usos 1/cena e as posturas ACABAM. Os combatentes CONTINUAM na lista — para esvaziá-la, use Reiniciar."
           confirmLabel="Encerrar"
           /* O `ConfirmDialog` assume destrutivo, e aqui isso estava errado: o
              botão saía CRIMSON, idêntico ao "Reiniciar" logo abaixo, bem no
              diálogo cujo texto existe para dizer que os dois são diferentes.
              Pela gramática que a ALE-200 fixou, entre clicáveis o dourado FAZ e
-             o crimson DESTRÓI — encerrar não destrói nada, guarda a fila. */
+             o crimson DESTRÓI. Continua dourado depois da ALE-220, e a escolha
+             é entre dois males: encerrar passou a apagar efeito, mas pintar os
+             DOIS de crimson devolveria a confusão que este diálogo existe para
+             desfazer. Quem separa os dois aqui é o texto, não a cor. */
           destructive={false}
           onConfirm={props.onEnd}
           trigger={(open) => (
