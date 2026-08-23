@@ -62,13 +62,29 @@ func campaignScalars(c sqlcgen.Campaign) CampaignDTO {
 }
 
 func (s *Server) handleListCampaigns(w http.ResponseWriter, r *http.Request) {
-	user := currentUser(r)
-	rows, err := s.visibleCampaigns(r.Context(), user)
+	out, err := s.campaignList(r.Context(), currentUser(r))
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not list campaigns")
 		return
 	}
-	owners := s.ownerNames(r.Context(), rows, user.ID)
+	writeJSON(w, http.StatusOK, out)
+}
+
+// campaignList monta a lista COMO A TELA a mostra: o papel de quem olha, o nome
+// do dono quando a mesa é de outra pessoa, e o personagem que o chamador tem
+// nela.
+//
+// Transport-agnostic, e esta é a QUINTA vez que a migração encontra a mesma
+// forma — depois do `selfInitiativeEntry`, do `deleteAccount`, do trio da porta
+// (ALE-229) e do `mintAccountInvite` (ALE-231). Não é descuido de ninguém: é o
+// que uma base com exatamente um transporte parece por dentro, e o segundo
+// transporte é o que torna isso visível (ALE-234).
+func (s *Server) campaignList(ctx context.Context, user AuthUser) ([]campaignListDTO, error) {
+	rows, err := s.visibleCampaigns(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+	owners := s.ownerNames(ctx, rows, user.ID)
 	out := make([]campaignListDTO, 0, len(rows))
 	for _, c := range rows {
 		item := campaignListDTO{CampaignDTO: campaignScalars(c), Role: "player"}
@@ -83,9 +99,9 @@ func (s *Server) handleListCampaigns(w http.ResponseWriter, r *http.Request) {
 			name := owners[c.Ownerid]
 			item.Role, item.OwnerName = "gm", &name
 		}
-		char, err := s.queries.CallerCharacterInCampaign(r.Context(), sqlcgen.CallerCharacterInCampaignParams{Campaignid: c.ID, Ownerid: user.ID})
+		char, err := s.queries.CallerCharacterInCampaign(ctx, sqlcgen.CallerCharacterInCampaignParams{Campaignid: c.ID, Ownerid: user.ID})
 		if err == nil {
-			classes, _ := s.queries.ListClassesByCharacter(r.Context(), char.ID)
+			classes, _ := s.queries.ListClassesByCharacter(ctx, char.ID)
 			cc := &campaignCharacterDTO{ID: char.ID, Name: char.Name, Level: char.Level, Classes: []ClassDTO{}}
 			for _, cl := range classes {
 				cc.Classes = append(cc.Classes, ClassDTO{ClassName: cl.Classname, Level: cl.Level})
@@ -94,7 +110,7 @@ func (s *Server) handleListCampaigns(w http.ResponseWriter, r *http.Request) {
 		}
 		out = append(out, item)
 	}
-	writeJSON(w, http.StatusOK, out)
+	return out, nil
 }
 
 // visibleCampaigns is what the caller may see listed: their own plus the ones

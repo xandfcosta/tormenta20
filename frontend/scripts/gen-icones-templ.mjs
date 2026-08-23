@@ -36,6 +36,8 @@ const QUERIDOS = [
   'ShieldCheck',
   'LogOut',
   'ChevronRight',
+  'Search',
+  'Plus',
 ]
 
 const indice = readFileSync(resolve(LUCIDE, 'lucide-solid.mjs'), 'utf8')

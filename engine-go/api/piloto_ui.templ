@@ -33,7 +33,8 @@ const (
 type tamanho string
 
 const (
-	tamPadrao tamanho = "default"
+	tamPadrao  tamanho = "default"
+	tamGrande  tamanho = "lg"
 	tamPequeno tamanho = "sm"
 	tamMinimo  tamanho = "xs"
 )
@@ -51,6 +52,7 @@ func classesDoBotao(v variante, t tamanho, extra string) string {
 	}
 	porTamanho := map[tamanho]string{
 		tamPadrao:  "h-9 px-4 py-2",
+		tamGrande:  "h-10 rounded-sm px-6",
 		tamPequeno: "h-8 gap-1.5 rounded-sm px-3",
 		tamMinimo:  "h-6 gap-1 rounded-sm px-2 text-xs",
 	}

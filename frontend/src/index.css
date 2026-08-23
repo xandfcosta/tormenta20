@@ -212,6 +212,21 @@
   --grimorio-iron-light: oklch(0.52 0.02 300);
   --grimorio-parchment: oklch(0.9 0.035 80);
   --grimorio-parchment-ink: oklch(0.28 0.03 60);
+  /* A TINTA CRIMSON DO PERGAMINHO (ALE-234).
+   *
+   * O `--grimorio-crimson` é tinta de superfície ESCURA, e a folha do grimório
+   * tem duas superfícies. Medido: sobre o pergaminho ele rende 3,95:1, abaixo
+   * do AA — é o "Sessão ao vivo" do livro de campanhas, e o defeito existe nos
+   * DOIS stacks porque o guarda de contraste nunca tinha visitado a cena.
+   *
+   * Em 0.50 rende 4,9:1. Token próprio e NÃO um ajuste no `--grimorio-crimson`:
+   * aquele é o `--destructive`, cuja legibilidade a ALE-200 mediu com branco
+   * POR CIMA (5,35:1) — mexer nele para consertar tinta sobre creme mudaria o
+   * botão que apaga por um motivo que não é dele.
+   *
+   * É a terceira vez que a mesma família de defeito aparece: uma regra de tinta
+   * verificada contra UMA superfície, num app que tem várias. */
+  --grimorio-parchment-crimson: oklch(0.5 0.19 25);
 }
 
 /* Remaps the shadcn semantic tokens inside a scene so any stock component
@@ -372,6 +387,7 @@
   --color-grimorio-iron-light: var(--grimorio-iron-light);
   --color-grimorio-parchment: var(--grimorio-parchment);
   --color-grimorio-parchment-ink: var(--grimorio-parchment-ink);
+  --color-grimorio-parchment-crimson: var(--grimorio-parchment-crimson);
 
   /* As SUPERFÍCIES da cena (ALE-173). Elas existiam desde sempre logo acima,
    * mas fora daqui — e um token que não entra no `@theme` não vira utilitário,

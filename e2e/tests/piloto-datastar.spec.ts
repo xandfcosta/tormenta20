@@ -73,6 +73,18 @@ async function textoComContrasteBaixo(page: Page): Promise<string[]> {
         if (!texto) return null
         const cs = getComputedStyle(el)
         if (cs.visibility === 'hidden' || cs.display === 'none') return null
+        // Texto DECORATIVO não entra na conta, e isto não é afrouxar o guarda:
+        // o WCAG isenta texto que não é exposto, e `aria-hidden` é exatamente
+        // essa declaração. O caso que trouxe a regra foi o monograma do livro
+        // de campanhas — as iniciais gigantes em `text-white/15` sobre o emblema
+        // são um substituto de ARTE, com o nome da campanha escrito ao lado em
+        // texto de verdade. Medi-las é medir a ilustração.
+        //
+        // O perigo aqui é esconder defeito atrás de `aria-hidden`, e a proteção
+        // é a regra que já vale: se o texto CARREGA informação, escondê-lo do
+        // leitor de tela é um defeito PIOR que o de contraste — e é o guarda
+        // errado que estaria reclamando.
+        if (el.closest('[aria-hidden="true"]')) return null
         const px = Number.parseFloat(cs.fontSize)
         const peso = Number.parseInt(cs.fontWeight, 10) || 400
         // A regra do AA: texto grande (24px, ou 18.66px em negrito) pede 3:1.
@@ -91,7 +103,13 @@ test.describe('Mesa do jogador (piloto Datastar)', () => {
 
   test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
     await page.goto('/piloto/mesa/1/4')
-    await expect(page.getByRole('heading', { name: 'Iniciativa' })).toBeVisible()
+    // `exact`, e isto é conserto de um defeito LATENTE deste arquivo (ALE-234):
+    // com a cena começada aparece um segundo `<h2>`, "Registrar iniciativa ·
+    // <nome>", e o localizador casava os dois — strict mode violation. Ele
+    // passava porque, quando o guarda foi escrito, nenhum spec antes dele
+    // deixava cena ativa; passou a falhar de forma intermitente conforme a
+    // ORDEM da suíte, que é o pior jeito de um teste falhar.
+    await expect(page.getByRole('heading', { name: 'Iniciativa', exact: true })).toBeVisible()
 
     expect(await textoComContrasteBaixo(page), 'texto abaixo do AA na Mesa').toEqual([])
   })
@@ -287,8 +305,14 @@ test.describe('O Hub e a SPA dividem a preferência de som', () => {
    * nada mais reclamasse.
    */
   test('ligar o som no Hub grava na chave que a SPA lê', async ({ page }) => {
+    // Limpa ANTES de a página carregar, e é aí que estava um defeito de ORDEM
+    // deste teste: limpando depois do `goto`, o `data-init` já tinha lido a
+    // preferência antiga para o sinal, e o rótulo nascia "Som ligado" se algum
+    // teste anterior tivesse ligado. O `addInitScript` roda antes de qualquer
+    // script da página, que é o único momento em que limpar significa alguma
+    // coisa.
+    await page.addInitScript(() => localStorage.removeItem('t20-ui'))
     await page.goto('/piloto/')
-    await page.evaluate(() => localStorage.removeItem('t20-ui'))
 
     await page.getByRole('button', { name: /^Menu de / }).click()
     const alternador = page.locator('#menu-do-jogador button').first()
@@ -302,5 +326,82 @@ test.describe('O Hub e a SPA dividem a preferência de som', () => {
     expect(await page.evaluate(() => localStorage.getItem('t20-ui'))).toBe(
       '{"state":{"sfx":true,"volume":100}}',
     )
+  })
+})
+
+test.describe('A cena de campanhas (piloto Datastar)', () => {
+  test.use({ storageState: '.auth/user.json' })
+
+  test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
+    await page.goto('/piloto/campanhas')
+    await expect(page.getByRole('listbox', { name: 'Campanhas' })).toBeVisible()
+    expect(await textoComContrasteBaixo(page), 'texto abaixo do AA nas campanhas').toEqual([])
+  })
+
+  /**
+   * O cursor segue o FOCO, e trocar de campanha não custa requisição.
+   *
+   * É a decisão que governa a cena: o servidor manda todos os livros e o
+   * `data-show` escolhe um. Se alguém trocar isso por uma ida ao servidor por
+   * passo, navegar por teclado vira uma conversa com a rede — e este guarda é
+   * o que avisa, porque ele conta as requisições.
+   *
+   * E2E porque foco e geometria são do navegador: em jsdom todo elemento mede
+   * zero e o driver não teria como escolher o vizinho.
+   */
+  test('as setas trocam de campanha sem pedir nada ao servidor', async ({ page }) => {
+    await page.goto('/piloto/campanhas')
+    const opcoes = page.getByRole('option')
+    await expect(opcoes.first()).toBeVisible()
+
+    const primeira = (await opcoes.first().textContent())?.trim() ?? ''
+    const segunda = (await opcoes.nth(1).textContent())?.trim() ?? ''
+    expect(primeira, 'a seed precisa de duas campanhas para este guarda').not.toBe(segunda)
+
+    let pedidos = 0
+    page.on('request', () => {
+      pedidos++
+    })
+
+    await opcoes.first().focus()
+    await page.keyboard.press('ArrowDown')
+
+    await expect(opcoes.nth(1)).toHaveAttribute('aria-selected', 'true')
+    await expect(opcoes.first()).toHaveAttribute('aria-selected', 'false')
+    expect(pedidos, 'andar no trilho foi à rede — o cursor deixou de ser sinal').toBe(0)
+  })
+
+  /**
+   * A busca é do SERVIDOR, e a regra tem de ser a MESMA da SPA — as duas telas
+   * convivem, e responder coisas diferentes para a mesma busca é o defeito que
+   * ninguém reporta e todo mundo sente.
+   *
+   * "tauron" é o caso que expõe isso: ele casa três campanhas, e a terceira
+   * ("Segredos de Wynlla") não tem a palavra em lugar nenhum — casa por
+   * subsequência na sinopse. Medido, o `match-sorter` da SPA faz o mesmo.
+   */
+  test('a busca devolve o mesmo que a tela da SPA devolve', async ({ page }) => {
+    await page.goto('/piloto/campanhas')
+    await page.getByRole('searchbox', { name: 'Buscar campanha' }).fill('tauron')
+    await expect(page.getByRole('option')).toHaveCount(3)
+
+    const noDatastar = await page.getByRole('option').allTextContents()
+
+    await page.goto('/campaigns')
+    await page.getByRole('searchbox', { name: 'Buscar campanha' }).fill('tauron')
+    await expect(page.getByRole('option')).toHaveCount(3)
+    const naSPA = await page.getByRole('option').allTextContents()
+
+    // Compara o CONJUNTO de campanhas, por nome contido — não o texto acessível
+    // inteiro. Duas tentativas anteriores falharam por diferença de FORMA e não
+    // de conteúdo (espaço entre o monograma e o nome; o papel na segunda
+    // linha), e um guarda que acusa formatação esconde o que ele existe para
+    // ver: se as duas telas concordam sobre QUAIS campanhas casam.
+    const contem = (xs: string[], nome: string) =>
+      xs.some((x) => x.replace(/\s+/g, ' ').includes(nome))
+    for (const nome of ['A Queda de Tauron', 'Segredos de Wynlla', 'Snapshot Test ALE-33']) {
+      expect(contem(noDatastar, nome), `${nome} faltou no Datastar`).toBe(true)
+      expect(contem(naSPA, nome), `${nome} faltou na SPA`).toBe(true)
+    }
   })
 })

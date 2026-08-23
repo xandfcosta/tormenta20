@@ -94,3 +94,37 @@ func TestBuscaOlhaTodosOsCampos(t *testing.T) {
 		t.Error("casou com o que não está em campo nenhum")
 	}
 }
+
+// O caso que me assustou na tela e que a biblioteca CONFIRMOU (ALE-234).
+//
+// Buscando "tauron" na cena, três das seis campanhas ficaram — e a terceira,
+// "Segredos de Wynlla", não tem "tauron" em lugar nenhum. Achei que meu port
+// tinha ficado frouxo. Não tinha: "t-a-u-r-o-n" É subsequência da sinopse dela
+// ("in*t*riga *a*rcana ... *u*m nec*r*omante"), e o `match-sorter` casa
+// exatamente igual:
+//
+//	rankItem(sinopseDeWynlla, 'tauron').passed  // true
+//
+// Fica FIXADO como está, e não "consertado". A busca difusa sobre sinopse longa
+// é frouxa nos DOIS lados, e apertar só o lado novo faria as duas telas
+// responderem coisas diferentes para a mesma busca — que é a divergência que
+// esta migração inteira existe para evitar. Se um dia apertar, aperta nos dois.
+func TestBuscaEhFrouxaSobreSinopseLongaComoNoOriginal(t *testing.T) {
+	wynlla := "Campanha de intriga arcana na Academia Arcana de Wynlla — segredos proibidos e um necromante à espreita."
+
+	if !casaBusca([]string{"Segredos de Wynlla", wynlla}, "tauron") {
+		t.Error("o port ficou MAIS restrito que o match-sorter — as duas telas passariam a discordar")
+	}
+	// O nome curto sozinho não casa: é a sinopse que abre a porta.
+	if casaBusca([]string{"Segredos de Wynlla"}, "tauron") {
+		t.Error(`"tauron" casou com o NOME "Segredos de Wynlla"`)
+	}
+	// E o caso legítimo continua legítimo.
+	if !casaBusca([]string{"A Queda de Tauron"}, "tauron") {
+		t.Error("a campanha que tem Tauron no nome não casou")
+	}
+	// Palavras coladas: o match-sorter aceita, e o port também.
+	if !casaBusca([]string{"A Queda de Tauron"}, "quedatauron") {
+		t.Error("palavras coladas não casaram — o match-sorter casa")
+	}
+}
