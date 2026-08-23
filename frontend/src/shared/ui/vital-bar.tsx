@@ -13,6 +13,30 @@ export function hpFillVar(percent: number): string {
 }
 
 /**
+ * O token com que se ESCREVE o rótulo, que não é sempre o mesmo com que se
+ * PINTA a barra (ALE-240).
+ *
+ * Os três tons vitais foram escolhidos como cor de barra, e dois deles servem
+ * de texto por acaso — medido sobre o painel: o verde dá 5,34:1 e o âmbar
+ * 6,25:1. O `--hp-critical` dá **4,11:1**, abaixo do mínimo de texto pequeno,
+ * e o rótulo tem 10px em negrito. Ou seja: exatamente na hora em que a barra
+ * grita "este aqui está morrendo", o "PV" ao lado dela é o menos legível da
+ * tela.
+ *
+ * O crítico escreve com a tinta de perigo da casa, que a ALE-237 fechou em
+ * 5,21 sobre o painel e 4,58 sobre o elevado. Tinta própria seria um segundo
+ * vermelho quase idêntico ao lado do primeiro — mesmo matiz, claridade a um
+ * passo —, e a casa tem uma palavra por conceito.
+ *
+ * O rótulo deixa de ser EXATAMENTE a cor da barra, e isso é deliberado: os dois
+ * continuam sendo o mesmo tom, e legibilidade ganha de casamento de pixel.
+ */
+export function hpInkVar(percent: number): string {
+  const preenchimento = hpFillVar(percent)
+  return preenchimento === '--hp-critical' ? '--grimorio-crimson-bright' : preenchimento
+}
+
+/**
  * Read-only PV/PM bar. A real `progressbar`, so the number is readable by
  * assistive tech and by the E2E suite — the tracker's rows are the one place
  * a player watches someone else's health, and "some green" is not an answer.
@@ -29,6 +53,7 @@ export function VitalBar(props: {
   const percent = () =>
     props.max > 0 ? Math.max(0, Math.min(100, (props.current / props.max) * 100)) : 0
   const fillVar = () => (props.kind === 'hp' ? hpFillVar(percent()) : '--mp-arcane')
+  const inkVar = () => (props.kind === 'hp' ? hpInkVar(percent()) : '--mp-arcane')
 
   return (
     <div class={cn('flex items-center gap-1.5', props.class)}>
@@ -38,7 +63,7 @@ export function VitalBar(props: {
       <FieldLabel
         tom="inherit"
         class="w-7 shrink-0 font-bold"
-        style={{ color: `var(${fillVar()})` }}>
+        style={{ color: `var(${inkVar()})` }}>
         {props.label}
       </FieldLabel>
       <div

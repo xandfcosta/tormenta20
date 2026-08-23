@@ -37,7 +37,10 @@ export function CargaMeter(props: { carga: LoadBreakdown }) {
         />
       </div>
       <Show when={props.carga.overloaded}>
-        <p class="text-3xs font-semibold text-[color:var(--hp-critical)] sm:text-2xs">
+        {/* A BARRA acima continua `--hp-critical`; este aviso é TEXTO, e em
+            10px ele precisa da tinta da casa — o token da barra rende 3,59:1
+            sobre o painel (ALE-240). */}
+        <p class="text-3xs font-semibold text-grimorio-crimson-bright sm:text-2xs">
           Sobrecarregado (p141): {signed(props.carga.armorPenalty)} em Acrobacia, Furtividade e
           Ladinagem · {signed(props.carga.displacementPenalty)}m de deslocamento
           <Show when={props.carga.overMax}>
