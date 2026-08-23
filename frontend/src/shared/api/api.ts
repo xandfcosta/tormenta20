@@ -71,6 +71,8 @@ import type {
   UpdateItemInput,
   UpdateProficienciesInput,
   UpdateSessionInput,
+  UpdateTibarInput,
+  TibarResult,
   SpellAugmentPick,
   UnlearnSpellResult,
   UpdateVitalsInput,
@@ -189,6 +191,9 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
       /** PV/PM edit. Answers the CLAMPED pair, so the client takes the server's word. */
       updateVitals: (id: number, input: UpdateVitalsInput) =>
         request<VitalsResult>(`/characters/${id}/vitals`, patch(input)),
+      /** O dinheiro do personagem (T$). Saldo inteiro, não delta. */
+      updateTibar: (id: number, input: UpdateTibarInput) =>
+        request<TibarResult>(`/characters/${id}/tibar`, patch(input)),
       /**
        * Damage in ONE request: the server routes it temp-PV-first and answers
        * what it drained. Two requests (drain, then subtract) could interleave

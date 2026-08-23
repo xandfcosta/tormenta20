@@ -184,6 +184,10 @@ SET hpMax = sqlc.arg('hpMax'), hpCurrent = sqlc.arg('hpCurrent'),
     mpMax = sqlc.arg('mpMax'), mpCurrent = sqlc.arg('mpCurrent'), updatedAt = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id');
 
+-- name: SetCharacterTibar :exec
+UPDATE characters SET tibar = sqlc.arg('tibar'), updatedAt = sqlc.arg('updatedAt')
+WHERE id = sqlc.arg('id');
+
 -- name: SetProficiencies :exec
 UPDATE characters SET proficiencies = sqlc.arg('proficiencies'), updatedAt = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id');
@@ -325,6 +329,15 @@ WHERE id = sqlc.arg('id') RETURNING *;
 -- name: EndSession :one
 UPDATE sessions SET status = 'ended', endedAt = sqlc.arg('endedAt'), updatedAt = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id') RETURNING *;
+
+-- name: HasLiveSessionForCharacter :one
+-- ALE-216: the character is at a table with a session RUNNING. 'active' is the
+-- only live status; 'planned' and 'ended' are not a table in progress.
+SELECT EXISTS (
+  SELECT 1 FROM campaign_members m
+  JOIN sessions s ON s.campaignId = m.campaignId
+  WHERE m.characterId = ? AND s.status = 'active'
+) AS atLiveTable;
 
 -- name: ResetSessionTracker :exec
 UPDATE sessions SET runtimeState = sqlc.arg('runtimeState'), updatedAt = sqlc.arg('updatedAt')

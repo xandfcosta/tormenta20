@@ -6,18 +6,28 @@ import { For, Show, createMemo } from 'solid-js'
 import type { Character } from '@/shared/api/api'
 import { conditionsList, conditionsRecord } from '@/shared/lib/rules-catalog-cache'
 import { cn } from '@/shared/lib/utils'
-import { PickerCombobox } from '@/shared/ui/picker-combobox'
 import { parseActiveConditions } from './active-conditions'
 import { conditionActions } from './effect-mutations'
+import { ApplyConditionDialog } from './apply-condition-dialog'
+import { toast } from '@/shared/ui/sonner'
 import { SectionTitle } from '@/shared/ui/section-label'
 
 export type ConditionEditing = {
   active: () => ConditionId[]
   /** As condições que ainda cabem, já ordenadas em pt-BR, para o picker. */
   options: () => { value: string; label: string }[]
+  /**
+   * Aplica e REJEITA se o servidor recusar, sem dizer nada — para quem toma a
+   * ação dentro de um diálogo, onde a falha vai inline (ALE-216).
+   */
+  apply: (id: string) => Promise<void>
+  /** `apply` com aviso em toast: para os pickers que vivem FORA de diálogo. */
   add: (id: string) => void
   remove: (id: ConditionId) => void
 }
+
+/** Uma frase só para as duas saídas que avisam por toast. */
+const FALHA_AO_SALVAR = 'Falha ao salvar condições — a ficha voltou ao valor anterior'
 
 /**
  * Aplicar e remover condições do livro (p394-395). Vive fora do componente para
@@ -30,13 +40,10 @@ export function createConditionEditing(character: () => Character): ConditionEdi
   const queryClient = useQueryClient()
   const active = createMemo(() => parseActiveConditions(character().activeConditions))
 
-  const save = async (next: ConditionId[]) => {
-    try {
-      await conditionActions(queryClient, character().id).set(next)
-    } catch {
-      // conditionActions already rolled back and told the player.
-    }
-  }
+  const save = (next: ConditionId[]) => conditionActions(queryClient, character().id).set(next)
+
+  /** Para as saídas FORA de diálogo, que não têm linha inline: avisa e engole. */
+  const comToast = (write: Promise<void>) => void write.catch(() => toast.error(FALHA_AO_SALVAR))
 
   const options = createMemo(() =>
     conditionsList()
@@ -45,21 +52,25 @@ export function createConditionEditing(character: () => Character): ConditionEdi
       .map((condition) => ({ value: condition.id, label: condition.name })),
   )
 
+  const apply = async (id: string) => {
+    if (active().includes(id as ConditionId)) return
+    await save([...active(), id as ConditionId])
+  }
+
   return {
     active,
     options,
-    add: (id) => {
-      if (active().includes(id as ConditionId)) return
-      void save([...active(), id as ConditionId])
-    },
-    remove: (id) => void save(active().filter((c) => c !== id)),
+    apply,
+    add: (id) => comToast(apply(id)),
+    remove: (id) => comToast(save(active().filter((c) => c !== id))),
   }
 }
 
 /**
  * Book conditions (caído, agarrado, atordoado… p394-395) — the #1 mid-fight
  * tracking need. Active conditions render as removable chips carrying the
- * mechanical effect they apply; the picker adds from the full catalog.
+ * mechanical effect they apply; `ApplyConditionDialog` adds from the full
+ * catalog.
  *
  * The chips say what each condition DOES because a condition that is only a
  * badge is the bug ALE-28 was: these change the sheet's numbers.
@@ -69,25 +80,26 @@ export function ConditionsSection(props: { character: Character }) {
 
   return (
     <section class="space-y-2 rounded-none border border-grimorio-iron p-3">
-      <SectionTitle as="h3" contexto="painel" class="text-sm">
-        Condições (p394)
-      </SectionTitle>
-      <Show when={conditions.active().length > 0}>
+      {/* A MESMA fileira do "Efeitos ativos" logo abaixo: título à esquerda,
+          botão de adicionar à direita abrindo um diálogo. Antes esta seção
+          usava um campo de busca embutido e a de baixo um botão — a mesma
+          escolha desenhada de dois jeitos, que é o defeito da ALE-169. */}
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <SectionTitle as="h3" contexto="painel" class="text-sm">
+          Condições (p394)
+        </SectionTitle>
+        <ApplyConditionDialog conditions={conditions} />
+      </div>
+      <Show
+        when={conditions.active().length > 0}
+        fallback={<p class="text-xs text-muted-foreground">Nenhuma condição ativa.</p>}
+      >
         <ul class="flex flex-wrap gap-1.5">
           <For each={conditions.active()}>
             {(id) => <ConditionChip id={id} onRemove={() => conditions.remove(id)} />}
           </For>
         </ul>
       </Show>
-      <div class="max-w-64">
-        <PickerCombobox
-          options={conditions.options()}
-          onPick={conditions.add}
-          aria-label="Aplicar condição"
-          placeholder="Aplicar condição…"
-          emptyMessage="Nenhuma."
-        />
-      </div>
     </section>
   )
 }

@@ -129,3 +129,53 @@ func (s *Server) handleApplyDamage(w http.ResponseWriter, r *http.Request) {
 		HpCurrent: plan.hpCurrent, TempHpRemaining: plan.tempHpRemaining, Drained: plan.drained,
 	})
 }
+
+// maxTibar é o teto do campo de dinheiro. Não é regra do livro — é o limite que
+// mantém o número legível na ficha e a carga sã (cada mil moedas ocupam um
+// espaço, p141, então isto já são mil espaços de moeda).
+const maxTibar = 1_000_000
+
+// handleUpdateTibar grava o dinheiro do personagem. O tibar é o MESMO campo que
+// a Forja preenche com a Tabela 3-1 (p140) e o mesmo que a carga lê — não há um
+// segundo lugar onde o dinheiro mora (ALE-215). Devolve o valor gravado para o
+// cliente tomar a palavra do servidor.
+func (s *Server) handleUpdateTibar(w http.ResponseWriter, r *http.Request) {
+	row, ok := s.characterFor(w, r)
+	if !ok {
+		return
+	}
+	var body struct {
+		Tibar *float64 `json:"tibar"`
+	}
+	if !decodeJSON(w, r, &body) {
+		return
+	}
+	if msg := tibarError(body.Tibar); msg != "" {
+		writeValidationError(w, FieldErrorMap{"tibar": {msg}})
+		return
+	}
+	err := s.queries.SetCharacterTibar(r.Context(), sqlcgen.SetCharacterTibarParams{
+		Tibar: *body.Tibar, UpdatedAt: nowISO(), ID: row.ID,
+	})
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Could not update tibar")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]float64{"tibar": *body.Tibar})
+}
+
+// tibarError recusa o que não é dinheiro. Não há checagem de finitude aqui de
+// propósito: o JSON não escreve NaN nem Inf, e um `1e999` o próprio decodificador
+// recusa antes ("cannot unmarshal number 1e999 into float64") — medido. Um
+// `case math.IsInf` seria linha verde sobre caminho morto.
+func tibarError(v *float64) string {
+	switch {
+	case v == nil:
+		return "tibar must be a number"
+	case *v < 0:
+		return "tibar must not be less than 0"
+	case *v > maxTibar:
+		return "tibar must not be greater than 1000000"
+	}
+	return ""
+}

@@ -81,6 +81,7 @@ func characterIntruderCases(hero, item, effect int64) []intruderCase {
 		{http.MethodPost, "/{id}/end-scene", base + "/end-scene", ""},
 		{http.MethodPost, "/{id}/end-day", base + "/end-day", ""},
 		{http.MethodPatch, "/{id}/vitals", base + "/vitals", `{"hpCurrent":1}`},
+		{http.MethodPatch, "/{id}/tibar", base + "/tibar", `{"tibar":10}`},
 		{http.MethodPost, "/{id}/damage", base + "/damage", `{"amount":5}`},
 		{http.MethodPatch, "/{id}/level", base + "/level", `{"level":20}`},
 		{http.MethodPatch, "/{id}/classes/level", base + "/classes/level", `{"className":"Guerreiro","level":2}`},

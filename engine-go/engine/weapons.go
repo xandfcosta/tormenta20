@@ -32,6 +32,10 @@ func (c *Catalogs) ComputeWeaponCards(ch Character, activeConditionals map[strin
 	forTotal := effectiveAttribute(ch, "strength", effects)
 	dexTotal := effectiveAttribute(ch, "dexterity", effects)
 	hasAcuidade := parseChoiceSet(ch.ClassPowers).has["acuidade-com-arma"]
+	// A carta de arma resolve Luta/Pontaria, que a penalidade de armadura nunca
+	// alcança (p153) — a carga entra por completude, para esta chamada não
+	// depender de saber quais perícias ficam de fora.
+	carga := cargaBreakdown(ch, inventorySlotsTotal(ch, effects))
 
 	cards := []WeaponCard{}
 	for _, it := range ch.Items {
@@ -65,7 +69,7 @@ func (c *Catalogs) ComputeWeaponCards(ch Character, activeConditionals map[strin
 		// the resolved attribute so a finessed melee attack sums Destreza (ALE-31).
 		state := weaponSkillState(ch, skill, attribute)
 		state.Attribute = attribute
-		ex := expertiseBreakdown(ch, state, effects)
+		ex := expertiseBreakdown(ch, state, effects, carga)
 		cards = append(cards, WeaponCard{
 			Name:        it.Name,
 			Skill:       skill,

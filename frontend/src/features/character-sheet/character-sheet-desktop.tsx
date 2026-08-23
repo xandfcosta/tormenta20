@@ -64,6 +64,7 @@ export function CharacterSheetDesktop(props: CharacterSheetDesktopProps) {
                 component={section.component}
                 character={props.character}
                 glance={props.glance}
+                inSession={props.inSession}
               />
               </TabsContent>
             )}

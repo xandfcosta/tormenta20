@@ -47,6 +47,33 @@ func (s *Server) endDay(ctx context.Context, user AuthUser, characterID int64) (
 	return http.StatusOK, nil
 }
 
+// assertOffTable is the ALE-216 guard on the SHEET's own scope buttons: at a
+// live table, ending the scene or the day is the GM's call — a rest is the
+// table's decision, and one player expiring scene buffs mid-fight edits state
+// everyone else is playing on. The GM's path is the session rest, which reaches
+// endScene/endDay through the WS gateway and never passes here.
+//
+// Authorization runs FIRST (and again inside the domain helper, which the WS
+// path calls without this guard) so a stranger is answered "belongs to another
+// user" instead of learning that the character is at a table tonight.
+func (s *Server) assertOffTable(w http.ResponseWriter, r *http.Request, id int64) bool {
+	if _, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id); err != nil {
+		writeError(w, status, err.Error())
+		return false
+	}
+	live, err := s.queries.HasLiveSessionForCharacter(r.Context(), id)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Could not check the character's sessions")
+		return false
+	}
+	if live {
+		writeError(w, http.StatusForbidden, fmt.Sprintf(
+			"Character %d is in a live session; ending the scene or the day is the GM's", id))
+		return false
+	}
+	return true
+}
+
 // clearEffectScopes runs one of the scope-expiring domain helpers for the {id}
 // character and answers with the scopes the client must drop from its cached
 // character — a delta, so the sheet updates without a refetch.
@@ -58,6 +85,9 @@ func (s *Server) clearEffectScopes(
 ) {
 	id, ok := intParam(w, r, "id")
 	if !ok {
+		return
+	}
+	if !s.assertOffTable(w, r, id) {
 		return
 	}
 	if status, err := expire(r.Context(), currentUser(r), id); err != nil {

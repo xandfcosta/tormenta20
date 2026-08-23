@@ -1,6 +1,7 @@
 import { PanelLeftOpen, Settings2, Swords } from 'lucide-solid'
 import { Show, createMemo, createSignal } from 'solid-js'
 import type { Session } from '@/shared/api/api'
+import type { CampaignMember } from '@/shared/api/types'
 import type { SessionRealtime } from '@/shared/realtime/realtime'
 import { DeleteSessionButton } from '@/features/session-tracker/delete-session-button'
 import { HeaderCard } from '@/features/session-tracker/header-card'
@@ -68,6 +69,10 @@ export function SessionGmView(props: {
   myCharacterIds: ReadonlySet<number>
   /** O nome da crônica, que a ficha do elenco precisa dizer (ALE-212). */
   campaignName: string
+  /** O roster da campanha, JÁ ASSENTADO pela página. Desce como prop porque
+   *  abrir consulta dentro da cena a desanexa (ALE-199, e de novo na ALE-211:
+   *  com um diálogo aberto, o Kobalte deixa a cena `aria-hidden` para sempre). */
+  members: readonly CampaignMember[]
 }) {
   const [selectedId, setSelectedId] = createSignal<string | null>(null)
   /**
@@ -205,7 +210,7 @@ export function SessionGmView(props: {
             fileira, logo abaixo. */}
         <Show when={railsFit()}>
           <SessionRail
-            campaignId={props.campaignId}
+            members={props.members}
             entries={props.rt.state().initiative}
             turnIndex={props.rt.state().turnIndex}
             activeEntryId={activeEntryId()}
@@ -327,6 +332,7 @@ export function SessionGmView(props: {
       >
         <CastPanel
           campaignId={props.campaignId}
+          members={props.members}
           present={props.rt.present()}
           onOpenCharacter={(characterId) => {
             // A gaveta FECHA ao escolher, pela mesma regra da fila (ALE-198): o

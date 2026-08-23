@@ -2,6 +2,7 @@ import { Show, createSignal } from 'solid-js'
 import { SceneCycleControls } from '@/features/session-tracker/scene-cycle-controls'
 import { cabemNaFila, janelaDaFila } from '@/features/session-tracker/rail-geometry'
 import { createElementSize } from '@/shared/lib/element-size'
+import type { CampaignMember } from '@/shared/api/types'
 import type { InitiativeEntry, PresenceUser } from '@/shared/realtime/realtime'
 import { CastRail } from './cast-rail'
 import { InitiativeRail } from './initiative-rail'
@@ -35,7 +36,8 @@ import { InitiativeRail } from './initiative-rail'
  * Abaixo de 1024 este trilho NÃO EXISTE (ALE-198) — quem o monta decide isso.
  */
 export function SessionRail(props: {
-  campaignId: number
+  /** Vêm da página: consulta nova dentro da cena a desanexa (ALE-199/211). */
+  members: readonly CampaignMember[]
   entries: readonly InitiativeEntry[]
   turnIndex: number
   activeEntryId: string | null
@@ -85,7 +87,7 @@ export function SessionRail(props: {
         <div class="flex min-h-0 flex-1 flex-col">
           <CastRail
             class="min-h-0 max-h-full"
-            campaignId={props.campaignId}
+            members={props.members}
             present={props.present}
             onOpenCharacter={props.onOpenCharacter}
             onExpand={props.onOpenCast}

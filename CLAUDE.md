@@ -81,6 +81,14 @@ outcome someone would notice breaking. Everything below follows from that.
 - Structured JSON when logging for debugging / observability.
 - Plain text only for user-facing CLI output.
 
+## Linguagem ubíqua
+
+- **[GLOSSARIO.md](GLOSSARIO.md) — uma palavra por conceito, e um conceito por
+  palavra.** Leia antes de nomear qualquer coisa que o usuário vá ler ou que vá
+  virar identificador. Ele tem a coluna dos termos PROIBIDOS (é "campanha", não
+  "crônica"), as colisões abertas que não se consertam por palpite, e a regra da
+  costura pt-BR/inglês. Termo novo: escreva a linha do glossário ANTES do código.
+
 ## Reference
 - Use [Tormenta 20 book](/t20-book.pdf) as reference for rules
 

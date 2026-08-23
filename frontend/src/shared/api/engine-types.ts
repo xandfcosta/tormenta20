@@ -41,7 +41,7 @@ export type ComputedSheetV2 = {
   defense: DefenseBreakdown
   displacement: ValueBreakdown
   flySpeed: number
-  inventorySlots: number
+  carga: LoadBreakdown
   attributes: Record<AttributeKey, AttributeBreakdown>
   pmLimit: ValueBreakdown
   bestBaseSpellCd: number | null
@@ -115,6 +115,18 @@ export type ItemEffects = {
   byTarget: Record<string, AggregatedStat>
   flags: string[]
   conditional: ConditionalEffect[]
+}
+
+export type LoadBreakdown = {
+  items: number
+  coins: number
+  used: number
+  limit: number
+  max: number
+  overloaded: boolean
+  overMax: boolean
+  armorPenalty: number
+  displacementPenalty: number
 }
 
 export type PointBuyStatus = {

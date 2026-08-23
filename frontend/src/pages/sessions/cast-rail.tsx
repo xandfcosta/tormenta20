@@ -1,9 +1,7 @@
-import { useQuery } from '@tanstack/solid-query'
 import { Users } from 'lucide-solid'
 import { For } from 'solid-js'
-import { campaignMembersQueryOptions } from '@/entities/campaign/queries'
 import { connectedCharacterIds } from '@/features/session-tracker/tracker-rules'
-import { settledQuery } from '@/shared/lib/settled-query'
+import type { CampaignMember } from '@/shared/api/types'
 import { cn } from '@/shared/lib/utils'
 import type { PresenceUser } from '@/shared/realtime/realtime'
 import { CharacterPortrait } from '@/shared/ui/character-portrait'
@@ -20,21 +18,26 @@ import { CharacterPortrait } from '@/shared/ui/character-portrait'
  * ainda vai), e rolar embaralharia isso. O elenco é uma lista sem ordem própria,
  * então rolar não custa leitura nenhuma.
  *
- * @example <CastRail campaignId={1} present={rt.present()} onOpenCharacter={abrir} />
+ * Os membros chegam por PROP e não por consulta própria, e isso não é estilo:
+ * montar um `useQuery` novo aqui DESANEXA a cena — a mesma família da ALE-199,
+ * e com um diálogo modal aberto o Kobalte perde a referência para desfazer o
+ * `aria-hidden`, deixando a cena inteira fora da árvore acessível depois de
+ * fechar a ficha. Custou uma bissecção no e2e para aparecer. A página já tem os
+ * membros assentados; uma segunda assinatura da mesma chave só compra risco.
+ *
+ * @example <CastRail members={membros()} present={rt.present()} onOpenCharacter={abrir} />
  */
 export function CastRail(props: {
-  campaignId: number
+  members: readonly CampaignMember[]
   present: PresenceUser[]
   onOpenCharacter: (characterId: number) => void
   /** Abre a gaveta do elenco, onde moram os NPCs e o criar (ALE-212). */
   onExpand: () => void
   class?: string
 }) {
-  const members = useQuery(() => campaignMembersQueryOptions(props.campaignId))
-
   /** Mesmo filtro do "Adicionar grupo" no servidor (`listPlayerCombatants`). */
-  const players = () => (settledQuery(members) ?? []).filter((member) => member.role === 'player')
-  const online = () => connectedCharacterIds(settledQuery(members) ?? [], props.present)
+  const players = () => props.members.filter((member) => member.role === 'player')
+  const online = () => connectedCharacterIds(props.members, props.present)
 
   return (
     <nav

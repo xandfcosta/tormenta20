@@ -1443,3 +1443,96 @@ describe('marcar um lugar', () => {
     expect(screen.queryByRole('button', { name: 'Marcar um lugar' })).not.toBeInTheDocument()
   })
 })
+
+/**
+ * QUEM vem para o tabuleiro (ALE-204).
+ *
+ * "Trazer a iniciativa" trazia a fila INTEIRA, e a fila inclui quem o mestre
+ * montou para aparecer depois: num clique a emboscada virava peça na tela da
+ * mesa, e desfazer era peça por peça.
+ *
+ * A fixture já tem o caso todo: a Sílfide (`e1`) JÁ tem peça, o Batedor (`e3`)
+ * é jogador e não tem, e o Ogro (`e2`) é do mestre.
+ */
+describe('quem vem para o tabuleiro', () => {
+  const abrirATrazer = () => screen.getByRole('button', { name: /Trazer a iniciativa/ })
+
+  // O atalho: pôr os PCs no mapa é o gesto de abrir cena e não revela nada —
+  // eles sabem onde estão. O Ogro é informação do mestre, e informação do
+  // mestre não sai por atalho.
+  it('o clique direito traz só os jogadores', () => {
+    const { rt } = renderRegion(true)
+
+    fireEvent.contextMenu(abrirATrazer())
+
+    expect(rt.populateBoard).toHaveBeenCalledWith(['e3'])
+    // E o atalho não abre nada: ele é o caminho de um gesto só.
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  // O cuidado que a issue nomeia: o clique direito JÁ tem dono no tabuleiro —
+  // ele apaga terreno (ALE-192/178). O botão vive no CABEÇALHO, que não é
+  // ancestral da superfície, e é isso que mantém os dois gestos separados; pôr
+  // o botão dentro do plano faria o mesmo gesto trazer peça E apagar chão.
+  it('o clique direito no botão não apaga terreno', async () => {
+    const { rt, user } = renderRegion(true)
+    await user.click(screen.getByRole('button', { name: 'Apagar terreno' }))
+
+    const botao = abrirATrazer()
+    const toque = new Event('pointerdown', { bubbles: true })
+    Object.assign(toque, { pointerId: 1, clientX: 10, clientY: 10, button: 2, buttons: 2 })
+    botao.dispatchEvent(toque)
+    fireEvent.contextMenu(botao)
+
+    expect(rt.populateBoard).toHaveBeenCalledWith(['e3'])
+    expect(rt.paintTerrain).not.toHaveBeenCalled()
+  })
+
+  // O defeito da issue, em uma linha: o clique esquerdo PERGUNTA.
+  it('o clique esquerdo não põe ninguém no mapa — ele pergunta', async () => {
+    const { rt, user } = renderRegion(true)
+
+    await user.click(abrirATrazer())
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(rt.populateBoard).not.toHaveBeenCalled()
+  })
+
+  // A regra da casa: gesto NUNCA é o único caminho. Abrir e confirmar faz
+  // exatamente o que o clique direito faz, sem gesto nenhum.
+  it('abrir e confirmar faz o mesmo que o atalho', async () => {
+    const { rt, user } = renderRegion(true)
+
+    await user.click(abrirATrazer())
+    await user.click(screen.getByRole('button', { name: /^Trazer \d/ }))
+
+    expect(rt.populateBoard).toHaveBeenCalledWith(['e3'])
+  })
+
+  // E o diálogo sabe fazer MAIS: o vilão vem quando o mestre o marca, e só aí.
+  it('o vilão só entra na lista depois de marcado', async () => {
+    const { rt, user } = renderRegion(true)
+
+    await user.click(abrirATrazer())
+    const ogro = screen.getByRole('button', { name: 'Ogro' })
+    expect(ogro).toHaveAttribute('aria-pressed', 'false')
+
+    await user.click(ogro)
+    await user.click(screen.getByRole('button', { name: /^Trazer \d/ }))
+
+    expect([...rt.populateBoard.mock.calls[0][0]].sort()).toEqual(['e2', 'e3'])
+  })
+
+  // Quem já tem peça aparece e não se escolhe: trazer de novo não faria nada, e
+  // esconder a linha faria o mestre procurar um nome que ele acabou de ver.
+  it('quem já está no mapa fica travado na lista', async () => {
+    const { user } = renderRegion(true)
+
+    await user.click(abrirATrazer())
+
+    // Escopado no diálogo: a peça DELA continua no tabuleiro atrás, com o mesmo
+    // nome no começo do rótulo.
+    const lista = within(screen.getByRole('dialog'))
+    expect(lista.getByRole('button', { name: /Sílfide Ladina/ })).toBeDisabled()
+  })
+})

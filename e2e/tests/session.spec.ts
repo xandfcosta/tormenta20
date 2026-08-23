@@ -1084,7 +1084,11 @@ test.describe('Sessão ao vivo', () => {
     // desenvolvimento acumulou — e caiu no CI, onde a seed nasce vazia e o
     // cabeçalho dizia "4 peças". Contar a lista antes de povoar também não
     // serve: outro worker mexe nela entre a contagem e o clique.
+    // O clique esquerdo PERGUNTA quem vem (ALE-204): o padrão traz só os
+    // jogadores, e aqui o teste quer o cabeçalho CHEIO — "Todos".
     await page.getByRole('button', { name: /Trazer a iniciativa/ }).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Todos' }).click()
+    await page.getByRole('dialog').getByRole('button', { name: /^Trazer \d/ }).click()
     await expect(page.getByText(/[1-9]\d* peças/)).toBeVisible()
 
     // Duas asserções, e cada uma diz uma coisa: nada fora da janela sem
@@ -1359,7 +1363,11 @@ test.describe('Sessão ao vivo', () => {
     await expect(fila.getByRole('button', { name: `Remover ${ALVO_DO_ARRASTE}` })).toBeVisible()
     await fechaAFila(page)
 
+    // "Todos" porque o alvo do arraste é um NPC, e o padrão do diálogo traz só
+    // os jogadores (ALE-204).
     await page.getByRole('button', { name: /Trazer a iniciativa/ }).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Todos' }).click()
+    await page.getByRole('dialog').getByRole('button', { name: /^Trazer \d/ }).click()
     // Quantas peças não importa aqui, e prender o número tornaria este teste
     // refém do tamanho da iniciativa da seed — que muda quando outro teste
     // deixa resto para trás. O que importa é que HÁ peça para medir.
