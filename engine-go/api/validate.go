@@ -105,16 +105,35 @@ func normalizeEmail(email string) string {
 	return strings.ToLower(strings.TrimSpace(email))
 }
 
+// As mensagens da PORTA são as que o jogador lê, então elas são em pt-BR
+// (ALE-229).
+//
+// Eram em inglês — herança das frases do class-validator do NestJS —, e a SPA
+// escondia isso validando com Zod antes de chamar. Servidor-renderizado elas
+// chegam na cara de quem digitou, e o buraco já existia: uma senha de 200
+// caracteres passa pelo Zod (que só checa o mínimo) e volta "password must be
+// shorter than or equal to 128 characters".
+//
+// O texto é o MESMO do Zod da SPA de propósito: enquanto as duas portas
+// existirem, duas redações da mesma recusa seriam duas telas discordando.
+const (
+	msgEmailInvalido = "E-mail inválido"
+	msgSenhaCurta    = "A senha precisa ter ao menos 8 caracteres"
+	msgSenhaLonga    = "A senha pode ter no máximo 128 caracteres"
+	msgSenhaVazia    = "Informe sua senha"
+	msgNomeLongo     = "O nome pode ter no máximo 80 caracteres"
+)
+
 func validateRegister(b registerBody) FieldErrorMap {
 	f := FieldErrorMap{}
 	if !isEmail(b.Email) {
-		f["email"] = []string{"email must be an email"}
+		f["email"] = []string{msgEmailInvalido}
 	}
 	for field, messages := range validatePassword(b.Password) {
 		f[field] = messages
 	}
 	if b.Name != nil && utf8.RuneCountInString(*b.Name) > 80 {
-		f["name"] = []string{"name must be shorter than or equal to 80 characters"}
+		f["name"] = []string{msgNomeLongo}
 	}
 	return f
 }
@@ -126,10 +145,10 @@ func validatePassword(password string) FieldErrorMap {
 	f := FieldErrorMap{}
 	length := utf8.RuneCountInString(password)
 	if length < 8 {
-		f["password"] = append(f["password"], "Password must be at least 8 characters")
+		f["password"] = append(f["password"], msgSenhaCurta)
 	}
 	if length > 128 {
-		f["password"] = append(f["password"], "password must be shorter than or equal to 128 characters")
+		f["password"] = append(f["password"], msgSenhaLonga)
 	}
 	return f
 }
@@ -137,10 +156,10 @@ func validatePassword(password string) FieldErrorMap {
 func validateLogin(b loginBody) FieldErrorMap {
 	f := FieldErrorMap{}
 	if !isEmail(b.Email) {
-		f["email"] = []string{"email must be an email"}
+		f["email"] = []string{msgEmailInvalido}
 	}
 	if b.Password == "" {
-		f["password"] = []string{"password must be longer than or equal to 1 characters"}
+		f["password"] = []string{msgSenhaVazia}
 	}
 	return f
 }

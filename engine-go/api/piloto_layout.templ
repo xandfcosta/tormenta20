@@ -34,15 +34,35 @@ package api
 // `html/template` não sabe invocar um sub-template por nome dinâmico. Render em
 // duas passadas era a saída, e cada passada era uma chance de escapar errado.
 type paginaPiloto struct {
-	// Titulo é o do `<title>`; TituloVisivel é o do cabeçalho da cena. Vazio
-	// significa "sem cabeçalho" — a Mesa não tem, porque a faixa AO VIVO dela já
-	// é o cabeçalho e duas fileiras de cromo tirariam o palco do combate.
-	Titulo        string
+	// Titulo é sempre o do `<title>`. O que aparece na TELA depende da Forma.
+	Titulo string
+	Forma  formaDaCasca
+	// TituloVisivel e Voltar são da casca DENSA; Kicker é da casca TÍTULO.
 	TituloVisivel string
 	Voltar        string
+	Kicker        string
 	Sinais        string
 	Init          string
 }
+
+// formaDaCasca são as três posturas do `SceneShell` da SPA, e elas se excluem —
+// um campo em vez de dois títulos opcionais, porque "TituloVisivel vazio E
+// TituloDaCena cheio" é um estado que não deveria ser representável.
+type formaDaCasca string
+
+const (
+	// cascaNua não desenha cabeçalho nenhum e não dá padding: a tela decide
+	// tudo. É o que a Mesa usa, porque a faixa AO VIVO dela já é o cabeçalho e
+	// duas fileiras de cromo tirariam o palco do combate.
+	cascaNua formaDaCasca = ""
+	// cascaDensa é o cabeçalho compacto das telas de conteúdo: voltar + título
+	// pequeno, `px-4 py-4`.
+	cascaDensa formaDaCasca = "densa"
+	// cascaTitulo é a TELA-TÍTULO — o nome do jogo em Cinzel grande e
+	// centralizado, sem link de voltar, `px-5 py-14`. É a forma do Hub, e é a
+	// da PORTA (ALE-229): quem está fora não tem para onde voltar.
+	cascaTitulo formaDaCasca = "titulo"
+)
 
 templ layout(p paginaPiloto, corpo templ.Component) {
 	<!DOCTYPE html>
@@ -69,9 +89,14 @@ templ layout(p paginaPiloto, corpo templ.Component) {
 				data-init={ p.Init }
 			}
 		>
-			<section class="scene-grimorio relative flex h-dvh flex-col overflow-hidden">
-				<div aria-hidden="true" class="grimorio-stone grimorio-vignette pointer-events-none absolute inset-0 -z-10"></div>
-				if p.TituloVisivel != "" {
+			// Os `data-slot` são o CONTRATO OBSERVÁVEL que a SPA publica, e não
+			// enfeite: o e2e da porta lê `[data-slot=scene-shell]` para conferir
+			// que os tokens resolvem a paleta da mesa e não o tema claro do
+			// template. Sem eles a virada quebraria um guarda que continua válido
+			// — a pergunta que ele faz não mudou, só o motor que desenha (ALE-229).
+			<section data-slot="scene-shell" class="scene-grimorio relative flex h-dvh flex-col overflow-hidden">
+				<div aria-hidden="true" data-slot="background-texture" data-variant="stone" data-vignette="true" class="grimorio-stone grimorio-vignette pointer-events-none absolute inset-0 -z-10"></div>
+				if p.Forma == cascaDensa {
 					<header
 						class="relative flex flex-wrap items-center gap-3 border-b border-grimorio-iron px-4 py-3"
 						style="padding-top: max(0.75rem, env(safe-area-inset-top))"
@@ -89,7 +114,15 @@ templ layout(p paginaPiloto, corpo templ.Component) {
 						<h1 class="font-heading text-xl tracking-wide text-foreground">{ p.TituloVisivel }</h1>
 					</header>
 				}
-				<div class={ "relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto", templ.KV("px-4 py-4", p.TituloVisivel != "") }>
+				<div
+					data-slot="scene-content"
+					class={ "relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto",
+						templ.KV("px-4 py-4", p.Forma == cascaDensa),
+						templ.KV("px-5 py-14", p.Forma == cascaTitulo) }
+				>
+					if p.Forma == cascaTitulo {
+						@tituloDaCena(p.Titulo, p.Kicker)
+					}
 					@corpo
 				</div>
 			</section>

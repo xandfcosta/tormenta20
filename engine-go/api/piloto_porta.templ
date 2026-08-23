@@ -1,0 +1,188 @@
+package api
+
+// A PORTA desenhada (ALE-229): entrar, criar conta e redefinir senha.
+//
+// A decisão que governa este arquivo: aqui NÃO se usa sinal do Datastar.
+//
+// O jeito idiomático seria `data-bind:senha` + `@post`. Um sinal, porém, é
+// estado do CLIENTE, e o Datastar serializa os sinais em toda requisição
+// seguinte — pôr uma senha ali é a senha viajando de novo a cada `@get`/`@post`
+// da página, para sempre. Então a porta é `<form method="post">` puro.
+//
+// O que se ganha junto não é consolo: funciona sem JavaScript nenhum, o
+// gerenciador de senha do navegador funciona porque este é o caminho que ele
+// conhece, e a validação de formato ganha as mensagens NATIVAS — já localizadas
+// e já acessíveis — via `required`, `type="email"` e `minlength`. É o que o Zod
+// fazia, sem o Zod.
+//
+// Fica como dado para a ALE-225: existe superfície inteira onde a resposta
+// certa é zero reatividade de cliente.
+
+// portaEmVolta é a `AuthShell` da SPA: a moldura de ferro no meio da
+// tela-título, com o rodapé embaixo e o aviso legal por último.
+templ portaEmVolta(titulo, subtitulo string, rodape templ.Component) {
+	<div class="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-5 py-6">
+		@molduraDePainel("space-y-5") {
+			<div class="space-y-1.5">
+				<h2 class="font-heading text-lg uppercase tracking-[0.16em] text-grimorio-gold">{ titulo }</h2>
+				if subtitulo != "" {
+					<p class="text-sm text-muted-foreground">{ subtitulo }</p>
+				}
+			</div>
+			{ children... }
+		}
+		if rodape != nil {
+			<p class="text-center text-sm text-muted-foreground">
+				@rodape
+			</p>
+		}
+		<p class="text-center text-xs text-muted-foreground">
+			Gerenciador não-oficial de Tormenta 20.
+		</p>
+	</div>
+}
+
+// avisoDoFormulario é a recusa que não pertence a nenhum campo.
+//
+// `role="alert"` porque ela aparece DEPOIS de um envio, sem navegação e sem
+// mover o foco: quem não vê a tela não teria como saber que a tentativa falhou.
+templ avisoDoFormulario(aviso string) {
+	if aviso != "" {
+		<p role="alert" class="text-sm text-destructive">{ aviso }</p>
+	}
+}
+
+// ── entrar ───────────────────────────────────────────────────────────────────
+
+templ paginaEntrar(v entrarView) {
+	@portaEmVolta("Entrar", "Bem-vindo de volta, aventureiro.", rodapeDeEntrar()) {
+		<form method="post" action="/piloto/entrar" class="space-y-4">
+			if v.Destino != "" {
+				<input type="hidden" name="destino" value={ v.Destino }/>
+			}
+			@campoDeTexto(campo{
+				Nome: "email", Label: "E-mail", Tipo: "email", Autocomplete: "email",
+				Valor: v.Email, Erros: v.Erros["email"], Obrigatorio: true,
+			})
+			@campoDeTexto(campo{
+				Nome: "senha", Label: "Senha", Tipo: "password", Autocomplete: "current-password",
+				Erros: v.Erros["senha"], Obrigatorio: true,
+			})
+			@avisoDoFormulario(v.Aviso)
+			@botao(varPrimaria, tamPadrao, "w-full", templ.Attributes{"type": "submit"}) {
+				Entrar
+			}
+		</form>
+	}
+}
+
+// Não há link para criar conta, e a ausência é a decisão (ALE-120): esta mesa é
+// por convite, e quem tem um chega pela URL do convite, não por aqui.
+templ rodapeDeEntrar() {
+	Esta mesa é por convite — peça o link a quem administra.
+}
+
+// ── criar conta ──────────────────────────────────────────────────────────────
+
+templ paginaCriarConta(v criarContaView) {
+	@portaEmVolta("Criar conta", "Junte-se à mesa.", rodapeComEntrar()) {
+		<form method="post" action="/piloto/criar-conta" class="space-y-4">
+			<input type="hidden" name="convite" value={ v.Convite }/>
+			@campoDeTexto(campo{
+				Nome: "email", Label: "E-mail", Tipo: "email", Autocomplete: "email",
+				Valor: v.Email, Erros: v.Erros["email"], Obrigatorio: true,
+			})
+			@campoDeTexto(campo{
+				Nome: "nome", Label: "Nome (opcional)", Autocomplete: "name",
+				Valor: v.Nome, Erros: v.Erros["nome"], TamanhoMaximo: 80,
+			})
+			@campoDeTexto(campo{
+				Nome: "senha", Label: "Senha", Tipo: "password", Autocomplete: "new-password",
+				Dica: "Ao menos 8 caracteres.", Erros: v.Erros["senha"],
+				Obrigatorio: true, TamanhoMinimo: 8, TamanhoMaximo: 128,
+			})
+			@confirmacaoDeSenha(v.Erros["confirmar"])
+			@avisoDoFormulario(v.Aviso)
+			@botao(varPrimaria, tamPadrao, "w-full", templ.Attributes{"type": "submit"}) {
+				Criar conta
+			}
+		</form>
+	}
+}
+
+templ rodapeComEntrar() {
+	Já tem conta?&nbsp;
+	<a href="/piloto/entrar" class="underline underline-offset-4 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">Entrar</a>
+}
+
+// ── redefinir senha ──────────────────────────────────────────────────────────
+
+templ paginaRedefinir(v redefinirView) {
+	@portaEmVolta("Escolher nova senha", subtituloDoLink(v), rodapeComEntrar()) {
+		if v.LinkVale {
+			<form method="post" action="/piloto/redefinir-senha" class="space-y-4">
+				<input type="hidden" name="token" value={ v.Token }/>
+				@campoDeTexto(campo{
+					Nome: "senha", Label: "Nova senha", Tipo: "password", Autocomplete: "new-password",
+					Dica: "Ao menos 8 caracteres.", Erros: v.Erros["senha"],
+					Obrigatorio: true, TamanhoMinimo: 8, TamanhoMaximo: 128,
+				})
+				@confirmacaoDeSenha(v.Erros["confirmar"])
+				@avisoDoFormulario(v.Aviso)
+				@botao(varPrimaria, tamPadrao, "w-full", templ.Attributes{"type": "submit"}) {
+					Salvar nova senha
+				}
+			</form>
+		} else {
+			// O link é conferido ANTES de desenhar o formulário, e isso deixou de
+			// custar uma consulta com estado de carregamento: na SPA era uma
+			// `useQuery` com "Conferindo o link…" e um `Show`/fallback. Aqui é um
+			// `if` no handler, e o estado "carregando" não existe.
+			<p class="text-sm text-muted-foreground">{ avisoLink }</p>
+		}
+	}
+}
+
+func subtituloDoLink(v redefinirView) string {
+	if v.EmailDaConta != "" {
+		return v.EmailDaConta
+	}
+	return "Um link de redefinição foi usado para chegar aqui."
+}
+
+// confirmacaoDeSenha é o campo que existe só para pegar o typo.
+//
+// Ele é conferido nos DOIS lados, e os dois são necessários por razões
+// diferentes: o `data-on:input` dá o aviso na hora, e o servidor é quem de fato
+// recusa — sem ele a página deixaria de funcionar com JavaScript desligado,
+// que é justamente o que esta superfície ganhou ao não usar sinais.
+//
+// A comparação lê o campo irmão pelo DOM (`el.form.senha.value`) em vez de por
+// um sinal, e isso é o ponto: a senha não entra em estado de cliente nenhum.
+templ confirmacaoDeSenha(erros []string) {
+	<div class="space-y-2">
+		<label for="confirmar" class="flex items-center gap-2 text-sm leading-none font-medium select-none">
+			Confirmar senha
+		</label>
+		<input
+			id="confirmar"
+			name="confirmar"
+			type="password"
+			autocomplete="new-password"
+			required
+			data-on:input={ "el.setCustomValidity(el.value === el.form.senha.value ? '' : '" + avisoConfere + "')" }
+			if len(erros) > 0 {
+				aria-invalid="true"
+				aria-describedby="confirmar-erro"
+			}
+			class="h-9 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring md:text-sm aria-invalid:border-destructive aria-invalid:ring-destructive/20"
+		/>
+		if len(erros) > 0 {
+			<div id="confirmar-erro">
+				for _, e := range erros {
+					<p class="text-sm text-destructive">{ e }</p>
+				}
+			</div>
+		}
+	</div>
+}
