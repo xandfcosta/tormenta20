@@ -399,3 +399,68 @@ test.describe('A cena de campanhas (piloto Datastar)', () => {
     await expect(page.getByText(/Nenhuma campanha combina/)).toBeVisible()
   })
 })
+
+test.describe('A cena de personagens (piloto Datastar)', () => {
+  test.use({ storageState: '.auth/user.json' })
+
+  test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
+    await page.goto('/piloto/personagens')
+    await expect(page.getByRole('listbox', { name: 'Personagens' })).toBeVisible()
+    expect(await textoComContrasteBaixo(page), 'texto abaixo do AA nos personagens').toEqual([])
+  })
+
+  /**
+   * A tecla `D` abre o dossiê, e a dica `D` na tela diz a verdade.
+   *
+   * O guarda existe por causa da dica: anunciar um atalho morto ensina errado, e
+   * é mais fácil escrever a dica do que ligar a tecla. Aqui os dois andam juntos
+   * ou nenhum anda.
+   *
+   * E2E porque teclado é do navegador — e porque o painel é `position: fixed`, o
+   * que já me enganou uma vez: `offsetParent` é NULL para elemento fixo, então
+   * um verificador escrito com ele reporta "fechado" com o painel aberto na
+   * cara. A checagem é por `display`.
+   */
+  test('a tecla D abre e fecha o dossiê do herói em cena', async ({ page }) => {
+    await page.goto('/piloto/personagens')
+    await page.getByRole('option').first().focus()
+
+    const dossie = page.locator('aside[aria-label^="Dossiê"]').first()
+    await expect(dossie).toBeHidden()
+
+    await page.keyboard.press('d')
+    await expect(dossie).toBeVisible()
+    // Ele traz o que o servidor já tinha: as habilidades da raça vêm do
+    // catálogo EMBUTIDO, e o navegador não baixou catálogo nenhum para isso.
+    await expect(dossie.getByText(/HABILIDADES DE/i)).toBeVisible()
+
+    await page.keyboard.press('d')
+    await expect(dossie).toBeHidden()
+  })
+
+  /**
+   * Trocar de herói não pede nada ao servidor — mesmo contrato da cena de
+   * campanhas, e o guarda conta as requisições pelo mesmo motivo.
+   *
+   * Aqui ele vale ainda mais: a Defesa de CADA herói já vem computada na
+   * página. Se alguém trocar isso por uma busca sob demanda, andar no elenco
+   * passa a custar uma chamada da `ComputeSheetV2` por passo.
+   */
+  test('as setas trocam de herói sem pedir nada ao servidor', async ({ page }) => {
+    await page.goto('/piloto/personagens')
+    const opcoes = page.getByRole('option')
+    await expect(opcoes.first()).toBeVisible()
+
+    let pedidos = 0
+    page.on('request', () => {
+      pedidos++
+    })
+
+    await opcoes.first().focus()
+    await page.keyboard.press('ArrowRight')
+
+    await expect(opcoes.nth(1)).toHaveAttribute('aria-selected', 'true')
+    await expect(opcoes.first()).toHaveAttribute('aria-selected', 'false')
+    expect(pedidos, 'andar no elenco foi à rede — o cursor deixou de ser sinal').toBe(0)
+  })
+})

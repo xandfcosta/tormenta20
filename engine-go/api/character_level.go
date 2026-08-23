@@ -63,6 +63,17 @@ func (s *Server) computeSheet(ctx context.Context, row sqlcgen.Character) (engin
 	if err != nil {
 		return engine.ComputedSheetV2{}, err
 	}
+	return s.sheetFromDTO(dto)
+}
+
+// sheetFromDTO computa a ficha de um agregado JÁ CARREGADO.
+//
+// Separado do `computeSheet` para a cena de personagens (ALE-239), que precisa
+// da ficha de TODOS de uma vez: ela já tem os agregados na mão, e passar por
+// `computeSheet` faria cada personagem ser lido do banco DUAS vezes — uma na
+// lista e outra dentro dele. Com uma dúzia de heróis isso é o dobro das
+// consultas para o mesmo resultado.
+func (s *Server) sheetFromDTO(dto CharacterDTO) (engine.ComputedSheetV2, error) {
 	ec, err := engineCharacterFrom(dto)
 	if err != nil {
 		return engine.ComputedSheetV2{}, err
