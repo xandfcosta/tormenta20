@@ -263,6 +263,37 @@ export type Character = {
   items: CharacterItem[]
   activeEffects: ActiveEffect[]
   spells: CharacterSpell[]
+  /**
+   * O estado de JOGO da ficha (ALE-222) — o que muda durante a partida e saiu
+   * do `localStorage` quando o servidor virou dono do estado.
+   *
+   * Vem JUNTO com a ficha e não por requisição própria: separado, a tela abriria
+   * com a Fúria desligada e a ligaria um instante depois, piscando exatamente os
+   * números que ela muda.
+   *
+   * `conditionals` NÃO é `activeConditions`: aquele é o opt-in do JOGADOR (Fúria,
+   * Ataque Poderoso); este são as condições do LIVRO (Caído, Atordoado). Ver a
+   * colisão C6 no GLOSSARIO.md.
+   */
+  conditionals: string[]
+  powerUses: PowerUse[]
+  stances: StancePayment[]
+}
+
+/** Quanto de um poder já se gastou num escopo. */
+export type PowerUse = { powerId: string; scope: PowerUseScope; used: number }
+export type PowerUseScope = 'scene' | 'day'
+
+/** O que foi PAGO para entrar numa postura — não se ela está ligada. Quem diz
+ *  isso é o situacional de mesmo nome, na lista `conditionals`. */
+export type StancePayment = { flag: string; steps: number; pmPaid: number }
+
+/** O que os endpoints de estado de jogo devolvem: o estado INTEIRO, para a tela
+ *  poder conferir o próprio otimismo contra a verdade do servidor. */
+export type PlayState = {
+  conditionals: string[]
+  powerUses: PowerUse[]
+  stances: StancePayment[]
 }
 
 /** Ver `Character.ignoredRules`. Uma chave por regra que a mesa pode desligar. */

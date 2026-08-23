@@ -53,6 +53,12 @@ type CharacterDTO struct {
 	Items         []ItemDTO           `json:"items"`
 	ActiveEffects []EffectDTO         `json:"activeEffects"`
 	Spells        []SpellDTO          `json:"spells"`
+	// O estado de JOGO da ficha (ALE-222) — situacionais ligados, usos gastos e
+	// o preco pago pelas posturas. Viaja com a ficha porque a tela precisa dos
+	// tres para desenhar o primeiro quadro.
+	Conditionals []string      `json:"conditionals"`
+	PowerUses    []PowerUseDTO `json:"powerUses"`
+	Stances      []StanceDTO   `json:"stances"`
 }
 
 type RaceDTO struct {
@@ -138,5 +144,8 @@ func characterScalarsFrom(c sqlcgen.Character) CharacterDTO {
 		Items:         []ItemDTO{},
 		ActiveEffects: []EffectDTO{},
 		Spells:        []SpellDTO{},
+		Conditionals:  []string{},
+		PowerUses:     []PowerUseDTO{},
+		Stances:       []StanceDTO{},
 	}
 }

@@ -1,70 +1,106 @@
-import { FakeStorage } from '@/shared/test/fake-storage'
-import { describe, expect, it } from 'vitest'
-import {
-  POWER_USES_STORAGE_KEY,
-  createPowerUsesStore,
-  readStoredPowerUses,
-} from './power-uses-store'
+import { describe, expect, it, vi } from 'vitest'
+import { createPowerUsesStore } from './power-uses-store'
 
+/**
+ * Os contadores de USO depois que o servidor virou dono (ALE-222).
+ *
+ * A regra que este arquivo protege é a mesma do situacional — otimismo e volta
+ * atrás — mais uma que é só daqui: o que vai no fio é "gastei MAIS UM", nunca o
+ * total. Um store que mandasse o total perderia um uso a cada par de cliques
+ * rápidos, e o teste que só olhasse o contador local não veria isso.
+ */
 
-const POWER = 'class.barbaro.golpe-poderoso'
+const HEROI = 7
 
-describe('readStoredPowerUses', () => {
-  it('lê a forma do zustand que o React grava', () => {
-    const raw = JSON.stringify({ state: { uses: { '1': { scene: { [POWER]: 2 }, day: {} } } } })
-    expect(readStoredPowerUses(raw)['1'].scene[POWER]).toBe(2)
+describe('store dos usos de poder', () => {
+  it('conta o uso na hora, sem esperar o servidor', () => {
+    const store = createPowerUsesStore(() => new Promise(() => {}))
+
+    store.bump(HEROI, 'furia', 'day')
+
+    expect(store.used(HEROI, 'furia')).toEqual({ scene: 0, day: 1 })
   })
 
-  it('blob corrompido ou ausente não derruba a ficha', () => {
-    expect(readStoredPowerUses(null)).toEqual({})
-    expect(readStoredPowerUses('{quebrado')).toEqual({})
-    expect(readStoredPowerUses(JSON.stringify({ state: { uses: 'nem objeto' } }))).toEqual({})
-  })
-})
+  it('manda "mais um" com o escopo, e nunca o total', () => {
+    const write = vi.fn(async () => {})
+    const store = createPowerUsesStore(write)
 
-describe('createPowerUsesStore', () => {
-  it('conta os usos por escopo e persiste na chave do React', () => {
-    const storage = new FakeStorage()
-    const store = createPowerUsesStore(storage)
+    store.bump(HEROI, 'furia', 'day')
+    store.bump(HEROI, 'furia', 'day')
 
-    store.bump(1, POWER, 'scene')
-    store.bump(1, POWER, 'scene')
-    store.bump(1, POWER, 'day')
-
-    expect(store.used(1, POWER)).toEqual({ scene: 2, day: 1 })
-    expect(readStoredPowerUses(storage.getItem(POWER_USES_STORAGE_KEY))['1'].scene[POWER]).toBe(2)
+    // Duas chamadas iguais — é o servidor que soma. Se o store mandasse o total,
+    // a segunda chamada traria 2 e dois cliques simultâneos gravariam 2 duas
+    // vezes, perdendo um uso.
+    expect(write).toHaveBeenCalledTimes(2)
+    expect(write).toHaveBeenNthCalledWith(1, HEROI, 'furia', 'day')
+    expect(write).toHaveBeenNthCalledWith(2, HEROI, 'furia', 'day')
   })
 
-  it('personagens diferentes contam separado', () => {
-    const store = createPowerUsesStore(new FakeStorage())
-    store.bump(1, POWER, 'scene')
-    expect(store.used(2, POWER)).toEqual({ scene: 0, day: 0 })
+  it('as contas de cena e de dia do MESMO poder são independentes', () => {
+    const store = createPowerUsesStore(async () => {})
+
+    store.bump(HEROI, 'furia', 'scene')
+    store.bump(HEROI, 'furia', 'day')
+    store.bump(HEROI, 'furia', 'day')
+
+    expect(store.used(HEROI, 'furia')).toEqual({ scene: 1, day: 2 })
   })
 
-  it('encerrar cena zera só a cena', () => {
-    const store = createPowerUsesStore(new FakeStorage())
-    store.bump(1, POWER, 'scene')
-    store.bump(1, POWER, 'day')
+  it('DESFAZ o contador quando o servidor recusa', async () => {
+    const store = createPowerUsesStore(() => Promise.reject(new Error('500')))
 
-    store.resetScene(1)
+    store.bump(HEROI, 'furia', 'day')
 
-    expect(store.used(1, POWER)).toEqual({ scene: 0, day: 1 })
+    // Aqui o desfazer importa mais que no situacional: um contador que ficou
+    // alto sozinho faz o jogador achar que gastou um poder que ainda tem.
+    await vi.waitFor(() => expect(store.used(HEROI, 'furia').day).toBe(0))
   })
 
-  // Encerrar o dia encerra a cena que estava rolando (descanso do livro).
-  it('encerrar dia zera os dois escopos', () => {
-    const store = createPowerUsesStore(new FakeStorage())
-    store.bump(1, POWER, 'scene')
-    store.bump(1, POWER, 'day')
+  it('o descanso de cena zera só a cena', () => {
+    const store = createPowerUsesStore(async () => {})
+    store.bump(HEROI, 'furia', 'scene')
+    store.bump(HEROI, 'milagre', 'day')
 
-    store.resetDay(1)
+    store.resetScene(HEROI)
 
-    expect(store.used(1, POWER)).toEqual({ scene: 0, day: 0 })
+    expect(store.used(HEROI, 'furia').scene).toBe(0)
+    // A metade que importa: o "1/dia" NÃO volta, senão o descanso de cena
+    // devolveria um poder que o livro não devolve.
+    expect(store.used(HEROI, 'milagre').day).toBe(1)
   })
 
-  it('encerrar cena de um personagem sem uso nenhum é inofensivo', () => {
-    const store = createPowerUsesStore(new FakeStorage())
-    expect(() => store.resetScene(99)).not.toThrow()
-    expect(store.used(99, POWER)).toEqual({ scene: 0, day: 0 })
+  it('o descanso de dia zera os dois escopos', () => {
+    const store = createPowerUsesStore(async () => {})
+    store.bump(HEROI, 'furia', 'scene')
+    store.bump(HEROI, 'milagre', 'day')
+
+    store.resetDay(HEROI)
+
+    expect(store.used(HEROI, 'furia').scene).toBe(0)
+    expect(store.used(HEROI, 'milagre').day).toBe(0)
+  })
+
+  it('o reset NÃO fala com o servidor — quem chama já falou', () => {
+    // O `/end-scene` limpa lá; repetir a chamada aqui seria a mesma decisão
+    // escrita em dois lugares, e um dia elas discordariam.
+    const write = vi.fn(async () => {})
+    const store = createPowerUsesStore(write)
+    store.bump(HEROI, 'furia', 'scene')
+    write.mockClear()
+
+    store.resetScene(HEROI)
+    store.resetDay(HEROI)
+
+    expect(write).not.toHaveBeenCalled()
+  })
+
+  it('hidrata substituindo o cache', () => {
+    const store = createPowerUsesStore(async () => {})
+    store.bump(HEROI, 'lixo', 'day')
+
+    store.hydrate(HEROI, [{ powerId: 'furia', scope: 'scene', used: 3 }])
+
+    expect(store.used(HEROI, 'furia')).toEqual({ scene: 3, day: 0 })
+    expect(store.used(HEROI, 'lixo')).toEqual({ scene: 0, day: 0 })
   })
 })

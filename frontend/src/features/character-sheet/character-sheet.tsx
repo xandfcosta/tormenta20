@@ -1,6 +1,7 @@
 import { Show, type JSX } from 'solid-js'
 import type { Character } from '@/shared/api/api'
 import { createMediaQuery } from '@/shared/lib/media-query'
+import { createPlayStateHydration } from '@/shared/stores/play-state-hydration'
 import { CharacterSheetDesktop } from './character-sheet-desktop'
 import { CharacterSheetMobile } from './character-sheet-mobile'
 
@@ -48,6 +49,10 @@ export type CharacterSheetProps = {
  */
 export function CharacterSheet(props: CharacterSheetProps) {
   const isDesktop = createMediaQuery('(min-width: 1024px)')
+  // O estado de jogo veio DENTRO da ficha (ALE-222); daqui ele entra nos stores.
+  // Fica no topo da ficha e não nos consumidores porque é UM lugar para lembrar,
+  // e porque os dois layouts abaixo montam as mesmas seções.
+  createPlayStateHydration(() => props.character)
 
   return (
     <Show

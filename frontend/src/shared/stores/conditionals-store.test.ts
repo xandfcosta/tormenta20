@@ -1,85 +1,90 @@
-import { FakeStorage } from '@/shared/test/fake-storage'
-import { describe, expect, it } from 'vitest'
-import { CONDITIONALS_STORAGE_KEY, createConditionalsStore } from './conditionals-store'
+import { describe, expect, it, vi } from 'vitest'
+import { createConditionalsStore } from './conditionals-store'
 
+/**
+ * O store dos SITUACIONAIS depois que o servidor virou dono (ALE-222).
+ *
+ * O que este arquivo testava antes era a leitura defensiva de um blob de
+ * `localStorage`. Esse blob não existe mais, e a regra que substituiu a antiga é
+ * o OTIMISMO: a tela pinta antes de o servidor responder e volta atrás se ele
+ * recusar. É isso que se protege aqui — não o CRUD, que o typechecker já
+ * garante.
+ */
 
-const HERO = 1
-const OTHER = 2
+const HEROI = 7
 
-describe('createConditionalsStore', () => {
-  it('começa sem nada ativo', () => {
-    const store = createConditionalsStore(new FakeStorage())
-    expect([...store.active(HERO)]).toEqual([])
+/** Um servidor que aceita e lembra o que recebeu. */
+function servidorQueAceita() {
+  return vi.fn(async () => {})
+}
+
+describe('store dos situacionais', () => {
+  it('liga o situacional na hora, sem esperar o servidor', () => {
+    // Um servidor que NUNCA responde: se a leitura dependesse dele, viria
+    // vazia — e é exatamente esse o ponto do otimismo.
+    const store = createConditionalsStore(() => new Promise(() => {}))
+
+    store.toggle(HEROI, 'furia')
+
+    expect([...store.active(HEROI)]).toEqual(['furia'])
   })
 
-  it('alterna um condicional para ligado e para desligado', () => {
-    const store = createConditionalsStore(new FakeStorage())
+  it('manda ao servidor o CONJUNTO final, e não o que mudou', () => {
+    const write = servidorQueAceita()
+    const store = createConditionalsStore(write)
 
-    store.toggle(HERO, 'furia')
-    expect(store.active(HERO).has('furia')).toBe(true)
+    store.toggle(HEROI, 'furia')
+    store.toggle(HEROI, 'ataque-poderoso')
 
-    store.toggle(HERO, 'furia')
-    expect(store.active(HERO).has('furia')).toBe(false)
+    expect(write).toHaveBeenLastCalledWith(HEROI, ['furia', 'ataque-poderoso'])
   })
 
-  // Dois personagens abertos na mesma máquina não podem compartilhar a Fúria.
-  it('mantém os personagens separados', () => {
-    const store = createConditionalsStore(new FakeStorage())
+  it('DESFAZ quando o servidor recusa', async () => {
+    const store = createConditionalsStore(() => Promise.reject(new Error('500')))
 
-    store.toggle(HERO, 'furia')
-    expect(store.active(OTHER).has('furia')).toBe(false)
+    store.toggle(HEROI, 'furia')
+
+    await vi.waitFor(() => expect([...store.active(HEROI)]).toEqual([]))
   })
 
-  it('setMany liga e desliga um lote de uma vez', () => {
-    const store = createConditionalsStore(new FakeStorage())
+  it('avisa quem escuta que a recusa aconteceu', async () => {
+    // Sem esta metade o toggle voltaria sozinho e o jogador acharia que errou o
+    // clique: desfazer em silêncio é pior que mostrar o erro.
+    const aviso = vi.fn()
+    const store = createConditionalsStore(() => Promise.reject(new Error('500')), aviso)
 
-    store.setMany(HERO, ['furia', 'ataque-poderoso'], true)
-    expect([...store.active(HERO)].sort()).toEqual(['ataque-poderoso', 'furia'])
+    store.toggle(HEROI, 'furia')
 
-    store.setMany(HERO, ['furia'], false)
-    expect([...store.active(HERO)]).toEqual(['ataque-poderoso'])
+    await vi.waitFor(() => expect(aviso).toHaveBeenCalled())
   })
 
-  it('clear zera só o personagem pedido', () => {
-    const store = createConditionalsStore(new FakeStorage())
-    store.toggle(HERO, 'furia')
-    store.toggle(OTHER, 'esquiva')
+  it('hidrata SUBSTITUINDO o que estava no cache', () => {
+    const store = createConditionalsStore(servidorQueAceita())
+    store.toggle(HEROI, 'ligado-nesta-aba')
 
-    store.clear(HERO)
+    store.hydrate(HEROI, ['furia'])
 
-    expect([...store.active(HERO)]).toEqual([])
-    expect(store.active(OTHER).has('esquiva')).toBe(true)
+    // Mesclar deixaria sobreviver aqui um situacional que outra aba desligou, e
+    // a ficha recomputaria contra um conjunto que não existe no servidor.
+    expect([...store.active(HEROI)]).toEqual(['furia'])
   })
 
-  /**
-   * Mesma chave e mesma forma do zustand do app React (`t20-conditionals` →
-   * `{ state: { active } }`): durante a migração o jogador alterna entre os
-   * dois fronts, e o que está ligado na mesa não pode se perder na troca.
-   */
-  it('persiste na chave e na forma que o app React usava', () => {
-    const storage = new FakeStorage()
-    createConditionalsStore(storage).toggle(HERO, 'furia')
+  it('cada personagem tem o próprio conjunto', () => {
+    const store = createConditionalsStore(servidorQueAceita())
 
-    expect(JSON.parse(storage.getItem(CONDITIONALS_STORAGE_KEY) ?? '{}')).toEqual({
-      state: { active: { '1': ['furia'] } },
-    })
+    store.toggle(HEROI, 'furia')
+    store.toggle(99, 'ataque-poderoso')
+
+    expect([...store.active(HEROI)]).toEqual(['furia'])
+    expect([...store.active(99)]).toEqual(['ataque-poderoso'])
   })
 
-  it('relê o que ficou salvo', () => {
-    const storage = new FakeStorage()
-    storage.setItem(
-      CONDITIONALS_STORAGE_KEY,
-      JSON.stringify({ state: { active: { '1': ['furia'] } } }),
-    )
+  it('setMany liga e desliga em lote', () => {
+    const store = createConditionalsStore(servidorQueAceita())
 
-    expect(createConditionalsStore(storage).active(HERO).has('furia')).toBe(true)
-  })
+    store.setMany(HEROI, ['a', 'b', 'c'], true)
+    store.setMany(HEROI, ['b'], false)
 
-  // Storage corrompido (ou de uma versão antiga) não pode derrubar a ficha.
-  it('ignora um storage ilegível em vez de estourar', () => {
-    const storage = new FakeStorage()
-    storage.setItem(CONDITIONALS_STORAGE_KEY, '{isto não é json')
-
-    expect([...createConditionalsStore(storage).active(HERO)]).toEqual([])
+    expect([...store.active(HEROI)].sort()).toEqual(['a', 'c'])
   })
 })

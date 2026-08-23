@@ -1,4 +1,3 @@
-import { FakeStorage } from '@/shared/test/fake-storage'
 import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
 import { render, screen, waitFor, within } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
@@ -9,8 +8,8 @@ import { characterQueryOptions } from '@/entities/character/queries'
 import type { Character, CharacterSpell } from '@/shared/api/api'
 import { spellCatalog } from '@/shared/lib/spell-cache'
 import { ConditionalsProvider } from '@/shared/stores/conditionals-context'
-import { createConditionalsStore } from '@/shared/stores/conditionals-store'
 import { SpellRow } from './spell-row'
+import { fakeConditionals } from '@/shared/test/play-stores'
 
 /**
  * SpellRow gets its own file because in the panel it lives inside a VIRTUALIZED
@@ -62,7 +61,7 @@ function renderRow(
   client.setQueryData(characterQueryOptions(character.id).queryKey, character)
   render(() => (
     <QueryClientProvider client={client}>
-      <ConditionalsProvider store={createConditionalsStore(new FakeStorage())}>
+      <ConditionalsProvider store={fakeConditionals()}>
         <SpellRow
           spell={options.spell ?? firstCircleSpell()}
           character={character}
@@ -215,7 +214,7 @@ describe('SpellRow', () => {
     client.setQueryData(characterQueryOptions(character.id).queryKey, character)
     render(() => (
       <QueryClientProvider client={client}>
-        <ConditionalsProvider store={createConditionalsStore(new FakeStorage())}>
+        <ConditionalsProvider store={fakeConditionals()}>
           <SpellRow
             spell={spell}
             character={character}

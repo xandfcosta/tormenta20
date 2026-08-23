@@ -15,7 +15,7 @@ import { meQueryOptions } from '@/entities/user/queries'
 import type { AuthUser, Campaign, Session } from '@/shared/api/api'
 import type { SessionRealtime } from '@/shared/realtime/realtime'
 import { PowerUsesProvider } from '@/shared/stores/power-uses-context'
-import { createPowerUsesStore } from '@/shared/stores/power-uses-store'
+import { fakePowerUses } from '@/shared/test/play-stores'
 import { UiProvider } from '@/shared/stores/ui-context'
 import { createUiStore } from '@/shared/stores/ui-store'
 import { FakeStorage } from '@/shared/test/fake-storage'
@@ -96,7 +96,10 @@ function renderTracker(campaign: Campaign | undefined) {
   // O `PowerUsesProvider` é o mesmo que o `main.tsx` põe acima de tudo: a
   // página lê os contadores de uso para zerá-los no descanso do mestre
   // (ALE-223), e a ficha que ela monta já os lia antes.
-  const powerUses = createPowerUsesStore(new FakeStorage())
+  // Store real com o servidor MUDO (ALE-222): o cache local continua de
+  // verdade, então o descanso do mestre é exercitado como na tela — só o que
+  // iria pelo fio é que não vai.
+  const powerUses = fakePowerUses()
   const rendered = render(() => (
     <UiProvider store={createUiStore(new FakeStorage())}>
       <PowerUsesProvider store={powerUses}>

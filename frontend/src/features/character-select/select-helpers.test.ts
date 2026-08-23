@@ -42,6 +42,9 @@ function character(overrides: Partial<Character> = {}): Character {
     items: [],
     activeEffects: [],
     spells: [],
+    conditionals: [],
+    powerUses: [],
+    stances: [],
     ...overrides,
   }
 }

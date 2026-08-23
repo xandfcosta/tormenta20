@@ -49,6 +49,11 @@ export function makeCharacter(overrides: Partial<Character> = {}): Character {
     items: [],
     activeEffects: [],
     spells: [],
+    // O estado de JOGO (ALE-222). Vazio por padrão: um personagem de teste
+    // nasce sem nada ligado, e quem testa o situacional o passa por override.
+    conditionals: [],
+    powerUses: [],
+    stances: [],
     ...overrides,
   }
 }

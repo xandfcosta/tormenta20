@@ -1,4 +1,3 @@
-import { FakeStorage } from '@/shared/test/fake-storage'
 import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
 import { render, screen } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
@@ -8,8 +7,8 @@ import { characterQueryOptions } from '@/entities/character/queries'
 import type { Character, CharacterSpell } from '@/shared/api/api'
 import { spellCatalog } from '@/shared/lib/spell-cache'
 import { ConditionalsProvider } from '@/shared/stores/conditionals-context'
-import { createConditionalsStore } from '@/shared/stores/conditionals-store'
 import { SpellbookPanel } from './spellbook-panel'
+import { fakeConditionals } from '@/shared/test/play-stores'
 
 
 /** A real 1st-circle Arcanista spell out of the primed catalog. */
@@ -29,7 +28,7 @@ function renderPanel(char: Character) {
   client.setQueryData(characterQueryOptions(char.id).queryKey, char)
   render(() => (
     <QueryClientProvider client={client}>
-      <ConditionalsProvider store={createConditionalsStore(new FakeStorage())}>
+      <ConditionalsProvider store={fakeConditionals()}>
         <SpellbookPanel character={char} />
       </ConditionalsProvider>
     </QueryClientProvider>

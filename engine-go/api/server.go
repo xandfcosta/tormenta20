@@ -208,6 +208,13 @@ func (s *Server) Router() http.Handler {
 			r.Delete("/{id}/items/{itemId}", s.handleDeleteItem)
 			r.Post("/{id}/items/{itemId}/consume", s.handleConsumeItem)
 			r.Patch("/{id}/conditions", s.handleUpdateConditions)
+			// O estado de JOGO da ficha (ALE-222). `conditionals` e vizinho de
+			// `conditions` uma linha acima e e OUTRA COISA: aquele e o opt-in do
+			// jogador, este sao as condicoes do livro. Ver C6 no GLOSSARIO.md.
+			r.Patch("/{id}/conditionals", s.handleUpdateConditionals)
+			r.Post("/{id}/power-uses", s.handleBumpPowerUse)
+			r.Put("/{id}/stances/{flag}", s.handleSetStance)
+			r.Delete("/{id}/stances/{flag}", s.handleDeleteStance)
 			r.Post("/{id}/expertises", s.handleAddExpertise)
 			r.Patch("/{id}/expertises", s.handleUpdateExpertise)
 			r.Delete("/{id}/expertises/{name}", s.handleDeleteExpertise)

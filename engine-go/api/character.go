@@ -213,6 +213,18 @@ func (s *Server) loadCharacter(ctx context.Context, c sqlcgen.Character) (Charac
 	if err == nil {
 		dto.IgnoredRules = engine.IgnoredRulesFrom(ignored)
 	}
+
+	// O estado de JOGO (ALE-222). Vem junto e nao por endpoint proprio: separado,
+	// a ficha abriria com a Furia desligada e a ligaria um instante depois,
+	// piscando os numeros que ela muda.
+	//
+	// Este DERRUBA a carga em caso de falha e o de cima nao, e a diferenca e
+	// deliberada: sem o estado de jogo a ficha mente sobre o que esta ligado,
+	// enquanto sem as regras opcionais ela cai no padrao do livro, que e o lado
+	// seguro. Uma regra a mais nunca inventa numero; uma postura a menos sim.
+	if err := s.loadPlayState(ctx, c.ID, &dto); err != nil {
+		return dto, err
+	}
 	return dto, nil
 }
 

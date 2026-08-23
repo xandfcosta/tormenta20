@@ -41,6 +41,9 @@ alguém já usou e que não voltam.
 | **cena** | `SceneActive` | — | O estado que o mestre liga e desliga; enquanto ela dura, a mesa recebe a fila (ALE-210). **Ver a colisão C1.** |
 | **rodada / vez** | `round` / `turnIndex` | ~~turno~~ para "de quem é a vez" | "Turno" é o que se GASTA (ação de movimento etc.); "vez" é de quem é. |
 | **recuperação** | `rest` | — | O painel. As ações dentro dele são **descanso de cena** e **descanso de dia**, que é a palavra do livro (T20 p105) — a seção diz o que devolve, as ações dizem o que o livro chama. |
+| **situacional** | `conditional` | ~~condição~~, ~~modificador opcional~~ | O modificador OPT-IN que o jogador liga na própria ficha e que muda o cálculo dela — Fúria, Ataque Poderoso, os homebrew. Na tela: "Situação — opt-in por contexto". **Não é condição** — ver C6. |
+| **postura** | `stance` | — | O situacional que cobra PM para entrar. O que foi pago fica registrado, para sair não devolver. Na tela: "Posturas ativas". |
+| **uso** | `powerUse` | ~~carga~~, ~~gasto~~ | Quantas vezes um poder "1/cena" ou "1/dia" já foi usado. ~~carga~~ está tomada: desde a ALE-215 ela é o peso que a mochila carrega. |
 
 ## C. O tabuleiro
 
@@ -109,6 +112,26 @@ colateral é conhecido e aceito: um PC do mestre que esteja na fila vem junto.
 
 **C5 — o README ainda usa três palavras para campanha.** "as dos outros aparecem
 nas **Crônicas**", "abre e edita qualquer **mesa**". Sai no próximo passe.
+
+**C6 — `condition` e `conditional` são conceitos DIFERENTES a uma letra de
+distância.** A **condição** é do livro (p394-395): Caído, Atordoado, Cego. Ela
+chega de fora — o mestre aplica, a magia impõe — e mora na coluna JSON
+`characters.activeConditions`. O **situacional** é escolha do jogador na própria
+ficha: Fúria, Ataque Poderoso, os homebrew. Ele muda o cálculo da ficha e, desde
+a ALE-222, mora na tabela `character_conditionals`.
+
+Os dois ficam a uma letra de distância no autocomplete, e trocá-los significa
+aplicar Fúria como se fosse Caído. Ao escrever query nova, confira o plural
+inteiro.
+
+E os dois guardam-se em FORMAS diferentes — coluna JSON de um lado, tabela do
+outro — sem que isso signifique nada sobre os conceitos: é o sqlc, que não
+enxerga `ALTER TABLE ADD COLUMN` de arquivo de migração novo (ALE-124), então
+espelhar a coluna não era opção. Não leia a assimetria como intenção.
+
+A tela não desambigua sozinha porque ela nem tenta: diz "Condições" de um lado
+e "Situação" do outro, que é a separação certa. É só no código que os dois se
+parecem.
 
 ---
 

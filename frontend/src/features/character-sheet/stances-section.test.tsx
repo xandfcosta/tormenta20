@@ -1,4 +1,3 @@
-import { FakeStorage } from '@/shared/test/fake-storage'
 import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
 import { render, screen, waitFor } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
@@ -7,16 +6,12 @@ import { makeCharacter } from '@/entities/character/__fixtures__/character'
 import { allConditionals } from '@/entities/character/derived'
 import { characterQueryOptions } from '@/entities/character/queries'
 import type { Character } from '@/shared/api/api'
+import type { ConditionalsStore } from '@/shared/stores/conditionals-store'
 import { ConditionalsProvider } from '@/shared/stores/conditionals-context'
-import {
-  type ConditionalsStore,
-  createConditionalsStore,
-} from '@/shared/stores/conditionals-store'
 import { PowerUsesProvider } from '@/shared/stores/power-uses-context'
-import { createPowerUsesStore } from '@/shared/stores/power-uses-store'
 import { StanceActivationProvider } from '@/shared/stores/stance-activation-context'
-import { createStanceActivationStore } from '@/shared/stores/stance-activation-store'
 import { StancesSection, activeStanceGroups, stanceSummary } from './stances-section'
+import { fakeConditionals, fakePowerUses, fakeStances } from '@/shared/test/play-stores'
 
 
 const barbaro = (overrides: Partial<Character> = {}) =>
@@ -37,13 +32,13 @@ function furiaEntryIds(character: Character): string[] {
 function renderStances(character: Character, tune?: (store: ConditionalsStore) => void) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   client.setQueryData(characterQueryOptions(character.id).queryKey, character)
-  const conditionals = createConditionalsStore(new FakeStorage())
+  const conditionals = fakeConditionals()
   tune?.(conditionals)
   render(() => (
     <QueryClientProvider client={client}>
       <ConditionalsProvider store={conditionals}>
-        <PowerUsesProvider store={createPowerUsesStore(new FakeStorage())}>
-          <StanceActivationProvider store={createStanceActivationStore(new FakeStorage())}>
+        <PowerUsesProvider store={fakePowerUses()}>
+          <StanceActivationProvider store={fakeStances()}>
             <StancesSection character={character} />
           </StanceActivationProvider>
         </PowerUsesProvider>
