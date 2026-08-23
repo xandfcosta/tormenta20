@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"crypto/sha256"
 	"net/http"
 	"time"
@@ -51,7 +52,7 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 	defer parar()
 
 	sse := datastar.NewSSE(w, r, datastar.WithCompression())
-	ultimo := escreveMesa(sse, view, [32]byte{})
+	ultimo := escreveMesa(r.Context(), sse, view, [32]byte{})
 
 	batimento := time.NewTicker(mesaBatimento)
 	defer batimento.Stop()
@@ -71,7 +72,7 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 			// de piscar.
 			continue
 		}
-		ultimo = escreveMesa(sse, view, ultimo)
+		ultimo = escreveMesa(r.Context(), sse, view, ultimo)
 	}
 }
 
@@ -87,16 +88,16 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 // `refreshCharacterMaxes` devolve struct nova a cada leitura, então igualdade de
 // estado mandaria tudo sempre; e comparar campo a campo seria a lista que
 // envelhece — o defeito que o `cloneState` documenta ter tido com o `TurnsTaken`.
-func escreveMesa(sse *datastar.ServerSentEventGenerator, view mesaView, anterior [32]byte) [32]byte {
-	fragmento, err := renderFragmento("mesa", view)
+func escreveMesa(ctx context.Context, sse *datastar.ServerSentEventGenerator, view mesaView, anterior [32]byte) [32]byte {
+	fragmento, err := renderFragmento(ctx, mesa(view))
 	if err != nil {
 		return anterior
 	}
-	digital := sha256.Sum256(fragmento)
+	digital := sha256.Sum256([]byte(fragmento))
 	if digital == anterior {
 		return anterior
 	}
-	if err := sse.PatchElements(string(fragmento)); err != nil {
+	if err := sse.PatchElements(fragmento); err != nil {
 		return anterior
 	}
 	return digital

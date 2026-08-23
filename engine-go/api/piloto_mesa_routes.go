@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"fmt"
-	"html/template"
 	"io/fs"
 	"net/http"
 	"strconv"
@@ -86,25 +85,13 @@ func (s *Server) handleMesaPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), status)
 		return
 	}
-	corpo, err := renderFragmento("mesa", view)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	html, err := renderPagina(paginaPiloto{
+	// A página é um retrato de agora, e o `escrevePagina` já a manda `no-store`:
+	// guardá-la serviria uma fila velha.
+	s.escrevePagina(w, r, paginaPiloto{
 		Titulo: fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
 		Sinais: "{d20: 10, erro: ''}",
 		Init:   fmt.Sprintf("@get('/piloto/mesa/%d/%d/stream')", campaignID, sessionID),
-		Corpo:  template.HTML(corpo),
-	})
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	// A página é um retrato de agora; guardá-la serviria uma fila velha.
-	w.Header().Set("Cache-Control", "no-store")
-	_, _ = w.Write(html)
+	}, mesa(view))
 }
 
 // loadMesaView busca tudo o que a tela precisa e delega a DECISÃO ao

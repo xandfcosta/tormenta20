@@ -5,9 +5,14 @@
  * para medir o Datastar, não para inventar um tema. */
 @import "../../../frontend/src/index.css";
 
-/* Os templates do Go, que o scanner não acharia sozinho: a detecção automática
- * do Tailwind v4 parte da pasta desta folha, e os `.html` estão na irmã. */
-@source "./tmpl";
+/* Os templates, que o scanner não acharia sozinho: a detecção automática do
+ * Tailwind v4 parte da pasta desta folha, e eles moram dois níveis acima.
+ *
+ * Em `api/` e não numa pasta própria porque as views são MINÚSCULAS (`mesaView`,
+ * `adminJogador`) e o `templ` gera Go no pacote do diretório — um pacote `tmpl`
+ * não as enxergaria. Varre-se só o `piloto_*.templ` para o scanner não ler o
+ * pacote `api` inteiro à procura de classe. */
+@source "../*.templ";
 
 /* A folha COMPILADA (`static/mesa.css`) é versionada, e isso é decisão e não
  * descuido: o `go:embed` não compila sem ela, então um clone limpo perderia
