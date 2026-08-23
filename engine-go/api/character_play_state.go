@@ -209,11 +209,11 @@ func (s *Server) writePlayState(w http.ResponseWriter, r *http.Request, id int64
 // as posturas.
 //
 // Ele se pendura no descanso da ficha e não no `endScene` da sessão de
-// propósito. A colisão C1 do glossário mede o estrago de confundir os dois:
-// `endScene` existe três vezes no pacote, o da sessão NÃO limpa efeito nenhum, e
-// o resultado é a bênção de duração "cena" sobrevivendo ao fim da cena. Os usos
-// entram pelo caminho que JÁ limpa a ficha, junto dos efeitos, para não nascerem
-// com o mesmo defeito.
+// propósito: os usos entram pelo caminho que JÁ limpa a ficha, junto dos
+// efeitos. Era o `endScene` da sessão que estava errado — ele não limpava
+// efeito nenhum, e a bênção de duração "cena" sobrevivia ao fim da cena. A
+// ALE-220 fechou isso pelo lado de lá: encerrar a cena agora percorre o grupo e
+// chama ESTE caminho para cada ficha.
 func (s *Server) clearScenePlayState(ctx context.Context, id int64) error {
 	if err := s.queries.ClearCharacterPowerUsesByScope(ctx, sqlcgen.ClearCharacterPowerUsesByScopeParams{
 		Characterid: id, Scope: "scene",

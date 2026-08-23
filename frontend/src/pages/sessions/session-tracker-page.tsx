@@ -202,11 +202,16 @@ function createRestCue(
       if (day) powerUses.resetDay(id)
       else powerUses.resetScene(id)
     }
+    // O de cena não diz mais "Descanso": desde a ALE-220 este sinal também
+    // chega quando o mestre ENCERRA a cena, e anunciar um descanso que ninguém
+    // pediu empataria de novo as duas palavras que a ALE-210 separou. O título
+    // passou a nomear o que aconteceu com as FICHAS, que é verdade nos dois
+    // caminhos. O de dia continua sendo descanso, porque devolve PV e PM.
     announce(() =>
-      toast.success(`Descanso de ${day ? 'dia' : 'cena'}`, {
+      toast.success(day ? 'Descanso de dia' : 'Efeitos de cena limpos', {
         description: day
           ? 'PV/PM recuperados e efeitos temporários limpos.'
-          : 'Efeitos temporários de cena foram limpos.',
+          : 'Os usos 1/cena e as posturas também saíram das fichas.',
       }),
     )
   })
