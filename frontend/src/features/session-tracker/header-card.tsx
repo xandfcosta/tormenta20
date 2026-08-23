@@ -156,7 +156,7 @@ export function HeaderCard(props: {
       <Show when={props.isGm && props.session.status === 'active'}>
         <SettingRow
           label="Encerrar sessão"
-          hint="A partida sai do ar para a mesa. A crônica e as fichas ficam como estão."
+          hint="A partida sai do ar para a mesa. A campanha e as fichas ficam como estão."
           action={
             <Button
               size="sm"

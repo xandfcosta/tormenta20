@@ -219,7 +219,7 @@ function Synopsis(props: { text: string | null }) {
     <Show
       when={props.text}
       fallback={
-        <p class="text-sm italic opacity-60">Esta crônica ainda não tem uma sinopse.</p>
+        <p class="text-sm italic opacity-60">Esta campanha ainda não tem uma sinopse.</p>
       }
     >
       {(text) => <p class="max-w-prose text-sm leading-relaxed opacity-85">{text()}</p>}
@@ -247,7 +247,7 @@ function CharacterRow(props: { character: NonNullable<Campaign['character']> }) 
 function Actions(props: { isLive: boolean; onOpen: () => void; onResume: () => void }) {
   return (
     <div class="flex flex-wrap items-center gap-2 pt-1">
-      {/* `Abrir crônica` fica SEMPRE na primeira posição e no mesmo tamanho.
+      {/* `Abrir campanha` fica SEMPRE na primeira posição e no mesmo tamanho.
           Desde a ALE-96 a cena pinta antes de saber se há sessão viva, e um
           botão que muda de lugar quando o dado chega é a ALE-78 outra vez — a
           ação some debaixo do cursor. Ao vivo ele só troca de preenchimento,
@@ -258,7 +258,7 @@ function Actions(props: { isLive: boolean; onOpen: () => void; onResume: () => v
         variant={props.isLive ? 'outline' : 'default'}
         onClick={() => props.onOpen()}
       >
-        Abrir crônica <Kbd>{props.isLive ? 'O' : '⏎'}</Kbd>
+        Abrir campanha <Kbd>{props.isLive ? 'O' : '⏎'}</Kbd>
       </Button>
       <Show when={props.isLive}>
         <Button size="lg" onClick={() => props.onResume()}>

@@ -55,7 +55,7 @@ function renderJoin(url: string, options: { invite?: { campaignId: number; campa
   const cronica = createRoute({
     getParentRoute: () => root,
     path: '/campaigns/$id',
-    component: () => <p>A crônica</p>,
+    component: () => <p>A campanha</p>,
   })
   const router = createRouter({
     routeTree: root.addChildren([join, cronica]),
@@ -120,7 +120,7 @@ describe('CampaignJoinPage', () => {
         inviteToken: 'abc',
       }),
     )
-    expect(await screen.findByText('A crônica')).toBeInTheDocument()
+    expect(await screen.findByText('A campanha')).toBeInTheDocument()
   })
 
   it('sem herói escolhido, não dá para entrar', async () => {
@@ -159,6 +159,6 @@ describe('CampaignJoinPage', () => {
     // A mensagem é a DO SERVIDOR: "não foi possível" é o último recurso, e
     // trocar o motivo real por ele faria a pessoa tentar de novo à toa.
     expect(await screen.findByText('Você já joga nesta mesa')).toBeInTheDocument()
-    expect(screen.queryByText('A crônica')).not.toBeInTheDocument()
+    expect(screen.queryByText('A campanha')).not.toBeInTheDocument()
   })
 })

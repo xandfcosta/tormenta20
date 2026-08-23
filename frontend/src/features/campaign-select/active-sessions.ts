@@ -34,6 +34,6 @@ export function createActiveSessionByCampaign(
   }))
 
   // `settledQuery`, não `.data`: ler pendente suspende o route match inteiro e
-  // a cena das Crônicas reanima (ALE-95/ALE-96).
+  // a cena das Campanhas reanima (ALE-95/ALE-96).
   return createMemo(() => activeSessionByCampaign(settledQuery(lists) ?? []))
 }

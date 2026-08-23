@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 /**
  * The rules a chronicle's name and description obey — shared by "abrir nova
- * crônica" and "editar campanha" so the two forms can never disagree about
+ * campanha" and "editar campanha" so the two forms can never disagree about
  * what a valid campaign is (ALE-80).
  *
  * `.trim()` runs before `.min(1)`, so a name of pure spaces is rejected

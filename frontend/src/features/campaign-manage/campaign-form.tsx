@@ -19,11 +19,11 @@ export type CampaignFormProps = {
 
 /**
  * The chronicle's two fields with the app's validation grammar — the body of
- * both "abrir nova crônica" and "editar campanha". Persisting is the caller's
+ * both "abrir nova campanha" and "editar campanha". Persisting is the caller's
  * job, so this renders in a test with no query client and no router.
  *
  * @example
- * <CampaignForm submitLabel="Abrir crônica" pendingLabel="Abrindo…"
+ * <CampaignForm submitLabel="Abrir campanha" pendingLabel="Abrindo…"
  *   onSubmit={create} onCancel={back} />
  */
 export function CampaignForm(props: CampaignFormProps) {

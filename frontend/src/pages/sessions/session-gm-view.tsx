@@ -67,7 +67,7 @@ export function SessionGmView(props: {
   session: Session
   rt: SessionRealtime
   myCharacterIds: ReadonlySet<number>
-  /** O nome da crônica, que a ficha do elenco precisa dizer (ALE-212). */
+  /** O nome da campanha, que a ficha do elenco precisa dizer (ALE-212). */
   campaignName: string
   /** O roster da campanha, JÁ ASSENTADO pela página. Desce como prop porque
    *  abrir consulta dentro da cena a desanexa (ALE-199, e de novo na ALE-211:
@@ -328,7 +328,7 @@ export function SessionGmView(props: {
         open={tool() === 'elenco'}
         onOpenChange={(open) => setTool(open ? 'elenco' : null)}
         title="Elenco"
-        description="Quem existe nesta crônica, dentro ou fora do combate."
+        description="Quem existe nesta campanha, dentro ou fora do combate."
       >
         <CastPanel
           campaignId={props.campaignId}

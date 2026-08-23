@@ -542,7 +542,7 @@
       padding: 0.75rem;
     }
   }
-  /* Open-tome presentation for a focused chronicle (Crônicas). Leather cover +
+  /* Open-tome presentation for a focused chronicle (Campanhas). Leather cover +
    * parchment pages (the child .grimorio-parchment-bg) + a shaded central
    * spine, so it reads as a book rather than two cards. Decorative → literal
    * oklch is fine here (same rule as the other backgrounds/glows). */

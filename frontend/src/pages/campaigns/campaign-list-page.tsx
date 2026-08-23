@@ -26,7 +26,7 @@ const ROLE_FILTERS: { value: RoleFilter; label: string }[] = [
 ]
 
 /**
- * Crônicas — the campaigns roster as a cinematic "chapter select" scene: the
+ * Campanhas — the campaigns roster as a cinematic "chapter select" scene: the
  * focused chronicle on a stage (emblem, synopsis, your PC, live status, primary
  * action) with a rail to switch focus, mirroring the character selector.
  * `←/→` (or `↑/↓`) move focus, Enter opens (resumes a live session or opens the
@@ -188,7 +188,7 @@ export function CampaignsListPage() {
   return (
     <SceneShell
       dense
-      title="Crônicas"
+      title="Campanhas"
       onBack={() => {
         sfx('select')
         navigate({ to: '/' })
@@ -269,7 +269,7 @@ function NoCampaigns() {
         <span class="select-none font-heading text-5xl text-grimorio-gold/30">✦</span>
       </div>
       <p class="font-heading text-xl uppercase tracking-[0.12em] text-foreground">
-        Nenhuma crônica ainda
+        Nenhuma campanha ainda
       </p>
       <Link to="/campaigns/new">
         <Button size="lg">Criar sua primeira campanha</Button>

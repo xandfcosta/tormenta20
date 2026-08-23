@@ -25,18 +25,18 @@ afterEach(() => {
 describe('HubMenu', () => {
   const items = [
     { label: 'Meus Heróis', icon: Users2, onSelect: vi.fn() },
-    { label: 'Crônicas', icon: Scroll, onSelect: vi.fn() },
+    { label: 'Campanhas', icon: Scroll, onSelect: vi.fn() },
   ]
 
   it('rende cada entrada como um botão de verdade', () => {
     render(() => <HubMenu items={items} />)
     expect(screen.getByRole('button', { name: 'Meus Heróis' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Crônicas' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Campanhas' })).toBeInTheDocument()
   })
 
   it('escolher uma entrada dispara o onSelect dela', async () => {
     render(() => <HubMenu items={items} />)
-    await userEvent.setup().click(screen.getByRole('button', { name: 'Crônicas' }))
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Campanhas' }))
     expect(items[1].onSelect).toHaveBeenCalledOnce()
   })
 

@@ -6,10 +6,10 @@ import { cn } from '@/shared/lib/utils'
 /** As consultas do mestre DENTRO da sessão, na ordem do trilho. Cada uma é um
  *  overlay, menos as notas, que abrem coluna (ALE-198). */
 export const SESSION_TOOLS = [
-  // O elenco vem PRIMEIRO: é quem existe na crônica, e as outras quatro são
+  // O elenco vem PRIMEIRO: é quem existe na campanha, e as outras quatro são
   // material de fora dela (o livro, os catálogos) ou o caderno da noite. A
   // ALE-211 depois o recolhe no trilho da ESQUERDA, junto da fila.
-  { slug: 'elenco', label: 'Elenco', hint: 'Os jogadores e os NPCs desta crônica.' },
+  { slug: 'elenco', label: 'Elenco', hint: 'Os jogadores e os NPCs desta campanha.' },
   { slug: 'bestiario', label: 'Bestiário', hint: 'Pôr uma criatura do livro na iniciativa.' },
   { slug: 'encontros', label: 'Encontros', hint: 'Combinar criaturas e mandar tudo de uma vez.' },
   { slug: 'catalogos', label: 'Catálogos', hint: 'Condições, magias, poderes e itens.' },

@@ -28,12 +28,12 @@ async function signIn(page: Page, email: string, file: string): Promise<void> {
 }
 
 /**
- * Varre crônicas de teste que sobraram de uma execução anterior.
+ * Varre campanhas de teste que sobraram de uma execução anterior.
  *
  * O único spec que ESCREVE de verdade cria uma "E2E Descartável <timestamp>" e
  * a apaga no fim. Quando ele morre no meio — ou quando alguém interrompe a
  * suíte —, a campanha sobrevive, e ela não fica quieta: rouba o holofote da
- * lista de Crônicas, e quem falha é OUTRO spec, o que espera "Continuar a
+ * lista de Campanhas, e quem falha é OUTRO spec, o que espera "Continuar a
  * sessão" da campanha 1, com um "element(s) not found" que não aponta para
  * lugar nenhum. O banco de desenvolvimento não é recriado entre execuções,
  * então o resto de ontem derruba a suíte de hoje.
@@ -47,11 +47,11 @@ async function signIn(page: Page, email: string, file: string): Promise<void> {
  */
 async function varrerCronicasDeTeste(page: Page): Promise<void> {
   const lista = await page.request.get('/api/campaigns')
-  expect(lista.ok(), 'a varredura de crônicas de teste rodou sem sessão').toBe(true)
+  expect(lista.ok(), 'a varredura de campanhas de teste rodou sem sessão').toBe(true)
   const cronicas = (await lista.json()) as { id: number; name: string }[]
   const restos = cronicas.filter((c) => c.name.startsWith('E2E Descartável'))
   for (const resto of restos) await page.request.delete(`/api/campaigns/${resto.id}`)
-  if (restos.length > 0) console.log(`[setup] ${restos.length} crônica(s) de teste varrida(s)`)
+  if (restos.length > 0) console.log(`[setup] ${restos.length} campanha(s) de teste varrida(s)`)
 }
 
 /**
@@ -65,7 +65,7 @@ async function varrerCronicasDeTeste(page: Page): Promise<void> {
  * numa seed limpa não é repetível (F.I.R.S.T), e este se envenenava sozinho.
  *
  * Varre no SETUP, que roda antes de tudo e não depende de nenhum teste ter
- * terminado bem. Mesma escolha da varredura de crônicas acima.
+ * terminado bem. Mesma escolha da varredura de campanhas acima.
  *
  * Roda nas DUAS sessões, e isso custou uma tentativa: `/api/characters` lista
  * só o que a sessão POSSUI, e a ficha que o spec suja — o Arcanista Erudito —

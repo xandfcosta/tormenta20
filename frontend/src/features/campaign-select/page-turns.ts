@@ -74,7 +74,7 @@ export function createPageTurns(
       }
       // Same chronicle, fresher data — a session just went live, say. Refresh
       // in place: turning a page to itself would be nonsense, but dropping the
-      // update leaves the book claiming "Abrir crônica" while the rail already
+      // update leaves the book claiming "Abrir campanha" while the rail already
       // shows the live ember (the React version does exactly that — ALE-78).
       if (queue().length === 0 && !turn()) setShown(next)
     })

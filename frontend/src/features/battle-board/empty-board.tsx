@@ -24,7 +24,7 @@ export function EmptyBoard(props: {
   return (
     // `justify-center` NÃO entra aqui, e isto é conserto: com o acervo de Lugares
     // dentro da cena vazia (ALE-124, fatia 5), o conteúdo passa da altura da
-    // caixa assim que a crônica junta algumas cenas — e centrar conteúdo que
+    // caixa assim que a campanha junta algumas cenas — e centrar conteúdo que
     // transborda empurra o TOPO para fora da área rolável, onde o navegador não
     // deixa chegar. O primeiro item do topo é justamente "Abrir tabuleiro": o
     // mestre com dez lugares guardados perdia o botão de abrir o próximo.
@@ -69,7 +69,7 @@ export function EmptyBoard(props: {
                 trigger={(open) => (
                   <Button variant="secondary" onClick={open}>
                     <Library aria-hidden="true" class="mr-1.5 size-4" />
-                    Lugares da crônica · {props.places.length}
+                    Lugares da campanha · {props.places.length}
                   </Button>
                 )}
               />

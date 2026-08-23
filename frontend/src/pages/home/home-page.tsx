@@ -70,7 +70,7 @@ export function HomePage() {
   const items = (): HubMenuItem[] => {
     const base: HubMenuItem[] = [
       { label: 'Meus Heróis', icon: Users2, onSelect: go(() => navigate({ to: '/characters' })) },
-      { label: 'Crônicas', icon: Scroll, onSelect: go(() => navigate({ to: '/campaigns' })) },
+      { label: 'Campanhas', icon: Scroll, onSelect: go(() => navigate({ to: '/campaigns' })) },
       { label: 'Ferramentas do Mestre', icon: Wand2, onSelect: go(() => navigate({ to: '/gm' })) },
     ]
     // Only surfaces while a session is live — a game's "Continue". Both GM and

@@ -34,9 +34,9 @@ async function openSection(page: Page, tab: string): Promise<void> {
 }
 
 test.describe('Campanha vista pelo jogador', () => {
-  // O jogador PERDE ações de escrita, não a mesa: ele continua lendo a crônica
+  // O jogador PERDE ações de escrita, não a mesa: ele continua lendo a campanha
   // e entrando na sessão ao vivo.
-  test('o jogador ainda lê a crônica e entra na sessão ao vivo', async ({ page }) => {
+  test('o jogador ainda lê a campanha e entra na sessão ao vivo', async ({ page }) => {
     await openSection(page, 'sessoes')
 
     await expect(page.getByText('JOGANDO')).toBeVisible()

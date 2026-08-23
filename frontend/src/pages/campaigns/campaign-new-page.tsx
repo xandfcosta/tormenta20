@@ -55,10 +55,10 @@ export function NewCampaignPage() {
             on a desktop screen. With taller content the auto margins collapse. */}
         <div class="m-auto w-full max-w-2xl space-y-6">
           <TomeHeading eyebrow="Folha em branco" icon={<BlankLeafMark />}>
-            Abrir nova crônica
+            Abrir nova campanha
           </TomeHeading>
           <CampaignForm
-            submitLabel="Abrir crônica"
+            submitLabel="Abrir campanha"
             pendingLabel="Abrindo…"
             onSubmit={create}
             onCancel={back}

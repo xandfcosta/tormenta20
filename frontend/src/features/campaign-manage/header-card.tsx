@@ -16,7 +16,7 @@ export type CampaignEditFormProps = {
 
 /**
  * The chronicle's ledger, open for writing. Shares its fields and validation
- * with "abrir nova crônica" via `CampaignForm`; only the framing and the verb
+ * with "abrir nova campanha" via `CampaignForm`; only the framing and the verb
  * differ.
  *
  * @example <CampaignEditForm campaign={c} onSave={save} onCancel={stop} />

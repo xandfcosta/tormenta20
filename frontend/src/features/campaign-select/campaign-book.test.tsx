@@ -8,7 +8,7 @@ function campaign(id: number): Campaign {
   return {
     id,
     ownerId: 1,
-    name: `Crônica ${id}`,
+    name: `Campanha ${id}`,
     description: null,
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
@@ -78,7 +78,7 @@ function mountBookWithLive() {
     screen
       .getAllByRole('button')
       .map((button) => button.textContent ?? '')
-      .filter((text) => /Abrir crônica|Continuar a sessão/.test(text))
+      .filter((text) => /Abrir campanha|Continuar a sessão/.test(text))
       .map((text) => (text.includes('Continuar') ? 'continuar' : 'abrir'))
   return { setLive, actionLabels }
 }
@@ -89,7 +89,7 @@ describe('CampaignBook — virada de folha', () => {
     expect(leaf()).toBeNull()
   })
 
-  it('escolher outra crônica põe uma folha em movimento', () => {
+  it('escolher outra campanha põe uma folha em movimento', () => {
     const setPick = mountBook()
 
     setPick(campaign(2))
@@ -107,7 +107,7 @@ describe('CampaignBook — virada de folha', () => {
   })
 
   /**
-   * Voltar uma crônica anima com o espelho (`--rev`), e o `animationend` chega
+   * Voltar uma campanha anima com o espelho (`--rev`), e o `animationend` chega
    * com OUTRO nome. O componente filtra por nome, e o teste só disparava o nome
    * da ida: apagar o braço do `-rev` da produção deixava tudo verde, e na tela a
    * folha da volta ficaria congelada sobre a lombada para sempre.
@@ -146,17 +146,17 @@ describe('CampaignBook — virada de folha', () => {
   })
 
   /**
-   * ALE-96. A cena das Crônicas passou a pintar ANTES de saber se a mesa tem
+   * ALE-96. A cena das Campanhas passou a pintar ANTES de saber se a mesa tem
    * sessão viva — o suspend que antes a segurava era o próprio defeito. Com
    * isso o `isLive` vira verdadeiro com a linha de ações já na tela, e a ordem
-   * de ontem punha `Continuar a sessão` na frente: o `Abrir crônica` que o
+   * de ontem punha `Continuar a sessão` na frente: o `Abrir campanha` que o
    * jogador estava mirando pulava para a segunda posição e o clique caía no
    * botão vizinho. É a ALE-78 outra vez, e a ordem é o que a impede.
    *
-   * Medido no browser antes do conserto: SEGURADO `["Abrir crônica"]`,
-   * ASSENTADO `["Continuar a sessão", "Abrir crônica"]`.
+   * Medido no browser antes do conserto: SEGURADO `["Abrir campanha"]`,
+   * ASSENTADO `["Continuar a sessão", "Abrir campanha"]`.
    */
-  it('a sessão viva chegando não tira o "Abrir crônica" de baixo do cursor', () => {
+  it('a sessão viva chegando não tira o "Abrir campanha" de baixo do cursor', () => {
     const { setLive, actionLabels } = mountBookWithLive()
     expect(actionLabels()).toEqual(['abrir'])
 

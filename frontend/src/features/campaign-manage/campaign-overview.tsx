@@ -146,7 +146,7 @@ function RecentChronicle(props: {
 }) {
   return (
     <FramedPanel>
-      <TomeSection eyebrow="Crônica" title="Sessões recentes">
+      <TomeSection eyebrow="Campanha" title="Sessões recentes">
         <Show when={props.isLoading}>
           <SkeletonRows count={2} />
         </Show>

@@ -86,7 +86,7 @@ outcome someone would notice breaking. Everything below follows from that.
 - **[GLOSSARIO.md](GLOSSARIO.md) — uma palavra por conceito, e um conceito por
   palavra.** Leia antes de nomear qualquer coisa que o usuário vá ler ou que vá
   virar identificador. Ele tem a coluna dos termos PROIBIDOS (é "campanha", não
-  "crônica"), as colisões abertas que não se consertam por palpite, e a regra da
+  "campanha"), as colisões abertas que não se consertam por palpite, e a regra da
   costura pt-BR/inglês. Termo novo: escreva a linha do glossário ANTES do código.
 
 ## Reference

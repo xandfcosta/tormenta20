@@ -161,7 +161,7 @@ afterEach(() => {
 })
 
 describe('CampaignTome', () => {
-  it('mostra o nome da crônica e a contagem de heróis', () => {
+  it('mostra o nome da campanha e a contagem de heróis', () => {
     renderTome()
     expect(screen.getByRole('heading', { name: 'Snapshot Test', level: 1 })).toBeInTheDocument()
     expect(screen.getByText('4 heróis')).toBeInTheDocument()

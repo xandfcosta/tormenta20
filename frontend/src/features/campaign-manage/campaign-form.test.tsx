@@ -12,7 +12,7 @@ afterEach(() => {
 
 describe('campaignSchema', () => {
   // A regra é a mesma nas duas telas; um nome só de espaços passaria num
-  // min(1) ingênuo e deixaria a crônica sem título na estante.
+  // min(1) ingênuo e deixaria a campanha sem título na estante.
   it('recusa nome vazio ou só de espaços', () => {
     expect(campaignSchema.safeParse({ name: '   ', description: '' }).success).toBe(false)
     expect(campaignSchema.safeParse({ name: '', description: '' }).success).toBe(false)
@@ -34,7 +34,7 @@ describe('campaignSchema', () => {
 function renderForm(onSubmit = vi.fn().mockResolvedValue(undefined), onCancel = vi.fn()) {
   render(() => (
     <CampaignForm
-      submitLabel="Abrir crônica"
+      submitLabel="Abrir campanha"
       pendingLabel="Abrindo…"
       onSubmit={onSubmit}
       onCancel={onCancel}
@@ -55,7 +55,7 @@ describe('CampaignForm', () => {
 
     await user.type(screen.getByLabelText('Nome'), '  Mesa do Beco  ')
     await user.type(screen.getByLabelText('Descrição'), 'Um beco sem saída.')
-    await user.click(screen.getByRole('button', { name: 'Abrir crônica' }))
+    await user.click(screen.getByRole('button', { name: 'Abrir campanha' }))
 
     expect(onSubmit).toHaveBeenCalledWith({
       name: 'Mesa do Beco',
@@ -66,7 +66,7 @@ describe('CampaignForm', () => {
   it('barra o envio inválido antes de chamar o backend', async () => {
     const { onSubmit, user } = renderForm()
 
-    await user.click(screen.getByRole('button', { name: 'Abrir crônica' }))
+    await user.click(screen.getByRole('button', { name: 'Abrir campanha' }))
 
     expect(await screen.findByText('Nome é obrigatório')).toBeInTheDocument()
     expect(onSubmit).not.toHaveBeenCalled()
@@ -77,7 +77,7 @@ describe('CampaignForm', () => {
     const { user } = renderForm(onSubmit)
     await user.type(screen.getByLabelText('Nome'), 'Mesa do Beco')
 
-    await user.click(screen.getByRole('button', { name: 'Abrir crônica' }))
+    await user.click(screen.getByRole('button', { name: 'Abrir campanha' }))
 
     expect(await screen.findByText('Já existe uma campanha assim')).toBeInTheDocument()
     expect(screen.getByLabelText('Nome')).toHaveValue('Mesa do Beco')
@@ -89,7 +89,7 @@ describe('CampaignForm', () => {
     const { user } = renderForm(onSubmit)
     await user.type(screen.getByLabelText('Nome'), 'Mesa do Beco')
 
-    await user.click(screen.getByRole('button', { name: 'Abrir crônica' }))
+    await user.click(screen.getByRole('button', { name: 'Abrir campanha' }))
 
     expect(screen.getByRole('button', { name: 'Abrindo…' })).toBeDisabled()
     release()

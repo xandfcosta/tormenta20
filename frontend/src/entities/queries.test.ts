@@ -30,13 +30,13 @@ describe('query keys', () => {
     expect(characterQueryOptions(7).queryKey).toEqual(['characters', 7])
   })
 
-  it('crônicas: lista, detalhe e membros aninhados', () => {
+  it('campanhas: lista, detalhe e membros aninhados', () => {
     expect(campaignsQueryOptions.queryKey).toEqual(['campaigns'])
     expect(campaignQueryOptions(1).queryKey).toEqual(['campaigns', 1])
     expect(campaignMembersQueryOptions(1).queryKey).toEqual(['campaigns', 1, 'members'])
   })
 
-  it('sessões ficam aninhadas na crônica', () => {
+  it('sessões ficam aninhadas na campanha', () => {
     expect(campaignSessionsQueryOptions(1).queryKey).toEqual(['campaigns', 1, 'sessions'])
     expect(campaignSessionQueryOptions(1, 4).queryKey).toEqual(['campaigns', 1, 'sessions', 4])
   })
@@ -46,7 +46,7 @@ describe('query keys', () => {
     expect(characterOptionsQueryOptions.staleTime).toBe(Number.POSITIVE_INFINITY)
   })
 
-  it('invalidar a crônica alcança membros e sessões', () => {
+  it('invalidar a campanha alcança membros e sessões', () => {
     const client = new QueryClient()
     client.setQueryData(campaignQueryOptions(1).queryKey, {
       id: 1,

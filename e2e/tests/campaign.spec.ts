@@ -20,7 +20,7 @@ test.describe('Detalhe da campanha', () => {
 })
 
 /**
- * Criar e excluir uma crônica (ALE-79, ALE-80): o único caso daqui que ESCREVE
+ * Criar e excluir uma campanha (ALE-79, ALE-80): o único caso daqui que ESCREVE
  * de verdade, e por isso ele apaga o que criou — a seed é compartilhada com
  * todos os specs e uma execução que deixa campanha para trás envenena a
  * próxima.
@@ -32,8 +32,8 @@ test.describe('Detalhe da campanha', () => {
  * página `/campaigns/join` continua sendo carregada nos seis formatos pelo
  * bloco responsivo abaixo.
  */
-test.describe('Abrir e fechar uma crônica', () => {
-  test('criar leva direto para a nova crônica, e excluir traz de volta', async ({
+test.describe('Abrir e fechar uma campanha', () => {
+  test('criar leva direto para a nova campanha, e excluir traz de volta', async ({
     page,
   }) => {
     const name = `E2E Descartável ${Date.now()}`
@@ -41,7 +41,7 @@ test.describe('Abrir e fechar uma crônica', () => {
 
     await page.getByLabel('Nome').fill(name)
     await page.getByLabel('Descrição').fill('Criada e excluída pelo E2E.')
-    await page.getByRole('button', { name: 'Abrir crônica' }).click()
+    await page.getByRole('button', { name: 'Abrir campanha' }).click()
 
     // Landed on the new chronicle's own page.
     await expect(page).toHaveURL(/\/campaigns\/\d+/)
@@ -64,7 +64,7 @@ test.describe('Abrir e fechar uma crônica', () => {
  */
 const SCENES = [
   { name: 'detalhe', path: `${CAMPAIGN}?tab=membros`, heading: /Snapshot Test ALE-33/i },
-  { name: 'nova', path: '/campaigns/new', heading: /Abrir nova crônica/i },
+  { name: 'nova', path: '/campaigns/new', heading: /Abrir nova campanha/i },
   { name: 'convite', path: '/campaigns/join', heading: /Entrar na mesa/i },
 ]
 
@@ -89,7 +89,7 @@ test.describe('Campanha — responsivo (sem overflow horizontal)', () => {
    * descuido: o `overflow-x-hidden` da cena zera o `scrollWidth` da raiz. É
    * preciso medir contra a JANELA, e é o que a asserção nova faz.
    */
-  test('nada clicável fica fora da janela na crônica, em nenhum formato', async ({ page }) => {
+  test('nada clicável fica fora da janela na campanha, em nenhum formato', async ({ page }) => {
     await page.goto(`${CAMPAIGN}?tab=visao`)
     await expect(page.getByRole('heading', { name: /Snapshot Test ALE-33/i })).toBeVisible()
 
@@ -109,7 +109,7 @@ test.describe('Campanha — responsivo (sem overflow horizontal)', () => {
    *
    * O teste afirma as DUAS metades de propósito. Só a primeira passaria verde
    * com a tampa simplesmente APAGADA, que é o conserto errado: medido no
-   * deitado, com a tampa aparecem 89% do botão "Abrir crônica" e sem ela
+   * deitado, com a tampa aparecem 89% do botão "Abrir campanha" e sem ela
    * apenas 31% (y=379,6..412,7 numa janela de 390). O limiar de 0,8 fica com
    * folga dos dois lados desse vão, e não é número mágico: está aqui porque a
    * tampa não faz o botão CABER — ela o traz de quase escondido para quase
@@ -122,7 +122,7 @@ test.describe('Campanha — responsivo (sem overflow horizontal)', () => {
     page,
   }) => {
     await page.goto('/campaigns/new')
-    await expect(page.getByRole('heading', { name: /Abrir nova crônica/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Abrir nova campanha/i })).toBeVisible()
 
     // A testemunha é o RESPIRO da folha, e ele se lê no valor computado e não
     // na posição de um filho. Tentei os dois caminhos posicionais e os dois
@@ -149,7 +149,7 @@ test.describe('Campanha — responsivo (sem overflow horizontal)', () => {
 
     await page.setViewportSize({ width: 844, height: 390 })
     await expect(
-      page.getByRole('button', { name: /Abrir crônica/i }),
+      page.getByRole('button', { name: /Abrir campanha/i }),
       'no celular deitado o botão que fecha a tarefa saiu da tela',
     ).toBeInViewport({ ratio: 0.8 })
   })

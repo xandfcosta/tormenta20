@@ -32,13 +32,13 @@ describe('firstActiveSession', () => {
     expect(firstActiveSession([noLiveSession])).toBeNull()
   })
 
-  it('null sem crônica nenhuma', () => {
+  it('null sem campanha nenhuma', () => {
     expect(firstActiveSession([])).toBeNull()
   })
 
   // Lista undefined = ainda carregando. Pular evita o "Continuar sessão"
   // piscar na tela enquanto as queries chegam.
-  it('pula crônicas ainda carregando', () => {
+  it('pula campanhas ainda carregando', () => {
     const lists: CampaignSessions[] = [
       { campaignId: 1, sessions: undefined },
       { campaignId: 2, sessions: [session(5, 'active')] },
@@ -46,7 +46,7 @@ describe('firstActiveSession', () => {
     expect(firstActiveSession(lists)).toEqual({ campaignId: 2, sessionId: 5 })
   })
 
-  it('a primeira crônica em ordem vence quando há mais de uma ao vivo', () => {
+  it('a primeira campanha em ordem vence quando há mais de uma ao vivo', () => {
     const lists: CampaignSessions[] = [
       { campaignId: 1, sessions: [session(4, 'active')] },
       { campaignId: 2, sessions: [session(8, 'active')] },
@@ -54,7 +54,7 @@ describe('firstActiveSession', () => {
     expect(firstActiveSession(lists)).toEqual({ campaignId: 1, sessionId: 4 })
   })
 
-  it('ignora encerradas e planejadas dentro da mesma crônica', () => {
+  it('ignora encerradas e planejadas dentro da mesma campanha', () => {
     const lists: CampaignSessions[] = [
       { campaignId: 1, sessions: [session(1, 'ended'), session(2, 'active'), session(3, 'planned')] },
     ]

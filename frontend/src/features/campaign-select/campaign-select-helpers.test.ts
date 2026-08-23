@@ -18,12 +18,12 @@ function session(id: number, status: Session['status'], campaignId = 1): Session
 }
 
 describe('activeSessionByCampaign', () => {
-  it('mapeia crônica → id da sessão ao vivo', () => {
+  it('mapeia campanha → id da sessão ao vivo', () => {
     const lists: CampaignSessions[] = [{ campaignId: 5, sessions: [session(12, 'active')] }]
     expect(activeSessionByCampaign(lists)).toEqual({ 5: 12 })
   })
 
-  it('crônica sem sessão ao vivo fica fora do mapa', () => {
+  it('campanha sem sessão ao vivo fica fora do mapa', () => {
     const lists: CampaignSessions[] = [
       { campaignId: 1, sessions: [session(1, 'ended'), session(2, 'planned')] },
     ]
@@ -31,7 +31,7 @@ describe('activeSessionByCampaign', () => {
   })
 
   // Lista undefined = ainda carregando; incluir mostraria brasa errada no rail.
-  it('pula crônicas ainda carregando', () => {
+  it('pula campanhas ainda carregando', () => {
     const lists: CampaignSessions[] = [
       { campaignId: 1, sessions: undefined },
       { campaignId: 2, sessions: [session(7, 'active')] },
@@ -39,7 +39,7 @@ describe('activeSessionByCampaign', () => {
     expect(activeSessionByCampaign(lists)).toEqual({ 2: 7 })
   })
 
-  it('lida com várias crônicas ao vivo ao mesmo tempo', () => {
+  it('lida com várias campanhas ao vivo ao mesmo tempo', () => {
     const lists: CampaignSessions[] = [
       { campaignId: 1, sessions: [session(4, 'active')] },
       { campaignId: 2, sessions: [session(9, 'ended')] },
@@ -48,7 +48,7 @@ describe('activeSessionByCampaign', () => {
     expect(activeSessionByCampaign(lists)).toEqual({ 1: 4, 3: 11 })
   })
 
-  it('mapa vazio sem crônica nenhuma', () => {
+  it('mapa vazio sem campanha nenhuma', () => {
     expect(activeSessionByCampaign([])).toEqual({})
   })
 })

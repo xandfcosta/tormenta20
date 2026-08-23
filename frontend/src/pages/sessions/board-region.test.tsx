@@ -228,7 +228,7 @@ describe('o tabuleiro na cena', () => {
     // A lente do mestre é dele: quem já É a mesa não tem o que conferir.
     expect(screen.queryByRole('button', { name: 'Ver como jogador' })).not.toBeInTheDocument()
     // E o acervo de cenas é preparação do mestre (ALE-191).
-    expect(screen.queryByRole('button', { name: 'Lugares da crônica' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Lugares da campanha' })).not.toBeInTheDocument()
   })
 
   it('sem tabuleiro, só o mestre vê como abrir um', () => {
@@ -774,12 +774,12 @@ describe('o painel da peça', () => {
 })
 
 /**
- * Lugares da crônica (ALE-124, fatia 5). A épica prometia que encerrar ARQUIVA —
+ * Lugares da campanha (ALE-124, fatia 5). A épica prometia que encerrar ARQUIVA —
  * "taverna → masmorra → de volta à taverna, com tudo onde estava" — e até esta
  * fatia encerrar DESTRUÍA a cena montada. Era a única promessa que o código
  * contradizia.
  */
-describe('os lugares guardados da crônica', () => {
+describe('os lugares guardados da campanha', () => {
   const TAVERNA: BoardPlace = {
     id: 7,
     name: 'Taverna do Javali',
@@ -800,7 +800,7 @@ describe('os lugares guardados da crônica', () => {
   it('a tela vazia não desenha o acervo: ela oferece o botão que o abre', async () => {
     const { user } = renderRegion(true, null, undefined, { places: [TAVERNA] })
 
-    const abrir = await screen.findByRole('button', { name: /Lugares da crônica/ })
+    const abrir = await screen.findByRole('button', { name: /Lugares da campanha/ })
     expect(screen.queryByText('9 peças')).not.toBeInTheDocument()
 
     await user.click(abrir)
@@ -811,7 +811,7 @@ describe('os lugares guardados da crônica', () => {
   it('sem tabuleiro, o mestre reabre uma cena guardada', async () => {
     const { rt, user } = renderRegion(true, null, undefined, { places: [TAVERNA] })
 
-    await user.click(await screen.findByRole('button', { name: /Lugares da crônica/ }))
+    await user.click(await screen.findByRole('button', { name: /Lugares da campanha/ }))
     const dialogo = await screen.findByRole('dialog')
     await user.click(within(dialogo).getByRole('button', { name: 'Reabrir' }))
 
@@ -823,7 +823,7 @@ describe('os lugares guardados da crônica', () => {
   it('apagar um lugar pede confirmação', async () => {
     const { user } = renderRegion(true, null, undefined, { places: [TAVERNA] })
 
-    await user.click(await screen.findByRole('button', { name: /Lugares da crônica/ }))
+    await user.click(await screen.findByRole('button', { name: /Lugares da campanha/ }))
     const acervo = await screen.findByRole('dialog')
     await user.click(within(acervo).getByRole('button', { name: 'Apagar Taverna do Javali' }))
 
@@ -842,7 +842,7 @@ describe('os lugares guardados da crônica', () => {
     await waitFor(() =>
       expect(screen.getByText('O mestre ainda não abriu um tabuleiro.')).toBeInTheDocument(),
     )
-    expect(screen.queryByText('Lugares da crônica')).not.toBeInTheDocument()
+    expect(screen.queryByText('Lugares da campanha')).not.toBeInTheDocument()
   })
 })
 
@@ -954,7 +954,7 @@ describe('mostrar outro lugar à mesa', () => {
   it('o mestre troca de cena pelo acervo, sem encerrar o tabuleiro', async () => {
     const { rt, user } = renderRegion(true, TABULEIRO, undefined, { places: [TAVERNA, CRIPTA] })
 
-    await user.click(screen.getByRole('button', { name: 'Lugares da crônica' }))
+    await user.click(screen.getByRole('button', { name: 'Lugares da campanha' }))
     await user.click(await screen.findByRole('button', { name: /Mostrar à mesa/ }))
 
     // A pergunta nomeia as DUAS cenas: para onde a mesa vai, e o que acontece
@@ -974,7 +974,7 @@ describe('mostrar outro lugar à mesa', () => {
   it('a cena que já está na mesa não se oferece para ir à mesa', async () => {
     const { user } = renderRegion(true, TABULEIRO, undefined, { places: [TAVERNA, CRIPTA] })
 
-    await user.click(screen.getByRole('button', { name: 'Lugares da crônica' }))
+    await user.click(screen.getByRole('button', { name: 'Lugares da campanha' }))
     const acervo = await screen.findByRole('dialog')
 
     expect(within(acervo).getByText('Na mesa')).toBeInTheDocument()
@@ -1006,7 +1006,7 @@ describe('montar um lugar do acervo', () => {
 
   const montar = async () => {
     const tudo = renderRegion(true, TABULEIRO, undefined, { places: [CRIPTA], scene: CENA_DA_CRIPTA })
-    await tudo.user.click(screen.getByRole('button', { name: 'Lugares da crônica' }))
+    await tudo.user.click(screen.getByRole('button', { name: 'Lugares da campanha' }))
     await tudo.user.click(await screen.findByRole('button', { name: 'Montar Cripta do Necromante' }))
     return tudo
   }
