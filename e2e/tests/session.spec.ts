@@ -1050,6 +1050,170 @@ test.describe('Sessão ao vivo', () => {
   })
 
   /**
+   * CLICAR NUMA CRIATURA DO BESTIÁRIO NÃO A PÕE NA MESA (ALE-208).
+   *
+   * O card inteiro era o botão de adicionar: clicar para LER punha a criatura
+   * na iniciativa ao vivo, com PV do livro e um d20 cru, e não havia caminho
+   * para só olhar. Agora o card ABRE, e o que entra é o que o mestre ajustou.
+   *
+   * É e2e e não unitário porque a lista é VIRTUALIZADA: em jsdom todo elemento
+   * mede zero e nenhuma linha renderiza, então um teste desses passaria verde
+   * sobre qualquer coisa. O que o diálogo faz com os campos, esse sim, é
+   * unitário (`add-monster-dialog.test.tsx`).
+   */
+  test('abrir uma criatura do bestiário não a joga na iniciativa', async ({ page }) => {
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(cenaViva(page)).toBeVisible()
+    await garanteACena(page)
+
+    const fila = await abreAFila(page)
+    const antes = await labelsNaGaveta(fila)
+    await fechaAFila(page)
+
+    await abreConsulta(page, 'Bestiário')
+    const gaveta = page.getByRole('dialog', { name: 'Adicionar do bestiário' })
+    await expect(gaveta).toBeVisible()
+
+    // Uma criatura ESCOLHIDA, e não "a primeira": a lista é virtualizada e o
+    // que está pintado depende da rolagem, então o teste diria coisas
+    // diferentes conforme o dia.
+    //
+    // O `Abrir` no começo do nome é a asserção de que a linha diz o que o
+    // clique FAZ — no Montar encontro a mesma lista diz "Adicionar ao
+    // encontro". E ele é PREFIXO: o resto do nome (o ND, o tipo, o PV) segue
+    // ali, que é o que um `aria-label` teria apagado.
+    const criatura = 'Ogro'
+    await gaveta.getByLabel('Buscar criatura').fill(criatura)
+    const primeira = gaveta.getByRole('button', { name: /^Abrir Ogro ND / }).first()
+    await expect(primeira).toBeVisible()
+    await primeira.click()
+
+    const ficha = page.getByRole('dialog', { name: criatura })
+    await expect(ficha).toBeVisible()
+
+    // Sair pelo Esc é o "só queria ler", e ele fecha SÓ a ficha — a gaveta
+    // fica, porque uma emboscada é uma viagem, não seis.
+    await page.keyboard.press('Escape')
+    await expect(ficha).toBeHidden()
+    await expect(gaveta).toBeVisible()
+
+    // Agora adicionar DE VERDADE, duas cópias, sem tocar na fila no meio: abrir
+    // a gaveta da iniciativa remonta a lista virtualizada e a linha se desprende
+    // debaixo do clique seguinte.
+    await primeira.click()
+    await expect(ficha).toBeVisible()
+    await ficha.getByLabel('Quantas').fill('2')
+    await ficha.getByRole('button', { name: 'Adicionar' }).click()
+    await expect(ficha).toBeHidden()
+    await page.keyboard.press('Escape')
+    await expect(gaveta).toBeHidden()
+
+    // EXATAMENTE dois novos, e é aqui que a issue se prova: se a leitura
+    // tivesse adicionado, haveria um terceiro.
+    //
+    // Os rótulos se afirmam por FORMA e não por texto literal (`Bandido 2`):
+    // quem numera é o servidor, contra o que já está na fila, então um resto de
+    // outra rodada faria o par sair `3` e `4`. Que eles saem numerados está
+    // provado onde a regra mora, em `initiative_labels_test.go`; aqui o que
+    // importa é serem dois, da espécie certa, e DISTINTOS — dois botões
+    // homônimos na fila não se separam nem no clique nem no leitor de tela.
+    const paraLimpar = await abreAFila(page)
+    const novos = await novosDesde(paraLimpar, antes)
+    expect(novos, `esperava duas cópias de ${criatura}`).toHaveLength(2)
+    expect(new Set(novos).size, `rótulos repetidos: ${novos.join(', ')}`).toBe(2)
+    for (const label of novos) {
+      expect(label).toMatch(new RegExp(`^${criatura}( \\d+)?$`))
+    }
+
+    for (const label of novos) {
+      // `exact`: sem ele "Remover Bandido" casa também "Remover Bandido 2".
+      await paraLimpar.getByRole('button', { name: `Remover ${label}`, exact: true }).click()
+    }
+  })
+
+  /**
+   * COM O BESTIÁRIO ABERTO, A GAVETA DE MONTAR ENCONTRO CONTINUA INTEIRA
+   * (ALE-209).
+   *
+   * O defeito era de leiaute e tinha dois lados. O "Mandar para a iniciativa"
+   * era desenhado pelo COMPOSITOR, então abrir a lista o deixava encalhado no
+   * MEIO do painel; e a lista tinha teto fixo de 256px, não "o que sobrar",
+   * então o resto dela saía pela borda de baixo da janela — medido a 1440×900.
+   *
+   * É e2e porque as duas asserções são de LEIAUTE REAL: em jsdom todo elemento
+   * mede zero, a lista virtualizada não pinta linha nenhuma e um teste destes
+   * passaria verde sobre qualquer coisa. O grupo já vir preenchido, esse sim,
+   * é unitário (`party-defaults`) e de integração (`encounter-panel.test.tsx`).
+   */
+  test('abrir o bestiário não empurra o botão de mandar para fora da gaveta', async ({ page }) => {
+    // Janela ALTA de propósito: é onde o teto fixo se denuncia. A 1280×720 uma
+    // lista de 256px simplesmente cabe, e a asserção passaria verde sobre ele.
+    await page.setViewportSize({ width: 1920, height: 1080 })
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(cenaViva(page)).toBeVisible()
+
+    await abreConsulta(page, 'Encontros')
+    const gaveta = page.getByRole('dialog', { name: 'Montar encontro' })
+    await expect(gaveta).toBeVisible()
+    const mandar = gaveta.getByRole('button', { name: 'Mandar para a iniciativa' })
+
+    await gaveta.getByRole('button', { name: 'Adicionar criatura' }).click()
+    await expect(gaveta.getByRole('searchbox', { name: 'Buscar criatura' })).toBeVisible()
+    const primeira = gaveta.getByRole('button', { name: /^Adicionar ao encontro:/ }).first()
+    // A lista PINTA: com teto fixo num painel curto ela ficava sem linha
+    // nenhuma, e o mestre via só os filtros.
+    await expect(primeira).toBeVisible()
+
+    // As DUAS medidas que separam o leiaute novo do velho, e cada uma prende
+    // uma metade do defeito.
+    //
+    // A lista PEGA O QUE SOBRA: numa janela de 1080 ela passa folgada dos 256px
+    // que o `max-h-64` dava, e é isso que faz o resto dela parar de sair pela
+    // borda de baixo. E o botão de mandar fica ABAIXO dela, ancorado, em vez de
+    // encalhado no meio.
+    //
+    // Nenhuma das duas sozinha basta, e as duas foram provadas vermelhas por
+    // sabotagem separada: devolver o rodapé para cima da lista acusa a segunda
+    // (o botão a 416 com a lista terminando em 704), e devolver o `max-h-64`
+    // acusa a primeira.
+    const TETO_ANTIGO = 256
+    const geo = await gaveta.evaluate((el) => {
+      const painel = el.getBoundingClientRect()
+      const linha = el.querySelector('[data-index]') as HTMLElement | null
+      const caixaDaLista = linha?.closest('div[style*="height"]')?.parentElement as HTMLElement | null
+      const botao = Array.from(el.querySelectorAll('button')).find((b) =>
+        b.textContent?.includes('Mandar para a iniciativa'),
+      )
+      const l = caixaDaLista?.getBoundingClientRect()
+      const b = botao?.getBoundingClientRect()
+      return l && b
+        ? {
+            fundoDoPainel: Math.round(painel.bottom),
+            alturaDaLista: Math.round(l.height),
+            fundoDaLista: Math.round(l.bottom),
+            topoDoBotao: Math.round(b.top),
+          }
+        : null
+    })
+    expect(geo, 'não achei a lista ou o botão de mandar na gaveta').not.toBeNull()
+    expect(
+      geo?.alturaDaLista,
+      `a lista mede ${geo?.alturaDaLista}px numa janela de 1080 — teto fixo, não "o que sobrar"`,
+    ).toBeGreaterThan(TETO_ANTIGO)
+    expect(
+      geo?.topoDoBotao,
+      `o botão começa em ${geo?.topoDoBotao}, acima do fim da lista (${geo?.fundoDaLista}) — está encalhado no meio`,
+    ).toBeGreaterThanOrEqual((geo?.fundoDaLista ?? 0) - 1)
+
+    // E ele ATIVA depois que uma criatura entra no rascunho — o rodapé ancorado
+    // não pode ter virado enfeite desligado.
+    await primeira.click()
+    await expect(mandar).toBeEnabled()
+    await page.keyboard.press('Escape')
+    await expect(gaveta).toBeHidden()
+  })
+
+  /**
    * Cada verbo da linha da iniciativa ocupa a MESMA coluna em todas as linhas.
    *
    * O conjunto de botões muda por linha com razão — o olho só existe em linha
@@ -1624,12 +1788,18 @@ test.describe('Sessão ao vivo', () => {
       }).observe(document.body, { childList: true, subtree: true })
     })
 
-    // O BESTIÁRIO fica de fora, e não por conveniência: montar a
-    // `MonsterPickerList` desanexa a cena por um quadro, e isso é ANTERIOR a
-    // esta issue — o mesmo acontece pelo "Adicionar criatura" do Montar
-    // encontro, caminho que a ALE-198 não tocou. Medido: ~7ms depois do
-    // clique, sem requisição na rede, com o catálogo já em cache. Está na
-    // ALE-199; consertar lá é devolver "Bestiário" a esta lista.
+    // O BESTIÁRIO ESTÁ DE VOLTA nesta lista (ALE-199). Ele ficava de fora
+    // porque montar a `MonsterPickerList` desanexava a cena por um quadro, e a
+    // exceção estava escrita aqui com a promessa de que consertar a ALE-199 a
+    // desfaria. Desfeita.
+    //
+    // O que a bissecção achou, e que não era o que se supunha: o gatilho não é
+    // a BUSCA do catálogo, é o `useQuery` criar o recurso dentro de um dono
+    // reativo novo — o portal do Kobalte faz um a cada abertura. Com a lista
+    // vazia, sem query, não desanexava; só com o `useQuery`, desanexava; e
+    // desanexava TAMBÉM com o cache já preparado, que é o que derrubou a
+    // hipótese do fetch. O bestiário passou a ter acessor síncrono como os
+    // outros dezoito catálogos, e aí não há recurso para suspender.
     // COMO SE FECHA depende de a consulta abrir gaveta ou não, e as duas
     // metades foram aprendidas apanhando.
     //
@@ -1647,7 +1817,7 @@ test.describe('Sessão ao vivo', () => {
     // Que o trilho fique inalcançável com a gaveta aberta é achado de PRODUTO e
     // não deste teste: o painel é não modal acima de 1280 justamente para o
     // mestre seguir trabalhando atrás dele (ALE-75). Está registrado à parte.
-    for (const consulta of ['Encontros', 'Catálogos', 'Notas'] as const) {
+    for (const consulta of ['Bestiário', 'Encontros', 'Catálogos', 'Notas'] as const) {
       await abreConsulta(page, consulta)
       await expect(
         trilhoDeConsultas(page).getByRole('button', { name: consulta, exact: true }),
@@ -1666,6 +1836,14 @@ test.describe('Sessão ao vivo', () => {
         trilhoDeConsultas(page).getByRole('button', { name: consulta, exact: true }),
       ).toHaveAttribute('aria-pressed', 'false')
     }
+
+    // O SEGUNDO caminho da ALE-199, e o que a issue dizia ser anterior à
+    // ALE-198: a lista do bestiário INLINE, dentro do Montar encontro. Ela não
+    // é gaveta — é a mesma `MonsterPickerList` montada dentro de outro painel
+    // —, então ela prova o conserto por um caminho que o laço acima não passa.
+    await abreConsulta(page, 'Encontros')
+    await page.getByRole('dialog').getByRole('button', { name: 'Adicionar criatura' }).click()
+    await expect(page.getByRole('dialog').getByRole('button', { name: 'Fechar bestiário' })).toBeVisible()
 
     const desanexos = await page.evaluate(
       () => (window as unknown as { __desanexos: string[] }).__desanexos,

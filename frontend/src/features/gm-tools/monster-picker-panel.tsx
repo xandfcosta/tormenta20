@@ -11,6 +11,8 @@ export type MonsterPickerPanelProps = {
   /** Live context pinned above the list (the tracker's peek, in a session). */
   header?: JSX.Element
   onPick: (monster: Monster) => void
+  /** Ver `MonsterPickerListProps.itemVerbo`. */
+  itemVerbo?: string
   /** Whether picking closes the panel. Adding several creatures in a row is the
    *  normal case, so the default keeps it open. */
   closeOnPick?: boolean
@@ -35,7 +37,7 @@ export function MonsterPickerPanel(props: MonsterPickerPanelProps) {
       description={props.description}
       header={props.header}
     >
-      <MonsterPickerList onPick={pick} idPrefix="picker" />
+      <MonsterPickerList onPick={pick} idPrefix="picker" itemVerbo={props.itemVerbo} />
     </SidePanel>
   )
 }

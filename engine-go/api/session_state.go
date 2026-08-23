@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"golang.org/x/text/collate"
 	"golang.org/x/text/language"
@@ -152,11 +153,48 @@ func addEntry(st *SessionRuntimeState, input InitiativeEntry, newID func() strin
 		return fmt.Errorf("Initiative tracker is full (max %d entries)", initiativeMaxEntries)
 	}
 	onTurn := turnEntryID(st)
+	input.Label = numberedLabel(st, input.Label)
 	input.ID = newID()
 	st.Initiative = append(st.Initiative, input)
 	sortInitiative(st)
 	restoreTurn(st, onTurn)
 	return nil
+}
+
+// numberedLabel numera o REPETIDO na fila: o segundo Ogro entra como "Ogro 2".
+//
+// Quem numera é o SERVIDOR, pela mesma razão do tabuleiro (ALE-192): achar o
+// próximo número livre é decisão sobre o estado, e duas telas adivinhando
+// produziriam dois "Ogro 2". A regra é a MESMA função que o mapa usa
+// (`nextInstanceLabelAmong`) para as duas superfícies não numerarem diferente.
+//
+// Sem isto, adicionar quatro ogros dava quatro linhas chamadas "Ogro" — e a
+// fila nomeia os botões dela pelo rótulo ("Remover Ogro"), então nem o mestre
+// nem um leitor de tela conseguiam dizer qual é qual. Apareceu ao dar
+// quantidade ao diálogo do bestiário (ALE-208), mas o defeito já existia:
+// mandar um encontro com quatro ogros do Montar encontro fazia o mesmo.
+//
+// O rótulo VAZIO passa reto: quem valida a obrigatoriedade é quem materializa a
+// linha, e inventar "1" aqui esconderia o erro dele.
+func numberedLabel(st *SessionRuntimeState, label string) string {
+	if strings.TrimSpace(label) == "" {
+		return label
+	}
+	usados := make([]string, 0, len(st.Initiative))
+	livre := true
+	for _, entry := range st.Initiative {
+		usados = append(usados, entry.Label)
+		if entry.Label == label {
+			livre = false
+		}
+	}
+	// O PRIMEIRO de cada espécie fica sem número: "Ogro", e só o segundo vira
+	// "Ogro 2". Numerar desde o começo encheria a fila de "1" que não ajudam a
+	// distinguir nada quando há um só.
+	if livre {
+		return label
+	}
+	return nextInstanceLabelAmong(usados, label)
 }
 
 // upsertCharacterEntry adds a character's entry, or — if that character is already in the
