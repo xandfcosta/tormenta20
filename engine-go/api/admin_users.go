@@ -5,6 +5,7 @@ package api
 // senha e apagar. Tudo atrás de requireAdmin; a UI só decide o que MOSTRAR.
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"time"
@@ -114,23 +115,47 @@ func (s *Server) handleAdminCreatePasswordReset(w http.ResponseWriter, r *http.R
 	if !ok {
 		return
 	}
-	if _, err := s.queries.GetUserByID(r.Context(), id); err != nil {
+	reset, err := s.mintPasswordReset(r.Context(), id, currentUser(r).ID)
+	if errors.Is(err, errUsuarioInexistente) {
 		writeError(w, http.StatusNotFound, "User not found")
 		return
 	}
-	now := time.Now()
-	reset, err := s.queries.CreatePasswordReset(r.Context(), sqlcgen.CreatePasswordResetParams{
-		Token:     generateInviteToken(),
-		Userid:    id,
-		Createdby: currentUser(r).ID,
-		Createdat: isoAt(now),
-		Expiresat: isoAt(now.Add(passwordResetTTL)),
-	})
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not create reset link")
 		return
 	}
 	writeJSON(w, http.StatusCreated, accountInviteDTO{Token: reset.Token, ExpiresAt: reset.Expiresat})
+}
+
+// errUsuarioInexistente separa "não existe" de "deu errado" para quem CHAMA
+// decidir o que dizer: a rota JSON responde 404, a cena do piloto desenha um
+// aviso. A regra não sabe qual é o transporte, e é esse o ponto.
+var errUsuarioInexistente = errors.New("usuário não existe")
+
+// mintPasswordReset cunha o link de uso único que o admin entrega (ALE-120).
+//
+// A REGRA está aqui e não no manipulador HTTP, e esta é a SÉTIMA vez que a
+// migração encontra o mesmo padrão — sete é padrão, não anedota. Duas telas
+// precisam cunhar o mesmo link, e enquanto a conta de validade morava dentro
+// de um `http.HandlerFunc` a segunda tela só tinha duas saídas: chamar a
+// própria rota por dentro, ou copiar a conta.
+//
+// O prazo é 24h contra os 7 dias do convite, e a diferença é de risco: o
+// convite abre uma conta que ainda NÃO existe, este abre uma que já existe e
+// tem fichas dentro. Um link esquecido numa conversa vale mais para um
+// estranho.
+func (s *Server) mintPasswordReset(ctx context.Context, usuarioID, criadoPor int64) (sqlcgen.PasswordReset, error) {
+	if _, err := s.queries.GetUserByID(ctx, usuarioID); err != nil {
+		return sqlcgen.PasswordReset{}, errUsuarioInexistente
+	}
+	now := time.Now()
+	return s.queries.CreatePasswordReset(ctx, sqlcgen.CreatePasswordResetParams{
+		Token:     generateInviteToken(),
+		Userid:    usuarioID,
+		Createdby: criadoPor,
+		Createdat: isoAt(now),
+		Expiresat: isoAt(now.Add(passwordResetTTL)),
+	})
 }
 
 // handleAdminListInvites: GET /admin/invites — the links already handed out and

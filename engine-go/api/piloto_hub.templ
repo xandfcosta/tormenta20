@@ -25,7 +25,7 @@ templ hub(v hubView) {
 		// título "Convidar jogador" e um botão de cunhar no HTML de quem não
 		// administra — marcação morta, e uma tela dizendo o que ela não faz. O
 		// servidor recusaria de todo jeito; o que se conserta aqui é a tela.
-		@dialogoDeConvite()
+		@dialogoDeConvite("/piloto/convites")
 	}
 }
 
@@ -198,11 +198,18 @@ func classeDoItemRapido(perigo bool) string {
 // dialogoDeConvite cunha o link de conta (ALE-120): o admin gera, entrega, e
 // quem recebe escolhe a própria senha — o admin nunca vê senha nenhuma.
 //
+// A ROTA é parâmetro porque o diálogo vive em duas telas e elas precisam de
+// remendos DIFERENTES (ALE-242): no Hub só volta o link; na administração volta
+// o link E o painel de convites, senão a contagem ao lado dele fica velha na
+// cara de quem acabou de cunhar. O diálogo é um só de propósito — duas cópias
+// divergiriam, e é a mesma razão pela qual o `mintAccountInvite` saiu do
+// manipulador HTTP.
+//
 // O link chega por remendo do servidor (`#convite-link`), então ele NÃO passa
 // por sinal: um token de uso único em estado de cliente viajaria de volta ao
 // servidor em toda requisição seguinte da página, que é a mesma razão pela qual
 // a senha ficou fora dos sinais na ALE-229.
-templ dialogoDeConvite() {
+templ dialogoDeConvite(rota string) {
 	<dialog
 		id="convidar"
 		data-ref="convidar"
@@ -224,7 +231,7 @@ templ dialogoDeConvite() {
 				}
 			</form>
 			@botao(varPrimaria, tamPadrao, "", templ.Attributes{
-				"type": "button", "data-on:click": "@post('/piloto/convites')",
+				"type": "button", "data-on:click": "@post('" + rota + "')",
 				"data-indicator:gerando": true, "data-attr:disabled": "$gerando",
 			}) {
 				Gerar convite

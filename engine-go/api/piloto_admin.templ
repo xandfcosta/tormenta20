@@ -16,6 +16,13 @@ templ admin(v adminView) {
 			</div>
 		</div>
 		@dialogoConfirmar()
+		@dialogoRedefinir()
+		// O MESMO componente do Hub, e não uma segunda cópia: cunhar convite é
+		// uma coisa só, e duas versões dela divergiriam sem ninguém notar — é a
+		// razão pela qual o `mintAccountInvite` saiu do manipulador HTTP. Fica
+		// aqui porque este é o lugar natural da ação, ao lado da LISTA que ela
+		// muda; a entrada do Hub continua valendo para quem já está lá.
+		@dialogoDeConvite("/piloto/admin/convites")
 		<p class="text-sm text-destructive" data-show="$erro != ''" data-text="$erro"></p>
 	</main>
 }
@@ -33,6 +40,24 @@ templ painelJogadores(v adminView) {
 						<span class="block truncate text-xs text-muted-foreground">{ j.Email }</span>
 					</span>
 					<span class="text-xs text-muted-foreground">{ j.Posses }</span>
+					// Redefinir vale para TODA conta, inclusive a sua: o admin que
+					// esqueceu a própria senha usa a mesma porta. É só apagar que
+					// tem a guarda do `EhEu`, porque essa não tem volta.
+					//
+					// O `#reset-link` é LIMPO ao abrir, e isso não é zelo: sem
+					// limpar, gerar um link para a Ana, fechar, e abrir a caixa da
+					// Bia mostraria o link da ANA sob o nome da BIA — um link de
+					// redefinição entregue à pessoa errada.
+					<button
+						type="button"
+						data-id={ fmt.Sprint(j.ID) }
+						data-nome={ j.Nome }
+						data-on:click="$alvoId = el.dataset.id; $alvoNome = el.dataset.nome; $copiado = ''; document.getElementById('reset-link').innerHTML = ''; $redefinir.showModal()"
+						aria-label={ "Redefinir a senha de " + j.Nome }
+						class="shrink-0 border border-grimorio-iron-light bg-secondary px-2 py-1 text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+					>
+						@icone("KeyRound", "size-4")
+					</button>
 					if !j.EhEu {
 						// O nome e o custo viajam em `data-*` e NUNCA dentro da
 						// expressão. Interpolar o nome num `data-on:click` seria injetar
@@ -60,9 +85,19 @@ templ painelJogadores(v adminView) {
 
 templ painelConvites(v adminView) {
 	<section id="painel-convites" class="border border-grimorio-iron bg-grimorio-panel p-3">
-		<h2 class="font-heading text-sm uppercase tracking-[0.18em] text-grimorio-gold/80">
-			Convites abertos ({ fmt.Sprint(len(v.Convites)) })
-		</h2>
+		<div class="flex items-center justify-between gap-2">
+			<h2 class="font-heading text-sm uppercase tracking-[0.18em] text-grimorio-gold/80">
+				Convites abertos ({ fmt.Sprint(len(v.Convites)) })
+			</h2>
+			<button
+				type="button"
+				data-on:click="$copiado = ''; document.getElementById('convite-link').innerHTML = ''; $convidar.showModal()"
+				class="inline-flex shrink-0 items-center gap-1 border border-grimorio-iron-light bg-secondary px-2 py-1 text-xs text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			>
+				@icone("UserPlus", "size-4")
+				Convidar
+			</button>
+		</div>
 		if len(v.Convites) == 0 {
 			<p class="mt-3 text-sm text-muted-foreground">
 				Nenhum convite pendente. Todo mundo que foi convidado já entrou.
@@ -185,4 +220,83 @@ templ dialogoConfirmar() {
 			</button>
 		</div>
 	</dialog>
+}
+
+// dialogoRedefinir entrega o link de uso único que troca a senha de UMA conta
+// (ALE-120): o admin gera e manda, e quem recebe escolhe a própria senha — o
+// admin nunca vê nem digita senha de ninguém.
+//
+// Mesma mecânica do convite do Hub, e pela mesma razão: o token chega por
+// REMENDO do servidor (`#reset-link`) e não por sinal. Sinal de cliente viaja
+// de volta ao servidor em toda requisição seguinte da página, e um token de uso
+// único que abre uma conta EXISTENTE é a última coisa que se quer nesse
+// caminho.
+templ dialogoRedefinir() {
+	<dialog
+		id="redefinir"
+		data-ref="redefinir"
+		aria-labelledby="redefinir-titulo"
+		class="m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60"
+	>
+		<h2 id="redefinir-titulo" class="flex items-center gap-2 font-heading text-base">
+			@icone("KeyRound", "size-4 text-grimorio-gold")
+			Redefinir senha
+		</h2>
+		<p class="mt-2 text-sm text-muted-foreground">
+			Envie o link para <span data-text="$alvoNome"></span>. Vale uma vez só, expira em 24 horas, e quem recebe escolhe a própria senha — você não digita senha nenhuma.
+		</p>
+		<div id="reset-link" class="mt-3"></div>
+		<div class="mt-4 flex justify-end gap-2">
+			<form method="dialog">
+				<button type="submit" class="border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring">
+					Fechar
+				</button>
+			</form>
+			<button
+				type="button"
+				data-indicator:gerando
+				data-attr:disabled="$gerando"
+				data-on:click="@post('/piloto/admin/usuarios/' + $alvoId + '/redefinir')"
+				class="border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-50"
+			>
+				Gerar link
+			</button>
+		</div>
+	</dialog>
+}
+
+// resetGerado é o remendo que volta do POST, e carrega o CAMINHO — nunca a URL
+// inteira. A origem é do NAVEGADOR, e isso é conserto de um defeito medido: com
+// o `r.Host` o link nascia apontando para a porta da API, porque o proxy do
+// Vite reescreve o `Host` em desenvolvimento. Link de redefinição existe para
+// ser MANDADO, então host errado é link morto.
+//
+// `readonly` e não `disabled`: campo desabilitado não entra na seleção nem no
+// "copiar" do teclado, e copiar é a única coisa que se faz com ele.
+templ resetGerado(caminho string) {
+	<div id="reset-link" class="mt-3 space-y-2">
+		<label for="reset-url" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">
+			Link de redefinição
+		</label>
+		<div class="flex gap-2">
+			<input
+				id="reset-url"
+				readonly
+				data-caminho={ caminho }
+				data-init="el.value = location.origin + el.dataset.caminho"
+				class="h-9 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 font-mono text-xs outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			/>
+			<button
+				type="button"
+				data-on:click="navigator.clipboard.writeText(document.getElementById('reset-url').value); $copiado = true"
+				class="shrink-0 border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			>
+				Copiar
+			</button>
+		</div>
+		<p class="text-xs text-hp-full" aria-live="polite" data-show="$copiado">Link copiado.</p>
+		<p class="text-xs text-muted-foreground">
+			Enquanto o link não for usado, a senha atual continua valendo.
+		</p>
+	</div>
 }

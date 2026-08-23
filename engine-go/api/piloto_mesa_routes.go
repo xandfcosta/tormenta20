@@ -56,6 +56,8 @@ func (s *Server) PilotoRouter() http.Handler {
 		r.Get("/admin", s.handleAdminPiloto)
 		r.Post("/admin/usuarios/{id}/apagar", s.handleAdminPilotoApagar)
 		r.Post("/admin/backup", s.handleAdminPilotoBackup)
+		r.Post("/admin/usuarios/{id}/redefinir", s.handleAdminPilotoRedefinir)
+		r.Post("/admin/convites", s.handleAdminPilotoConvite)
 	})
 	return r
 }
