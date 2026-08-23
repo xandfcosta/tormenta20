@@ -11,11 +11,25 @@ import {
 } from './encounter'
 import { formatNd } from './monster-format'
 
+/**
+ * As cores do VEREDITO, e elas são TINTA — este mapa vai para `color`, não
+ * para um fundo.
+ *
+ * O "Mortal" usava `--hp-critical`, que é cor de BARRA: ela rende 3,59:1 sobre
+ * o painel e 3,16:1 sobre o elevado, abaixo do mínimo de texto nos dois
+ * (ALE-240). Quem escreve vermelho em fundo escuro nesta casa é o
+ * `--grimorio-crimson-bright`, que a ALE-237 acabou de fechar em 5,21 e 4,58.
+ *
+ * Tinta PRÓPRIA para o crítico seria um segundo vermelho quase idêntico ao
+ * lado do primeiro — mesmo matiz, claridade a um passo — e a casa tem uma
+ * palavra por conceito. O `--hp-critical` continua existindo e continua sendo
+ * o que PINTA a barra; ele só deixou de escrever.
+ */
 const TONE_COLOR = {
   calm: 'var(--hp-full)',
   even: 'var(--grimorio-gold)',
   hard: 'var(--hp-hurt)',
-  deadly: 'var(--hp-critical)',
+  deadly: 'var(--grimorio-crimson-bright)',
 } as const
 
 export type EncounterComposerProps = {

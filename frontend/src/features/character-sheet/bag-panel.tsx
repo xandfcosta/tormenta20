@@ -75,14 +75,15 @@ export function BagPanel(props: { character: Character }) {
             <span
               class={cn(
                 'font-mono',
-                carga().overloaded ? 'text-[color:var(--hp-critical)]' : 'text-foreground',
+                // Tinta e não cor de barra (ALE-240).
+                carga().overloaded ? 'text-grimorio-crimson-bright' : 'text-foreground',
               )}
             >
               {formatLoad(carga().used)}
             </span>{' '}
             / {carga().limit}
             <Show when={carga().overloaded}>
-              <FieldLabel tom="inherit" class="ml-2 text-[color:var(--hp-critical)]">
+              <FieldLabel tom="inherit" class="ml-2 text-grimorio-crimson-bright">
                 sobrecarga
               </FieldLabel>
             </Show>

@@ -10,13 +10,13 @@ import { VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
  * que nenhuma, porque quem consulta acredita nela.
  */
 /**
- * As superfícies onde a casa ESCREVE em crimson, e como chegar a cada uma
- * (ALE-237). Cena nova que escreva crimson entra aqui, ou nasce sem medição —
+ * As superfícies onde a casa ESCREVE com tinta semântica, e como chegar a cada
+ * uma (ALE-237, ALE-240). Cena nova que escreva crimson entra aqui, ou nasce sem medição —
  * a lição da issue é que um guarda de contraste só mede o que ele VISITA, e
  * dois defeitos velhos sobreviveram anos porque nenhum guarda abria um popover
  * nem entrava no livro de campanhas.
  */
-const SUPERFICIES_COM_CRIMSON = [
+const SUPERFICIES_COM_TINTA = [
   {
     onde: 'na folha do grimório',
     abre: async (page: Page) => {
@@ -32,6 +32,27 @@ const SUPERFICIES_COM_CRIMSON = [
       await page.goto('/')
       await page.getByRole('button', { name: 'Menu de Mestre' }).click()
       await expect(page.getByRole('button', { name: 'Sair' })).toBeVisible()
+    },
+  },
+  {
+    onde: 'no veredito do encontro',
+    abre: async (page: Page) => {
+      // O veredito do encontro escreve com a família VITAL, e é a única tela
+      // fora da folha onde ela vira texto grande (ALE-240).
+      //
+      // O que ele mede é o tom que estiver na tela: com o rascunho vazio isso é
+      // "Trivial", em `--hp-full`. Ele NÃO exercita o "Mortal" — montar um
+      // encontro mortal aqui custaria semear criaturas, e o token daquele tom
+      // já é a tinta da casa, medida nas outras três cenas por identidade. O
+      // que esta entrada garante é que a família vital continue legível ONDE
+      // ela escreve grande, e que a tela entre na varredura quando alguém puser
+      // tinta nova nela.
+      await page.goto('/campaigns/1/sessions/4')
+      await page
+        .getByRole('navigation', { name: 'Consultas do mestre' })
+        .getByRole('button', { name: 'Encontros', exact: true })
+        .click()
+      await expect(page.getByRole('dialog', { name: 'Montar encontro' })).toBeVisible()
     },
   },
   {
@@ -56,7 +77,7 @@ const SUPERFICIES_COM_CRIMSON = [
  * `getComputedStyle` devolve o oklch cru e ler aqueles três números como RGB
  * dá razão inventada.
  */
-async function crimsonsFracos(page: Page): Promise<string[]> {
+async function tintasFracas(page: Page): Promise<string[]> {
   return page.evaluate(() => {
     const tela = document.createElement('canvas')
     tela.width = 1
@@ -79,17 +100,31 @@ async function crimsonsFracos(page: Page): Promise<string[]> {
       return 0.2126 * (r ?? 0) + 0.7152 * (g ?? 0) + 0.0722 * (b ?? 0)
     }
 
-    /** Os TRÊS crimsons da casa, resolvidos em sRGB pelo navegador, e não
-     *  "qualquer coisa avermelhada": a primeira versão casava por aparência e
-     *  pegou junto o `--hp-critical`, que é vermelho da mesma família mas tem
-     *  outro dono e outro trabalho — ele preenche barra além de escrever, e
-     *  consertá-lo é escolha de desenho. Ficou medido na ALE-240. */
+    /** As tintas da casa, resolvidas em sRGB pelo navegador, e não "qualquer
+     *  coisa avermelhada": a primeira versão deste guarda casava por aparência
+     *  e não sabia dizer QUAL token estava falhando.
+     *
+     *  A lista tem duas famílias porque o defeito é o mesmo dos dois lados. Os
+     *  três crimsons são tinta por construção (ALE-237). Os quatro VITAIS não
+     *  são: eles foram escolhidos como cor de BARRA, e escrevem em alguns
+     *  lugares por hábito — o verde e o azul passam por sorte (5,34 e 6,34
+     *  medidos), e o `--hp-critical` não passava em superfície nenhuma. Por
+     *  isso eles entram: o dia em que alguém escrever com um deles numa tela
+     *  nova, é aqui que se descobre (ALE-240). */
     const raiz = getComputedStyle(document.documentElement)
-    const crimsons = [
+    const TINTAS = [
       '--grimorio-crimson',
       '--grimorio-crimson-bright',
       '--grimorio-parchment-crimson',
-    ].map((token) => rgb(raiz.getPropertyValue(token).trim()).slice(0, 3).join(','))
+      '--hp-full',
+      '--hp-hurt',
+      '--hp-critical',
+      '--mp-arcane',
+    ]
+    const tintas = TINTAS.map((token) => ({
+      token,
+      chave: rgb(raiz.getPropertyValue(token).trim()).slice(0, 3).join(','),
+    }))
 
     const fundoEfetivo = (el: HTMLElement) => {
       let no: HTMLElement | null = el
@@ -111,14 +146,19 @@ async function crimsonsFracos(page: Page): Promise<string[]> {
         return proprio && el.getBoundingClientRect().height > 0
       })
       .map((el) => {
-        const tinta = rgb(getComputedStyle(el).color)
-        if (!crimsons.includes([tinta[0], tinta[1], tinta[2]].join(','))) return null
-        const [a, b] = [luz(tinta), luz(fundoEfetivo(el))].sort((x, y) => y - x)
+        const cor = rgb(getComputedStyle(el).color)
+        const casa = tintas.find((t) => t.chave === [cor[0], cor[1], cor[2]].join(','))
+        if (!casa) return null
+        const [a, b] = [luz(cor), luz(fundoEfetivo(el))].sort((x, y) => y - x)
         const razao = ((a ?? 0) + 0.05) / ((b ?? 0) + 0.05)
-        return { texto: el.textContent?.trim().slice(0, 28) ?? '', razao: Number(razao.toFixed(2)) }
+        return {
+          token: casa.token,
+          texto: el.textContent?.trim().slice(0, 24) ?? '',
+          razao: Number(razao.toFixed(2)),
+        }
       })
       .filter((t) => t !== null && t.razao < 4.5)
-      .map((t) => `"${t?.texto}" dá ${t?.razao}:1`)
+      .map((t) => `${t?.token} em "${t?.texto}" dá ${t?.razao}:1`)
   })
 }
 
@@ -393,11 +433,11 @@ test.describe('Grimório — a folha de especificação', () => {
    * mente igual, e um `expect` cansado dentro de um teste desses acusaria o
    * app. Cada teste ganha página nova.
    */
-  for (const cena of SUPERFICIES_COM_CRIMSON) {
-    test(`o crimson alcança texto ${cena.onde}`, async ({ page }) => {
+  for (const cena of SUPERFICIES_COM_TINTA) {
+    test(`a tinta da casa alcança texto ${cena.onde}`, async ({ page }) => {
       await cena.abre(page)
-      const fracos = await crimsonsFracos(page)
-      expect(fracos, `crimson abaixo do mínimo de texto ${cena.onde}`).toEqual([])
+      const fracos = await tintasFracas(page)
+      expect(fracos, `tinta abaixo do mínimo de texto ${cena.onde}`).toEqual([])
     })
   }
 
