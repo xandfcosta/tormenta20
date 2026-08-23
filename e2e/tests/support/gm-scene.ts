@@ -137,6 +137,46 @@ export async function fechaAFicha(page: Page): Promise<void> {
 }
 
 /**
+ * Tira TODAS as condições da ficha aberta, e devolve quantas tirou.
+ *
+ * Existe para ser chamada nas DUAS pontas do teste que aplica condições
+ * (ALE-238), e a ponta de ENTRADA é a que faltava: o spec derivava o rótulo
+ * esperado ("Ver as 3 condições ativas") do índice do laço, o que só vale se a
+ * ficha começar em zero. Uma condição herdada de qualquer lugar desloca os três
+ * rótulos e o teste falha procurando um botão que nunca vai existir — sempre no
+ * terceiro, que é a assinatura registrada na issue.
+ *
+ * Ele já limpava no fim; limpar no fim não basta, porque a limpeza mora no
+ * CORPO do teste e não roda quando ele falha antes. A varredura do `auth.setup`
+ * cobre o caso entre EXECUÇÕES; esta cobre o caso dentro de uma.
+ *
+ * Sai por dentro do popover, onde as condições ficam listadas juntas. O popover
+ * é achado pelo que ele NÃO contém: desde a ALE-198 a ficha é ela mesma um
+ * diálogo, e `getByRole('dialog')` sozinho casa os dois.
+ */
+export async function limpaAsCondicoes(page: Page): Promise<number> {
+  const gatilho = page.getByRole('button', { name: /^Ver as? .*condi/ })
+  let tiradas = 0
+  // Teto de 8: as condições do livro são 35, mas nenhum teste da casa aplica
+  // mais que três. Um laço sem teto sobre uma UI que não fecha nunca acaba.
+  for (let i = 0; i < 8 && (await gatilho.count()) > 0; i++) {
+    await gatilho.click()
+    const painel = page
+      .getByRole('dialog')
+      .filter({ hasNot: page.getByRole('tab', { name: 'Perícias' }) })
+    await painel.getByRole('button', { name: /^Remover condição/ }).first().click()
+    // Esc só se o popover AINDA estiver aberto: ao tirar a última condição ele
+    // fecha sozinho, e aí um Esc cego fecha a FICHA — o que deixa quem chamar
+    // isto no meio do teste sem tela para continuar. Custou três sondas.
+    if ((await painel.count()) > 0) await page.keyboard.press('Escape')
+    await expect(painel).toHaveCount(0)
+    tiradas++
+  }
+  await expect(gatilho, 'sobrou condição na ficha').toHaveCount(0)
+  return tiradas
+}
+
+/**
  * Os rótulos VISÍVEIS no trilho — que desde a ALE-211 são uma JANELA, não a
  * fila inteira.
  *

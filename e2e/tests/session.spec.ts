@@ -17,6 +17,7 @@ import {
   garanteACena,
   labelsNaFila,
   labelsNaGaveta,
+  limpaAsCondicoes,
   primeiroDaFila,
   trilhoDaFila,
   trilhoDeConsultas,
@@ -653,6 +654,15 @@ test.describe('Sessão ao vivo', () => {
     const abaDaFicha = page.getByRole('tab', { name: 'Perícias' })
     await expect(abaDaFicha).toBeVisible()
 
+    // COMEÇA DO ZERO, e isto é a ALE-238: os rótulos abaixo são derivados do
+    // ÍNDICE do laço ("Ver as 3 condições ativas"), o que só vale se a ficha
+    // não trouxer nada de antes. Uma condição herdada desloca os três e o teste
+    // falha procurando um botão que nunca vai existir — sempre no terceiro, que
+    // é a assinatura que a issue registrou. Ele já limpava no FIM; limpar no
+    // fim não basta, porque essa limpeza não roda quando o teste falha antes.
+    const herdadas = await limpaAsCondicoes(page)
+    if (herdadas > 0) console.log(`[ALE-238] a ficha veio com ${herdadas} condição(ões) de antes`)
+
     // COM CONDIÇÕES ATIVAS, que é o estado em que a faixa quebrou (ALE-147):
     // elas são o único conteúdo dela que cresce sozinho durante o combate, e
     // com a fileira vazia nenhuma asserção via o defeito.
@@ -708,24 +718,7 @@ test.describe('Sessão ao vivo', () => {
     // obrigação deste teste — sem isto elas se acumulam entre execuções e a
     // próxima roda contra uma ficha que ninguém montou (F.I.R.S.T: repetível).
     await page.setViewportSize({ width: 1920, height: 1080 })
-    const gatilho = page.getByRole('button', { name: /^Ver as? .*condi/ })
-    for (let i = 0; i < 5 && (await gatilho.count()) > 0; i++) {
-      // Sai por dentro do popover, onde as três estão listadas juntas. O
-      // popover é achado pelo que ele NÃO contém: desde a ALE-198 a ficha é ela
-      // mesma um diálogo, e `getByRole('dialog')` sozinho casa os dois — o de
-      // fora nunca fecha, e a espera estourava sobre uma limpeza que funcionou.
-      // Filtrar pelo que ele CONTÉM não resolve: com duas condições ou menos a
-      // própria faixa desenha os "Remover condição" soltos, dentro da ficha.
-      // A barra de blocos é o que só a ficha tem.
-      await gatilho.click()
-      const painel = page
-        .getByRole('dialog')
-        .filter({ hasNot: page.getByRole('tab', { name: 'Perícias' }) })
-      await painel.getByRole('button', { name: /^Remover condição/ }).first().click()
-      await page.keyboard.press('Escape')
-      await expect(painel).toHaveCount(0)
-    }
-    await expect(gatilho).toHaveCount(0)
+    await limpaAsCondicoes(page)
 
     // Tira da fila só quem ESTE teste pôs.
     await fechaAFicha(page)
