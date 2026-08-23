@@ -78,6 +78,18 @@ links, the browser Back button and the progress rail cannot then disagree.
   `scripts/build-engine-wasm.sh`.
 - Optimistic mutations live OUTSIDE the component (`xActions(queryClient,
   id)` + pure transformations). See `expertise-mutations.ts`.
+- **Uma escrita otimista só corrompe dado quando DUAS coisas coincidem**
+  (ALE-243, levantamento da ALE-248): o payload é montado a partir do CACHE
+  (`set([...atuais(), novo])`, e não `(id, valor)`), **e** o gesto pode repetir
+  sem esperar — controle que não desabilita. Com as duas, a resposta atrasada
+  de uma escrita reescreve o cache e a escrita SEGUINTE monta o pedido em cima
+  do estado regredido; o dado some sem erro nenhum.
+  Sozinhas, nenhuma das duas morde: payload de `(id, valor)` é imune ao cache,
+  e cache-derivado com `disabled={pending()}` nunca tem duas em voo. Todos os
+  painéis da ficha têm a guarda — proficiências, escolhas de origem, itens,
+  magias —, e as condições eram o único lugar sem ela.
+  **Ao escrever uma mutação nova, pergunte as duas.** Se as respostas forem
+  "cache" e "sem guarda", ou ponha a guarda, ou não assente a resposta.
 
 ## Rendering — the traps that cost real time
 
