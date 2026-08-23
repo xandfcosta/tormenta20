@@ -1,3 +1,4 @@
+import { getMonster } from '@/shared/lib/bestiary-cache'
 import { useQuery } from '@tanstack/solid-query'
 import { Pencil, X } from 'lucide-solid'
 import { type JSX, Show, createSignal } from 'solid-js'
@@ -5,7 +6,6 @@ import { characterQueryOptions } from '@/entities/character/queries'
 import { CombatantBand } from '@/features/character-sheet/combatant-band'
 import { ApplyEffectSelect } from '@/features/session-tracker/apply-effect-select'
 import { CharacterSheet } from '@/features/character-sheet/character-sheet'
-import { bestiaryCatalogQueryOptions } from '@/entities/catalog/queries'
 import { MonsterStatBlock } from '@/features/gm-tools/monster-stat-block'
 import { CreatureBlockDialog } from '@/features/gm-tools/creature-block-dialog'
 import { CreatureStatBlock } from '@/features/gm-tools/creature-stat-block'
@@ -200,12 +200,11 @@ function NpcCard(props: {
   onLinkCreature?: (creature: CampaignCreature) => void
   onConditions?: (conditions: string[]) => void
 }) {
-  const bestiary = useQuery(() => bestiaryCatalogQueryOptions)
   const creatures = useQuery(() => campaignCreaturesQueryOptions(props.campaignId))
   const monster = () =>
     props.entry.monsterId === undefined
       ? undefined
-      : settledQuery(bestiary)?.find((creature) => creature.id === props.entry.monsterId)
+      : getMonster(props.entry.monsterId)
   const creature = () =>
     props.entry.creatureId === undefined
       ? undefined

@@ -1,7 +1,6 @@
-import { useQuery } from '@tanstack/solid-query'
+import { allMonsters } from '@/shared/lib/bestiary-cache'
 import { Plus } from 'lucide-solid'
 import { createMemo, createSignal } from 'solid-js'
-import { bestiaryCatalogQueryOptions } from '@/entities/catalog/queries'
 import { enrichEncounter } from '@/features/gm-tools/encounter'
 import { EncounterComposer } from '@/features/gm-tools/encounter-composer'
 import { createEncounterDraft } from '@/features/gm-tools/encounter-draft'
@@ -16,11 +15,10 @@ import { SectionTitle } from '@/shared/ui/section-label'
  * straight into the initiative tracker.
  */
 export function EncontrosTool() {
-  const bestiary = useQuery(() => bestiaryCatalogQueryOptions)
   const draft = createEncounterDraft()
   const [picking, setPicking] = createSignal(false)
 
-  const groups = createMemo(() => enrichEncounter(draft.entries(), bestiary.data ?? []))
+  const groups = createMemo(() => enrichEncounter(draft.entries(), allMonsters()))
 
   return (
     <section class="flex min-h-0 flex-1 flex-col gap-3" aria-labelledby="mesa-encontros">

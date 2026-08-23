@@ -6,6 +6,7 @@ import { primeDivinePowers } from '@/shared/lib/divine-powers-cache'
 import { ensureEngine, primeEngineCatalogs } from '@/shared/lib/engine-wasm'
 import { primeRacas } from '@/shared/lib/racas-cache'
 import { primeRulesCatalogs } from '@/shared/lib/rules-catalog-cache'
+import { primeBestiary } from '@/shared/lib/bestiary-cache'
 import { primeRulesTables } from '@/shared/lib/rules-tables-cache'
 import { primeSpellCatalog } from '@/shared/lib/spell-cache'
 import {
@@ -14,6 +15,7 @@ import {
   classPowersCatalogQueryOptions,
   devotoTermsCatalogQueryOptions,
   dungeonDesignCatalogQueryOptions,
+  bestiaryCatalogQueryOptions,
   gmTablesCatalogQueryOptions,
   conditionsCatalogQueryOptions,
   deusesCatalogQueryOptions,
@@ -62,6 +64,7 @@ export async function ensureCatalogs(qc: QueryClient): Promise<void> {
     devotoTerms,
     gmTables,
     dungeonDesign,
+    bestiary,
   ] = await Promise.all([
     qc.ensureQueryData(itemCatalogQueryOptions),
     qc.ensureQueryData(raceDefsCatalogQueryOptions),
@@ -81,6 +84,7 @@ export async function ensureCatalogs(qc: QueryClient): Promise<void> {
     qc.ensureQueryData(devotoTermsCatalogQueryOptions),
     qc.ensureQueryData(gmTablesCatalogQueryOptions),
     qc.ensureQueryData(dungeonDesignCatalogQueryOptions),
+    qc.ensureQueryData(bestiaryCatalogQueryOptions),
   ])
   primeItemCatalog(items)
   primeAbilities({
@@ -97,6 +101,7 @@ export async function ensureCatalogs(qc: QueryClient): Promise<void> {
   primeDivinePowers(divinePowers)
   primeActivations(activations)
   primeRulesTables({ classExpertises, devotoTerms, gmTables, dungeonDesign })
+  primeBestiary(bestiary)
 }
 
 /**

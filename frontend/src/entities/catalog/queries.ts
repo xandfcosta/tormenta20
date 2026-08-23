@@ -19,9 +19,15 @@ export const itemCatalogQueryOptions = queryOptions({
   staleTime: Number.POSITIVE_INFINITY,
 })
 
-/** The bestiary. Unlike the abilities cluster it is NOT primed into a module
- *  cache: only the Mesa do Mestre and the in-session monster add read it, and
- *  they can wait for a query like any other screen. */
+/**
+ * O bestiário. Ele é buscado pelo `ensureCatalogs` e PREPARADO no
+ * `bestiary-cache`, como o resto dos catálogos — quem lê usa o acessor
+ * síncrono, não este `queryOptions`.
+ *
+ * Ele era a exceção ("podem esperar uma query como qualquer outra tela") e a
+ * exceção custou a ALE-199: dentro da sessão, esperar uma query desanexa a
+ * cena. O motivo está escrito no `bestiary-cache.ts`, com a medição.
+ */
 export const bestiaryCatalogQueryOptions = queryOptions({
   queryKey: ['catalog', 'bestiary'] as const,
   queryFn: api.catalog.bestiary,
