@@ -2,11 +2,14 @@ package api
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"testing"
+
+	"t20engine/db/sqlcgen"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -104,5 +107,92 @@ func TestEndSceneRouteRejectsStranger(t *testing.T) {
 	}
 	if got := effectScopes(t, s, char); len(got) != 1 {
 		t.Errorf("effect should survive a rejected end-scene, scopes = %v", got)
+	}
+}
+
+// seedLiveSession puts the character at a table with a session RUNNING: a
+// campaign it is a member of, holding a session moved to status 'active'.
+func seedLiveSession(t *testing.T, s *Server, gmID, charID int64) int64 {
+	t.Helper()
+	campaign := seedCampaign(t, s, gmID)
+	seedMember(t, s, campaign, charID, "player")
+	sid := seedSession(t, s, campaign)
+	if _, err := s.queries.StartSessionFresh(context.Background(), sqlcgen.StartSessionFreshParams{
+		StartedAt: sql.NullString{String: nowISO(), Valid: true}, UpdatedAt: nowISO(), ID: sid,
+	}); err != nil {
+		t.Fatalf("start session: %v", err)
+	}
+	return sid
+}
+
+// ALE-216: at a live table the scene and the day are the GM's, so the sheet's
+// own buttons are refused by the SERVER — hiding them is only UX, and the
+// player can still reach the route from the standalone sheet in another tab.
+func TestEndScopeRoutesRefusedInLiveSession(t *testing.T) {
+	for _, path := range []string{"/end-scene", "/end-day"} {
+		t.Run(path, func(t *testing.T) {
+			s := newTestServer(t)
+			gmID := seedUser(t, s, "gm@t.com")
+			ownerID := seedUser(t, s, "dono@t.com")
+			char := seedCharacter(t, s, ownerID, "PC", 10, 10, 5, 5)
+			seedEffect(t, s, char, "buff-a", "scene")
+			seedEffect(t, s, char, "buff-b", "day")
+			seedLiveSession(t, s, gmID, char)
+
+			rec := postEndScope(t, endScopeRouter(s, AuthUser{ID: ownerID}), path, char)
+
+			if rec.Code != http.StatusForbidden {
+				t.Fatalf("status = %d, want 403 (body %q)", rec.Code, rec.Body.String())
+			}
+			if got := effectScopes(t, s, char); len(got) != 2 {
+				t.Errorf("effects should survive a refused %s, scopes = %v", path, got)
+			}
+		})
+	}
+}
+
+// The GM is refused too, and for the same reason: their path is the session
+// rest (WS `session-rest`), which reaches endScene/endDay without this guard.
+func TestEndSceneRouteRefusesTheGmInLiveSession(t *testing.T) {
+	s := newTestServer(t)
+	gmID := seedUser(t, s, "gm@t.com")
+	ownerID := seedUser(t, s, "dono@t.com")
+	char := seedCharacter(t, s, ownerID, "PC", 10, 10, 5, 5)
+	seedEffect(t, s, char, "buff-a", "scene")
+	seedLiveSession(t, s, gmID, char)
+
+	rec := postEndScope(t, endScopeRouter(s, AuthUser{ID: gmID}), "/end-scene", char)
+
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("status = %d, want 403 (body %q)", rec.Code, rec.Body.String())
+	}
+}
+
+// The reciprocal, and the half that keeps the guard honest: a campaign whose
+// sessions are only planned or already ended is NOT a table in progress — the
+// player goes on administering their own sheet between sessions.
+func TestEndSceneRouteAllowedWithNoRunningSession(t *testing.T) {
+	s := newTestServer(t)
+	gmID := seedUser(t, s, "gm@t.com")
+	ownerID := seedUser(t, s, "dono@t.com")
+	char := seedCharacter(t, s, ownerID, "PC", 10, 10, 5, 5)
+	seedEffect(t, s, char, "buff-a", "scene")
+	campaign := seedCampaign(t, s, gmID)
+	seedMember(t, s, campaign, char, "player")
+	sid := seedSession(t, s, campaign)
+	if _, err := s.queries.EndSession(context.Background(), sqlcgen.EndSessionParams{
+		EndedAt: sql.NullString{String: nowISO(), Valid: true}, UpdatedAt: nowISO(), ID: sid,
+	}); err != nil {
+		t.Fatalf("end session: %v", err)
+	}
+	seedSession(t, s, campaign) // planned, never started
+
+	rec := postEndScope(t, endScopeRouter(s, AuthUser{ID: ownerID}), "/end-scene", char)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200 (body %q)", rec.Code, rec.Body.String())
+	}
+	if got := effectScopes(t, s, char); len(got) != 0 {
+		t.Errorf("remaining scopes = %v, want []", got)
 	}
 }

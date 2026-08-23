@@ -1146,6 +1146,23 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (User, error) {
 	return i, err
 }
 
+const hasLiveSessionForCharacter = `-- name: HasLiveSessionForCharacter :one
+SELECT EXISTS (
+  SELECT 1 FROM campaign_members m
+  JOIN sessions s ON s.campaignId = m.campaignId
+  WHERE m.characterId = ? AND s.status = 'active'
+) AS atLiveTable
+`
+
+// ALE-216: the character is at a table with a session RUNNING. 'active' is the
+// only live status; 'planned' and 'ended' are not a table in progress.
+func (q *Queries) HasLiveSessionForCharacter(ctx context.Context, characterid int64) (bool, error) {
+	row := q.db.QueryRowContext(ctx, hasLiveSessionForCharacter, characterid)
+	var atlivetable bool
+	err := row.Scan(&atlivetable)
+	return atlivetable, err
+}
+
 const hasPlayerPc = `-- name: HasPlayerPc :one
 SELECT EXISTS (
   SELECT 1 FROM campaign_members m JOIN characters ch ON ch.id = m.characterId

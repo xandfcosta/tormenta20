@@ -24,7 +24,7 @@ import { SectionTitle } from '@/shared/ui/section-label'
  * both, and letting them drift is how a player ends up with a spent power on a
  * fresh scene.
  */
-export function ActiveEffectsSection(props: { character: Character }) {
+export function ActiveEffectsSection(props: { character: Character; inSession?: boolean }) {
   const queryClient = useQueryClient()
   const powerUses = usePowerUses()
   const actions = () => effectActions(queryClient, props.character.id)
@@ -55,42 +55,49 @@ export function ActiveEffectsSection(props: { character: Character }) {
         </SectionTitle>
         <div class="flex flex-wrap gap-1">
           <ApplyEffectDialog character={props.character} />
-          <ConfirmDialog
-            title="Encerrar cena?"
-            description="Limpa todos os efeitos de cena (buffs, poções ativas) e zera os usos por cena."
-            confirmLabel="Encerrar cena"
-            destructive={false}
-            onConfirm={() => void endScene()}
-            trigger={(open) => (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                class="h-6 px-2 text-2xs"
-                onClick={open}
-              >
-                Encerrar cena
-              </Button>
-            )}
-          />
-          <ConfirmDialog
-            title="Encerrar dia?"
-            description="Limpa efeitos de cena e de dia, e zera os usos por cena e por dia."
-            confirmLabel="Encerrar dia"
-            destructive={false}
-            onConfirm={() => void endDay()}
-            trigger={(open) => (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                class="h-6 px-2 text-2xs"
-                onClick={open}
-              >
-                Encerrar dia
-              </Button>
-            )}
-          />
+          {/* Na mesa, encerrar cena e encerrar dia são do MESTRE: o descanso é
+              decisão da mesa, e um jogador expirando os buffs de cena no meio
+              do combate mexe no estado de todo mundo. O mestre tem os dois no
+              menu da sessão. Isto é só UX — quem RECUSA é o handler Go, porque
+              a ficha continua alcançável numa aba fora da sessão (ALE-216). */}
+          <Show when={!props.inSession}>
+            <ConfirmDialog
+              title="Encerrar cena?"
+              description="Limpa todos os efeitos de cena (buffs, poções ativas) e zera os usos por cena."
+              confirmLabel="Encerrar cena"
+              destructive={false}
+              onConfirm={() => void endScene()}
+              trigger={(open) => (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  class="h-6 px-2 text-2xs"
+                  onClick={open}
+                >
+                  Encerrar cena
+                </Button>
+              )}
+            />
+            <ConfirmDialog
+              title="Encerrar dia?"
+              description="Limpa efeitos de cena e de dia, e zera os usos por cena e por dia."
+              confirmLabel="Encerrar dia"
+              destructive={false}
+              onConfirm={() => void endDay()}
+              trigger={(open) => (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  class="h-6 px-2 text-2xs"
+                  onClick={open}
+                >
+                  Encerrar dia
+                </Button>
+              )}
+            />
+          </Show>
         </div>
       </div>
       <Show

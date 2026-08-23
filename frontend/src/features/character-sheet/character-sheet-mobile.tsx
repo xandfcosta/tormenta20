@@ -69,6 +69,7 @@ export function CharacterSheetMobile(props: CharacterSheetMobileProps) {
                 component={section.component}
                 character={props.character}
                 glance={props.glance}
+                inSession={props.inSession}
               />
             </TabsContent>
           )}
