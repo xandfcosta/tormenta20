@@ -22,6 +22,14 @@ export type EntradaAjustada = { hp: number; initiative: number; quantidade: numb
  *  linha por linha. A fila tem teto próprio no servidor, e ele responde. */
 const MAX_COPIAS = 12
 
+/** O `min`/`max` do `NumberInput` governa o SPINNER; digitar passa direto por
+ *  ele, e quem prende é o chamador (ALE-236). Sem isto, teclar `99` em
+ *  "Quantas" mandava 99 criaturas para a fila de uma vez. */
+function preso(valor: number, min: number, max: number): number {
+  if (!Number.isFinite(valor)) return min
+  return Math.min(max, Math.max(min, Math.round(valor)))
+}
+
 /**
  * LER a criatura e, se for o caso, AJUSTÁ-LA antes de ela entrar (ALE-208).
  *
@@ -96,7 +104,14 @@ function Corpo(props: {
         <div class="flex flex-wrap items-end gap-3">
           <div class="min-w-24 flex-1 space-y-1">
             <Label for="add-monster-hp">PV</Label>
-            <NumberInput id="add-monster-hp" value={hp()} onChange={setHp} min={1} step={1} spinnerLabel="PV" />
+            <NumberInput
+              id="add-monster-hp"
+              value={hp()}
+              onChange={(pv) => setHp(preso(pv, 1, 9999))}
+              min={1}
+              step={1}
+              spinnerLabel="PV"
+            />
           </div>
           <div class="min-w-32 flex-1 space-y-1">
             <Label for="add-monster-init">Iniciativa</Label>
@@ -104,7 +119,7 @@ function Corpo(props: {
               <NumberInput
                 id="add-monster-init"
                 value={initiative()}
-                onChange={setInitiative}
+                onChange={(valor) => setInitiative(preso(valor, 1, 99))}
                 min={1}
                 step={1}
                 spinnerLabel="iniciativa"
@@ -127,7 +142,7 @@ function Corpo(props: {
             <NumberInput
               id="add-monster-qtd"
               value={quantidade()}
-              onChange={setQuantidade}
+              onChange={(quantas) => setQuantidade(preso(quantas, 1, MAX_COPIAS))}
               min={1}
               max={MAX_COPIAS}
               step={1}
