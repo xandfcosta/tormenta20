@@ -320,6 +320,7 @@ export function SessionGmView(props: {
       />
       <EncounterPanel
         rt={props.rt}
+        members={props.members}
         open={tool() === 'encontros'}
         onOpenChange={(open) => setTool(open ? 'encontros' : null)}
       />

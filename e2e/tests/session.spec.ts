@@ -1128,6 +1128,88 @@ test.describe('Sessão ao vivo', () => {
   })
 
   /**
+   * COM O BESTIÁRIO ABERTO, A GAVETA DE MONTAR ENCONTRO CONTINUA INTEIRA
+   * (ALE-209).
+   *
+   * O defeito era de leiaute e tinha dois lados. O "Mandar para a iniciativa"
+   * era desenhado pelo COMPOSITOR, então abrir a lista o deixava encalhado no
+   * MEIO do painel; e a lista tinha teto fixo de 256px, não "o que sobrar",
+   * então o resto dela saía pela borda de baixo da janela — medido a 1440×900.
+   *
+   * É e2e porque as duas asserções são de LEIAUTE REAL: em jsdom todo elemento
+   * mede zero, a lista virtualizada não pinta linha nenhuma e um teste destes
+   * passaria verde sobre qualquer coisa. O grupo já vir preenchido, esse sim,
+   * é unitário (`party-defaults`) e de integração (`encounter-panel.test.tsx`).
+   */
+  test('abrir o bestiário não empurra o botão de mandar para fora da gaveta', async ({ page }) => {
+    // Janela ALTA de propósito: é onde o teto fixo se denuncia. A 1280×720 uma
+    // lista de 256px simplesmente cabe, e a asserção passaria verde sobre ele.
+    await page.setViewportSize({ width: 1920, height: 1080 })
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(cenaViva(page)).toBeVisible()
+
+    await abreConsulta(page, 'Encontros')
+    const gaveta = page.getByRole('dialog', { name: 'Montar encontro' })
+    await expect(gaveta).toBeVisible()
+    const mandar = gaveta.getByRole('button', { name: 'Mandar para a iniciativa' })
+
+    await gaveta.getByRole('button', { name: 'Adicionar criatura' }).click()
+    await expect(gaveta.getByRole('searchbox', { name: 'Buscar criatura' })).toBeVisible()
+    const primeira = gaveta.getByRole('button', { name: /^Adicionar ao encontro:/ }).first()
+    // A lista PINTA: com teto fixo num painel curto ela ficava sem linha
+    // nenhuma, e o mestre via só os filtros.
+    await expect(primeira).toBeVisible()
+
+    // As DUAS medidas que separam o leiaute novo do velho, e cada uma prende
+    // uma metade do defeito.
+    //
+    // A lista PEGA O QUE SOBRA: numa janela de 1080 ela passa folgada dos 256px
+    // que o `max-h-64` dava, e é isso que faz o resto dela parar de sair pela
+    // borda de baixo. E o botão de mandar fica ABAIXO dela, ancorado, em vez de
+    // encalhado no meio.
+    //
+    // Nenhuma das duas sozinha basta, e as duas foram provadas vermelhas por
+    // sabotagem separada: devolver o rodapé para cima da lista acusa a segunda
+    // (o botão a 416 com a lista terminando em 704), e devolver o `max-h-64`
+    // acusa a primeira.
+    const TETO_ANTIGO = 256
+    const geo = await gaveta.evaluate((el) => {
+      const painel = el.getBoundingClientRect()
+      const linha = el.querySelector('[data-index]') as HTMLElement | null
+      const caixaDaLista = linha?.closest('div[style*="height"]')?.parentElement as HTMLElement | null
+      const botao = Array.from(el.querySelectorAll('button')).find((b) =>
+        b.textContent?.includes('Mandar para a iniciativa'),
+      )
+      const l = caixaDaLista?.getBoundingClientRect()
+      const b = botao?.getBoundingClientRect()
+      return l && b
+        ? {
+            fundoDoPainel: Math.round(painel.bottom),
+            alturaDaLista: Math.round(l.height),
+            fundoDaLista: Math.round(l.bottom),
+            topoDoBotao: Math.round(b.top),
+          }
+        : null
+    })
+    expect(geo, 'não achei a lista ou o botão de mandar na gaveta').not.toBeNull()
+    expect(
+      geo?.alturaDaLista,
+      `a lista mede ${geo?.alturaDaLista}px numa janela de 1080 — teto fixo, não "o que sobrar"`,
+    ).toBeGreaterThan(TETO_ANTIGO)
+    expect(
+      geo?.topoDoBotao,
+      `o botão começa em ${geo?.topoDoBotao}, acima do fim da lista (${geo?.fundoDaLista}) — está encalhado no meio`,
+    ).toBeGreaterThanOrEqual((geo?.fundoDaLista ?? 0) - 1)
+
+    // E ele ATIVA depois que uma criatura entra no rascunho — o rodapé ancorado
+    // não pode ter virado enfeite desligado.
+    await primeira.click()
+    await expect(mandar).toBeEnabled()
+    await page.keyboard.press('Escape')
+    await expect(gaveta).toBeHidden()
+  })
+
+  /**
    * Cada verbo da linha da iniciativa ocupa a MESMA coluna em todas as linhas.
    *
    * O conjunto de botões muda por linha com razão — o olho só existe em linha
