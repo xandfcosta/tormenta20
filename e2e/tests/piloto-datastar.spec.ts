@@ -257,7 +257,7 @@ test.describe('O Hub (piloto Datastar)', () => {
     await page.getByRole('link', { name: 'Meus Heróis' }).focus()
 
     await page.keyboard.press('ArrowDown')
-    await expect(page.locator(':focus')).toHaveAttribute('href', '/campaigns')
+    await expect(page.locator(':focus')).toHaveAttribute('href', '/piloto/campanhas')
 
     await page.keyboard.press('ArrowUp')
     await expect(page.locator(':focus')).toHaveAttribute('href', '/characters')
@@ -372,36 +372,30 @@ test.describe('A cena de campanhas (piloto Datastar)', () => {
   })
 
   /**
-   * A busca é do SERVIDOR, e a regra tem de ser a MESMA da SPA — as duas telas
-   * convivem, e responder coisas diferentes para a mesma busca é o defeito que
-   * ninguém reporta e todo mundo sente.
+   * A busca é do SERVIDOR, e o guarda que comparava as DUAS telas lado a lado
+   * morreu com a virada (ALE-234): a tela da SPA não existe mais, então não há
+   * segundo lado para comparar.
    *
-   * "tauron" é o caso que expõe isso: ele casa três campanhas, e a terceira
-   * ("Segredos de Wynlla") não tem a palavra em lugar nenhum — casa por
-   * subsequência na sinopse. Medido, o `match-sorter` da SPA faz o mesmo.
+   * A garantia não ficou órfã — ela desceu para onde é mais barata e mais
+   * exata. Os sete casos de `busca_test.go` foram conferidos um a um rodando o
+   * `match-sorter` de verdade, incluindo o que mais surpreende: "tauron" casa
+   * "Segredos de Wynlla" por subsequência na sinopse, e a biblioteca faz igual.
+   * Comparar duas telas era a forma cara de afirmar isso enquanto as duas
+   * existiam.
+   *
+   * O que sobra aqui é o que só o navegador vê: que a busca de fato FILTRA a
+   * lista renderizada.
    */
-  test('a busca devolve o mesmo que a tela da SPA devolve', async ({ page }) => {
+  test('a busca filtra a lista que o servidor desenhou', async ({ page }) => {
     await page.goto('/piloto/campanhas')
+    const antes = await page.getByRole('option').count()
+    expect(antes, 'a seed precisa de mais de duas campanhas').toBeGreaterThan(2)
+
     await page.getByRole('searchbox', { name: 'Buscar campanha' }).fill('tauron')
     await expect(page.getByRole('option')).toHaveCount(3)
+    await expect(page.getByRole('option', { name: /A Queda de Tauron/ })).toBeVisible()
 
-    const noDatastar = await page.getByRole('option').allTextContents()
-
-    await page.goto('/campaigns')
-    await page.getByRole('searchbox', { name: 'Buscar campanha' }).fill('tauron')
-    await expect(page.getByRole('option')).toHaveCount(3)
-    const naSPA = await page.getByRole('option').allTextContents()
-
-    // Compara o CONJUNTO de campanhas, por nome contido — não o texto acessível
-    // inteiro. Duas tentativas anteriores falharam por diferença de FORMA e não
-    // de conteúdo (espaço entre o monograma e o nome; o papel na segunda
-    // linha), e um guarda que acusa formatação esconde o que ele existe para
-    // ver: se as duas telas concordam sobre QUAIS campanhas casam.
-    const contem = (xs: string[], nome: string) =>
-      xs.some((x) => x.replace(/\s+/g, ' ').includes(nome))
-    for (const nome of ['A Queda de Tauron', 'Segredos de Wynlla', 'Snapshot Test ALE-33']) {
-      expect(contem(noDatastar, nome), `${nome} faltou no Datastar`).toBe(true)
-      expect(contem(naSPA, nome), `${nome} faltou na SPA`).toBe(true)
-    }
+    await page.getByRole('searchbox', { name: 'Buscar campanha' }).fill('zzzzzz')
+    await expect(page.getByText(/Nenhuma campanha combina/)).toBeVisible()
   })
 })

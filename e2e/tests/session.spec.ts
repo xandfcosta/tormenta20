@@ -148,12 +148,16 @@ test.describe('Sessão ao vivo', () => {
 
   test('Campanhas → campanha → continuar a sessão (realtime conectado)', async ({ page }) => {
     await page.goto('/campaigns')
-    // O estado "ao vivo" chega DEPOIS da lista (fan-out separado de sessões) e
-    // troca os botões do livro. Esperar ele assentar antes de clicar — senão a
-    // ação some debaixo do cursor e o clique cai no botão vizinho (ALE-78).
-    await expect(page.getByRole('button', { name: /^Continuar a sessão/ })).toBeVisible()
+    // A espera pelo "ao vivo" SUMIU com a ALE-234, e a razão dela sumiu junto: o
+    // estado chegava depois da lista porque era uma fan-out separada de sessões,
+    // uma requisição por campanha. Agora ele vem na MESMA resposta, então não há
+    // instante em que os botões trocam debaixo do cursor (ALE-78).
+    //
+    // E as ações são LINKS na cena do servidor, não botões: abrir campanha é
+    // navegação, e um botão perderia o clique do meio e o "abrir em nova aba".
+    await expect(page.getByRole('link', { name: /^Continuar a sessão/ })).toBeVisible()
 
-    await page.getByRole('button', { name: /^Abrir campanha/ }).click()
+    await page.getByRole('link', { name: /^Abrir campanha/ }).click()
     await expect(page.getByRole('heading', { name: CAMPAIGN, level: 1 })).toBeVisible()
 
     await page.getByRole('button', { name: 'Continuar a sessão' }).click()

@@ -51,7 +51,12 @@ test.describe('Abrir e fechar uma campanha', () => {
     await page.goto(`${new URL(page.url()).pathname}?tab=config`)
     await page.getByRole('button', { name: /Excluir campanha/ }).click()
     await page.getByRole('dialog').getByRole('button', { name: 'Excluir' }).click()
-    await expect(page).toHaveURL(/\/campaigns$/)
+    // Volta para a LISTA, e o que se afirma é a lista — não a URL dela. Desde a
+    // ALE-234 a cena é do servidor e `/campaigns` encaminha para
+    // `/piloto/campanhas`; prender o teste ao endereço faria ele quebrar de novo
+    // quando o prefixo `/piloto` cair, sem que nada de verdade tivesse mudado.
+    await expect(page.getByRole('listbox', { name: 'Campanhas' })).toBeVisible()
+    await expect(page.getByRole('option', { name: new RegExp(name) })).toHaveCount(0)
   })
 })
 
