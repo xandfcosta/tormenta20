@@ -8,6 +8,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"log"
@@ -70,6 +71,10 @@ func httpServerFor(cfg api.Config, mux http.Handler) *http.Server {
 		Handler:           mux,
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       120 * time.Second,
+		// Dito com todas as letras porque o padrão do Go pode mudar de versão, e
+		// porque um telefone antigo na mesa negociando TLS 1.0 seria uma queda
+		// silenciosa de segurança. Ignorado quando não há TLS (ALE-118).
+		TLSConfig: &tls.Config{MinVersion: tls.VersionTLS12},
 	}
 }
 
@@ -87,7 +92,7 @@ func serve(ctx context.Context, cfg api.Config, mux http.Handler) error {
 	server := httpServerFor(cfg, mux)
 	falhou := make(chan error, 1)
 	go func() {
-		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err := escutar(server, cfg); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			falhou <- err
 		}
 	}()
@@ -108,6 +113,23 @@ func serve(ctx context.Context, cfg api.Config, mux http.Handler) error {
 		log.Printf("encerramento forçado: %v", err)
 	}
 	return nil
+}
+
+// escutar sobe o listener: HTTPS quando o par de certificados está configurado,
+// HTTP puro quando não (ALE-118). Os dois caminhos são o MESMO processo servindo
+// SPA, API e socket — o TLS não acrescenta um segundo runtime.
+//
+// Um pedido `http://` chegando numa porta com TLS recebe "Client sent an HTTP
+// request to an HTTPS server" do próprio net/http. Feio, mas VISÍVEL — que é o
+// oposto do que acontecia se a configuração caísse para HTTP em silêncio.
+func escutar(server *http.Server, cfg api.Config) error {
+	if !cfg.TLSEnabled() {
+		return server.ListenAndServe()
+	}
+	// Os caminhos vão aqui, e não pré-carregados no `TLSConfig`: assim o erro
+	// de um arquivo ausente ou ilegível NOMEIA o arquivo, e ele sobe pelo
+	// `log.Fatalf("listen: …")` do main.
+	return server.ListenAndServeTLS(cfg.TLSCertFile, cfg.TLSKeyFile)
 }
 
 // primeCatalogs loads the rules catalogs for the mutation validators, best
@@ -171,11 +193,14 @@ func buildMux(cfg api.Config, srv *api.Server) *http.ServeMux {
 // also prints the LAN addresses, because the players open the app from their own
 // machines and the host would otherwise have to go read `ip addr` (ALE-119).
 func announce(cfg api.Config) {
-	log.Printf("t20 %s server listening on :%s (db=%s)", cfg.AppEnv, cfg.Port, cfg.DatabasePath)
+	log.Printf("t20 %s server listening on :%s (%s, db=%s)", cfg.AppEnv, cfg.Port, cfg.Scheme(), cfg.DatabasePath)
+	if cfg.TLSEnabled() && !cfg.CookieSecure {
+		log.Print("  aviso: há TLS e COOKIE_SECURE=false — o cookie de sessão viaja sem a marca Secure")
+	}
 	if cfg.StaticDir == "" {
 		return
 	}
-	for _, url := range lanURLs(cfg.Port) {
+	for _, url := range lanURLs(cfg) {
 		log.Printf("  players can open %s", url)
 	}
 }
@@ -183,7 +208,11 @@ func announce(cfg api.Config) {
 // lanURLs lists this host's non-loopback IPv4 addresses as URLs. The server
 // binds every interface, so these already work — they are just not discoverable
 // from the log line above.
-func lanURLs(port string) []string {
+//
+// O esquema vem da config, e não é detalhe: este log É o endereço que o mestre
+// lê e repassa para a mesa. Com TLS ligado e `http://` impresso, os quatro
+// telefones batem num 400 e o sintoma parece do app (ALE-118).
+func lanURLs(cfg api.Config) []string {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		log.Printf("interfaces: %v — LAN address unknown", err)
@@ -195,7 +224,7 @@ func lanURLs(port string) []string {
 		if !ok || ipNet.IP.IsLoopback() || ipNet.IP.To4() == nil {
 			continue
 		}
-		urls = append(urls, fmt.Sprintf("http://%s:%s", ipNet.IP, port))
+		urls = append(urls, fmt.Sprintf("%s://%s:%s", cfg.Scheme(), ipNet.IP, cfg.Port))
 	}
 	return urls
 }
@@ -231,7 +260,7 @@ func serveMaybeCompressed(w http.ResponseWriter, r *http.Request, file string) {
 	// O `Content-Type` sai do nome ORIGINAL: o `ServeFile` o adivinharia pela
 	// extensão do irmão, e `application/octet-stream` faz o
 	// `WebAssembly.instantiateStreaming` recusar o wasm.
-	if ctype := mime.TypeByExtension(filepath.Ext(file)); ctype != "" {
+	if ctype := contentTypeFor(file); ctype != "" {
 		w.Header().Set("Content-Type", ctype)
 	}
 	// Sem `Vary`, um proxy no meio serviria a resposta comprimida para quem não
@@ -251,6 +280,31 @@ func serveMaybeCompressed(w http.ResponseWriter, r *http.Request, file string) {
 		return
 	}
 	http.ServeFile(w, r, file)
+}
+
+// tiposFora são as extensões que a tabela do `mime` do Go não conhece e que
+// este servidor precisa acertar. Uma tabela nossa, e não `mime.AddExtensionType`
+// no boot, porque o `mime` também lê o `/etc/mime.types` do HOST: o mesmo
+// binário responderia diferente em duas máquinas, e o teste passaria verde na
+// que tem o arquivo (ALE-118).
+var tiposFora = map[string]string{
+	// Sem isto o manifest sai como `text/plain`, adivinhado pelo CONTEÚDO. O
+	// Chromium engole isso — medido: servido como `text/plain` ele mesmo assim
+	// parseia o manifest inteiro, sem erro. O tipo entra aqui porque é o que a
+	// especificação exige (um tipo de JSON) e porque não é o Chrome que decide
+	// sozinho: quem depende do manifest é também o Safari e o Firefox, e um
+	// `text/plain` é a diferença entre "funciona" e "funciona neste navegador".
+	".webmanifest": "application/manifest+json",
+}
+
+// contentTypeFor devolve o tipo do arquivo pelo nome, preferindo a tabela da
+// casa à do sistema.
+func contentTypeFor(file string) string {
+	ext := filepath.Ext(file)
+	if ctype, ok := tiposFora[ext]; ok {
+		return ctype
+	}
+	return mime.TypeByExtension(ext)
 }
 
 // cacheControlFor decide por quanto tempo o navegador pode guardar (ALE-157).

@@ -783,4 +783,36 @@
   .scene-in {
     animation: scene-in 0.32s ease-out both;
   }
+
+  /* A gaveta lateral entra e sai com UM deslize, e nada mais (ALE-207).
+   *
+   * O `animate-in`/`animate-out` do tw-animate serve ao caso geral, e por isso
+   * o quadro `enter` anima TRÊS propriedades — `transform`, `opacity` e
+   * `filter` — e monta o eixo a partir de duas variáveis que NÃO se anulam
+   * entre pontos de quebra. Medido a 1920x1080 antes desta mudança: o
+   * `slide-in-from-bottom` da folha do telefone continuava valendo acima do
+   * `xl`, somava-se ao `xl:slide-in-from-right`, e a gaveta entrava na
+   * DIAGONAL, de `translate3d(100%, 100%, 0)` — 958px de percurso vertical
+   * numa janela de 1080. Aqui o quadro tem uma propriedade só, e quem escolhe
+   * o eixo é o componente, que escreve os DOIS em cada ponto de quebra.
+   *
+   * Declarativo de propósito: a regra global de `prefers-reduced-motion` no
+   * `@layer base` zera animação escrita em CSS, e `el.animate` passaria por
+   * baixo dela (ALE-174). */
+  @keyframes side-panel-slide-in {
+    from {
+      transform: translate3d(var(--side-panel-from-x, 0), var(--side-panel-from-y, 0), 0);
+    }
+  }
+  @keyframes side-panel-slide-out {
+    to {
+      transform: translate3d(var(--side-panel-from-x, 0), var(--side-panel-from-y, 0), 0);
+    }
+  }
+  .side-panel-slide[data-expanded] {
+    animation: side-panel-slide-in 0.15s ease;
+  }
+  .side-panel-slide[data-closed] {
+    animation: side-panel-slide-out 0.15s ease;
+  }
 }

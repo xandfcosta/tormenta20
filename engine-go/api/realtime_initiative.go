@@ -162,15 +162,44 @@ func (g *realtimeGateway) onSceneStart(sock *socket.Socket, args []any) {
 	})
 }
 
-// onSceneEnd (GM) desliga a cena, guardando a fila para a próxima.
+// onSceneEnd (GM) desliga a cena, guardando a fila para a próxima — e expira a
+// duração "cena" das fichas do grupo (ALE-220).
+//
+// Não usa o `mutateAndBroadcast`: além do estado, a mesa precisa do aviso de
+// que as FICHAS mudaram. Elas não estão no estado do rastreador, então sem ele
+// o efeito morto e o "usado 1/cena" ficariam na tela até alguém recarregar.
+// O aviso é o `session-rest` que a Recuperação já emite: no fio esse evento
+// significa "o servidor expirou o escopo X do grupo", que é exatamente o que
+// aconteceu aqui.
 func (g *realtimeGateway) onSceneEnd(sock *socket.Socket, args []any) {
 	ctx, ok := g.access(sock, args)
 	if !ok || !g.requireGm(sock, ctx.role) {
 		return
 	}
-	g.mutateAndBroadcast(sock, ctx, func() (*SessionRuntimeState, error) {
-		return g.s.sessions.endScene(ctx.sessionID)
-	})
+	state, err := g.endSceneForTable(sockData(sock).user, ctx.campaignID, ctx.sessionID)
+	if err != nil {
+		g.wsError(sock, err.Error())
+		return
+	}
+	g.emitSessionState(ctx.sessionID, state)
+	g.io.To(socket.Room(sessionRoomName(ctx.sessionID))).
+		Emit("session-rest", map[string]any{"sessionId": ctx.sessionID, "scope": "scene"})
+	ackOK(ctx.ack, stateForRole(ctx.role, state))
+}
+
+// endSceneForTable é o gesto "Encerrar cena" INTEIRO, sem socket: a duração
+// "cena" acaba para o grupo E a fila volta ao começo.
+//
+// A ordem importa e a recusa também. A expiração vem ANTES porque o estado
+// desligado é o que a mesa vê: desligar a cena e só então falhar deixaria o
+// mestre com a fila zerada e as bênçãos vivas — o defeito da ALE-220 outra vez,
+// agora com o botão parecendo ter funcionado. Falha aqui é falha do gesto
+// inteiro, e o mestre clica de novo.
+func (g *realtimeGateway) endSceneForTable(user AuthUser, campaignID, sessionID int64) (*SessionRuntimeState, error) {
+	if _, _, err := g.expirePartyScene(user, campaignID, sessionID); err != nil {
+		return nil, errors.New("Could not load campaign members")
+	}
+	return g.s.sessions.endScene(sessionID)
 }
 
 // onResetInitiative (GM) clears the tracker.

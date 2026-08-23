@@ -269,7 +269,7 @@ test.describe('Sessão ao vivo', () => {
 
     await page.getByRole('button', { name: 'Recuperar · cena' }).click()
 
-    await expect(page.getByText('Efeitos temporários de cena foram limpos.')).toBeVisible()
+    await expect(page.getByText('Os usos 1/cena e as posturas também saíram das fichas.')).toBeVisible()
 
     // A aba viva é o que estava em jogo, e a sonda tem de provar RESPOSTA: um
     // clique que só o main thread pode atender, e a tela mudando por causa
@@ -1136,7 +1136,14 @@ test.describe('Sessão ao vivo', () => {
     await page.getByRole('button', { name: /Trazer a iniciativa/ }).click()
     await page.getByRole('dialog').getByRole('button', { name: 'Todos' }).click()
     await page.getByRole('dialog').getByRole('button', { name: /^Trazer \d/ }).click()
-    await expect(page.getByText(/[1-9]\d* peças/)).toBeVisible()
+    // O sufixo do cabeçalho entra no locator porque "N peças" sozinho casa
+    // TAMBÉM o gatilho do "Trazer a iniciativa", que desde a ALE-204 conta as
+    // peças no rótulo ("Trazer 2 peças"). Os dois só coexistem quando a fila
+    // tem gente, então a colisão depende do que os testes ANTERIORES deixaram
+    // na sessão: isolado este teste passa, e como 71º da suíte ele estourava
+    // por ambiguidade. É a terceira vez que esta linha cai por prender algo que
+    // não é dela — as duas anteriores estão no comentário acima.
+    await expect(page.getByText(/[1-9]\d* peças · 1 quadrado/)).toBeVisible()
 
     // Duas asserções, e cada uma diz uma coisa: nada fora da janela sem
     // caminho, E nenhum painel rolando de lado. O defeito desta issue passava
@@ -1619,12 +1626,41 @@ test.describe('Sessão ao vivo', () => {
     // encontro, caminho que a ALE-198 não tocou. Medido: ~7ms depois do
     // clique, sem requisição na rede, com o catálogo já em cache. Está na
     // ALE-199; consertar lá é devolver "Bestiário" a esta lista.
+    // COMO SE FECHA depende de a consulta abrir gaveta ou não, e as duas
+    // metades foram aprendidas apanhando.
+    //
+    // 1. A partir de 1280 a gaveta é `fixed right-0` e o trilho mora na borda
+    //    direita: com ela aberta o botão do trilho fica DEBAIXO dela — medido,
+    //    a gaveta ocupa x 864–1280 e o botão está em 1217, e quem recebe o
+    //    clique é o conteúdo da gaveta. Vale igual na main; o teste só nunca
+    //    tropeçou porque clicava enquanto a gaveta ainda deslizava, e era uma
+    //    corrida com a animação. Fechar pelo ✕ não depende de tempo.
+    // 2. "Notas" NÃO abre gaveta neste formato: acima do degrau ela renderiza
+    //    inline, ao lado do mapa (`Show when={!railsFit()}`). Sem gaveta não há
+    //    ✕ — e sem gaveta também não há nada cobrindo o trilho, então ali o
+    //    próprio botão fecha.
+    //
+    // Que o trilho fique inalcançável com a gaveta aberta é achado de PRODUTO e
+    // não deste teste: o painel é não modal acima de 1280 justamente para o
+    // mestre seguir trabalhando atrás dele (ALE-75). Está registrado à parte.
     for (const consulta of ['Encontros', 'Catálogos', 'Notas'] as const) {
       await abreConsulta(page, consulta)
       await expect(
         trilhoDeConsultas(page).getByRole('button', { name: consulta, exact: true }),
       ).toHaveAttribute('aria-pressed', 'true')
-      await abreConsulta(page, consulta)
+
+      // O ✕ se chama "Fechar <título da gaveta>", e o título nem sempre é o
+      // rótulo do trilho — prender o VERBO sobrevive a renomear a gaveta.
+      const fechar = page.getByRole('dialog').getByRole('button', { name: /^Fechar / })
+      if (await fechar.count()) {
+        await fechar.first().click()
+        await expect(page.getByRole('dialog')).toHaveCount(0)
+      } else {
+        await abreConsulta(page, consulta)
+      }
+      await expect(
+        trilhoDeConsultas(page).getByRole('button', { name: consulta, exact: true }),
+      ).toHaveAttribute('aria-pressed', 'false')
     }
 
     const desanexos = await page.evaluate(
@@ -1793,7 +1829,7 @@ test.describe('Sessão ao vivo', () => {
     await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
 
     await page.getByRole('button', { name: 'Recuperar · cena' }).click()
-    await expect(page.getByText('Efeitos temporários de cena foram limpos.')).toBeVisible()
+    await expect(page.getByText('Os usos 1/cena e as posturas também saíram das fichas.')).toBeVisible()
 
     // A testemunha é o token BRUTO da casa, não o `--popover`. Comparar com
     // `--popover` parece mais direto e não prova nada: desde que a raiz virou

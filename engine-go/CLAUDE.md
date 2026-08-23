@@ -117,6 +117,32 @@ RECUSA — um `strings.Contains` a leria como aceitação.
 Sem os irmãos comprimidos o app continua funcionando, só mais pesado: ausência é
 caminho normal, não erro.
 
+## HTTPS termina NESTE processo (opcional)
+
+`TLS_CERT_FILE` + `TLS_KEY_FILE` preenchidos e o `ListenAndServeTLS` entra no
+lugar do `ListenAndServe` (ALE-118). Vazios nos dois — o padrão — nada muda.
+**Meio par derruba o boot** (`Config.validateTLS`, e ele roda em desenvolvimento
+também): cair para HTTP em silêncio é o pior dos mundos, porque quem escreve
+meio par liga `COOKIE_SECURE=true` junto e aí o navegador descarta o cookie de
+sessão — o login não conclui e não há erro em lugar nenhum.
+
+Terminar aqui, e não num proxy na frente, é o que mantém a decisão de um
+processo só. Quem terminar TLS fora deixa os dois caminhos vazios.
+
+O esquema do log vem da config (`Config.Scheme`), e isso não é cosmético: aquela
+linha É o endereço que o mestre repassa para a mesa.
+
+**Medido, não suposto (ALE-118):** com TLS o Chrome negocia **h2** para a
+página, e o socket.io continua subindo para `wss://` — o Go não anuncia o
+RFC 8441, então o navegador abre uma conexão HTTP/1.1 só para o upgrade. A
+pré-compressão (`.br`) atravessa o TLS e o h2 intacta. Nada disso precisou de
+mudança no gateway nem no `guardSocketOrigin`, que compara só o `Host` e é
+indiferente ao esquema.
+
+O que este repositório **não** decide é de onde vem o certificado — as duas
+saídas e o preço de cada uma estão no README, e nenhuma delas se executa de
+dentro do repositório.
+
 ## O boot confere o SCHEMA, não o `goose_db_version`
 
 A migração pode CONSTAR aplicada sem a tabela existir. Aconteceu: a

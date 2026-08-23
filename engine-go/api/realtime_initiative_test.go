@@ -217,3 +217,102 @@ func newSelfInitiativeFixture(t *testing.T) selfInitiativeFixture {
 		charID: charID, player: player, intruder: intruder,
 	}
 }
+
+// Encerrar a cena EXPIRA os efeitos de duração "cena" do grupo (ALE-220).
+//
+// O livro não deixa margem: "Cena. A habilidade dura uma cena inteira,
+// encerrando-se quando esse momento da história acaba" (p227), e o começo e o
+// fim de uma cena "são determinadas pelo andamento da história" (p11) — que é
+// exatamente o que o mestre declara ao clicar em Encerrar cena.
+//
+// O teste vai pelo `endSceneForTable` e não pelo socket porque é ele que faz o
+// gesto inteiro; o `onSceneEnd` acima só carrega transporte e autorização. E
+// afirma os DOIS lados: o de cena sai, o de dia FICA. Limpar demais aqui
+// apagaria a bênção que o grupo comprou para o dia todo, e ninguém veria.
+func TestEncerrarCenaExpiraOsEfeitosDeCenaDoGrupo(t *testing.T) {
+	f := newEndSceneFixture(t)
+
+	state, err := f.g.endSceneForTable(f.gm, f.campaignID, f.sessionID)
+	if err != nil {
+		t.Fatalf("encerrar a cena: %v", err)
+	}
+
+	if state.SceneActive {
+		t.Error("a cena continuou ligada")
+	}
+	if got := effectScopes(t, f.g.s, f.charID); len(got) != 1 || got[0] != "day" {
+		t.Errorf("sobraram os escopos %v na ficha do grupo, queria só [day]", got)
+	}
+}
+
+// E alcança TODA a ficha do grupo, não só quem está na fila: a bênção foi
+// lançada na cena e a cena acabou para os cinco, inclusive para quem o mestre
+// nunca chegou a pôr no rastreador.
+func TestEncerrarCenaAlcancaQuemNaoEstaNaFila(t *testing.T) {
+	f := newEndSceneFixture(t)
+	ausente := seedCharacter(t, f.g.s, f.player, "Ladino de fora", 10, 10, 2, 2)
+	seedMember(t, f.g.s, f.campaignID, ausente, "player")
+	seedEffect(t, f.g.s, ausente, "bencao", "scene")
+
+	if _, err := f.g.endSceneForTable(f.gm, f.campaignID, f.sessionID); err != nil {
+		t.Fatalf("encerrar a cena: %v", err)
+	}
+
+	if got := effectScopes(t, f.g.s, ausente); len(got) != 0 {
+		t.Errorf("a ficha fora da fila ficou com %v", got)
+	}
+}
+
+type endSceneFixture struct {
+	g          *realtimeGateway
+	gm         AuthUser
+	player     int64
+	campaignID int64
+	sessionID  int64
+	charID     int64
+}
+
+func newEndSceneFixture(t *testing.T) endSceneFixture {
+	t.Helper()
+	s := newTestServer(t)
+	gmID := seedUser(t, s, "mestre@t.com")
+	player := seedUser(t, s, "jogador@t.com")
+	campaignID := seedCampaign(t, s, gmID)
+	sessionID := seedSession(t, s, campaignID)
+	charID := seedCharacter(t, s, player, "Clérigo", 10, 10, 5, 5)
+	seedMember(t, s, campaignID, charID, "player")
+	seedEffect(t, s, charID, "bencao", "scene")
+	seedEffect(t, s, charID, "heroismo", "day")
+
+	g := &realtimeGateway{s: s}
+	if _, err := s.sessions.startScene(sessionID); err != nil {
+		t.Fatalf("iniciar a cena: %v", err)
+	}
+	// O Clérigo entra na FILA: sem ele lá, "quem não está na fila" seria todo
+	// mundo e o segundo teste não separaria nada.
+	if _, err := s.sessions.addInitiativeEntry(sessionID, charEntry("Clérigo", 14, charID)); err != nil {
+		t.Fatalf("pôr o Clérigo na fila: %v", err)
+	}
+	return endSceneFixture{
+		g: g, gm: AuthUser{ID: gmID, Email: "mestre@t.com"}, player: player,
+		campaignID: campaignID, sessionID: sessionID, charID: charID,
+	}
+}
+
+// Não alcançar as fichas do grupo ABORTA o gesto inteiro: a cena continua
+// ligada. Desligá-la assim mesmo devolveria o defeito da ALE-220 com o botão
+// parecendo ter funcionado — fila zerada na tela e as bênçãos vivas na ficha.
+func TestEncerrarCenaNaoDesligaACenaSeNaoAlcancouAsFichas(t *testing.T) {
+	f := newEndSceneFixture(t)
+	if _, err := f.g.s.db.Exec("DROP TABLE campaign_members"); err != nil {
+		t.Fatalf("derrubar a tabela: %v", err)
+	}
+
+	if _, err := f.g.endSceneForTable(f.gm, f.campaignID, f.sessionID); err == nil {
+		t.Fatal("encerrou sem ter conseguido alcançar as fichas do grupo")
+	}
+
+	if !f.g.s.sessions.getState(f.sessionID).SceneActive {
+		t.Error("a cena foi desligada mesmo assim")
+	}
+}

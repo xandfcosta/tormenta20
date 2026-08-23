@@ -64,6 +64,18 @@ type Config struct {
 	// dois DESLIGA o automático — a mesa é do dono, e ele pode não querer.
 	BackupEvery time.Duration
 	BackupKeep  int
+	// TLSCertFile e TLSKeyFile ligam o HTTPS NESTE processo (ALE-118). Vazios
+	// nos dois — o padrão — o servidor fala HTTP puro exatamente como antes.
+	//
+	// O TLS termina aqui, e não num nginx/Caddy na frente, porque a decisão
+	// registrada no `engine-go/CLAUDE.md` é um processo só servindo SPA, API e
+	// socket; pôr um proxy na frente contraria isso e precisa ser deliberado.
+	//
+	// Isto NÃO exclui o outro arranjo: quem terminar TLS fora (um túnel, um
+	// proxy) deixa estes dois vazios, mantém `COOKIE_SECURE=true` e continua
+	// funcionando — o processo segue falando HTTP para quem está na frente.
+	TLSCertFile string
+	TLSKeyFile  string
 	// StaticDir, when set, is the built frontend (frontend/dist) served by cmd/api in
 	// production: the server then owns the app + API + socket as a single binary and
 	// routes /api/* to the domain (no Vite to strip the prefix). Empty in dev, where
@@ -95,15 +107,24 @@ func LoadConfig() (Config, error) {
 		BackupEvery:  envDuration("BACKUP_EVERY", 24*time.Hour),
 		BackupKeep:   envInt("BACKUP_KEEP", 7),
 		CatalogPath:  env("CATALOG_PATH", "parity/_catalogs.json"),
+		TLSCertFile:  os.Getenv("TLS_CERT_FILE"),
+		TLSKeyFile:   os.Getenv("TLS_KEY_FILE"),
 		StaticDir:    env("STATIC_DIR", ""),
 	}, nil
 }
 
-// Validate refuses a production boot that would misbehave in silence. Only the
-// signing key qualifies today: empty or public, anyone who can reach the server
-// mints their own session cookie and is every user at once. Development stays
-// permissive on purpose — that is what makes it development.
+// Validate refuses a boot that would misbehave in silence. Em produção é a chave
+// de assinatura (vazia ou pública, qualquer um que alcance o servidor emite o
+// próprio cookie e é todo mundo de uma vez) e a lista de admins. Em QUALQUER
+// ambiente é o par de TLS pela metade — ver validateTLS. Fora disso o
+// desenvolvimento segue permissivo de propósito: é o que o faz desenvolvimento.
 func (c Config) Validate() error {
+	// ANTES do desvio de desenvolvimento: um par de TLS pela metade é erro de
+	// digitação em qualquer ambiente, e é justamente em desenvolvimento que
+	// alguém experimenta o HTTPS pela primeira vez.
+	if err := c.validateTLS(); err != nil {
+		return err
+	}
 	if c.AppEnv != EnvProduction {
 		return nil
 	}
@@ -120,6 +141,39 @@ func (c Config) Validate() error {
 		return fmt.Errorf("ADMIN_EMAILS is empty in %s — nobody could invite the players in", c.AppEnv)
 	}
 	return nil
+}
+
+// TLSEnabled reports whether this process terminates TLS itself.
+func (c Config) TLSEnabled() bool {
+	return c.TLSCertFile != "" && c.TLSKeyFile != ""
+}
+
+// Scheme is what goes before the address the players type. It exists so the
+// log line and the URL are the same decision: um servidor em HTTPS anunciando
+// `http://` manda a mesa inteira para um endereço que responde 400 (ALE-118).
+func (c Config) Scheme() string {
+	if c.TLSEnabled() {
+		return "https"
+	}
+	return "http"
+}
+
+// validateTLS recusa um par de TLS pela metade. Cair para HTTP em silêncio
+// seria o pior dos mundos: quem escreveu meio par ligou `COOKIE_SECURE=true`
+// junto, e aí o navegador DESCARTA o cookie de sessão — o login não conclui,
+// sem erro em lugar nenhum, e a tela só volta para o início (ALE-118).
+func (c Config) validateTLS() error {
+	if (c.TLSCertFile == "") == (c.TLSKeyFile == "") {
+		return nil
+	}
+	faltando, presente, valor := "TLS_KEY_FILE", "TLS_CERT_FILE", c.TLSCertFile
+	if c.TLSCertFile == "" {
+		faltando, presente, valor = "TLS_CERT_FILE", "TLS_KEY_FILE", c.TLSKeyFile
+	}
+	return fmt.Errorf(
+		"%s está vazio e %s=%q — o HTTPS precisa dos DOIS caminhos; deixe os dois vazios para servir HTTP",
+		faltando, presente, valor,
+	)
 }
 
 // IsAdmin reports whether email administers the table. Case-insensitive, which

@@ -143,3 +143,78 @@ func TestCORSOriginParsesAList(t *testing.T) {
 		})
 	}
 }
+
+// Meio par de TLS derruba o boot, em QUALQUER ambiente (ALE-118).
+//
+// Cair para HTTP em silêncio é o pior dos mundos: quem escreveu meio par ligou
+// `COOKIE_SECURE=true` junto, e aí o navegador DESCARTA o cookie de sessão. O
+// login não conclui, não há erro em lugar nenhum, e a tela só volta ao início —
+// e quem procura o defeito procura no login, não no `.env`.
+func TestValidateRefusesHalfConfiguredTLS(t *testing.T) {
+	casos := []struct {
+		nome, cert, key string
+		querErro        bool
+	}{
+		{nome: "os dois vazios é HTTP puro, o padrão", cert: "", key: "", querErro: false},
+		{nome: "o par inteiro é HTTPS", cert: "/etc/t20/cert.pem", key: "/etc/t20/key.pem", querErro: false},
+		{nome: "certificado sem chave", cert: "/etc/t20/cert.pem", key: "", querErro: true},
+		{nome: "chave sem certificado", cert: "", key: "/etc/t20/key.pem", querErro: true},
+	}
+	for _, tc := range casos {
+		t.Run(tc.nome, func(t *testing.T) {
+			// Desenvolvimento de propósito: é onde alguém experimenta HTTPS pela
+			// primeira vez, e onde a validação de produção não olharia.
+			cfg := Config{AppEnv: EnvDevelopment, TLSCertFile: tc.cert, TLSKeyFile: tc.key}
+
+			err := cfg.Validate()
+
+			if tc.querErro != (err != nil) {
+				t.Fatalf("Validate() = %v, querErro %v", err, tc.querErro)
+			}
+			if err == nil {
+				return
+			}
+			// O erro tem de nomear a variável QUE FALTA e mostrar o valor que
+			// está lá — sem isso o dono relê o `.env` inteiro procurando o typo.
+			if !strings.Contains(err.Error(), "TLS_CERT_FILE") || !strings.Contains(err.Error(), "TLS_KEY_FILE") {
+				t.Errorf("o erro tem de nomear as duas variáveis, veio %q", err)
+			}
+			if preenchido := tc.cert + tc.key; !strings.Contains(err.Error(), preenchido) {
+				t.Errorf("o erro tem de mostrar o caminho já escrito (%q), veio %q", preenchido, err)
+			}
+		})
+	}
+}
+
+// O esquema é derivado do par, e não uma segunda variável que possa discordar
+// dele: um `SCHEME=https` com TLS desligado seria mentira anunciada no log.
+func TestSchemeFollowsTheCertificatePair(t *testing.T) {
+	semTLS := Config{}
+	comTLS := Config{TLSCertFile: "/etc/t20/cert.pem", TLSKeyFile: "/etc/t20/key.pem"}
+
+	if got := semTLS.Scheme(); got != "http" {
+		t.Errorf("Scheme() = %q sem certificado, esperava http", got)
+	}
+	if got := comTLS.Scheme(); got != "https" {
+		t.Errorf("Scheme() = %q com o par completo, esperava https", got)
+	}
+}
+
+// O par vem do ambiente como qualquer outra configuração — sem isto o default
+// existe só no Go e ninguém o descobre.
+func TestLoadConfigReadsTheCertificatePair(t *testing.T) {
+	sandboxEnv(t, "TLS_CERT_FILE", "TLS_KEY_FILE")
+	t.Setenv("ENV_FILE", writeEnvFile(t, strings.Join([]string{
+		"TLS_CERT_FILE=/etc/t20/cert.pem",
+		"TLS_KEY_FILE=/etc/t20/key.pem",
+	}, "\n")))
+
+	cfg, err := LoadConfig()
+
+	if err != nil {
+		t.Fatalf("LoadConfig: %v", err)
+	}
+	if !cfg.TLSEnabled() {
+		t.Fatalf("TLSEnabled() falso com o par no arquivo: cert=%q key=%q", cfg.TLSCertFile, cfg.TLSKeyFile)
+	}
+}

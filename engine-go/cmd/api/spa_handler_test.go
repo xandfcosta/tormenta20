@@ -1,10 +1,12 @@
 package main
 
 import (
+	"crypto/tls"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"t20engine/api"
 	"testing"
 )
@@ -31,6 +33,7 @@ func dist(t *testing.T) string {
 	escrever("t20.wasm.gz", "gzip")
 	// Sem irmão comprimido: build que não rodou o passo de compressão.
 	escrever("app.css", "body{}")
+	escrever("manifest.webmanifest", `{"name":"Tormenta 20"}`)
 	return dir
 }
 
@@ -112,6 +115,21 @@ func TestClientRouteFallsBackToTheIndex(t *testing.T) {
 	}
 	if got := res.Header.Get("Content-Type"); got == "" {
 		t.Error("o index saiu sem Content-Type")
+	}
+}
+
+// O manifest sai com tipo de JSON (ALE-118).
+//
+// A tabela do `mime` do Go NÃO conhece `.webmanifest`, então sem a tabela da
+// casa o arquivo sai adivinhado pelo CONTEÚDO: `text/plain`. O Chromium engole
+// isso — foi medido, ele parseia o manifest mesmo assim —, e é justamente por
+// isso que só um teste segura este byte: nenhum navegador da nossa mesa
+// reclamaria, e a especificação pede um tipo de JSON.
+func TestTheManifestGoesOutAsJSON(t *testing.T) {
+	res := pedir(t, dist(t), "/manifest.webmanifest", "")
+
+	if got := res.Header.Get("Content-Type"); got != "application/manifest+json" {
+		t.Errorf("Content-Type %q, esperava application/manifest+json — a tabela do mime do Go não conhece .webmanifest e adivinha text/plain", got)
 	}
 }
 
@@ -199,5 +217,45 @@ func TestARaizDesviaParaOHubEORestoNao(t *testing.T) {
 	defer func() { _ = rota.Body.Close() }()
 	if rota.StatusCode != http.StatusOK {
 		t.Errorf("GET /characters/3 = %d — o desvio engoliu uma rota do cliente", rota.StatusCode)
+	}
+}
+
+// HTTPS na LAN: o que o processo faz quando o par de certificados existe
+// (ALE-118). O TLS termina AQUI, no mesmo processo que serve a SPA, a API e o
+// socket — é a decisão registrada no `engine-go/CLAUDE.md`, e um proxy na
+// frente a contrariaria.
+
+// O log É o endereço que o mestre lê e repassa para a mesa. Com TLS ligado e
+// `http://` impresso, os quatro telefones batem num 400 do próprio net/http e o
+// sintoma parece defeito do app.
+func TestTheAnnouncedURLFollowsTheScheme(t *testing.T) {
+	semTLS := lanURLs(api.Config{Port: "3001"})
+	comTLS := lanURLs(api.Config{Port: "3001", TLSCertFile: "/tmp/c.pem", TLSKeyFile: "/tmp/k.pem"})
+
+	if len(semTLS) == 0 || len(comTLS) == 0 {
+		t.Skip("máquina sem endereço IPv4 não-loopback: não há URL de LAN para anunciar")
+	}
+	for _, url := range semTLS {
+		if !strings.HasPrefix(url, "http://") {
+			t.Errorf("sem TLS o endereço saiu %q", url)
+		}
+	}
+	for _, url := range comTLS {
+		if !strings.HasPrefix(url, "https://") {
+			t.Errorf("com TLS o endereço saiu %q — a mesa inteira digitaria o esquema errado", url)
+		}
+	}
+}
+
+// O piso do TLS é dito com todas as letras: o padrão do Go pode mudar de versão,
+// e um aparelho antigo negociando TLS 1.0 seria uma queda silenciosa.
+func TestTheTLSFloorIsDeclared(t *testing.T) {
+	server := httpServerFor(api.Config{Port: "0"}, http.NewServeMux())
+
+	if server.TLSConfig == nil {
+		t.Fatal("sem TLSConfig: o piso do TLS passa a ser o do Go da vez, e ele muda de versão")
+	}
+	if got := server.TLSConfig.MinVersion; got != tls.VersionTLS12 {
+		t.Errorf("MinVersion %#04x, esperava TLS 1.2 (%#04x)", got, tls.VersionTLS12)
 	}
 }

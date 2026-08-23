@@ -194,7 +194,13 @@ describe('o ciclo da cena', () => {
     expect(rt.endScene).not.toHaveBeenCalled()
     // Encerrar e reiniciar parecem a mesma coisa; o que os separa é o que
     // sobrevive, e por isso a pergunta tem de dizer isso na cara.
-    expect(await screen.findByRole('dialog')).toHaveTextContent('CONTINUAM na lista')
+    const pergunta = await screen.findByRole('dialog')
+    expect(pergunta).toHaveTextContent('CONTINUAM na lista')
+    // E desde a ALE-220 encerrar também EXPIRA a duração "cena" das fichas do
+    // grupo, que é apagar dado e não é reversível. A confirmação que já existia
+    // tem de dizer o que se perde, senão o clique de sempre passou a custar as
+    // bênçãos da mesa inteira sem avisar.
+    expect(pergunta).toHaveTextContent('duração cena')
   })
 
   // O buraco que a especificação abria: encerrar GUARDA os combatentes, então
