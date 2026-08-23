@@ -1,0 +1,70 @@
+package api
+
+// A FOLHA EM BRANCO (ALE-246): abrir uma campanha nova.
+//
+// Ela é a mesma folha do grimório que a crônica que se lê — mesmo couro, mesma
+// virada de página —, só que vazia e com você segurando a pena. É por isso que
+// ela mora no `folhaDoTomo` e não numa casca comum.
+//
+// SEM Datastar, e a ausência é a mesma decisão da porta (ALE-229): é um
+// formulário que NAVEGA ao dar certo. `<form method="post">` faz isso desde
+// sempre, sem sinal, sem estado de cliente, e continua funcionando com o
+// JavaScript desligado. Sinal aqui só serviria para reimplementar o que o
+// navegador já faz.
+
+templ campanhaNova(v campanhaNovaView) {
+	@folhaDoTomo() {
+		// `m-auto`: uma folha em branco segura pouco, então o formulário fica no
+		// MEIO da página em vez de se agarrar ao topo de um retângulo vazio
+		// enorme numa tela grande. Com conteúdo mais alto as margens somem.
+		<div class="m-auto w-full max-w-2xl space-y-6">
+			@tituloDaFolha("Folha em branco", "Abrir nova campanha")
+			<form method="post" action="/piloto/campanhas/nova" class="space-y-4">
+				@campoDeTexto(campo{
+					Nome: "name", Label: "Nome", Valor: v.Nome,
+					Obrigatorio: true, TamanhoMaximo: nomeDeCampanhaMax,
+					Erros: v.Erros["name"],
+				})
+				@campoDeTextoLongo(campo{
+					Nome: "description", Label: "Descrição", Valor: v.Descricao,
+					TamanhoMaximo: descricaoDeCampanhaMax,
+					Erros:         v.Erros["description"],
+				}, 6)
+				if v.Aviso != "" {
+					<p class="text-sm text-destructive">{ v.Aviso }</p>
+				}
+				<div class="flex justify-end gap-2">
+					<a href="/piloto/campanhas" class={ classesDoBotao(varSecundaria, tamPadrao, "") }>Cancelar</a>
+					@botao(varPrimaria, tamPadrao, "", templ.Attributes{"type": "submit"}) {
+						Abrir campanha
+					}
+				</div>
+			</form>
+		</div>
+	}
+}
+
+// tituloDaFolha é a cabeça iluminada de uma folha do tomo: sobrancelha pequena,
+// título em versalete DOURADO e centrado, e um filete dourado embaixo.
+//
+// Portado do `TomeHeading` depois de comparar as duas telas lado a lado — a
+// minha primeira versão saiu alinhada à esquerda, na cor do texto comum e sem
+// filete, o que já não era a mesma página do mesmo livro.
+//
+// A consulta por ALTURA não é enfeite: num telefone deitado (~390px) a
+// sobrancelha some e o título encolhe, senão o cabeçalho sozinho come metade da
+// tela e o formulário começa abaixo da dobra. É `max-height` e não `landscape`
+// AQUI de propósito, ao contrário da folha — o que importa para o cabeçalho é
+// quanta altura sobra, inclusive com o teclado virtual aberto.
+templ tituloDaFolha(sobrancelha, titulo string) {
+	<header class="space-y-3 text-center [@media(max-height:520px)]:space-y-1.5">
+		<p class="text-2xs font-semibold uppercase tracking-[0.22em] text-muted-foreground [@media(max-height:520px)]:hidden">
+			{ sobrancelha }
+		</p>
+		<h1 class="font-display text-3xl uppercase leading-tight tracking-wide text-grimorio-gold sm:text-4xl [@media(max-height:520px)]:text-2xl">
+			<span aria-hidden="true" class="mr-2 text-grimorio-gold/60">✦</span>
+			{ titulo }
+		</h1>
+		<div aria-hidden="true" class="h-px w-full bg-gradient-to-r from-transparent via-grimorio-gold/40 to-transparent"></div>
+	</header>
+}

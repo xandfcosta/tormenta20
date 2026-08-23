@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"t20engine/db/sqlcgen"
@@ -203,14 +202,19 @@ func (s *Server) handleCreateCampaign(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &body) {
 		return
 	}
-	name := strings.TrimSpace(body.Name)
-	if name == "" || len([]rune(name)) > 120 {
-		writeValidationError(w, FieldErrorMap{"name": {"name must be between 1 and 120 characters"}})
+	name, err := nomeDeCampanha(body.Name)
+	if err != nil {
+		writeValidationError(w, FieldErrorMap{"name": {err.Error()}})
+		return
+	}
+	descricao, err := descricaoDeCampanha(body.Description)
+	if err != nil {
+		writeValidationError(w, FieldErrorMap{"description": {err.Error()}})
 		return
 	}
 	now := nowISO()
 	c, err := s.queries.CreateCampaign(r.Context(), sqlcgen.CreateCampaignParams{
-		Ownerid: currentUser(r).ID, Name: name, Description: trimOrNull(body.Description),
+		Ownerid: currentUser(r).ID, Name: name, Description: descricao,
 		Createdat: now, Updatedat: now,
 	})
 	if err != nil {
@@ -237,18 +241,23 @@ func (s *Server) handleUpdateCampaign(w http.ResponseWriter, r *http.Request) {
 	}
 	var set setBuilder
 	if body.Name != nil {
-		name := strings.TrimSpace(*body.Name)
-		if name == "" || len([]rune(name)) > 120 {
-			writeValidationError(w, FieldErrorMap{"name": {"name must be between 1 and 120 characters"}})
+		name, err := nomeDeCampanha(*body.Name)
+		if err != nil {
+			writeValidationError(w, FieldErrorMap{"name": {err.Error()}})
 			return
 		}
 		set.add("name = ?", name)
 	}
 	if body.Description != nil {
-		// Same helper as create: a whitespace-only description is NULL on both
-		// paths, or the client reads "" from one and null from the other for the
-		// very same input.
-		set.add("description = ?", nullableArg(trimOrNull(body.Description)))
+		// Mesma regra do criar, e agora literalmente a mesma FUNÇÃO: descrição
+		// de puros espaços vira NULL nos dois caminhos, senão o cliente lê ""
+		// de um e null do outro para a mesma entrada.
+		descricao, err := descricaoDeCampanha(body.Description)
+		if err != nil {
+			writeValidationError(w, FieldErrorMap{"description": {err.Error()}})
+			return
+		}
+		set.add("description = ?", nullableArg(descricao))
 	}
 	if set.empty() {
 		writeError(w, http.StatusBadRequest, "No fields to update")

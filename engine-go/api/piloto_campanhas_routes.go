@@ -3,6 +3,9 @@ package api
 import (
 	"net/http"
 	"net/url"
+	"strconv"
+
+	"t20engine/db/sqlcgen"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
@@ -17,6 +20,8 @@ import (
 
 func (s *Server) rotasDeCampanhas(r chi.Router) {
 	r.Get("/campanhas", s.handleCampanhas)
+	r.Get("/campanhas/nova", s.handleCampanhaNova)
+	r.Post("/campanhas/nova", s.handleCampanhaNovaPost)
 }
 
 func (s *Server) handleCampanhas(w http.ResponseWriter, r *http.Request) {
@@ -82,4 +87,68 @@ func urlDeCampanhas(busca, papel string) string {
 		return "/piloto/campanhas"
 	}
 	return "/piloto/campanhas?" + q.Encode()
+}
+
+// ── a folha em branco: abrir campanha (ALE-246) ──────────────────────────────
+
+// handleCampanhaNova desenha o formulário vazio.
+func (s *Server) handleCampanhaNova(w http.ResponseWriter, r *http.Request) {
+	s.escreveFolhaNova(w, r, http.StatusOK, campanhaNovaView{})
+}
+
+// handleCampanhaNovaPost cria e vai para a crônica recém-aberta.
+//
+// A recusa REDESENHA a folha com o que foi digitado e o erro no campo — não
+// redireciona. Redirecionar perderia o texto, e a descrição é o campo caro de
+// reescrever. Status 422 e não 200 porque a resposta É uma recusa, e o
+// navegador não trata os dois igual no histórico.
+func (s *Server) handleCampanhaNovaPost(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		s.escreveFolhaNova(w, r, http.StatusBadRequest, campanhaNovaView{Aviso: avisoInterno})
+		return
+	}
+	v := campanhaNovaView{
+		Nome:      r.PostFormValue("name"),
+		Descricao: r.PostFormValue("description"),
+		Erros:     FieldErrorMap{},
+	}
+	// A MESMA regra da rota JSON, e não uma cópia dela — ver `campanha_regras.go`.
+	nome, err := nomeDeCampanha(v.Nome)
+	if err != nil {
+		v.Erros["name"] = []string{"O nome é obrigatório e cabe em 120 caracteres."}
+	}
+	descricao, errDesc := descricaoDeCampanha(&v.Descricao)
+	if errDesc != nil {
+		v.Erros["description"] = []string{"A descrição cabe em 2000 caracteres."}
+	}
+	if len(v.Erros) > 0 {
+		s.escreveFolhaNova(w, r, http.StatusUnprocessableEntity, v)
+		return
+	}
+
+	agora := nowISO()
+	c, err := s.queries.CreateCampaign(r.Context(), sqlcgen.CreateCampaignParams{
+		Ownerid: currentUser(r).ID, Name: nome, Description: descricao,
+		Createdat: agora, Updatedat: agora,
+	})
+	if err != nil {
+		v.Aviso = avisoInterno
+		s.escreveFolhaNova(w, r, http.StatusInternalServerError, v)
+		return
+	}
+	// 303 e não 302: depois de um POST, o `See Other` é o que garante que o
+	// navegador siga com GET. Sem ele, recarregar a crônica reenviaria o
+	// formulário e abriria uma segunda campanha igual.
+	http.Redirect(w, r, "/campaigns/"+strconv.FormatInt(c.ID, 10), http.StatusSeeOther)
+}
+
+func (s *Server) escreveFolhaNova(w http.ResponseWriter, r *http.Request, status int, v campanhaNovaView) {
+	s.escrevePagina(w, r, status, paginaPiloto{
+		Titulo: "Abrir nova campanha",
+		// `cascaDensa`: a tela da SPA usa o cabeçalho compacto com o "‹ Voltar",
+		// e sem ele a folha nasce sem saída visível — o Esc existe, mas atalho
+		// não é a única porta.
+		Forma:  cascaDensa,
+		Voltar: "/piloto/campanhas",
+	}, campanhaNova(v))
 }
