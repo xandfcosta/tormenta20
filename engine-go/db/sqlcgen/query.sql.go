@@ -1262,6 +1262,32 @@ func (q *Queries) IsCharacterMember(ctx context.Context, arg IsCharacterMemberPa
 	return ismember, err
 }
 
+const isGmAtLiveTableForCharacter = `-- name: IsGmAtLiveTableForCharacter :one
+SELECT EXISTS (
+  SELECT 1 FROM campaign_members m
+  JOIN campaigns c ON c.id = m.campaignId
+  JOIN sessions s ON s.campaignId = m.campaignId
+  WHERE m.characterId = ?1
+    AND c.ownerId = ?2
+    AND s.status = 'active'
+) AS gmAtLiveTable
+`
+
+type IsGmAtLiveTableForCharacterParams struct {
+	CharacterId int64 `json:"characterId"`
+	OwnerId     int64 `json:"ownerId"`
+}
+
+// ALE-223: the caller OWNS a campaign that this character belongs to AND that
+// campaign has a session running. GM of campaign A with a live session in
+// campaign B does not count -- the two joins are on the same membership row.
+func (q *Queries) IsGmAtLiveTableForCharacter(ctx context.Context, arg IsGmAtLiveTableForCharacterParams) (bool, error) {
+	row := q.db.QueryRowContext(ctx, isGmAtLiveTableForCharacter, arg.CharacterId, arg.OwnerId)
+	var gmatlivetable bool
+	err := row.Scan(&gmatlivetable)
+	return gmatlivetable, err
+}
+
 const listActiveEffectsByCharacter = `-- name: ListActiveEffectsByCharacter :many
 SELECT id, catalogId, scope, modifiers, createdAt
 FROM active_effects WHERE characterId = ? ORDER BY id ASC

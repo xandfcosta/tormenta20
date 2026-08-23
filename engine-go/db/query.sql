@@ -500,3 +500,16 @@ WHERE r.campaignId IN (SELECT m.campaignId FROM campaign_members m WHERE m.chara
 GROUP BY r.rule
 HAVING COUNT(DISTINCT r.campaignId) = (SELECT COUNT(*) FROM campaign_members m2 WHERE m2.characterId = sqlc.arg('characterId'))
 ORDER BY r.rule;
+
+-- name: IsGmAtLiveTableForCharacter :one
+-- ALE-223: the caller OWNS a campaign that this character belongs to AND that
+-- campaign has a session running. GM of campaign A with a live session in
+-- campaign B does not count -- the two joins are on the same membership row.
+SELECT EXISTS (
+  SELECT 1 FROM campaign_members m
+  JOIN campaigns c ON c.id = m.campaignId
+  JOIN sessions s ON s.campaignId = m.campaignId
+  WHERE m.characterId = sqlc.arg('characterId')
+    AND c.ownerId = sqlc.arg('ownerId')
+    AND s.status = 'active'
+) AS gmAtLiveTable;

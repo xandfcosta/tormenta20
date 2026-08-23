@@ -13,6 +13,7 @@ import { SessionPlayerView } from '@/pages/sessions/session-player-view'
 import { createCharacterVitalsSync } from '@/features/session-tracker/character-vitals-sync'
 import { PresenceChips } from '@/features/session-tracker/presence-chips'
 import { myCharacterIdsOf } from '@/features/session-tracker/tracker-rules'
+import { usePowerUses } from '@/shared/stores/power-uses-context'
 import { createTurnCue } from '@/features/session-tracker/turn-cue'
 import { createSessionSocket } from '@/shared/realtime/realtime'
 import { createSfx, createSfxToggle } from '@/shared/lib/sfx'
@@ -53,6 +54,7 @@ export function SessionTrackerPage() {
   const settledCampaign = () => settledQuery(campaign)
 
   const isGm = () => settledCampaign()?.role === 'gm'
+  const powerUses = usePowerUses()
   const myCharacterIds = createMemo(() =>
     myCharacterIdsOf(settledQuery(members) ?? [], settledQuery(me)?.id),
   )
@@ -75,7 +77,7 @@ export function SessionTrackerPage() {
       ),
     sfx,
   })
-  createRestCue(rt)
+  createRestCue(rt, myCharacterIds, powerUses)
   // A ficha e o card do grupo seguem o combate: sem isto o mestre bate -5 e vê
   // o número antigo a 300px de distância (ALE-122).
   createCharacterVitalsSync(rt, campaignId)
@@ -173,12 +175,33 @@ function announce(fire: () => void): void {
   queueMicrotask(fire)
 }
 
-/** The GM's rest broadcast → a toast for everyone in the room. */
-function createRestCue(rt: ReturnType<typeof createSessionSocket>) {
+/**
+ * O descanso do mestre chegando à tela de quem está na sala: o aviso, e o zerar
+ * dos contadores de uso por cena/dia das fichas de quem está olhando.
+ *
+ * O zerar é novo e conserta um buraco que ninguém via (ALE-223). Os efeitos de
+ * escopo o SERVIDOR já expirava para a mesa inteira, mas "usado 1/cena" é
+ * contador LOCAL, e nada do lado do jogador o tocava quando o mestre
+ * descansava. O botão "Encerrar cena" da ficha mascarava isso: o jogador
+ * acabava zerando por conta própria. Com ele fora da ficha, este é o único
+ * caminho — e ele só alcança as fichas de QUEM ESTÁ OLHANDO, que é o certo:
+ * o contador é do navegador de cada um.
+ */
+function createRestCue(
+  rt: ReturnType<typeof createSessionSocket>,
+  myCharacterIds: () => ReadonlySet<number>,
+  powerUses: ReturnType<typeof usePowerUses>,
+) {
   createEffect(() => {
     const scope = rt.restFlash()
     if (!scope) return
     const day = scope === 'day'
+    // Fora do `announce`: o efeito colateral no estado local acontece AGORA, e
+    // só o toast precisa do microtask que separa os dois ciclos reativos.
+    for (const id of myCharacterIds()) {
+      if (day) powerUses.resetDay(id)
+      else powerUses.resetScene(id)
+    }
     announce(() =>
       toast.success(`Descanso de ${day ? 'dia' : 'cena'}`, {
         description: day
