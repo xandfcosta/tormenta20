@@ -46,10 +46,32 @@ type Deslize = {
  * percurso viraria uma corrida com o relógio do compositor. Pausado, o
  * `getComputedStyle` resolve o `translate3d(100%, …)` em pixels exatos.
  */
+/**
+ * A consulta usada para medir o deslize é CATÁLOGOS e não o bestiário, e isso
+ * não é gosto: montar a lista do bestiário DESANEXA a cena (ALE-199, a quinta
+ * reincidência da família ALE-95). A gaveta é derrubada e remontada no meio da
+ * abertura, e o `animationstart` do elemento que morreu não chega ao gravador —
+ * o teste então acusa "nenhuma animação" sobre um app que animou, de forma
+ * INTERMITENTE, conforme a remontagem ganhe ou perca a corrida. Medido: com o
+ * bestiário, dois dos três testes de deslize alternavam entre verde e vermelho
+ * a cada rodada.
+ *
+ * É a mesma razão pela qual o `percorrer as consultas não desanexa a cena`, no
+ * `session.spec.ts`, já lista só Encontros, Catálogos e Notas. Consertar a
+ * ALE-199 é o que devolve o bestiário às duas listas.
+ */
 async function gravaODeslize(page: Page): Promise<void> {
   await page.addInitScript(() => {
-    const gravadas: unknown[] = []
-    ;(window as unknown as { __deslizes: unknown[] }).__deslizes = gravadas
+    const janela = window as unknown as { __deslizes?: unknown[]; __gravando?: boolean }
+    // REUSA o array se ele já existe, e registra o ouvinte UMA vez só.
+    // `addInitScript` roda a cada documento novo: recriar o array aqui deixaria
+    // `window.__deslizes` apontando para um vazio enquanto um ouvinte de antes
+    // continua empurrando para o array ÓRFÃO da execução anterior — e o teste
+    // lê "nenhuma animação" sobre um app que animou.
+    const gravadas: unknown[] = janela.__deslizes ?? []
+    janela.__deslizes = gravadas
+    if (janela.__gravando) return
+    janela.__gravando = true
 
     // `getAnimations` devolve CSSTransition junto, e contar o TAMANHO da lista
     // passaria verde com a animação desligada (ALE-174). O que se afirma aqui é
@@ -92,10 +114,20 @@ async function gravaODeslize(page: Page): Promise<void> {
 }
 
 async function oDeslize(page: Page): Promise<Deslize> {
+  // ESPERA a gravação em vez de ler uma vez. O diálogo fica visível antes de o
+  // `animationstart` ser despachado, e a leitura imediata era uma corrida: por
+  // rodada exatamente UM dos três testes de deslize caía com "nenhuma
+  // animação", e qual deles variava. Se a animação de fato não existir, isto
+  // ainda falha — só que no fim do tempo, e não por chegar cedo demais.
+  await expect
+    .poll(
+      () => page.evaluate(() => (window as unknown as { __deslizes: unknown[] }).__deslizes.length),
+      { message: 'a gaveta abriu sem animação nenhuma' },
+    )
+    .toBeGreaterThan(0)
   const gravadas = await page.evaluate(
     () => (window as unknown as { __deslizes: Deslize[] }).__deslizes,
   )
-  expect(gravadas, 'a gaveta abriu sem animação nenhuma').not.toHaveLength(0)
   // A PRIMEIRA é a abertura que o gesto do teste provocou; um remonte posterior
   // (HMR) empilharia outras atrás, e elas dizem a mesma coisa.
   return gravadas[0]
@@ -121,8 +153,8 @@ test.describe('As gavetas do mestre', () => {
     await page.goto('/campaigns/1/sessions/4')
     await expect(cenaViva(page)).toBeVisible()
 
-    await abreConsulta(page, 'Bestiário')
-    await expect(page.getByRole('dialog', { name: 'Bestiário' })).toBeVisible()
+    await abreConsulta(page, 'Catálogos')
+    await expect(page.getByRole('dialog', { name: 'Catálogos' })).toBeVisible()
 
     const deslize = await oDeslize(page)
     expectSoODeslize(deslize)
@@ -156,8 +188,8 @@ test.describe('As gavetas do mestre', () => {
     await page.goto('/campaigns/1/sessions/4')
     await expect(cenaViva(page)).toBeVisible()
 
-    await abreConsulta(page, 'Bestiário')
-    await expect(page.getByRole('dialog', { name: 'Bestiário' })).toBeVisible()
+    await abreConsulta(page, 'Catálogos')
+    await expect(page.getByRole('dialog', { name: 'Catálogos' })).toBeVisible()
 
     const deslize = await oDeslize(page)
     expectSoODeslize(deslize)
