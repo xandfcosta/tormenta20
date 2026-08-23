@@ -1,0 +1,265 @@
+package api
+
+import "fmt"
+
+// O HUB desenhado (ALE-231).
+//
+// Três coisas nesta tela respondem, cada uma, a uma pergunta que a migração
+// tinha em aberto:
+//
+//  1. O TECLADO. As setas andam no menu, e nada aqui as implementa: o menu só
+//     DECLARA a forma dele (`data-nav-region`, `data-nav-layout`) e o driver —
+//     o mesmo `scene-nav.ts` da SPA, servido por `cena.js` — lê isso do DOM.
+//     Um DOM vindo do servidor é um DOM.
+//  2. O POPOVER do rodapé, que era Kobalte, é a Popover API NATIVA. Foco,
+//     dispensa por clique fora, `Esc` e camada de topo vêm do navegador; o que
+//     sobra de JavaScript é posicionar, porque a top layer sai do fluxo.
+//  3. O SLIDER de volume, que era Kobalte, é `<input type="range">`. Teclado e
+//     leitor de tela de graça, e melhores.
+
+templ hub(v hubView) {
+	@menuDoHub(v)
+	@rodapeDoHub(v)
+	if v.EhAdmin {
+		// O diálogo acompanha a ENTRADA que o abre. Desenhá-lo sempre punha o
+		// título "Convidar jogador" e um botão de cunhar no HTML de quem não
+		// administra — marcação morta, e uma tela dizendo o que ela não faz. O
+		// servidor recusaria de todo jeito; o que se conserta aqui é a tela.
+		@dialogoDeConvite()
+	}
+}
+
+// menuDoHub é o menu principal. `data-nav-region` + `data-nav-layout` são o
+// contrato com o driver de teclado — o menu declara a forma e nunca importa o
+// driver, exatamente como na SPA.
+templ menuDoHub(v hubView) {
+	<nav
+		aria-label="Menu principal"
+		data-nav-region="menu"
+		data-nav-layout="column"
+		class="mx-auto mt-10 flex w-full max-w-md flex-col gap-2.5"
+	>
+		@itemDoMenu("Users2", "Meus Heróis", "/characters", false)
+		@itemDoMenu("Scroll", "Campanhas", "/campaigns", false)
+		@itemDoMenu("Wand2", "Ferramentas do Mestre", "/gm", false)
+		if v.Viva != nil {
+			// Só aparece com partida rolando — o "Continue" de um jogo. Mestre e
+			// jogador retomam a MESMA tela.
+			@itemDoMenu("PlayCircle", "Continuar sessão",
+				fmt.Sprintf("/campaigns/%d/sessions/%d", v.Viva.CampaignID, v.Viva.SessionID), true)
+		}
+	</nav>
+}
+
+// itemDoMenu é um `<a>` de verdade e não um `<button>` com JavaScript: cada
+// entrada é NAVEGAÇÃO, e um botão perderia o clique do meio, o "abrir em nova
+// aba" e o menu de contexto que o navegador já dá.
+//
+// Os `data-cue-*` são o gancho dos sons: o `cena.js` escuta por DELEGAÇÃO num
+// ouvinte só, porque o HTML pode ser remendado a qualquer tique e ouvinte preso
+// a nó morre no remendo.
+templ itemDoMenu(icone_, rotulo, destino string, temProximo bool) {
+	<a
+		href={ templ.SafeURL(destino) }
+		data-nav-item
+		data-cue-hover
+		data-cue-select
+		class="grimorio-menu-item group flex min-h-11 w-full items-center gap-3 rounded-none px-4 py-3 text-left font-heading text-lg tracking-wide text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+	>
+		<span aria-hidden="true" class="text-sm text-grimorio-crimson-bright">▸</span>
+		@icone(icone_, "size-5 text-grimorio-gold")
+		<span class="flex-1">{ rotulo }</span>
+		if temProximo {
+			<span aria-hidden="true" class="text-sm text-grimorio-gold">►</span>
+		}
+	</a>
+}
+
+// rodapeDoHub é a tira de identidade, com o menu rápido do jogador.
+templ rodapeDoHub(v hubView) {
+	<footer class="mx-auto mt-auto flex w-full max-w-md border-t border-grimorio-iron pt-4">
+		<button
+			type="button"
+			popovertarget="menu-do-jogador"
+			aria-label={ "Menu de " + v.Nome }
+			data-cue-hover
+			class="group flex flex-1 items-center gap-3 rounded-none p-1 text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>
+			<span
+				aria-hidden="true"
+				class="grid size-10 place-items-center rounded-full border-2 border-grimorio-iron-light font-heading font-bold text-grimorio-gold transition-colors group-hover:border-grimorio-gold"
+			>
+				{ v.Inicial }
+			</span>
+			<span class="min-w-0 flex-1 truncate font-heading tracking-wide text-foreground">{ v.Nome }</span>
+			@icone("Settings", "size-4 text-muted-foreground transition-colors group-hover:text-grimorio-gold")
+		</button>
+		@menuDoJogador(v)
+	</footer>
+}
+
+// menuDoJogador é o popover NATIVO.
+//
+// O `position: fixed` com `margin: 0` é obrigatório: a top layer ignora o
+// contexto de posicionamento do pai, e o preflight do Tailwind não zera a
+// margem do popover como zera a do `<dialog>`. Quem escreve as coordenadas é o
+// `cena.js`, no `beforetoggle`.
+//
+// Os sinais aqui são estado de INTERAÇÃO (o rótulo do som, a visibilidade do
+// slider), não da aplicação — e nascem no `data-init` lendo a preferência deste
+// aparelho. Não há lampejo de rótulo errado porque o menu começa FECHADO.
+templ menuDoJogador(v hubView) {
+	<div
+		id="menu-do-jogador"
+		popover
+		data-signals="{som: false, volume: 100}"
+		data-init="const p = cena.preferencias(); $som = p.som; $volume = p.volume"
+		class="fixed m-0 w-56 border border-grimorio-iron bg-grimorio-panel-raised p-1.5 text-foreground shadow-lg"
+	>
+		<button type="button" data-on:click="$som = cena.som()" class={ classeDoItemRapido(false) }>
+			<span data-show="$som">@icone("Volume2", "size-4")</span>
+			<span data-show="!$som">@icone("VolumeX", "size-4")</span>
+			<span data-text="$som ? 'Som ligado' : 'Som desligado'"></span>
+		</button>
+		// O slider só existe com o som ligado: slider sobre o mudo é controle
+		// morto, e o que ele resolve é o sino do "Sua vez" alto demais (ALE-180).
+		<div data-show="$som" class="px-2 pb-2 pt-1">
+			<label for="volume" class="flex justify-between text-xs text-muted-foreground">
+				Volume
+				<span data-text="$volume + '%'"></span>
+			</label>
+			<input
+				id="volume"
+				type="range"
+				min="0"
+				max="100"
+				data-bind:volume
+				data-on:input="cena.volume($volume)"
+				class="mt-1 w-full accent-grimorio-gold"
+			/>
+		</div>
+		// Tela cheia some onde o navegador não tem a API — o iPhone é o caso, e
+		// item morto é pior que item ausente. Quem responde é o navegador, então
+		// quem esconde é o cliente: `data-show`, e não um `if` no servidor.
+		<button
+			type="button"
+			data-show="cena.temTelaCheia()"
+			data-on:click="$cheia = cena.telaCheia()"
+			data-signals="{cheia: false}"
+			class={ classeDoItemRapido(false) }
+		>
+			<span data-show="!$cheia">@icone("Maximize", "size-4")</span>
+			<span data-show="$cheia">@icone("Minimize", "size-4")</span>
+			<span data-text="$cheia ? 'Sair da tela cheia' : 'Tela cheia'"></span>
+		</button>
+		if v.EhAdmin {
+			// Desenhado só para admin, e isso é UX: quem chegar na mão leva 403 do
+			// servidor, que é onde a fronteira mora (ALE-120).
+			<button
+				type="button"
+				data-on:click="$convidar.showModal()"
+				class={ classeDoItemRapido(false) }
+			>
+				@icone("UserPlus", "size-4")
+				<span>Convidar jogador</span>
+			</button>
+			<a href="/piloto/admin" class={ classeDoItemRapido(false) }>
+				@icone("ShieldCheck", "size-4")
+				<span>Administração</span>
+			</a>
+		}
+		<form method="post" action="/piloto/sair">
+			<button type="submit" class={ classeDoItemRapido(true) }>
+				@icone("LogOut", "size-4")
+				<span>Sair</span>
+			</button>
+		</form>
+	</div>
+}
+
+// classeDoItemRapido: uma linha do menu rápido. Em função e não repetida sete
+// vezes porque a lista de classes é longa e uma cópia divergente é invisível.
+func classeDoItemRapido(perigo bool) string {
+	base := "flex w-full items-center gap-2.5 rounded-none px-2.5 py-2 text-left font-heading text-sm tracking-wide transition-colors hover:bg-accent focus-visible:bg-accent outline-none"
+	if perigo {
+		return juntar(base, "text-grimorio-crimson-bright")
+	}
+	return juntar(base, "text-foreground")
+}
+
+// dialogoDeConvite cunha o link de conta (ALE-120): o admin gera, entrega, e
+// quem recebe escolhe a própria senha — o admin nunca vê senha nenhuma.
+//
+// O link chega por remendo do servidor (`#convite-link`), então ele NÃO passa
+// por sinal: um token de uso único em estado de cliente viajaria de volta ao
+// servidor em toda requisição seguinte da página, que é a mesma razão pela qual
+// a senha ficou fora dos sinais na ALE-229.
+templ dialogoDeConvite() {
+	<dialog
+		id="convidar"
+		data-ref="convidar"
+		aria-labelledby="convidar-titulo"
+		class="m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-foreground backdrop:bg-black/60"
+	>
+		<h2 id="convidar-titulo" class="flex items-center gap-2 font-heading text-base">
+			@icone("UserPlus", "size-4 text-grimorio-gold")
+			Convidar jogador
+		</h2>
+		<p class="mt-2 text-sm text-muted-foreground">
+			Gere um link e envie para quem vai entrar. Ele vale uma vez só, expira em 7 dias, e a pessoa escolhe a própria senha.
+		</p>
+		<div id="convite-link" class="mt-3"></div>
+		<div class="mt-4 flex justify-end gap-2">
+			<form method="dialog">
+				@botao(varSecundaria, tamPadrao, "", templ.Attributes{"type": "submit"}) {
+					Fechar
+				}
+			</form>
+			@botao(varPrimaria, tamPadrao, "", templ.Attributes{
+				"type": "button", "data-on:click": "@post('/piloto/convites')",
+				"data-indicator:gerando": true, "data-attr:disabled": "$gerando",
+			}) {
+				Gerar convite
+			}
+		</div>
+	</dialog>
+}
+
+// conviteGerado é o remendo que volta do POST, e ele carrega o CAMINHO do
+// convite — nunca a URL inteira.
+//
+// A origem é do NAVEGADOR e não do servidor, e isso é conserto de um defeito
+// medido: com o `r.Host`, o link nascia apontando para a porta da API
+// (`localhost:3026`) porque o proxy do Vite reescreve o `Host` em
+// desenvolvimento. O link de convite existe para ser MANDADO para outra pessoa,
+// então um host errado é um link morto. É o mesmo padrão que o painel de
+// administração já usa para copiar convite.
+//
+// `readonly` e não `disabled`: campo desabilitado não entra na seleção nem no
+// "copiar" do teclado, e copiar é a única coisa que se faz com ele.
+templ conviteGerado(caminho string) {
+	<div id="convite-link" class="mt-3 space-y-2">
+		<label for="convite-url" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">
+			Link de convite
+		</label>
+		<div class="flex gap-2">
+			<input
+				id="convite-url"
+				readonly
+				data-caminho={ caminho }
+				data-init="el.value = location.origin + el.dataset.caminho"
+				class="h-9 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 font-mono text-xs outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			/>
+			@botao(varSecundaria, tamPadrao, "shrink-0", templ.Attributes{
+				"type":          "button",
+				"data-on:click": "navigator.clipboard.writeText(document.getElementById('convite-url').value); $copiado = true",
+			}) {
+				Copiar
+			}
+		</div>
+		<p class="text-xs text-hp-full" aria-live="polite" data-show="$copiado">Link copiado.</p>
+		<p class="text-xs text-muted-foreground">
+			Cada convite serve para UMA conta. Gere outro para o próximo jogador.
+		</p>
+	</div>
+}

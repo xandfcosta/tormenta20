@@ -843,6 +843,39 @@ func (q *Queries) FindCampaignPlaceByName(ctx context.Context, arg FindCampaignP
 	return i, err
 }
 
+const firstLiveSessionForUser = `-- name: FirstLiveSessionForUser :one
+SELECT s.id AS sessionId, s.campaignId AS campaignId
+FROM sessions s
+JOIN campaigns c ON c.id = s.campaignId
+WHERE s.status = 'active'
+  AND (c.ownerId = ?1
+       OR c.id IN (
+         SELECT m.campaignId FROM campaign_members m
+         JOIN characters ch ON ch.id = m.characterId
+         WHERE ch.ownerId = ?1
+       ))
+ORDER BY c.updatedAt DESC
+LIMIT 1
+`
+
+type FirstLiveSessionForUserRow struct {
+	Sessionid  int64 `json:"sessionid"`
+	Campaignid int64 `json:"campaignid"`
+}
+
+// ALE-231: the Hub's "Continuar sessao" answered in ONE query.
+// The SPA had no endpoint for this, so it fanned out one sessions request per
+// campaign and picked the first live one client-side (see the deleted
+// createActiveSession). Campaign order is the SAME as ListCampaignsForUser --
+// most recently touched first -- because that is the order the Hub walked, and
+// changing it would change which session "Continuar" resumes.
+func (q *Queries) FirstLiveSessionForUser(ctx context.Context, userid int64) (FirstLiveSessionForUserRow, error) {
+	row := q.db.QueryRowContext(ctx, firstLiveSessionForUser, userid)
+	var i FirstLiveSessionForUserRow
+	err := row.Scan(&i.Sessionid, &i.Campaignid)
+	return i, err
+}
+
 const getAccountInvite = `-- name: GetAccountInvite :one
 SELECT id, token, createdby, createdat, expiresat, usedat, usedby FROM account_invites WHERE token = ? LIMIT 1
 `

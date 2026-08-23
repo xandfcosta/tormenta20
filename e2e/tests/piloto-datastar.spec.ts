@@ -213,3 +213,61 @@ test.describe('A porta (piloto Datastar)', () => {
     ).toBe(true)
   })
 })
+
+test.describe('O Hub (piloto Datastar)', () => {
+  test.use({ storageState: '.auth/user.json' })
+
+  test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
+    await page.goto('/piloto/')
+    await expect(page.getByRole('navigation', { name: 'Menu principal' })).toBeVisible()
+    expect(await textoComContrasteBaixo(page), 'texto abaixo do AA no Hub').toEqual([])
+  })
+
+  /**
+   * A TESE da fatia, medida: o driver de teclado da SPA anda num menu que o
+   * SERVIDOR desenhou, sem uma linha de adaptação.
+   *
+   * O menu só declara a forma dele (`data-nav-region`, `data-nav-layout`) e o
+   * `scene-nav.ts` — compilado dos mesmos fontes que a SPA usa — lê isso do
+   * DOM. Um DOM vindo do servidor é um DOM.
+   *
+   * E2E porque foco e geometria são do navegador: em jsdom todo elemento mede
+   * zero e o driver não teria como escolher o vizinho.
+   */
+  test('as setas andam no menu que o servidor desenhou', async ({ page }) => {
+    await page.goto('/piloto/')
+    await page.getByRole('link', { name: 'Meus Heróis' }).focus()
+
+    await page.keyboard.press('ArrowDown')
+    await expect(page.locator(':focus')).toHaveAttribute('href', '/campaigns')
+
+    await page.keyboard.press('ArrowUp')
+    await expect(page.locator(':focus')).toHaveAttribute('href', '/characters')
+  })
+
+  /**
+   * O popover do rodapé é a Popover API NATIVA no lugar do Kobalte, e o que se
+   * afirma é o que a biblioteca entregava: camada de topo, `Esc` fecha, e o
+   * foco VOLTA para o gatilho.
+   *
+   * O `Esc` é o guarda que importa. O driver de teclado escuta na CAPTURA para
+   * pre-emptar o foco rotativo do Kobalte, e com isso ele também pre-emptava o
+   * navegador: media na ALE-231 que o popover não fechava, porque o `Esc` virava
+   * "voltar um nível" antes de chegar à dispensa nativa. A lista de "há camada
+   * aberta?" do driver era Kobalte-shaped e passou a conhecer `:popover-open` e
+   * `dialog[open]`.
+   */
+  test('o menu do jogador é popover nativo: Esc fecha e devolve o foco', async ({ page }) => {
+    await page.goto('/piloto/')
+    const gatilho = page.getByRole('button', { name: /^Menu de / })
+    await gatilho.click()
+
+    const menu = page.locator('#menu-do-jogador')
+    await expect(menu).toBeVisible()
+    expect(await menu.evaluate((el) => el.matches(':popover-open'))).toBe(true)
+
+    await page.keyboard.press('Escape')
+    await expect(menu).toBeHidden()
+    await expect(gatilho).toBeFocused()
+  })
+})

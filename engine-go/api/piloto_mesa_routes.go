@@ -34,8 +34,13 @@ func (s *Server) PilotoRouter() http.Handler {
 	// (o chi casa por rota, não por ordem), mas porque ficar dentro do grupo a
 	// tornaria inalcançável para exatamente quem precisa dela.
 	s.rotasDaPorta(r)
+	// O HUB (ALE-231): o menu principal, atrás de sessão como todo o resto.
 	r.Group(func(r chi.Router) {
-		r.Use(s.requireAuth)
+		r.Use(s.requirePagina)
+		s.rotasDoHub(r)
+	})
+	r.Group(func(r chi.Router) {
+		r.Use(s.requirePagina)
 		r.Get("/mesa/{campaignId}/{sessionId}", s.handleMesaPage)
 		r.Get("/mesa/{campaignId}/{sessionId}/stream", s.handleMesaStream)
 		r.Post("/mesa/{campaignId}/{sessionId}/iniciativa", s.handleMesaInitiative)
@@ -44,7 +49,7 @@ func (s *Server) PilotoRouter() http.Handler {
 	// API — a tela não decide quem pode ver, ela só deixa de oferecer o que o
 	// servidor recusaria.
 	r.Group(func(r chi.Router) {
-		r.Use(s.requireAuth)
+		r.Use(s.requirePagina)
 		r.Use(s.requireAdmin)
 		r.Get("/admin", s.handleAdminPiloto)
 		r.Post("/admin/usuarios/{id}/apagar", s.handleAdminPilotoApagar)

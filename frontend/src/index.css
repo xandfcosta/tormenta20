@@ -121,7 +121,15 @@
    *
    * Com isso o par fica na divisão que a folha do grimório já ensina: o crimson
    * é o BLOCO (preencher) e o crimson-bright é a TINTA (escrever e contornar
-   * sobre fundo escuro, onde ele rende 4,61:1 contra o painel). */
+   * sobre fundo escuro).
+   *
+   * A REGRA DA TINTA foi verificada contra UM painel, e o app tem DOIS
+   * (ALE-231). Em `oklch(0.64 …)` ela rendia 4,63:1 sobre `--grimorio-panel` e
+   * apenas 4,07:1 sobre `--grimorio-panel-raised`, que é mais claro — abaixo do
+   * AA. O "Sair" do menu do jogador vivia exatamente aí, nos DOIS stacks, e
+   * ninguém tinha visto porque o guarda de contraste nunca abria o popover.
+   * Em `0.67` a tinta rende 5,21:1 e 4,58:1: o invariante passa a valer nas duas
+   * superfícies, que é o que a regra sempre disse. */
   --destructive: var(--grimorio-crimson);
   --border: var(--grimorio-iron);
   --input: var(--grimorio-iron);
@@ -197,7 +205,7 @@
   --grimorio-fg: oklch(0.93 0.014 85);
   --grimorio-fg-muted: oklch(0.74 0.02 85);
   --grimorio-crimson: oklch(0.55 0.19 25);
-  --grimorio-crimson-bright: oklch(0.64 0.21 25);
+  --grimorio-crimson-bright: oklch(0.67 0.21 25);
   --grimorio-purple: oklch(0.55 0.15 305);
   --grimorio-gold: oklch(0.8 0.11 85);
   --grimorio-iron: oklch(0.4 0.015 300);

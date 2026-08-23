@@ -9,7 +9,6 @@ import {
   nextInDirection,
 } from '@/shared/lib/spatial-nav'
 import type { SfxName } from '@/shared/lib/sfx-player'
-import { createMediaQuery } from '@/shared/lib/media-query'
 
 /** Input-agnostic navigation intent — a keyboard keydown or (later) a gamepad
  *  button both resolve to one of these before the scene reacts. */
@@ -67,16 +66,54 @@ const FOCUSABLE =
  * createSceneNav({ root: () => el(), onEscape: toHub, sfx })
  */
 export function createSceneNav(opts: SceneNavOptions): void {
+  createEffect(() => {
+    // O `active` é lido AQUI dentro para o Solid rastreá-lo; a media query é
+    // do `attachSceneNav`, que a escuta sozinho.
+    if (opts.active?.() === false) return
+    onCleanup(attachSceneNav(opts))
+  })
+}
+
+/**
+ * O MESMO driver, sem Solid: liga e devolve como desligar.
+ *
+ * Ele existe porque o Datastar precisa dele (ALE-231), e a extração custou
+ * doze linhas — o resto deste arquivo sempre foi código DOM puro, como o
+ * comentário acima já dizia. Medido: `spatial-nav.ts` (151 linhas) e
+ * `sfx-player.ts` (46) não importam `solid-js` NENHUMA vez, e este importava
+ * duas.
+ *
+ * Isso derruba a suposição que sustentava a ideia de "ilha" para telas ricas: a
+ * gramática de teclado do app inteiro nunca precisou de framework. Ela lê
+ * `data-nav-region` do DOM, e um DOM vindo do servidor é um DOM.
+ *
+ * A media query mora aqui, e não no chamador, porque ela é uma REGRA do driver
+ * (teclado é para laptop com ponteiro fino) e não uma opção de quem liga.
+ *
+ * @example const desligar = attachSceneNav({ root: () => el, onEscape, sfx })
+ */
+export function attachSceneNav(opts: SceneNavOptions): () => void {
   // Region → last-focused item, so re-entering a region restores its cursor.
   const memory: Memory = new WeakMap<HTMLElement, HTMLElement>()
-  const desktop = createMediaQuery(DESKTOP)
+  const onKey = (e: KeyboardEvent) => handleKey(e, opts, memory)
+  const lista = typeof window.matchMedia === 'function' ? window.matchMedia(DESKTOP) : null
 
-  createEffect(() => {
-    if (opts.active?.() === false || !desktop()) return
-    const onKey = (e: KeyboardEvent) => handleKey(e, opts, memory)
-    window.addEventListener('keydown', onKey, true)
-    onCleanup(() => window.removeEventListener('keydown', onKey, true))
-  })
+  let ouvindo = false
+  const sincroniza = () => {
+    const quer = (lista?.matches ?? false) && opts.active?.() !== false
+    if (quer === ouvindo) return
+    ouvindo = quer
+    if (quer) window.addEventListener('keydown', onKey, true)
+    else window.removeEventListener('keydown', onKey, true)
+  }
+  sincroniza()
+  lista?.addEventListener('change', sincroniza)
+
+  return () => {
+    lista?.removeEventListener('change', sincroniza)
+    if (ouvindo) window.removeEventListener('keydown', onKey, true)
+    ouvindo = false
+  }
 }
 
 type Memory = WeakMap<HTMLElement, HTMLElement>
@@ -344,12 +381,27 @@ function isTypingTarget(): boolean {
  * the tracker behind). Standing down for one would kill the scene's keyboard
  * navigation the moment the panel opened (ALE-75).
  */
+/**
+ * Há alguma camada aberta por cima da cena?
+ *
+ * O driver escuta na CAPTURA para pre-emptar o foco rotativo do Kobalte, e o
+ * preço disso é que ele também pre-empta o NAVEGADOR: com um popover aberto, o
+ * `Esc` chegava aqui, virava "voltar um nível" e nunca alcançava a dispensa
+ * nativa. Medido na ALE-231 — o popover do Hub não fechava com `Esc`.
+ *
+ * Os três primeiros seletores são a marcação do Kobalte; os dois últimos são os
+ * equivalentes NATIVOS, que a lista não conhecia porque até a ALE-231 não havia
+ * nenhum no app. `:popover-open` e `dialog[open]` são o que o `<dialog>` e a
+ * Popover API expõem, e é por eles que a migração troca a biblioteca.
+ */
 function hasOpenOverlay(): boolean {
   return !!document.querySelector(
     [
       '[role="dialog"][data-expanded]:not([data-nav-inline])',
       '[role="menu"][data-expanded]',
       '[role="listbox"][data-expanded]',
+      '[popover]:popover-open',
+      'dialog[open]',
     ].join(', '),
   )
 }

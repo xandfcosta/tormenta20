@@ -339,6 +339,26 @@ SELECT EXISTS (
   WHERE m.characterId = ? AND s.status = 'active'
 ) AS atLiveTable;
 
+-- name: FirstLiveSessionForUser :one
+-- ALE-231: the Hub's "Continuar sessao" answered in ONE query.
+-- The SPA had no endpoint for this, so it fanned out one sessions request per
+-- campaign and picked the first live one client-side (see the deleted
+-- createActiveSession). Campaign order is the SAME as ListCampaignsForUser --
+-- most recently touched first -- because that is the order the Hub walked, and
+-- changing it would change which session "Continuar" resumes.
+SELECT s.id AS sessionId, s.campaignId AS campaignId
+FROM sessions s
+JOIN campaigns c ON c.id = s.campaignId
+WHERE s.status = 'active'
+  AND (c.ownerId = sqlc.arg('userId')
+       OR c.id IN (
+         SELECT m.campaignId FROM campaign_members m
+         JOIN characters ch ON ch.id = m.characterId
+         WHERE ch.ownerId = sqlc.arg('userId')
+       ))
+ORDER BY c.updatedAt DESC
+LIMIT 1;
+
 -- name: ResetSessionTracker :exec
 UPDATE sessions SET runtimeState = sqlc.arg('runtimeState'), updatedAt = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id');

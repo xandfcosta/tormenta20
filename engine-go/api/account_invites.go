@@ -38,18 +38,29 @@ type accountInviteDTO struct {
 
 // handleCreateAccountInvite issues a fresh invite: POST /admin/invites (admin only).
 func (s *Server) handleCreateAccountInvite(w http.ResponseWriter, r *http.Request) {
-	now := time.Now()
-	invite, err := s.queries.CreateAccountInvite(r.Context(), sqlcgen.CreateAccountInviteParams{
-		Token:     generateInviteToken(),
-		Createdby: currentUser(r).ID,
-		Createdat: isoAt(now),
-		Expiresat: isoAt(now.Add(accountInviteTTL)),
-	})
+	invite, err := s.mintAccountInvite(r.Context(), currentUser(r).ID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not create invite")
 		return
 	}
 	writeJSON(w, http.StatusCreated, accountInviteDTO{Token: invite.Token, ExpiresAt: invite.Expiresat})
+}
+
+// mintAccountInvite cunha o link de uso único.
+//
+// Transport-agnostic, e esta é a QUARTA vez que a migração encontra a mesma
+// forma — depois do `selfInitiativeEntry` (socket), do `deleteAccount` (handler
+// HTTP) e do trio da porta (ALE-229). Já não é anedota: é o que uma base com
+// exatamente um transporte parece por dentro, e o segundo transporte é o que
+// torna isso visível.
+func (s *Server) mintAccountInvite(ctx context.Context, criadoPor int64) (sqlcgen.AccountInvite, error) {
+	now := time.Now()
+	return s.queries.CreateAccountInvite(ctx, sqlcgen.CreateAccountInviteParams{
+		Token:     generateInviteToken(),
+		Createdby: criadoPor,
+		Createdat: isoAt(now),
+		Expiresat: isoAt(now.Add(accountInviteTTL)),
+	})
 }
 
 // handleResolveAccountInvite answers whether a link still works: GET
