@@ -3,6 +3,19 @@ packages:
   - engine-go
   - e2e
 
+# O pnpm 11.22 pede a decisão nesta chave NOVA, por pacote, além da lista
+# abaixo — e ele mesmo escreve aqui um rascunho com o texto
+# `set this to true or false`, que NÃO é booleano. Enquanto o rascunho está no
+# arquivo, todo `pnpm run`/`pnpm exec` aborta no `runDepsStatusCheck` antes de
+# rodar qualquer coisa, e o sintoma não menciona este arquivo.
+#
+# Isso é pior do que parece: o contorno óbvio é chamar o binário direto em
+# `node_modules/.bin`, e aí se PULA o `pretest`, que é quem reconstrói o WASM.
+# Foi assim que 12 testes da Mochila caíram contra um motor velho depois da
+# ALE-215 — o teste media o meu wasm, não o código.
+allowBuilds:
+  '@parcel/watcher': true
+
 # Pacotes autorizados a rodar script de instalação (o pnpm 11 bloqueia por
 # padrão, e o ajuste saiu do campo `pnpm` do package.json, onde passou a ser
 # IGNORADO em silêncio). Todos aqui compilam binário nativo e não funcionam sem
