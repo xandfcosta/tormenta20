@@ -138,7 +138,18 @@ export function SidePanel(props: SidePanelProps) {
             )}
           </Show>
 
-          <div class="min-h-0 flex-1 overflow-y-auto">{local.children}</div>
+          {/* `flex flex-col`, e não só `min-h-0 flex-1 overflow-y-auto`: o corpo
+              era um BLOCO, então o `flex-1` do filho não valia nada e nada
+              limitava a altura dele. Uma lista VIRTUALIZADA aqui dentro crescia
+              até a altura do próprio conteúdo — o contêiner de rolagem dela
+              ficava do tamanho da lista inteira, o virtualizador concluía que
+              tudo estava visível e pintava TODAS as linhas. Medido na gaveta de
+              Catálogos: 566 de 566 poderes no DOM, 198 magias, 193 itens; com
+              `flex flex-col`, 15/12/19. Nada parecia quebrado porque o corpo
+              rola: a rolagem que o mestre usava era a de FORA, e a de dentro
+              nunca tinha o que rolar (ALE-138, mesmo defeito que a ALE-149
+              corrigiu um nível abaixo, nos painéis de aba). */}
+          <div class="flex min-h-0 flex-1 flex-col overflow-y-auto">{local.children}</div>
 
           {/* Full-width and anchored at the bottom: the reachable half of a
               phone screen. Redundant with Esc and the X, never the only way.
