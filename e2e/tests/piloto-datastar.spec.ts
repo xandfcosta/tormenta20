@@ -1,4 +1,5 @@
 import { type Page, expect, test } from '@playwright/test'
+import { VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
 
 /**
  * As DUAS telas do piloto Datastar (ALE-219): a Mesa do jogador e a
@@ -260,7 +261,7 @@ test.describe('O Hub (piloto Datastar)', () => {
     await expect(page.locator(':focus')).toHaveAttribute('href', '/piloto/campanhas')
 
     await page.keyboard.press('ArrowUp')
-    await expect(page.locator(':focus')).toHaveAttribute('href', '/characters')
+    await expect(page.locator(':focus')).toHaveAttribute('href', '/piloto/personagens')
   })
 
   /**
@@ -462,5 +463,129 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
     await expect(opcoes.nth(1)).toHaveAttribute('aria-selected', 'true')
     await expect(opcoes.first()).toHaveAttribute('aria-selected', 'false')
     expect(pedidos, 'andar no elenco foi à rede — o cursor deixou de ser sinal').toBe(0)
+  })
+
+  /**
+   * O ⏎ atravessa a FRONTEIRA entre os dois stacks: a cena é do servidor, a
+   * ficha ainda é da SPA. É a costura que a virada da ALE-239 criou, e nenhuma
+   * outra camada a vê — o guarda em Go conhece só o HTML de um lado.
+   */
+  test('⏎ no trilho abre a ficha do herói em cena, que ainda é da SPA', async ({ page }) => {
+    await page.goto('/piloto/personagens')
+    const primeiro = page.getByRole('option').first()
+    await primeiro.focus()
+    const nome = (await primeiro.getAttribute('aria-label'))?.split(' · ')[0]
+
+    await page.keyboard.press('Enter')
+
+    await expect(page).toHaveURL(/\/characters\/\d+$/)
+    await expect(page.getByRole('heading', { name: nome, level: 1 }).first()).toBeVisible()
+  })
+
+  /**
+   * ALE-98: a vaga de criar é POSIÇÃO DE CURSOR, e a seta chega nela. O guarda
+   * em Go afirma que ela declara `role=option` e escreve o cursor; que a SETA
+   * de fato pare ali e que o ⏎ leve à Forja é do teclado, e teclado é do
+   * navegador.
+   *
+   * Sem o ⏎ aqui a gramática morre na última posição: a tecla que abriu tudo
+   * até então não faz nada justamente onde não há ficha para abrir.
+   */
+  test('a seta alcança a vaga de criar e ⏎ leva à Forja', async ({ page }) => {
+    await page.goto('/piloto/personagens')
+    const vaga = page.getByRole('option', { name: 'Forjar um novo herói' })
+    await expect(vaga).toBeVisible()
+
+    await page.getByRole('option').first().focus()
+    // Anda até o fim do trilho: a vaga é a última posição, sempre.
+    for (let i = 0; i < 30; i++) await page.keyboard.press('ArrowRight')
+    await expect(vaga).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByRole('heading', { name: 'Forjar um herói' })).toBeVisible()
+
+    await page.keyboard.press('Enter')
+    await expect(page).toHaveURL(/\/characters\/new/)
+  })
+
+  /**
+   * O NOME do vizinho fica sempre à mostra. A versão original escondia a
+   * legenda atrás de `group-hover`, e hover não existe no toque nem sob
+   * navegação por teclado — que são os dois modos em que duas iniciais não
+   * dizem quem vem a seguir.
+   *
+   * E2E porque a garantia é de CSS COMPUTADO: em jsdom nenhuma folha se aplica,
+   * e o guarda em Go só sabe que o texto está no HTML — texto no HTML com
+   * `opacity: 0` passaria nos dois.
+   */
+  test('os peeks mostram o nome do vizinho sem precisar de hover', async ({ page }) => {
+    await page.goto('/piloto/personagens')
+    await page.getByRole('option').first().focus()
+    // Um passo para dentro, para haver vizinho dos DOIS lados do palco.
+    await page.keyboard.press('ArrowRight')
+
+    for (const lado of [/^Anterior:/, /^Próximo:/]) {
+      const peek = page.getByRole('button', { name: lado })
+      const legenda = peek.locator('span').last()
+      await expect(legenda).not.toHaveText('')
+      await expect(legenda).toHaveCSS('opacity', '1')
+    }
+  })
+
+  /**
+   * ALE-99: o retrato não escorrega nas pontas do elenco.
+   *
+   * No primeiro herói não há vizinho à esquerda, e a caixa vazia entra no lugar
+   * dele — sem ela o retrato desliza para a esquerda ao chegar ali, e o palco
+   * dança a cada passo. É LAYOUT medido, e por isso é aqui: o guarda em Go que
+   * eu tinha escrito primeiro contava `div`s por classe, que é afirmar a forma
+   * do DOM e não a garantia.
+   */
+  test('o retrato fica no mesmo lugar nas pontas do elenco', async ({ page }) => {
+    await page.goto('/piloto/personagens')
+    const retratoVisivel = () =>
+      page.locator('a[aria-label^="Abrir ficha de"]:visible').first().boundingBox()
+
+    await page.getByRole('option').first().focus()
+    const naPonta = await retratoVisivel()
+
+    await page.keyboard.press('ArrowRight')
+    await expect(page.getByRole('button', { name: /^Anterior:/ })).toBeVisible()
+    const noMeio = await retratoVisivel()
+
+    expect(naPonta, 'retrato não medido na ponta').not.toBeNull()
+    expect(noMeio, 'retrato não medido no meio').not.toBeNull()
+    expect(Math.round(noMeio!.x), 'o retrato escorregou ao sair da ponta').toBe(
+      Math.round(naPonta!.x),
+    )
+
+    // E a VAGA de criar ocupa a mesma posição de um herói. Ela não tem nome
+    // longo, nem vitais, nem resumo — e sem fileiras invisíveis do tamanho
+    // deles a coluna centralizada puxa o retrato para cima. Medido antes do
+    // conserto: 74px. Este é o passo em que o palco dançava mais.
+    for (let i = 0; i < 30; i++) await page.keyboard.press('ArrowRight')
+    const vaga = await page
+      .locator('a[aria-label="Forjar um novo herói"]:visible')
+      .first()
+      .boundingBox()
+    expect(vaga, 'vaga de criar não medida').not.toBeNull()
+    expect(Math.round(vaga!.y), 'o palco pulou na vaga de criar').toBe(Math.round(naPonta!.y))
+    expect(Math.round(vaga!.x), 'a vaga de criar não está onde os heróis estão').toBe(
+      Math.round(naPonta!.x),
+    )
+  })
+
+  // Tela nova se valida nos seis formatos — regra da casa, e overflow é layout.
+  test('personagens: sem scroll horizontal nos seis formatos', async ({ page }) => {
+    await page.goto('/piloto/personagens')
+    await expect(page.getByRole('listbox', { name: 'Personagens' })).toBeVisible()
+
+    await expectNoHorizontalOverflow(page, VIEWPORTS)
+  })
+
+  // O endereço antigo é favorito e link de terceiros: ele não pode quebrar. É a
+  // promessa escrita em `routes/characters.index.tsx`, e ela vive na SPA.
+  test('o endereço antigo /characters encaminha para a cena nova', async ({ page }) => {
+    await page.goto('/characters')
+    await expect(page).toHaveURL(/\/piloto\/personagens$/)
+    await expect(page.getByRole('listbox', { name: 'Personagens' })).toBeVisible()
   })
 })

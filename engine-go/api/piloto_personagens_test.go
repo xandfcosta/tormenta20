@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"t20engine/db/sqlcgen"
 	"t20engine/engine"
 )
 
@@ -30,6 +31,26 @@ func novaCenaDeHerois(t *testing.T) (*Server, AuthUser) {
 		t.Fatalf("usuário: %v", err)
 	}
 	return s, s.authUser(u)
+}
+
+func seedClasse(t *testing.T, s *Server, characterID int64, nome string, nivel int64) {
+	t.Helper()
+	err := s.queries.CreateClass(context.Background(), sqlcgen.CreateClassParams{
+		Characterid: characterID, Classname: nome, Level: nivel,
+	})
+	if err != nil {
+		t.Fatalf("seed classe %q: %v", nome, err)
+	}
+}
+
+func seedRaca(t *testing.T, s *Server, characterID int64, raca string) {
+	t.Helper()
+	err := s.queries.CreateRace(context.Background(), sqlcgen.CreateRaceParams{
+		Characterid: characterID, Race: raca,
+	})
+	if err != nil {
+		t.Fatalf("seed raça %q: %v", raca, err)
+	}
 }
 
 // ── a Defesa ─────────────────────────────────────────────────────────────────
@@ -172,18 +193,34 @@ func TestAVagaDeCriarEhPosicaoDeCursorENaoUmLinkSolto(t *testing.T) {
 
 // ── a busca ──────────────────────────────────────────────────────────────────
 
-// Os QUATRO campos que a SPA indexa. O da raça é o que faz "anao" achar o anão,
-// e é o caso que a regra de acento existe para servir.
+// Os QUATRO campos que a SPA indexa: nome, classe primária, origem e raças.
+//
+// A primeira versão deste teste chamava a busca de "pela CLASSE" e seedava um
+// personagem chamado "Guerreiro" SEM linha de classe nenhuma — ele casava pelo
+// NOME, e teria continuado verde com a classe fora do índice. Aqui o nome e a
+// classe são propositalmente disjuntos, e cada campo é buscado pelo termo que
+// só ELE contém; é isso que faz o teste morrer se algum sair de
+// `camposDeBusca`.
 func TestBuscaDePersonagemOlhaOsQuatroCampos(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
-	seedCharacterAtLevel(t, s, eu.ID, "Guerreiro", 5, 16, 12, 3, 8)
+	id := seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
+	seedClasse(t, s, id, "Bárbaro", 5)
+	seedRaca(t, s, id, "Anão")
 
-	v, err := s.carregaPersonagens(context.Background(), eu, "guerreiro")
-	if err != nil {
-		t.Fatalf("carregar: %v", err)
-	}
-	if len(v.Herois) != 1 {
-		t.Errorf("busca pela CLASSE devolveu %d", len(v.Herois))
+	// "Soldado" é a origem que o `seedCharacterAtLevel` grava.
+	for termo, campo := range map[string]string{
+		"thalen":  "nome",
+		"barbaro": "classe",
+		"soldado": "origem",
+		"anao":    "raça",
+	} {
+		v, err := s.carregaPersonagens(context.Background(), eu, termo)
+		if err != nil {
+			t.Fatalf("carregar %q: %v", termo, err)
+		}
+		if len(v.Herois) != 1 {
+			t.Errorf("busca por %s (%q) devolveu %d heróis, queria 1", campo, termo, len(v.Herois))
+		}
 	}
 
 	nada, err := s.carregaPersonagens(context.Background(), eu, "zzzzzz")
@@ -199,14 +236,121 @@ func TestBuscaDePersonagemOlhaOsQuatroCampos(t *testing.T) {
 // busca esconde justamente o que a pessoa precisa saber para limpar o filtro.
 func TestAContagemDizFiltradosDeTotal(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
-	seedCharacterAtLevel(t, s, eu.ID, "Guerreiro", 5, 16, 12, 3, 8)
-	seedCharacterAtLevel(t, s, eu.ID, "Arcanista", 4, 10, 14, 2, 6)
+	seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
+	seedCharacterAtLevel(t, s, eu.ID, "Yrla", 4, 10, 14, 2, 6)
 
-	v, err := s.carregaPersonagens(context.Background(), eu, "guerreiro")
+	v, err := s.carregaPersonagens(context.Background(), eu, "thalen")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
 	if len(v.Herois) != 1 || v.Total != 2 {
 		t.Errorf("filtrados=%d total=%d, queria 1 de 2", len(v.Herois), v.Total)
+	}
+}
+
+// ── os vizinhos que ladeiam o palco ──────────────────────────────────────────
+
+// O peek foi PORTADO na virada, e não reescrito: apagar a tela antiga levaria
+// junto os retratos apagados dos vizinhos se ninguém os trouxesse. Aqui se
+// afirma o que eles carregam de regra — o nome legível e o caminho de volta.
+func TestOsVizinhosLadeiamOPalcoComNomeLegivel(t *testing.T) {
+	s, eu := novaCenaDeHerois(t)
+	seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
+	seedCharacterAtLevel(t, s, eu.ID, "Yrla", 4, 10, 14, 2, 6)
+
+	v, err := s.carregaPersonagens(context.Background(), eu, "")
+	if err != nil {
+		t.Fatalf("carregar: %v", err)
+	}
+	if len(v.Herois) != 2 {
+		t.Fatalf("esperava 2 heróis, veio %d", len(v.Herois))
+	}
+	primeiro, segundo := v.Herois[0].Nome, v.Herois[1].Nome
+
+	html, err := renderFragmento(t.Context(), cenaDePersonagens(v))
+	if err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	// O primeiro palco olha para a frente, o segundo para trás.
+	if !strings.Contains(html, `aria-label="Próximo: `+segundo+`"`) {
+		t.Errorf("o palco de %q não mostra %q como próximo", primeiro, segundo)
+	}
+	if !strings.Contains(html, `aria-label="Anterior: `+primeiro+`"`) {
+		t.Errorf("o palco de %q não mostra %q como anterior", segundo, primeiro)
+	}
+	// O NOME vai no CORPO do botão, e não só no rótulo: duas iniciais não dizem
+	// quem vem a seguir, e é para os olhos que ele existe. A primeira versão
+	// deste guarda contava o nome no HTML inteiro e sobrevivia à sabotagem —
+	// o nome também está no `title`, no `h2` do palco e no rótulo do filme.
+	if corpo := corpoDoBotao(t, html, "Próximo: "+segundo); !strings.Contains(corpo, segundo) {
+		t.Errorf("o peek de %q não mostra o nome na tela, só em atributo: %q", segundo, corpo)
+	}
+}
+
+// corpoDoBotao devolve o conteúdo visível de um botão achado pelo `aria-label`.
+//
+// O `>` que fecha a tag de abertura é o primeiro do trecho porque o templ
+// escapa `>` dentro de valor de atributo — então o corte é seguro.
+func corpoDoBotao(t *testing.T, html, rotulo string) string {
+	t.Helper()
+	i := strings.Index(html, `aria-label="`+rotulo+`"`)
+	if i < 0 {
+		t.Fatalf("nenhum botão com rótulo %q no HTML", rotulo)
+	}
+	resto := html[i:]
+	abre := strings.Index(resto, ">")
+	fecha := strings.Index(resto, "</button>")
+	if abre < 0 || fecha < 0 || abre > fecha {
+		t.Fatalf("botão %q malformado no HTML", rotulo)
+	}
+	return resto[abre+1 : fecha]
+}
+
+// A vaga de criar tem o ÚLTIMO herói à esquerda: é o caminho de volta para o
+// elenco, e sem ele quem anda até o fim do trilho fica sem pista de retorno.
+func TestAVagaDeCriarMostraOUltimoHeroiComoCaminhoDeVolta(t *testing.T) {
+	s, eu := novaCenaDeHerois(t)
+	seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
+	seedCharacterAtLevel(t, s, eu.ID, "Yrla", 4, 10, 14, 2, 6)
+
+	v, err := s.carregaPersonagens(context.Background(), eu, "")
+	if err != nil {
+		t.Fatalf("carregar: %v", err)
+	}
+	html, err := renderFragmento(t.Context(), cenaDePersonagens(v))
+	if err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	ultimo := v.Herois[len(v.Herois)-1].Nome
+	// UMA vez, e é isso que prova que veio da vaga: "Anterior: X" só aparece no
+	// palco de quem vem DEPOIS de X, e depois do último herói não há palco de
+	// herói nenhum. A única coisa à direita dele no trilho é a vaga.
+	if got := strings.Count(html, `aria-label="Anterior: `+ultimo+`"`); got != 1 {
+		t.Errorf("o último herói aparece como anterior %d vez(es), queria 1 (a vaga de criar)", got)
+	}
+}
+
+// Nas PONTAS não há vizinho, e o palco não pode inventar um. Que a CAIXA vazia
+// continue ocupando a largura — para o retrato não escorregar ao chegar no
+// primeiro herói, família de defeito da ALE-99 — é garantia de LAYOUT, e layout
+// só existe num navegador: está no `piloto-datastar.spec.ts`. Aqui fica só o
+// que é verdade de dado.
+func TestHeroiUnicoNaoGanhaVizinhoInventado(t *testing.T) {
+	s, eu := novaCenaDeHerois(t)
+	seedCharacterAtLevel(t, s, eu.ID, "Thalen", 5, 16, 12, 3, 8)
+
+	v, err := s.carregaPersonagens(context.Background(), eu, "")
+	if err != nil {
+		t.Fatalf("carregar: %v", err)
+	}
+	if peekDe(v.Herois, -1) != nil || peekDe(v.Herois, 1) != nil {
+		t.Fatal("peekDe inventou vizinho fora do trilho")
+	}
+	html, err := renderFragmento(t.Context(), cenaDePersonagens(v))
+	if err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	if strings.Contains(html, `aria-label="Próximo: `) {
+		t.Error("herói único ganhou um próximo que não existe")
 	}
 }

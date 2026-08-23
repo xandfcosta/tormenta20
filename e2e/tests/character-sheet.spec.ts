@@ -34,7 +34,7 @@ async function currentHp(vida: Locator): Promise<number> {
 test('Hub → herói → editar Vida no bloco de vitals (persiste no servidor)', async ({ page }) => {
   await page.goto('/')
   await page.getByText('Meus Heróis').click()
-  await expect(page).toHaveURL(/\/characters$/)
+  await expect(page).toHaveURL(/\/piloto\/personagens$/)
   await openSheetFromRoster(page, HERO)
   await expect(page).toHaveURL(/\/characters\/\d+$/)
 
@@ -78,7 +78,7 @@ test('a linha de PV/PM não vaza a coluna numa tela apertada', async ({ page }) 
   await page.setViewportSize({ width: 375, height: 844 })
   await page.goto('/')
   await page.getByText('Meus Heróis').click()
-  await expect(page).toHaveURL(/\/characters$/)
+  await expect(page).toHaveURL(/\/piloto\/personagens$/)
   await openSheetFromRoster(page, HERO)
   await expect(page.getByRole('progressbar', { name: 'Vida' })).toBeVisible()
 
@@ -130,7 +130,7 @@ test('no celular deitado, a barra de abas da ficha fica na tela', async ({ page 
   await page.setViewportSize({ width: 844, height: 390 })
   await page.goto('/')
   await page.getByText('Meus Heróis').click()
-  await expect(page).toHaveURL(/\/characters$/)
+  await expect(page).toHaveURL(/\/piloto\/personagens$/)
   await openSheetFromRoster(page, HERO)
   await expect(page.getByRole('progressbar', { name: 'Vida' })).toBeVisible()
 
@@ -167,7 +167,7 @@ test('no celular o nome do herói cabe, e o nível continua alterável', async (
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   await page.getByText('Meus Heróis').click()
-  await expect(page).toHaveURL(/\/characters$/)
+  await expect(page).toHaveURL(/\/piloto\/personagens$/)
   await openSheetFromRoster(page, HERO)
   await expect(page.getByRole('progressbar', { name: 'Vida' })).toBeVisible()
 

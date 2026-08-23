@@ -95,7 +95,7 @@ func menuDoHub(v hubView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = itemDoMenu("Users2", "Meus Heróis", "/characters", false).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = itemDoMenu("Users2", "Meus Heróis", "/piloto/personagens", false).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

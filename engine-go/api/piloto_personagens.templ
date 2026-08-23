@@ -21,20 +21,21 @@ import (
 templ personagens(v personagensView) {
 	@barraDePersonagens(v)
 	if !v.TemAlgum {
-		@palcoDeCriar(true)
+		@palcoDeCriar(true, nil)
 		@filmeDePersonagens(v)
 	} else if v.FiltrouTudo {
 		@buscaSemHeroi()
 	} else {
 		<div class="flex min-h-0 flex-1 flex-col">
 			<div class="relative flex min-h-0 flex-1 items-center justify-center">
-				for _, h := range v.Herois {
-					@palcoDoHeroi(h)
+				for i, h := range v.Herois {
+					@palcoDoHeroi(h, peekDe(v.Herois, i-1), peekDe(v.Herois, i+1))
 				}
 				// A vaga de criar é um palco como os outros, e o cursor pousa
 				// nela: `$cursor == 0` é a posição dela, porque nenhum id de
-				// personagem é zero.
-				@palcoDeCriar(false)
+				// personagem é zero. O vizinho da esquerda é o ÚLTIMO herói,
+				// que é o caminho de volta para o elenco.
+				@palcoDeCriar(false, peekDe(v.Herois, len(v.Herois)-1))
 			</div>
 			@filmeDePersonagens(v)
 		</div>
@@ -77,7 +78,7 @@ templ barraDePersonagens(v personagensView) {
 
 // ── o palco ──────────────────────────────────────────────────────────────────
 
-templ palcoDoHeroi(h heroiCartao) {
+templ palcoDoHeroi(h heroiCartao, anterior, proximo *vizinho) {
 	<div
 		data-show={ fmt.Sprintf("$cursor == %d", h.ID) }
 		class="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-2"
@@ -89,17 +90,21 @@ templ palcoDoHeroi(h heroiCartao) {
 			class="pointer-events-none absolute inset-0 -z-10"
 			style={ "background: " + lavagemDoHeroi(h) }
 		></div>
-		<a
-			href={ templ.SafeURL("/characters/" + strconv.FormatInt(h.ID, 10)) }
-			aria-label={ "Abrir ficha de " + h.Nome }
-			class="relative aspect-[3/4] w-44 overflow-hidden rounded-sm border-2 border-grimorio-iron outline-none transition-transform hover:scale-[1.01] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:w-56 lg:w-64"
-			style={ "background: " + h.Gradiente }
-		>
-			<span aria-hidden="true" class="absolute inset-0 flex select-none items-center justify-center font-display text-[7rem] leading-none text-white/20 sm:text-[9rem]">
-				{ h.Iniciais }
-			</span>
-			<span aria-hidden="true" class="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-black/50 to-transparent"></span>
-		</a>
+		<div class="flex items-center justify-center gap-4 sm:gap-8">
+			@retratoVizinho(anterior, "Anterior")
+			<a
+				href={ templ.SafeURL("/characters/" + strconv.FormatInt(h.ID, 10)) }
+				aria-label={ "Abrir ficha de " + h.Nome }
+				class="relative aspect-[3/4] w-44 overflow-hidden rounded-sm border-2 border-grimorio-iron outline-none transition-transform hover:scale-[1.01] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:w-56 lg:w-64"
+				style={ "background: " + h.Gradiente }
+			>
+				<span aria-hidden="true" class="absolute inset-0 flex select-none items-center justify-center font-display text-[7rem] leading-none text-white/20 sm:text-[9rem]">
+					{ h.Iniciais }
+				</span>
+				<span aria-hidden="true" class="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-black/50 to-transparent"></span>
+			</a>
+			@retratoVizinho(proximo, "Próximo")
+		</div>
 		// `min-h-[2lh]` reserva SEMPRE duas linhas para o nome, e a unidade é
 		// `lh` para acompanhar o tamanho responsivo da fonte. Sem isso, um nome
 		// que quebra em duas linhas empurra a fileira do retrato 20px para cima
@@ -152,30 +157,84 @@ templ umVital(rotulo, valor, tom string, apagado bool) {
 
 // palcoDeCriar é a vaga do fim — e ela existe TAMBÉM com o elenco vazio, porque
 // aí ela é a única coisa que dá o que fazer.
-templ palcoDeCriar(sozinha bool) {
+templ palcoDeCriar(sozinha bool, anterior *vizinho) {
 	<div
 		if !sozinha {
 			data-show="$cursor == 0"
 		}
 		class="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-2"
 	>
-		<a
-			href="/characters/new"
-			aria-label="Forjar um novo herói"
-			class="flex aspect-[3/4] w-44 items-center justify-center rounded-sm border-2 border-dashed border-grimorio-iron-light text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:w-56 lg:w-64"
-		>
-			@icone("Plus", "size-16")
-		</a>
-		<div class="max-w-md px-4 text-center">
-			<h2 class="font-display text-2xl uppercase tracking-[0.05em] text-foreground">Forjar um herói</h2>
-			if sozinha {
-				<p class="mt-2 text-sm text-muted-foreground">
-					Seu elenco está vazio. O primeiro herói começa aqui.
-				</p>
-			}
+		<div class="flex items-center justify-center gap-4 sm:gap-8">
+			@retratoVizinho(anterior, "Anterior")
+			<a
+				href="/characters/new"
+				aria-label="Forjar um novo herói"
+				class="flex aspect-[3/4] w-44 items-center justify-center rounded-sm border-2 border-dashed border-grimorio-iron-light text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:w-56 lg:w-64"
+			>
+				@icone("Plus", "size-16")
+			</a>
+			// À direita da vaga não há vizinho: ela é o fim do trilho. O
+			// espaçador entra do mesmo jeito, senão o retrato desliza para a
+			// direita ao chegar aqui.
+			@retratoVizinho(nil, "Próximo")
 		</div>
-		<a href="/characters/new" class={ classesDoBotao(varPrimaria, tamGrande, "") }>Abrir a Forja</a>
+		<div class="max-w-2xl px-4 text-center">
+			<h2 class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl">Forjar um herói</h2>
+			<p class="mt-1 font-heading text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Uma vaga vazia no grupo</p>
+		</div>
+		// A vaga não tem vitais nem resumo, mas precisa da ALTURA deles: sem
+		// essas duas fileiras invisíveis a coluna centralizada puxa o retrato
+		// 70px para cima ao chegar aqui, e o palco DANÇA na última posição do
+		// trilho (ALE-99). Medido: 70px, com o retrato do herói em y=152 e o da
+		// vaga em y=222. Elas espelham a escala de `vitaisDoHeroi` e da linha de
+		// resumo — mudou lá, muda aqui.
+		<div aria-hidden="true" class="invisible flex items-center justify-center gap-5 text-sm">
+			<span class="font-mono text-lg font-semibold tabular-nums">0</span>
+		</div>
+		<p aria-hidden="true" class="invisible max-w-xl px-4 text-center text-sm">.</p>
+		if sozinha {
+			<p class="max-w-xl px-4 text-center text-sm text-muted-foreground">
+				Seu elenco está vazio. O primeiro herói começa aqui.
+			</p>
+		}
+		<a href="/characters/new" class={ classesDoBotao(varPrimaria, tamGrande, "") }>
+			Abrir a Forja
+			@tecla("⏎")
+		</a>
 	</div>
+}
+
+// retratoVizinho é o retrato apagado de quem está ao lado — clicá-lo anda o
+// cursor para lá.
+//
+// O NOME fica sempre visível, e isso é regra e não estilo: a versão original
+// escondia a legenda atrás de `group-hover`, e hover não existe no toque nem
+// sob navegação por teclado, que são justamente os dois modos em que duas
+// iniciais não dizem quem vem a seguir.
+//
+// Vizinho nulo vira ESPAÇADOR da mesma largura, nunca elemento ausente — ver
+// `peekDe`.
+templ retratoVizinho(vz *vizinho, lado string) {
+	if vz == nil {
+		<div class="w-20 shrink-0 sm:w-28 lg:w-32" aria-hidden="true"></div>
+	} else {
+		<button
+			type="button"
+			title={ vz.Nome }
+			aria-label={ lado + ": " + vz.Nome }
+			data-cue-hover
+			data-on:click={ fmt.Sprintf("$cursor = %d", vz.ID) }
+			class="relative aspect-[3/4] w-20 shrink-0 overflow-hidden rounded-sm border border-grimorio-iron opacity-50 outline-none transition-all hover:opacity-80 focus-visible:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:w-28 lg:w-32"
+			style={ "background: " + vz.Gradiente }
+		>
+			<span aria-hidden="true" class="absolute inset-0 flex select-none items-center justify-center font-display text-4xl text-white/20 sm:text-5xl">
+				{ vz.Iniciais }
+			</span>
+			<span class="absolute inset-x-0 bottom-0 line-clamp-2 bg-black/60 px-1 py-0.5 text-center text-3xs leading-tight text-white">
+				{ vz.Nome }
+			</span>
+		</button>
+	}
 }
 
 // ── o filme ──────────────────────────────────────────────────────────────────
@@ -216,6 +275,10 @@ templ quadroDoFilme(h heroiCartao) {
 	</button>
 }
 
+// O ⏎ daqui leva à Forja, como o ⏎ de um herói leva à ficha. Sem ele a gramática
+// do teclado morre na última posição do trilho: a seta chega na vaga e a tecla
+// que abriu tudo até ali não faz nada. (E é a QUINTA vez que um comentário
+// dentro da lista de atributos derruba o `templ generate` — ele não aceita.)
 templ quadroDeCriar(temAlgum bool) {
 	<button
 		type="button"
@@ -223,6 +286,7 @@ templ quadroDeCriar(temAlgum bool) {
 		data-nav-item
 		data-cue-hover
 		aria-label="Forjar um novo herói"
+		data-on:keydown="evt.key === 'Enter' && (evt.preventDefault(), location.href = '/characters/new')"
 		if temAlgum {
 			data-attr:aria-selected="$cursor == 0 ? 'true' : 'false'"
 			data-on:focusin="$cursor = 0"
