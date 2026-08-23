@@ -94,6 +94,7 @@ function renderScene(state: SessionRuntimeState = EM_COMBATE) {
         rt={rt.asRealtime()}
         myCharacterIds={new Set<number>()}
         campaignName="Snapshot Test ALE-33"
+        members={[]}
       />
     </QueryClientProvider>
   ))

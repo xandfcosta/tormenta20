@@ -2,7 +2,6 @@ import { render, screen } from '@solidjs/testing-library'
 import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { campaignMembersQueryOptions } from '@/entities/campaign/queries'
 import { campaignCreaturesQueryOptions } from '@/entities/creature/queries'
 import type { CampaignMember } from '@/shared/api/types'
 import type { CampaignCreature } from '@/shared/api/creature-types'
@@ -46,12 +45,11 @@ const MEMBROS = [
 
 function renderCast(present: PresenceUser[] = [], creatures = [criatura(3, 'Taverneiro Gordo', 30)]) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  client.setQueryData(campaignMembersQueryOptions(1).queryKey, MEMBROS)
   client.setQueryData(campaignCreaturesQueryOptions(1).queryKey, creatures)
   const onOpenCharacter = vi.fn()
   render(() => (
     <QueryClientProvider client={client}>
-      <CastPanel campaignId={1} present={present} onOpenCharacter={onOpenCharacter} />
+      <CastPanel campaignId={1} members={MEMBROS} present={present} onOpenCharacter={onOpenCharacter} />
     </QueryClientProvider>
   ))
   return { onOpenCharacter, user: userEvent.setup() }

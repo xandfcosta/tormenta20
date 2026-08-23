@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/solid-query'
 import { Plus, Trash2 } from 'lucide-solid'
 import { For, Show, createMemo } from 'solid-js'
-import { campaignMembersQueryOptions } from '@/entities/campaign/queries'
 import { campaignCreaturesQueryOptions } from '@/entities/creature/queries'
 import { connectedCharacterIds } from '@/features/session-tracker/tracker-rules'
 import { CreatureBlockDialog } from '@/features/gm-tools/creature-block-dialog'
@@ -9,6 +8,7 @@ import { creatureActions } from '@/features/gm-tools/creature-mutations'
 import { blankCreatureBlock } from '@/shared/api/creature-types'
 import type { CampaignCreature } from '@/shared/api/creature-types'
 import { settledQuery } from '@/shared/lib/settled-query'
+import type { CampaignMember } from '@/shared/api/types'
 import type { PresenceUser } from '@/shared/realtime/realtime'
 import { Button } from '@/shared/ui/button'
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
@@ -35,12 +35,14 @@ import { useQueryClient } from '@tanstack/solid-query'
  */
 export function CastPanel(props: {
   campaignId: number
+  /** Os membros vêm da PÁGINA, não de uma consulta daqui: abrir consulta dentro
+   *  da cena desanexa a árvore (ALE-199, e visto de novo no trilho da ALE-211). */
+  members: readonly CampaignMember[]
   /** A sala ao vivo, para dizer quem está na mesa AGORA. */
   present: PresenceUser[]
   /** Abre a ficha inteira de um PC — o diálogo mora na página, que é quem compõe. */
   onOpenCharacter: (characterId: number) => void
 }) {
-  const members = useQuery(() => campaignMembersQueryOptions(props.campaignId))
   const creatures = useQuery(() => campaignCreaturesQueryOptions(props.campaignId))
   const queryClient = useQueryClient()
   const actions = createMemo(() => creatureActions(queryClient, props.campaignId))
@@ -51,8 +53,8 @@ export function CastPanel(props: {
    * próprio no roster, e listá-lo aqui sob "Jogadores" criaria uma linha que o
    * "Adicionar grupo" nunca traz — duas telas discordando sobre quem é o grupo.
    */
-  const players = () => (settledQuery(members) ?? []).filter((member) => member.role === 'player')
-  const online = () => connectedCharacterIds(settledQuery(members) ?? [], props.present)
+  const players = () => props.members.filter((member) => member.role === 'player')
+  const online = () => connectedCharacterIds(props.members, props.present)
   const npcs = () => settledQuery(creatures) ?? []
 
   return (
@@ -61,26 +63,24 @@ export function CastPanel(props: {
         <SectionTitle contexto="painel" class="text-sm">
           Jogadores · {players().length}
         </SectionTitle>
-        <Show when={!members.isPending} fallback={<Skeleton class="h-20 w-full" />}>
-          <Show
-            when={players().length > 0}
-            fallback={<Vazio>Nenhum personagem no elenco desta crônica ainda.</Vazio>}
-          >
-            <ul class="space-y-1">
-              <For each={players()}>
-                {(member) => (
-                  <li>
-                    <PlayerRow
-                      name={member.character?.name ?? `Personagem ${member.characterId}`}
-                      subtitle={classesOf(member.character?.classes)}
-                      online={online().has(member.characterId)}
-                      onOpen={() => props.onOpenCharacter(member.characterId)}
-                    />
-                  </li>
-                )}
-              </For>
-            </ul>
-          </Show>
+        <Show
+          when={players().length > 0}
+          fallback={<Vazio>Nenhum personagem no elenco desta crônica ainda.</Vazio>}
+        >
+          <ul class="space-y-1">
+            <For each={players()}>
+              {(member) => (
+                <li>
+                  <PlayerRow
+                    name={member.character?.name ?? `Personagem ${member.characterId}`}
+                    subtitle={classesOf(member.character?.classes)}
+                    online={online().has(member.characterId)}
+                    onOpen={() => props.onOpenCharacter(member.characterId)}
+                  />
+                </li>
+              )}
+            </For>
+          </ul>
         </Show>
       </section>
 

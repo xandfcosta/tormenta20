@@ -127,6 +127,7 @@ export function SessionTrackerPage() {
                    com a de baixo podendo estar pendente enquanto esta já
                    respondeu. */
                 campaignName={settledCampaign()?.name ?? ''}
+                members={settledQuery(members) ?? []}
               />
             </Show>
           )}

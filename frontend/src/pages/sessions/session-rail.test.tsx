@@ -1,7 +1,6 @@
 import { render, screen } from '@solidjs/testing-library'
 import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { campaignMembersQueryOptions } from '@/entities/campaign/queries'
 import type { CampaignMember } from '@/shared/api/types'
 import type { InitiativeEntry, PresenceUser } from '@/shared/realtime/realtime'
 import { SessionRail } from './session-rail'
@@ -46,17 +45,14 @@ const membro = (characterId: number, name: string, ownerId: number): CampaignMem
 
 function renderRail(over: { turnIndex?: number; present?: PresenceUser[] } = {}) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  client.setQueryData(campaignMembersQueryOptions(1).queryKey, [
-    membro(12, 'Arcanista Erudito', 7),
-    membro(15, 'Paladino Sagrado', 8),
-  ])
+  const MEMBROS = [membro(12, 'Arcanista Erudito', 7), membro(15, 'Paladino Sagrado', 8)]
   const onOpenCharacter = vi.fn()
   const onOpenQueue = vi.fn()
   const onOpenCast = vi.fn()
   render(() => (
     <QueryClientProvider client={client}>
       <SessionRail
-        campaignId={1}
+        members={MEMBROS}
         entries={FILA}
         turnIndex={over.turnIndex ?? 1}
         activeEntryId={FILA[over.turnIndex ?? 1]?.id ?? null}
