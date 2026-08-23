@@ -158,20 +158,33 @@ func speciesOf(label string) (string, int) {
 // iniciativa, e mudar o nome dele por baixo faria a lista e o mapa discordarem
 // sobre quem é quem.
 func nextInstanceLabel(b *BoardState, label string) string {
-	especie, _ := speciesOf(label)
-	usados := map[int]bool{}
+	usados := make([]string, 0, len(b.Tokens))
 	for _, token := range b.Tokens {
-		outra, numero := speciesOf(token.Label)
+		usados = append(usados, token.Label)
+	}
+	return nextInstanceLabelAmong(usados, label)
+}
+
+// nextInstanceLabelAmong é a regra sozinha, sobre uma lista de rótulos — o
+// tabuleiro passa as peças e a FILA passa os combatentes (ALE-208). Extraída
+// porque adicionar quatro ogros à iniciativa tem exatamente o mesmo problema
+// que duplicar um zumbi no mapa, e resolvê-lo duas vezes é como as duas telas
+// passam a numerar diferente.
+func nextInstanceLabelAmong(usados []string, label string) string {
+	especie, _ := speciesOf(label)
+	ocupados := map[int]bool{}
+	for _, outro := range usados {
+		outra, numero := speciesOf(outro)
 		if outra != especie {
 			continue
 		}
 		if numero == 0 {
-			numero = 1 // a peça sem número ocupa o 1
+			numero = 1 // quem está sem número ocupa o 1
 		}
-		usados[numero] = true
+		ocupados[numero] = true
 	}
 	for numero := 1; ; numero++ {
-		if !usados[numero] {
+		if !ocupados[numero] {
 			return fmt.Sprintf("%s %d", especie, numero)
 		}
 	}
