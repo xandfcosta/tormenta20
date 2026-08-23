@@ -1,9 +1,11 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"t20engine/db/sqlcgen"
 
@@ -22,6 +24,8 @@ func (s *Server) rotasDeCampanhas(r chi.Router) {
 	r.Get("/campanhas", s.handleCampanhas)
 	r.Get("/campanhas/nova", s.handleCampanhaNova)
 	r.Post("/campanhas/nova", s.handleCampanhaNovaPost)
+	r.Get("/campanhas/entrar", s.handleCampanhaEntrar)
+	r.Post("/campanhas/entrar", s.handleCampanhaEntrarPost)
 }
 
 func (s *Server) handleCampanhas(w http.ResponseWriter, r *http.Request) {
@@ -151,4 +155,104 @@ func (s *Server) escreveFolhaNova(w http.ResponseWriter, r *http.Request, status
 		Forma:  cascaDensa,
 		Voltar: "/piloto/campanhas",
 	}, campanhaNova(v))
+}
+
+// ── a carta de convite: entrar na mesa (ALE-249) ─────────────────────────────
+
+// handleCampanhaEntrar desenha a carta, com o convite JÁ RESOLVIDO.
+func (s *Server) handleCampanhaEntrar(w http.ResponseWriter, r *http.Request) {
+	v, err := s.carregaCartaDeConvite(r.Context(), currentUser(r), r.URL.Query().Get("token"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	s.escreveCarta(w, r, http.StatusOK, v)
+}
+
+// handleCampanhaEntrarPost senta o herói à mesa.
+//
+// As sete travas são do `entrarNaMesa` e não daqui — a mesma função que a rota
+// JSON usa. O que este manipulador faz é TRADUZIR cada recusa para uma frase em
+// português no campo certo, que é trabalho de tela e não de regra.
+func (s *Server) handleCampanhaEntrarPost(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		s.escreveCarta(w, r, http.StatusBadRequest, campanhaEntrarView{Aviso: avisoInterno})
+		return
+	}
+	eu := currentUser(r)
+	token := r.PostFormValue("token")
+	v, err := s.carregaCartaDeConvite(r.Context(), eu, token)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	v.NumeroDigitado = r.PostFormValue("campaignId")
+
+	// O id da campanha vem do CONVITE quando há um, e do campo quando não há.
+	// Nunca dos dois: com convite na mão, um número digitado seria uma segunda
+	// fonte para a mesma coisa, e a tela nem mostra o campo.
+	campanhaID := v.CampanhaID
+	if !v.TemConvite {
+		n, erroNum := strconv.ParseInt(strings.TrimSpace(v.NumeroDigitado), 10, 64)
+		if erroNum != nil || n <= 0 {
+			v.Erros["campaignId"] = []string{"Informe o número da campanha."}
+			s.escreveCarta(w, r, http.StatusUnprocessableEntity, v)
+			return
+		}
+		campanhaID = n
+	}
+
+	heroiID, erroHeroi := strconv.ParseInt(r.PostFormValue("characterId"), 10, 64)
+	if erroHeroi != nil {
+		v.Erros["characterId"] = []string{"Escolha o herói que entra na mesa."}
+		s.escreveCarta(w, r, http.StatusUnprocessableEntity, v)
+		return
+	}
+	v.EscolhidoID = heroiID
+
+	_, err = s.entrarNaMesa(r.Context(), pedidoDeEntrada{
+		CampanhaID: campanhaID, PersonagemID: heroiID,
+		Convite: token, Papel: "player", QuemPede: eu.ID,
+	})
+	if err != nil {
+		v.Erros, v.Aviso = recusaDeEntrada(err)
+		s.escreveCarta(w, r, http.StatusUnprocessableEntity, v)
+		return
+	}
+	// 303, como a folha em branco: depois de um POST, recarregar a crônica não
+	// pode reenviar o formulário.
+	http.Redirect(w, r, "/campaigns/"+strconv.FormatInt(campanhaID, 10), http.StatusSeeOther)
+}
+
+// recusaDeEntrada traduz cada erro da regra para a frase que a pessoa lê.
+//
+// Uma frase por recusa, e não um "não foi possível entrar" para tudo: cada uma
+// destas tem uma AÇÃO diferente do outro lado — pedir link novo, conferir o
+// número, escolher outro herói, ou nada, porque já está lá dentro.
+func recusaDeEntrada(err error) (FieldErrorMap, string) {
+	switch {
+	case errors.Is(err, errCampanhaInexistente):
+		return FieldErrorMap{"campaignId": {"Não existe campanha com esse número."}}, ""
+	case errors.Is(err, errConviteExigido):
+		return FieldErrorMap{}, "Esta mesa é fechada. Peça um link de convite ao mestre."
+	case errors.Is(err, errPersonagemInexistente), errors.Is(err, errPersonagemDeOutro):
+		return FieldErrorMap{"characterId": {"Escolha um herói seu."}}, ""
+	case errors.Is(err, errJaTemPersonagem):
+		return FieldErrorMap{"characterId": {"Você já tem um herói nesta mesa."}}, ""
+	case errors.Is(err, errAlreadyInCampaign):
+		return FieldErrorMap{"characterId": {"Esse herói já está nesta mesa."}}, ""
+	default:
+		return FieldErrorMap{}, avisoInterno
+	}
+}
+
+func (s *Server) escreveCarta(w http.ResponseWriter, r *http.Request, status int, v campanhaEntrarView) {
+	if v.Erros == nil {
+		v.Erros = FieldErrorMap{}
+	}
+	s.escrevePagina(w, r, status, paginaPiloto{
+		Titulo: "Entrar na mesa",
+		Forma:  cascaDensa,
+		Voltar: "/piloto/campanhas",
+	}, campanhaEntrar(v))
 }

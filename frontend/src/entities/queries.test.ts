@@ -6,8 +6,6 @@ import {
   campaignMembersQueryOptions,
   campaignQueryOptions,
   campaignsQueryOptions,
-  fetchInvitePreview,
-  inviteQueryOptions,
 } from './campaign/queries'
 import {
   characterOptionsQueryOptions,
@@ -95,36 +93,6 @@ describe('queryFn → endpoint', () => {
       '/api/campaigns/1/members',
       '/api/campaigns/1/sessions/4',
     ])
-  })
-})
-
-describe('inviteQueryOptions', () => {
-  it('fica desligada sem token e não retenta', () => {
-    expect(inviteQueryOptions(undefined).enabled).toBe(false)
-    expect(inviteQueryOptions('abc').enabled).toBe(true)
-    // Um token morto é RESPOSTA, não soluço: retentar só atrasa o aviso.
-    expect(inviteQueryOptions('abc').retry).toBe(false)
-  })
-
-})
-
-describe('fetchInvitePreview', () => {
-  it('devolve a prévia de um convite vivo', async () => {
-    const client = createApiClient(
-      new FakeFetch([FakeFetch.json({ campaignId: 7, campaignName: 'Mesa' })]).fetch,
-    )
-    await expect(fetchInvitePreview('abc', client)).resolves.toEqual({
-      campaignId: 7,
-      campaignName: 'Mesa',
-    })
-  })
-
-  // O backend Go responde token desconhecido com 200 e corpo `null`. Sem
-  // transformar isso em erro, o convite expirado fica indistinguível de um
-  // ainda carregando e o jogador encara um botão morto sem explicação.
-  it('corpo nulo de token morto vira erro, não uma prévia vazia', async () => {
-    const client = createApiClient(new FakeFetch([FakeFetch.json(null)]).fetch)
-    await expect(fetchInvitePreview('token-morto', client)).rejects.toThrow(/Convite inválido/)
   })
 })
 

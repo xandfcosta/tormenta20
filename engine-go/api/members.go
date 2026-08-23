@@ -230,81 +230,46 @@ func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := currentUser(r)
-
-	c, err := s.queries.GetCampaign(r.Context(), cid)
-	if errors.Is(err, sql.ErrNoRows) {
-		writeError(w, http.StatusNotFound, fmt.Sprintf("Campaign %d not found", cid))
-		return
-	}
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load campaign")
-		return
-	}
-	if c.Ownerid != user.ID {
-		token := derefStr(body.InviteToken, "")
-		if !c.Invitetoken.Valid || token == "" || token != c.Invitetoken.String {
-			writeError(w, http.StatusForbidden, fmt.Sprintf("A valid invite token is required to join campaign %d", cid))
-			return
-		}
-	}
 	if body.CharacterID == nil {
 		writeValidationError(w, FieldErrorMap{"characterId": {"characterId must be an integer number"}})
 		return
 	}
-	owner, err := s.queries.GetCharacterOwner(r.Context(), *body.CharacterID)
-	if errors.Is(err, sql.ErrNoRows) {
+
+	// As SETE travas moram em `entrarNaMesa` (ALE-249) e não mais aqui: esta
+	// rota e a cena do servidor precisam das mesmas, e enquanto elas viviam
+	// dentro deste handler a segunda tela teria de copiá-las. O que sobra aqui
+	// é a TRADUÇÃO de cada recusa para o status e a frase que o fio JSON usa.
+	m, err := s.entrarNaMesa(r.Context(), pedidoDeEntrada{
+		CampanhaID:   cid,
+		PersonagemID: *body.CharacterID,
+		Convite:      derefStr(body.InviteToken, ""),
+		Papel:        derefStr(body.Role, "player"),
+		QuemPede:     user.ID,
+	})
+	switch {
+	case err == nil:
+	case errors.Is(err, errCampanhaInexistente):
+		writeError(w, http.StatusNotFound, fmt.Sprintf("Campaign %d not found", cid))
+		return
+	case errors.Is(err, errConviteExigido):
+		writeError(w, http.StatusForbidden, fmt.Sprintf("A valid invite token is required to join campaign %d", cid))
+		return
+	case errors.Is(err, errPersonagemInexistente):
 		writeFieldError(w, http.StatusBadRequest, fmt.Sprintf("Character %d not found", *body.CharacterID), FieldErrorMap{"characterId": {"Character does not exist"}})
 		return
-	}
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load character")
-		return
-	}
-	if owner != user.ID {
+	case errors.Is(err, errPersonagemDeOutro):
 		writeError(w, http.StatusForbidden, fmt.Sprintf("Cannot add a character you don't own (character %d)", *body.CharacterID))
 		return
-	}
-	role := derefStr(body.Role, "player")
-	if !campaignMemberRoles[role] {
+	case errors.Is(err, errPapelInvalido):
 		writeValidationError(w, FieldErrorMap{"role": {"role must be one of: player, gm"}})
 		return
-	}
-	// As duas travas abaixo falhavam ABERTAS (ALE-156): o erro era descartado
-	// com `_`, e um erro de banco virava `false`, que significa "pode entrar".
-	// Eram as únicas checagens do repositório que um erro ABRIA — as outras
-	// engolem o erro e NEGAM (mentem o status, não a decisão). Checagem de
-	// autorização ou de unicidade nunca descarta erro: na dúvida, nega.
-	if role == "player" {
-		hasPc, err := s.queries.HasPlayerPc(r.Context(), sqlcgen.HasPlayerPcParams{Campaignid: cid, Ownerid: user.ID})
-		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Could not check existing characters")
-			return
-		}
-		if hasPc {
-			writeFieldError(w, http.StatusConflict, fmt.Sprintf("You already have a character in campaign %d", cid), FieldErrorMap{"characterId": {"Você já tem um personagem nesta campanha"}})
-			return
-		}
-	}
-	// Snapshot model (ALE-33): the roster character is a template; a mesa holds
-	// its own copy. Dedupe on "this template already snapshotted here" rather
-	// than membership of the source (the source is never a member — the copy is).
-	hasCopy, err := s.campaignHasCopyOf(r.Context(), *body.CharacterID, cid)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not check campaign roster")
+	case errors.Is(err, errJaTemPersonagem):
+		writeFieldError(w, http.StatusConflict, fmt.Sprintf("You already have a character in campaign %d", cid), FieldErrorMap{"characterId": {"Você já tem um personagem nesta campanha"}})
 		return
-	}
-	if hasCopy {
+	case errors.Is(err, errAlreadyInCampaign):
 		writeFieldError(w, http.StatusConflict, fmt.Sprintf("Character %d already in campaign %d", *body.CharacterID, cid), FieldErrorMap{"characterId": {"Already a member"}})
 		return
-	}
-	m, err := s.joinCampaign(r.Context(), *body.CharacterID, cid, user.ID, role)
-	if errors.Is(err, errAlreadyInCampaign) {
-		// Perdeu a corrida para um pedido simultâneo: o desfecho é o mesmo 409
-		// que a checagem de fora daria, e não um 500 que culparia o servidor.
-		writeFieldError(w, http.StatusConflict, fmt.Sprintf("Character %d already in campaign %d", *body.CharacterID, cid), FieldErrorMap{"characterId": {"Already a member"}})
-		return
-	}
-	if err != nil {
+	default:
 		writeError(w, http.StatusInternalServerError, "Could not add member")
 		return
 	}
