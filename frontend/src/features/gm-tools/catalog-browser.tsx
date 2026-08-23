@@ -97,11 +97,11 @@ export function CatalogBrowser(props: CatalogBrowserProps) {
           // conteúdo e vazava 1854-2566px para fora do cartão, nos seis
           // formatos, sem a página rolar (ALE-149).
           <Tabs defaultValue="conditions" class="flex min-h-0 flex-1 flex-col gap-2">
-            <TabsList class="max-w-full self-start overflow-x-auto">
-              <TabsTrigger value="conditions">Condições</TabsTrigger>
-              <TabsTrigger value="spells">Magias</TabsTrigger>
-              <TabsTrigger value="powers">Poderes</TabsTrigger>
-              <TabsTrigger value="items">Itens</TabsTrigger>
+            <TabsList class="@container w-full shrink-0">
+              <CatalogTabTrigger value="conditions" label="Condições" />
+              <CatalogTabTrigger value="spells" label="Magias" />
+              <CatalogTabTrigger value="powers" label="Poderes" />
+              <CatalogTabTrigger value="items" label="Itens" />
             </TabsList>
 
             {/* `flex flex-col` em cada painel, e não só `min-h-0 flex-1`: o
@@ -167,6 +167,25 @@ export function CatalogBrowser(props: CatalogBrowserProps) {
         />
       </Show>
     </div>
+  )
+}
+
+/**
+ * Uma aba do catálogo, dividindo a faixa em quatro partes iguais.
+ *
+ * O `TabsList` do kit nasce `inline-flex w-fit`, então o `flex-1` que o gatilho
+ * já tinha não tinha o que dividir: as quatro abas ficavam encolhidas à
+ * esquerda enquanto a faixa tinha a largura toda. `w-full` dá a faixa, e o
+ * `min-w-0` é obrigatório junto do `flex-1` — sem ele o rótulo mais longo
+ * empurra a última aba para FORA da faixa, que foi a medida da ALE-122. O
+ * aperto é do CONTÊINER e não da viewport: a mesma tela dá 384px na gaveta e a
+ * largura inteira na Mesa (ALE-138).
+ */
+function CatalogTabTrigger(props: { value: string; label: string }) {
+  return (
+    <TabsTrigger value={props.value} class="min-w-0 flex-1 px-1 @sm:px-3">
+      <span class="truncate">{props.label}</span>
+    </TabsTrigger>
   )
 }
 
