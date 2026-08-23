@@ -116,22 +116,30 @@ test.describe('Listas virtualizadas do mestre', () => {
     const id = await ensurePowersFixture(request)
     await page.goto(`/characters/${id}`)
     await page.getByRole('tab', { name: /^Poderes/ }).click()
-    // O pool mora dentro do card da classe, e o card mora dentro do grupo
-    // "Classe" — os dois recolhidos, nada pinta e não há o que medir.
-    await page.getByRole('button', { name: /^Classe/ }).first().click()
+    // A escolha de poderes saiu do painel e virou DIÁLOGO (ALE-217): o painel
+    // agora é só a lista da mesa, e o pool de gerais vive onde se escolhe.
+    await page.getByRole('button', { name: /^Escolher poderes/ }).click()
+    const escolher = page.getByRole('dialog')
+    await expect(escolher).toBeVisible()
+    // A aba e o CARTÃO da mesma fonte compartilham o prefixo ("Classe, 3
+    // escolhas pendentes" e "Classe: Guerreiro 6"); o `(,|$)` separa a aba.
+    await escolher.getByRole('button', { name: /^Classe(,|$)/ }).click()
+    // O card da classe ABRE SOZINHO quando há escolha pendente, e é por isso
+    // que o teste cria um Guerreiro de 6º com três vagas em aberto em vez de
+    // usar um personagem da seed, onde as vagas já estão gastas.
 
     // `textbox`, não `searchbox`: este campo não declara `type="search"` como os
     // irmãos dele (bestiário e loja) — o papel segue o elemento, não o rótulo.
-    const busca = page.getByRole('textbox', { name: 'Buscar poder geral' })
+    const busca = escolher.getByRole('textbox', { name: 'Buscar poder geral' })
     await expect(busca).toBeVisible()
     // A linha do pool é um `div` com caixa de marcar e o nome em texto — não um
     // botão por linha, como nas outras listas.
-    await expect(page.getByText('Ataque Poderoso', { exact: true })).toBeVisible()
+    await expect(escolher.getByText('Ataque Poderoso', { exact: true })).toBeVisible()
 
     await busca.fill('esquiva')
-    await expect(page.getByText(/Esquiva/).first()).toBeVisible()
+    await expect(escolher.getByText(/Esquiva/).first()).toBeVisible()
     // O modo de falha da virtualização: guardar o que pintou primeiro.
-    await expect(page.getByText('Ataque Poderoso', { exact: true })).toHaveCount(0)
+    await expect(escolher.getByText('Ataque Poderoso', { exact: true })).toHaveCount(0)
   })
 
   /**
