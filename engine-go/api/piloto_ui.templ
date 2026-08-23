@@ -161,3 +161,77 @@ templ tituloDaCena(titulo, kicker string) {
 		}
 	</div>
 }
+
+// campoDeTextoLongo é o irmão do `campoDeTexto` para texto de vários parágrafos
+// (ALE-246). Mesma gramática de rótulo, erro e dica — o que muda é só o
+// elemento e a altura.
+//
+// O `maxlength` NATIVO faz o navegador parar a digitação no limite, e isso é
+// melhor que recusar depois: a pessoa vê que chegou ao fim enquanto escreve, em
+// vez de perder o texto ao enviar. O servidor continua sendo a autoridade —
+// `maxlength` não sobrevive a um POST feito na mão.
+//
+// `field-sizing-content` com `min-h-16` é o que a SPA faz, e eu só descobri
+// medindo: a caixa CRESCE com o texto e as `linhas` são só o piso para quem não
+// suporta a propriedade. Eu tinha lido a captura de tela como "3 linhas" e
+// fixado a altura — o que dava 77px onde a SPA dá 64 e, pior, tirava o
+// crescimento. Num telefone DEITADO esses 13px são a diferença entre o botão de
+// enviar estar na tela e não estar.
+templ campoDeTextoLongo(c campo, linhas int) {
+	<div class="space-y-2">
+		<label for={ c.Nome } class="flex items-center gap-2 text-sm leading-none font-medium select-none">
+			{ c.Label }
+		</label>
+		<textarea
+			id={ c.Nome }
+			name={ c.Nome }
+			rows={ inteiro(linhas) }
+			if c.TamanhoMaximo > 0 {
+				maxlength={ inteiro(c.TamanhoMaximo) }
+			}
+			if len(c.Erros) > 0 {
+				aria-invalid="true"
+				aria-describedby={ c.Nome + "-erro" }
+			}
+			class="field-sizing-content min-h-16 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm aria-invalid:border-destructive aria-invalid:ring-destructive/20"
+		>{ c.Valor }</textarea>
+		if len(c.Erros) == 0 && c.Dica != "" {
+			<p class="text-xs text-muted-foreground">{ c.Dica }</p>
+		}
+		if len(c.Erros) > 0 {
+			<div id={ c.Nome + "-erro" }>
+				for _, e := range c.Erros {
+					<p class="text-sm text-destructive">{ e }</p>
+				}
+			</div>
+		}
+	</div>
+}
+
+// folhaDoTomo é uma FOLHA do grimório aberta: a capa de couro segurando uma
+// página que preenche a cena (ALE-246, portado do `TomePage`).
+//
+// Toda cena de campanha é página do mesmo livro — a crônica que se lê, a folha
+// em branco que se escreve, e a carta de convite enfiada nela.
+//
+// O par `max-lg:landscape:` não é enfeite e a chave é LARGURA + ORIENTAÇÃO, não
+// altura: um telefone deitado tem ~390px de altura, e com o espaçamento cheio o
+// botão de enviar cai para fora da tela. Uma consulta por `max-height` também
+// casaria com o telefone EM PÉ e o teclado virtual aberto (390x494) — e estas
+// folhas hospedam campos de texto, então o espaçamento encolheria debaixo do
+// dedo no meio da digitação (ALE-176).
+templ folhaDoTomo() {
+	<div class="w-full">
+		<div class="grimorio-leather grimorio-page-in p-2.5 sm:p-3">
+			// `data-tome-root` é CONTRATO PUBLICADO e não decoração: é a raiz de
+			// navegação por teclado do lado da SPA, e é a testemunha que o e2e da
+			// ALE-176 mede para provar que o respiro da folha chaveia por
+			// ORIENTAÇÃO e não por altura. Portar a folha sem ele fez o teste
+			// esperar por um seletor que não existia mais — a virada teria
+			// apagado a prova junto com o elemento.
+			<div data-tome-root class="grimorio-frame--stone flex min-h-[calc(100dvh-7rem)] flex-col gap-6 rounded-none p-6 sm:p-10 max-lg:landscape:gap-3 max-lg:landscape:p-4">
+				{ children... }
+			</div>
+		</div>
+	</div>
+}

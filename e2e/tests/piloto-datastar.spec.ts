@@ -1,5 +1,6 @@
 import { type Page, expect, test } from '@playwright/test'
 import { VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
+import { expectDentroDaJanela } from './support/geometry'
 
 /**
  * As DUAS telas do piloto Datastar (ALE-219): a Mesa do jogador e a
@@ -448,6 +449,66 @@ test.describe('A cena de campanhas (piloto Datastar)', () => {
 
     await page.getByRole('searchbox', { name: 'Buscar campanha' }).fill('zzzzzz')
     await expect(page.getByText(/Nenhuma campanha combina/)).toBeVisible()
+  })
+})
+
+test.describe('A folha em branco (piloto Datastar)', () => {
+  test.use({ storageState: '.auth/user.json' })
+
+  test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
+    await page.goto('/piloto/campanhas/nova')
+    await expect(page.getByRole('heading', { name: 'Abrir nova campanha' })).toBeVisible()
+    expect(await textoComContrasteBaixo(page), 'texto abaixo do AA na folha em branco').toEqual([])
+  })
+
+  // Tela nova se valida nos seis formatos. Aqui importa mais que de costume: a
+  // folha hospeda campos de texto, e o espaçamento dela encolhe com a
+  // ORIENTAÇÃO justamente porque num telefone deitado o botão de enviar caía
+  // para fora da tela (ALE-176).
+  test('a folha cabe nos seis formatos', async ({ page }) => {
+    await page.goto('/piloto/campanhas/nova')
+    await expect(page.getByRole('button', { name: 'Abrir campanha' })).toBeVisible()
+
+    await expectNoHorizontalOverflow(page, VIEWPORTS)
+    for (const viewport of VIEWPORTS) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height })
+      await expectDentroDaJanela(page)
+    }
+  })
+
+  /**
+   * A RECUSA NÃO COME O TEXTO — e este é o caso que só o navegador vê inteiro,
+   * porque envolve o `maxlength` NATIVO e o envio de verdade do formulário.
+   *
+   * O guarda em Go afirma o mesmo pelo lado do servidor. O que se acrescenta
+   * aqui é que o navegador PARA a digitação no limite em vez de deixar escrever
+   * 3000 caracteres e recusar no fim: ver a pessoa chegar ao fim enquanto
+   * escreve é melhor que perder o texto ao enviar.
+   */
+  test('a recusa devolve o texto, e o limite avisa enquanto se escreve', async ({ page }) => {
+    await page.goto('/piloto/campanhas/nova')
+    const descricao = page.getByLabel('Descrição')
+
+    // O `maxlength` nativo é o aviso durante a digitação.
+    await descricao.fill('x'.repeat(2500))
+    expect((await descricao.inputValue()).length, 'o navegador deixou passar do teto').toBe(2000)
+
+    // Nome de puros espaços: o `required` não pega, o servidor pega.
+    await page.getByLabel('Nome').fill('   ')
+    await descricao.fill('A caravana parte de Valkaria ao amanhecer.')
+    await page.getByRole('button', { name: 'Abrir campanha' }).click()
+
+    await expect(page.getByText(/O nome é obrigatório/)).toBeVisible()
+    await expect(descricao, 'a descrição sumiu na recusa').toHaveValue(
+      'A caravana parte de Valkaria ao amanhecer.',
+    )
+  })
+
+  // O endereço antigo é favorito: ele não pode quebrar.
+  test('o endereço antigo /campaigns/new encaminha para a folha nova', async ({ page }) => {
+    await page.goto('/campaigns/new')
+    await expect(page).toHaveURL(/\/piloto\/campanhas\/nova$/)
+    await expect(page.getByRole('heading', { name: 'Abrir nova campanha' })).toBeVisible()
   })
 })
 

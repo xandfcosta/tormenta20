@@ -286,3 +286,31 @@ todo descoberto errando — está aqui para ninguém redescobrir:
   `../*.templ`, e só ele — por isso `classesDoBotao` mora no `.templ` e não no
   `.go`. Classe que não passou pelo scanner simplesmente não existe na folha, e
   o elemento aparece sem estilo em vez de dar erro.
+
+## Remendo em nó COMPARTILHADO exige limpeza no gesto que troca de item
+
+Uma cena em Datastar desenha **todos** os itens e alterna qual aparece com
+`data-show`. Isso é seguro enquanto o conteúdo de cada item vier inteiro do
+servidor — e deixa de ser no instante em que algo é escrito, DEPOIS da
+renderização, num nó que os itens dividem.
+
+O caso que ensinou: o diálogo de redefinição de senha é UM só, reaproveitado por
+todas as linhas de jogador, e o token chega por remendo do servidor num `<div>`
+de id fixo. Gerar o link da Ana, fechar, e abrir a caixa da Bia mostrava **o link
+da Ana sob o nome da Bia** — e quem estiver com pressa entrega a chave da conta
+errada.
+
+**A regra: quem LIMPA é o gesto que TROCA de item, não o gesto que gera.** Quem
+gera não sabe que vai haver um próximo; quem troca sabe que houve um anterior.
+
+```
+data-on:click="$alvoId = el.dataset.id;
+               document.getElementById('reset-link').innerHTML = '';
+               $redefinir.showModal()"
+```
+
+É a mesma família do `<Show keyed>` sem parâmetro que mordeu do lado da SPA
+(ALE-208): **estado de um item sobrevivendo à troca por outro**. Muda o vestido,
+não o defeito. E como o `data-show` é a forma que esta migração multiplica, vale
+conferir a cada cena nova: existe algum nó compartilhado que recebe escrita
+depois da renderização? Se existe, quem troca de item tem de apagá-lo.
