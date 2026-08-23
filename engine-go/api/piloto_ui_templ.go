@@ -42,6 +42,7 @@ type tamanho string
 
 const (
 	tamPadrao  tamanho = "default"
+	tamGrande  tamanho = "lg"
 	tamPequeno tamanho = "sm"
 	tamMinimo  tamanho = "xs"
 )
@@ -59,6 +60,7 @@ func classesDoBotao(v variante, t tamanho, extra string) string {
 	}
 	porTamanho := map[tamanho]string{
 		tamPadrao:  "h-9 px-4 py-2",
+		tamGrande:  "h-10 rounded-sm px-6",
 		tamPequeno: "h-8 gap-1.5 rounded-sm px-3",
 		tamMinimo:  "h-6 gap-1 rounded-sm px-2 text-xs",
 	}
@@ -191,7 +193,7 @@ func campoDeTexto(c campo) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 103, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 105, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -204,7 +206,7 @@ func campoDeTexto(c campo) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(c.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 104, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 106, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -217,7 +219,7 @@ func campoDeTexto(c campo) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 107, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 109, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -230,7 +232,7 @@ func campoDeTexto(c campo) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 108, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 110, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 		if templ_7745c5c3_Err != nil {
@@ -243,7 +245,7 @@ func campoDeTexto(c campo) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(tipoOuTexto(c.Tipo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 109, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 111, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -256,7 +258,7 @@ func campoDeTexto(c campo) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Valor)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 110, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 112, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {
@@ -274,7 +276,7 @@ func campoDeTexto(c campo) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Autocomplete)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 112, Col: 33}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 114, Col: 33}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 			if templ_7745c5c3_Err != nil {
@@ -299,7 +301,7 @@ func campoDeTexto(c campo) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(inteiro(c.TamanhoMinimo))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 118, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 120, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 			if templ_7745c5c3_Err != nil {
@@ -318,7 +320,7 @@ func campoDeTexto(c campo) templ.Component {
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(inteiro(c.TamanhoMaximo))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 121, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 123, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 			if templ_7745c5c3_Err != nil {
@@ -337,7 +339,7 @@ func campoDeTexto(c campo) templ.Component {
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome + "-erro")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 125, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 127, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 			if templ_7745c5c3_Err != nil {
@@ -360,7 +362,7 @@ func campoDeTexto(c campo) templ.Component {
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(c.Dica)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 130, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 132, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -379,7 +381,7 @@ func campoDeTexto(c campo) templ.Component {
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome + "-erro")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 133, Col: 29}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 135, Col: 29}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 			if templ_7745c5c3_Err != nil {
@@ -397,7 +399,7 @@ func campoDeTexto(c campo) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(e)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 135, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 137, Col: 44}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -508,7 +510,7 @@ func tituloDaCena(titulo, kicker string) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 155, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 157, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -526,7 +528,7 @@ func tituloDaCena(titulo, kicker string) templ.Component {
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(kicker)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 158, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 160, Col: 89}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {

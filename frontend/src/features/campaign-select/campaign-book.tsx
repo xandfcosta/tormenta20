@@ -205,7 +205,7 @@ function StatusLine(props: { role: string; isLive: boolean }) {
       <span>{props.role}</span>
       <Show when={props.isLive}>
         <span aria-hidden="true">·</span>
-        <span class="flex items-center gap-1.5 text-[color:var(--grimorio-crimson)] opacity-100">
+        <span class="flex items-center gap-1.5 text-[color:var(--grimorio-parchment-crimson)] opacity-100">
           <span class="size-2 animate-pulse rounded-full bg-[color:var(--grimorio-crimson-bright)] motion-reduce:animate-none" />
           Sessão ao vivo
         </span>

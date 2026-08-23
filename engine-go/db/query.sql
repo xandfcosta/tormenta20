@@ -359,6 +359,24 @@ WHERE s.status = 'active'
 ORDER BY c.updatedAt DESC
 LIMIT 1;
 
+-- name: LiveSessionsForUser :many
+-- ALE-234: which of my campaigns have a session RUNNING, all in one query.
+-- The SPA asked this with one request PER CAMPAIGN, twice over: once in the Hub
+-- (createActiveSession) and once in the campaign scene
+-- (createActiveSessionByCampaign). Two identical fan-outs in two screens is the
+-- sign that the hole was in the API, not in the screens.
+SELECT s.campaignId AS campaignId, MIN(s.id) AS sessionId
+FROM sessions s
+JOIN campaigns c ON c.id = s.campaignId
+WHERE s.status = 'active'
+  AND (c.ownerId = sqlc.arg('userId')
+       OR c.id IN (
+         SELECT m.campaignId FROM campaign_members m
+         JOIN characters ch ON ch.id = m.characterId
+         WHERE ch.ownerId = sqlc.arg('userId')
+       ))
+GROUP BY s.campaignId;
+
 -- name: ResetSessionTracker :exec
 UPDATE sessions SET runtimeState = sqlc.arg('runtimeState'), updatedAt = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id');

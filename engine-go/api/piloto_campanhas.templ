@@ -1,0 +1,326 @@
+package api
+
+import (
+	"fmt"
+	"strconv"
+)
+
+// A cena de CAMPANHAS desenhada (ALE-234).
+//
+// O cursor (`$cursor`) é um sinal e o servidor manda TODOS os livros: trocar de
+// campanha é `data-show`, não requisição. Quem move o cursor é o FOCO — cada
+// marcador do trilho o escreve no `focusin` —, e assim as setas funcionam sem
+// uma linha de teclado nesta tela: o driver do `cena.js` já move foco dentro de
+// uma `data-nav-region`, e o cursor vem de carona.
+//
+// Essa é a diferença de desenho em relação à SPA, e ela é simplificação de
+// verdade: lá o teclado é um modo `delegated` do `scene-nav` com um
+// `onCommand` mapeando cada direção, porque o cursor era estado do componente e
+// o foco não o seguia.
+//
+// A VIRADA DE PÁGINA não está aqui: a troca é instantânea, que é o caminho que
+// a própria SPA usa no telefone e sob `prefers-reduced-motion`. A folha
+// atravessando a lombada tem issue própria (ALE-235), por decisão do dono.
+
+// cenaDeCampanhas embrulha a cena num elemento com `id`, e é ele que o remendo
+// da busca substitui. O `id` é o que o morph do Datastar casa — sem ele o
+// remendo não teria onde pousar.
+templ cenaDeCampanhas(v campanhasView) {
+	<div id="cena-campanhas" class="flex min-h-0 flex-1 flex-col">
+		@campanhas(v)
+	</div>
+}
+
+templ campanhas(v campanhasView) {
+	@barraDeCampanhas(v)
+	if !v.TemAlguma {
+		@vazioDeCampanhas()
+	} else if v.FiltrouTudo {
+		@buscaSemResultado(v)
+	} else {
+		<div class="flex min-h-0 flex-1 items-center justify-center">
+			<div class="flex min-h-0 w-full max-w-7xl flex-col gap-2 lg:flex-row lg:items-stretch lg:gap-0">
+				// Espelha a largura do trilho para o LIVRO centralizar na janela, e
+				// não o conjunto livro+trilho. Some no telefone.
+				<div aria-hidden="true" class="hidden lg:block lg:w-56 lg:shrink-0"></div>
+				<div class="flex min-h-0 flex-1 items-center justify-center py-1">
+					for _, c := range v.Campanhas {
+						@livroDaCampanha(c)
+					}
+				</div>
+				@trilhoDeCampanhas(v)
+			</div>
+		</div>
+	}
+}
+
+// barraDeCampanhas é a fileira do cabeçalho: busca, filtro de papel e as duas
+// portas de entrada.
+//
+// A busca e o filtro viajam na URL (`@get` com os sinais), então a tela
+// filtrada é um endereço que se guarda e se recarrega — coisa que o estado de
+// componente da SPA não dava.
+templ barraDeCampanhas(v campanhasView) {
+	<div
+		class="flex w-full flex-wrap items-center gap-2 border-b border-grimorio-iron px-4 py-3"
+		data-signals={ fmt.Sprintf("{busca: %q, papel: %q, cursor: %d}", v.Busca, v.Papel, v.CursorID) }
+	>
+		<a
+			href="/piloto/"
+			class="inline-flex min-h-11 items-center gap-1 px-3 font-heading text-sm tracking-wide text-muted-foreground outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>‹ Voltar</a>
+		<h1 class="font-heading text-xl tracking-wide text-foreground">Campanhas</h1>
+		if v.TemAlguma {
+			// O `__debounce` no `data-on:input` não é afinação: sem ele isto é uma
+			// requisição POR TECLA. 250ms é o que separa "ainda digitando" de
+			// "parou de digitar".
+			<div class="relative w-full sm:ml-auto sm:w-56 md:w-64">
+				@icone("Search", "pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground")
+				<input
+					type="search"
+					name="busca"
+					data-busca
+					data-bind:busca
+					data-on:input__debounce.250ms="@get('/piloto/campanhas')"
+					value={ v.Busca }
+					placeholder="Buscar campanha"
+					aria-label="Buscar campanha"
+					class="h-9 w-full rounded-sm border border-input bg-transparent pl-8 pr-3 text-base outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring md:text-sm"
+				/>
+			</div>
+			@filtroDePapel(v)
+		}
+		<div class="ml-auto flex gap-2 sm:ml-0">
+			<a href="/campaigns/join" aria-label="Entrar em campanha" class={ classesDoBotao(varSecundaria, tamPequeno, "") }>
+				@icone("UserPlus", "size-4 sm:mr-1")
+				<span class="hidden sm:inline">Entrar</span>
+			</a>
+			<a href="/campaigns/new" aria-label="Nova campanha" class={ classesDoBotao(varPrimaria, tamPequeno, "") }>
+				@icone("Plus", "size-4 sm:mr-1")
+				<span class="hidden sm:inline">Nova</span>
+			</a>
+		</div>
+	</div>
+}
+
+templ filtroDePapel(v campanhasView) {
+	// `fieldset` + `legend` em `sr-only` porque é um conjunto de escolhas
+	// exclusivas, e é o que o `useSemanticElements` da casa pede (ALE-224).
+	<fieldset class="flex items-center gap-1">
+		<legend class="sr-only">Filtrar por papel</legend>
+		@chipDePapel(v, "todas", "Todas")
+		@chipDePapel(v, "gm", "Mestrando")
+		@chipDePapel(v, "player", "Jogando")
+	</fieldset>
+}
+
+// chipDePapel é `aria-pressed` e não `data-selected`: um botão que fica ligado
+// é um alternador, e é isso que o leitor de tela precisa ouvir.
+templ chipDePapel(v campanhasView, valor, rotulo string) {
+	<button
+		type="button"
+		aria-pressed={ boolStr(v.Papel == valor) }
+		data-on:click={ fmt.Sprintf("$papel = %q; @get('/piloto/campanhas')", valor) }
+		class={ "h-8 rounded-sm px-3 text-sm font-medium outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
+			templ.KV("bg-secondary text-secondary-foreground border border-grimorio-iron-light", v.Papel == valor),
+			templ.KV("text-muted-foreground hover:text-foreground", v.Papel != valor) }
+	>
+		{ rotulo }
+	</button>
+}
+
+// ── o livro ──────────────────────────────────────────────────────────────────
+
+// livroDaCampanha é a crônica em foco como um tomo aberto: capa de couro com
+// duas folhas separadas pela lombada. A da esquerda é a ilustração (o emblema
+// de matiz, até haver arte de verdade); a da direita é a informação e a ação.
+//
+// Todos os livros são desenhados e o `data-show` escolhe um. É o que faz ←/→
+// não custar requisição.
+templ livroDaCampanha(c campanhaCartao) {
+	<div data-show={ fmt.Sprintf("$cursor == %d", c.ID) } class="grimorio-book w-full p-2.5 sm:p-3">
+		<div class="grimorio-book-pages flex flex-col overflow-hidden sm:min-h-[26rem] sm:flex-row sm:items-stretch lg:min-h-[32rem] xl:min-h-[36rem]">
+			@folhaDaArte(c)
+			@folhaDaInformacao(c)
+		</div>
+	</div>
+}
+
+templ folhaDaArte(c campanhaCartao) {
+	<div class="grimorio-parchment-bg flex shrink-0 items-center justify-center p-0 sm:w-1/2 sm:p-4 lg:p-7 xl:p-10">
+		<div
+			class="relative aspect-[16/10] w-full overflow-hidden rounded-none border border-[color:var(--grimorio-parchment-ink)]/35 sm:aspect-auto sm:h-full"
+			style={ "background: " + c.Gradiente }
+		>
+			<span
+				aria-hidden="true"
+				class="absolute inset-0 flex select-none items-center justify-center font-display text-[4.5rem] leading-none text-white/15 sm:text-[7rem] lg:text-[8.5rem]"
+			>
+				{ c.Iniciais }
+			</span>
+			<span aria-hidden="true" class="pointer-events-none absolute inset-0 [box-shadow:inset_0_0_90px_14px_oklch(0_0_0/0.45)]"></span>
+		</div>
+	</div>
+}
+
+// folhaDaInformacao é pergaminho com tinta escura. O apagado aqui é OPACIDADE e
+// não os tokens escuros da cena — eles sumiriam sobre o creme.
+templ folhaDaInformacao(c campanhaCartao) {
+	<div class="grimorio-parchment-bg flex flex-1 flex-col justify-center gap-4 p-6 sm:p-8 lg:p-12 xl:p-16">
+		<p class="flex items-center gap-2 text-2xs font-semibold uppercase tracking-[0.22em] opacity-70">
+			<span>{ c.Papel }</span>
+			if c.AoVivo {
+				<span aria-hidden="true">·</span>
+				<span class="flex items-center gap-1.5 text-[color:var(--grimorio-parchment-crimson)] opacity-100">
+					<span class="size-2 animate-pulse rounded-full bg-[color:var(--grimorio-crimson-bright)] motion-reduce:animate-none"></span>
+					Sessão ao vivo
+				</span>
+			}
+		</p>
+		<h2 class="font-display text-2xl uppercase leading-tight tracking-[0.05em] sm:text-[2rem] lg:text-4xl">{ c.Nome }</h2>
+		if c.Sinopse == "" {
+			<p class="text-sm italic opacity-60">Esta campanha ainda não tem uma sinopse.</p>
+		} else {
+			<p class="max-w-prose text-sm leading-relaxed opacity-85">{ c.Sinopse }</p>
+		}
+		if c.Meu != nil {
+			<div class="flex w-full max-w-xs items-center gap-2 rounded-sm border border-[color:var(--grimorio-parchment-ink)]/25 p-2">
+				<span
+					aria-hidden="true"
+					class="grid size-9 shrink-0 place-items-center rounded-full font-heading text-sm font-bold text-white"
+					style={ "background: " + gradienteDaCampanha(c.Meu.Nome) }
+				>{ c.Meu.Iniciais }</span>
+				<div class="min-w-0">
+					<p class="truncate font-medium">{ c.Meu.Nome }</p>
+					<p class="truncate text-xs opacity-70">{ c.Meu.Classes }</p>
+				</div>
+			</div>
+		}
+		@acoesDaCampanha(c)
+	</div>
+}
+
+// acoesDaCampanha: "Abrir campanha" fica SEMPRE na primeira posição e no mesmo
+// tamanho.
+//
+// A regra vem da ALE-96 e da ALE-78: a cena pinta antes de saber se há sessão
+// viva, e um botão que muda de lugar quando o dado chega some debaixo do
+// cursor. Ao vivo ele só troca de preenchimento, cedendo o destaque para
+// "Continuar a sessão", que ENTRA à direita em vez de empurrar.
+templ acoesDaCampanha(c campanhaCartao) {
+	<div class="flex flex-wrap items-center gap-2 pt-1">
+		<a
+			href={ templ.SafeURL("/campaigns/" + strconv.FormatInt(c.ID, 10)) }
+			class={ classesDoBotao(seAoVivo(c, varSecundaria, varPrimaria), tamGrande, "") }
+		>
+			Abrir campanha
+		</a>
+		if c.AoVivo {
+			<a
+				href={ templ.SafeURL(fmt.Sprintf("/campaigns/%d/sessions/%d", c.ID, c.SessaoID)) }
+				class={ classesDoBotao(varPrimaria, tamGrande, "") }
+			>
+				Continuar a sessão
+				@icone("ChevronRight", "ml-1 size-4")
+			</a>
+		}
+	</div>
+}
+
+func seAoVivo(c campanhaCartao, aoVivo, parado variante) variante {
+	if c.AoVivo {
+		return aoVivo
+	}
+	return parado
+}
+
+// ── o trilho ─────────────────────────────────────────────────────────────────
+
+// trilhoDeCampanhas são os marcadores. `data-nav-region` + `data-nav-layout`
+// são o contrato com o driver de teclado, e o `focusin` de cada marcador é o
+// que faz o cursor seguir o foco.
+//
+// `listbox`/`option` e não `nav`/`button`, porque é o que a SPA já expõe —
+// conferido no navegador, o trilho dela sai como `listbox` com as campanhas
+// como `option`. E é a semântica certa: o trilho ESCOLHE o que o palco mostra,
+// não navega para lugar nenhum. Escrever `nav` aqui faria o leitor de tela
+// anunciar duas coisas diferentes para a mesma peça nas duas telas.
+templ trilhoDeCampanhas(v campanhasView) {
+	<div
+		role="listbox"
+		aria-label="Campanhas"
+		aria-orientation="vertical"
+		data-nav-region="trilho"
+		data-nav-layout="column"
+		class="flex gap-1 overflow-x-auto lg:-ml-px lg:w-56 lg:shrink-0 lg:flex-col lg:overflow-visible lg:self-stretch"
+	>
+		for _, c := range v.Campanhas {
+			@marcadorDaCampanha(c)
+		}
+	</div>
+}
+
+templ marcadorDaCampanha(c campanhaCartao) {
+	<button
+		type="button"
+		role="option"
+		data-nav-item
+		data-cue-hover
+		data-attr:aria-selected={ fmt.Sprintf("$cursor == %d ? 'true' : 'false'", c.ID) }
+		data-on:focusin={ fmt.Sprintf("$cursor = %d", c.ID) }
+		data-on:click={ fmt.Sprintf("$cursor = %d", c.ID) }
+		class={ "flex min-h-11 shrink-0 items-center gap-2 border border-grimorio-iron bg-grimorio-panel px-3 py-2 text-left outline-none transition-colors hover:bg-grimorio-panel-raised focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
+			"aria-selected:border-grimorio-gold aria-selected:bg-grimorio-panel-raised" }
+	>
+		<span
+			aria-hidden="true"
+			class="flex size-8 shrink-0 items-center justify-center rounded-none border border-grimorio-iron font-display text-xs text-white/85"
+			style={ "background: " + c.Gradiente }
+		>{ c.Iniciais }</span>
+		// Nome E papel, como a SPA: o marcador anuncia "Snapshot Test ALE-33
+		// Mestrando". O papel não é enfeite na lista de um admin, que vê mesas
+		// de outras pessoas e precisa distinguir a própria (ALE-120).
+		<span class="flex min-w-0 flex-1 flex-col">
+			<span class="truncate font-heading text-sm tracking-wide">{ c.Nome }</span>
+			<span class="text-3xs uppercase tracking-[0.18em] opacity-65">{ c.Papel }</span>
+		</span>
+		if c.AoVivo {
+			<span aria-hidden="true" class="size-2 shrink-0 animate-pulse rounded-full bg-[color:var(--grimorio-crimson-bright)] motion-reduce:animate-none"></span>
+			<span class="sr-only">com sessão ao vivo</span>
+		}
+	</button>
+}
+
+// ── os vazios ────────────────────────────────────────────────────────────────
+
+templ vazioDeCampanhas() {
+	<div class="flex flex-1 items-center justify-center p-8">
+		<div class="max-w-md space-y-3 text-center">
+			<h2 class="font-heading text-lg tracking-wide">Nenhuma campanha ainda</h2>
+			<p class="text-sm text-muted-foreground">
+				Crie a sua para começar a mestrar, ou entre numa com o link que o mestre enviou.
+			</p>
+		</div>
+	</div>
+}
+
+templ buscaSemResultado(v campanhasView) {
+	<div class="flex flex-1 items-center justify-center p-8">
+		<div class="max-w-md space-y-3 text-center">
+			<p class="text-sm text-muted-foreground">Nenhuma campanha combina com o que você buscou.</p>
+			@botao(varSecundaria, tamPequeno, "", templ.Attributes{
+				"type":          "button",
+				"data-on:click": "$busca = ''; $papel = 'todas'; @get('/piloto/campanhas')",
+			}) {
+				Limpar a busca
+			}
+		</div>
+	</div>
+}
+
+func boolStr(b bool) string {
+	if b {
+		return "true"
+	}
+	return "false"
+}
