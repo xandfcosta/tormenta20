@@ -1626,12 +1626,41 @@ test.describe('Sessão ao vivo', () => {
     // encontro, caminho que a ALE-198 não tocou. Medido: ~7ms depois do
     // clique, sem requisição na rede, com o catálogo já em cache. Está na
     // ALE-199; consertar lá é devolver "Bestiário" a esta lista.
+    // COMO SE FECHA depende de a consulta abrir gaveta ou não, e as duas
+    // metades foram aprendidas apanhando.
+    //
+    // 1. A partir de 1280 a gaveta é `fixed right-0` e o trilho mora na borda
+    //    direita: com ela aberta o botão do trilho fica DEBAIXO dela — medido,
+    //    a gaveta ocupa x 864–1280 e o botão está em 1217, e quem recebe o
+    //    clique é o conteúdo da gaveta. Vale igual na main; o teste só nunca
+    //    tropeçou porque clicava enquanto a gaveta ainda deslizava, e era uma
+    //    corrida com a animação. Fechar pelo ✕ não depende de tempo.
+    // 2. "Notas" NÃO abre gaveta neste formato: acima do degrau ela renderiza
+    //    inline, ao lado do mapa (`Show when={!railsFit()}`). Sem gaveta não há
+    //    ✕ — e sem gaveta também não há nada cobrindo o trilho, então ali o
+    //    próprio botão fecha.
+    //
+    // Que o trilho fique inalcançável com a gaveta aberta é achado de PRODUTO e
+    // não deste teste: o painel é não modal acima de 1280 justamente para o
+    // mestre seguir trabalhando atrás dele (ALE-75). Está registrado à parte.
     for (const consulta of ['Encontros', 'Catálogos', 'Notas'] as const) {
       await abreConsulta(page, consulta)
       await expect(
         trilhoDeConsultas(page).getByRole('button', { name: consulta, exact: true }),
       ).toHaveAttribute('aria-pressed', 'true')
-      await abreConsulta(page, consulta)
+
+      // O ✕ se chama "Fechar <título da gaveta>", e o título nem sempre é o
+      // rótulo do trilho — prender o VERBO sobrevive a renomear a gaveta.
+      const fechar = page.getByRole('dialog').getByRole('button', { name: /^Fechar / })
+      if (await fechar.count()) {
+        await fechar.first().click()
+        await expect(page.getByRole('dialog')).toHaveCount(0)
+      } else {
+        await abreConsulta(page, consulta)
+      }
+      await expect(
+        trilhoDeConsultas(page).getByRole('button', { name: consulta, exact: true }),
+      ).toHaveAttribute('aria-pressed', 'false')
     }
 
     const desanexos = await page.evaluate(
