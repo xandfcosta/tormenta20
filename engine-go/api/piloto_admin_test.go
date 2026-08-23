@@ -88,11 +88,11 @@ func TestPainelNaoOfereceApagarAPropriaConta(t *testing.T) {
 		{ID: 2, Nome: "Outro", Email: "outro@t.com", Posses: "-", Custo: "-", EhEu: false},
 	}}
 
-	html, err := renderFragmento("admin-jogadores", view)
+	html, err := renderFragmento(t.Context(), painelJogadores(view))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
-	texto := string(html)
+	texto := html
 
 	if strings.Contains(texto, "Apagar a conta de Dono") {
 		t.Error("o painel ofereceu apagar a PRÓPRIA conta — o servidor recusaria e o dono levaria um erro")
@@ -108,22 +108,22 @@ func TestPainelNaoOfereceApagarAPropriaConta(t *testing.T) {
 // comportamento no navegador.
 func TestOBotaoDaLinhaAbreODialogoEmVezDeApagar(t *testing.T) {
 	view := adminView{Jogadores: []adminJogador{{ID: 2, Nome: "Outro", EhEu: false}}}
-	linha, err := renderFragmento("admin-jogadores", view)
+	linha, err := renderFragmento(t.Context(), painelJogadores(view))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
-	if strings.Contains(string(linha), "@post") {
+	if strings.Contains(linha, "@post") {
 		t.Error("o botão da linha posta direto — o primeiro clique virou irreversível")
 	}
-	if !strings.Contains(string(linha), "showModal()") {
+	if !strings.Contains(linha, "showModal()") {
 		t.Error("o botão da linha não abre o diálogo")
 	}
 
-	dialogo, err := renderFragmento("admin-confirmar", view)
+	dialogo, err := renderFragmento(t.Context(), dialogoConfirmar())
 	if err != nil {
 		t.Fatalf("render do diálogo: %v", err)
 	}
-	if !strings.Contains(string(dialogo), "@post") {
+	if !strings.Contains(dialogo, "@post") {
 		t.Error("quem apaga é o botão do diálogo, e ele não posta")
 	}
 }

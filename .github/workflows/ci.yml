@@ -40,6 +40,22 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Os `_templ.go` também são artefato commitado, pelo mesmo motivo da folha
+      # logo abaixo: `go build` num clone limpo não pode depender de rodar um
+      # gerador. O guarda é o mesmo par recompila + `git diff --quiet` do
+      # `TestGeneratedTypesAreCurrent`.
+      - name: Regenerate the templ templates
+        run: go tool templ generate
+        working-directory: engine-go
+
+      - name: Fail if the generated templates were stale
+        run: |
+          if ! git diff --quiet -- 'engine-go/api/*_templ.go'; then
+            echo "::error::Os _templ.go estão desatualizados. Rode 'go tool templ generate' em engine-go/ e commite o resultado."
+            git diff --stat -- 'engine-go/api/*_templ.go'
+            exit 1
+          fi
+
       # A folha do Datastar é um ARTEFATO COMMITADO (o `go:embed` não compila
       # sem ela), e artefato commitado apodrece em silêncio: uma classe nova num
       # template sem recompilar dá uma tela sem estilo, e nada reprova. Este
