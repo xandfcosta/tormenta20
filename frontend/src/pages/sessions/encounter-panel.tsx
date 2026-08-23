@@ -1,7 +1,6 @@
-import { useQuery } from '@tanstack/solid-query'
+import { allMonsters } from '@/shared/lib/bestiary-cache'
 import { Plus } from 'lucide-solid'
 import { Show, createMemo, createSignal } from 'solid-js'
-import { bestiaryCatalogQueryOptions } from '@/entities/catalog/queries'
 import { enrichEncounter, encounterInitiativeEntries } from '@/features/gm-tools/encounter'
 import { EncounterComposer } from '@/features/gm-tools/encounter-composer'
 import { createEncounterDraft } from '@/features/gm-tools/encounter-draft'
@@ -12,7 +11,6 @@ import { Button } from '@/shared/ui/button'
 import { SidePanel } from '@/shared/ui/side-panel'
 import { toast } from '@/shared/ui/sonner'
 import { MatchPeek } from './match-rail'
-import { settledQuery } from '@/shared/lib/settled-query'
 
 /**
  * Composes an encounter mid-session and pushes it into the initiative in one
@@ -30,7 +28,6 @@ export function EncounterPanel(props: {
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const bestiary = useQuery(() => bestiaryCatalogQueryOptions)
   const draft = createEncounterDraft()
   const [picking, setPicking] = createSignal(false)
 
@@ -38,7 +35,7 @@ export function EncounterPanel(props: {
   // de o `??` importar — e o suspend desanexa a CENA inteira (ALE-96). Era o
   // último branco ao entrar na sessão, porque o bestiário só é buscado depois
   // da montagem.
-  const groups = createMemo(() => enrichEncounter(draft.entries(), settledQuery(bestiary) ?? []))
+  const groups = createMemo(() => enrichEncounter(draft.entries(), allMonsters()))
 
   const send = () => {
     const { entries, dropped } = encounterInitiativeEntries(

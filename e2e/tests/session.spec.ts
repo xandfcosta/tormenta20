@@ -1620,12 +1620,18 @@ test.describe('Sessão ao vivo', () => {
       }).observe(document.body, { childList: true, subtree: true })
     })
 
-    // O BESTIÁRIO fica de fora, e não por conveniência: montar a
-    // `MonsterPickerList` desanexa a cena por um quadro, e isso é ANTERIOR a
-    // esta issue — o mesmo acontece pelo "Adicionar criatura" do Montar
-    // encontro, caminho que a ALE-198 não tocou. Medido: ~7ms depois do
-    // clique, sem requisição na rede, com o catálogo já em cache. Está na
-    // ALE-199; consertar lá é devolver "Bestiário" a esta lista.
+    // O BESTIÁRIO ESTÁ DE VOLTA nesta lista (ALE-199). Ele ficava de fora
+    // porque montar a `MonsterPickerList` desanexava a cena por um quadro, e a
+    // exceção estava escrita aqui com a promessa de que consertar a ALE-199 a
+    // desfaria. Desfeita.
+    //
+    // O que a bissecção achou, e que não era o que se supunha: o gatilho não é
+    // a BUSCA do catálogo, é o `useQuery` criar o recurso dentro de um dono
+    // reativo novo — o portal do Kobalte faz um a cada abertura. Com a lista
+    // vazia, sem query, não desanexava; só com o `useQuery`, desanexava; e
+    // desanexava TAMBÉM com o cache já preparado, que é o que derrubou a
+    // hipótese do fetch. O bestiário passou a ter acessor síncrono como os
+    // outros dezoito catálogos, e aí não há recurso para suspender.
     // COMO SE FECHA depende de a consulta abrir gaveta ou não, e as duas
     // metades foram aprendidas apanhando.
     //
@@ -1643,7 +1649,7 @@ test.describe('Sessão ao vivo', () => {
     // Que o trilho fique inalcançável com a gaveta aberta é achado de PRODUTO e
     // não deste teste: o painel é não modal acima de 1280 justamente para o
     // mestre seguir trabalhando atrás dele (ALE-75). Está registrado à parte.
-    for (const consulta of ['Encontros', 'Catálogos', 'Notas'] as const) {
+    for (const consulta of ['Bestiário', 'Encontros', 'Catálogos', 'Notas'] as const) {
       await abreConsulta(page, consulta)
       await expect(
         trilhoDeConsultas(page).getByRole('button', { name: consulta, exact: true }),
@@ -1662,6 +1668,14 @@ test.describe('Sessão ao vivo', () => {
         trilhoDeConsultas(page).getByRole('button', { name: consulta, exact: true }),
       ).toHaveAttribute('aria-pressed', 'false')
     }
+
+    // O SEGUNDO caminho da ALE-199, e o que a issue dizia ser anterior à
+    // ALE-198: a lista do bestiário INLINE, dentro do Montar encontro. Ela não
+    // é gaveta — é a mesma `MonsterPickerList` montada dentro de outro painel
+    // —, então ela prova o conserto por um caminho que o laço acima não passa.
+    await abreConsulta(page, 'Encontros')
+    await page.getByRole('dialog').getByRole('button', { name: 'Adicionar criatura' }).click()
+    await expect(page.getByRole('dialog').getByRole('button', { name: 'Fechar bestiário' })).toBeVisible()
 
     const desanexos = await page.evaluate(
       () => (window as unknown as { __desanexos: string[] }).__desanexos,

@@ -1,7 +1,6 @@
-import { useQuery } from '@tanstack/solid-query'
+import { allMonsters, isBestiaryPrimed } from '@/shared/lib/bestiary-cache'
 import type { Monster } from '@/shared/api/catalog-types'
 import { Show, createMemo, createSignal } from 'solid-js'
-import { bestiaryCatalogQueryOptions } from '@/entities/catalog/queries'
 import { createMonsterFilter, filterMonsters } from '@/features/gm-tools/monster-filter'
 import { MonsterDetail } from '@/features/gm-tools/monster-detail'
 import { MonsterFilters } from '@/features/gm-tools/monster-filters'
@@ -26,14 +25,13 @@ import { SectionTitle } from '@/shared/ui/section-label'
  * allows.
  */
 export function BestiarioTool() {
-  const bestiary = useQuery(() => bestiaryCatalogQueryOptions)
   // `create*` holding state → born once in the component body (gotcha #17).
   const filter = createMonsterFilter()
   const [pickedId, setPickedId] = createSignal<string | null>(null)
   const [dialogId, setDialogId] = createSignal<string | null>(null)
   const isWide = createMediaQuery('(min-width: 1024px)')
 
-  const all = () => bestiary.data ?? []
+  const all = () => allMonsters()
   const shown = createMemo(() => filterMonsters(all(), filter.criteria()))
   const picked = () => shown().find((m) => m.id === pickedId()) ?? shown()[0]
   const inDialog = () => shown().find((m) => m.id === dialogId()) ?? null
@@ -56,7 +54,7 @@ export function BestiarioTool() {
         </p>
       </div>
 
-      <Show when={!bestiary.isPending} fallback={<BestiarySkeleton />}>
+      <Show when={isBestiaryPrimed()} fallback={<BestiarySkeleton />}>
         {/* `min-h-0 flex-1` em TODAS as larguras, não só a partir de `lg`
             (ALE-175): abaixo de `lg` a grade não esticava, a lista parava na
             tampa de 45vh e o que sobrava era faixa morta — 243px medidos em

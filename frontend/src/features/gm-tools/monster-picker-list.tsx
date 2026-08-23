@@ -1,12 +1,10 @@
-import { useQuery } from '@tanstack/solid-query'
+import { allMonsters } from '@/shared/lib/bestiary-cache'
 import type { Monster } from '@/shared/api/catalog-types'
 import { Show, createMemo } from 'solid-js'
-import { bestiaryCatalogQueryOptions } from '@/entities/catalog/queries'
 import { VirtualList } from '@/shared/ui/virtual-list'
 import { createMonsterFilter, filterMonsters } from './monster-filter'
 import { MonsterFilters } from './monster-filters'
 import { MONSTER_TIPO_LABEL, formatNd } from './monster-format'
-import { settledQuery } from '@/shared/lib/settled-query'
 
 export type MonsterPickerListProps = {
   onPick: (monster: Monster) => void
@@ -23,12 +21,12 @@ export type MonsterPickerListProps = {
  * panel would land on top of the very composition being added to.
  */
 export function MonsterPickerList(props: MonsterPickerListProps) {
-  const bestiary = useQuery(() => bestiaryCatalogQueryOptions)
   const filter = createMonsterFilter()
-  // `settledQuery` e não `.data ?? []`: a leitura pendente SUSPENDE, o
-  // `Suspense` do route match desanexa a cena e a tela pisca ao trocar para
-  // esta aba — quarta vez que esta armadilha aparece nesta issue (ALE-122).
-  const monsters = () => settledQuery(bestiary) ?? []
+  // Acessor SÍNCRONO e não `useQuery`: aqui `settledQuery` não bastava. Quem
+  // suspende é o RECURSO NASCER dentro de um dono reativo novo, e o portal do
+  // Kobalte cria um a cada abertura — medido na ALE-199, o desanexo acontecia
+  // até com o cache já preparado. O bestiário é preparado no `ensureCatalogs`.
+  const monsters = () => allMonsters()
   const shown = createMemo(() => filterMonsters(monsters(), filter.criteria()))
 
   return (
