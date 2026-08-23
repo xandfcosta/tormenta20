@@ -137,8 +137,16 @@ export async function fechaAFicha(page: Page): Promise<void> {
 }
 
 /**
- * Os rótulos na fila, lidos do TRILHO e não da lista: o trilho está sempre na
- * tela a partir de 1024, e ler daqui não exige abrir gaveta nenhuma.
+ * Os rótulos VISÍVEIS no trilho — que desde a ALE-211 são uma JANELA, não a
+ * fila inteira.
+ *
+ * O bloco da fila mostra quem cabe, centrado em quem está na vez, e o resto
+ * fica de fora. **Não use isto para enumerar a fila**: com nove combatentes num
+ * laptop ele devolve cinco, e uma limpeza baseada nele deixa quatro para trás.
+ * Quem responde "quem está na fila" é a GAVETA — `labelsNaGaveta`.
+ *
+ * O que ele continua respondendo bem é "o trilho está vazio?" (janela vazia só
+ * existe com fila vazia) e "quem o trilho está mostrando agora".
  *
  * Escopado nos ITENS DA LISTA, e não em "todo botão do trilho": o botão de
  * expandir também se chama "Abrir a iniciativa", e ele entraria na conta como

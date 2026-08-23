@@ -1,4 +1,4 @@
-import { expect, type Page, test } from '@playwright/test'
+import { expect, type Locator, type Page, test } from '@playwright/test'
 import {
   expectDentroDaJanela,
   expectFormaColuna,
@@ -39,6 +39,9 @@ function avancoDeTurno(page: Page) {
 }
 
 const CAMPAIGN = 'Snapshot Test ALE-33' // the seed chronicle with a live session
+
+/** Combatentes que o teste do recorte CRIA, para a fila passar do que cabe. */
+const RECHEIO_DO_TRILHO = ['Recheio A', 'Recheio B', 'Recheio C', 'Recheio D', 'Recheio E']
 
 /**
  * Hub → Crônicas → abrir campanha → entrar na sessão ao vivo.
@@ -315,7 +318,11 @@ test.describe('Sessão ao vivo', () => {
     await page.goto('/campaigns/1/sessions/4')
     await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
 
-    const antes = await labelsNaFila(page)
+    // Da GAVETA e não do trilho, porque o trilho virou JANELA (ALE-211) — mas
+    // lido DENTRO do estado que já a abre, e não numa abertura só para isto:
+    // esta matriz mede quatro estados em seis formatos e vive perto do teto de
+    // 30s, então um par abre/fecha a mais é o que a empurra para fora.
+    let antes: string[] = []
     const cena = () => page.locator('.scene-grimorio').first()
 
     /**
@@ -331,6 +338,7 @@ test.describe('Sessão ao vivo', () => {
         nome: 'grupo na fila',
         montar: async () => {
           const fila = await abreAFila(page)
+          antes = await labelsNaGaveta(fila)
           await fila.getByRole('button', { name: 'Adicionar grupo' }).click()
           await expect(page.locator('[role="progressbar"][aria-label^="PM "]').first()).toBeVisible()
           await fechaAFila(page)
@@ -369,7 +377,7 @@ test.describe('Sessão ao vivo', () => {
 
     await page.keyboard.press('Escape')
     const paraLimpar = await abreAFila(page)
-    for (const label of await novosDesde(page, antes)) {
+    for (const label of await novosDesde(paraLimpar, antes)) {
       await paraLimpar.getByRole('button', { name: `Remover ${label}` }).click()
     }
   })
@@ -628,8 +636,11 @@ test.describe('Sessão ao vivo', () => {
     // O teste traz o PRÓPRIO grupo: a iniciativa da seed do CI está VAZIA, e
     // depender de um PC que só existe no banco de dev já quebrou o CI três vezes
     // nesta issue. "Adicionar grupo" é idempotente e traz os PCs da campanha.
-    const antes = await labelsNaFila(page)
+    // O instantâneo sai da GAVETA e não do trilho: desde a ALE-211 o trilho é
+    // uma janela, e um `antes` incompleto faz a limpeza do fim acusar como novo
+    // quem só estava fora da vista.
     const fila = await abreAFila(page)
+    const antes = await labelsNaGaveta(fila)
     await fila.getByRole('button', { name: 'Adicionar grupo' }).click()
     await expect(page.locator('[role="progressbar"][aria-label^="PM "]').first()).toBeVisible()
     await fechaAFila(page)
@@ -719,7 +730,7 @@ test.describe('Sessão ao vivo', () => {
     // Tira da fila só quem ESTE teste pôs.
     await fechaAFicha(page)
     const paraLimpar = await abreAFila(page)
-    for (const label of await novosDesde(page, antes)) {
+    for (const label of await novosDesde(paraLimpar, antes)) {
       await paraLimpar.getByRole('button', { name: `Remover ${label}` }).click()
     }
   })
@@ -885,8 +896,11 @@ test.describe('Sessão ao vivo', () => {
     await page.goto('/campaigns/1/sessions/4')
     await expect(cenaViva(page)).toBeVisible()
 
-    const antes = await labelsNaFila(page)
+    // O instantâneo sai da GAVETA e não do trilho: desde a ALE-211 o trilho é
+    // uma janela, e um `antes` incompleto faz a limpeza do fim acusar como novo
+    // quem só estava fora da vista.
     const fila = await abreAFila(page)
+    const antes = await labelsNaGaveta(fila)
     await fila.getByRole('button', { name: 'Adicionar grupo' }).click()
     await expect(page.locator('[role="progressbar"][aria-label^="PM "]').first()).toBeVisible()
     await fechaAFila(page)
@@ -918,7 +932,68 @@ test.describe('Sessão ao vivo', () => {
     // Sai como entrou.
     await fechaAFicha(page)
     const paraLimpar = await abreAFila(page)
-    for (const label of await novosDesde(page, antes)) {
+    for (const label of await novosDesde(paraLimpar, antes)) {
+      await paraLimpar.getByRole('button', { name: `Remover ${label}` }).click()
+    }
+  })
+
+  /**
+   * O trilho RECORTA a fila em vez de rolar, e mantém quem está na vez à vista
+   * (ALE-211).
+   *
+   * A fila recolhida deixou de rolar: ela mostra uma janela centrada na vez,
+   * com quem já agiu acima e quem ainda vai abaixo. Quantos vizinhos cabem é
+   * conta medida por observador, e é aí que está o risco — com um número errado
+   * o trilho MENTE sobre quem já jogou, ou transborda o bloco.
+   *
+   * Por que e2e: em jsdom todo elemento mede ZERO, então `cabemNaFila` responde
+   * zero, a janela vira "mostra tudo" e a asserção passaria verde sobre um
+   * trilho quebrado. É a mesma cegueira que a ALE-139 documentou. A regra em si
+   * é unitária (`rail-geometry.test.ts`); o que só o navegador testemunha é que
+   * a MEDIÇÃO chegou e recortou.
+   */
+  test('o trilho recorta a fila e nunca perde de vista quem está na vez', async ({ page }) => {
+    // 1024 de largura para o trilho existir, e 768 de altura porque é o formato
+    // em que ele mais aperta — quanto menor a altura, menor a janela.
+    await page.setViewportSize({ width: 1024, height: 768 })
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(cenaViva(page)).toBeVisible()
+    await garanteACena(page)
+
+    const fila = await abreAFila(page)
+    const antes = await labelsNaGaveta(fila)
+    await fila.getByRole('button', { name: 'Adicionar grupo' }).click()
+    await expect(page.locator('[role="progressbar"][aria-label^="PM "]').first()).toBeVisible()
+    // Mais gente do que cabe: os PCs da campanha sozinhos ainda cabem num
+    // laptop, então o teste CRIA o excedente em vez de contar com a seed.
+    await fila.getByRole('button', { name: 'Combatente' }).click()
+    for (const nome of RECHEIO_DO_TRILHO) {
+      await page.getByLabel('Nome').fill(nome)
+      await page.getByRole('button', { name: 'Adicionar', exact: true }).click()
+      await expect(fila.getByRole('button', { name: `Remover ${nome}` })).toBeVisible()
+    }
+    const naFila = (await labelsNaGaveta(fila)).length
+    await fechaAFila(page)
+
+    // O recorte: o trilho mostra MENOS do que a fila tem. Sem esta metade o
+    // teste passaria verde num trilho que desenha todo mundo e transborda.
+    await expect
+      .poll(async () => (await labelsNaFila(page)).length, { timeout: 7000 })
+      .toBeLessThan(naFila)
+    expect(naFila, 'a fila precisa ser maior que a janela para o teste medir algo')
+      .toBeGreaterThan(1)
+
+    // E a outra metade, que é a razão de o bloco existir: passe o turno onde
+    // passar, quem está na vez continua desenhado.
+    for (let volta = 0; volta < 4; volta++) {
+      await avancoDeTurno(page).first().click()
+      const naVez = page.getByRole('button', { name: /— na vez$/ })
+      await expect(naVez, `turno ${volta + 1}: a vez sumiu do trilho`).toHaveCount(1)
+      await expect(naVez).toBeInViewport()
+    }
+
+    const paraLimpar = await abreAFila(page)
+    for (const label of await novosDesde(paraLimpar, antes)) {
       await paraLimpar.getByRole('button', { name: `Remover ${label}` }).click()
     }
   })
@@ -942,8 +1017,11 @@ test.describe('Sessão ao vivo', () => {
 
     // Precisa de linhas HETEROGÊNEAS: os PCs da campanha entram com vida (e
     // portanto com olho), e a seed tem NPC sem vida, que é o caso sem olho.
-    const antes = await labelsNaFila(page)
+    // O instantâneo sai da GAVETA e não do trilho: desde a ALE-211 o trilho é
+    // uma janela, e um `antes` incompleto faz a limpeza do fim acusar como novo
+    // quem só estava fora da vista.
     const fila = await abreAFila(page)
+    const antes = await labelsNaGaveta(fila)
     await fila.getByRole('button', { name: 'Adicionar grupo' }).click()
     await expect(page.locator('[role="progressbar"][aria-label^="PM "]').first()).toBeVisible()
 
@@ -951,7 +1029,7 @@ test.describe('Sessão ao vivo', () => {
       await expectFormaColuna(page, `button[aria-label^="${verbo} "]`)
     }
 
-    for (const label of await novosDesde(page, antes)) {
+    for (const label of await novosDesde(fila, antes)) {
       await fila.getByRole('button', { name: `Remover ${label}` }).click()
     }
   })
@@ -1205,8 +1283,17 @@ test.describe('Sessão ao vivo', () => {
   }
 
   /** Quem entrou na fila depois do instantâneo — o que este teste tem de limpar. */
-  async function novosDesde(page: Page, antes: string[]): Promise<string[]> {
-    const agora = await labelsNaFila(page)
+  /**
+   * Quem entrou na fila desde o instantâneo — lido da GAVETA, que é a lista
+   * inteira.
+   *
+   * Era lido do trilho até a ALE-211, e ali passou a ser uma JANELA: com mais
+   * combatentes do que cabem, a limpeza enxergava cinco de nove e deixava
+   * quatro na seed compartilhada. As duas pontas (o `antes` e o `agora`) têm de
+   * sair da MESMA fonte, senão o diff acusa como novo quem só saiu da janela.
+   */
+  async function novosDesde(gaveta: Locator, antes: string[]): Promise<string[]> {
+    const agora = await labelsNaGaveta(gaveta)
     return agora.filter((label) => !antes.includes(label))
   }
 

@@ -26,7 +26,7 @@ import { CatalogPanel } from './catalog-panel'
 import { CombatantDialog } from './combatant-dialog'
 import { EncounterPanel } from './encounter-panel'
 import { type SessionTool, GmToolRail } from './gm-tool-rail'
-import { InitiativeRail } from './initiative-rail'
+import { SessionRail } from './session-rail'
 import { MatchControls } from './match-rail'
 import { SectionTitle } from '@/shared/ui/section-label'
 
@@ -103,10 +103,9 @@ export function SessionGmView(props: {
   const railsFit = createMediaQuery(RAILS_FIT)
   /**
    * Há alguma ação de FIM de ciclo para oferecer (ALE-210). Encerrar exige
-   * cena, reiniciar exige fila, e sem nenhuma das duas o pé do trilho não deve
-   * existir: um elemento JSX é sempre verdadeiro, então `Show` lá dentro não
-   * resolveria — ele desenharia o vinco e o vão sobre nada. Visto na foto a
-   * 1920, com a sessão fora de cena e vazia.
+   * cena, reiniciar exige fila. Continua aqui porque o MENU da sessão — o
+   * caminho de quem está abaixo de 1024, onde o trilho não existe — também
+   * precisa da resposta; o trilho tem a sua, calculada lá dentro.
    */
   const temFimDeCiclo = () => {
     const live = props.rt.state()
@@ -205,30 +204,21 @@ export function SessionGmView(props: {
             que o CSS o esconda de quem enxerga. Quem a alcança lá é o botão da
             fileira, logo abaixo. */}
         <Show when={railsFit()}>
-          <InitiativeRail
+          <SessionRail
+            campaignId={props.campaignId}
             entries={props.rt.state().initiative}
+            turnIndex={props.rt.state().turnIndex}
             activeEntryId={activeEntryId()}
+            present={props.rt.present()}
+            connected={props.rt.isConnected()}
+            sceneActive={props.rt.state().sceneActive}
             onOpenCombatant={openCombatant}
-            onExpand={openQueue}
+            onOpenQueue={openQueue}
+            onOpenCast={() => setTool('elenco')}
+            onOpenCharacter={setCastCharacterId}
             onHoverEntry={setHoveredEntryId}
-            footer={
-              /* Encerrar e reiniciar moram no pé do trilho, longe da vaga do
-                 avanço: os três são o ciclo da cena, mas só o começo divide
-                 lugar com o botão mais clicado da sessão — juntar os outros
-                 dois ali repetiria o defeito que a ALE-122 consertou afastando
-                 o "Reiniciar" do "Próximo turno". Abaixo de 1024 o trilho não
-                 existe e eles reaparecem no menu da sessão, os MESMOS nós. */
-              temFimDeCiclo() ? (
-                <SceneCycleControls
-                  compact
-                  connected={props.rt.isConnected()}
-                  sceneActive={props.rt.state().sceneActive}
-                  hasQueue={props.rt.state().initiative.length > 0}
-                  onEnd={props.rt.endScene}
-                  onReset={props.rt.resetInitiative}
-                />
-              ) : undefined
-            }
+            onEndScene={props.rt.endScene}
+            onResetScene={props.rt.resetInitiative}
           />
         </Show>
 
