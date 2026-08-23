@@ -29,8 +29,6 @@ export type EncounterComposerProps = {
   /** The "add creature" control — the Mesa opens a panel, the session drawer
    *  reuses its own list, so the composer does not own that decision. */
   addControl: JSX.Element
-  /** Extra action under the ledger (e.g. "send to the tracker"). */
-  footer?: JSX.Element
 }
 
 /**
@@ -144,8 +142,6 @@ export function EncounterComposer(props: EncounterComposerProps) {
           </For>
         </ul>
       </Show>
-
-      <Show when={props.footer}>{(footer) => <div class="pt-1">{footer()}</div>}</Show>
     </div>
   )
 }
