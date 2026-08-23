@@ -42,15 +42,35 @@ import templruntime "github.com/a-h/templ/runtime"
 // `html/template` não sabe invocar um sub-template por nome dinâmico. Render em
 // duas passadas era a saída, e cada passada era uma chance de escapar errado.
 type paginaPiloto struct {
-	// Titulo é o do `<title>`; TituloVisivel é o do cabeçalho da cena. Vazio
-	// significa "sem cabeçalho" — a Mesa não tem, porque a faixa AO VIVO dela já
-	// é o cabeçalho e duas fileiras de cromo tirariam o palco do combate.
-	Titulo        string
+	// Titulo é sempre o do `<title>`. O que aparece na TELA depende da Forma.
+	Titulo string
+	Forma  formaDaCasca
+	// TituloVisivel e Voltar são da casca DENSA; Kicker é da casca TÍTULO.
 	TituloVisivel string
 	Voltar        string
+	Kicker        string
 	Sinais        string
 	Init          string
 }
+
+// formaDaCasca são as três posturas do `SceneShell` da SPA, e elas se excluem —
+// um campo em vez de dois títulos opcionais, porque "TituloVisivel vazio E
+// TituloDaCena cheio" é um estado que não deveria ser representável.
+type formaDaCasca string
+
+const (
+	// cascaNua não desenha cabeçalho nenhum e não dá padding: a tela decide
+	// tudo. É o que a Mesa usa, porque a faixa AO VIVO dela já é o cabeçalho e
+	// duas fileiras de cromo tirariam o palco do combate.
+	cascaNua formaDaCasca = ""
+	// cascaDensa é o cabeçalho compacto das telas de conteúdo: voltar + título
+	// pequeno, `px-4 py-4`.
+	cascaDensa formaDaCasca = "densa"
+	// cascaTitulo é a TELA-TÍTULO — o nome do jogo em Cinzel grande e
+	// centralizado, sem link de voltar, `px-5 py-14`. É a forma do Hub, e é a
+	// da PORTA (ALE-229): quem está fora não tem para onde voltar.
+	cascaTitulo formaDaCasca = "titulo"
+)
 
 func layout(p paginaPiloto, corpo templ.Component) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -80,7 +100,7 @@ func layout(p paginaPiloto, corpo templ.Component) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(p.Titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_layout.templ`, Line: 53, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_layout.templ`, Line: 73, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -98,7 +118,7 @@ func layout(p paginaPiloto, corpo templ.Component) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.Sinais)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_layout.templ`, Line: 66, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_layout.templ`, Line: 86, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 			if templ_7745c5c3_Err != nil {
@@ -117,7 +137,7 @@ func layout(p paginaPiloto, corpo templ.Component) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.Init)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_layout.templ`, Line: 69, Col: 22}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_layout.templ`, Line: 89, Col: 22}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 			if templ_7745c5c3_Err != nil {
@@ -132,7 +152,7 @@ func layout(p paginaPiloto, corpo templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if p.TituloVisivel != "" {
+		if p.Forma == cascaDensa {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<header class=\"relative flex flex-wrap items-center gap-3 border-b border-grimorio-iron px-4 py-3\" style=\"padding-top: max(0.75rem, env(safe-area-inset-top))\"><a href=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -140,7 +160,7 @@ func layout(p paginaPiloto, corpo templ.Component) templ.Component {
 			var templ_7745c5c3_Var5 templ.SafeURL
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(p.Voltar))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_layout.templ`, Line: 84, Col: 37}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_layout.templ`, Line: 104, Col: 37}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -153,7 +173,7 @@ func layout(p paginaPiloto, corpo templ.Component) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(p.TituloVisivel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_layout.templ`, Line: 89, Col: 86}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_layout.templ`, Line: 109, Col: 86}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -164,7 +184,9 @@ func layout(p paginaPiloto, corpo templ.Component) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		var templ_7745c5c3_Var7 = []any{"relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto", templ.KV("px-4 py-4", p.TituloVisivel != "")}
+		var templ_7745c5c3_Var7 = []any{"relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto",
+			templ.KV("px-4 py-4", p.Forma == cascaDensa),
+			templ.KV("px-5 py-14", p.Forma == cascaTitulo)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var7...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -185,6 +207,12 @@ func layout(p paginaPiloto, corpo templ.Component) templ.Component {
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
+		}
+		if p.Forma == cascaTitulo {
+			templ_7745c5c3_Err = tituloDaCena(p.Titulo, p.Kicker).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
 		templ_7745c5c3_Err = corpo.Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {

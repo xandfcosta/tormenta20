@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"net/http"
@@ -63,23 +64,7 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 		writeValidationError(w, fields)
 		return
 	}
-	invite, ok := s.registrationInvite(w, r, body.Email, body.InviteToken)
-	if !ok {
-		return
-	}
-	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcryptCost)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not hash password")
-		return
-	}
-	now := nowISO()
-	user, err := s.createUser(r.Context(), sqlcgen.CreateUserParams{
-		Email:        body.Email,
-		Name:         nullString(body.Name),
-		Passwordhash: string(hash),
-		Createdat:    now,
-		Updatedat:    now,
-	}, invite)
+	user, err := s.createAccount(r.Context(), body)
 	if err != nil {
 		writeRegisterError(w, err, body.Email)
 		return
@@ -90,29 +75,59 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, s.authUser(user))
 }
 
+// createAccount is the RULE behind registration: resolve the invite this
+// address has to spend, hash, and write the row.
+//
+// Transport-agnostic, and this is the THIRD time the pilot has had to do this
+// (after `selfInitiativeEntry` welded to the socket and `deleteAccount` welded
+// to the HTTP handler). The pattern is the same every time — a rule pinned to
+// whichever transport reached it first — and it only shows up when a second
+// one arrives (ALE-229). Worth naming: it is not a coincidence, it is what a
+// codebase with exactly one transport looks like.
+func (s *Server) createAccount(ctx context.Context, body registerBody) (sqlcgen.User, error) {
+	invite, err := s.registrationInvite(ctx, body.Email, body.InviteToken)
+	if err != nil {
+		return sqlcgen.User{}, err
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcryptCost)
+	if err != nil {
+		return sqlcgen.User{}, err
+	}
+	now := nowISO()
+	return s.createUser(ctx, sqlcgen.CreateUserParams{
+		Email:        body.Email,
+		Name:         nullString(body.Name),
+		Passwordhash: string(hash),
+		Createdat:    now,
+		Updatedat:    now,
+	}, invite)
+}
+
+// errInviteRejected is unknown, spent and expired alike — see `inviteRejected`.
+var errInviteRejected = errors.New(inviteRejected)
+
 // registrationInvite resolves the invite this registration has to spend. The
 // ADMIN_EMAILS addresses are the exception, and the only one: the owner must be
 // able to create their own account on a fresh machine, and "first to register
 // wins the crown" would hand that to whoever opens the page first (ALE-120).
 func (s *Server) registrationInvite(
-	w http.ResponseWriter, r *http.Request, email, token string,
-) (*sqlcgen.AccountInvite, bool) {
+	ctx context.Context, email, token string,
+) (*sqlcgen.AccountInvite, error) {
 	if s.cfg.IsAdmin(email) {
-		return nil, true
+		return nil, nil
 	}
-	invite, ok := s.usableInvite(r.Context(), token)
+	invite, ok := s.usableInvite(ctx, token)
 	if !ok {
-		writeError(w, http.StatusForbidden, inviteRejected)
-		return nil, false
+		return nil, errInviteRejected
 	}
-	return &invite, true
+	return &invite, nil
 }
 
 func writeRegisterError(w http.ResponseWriter, err error, email string) {
 	switch {
 	case db.IsUniqueViolation(err):
 		writeError(w, http.StatusConflict, "Email already registered: "+email)
-	case errors.Is(err, errInviteSpent):
+	case errors.Is(err, errInviteRejected), errors.Is(err, errInviteSpent):
 		writeError(w, http.StatusForbidden, inviteRejected)
 	default:
 		writeError(w, http.StatusInternalServerError, "Could not create user")
@@ -129,8 +144,8 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		writeValidationError(w, fields)
 		return
 	}
-	user, err := s.queries.GetUserByEmail(r.Context(), normalizeEmail(body.Email))
-	if err != nil || bcrypt.CompareHashAndPassword([]byte(user.Passwordhash), []byte(body.Password)) != nil {
+	user, err := s.authenticate(r.Context(), body.Email, body.Password)
+	if err != nil {
 		writeError(w, http.StatusUnauthorized, "Invalid credentials")
 		return
 	}
@@ -138,6 +153,28 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, s.authUser(user))
+}
+
+// errBadCredentials is the ONE answer for "no such account" and "wrong
+// password": telling them apart hands an anonymous caller a way to enumerate
+// who has an account here.
+var errBadCredentials = errors.New("invalid credentials")
+
+// authenticate is the RULE behind the login — extracted alongside
+// `createAccount` and for the same reason.
+//
+// The bcrypt comparison runs even when the e-mail is unknown would be the next
+// hardening step (it does not today, and that is a timing oracle worth an issue
+// of its own); what matters here is that BOTH paths answer the same error.
+func (s *Server) authenticate(ctx context.Context, email, password string) (sqlcgen.User, error) {
+	user, err := s.queries.GetUserByEmail(ctx, normalizeEmail(email))
+	if err != nil {
+		return sqlcgen.User{}, errBadCredentials
+	}
+	if bcrypt.CompareHashAndPassword([]byte(user.Passwordhash), []byte(password)) != nil {
+		return sqlcgen.User{}, errBadCredentials
+	}
+	return user, nil
 }
 
 // handleLogout clears the session cookie (204).

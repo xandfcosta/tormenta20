@@ -163,3 +163,53 @@ test.describe('Administração (piloto Datastar)', () => {
  * vale mais que ele: o morph do Datastar reaproveita o nó por identidade, e
  * essa classe de defeito, que eu apostava contra, não acontece.
  */
+test.describe('A porta (piloto Datastar)', () => {
+  // ANÔNIMA: são estas telas que criam a sessão, e com o estado de login o
+  // servidor redireciona para dentro do app — o guarda mediria a tela errada.
+  test.use({ storageState: { cookies: [], origins: [] } })
+
+  /**
+   * A porta é a tela-título, e a tela-título tem duas coisas que nenhuma outra
+   * superfície do piloto tinha: o brilho do `scene-title-glow` sobre a pedra, e
+   * o `text-muted-foreground` do rodapé sobre o fundo mais escuro da cena.
+   *
+   * Nenhuma delas dá para medir fora do navegador: converter oklch para sRGB é
+   * trabalho dele, e em jsdom o `getComputedStyle` devolve o oklch cru.
+   */
+  test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
+    for (const [caminho, marco] of [
+      ['/piloto/entrar', 'Entrar'],
+      ['/piloto/criar-conta?convite=nao-importa', 'Criar conta'],
+      ['/piloto/redefinir-senha', 'Escolher nova senha'],
+    ] as const) {
+      await page.goto(caminho)
+      await expect(page.getByRole('heading', { name: marco, level: 2 })).toBeVisible()
+      expect(await textoComContrasteBaixo(page), `texto abaixo do AA em ${caminho}`).toEqual([])
+    }
+  })
+
+  /**
+   * A senha é conferida sem sinal do Datastar: o `data-on:input` lê o campo
+   * irmão pelo DOM e usa `setCustomValidity`.
+   *
+   * E2E porque `setCustomValidity` e `validationMessage` são do navegador —
+   * jsdom aceita a chamada e não faz nada com ela, então lá o guarda passaria
+   * verde com a implementação apagada.
+   */
+  test('a confirmação de senha avisa o typo sem pôr a senha em estado de cliente', async ({
+    page,
+  }) => {
+    await page.goto('/piloto/criar-conta?convite=nao-importa')
+    await page.locator('#senha').fill('uma senha boa')
+    await page.locator('#confirmar').fill('outra coisa')
+
+    expect(
+      await page.locator('#confirmar').evaluate((el: HTMLInputElement) => el.validationMessage),
+    ).toBe('As senhas não conferem')
+
+    await page.locator('#confirmar').fill('uma senha boa')
+    expect(
+      await page.locator('#confirmar').evaluate((el: HTMLInputElement) => el.checkValidity()),
+    ).toBe(true)
+  })
+})

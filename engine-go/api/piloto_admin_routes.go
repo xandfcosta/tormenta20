@@ -26,8 +26,9 @@ func (s *Server) handleAdminPiloto(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	s.escrevePagina(w, r, paginaPiloto{
+	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
 		Titulo:        "Administração",
+		Forma:         cascaDensa,
 		TituloVisivel: "Administração",
 		Voltar:        "/",
 		// Sem `Init`: esta tela não abre stream nenhum. Os sinais existem só

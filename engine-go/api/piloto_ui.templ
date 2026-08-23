@@ -1,0 +1,161 @@
+package api
+
+// A contraparte templ do `shared/ui` da SPA (ALE-229).
+//
+// Ela nasce agora e não no piloto porque o piloto podia escrever classe à mão
+// em cinco lugares e ainda caber na cabeça. Ela EXISTE porque isso já deu
+// errado: os botões do piloto usam `px-2 py-1 text-xs` e `px-3 py-1.5 text-sm`,
+// que não são nenhum dos tamanhos da casa — divergiram do `buttonVariants` no
+// primeiro dia, em silêncio, e ninguém compara duas telas lado a lado.
+//
+// É o risco nomeado na ALE-225 ("sem biblioteca de componentes, token inventado
+// falha em silêncio") atacado no único lugar onde dá: um componente por peça, e
+// as classes escritas UMA vez.
+//
+// As classes são cópia literal do `buttonVariants` e do `Input`/`Label` da SPA.
+// Enquanto as duas portas existirem isso é duplicação de propósito — a fonte
+// única só é possível depois que uma das duas morrer, e escolher divergir agora
+// para evitar duplicar depois seria pagar o custo duas vezes.
+
+// variante e tamanho são os do `buttonVariants` (cva) da SPA. Só os que o app
+// usa hoje: variante que ninguém pede é classe que o Tailwind emite para
+// ninguém.
+type variante string
+
+const (
+	// A gramática da ALE-200: entre clicáveis, o dourado FAZ e o crimson
+	// DESTRÓI. Não há terceira cor de ação.
+	varPrimaria   variante = "default"
+	varSecundaria variante = "secondary"
+	varDestrutiva variante = "destructive"
+)
+
+type tamanho string
+
+const (
+	tamPadrao tamanho = "default"
+	tamPequeno tamanho = "sm"
+	tamMinimo  tamanho = "xs"
+)
+
+// classesDoBotao mora neste arquivo, e não num `.go` ao lado, por uma razão
+// mecânica: o scanner do Tailwind varre `../*.templ`, então uma classe escrita
+// num `.go` comum não seria emitida e o botão sairia sem estilo. Foi assim que
+// as cores das barras de PV precisaram do `@source inline(...)`.
+func classesDoBotao(v variante, t tamanho, extra string) string {
+	base := "inline-flex shrink-0 items-center justify-center gap-2 rounded-sm text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50"
+	porVariante := map[variante]string{
+		varPrimaria:   "bg-primary text-primary-foreground hover:bg-primary/90",
+		varSecundaria: "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-grimorio-iron-light",
+		varDestrutiva: "bg-destructive text-white hover:bg-destructive/90",
+	}
+	porTamanho := map[tamanho]string{
+		tamPadrao:  "h-9 px-4 py-2",
+		tamPequeno: "h-8 gap-1.5 rounded-sm px-3",
+		tamMinimo:  "h-6 gap-1 rounded-sm px-2 text-xs",
+	}
+	return juntar(base, porVariante[v], porTamanho[t], extra)
+}
+
+// botao é o botão da casa. Os atributos chegam como mapa e são espalhados, e é
+// isso que deixa um só componente servir o `type="submit"` do formulário, o
+// `data-on:click` do Datastar e o `aria-label` da linha de lista.
+//
+// `extra` é um parâmetro e NÃO uma chave `class` dentro de `attrs`: duas
+// `class` na mesma tag não se somam — o navegador fica com a primeira e a outra
+// é ignorada em silêncio, que é como um `w-full` some sem ninguém notar.
+templ botao(v variante, t tamanho, extra string, attrs templ.Attributes) {
+	<button class={ classesDoBotao(v, t, extra) } { attrs... }>
+		{ children... }
+	</button>
+}
+
+// campo é um input rotulado com as mensagens de validação embaixo — a forma que
+// TODO campo de formulário deste app tem (`TextField` + `FieldFrame`).
+//
+// O `Nome` é o `id` E o `name`, porque é ele que liga o `<label for>` ao
+// controle; um rótulo sem controle é o defeito que essa amarração previne.
+type campo struct {
+	Nome  string
+	Label string
+	Tipo  string
+	// Valor volta preenchido quando o servidor rejeita, para o jogador não
+	// redigitar o que estava certo. Campo de SENHA nunca volta: o navegador não
+	// deve receber de volta o que ele mandou, e redigitar é o comportamento
+	// esperado depois de uma recusa.
+	Valor        string
+	Autocomplete string
+	Dica         string
+	// Erros vem do `FieldErrorMap` do servidor, que é o MESMO que a API devolve
+	// — a porta não tem validação própria.
+	Erros []string
+	// Obrigatorio, TamanhoMinimo e Padrao viram validação NATIVA do navegador.
+	// Isso não substitui o servidor; ele continua sendo a autoridade. O que se
+	// ganha é a mensagem localizada e acessível de graça, antes da ida à rede —
+	// exatamente o que o Zod fazia, sem o Zod.
+	Obrigatorio   bool
+	TamanhoMinimo int
+	TamanhoMaximo int
+}
+
+templ campoDeTexto(c campo) {
+	<div class="space-y-2">
+		<label for={ c.Nome } class="flex items-center gap-2 text-sm leading-none font-medium select-none">
+			{ c.Label }
+		</label>
+		<input
+			id={ c.Nome }
+			name={ c.Nome }
+			type={ tipoOuTexto(c.Tipo) }
+			value={ c.Valor }
+			if c.Autocomplete != "" {
+				autocomplete={ c.Autocomplete }
+			}
+			if c.Obrigatorio {
+				required
+			}
+			if c.TamanhoMinimo > 0 {
+				minlength={ inteiro(c.TamanhoMinimo) }
+			}
+			if c.TamanhoMaximo > 0 {
+				maxlength={ inteiro(c.TamanhoMaximo) }
+			}
+			if len(c.Erros) > 0 {
+				aria-invalid="true"
+				aria-describedby={ c.Nome + "-erro" }
+			}
+			class="h-9 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm aria-invalid:border-destructive aria-invalid:ring-destructive/20"
+		/>
+		if len(c.Erros) == 0 && c.Dica != "" {
+			<p class="text-xs text-muted-foreground">{ c.Dica }</p>
+		}
+		if len(c.Erros) > 0 {
+			<div id={ c.Nome + "-erro" }>
+				for _, e := range c.Erros {
+					<p class="text-sm text-destructive">{ e }</p>
+				}
+			</div>
+		}
+	</div>
+}
+
+// molduraDePainel é o contêiner padrão de uma cena: borda de ferro com um filete
+// dourado por dentro (`FramedPanel`, variante stone).
+templ molduraDePainel(extra string) {
+	<div class={ juntar("grimorio-frame grimorio-frame--stone p-5 text-foreground", extra) }>
+		{ children... }
+	</div>
+}
+
+// tituloDaCena é o título cinematográfico do Grimório: Cinzel em caixa alta,
+// entreletra larga e o brilho arcano, com um `kicker` dourado embaixo.
+templ tituloDaCena(titulo, kicker string) {
+	<div class="flex flex-col items-center gap-1 text-center">
+		<h1 class="scene-title-glow font-heading font-bold text-[clamp(2.2rem,8vw,3.4rem)] uppercase leading-tight tracking-[0.18em] text-foreground">
+			{ titulo }
+		</h1>
+		if kicker != "" {
+			<p class="font-heading text-xs uppercase tracking-[0.3em] text-grimorio-gold">{ kicker }</p>
+		}
+	</div>
+}

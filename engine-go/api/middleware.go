@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"net/http"
 )
 
@@ -14,24 +15,46 @@ const userCtxKey ctxKey = iota
 // see TestRequireAuthRejectsMissingAndBrokenCredentials.
 func (s *Server) requireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token := s.extractToken(r)
-		if token == "" {
-			writeError(w, http.StatusUnauthorized, "Unauthorized")
-			return
-		}
-		sub, err := s.verifyToken(token)
+		user, err := s.sessionUser(r)
 		if err != nil {
-			writeError(w, http.StatusUnauthorized, "Unauthorized")
+			writeError(w, http.StatusUnauthorized, err.Error())
 			return
 		}
-		user, err := s.queries.GetUserByID(r.Context(), sub)
-		if err != nil {
-			writeError(w, http.StatusUnauthorized, "User no longer exists")
-			return
-		}
-		ctx := context.WithValue(r.Context(), userCtxKey, s.authUser(user))
+		ctx := context.WithValue(r.Context(), userCtxKey, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+// errNoSession and errUserGone are separate because the SECOND one is worth
+// saying out loud: a token that verifies against a user that no longer exists
+// is a stale cookie, not a forged one, and the message is the only place that
+// difference is visible.
+var (
+	errNoSession = errors.New("Unauthorized")
+	errUserGone  = errors.New("User no longer exists")
+)
+
+// sessionUser resolves the identity a request carries, WITHOUT the middleware.
+//
+// Extracted for the porta (ALE-229), which has to ask "is anyone logged in?" to
+// decide between drawing the login screen and redirecting — a question the
+// middleware could only answer by refusing the request. Same shape as
+// `deleteAccount` and `authenticate`: the rule was welded to the one transport
+// that had needed it.
+func (s *Server) sessionUser(r *http.Request) (AuthUser, error) {
+	token := s.extractToken(r)
+	if token == "" {
+		return AuthUser{}, errNoSession
+	}
+	sub, err := s.verifyToken(token)
+	if err != nil {
+		return AuthUser{}, errNoSession
+	}
+	user, err := s.queries.GetUserByID(r.Context(), sub)
+	if err != nil {
+		return AuthUser{}, errUserGone
+	}
+	return s.authUser(user), nil
 }
 
 // requireAdmin gates the administration routes, and runs AFTER requireAuth —

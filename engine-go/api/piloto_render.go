@@ -30,7 +30,9 @@ var pilotoFS embed.FS
 // e só então entrava no layout — porque o `html/template` não sabe invocar um
 // sub-template por nome dinâmico. Agora quem compõe é o compilador, e não há
 // passada intermediária onde escapar errado.
-func (s *Server) escrevePagina(w http.ResponseWriter, r *http.Request, p paginaPiloto, corpo templ.Component) {
+func (s *Server) escrevePagina(
+	w http.ResponseWriter, r *http.Request, status int, p paginaPiloto, corpo templ.Component,
+) {
 	var buf bytes.Buffer
 	if err := layout(p, corpo).Render(r.Context(), &buf); err != nil {
 		// Em buffer e não direto no `w`: um erro no meio da renderização já
@@ -41,6 +43,12 @@ func (s *Server) escrevePagina(w http.ResponseWriter, r *http.Request, p paginaP
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store")
+	// O status vem por parâmetro porque um formulário RECUSADO devolve a mesma
+	// tela (ALE-229), e responder 200 a uma recusa mente para tudo o que não é
+	// um navegador — teste, log, monitoração. E ele é escrito DEPOIS dos
+	// cabeçalhos: `WriteHeader` os congela, então um `Set` depois dele não faz
+	// nada e some sem erro.
+	w.WriteHeader(status)
 	_, _ = w.Write(buf.Bytes())
 }
 

@@ -29,6 +29,11 @@ func (s *Server) PilotoRouter() http.Handler {
 	// Os estáticos são anônimos: são o bundle do Datastar e a folha de estilo,
 	// e exigir sessão para eles só quebraria o cache.
 	r.Handle("/static/*", http.StripPrefix("/static/", pilotoStaticHandler()))
+	// A PORTA (ALE-229) é anônima por necessidade: é ela que cria a sessão. Ela
+	// tem de vir ANTES dos grupos com `requireAuth` — não por ordem de casamento
+	// (o chi casa por rota, não por ordem), mas porque ficar dentro do grupo a
+	// tornaria inalcançável para exatamente quem precisa dela.
+	s.rotasDaPorta(r)
 	r.Group(func(r chi.Router) {
 		r.Use(s.requireAuth)
 		r.Get("/mesa/{campaignId}/{sessionId}", s.handleMesaPage)
@@ -87,7 +92,7 @@ func (s *Server) handleMesaPage(w http.ResponseWriter, r *http.Request) {
 	}
 	// A página é um retrato de agora, e o `escrevePagina` já a manda `no-store`:
 	// guardá-la serviria uma fila velha.
-	s.escrevePagina(w, r, paginaPiloto{
+	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
 		Titulo: fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
 		Sinais: "{d20: 10, erro: ''}",
 		Init:   fmt.Sprintf("@get('/piloto/mesa/%d/%d/stream')", campaignID, sessionID),
