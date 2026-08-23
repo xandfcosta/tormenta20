@@ -1,0 +1,155 @@
+package api
+
+import (
+
+	"strconv"
+)
+
+// A CARTA DE CONVITE desenhada (ALE-249): entrar numa mesa.
+//
+// Mesma folha do grimório da folha em branco, e é de propósito: toda cena de
+// campanha é página do mesmo livro — a crônica que se lê, a folha que se
+// escreve, e a carta enfiada nela.
+//
+// SEM Datastar, pela terceira vez e pelo mesmo motivo (ALE-229, ALE-246): é um
+// formulário que NAVEGA ao dar certo. A escolha do herói é um `radio` nativo —
+// não um botão com estado de cliente —, e isso não é economia: `radio` dá de
+// graça o grupo exclusivo, a navegação por setas dentro do grupo, o rótulo lido
+// e o valor que viaja no POST. Reimplementar isso com sinal seria trocar
+// comportamento que o navegador garante por comportamento que eu garanto.
+
+templ campanhaEntrar(v campanhaEntrarView) {
+	@folhaDoTomo() {
+		// `m-auto` centra uma carta curta (convite morto, elenco vazio) em vez
+		// de deixá-la encalhada no topo de uma folha vazia; com elenco cheio as
+		// margens automáticas somem e ela preenche a página.
+		<form method="post" action="/piloto/campanhas/entrar" class="m-auto w-full max-w-3xl space-y-6">
+			@tituloDaFolha("Carta de convite", "Entrar na mesa")
+			if v.TemConvite {
+				<input type="hidden" name="token" value={ v.Convite }/>
+				@cartaDoConvite(v)
+			} else {
+				@campoDeTexto(campo{
+					Nome: "campaignId", Label: "Número da campanha", Tipo: "number",
+					Valor: v.NumeroDigitado, Obrigatorio: true,
+					Dica:  "O mestre da mesa envia esse número.",
+					Erros: v.Erros["campaignId"],
+				})
+			}
+			if len(v.Herois) == 0 {
+				@semHeroisParaSentar()
+			} else {
+				@escolhaDoHeroi(v)
+			}
+			if v.Aviso != "" {
+				<p class="text-sm text-destructive">{ v.Aviso }</p>
+			}
+			// O botão SOME quando não há o que enviar — convite morto ou elenco
+			// vazio —, em vez de ficar desabilitado como na SPA. Divergência
+			// deliberada: nos dois casos não existe nada que a pessoa possa
+			// fazer AQUI, e um botão que não funciona é uma porta pintada na
+			// parede. Quem explica é a carta ("peça um novo link ao mestre") ou
+			// a caixa vazia ("crie um herói"), e as duas oferecem o passo certo.
+			<div class="flex justify-end gap-2">
+				<a href="/piloto/campanhas" class={ classesDoBotao(varSecundaria, tamPadrao, "") }>Cancelar</a>
+				if len(v.Herois) > 0 && (!v.TemConvite || v.ConviteVale) {
+					@botao(varPrimaria, tamPadrao, "", templ.Attributes{"type": "submit"}) {
+						Entrar na mesa
+					}
+				}
+			</div>
+		</form>
+	}
+}
+
+// cartaDoConvite diz PARA QUAL mesa a pessoa foi chamada, antes de ela
+// comprometer um herói com ela.
+//
+// Não há estado de "carregando" aqui, e a ausência é o ganho da cena: o convite
+// é resolvido no servidor antes de a página existir. Na SPA a tela monta e
+// espera uma segunda requisição atrás de um esqueleto.
+templ cartaDoConvite(v campanhaEntrarView) {
+	<div class="flex items-start gap-3 rounded-none border border-grimorio-gold/40 bg-grimorio-panel p-4">
+		@icone("Mail", "mt-0.5 size-4 shrink-0 text-grimorio-gold")
+		<div class="min-w-0 flex-1 space-y-1">
+			<p class="font-heading text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Convite</p>
+			if v.ConviteVale {
+				<p class="text-sm">
+					Você foi convidado para <span class="font-semibold text-grimorio-gold">{ v.NomeDaCampanha }</span>.
+				</p>
+			} else {
+				<p class="text-sm text-destructive">
+					Convite inválido ou expirado. Peça um novo link ao mestre.
+				</p>
+			}
+		</div>
+	</div>
+}
+
+// escolhaDoHeroi é um grupo de RÁDIOS, e o `fieldset`/`legend` não é enfeite: é
+// o elemento certo para um conjunto de escolhas dentro de um formulário, e é o
+// que faz o leitor de tela anunciar a pergunta antes de cada opção.
+templ escolhaDoHeroi(v campanhaEntrarView) {
+	<fieldset class="space-y-3">
+		<legend class="mb-3 font-heading text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+			Qual herói entra na mesa?
+		</legend>
+		<div data-nav-region="content" data-nav-layout="grid" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+			for _, h := range v.Herois {
+				@plaquetaDoHeroi(h, h.ID == v.EscolhidoID)
+			}
+		</div>
+		if len(v.Erros["characterId"]) > 0 {
+			for _, e := range v.Erros["characterId"] {
+				<p class="text-sm text-destructive">{ e }</p>
+			}
+		}
+	</fieldset>
+}
+
+// plaquetaDoHeroi: o rádio é INVISÍVEL mas real, e o rótulo inteiro é a área de
+// clique. `peer-checked` pinta a borda dourada e `peer-focus-visible` desenha o
+// anel — assim o estado visual segue o estado REAL do controle, e não uma
+// segunda cópia dele guardada em algum lugar.
+// NADA vem pré-selecionado, e isso é decisão e não esquecimento: entrar numa
+// mesa cria uma CÓPIA do herói lá dentro (ALE-33), e sair não é um clique. Um
+// rádio já marcado faz quem estiver distraído sentar o herói errado à mesa.
+//
+// A recusa é do NAVEGADOR, pelo `required`: ele diz "selecione uma destas
+// opções" apontando o grupo. É melhor que o botão desabilitado da SPA, que não
+// diz por que não envia — a mesma queixa que a ALE-80 registrou sobre esta
+// tela. O servidor recusa de novo, porque `required` não sobrevive a um POST
+// feito na mão.
+templ plaquetaDoHeroi(h heroiDaCarta, marcado bool) {
+	<label class="flex cursor-pointer items-center gap-3 rounded-none border border-grimorio-iron bg-grimorio-panel p-3 text-left transition-colors hover:border-grimorio-gold/60 has-[:checked]:border-grimorio-gold has-[:checked]:bg-grimorio-panel-raised has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring">
+		<input
+			type="radio"
+			name="characterId"
+			value={ strconv.FormatInt(h.ID, 10) }
+			checked?={ marcado }
+			required
+			class="sr-only"
+		/>
+		<span
+			aria-hidden="true"
+			class="flex size-11 shrink-0 items-center justify-center rounded-sm font-display text-xs text-white/85"
+			style={ "background: " + h.Gradiente }
+		>{ h.Iniciais }</span>
+		<span class="min-w-0 flex-1">
+			<span class="block truncate font-medium text-foreground">{ h.Nome }</span>
+			<span class="block truncate text-xs text-muted-foreground">{ h.Subtitulo }</span>
+		</span>
+	</label>
+}
+
+// Sem herói não se senta à mesa. A tela oferece a saída em vez de só constatar
+// o vazio — tela vazia que não dá o primeiro passo é tela que não ajuda.
+templ semHeroisParaSentar() {
+	<div class="flex flex-col items-center gap-3 rounded-none border border-dashed border-grimorio-iron px-4 py-10 text-center">
+		<p class="text-sm text-muted-foreground">
+			Você ainda não tem heróis. Crie um antes de entrar numa mesa.
+		</p>
+		<a href="/characters/new" class={ classesDoBotao(varSecundaria, tamPequeno, "") }>Criar herói</a>
+	</div>
+}
+
