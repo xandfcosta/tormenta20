@@ -1,5 +1,9 @@
 -- Regras opcionais da campanha (ALE-221, fatia 1: a carga).
 --
+-- Numerada 00009 e nao 00008 porque a ALE-222, feita em paralelo noutra
+-- sessao, ja tinha reservado o 00008 para as tres tabelas de estado de jogo.
+-- Duas migracoes com o mesmo numero nao convivem: o goose aplica uma so.
+--
 -- O livro nao manda aplicar tudo. Sobre os limites de carga ele diz, com todas
 -- as letras: "O mestre pode ignorar essa regra, desde que os jogadores nao
 -- abusem" (p141). Ate aqui o app aplicava sempre, o que escolhe um estilo de
