@@ -17,7 +17,7 @@ import { abreAFila, acionaOCiclo, garanteACena, labelsNaFila } from './support/g
  */
 /**
  * Esta spec dirige a sessão 5, e o `session.spec.ts` dirige a 4 — as duas são da
- * MESMA crônica (o jogador da seed é membro dela), e é essa separação que as
+ * MESMA campanha (o jogador da seed é membro dela), e é essa separação que as
  * deixa correr em paralelo no CI sem se atropelar. Antes as duas escreviam na
  * sessão 4, e o sintoma não parecia corrida: era um número que não batia ou um
  * clique que caía no botão errado.

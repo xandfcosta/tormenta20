@@ -6,7 +6,7 @@ import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 
 /** As linhas do acervo, sem título: quem nomeia é o cabeçalho do diálogo, e
- *  repetir "Lugares da crônica" duas vezes na mesma caixa é ruído. */
+ *  repetir "Lugares da campanha" duas vezes na mesma caixa é ruído. */
 function PlaceRows(props: {
   places: readonly BoardPlace[]
   onReopen: (placeId: number) => void
@@ -93,7 +93,7 @@ function PlaceAction(props: {
         {(naMesa) => (
           <ConfirmDialog
             title={`Mostrar ${props.place.name} à mesa?`}
-            description={`A cena que está na mesa, ${naMesa()}, vai para os Lugares da crônica com as peças onde estão — você a reabre quando quiser.`}
+            description={`A cena que está na mesa, ${naMesa()}, vai para os Lugares da campanha com as peças onde estão — você a reabre quando quiser.`}
             confirmLabel="Mostrar à mesa"
             onConfirm={() => props.onReopen(props.place.id)}
             trigger={(open) => (
@@ -110,7 +110,7 @@ function PlaceAction(props: {
 }
 
 /**
- * Os Lugares da crônica: as cenas que o mestre já montou (ALE-124, fatia 5).
+ * Os Lugares da campanha: as cenas que o mestre já montou (ALE-124, fatia 5).
  *
  * Encerrar o tabuleiro ARQUIVA — a taverna com as nove peças onde ficaram volta
  * para cá e é reaberta na semana seguinte sem remontar nada. A lista mostra a
@@ -156,7 +156,7 @@ export function PlacesDialog(props: {
     <>
       {props.trigger(abrir)}
       <Dialog open={open()} onOpenChange={setOpen}>
-        {/* Teto de altura E rolagem por dentro: o acervo cresce com a crônica, e
+        {/* Teto de altura E rolagem por dentro: o acervo cresce com a campanha, e
             sem isto o diálogo passava da janela nos dois sentidos — com 46
             cenas guardadas o CABEÇALHO ficava acima do topo da tela, onde o
             navegador não deixa chegar. Mesma família do ✕ inalcançável da
@@ -166,10 +166,10 @@ export function PlacesDialog(props: {
           <DialogHeader class="shrink-0">
             <DialogTitle>
               <Library aria-hidden="true" class="mr-1 inline size-4" />
-              Lugares da crônica
+              Lugares da campanha
             </DialogTitle>
             <DialogDescription>
-              As cenas guardadas desta crônica. Mostrar uma à mesa guarda a que está lá.
+              As cenas guardadas desta campanha. Mostrar uma à mesa guarda a que está lá.
             </DialogDescription>
           </DialogHeader>
           <Show

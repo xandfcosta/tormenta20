@@ -22,14 +22,14 @@ describe('initials', () => {
 
 describe('campaignEmblemGradient', () => {
   // O emblema é derivado do nome justamente pra não precisar de imagem salva:
-  // mesma crônica, mesmo sigilo, em qualquer reload.
+  // mesma campanha, mesmo sigilo, em qualquer reload.
   it('é estável pro mesmo nome', () => {
     expect(campaignEmblemGradient('A Queda de Tauron')).toBe(
       campaignEmblemGradient('A Queda de Tauron'),
     )
   })
 
-  it('distingue crônicas diferentes', () => {
+  it('distingue campanhas diferentes', () => {
     expect(campaignEmblemGradient('A Queda de Tauron')).not.toBe(
       campaignEmblemGradient('Segredos de Wynlla'),
     )
@@ -55,7 +55,7 @@ describe('roleLabel', () => {
   })
 
   // A mesa alheia só aparece para quem administra, e o servidor lhe dá o papel
-  // `gm` nela — dizer "Mestrando" ali afirmaria que a crônica é dele (ALE-120).
+  // `gm` nela — dizer "Mestrando" ali afirmaria que a campanha é dele (ALE-120).
   it('a mesa de outro diz de quem é, não o papel', () => {
     expect(roleLabel('gm', 'Bruna')).toBe('Mesa de Bruna')
   })

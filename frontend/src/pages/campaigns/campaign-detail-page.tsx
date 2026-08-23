@@ -19,7 +19,7 @@ const routeApi = getRouteApi('/campaigns/$id/')
 
 /**
  * Campaign detail as a grimório scene, redesigned into an open tome: the
- * SceneShell owns the back-to-Crônicas control; the CampaignTome renders the
+ * SceneShell owns the back-to-Campanhas control; the CampaignTome renders the
  * chronicle as a book. The active tab lives in `?tab=` so it deep-links and
  * survives the back button.
  *

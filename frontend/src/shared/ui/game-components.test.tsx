@@ -58,8 +58,8 @@ describe('SceneTitle', () => {
   })
 
   it('vira h2 quando a cena já tem um h1', () => {
-    render(() => <SceneTitle as="h2">Crônicas</SceneTitle>)
-    expect(screen.getByRole('heading', { level: 2, name: 'Crônicas' })).toBeInTheDocument()
+    render(() => <SceneTitle as="h2">Campanhas</SceneTitle>)
+    expect(screen.getByRole('heading', { level: 2, name: 'Campanhas' })).toBeInTheDocument()
   })
 
   it('mostra o kicker quando passado', () => {
@@ -108,12 +108,12 @@ describe('GameMenuButton', () => {
   })
 
   it('marca o destino atual com aria-current', () => {
-    render(() => <GameMenuButton active>Crônicas</GameMenuButton>)
+    render(() => <GameMenuButton active>Campanhas</GameMenuButton>)
     expect(screen.getByRole('button')).toHaveAttribute('aria-current', 'page')
   })
 
   it('sem active, não deixa aria-current pendurado', () => {
-    render(() => <GameMenuButton>Crônicas</GameMenuButton>)
+    render(() => <GameMenuButton>Campanhas</GameMenuButton>)
     expect(screen.getByRole('button')).not.toHaveAttribute('aria-current')
   })
 

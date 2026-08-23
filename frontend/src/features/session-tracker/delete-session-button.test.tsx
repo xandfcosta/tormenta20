@@ -36,7 +36,7 @@ function renderButton() {
   const cronica = createRoute({
     getParentRoute: () => root,
     path: '/campaigns/$id',
-    component: () => <p>A crônica</p>,
+    component: () => <p>A campanha</p>,
   })
   const router = createRouter({
     routeTree: root.addChildren([sessao, cronica]),
@@ -79,7 +79,7 @@ describe('DeleteSessionButton', () => {
     await waitFor(() => expect(remove).toHaveBeenCalledWith(7, 4))
     // Ficar na cena de uma sessão que não existe mais é o defeito clássico
     // desta família — a tela seguiria pedindo estado de um id apagado.
-    expect(await screen.findByText('A crônica')).toBeInTheDocument()
+    expect(await screen.findByText('A campanha')).toBeInTheDocument()
   })
 
   it('cancelar fecha sem excluir', async () => {
@@ -101,8 +101,8 @@ describe('DeleteSessionButton', () => {
     await user.click(await screen.findByRole('button', { name: 'Excluir' }))
 
     // Navegar depois de uma falha diria "apagamos" sobre uma sessão que
-    // continua lá — a mesa voltaria para a crônica achando que acabou.
+    // continua lá — a mesa voltaria para a campanha achando que acabou.
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    expect(screen.queryByText('A crônica')).not.toBeInTheDocument()
+    expect(screen.queryByText('A campanha')).not.toBeInTheDocument()
   })
 })

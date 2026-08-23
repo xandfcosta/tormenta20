@@ -17,7 +17,7 @@ import { Skeleton } from '@/shared/ui/skeleton'
 import { useQueryClient } from '@tanstack/solid-query'
 
 /**
- * O ELENCO: quem existe na crônica fora da fila do combate (ALE-212).
+ * O ELENCO: quem existe na campanha fora da fila do combate (ALE-212).
  *
  * O conceito que faltava é que **iniciativa não é lista de combatentes**. Até
  * aqui a única forma de alguém existir na sessão era já estar na fila: não
@@ -65,7 +65,7 @@ export function CastPanel(props: {
         </SectionTitle>
         <Show
           when={players().length > 0}
-          fallback={<Vazio>Nenhum personagem no elenco desta crônica ainda.</Vazio>}
+          fallback={<Vazio>Nenhum personagem no elenco desta campanha ainda.</Vazio>}
         >
           <ul class="space-y-1">
             <For each={players()}>
@@ -201,7 +201,7 @@ function NpcRow(props: { creature: CampaignCreature; campaignId: number; onRemov
       />
       <ConfirmDialog
         title={`Apagar "${props.creature.name}"?`}
-        description="O bloco sai da crônica. Quem já está na fila do combate continua lá, mas sem bloco atrás dele."
+        description="O bloco sai da campanha. Quem já está na fila do combate continua lá, mas sem bloco atrás dele."
         confirmLabel="Apagar"
         destructive
         onConfirm={props.onRemove}

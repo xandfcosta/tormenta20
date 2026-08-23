@@ -25,7 +25,7 @@ function renderForm(onSave = vi.fn().mockResolvedValue(undefined), onCancel = vi
 }
 
 describe('CampaignEditForm', () => {
-  it('abre com os valores atuais da crônica', () => {
+  it('abre com os valores atuais da campanha', () => {
     renderForm()
     expect(screen.getByLabelText('Nome')).toHaveValue('Snapshot Test')
     expect(screen.getByLabelText('Descrição')).toHaveValue('Uma mesa-vitrine.')
@@ -44,7 +44,7 @@ describe('CampaignEditForm', () => {
     })
   })
 
-  // Um nome só de espaços passaria num min(1) ingênuo e deixaria a crônica sem
+  // Um nome só de espaços passaria num min(1) ingênuo e deixaria a campanha sem
   // título na lista.
   it('recusa nome vazio ou só de espaços, sem chamar o backend', async () => {
     const { onSave, user } = renderForm()

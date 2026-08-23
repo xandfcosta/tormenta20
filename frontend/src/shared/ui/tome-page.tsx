@@ -12,7 +12,7 @@ import { cn } from '@/shared/lib/utils'
  *
  * @example
  * <TomePage>
- *   <h1>Abrir nova crônica</h1>
+ *   <h1>Abrir nova campanha</h1>
  *   <CampaignForm … />
  * </TomePage>
  */
@@ -26,7 +26,7 @@ export function TomePage(props: ParentProps<{ class?: string }>) {
             'grimorio-frame--stone flex min-h-[calc(100dvh-7rem)] flex-col gap-6 rounded-none p-6 sm:p-10',
             // A phone held sideways has ~390px of height; full padding there
             // pushes the content of a short leaf clean off the screen — the
-            // "Abrir crônica" button ends at y=389 with this and at ~411
+            // "Abrir campanha" button ends at y=389 with this and at ~411
             // without it. The key is width + ORIENTATION and not height
             // (ALE-176): a `max-height` query also matches a phone held
             // UPRIGHT with the virtual keyboard open (390x494), and these

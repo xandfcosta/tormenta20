@@ -542,7 +542,7 @@ export function BoardRegion(props: {
                     onReopen={props.rt.reopenPlace}
                     onRemove={(placeId) => void props.rt.removePlace(placeId).then(setPlaces)}
                     trigger={(open) => (
-                      <Button size="sm" variant="ghost" aria-label="Lugares da crônica" onClick={open}>
+                      <Button size="sm" variant="ghost" aria-label="Lugares da campanha" onClick={open}>
                         <Library aria-hidden="true" class="size-4" />
                       </Button>
                     )}
@@ -583,7 +583,7 @@ export function BoardRegion(props: {
                   />
                   <ConfirmDialog
                     title="Encerrar o tabuleiro?"
-                    description="A cena vai para os Lugares da crônica, com as peças onde estão, e você a reabre quando quiser. A iniciativa e os PV continuam como estão."
+                    description="A cena vai para os Lugares da campanha, com as peças onde estão, e você a reabre quando quiser. A iniciativa e os PV continuam como estão."
                     confirmLabel="Encerrar"
                     destructive
                     onConfirm={props.rt.closeBoard}

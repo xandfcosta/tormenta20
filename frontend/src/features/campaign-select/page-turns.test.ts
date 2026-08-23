@@ -7,7 +7,7 @@ function campaign(id: number): Campaign {
   return {
     id,
     ownerId: 1,
-    name: `Crônica ${id}`,
+    name: `Campanha ${id}`,
     description: null,
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
@@ -110,7 +110,7 @@ describe('createPageTurns', () => {
 
   // Regressão do bug que a main tem (ALE-78): o mapa de sessões ao vivo chega
   // DEPOIS da lista, então o alvo muda só no `isLive`. Sem isso, o livro fica
-  // dizendo "Abrir crônica" enquanto o rail já mostra a brasa.
+  // dizendo "Abrir campanha" enquanto o rail já mostra a brasa.
   it('atualiza no lugar quando só o isLive muda, sem virar página', () => {
     mockViewport()
     createRoot((dispose) => {
@@ -125,7 +125,7 @@ describe('createPageTurns', () => {
     })
   })
 
-  it('não enfileira a mesma crônica duas vezes seguidas', () => {
+  it('não enfileira a mesma campanha duas vezes seguidas', () => {
     mockViewport()
     createRoot((dispose) => {
       const [target, setTarget] = createSignal(page(1))

@@ -18,7 +18,7 @@ export function SessionsCard(props: { campaignId: number; isGm: boolean }) {
 
   return (
     <TomeSection
-      eyebrow="Crônica"
+      eyebrow="Campanha"
       title="Sessões"
       action={<Show when={props.isGm}>{<NewSessionButton campaignId={props.campaignId} />}</Show>}
     >
@@ -41,7 +41,7 @@ function EmptyLog(props: { isGm: boolean }) {
     <div class="flex flex-col items-center gap-2 rounded-none border border-dashed border-grimorio-iron px-4 py-10 text-center">
       <ScrollText aria-hidden="true" class="size-6 text-muted-foreground" />
       <p class="text-sm text-muted-foreground">
-        A crônica ainda não tem sessões.
+        A campanha ainda não tem sessões.
         <Show when={props.isGm}> Abra a primeira para começar a registrar.</Show>
       </p>
     </div>

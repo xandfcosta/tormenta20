@@ -44,7 +44,7 @@ const CAMPAIGN = 'Snapshot Test ALE-33' // the seed chronicle with a live sessio
 const RECHEIO_DO_TRILHO = ['Recheio A', 'Recheio B', 'Recheio C', 'Recheio D', 'Recheio E']
 
 /**
- * Hub → Crônicas → abrir campanha → entrar na sessão ao vivo.
+ * Hub → Campanhas → abrir campanha → entrar na sessão ao vivo.
  *
  * Read-only once inside: asserts the socket.io gateway connected, without
  * touching initiative/turns, so the seed survives the run untouched.
@@ -146,14 +146,14 @@ test.describe('Sessão ao vivo', () => {
    * de quem rodou o quê antes.
    */
 
-  test('Crônicas → campanha → continuar a sessão (realtime conectado)', async ({ page }) => {
+  test('Campanhas → campanha → continuar a sessão (realtime conectado)', async ({ page }) => {
     await page.goto('/campaigns')
     // O estado "ao vivo" chega DEPOIS da lista (fan-out separado de sessões) e
     // troca os botões do livro. Esperar ele assentar antes de clicar — senão a
     // ação some debaixo do cursor e o clique cai no botão vizinho (ALE-78).
     await expect(page.getByRole('button', { name: /^Continuar a sessão/ })).toBeVisible()
 
-    await page.getByRole('button', { name: /^Abrir crônica/ }).click()
+    await page.getByRole('button', { name: /^Abrir campanha/ }).click()
     await expect(page.getByRole('heading', { name: CAMPAIGN, level: 1 })).toBeVisible()
 
     await page.getByRole('button', { name: 'Continuar a sessão' }).click()
@@ -1172,7 +1172,7 @@ test.describe('Sessão ao vivo', () => {
   /**
    * Com o acervo cheio, "Abrir tabuleiro" continua alcançável (ALE-124).
    *
-   * A cena vazia passou a mostrar os Lugares da crônica (fatia 5), e ela
+   * A cena vazia passou a mostrar os Lugares da campanha (fatia 5), e ela
    * centrava o conteúdo com `justify-center` DENTRO de uma caixa que rola.
    * Centrar conteúdo que transborda empurra o TOPO para fora da área rolável —
    * e o topo aqui é justamente o botão de abrir. O mestre com algumas cenas
@@ -1189,7 +1189,7 @@ test.describe('Sessão ao vivo', () => {
    * estava clipado fora do alcance.
    *
    * A janela é BAIXA de propósito: é o que faz o conteúdo transbordar sem
-   * depender de quantas cenas a crônica juntou.
+   * depender de quantas cenas a campanha juntou.
    */
   test('com o acervo cheio, o botão de abrir tabuleiro continua alcançável', async ({ page }) => {
     // Este é o teste mais LONGO da suíte: três idas e voltas de abrir e
@@ -1770,7 +1770,7 @@ test.describe('Sessão ao vivo', () => {
     ).toBe(cores?.painelDaCasa)
   })
 
-  test('Sair da sessão volta pra crônica', async ({ page }) => {
+  test('Sair da sessão volta pra campanha', async ({ page }) => {
     await page.goto('/campaigns/1/sessions/4')
     await expect(cenaViva(page)).toBeVisible()
 

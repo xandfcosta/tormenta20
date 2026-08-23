@@ -15,7 +15,7 @@ describe('Tabs', () => {
           <TabsTrigger value="visao">Visão geral</TabsTrigger>
           <TabsTrigger value="membros">Membros</TabsTrigger>
         </TabsList>
-        <TabsContent value="visao">Resumo da crônica</TabsContent>
+        <TabsContent value="visao">Resumo da campanha</TabsContent>
         <TabsContent value="membros">Roster do grupo</TabsContent>
       </Tabs>
     )
@@ -23,7 +23,7 @@ describe('Tabs', () => {
 
   it('mostra o painel da aba inicial', () => {
     render(() => <Fixture />)
-    expect(screen.getByText('Resumo da crônica')).toBeInTheDocument()
+    expect(screen.getByText('Resumo da campanha')).toBeInTheDocument()
   })
 
   it('troca de painel no clique', async () => {

@@ -35,7 +35,7 @@ export function CampaignRail(props: CampaignRailProps) {
     <div
       ref={rail}
       role="listbox"
-      aria-label="Crônicas"
+      aria-label="Campanhas"
       class={cn(
         'flex gap-1.5 overflow-x-auto overflow-y-hidden pb-1',
         // Desktop: a vertical stack of markers glued to the book's fore-edge.

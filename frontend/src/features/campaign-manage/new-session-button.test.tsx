@@ -25,7 +25,7 @@ function session(sessionNumber: number): Session {
 }
 
 describe('nextSessionNumber', () => {
-  it('a primeira crônica abre na sessão 1', () => {
+  it('a primeira campanha abre na sessão 1', () => {
     expect(nextSessionNumber([])).toBe(1)
   })
 

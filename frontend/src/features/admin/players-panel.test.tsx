@@ -58,7 +58,7 @@ describe('PlayersPanel', () => {
   })
 
   // O aviso tem de dizer o preço DESTA conta: um texto genérico não distingue
-  // apagar uma conta vazia de apagar a do jogador que mestra duas crônicas.
+  // apagar uma conta vazia de apagar a do jogador que mestra duas campanhas.
   it('a confirmação diz o que se perde e para onde vão as mesas', async () => {
     const { user } = setup([makeUser({ campaigns: 2, characters: 3 })])
 

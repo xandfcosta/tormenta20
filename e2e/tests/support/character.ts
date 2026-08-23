@@ -8,7 +8,7 @@ export const POWERS_FIXTURE_NAME = 'E2E Poderes Gerais'
  *
  * Idempotente de propósito: o app NÃO apaga personagem (não há rota nem ação na
  * interface), então um teste que criasse um a cada rodada entulharia o elenco
- * exatamente como as crônicas "E2E Descartável" entulharam as mesas. Ele procura
+ * exatamente como as campanhas "E2E Descartável" entulharam as mesas. Ele procura
  * pelo nome, cria só na primeira vez e reusa daí em diante.
  *
  * É SETUP, não o assunto: a criação pela Forja tem teste próprio

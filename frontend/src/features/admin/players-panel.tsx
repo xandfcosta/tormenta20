@@ -99,7 +99,7 @@ function belongings(user: AdminUser): string {
 /**
  * O texto da confirmação diz o preço EXATO desta conta. Um aviso genérico
  * ("esta ação não pode ser desfeita") não distingue apagar uma conta vazia de
- * apagar a do jogador que mestra duas crônicas.
+ * apagar a do jogador que mestra duas campanhas.
  */
 function deletionCost(user: AdminUser): string {
   const fichas = `${plural(user.characters, 'ficha', 'fichas')} vão junto`

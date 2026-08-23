@@ -158,7 +158,7 @@ export type BoardState = {
   markers?: BoardMarker[]
 }
 
-/** Uma cena guardada da crônica (ALE-124, fatia 5). Sem as peças: a lista serve
+/** Uma cena guardada da campanha (ALE-124, fatia 5). Sem as peças: a lista serve
  *  para escolher onde jogar, e mandar a cena inteira de cada lugar seria mandar
  *  o acervo do mestre a cada abertura de menu. */
 export type BoardPlace = {
@@ -282,7 +282,7 @@ export type SessionRealtime = {
    *  alternado: o pincel pinta ARRASTANDO, e o arraste passa duas vezes pela
    *  mesma casa. */
   paintTerrain: (x: number, y: number, difficult: boolean) => void
-  /** Os lugares guardados da crônica (mestre). PERGUNTA com resposta, e não
+  /** Os lugares guardados da campanha (mestre). PERGUNTA com resposta, e não
    *  estado de broadcast: o acervo é preparação, não muda com a cena, e mandá-lo
    *  a cada snapshot seria carregar o armário do mestre em toda mensagem. */
   listPlaces: () => Promise<BoardPlace[]>
@@ -446,7 +446,7 @@ export function createSessionSocket(
     previousTurn: () => send('initiative-previous-turn'),
     resetInitiative: () => send('initiative-reset'),
     // `session-*` e não `scene-*`: "cena" já é palavra ocupada no fio pelo lado
-    // do tabuleiro, onde `board-place-scene` é um mapa GUARDADO da crônica.
+    // do tabuleiro, onde `board-place-scene` é um mapa GUARDADO da campanha.
     startScene: () => send('session-scene-start'),
     endScene: () => send('session-scene-end'),
     populateParty: () => send('initiative-populate'),

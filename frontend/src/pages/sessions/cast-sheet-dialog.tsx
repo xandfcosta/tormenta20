@@ -19,9 +19,9 @@ import { Skeleton } from '@/shared/ui/skeleton'
  * —, então isto não abriu porta nenhuma; abriu o caminho até uma porta que já
  * estava destrancada.
  *
- * **A linha da crônica não é enfeite.** O que o mestre edita é o SNAPSHOT desta
+ * **A linha da campanha não é enfeite.** O que o mestre edita é o SNAPSHOT desta
  * campanha e não o personagem do jogador (ALE-33): o mesmo herói em duas
- * crônicas tem duas fichas. O risco que a issue nomeia não é ele estragar o
+ * campanhas tem duas fichas. O risco que a issue nomeia não é ele estragar o
  * personagem — é ele ACHAR que estragou, ou achar que consertou o de outra
  * mesa. A frase fica no cabeçalho, junto do que ele está prestes a mexer, e não
  * na gaveta que o diálogo cobre.
@@ -34,7 +34,7 @@ import { Skeleton } from '@/shared/ui/skeleton'
  */
 export function CastSheetDialog(props: {
   characterId: number | null
-  /** O nome da crônica, que é o que a linha de aviso precisa dizer. */
+  /** O nome da campanha, que é o que a linha de aviso precisa dizer. */
   chronicle: string
   onClose: () => void
 }) {
@@ -93,14 +93,14 @@ function CastSheet(props: { characterId: number; chronicle: string; onClose: () 
               aqui até ver a tela. Para quem OUVE, o nome continua: ele está no
               título do diálogo, que é o que se anuncia ao abrir. */}
           <DialogTitle class="sr-only">
-            Ficha de {data().name} nesta crônica
+            Ficha de {data().name} nesta campanha
           </DialogTitle>
           <header class="flex shrink-0 items-center justify-between gap-3 border-b border-grimorio-iron px-3 py-2 sm:px-4">
             {/* A frase que responde "qual ficha é esta?" antes de a dúvida
                 existir. Ela é a `DialogDescription`, então quem ouve o diálogo
                 abrir ouve o aviso junto do nome. */}
             <DialogDescription class="min-w-0 truncate text-xs text-muted-foreground">
-              Ficha desta crônica · {props.chronicle}
+              Ficha desta campanha · {props.chronicle}
             </DialogDescription>
             <Button
               size="sm"
