@@ -24,6 +24,13 @@ type Server struct {
 	sessions *sessionStore     // in-memory realtime tracker state (B.6)
 	boards   *boardStore       // tabuleiro tático vivo por sessão (ALE-124)
 	presence *presenceRegistry // who's-online per session room (B.6)
+	// rt é o gateway do socket, guardado para que um SEGUNDO transporte possa
+	// avisar as salas (ALE-219): a página da Mesa muta o mesmo store, e sem
+	// isto o mestre na SPA só veria a iniciativa nova no próximo refresh.
+	//
+	// Nil até o `SocketHandler()` construir o gateway. Quem depende dele avisa
+	// em vez de mutar às cegas — mutação que ninguém vê é pior que recusa.
+	rt *realtimeGateway
 	// charMu serializes mutating HTTP requests per character (characterID → *sync.Mutex)
 	// so concurrent read-modify-write mutations (rapid damage/vitals clicks) can't lose
 	// updates. Mirrors the per-session lock used by the realtime store.

@@ -1,0 +1,167 @@
+{{define "mesa"}}
+<main id="mesa" class="mx-auto flex min-h-dvh w-full max-w-3xl flex-col">
+
+  {{/* A faixa AO VIVO (ALE-30). Acende em DOURADO na vez do jogador, porque
+       dourado é o que já diz "a vez" na iniciativa e no tabuleiro (ALE-200). */}}
+  <div class="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b px-3 py-2 sm:px-4
+       {{if eq .Turn.Kind "mine"}}border-grimorio-gold/60 bg-grimorio-gold/10{{else}}border-grimorio-iron bg-grimorio-panel{{end}}">
+    <p class="flex items-center gap-2">
+      <span class="relative flex size-2.5">
+        <span class="absolute inline-flex size-full animate-ping rounded-full bg-hp-full opacity-75"></span>
+        <span class="relative inline-flex size-2.5 rounded-full bg-hp-full"></span>
+      </span>
+      <span class="text-xs font-semibold uppercase tracking-widest text-hp-full">Ao vivo</span>
+      <span class="text-sm text-muted-foreground">· Sessão {{.SessionNum}}</span>
+    </p>
+    {{/* `aria-live` é obrigatório aqui e não é enfeite: num app de morph a vez
+         muda sem navegação nenhuma, então quem não vê a tela não tem OUTRO
+         sinal de que chegou a vez dele. Na SPA o aviso chega por toast. */}}
+    <div class="flex items-center gap-2 text-sm" aria-live="polite">
+      {{if ne .Turn.Kind "idle"}}<span class="text-muted-foreground">Rodada {{.Round}}</span>{{end}}
+      {{if eq .Turn.Kind "mine"}}
+        <span class="flex animate-pulse items-center gap-1 bg-primary px-2 py-0.5 text-xs font-bold uppercase tracking-widest text-primary-foreground">Sua vez</span>
+      {{else if eq .Turn.Kind "other"}}
+        <span class="truncate text-muted-foreground">· Vez de {{.Turn.Label}}</span>
+      {{else}}
+        <span class="truncate text-muted-foreground">Aguardando iniciativa</span>
+      {{end}}
+    </div>
+  </div>
+
+  <div class="flex-1 space-y-4 p-3 sm:p-4">
+
+    {{/* Registrar iniciativa — a ÚNICA mutação desta superfície (ALE-213). Some
+         fora de cena pelo mesmo motivo da SPA: gravaria a linha no rastreador do
+         mestre sem mudar nada na tela de quem clicou. */}}
+    {{if and .SceneActive .Eu}}
+    <section class="space-y-2 border border-grimorio-iron bg-grimorio-panel p-3">
+      <h2 class="font-heading text-sm font-semibold text-grimorio-gold">
+        {{if .Eu.NaFila}}Rolar de novo{{else}}Registrar iniciativa{{end}} · {{.Eu.Nome}}
+      </h2>
+      <div class="flex flex-wrap items-end gap-2">
+        <div class="space-y-1">
+          <label for="d20" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Dado (d20)</label>
+          {{/* Ligado a um SINAL e nunca renderizado pelo servidor: o remendo
+               chega a cada 200ms, e um `value` vindo do servidor apagaria o que
+               o jogador está digitando. Sinal não é estado da aplicação — é
+               entrada em curso, e ela é do teclado de quem digita. */}}
+          <input id="d20" name="d20" type="number" min="1" max="20" inputmode="numeric"
+                 data-bind:d20
+                 class="w-24 border border-input bg-background px-2 py-1.5 font-mono tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring">
+        </div>
+        <button type="button"
+                data-on:click="$d20 = Math.floor(Math.random() * 20) + 1"
+                class="border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring">
+          🎲 Rolar
+        </button>
+        <p class="text-sm text-muted-foreground">
+          Bônus <span class="font-mono tabular-nums text-foreground">{{.Eu.Bonus}}</span>
+          · Total previsto <span class="font-mono tabular-nums text-foreground" data-text="$d20 + {{.Eu.Bonus}}"></span>
+        </p>
+      </div>
+      {{/* Sai só o d20 no fio; o TOTAL é somado pelo servidor (ALE-213), que é
+           quem tem a `ComputeSheetV2`. O `data-indicator` desliga o botão
+           enquanto o POST voa — sem isso o duplo clique manda duas rolagens. */}}
+      <button type="button"
+              data-indicator:registrando
+              data-attr:disabled="$registrando"
+              data-on:click="@post('/mesa/{{.CampaignID}}/{{.SessionID}}/iniciativa')"
+              class="bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-50">
+        Registrar
+      </button>
+      <p class="text-xs text-destructive" data-show="$erro != ''" data-text="$erro"></p>
+    </section>
+    {{end}}
+
+    {{/* Grupo — como todo mundo está, que é pergunta diferente de "quem age
+         quando". Aparece FORA de cena de propósito: PV do grupo não é
+         informação de combate. */}}
+    {{if .Grupo}}
+    <section class="space-y-1.5">
+      <h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">Grupo</h2>
+      <div class="grid gap-2 sm:grid-cols-2">
+        {{range .Grupo}}
+        <article class="space-y-1.5 border border-border/60 bg-card/60 p-2.5">
+          <div class="flex items-baseline justify-between gap-2">
+            <span class="truncate font-medium">{{.Nome}}</span>
+            <span class="shrink-0 bg-muted px-1.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">Nv {{.Nivel}}</span>
+          </div>
+          {{if .Classes}}<p class="truncate text-xs text-muted-foreground">{{.Classes}}</p>{{end}}
+          {{template "barra" dict "Rotulo" "PV" "B" .PV}}
+          {{template "barra" dict "Rotulo" "PM" "B" .PM}}
+        </article>
+        {{end}}
+      </div>
+    </section>
+    {{end}}
+
+    {{/* Iniciativa — LEITURA, e só (ALE-213). */}}
+    <section class="space-y-1.5">
+      <h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">Iniciativa</h2>
+      {{/* Desenha O QUE CHEGOU, e nada mais. A decisão de esconder a fila fora
+           de cena já foi tomada pelo servidor, que a esvaziou no
+           `redactForPlayers` — repeti-la aqui num `if .SceneActive` seria a
+           MESMA regra escrita em dois lugares, e o dia em que elas divergissem
+           a tela mentiria com toda a confiança (ALE-210: não mandar é
+           segurança, não desenhar é UX, e cada uma tem um dono).
+           O que sobra para o template é escolher a FRASE do vazio. */}}
+      {{if not .Fila}}
+        <p class="border border-dashed border-grimorio-iron p-4 text-center text-sm text-muted-foreground">
+          {{if .SceneActive}}Em cena · ninguém na fila ainda.{{else}}Fora de cena. O mestre ainda não começou.{{end}}
+        </p>
+      {{else}}
+        <ol class="space-y-1">
+          {{range .Fila}}
+          <li {{if .NaVez}}aria-current="true"{{end}}
+              class="flex items-center gap-2.5 border p-2
+              {{if .NaVez}}border-grimorio-gold/60 bg-grimorio-gold/10{{else}}border-border/60 bg-card/60{{end}}">
+            <span class="w-8 shrink-0 text-center font-mono text-lg font-bold tabular-nums {{if .NaVez}}text-grimorio-gold{{else}}text-muted-foreground{{end}}">{{.Iniciativa}}</span>
+            <div class="min-w-0 flex-1 space-y-1">
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="truncate font-medium">{{.Rotulo}}</span>
+                {{/* O crachá é `--marker` e nunca a primária: crachá não se
+                     clica, então não compete com a ação (ALE-200). */}}
+                {{if .PC}}<span class="shrink-0 bg-marker px-1 text-[10px] font-bold uppercase tracking-widest text-marker-foreground">PC</span>{{end}}
+                {{if .Minha}}<span class="shrink-0 bg-marker px-1 text-[10px] font-bold uppercase tracking-widest text-marker-foreground">Seu</span>{{end}}
+                {{/* "Na vez" por ESCRITO e não só pela cor dourada: um fundo
+                     colorido não existe para leitor de tela (ALE-212). */}}
+                {{if .NaVez}}<span class="shrink-0 text-[10px] font-bold uppercase tracking-widest text-grimorio-gold">Na vez</span>{{end}}
+              </div>
+              {{if .PV}}
+                {{template "barra" dict "Rotulo" "PV" "B" .PV}}
+              {{else if .Oculto}}
+                {{/* A flag sobrevive à redação de propósito: "sem barra" e
+                     "escondido" são coisas diferentes, e a segunda é
+                     informação (ALE-210). */}}
+                <p class="text-xs italic text-muted-foreground">PV ocultos pelo mestre</p>
+              {{end}}
+              {{if .Condicoes}}
+              <ul class="flex flex-wrap gap-1">
+                {{range .Condicoes}}<li class="bg-penalty px-1 text-[10px] font-bold uppercase tracking-widest text-penalty-ink">{{.}}</li>{{end}}
+              </ul>
+              {{end}}
+            </div>
+          </li>
+          {{end}}
+        </ol>
+      {{end}}
+    </section>
+  </div>
+</main>
+{{end}}
+
+{{/* A barra de vital, com o mesmo contrato de acessibilidade da `VitalBar` da
+     SPA: um `progressbar` de verdade, porque "um pouco de verde" não é resposta
+     para quem não vê a tela — e é o que o e2e consegue ler. */}}
+{{define "barra"}}
+{{- $b := .B -}}
+<div class="flex items-center gap-1.5">
+  <span class="w-7 shrink-0 text-xs font-bold uppercase tracking-widest text-muted-foreground">{{.Rotulo}}</span>
+  <div role="progressbar" aria-valuenow="{{$b.Atual}}" aria-valuemin="0" aria-valuemax="{{$b.Max}}"
+       aria-label="{{.Rotulo}} {{$b.Atual}} de {{$b.Max}}"
+       class="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted">
+    <div class="h-full rounded-full {{$b.Tom}}" style="width: {{$b.Pct}}%"></div>
+  </div>
+  <span class="shrink-0 font-mono text-[13px] tabular-nums text-foreground">{{$b.Atual}}/{{$b.Max}}</span>
+</div>
+{{end}}

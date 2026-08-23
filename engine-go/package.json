@@ -8,6 +8,8 @@
     "build": "go build -o ./bin/t20-api ./cmd/api",
     "start": "APP_ENV=production ./bin/t20-api",
     "seed": "SEED_API_URL=http://localhost:3001 go run ./cmd/seed",
-    "build:wasm": "bash ../frontend/scripts/build-engine-wasm.sh"
+    "build:wasm": "bash ../frontend/scripts/build-engine-wasm.sh",
+    "build:mesa-css": "bash ./scripts/build-mesa-css.sh",
+    "prebuild": "bash ./scripts/build-mesa-css.sh"
   }
 }

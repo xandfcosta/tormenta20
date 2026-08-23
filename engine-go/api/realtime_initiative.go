@@ -26,7 +26,7 @@ func (g *realtimeGateway) onInitiativeAdd(sock *socket.Socket, args []any) {
 		g.wsError(sock, "entry is required")
 		return
 	}
-	entry, err := g.materializeEntry(ctx.userID, ctx.campaignID, entryBody)
+	entry, err := g.s.materializeEntry(ctx.userID, ctx.campaignID, entryBody)
 	if err != nil {
 		g.wsError(sock, err.Error())
 		return
@@ -57,7 +57,7 @@ func (g *realtimeGateway) onInitiativeSelf(sock *socket.Socket, args []any) {
 		return
 	}
 	d20, _ := intField(ctx.body, "d20")
-	entry, err := g.selfInitiativeEntry(ctx.userID, ctx.campaignID, charID, d20)
+	entry, err := g.s.selfInitiativeEntry(ctx.userID, ctx.campaignID, charID, d20)
 	if err != nil {
 		g.wsError(sock, err.Error())
 		return
@@ -74,18 +74,23 @@ func (g *realtimeGateway) onInitiativeSelf(sock *socket.Socket, args []any) {
 // regra mora e é aqui que ela se prova, com o handler em volta traduzindo erro
 // em `exception`. Testar pelo socket exigiria um socket, e o que importa não é
 // o transporte.
-func (g *realtimeGateway) selfInitiativeEntry(callerID, campaignID, charID, d20 int64) (InitiativeEntry, error) {
+//
+// O RECEPTOR virou `*Server` na ALE-219, e a frase acima é o motivo: enquanto a
+// regra pendia do gateway, "transport-agnostic" era uma intenção escrita em
+// comentário e desmentida pela assinatura — o segundo transporte (a página da
+// Mesa) não conseguia alcançá-la sem um socket que ele não tem.
+func (s *Server) selfInitiativeEntry(callerID, campaignID, charID, d20 int64) (InitiativeEntry, error) {
 	if d20 < 1 || d20 > 20 {
 		return InitiativeEntry{}, fmt.Errorf("d20 must be an integer from 1 to 20, got %d", d20)
 	}
-	bonus, err := g.s.initiativeBonus(context.Background(), charID)
+	bonus, err := s.initiativeBonus(context.Background(), charID)
 	if err != nil {
 		return InitiativeEntry{}, err
 	}
 	// Um payload NOVO e não o corpo recebido: escrever no mapa do cliente faria a
 	// mensagem se reescrever a si mesma, e um `initiative` que ele tenha mandado
 	// junto venceria a conta do servidor.
-	return g.materializeEntry(callerID, campaignID, map[string]any{
+	return s.materializeEntry(callerID, campaignID, map[string]any{
 		"characterId": charID, "initiative": d20 + bonus,
 	})
 }
@@ -236,11 +241,11 @@ func (g *realtimeGateway) populateParty(sessionID int64, combatants []combatant)
 // materializeEntry resolves an initiative payload into a concrete entry — an NPC (label +
 // initiative) or a character (name/vitals pulled via resolveCombatant, with optional client
 // overrides).
-func (g *realtimeGateway) materializeEntry(callerID, campaignID int64, input map[string]any) (InitiativeEntry, error) {
+func (s *Server) materializeEntry(callerID, campaignID int64, input map[string]any) (InitiativeEntry, error) {
 	if _, hasChar := intField(input, "characterId"); !hasChar {
 		return materializeNpcEntry(input)
 	}
-	return g.materializeCharacterEntry(callerID, campaignID, input)
+	return s.materializeCharacterEntry(callerID, campaignID, input)
 }
 
 func materializeNpcEntry(input map[string]any) (InitiativeEntry, error) {
@@ -283,13 +288,13 @@ func materializeNpcEntry(input map[string]any) (InitiativeEntry, error) {
 	return entry, nil
 }
 
-func (g *realtimeGateway) materializeCharacterEntry(callerID, campaignID int64, input map[string]any) (InitiativeEntry, error) {
+func (s *Server) materializeCharacterEntry(callerID, campaignID int64, input map[string]any) (InitiativeEntry, error) {
 	charID, _ := intField(input, "characterId")
 	initiative, hasInit := intField(input, "initiative")
 	if !hasInit {
 		return InitiativeEntry{}, errors.New("entry.initiative is required")
 	}
-	stats, _, err := g.s.resolveCombatant(context.Background(), callerID, campaignID, charID)
+	stats, _, err := s.resolveCombatant(context.Background(), callerID, campaignID, charID)
 	if err != nil {
 		return InitiativeEntry{}, err
 	}

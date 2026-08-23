@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "@solidjs/testing-library": "^0.8.10",
+    "@tailwindcss/cli": "^4.3.3",
     "@tailwindcss/vite": "^4.2.4",
     "@tanstack/router-plugin": "^1.167.34",
     "@testing-library/jest-dom": "^6.9.1",

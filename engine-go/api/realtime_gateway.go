@@ -39,6 +39,7 @@ func (s *Server) SocketHandler() http.Handler {
 	opts := socket.DefaultServerOptions()
 	opts.SetCors(&types.Cors{Origin: "*", Credentials: true})
 	g := &realtimeGateway{s: s, io: socket.NewServer(nil, opts)}
+	s.rt = g
 	g.io.On("connection", func(clients ...any) {
 		if sock, ok := clients[0].(*socket.Socket); ok {
 			g.onConnect(sock)

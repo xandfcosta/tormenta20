@@ -133,6 +133,11 @@ func primeCatalogs(path string) *engine.Catalogs {
 func buildMux(cfg api.Config, srv *api.Server) *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.Handle("/socket.io/", srv.SocketHandler())
+	// O piloto Datastar (ALE-219): uma PÁGINA renderizada pelo servidor, ao lado
+	// da SPA. Fora do `/api` de propósito — o jogador abre e favorita esta URL.
+	// Vive nos dois formatos porque o `ServeMux` casa pelo prefixo mais longo.
+	// Apagar esta linha é metade da saída do piloto.
+	mux.Handle("/mesa/", http.StripPrefix("/mesa", srv.MesaRouter()))
 	if cfg.StaticDir == "" {
 		mux.Handle("/", srv.Router())
 		return mux

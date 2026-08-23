@@ -127,7 +127,7 @@ func TestCondicaoEntraESaiDaLinha(t *testing.T) {
 func TestIniciativaDoJogadorEhSomadaPeloServidor(t *testing.T) {
 	f := newSelfInitiativeFixture(t)
 
-	entry, err := f.g.selfInitiativeEntry(f.player, f.campaignID, f.charID, 13)
+	entry, err := f.g.s.selfInitiativeEntry(f.player, f.campaignID, f.charID, 13)
 	if err != nil {
 		t.Fatalf("registrar: %v", err)
 	}
@@ -147,13 +147,13 @@ func TestD20ForaDaFaixaEhRecusado(t *testing.T) {
 	f := newSelfInitiativeFixture(t)
 
 	for _, d20 := range []int64{0, -3, 21, 100} {
-		if _, err := f.g.selfInitiativeEntry(f.player, f.campaignID, f.charID, d20); err == nil {
+		if _, err := f.g.s.selfInitiativeEntry(f.player, f.campaignID, f.charID, d20); err == nil {
 			t.Errorf("d20 %d passou", d20)
 		}
 	}
 	// E a fronteira dos dois lados vale: 1 e 20 são dados de verdade.
 	for _, d20 := range []int64{1, 20} {
-		if _, err := f.g.selfInitiativeEntry(f.player, f.campaignID, f.charID, d20); err != nil {
+		if _, err := f.g.s.selfInitiativeEntry(f.player, f.campaignID, f.charID, d20); err != nil {
 			t.Errorf("d20 %d recusado: %v", d20, err)
 		}
 	}
@@ -165,7 +165,7 @@ func TestD20ForaDaFaixaEhRecusado(t *testing.T) {
 func TestRegistrarIniciativaDeOutroEhRecusado(t *testing.T) {
 	f := newSelfInitiativeFixture(t)
 
-	_, err := f.g.selfInitiativeEntry(f.intruder, f.campaignID, f.charID, 10)
+	_, err := f.g.s.selfInitiativeEntry(f.intruder, f.campaignID, f.charID, 10)
 
 	if err == nil {
 		t.Fatal("um jogador registrou a iniciativa do personagem de outro")

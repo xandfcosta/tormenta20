@@ -1,0 +1,23 @@
+/* A folha do piloto Datastar (ALE-219).
+ *
+ * Ela NÃO redefine cor nenhuma: importa a folha da SPA inteira, que é onde os
+ * tokens moram. Uma segunda paleta é uma paleta que diverge — o piloto existe
+ * para medir o Datastar, não para inventar um tema. */
+@import "../../../frontend/src/index.css";
+
+/* Os templates do Go, que o scanner não acharia sozinho: a detecção automática
+ * do Tailwind v4 parte da pasta desta folha, e os `.html` estão na irmã. */
+@source "./tmpl";
+
+/* A folha COMPILADA (`static/mesa.css`) é versionada, e isso é decisão e não
+ * descuido: o `go:embed` não compila sem ela, então um clone limpo perderia
+ * `go build` e `go test` até alguém descobrir que precisa rodar um script de
+ * CSS. Foi exatamente essa classe de armadilha — arquivo do piloto derrubando
+ * o build de outra pessoa — que já custou um servidor fora do ar na main.
+ * O preço é um artefato gerado de ~106 KB no git enquanto o piloto durar. */
+
+/* As classes de preenchimento das barras NASCEM NO GO (`hpTomDe`, em
+ * mesa_view.go), então nenhuma delas aparece literalmente num template e o
+ * scanner as descartaria — a barra ficaria transparente e só numa das faixas
+ * de PV, que é o jeito mais silencioso possível de quebrar. */
+@source inline("bg-hp-full bg-hp-hurt bg-hp-critical bg-mp-arcane");

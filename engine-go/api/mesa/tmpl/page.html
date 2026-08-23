@@ -1,0 +1,26 @@
+{{define "page"}}<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Mesa · Sessão {{.SessionNum}}</title>
+<link rel="stylesheet" href="/mesa/static/mesa.css">
+<script type="module" src="/mesa/static/datastar.js"></script>
+</head>
+<!--
+  O STREAM e os SINAIS moram no <body>, que nunca é remendado — o fragmento é
+  o <main id="mesa"> lá dentro.
+
+  Não é detalhe de arrumação. `data-init` dispara quando o atributo entra no
+  DOM: no fragmento, cada remendo o traria de volta e abriria um segundo SSE a
+  cada tique. E `data-signals` reinicializaria o d20 do jogador no meio da
+  digitação, uma vez a cada 200ms.
+-->
+<body
+  class="min-h-dvh bg-background font-sans text-foreground antialiased"
+  data-signals="{d20: 10, erro: ''}"
+  data-init="@get('/mesa/{{.CampaignID}}/{{.SessionID}}/stream')">
+{{template "mesa" .}}
+</body>
+</html>
+{{end}}
