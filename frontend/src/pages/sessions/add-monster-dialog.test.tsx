@@ -118,6 +118,20 @@ describe('abrir a criatura', () => {
     expect(rolado).toBeLessThanOrEqual(20)
   })
 
+  // O `max` do `NumberInput` governa o SPINNER; DIGITAR passa direto por ele
+  // (ALE-236), e quem prende é este diálogo. Sem isso, teclar `99` mandava 99
+  // criaturas para a fila de uma vez — uma chamada de rede por cópia.
+  it('digitar acima do teto de cópias não passa', async () => {
+    const { adicionados, user } = renderDialog()
+
+    const quantas = await screen.findByLabelText('Quantas')
+    await user.type(quantas, '{backspace}99')
+    await user.click(screen.getByRole('button', { name: 'Adicionar' }))
+
+    await waitFor(() => expect(adicionados).toHaveLength(1))
+    expect(adicionados[0].ajuste.quantidade).toBe(12)
+  })
+
   it('cancelar não manda nada', async () => {
     const { adicionados, user } = renderDialog()
 
@@ -132,8 +146,11 @@ describe('abrir a criatura', () => {
     const { user } = renderDialog()
 
     const quantas = await screen.findByLabelText('Quantas')
-    await user.clear(quantas)
-    await user.type(quantas, '3')
+    // `{backspace}` e não `clear()`: `input[type=number]` não tem API de
+    // seleção (ALE-236). Este teste passava com `clear()` porque o campo
+    // emitia `Number('')` === 0 e o dígito colava num "0" — hoje o campo
+    // esvazia de verdade, e o gesto de verdade é apagar e digitar.
+    await user.type(quantas, '{backspace}3')
 
     expect(await screen.findByText(/As 3 entram juntas, com a mesma iniciativa/)).toBeInTheDocument()
     expect(screen.getByText(/Ogro, Ogro 2/)).toBeInTheDocument()

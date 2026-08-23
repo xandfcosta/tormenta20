@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp } from 'lucide-solid'
-import { type ComponentProps, splitProps } from 'solid-js'
+import { type ComponentProps, createSignal, splitProps } from 'solid-js'
 import { cn } from '@/shared/lib/utils'
 import { Input } from './input'
 
@@ -33,6 +33,14 @@ export function clampToRange(n: number, min?: number, max?: number): number {
  * The React kit also carried an `onCommit` for "changed by spinner, not by
  * typing"; nothing in this app used it on a bag field, so it is not ported.
  *
+ * O campo guarda um RASCUNHO dos estados que ainda não são número (ALE-236).
+ * Sem ele, apagar para digitar outro valor é impossível: `Number('')` é ZERO,
+ * o zero vai ao chamador, o chamador clampa para o mínimo dele, e o valor
+ * controlado reescreve o campo no meio da digitação. Medido no Chrome, em
+ * "Personagens do grupo" (mín 1, máx 8): partindo de 4, um Backspace deixava
+ * `1` na tela em vez de vazio, e digitar `3` produzia `13` — clampado a `8`.
+ * Quem quis 3 gravou 8, sem aviso nenhum, em TODO campo numérico do app.
+ *
  * @example <NumberInput value={slots()} onChange={setSlots} min={0.5} step={0.5} />
  */
 export function NumberInput(props: NumberInputProps) {
@@ -45,7 +53,12 @@ export function NumberInput(props: NumberInputProps) {
     'step',
     'disabled',
     'spinnerLabel',
+    'onBlur',
   ])
+  // `null` significa "mostre o valor comprometido"; uma string significa que a
+  // pessoa está no meio de digitar algo que ainda não é número.
+  const [rascunho, setRascunho] = createSignal<string | null>(null)
+  const exibido = () => rascunho() ?? String(local.value)
   const numeric = () => (typeof local.value === 'number' ? local.value : Number(local.value) || 0)
   const step = () => local.step ?? 1
   const atMin = () => typeof local.min === 'number' && numeric() <= local.min
@@ -53,7 +66,33 @@ export function NumberInput(props: NumberInputProps) {
 
   const adjust = (delta: number) => {
     if (local.disabled) return
+    // O spinner COMPROMETE: ele parte do valor de verdade, então o rascunho
+    // deixa de fazer sentido e a tela volta a mostrar o modelo.
+    setRascunho(null)
     local.onChange(clampToRange(numeric() + delta, local.min, local.max))
+  }
+
+  /** Vazio e "-" são passos do caminho até um número, não valores — mostram-se
+   *  na tela e NÃO sobem para o chamador. */
+  const digitou = (texto: string) => {
+    if (texto === '' || texto === '-') {
+      setRascunho(texto)
+      return
+    }
+    setRascunho(null)
+    const numero = Number(texto)
+    if (Number.isNaN(numero)) return
+    local.onChange(numero)
+  }
+
+  /** Sair do campo desfaz o rascunho: um campo vazio na tela sobre um valor
+   *  gravado é mentira. Nenhum chamador passa `onBlur` hoje, mas engolir o
+   *  dele calado seria a próxima armadilha. */
+  const saiu = (event: FocusEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement }) => {
+    setRascunho(null)
+    const handler = local.onBlur
+    if (typeof handler === 'function') handler(event)
+    else if (handler) handler[0](handler[1], event)
   }
 
   return (
@@ -62,8 +101,9 @@ export function NumberInput(props: NumberInputProps) {
         {...rest}
         type="number"
         inputMode="numeric"
-        value={local.value}
-        onInput={(event) => local.onChange(Number(event.currentTarget.value))}
+        value={exibido()}
+        onInput={(event) => digitou(event.currentTarget.value)}
+        onBlur={saiu}
         min={local.min}
         max={local.max}
         step={step()}
