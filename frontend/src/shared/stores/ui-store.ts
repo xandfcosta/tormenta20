@@ -7,7 +7,14 @@ import { type Accessor, createSignal } from 'solid-js'
  * do jogo virou cena, e o seletor claro/escuro nunca teve controle que o
  * chamasse. Um valor antigo no storage é simplesmente ignorado.
  */
-const STORAGE_KEY = 't20-ui'
+export const STORAGE_KEY = 't20-ui'
+
+/** Grava a preferência na MESMA chave e forma que a SPA usa. Exportado porque o
+ *  módulo do Datastar (`piloto/cena.ts`, ALE-231) escreve nela: som e volume
+ *  são preferência DESTE aparelho, e as duas portas do app têm de ler a mesma. */
+export function persistUi(state: { sfx: boolean; volume: number }, storage = globalThis.localStorage): void {
+  storage?.setItem(STORAGE_KEY, JSON.stringify({ state }))
+}
 
 /** Cheio por padrão: os cues foram afinados um a um nesse ganho, e o slider só
  *  atenua a partir daí (ALE-180). */

@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"net/url"
+	"strings"
 )
 
 type ctxKey int
@@ -55,6 +57,41 @@ func (s *Server) sessionUser(r *http.Request) (AuthUser, error) {
 		return AuthUser{}, errUserGone
 	}
 	return s.authUser(user), nil
+}
+
+// requirePagina é o `requireAuth` das PÁGINAS: quem não tem sessão vai para a
+// porta, lembrando para onde ia.
+//
+// A diferença não é cosmética. O `requireAuth` responde um JSON 401, que é a
+// resposta certa para quem chama a API e a errada para quem digitou uma URL: o
+// jogador vê `{"statusCode":401}` numa tela branca em vez da tela de entrar.
+// Era o guarda `requireSession` da SPA, que morava no cliente (ALE-231).
+//
+// Vale para TODA página do Datastar, e não só para o Hub — a Mesa e a
+// administração tinham a mesma aresta desde o piloto.
+func (s *Server) requirePagina(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user, err := s.sessionUser(r)
+		if err != nil {
+			http.Redirect(w, r, "/piloto/entrar?redirect="+url.QueryEscape(alvoOriginal(r)), http.StatusSeeOther)
+			return
+		}
+		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), userCtxKey, user)))
+	})
+}
+
+// alvoOriginal é a URL que o navegador pediu, com prefixo e query.
+//
+// `RequestURI` e não `URL.Path`: o roteador do piloto é montado com
+// `http.StripPrefix`, que REESCREVE o caminho — quem lesse `URL.Path` mandaria
+// o jogador de volta para `/mesa/1/4` em vez de `/piloto/mesa/1/4`, e ele
+// entraria para cair num 404. O `RequestURI` é o alvo cru, intocado pelo strip,
+// e leva a query junto (uma URL de mesa guardada nos favoritos tem parâmetros).
+func alvoOriginal(r *http.Request) string {
+	if r.RequestURI != "" && strings.HasPrefix(r.RequestURI, "/") {
+		return r.RequestURI
+	}
+	return "/"
 }
 
 // requireAdmin gates the administration routes, and runs AFTER requireAuth —

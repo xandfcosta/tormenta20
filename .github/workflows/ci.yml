@@ -40,6 +40,28 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # `cena.js` e os ícones são gerados dos MESMOS fontes que a SPA usa
+      # (ALE-231) e commitados, pelo mesmo motivo da folha e dos `_templ.go`:
+      # `go build` num clone limpo não pode depender de rodar um gerador. O
+      # guarda é o par recompila + `git diff --quiet`, como os outros três.
+      #
+      # O dos ÍCONES importa mais do que parece: ele lê o lucide instalado e
+      # segue o APELIDO do pacote, então uma atualização que renomeie um ícone
+      # aparece aqui em vez de a SPA e o Datastar passarem a desenhar coisas
+      # diferentes em silêncio.
+      - name: Rebuild the shared scene module and the icons
+        run: |
+          ./engine-go/scripts/build-piloto-js.sh
+          node frontend/scripts/gen-icones-templ.mjs
+
+      - name: Fail if the generated scene assets were stale
+        run: |
+          if ! git diff --quiet -- engine-go/api/piloto/static/cena.js engine-go/api/piloto_icones.templ; then
+            echo "::error::cena.js ou os ícones estão desatualizados. Rode ./engine-go/scripts/build-piloto-js.sh e node frontend/scripts/gen-icones-templ.mjs, e commite."
+            git diff --stat -- engine-go/api/piloto/static/cena.js engine-go/api/piloto_icones.templ
+            exit 1
+          fi
+
       # Os `_templ.go` também são artefato commitado, pelo mesmo motivo da folha
       # logo abaixo: `go build` num clone limpo não pode depender de rodar um
       # gerador. O guarda é o mesmo par recompila + `git diff --quiet` do

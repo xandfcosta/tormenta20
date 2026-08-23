@@ -1,0 +1,102 @@
+package api
+
+// GERADO por `node scripts/gen-icones-templ.mjs` — não edite à mão.
+//
+// Os SVGs vêm do lucide INSTALADO, não transcritos: copiar path à mão é a classe
+// de erro que nenhum teste pega, porque um path errado é um path válido. O
+// gerador segue o APELIDO do pacote (a SPA escreve `Users2`, o lucide 1.x
+// guarda em `users-round.mjs`), então as duas portas do app desenham o mesmo
+// desenho mesmo quando o pacote renomeia alguma coisa.
+//
+// Ícone novo: acrescente o nome em `QUERIDOS` e rode o gerador.
+
+// icone desenha um ícone do lucide. `nome` é o nome que a SPA usa.
+//
+// Sempre `aria-hidden`: nos doze usos deste app o ícone acompanha um rótulo em
+// texto, e um nome acessível a mais faria o leitor de tela dizer a mesma coisa
+// duas vezes. Ícone que precisar de nome próprio pede um componente próprio.
+templ icone(nome, classe string) {
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		width="24"
+		height="24"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="2"
+		stroke-linecap="round"
+		stroke-linejoin="round"
+		aria-hidden="true"
+		class={ classe }
+	>
+		switch nome {
+			case "Users2":
+				<path d="M18 21a8 8 0 0 0-16 0"></path>
+				<circle cx="10" cy="8" r="5"></circle>
+				<path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3"></path>
+				// lucide: icons/users-round.mjs
+			case "Scroll":
+				<path d="M19 17V5a2 2 0 0 0-2-2H4"></path>
+				<path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"></path>
+				// lucide: icons/scroll.mjs
+			case "Wand2":
+				<path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"></path>
+				<path d="m14 7 3 3"></path>
+				<path d="M5 6v4"></path>
+				<path d="M19 14v4"></path>
+				<path d="M10 2v2"></path>
+				<path d="M7 8H3"></path>
+				<path d="M21 16h-4"></path>
+				<path d="M11 3H9"></path>
+				// lucide: icons/wand-sparkles.mjs
+			case "PlayCircle":
+				<path d="M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z"></path>
+				<circle cx="12" cy="12" r="10"></circle>
+				// lucide: icons/circle-play.mjs
+			case "Settings":
+				<path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"></path>
+				<circle cx="12" cy="12" r="3"></circle>
+				// lucide: icons/settings.mjs
+			case "Volume2":
+				<path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"></path>
+				<path d="M16 9a5 5 0 0 1 0 6"></path>
+				<path d="M19.364 18.364a9 9 0 0 0 0-12.728"></path>
+				// lucide: icons/volume-2.mjs
+			case "VolumeX":
+				<path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"></path>
+				<line x1="22" x2="16" y1="9" y2="15"></line>
+				<line x1="16" x2="22" y1="9" y2="15"></line>
+				// lucide: icons/volume-x.mjs
+			case "Maximize":
+				<path d="M8 3H5a2 2 0 0 0-2 2v3"></path>
+				<path d="M21 8V5a2 2 0 0 0-2-2h-3"></path>
+				<path d="M3 16v3a2 2 0 0 0 2 2h3"></path>
+				<path d="M16 21h3a2 2 0 0 0 2-2v-3"></path>
+				// lucide: icons/maximize.mjs
+			case "Minimize":
+				<path d="M8 3v3a2 2 0 0 1-2 2H3"></path>
+				<path d="M21 8h-3a2 2 0 0 1-2-2V3"></path>
+				<path d="M3 16h3a2 2 0 0 1 2 2v3"></path>
+				<path d="M16 21v-3a2 2 0 0 1 2-2h3"></path>
+				// lucide: icons/minimize.mjs
+			case "UserPlus":
+				<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+				<circle cx="9" cy="7" r="4"></circle>
+				<line x1="19" x2="19" y1="8" y2="14"></line>
+				<line x1="22" x2="16" y1="11" y2="11"></line>
+				// lucide: icons/user-plus.mjs
+			case "ShieldCheck":
+				<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path>
+				<path d="m9 12 2 2 4-4"></path>
+				// lucide: icons/shield-check.mjs
+			case "LogOut":
+				<path d="m16 17 5-5-5-5"></path>
+				<path d="M21 12H9"></path>
+				<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+				// lucide: icons/log-out.mjs
+			case "ChevronRight":
+				<path d="m9 18 6-6-6-6"></path>
+				// lucide: icons/chevron-right.mjs
+		}
+	</svg>
+}
