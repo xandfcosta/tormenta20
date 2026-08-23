@@ -1,5 +1,6 @@
 import { Flame } from 'lucide-solid'
 import type { Campaign } from '@/shared/api/api'
+import { CampaignRulesCard } from './campaign-rules-card'
 import { DeleteCampaignButton } from './delete-campaign-button'
 import { CampaignHeaderCard } from './header-card'
 import { SectionLabel, SectionTitle } from '@/shared/ui/section-label'
@@ -15,6 +16,12 @@ export function ConfigSection(props: { campaign: Campaign }) {
         Ajustes do tomo
       </SectionLabel>
       <CampaignHeaderCard campaign={props.campaign} />
+      {/* Entre o cadastro e a zona de perigo: as regras são configuração
+          corriqueira, e não destruição (ALE-221). */}
+      <CampaignRulesCard
+        campaignId={props.campaign.id}
+        ignoredRules={props.campaign.ignoredRules ?? []}
+      />
       <DangerZone campaign={props.campaign} />
     </div>
   )

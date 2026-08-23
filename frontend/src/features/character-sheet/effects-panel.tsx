@@ -29,7 +29,7 @@ export function EffectsPanel(props: SheetPanelProps) {
       <div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3 sm:p-4">
         <ConditionsSection character={props.character} />
         <StancesSection character={props.character} />
-        <ActiveEffectsSection character={props.character} inSession={props.inSession} />
+        <ActiveEffectsSection character={props.character} />
         <SituationalSection character={props.character} />
       </div>
     </Panel>

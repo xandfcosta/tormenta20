@@ -4,7 +4,12 @@ import fixtures from './__fixtures__/character-input-parity.json'
 import { assembleWeaponCards } from './weapon-cards'
 import { attributeTotal, characterEffects } from './derived'
 
-const base = (fixtures as { char: Character }[])[0]!.char
+// `as unknown as` porque o JSON de paridade é a forma do MOTOR, não a do DTO da
+// API: ele nasce do `genoracle`, que descreve o que o WASM computa, e por isso
+// não traz o estado de jogo que a ficha carrega (ALE-222). O que este teste usa
+// é a parte comum — atributos, itens, poderes —, e a conversão passa a admitir
+// por escrito que as duas formas só se sobrepõem em parte.
+const base = (fixtures as unknown as { char: Character }[])[0]!.char
 
 /** A one-weapon character wielding `catalogId`, with the given attrs + power. */
 function card(

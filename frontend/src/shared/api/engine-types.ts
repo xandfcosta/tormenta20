@@ -123,6 +123,7 @@ export type LoadBreakdown = {
   used: number
   limit: number
   max: number
+  enforced: boolean
   overloaded: boolean
   overMax: boolean
   armorPenalty: number

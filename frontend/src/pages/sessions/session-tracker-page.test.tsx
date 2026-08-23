@@ -1,4 +1,4 @@
-import { render, screen } from '@solidjs/testing-library'
+import { render, screen, waitFor } from '@solidjs/testing-library'
 import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
 import {
   createMemoryHistory,
@@ -7,12 +7,15 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/solid-router'
+import { createSignal } from 'solid-js'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { campaignMembersQueryOptions, campaignQueryOptions } from '@/entities/campaign/queries'
 import { campaignSessionQueryOptions } from '@/entities/session/queries'
 import { meQueryOptions } from '@/entities/user/queries'
 import type { AuthUser, Campaign, Session } from '@/shared/api/api'
 import type { SessionRealtime } from '@/shared/realtime/realtime'
+import { PowerUsesProvider } from '@/shared/stores/power-uses-context'
+import { fakePowerUses } from '@/shared/test/play-stores'
 import { UiProvider } from '@/shared/stores/ui-context'
 import { createUiStore } from '@/shared/stores/ui-store'
 import { FakeStorage } from '@/shared/test/fake-storage'
@@ -30,6 +33,10 @@ import { SessionTrackerPage } from './session-tracker-page'
  * provadas, o que faltava era provar a montagem.
  */
 
+/** O descanso que o MESTRE transmite, do lado de fora do mock: o teste o
+ *  dispara como o socket faria, e a página reage. */
+const [restFlash, setRestFlash] = createSignal<'scene' | 'day' | null>(null)
+
 /** O socket é criado DENTRO da página (ela é a dona da conexão da partida), então
  *  a única costura possível é o módulo. */
 vi.mock('@/shared/realtime/realtime', async () => {
@@ -43,7 +50,7 @@ vi.mock('@/shared/realtime/realtime', async () => {
         error: () => null,
         hasPersistenceWarning: () => false,
         present: () => [],
-        restFlash: () => null,
+        restFlash: () => restFlash(),
         board: () => null,
         listPlaces: () => Promise.resolve([]),
       }) as unknown as SessionRealtime,
@@ -65,7 +72,13 @@ function mesaCom(role: 'gm' | 'player'): Campaign {
 function renderTracker(campaign: Campaign | undefined) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   client.setQueryData(campaignSessionQueryOptions(1, 5).queryKey, SESSAO)
-  client.setQueryData(campaignMembersQueryOptions(1).queryKey, [])
+  // Um membro MEU e um de outra pessoa: o descanso zera os contadores das
+  // minhas fichas, e a segunda linha é o que prova que ele não sai zerando o
+  // que não é meu (ALE-223).
+  client.setQueryData(campaignMembersQueryOptions(1).queryKey, [
+    { id: 1, campaignId: 1, characterId: 7, role: 'player', addedAt: '', character: { id: 7, ownerId: 9 } },
+    { id: 2, campaignId: 1, characterId: 8, role: 'player', addedAt: '', character: { id: 8, ownerId: 99 } },
+  ] as never)
   const eu: AuthUser = { id: 9, email: 'eu@t20.local', name: null, isAdmin: false }
   client.setQueryData(meQueryOptions.queryKey, eu)
   if (campaign) client.setQueryData(campaignQueryOptions(1).queryKey, campaign)
@@ -80,17 +93,28 @@ function renderTracker(campaign: Campaign | undefined) {
     routeTree: root.addChildren([route]),
     history: createMemoryHistory({ initialEntries: ['/campaigns/1/sessions/5'] }),
   })
-  return render(() => (
+  // O `PowerUsesProvider` é o mesmo que o `main.tsx` põe acima de tudo: a
+  // página lê os contadores de uso para zerá-los no descanso do mestre
+  // (ALE-223), e a ficha que ela monta já os lia antes.
+  // Store real com o servidor MUDO (ALE-222): o cache local continua de
+  // verdade, então o descanso do mestre é exercitado como na tela — só o que
+  // iria pelo fio é que não vai.
+  const powerUses = fakePowerUses()
+  const rendered = render(() => (
     <UiProvider store={createUiStore(new FakeStorage())}>
-      <QueryClientProvider client={client}>
-        {/* biome-ignore lint/suspicious/noExplicitAny: o router de teste tem uma rota só */}
-        <RouterProvider router={router as any} />
-      </QueryClientProvider>
+      <PowerUsesProvider store={powerUses}>
+        <QueryClientProvider client={client}>
+          {/* biome-ignore lint/suspicious/noExplicitAny: o router de teste tem uma rota só */}
+          <RouterProvider router={router as any} />
+        </QueryClientProvider>
+      </PowerUsesProvider>
     </UiProvider>
   ))
+  return { ...rendered, powerUses }
 }
 
 beforeEach(() => {
+  setRestFlash(null)
   window.matchMedia = vi.fn().mockImplementation((media: string) => ({
     matches: true,
     media,
@@ -133,5 +157,51 @@ describe('SessionTrackerPage — o papel escolhe a cena', () => {
       screen.queryByRole('button', { name: 'Configurações da sessão' }),
     ).not.toBeInTheDocument()
     expect(screen.queryByRole('group', { name: 'O que ver na sessão' })).not.toBeInTheDocument()
+  })
+})
+
+/**
+ * O DESCANSO DO MESTRE zera os usos por cena/dia de quem está na sala (ALE-223).
+ *
+ * Os efeitos de escopo o servidor já expirava para a mesa inteira, mas "usado
+ * 1/cena" é contador LOCAL e nada do lado do jogador o tocava — o botão
+ * "Encerrar cena" da ficha mascarava o buraco, porque o jogador acabava zerando
+ * sozinho. Com o botão fora da ficha (decisão do dono), este é o único caminho.
+ *
+ * O teste monta a PÁGINA e dispara o descanso pelo mesmo sinal que o socket
+ * usa, porque é composição: o defeito não é a conta, é ela não chegar.
+ */
+describe('SessionTrackerPage — o descanso do mestre alcança os contadores locais', () => {
+  it('descanso de cena zera o uso por cena da minha ficha', async () => {
+    const { powerUses } = renderTracker(mesaCom('player'))
+    await screen.findByRole('group', { name: 'O que ver na sessão' })
+    powerUses.bump(7, 'class.bardo.inspiracao', 'scene')
+    powerUses.bump(7, 'class.barbaro.furia', 'day')
+    powerUses.bump(8, 'class.bardo.inspiracao', 'scene')
+
+    setRestFlash('scene')
+
+    await waitFor(() => {
+      expect(powerUses.used(7, 'class.bardo.inspiracao').scene).toBe(0)
+    })
+    // Cena não é dia: quem descansa a cena não devolve o uso diário.
+    expect(powerUses.used(7, 'class.barbaro.furia').day).toBe(1)
+    // E a ficha de outro jogador não é minha para zerar: o contador é local, e
+    // quem o zera é o navegador do dono dela.
+    expect(powerUses.used(8, 'class.bardo.inspiracao').scene).toBe(1)
+  })
+
+  it('descanso de dia zera os dois escopos', async () => {
+    const { powerUses } = renderTracker(mesaCom('player'))
+    await screen.findByRole('group', { name: 'O que ver na sessão' })
+    powerUses.bump(7, 'class.bardo.inspiracao', 'scene')
+    powerUses.bump(7, 'class.barbaro.furia', 'day')
+
+    setRestFlash('day')
+
+    await waitFor(() => {
+      expect(powerUses.used(7, 'class.barbaro.furia').day).toBe(0)
+    })
+    expect(powerUses.used(7, 'class.bardo.inspiracao').scene).toBe(0)
   })
 })

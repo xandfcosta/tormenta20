@@ -1,90 +1,99 @@
 import { createStore, produce } from 'solid-js/store'
+import type { StancePayment } from '@/shared/api/api'
 
 /**
- * What the player paid entering a stance. `steps` are the extra-PM stepper
- * picks (Fúria p40: +1 PM per +1 bônus every 5 levels). The stepped EXTRA has
- * no engine modifier yet, so this record is the display-only source of truth
- * for "+N extra (stepper)" in Posturas ativas.
+ * O que o jogador PAGOU para entrar numa postura, por personagem. `steps` são
+ * os passos do seletor de PM extra (Fúria p40: +1 PM por +1 de bônus a cada 5
+ * níveis).
+ *
+ * O DONO É O SERVIDOR (ALE-222). Isto vivia em `localStorage`, e o comentário
+ * daqui dizia *"local-only like conditionals-store… this only remembers what
+ * was paid, so ending a stance never refunds"*. A decisão do dono em
+ * 2026-08-22 foi "o servidor mantém estado, ponto final"; a razão de EXISTIR
+ * continua a mesma — sair da postura não pode devolver PM —, só o dono mudou.
+ *
+ * Ele guarda o PREÇO, não se a postura está ligada: quem diz isso é o
+ * situacional de mesmo nome, no [[conditionals-store]].
  */
-export type StanceActivationRecord = { steps: number; pmPaid: number }
 
+export type StanceActivationRecord = { steps: number; pmPaid: number }
 type RecordsByCharacter = Record<string, Record<string, StanceActivationRecord>>
 
-/**
- * Per-character record of active-stance payments — local-only like
- * [[conditionals-store]]: the flag state itself lives there, this only
- * remembers what was paid, so ending a stance never refunds.
- *
- * Persisted under the SAME key/shape the React zustand used
- * (`t20-stance-activations` → `{ state: { records } }`): mid-migration the
- * player alternates between the two apps and a Fúria paid at the table must
- * still read as paid.
- */
-export const STANCE_ACTIVATIONS_STORAGE_KEY = 't20-stance-activations'
+/** Quem leva o pagamento ao servidor. Injetado para o teste espiar. */
+export type StanceWriter = {
+  set: (characterId: number, flag: string, record: StanceActivationRecord) => Promise<unknown>
+  clear: (characterId: number, flag: string) => Promise<unknown>
+}
 
 export type StanceActivationStore = {
-  /** What was paid for one active stance, or undefined if it never was. */
+  /** O que foi pago por uma postura ativa, ou undefined se nunca foi. */
   paidFor: (characterId: number, flag: string) => StanceActivationRecord | undefined
   logActivation: (characterId: number, flag: string, record: StanceActivationRecord) => void
   clearActivation: (characterId: number, flag: string) => void
+  hydrate: (characterId: number, stances: readonly StancePayment[]) => void
 }
 
-function isRecord(value: unknown): value is StanceActivationRecord {
-  const { steps, pmPaid } = (value ?? {}) as Partial<StanceActivationRecord>
-  return typeof steps === 'number' && typeof pmPaid === 'number'
-}
-
-/** Defensive read: a corrupt or older blob must not take the sheet down. */
-export function readStoredStanceActivations(raw: string | null): RecordsByCharacter {
-  if (!raw) return {}
-  try {
-    const parsed = (JSON.parse(raw) as { state?: { records?: unknown } }).state?.records
-    if (!parsed || typeof parsed !== 'object') return {}
-    const entries = Object.entries(parsed as Record<string, unknown>).flatMap(
-      ([id, byFlag]): [string, Record<string, StanceActivationRecord>][] => {
-        if (!byFlag || typeof byFlag !== 'object') return []
-        const clean = Object.entries(byFlag as Record<string, unknown>).filter(
-          (entry): entry is [string, StanceActivationRecord] => isRecord(entry[1]),
-        )
-        return clean.length ? [[id, Object.fromEntries(clean)]] : []
-      },
-    )
-    return Object.fromEntries(entries)
-  } catch {
-    return {}
-  }
-}
-
-/**
- * @example
- * const stances = createStanceActivationStore()
- * stances.logActivation(character.id, 'furia', { steps: 1, pmPaid: 3 })
- */
 export function createStanceActivationStore(
-  storage: Storage | undefined = globalThis.localStorage,
+  write: StanceWriter,
+  onError: (erro: unknown) => void = () => {},
 ): StanceActivationStore {
-  const [records, setRecords] = createStore<RecordsByCharacter>(
-    readStoredStanceActivations(storage?.getItem(STANCE_ACTIVATIONS_STORAGE_KEY) ?? null),
-  )
+  const [records, setRecords] = createStore<RecordsByCharacter>({})
 
-  const edit = (mutate: (draft: RecordsByCharacter) => void) => {
+  /** Escreve local, manda, e volta ao instantâneo se o servidor recusar. */
+  const edit = (
+    characterId: number,
+    flag: string,
+    mutate: (draft: RecordsByCharacter) => void,
+    enviar: () => Promise<unknown>,
+  ) => {
+    const chave = String(characterId)
+    const antes = records[chave]?.[flag]
     setRecords(produce(mutate))
-    storage?.setItem(STANCE_ACTIVATIONS_STORAGE_KEY, JSON.stringify({ state: { records } }))
+    void enviar().catch((erro) => {
+      setRecords(
+        produce((draft) => {
+          const doPersonagem = draft[chave] ?? {}
+          if (antes) doPersonagem[flag] = antes
+          else delete doPersonagem[flag]
+          draft[chave] = doPersonagem
+        }),
+      )
+      onError(erro)
+    })
   }
 
   return {
     paidFor: (characterId, flag) => records[String(characterId)]?.[flag],
 
+    hydrate: (characterId, stances) =>
+      setRecords(
+        produce((draft) => {
+          const porFlag: Record<string, StanceActivationRecord> = {}
+          for (const s of stances) porFlag[s.flag] = { steps: s.steps, pmPaid: s.pmPaid }
+          draft[String(characterId)] = porFlag
+        }),
+      ),
+
     logActivation: (characterId, flag, record) =>
-      edit((draft) => {
-        const key = String(characterId)
-        draft[key] = { ...draft[key], [flag]: record }
-      }),
+      edit(
+        characterId,
+        flag,
+        (draft) => {
+          const chave = String(characterId)
+          draft[chave] = { ...(draft[chave] ?? {}), [flag]: record }
+        },
+        () => write.set(characterId, flag, record),
+      ),
 
     clearActivation: (characterId, flag) =>
-      edit((draft) => {
-        const current = draft[String(characterId)]
-        if (current?.[flag]) delete current[flag]
-      }),
+      edit(
+        characterId,
+        flag,
+        (draft) => {
+          const doPersonagem = draft[String(characterId)]
+          if (doPersonagem) delete doPersonagem[flag]
+        },
+        () => write.clear(characterId, flag),
+      ),
   }
 }

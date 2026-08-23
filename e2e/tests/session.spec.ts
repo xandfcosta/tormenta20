@@ -999,6 +999,53 @@ test.describe('Sessão ao vivo', () => {
   })
 
   /**
+   * As consultas do mestre CABEM na fileira a 390 (ALE-221).
+   *
+   * A fileira é `overflow-x-auto`, então nada quebra quando ela estoura — e é
+   * justamente por isso que o defeito é invisível: medido, a sexta consulta
+   * passava SETE pixels do trilho, e sete pixels não parecem roláveis. O último
+   * ícone ficava cortado sem afordância nenhuma, e o último ícone é sempre o
+   * mais novo. Eu mesmo introduzi isso ao acrescentar "Regras" e só peguei
+   * medindo.
+   *
+   * A asserção é o CONTEÚDO contra a JANELA, e não uma contagem de ícones nem
+   * uma largura fixa: ela sobrevive a mudar padding, gap ou ordem, e falha no
+   * dia em que a sétima consulta chegar — que é exatamente quando alguém
+   * precisa decidir o que fazer com ela.
+   *
+   * Só o browser mede isto. Em jsdom `scrollWidth` e `clientWidth` são ambos
+   * zero, e a comparação passa verde sobre um trilho estourado.
+   */
+  test('as consultas do mestre cabem na fileira no telefone em pé', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('/campaigns/1/sessions/4')
+    await expect(cenaViva(page)).toBeVisible()
+
+    const trilho = page.getByRole('navigation', { name: 'Consultas do mestre' })
+    await expect(trilho).toBeVisible()
+    // Espera a caixa assentar: depois de um `setViewportSize` o
+    // `chrome-headless-shell` leva um quadro para reresolver o arranjo, e ler
+    // antes disso mede o formato ANTERIOR (ALE-200).
+    await expect
+      .poll(
+        async () =>
+          trilho.evaluate((el) => `${el.scrollWidth}|${el.clientWidth}`),
+        { polling: 'raf', timeout: 5000 },
+      )
+      .toBe(await trilho.evaluate((el) => `${el.scrollWidth}|${el.clientWidth}`))
+
+    const { conteudo, janela } = await trilho.evaluate((el) => ({
+      conteudo: el.scrollWidth,
+      janela: el.clientWidth,
+    }))
+    expect(janela, 'o trilho não foi medido').toBeGreaterThan(0)
+    expect(
+      conteudo,
+      `as consultas ocupam ${conteudo}px numa fileira de ${janela}px — a última fica cortada`,
+    ).toBeLessThanOrEqual(janela)
+  })
+
+  /**
    * Cada verbo da linha da iniciativa ocupa a MESMA coluna em todas as linhas.
    *
    * O conjunto de botões muda por linha com razão — o olho só existe em linha

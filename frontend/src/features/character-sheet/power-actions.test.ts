@@ -1,4 +1,3 @@
-import { FakeStorage } from '@/shared/test/fake-storage'
 import { QueryClient } from '@tanstack/solid-query'
 import type { ActivationSpec } from '@/shared/api/catalog-types'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -6,10 +5,8 @@ import { makeCharacter } from '@/entities/character/__fixtures__/character'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { getActivation } from '@/shared/lib/activation-cache'
 import type { ActiveEffect, Character } from '@/shared/api/api'
-import { createConditionalsStore } from '@/shared/stores/conditionals-store'
-import { createPowerUsesStore } from '@/shared/stores/power-uses-store'
-import { createStanceActivationStore } from '@/shared/stores/stance-activation-store'
 import { type PowerStores, powerActions } from './power-actions'
+import { fakeConditionals, fakePowerUses, fakeStances } from '@/shared/test/play-stores'
 
 
 const CHARACTER_ID = 1
@@ -26,9 +23,9 @@ function barbaro(overrides: Partial<Character> = {}): Character {
 
 function stores(): PowerStores {
   return {
-    conditionals: createConditionalsStore(new FakeStorage()),
-    powerUses: createPowerUsesStore(new FakeStorage()),
-    stanceActivations: createStanceActivationStore(new FakeStorage()),
+    conditionals: fakeConditionals(),
+    powerUses: fakePowerUses(),
+    stanceActivations: fakeStances(),
   }
 }
 

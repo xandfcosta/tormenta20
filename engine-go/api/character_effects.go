@@ -33,6 +33,13 @@ func (s *Server) endScene(ctx context.Context, user AuthUser, characterID int64)
 	if err := s.queries.DeleteEffectsByScope(ctx, sqlcgen.DeleteEffectsByScopeParams{Characterid: characterID, Scope: "scene"}); err != nil {
 		return http.StatusInternalServerError, errors.New("Could not clear effects")
 	}
+	// Os usos "1/cena" e as posturas vao junto (ALE-222). Aqui e nao no
+	// `endScene` da SESSAO: este e o caminho que ja limpa a ficha, e e por onde
+	// os dois transportes passam. A colisao C1 do glossario mede o que custa
+	// escolher o outro — o `endScene` da sessao nao limpa efeito nenhum.
+	if err := s.clearScenePlayState(ctx, characterID); err != nil {
+		return http.StatusInternalServerError, errors.New("Could not clear the play state")
+	}
 	return http.StatusOK, nil
 }
 
@@ -44,31 +51,43 @@ func (s *Server) endDay(ctx context.Context, user AuthUser, characterID int64) (
 	if err := s.queries.DeleteSceneAndDayEffects(ctx, characterID); err != nil {
 		return http.StatusInternalServerError, errors.New("Could not clear effects")
 	}
+	if err := s.clearDayPlayState(ctx, characterID); err != nil {
+		return http.StatusInternalServerError, errors.New("Could not clear the play state")
+	}
 	return http.StatusOK, nil
 }
 
-// assertOffTable is the ALE-216 guard on the SHEET's own scope buttons: at a
-// live table, ending the scene or the day is the GM's call — a rest is the
-// table's decision, and one player expiring scene buffs mid-fight edits state
-// everyone else is playing on. The GM's path is the session rest, which reaches
-// endScene/endDay through the WS gateway and never passes here.
+// assertGmAtLiveTable guarda as rotas de escopo da FICHA: encerrar cena e
+// encerrar dia sao do MESTRE, DURANTE uma sessao -- decisao do dono (ALE-223).
 //
-// Authorization runs FIRST (and again inside the domain helper, which the WS
-// path calls without this guard) so a stranger is answered "belongs to another
-// user" instead of learning that the character is at a table tonight.
-func (s *Server) assertOffTable(w http.ResponseWriter, r *http.Request, id int64) bool {
-	if _, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id); err != nil {
+// Isto INVERTE o guarda da ALE-216, que recusava enquanto houvesse mesa em
+// curso e liberava fora dela. A leitura nova e que as duas acoes nao pertencem
+// a quem esta editando uma ficha: descanso e decisao da mesa, e mesa e o que
+// existe durante uma sessao. Fora dela ninguem as executa -- nem o dono.
+//
+// A pergunta e uma so e e PRECISA: mestre de uma campanha DESTE personagem que
+// tenha sessao viva. Compor "e mestre?" com "ha sessao viva?" em duas consultas
+// deixaria passar o mestre da campanha A com sessao rodando na campanha B.
+//
+// Autorizacao roda ANTES (e de novo dentro do helper de dominio, que o caminho
+// do socket chama sem este guarda): sem essa ordem, um estranho receberia "nao
+// e o mestre da mesa" e aprenderia que a mesa esta rodando hoje.
+func (s *Server) assertGmAtLiveTable(w http.ResponseWriter, r *http.Request, id int64) bool {
+	user := currentUser(r)
+	if _, status, err := s.authorizedCharacter(r.Context(), user, id); err != nil {
 		writeError(w, status, err.Error())
 		return false
 	}
-	live, err := s.queries.HasLiveSessionForCharacter(r.Context(), id)
+	gm, err := s.queries.IsGmAtLiveTableForCharacter(r.Context(), sqlcgen.IsGmAtLiveTableForCharacterParams{
+		CharacterId: id, OwnerId: user.ID,
+	})
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not check the character's sessions")
 		return false
 	}
-	if live {
+	if !gm {
 		writeError(w, http.StatusForbidden, fmt.Sprintf(
-			"Character %d is in a live session; ending the scene or the day is the GM's", id))
+			"Ending the scene or the day for character %d is the GM's, during a live session", id))
 		return false
 	}
 	return true
@@ -87,7 +106,7 @@ func (s *Server) clearEffectScopes(
 	if !ok {
 		return
 	}
-	if !s.assertOffTable(w, r, id) {
+	if !s.assertGmAtLiveTable(w, r, id) {
 		return
 	}
 	if status, err := expire(r.Context(), currentUser(r), id); err != nil {

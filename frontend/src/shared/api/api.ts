@@ -51,6 +51,8 @@ import type {
   ClassLevelResult,
   AbilityChoicesResult,
   ConditionsResult,
+  PlayState,
+  PowerUseScope,
   ConsumeItemInput,
   ConsumeItemResult,
   ComputedSheetV2,
@@ -139,6 +141,10 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
   })
   const patch = (body: unknown): RequestInit => ({
     method: 'PATCH',
+    body: JSON.stringify(body),
+  })
+  const put = (body: unknown): RequestInit => ({
+    method: 'PUT',
     body: JSON.stringify(body),
   })
   const del: RequestInit = { method: 'DELETE' }
@@ -251,6 +257,35 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
           `/characters/${id}/conditions`,
           patch({ activeConditions }),
         ),
+
+      /**
+       * O estado de JOGO da ficha (ALE-222). Os quatro devolvem o estado
+       * INTEIRO, para a tela conferir o próprio otimismo contra o servidor.
+       *
+       * CUIDADO com o vizinho de cima: `conditionals` é o opt-in do JOGADOR;
+       * `conditions` são as do LIVRO. Ver C6 no GLOSSARIO.md.
+       */
+      updateConditionals: (id: number, conditionals: string[]) =>
+        request<PlayState>(`/characters/${id}/conditionals`, patch({ conditionals })),
+
+      /**
+       * Gasta MAIS UM uso. O corpo não carrega o total de propósito: dois
+       * cliques rápidos mandando "agora são 3" gravariam 3 duas vezes e
+       * perderiam um uso — o servidor soma no `ON CONFLICT`.
+       */
+      bumpPowerUse: (id: number, powerId: string, scope: PowerUseScope) =>
+        request<PlayState>(`/characters/${id}/power-uses`, json({ powerId, scope })),
+
+      /** Registra o que foi pago para entrar na postura. */
+      setStance: (id: number, flag: string, payment: { steps: number; pmPaid: number }) =>
+        request<PlayState>(
+          `/characters/${id}/stances/${encodeURIComponent(flag)}`,
+          put(payment),
+        ),
+
+      /** Esquece o pagamento — sair da postura. */
+      clearStance: (id: number, flag: string) =>
+        request<PlayState>(`/characters/${id}/stances/${encodeURIComponent(flag)}`, del),
     },
     catalog: {
       // Static rulebook reference; cached hard (staleTime ∞) and fetched instead
@@ -294,6 +329,16 @@ export function createApiClient(fetchImpl: typeof globalThis.fetch = globalThis.
       /** Mints a fresh invite token — any link shared before this 404s. */
       rotateInvite: (id: number) =>
         request<CampaignInviteToken>(`/campaigns/${id}/invite`, { method: 'POST' }),
+      /**
+       * Substitui o conjunto INTEIRO das regras que a campanha desligou
+       * (ALE-221). PUT e não PATCH porque a tela sempre conhece o estado
+       * completo dos interruptores — um par ligar/desligar disputando a mesma
+       * regra terminaria num estado que ninguém pediu.
+       *
+       * @example api.campaigns.replaceRules(3, ['carga'])
+       */
+      replaceRules: (id: number, ignoredRules: readonly string[]) =>
+        request<{ ignoredRules: string[] }>(`/campaigns/${id}/rules`, put({ ignoredRules })),
     },
     /**
      * Blocos de criatura que o MESTRE escreveu para a campanha (ALE-137). O

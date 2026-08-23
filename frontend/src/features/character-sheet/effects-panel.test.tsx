@@ -1,4 +1,3 @@
-import { FakeStorage } from '@/shared/test/fake-storage'
 import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
 import { render, screen, waitFor, within } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
@@ -7,10 +6,9 @@ import { characterQueryOptions } from '@/entities/character/queries'
 import { makeCharacter } from '@/entities/character/__fixtures__/character'
 import type { ActiveEffect, Character } from '@/shared/api/api'
 import { ConditionalsProvider } from '@/shared/stores/conditionals-context'
-import { createConditionalsStore } from '@/shared/stores/conditionals-store'
 import { PowerUsesProvider } from '@/shared/stores/power-uses-context'
-import { createPowerUsesStore } from '@/shared/stores/power-uses-store'
 import { EffectsPanel } from './effects-panel'
+import { fakeConditionals, fakePowerUses } from '@/shared/test/play-stores'
 
 function effect(overrides: Partial<ActiveEffect> = {}): ActiveEffect {
   return {
@@ -27,10 +25,10 @@ function effect(overrides: Partial<ActiveEffect> = {}): ActiveEffect {
 function renderPanel(char: Character = makeCharacter(), inSession = false) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   client.setQueryData(characterQueryOptions(char.id).queryKey, char)
-  const powerUses = createPowerUsesStore(new FakeStorage())
+  const powerUses = fakePowerUses()
   render(() => (
     <QueryClientProvider client={client}>
-      <ConditionalsProvider store={createConditionalsStore(new FakeStorage())}>
+      <ConditionalsProvider store={fakeConditionals()}>
         <PowerUsesProvider store={powerUses}>
           <EffectsPanel character={char} inSession={inSession} />
         </PowerUsesProvider>
@@ -125,27 +123,6 @@ describe('EffectsPanel — efeitos ativos', () => {
     expect(screen.getByText(/Nenhum consumível ativo/)).toBeInTheDocument()
   })
 
-  it('encerrar cena limpa os efeitos de cena e zera os usos por cena', async () => {
-    const api = await import('@/shared/api/api')
-    vi.spyOn(api.api.characters, 'endScene').mockResolvedValue({ clearedScopes: ['scene'] })
-    const { user, client, powerUses } = renderPanel(
-      makeCharacter({ activeEffects: [effect({ id: 1, scope: 'scene' }), effect({ id: 2, scope: 'day' })] }),
-    )
-    powerUses.bump(1, 'class.bardo.inspiracao', 'scene')
-
-    await user.click(screen.getByRole('button', { name: 'Encerrar cena' }))
-    // O gatilho e o botão de confirmar têm o MESMO rótulo — busca dentro do
-    // diálogo, senão o clique volta pro gatilho e nada é encerrado.
-    const dialog = await screen.findByRole('dialog')
-    await user.click(within(dialog).getByRole('button', { name: 'Encerrar cena' }))
-
-    await waitFor(() => {
-      const cached = client.getQueryData<Character>(characterQueryOptions(1).queryKey)
-      expect(cached?.activeEffects.map((e) => e.id)).toEqual([2])
-    })
-    // O limite de uso do livro acompanha a mesma fronteira de cena.
-    expect(powerUses.used(1, 'class.bardo.inspiracao').scene).toBe(0)
-  })
 })
 
 describe('EffectsPanel — situação', () => {
@@ -155,18 +132,24 @@ describe('EffectsPanel — situação', () => {
   })
 })
 
-// ALE-216: dentro da sessão o descanso é decisão da MESA — encerrar cena e
-// encerrar dia são do mestre, que tem os dois no menu da sessão. Esconder é só
-// UX; a recusa que vale é a do handler Go (character_effects_http_test.go).
-describe('EffectsPanel — encerrar cena/dia na sessão', () => {
-  it('fora da sessão o jogador administra a própria ficha', () => {
+/**
+ * ALE-223, decisão do dono: encerrar cena e encerrar dia são do MESTRE e só
+ * existem DURANTE uma sessão. A ficha não é o lugar delas — nem dentro da
+ * sessão (onde a ALE-216 já as escondia) nem fora, onde elas ficavam.
+ *
+ * O que este bloco afirma é a AUSÊNCIA nos dois estados, e a permanência do que
+ * continua sendo do jogador. A recusa que vale é a do handler Go
+ * (`character_effects_http_test.go`): esconder botão é UX, não fronteira.
+ */
+describe('EffectsPanel — encerrar cena/dia não é da ficha', () => {
+  it('fora da sessão as duas ações não existem', () => {
     renderPanel()
 
-    expect(screen.getByRole('button', { name: 'Encerrar cena' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Encerrar dia' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Encerrar cena' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Encerrar dia' })).not.toBeInTheDocument()
   })
 
-  it('numa sessão ao vivo as duas ações somem', () => {
+  it('dentro da sessão elas continuam não existindo, e o resto continua do jogador', () => {
     renderPanel(makeCharacter(), true)
 
     expect(screen.queryByRole('button', { name: 'Encerrar cena' })).not.toBeInTheDocument()

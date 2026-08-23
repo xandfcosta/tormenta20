@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"t20engine/db/sqlcgen"
+	"t20engine/engine"
 )
 
 // handleListCharacters returns the caller's own characters (newest-updated first),
@@ -200,6 +201,29 @@ func (s *Server) loadCharacter(ctx context.Context, c sqlcgen.Character) (Charac
 		dto.Spells = append(dto.Spells, SpellDTO{
 			ID: sp.ID, CatalogSpellID: sp.Catalogspellid, Prepared: sp.Prepared != 0, LearnedAt: sp.Learnedat,
 		})
+	}
+
+	// As regras opcionais da mesa entram na ficha AQUI, e num lugar só (ALE-221):
+	// tudo o que calcula — o `GET /sheet`, os PV/PM do nível, o bônus de
+	// iniciativa, a ficha que o navegador recalcula no WASM — passa por este
+	// carregamento. Falha de leitura não derruba a ficha: o `IgnoredRules` fica
+	// zerado, que significa TODAS as regras em vigor. É o lado seguro, e o único
+	// em que um banco mudo não afrouxa regra sem ninguém ver.
+	ignored, err := s.queries.ListIgnoredRulesForCharacter(ctx, c.ID)
+	if err == nil {
+		dto.IgnoredRules = engine.IgnoredRulesFrom(ignored)
+	}
+
+	// O estado de JOGO (ALE-222). Vem junto e nao por endpoint proprio: separado,
+	// a ficha abriria com a Furia desligada e a ligaria um instante depois,
+	// piscando os numeros que ela muda.
+	//
+	// Este DERRUBA a carga em caso de falha e o de cima nao, e a diferenca e
+	// deliberada: sem o estado de jogo a ficha mente sobre o que esta ligado,
+	// enquanto sem as regras opcionais ela cai no padrao do livro, que e o lado
+	// seguro. Uma regra a mais nunca inventa numero; uma postura a menos sim.
+	if err := s.loadPlayState(ctx, c.ID, &dto); err != nil {
+		return dto, err
 	}
 	return dto, nil
 }

@@ -211,8 +211,13 @@ func TestConsumeAllowsThePortionAgainAfterTheDayEnds(t *testing.T) {
 	// A outra metade da regra: o marcador é de ESCOPO DE DIA, e encerrar o dia
 	// o limpa. Sem isto, o conserto acima teria trocado "come o dia inteiro"
 	// por "nunca mais come" — que é pior, porque some sem aviso.
-	if rec := authed(t, s, owner, http.MethodPost, "/characters/"+id64(char)+"/end-day", ""); rec.Code != http.StatusOK {
-		t.Fatalf("encerrar o dia falhou: %d (%s)", rec.Code, rec.Body.String())
+	//
+	// Chama o HELPER de domínio e não a rota HTTP: o que este teste protege é o
+	// marcador do consumível, e a rota carrega uma autorização que não é assunto
+	// dele — desde a ALE-223 ela pede um MESTRE em sessão viva, e montar uma
+	// mesa aqui só para encerrar um dia mediria a regra errada.
+	if status, err := s.endDay(context.Background(), AuthUser{ID: owner}, char); err != nil {
+		t.Fatalf("encerrar o dia falhou: %d (%v)", status, err)
 	}
 
 	rec := authed(t, s, owner, http.MethodPost, consumePath(char, item), "{}")

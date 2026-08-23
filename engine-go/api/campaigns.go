@@ -45,6 +45,10 @@ type campaignListDTO struct {
 type campaignDetailDTO struct {
 	CampaignDTO
 	Role string `json:"role"`
+	// IgnoredRules acompanha o detalhe porque é nele que a campanha se configura
+	// (ALE-221) — pedir uma segunda rota para desenhar os interruptores faria a
+	// tela piscar entre "tudo ligado" e o estado real.
+	IgnoredRules []string `json:"ignoredRules"`
 	// Same rule as the list: present only on a mesa the caller does not own. It
 	// matters MORE here — this is the screen where you rename and delete.
 	OwnerName *string `json:"ownerName,omitempty"`
@@ -160,7 +164,11 @@ func (s *Server) handleGetCampaign(w http.ResponseWriter, r *http.Request) {
 		writeError(w, status, err.Error())
 		return
 	}
-	out := campaignDetailDTO{CampaignDTO: campaignScalars(c), Role: role}
+	out := campaignDetailDTO{
+		CampaignDTO:  campaignScalars(c),
+		Role:         role,
+		IgnoredRules: s.ignoredRulesOf(r.Context(), c.ID),
+	}
 	// IsAdmin, not merely "not the owner": a PLAYER is also a non-owner here, and
 	// marking their mesa would replace their "Jogando" with "Mesa de Fulano" —
 	// which is exactly what the e2e caught when this condition was looser.

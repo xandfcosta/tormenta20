@@ -476,3 +476,93 @@ SELECT * FROM campaign_places WHERE campaignId = ? AND name = ? LIMIT 1;
 
 -- name: DeleteCampaignPlace :exec
 DELETE FROM campaign_places WHERE id = ?;
+
+-- regras opcionais da campanha (ALE-221)
+
+-- name: ListIgnoredRulesForCampaign :many
+SELECT rule FROM campaign_ignored_rules WHERE campaignId = ? ORDER BY rule;
+
+-- name: ClearIgnoredRulesForCampaign :exec
+DELETE FROM campaign_ignored_rules WHERE campaignId = ?;
+
+-- name: IgnoreRuleInCampaign :exec
+INSERT INTO campaign_ignored_rules (campaignId, rule, updatedAt) VALUES (?, ?, ?)
+ON CONFLICT(campaignId, rule) DO UPDATE SET updatedAt = excluded.updatedAt;
+
+-- A regra so esta desligada para a ficha se TODAS as campanhas dela a
+-- desligaram. A mais estrita vence, e a ficha que nao pertence a campanha
+-- nenhuma calcula com tudo em vigor -- que e o padrao do livro. Escolher "a
+-- primeira campanha" seria arbitrario e mudaria com a ordem das linhas.
+-- name: ListIgnoredRulesForCharacter :many
+SELECT r.rule
+FROM campaign_ignored_rules r
+WHERE r.campaignId IN (SELECT m.campaignId FROM campaign_members m WHERE m.characterId = sqlc.arg('characterId'))
+GROUP BY r.rule
+HAVING COUNT(DISTINCT r.campaignId) = (SELECT COUNT(*) FROM campaign_members m2 WHERE m2.characterId = sqlc.arg('characterId'))
+ORDER BY r.rule;
+
+-- name: IsGmAtLiveTableForCharacter :one
+-- ALE-223: the caller OWNS a campaign that this character belongs to AND that
+-- campaign has a session running. GM of campaign A with a live session in
+-- campaign B does not count -- the two joins are on the same membership row.
+SELECT EXISTS (
+  SELECT 1 FROM campaign_members m
+  JOIN campaigns c ON c.id = m.campaignId
+  JOIN sessions s ON s.campaignId = m.campaignId
+  WHERE m.characterId = sqlc.arg('characterId')
+    AND c.ownerId = sqlc.arg('ownerId')
+    AND s.status = 'active'
+) AS gmAtLiveTable;
+
+-- Estado de mesa da ficha (ALE-222). Saiu do localStorage: o servidor e dono.
+-- CUIDADO: conditionals (o opt-in do JOGADOR) nao e conditions (as do LIVRO,
+-- que vivem na coluna characters.activeConditions). Ver C6 no GLOSSARIO.md.
+
+-- name: ListCharacterConditionals :many
+SELECT conditionalId FROM character_conditionals
+WHERE characterId = ? ORDER BY conditionalId;
+
+-- name: AddCharacterConditional :exec
+INSERT INTO character_conditionals (characterId, conditionalId)
+VALUES (?, ?) ON CONFLICT DO NOTHING;
+
+-- name: RemoveCharacterConditional :exec
+DELETE FROM character_conditionals WHERE characterId = ? AND conditionalId = ?;
+
+-- name: ClearCharacterConditionals :exec
+DELETE FROM character_conditionals WHERE characterId = ?;
+
+-- name: ListCharacterPowerUses :many
+SELECT powerId, scope, used FROM character_power_uses
+WHERE characterId = ? ORDER BY powerId, scope;
+
+-- O upsert SOMA em vez de escrever o total: quem chama diz "gastei mais um",
+-- nunca "agora sao tres". Mandar o total deixaria dois cliques rapidos gravarem
+-- o mesmo numero e perderem um uso.
+-- name: BumpCharacterPowerUse :exec
+INSERT INTO character_power_uses (characterId, powerId, scope, used)
+VALUES (?, ?, ?, 1)
+ON CONFLICT (characterId, powerId, scope)
+DO UPDATE SET used = used + 1;
+
+-- name: ClearCharacterPowerUsesByScope :exec
+DELETE FROM character_power_uses WHERE characterId = ? AND scope = ?;
+
+-- name: ClearCharacterPowerUses :exec
+DELETE FROM character_power_uses WHERE characterId = ?;
+
+-- name: ListCharacterStances :many
+SELECT flag, steps, pmPaid FROM character_stances
+WHERE characterId = ? ORDER BY flag;
+
+-- name: UpsertCharacterStance :exec
+INSERT INTO character_stances (characterId, flag, steps, pmPaid)
+VALUES (?, ?, ?, ?)
+ON CONFLICT (characterId, flag)
+DO UPDATE SET steps = excluded.steps, pmPaid = excluded.pmPaid;
+
+-- name: RemoveCharacterStance :exec
+DELETE FROM character_stances WHERE characterId = ? AND flag = ?;
+
+-- name: ClearCharacterStances :exec
+DELETE FROM character_stances WHERE characterId = ?;

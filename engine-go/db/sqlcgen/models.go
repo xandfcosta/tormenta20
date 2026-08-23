@@ -47,6 +47,12 @@ type CampaignCreature struct {
 	Updatedat  string `json:"updatedat"`
 }
 
+type CampaignIgnoredRule struct {
+	Campaignid int64  `json:"campaignid"`
+	Rule       string `json:"rule"`
+	Updatedat  string `json:"updatedat"`
+}
+
 type CampaignMember struct {
 	ID          int64  `json:"id"`
 	Campaignid  int64  `json:"campaignid"`
@@ -107,6 +113,11 @@ type CharacterClass struct {
 	Level       int64  `json:"level"`
 }
 
+type CharacterConditional struct {
+	Characterid   int64  `json:"characterid"`
+	Conditionalid string `json:"conditionalid"`
+}
+
 type CharacterExpertise struct {
 	ID          int64  `json:"id"`
 	Characterid int64  `json:"characterid"`
@@ -129,6 +140,13 @@ type CharacterItem struct {
 	Createdat    string         `json:"createdat"`
 }
 
+type CharacterPowerUse struct {
+	Characterid int64  `json:"characterid"`
+	Powerid     string `json:"powerid"`
+	Scope       string `json:"scope"`
+	Used        int64  `json:"used"`
+}
+
 type CharacterRace struct {
 	ID          int64  `json:"id"`
 	Characterid int64  `json:"characterid"`
@@ -141,6 +159,13 @@ type CharacterSpell struct {
 	Catalogspellid string `json:"catalogspellid"`
 	Prepared       int64  `json:"prepared"`
 	Learnedat      string `json:"learnedat"`
+}
+
+type CharacterStance struct {
+	Characterid int64  `json:"characterid"`
+	Flag        string `json:"flag"`
+	Steps       int64  `json:"steps"`
+	Pmpaid      int64  `json:"pmpaid"`
 }
 
 type PasswordReset struct {
