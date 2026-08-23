@@ -223,20 +223,76 @@ describe('BagPanel', () => {
     expect(screen.getByText('T$ 1.250,5')).toBeInTheDocument()
   })
 
-  it('o botão de tibares grava o saldo digitado', async () => {
+  /**
+   * O diálogo do dinheiro tem TRÊS gestos e o fio carrega SALDO (ALE-224).
+   *
+   * O que estes testes protegem é a tradução entre os dois: o jogador diz
+   * "ganhei 350" e o servidor recebe o total resultante. Errar isso grava 350
+   * em cima de 1.200 sem avisar ninguém — o erro silencioso que a prévia e o
+   * verbo no botão existem para impedir.
+   */
+  it('receber SOMA ao saldo, e o fio leva o total', async () => {
     const api = await import('@/shared/api/api')
-    const update = vi
-      .spyOn(api.api.characters, 'updateTibar')
-      .mockResolvedValue({ tibar: 300 })
+    const update = vi.spyOn(api.api.characters, 'updateTibar').mockResolvedValue({ tibar: 370 })
     const user = renderPanel(character({ tibar: 20 }))
 
     await user.click(screen.getByRole('button', { name: 'Editar tibares' }))
     const campo = screen.getByLabelText('T$')
     await user.clear(campo)
+    await user.type(campo, '350')
+    // A prévia diz o que o botão vai fazer, ANTES de ele ser apertado.
+    expect(screen.getByText('T$ 20 → T$ 370')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Receber T$ 350' }))
+
+    await waitFor(() => expect(update).toHaveBeenCalledWith(1, { tibar: 370 }))
+  })
+
+  it('gastar SUBTRAI, e o fio continua levando o total', async () => {
+    const api = await import('@/shared/api/api')
+    const update = vi.spyOn(api.api.characters, 'updateTibar').mockResolvedValue({ tibar: 120 })
+    const user = renderPanel(character({ tibar: 200 }))
+
+    await user.click(screen.getByRole('button', { name: 'Editar tibares' }))
+    await user.click(screen.getByRole('button', { name: 'Gastar' }))
+    const campo = screen.getByLabelText('T$')
+    await user.clear(campo)
+    await user.type(campo, '80')
+    await user.click(screen.getByRole('button', { name: 'Gastar T$ 80' }))
+
+    await waitFor(() => expect(update).toHaveBeenCalledWith(1, { tibar: 120 }))
+  })
+
+  it('corrigir ESCREVE o saldo, que é o gesto da Forja', async () => {
+    const api = await import('@/shared/api/api')
+    const update = vi.spyOn(api.api.characters, 'updateTibar').mockResolvedValue({ tibar: 300 })
+    const user = renderPanel(character({ tibar: 20 }))
+
+    await user.click(screen.getByRole('button', { name: 'Editar tibares' }))
+    await user.click(screen.getByRole('button', { name: 'Corrigir' }))
+    const campo = screen.getByLabelText('T$')
+    await user.clear(campo)
     await user.type(campo, '300')
-    await user.click(screen.getByRole('button', { name: 'Salvar' }))
+    await user.click(screen.getByRole('button', { name: 'Corrigir T$ 300' }))
 
     await waitFor(() => expect(update).toHaveBeenCalledWith(1, { tibar: 300 }))
+  })
+
+  // Recusa ANTES da rede: com a escrita otimista, deixar o servidor responder
+  // faria o saldo (e a barra da mochila, que é carga) piscar e voltar.
+  it('gastar mais do que se tem é recusado dizendo quanto se tem', async () => {
+    const api = await import('@/shared/api/api')
+    const update = vi.spyOn(api.api.characters, 'updateTibar').mockResolvedValue({ tibar: 0 })
+    const user = renderPanel(character({ tibar: 50 }))
+
+    await user.click(screen.getByRole('button', { name: 'Editar tibares' }))
+    await user.click(screen.getByRole('button', { name: 'Gastar' }))
+    const campo = screen.getByLabelText('T$')
+    await user.clear(campo)
+    await user.type(campo, '80')
+    await user.click(screen.getByRole('button', { name: 'Gastar T$ 80' }))
+
+    expect(await screen.findByText('Você tem T$ 50.')).toBeInTheDocument()
+    expect(update).not.toHaveBeenCalled()
   })
 
   it('abrir um item leva à ficha dele com as ações de equipar', async () => {
