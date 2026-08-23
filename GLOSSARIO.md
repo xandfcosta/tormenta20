@@ -78,12 +78,18 @@ uma decisão do dono antes do renome.
 4. a casca visual da UI (`SceneShell`, `scene-grimorio`, `SceneContainerProvider`, `scene-nav`).
 
 Consequência medida: `endScene` existe **três vezes** no pacote `api` —
-`session_state.go:317` e `session_store.go:125` desligam a cena, e
-`character_effects.go:29` limpa os efeitos de duração "cena" de UMA ficha. E as
-duas não conversam: `onSceneEnd` (`realtime_initiative.go:161`) **não limpa
-efeito nenhum**; quem limpa é a Recuperação com `scope='scene'`
-(`realtime_vitals.go:122`). O mestre encerra a cena e a bênção que dura "cena"
-continua na ficha. **Isso é bug, não nome** — e o nome foi o que o escondeu.
+`session_state.go` e `session_store.go` desligam a cena, e
+`character_effects.go` limpa a duração "cena" de UMA ficha. Os três nomes
+continuam, e o renome ainda espera decisão do dono.
+
+O BUG que a colisão escondia está fechado (ALE-220): `onSceneEnd` não limpava
+efeito nenhum, e quem limpava era só a Recuperação com `scope='scene'` — o
+mestre encerrava a cena e a bênção que dura "cena" continuava na ficha. Agora os
+dois gestos passam pelo MESMO `expirePartyScene`, e o livro é quem manda: "a
+habilidade dura uma cena inteira, encerrando-se quando esse momento da história
+acaba" (p227), e o início e o fim de uma cena são dados "pelo andamento da
+história" (p11) — que é o que o mestre declara ao clicar em Encerrar cena.
+**Era bug, não nome** — e o nome foi o que o escondeu.
 
 **C2 — `place` é rótulo, entidade e marcador.** `BoardState.Place` é a *string*
 com o nome da cena aberta; `BoardPlace{id, name, …}` é o lugar guardado, e o

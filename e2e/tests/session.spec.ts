@@ -269,7 +269,7 @@ test.describe('Sessão ao vivo', () => {
 
     await page.getByRole('button', { name: 'Recuperar · cena' }).click()
 
-    await expect(page.getByText('Efeitos temporários de cena foram limpos.')).toBeVisible()
+    await expect(page.getByText('Os usos 1/cena e as posturas também saíram das fichas.')).toBeVisible()
 
     // A aba viva é o que estava em jogo, e a sonda tem de provar RESPOSTA: um
     // clique que só o main thread pode atender, e a tela mudando por causa
@@ -1793,7 +1793,7 @@ test.describe('Sessão ao vivo', () => {
     await expect(page.getByRole('status', { name: 'Conectado' })).toBeVisible()
 
     await page.getByRole('button', { name: 'Recuperar · cena' }).click()
-    await expect(page.getByText('Efeitos temporários de cena foram limpos.')).toBeVisible()
+    await expect(page.getByText('Os usos 1/cena e as posturas também saíram das fichas.')).toBeVisible()
 
     // A testemunha é o token BRUTO da casa, não o `--popover`. Comparar com
     // `--popover` parece mais direto e não prova nada: desde que a raiz virou
