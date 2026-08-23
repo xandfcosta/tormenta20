@@ -148,7 +148,7 @@ func layout(p paginaPiloto, corpo templ.Component) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "><section class=\"scene-grimorio relative flex h-dvh flex-col overflow-hidden\"><div aria-hidden=\"true\" class=\"grimorio-stone grimorio-vignette pointer-events-none absolute inset-0 -z-10\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "><section data-slot=\"scene-shell\" class=\"scene-grimorio relative flex h-dvh flex-col overflow-hidden\"><div aria-hidden=\"true\" data-slot=\"background-texture\" data-variant=\"stone\" data-vignette=\"true\" class=\"grimorio-stone grimorio-vignette pointer-events-none absolute inset-0 -z-10\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -160,7 +160,7 @@ func layout(p paginaPiloto, corpo templ.Component) templ.Component {
 			var templ_7745c5c3_Var5 templ.SafeURL
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(p.Voltar))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_layout.templ`, Line: 104, Col: 37}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_layout.templ`, Line: 109, Col: 37}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -173,7 +173,7 @@ func layout(p paginaPiloto, corpo templ.Component) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(p.TituloVisivel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_layout.templ`, Line: 109, Col: 86}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_layout.templ`, Line: 114, Col: 86}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -191,7 +191,7 @@ func layout(p paginaPiloto, corpo templ.Component) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<div class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<div data-slot=\"scene-content\" class=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

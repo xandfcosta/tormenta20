@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/solid-query'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { meQueryOptions } from '@/entities/user/queries'
 import type { AuthUser } from '@/shared/api/api'
 import { requireAdmin, requireSession } from './-guards'
@@ -35,6 +35,50 @@ async function caught(run: () => Promise<void>): Promise<{ to?: string; search?:
   throw new Error('nada foi lançado: o guarda deixou passar')
 }
 
+/**
+ * Desde a ALE-229 o anônimo não é redirecionado DENTRO da SPA: a porta virou
+ * página do servidor, e sair do bundle é uma navegação de verdade
+ * (`window.location.href`). O guarda devolve uma promessa que nunca resolve, e
+ * essa é a garantia — se ela resolvesse, o roteador seguiria e desenharia a
+ * tela protegida no quadro entre a atribuição e a troca de documento.
+ *
+ * Por isso o teste NÃO espera a promessa: esperar é o modo de falha.
+ */
+async function paraOndeFoi(run: () => Promise<void>): Promise<string> {
+  const ida = vi.fn()
+  vi.spyOn(window, 'location', 'get').mockReturnValue({
+    set href(url: string) {
+      ida(url)
+    },
+  } as unknown as Location)
+
+  // Assentou = resolveu OU rejeitou. As duas contam: com a promessa resolvida o
+  // roteador segue e desenha; com ela rejeitada o TanStack trata como redirect
+  // interno e some com a navegação para fora. A primeira versão deste
+  // verificador só olhava o `then`, e por isso o `requireAdmin` passava verde
+  // sabotado — ele rejeita depois de o `requireSession` devolver.
+  let assentou = ''
+  void run().then(
+    () => {
+      assentou = 'resolveu'
+    },
+    (e) => {
+      assentou = `rejeitou (${String(e)})`
+    },
+  )
+  await new Promise((r) => setTimeout(r, 0))
+
+  expect(assentou, 'o guarda assentou: a navegação para fora da SPA não é o que aconteceu').toBe(
+    '',
+  )
+  expect(ida, 'o guarda não navegou para lugar nenhum').toHaveBeenCalledTimes(1)
+  return ida.mock.calls[0]?.[0] as string
+}
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
+
 describe('requireSession', () => {
   it('deixa passar quem tem sessão', async () => {
     await expect(requireSession(guardArgs(makeUser()))).resolves.toBeUndefined()
@@ -42,10 +86,11 @@ describe('requireSession', () => {
 
   // O destino tem de viajar junto: sem ele, entrar joga na home e quem clicou o
   // link da mesa perde o caminho.
-  it('manda o anônimo para o login LEMBRANDO para onde ia', async () => {
-    const redirect = await caught(() => requireSession(guardArgs(null, '/campaigns/7/sessions/4')))
-    expect(redirect.to).toBe('/login')
-    expect(redirect.search).toEqual({ redirect: '/campaigns/7/sessions/4' })
+  it('entrega o anônimo à porta LEMBRANDO para onde ia', async () => {
+    const url = await paraOndeFoi(() =>
+      requireSession(guardArgs(null, '/campaigns/7/sessions/4')),
+    )
+    expect(url).toBe('/piloto/entrar?redirect=%2Fcampaigns%2F7%2Fsessions%2F4')
   })
 })
 
@@ -59,9 +104,9 @@ describe('requireAdmin', () => {
     expect(redirect.to).toBe('/')
   })
 
-  // Anônimo cai no login, não na home: quem não entrou ainda tem para onde ir.
-  it('manda o anônimo para o login', async () => {
-    const redirect = await caught(() => requireAdmin(guardArgs(null)))
-    expect(redirect.to).toBe('/login')
+  // Anônimo vai para a PORTA, não para a home: quem não entrou ainda tem para
+  // onde ir, e mandá-lo à home o faria bater na mesma parede de novo.
+  it('entrega o anônimo à porta, não à home', async () => {
+    expect(await paraOndeFoi(() => requireAdmin(guardArgs(null)))).toContain('/piloto/entrar')
   })
 })

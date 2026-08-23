@@ -142,7 +142,7 @@ templ campoDeTexto(c campo) {
 // molduraDePainel é o contêiner padrão de uma cena: borda de ferro com um filete
 // dourado por dentro (`FramedPanel`, variante stone).
 templ molduraDePainel(extra string) {
-	<div class={ juntar("grimorio-frame grimorio-frame--stone p-5 text-foreground", extra) }>
+	<div data-slot="framed-panel" data-variant="stone" class={ juntar("grimorio-frame grimorio-frame--stone p-5 text-foreground", extra) }>
 		{ children... }
 	</div>
 }
@@ -150,7 +150,7 @@ templ molduraDePainel(extra string) {
 // tituloDaCena é o título cinematográfico do Grimório: Cinzel em caixa alta,
 // entreletra larga e o brilho arcano, com um `kicker` dourado embaixo.
 templ tituloDaCena(titulo, kicker string) {
-	<div class="flex flex-col items-center gap-1 text-center">
+	<div data-slot="scene-title" class="flex flex-col items-center gap-1 text-center">
 		<h1 class="scene-title-glow font-heading font-bold text-[clamp(2.2rem,8vw,3.4rem)] uppercase leading-tight tracking-[0.18em] text-foreground">
 			{ titulo }
 		</h1>

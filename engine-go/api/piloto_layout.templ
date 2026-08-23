@@ -89,8 +89,13 @@ templ layout(p paginaPiloto, corpo templ.Component) {
 				data-init={ p.Init }
 			}
 		>
-			<section class="scene-grimorio relative flex h-dvh flex-col overflow-hidden">
-				<div aria-hidden="true" class="grimorio-stone grimorio-vignette pointer-events-none absolute inset-0 -z-10"></div>
+			// Os `data-slot` são o CONTRATO OBSERVÁVEL que a SPA publica, e não
+			// enfeite: o e2e da porta lê `[data-slot=scene-shell]` para conferir
+			// que os tokens resolvem a paleta da mesa e não o tema claro do
+			// template. Sem eles a virada quebraria um guarda que continua válido
+			// — a pergunta que ele faz não mudou, só o motor que desenha (ALE-229).
+			<section data-slot="scene-shell" class="scene-grimorio relative flex h-dvh flex-col overflow-hidden">
+				<div aria-hidden="true" data-slot="background-texture" data-variant="stone" data-vignette="true" class="grimorio-stone grimorio-vignette pointer-events-none absolute inset-0 -z-10"></div>
 				if p.Forma == cascaDensa {
 					<header
 						class="relative flex flex-wrap items-center gap-3 border-b border-grimorio-iron px-4 py-3"
@@ -110,6 +115,7 @@ templ layout(p paginaPiloto, corpo templ.Component) {
 					</header>
 				}
 				<div
+					data-slot="scene-content"
 					class={ "relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto",
 						templ.KV("px-4 py-4", p.Forma == cascaDensa),
 						templ.KV("px-5 py-14", p.Forma == cascaTitulo) }

@@ -1,15 +1,17 @@
 import { createFileRoute } from '@tanstack/solid-router'
-import { ResetPasswordPage } from '@/pages/auth/reset-password-page'
+import { entregaAPorta } from './-guards'
 
 type ResetSearch = { token?: string }
 
 /**
- * A ponta do jogador no link que o admin gera (ALE-120). Anônima de propósito:
- * quem esqueceu a senha não consegue autenticar para trocá-la — o que guarda a
- * rota é o token de uso único, verificado no servidor.
+ * Encaminhamento para a porta (ALE-229). O caminho é o que vai escrito no link
+ * que o administrador manda, então ele não pode sumir — quem clicar num link
+ * antigo tem de chegar à tela nova.
  */
 export const Route = createFileRoute('/redefinir-senha')({
   validateSearch: (search: Record<string, unknown>): ResetSearch =>
     typeof search.token === 'string' ? { token: search.token } : {},
-  component: ResetPasswordPage,
+  beforeLoad: ({ search }) =>
+    entregaAPorta('/piloto/redefinir-senha', search.token ? { token: search.token } : {}),
+  component: () => null,
 })

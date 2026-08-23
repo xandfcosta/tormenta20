@@ -9,6 +9,12 @@ import { VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
  * de marca à esquerda, formulário à direita, tokens claros — e eram a última
  * superfície do app que ainda falava a língua do template. Agora são cena.
  *
+ * Desde a ALE-229 elas são renderizadas pelo SERVIDOR, e os caminhos antigos
+ * encaminham para `/piloto/*`. Este arquivo continua entrando pelos caminhos
+ * ANTIGOS de propósito: eles estão em links e favoritos, e o guarda de que o
+ * encaminhamento funciona é entrar por onde as pessoas entram. O que se afirma
+ * não mudou — mudou o motor que desenha.
+ *
  * O que se afirma é o que o jogador VÊ: a porta é escura como a mesa. Não é
  * afirmação de classe: é a cor que o navegador pintou, e o defeito que ela
  * impede é o template genérico voltar por cima.
@@ -62,11 +68,11 @@ test.describe('A porta do jogo', () => {
    */
   test('criar conta só abre com convite na mão', async ({ page }) => {
     await page.goto('/register')
-    await expect(page).toHaveURL(/\/login/)
+    await expect(page).toHaveURL(/\/piloto\/entrar/)
     await expect(page.getByText(/por convite/i)).toBeVisible()
 
     await page.goto('/register?convite=um-token-qualquer')
-    await expect(page).toHaveURL(/\/register/)
+    await expect(page).toHaveURL(/\/piloto\/criar-conta/)
     await expect(page.getByRole('button', { name: /Criar conta/i })).toBeVisible()
   })
 
