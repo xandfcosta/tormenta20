@@ -1136,7 +1136,14 @@ test.describe('Sessão ao vivo', () => {
     await page.getByRole('button', { name: /Trazer a iniciativa/ }).click()
     await page.getByRole('dialog').getByRole('button', { name: 'Todos' }).click()
     await page.getByRole('dialog').getByRole('button', { name: /^Trazer \d/ }).click()
-    await expect(page.getByText(/[1-9]\d* peças/)).toBeVisible()
+    // O sufixo do cabeçalho entra no locator porque "N peças" sozinho casa
+    // TAMBÉM o gatilho do "Trazer a iniciativa", que desde a ALE-204 conta as
+    // peças no rótulo ("Trazer 2 peças"). Os dois só coexistem quando a fila
+    // tem gente, então a colisão depende do que os testes ANTERIORES deixaram
+    // na sessão: isolado este teste passa, e como 71º da suíte ele estourava
+    // por ambiguidade. É a terceira vez que esta linha cai por prender algo que
+    // não é dela — as duas anteriores estão no comentário acima.
+    await expect(page.getByText(/[1-9]\d* peças · 1 quadrado/)).toBeVisible()
 
     // Duas asserções, e cada uma diz uma coisa: nada fora da janela sem
     // caminho, E nenhum painel rolando de lado. O defeito desta issue passava
