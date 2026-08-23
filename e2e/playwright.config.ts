@@ -28,11 +28,26 @@ export default defineConfig({
   // paralelismo de volta passa E2E_WORKERS=2.
   workers: Number(process.env.E2E_WORKERS ?? (process.env.CI ? 2 : 1)),
   forbidOnly: !!process.env.CI,
+  // `retries: 0` local é DELIBERADO e fica: retentativa esconde intermitência,
+  // que é justamente o que se caça numa máquina de dev (ALE-244).
   retries: process.env.CI ? 1 : 0,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: BASE_URL,
-    trace: 'on-first-retry',
+    // `retain-on-failure` e NÃO `on-first-retry`, que era o que estava aqui.
+    // As duas linhas se cancelavam: sem retry não há primeira tentativa
+    // repetida, então fora do CI o trace nunca era gravado — não raramente,
+    // NUNCA. E `e2e/test-results` sequer existia em disco (ALE-244).
+    //
+    // O preço disso foi alto e é o motivo deste comentário. A ALE-238 nasceu de
+    // UMA assinatura de erro transcrita à mão de scrollback de terminal, num
+    // formato que o Playwright não emite, sem segunda amostra em lugar nenhum.
+    // Duas sessões construíram e derrubaram duas explicações elaboradas em cima
+    // dela, e dez corridas cheias produziram zero artefato aproveitável.
+    //
+    // Guarda o trace de toda tentativa que FALHA e descarta as que passam: o
+    // custo em disco é proporcional ao que quebrou, não ao tamanho da suíte.
+    trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     launchOptions: {
       // O Chromium usa /dev/shm para memória compartilhada e, quando ele acaba,
