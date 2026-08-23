@@ -168,6 +168,14 @@ templ menuDoJogador(v hubView) {
 				<span>Administração</span>
 			</a>
 		}
+		// Placeholder até existir tela de configurações, e DESABILITADO em vez de
+		// ausente: ele diz que o lugar existe e ainda não abriu. Portado tal e
+		// qual — a lista de garantias do `hub.test.tsx` foi conferida uma a uma, e
+		// este item era o único que eu tinha deixado cair sem perceber.
+		<button type="button" disabled class={ classeDoItemRapido(false) }>
+			@icone("Settings", "size-4")
+			<span>Configurações</span>
+		</button>
 		<form method="post" action="/piloto/sair">
 			<button type="submit" class={ classeDoItemRapido(true) }>
 				@icone("LogOut", "size-4")

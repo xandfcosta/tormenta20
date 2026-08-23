@@ -138,6 +138,25 @@ func buildMux(cfg api.Config, srv *api.Server) *http.ServeMux {
 	// Vive nos dois formatos porque o `ServeMux` casa pelo prefixo mais longo.
 	// Apagar esta linha é metade da saída do piloto.
 	mux.Handle("/piloto/", http.StripPrefix("/piloto", srv.PilotoRouter()))
+	// A PORTA DA FRENTE é do servidor desde a ALE-231, e o desvio acontece AQUI
+	// e não dentro da SPA por uma razão medida: a rota `/` dela fazia o desvio em
+	// JavaScript, o que obriga o navegador a baixar e executar o aplicativo
+	// inteiro só para sair dele. Em desenvolvimento isso são ~1600 módulos — o
+	// `lucide-solid` publica um arquivo por ícone e o Vite se RECUSA a
+	// pré-empacotá-lo, porque ele vem em JSX-fonte —, e a carga desperdiçada
+	// esgotou o pool de conexões do Chromium: página em branco, sem erro de
+	// JavaScript nenhum.
+	//
+	// No mux e não no `spaHandler` porque em desenvolvimento o `spaHandler` nem
+	// é montado (sem `STATIC_DIR`), e aí o desvio só existiria em produção — o
+	// e2e mediria uma coisa e o jogador veria outra.
+	//
+	// `"/{$}"` casa a raiz EXATA; `"/"` casaria o app inteiro. A rota `/` da SPA
+	// continua existindo para quem já está DENTRO dela e chama
+	// `navigate({ to: '/' })` — as duas cobrem casos que a outra não alcança.
+	mux.HandleFunc("/{$}", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/piloto/", http.StatusFound)
+	})
 	if cfg.StaticDir == "" {
 		mux.Handle("/", srv.Router())
 		return mux

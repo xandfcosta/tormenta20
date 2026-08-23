@@ -271,3 +271,36 @@ test.describe('O Hub (piloto Datastar)', () => {
     await expect(gatilho).toBeFocused()
   })
 })
+
+test.describe('O Hub e a SPA dividem a preferência de som', () => {
+  test.use({ storageState: '.auth/user.json' })
+
+  /**
+   * Enquanto as duas portas existirem, som e volume têm de ser a MESMA
+   * preferência: quem liga o som no Hub do servidor não pode achá-lo desligado
+   * na cena do tabuleiro. O contrato é a chave e a forma do `localStorage`
+   * (`t20-ui` → `{state:{sfx,volume}}`), e o `cena.js` escreve pelo mesmo
+   * `persistUi` que o `ui-store` da SPA usa.
+   *
+   * É este contrato que se afirma — não o rótulo do botão. O rótulo é
+   * consequência; a chave é o que uma refatoração distraída quebraria sem que
+   * nada mais reclamasse.
+   */
+  test('ligar o som no Hub grava na chave que a SPA lê', async ({ page }) => {
+    await page.goto('/piloto/')
+    await page.evaluate(() => localStorage.removeItem('t20-ui'))
+
+    await page.getByRole('button', { name: /^Menu de / }).click()
+    const alternador = page.locator('#menu-do-jogador button').first()
+    await expect(alternador).toHaveText(/Som desligado/)
+
+    await alternador.click()
+    await expect(alternador).toHaveText(/Som ligado/)
+    // O slider só existe com o som ligado: controle sobre o mudo é controle morto.
+    await expect(page.locator('#volume')).toBeVisible()
+
+    expect(await page.evaluate(() => localStorage.getItem('t20-ui'))).toBe(
+      '{"state":{"sfx":true,"volume":100}}',
+    )
+  })
+})
