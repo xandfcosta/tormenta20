@@ -12,6 +12,20 @@ export type MonsterPickerListProps = {
   idPrefix: string
   /** Bounds the scroll area where the list is not the whole surface. */
   listClass?: string
+  /**
+   * O VERBO da linha, dito antes do nome da criatura para quem ouve. Ele muda
+   * por superfície: no bestiário da sessão a linha ABRE (ALE-208), no Montar
+   * encontro ela ADICIONA ao rascunho — um nome só para os dois mentiria num
+   * deles.
+   *
+   * É um prefixo `sr-only` DENTRO do botão, e não um `aria-label`, porque o
+   * `aria-label` SUBSTITUI o nome inteiro: a linha perdia o ND, o tipo, o PV e
+   * a Defesa que ela anuncia hoje, e o `gm-listas.spec.ts` — que procura as
+   * linhas por `/ND /` — foi quem acusou. O prefixo soma; o rótulo trocava.
+   *
+   * Sem ele a linha se chama só pela criatura, que é o que a Mesa do Mestre quer.
+   */
+  itemVerbo?: string
 }
 
 /**
@@ -54,6 +68,9 @@ export function MonsterPickerList(props: MonsterPickerListProps) {
               onClick={() => props.onPick(monster)}
               class="w-full rounded-sm border border-grimorio-iron p-2 text-left transition-colors hover:bg-accent"
             >
+              <Show when={props.itemVerbo}>
+                <span class="sr-only">{props.itemVerbo} </span>
+              </Show>
               <p class="flex flex-wrap items-baseline gap-x-1.5 text-xs font-semibold">
                 {monster.name}
                 <span class="font-mono text-3xs text-grimorio-gold">

@@ -100,10 +100,18 @@ export function EncounterPanel(props: {
             added to. The list is bounded so the ledger above stays on screen. */}
         <Show when={picking()}>
           <div class="mt-3 border-t border-grimorio-iron pt-3">
+            {/* Aqui o clique ADICIONA, e continua assim de propósito (ALE-208):
+                o que a issue consertou foi "clicar para ler joga na mesa AO
+                VIVO", e aqui nada chega à mesa até o "Mandar para a
+                iniciativa" — o rascunho logo acima é o desfazer, com
+                quantidade e remover ao lado de cada linha. Pôr um diálogo no
+                caminho custaria fricção justamente onde adicionar rápido é o
+                propósito. */}
             <MonsterPickerList
               onPick={(monster) => draft.add(monster.id)}
               idPrefix="session-encounter"
               listClass="max-h-64"
+              itemVerbo="Adicionar ao encontro:"
             />
           </div>
         </Show>

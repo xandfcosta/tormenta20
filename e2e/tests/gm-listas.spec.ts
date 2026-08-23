@@ -42,7 +42,11 @@ test.describe('Listas virtualizadas do mestre', () => {
 
     await busca.fill('ogro')
     // Mais de um ogro no bestiário (o comum e o ancião) — `first()` de propósito.
-    await expect(page.getByRole('button', { name: /^Ogro/ }).first()).toBeVisible()
+    // O `Abrir` na frente é o verbo da linha na SESSÃO (ALE-208): ela abre a
+    // criatura em vez de jogá-la na iniciativa, e o verbo entra como prefixo
+    // `sr-only` — o ND, o tipo e o PV continuam no nome, que é o que o `/ND /`
+    // acima ainda casa. No Montar encontro a mesma lista diz "Adicionar".
+    await expect(page.getByRole('button', { name: /^Abrir Ogro/ }).first()).toBeVisible()
     expect(await linhas.count()).toBeLessThan(antes)
   })
 
