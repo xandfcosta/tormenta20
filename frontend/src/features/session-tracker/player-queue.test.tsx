@@ -6,9 +6,8 @@ import { makeCharacter } from '@/entities/character/__fixtures__/character'
 import { characterQueryOptions } from '@/entities/character/queries'
 import type { InitiativeEntry, SessionRealtime } from '@/shared/realtime/realtime'
 import { ConditionalsProvider } from '@/shared/stores/conditionals-context'
-import { createConditionalsStore } from '@/shared/stores/conditionals-store'
-import { FakeStorage } from '@/shared/test/fake-storage'
 import { InitiativeCard } from './initiative-card'
+import { fakeConditionals } from '@/shared/test/play-stores'
 
 /**
  * A FILA DO JOGADOR É LEITURA (ALE-213).
@@ -107,7 +106,7 @@ function renderQueue(isGm: boolean) {
   const rt = new FakeRealtime()
   render(() => (
     <QueryClientProvider client={client}>
-      <ConditionalsProvider store={createConditionalsStore(new FakeStorage())}>
+      <ConditionalsProvider store={fakeConditionals()}>
         <InitiativeCard rt={rt.asRealtime()} isGm={isGm} myCharacterIds={new Set([15])} />
       </ConditionalsProvider>
     </QueryClientProvider>

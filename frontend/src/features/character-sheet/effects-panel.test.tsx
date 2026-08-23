@@ -1,4 +1,3 @@
-import { FakeStorage } from '@/shared/test/fake-storage'
 import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
 import { render, screen, waitFor, within } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
@@ -7,10 +6,9 @@ import { characterQueryOptions } from '@/entities/character/queries'
 import { makeCharacter } from '@/entities/character/__fixtures__/character'
 import type { ActiveEffect, Character } from '@/shared/api/api'
 import { ConditionalsProvider } from '@/shared/stores/conditionals-context'
-import { createConditionalsStore } from '@/shared/stores/conditionals-store'
 import { PowerUsesProvider } from '@/shared/stores/power-uses-context'
-import { createPowerUsesStore } from '@/shared/stores/power-uses-store'
 import { EffectsPanel } from './effects-panel'
+import { fakeConditionals, fakePowerUses } from '@/shared/test/play-stores'
 
 function effect(overrides: Partial<ActiveEffect> = {}): ActiveEffect {
   return {
@@ -27,10 +25,10 @@ function effect(overrides: Partial<ActiveEffect> = {}): ActiveEffect {
 function renderPanel(char: Character = makeCharacter(), inSession = false) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   client.setQueryData(characterQueryOptions(char.id).queryKey, char)
-  const powerUses = createPowerUsesStore(new FakeStorage())
+  const powerUses = fakePowerUses()
   render(() => (
     <QueryClientProvider client={client}>
-      <ConditionalsProvider store={createConditionalsStore(new FakeStorage())}>
+      <ConditionalsProvider store={fakeConditionals()}>
         <PowerUsesProvider store={powerUses}>
           <EffectsPanel character={char} inSession={inSession} />
         </PowerUsesProvider>

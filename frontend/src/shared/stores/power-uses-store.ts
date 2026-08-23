@@ -1,107 +1,110 @@
 import { createStore, produce } from 'solid-js/store'
+import type { PowerUse } from '@/shared/api/api'
 
 /**
- * How many times each limited power ("1/cena", "1/dia") has been used, per
- * character. Local-only like [[conditionals-store]]: the book limit is
- * table-trust, not server state. Cleared by the Efeitos block's "Encerrar
- * cena/dia".
+ * Quantas vezes cada poder limitado ("1/cena", "1/dia") já foi USADO, por
+ * personagem.
  *
- * Persisted under the SAME key/shape the React zustand used
- * (`t20-power-uses` → `{ state: { uses } }`): mid-migration the player
- * alternates between the two apps and a power spent at the table must stay
- * spent.
+ * O DONO É O SERVIDOR (ALE-222). Isto vivia em `localStorage`, e o comentário
+ * que estava aqui dizia o contrário: *"Local-only like conditionals-store: the
+ * book limit is table-trust, not server state"*. A decisão do dono em
+ * 2026-08-22 foi "o servidor mantém estado, ponto final", e a frase antiga fica
+ * registrada em vez de apagada — o histórico não deve mentir sobre o que já se
+ * pensou.
+ *
+ * Leitura SÍNCRONA e escrita OTIMISTA, pelo mesmo motivo do situacional: `used`
+ * é lido de dentro de memos, e uma Promise ali tornaria a ficha inteira
+ * assíncrona por causa de um contador.
  */
-export const POWER_USES_STORAGE_KEY = 't20-power-uses'
 
-/** Scope of a power's use limit — mirrors t20-data `ActivationUses`. */
 export type PowerUseScope = 'scene' | 'day'
-
 export type PowerUseCounts = { scene: Record<string, number>; day: Record<string, number> }
-
 type UsesByCharacter = Record<string, PowerUseCounts>
 
+/** Quem avisa o servidor que gastou mais um. Injetado para o teste espiar. */
+export type PowerUseWriter = (
+  characterId: number,
+  powerId: string,
+  scope: PowerUseScope,
+) => Promise<unknown>
+
 export type PowerUsesStore = {
-  /** Used counts for one power. Tracks — read it inside a memo. */
   used: (characterId: number, powerId: string) => { scene: number; day: number }
   bump: (characterId: number, powerId: string, scope: PowerUseScope) => void
+  /**
+   * Zera o que a CENA leva — só o CACHE. Quem chama já esperou o `/end-scene`
+   * do servidor, que limpou lá; repetir a chamada aqui seria a mesma decisão
+   * escrita em dois lugares, e um dia elas discordariam.
+   */
   resetScene: (characterId: number) => void
+  /** Idem para o dia — o `/end-day` já limpou os dois escopos no servidor. */
   resetDay: (characterId: number) => void
+  hydrate: (characterId: number, uses: readonly PowerUse[]) => void
 }
 
-const EMPTY_COUNTS: PowerUseCounts = { scene: {}, day: {} }
+const SEM_USOS: PowerUseCounts = { scene: {}, day: {} }
 
-function isCountBucket(value: unknown): value is Record<string, number> {
-  return (
-    !!value &&
-    typeof value === 'object' &&
-    Object.values(value).every((n) => typeof n === 'number')
-  )
-}
-
-/** Defensive read: a corrupt or older blob must not take the sheet down. */
-export function readStoredPowerUses(raw: string | null): UsesByCharacter {
-  if (!raw) return {}
-  try {
-    const parsed = (JSON.parse(raw) as { state?: { uses?: unknown } }).state?.uses
-    if (!parsed || typeof parsed !== 'object') return {}
-    const entries = Object.entries(parsed as Record<string, unknown>).flatMap(
-      ([id, counts]): [string, PowerUseCounts][] => {
-        const { scene, day } = (counts ?? {}) as Partial<PowerUseCounts>
-        if (!isCountBucket(scene) || !isCountBucket(day)) return []
-        return [[id, { scene, day }]]
-      },
-    )
-    return Object.fromEntries(entries)
-  } catch {
-    return {}
-  }
-}
-
-/**
- * @example
- * const powerUses = createPowerUsesStore()
- * powerUses.bump(character.id, 'class.barbaro.furia', 'day')
- * powerUses.used(character.id, 'class.barbaro.furia').day // 1
- */
 export function createPowerUsesStore(
-  storage: Storage | undefined = globalThis.localStorage,
+  write: PowerUseWriter,
+  onError: (erro: unknown) => void = () => {},
 ): PowerUsesStore {
-  const [uses, setUses] = createStore<UsesByCharacter>(
-    readStoredPowerUses(storage?.getItem(POWER_USES_STORAGE_KEY) ?? null),
-  )
+  const [uses, setUses] = createStore<UsesByCharacter>({})
 
-  const edit = (mutate: (draft: UsesByCharacter) => void) => {
-    setUses(produce(mutate))
-    storage?.setItem(POWER_USES_STORAGE_KEY, JSON.stringify({ state: { uses } }))
-  }
+  const contas = (characterId: number): PowerUseCounts => uses[String(characterId)] ?? SEM_USOS
 
   return {
     used: (characterId, powerId) => {
-      const counts = uses[String(characterId)] ?? EMPTY_COUNTS
-      return { scene: counts.scene[powerId] ?? 0, day: counts.day[powerId] ?? 0 }
+      const c = contas(characterId)
+      return { scene: c.scene[powerId] ?? 0, day: c.day[powerId] ?? 0 }
     },
 
-    bump: (characterId, powerId, scope) =>
-      edit((draft) => {
-        const key = String(characterId)
-        const current = draft[key] ?? { scene: {}, day: {} }
-        draft[key] = {
-          ...current,
-          [scope]: { ...current[scope], [powerId]: (current[scope][powerId] ?? 0) + 1 },
-        }
-      }),
+    hydrate: (characterId, lista) =>
+      setUses(
+        produce((draft) => {
+          const contagem: PowerUseCounts = { scene: {}, day: {} }
+          for (const u of lista) contagem[u.scope][u.powerId] = u.used
+          draft[String(characterId)] = contagem
+        }),
+      ),
+
+    // Soma UM, e é isso que vai no fio — nunca o total. Dois cliques rápidos
+    // mandando "agora são 3" gravariam 3 duas vezes e perderiam um uso; quem
+    // incrementa é o `ON CONFLICT` do servidor.
+    bump: (characterId, powerId, scope) => {
+      const chave = String(characterId)
+      const antes = contas(characterId)[scope][powerId] ?? 0
+      setUses(
+        produce((draft) => {
+          const atual = draft[chave] ?? { scene: {}, day: {} }
+          atual[scope][powerId] = (atual[scope][powerId] ?? 0) + 1
+          draft[chave] = atual
+        }),
+      )
+      void write(characterId, powerId, scope).catch((erro) => {
+        setUses(
+          produce((draft) => {
+            const atual = draft[chave] ?? { scene: {}, day: {} }
+            atual[scope][powerId] = antes
+            draft[chave] = atual
+          }),
+        )
+        onError(erro)
+      })
+    },
 
     resetScene: (characterId) =>
-      edit((draft) => {
-        const current = draft[String(characterId)]
-        if (current) draft[String(characterId)] = { ...current, scene: {} }
-      }),
+      setUses(
+        produce((draft) => {
+          const atual = draft[String(characterId)]
+          if (atual) atual.scene = {}
+        }),
+      ),
 
-    // Ending the day ends the running scene too (book rest semantics), so the
-    // whole character entry goes.
     resetDay: (characterId) =>
-      edit((draft) => {
-        delete draft[String(characterId)]
-      }),
+      setUses(
+        produce((draft) => {
+          draft[String(characterId)] = { scene: {}, day: {} }
+        }),
+      ),
   }
 }

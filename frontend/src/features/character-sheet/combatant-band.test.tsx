@@ -4,15 +4,14 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { makeCharacter } from '@/entities/character/__fixtures__/character'
 import { ConditionalsProvider } from '@/shared/stores/conditionals-context'
-import { createConditionalsStore } from '@/shared/stores/conditionals-store'
-import { FakeStorage } from '@/shared/test/fake-storage'
 import { CombatantBand } from './combatant-band'
+import { fakeConditionals } from '@/shared/test/play-stores'
 
 function renderBand(activeConditions?: string) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(() => (
     <QueryClientProvider client={client}>
-      <ConditionalsProvider store={createConditionalsStore(new FakeStorage())}>
+      <ConditionalsProvider store={fakeConditionals()}>
         <CombatantBand
           character={makeCharacter({
             name: 'Paladino Sagrado',
@@ -97,7 +96,7 @@ describe('CombatantBand', () => {
       const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
       return (
         <QueryClientProvider client={client}>
-          <ConditionalsProvider store={createConditionalsStore(new FakeStorage())}>
+          <ConditionalsProvider store={fakeConditionals()}>
             <CombatantBand
               character={makeCharacter({
                 name: 'Paladino Sagrado de Khalmyr, o Inquebrantável da Aliança',

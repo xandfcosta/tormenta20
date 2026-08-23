@@ -1,73 +1,82 @@
-import { FakeStorage } from '@/shared/test/fake-storage'
-import { describe, expect, it } from 'vitest'
-import {
-  STANCE_ACTIVATIONS_STORAGE_KEY,
-  createStanceActivationStore,
-  readStoredStanceActivations,
-} from './stance-activation-store'
+import { describe, expect, it, vi } from 'vitest'
+import { createStanceActivationStore } from './stance-activation-store'
 
+/**
+ * O registro do que cada POSTURA custou, depois que o servidor virou dono
+ * (ALE-222).
+ *
+ * A razão de este store existir não mudou: sair da postura não pode devolver
+ * PM. Perder o registro é o pior dos três casos de falha, e é por isso que o
+ * desfazer aqui tem teste próprio.
+ */
 
-describe('readStoredStanceActivations', () => {
-  it('lê a forma do zustand que o React grava', () => {
-    const raw = JSON.stringify({
-      state: { records: { '1': { furia: { steps: 1, pmPaid: 3 } } } },
+const HEROI = 7
+const PAGO = { steps: 2, pmPaid: 4 }
+
+function servidorMudo() {
+  return { set: vi.fn(async () => {}), clear: vi.fn(async () => {}) }
+}
+
+describe('store das posturas', () => {
+  it('registra o pagamento na hora e o manda ao servidor', () => {
+    const write = servidorMudo()
+    const store = createStanceActivationStore(write)
+
+    store.logActivation(HEROI, 'furia', PAGO)
+
+    expect(store.paidFor(HEROI, 'furia')).toEqual(PAGO)
+    expect(write.set).toHaveBeenCalledWith(HEROI, 'furia', PAGO)
+  })
+
+  it('postura que nunca foi paga não tem registro', () => {
+    const store = createStanceActivationStore(servidorMudo())
+
+    expect(store.paidFor(HEROI, 'furia')).toBeUndefined()
+  })
+
+  it('sair da postura apaga o registro e avisa o servidor', () => {
+    const write = servidorMudo()
+    const store = createStanceActivationStore(write)
+    store.logActivation(HEROI, 'furia', PAGO)
+
+    store.clearActivation(HEROI, 'furia')
+
+    expect(store.paidFor(HEROI, 'furia')).toBeUndefined()
+    expect(write.clear).toHaveBeenCalledWith(HEROI, 'furia')
+  })
+
+  it('DESFAZ o registro quando o servidor recusa a entrada', async () => {
+    const store = createStanceActivationStore({
+      set: () => Promise.reject(new Error('500')),
+      clear: async () => {},
     })
 
-    expect(readStoredStanceActivations(raw)['1'].furia).toEqual({ steps: 1, pmPaid: 3 })
+    store.logActivation(HEROI, 'furia', PAGO)
+
+    await vi.waitFor(() => expect(store.paidFor(HEROI, 'furia')).toBeUndefined())
   })
 
-  it('blob corrompido ou ausente não derruba a ficha', () => {
-    expect(readStoredStanceActivations(null)).toEqual({})
-    expect(readStoredStanceActivations('{quebrado')).toEqual({})
-    expect(readStoredStanceActivations(JSON.stringify({ state: { records: 7 } }))).toEqual({})
+  it('DEVOLVE o registro quando o servidor recusa a saída', async () => {
+    // Este é o caso perigoso: sem a volta, o pagamento some da tela e sair da
+    // postura passa a devolver PM — exatamente o que este store impede.
+    const store = createStanceActivationStore({
+      set: async () => {},
+      clear: () => Promise.reject(new Error('500')),
+    })
+    store.logActivation(HEROI, 'furia', PAGO)
+
+    store.clearActivation(HEROI, 'furia')
+
+    await vi.waitFor(() => expect(store.paidFor(HEROI, 'furia')).toEqual(PAGO))
   })
 
-  // Registro sem os números não descreve pagamento nenhum — cai fora em vez de
-  // virar NaN na tela de Posturas ativas.
-  it('registro sem steps/pmPaid numéricos é descartado', () => {
-    const raw = JSON.stringify({ state: { records: { '1': { furia: { steps: 'x' } } } } })
+  it('hidrata substituindo o cache', () => {
+    const store = createStanceActivationStore(servidorMudo())
+    store.logActivation(HEROI, 'lixo', PAGO)
 
-    expect(readStoredStanceActivations(raw)).toEqual({})
-  })
-})
+    store.hydrate(HEROI, [{ flag: 'furia', steps: 1, pmPaid: 2 }])
 
-describe('createStanceActivationStore', () => {
-  it('guarda o que foi pago e persiste na chave do React', () => {
-    const storage = new FakeStorage()
-    const store = createStanceActivationStore(storage)
-
-    store.logActivation(1, 'furia', { steps: 1, pmPaid: 3 })
-
-    expect(store.paidFor(1, 'furia')).toEqual({ steps: 1, pmPaid: 3 })
-    const persisted = readStoredStanceActivations(storage.getItem(STANCE_ACTIVATIONS_STORAGE_KEY))
-    expect(persisted['1'].furia.pmPaid).toBe(3)
-  })
-
-  it('stance nunca ativada não tem registro', () => {
-    const store = createStanceActivationStore(new FakeStorage())
-    expect(store.paidFor(1, 'furia')).toBeUndefined()
-  })
-
-  it('personagens diferentes guardam pagamentos separados', () => {
-    const store = createStanceActivationStore(new FakeStorage())
-    store.logActivation(1, 'furia', { steps: 2, pmPaid: 4 })
-
-    expect(store.paidFor(2, 'furia')).toBeUndefined()
-  })
-
-  it('encerrar a stance apaga o registro, sem tocar nas outras', () => {
-    const store = createStanceActivationStore(new FakeStorage())
-    store.logActivation(1, 'furia', { steps: 1, pmPaid: 3 })
-    store.logActivation(1, 'inspiracao', { steps: 0, pmPaid: 2 })
-
-    store.clearActivation(1, 'furia')
-
-    expect(store.paidFor(1, 'furia')).toBeUndefined()
-    expect(store.paidFor(1, 'inspiracao')).toEqual({ steps: 0, pmPaid: 2 })
-  })
-
-  it('encerrar stance que não estava ativa é inofensivo', () => {
-    const store = createStanceActivationStore(new FakeStorage())
-    expect(() => store.clearActivation(9, 'furia')).not.toThrow()
+    expect(store.paidFor(HEROI, 'furia')).toEqual({ steps: 1, pmPaid: 2 })
+    expect(store.paidFor(HEROI, 'lixo')).toBeUndefined()
   })
 })

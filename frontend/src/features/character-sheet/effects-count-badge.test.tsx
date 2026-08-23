@@ -1,16 +1,15 @@
 import { render, screen } from '@solidjs/testing-library'
-import { FakeStorage } from '@/shared/test/fake-storage'
 import { describe, expect, it } from 'vitest'
 import { makeCharacter } from '@/entities/character/__fixtures__/character'
 import type { Character } from '@/shared/api/api'
 import { ConditionalsProvider } from '@/shared/stores/conditionals-context'
-import { createConditionalsStore } from '@/shared/stores/conditionals-store'
 import { EffectsCountBadge } from './effects-count-badge'
+import { fakeConditionals } from '@/shared/test/play-stores'
 
 
 function renderBadge(char: Character) {
   render(() => (
-    <ConditionalsProvider store={createConditionalsStore(new FakeStorage())}>
+    <ConditionalsProvider store={fakeConditionals()}>
       <EffectsCountBadge character={char} />
     </ConditionalsProvider>
   ))

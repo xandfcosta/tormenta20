@@ -7,13 +7,10 @@ import { characterQueryOptions } from '@/entities/character/queries'
 import { api, type Character } from '@/shared/api/api'
 import { activationSpecs } from '@/shared/lib/activation-cache'
 import { ConditionalsProvider } from '@/shared/stores/conditionals-context'
-import { createConditionalsStore } from '@/shared/stores/conditionals-store'
 import { PowerUsesProvider } from '@/shared/stores/power-uses-context'
-import { createPowerUsesStore } from '@/shared/stores/power-uses-store'
 import { StanceActivationProvider } from '@/shared/stores/stance-activation-context'
-import { createStanceActivationStore } from '@/shared/stores/stance-activation-store'
-import { FakeStorage } from '@/shared/test/fake-storage'
 import { UsePowerDialog } from './use-power-dialog'
+import { fakeConditionals, fakePowerUses, fakeStances } from '@/shared/test/play-stores'
 
 /**
  * ATIVAR A FÚRIA (ALE-197, grupo B).
@@ -48,9 +45,9 @@ function renderDialog(character: Character) {
   client.setQueryData(characterQueryOptions(character.id).queryKey, character)
   render(() => (
     <QueryClientProvider client={client}>
-      <ConditionalsProvider store={createConditionalsStore(new FakeStorage())}>
-        <PowerUsesProvider store={createPowerUsesStore(new FakeStorage())}>
-          <StanceActivationProvider store={createStanceActivationStore(new FakeStorage())}>
+      <ConditionalsProvider store={fakeConditionals()}>
+        <PowerUsesProvider store={fakePowerUses()}>
+          <StanceActivationProvider store={fakeStances()}>
             <UsePowerDialog spec={furia()} character={character} />
           </StanceActivationProvider>
         </PowerUsesProvider>

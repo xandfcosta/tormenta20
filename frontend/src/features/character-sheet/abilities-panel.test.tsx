@@ -1,4 +1,3 @@
-import { FakeStorage } from '@/shared/test/fake-storage'
 import { QueryClient, QueryClientProvider } from '@tanstack/solid-query'
 import { render, screen, waitFor } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
@@ -7,12 +6,10 @@ import { makeCharacter } from '@/entities/character/__fixtures__/character'
 import { characterQueryOptions } from '@/entities/character/queries'
 import { type Character, api } from '@/shared/api/api'
 import { ConditionalsProvider } from '@/shared/stores/conditionals-context'
-import { createConditionalsStore } from '@/shared/stores/conditionals-store'
 import { PowerUsesProvider } from '@/shared/stores/power-uses-context'
-import { createPowerUsesStore } from '@/shared/stores/power-uses-store'
 import { StanceActivationProvider } from '@/shared/stores/stance-activation-context'
-import { createStanceActivationStore } from '@/shared/stores/stance-activation-store'
 import { AbilitiesPanel } from './abilities-panel'
+import { fakeConditionals, fakePowerUses, fakeStances } from '@/shared/test/play-stores'
 
 
 function renderPanel(char: Character = makeCharacter()) {
@@ -20,9 +17,9 @@ function renderPanel(char: Character = makeCharacter()) {
   client.setQueryData(characterQueryOptions(char.id).queryKey, char)
   render(() => (
     <QueryClientProvider client={client}>
-      <ConditionalsProvider store={createConditionalsStore(new FakeStorage())}>
-        <PowerUsesProvider store={createPowerUsesStore(new FakeStorage())}>
-          <StanceActivationProvider store={createStanceActivationStore(new FakeStorage())}>
+      <ConditionalsProvider store={fakeConditionals()}>
+        <PowerUsesProvider store={fakePowerUses()}>
+          <StanceActivationProvider store={fakeStances()}>
             <AbilitiesPanel character={char} />
           </StanceActivationProvider>
         </PowerUsesProvider>

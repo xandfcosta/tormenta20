@@ -7,11 +7,10 @@ import { characterQueryOptions } from '@/entities/character/queries'
 import { campaignCreaturesQueryOptions } from '@/entities/creature/queries'
 import type { InitiativeEntry } from '@/shared/realtime/realtime'
 import { ConditionalsProvider } from '@/shared/stores/conditionals-context'
-import { createConditionalsStore } from '@/shared/stores/conditionals-store'
 import { PowerUsesProvider } from '@/shared/stores/power-uses-context'
-import { createPowerUsesStore } from '@/shared/stores/power-uses-store'
-import { FakeStorage } from '@/shared/test/fake-storage'
+import { StanceActivationProvider } from '@/shared/stores/stance-activation-context'
 import { CombatantPanel } from './combatant-panel'
+import { fakeConditionals, fakePowerUses, fakeStances } from '@/shared/test/play-stores'
 
 /**
  * O COMBATENTE ABERTO (ALE-197, grupo C).
@@ -42,9 +41,14 @@ function renderPanel(entry: InitiativeEntry, onClose = vi.fn()) {
   }
   render(() => (
     <QueryClientProvider client={client}>
-      <ConditionalsProvider store={createConditionalsStore(new FakeStorage())}>
-        <PowerUsesProvider store={createPowerUsesStore(new FakeStorage())}>
-          <CombatantPanel entry={entry} onClose={onClose} campaignId={1} />
+      {/* Os TRÊS provedores, como o `main.tsx` monta. O de posturas passou a
+          ser obrigatório na ALE-222: a ficha hidrata o estado de jogo no topo,
+          e antes disso este teste passava só porque nada forçava o contexto. */}
+      <ConditionalsProvider store={fakeConditionals()}>
+        <PowerUsesProvider store={fakePowerUses()}>
+          <StanceActivationProvider store={fakeStances()}>
+            <CombatantPanel entry={entry} onClose={onClose} campaignId={1} />
+          </StanceActivationProvider>
         </PowerUsesProvider>
       </ConditionalsProvider>
     </QueryClientProvider>

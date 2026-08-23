@@ -3,13 +3,10 @@ import { render, screen } from '@solidjs/testing-library'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { makeCharacter } from '@/entities/character/__fixtures__/character'
 import { ConditionalsProvider } from '@/shared/stores/conditionals-context'
-import { createConditionalsStore } from '@/shared/stores/conditionals-store'
 import { PowerUsesProvider } from '@/shared/stores/power-uses-context'
-import { createPowerUsesStore } from '@/shared/stores/power-uses-store'
 import { StanceActivationProvider } from '@/shared/stores/stance-activation-context'
-import { createStanceActivationStore } from '@/shared/stores/stance-activation-store'
-import { FakeStorage } from '@/shared/test/fake-storage'
 import { CharacterSheet } from './character-sheet'
+import { fakeConditionals, fakePowerUses, fakeStances } from '@/shared/test/play-stores'
 
 /**
  * As duas props que a ficha ganhou para caber numa COLUNA (ALE-122).
@@ -34,9 +31,9 @@ function renderSheet(props: { compact?: boolean; hudless?: boolean; tab?: string
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(() => (
     <QueryClientProvider client={client}>
-      <ConditionalsProvider store={createConditionalsStore(new FakeStorage())}>
-        <PowerUsesProvider store={createPowerUsesStore(new FakeStorage())}>
-          <StanceActivationProvider store={createStanceActivationStore(new FakeStorage())}>
+      <ConditionalsProvider store={fakeConditionals()}>
+        <PowerUsesProvider store={fakePowerUses()}>
+          <StanceActivationProvider store={fakeStances()}>
             <CharacterSheet
               character={makeCharacter({ name: 'Paladino Sagrado' })}
               tab="expertises"

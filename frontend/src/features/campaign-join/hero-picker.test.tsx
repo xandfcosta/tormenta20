@@ -49,6 +49,9 @@ function hero(id: number, name: string, classes: { className: string; level: num
     items: [],
     activeEffects: [],
     spells: [],
+    conditionals: [],
+    powerUses: [],
+    stances: [],
   }
 }
 
