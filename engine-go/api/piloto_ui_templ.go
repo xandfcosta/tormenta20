@@ -838,6 +838,12 @@ func folhaDoTomo() templ.Component {
 //
 // `tom` é "muted" ou "gold". Não há terceira opção de propósito: a casa tem
 // duas, e uma terceira nasceria como cor solta.
+// CUIDADO: ele envolve o conteúdo num `<p>`, que só aceita conteúdo de FRASE.
+// Passar um `<h4>` aqui é HTML inválido, e o navegador não reclama — ele
+// EXPULSA o cabeçalho do parágrafo e deixa um `<p>` vazio para trás. Medido na
+// ALE-262: o `h4` acabava filho da `<section>`, com `text-transform: none`
+// porque a classe ficou no parágrafo abandonado, e a página juntou 24 desses.
+// Para pôr a receita num cabeçalho, use `classesDoRotulo` direto no elemento.
 func rotuloDeSecao(tom string, extra string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -859,7 +865,7 @@ func rotuloDeSecao(tom string, extra string) templ.Component {
 			templ_7745c5c3_Var37 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var38 = []any{"text-2xs font-semibold uppercase tracking-[0.16em]", tomDoRotulo(tom), extra}
+		var templ_7745c5c3_Var38 = []any{classesDoRotulo(tom, extra)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var38...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -893,6 +899,12 @@ func rotuloDeSecao(tom string, extra string) templ.Component {
 	})
 }
 
+// classesDoRotulo é a mesma receita para quem precisa dela no PRÓPRIO elemento —
+// um `<h4>`, um `<caption>`, um `<summary>`. Mesma forma do `classesDoBotao`.
+func classesDoRotulo(tom, extra string) string {
+	return juntar("text-2xs font-semibold uppercase tracking-[0.16em] "+tomDoRotulo(tom), extra)
+}
+
 // A mesma receita como LEGENDA de um `fieldset`, que é o elemento certo para a
 // pergunta de um grupo de escolhas.
 func legendaDeSecao(tom string, extra string) templ.Component {
@@ -916,7 +928,7 @@ func legendaDeSecao(tom string, extra string) templ.Component {
 			templ_7745c5c3_Var40 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var41 = []any{"text-2xs font-semibold uppercase tracking-[0.16em]", tomDoRotulo(tom), extra}
+		var templ_7745c5c3_Var41 = []any{classesDoRotulo(tom, extra)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var41...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

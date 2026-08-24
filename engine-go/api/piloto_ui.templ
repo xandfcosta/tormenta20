@@ -255,16 +255,28 @@ templ folhaDoTomo() {
 //
 // `tom` é "muted" ou "gold". Não há terceira opção de propósito: a casa tem
 // duas, e uma terceira nasceria como cor solta.
+// CUIDADO: ele envolve o conteúdo num `<p>`, que só aceita conteúdo de FRASE.
+// Passar um `<h4>` aqui é HTML inválido, e o navegador não reclama — ele
+// EXPULSA o cabeçalho do parágrafo e deixa um `<p>` vazio para trás. Medido na
+// ALE-262: o `h4` acabava filho da `<section>`, com `text-transform: none`
+// porque a classe ficou no parágrafo abandonado, e a página juntou 24 desses.
+// Para pôr a receita num cabeçalho, use `classesDoRotulo` direto no elemento.
 templ rotuloDeSecao(tom string, extra string) {
-	<p class={ "text-2xs font-semibold uppercase tracking-[0.16em]", tomDoRotulo(tom), extra }>
+	<p class={ classesDoRotulo(tom, extra) }>
 		{ children... }
 	</p>
+}
+
+// classesDoRotulo é a mesma receita para quem precisa dela no PRÓPRIO elemento —
+// um `<h4>`, um `<caption>`, um `<summary>`. Mesma forma do `classesDoBotao`.
+func classesDoRotulo(tom, extra string) string {
+	return juntar("text-2xs font-semibold uppercase tracking-[0.16em] "+tomDoRotulo(tom), extra)
 }
 
 // A mesma receita como LEGENDA de um `fieldset`, que é o elemento certo para a
 // pergunta de um grupo de escolhas.
 templ legendaDeSecao(tom string, extra string) {
-	<legend class={ "text-2xs font-semibold uppercase tracking-[0.16em]", tomDoRotulo(tom), extra }>
+	<legend class={ classesDoRotulo(tom, extra) }>
 		{ children... }
 	</legend>
 }

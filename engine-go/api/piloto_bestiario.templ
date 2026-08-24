@@ -385,9 +385,7 @@ templ blocoDoVerbete(m verbete) {
 // mestre que navega por regiões não consegue pular para Ataques (ALE-151).
 templ secaoDoBloco(titulo string) {
 	<section aria-label={ titulo }>
-		@rotuloDeSecao("muted", "mb-1") {
-			<h4>{ titulo }</h4>
-		}
+		<h4 class={ classesDoRotulo("muted", "mb-1") }>{ titulo }</h4>
 		{ children... }
 	</section>
 }

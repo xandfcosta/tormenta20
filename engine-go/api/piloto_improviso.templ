@@ -11,15 +11,24 @@ import "fmt"
 //	Ruína              p269   (a TELA acertava; não é tabela numerada, é prosa)
 //	Tabela 6-5         p274   (o arquivo de REGRAS acertava)
 //	Tabela 6-2         p263   (o arquivo de REGRAS acertava)
-//	Tabela 6-7         p278   (ninguém acertava: a tela dizia p276)
+//	Tabela 6-7         p279   (ninguém acertava: a tela dizia p276)
 //
 // E um erro que nenhum dos dois pegou: o comentário `Tabela 6-4: Ruínas` está
 // errado no NÚMERO e no NOME — a 6-4 é "Viagens", e a Ruína não é tabela
 // numerada. O livro escreve: "Um personagem que entre em uma ruína deve rolar
 // 1d6. Com um resultado 1 ou 2, a ruína possui apenas uma ameaça..." (p269).
 //
-// Método, para quem repetir: o PDF tem OFFSET DE 6 — a página impressa 269 é a
-// 275 do arquivo. Conferido em quatro amostras antes de eu confiar nele.
+// MÉTODO, e ele importa mais que a tabela acima: confira pelo FOLIO IMPRESSO,
+// nunca pela aritmética do offset. O PDF tem offset de 6 — a página impressa 269
+// é a 275 do arquivo —, mas usar o offset para achar E para confirmar é
+// verificar a suposição com a própria suposição.
+//
+// Foi assim que a 6-7 quase ficou errada de novo: eu cheguei na p278 e parei,
+// porque é ali que o texto MENCIONA a tabela ("usando a Tabela 6-7:
+// Consequências de Buscas"). O corpo dela — `Sucessos / Consequência / 0 / 1
+// castigo` — começa na p279. Citação de tabela aponta para onde a tabela ESTÁ,
+// não para onde o livro fala dela; quem segue a citação quer conferir um
+// resultado. A sessão irmã pegou o um-a-menos conferindo o folio.
 //
 // Três tabelas lado a lado e a masmorra embaixo, como o original. A grade é
 // `sm:2 xl:3` e não a `.acervo-em-colunas` dos catálogos: aqui os cartões são
@@ -42,7 +51,7 @@ templ cenaDoImproviso(v improvisoView) {
 				<div class="grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-3">
 					@tabelaQueRola("ruina", "Ermos — Ruína", "d6", "p269", v.Ruina)
 					@tabelaQueRola("perseguicao", "Perseguição — evento", "d20", "Tabela 6-5 · p274", v.Perseguicao)
-					@tabelaQueRola("recompensa", "Consequências de buscas", "d6", "Tabela 6-7 · p278", v.Recompensa)
+					@tabelaQueRola("recompensa", "Consequências de buscas", "d6", "Tabela 6-7 · p279", v.Recompensa)
 				</div>
 			</div>
 			<div class="border-t border-grimorio-iron pt-4">
