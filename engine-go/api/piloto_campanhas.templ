@@ -210,7 +210,7 @@ templ folhaDaInformacao(c campanhaCartao) {
 templ acoesDaCampanha(c campanhaCartao) {
 	<div class="flex flex-wrap items-center gap-2 pt-1">
 		<a
-			href={ templ.SafeURL("/campaigns/" + strconv.FormatInt(c.ID, 10)) }
+			href={ templ.SafeURL("/piloto/campanhas/" + strconv.FormatInt(c.ID, 10)) }
 			class={ classesDoBotao(seAoVivo(c, varSecundaria, varPrimaria), tamGrande, "") }
 		>
 			Abrir campanha

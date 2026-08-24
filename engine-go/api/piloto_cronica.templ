@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-// A CRÔNICA desenhada (ALE-253): a página de uma campanha aberta no tomo.
+// A CRÔNICA desenhada (ALE-255): a página de uma campanha aberta no tomo.
 //
 // Mesma folha do grimório das outras cenas de campanha — a folha em branco que
 // se escreve, a carta que se enfia nela, e esta, que é a crônica que se lê.
@@ -275,13 +275,26 @@ templ linhaDaSessao(campanhaID int64, sess sessaoNaCronica) {
 			<span class="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">{ strconv.FormatInt(sess.Numero, 10) }</span>
 			<span class="min-w-0 flex-1 truncate text-foreground">{ nomeDaSessao(sess) }</span>
 			<span class="hidden shrink-0 font-mono text-3xs text-muted-foreground sm:inline">{ sess.Data }</span>
-			if sess.Viva {
-				<span class="shrink-0 text-2xs font-semibold uppercase tracking-widest text-grimorio-parchment-crimson">{ sess.Estado }</span>
-			} else {
-				<span class="shrink-0 text-2xs uppercase tracking-widest text-muted-foreground">{ sess.Estado }</span>
-			}
+			@crachaDoEstado(sess.Estado)
 		</a>
 	</li>
+}
+
+// O crachá do estado, com as TRÊS cores da casa — e elas não são escolha de
+// gosto. Eu tinha escrito o "ao vivo" com a tinta do PERGAMINHO, que rende
+// 2,59:1 sobre o painel escuro: é a lição da ALE-237 cometida de novo, uma
+// tinta verificada contra uma superfície usada noutra. A receita da SPA usa
+// `--hp-full` (4,66:1 medido na folha de especificação) para o vivo, o dourado
+// para o planejado e o texto apagado para o encerrado.
+templ crachaDoEstado(estado string) {
+	switch estado {
+		case "Ao vivo":
+			<span class="shrink-0 rounded-none border border-[color:var(--hp-full)]/70 bg-[color:var(--hp-full)]/12 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-widest text-[color:var(--hp-full)]">{ estado }</span>
+		case "Planejada":
+			<span class="shrink-0 rounded-none border border-grimorio-gold/50 bg-grimorio-gold/10 px-1.5 py-0.5 text-2xs uppercase tracking-widest text-grimorio-gold">{ estado }</span>
+		default:
+			<span class="shrink-0 rounded-none border border-grimorio-iron px-1.5 py-0.5 text-2xs uppercase tracking-widest text-muted-foreground">{ estado }</span>
+	}
 }
 
 // Sessão sem título vira "Sessão N" e não uma linha em branco — linha vazia
@@ -321,8 +334,167 @@ templ abaDeMembros(v cronicaView) {
 	</div>
 }
 
+// A aba de CONFIGURAÇÃO: o cadastro da crônica, as regras opcionais, e a zona
+// de perigo — nesta ordem, e a do meio não é acidente. Regra opcional é ajuste
+// CORRIQUEIRO e não destruição, então ela fica entre o cadastro e o que apaga
+// (ALE-221); posta depois da zona de perigo, ela herdaria o tom de risco.
 templ abaDeConfiguracao(v cronicaView) {
-	<p class="text-sm text-muted-foreground">Em breve.</p>
+	<div class="space-y-6">
+		@rotuloDeSecao("muted", "") {
+			Ajustes do tomo
+		}
+		@cadastroDaCronica(v)
+		@regrasDaCronica(v)
+		@zonaDePerigo(v)
+	</div>
+}
+
+// O cadastro é o MESMO formulário da folha em branco, com outro verbo. Os dois
+// gravam pela mesma regra (`nomeDeCampanha` / `descricaoDeCampanha`), então
+// "salvar" e "abrir" não podem discordar sobre o que é um nome válido.
+templ cadastroDaCronica(v cronicaView) {
+	<section class="space-y-4 border border-grimorio-iron bg-grimorio-panel p-4">
+		<h2 class="font-heading text-base tracking-wide text-foreground">Editar campanha</h2>
+		<form method="post" action={ templ.SafeURL(fmt.Sprintf("/piloto/campanhas/%d/editar", v.ID)) } class="space-y-4">
+			@campoDeTexto(campo{
+				Nome: "name", Label: "Nome", Valor: v.Nome,
+				Obrigatorio: true, TamanhoMaximo: nomeDeCampanhaMax,
+				Erros: v.Erros["name"],
+			})
+			@campoDeTextoLongo(campo{
+				Nome: "description", Label: "Descrição", Valor: v.Descricao,
+				TamanhoMaximo: descricaoDeCampanhaMax,
+				Erros:         v.Erros["description"],
+			}, 6)
+			if v.Aviso != "" {
+				<p class="text-sm text-destructive">{ v.Aviso }</p>
+			}
+			<div class="flex justify-end">
+				@botao(varPrimaria, tamPadrao, "", templ.Attributes{"type": "submit"}) {
+					Salvar
+				}
+			</div>
+		</form>
+	</section>
+}
+
+// As regras opcionais são o único lugar da crônica com Datastar, e a razão é
+// que aqui NÃO se navega: alternar um interruptor e recarregar a página inteira
+// perderia a posição de quem está no fim de uma lista de ajustes. O remendo
+// volta só este painel.
+//
+// A falha aparece INLINE e não por aviso flutuante, e isso é porte fiel de uma
+// decisão medida: este mesmo painel é montado dentro de um overlay na cena da
+// sessão, e aviso disparado de dentro de modal não é anunciado.
+templ regrasDaCronica(v cronicaView) {
+	<section id="painel-regras" aria-label="Regras da campanha" class="space-y-3 border border-grimorio-iron bg-grimorio-panel p-4">
+		<header class="space-y-0.5">
+			@rotuloDeSecao("muted", "") {
+				Campanha
+			}
+			<h2 class="font-heading text-base tracking-wide text-foreground">Regras opcionais</h2>
+		</header>
+		for _, regra := range regrasOpcionais {
+			<div class="flex items-start justify-between gap-4">
+				<div class="min-w-0 flex-1 space-y-0.5">
+					<p class="text-sm text-foreground">{ regra.Titulo }</p>
+					<p class="text-xs text-muted-foreground">{ regra.Descricao }</p>
+				</div>
+				@interruptorDaRegra(v, regra)
+			</div>
+		}
+		<p class="text-sm text-destructive" data-show="$erroDaRegra != ''" data-text="$erroDaRegra"></p>
+	</section>
+}
+
+// O interruptor é um `button` com `aria-pressed`, e não um `checkbox`: ele não
+// vive num formulário e não tem valor a enviar — o que ele faz é DISPARAR uma
+// ação. `aria-pressed` é o que diz "ligado" para o leitor de tela sem mentir
+// sobre o elemento ser um campo.
+templ interruptorDaRegra(v cronicaView, regra regraOpcional) {
+	<button
+		type="button"
+		role="switch"
+		aria-checked={ boolTexto(v.RegraEmVigor(regra.ID)) }
+		aria-label={ regra.Titulo }
+		data-indicator:salvando
+		data-attr:disabled="$salvando"
+		data-on:click={ fmt.Sprintf("@post('/piloto/campanhas/%d/regras/%s')", v.ID, regra.ID) }
+		class={ "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50",
+			templ.KV("border-grimorio-gold bg-grimorio-gold/80", v.RegraEmVigor(regra.ID)),
+			templ.KV("border-grimorio-iron-light bg-grimorio-panel-raised", !v.RegraEmVigor(regra.ID)) }
+	>
+		<span
+			aria-hidden="true"
+			class={ "size-4 rounded-full bg-white transition-transform",
+				templ.KV("translate-x-6", v.RegraEmVigor(regra.ID)),
+				templ.KV("translate-x-1", !v.RegraEmVigor(regra.ID)) }
+		></span>
+	</button>
+}
+
+func boolTexto(b bool) string {
+	if b {
+		return "true"
+	}
+	return "false"
+}
+
+// A zona de perigo é selada em crimson porque excluir é irreversível, e o texto
+// diz o PREÇO — "todas as sessões e membros" — em vez de um genérico "não pode
+// ser desfeito", que não distingue apagar uma mesa vazia de apagar a de dois
+// anos de crônica.
+templ zonaDePerigo(v cronicaView) {
+	<div class="flex flex-wrap items-center justify-between gap-3 rounded-none border border-[color:var(--grimorio-crimson)]/50 bg-[color:var(--grimorio-crimson)]/[0.06] p-4">
+		<div class="space-y-1">
+			<p class="flex items-center gap-1.5 font-heading text-sm tracking-wide text-[color:var(--grimorio-crimson-bright)]">
+				@icone("Flame", "size-4")
+				Zona de perigo
+			</p>
+			<p class="text-xs text-muted-foreground">
+				Excluir a campanha remove todas as sessões e membros. Não pode ser desfeito.
+			</p>
+		</div>
+		// O primeiro clique ABRE o diálogo; quem apaga é o botão de dentro. É a
+		// mesma propriedade do apagar conta da administração, e pelo mesmo
+		// motivo: primeiro clique não pode ser irreversível.
+		@botao(varDestrutiva, tamPequeno, "shrink-0", templ.Attributes{
+			"type": "button", "data-on:click": "$excluir.showModal()",
+		}) {
+			@icone("Trash2", "mr-1 size-3.5")
+			Excluir campanha
+		}
+		@dialogoDeExclusao(v)
+	</div>
+}
+
+templ dialogoDeExclusao(v cronicaView) {
+	<dialog
+		id="excluir"
+		data-ref="excluir"
+		aria-labelledby="excluir-titulo"
+		class="m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-left text-foreground backdrop:bg-black/60"
+	>
+		<h2 id="excluir-titulo" class="font-heading text-base">Excluir "{ v.Nome }"?</h2>
+		<p class="mt-2 text-sm text-muted-foreground">
+			Todas as sessões e membros da campanha serão removidos. Esta ação não pode ser desfeita.
+		</p>
+		<div class="mt-4 flex justify-end gap-2">
+			<form method="dialog">
+				@botao(varSecundaria, tamPadrao, "", templ.Attributes{"type": "submit"}) {
+					Cancelar
+				}
+			</form>
+			// Formulário de VERDADE e não `@post`: apagar leva embora a página,
+			// e o que vem depois é uma navegação para o livro. Remendo não
+			// navega.
+			<form method="post" action={ templ.SafeURL(fmt.Sprintf("/piloto/campanhas/%d/excluir", v.ID)) }>
+				@botao(varDestrutiva, tamPadrao, "", templ.Attributes{"type": "submit"}) {
+					Excluir
+				}
+			</form>
+		</div>
+	</dialog>
 }
 
 func primeirosHerois(hs []heroiNaMesa, n int) []heroiNaMesa {

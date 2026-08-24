@@ -136,7 +136,14 @@ templ layout(p paginaPiloto, corpo templ.Component) {
 								‹ Voltar
 							}
 						</a>
-						<h1 class="font-heading text-xl tracking-wide text-foreground">{ p.TituloVisivel }</h1>
+						// Só quando HÁ título: um `<h1>` vazio entra na árvore de
+						// acessibilidade como cabeçalho sem nome, e o leitor de
+						// tela anuncia "título, nível 1" sobre o nada. A crônica
+						// desenha o próprio `h1` com o nome da campanha, e a casca
+						// não tem o que dizer por cima disso.
+						if p.TituloVisivel != "" {
+							<h1 class="font-heading text-xl tracking-wide text-foreground">{ p.TituloVisivel }</h1>
+						}
 					</header>
 				}
 				<div

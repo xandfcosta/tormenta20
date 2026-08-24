@@ -727,9 +727,9 @@ func acoesDaCampanha(c campanhaCartao) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var32 templ.SafeURL
-		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/campaigns/" + strconv.FormatInt(c.ID, 10)))
+		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/piloto/campanhas/" + strconv.FormatInt(c.ID, 10)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 213, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 213, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 		if templ_7745c5c3_Err != nil {

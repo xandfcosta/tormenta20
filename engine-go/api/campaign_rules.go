@@ -60,18 +60,9 @@ func (s *Server) handleReplaceCampaignRules(w http.ResponseWriter, r *http.Reque
 		writeValidationError(w, FieldErrorMap{"ignoredRules": {msg}})
 		return
 	}
-	if err := s.queries.ClearIgnoredRulesForCampaign(r.Context(), id); err != nil {
+	if err := s.gravaRegrasIgnoradas(r.Context(), id, wanted); err != nil {
 		writeError(w, http.StatusInternalServerError, "Could not update campaign rules")
 		return
-	}
-	now := nowISO()
-	for _, rule := range wanted {
-		if err := s.queries.IgnoreRuleInCampaign(r.Context(), sqlcgen.IgnoreRuleInCampaignParams{
-			Campaignid: id, Rule: rule, Updatedat: now,
-		}); err != nil {
-			writeError(w, http.StatusInternalServerError, "Could not update campaign rules")
-			return
-		}
 	}
 	writeJSON(w, http.StatusOK, campaignRulesDTO{IgnoredRules: wanted})
 }
@@ -94,4 +85,26 @@ func normalizeIgnoredRules(raw []string) ([]string, string) {
 	}
 	sort.Strings(out)
 	return out, ""
+}
+
+// gravaRegrasIgnoradas troca o conjunto INTEIRO: limpa e reinsere.
+//
+// Extraída na ALE-255 porque a cena do servidor precisa do mesmo passo, e é
+// substituição e não delta de propósito — o conjunto é pequeno e fechado, e
+// mandar o estado final faz a operação ser idempotente. Um delta reenviado
+// alternaria a regra duas vezes, que é exatamente o que um clique repetido
+// numa conexão ruim produz.
+func (s *Server) gravaRegrasIgnoradas(ctx context.Context, campanhaID int64, regras []string) error {
+	if err := s.queries.ClearIgnoredRulesForCampaign(ctx, campanhaID); err != nil {
+		return err
+	}
+	agora := nowISO()
+	for _, regra := range regras {
+		if err := s.queries.IgnoreRuleInCampaign(ctx, sqlcgen.IgnoreRuleInCampaignParams{
+			Campaignid: campanhaID, Rule: regra, Updatedat: agora,
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
 }

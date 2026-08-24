@@ -2,8 +2,10 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -27,6 +29,9 @@ func (s *Server) rotasDeCampanhas(r chi.Router) {
 	r.Get("/campanhas/entrar", s.handleCampanhaEntrar)
 	r.Post("/campanhas/entrar", s.handleCampanhaEntrarPost)
 	r.Get("/campanhas/{id}", s.handleCronica)
+	r.Post("/campanhas/{id}/editar", s.handleCronicaEditar)
+	r.Post("/campanhas/{id}/excluir", s.handleCronicaExcluir)
+	r.Post("/campanhas/{id}/regras/{regra}", s.handleCronicaAlternarRegra)
 }
 
 func (s *Server) handleCampanhas(w http.ResponseWriter, r *http.Request) {
@@ -144,7 +149,7 @@ func (s *Server) handleCampanhaNovaPost(w http.ResponseWriter, r *http.Request) 
 	// 303 e não 302: depois de um POST, o `See Other` é o que garante que o
 	// navegador siga com GET. Sem ele, recarregar a crônica reenviaria o
 	// formulário e abriria uma segunda campanha igual.
-	http.Redirect(w, r, "/campaigns/"+strconv.FormatInt(c.ID, 10), http.StatusSeeOther)
+	http.Redirect(w, r, "/piloto/campanhas/"+strconv.FormatInt(c.ID, 10), http.StatusSeeOther)
 }
 
 func (s *Server) escreveFolhaNova(w http.ResponseWriter, r *http.Request, status int, v campanhaNovaView) {
@@ -222,7 +227,7 @@ func (s *Server) handleCampanhaEntrarPost(w http.ResponseWriter, r *http.Request
 	}
 	// 303, como a folha em branco: depois de um POST, recarregar a crônica não
 	// pode reenviar o formulário.
-	http.Redirect(w, r, "/campaigns/"+strconv.FormatInt(campanhaID, 10), http.StatusSeeOther)
+	http.Redirect(w, r, "/piloto/campanhas/"+strconv.FormatInt(campanhaID, 10), http.StatusSeeOther)
 }
 
 // recusaDeEntrada traduz cada erro da regra para a frase que a pessoa lê.
@@ -258,7 +263,7 @@ func (s *Server) escreveCarta(w http.ResponseWriter, r *http.Request, status int
 	}, campanhaEntrar(v))
 }
 
-// ── a crônica: a página de uma campanha (ALE-253) ────────────────────────────
+// ── a crônica: a página de uma campanha (ALE-255) ────────────────────────────
 
 // handleCronica desenha a crônica inteira, com a aba escolhida pelo `?tab=`.
 //
@@ -282,12 +287,158 @@ func (s *Server) handleCronica(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
-	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
+	s.escrevePaginaDaCronica(w, r, http.StatusOK, v)
+}
+
+// ── as ações da crônica (ALE-255) ────────────────────────────────────────────
+
+// handleCronicaEditar grava nome e descrição.
+//
+// A recusa REDESENHA a aba de configuração com o que foi digitado, como a folha
+// em branco — e pela mesma razão: a descrição é o campo caro de reescrever.
+func (s *Server) handleCronicaEditar(w http.ResponseWriter, r *http.Request) {
+	id, eu, ok := donoDaCronica(w, r, s)
+	if !ok {
+		return
+	}
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "formulário inválido", http.StatusBadRequest)
+		return
+	}
+	nomeBruto, descricaoBruta := r.PostFormValue("name"), r.PostFormValue("description")
+
+	// A MESMA regra da folha em branco e da rota JSON. Três telas, uma função.
+	nome, err := nomeDeCampanha(nomeBruto)
+	descricao, errDesc := descricaoDeCampanha(&descricaoBruta)
+	if err != nil || errDesc != nil {
+		v, erroAoLer := s.carregaCronica(r.Context(), eu, id, "config")
+		if erroAoLer != nil {
+			http.Error(w, erroAoLer.Error(), http.StatusInternalServerError)
+			return
+		}
+		// O que a pessoa digitou vence o que está no banco: ela está olhando
+		// para o próprio texto, e devolver o antigo apagaria a edição dela.
+		v.Nome, v.Descricao = nomeBruto, descricaoBruta
+		if err != nil {
+			v.Erros["name"] = []string{"O nome é obrigatório e cabe em 120 caracteres."}
+		}
+		if errDesc != nil {
+			v.Erros["description"] = []string{"A descrição cabe em 2000 caracteres."}
+		}
+		s.escrevePaginaDaCronica(w, r, http.StatusUnprocessableEntity, v)
+		return
+	}
+
+	var set setBuilder
+	set.add("name = ?", nome)
+	set.add("description = ?", nullableArg(descricao))
+	if err := set.execTouched(r.Context(), s.db, "UPDATE campaigns", id); err != nil {
+		http.Error(w, avisoInterno, http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, fmt.Sprintf("/piloto/campanhas/%d?tab=config", id), http.StatusSeeOther)
+}
+
+// handleCronicaExcluir apaga a crônica e devolve ao livro.
+func (s *Server) handleCronicaExcluir(w http.ResponseWriter, r *http.Request) {
+	id, _, ok := donoDaCronica(w, r, s)
+	if !ok {
+		return
+	}
+	if err := s.queries.DeleteCampaign(r.Context(), id); err != nil {
+		http.Error(w, avisoInterno, http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/piloto/campanhas", http.StatusSeeOther)
+}
+
+// handleCronicaAlternarRegra liga ou desliga UMA regra opcional e devolve só o
+// painel dela.
+//
+// Remendo e não navegação, e essa é a diferença desta ação para as outras duas:
+// alternar um interruptor no meio de uma lista de ajustes e recarregar a página
+// perderia a posição de quem está lendo. Excluir e salvar LEVAM embora a
+// página, então lá o formulário de verdade é o certo.
+func (s *Server) handleCronicaAlternarRegra(w http.ResponseWriter, r *http.Request) {
+	id, eu, ok := donoDaCronica(w, r, s)
+	if !ok {
+		return
+	}
+	regra := chi.URLParam(r, "regra")
+	sse := datastar.NewSSE(w, r)
+
+	atuais := s.ignoredRulesOf(r.Context(), id)
+	var desejadas []string
+	if slices.Contains(atuais, regra) {
+		// Estava DESLIGADA: religar é tirá-la do conjunto de exceções.
+		for _, x := range atuais {
+			if x != regra {
+				desejadas = append(desejadas, x)
+			}
+		}
+	} else {
+		desejadas = append(append([]string{}, atuais...), regra)
+	}
+	// A validação é a MESMA da rota JSON: regra que o motor não conhece é
+	// recusada mesmo vindo de um caminho de tela.
+	normalizadas, msg := normalizeIgnoredRules(desejadas)
+	if msg != "" {
+		_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": msg})
+		return
+	}
+	if err := s.gravaRegrasIgnoradas(r.Context(), id, normalizadas); err != nil {
+		_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": avisoInterno})
+		return
+	}
+
+	v, err := s.carregaCronica(r.Context(), eu, id, "config")
+	if err != nil {
+		_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": avisoInterno})
+		return
+	}
+	fragmento, err := renderFragmento(r.Context(), regrasDaCronica(v))
+	if err != nil {
+		_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": avisoInterno})
+		return
+	}
+	_ = sse.PatchElements(fragmento)
+	_ = sse.MarshalAndPatchSignals(map[string]string{"erroDaRegra": ""})
+}
+
+// donoDaCronica resolve o id e exige que quem pede seja o DONO.
+//
+// As três ações desta aba são de mestre, e a trava é aqui e não na tela: a tela
+// não mostra a aba para jogador, mas isso é UX — quem postar na mão leva 403.
+func donoDaCronica(w http.ResponseWriter, r *http.Request, s *Server) (int64, AuthUser, bool) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		http.Error(w, "id inválido", http.StatusBadRequest)
+		return 0, AuthUser{}, false
+	}
+	eu := currentUser(r)
+	c, err := s.queries.GetCampaign(r.Context(), id)
+	if err != nil {
+		http.Error(w, "Campanha não encontrada", http.StatusNotFound)
+		return 0, AuthUser{}, false
+	}
+	if c.Ownerid != eu.ID {
+		http.Error(w, "Só quem mestra pode mudar a crônica.", http.StatusForbidden)
+		return 0, AuthUser{}, false
+	}
+	return id, eu, true
+}
+
+func (s *Server) escrevePaginaDaCronica(w http.ResponseWriter, r *http.Request, status int, v cronicaView) {
+	s.escrevePagina(w, r, status, paginaPiloto{
 		Titulo: v.Nome,
 		Forma:  cascaDensa,
 		Voltar: "/piloto/campanhas",
 		// O rótulo nomeia o destino em vez da seta genérica: daqui se volta
 		// para o livro, e "Campanhas" diz isso melhor que "Voltar".
 		VoltarRotulo: "Campanhas",
+		// Os sinais são só de INTERAÇÃO — o diálogo de excluir e o aviso do
+		// interruptor. Nada de estado da aplicação: a aba vem da URL e o resto
+		// vem desenhado.
+		Sinais: "{erroDaRegra: ''}",
 	}, cronica(v))
 }

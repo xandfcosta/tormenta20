@@ -75,7 +75,9 @@ func TestODonoEntraNaPropriaMesaSemConvite(t *testing.T) {
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("status = %d, queria 303\n%s", rec.Code, rec.Body.String())
 	}
-	if destino := rec.Header().Get("Location"); destino != "/campaigns/"+strconv.FormatInt(campanha, 10) {
+	// O destino é a CRÔNICA DO SERVIDOR desde a ALE-255: quem acabou de sentar
+	// à mesa cai na página dela, e ela deixou de ser da SPA.
+	if destino := rec.Header().Get("Location"); destino != "/piloto/campanhas/"+strconv.FormatInt(campanha, 10) {
 		t.Errorf("destino = %q", destino)
 	}
 }
@@ -141,7 +143,7 @@ func TestComConviteONumeroDigitadoEhIgnorado(t *testing.T) {
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("status = %d, queria 303\n%s", rec.Code, rec.Body.String())
 	}
-	if destino := rec.Header().Get("Location"); destino != "/campaigns/"+strconv.FormatInt(convidada, 10) {
+	if destino := rec.Header().Get("Location"); destino != "/piloto/campanhas/"+strconv.FormatInt(convidada, 10) {
 		t.Errorf("entrou em %q — o número digitado venceu o convite", destino)
 	}
 }

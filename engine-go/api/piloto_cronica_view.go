@@ -11,7 +11,7 @@ import (
 	"t20engine/db/sqlcgen"
 )
 
-// A CRÔNICA como dado (ALE-253): a página de uma campanha aberta no tomo.
+// A CRÔNICA como dado (ALE-255): a página de uma campanha aberta no tomo.
 //
 // A diferença que mais pesa em relação à tela da SPA está na CONTAGEM DE IDAS
 // À REDE. Lá a cena monta e dispara TRÊS consultas — campanha, sessões e
@@ -53,6 +53,14 @@ type cronicaView struct {
 	// CriadaEm é "desde quando esta mesa existe", e ela fica na linha de meta
 	// porque é o que separa uma crônica de anos de uma aberta ontem.
 	CriadaEm string
+
+	// RegrasIgnoradas é o conjunto DESLIGADO, e não o ligado: o padrão do livro
+	// é a regra valer, então guardar as exceções é guardar o que alguém
+	// decidiu — e uma regra nova nasce em vigor sem migração de dados.
+	RegrasIgnoradas []string
+	// Erros e Aviso servem à aba de configuração, que é a única com formulário.
+	Erros FieldErrorMap
+	Aviso string
 }
 
 type abaDaCronica struct {
@@ -103,6 +111,28 @@ func abasDaCronica(ehMestre bool, pedida string) []abaDaCronica {
 	return todas
 }
 
+// RegraEmVigor: o conjunto guardado é o das DESLIGADAS.
+func (v cronicaView) RegraEmVigor(id string) bool {
+	return !slices.Contains(v.RegrasIgnoradas, id)
+}
+
+// regraOpcional é o verbete que a tela mostra. O texto vive no servidor porque
+// ele cita a PÁGINA do livro, e página citada é dado de regra, não de layout.
+type regraOpcional struct {
+	ID        string
+	Titulo    string
+	Descricao string
+}
+
+var regrasOpcionais = []regraOpcional{
+	{
+		ID:     "carga",
+		Titulo: "Limites de carga",
+		Descricao: "Passar do limite sobrecarrega: −5 de penalidade de armadura e −3m de deslocamento (p141). " +
+			"Os espaços continuam somados na mochila mesmo com a regra desligada.",
+	},
+}
+
 func (v cronicaView) AbaAtiva() string {
 	for _, a := range v.Abas {
 		if a.Ativa {
@@ -129,8 +159,10 @@ func (s *Server) carregaCronica(ctx context.Context, eu AuthUser, id int64, aba 
 
 	v := cronicaView{
 		ID: c.ID, Nome: c.Name, Descricao: c.Description.String,
-		EhMestre: papel == "gm",
-		CriadaEm: dataCurta(c.Createdat),
+		EhMestre:        papel == "gm",
+		CriadaEm:        dataCurta(c.Createdat),
+		RegrasIgnoradas: s.ignoredRulesOf(ctx, c.ID),
+		Erros:           FieldErrorMap{},
 	}
 	if eu.IsAdmin && c.Ownerid != eu.ID {
 		v.DonoOutro = s.ownerNames(ctx, []sqlcgen.Campaign{c}, eu.ID)[c.Ownerid]
