@@ -282,8 +282,17 @@ templ mesaLinhaDaFila(v mesaView, l mesaLinha) {
 				<span class="truncate font-medium">{ l.Rotulo }</span>
 				// O crachá é `--marker` e nunca a primária: crachá não se clica,
 				// então não compete com a ação (ALE-200).
-				if l.PC {
-					<span class="shrink-0 bg-marker px-1 text-[10px] font-bold uppercase tracking-widest text-marker-foreground">PC</span>
+				//
+				// A palavra é FICHA e não "PC" nem "Personagem". `PC` é termo
+				// PROIBIDO pelo GLOSSARIO; e o canônico que serve AQUI não é
+				// "personagem" e sim "ficha", porque a tabela de colisões diz
+				// com todas as letras qual pergunta o `type === "character"`
+				// responde: "esta linha é ficha ou é NPC?". "Personagem" ainda
+				// seria pior na medida — dez letras em `tracking-widest` numa
+				// linha de 390px que já leva quatro alvos de 36px, e o comentário
+				// da SPA registra um transbordo antigo com este mesmo crachá.
+				if l.EhFicha {
+					<span class="shrink-0 bg-marker px-1 text-[10px] font-bold uppercase tracking-widest text-marker-foreground">Ficha</span>
 				}
 				if l.Minha {
 					<span class="shrink-0 bg-marker px-1 text-[10px] font-bold uppercase tracking-widest text-marker-foreground">Seu</span>
@@ -479,7 +488,7 @@ templ formDeCombatente(v mesaView) {
 		// tem de ser legível sem abrir nada. `aria-pressed` porque é escolha que
 		// fica, não ação que passa.
 		<div class="flex gap-1">
-			@oTipoDoCombatente("character", "PC")
+			@oTipoDoCombatente("character", "Ficha")
 			@oTipoDoCombatente("npc", "NPC")
 		</div>
 		// O botão recusa o que o servidor recusaria, ANTES do clique: nome vazio

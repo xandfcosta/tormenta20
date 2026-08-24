@@ -109,8 +109,11 @@ type mesaLinha struct {
 	ID         string
 	Rotulo     string
 	Iniciativa int
-	PC         bool
-	Minha      bool
+	// EhFicha responde a pergunta que o GLOSSARIO faz do `type === "character"`:
+	// "esta linha é ficha ou é NPC?". O campo se chamava `PC`, que é termo
+	// PROIBIDO — e o par na tela é `Ficha`/`NPC` pelo mesmo motivo.
+	EhFicha bool
+	Minha   bool
 	NaVez      bool
 	// PV nil = linha sem vida rastreada. `Oculto` é outra coisa: o mestre
 	// escondeu, e a flag sobrevive à redação de propósito (ALE-210) — "sem
@@ -190,7 +193,7 @@ func mesaFilaDe(st *aovivo.SessionRuntimeState, meus map[int64]bool) []mesaLinha
 			ID:         e.ID,
 			Rotulo:     e.Label,
 			Iniciativa: e.Initiative,
-			PC:         e.Type == "character",
+			EhFicha:    e.Type == "character",
 			Minha:      e.CharacterID != nil && meus[*e.CharacterID],
 			NaVez:      i == st.TurnIndex,
 			Oculto:     e.HpHidden != nil && *e.HpHidden,
