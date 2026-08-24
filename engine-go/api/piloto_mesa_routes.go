@@ -41,6 +41,7 @@ func (s *Server) PilotoRouter() http.Handler {
 		s.rotasDeCampanhas(r)
 		s.rotasDePersonagens(r)
 		s.rotasDoGrimorio(r)
+		s.rotasDoMestre(r)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(s.requirePagina)

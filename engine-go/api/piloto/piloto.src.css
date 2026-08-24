@@ -26,3 +26,30 @@
  * scanner as descartaria — a barra ficaria transparente e só numa das faixas
  * de PV, que é o jeito mais silencioso possível de quebrar. */
 @source inline("bg-hp-full bg-hp-hurt bg-hp-critical bg-mp-arcane");
+
+/* A metade ESTREITA do bestiário (ALE-257).
+ *
+ * O `.mesa-painel` da SPA é `display: none` por padrão e só aparece a partir de
+ * 50rem de contêiner. Abaixo disso a tela não tem onde pôr o bloco de
+ * estatísticas, e a SPA resolve com um DIÁLOGO — tocar numa linha abre a mesma
+ * ficha por cima. Sem isto o porte perde a ficha inteira no telefone, que é o
+ * tipo de perda que ninguém reporta porque quem sabia que existia foi o commit
+ * que a apagou.
+ *
+ * A SPA decide por JS (`createMediaQuery('(min-width: 1024px)')`); aqui a
+ * decisão é do CSS, e ela COMPÕE com o `data-show` do Datastar em vez de
+ * brigar: o `data-show` escreve `display:none` no estilo em linha quando o
+ * sinal é falso, e o REMOVE quando é verdadeiro — deixando a classe decidir.
+ * Então diálogo aberto numa tela larga continua escondido, que é o certo,
+ * porque lá o painel ao lado já mostra a mesma ficha.
+ *
+ * Mesma consulta de contêiner do `.mesa-painel`, e isso é de propósito: as
+ * duas metades têm de trocar EXATAMENTE no mesmo ponto, senão existe uma faixa
+ * de largura sem ficha nenhuma ou com as duas. */
+@layer components {
+  @container (min-width: 50rem) and (min-height: 30rem) {
+    .mesa-ficha-em-dialogo {
+      display: none;
+    }
+  }
+}
