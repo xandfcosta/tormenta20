@@ -1,6 +1,9 @@
 package aovivo
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 // As regras do rastreador (ALE-265). Os casos são as BORDAS que a história de
 // cada issue nomeia — não uma transcrição do comportamento.
@@ -171,5 +174,57 @@ func TestOOlhoDoMestreOlhaAFilaENaoOPapel(t *testing.T) {
 	}
 	if OMestreVeOsVitais(soPCs, true) {
 		t.Error("numa fila só de PCs não há o que reservar, e a tela mudou de forma")
+	}
+}
+
+// TestValidaCombatenteNovoPrendeAsQuatroBordas.
+//
+// Uma por campo, e cada uma é a que a tela sozinha não segurava: os limites
+// viviam como atributos dos campos do formulário da SPA, que é UI — quem
+// postasse na mão passava por cima dos quatro.
+func TestValidaCombatenteNovoPrendeAsQuatroBordas(t *testing.T) {
+	bom := CombatenteNovo{Rotulo: "Ogro", Iniciativa: 12, PV: 45, Tipo: "npc"}
+	if err := ValidaCombatenteNovo(bom); err != nil {
+		t.Fatalf("o combatente bom foi recusado: %v — sem isto as recusas abaixo não provariam nada", err)
+	}
+	// PV zero é ESTADO VÁLIDO e não ausência: é "sem vida registrada", e o
+	// capanga anônimo depende dele.
+	if err := ValidaCombatenteNovo(CombatenteNovo{Rotulo: "Figurante", Iniciativa: 0, PV: 0, Tipo: "npc"}); err != nil {
+		t.Errorf("PV 0 foi recusado, e ele é o capanga sem vida rastreada: %v", err)
+	}
+
+	casos := []struct {
+		nome string
+		c    CombatenteNovo
+		cita string
+	}{
+		{"sem nome", CombatenteNovo{Rotulo: "   ", Iniciativa: 10, Tipo: "npc"}, "nome"},
+		{"nome comprido", CombatenteNovo{Rotulo: strings.Repeat("a", 61), Iniciativa: 10, Tipo: "npc"}, "61"},
+		{"iniciativa alta", CombatenteNovo{Rotulo: "Ogro", Iniciativa: 400, Tipo: "npc"}, "400"},
+		{"iniciativa baixa", CombatenteNovo{Rotulo: "Ogro", Iniciativa: -6, Tipo: "npc"}, "-6"},
+		{"PV demais", CombatenteNovo{Rotulo: "Ogro", Iniciativa: 10, PV: 1000, Tipo: "npc"}, "1000"},
+		{"tipo inventado", CombatenteNovo{Rotulo: "Ogro", Iniciativa: 10, Tipo: "dragão"}, "dragão"},
+	}
+	for _, c := range casos {
+		err := ValidaCombatenteNovo(c.c)
+		if err == nil {
+			t.Errorf("%s: passou", c.nome)
+			continue
+		}
+		// A mensagem tem de nomear o VALOR ofensivo: quem a lê está no meio de
+		// um combate e precisa consertar sem sair da tela.
+		if !strings.Contains(err.Error(), c.cita) {
+			t.Errorf("%s: a recusa %q não cita %q", c.nome, err, c.cita)
+		}
+	}
+}
+
+// O limite do nome conta RUNAS e não bytes: um nome de 60 letras acentuadas tem
+// mais de 60 bytes, e contar bytes recusaria um nome mais curto do que o que
+// deixa passar em ASCII.
+func TestOLimiteDoNomeContaLetrasENaoBytes(t *testing.T) {
+	acentuado := strings.Repeat("ã", MaxLetrasDoRotulo) // 60 letras, 120 bytes
+	if err := ValidaCombatenteNovo(CombatenteNovo{Rotulo: acentuado, Iniciativa: 10, Tipo: "npc"}); err != nil {
+		t.Errorf("60 letras acentuadas foram recusadas: %v", err)
 	}
 }

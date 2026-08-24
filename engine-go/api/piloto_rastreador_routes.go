@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
@@ -38,6 +39,7 @@ func (s *Server) rotasDoRastreador(r chi.Router) {
 		}))
 	r.Post("/mesa/{campaignId}/{sessionId}/scene/end", s.comandoDoMestre(encerraACena))
 	r.Post("/mesa/{campaignId}/{sessionId}/initiative/populate", s.comandoDoMestre(trazOGrupo))
+	r.Post("/mesa/{campaignId}/{sessionId}/initiative/add", s.comandoDoMestre(acrescentaCombatente))
 	// DOIS caminhos e não um `/rest` com o escopo no corpo, que é a forma da API
 	// JSON: aqui o VERBO é o caminho, como em `scene/start` e `scene/end`. A
 	// gramática desta superfície já foi escolhida, e misturar as duas faria a
@@ -59,6 +61,81 @@ func (s *Server) rotasDoRastreador(r chi.Router) {
 		r.Post("/vitals/hidden", s.comandoDoMestre(alternaOOlho))
 		r.Post("/remove", s.comandoDoMestre(tiraDaFila))
 	})
+}
+
+// acrescentaCombatente é o capanga digitado na hora: nome, iniciativa, PV e se é
+// PC ou NPC.
+//
+// A VALIDAÇÃO é do `aovivo` e não daqui, e essa é a extração de sempre: os
+// limites viviam como atributos dos campos do formulário da SPA, que é UI e não
+// trava — quem postasse na mão passava por cima dos quatro. Com eles no pacote
+// do estado, as duas telas param de poder discordar sobre o que é um combatente
+// aceitável.
+//
+// Quem MONTA a linha continua sendo o `materializeEntry`, que é o caminho que a
+// API já usa: sem `characterId` ele cai no NPC, e o PV só entra quando foi
+// digitado. Escrever a montagem aqui seria a segunda cópia da mesma regra, que é
+// como a ALE-122 começou.
+func acrescentaCombatente(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+	novo, err := combatenteDosSinais(c.R)
+	if err != nil {
+		return nil, err
+	}
+	if err := aovivo.ValidaCombatenteNovo(novo); err != nil {
+		return nil, err
+	}
+	entrada := map[string]any{
+		"label":      strings.TrimSpace(novo.Rotulo),
+		"initiative": novo.Iniciativa,
+		"type":       novo.Tipo,
+	}
+	// PV ZERO fica de fora em vez de virar 0/0: "sem vida registrada" é a
+	// ausência do campo, e uma barra 0/0 diria que o capanga já está morto.
+	if novo.PV > 0 {
+		entrada["hpCurrent"] = novo.PV
+		entrada["hpMax"] = novo.PV
+	}
+	linha, err := st.materializeEntry(c.R.Context(), c.User.ID, c.CampaignID, entrada)
+	if err != nil {
+		return nil, err
+	}
+	estado, err := st.sessions.AddInitiativeEntry(c.SessionID, linha)
+	if err != nil {
+		return nil, err
+	}
+	// O formulário volta ao zero, como na SPA: sem isto o nome fica no campo e o
+	// clique seguinte acrescenta o MESMO capanga de novo — e no meio de um
+	// combate ninguém confere a fila antes de clicar. Volta para NPC porque é o
+	// caso comum; o PC digitado à mão é a exceção.
+	c.Sinais["novonome"] = ""
+	c.Sinais["novainiciativa"] = 10
+	c.Sinais["novopv"] = 0
+	c.Sinais["novotipo"] = "npc"
+	return estado, nil
+}
+
+// combatenteDosSinais lê o formulário da página.
+//
+// TODOS OS NOMES SÃO MINÚSCULOS, e isso é obrigatório e não estilo: eles são
+// chaves de `data-bind:`, e nome de atributo é minusculado pelo analisador de
+// HTML. Um `data-bind:novoNome` liga um sinal `novonome` e deixa o declarado
+// intocado — o fio leva os dois e o servidor lê o errado. Foi exatamente isso
+// que aconteceu com a qualidade do descanso, e o navegador foi a única
+// testemunha.
+func combatenteDosSinais(r *http.Request) (aovivo.CombatenteNovo, error) {
+	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
+	var sinais struct {
+		Nome       string `json:"novonome"`
+		Iniciativa int    `json:"novainiciativa"`
+		PV         int64  `json:"novopv"`
+		Tipo       string `json:"novotipo"`
+	}
+	if err := datastar.ReadSignals(r, &sinais); err != nil {
+		return aovivo.CombatenteNovo{}, fmt.Errorf("não entendi o combatente enviado: %v", err)
+	}
+	return aovivo.CombatenteNovo{
+		Rotulo: sinais.Nome, Iniciativa: sinais.Iniciativa, PV: sinais.PV, Tipo: sinais.Tipo,
+	}, nil
 }
 
 // mexeNosVitais é o dano e a cura de UMA linha, e o PASSO vem do CAMINHO.
@@ -229,6 +306,22 @@ type mesaComando struct {
 	User       AuthUser
 	CampaignID int64
 	SessionID  int64
+	// Sinais é o que a cena recebe de volta ALÉM do HTML, e a mutação escreve
+	// nele quando quer mexer no estado do CLIENTE.
+	//
+	// Hoje só o formulário de acrescentar usa, e o motivo dele é o que justifica
+	// o campo: ele se limpa DEPOIS de o servidor aceitar. Limpar no clique
+	// custaria o que a pessoa digitou toda vez que a validação recusasse — e a
+	// recusa mais comum é o nome, que é o campo mais caro de redigitar no meio
+	// de um combate.
+	//
+	// QUEM GARANTE que a recusa não limpa nada é a ORDEM, e não um descarte aqui:
+	// a mutação só escreve neste mapa depois de a sua própria escrita ter dado
+	// certo, então numa recusa ele chega vazio. Eu tinha posto o descarte por
+	// via das dúvidas e a sabotagem mostrou que ele era código morto — nenhum
+	// caminho o alcançava, e um comentário dizendo que ele protegia algo era
+	// pior do que não tê-lo.
+	Sinais map[string]any
 }
 
 // encerraACena é o gesto INTEIRO, e a razão de ser função nomeada em vez de um
@@ -283,8 +376,9 @@ func (s *Server) comandoDoMestre(
 			return
 		}
 
+		sinais := map[string]any{}
 		estado, err := mutar(s, mesaComando{
-			R: r, User: user, CampaignID: campaignID, SessionID: sessionID,
+			R: r, User: user, CampaignID: campaignID, SessionID: sessionID, Sinais: sinais,
 		})
 		// O que POUSOU se transmite mesmo quando a chamada devolveu erro, e o
 		// `trazer o grupo` é quem o exige: ele põe quatro dos cinco e tropeça no
@@ -298,7 +392,7 @@ func (s *Server) comandoDoMestre(
 		if estado != nil {
 			s.publishSessionState(sessionID, estado)
 		}
-		s.respondeAoMestre(w, r, user, campaignID, sessionID, err)
+		s.respondeAoMestre(w, r, user, campaignID, sessionID, err, sinais)
 	}
 }
 
@@ -322,7 +416,7 @@ func (s *Server) comandoDoMestre(
 // continua ABERTA, que é a verdade que o mestre precisa ver ao lado da frase.
 func (s *Server) respondeAoMestre(
 	w http.ResponseWriter, r *http.Request,
-	user AuthUser, campaignID, sessionID int64, recusa error,
+	user AuthUser, campaignID, sessionID int64, recusa error, sinais map[string]any,
 ) {
 	sse := datastar.NewSSE(w, r)
 	if view, _, err := s.loadMesaView(r.Context(), user, campaignID, sessionID); err == nil {
@@ -340,5 +434,6 @@ func (s *Server) respondeAoMestre(
 	// Sai nos DOIS caminhos: no da recusa para acender a frase, e no do acerto
 	// para APAGAR a anterior. Um sinal que só se escreve quando dá errado deixa
 	// a recusa de dois cliques atrás acesa sobre um comando que funcionou.
-	_ = sse.MarshalAndPatchSignals(map[string]string{"erroDoComando": frase})
+	sinais["erroDoComando"] = frase
+	_ = sse.MarshalAndPatchSignals(sinais)
 }

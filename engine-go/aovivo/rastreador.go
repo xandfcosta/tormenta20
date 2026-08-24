@@ -1,6 +1,10 @@
 package aovivo
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"strings"
+)
 
 // AS REGRAS DO RASTREADOR (ALE-265).
 //
@@ -172,3 +176,62 @@ func OMestreVeOsVitais(fila []InitiativeEntry, ehMestre bool) bool {
 // precisava de JS só por causa da lista virtualizada. O comentário de lá avisa
 // que a consulta tem de ser por ALTURA e não por mídia, porque o teclado virtual
 // mexe na altura da JANELA (ALE-176) enquanto a altura do PALCO é outra coisa.
+
+// ── acrescentar um combatente ────────────────────────────────────────────────
+
+// Os limites do que o mestre pode digitar ao acrescentar um combatente.
+//
+// Eles vinham do formulário da SPA (`AddCombatantForm`), escritos como atributos
+// dos campos — que é UI e não trava: quem postasse na mão passava por cima dos
+// quatro. Vêm para cá pelo mesmo motivo das outras seis regras desta fatia, e a
+// escolha de virem para o `aovivo` em vez de ficarem no piloto é a que evita o
+// defeito clássico: dois formulários com escadas diferentes deixariam as duas
+// telas discordando sobre o que é um combatente aceitável.
+//
+// Os números são os que a SPA já praticava. A faixa da iniciativa é de
+// jogabilidade e não do livro: um d20 mais bônus cabe folgado nela, e o que ela
+// barra é o dedo escorregado que digita 400 e manda o combatente para o topo de
+// toda rodada até alguém achar o erro.
+const (
+	MaxLetrasDoRotulo = 60
+	MinIniciativa     = -5
+	MaxIniciativa     = 40
+	MaxPontosDeVida   = 999
+)
+
+// CombatenteNovo é o que o mestre digitou, antes de virar linha.
+type CombatenteNovo struct {
+	Rotulo     string
+	Iniciativa int
+	// PV zero é "sem vida registrada", e a linha nasce SEM barra. Um capanga
+	// anônimo não precisa de PV, e uma barra 0/0 mentiria dizendo que ele já
+	// está morto.
+	PV   int64
+	Tipo string
+}
+
+// ValidaCombatenteNovo devolve o que impede o combatente de entrar, ou nil.
+//
+// As mensagens nomeiam o VALOR ofensivo e a forma esperada, porque quem as lê
+// está no meio de um combate e precisa consertar sem sair da tela.
+func ValidaCombatenteNovo(c CombatenteNovo) error {
+	rotulo := strings.TrimSpace(c.Rotulo)
+	if rotulo == "" {
+		return errors.New("o combatente precisa de um nome")
+	}
+	// Conta RUNAS e não bytes: "Ogro Ancião" tem acentos, e um limite em bytes
+	// recusaria um nome mais curto do que o que ele deixa passar em ASCII.
+	if n := len([]rune(rotulo)); n > MaxLetrasDoRotulo {
+		return fmt.Errorf("o nome tem %d letras; o limite é %d", n, MaxLetrasDoRotulo)
+	}
+	if c.Iniciativa < MinIniciativa || c.Iniciativa > MaxIniciativa {
+		return fmt.Errorf("iniciativa %d está fora da faixa de %d a %d", c.Iniciativa, MinIniciativa, MaxIniciativa)
+	}
+	if c.PV < 0 || c.PV > MaxPontosDeVida {
+		return fmt.Errorf("PV %d está fora da faixa de 0 a %d; 0 é 'sem vida registrada'", c.PV, MaxPontosDeVida)
+	}
+	if c.Tipo != "npc" && c.Tipo != "character" {
+		return fmt.Errorf("tipo %q não existe; um combatente é 'npc' ou 'character'", c.Tipo)
+	}
+	return nil
+}

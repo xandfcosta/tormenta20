@@ -651,3 +651,131 @@ func TestOMestreVeQuemEstaNaMesaEOJogadorNao(t *testing.T) {
 		}
 	}
 }
+
+// ── acrescentar combatente (ALE-263) ─────────────────────────────────────────
+
+// TestAcrescentarCombatenteMontaALinhaPELOCaminhoDaCasa.
+//
+// O que se prende é a COMPOSIÇÃO: que o piloto chama o `materializeEntry` e a
+// validação do `aovivo`, em vez de montar a linha por conta própria. As duas
+// metades do PV são o ponto — digitado ele vira pool cheio, e ZERO fica de fora
+// em vez de virar 0/0, que é a diferença entre "capanga sem vida rastreada" e
+// "capanga que já está morto".
+func TestAcrescentarCombatenteMontaALinhaPeloCaminhoDaCasa(t *testing.T) {
+	f := novoPiloto(t)
+
+	rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/add",
+		`{"novonome":"  Goblin salteador  ","novainiciativa":17,"novopv":12,"novotipo":"npc"}`)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("acrescentar deu %d: %s", rec.Code, rec.Body.String())
+	}
+	fila := f.s.sessions.GetState(f.sessionID).Initiative
+	if len(fila) != 1 {
+		t.Fatalf("a fila ficou com %d combatentes", len(fila))
+	}
+	// O nome vai APARADO: o mestre digitando com espaço sobrando não deve
+	// produzir uma linha que ordena diferente do que ele leu.
+	if fila[0].Label != "Goblin salteador" {
+		t.Errorf("o rótulo ficou %q", fila[0].Label)
+	}
+	if fila[0].Initiative != 17 || fila[0].Type != "npc" {
+		t.Errorf("a linha ficou %+v", fila[0])
+	}
+	if fila[0].HpMax == nil || *fila[0].HpMax != 12 || fila[0].HpCurrent == nil || *fila[0].HpCurrent != 12 {
+		t.Errorf("o PV digitado não virou pool cheio: %v/%v", fila[0].HpCurrent, fila[0].HpMax)
+	}
+
+	rec = f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/add",
+		`{"novonome":"Figurante","novainiciativa":3,"novopv":0,"novotipo":"npc"}`)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("acrescentar sem PV deu %d", rec.Code)
+	}
+	for _, e := range f.s.sessions.GetState(f.sessionID).Initiative {
+		if e.Label == "Figurante" && e.HpMax != nil {
+			t.Errorf("PV 0 virou barra %v — o capanga sem vida rastreada apareceu morto", *e.HpMax)
+		}
+	}
+}
+
+// E a validação do `aovivo` está LIGADA: o piloto não tem uma segunda escada.
+//
+// Um caso só, e de propósito — as quatro bordas têm guarda no `aovivo`, contra a
+// regra. O que falta provar aqui é a LIGAÇÃO, e repetir as quatro seria afirmar
+// a mesma coisa em duas camadas.
+func TestAcrescentarCombatenteUsaAValidacaoDoAovivo(t *testing.T) {
+	f := novoPiloto(t)
+
+	rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/add",
+		`{"novonome":"Ogro","novainiciativa":400,"novopv":0,"novotipo":"npc"}`)
+	if corpo := rec.Body.String(); !strings.Contains(corpo, "400") {
+		t.Errorf("a recusa não citou a iniciativa ofensiva; corpo = %q", corpo)
+	}
+	if n := len(f.s.sessions.GetState(f.sessionID).Initiative); n != 0 {
+		t.Errorf("o combatente recusado entrou na fila mesmo assim (%d na fila)", n)
+	}
+}
+
+// E acrescentar é do MESTRE, com as duas metades medidas juntas (ALE-144).
+func TestAcrescentarCombatenteEDoMestre(t *testing.T) {
+	f := novoPiloto(t)
+	corpo := `{"novonome":"Intruso","novainiciativa":10,"novopv":0,"novotipo":"npc"}`
+
+	if rec := f.pede(t, f.jogador, "POST", f.urlDaMesa()+"/initiative/add", corpo); rec.Code != http.StatusForbidden {
+		t.Errorf("o jogador acrescentou e levou %d, quero 403", rec.Code)
+	}
+	html := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	if !strings.Contains(html, "Iniciativa") {
+		t.Fatal("o jogador não viu a seção da fila; a ausência abaixo não provaria nada")
+	}
+	if strings.Contains(html, "+ Combatente") {
+		t.Error("o HTML do jogador veio com o + Combatente")
+	}
+}
+
+// TestOFormularioSoSeLimpaQuandoOServidorACEITA.
+//
+// As duas metades são o gesto, e a segunda é a que importa: limpar no clique
+// custaria o que a pessoa digitou toda vez que a validação recusasse, e a recusa
+// mais comum é sobre o nome — o campo mais caro de redigitar no meio de um
+// combate.
+//
+// Sem a primeira metade, o nome fica no campo e o clique seguinte acrescenta o
+// MESMO capanga de novo; ninguém confere a fila antes de clicar durante uma
+// luta.
+func TestOFormularioSoSeLimpaQuandoOServidorAceita(t *testing.T) {
+	f := novoPiloto(t)
+
+	aceito := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/add",
+		`{"novonome":"Goblin","novainiciativa":17,"novopv":12,"novotipo":"character"}`).Body.String()
+	if !strings.Contains(aceito, `"novonome":""`) {
+		t.Errorf("o formulário não se limpou depois do aceite; corpo = %s", trechoDeSinais(aceito))
+	}
+	if !strings.Contains(aceito, `"novotipo":"npc"`) {
+		t.Errorf("o tipo não voltou para npc; corpo = %s", trechoDeSinais(aceito))
+	}
+
+	recusado := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/add",
+		`{"novonome":"Ogro","novainiciativa":400,"novopv":0,"novotipo":"npc"}`).Body.String()
+	// O CONTROLE: a recusa TEM de ter acontecido, senão "não limpou" seria só
+	// "não houve resposta nenhuma".
+	if !strings.Contains(recusado, "400") {
+		t.Fatalf("a recusa não chegou; corpo = %s", trechoDeSinais(recusado))
+	}
+	// Quem garante isto é a ORDEM — a mutação só escreve nos sinais depois de a
+	// própria escrita ter dado certo —, e não um descarte na resposta. O teste
+	// prende a ordem: quem mover a limpeza para antes da mutação cai aqui.
+	if strings.Contains(recusado, `"novonome"`) {
+		t.Error("o formulário foi limpo numa RECUSA — a pessoa perdeu o que digitou e precisa corrigir")
+	}
+}
+
+// trechoDeSinais tira só a linha dos sinais da resposta SSE, porque o quadro
+// inteiro traz a cena e enterra a asserção em 8 KB de HTML.
+func trechoDeSinais(corpo string) string {
+	for _, linha := range strings.Split(corpo, "\n") {
+		if strings.HasPrefix(linha, "data: signals ") {
+			return linha
+		}
+	}
+	return "(nenhuma linha de sinais na resposta)"
+}

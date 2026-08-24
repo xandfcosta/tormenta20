@@ -113,9 +113,30 @@ templ mesa(v mesaView) {
 					// propósito — duas telas não devem inventar dois vocabulários
 					// para o mesmo gesto.
 					if v.Mestre != nil {
-						@adicionarGrupo(v)
+						<span class="flex items-center gap-1.5">
+							@adicionarGrupo(v)
+							// O "+ Combatente" fica ao lado do "Adicionar grupo" como na
+							// SPA: os dois MONTAM a fila, e um traz o elenco enquanto o
+							// outro traz o capanga que apareceu agora.
+							//
+							// O `aria-expanded` devolve a STRING e não o booleano, e isto é
+							// conserto de defeito MEDIDO: o `data-attr` do Datastar trata
+							// valor booleano como ATRIBUTO BOOLEANO — verdadeiro vira
+							// `aria-expanded=""` e falso REMOVE o atributo. Para `disabled`
+							// isso é o certo; para ARIA é inválido, e um `aria-expanded=""`
+							// não anuncia estado nenhum. Vale para todo `data-attr:aria-*`.
+							<button
+								type="button"
+								data-on:click="$formdecombatente = !$formdecombatente"
+								data-attr:aria-expanded="$formdecombatente ? 'true' : 'false'"
+								class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+							>+ Combatente</button>
+						</span>
 					}
 				</div>
+				if v.Mestre != nil {
+					@formDeCombatente(v)
+				}
 				// Desenha O QUE CHEGOU, e nada mais. A decisão de esconder a fila fora
 				// de cena já foi tomada pelo servidor, que a esvaziou no
 				// `redactForPlayers` — repeti-la aqui num `if v.SceneActive` seria a
@@ -399,4 +420,86 @@ templ adicionarGrupo(v mesaView) {
 		data-on:click={ comandoDaMesa(v, "POST", "initiative/populate") }
 		class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
 	>+ Adicionar grupo</button>
+}
+
+// formDeCombatente é o capanga digitado no meio do combate.
+//
+// Ele está SEMPRE no HTML e quem o mostra é o sinal, não o servidor: um
+// formulário que só existe depois de uma ida ao servidor perderia o que estava
+// digitado a cada remendo da cena, e a cena é remendada a cada mudança de
+// qualquer um na mesa. Pelo mesmo motivo os campos são ligados a SINAIS e nunca
+// recebem `value` do servidor — entrada em curso é do teclado de quem digita,
+// não estado da aplicação (é a mesma escolha do d20, ALE-219).
+//
+// TODOS OS NOMES DE SINAL SÃO MINÚSCULOS, e isso é obrigatório: eles são chaves
+// de `data-bind:`, e nome de atributo é minusculado pelo analisador de HTML —
+// `data-bind:novoNome` ligaria um sinal `novonome` e deixaria o declarado
+// intocado, com o fio levando os dois e o servidor lendo o que ninguém tocou.
+//
+// O `Escape` fecha, porque é o gesto que todo mundo tenta primeiro num
+// formulário aberto por engano e o gatilho que o abriu fica longe (ALE-136).
+templ formDeCombatente(v mesaView) {
+	<div
+		data-show="$formdecombatente"
+		data-on:keydown__window="evt.key === 'Escape' && ($formdecombatente = false)"
+		class="flex flex-wrap items-end gap-2 border border-dashed border-grimorio-iron p-3"
+	>
+		<div class="min-w-[10rem] flex-1 space-y-1">
+			<label for="novo-combatente" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Nome</label>
+			<input
+				id="novo-combatente"
+				type="text"
+				maxlength="60"
+				placeholder="Goblin salteador…"
+				data-bind:novonome
+				class="w-full border border-input bg-background px-2 py-1.5 outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			/>
+		</div>
+		@campoDeNumero("nova-iniciativa", "Iniciativa", "novainiciativa", "-5", "40")
+		@campoDeNumero("novo-pv", "PV", "novopv", "0", "999")
+		// PC ou NPC: dois botões e não um seletor, porque são DOIS e o estado
+		// tem de ser legível sem abrir nada. `aria-pressed` porque é escolha que
+		// fica, não ação que passa.
+		<div class="flex gap-1">
+			@oTipoDoCombatente("character", "PC")
+			@oTipoDoCombatente("npc", "NPC")
+		</div>
+		// O botão recusa o que o servidor recusaria, ANTES do clique: nome vazio
+		// é a recusa que a pessoa mais encontra, e descobri-la depois de clicar
+		// é o que a ALE-236 consertou no d20.
+		<button
+			type="button"
+			data-attr:disabled="!$novonome.trim()"
+			data-on:click={ fmt.Sprintf("@post('/piloto/mesa/%d/%d/initiative/add')", v.CampaignID, v.SessionID) }
+			class="min-h-11 rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:opacity-50"
+		>Acrescentar</button>
+	</div>
+}
+
+templ campoDeNumero(id, rotulo, sinal, min, max string) {
+	<div class="w-20 space-y-1">
+		<label for={ id } class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">{ rotulo }</label>
+		<input
+			id={ id }
+			type="number"
+			min={ min }
+			max={ max }
+			inputmode="numeric"
+			data-bind={ sinal }
+			class="w-full border border-input bg-background px-2 py-1.5 font-mono tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+		/>
+	</div>
+}
+
+// O `aria-pressed` sai como STRING e não como booleano — ver o comentário do
+// `aria-expanded` lá em cima: o `data-attr` daria `aria-pressed=""`, que é
+// inválido e não anuncia estado nenhum.
+templ oTipoDoCombatente(tipo, rotulo string) {
+	<button
+		type="button"
+		data-attr:aria-pressed={ fmt.Sprintf("$novotipo === '%s' ? 'true' : 'false'", tipo) }
+		data-on:click={ fmt.Sprintf("$novotipo = '%s'", tipo) }
+		data-class={ fmt.Sprintf("{'border-grimorio-gold text-grimorio-gold': $novotipo === '%s', 'border-grimorio-iron text-muted-foreground': $novotipo !== '%s'}", tipo, tipo) }
+		class="min-h-11 rounded-sm border px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+	>{ rotulo }</button>
 }

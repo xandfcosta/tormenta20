@@ -112,7 +112,7 @@ func (s *Server) handleMesaPage(w http.ResponseWriter, r *http.Request) {
 		// "Registrar iniciativa" do mestre que também joga: a frase certa no
 		// lugar errado, que é como se lê um defeito. Uma palavra por conceito
 		// vale para sinal de página como vale para identificador.
-		Sinais: "{d20: 10, erro: '', erroDoComando: '', qualidadedodescanso: 'normal'}",
+		Sinais: "{d20: 10, erro: '', erroDoComando: '', qualidadedodescanso: 'normal', formdecombatente: false, novonome: '', novainiciativa: 10, novopv: 0, novotipo: 'npc'}",
 		Init:   fmt.Sprintf("@get('/piloto/mesa/%d/%d/stream')", campaignID, sessionID),
 	}, mesa(view))
 }
