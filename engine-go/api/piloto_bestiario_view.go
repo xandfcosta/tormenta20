@@ -276,6 +276,16 @@ func xpDoND(nd float64) int {
 // "12 de 80" precisa dos dois números, e sem ele a tela não sabe se o filtro
 // apertou muito ou se o bestiário é pequeno.
 type bestiarioView struct {
+	// Base é o prefixo das rotas que ESTA cena chama, e existe porque o mesmo
+	// desenho serve dois lugares: a cena do mestre em `/piloto/mestre/bestiario`
+	// e o painel da Mesa em `/piloto/mesa/{c}/{s}/bestiario`. O que muda entre
+	// as duas é o ENDEREÇO, não a lista nem o bloco — e um segundo desenho seria
+	// a mesma criatura mantida em dois lugares.
+	//
+	// Sem valor não há rota: o `bestiarioBase` recusa a string vazia em vez de
+	// deixar o botão apontar para a página atual, que é o defeito silencioso
+	// desta forma — o clique "funciona" e recarrega a cena.
+	Base      string
 	Verbetes  []verbete
 	Total     int
 	Escolhido *verbete
@@ -303,10 +313,16 @@ func escolhidoOuPrimeiro(lista []verbete, id string) *verbete {
 }
 
 // carregaBestiario monta a cena a partir do que veio na URL ou nos sinais.
-func carregaBestiarioDe(busca string, tipos []string, ndMin, ndMax float64, escolhido string) bestiarioView {
+// carregaBestiarioDe exige a BASE como primeiro parâmetro, e isso é a lição de
+// um guarda que acusou na hora: a primeira versão deixava o campo de fora e um
+// teste de outra pasta montou a cena sem ele. Construtor que consegue produzir
+// valor inválido é o próprio defeito — pedir aqui torna o esquecimento
+// impossível em vez de detectável.
+func carregaBestiarioDe(base, busca string, tipos []string, ndMin, ndMax float64, escolhido string) bestiarioView {
 	todos := criaturasDoLivro()
 	lista := filtraCriaturas(todos, filtroDeCriaturas{Busca: busca, Tipos: tipos, NDMin: ndMin, NDMax: ndMax})
 	return bestiarioView{
+		Base:      base,
 		Verbetes:  lista,
 		Total:     len(todos),
 		Escolhido: escolhidoOuPrimeiro(lista, escolhido),
@@ -356,4 +372,17 @@ func sinaisDoBestiario(v bestiarioView) string {
 	criatura, _ := json.Marshal(escolhida)
 	return fmt.Sprintf(`{busca: %s, ndMin: %s, ndMax: %s, tipos: %s, criatura: %s, fichaAberta: false}`,
 		busca, ndNaCaixa(v.NDMin), ndNaCaixa(v.NDMax), tipos, criatura)
+}
+
+// bestiarioBase é o prefixo de rota da cena, e ele NÃO tem padrão.
+//
+// Uma base vazia produziria `@get(”)`, que o navegador resolve para a página
+// ATUAL: o filtro pareceria funcionar (a página recarrega) e não filtraria nada.
+// Um pânico no render é barulhento e acontece na primeira vez que alguém monta a
+// cena sem dizer de onde ela fala.
+func (v bestiarioView) bestiarioBase() string {
+	if v.Base == "" {
+		panic("bestiarioView sem Base: a cena não sabe para que rota falar")
+	}
+	return v.Base
 }

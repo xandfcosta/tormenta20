@@ -347,3 +347,27 @@ func TestTodoTipoDoLivroEstaNoTrilhoETemRotulo(t *testing.T) {
 		}
 	}
 }
+
+// TestABaseDoBestiarioNaoTemPADRAO.
+//
+// Uma base vazia produz `@get(”)`, que o navegador resolve para a página ATUAL:
+// o filtro pareceria funcionar — a página recarrega — e não filtraria nada. É o
+// defeito silencioso desta forma, e a resposta é recusar em vez de escolher um
+// padrão que só um dos dois chamadores quer.
+func TestABaseDoBestiarioNaoTemPadrao(t *testing.T) {
+	defer func() {
+		if recover() == nil {
+			t.Error("uma cena sem Base foi montada em silêncio")
+		}
+	}()
+	_ = bestiarioView{}.bestiarioBase()
+}
+
+// E a cena do mestre continua falando para a rota dela: o refator trocou o
+// literal por um campo, e este guarda prende que o campo chegou preenchido.
+func TestACenaDoMestreFalaParaARotaDoMestre(t *testing.T) {
+	v := carregaBestiario(criteriosDoBestiario{NDMax: 20})
+	if v.Base != rotaDoBestiarioDoMestre {
+		t.Errorf("a cena do mestre nasceu com Base %q", v.Base)
+	}
+}

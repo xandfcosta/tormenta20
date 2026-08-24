@@ -52,7 +52,7 @@ func cenasDoPiloto(t *testing.T) map[string]string {
 
 	ctx := context.Background()
 	monta("bestiario", func() (string, error) {
-		return renderFragmento(ctx, cenaDoBestiario(carregaBestiarioDe("", nil, ndMinimo, ndMaximo, "")))
+		return renderFragmento(ctx, cenaDoBestiario(carregaBestiarioDe(rotaDoBestiarioDoMestre, "", nil, ndMinimo, ndMaximo, "")))
 	})
 	monta("catalogos", func() (string, error) {
 		return renderFragmento(ctx, cenaDosCatalogos(carregaCatalogos("", "condicoes")))

@@ -168,7 +168,7 @@ templ filtrosDoBestiario(v bestiarioView) {
 				type="search"
 				name="busca"
 				data-bind:busca
-				data-on:input__debounce.250ms="@get('/piloto/mestre/bestiario')"
+				data-on:input__debounce.250ms={ fmt.Sprintf("@get('%s')", v.bestiarioBase()) }
 				value={ v.Busca }
 				placeholder="Buscar criatura"
 				aria-label="Buscar criatura"
@@ -176,8 +176,8 @@ templ filtrosDoBestiario(v bestiarioView) {
 			/>
 		</div>
 		<div class="flex flex-wrap items-end gap-2">
-			@caixaDeND("nd-min", "ND mínimo", "ndMin", ndNaCaixa(v.NDMin))
-			@caixaDeND("nd-max", "ND máximo", "ndMax", ndNaCaixa(v.NDMax))
+			@caixaDeND(v.bestiarioBase(), "nd-min", "ND mínimo", "ndMin", ndNaCaixa(v.NDMin))
+			@caixaDeND(v.bestiarioBase(), "nd-max", "ND máximo", "ndMax", ndNaCaixa(v.NDMax))
 		</div>
 		// `fieldset` porque é um conjunto de escolhas, e a `legend` em `sr-only`
 		// porque a tela já diz "Bestiário" logo acima — repetir "Tipo" ali só
@@ -190,7 +190,7 @@ templ filtrosDoBestiario(v bestiarioView) {
 				<button
 					type="button"
 					aria-pressed={ boolTexto(v.tipoAceso(t)) }
-					data-on:click={ fmt.Sprintf("@post('/piloto/mestre/bestiario/tipo/%s')", t) }
+					data-on:click={ fmt.Sprintf("@post('%s/tipo/%s')", v.bestiarioBase(), t) }
 					if v.tipoAceso(t) {
 						class="min-h-11 rounded-sm border border-grimorio-gold bg-accent px-2 py-0.5 text-2xs font-medium text-grimorio-gold transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 					} else {
@@ -207,7 +207,7 @@ templ filtrosDoBestiario(v bestiarioView) {
 // O `step` de 0,25 é do livro: o ND anda em quartos abaixo de 1 (ND 1/4, 1/2).
 // O `min`/`max` nativos NÃO são a trava — o servidor aperta a faixa de novo,
 // porque o número chega pela URL e qualquer um a edita à mão.
-templ caixaDeND(id, rotulo, sinal, valor string) {
+templ caixaDeND(base, id, rotulo, sinal, valor string) {
 	<div class="space-y-1">
 		@rotuloDeSecao("muted", "block") {
 			<label for={ "bestiario-" + id }>{ rotulo }</label>
@@ -220,7 +220,7 @@ templ caixaDeND(id, rotulo, sinal, valor string) {
 			step="0.25"
 			value={ valor }
 			data-bind={ sinal }
-			data-on:input__debounce.400ms="@get('/piloto/mestre/bestiario')"
+			data-on:input__debounce.400ms={ fmt.Sprintf("@get('%s')", base) }
 			aria-label={ rotulo }
 			class="h-9 w-24 rounded-sm border border-input bg-transparent px-2 text-base tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring md:text-sm"
 		/>
@@ -246,8 +246,8 @@ templ listaDeVerbetes(v bestiarioView) {
 			for _, m := range v.Verbetes {
 				<li>
 					<a
-						href={ templ.SafeURL("/piloto/mestre/bestiario?criatura=" + m.ID) }
-						data-on:click={ fmt.Sprintf("evt.preventDefault(); $criatura = %q; $fichaAberta = true; @get('/piloto/mestre/bestiario')", m.ID) }
+						href={ templ.SafeURL(v.bestiarioBase() + "?criatura=" + m.ID) }
+						data-on:click={ fmt.Sprintf("evt.preventDefault(); $criatura = %q; $fichaAberta = true; @get('%s')", m.ID, v.bestiarioBase()) }
 						if v.Escolhido != nil && v.Escolhido.ID == m.ID {
 							aria-current="true"
 							class="block w-full rounded-sm border border-grimorio-gold bg-accent p-2 text-left transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"

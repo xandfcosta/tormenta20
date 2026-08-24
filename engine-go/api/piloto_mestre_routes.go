@@ -339,6 +339,10 @@ func criteriosDoAcervo(r *http.Request) (string, string) {
 	return busca, aba
 }
 
+// rotaDoBestiarioDoMestre é a base da CENA do mestre. O painel da Mesa tem a
+// sua, e as duas dividem o mesmo desenho — ver `bestiarioView.Base`.
+const rotaDoBestiarioDoMestre = "/piloto/mestre/bestiario"
+
 // handleBestiario serve os DOIS casos numa rota, como a cena de campanhas: a
 // carga fria devolve a página inteira e o Datastar recebe só o remendo da cena.
 //
@@ -512,5 +516,5 @@ func apertaND(n, padrao float64) float64 {
 // carregaBestiario com os critérios já lidos. Envelope fino sobre a função da
 // camada de dados, para o handler não repetir a ordem dos cinco argumentos.
 func carregaBestiario(c criteriosDoBestiario) bestiarioView {
-	return carregaBestiarioDe(c.Busca, c.Tipos, c.NDMin, c.NDMax, c.Escolhida)
+	return carregaBestiarioDe(rotaDoBestiarioDoMestre, c.Busca, c.Tipos, c.NDMin, c.NDMax, c.Escolhida)
 }
