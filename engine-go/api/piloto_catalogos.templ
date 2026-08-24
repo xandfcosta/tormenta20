@@ -1,0 +1,194 @@
+package api
+
+import "fmt"
+
+// OS CATÁLOGOS (ALE-258), segunda ferramenta da Mesa do Mestre.
+//
+// A cena manda as 992 entradas — decisão do dono, e o custo aceito é DOM. O que
+// esse custo exige em troca é que a lista ROLE DENTRO DA CAIXA, e isso não é
+// detalhe de estilo: a versão em React deixou a lista crescer até a altura do
+// conteúdo e vazar de 1854 a 2566px para fora do cartão, nos seis formatos, sem
+// a página rolar — então a asserção "a cena não rola" ficava VERDE por cima do
+// defeito (ALE-149). Com 566 poderes desenhados de uma vez, o mesmo descuido
+// aqui daria uma página de dezenas de milhares de pixels.
+//
+// Por isso o `min-h-0` aparece em cada elo da corrente até a lista, e o e2e
+// mede a altura do documento em vez de confiar em classe.
+
+templ cenaDosCatalogos(v catalogosView) {
+	<section
+		id="catalogos"
+		class="mesa-palco flex min-h-0 flex-1 flex-col gap-3"
+		aria-labelledby="mesa-catalogos"
+		data-signals={ sinaisDosCatalogos(v) }
+	>
+		<div class="flex flex-wrap items-baseline gap-x-3">
+			<h2 id="mesa-catalogos" class="font-heading text-lg tracking-wide text-foreground">Catálogos</h2>
+			<p class="text-xs text-muted-foreground">{ contagemDoAcervo(v) }</p>
+		</div>
+		<div class="relative shrink-0">
+			@icone("Search", "pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground")
+			<input
+				type="search"
+				name="busca"
+				data-bind:busca
+				data-on:input__debounce.250ms="@get('/piloto/mestre/catalogos')"
+				value={ v.Busca }
+				placeholder="Buscar em todos os catálogos"
+				aria-label="Buscar nos catálogos"
+				class="h-9 w-full rounded-sm border border-input bg-transparent pl-8 pr-3 text-base outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring md:text-sm"
+			/>
+		</div>
+		// A fileira de abas SOME durante a busca, e isso é porte fiel: com termo
+		// digitado o assunto é o acervo inteiro, não uma aba. É a ALE-22 — a
+		// versão em React filtrava só a aba ativa, e "bola de fogo" digitado em
+		// Condições dizia "nada encontrado" com a magia existindo.
+		if !v.Buscando() {
+			@fileiraDeCatalogos(v.Aba)
+		}
+		@resultadosDoAcervo(v)
+	</section>
+}
+
+func contagemDoAcervo(v catalogosView) string {
+	if v.Buscando() {
+		return fmt.Sprintf("%d achados", v.Achados)
+	}
+	return fmt.Sprintf("%d entradas", v.Achados)
+}
+
+// fileiraDeCatalogos são LINKS e não botões de aba, pela mesma razão da trilha
+// da crônica: `?aba=magias` é ENDEREÇO — volta no histórico, abre em nova aba e
+// é o que alguém cola no chat da mesa.
+templ fileiraDeCatalogos(atual string) {
+	<nav aria-label="Catálogos" class="flex shrink-0 flex-wrap gap-1">
+		for _, a := range abasDoAcervo {
+			<a
+				href={ templ.SafeURL("/piloto/mestre/catalogos?aba=" + a.ID) }
+				if a.ID == atual {
+					aria-current="page"
+					class="min-h-11 rounded-sm border border-grimorio-gold bg-accent px-3 py-1.5 font-heading text-xs uppercase tracking-[0.12em] text-grimorio-gold outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				} else {
+					class="min-h-11 rounded-sm border border-grimorio-iron px-3 py-1.5 font-heading text-xs uppercase tracking-[0.12em] text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				}
+			>{ a.Rotulo }</a>
+		}
+	</nav>
+}
+
+// resultadosDoAcervo é a caixa que ROLA. Ver o cabeçalho do arquivo.
+//
+// As colunas são CSS (`.acervo-em-colunas`) e não um número calculado em JS
+// como na SPA. Lá o cálculo era necessário porque a lista é virtualizada e
+// "duas colunas" tinha de ser um agrupamento dos DADOS antes de entregá-los;
+// sem virtualização a grade nativa mede o contêiner de graça.
+//
+// A primeira versão usava `auto-fill minmax(22rem, 1fr)` puro, e MEDIDO deu
+// QUATRO colunas a 1920 — a SPA teto em três, e o teto é medida de leitura, não
+// gosto (ALE-170). O `max()` no piso é o que o impõe. Se eu não tivesse medido
+// as quatro larguras, o teto teria sumido no porte sem ninguém notar.
+templ resultadosDoAcervo(v catalogosView) {
+	if v.Achados == 0 {
+		<p class="p-4 text-center text-xs text-muted-foreground">Nada nos catálogos casa com essa busca.</p>
+	} else {
+		<div class="min-h-0 flex-1 space-y-4 overflow-y-auto rounded-sm border border-grimorio-iron p-2">
+			for _, g := range v.Grupos {
+				<section aria-label={ g.Rotulo }>
+					if v.Buscando() {
+						// O cabeçalho de grupo só existe na busca unificada: sem
+						// termo há um catálogo só na tela, e nomeá-lo duas vezes
+						// (na aba e aqui) é repetição.
+						@rotuloDeSecao("gold", "mb-1.5") {
+							{ fmt.Sprintf("%s · %d", g.Rotulo, g.Quantos()) }
+						}
+					}
+					<div class="acervo-em-colunas">
+						for _, c := range g.Condicoes {
+							@cartaoDeCondicao(c)
+						}
+						for _, m := range g.Magias {
+							@cartaoDeMagia(m)
+						}
+						for _, p := range g.Poderes {
+							@cartaoDePoder(p)
+						}
+						for _, i := range g.Itens {
+							@cartaoDeItem(i)
+						}
+					</div>
+				</section>
+			}
+		</div>
+	}
+}
+
+// ── os quatro cartões ────────────────────────────────────────────────────────
+
+templ cartaoDoAcervo() {
+	<div class="rounded-sm border border-grimorio-iron p-2.5 text-sm">
+		{ children... }
+	</div>
+}
+
+templ cartaoDeCondicao(c condicaoDoLivro) {
+	@cartaoDoAcervo() {
+		<p class="flex flex-wrap items-center gap-1.5 font-medium">
+			{ c.Name }
+			for _, t := range c.Tags {
+				<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ t }</span>
+			}
+		</p>
+		<p class="mt-1 text-muted-foreground">{ c.Description }</p>
+		if c.UpgradesTo != "" {
+			<p class="mt-1 text-xs text-muted-foreground">
+				Agrava para <span class="font-medium">{ nomeDaCondicao(c.UpgradesTo) }</span>
+			</p>
+		}
+	}
+}
+
+templ cartaoDeMagia(m magiaDoLivro) {
+	@cartaoDoAcervo() {
+		<p class="flex flex-wrap items-center gap-1.5 font-medium">
+			{ m.Name }
+			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">
+				{ fmt.Sprintf("%dº círculo", m.Circle) }
+			</span>
+		</p>
+		<p class="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+			<span>{ "Execução: " + nomeDaExecucao(m.Execution) }</span>
+			<span>{ "Alcance: " + nomeDoAlcance(m.Range) }</span>
+			<span>{ "Duração: " + m.Duration }</span>
+			if m.Resistance != "" {
+				<span>{ "Resistência: " + m.Resistance }</span>
+			}
+		</p>
+		<p class="mt-1 text-muted-foreground">{ m.BaseEffect }</p>
+		if len(m.Augments) > 0 {
+			<p class="mt-1 text-xs text-muted-foreground">{ aprimoramentosEscritos(len(m.Augments)) }</p>
+		}
+	}
+}
+
+templ cartaoDePoder(p poderDoLivro) {
+	@cartaoDoAcervo() {
+		<p class="flex flex-wrap items-center gap-1.5 font-medium">
+			{ p.Name }
+			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ p.Fonte }</span>
+		</p>
+		<p class="mt-1 text-muted-foreground">{ p.Description }</p>
+	}
+}
+
+templ cartaoDeItem(i itemDoLivro) {
+	@cartaoDoAcervo() {
+		<p class="flex flex-wrap items-center gap-1.5 font-medium">
+			{ i.Name }
+			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ nomeDaCategoria(i.Category) }</span>
+		</p>
+		<p class="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+			<span>{ "Preço: " + precoEscrito(i.Price) }</span>
+			<span>{ fmt.Sprintf("Espaços: %s", espacosEscritos(i.Slots)) }</span>
+		</p>
+	}
+}
