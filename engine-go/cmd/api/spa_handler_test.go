@@ -170,16 +170,16 @@ func TestServerTimeoutsProtectWithoutKillingLongResponses(t *testing.T) {
 	if server.IdleTimeout == 0 {
 		t.Error("sem IdleTimeout: conexão ociosa de keep-alive nunca é recolhida")
 	}
-	// O que NÃO pode existir: `WriteTimeout` mataria o socket.io, que é conexão
+	// O que NÃO pode existir: `WriteTimeout` mataria o fluxo SSE, que é conexão
 	// longa por natureza, e o download do wasm de 780 KB numa rede ruim.
 	if server.WriteTimeout != 0 {
-		t.Errorf("WriteTimeout=%s derruba o socket ao vivo e o download do wasm", server.WriteTimeout)
+		t.Errorf("WriteTimeout=%s derruba o fluxo SSE ao vivo e o download do wasm", server.WriteTimeout)
 	}
 }
 
 // HTTPS na LAN: o que o processo faz quando o par de certificados existe
 // (ALE-118). O TLS termina AQUI, no mesmo processo que serve a SPA, a API e o
-// socket — é a decisão registrada no `engine-go/CLAUDE.md`, e um proxy na
+// fluxo de eventos — é a decisão registrada no `engine-go/CLAUDE.md`, e um proxy na
 // frente a contrariaria.
 
 // O log É o endereço que o mestre lê e repassa para a mesa. Com TLS ligado e

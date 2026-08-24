@@ -28,9 +28,6 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api/, ''),
       },
-      // The realtime client connects to window.location.origin; socket.io lives
-      // on the same backend, so proxy its path with the WebSocket upgrade on.
-      '/socket.io': { target: API_TARGET, changeOrigin: true, ws: true },
     },
   },
   /**
@@ -52,7 +49,6 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api/, ''),
       },
-      '/socket.io': { target: API_TARGET, changeOrigin: true, ws: true },
     },
   },
   test: {

@@ -4,7 +4,7 @@ Adapts the root [CLAUDE.md](../CLAUDE.md) to this package. Root rules
 apply; the notes below override or extend them for the frontend.
 
 Stack: **SolidJS**, Vite (rolldown), TanStack Router (file-based) + Query,
-Kobalte (headless UI), Tailwind v4, socket.io-client, solid-sonner.
+Kobalte (headless UI), Tailwind v4, solid-sonner.
 
 Runs on **:5173**; the Go API (`engine-go`, :3001) is the backend.
 
@@ -68,9 +68,10 @@ links, the browser Back button and the progress rail cannot then disagree.
   the HTTP client is `shared/api/api.ts` — components never call `fetch`.
 - Solid Query has **no `useQueries`**: fan out with
   `queryClient.ensureQueryData` inside one query and derive from the cache.
-- Wrap third-party libs behind owned modules: socket.io → `shared/realtime`,
+- Wrap third-party libs behind owned modules: o tempo real → `shared/realtime`,
   toasts → `shared/ui/sonner`, fuzzy search → `shared/lib/fuzzy-filter`.
-  Don't import `socket.io-client` / `solid-sonner` directly in features.
+  Don't import `solid-sonner` directly in features. O `EventSource` e o `fetch`
+  dos comandos ficam DENTRO do `shared/realtime` (ALE-253).
 - **Catalogs are fetched, never bundled.** The `__root` primes them
   (`ensureCatalogs` + `ensureEngineCatalogs`) and the caches are read
   INSIDE components — a module-level const would freeze an empty list.

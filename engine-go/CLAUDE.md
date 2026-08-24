@@ -5,7 +5,7 @@ valem; o que está aqui estende ou sobrepõe.
 
 `engine-go` é o backend: API HTTP na :3001, o motor de regras, e o mesmo motor
 compilado para WASM que roda no navegador. Um processo serve a SPA, a API e o
-socket em produção (`STATIC_DIR`).
+fluxo de eventos em produção (`STATIC_DIR`).
 
 ## Ambientes
 
@@ -133,11 +133,12 @@ O esquema do log vem da config (`Config.Scheme`), e isso não é cosmético: aqu
 linha É o endereço que o mestre repassa para a mesa.
 
 **Medido, não suposto (ALE-118):** com TLS o Chrome negocia **h2** para a
-página, e o socket.io continua subindo para `wss://` — o Go não anuncia o
-RFC 8441, então o navegador abre uma conexão HTTP/1.1 só para o upgrade. A
-pré-compressão (`.br`) atravessa o TLS e o h2 intacta. Nada disso precisou de
-mudança no gateway nem no `guardSocketOrigin`, que compara só o `Host` e é
-indiferente ao esquema.
+página. A pré-compressão (`.br`) atravessa o TLS e o h2 intacta.
+
+O tempo real era socket.io e subia para `wss://` numa conexão HTTP/1.1 à parte,
+porque o Go não anuncia o RFC 8441. Com SSE (ALE-253) ele é um `GET` como
+qualquer outro e viaja pelo mesmo h2 — uma conexão a menos e uma exceção a menos
+para lembrar.
 
 O que este repositório **não** decide é de onde vem o certificado — as duas
 saídas e o preço de cada uma estão no README, e nenhuma delas se executa de
@@ -179,7 +180,7 @@ doméstica isso é de graça; o `busy_timeout(5000)` cobre a espera.
 ## Timeouts, encerramento e backup
 
 O servidor tem `ReadHeaderTimeout` (5s) e `IdleTimeout` (120s), e **não tem
-`WriteTimeout` de propósito** (ALE-157): ele mataria o socket.io, que é conexão
+`WriteTimeout` de propósito** (ALE-157): ele mataria o fluxo SSE, que é conexão
 longa por natureza, e o download do wasm numa rede ruim. É o timeout que parece
 obrigatório e é justamente o errado aqui — há teste afirmando a AUSÊNCIA dele.
 
@@ -197,19 +198,38 @@ manual e poda os mais antigos. Zero em qualquer um dos dois desliga. A poda só
 alcança o que a listagem reconhece como backup — arquivo estranho na pasta não é
 candidato.
 
-## O socket segue a MESMA política de origem do HTTP
+## O tempo real é SSE, e é uma rota como as outras
 
-O `SetCors` do socket.io reflete qualquer origem, e refletir com credenciais
-deixa um site de terceiros abrir o handshake do engine.io com o cookie do
-usuário. Por isso o handler é embrulhado pelo `guardSocketOrigin` (ALE-158): com
-`CORS_ORIGIN` declarado (dev, atrás do proxy do Vite) vale aquela origem; sem
-ele (produção, onde o binário serve a própria SPA) vale a mesma origem do
-pedido.
+`GET /campaigns/{campaignId}/sessions/{id}/events` devolve `text/event-stream` e
+fica aberto; tudo que SOBE é `POST`/`PATCH`/`DELETE` numa rota própria
+(`mountLiveRoutes`). Era socket.io até a ALE-253, e a troca não foi de
+biblioteca: as 37 mensagens que subiam pelo socket eram TODAS mutação, e mutação
+é uma requisição. Bidirecional não era requisito, era hábito.
 
-Requisição **sem** `Origin` passa de propósito: o navegador não manda esse
-cabeçalho em GET de mesma origem, que é justamente o transporte de polling em
-produção — exigi-lo derrubaria o caminho normal. Quem guarda a sala nesse caso é
-o JWT do handshake.
+Três coisas sumiram junto, e todas eram exceção:
+
+- **A política de origem duplicada.** O socket tinha caminho próprio no mux,
+  fora do `Router()`, e por isso precisava do `guardSocketOrigin` repetindo o
+  CORS por conta (ALE-158). O `/events` está debaixo do `cors.Handler` do
+  roteador — a política é uma só.
+- **O token na query string.** O `EventSource` não deixa pôr cabeçalho, mas manda
+  COOKIE, e o `extractToken` lê o cookie antes do header. Então o fluxo entra
+  debaixo do `requireAuth` sem gambiarra.
+- **A detecção de queda por biblioteca.** O `r.Context()` é cancelado quando o
+  cliente vai embora. A batida de 25s (`sseHeartbeat`) NÃO é para isso — é um
+  comentário SSE (`: ping`) para atravessar intermediário que fecha conexão
+  ociosa.
+
+O `emit` do hub **nunca bloqueia**: fila cheia descarta o quadro daquele leitor.
+Quem perdeu reconecta e busca o estado por HTTP, que é o mesmo caminho da
+primeira carga — nenhum estado vive só no fio.
+
+**Uma armadilha que custou uma rodada:** o `characterChanged` era um GANCHO
+preenchido pelo `SocketHandler()`. Apagar o gateway deixou o gancho sem quem o
+ligasse, o `go test ./...` seguiu VERDE — havia até um teste afirmando que nulo
+era caminho normal — e quem acusou foi o e2e de dois clientes. Campo que precisa
+ser preenchido por outro arquivo para o recurso existir é recurso que nasce
+desligado.
 
 ## Catálogos
 
