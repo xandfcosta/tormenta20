@@ -75,12 +75,10 @@ describe('totalClassLevel', () => {
 })
 
 describe('classPresetSpread — sugestão de atributos da classe', () => {
-  it('devolve os seis atributos da classe', () => {
-    const spread = classPresetSpread('Guerreiro')
-
-    expect(spread).not.toBeNull()
-    expect(Object.keys(spread ?? {})).toHaveLength(6)
-  })
+  // 'devolve os seis atributos da classe' saiu na ALE-187: contava as chaves
+  // de um objeto de forma fixa, que o typechecker garante. Os dois casos
+  // abaixo ficam — eles afirmam REGRA (classe desconhecida não tem sugestão,
+  // e cada classe puxa para o próprio atributo-chave).
 
   it('classe desconhecida não tem sugestão', () => {
     expect(classPresetSpread('Caçador de Dragões')).toBeNull()

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { originSwitchPatch } from './origin-switch'
-import { origemRolledMoneySum } from './starting-equipment'
 import { wizardDefaults } from './wizard-steps'
 
 describe('originSwitchPatch', () => {
@@ -19,15 +18,35 @@ describe('originSwitchPatch', () => {
     expect(patch.originItemPicks).toEqual({})
   })
 
+  /**
+   * O dinheiro que a origem ANTERIOR já rolou sai com ela — dinheiro não pode
+   * vazar de uma origem que o personagem não tem mais.
+   *
+   * Reescrito na ALE-187, e a reescrita achou um defeito: o esperado era
+   * `12 - origemRolledMoneySum('Batedor', picks)`, calculado pela função IRMÃ.
+   * Isso já bastaria para condenar — implementação comparada consigo mesma —,
+   * mas o pior estava na FIXTURE: o Batedor não concede dinheiro nenhum (os
+   * itens dele são barraca, equipamento de viagem e uma arma), e o rótulo
+   * `'T$ 2d6'` não existe em origem alguma. A soma devolvia ZERO, o teste
+   * afirmava `12 - 0 === 12` e passava sem nunca exercitar a subtração que ele
+   * diz proteger.
+   *
+   * Quem rola dinheiro é o MARUJO, com o rótulo exato do catálogo
+   * (`origens.json`). Com ele o caso finalmente morde: 12 na bolsa, 7 rolados,
+   * sobram 5 — número TRANSCRITO, não recalculado.
+   */
   it('gives back the T$ the previous origin had already rolled', () => {
-    const picks = { 'T$ 2d6': '7' }
     const patch = originSwitchPatch(
-      { ...wizardDefaults, origin: 'Batedor', originItemPicks: picks, tibar: 12 },
+      {
+        ...wizardDefaults,
+        origin: 'Marujo',
+        originItemPicks: { 'T$ 2d6 (último salário)': '7' },
+        tibar: 12,
+      },
       'Artesão',
     )
-    // Whatever the previous origin rolled leaves with it — money must not leak
-    // from an origin the character no longer has.
-    expect(patch.tibar).toBe(12 - origemRolledMoneySum('Batedor', picks))
+
+    expect(patch.tibar).toBe(5)
   })
 
   it('never drives tibar negative', () => {

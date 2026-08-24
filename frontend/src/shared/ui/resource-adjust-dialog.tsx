@@ -20,6 +20,19 @@ export function clampResource(raw: number, max: number): { value: number; clampe
  * the temp-PV pool first — the same routing the damage endpoint applies — so
  * the preview does not promise PV loss the server will absorb.
  *
+ * ATENÇÃO, duplicação DELIBERADA (ALE-187): o `soak` daqui é a mesma regra do
+ * `routeDamage` em `entities/character/temp-hp-pool.ts`, cujo dono de verdade é
+ * o `api/temp_hp_test.go` no servidor. A ALE-187 propunha derivar um do outro —
+ * e não dá: este arquivo é da camada `shared`, que é o CHÃO do FSD, e importar
+ * de `entities` seria o primeiro import para cima do repositório (conferido:
+ * hoje não existe nenhum). As saídas seriam mover regra de domínio para o
+ * `shared` ou criar uma costura de injeção para um `Math.min` — as duas custam
+ * mais que a cópia.
+ *
+ * Então fica a cópia, e fica ESTE aviso: quem mudar a ordem de absorção muda em
+ * três lugares, e o terceiro é o servidor. Duplicação anotada é dívida; sem a
+ * anotação ela é armadilha.
+ *
  * @example adjustPreview({ mode: 'remove', amount: 8, current: 30, max: 40, tempTotal: 5 })
  * // { soak: 5, delta: -3, preview: 27, clamped: false }
  */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MONSTER_TIPOS, MONSTER_TIPO_LABEL, formatNd } from './monster-format'
+import { formatNd } from './monster-format'
 
 describe('formatNd', () => {
   it('escreve o ND fracionário como o livro escreve', () => {
@@ -17,11 +17,7 @@ describe('formatNd', () => {
   })
 })
 
-describe('MONSTER_TIPO_LABEL', () => {
-  it('rotula todos os tipos que os chips oferecem', () => {
-    // Um tipo sem rótulo viraria um chip vazio na tela.
-    for (const tipo of MONSTER_TIPOS) {
-      expect(MONSTER_TIPO_LABEL[tipo]).toBeTruthy()
-    }
-  })
-})
+// O bloco `MONSTER_TIPO_LABEL` saiu inteiro na ALE-187: ele varria os tipos
+// afirmando que cada um tem rótulo, e o `Record<MonsterTipo, string>` é TOTAL —
+// o typechecker já recusa um tipo sem rótulo, que era o defeito descrito. Só a
+// string vazia escapava dele, e ninguém a escreve.

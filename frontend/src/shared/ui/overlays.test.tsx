@@ -3,7 +3,6 @@ import userEvent from '@testing-library/user-event'
 import { createSignal } from 'solid-js'
 import { describe, expect, it, vi } from 'vitest'
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from './dialog'
-import { Popover, PopoverContent, PopoverTrigger } from './popover'
 import { type SelectOption, Select } from './select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs'
 
@@ -43,13 +42,9 @@ describe('Tabs', () => {
     expect(screen.getByRole('tab', { name: 'Visão geral' })).not.toHaveAttribute('data-selected')
   })
 
-  it('navega pelas abas com as setas', async () => {
-    render(() => <Fixture />)
-    const user = userEvent.setup()
-    await user.click(screen.getByRole('tab', { name: 'Visão geral' }))
-    await user.keyboard('{ArrowRight}')
-    await waitFor(() => expect(screen.getByRole('tab', { name: 'Membros' })).toHaveFocus())
-  })
+  // 'navega pelas abas com as setas' saiu na ALE-187: é o roving tabindex do
+  // Kobalte, testado pelo Kobalte. O que ESTA casa decide sobre as abas — o
+  // `data-selected` de que as classes dependem — fica logo acima.
 })
 
 describe('Dialog', () => {
@@ -78,14 +73,11 @@ describe('Dialog', () => {
     expect(dialog).toHaveAccessibleDescription('Essa ação não pode ser desfeita.')
   })
 
-  it('fecha no Escape', async () => {
-    render(() => <Fixture />)
-    const user = userEvent.setup()
-    await user.click(screen.getByRole('button', { name: 'Abrir' }))
-    await screen.findByRole('dialog')
-    await user.keyboard('{Escape}')
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-  })
+  // 'fecha no Escape' saiu na ALE-187: é o `Dialog` do Kobalte fazendo o que
+  // ele documenta. O caso abaixo fica, e não é o mesmo: ele prende o rótulo
+  // pt-BR do botão de fechar, que a biblioteca entrega em INGLÊS
+  // (`aria-label="Dismiss"`) e que a casa sobrescreve — armadilha real, e
+  // nossa.
 
   // Kobalte's CloseButton ships aria-label="Dismiss"; dialog.tsx overrides it
   // so a pt-BR app doesn't announce English.
@@ -113,24 +105,9 @@ describe('Dialog', () => {
   })
 })
 
-describe('Popover', () => {
-  it('abre e fecha pelo gatilho', async () => {
-    render(() => (
-      <Popover>
-        <PopoverTrigger>Filtros</PopoverTrigger>
-        <PopoverContent>Só mestrando</PopoverContent>
-      </Popover>
-    ))
-    const user = userEvent.setup()
-    expect(screen.queryByText('Só mestrando')).not.toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: 'Filtros' }))
-    expect(await screen.findByText('Só mestrando')).toBeInTheDocument()
-
-    await user.keyboard('{Escape}')
-    await waitFor(() => expect(screen.queryByText('Só mestrando')).not.toBeInTheDocument())
-  })
-})
+// O bloco `Popover` saiu inteiro na ALE-187: o único caso dele afirmava que o
+// gatilho abre e fecha, que é o Popover do Kobalte fazendo o que documenta.
+// Nada desta casa passava por ali.
 
 describe('Select', () => {
   const RACES: SelectOption<string>[] = [

@@ -56,9 +56,28 @@ describe('HubMenu', () => {
     expect(onItemHover).toHaveBeenCalled()
   })
 
+  /**
+   * CONSERTADO na ALE-187: o nome prometia o chevron e o corpo só afirmava que
+   * o botão existia — um teste que passava sobre outra coisa.
+   *
+   * As duas metades, porque a promessa é "SÓ em quem pediu": afirmar apenas a
+   * presença deixaria passar um menu que desenha o ► em toda entrada, que é
+   * justamente o defeito que faria o Hub inteiro parecer ter continuação.
+   */
   it('mostra o chevron de continuar só em quem pediu', () => {
-    render(() => <HubMenu items={[{ label: 'Continuar sessão', hasNext: true, onSelect: vi.fn() }]} />)
-    expect(screen.getByRole('button', { name: 'Continuar sessão' })).toBeInTheDocument()
+    render(() => (
+      <HubMenu
+        items={[
+          { label: 'Continuar sessão', hasNext: true, onSelect: vi.fn() },
+          { label: 'Meus Heróis', onSelect: vi.fn() },
+        ]}
+      />
+    ))
+
+    const comChevron = screen.getByRole('button', { name: 'Continuar sessão' })
+    const sem = screen.getByRole('button', { name: 'Meus Heróis' })
+    expect(comChevron).toHaveTextContent('►')
+    expect(sem).not.toHaveTextContent('►')
   })
 })
 

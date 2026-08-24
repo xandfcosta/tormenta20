@@ -14,12 +14,9 @@ async function fillAndSubmit(email: string, password: string) {
 }
 
 describe('LoginForm', () => {
-  it('rende os campos e o botão', () => {
-    render(() => <LoginForm onSubmit={vi.fn()} />)
-    expect(screen.getByLabelText('E-mail')).toBeInTheDocument()
-    expect(screen.getByLabelText('Senha')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Entrar' })).toBeInTheDocument()
-  })
+  // 'rende os campos e o botão' saiu na ALE-187: o caso abaixo DIGITA nesses
+  // mesmos campos e clica nesse mesmo botão, então ele já falharia se algum
+  // sumisse. Afirmar presença antes de usar é dizer duas vezes.
 
   it('envia as credenciais quando o formulário é válido', async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined)

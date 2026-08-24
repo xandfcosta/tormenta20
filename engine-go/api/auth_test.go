@@ -12,20 +12,16 @@ func testServer(secret string) *Server {
 	return &Server{cfg: plataforma.Config{JWTSecret: secret, JWTExpiresIn: "7d", CookieName: "t20_session"}}
 }
 
-func TestSignVerifyRoundtrip(t *testing.T) {
-	s := testServer("secret-key")
-	tok, err := s.signToken(sqlcgen.User{ID: 42, Email: "a@b.com"})
-	if err != nil {
-		t.Fatalf("sign: %v", err)
-	}
-	sub, err := s.verifyToken(tok)
-	if err != nil {
-		t.Fatalf("verify: %v", err)
-	}
-	if sub != 42 {
-		t.Fatalf("sub = %d, want 42", sub)
-	}
-}
+// `TestSignVerifyRoundtrip` saiu na ALE-187: assinar e verificar o próprio
+// token é exercitado por TODA chamada `authed()` da suíte, centenas de vezes
+// por corrida. O vizinho abaixo fica, e não é o mesmo: ele afirma a RECUSA
+// de um token assinado com outro segredo, que nenhum caminho feliz cobre.
+//
+// O `TestParseExpiry` mais abaixo também FICA, contra o que a issue pedia:
+// ele não é encanamento. O `parseExpiry` é parser escrito à mão, com dois
+// fallbacks para `sessionTTL` — vazio e número inválido —, e um
+// `JWT_EXPIRES_IN` malformado caindo em silêncio para o padrão é o tipo de
+// coisa que ninguém descobre olhando.
 
 func TestVerifyRejectsWrongSecret(t *testing.T) {
 	tok, _ := testServer("real").signToken(sqlcgen.User{ID: 1, Email: "x@y.com"})

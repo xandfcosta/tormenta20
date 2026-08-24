@@ -432,26 +432,26 @@ func TestResolveConditionalDisplayUntypedStacks(t *testing.T) {
 	}
 }
 
-func TestResolveConditionalDisplayEmpty(t *testing.T) {
-	if len(ResolveConditionalDisplay(nil)) != 0 {
-		t.Error("empty input should yield empty output")
-	}
-}
-
 // ─── statFor / conditionalId ──────────────────────────────────────────
 
-func TestStatForAbsentTarget(t *testing.T) {
-	res := StatFor(ComputeItemEffects(nil), defenseTarget)
-	if res.Total != 0 || len(res.Contributions) != 0 {
-		t.Errorf("absent target should be zeroed, got %+v", res)
-	}
-}
+// Dois testes de 'entrada vazia, saída vazia' saíram na ALE-187
+// (`TestResolveConditionalDisplayEmpty` e `TestStatForAbsentTarget`): eles
+// afirmavam que uma lista vazia produz lista vazia e que alvo ausente soma
+// zero. O `TestEmptyInputs` logo abaixo já cobre a família inteira num caso
+// só, e o resto era encanamento.
+//
+// O `TestTargetKeyDistinguishesAttackScopes` lá em cima NÃO saiu, apesar de
+// listado: o comentário dele conta que ele já É a versão podada — o teste
+// antigo transcrevia os 28 braços do `switch`, e este pinou o que importa,
+// que é a chave decidir o que compete com o quê.
 
 func TestConditionalIDDivergence(t *testing.T) {
+	// A linha da "estabilidade" saiu na ALE-187: ela comparava `ConditionalID(a)`
+	// com ELE MESMO, e só falharia se a função virasse aleatória. O que este
+	// teste protege é a DIVERGÊNCIA — dois conditionais diferentes que colidam
+	// na mesma chave viram um só na resolução, e o jogador perde um bônus sem
+	// aviso.
 	a := ConditionalEffect{Source: "a", BonusType: "untyped", Amount: 2, Note: "n", Target: defenseTarget}
-	if ConditionalID(a) != ConditionalID(a) {
-		t.Error("conditionalId must be stable")
-	}
 	diffs := []ConditionalEffect{
 		{Source: "b", BonusType: "untyped", Amount: 2, Note: "n", Target: defenseTarget},
 		{Source: "a", BonusType: "untyped", Amount: 2, Note: "n", Target: damageThisTarget},
