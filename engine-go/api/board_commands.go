@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"t20engine/plataforma"
 
 	"github.com/go-chi/chi/v5"
 
@@ -33,7 +34,7 @@ func boardBody(w http.ResponseWriter, r *http.Request) (map[string]any, bool) {
 	if r.ContentLength == 0 {
 		return body, true
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return nil, false
 	}
 	return body, true
@@ -45,11 +46,11 @@ func (s *Server) mutateBoardAndPublish(
 ) {
 	board, err := mutate()
 	if err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	s.publishBoardState(ctx.sessionID, board)
-	writeJSON(w, http.StatusOK, boardForRole(ctx.role, board))
+	plataforma.WriteJSON(w, http.StatusOK, boardForRole(ctx.role, board))
 }
 
 // publishBoardState transmite às duas salas por papel e persiste.
@@ -90,9 +91,9 @@ func (s *Server) handleBoardOpen(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	board := s.boards.open(r.Context(), ctx.sessionID,
-		stringField(body, "place"), stringField(body, "terrain"))
+		plataforma.StringField(body, "place"), plataforma.StringField(body, "terrain"))
 	s.publishBoardState(ctx.sessionID, board)
-	writeJSON(w, http.StatusOK, boardForRole(ctx.role, board))
+	plataforma.WriteJSON(w, http.StatusOK, boardForRole(ctx.role, board))
 }
 
 // handleBoardClose ARQUIVA e fecha (ALE-124, fatia 5): a cena vira um Lugar da
@@ -119,7 +120,7 @@ func (s *Server) handleBoardClose(w http.ResponseWriter, r *http.Request) {
 	// `nil` é a mensagem: "esta sessão não tem tabuleiro" é estado de verdade, e
 	// não uma grade vazia.
 	s.publishBoardState(ctx.sessionID, nil)
-	writeJSON(w, http.StatusOK, map[string]any{"closed": true})
+	plataforma.WriteJSON(w, http.StatusOK, map[string]any{"closed": true})
 }
 
 func (s *Server) handleBoardGet(w http.ResponseWriter, r *http.Request) {
@@ -127,7 +128,7 @@ func (s *Server) handleBoardGet(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	writeJSON(w, http.StatusOK, boardForRole(ctx.role, s.boards.get(r.Context(), ctx.sessionID)))
+	plataforma.WriteJSON(w, http.StatusOK, boardForRole(ctx.role, s.boards.get(r.Context(), ctx.sessionID)))
 }
 
 // handleBoardAsPlayer devolve ao MESTRE a versão que a mesa vê — é o "espiar
@@ -137,7 +138,7 @@ func (s *Server) handleBoardAsPlayer(w http.ResponseWriter, r *http.Request) {
 	if !ok || !requireGmRole(w, ctx) {
 		return
 	}
-	writeJSON(w, http.StatusOK, boardForRole("player", s.boards.get(r.Context(), ctx.sessionID)))
+	plataforma.WriteJSON(w, http.StatusOK, boardForRole("player", s.boards.get(r.Context(), ctx.sessionID)))
 }
 
 // --- Peças -----------------------------------------------------------------
@@ -170,7 +171,7 @@ func (s *Server) handleBoardTokenUpdate(w http.ResponseWriter, r *http.Request) 
 	}
 	tokenID := pathToken(r)
 	if tokenID == "" {
-		writeError(w, http.StatusBadRequest, "tokenId is required")
+		plataforma.WriteError(w, http.StatusBadRequest, "tokenId is required")
 		return
 	}
 	patch := parseTokenPatch(body["patch"])
@@ -196,10 +197,10 @@ func (s *Server) handleBoardMarkerAdd(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	x, temX := intField(body, "x")
-	y, temY := intField(body, "y")
+	x, temX := plataforma.IntField(body, "x")
+	y, temY := plataforma.IntField(body, "y")
 	if !temX || !temY {
-		writeError(w, http.StatusBadRequest, "x and y are required")
+		plataforma.WriteError(w, http.StatusBadRequest, "x and y are required")
 		return
 	}
 	// Nasce ESCONDIDO quando ninguém disse o contrário: marcador é preparação
@@ -210,8 +211,8 @@ func (s *Server) handleBoardMarkerAdd(w http.ResponseWriter, r *http.Request) {
 	}
 	marker := BoardMarker{
 		X: int(x), Y: int(y),
-		Text:   stringField(body, "text"),
-		Color:  stringField(body, "color"),
+		Text:   plataforma.StringField(body, "text"),
+		Color:  plataforma.StringField(body, "color"),
 		Hidden: escondido,
 	}
 	s.mutateBoardAndPublish(w, ctx, func() (*BoardState, error) {
@@ -226,7 +227,7 @@ func (s *Server) handleBoardMarkerUpdate(w http.ResponseWriter, r *http.Request)
 	}
 	markerID := pathMarker(r)
 	if markerID == "" {
-		writeError(w, http.StatusBadRequest, "markerId is required")
+		plataforma.WriteError(w, http.StatusBadRequest, "markerId is required")
 		return
 	}
 	patch := parseMarkerPatch(body["patch"])
@@ -242,7 +243,7 @@ func (s *Server) handleBoardMarkerRemove(w http.ResponseWriter, r *http.Request)
 	}
 	markerID := pathMarker(r)
 	if markerID == "" {
-		writeError(w, http.StatusBadRequest, "markerId is required")
+		plataforma.WriteError(w, http.StatusBadRequest, "markerId is required")
 		return
 	}
 	s.mutateBoardAndPublish(w, ctx, func() (*BoardState, error) {
@@ -257,10 +258,10 @@ func (s *Server) handleBoardTerrainPaint(w http.ResponseWriter, r *http.Request)
 	if !ok {
 		return
 	}
-	x, temX := intField(body, "x")
-	y, temY := intField(body, "y")
+	x, temX := plataforma.IntField(body, "x")
+	y, temY := plataforma.IntField(body, "y")
 	if !temX || !temY {
-		writeError(w, http.StatusBadRequest, "x and y are required")
+		plataforma.WriteError(w, http.StatusBadRequest, "x and y are required")
 		return
 	}
 	difficult, informado := body["difficult"].(bool)
@@ -284,7 +285,7 @@ func (s *Server) handleBoardPopulate(w http.ResponseWriter, r *http.Request) {
 		s.sessions.getState(ctx.sessionID), chosenEntries(body, "entryIds"),
 	)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	if speeds := s.speedsForBoard(board); len(speeds) > 0 {
@@ -293,7 +294,7 @@ func (s *Server) handleBoardPopulate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	s.publishBoardState(ctx.sessionID, board)
-	writeJSON(w, http.StatusOK, boardForRole(ctx.role, board))
+	plataforma.WriteJSON(w, http.StatusOK, boardForRole(ctx.role, board))
 }
 
 // --- Lugares (o acervo de cenas da crônica) --------------------------------
@@ -306,7 +307,7 @@ func (s *Server) handleBoardPlaces(w http.ResponseWriter, r *http.Request) {
 	if !ok || !requireGmRole(w, ctx) {
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"places": s.boards.places(r.Context(), ctx.campaignID)})
+	plataforma.WriteJSON(w, http.StatusOK, map[string]any{"places": s.boards.places(r.Context(), ctx.campaignID)})
 }
 
 func (s *Server) handleBoardReopen(w http.ResponseWriter, r *http.Request) {
@@ -316,14 +317,14 @@ func (s *Server) handleBoardReopen(w http.ResponseWriter, r *http.Request) {
 	}
 	board, err := s.boards.showPlace(r.Context(), ctx.campaignID, ctx.sessionID, placeID)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	if dirty, changed := s.boards.persist(r.Context(), ctx.sessionID); changed {
 		s.warnPersistenceOnBoard(ctx.sessionID, dirty)
 	}
 	s.publishBoardState(ctx.sessionID, board)
-	writeJSON(w, http.StatusOK, boardForRole(ctx.role, board))
+	plataforma.WriteJSON(w, http.StatusOK, boardForRole(ctx.role, board))
 }
 
 func (s *Server) handleBoardPlaceRemove(w http.ResponseWriter, r *http.Request) {
@@ -332,10 +333,10 @@ func (s *Server) handleBoardPlaceRemove(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	if err := s.boards.removePlace(r.Context(), ctx.campaignID, placeID); err != nil {
-		writeError(w, http.StatusBadRequest, "não consegui apagar o lugar")
+		plataforma.WriteError(w, http.StatusBadRequest, "não consegui apagar o lugar")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"places": s.boards.places(r.Context(), ctx.campaignID)})
+	plataforma.WriteJSON(w, http.StatusOK, map[string]any{"places": s.boards.places(r.Context(), ctx.campaignID)})
 }
 
 // handleBoardPlaceScene abre o lugar para MONTAR — sem pôr na mesa.
@@ -346,10 +347,10 @@ func (s *Server) handleBoardPlaceScene(w http.ResponseWriter, r *http.Request) {
 	}
 	cena, err := s.boards.placeScene(r.Context(), ctx.campaignID, placeID)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "não consegui abrir o lugar para montar")
+		plataforma.WriteError(w, http.StatusBadRequest, "não consegui abrir o lugar para montar")
 		return
 	}
-	writeJSON(w, http.StatusOK, boardForRole(ctx.role, cena))
+	plataforma.WriteJSON(w, http.StatusOK, boardForRole(ctx.role, cena))
 }
 
 func (s *Server) handleBoardPlaceSave(w http.ResponseWriter, r *http.Request) {
@@ -363,14 +364,14 @@ func (s *Server) handleBoardPlaceSave(w http.ResponseWriter, r *http.Request) {
 	}
 	cena, err := parseScene(body["scene"])
 	if err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	if err := s.boards.savePlaceScene(r.Context(), ctx.campaignID, placeID, cena); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"places": s.boards.places(r.Context(), ctx.campaignID)})
+	plataforma.WriteJSON(w, http.StatusOK, map[string]any{"places": s.boards.places(r.Context(), ctx.campaignID)})
 }
 
 // --- Movimento -------------------------------------------------------------
@@ -391,7 +392,7 @@ func (s *Server) handleBoardMovePropose(w http.ResponseWriter, r *http.Request) 
 	tokenID := pathToken(r)
 	path := parseSquarePath(body["path"])
 	if tokenID == "" || len(path) < 2 {
-		writeError(w, http.StatusBadRequest, "tokenId e um caminho com origem e destino são obrigatórios")
+		plataforma.WriteError(w, http.StatusBadRequest, "tokenId e um caminho com origem e destino são obrigatórios")
 		return
 	}
 	by, speed := s.moverFor(ctx, tokenID)
@@ -410,7 +411,7 @@ func (s *Server) handleBoardMoveCommit(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	version, _ := intField(body, "version")
+	version, _ := plataforma.IntField(body, "version")
 	by, _ := s.moverFor(ctx, pendingTokenOf(s.boards.get(r.Context(), ctx.sessionID)))
 	s.mutateBoardAndPublish(w, ctx, func() (*BoardState, error) {
 		return s.boards.commitMove(r.Context(), ctx.sessionID,
@@ -465,7 +466,7 @@ func (s *Server) boardTokenCommand(w http.ResponseWriter, r *http.Request) (live
 	}
 	tokenID := pathToken(r)
 	if tokenID == "" {
-		writeError(w, http.StatusBadRequest, "tokenId is required")
+		plataforma.WriteError(w, http.StatusBadRequest, "tokenId is required")
 		return liveCtx{}, "", false
 	}
 	return ctx, tokenID, true

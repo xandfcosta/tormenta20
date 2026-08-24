@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"t20engine/plataforma"
 
 	"t20engine/engine"
 )
@@ -136,8 +137,8 @@ func parseSquarePath(raw any) []engine.Square {
 		if !ok {
 			continue
 		}
-		x, okX := intField(square, "x")
-		y, okY := intField(square, "y")
+		x, okX := plataforma.IntField(square, "x")
+		y, okY := plataforma.IntField(square, "y")
 		if !okX || !okY {
 			continue
 		}

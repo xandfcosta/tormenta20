@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"sync"
+	"t20engine/plataforma"
 	"testing"
 
 	"t20engine/db/sqlcgen"
@@ -14,7 +15,7 @@ func seedSession(t *testing.T, s *Server, campaignID int64) int64 {
 	t.Helper()
 	sess, err := s.queries.CreateSession(context.Background(), sqlcgen.CreateSessionParams{
 		Campaignid: campaignID, Sessionnumber: 1, Title: sql.NullString{String: "S", Valid: true},
-		Createdat: nowISO(), Updatedat: nowISO(),
+		Createdat: plataforma.NowISO(), Updatedat: plataforma.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed session: %v", err)
@@ -64,7 +65,7 @@ func TestStoreHydrateFromBlob(t *testing.T) {
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 	blob := `{"initiative":[{"id":"x","label":"Boss","initiative":9,"type":"npc"}],"round":2,"turnIndex":0}`
 	if err := s.queries.ResetSessionTracker(ctx, sqlcgen.ResetSessionTrackerParams{
-		RuntimeState: blob, UpdatedAt: nowISO(), ID: sid,
+		RuntimeState: blob, UpdatedAt: plataforma.NowISO(), ID: sid,
 	}); err != nil {
 		t.Fatalf("seed blob: %v", err)
 	}
@@ -93,7 +94,7 @@ func TestBlobSemTurnoNaoInventaCena(t *testing.T) {
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 	blob := `{"initiative":[{"id":"x","label":"Boss","initiative":9,"type":"npc"}],"round":0,"turnIndex":-1}`
 	if err := s.queries.ResetSessionTracker(ctx, sqlcgen.ResetSessionTrackerParams{
-		RuntimeState: blob, UpdatedAt: nowISO(), ID: sid,
+		RuntimeState: blob, UpdatedAt: plataforma.NowISO(), ID: sid,
 	}); err != nil {
 		t.Fatalf("seed blob: %v", err)
 	}
@@ -291,7 +292,7 @@ func seedTempHpPool(t *testing.T, s *Server, charID int64, amount int) {
 	mods := fmt.Sprintf(`[{"target":{"k":"tempHp"},"amount":%d,"bonusType":"untyped"}]`, amount)
 	if _, err := s.queries.CreateActiveEffect(context.Background(), sqlcgen.CreateActiveEffectParams{
 		Characterid: charID, Catalogid: "armadura-arcana", Scope: "scene",
-		Modifiers: mods, Createdat: nowISO(),
+		Modifiers: mods, Createdat: plataforma.NowISO(),
 	}); err != nil {
 		t.Fatalf("semear pool temporário: %v", err)
 	}

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
@@ -32,19 +33,19 @@ func (s *Server) handleAddItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body createItemBody
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if body.Quantity == nil {
-		writeValidationError(w, FieldErrorMap{"quantity": {"quantity must be an integer number"}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"quantity": {"quantity must be an integer number"}})
 		return
 	}
 	if *body.Quantity < 1 || *body.Quantity > 9999 {
-		writeValidationError(w, FieldErrorMap{"quantity": {"quantity out of range [1, 9999]"}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"quantity": {"quantity out of range [1, 9999]"}})
 		return
 	}
 
-	fields := FieldErrorMap{}
+	fields := plataforma.FieldErrorMap{}
 	name := ""
 	if body.Name != nil {
 		name = strings.TrimSpace(*body.Name)
@@ -77,7 +78,7 @@ func (s *Server) handleAddItem(w http.ResponseWriter, r *http.Request) {
 		fields["slots"] = []string{"Slots must be a multiple of 0.5"}
 	}
 	if len(fields) > 0 {
-		writeValidationError(w, fields)
+		plataforma.WriteValidationError(w, fields)
 		return
 	}
 
@@ -87,10 +88,10 @@ func (s *Server) handleAddItem(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if msg, err := s.equipLimitCheck(r, row.ID, 0, *body.Equipped); err != nil {
-			writeError(w, http.StatusInternalServerError, "Could not check equip limits")
+			plataforma.WriteError(w, http.StatusInternalServerError, "Could not check equip limits")
 			return
 		} else if msg != "" {
-			writeValidationError(w, FieldErrorMap{"equipped": {msg}})
+			plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"equipped": {msg}})
 			return
 		}
 	}
@@ -104,16 +105,16 @@ func (s *Server) handleAddItem(w http.ResponseWriter, r *http.Request) {
 		Equipped:     nullString(body.Equipped),
 		Improvements: marshalStrings(body.Improvements),
 		Material:     nullString(body.Material),
-		Createdat:    nowISO(),
+		Createdat:    plataforma.NowISO(),
 	})
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not create item")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not create item")
 		return
 	}
-	writeJSON(w, http.StatusCreated, ItemDTO{
-		ID: item.ID, CatalogID: nullToPtr(item.Catalogid), Name: item.Name,
-		Quantity: item.Quantity, Slots: item.Slots, Equipped: nullToPtr(item.Equipped),
-		Improvements: item.Improvements, Material: nullToPtr(item.Material),
+	plataforma.WriteJSON(w, http.StatusCreated, ItemDTO{
+		ID: item.ID, CatalogID: plataforma.NullToPtr(item.Catalogid), Name: item.Name,
+		Quantity: item.Quantity, Slots: item.Slots, Equipped: plataforma.NullToPtr(item.Equipped),
+		Improvements: item.Improvements, Material: plataforma.NullToPtr(item.Material),
 	})
 }
 
@@ -132,16 +133,16 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var raw map[string]json.RawMessage
-	if !decodeJSON(w, r, &raw) {
+	if !plataforma.DecodeJSON(w, r, &raw) {
 		return
 	}
 	item, err := s.queries.GetItem(r.Context(), itemID)
 	if errors.Is(err, sql.ErrNoRows) || (err == nil && item.Characterid != row.ID) {
-		writeError(w, http.StatusNotFound, fmt.Sprintf("Item %d not found", itemID))
+		plataforma.WriteError(w, http.StatusNotFound, fmt.Sprintf("Item %d not found", itemID))
 		return
 	}
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load item")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load item")
 		return
 	}
 
@@ -149,7 +150,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 	if v, has := raw["name"]; has {
 		var name string
 		if json.Unmarshal(v, &name) != nil {
-			writeError(w, http.StatusBadRequest, "Invalid name")
+			plataforma.WriteError(w, http.StatusBadRequest, "Invalid name")
 			return
 		}
 		set.add("name = ?", strings.TrimSpace(name))
@@ -157,7 +158,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 	if v, has := raw["quantity"]; has {
 		var q int64
 		if json.Unmarshal(v, &q) != nil || q < 1 || q > 9999 {
-			writeValidationError(w, FieldErrorMap{"quantity": {"quantity out of range [1, 9999]"}})
+			plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"quantity": {"quantity out of range [1, 9999]"}})
 			return
 		}
 		set.add("quantity = ?", q)
@@ -165,7 +166,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 	if v, has := raw["slots"]; has {
 		var sl float64
 		if json.Unmarshal(v, &sl) != nil || slotsNotMultiple(sl) {
-			writeValidationError(w, FieldErrorMap{"slots": {"Slots must be a multiple of 0.5"}})
+			plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"slots": {"Slots must be a multiple of 0.5"}})
 			return
 		}
 		set.add("slots = ?", sl)
@@ -173,10 +174,10 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 	if v, has := raw["equipped"]; has {
 		var eq *string
 		if json.Unmarshal(v, &eq) != nil {
-			writeError(w, http.StatusBadRequest, "Invalid equipped")
+			plataforma.WriteError(w, http.StatusBadRequest, "Invalid equipped")
 			return
 		}
-		if !ptrEq(eq, nullToPtr(item.Equipped)) && eq != nil && *eq != "" {
+		if !ptrEq(eq, plataforma.NullToPtr(item.Equipped)) && eq != nil && *eq != "" {
 			var catalog *engine.CatalogItem
 			if item.Catalogid.Valid && s.catalogs != nil {
 				catalog = s.catalogs.Item(item.Catalogid.String)
@@ -186,10 +187,10 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			if msg, err := s.equipLimitCheck(r, row.ID, itemID, *eq); err != nil {
-				writeError(w, http.StatusInternalServerError, "Could not check equip limits")
+				plataforma.WriteError(w, http.StatusInternalServerError, "Could not check equip limits")
 				return
 			} else if msg != "" {
-				writeValidationError(w, FieldErrorMap{"equipped": {msg}})
+				plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"equipped": {msg}})
 				return
 			}
 		}
@@ -198,7 +199,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 	if v, has := raw["improvements"]; has {
 		var imp []string
 		if json.Unmarshal(v, &imp) != nil {
-			writeError(w, http.StatusBadRequest, "Invalid improvements")
+			plataforma.WriteError(w, http.StatusBadRequest, "Invalid improvements")
 			return
 		}
 		set.add("improvements = ?", marshalStrings(&imp))
@@ -206,30 +207,30 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 	if v, has := raw["material"]; has {
 		var mat *string
 		if json.Unmarshal(v, &mat) != nil {
-			writeError(w, http.StatusBadRequest, "Invalid material")
+			plataforma.WriteError(w, http.StatusBadRequest, "Invalid material")
 			return
 		}
 		set.add("material = ?", nullString(mat))
 	}
 	if set.empty() {
-		writeError(w, http.StatusBadRequest, "No fields to update")
+		plataforma.WriteError(w, http.StatusBadRequest, "No fields to update")
 		return
 	}
 
 	// No `execTouched`: character_items carries createdAt only.
 	if err := set.exec(r.Context(), s.db, "UPDATE character_items", itemID); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not update item")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update item")
 		return
 	}
 	updated, err := s.queries.GetItem(r.Context(), itemID)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not reload item")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not reload item")
 		return
 	}
-	writeJSON(w, http.StatusOK, ItemDTO{
-		ID: updated.ID, CatalogID: nullToPtr(updated.Catalogid), Name: updated.Name,
-		Quantity: updated.Quantity, Slots: updated.Slots, Equipped: nullToPtr(updated.Equipped),
-		Improvements: updated.Improvements, Material: nullToPtr(updated.Material),
+	plataforma.WriteJSON(w, http.StatusOK, ItemDTO{
+		ID: updated.ID, CatalogID: plataforma.NullToPtr(updated.Catalogid), Name: updated.Name,
+		Quantity: updated.Quantity, Slots: updated.Slots, Equipped: plataforma.NullToPtr(updated.Equipped),
+		Improvements: updated.Improvements, Material: plataforma.NullToPtr(updated.Material),
 	})
 }
 
@@ -254,18 +255,18 @@ func (s *Server) handleDeleteItem(w http.ResponseWriter, r *http.Request) {
 	}
 	item, err := s.queries.GetItem(r.Context(), itemID)
 	if errors.Is(err, sql.ErrNoRows) || (err == nil && item.Characterid != row.ID) {
-		writeError(w, http.StatusNotFound, fmt.Sprintf("Item %d not found", itemID))
+		plataforma.WriteError(w, http.StatusNotFound, fmt.Sprintf("Item %d not found", itemID))
 		return
 	}
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load item")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load item")
 		return
 	}
 	if err := s.queries.DeleteItem(r.Context(), itemID); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not delete item")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not delete item")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]int64{"id": itemID})
+	plataforma.WriteJSON(w, http.StatusOK, map[string]int64{"id": itemID})
 }
 
 // equipLimitCheck runs the 4-vested/2-hands caps over the character's OTHER
@@ -288,7 +289,7 @@ func (s *Server) equipLimitCheck(r *http.Request, charID, excludeItemID int64, i
 // writeAxisError emits the equip-axis BadRequest: a custom top message + the
 // equipped field error (assertEquipAxisAllowed).
 func writeAxisError(w http.ResponseWriter, top, field string) {
-	writeFieldError(w, http.StatusBadRequest, top, FieldErrorMap{"equipped": {field}})
+	plataforma.WriteFieldError(w, http.StatusBadRequest, top, plataforma.FieldErrorMap{"equipped": {field}})
 }
 
 // marshalStrings JSON-encodes a string slice, normalizing nil (absent or JSON

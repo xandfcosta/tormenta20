@@ -11,6 +11,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"t20engine/plataforma"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -32,37 +33,37 @@ type resetPasswordBody struct {
 func (s *Server) handleResolvePasswordReset(w http.ResponseWriter, r *http.Request) {
 	reset, ok := s.usableReset(r.Context(), chi.URLParam(r, "token"))
 	if !ok {
-		writeError(w, http.StatusNotFound, resetRejected)
+		plataforma.WriteError(w, http.StatusNotFound, resetRejected)
 		return
 	}
 	user, err := s.queries.GetUserByID(r.Context(), reset.Userid)
 	if err != nil {
-		writeError(w, http.StatusNotFound, resetRejected)
+		plataforma.WriteError(w, http.StatusNotFound, resetRejected)
 		return
 	}
 	// The e-mail is the ONE thing this anonymous route reveals, and it is what
 	// tells the player they are resetting the right account.
-	writeJSON(w, http.StatusOK, map[string]string{"email": user.Email})
+	plataforma.WriteJSON(w, http.StatusOK, map[string]string{"email": user.Email})
 }
 
 // handleResetPassword: POST /auth/reset-password.
 func (s *Server) handleResetPassword(w http.ResponseWriter, r *http.Request) {
 	var body resetPasswordBody
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
-	if fields := validatePassword(body.Password); len(fields) > 0 {
-		writeValidationError(w, fields)
+	if fields := ValidatePassword(body.Password); len(fields) > 0 {
+		plataforma.WriteValidationError(w, fields)
 		return
 	}
 	reset, ok := s.usableReset(r.Context(), body.Token)
 	if !ok {
-		writeError(w, http.StatusForbidden, resetRejected)
+		plataforma.WriteError(w, http.StatusForbidden, resetRejected)
 		return
 	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcryptCost)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not hash password")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not hash password")
 		return
 	}
 	if err := s.applyReset(r.Context(), reset, string(hash)); err != nil {
@@ -84,7 +85,7 @@ func (s *Server) applyReset(ctx context.Context, reset sqlcgen.PasswordReset, ha
 
 	q := s.queries.WithTx(tx)
 	spent, err := q.SpendPasswordReset(ctx, sqlcgen.SpendPasswordResetParams{
-		Usedat: nullString(ptrTo(nowISO())), ID: reset.ID,
+		Usedat: nullString(ptrTo(plataforma.NowISO())), ID: reset.ID,
 	})
 	if err != nil {
 		return err
@@ -93,7 +94,7 @@ func (s *Server) applyReset(ctx context.Context, reset sqlcgen.PasswordReset, ha
 		return errResetSpent
 	}
 	if err := q.UpdateUserPassword(ctx, sqlcgen.UpdateUserPasswordParams{
-		Passwordhash: hash, Updatedat: nowISO(), ID: reset.Userid,
+		Passwordhash: hash, Updatedat: plataforma.NowISO(), ID: reset.Userid,
 	}); err != nil {
 		return err
 	}
@@ -104,10 +105,10 @@ var errResetSpent = errors.New("reset link already spent")
 
 func writeResetError(w http.ResponseWriter, err error) {
 	if errors.Is(err, errResetSpent) {
-		writeError(w, http.StatusForbidden, resetRejected)
+		plataforma.WriteError(w, http.StatusForbidden, resetRejected)
 		return
 	}
-	writeError(w, http.StatusInternalServerError, "Could not reset password")
+	plataforma.WriteError(w, http.StatusInternalServerError, "Could not reset password")
 }
 
 // usableReset loads a link that can still be spent: it exists, nobody used it,
@@ -120,7 +121,7 @@ func (s *Server) usableReset(ctx context.Context, token string) (sqlcgen.Passwor
 	if err != nil || reset.Usedat.Valid {
 		return sqlcgen.PasswordReset{}, false
 	}
-	expiresAt, err := time.Parse(isoLayout, reset.Expiresat)
+	expiresAt, err := time.Parse(plataforma.IsoLayout, reset.Expiresat)
 	if err != nil || time.Now().UTC().After(expiresAt) {
 		return sqlcgen.PasswordReset{}, false
 	}

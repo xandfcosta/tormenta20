@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"t20engine/plataforma"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -101,7 +102,7 @@ func (s *Server) liveAccess(w http.ResponseWriter, r *http.Request) (liveCtx, bo
 	user := currentUser(r)
 	_, role, status, err := s.sessionForCaller(r.Context(), user, campaignID, sessionID)
 	if err != nil {
-		writeError(w, status, err.Error())
+		plataforma.WriteError(w, status, err.Error())
 		return liveCtx{}, false
 	}
 	return liveCtx{userID: user.ID, campaignID: campaignID, sessionID: sessionID, role: role}, true
@@ -113,7 +114,7 @@ func (s *Server) liveAccess(w http.ResponseWriter, r *http.Request) (liveCtx, bo
 // nesta ação. Dizer "não autorizado" faria o cliente tentar entrar de novo.
 func requireGmRole(w http.ResponseWriter, ctx liveCtx) bool {
 	if ctx.role != "gm" {
-		writeError(w, http.StatusForbidden, "Only the GM can do this")
+		plataforma.WriteError(w, http.StatusForbidden, "Only the GM can do this")
 		return false
 	}
 	return true
@@ -132,11 +133,11 @@ func (s *Server) mutateAndPublish(
 ) {
 	state, err := mutate()
 	if err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	s.publishSessionState(ctx.sessionID, state)
-	writeJSON(w, http.StatusOK, stateForRole(ctx.role, state))
+	plataforma.WriteJSON(w, http.StatusOK, stateForRole(ctx.role, state))
 }
 
 // publishSessionState transmite o estado às duas salas por papel e persiste.
@@ -157,16 +158,16 @@ func (s *Server) handleInitiativeAdd(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Entry map[string]any `json:"entry"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if body.Entry == nil {
-		writeError(w, http.StatusBadRequest, "entry is required")
+		plataforma.WriteError(w, http.StatusBadRequest, "entry is required")
 		return
 	}
 	entry, err := s.materializeEntry(r.Context(), ctx.userID, ctx.campaignID, body.Entry)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	s.mutateAndPublish(w, ctx, func() (*SessionRuntimeState, error) {
@@ -181,7 +182,7 @@ func (s *Server) handleInitiativeRemove(w http.ResponseWriter, r *http.Request) 
 	}
 	entryID := chi.URLParam(r, "entryId")
 	if entryID == "" {
-		writeError(w, http.StatusBadRequest, "entryId is required")
+		plataforma.WriteError(w, http.StatusBadRequest, "entryId is required")
 		return
 	}
 	s.mutateAndPublish(w, ctx, func() (*SessionRuntimeState, error) {
@@ -220,16 +221,16 @@ func (s *Server) handleInitiativeSelf(w http.ResponseWriter, r *http.Request) {
 		CharacterID int64 `json:"characterId"`
 		D20         int64 `json:"d20"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if body.CharacterID == 0 {
-		writeError(w, http.StatusBadRequest, "characterId is required")
+		plataforma.WriteError(w, http.StatusBadRequest, "characterId is required")
 		return
 	}
 	entry, err := s.selfInitiativeEntry(ctx.userID, ctx.campaignID, body.CharacterID, body.D20)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	s.mutateAndPublish(w, ctx, func() (*SessionRuntimeState, error) {
@@ -244,13 +245,13 @@ func (s *Server) handleInitiativeUpdate(w http.ResponseWriter, r *http.Request) 
 	}
 	entryID := chi.URLParam(r, "entryId")
 	if entryID == "" {
-		writeError(w, http.StatusBadRequest, "entryId is required")
+		plataforma.WriteError(w, http.StatusBadRequest, "entryId is required")
 		return
 	}
 	var body struct {
 		Patch map[string]any `json:"patch"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	patch := parseEntryPatch(body.Patch)
@@ -279,7 +280,7 @@ func (s *Server) handleInitiativePopulate(w http.ResponseWriter, r *http.Request
 	}
 	combatants, err := s.listPlayerCombatants(r.Context(), ctx.campaignID)
 	if err != nil {
-		writeError(w, http.StatusBadGateway, "Could not load party")
+		plataforma.WriteError(w, http.StatusBadGateway, "Could not load party")
 		return
 	}
 	state, addErr := s.populateParty(ctx.sessionID, combatants)
@@ -288,10 +289,10 @@ func (s *Server) handleInitiativePopulate(w http.ResponseWriter, r *http.Request
 	}
 	s.publishSessionState(ctx.sessionID, state)
 	if addErr != nil {
-		writeError(w, http.StatusBadRequest, addErr.Error())
+		plataforma.WriteError(w, http.StatusBadRequest, addErr.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, stateForRole(ctx.role, state))
+	plataforma.WriteJSON(w, http.StatusOK, stateForRole(ctx.role, state))
 }
 
 // --- Cena ------------------------------------------------------------------
@@ -320,14 +321,14 @@ func (s *Server) handleSceneEnd(w http.ResponseWriter, r *http.Request) {
 	}
 	state, err := s.endSceneForTable(currentUser(r), ctx.campaignID, ctx.sessionID)
 	if err != nil {
-		writeError(w, http.StatusBadGateway, err.Error())
+		plataforma.WriteError(w, http.StatusBadGateway, err.Error())
 		return
 	}
 	s.publishSessionState(ctx.sessionID, state)
 	s.sse.emit(ctx.sessionID, "", "session-rest", map[string]any{
 		"sessionId": ctx.sessionID, "scope": "scene",
 	})
-	writeJSON(w, http.StatusOK, stateForRole(ctx.role, state))
+	plataforma.WriteJSON(w, http.StatusOK, stateForRole(ctx.role, state))
 }
 
 // --- Vitais e descanso -----------------------------------------------------
@@ -343,7 +344,7 @@ func (s *Server) handleVitalsPatch(w http.ResponseWriter, r *http.Request) {
 			MpCurrent *int64 `json:"mpCurrent"`
 		} `json:"patch"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	s.mutateAndPublish(w, ctx, func() (*SessionRuntimeState, error) {
@@ -360,7 +361,7 @@ func (s *Server) handleVitalsDelta(w http.ResponseWriter, r *http.Request) {
 		HpDelta *int64 `json:"hpDelta"`
 		MpDelta *int64 `json:"mpDelta"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	s.mutateAndPublish(w, ctx, func() (*SessionRuntimeState, error) {
@@ -378,11 +379,11 @@ func (s *Server) vitalsAccess(w http.ResponseWriter, r *http.Request) (liveCtx, 
 	}
 	entryID := chi.URLParam(r, "entryId")
 	if entryID == "" {
-		writeError(w, http.StatusBadRequest, "entryId is required")
+		plataforma.WriteError(w, http.StatusBadRequest, "entryId is required")
 		return liveCtx{}, "", false
 	}
 	if err := s.assertVitalsEditableFor(r.Context(), ctx, entryID); err != nil {
-		writeError(w, http.StatusForbidden, err.Error())
+		plataforma.WriteError(w, http.StatusForbidden, err.Error())
 		return liveCtx{}, "", false
 	}
 	return ctx, entryID, true
@@ -397,7 +398,7 @@ func (s *Server) handleSessionRest(w http.ResponseWriter, r *http.Request) {
 		Scope     string `json:"scope"`
 		Condition string `json:"condition"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if body.Condition == "" {
@@ -405,7 +406,7 @@ func (s *Server) handleSessionRest(w http.ResponseWriter, r *http.Request) {
 	}
 	done, total, err := s.restParty(currentUser(r), ctx.campaignID, ctx.sessionID, body.Scope, body.Condition)
 	if err != nil {
-		writeError(w, http.StatusBadGateway, "Could not load campaign members")
+		plataforma.WriteError(w, http.StatusBadGateway, "Could not load campaign members")
 		return
 	}
 	if done > 0 {
@@ -416,7 +417,7 @@ func (s *Server) handleSessionRest(w http.ResponseWriter, r *http.Request) {
 	})
 	// `healed` mantém o nome antigo porque o cliente o lê, mas conta os DOIS
 	// escopos: encerrar cena que falha deixa de somar (ALE-155).
-	writeJSON(w, http.StatusOK, map[string]any{
+	plataforma.WriteJSON(w, http.StatusOK, map[string]any{
 		"rested": body.Scope, "characters": total, "healed": done,
 	})
 }
@@ -436,33 +437,33 @@ func (s *Server) handleTableSpellEffect(w http.ResponseWriter, r *http.Request) 
 	}
 	entryID := chi.URLParam(r, "entryId")
 	if entryID == "" {
-		writeError(w, http.StatusBadRequest, "entryId is required")
+		plataforma.WriteError(w, http.StatusBadRequest, "entryId is required")
 		return
 	}
 	var body struct {
 		SpellID string  `json:"spellId"`
 		Scope   *string `json:"scope"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if body.SpellID == "" {
-		writeError(w, http.StatusBadRequest, "spellId is required")
+		plataforma.WriteError(w, http.StatusBadRequest, "spellId is required")
 		return
 	}
 	characterID, err := s.characterOfEntry(ctx.sessionID, entryID)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	if _, _, err := s.applySpellBuffEffect(r.Context(), characterID, body.SpellID, body.Scope); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	s.sse.emit(ctx.sessionID, "", "effect-applied", map[string]any{
 		"sessionId": ctx.sessionID, "characterId": characterID, "spellId": body.SpellID,
 	})
-	writeJSON(w, http.StatusOK, map[string]any{"applied": body.SpellID, "characterId": characterID})
+	plataforma.WriteJSON(w, http.StatusOK, map[string]any{"applied": body.SpellID, "characterId": characterID})
 }
 
 // characterOfEntry resolve a ficha por trás de uma linha da fila. NPC não tem,

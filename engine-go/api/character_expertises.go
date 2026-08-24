@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"t20engine/plataforma"
 
 	"github.com/go-chi/chi/v5"
 	"t20engine/db/sqlcgen"
@@ -41,10 +42,10 @@ func (s *Server) handleAddExpertise(w http.ResponseWriter, r *http.Request) {
 		Name      string `json:"name"`
 		Attribute string `json:"attribute"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
-	fields := FieldErrorMap{}
+	fields := plataforma.FieldErrorMap{}
 	name := strings.TrimSpace(body.Name)
 	switch {
 	case name == "":
@@ -60,17 +61,17 @@ func (s *Server) handleAddExpertise(w http.ResponseWriter, r *http.Request) {
 		fields["attribute"] = []string{"attribute must be a valid AttributeKey"}
 	}
 	if len(fields) > 0 {
-		writeValidationError(w, fields)
+		plataforma.WriteValidationError(w, fields)
 		return
 	}
 	row, err := s.queries.CreateExpertise(r.Context(), sqlcgen.CreateExpertiseParams{
 		Characterid: character.ID, Name: name, Attribute: body.Attribute, Trained: 1, Custom: 1,
 	})
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not create expertise")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not create expertise")
 		return
 	}
-	writeJSON(w, http.StatusCreated, expertiseDTO(row.Name, row.Attribute, row.Trained, row.Custom))
+	plataforma.WriteJSON(w, http.StatusCreated, expertiseDTO(row.Name, row.Attribute, row.Trained, row.Custom))
 }
 
 // handleUpdateExpertise ports updateExpertise: patch a BUILTIN perícia's attribute
@@ -85,19 +86,19 @@ func (s *Server) handleUpdateExpertise(w http.ResponseWriter, r *http.Request) {
 		Attribute *string `json:"attribute"`
 		Trained   *bool   `json:"trained"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if !expertiseNames[body.Name] {
-		writeValidationError(w, FieldErrorMap{"name": {"name must be a builtin expertise"}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"name": {"name must be a builtin expertise"}})
 		return
 	}
 	if body.Attribute == nil && body.Trained == nil {
-		writeError(w, http.StatusBadRequest, "No fields to update")
+		plataforma.WriteError(w, http.StatusBadRequest, "No fields to update")
 		return
 	}
 	if body.Attribute != nil && !attributeKeys[*body.Attribute] {
-		writeValidationError(w, FieldErrorMap{"attribute": {"attribute must be a valid AttributeKey"}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"attribute": {"attribute must be a valid AttributeKey"}})
 		return
 	}
 	row, err := s.queries.UpdateExpertise(r.Context(), sqlcgen.UpdateExpertiseParams{
@@ -107,14 +108,14 @@ func (s *Server) handleUpdateExpertise(w http.ResponseWriter, r *http.Request) {
 		Name:        body.Name,
 	})
 	if errors.Is(err, sql.ErrNoRows) {
-		writeError(w, http.StatusNotFound, fmt.Sprintf("Expertise %q not found", body.Name))
+		plataforma.WriteError(w, http.StatusNotFound, fmt.Sprintf("Expertise %q not found", body.Name))
 		return
 	}
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not update expertise")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update expertise")
 		return
 	}
-	writeJSON(w, http.StatusOK, expertiseDTO(row.Name, row.Attribute, row.Trained, row.Custom))
+	plataforma.WriteJSON(w, http.StatusOK, expertiseDTO(row.Name, row.Attribute, row.Trained, row.Custom))
 }
 
 // handleDeleteExpertise ports deleteExpertise: only custom perícias can be
@@ -130,22 +131,22 @@ func (s *Server) handleDeleteExpertise(w http.ResponseWriter, r *http.Request) {
 	}
 	meta, err := s.queries.GetExpertiseMeta(r.Context(), sqlcgen.GetExpertiseMetaParams{Characterid: character.ID, Name: name})
 	if errors.Is(err, sql.ErrNoRows) {
-		writeError(w, http.StatusNotFound, fmt.Sprintf("Expertise %q not found", name))
+		plataforma.WriteError(w, http.StatusNotFound, fmt.Sprintf("Expertise %q not found", name))
 		return
 	}
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load expertise")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load expertise")
 		return
 	}
 	if meta.Custom == 0 {
-		writeError(w, http.StatusBadRequest, fmt.Sprintf("Expertise %q is builtin and cannot be removed", name))
+		plataforma.WriteError(w, http.StatusBadRequest, fmt.Sprintf("Expertise %q is builtin and cannot be removed", name))
 		return
 	}
 	if err := s.queries.DeleteExpertiseByID(r.Context(), meta.ID); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not delete expertise")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not delete expertise")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]string{"name": name})
+	plataforma.WriteJSON(w, http.StatusOK, map[string]string{"name": name})
 }
 
 func nullBool(p *bool) sql.NullInt64 {

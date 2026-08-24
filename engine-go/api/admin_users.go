@@ -6,6 +6,7 @@ package api
 
 import (
 	"net/http"
+	"t20engine/plataforma"
 	"time"
 
 	"t20engine/db/sqlcgen"
@@ -30,17 +31,17 @@ type adminUserDTO struct {
 func (s *Server) handleAdminListUsers(w http.ResponseWriter, r *http.Request) {
 	rows, err := s.queries.ListUsersWithCounts(r.Context())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not list users")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not list users")
 		return
 	}
 	out := make([]adminUserDTO, 0, len(rows))
 	for _, u := range rows {
 		out = append(out, adminUserDTO{
-			ID: u.ID, Email: u.Email, Name: nullToPtr(u.Name), IsAdmin: s.cfg.IsAdmin(u.Email),
+			ID: u.ID, Email: u.Email, Name: plataforma.NullToPtr(u.Name), IsAdmin: s.cfg.IsAdmin(u.Email),
 			Campaigns: u.Campaigns, Characters: u.Characters, CreatedAt: u.Createdat,
 		})
 	}
-	writeJSON(w, http.StatusOK, out)
+	plataforma.WriteJSON(w, http.StatusOK, out)
 }
 
 // handleAdminDeleteUser: DELETE /admin/users/{id}. The mesas the account owns
@@ -56,15 +57,15 @@ func (s *Server) handleAdminDeleteUser(w http.ResponseWriter, r *http.Request) {
 	if id == caller.ID {
 		// Not paranoia: the admin list shows your own row, and the menu is the
 		// same one. Deleting yourself would take your mesas nowhere.
-		writeError(w, http.StatusBadRequest, "You cannot delete your own account")
+		plataforma.WriteError(w, http.StatusBadRequest, "You cannot delete your own account")
 		return
 	}
 	moved, err := s.deleteUserKeepingMesas(r, id, caller.ID)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not delete user")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not delete user")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"id": id, "transferredCampaigns": moved})
+	plataforma.WriteJSON(w, http.StatusOK, map[string]any{"id": id, "transferredCampaigns": moved})
 }
 
 // deleteUserKeepingMesas moves the campaigns and deletes the account in ONE
@@ -80,7 +81,7 @@ func (s *Server) deleteUserKeepingMesas(r *http.Request, userID, newOwnerID int6
 
 	q := s.queries.WithTx(tx)
 	moved, err := q.TransferCampaigns(ctx, sqlcgen.TransferCampaignsParams{
-		NewOwnerId: newOwnerID, UpdatedAt: nowISO(), OldOwnerId: userID,
+		NewOwnerId: newOwnerID, UpdatedAt: plataforma.NowISO(), OldOwnerId: userID,
 	})
 	if err != nil {
 		return 0, err
@@ -100,7 +101,7 @@ func (s *Server) handleAdminCreatePasswordReset(w http.ResponseWriter, r *http.R
 		return
 	}
 	if _, err := s.queries.GetUserByID(r.Context(), id); err != nil {
-		writeError(w, http.StatusNotFound, "User not found")
+		plataforma.WriteError(w, http.StatusNotFound, "User not found")
 		return
 	}
 	now := time.Now()
@@ -108,27 +109,27 @@ func (s *Server) handleAdminCreatePasswordReset(w http.ResponseWriter, r *http.R
 		Token:     generateInviteToken(),
 		Userid:    id,
 		Createdby: currentUser(r).ID,
-		Createdat: isoAt(now),
-		Expiresat: isoAt(now.Add(passwordResetTTL)),
+		Createdat: plataforma.IsoAt(now),
+		Expiresat: plataforma.IsoAt(now.Add(passwordResetTTL)),
 	})
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not create reset link")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not create reset link")
 		return
 	}
-	writeJSON(w, http.StatusCreated, accountInviteDTO{Token: reset.Token, ExpiresAt: reset.Expiresat})
+	plataforma.WriteJSON(w, http.StatusCreated, accountInviteDTO{Token: reset.Token, ExpiresAt: reset.Expiresat})
 }
 
 // handleAdminListInvites: GET /admin/invites — the links already handed out and
 // still good, so the admin can copy one again instead of minting a second.
 func (s *Server) handleAdminListInvites(w http.ResponseWriter, r *http.Request) {
-	rows, err := s.queries.ListOpenAccountInvites(r.Context(), nowISO())
+	rows, err := s.queries.ListOpenAccountInvites(r.Context(), plataforma.NowISO())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not list invites")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not list invites")
 		return
 	}
 	out := make([]accountInviteDTO, 0, len(rows))
 	for _, i := range rows {
 		out = append(out, accountInviteDTO{Token: i.Token, ExpiresAt: i.Expiresat})
 	}
-	writeJSON(w, http.StatusOK, out)
+	plataforma.WriteJSON(w, http.StatusOK, out)
 }

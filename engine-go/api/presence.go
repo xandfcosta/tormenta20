@@ -35,7 +35,7 @@ type presenceRegistry struct {
 
 func newPresenceRegistry() *presenceRegistry {
 	return &presenceRegistry{
-		presence:       map[int64]map[string]PresenceUser{},
+		presence:     map[int64]map[string]PresenceUser{},
 		connSessions: map[string]map[int64]bool{},
 	}
 }

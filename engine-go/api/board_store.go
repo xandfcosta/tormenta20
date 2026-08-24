@@ -7,6 +7,7 @@ import (
 	"errors"
 	"log"
 	"sync"
+	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
@@ -278,7 +279,7 @@ func (bs *boardStore) persist(ctx context.Context, sessionID int64) (dirty, chan
 		return false, false
 	}
 	err = bs.q.SaveSessionBoard(ctx, sqlcgen.SaveSessionBoardParams{
-		Sessionid: sessionID, State: string(blob), Updatedat: nowISO(),
+		Sessionid: sessionID, State: string(blob), Updatedat: plataforma.NowISO(),
 	})
 
 	bs.mu.Lock()

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"t20engine/plataforma"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
@@ -29,19 +30,19 @@ func inviteFixture(t *testing.T, token string) (*Server, http.Handler) {
 	ctx := context.Background()
 	queries := sqlcgen.New(sqlDB)
 	user, err := queries.CreateUser(ctx, sqlcgen.CreateUserParams{
-		Email: "gm@test.local", Passwordhash: "x", Createdat: nowISO(), Updatedat: nowISO(),
+		Email: "gm@test.local", Passwordhash: "x", Createdat: plataforma.NowISO(), Updatedat: plataforma.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("create user: %v", err)
 	}
 	campaign, err := queries.CreateCampaign(ctx, sqlcgen.CreateCampaignParams{
-		Ownerid: user.ID, Name: "Mesa do Beco", Createdat: nowISO(), Updatedat: nowISO(),
+		Ownerid: user.ID, Name: "Mesa do Beco", Createdat: plataforma.NowISO(), Updatedat: plataforma.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("create campaign: %v", err)
 	}
 	if _, err := queries.SetInviteToken(ctx, sqlcgen.SetInviteTokenParams{
-		InviteToken: sql.NullString{String: token, Valid: true}, UpdatedAt: nowISO(), ID: campaign.ID,
+		InviteToken: sql.NullString{String: token, Valid: true}, UpdatedAt: plataforma.NowISO(), ID: campaign.ID,
 	}); err != nil {
 		t.Fatalf("set invite token: %v", err)
 	}
@@ -102,7 +103,7 @@ func TestResolveInviteRejectsUnknownToken(t *testing.T) {
 func TestResolveInviteRejectsRotatedToken(t *testing.T) {
 	s, h := inviteFixture(t, "token-antigo")
 	if _, err := s.queries.SetInviteToken(context.Background(), sqlcgen.SetInviteTokenParams{
-		InviteToken: sql.NullString{String: "token-novo", Valid: true}, UpdatedAt: nowISO(), ID: 1,
+		InviteToken: sql.NullString{String: "token-novo", Valid: true}, UpdatedAt: plataforma.NowISO(), ID: 1,
 	}); err != nil {
 		t.Fatalf("rotate: %v", err)
 	}

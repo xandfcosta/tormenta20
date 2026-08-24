@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"sync"
+	"t20engine/plataforma"
 
 	"github.com/google/uuid"
 
@@ -264,7 +265,7 @@ func (st *sessionStore) persist(ctx context.Context, sessionID int64) (dirty, ch
 	st.mu.Unlock()
 
 	err := st.q.ResetSessionTracker(ctx, sqlcgen.ResetSessionTrackerParams{
-		RuntimeState: string(blob), UpdatedAt: nowISO(), ID: sessionID,
+		RuntimeState: string(blob), UpdatedAt: plataforma.NowISO(), ID: sessionID,
 	})
 
 	st.mu.Lock()

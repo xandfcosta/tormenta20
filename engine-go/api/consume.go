@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"t20engine/plataforma"
 
 	"t20engine/catalog"
 	"t20engine/db"
@@ -42,30 +43,30 @@ func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {
 		HpRolled *int64 `json:"hpRolled"`
 		MpRolled *int64 `json:"mpRolled"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	dto, err := s.loadCharacter(r.Context(), row)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load character")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load character")
 		return
 	}
 	item := findItemDTO(dto.Items, itemID)
 	if item == nil {
-		writeError(w, http.StatusNotFound, fmt.Sprintf("Item %d not found", itemID))
+		plataforma.WriteError(w, http.StatusNotFound, fmt.Sprintf("Item %d not found", itemID))
 		return
 	}
 	if item.CatalogID == nil {
-		writeError(w, http.StatusBadRequest, fmt.Sprintf("Item %d is custom and has no consumable spec", itemID))
+		plataforma.WriteError(w, http.StatusBadRequest, fmt.Sprintf("Item %d is custom and has no consumable spec", itemID))
 		return
 	}
 	cat, known := catalog.LookupItem(*item.CatalogID)
 	if !known || cat.Consumable == nil {
-		writeError(w, http.StatusBadRequest, fmt.Sprintf("Item %q is not consumable", item.Name))
+		plataforma.WriteError(w, http.StatusBadRequest, fmt.Sprintf("Item %q is not consumable", item.Name))
 		return
 	}
 	if item.Quantity < 1 {
-		writeError(w, http.StatusBadRequest, fmt.Sprintf("No remaining uses of %q", item.Name))
+		plataforma.WriteError(w, http.StatusBadRequest, fmt.Sprintf("No remaining uses of %q", item.Name))
 		return
 	}
 	spec := cat.Consumable
@@ -83,12 +84,12 @@ func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {
 
 	tx, err := s.db.BeginTx(r.Context(), nil)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not consume item")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not consume item")
 		return
 	}
 	defer func() { _ = tx.Rollback() }()
 	q := s.queries.WithTx(tx)
-	now := nowISO()
+	now := plataforma.NowISO()
 
 	var effect *EffectDTO
 	if wantsEffectRow(spec) {
@@ -100,7 +101,7 @@ func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Could not apply effect")
+			plataforma.WriteError(w, http.StatusInternalServerError, "Could not apply effect")
 			return
 		}
 		effect = &EffectDTO{ID: eff.ID, CatalogID: eff.Catalogid, Scope: eff.Scope, Modifiers: eff.Modifiers, CreatedAt: eff.Createdat}
@@ -110,12 +111,12 @@ func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {
 	newQty := item.Quantity - 1
 	if item.Quantity > 1 {
 		if err := q.SetItemQuantity(r.Context(), sqlcgen.SetItemQuantityParams{Quantity: newQty, ID: itemID}); err != nil {
-			writeError(w, http.StatusInternalServerError, "Could not update item")
+			plataforma.WriteError(w, http.StatusInternalServerError, "Could not update item")
 			return
 		}
 	} else {
 		if err := q.DeleteItem(r.Context(), itemID); err != nil {
-			writeError(w, http.StatusInternalServerError, "Could not remove item")
+			plataforma.WriteError(w, http.StatusInternalServerError, "Could not remove item")
 			return
 		}
 		removed, newQty = true, 0
@@ -130,22 +131,22 @@ func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {
 			mpCurrent = min(row.Mpmax, row.Mpcurrent+int64(mpGain))
 		}
 		if err := q.SetVitalsCurrent(r.Context(), sqlcgen.SetVitalsCurrentParams{HpCurrent: hpCurrent, MpCurrent: mpCurrent, UpdatedAt: now, ID: row.ID}); err != nil {
-			writeError(w, http.StatusInternalServerError, "Could not apply vitals")
+			plataforma.WriteError(w, http.StatusInternalServerError, "Could not apply vitals")
 			return
 		}
 	}
 	if err := tx.Commit(); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not consume item")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not consume item")
 		return
 	}
-	writeJSON(w, http.StatusOK, consumeResult{
+	plataforma.WriteJSON(w, http.StatusOK, consumeResult{
 		Item: consumeItemResult{ID: itemID, Quantity: newQty, Removed: removed}, Effect: effect,
 		HpCurrent: hpCurrent, MpCurrent: mpCurrent,
 	})
 }
 
 func writeOncePerDay(w http.ResponseWriter, name string) {
-	writeFieldError(w, http.StatusBadRequest, fmt.Sprintf("%q already active for the day", name), FieldErrorMap{"catalogId": {"Apenas uma porção por dia"}})
+	plataforma.WriteFieldError(w, http.StatusBadRequest, fmt.Sprintf("%q already active for the day", name), plataforma.FieldErrorMap{"catalogId": {"Apenas uma porção por dia"}})
 }
 
 func findItemDTO(items []ItemDTO, itemID int64) *ItemDTO {

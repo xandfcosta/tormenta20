@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"t20engine/plataforma"
 	"testing"
 
 	"t20engine/db/sqlcgen"
@@ -47,7 +48,7 @@ func newRulesFixture(t *testing.T) rulesFixture {
 func (f rulesFixture) join(t *testing.T, campaignID int64) {
 	t.Helper()
 	if _, err := f.s.queries.CreateMember(context.Background(), sqlcgen.CreateMemberParams{
-		Campaignid: campaignID, Characterid: f.pc, Role: "player", Addedat: nowISO(),
+		Campaignid: campaignID, Characterid: f.pc, Role: "player", Addedat: plataforma.NowISO(),
 	}); err != nil {
 		t.Fatalf("entrar na campanha %d: %v", campaignID, err)
 	}

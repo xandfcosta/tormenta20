@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"t20engine/api"
+	"t20engine/plataforma"
 	"testing"
 )
 
@@ -162,7 +162,7 @@ func TestHashedAssetsAreImmutableAndTheRestRevalidates(t *testing.T) {
 
 // Os timeouts são escolhidos: o que falta é tão importante quanto o que está.
 func TestServerTimeoutsProtectWithoutKillingLongResponses(t *testing.T) {
-	server := httpServerFor(api.Config{Port: "0"}, http.NewServeMux())
+	server := httpServerFor(plataforma.Config{Port: "0"}, http.NewServeMux())
 
 	if server.ReadHeaderTimeout == 0 {
 		t.Error("sem ReadHeaderTimeout: uma conexão que nunca manda cabeçalho segura uma goroutine para sempre")
@@ -186,8 +186,8 @@ func TestServerTimeoutsProtectWithoutKillingLongResponses(t *testing.T) {
 // `http://` impresso, os quatro telefones batem num 400 do próprio net/http e o
 // sintoma parece defeito do app.
 func TestTheAnnouncedURLFollowsTheScheme(t *testing.T) {
-	semTLS := lanURLs(api.Config{Port: "3001"})
-	comTLS := lanURLs(api.Config{Port: "3001", TLSCertFile: "/tmp/c.pem", TLSKeyFile: "/tmp/k.pem"})
+	semTLS := lanURLs(plataforma.Config{Port: "3001"})
+	comTLS := lanURLs(plataforma.Config{Port: "3001", TLSCertFile: "/tmp/c.pem", TLSKeyFile: "/tmp/k.pem"})
 
 	if len(semTLS) == 0 || len(comTLS) == 0 {
 		t.Skip("máquina sem endereço IPv4 não-loopback: não há URL de LAN para anunciar")
@@ -207,7 +207,7 @@ func TestTheAnnouncedURLFollowsTheScheme(t *testing.T) {
 // O piso do TLS é dito com todas as letras: o padrão do Go pode mudar de versão,
 // e um aparelho antigo negociando TLS 1.0 seria uma queda silenciosa.
 func TestTheTLSFloorIsDeclared(t *testing.T) {
-	server := httpServerFor(api.Config{Port: "0"}, http.NewServeMux())
+	server := httpServerFor(plataforma.Config{Port: "0"}, http.NewServeMux())
 
 	if server.TLSConfig == nil {
 		t.Fatal("sem TLSConfig: o piso do TLS passa a ser o do Go da vez, e ele muda de versão")

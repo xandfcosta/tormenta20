@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"t20engine/plataforma"
 	"testing"
 
 	"t20engine/db/sqlcgen"
@@ -69,7 +70,7 @@ func seedLiveSession(t *testing.T, s *Server, gmID, charID int64) int64 {
 	seedMember(t, s, campaign, charID, "player")
 	sid := seedSession(t, s, campaign)
 	if _, err := s.queries.StartSessionFresh(context.Background(), sqlcgen.StartSessionFreshParams{
-		StartedAt: sql.NullString{String: nowISO(), Valid: true}, UpdatedAt: nowISO(), ID: sid,
+		StartedAt: sql.NullString{String: plataforma.NowISO(), Valid: true}, UpdatedAt: plataforma.NowISO(), ID: sid,
 	}); err != nil {
 		t.Fatalf("start session: %v", err)
 	}
@@ -181,7 +182,7 @@ func TestEndSceneRouteRefusedWithNoRunningSession(t *testing.T) {
 	seedMember(t, s, campaign, char, "player")
 	sid := seedSession(t, s, campaign)
 	if _, err := s.queries.EndSession(context.Background(), sqlcgen.EndSessionParams{
-		EndedAt: sql.NullString{String: nowISO(), Valid: true}, UpdatedAt: nowISO(), ID: sid,
+		EndedAt: sql.NullString{String: plataforma.NowISO(), Valid: true}, UpdatedAt: plataforma.NowISO(), ID: sid,
 	}); err != nil {
 		t.Fatalf("end session: %v", err)
 	}

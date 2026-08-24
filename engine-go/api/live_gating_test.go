@@ -206,19 +206,19 @@ func TestPortaDoMestreEmTodaRotaDaMesaAoVivo(t *testing.T) {
 }
 
 // saidaDeEstado é toda linha que ENTREGA estado da mesa: o `emit` do broadcast e
-// o `writeJSON` que responde a quem comandou.
+// o `plataforma.WriteJSON` que responde a quem comandou.
 //
 // O `board-state` entrou aqui junto com o primeiro emit do tabuleiro (ALE-124):
 // enquanto o regex só conhecia `session-state`, uma peça escondida podia sair
 // sem redação nenhuma e este teste passava verde — é assim que uma rede fica
 // cega, e o próprio arquivo avisa que é assim.
 var saidaDeEstado = regexp.MustCompile(
-	`(?m)^.*(sse\.emit(Ordered)?\([^,]+, [^,]+, "(session|board)-state"|writeJSON\(w, http\.StatusOK, (state|board)\b).*$`)
+	`(?m)^.*(sse\.emit(Ordered)?\([^,]+, [^,]+, "(session|board)-state"|plataforma.WriteJSON\(w, http\.StatusOK, (state|board)\b).*$`)
 
 // O PV oculto é do mestre, e o broadcast não é o único caminho do estado até a
 // tela: a RESPOSTA do próprio comando hidrata quem o mandou, inclusive jogador.
 // Foi exatamente por aí que ele vazou (ALE-122) — a redação existia e o ack
-// passava por fora dela. Com HTTP o buraco é o mesmo, só que se chama `writeJSON`.
+// passava por fora dela. Com HTTP o buraco é o mesmo, só que se chama `plataforma.WriteJSON`.
 func TestEstadoSaiDoServidorFiltradoPorPapel(t *testing.T) {
 	linhas := saidaDeEstado.FindAllString(fonteDosComandos(t), -1)
 	if len(linhas) == 0 {

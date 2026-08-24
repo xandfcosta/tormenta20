@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"t20engine/plataforma"
 
 	"github.com/go-chi/chi/v5"
 	"t20engine/catalog"
@@ -15,7 +16,7 @@ import (
 
 // handleCatalogIndex serves GET /catalog — the accepted resource names.
 func (s *Server) handleCatalogIndex(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, catalog.Resources())
+	plataforma.WriteJSON(w, http.StatusOK, catalog.Resources())
 }
 
 // handleCatalogResource serves GET /catalog/:resource from the embedded JSON.
@@ -24,7 +25,7 @@ func (s *Server) handleCatalogResource(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "resource")
 	body, ok := catalog.Resource(name)
 	if !ok {
-		writeError(w, http.StatusNotFound, fmt.Sprintf(
+		plataforma.WriteError(w, http.StatusNotFound, fmt.Sprintf(
 			"unknown catalog resource: %q; expected one of %s", name, strings.Join(catalog.Resources(), ", ")))
 		return
 	}
@@ -35,7 +36,7 @@ func (s *Server) handleCatalogResource(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleCharacterOptions(w http.ResponseWriter, r *http.Request) {
 	body, err := catalog.Options()
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load options")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load options")
 		return
 	}
 	writeCatalogJSON(w, r, "characters/options", body)
@@ -64,7 +65,7 @@ func writeCatalogJSON(w http.ResponseWriter, r *http.Request, name string, body 
 	// `Vary` sempre, mesmo servindo cru: sem ele um proxy no meio guardaria a
 	// resposta comprimida e a devolveria a quem não aceita.
 	w.Header().Set("Vary", "Accept-Encoding")
-	if !AcceptsEncoding(r.Header.Get("Accept-Encoding"), "gzip") {
+	if !plataforma.AcceptsEncoding(r.Header.Get("Accept-Encoding"), "gzip") {
 		writeRawJSON(w, body)
 		return
 	}

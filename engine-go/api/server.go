@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"t20engine/plataforma"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -17,7 +18,7 @@ import (
 // Server holds the API dependencies (config, DB handle, typed queries, primed
 // rules catalogs) and builds the router.
 type Server struct {
-	cfg      Config
+	cfg      plataforma.Config
 	db       *sql.DB
 	queries  *sqlcgen.Queries
 	catalogs *engine.Catalogs  // nil if the catalog snapshot failed to load
@@ -101,7 +102,7 @@ func characterIDFromPath(path string) (int64, bool) {
 
 // NewServer wires the API server. The DB is already opened + migrated (db.Open);
 // catalogs may be nil (best-effort) — rule-heavy handlers guard on it.
-func NewServer(cfg Config, database *sql.DB, catalogs *engine.Catalogs) *Server {
+func NewServer(cfg plataforma.Config, database *sql.DB, catalogs *engine.Catalogs) *Server {
 	q := sqlcgen.New(database)
 	return &Server{
 		cfg: cfg, db: database, queries: q, catalogs: catalogs,

@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"t20engine/plataforma"
 	"testing"
 
 	"t20engine/db"
@@ -44,7 +45,7 @@ func newCastServer(t *testing.T) *Server {
 	if err != nil {
 		t.Fatalf("primar catálogos: %v", err)
 	}
-	return NewServer(Config{JWTSecret: "test-secret", CookieName: "t20_session"}, database, catalogs)
+	return NewServer(plataforma.Config{JWTSecret: "test-secret", CookieName: "t20_session"}, database, catalogs)
 }
 
 // seedCaster inserts a caster with the class level, PM and one learned spell —
@@ -65,7 +66,7 @@ func seedCasterWithPowers(t *testing.T, s *Server, ownerID int64, className stri
 		Intelligence: 4, Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
 		OriginChoices: "[]", ClassPowers: classPowers, ClassChoices: "{}", PowerChoices: "{}",
-		CreatedAt: nowISO(), UpdatedAt: nowISO(),
+		CreatedAt: plataforma.NowISO(), UpdatedAt: plataforma.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("semear personagem: %v", err)
@@ -76,7 +77,7 @@ func seedCasterWithPowers(t *testing.T, s *Server, ownerID int64, className stri
 		t.Fatalf("semear classe: %v", err)
 	}
 	if _, err := s.queries.CreateSpell(ctx, sqlcgen.CreateSpellParams{
-		Characterid: id, Catalogspellid: spellID, Prepared: 1, Learnedat: nowISO(),
+		Characterid: id, Catalogspellid: spellID, Prepared: 1, Learnedat: plataforma.NowISO(),
 	}); err != nil {
 		t.Fatalf("semear magia: %v", err)
 	}
@@ -268,7 +269,7 @@ func TestPmCostReductionIsAppliedAndFloored(t *testing.T) {
 	// 1º círculo custa 1, e −2 não a torna gratuita.
 	t.Run("o piso de 1 PM segura a redução", func(t *testing.T) {
 		if _, err := s.queries.CreateSpell(context.Background(), sqlcgen.CreateSpellParams{
-			Characterid: char, Catalogspellid: "luz", Prepared: 1, Learnedat: nowISO(),
+			Characterid: char, Catalogspellid: "luz", Prepared: 1, Learnedat: plataforma.NowISO(),
 		}); err != nil {
 			t.Fatalf("semear magia: %v", err)
 		}

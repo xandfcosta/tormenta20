@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"t20engine/plataforma"
 	"time"
 )
 
@@ -43,7 +44,7 @@ func (s *Server) handleSessionEvents(w http.ResponseWriter, r *http.Request) {
 	user := currentUser(r)
 	_, role, status, err := s.sessionForCaller(r.Context(), user, campaignID, sessionID)
 	if err != nil {
-		writeError(w, status, err.Error())
+		plataforma.WriteError(w, status, err.Error())
 		return
 	}
 	// Sem `Flusher` não há SSE: o quadro ficaria no buffer do net/http e o
@@ -51,7 +52,7 @@ func (s *Server) handleSessionEvents(w http.ResponseWriter, r *http.Request) {
 	// que nunca entrega.
 	flusher, podeEmpurrar := w.(http.Flusher)
 	if !podeEmpurrar {
-		writeError(w, http.StatusInternalServerError, "streaming unsupported")
+		plataforma.WriteError(w, http.StatusInternalServerError, "streaming unsupported")
 		return
 	}
 

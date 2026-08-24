@@ -1,4 +1,4 @@
-package api
+package plataforma
 
 import (
 	"bufio"
@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// loadEnvFile exports every KEY=VALUE of path that is NOT already set in the
+// LoadEnvFile exports every KEY=VALUE of path that is NOT already set in the
 // process environment, and returns without error when the file does not exist.
 //
 // The process wins on purpose (ALE-119): the file carries the environment's
@@ -17,8 +17,8 @@ import (
 // everything and ships no file at all — still overrides it without editing
 // anything on disk.
 //
-//	loadEnvFile(".env.production") // → PORT, JWT_SECRET, STATIC_DIR… exported
-func loadEnvFile(path string) error {
+//	LoadEnvFile(".env.production") // → PORT, JWT_SECRET, STATIC_DIR… exported
+func LoadEnvFile(path string) error {
 	file, err := os.Open(path)
 	if errors.Is(err, fs.ErrNotExist) {
 		return nil

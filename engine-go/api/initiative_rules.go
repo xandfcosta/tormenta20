@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"t20engine/catalog"
+	"t20engine/plataforma"
 )
 
 // As regras da iniciativa e do descanso, fora de qualquer transporte.
@@ -87,55 +88,55 @@ func (s *Server) populateParty(sessionID int64, combatants []combatant) (*Sessio
 // initiative) or a character (name/vitals pulled via resolveCombatant, with optional client
 // overrides).
 func (s *Server) materializeEntry(ctx context.Context, callerID, campaignID int64, input map[string]any) (InitiativeEntry, error) {
-	if _, hasChar := intField(input, "characterId"); !hasChar {
+	if _, hasChar := plataforma.IntField(input, "characterId"); !hasChar {
 		return materializeNpcEntry(input)
 	}
 	return s.materializeCharacterEntry(ctx, callerID, campaignID, input)
 }
 
 func materializeNpcEntry(input map[string]any) (InitiativeEntry, error) {
-	label := strings.TrimSpace(stringField(input, "label"))
+	label := strings.TrimSpace(plataforma.StringField(input, "label"))
 	if label == "" {
 		return InitiativeEntry{}, errors.New("entry.label is required for NPC entries")
 	}
-	initiative, hasInit := intField(input, "initiative")
+	initiative, hasInit := plataforma.IntField(input, "initiative")
 	if !hasInit {
 		return InitiativeEntry{}, errors.New("entry.initiative is required")
 	}
 	typ := "npc"
-	if t := stringField(input, "type"); t != "" {
+	if t := plataforma.StringField(input, "type"); t != "" {
 		typ = t
 	}
 	// PV rides along when the client seeds it (a monster dropped in from the
 	// bestiary knows its own pool). Absent stays absent: a bare NPC has no
 	// health to track, and a zeroed bar would mean something it does not.
 	entry := InitiativeEntry{Label: label, Initiative: int(initiative), Type: typ}
-	if hp, ok := intField(input, "hpCurrent"); ok {
+	if hp, ok := plataforma.IntField(input, "hpCurrent"); ok {
 		entry.HpCurrent = &hp
 	}
-	if hp, ok := intField(input, "hpMax"); ok {
+	if hp, ok := plataforma.IntField(input, "hpMax"); ok {
 		entry.HpMax = &hp
 	}
 	// O id do bestiário vem do cliente porque é ele que escolheu o verbete; o
 	// servidor não valida contra o catálogo de propósito — um id desconhecido
 	// vira "sem bloco" na tela, não um erro que derruba a adição no meio do
 	// combate (ALE-122).
-	if monsterID := strings.TrimSpace(stringField(input, "monsterId")); monsterID != "" {
+	if monsterID := strings.TrimSpace(plataforma.StringField(input, "monsterId")); monsterID != "" {
 		entry.MonsterID = &monsterID
 	}
 	// O bloco de criatura do mestre (ALE-137). Mesma escolha do `monsterId`: o
 	// servidor não confere se a criatura existe, porque um id órfão vira "sem
 	// bloco" na tela e não um erro no meio do combate. Quem confere o dono é a
 	// rota HTTP que serve o bloco, e ela só responde ao mestre.
-	if creatureID, ok := intField(input, "creatureId"); ok && creatureID > 0 {
+	if creatureID, ok := plataforma.IntField(input, "creatureId"); ok && creatureID > 0 {
 		entry.CreatureID = &creatureID
 	}
 	return entry, nil
 }
 
 func (s *Server) materializeCharacterEntry(ctx context.Context, callerID, campaignID int64, input map[string]any) (InitiativeEntry, error) {
-	charID, _ := intField(input, "characterId")
-	initiative, hasInit := intField(input, "initiative")
+	charID, _ := plataforma.IntField(input, "characterId")
+	initiative, hasInit := plataforma.IntField(input, "initiative")
 	if !hasInit {
 		return InitiativeEntry{}, errors.New("entry.initiative is required")
 	}
@@ -144,7 +145,7 @@ func (s *Server) materializeCharacterEntry(ctx context.Context, callerID, campai
 		return InitiativeEntry{}, err
 	}
 	label := stats.name
-	if l := strings.TrimSpace(stringField(input, "label")); l != "" {
+	if l := strings.TrimSpace(plataforma.StringField(input, "label")); l != "" {
 		label = l
 	}
 	cid := charID
@@ -171,7 +172,7 @@ func parseEntryPatch(v any) entryPatch {
 	if s, ok := m["type"].(string); ok {
 		p.Type = &s
 	}
-	if i, ok := intField(m, "initiative"); ok {
+	if i, ok := plataforma.IntField(m, "initiative"); ok {
 		n := int(i)
 		p.Initiative = &n
 	}
@@ -190,7 +191,7 @@ func parseEntryPatch(v any) entryPatch {
 		// mesmo dia — o outro era o `cloneState` zerando o contador de turnos.
 		{"creatureId", &p.CreatureID},
 	} {
-		if i, ok := intField(m, f.key); ok {
+		if i, ok := plataforma.IntField(m, f.key); ok {
 			v := i
 			*f.dst = &v
 		}
@@ -204,7 +205,7 @@ func parseEntryPatch(v any) entryPatch {
 
 // overrideInt returns the body's value for key when present, else def — as a pointer.
 func overrideInt(m map[string]any, key string, def int64) *int64 {
-	if v, ok := intField(m, key); ok {
+	if v, ok := plataforma.IntField(m, key); ok {
 		return ptrInt64(v)
 	}
 	return ptrInt64(def)

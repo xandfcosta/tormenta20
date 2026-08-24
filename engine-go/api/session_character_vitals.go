@@ -19,6 +19,7 @@ package api
 
 import (
 	"context"
+	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
 )
@@ -51,7 +52,7 @@ func applyDamagePlan(
 	}
 	if plan.hpCurrent != int(row.Hpcurrent) {
 		if err := q.SetHpCurrent(ctx, sqlcgen.SetHpCurrentParams{
-			HpCurrent: int64(plan.hpCurrent), UpdatedAt: nowISO(), ID: row.ID,
+			HpCurrent: int64(plan.hpCurrent), UpdatedAt: plataforma.NowISO(), ID: row.ID,
 		}); err != nil {
 			return damagePlan{}, err
 		}
@@ -115,7 +116,7 @@ func (st *sessionStore) persistVitals(
 	ctx context.Context, charID, hp int64, writeHp bool, mp int64, writeMp bool,
 ) (*int64, *int64, error) {
 	if writeHp || writeMp {
-		params := sqlcgen.UpdateVitalsParams{UpdatedAt: nowISO(), ID: charID}
+		params := sqlcgen.UpdateVitalsParams{UpdatedAt: plataforma.NowISO(), ID: charID}
 		if writeHp {
 			params.HpCurrent = nullInt(&hp)
 		}
