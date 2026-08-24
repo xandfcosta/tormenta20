@@ -166,7 +166,7 @@ A regra, daqui para frente:
 
 - **A tela fala pt-BR.** Sem exceção, incluindo `aria-label` e `title` (o Kobalte
   injeta rótulos em inglês — passe o seu, mesmo quando a palavra está escrita).
-- **A fronteira fala inglês**: nomes de tabela, campos JSON, eventos de socket e
+- **A fronteira fala inglês**: nomes de tabela, campos JSON, eventos SSE e
   rotas HTTP. Trocá-los quebra clientes e migrações, e o ganho é estético.
 - **Dentro de uma função, o idioma é o do conceito.** Nome de domínio que o
   glossário canoniza em pt-BR entra em pt-BR (`combatente`, `peça`, `lugar`);

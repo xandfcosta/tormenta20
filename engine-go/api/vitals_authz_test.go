@@ -20,7 +20,7 @@ import (
 // vitalsFixture monta uma mesa com mestre, dois jogadores com personagem e um NPC na
 // iniciativa, devolvendo o gateway e os ids que os testes usam.
 type vitalsFixture struct {
-	g         *realtimeGateway
+	srv       *Server
 	sessionID int64
 	gmUser    int64
 	player    int64
@@ -52,11 +52,11 @@ func newVitalsFixture(t *testing.T) vitalsFixture {
 		t.Fatalf("seed session: %v", err)
 	}
 
-	g := &realtimeGateway{s: s}
+	srv := s
 	// O id da entrada é do SERVIDOR (`addEntry` sobrescreve o que vem do cliente),
 	// então o teste lê de volta o que ele gerou em vez de inventar um.
 	add := func(label, kind string, characterID *int64) string {
-		state, err := g.s.sessions.addInitiativeEntry(sess.ID, InitiativeEntry{
+		state, err := srv.sessions.addInitiativeEntry(sess.ID, InitiativeEntry{
 			Label: label, Initiative: 10, Type: kind, CharacterID: characterID,
 		})
 		if err != nil {
@@ -72,15 +72,15 @@ func newVitalsFixture(t *testing.T) vitalsFixture {
 	}
 
 	return vitalsFixture{
-		g: g, sessionID: sess.ID, gmUser: gmUser, player: player, other: other,
+		srv: srv, sessionID: sess.ID, gmUser: gmUser, player: player, other: other,
 		pcEntry:  add("Herói", "character", &pcID),
 		otherPc:  add("Colega", "character", &otherID),
 		npcEntry: add("Ogro", "npc", nil),
 	}
 }
 
-func (f vitalsFixture) ctx(userID int64, role string) msgCtx {
-	return msgCtx{userID: userID, sessionID: f.sessionID, role: role}
+func (f vitalsFixture) ctx(userID int64, role string) liveCtx {
+	return liveCtx{userID: userID, sessionID: f.sessionID, role: role}
 }
 
 func TestAssertVitalsEditable(t *testing.T) {
@@ -88,28 +88,28 @@ func TestAssertVitalsEditable(t *testing.T) {
 
 	t.Run("o mestre edita qualquer combatente", func(t *testing.T) {
 		for _, entry := range []string{f.pcEntry, f.otherPc, f.npcEntry} {
-			if err := f.g.assertVitalsEditable(f.ctx(f.gmUser, "gm"), entry); err != nil {
+			if err := f.srv.assertVitalsEditableFor(context.Background(), f.ctx(f.gmUser, "gm"), entry); err != nil {
 				t.Errorf("mestre em %q: %v", entry, err)
 			}
 		}
 	})
 
 	t.Run("o jogador edita o próprio personagem", func(t *testing.T) {
-		if err := f.g.assertVitalsEditable(f.ctx(f.player, "player"), f.pcEntry); err != nil {
+		if err := f.srv.assertVitalsEditableFor(context.Background(), f.ctx(f.player, "player"), f.pcEntry); err != nil {
 			t.Errorf("jogador no próprio PC: %v", err)
 		}
 	})
 
 	// O caso que dói na mesa: um jogador tirando PV do personagem de outro.
 	t.Run("o jogador não edita o personagem de outro", func(t *testing.T) {
-		err := f.g.assertVitalsEditable(f.ctx(f.player, "player"), f.otherPc)
+		err := f.srv.assertVitalsEditableFor(context.Background(), f.ctx(f.player, "player"), f.otherPc)
 		if err == nil {
 			t.Fatal("jogador editou o PC de outro jogador")
 		}
 	})
 
 	t.Run("o jogador não edita NPC", func(t *testing.T) {
-		err := f.g.assertVitalsEditable(f.ctx(f.player, "player"), f.npcEntry)
+		err := f.srv.assertVitalsEditableFor(context.Background(), f.ctx(f.player, "player"), f.npcEntry)
 		if err == nil || !strings.Contains(err.Error(), "NPC") {
 			t.Fatalf("err=%v, queria recusa citando NPC", err)
 		}
@@ -118,7 +118,7 @@ func TestAssertVitalsEditable(t *testing.T) {
 	// A mensagem carrega o id recusado: sem ele, o mestre lê "não encontrado" e
 	// não sabe qual linha o cliente pediu.
 	t.Run("entrada inexistente é recusada nomeando o id", func(t *testing.T) {
-		err := f.g.assertVitalsEditable(f.ctx(f.player, "player"), "e-fantasma")
+		err := f.srv.assertVitalsEditableFor(context.Background(), f.ctx(f.player, "player"), "e-fantasma")
 		if err == nil || !strings.Contains(err.Error(), "e-fantasma") {
 			t.Fatalf("err=%v, queria recusa citando e-fantasma", err)
 		}

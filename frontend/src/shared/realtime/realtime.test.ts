@@ -2,7 +2,7 @@ import { createRoot } from 'solid-js'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   type BoardState,
-  type SessionSocket,
+  type SessionStream,
   type SessionRuntimeState,
   createSessionSocket,
 } from './realtime'
@@ -12,43 +12,44 @@ import {
  * server events back. A named fake, not an inline stub — the realtime contract
  * is the thing under test, and it deserves a readable double.
  */
-class FakeSocket implements SessionSocket {
-  readonly emitted: { event: string; args: unknown[] }[] = []
-  connected = false
-  disconnectCount = 0
+/**
+ * Duas metades, porque o transporte agora tem duas (ALE-253): o FLUXO desce
+ * eventos e o COMANDO sobe. O socket fazia as duas com o mesmo objeto.
+ */
+class FakeStream implements SessionStream {
+  closeCount = 0
   private handlers = new Map<string, (payload: never) => void>()
-  /** Acks the next `join-session` / `get-session-state` when set. */
-  ackWith: Record<string, unknown> = {}
 
   on(event: string, handler: (payload: never) => void): void {
     this.handlers.set(event, handler)
   }
 
-  emit(event: string, ...args: unknown[]): void {
-    this.emitted.push({ event, args })
-    const ack = args.find((arg): arg is (value: unknown) => void => typeof arg === 'function')
-    if (ack && event in this.ackWith) ack(this.ackWith[event])
+  close(): void {
+    this.closeCount++
   }
 
-  connect(): void {
-    this.connected = true
-  }
-
-  disconnect(): void {
-    // Entra na MESMA linha do tempo dos emits: sem isto não dá para afirmar que
-    // o `leave-session` saiu antes, que é a regra em jogo.
-    this.emitted.push({ event: '(disconnect)', args: [] })
-    this.connected = false
-    this.disconnectCount++
-  }
-
-  /** Pretends the server sent an event. */
+  /** Finge que o servidor empurrou um evento. */
   server<T>(event: string, payload?: T): void {
     this.handlers.get(event)?.(payload as never)
   }
+}
 
-  emitsOf(event: string): unknown[][] {
-    return this.emitted.filter((e) => e.event === event).map((e) => e.args)
+/** Grava o que SOBE e responde o que o teste mandar. */
+class FakeCommands {
+  readonly sent: { event: string; body: Record<string, unknown> }[] = []
+  respondWith: Record<string, unknown> = {}
+
+  readonly run = (
+    event: string,
+    _ids: { campaignId: number; sessionId: number },
+    body: Record<string, unknown>,
+  ): Promise<unknown> => {
+    this.sent.push({ event, body })
+    return Promise.resolve(this.respondWith[event] ?? null)
+  }
+
+  sentOf(event: string): Record<string, unknown>[] {
+    return this.sent.filter((c) => c.event === event).map((c) => c.body)
   }
 }
 
@@ -60,74 +61,70 @@ const STATE: SessionRuntimeState = {
 }
 
 /** Como o `withSocket`, mas com o aviso de ficha mudada ligado (ALE-245). */
-function withCharacterWatch(run: (socket: FakeSocket, avisados: number[]) => void) {
-  const socket = new FakeSocket()
+function withCharacterWatch(run: (stream: FakeStream, avisados: number[]) => void) {
+  const stream = new FakeStream()
+  const comandos = new FakeCommands()
   const avisados: number[] = []
   createRoot((dispose) => {
     createSessionSocket(
       () => 1,
       () => 7,
-      { connect: () => socket, onCharacterChanged: (id) => avisados.push(id) },
+      {
+        connect: () => stream,
+        command: comandos.run,
+        onCharacterChanged: (id) => avisados.push(id),
+      },
     )
-    run(socket, avisados)
+    run(stream, avisados)
     dispose()
   })
   return avisados
 }
 
-function withSocket(run: (socket: FakeSocket, rt: ReturnType<typeof createSessionSocket>) => void) {
-  const socket = new FakeSocket()
+function withSocket(
+  run: (stream: FakeStream, rt: ReturnType<typeof createSessionSocket>, comandos: FakeCommands) => void,
+) {
+  const stream = new FakeStream()
+  const comandos = new FakeCommands()
   createRoot((dispose) => {
     const rt = createSessionSocket(
       () => 1,
       () => 7,
-      { connect: () => socket },
+      { connect: () => stream, command: comandos.run },
     )
-    run(socket, rt)
+    run(stream, rt, comandos)
     dispose()
   })
-  return socket
+  return { stream, comandos }
 }
+
+/** Os corpos enviados de um comando. O ESCOPO não vem mais no corpo: ele está
+ *  no caminho da rota, e é o `realtime-wire.test.ts` que o prende. */
+const comandosDe = (c: FakeCommands, event: string) => c.sentOf(event)
 
 beforeEach(() => vi.useFakeTimers())
 afterEach(() => vi.useRealTimers())
 
 describe('createSessionSocket — ciclo de vida', () => {
-  it('conecta e entra na sala da sessão', () => {
-    const socket = withSocket((socket) => {
-      socket.ackWith = { 'join-session': { joined: 'session:7' } }
-      socket.server('connect')
+  // Sem `join-session` e sem ack: entrar na sala É abrir o fluxo, e o servidor
+  // resolve a mesa pelo CAMINHO da requisição (ALE-253). O que sobreviveu da
+  // regra antiga é o que importava — ao conectar, a tela se hidrata.
+  it('conectar hidrata a tela por HTTP', () => {
+    withSocket((stream, _rt, comandos) => {
+      stream.server('connect')
 
-      expect(socket.connected).toBe(true)
-      expect(socket.emitsOf('join-session')[0][0]).toEqual({ campaignId: 1, sessionId: 7 })
-    })
-    expect(socket.disconnectCount).toBe(1)
-  })
-
-  // O ack do join é o que libera pedir o estado — pedir antes traria a sala vazia.
-  it('só pede o estado depois do ack do join', () => {
-    withSocket((socket) => {
-      socket.server('connect')
-      expect(socket.emitsOf('get-session-state')).toHaveLength(0)
-
-      socket.ackWith = { 'join-session': { joined: 'session:7' } }
-      socket.server('connect')
-
-      expect(socket.emitsOf('get-session-state')).toHaveLength(1)
+      expect(comandosDe(comandos, 'get-session-state')).toHaveLength(1)
+      expect(comandosDe(comandos, 'get-board-state')).toHaveLength(1)
     })
   })
 
-  // A ORDEM é a regra: desconectar antes de sair da sala deixa o servidor com
-  // presença fantasma até o timeout. A asserção antiga comparava o índice com o
-  // tamanho da lista — verdadeira para qualquer evento que exista — então media
-  // a existência de novo, não a ordem.
-  it('sai da sala ANTES de desconectar', () => {
-    const socket = withSocket(() => {})
+  // SAIR é FECHAR o fluxo, e some a corrida que a regra antiga prendia: não há
+  // mais um "leave" que possa sair DEPOIS do disconnect, porque o servidor tira
+  // a presença pelo cancelamento do contexto da requisição.
+  it('desmontar fecha o fluxo', () => {
+    const { stream } = withSocket(() => {})
 
-    const events = socket.emitted.map((e) => e.event)
-    expect(events).toContain('leave-session')
-    expect(socket.disconnectCount).toBe(1)
-    expect(events.indexOf('leave-session')).toBeLessThan(events.indexOf('(disconnect)'))
+    expect(stream.closeCount).toBe(1)
   })
 })
 
@@ -198,38 +195,32 @@ describe('createSessionSocket — estado', () => {
 })
 
 describe('createSessionSocket — ações', () => {
-  it('toda ação carrega o escopo da sessão', () => {
-    withSocket((socket, rt) => {
+  // O ESCOPO saiu do corpo: ele está no CAMINHO da rota agora, e quem o prende
+  // é o `realtime-wire.test.ts`. Aqui prova-se que a ação sai, e com o quê.
+  it('cada ação sai como um comando próprio', () => {
+    withSocket((_stream, rt, comandos) => {
       rt.nextTurn()
       rt.removeEntry('a')
 
-      expect(socket.emitsOf('initiative-next-turn')[0][0]).toEqual({
-        campaignId: 1,
-        sessionId: 7,
-      })
-      expect(socket.emitsOf('initiative-remove')[0][0]).toMatchObject({ entryId: 'a' })
+      expect(comandosDe(comandos, 'initiative-next-turn')).toHaveLength(1)
+      expect(comandosDe(comandos, 'initiative-remove')[0]).toMatchObject({ entryId: 'a' })
     })
   })
 
   it('o delta de vitais vai achatado, como o servidor lê', () => {
-    withSocket((socket, rt) => {
+    withSocket((_stream, rt, comandos) => {
       rt.deltaVitals('a', { hpDelta: -3 })
 
-      expect(socket.emitsOf('vitals-delta')[0][0]).toEqual({
-        campaignId: 1,
-        sessionId: 7,
-        entryId: 'a',
-        hpDelta: -3,
-      })
+      expect(comandosDe(comandos, 'vitals-delta')[0]).toEqual({ entryId: 'a', hpDelta: -3 })
     })
   })
 
   // O D20, e nunca o total (ALE-213): quem soma o bônus da perícia é o Go.
   it('iniciativa própria manda o personagem e o d20', () => {
-    withSocket((socket, rt) => {
+    withSocket((_stream, rt, comandos) => {
       rt.rollSelfInitiative(42, 17)
 
-      expect(socket.emitsOf('initiative-self')[0][0]).toMatchObject({
+      expect(comandosDe(comandos, 'initiative-self')[0]).toMatchObject({
         characterId: 42,
         d20: 17,
       })
@@ -284,31 +275,21 @@ describe('o tabuleiro no fio', () => {
   })
 
   it('entrar na sessão já pede o tabuleiro', () => {
-    const socket = new FakeSocket()
-    socket.ackWith = { 'join-session': { joined: 'session:7' } }
-    createRoot((dispose) => {
-      createSessionSocket(
-        () => 1,
-        () => 7,
-        { connect: () => socket },
-      )
-      socket.server('connect')
-      dispose()
-    })
+    withSocket((stream, _rt, comandos) => {
+      stream.server('connect')
 
-    expect(socket.emitsOf('get-board-state')).toHaveLength(1)
+      expect(comandosDe(comandos, 'get-board-state')).toHaveLength(1)
+    })
   })
 
   it('mover a peça sai com o id e o quadrado', () => {
-    const socket = withSocket((_socket, rt) => {
+    withSocket((_stream, rt, comandos) => {
       rt.updateToken('t1', { x: 5, y: 6 })
-    })
 
-    expect(socket.emitsOf('board-token-update')[0][0]).toEqual({
-      campaignId: 1,
-      sessionId: 7,
-      tokenId: 't1',
-      patch: { x: 5, y: 6 },
+      expect(comandosDe(comandos, 'board-token-update')[0]).toEqual({
+        tokenId: 't1',
+        patch: { x: 5, y: 6 },
+      })
     })
   })
 })
@@ -327,9 +308,9 @@ describe('o tabuleiro no fio', () => {
  */
 describe('character-changed', () => {
   it('entrega o id de quem mudou', () => {
-    const avisados = withCharacterWatch((socket) => {
-      socket.server('connect')
-      socket.server('character-changed', { characterId: 14 })
+    const avisados = withCharacterWatch((stream) => {
+      stream.server('connect')
+      stream.server('character-changed', { characterId: 14 })
     })
 
     expect(avisados).toEqual([14])
@@ -340,10 +321,10 @@ describe('character-changed', () => {
   // notifica ao receber o mesmo valor, e aplicar duas condições em sequência no
   // mesmo PC é o caso comum.
   it('o mesmo personagem duas vezes avisa duas vezes', () => {
-    const avisados = withCharacterWatch((socket) => {
-      socket.server('connect')
-      socket.server('character-changed', { characterId: 14 })
-      socket.server('character-changed', { characterId: 14 })
+    const avisados = withCharacterWatch((stream) => {
+      stream.server('connect')
+      stream.server('character-changed', { characterId: 14 })
+      stream.server('character-changed', { characterId: 14 })
     })
 
     expect(avisados).toEqual([14, 14])
@@ -352,10 +333,10 @@ describe('character-changed', () => {
   // Corpo sem id não vira invalidação de `undefined`, que derrubaria o cache
   // inteiro de personagens por uma mensagem malformada.
   it('corpo sem id é ignorado', () => {
-    const avisados = withCharacterWatch((socket) => {
-      socket.server('connect')
-      socket.server('character-changed', {})
-      socket.server('character-changed', { characterId: 'catorze' })
+    const avisados = withCharacterWatch((stream) => {
+      stream.server('connect')
+      stream.server('character-changed', {})
+      stream.server('character-changed', { characterId: 'catorze' })
     })
 
     expect(avisados).toEqual([])

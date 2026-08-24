@@ -1,6 +1,9 @@
 package api
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 // A MESA AO VIVO PRECISA SABER QUE A FICHA MUDOU (ALE-245).
 //
@@ -9,30 +12,60 @@ import "testing"
 // perícias da condição (ALE-28), então os dois viam números diferentes do mesmo
 // personagem, sem nada na tela dizendo que discordavam. É a família da ALE-122.
 //
-// O que impedia era estrutural: o gateway guarda `s *Server`, e o ponteiro
-// nunca vai na direção contrária, então NENHUM handler HTTP conseguia falar com
-// a sala. O `Server` ganhou um gancho, e o `SocketHandler()` o preenche.
-
-// TestOGanchoNuloNaoDerruba prende a escolha de nulo ser caminho NORMAL.
+// Este teste mudou de FORMA na ALE-253, e o motivo vale mais que ele. Antes ele
+// prendia um GANCHO: `characterChanged` chamava `s.notifyCharacterChanged` se
+// não fosse nulo, e havia um caso afirmando que NULO NÃO DERRUBA. Aquilo estava
+// certo para o socket — o gateway nascia noutro arquivo e o `Server` existia
+// sem ele. Só que apagar o gateway deixou o gancho sem quem o preenchesse, o Go
+// inteiro seguiu VERDE, e quem acusou foi o e2e de dois clientes.
 //
-// O `Server` existe sem gateway em dois lugares de verdade: em todo teste de
-// handler, e num binário que sirva só HTTP. Se `characterChanged` exigisse o
-// gancho, a suíte inteira de handlers quebraria — e o que é pior, quebraria
-// longe daqui.
-func TestOGanchoNuloNaoDerruba(t *testing.T) {
-	s := &Server{}
+// Um teste que afirma "desligado é caminho normal" não distingue desligado de
+// QUEBRADO. Agora o hub é campo do `Server`, não há nulo a tolerar, e o que se
+// prende é o que a mesa recebe.
 
-	s.characterChanged(7) // não deve entrar em pânico
-}
-
-func TestOGanchoRecebeOPersonagemQueMudou(t *testing.T) {
-	var avisados []int64
-	s := &Server{notifyCharacterChanged: func(id int64) { avisados = append(avisados, id) }}
+// TestAFichaQueMudouChegaNaMesa exercita o caminho inteiro contra o hub de
+// verdade — o mesmo que o handler usa.
+func TestAFichaQueMudouChegaNaMesa(t *testing.T) {
+	umPersonagem := func(id int64) *int64 { return &id }
+	s := &Server{
+		sse: newSSEHub(),
+		sessions: &sessionStore{states: map[int64]*SessionRuntimeState{
+			7: {Initiative: []InitiativeEntry{{ID: "a", CharacterID: umPersonagem(14)}}},
+		}},
+	}
+	conn := s.sse.add(7, "c1", "player")
 
 	s.characterChanged(14)
 
-	if len(avisados) != 1 || avisados[0] != 14 {
-		t.Fatalf("avisados = %v, queria [14]", avisados)
+	select {
+	case frame := <-conn.frames:
+		if !strings.Contains(string(frame), "character-changed") ||
+			!strings.Contains(string(frame), `"characterId":14`) {
+			t.Fatalf("quadro = %q", frame)
+		}
+	default:
+		t.Fatal("a mesa não recebeu aviso nenhum — é a ALE-245 desligada de novo")
+	}
+}
+
+// Mesa que NÃO tem o personagem não recebe nada. O recorte é o que impede uma
+// ficha salva de mandar toda a casa refazer busca.
+func TestMesaSemOPersonagemNaoRecebe(t *testing.T) {
+	umPersonagem := func(id int64) *int64 { return &id }
+	s := &Server{
+		sse: newSSEHub(),
+		sessions: &sessionStore{states: map[int64]*SessionRuntimeState{
+			7: {Initiative: []InitiativeEntry{{ID: "a", CharacterID: umPersonagem(99)}}},
+		}},
+	}
+	conn := s.sse.add(7, "c1", "player")
+
+	s.characterChanged(14)
+
+	select {
+	case frame := <-conn.frames:
+		t.Fatalf("mesa sem o personagem recebeu %q", frame)
+	default:
 	}
 }
 

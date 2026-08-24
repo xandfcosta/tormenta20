@@ -83,12 +83,14 @@ func (s *Server) registraIniciativaDaMesa(r *http.Request, campaignID, sessionID
 	if err != nil {
 		return err
 	}
-	// O mestre está na SPA, ouvindo o socket. Sem este aviso a linha nova só
-	// apareceria para ele no próximo F5 — e é exatamente aqui que o custo de ter
-	// DOIS transportes aparece: cada escrita nova tem de lembrar dos dois.
-	if s.rt == nil {
-		return fmt.Errorf("o tempo real não subiu; sua iniciativa foi gravada mas a mesa não foi avisada")
-	}
-	s.rt.emitSessionState(sessionID, estado)
+	// O mestre está na SPA. Sem este aviso a linha nova só apareceria para ele
+	// no próximo F5.
+	//
+	// Isto era `s.rt.emitSessionState`, com uma guarda de nil e uma mensagem de
+	// erro para o caso de o socket não ter subido — e um comentário reclamando
+	// que "cada escrita nova tem de lembrar dos dois transportes". A ALE-253
+	// tirou o socket do projeto e o custo junto: há um caminho de publicação só,
+	// ele existe desde o `newServer`, e não há mais o que estar nil.
+	s.publishSessionState(sessionID, estado)
 	return nil
 }

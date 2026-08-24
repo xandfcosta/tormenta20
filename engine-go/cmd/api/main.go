@@ -85,7 +85,7 @@ func httpServerFor(cfg api.Config, mux http.Handler) *http.Server {
 //   - `ReadHeaderTimeout` existe porque sem ele uma conexão que abre e nunca
 //     manda o cabeçalho segura uma goroutine para sempre (slowloris);
 //   - `IdleTimeout` recolhe conexões ociosas do keep-alive;
-//   - `WriteTimeout` fica de FORA de propósito. Ele mataria o socket.io, que é
+//   - `WriteTimeout` fica de FORA de propósito. Ele mataria o fluxo SSE, que é
 //     conexão longa por natureza, e o download do wasm de 780 KB numa rede
 //     ruim. É o timeout que parece obrigatório e é justamente o errado aqui.
 func serve(ctx context.Context, cfg api.Config, mux http.Handler) error {
@@ -117,7 +117,7 @@ func serve(ctx context.Context, cfg api.Config, mux http.Handler) error {
 
 // escutar sobe o listener: HTTPS quando o par de certificados está configurado,
 // HTTP puro quando não (ALE-118). Os dois caminhos são o MESMO processo servindo
-// SPA, API e socket — o TLS não acrescenta um segundo runtime.
+// SPA, API e fluxo de eventos — o TLS não acrescenta um segundo runtime.
 //
 // Um pedido `http://` chegando numa porta com TLS recebe "Client sent an HTTP
 // request to an HTTPS server" do próprio net/http. Feio, mas VISÍVEL — que é o
@@ -149,12 +149,16 @@ func primeCatalogs(path string) *engine.Catalogs {
 	return catalogs
 }
 
-// buildMux wires the realtime gateway plus either the production single binary
-// (SPA + /api/* + socket on one port) or the dev shape, where Vite serves the
-// front and strips /api before proxying to us.
+// buildMux monta ou o binário único de produção (SPA + /api/* na mesma porta),
+// ou a forma de desenvolvimento, em que o Vite serve o front e tira o /api antes
+// de encaminhar para cá.
+//
+// O socket.io tinha caminho PRÓPRIO aqui ("/socket.io/"), fora do `Router()` e
+// por isso fora do CORS e do `requireAuth` — o que obrigava o `guardSocketOrigin`
+// a repetir a política de origem por conta. Com SSE o tempo real é uma rota como
+// as outras e essa exceção sumiu (ALE-253).
 func buildMux(cfg api.Config, srv *api.Server) *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.Handle("/socket.io/", srv.SocketHandler())
 	// O piloto Datastar (ALE-219): uma PÁGINA renderizada pelo servidor, ao lado
 	// da SPA. Fora do `/api` de propósito — o jogador abre e favorita esta URL.
 	// Vive nos dois formatos porque o `ServeMux` casa pelo prefixo mais longo.

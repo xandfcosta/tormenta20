@@ -287,8 +287,7 @@ func TestPartyRestCountsWhoActuallyRested(t *testing.T) {
 	seedMember(t, s, campaignID, heroi, "player")
 	user := AuthUser{ID: gm, Email: "gm@t.com"}
 
-	g := &realtimeGateway{s: s}
-	done, total, err := g.restParty(user, campaignID, sid, "scene", "normal")
+	done, total, err := s.restParty(user, campaignID, sid, "scene", "normal")
 	if err != nil || total != 1 || done != 1 {
 		t.Fatalf("descanso saudável deu done=%d total=%d err=%v", done, total, err)
 	}
@@ -297,7 +296,7 @@ func TestPartyRestCountsWhoActuallyRested(t *testing.T) {
 	if _, err := s.db.Exec("DROP TABLE active_effects"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
-	done, total, err = g.restParty(user, campaignID, sid, "scene", "normal")
+	done, total, err = s.restParty(user, campaignID, sid, "scene", "normal")
 
 	if err != nil {
 		t.Fatalf("uma ficha que falha não pode derrubar o descanso inteiro: %v", err)

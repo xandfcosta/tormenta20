@@ -29,9 +29,6 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api/, ''),
       },
-      // The realtime client connects to window.location.origin; socket.io lives
-      // on the same backend, so proxy its path with the WebSocket upgrade on.
-      '/socket.io': { target: API_TARGET, changeOrigin: true, ws: true },
       // O piloto Datastar (ALE-219): uma página servida pelo GO, não por este
       // servidor. Sem proxy ela só abriria em :3001 — o cookie funcionaria
       // (cookie ignora porta), mas as fontes self-hosted de `public/` não, e o
@@ -63,7 +60,6 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api/, ''),
       },
-      '/socket.io': { target: API_TARGET, changeOrigin: true, ws: true },
       // O piloto Datastar (ALE-219): uma página servida pelo GO, não por este
       // servidor. Sem proxy ela só abriria em :3001 — o cookie funcionaria
       // (cookie ignora porta), mas as fontes self-hosted de `public/` não, e o

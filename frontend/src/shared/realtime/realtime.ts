@@ -1,6 +1,8 @@
 import { type Accessor, createRenderEffect, createSignal, onCleanup } from 'solid-js'
-import { io } from 'socket.io-client'
 import type { BoardSquare } from '@/shared/lib/engine-wasm'
+import { sendCommand } from './commands'
+
+export { COMMANDS, sendCommand, type CommandSpec } from './commands'
 
 /**
  * Session runtime state, mirroring the backend `SessionRuntimeState`. The
@@ -172,15 +174,14 @@ export type RestScope = 'scene' | 'day'
 export type RestCondition = 'ruim' | 'normal' | 'confortavel' | 'luxuosa'
 
 /**
- * The slice of socket.io this app uses. Owning the interface is what lets the
- * tests drive a FakeSocket — and keeps `socket.io-client` from leaking past
- * this module (ALE-91 kept WS, but the seam is what makes revisiting cheap).
+ * A fatia do transporte de DESCIDA que este app usa. Ter a interface é o que
+ * deixa o teste dirigir um `FakeStream` — e é o que tornou a troca de socket.io
+ * por SSE barata (ALE-253): a costura foi escrita na ALE-91 justamente para o
+ * dia de revisitar, e o dia chegou sem que nenhum recurso soubesse.
  */
-export type SessionSocket = {
+export type SessionStream = {
   on: (event: string, handler: (payload: never) => void) => void
-  emit: (event: string, ...args: unknown[]) => void
-  connect: () => void
-  disconnect: () => void
+  close: () => void
 }
 
 const EMPTY_STATE: SessionRuntimeState = {
@@ -194,11 +195,6 @@ const EMPTY_STATE: SessionRuntimeState = {
 /** How long the rest banner stays up before it reads as stale state. */
 const REST_FLASH_MS = 4000
 
-/**
- * Opens a socket to the realtime gateway. Auth rides the session cookie — the
- * WS handshake picks it up with `withCredentials`. The token override exists
- * for headless clients.
- */
 /** O acervo chega embrulhado em `{ places }`; ack de outra forma é lista vazia. */
 const readPlaces = (ack: unknown): BoardPlace[] =>
   typeof ack === 'object' && ack !== null && 'places' in ack
@@ -210,14 +206,34 @@ const readPlaces = (ack: unknown): BoardPlace[] =>
 const readBoard = (ack: unknown): BoardState | null =>
   typeof ack === 'object' && ack !== null && 'version' in ack ? (ack as BoardState) : null
 
-export function connectSession(token?: string): SessionSocket {
-  return io(window.location.origin, {
-    withCredentials: true,
-    transports: ['websocket', 'polling'],
-    auth: token ? { token } : undefined,
-    autoConnect: false,
-  }) as unknown as SessionSocket
+/**
+ * O FLUXO DE DESCIDA (ALE-253). Era socket.io; virou SSE.
+ *
+ * `withCredentials` porque o servidor autentica por COOKIE — o `EventSource`
+ * não deixa pôr cabeçalho, e é justamente por o `extractToken` ler o cookie
+ * antes do header que esta troca não precisou de token na query string.
+ */
+export function connectSession(campaignId: number, sessionId: number): SessionStream {
+  const url = `/api/campaigns/${campaignId}/sessions/${sessionId}/events`
+  const source = new EventSource(url, { withCredentials: true })
+  return {
+    on: (event, handler) => {
+      if (event === 'connect') {
+        source.addEventListener('open', () => handler(undefined as never))
+        return
+      }
+      if (event === 'disconnect') {
+        source.addEventListener('error', () => handler(undefined as never))
+        return
+      }
+      source.addEventListener(event, (e) => {
+        handler(JSON.parse((e as MessageEvent).data) as never)
+      })
+    },
+    close: () => source.close(),
+  }
 }
+
 
 export type SessionRealtime = {
   state: Accessor<SessionRuntimeState>
@@ -332,7 +348,9 @@ export function createSessionSocket(
   campaignId: Accessor<number>,
   sessionId: Accessor<number>,
   options: {
-    connect?: (token?: string) => SessionSocket
+    connect?: (campaignId: number, sessionId: number) => SessionStream
+    /** Manda um comando. Injetável para o teste ver o que sai no fio. */
+    command?: (event: string, ids: { campaignId: number; sessionId: number }, body: Record<string, unknown>) => Promise<unknown>
     /** A ficha de um personagem da mesa mudou por HTTP e quem está olhando
      *  precisa refazer a busca (ALE-245).
      *
@@ -362,8 +380,8 @@ export function createSessionSocket(
     setBoard(next)
   }
 
-  let socket: SessionSocket | null = null
   const open = options.connect ?? connectSession
+  const fire = options.command ?? sendCommand
 
   // The rest banner is a NOTIFICATION: it clears itself, or it reads as state.
   // The timer lives here rather than in an effect — an effect would tie a
@@ -380,24 +398,23 @@ export function createSessionSocket(
   // the primitive is born — a deferred effect leaves the first actions of the
   // component firing into nothing.
   createRenderEffect(() => {
-    const scope = { campaignId: campaignId(), sessionId: sessionId() }
-    const live = open()
-    socket = live
+    const ids = { campaignId: campaignId(), sessionId: sessionId() }
+    const live = open(ids.campaignId, ids.sessionId)
 
     live.on('connect', () => {
       setIsConnected(true)
       setError(null)
-      // The state request waits for the join ack — asking earlier answers for
-      // a room this socket has not entered yet.
-      live.emit('join-session', scope, (ack: unknown) => {
-        if (typeof ack !== 'object' || !ack || !('joined' in ack)) return
-        live.emit('get-session-state', scope, (next: SessionRuntimeState) => setState(next))
-        live.emit('get-board-state', scope, (next: BoardState | null) => setBoard(next ?? null))
+      // Hidrata por HTTP, e não por um pedido no fluxo: o SSE só desce. É o
+      // MESMO caminho da primeira carga, então nenhum estado vive só no fio —
+      // que é o que deixa o hub descartar quadro de leitor lento sem medo.
+      void run('get-session-state', {}).then((next) => {
+        if (next) setState(next as SessionRuntimeState)
       })
+      void run('get-board-state', {}).then((next) => setBoard(readBoard(next)))
     })
     live.on('disconnect', () => {
       setIsConnected(false)
-      // A dropped connection must not leave the roster showing people who left.
+      // Conexão caída não pode deixar o elenco mostrando quem já saiu.
       setPresent([])
     })
     live.on('unauthorized', (payload: { message?: string }) =>
@@ -418,34 +435,32 @@ export function createSessionSocket(
       }
     })
 
-    live.connect()
-
+    // Sair da sala é FECHAR o fluxo: o servidor detecta pelo cancelamento do
+    // contexto da requisição e tira a presença sozinho. Some o `leave-session`
+    // — e com ele a corrida de mandar a despedida DEPOIS de desconectar, que a
+    // ALE-186 teve de prender com um teste de ordem.
     onCleanup(() => {
-      live.emit('leave-session', { sessionId: scope.sessionId })
-      live.disconnect()
-      socket = null
+      live.close()
     })
   })
 
-  /** Every mutation carries the session scope; the server authorizes on it. */
+  /** Roda um comando pelo fio de subida. */
+  const run = (event: string, body: Record<string, unknown>) =>
+    fire(event, { campaignId: campaignId(), sessionId: sessionId() }, body)
+
+  /** Dispara e esquece — o que o `send` do socket fazia. A falha vira `error`
+   *  em vez de promessa rejeitada solta: ninguém acima espera por ela, e uma
+   *  rejeição sem dono some no console. */
   const send = (event: string, body: Record<string, unknown> = {}) => {
-    socket?.emit(event, { campaignId: campaignId(), sessionId: sessionId(), ...body })
+    void run(event, body).catch((e: unknown) => {
+      setError(e instanceof Error ? e.message : 'Falha ao falar com a mesa')
+    })
   }
 
-  /** Pergunta e espera a resposta. Sem socket, o `read` responde por `null` em
-   *  vez de pendurar a tela numa promessa que nunca resolve. */
+  /** Pergunta e espera. O ack do socket virou a RESPOSTA do HTTP, de graça.
+   *  Falha responde pelo `read(null)` em vez de pendurar a tela. */
   const ask = <T>(event: string, body: Record<string, unknown>, read: (ack: unknown) => T) =>
-    new Promise<T>((resolve) => {
-      if (!socket) {
-        resolve(read(null))
-        return
-      }
-      socket.emit(
-        event,
-        { campaignId: campaignId(), sessionId: sessionId(), ...body },
-        (ack: unknown) => resolve(read(ack)),
-      )
-    })
+    run(event, body).then(read).catch(() => read(null))
 
   return {
     state,

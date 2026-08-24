@@ -24,40 +24,42 @@ type Server struct {
 	sessions *sessionStore     // in-memory realtime tracker state (B.6)
 	boards   *boardStore       // tabuleiro tático vivo por sessão (ALE-124)
 	presence *presenceRegistry // who's-online per session room (B.6)
-	// rt é o gateway do socket, guardado para que um SEGUNDO transporte possa
-	// avisar as salas (ALE-219): a página da Mesa muta o mesmo store, e sem
-	// isto o mestre na SPA só veria a iniciativa nova no próximo refresh.
-	//
-	// Nil até o `SocketHandler()` construir o gateway. Quem depende dele avisa
-	// em vez de mutar às cegas — mutação que ninguém vê é pior que recusa.
-	rt *realtimeGateway
+	// O `rt` (gateway do socket) MORREU aqui na ALE-253, e com ele a razão de
+	// ele existir: o piloto o guardava para poder avisar as salas de um
+	// SEGUNDO transporte. Agora há um só, e quem publica é o hub.
+	sse *sseHub // leitores SSE por sessão e papel (ALE-253)
 	// charMu serializes mutating HTTP requests per character (characterID → *sync.Mutex)
 	// so concurrent read-modify-write mutations (rapid damage/vitals clicks) can't lose
 	// updates. Mirrors the per-session lock used by the realtime store.
 	charMu sync.Map
-	// notifyCharacterChanged avisa as mesas AO VIVO que a ficha de um personagem
-	// mudou por HTTP (ALE-245).
-	//
-	// Sem isto nenhum handler HTTP CONSEGUE falar com a sala, e a razão é
-	// estrutural: o gateway guarda `s *Server`, e o ponteiro nunca vai na
-	// direção contrária. O efeito na mesa é o da ALE-122 — o mestre aplica
-	// "Caído" num PC e a tela do jogador não fica sabendo. Pior que o chip
-	// faltando: o motor deriva Defesa e perícias da condição (ALE-28), então os
-	// dois passam a ver números diferentes do mesmo personagem.
-	//
-	// É um GANCHO e não uma referência ao socket porque o `Server` existe sem
-	// gateway — nos testes de handler, e num binário que sirva só HTTP. Nulo é
-	// caminho normal, não erro.
-	//
-	// O gancho é preenchido pelo `SocketHandler()`, que é onde o gateway nasce.
-	notifyCharacterChanged func(characterID int64)
 }
 
-// characterChanged avisa a mesa, se houver gateway. Nulo é silêncio, de
-// propósito: o `Server` roda sem socket em teste e num binário só-HTTP.
+// characterChanged avisa as mesas AO VIVO que a ficha de um personagem mudou
+// por HTTP (ALE-245).
+//
+// O mestre aplica "Caído" num PC pela ficha do combatente, e sem isto a tela do
+// jogador não fica sabendo. É pior que o chip faltando: o motor deriva Defesa e
+// perícias da condição (ALE-28), então os dois passam a ver números diferentes
+// do mesmo personagem, sem nada na tela dizendo que discordam.
+//
+// Era um GANCHO (`notifyCharacterChanged`) preenchido pelo `SocketHandler()`, e
+// tinha de ser: o gateway do socket guardava `s *Server`, e o ponteiro nunca ia
+// na direção contrária — nenhum handler HTTP conseguia falar com a sala. Com
+// SSE o hub é campo do próprio `Server`, então a indireção sumiu junto com o
+// socket (ALE-253).
+//
+// E ela era um risco real, não só uma volta a mais: apagar o gateway deixou o
+// gancho SEM QUEM O LIGASSE, o Go inteiro seguiu verde — porque nulo era
+// caminho normal e havia teste afirmando isso — e quem acusou foi o e2e de dois
+// clientes. Um campo que precisa ser preenchido por outro arquivo para o
+// recurso existir é um recurso que nasce desligado.
+//
+// A busca é por sessão VIVA e só as que têm o personagem na fila: avisar mesa
+// que não tem aquele combatente mandaria todo cliente da casa refazer busca a
+// cada ficha salva.
 func (s *Server) characterChanged(characterID int64) {
-	if s.notifyCharacterChanged != nil {
-		s.notifyCharacterChanged(characterID)
+	for _, sessionID := range s.sessions.liveSessionsWithCharacter(characterID) {
+		s.sse.emit(sessionID, "", "character-changed", map[string]any{"characterId": characterID})
 	}
 }
 
@@ -109,6 +111,7 @@ func NewServer(cfg Config, database *sql.DB, catalogs *engine.Catalogs) *Server 
 		sessions: newSessionStore(q, newUUID),
 		boards:   newBoardStore(q, newUUID),
 		presence: newPresenceRegistry(),
+		sse:      newSSEHub(),
 	}
 }
 
@@ -208,6 +211,10 @@ func (s *Server) Router() http.Handler {
 			r.Post("/{id}/start", s.handleStartSession)
 			r.Post("/{id}/end", s.handleEndSession)
 			r.Post("/{id}/clear-tracker", s.handleClearTracker)
+			// O fluxo de eventos ao vivo (ALE-253). Debaixo do `requireAuth`
+			// como qualquer rota — o `EventSource` manda o cookie sozinho.
+			r.Get("/{id}/events", s.handleSessionEvents)
+			s.mountLiveRoutes(r)
 		})
 	})
 

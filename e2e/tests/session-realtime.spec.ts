@@ -9,7 +9,6 @@ import {
   labelsNaFila,
   labelsNaGaveta,
   limpaAsCondicoes,
-  primeiroDaFila,
 } from './support/gm-scene'
 
 /**
