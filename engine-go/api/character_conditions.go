@@ -44,6 +44,14 @@ func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) 
 		writeError(w, http.StatusInternalServerError, "Could not update conditions")
 		return
 	}
+	// Avisa a mesa AO VIVO (ALE-245). Sem isto o mestre aplica "Caído" num PC e a
+	// tela do jogador não fica sabendo — e como o motor deriva Defesa e perícias
+	// da condição (ALE-28), os dois passam a ver números diferentes do mesmo
+	// personagem. É a família da ALE-122, e a rota é a única que grava.
+	//
+	// DEPOIS da escrita, nunca antes: avisar sobre algo que ainda pode falhar
+	// faria a mesa buscar o estado velho e acreditar nele.
+	s.characterChanged(row.ID)
 	writeJSON(w, http.StatusOK, map[string]string{"activeConditions": activeConditions})
 }
 

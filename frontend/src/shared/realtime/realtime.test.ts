@@ -59,6 +59,22 @@ const STATE: SessionRuntimeState = {
   sceneActive: true,
 }
 
+/** Como o `withSocket`, mas com o aviso de ficha mudada ligado (ALE-245). */
+function withCharacterWatch(run: (socket: FakeSocket, avisados: number[]) => void) {
+  const socket = new FakeSocket()
+  const avisados: number[] = []
+  createRoot((dispose) => {
+    createSessionSocket(
+      () => 1,
+      () => 7,
+      { connect: () => socket, onCharacterChanged: (id) => avisados.push(id) },
+    )
+    run(socket, avisados)
+    dispose()
+  })
+  return avisados
+}
+
 function withSocket(run: (socket: FakeSocket, rt: ReturnType<typeof createSessionSocket>) => void) {
   const socket = new FakeSocket()
   createRoot((dispose) => {
@@ -294,5 +310,54 @@ describe('o tabuleiro no fio', () => {
       tokenId: 't1',
       patch: { x: 5, y: 6 },
     })
+  })
+})
+
+/**
+ * A FICHA MUDOU NO SERVIDOR E QUEM ESTÁ OLHANDO PRECISA SABER (ALE-245).
+ *
+ * O mestre aplica "Caído" num PC pela ficha do combatente; a escrita é HTTP, e
+ * até esta fatia nenhum handler HTTP conseguia falar com a sala — o gateway
+ * guarda `s *Server` e o ponteiro nunca vai na direção contrária. A tela do
+ * jogador ficava com a condição faltando E com Defesa e perícias derivadas do
+ * estado velho (ALE-28), sem nada dizendo que os dois discordavam.
+ *
+ * O transporte não conhece o cache de propósito: ele só entrega o id, e quem
+ * invalida é a página, que é quem tem o `queryClient`.
+ */
+describe('character-changed', () => {
+  it('entrega o id de quem mudou', () => {
+    const avisados = withCharacterWatch((socket) => {
+      socket.server('connect')
+      socket.server('character-changed', { characterId: 14 })
+    })
+
+    expect(avisados).toEqual([14])
+  })
+
+  // DUAS mudanças do MESMO personagem contam duas vezes, e é por isso que o
+  // aviso é retorno de chamada e não sinal: um sinal guardando o último id não
+  // notifica ao receber o mesmo valor, e aplicar duas condições em sequência no
+  // mesmo PC é o caso comum.
+  it('o mesmo personagem duas vezes avisa duas vezes', () => {
+    const avisados = withCharacterWatch((socket) => {
+      socket.server('connect')
+      socket.server('character-changed', { characterId: 14 })
+      socket.server('character-changed', { characterId: 14 })
+    })
+
+    expect(avisados).toEqual([14, 14])
+  })
+
+  // Corpo sem id não vira invalidação de `undefined`, que derrubaria o cache
+  // inteiro de personagens por uma mensagem malformada.
+  it('corpo sem id é ignorado', () => {
+    const avisados = withCharacterWatch((socket) => {
+      socket.server('connect')
+      socket.server('character-changed', {})
+      socket.server('character-changed', { characterId: 'catorze' })
+    })
+
+    expect(avisados).toEqual([])
   })
 })
