@@ -2,7 +2,9 @@ package api
 
 import (
 	"context"
+
 	"fmt"
+	"github.com/a-h/templ"
 	"io/fs"
 	"net/http"
 	"strconv"
@@ -50,6 +52,7 @@ func (s *Server) PilotoRouter() http.Handler {
 		r.Get("/mesa/{campaignId}/{sessionId}/stream", s.handleMesaStream)
 		r.Post("/mesa/{campaignId}/{sessionId}/iniciativa", s.handleMesaInitiative)
 		s.rotasDoRastreador(r)
+		s.rotasDoBestiarioDaMesa(r)
 	})
 	// A SEGUNDA superfície (ALE-219): a administração. Mesmo `requireAdmin` da
 	// API — a tela não decide quem pode ver, ela só deixa de oferecer o que o
@@ -112,9 +115,23 @@ func (s *Server) handleMesaPage(w http.ResponseWriter, r *http.Request) {
 		// "Registrar iniciativa" do mestre que também joga: a frase certa no
 		// lugar errado, que é como se lê um defeito. Uma palavra por conceito
 		// vale para sinal de página como vale para identificador.
-		Sinais: "{d20: 10, erro: '', erroDoComando: '', qualidadedodescanso: 'normal', formdecombatente: false, novonome: '', novainiciativa: 10, novopv: 0, novotipo: 'npc', edicaolinha: '', edicaonome: '', edicaoiniciativa: 0, edicaopv: 0, edicaopvmax: 0}",
+		Sinais: "{d20: 10, erro: '', erroDoComando: '', qualidadedodescanso: 'normal', formdecombatente: false, novonome: '', novainiciativa: 10, novopv: 0, novotipo: 'npc', edicaolinha: '', edicaonome: '', edicaoiniciativa: 0, edicaopv: 0, edicaopvmax: 0, rascunhode: '', pvdoverbete: 0, inidoverbete: 10, copiasdoverbete: 1}",
 		Init:   fmt.Sprintf("@get('/piloto/mesa/%d/%d/stream')", campaignID, sessionID),
-	}, mesa(view))
+	}, corpoDaMesa(r, view, campaignID, sessionID))
+}
+
+// corpoDaMesa escolhe o que a PÁGINA desenha: a cena sozinha para o jogador, a
+// cena mais o painel do bestiário para o mestre.
+//
+// O painel só nasce para quem pode abri-lo, pela mesma trava do resto da fatia:
+// não é a tela que esconde, é a página que não o tem. Mandá-lo para todo mundo e
+// escondê-lo por CSS entregaria as 80 criaturas com PV e defesa a quem abrisse o
+// inspetor — e esconder PV de NPC é literalmente o que o olho da linha faz.
+func corpoDaMesa(r *http.Request, view mesaView, campaignID, sessionID int64) templ.Component {
+	if view.Mestre == nil {
+		return mesa(view)
+	}
+	return mesaEBestiario(view, bestiarioDaMesaPara(r, campaignID, sessionID))
 }
 
 // loadMesaView busca tudo o que a tela precisa e delega a DECISÃO ao

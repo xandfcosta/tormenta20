@@ -386,3 +386,42 @@ func (v bestiarioView) bestiarioBase() string {
 	}
 	return v.Base
 }
+
+// alternaOTipo liga ou desliga UM crachá de tipo no conjunto.
+//
+// Extraída porque tem dois chamadores desde que o painel da Mesa nasceu — a cena
+// do mestre e ele —, e "alternar" é regra pequena o bastante para alguém
+// reescrever sem notar que já existia, e grande o bastante para as duas cópias
+// discordarem sobre o que fazer com um tipo repetido.
+//
+// Tipo que o catálogo não conhece é RECUSADO e não descartado: a URL é editável
+// à mão, e um tipo inventado no conjunto filtraria tudo fora — a tela leria
+// "Nenhuma criatura casa com os filtros" sem explicar por quê. É diferente do
+// `tiposConhecidos`, que descarta de propósito porque lá o conjunto inteiro vem
+// da URL e uma vírgula sobrando não deve esvaziar a tela.
+func alternaOTipo(tipos []string, tipo string) ([]string, error) {
+	if !slices.Contains(tiposDeCriatura, tipo) {
+		return nil, fmt.Errorf("tipo de criatura desconhecido: %s", tipo)
+	}
+	if i := slices.Index(tipos, tipo); i >= 0 {
+		return slices.Delete(slices.Clone(tipos), i, i+1), nil
+	}
+	return append(slices.Clone(tipos), tipo), nil
+}
+
+// verbetePorID acha a criatura do livro, ou nil.
+//
+// Nil e não erro: quem chama decide o que dizer. O painel da Mesa recusa a
+// entrada com o id na frase, porque ali um id desconhecido só chega por adulteração.
+func verbetePorID(id string) *verbete {
+	if id == "" {
+		return nil
+	}
+	todas := criaturasDoLivro()
+	for i := range todas {
+		if todas[i].ID == id {
+			return &todas[i]
+		}
+	}
+	return nil
+}

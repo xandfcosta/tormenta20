@@ -239,6 +239,40 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
   })
 
   /**
+   * NENHUM DIÁLOGO FECHADO ROUBA O CLIQUE DA CENA (ALE-263).
+   *
+   * O navegador dá `display:none` a `<dialog>` fechado, e um `flex` utilitário
+   * do Tailwind SOBREPÕE isso — o painel do bestiário fechado ocupava a tela
+   * inteira e engolia o clique de todo botão da Mesa. Foi pego como efeito
+   * colateral (dois testes deste arquivo estouraram por timeout, com o log
+   * dizendo que o clique caía num `<span>` de dentro do diálogo), e este guarda
+   * existe para que o próximo apareça NOMEADO em vez de como dois timeouts.
+   *
+   * Ele vale para os TRÊS diálogos da cena e para os que vierem, porque varre
+   * `dialog:not([open])` em vez de citar ids — é amostragem e não enumeração.
+   *
+   * Só o navegador responde: é a folha do agente do usuário disputando
+   * especificidade com a folha compilada, e nem jsdom nem teste de handler têm
+   * as duas.
+   */
+  test('nenhum diálogo fechado rouba o clique da cena', async ({ page }) => {
+    await page.goto(MESA)
+
+    const fechados = await page.evaluate(() =>
+      [...document.querySelectorAll('dialog:not([open])')].map((d) => ({
+        id: d.id,
+        display: getComputedStyle(d).display,
+      })),
+    )
+    // O CONTROLE: a cena do mestre TEM diálogos. Uma lista vazia passaria verde
+    // dizendo nada, e é o que aconteceria se os ids mudassem.
+    expect(fechados.length, 'a cena não tem diálogo nenhum para medir').toBeGreaterThan(0)
+    for (const d of fechados) {
+      expect(d.display, `o diálogo #${d.id} está fechado e ocupando a tela`).toBe('none')
+    }
+  })
+
+  /**
    * O `<dialog>` modal centralizado (ALE-263).
    *
    * O `preflight` do Tailwind zera a margem de TODO elemento, e a centralização

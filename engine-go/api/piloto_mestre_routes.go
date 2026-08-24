@@ -386,24 +386,18 @@ func (s *Server) handleBestiario(w http.ResponseWriter, r *http.Request) {
 // gravar — é um filtro de leitura, não um estado da campanha. O que a rota faz
 // é a álgebra do conjunto e devolver a cena inteira com os sinais novos.
 func (s *Server) handleBestiarioTipo(w http.ResponseWriter, r *http.Request) {
-	tipo := chi.URLParam(r, "tipo")
-	// Tipo que o catálogo não conhece é recusado ANTES de qualquer coisa: a URL
-	// é editável à mão, e um tipo inventado no conjunto filtraria tudo fora e a
-	// tela leria "Nenhuma criatura casa com os filtros" sem explicar por quê.
-	if !slices.Contains(tiposDeCriatura, tipo) {
-		http.Error(w, "tipo de criatura desconhecido: "+tipo, http.StatusBadRequest)
-		return
-	}
 	// `ReadSignals` ANTES do `NewSSE`: depois da resposta começar, o corpo do
 	// pedido já não se lê.
 	criterios := criteriosDoPedido(r)
-	sse := datastar.NewSSE(w, r)
-
-	if i := slices.Index(criterios.Tipos, tipo); i >= 0 {
-		criterios.Tipos = slices.Delete(slices.Clone(criterios.Tipos), i, i+1)
-	} else {
-		criterios.Tipos = append(slices.Clone(criterios.Tipos), tipo)
+	// A recusa vem ANTES da resposta começar, senão o 400 chega depois dos
+	// cabeçalhos de SSE e o cliente vê um stream vazio em vez de um erro.
+	tipos, err := alternaOTipo(criterios.Tipos, chi.URLParam(r, "tipo"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
+	criterios.Tipos = tipos
+	sse := datastar.NewSSE(w, r)
 
 	fragmento, err := renderFragmento(r.Context(), cenaDoBestiario(carregaBestiario(criterios)))
 	if err != nil {

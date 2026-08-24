@@ -1,0 +1,137 @@
+package api
+
+import "fmt"
+
+// O PAINEL DO BESTIÁRIO dentro da Mesa (ALE-263).
+//
+// A lista, os filtros e o bloco são os MESMOS componentes da cena do mestre —
+// é para isso que a `bestiarioView.Base` existe. O que este arquivo acrescenta
+// é o invólucro e o gesto que a cena de lá não tem: mandar para a fila.
+
+// bestiarioDaMesa é o painel inteiro, e ele é a raiz que as rotas remendam.
+//
+// O `data-signals` fica AQUI, na raiz remendada, e por isso ele reinicializa a
+// cada remendo — de propósito: `busca`, `tipos` e `criatura` são o que o
+// SERVIDOR acabou de desenhar, e reecoá-los é o que mantém a tela e o servidor
+// falando do mesmo filtro. Os campos do AJUSTE não estão nele justamente por
+// isso: eles são rascunho do mestre, e reinicializá-los a cada tecla da busca
+// apagaria o PV que ele acabou de baixar. Eles nascem no `<body>`, que nunca é
+// remendado, e só o servidor os semeia — ao abrir OUTRA criatura.
+//
+// Mora FORA do `<main id="mesa">` de propósito. A cena é remendada inteira a
+// cada mudança de qualquer um na mesa, e o que este painel guarda — a busca
+// digitada, o filtro aceso, a criatura aberta — é estado de TELA e não da
+// sessão: um remendo da mesa o apagaria a cada turno que alguém avançasse.
+//
+// É `<dialog>` modal e não uma gaveta ao lado, e aqui há um DESVIO da SPA que
+// vale dizer: lá o painel é não-modal em tela larga, para o rastreador continuar
+// recebendo clique atrás dele. A Mesa do piloto é uma coluna só — não existe o
+// "ao lado" que justificaria o não-modal —, e o modal traz de graça o foco
+// preso, o Escape e a camada de topo, que é também o que o tira de dentro do
+// `contain` do palco.
+//
+// Ele NÃO fecha ao mandar para a mesa: uma emboscada é uma viagem, não seis.
+//
+// `hidden open:flex` e não só `flex`, e isto é conserto de um defeito que o e2e
+// ANTIGO pegou: o navegador dá `display:none` a `<dialog>` fechado, e um `flex`
+// utilitário SOBREPÕE isso — o painel fechado continuava ocupando a tela inteira
+// e engolia o clique de todo botão da Mesa. É a mesma família do `m-auto` do
+// descanso: utilitário do Tailwind brigando com a folha do agente do usuário,
+// e as duas vezes quem denunciou foi o navegador.
+//
+// Eu não vi na minha própria conferência porque cliquei por JavaScript, e
+// `element.click()` NÃO faz teste de acerto — ele dispara no elemento mesmo com
+// outra coisa por cima. Foi o clique de verdade do Playwright que acusou.
+templ bestiarioDaMesa(v bestiarioView) {
+	<dialog
+		id="bestiario-da-mesa"
+		data-preserve-attr="open"
+		aria-labelledby="bestiario-da-mesa-titulo"
+		data-signals={ sinaisDoBestiario(v) }
+		class="scene-grimorio m-auto hidden h-[min(44rem,calc(100vh-2rem))] open:flex w-[min(56rem,calc(100vw-2rem))] flex-col gap-3 rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
+	>
+		<div class="flex shrink-0 flex-wrap items-baseline gap-x-3">
+			<h2 id="bestiario-da-mesa-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">Bestiário</h2>
+			<p class="text-xs text-muted-foreground">{ fmt.Sprintf("%d de %d", len(v.Verbetes), v.Total) }</p>
+			<button
+				type="button"
+				aria-label="Fechar o bestiário"
+				data-on:click="document.getElementById('bestiario-da-mesa').close()"
+				class="ml-auto flex size-9 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>✕</button>
+		</div>
+		// A mesma grade da cena do mestre, e a mesma consulta de contêiner: a
+		// pergunta "cabe o bloco ao lado da lista?" é sobre o espaço que ESTA
+		// caixa recebe, e não sobre a janela (ALE-172).
+		<div class="mesa-palco mesa-duas-colunas grid min-h-0 flex-1 gap-4">
+			<div class="flex min-h-0 flex-col gap-2">
+				@filtrosDoBestiario(v)
+				@listaDeVerbetes(v)
+			</div>
+			<section aria-label="Criatura escolhida" class="mesa-painel">
+				if v.Escolhido != nil {
+					@blocoDoVerbete(*v.Escolhido)
+				} else {
+					<p class="text-xs text-muted-foreground">Escolha uma criatura na lista.</p>
+				}
+			</section>
+		</div>
+		// O AJUSTE fica ancorado embaixo e fora da parte que rola, porque é ele
+		// que o mestre veio usar quando não veio só ler (ALE-208): clicar na
+		// lista ABRE a criatura, e mandar para a mesa é o gesto seguinte.
+		if v.Escolhido != nil {
+			@ajusteDoVerbete(v, *v.Escolhido)
+			// A MESMA ficha da cena do mestre, para a largura em que o painel ao
+			// lado não cabe: abaixo de 50rem de contêiner o `.mesa-painel` é
+			// `display:none`, e sem isto o mestre no telefone escolheria a
+			// criatura e não veria bloco nenhum — escolheria pelo nome. É um
+			// `<div role="dialog">` e não um `<dialog>` nativo, então aninhá-lo
+			// aqui dentro é só posicionamento.
+			@fichaEmDialogo(*v.Escolhido)
+		}
+	</dialog>
+}
+
+// ajusteDoVerbete é PV, iniciativa e quantas, antes de a criatura entrar.
+//
+// Ele existe porque o que entrava sem ele era quase sempre errado (ALE-208): o
+// mestre quer o ogro com menos PV, ou a iniciativa que ele acabou de rolar nos
+// dados de verdade em cima da mesa. Ajustar depois custa achar a linha na fila.
+//
+// Os campos são ligados a SINAIS e nunca recebem `value` do servidor: entrada em
+// curso é do teclado de quem digita. Quem os semeia do bloco do livro é o
+// servidor, e SÓ ao abrir outra criatura — ver `rascunhoDoVerbete`.
+templ ajusteDoVerbete(v bestiarioView, m verbete) {
+	<div class="flex shrink-0 flex-wrap items-end gap-3 border-t border-grimorio-iron pt-3">
+		@campoDoAjuste("ajuste-pv", "PV", "pvdoverbete", "1", "999")
+		@campoDoAjuste("ajuste-ini", "Iniciativa", "inidoverbete", "-5", "40")
+		@campoDoAjuste("ajuste-copias", "Quantas", "copiasdoverbete", "1", fmt.Sprint(maxCopiasDeUmVerbete))
+		<button
+			type="button"
+			data-indicator:mandando
+			data-attr:disabled="$mandando"
+			data-on:click={ fmt.Sprintf("@post('%s/enviar')", v.bestiarioBase()) }
+			class="min-h-11 rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
+		>
+			Mandar { m.Name } para a mesa
+		</button>
+	</div>
+}
+
+templ campoDoAjuste(id, rotulo, sinal, min, max string) {
+	<div class="w-24 space-y-1">
+		<label for={ id } class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">{ rotulo }</label>
+		// O `min`/`max` nativo governa o SPINNER; digitar passa direto por ele, e
+		// quem prende é o servidor (ALE-236). Estão aqui pelo teclado numérico e
+		// pelas setas, não como trava.
+		<input
+			id={ id }
+			type="number"
+			min={ min }
+			max={ max }
+			inputmode="numeric"
+			data-bind={ sinal }
+			class="w-full border border-input bg-background px-2 py-1.5 font-mono tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+		/>
+	</div>
+}
