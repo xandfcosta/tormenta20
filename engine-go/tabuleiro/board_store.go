@@ -36,8 +36,11 @@ type BoardStore struct {
 	// Dirty: a última gravação falhou. Espelha o do rastreador, e é o que
 	// transforma "gravação falhando em silêncio" em aviso na tela da mesa.
 	Dirty map[int64]bool
-	newID func() string
-	q     *sqlcgen.Queries
+	// ouvintes são os streams que querem saber quando este tabuleiro muda
+	// (ALE-264). Ver `aviso.go`.
+	ouvintes map[int64][]chan struct{}
+	newID    func() string
+	q        *sqlcgen.Queries
 }
 
 func NewBoardStore(q *sqlcgen.Queries, newID func() string) *BoardStore {
@@ -137,6 +140,7 @@ func (bs *BoardStore) Open(ctx context.Context, sessionID int64, place, terrain 
 		b.Version = old.Version + 1
 	}
 	bs.boards[sessionID] = b
+	bs.avisarLocked(sessionID)
 	return cloneBoard(b)
 }
 
@@ -151,6 +155,7 @@ func (bs *BoardStore) Close(ctx context.Context, sessionID int64) (Dirty, change
 	bs.Mu.Lock()
 	delete(bs.boards, sessionID)
 	bs.loaded[sessionID] = true
+	bs.avisarLocked(sessionID)
 	bs.Mu.Unlock()
 
 	err := bs.q.DeleteSessionBoard(ctx, sessionID)
@@ -183,6 +188,7 @@ func (bs *BoardStore) apply(ctx context.Context, sessionID int64, fn func(*Board
 	if err := fn(b); err != nil {
 		return nil, err
 	}
+	bs.avisarLocked(sessionID)
 	return cloneBoard(b), nil
 }
 

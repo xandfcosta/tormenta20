@@ -1,10 +1,13 @@
 package api
 
 import (
+	"bufio"
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"t20engine/tabuleiro"
 )
@@ -130,5 +133,180 @@ func TestUmTerrenoInventadoCaiNoChaoPadrao(t *testing.T) {
 	}
 	if strings.Contains(corpo, "chao-vulcão") {
 		t.Error("o terreno inventado virou classe solta")
+	}
+}
+
+// ── o aviso do tabuleiro (ALE-264) ───────────────────────────────────────────
+
+// TestOTabuleiroAVISAquemEscutaAcadaMudanca.
+//
+// O stream da Mesa assinava só o store da SESSÃO, e o tabuleiro é outro: mover
+// uma peça não acordava ninguém, e a mudança só chegava no batimento de reserva
+// — 1310ms cronometrados no navegador.
+//
+// Os TRÊS pontos de escrita são medidos, e o `Open`/`Close` estão aqui porque
+// eles não passam pelo `apply`: abrir e fechar são as mudanças mais VISÍVEIS do
+// tabuleiro — a grade aparecendo e sumindo —, e um aviso que cobrisse só o que
+// se move perderia o que nasce.
+func TestOTabuleiroAvisaQuemEscutaAcadaMudanca(t *testing.T) {
+	bs := novoPiloto(t).s.boards
+	ctx := context.Background()
+	const sessao = int64(1)
+
+	aviso, parar := bs.Assinar(sessao)
+	defer parar()
+	drenar := func() {
+		select {
+		case <-aviso:
+		default:
+		}
+	}
+	avisou := func(oque string) {
+		t.Helper()
+		select {
+		case <-aviso:
+		default:
+			t.Errorf("%s não avisou quem escuta", oque)
+		}
+	}
+
+	drenar()
+	bs.Open(ctx, sessao, "Taverna", "taverna")
+	avisou("abrir o tabuleiro")
+
+	drenar()
+	if _, err := bs.AddToken(ctx, sessao, tabuleiro.BoardToken{ID: "p", Label: "Ogro", X: 1, Y: 1}, true); err != nil {
+		t.Fatalf("pôr a peça: %v", err)
+	}
+	avisou("pôr uma peça (pelo apply)")
+
+	drenar()
+	bs.Close(ctx, sessao)
+	avisou("fechar o tabuleiro")
+}
+
+// E uma mutação RECUSADA não avisa: "mudou" tem de significar mudou, senão o
+// stream relê e o hash o faz calar — trabalho para nada a cada erro de quem
+// clica.
+func TestUmaMutacaoRecusadaNaoAvisa(t *testing.T) {
+	bs := novoPiloto(t).s.boards
+	ctx := context.Background()
+	const sessao = int64(2)
+
+	aviso, parar := bs.Assinar(sessao)
+	defer parar()
+	// SEM tabuleiro aberto: o `apply` recusa antes de mexer em nada.
+	if _, err := bs.AddToken(ctx, sessao, tabuleiro.BoardToken{ID: "p", Label: "Ogro"}, true); err == nil {
+		t.Fatal("pôr peça sem tabuleiro devia recusar; sem a recusa este teste não mede nada")
+	}
+	select {
+	case <-aviso:
+		t.Error("a mutação recusada avisou que algo mudou")
+	default:
+	}
+}
+
+// A BAIXA limpa o registro: sem ela, cada aba fechada deixa um canal para sempre
+// e o aviso percorre uma lista que só cresce.
+func TestABaixaLimpaOOuvinte(t *testing.T) {
+	bs := novoPiloto(t).s.boards
+	const sessao = int64(3)
+
+	_, parar := bs.Assinar(sessao)
+	if n := bs.Ouvintes(sessao); n != 1 {
+		t.Fatalf("depois de assinar havia %d ouvintes, queria 1", n)
+	}
+	parar()
+	if n := bs.Ouvintes(sessao); n != 0 {
+		t.Errorf("depois da baixa sobraram %d ouvintes", n)
+	}
+}
+
+// TestMoverUmaPecaCHEGAaoStreamSemEsperarOBatimento.
+//
+// Este é o teste que a MEDIÇÃO pediu, e ele nasceu porque o guarda de unidade
+// não bastou: os testes acima provam que o store AVISA, e mesmo assim o
+// cronômetro no navegador deu 1000ms redondos — o batimento — para uma peça
+// andar um quadrado. "O store avisa" e "a tela recebe" são perguntas diferentes,
+// e só esta segunda é a que o mestre sente.
+//
+// Ele abre um stream de VERDADE por HTTP, move uma peça, e exige o quadro em bem
+// menos que o batimento. O limite é 400ms: folgado para um round-trip local, e
+// menos da metade do batimento, então um verde aqui não pode ser o relógio.
+func TestMoverUmaPecaChegaAoStreamSemEsperarOBatimento(t *testing.T) {
+	f := novoPiloto(t)
+	f.abreTabuleiro(t, "pedra")
+	// O id vem do SERVIDOR (`bs.newID`), não do que eu passo: dois clientes
+	// criando ao mesmo tempo não podem inventar o mesmo. Por isso ele é lido do
+	// estado devolvido em vez de assumido — a primeira versão deste teste
+	// assumiu "p" e morreu em `peça "p" não está no tabuleiro`.
+	posto, err := f.s.boards.AddToken(context.Background(), f.sessionID,
+		tabuleiro.BoardToken{Label: "Ogro", X: 2, Y: 2}, true)
+	if err != nil {
+		t.Fatalf("pôr a peça: %v", err)
+	}
+	pecaID := posto.Tokens[len(posto.Tokens)-1].ID
+
+	srv := httptest.NewServer(http.StripPrefix("/piloto", f.s.PilotoRouter()))
+	defer srv.Close()
+	req, erroDoPedido := http.NewRequest(http.MethodGet, srv.URL+f.urlDaMesa()+"/stream", nil)
+	if erroDoPedido != nil {
+		t.Fatalf("montar pedido: %v", erroDoPedido)
+	}
+	req.Header.Set("Authorization", "Bearer "+f.token(t, f.mestre))
+	ctx, cancelar := context.WithCancel(context.Background())
+	defer cancelar()
+	resp, erroDoStream := http.DefaultClient.Do(req.WithContext(ctx))
+	if erroDoStream != nil {
+		t.Fatalf("abrir stream: %v", erroDoStream)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	quadros := make(chan string, 8)
+	go func() {
+		leitor := bufio.NewScanner(resp.Body)
+		leitor.Buffer(make([]byte, 0, 64*1024), 1<<20)
+		var atual strings.Builder
+		for leitor.Scan() {
+			if linha := leitor.Text(); linha != "" {
+				atual.WriteString(linha)
+				continue
+			}
+			select {
+			case quadros <- atual.String():
+			default:
+			}
+			atual.Reset()
+		}
+	}()
+
+	// O PRIMEIRO quadro é a carga do stream, e ele é o CONTROLE: sem ele, um
+	// stream que nunca abriu daria o mesmo silêncio que um aviso que não chega.
+	select {
+	case q := <-quadros:
+		if !strings.Contains(q, "Ogro em 2, 2") {
+			t.Fatalf("o primeiro quadro não trouxe a peça onde ela está:\n%.400s", q)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("o stream não mandou o primeiro quadro")
+	}
+
+	inicio := time.Now()
+	if _, err := f.s.boards.UpdateToken(context.Background(), f.sessionID, pecaID,
+		tabuleiro.ParseTokenPatch(map[string]any{"x": 7})); err != nil {
+		t.Fatalf("mover a peça: %v", err)
+	}
+
+	limite := time.After(400 * time.Millisecond)
+	for {
+		select {
+		case q := <-quadros:
+			if strings.Contains(q, "Ogro em 7, 2") {
+				t.Logf("a peça chegou à tela em %v", time.Since(inicio))
+				return
+			}
+		case <-limite:
+			t.Fatalf("a peça não chegou em 400ms — a tela está esperando o batimento de %v", mesaBatimento)
+		}
 	}
 }

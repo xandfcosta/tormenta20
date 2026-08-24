@@ -22,13 +22,17 @@ import (
 // em brotli — 17KB por remendo caem para ~600. Quadros sucessivos são quase
 // idênticos, e essa redundância é exatamente o que um compressor de stream come.
 //
-// A CADÊNCIA deixou de ser só relógio (o passo (b) da ordem combinada). O
-// `sessionStore` agora avisa quem escuta a cada mutação, então o caminho comum
-// acorda na hora em vez de esperar o próximo tique. O relógio continua existindo
-// como BATIMENTO de reserva, e não é redundância: mudanças que a Mesa mostra
-// nascem FORA do store da sessão — o PV do Grupo vem da ficha, alterado por HTTP
-// —, e nenhum aviso do store cobriria isso. Por isso ele afrouxou de 200ms para
-// 1s: o aviso paga a latência, o batimento paga a abrangência.
+// A CADÊNCIA deixou de ser só relógio (o passo (b) da ordem combinada). Os
+// stores avisam quem escuta a cada mutação, então o caminho comum acorda na hora
+// em vez de esperar o próximo tique. O relógio continua existindo como BATIMENTO
+// de reserva, e não é redundância: mudanças que a Mesa mostra nascem FORA dos
+// stores — o PV do Grupo vem da ficha, alterado por HTTP —, e nenhum aviso as
+// cobriria. Por isso ele afrouxou de 200ms para 1s: o aviso paga a latência, o
+// batimento paga a abrangência.
+//
+// São DOIS avisos desde a ALE-264, e o segundo nasceu de uma medição: o
+// tabuleiro é outro store, então mover uma peça não acordava ninguém e a
+// mudança só chegava no batimento — 1310ms, cronometrados no navegador.
 const mesaBatimento = time.Second
 
 func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
@@ -50,6 +54,12 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 	// entre render e assinatura se perde e a tela fica velha até o batimento.
 	aviso, parar := s.sessions.Assinar(sessionID)
 	defer parar()
+	// DOIS canais porque são dois stores, e o tabuleiro não passa pelo da
+	// sessão. Sem este segundo, mover uma peça só aparecia no BATIMENTO —
+	// medido no navegador, 1310ms para a peça andar um quadrado, com o mestre
+	// arrastando na frente de seis pessoas.
+	avisoDoMapa, pararMapa := s.boards.Assinar(sessionID)
+	defer pararMapa()
 
 	sse := datastar.NewSSE(w, r, datastar.WithCompression())
 	ultimo := escreveMesa(r.Context(), sse, view, [32]byte{})
@@ -63,6 +73,7 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 			// aqui é o que impede a goroutine de sobreviver ao leitor.
 			return
 		case <-aviso:
+		case <-avisoDoMapa:
 		case <-batimento.C:
 		}
 		view, _, err := s.loadMesaView(r.Context(), user, campaignID, sessionID)
