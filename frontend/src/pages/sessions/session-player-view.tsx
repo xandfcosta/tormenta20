@@ -14,7 +14,7 @@ import type { SessionRealtime } from '@/shared/realtime/realtime'
 import { cn } from '@/shared/lib/utils'
 import { createBoardViewport } from '@/features/battle-board/board-viewport'
 import { BoardRegion } from './board-region'
-import { LiveSessionBanner, type LiveTurnState } from './live-session-banner'
+import { playerTurnState } from './live-session-status'
 import { type PlayerSurface, PlayerSurfaceSwitch } from './player-surface-switch'
 
 /**
@@ -79,11 +79,6 @@ export function SessionPlayerView(props: {
     // personagem na mesa caía num ramo alternativo sem seletor nenhum — ficava
     // sem tabuleiro e sem escolha, o que é pior do que não ter ficha.
     <div class="flex h-full min-h-0 flex-col">
-      <LiveSessionBanner
-        sessionNumber={props.session.sessionNumber}
-        round={props.rt.state().round}
-        turn={turn()}
-      />
       {/* Ancorado, nunca rolando para fora: é o menu da cena. O estado da
           conexão vem junto porque ele vale para a sessão INTEIRA — antes ele
           morava dentro do card da iniciativa, e sumia da tela junto com ele
@@ -202,16 +197,3 @@ function PlayerSheet(props: { characterId: number | undefined }) {
   )
 }
 
-/** The player's turn state from the live initiative (mirrors the page's cue). */
-function playerTurnState(
-  rt: SessionRealtime,
-  myCharacterIds: ReadonlySet<number>,
-): LiveTurnState {
-  const state = rt.state()
-  const active = state.turnIndex >= 0 ? state.initiative[state.turnIndex] : undefined
-  if (!active) return { kind: 'idle' }
-  if (active.characterId !== undefined && myCharacterIds.has(active.characterId)) {
-    return { kind: 'mine' }
-  }
-  return { kind: 'other', label: active.label }
-}

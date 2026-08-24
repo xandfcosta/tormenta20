@@ -92,7 +92,7 @@ func (s *Server) deleteUserKeepingMesas(r *http.Request, UserID, newOwnerID int6
 	return moved, tx.Commit()
 }
 
-// handleAdminCreatePasswordReset: POST /admin/users/{id}/password-Reset. The
+// handleAdminCreatePasswordReset: POST /admin/users/{id}/password-reset. The
 // admin never sees or types a password — they hand over a single-use link and
 // the player picks their own.
 func (s *Server) handleAdminCreatePasswordReset(w http.ResponseWriter, r *http.Request) {

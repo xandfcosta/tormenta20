@@ -38,7 +38,7 @@ var gmGate = map[string]bool{
 	"POST /initiative/next-turn":              true,
 	"POST /initiative/previous-turn":          true,
 	"DELETE /initiative":                      true, // reiniciar o combate
-	"POST /initiative/Populate":               true,
+	"POST /initiative/populate":               true,
 	"POST /scene/start":                       true, // quem decide que a cena começou é o mestre (ALE-210)
 	"POST /scene/end":                         true,
 	"PATCH /initiative/{entryId}/vitals":      false, // regra mais fina: assertVitalsEditableFor
@@ -56,7 +56,7 @@ var gmGate = map[string]bool{
 	"DELETE /board/tokens/{tokenId}":         true,
 	"PATCH /board/tokens/{tokenId}":          true,
 	"POST /board/tokens/{tokenId}/duplicate": true, // "mais um zumbi" é montar encontro, e montar é do mestre
-	"POST /board/Populate":                   true,
+	"POST /board/populate":                   true,
 	// O marcador é o LUGAR apontado no mapa (ALE-195): ele nasce escondido e o
 	// mestre revela, então marcar, revelar e apagar são todos dele.
 	"POST /board/markers":                 true,
@@ -64,11 +64,11 @@ var gmGate = map[string]bool{
 	"DELETE /board/markers/{markerId}":    true,
 	"POST /board/terrain":                 true, // o chão é da cena, e a cena é do mestre
 	"GET /board/as-player":                true, // "ver como jogador" é a lente do mestre sobre a própria cena
-	"GET /board/Places":                   true, // o acervo de cenas guardadas é preparação do mestre
-	"POST /board/Places/{placeId}/Reopen": true,
-	"GET /board/Places/{placeId}/scene":   true, // a cena guardada é preparação: o jogador não a pede
-	"PUT /board/Places/{placeId}/scene":   true, // montar o lugar é do mestre, e não toca na mesa
-	"DELETE /board/Places/{placeId}":      true,
+	"GET /board/places":                   true, // o acervo de cenas guardadas é preparação do mestre
+	"POST /board/places/{placeId}/reopen": true,
+	"GET /board/places/{placeId}/scene":   true, // a cena guardada é preparação: o jogador não a pede
+	"PUT /board/places/{placeId}/scene":   true, // montar o lugar é do mestre, e não toca na mesa
+	"DELETE /board/places/{placeId}":      true,
 	"POST /board/tokens/{tokenId}/move":   false, // assertMovable: papel, posse e a VEZ
 	"POST /board/move/cancel":             false, // desfaz o próprio provisório; o mestre desfaz o de qualquer um
 	"POST /board/move/commit":             false, // idem

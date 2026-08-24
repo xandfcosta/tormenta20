@@ -145,7 +145,7 @@ func (s *Server) Router() http.Handler {
 		r.Post("/login", s.handleLogin)
 		r.Post("/logout", s.handleLogout)
 		// Anonymous: see /password-resets above.
-		r.Post("/Reset-password", s.handleResetPassword)
+		r.Post("/reset-password", s.handleResetPassword)
 		r.With(s.requireAuth).Get("/me", s.handleMe)
 	})
 
@@ -170,7 +170,7 @@ func (s *Server) Router() http.Handler {
 		r.Use(s.requireAdmin)
 		r.Get("/users", s.handleAdminListUsers)
 		r.Delete("/users/{id}", s.handleAdminDeleteUser)
-		r.Post("/users/{id}/password-Reset", s.handleAdminCreatePasswordReset)
+		r.Post("/users/{id}/password-reset", s.handleAdminCreatePasswordReset)
 		r.Get("/invites", s.handleAdminListInvites)
 		r.Post("/invites", s.handleCreateAccountInvite)
 		r.Get("/status", s.handleAdminStatus)
