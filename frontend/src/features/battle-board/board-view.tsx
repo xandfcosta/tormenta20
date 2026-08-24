@@ -54,6 +54,9 @@ export function BoardView(props: {
   reachable?: readonly BoardSquare[]
   /** O movimento proposto, desenhado para a mesa inteira ver. */
   pending?: PendingMove | null
+  /** Onde o jogador SOLTOU a peça, na ordem — o que o desfazer vai tirar
+   *  (ALE-266). Ausente para o mestre e para quem só assiste. */
+  paradas?: readonly BoardSquare[]
   /** Peças que ESTE espectador pode pegar; as outras não respondem ao clique. */
   movableTokenIds?: ReadonlySet<string>
   /** As casas que custam o dobro (T20 p238). Público: chão acidentado é coisa
@@ -178,7 +181,9 @@ export function BoardView(props: {
           resposta que ele existe para dar. */}
       <AreaLayer view={view()} squares={props.area ?? []} />
 
-      <Show when={props.pending}>{(move) => <PendingPath move={move()} view={view()} />}</Show>
+      <Show when={props.pending}>
+        {(move) => <PendingPath move={move()} view={view()} paradas={props.paradas} />}
+      </Show>
 
       {/* Os LUGARES apontados (ALE-195). Vêm ANTES das peças na árvore: o
           marcador é chão, e a peça que pisa nele fica por cima. */}
@@ -353,7 +358,17 @@ function DifficultLayer(props: { view: BoardViewport; squares: readonly BoardSqu
  * leitor de tela lê o texto da barra de confirmação, que diz o custo em
  * quadrados, e não uma sequência de coordenadas.
  */
-function PendingPath(props: { move: PendingMove; view: BoardViewport }) {
+/**
+ * @param paradas Os quadrados onde o jogador SOLTOU a peça, na ordem (ALE-266).
+ *   Sem eles o desfazer fica sem referência: um segmento desenhado pelo
+ *   `pathBetween` já tem uma dobra natural (a diagonal vem primeiro), então
+ *   "onde eu parei" e "onde o traçado virou" são indistinguíveis no desenho.
+ */
+function PendingPath(props: {
+  move: PendingMove
+  view: BoardViewport
+  paradas?: readonly BoardSquare[]
+}) {
   const centro = (square: BoardSquare) => ({
     x: (square.x - props.view.originX()) * props.view.cellPx() + props.view.cellPx() / 2,
     y: (square.y - props.view.originY()) * props.view.cellPx() + props.view.cellPx() / 2,
@@ -392,6 +407,25 @@ function PendingPath(props: { move: PendingMove; view: BoardViewport }) {
           <animate attributeName="stroke-dashoffset" from="20" to="0" dur="1s" repeatCount="indefinite" />
         </Show>
       </polyline>
+      {/* As PARADAS intermediárias (ALE-266): ponto cheio e pequeno, distinto
+          dos outros dois marcos desta camada — a origem é um círculo TRACEJADO
+          e vazado, o destino é um LOSANGO. Três formas, três significados, e
+          nenhuma se confunde de relance no meio do combate.
+          
+          A última parada não ganha ponto: ela É o destino e já tem o losango.
+          Marcar as duas coisas no mesmo quadrado empilharia dois símbolos para
+          dizer uma. */}
+      <For each={props.paradas?.slice(0, -1) ?? []}>
+        {(parada) => (
+          <circle
+            cx={centro(parada).x}
+            cy={centro(parada).y}
+            r={meia() * 0.22}
+            fill="var(--grimorio-gold)"
+            opacity="0.85"
+          />
+        )}
+      </For>
       {/* O destino no LOSANGO, que é o vocabulário do alcance nesta casa — o
           retângulo cheio dizia "casa pintada", que é outra coisa. */}
       <polygon

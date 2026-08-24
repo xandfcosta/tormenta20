@@ -1636,3 +1636,98 @@ describe('a cortina sobre a cena', () => {
     expect(screen.queryByRole('button', { name: 'Abrir a cortina' })).not.toBeInTheDocument()
   })
 })
+
+/**
+ * PONTOS DE PARADA (ALE-266).
+ *
+ * O defeito: o caminho que ia no fio era sempre uma reta monótona que o cliente
+ * desenhava sozinho, então o jogador nunca escolhia a rota. Não doía enquanto
+ * todo caminho entre A e B custasse o mesmo — com a diagonal valendo o dobro
+ * (T20 p238) isso é verdade —, e passou a doer quando o terreno difícil chegou:
+ * contornar duas casas de lama custa diferente de atravessá-las, e o jogador
+ * pode QUERER a rota mais cara para não passar ao lado de um inimigo.
+ *
+ * O que se prova aqui é o desfecho: cada solta acrescenta uma perna, a perna sai
+ * da última parada, e desfazer volta uma parada de cada vez. O CUSTO não é
+ * afirmado — ele vem do servidor, e refazer a aritmética da diagonal e do brejo
+ * na tela seria a segunda implementação da regra que a ALE-104 apagou.
+ */
+describe('o caminho é feito de paradas, e não de uma reta', () => {
+  const PARADO_EM_8: BoardState = {
+    ...COM_JOGADOR,
+    pending: {
+      tokenId: 't2',
+      path: [
+        { x: 6, y: 5 },
+        { x: 7, y: 5 },
+        { x: 8, y: 5 },
+      ],
+      cost: 2,
+      budget: 6,
+      diagonals: 0,
+      difficult: 0,
+      byUserId: 42,
+    },
+  }
+
+  it('a segunda parada EMENDA na primeira, em vez de recomeçar da peça', async () => {
+    const { rt, user } = renderRegion(false, PARADO_EM_8, 'e1', {
+      myCharacterIds: MEU_HEROI,
+      turnIndex: 0,
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Sílfide Ladina, coluna 6, linha 5' }))
+    await user.click(screen.getByRole('button', { name: 'Coluna 8, linha 4' }))
+
+    // Sai da ÚLTIMA parada (8,5) e não do lugar da peça (6,5) — se recomeçasse
+    // da peça, o caminho teria três quadrados e o desvio do jogador sumiria.
+    expect(rt.proposeMove).toHaveBeenCalledWith('t2', [
+      { x: 6, y: 5 },
+      { x: 7, y: 5 },
+      { x: 8, y: 5 },
+      { x: 8, y: 4 },
+    ])
+  })
+
+  it('desfazer volta UMA parada, e a última vira cancelar', async () => {
+    // A cena muda no meio porque o servidor é quem devolve a proposta: o fake
+    // não a inventa, e sem ela a faixa do movimento não monta. É a mesma
+    // mutação que o broadcast traria, com a versão subindo.
+    const [live, setLive] = createSignal<BoardState | null>(COM_JOGADOR)
+    const { rt, user } = renderRegion(false, live, 'e1', {
+      myCharacterIds: MEU_HEROI,
+      turnIndex: 0,
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Sílfide Ladina, coluna 6, linha 5' }))
+    await user.click(screen.getByRole('button', { name: 'Coluna 8, linha 5' }))
+    expect(rt.proposeMove).toHaveBeenCalledTimes(1)
+    setLive({ ...PARADO_EM_8, version: COM_JOGADOR.version + 1 })
+
+    // Com uma parada só, desfazê-la não deixa proposta nenhuma de pé — e
+    // proposta sem perna não é proposta.
+    await user.click(await screen.findByRole('button', { name: 'Desfazer parada' }))
+    expect(rt.cancelMove).toHaveBeenCalled()
+    expect(rt.proposeMove).toHaveBeenCalledTimes(1)
+  })
+
+  /**
+   * A metade que o dono fez questão de separar: sem ver o que sobrou, o jogador
+   * empilha paradas, passa do deslocamento e não sabe o que desfazer.
+   *
+   * O número sai da conta do SERVIDOR (`pending.cost` contra `speedSquares`),
+   * nunca de uma refeita aqui.
+   */
+  it('a faixa diz quanto AINDA cabe, e não só o que já se gastou', async () => {
+    const { user } = renderRegion(false, PARADO_EM_8, 'e1', {
+      myCharacterIds: MEU_HEROI,
+      turnIndex: 0,
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Sílfide Ladina, coluna 6, linha 5' }))
+
+    // 6 de deslocamento menos os 2 que o servidor cobrou pelas duas primeiras
+    // casas.
+    expect(await screen.findByText(/resta 4 quadrados/)).toBeInTheDocument()
+  })
+})

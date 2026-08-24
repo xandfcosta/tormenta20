@@ -328,10 +328,108 @@ export function BoardRegion(props: {
   const reachable = createMemo(() => {
     const token = selectedToken()
     if (!token || props.isGm || !inCombat() || !token.speedSquares) return undefined
-    // O losango passa a CONTORNAR o brejo sozinho: é o mesmo motor que o
-    // servidor usa para cobrar o caminho (T20 p238).
-    return boardReach({ x: token.x, y: token.y }, board()?.difficult ?? [], token.speedSquares)
+    // Nasce da ÚLTIMA PARADA com o que SOBROU, e não da casa onde a peça está
+    // (ALE-266). Sem isso o jogador empilha paradas, o total passa do
+    // deslocamento e ele não sabe o que desfazer para corrigir — que é a metade
+    // que separa este conserto de uma troca de defeito.
+    //
+    // O custo vem do SERVIDOR (`pending.cost`), nunca de uma conta refeita
+    // aqui: a régua do livro tem um dono só, e recalcular a diagonal e o brejo
+    // na tela seria a segunda implementação que a ALE-104 apagou.
+    const daVez = pendingDoToken(token.id)
+    const de = daVez ? daVez.path[daVez.path.length - 1] : { x: token.x, y: token.y }
+    // A MESMA conta que a faixa mostra. Escrevi a subtração duas vezes primeiro
+    // — aqui e no texto — e a sabotagem denunciou: estragar uma delas deixava a
+    // outra verde, ou seja o losango podia acender casas que a faixa jurava não
+    // caberem. Duas cópias da mesma regra é como este repositório já mostrou
+    // 52/95 e 57/95 do mesmo combatente em duas telas (ALE-122).
+    const resta = restanteDoMovimento() ?? token.speedSquares
+    if (resta <= 0) return []
+    // O losango CONTORNA o brejo sozinho: é o mesmo motor que o servidor usa
+    // para cobrar o caminho (T20 p238).
+    return boardReach(de, board()?.difficult ?? [], resta)
   })
+
+  /**
+   * Quanto AINDA dá para andar, ou `undefined` quando não há orçamento em jogo
+   * (o mestre posiciona sem limite, e fora de combate não há deslocamento de
+   * turno). Sai da conta do servidor, nunca de uma refeita aqui.
+   */
+  const restanteDoMovimento = () => {
+    const token = selectedToken()
+    const daVez = token ? pendingDoToken(token.id) : null
+    if (!token || !daVez || !token.speedSquares || props.isGm) return undefined
+    return Math.max(0, token.speedSquares - daVez.cost)
+  }
+
+  /** O movimento proposto DESTA peça, ou nada. */
+  const pendingDoToken = (tokenId: string) => {
+    const p = board()?.pending
+    return p && p.tokenId === tokenId ? p : null
+  }
+
+  /**
+   * As PARADAS desta proposta, na ordem — memória local e de propósito.
+   *
+   * O fio não mudou: `proposeMove` continua levando o caminho inteiro e
+   * contíguo, que é o que o `ProposeMove` do Go já valida e cobra. O que ele
+   * não carrega é ONDE o jogador soltou, e um caminho plano não deixa
+   * descobrir: um segmento legítimo já tem uma dobra (a diagonal primeiro), e
+   * ela é indistinguível da dobra de uma parada.
+   *
+   * Consequência aceita e visível: quem recarregar a página no meio de uma
+   * proposta perde as paradas e com elas o botão de desfazer UMA — o Cancelar
+   * continua ali, e a proposta é transitória por natureza. Preferi isso a
+   * inventar campo novo no fio para um estado que morre no commit.
+   */
+  const [paradas, setParadas] = createSignal<{ x: number; y: number }[]>([])
+
+  /**
+   * Desfaz a ÚLTIMA parada, reconstruindo o caminho pelas que sobraram.
+   *
+   * Reconstruir e não "cortar o fim do caminho": o número de quadrados de um
+   * segmento não se deduz das paradas sem redesenhá-lo, e redesenhar é
+   * justamente o que o `pathBetween` faz de graça. Sobrando uma parada só, o
+   * desfazer vira CANCELAR — uma proposta sem nenhuma perna não é proposta.
+   */
+  const desfazAParada = () => {
+    // Sai da PROPOSTA e não da seleção, e isso não é preferência: o clique que
+    // cria a parada também LARGA a peça (senão o clique seguinte a moveria sem
+    // querer), então no instante do desfazer não há peça selecionada. Escrevi
+    // contra `selectedToken()` primeiro e o teste acusou — o botão aparecia e
+    // não fazia nada.
+    //
+    // A origem é `path[0]`, que é o quadrado de onde a peça saiu: o `pending`
+    // é a fonte da verdade do movimento, e a peça no tabuleiro ainda está lá
+    // (a proposta não a moveu).
+    const daVez = board()?.pending
+    if (!daVez) return
+    const restantes = paradas().slice(0, -1)
+    setParadas(restantes)
+    if (restantes.length === 0) {
+      props.rt.cancelMove()
+      return
+    }
+    let caminho = [daVez.path[0]]
+    for (const parada of restantes) {
+      caminho = [...caminho, ...pathBetween(caminho[caminho.length - 1], parada).slice(1)]
+    }
+    props.rt.proposeMove(daVez.tokenId, caminho)
+  }
+
+  /**
+   * A proposta some (confirmada, cancelada, ou de outra peça) e as paradas vão
+   * junto. Sem isto elas sobreviveriam ao commit e a proposta SEGUINTE nasceria
+   * com um desfazer que aponta para quadrados de um movimento que já acabou.
+   */
+  createEffect(
+    on(
+      () => board()?.pending?.tokenId,
+      (dono) => {
+        if (!dono) setParadas([])
+      },
+    ),
+  )
 
   /**
    * Pousar a peça. São dois caminhos porque são duas coisas diferentes: o
@@ -351,7 +449,18 @@ export function BoardRegion(props: {
       setOndeEstava((atual) => ({ ...atual, [token.id]: { x: token.x, y: token.y } }))
       props.rt.updateToken(token.id, { x, y })
     } else {
-      props.rt.proposeMove(token.id, pathBetween({ x: token.x, y: token.y }, { x, y }))
+      // EMENDA na proposta que já existe, em vez de recomeçar do lugar da peça
+      // (ALE-266): é assim que contornar vira escolha da pessoa — acrescenta-se
+      // uma parada e o segmento seguinte sai dela.
+      const daVez = pendingDoToken(token.id)
+      const de = daVez ? daVez.path[daVez.path.length - 1] : { x: token.x, y: token.y }
+      // `slice(1)` porque o `pathBetween` devolve a origem inclusive, e ela já é
+      // o último quadrado do que veio antes — repeti-la quebraria a contiguidade
+      // que o servidor exige.
+      const emenda = pathBetween(de, { x, y }).slice(1)
+      if (emenda.length === 0) return
+      props.rt.proposeMove(token.id, [...(daVez?.path ?? [{ x: token.x, y: token.y }]), ...emenda])
+      setParadas((atuais) => [...atuais, { x, y }])
     }
   }
 
@@ -667,6 +776,10 @@ export function BoardRegion(props: {
                 selectedTokenId={selectedTokenId()}
                 movableTokenIds={movableTokenIds()}
                 pending={cena(live()).pending}
+              // Só quem está movendo vê as próprias paradas: para a mesa o que
+              // importa é a rota e o custo, e pontos de escolha alheia seriam
+              // ruído numa camada que já tem origem, caminho e destino.
+              paradas={paradas().length > 0 ? paradas() : undefined}
                 // Quem não pode mover NENHUMA peça também não seleciona: sem isso
                 // a camada de quadrados nasceria com centenas de botões inertes
                 // na árvore de quem só assiste.
@@ -763,6 +876,8 @@ export function BoardRegion(props: {
                 <MoveBar
                   move={move()}
                   canDecide={decidesPending()}
+                  restante={restanteDoMovimento()}
+                  onDesfazerParada={paradas().length > 0 ? desfazAParada : undefined}
                   onConfirm={() => props.rt.commitMove(live().version)}
                   onCancel={props.rt.cancelMove}
                 />
