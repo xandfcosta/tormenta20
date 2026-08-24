@@ -47,6 +47,68 @@ import (
 // ele pode aparecer, é enumeração disfarçada de amostragem.
 var pacotesDeFio = []string{".", "../aovivo", "../tabuleiro", "../plataforma"}
 
+// A ROTA TAMBÉM É FIO, E TAMBÉM COMEÇA EM MINÚSCULA.
+//
+// O mesmo laço da ALE-254 que capitalizou as tags capitalizou OITO ROTAS, e
+// isto só apareceu depois — porque no commit daquele trabalho eu rodei a suíte
+// Go e não a do front, e quem acusa rota errada é o `realtime-wire.test.ts`,
+// que compara o roteador do chi com a tabela de comandos do cliente.
+//
+// O estrago era maior que o das tags: `/Populate`, `/Places` e companhia
+// quebram sete comandos da mesa ao vivo, e o `/Reset-password` do `server.go`
+// quebra REDEFINIR SENHA — uma rota que ninguém exercita no dia a dia e que só
+// falha quando alguém precisa dela.
+//
+// Fica no mesmo arquivo que o guarda das tags de propósito: é a mesma família
+// (rename que varre uma STRING junto) e a mesma resposta (conserte a string,
+// não o guarda). Separá-los faria parecer que são dois problemas.
+func TestRotaDeFioComecaEmMinuscula(t *testing.T) {
+	rota := regexp.MustCompile(`r\.(?:Get|Post|Put|Patch|Delete|Route)\("(/[^"]*)"`)
+
+	arquivos, err := filepath.Glob("*.go")
+	if err != nil {
+		t.Fatalf("listar o pacote: %v", err)
+	}
+
+	visitadas := 0
+	for _, nome := range arquivos {
+		bruto, err := os.ReadFile(nome)
+		if err != nil {
+			t.Fatalf("ler %s: %v", nome, err)
+		}
+		for linha, texto := range strings.Split(string(bruto), "\n") {
+			if corte := strings.Index(texto, "//"); corte >= 0 {
+				texto = texto[:corte]
+			}
+			for _, m := range rota.FindAllStringSubmatch(texto, -1) {
+				caminho := m[1]
+				visitadas++
+				for _, pedaco := range strings.Split(strings.Trim(caminho, "/"), "/") {
+					// `{id}` é parâmetro e segue o nome do campo, não a rota.
+					if pedaco == "" || strings.HasPrefix(pedaco, "{") {
+						continue
+					}
+					// Qualquer maiúscula, não só a primeira: o defeito real
+					// incluía `password-Reset`, onde o segmento COMEÇA minúsculo e
+					// a varredura capitalizou a palavra depois do hífen. Um guarda
+					// que olhasse só a inicial passaria verde sobre ele — e passou,
+					// até o `grep` manual achar a nona rota.
+					if strings.ContainsAny(pedaco, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
+						t.Errorf("%s:%d: a rota %q tem segmento em MAIÚSCULA (%q).\n"+
+							"O cliente chama a grafia minúscula; capitalizar vira 404, e o\n"+
+							"404 chega à tela como funcionalidade que sumiu.",
+							nome, linha+1, caminho, pedaco)
+					}
+				}
+			}
+		}
+	}
+
+	if visitadas < 40 {
+		t.Fatalf("guarda cego: só %d rotas reconhecidas — o padrão parou de casar", visitadas)
+	}
+}
+
 func TestTagDeFioComecaEmMinuscula(t *testing.T) {
 	tag := regexp.MustCompile(`json:"([^",]+)`)
 

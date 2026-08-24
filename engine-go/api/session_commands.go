@@ -35,7 +35,7 @@ func (s *Server) mountLiveRoutes(r chi.Router) {
 	r.Route("/{id}/initiative", func(r chi.Router) {
 		r.Post("/", s.handleInitiativeAdd)
 		r.Post("/self", s.handleInitiativeSelf)
-		r.Post("/Populate", s.handleInitiativePopulate)
+		r.Post("/populate", s.handleInitiativePopulate)
 		r.Post("/next-turn", s.handleNextTurn)
 		r.Post("/previous-turn", s.handlePreviousTurn)
 		r.Delete("/", s.handleInitiativeReset)
@@ -56,7 +56,7 @@ func (s *Server) mountLiveRoutes(r chi.Router) {
 		r.Get("/as-player", s.handleBoardAsPlayer)
 		r.Post("/", s.handleBoardOpen)
 		r.Delete("/", s.handleBoardClose)
-		r.Post("/Populate", s.handleBoardPopulate)
+		r.Post("/populate", s.handleBoardPopulate)
 		r.Post("/terrain", s.handleBoardTerrainPaint)
 
 		r.Post("/tokens", s.handleBoardTokenAdd)
@@ -72,11 +72,11 @@ func (s *Server) mountLiveRoutes(r chi.Router) {
 		r.Patch("/markers/{markerId}", s.handleBoardMarkerUpdate)
 		r.Delete("/markers/{markerId}", s.handleBoardMarkerRemove)
 
-		r.Get("/Places", s.handleBoardPlaces)
-		r.Post("/Places/{placeId}/Reopen", s.handleBoardReopen)
-		r.Get("/Places/{placeId}/scene", s.handleBoardPlaceScene)
-		r.Put("/Places/{placeId}/scene", s.handleBoardPlaceSave)
-		r.Delete("/Places/{placeId}", s.handleBoardPlaceRemove)
+		r.Get("/places", s.handleBoardPlaces)
+		r.Post("/places/{placeId}/reopen", s.handleBoardReopen)
+		r.Get("/places/{placeId}/scene", s.handleBoardPlaceScene)
+		r.Put("/places/{placeId}/scene", s.handleBoardPlaceSave)
+		r.Delete("/places/{placeId}", s.handleBoardPlaceRemove)
 	})
 }
 
