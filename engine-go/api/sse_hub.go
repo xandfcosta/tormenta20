@@ -143,6 +143,17 @@ func (h *sseHub) entregaLocked(sessionID int64, role string, frame sseFrame) {
 // dezenas de tentativas, e é a assinatura #1 da ALE-238 ("uma condição some no
 // meio de três").
 //
+// POR QUE AQUI E NÃO EM TODO STREAM DA CASA. A ordem importa neste hub porque
+// o que viaja é o CLONE do estado, capturado no instante da mutação: um clone
+// velho que chegue depois de um novo é uma verdade antiga sobrescrevendo uma
+// recente. Há um desenho irmão que é imune por construção — o stream do piloto
+// (Datastar) manda um AVISO sem estado, e o leitor relê o estado de agora; dois
+// avisos fora de ordem no pior caso mandam reler duas vezes, e não há o que
+// reordenar. Publicar o clone é a escolha certa AQUI porque o cliente da SPA
+// não pode reler barato: seria um GET por mutação, para todo mundo na mesa.
+// Escrito porque sem isto a guarda parece paranoia, e a próxima pessoa a
+// simplificaria (obrigado à sessão da migração Datastar pela distinção).
+//
 // A guarda mora AQUI, e não numa trava em volta de cada publicação, porque
 // publicação nova é fácil de esquecer — são nove pontos hoje. O hub é o funil
 // por onde tudo passa, e o que ele não deixa acontecer ninguém precisa lembrar
