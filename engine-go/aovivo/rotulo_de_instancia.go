@@ -58,3 +58,16 @@ func NextInstanceLabelAmong(usados []string, label string) string {
 		}
 	}
 }
+
+// Especie separa a espécie do número da instância, para quem DESENHA.
+//
+// Exportada porque o desenho da peça precisa da MESMA separação que a
+// numeração: a cor e as letras vêm da espécie, e o número vira selo (ALE-179).
+// Derivá-la uma segunda vez é exatamente como "Zumbi 1" e "Zumbi 2" — a mesma
+// criatura — saíam em cores sem relação nenhuma, com o número, que é a única
+// coisa que distingue as três peças na mesa, sendo justamente o que se perdia.
+//
+// Devolve 0 quando não há sufixo. "Recruta Nv1 Simples" não tem instância: o
+// número está no MEIO do nome, e separar por qualquer dígito faria a cópia
+// nascer como outra espécie.
+func Especie(rotulo string) (string, int) { return speciesOf(rotulo) }
