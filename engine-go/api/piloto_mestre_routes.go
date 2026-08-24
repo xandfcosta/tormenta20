@@ -23,6 +23,59 @@ func (s *Server) rotasDoMestre(r chi.Router) {
 	})
 	r.Get("/mestre/bestiario", s.handleBestiario)
 	r.Post("/mestre/bestiario/tipo/{tipo}", s.handleBestiarioTipo)
+	r.Get("/mestre/catalogos", s.handleCatalogos)
+}
+
+// handleCatalogos serve os dois casos numa rota, como as outras cenas.
+//
+// Sem autorização própria e pelo mesmo motivo do bestiário: o catálogo é o
+// LIVRO, igual para todo mundo. O `requirePagina` do grupo já exige sessão.
+func (s *Server) handleCatalogos(w http.ResponseWriter, r *http.Request) {
+	busca, aba := criteriosDoAcervo(r)
+	v := carregaCatalogos(busca, aba)
+
+	if r.Header.Get("datastar-request") != "" {
+		sse := datastar.NewSSE(w, r)
+		fragmento, err := renderFragmento(r.Context(), cenaDosCatalogos(v))
+		if err != nil {
+			return
+		}
+		_ = sse.PatchElements(fragmento)
+		return
+	}
+
+	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
+		Titulo:        "Catálogos · Mesa do Mestre · Tormenta 20",
+		Forma:         cascaDensa,
+		Voltar:        "/piloto/",
+		VoltarRotulo:  "Hub",
+		TituloVisivel: "Mesa do Mestre",
+	}, mesaDoMestre("catalogos", cenaDosCatalogos(v)))
+}
+
+// criteriosDoAcervo lê a busca e a aba da URL na carga fria e dos SINAIS quando
+// o Datastar chama — mesma decisão das outras cenas, e é ela que faz
+// `?busca=fogo` e `?aba=magias` serem endereços que se recarregam.
+func criteriosDoAcervo(r *http.Request) (string, string) {
+	q := r.URL.Query()
+	busca, aba := q.Get("busca"), q.Get("aba")
+
+	sinais := struct {
+		Busca *string `json:"busca"`
+		Aba   *string `json:"aba"`
+	}{}
+	if err := datastar.ReadSignals(r, &sinais); err != nil {
+		return busca, aba
+	}
+	// Ponteiro para separar "não veio" de "veio vazio": busca APAGADA é valor
+	// legítimo, e tratá-la como ausente ressuscitaria o texto da URL.
+	if sinais.Busca != nil {
+		busca = *sinais.Busca
+	}
+	if sinais.Aba != nil {
+		aba = *sinais.Aba
+	}
+	return busca, aba
 }
 
 // handleBestiario serve os DOIS casos numa rota, como a cena de campanhas: a

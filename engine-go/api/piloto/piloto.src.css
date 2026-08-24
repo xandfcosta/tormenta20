@@ -53,3 +53,29 @@
     }
   }
 }
+
+/* A grade dos catálogos (ALE-258).
+ *
+ * Duas travas, e as duas são MEDIDA DE LEITURA portada da ALE-170, não estética:
+ *
+ *  - piso de 22rem por cartão, porque abaixo disso a prosa de uma magia vira
+ *    uma fita de duas palavras por linha;
+ *  - teto de TRÊS colunas, porque acima disso a linha fica curta demais para
+ *    descrição de regra. A SPA calculava o número em JS (`catalogColumns`)
+ *    porque a lista é virtualizada e "duas colunas" tinha de ser um agrupamento
+ *    dos DADOS antes de entregá-los. Sem virtualização a grade nativa mede o
+ *    contêiner de graça — mas `auto-fill` sozinho não tem teto, e medido a 1920
+ *    ele dava QUATRO.
+ *
+ * O `max()` no piso é o que impõe o teto: uma coluna nunca fica menor que um
+ * terço do contêiner, então nunca cabem quatro. */
+@layer components {
+  .acervo-em-colunas {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(max(22rem, (100% - 1rem) / 3), 1fr));
+  }
+  .acervo-em-colunas > * {
+    min-width: 0;
+  }
+}
