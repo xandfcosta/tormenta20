@@ -45,6 +45,32 @@ outcome someone would notice breaking. Everything below follows from that.
 - **Bug fixes get a regression test, and it must be proven RED first.** A test
   that was never seen failing is a guess. When a fix and its test land together,
   the commit says how the test was proven to fail.
+- **O INSTRUMENTO MENTE COM CARA DE RESULTADO, e o formato é sempre o mesmo:**
+  a infraestrutura em volta da medição destrói a medição, e o que sobra parece
+  um dado. Quatro casos num dia só, e nenhum deles pareceu erro na hora:
+  - Um `finally` que fecha contextos de browser lançou "Failed to find context"
+    e **substituiu o erro de verdade** do teste. Limpeza ganha `catch`, sempre:
+    *limpeza não pode falar mais alto que o defeito* (ALE-245).
+  - A suíte rodada com `| tail -15` deixou 981 bytes de stdout; procurar uma
+    linha ali e não achar foi lido como "o evento não aconteceu", quando era
+    "o canal não existe" (ALE-238).
+  - Uma sonda instalou `MutationObserver` em `document.body` num `addInitScript`,
+    onde o `body` ainda é `null` — e a ausência de mutação virou conclusão
+    (ALE-199).
+  - Um teste de componente não passava o tamanho e comparava o valor do
+    servidor com o **default** da SPA, passando verde sobre nada.
+
+  **O controle é barato e é obrigatório: antes de ler AUSÊNCIA como evidência,
+  provar que o canal estaria lá se o evento tivesse acontecido.** Procurar no
+  mesmo arquivo uma linha que sai SEMPRE; conferir que a sonda vê o caso
+  positivo conhecido. Sem isso, "não reproduzi" não é evidência de ausência —
+  é ausência de evidência, e as duas se parecem no terminal.
+- **Um guarda só mede o que ele VISITA.** Cobertura de contraste, de tipografia
+  e de leiaute é função de onde o teste NAVEGA, não de quantas asserções ele
+  tem. Dois defeitos de contraste sobreviveram anos com o guarda no ar porque
+  ele nunca abria um popover nem entrava no livro de campanhas (ALE-237); a
+  mesma forma reapareceu na tipografia (ALE-252). Cena nova entra na lista do
+  guarda, ou nasce sem medição.
 - **Delete tests that cost more than they protect**: assertions on class names
   and DOM shape nobody promised, tests that re-derive the expected value by
   running the implementation, tests over code that is dead or gated out of the
