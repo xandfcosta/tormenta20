@@ -13,7 +13,7 @@ import { fakeConditionals } from '@/shared/test/play-stores'
  * A FILA DO JOGADOR É LEITURA (ALE-213).
  *
  * "Ele pode ver a ordem, e só." A tela nunca ofereceu ação sobre linha ALHEIA —
- * e o servidor recusa (`assertVitalsEditable`, provado em `realtime_authz_test.go`).
+ * e o servidor recusa (`assertVitalsEditable`, provado em `vitals_authz_test.go`).
  * O que existia era ação sobre a linha DELE, e ela saiu: o PV do personagem já
  * se mexe na ficha, que é a superfície ao lado, e duas portas para o mesmo
  * número faziam a Mesa parecer um painel de mestre menor.

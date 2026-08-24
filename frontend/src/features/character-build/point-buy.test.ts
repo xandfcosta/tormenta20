@@ -12,41 +12,34 @@ const attrs = (patch: Partial<Record<AttributeKey, number>> = {}) => ({
   ...patch,
 })
 
-describe('pointBuyStatusFor — pontos de atributo (p17)', () => {
-  it('todos em 0 não custam nada', () => {
-    expect(pointBuyStatusFor(attrs()).spent).toBe(0)
-  })
-
-  it('cobra a Tabela 1-1 (1/2/4/7) — a escalada começa no +3', () => {
+/**
+ * FUMAÇA DA PONTE, e só isso (ALE-187).
+ *
+ * `pointBuyStatusFor` é literalmente `return enginePointBuyStatus(attrs)`: uma
+ * linha sobre o WASM. A Tabela 1-1 (p17) tem dono em `engine/pointbuy_test.go`,
+ * e re-afirmá-la aqui era a terceira cópia de uma regra do livro — o que a
+ * ALE-104 apagou ao aposentar o `t20-data`.
+ *
+ * Sobraram DOIS casos, um por FORMA de resposta que a ponte pode devolver: um
+ * número calculado e o nulo do modo livre. Se o motor não carregar, ou se a
+ * travessia perder o valor, é aqui que aparece — e aparece rápido, antes de a
+ * Forja inteira ficar vermelha por um motivo que não é dela.
+ *
+ * O que saiu e por onde está coberto: os avisos ("excedem o limite", "apenas UM
+ * atributo") são texto que o jogador lê e vivem afirmados MONTADOS em
+ * `pages/characters/forge/atributos-step.test.tsx`; o resto era a tabela.
+ */
+describe('pointBuyStatusFor — a ponte com o motor', () => {
+  it('devolve o número que a Tabela 1-1 manda (1/2/4/7)', () => {
     expect(pointBuyStatusFor(attrs({ strength: 1 })).spent).toBe(1)
-    expect(pointBuyStatusFor(attrs({ strength: 2 })).spent).toBe(2)
     expect(pointBuyStatusFor(attrs({ strength: 3 })).spent).toBe(4)
     expect(pointBuyStatusFor(attrs({ strength: 4 })).spent).toBe(7)
   })
 
-  it('reduzir um atributo a −1 devolve 1 ponto', () => {
-    expect(pointBuyStatusFor(attrs({ charisma: -1 })).spent).toBe(-1)
-  })
-
-  it('estourar os 10 pontos vira aviso', () => {
-    const { warnings } = pointBuyStatusFor(attrs({ strength: 4, dexterity: 4 }))
-
-    expect(warnings.join(' ')).toContain('excedem o limite')
-  })
-
-  it('só UM atributo pode cair a −1 (p17)', () => {
-    const { warnings } = pointBuyStatusFor(attrs({ charisma: -1, strength: -1 }))
-
-    expect(warnings.join(' ')).toContain('apenas UM atributo')
-  })
-
-  it('valor fora da tabela → spent null, não exceção (modo livre)', () => {
-    // Modo livre deixa passar valores que a compra por pontos não precifica; a
-    // Forja mostra "—" em vez de derrubar o passo de atributos.
+  // Modo livre: o motor recusa base fora da faixa e devolve nulo em vez de
+  // exceção, e a Forja mostra "—" no lugar do custo. É a outra forma que a
+  // ponte devolve, e uma travessia que estourasse aqui derrubaria o passo.
+  it('valor fora da tabela volta como nulo, não como exceção', () => {
     expect(pointBuyStatusFor(attrs({ strength: 9 })).spent).toBeNull()
-  })
-
-  it('avisos são conselho, nunca bloqueio', () => {
-    expect(Array.isArray(pointBuyStatusFor(attrs()).warnings)).toBe(true)
   })
 })

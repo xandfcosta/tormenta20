@@ -24,10 +24,6 @@ describe('rollValueSchema', () => {
   const firstError = (value: string) =>
     schema.safeParse(value).error?.issues[0]?.message
 
-  it('requires a value', () => {
-    expect(firstError('')).toBe('Informe o resultado do dado')
-    expect(firstError('   ')).toBe('Informe o resultado do dado')
-  })
 
   it('rejects non-digit input', () => {
     expect(firstError('1.5')).toBe('Valor inválido')
@@ -35,10 +31,12 @@ describe('rollValueSchema', () => {
     expect(firstError('abc')).toBe('Valor inválido')
   })
 
-  it('rejects a result the die cannot produce', () => {
-    expect(firstError('1')).toBe('Fora do intervalo (2–8)')
-    expect(firstError('9')).toBe('Fora do intervalo (2–8)')
-  })
+  // Dois casos saíram na ALE-187 porque as mensagens deles já são afirmadas
+  // MONTADAS em `consume-action.test.tsx` — 'Informe o resultado do dado' e
+  // 'Fora do intervalo (2–8)' aparecem lá na tela de verdade.
+  //
+  // O caso de cima FICA: 'Valor inválido' não é afirmado em tela nenhuma, e
+  // este é o único lugar que o prende.
 
   it('accepts a valid in-range roll', () => {
     for (const v of ['2', '5', '8']) {

@@ -26,11 +26,10 @@ describe('ForgeBeads', () => {
     expect(screen.getByText('Passo 3 de 9 · Poderes')).toBeInTheDocument()
   })
 
-  it('mostra o algarismo romano do passo atual', () => {
-    renderBeads({ current: 'raca' })
-
-    expect(screen.getByText('I')).toBeInTheDocument()
-  })
+  // 'mostra o algarismo romano do passo atual' saiu na ALE-187: o romano é
+  // DECORAÇÃO, e o próprio caso acima diz isso ao afirmar que quem lê tela
+  // recebe a frase. Um teste sobre o enfeite trava a decoração sem proteger
+  // desfecho nenhum.
 
   it('marca a conta atual para o leitor de tela', () => {
     renderBeads()

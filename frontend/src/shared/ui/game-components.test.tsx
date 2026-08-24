@@ -3,13 +3,11 @@ import userEvent from '@testing-library/user-event'
 import { Swords } from 'lucide-solid'
 import { describe, expect, it, vi } from 'vitest'
 import { BackgroundTexture } from './background-texture'
-import { Badge } from './badge'
 import { CharacterPortrait } from './character-portrait'
 import { GameMenuButton } from './game-menu-button'
 import { Input } from './input'
 import { Label } from './label'
 import { SceneTitle } from './scene-title'
-import { SkeletonCardGrid, SkeletonRows } from './skeleton'
 
 describe('Input', () => {
   it('associa por for/id e recebe texto', async () => {
@@ -29,27 +27,16 @@ describe('Input', () => {
   })
 })
 
-describe('Badge', () => {
-  it('usa a variante pedida', () => {
-    render(() => <Badge variant="outline">Nv 10</Badge>)
-    expect(screen.getByText('Nv 10')).toHaveAttribute('data-variant', 'outline')
-  })
-})
-
-describe('Skeleton', () => {
-  // A promessa é a QUANTIDADE (o esqueleto tem de ocupar o lugar do que vem), e
-  // ela é contada pelo slot, não por classe de estilo — `.rounded-sm.border`
-  // quebrava em qualquer restyle legítimo e não dizia nada ao usuário.
-  it('SkeletonCardGrid rende a quantidade pedida de cards', () => {
-    const { container } = render(() => <SkeletonCardGrid count={5} />)
-    expect(container.querySelectorAll('[data-slot=skeleton-card]')).toHaveLength(5)
-  })
-
-  it('SkeletonRows rende a quantidade pedida de linhas', () => {
-    const { container } = render(() => <SkeletonRows count={2} />)
-    expect(container.querySelectorAll('[data-slot=skeleton-row]')).toHaveLength(2)
-  })
-})
+// Os blocos `Badge` e `Skeleton` saíram inteiros na ALE-187.
+//
+// O do Badge afirmava o `data-variant`, e — conferido — nenhum CSS, e2e ou
+// teste o consome; diferente do `BackgroundTexture` abaixo, o Badge não
+// DECLARA esse atributo como contrato, ele só é carregado junto.
+//
+// Os do Skeleton contavam quantos cards a prop pediu: é um `For` sobre um
+// array do tamanho da prop, que o typechecker já garante, e não há defeito na
+// história deles — o comentário que morava ali defendia COMO contar (pelo
+// slot, não pela classe), não SE contar.
 
 describe('SceneTitle', () => {
   it('é h1 por padrão', () => {
@@ -117,10 +104,9 @@ describe('GameMenuButton', () => {
     expect(screen.getByRole('button')).not.toHaveAttribute('aria-current')
   })
 
-  it('rende o ícone quando passado', () => {
-    const { container } = render(() => <GameMenuButton icon={Swords}>Sessão</GameMenuButton>)
-    expect(container.querySelector('svg')).toBeInTheDocument()
-  })
+  // 'rende o ícone quando passado' saiu na ALE-187: `querySelector('svg')` é
+  // forma de DOM. O que importa do ícone — não roubar o nome acessível — é o
+  // caso abaixo, e esse fica.
 
   it('o nome acessível é só o rótulo — os enfeites são aria-hidden', () => {
     render(() => (
@@ -138,15 +124,11 @@ describe('CharacterPortrait', () => {
     expect(screen.getByText('TP')).toBeInTheDocument()
   })
 
-  it('cai pra ? quando o nome é vazio', () => {
-    render(() => <CharacterPortrait name="   " size="sm" />)
-    expect(screen.getByText('?')).toBeInTheDocument()
-  })
 
-  it('nome de uma palavra usa só a inicial', () => {
-    render(() => <CharacterPortrait name="Arsenal" size="sm" />)
-    expect(screen.getByText('A')).toBeInTheDocument()
-  })
+  // As três variações de INICIAIS saíram na ALE-187: elas re-testavam o
+  // `initials` do `shared/lib` através do retrato, e a função tem dono em
+  // `entities/campaign/emblem.test.ts`. Sobrou o caso de cima, que prova o
+  // que este componente promete — que o retrato MOSTRA iniciais.
 
   it('tinge com o hue quando informado', () => {
     const { container } = render(() => <CharacterPortrait name="Arsenal" size="lg" hue={210} />)

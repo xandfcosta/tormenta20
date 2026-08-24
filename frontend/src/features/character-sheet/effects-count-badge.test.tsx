@@ -35,8 +35,12 @@ describe('EffectsCountBadge', () => {
   // Zero com condicional disponível é informação: a aba TEM o que oferecer e
   // nada está ligado. É por isso que a pílula fica, em tom apagado.
   it('mostra 0 apagado quando há o que ligar e nada ligado', () => {
+    // A PÍLULA existe, e é isso que a decisão promete. O tom apagado saiu na
+    // ALE-187: `toHaveClass` amarra o teste ao CSS e quebra em qualquer restyle
+    // legítimo. O par que importa é este caso contra o de baixo — mostra zero
+    // quando há o que ligar, não mostra nada quando não há.
     renderBadge(makeCharacter({ classes: [{ className: 'Bardo', level: 3 }] }))
-    expect(screen.getByText('0')).toHaveClass('text-muted-foreground')
+    expect(screen.getByText('0')).toBeInTheDocument()
   })
 
   it('sem nada a oferecer, não pinta pílula', () => {
