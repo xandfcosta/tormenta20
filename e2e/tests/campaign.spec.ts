@@ -6,9 +6,20 @@ const CAMPAIGN = '/piloto/campanhas/1' // Snapshot Test ALE-33 (seed)
 
 test.describe('Detalhe da campanha', () => {
   // 'troca de aba mostra o roster de membros' saiu na ALE-187: clique numa aba
-  // e nomes na tela, sem medida que precise de browser. A garantia — e a URL,
-  // que o e2e também afirmava — está em `campaign-detail-page.test.tsx`, que
-  // monta a página com router de memória e cobre os dois sentidos.
+  // e nomes na tela, sem medida que precise de browser.
+  //
+  // O DESTINO que aquela issue escreveu era `campaign-detail-page.test.tsx`, e
+  // ele NÃO existe mais nesta branch: a migração apagou a página da SPA que ele
+  // montava, porque a crônica virou cena do servidor (ALE-255). O ponteiro
+  // quebrou no merge que trouxe a poda, e ficaria mandando procurar num arquivo
+  // ausente — que é a forma mais cara de perder um guarda, porque parece que ele
+  // existe.
+  //
+  // Aqui a garantia está partida em duas, cada metade na camada que a sustenta:
+  //   - a SEÇÃO É ENDEREÇO (link, URL, e o botão voltar) tem e2e próprio em
+  //     `piloto-datastar.spec.ts` — histórico é do navegador e jsdom não o tem;
+  //   - o ROSTER desenhado é `TestOMestreVemPrimeiroNoElenco`, em
+  //     `api/piloto_cronica_test.go`, que é a camada mais barata que o sustenta.
 })
 
 /**
@@ -17,10 +28,16 @@ test.describe('Detalhe da campanha', () => {
  * todos os specs e uma execução que deixa campanha para trás envenena a
  * próxima.
  *
- * O bloco "Entrar por convite" saiu na ALE-144: resolução do alvo
- * (`entities/campaign/join-target.test.ts`), prévia do convite
- * (`entities/queries.test.ts`) e convite morto
- * (`features/campaign-join/hero-picker.test.tsx`) já respondem em vitest, e a
+ * O bloco "Entrar por convite" saiu na ALE-144, e DOIS dos três destinos que ela
+ * escreveu não existem mais nesta branch: a carta de convite virou cena do
+ * servidor, e com ela foram embora o `entities/campaign/join-target.test.ts` e o
+ * `features/campaign-join/hero-picker.test.tsx`. Quem responde agora é o
+ * `api/piloto_campanha_entrar_test.go` — a resolução do alvo em
+ * `TestSemConviteAMesaDeOutroEhRecusadaComOProximoPasso` e o convite morto em
+ * `TestConviteMortoViraFraseENaoPaginaQuebrada` —, mais a
+ * `A carta de convite (piloto Datastar)` no `piloto-datastar.spec.ts` para o que
+ * só o browser vê. A prévia do convite continua em
+ * (`entities/queries.test.ts`), esse sobreviveu, e a
  * página `/campaigns/join` continua sendo carregada nos seis formatos pelo
  * bloco responsivo abaixo.
  */
