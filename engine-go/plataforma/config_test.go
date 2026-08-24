@@ -1,4 +1,4 @@
-package api
+package plataforma
 
 import (
 	"strings"
@@ -90,7 +90,7 @@ func TestLoadConfigReadsTheEnvironmentFile(t *testing.T) {
 func TestLoadConfigDefaultsCORSPerEnvironment(t *testing.T) {
 	cases := map[AppEnv]string{
 		EnvProduction:  "",
-		EnvDevelopment: devCORSOrigins,
+		EnvDevelopment: DevCORSOrigins,
 	}
 	for appEnv, want := range cases {
 		t.Run(string(appEnv), func(t *testing.T) {
@@ -131,9 +131,9 @@ func TestCORSOriginParsesAList(t *testing.T) {
 	}
 	for _, caso := range casos {
 		t.Run(caso.nome, func(t *testing.T) {
-			got := splitOrigins(caso.raw)
+			got := SplitOrigins(caso.raw)
 			if len(got) != len(caso.quer) {
-				t.Fatalf("splitOrigins(%q) = %q, queria %q", caso.raw, got, caso.quer)
+				t.Fatalf("SplitOrigins(%q) = %q, queria %q", caso.raw, got, caso.quer)
 			}
 			for i, origem := range caso.quer {
 				if got[i] != origem {

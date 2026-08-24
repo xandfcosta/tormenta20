@@ -4,7 +4,7 @@ import { Show, createMemo, createSignal } from 'solid-js'
 import { createMonsterFilter, filterMonsters } from '@/features/gm-tools/monster-filter'
 import { MonsterDetail } from '@/features/gm-tools/monster-detail'
 import { MonsterFilters } from '@/features/gm-tools/monster-filters'
-import { formatNd, MONSTER_TIPO_LABEL } from '@/features/gm-tools/monster-format'
+import { formatNd, MONSTER_SIZE_LABEL, MONSTER_TIPO_LABEL } from '@/features/gm-tools/monster-format'
 import { createMediaQuery } from '@/shared/lib/media-query'
 import { cn } from '@/shared/lib/utils'
 import {
@@ -160,7 +160,7 @@ function MonsterRow(props: { monster: Monster; selected: boolean; onOpen: () => 
           ND {formatNd(props.monster.nd)}
         </span>
         <span class="text-3xs font-normal text-muted-foreground">
-          {MONSTER_TIPO_LABEL[props.monster.tipo]} · {props.monster.size}
+          {MONSTER_TIPO_LABEL[props.monster.tipo]} · {MONSTER_SIZE_LABEL[props.monster.size]}
         </span>
       </p>
       <p class="font-mono text-3xs text-muted-foreground">

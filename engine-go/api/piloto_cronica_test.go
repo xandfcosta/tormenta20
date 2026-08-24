@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"t20engine/plataforma"
 	"testing"
 
 	"t20engine/db/sqlcgen"
@@ -196,7 +197,7 @@ func TestOInterruptorAlternaAValeENaoOContrario(t *testing.T) {
 
 func seedSessao(t *testing.T, s *Server, campanhaID, numero int64) int64 {
 	t.Helper()
-	agora := nowISO()
+	agora := plataforma.NowISO()
 	sess, err := s.queries.CreateSession(context.Background(), sqlcgen.CreateSessionParams{
 		Campaignid: campanhaID, Sessionnumber: numero,
 		Createdat: agora, Updatedat: agora,

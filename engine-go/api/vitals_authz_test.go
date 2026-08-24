@@ -1,9 +1,12 @@
 package api
 
+import "t20engine/aovivo"
+
 import (
 	"context"
 	"database/sql"
 	"strings"
+	"t20engine/plataforma"
 	"testing"
 
 	"t20engine/db/sqlcgen"
@@ -46,17 +49,17 @@ func newVitalsFixture(t *testing.T) vitalsFixture {
 
 	sess, err := s.queries.CreateSession(ctx, sqlcgen.CreateSessionParams{
 		Campaignid: campaignID, Sessionnumber: 1, Title: sql.NullString{String: "S1", Valid: true},
-		Createdat: nowISO(), Updatedat: nowISO(),
+		Createdat: plataforma.NowISO(), Updatedat: plataforma.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed session: %v", err)
 	}
 
 	srv := s
-	// O id da entrada é do SERVIDOR (`addEntry` sobrescreve o que vem do cliente),
+	// O id da entrada é do SERVIDOR (`aovivo.AddEntry` sobrescreve o que vem do cliente),
 	// então o teste lê de volta o que ele gerou em vez de inventar um.
-	add := func(label, kind string, characterID *int64) string {
-		state, err := srv.sessions.addInitiativeEntry(sess.ID, InitiativeEntry{
+	Add := func(label, kind string, characterID *int64) string {
+		state, err := srv.sessions.AddInitiativeEntry(sess.ID, aovivo.InitiativeEntry{
 			Label: label, Initiative: 10, Type: kind, CharacterID: characterID,
 		})
 		if err != nil {
@@ -73,14 +76,14 @@ func newVitalsFixture(t *testing.T) vitalsFixture {
 
 	return vitalsFixture{
 		srv: srv, sessionID: sess.ID, gmUser: gmUser, player: player, other: other,
-		pcEntry:  add("Herói", "character", &pcID),
-		otherPc:  add("Colega", "character", &otherID),
-		npcEntry: add("Ogro", "npc", nil),
+		pcEntry:  Add("Herói", "character", &pcID),
+		otherPc:  Add("Colega", "character", &otherID),
+		npcEntry: Add("Ogro", "npc", nil),
 	}
 }
 
-func (f vitalsFixture) ctx(userID int64, role string) liveCtx {
-	return liveCtx{userID: userID, sessionID: f.sessionID, role: role}
+func (f vitalsFixture) ctx(UserID int64, Role string) liveCtx {
+	return liveCtx{UserID: UserID, sessionID: f.sessionID, Role: Role}
 }
 
 func TestAssertVitalsEditable(t *testing.T) {
@@ -140,14 +143,14 @@ func TestSessionForCallerRejectsForeignSession(t *testing.T) {
 
 	foreign, err := s.queries.CreateSession(ctx, sqlcgen.CreateSessionParams{
 		Campaignid: theirCampaign, Sessionnumber: 1, Title: sql.NullString{String: "Alheia", Valid: true},
-		Createdat: nowISO(), Updatedat: nowISO(),
+		Createdat: plataforma.NowISO(), Updatedat: plataforma.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed foreign session: %v", err)
 	}
 
-	_, role, status, err := s.sessionForCaller(ctx, AuthUser{ID: mine}, myCampaign, foreign.ID)
+	_, Role, status, err := s.sessionForCaller(ctx, AuthUser{ID: mine}, myCampaign, foreign.ID)
 	if err == nil || status == 200 {
-		t.Fatalf("status=%d role=%q err=%v — a sessão de outra mesa foi aceita", status, role, err)
+		t.Fatalf("status=%d Role=%q err=%v — a sessão de outra mesa foi aceita", status, Role, err)
 	}
 }

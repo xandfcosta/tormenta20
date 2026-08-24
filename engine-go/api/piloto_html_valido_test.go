@@ -42,7 +42,14 @@ func TestNadaDeConteudoDeFluxoDentroDeRotuloDeSecao(t *testing.T) {
 		if err != nil {
 			t.Fatalf("ler %s: %v", nome, err)
 		}
-		linhas := strings.Split(string(conteudo), "\n")
+		// COMENTÁRIO FORA ANTES DE MEDIR. O comentário do próprio
+		// `rotuloDeSecao` cita `<h4>` para explicar por que ele não pode entrar
+		// ali, e um guarda que lê a fonte crua acusaria a explicação do
+		// defeito como se fosse o defeito. A sessão irmã pagou exatamente isso
+		// hoje num guarda irmão: ele nasceu VERMELHO sobre o próprio texto, e
+		// só a prova de vermelho revelou — sem ela, entregaria um teste que
+		// falha sobre si mesmo para sempre, e o próximo o desligaria.
+		linhas := semComentario(strings.Split(string(conteudo), "\n"))
 		for i, linha := range linhas {
 			if !abre.MatchString(linha) {
 				continue
@@ -69,4 +76,19 @@ func TestNadaDeConteudoDeFluxoDentroDeRotuloDeSecao(t *testing.T) {
 			"e o verde não significa nada")
 	}
 	t.Logf("%d usos de @rotuloDeSecao visitados", visitados)
+}
+
+// semComentario corta o que vier depois de `//` em cada linha. Grosseiro de
+// propósito: `//` dentro de string literal viraria corte indevido, mas em
+// template isso é raro e o custo do erro é um falso NEGATIVO — o guarda deixa
+// passar —, não um falso positivo que faz alguém desligá-lo.
+func semComentario(linhas []string) []string {
+	fora := make([]string, len(linhas))
+	for i, l := range linhas {
+		if j := strings.Index(l, "//"); j >= 0 {
+			l = l[:j]
+		}
+		fora[i] = l
+	}
+	return fora
 }

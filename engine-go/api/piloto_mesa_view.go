@@ -1,5 +1,9 @@
 package api
 
+import (
+	"t20engine/aovivo"
+)
+
 // A Mesa do jogador como DADO — o piloto Datastar (ALE-219).
 //
 // Puro de propósito: o handler busca, este arquivo decide, o template só
@@ -92,7 +96,7 @@ type mesaEu struct {
 //
 // Fora de combate ninguém está na vez. A linha na vez sendo de um personagem
 // MEU é o único caso em que a faixa acende.
-func mesaTurnOf(st *SessionRuntimeState, meus map[int64]bool) mesaTurn {
+func mesaTurnOf(st *aovivo.SessionRuntimeState, meus map[int64]bool) mesaTurn {
 	if st.TurnIndex < 0 || st.TurnIndex >= len(st.Initiative) {
 		return mesaTurn{Kind: "idle"}
 	}
@@ -141,7 +145,7 @@ func hpTomDe(pct int) string {
 }
 
 // mesaFilaDe desenha a fila que o jogador recebeu — já redigida.
-func mesaFilaDe(st *SessionRuntimeState, meus map[int64]bool) []mesaLinha {
+func mesaFilaDe(st *aovivo.SessionRuntimeState, meus map[int64]bool) []mesaLinha {
 	fila := make([]mesaLinha, 0, len(st.Initiative))
 	for i := range st.Initiative {
 		e := &st.Initiative[i]
@@ -158,7 +162,7 @@ func mesaFilaDe(st *SessionRuntimeState, meus map[int64]bool) []mesaLinha {
 		// O `HpMax` nil depois da redação é como o servidor DIZ "isto não é seu
 		// para ver". Desenhar barra aqui inventaria um número.
 		if e.HpMax != nil {
-			barra := mesaBarraDe(derefOr(e.HpCurrent, 0), *e.HpMax, false)
+			barra := mesaBarraDe(aovivo.DerefOr(e.HpCurrent, 0), *e.HpMax, false)
 			linha.PV = &barra
 		}
 		fila = append(fila, linha)
@@ -169,7 +173,7 @@ func mesaFilaDe(st *SessionRuntimeState, meus map[int64]bool) []mesaLinha {
 // mesaViewOf monta a tela a partir das partes já buscadas. Tudo o que decide
 // mora aqui; o handler ao lado só sabe buscar.
 func mesaViewOf(
-	st *SessionRuntimeState,
+	st *aovivo.SessionRuntimeState,
 	campaignID, sessionID, sessionNum int64,
 	grupo []mesaMembro,
 	meus map[int64]bool,

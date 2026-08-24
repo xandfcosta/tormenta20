@@ -1,11 +1,13 @@
-package api
+package tabuleiro
+
+import "t20engine/aovivo"
 
 import "testing"
 
-// entryIDByLabel devolve o ID que `addEntry` sorteou para uma linha. A escolha
+// entryIDByLabel devolve o ID que `aovivo.AddEntry` sorteou para uma linha. A escolha
 // viaja por ID e nunca por rótulo (ALE-204/192): dois goblins têm o mesmo nome
 // até o servidor numerá-los.
-func entryIDByLabel(t *testing.T, st *SessionRuntimeState, label string) string {
+func entryIDByLabel(t *testing.T, st *aovivo.SessionRuntimeState, label string) string {
 	t.Helper()
 	for _, entry := range st.Initiative {
 		if entry.Label == label {
@@ -24,14 +26,14 @@ func entryIDByLabel(t *testing.T, st *SessionRuntimeState, label string) string 
 // não nasce — nem escondido, porque peça que não existe não vaza por bug de
 // redação.
 func TestPopulateBringsOnlyTheChosen(t *testing.T) {
-	st := emptyRuntimeState()
-	id := counter()
-	_ = addEntry(st, charEntry("Sílfide", 18, 7), id)
-	_ = addEntry(st, charEntry("Paladino", 15, 8), id)
-	_ = addEntry(st, npc("Assassino", 20), id)
+	st := aovivo.EmptyRuntimeState()
+	id := ContadorDeIds()
+	_ = aovivo.AddEntry(st, combatenteDeFicha("Sílfide", 18, 7), id)
+	_ = aovivo.AddEntry(st, combatenteDeFicha("Paladino", 15, 8), id)
+	_ = aovivo.AddEntry(st, npc("Assassino", 20), id)
 	b := newBoard("Cripta", "pedra")
 
-	escolhidos := entrySelection{
+	escolhidos := EntrySelection{
 		entryIDByLabel(t, st, "Sílfide"):  true,
 		entryIDByLabel(t, st, "Paladino"): true,
 	}
@@ -46,17 +48,17 @@ func TestPopulateBringsOnlyTheChosen(t *testing.T) {
 }
 
 // "Não escolhi" não é "escolhi ninguém", e a diferença é o que separa uma aba
-// aberta antes da ALE-204 (que manda `board-populate` pelado e espera a fila
+// aberta antes da ALE-204 (que manda `board-Populate` pelado e espera a fila
 // inteira) de um mestre que desmarcou todo mundo no diálogo.
 func TestChosenEntriesTellsAbsentFromEmpty(t *testing.T) {
-	if ausente := chosenEntries(map[string]any{}, "entryIds"); ausente != nil {
+	if ausente := ChosenEntries(map[string]any{}, "entryIds"); ausente != nil {
 		t.Errorf("corpo sem entryIds virou seleção %v — o cliente antigo pararia de trazer alguém", ausente)
 	}
-	if !chosenEntries(map[string]any{}, "entryIds").wants("e1") {
+	if !ChosenEntries(map[string]any{}, "entryIds").wants("e1") {
 		t.Error("seleção ausente recusou uma linha — ausente é TODAS")
 	}
 
-	vazia := chosenEntries(map[string]any{"entryIds": []any{}}, "entryIds")
+	vazia := ChosenEntries(map[string]any{"entryIds": []any{}}, "entryIds")
 	if vazia == nil {
 		t.Fatal("lista vazia virou 'todas' — o mestre pediu ninguém e receberia a fila inteira")
 	}
@@ -64,7 +66,7 @@ func TestChosenEntriesTellsAbsentFromEmpty(t *testing.T) {
 		t.Error("lista vazia aceitou uma linha")
 	}
 
-	uma := chosenEntries(map[string]any{"entryIds": []any{"e2", 7, nil}}, "entryIds")
+	uma := ChosenEntries(map[string]any{"entryIds": []any{"e2", 7, nil}}, "entryIds")
 	if !uma.wants("e2") {
 		t.Error("a linha nomeada ficou de fora")
 	}

@@ -36,7 +36,7 @@ func (s *Server) handleMesaInitiative(w http.ResponseWriter, r *http.Request) {
 	// ReadSignals?". A ordem inversa passou VERDE em teste de handler e falhou no
 	// servidor de verdade: `httptest.NewRequest` não reproduz esse ciclo de vida
 	// (foi assim que o defeito apareceu — no navegador, não na suíte).
-	r.Body = http.MaxBytesReader(w, r.Body, 1<<20) // teto de 1 MB, como o `decodeJSON` da casa
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20) // teto de 1 MB, como o `plataforma.DecodeJSON` da casa
 	var sinais mesaSignals
 	erroDeLeitura := datastar.ReadSignals(r, &sinais)
 
@@ -79,7 +79,7 @@ func (s *Server) registraIniciativaDaMesa(r *http.Request, campaignID, sessionID
 	if err != nil {
 		return err
 	}
-	estado, err := s.sessions.upsertInitiativeEntry(sessionID, entry)
+	estado, err := s.sessions.UpsertInitiativeEntry(sessionID, entry)
 	if err != nil {
 		return err
 	}

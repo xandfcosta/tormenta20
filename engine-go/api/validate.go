@@ -1,109 +1,28 @@
 package api
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
-	"net/http"
-	"regexp"
-	"strconv"
-	"strings"
-	"time"
+	"t20engine/plataforma"
 	"unicode/utf8"
 )
 
-// FieldErrorMap is the validation error shape the client reads: field →
-// human messages. Emitted inside the {statusCode,error,message,fieldErrors} body.
-type FieldErrorMap map[string][]string
+// AS VALIDAÇÕES DA PORTA — o que sobrou aqui depois de o `api/` virar quatro
+// pacotes (ALE-254).
+//
+// O resto deste arquivo virou `plataforma/validate.go`: `DecodeJSON`, `NowISO`,
+// `NormalizeEmail`, `WriteValidationError` e companhia são infraestrutura, e
+// agora se chamam pelo pacote. O que fica aqui são as quatro funções da ALE-229,
+// que NÃO existem na main — elas nasceram com a porta em Datastar e o merge da
+// nona puxada quase as perdeu, porque mover arquivo entre pacotes faz o git ver
+// apagar+criar, e o lado que "vence" é o que não tinha a mudança.
+//
+// Ficam em `api/` e não em `plataforma/` de propósito: `plataforma` é
+// infraestrutura sem domínio, e "a senha precisa ter ao menos 8 caracteres" é
+// regra de PRODUTO — quem a mudar está mudando o que o jogador pode fazer, não
+// como o servidor escreve JSON.
 
-// fieldError is a domain validation failure that also carries per-field messages.
-// It lets a transport-agnostic domain rule signal a rich validation body without
-// depending on http.ResponseWriter: the HTTP layer renders the full
-// {statusCode,error,message,fieldErrors} envelope; other transports (the WS gateway)
-// just read Error(). Foundation for the B.6 fase-0 extraction.
-type fieldError struct {
-	status  int
-	message string
-	fields  FieldErrorMap
-}
-
-func (e *fieldError) Error() string { return e.message }
-
-// writeFieldError emits the full validation envelope directly, for a handler
-// that already knows the message and the per-field detail and has no domain
-// error to wrap. Thirteen call sites used to build this map literal by hand —
-// the rich shape existed only behind *fieldError, which is awkward to construct
-// inline, so handlers wrote it out instead and the envelope drifted.
-func writeFieldError(w http.ResponseWriter, status int, message string, fields FieldErrorMap) {
-	writeJSON(w, status, map[string]any{
-		"statusCode":  status,
-		"error":       http.StatusText(status),
-		"message":     message,
-		"fieldErrors": fields,
-	})
-}
-
-// writeDomainError maps a domain error to the HTTP response: a *fieldError becomes the
-// full validation envelope (preserving its custom message); anything else falls back to
-// a plain {message} at the given status. The single seam every HTTP handler uses to
-// translate a domain rule's (status, error) return.
-func writeDomainError(w http.ResponseWriter, status int, err error) {
-	var fe *fieldError
-	if errors.As(err, &fe) {
-		writeFieldError(w, fe.status, fe.message, fe.fields)
-		return
-	}
-	writeError(w, status, err.Error())
-}
-
-// decodeJSON reads a JSON body into dst; on malformed input it writes a 400 and
-// returns false so the handler can bail.
-// maxBodyBytes é o teto de um corpo de requisição. Um megabyte é folgado para
-// tudo que este app manda — a ficha inteira de nível 20 serializada dá ~40 KB —
-// e o que ele impede é um corpo sem fim segurando memória e goroutine (ALE-157).
-const maxBodyBytes = 1 << 20
-
-func decodeJSON(w http.ResponseWriter, r *http.Request, dst any) bool {
-	r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
-	if err := json.NewDecoder(r.Body).Decode(dst); err != nil {
-		// Corpo grande demais tem resposta PRÓPRIA: dizer "JSON inválido" para
-		// um JSON perfeitamente válido mandaria quem escreveu o cliente
-		// procurar defeito onde não há.
-		var tooLarge *http.MaxBytesError
-		if errors.As(err, &tooLarge) {
-			writeError(w, http.StatusRequestEntityTooLarge,
-				fmt.Sprintf("O corpo da requisição passa de %d bytes", tooLarge.Limit))
-			return false
-		}
-		writeError(w, http.StatusBadRequest, "Invalid JSON body")
-		return false
-	}
-	return true
-}
-
-// writeValidationError emits the same envelope as validation-exception.factory.ts.
-func writeValidationError(w http.ResponseWriter, fields FieldErrorMap) {
-	writeJSON(w, http.StatusBadRequest, map[string]any{
-		"statusCode":  http.StatusBadRequest,
-		"error":       "Bad Request",
-		"message":     "Validation failed",
-		"fieldErrors": fields,
-	})
-}
-
-// A pragmatic email shape check — class-validator's IsEmail is stricter, but the
-// frontend pre-validates and the exact RFC is not worth reproducing here.
-var emailRe = regexp.MustCompile(`^[^@\s]+@[^@\s]+\.[^@\s]+$`)
-
-func isEmail(s string) bool { return emailRe.MatchString(s) }
-
-// normalizeEmail is the single spelling of an account. Register and login both
-// run it, so `Mestre@T20.local` and `mestre@t20.local` are ONE account and not
-// two — which is what lets the admin check (Config.IsAdmin) ignore case without
-// opening a door: a case variant can no longer become a second admin (ALE-120).
-func normalizeEmail(email string) string {
-	return strings.ToLower(strings.TrimSpace(email))
-}
+// O `emailRe` e o `IsEmail` vivem no `account_rules.go` desde a nona puxada —
+// a main os extraiu para lá. Duas cópias do mesmo regex é exatamente o defeito
+// que uma extração existe para evitar, então aqui só se usa o de lá.
 
 // As mensagens da PORTA são as que o jogador lê, então elas são em pt-BR
 // (ALE-229).
@@ -124,9 +43,9 @@ const (
 	msgNomeLongo     = "O nome pode ter no máximo 80 caracteres"
 )
 
-func validateRegister(b registerBody) FieldErrorMap {
-	f := FieldErrorMap{}
-	if !isEmail(b.Email) {
+func validateRegister(b registerBody) plataforma.FieldErrorMap {
+	f := plataforma.FieldErrorMap{}
+	if !IsEmail(b.Email) {
 		f["email"] = []string{msgEmailInvalido}
 	}
 	for field, messages := range validatePassword(b.Password) {
@@ -141,8 +60,8 @@ func validateRegister(b registerBody) FieldErrorMap {
 // validatePassword is the ONE password rule, shared by registration and by the
 // reset link (ALE-120) — two spellings of "at least 8" would drift, and the
 // screen that ended up laxer would be the one that matters.
-func validatePassword(password string) FieldErrorMap {
-	f := FieldErrorMap{}
+func validatePassword(password string) plataforma.FieldErrorMap {
+	f := plataforma.FieldErrorMap{}
 	length := utf8.RuneCountInString(password)
 	if length < 8 {
 		f["password"] = append(f["password"], msgSenhaCurta)
@@ -153,9 +72,9 @@ func validatePassword(password string) FieldErrorMap {
 	return f
 }
 
-func validateLogin(b loginBody) FieldErrorMap {
-	f := FieldErrorMap{}
-	if !isEmail(b.Email) {
+func validateLogin(b loginBody) plataforma.FieldErrorMap {
+	f := plataforma.FieldErrorMap{}
+	if !IsEmail(b.Email) {
 		f["email"] = []string{msgEmailInvalido}
 	}
 	if b.Password == "" {
@@ -164,18 +83,7 @@ func validateLogin(b loginBody) FieldErrorMap {
 	return f
 }
 
-// nowISO is the timestamp format stored in the TEXT DateTime columns (ISO-8601,
+// plataforma.NowISO is the timestamp format stored in the TEXT DateTime columns (ISO-8601,
 // UTC, millisecond precision — what Prisma serialized).
-// isoLayout is the one spelling of a timestamp in this database. Shared so a
+// plataforma.IsoLayout is the one spelling of a timestamp in this database. Shared so a
 // stored value parses back with the layout that wrote it (ALE-120).
-const isoLayout = "2006-01-02T15:04:05.000Z"
-
-func nowISO() string {
-	return isoAt(time.Now())
-}
-
-func isoAt(t time.Time) string {
-	return t.UTC().Format(isoLayout)
-}
-
-func parseInt(s string) (int, error) { return strconv.Atoi(strings.TrimSpace(s)) }

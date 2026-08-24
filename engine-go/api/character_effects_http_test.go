@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"t20engine/plataforma"
 	"testing"
 
 	"t20engine/db/sqlcgen"
@@ -26,7 +27,7 @@ import (
 // mestre de qualquer coisa com uma sessão viva em algum lugar.
 
 // endScopeRouter mounts only the two scope-expiring routes, injecting `user`
-// the way requireAuth would. The domain side of endScene/endDay is covered by
+// the way requireAuth would. The domain side of EndScene/endDay is covered by
 // TestEndSceneEndDay; what this file pins is the HTTP contract — who may call,
 // and the `clearedScopes` delta the caller uses to drop cached effects.
 func endScopeRouter(s *Server, user AuthUser) http.Handler {
@@ -69,7 +70,7 @@ func seedLiveSession(t *testing.T, s *Server, gmID, charID int64) int64 {
 	seedMember(t, s, campaign, charID, "player")
 	sid := seedSession(t, s, campaign)
 	if _, err := s.queries.StartSessionFresh(context.Background(), sqlcgen.StartSessionFreshParams{
-		StartedAt: sql.NullString{String: nowISO(), Valid: true}, UpdatedAt: nowISO(), ID: sid,
+		StartedAt: sql.NullString{String: plataforma.NowISO(), Valid: true}, UpdatedAt: plataforma.NowISO(), ID: sid,
 	}); err != nil {
 		t.Fatalf("start session: %v", err)
 	}
@@ -113,7 +114,7 @@ func TestEndDayRouteClearsBothScopes(t *testing.T) {
 		t.Fatalf("status = %d, want 200 (body %q)", rec.Code, rec.Body.String())
 	}
 	// Both scopes, so the caller drops day effects too — reporting only "day"
-	// would leave the cleared scene buffs painted on the sheet.
+	// would Leave the cleared scene buffs painted on the sheet.
 	got := clearedScopes(t, rec)
 	if len(got) != 2 || got[0] != "scene" || got[1] != "day" {
 		t.Errorf("clearedScopes = %v, want [scene day]", got)
@@ -181,7 +182,7 @@ func TestEndSceneRouteRefusedWithNoRunningSession(t *testing.T) {
 	seedMember(t, s, campaign, char, "player")
 	sid := seedSession(t, s, campaign)
 	if _, err := s.queries.EndSession(context.Background(), sqlcgen.EndSessionParams{
-		EndedAt: sql.NullString{String: nowISO(), Valid: true}, UpdatedAt: nowISO(), ID: sid,
+		EndedAt: sql.NullString{String: plataforma.NowISO(), Valid: true}, UpdatedAt: plataforma.NowISO(), ID: sid,
 	}); err != nil {
 		t.Fatalf("end session: %v", err)
 	}

@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"t20engine/plataforma"
 	"time"
 
 	"t20engine/db/sqlcgen"
@@ -32,17 +33,17 @@ type adminUserDTO struct {
 func (s *Server) handleAdminListUsers(w http.ResponseWriter, r *http.Request) {
 	rows, err := s.queries.ListUsersWithCounts(r.Context())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not list users")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not list users")
 		return
 	}
 	out := make([]adminUserDTO, 0, len(rows))
 	for _, u := range rows {
 		out = append(out, adminUserDTO{
-			ID: u.ID, Email: u.Email, Name: nullToPtr(u.Name), IsAdmin: s.cfg.IsAdmin(u.Email),
+			ID: u.ID, Email: u.Email, Name: plataforma.NullToPtr(u.Name), IsAdmin: s.cfg.IsAdmin(u.Email),
 			Campaigns: u.Campaigns, Characters: u.Characters, CreatedAt: u.Createdat,
 		})
 	}
-	writeJSON(w, http.StatusOK, out)
+	plataforma.WriteJSON(w, http.StatusOK, out)
 }
 
 // handleAdminDeleteUser: DELETE /admin/users/{id}. The mesas the account owns
@@ -56,10 +57,10 @@ func (s *Server) handleAdminDeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 	moved, status, err := s.deleteAccount(r, id, currentUser(r).ID)
 	if err != nil {
-		writeError(w, status, err.Error())
+		plataforma.WriteError(w, status, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"id": id, "transferredCampaigns": moved})
+	plataforma.WriteJSON(w, http.StatusOK, map[string]any{"id": id, "transferredCampaigns": moved})
 }
 
 // deleteAccount is the RULE behind the delete: you cannot remove your own
@@ -96,7 +97,7 @@ func (s *Server) deleteUserKeepingMesas(r *http.Request, userID, newOwnerID int6
 
 	q := s.queries.WithTx(tx)
 	moved, err := q.TransferCampaigns(ctx, sqlcgen.TransferCampaignsParams{
-		NewOwnerId: newOwnerID, UpdatedAt: nowISO(), OldOwnerId: userID,
+		NewOwnerId: newOwnerID, UpdatedAt: plataforma.NowISO(), OldOwnerId: userID,
 	})
 	if err != nil {
 		return 0, err
@@ -117,14 +118,14 @@ func (s *Server) handleAdminCreatePasswordReset(w http.ResponseWriter, r *http.R
 	}
 	reset, err := s.mintPasswordReset(r.Context(), id, currentUser(r).ID)
 	if errors.Is(err, errUsuarioInexistente) {
-		writeError(w, http.StatusNotFound, "User not found")
+		plataforma.WriteError(w, http.StatusNotFound, "User not found")
 		return
 	}
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not create reset link")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not create reset link")
 		return
 	}
-	writeJSON(w, http.StatusCreated, accountInviteDTO{Token: reset.Token, ExpiresAt: reset.Expiresat})
+	plataforma.WriteJSON(w, http.StatusCreated, accountInviteDTO{Token: reset.Token, ExpiresAt: reset.Expiresat})
 }
 
 // errUsuarioInexistente separa "não existe" de "deu errado" para quem CHAMA
@@ -153,22 +154,22 @@ func (s *Server) mintPasswordReset(ctx context.Context, usuarioID, criadoPor int
 		Token:     generateInviteToken(),
 		Userid:    usuarioID,
 		Createdby: criadoPor,
-		Createdat: isoAt(now),
-		Expiresat: isoAt(now.Add(passwordResetTTL)),
+		Createdat: plataforma.IsoAt(now),
+		Expiresat: plataforma.IsoAt(now.Add(passwordResetTTL)),
 	})
 }
 
 // handleAdminListInvites: GET /admin/invites — the links already handed out and
 // still good, so the admin can copy one again instead of minting a second.
 func (s *Server) handleAdminListInvites(w http.ResponseWriter, r *http.Request) {
-	rows, err := s.queries.ListOpenAccountInvites(r.Context(), nowISO())
+	rows, err := s.queries.ListOpenAccountInvites(r.Context(), plataforma.NowISO())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not list invites")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not list invites")
 		return
 	}
 	out := make([]accountInviteDTO, 0, len(rows))
 	for _, i := range rows {
 		out = append(out, accountInviteDTO{Token: i.Token, ExpiresAt: i.Expiresat})
 	}
-	writeJSON(w, http.StatusOK, out)
+	plataforma.WriteJSON(w, http.StatusOK, out)
 }

@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"net/http"
 	"strconv"
+	"t20engine/aovivo"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -119,13 +120,13 @@ func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, se
 	}
 	// Hidrata do banco na primeira leitura, como o `onGetState` faz — sem isto
 	// um servidor recém-subido serve fila vazia para um combate em andamento.
-	if _, err := s.sessions.load(ctx, sessionID); err != nil {
+	if _, err := s.sessions.Load(ctx, sessionID); err != nil {
 		return mesaView{}, http.StatusInternalServerError, err
 	}
 	// `stateForRole` e não `redactForPlayers` direto: é o mesmo gargalo que o
 	// socket usa (ALE-122/ALE-210), e papel desconhecido cai em jogador. O
 	// piloto não ganha uma segunda decisão sobre quem vê o quê.
-	st := stateForRole(role, s.sessions.refreshCharacterMaxes(ctx, sessionID))
+	st := aovivo.StateForRole(role, s.sessions.RefreshCharacterMaxes(ctx, sessionID))
 	grupo, meus, eu := s.mesaRoster(ctx, user, campaignID)
 	return mesaViewOf(st, campaignID, sessionID, sess.Sessionnumber, grupo, meus, eu), http.StatusOK, nil
 }

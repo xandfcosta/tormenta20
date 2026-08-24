@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"t20engine/plataforma"
 
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
@@ -100,7 +101,7 @@ func (s *Server) handlePortaCriarContaSubmit(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	v := criarContaView{
-		Email:   normalizeEmail(r.PostFormValue("email")),
+		Email:   plataforma.NormalizeEmail(r.PostFormValue("email")),
 		Nome:    strings.TrimSpace(r.PostFormValue("nome")),
 		Convite: r.PostFormValue("convite"),
 	}
@@ -195,7 +196,7 @@ func (s *Server) handlePortaRedefinirSubmit(w http.ResponseWriter, r *http.Reque
 // dizer isso de cara é melhor que falhar no envio com a senha já digitada duas
 // vezes.
 func (s *Server) olhaOLink(r *http.Request, token string) redefinirView {
-	v := redefinirView{Token: token, Erros: FieldErrorMap{}}
+	v := redefinirView{Token: token, Erros: plataforma.FieldErrorMap{}}
 	reset, ok := s.usableReset(r.Context(), token)
 	if !ok {
 		return v
@@ -262,13 +263,13 @@ func destinoPedido(bruto string) string {
 	return bruto
 }
 
-// comNomesDoFormulario traduz as chaves do `FieldErrorMap` da API (`password`)
+// comNomesDoFormulario traduz as chaves do `plataforma.FieldErrorMap` da API (`password`)
 // para os nomes dos campos DESTE formulário (`senha`).
 //
-// A tradução é aqui e não no validador porque o `FieldErrorMap` é contrato de
+// A tradução é aqui e não no validador porque o `plataforma.FieldErrorMap` é contrato de
 // fio da API JSON — renomear a chave lá quebraria o cliente que a lê.
-func comNomesDoFormulario(fields FieldErrorMap) FieldErrorMap {
-	out := FieldErrorMap{}
+func comNomesDoFormulario(fields plataforma.FieldErrorMap) plataforma.FieldErrorMap {
+	out := plataforma.FieldErrorMap{}
 	nomes := map[string]string{"password": "senha", "name": "nome", "email": "email"}
 	for chave, msgs := range fields {
 		if nome, ok := nomes[chave]; ok {

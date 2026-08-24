@@ -25,10 +25,11 @@ import (
 	"t20engine/api"
 	"t20engine/db"
 	"t20engine/engine"
+	"t20engine/plataforma"
 )
 
 func main() {
-	cfg, err := api.LoadConfig()
+	cfg, err := plataforma.LoadConfig()
 	if err != nil {
 		log.Fatalf("config: %v", err)
 	}
@@ -65,7 +66,7 @@ func main() {
 // httpServerFor monta o servidor com os timeouts da casa. Separado da `serve`
 // para os testes poderem afirmar as escolhas — inclusive a AUSÊNCIA do
 // `WriteTimeout`, que é a mais fácil de alguém "consertar" sem saber.
-func httpServerFor(cfg api.Config, mux http.Handler) *http.Server {
+func httpServerFor(cfg plataforma.Config, mux http.Handler) *http.Server {
 	return &http.Server{
 		Addr:              ":" + cfg.Port,
 		Handler:           mux,
@@ -88,7 +89,7 @@ func httpServerFor(cfg api.Config, mux http.Handler) *http.Server {
 //   - `WriteTimeout` fica de FORA de propósito. Ele mataria o fluxo SSE, que é
 //     conexão longa por natureza, e o download do wasm de 780 KB numa rede
 //     ruim. É o timeout que parece obrigatório e é justamente o errado aqui.
-func serve(ctx context.Context, cfg api.Config, mux http.Handler) error {
+func serve(ctx context.Context, cfg plataforma.Config, mux http.Handler) error {
 	server := httpServerFor(cfg, mux)
 	falhou := make(chan error, 1)
 	go func() {
@@ -122,7 +123,7 @@ func serve(ctx context.Context, cfg api.Config, mux http.Handler) error {
 // Um pedido `http://` chegando numa porta com TLS recebe "Client sent an HTTP
 // request to an HTTPS server" do próprio net/http. Feio, mas VISÍVEL — que é o
 // oposto do que acontecia se a configuração caísse para HTTP em silêncio.
-func escutar(server *http.Server, cfg api.Config) error {
+func escutar(server *http.Server, cfg plataforma.Config) error {
 	if !cfg.TLSEnabled() {
 		return server.ListenAndServe()
 	}
@@ -157,7 +158,7 @@ func primeCatalogs(path string) *engine.Catalogs {
 // por isso fora do CORS e do `requireAuth` — o que obrigava o `guardSocketOrigin`
 // a repetir a política de origem por conta. Com SSE o tempo real é uma rota como
 // as outras e essa exceção sumiu (ALE-253).
-func buildMux(cfg api.Config, srv *api.Server) *http.ServeMux {
+func buildMux(cfg plataforma.Config, srv *api.Server) *http.ServeMux {
 	mux := http.NewServeMux()
 	// O piloto Datastar (ALE-219): uma PÁGINA renderizada pelo servidor, ao lado
 	// da SPA. Fora do `/api` de propósito — o jogador abre e favorita esta URL.
@@ -196,7 +197,7 @@ func buildMux(cfg api.Config, srv *api.Server) *http.ServeMux {
 // announce prints where to point a browser. When this process serves the SPA it
 // also prints the LAN addresses, because the players open the app from their own
 // machines and the host would otherwise have to go read `ip addr` (ALE-119).
-func announce(cfg api.Config) {
+func announce(cfg plataforma.Config) {
 	log.Printf("t20 %s server listening on :%s (%s, db=%s)", cfg.AppEnv, cfg.Port, cfg.Scheme(), cfg.DatabasePath)
 	if cfg.TLSEnabled() && !cfg.CookieSecure {
 		log.Print("  aviso: há TLS e COOKIE_SECURE=false — o cookie de sessão viaja sem a marca Secure")
@@ -216,7 +217,7 @@ func announce(cfg api.Config) {
 // O esquema vem da config, e não é detalhe: este log É o endereço que o mestre
 // lê e repassa para a mesa. Com TLS ligado e `http://` impresso, os quatro
 // telefones batem num 400 e o sintoma parece do app (ALE-118).
-func lanURLs(cfg api.Config) []string {
+func lanURLs(cfg plataforma.Config) []string {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		log.Printf("interfaces: %v — LAN address unknown", err)
@@ -273,7 +274,7 @@ func serveMaybeCompressed(w http.ResponseWriter, r *http.Request, file string) {
 	w.Header().Set("Cache-Control", cacheControlFor(file))
 
 	for _, variant := range []struct{ encoding, ext string }{{"br", ".br"}, {"gzip", ".gz"}} {
-		if !api.AcceptsEncoding(r.Header.Get("Accept-Encoding"), variant.encoding) {
+		if !plataforma.AcceptsEncoding(r.Header.Get("Accept-Encoding"), variant.encoding) {
 			continue
 		}
 		if info, err := os.Stat(file + variant.ext); err != nil || info.IsDir() {

@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"t20engine/plataforma"
 
 	"t20engine/catalog"
 )
@@ -27,8 +28,8 @@ func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 		degraded = append(degraded, "activations")
 	}
 	if len(degraded) == 0 {
-		writeJSON(w, http.StatusOK, map[string]any{"status": "ok"})
+		plataforma.WriteJSON(w, http.StatusOK, map[string]any{"status": "ok"})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"status": "degraded", "degraded": degraded})
+	plataforma.WriteJSON(w, http.StatusOK, map[string]any{"status": "degraded", "degraded": degraded})
 }

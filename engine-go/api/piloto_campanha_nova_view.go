@@ -1,5 +1,9 @@
 package api
 
+import (
+	"t20engine/plataforma"
+)
+
 // campanhaNovaView é o formulário da folha em branco (ALE-246).
 //
 // Ele carrega de volta o que a pessoa digitou, e isso é o mínimo: recusar um
@@ -8,7 +12,7 @@ package api
 type campanhaNovaView struct {
 	Nome      string
 	Descricao string
-	Erros     FieldErrorMap
+	Erros     plataforma.FieldErrorMap
 	// Aviso é a recusa do formulário inteiro, quando nenhum campo é dono do
 	// problema. Mesma divisão da porta.
 	Aviso string

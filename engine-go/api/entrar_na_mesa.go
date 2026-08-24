@@ -12,7 +12,7 @@ import (
 //
 // Esta é a NONA vez que a migração encontra regra soldada ao transporte, e a
 // maior de longe: o `handleAddMember` tinha ~110 linhas com SETE checagens
-// misturadas a `writeError`. Duas telas precisam das sete — a da SPA, que ainda
+// misturadas a `plataforma.WriteError`. Duas telas precisam das sete — a da SPA, que ainda
 // existe, e a cena do servidor — e enquanto elas viviam dentro de um
 // `http.HandlerFunc` a segunda só tinha duas saídas: chamar a própria rota por
 // dentro, ou copiar as sete.

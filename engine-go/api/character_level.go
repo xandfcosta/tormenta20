@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
@@ -56,7 +57,7 @@ func engineCharacterFrom(dto CharacterDTO) (engine.Character, error) {
 
 // computeSheet builds the engine input from an already-loaded character row and returns the
 // server-computed ComputedSheetV2 (base sheet, no active conditionals). Shared by GET /sheet
-// and the power-grant temp-HP amount so the load→engine→compute wiring lives in one place.
+// and the power-grant temp-HP amount so the Load→engine→compute wiring lives in one place.
 // Caller must ensure s.catalogs is primed.
 func (s *Server) computeSheet(ctx context.Context, row sqlcgen.Character) (engine.ComputedSheetV2, error) {
 	dto, err := s.loadCharacter(ctx, row)
@@ -97,7 +98,7 @@ func (s *Server) syncLevelVitals(r *http.Request, id int64, dto CharacterDTO) (s
 	if changed {
 		if err := s.queries.SetCharacterVitals(r.Context(), sqlcgen.SetCharacterVitalsParams{
 			HpMax: next.HpMax, HpCurrent: next.HpCurrent, MpMax: next.MpMax, MpCurrent: next.MpCurrent,
-			UpdatedAt: nowISO(), ID: id,
+			UpdatedAt: plataforma.NowISO(), ID: id,
 		}); err != nil {
 			return stored, err
 		}
@@ -116,31 +117,31 @@ func (s *Server) handleUpdateLevel(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Level *int64 `json:"level"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if msg := levelRangeError(body.Level); msg != "" {
-		writeValidationError(w, FieldErrorMap{"level": {msg}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"level": {msg}})
 		return
 	}
 	if err := s.queries.SetCharacterLevel(r.Context(), sqlcgen.SetCharacterLevelParams{
-		Level: *body.Level, UpdatedAt: nowISO(), ID: row.ID,
+		Level: *body.Level, UpdatedAt: plataforma.NowISO(), ID: row.ID,
 	}); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not update level")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update level")
 		return
 	}
 	dto, err := s.loadCharacter(r.Context(), row)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load character")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
 		return
 	}
 	dto.Level = *body.Level
 	vitals, err := s.syncLevelVitals(r, row.ID, dto)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not sync vitals")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not sync vitals")
 		return
 	}
-	writeJSON(w, http.StatusOK, levelResult{Level: *body.Level, Vitals: vitals})
+	plataforma.WriteJSON(w, http.StatusOK, levelResult{Level: *body.Level, Vitals: vitals})
 }
 
 // handleUpdateClassLevel ports updateClassLevel: bump one class, recompute the
@@ -154,16 +155,16 @@ func (s *Server) handleUpdateClassLevel(w http.ResponseWriter, r *http.Request) 
 		ClassName string `json:"className"`
 		Level     *int64 `json:"level"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if msg := levelRangeError(body.Level); msg != "" {
-		writeValidationError(w, FieldErrorMap{"level": {msg}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"level": {msg}})
 		return
 	}
 	dto, err := s.loadCharacter(r.Context(), row)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load character")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
 		return
 	}
 	found := false
@@ -176,32 +177,32 @@ func (s *Server) handleUpdateClassLevel(w http.ResponseWriter, r *http.Request) 
 		total += dto.Classes[i].Level
 	}
 	if !found {
-		writeFieldError(w, http.StatusBadRequest, fmt.Sprintf("Character does not have class %q", body.ClassName), FieldErrorMap{"className": {"Class not on character"}})
+		plataforma.WriteFieldError(w, http.StatusBadRequest, fmt.Sprintf("Character does not have class %q", body.ClassName), plataforma.FieldErrorMap{"className": {"Class not on character"}})
 		return
 	}
 	if total > 20 {
-		writeFieldError(w, http.StatusBadRequest, fmt.Sprintf("Total level %d exceeds 20", total), FieldErrorMap{"level": {"Sum of class levels capped at 20"}})
+		plataforma.WriteFieldError(w, http.StatusBadRequest, fmt.Sprintf("Total level %d exceeds 20", total), plataforma.FieldErrorMap{"level": {"Sum of class levels capped at 20"}})
 		return
 	}
 	if _, err := s.queries.SetCharacterClassLevel(r.Context(), sqlcgen.SetCharacterClassLevelParams{
 		Level: *body.Level, CharacterId: row.ID, ClassName: body.ClassName,
 	}); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not update class level")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update class level")
 		return
 	}
 	if err := s.queries.SetCharacterLevel(r.Context(), sqlcgen.SetCharacterLevelParams{
-		Level: total, UpdatedAt: nowISO(), ID: row.ID,
+		Level: total, UpdatedAt: plataforma.NowISO(), ID: row.ID,
 	}); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not update level")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update level")
 		return
 	}
 	dto.Level = total
 	vitals, err := s.syncLevelVitals(r, row.ID, dto)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not sync vitals")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not sync vitals")
 		return
 	}
-	writeJSON(w, http.StatusOK, classLevelResult{Level: total, Classes: dto.Classes, Vitals: vitals})
+	plataforma.WriteJSON(w, http.StatusOK, classLevelResult{Level: total, Classes: dto.Classes, Vitals: vitals})
 }
 
 // levelRangeError applies the UpdateLevelDto range (@IsInt @Min(1) @Max(20)).

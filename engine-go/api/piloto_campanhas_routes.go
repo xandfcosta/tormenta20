@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
 
@@ -120,7 +121,7 @@ func (s *Server) handleCampanhaNovaPost(w http.ResponseWriter, r *http.Request) 
 	v := campanhaNovaView{
 		Nome:      r.PostFormValue("name"),
 		Descricao: r.PostFormValue("description"),
-		Erros:     FieldErrorMap{},
+		Erros:     plataforma.FieldErrorMap{},
 	}
 	// A MESMA regra da rota JSON, e não uma cópia dela — ver `campanha_regras.go`.
 	nome, err := nomeDeCampanha(v.Nome)
@@ -136,7 +137,7 @@ func (s *Server) handleCampanhaNovaPost(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	agora := nowISO()
+	agora := plataforma.NowISO()
 	c, err := s.queries.CreateCampaign(r.Context(), sqlcgen.CreateCampaignParams{
 		Ownerid: currentUser(r).ID, Name: nome, Description: descricao,
 		Createdat: agora, Updatedat: agora,
@@ -235,26 +236,26 @@ func (s *Server) handleCampanhaEntrarPost(w http.ResponseWriter, r *http.Request
 // Uma frase por recusa, e não um "não foi possível entrar" para tudo: cada uma
 // destas tem uma AÇÃO diferente do outro lado — pedir link novo, conferir o
 // número, escolher outro herói, ou nada, porque já está lá dentro.
-func recusaDeEntrada(err error) (FieldErrorMap, string) {
+func recusaDeEntrada(err error) (plataforma.FieldErrorMap, string) {
 	switch {
 	case errors.Is(err, errCampanhaInexistente):
-		return FieldErrorMap{"campaignId": {"Não existe campanha com esse número."}}, ""
+		return plataforma.FieldErrorMap{"campaignId": {"Não existe campanha com esse número."}}, ""
 	case errors.Is(err, errConviteExigido):
-		return FieldErrorMap{}, "Esta mesa é fechada. Peça um link de convite ao mestre."
+		return plataforma.FieldErrorMap{}, "Esta mesa é fechada. Peça um link de convite ao mestre."
 	case errors.Is(err, errPersonagemInexistente), errors.Is(err, errPersonagemDeOutro):
-		return FieldErrorMap{"characterId": {"Escolha um herói seu."}}, ""
+		return plataforma.FieldErrorMap{"characterId": {"Escolha um herói seu."}}, ""
 	case errors.Is(err, errJaTemPersonagem):
-		return FieldErrorMap{"characterId": {"Você já tem um herói nesta mesa."}}, ""
+		return plataforma.FieldErrorMap{"characterId": {"Você já tem um herói nesta mesa."}}, ""
 	case errors.Is(err, errAlreadyInCampaign):
-		return FieldErrorMap{"characterId": {"Esse herói já está nesta mesa."}}, ""
+		return plataforma.FieldErrorMap{"characterId": {"Esse herói já está nesta mesa."}}, ""
 	default:
-		return FieldErrorMap{}, avisoInterno
+		return plataforma.FieldErrorMap{}, avisoInterno
 	}
 }
 
 func (s *Server) escreveCarta(w http.ResponseWriter, r *http.Request, status int, v campanhaEntrarView) {
 	if v.Erros == nil {
-		v.Erros = FieldErrorMap{}
+		v.Erros = plataforma.FieldErrorMap{}
 	}
 	s.escrevePagina(w, r, status, paginaPiloto{
 		Titulo: "Entrar na mesa",
@@ -330,8 +331,8 @@ func (s *Server) handleCronicaEditar(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var set setBuilder
-	set.add("name = ?", nome)
-	set.add("description = ?", nullableArg(descricao))
+	set.Add("name = ?", nome)
+	set.Add("description = ?", nullableArg(descricao))
 	if err := set.execTouched(r.Context(), s.db, "UPDATE campaigns", id); err != nil {
 		http.Error(w, avisoInterno, http.StatusInternalServerError)
 		return

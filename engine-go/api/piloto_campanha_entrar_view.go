@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"strconv"
+	"t20engine/plataforma"
 )
 
 // A CARTA DE CONVITE como dado (ALE-249): entrar numa mesa.
@@ -30,7 +31,7 @@ type campanhaEntrarView struct {
 	NumeroDigitado string
 	Herois         []heroiDaCarta
 	EscolhidoID    int64
-	Erros          FieldErrorMap
+	Erros          plataforma.FieldErrorMap
 	Aviso          string
 }
 
@@ -44,7 +45,7 @@ type heroiDaCarta struct {
 }
 
 func (s *Server) carregaCartaDeConvite(ctx context.Context, eu AuthUser, token string) (campanhaEntrarView, error) {
-	v := campanhaEntrarView{Convite: token, TemConvite: token != "", Erros: FieldErrorMap{}}
+	v := campanhaEntrarView{Convite: token, TemConvite: token != "", Erros: plataforma.FieldErrorMap{}}
 
 	if v.TemConvite {
 		// Convite morto NÃO é erro da página: é uma resposta, e a carta diz

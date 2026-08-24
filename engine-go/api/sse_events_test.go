@@ -1,5 +1,7 @@
 package api
 
+import "t20engine/aovivo"
+
 import (
 	"bufio"
 	"net/http"
@@ -55,8 +57,8 @@ func lerQuadro(t *testing.T, leitor *bufio.Reader) string {
 // asserção sobre o corpo e falharia na mesa: o mestre viraria o turno e a tela
 // do jogador só saberia quando a conexão caísse.
 func TestOQuadroChegaComARequisicaoAINDAABERTA(t *testing.T) {
-	hub := newSSEHub()
-	conn := hub.add(7, "c1", "gm")
+	hub := aovivo.NewSSEHub()
+	conn := hub.Add(7, "c1", "gm")
 
 	servidor := httptest.NewServer(fluxoDeTeste(conn, time.Hour))
 	defer servidor.Close()
@@ -75,7 +77,7 @@ func TestOQuadroChegaComARequisicaoAINDAABERTA(t *testing.T) {
 	}
 
 	leitor := bufio.NewReader(resp.Body)
-	hub.emit(7, "", "session-state", map[string]any{"turnIndex": 3})
+	hub.Emit(7, "", "session-state", map[string]any{"turnIndex": 3})
 
 	quadro := lerQuadro(t, leitor)
 	if !strings.Contains(quadro, "event: session-state") || !strings.Contains(quadro, `"turnIndex":3`) {
@@ -87,8 +89,8 @@ func TestOQuadroChegaComARequisicaoAINDAABERTA(t *testing.T) {
 // SSE (começa com `:`), então o cliente a ignora — mandar um evento de verdade
 // faria o `EventSource` acordar o app por nada.
 func TestABatidaEComentarioENaoEvento(t *testing.T) {
-	hub := newSSEHub()
-	conn := hub.add(7, "c1", "gm")
+	hub := aovivo.NewSSEHub()
+	conn := hub.Add(7, "c1", "gm")
 	servidor := httptest.NewServer(fluxoDeTeste(conn, 30*time.Millisecond))
 	defer servidor.Close()
 
@@ -107,10 +109,10 @@ func TestABatidaEComentarioENaoEvento(t *testing.T) {
 	}
 }
 
-// fluxoDeTeste põe o LAÇO DE VERDADE (`streamFrames`) atrás de um servidor, com
+// fluxoDeTeste põe o LAÇO DE VERDADE (`aovivo.StreamFrames`) atrás de um servidor, com
 // os mesmos cabeçalhos do handler. Copiar o laço numa imitação faria o teste
 // medir a cópia — que é o modo de o guarda passar verde sobre o app quebrado.
-func fluxoDeTeste(conn *sseConn, batida time.Duration) http.HandlerFunc {
+func fluxoDeTeste(conn *aovivo.SSEConn, batida time.Duration) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		flusher, ok := w.(http.Flusher)
 		if !ok {
@@ -121,6 +123,6 @@ func fluxoDeTeste(conn *sseConn, batida time.Duration) http.HandlerFunc {
 		w.Header().Set("Cache-Control", "no-cache")
 		w.WriteHeader(http.StatusOK)
 		flusher.Flush()
-		streamFrames(r.Context(), w, flusher, conn, batida)
+		aovivo.StreamFrames(r.Context(), w, flusher, conn, batida)
 	}
 }

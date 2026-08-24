@@ -1,4 +1,4 @@
-package api
+package aovivo
 
 import (
 	"sort"
@@ -21,11 +21,11 @@ type sessionRoster struct {
 	roster    []PresenceUser
 }
 
-// presenceRegistry is the in-memory "who's online" tracker for session rooms. Pure
+// PresenceRegistry is the in-memory "who's online" tracker for session rooms. Pure
 // bookkeeping (the SSE hub owns the broadcast); rebuilt from live connections, so a
 // server restart starts empty and refills as clients reconnect. Mirrors PresenceRegistry.
-type presenceRegistry struct {
-	mu sync.Mutex
+type PresenceRegistry struct {
+	Mu sync.Mutex
 	// sessionID → (connID → presence)
 	presence map[int64]map[string]PresenceUser
 	// connID → set of sessions it joined, so a disconnect cleans every room without
@@ -33,17 +33,17 @@ type presenceRegistry struct {
 	connSessions map[string]map[int64]bool
 }
 
-func newPresenceRegistry() *presenceRegistry {
-	return &presenceRegistry{
-		presence:       map[int64]map[string]PresenceUser{},
+func NewPresenceRegistry() *PresenceRegistry {
+	return &PresenceRegistry{
+		presence:     map[int64]map[string]PresenceUser{},
 		connSessions: map[string]map[int64]bool{},
 	}
 }
 
-// join records a connection in a session and returns the session's deduped roster.
-func (p *presenceRegistry) join(sessionID int64, connID string, user PresenceUser) []PresenceUser {
-	p.mu.Lock()
-	defer p.mu.Unlock()
+// Join records a connection in a session and returns the session's deduped roster.
+func (p *PresenceRegistry) Join(sessionID int64, connID string, user PresenceUser) []PresenceUser {
+	p.Mu.Lock()
+	defer p.Mu.Unlock()
 	room := p.presence[sessionID]
 	if room == nil {
 		room = map[string]PresenceUser{}
@@ -59,11 +59,11 @@ func (p *presenceRegistry) join(sessionID int64, connID string, user PresenceUse
 	return p.rosterLocked(sessionID)
 }
 
-// leave removes a connection from one session. Returns the new roster and true, or (nil,false)
+// Leave removes a connection from one session. Returns the new roster and true, or (nil,false)
 // when the socket wasn't present (nothing to announce).
-func (p *presenceRegistry) leave(sessionID int64, connID string) ([]PresenceUser, bool) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
+func (p *PresenceRegistry) Leave(sessionID int64, connID string) ([]PresenceUser, bool) {
+	p.Mu.Lock()
+	defer p.Mu.Unlock()
 	if sessions := p.connSessions[connID]; sessions != nil {
 		delete(sessions, sessionID)
 	}
@@ -75,9 +75,9 @@ func (p *presenceRegistry) leave(sessionID int64, connID string) ([]PresenceUser
 
 // disconnect removes a socket from every session it joined, returning one {sessionID,
 // roster} per room that actually changed so the gateway can broadcast each.
-func (p *presenceRegistry) disconnect(connID string) []sessionRoster {
-	p.mu.Lock()
-	defer p.mu.Unlock()
+func (p *PresenceRegistry) disconnect(connID string) []sessionRoster {
+	p.Mu.Lock()
+	defer p.Mu.Unlock()
 	sessions := p.connSessions[connID]
 	if sessions == nil {
 		return nil
@@ -93,8 +93,8 @@ func (p *presenceRegistry) disconnect(connID string) []sessionRoster {
 }
 
 // dropLocked removes a socket from a session's room, cleaning up the empty room. Returns
-// false when the socket wasn't there. Caller holds mu.
-func (p *presenceRegistry) dropLocked(connID string, sessionID int64) bool {
+// false when the socket wasn't there. Caller holds Mu.
+func (p *PresenceRegistry) dropLocked(connID string, sessionID int64) bool {
 	room := p.presence[sessionID]
 	if room == nil {
 		return false
@@ -112,8 +112,8 @@ func (p *presenceRegistry) dropLocked(connID string, sessionID int64) bool {
 // rosterLocked returns the session's roster deduped by userId — multi-tab collapses to one,
 // and a user counts as GM if any of their sockets is a GM. Sorted by userId for a
 // deterministic broadcast (order is cosmetic, but a stable one keeps diffs readable).
-// Caller holds mu.
-func (p *presenceRegistry) rosterLocked(sessionID int64) []PresenceUser {
+// Caller holds Mu.
+func (p *PresenceRegistry) rosterLocked(sessionID int64) []PresenceUser {
 	room := p.presence[sessionID]
 	byUser := make(map[int64]PresenceUser, len(room))
 	for _, u := range room {

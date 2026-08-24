@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"t20engine/plataforma"
 )
 
 type ctxKey int
@@ -19,7 +20,7 @@ func (s *Server) requireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := s.sessionUser(r)
 		if err != nil {
-			writeError(w, http.StatusUnauthorized, err.Error())
+			plataforma.WriteError(w, http.StatusUnauthorized, err.Error())
 			return
 		}
 		ctx := context.WithValue(r.Context(), userCtxKey, user)
@@ -101,7 +102,7 @@ func alvoOriginal(r *http.Request) string {
 func (s *Server) requireAdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !currentUser(r).IsAdmin {
-			writeError(w, http.StatusForbidden, "Admin only")
+			plataforma.WriteError(w, http.StatusForbidden, "Admin only")
 			return
 		}
 		next.ServeHTTP(w, r)

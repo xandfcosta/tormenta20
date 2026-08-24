@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"strconv"
 	"strings"
+	"t20engine/aovivo"
 	"testing"
 
 	"t20engine/db/sqlcgen"
@@ -132,16 +133,16 @@ func (f pilotoFixture) cena(t *testing.T) {
 	t.Helper()
 	oculto := true
 	pv, pvMax := int64(12), int64(130)
-	if _, err := f.s.sessions.startScene(f.sessionID); err != nil {
+	if _, err := f.s.sessions.StartScene(f.sessionID); err != nil {
 		t.Fatalf("iniciar cena: %v", err)
 	}
-	if _, err := f.s.sessions.addInitiativeEntry(f.sessionID, InitiativeEntry{
+	if _, err := f.s.sessions.AddInitiativeEntry(f.sessionID, aovivo.InitiativeEntry{
 		Label: "Ogro cansado", Initiative: 19, Type: "npc",
 		HpHidden: &oculto, HpCurrent: &pv, HpMax: &pvMax,
 	}); err != nil {
 		t.Fatalf("semear ogro: %v", err)
 	}
-	if _, err := f.s.sessions.addInitiativeEntry(f.sessionID, InitiativeEntry{
+	if _, err := f.s.sessions.AddInitiativeEntry(f.sessionID, aovivo.InitiativeEntry{
 		Label: "Arcanista", Initiative: 12, Type: "character", CharacterID: &f.charID,
 	}); err != nil {
 		t.Fatalf("semear PC: %v", err)
@@ -151,7 +152,7 @@ func (f pilotoFixture) cena(t *testing.T) {
 // O guarda que justifica o piloto reusar `stateForRole` em vez de montar a
 // própria leitura: a PÁGINA obedece à mesma redação que o socket.
 //
-// Provado VERMELHO trocando `stateForRole(role, ...)` por `s.sessions.getState(...)`
+// Provado VERMELHO trocando `aovivo.StateForRole(role, ...)` por `s.sessions.GetState(...)`
 // no `loadMesaView` — o HTML passou a carregar "12/130", os PV que o mestre
 // escondeu, para dentro da tela do jogador.
 func TestMesaNaoVazaPVOculto(t *testing.T) {
@@ -181,7 +182,7 @@ func TestMesaNaoVazaPVOculto(t *testing.T) {
 func TestMesaForaDeCenaNaoMandaFila(t *testing.T) {
 	f := novoPiloto(t)
 	// Fila CHEIA e cena DESLIGADA: é o mestre montando a briga antes de começar.
-	if _, err := f.s.sessions.addInitiativeEntry(f.sessionID, InitiativeEntry{
+	if _, err := f.s.sessions.AddInitiativeEntry(f.sessionID, aovivo.InitiativeEntry{
 		Label: "Chefe secreto", Initiative: 22, Type: "npc",
 	}); err != nil {
 		t.Fatalf("semear chefe: %v", err)
@@ -250,7 +251,7 @@ func TestMesaRegistraIniciativaComTotalDoServidor(t *testing.T) {
 		t.Fatalf("a escrita não foi aceita, respondeu:\n%s", resposta)
 	}
 
-	estado := f.s.sessions.getState(f.sessionID)
+	estado := f.s.sessions.GetState(f.sessionID)
 	for i := range estado.Initiative {
 		e := &estado.Initiative[i]
 		if e.CharacterID != nil && *e.CharacterID == f.charID {
@@ -268,7 +269,7 @@ func TestMesaRegistraIniciativaComTotalDoServidor(t *testing.T) {
 // divergiriam em silêncio.
 func TestMesaTurnOf(t *testing.T) {
 	meu, alheio := int64(7), int64(9)
-	fila := []InitiativeEntry{
+	fila := []aovivo.InitiativeEntry{
 		{Label: "Ogro", Initiative: 19, Type: "npc"},
 		{Label: "Arcanista", Initiative: 12, Type: "character", CharacterID: &meu},
 	}
@@ -287,15 +288,15 @@ func TestMesaTurnOf(t *testing.T) {
 	}
 	for _, c := range casos {
 		t.Run(c.nome, func(t *testing.T) {
-			got := mesaTurnOf(&SessionRuntimeState{Initiative: fila, TurnIndex: c.turnIndex}, meus)
+			got := mesaTurnOf(&aovivo.SessionRuntimeState{Initiative: fila, TurnIndex: c.turnIndex}, meus)
 			if got.Kind != c.kind || got.Label != c.label {
 				t.Errorf("veio {%s %q}, queria {%s %q}", got.Kind, got.Label, c.kind, c.label)
 			}
 		})
 	}
 	// O personagem alheio não acende a faixa de ninguém.
-	outro := mesaTurnOf(&SessionRuntimeState{
-		Initiative: []InitiativeEntry{{Label: "Colega", Type: "character", CharacterID: &alheio}},
+	outro := mesaTurnOf(&aovivo.SessionRuntimeState{
+		Initiative: []aovivo.InitiativeEntry{{Label: "Colega", Type: "character", CharacterID: &alheio}},
 		TurnIndex:  0,
 	}, meus)
 	if outro.Kind != "other" {
@@ -395,9 +396,9 @@ func TestMesaStreamComprime(t *testing.T) {
 // então nenhuma delas pode escapar sem cutucar quem escuta.
 func TestMesaAvisaAssinantesEmCadaMutacao(t *testing.T) {
 	f := novoPiloto(t)
-	aviso, parar := f.s.sessions.assinar(f.sessionID)
+	aviso, parar := f.s.sessions.Assinar(f.sessionID)
 
-	if _, err := f.s.sessions.startScene(f.sessionID); err != nil {
+	if _, err := f.s.sessions.StartScene(f.sessionID); err != nil {
 		t.Fatalf("iniciar cena: %v", err)
 	}
 	select {
@@ -410,7 +411,7 @@ func TestMesaAvisaAssinantesEmCadaMutacao(t *testing.T) {
 	// um canal para sempre, e o `avisarLocked` passa a percorrer uma lista que só
 	// cresce escrevendo em canais que ninguém lê.
 	parar()
-	if _, err := f.s.sessions.endScene(f.sessionID); err != nil {
+	if _, err := f.s.sessions.EndScene(f.sessionID); err != nil {
 		t.Fatalf("encerrar cena: %v", err)
 	}
 	select {
@@ -418,7 +419,7 @@ func TestMesaAvisaAssinantesEmCadaMutacao(t *testing.T) {
 		t.Fatal("o ouvinte baixado continuou recebendo — a lista vaza")
 	default:
 	}
-	if n := len(f.s.sessions.ouvintes[f.sessionID]); n != 0 {
+	if n := f.s.sessions.Ouvintes(f.sessionID); n != 0 {
 		t.Errorf("sobraram %d ouvintes registrados depois da baixa", n)
 	}
 }

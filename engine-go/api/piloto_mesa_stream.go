@@ -48,7 +48,7 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 
 	// O aviso é assinado ANTES do primeiro quadro, senão uma mutação que caia
 	// entre render e assinatura se perde e a tela fica velha até o batimento.
-	aviso, parar := s.sessions.assinar(sessionID)
+	aviso, parar := s.sessions.Assinar(sessionID)
 	defer parar()
 
 	sse := datastar.NewSSE(w, r, datastar.WithCompression())

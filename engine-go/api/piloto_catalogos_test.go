@@ -181,7 +181,6 @@ func TestOsPoderesVemDosTresCatalogos(t *testing.T) {
 			t.Errorf("nenhum poder de %q — um dos três catálogos não entrou", esperada)
 		}
 	}
-	fmt.Sprint(fontes)
 }
 
 // ── a cena pelo fio ──────────────────────────────────────────────────────────

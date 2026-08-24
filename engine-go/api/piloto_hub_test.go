@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"t20engine/plataforma"
 	"testing"
 
 	"t20engine/db/sqlcgen"
@@ -57,7 +58,7 @@ func TestHubSoOfereceContinuarComSessaoViva(t *testing.T) {
 	}
 
 	if _, err := s.queries.StartSessionFresh(context.Background(), sqlcgen.StartSessionFreshParams{
-		UpdatedAt: nowISO(), ID: sessao,
+		UpdatedAt: plataforma.NowISO(), ID: sessao,
 	}); err != nil {
 		t.Fatalf("iniciar sessão: %v", err)
 	}
@@ -83,7 +84,7 @@ func TestSessaoVivaEscolheAPrimeiraNaOrdemDasCampanhas(t *testing.T) {
 	vivaRecente := seedSession(t, s, recente)
 	for _, id := range []int64{vivaAntiga, vivaRecente} {
 		if _, err := s.queries.StartSessionFresh(context.Background(), sqlcgen.StartSessionFreshParams{
-			UpdatedAt: nowISO(), ID: id,
+			UpdatedAt: plataforma.NowISO(), ID: id,
 		}); err != nil {
 			t.Fatalf("iniciar %d: %v", id, err)
 		}
@@ -138,12 +139,12 @@ func TestHubRecusaConviteDeQuemNaoEhAdmin(t *testing.T) {
 	s, _ := hubFixture(t, "mestre@t20.local")
 	jogador := seedUser(t, s, "jogadora@t20.local")
 
-	antes, err := s.queries.ListOpenAccountInvites(context.Background(), nowISO())
+	antes, err := s.queries.ListOpenAccountInvites(context.Background(), plataforma.NowISO())
 	if err != nil {
 		t.Fatalf("listar: %v", err)
 	}
 	pedeHub(t, s, jogador, http.MethodPost, "/piloto/convites")
-	depois, err := s.queries.ListOpenAccountInvites(context.Background(), nowISO())
+	depois, err := s.queries.ListOpenAccountInvites(context.Background(), plataforma.NowISO())
 	if err != nil {
 		t.Fatalf("listar: %v", err)
 	}

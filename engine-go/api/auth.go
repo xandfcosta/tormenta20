@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"t20engine/plataforma"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -56,12 +57,12 @@ type loginBody struct {
 // open — see registrationInvite.
 func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 	var body registerBody
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
-	body.Email = normalizeEmail(body.Email)
+	body.Email = plataforma.NormalizeEmail(body.Email)
 	if fields := validateRegister(body); len(fields) > 0 {
-		writeValidationError(w, fields)
+		plataforma.WriteValidationError(w, fields)
 		return
 	}
 	user, err := s.createAccount(r.Context(), body)
@@ -72,7 +73,7 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 	if !s.issueSession(w, user) {
 		return
 	}
-	writeJSON(w, http.StatusCreated, s.authUser(user))
+	plataforma.WriteJSON(w, http.StatusCreated, s.authUser(user))
 }
 
 // createAccount is the RULE behind registration: resolve the invite this
@@ -93,7 +94,7 @@ func (s *Server) createAccount(ctx context.Context, body registerBody) (sqlcgen.
 	if err != nil {
 		return sqlcgen.User{}, err
 	}
-	now := nowISO()
+	now := plataforma.NowISO()
 	return s.createUser(ctx, sqlcgen.CreateUserParams{
 		Email:        body.Email,
 		Name:         nullString(body.Name),
@@ -126,33 +127,33 @@ func (s *Server) registrationInvite(
 func writeRegisterError(w http.ResponseWriter, err error, email string) {
 	switch {
 	case db.IsUniqueViolation(err):
-		writeError(w, http.StatusConflict, "Email already registered: "+email)
+		plataforma.WriteError(w, http.StatusConflict, "Email already registered: "+email)
 	case errors.Is(err, errInviteRejected), errors.Is(err, errInviteSpent):
-		writeError(w, http.StatusForbidden, inviteRejected)
+		plataforma.WriteError(w, http.StatusForbidden, inviteRejected)
 	default:
-		writeError(w, http.StatusInternalServerError, "Could not create user")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not create user")
 	}
 }
 
 // handleLogin validates credentials, issues the cookie, returns AuthUser (200).
 func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	var body loginBody
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if fields := validateLogin(body); len(fields) > 0 {
-		writeValidationError(w, fields)
+		plataforma.WriteValidationError(w, fields)
 		return
 	}
 	user, err := s.authenticate(r.Context(), body.Email, body.Password)
 	if err != nil {
-		writeError(w, http.StatusUnauthorized, "Invalid credentials")
+		plataforma.WriteError(w, http.StatusUnauthorized, "Invalid credentials")
 		return
 	}
 	if !s.issueSession(w, user) {
 		return
 	}
-	writeJSON(w, http.StatusOK, s.authUser(user))
+	plataforma.WriteJSON(w, http.StatusOK, s.authUser(user))
 }
 
 // errBadCredentials is the ONE answer for "no such account" and "wrong
@@ -167,7 +168,7 @@ var errBadCredentials = errors.New("invalid credentials")
 // hardening step (it does not today, and that is a timing oracle worth an issue
 // of its own); what matters here is that BOTH paths answer the same error.
 func (s *Server) authenticate(ctx context.Context, email, password string) (sqlcgen.User, error) {
-	user, err := s.queries.GetUserByEmail(ctx, normalizeEmail(email))
+	user, err := s.queries.GetUserByEmail(ctx, plataforma.NormalizeEmail(email))
 	if err != nil {
 		return sqlcgen.User{}, errBadCredentials
 	}
@@ -185,7 +186,7 @@ func (s *Server) handleLogout(w http.ResponseWriter, _ *http.Request) {
 
 // handleMe returns the authenticated user (behind requireAuth).
 func (s *Server) handleMe(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, currentUser(r))
+	plataforma.WriteJSON(w, http.StatusOK, currentUser(r))
 }
 
 // issueSession signs a JWT for the user and sets the session cookie. Returns
@@ -193,7 +194,7 @@ func (s *Server) handleMe(w http.ResponseWriter, r *http.Request) {
 func (s *Server) issueSession(w http.ResponseWriter, user sqlcgen.User) bool {
 	token, err := s.signToken(user)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not sign session")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not sign session")
 		return false
 	}
 	http.SetCookie(w, s.sessionCookie(token, int(sessionTTL.Seconds())))
@@ -256,7 +257,7 @@ func parseExpiry(s string) time.Duration {
 		return sessionTTL
 	}
 	unit := s[len(s)-1]
-	n, err := parseInt(s[:len(s)-1])
+	n, err := plataforma.ParseInt(s[:len(s)-1])
 	if err != nil {
 		return sessionTTL
 	}

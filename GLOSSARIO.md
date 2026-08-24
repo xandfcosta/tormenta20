@@ -155,6 +155,26 @@ mesa para o botão que o aparelho dela não tem.
 
 ---
 
+## E-bis. Os contextos do servidor (ALE-254)
+
+Nome de pacote é identificador, então o glossário manda nele. E a regra da
+costura já responde qual idioma: **fronteira** é o que fala inglês — tabela,
+campo JSON, evento SSE, rota HTTP. Nome de pacote interno não é fronteira, então
+contexto de domínio entra em **pt-BR**.
+
+| termo | no código | proibido | o que é |
+| -- | -- | -- | -- |
+| **ao vivo** | `aovivo/`, `live*` | ~~mesa~~ (como pacote), ~~tempo real~~ | **O REGIME: a sessão enquanto está acontecendo.** O que existe só enquanto há gente conectada — o estado da fila em memória, a entrega por SSE, a presença, e a autorização de quem está na sessão. Nomeia o regime e não as pessoas, o que o distingue de `mesa`, e não a linha do banco, o que o distingue de `sessão`. O código já dizia `mountLiveRoutes`, `liveAccess` e `liveCtx` antes de a palavra existir aqui. |
+| **plataforma** | `plataforma/` | ~~util~~, ~~common~~, ~~shared~~ | **O que não é domínio nenhum**: responder e decodificar HTTP, validar corpo, ler config, negociar codificação. Existe para NÃO virar o saco onde tudo cabe — se um conceito do jogo entrar aqui, a fronteira está errada. Os nomes proibidos são os que convidam exatamente esse acúmulo. |
+
+**Por que `mesa` NÃO serve para o pacote**, e vale ficar escrito porque a
+tentação vai voltar: a linha da seção A diz que "mesa" é metonímia das pessoas
+conectadas, **nunca entidade**, e nunca serve para campanha nem para sessão. Um
+pacote guardando o estado da sessão faria as duas coisas proibidas de uma vez, e
+criaria a terceira acepção da palavra que a linha existe para impedir.
+
+---
+
 ## F. A costura PT/EN
 
 O domínio é pt-BR e o código é misto — e isso não estava escrito em lugar

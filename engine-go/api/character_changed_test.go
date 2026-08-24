@@ -1,5 +1,7 @@
 package api
 
+import "t20engine/aovivo"
+
 import (
 	"strings"
 	"testing"
@@ -28,17 +30,17 @@ import (
 func TestAFichaQueMudouChegaNaMesa(t *testing.T) {
 	umPersonagem := func(id int64) *int64 { return &id }
 	s := &Server{
-		sse: newSSEHub(),
-		sessions: &sessionStore{states: map[int64]*SessionRuntimeState{
-			7: {Initiative: []InitiativeEntry{{ID: "a", CharacterID: umPersonagem(14)}}},
+		sse: aovivo.NewSSEHub(),
+		sessions: &aovivo.SessionStore{States: map[int64]*aovivo.SessionRuntimeState{
+			7: {Initiative: []aovivo.InitiativeEntry{{ID: "a", CharacterID: umPersonagem(14)}}},
 		}},
 	}
-	conn := s.sse.add(7, "c1", "player")
+	conn := s.sse.Add(7, "c1", "player")
 
 	s.characterChanged(14)
 
 	select {
-	case frame := <-conn.frames:
+	case frame := <-conn.Frames:
 		if !strings.Contains(string(frame), "character-changed") ||
 			!strings.Contains(string(frame), `"characterId":14`) {
 			t.Fatalf("quadro = %q", frame)
@@ -53,17 +55,17 @@ func TestAFichaQueMudouChegaNaMesa(t *testing.T) {
 func TestMesaSemOPersonagemNaoRecebe(t *testing.T) {
 	umPersonagem := func(id int64) *int64 { return &id }
 	s := &Server{
-		sse: newSSEHub(),
-		sessions: &sessionStore{states: map[int64]*SessionRuntimeState{
-			7: {Initiative: []InitiativeEntry{{ID: "a", CharacterID: umPersonagem(99)}}},
+		sse: aovivo.NewSSEHub(),
+		sessions: &aovivo.SessionStore{States: map[int64]*aovivo.SessionRuntimeState{
+			7: {Initiative: []aovivo.InitiativeEntry{{ID: "a", CharacterID: umPersonagem(99)}}},
 		}},
 	}
-	conn := s.sse.add(7, "c1", "player")
+	conn := s.sse.Add(7, "c1", "player")
 
 	s.characterChanged(14)
 
 	select {
-	case frame := <-conn.frames:
+	case frame := <-conn.Frames:
 		t.Fatalf("mesa sem o personagem recebeu %q", frame)
 	default:
 	}
@@ -76,14 +78,14 @@ func TestMesaSemOPersonagemNaoRecebe(t *testing.T) {
 // estar olhando.
 func TestSoAsSessoesVivasComOPersonagem(t *testing.T) {
 	umPersonagem := func(id int64) *int64 { return &id }
-	st := &sessionStore{states: map[int64]*SessionRuntimeState{
-		1: {Initiative: []InitiativeEntry{{ID: "a", CharacterID: umPersonagem(14)}}},
-		2: {Initiative: []InitiativeEntry{{ID: "b", CharacterID: umPersonagem(99)}}},
+	st := &aovivo.SessionStore{States: map[int64]*aovivo.SessionRuntimeState{
+		1: {Initiative: []aovivo.InitiativeEntry{{ID: "a", CharacterID: umPersonagem(14)}}},
+		2: {Initiative: []aovivo.InitiativeEntry{{ID: "b", CharacterID: umPersonagem(99)}}},
 		// NPC na fila: `CharacterID` nulo não pode ser confundido com o 14.
-		3: {Initiative: []InitiativeEntry{{ID: "c"}, {ID: "d", CharacterID: umPersonagem(14)}}},
+		3: {Initiative: []aovivo.InitiativeEntry{{ID: "c"}, {ID: "d", CharacterID: umPersonagem(14)}}},
 	}}
 
-	achadas := st.liveSessionsWithCharacter(14)
+	achadas := st.LiveSessionsWithCharacter(14)
 
 	if len(achadas) != 2 {
 		t.Fatalf("sessões = %v, queria as duas que têm o 14", achadas)
@@ -100,14 +102,14 @@ func TestSoAsSessoesVivasComOPersonagem(t *testing.T) {
 // mesma busca duas vezes por escrita.
 func TestSessaoRepetidaAvisaUmaVez(t *testing.T) {
 	umPersonagem := func(id int64) *int64 { return &id }
-	st := &sessionStore{states: map[int64]*SessionRuntimeState{
-		1: {Initiative: []InitiativeEntry{
+	st := &aovivo.SessionStore{States: map[int64]*aovivo.SessionRuntimeState{
+		1: {Initiative: []aovivo.InitiativeEntry{
 			{ID: "a", CharacterID: umPersonagem(14)},
 			{ID: "b", CharacterID: umPersonagem(14)},
 		}},
 	}}
 
-	if achadas := st.liveSessionsWithCharacter(14); len(achadas) != 1 {
+	if achadas := st.LiveSessionsWithCharacter(14); len(achadas) != 1 {
 		t.Fatalf("sessões = %v, queria uma só", achadas)
 	}
 }
@@ -126,11 +128,11 @@ func TestSessaoRepetidaAvisaUmaVez(t *testing.T) {
 // uma leitura de banco a cada escrita de ficha. Não foi feito, e a troca está
 // escrita aqui para quem for decidir de novo.
 func TestForaDeMesaNaoAvisaNinguem(t *testing.T) {
-	st := &sessionStore{states: map[int64]*SessionRuntimeState{
-		1: {Initiative: []InitiativeEntry{{ID: "a"}}},
+	st := &aovivo.SessionStore{States: map[int64]*aovivo.SessionRuntimeState{
+		1: {Initiative: []aovivo.InitiativeEntry{{ID: "a"}}},
 	}}
 
-	if achadas := st.liveSessionsWithCharacter(14); len(achadas) != 0 {
+	if achadas := st.LiveSessionsWithCharacter(14); len(achadas) != 0 {
 		t.Fatalf("sessões = %v, queria nenhuma", achadas)
 	}
 }

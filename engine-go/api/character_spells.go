@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"t20engine/plataforma"
 
 	"github.com/go-chi/chi/v5"
 	"t20engine/db"
@@ -39,25 +40,25 @@ func (s *Server) handleLearnSpell(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		CatalogSpellID string `json:"catalogSpellId"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if body.CatalogSpellID == "" {
-		writeValidationError(w, FieldErrorMap{"catalogSpellId": {"catalogSpellId must be longer than or equal to 1 characters"}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"catalogSpellId": {"catalogSpellId must be longer than or equal to 1 characters"}})
 		return
 	}
 	row, err := s.queries.CreateSpell(r.Context(), sqlcgen.CreateSpellParams{
-		Characterid: character.ID, Catalogspellid: body.CatalogSpellID, Prepared: 0, Learnedat: nowISO(),
+		Characterid: character.ID, Catalogspellid: body.CatalogSpellID, Prepared: 0, Learnedat: plataforma.NowISO(),
 	})
 	if err != nil {
 		if db.IsUniqueViolation(err) {
-			writeFieldError(w, http.StatusConflict, fmt.Sprintf("Spell %q already known", body.CatalogSpellID), FieldErrorMap{"catalogSpellId": {"Already learned"}})
+			plataforma.WriteFieldError(w, http.StatusConflict, fmt.Sprintf("Spell %q already known", body.CatalogSpellID), plataforma.FieldErrorMap{"catalogSpellId": {"Already learned"}})
 			return
 		}
-		writeError(w, http.StatusInternalServerError, "Could not learn spell")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not learn spell")
 		return
 	}
-	writeJSON(w, http.StatusCreated, spellRowFrom(row))
+	plataforma.WriteJSON(w, http.StatusCreated, spellRowFrom(row))
 }
 
 // handleUnlearnSpell ports unlearnSpell: removes the spell, returning
@@ -72,10 +73,10 @@ func (s *Server) handleUnlearnSpell(w http.ResponseWriter, r *http.Request) {
 		Characterid: character.ID, Catalogspellid: catalogSpellID,
 	})
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not unlearn spell")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not unlearn spell")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"catalogSpellId": catalogSpellID, "removed": removed})
+	plataforma.WriteJSON(w, http.StatusOK, map[string]any{"catalogSpellId": catalogSpellID, "removed": removed})
 }
 
 // handleSetSpellPrepared ports setSpellPrepared: toggles the prepared flag; 404
@@ -89,25 +90,25 @@ func (s *Server) handleSetSpellPrepared(w http.ResponseWriter, r *http.Request) 
 	var body struct {
 		Prepared *bool `json:"prepared"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if body.Prepared == nil {
-		writeValidationError(w, FieldErrorMap{"prepared": {"prepared must be a boolean value"}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"prepared": {"prepared must be a boolean value"}})
 		return
 	}
 	row, err := s.queries.SetSpellPreparedByCatalog(r.Context(), sqlcgen.SetSpellPreparedByCatalogParams{
 		Prepared: boolToInt(*body.Prepared), CharacterId: character.ID, CatalogSpellId: catalogSpellID,
 	})
 	if errors.Is(err, sql.ErrNoRows) {
-		writeError(w, http.StatusNotFound, fmt.Sprintf("Spell %q not in character's spellbook", catalogSpellID))
+		plataforma.WriteError(w, http.StatusNotFound, fmt.Sprintf("Spell %q not in character's spellbook", catalogSpellID))
 		return
 	}
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not update spell")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update spell")
 		return
 	}
-	writeJSON(w, http.StatusOK, spellRowFrom(row))
+	plataforma.WriteJSON(w, http.StatusOK, spellRowFrom(row))
 }
 
 func boolToInt(b bool) int64 {

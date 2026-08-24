@@ -6,6 +6,7 @@ import (
 	"errors"
 	"slices"
 	"strconv"
+	"t20engine/plataforma"
 	"time"
 
 	"t20engine/db/sqlcgen"
@@ -59,7 +60,7 @@ type cronicaView struct {
 	// decidiu — e uma regra nova nasce em vigor sem migração de dados.
 	RegrasIgnoradas []string
 	// Erros e Aviso servem à aba de configuração, que é a única com formulário.
-	Erros FieldErrorMap
+	Erros plataforma.FieldErrorMap
 	Aviso string
 }
 
@@ -162,7 +163,7 @@ func (s *Server) carregaCronica(ctx context.Context, eu AuthUser, id int64, aba 
 		EhMestre:        papel == "gm",
 		CriadaEm:        dataCurta(c.Createdat),
 		RegrasIgnoradas: s.ignoredRulesOf(ctx, c.ID),
-		Erros:           FieldErrorMap{},
+		Erros:           plataforma.FieldErrorMap{},
 	}
 	if eu.IsAdmin && c.Ownerid != eu.ID {
 		v.DonoOutro = s.ownerNames(ctx, []sqlcgen.Campaign{c}, eu.ID)[c.Ownerid]

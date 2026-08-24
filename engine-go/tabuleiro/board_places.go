@@ -1,4 +1,4 @@
-package api
+package tabuleiro
 
 import (
 	"context"
@@ -25,13 +25,13 @@ type Place struct {
 	UpdatedAt string `json:"updatedAt"`
 }
 
-// archive guarda a cena atual como lugar da crônica e devolve o lugar.
+// Archive guarda a cena atual como lugar da crônica e devolve o lugar.
 //
 // Sobrescreve o lugar de MESMO NOME na mesma crônica: quem reabre a taverna,
 // move duas peças e encerra de novo espera uma taverna — não uma pilha de
 // tavernas quase iguais. É a mesma decisão do "voltar para onde estava" da
 // ALE-178: memória do que importa, não histórico de tudo.
-func (bs *boardStore) archive(ctx context.Context, campaignID int64, board *BoardState) error {
+func (bs *BoardStore) Archive(ctx context.Context, campaignID int64, board *BoardState) error {
 	blob, err := json.Marshal(board)
 	if err != nil {
 		return err
@@ -57,8 +57,8 @@ func (bs *boardStore) archive(ctx context.Context, campaignID int64, board *Boar
 	return err
 }
 
-// places lista os lugares da crônica, sem as cenas.
-func (bs *boardStore) places(ctx context.Context, campaignID int64) []Place {
+// Places lista os lugares da crônica, sem as cenas.
+func (bs *BoardStore) Places(ctx context.Context, campaignID int64) []Place {
 	rows, err := bs.q.ListCampaignPlaces(ctx, campaignID)
 	if err != nil {
 		log.Printf("campaign %d: falha ao listar lugares (%v)", campaignID, err)
@@ -76,10 +76,10 @@ func (bs *boardStore) places(ctx context.Context, campaignID int64) []Place {
 	return lugares
 }
 
-// showPlace põe um lugar guardado na mesa — e GUARDA ANTES a cena que estava
+// ShowPlace põe um lugar guardado na mesa — e GUARDA ANTES a cena que estava
 // lá (ALE-191).
 //
-// Sem isso, mostrar a cripta à mesa DESTRUÍA a taverna: o `reopen` troca o
+// Sem isso, mostrar a cripta à mesa DESTRUÍA a taverna: o `Reopen` troca o
 // tabuleiro vivo, e o que estava nele não ia para lugar nenhum. Até agora o
 // caminho era inalcançável, porque a lista de Lugares só aparecia na cena
 // vazia; é esta issue que o abre, ao deixar o mestre trocar de cena com a mesa
@@ -89,33 +89,33 @@ func (bs *boardStore) places(ctx context.Context, campaignID int64) []Place {
 // encerrar: lá o mestre mandou tirar a cena da mesa e prendê-lo numa cena que
 // já acabou seria pior; aqui ele mandou trocar, e trocar em cima de um acervo
 // que não gravou é justamente perder a taverna.
-func (bs *boardStore) showPlace(ctx context.Context, campaignID, sessionID, placeID int64) (*BoardState, error) {
+func (bs *BoardStore) ShowPlace(ctx context.Context, campaignID, sessionID, placeID int64) (*BoardState, error) {
 	row, err := bs.q.GetCampaignPlace(ctx, placeID)
 	if err != nil {
 		return nil, err
 	}
 	// O id vem do cliente: sem conferir a crônica, um mestre puxaria para a
-	// própria mesa a cena de OUTRA campanha. É a mesma posse que o `removePlace`
+	// própria mesa a cena de OUTRA campanha. É a mesma posse que o `RemovePlace`
 	// confere, e pelo mesmo motivo.
 	if row.Campaignid != campaignID {
 		return nil, errPlaceFromAnotherCampaign
 	}
-	if atual := bs.get(ctx, sessionID); atual != nil {
-		if err := bs.archive(ctx, campaignID, atual); err != nil {
+	if atual := bs.Get(ctx, sessionID); atual != nil {
+		if err := bs.Archive(ctx, campaignID, atual); err != nil {
 			return nil, fmt.Errorf("não consegui guardar %q antes de trocar de cena: %w", atual.Place, err)
 		}
 	}
-	return bs.reopen(ctx, sessionID, placeID)
+	return bs.Reopen(ctx, sessionID, placeID)
 }
 
-// reopen põe o lugar guardado de volta na mesa. É a PRIMITIVA: não confere de
+// Reopen põe o lugar guardado de volta na mesa. É a PRIMITIVA: não confere de
 // que crônica o lugar é, nem guarda a cena que estava na mesa — quem faz as
-// duas coisas é o `showPlace`, que é por onde o gateway entra.
+// duas coisas é o `ShowPlace`, que é por onde o gateway entra.
 //
 // A VERSÃO continua a do tabuleiro que estava aberto, e não a que foi
 // arquivada: um cliente com a cena velha na mão precisa reconhecer esta como
 // mais recente. Reabrir é uma mutação de agora, não uma volta ao passado.
-func (bs *boardStore) reopen(ctx context.Context, sessionID, placeID int64) (*BoardState, error) {
+func (bs *BoardStore) Reopen(ctx context.Context, sessionID, placeID int64) (*BoardState, error) {
 	row, err := bs.q.GetCampaignPlace(ctx, placeID)
 	if err != nil {
 		return nil, err
@@ -134,8 +134,8 @@ func (bs *boardStore) reopen(ctx context.Context, sessionID, placeID int64) (*Bo
 	// lugares, e o de fora é o que a lista mostra.
 	guardado.Place = row.Name
 
-	bs.mu.Lock()
-	defer bs.mu.Unlock()
+	bs.Mu.Lock()
+	defer bs.Mu.Unlock()
 	bs.hydrateLocked(ctx, sessionID)
 	if aberto := bs.boards[sessionID]; aberto != nil && aberto.Version >= guardado.Version {
 		guardado.Version = aberto.Version + 1
@@ -144,14 +144,14 @@ func (bs *boardStore) reopen(ctx context.Context, sessionID, placeID int64) (*Bo
 	return cloneBoard(&guardado), nil
 }
 
-// placeScene devolve a cena INTEIRA de um lugar guardado — é o que o mestre
+// PlaceScene devolve a cena INTEIRA de um lugar guardado — é o que o mestre
 // monta sem pôr nada na mesa (ALE-191, fatia 2).
 //
 // A lista de lugares viaja sem as cenas de propósito (só nome e contagem), e é
 // por isso que existe esta segunda pergunta: baixar o acervo inteiro para
 // desenhar um menu seria pagar caro por um número, mas para EDITAR é a cena que
 // se precisa.
-func (bs *boardStore) placeScene(ctx context.Context, campaignID, placeID int64) (*BoardState, error) {
+func (bs *BoardStore) PlaceScene(ctx context.Context, campaignID, placeID int64) (*BoardState, error) {
 	row, err := bs.q.GetCampaignPlace(ctx, placeID)
 	if err != nil {
 		return nil, err
@@ -173,7 +173,7 @@ func (bs *boardStore) placeScene(ctx context.Context, campaignID, placeID int64)
 	return &cena, nil
 }
 
-// savePlaceScene grava a cena que o mestre montou, sem tocar na mesa.
+// SavePlaceScene grava a cena que o mestre montou, sem tocar na mesa.
 //
 // Este é o ÚNICO lugar do tabuleiro onde um estado inteiro chega pelo cliente —
 // nos outros o cliente manda a intenção ("mova esta peça") e o servidor produz o
@@ -182,7 +182,7 @@ func (bs *boardStore) placeScene(ctx context.Context, campaignID, placeID int64)
 // para nada. O preço é este: o que chega tem de ser CONFERIDO antes de virar
 // acervo, senão um cliente quebrado guarda lixo que só aparece quando a cena
 // chega à mesa.
-func (bs *boardStore) savePlaceScene(ctx context.Context, campaignID, placeID int64, cena *BoardState) error {
+func (bs *BoardStore) SavePlaceScene(ctx context.Context, campaignID, placeID int64, cena *BoardState) error {
 	row, err := bs.q.GetCampaignPlace(ctx, placeID)
 	if err != nil {
 		return err
@@ -245,12 +245,12 @@ func countTokens(state string) int {
 	return len(apenasPecas.Tokens)
 }
 
-// removePlace apaga um lugar do acervo da crônica.
+// RemovePlace apaga um lugar do acervo da crônica.
 //
 // Confere a crônica antes de apagar: o id vem do cliente, e sem a checagem um
 // mestre apagaria o lugar de OUTRA mesa mandando um id que não é dele. É a
 // mesma regra de posse que as rotas de personagem aplicam.
-func (bs *boardStore) removePlace(ctx context.Context, campaignID, placeID int64) error {
+func (bs *BoardStore) RemovePlace(ctx context.Context, campaignID, placeID int64) error {
 	row, err := bs.q.GetCampaignPlace(ctx, placeID)
 	if err != nil {
 		return err

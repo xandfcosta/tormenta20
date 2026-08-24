@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"net/http"
+	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
 )
@@ -28,15 +29,15 @@ func (s *Server) handleUpdateVitals(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body vitalsBody
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if body.HpCurrent == nil && body.MpCurrent == nil {
-		writeError(w, http.StatusBadRequest, "No fields to update")
+		plataforma.WriteError(w, http.StatusBadRequest, "No fields to update")
 		return
 	}
 
-	fields := FieldErrorMap{}
+	fields := plataforma.FieldErrorMap{}
 	if msg := vitalError("hpCurrent", body.HpCurrent, row.Hpmax, "HP"); msg != "" {
 		fields["hpCurrent"] = []string{msg}
 	}
@@ -44,21 +45,21 @@ func (s *Server) handleUpdateVitals(w http.ResponseWriter, r *http.Request) {
 		fields["mpCurrent"] = []string{msg}
 	}
 	if len(fields) > 0 {
-		writeValidationError(w, fields)
+		plataforma.WriteValidationError(w, fields)
 		return
 	}
 
 	res, err := s.queries.UpdateVitals(r.Context(), sqlcgen.UpdateVitalsParams{
 		HpCurrent: nullInt(body.HpCurrent),
 		MpCurrent: nullInt(body.MpCurrent),
-		UpdatedAt: nowISO(),
+		UpdatedAt: plataforma.NowISO(),
 		ID:        row.ID,
 	})
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not update vitals")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update vitals")
 		return
 	}
-	writeJSON(w, http.StatusOK, vitalsResult{HpCurrent: res.Hpcurrent, MpCurrent: res.Mpcurrent})
+	plataforma.WriteJSON(w, http.StatusOK, vitalsResult{HpCurrent: res.Hpcurrent, MpCurrent: res.Mpcurrent})
 }
 
 // vitalError applies the DTO range (0..9999, class-validator messages) then the
@@ -102,18 +103,18 @@ func (s *Server) handleApplyDamage(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Amount *int64 `json:"amount"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	switch {
 	case body.Amount == nil:
-		writeValidationError(w, FieldErrorMap{"amount": {"amount must be an integer number"}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"amount": {"amount must be an integer number"}})
 		return
 	case *body.Amount < 1:
-		writeValidationError(w, FieldErrorMap{"amount": {"amount must not be less than 1"}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"amount": {"amount must not be less than 1"}})
 		return
 	case *body.Amount > 9999:
-		writeValidationError(w, FieldErrorMap{"amount": {"amount must not be greater than 9999"}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"amount": {"amount must not be greater than 9999"}})
 		return
 	}
 
@@ -122,10 +123,10 @@ func (s *Server) handleApplyDamage(w http.ResponseWriter, r *http.Request) {
 	// da sessão ignorar PV temporários enquanto a da ficha os drenava.
 	plan, err := applyDamagePlan(r.Context(), s.queries, row, int(*body.Amount))
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not apply damage")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not apply damage")
 		return
 	}
-	writeJSON(w, http.StatusOK, applyDamageResult{
+	plataforma.WriteJSON(w, http.StatusOK, applyDamageResult{
 		HpCurrent: plan.hpCurrent, TempHpRemaining: plan.tempHpRemaining, Drained: plan.drained,
 	})
 }
@@ -147,21 +148,21 @@ func (s *Server) handleUpdateTibar(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Tibar *float64 `json:"tibar"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if msg := tibarError(body.Tibar); msg != "" {
-		writeValidationError(w, FieldErrorMap{"tibar": {msg}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"tibar": {msg}})
 		return
 	}
 	err := s.queries.SetCharacterTibar(r.Context(), sqlcgen.SetCharacterTibarParams{
-		Tibar: *body.Tibar, UpdatedAt: nowISO(), ID: row.ID,
+		Tibar: *body.Tibar, UpdatedAt: plataforma.NowISO(), ID: row.ID,
 	})
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not update tibar")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update tibar")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]float64{"tibar": *body.Tibar})
+	plataforma.WriteJSON(w, http.StatusOK, map[string]float64{"tibar": *body.Tibar})
 }
 
 // tibarError recusa o que não é dinheiro. Não há checagem de finitude aqui de

@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strings"
+	"t20engine/plataforma"
 	"testing"
 	"time"
 
@@ -35,7 +36,7 @@ func novaPorta(t *testing.T, admins ...string) portaFixture {
 		t.Fatalf("hash: %v", err)
 	}
 	if _, err := s.queries.CreateUser(context.Background(), sqlcgen.CreateUserParams{
-		Email: f.email, Passwordhash: string(hash), Createdat: nowISO(), Updatedat: nowISO(),
+		Email: f.email, Passwordhash: string(hash), Createdat: plataforma.NowISO(), Updatedat: plataforma.NowISO(),
 	}); err != nil {
 		t.Fatalf("semear conta: %v", err)
 	}
@@ -246,7 +247,7 @@ func (f portaFixture) semeiaLink(t *testing.T, validade time.Duration) string {
 	agora := time.Now()
 	reset, err := f.s.queries.CreatePasswordReset(context.Background(), sqlcgen.CreatePasswordResetParams{
 		Token: generateInviteToken(), Userid: user.ID, Createdby: user.ID,
-		Createdat: isoAt(agora), Expiresat: isoAt(agora.Add(validade)),
+		Createdat: plataforma.IsoAt(agora), Expiresat: plataforma.IsoAt(agora.Add(validade)),
 	})
 	if err != nil {
 		t.Fatalf("semear link: %v", err)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"t20engine/plataforma"
 	"time"
 )
 
@@ -91,7 +92,7 @@ func (s *Server) carregaAdmin(ctx context.Context, eu AuthUser) (adminView, erro
 		})
 	}
 
-	convites, err := s.queries.ListOpenAccountInvites(ctx, nowISO())
+	convites, err := s.queries.ListOpenAccountInvites(ctx, plataforma.NowISO())
 	if err != nil {
 		return adminView{}, err
 	}

@@ -1,5 +1,9 @@
 package api
 
+import (
+	"t20engine/plataforma"
+)
+
 // A PORTA como dado (ALE-229): entrar, criar conta e redefinir senha.
 //
 // Cada tela tem a própria struct, e não uma só com campos opcionais, porque um
@@ -17,7 +21,7 @@ type entrarView struct {
 	// mandado para a porta volta para onde estava. Ele viaja em campo OCULTO e
 	// não na URL do POST para o formulário ser o dono do próprio contexto.
 	Destino string
-	Erros   FieldErrorMap
+	Erros   plataforma.FieldErrorMap
 	// Aviso é a recusa do formulário inteiro, quando nenhum campo é o dono do
 	// problema — "E-mail ou senha incorretos" não é culpa de um dos dois.
 	Aviso string
@@ -28,7 +32,7 @@ type criarContaView struct {
 	Email   string
 	Nome    string
 	Convite string
-	Erros   FieldErrorMap
+	Erros   plataforma.FieldErrorMap
 	Aviso   string
 }
 
@@ -40,7 +44,7 @@ type redefinirView struct {
 	// vale — e aí não há formulário para mostrar.
 	EmailDaConta string
 	LinkVale     bool
-	Erros        FieldErrorMap
+	Erros        plataforma.FieldErrorMap
 	Aviso        string
 }
 

@@ -2013,14 +2013,31 @@ test.describe('Sessão ao vivo', () => {
     // grimório os dois são a MESMA variável, então apontar `--popover` para
     // branco moveria os dois juntos e o teste passaria verde sobre o defeito.
     // Descobri isso sabotando.
+    // As duas pontas são resolvidas pelo MESMO motor antes de comparar, e isso
+    // não é preciosismo (ALE-256). Ler o token com `getPropertyValue` devolve o
+    // TEXTO da custom property, que é o texto do arquivo servido — e o
+    // minificador reescreve `oklch(0.27 0.016 300)` como `oklch(27% .016 300)`.
+    // A cor é a mesma; a string não. O teste passava em dev por ACIDENTE, porque
+    // lá o texto coincidia com a serialização do valor computado, e falhava só
+    // contra o build acusando "voltou a resolver uma paleta clara" — um
+    // diagnóstico errado, que manda a próxima pessoa procurar defeito onde não
+    // há. Comparar representação de CSS é comparar coisa que ninguém prometeu.
+    //
+    // A sonda entra DENTRO da cena porque a variável é resolvida no contexto
+    // dela: medida fora, viria o valor da raiz e o teste voltaria a passar sobre
+    // nada.
     const cores = await page.evaluate(() => {
       const aviso = document.querySelector('[data-sonner-toast]')
       const cena = document.querySelector('.scene-grimorio')
       if (!aviso || !cena) return null
-      return {
-        fundo: getComputedStyle(aviso).backgroundColor,
-        painelDaCasa: getComputedStyle(cena).getPropertyValue('--grimorio-panel-raised').trim(),
-      }
+
+      const sonda = document.createElement('span')
+      sonda.style.backgroundColor = 'var(--grimorio-panel-raised)'
+      cena.appendChild(sonda)
+      const painelDaCasa = getComputedStyle(sonda).backgroundColor
+      sonda.remove()
+
+      return { fundo: getComputedStyle(aviso).backgroundColor, painelDaCasa }
     })
 
     expect(cores, 'não achei o aviso na tela').not.toBeNull()

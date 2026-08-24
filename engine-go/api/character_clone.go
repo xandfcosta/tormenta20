@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"t20engine/plataforma"
 )
 
 // cloneCharacterForCampaign snapshots a character — its row plus every child
@@ -35,7 +36,7 @@ func (s *Server) cloneCharacterForCampaign(ctx context.Context, sourceID, campai
 // passa a responder "já está na mesa" e o herói fica impedido de entrar PARA
 // SEMPRE, sem membro nenhum para remover.
 func cloneCharacterTx(ctx context.Context, tx *sql.Tx, sourceID, campaignID int64) (int64, error) {
-	now := nowISO()
+	now := plataforma.NowISO()
 
 	res, err := tx.ExecContext(ctx, `
 INSERT INTO characters (

@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"t20engine/plataforma"
 	"time"
 )
 
@@ -37,10 +38,10 @@ type backupDTO struct {
 func (s *Server) handleAdminStatus(w http.ResponseWriter, r *http.Request) {
 	counts, err := s.queries.TableCounts(r.Context())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not read status")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not read status")
 		return
 	}
-	writeJSON(w, http.StatusOK, serverStatusDTO{
+	plataforma.WriteJSON(w, http.StatusOK, serverStatusDTO{
 		Environment:  string(s.cfg.AppEnv),
 		DatabasePath: s.cfg.DatabasePath,
 		DatabaseSize: fileSize(s.cfg.DatabasePath),
@@ -52,17 +53,17 @@ func (s *Server) handleAdminStatus(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleAdminCreateBackup(w http.ResponseWriter, r *http.Request) {
 	name, err := s.backupDatabase(r.Context(), time.Now())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not back up: "+err.Error())
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not back up: "+err.Error())
 		return
 	}
-	writeJSON(w, http.StatusCreated, backupDTO{
-		Name: name, Size: fileSize(filepath.Join(s.cfg.BackupDir, name)), CreatedAt: nowISO(),
+	plataforma.WriteJSON(w, http.StatusCreated, backupDTO{
+		Name: name, Size: fileSize(filepath.Join(s.cfg.BackupDir, name)), CreatedAt: plataforma.NowISO(),
 	})
 }
 
 // handleAdminListBackups: GET /admin/backups, newest first.
 func (s *Server) handleAdminListBackups(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, s.listBackups())
+	plataforma.WriteJSON(w, http.StatusOK, s.listBackups())
 }
 
 // backupDatabase writes a consistent snapshot with SQLite's own VACUUM INTO.
@@ -99,7 +100,7 @@ func (s *Server) listBackups() []backupDTO {
 		if e.IsDir() || filepath.Ext(e.Name()) != ".db" || err != nil {
 			continue
 		}
-		out = append(out, backupDTO{Name: e.Name(), Size: info.Size(), CreatedAt: isoAt(info.ModTime())})
+		out = append(out, backupDTO{Name: e.Name(), Size: info.Size(), CreatedAt: plataforma.IsoAt(info.ModTime())})
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt > out[j].CreatedAt })
 	return out
