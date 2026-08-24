@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -37,6 +38,82 @@ func (s *Server) rotasDoRastreador(r chi.Router) {
 		}))
 	r.Post("/mesa/{campaignId}/{sessionId}/scene/end", s.comandoDoMestre(encerraACena))
 	r.Post("/mesa/{campaignId}/{sessionId}/initiative/populate", s.comandoDoMestre(trazOGrupo))
+	// DOIS caminhos e não um `/rest` com o escopo no corpo, que é a forma da API
+	// JSON: aqui o VERBO é o caminho, como em `scene/start` e `scene/end`. A
+	// gramática desta superfície já foi escolhida, e misturar as duas faria a
+	// próxima pessoa ter de descobrir qual vale onde.
+	r.Post("/mesa/{campaignId}/{sessionId}/rest/scene", s.comandoDoMestre(descansaOGrupo("scene")))
+	r.Post("/mesa/{campaignId}/{sessionId}/rest/day", s.comandoDoMestre(descansaOGrupo("day")))
+}
+
+// descansaOGrupo é a RECUPERAÇÃO (T20 p105): devolve PV e PM ao grupo inteiro.
+//
+// Os dois escopos dividem o corpo porque só diferem em duas coisas — a
+// qualidade, que só o de dia usa, e o que o `restParty` faz lá dentro. Duas
+// funções seriam duas chances de uma esquecer o aviso às fichas.
+//
+// O aviso é obrigatório e não é o `session-state`: o que muda no descanso é a
+// FICHA, e ela não está no estado da fila. Sem o `session-rest`, quem estivesse
+// com a ficha aberta na SPA continuaria vendo o PV de antes até recarregar.
+func descansaOGrupo(escopo string) func(*Server, mesaComando) (*aovivo.SessionRuntimeState, error) {
+	return func(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+		qualidade := "normal"
+		if escopo == "day" {
+			lida, err := qualidadeDoDescanso(c.R)
+			if err != nil {
+				return nil, err
+			}
+			qualidade = lida
+		}
+		feitos, total, err := st.restParty(c.User, c.CampaignID, c.SessionID, escopo, qualidade)
+		if err != nil {
+			return nil, errors.New("não deu para carregar o grupo desta campanha")
+		}
+		st.sse.Emit(c.SessionID, "", "session-rest", map[string]any{
+			"sessionId": c.SessionID, "scope": escopo, "condition": qualidade,
+		})
+		estado := st.sessions.GetState(c.SessionID)
+		// O PARCIAL é contado e DITO, que é a lição da ALE-155: antes o
+		// encerrar-cena era `_, _ =` e o mestre lia "descansou" enquanto duas de
+		// cinco fichas não tinham descansado. Volta como recusa porque é o
+		// caminho que acende a frase — e "3 de 5" é exatamente o que ele precisa
+		// ver para saber que tem de olhar as outras duas.
+		if feitos < total {
+			return estado, fmt.Errorf("%d de %d fichas descansaram; as outras %d falharam", feitos, total, total-feitos)
+		}
+		return estado, nil
+	}
+}
+
+// qualidadesDoDescanso são as quatro do livro (T20 p105), e a lista existe aqui
+// para RECUSAR o que não é uma delas.
+//
+// O `restMultiplier` do motor cai em "normal" quando não reconhece a palavra, e
+// para o piloto isso não serve: um sinal adulterado faria o grupo descansar em
+// "normal" enquanto o mestre pediu "luxuosa", e ninguém veria a diferença — um
+// número plausível no lugar do certo é o desfecho que esta migração mais paga
+// para evitar.
+var qualidadesDoDescanso = map[string]bool{"ruim": true, "normal": true, "confortavel": true, "luxuosa": true}
+
+// qualidadeDoDescanso lê o sinal da página.
+//
+// Lê ANTES do `NewSSE`, obrigatoriamente: o SDK assume a resposta e fecha o
+// corpo do pedido, e um `ReadSignals` depois dele encontra o corpo fechado. Isso
+// é garantido pela ordem no `comandoDoMestre`, que chama a mutação primeiro — e
+// a armadilha está registrada no `piloto_mesa_action.go`, onde ela passou VERDE
+// em teste de handler e falhou no navegador.
+func qualidadeDoDescanso(r *http.Request) (string, error) {
+	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20) // o mesmo teto de 1 MB do `plataforma.DecodeJSON`
+	var sinais struct {
+		Qualidade string `json:"qualidadedodescanso"`
+	}
+	if err := datastar.ReadSignals(r, &sinais); err != nil {
+		return "", fmt.Errorf("não entendi a qualidade do descanso: %v", err)
+	}
+	if !qualidadesDoDescanso[sinais.Qualidade] {
+		return "", fmt.Errorf("qualidade %q não existe; o livro tem ruim, normal, confortavel e luxuosa (p105)", sinais.Qualidade)
+	}
+	return sinais.Qualidade, nil
 }
 
 // trazOGrupo põe na fila cada personagem do grupo que ainda não está lá.

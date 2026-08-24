@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"testing"
@@ -126,18 +127,26 @@ func TestAPresencaChegaNaCena(t *testing.T) {
 func TestSoOMestreComandaAMesa(t *testing.T) {
 	f := novoPiloto(t)
 
-	comandos := []string{
-		"initiative/next-turn", "initiative/previous-turn",
-		"scene/start", "scene/end", "initiative/populate",
+	// O corpo é o dos SINAIS que o Datastar manda junto. Só o descanso de dia lê
+	// algum; os outros levam corpo vazio, que é o que o `@post` manda quando a
+	// página não tem sinal nenhum a declarar.
+	comandos := []struct{ rota, sinais string }{
+		{"initiative/next-turn", ""},
+		{"initiative/previous-turn", ""},
+		{"scene/start", ""},
+		{"scene/end", ""},
+		{"initiative/populate", ""},
+		{"rest/scene", ""},
+		{"rest/day", `{"qualidadedodescanso":"normal"}`},
 	}
 	for _, cmd := range comandos {
-		t.Run(cmd, func(t *testing.T) {
-			rec := f.pede(t, f.jogador, "POST", f.urlDaMesa()+"/"+cmd, "")
+		t.Run(cmd.rota, func(t *testing.T) {
+			rec := f.pede(t, f.jogador, "POST", f.urlDaMesa()+"/"+cmd.rota, cmd.sinais)
 			if rec.Code != http.StatusForbidden {
-				t.Errorf("o jogador comandou %q e levou %d, quero 403", cmd, rec.Code)
+				t.Errorf("o jogador comandou %q e levou %d, quero 403", cmd.rota, rec.Code)
 			}
-			if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/"+cmd, ""); rec.Code != http.StatusOK {
-				t.Errorf("o mestre foi recusado em %q com %d", cmd, rec.Code)
+			if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/"+cmd.rota, cmd.sinais); rec.Code != http.StatusOK {
+				t.Errorf("o mestre foi recusado em %q com %d", cmd.rota, rec.Code)
 			}
 		})
 	}
@@ -350,5 +359,92 @@ func TestOJogadorNaoRecebeOAdicionarGrupoNoHTML(t *testing.T) {
 	}
 	if corpo := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String(); !strings.Contains(corpo, "Adicionar grupo") {
 		t.Error("o mestre não recebeu o Adicionar grupo")
+	}
+}
+
+// ── a recuperação (T20 p105) ─────────────────────────────────────────────────
+
+// TestODescansoDeDiaUsaAQualidadeQueOMestreEscolheu.
+//
+// Este é o guarda que carrega a REGRA, e ele mira o desfecho mais silencioso
+// possível: o `restMultiplier` do motor cai em "normal" quando não reconhece a
+// palavra, então uma qualidade que não chegasse ao servidor não daria erro
+// nenhum — o grupo descansaria em "normal" enquanto o mestre pediu outra coisa,
+// e ninguém veria a diferença.
+//
+// Por isso a asserção é sobre o NÚMERO e a qualidade escolhida é "ruim", que é a
+// única que se distingue do padrão: nível 8 recupera 4 em "ruim" e 8 em
+// "normal", então 24 de PV prova que o sinal atravessou e 28 provaria que ele se
+// perdeu no caminho.
+func TestODescansoDeDiaUsaAQualidadeQueOMestreEscolheu(t *testing.T) {
+	f := novoPiloto(t)
+
+	rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/rest/day", `{"qualidadedodescanso":"ruim"}`)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("descanso de dia deu %d: %s", rec.Code, rec.Body.String())
+	}
+
+	ficha, err := f.s.queries.GetCharacter(context.Background(), f.charID)
+	if err != nil {
+		t.Fatalf("reler a ficha: %v", err)
+	}
+	if ficha.Hpcurrent != 24 {
+		t.Errorf("PV = %d; 24 é o descanso RUIM de um nível 8 (20+4), 28 seria o normal que ninguém pediu", ficha.Hpcurrent)
+	}
+}
+
+// E uma qualidade que não existe é RECUSADA, não rebaixada em silêncio.
+//
+// O motor cai em "normal" por conta própria, e para o piloto isso não serve: um
+// sinal adulterado faria o grupo descansar em "normal" enquanto a tela dizia
+// "luxuosa". Um número plausível no lugar do certo é o desfecho que esta
+// migração mais paga para evitar — e a frase nomeia o valor ofensivo e a forma
+// esperada, como o CLAUDE.md pede.
+func TestUmaQualidadeInventadaERecusada(t *testing.T) {
+	f := novoPiloto(t)
+
+	rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/rest/day", `{"qualidadedodescanso":"palaciana"}`)
+	corpo := rec.Body.String()
+	if !strings.Contains(corpo, "palaciana") {
+		t.Errorf("a recusa não citou o valor ofensivo; corpo = %q", corpo)
+	}
+	if !strings.Contains(corpo, "luxuosa") {
+		t.Errorf("a recusa não disse a forma esperada; corpo = %q", corpo)
+	}
+
+	ficha, err := f.s.queries.GetCharacter(context.Background(), f.charID)
+	if err != nil {
+		t.Fatalf("reler a ficha: %v", err)
+	}
+	if ficha.Hpcurrent != 20 {
+		t.Errorf("PV = %d — o grupo descansou mesmo com a qualidade recusada", ficha.Hpcurrent)
+	}
+}
+
+// A recuperação de CENA é o mesmo gesto do encerrar cena sem desligar a cena:
+// expira a duração "cena" das fichas do grupo, e avisa que elas mudaram.
+//
+// É o `expirePartyScene` dos dois lados desde a ALE-220 — o que se prende aqui é
+// que o piloto chama ELE, e não uma sequência própria.
+func TestARecuperacaoDeCenaExpiraAsFichasESemDesligarACena(t *testing.T) {
+	f := novoPiloto(t)
+	seedEffect(t, f.s, f.charID, "bencao", "scene")
+	seedEffect(t, f.s, f.charID, "heroismo", "day")
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/scene/start", ""); rec.Code != http.StatusOK {
+		t.Fatalf("iniciar cena deu %d", rec.Code)
+	}
+
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/rest/scene", ""); rec.Code != http.StatusOK {
+		t.Fatalf("recuperar a cena deu %d", rec.Code)
+	}
+
+	if got := effectScopes(t, f.s, f.charID); len(got) != 1 || got[0] != "day" {
+		t.Errorf("a ficha ficou com os escopos %v, queria só [day]", got)
+	}
+	// A diferença para o "Encerrar cena": a cena continua LIGADA. Recuperar ao
+	// fim de uma luta não acaba a cena, e confundir os dois tiraria a fila da
+	// mesa no meio do combate.
+	if !f.s.sessions.GetState(f.sessionID).SceneActive {
+		t.Error("a recuperação de cena desligou a cena")
 	}
 }

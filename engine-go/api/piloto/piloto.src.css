@@ -79,3 +79,49 @@
     min-width: 0;
   }
 }
+
+/* O RODAPÉ DO MESTRE quando o palco é baixo (ALE-263) — a tradução do
+ * `palcoBaixo` da SPA, que a ALE-265 deixou de fora de propósito porque ele
+ * decide leiaute a partir de altura MEDIDA e o Go não mede caixa.
+ *
+ * A pergunta é a mesma que a `.mesa-palco` já responde para o bestiário: quanto
+ * este palco recebe de ALTURA. Por isso ela é a mesma classe e o mesmo
+ * `container-type: size` — abrir um segundo contêiner seria uma segunda
+ * resposta para a mesma pergunta, e o comentário dela em `index.css` já carrega
+ * o argumento inteiro, inclusive o do teclado virtual (ALE-176): a altura medida
+ * é a do PALCO, e no único formato onde o teclado abriria o palco já está muito
+ * abaixo do limiar, então não há chaveamento para o dedo sentir.
+ *
+ * 30rem = 480px é o corte, e ele separa os formatos que a ALE-146 mediu: o
+ * celular DEITADO dá um palco de ~390px e cai em baixo; o mesmo celular em pé dá
+ * ~844px e fica em alto. Naquela issue cada fileira de cromo a menos era uma
+ * linha de combatente a mais, e é exatamente essa a troca aqui — a recuperação e
+ * o encerrar cena entram na gaveta em vez de enrolar a fileira.
+ *
+ * O "Iniciar cena" NÃO entra na gaveta, e isso é a letra da ALE-210 lida pela
+ * ALE-184: abaixo de 1024 a SPA tirou o ciclo do trilho justamente para o mestre
+ * no celular não ficar sem caminho nenhum para COMEÇAR. Escondê-lo atrás de um
+ * ⚙ seria refazer o mesmo buraco com outra tampa.
+ *
+ * `display: contents` no invólucro do palco alto, e não uma classe do Tailwind:
+ * a camada de utilitários vence a de componentes (é o que o comentário do
+ * `.mesa-painel` registra), então um `flex` utilitário no mesmo elemento
+ * venceria o `display:none` da consulta e o botão apareceria nas duas alturas.
+ * Com `contents` o invólucro não existe para o leiaute enquanto está visível —
+ * os botões participam da fileira como se ele não estivesse lá. */
+@layer components {
+  .palco-alto-so {
+    display: contents;
+  }
+  .palco-gaveta {
+    display: none;
+  }
+  @container (max-height: 30rem) {
+    .palco-alto-so {
+      display: none;
+    }
+    .palco-gaveta {
+      display: block;
+    }
+  }
+}

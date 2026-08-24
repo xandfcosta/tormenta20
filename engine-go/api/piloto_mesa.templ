@@ -11,11 +11,20 @@ templ mesa(v mesaView) {
 	// vive dentro do palco da sessão —, enquanto o admin é uma grade de dois
 	// painéis e ocupa o que recebe. Sem isto, as linhas da fila esticam 1500px e
 	// o número da iniciativa fica a meia tela do nome.
-	<main id="mesa" class="mx-auto flex w-full max-w-3xl flex-col">
+	// `mesa-palco` é o que dá ALTURA MEDIDA a esta cena, e é a MESMA classe que o
+	// bestiário usa (`container-type: size`, index.css): a pergunta "quanto este
+	// palco recebe" tem uma resposta só na casa. Ela exige que a caixa tenha
+	// altura definida, e é por isso que o `main` passou a ser o item que PREENCHE
+	// o palco (`flex-1`) com o miolo rolando por dentro, em vez de crescer com o
+	// conteúdo e deixar a casca rolar por fora. A premissa do app sempre foi tela
+	// cheia com o CONTEÚDO rolando — o comentário do layout já dizia isso —, e
+	// com ela as duas faixas deixam de precisar de `sticky`: elas são o cabeçalho
+	// e o rodapé de uma caixa que não rola.
+	<main id="mesa" class="mesa-palco mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col">
 		// A faixa AO VIVO (ALE-30). Acende em DOURADO na vez do jogador, porque
 		// dourado é o que já diz "a vez" na iniciativa e no tabuleiro (ALE-200).
 		<div
-			class={ "sticky top-0 z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b px-3 py-2 sm:px-4",
+			class={ "flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b px-3 py-2 sm:px-4",
 				templ.KV("border-grimorio-gold/60 bg-grimorio-gold/10", v.Turn.Kind == "mine"),
 				templ.KV("border-grimorio-iron bg-grimorio-panel", v.Turn.Kind != "mine") }
 		>
@@ -44,7 +53,7 @@ templ mesa(v mesaView) {
 				}
 			</div>
 		</div>
-		<div class="flex-1 space-y-4 p-3 sm:p-4">
+		<div class="min-h-0 flex-1 space-y-4 overflow-y-auto p-3 sm:p-4">
 			// Registrar iniciativa — a ÚNICA mutação desta superfície (ALE-213). Some
 			// fora de cena pelo mesmo motivo da SPA: gravaria o combatente na fila do
 			// mestre sem mudar nada na tela de quem clicou.
