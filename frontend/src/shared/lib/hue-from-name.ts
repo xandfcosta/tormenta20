@@ -4,7 +4,7 @@
  * same hue across reloads. Used by the character-select splash gradient +
  * keystone; the app has no per-character image field (reskin-only).
  *
- * @example hueFromName('Thorvald') // => 214 (stable)
+ * @example hueFromName('Thorvald') // => 186 (stable)
  */
 export function hueFromName(name: string): number {
   let hash = 0

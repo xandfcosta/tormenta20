@@ -1,22 +1,22 @@
 import { Eye, EyeOff, Pencil, Plus, Swords, Trash2, X } from 'lucide-solid'
-import { For, Show, createEffect, createSignal } from 'solid-js'
-import type { InitiativeEntry, SessionRealtime } from '@/shared/realtime/realtime'
+import { createEffect, createSignal, For, Show } from 'solid-js'
+import { createPrefersReducedMotion } from '@/shared/lib/media-query'
 import { cn } from '@/shared/lib/utils'
+import type { InitiativeEntry, SessionRealtime } from '@/shared/realtime/realtime'
 import { Button } from '@/shared/ui/button'
-import { ResourceAdjustDialog } from '@/shared/ui/resource-adjust-dialog'
 import { ConnectionChip } from '@/shared/ui/connection-chip'
 import { Input } from '@/shared/ui/input'
 import { NumberInput } from '@/shared/ui/number-input'
+import { ResourceAdjustDialog } from '@/shared/ui/resource-adjust-dialog'
+import { FieldLabel, SectionTitle } from '@/shared/ui/section-label'
+import { toast } from '@/shared/ui/sonner'
 import { VitalBar } from '@/shared/ui/vital-bar'
 import { InitiativeEditDialog } from './initiative-edit-dialog'
 import { InitiativeRollButton } from './initiative-roll'
-import { TurnAdvance, TurnCounter } from './turn-controls'
-import { toast } from '@/shared/ui/sonner'
 import { createPartyFeedback } from './party-feedback'
-import { createTurnJuice } from './turn-juice'
-import { createPrefersReducedMotion } from '@/shared/lib/media-query'
 import { connectionStatus, reservaOOlho } from './tracker-rules'
-import { FieldLabel, SectionTitle } from '@/shared/ui/section-label'
+import { TurnAdvance, TurnCounter } from './turn-controls'
+import { createTurnJuice } from './turn-juice'
 
 /**
  * O passo de um clique. Shift multiplica por 5, como no HUD da ficha — combate
@@ -424,9 +424,17 @@ function InitiativeRow(props: {
               `min-w-0` vem JUNTO e não é enfeite: `line-clamp-2` desenha o
               botão como `-webkit-box`, cujo `min-width: auto` é o min-content
               — a palavra mais longa do nome. Sem ele o botão não encolhia e
-              empurrava o selo PC/NPC para fora da linha; o e2e da cena pegou
+              empurrava o selo para fora da linha; o e2e da cena pegou
               isso com quatro "PC" pintados fora do pai. É a armadilha nº37 do
-              guia do front outra vez, e desta vez do lado de dentro. */}
+              guia do front outra vez, e desta vez do lado de dentro.
+
+              O selo dizia "PC" quando isso aconteceu e hoje diz "Ficha"
+              (decisão do dono, 2026-08-24: o GLOSSARIO proíbe `PC`, e o oposto
+              de NPC na fila é FICHA — é a pergunta que o `type` responde). São
+              três caracteres a MAIS no elemento que já transbordou uma vez, e é
+              por isso que esta nota fica: quem mexer aqui tem de rodar os
+              guardas de transbordo do `session.spec.ts`, não só olhar a tela
+              larga. */}
           <Show
             when={props.onSelect}
             fallback={<span class="line-clamp-2 min-w-0">{props.entry.label}</span>}
@@ -451,7 +459,7 @@ function InitiativeRow(props: {
                 : 'bg-muted text-muted-foreground',
             )}
           >
-            {props.entry.type === 'character' ? 'PC' : 'NPC'}
+            {props.entry.type === 'character' ? 'Ficha' : 'NPC'}
           </span>
           <Show when={props.onTurn}>
             {/* O mesmo par do marcador do tabuleiro (`bg-grimorio-gold` sobre
@@ -697,7 +705,7 @@ function AddCombatantForm(props: {
           variant={type() === 'character' ? 'default' : 'outline'}
           onClick={() => setType('character')}
         >
-          PC
+          Ficha
         </Button>
         <Button
           type="button"

@@ -89,7 +89,20 @@ export async function labelsNaGaveta(gaveta: Locator): Promise<string[]> {
 export async function fechaAFila(page: Page): Promise<void> {
   const gaveta = page.getByRole('dialog', { name: 'Iniciativa' })
   if (await gaveta.isVisible()) {
-    await page.keyboard.press('Escape')
+    // Pela AFORDÂNCIA e não por `Escape` (ALE-238). Este helper é usado pelos
+    // DOIS specs que a issue mediu como intermitentes, então uma corrida aqui
+    // aparece como flake em lugares que não têm nada a ver um com o outro —
+    // que é exatamente por que a causa demorou a aparecer.
+    //
+    // A corrida: se um diálogo aninhado tiver acabado de fechar, existe uma
+    // janela em que ele já saiu do DOM e a gaveta ainda não reassumiu o ouvinte
+    // de Esc; a tecla apertada nela não chega a ninguém. Medido no
+    // `session.spec.ts`: 3 vermelhos em 6 corridas independentes.
+    //
+    // O nome do botão NOMEIA o painel de propósito (ALE-198): dentro desta
+    // gaveta havia um "Fechar" do formulário de adicionar, e dois botões com o
+    // mesmo nome acessível na mesma caixa quebram em strict mode.
+    await gaveta.getByRole('button', { name: 'Fechar Iniciativa' }).click()
     await expect(gaveta).toBeHidden()
   }
 }
