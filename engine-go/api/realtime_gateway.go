@@ -39,6 +39,10 @@ func (s *Server) SocketHandler() http.Handler {
 	opts := socket.DefaultServerOptions()
 	opts.SetCors(&types.Cors{Origin: "*", Credentials: true})
 	g := &realtimeGateway{s: s, io: socket.NewServer(nil, opts)}
+	// O gancho da ALE-245: é AQUI que o servidor ganha voz na sala, porque é
+	// aqui que o gateway existe. Sem esta linha, uma condição aplicada pela
+	// ficha não chega a mais ninguém.
+	s.notifyCharacterChanged = g.emitCharacterChanged
 	g.io.On("connection", func(clients ...any) {
 		if sock, ok := clients[0].(*socket.Socket); ok {
 			g.onConnect(sock)
@@ -305,6 +309,29 @@ func (g *realtimeGateway) emitSessionState(sessionID int64, state *SessionRuntim
 	g.io.To(socket.Room(roleRoomName(sessionID, "player"))).
 		Emit("session-state", redactForPlayers(state))
 	go g.persistAndWarn(sessionID)
+}
+
+// emitCharacterChanged avisa TODA mesa ao vivo que tem este personagem na fila
+// de que a ficha dele mudou (ALE-245).
+//
+// Manda só o id, e isso é escolha: cada cliente refaz a busca pela rota que ele
+// já tem permissão de chamar, então a mensagem não carrega ficha de ninguém
+// para dentro da sala. Quem nunca buscou aquele personagem não tem a query no
+// cache e o aviso é um no-op — não vira requisição.
+//
+// O mesmo payload vai para as duas salas: saber que um combatente MUDOU não é
+// informação secreta, e a fila já mostra que ele existe. O que é secreto está
+// atrás da rota que cada um chama depois.
+//
+// Percorre as sessões vivas em vez de perguntar ao banco: é o que o store tem
+// em memória, são poucas mesas com no máximo 50 entradas, e o custo é o de uma
+// escrita de ficha — não de um laço quente.
+func (g *realtimeGateway) emitCharacterChanged(characterID int64) {
+	for _, sessionID := range g.s.sessions.liveSessionsWithCharacter(characterID) {
+		payload := map[string]any{"characterId": characterID}
+		g.io.To(socket.Room(roleRoomName(sessionID, "gm"))).Emit("character-changed", payload)
+		g.io.To(socket.Room(roleRoomName(sessionID, "player"))).Emit("character-changed", payload)
+	}
 }
 
 // persistAndWarn persists the state and broadcasts `persistence-warning` only when the

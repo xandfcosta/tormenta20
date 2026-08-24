@@ -73,6 +73,27 @@ func (st *sessionStore) getOrCreateLocked(sessionID int64) *SessionRuntimeState 
 }
 
 // getState returns a snapshot of the current state (an empty tracker if never loaded).
+// liveSessionsWithCharacter devolve as sessões EM MEMÓRIA que têm este
+// personagem na fila (ALE-245).
+//
+// Só as vivas, e isso é o ponto: o aviso serve para atualizar tela aberta. Mesa
+// que ninguém está olhando não precisa ser avisada — quem entrar depois busca o
+// estado do zero.
+func (st *sessionStore) liveSessionsWithCharacter(characterID int64) []int64 {
+	st.mu.Lock()
+	defer st.mu.Unlock()
+	var out []int64
+	for sessionID, state := range st.states {
+		for _, entry := range state.Initiative {
+			if entry.CharacterID != nil && *entry.CharacterID == characterID {
+				out = append(out, sessionID)
+				break
+			}
+		}
+	}
+	return out
+}
+
 func (st *sessionStore) getState(sessionID int64) *SessionRuntimeState {
 	st.mu.Lock()
 	defer st.mu.Unlock()

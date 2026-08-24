@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/solid-query'
+import { useQuery, useQueryClient } from '@tanstack/solid-query'
 import { getRouteApi } from '@tanstack/solid-router'
 import { Show, createEffect, createMemo } from 'solid-js'
 import {
@@ -67,7 +67,16 @@ export function SessionTrackerPage() {
     return current && settledCampaign() ? current : null
   })
 
-  const rt = createSessionSocket(campaignId, sessionId)
+  const queryClient = useQueryClient()
+  // A ficha mudou no servidor (o mestre aplicou uma condição, por exemplo) e
+  // quem está com ela aberta precisa saber (ALE-245). Invalidar é o suficiente:
+  // quem nunca buscou aquele personagem não tem a query no cache e isto vira
+  // no-op, então o aviso não gera requisição para quem não olha.
+  const rt = createSessionSocket(campaignId, sessionId, {
+    onCharacterChanged: (characterId) => {
+      void queryClient.invalidateQueries({ queryKey: ['characters', characterId] })
+    },
+  })
   createTurnCue(rt.state, myCharacterIds, {
     notify: (label) =>
       announce(() =>

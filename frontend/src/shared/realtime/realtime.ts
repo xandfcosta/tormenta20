@@ -331,7 +331,18 @@ export type SessionRealtime = {
 export function createSessionSocket(
   campaignId: Accessor<number>,
   sessionId: Accessor<number>,
-  options: { connect?: (token?: string) => SessionSocket } = {},
+  options: {
+    connect?: (token?: string) => SessionSocket
+    /** A ficha de um personagem da mesa mudou por HTTP e quem está olhando
+     *  precisa refazer a busca (ALE-245).
+     *
+     *  É retorno de chamada e NÃO sinal: um sinal guardando o último id
+     *  colapsaria duas mudanças seguidas do MESMO personagem — escrever o
+     *  mesmo valor não notifica —, e é justamente o caso do mestre aplicando
+     *  duas condições em sequência. O transporte também não conhece o cache;
+     *  quem o conhece é a página, e ela injeta. */
+    onCharacterChanged?: (characterId: number) => void
+  } = {},
 ): SessionRealtime {
   const [state, setState] = createSignal<SessionRuntimeState>(EMPTY_STATE)
   const [isConnected, setIsConnected] = createSignal(false)
@@ -400,6 +411,11 @@ export function createSessionSocket(
     live.on('presence', (payload: { users?: PresenceUser[] }) => setPresent(payload?.users ?? []))
     live.on('session-rest', (payload: { scope?: RestScope }) => {
       if (payload?.scope) flashRest(payload.scope)
+    })
+    live.on('character-changed', (payload: { characterId?: number }) => {
+      if (typeof payload?.characterId === 'number') {
+        options.onCharacterChanged?.(payload.characterId)
+      }
     })
 
     live.connect()
