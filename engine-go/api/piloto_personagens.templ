@@ -111,7 +111,9 @@ templ palcoDoHeroi(h heroiCartao, anterior, proximo *vizinho) {
 		// e os cartões dançam ao percorrer o elenco (ALE-99).
 		<div class="max-w-2xl px-4 text-center">
 			<h2 class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl">{ h.Nome }</h2>
-			<p class="mt-1 font-heading text-xs font-semibold uppercase tracking-[0.22em] text-grimorio-gold">{ h.Papel }</p>
+			@rotuloDeSecao("gold", "mt-1") {
+				{ h.Papel }
+			}
 		</div>
 		@vitaisDoHeroi(h)
 		<p class="max-w-xl px-4 text-center text-sm text-muted-foreground">{ h.Resumo }</p>
@@ -180,7 +182,9 @@ templ palcoDeCriar(sozinha bool, anterior *vizinho) {
 		</div>
 		<div class="max-w-2xl px-4 text-center">
 			<h2 class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl">Forjar um herói</h2>
-			<p class="mt-1 font-heading text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Uma vaga vazia no grupo</p>
+			@rotuloDeSecao("muted", "mt-1") {
+					Uma vaga vazia no grupo
+				}
 		</div>
 		// A vaga não tem vitais nem resumo, mas precisa da ALTURA deles: sem
 		// essas duas fileiras invisíveis a coluna centralizada puxa o retrato
