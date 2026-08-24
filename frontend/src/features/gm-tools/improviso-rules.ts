@@ -8,7 +8,14 @@ import type {
 import { dungeonDesignData, gmTablesData } from '@/shared/lib/rules-tables-cache'
 
 /**
- * Resolvedores das tabelas de rolagem da Mesa do Mestre — Cap 6 (p263-274).
+ * Resolvedores das tabelas de rolagem da Mesa do Mestre — Cap 6 (p263-279).
+ *
+ * AS PÁGINAS SÃO CONFERIDAS CONTRA O PDF, e este arquivo é a prova de que
+ * precisam ser: ele e a tela davam páginas DIFERENTES para a mesma tabela, cada
+ * um acertando metade, e a de Consequências de Buscas estava errada nos dois.
+ * O método é o do guia do motor — `página do PDF = página do livro + 6` — e a
+ * conferência é pelo FOLIO IMPRESSO na página extraída, não pela aritmética:
+ * confirmar o offset com a própria conta é confirmar a suposição.
  *
  * Moravam no `t20-data` GRUDADOS nas tabelas, e por isso as tabelas iam para o
  * bundle. As tabelas desceram para o catálogo servido; aqui ficou só a regra de
@@ -36,7 +43,16 @@ function rowForRoll<T extends { rollMin: number; rollMax: number }>(
   return row
 }
 
-/** Tabela 6-4: Ruínas (d6, p272). */
+/**
+ * Ruína (d6, p269) — e ela NÃO É TABELA NUMERADA, é prosa.
+ *
+ * O comentário anterior dizia "Tabela 6-4: Ruínas (d6, p272)" e errava as duas
+ * coisas: a Tabela 6-4 é *Viagens*, na p270, e a ruína é o parágrafo da p269
+ * ("Um personagem que entre em uma ruína deve rolar 1d6. Com um resultado 1 ou
+ * 2, a ruína possui apenas uma ameaça…"). Inventar um número de tabela é pior
+ * que não citar nada: manda quem for conferir para a página errada com ar de
+ * rigor.
+ */
 export function ruinaFromRoll(d6: number): RuinaRow {
   assertRoll(d6, 6)
   return rowForRoll(gmTablesData().ruina, d6, 'ruina')

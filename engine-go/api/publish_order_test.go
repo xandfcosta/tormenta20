@@ -1,5 +1,7 @@
 package api
 
+import "t20engine/aovivo"
+
 import (
 	"encoding/json"
 	"strings"
@@ -49,14 +51,14 @@ func TestOQuadroSegueAOrdemDaMutacao(t *testing.T) {
 
 	for tentativa := range tentativas {
 		s := newTestServer(t)
-		conn := s.sse.add(sessionID, "c1", "gm")
+		conn := s.sse.Add(sessionID, "c1", "gm")
 
 		var wg sync.WaitGroup
 		for _, nome := range []string{"Abalado", "Agarrado", "Cego", "Surdo", "Lento", "Fraco"} {
 			wg.Add(1)
 			go func(rotulo string) {
 				defer wg.Done()
-				estado, err := s.sessions.addInitiativeEntry(sessionID, InitiativeEntry{
+				estado, err := s.sessions.AddInitiativeEntry(sessionID, aovivo.InitiativeEntry{
 					Label: rotulo, Type: "npc", Initiative: 10,
 				})
 				if err != nil {
@@ -84,17 +86,17 @@ func TestOQuadroSegueAOrdemDaMutacao(t *testing.T) {
 			t.Fatalf("tentativa %d: o último quadro perdeu %q — a tela fica com ela sumida.\n%s",
 				tentativa, faltando, resumoDoQuadro(t, ultimo))
 		}
-		s.sse.remove(sessionID, "c1")
+		s.sse.Remove(sessionID, "c1")
 	}
 }
 
 // ultimoQuadro drena a fila e devolve o último quadro, que é o que sobrevive na
 // tela — os anteriores são sobrescritos por ele.
-func ultimoQuadro(conn *sseConn) string {
+func ultimoQuadro(conn *aovivo.SSEConn) string {
 	var ultimo string
 	for {
 		select {
-		case frame := <-conn.frames:
+		case frame := <-conn.Frames:
 			if strings.Contains(string(frame), "event: session-state") {
 				ultimo = string(frame)
 			}

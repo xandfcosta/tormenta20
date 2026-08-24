@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
 )
@@ -38,44 +39,44 @@ func (s *Server) handleUpdateAbilities(w http.ResponseWriter, r *http.Request) {
 		// de aplicar demais (engine/collect_rules.go, resolveFloating).
 		RaceAttributeChoices *json.RawMessage `json:"raceAttributeChoices"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 
 	var set setBuilder
 	resp := map[string]string{}
-	add := func(column string, value string) {
-		set.add(column+" = ?", value)
+	Add := func(column string, value string) {
+		set.Add(column+" = ?", value)
 		resp[column] = value
 	}
 	if body.RaceAbilityChoices != nil {
-		add("raceAbilityChoices", marshalStrings(body.RaceAbilityChoices))
+		Add("raceAbilityChoices", marshalStrings(body.RaceAbilityChoices))
 	}
 	if body.OriginChoices != nil {
-		add("originChoices", marshalStrings(body.OriginChoices))
+		Add("originChoices", marshalStrings(body.OriginChoices))
 	}
 	if body.ClassPowers != nil {
-		add("classPowers", marshalStrings(body.ClassPowers))
+		Add("classPowers", marshalStrings(body.ClassPowers))
 	}
 	if body.ClassChoices != nil {
-		add("classChoices", compactJSON(*body.ClassChoices))
+		Add("classChoices", compactJSON(*body.ClassChoices))
 	}
 	if body.PowerChoices != nil {
-		add("powerChoices", compactJSON(*body.PowerChoices))
+		Add("powerChoices", compactJSON(*body.PowerChoices))
 	}
 	if body.RaceAttributeChoices != nil {
-		add("raceAttributeChoices", compactJSON(*body.RaceAttributeChoices))
+		Add("raceAttributeChoices", compactJSON(*body.RaceAttributeChoices))
 	}
 	if set.empty() {
-		writeError(w, http.StatusBadRequest, "No fields to update")
+		plataforma.WriteError(w, http.StatusBadRequest, "No fields to update")
 		return
 	}
 
 	if err := set.execTouched(r.Context(), s.db, "UPDATE characters", row.ID); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not update abilities")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update abilities")
 		return
 	}
-	writeJSON(w, http.StatusOK, resp)
+	plataforma.WriteJSON(w, http.StatusOK, resp)
 }
 
 // handleUpdateProficiencies ports updateProficiencies: validate every category
@@ -88,11 +89,11 @@ func (s *Server) handleUpdateProficiencies(w http.ResponseWriter, r *http.Reques
 	var body struct {
 		Proficiencies []string `json:"proficiencies"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if body.Proficiencies == nil {
-		writeValidationError(w, FieldErrorMap{"proficiencies": {"proficiencies must be an array"}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"proficiencies": {"proficiencies must be an array"}})
 		return
 	}
 	var unknown []string
@@ -108,17 +109,17 @@ func (s *Server) handleUpdateProficiencies(w http.ResponseWriter, r *http.Reques
 		}
 	}
 	if len(unknown) > 0 {
-		writeValidationError(w, FieldErrorMap{"proficiencies": unknown})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"proficiencies": unknown})
 		return
 	}
 	proficiencies := marshalStrings(&dedup)
 	if err := s.queries.SetProficiencies(r.Context(), sqlcgen.SetProficienciesParams{
-		Proficiencies: proficiencies, UpdatedAt: nowISO(), ID: row.ID,
+		Proficiencies: proficiencies, UpdatedAt: plataforma.NowISO(), ID: row.ID,
 	}); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not update proficiencies")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update proficiencies")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]string{"proficiencies": proficiencies})
+	plataforma.WriteJSON(w, http.StatusOK, map[string]string{"proficiencies": proficiencies})
 }
 
 // compactJSON normalizes an object blob to compact JSON (matching JSON.stringify

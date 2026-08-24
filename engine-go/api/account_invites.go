@@ -1,6 +1,6 @@
 package api
 
-// Convite de CONTA (ALE-120). Serving the table on the LAN made open
+// Convite de CONTA (ALE-120). Serving the table on the LAN made Open
 // registration a real door: anyone reaching http://<ip>:3001 could create an
 // account. Now the admin issues a single-use link and hands it to the player,
 // who still picks their own password — the admin never sees it.
@@ -14,6 +14,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"t20engine/plataforma"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -42,14 +43,14 @@ func (s *Server) handleCreateAccountInvite(w http.ResponseWriter, r *http.Reques
 	invite, err := s.queries.CreateAccountInvite(r.Context(), sqlcgen.CreateAccountInviteParams{
 		Token:     generateInviteToken(),
 		Createdby: currentUser(r).ID,
-		Createdat: isoAt(now),
-		Expiresat: isoAt(now.Add(accountInviteTTL)),
+		Createdat: plataforma.IsoAt(now),
+		Expiresat: plataforma.IsoAt(now.Add(accountInviteTTL)),
 	})
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not create invite")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not create invite")
 		return
 	}
-	writeJSON(w, http.StatusCreated, accountInviteDTO{Token: invite.Token, ExpiresAt: invite.Expiresat})
+	plataforma.WriteJSON(w, http.StatusCreated, accountInviteDTO{Token: invite.Token, ExpiresAt: invite.Expiresat})
 }
 
 // handleResolveAccountInvite answers whether a link still works: GET
@@ -59,10 +60,10 @@ func (s *Server) handleCreateAccountInvite(w http.ResponseWriter, r *http.Reques
 func (s *Server) handleResolveAccountInvite(w http.ResponseWriter, r *http.Request) {
 	invite, ok := s.usableInvite(r.Context(), chi.URLParam(r, "token"))
 	if !ok {
-		writeError(w, http.StatusNotFound, inviteRejected)
+		plataforma.WriteError(w, http.StatusNotFound, inviteRejected)
 		return
 	}
-	writeJSON(w, http.StatusOK, accountInviteDTO{Token: invite.Token, ExpiresAt: invite.Expiresat})
+	plataforma.WriteJSON(w, http.StatusOK, accountInviteDTO{Token: invite.Token, ExpiresAt: invite.Expiresat})
 }
 
 // usableInvite loads an invite that can still be spent: it exists, nobody used
@@ -75,7 +76,7 @@ func (s *Server) usableInvite(ctx context.Context, token string) (sqlcgen.Accoun
 	if err != nil || invite.Usedat.Valid {
 		return sqlcgen.AccountInvite{}, false
 	}
-	expiresAt, err := time.Parse(isoLayout, invite.Expiresat)
+	expiresAt, err := time.Parse(plataforma.IsoLayout, invite.Expiresat)
 	if err != nil || time.Now().UTC().After(expiresAt) {
 		return sqlcgen.AccountInvite{}, false
 	}
@@ -115,10 +116,10 @@ func (s *Server) createUser(
 	return user, tx.Commit()
 }
 
-func spend(ctx context.Context, q *sqlcgen.Queries, inviteID, userID int64) error {
+func spend(ctx context.Context, q *sqlcgen.Queries, inviteID, UserID int64) error {
 	rows, err := q.SpendAccountInvite(ctx, sqlcgen.SpendAccountInviteParams{
-		Usedat: sql.NullString{String: nowISO(), Valid: true},
-		Usedby: sql.NullInt64{Int64: userID, Valid: true},
+		Usedat: sql.NullString{String: plataforma.NowISO(), Valid: true},
+		Usedby: sql.NullInt64{Int64: UserID, Valid: true},
 		ID:     inviteID,
 	})
 	if err != nil {

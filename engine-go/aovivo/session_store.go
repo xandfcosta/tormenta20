@@ -1,29 +1,35 @@
-package api
+package aovivo
 
 import (
 	"context"
 	"encoding/json"
 	"log"
 	"sync"
+	"t20engine/plataforma"
 
 	"github.com/google/uuid"
 
 	"t20engine/db/sqlcgen"
 )
 
-// newUUID generates a random v4 UUID string for initiative entry ids (randomUUID() in the
+// NewUUID generates a random v4 UUID string for initiative entry ids (randomUUID() in the
 // service). Injected into the store so tests can swap a deterministic generator.
-func newUUID() string { return uuid.NewString() }
+func NewUUID() string { return uuid.NewString() }
 
-// sessionStore holds each session's in-memory runtime state, guarding the pure mutations
-// (session_state.go) with a mutex and persisting fire-and-forget to Session.runtimeState.
-// Mirrors SessionStateService — a server restart wipes trackers until the first load()
+// SessionStore holds each session's in-memory runtime state, guarding the pure mutations
+// (session_state.go) with a mutex and persisting fire-and-Forget to Session.runtimeState.
+// Mirrors SessionStateService — a server restart wipes trackers until the first Load()
 // re-hydrates from the DB. Mutation methods return a snapshot (deep-enough copy) so the
 // gateway can serialize/broadcast it without racing a concurrent message on the session.
-type sessionStore struct {
-	mu     sync.Mutex
-	states map[int64]*SessionRuntimeState
-	dirty  map[int64]bool
+type SessionStore struct {
+	Mu sync.Mutex
+	// ficha é a PORTA para o contexto da ficha (ALE-254): o regime escreve PV e
+	// PM de personagem, mas as REGRAS dessa escrita são de lá. Nulo é caminho
+	// normal em teste de regime puro — quem tem personagem na fila injeta o
+	// implementador.
+	ficha  VitaisDaFicha
+	States map[int64]*SessionRuntimeState
+	Dirty  map[int64]bool
 	// seqs numera as mutações de cada sessão, para o hub reconhecer quadro
 	// atrasado (ALE-238). Mora aqui e não no estado: hidratar do banco troca o
 	// estado, e um contador que vivesse nele voltaria a zero.
@@ -37,17 +43,20 @@ type sessionStore struct {
 }
 
 // persistLock returns the per-session DB-write mutex, creating it on first use.
-func (st *sessionStore) persistLock(sessionID int64) *sync.Mutex {
+func (st *SessionStore) persistLock(sessionID int64) *sync.Mutex {
 	m, _ := st.persistMus.LoadOrStore(sessionID, &sync.Mutex{})
 	return m.(*sync.Mutex)
 }
 
-func newSessionStore(q *sqlcgen.Queries, newID func() string) *sessionStore {
-	return &sessionStore{
-		states: map[int64]*SessionRuntimeState{},
-		dirty:  map[int64]bool{},
+// NewSessionStore recebe a PORTA da ficha por parâmetro (ALE-254) — injetada e
+// não importada, que é o que impede o regime de conhecer as regras da ficha.
+func NewSessionStore(q *sqlcgen.Queries, newID func() string, ficha VitaisDaFicha) *SessionStore {
+	return &SessionStore{
+		States: map[int64]*SessionRuntimeState{},
+		Dirty:  map[int64]bool{},
 		seqs:   map[int64]uint64{},
 		newID:  newID,
+		ficha:  ficha,
 		q:      q,
 	}
 }
@@ -62,14 +71,14 @@ func newSessionStore(q *sqlcgen.Queries, newID func() string) *sessionStore {
 // modo que o valor certo existia só na memória do servidor. Assim, campo novo
 // vem junto sem ninguém precisar lembrar.
 // proximaSeq devolve a ordem da próxima mutação desta sessão. Chamada SEMPRE
-// com `st.mu` seguro, que é o que faz a numeração coincidir com a ordem real
+// com `st.Mu` seguro, que é o que faz a numeração coincidir com a ordem real
 // das mutações.
 //
 // O contador mora na LOJA e não no estado: hidratar do banco substitui o estado
 // e zeraria um contador que vivesse nele, e aí o hub descartaria todo quadro
 // seguinte por achá-los atrasados. O contador só reinicia com o processo, que é
 // quando o hub também esquece o que já mandou.
-func (st *sessionStore) proximaSeqLocked(sessionID int64) uint64 {
+func (st *SessionStore) proximaSeqLocked(sessionID int64) uint64 {
 	st.seqs[sessionID]++
 	return st.seqs[sessionID]
 }
@@ -81,27 +90,27 @@ func cloneState(s *SessionRuntimeState) *SessionRuntimeState {
 	return &out
 }
 
-func (st *sessionStore) getOrCreateLocked(sessionID int64) *SessionRuntimeState {
-	s := st.states[sessionID]
+func (st *SessionStore) getOrCreateLocked(sessionID int64) *SessionRuntimeState {
+	s := st.States[sessionID]
 	if s == nil {
-		s = emptyRuntimeState()
-		st.states[sessionID] = s
+		s = EmptyRuntimeState()
+		st.States[sessionID] = s
 	}
 	return s
 }
 
-// getState returns a snapshot of the current state (an empty tracker if never loaded).
-// liveSessionsWithCharacter devolve as sessões EM MEMÓRIA que têm este
+// GetState returns a snapshot of the current state (an empty tracker if never loaded).
+// LiveSessionsWithCharacter devolve as sessões EM MEMÓRIA que têm este
 // personagem na fila (ALE-245).
 //
 // Só as vivas, e isso é o ponto: o aviso serve para atualizar tela aberta. Mesa
 // que ninguém está olhando não precisa ser avisada — quem entrar depois busca o
 // estado do zero.
-func (st *sessionStore) liveSessionsWithCharacter(characterID int64) []int64 {
-	st.mu.Lock()
-	defer st.mu.Unlock()
+func (st *SessionStore) LiveSessionsWithCharacter(characterID int64) []int64 {
+	st.Mu.Lock()
+	defer st.Mu.Unlock()
 	var out []int64
-	for sessionID, state := range st.states {
+	for sessionID, state := range st.States {
 		for _, entry := range state.Initiative {
 			if entry.CharacterID != nil && *entry.CharacterID == characterID {
 				out = append(out, sessionID)
@@ -112,98 +121,98 @@ func (st *sessionStore) liveSessionsWithCharacter(characterID int64) []int64 {
 	return out
 }
 
-func (st *sessionStore) getState(sessionID int64) *SessionRuntimeState {
-	st.mu.Lock()
-	defer st.mu.Unlock()
+func (st *SessionStore) GetState(sessionID int64) *SessionRuntimeState {
+	st.Mu.Lock()
+	defer st.Mu.Unlock()
 	return cloneState(st.getOrCreateLocked(sessionID))
 }
 
 // apply runs a pure mutation under the lock and returns a snapshot for broadcast.
-func (st *sessionStore) apply(sessionID int64, fn func(*SessionRuntimeState) error) (*SessionRuntimeState, error) {
-	st.mu.Lock()
-	defer st.mu.Unlock()
+func (st *SessionStore) apply(sessionID int64, fn func(*SessionRuntimeState) error) (*SessionRuntimeState, error) {
+	st.Mu.Lock()
+	defer st.Mu.Unlock()
 	s := st.getOrCreateLocked(sessionID)
 	if err := fn(s); err != nil {
 		return nil, err
 	}
 	clone := cloneState(s)
-	clone.seq = st.proximaSeqLocked(sessionID)
+	clone.Seq = st.proximaSeqLocked(sessionID)
 	return clone, nil
 }
 
-func (st *sessionStore) addInitiativeEntry(sessionID int64, e InitiativeEntry) (*SessionRuntimeState, error) {
-	return st.apply(sessionID, func(s *SessionRuntimeState) error { return addEntry(s, e, st.newID) })
+func (st *SessionStore) AddInitiativeEntry(sessionID int64, e InitiativeEntry) (*SessionRuntimeState, error) {
+	return st.apply(sessionID, func(s *SessionRuntimeState) error { return AddEntry(s, e, st.newID) })
 }
 
-func (st *sessionStore) upsertInitiativeEntry(sessionID int64, e InitiativeEntry) (*SessionRuntimeState, error) {
+func (st *SessionStore) UpsertInitiativeEntry(sessionID int64, e InitiativeEntry) (*SessionRuntimeState, error) {
 	return st.apply(sessionID, func(s *SessionRuntimeState) error { return upsertCharacterEntry(s, e, st.newID) })
 }
 
-func (st *sessionStore) updateInitiativeEntry(sessionID int64, entryID string, patch entryPatch) (*SessionRuntimeState, error) {
-	return st.apply(sessionID, func(s *SessionRuntimeState) error { return updateEntry(s, entryID, patch) })
+func (st *SessionStore) UpdateInitiativeEntry(sessionID int64, entryID string, patch EntryPatch) (*SessionRuntimeState, error) {
+	return st.apply(sessionID, func(s *SessionRuntimeState) error { return UpdateEntry(s, entryID, patch) })
 }
 
-func (st *sessionStore) removeInitiativeEntry(sessionID int64, entryID string) (*SessionRuntimeState, error) {
-	return st.apply(sessionID, func(s *SessionRuntimeState) error { return removeEntry(s, entryID) })
+func (st *SessionStore) RemoveInitiativeEntry(sessionID int64, entryID string) (*SessionRuntimeState, error) {
+	return st.apply(sessionID, func(s *SessionRuntimeState) error { return RemoveEntry(s, entryID) })
 }
 
-func (st *sessionStore) nextTurn(sessionID int64) (*SessionRuntimeState, error) {
+func (st *SessionStore) NextTurn(sessionID int64) (*SessionRuntimeState, error) {
 	return st.apply(sessionID, func(s *SessionRuntimeState) error { advanceTurn(s); return nil })
 }
 
-func (st *sessionStore) previousTurn(sessionID int64) (*SessionRuntimeState, error) {
+func (st *SessionStore) PreviousTurn(sessionID int64) (*SessionRuntimeState, error) {
 	return st.apply(sessionID, func(s *SessionRuntimeState) error { rewindTurn(s); return nil })
 }
 
-func (st *sessionStore) reset(sessionID int64) (*SessionRuntimeState, error) {
+func (st *SessionStore) Reset(sessionID int64) (*SessionRuntimeState, error) {
 	return st.apply(sessionID, func(s *SessionRuntimeState) error { resetInitiative(s); return nil })
 }
 
-func (st *sessionStore) startScene(sessionID int64) (*SessionRuntimeState, error) {
-	return st.apply(sessionID, func(s *SessionRuntimeState) error { startScene(s); return nil })
+func (st *SessionStore) StartScene(sessionID int64) (*SessionRuntimeState, error) {
+	return st.apply(sessionID, func(s *SessionRuntimeState) error { StartScene(s); return nil })
 }
 
-func (st *sessionStore) endScene(sessionID int64) (*SessionRuntimeState, error) {
-	return st.apply(sessionID, func(s *SessionRuntimeState) error { endScene(s); return nil })
+func (st *SessionStore) EndScene(sessionID int64) (*SessionRuntimeState, error) {
+	return st.apply(sessionID, func(s *SessionRuntimeState) error { EndScene(s); return nil })
 }
 
-// patchVitals fixa os vitais de uma entrada. Mesma regra do delta sobre quem é a
+// PatchVitals fixa os vitais de uma entrada. Mesma regra do delta sobre quem é a
 // fonte; valor absoluto NÃO drena pool temporário, porque é uma afirmação sobre
 // o total e não uma pancada.
-func (st *sessionStore) patchVitals(sessionID int64, entryID string, hpCurrent, mpCurrent *int64) (*SessionRuntimeState, error) {
-	charID := st.characterIDOf(sessionID, entryID)
+func (st *SessionStore) PatchVitals(sessionID int64, entryID string, hpCurrent, mpCurrent *int64) (*SessionRuntimeState, error) {
+	charID := st.CharacterIDOf(sessionID, entryID)
 	if charID == nil {
 		return st.apply(sessionID, func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hpCurrent, mpCurrent) })
 	}
-	hp, mp, err := st.applyCharacterVitals(context.Background(), *charID, hpCurrent, mpCurrent)
+	hp, mp, err := st.ficha.AplicaAbsoluto(context.Background(), *charID, hpCurrent, mpCurrent)
 	if err != nil {
 		return nil, err
 	}
 	return st.apply(sessionID, func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hp, mp) })
 }
 
-// deltaVitals move os vitais de uma entrada. Se há personagem atrás dela, quem
+// DeltaVitals move os vitais de uma entrada. Se há personagem atrás dela, quem
 // manda é a FICHA: o delta é aplicado na linha do personagem (dano drenando PV
 // temporários, como o endpoint de dano) e a entrada espelha o resultado
 // (ALE-122). NPC não tem ficha — ali o rastreador é o registro.
-func (st *sessionStore) deltaVitals(sessionID int64, entryID string, hpDelta, mpDelta *int64) (*SessionRuntimeState, error) {
-	charID := st.characterIDOf(sessionID, entryID)
+func (st *SessionStore) DeltaVitals(sessionID int64, entryID string, hpDelta, mpDelta *int64) (*SessionRuntimeState, error) {
+	charID := st.CharacterIDOf(sessionID, entryID)
 	if charID == nil {
 		return st.apply(sessionID, func(s *SessionRuntimeState) error { return deltaEntryVitals(s, entryID, hpDelta, mpDelta) })
 	}
-	hp, mp, err := st.applyCharacterDelta(context.Background(), *charID, hpDelta, mpDelta)
+	hp, mp, err := st.ficha.AplicaDelta(context.Background(), *charID, hpDelta, mpDelta)
 	if err != nil {
 		return nil, err
 	}
 	return st.apply(sessionID, func(s *SessionRuntimeState) error { return patchEntryVitals(s, entryID, hp, mp) })
 }
 
-// load hydrates the session from Session.runtimeState on first access, then serves the
+// Load hydrates the session from Session.runtimeState on first access, then serves the
 // cached copy./hydrate.
-func (st *sessionStore) load(ctx context.Context, sessionID int64) (*SessionRuntimeState, error) {
-	st.mu.Lock()
-	defer st.mu.Unlock()
-	if s := st.states[sessionID]; s != nil {
+func (st *SessionStore) Load(ctx context.Context, sessionID int64) (*SessionRuntimeState, error) {
+	st.Mu.Lock()
+	defer st.Mu.Unlock()
+	if s := st.States[sessionID]; s != nil {
 		return cloneState(s), nil
 	}
 	sess, err := st.q.GetSession(ctx, sessionID)
@@ -211,7 +220,7 @@ func (st *sessionStore) load(ctx context.Context, sessionID int64) (*SessionRunt
 		return nil, err
 	}
 	s := parseRuntimeBlob(sess.Runtimestate)
-	st.states[sessionID] = s
+	st.States[sessionID] = s
 	return cloneState(s), nil
 }
 
@@ -220,11 +229,11 @@ func (st *sessionStore) load(ctx context.Context, sessionID int64) (*SessionRunt
 // column default carry round/turnIndex), so partial-blob defaulting isn't needed.
 func parseRuntimeBlob(blob string) *SessionRuntimeState {
 	if blob == "" {
-		return emptyRuntimeState()
+		return EmptyRuntimeState()
 	}
 	var parsed SessionRuntimeState
 	if err := json.Unmarshal([]byte(blob), &parsed); err != nil {
-		return emptyRuntimeState()
+		return EmptyRuntimeState()
 	}
 	if parsed.Initiative == nil {
 		parsed.Initiative = []InitiativeEntry{}
@@ -241,84 +250,84 @@ func parseRuntimeBlob(blob string) *SessionRuntimeState {
 	return &parsed
 }
 
-// persist serializes the current state to Session.runtimeState. Fire-and-forget: never
-// returns an error — it returns (dirty, changed), where `changed` is true only when the
-// persistence health flipped since the last persist, so the gateway can broadcast
+// Persist serializes the current state to Session.runtimeState. Fire-and-Forget: never
+// returns an error — it returns (Dirty, changed), where `changed` is true only when the
+// persistence health flipped since the last Persist, so the gateway can broadcast
 // `persistence-warning` exactly on the transitions. The store is the single owner of the
-// dirty flag (pruned by forget) — the gateway no longer tracks it. Code-review finding.
+// Dirty flag (pruned by Forget) — the gateway no longer tracks it. Code-review finding.
 //
 // Serialized so overlapping persists for one session write in order: whichever runs last
 // snapshots the newest state, so the DB converges to the latest instead of a stale capture.
-func (st *sessionStore) persist(ctx context.Context, sessionID int64) (dirty, changed bool) {
+func (st *SessionStore) Persist(ctx context.Context, sessionID int64) (Dirty, changed bool) {
 	pm := st.persistLock(sessionID)
 	pm.Lock()
 	defer pm.Unlock()
 
-	st.mu.Lock()
-	s := st.states[sessionID]
+	st.Mu.Lock()
+	s := st.States[sessionID]
 	if s == nil {
-		st.mu.Unlock()
+		st.Mu.Unlock()
 		return false, false
 	}
 	blob, _ := json.Marshal(cloneState(s))
-	st.mu.Unlock()
+	st.Mu.Unlock()
 
 	err := st.q.ResetSessionTracker(ctx, sqlcgen.ResetSessionTrackerParams{
-		RuntimeState: string(blob), UpdatedAt: nowISO(), ID: sessionID,
+		RuntimeState: string(blob), UpdatedAt: plataforma.NowISO(), ID: sessionID,
 	})
 
-	st.mu.Lock()
-	defer st.mu.Unlock()
-	prev := st.dirty[sessionID] // absent ⇒ false (healthy)
-	dirty = err != nil
-	changed = prev != dirty
-	if dirty {
-		st.dirty[sessionID] = true
-		log.Printf("session %d: persist failed (%v); marked dirty for retry", sessionID, err)
+	st.Mu.Lock()
+	defer st.Mu.Unlock()
+	prev := st.Dirty[sessionID] // absent ⇒ false (healthy)
+	Dirty = err != nil
+	changed = prev != Dirty
+	if Dirty {
+		st.Dirty[sessionID] = true
+		log.Printf("session %d: Persist failed (%v); marked Dirty for retry", sessionID, err)
 	} else {
-		delete(st.dirty, sessionID)
+		delete(st.Dirty, sessionID)
 	}
-	return dirty, changed
+	return Dirty, changed
 }
 
-func (st *sessionStore) isDirty(sessionID int64) bool {
-	st.mu.Lock()
-	defer st.mu.Unlock()
-	return st.dirty[sessionID]
+func (st *SessionStore) IsDirty(sessionID int64) bool {
+	st.Mu.Lock()
+	defer st.Mu.Unlock()
+	return st.Dirty[sessionID]
 }
 
-// forget drops a session's in-memory tracker (e.g. on clear-tracker). It does NOT clear
-// the dirty flag: that would swallow the dirty→healthy recovery — a session left dirty
-// must still emit persistence-warning{dirty:false} on the next successful persist. The
-// dirty map self-prunes on that success, so it stays small (only currently-dirty sessions).
-func (st *sessionStore) forget(sessionID int64) {
-	st.mu.Lock()
-	defer st.mu.Unlock()
-	delete(st.states, sessionID)
+// Forget drops a session's in-memory tracker (e.g. on clear-tracker). It does NOT clear
+// the Dirty flag: that would swallow the Dirty→healthy recovery — a session left Dirty
+// must still Emit persistence-warning{Dirty:false} on the next successful Persist. The
+// Dirty map self-prunes on that success, so it stays small (only currently-Dirty sessions).
+func (st *SessionStore) Forget(sessionID int64) {
+	st.Mu.Lock()
+	defer st.Mu.Unlock()
+	delete(st.States, sessionID)
 }
 
-// refreshCharacterMaxes refreshes hpMax/mpMax on every entry carrying a characterId from
+// RefreshCharacterMaxes refreshes hpMax/mpMax on every entry carrying a characterId from
 // the DB rows (ceilings only; current untouched) so a mid-session level-up isn't capped at
 // the stale max. Best-effort: a DB blip logs and returns the current
 // snapshot rather than failing the get-session-state pull.
-func (st *sessionStore) refreshCharacterMaxes(ctx context.Context, sessionID int64) *SessionRuntimeState {
-	st.mu.Lock()
+func (st *SessionStore) RefreshCharacterMaxes(ctx context.Context, sessionID int64) *SessionRuntimeState {
+	st.Mu.Lock()
 	ids := uniqueCharacterIDs(st.getOrCreateLocked(sessionID))
-	st.mu.Unlock()
+	st.Mu.Unlock()
 	if len(ids) == 0 {
-		return st.getState(sessionID)
+		return st.GetState(sessionID)
 	}
 	rows, err := st.q.ListCharacterMaxes(ctx, ids)
 	if err != nil {
 		log.Printf("session %d: hpMax refresh failed (%v)", sessionID, err)
-		return st.getState(sessionID)
+		return st.GetState(sessionID)
 	}
 	maxes := make(map[int64]sqlcgen.ListCharacterMaxesRow, len(rows))
 	for _, r := range rows {
 		maxes[r.ID] = r
 	}
-	st.mu.Lock()
-	defer st.mu.Unlock()
+	st.Mu.Lock()
+	defer st.Mu.Unlock()
 	s := st.getOrCreateLocked(sessionID)
 	for i := range s.Initiative {
 		e := &s.Initiative[i]
@@ -326,8 +335,8 @@ func (st *sessionStore) refreshCharacterMaxes(ctx context.Context, sessionID int
 			continue
 		}
 		if fresh, ok := maxes[*e.CharacterID]; ok {
-			e.HpMax = ptrInt64(fresh.Hpmax)
-			e.MpMax = ptrInt64(fresh.Mpmax)
+			e.HpMax = PtrInt64(fresh.Hpmax)
+			e.MpMax = PtrInt64(fresh.Mpmax)
 			// O máximo pode ter ENCOLHIDO (nível abaixado, CON caída): sem aparar,
 			// a barra mostra 9/5 e a ficha se contradiz na tela — o mesmo par que
 			// a criação e o PATCH de vitais recusam.
@@ -344,7 +353,7 @@ func clampCurrentTo(current **int64, max int64) {
 	if *current == nil || **current <= max {
 		return
 	}
-	*current = ptrInt64(max)
+	*current = PtrInt64(max)
 }
 
 func uniqueCharacterIDs(s *SessionRuntimeState) []int64 {

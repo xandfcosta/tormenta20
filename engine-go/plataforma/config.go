@@ -2,7 +2,7 @@
 // cookie/bearer JWT auth), and per-domain handlers. Deps live here and in
 // cmd/api — never in engine/, so the WASM build stays dep-free.
 
-package api
+package plataforma
 
 import (
 	"fmt"
@@ -90,7 +90,7 @@ type Config struct {
 //	APP_ENV=production ./bin/t20-api // → reads .env.production
 func LoadConfig() (Config, error) {
 	appEnv := AppEnv(env("APP_ENV", string(EnvDevelopment)))
-	if err := loadEnvFile(env("ENV_FILE", ".env."+string(appEnv))); err != nil {
+	if err := LoadEnvFile(env("ENV_FILE", ".env."+string(appEnv))); err != nil {
 		return Config{}, err
 	}
 	return Config{
@@ -102,7 +102,7 @@ func LoadConfig() (Config, error) {
 		JWTExpiresIn: env("JWT_EXPIRES_IN", "7d"),
 		CookieName:   env("COOKIE_NAME", "t20_session"),
 		CookieSecure: os.Getenv("COOKIE_SECURE") == "true",
-		CORSOrigins:  splitOrigins(env("CORS_ORIGIN", defaultCORSOrigin(appEnv))),
+		CORSOrigins:  SplitOrigins(env("CORS_ORIGIN", defaultCORSOrigin(appEnv))),
 		BackupDir:    env("BACKUP_DIR", "../backups"),
 		BackupEvery:  envDuration("BACKUP_EVERY", 24*time.Hour),
 		BackupKeep:   envInt("BACKUP_KEEP", 7),
@@ -180,7 +180,7 @@ func (c Config) validateTLS() error {
 // is only safe because registration and login normalize the same way — without
 // that, `Mestre@` could register as a SECOND account and be admin too.
 func (c Config) IsAdmin(email string) bool {
-	return slices.Contains(c.AdminEmails, normalizeEmail(email))
+	return slices.Contains(c.AdminEmails, NormalizeEmail(email))
 }
 
 // splitEmails parses the comma-separated ADMIN_EMAILS, dropping blanks so a
@@ -188,7 +188,7 @@ func (c Config) IsAdmin(email string) bool {
 func splitEmails(raw string) []string {
 	var emails []string
 	for _, part := range strings.Split(raw, ",") {
-		if email := normalizeEmail(part); email != "" {
+		if email := NormalizeEmail(part); email != "" {
 			emails = append(emails, email)
 		}
 	}
@@ -202,7 +202,7 @@ func secretFlaw(secret string) string {
 	return "the public development secret"
 }
 
-// devCORSOrigins: dev needs the Vite origin whitelisted because the SPA is
+// DevCORSOrigins: dev needs the Vite origin whitelisted because the SPA is
 // served by a different port than the API — and it needs EVERY alias of it,
 // because `localhost`, `[::1]` and `127.0.0.1` are the same dev server but
 // three different origins to the browser. Whichever one is not listed loses the
@@ -213,20 +213,20 @@ func secretFlaw(secret string) string {
 // rede acrescenta `http://<ip-da-máquina>:5173` a esta lista. Em PRODUÇÃO nada
 // disso é preciso — um binário só serve SPA, API e socket, então o cliente da
 // LAN é MESMA ORIGEM e passa pelo caminho de baixo do socketOriginAllowed.
-const devCORSOrigins = "http://localhost:5173,http://[::1]:5173,http://127.0.0.1:5173"
+const DevCORSOrigins = "http://localhost:5173,http://[::1]:5173,http://127.0.0.1:5173"
 
 func defaultCORSOrigin(appEnv AppEnv) string {
 	if appEnv == EnvProduction {
 		return ""
 	}
-	return devCORSOrigins
+	return DevCORSOrigins
 }
 
-// splitOrigins parses the comma-separated CORS_ORIGIN, dropping blanks: a
+// SplitOrigins parses the comma-separated CORS_ORIGIN, dropping blanks: a
 // trailing comma must yield NO origin rather than an empty one, and an empty
 // one is worse than none — go-chi reads an empty AllowedOrigins list as "allow
 // ALL", which with credentials on is every website (ALE-119).
-func splitOrigins(raw string) []string {
+func SplitOrigins(raw string) []string {
 	var origins []string
 	for _, part := range strings.Split(raw, ",") {
 		if origin := strings.TrimSpace(part); origin != "" {

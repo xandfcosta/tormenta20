@@ -29,6 +29,7 @@ import (
 	"t20engine/catalog"
 	"t20engine/db"
 	"t20engine/engine"
+	"t20engine/plataforma"
 )
 
 //go:embed seed-data.json
@@ -122,7 +123,7 @@ func freshServer(adminEmails []string) (http.Handler, *sql.DB, func()) {
 	if err != nil {
 		log.Fatalf("db.Open: %v", err)
 	}
-	cfg, err := api.LoadConfig()
+	cfg, err := plataforma.LoadConfig()
 	if err != nil {
 		log.Fatalf("config: %v", err)
 	}

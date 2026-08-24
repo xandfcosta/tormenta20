@@ -1,11 +1,14 @@
 package api
 
+import "t20engine/aovivo"
+
 import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
+	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
 )
@@ -120,12 +123,12 @@ type createCharacterBody struct {
 // deferred — the frontend pre-validates.
 func (s *Server) handleCreateCharacter(w http.ResponseWriter, r *http.Request) {
 	var body createCharacterBody
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	user := currentUser(r)
 
-	fields := FieldErrorMap{}
+	fields := plataforma.FieldErrorMap{}
 	name := strings.TrimSpace(body.Name)
 	if name == "" {
 		fields["name"] = []string{"name must be longer than or equal to 1 characters"}
@@ -151,7 +154,7 @@ func (s *Server) handleCreateCharacter(w http.ResponseWriter, r *http.Request) {
 		seen[c.ClassName] = true
 	}
 	if len(fields) > 0 {
-		writeValidationError(w, fields)
+		plataforma.WriteValidationError(w, fields)
 		return
 	}
 
@@ -166,25 +169,25 @@ func (s *Server) handleCreateCharacter(w http.ResponseWriter, r *http.Request) {
 
 	id, err := s.insertCharacter(r, user.ID, name, body, totalLevel, granted, trained)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not create character")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not create character")
 		return
 	}
 
 	row, err := s.queries.GetCharacter(r.Context(), id)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load character")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
 		return
 	}
 	dto, err := s.loadCharacter(r.Context(), row)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load character")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
 		return
 	}
 	if err := s.healVitals(r, id, &dto); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not sync vitals")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not sync vitals")
 		return
 	}
-	writeJSON(w, http.StatusCreated, dto)
+	plataforma.WriteJSON(w, http.StatusCreated, dto)
 }
 
 // insertCharacter writes the character + all relations in one transaction.
@@ -195,7 +198,7 @@ func (s *Server) insertCharacter(r *http.Request, ownerID int64, name string, bo
 	}
 	defer func() { _ = tx.Rollback() }()
 	q := s.queries.WithTx(tx)
-	now := nowISO()
+	now := plataforma.NowISO()
 
 	id, err := q.CreateCharacter(r.Context(), sqlcgen.CreateCharacterParams{
 		OwnerId: ownerID, Name: name, Origin: body.Origin, God: nullString(body.God),
@@ -236,7 +239,7 @@ func (s *Server) insertCharacter(r *http.Request, ownerID int64, name string, bo
 	for _, it := range body.Items {
 		if _, err := q.CreateItem(r.Context(), sqlcgen.CreateItemParams{
 			Characterid: id, Catalogid: nullString(it.CatalogID), Name: derefStr(it.Name, ""),
-			Quantity: derefOr(it.Quantity, 1), Slots: derefF64(it.Slots, 1),
+			Quantity: aovivo.DerefOr(it.Quantity, 1), Slots: derefF64(it.Slots, 1),
 			Equipped: nullString(it.Equipped), Improvements: "[]", Material: sql.NullString{}, Createdat: now,
 		}); err != nil {
 			return 0, err
@@ -266,7 +269,7 @@ func (s *Server) healVitals(r *http.Request, id int64, dto *CharacterDTO) error 
 	}
 	if err := s.queries.SetCharacterVitals(r.Context(), sqlcgen.SetCharacterVitalsParams{
 		HpMax: next.HpMax, HpCurrent: next.HpCurrent, MpMax: next.MpMax, MpCurrent: next.MpCurrent,
-		UpdatedAt: nowISO(), ID: id,
+		UpdatedAt: plataforma.NowISO(), ID: id,
 	}); err != nil {
 		return err
 	}

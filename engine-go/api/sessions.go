@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
 )
@@ -29,8 +30,8 @@ type SessionDTO struct {
 
 func sessionDTO(s sqlcgen.Session) SessionDTO {
 	return SessionDTO{
-		ID: s.ID, CampaignID: s.Campaignid, Title: nullToPtr(s.Title), SessionNumber: s.Sessionnumber,
-		Notes: nullToPtr(s.Notes), Status: s.Status, StartedAt: nullToPtr(s.Startedat), EndedAt: nullToPtr(s.Endedat),
+		ID: s.ID, CampaignID: s.Campaignid, Title: plataforma.NullToPtr(s.Title), SessionNumber: s.Sessionnumber,
+		Notes: plataforma.NullToPtr(s.Notes), Status: s.Status, StartedAt: plataforma.NullToPtr(s.Startedat), EndedAt: plataforma.NullToPtr(s.Endedat),
 		CreatedAt: s.Createdat, UpdatedAt: s.Updatedat, RuntimeState: s.Runtimestate,
 	}
 }
@@ -45,17 +46,17 @@ func (s *Server) loadSessionInCampaign(ctx context.Context, campaignID, sessionI
 		return sqlcgen.Session{}, http.StatusNotFound, fmt.Errorf("Session %d not found", sessionID)
 	}
 	if err != nil {
-		return sqlcgen.Session{}, http.StatusInternalServerError, errors.New("Could not load session")
+		return sqlcgen.Session{}, http.StatusInternalServerError, errors.New("Could not Load session")
 	}
 	return sess, http.StatusOK, nil
 }
 
 // sessionForCaller is the member-aware session resolver the WS gateway runs on every
-// session-scoped message: resolve the caller's role (gm/player) then load the session and
-// assert it belongs to the campaign. — the role is
+// session-scoped message: resolve the caller's Role (gm/player) then Load the session and
+// assert it belongs to the campaign. — the Role is
 // stashed on socket.data for per-action GM gating. Transport-agnostic (WS maps status/err).
 func (s *Server) sessionForCaller(ctx context.Context, user AuthUser, campaignID, sessionID int64) (sqlcgen.Session, string, int, error) {
-	role, status, err := s.resolveRole(ctx, user, campaignID)
+	Role, status, err := s.resolveRole(ctx, user, campaignID)
 	if err != nil {
 		return sqlcgen.Session{}, "", status, err
 	}
@@ -63,7 +64,7 @@ func (s *Server) sessionForCaller(ctx context.Context, user AuthUser, campaignID
 	if err != nil {
 		return sqlcgen.Session{}, "", status, err
 	}
-	return sess, role, http.StatusOK, nil
+	return sess, Role, http.StatusOK, nil
 }
 
 func (s *Server) ownedSession(w http.ResponseWriter, r *http.Request, campaignID, sessionID int64) (sqlcgen.Session, bool) {
@@ -72,7 +73,7 @@ func (s *Server) ownedSession(w http.ResponseWriter, r *http.Request, campaignID
 	}
 	sess, status, err := s.loadSessionInCampaign(r.Context(), campaignID, sessionID)
 	if err != nil {
-		writeError(w, status, err.Error())
+		plataforma.WriteError(w, status, err.Error())
 		return sqlcgen.Session{}, false
 	}
 	return sess, true
@@ -89,14 +90,14 @@ func (s *Server) handleListSessions(w http.ResponseWriter, r *http.Request) {
 	}
 	rows, err := s.queries.ListSessions(r.Context(), cid)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not list sessions")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not list sessions")
 		return
 	}
 	out := make([]SessionDTO, 0, len(rows))
 	for _, sess := range rows {
 		out = append(out, sessionDTO(sess))
 	}
-	writeJSON(w, http.StatusOK, out)
+	plataforma.WriteJSON(w, http.StatusOK, out)
 }
 
 func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
@@ -108,16 +109,16 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	// Member-aware (ALE-19): a player who is a member must be able to load the
+	// Member-aware (ALE-19): a player who is a member must be able to Load the
 	// session before the socket connects — the WS gateway already gates on
 	// sessionForCaller, so mirror it here instead of the owner-only ownedSession
 	// (which 403'd invited players with "belongs to another user").
 	sess, _, status, err := s.sessionForCaller(r.Context(), currentUser(r), cid, sid)
 	if err != nil {
-		writeError(w, status, err.Error())
+		plataforma.WriteError(w, status, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, sessionDTO(sess))
+	plataforma.WriteJSON(w, http.StatusOK, sessionDTO(sess))
 }
 
 func (s *Server) handleCreateSession(w http.ResponseWriter, r *http.Request) {
@@ -130,26 +131,26 @@ func (s *Server) handleCreateSession(w http.ResponseWriter, r *http.Request) {
 		Title         *string `json:"title"`
 		Notes         *string `json:"notes"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if _, ok := s.ownedCampaign(w, r, cid); !ok {
 		return
 	}
 	if body.SessionNumber == nil || *body.SessionNumber < 1 {
-		writeValidationError(w, FieldErrorMap{"sessionNumber": {"sessionNumber must not be less than 1"}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"sessionNumber": {"sessionNumber must not be less than 1"}})
 		return
 	}
-	now := nowISO()
+	now := plataforma.NowISO()
 	sess, err := s.queries.CreateSession(r.Context(), sqlcgen.CreateSessionParams{
 		Campaignid: cid, Sessionnumber: *body.SessionNumber, Title: trimOrNull(body.Title), Notes: trimOrNull(body.Notes),
 		Createdat: now, Updatedat: now,
 	})
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not create session")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not create session")
 		return
 	}
-	writeJSON(w, http.StatusCreated, sessionDTO(sess))
+	plataforma.WriteJSON(w, http.StatusCreated, sessionDTO(sess))
 }
 
 func (s *Server) handleUpdateSession(w http.ResponseWriter, r *http.Request) {
@@ -166,7 +167,7 @@ func (s *Server) handleUpdateSession(w http.ResponseWriter, r *http.Request) {
 		Title         *string `json:"title"`
 		Notes         *string `json:"notes"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if _, ok := s.ownedSession(w, r, cid, sid); !ok {
@@ -175,27 +176,27 @@ func (s *Server) handleUpdateSession(w http.ResponseWriter, r *http.Request) {
 	var set setBuilder
 	if body.SessionNumber != nil {
 		if *body.SessionNumber < 1 {
-			writeValidationError(w, FieldErrorMap{"sessionNumber": {"sessionNumber must not be less than 1"}})
+			plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"sessionNumber": {"sessionNumber must not be less than 1"}})
 			return
 		}
-		set.add("sessionNumber = ?", *body.SessionNumber)
+		set.Add("sessionNumber = ?", *body.SessionNumber)
 	}
 	if body.Title != nil {
-		set.add("title = ?", nullableArg(trimOrNull(body.Title)))
+		set.Add("title = ?", nullableArg(trimOrNull(body.Title)))
 	}
 	if body.Notes != nil {
-		set.add("notes = ?", nullableArg(trimOrNull(body.Notes)))
+		set.Add("notes = ?", nullableArg(trimOrNull(body.Notes)))
 	}
 	if set.empty() {
-		writeError(w, http.StatusBadRequest, "No fields to update")
+		plataforma.WriteError(w, http.StatusBadRequest, "No fields to update")
 		return
 	}
 	if err := set.execTouched(r.Context(), s.db, "UPDATE sessions", sid); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not update session")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update session")
 		return
 	}
 	sess, _ := s.queries.GetSession(r.Context(), sid)
-	writeJSON(w, http.StatusOK, sessionDTO(sess))
+	plataforma.WriteJSON(w, http.StatusOK, sessionDTO(sess))
 }
 
 func (s *Server) handleDeleteSession(w http.ResponseWriter, r *http.Request) {
@@ -211,10 +212,10 @@ func (s *Server) handleDeleteSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := s.queries.DeleteSession(r.Context(), sid); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not delete session")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not delete session")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]int64{"id": sid})
+	plataforma.WriteJSON(w, http.StatusOK, map[string]int64{"id": sid})
 }
 
 // handleStartSession ports start: active is a no-op, ended reopens, planned starts.
@@ -231,12 +232,12 @@ func (s *Server) handleStartSession(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	now := nowISO()
+	now := plataforma.NowISO()
 	var updated sqlcgen.Session
 	var err error
 	switch sess.Status {
 	case "active":
-		writeJSON(w, http.StatusOK, sessionDTO(sess))
+		plataforma.WriteJSON(w, http.StatusOK, sessionDTO(sess))
 		return
 	case "ended":
 		updated, err = s.queries.ReopenSession(r.Context(), sqlcgen.ReopenSessionParams{UpdatedAt: now, ID: sid})
@@ -244,10 +245,10 @@ func (s *Server) handleStartSession(w http.ResponseWriter, r *http.Request) {
 		updated, err = s.queries.StartSessionFresh(r.Context(), sqlcgen.StartSessionFreshParams{StartedAt: sql.NullString{String: now, Valid: true}, UpdatedAt: now, ID: sid})
 	}
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not start session")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not start session")
 		return
 	}
-	writeJSON(w, http.StatusOK, sessionDTO(updated))
+	plataforma.WriteJSON(w, http.StatusOK, sessionDTO(updated))
 }
 
 // handleEndSession ports end: planned → 400, ended → no-op, active → ends. The WS
@@ -267,19 +268,19 @@ func (s *Server) handleEndSession(w http.ResponseWriter, r *http.Request) {
 	}
 	switch sess.Status {
 	case "planned":
-		writeError(w, http.StatusBadRequest, fmt.Sprintf("Session %d was never started; nothing to end", sid))
+		plataforma.WriteError(w, http.StatusBadRequest, fmt.Sprintf("Session %d was never started; nothing to end", sid))
 		return
 	case "ended":
-		writeJSON(w, http.StatusOK, sessionDTO(sess))
+		plataforma.WriteJSON(w, http.StatusOK, sessionDTO(sess))
 		return
 	}
-	now := nowISO()
+	now := plataforma.NowISO()
 	updated, err := s.queries.EndSession(r.Context(), sqlcgen.EndSessionParams{EndedAt: sql.NullString{String: now, Valid: true}, UpdatedAt: now, ID: sid})
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not end session")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not end session")
 		return
 	}
-	writeJSON(w, http.StatusOK, sessionDTO(updated))
+	plataforma.WriteJSON(w, http.StatusOK, sessionDTO(updated))
 }
 
 // handleClearTracker resets the initiative runtime state to empty.
@@ -296,16 +297,16 @@ func (s *Server) handleClearTracker(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := s.queries.ResetSessionTracker(r.Context(), sqlcgen.ResetSessionTrackerParams{
-		RuntimeState: defaultRuntimeState, UpdatedAt: nowISO(), ID: sid,
+		RuntimeState: defaultRuntimeState, UpdatedAt: plataforma.NowISO(), ID: sid,
 	}); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not clear tracker")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not clear tracker")
 		return
 	}
 	// Drop the in-memory tracker too — otherwise a live session's cached state
-	// would shadow the cleared DB row until the next cold load (the realtime
+	// would shadow the cleared DB row until the next cold Load (the realtime
 	// store hydrates only on first access). Code-review finding (B.6 fase 2).
-	s.sessions.forget(sid)
-	writeJSON(w, http.StatusOK, map[string]int64{"id": sid})
+	s.sessions.Forget(sid)
+	plataforma.WriteJSON(w, http.StatusOK, map[string]int64{"id": sid})
 }
 
 // trimOrNull trims a string pointer, treating nil AND whitespace-only as NULL.

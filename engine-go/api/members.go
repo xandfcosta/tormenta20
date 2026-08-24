@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
 )
@@ -16,7 +17,7 @@ type memberDTO struct {
 	ID          int64               `json:"id"`
 	CampaignID  int64               `json:"campaignId"`
 	CharacterID int64               `json:"characterId"`
-	Role        string              `json:"role"`
+	Role        string              `json:"Role"`
 	AddedAt     string              `json:"addedAt"`
 	Character   *memberCharacterDTO `json:"character,omitempty"`
 }
@@ -50,7 +51,7 @@ func (s *Server) classDTOs(r *http.Request, characterID int64) []ClassDTO {
 // the 404/403 and returning false.
 func (s *Server) campaignAccess(w http.ResponseWriter, r *http.Request, campaignID int64) bool {
 	if _, status, err := s.resolveRole(r.Context(), currentUser(r), campaignID); err != nil {
-		writeError(w, status, err.Error())
+		plataforma.WriteError(w, status, err.Error())
 		return false
 	}
 	return true
@@ -77,7 +78,7 @@ func (s *Server) initiativeBonus(ctx context.Context, characterID int64) (int64,
 		return 0, fmt.Errorf("Character %d not found", characterID)
 	}
 	if err != nil {
-		return 0, errors.New("Could not load character")
+		return 0, errors.New("Could not Load character")
 	}
 	sheet, err := s.computeSheet(ctx, row)
 	if err != nil {
@@ -101,7 +102,7 @@ func (s *Server) initiativeBonus(ctx context.Context, characterID int64) (int64,
 const initiativeExpertise = "Iniciativa"
 
 // combatant is a character's tracker-relevant snapshot (name + live vitals) for an
-// initiative entry. Transport-agnostic — the WS gateway maps it into an InitiativeEntry.
+// initiative entry. Transport-agnostic — the WS gateway maps it into an aovivo.InitiativeEntry.
 type combatant struct {
 	characterID int64
 	name        string
@@ -122,14 +123,14 @@ func (s *Server) resolveCombatant(ctx context.Context, callerID, campaignID, cha
 		return combatant{}, http.StatusNotFound, fmt.Errorf("Character %d not found", characterID)
 	}
 	if err != nil {
-		return combatant{}, http.StatusInternalServerError, errors.New("Could not load character")
+		return combatant{}, http.StatusInternalServerError, errors.New("Could not Load character")
 	}
 	camp, err := s.queries.GetCampaign(ctx, campaignID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return combatant{}, http.StatusNotFound, fmt.Errorf("Campaign %d not found", campaignID)
 	}
 	if err != nil {
-		return combatant{}, http.StatusInternalServerError, errors.New("Could not load campaign")
+		return combatant{}, http.StatusInternalServerError, errors.New("Could not Load campaign")
 	}
 	isMember, err := s.queries.IsCharacterMember(ctx, sqlcgen.IsCharacterMemberParams{Campaignid: campaignID, Characterid: characterID})
 	if err != nil {
@@ -149,7 +150,7 @@ func (s *Server) resolveCombatant(ctx context.Context, callerID, campaignID, cha
 }
 
 // listPlayerCombatants returns every player character in the campaign with live vitals —
-// the GM's one-shot "populate tracker".
+// the GM's one-shot "Populate tracker".
 func (s *Server) listPlayerCombatants(ctx context.Context, campaignID int64) ([]combatant, error) {
 	rows, err := s.queries.ListMembers(ctx, campaignID)
 	if err != nil {
@@ -168,7 +169,7 @@ func (s *Server) listPlayerCombatants(ctx context.Context, campaignID int64) ([]
 	return out, nil
 }
 
-// listMemberCharacterIds returns the character id of every member (any role) — the set a
+// listMemberCharacterIds returns the character id of every member (any Role) — the set a
 // session-wide rest iterates over.
 func (s *Server) listMemberCharacterIds(ctx context.Context, campaignID int64) ([]int64, error) {
 	rows, err := s.queries.ListMembers(ctx, campaignID)
@@ -194,7 +195,7 @@ func (s *Server) handleListMembers(w http.ResponseWriter, r *http.Request) {
 	}
 	rows, err := s.queries.ListMembers(r.Context(), cid)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not list members")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not list members")
 		return
 	}
 	out := make([]memberDTO, 0, len(rows))
@@ -211,10 +212,10 @@ func (s *Server) handleListMembers(w http.ResponseWriter, r *http.Request) {
 			},
 		})
 	}
-	writeJSON(w, http.StatusOK, out)
+	plataforma.WriteJSON(w, http.StatusOK, out)
 }
 
-// handleAddMember ports members.add: caller must own the character; owner joins
+// handleAddMember ports members.Add: caller must own the character; owner joins
 // freely, others need a valid invite token; one player-PC per user per campaign.
 func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 	cid, ok := intParam(w, r, "campaignId")
@@ -223,50 +224,50 @@ func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 	}
 	var body struct {
 		CharacterID *int64  `json:"characterId"`
-		Role        *string `json:"role"`
+		Role        *string `json:"Role"`
 		InviteToken *string `json:"inviteToken"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	user := currentUser(r)
 
 	c, err := s.queries.GetCampaign(r.Context(), cid)
 	if errors.Is(err, sql.ErrNoRows) {
-		writeError(w, http.StatusNotFound, fmt.Sprintf("Campaign %d not found", cid))
+		plataforma.WriteError(w, http.StatusNotFound, fmt.Sprintf("Campaign %d not found", cid))
 		return
 	}
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load campaign")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load campaign")
 		return
 	}
 	if c.Ownerid != user.ID {
 		token := derefStr(body.InviteToken, "")
 		if !c.Invitetoken.Valid || token == "" || token != c.Invitetoken.String {
-			writeError(w, http.StatusForbidden, fmt.Sprintf("A valid invite token is required to join campaign %d", cid))
+			plataforma.WriteError(w, http.StatusForbidden, fmt.Sprintf("A valid invite token is required to Join campaign %d", cid))
 			return
 		}
 	}
 	if body.CharacterID == nil {
-		writeValidationError(w, FieldErrorMap{"characterId": {"characterId must be an integer number"}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"characterId": {"characterId must be an integer number"}})
 		return
 	}
 	owner, err := s.queries.GetCharacterOwner(r.Context(), *body.CharacterID)
 	if errors.Is(err, sql.ErrNoRows) {
-		writeFieldError(w, http.StatusBadRequest, fmt.Sprintf("Character %d not found", *body.CharacterID), FieldErrorMap{"characterId": {"Character does not exist"}})
+		plataforma.WriteFieldError(w, http.StatusBadRequest, fmt.Sprintf("Character %d not found", *body.CharacterID), plataforma.FieldErrorMap{"characterId": {"Character does not exist"}})
 		return
 	}
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load character")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
 		return
 	}
 	if owner != user.ID {
-		writeError(w, http.StatusForbidden, fmt.Sprintf("Cannot add a character you don't own (character %d)", *body.CharacterID))
+		plataforma.WriteError(w, http.StatusForbidden, fmt.Sprintf("Cannot Add a character you don't own (character %d)", *body.CharacterID))
 		return
 	}
-	role := derefStr(body.Role, "player")
-	if !campaignMemberRoles[role] {
-		writeValidationError(w, FieldErrorMap{"role": {"role must be one of: player, gm"}})
+	Role := derefStr(body.Role, "player")
+	if !campaignMemberRoles[Role] {
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"Role": {"Role must be one of: player, gm"}})
 		return
 	}
 	// As duas travas abaixo falhavam ABERTAS (ALE-156): o erro era descartado
@@ -274,14 +275,14 @@ func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 	// Eram as únicas checagens do repositório que um erro ABRIA — as outras
 	// engolem o erro e NEGAM (mentem o status, não a decisão). Checagem de
 	// autorização ou de unicidade nunca descarta erro: na dúvida, nega.
-	if role == "player" {
+	if Role == "player" {
 		hasPc, err := s.queries.HasPlayerPc(r.Context(), sqlcgen.HasPlayerPcParams{Campaignid: cid, Ownerid: user.ID})
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Could not check existing characters")
+			plataforma.WriteError(w, http.StatusInternalServerError, "Could not check existing characters")
 			return
 		}
 		if hasPc {
-			writeFieldError(w, http.StatusConflict, fmt.Sprintf("You already have a character in campaign %d", cid), FieldErrorMap{"characterId": {"Você já tem um personagem nesta campanha"}})
+			plataforma.WriteFieldError(w, http.StatusConflict, fmt.Sprintf("You already have a character in campaign %d", cid), plataforma.FieldErrorMap{"characterId": {"Você já tem um personagem nesta campanha"}})
 			return
 		}
 	}
@@ -290,25 +291,25 @@ func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 	// than membership of the source (the source is never a member — the copy is).
 	hasCopy, err := s.campaignHasCopyOf(r.Context(), *body.CharacterID, cid)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not check campaign roster")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not check campaign roster")
 		return
 	}
 	if hasCopy {
-		writeFieldError(w, http.StatusConflict, fmt.Sprintf("Character %d already in campaign %d", *body.CharacterID, cid), FieldErrorMap{"characterId": {"Already a member"}})
+		plataforma.WriteFieldError(w, http.StatusConflict, fmt.Sprintf("Character %d already in campaign %d", *body.CharacterID, cid), plataforma.FieldErrorMap{"characterId": {"Already a member"}})
 		return
 	}
-	m, err := s.joinCampaign(r.Context(), *body.CharacterID, cid, user.ID, role)
+	m, err := s.joinCampaign(r.Context(), *body.CharacterID, cid, user.ID, Role)
 	if errors.Is(err, errAlreadyInCampaign) {
 		// Perdeu a corrida para um pedido simultâneo: o desfecho é o mesmo 409
 		// que a checagem de fora daria, e não um 500 que culparia o servidor.
-		writeFieldError(w, http.StatusConflict, fmt.Sprintf("Character %d already in campaign %d", *body.CharacterID, cid), FieldErrorMap{"characterId": {"Already a member"}})
+		plataforma.WriteFieldError(w, http.StatusConflict, fmt.Sprintf("Character %d already in campaign %d", *body.CharacterID, cid), plataforma.FieldErrorMap{"characterId": {"Already a member"}})
 		return
 	}
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not add member")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Add member")
 		return
 	}
-	writeJSON(w, http.StatusCreated, memberScalars(m))
+	plataforma.WriteJSON(w, http.StatusCreated, memberScalars(m))
 }
 
 // handleUpdateMemberRole ports updateRole (owner-only).
@@ -322,36 +323,36 @@ func (s *Server) handleUpdateMemberRole(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	var body struct {
-		Role string `json:"role"`
+		Role string `json:"Role"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if _, ok := s.ownedCampaign(w, r, cid); !ok {
 		return
 	}
 	if !campaignMemberRoles[body.Role] {
-		writeValidationError(w, FieldErrorMap{"role": {"role must be one of: player, gm"}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"Role": {"Role must be one of: player, gm"}})
 		return
 	}
 	m, err := s.queries.GetMember(r.Context(), mid)
 	if errors.Is(err, sql.ErrNoRows) || (err == nil && m.Campaignid != cid) {
-		writeError(w, http.StatusNotFound, fmt.Sprintf("Member %d not found", mid))
+		plataforma.WriteError(w, http.StatusNotFound, fmt.Sprintf("Member %d not found", mid))
 		return
 	}
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load member")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load member")
 		return
 	}
 	updated, err := s.queries.SetMemberRole(r.Context(), sqlcgen.SetMemberRoleParams{Role: body.Role, ID: mid})
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not update member")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update member")
 		return
 	}
-	writeJSON(w, http.StatusOK, memberScalars(updated))
+	plataforma.WriteJSON(w, http.StatusOK, memberScalars(updated))
 }
 
-// handleRemoveMember ports members.remove: GM or the character's owner may remove.
+// handleRemoveMember ports members.Remove: GM or the character's owner may Remove.
 func (s *Server) handleRemoveMember(w http.ResponseWriter, r *http.Request) {
 	cid, ok := intParam(w, r, "campaignId")
 	if !ok {
@@ -363,23 +364,23 @@ func (s *Server) handleRemoveMember(w http.ResponseWriter, r *http.Request) {
 	}
 	owners, err := s.queries.GetMemberOwners(r.Context(), mid)
 	if errors.Is(err, sql.ErrNoRows) || (err == nil && owners.Campaignid != cid) {
-		writeError(w, http.StatusNotFound, fmt.Sprintf("Member %d not found", mid))
+		plataforma.WriteError(w, http.StatusNotFound, fmt.Sprintf("Member %d not found", mid))
 		return
 	}
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load member")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load member")
 		return
 	}
 	uid := currentUser(r).ID
 	if owners.Campaignowner != uid && owners.Characterowner != uid {
-		writeError(w, http.StatusForbidden, "You are neither the GM of this campaign nor the character's owner")
+		plataforma.WriteError(w, http.StatusForbidden, "You are neither the GM of this campaign nor the character's owner")
 		return
 	}
 	if err := s.queries.DeleteMember(r.Context(), mid); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not remove member")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Remove member")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]int64{"id": mid})
+	plataforma.WriteJSON(w, http.StatusOK, map[string]int64{"id": mid})
 }
 
 // joinCampaign clona o personagem para a mesa e cria o membro NA MESMA
@@ -393,7 +394,7 @@ func (s *Server) handleRemoveMember(w http.ResponseWriter, r *http.Request) {
 //
 // A cópia existe porque a ficha da mesa é um instantâneo (ALE-33): editar
 // durante a sessão não pode vazar para as outras campanhas.
-func (s *Server) joinCampaign(ctx context.Context, sourceID, campaignID, ownerID int64, role string) (sqlcgen.CampaignMember, error) {
+func (s *Server) joinCampaign(ctx context.Context, sourceID, campaignID, ownerID int64, Role string) (sqlcgen.CampaignMember, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return sqlcgen.CampaignMember{}, err
@@ -410,7 +411,7 @@ func (s *Server) joinCampaign(ctx context.Context, sourceID, campaignID, ownerID
 	//
 	// É a mesma forma do commit de movimento no tabuleiro, que reconfere a vez:
 	// entre decidir e escrever, a mesa pode ter mudado.
-	if err := assertCanJoin(ctx, s.queries.WithTx(tx), tx, sourceID, campaignID, ownerID, role); err != nil {
+	if err := assertCanJoin(ctx, s.queries.WithTx(tx), tx, sourceID, campaignID, ownerID, Role); err != nil {
 		return sqlcgen.CampaignMember{}, err
 	}
 
@@ -419,7 +420,7 @@ func (s *Server) joinCampaign(ctx context.Context, sourceID, campaignID, ownerID
 		return sqlcgen.CampaignMember{}, err
 	}
 	member, err := s.queries.WithTx(tx).CreateMember(ctx, sqlcgen.CreateMemberParams{
-		Campaignid: campaignID, Characterid: copyID, Role: role, Addedat: nowISO(),
+		Campaignid: campaignID, Characterid: copyID, Role: Role, Addedat: plataforma.NowISO(),
 	})
 	if err != nil {
 		return sqlcgen.CampaignMember{}, err
@@ -434,8 +435,8 @@ var errAlreadyInCampaign = errors.New("personagem já está na campanha")
 // assertCanJoin repete, DENTRO da transação, as duas travas que o handler já
 // tentou por fora. Repetição de propósito: a de fora é pela mensagem, esta é
 // pela verdade (ALE-156).
-func assertCanJoin(ctx context.Context, q *sqlcgen.Queries, tx *sql.Tx, sourceID, campaignID, ownerID int64, role string) error {
-	if role == "player" {
+func assertCanJoin(ctx context.Context, q *sqlcgen.Queries, tx *sql.Tx, sourceID, campaignID, ownerID int64, Role string) error {
+	if Role == "player" {
 		hasPc, err := q.HasPlayerPc(ctx, sqlcgen.HasPlayerPcParams{Campaignid: campaignID, Ownerid: ownerID})
 		if err != nil {
 			return err

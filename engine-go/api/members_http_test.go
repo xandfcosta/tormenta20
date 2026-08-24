@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"t20engine/plataforma"
 	"testing"
 
 	"t20engine/db/sqlcgen"
@@ -42,13 +43,13 @@ func newMemberFixture(t *testing.T) memberFixture {
 	otherPc := seedCharacter(t, s, otherOwner, "Vizinho", 20, 30, 5, 10)
 
 	member, err := s.queries.CreateMember(ctx, sqlcgen.CreateMemberParams{
-		Campaignid: campaignID, Characterid: pcID, Role: "player", Addedat: nowISO(),
+		Campaignid: campaignID, Characterid: pcID, Role: "player", Addedat: plataforma.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed member: %v", err)
 	}
 	otherMember, err := s.queries.CreateMember(ctx, sqlcgen.CreateMemberParams{
-		Campaignid: otherCamp, Characterid: otherPc, Role: "player", Addedat: nowISO(),
+		Campaignid: otherCamp, Characterid: otherPc, Role: "player", Addedat: plataforma.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed other member: %v", err)
@@ -69,10 +70,10 @@ func (f memberFixture) roleOf(t *testing.T, memberID int64) string {
 	return m.Role
 }
 
-func (f memberFixture) patchRole(t *testing.T, caller, campaignID, memberID int64, role string) int {
+func (f memberFixture) patchRole(t *testing.T, caller, campaignID, memberID int64, Role string) int {
 	t.Helper()
 	path := "/campaigns/" + strconv.FormatInt(campaignID, 10) + "/members/" + strconv.FormatInt(memberID, 10)
-	return authed(t, f.s, caller, http.MethodPatch, path, `{"role":"`+role+`"}`).Code
+	return authed(t, f.s, caller, http.MethodPatch, path, `{"Role":"`+Role+`"}`).Code
 }
 
 func TestUpdateMemberRole(t *testing.T) {
@@ -199,7 +200,7 @@ func TestJoiningStillWorks(t *testing.T) {
 func (f memberFixture) addMember(t *testing.T, caller, campaignID, characterID int64) int {
 	t.Helper()
 	path := "/campaigns/" + strconv.FormatInt(campaignID, 10) + "/members"
-	body := `{"characterId":` + strconv.FormatInt(characterID, 10) + `,"role":"player"}`
+	body := `{"characterId":` + strconv.FormatInt(characterID, 10) + `,"Role":"player"}`
 	return authed(t, f.s, caller, http.MethodPost, path, body).Code
 }
 
@@ -290,13 +291,13 @@ func TestSimultaneousJoinsCreateOneMember(t *testing.T) {
 
 // Corpo grande demais tem resposta PRÓPRIA (ALE-157).
 //
-// Sem teto, o `decodeJSON` lia o que viesse e um corpo sem fim segurava memória
+// Sem teto, o `plataforma.DecodeJSON` lia o que viesse e um corpo sem fim segurava memória
 // e goroutine. E o 413 importa tanto quanto o teto: dizer "JSON inválido" para
 // um JSON perfeitamente válido mandaria quem escreveu o cliente procurar
 // defeito de sintaxe onde o problema é tamanho.
 func TestAnOversizedBodyIsRefusedBySize(t *testing.T) {
 	f := newMemberFixture(t)
-	gigante := `{"characterId":1,"role":"player","lixo":"` + strings.Repeat("a", 2<<20) + `"}`
+	gigante := `{"characterId":1,"Role":"player","lixo":"` + strings.Repeat("a", 2<<20) + `"}`
 
 	rec := authed(t, f.s, f.owner, http.MethodPost,
 		"/campaigns/"+strconv.FormatInt(f.campaignID, 10)+"/members", gigante)

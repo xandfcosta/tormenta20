@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"t20engine/plataforma"
 	"testing"
 
 	"t20engine/db/sqlcgen"
@@ -23,7 +24,7 @@ func seedConsumable(t *testing.T, s *Server, charID int64, catalogID, name strin
 	t.Helper()
 	it, err := s.queries.CreateItem(context.Background(), sqlcgen.CreateItemParams{
 		Characterid: charID, Catalogid: sql.NullString{String: catalogID, Valid: true},
-		Name: name, Quantity: qty, Slots: 0.5, Improvements: "[]", Createdat: nowISO(),
+		Name: name, Quantity: qty, Slots: 0.5, Improvements: "[]", Createdat: plataforma.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("semear item %q: %v", name, err)

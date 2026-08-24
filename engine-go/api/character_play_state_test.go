@@ -99,7 +99,7 @@ func TestDescansoDeCenaLimpaSoOQueEDaCena(t *testing.T) {
 	// assunto dele — desde a ALE-223 ela pede um MESTRE em sessão viva, e montar
 	// uma mesa aqui só para descansar mediria a regra errada. O helper é também
 	// por onde o descanso da SESSÃO passa, então é o caminho mais verdadeiro.
-	if status, err := f.s.endScene(ctx, AuthUser{ID: f.dono}, f.heroi); err != nil {
+	if status, err := f.s.EndScene(ctx, AuthUser{ID: f.dono}, f.heroi); err != nil {
 		t.Fatalf("descanso de cena: status=%d — %v", status, err)
 	}
 

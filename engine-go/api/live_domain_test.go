@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"path/filepath"
+	"t20engine/plataforma"
 	"testing"
 
 	"t20engine/db"
@@ -14,20 +15,20 @@ import (
 // helpers under test (authz + combatant resolution) never touch the engine, so a nil
 // catalog snapshot is fine — this is the seam the WS gateway will reuse.
 // newTestServer boots the real server on a throwaway migrated DB. adminEmails
-// is variadic so the dozens of callers that don't care about the role keep
+// is variadic so the dozens of callers that don't care about the Role keep
 // reading as before (ALE-120).
 func newTestServer(t *testing.T, adminEmails ...string) *Server {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "test.db")
 	database, err := db.Open(path)
 	if err != nil {
-		t.Fatalf("open test db: %v", err)
+		t.Fatalf("Open test db: %v", err)
 	}
 	t.Cleanup(func() { _ = database.Close() })
 	// DatabasePath carries the file actually opened, so the config does not lie
 	// about it — /admin/status reports it, and reporting a path that is not the
 	// one in use would send the owner looking at the wrong file (ALE-120).
-	cfg := Config{
+	cfg := plataforma.Config{
 		JWTSecret: "test-secret", CookieName: "t20_session",
 		AdminEmails: adminEmails, DatabasePath: path,
 	}
@@ -37,7 +38,7 @@ func newTestServer(t *testing.T, adminEmails ...string) *Server {
 func seedUser(t *testing.T, s *Server, email string) int64 {
 	t.Helper()
 	u, err := s.queries.CreateUser(context.Background(), sqlcgen.CreateUserParams{
-		Email: email, Passwordhash: "x", Createdat: nowISO(), Updatedat: nowISO(),
+		Email: email, Passwordhash: "x", Createdat: plataforma.NowISO(), Updatedat: plataforma.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed user %q: %v", email, err)
@@ -48,7 +49,7 @@ func seedUser(t *testing.T, s *Server, email string) int64 {
 func seedCampaign(t *testing.T, s *Server, ownerID int64) int64 {
 	t.Helper()
 	c, err := s.queries.CreateCampaign(context.Background(), sqlcgen.CreateCampaignParams{
-		Ownerid: ownerID, Name: "Mesa", Createdat: nowISO(), Updatedat: nowISO(),
+		Ownerid: ownerID, Name: "Mesa", Createdat: plataforma.NowISO(), Updatedat: plataforma.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed campaign: %v", err)
@@ -66,7 +67,7 @@ func seedCharacter(t *testing.T, s *Server, ownerID int64, name string, hpCur, h
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
 		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: "{}", PowerChoices: "{}",
-		CreatedAt: nowISO(), UpdatedAt: nowISO(),
+		CreatedAt: plataforma.NowISO(), UpdatedAt: plataforma.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed character %q: %v", name, err)
@@ -86,7 +87,7 @@ func seedCharacterAtLevel(
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
 		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: "{}", PowerChoices: "{}",
-		CreatedAt: nowISO(), UpdatedAt: nowISO(),
+		CreatedAt: plataforma.NowISO(), UpdatedAt: plataforma.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed character %q: %v", name, err)
@@ -94,10 +95,10 @@ func seedCharacterAtLevel(
 	return id
 }
 
-func seedMember(t *testing.T, s *Server, campaignID, characterID int64, role string) {
+func seedMember(t *testing.T, s *Server, campaignID, characterID int64, Role string) {
 	t.Helper()
 	if _, err := s.queries.CreateMember(context.Background(), sqlcgen.CreateMemberParams{
-		Campaignid: campaignID, Characterid: characterID, Role: role, Addedat: nowISO(),
+		Campaignid: campaignID, Characterid: characterID, Role: Role, Addedat: plataforma.NowISO(),
 	}); err != nil {
 		t.Fatalf("seed member: %v", err)
 	}
@@ -123,13 +124,13 @@ func TestResolveRole(t *testing.T) {
 		{"member is player", AuthUser{ID: player}, "player", 200},
 		{"stranger forbidden", AuthUser{ID: stranger}, "", 403},
 		// The admin enters any mesa as gm, and this is the rule the WS gateway
-		// runs too — it is what lets them join a live session (ALE-120).
+		// runs too — it is what lets them Join a live session (ALE-120).
 		{"admin is gm anywhere", AuthUser{ID: stranger, IsAdmin: true}, "gm", 200},
 	}
 	for _, c := range cases {
-		role, status, err := s.resolveRole(ctx, c.caller, campaignID)
-		if role != c.wantRole || status != c.wantStatus {
-			t.Errorf("%s: role=%q status=%d err=%v, want role=%q status=%d", c.name, role, status, err, c.wantRole, c.wantStatus)
+		Role, status, err := s.resolveRole(ctx, c.caller, campaignID)
+		if Role != c.wantRole || status != c.wantStatus {
+			t.Errorf("%s: Role=%q status=%d err=%v, want Role=%q status=%d", c.name, Role, status, err, c.wantRole, c.wantStatus)
 		}
 	}
 	if _, status, _ := s.resolveRole(ctx, AuthUser{ID: gm}, 999999); status != 404 {
@@ -188,19 +189,19 @@ func TestSessionForCaller(t *testing.T) {
 	campaignID := seedCampaign(t, s, gm)
 	sess, err := s.queries.CreateSession(ctx, sqlcgen.CreateSessionParams{
 		Campaignid: campaignID, Sessionnumber: 1, Title: sql.NullString{String: "S1", Valid: true},
-		Createdat: nowISO(), Updatedat: nowISO(),
+		Createdat: plataforma.NowISO(), Updatedat: plataforma.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("seed session: %v", err)
 	}
 
-	t.Run("gm gets session + role", func(t *testing.T) {
-		got, role, status, err := s.sessionForCaller(ctx, AuthUser{ID: gm}, campaignID, sess.ID)
-		if err != nil || status != 200 || role != "gm" || got.ID != sess.ID {
-			t.Errorf("status=%d role=%q id=%d err=%v", status, role, got.ID, err)
+	t.Run("gm gets session + Role", func(t *testing.T) {
+		got, Role, status, err := s.sessionForCaller(ctx, AuthUser{ID: gm}, campaignID, sess.ID)
+		if err != nil || status != 200 || Role != "gm" || got.ID != sess.ID {
+			t.Errorf("status=%d Role=%q id=%d err=%v", status, Role, got.ID, err)
 		}
 	})
-	t.Run("stranger forbidden before session load", func(t *testing.T) {
+	t.Run("stranger forbidden before session Load", func(t *testing.T) {
 		if _, _, status, _ := s.sessionForCaller(ctx, AuthUser{ID: stranger}, campaignID, sess.ID); status != 403 {
 			t.Errorf("status=%d, want 403", status)
 		}
@@ -215,7 +216,7 @@ func TestSessionForCaller(t *testing.T) {
 func seedEffect(t *testing.T, s *Server, charID int64, catalogID, scope string) {
 	t.Helper()
 	if _, err := s.queries.CreateActiveEffect(context.Background(), sqlcgen.CreateActiveEffectParams{
-		Characterid: charID, Catalogid: catalogID, Scope: scope, Modifiers: "[]", Createdat: nowISO(),
+		Characterid: charID, Catalogid: catalogID, Scope: scope, Modifiers: "[]", Createdat: plataforma.NowISO(),
 	}); err != nil {
 		t.Fatalf("seed effect %q/%q: %v", catalogID, scope, err)
 	}
@@ -243,10 +244,10 @@ func TestEndSceneEndDay(t *testing.T) {
 	_ = seedCampaign(t, s, gmID)
 	char := seedCharacter(t, s, gmID, "PC", 10, 10, 5, 5)
 
-	t.Run("endScene removes only scene effects", func(t *testing.T) {
+	t.Run("EndScene removes only scene effects", func(t *testing.T) {
 		seedEffect(t, s, char, "buff-a", "scene")
 		seedEffect(t, s, char, "buff-b", "day")
-		if status, err := s.endScene(ctx, gm, char); status != 200 || err != nil {
+		if status, err := s.EndScene(ctx, gm, char); status != 200 || err != nil {
 			t.Fatalf("status=%d err=%v", status, err)
 		}
 		if got := effectScopes(t, s, char); len(got) != 1 || got[0] != "day" {
@@ -254,7 +255,7 @@ func TestEndSceneEndDay(t *testing.T) {
 		}
 	})
 	t.Run("endDay removes scene and day", func(t *testing.T) {
-		seedEffect(t, s, char, "buff-a", "scene") // re-add the scene one
+		seedEffect(t, s, char, "buff-a", "scene") // re-Add the scene one
 		if status, err := s.endDay(ctx, gm, char); status != 200 || err != nil {
 			t.Fatalf("status=%d err=%v", status, err)
 		}
@@ -264,7 +265,7 @@ func TestEndSceneEndDay(t *testing.T) {
 	})
 	t.Run("stranger forbidden, effects untouched", func(t *testing.T) {
 		seedEffect(t, s, char, "buff-c", "scene")
-		if status, _ := s.endScene(ctx, stranger, char); status != 403 {
+		if status, _ := s.EndScene(ctx, stranger, char); status != 403 {
 			t.Errorf("status=%d, want 403", status)
 		}
 		if got := effectScopes(t, s, char); len(got) != 1 {

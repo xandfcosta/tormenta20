@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"t20engine/plataforma"
 )
 
 type ctxKey int
@@ -16,17 +17,17 @@ func (s *Server) requireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token := s.extractToken(r)
 		if token == "" {
-			writeError(w, http.StatusUnauthorized, "Unauthorized")
+			plataforma.WriteError(w, http.StatusUnauthorized, "Unauthorized")
 			return
 		}
 		sub, err := s.verifyToken(token)
 		if err != nil {
-			writeError(w, http.StatusUnauthorized, "Unauthorized")
+			plataforma.WriteError(w, http.StatusUnauthorized, "Unauthorized")
 			return
 		}
 		user, err := s.queries.GetUserByID(r.Context(), sub)
 		if err != nil {
-			writeError(w, http.StatusUnauthorized, "User no longer exists")
+			plataforma.WriteError(w, http.StatusUnauthorized, "User no longer exists")
 			return
 		}
 		ctx := context.WithValue(r.Context(), userCtxKey, s.authUser(user))
@@ -41,7 +42,7 @@ func (s *Server) requireAuth(next http.Handler) http.Handler {
 func (s *Server) requireAdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !currentUser(r).IsAdmin {
-			writeError(w, http.StatusForbidden, "Admin only")
+			plataforma.WriteError(w, http.StatusForbidden, "Admin only")
 			return
 		}
 		next.ServeHTTP(w, r)

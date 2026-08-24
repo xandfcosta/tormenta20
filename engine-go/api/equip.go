@@ -32,7 +32,7 @@ func handsFor(slot string) int {
 	}
 }
 
-// allowedEquipStates maps an item's equip axis to the states it may occupy.
+// allowedEquipStates maps an item's equip axis to the States it may occupy.
 func allowedEquipStates(equip string) []string {
 	switch equip {
 	case "vested":

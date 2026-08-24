@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"t20engine/plataforma"
 	"testing"
 
 	"t20engine/db/sqlcgen"
@@ -115,7 +116,7 @@ func characterIntruderCases(hero, item, effect int64) []intruderCase {
 func seedEffectRow(t *testing.T, s *Server, charID int64) int64 {
 	t.Helper()
 	eff, err := s.queries.CreateActiveEffect(context.Background(), sqlcgen.CreateActiveEffectParams{
-		Characterid: charID, Catalogid: "cosmetico", Scope: "scene", Modifiers: "[]", Createdat: nowISO(),
+		Characterid: charID, Catalogid: "cosmetico", Scope: "scene", Modifiers: "[]", Createdat: plataforma.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("semear efeito: %v", err)

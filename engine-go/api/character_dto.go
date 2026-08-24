@@ -3,6 +3,7 @@ package api
 import (
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
+	"t20engine/plataforma"
 )
 
 // CharacterDTO is the character aggregate the frontend consumes (shared/api/api.ts
@@ -110,7 +111,7 @@ func characterScalarsFrom(c sqlcgen.Character) CharacterDTO {
 		OwnerID:              c.Ownerid,
 		Name:                 c.Name,
 		Origin:               c.Origin,
-		God:                  nullToPtr(c.God),
+		God:                  plataforma.NullToPtr(c.God),
 		GodPower:             c.Godpower,
 		Tibar:                c.Tibar,
 		Level:                c.Level,

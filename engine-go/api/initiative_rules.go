@@ -1,11 +1,14 @@
 package api
 
+import "t20engine/aovivo"
+
 import (
 	"context"
 	"errors"
 	"fmt"
 	"strings"
 	"t20engine/catalog"
+	"t20engine/plataforma"
 )
 
 // As regras da iniciativa e do descanso, fora de qualquer transporte.
@@ -24,13 +27,13 @@ import (
 // regra mora e é aqui que ela se prova, com o handler em volta traduzindo erro
 // em `exception`. Testar pelo socket exigiria um socket, e o que importa não é
 // o transporte.
-func (s *Server) selfInitiativeEntry(callerID, campaignID, charID, d20 int64) (InitiativeEntry, error) {
+func (s *Server) selfInitiativeEntry(callerID, campaignID, charID, d20 int64) (aovivo.InitiativeEntry, error) {
 	if d20 < 1 || d20 > 20 {
-		return InitiativeEntry{}, fmt.Errorf("d20 must be an integer from 1 to 20, got %d", d20)
+		return aovivo.InitiativeEntry{}, fmt.Errorf("d20 must be an integer from 1 to 20, got %d", d20)
 	}
 	bonus, err := s.initiativeBonus(context.Background(), charID)
 	if err != nil {
-		return InitiativeEntry{}, err
+		return aovivo.InitiativeEntry{}, err
 	}
 	// Um payload NOVO e não o corpo recebido: escrever no mapa do cliente faria a
 	// mensagem se reescrever a si mesma, e um `initiative` que ele tenha mandado
@@ -48,30 +51,30 @@ func (s *Server) selfInitiativeEntry(callerID, campaignID, charID, d20 int64) (I
 // mestre com a fila zerada e as bênçãos vivas — o defeito da ALE-220 outra vez,
 // agora com o botão parecendo ter funcionado. Falha aqui é falha do gesto
 // inteiro, e o mestre clica de novo.
-func (s *Server) endSceneForTable(user AuthUser, campaignID, sessionID int64) (*SessionRuntimeState, error) {
+func (s *Server) endSceneForTable(user AuthUser, campaignID, sessionID int64) (*aovivo.SessionRuntimeState, error) {
 	if _, _, err := s.expirePartyScene(user, campaignID, sessionID); err != nil {
-		return nil, errors.New("Could not load campaign members")
+		return nil, errors.New("Could not Load campaign members")
 	}
-	return s.sessions.endScene(sessionID)
+	return s.sessions.EndScene(sessionID)
 }
 
 // populateParty adds each not-yet-present player combatant at initiative 0 with live vitals,
-// returning the latest state and the first add error (with the partial state so the caller
+// returning the latest state and the first Add error (with the partial state so the caller
 // can still broadcast what landed).
-func (s *Server) populateParty(sessionID int64, combatants []combatant) (*SessionRuntimeState, error) {
+func (s *Server) populateParty(sessionID int64, combatants []combatant) (*aovivo.SessionRuntimeState, error) {
 	existing := map[int64]bool{}
-	for _, e := range s.sessions.getState(sessionID).Initiative {
+	for _, e := range s.sessions.GetState(sessionID).Initiative {
 		if e.CharacterID != nil {
 			existing[*e.CharacterID] = true
 		}
 	}
-	var state *SessionRuntimeState
+	var state *aovivo.SessionRuntimeState
 	for _, c := range combatants {
 		if existing[c.characterID] {
 			continue
 		}
 		cid, hpc, hpm, mpc, mpm := c.characterID, c.hpCurrent, c.hpMax, c.mpCurrent, c.mpMax
-		st, err := s.sessions.addInitiativeEntry(sessionID, InitiativeEntry{
+		st, err := s.sessions.AddInitiativeEntry(sessionID, aovivo.InitiativeEntry{
 			Label: c.name, Initiative: 0, Type: "character", CharacterID: &cid,
 			HpCurrent: &hpc, HpMax: &hpm, MpCurrent: &mpc, MpMax: &mpm,
 		})
@@ -86,69 +89,69 @@ func (s *Server) populateParty(sessionID int64, combatants []combatant) (*Sessio
 // materializeEntry resolves an initiative payload into a concrete entry — an NPC (label +
 // initiative) or a character (name/vitals pulled via resolveCombatant, with optional client
 // overrides).
-func (s *Server) materializeEntry(ctx context.Context, callerID, campaignID int64, input map[string]any) (InitiativeEntry, error) {
-	if _, hasChar := intField(input, "characterId"); !hasChar {
+func (s *Server) materializeEntry(ctx context.Context, callerID, campaignID int64, input map[string]any) (aovivo.InitiativeEntry, error) {
+	if _, hasChar := plataforma.IntField(input, "characterId"); !hasChar {
 		return materializeNpcEntry(input)
 	}
 	return s.materializeCharacterEntry(ctx, callerID, campaignID, input)
 }
 
-func materializeNpcEntry(input map[string]any) (InitiativeEntry, error) {
-	label := strings.TrimSpace(stringField(input, "label"))
+func materializeNpcEntry(input map[string]any) (aovivo.InitiativeEntry, error) {
+	label := strings.TrimSpace(plataforma.StringField(input, "label"))
 	if label == "" {
-		return InitiativeEntry{}, errors.New("entry.label is required for NPC entries")
+		return aovivo.InitiativeEntry{}, errors.New("entry.label is required for NPC entries")
 	}
-	initiative, hasInit := intField(input, "initiative")
+	initiative, hasInit := plataforma.IntField(input, "initiative")
 	if !hasInit {
-		return InitiativeEntry{}, errors.New("entry.initiative is required")
+		return aovivo.InitiativeEntry{}, errors.New("entry.initiative is required")
 	}
 	typ := "npc"
-	if t := stringField(input, "type"); t != "" {
+	if t := plataforma.StringField(input, "type"); t != "" {
 		typ = t
 	}
 	// PV rides along when the client seeds it (a monster dropped in from the
 	// bestiary knows its own pool). Absent stays absent: a bare NPC has no
 	// health to track, and a zeroed bar would mean something it does not.
-	entry := InitiativeEntry{Label: label, Initiative: int(initiative), Type: typ}
-	if hp, ok := intField(input, "hpCurrent"); ok {
+	entry := aovivo.InitiativeEntry{Label: label, Initiative: int(initiative), Type: typ}
+	if hp, ok := plataforma.IntField(input, "hpCurrent"); ok {
 		entry.HpCurrent = &hp
 	}
-	if hp, ok := intField(input, "hpMax"); ok {
+	if hp, ok := plataforma.IntField(input, "hpMax"); ok {
 		entry.HpMax = &hp
 	}
 	// O id do bestiário vem do cliente porque é ele que escolheu o verbete; o
 	// servidor não valida contra o catálogo de propósito — um id desconhecido
 	// vira "sem bloco" na tela, não um erro que derruba a adição no meio do
 	// combate (ALE-122).
-	if monsterID := strings.TrimSpace(stringField(input, "monsterId")); monsterID != "" {
+	if monsterID := strings.TrimSpace(plataforma.StringField(input, "monsterId")); monsterID != "" {
 		entry.MonsterID = &monsterID
 	}
 	// O bloco de criatura do mestre (ALE-137). Mesma escolha do `monsterId`: o
 	// servidor não confere se a criatura existe, porque um id órfão vira "sem
 	// bloco" na tela e não um erro no meio do combate. Quem confere o dono é a
 	// rota HTTP que serve o bloco, e ela só responde ao mestre.
-	if creatureID, ok := intField(input, "creatureId"); ok && creatureID > 0 {
+	if creatureID, ok := plataforma.IntField(input, "creatureId"); ok && creatureID > 0 {
 		entry.CreatureID = &creatureID
 	}
 	return entry, nil
 }
 
-func (s *Server) materializeCharacterEntry(ctx context.Context, callerID, campaignID int64, input map[string]any) (InitiativeEntry, error) {
-	charID, _ := intField(input, "characterId")
-	initiative, hasInit := intField(input, "initiative")
+func (s *Server) materializeCharacterEntry(ctx context.Context, callerID, campaignID int64, input map[string]any) (aovivo.InitiativeEntry, error) {
+	charID, _ := plataforma.IntField(input, "characterId")
+	initiative, hasInit := plataforma.IntField(input, "initiative")
 	if !hasInit {
-		return InitiativeEntry{}, errors.New("entry.initiative is required")
+		return aovivo.InitiativeEntry{}, errors.New("entry.initiative is required")
 	}
 	stats, _, err := s.resolveCombatant(ctx, callerID, campaignID, charID)
 	if err != nil {
-		return InitiativeEntry{}, err
+		return aovivo.InitiativeEntry{}, err
 	}
 	label := stats.name
-	if l := strings.TrimSpace(stringField(input, "label")); l != "" {
+	if l := strings.TrimSpace(plataforma.StringField(input, "label")); l != "" {
 		label = l
 	}
 	cid := charID
-	return InitiativeEntry{
+	return aovivo.InitiativeEntry{
 		Label: label, Initiative: int(initiative), Type: "character", CharacterID: &cid,
 		HpCurrent: overrideInt(input, "hpCurrent", stats.hpCurrent),
 		HpMax:     overrideInt(input, "hpMax", stats.hpMax),
@@ -158,10 +161,10 @@ func (s *Server) materializeCharacterEntry(ctx context.Context, callerID, campai
 }
 
 // parseEntryPatch reads an update patch from the raw body (only present fields become
-// non-nil, so "leave unchanged" is distinct from "set to zero").
-func parseEntryPatch(v any) entryPatch {
+// non-nil, so "Leave unchanged" is distinct from "set to zero").
+func parseEntryPatch(v any) aovivo.EntryPatch {
 	m, _ := v.(map[string]any)
-	p := entryPatch{}
+	p := aovivo.EntryPatch{}
 	if m == nil {
 		return p
 	}
@@ -171,7 +174,7 @@ func parseEntryPatch(v any) entryPatch {
 	if s, ok := m["type"].(string); ok {
 		p.Type = &s
 	}
-	if i, ok := intField(m, "initiative"); ok {
+	if i, ok := plataforma.IntField(m, "initiative"); ok {
 		n := int(i)
 		p.Initiative = &n
 	}
@@ -190,7 +193,7 @@ func parseEntryPatch(v any) entryPatch {
 		// mesmo dia — o outro era o `cloneState` zerando o contador de turnos.
 		{"creatureId", &p.CreatureID},
 	} {
-		if i, ok := intField(m, f.key); ok {
+		if i, ok := plataforma.IntField(m, f.key); ok {
 			v := i
 			*f.dst = &v
 		}
@@ -204,10 +207,10 @@ func parseEntryPatch(v any) entryPatch {
 
 // overrideInt returns the body's value for key when present, else def — as a pointer.
 func overrideInt(m map[string]any, key string, def int64) *int64 {
-	if v, ok := intField(m, key); ok {
-		return ptrInt64(v)
+	if v, ok := plataforma.IntField(m, key); ok {
+		return aovivo.PtrInt64(v)
 	}
-	return ptrInt64(def)
+	return aovivo.PtrInt64(def)
 }
 
 // parseConditions filtra pelo CATÁLOGO, que é onde as condições são autoradas.

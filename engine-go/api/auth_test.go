@@ -1,6 +1,7 @@
 package api
 
 import (
+	"t20engine/plataforma"
 	"testing"
 	"time"
 
@@ -8,7 +9,7 @@ import (
 )
 
 func testServer(secret string) *Server {
-	return &Server{cfg: Config{JWTSecret: secret, JWTExpiresIn: "7d", CookieName: "t20_session"}}
+	return &Server{cfg: plataforma.Config{JWTSecret: secret, JWTExpiresIn: "7d", CookieName: "t20_session"}}
 }
 
 func TestSignVerifyRoundtrip(t *testing.T) {
@@ -49,10 +50,10 @@ func TestParseExpiry(t *testing.T) {
 }
 
 func TestValidateRegister(t *testing.T) {
-	if f := validateRegister(registerBody{Email: "gm@test.com", Password: "password123"}); len(f) != 0 {
+	if f := ValidateRegister(registerBody{Email: "gm@test.com", Password: "password123"}); len(f) != 0 {
 		t.Fatalf("valid input flagged: %v", f)
 	}
-	f := validateRegister(registerBody{Email: "bad", Password: "short"})
+	f := ValidateRegister(registerBody{Email: "bad", Password: "short"})
 	if _, ok := f["email"]; !ok {
 		t.Error("bad email not flagged")
 	}

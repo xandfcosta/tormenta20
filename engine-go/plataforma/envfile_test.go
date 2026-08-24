@@ -1,4 +1,4 @@
-package api
+package plataforma
 
 import (
 	"os"
@@ -18,7 +18,7 @@ func writeEnvFile(t *testing.T, content string) string {
 }
 
 // sandboxEnv registers each key with t.Setenv so the test's own writes AND the
-// ones loadEnvFile makes are restored afterwards — os.Setenv alone would leak
+// ones LoadEnvFile makes are restored afterwards — os.Setenv alone would leak
 // into every test that runs later in this package.
 func sandboxEnv(t *testing.T, keys ...string) {
 	t.Helper()
@@ -31,8 +31,8 @@ func TestLoadEnvFileExportsWhatTheProcessDoesNotSet(t *testing.T) {
 	sandboxEnv(t, "T20_PORT")
 	path := writeEnvFile(t, "T20_PORT=3001\n")
 
-	if err := loadEnvFile(path); err != nil {
-		t.Fatalf("loadEnvFile: %v", err)
+	if err := LoadEnvFile(path); err != nil {
+		t.Fatalf("LoadEnvFile: %v", err)
 	}
 
 	if got := os.Getenv("T20_PORT"); got != "3001" {
@@ -46,8 +46,8 @@ func TestLoadEnvFileKeepsTheValueTheProcessAlreadyExported(t *testing.T) {
 	t.Setenv("T20_PORT", "4000")
 	path := writeEnvFile(t, "T20_PORT=3001\n")
 
-	if err := loadEnvFile(path); err != nil {
-		t.Fatalf("loadEnvFile: %v", err)
+	if err := LoadEnvFile(path); err != nil {
+		t.Fatalf("LoadEnvFile: %v", err)
 	}
 
 	if got := os.Getenv("T20_PORT"); got != "4000" {
@@ -57,7 +57,7 @@ func TestLoadEnvFileKeepsTheValueTheProcessAlreadyExported(t *testing.T) {
 
 // A missing file is the CI/systemd shape: everything is exported already.
 func TestLoadEnvFileTreatsAMissingFileAsNoConfiguration(t *testing.T) {
-	if err := loadEnvFile(filepath.Join(t.TempDir(), "absent")); err != nil {
+	if err := LoadEnvFile(filepath.Join(t.TempDir(), "absent")); err != nil {
 		t.Fatalf("missing file must not fail the boot: %v", err)
 	}
 }
@@ -68,7 +68,7 @@ func TestLoadEnvFileRejectsALineThatIsNotKeyValue(t *testing.T) {
 	sandboxEnv(t, "T20_PORT")
 	path := writeEnvFile(t, "T20_PORT=3001\nJWT_SECRET\n")
 
-	err := loadEnvFile(path)
+	err := LoadEnvFile(path)
 
 	if err == nil {
 		t.Fatal("expected an error for a line without '='")

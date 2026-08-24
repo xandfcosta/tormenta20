@@ -1,9 +1,12 @@
 package api
 
+import "t20engine/aovivo"
+
 import (
 	"context"
 	"errors"
 	"net/http"
+	"t20engine/plataforma"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -26,13 +29,13 @@ import (
 // Fica AQUI e não no `server.go` por dois motivos: o roteador da raiz já passa
 // das 200 linhas com o teto da casa em 500, e — o que importa mais — cada
 // contexto passa a ser lido inteiro num arquivo só, comando e rota juntos
-// (ALE-254). O dia de virar pacote começa por mover um arquivo, não por caçar
+// (ALE-254). O dia de virar pacote começa por tabuleiro.Mover um arquivo, não por caçar
 // linhas espalhadas.
 func (s *Server) mountLiveRoutes(r chi.Router) {
 	r.Route("/{id}/initiative", func(r chi.Router) {
 		r.Post("/", s.handleInitiativeAdd)
 		r.Post("/self", s.handleInitiativeSelf)
-		r.Post("/populate", s.handleInitiativePopulate)
+		r.Post("/Populate", s.handleInitiativePopulate)
 		r.Post("/next-turn", s.handleNextTurn)
 		r.Post("/previous-turn", s.handlePreviousTurn)
 		r.Delete("/", s.handleInitiativeReset)
@@ -53,7 +56,7 @@ func (s *Server) mountLiveRoutes(r chi.Router) {
 		r.Get("/as-player", s.handleBoardAsPlayer)
 		r.Post("/", s.handleBoardOpen)
 		r.Delete("/", s.handleBoardClose)
-		r.Post("/populate", s.handleBoardPopulate)
+		r.Post("/Populate", s.handleBoardPopulate)
 		r.Post("/terrain", s.handleBoardTerrainPaint)
 
 		r.Post("/tokens", s.handleBoardTokenAdd)
@@ -69,21 +72,21 @@ func (s *Server) mountLiveRoutes(r chi.Router) {
 		r.Patch("/markers/{markerId}", s.handleBoardMarkerUpdate)
 		r.Delete("/markers/{markerId}", s.handleBoardMarkerRemove)
 
-		r.Get("/places", s.handleBoardPlaces)
-		r.Post("/places/{placeId}/reopen", s.handleBoardReopen)
-		r.Get("/places/{placeId}/scene", s.handleBoardPlaceScene)
-		r.Put("/places/{placeId}/scene", s.handleBoardPlaceSave)
-		r.Delete("/places/{placeId}", s.handleBoardPlaceRemove)
+		r.Get("/Places", s.handleBoardPlaces)
+		r.Post("/Places/{placeId}/Reopen", s.handleBoardReopen)
+		r.Get("/Places/{placeId}/scene", s.handleBoardPlaceScene)
+		r.Put("/Places/{placeId}/scene", s.handleBoardPlaceSave)
+		r.Delete("/Places/{placeId}", s.handleBoardPlaceRemove)
 	})
 }
 
 // liveCtx é o que o socket chamava de `msgCtx`: quem pediu, em que mesa, com
 // que papel. Resolvido uma vez por requisição.
 type liveCtx struct {
-	userID     int64
+	UserID     int64
 	campaignID int64
 	sessionID  int64
-	role       string
+	Role       string
 }
 
 // liveAccess resolve a mesa e o papel de quem chamou, ou responde e devolve
@@ -99,12 +102,12 @@ func (s *Server) liveAccess(w http.ResponseWriter, r *http.Request) (liveCtx, bo
 		return liveCtx{}, false
 	}
 	user := currentUser(r)
-	_, role, status, err := s.sessionForCaller(r.Context(), user, campaignID, sessionID)
+	_, Role, status, err := s.sessionForCaller(r.Context(), user, campaignID, sessionID)
 	if err != nil {
-		writeError(w, status, err.Error())
+		plataforma.WriteError(w, status, err.Error())
 		return liveCtx{}, false
 	}
-	return liveCtx{userID: user.ID, campaignID: campaignID, sessionID: sessionID, role: role}, true
+	return liveCtx{UserID: user.ID, campaignID: campaignID, sessionID: sessionID, Role: Role}, true
 }
 
 // requireGmRole barra o que é do mestre. Espelha o `requireGm` do gateway.
@@ -112,8 +115,8 @@ func (s *Server) liveAccess(w http.ResponseWriter, r *http.Request) (liveCtx, bo
 // 403 e não 401: quem chega aqui está autenticado e é da mesa — só não manda
 // nesta ação. Dizer "não autorizado" faria o cliente tentar entrar de novo.
 func requireGmRole(w http.ResponseWriter, ctx liveCtx) bool {
-	if ctx.role != "gm" {
-		writeError(w, http.StatusForbidden, "Only the GM can do this")
+	if ctx.Role != "gm" {
+		plataforma.WriteError(w, http.StatusForbidden, "Only the GM can do this")
 		return false
 	}
 	return true
@@ -124,26 +127,26 @@ func requireGmRole(w http.ResponseWriter, ctx liveCtx) bool {
 //
 // A RESPOSTA é o ack que o socket dava por callback — e de graça, porque HTTP
 // já responde. Ela leva o estado do ponto de vista de QUEM PEDIU: o mestre
-// recebe inteiro, o jogador recebe redigido, pelo mesmo `redactForPlayers` que
+// recebe inteiro, o jogador recebe redigido, pelo mesmo `aovivo.RedactForPlayers` que
 // alimenta o broadcast. Responder o estado cheio a um jogador aqui abriria pela
 // porta da frente exatamente o que a sala por papel fecha.
 func (s *Server) mutateAndPublish(
-	w http.ResponseWriter, ctx liveCtx, mutate func() (*SessionRuntimeState, error),
+	w http.ResponseWriter, ctx liveCtx, mutate func() (*aovivo.SessionRuntimeState, error),
 ) {
 	state, err := mutate()
 	if err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	s.publishSessionState(ctx.sessionID, state)
-	writeJSON(w, http.StatusOK, stateForRole(ctx.role, state))
+	plataforma.WriteJSON(w, http.StatusOK, aovivo.StateForRole(ctx.Role, state))
 }
 
 // publishSessionState transmite o estado às duas salas por papel e persiste.
 // Espelha o `emitSessionState` do gateway.
-func (s *Server) publishSessionState(sessionID int64, state *SessionRuntimeState) {
-	s.sse.emitOrdered(sessionID, "gm", "session-state", state.seq, state)
-	s.sse.emitOrdered(sessionID, "player", "session-state", state.seq, redactForPlayers(state))
+func (s *Server) publishSessionState(sessionID int64, state *aovivo.SessionRuntimeState) {
+	s.sse.EmitOrdered(sessionID, "gm", "session-state", state.Seq, state)
+	s.sse.EmitOrdered(sessionID, "player", "session-state", state.Seq, aovivo.RedactForPlayers(state))
 	go s.persistSessionAndWarn(sessionID)
 }
 
@@ -157,20 +160,20 @@ func (s *Server) handleInitiativeAdd(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Entry map[string]any `json:"entry"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if body.Entry == nil {
-		writeError(w, http.StatusBadRequest, "entry is required")
+		plataforma.WriteError(w, http.StatusBadRequest, "entry is required")
 		return
 	}
-	entry, err := s.materializeEntry(r.Context(), ctx.userID, ctx.campaignID, body.Entry)
+	entry, err := s.materializeEntry(r.Context(), ctx.UserID, ctx.campaignID, body.Entry)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	s.mutateAndPublish(w, ctx, func() (*SessionRuntimeState, error) {
-		return s.sessions.addInitiativeEntry(ctx.sessionID, entry)
+	s.mutateAndPublish(w, ctx, func() (*aovivo.SessionRuntimeState, error) {
+		return s.sessions.AddInitiativeEntry(ctx.sessionID, entry)
 	})
 }
 
@@ -181,11 +184,11 @@ func (s *Server) handleInitiativeRemove(w http.ResponseWriter, r *http.Request) 
 	}
 	entryID := chi.URLParam(r, "entryId")
 	if entryID == "" {
-		writeError(w, http.StatusBadRequest, "entryId is required")
+		plataforma.WriteError(w, http.StatusBadRequest, "entryId is required")
 		return
 	}
-	s.mutateAndPublish(w, ctx, func() (*SessionRuntimeState, error) {
-		return s.sessions.removeInitiativeEntry(ctx.sessionID, entryID)
+	s.mutateAndPublish(w, ctx, func() (*aovivo.SessionRuntimeState, error) {
+		return s.sessions.RemoveInitiativeEntry(ctx.sessionID, entryID)
 	})
 }
 
@@ -194,8 +197,8 @@ func (s *Server) handleNextTurn(w http.ResponseWriter, r *http.Request) {
 	if !ok || !requireGmRole(w, ctx) {
 		return
 	}
-	s.mutateAndPublish(w, ctx, func() (*SessionRuntimeState, error) {
-		return s.sessions.nextTurn(ctx.sessionID)
+	s.mutateAndPublish(w, ctx, func() (*aovivo.SessionRuntimeState, error) {
+		return s.sessions.NextTurn(ctx.sessionID)
 	})
 }
 
@@ -204,8 +207,8 @@ func (s *Server) handlePreviousTurn(w http.ResponseWriter, r *http.Request) {
 	if !ok || !requireGmRole(w, ctx) {
 		return
 	}
-	s.mutateAndPublish(w, ctx, func() (*SessionRuntimeState, error) {
-		return s.sessions.previousTurn(ctx.sessionID)
+	s.mutateAndPublish(w, ctx, func() (*aovivo.SessionRuntimeState, error) {
+		return s.sessions.PreviousTurn(ctx.sessionID)
 	})
 }
 
@@ -220,20 +223,20 @@ func (s *Server) handleInitiativeSelf(w http.ResponseWriter, r *http.Request) {
 		CharacterID int64 `json:"characterId"`
 		D20         int64 `json:"d20"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if body.CharacterID == 0 {
-		writeError(w, http.StatusBadRequest, "characterId is required")
+		plataforma.WriteError(w, http.StatusBadRequest, "characterId is required")
 		return
 	}
-	entry, err := s.selfInitiativeEntry(ctx.userID, ctx.campaignID, body.CharacterID, body.D20)
+	entry, err := s.selfInitiativeEntry(ctx.UserID, ctx.campaignID, body.CharacterID, body.D20)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	s.mutateAndPublish(w, ctx, func() (*SessionRuntimeState, error) {
-		return s.sessions.upsertInitiativeEntry(ctx.sessionID, entry)
+	s.mutateAndPublish(w, ctx, func() (*aovivo.SessionRuntimeState, error) {
+		return s.sessions.UpsertInitiativeEntry(ctx.sessionID, entry)
 	})
 }
 
@@ -244,18 +247,18 @@ func (s *Server) handleInitiativeUpdate(w http.ResponseWriter, r *http.Request) 
 	}
 	entryID := chi.URLParam(r, "entryId")
 	if entryID == "" {
-		writeError(w, http.StatusBadRequest, "entryId is required")
+		plataforma.WriteError(w, http.StatusBadRequest, "entryId is required")
 		return
 	}
 	var body struct {
 		Patch map[string]any `json:"patch"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	patch := parseEntryPatch(body.Patch)
-	s.mutateAndPublish(w, ctx, func() (*SessionRuntimeState, error) {
-		return s.sessions.updateInitiativeEntry(ctx.sessionID, entryID, patch)
+	s.mutateAndPublish(w, ctx, func() (*aovivo.SessionRuntimeState, error) {
+		return s.sessions.UpdateInitiativeEntry(ctx.sessionID, entryID, patch)
 	})
 }
 
@@ -264,8 +267,8 @@ func (s *Server) handleInitiativeReset(w http.ResponseWriter, r *http.Request) {
 	if !ok || !requireGmRole(w, ctx) {
 		return
 	}
-	s.mutateAndPublish(w, ctx, func() (*SessionRuntimeState, error) {
-		return s.sessions.reset(ctx.sessionID)
+	s.mutateAndPublish(w, ctx, func() (*aovivo.SessionRuntimeState, error) {
+		return s.sessions.Reset(ctx.sessionID)
 	})
 }
 
@@ -279,19 +282,19 @@ func (s *Server) handleInitiativePopulate(w http.ResponseWriter, r *http.Request
 	}
 	combatants, err := s.listPlayerCombatants(r.Context(), ctx.campaignID)
 	if err != nil {
-		writeError(w, http.StatusBadGateway, "Could not load party")
+		plataforma.WriteError(w, http.StatusBadGateway, "Could not Load party")
 		return
 	}
 	state, addErr := s.populateParty(ctx.sessionID, combatants)
 	if state == nil {
-		state = s.sessions.getState(ctx.sessionID)
+		state = s.sessions.GetState(ctx.sessionID)
 	}
 	s.publishSessionState(ctx.sessionID, state)
 	if addErr != nil {
-		writeError(w, http.StatusBadRequest, addErr.Error())
+		plataforma.WriteError(w, http.StatusBadRequest, addErr.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, stateForRole(ctx.role, state))
+	plataforma.WriteJSON(w, http.StatusOK, aovivo.StateForRole(ctx.Role, state))
 }
 
 // --- Cena ------------------------------------------------------------------
@@ -301,8 +304,8 @@ func (s *Server) handleSceneStart(w http.ResponseWriter, r *http.Request) {
 	if !ok || !requireGmRole(w, ctx) {
 		return
 	}
-	s.mutateAndPublish(w, ctx, func() (*SessionRuntimeState, error) {
-		return s.sessions.startScene(ctx.sessionID)
+	s.mutateAndPublish(w, ctx, func() (*aovivo.SessionRuntimeState, error) {
+		return s.sessions.StartScene(ctx.sessionID)
 	})
 }
 
@@ -320,14 +323,14 @@ func (s *Server) handleSceneEnd(w http.ResponseWriter, r *http.Request) {
 	}
 	state, err := s.endSceneForTable(currentUser(r), ctx.campaignID, ctx.sessionID)
 	if err != nil {
-		writeError(w, http.StatusBadGateway, err.Error())
+		plataforma.WriteError(w, http.StatusBadGateway, err.Error())
 		return
 	}
 	s.publishSessionState(ctx.sessionID, state)
-	s.sse.emit(ctx.sessionID, "", "session-rest", map[string]any{
+	s.sse.Emit(ctx.sessionID, "", "session-rest", map[string]any{
 		"sessionId": ctx.sessionID, "scope": "scene",
 	})
-	writeJSON(w, http.StatusOK, stateForRole(ctx.role, state))
+	plataforma.WriteJSON(w, http.StatusOK, aovivo.StateForRole(ctx.Role, state))
 }
 
 // --- Vitais e descanso -----------------------------------------------------
@@ -343,11 +346,11 @@ func (s *Server) handleVitalsPatch(w http.ResponseWriter, r *http.Request) {
 			MpCurrent *int64 `json:"mpCurrent"`
 		} `json:"patch"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
-	s.mutateAndPublish(w, ctx, func() (*SessionRuntimeState, error) {
-		return s.sessions.patchVitals(ctx.sessionID, entryID, body.Patch.HpCurrent, body.Patch.MpCurrent)
+	s.mutateAndPublish(w, ctx, func() (*aovivo.SessionRuntimeState, error) {
+		return s.sessions.PatchVitals(ctx.sessionID, entryID, body.Patch.HpCurrent, body.Patch.MpCurrent)
 	})
 }
 
@@ -360,11 +363,11 @@ func (s *Server) handleVitalsDelta(w http.ResponseWriter, r *http.Request) {
 		HpDelta *int64 `json:"hpDelta"`
 		MpDelta *int64 `json:"mpDelta"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
-	s.mutateAndPublish(w, ctx, func() (*SessionRuntimeState, error) {
-		return s.sessions.deltaVitals(ctx.sessionID, entryID, body.HpDelta, body.MpDelta)
+	s.mutateAndPublish(w, ctx, func() (*aovivo.SessionRuntimeState, error) {
+		return s.sessions.DeltaVitals(ctx.sessionID, entryID, body.HpDelta, body.MpDelta)
 	})
 }
 
@@ -378,11 +381,11 @@ func (s *Server) vitalsAccess(w http.ResponseWriter, r *http.Request) (liveCtx, 
 	}
 	entryID := chi.URLParam(r, "entryId")
 	if entryID == "" {
-		writeError(w, http.StatusBadRequest, "entryId is required")
+		plataforma.WriteError(w, http.StatusBadRequest, "entryId is required")
 		return liveCtx{}, "", false
 	}
 	if err := s.assertVitalsEditableFor(r.Context(), ctx, entryID); err != nil {
-		writeError(w, http.StatusForbidden, err.Error())
+		plataforma.WriteError(w, http.StatusForbidden, err.Error())
 		return liveCtx{}, "", false
 	}
 	return ctx, entryID, true
@@ -397,7 +400,7 @@ func (s *Server) handleSessionRest(w http.ResponseWriter, r *http.Request) {
 		Scope     string `json:"scope"`
 		Condition string `json:"condition"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if body.Condition == "" {
@@ -405,18 +408,18 @@ func (s *Server) handleSessionRest(w http.ResponseWriter, r *http.Request) {
 	}
 	done, total, err := s.restParty(currentUser(r), ctx.campaignID, ctx.sessionID, body.Scope, body.Condition)
 	if err != nil {
-		writeError(w, http.StatusBadGateway, "Could not load campaign members")
+		plataforma.WriteError(w, http.StatusBadGateway, "Could not Load campaign members")
 		return
 	}
 	if done > 0 {
-		s.publishSessionState(ctx.sessionID, s.sessions.getState(ctx.sessionID))
+		s.publishSessionState(ctx.sessionID, s.sessions.GetState(ctx.sessionID))
 	}
-	s.sse.emit(ctx.sessionID, "", "session-rest", map[string]any{
+	s.sse.Emit(ctx.sessionID, "", "session-rest", map[string]any{
 		"sessionId": ctx.sessionID, "scope": body.Scope, "condition": body.Condition,
 	})
 	// `healed` mantém o nome antigo porque o cliente o lê, mas conta os DOIS
 	// escopos: encerrar cena que falha deixa de somar (ALE-155).
-	writeJSON(w, http.StatusOK, map[string]any{
+	plataforma.WriteJSON(w, http.StatusOK, map[string]any{
 		"rested": body.Scope, "characters": total, "healed": done,
 	})
 }
@@ -436,41 +439,41 @@ func (s *Server) handleTableSpellEffect(w http.ResponseWriter, r *http.Request) 
 	}
 	entryID := chi.URLParam(r, "entryId")
 	if entryID == "" {
-		writeError(w, http.StatusBadRequest, "entryId is required")
+		plataforma.WriteError(w, http.StatusBadRequest, "entryId is required")
 		return
 	}
 	var body struct {
 		SpellID string  `json:"spellId"`
 		Scope   *string `json:"scope"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if body.SpellID == "" {
-		writeError(w, http.StatusBadRequest, "spellId is required")
+		plataforma.WriteError(w, http.StatusBadRequest, "spellId is required")
 		return
 	}
 	characterID, err := s.characterOfEntry(ctx.sessionID, entryID)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	if _, _, err := s.applySpellBuffEffect(r.Context(), characterID, body.SpellID, body.Scope); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	s.sse.emit(ctx.sessionID, "", "effect-applied", map[string]any{
+	s.sse.Emit(ctx.sessionID, "", "effect-applied", map[string]any{
 		"sessionId": ctx.sessionID, "characterId": characterID, "spellId": body.SpellID,
 	})
-	writeJSON(w, http.StatusOK, map[string]any{"applied": body.SpellID, "characterId": characterID})
+	plataforma.WriteJSON(w, http.StatusOK, map[string]any{"applied": body.SpellID, "characterId": characterID})
 }
 
 // characterOfEntry resolve a ficha por trás de uma linha da fila. NPC não tem,
 // e é por isso que ele não recebe magia de buff: não há números derivados para
 // mexer (os do bloco são escritos à mão).
 func (s *Server) characterOfEntry(sessionID int64, entryID string) (int64, error) {
-	state := s.sessions.getState(sessionID)
-	idx := findEntryIndex(state, entryID)
+	state := s.sessions.GetState(sessionID)
+	idx := aovivo.FindEntryIndex(state, entryID)
 	if idx < 0 {
 		return 0, errors.New("Entry " + entryID + " not found")
 	}
@@ -485,11 +488,11 @@ func (s *Server) characterOfEntry(sessionID int64, entryID string) (int64, error
 // vira — primeira falha, ou uma tentativa que se recuperou. Espelha o
 // `persistAndWarn` do gateway; quem é dono do sinal é o store.
 func (s *Server) persistSessionAndWarn(sessionID int64) {
-	dirty, changed := s.sessions.persist(context.Background(), sessionID)
+	Dirty, changed := s.sessions.Persist(context.Background(), sessionID)
 	if !changed {
 		return
 	}
-	s.sse.emit(sessionID, "", "persistence-warning", map[string]any{
-		"sessionId": sessionID, "dirty": dirty,
+	s.sse.Emit(sessionID, "", "persistence-warning", map[string]any{
+		"sessionId": sessionID, "Dirty": Dirty,
 	})
 }

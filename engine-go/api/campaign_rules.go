@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
 	"t20engine/engine"
@@ -47,7 +48,7 @@ func (s *Server) handleReplaceCampaignRules(w http.ResponseWriter, r *http.Reque
 	var body struct {
 		IgnoredRules []string `json:"ignoredRules"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	// A posse vem ANTES da validação do corpo: um estranho que mandasse uma regra
@@ -57,23 +58,23 @@ func (s *Server) handleReplaceCampaignRules(w http.ResponseWriter, r *http.Reque
 	}
 	wanted, msg := normalizeIgnoredRules(body.IgnoredRules)
 	if msg != "" {
-		writeValidationError(w, FieldErrorMap{"ignoredRules": {msg}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"ignoredRules": {msg}})
 		return
 	}
 	if err := s.queries.ClearIgnoredRulesForCampaign(r.Context(), id); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not update campaign rules")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update campaign rules")
 		return
 	}
-	now := nowISO()
+	now := plataforma.NowISO()
 	for _, rule := range wanted {
 		if err := s.queries.IgnoreRuleInCampaign(r.Context(), sqlcgen.IgnoreRuleInCampaignParams{
 			Campaignid: id, Rule: rule, Updatedat: now,
 		}); err != nil {
-			writeError(w, http.StatusInternalServerError, "Could not update campaign rules")
+			plataforma.WriteError(w, http.StatusInternalServerError, "Could not update campaign rules")
 			return
 		}
 	}
-	writeJSON(w, http.StatusOK, campaignRulesDTO{IgnoredRules: wanted})
+	plataforma.WriteJSON(w, http.StatusOK, campaignRulesDTO{IgnoredRules: wanted})
 }
 
 // normalizeIgnoredRules ordena, tira repetidos e recusa o que o motor não

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"t20engine/plataforma"
 
 	"t20engine/catalog"
 	"t20engine/db/sqlcgen"
@@ -19,11 +20,11 @@ func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) 
 	var body struct {
 		ActiveConditions []string `json:"activeConditions"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if body.ActiveConditions == nil {
-		writeValidationError(w, FieldErrorMap{"activeConditions": {"activeConditions must be an array"}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"activeConditions": {"activeConditions must be an array"}})
 		return
 	}
 	var unknown []string
@@ -33,15 +34,15 @@ func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 	if len(unknown) > 0 {
-		writeError(w, http.StatusBadRequest, fmt.Sprintf(
+		plataforma.WriteError(w, http.StatusBadRequest, fmt.Sprintf(
 			"Unknown condition ids: %s — expected ids from the CONDITIONS catalog", strings.Join(unknown, ", ")))
 		return
 	}
 	activeConditions := marshalStrings(&body.ActiveConditions)
 	if err := s.queries.UpdateConditions(r.Context(), sqlcgen.UpdateConditionsParams{
-		ActiveConditions: activeConditions, UpdatedAt: nowISO(), ID: row.ID,
+		ActiveConditions: activeConditions, UpdatedAt: plataforma.NowISO(), ID: row.ID,
 	}); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not update conditions")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update conditions")
 		return
 	}
 	// Avisa a mesa AO VIVO (ALE-245). Sem isto o mestre aplica "Caído" num PC e a
@@ -52,7 +53,7 @@ func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) 
 	// DEPOIS da escrita, nunca antes: avisar sobre algo que ainda pode falhar
 	// faria a mesa buscar o estado velho e acreditar nele.
 	s.characterChanged(row.ID)
-	writeJSON(w, http.StatusOK, map[string]string{"activeConditions": activeConditions})
+	plataforma.WriteJSON(w, http.StatusOK, map[string]string{"activeConditions": activeConditions})
 }
 
 func toStringSet(xs []string) map[string]bool {

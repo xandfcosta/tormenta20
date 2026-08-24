@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"t20engine/plataforma"
 
 	"t20engine/db/sqlcgen"
 )
@@ -24,9 +25,9 @@ type restedVitals struct {
 	mpCurrent int64
 }
 
-// endScene expires the character's scene-scoped effects (owner-or-GM authorized first).
+// EndScene expires the character's scene-scoped effects (owner-or-GM authorized first).
 // Transport-agnostic — the WS session-rest handler calls this per member character.
-func (s *Server) endScene(ctx context.Context, user AuthUser, characterID int64) (int, error) {
+func (s *Server) EndScene(ctx context.Context, user AuthUser, characterID int64) (int, error) {
 	if _, status, err := s.authorizedCharacter(ctx, user, characterID); err != nil {
 		return status, err
 	}
@@ -34,8 +35,8 @@ func (s *Server) endScene(ctx context.Context, user AuthUser, characterID int64)
 		return http.StatusInternalServerError, errors.New("Could not clear effects")
 	}
 	// Os usos "1/cena" e as posturas vao junto (ALE-222). Aqui e nao no
-	// `endScene` da SESSAO: este e o caminho que ja limpa a ficha, e e por onde
-	// os dois transportes passam. Desde a ALE-220 o `endScene` da sessao
+	// `EndScene` da SESSAO: este e o caminho que ja limpa a ficha, e e por onde
+	// os dois transportes passam. Desde a ALE-220 o `EndScene` da sessao
 	// tambem chega ate aqui, uma ficha por vez, pelo `expirePartyScene`.
 	if err := s.clearScenePlayState(ctx, characterID); err != nil {
 		return http.StatusInternalServerError, errors.New("Could not clear the play state")
@@ -75,18 +76,18 @@ func (s *Server) endDay(ctx context.Context, user AuthUser, characterID int64) (
 func (s *Server) assertGmAtLiveTable(w http.ResponseWriter, r *http.Request, id int64) bool {
 	user := currentUser(r)
 	if _, status, err := s.authorizedCharacter(r.Context(), user, id); err != nil {
-		writeError(w, status, err.Error())
+		plataforma.WriteError(w, status, err.Error())
 		return false
 	}
 	gm, err := s.queries.IsGmAtLiveTableForCharacter(r.Context(), sqlcgen.IsGmAtLiveTableForCharacterParams{
 		CharacterId: id, OwnerId: user.ID,
 	})
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not check the character's sessions")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not check the character's sessions")
 		return false
 	}
 	if !gm {
-		writeError(w, http.StatusForbidden, fmt.Sprintf(
+		plataforma.WriteError(w, http.StatusForbidden, fmt.Sprintf(
 			"Ending the scene or the day for character %d is the GM's, during a live session", id))
 		return false
 	}
@@ -110,17 +111,17 @@ func (s *Server) clearEffectScopes(
 		return
 	}
 	if status, err := expire(r.Context(), currentUser(r), id); err != nil {
-		writeError(w, status, err.Error())
+		plataforma.WriteError(w, status, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string][]string{"clearedScopes": cleared})
+	plataforma.WriteJSON(w, http.StatusOK, map[string][]string{"clearedScopes": cleared})
 }
 
 // handleEndScene is the sheet's own "Encerrar cena" (Efeitos tab): one player
 // ending their scene, as opposed to the GM's session-wide rest that reaches
-// endScene through the WS gateway.
+// EndScene through the WS gateway.
 func (s *Server) handleEndScene(w http.ResponseWriter, r *http.Request) {
-	s.clearEffectScopes(w, r, s.endScene, []string{"scene"})
+	s.clearEffectScopes(w, r, s.EndScene, []string{"scene"})
 }
 
 // handleEndDay ends the day, which also ends the running scene (book rest
@@ -147,7 +148,7 @@ func (s *Server) restVitals(ctx context.Context, user AuthUser, characterID int6
 		mpCurrent: min(row.Mpmax, row.Mpcurrent+gain),
 	}
 	if err := s.queries.SetVitalsCurrent(ctx, sqlcgen.SetVitalsCurrentParams{
-		HpCurrent: next.hpCurrent, MpCurrent: next.mpCurrent, UpdatedAt: nowISO(), ID: characterID,
+		HpCurrent: next.hpCurrent, MpCurrent: next.mpCurrent, UpdatedAt: plataforma.NowISO(), ID: characterID,
 	}); err != nil {
 		return restedVitals{}, http.StatusInternalServerError, errors.New("Could not update vitals")
 	}
@@ -168,26 +169,26 @@ func (s *Server) handleAdjustEffect(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		TempHpDelta *int64 `json:"tempHpDelta"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if body.TempHpDelta == nil {
-		writeValidationError(w, FieldErrorMap{"tempHpDelta": {"tempHpDelta must be an integer number"}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"tempHpDelta": {"tempHpDelta must be an integer number"}})
 		return
 	}
 	eff, err := s.queries.GetActiveEffect(r.Context(), effectID)
 	if errors.Is(err, sql.ErrNoRows) || (err == nil && eff.Characterid != row.ID) {
-		writeError(w, http.StatusNotFound, fmt.Sprintf("Active effect %d not found for character %d", effectID, row.ID))
+		plataforma.WriteError(w, http.StatusNotFound, fmt.Sprintf("Active effect %d not found for character %d", effectID, row.ID))
 		return
 	}
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load effect")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load effect")
 		return
 	}
 
 	var mods []map[string]any
 	if json.Unmarshal([]byte(eff.Modifiers), &mods) != nil {
-		writeError(w, http.StatusBadRequest, "Effect modifiers are malformed")
+		plataforma.WriteError(w, http.StatusBadRequest, "Effect modifiers are malformed")
 		return
 	}
 	idx := -1
@@ -198,25 +199,25 @@ func (s *Server) handleAdjustEffect(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if idx < 0 {
-		writeError(w, http.StatusBadRequest, "Active effect has no temp HP to adjust")
+		plataforma.WriteError(w, http.StatusBadRequest, "Active effect has no temp HP to adjust")
 		return
 	}
 	amount := max(0, toInt(mods[idx]["amount"])+int(*body.TempHpDelta))
 	if amount == 0 {
 		if err := s.queries.DeleteEffectByID(r.Context(), effectID); err != nil {
-			writeError(w, http.StatusInternalServerError, "Could not remove effect")
+			plataforma.WriteError(w, http.StatusInternalServerError, "Could not Remove effect")
 			return
 		}
-		writeJSON(w, http.StatusOK, map[string]any{"removed": true, "id": effectID})
+		plataforma.WriteJSON(w, http.StatusOK, map[string]any{"removed": true, "id": effectID})
 		return
 	}
 	mods[idx]["amount"] = amount
 	next, _ := json.Marshal(mods)
 	if err := s.queries.UpdateEffectModifiers(r.Context(), sqlcgen.UpdateEffectModifiersParams{Modifiers: string(next), ID: effectID}); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not update effect")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update effect")
 		return
 	}
-	writeJSON(w, http.StatusOK, EffectDTO{
+	plataforma.WriteJSON(w, http.StatusOK, EffectDTO{
 		ID: eff.ID, CatalogID: eff.Catalogid, Scope: eff.Scope, Modifiers: string(next), CreatedAt: eff.Createdat,
 	})
 }
@@ -234,25 +235,25 @@ func (s *Server) handleDeleteEffect(w http.ResponseWriter, r *http.Request) {
 	}
 	meta, err := s.queries.GetActiveEffectMeta(r.Context(), effectID)
 	if errors.Is(err, sql.ErrNoRows) || (err == nil && meta.Characterid != row.ID) {
-		writeError(w, http.StatusNotFound, fmt.Sprintf("Active effect %d not found", effectID))
+		plataforma.WriteError(w, http.StatusNotFound, fmt.Sprintf("Active effect %d not found", effectID))
 		return
 	}
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load effect")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load effect")
 		return
 	}
 	if err := s.queries.DeleteEffectByID(r.Context(), effectID); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not remove effect")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Remove effect")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]int64{"id": effectID})
+	plataforma.WriteJSON(w, http.StatusOK, map[string]int64{"id": effectID})
 }
 
 type characterCampaignDTO struct {
 	ID          int64              `json:"id"`
 	CampaignID  int64              `json:"campaignId"`
 	CharacterID int64              `json:"characterId"`
-	Role        string             `json:"role"`
+	Role        string             `json:"Role"`
 	AddedAt     string             `json:"addedAt"`
 	Campaign    campaignSummaryDTO `json:"campaign"`
 }
@@ -273,20 +274,20 @@ func (s *Server) handleListCharacterCampaigns(w http.ResponseWriter, r *http.Req
 	}
 	owner, err := s.queries.GetCharacterOwner(r.Context(), id)
 	if errors.Is(err, sql.ErrNoRows) {
-		writeError(w, http.StatusNotFound, fmt.Sprintf("Character %d not found", id))
+		plataforma.WriteError(w, http.StatusNotFound, fmt.Sprintf("Character %d not found", id))
 		return
 	}
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load character")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
 		return
 	}
 	if owner != currentUser(r).ID {
-		writeError(w, http.StatusForbidden, fmt.Sprintf("Character %d belongs to another user", id))
+		plataforma.WriteError(w, http.StatusForbidden, fmt.Sprintf("Character %d belongs to another user", id))
 		return
 	}
 	rows, err := s.queries.ListCampaignsForCharacter(r.Context(), id)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not list campaigns")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not list campaigns")
 		return
 	}
 	out := make([]characterCampaignDTO, 0, len(rows))
@@ -295,9 +296,9 @@ func (s *Server) handleListCharacterCampaigns(w http.ResponseWriter, r *http.Req
 			ID: m.ID, CampaignID: m.Campaignid, CharacterID: m.Characterid, Role: m.Role, AddedAt: m.Addedat,
 			Campaign: campaignSummaryDTO{
 				ID: m.Campaignid, Name: m.Campaignname,
-				Description: nullToPtr(m.Campaigndescription), UpdatedAt: m.Campaignupdatedat,
+				Description: plataforma.NullToPtr(m.Campaigndescription), UpdatedAt: m.Campaignupdatedat,
 			},
 		})
 	}
-	writeJSON(w, http.StatusOK, out)
+	plataforma.WriteJSON(w, http.StatusOK, out)
 }

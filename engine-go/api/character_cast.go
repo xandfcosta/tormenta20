@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"t20engine/plataforma"
 
 	"github.com/go-chi/chi/v5"
 	"t20engine/catalog"
@@ -39,33 +40,33 @@ func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Augments []augmentPick `json:"augments"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	spell, known := catalog.LookupSpell(catalogSpellID)
 	if !known {
-		writeError(w, http.StatusBadRequest, fmt.Sprintf("Unknown spell %q", catalogSpellID))
+		plataforma.WriteError(w, http.StatusBadRequest, fmt.Sprintf("Unknown spell %q", catalogSpellID))
 		return
 	}
 	dto, err := s.loadCharacter(r.Context(), row)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load character")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
 		return
 	}
 
 	learned := findSpell(dto.Spells, catalogSpellID)
 	if learned == nil {
-		writeError(w, http.StatusNotFound, fmt.Sprintf("Spell %q not in character's spellbook", catalogSpellID))
+		plataforma.WriteError(w, http.StatusNotFound, fmt.Sprintf("Spell %q not in character's spellbook", catalogSpellID))
 		return
 	}
 	if requiresPreparation(dto.Classes, dto.ClassChoices) && !learned.Prepared {
-		writeError(w, http.StatusForbidden, fmt.Sprintf("Spell %q must be prepared before casting", catalogSpellID))
+		plataforma.WriteError(w, http.StatusForbidden, fmt.Sprintf("Spell %q must be prepared before casting", catalogSpellID))
 		return
 	}
 
 	augmentPm, augErr := validateAugments(spell, body.Augments)
 	if augErr != "" {
-		writeError(w, http.StatusBadRequest, augErr)
+		plataforma.WriteError(w, http.StatusBadRequest, augErr)
 		return
 	}
 	basePm := spellBasePmCost[spell.Circle]
@@ -76,7 +77,7 @@ func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
 	// bonuses stack — so the sheet offered a cap this gate then refused.
 	ec, err := engineCharacterFrom(dto)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not read character")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not read character")
 		return
 	}
 	// p226: o modificador de custo entra AQUI, e não só na ficha — a redução era
@@ -91,24 +92,24 @@ func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
 	// nunca torna inconjurável uma magia que o personagem já possui, o que
 	// acontecia com uma magia de círculo alto vinda de fora da classe.
 	if spell.Circle > 0 && totalPm > limit && totalPm > minPm {
-		writeFieldError(w, http.StatusBadRequest, fmt.Sprintf("PM cost %d exceeds per-spell limit %d", totalPm, limit), FieldErrorMap{"augments": {fmt.Sprintf("Limite PM excedido (%d)", limit)}})
+		plataforma.WriteFieldError(w, http.StatusBadRequest, fmt.Sprintf("PM cost %d exceeds per-spell limit %d", totalPm, limit), plataforma.FieldErrorMap{"augments": {fmt.Sprintf("Limite PM excedido (%d)", limit)}})
 		return
 	}
 	if int64(totalPm) > dto.MpCurrent {
-		writeFieldError(w, http.StatusBadRequest, fmt.Sprintf("Insufficient PM (need %d, have %d)", totalPm, dto.MpCurrent), FieldErrorMap{"mpCurrent": {"Sem PM suficiente"}})
+		plataforma.WriteFieldError(w, http.StatusBadRequest, fmt.Sprintf("Insufficient PM (need %d, have %d)", totalPm, dto.MpCurrent), plataforma.FieldErrorMap{"mpCurrent": {"Sem PM suficiente"}})
 		return
 	}
 
 	if totalPm == 0 {
-		writeJSON(w, http.StatusOK, castResult{MpCurrent: dto.MpCurrent, RemovedEffectIDs: []int64{}})
+		plataforma.WriteJSON(w, http.StatusOK, castResult{MpCurrent: dto.MpCurrent, RemovedEffectIDs: []int64{}})
 		return
 	}
 	mpCurrent := dto.MpCurrent - int64(totalPm)
-	if err := s.queries.SetMpCurrent(r.Context(), sqlcgen.SetMpCurrentParams{MpCurrent: mpCurrent, UpdatedAt: nowISO(), ID: row.ID}); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not cast spell")
+	if err := s.queries.SetMpCurrent(r.Context(), sqlcgen.SetMpCurrentParams{MpCurrent: mpCurrent, UpdatedAt: plataforma.NowISO(), ID: row.ID}); err != nil {
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not cast spell")
 		return
 	}
-	writeJSON(w, http.StatusOK, castResult{MpCurrent: mpCurrent, RemovedEffectIDs: []int64{}})
+	plataforma.WriteJSON(w, http.StatusOK, castResult{MpCurrent: mpCurrent, RemovedEffectIDs: []int64{}})
 }
 
 func findSpell(spells []SpellDTO, catalogSpellID string) *SpellDTO {

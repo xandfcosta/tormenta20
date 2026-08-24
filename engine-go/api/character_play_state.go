@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"t20engine/plataforma"
 
 	"github.com/go-chi/chi/v5"
 	"t20engine/db/sqlcgen"
@@ -84,27 +85,27 @@ func (s *Server) handleUpdateConditionals(w http.ResponseWriter, r *http.Request
 	var body struct {
 		Conditionals []string `json:"conditionals"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if body.Conditionals == nil {
-		writeValidationError(w, FieldErrorMap{"conditionals": {"conditionals must be an array"}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"conditionals": {"conditionals must be an array"}})
 		return
 	}
 	ctx := r.Context()
 	if err := s.queries.ClearCharacterConditionals(ctx, row.ID); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not update conditionals")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update conditionals")
 		return
 	}
 	for _, id := range body.Conditionals {
 		if err := s.queries.AddCharacterConditional(ctx, sqlcgen.AddCharacterConditionalParams{
 			Characterid: row.ID, Conditionalid: id,
 		}); err != nil {
-			writeError(w, http.StatusInternalServerError, "Could not update conditionals")
+			plataforma.WriteError(w, http.StatusInternalServerError, "Could not update conditionals")
 			return
 		}
 	}
-	writeJSON(w, http.StatusOK, map[string][]string{"conditionals": body.Conditionals})
+	plataforma.WriteJSON(w, http.StatusOK, map[string][]string{"conditionals": body.Conditionals})
 }
 
 // handleBumpPowerUse gasta MAIS UM uso.
@@ -122,21 +123,21 @@ func (s *Server) handleBumpPowerUse(w http.ResponseWriter, r *http.Request) {
 		PowerID string `json:"powerId"`
 		Scope   string `json:"scope"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if body.PowerID == "" {
-		writeValidationError(w, FieldErrorMap{"powerId": {"powerId is required"}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"powerId": {"powerId is required"}})
 		return
 	}
 	if body.Scope != "scene" && body.Scope != "day" {
-		writeValidationError(w, FieldErrorMap{"scope": {`scope must be "scene" or "day"`}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"scope": {`scope must be "scene" or "day"`}})
 		return
 	}
 	if err := s.queries.BumpCharacterPowerUse(r.Context(), sqlcgen.BumpCharacterPowerUseParams{
 		Characterid: row.ID, Powerid: body.PowerID, Scope: body.Scope,
 	}); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not record the power use")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not record the power use")
 		return
 	}
 	s.writePlayState(w, r, row.ID)
@@ -150,24 +151,24 @@ func (s *Server) handleSetStance(w http.ResponseWriter, r *http.Request) {
 	}
 	flag := chi.URLParam(r, "flag")
 	if flag == "" {
-		writeValidationError(w, FieldErrorMap{"flag": {"flag is required"}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"flag": {"flag is required"}})
 		return
 	}
 	var body struct {
 		Steps  int64 `json:"steps"`
 		PmPaid int64 `json:"pmPaid"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if body.Steps < 0 || body.PmPaid < 0 {
-		writeValidationError(w, FieldErrorMap{"pmPaid": {"steps and pmPaid must be zero or more"}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"pmPaid": {"steps and pmPaid must be zero or more"}})
 		return
 	}
 	if err := s.queries.UpsertCharacterStance(r.Context(), sqlcgen.UpsertCharacterStanceParams{
 		Characterid: row.ID, Flag: flag, Steps: body.Steps, Pmpaid: body.PmPaid,
 	}); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not record the stance")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not record the stance")
 		return
 	}
 	s.writePlayState(w, r, row.ID)
@@ -182,7 +183,7 @@ func (s *Server) handleDeleteStance(w http.ResponseWriter, r *http.Request) {
 	if err := s.queries.RemoveCharacterStance(r.Context(), sqlcgen.RemoveCharacterStanceParams{
 		Characterid: row.ID, Flag: chi.URLParam(r, "flag"),
 	}); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not clear the stance")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not clear the stance")
 		return
 	}
 	s.writePlayState(w, r, row.ID)
@@ -195,10 +196,10 @@ func (s *Server) handleDeleteStance(w http.ResponseWriter, r *http.Request) {
 func (s *Server) writePlayState(w http.ResponseWriter, r *http.Request, id int64) {
 	var dto CharacterDTO
 	if err := s.loadPlayState(r.Context(), id, &dto); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not read the play state")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not read the play state")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
+	plataforma.WriteJSON(w, http.StatusOK, map[string]any{
 		"conditionals": dto.Conditionals,
 		"powerUses":    dto.PowerUses,
 		"stances":      dto.Stances,
@@ -208,9 +209,9 @@ func (s *Server) writePlayState(w http.ResponseWriter, r *http.Request, id int64
 // clearScenePlayState é o que o DESCANSO DE CENA leva embora: os usos "1/cena" e
 // as posturas.
 //
-// Ele se pendura no descanso da ficha e não no `endScene` da sessão de
+// Ele se pendura no descanso da ficha e não no `EndScene` da sessão de
 // propósito: os usos entram pelo caminho que JÁ limpa a ficha, junto dos
-// efeitos. Era o `endScene` da sessão que estava errado — ele não limpava
+// efeitos. Era o `EndScene` da sessão que estava errado — ele não limpava
 // efeito nenhum, e a bênção de duração "cena" sobrevivia ao fim da cena. A
 // ALE-220 fechou isso pelo lado de lá: encerrar a cena agora percorre o grupo e
 // chama ESTE caminho para cada ficha.

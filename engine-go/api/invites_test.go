@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"t20engine/plataforma"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
@@ -22,26 +23,26 @@ func inviteFixture(t *testing.T, token string) (*Server, http.Handler) {
 	t.Helper()
 	sqlDB, err := db.Open(filepath.Join(t.TempDir(), "invites_test.db"))
 	if err != nil {
-		t.Fatalf("open test db: %v", err)
+		t.Fatalf("Open test db: %v", err)
 	}
 	t.Cleanup(func() { _ = sqlDB.Close() })
 
 	ctx := context.Background()
 	queries := sqlcgen.New(sqlDB)
 	user, err := queries.CreateUser(ctx, sqlcgen.CreateUserParams{
-		Email: "gm@test.local", Passwordhash: "x", Createdat: nowISO(), Updatedat: nowISO(),
+		Email: "gm@test.local", Passwordhash: "x", Createdat: plataforma.NowISO(), Updatedat: plataforma.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("create user: %v", err)
 	}
 	campaign, err := queries.CreateCampaign(ctx, sqlcgen.CreateCampaignParams{
-		Ownerid: user.ID, Name: "Mesa do Beco", Createdat: nowISO(), Updatedat: nowISO(),
+		Ownerid: user.ID, Name: "Mesa do Beco", Createdat: plataforma.NowISO(), Updatedat: plataforma.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("create campaign: %v", err)
 	}
 	if _, err := queries.SetInviteToken(ctx, sqlcgen.SetInviteTokenParams{
-		InviteToken: sql.NullString{String: token, Valid: true}, UpdatedAt: nowISO(), ID: campaign.ID,
+		InviteToken: sql.NullString{String: token, Valid: true}, UpdatedAt: plataforma.NowISO(), ID: campaign.ID,
 	}); err != nil {
 		t.Fatalf("set invite token: %v", err)
 	}
@@ -71,7 +72,7 @@ func TestResolveInviteReturnsPreview(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
 		t.Fatalf("decode: %v (body %q)", err, rec.Body.String())
 	}
-	// camelCase or the join form reads an undefined campaignId (ALE-18).
+	// camelCase or the Join form reads an undefined campaignId (ALE-18).
 	if body["campaignName"] != "Mesa do Beco" {
 		t.Errorf("campaignName = %v, want %q", body["campaignName"], "Mesa do Beco")
 	}
@@ -82,7 +83,7 @@ func TestResolveInviteReturnsPreview(t *testing.T) {
 
 // The regression this file exists for: an unknown token used to answer 200 with
 // a `null` body, so a dead invite reached the client as a SUCCESS carrying no
-// campaign — the join screen could not tell it apart from one still loading
+// campaign — the Join screen could not tell it apart from one still loading
 // (ALE-80).
 func TestResolveInviteRejectsUnknownToken(t *testing.T) {
 	_, h := inviteFixture(t, "token-vivo")
@@ -102,7 +103,7 @@ func TestResolveInviteRejectsUnknownToken(t *testing.T) {
 func TestResolveInviteRejectsRotatedToken(t *testing.T) {
 	s, h := inviteFixture(t, "token-antigo")
 	if _, err := s.queries.SetInviteToken(context.Background(), sqlcgen.SetInviteTokenParams{
-		InviteToken: sql.NullString{String: "token-novo", Valid: true}, UpdatedAt: nowISO(), ID: 1,
+		InviteToken: sql.NullString{String: "token-novo", Valid: true}, UpdatedAt: plataforma.NowISO(), ID: 1,
 	}); err != nil {
 		t.Fatalf("rotate: %v", err)
 	}

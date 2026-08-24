@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"t20engine/plataforma"
 
 	"github.com/go-chi/chi/v5"
 	"t20engine/db/sqlcgen"
@@ -18,19 +19,19 @@ func (s *Server) handleListCharacters(w http.ResponseWriter, r *http.Request) {
 	user := currentUser(r)
 	rows, err := s.queries.ListCharactersByOwner(r.Context(), user.ID)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not list characters")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not list characters")
 		return
 	}
 	out := make([]CharacterDTO, 0, len(rows))
 	for _, row := range rows {
 		dto, err := s.loadCharacter(r.Context(), row)
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Could not load character")
+			plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
 			return
 		}
 		out = append(out, dto)
 	}
-	writeJSON(w, http.StatusOK, out)
+	plataforma.WriteJSON(w, http.StatusOK, out)
 }
 
 // handleGetCharacter returns one character aggregate. Access = owner OR campaign
@@ -42,14 +43,14 @@ func (s *Server) handleGetCharacter(w http.ResponseWriter, r *http.Request) {
 	}
 	dto, err := s.loadCharacter(r.Context(), row)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load character")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
 		return
 	}
-	writeJSON(w, http.StatusOK, dto)
+	plataforma.WriteJSON(w, http.StatusOK, dto)
 }
 
-// characterFor is the preamble every character route repeats: read {id}, load
-// the row, enforce the read/mutation guard, and emit the right error. Returns
+// characterFor is the preamble every character route repeats: read {id}, Load
+// the row, enforce the read/mutation guard, and Emit the right error. Returns
 // ok=false when it already wrote the response.
 //
 // Twenty-three handlers spelled these nine lines out, and the copy-paste left a
@@ -66,21 +67,21 @@ func (s *Server) characterFor(w http.ResponseWriter, r *http.Request) (sqlcgen.C
 	}
 	row, status, err := s.authorizedCharacter(r.Context(), currentUser(r), id)
 	if err != nil {
-		writeError(w, status, err.Error())
+		plataforma.WriteError(w, status, err.Error())
 		return sqlcgen.Character{}, false
 	}
 	return row, true
 }
 
 // authorizedCharacter loads a character and enforces the read/mutation guard
-// (owner or campaign GM). Returns the row, or an HTTP status + error to emit.
+// (owner or campaign GM). Returns the row, or an HTTP status + error to Emit.
 func (s *Server) authorizedCharacter(ctx context.Context, user AuthUser, id int64) (sqlcgen.Character, int, error) {
 	row, err := s.queries.GetCharacter(ctx, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return row, http.StatusNotFound, fmt.Errorf("Character %d not found", id)
 	}
 	if err != nil {
-		return row, http.StatusInternalServerError, errors.New("Could not load character")
+		return row, http.StatusInternalServerError, errors.New("Could not Load character")
 	}
 	// The admin passes the same door as the owner and the campaign's GM: a table
 	// they administer includes the sheets in it (ALE-120).
@@ -110,30 +111,30 @@ func (s *Server) handleGetSheet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if s.catalogs == nil {
-		writeError(w, http.StatusServiceUnavailable, "Rules catalog not loaded")
+		plataforma.WriteError(w, http.StatusServiceUnavailable, "Rules catalog not loaded")
 		return
 	}
 	sheet, err := s.computeSheet(r.Context(), row)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not compute sheet")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not compute sheet")
 		return
 	}
-	writeJSON(w, http.StatusOK, sheet)
+	plataforma.WriteJSON(w, http.StatusOK, sheet)
 }
 
 // assertCharacterOwner is the strict owner-only check
 // the WS vitals gate uses: a player may edit only a character they own. Transport-agnostic.
-func (s *Server) assertCharacterOwner(ctx context.Context, userID, characterID int64) (int, error) {
+func (s *Server) assertCharacterOwner(ctx context.Context, UserID, characterID int64) (int, error) {
 	owner, err := s.queries.GetCharacterOwner(ctx, characterID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return http.StatusNotFound, fmt.Errorf("Character %d not found", characterID)
 	}
 	if err != nil {
-		return http.StatusInternalServerError, errors.New("Could not load character")
+		return http.StatusInternalServerError, errors.New("Could not Load character")
 	}
-	if owner != userID {
+	if owner != UserID {
 		return http.StatusForbidden, fmt.Errorf(
-			"Caller %d can only edit their own character's vitals (character %d)", userID, characterID)
+			"Caller %d can only edit their own character's vitals (character %d)", UserID, characterID)
 	}
 	return http.StatusOK, nil
 }
@@ -176,9 +177,9 @@ func (s *Server) loadCharacter(ctx context.Context, c sqlcgen.Character) (Charac
 	}
 	for _, it := range items {
 		dto.Items = append(dto.Items, ItemDTO{
-			ID: it.ID, CatalogID: nullToPtr(it.Catalogid), Name: it.Name,
-			Quantity: it.Quantity, Slots: it.Slots, Equipped: nullToPtr(it.Equipped),
-			Improvements: it.Improvements, Material: nullToPtr(it.Material),
+			ID: it.ID, CatalogID: plataforma.NullToPtr(it.Catalogid), Name: it.Name,
+			Quantity: it.Quantity, Slots: it.Slots, Equipped: plataforma.NullToPtr(it.Equipped),
+			Improvements: it.Improvements, Material: plataforma.NullToPtr(it.Material),
 		})
 	}
 
@@ -231,9 +232,9 @@ func (s *Server) loadCharacter(ctx context.Context, c sqlcgen.Character) (Charac
 // intParam parses a chi :id-style path param, writing a 400 (like ParseIntPipe)
 // and returning false on a non-numeric value.
 func intParam(w http.ResponseWriter, r *http.Request, name string) (int64, bool) {
-	n, err := parseInt(chi.URLParam(r, name))
+	n, err := plataforma.ParseInt(chi.URLParam(r, name))
 	if err != nil {
-		writeError(w, http.StatusBadRequest, fmt.Sprintf("Validation failed (numeric string is expected for %q)", name))
+		plataforma.WriteError(w, http.StatusBadRequest, fmt.Sprintf("Validation failed (numeric string is expected for %q)", name))
 		return 0, false
 	}
 	return int64(n), true

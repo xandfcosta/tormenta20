@@ -2,7 +2,7 @@ import { For, type JSX, Show } from 'solid-js'
 import type { Monster } from '@/shared/api/catalog-types'
 import { xpForNd } from '@/shared/lib/encounter-math'
 import { FieldLabel, SectionLabel, SectionTitle } from '@/shared/ui/section-label'
-import { formatNd, MONSTER_TIPO_LABEL } from './monster-format'
+import { formatNd, MONSTER_SIZE_LABEL, MONSTER_TIPO_LABEL } from './monster-format'
 
 /**
  * O modificador como o livro escreve, e o TRAVESSÃO quando ele não existe.
@@ -27,7 +27,7 @@ export function MonsterDetail(props: { monster: Monster }) {
         </SectionTitle>
         <p class="text-xs text-muted-foreground">
           ND {formatNd(props.monster.nd)} · {MONSTER_TIPO_LABEL[props.monster.tipo]} ·{' '}
-          {props.monster.size} · p{props.monster.bookPage} · XP {xpForNd(props.monster.nd)}
+          {MONSTER_SIZE_LABEL[props.monster.size]} · p{props.monster.bookPage} · XP {xpForNd(props.monster.nd)}
         </p>
       </div>
 

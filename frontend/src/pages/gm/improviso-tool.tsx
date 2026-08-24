@@ -99,7 +99,7 @@ function ChaseTable() {
     <TableCard
       title="Perseguição — evento"
       dice="d20"
-      page="p272"
+      page="p274"
       onRoll={() => {
         const roll = rollDice(1, 20)
         history.push(roll, chaseEventFromRoll(roll))
@@ -117,7 +117,7 @@ function RewardTable() {
     <TableCard
       title="Consequências"
       dice="d6"
-      page="p276"
+      page="p279"
       onRoll={() => {
         const roll = rollDice(1, 6)
         history.push(roll, rewardCastigoFromRoll(roll))

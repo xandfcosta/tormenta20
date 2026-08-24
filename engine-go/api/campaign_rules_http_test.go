@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"t20engine/plataforma"
 	"testing"
 
 	"t20engine/db/sqlcgen"
@@ -44,10 +45,10 @@ func newRulesFixture(t *testing.T) rulesFixture {
 	}
 }
 
-func (f rulesFixture) join(t *testing.T, campaignID int64) {
+func (f rulesFixture) Join(t *testing.T, campaignID int64) {
 	t.Helper()
 	if _, err := f.s.queries.CreateMember(context.Background(), sqlcgen.CreateMemberParams{
-		Campaignid: campaignID, Characterid: f.pc, Role: "player", Addedat: nowISO(),
+		Campaignid: campaignID, Characterid: f.pc, Role: "player", Addedat: plataforma.NowISO(),
 	}); err != nil {
 		t.Fatalf("entrar na campanha %d: %v", campaignID, err)
 	}
@@ -78,7 +79,7 @@ func (f rulesFixture) cargaIgnorada(t *testing.T) bool {
 func TestReplaceCampaignRules(t *testing.T) {
 	t.Run("o mestre desliga a carga e a ficha do jogador para de aplicá-la", func(t *testing.T) {
 		f := newRulesFixture(t)
-		f.join(t, f.campaign)
+		f.Join(t, f.campaign)
 		if f.cargaIgnorada(t) {
 			t.Fatal("a carga já nascia desligada — o padrão do livro é ela EM VIGOR")
 		}
@@ -96,7 +97,7 @@ func TestReplaceCampaignRules(t *testing.T) {
 	// Ligar de volta é o mesmo gesto com a lista vazia: substituição, não delta.
 	t.Run("mandar a lista vazia religa tudo", func(t *testing.T) {
 		f := newRulesFixture(t)
-		f.join(t, f.campaign)
+		f.Join(t, f.campaign)
 		f.putRules(t, f.owner, f.campaign, `{"ignoredRules":["carga"]}`)
 
 		if code, body := f.putRules(t, f.owner, f.campaign, `{"ignoredRules":[]}`); code != http.StatusOK {
@@ -111,7 +112,7 @@ func TestReplaceCampaignRules(t *testing.T) {
 	// penalidade da própria ficha no meio da sessão.
 	t.Run("o jogador não desliga regra nenhuma", func(t *testing.T) {
 		f := newRulesFixture(t)
-		f.join(t, f.campaign)
+		f.Join(t, f.campaign)
 
 		code, _ := f.putRules(t, f.player, f.campaign, `{"ignoredRules":["carga"]}`)
 
@@ -150,8 +151,8 @@ func TestReplaceCampaignRules(t *testing.T) {
 // dois.
 func TestFichaEmDuasCampanhasSegueAMaisEstrita(t *testing.T) {
 	f := newRulesFixture(t)
-	f.join(t, f.campaign)
-	f.join(t, f.otherCamp)
+	f.Join(t, f.campaign)
+	f.Join(t, f.otherCamp)
 
 	f.putRules(t, f.owner, f.campaign, `{"ignoredRules":["carga"]}`)
 	if f.cargaIgnorada(t) {

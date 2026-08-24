@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"t20engine/plataforma"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -22,7 +23,7 @@ type AuthUser struct {
 	Email string  `json:"email"`
 	Name  *string `json:"name"`
 	// IsAdmin is derived from ADMIN_EMAILS at every request, never stored: the
-	// role has no row to go stale against, and this is what the UI reads to show
+	// Role has no row to go stale against, and this is what the UI reads to show
 	// the admin door (ALE-120).
 	IsAdmin bool `json:"isAdmin"`
 }
@@ -52,15 +53,15 @@ type loginBody struct {
 // handleRegister creates a user (bcrypt), issues the session cookie, returns the
 // AuthUser. 201 on success; 409 on a duplicate email; 403 without a usable
 // invite. Since ALE-119 the app answers on the LAN, so registration is no longer
-// open — see registrationInvite.
+// Open — see registrationInvite.
 func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 	var body registerBody
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
-	body.Email = normalizeEmail(body.Email)
-	if fields := validateRegister(body); len(fields) > 0 {
-		writeValidationError(w, fields)
+	body.Email = plataforma.NormalizeEmail(body.Email)
+	if fields := ValidateRegister(body); len(fields) > 0 {
+		plataforma.WriteValidationError(w, fields)
 		return
 	}
 	invite, ok := s.registrationInvite(w, r, body.Email, body.InviteToken)
@@ -69,10 +70,10 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcryptCost)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not hash password")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not hash password")
 		return
 	}
-	now := nowISO()
+	now := plataforma.NowISO()
 	user, err := s.createUser(r.Context(), sqlcgen.CreateUserParams{
 		Email:        body.Email,
 		Name:         nullString(body.Name),
@@ -87,7 +88,7 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 	if !s.issueSession(w, user) {
 		return
 	}
-	writeJSON(w, http.StatusCreated, s.authUser(user))
+	plataforma.WriteJSON(w, http.StatusCreated, s.authUser(user))
 }
 
 // registrationInvite resolves the invite this registration has to spend. The
@@ -102,7 +103,7 @@ func (s *Server) registrationInvite(
 	}
 	invite, ok := s.usableInvite(r.Context(), token)
 	if !ok {
-		writeError(w, http.StatusForbidden, inviteRejected)
+		plataforma.WriteError(w, http.StatusForbidden, inviteRejected)
 		return nil, false
 	}
 	return &invite, true
@@ -111,33 +112,33 @@ func (s *Server) registrationInvite(
 func writeRegisterError(w http.ResponseWriter, err error, email string) {
 	switch {
 	case db.IsUniqueViolation(err):
-		writeError(w, http.StatusConflict, "Email already registered: "+email)
+		plataforma.WriteError(w, http.StatusConflict, "Email already registered: "+email)
 	case errors.Is(err, errInviteSpent):
-		writeError(w, http.StatusForbidden, inviteRejected)
+		plataforma.WriteError(w, http.StatusForbidden, inviteRejected)
 	default:
-		writeError(w, http.StatusInternalServerError, "Could not create user")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not create user")
 	}
 }
 
 // handleLogin validates credentials, issues the cookie, returns AuthUser (200).
 func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	var body loginBody
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
-	if fields := validateLogin(body); len(fields) > 0 {
-		writeValidationError(w, fields)
+	if fields := ValidateLogin(body); len(fields) > 0 {
+		plataforma.WriteValidationError(w, fields)
 		return
 	}
-	user, err := s.queries.GetUserByEmail(r.Context(), normalizeEmail(body.Email))
+	user, err := s.queries.GetUserByEmail(r.Context(), plataforma.NormalizeEmail(body.Email))
 	if err != nil || bcrypt.CompareHashAndPassword([]byte(user.Passwordhash), []byte(body.Password)) != nil {
-		writeError(w, http.StatusUnauthorized, "Invalid credentials")
+		plataforma.WriteError(w, http.StatusUnauthorized, "Invalid credentials")
 		return
 	}
 	if !s.issueSession(w, user) {
 		return
 	}
-	writeJSON(w, http.StatusOK, s.authUser(user))
+	plataforma.WriteJSON(w, http.StatusOK, s.authUser(user))
 }
 
 // handleLogout clears the session cookie (204).
@@ -148,7 +149,7 @@ func (s *Server) handleLogout(w http.ResponseWriter, _ *http.Request) {
 
 // handleMe returns the authenticated user (behind requireAuth).
 func (s *Server) handleMe(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, currentUser(r))
+	plataforma.WriteJSON(w, http.StatusOK, currentUser(r))
 }
 
 // issueSession signs a JWT for the user and sets the session cookie. Returns
@@ -156,7 +157,7 @@ func (s *Server) handleMe(w http.ResponseWriter, r *http.Request) {
 func (s *Server) issueSession(w http.ResponseWriter, user sqlcgen.User) bool {
 	token, err := s.signToken(user)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not sign session")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not sign session")
 		return false
 	}
 	http.SetCookie(w, s.sessionCookie(token, int(sessionTTL.Seconds())))
@@ -219,7 +220,7 @@ func parseExpiry(s string) time.Duration {
 		return sessionTTL
 	}
 	unit := s[len(s)-1]
-	n, err := parseInt(s[:len(s)-1])
+	n, err := plataforma.ParseInt(s[:len(s)-1])
 	if err != nil {
 		return sessionTTL
 	}

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"t20engine/plataforma"
 
 	"github.com/go-chi/chi/v5"
 	"t20engine/db/sqlcgen"
@@ -31,10 +32,10 @@ type campaignCharacterDTO struct {
 	Classes []ClassDTO `json:"classes"`
 }
 
-// campaignListDTO adds the caller's role + own member character (GET /campaigns).
+// campaignListDTO adds the caller's Role + own member character (GET /campaigns).
 type campaignListDTO struct {
 	CampaignDTO
-	Role      string                `json:"role"`
+	Role      string                `json:"Role"`
 	Character *campaignCharacterDTO `json:"character"`
 	// OwnerName is present ONLY on a mesa the caller does not own, which today
 	// means an admin seeing everyone's (ALE-120). Absent is the normal case, so
@@ -44,7 +45,7 @@ type campaignListDTO struct {
 
 type campaignDetailDTO struct {
 	CampaignDTO
-	Role string `json:"role"`
+	Role string `json:"Role"`
 	// IgnoredRules acompanha o detalhe porque é nele que a campanha se configura
 	// (ALE-221) — pedir uma segunda rota para desenhar os interruptores faria a
 	// tela piscar entre "tudo ligado" e o estado real.
@@ -56,7 +57,7 @@ type campaignDetailDTO struct {
 
 func campaignScalars(c sqlcgen.Campaign) CampaignDTO {
 	return CampaignDTO{
-		ID: c.ID, OwnerID: c.Ownerid, Name: c.Name, Description: nullToPtr(c.Description),
+		ID: c.ID, OwnerID: c.Ownerid, Name: c.Name, Description: plataforma.NullToPtr(c.Description),
 		CreatedAt: c.Createdat, UpdatedAt: c.Updatedat,
 	}
 }
@@ -65,7 +66,7 @@ func (s *Server) handleListCampaigns(w http.ResponseWriter, r *http.Request) {
 	user := currentUser(r)
 	rows, err := s.visibleCampaigns(r.Context(), user)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not list campaigns")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not list campaigns")
 		return
 	}
 	owners := s.ownerNames(r.Context(), rows, user.ID)
@@ -94,7 +95,7 @@ func (s *Server) handleListCampaigns(w http.ResponseWriter, r *http.Request) {
 		}
 		out = append(out, item)
 	}
-	writeJSON(w, http.StatusOK, out)
+	plataforma.WriteJSON(w, http.StatusOK, out)
 }
 
 // visibleCampaigns is what the caller may see listed: their own plus the ones
@@ -151,22 +152,22 @@ func (s *Server) handleGetCampaign(w http.ResponseWriter, r *http.Request) {
 	}
 	c, err := s.queries.GetCampaign(r.Context(), id)
 	if errors.Is(err, sql.ErrNoRows) {
-		writeError(w, http.StatusNotFound, fmt.Sprintf("Campaign %d not found", id))
+		plataforma.WriteError(w, http.StatusNotFound, fmt.Sprintf("Campaign %d not found", id))
 		return
 	}
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not load campaign")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load campaign")
 		return
 	}
 	user := currentUser(r)
-	role, status, err := s.roleIn(r.Context(), user, c)
+	Role, status, err := s.roleIn(r.Context(), user, c)
 	if err != nil {
-		writeError(w, status, err.Error())
+		plataforma.WriteError(w, status, err.Error())
 		return
 	}
 	out := campaignDetailDTO{
 		CampaignDTO:  campaignScalars(c),
-		Role:         role,
+		Role:         Role,
 		IgnoredRules: s.ignoredRulesOf(r.Context(), c.ID),
 	}
 	// IsAdmin, not merely "not the owner": a PLAYER is also a non-owner here, and
@@ -176,7 +177,7 @@ func (s *Server) handleGetCampaign(w http.ResponseWriter, r *http.Request) {
 		name := s.ownerNames(r.Context(), []sqlcgen.Campaign{c}, user.ID)[c.Ownerid]
 		out.OwnerName = &name
 	}
-	writeJSON(w, http.StatusOK, out)
+	plataforma.WriteJSON(w, http.StatusOK, out)
 }
 
 func (s *Server) handleCreateCampaign(w http.ResponseWriter, r *http.Request) {
@@ -184,24 +185,24 @@ func (s *Server) handleCreateCampaign(w http.ResponseWriter, r *http.Request) {
 		Name        string  `json:"name"`
 		Description *string `json:"description"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	name := strings.TrimSpace(body.Name)
 	if name == "" || len([]rune(name)) > 120 {
-		writeValidationError(w, FieldErrorMap{"name": {"name must be between 1 and 120 characters"}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"name": {"name must be between 1 and 120 characters"}})
 		return
 	}
-	now := nowISO()
+	now := plataforma.NowISO()
 	c, err := s.queries.CreateCampaign(r.Context(), sqlcgen.CreateCampaignParams{
 		Ownerid: currentUser(r).ID, Name: name, Description: trimOrNull(body.Description),
 		Createdat: now, Updatedat: now,
 	})
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not create campaign")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not create campaign")
 		return
 	}
-	writeJSON(w, http.StatusCreated, campaignScalars(c))
+	plataforma.WriteJSON(w, http.StatusCreated, campaignScalars(c))
 }
 
 func (s *Server) handleUpdateCampaign(w http.ResponseWriter, r *http.Request) {
@@ -213,7 +214,7 @@ func (s *Server) handleUpdateCampaign(w http.ResponseWriter, r *http.Request) {
 		Name        *string `json:"name"`
 		Description *string `json:"description"`
 	}
-	if !decodeJSON(w, r, &body) {
+	if !plataforma.DecodeJSON(w, r, &body) {
 		return
 	}
 	if _, ok := s.ownedCampaign(w, r, id); !ok {
@@ -223,27 +224,27 @@ func (s *Server) handleUpdateCampaign(w http.ResponseWriter, r *http.Request) {
 	if body.Name != nil {
 		name := strings.TrimSpace(*body.Name)
 		if name == "" || len([]rune(name)) > 120 {
-			writeValidationError(w, FieldErrorMap{"name": {"name must be between 1 and 120 characters"}})
+			plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"name": {"name must be between 1 and 120 characters"}})
 			return
 		}
-		set.add("name = ?", name)
+		set.Add("name = ?", name)
 	}
 	if body.Description != nil {
 		// Same helper as create: a whitespace-only description is NULL on both
 		// paths, or the client reads "" from one and null from the other for the
 		// very same input.
-		set.add("description = ?", nullableArg(trimOrNull(body.Description)))
+		set.Add("description = ?", nullableArg(trimOrNull(body.Description)))
 	}
 	if set.empty() {
-		writeError(w, http.StatusBadRequest, "No fields to update")
+		plataforma.WriteError(w, http.StatusBadRequest, "No fields to update")
 		return
 	}
 	if err := set.execTouched(r.Context(), s.db, "UPDATE campaigns", id); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not update campaign")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not update campaign")
 		return
 	}
 	c, _ := s.queries.GetCampaign(r.Context(), id)
-	writeJSON(w, http.StatusOK, campaignScalars(c))
+	plataforma.WriteJSON(w, http.StatusOK, campaignScalars(c))
 }
 
 func (s *Server) handleDeleteCampaign(w http.ResponseWriter, r *http.Request) {
@@ -255,10 +256,10 @@ func (s *Server) handleDeleteCampaign(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := s.queries.DeleteCampaign(r.Context(), id); err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not delete campaign")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not delete campaign")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]int64{"id": id})
+	plataforma.WriteJSON(w, http.StatusOK, map[string]int64{"id": id})
 }
 
 // handleRotateInvite ports rotateInviteToken (owner-only): {campaignId, token}.
@@ -271,51 +272,51 @@ func (s *Server) handleRotateInvite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	row, err := s.queries.SetInviteToken(r.Context(), sqlcgen.SetInviteTokenParams{
-		InviteToken: sql.NullString{String: generateInviteToken(), Valid: true}, UpdatedAt: nowISO(), ID: id,
+		InviteToken: sql.NullString{String: generateInviteToken(), Valid: true}, UpdatedAt: plataforma.NowISO(), ID: id,
 	})
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not rotate invite")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not rotate invite")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"campaignId": row.ID, "token": row.Invitetoken.String})
+	plataforma.WriteJSON(w, http.StatusOK, map[string]any{"campaignId": row.ID, "token": row.Invitetoken.String})
 }
 
 // handleResolveInvite resolves a shared token to {campaignId, campaignName}
 // (public). The frontend's CampaignInvitePreview expects camelCase keys —
-// returning {id, name} left the join form with an undefined campaignId, so the
+// returning {id, name} left the Join form with an undefined campaignId, so the
 // "Entrar" button stayed disabled forever (ALE-18). Mirrors handleRotateInvite,
 // which already returns campaignId.
 //
 // An unknown or rotated token is a 404. It used to answer 200 with a `null`
 // body, which made a dead invite arrive at the client as a SUCCESS carrying no
-// campaign — indistinguishable from one still loading, so the join screen sat
+// campaign — indistinguishable from one still loading, so the Join screen sat
 // there with a disabled button and no explanation (ALE-80). A missing thing is
 // a 404; only a genuine lookup failure is a 500.
 func (s *Server) handleResolveInvite(w http.ResponseWriter, r *http.Request) {
 	token := chi.URLParam(r, "token")
 	if token == "" {
-		writeError(w, http.StatusNotFound, "Invite not found")
+		plataforma.WriteError(w, http.StatusNotFound, "Invite not found")
 		return
 	}
 	c, err := s.queries.GetCampaignByToken(r.Context(), sql.NullString{String: token, Valid: true})
 	if errors.Is(err, sql.ErrNoRows) {
-		writeError(w, http.StatusNotFound, "Invite not found")
+		plataforma.WriteError(w, http.StatusNotFound, "Invite not found")
 		return
 	}
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Could not resolve invite")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not resolve invite")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"campaignId": c.ID, "campaignName": c.Name})
+	plataforma.WriteJSON(w, http.StatusOK, map[string]any{"campaignId": c.ID, "campaignName": c.Name})
 }
 
 // resolveRole is the campaign-access domain rule,
 // transport-agnostic so both the HTTP handlers and the WS gateway can gate on it: the
 // owner is the "gm"; a user who owns a member character is a "player"; anyone else is
-// forbidden. Returns the role + an HTTP-ish status the caller maps to its transport.
-// The admin enters ANY mesa as "gm" (ALE-120): the role already exists, carries
+// forbidden. Returns the Role + an HTTP-ish status the caller maps to its transport.
+// The admin enters ANY mesa as "gm" (ALE-120): the Role already exists, carries
 // the tools they came to use, and nothing in the engine assumes a single GM —
-// presence de-duplicates per user and `requireGm` gates by role, not identity.
+// presence de-duplicates per user and `requireGm` gates by Role, not identity.
 // Two GMs can therefore drive initiative at once; that is the accepted cost of
 // letting the table's owner fix a player's mesa mid-session.
 func (s *Server) resolveRole(ctx context.Context, user AuthUser, campaignID int64) (string, int, error) {
@@ -324,13 +325,13 @@ func (s *Server) resolveRole(ctx context.Context, user AuthUser, campaignID int6
 		return "", http.StatusNotFound, fmt.Errorf("Campaign %d not found", campaignID)
 	}
 	if err != nil {
-		return "", http.StatusInternalServerError, errors.New("Could not load campaign")
+		return "", http.StatusInternalServerError, errors.New("Could not Load campaign")
 	}
 	return s.roleIn(ctx, user, c)
 }
 
 // roleIn is the same rule over a campaign the caller ALREADY loaded, so a
-// handler that needs both the row and the role does not read it twice.
+// handler that needs both the row and the Role does not read it twice.
 func (s *Server) roleIn(ctx context.Context, user AuthUser, c sqlcgen.Campaign) (string, int, error) {
 	if c.Ownerid == user.ID || user.IsAdmin {
 		return "gm", http.StatusOK, nil
@@ -352,7 +353,7 @@ func (s *Server) loadOwnedCampaign(ctx context.Context, user AuthUser, id int64)
 		return c, http.StatusNotFound, fmt.Errorf("Campaign %d not found", id)
 	}
 	if err != nil {
-		return c, http.StatusInternalServerError, errors.New("Could not load campaign")
+		return c, http.StatusInternalServerError, errors.New("Could not Load campaign")
 	}
 	if c.Ownerid != user.ID && !user.IsAdmin {
 		return c, http.StatusForbidden, fmt.Errorf("Campaign %d belongs to another user", id)
@@ -363,7 +364,7 @@ func (s *Server) loadOwnedCampaign(ctx context.Context, user AuthUser, id int64)
 func (s *Server) ownedCampaign(w http.ResponseWriter, r *http.Request, id int64) (sqlcgen.Campaign, bool) {
 	c, status, err := s.loadOwnedCampaign(r.Context(), currentUser(r), id)
 	if err != nil {
-		writeError(w, status, err.Error())
+		plataforma.WriteError(w, status, err.Error())
 		return c, false
 	}
 	return c, true

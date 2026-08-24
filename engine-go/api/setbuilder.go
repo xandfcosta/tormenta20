@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"strings"
+	"t20engine/plataforma"
 )
 
 // setBuilder accumulates a partial UPDATE: the columns a PATCH body actually
@@ -13,7 +14,7 @@ import (
 // grew their own `sets []string` / `args []any` pair — and copied the
 // `//nolint:gosec` alongside, which is the part that matters: the suppression
 // says "the SET clause is a fixed allowlist, not input", and that promise was
-// being re-asserted in four places where a fifth could quietly break it.
+// being re-asserted in four Places where a fifth could quietly break it.
 // Concentrating it here means the claim is made once, next to the only code
 // that builds the clause.
 //
@@ -23,15 +24,15 @@ import (
 // @example
 //
 //	var set setBuilder
-//	set.add("name = ?", name)
+//	set.Add("name = ?", name)
 //	if err := set.exec(ctx, s.db, "UPDATE campaigns", id); err != nil { … }
 type setBuilder struct {
 	columns []string
 	args    []any
 }
 
-// add records one column assignment. `clause` must be a literal like "name = ?".
-func (b *setBuilder) add(clause string, value any) {
+// Add records one column assignment. `clause` must be a literal like "name = ?".
+func (b *setBuilder) Add(clause string, value any) {
 	b.columns = append(b.columns, clause)
 	b.args = append(b.args, value)
 }
@@ -57,7 +58,7 @@ func (b *setBuilder) exec(ctx context.Context, db *sql.DB, prefix string, id int
 func (b *setBuilder) execTouched(ctx context.Context, db *sql.DB, prefix string, id int64) error {
 	stamped := setBuilder{
 		columns: append(append([]string{}, b.columns...), "updatedAt = ?"),
-		args:    append(append([]any{}, b.args...), nowISO()),
+		args:    append(append([]any{}, b.args...), plataforma.NowISO()),
 	}
 	return stamped.exec(ctx, db, prefix, id)
 }

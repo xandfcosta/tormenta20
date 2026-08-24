@@ -1,12 +1,10 @@
-package api
+package aovivo
 
 import (
 	"reflect"
 	"testing"
 )
 
-// counter returns a deterministic id generator ("e1", "e2", …) so tests can assert on
-// order/turn behavior without random UUIDs.
 func counter() func() string {
 	n := 0
 	return func() string {
@@ -14,6 +12,9 @@ func counter() func() string {
 		return "e" + itoa(n)
 	}
 }
+
+// Counter returns a deterministic id generator ("e1", "e2", …) so tests can assert on
+// order/turn behavior without random UUIDs.
 
 func itoa(n int) string {
 	if n == 0 {
@@ -29,10 +30,10 @@ func itoa(n int) string {
 
 // cenaEmCurso é o rastreador de uma cena JÁ INICIADA (ALE-210). Turno só existe
 // dentro de cena, e é o que quase todo teste daqui fala — o padrão de
-// `emptyRuntimeState` é fora de cena, que é o estado de uma sessão recém-aberta.
+// `EmptyRuntimeState` é fora de cena, que é o estado de uma sessão recém-aberta.
 func cenaEmCurso() *SessionRuntimeState {
-	st := emptyRuntimeState()
-	startScene(st)
+	st := EmptyRuntimeState()
+	StartScene(st)
 	return st
 }
 
@@ -66,11 +67,11 @@ func eq(a, b []string) bool {
 }
 
 func TestAddEntrySortsAndAssignsID(t *testing.T) {
-	st := emptyRuntimeState()
+	st := EmptyRuntimeState()
 	id := counter()
 	for _, e := range []InitiativeEntry{npc("A", 10), npc("B", 20), npc("C", 5)} {
-		if err := addEntry(st, e, id); err != nil {
-			t.Fatalf("addEntry: %v", err)
+		if err := AddEntry(st, e, id); err != nil {
+			t.Fatalf("AddEntry: %v", err)
 		}
 	}
 	if got := labels(st); !eq(got, []string{"B", "A", "C"}) {
@@ -82,10 +83,10 @@ func TestAddEntrySortsAndAssignsID(t *testing.T) {
 }
 
 func TestAddEntryTieBreakByLabel(t *testing.T) {
-	st := emptyRuntimeState()
+	st := EmptyRuntimeState()
 	id := counter()
-	_ = addEntry(st, npc("Zé", 10), id)
-	_ = addEntry(st, npc("Ana", 10), id)
+	_ = AddEntry(st, npc("Zé", 10), id)
+	_ = AddEntry(st, npc("Ana", 10), id)
 	if got := labels(st); !eq(got, []string{"Ana", "Zé"}) {
 		t.Errorf("order=%v, want [Ana Zé] (tie broken by label asc)", got)
 	}
@@ -95,44 +96,44 @@ func TestAddEntryTieBreakCollation(t *testing.T) {
 	// Accent-aware pt-BR collation: "Ávila" sorts with A (before "Bravo"). A byte
 	// compare would do the opposite (Á's first byte 0xC3 > 'B'), so this proves the
 	// collator is in effect. Same initiative → the tie-break decides.
-	st := emptyRuntimeState()
+	st := EmptyRuntimeState()
 	id := counter()
-	_ = addEntry(st, npc("Bravo", 10), id)
-	_ = addEntry(st, npc("Ávila", 10), id)
+	_ = AddEntry(st, npc("Bravo", 10), id)
+	_ = AddEntry(st, npc("Ávila", 10), id)
 	if got := labels(st); !eq(got, []string{"Ávila", "Bravo"}) {
 		t.Errorf("order=%v, want [Ávila Bravo] (pt-BR collation, not byte order)", got)
 	}
 }
 
 func TestAddEntryFull(t *testing.T) {
-	st := emptyRuntimeState()
+	st := EmptyRuntimeState()
 	id := counter()
-	for i := 0; i < initiativeMaxEntries; i++ {
-		if err := addEntry(st, npc("x", i), id); err != nil {
+	for i := 0; i < InitiativeMaxEntries; i++ {
+		if err := AddEntry(st, npc("x", i), id); err != nil {
 			t.Fatalf("unexpected full at %d: %v", i, err)
 		}
 	}
-	if err := addEntry(st, npc("overflow", 1), id); err == nil {
+	if err := AddEntry(st, npc("overflow", 1), id); err == nil {
 		t.Error("expected full-tracker error at 51st entry")
 	}
 }
 
 func TestAddEntryPreservesTurnAcrossSort(t *testing.T) {
-	st := emptyRuntimeState()
+	st := EmptyRuntimeState()
 	id := counter()
-	_ = addEntry(st, npc("A", 10), id) // e1
-	_ = addEntry(st, npc("B", 20), id) // e2
-	_ = addEntry(st, npc("C", 5), id)  // e3 → order B,A,C
+	_ = AddEntry(st, npc("A", 10), id) // e1
+	_ = AddEntry(st, npc("B", 20), id) // e2
+	_ = AddEntry(st, npc("C", 5), id)  // e3 → order B,A,C
 	st.TurnIndex = 1                   // A is on turn
 	onTurnID := st.Initiative[1].ID
-	_ = addEntry(st, npc("D", 25), id) // order D,B,A,C
+	_ = AddEntry(st, npc("D", 25), id) // order D,B,A,C
 	if st.Initiative[st.TurnIndex].ID != onTurnID || labels(st)[st.TurnIndex] != "A" {
 		t.Errorf("turn should stay on A, got index=%d labels=%v", st.TurnIndex, labels(st))
 	}
 }
 
 func TestUpsertCharacterEntry(t *testing.T) {
-	st := emptyRuntimeState()
+	st := EmptyRuntimeState()
 	id := counter()
 	hp := int64(30)
 	entry := charEntry("Herói", 12, 7)
@@ -144,7 +145,7 @@ func TestUpsertCharacterEntry(t *testing.T) {
 		t.Fatalf("re-roll: %v", err)
 	}
 	if len(st.Initiative) != 1 {
-		t.Fatalf("re-roll should upsert not add, len=%d", len(st.Initiative))
+		t.Fatalf("re-roll should upsert not Add, len=%d", len(st.Initiative))
 	}
 	e := st.Initiative[0]
 	if e.Initiative != 3 {
@@ -157,20 +158,20 @@ func TestUpsertCharacterEntry(t *testing.T) {
 	// A different character is added, not merged.
 	_ = upsertCharacterEntry(st, charEntry("Outro", 8, 9), id)
 	if len(st.Initiative) != 2 {
-		t.Errorf("different character should add, len=%d", len(st.Initiative))
+		t.Errorf("different character should Add, len=%d", len(st.Initiative))
 	}
 }
 
 func TestUpdateEntry(t *testing.T) {
-	st := emptyRuntimeState()
+	st := EmptyRuntimeState()
 	id := counter()
-	_ = addEntry(st, npc("A", 10), id)
-	_ = addEntry(st, npc("B", 20), id) // order B,A
+	_ = AddEntry(st, npc("A", 10), id)
+	_ = AddEntry(st, npc("B", 20), id) // order B,A
 	aID := st.Initiative[1].ID
 
 	// Patch initiative → A jumps above B, re-sorted.
 	newInit := 30
-	if err := updateEntry(st, aID, entryPatch{Initiative: &newInit}); err != nil {
+	if err := UpdateEntry(st, aID, EntryPatch{Initiative: &newInit}); err != nil {
 		t.Fatalf("update: %v", err)
 	}
 	if !eq(labels(st), []string{"A", "B"}) {
@@ -179,56 +180,56 @@ func TestUpdateEntry(t *testing.T) {
 
 	// Patch label only → no re-sort.
 	lbl := "Alpha"
-	_ = updateEntry(st, aID, entryPatch{Label: &lbl})
+	_ = UpdateEntry(st, aID, EntryPatch{Label: &lbl})
 	if st.Initiative[0].Label != "Alpha" {
 		t.Errorf("label not patched: %v", st.Initiative[0].Label)
 	}
 
-	if err := updateEntry(st, "missing", entryPatch{Label: &lbl}); err == nil {
+	if err := UpdateEntry(st, "missing", EntryPatch{Label: &lbl}); err == nil {
 		t.Error("expected not-found error")
 	}
 }
 
 func TestRemoveEntryTurnBookkeeping(t *testing.T) {
 	build := func() (*SessionRuntimeState, []string) {
-		st := emptyRuntimeState()
+		st := EmptyRuntimeState()
 		id := counter()
-		_ = addEntry(st, npc("C", 30), id)
-		_ = addEntry(st, npc("B", 20), id)
-		_ = addEntry(st, npc("A", 10), id) // order C,B,A
+		_ = AddEntry(st, npc("C", 30), id)
+		_ = AddEntry(st, npc("B", 20), id)
+		_ = AddEntry(st, npc("A", 10), id) // order C,B,A
 		ids := []string{st.Initiative[0].ID, st.Initiative[1].ID, st.Initiative[2].ID}
 		return st, ids
 	}
 
-	t.Run("remove before turn shifts turnIndex left", func(t *testing.T) {
+	t.Run("Remove before turn shifts turnIndex left", func(t *testing.T) {
 		st, ids := build()
 		st.TurnIndex = 2 // A on turn
-		_ = removeEntry(st, ids[0])
+		_ = RemoveEntry(st, ids[0])
 		if st.TurnIndex != 1 || st.Initiative[st.TurnIndex].Label != "A" {
 			t.Errorf("turnIndex=%d labels=%v, want A at 1", st.TurnIndex, labels(st))
 		}
 	})
-	t.Run("remove the tail on turn wraps round", func(t *testing.T) {
+	t.Run("Remove the tail on turn wraps round", func(t *testing.T) {
 		st, ids := build()
 		st.TurnIndex, st.Round = 2, 1 // A (tail) on turn
-		_ = removeEntry(st, ids[2])
+		_ = RemoveEntry(st, ids[2])
 		if st.TurnIndex != 0 || st.Round != 2 {
 			t.Errorf("turnIndex=%d round=%d, want 0/2", st.TurnIndex, st.Round)
 		}
 	})
-	t.Run("remove after turn leaves turnIndex", func(t *testing.T) {
+	t.Run("Remove after turn leaves turnIndex", func(t *testing.T) {
 		st, ids := build()
 		st.TurnIndex = 0 // C on turn
-		_ = removeEntry(st, ids[2])
+		_ = RemoveEntry(st, ids[2])
 		if st.TurnIndex != 0 {
 			t.Errorf("turnIndex=%d, want 0", st.TurnIndex)
 		}
 	})
-	t.Run("remove last entry resets turn to -1", func(t *testing.T) {
-		st := emptyRuntimeState()
-		_ = addEntry(st, npc("solo", 1), counter())
+	t.Run("Remove last entry resets turn to -1", func(t *testing.T) {
+		st := EmptyRuntimeState()
+		_ = AddEntry(st, npc("solo", 1), counter())
 		st.TurnIndex = 0
-		_ = removeEntry(st, st.Initiative[0].ID)
+		_ = RemoveEntry(st, st.Initiative[0].ID)
 		if st.TurnIndex != -1 {
 			t.Errorf("turnIndex=%d, want -1", st.TurnIndex)
 		}
@@ -238,8 +239,8 @@ func TestRemoveEntryTurnBookkeeping(t *testing.T) {
 func TestAdvanceTurn(t *testing.T) {
 	st := cenaEmCurso()
 	id := counter()
-	_ = addEntry(st, npc("A", 30), id)
-	_ = addEntry(st, npc("B", 20), id) // order A,B
+	_ = AddEntry(st, npc("A", 30), id)
+	_ = AddEntry(st, npc("B", 20), id) // order A,B
 
 	advanceTurn(st) // from -1 → first, round becomes 1
 	if st.TurnIndex != 0 || st.Round != 1 {
@@ -268,8 +269,8 @@ func TestAdvanceTurn(t *testing.T) {
 func TestRewindTurn(t *testing.T) {
 	st := cenaEmCurso()
 	id := counter()
-	_ = addEntry(st, npc("A", 30), id)
-	_ = addEntry(st, npc("B", 20), id)
+	_ = AddEntry(st, npc("A", 30), id)
+	_ = AddEntry(st, npc("B", 20), id)
 
 	advanceTurn(st) // A, rodada 1
 	advanceTurn(st) // B
@@ -290,7 +291,7 @@ func TestRewindTurn(t *testing.T) {
 
 	// Antes do combate começar não há o que desfazer, e a rodada não pode ir a 0.
 	inicio := cenaEmCurso()
-	_ = addEntry(inicio, npc("A", 30), counter())
+	_ = AddEntry(inicio, npc("A", 30), counter())
 	rewindTurn(inicio)
 	if inicio.TurnIndex != -1 || inicio.Round != 0 {
 		t.Errorf("voltar antes do primeiro turno: turnIndex=%d round=%d, queria -1/0", inicio.TurnIndex, inicio.Round)
@@ -314,15 +315,15 @@ func TestRewindTurn(t *testing.T) {
 func TestRedactForPlayers(t *testing.T) {
 	st := cenaEmCurso()
 	id := counter()
-	_ = addEntry(st, npc("Ogro", 12), id)
-	_ = addEntry(st, npc("Bandido", 8), id)
+	_ = AddEntry(st, npc("Ogro", 12), id)
+	_ = AddEntry(st, npc("Bandido", 8), id)
 	oculto, aberto := int64(120), int64(130)
 	sim := true
 	st.Initiative[0].HpCurrent, st.Initiative[0].HpMax = &oculto, &aberto
 	st.Initiative[0].HpHidden = &sim
 	st.Initiative[1].HpCurrent, st.Initiative[1].HpMax = &oculto, &aberto
 
-	redigido := redactForPlayers(st)
+	redigido := RedactForPlayers(st)
 
 	if redigido.Initiative[0].HpCurrent != nil || redigido.Initiative[0].HpMax != nil {
 		t.Errorf("linha oculta vazou PV: %+v", redigido.Initiative[0])
@@ -346,38 +347,38 @@ func TestRedactForPlayers(t *testing.T) {
 // broadcast deixaria o PV oculto sair inteiro na primeira carga (ALE-122).
 func TestStateForRole(t *testing.T) {
 	st := cenaEmCurso()
-	_ = addEntry(st, npc("Ogro", 12), counter())
+	_ = AddEntry(st, npc("Ogro", 12), counter())
 	pv := int64(37)
 	sim := true
 	st.Initiative[0].HpCurrent, st.Initiative[0].HpMax = &pv, &pv
 	st.Initiative[0].HpHidden = &sim
 
-	if paraJogador := stateForRole("player", st); paraJogador.Initiative[0].HpCurrent != nil {
+	if paraJogador := StateForRole("player", st); paraJogador.Initiative[0].HpCurrent != nil {
 		t.Error("o ack do jogador entregou o PV que o mestre escondeu")
 	}
-	if paraMestre := stateForRole("gm", st); paraMestre.Initiative[0].HpCurrent == nil {
+	if paraMestre := StateForRole("gm", st); paraMestre.Initiative[0].HpCurrent == nil {
 		t.Error("o mestre perdeu o próprio número")
 	}
 	// Papel desconhecido é tratado como jogador: errar para o lado que MOSTRA
 	// seria vazar por omissão.
-	if desconhecido := stateForRole("", st); desconhecido.Initiative[0].HpCurrent != nil {
+	if desconhecido := StateForRole("", st); desconhecido.Initiative[0].HpCurrent != nil {
 		t.Error("papel vazio recebeu estado inteiro")
 	}
 }
 
 func TestResetInitiative(t *testing.T) {
-	st := emptyRuntimeState()
-	_ = addEntry(st, npc("A", 1), counter())
+	st := EmptyRuntimeState()
+	_ = AddEntry(st, npc("A", 1), counter())
 	st.TurnIndex, st.Round = 0, 3
 	resetInitiative(st)
 	if len(st.Initiative) != 0 || st.Round != 0 || st.TurnIndex != -1 {
-		t.Errorf("reset gave %+v, want empty/0/-1", st)
+		t.Errorf("Reset gave %+v, want empty/0/-1", st)
 	}
 }
 
 func TestPatchAndDeltaVitals(t *testing.T) {
 	mk := func() (*SessionRuntimeState, string) {
-		st := emptyRuntimeState()
+		st := EmptyRuntimeState()
 		e := npc("A", 10)
 		hp, hpMax, mp, mpMax := int64(8), int64(10), int64(2), int64(6)
 		e.HpCurrent, e.HpMax, e.MpCurrent, e.MpMax = &hp, &hpMax, &mp, &mpMax
@@ -413,7 +414,7 @@ func TestPatchAndDeltaVitals(t *testing.T) {
 		}
 	})
 	t.Run("delta treats absent current as 0", func(t *testing.T) {
-		st := emptyRuntimeState()
+		st := EmptyRuntimeState()
 		e := npc("A", 10)
 		hpMax := int64(10)
 		e.HpMax = &hpMax // HpCurrent nil
@@ -441,9 +442,9 @@ func TestPatchAndDeltaVitals(t *testing.T) {
 func TestTurnsTakenSobreviveAListaMudar(t *testing.T) {
 	st := cenaEmCurso()
 	id := counter()
-	_ = addEntry(st, npc("A", 30), id)
-	_ = addEntry(st, npc("B", 20), id)
-	_ = addEntry(st, npc("C", 10), id)
+	_ = AddEntry(st, npc("A", 30), id)
+	_ = AddEntry(st, npc("B", 20), id)
+	_ = AddEntry(st, npc("C", 10), id)
 
 	advanceTurn(st) // A
 	advanceTurn(st) // B
@@ -456,7 +457,7 @@ func TestTurnsTakenSobreviveAListaMudar(t *testing.T) {
 	// C morre. A conta derivada diria rodada 2 × 2 = 4 daqui em diante e passaria
 	// a discordar de si mesma; o contador não se mexe, porque os quatro turnos
 	// aconteceram.
-	if err := removeEntry(st, "e3"); err != nil {
+	if err := RemoveEntry(st, "e3"); err != nil {
 		t.Fatalf("remover C: %v", err)
 	}
 	if st.TurnsTaken != 4 {
@@ -474,8 +475,8 @@ func TestTurnsTakenSobreviveAListaMudar(t *testing.T) {
 func TestTurnsTakenVoltaComRewind(t *testing.T) {
 	st := cenaEmCurso()
 	id := counter()
-	_ = addEntry(st, npc("A", 30), id)
-	_ = addEntry(st, npc("B", 20), id)
+	_ = AddEntry(st, npc("A", 30), id)
+	_ = AddEntry(st, npc("B", 20), id)
 
 	advanceTurn(st)
 	advanceTurn(st)
@@ -496,14 +497,14 @@ func TestTurnsTakenVoltaComRewind(t *testing.T) {
 func TestResetZeraOsTurnos(t *testing.T) {
 	st := cenaEmCurso()
 	id := counter()
-	_ = addEntry(st, npc("A", 30), id)
+	_ = AddEntry(st, npc("A", 30), id)
 	advanceTurn(st)
 	advanceTurn(st)
 
 	resetInitiative(st)
 
 	if st.TurnsTaken != 0 {
-		t.Fatalf("reset: turnsTaken=%d, want 0", st.TurnsTaken)
+		t.Fatalf("Reset: turnsTaken=%d, want 0", st.TurnsTaken)
 	}
 }
 
@@ -517,8 +518,8 @@ func TestResetZeraOsTurnos(t *testing.T) {
 func TestCloneStatePreservaTodosOsCampos(t *testing.T) {
 	st := cenaEmCurso()
 	id := counter()
-	_ = addEntry(st, npc("A", 30), id)
-	_ = addEntry(st, npc("B", 20), id)
+	_ = AddEntry(st, npc("A", 30), id)
+	_ = AddEntry(st, npc("B", 20), id)
 	advanceTurn(st)
 	advanceTurn(st)
 
@@ -541,12 +542,12 @@ func TestCloneStatePreservaTodosOsCampos(t *testing.T) {
 // combatente e adicioná-lo de novo, perdendo PV e condições no caminho, que é
 // exatamente o atalho que a ALE-122 aboliu.
 func TestLigarBlocoDeCriaturaNaLinhaQueJaExiste(t *testing.T) {
-	st := emptyRuntimeState()
+	st := EmptyRuntimeState()
 	id := counter()
-	_ = addEntry(st, npc("Capanga", 12), id)
+	_ = AddEntry(st, npc("Capanga", 12), id)
 
 	criatura := int64(7)
-	if err := updateEntry(st, "e1", entryPatch{CreatureID: &criatura}); err != nil {
+	if err := UpdateEntry(st, "e1", EntryPatch{CreatureID: &criatura}); err != nil {
 		t.Fatalf("ligar: %v", err)
 	}
 	if st.Initiative[0].CreatureID == nil || *st.Initiative[0].CreatureID != 7 {
@@ -560,24 +561,24 @@ func TestLigarBlocoDeCriaturaNaLinhaQueJaExiste(t *testing.T) {
 }
 
 // A CENA como estado explícito (ALE-210): fora dela o jogador não recebe fila
-// NENHUMA. É a trava do servidor, e ela mora em `redactForPlayers` de propósito
+// NENHUMA. É a trava do servidor, e ela mora em `RedactForPlayers` de propósito
 // — não mandar é diferente de não desenhar, e esta função é o gargalo pelo qual
 // os dois caminhos do estado passam (o broadcast por sala e o ack do get-state).
 func TestForaDeCenaAFilaNaoSaiParaAMesa(t *testing.T) {
 	st := cenaEmCurso()
 	id := counter()
-	_ = addEntry(st, npc("Ogro", 20), id)
-	_ = addEntry(st, charEntry("Arcanista", 15, 7), id)
+	_ = AddEntry(st, npc("Ogro", 20), id)
+	_ = AddEntry(st, charEntry("Arcanista", 15, 7), id)
 	advanceTurn(st)
 
 	// Em cena, a mesa vê tudo o que sempre viu.
-	if emCena := redactForPlayers(st); len(emCena.Initiative) != 2 || emCena.Round != 1 {
+	if emCena := RedactForPlayers(st); len(emCena.Initiative) != 2 || emCena.Round != 1 {
 		t.Fatalf("em cena o jogador perdeu a fila: %+v", emCena)
 	}
 
-	endScene(st)
+	EndScene(st)
 
-	fora := redactForPlayers(st)
+	fora := RedactForPlayers(st)
 	if len(fora.Initiative) != 0 {
 		t.Errorf("fora de cena a fila vazou para o jogador: %+v", fora.Initiative)
 	}
@@ -587,11 +588,11 @@ func TestForaDeCenaAFilaNaoSaiParaAMesa(t *testing.T) {
 		t.Errorf("fora de cena sobrou relógio de combate: %+v", fora)
 	}
 	// O ack é o outro caminho, e papel desconhecido cai em jogador.
-	if pedido := stateForRole("", st); len(pedido.Initiative) != 0 {
+	if pedido := StateForRole("", st); len(pedido.Initiative) != 0 {
 		t.Errorf("o ack entregou a fila fora de cena: %+v", pedido.Initiative)
 	}
 	// E o MESTRE continua com a fila inteira — encerrar não é apagar.
-	if doMestre := stateForRole("gm", st); len(doMestre.Initiative) != 2 {
+	if doMestre := StateForRole("gm", st); len(doMestre.Initiative) != 2 {
 		t.Errorf("o mestre perdeu a fila ao encerrar: %+v", doMestre.Initiative)
 	}
 }
@@ -602,15 +603,15 @@ func TestEncerrarGuardaAFilaEReiniciarEsvazia(t *testing.T) {
 	monta := func() *SessionRuntimeState {
 		st := cenaEmCurso()
 		id := counter()
-		_ = addEntry(st, npc("Goblin", 18), id)
-		_ = addEntry(st, npc("Ogro", 9), id)
+		_ = AddEntry(st, npc("Goblin", 18), id)
+		_ = AddEntry(st, npc("Ogro", 9), id)
 		advanceTurn(st)
 		advanceTurn(st)
 		return st
 	}
 
 	encerrada := monta()
-	endScene(encerrada)
+	EndScene(encerrada)
 	if len(encerrada.Initiative) != 2 {
 		t.Errorf("encerrar apagou a fila: %+v", encerrada.Initiative)
 	}
@@ -633,8 +634,8 @@ func TestEncerrarGuardaAFilaEReiniciarEsvazia(t *testing.T) {
 // só existe dentro de cena —, e é dela que `parseRuntimeBlob` tira o direito de
 // deduzir a cena de um turno em curso.
 func TestSemCenaOTurnoNaoAnda(t *testing.T) {
-	st := emptyRuntimeState()
-	_ = addEntry(st, npc("Ogro", 20), counter())
+	st := EmptyRuntimeState()
+	_ = AddEntry(st, npc("Ogro", 20), counter())
 
 	advanceTurn(st)
 
@@ -642,7 +643,7 @@ func TestSemCenaOTurnoNaoAnda(t *testing.T) {
 		t.Fatalf("avançou fora de cena: %+v", st)
 	}
 	// E anda assim que a cena começa, pelo mesmo clique.
-	startScene(st)
+	StartScene(st)
 	advanceTurn(st)
 	if st.TurnIndex != 0 || st.Round != 1 {
 		t.Fatalf("em cena o avanço parou de funcionar: %+v", st)

@@ -1,10 +1,10 @@
 package api
 
+import "t20engine/aovivo"
+
 import (
-	"context"
-	"io"
 	"net/http"
-	"time"
+	"t20engine/plataforma"
 )
 
 // O fluxo de eventos da sessão ao vivo (ALE-253).
@@ -23,13 +23,6 @@ import (
 //     saída é detectada pelo próprio servidor HTTP em vez de por heartbeat da
 //     biblioteca.
 
-// O intervalo do comentário-batida. Ele NÃO é para detectar queda — disso o
-// contexto cuida —, é para atravessar intermediário que fecha conexão ociosa: o
-// proxy do Vite em desenvolvimento e qualquer coisa entre o mestre e a mesa
-// numa rede doméstica. 25s fica confortavelmente abaixo dos 60s que é o padrão
-// mais comum.
-const sseHeartbeat = 25 * time.Second
-
 // handleSessionEvents mantém o fluxo aberto enquanto o cliente estiver lá.
 func (s *Server) handleSessionEvents(w http.ResponseWriter, r *http.Request) {
 	campaignID, ok := intParam(w, r, "campaignId")
@@ -41,9 +34,9 @@ func (s *Server) handleSessionEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := currentUser(r)
-	_, role, status, err := s.sessionForCaller(r.Context(), user, campaignID, sessionID)
+	_, Role, status, err := s.sessionForCaller(r.Context(), user, campaignID, sessionID)
 	if err != nil {
-		writeError(w, status, err.Error())
+		plataforma.WriteError(w, status, err.Error())
 		return
 	}
 	// Sem `Flusher` não há SSE: o quadro ficaria no buffer do net/http e o
@@ -51,7 +44,7 @@ func (s *Server) handleSessionEvents(w http.ResponseWriter, r *http.Request) {
 	// que nunca entrega.
 	flusher, podeEmpurrar := w.(http.Flusher)
 	if !podeEmpurrar {
-		writeError(w, http.StatusInternalServerError, "streaming unsupported")
+		plataforma.WriteError(w, http.StatusInternalServerError, "streaming unsupported")
 		return
 	}
 
@@ -64,76 +57,38 @@ func (s *Server) handleSessionEvents(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	flusher.Flush()
 
-	connID := newUUID()
-	conn := s.sse.add(sessionID, connID, role)
-	defer s.sse.remove(sessionID, connID)
+	connID := aovivo.NewUUID()
+	conn := s.sse.Add(sessionID, connID, Role)
+	defer s.sse.Remove(sessionID, connID)
 
-	s.announcePresence(sessionID, connID, user, role)
+	s.announcePresence(sessionID, connID, user, Role)
 	defer s.dropPresence(sessionID, connID)
 
-	streamFrames(r.Context(), w, flusher, conn, sseHeartbeat)
-}
-
-// streamFrames é o laço do fluxo, separado do handler para o teste exercitar o
-// código DE VERDADE em vez de uma imitação com a mesma forma.
-//
-// Sai por três caminhos, e os três são normais: a fila fechou (o hub tirou a
-// conexão), a escrita falhou (o cliente sumiu no meio de um quadro), ou o
-// contexto foi cancelado (ele foi embora). Nenhum é erro a registrar.
-func streamFrames(
-	ctx context.Context,
-	w io.Writer,
-	flusher http.Flusher,
-	conn *sseConn,
-	batidaCada time.Duration,
-) {
-	batida := time.NewTicker(batidaCada)
-	defer batida.Stop()
-
-	for {
-		select {
-		case frame, aberta := <-conn.frames:
-			if !aberta {
-				return
-			}
-			if _, err := w.Write(frame); err != nil {
-				return
-			}
-			flusher.Flush()
-		case <-batida.C:
-			// Comentário SSE: o cliente ignora, o intermediário vê tráfego.
-			if _, err := w.Write([]byte(": ping\n\n")); err != nil {
-				return
-			}
-			flusher.Flush()
-		case <-ctx.Done():
-			return
-		}
-	}
+	aovivo.StreamFrames(r.Context(), w, flusher, conn, aovivo.Heartbeat)
 }
 
 // announcePresence põe o leitor no elenco e conta à mesa.
-func (s *Server) announcePresence(sessionID int64, connID string, user AuthUser, role string) {
+func (s *Server) announcePresence(sessionID int64, connID string, user AuthUser, Role string) {
 	nome := user.Email
 	if user.Name != nil && *user.Name != "" {
 		nome = *user.Name
 	}
-	if role == "" {
-		role = "player"
+	if Role == "" {
+		Role = "player"
 	}
-	elenco := s.presence.join(sessionID, connID, PresenceUser{UserID: user.ID, Name: nome, Role: role})
+	elenco := s.presence.Join(sessionID, connID, aovivo.PresenceUser{UserID: user.ID, Name: nome, Role: Role})
 	s.emitPresence(sessionID, elenco)
 }
 
 func (s *Server) dropPresence(sessionID int64, connID string) {
-	elenco, mudou := s.presence.leave(sessionID, connID)
+	elenco, mudou := s.presence.Leave(sessionID, connID)
 	if mudou {
 		s.emitPresence(sessionID, elenco)
 	}
 }
 
-func (s *Server) emitPresence(sessionID int64, elenco []PresenceUser) {
-	s.sse.emit(sessionID, "", "presence", map[string]any{
+func (s *Server) emitPresence(sessionID int64, elenco []aovivo.PresenceUser) {
+	s.sse.Emit(sessionID, "", "presence", map[string]any{
 		"sessionId": sessionID, "users": elenco,
 	})
 }
