@@ -605,3 +605,49 @@ func TestRemoverTiraOCombatenteDaFila(t *testing.T) {
 		t.Errorf("a fila ficou com %d combatentes", n)
 	}
 }
+
+// ── a presença no cartão do Grupo (ALE-263) ──────────────────────────────────
+
+// TestOMestreVeQuemEstaNaMesaEOJogadorNao.
+//
+// A regra de QUEM está conectado já tem guarda no `aovivo`; o que se prende aqui
+// é a LIGAÇÃO — que o cartão do Grupo é casado com a presença pelo id do
+// personagem, e que ela chega à tela do mestre e não à do jogador.
+//
+// O precedente é da SPA e é deliberado: presença POR PERSONAGEM é do mestre (o
+// trilho do elenco vive na `session-gm-view`), enquanto os crachás de nome são
+// de todo mundo. Um anel apagado na tela do jogador diria "fora da mesa" sobre
+// um colega a quem ele não tem por que vigiar.
+func TestOMestreVeQuemEstaNaMesaEOJogadorNao(t *testing.T) {
+	f := novoPiloto(t)
+
+	// Fora da mesa primeiro, que é o estado de nascença: sem esta metade, "vi
+	// 'na mesa'" não distinguiria a ligação certa de uma frase fixa.
+	corpo := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	if !strings.Contains(corpo, "fora da mesa") {
+		t.Fatalf("o mestre não viu a presença do grupo com ninguém conectado")
+	}
+	if strings.Contains(corpo, ">na mesa<") {
+		t.Error("alguém apareceu na mesa sem ter entrado")
+	}
+
+	f.s.presence.Join(f.sessionID, "conn-do-jogador", aovivo.PresenceUser{
+		UserID: f.jogador, Name: "Jogador", Role: "player",
+	})
+
+	corpo = f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	if !strings.Contains(corpo, "na mesa") || strings.Contains(corpo, "fora da mesa") {
+		t.Error("o dono do personagem entrou e o cartão dele não acendeu")
+	}
+
+	// E o jogador não recebe presença nenhuma — nem acesa nem apagada.
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	if !strings.Contains(doJogador, "Arcanista") {
+		t.Fatal("o jogador não viu o cartão do Grupo; a ausência abaixo não provaria nada")
+	}
+	for _, frase := range []string{"na mesa", "fora da mesa"} {
+		if strings.Contains(doJogador, frase) {
+			t.Errorf("o HTML do jogador veio com %q", frase)
+		}
+	}
+}

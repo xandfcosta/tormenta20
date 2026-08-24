@@ -70,7 +70,26 @@ templ mesa(v mesaView) {
 						for _, m := range v.Grupo {
 							<article class="space-y-1.5 border border-border/60 bg-card/60 p-2.5">
 								<div class="flex items-baseline justify-between gap-2">
-									<span class="truncate font-medium">{ m.Nome }</span>
+									<span class="flex min-w-0 items-baseline gap-1.5">
+										// A presença é um PONTO e não um anel, porque aqui o cartão tem
+										// largura de sobra — o anel da SPA existe porque num trilho de
+										// 80px um ponto ao lado do retrato disputaria espaço com ele.
+										//
+										// E ele nunca vai sozinho: cor não existe para quem usa leitor
+										// de tela (ALE-212), então a frase viaja no `title` e num
+										// rótulo só-para-leitor. Verde é o mesmo `--hp-full` que os
+										// crachás de conectado já usam.
+										if m.Presenca != nil {
+											<span
+												title={ m.Nome + " — " + m.Presenca.Frase }
+												class={ "size-2 shrink-0 self-center rounded-full",
+													templ.KV("bg-hp-full", m.Presenca.NaMesa),
+													templ.KV("bg-grimorio-iron", !m.Presenca.NaMesa) }
+											></span>
+											<span class="sr-only">{ m.Presenca.Frase }</span>
+										}
+										<span class="truncate font-medium">{ m.Nome }</span>
+									</span>
 									<span class="shrink-0 bg-muted px-1.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">Nv { fmt.Sprint(m.Nivel) }</span>
 								</div>
 								if m.Classes != "" {

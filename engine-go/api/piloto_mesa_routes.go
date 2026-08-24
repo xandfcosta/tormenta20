@@ -141,6 +141,10 @@ func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, se
 	if role == "gm" {
 		membros, presentes := s.membrosEPresenca(ctx, campaignID, sessionID)
 		r := rastreadorViewOf(st, membros, presentes, true)
+		// A presença é escrita nos cartões DEPOIS de o papel ser resolvido, e é
+		// isso que a mantém fora da tela do jogador sem uma segunda decisão na
+		// cena: quem não é mestre não chega aqui, e lá o campo continua nil.
+		marcaAPresenca(view.Grupo, r.Conectados)
 		view.Mestre = &r
 	}
 	return view, http.StatusOK, nil
@@ -178,11 +182,12 @@ func (s *Server) mesaRoster(ctx context.Context, user AuthUser, campaignID int64
 			continue
 		}
 		grupo = append(grupo, mesaMembro{
-			Nome:    m.Charname,
-			Nivel:   m.Charlevel,
-			Classes: s.mesaClasses(ctx, m.Characterid),
-			PV:      mesaBarraDe(m.Charhpcurrent, m.Charhpmax, false),
-			PM:      mesaBarraDe(m.Charmpcurrent, m.Charmpmax, true),
+			CharacterID: m.Characterid,
+			Nome:        m.Charname,
+			Nivel:       m.Charlevel,
+			Classes:     s.mesaClasses(ctx, m.Characterid),
+			PV:          mesaBarraDe(m.Charhpcurrent, m.Charhpmax, false),
+			PM:          mesaBarraDe(m.Charmpcurrent, m.Charmpmax, true),
 		})
 	}
 	if eu != nil {

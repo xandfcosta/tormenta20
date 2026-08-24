@@ -66,11 +66,41 @@ type mesaBarra struct {
 
 // mesaMembro é um personagem do grupo no cartão "Grupo".
 type mesaMembro struct {
-	Nome    string
-	Nivel   int64
-	Classes string
-	PV      mesaBarra
-	PM      mesaBarra
+	// CharacterID não é desenhado: é a chave que casa o cartão com a presença.
+	CharacterID int64
+	Nome        string
+	Nivel       int64
+	Classes     string
+	PV          mesaBarra
+	PM          mesaBarra
+	// Presenca é nil para o JOGADOR, e isso segue o precedente da SPA: presença
+	// POR PERSONAGEM é do mestre (o trilho do elenco vive na `session-gm-view`),
+	// enquanto os crachás de NOME são de todo mundo. Nil e não "false" porque
+	// "não mostrar" e "está fora" são coisas diferentes — um anel apagado diria
+	// "fora da mesa" a quem não tem por que saber.
+	Presenca *presencaDoMembro
+}
+
+// presencaDoMembro é "está com a aba aberta agora?", já com a frase pronta.
+type presencaDoMembro struct {
+	NaMesa bool
+	// Frase é o nome acessível, porque anel colorido não existe para leitor de
+	// tela (ALE-212). As palavras são as MESMAS da gaveta do elenco na SPA: duas
+	// telas não devem inventar dois vocabulários para o mesmo estado.
+	Frase string
+}
+
+// marcaAPresenca escreve em cada cartão do Grupo se aquele personagem está na
+// mesa agora. Só é chamada para o MESTRE — ver o comentário do campo.
+func marcaAPresenca(grupo []mesaMembro, conectados map[int64]bool) {
+	for i := range grupo {
+		naMesa := conectados[grupo[i].CharacterID]
+		frase := "fora da mesa"
+		if naMesa {
+			frase = "na mesa"
+		}
+		grupo[i].Presenca = &presencaDoMembro{NaMesa: naMesa, Frase: frase}
+	}
 }
 
 // mesaLinha é uma linha da fila de iniciativa como o jogador a vê.
