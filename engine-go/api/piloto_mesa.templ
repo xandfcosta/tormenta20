@@ -102,6 +102,10 @@ templ mesa(v mesaView) {
 					</div>
 				</section>
 			}
+			// O TABULEIRO vem ANTES da fila e depois do Grupo: quando há mapa, é
+			// nele que a mesa olha — a fila responde "quem age quando", e o mapa
+			// responde "quem está onde", que é a pergunta do turno em curso.
+			@tabuleiroDaMesa(v.Tabuleiro)
 			// Iniciativa — LEITURA para o jogador (ALE-213); o mestre ganha aqui o
 			// que MONTA a fila.
 			<section class="space-y-1.5">

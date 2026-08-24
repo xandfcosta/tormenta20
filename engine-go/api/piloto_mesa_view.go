@@ -34,6 +34,9 @@ type mesaView struct {
 	Grupo       []mesaMembro
 	Fila        []mesaLinha
 	Eu          *mesaEu
+	// Tabuleiro é o mapa da cena. `Aberto` falso é o estado normal — a maior
+	// parte de uma sessão não tem mapa —, e ele desenha a frase e nenhuma grade.
+	Tabuleiro tabuleiroView
 	// Mestre é nil para o jogador, e essa é a trava na CENA: não há como
 	// desenhar controle que não existe na view. Esconder por classe deixaria o
 	// HTML na página para quem abrisse o inspetor.
@@ -114,7 +117,7 @@ type mesaLinha struct {
 	// PROIBIDO — e o par na tela é `Ficha`/`NPC` pelo mesmo motivo.
 	EhFicha bool
 	Minha   bool
-	NaVez      bool
+	NaVez   bool
 	// PV nil = linha sem vida rastreada. `Oculto` é outra coisa: o mestre
 	// escondeu, e a flag sobrevive à redação de propósito (ALE-210) — "sem
 	// barra" e "escondido" não são a mesma coisa, e a segunda é informação.

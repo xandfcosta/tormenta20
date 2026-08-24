@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"t20engine/aovivo"
+	"t20engine/tabuleiro"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -152,6 +153,15 @@ func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, se
 	st := aovivo.StateForRole(role, s.sessions.RefreshCharacterMaxes(ctx, sessionID))
 	grupo, meus, eu := s.mesaRoster(ctx, user, campaignID)
 	view := mesaViewOf(st, campaignID, sessionID, sess.Sessionnumber, grupo, meus, eu)
+	// O tabuleiro passa pelo MESMO gargalo por papel que a fila: o `BoardForRole`
+	// é para o mapa o que o `StateForRole` é para a lista, e é ele que tira as
+	// peças escondidas antes de a cena existir. A saúde vem do estado JÁ
+	// REDIGIDO, então o combatente cujo PV o mestre ocultou chega sem `HpMax` e a
+	// peça dele sai sem barra — a redação alcança o mapa sem uma segunda decisão.
+	view.Tabuleiro = tabuleiroViewOf(
+		tabuleiro.BoardForRole(role, s.boards.Get(ctx, sessionID)),
+		saudeDaFila(st), combatenteDaVez(st),
+	)
 	// O rastreador só é MONTADO para o mestre. A trava não é a tela esconder o
 	// bloco: é a view não ter o que desenhar, pelo mesmo `role` que o
 	// `stateForRole` já usou para redigir o estado.

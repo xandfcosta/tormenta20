@@ -1,0 +1,101 @@
+package api
+
+import "fmt"
+
+// O TABULEIRO desenhado (ALE-263) — a fatia que se OLHA.
+//
+// UM NÓ POR CAMADA, nunca um por quadrado, e essa é a restrição que segura o
+// custo: um extenso de 20×14 são 280 quadrados, e desenhá-los daria 280 nós para
+// pintar linhas que um `repeating-linear-gradient` pinta em zero. O chão, o
+// ambiente e a grade são três divs; o que vira nó é só o que EXISTE — as peças,
+// os marcadores e o terreno difícil.
+//
+// DOM e não canvas, como a SPA: cada peça é um `<button>` de verdade com nome
+// acessível que diz QUEM e ONDE. Num canvas isso viraria um DOM espelho
+// invisível, escrito duas vezes.
+
+templ tabuleiroDaMesa(v tabuleiroView) {
+	if !v.Aberto {
+		<p class="border border-dashed border-grimorio-iron p-4 text-center text-sm text-muted-foreground">
+			Nenhum tabuleiro aberto. O mestre abre quando a cena tiver lugar.
+		</p>
+	} else {
+		<section aria-label={ "Tabuleiro · " + v.Lugar } class="space-y-1.5">
+			<div class="flex flex-wrap items-baseline gap-x-2">
+				<h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tabuleiro</h2>
+				<p class="truncate text-sm text-foreground">{ v.Lugar }</p>
+			</div>
+			// O PALCO é a janela; o PLANO é o extenso inteiro dentro dela. O
+			// enquadramento é do NAVEGADOR e nunca do servidor — foi essa a
+			// escolha que tirou a ida ao servidor de cada passo de arrasto —, e
+			// nesta fatia ele é a rolagem nativa: ela já é o arrasto, e vem com
+			// teclado, roda e toque de graça. Como o enquadramento não está no
+			// HTML, o remendo do SSE redesenha as peças sem que o mestre perca
+			// onde estava olhando.
+			<div class="tabuleiro-palco grimorio-frame">
+				<div
+					class={ "tabuleiro-plano chao-" + v.Terreno }
+					style={ fmt.Sprintf("--colunas:%d; --linhas:%d", v.Colunas, v.Linhas) }
+				>
+					<div aria-hidden="true" class="tabuleiro-ambiente"></div>
+					<div aria-hidden="true" class="tabuleiro-grade"></div>
+					// O terreno difícil vem ANTES das peças para ficar por baixo
+					// delas: ele é chão, e uma peça em cima de terreno difícil
+					// continua sendo a peça que se clica.
+					for _, q := range v.Dificil {
+						<div aria-hidden="true" class="tabuleiro-dificil" style={ posicaoNoPlano(q.Col, q.Lin, 1) }></div>
+					}
+					for _, m := range v.Marcadores {
+						@marcadorNoPlano(m)
+					}
+					for _, p := range v.Pecas {
+						@pecaNoPlano(p)
+					}
+				</div>
+			</div>
+		</section>
+	}
+}
+
+// pecaNoPlano é uma peça: monograma da ESPÉCIE, selo da INSTÂNCIA, e a barra de
+// PV quando há número para mostrar.
+//
+// O nome acessível diz QUEM e ONDE, com a coordenada COM SINAL que o servidor
+// guarda — sem ele a peça é um disco anônimo para quem não vê a tela, e "o Zumbi
+// 3" deixa de ter resposta.
+//
+// A cor vem por variável de estilo e não por classe, e é o único jeito: o matiz
+// é um número calculado por nome, então não existe classe do Tailwind para ele —
+// seriam 360 classes que o scanner nunca veria.
+templ pecaNoPlano(p pecaDoTabuleiro) {
+	<button
+		type="button"
+		aria-label={ nomeDaPeca(p) }
+		title={ nomeDaPeca(p) }
+		style={ posicaoNoPlano(p.Col, p.Lin, p.Pegada) + fmt.Sprintf("--matiz:%d;", p.Matiz) }
+		class={ "tabuleiro-peca",
+			templ.KV("tabuleiro-peca-na-vez", p.NaVez),
+			templ.KV("tabuleiro-peca-oculta", p.Oculta) }
+	>
+		<span class="tabuleiro-monograma">{ p.Monograma }</span>
+		if p.Instancia != "" {
+			// O selo é TEXTO e não só cor: "eu ataco o Zumbi 3" precisa de
+			// resposta num relance inclusive para quem não distingue matiz.
+			<span class="tabuleiro-selo">{ p.Instancia }</span>
+		}
+		if p.PV != nil {
+			<span aria-hidden="true" class="tabuleiro-vida">
+				<span class={ "tabuleiro-vida-cheia", hpTomDe(*p.PV) } style={ fmt.Sprintf("width:%d%%", *p.PV) }></span>
+			</span>
+		}
+	</button>
+}
+
+templ marcadorNoPlano(m marcadorDoTabuleiro) {
+	<span
+		aria-label={ "Marcador " + m.Texto + " em " + m.Onde }
+		title={ m.Texto + " · " + m.Onde }
+		style={ posicaoNoPlano(m.Col, m.Lin, 1) + fmt.Sprintf("--marcador:%s;", corDeMarcador(m.Cor)) }
+		class="tabuleiro-marcador"
+	>{ m.Texto }</span>
+}
