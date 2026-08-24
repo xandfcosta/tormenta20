@@ -1,13 +1,17 @@
 import { createFileRoute } from '@tanstack/solid-router'
-import { GrimorioPage } from '@/pages/grimorio/grimorio-page'
-import { requireSession } from './-guards'
+import { entregaAPorta } from './-guards'
 
 /**
- * A folha de especificação do sistema de desenho (ALE-173). Atrás do mesmo
- * guarda das outras cenas: ela não expõe nada do jogo, mas é ferramenta de
- * quem constrói, não de quem joga.
+ * A folha de especificação saiu da SPA (ALE-251): `/grimorio` agora é
+ * `/piloto/grimorio`, renderizada pelo servidor.
+ *
+ * Ela mede o que desenha, e isso exigiu a primeira ilha de JS da migração que é
+ * NECESSÁRIA e não conveniente — `getComputedStyle` e canvas não existem no
+ * servidor. E ela ganhou uma coluna a mais: cada peça aparece nas DUAS versões,
+ * medida, para a divergência entre os stacks saltar aos olhos em vez de
+ * depender de alguém lembrar de comparar.
  */
 export const Route = createFileRoute('/grimorio')({
-  beforeLoad: requireSession,
-  component: GrimorioPage,
+  beforeLoad: () => entregaAPorta('/piloto/grimorio'),
+  component: () => null,
 })

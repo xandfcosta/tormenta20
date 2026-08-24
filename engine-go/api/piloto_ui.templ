@@ -157,6 +157,12 @@ templ tituloDaCena(titulo, kicker string) {
 			{ titulo }
 		</h1>
 		if kicker != "" {
+			// O ÚNICO Cinzel abaixo de 14px que fica, e ele é porte FIEL: o
+			// `scene-title.tsx` da SPA escreve exatamente isto. É violação do
+			// piso da ALE-173 que já existia, e consertá-la aqui mudaria a
+			// tela-título por conta própria no meio de uma virada. O guarda da
+			// folha não o vê porque a folha não desenha a tela-título — ver a
+			// ALE-252.
 			<p class="font-heading text-xs uppercase tracking-[0.3em] text-grimorio-gold">{ kicker }</p>
 		}
 	</div>
@@ -234,4 +240,38 @@ templ folhaDoTomo() {
 			</div>
 		</div>
 	</div>
+}
+
+// rotuloDeSecao é o cabeçalho de um bloco — a receita `secao` da casa, portada
+// do `SectionLabel` (ALE-251).
+//
+// Ela existe porque eu tinha INVENTADO uma receita em vez de portar esta, e o
+// erro se espalhou por três cenas antes de o guarda da folha de especificação
+// achá-lo. O que eu escrevia era `font-heading text-xs ... tracking-[0.22em]`,
+// e a receita da casa é `text-2xs font-semibold tracking-[0.16em]` — três
+// divergências de uma vez, sendo a pior o Cinzel: ele é serifado de display, e
+// abaixo de 14px vira desenho antes de virar texto (ALE-173). O piso é 14, e
+// `text-xs` é 12.
+//
+// `tom` é "muted" ou "gold". Não há terceira opção de propósito: a casa tem
+// duas, e uma terceira nasceria como cor solta.
+templ rotuloDeSecao(tom string, extra string) {
+	<p class={ "text-2xs font-semibold uppercase tracking-[0.16em]", tomDoRotulo(tom), extra }>
+		{ children... }
+	</p>
+}
+
+// A mesma receita como LEGENDA de um `fieldset`, que é o elemento certo para a
+// pergunta de um grupo de escolhas.
+templ legendaDeSecao(tom string, extra string) {
+	<legend class={ "text-2xs font-semibold uppercase tracking-[0.16em]", tomDoRotulo(tom), extra }>
+		{ children... }
+	</legend>
+}
+
+func tomDoRotulo(tom string) string {
+	if tom == "gold" {
+		return "text-grimorio-gold"
+	}
+	return "text-muted-foreground"
 }

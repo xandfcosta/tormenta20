@@ -72,7 +72,9 @@ templ cartaDoConvite(v campanhaEntrarView) {
 	<div class="flex items-start gap-3 rounded-none border border-grimorio-gold/40 bg-grimorio-panel p-4">
 		@icone("Mail", "mt-0.5 size-4 shrink-0 text-grimorio-gold")
 		<div class="min-w-0 flex-1 space-y-1">
-			<p class="font-heading text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">Convite</p>
+			@rotuloDeSecao("muted", "") {
+				Convite
+			}
 			if v.ConviteVale {
 				<p class="text-sm">
 					Você foi convidado para <span class="font-semibold text-grimorio-gold">{ v.NomeDaCampanha }</span>.
@@ -91,9 +93,9 @@ templ cartaDoConvite(v campanhaEntrarView) {
 // que faz o leitor de tela anunciar a pergunta antes de cada opção.
 templ escolhaDoHeroi(v campanhaEntrarView) {
 	<fieldset class="space-y-3">
-		<legend class="mb-3 font-heading text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+		@legendaDeSecao("muted", "mb-3") {
 			Qual herói entra na mesa?
-		</legend>
+		}
 		<div data-nav-region="content" data-nav-layout="grid" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
 			for _, h := range v.Herois {
 				@plaquetaDoHeroi(h, h.ID == v.EscolhidoID)

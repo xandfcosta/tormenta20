@@ -1,5 +1,6 @@
 import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
+import solid from 'vite-plugin-solid'
 
 /**
  * O bundle do módulo do piloto Datastar (ALE-231).
@@ -13,6 +14,9 @@ import { defineConfig } from 'vite'
  * duas cópias.
  */
 export default defineConfig({
+  // O plugin do Solid é necessário desde a ilha das peças (ALE-251): o
+  // `pecas-solid.tsx` traz JSX, e sem ele o esbuild do Vite não o compila.
+  plugins: [solid()],
   // Sem cópia do `public/`: ele traz os 3,7 MB do `t20.wasm` junto, e eles
   // iriam para DENTRO do binário pelo `go:embed`. As fontes que moram lá
   // continuam sendo servidas pelo Vite em dev e pelo `STATIC_DIR` em produção
@@ -26,9 +30,27 @@ export default defineConfig({
     emptyOutDir: false,
     target: 'es2022',
     lib: {
-      entry: resolve(import.meta.dirname, 'src/piloto/cena.ts'),
+      // DUAS entradas e não duas configs: o `grimorio.js` só é pedido pela
+      // folha de especificação, e carregá-lo em toda cena seria pôr canvas e
+      // medição de contraste no caminho de quem só quer jogar.
+      entry: {
+        cena: resolve(import.meta.dirname, 'src/piloto/cena.ts'),
+        grimorio: resolve(import.meta.dirname, 'src/piloto/grimorio.ts'),
+        'pecas-solid': resolve(import.meta.dirname, 'src/piloto/pecas-solid.tsx'),
+      },
       formats: ['es'],
-      fileName: () => 'cena.js',
+      fileName: (_formato, nome) => `${nome}.js`,
+    },
+    rollupOptions: {
+      output: {
+        // Sem HASH no nome do pedaço compartilhado, e isto não é preferência:
+        // o produto é embutido por `go:embed` e versionado, então um hash novo
+        // a cada build encheria o repositório de sobras e faria o guarda de
+        // "regenerar e comparar" do CI acusar mudança em toda corrida. O nome
+        // estável também é o que permite ao `pecas-solid.js` importá-lo por
+        // caminho previsível.
+        chunkFileNames: '[name].js',
+      },
     },
   },
 })

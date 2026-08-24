@@ -43,6 +43,18 @@ type paginaPiloto struct {
 	Kicker        string
 	Sinais        string
 	Init          string
+	// Scripts são os módulos EXTRA de UMA cena. O `cena.js` vale para toda
+	// página; estes são para o que é de uma só — hoje a folha de especificação,
+	// que mede o desenho com canvas e `getComputedStyle` e ainda monta as peças
+	// da SPA como elementos customizados (ALE-251). Somam ~77 KB, e carregá-los
+	// em toda cena seria pôr o custo de uma tela de quem CONSTRÓI no caminho de
+	// quem só quer jogar.
+	Scripts []string
+	// VoltarRotulo troca o "Voltar" por um destino NOMEADO. A folha de
+	// especificação diz "Hub" porque é para lá que ela volta, e nomear o
+	// destino é melhor que a seta genérica quando a cena não é filha óbvia de
+	// ninguém.
+	VoltarRotulo string
 }
 
 // formaDaCasca são as três posturas do `SceneShell` da SPA, e elas se excluem —
@@ -79,6 +91,9 @@ templ layout(p paginaPiloto, corpo templ.Component) {
 			// de uma cópia. Vale para toda página do Datastar, e é `defer` por ser
 			// módulo: ele consulta o DOM ao carregar.
 			<script type="module" src="/piloto/static/cena.js"></script>
+			for _, modulo := range p.Scripts {
+				<script type="module" src={ modulo }></script>
+			}
 		</head>
 		// Os SINAIS e o `data-init` moram no <body>, que nunca é remendado.
 		//
@@ -115,7 +130,11 @@ templ layout(p paginaPiloto, corpo templ.Component) {
 							href={ templ.SafeURL(p.Voltar) }
 							class="inline-flex min-h-11 items-center gap-1 px-3 font-heading text-sm tracking-wide text-muted-foreground outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 						>
-							‹ Voltar
+							if p.VoltarRotulo != "" {
+								{ "‹ " + p.VoltarRotulo }
+							} else {
+								‹ Voltar
+							}
 						</a>
 						<h1 class="font-heading text-xl tracking-wide text-foreground">{ p.TituloVisivel }</h1>
 					</header>

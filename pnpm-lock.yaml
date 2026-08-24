@@ -55,6 +55,9 @@ importers:
       socket.io-client:
         specifier: ^4.8.3
         version: 4.8.3(supports-color@8.1.1)
+      solid-element:
+        specifier: ^1.9.2
+        version: 1.9.2(solid-js@1.9.14)
       solid-js:
         specifier: ^1.9.9
         version: 1.9.14
@@ -1347,6 +1350,9 @@ packages:
   commander@2.20.3:
     resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==}
 
+  component-register@0.8.8:
+    resolution: {integrity: sha512-djhwcxjY+X9dacaYUEOkOm7tda8uOEDiMDigWysu3xv54M8o6XDlsjR1qt5Y8QLGiKg51fqXFIR2HUTmt9ys0Q==}
+
   concurrently@9.2.1:
     resolution: {integrity: sha512-fsfrO0MxV64Znoy8/l1vVIjjHa29SZyyqPgQBwhiDcaW8wJc2W3XWVOGx4M3oJBnv/zdUZIIp1gDeS98GzP8Ng==}
     engines: {node: '>=18'}
@@ -1894,6 +1900,11 @@ packages:
   socket.io-parser@4.2.6:
     resolution: {integrity: sha512-asJqbVBDsBCJx0pTqw3WfesSY0iRX+2xzWEWzrpcH7L6fLzrhyF8WPI8UaeM4YCuDfpwA/cgsdugMsmtz8EJeg==}
     engines: {node: '>=10.0.0'}
+
+  solid-element@1.9.2:
+    resolution: {integrity: sha512-+6bK9YGAf47lrwWyTFXUVKCkKTkof3bn6yxknHJPAE5MGSCvx4DJH1KE3ltUjIXeDWhS2gU5yjpynkH709+Xag==}
+    peerDependencies:
+      solid-js: ^1.9.14
 
   solid-js@1.9.14:
     resolution: {integrity: sha512-sAEXC0Kk0S1EDg+8ysEWJDbYhA3RRoEjwuySUGlKIemeo0I5YZfOyumNjNs9Sv3y2nmhD+0rW66ag2HsMuQiGQ==}
@@ -3445,6 +3456,8 @@ snapshots:
   commander@2.20.3:
     optional: true
 
+  component-register@0.8.8: {}
+
   concurrently@9.2.1:
     dependencies:
       chalk: 4.1.2
@@ -3936,6 +3949,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  solid-element@1.9.2(solid-js@1.9.14):
+    dependencies:
+      component-register: 0.8.8
+      solid-js: 1.9.14
+
   solid-js@1.9.14:
     dependencies:
       csstype: 3.2.3
@@ -4198,7 +4216,7 @@ snapshots:
       acorn-import-phases: 1.0.4(acorn@8.16.0)
       browserslist: 4.28.2
       chrome-trace-event: 1.0.4
-      enhanced-resolve: 5.21.0
+      enhanced-resolve: 5.24.5
       es-module-lexer: 2.1.0
       eslint-scope: 5.1.1
       events: 3.3.0

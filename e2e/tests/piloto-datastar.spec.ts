@@ -512,6 +512,77 @@ test.describe('A folha em branco (piloto Datastar)', () => {
   })
 })
 
+test.describe('A folha de especificação (piloto Datastar)', () => {
+  test.use({ storageState: '.auth/user.json' })
+
+  /**
+   * A COLUNA DUPLA MEDE OS DOIS STACKS, e este guarda existe por causa de um
+   * defeito real: a primeira versão dela não passava o tamanho ao elemento
+   * customizado da SPA, então aquela coluna inteira renderizava no padrão e a
+   * linha "xs" comparava um xs do servidor com um default da SPA.
+   *
+   * O instrumento MENTIA — e instrumento que mente é pior que instrumento
+   * nenhum, porque produz confiança em vez de dúvida. Um guarda que só
+   * checasse "a seção existe" não teria pego; este exige que as duas colunas
+   * tragam MEDIDA, e que a ladeira de tamanhos seja estritamente crescente dos
+   * dois lados.
+   *
+   * E2E porque a coluna da SPA é montada por `solid-element` e medida com
+   * `getBoundingClientRect` — nada disso existe sem navegador.
+   */
+  test('a coluna dupla mede os DOIS stacks, e a ladeira cresce nos dois', async ({ page }) => {
+    await page.goto('/piloto/grimorio')
+    const tamanhos = page.locator('#pecas [data-par]').filter({ hasText: /^(xs|sm|default|lg)/ })
+    await expect(tamanhos.first()).toBeVisible()
+
+    const alturas = await page.evaluate(() => {
+      const linhas = [...document.querySelectorAll('#pecas [data-par]')]
+      const daLinha = (nome: string) => {
+        const linha = linhas.find((l) => l.firstElementChild?.textContent?.trim() === nome)
+        return [...(linha?.querySelectorAll('[data-medir-cela]') ?? [])].map(
+          (e) => Number(/h (\d+)/.exec(e.textContent ?? '')?.[1] ?? 0),
+        )
+      }
+      return { xs: daLinha('xs'), sm: daLinha('sm'), lg: daLinha('lg') }
+    })
+
+    for (const [nome, par] of Object.entries(alturas)) {
+      expect(par.length, `a linha ${nome} não tem as duas colunas medidas`).toBe(2)
+      expect(par[0], `a coluna da SPA não mediu em ${nome}`).toBeGreaterThan(0)
+      expect(par[1], `a coluna do servidor não mediu em ${nome}`).toBeGreaterThan(0)
+    }
+    // A ladeira cresce dos DOIS lados. Com o defeito antigo, a coluna da SPA
+    // vinha 36/36/36 — constante, e nenhuma asserção de igualdade a pegaria.
+    for (const coluna of [0, 1]) {
+      expect(alturas.xs[coluna], 'xs não é menor que sm').toBeLessThan(alturas.sm[coluna] as number)
+      expect(alturas.sm[coluna], 'sm não é menor que lg').toBeLessThan(alturas.lg[coluna] as number)
+    }
+  })
+
+  /**
+   * `noShadowDOM()` não é opcional: no shadow root as classes do Tailwind não
+   * alcançam, e as peças da SPA renderizariam sem forma nenhuma — numa página
+   * cujo trabalho é mostrar como elas são. Pior, as variáveis CSS atravessam o
+   * shadow, então o resultado seria parcialmente certo: cores no lugar, forma
+   * não.
+   */
+  test('as peças da SPA montam SEM shadow root, senão o Tailwind não as alcança', async ({
+    page,
+  }) => {
+    await page.goto('/piloto/grimorio')
+    const botao = page.locator('spa-botao').first()
+    await expect(botao.locator('button')).toBeVisible()
+    expect(await botao.evaluate((el) => !!el.shadowRoot)).toBe(false)
+  })
+
+  // O endereço antigo é o que os dois comentários do index.css mandam abrir.
+  test('o endereço antigo /grimorio encaminha para a folha nova', async ({ page }) => {
+    await page.goto('/grimorio')
+    await expect(page).toHaveURL(/\/piloto\/grimorio$/)
+    await expect(page.getByRole('heading', { name: 'Cor' })).toBeVisible()
+  })
+})
+
 test.describe('A carta de convite (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
 
