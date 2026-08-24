@@ -24,8 +24,12 @@ type sessionStore struct {
 	mu     sync.Mutex
 	states map[int64]*SessionRuntimeState
 	dirty  map[int64]bool
-	newID  func() string
-	q      *sqlcgen.Queries
+	// seqs numera as mutações de cada sessão, para o hub reconhecer quadro
+	// atrasado (ALE-238). Mora aqui e não no estado: hidratar do banco troca o
+	// estado, e um contador que vivesse nele voltaria a zero.
+	seqs  map[int64]uint64
+	newID func() string
+	q     *sqlcgen.Queries
 	// persistMus holds a per-session mutex (sessionID → *sync.Mutex) serializing that
 	// session's runtime-state writes so concurrent mutations can't land out of order —
 	// WITHOUT coupling latency across sessions.
@@ -42,6 +46,7 @@ func newSessionStore(q *sqlcgen.Queries, newID func() string) *sessionStore {
 	return &sessionStore{
 		states: map[int64]*SessionRuntimeState{},
 		dirty:  map[int64]bool{},
+		seqs:   map[int64]uint64{},
 		newID:  newID,
 		q:      q,
 	}
@@ -56,6 +61,19 @@ func newSessionStore(q *sqlcgen.Queries, newID func() string) *sessionStore {
 // o contador em silêncio — e é a cópia que vai para o socket e para o banco, de
 // modo que o valor certo existia só na memória do servidor. Assim, campo novo
 // vem junto sem ninguém precisar lembrar.
+// proximaSeq devolve a ordem da próxima mutação desta sessão. Chamada SEMPRE
+// com `st.mu` seguro, que é o que faz a numeração coincidir com a ordem real
+// das mutações.
+//
+// O contador mora na LOJA e não no estado: hidratar do banco substitui o estado
+// e zeraria um contador que vivesse nele, e aí o hub descartaria todo quadro
+// seguinte por achá-los atrasados. O contador só reinicia com o processo, que é
+// quando o hub também esquece o que já mandou.
+func (st *sessionStore) proximaSeqLocked(sessionID int64) uint64 {
+	st.seqs[sessionID]++
+	return st.seqs[sessionID]
+}
+
 func cloneState(s *SessionRuntimeState) *SessionRuntimeState {
 	out := *s
 	out.Initiative = make([]InitiativeEntry, len(s.Initiative))
@@ -108,7 +126,9 @@ func (st *sessionStore) apply(sessionID int64, fn func(*SessionRuntimeState) err
 	if err := fn(s); err != nil {
 		return nil, err
 	}
-	return cloneState(s), nil
+	clone := cloneState(s)
+	clone.seq = st.proximaSeqLocked(sessionID)
+	return clone, nil
 }
 
 func (st *sessionStore) addInitiativeEntry(sessionID int64, e InitiativeEntry) (*SessionRuntimeState, error) {

@@ -127,7 +127,7 @@ func TestCondicaoEntraESaiDaLinha(t *testing.T) {
 func TestIniciativaDoJogadorEhSomadaPeloServidor(t *testing.T) {
 	f := newSelfInitiativeFixture(t)
 
-	entry, err := f.g.selfInitiativeEntry(f.player, f.campaignID, f.charID, 13)
+	entry, err := f.srv.selfInitiativeEntry(f.player, f.campaignID, f.charID, 13)
 	if err != nil {
 		t.Fatalf("registrar: %v", err)
 	}
@@ -147,13 +147,13 @@ func TestD20ForaDaFaixaEhRecusado(t *testing.T) {
 	f := newSelfInitiativeFixture(t)
 
 	for _, d20 := range []int64{0, -3, 21, 100} {
-		if _, err := f.g.selfInitiativeEntry(f.player, f.campaignID, f.charID, d20); err == nil {
+		if _, err := f.srv.selfInitiativeEntry(f.player, f.campaignID, f.charID, d20); err == nil {
 			t.Errorf("d20 %d passou", d20)
 		}
 	}
 	// E a fronteira dos dois lados vale: 1 e 20 são dados de verdade.
 	for _, d20 := range []int64{1, 20} {
-		if _, err := f.g.selfInitiativeEntry(f.player, f.campaignID, f.charID, d20); err != nil {
+		if _, err := f.srv.selfInitiativeEntry(f.player, f.campaignID, f.charID, d20); err != nil {
 			t.Errorf("d20 %d recusado: %v", d20, err)
 		}
 	}
@@ -165,7 +165,7 @@ func TestD20ForaDaFaixaEhRecusado(t *testing.T) {
 func TestRegistrarIniciativaDeOutroEhRecusado(t *testing.T) {
 	f := newSelfInitiativeFixture(t)
 
-	_, err := f.g.selfInitiativeEntry(f.intruder, f.campaignID, f.charID, 10)
+	_, err := f.srv.selfInitiativeEntry(f.intruder, f.campaignID, f.charID, 10)
 
 	if err == nil {
 		t.Fatal("um jogador registrou a iniciativa do personagem de outro")
@@ -176,7 +176,7 @@ func TestRegistrarIniciativaDeOutroEhRecusado(t *testing.T) {
 }
 
 type selfInitiativeFixture struct {
-	g          *realtimeGateway
+	srv        *Server
 	campaignID int64
 	charID     int64
 	player     int64
@@ -213,7 +213,7 @@ func newSelfInitiativeFixture(t *testing.T) selfInitiativeFixture {
 	seedMember(t, s, campaignID, intruderChar, "player")
 
 	return selfInitiativeFixture{
-		g: &realtimeGateway{s: s}, campaignID: campaignID,
+		srv: s, campaignID: campaignID,
 		charID: charID, player: player, intruder: intruder,
 	}
 }
@@ -232,7 +232,7 @@ func newSelfInitiativeFixture(t *testing.T) selfInitiativeFixture {
 func TestEncerrarCenaExpiraOsEfeitosDeCenaDoGrupo(t *testing.T) {
 	f := newEndSceneFixture(t)
 
-	state, err := f.g.endSceneForTable(f.gm, f.campaignID, f.sessionID)
+	state, err := f.srv.endSceneForTable(f.gm, f.campaignID, f.sessionID)
 	if err != nil {
 		t.Fatalf("encerrar a cena: %v", err)
 	}
@@ -240,7 +240,7 @@ func TestEncerrarCenaExpiraOsEfeitosDeCenaDoGrupo(t *testing.T) {
 	if state.SceneActive {
 		t.Error("a cena continuou ligada")
 	}
-	if got := effectScopes(t, f.g.s, f.charID); len(got) != 1 || got[0] != "day" {
+	if got := effectScopes(t, f.srv, f.charID); len(got) != 1 || got[0] != "day" {
 		t.Errorf("sobraram os escopos %v na ficha do grupo, queria só [day]", got)
 	}
 }
@@ -250,21 +250,21 @@ func TestEncerrarCenaExpiraOsEfeitosDeCenaDoGrupo(t *testing.T) {
 // nunca chegou a pôr no rastreador.
 func TestEncerrarCenaAlcancaQuemNaoEstaNaFila(t *testing.T) {
 	f := newEndSceneFixture(t)
-	ausente := seedCharacter(t, f.g.s, f.player, "Ladino de fora", 10, 10, 2, 2)
-	seedMember(t, f.g.s, f.campaignID, ausente, "player")
-	seedEffect(t, f.g.s, ausente, "bencao", "scene")
+	ausente := seedCharacter(t, f.srv, f.player, "Ladino de fora", 10, 10, 2, 2)
+	seedMember(t, f.srv, f.campaignID, ausente, "player")
+	seedEffect(t, f.srv, ausente, "bencao", "scene")
 
-	if _, err := f.g.endSceneForTable(f.gm, f.campaignID, f.sessionID); err != nil {
+	if _, err := f.srv.endSceneForTable(f.gm, f.campaignID, f.sessionID); err != nil {
 		t.Fatalf("encerrar a cena: %v", err)
 	}
 
-	if got := effectScopes(t, f.g.s, ausente); len(got) != 0 {
+	if got := effectScopes(t, f.srv, ausente); len(got) != 0 {
 		t.Errorf("a ficha fora da fila ficou com %v", got)
 	}
 }
 
 type endSceneFixture struct {
-	g          *realtimeGateway
+	srv        *Server
 	gm         AuthUser
 	player     int64
 	campaignID int64
@@ -284,7 +284,7 @@ func newEndSceneFixture(t *testing.T) endSceneFixture {
 	seedEffect(t, s, charID, "bencao", "scene")
 	seedEffect(t, s, charID, "heroismo", "day")
 
-	g := &realtimeGateway{s: s}
+	srv := s
 	if _, err := s.sessions.startScene(sessionID); err != nil {
 		t.Fatalf("iniciar a cena: %v", err)
 	}
@@ -294,7 +294,7 @@ func newEndSceneFixture(t *testing.T) endSceneFixture {
 		t.Fatalf("pôr o Clérigo na fila: %v", err)
 	}
 	return endSceneFixture{
-		g: g, gm: AuthUser{ID: gmID, Email: "mestre@t.com"}, player: player,
+		srv: srv, gm: AuthUser{ID: gmID, Email: "mestre@t.com"}, player: player,
 		campaignID: campaignID, sessionID: sessionID, charID: charID,
 	}
 }
@@ -304,15 +304,15 @@ func newEndSceneFixture(t *testing.T) endSceneFixture {
 // parecendo ter funcionado — fila zerada na tela e as bênçãos vivas na ficha.
 func TestEncerrarCenaNaoDesligaACenaSeNaoAlcancouAsFichas(t *testing.T) {
 	f := newEndSceneFixture(t)
-	if _, err := f.g.s.db.Exec("DROP TABLE campaign_members"); err != nil {
+	if _, err := f.srv.db.Exec("DROP TABLE campaign_members"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
 
-	if _, err := f.g.endSceneForTable(f.gm, f.campaignID, f.sessionID); err == nil {
+	if _, err := f.srv.endSceneForTable(f.gm, f.campaignID, f.sessionID); err == nil {
 		t.Fatal("encerrou sem ter conseguido alcançar as fichas do grupo")
 	}
 
-	if !f.g.s.sessions.getState(f.sessionID).SceneActive {
+	if !f.srv.sessions.getState(f.sessionID).SceneActive {
 		t.Error("a cena foi desligada mesmo assim")
 	}
 }

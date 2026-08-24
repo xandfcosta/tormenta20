@@ -34,7 +34,7 @@ outcome someone would notice breaking. Everything below follows from that.
   and anything the typechecker already guarantees: no.
 - **E2E is the smallest possible set.** A Playwright test must justify itself
   with a mechanism only a real browser has — animation timeline, real layout and
-  overflow, virtualized lists that measure zero in jsdom, a socket across two
+  overflow, virtualized lists that measure zero in jsdom, a live stream across two
   servers. "It's a user journey" is NOT a justification: journeys are cheaper
   and steadier as integration tests. E2E is the most expensive and most fragile
   thing in this repo; spend it deliberately.
@@ -65,6 +65,19 @@ outcome someone would notice breaking. Everything below follows from that.
   mesmo arquivo uma linha que sai SEMPRE; conferir que a sonda vê o caso
   positivo conhecido. Sem isso, "não reproduzi" não é evidência de ausência —
   é ausência de evidência, e as duas se parecem no terminal.
+
+  **E o canal pode morrer DEPOIS de instalado: um observador precisa afirmar
+  que o DOCUMENTO em que ele foi instalado ainda é o mesmo.** Navegação
+  descarta o documento, e com ele o `MutationObserver` — a lista de mutações
+  volta VAZIA, que é a mesma coisa que "nada mudou". O guarda
+  `não desanexa a cena` (ALE-238) passa exatamente no PIOR caso: a cena não
+  desanexou porque a cena deixou de existir. Não é um teste que falha em
+  detectar; é um teste que **afirma o oposto do que aconteceu**, e ele só foi
+  descoberto porque um clique estourou antes e denunciou a navegação.
+
+  O mesmo vale para qualquer sonda de vida longa — `addEventListener`,
+  `PerformanceObserver`, um `page.on(...)` cujo alvo recarregou. Afirme o
+  documento antes de afirmar o silêncio.
 - **Um guarda só mede o que ele VISITA.** Cobertura de contraste, de tipografia
   e de leiaute é função de onde o teste NAVEGA, não de quantas asserções ele
   tem. Dois defeitos de contraste sobreviveram anos com o guarda no ar porque
@@ -135,5 +148,5 @@ outcome someone would notice breaking. Everything below follows from that.
   — regenerar oráculo é ato deliberado, citação de página conferida, o gerador de
   tipos da fronteira, validação de schema dos catálogos. HTTP API on :3001, the rules engine, and
   the same engine compiled to WASM for the browser. One process serves the SPA,
-  the API and the socket in production (`STATIC_DIR`) — there is no nginx and no
+  the API and the event stream in production (`STATIC_DIR`) — there is no nginx and no
   compose. The NestJS backend was removed once nothing consumed it.

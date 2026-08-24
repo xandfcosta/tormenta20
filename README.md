@@ -28,7 +28,7 @@ Não há passo de migração: `db.Open` aplica as migrações embutidas na parti
 
 ```bash
 pnpm dev                 # API Go (:3001) + Vite (:5173) juntos
-pnpm dev:frontend        # só o Vite (/api e /socket.io proxiados pra :3001)
+pnpm dev:frontend        # só o Vite (/api proxiado pra :3001)
 ```
 
 O `predev` do frontend compila `engine-go` → WASM antes de subir o Vite, porque
@@ -98,7 +98,7 @@ junto e passa as mesas dela para você.
 
 **A stack de produção é um processo só.** Com `STATIC_DIR` apontando para
 `frontend/dist`, o `cmd/api` serve o SPA (com fallback pras rotas de cliente), os
-assets, `/api/*` e o `/socket.io/` na mesma porta. Não há nginx, não há
+assets e `/api/*` na mesma porta. Não há nginx, não há
 docker-compose e não há segundo runtime pra manter — foi por isso que os dois
 saíram quando o Nest saiu.
 
