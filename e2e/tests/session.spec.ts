@@ -39,8 +39,6 @@ function avancoDeTurno(page: Page) {
   return page.getByRole('button', { name: /^(Próximo|Começar|Ninguém na fila)/ })
 }
 
-const CAMPAIGN = 'Snapshot Test ALE-33' // the seed chronicle with a live session
-
 /** Combatentes que o teste do recorte CRIA, para a fila passar do que cabe. */
 const RECHEIO_DO_TRILHO = ['Recheio A', 'Recheio B', 'Recheio C', 'Recheio D', 'Recheio E']
 
@@ -147,25 +145,10 @@ test.describe('Sessão ao vivo', () => {
    * de quem rodou o quê antes.
    */
 
-  test('Campanhas → campanha → continuar a sessão (realtime conectado)', async ({ page }) => {
-    await page.goto('/campaigns')
-    // O estado "ao vivo" chega DEPOIS da lista (fan-out separado de sessões) e
-    // troca os botões do livro. Esperar ele assentar antes de clicar — senão a
-    // ação some debaixo do cursor e o clique cai no botão vizinho (ALE-78).
-    await expect(page.getByRole('button', { name: /^Continuar a sessão/ })).toBeVisible()
-
-    await page.getByRole('button', { name: /^Abrir campanha/ }).click()
-    await expect(page.getByRole('heading', { name: CAMPAIGN, level: 1 })).toBeVisible()
-
-    await page.getByRole('button', { name: 'Continuar a sessão' }).click()
-    await expect(page).toHaveURL(/\/campaigns\/\d+\/sessions\/\d+$/)
-
-    // A superfície permanente é o TABULEIRO (ALE-198): é ele que prova que a
-    // cena montou. A iniciativa virou gaveta e não serve mais de âncora.
-    await expect(page.getByRole('navigation', { name: 'Consultas do mestre' })).toBeVisible()
-    // The connection chip flips to "Conectado" only after the socket handshake.
-    await expect(cenaViva(page)).toBeVisible()
-  })
+  // 'Campanhas → campanha → continuar a sessão' saiu na ALE-187: era uma
+  // jornada de navegação terminando no chip 'Conectado'. Os outros 28 testes
+  // deste arquivo também chegam à cena, e o handshake com dois clientes de
+  // verdade é o `session-realtime.spec.ts`. Jornada não é justificativa de e2e.
 
   /**
    * A mesma família da ALE-96, um andar acima. O `SessionTrackerPage` lia
@@ -2059,14 +2042,8 @@ test.describe('Sessão ao vivo', () => {
     ).toBe(cores?.painelDaCasa)
   })
 
-  test('Sair da sessão volta pra campanha', async ({ page }) => {
-    await page.goto('/campaigns/1/sessions/4')
-    await expect(cenaViva(page)).toBeVisible()
-
-    // Um LINK, não um botão: sem `asChild` no Solid, um link com cara de botão
-    // é um `<a>` vestindo as classes do botão (armadilha #6 do porte).
-    await page.getByRole('link', { name: 'Sair da sessão' }).click()
-    await expect(page).toHaveURL(/\/campaigns\/1$/)
-    await expect(page.getByRole('heading', { name: CAMPAIGN, level: 1 })).toBeVisible()
-  })
+  // 'Sair da sessão volta pra campanha' saiu na ALE-187. O que ele media de
+  // único era o PAPEL do elemento — um `<a>` e não um `<button>`, a armadilha
+  // #6 do porte para Solid —, e papel se afirma montando: está em
+  // `pages/sessions/match-shell.test.tsx`, provado vermelho.
 })

@@ -36,13 +36,9 @@ async function openSection(page: Page, tab: string): Promise<void> {
 test.describe('Campanha vista pelo jogador', () => {
   // O jogador PERDE ações de escrita, não a mesa: ele continua lendo a campanha
   // e entrando na sessão ao vivo.
-  test('o jogador ainda lê a campanha e entra na sessão ao vivo', async ({ page }) => {
-    await openSection(page, 'sessoes')
-
-    await expect(page.getByText('JOGANDO')).toBeVisible()
-    await expect(page.getByRole('button', { name: /Continuar a sessão/ })).toBeVisible()
-    await expect(page.getByText('Sessão 5')).toBeVisible()
-  })
+  // 'o jogador ainda lê a campanha e entra na sessão ao vivo' saiu na ALE-187:
+  // eram três `toBeVisible` de texto, nada que o jsdom não veja. O vizinho
+  // abaixo FICA, e a diferença entre os dois é exatamente o critério da casa.
 
   /**
    * ALE-96. Ler `.data` de uma query PENDENTE suspende, e o boundary mais

@@ -5,18 +5,10 @@ import { VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
 const CAMPAIGN = '/campaigns/1' // Snapshot Test ALE-33 (seed)
 
 test.describe('Detalhe da campanha', () => {
-  test('troca de aba mostra o roster de membros', async ({ page }) => {
-    await page.goto(`${CAMPAIGN}?tab=visao`)
-    await expect(
-      page.getByRole('heading', { name: /Snapshot Test ALE-33/i }),
-    ).toBeVisible()
-
-    await page.getByRole('tab', { name: 'Membros' }).click()
-    await expect(page).toHaveURL(/tab=membros/)
-    await expect(page.getByText('Tanque Placas Nv10')).toBeVisible()
-    // Party roster from the rich seed (1 GM + 4 players).
-    await expect(page.getByText('Recruta Nv1 Simples')).toBeVisible()
-  })
+  // 'troca de aba mostra o roster de membros' saiu na ALE-187: clique numa aba
+  // e nomes na tela, sem medida que precise de browser. A garantia — e a URL,
+  // que o e2e também afirmava — está em `campaign-detail-page.test.tsx`, que
+  // monta a página com router de memória e cobre os dois sentidos.
 })
 
 /**
