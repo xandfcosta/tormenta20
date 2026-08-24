@@ -1,5 +1,7 @@
 package api
 
+import "t20engine/aovivo"
+
 import (
 	"context"
 	"database/sql"
@@ -26,14 +28,14 @@ var errNoBoard = errors.New("esta sessão não tem tabuleiro aberto")
 // outra mesa. Aqui a mesma trava vale para todos os tabuleiros — quando o custo
 // aparecer, ela vira uma por sessão sem mudar quem chama (ALE-124).
 type boardStore struct {
-	mu     sync.Mutex
+	Mu     sync.Mutex
 	boards map[int64]*BoardState
 	// loaded marca a sessão já consultada no banco, para "sem tabuleiro" não
 	// virar uma ida ao disco por mensagem.
 	loaded map[int64]bool
-	// dirty: a última gravação falhou. Espelha o do rastreador, e é o que
+	// Dirty: a última gravação falhou. Espelha o do rastreador, e é o que
 	// transforma "gravação falhando em silêncio" em aviso na tela da mesa.
-	dirty map[int64]bool
+	Dirty map[int64]bool
 	newID func() string
 	q     *sqlcgen.Queries
 }
@@ -42,7 +44,7 @@ func newBoardStore(q *sqlcgen.Queries, newID func() string) *boardStore {
 	return &boardStore{
 		boards: map[int64]*BoardState{},
 		loaded: map[int64]bool{},
-		dirty:  map[int64]bool{},
+		Dirty:  map[int64]bool{},
 		newID:  newID,
 		q:      q,
 	}
@@ -77,8 +79,8 @@ func cloneBoard(b *BoardState) *BoardState {
 // get devolve o tabuleiro da sessão (nil quando não há), hidratando do banco na
 // primeira leitura.
 func (bs *boardStore) get(ctx context.Context, sessionID int64) *BoardState {
-	bs.mu.Lock()
-	defer bs.mu.Unlock()
+	bs.Mu.Lock()
+	defer bs.Mu.Unlock()
 	bs.hydrateLocked(ctx, sessionID)
 	return cloneBoard(bs.boards[sessionID])
 }
@@ -107,7 +109,7 @@ func (bs *boardStore) hydrateLocked(ctx context.Context, sessionID int64) {
 	if err != nil {
 		// Sem marcar: a próxima mensagem tenta de novo em vez de servir um
 		// "sem tabuleiro" que só existe porque o banco piscou.
-		log.Printf("session %d: board load failed (%v); tentará de novo", sessionID, err)
+		log.Printf("session %d: board Load failed (%v); tentará de novo", sessionID, err)
 		return
 	}
 	bs.loaded[sessionID] = true
@@ -125,8 +127,8 @@ func (bs *boardStore) hydrateLocked(ctx context.Context, sessionID int64) {
 // open abre (ou substitui) o tabuleiro da sessão.
 func (bs *boardStore) open(ctx context.Context, sessionID int64, place, terrain string) *BoardState {
 	b := newBoard(place, terrain)
-	bs.mu.Lock()
-	defer bs.mu.Unlock()
+	bs.Mu.Lock()
+	defer bs.Mu.Unlock()
 	bs.hydrateLocked(ctx, sessionID)
 	// A versão CONTINUA de onde estava: um cliente que ainda tem o tabuleiro
 	// velho precisa reconhecer o novo como mais recente, e não como um retorno
@@ -141,38 +143,38 @@ func (bs *boardStore) open(ctx context.Context, sessionID int64, place, terrain 
 // close encerra o tabuleiro: some da memória e do banco. As posições não são
 // arquivadas AINDA — os Lugares da crônica são fatia própria (ALE-124).
 //
-// Devolve as transições de saúde como o `persist`, e pelo mesmo motivo
+// Devolve as transições de saúde como o `Persist`, e pelo mesmo motivo
 // (ALE-155): se o DELETE falha, a memória diz "fechado" e o banco mantém a
 // linha — no próximo boot o tabuleiro FANTASMA volta, com as peças de uma cena
 // que a mesa já encerrou. Antes isso morria numa linha de log.
-func (bs *boardStore) close(ctx context.Context, sessionID int64) (dirty, changed bool) {
-	bs.mu.Lock()
+func (bs *boardStore) close(ctx context.Context, sessionID int64) (Dirty, changed bool) {
+	bs.Mu.Lock()
 	delete(bs.boards, sessionID)
 	bs.loaded[sessionID] = true
-	bs.mu.Unlock()
+	bs.Mu.Unlock()
 
 	err := bs.q.DeleteSessionBoard(ctx, sessionID)
 
-	bs.mu.Lock()
-	defer bs.mu.Unlock()
-	prev := bs.dirty[sessionID]
-	dirty = err != nil
-	changed = prev != dirty
-	if dirty {
-		bs.dirty[sessionID] = true
+	bs.Mu.Lock()
+	defer bs.Mu.Unlock()
+	prev := bs.Dirty[sessionID]
+	Dirty = err != nil
+	changed = prev != Dirty
+	if Dirty {
+		bs.Dirty[sessionID] = true
 		log.Printf("session %d: board delete failed (%v)", sessionID, err)
-		return dirty, changed
+		return Dirty, changed
 	}
-	delete(bs.dirty, sessionID)
-	return dirty, changed
+	delete(bs.Dirty, sessionID)
+	return Dirty, changed
 }
 
 // apply roda uma mutação pura sob a trava e devolve o instantâneo para o
 // broadcast. Recusa quando não há tabuleiro: mexer no que não existe é erro de
 // quem chamou, não um tabuleiro criado por acidente.
 func (bs *boardStore) apply(ctx context.Context, sessionID int64, fn func(*BoardState) error) (*BoardState, error) {
-	bs.mu.Lock()
-	defer bs.mu.Unlock()
+	bs.Mu.Lock()
+	defer bs.Mu.Unlock()
 	bs.hydrateLocked(ctx, sessionID)
 	b := bs.boards[sessionID]
 	if b == nil {
@@ -234,7 +236,7 @@ func (bs *boardStore) paintTerrain(ctx context.Context, sessionID int64, square 
 }
 
 func (bs *boardStore) populate(
-	ctx context.Context, sessionID int64, st *SessionRuntimeState, chosen entrySelection,
+	ctx context.Context, sessionID int64, st *aovivo.SessionRuntimeState, chosen entrySelection,
 ) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, func(b *BoardState) error {
 		populateBoard(b, st, bs.newID, chosen)
@@ -257,7 +259,7 @@ func (bs *boardStore) setSpeeds(ctx context.Context, sessionID int64, speeds map
 	})
 }
 
-// persist grava o tabuleiro e devolve as transições de saúde, como o do
+// Persist grava o tabuleiro e devolve as transições de saúde, como o do
 // rastreador: a mesa não para porque o disco piscou, mas ela precisa SABER
 // quando parou de gravar.
 //
@@ -266,10 +268,10 @@ func (bs *boardStore) setSpeeds(ctx context.Context, sessionID int64, speeds map
 // existia), e o tabuleiro passou um dia vivendo só em memória — cada gravação
 // falhava numa linha de log que ninguém lê, e na tela estava tudo perfeito até
 // o processo reiniciar. Falha permanente de gravação não é "o disco piscou".
-func (bs *boardStore) persist(ctx context.Context, sessionID int64) (dirty, changed bool) {
-	bs.mu.Lock()
+func (bs *boardStore) Persist(ctx context.Context, sessionID int64) (Dirty, changed bool) {
+	bs.Mu.Lock()
 	b := cloneBoard(bs.boards[sessionID])
-	bs.mu.Unlock()
+	bs.Mu.Unlock()
 	if b == nil {
 		return false, false
 	}
@@ -282,25 +284,25 @@ func (bs *boardStore) persist(ctx context.Context, sessionID int64) (dirty, chan
 		Sessionid: sessionID, State: string(blob), Updatedat: plataforma.NowISO(),
 	})
 
-	bs.mu.Lock()
-	defer bs.mu.Unlock()
-	prev := bs.dirty[sessionID] // ausente ⇒ false (saudável)
-	dirty = err != nil
-	changed = prev != dirty
-	if dirty {
-		bs.dirty[sessionID] = true
-		log.Printf("session %d: board persist failed (%v)", sessionID, err)
-		return dirty, changed
+	bs.Mu.Lock()
+	defer bs.Mu.Unlock()
+	prev := bs.Dirty[sessionID] // ausente ⇒ false (saudável)
+	Dirty = err != nil
+	changed = prev != Dirty
+	if Dirty {
+		bs.Dirty[sessionID] = true
+		log.Printf("session %d: board Persist failed (%v)", sessionID, err)
+		return Dirty, changed
 	}
-	delete(bs.dirty, sessionID)
-	return dirty, changed
+	delete(bs.Dirty, sessionID)
+	return Dirty, changed
 }
 
 // proposeMove, commitMove e cancelMove são as três portas do movimento (ALE-124).
 // A posse e o orçamento chegam RESOLVIDOS do gateway: quem consulta o banco é
 // ele, e a trava daqui não pode esperar por I/O.
 
-func (bs *boardStore) proposeMove(ctx context.Context, sessionID int64, st *SessionRuntimeState, tokenID string, path []engine.Square, by mover, speedSquares int) (*BoardState, error) {
+func (bs *boardStore) proposeMove(ctx context.Context, sessionID int64, st *aovivo.SessionRuntimeState, tokenID string, path []engine.Square, by mover, speedSquares int) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, func(b *BoardState) error {
 		// O orçamento fresco do motor entra na peça ANTES da medição: sem isso,
 		// a armadura vestida no meio da sessão só valeria no movimento seguinte.
@@ -311,7 +313,7 @@ func (bs *boardStore) proposeMove(ctx context.Context, sessionID int64, st *Sess
 	})
 }
 
-func (bs *boardStore) commitMove(ctx context.Context, sessionID int64, st *SessionRuntimeState, version int64, by mover) (*BoardState, error) {
+func (bs *boardStore) commitMove(ctx context.Context, sessionID int64, st *aovivo.SessionRuntimeState, version int64, by mover) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, func(b *BoardState) error { return commitMove(b, st, version, by) })
 }
 

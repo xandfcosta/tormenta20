@@ -1,11 +1,13 @@
 package api
 
+import "t20engine/aovivo"
+
 import "testing"
 
-// entryIDByLabel devolve o ID que `addEntry` sorteou para uma linha. A escolha
+// entryIDByLabel devolve o ID que `aovivo.AddEntry` sorteou para uma linha. A escolha
 // viaja por ID e nunca por rótulo (ALE-204/192): dois goblins têm o mesmo nome
 // até o servidor numerá-los.
-func entryIDByLabel(t *testing.T, st *SessionRuntimeState, label string) string {
+func entryIDByLabel(t *testing.T, st *aovivo.SessionRuntimeState, label string) string {
 	t.Helper()
 	for _, entry := range st.Initiative {
 		if entry.Label == label {
@@ -24,11 +26,11 @@ func entryIDByLabel(t *testing.T, st *SessionRuntimeState, label string) string 
 // não nasce — nem escondido, porque peça que não existe não vaza por bug de
 // redação.
 func TestPopulateBringsOnlyTheChosen(t *testing.T) {
-	st := emptyRuntimeState()
-	id := counter()
-	_ = addEntry(st, charEntry("Sílfide", 18, 7), id)
-	_ = addEntry(st, charEntry("Paladino", 15, 8), id)
-	_ = addEntry(st, npc("Assassino", 20), id)
+	st := aovivo.EmptyRuntimeState()
+	id := contadorDeIds()
+	_ = aovivo.AddEntry(st, combatenteDeFicha("Sílfide", 18, 7), id)
+	_ = aovivo.AddEntry(st, combatenteDeFicha("Paladino", 15, 8), id)
+	_ = aovivo.AddEntry(st, npc("Assassino", 20), id)
 	b := newBoard("Cripta", "pedra")
 
 	escolhidos := entrySelection{

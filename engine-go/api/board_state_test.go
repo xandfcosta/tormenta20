@@ -1,5 +1,7 @@
 package api
 
+import "t20engine/aovivo"
+
 import (
 	"fmt"
 	"testing"
@@ -103,10 +105,10 @@ func TestHiddenTokenVanishesForPlayers(t *testing.T) {
 func TestPopulateBoardIsIdempotent(t *testing.T) {
 	b := openBoard(t)
 	id := boardCounter()
-	st := emptyRuntimeState()
-	entryID := counter()
-	_ = addEntry(st, npc("Ogro", 12), entryID)
-	_ = addEntry(st, npc("Bandido", 8), entryID)
+	st := aovivo.EmptyRuntimeState()
+	entryID := contadorDeIds()
+	_ = aovivo.AddEntry(st, npc("Ogro", 12), entryID)
+	_ = aovivo.AddEntry(st, npc("Bandido", 8), entryID)
 
 	if placed := populateBoard(b, st, id, nil); placed != 2 {
 		t.Errorf("primeira chamada colocou %d peças, esperado 2", placed)

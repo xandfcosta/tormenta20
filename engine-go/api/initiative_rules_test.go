@@ -1,5 +1,7 @@
 package api
 
+import "t20engine/aovivo"
+
 import (
 	"context"
 	"strings"
@@ -92,12 +94,12 @@ func TestParseConditionsNaoDuplicaNemQuebra(t *testing.T) {
 // A condição é estado de COMBATE e mora na linha, como os PV atuais: o bloco de
 // criatura descreve o vilão, e ele não volta na semana seguinte ainda caído.
 func TestCondicaoEntraESaiDaLinha(t *testing.T) {
-	st := emptyRuntimeState()
-	id := counter()
-	_ = addEntry(st, npc("Ogro", 12), id)
+	st := aovivo.EmptyRuntimeState()
+	id := contadorDeIds()
+	_ = aovivo.AddEntry(st, npc("Ogro", 12), id)
 
 	aplicadas := []string{"caido", "atordoado"}
-	if err := updateEntry(st, "e1", entryPatch{Conditions: &aplicadas}); err != nil {
+	if err := aovivo.UpdateEntry(st, "e1", aovivo.EntryPatch{Conditions: &aplicadas}); err != nil {
 		t.Fatalf("aplicar: %v", err)
 	}
 	if len(st.Initiative[0].Conditions) != 2 {
@@ -105,7 +107,7 @@ func TestCondicaoEntraESaiDaLinha(t *testing.T) {
 	}
 
 	vazio := []string{}
-	_ = updateEntry(st, "e1", entryPatch{Conditions: &vazio})
+	_ = aovivo.UpdateEntry(st, "e1", aovivo.EntryPatch{Conditions: &vazio})
 	if len(st.Initiative[0].Conditions) != 0 {
 		t.Fatalf("limpar deixou %v", st.Initiative[0].Conditions)
 	}
@@ -285,12 +287,12 @@ func newEndSceneFixture(t *testing.T) endSceneFixture {
 	seedEffect(t, s, charID, "heroismo", "day")
 
 	srv := s
-	if _, err := s.sessions.startScene(sessionID); err != nil {
+	if _, err := s.sessions.StartScene(sessionID); err != nil {
 		t.Fatalf("iniciar a cena: %v", err)
 	}
 	// O Clérigo entra na FILA: sem ele lá, "quem não está na fila" seria todo
 	// mundo e o segundo teste não separaria nada.
-	if _, err := s.sessions.addInitiativeEntry(sessionID, charEntry("Clérigo", 14, charID)); err != nil {
+	if _, err := s.sessions.AddInitiativeEntry(sessionID, combatenteDeFicha("Clérigo", 14, charID)); err != nil {
 		t.Fatalf("pôr o Clérigo na fila: %v", err)
 	}
 	return endSceneFixture{
@@ -312,7 +314,7 @@ func TestEncerrarCenaNaoDesligaACenaSeNaoAlcancouAsFichas(t *testing.T) {
 		t.Fatal("encerrou sem ter conseguido alcançar as fichas do grupo")
 	}
 
-	if !f.srv.sessions.getState(f.sessionID).SceneActive {
+	if !f.srv.sessions.GetState(f.sessionID).SceneActive {
 		t.Error("a cena foi desligada mesmo assim")
 	}
 }

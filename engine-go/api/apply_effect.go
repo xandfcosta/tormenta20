@@ -88,7 +88,7 @@ func (s *Server) applyPool(w http.ResponseWriter, r *http.Request, id int64, sou
 
 	rows, err := q.ListActiveEffectsByCharacter(r.Context(), id)
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load effects")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load effects")
 		return
 	}
 	plan := planPoolSupremacy(parseTempHpPools(rows), catalogID, scope, amount)

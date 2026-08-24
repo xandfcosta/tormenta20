@@ -72,7 +72,7 @@ func TestResolveInviteReturnsPreview(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
 		t.Fatalf("decode: %v (body %q)", err, rec.Body.String())
 	}
-	// camelCase or the join form reads an undefined campaignId (ALE-18).
+	// camelCase or the Join form reads an undefined campaignId (ALE-18).
 	if body["campaignName"] != "Mesa do Beco" {
 		t.Errorf("campaignName = %v, want %q", body["campaignName"], "Mesa do Beco")
 	}
@@ -83,7 +83,7 @@ func TestResolveInviteReturnsPreview(t *testing.T) {
 
 // The regression this file exists for: an unknown token used to answer 200 with
 // a `null` body, so a dead invite reached the client as a SUCCESS carrying no
-// campaign — the join screen could not tell it apart from one still loading
+// campaign — the Join screen could not tell it apart from one still loading
 // (ALE-80).
 func TestResolveInviteRejectsUnknownToken(t *testing.T) {
 	_, h := inviteFixture(t, "token-vivo")

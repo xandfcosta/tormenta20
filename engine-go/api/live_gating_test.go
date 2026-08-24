@@ -205,15 +205,15 @@ func TestPortaDoMestreEmTodaRotaDaMesaAoVivo(t *testing.T) {
 	}
 }
 
-// saidaDeEstado é toda linha que ENTREGA estado da mesa: o `emit` do broadcast e
+// saidaDeEstado é toda linha que ENTREGA estado da mesa: o `Emit` do broadcast e
 // o `plataforma.WriteJSON` que responde a quem comandou.
 //
-// O `board-state` entrou aqui junto com o primeiro emit do tabuleiro (ALE-124):
+// O `board-state` entrou aqui junto com o primeiro Emit do tabuleiro (ALE-124):
 // enquanto o regex só conhecia `session-state`, uma peça escondida podia sair
 // sem redação nenhuma e este teste passava verde — é assim que uma rede fica
 // cega, e o próprio arquivo avisa que é assim.
 var saidaDeEstado = regexp.MustCompile(
-	`(?m)^.*(sse\.emit(Ordered)?\([^,]+, [^,]+, "(session|board)-state"|plataforma.WriteJSON\(w, http\.StatusOK, (state|board)\b).*$`)
+	`(?m)^.*(sse\.Emit(Ordered)?\([^,]+, [^,]+, "(session|board)-state"|plataforma.WriteJSON\(w, http\.StatusOK, (state|board)\b).*$`)
 
 // O PV oculto é do mestre, e o broadcast não é o único caminho do estado até a
 // tela: a RESPOSTA do próprio comando hidrata quem o mandou, inclusive jogador.
@@ -226,13 +226,13 @@ func TestEstadoSaiDoServidorFiltradoPorPapel(t *testing.T) {
 	}
 
 	for _, linha := range linhas {
-		filtrada := strings.Contains(linha, "stateForRole") ||
-			strings.Contains(linha, "redactForPlayers") ||
+		filtrada := strings.Contains(linha, "aovivo.StateForRole") ||
+			strings.Contains(linha, "aovivo.RedactForPlayers") ||
 			strings.Contains(linha, "boardForRole") ||
 			strings.Contains(linha, `, "gm", `)
 		if !filtrada {
 			t.Errorf("estado sai sem filtro de papel:\n%s\ndiga para quem:"+
-				" stateForRole(ctx.role, …) na resposta, ou o papel no emit", strings.TrimSpace(linha))
+				" aovivo.StateForRole(ctx.role, …) na resposta, ou o papel no Emit", strings.TrimSpace(linha))
 		}
 	}
 }

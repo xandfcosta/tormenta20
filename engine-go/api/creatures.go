@@ -163,7 +163,7 @@ func (s *Server) creatureBelongsTo(w http.ResponseWriter, r *http.Request, id, c
 		return false
 	}
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load creature")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load creature")
 		return false
 	}
 	return true

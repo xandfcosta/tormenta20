@@ -2,10 +2,38 @@ package api
 
 import (
 	"fmt"
+	"t20engine/aovivo"
 	"testing"
 
 	"t20engine/engine"
 )
+
+// combatenteDeFicha monta uma entrada de PC. Helper de teste local: o do
+// `aovivo` mudou de pacote na ALE-254 e teste não exporta para o vizinho.
+func combatenteDeFicha(label string, init int, charID int64) aovivo.InitiativeEntry {
+	c := charID
+	return aovivo.InitiativeEntry{Label: label, Initiative: init, Type: "character", CharacterID: &c}
+}
+
+// contadorDeIds gera ids previsíveis para o teste. Era um helper compartilhado
+// no `session_state_test.go`; quando aquele arquivo mudou de pacote (ALE-254) o
+// helper foi junto, e teste não exporta para o vizinho — cada pacote tem o seu.
+func contadorDeIds() func() string {
+	n := 0
+	return func() string { n++; return "e" + itoaLocal(n) }
+}
+
+func itoaLocal(n int) string {
+	if n == 0 {
+		return "0"
+	}
+	var b []byte
+	for n > 0 {
+		b = append([]byte{byte(48 + n%10)}, b...)
+		n /= 10
+	}
+	return string(b)
+}
 
 // Mover peça no tabuleiro (ALE-124, fatia 3). O que se prova aqui é o que a mesa
 // notaria quebrar: o jogador andando na vez de outro, a peça furando o
@@ -16,12 +44,12 @@ import (
 // da mesma regra.
 
 // mesaEmCombate monta um tabuleiro com a peça do jogador na vez e um NPC fora.
-func mesaEmCombate(t *testing.T) (*BoardState, *SessionRuntimeState) {
+func mesaEmCombate(t *testing.T) (*BoardState, *aovivo.SessionRuntimeState) {
 	t.Helper()
-	st := emptyRuntimeState()
-	id := counter()
-	_ = addEntry(st, charEntry("Sílfide", 18, 7), id) // e1
-	_ = addEntry(st, npc("Ogro", 12), id)             // e2
+	st := aovivo.EmptyRuntimeState()
+	id := contadorDeIds()
+	_ = aovivo.AddEntry(st, combatenteDeFicha("Sílfide", 18, 7), id) // e1
+	_ = aovivo.AddEntry(st, npc("Ogro", 12), id)                     // e2
 	st.TurnIndex = 0
 
 	b := newBoard("Taverna do Javali", "pedra")
@@ -232,12 +260,12 @@ func boolPtr(v bool) *bool { return &v }
 // que o mestre encontra o tabuleiro no segundo em que o combate começa: ele
 // tinha de arrastar nove peças antes de a cena servir para alguma coisa.
 func TestPopulateStartsTheSidesApart(t *testing.T) {
-	st := emptyRuntimeState()
-	id := counter()
-	_ = addEntry(st, charEntry("Sílfide", 18, 7), id)
-	_ = addEntry(st, charEntry("Paladino", 15, 8), id)
-	_ = addEntry(st, npc("Ogro", 12), id)
-	_ = addEntry(st, npc("Goblin", 9), id)
+	st := aovivo.EmptyRuntimeState()
+	id := contadorDeIds()
+	_ = aovivo.AddEntry(st, combatenteDeFicha("Sílfide", 18, 7), id)
+	_ = aovivo.AddEntry(st, combatenteDeFicha("Paladino", 15, 8), id)
+	_ = aovivo.AddEntry(st, npc("Ogro", 12), id)
+	_ = aovivo.AddEntry(st, npc("Goblin", 9), id)
 	b := newBoard("Cripta", "pedra")
 
 	populateBoard(b, st, boardCounter(), nil)
@@ -286,9 +314,9 @@ func TestPopulateStartsTheSidesApart(t *testing.T) {
 // posicionado NÃO é movido — o mestre pode ter colocado o vilão onde queria
 // antes de trazer o resto.
 func TestPopulateLeavesWhoIsAlreadyThere(t *testing.T) {
-	st := emptyRuntimeState()
-	id := counter()
-	_ = addEntry(st, npc("Ogro", 12), id)
+	st := aovivo.EmptyRuntimeState()
+	id := contadorDeIds()
+	_ = aovivo.AddEntry(st, npc("Ogro", 12), id)
 	b := newBoard("Cripta", "pedra")
 	tokens := boardCounter()
 	_ = addToken(b, BoardToken{Label: "Ogro", X: 40, Y: 40, EntryID: strPtr("e1")}, tokens)

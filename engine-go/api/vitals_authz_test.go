@@ -1,5 +1,7 @@
 package api
 
+import "t20engine/aovivo"
+
 import (
 	"context"
 	"database/sql"
@@ -54,10 +56,10 @@ func newVitalsFixture(t *testing.T) vitalsFixture {
 	}
 
 	srv := s
-	// O id da entrada é do SERVIDOR (`addEntry` sobrescreve o que vem do cliente),
+	// O id da entrada é do SERVIDOR (`aovivo.AddEntry` sobrescreve o que vem do cliente),
 	// então o teste lê de volta o que ele gerou em vez de inventar um.
-	add := func(label, kind string, characterID *int64) string {
-		state, err := srv.sessions.addInitiativeEntry(sess.ID, InitiativeEntry{
+	Add := func(label, kind string, characterID *int64) string {
+		state, err := srv.sessions.AddInitiativeEntry(sess.ID, aovivo.InitiativeEntry{
 			Label: label, Initiative: 10, Type: kind, CharacterID: characterID,
 		})
 		if err != nil {
@@ -74,9 +76,9 @@ func newVitalsFixture(t *testing.T) vitalsFixture {
 
 	return vitalsFixture{
 		srv: srv, sessionID: sess.ID, gmUser: gmUser, player: player, other: other,
-		pcEntry:  add("Herói", "character", &pcID),
-		otherPc:  add("Colega", "character", &otherID),
-		npcEntry: add("Ogro", "npc", nil),
+		pcEntry:  Add("Herói", "character", &pcID),
+		otherPc:  Add("Colega", "character", &otherID),
+		npcEntry: Add("Ogro", "npc", nil),
 	}
 }
 

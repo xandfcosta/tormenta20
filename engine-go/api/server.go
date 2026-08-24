@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"t20engine/aovivo"
 	"t20engine/plataforma"
 
 	"github.com/go-chi/chi/v5"
@@ -21,11 +22,11 @@ type Server struct {
 	cfg      plataforma.Config
 	db       *sql.DB
 	queries  *sqlcgen.Queries
-	catalogs *engine.Catalogs  // nil if the catalog snapshot failed to load
-	sessions *sessionStore     // in-memory realtime tracker state (B.6)
-	boards   *boardStore       // tabuleiro tático vivo por sessão (ALE-124)
-	presence *presenceRegistry // who's-online per session room (B.6)
-	sse      *sseHub           // leitores SSE por sessão e papel (ALE-253)
+	catalogs *engine.Catalogs         // nil if the catalog snapshot failed to Load
+	sessions *aovivo.SessionStore     // in-memory realtime tracker state (B.6)
+	boards   *boardStore              // tabuleiro tático vivo por sessão (ALE-124)
+	presence *aovivo.PresenceRegistry // who's-online per session room (B.6)
+	sse      *aovivo.SSEHub           // leitores SSE por sessão e papel (ALE-253)
 	// charMu serializes mutating HTTP requests per character (characterID → *sync.Mutex)
 	// so concurrent read-modify-write mutations (rapid damage/vitals clicks) can't lose
 	// updates. Mirrors the per-session lock used by the realtime store.
@@ -56,22 +57,22 @@ type Server struct {
 // que não tem aquele combatente mandaria todo cliente da casa refazer busca a
 // cada ficha salva.
 func (s *Server) characterChanged(characterID int64) {
-	for _, sessionID := range s.sessions.liveSessionsWithCharacter(characterID) {
-		s.sse.emit(sessionID, "", "character-changed", map[string]any{"characterId": characterID})
+	for _, sessionID := range s.sessions.LiveSessionsWithCharacter(characterID) {
+		s.sse.Emit(sessionID, "", "character-changed", map[string]any{"characterId": characterID})
 	}
 }
 
 // lockCharacter acquires the per-character write lock, returning the unlock func.
 func (s *Server) lockCharacter(id int64) func() {
 	m, _ := s.charMu.LoadOrStore(id, &sync.Mutex{})
-	mu := m.(*sync.Mutex)
-	mu.Lock()
-	return mu.Unlock
+	Mu := m.(*sync.Mutex)
+	Mu.Lock()
+	return Mu.Unlock
 }
 
 // serializeCharacterWrites serializes mutating requests (POST/PATCH/DELETE) per character,
 // so concurrent read-modify-write handlers (damage, vitals, items, effects…) don't race on
-// load→compute→save and drop updates. Reads pass straight through.
+// Load→compute→save and drop updates. Reads pass straight through.
 func (s *Server) serializeCharacterWrites(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet || r.Method == http.MethodHead {
@@ -106,10 +107,10 @@ func NewServer(cfg plataforma.Config, database *sql.DB, catalogs *engine.Catalog
 	q := sqlcgen.New(database)
 	return &Server{
 		cfg: cfg, db: database, queries: q, catalogs: catalogs,
-		sessions: newSessionStore(q, newUUID),
-		boards:   newBoardStore(q, newUUID),
-		presence: newPresenceRegistry(),
-		sse:      newSSEHub(),
+		sessions: aovivo.NewSessionStore(q, aovivo.NewUUID, vitaisDaFicha{q: q}),
+		boards:   newBoardStore(q, aovivo.NewUUID),
+		presence: aovivo.NewPresenceRegistry(),
+		sse:      aovivo.NewSSEHub(),
 	}
 }
 
@@ -142,7 +143,7 @@ func (s *Server) Router() http.Handler {
 		r.Post("/login", s.handleLogin)
 		r.Post("/logout", s.handleLogout)
 		// Anonymous: see /password-resets above.
-		r.Post("/reset-password", s.handleResetPassword)
+		r.Post("/Reset-password", s.handleResetPassword)
 		r.With(s.requireAuth).Get("/me", s.handleMe)
 	})
 
@@ -167,7 +168,7 @@ func (s *Server) Router() http.Handler {
 		r.Use(s.requireAdmin)
 		r.Get("/users", s.handleAdminListUsers)
 		r.Delete("/users/{id}", s.handleAdminDeleteUser)
-		r.Post("/users/{id}/password-reset", s.handleAdminCreatePasswordReset)
+		r.Post("/users/{id}/password-Reset", s.handleAdminCreatePasswordReset)
 		r.Get("/invites", s.handleAdminListInvites)
 		r.Post("/invites", s.handleCreateAccountInvite)
 		r.Get("/status", s.handleAdminStatus)

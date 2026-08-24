@@ -28,7 +28,7 @@ type consumeResult struct {
 }
 
 // handleConsumeItem roll the instant
-// gain (clamped to max), create the scene/day effect (if any), decrement/remove
+// gain (clamped to max), create the scene/day effect (if any), decrement/Remove
 // the item — all in one transaction. hpRolled/mpRolled override the dice.
 func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {
 	row, ok := s.characterFor(w, r)
@@ -48,7 +48,7 @@ func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {
 	}
 	dto, err := s.loadCharacter(r.Context(), row)
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load character")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
 		return
 	}
 	item := findItemDTO(dto.Items, itemID)
@@ -116,7 +116,7 @@ func (s *Server) handleConsumeItem(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		if err := q.DeleteItem(r.Context(), itemID); err != nil {
-			plataforma.WriteError(w, http.StatusInternalServerError, "Could not remove item")
+			plataforma.WriteError(w, http.StatusInternalServerError, "Could not Remove item")
 			return
 		}
 		removed, newQty = true, 0

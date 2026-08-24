@@ -50,7 +50,7 @@ func (s *Server) handleCastSpell(w http.ResponseWriter, r *http.Request) {
 	}
 	dto, err := s.loadCharacter(r.Context(), row)
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load character")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
 		return
 	}
 

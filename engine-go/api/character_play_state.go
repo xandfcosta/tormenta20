@@ -209,9 +209,9 @@ func (s *Server) writePlayState(w http.ResponseWriter, r *http.Request, id int64
 // clearScenePlayState é o que o DESCANSO DE CENA leva embora: os usos "1/cena" e
 // as posturas.
 //
-// Ele se pendura no descanso da ficha e não no `endScene` da sessão de
+// Ele se pendura no descanso da ficha e não no `EndScene` da sessão de
 // propósito: os usos entram pelo caminho que JÁ limpa a ficha, junto dos
-// efeitos. Era o `endScene` da sessão que estava errado — ele não limpava
+// efeitos. Era o `EndScene` da sessão que estava errado — ele não limpava
 // efeito nenhum, e a bênção de duração "cena" sobrevivia ao fim da cena. A
 // ALE-220 fechou isso pelo lado de lá: encerrar a cena agora percorre o grupo e
 // chama ESTE caminho para cada ficha.

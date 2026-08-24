@@ -57,7 +57,7 @@ func engineCharacterFrom(dto CharacterDTO) (engine.Character, error) {
 
 // computeSheet builds the engine input from an already-loaded character row and returns the
 // server-computed ComputedSheetV2 (base sheet, no active conditionals). Shared by GET /sheet
-// and the power-grant temp-HP amount so the load→engine→compute wiring lives in one place.
+// and the power-grant temp-HP amount so the Load→engine→compute wiring lives in one place.
 // Caller must ensure s.catalogs is primed.
 func (s *Server) computeSheet(ctx context.Context, row sqlcgen.Character) (engine.ComputedSheetV2, error) {
 	dto, err := s.loadCharacter(ctx, row)
@@ -121,7 +121,7 @@ func (s *Server) handleUpdateLevel(w http.ResponseWriter, r *http.Request) {
 	}
 	dto, err := s.loadCharacter(r.Context(), row)
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load character")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
 		return
 	}
 	dto.Level = *body.Level
@@ -153,7 +153,7 @@ func (s *Server) handleUpdateClassLevel(w http.ResponseWriter, r *http.Request) 
 	}
 	dto, err := s.loadCharacter(r.Context(), row)
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load character")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
 		return
 	}
 	found := false

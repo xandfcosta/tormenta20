@@ -46,13 +46,13 @@ func (s *Server) loadSessionInCampaign(ctx context.Context, campaignID, sessionI
 		return sqlcgen.Session{}, http.StatusNotFound, fmt.Errorf("Session %d not found", sessionID)
 	}
 	if err != nil {
-		return sqlcgen.Session{}, http.StatusInternalServerError, errors.New("Could not load session")
+		return sqlcgen.Session{}, http.StatusInternalServerError, errors.New("Could not Load session")
 	}
 	return sess, http.StatusOK, nil
 }
 
 // sessionForCaller is the member-aware session resolver the WS gateway runs on every
-// session-scoped message: resolve the caller's role (gm/player) then load the session and
+// session-scoped message: resolve the caller's role (gm/player) then Load the session and
 // assert it belongs to the campaign. — the role is
 // stashed on socket.data for per-action GM gating. Transport-agnostic (WS maps status/err).
 func (s *Server) sessionForCaller(ctx context.Context, user AuthUser, campaignID, sessionID int64) (sqlcgen.Session, string, int, error) {
@@ -109,7 +109,7 @@ func (s *Server) handleGetSession(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	// Member-aware (ALE-19): a player who is a member must be able to load the
+	// Member-aware (ALE-19): a player who is a member must be able to Load the
 	// session before the socket connects — the WS gateway already gates on
 	// sessionForCaller, so mirror it here instead of the owner-only ownedSession
 	// (which 403'd invited players with "belongs to another user").
@@ -179,13 +179,13 @@ func (s *Server) handleUpdateSession(w http.ResponseWriter, r *http.Request) {
 			plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"sessionNumber": {"sessionNumber must not be less than 1"}})
 			return
 		}
-		set.add("sessionNumber = ?", *body.SessionNumber)
+		set.Add("sessionNumber = ?", *body.SessionNumber)
 	}
 	if body.Title != nil {
-		set.add("title = ?", nullableArg(trimOrNull(body.Title)))
+		set.Add("title = ?", nullableArg(trimOrNull(body.Title)))
 	}
 	if body.Notes != nil {
-		set.add("notes = ?", nullableArg(trimOrNull(body.Notes)))
+		set.Add("notes = ?", nullableArg(trimOrNull(body.Notes)))
 	}
 	if set.empty() {
 		plataforma.WriteError(w, http.StatusBadRequest, "No fields to update")
@@ -303,9 +303,9 @@ func (s *Server) handleClearTracker(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Drop the in-memory tracker too — otherwise a live session's cached state
-	// would shadow the cleared DB row until the next cold load (the realtime
+	// would shadow the cleared DB row until the next cold Load (the realtime
 	// store hydrates only on first access). Code-review finding (B.6 fase 2).
-	s.sessions.forget(sid)
+	s.sessions.Forget(sid)
 	plataforma.WriteJSON(w, http.StatusOK, map[string]int64{"id": sid})
 }
 

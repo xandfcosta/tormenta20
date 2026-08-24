@@ -1,4 +1,4 @@
-package api
+package aovivo
 
 import (
 	"encoding/json"
@@ -16,27 +16,27 @@ import (
 // O que este arquivo substitui é exatamente o que o socket dava de útil:
 // destinatários agrupados por sessão e por PAPEL, porque o estado sai duas
 // vezes — inteiro para o mestre e redigido para os jogadores (ALE-122). O
-// `redactForPlayers` não mudou uma linha; mudou quem o entrega.
+// `RedactForPlayers` não mudou uma linha; mudou quem o entrega.
 
-// sseFrame é um evento já codificado no formato do fio. Codificar UMA vez por
+// SSEFrame é um evento já codificado no formato do fio. Codificar UMA vez por
 // broadcast e não uma por conexão: numa mesa de seis, o estado da iniciativa
 // seria serializado seis vezes por turno sem isto.
-type sseFrame []byte
+type SSEFrame []byte
 
-func encodeFrame(event string, payload any) (sseFrame, error) {
+func encodeFrame(event string, payload any) (SSEFrame, error) {
 	body, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
 	}
-	return sseFrame(fmt.Sprintf("event: %s\ndata: %s\n\n", event, body)), nil
+	return SSEFrame(fmt.Sprintf("event: %s\ndata: %s\n\n", event, body)), nil
 }
 
-// sseConn é um leitor ligado. O `role` é o do momento da ENTRADA, como no
+// SSEConn é um leitor ligado. O `role` é o do momento da ENTRADA, como no
 // socket: quem for promovido no meio da sessão reconecta (ALE-122).
-type sseConn struct {
+type SSEConn struct {
 	id     string
 	role   string
-	frames chan sseFrame
+	Frames chan SSEFrame
 }
 
 // destino identifica um fluxo ordenado: os quadros de um mesmo evento para um
@@ -48,48 +48,48 @@ type destino struct {
 	event     string
 }
 
-// sseHub guarda quem está ouvindo cada sessão.
-type sseHub struct {
-	mu sync.Mutex
+// SSEHub guarda quem está ouvindo cada sessão.
+type SSEHub struct {
+	Mu sync.Mutex
 	// sessionID → connID → conexão
-	conns map[int64]map[string]*sseConn
+	conns map[int64]map[string]*SSEConn
 	// ultimaSeq guarda a maior ordem já emitida por destino, para reconhecer
-	// quadro atrasado. Ver `emitOrdered`.
+	// quadro atrasado. Ver `EmitOrdered`.
 	ultimaSeq map[destino]uint64
 }
 
-func newSSEHub() *sseHub {
-	return &sseHub{
-		conns:     map[int64]map[string]*sseConn{},
+func NewSSEHub() *SSEHub {
+	return &SSEHub{
+		conns:     map[int64]map[string]*SSEConn{},
 		ultimaSeq: map[destino]uint64{},
 	}
 }
 
 // A fila de cada conexão. Um leitor lento não pode segurar o broadcast — ver
-// `emit`. Dez quadros é folga para uma rajada (mover peça, virar turno) sem
+// `Emit`. Dez quadros é folga para uma rajada (mover peça, virar turno) sem
 // virar memória parada por cliente.
 const sseBuffer = 10
 
-func (h *sseHub) add(sessionID int64, connID, role string) *sseConn {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-	conn := &sseConn{id: connID, role: role, frames: make(chan sseFrame, sseBuffer)}
+func (h *SSEHub) Add(sessionID int64, connID, role string) *SSEConn {
+	h.Mu.Lock()
+	defer h.Mu.Unlock()
+	conn := &SSEConn{id: connID, role: role, Frames: make(chan SSEFrame, sseBuffer)}
 	if h.conns[sessionID] == nil {
-		h.conns[sessionID] = map[string]*sseConn{}
+		h.conns[sessionID] = map[string]*SSEConn{}
 	}
 	h.conns[sessionID][connID] = conn
 	return conn
 }
 
-func (h *sseHub) remove(sessionID int64, connID string) {
-	h.mu.Lock()
-	defer h.mu.Unlock()
+func (h *SSEHub) Remove(sessionID int64, connID string) {
+	h.Mu.Lock()
+	defer h.Mu.Unlock()
 	sala := h.conns[sessionID]
 	if sala == nil {
 		return
 	}
 	if conn, ok := sala[connID]; ok {
-		close(conn.frames)
+		close(conn.Frames)
 		delete(sala, connID)
 	}
 	if len(sala) == 0 {
@@ -97,7 +97,7 @@ func (h *sseHub) remove(sessionID int64, connID string) {
 	}
 }
 
-// emit entrega um evento aos ouvintes de uma sessão. `role` vazio é para todos;
+// Emit entrega um evento aos ouvintes de uma sessão. `role` vazio é para todos;
 // "gm" ou "player" recorta.
 //
 // NUNCA BLOQUEIA. Se a fila de um leitor está cheia, o quadro é DESCARTADO para
@@ -106,31 +106,31 @@ func (h *sseHub) remove(sessionID int64, connID string) {
 // clássico de hub de broadcast. Quem perdeu quadro reconecta e busca o estado
 // por HTTP, que é o mesmo caminho da primeira carga: nenhum estado vive só no
 // fio.
-func (h *sseHub) emit(sessionID int64, role string, event string, payload any) {
+func (h *SSEHub) Emit(sessionID int64, role string, event string, payload any) {
 	frame, err := encodeFrame(event, payload)
 	if err != nil {
 		return
 	}
-	h.mu.Lock()
-	defer h.mu.Unlock()
+	h.Mu.Lock()
+	defer h.Mu.Unlock()
 	h.entregaLocked(sessionID, role, frame)
 }
 
-// entregaLocked enfileira o quadro nos destinatários. Exige `h.mu`.
-func (h *sseHub) entregaLocked(sessionID int64, role string, frame sseFrame) {
+// entregaLocked enfileira o quadro nos destinatários. Exige `h.Mu`.
+func (h *SSEHub) entregaLocked(sessionID int64, role string, frame SSEFrame) {
 	for _, conn := range h.conns[sessionID] {
 		if role != "" && conn.role != role {
 			continue
 		}
 		select {
-		case conn.frames <- frame:
+		case conn.Frames <- frame:
 		default:
 			// Leitor lento: o quadro se perde de propósito.
 		}
 	}
 }
 
-// emitOrdered entrega um evento DESCARTANDO quadro atrasado (ALE-238).
+// EmitOrdered entrega um evento DESCARTANDO quadro atrasado (ALE-238).
 //
 // O defeito que ele conserta é sutil e sobreviveu à troca do socket por SSE,
 // porque a forma foi copiada sem ser revista: a mutação do estado é serializada
@@ -157,13 +157,13 @@ func (h *sseHub) entregaLocked(sessionID int64, role string, frame sseFrame) {
 // A guarda mora AQUI, e não numa trava em volta de cada publicação, porque
 // publicação nova é fácil de esquecer — são nove pontos hoje. O hub é o funil
 // por onde tudo passa, e o que ele não deixa acontecer ninguém precisa lembrar
-// de evitar. É a mesma razão de o guarda de papel viver no `emit`.
+// de evitar. É a mesma razão de o guarda de papel viver no `Emit`.
 //
-// `seq == 0` significa SEM ORDEM: o quadro passa e o destino reinicia. É o que
+// `Seq == 0` significa SEM ORDEM: o quadro passa e o destino reinicia. É o que
 // eventos sem contador usam (presença, aviso de persistência) e é o que o
 // fechamento de tabuleiro usa — depois dele, o próximo tabuleiro começa da
 // versão 1, e insistir na ordem antiga descartaria o mapa novo inteiro.
-func (h *sseHub) emitOrdered(sessionID int64, role, event string, seq uint64, payload any) {
+func (h *SSEHub) EmitOrdered(sessionID int64, role, event string, Seq uint64, payload any) {
 	frame, err := encodeFrame(event, payload)
 	if err != nil {
 		return
@@ -174,23 +174,23 @@ func (h *sseHub) emitOrdered(sessionID int64, role, event string, seq uint64, pa
 	// fora dela não conserta nada: outra goroutine se enfia entre as duas e
 	// enfileira o quadro dela primeiro — foi assim que a primeira versão desta
 	// função continuou vermelha, com a contabilidade certa e a fila errada.
-	h.mu.Lock()
-	defer h.mu.Unlock()
+	h.Mu.Lock()
+	defer h.Mu.Unlock()
 
-	if seq == 0 {
+	if Seq == 0 {
 		delete(h.ultimaSeq, chave) // sem ordem: passa e reinicia o destino
 	} else {
-		if seq < h.ultimaSeq[chave] {
+		if Seq < h.ultimaSeq[chave] {
 			return // quadro atrasado: a tela já tem coisa mais nova
 		}
-		h.ultimaSeq[chave] = seq
+		h.ultimaSeq[chave] = Seq
 	}
 	h.entregaLocked(sessionID, role, frame)
 }
 
 // listeners conta quem está ouvindo — para teste e para o `liveSessions`.
-func (h *sseHub) listeners(sessionID int64) int {
-	h.mu.Lock()
-	defer h.mu.Unlock()
+func (h *SSEHub) listeners(sessionID int64) int {
+	h.Mu.Lock()
+	defer h.Mu.Unlock()
 	return len(h.conns[sessionID])
 }

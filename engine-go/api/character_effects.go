@@ -25,9 +25,9 @@ type restedVitals struct {
 	mpCurrent int64
 }
 
-// endScene expires the character's scene-scoped effects (owner-or-GM authorized first).
+// EndScene expires the character's scene-scoped effects (owner-or-GM authorized first).
 // Transport-agnostic — the WS session-rest handler calls this per member character.
-func (s *Server) endScene(ctx context.Context, user AuthUser, characterID int64) (int, error) {
+func (s *Server) EndScene(ctx context.Context, user AuthUser, characterID int64) (int, error) {
 	if _, status, err := s.authorizedCharacter(ctx, user, characterID); err != nil {
 		return status, err
 	}
@@ -35,8 +35,8 @@ func (s *Server) endScene(ctx context.Context, user AuthUser, characterID int64)
 		return http.StatusInternalServerError, errors.New("Could not clear effects")
 	}
 	// Os usos "1/cena" e as posturas vao junto (ALE-222). Aqui e nao no
-	// `endScene` da SESSAO: este e o caminho que ja limpa a ficha, e e por onde
-	// os dois transportes passam. Desde a ALE-220 o `endScene` da sessao
+	// `EndScene` da SESSAO: este e o caminho que ja limpa a ficha, e e por onde
+	// os dois transportes passam. Desde a ALE-220 o `EndScene` da sessao
 	// tambem chega ate aqui, uma ficha por vez, pelo `expirePartyScene`.
 	if err := s.clearScenePlayState(ctx, characterID); err != nil {
 		return http.StatusInternalServerError, errors.New("Could not clear the play state")
@@ -119,9 +119,9 @@ func (s *Server) clearEffectScopes(
 
 // handleEndScene is the sheet's own "Encerrar cena" (Efeitos tab): one player
 // ending their scene, as opposed to the GM's session-wide rest that reaches
-// endScene through the WS gateway.
+// EndScene through the WS gateway.
 func (s *Server) handleEndScene(w http.ResponseWriter, r *http.Request) {
-	s.clearEffectScopes(w, r, s.endScene, []string{"scene"})
+	s.clearEffectScopes(w, r, s.EndScene, []string{"scene"})
 }
 
 // handleEndDay ends the day, which also ends the running scene (book rest
@@ -182,7 +182,7 @@ func (s *Server) handleAdjustEffect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load effect")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load effect")
 		return
 	}
 
@@ -205,7 +205,7 @@ func (s *Server) handleAdjustEffect(w http.ResponseWriter, r *http.Request) {
 	amount := max(0, toInt(mods[idx]["amount"])+int(*body.TempHpDelta))
 	if amount == 0 {
 		if err := s.queries.DeleteEffectByID(r.Context(), effectID); err != nil {
-			plataforma.WriteError(w, http.StatusInternalServerError, "Could not remove effect")
+			plataforma.WriteError(w, http.StatusInternalServerError, "Could not Remove effect")
 			return
 		}
 		plataforma.WriteJSON(w, http.StatusOK, map[string]any{"removed": true, "id": effectID})
@@ -239,11 +239,11 @@ func (s *Server) handleDeleteEffect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load effect")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load effect")
 		return
 	}
 	if err := s.queries.DeleteEffectByID(r.Context(), effectID); err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not remove effect")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Remove effect")
 		return
 	}
 	plataforma.WriteJSON(w, http.StatusOK, map[string]int64{"id": effectID})
@@ -278,7 +278,7 @@ func (s *Server) handleListCharacterCampaigns(w http.ResponseWriter, r *http.Req
 		return
 	}
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load character")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
 		return
 	}
 	if owner != currentUser(r).ID {

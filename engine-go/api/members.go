@@ -78,7 +78,7 @@ func (s *Server) initiativeBonus(ctx context.Context, characterID int64) (int64,
 		return 0, fmt.Errorf("Character %d not found", characterID)
 	}
 	if err != nil {
-		return 0, errors.New("Could not load character")
+		return 0, errors.New("Could not Load character")
 	}
 	sheet, err := s.computeSheet(ctx, row)
 	if err != nil {
@@ -102,7 +102,7 @@ func (s *Server) initiativeBonus(ctx context.Context, characterID int64) (int64,
 const initiativeExpertise = "Iniciativa"
 
 // combatant is a character's tracker-relevant snapshot (name + live vitals) for an
-// initiative entry. Transport-agnostic — the WS gateway maps it into an InitiativeEntry.
+// initiative entry. Transport-agnostic — the WS gateway maps it into an aovivo.InitiativeEntry.
 type combatant struct {
 	characterID int64
 	name        string
@@ -123,14 +123,14 @@ func (s *Server) resolveCombatant(ctx context.Context, callerID, campaignID, cha
 		return combatant{}, http.StatusNotFound, fmt.Errorf("Character %d not found", characterID)
 	}
 	if err != nil {
-		return combatant{}, http.StatusInternalServerError, errors.New("Could not load character")
+		return combatant{}, http.StatusInternalServerError, errors.New("Could not Load character")
 	}
 	camp, err := s.queries.GetCampaign(ctx, campaignID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return combatant{}, http.StatusNotFound, fmt.Errorf("Campaign %d not found", campaignID)
 	}
 	if err != nil {
-		return combatant{}, http.StatusInternalServerError, errors.New("Could not load campaign")
+		return combatant{}, http.StatusInternalServerError, errors.New("Could not Load campaign")
 	}
 	isMember, err := s.queries.IsCharacterMember(ctx, sqlcgen.IsCharacterMemberParams{Campaignid: campaignID, Characterid: characterID})
 	if err != nil {
@@ -215,7 +215,7 @@ func (s *Server) handleListMembers(w http.ResponseWriter, r *http.Request) {
 	plataforma.WriteJSON(w, http.StatusOK, out)
 }
 
-// handleAddMember ports members.add: caller must own the character; owner joins
+// handleAddMember ports members.Add: caller must own the character; owner joins
 // freely, others need a valid invite token; one player-PC per user per campaign.
 func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 	cid, ok := intParam(w, r, "campaignId")
@@ -238,13 +238,13 @@ func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load campaign")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load campaign")
 		return
 	}
 	if c.Ownerid != user.ID {
 		token := derefStr(body.InviteToken, "")
 		if !c.Invitetoken.Valid || token == "" || token != c.Invitetoken.String {
-			plataforma.WriteError(w, http.StatusForbidden, fmt.Sprintf("A valid invite token is required to join campaign %d", cid))
+			plataforma.WriteError(w, http.StatusForbidden, fmt.Sprintf("A valid invite token is required to Join campaign %d", cid))
 			return
 		}
 	}
@@ -258,11 +258,11 @@ func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load character")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
 		return
 	}
 	if owner != user.ID {
-		plataforma.WriteError(w, http.StatusForbidden, fmt.Sprintf("Cannot add a character you don't own (character %d)", *body.CharacterID))
+		plataforma.WriteError(w, http.StatusForbidden, fmt.Sprintf("Cannot Add a character you don't own (character %d)", *body.CharacterID))
 		return
 	}
 	role := derefStr(body.Role, "player")
@@ -306,7 +306,7 @@ func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not add member")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Add member")
 		return
 	}
 	plataforma.WriteJSON(w, http.StatusCreated, memberScalars(m))
@@ -341,7 +341,7 @@ func (s *Server) handleUpdateMemberRole(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load member")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load member")
 		return
 	}
 	updated, err := s.queries.SetMemberRole(r.Context(), sqlcgen.SetMemberRoleParams{Role: body.Role, ID: mid})
@@ -352,7 +352,7 @@ func (s *Server) handleUpdateMemberRole(w http.ResponseWriter, r *http.Request) 
 	plataforma.WriteJSON(w, http.StatusOK, memberScalars(updated))
 }
 
-// handleRemoveMember ports members.remove: GM or the character's owner may remove.
+// handleRemoveMember ports members.Remove: GM or the character's owner may Remove.
 func (s *Server) handleRemoveMember(w http.ResponseWriter, r *http.Request) {
 	cid, ok := intParam(w, r, "campaignId")
 	if !ok {
@@ -368,7 +368,7 @@ func (s *Server) handleRemoveMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load member")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load member")
 		return
 	}
 	uid := currentUser(r).ID
@@ -377,7 +377,7 @@ func (s *Server) handleRemoveMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := s.queries.DeleteMember(r.Context(), mid); err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not remove member")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Remove member")
 		return
 	}
 	plataforma.WriteJSON(w, http.StatusOK, map[string]int64{"id": mid})

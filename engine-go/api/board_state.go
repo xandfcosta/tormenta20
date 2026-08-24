@@ -1,15 +1,15 @@
 package api
 
+import "t20engine/aovivo"
+
 import (
 	"fmt"
-	"regexp"
-	"strconv"
 	"strings"
 
 	"t20engine/engine"
 )
 
-// boardMaxTokens — teto de peças num tabuleiro. Espelha o `initiativeMaxEntries`
+// boardMaxTokens — teto de peças num tabuleiro. Espelha o `aovivo.InitiativeMaxEntries`
 // pelo mesmo motivo: sem teto, o estado cresce sem limite e TODO broadcast o
 // carrega. Vinte tokens é uma mesa cheia; 200 é um acidente.
 const boardMaxTokens = 200
@@ -44,7 +44,7 @@ type BoardToken struct {
 	// SpeedSquares é o orçamento de movimento da peça em QUADRADOS (T20 p106:
 	// 9m = 6 quadrados). Mora na peça porque a tela precisa dele ANTES de
 	// propor — para contar o gasto e acender o que dá para alcançar —, e é
-	// re-sincronizado do motor a cada proposta, como o `refreshCharacterMaxes`
+	// re-sincronizado do motor a cada proposta, como o `RefreshCharacterMaxes`
 	// faz com o `hpMax`. Zero = nunca medido; vale o padrão do livro.
 	SpeedSquares int `json:"speedSquares,omitempty"`
 }
@@ -123,27 +123,12 @@ func addToken(b *BoardState, t BoardToken, newID func() string) error {
 	return nil
 }
 
-// instanceSuffix é o número que a mesa usa para contar iguais: "Zumbi 3".
 //
 // A MESMA convenção vive na tela, em `token-appearance.ts`, onde ela decide a
 // cor e o selo da peça (ALE-179) — e as duas precisam concordar, senão a cópia
 // nasce com um nome que o desenho colore como outra espécie. Os dois testes
 // carregam a mesma tabela de exemplos de propósito, com a mesma armadilha: o
 // número no MEIO do nome ("Recruta Nv1 Simples") não é instância.
-var instanceSuffix = regexp.MustCompile(`^(.*\S)\s+(\d{1,3})$`)
-
-// speciesOf separa a espécie do número da instância.
-func speciesOf(label string) (string, int) {
-	match := instanceSuffix.FindStringSubmatch(strings.TrimSpace(label))
-	if match == nil {
-		return strings.TrimSpace(label), 0
-	}
-	numero, err := strconv.Atoi(match[2])
-	if err != nil {
-		return strings.TrimSpace(label), 0
-	}
-	return match[1], numero
-}
 
 // nextInstanceLabel devolve o rótulo da cópia: a mesma espécie com o MENOR
 // número livre.
@@ -162,32 +147,7 @@ func nextInstanceLabel(b *BoardState, label string) string {
 	for _, token := range b.Tokens {
 		usados = append(usados, token.Label)
 	}
-	return nextInstanceLabelAmong(usados, label)
-}
-
-// nextInstanceLabelAmong é a regra sozinha, sobre uma lista de rótulos — o
-// tabuleiro passa as peças e a FILA passa os combatentes (ALE-208). Extraída
-// porque adicionar quatro ogros à iniciativa tem exatamente o mesmo problema
-// que duplicar um zumbi no mapa, e resolvê-lo duas vezes é como as duas telas
-// passam a numerar diferente.
-func nextInstanceLabelAmong(usados []string, label string) string {
-	especie, _ := speciesOf(label)
-	ocupados := map[int]bool{}
-	for _, outro := range usados {
-		outra, numero := speciesOf(outro)
-		if outra != especie {
-			continue
-		}
-		if numero == 0 {
-			numero = 1 // quem está sem número ocupa o 1
-		}
-		ocupados[numero] = true
-	}
-	for numero := 1; ; numero++ {
-		if !ocupados[numero] {
-			return fmt.Sprintf("%s %d", especie, numero)
-		}
-	}
+	return aovivo.NextInstanceLabelAmong(usados, label)
 }
 
 // duplicateToken põe outra igual no tabuleiro — "mais um zumbi" é a operação
@@ -423,7 +383,7 @@ func (s entrySelection) wants(entryID string) bool { return s == nil || s[entryI
 // assassino que o mestre montou para aparecer no terceiro turno, e desfazer
 // era peça por peça. Quem não foi escolhido não nasce — nem escondido: peça
 // que não existe não vaza por bug de redação.
-func populateBoard(b *BoardState, st *SessionRuntimeState, newID func() string, chosen entrySelection) int {
+func populateBoard(b *BoardState, st *aovivo.SessionRuntimeState, newID func() string, chosen entrySelection) int {
 	placed := 0
 	for _, entry := range st.Initiative {
 		if !chosen.wants(entry.ID) || hasTokenForEntry(b, entry.ID) {
@@ -521,7 +481,7 @@ func occupied(b *BoardState, x, y int) bool {
 
 // boardForRole é o tabuleiro como UM papel pode vê-lo. Papel desconhecido cai em
 // jogador: errar para o lado que MOSTRA seria vazar por omissão, a mesma regra
-// do `stateForRole`.
+// do `aovivo.StateForRole`.
 func boardForRole(role string, b *BoardState) *BoardState {
 	if b == nil || role == "gm" {
 		return b
@@ -640,7 +600,7 @@ type mover struct {
 //   - FORA DE COMBATE (`turnIndex` < 0) não existe vez nem deslocamento de
 //     turno: cada um anda com a própria peça, e o contador só informa;
 //   - em combate, o jogador move a própria peça só na vez dela.
-func assertMovable(b *BoardState, st *SessionRuntimeState, tokenID string, by mover) (*BoardToken, int, error) {
+func assertMovable(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, by mover) (*BoardToken, int, error) {
 	token := findToken(b, tokenID)
 	if token == nil {
 		return nil, 0, fmt.Errorf("peça %q não está no tabuleiro", tokenID)
@@ -663,7 +623,7 @@ func assertMovable(b *BoardState, st *SessionRuntimeState, tokenID string, by mo
 // isTokenOnTurn amarra a peça à LINHA da iniciativa: a vez não é copiada para o
 // tabuleiro, ela é perguntada ao rastreador — duas cópias da vez divergiriam no
 // primeiro turno passado com o tabuleiro fechado.
-func isTokenOnTurn(token *BoardToken, st *SessionRuntimeState) bool {
+func isTokenOnTurn(token *BoardToken, st *aovivo.SessionRuntimeState) bool {
 	if token.EntryID == nil || st.TurnIndex < 0 || st.TurnIndex >= len(st.Initiative) {
 		return false
 	}
@@ -673,7 +633,7 @@ func isTokenOnTurn(token *BoardToken, st *SessionRuntimeState) bool {
 // proposeMove mede o caminho e guarda o provisório. Recusa o que estoura o
 // deslocamento: a decisão do dono é BLOQUEAR no limite, e as saídas são o
 // mestre (sem orçamento) e a cena fora de combate.
-func proposeMove(b *BoardState, st *SessionRuntimeState, tokenID string, path []engine.Square, by mover) error {
+func proposeMove(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, path []engine.Square, by mover) error {
 	token, budget, err := assertMovable(b, st, tokenID, by)
 	if err != nil {
 		return err
@@ -747,7 +707,7 @@ func moveTerrainOf(b *BoardState) engine.MoveTerrain {
 // que chega depois da re-hidratação. Versão 0 = "não sei em que versão eu
 // estava", aceita, porque recusar um cliente honesto e desatualizado seria
 // pior que aplicar o que ele acabou de ver na tela.
-func commitMove(b *BoardState, st *SessionRuntimeState, version int64, by mover) error {
+func commitMove(b *BoardState, st *aovivo.SessionRuntimeState, version int64, by mover) error {
 	pending, err := pendingFor(b, by)
 	if err != nil {
 		return err

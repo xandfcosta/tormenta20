@@ -1,5 +1,7 @@
 package api
 
+import "t20engine/aovivo"
+
 import (
 	"context"
 	"database/sql"
@@ -29,25 +31,25 @@ func TestStorePersistLoadRoundTrip(t *testing.T) {
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 	store := s.sessions
 
-	if _, err := store.load(ctx, sid); err != nil {
-		t.Fatalf("initial load: %v", err)
+	if _, err := store.Load(ctx, sid); err != nil {
+		t.Fatalf("initial Load: %v", err)
 	}
 	// A cena precisa estar iniciada para o turno andar (ALE-210).
-	if _, err := store.startScene(sid); err != nil {
-		t.Fatalf("startScene: %v", err)
+	if _, err := store.StartScene(sid); err != nil {
+		t.Fatalf("aovivo.StartScene: %v", err)
 	}
-	if _, err := store.addInitiativeEntry(sid, npc("Goblin", 15)); err != nil {
-		t.Fatalf("add: %v", err)
+	if _, err := store.AddInitiativeEntry(sid, npc("Goblin", 15)); err != nil {
+		t.Fatalf("Add: %v", err)
 	}
-	if _, err := store.nextTurn(sid); err != nil {
-		t.Fatalf("nextTurn: %v", err)
+	if _, err := store.NextTurn(sid); err != nil {
+		t.Fatalf("NextTurn: %v", err)
 	}
-	if dirty, _ := store.persist(ctx, sid); dirty {
-		t.Fatalf("persist should succeed, got dirty")
+	if Dirty, _ := store.Persist(ctx, sid); Dirty {
+		t.Fatalf("Persist should succeed, got Dirty")
 	}
 
-	store.forget(sid) // drop the cache → next load re-hydrates from the DB
-	loaded, err := store.load(ctx, sid)
+	store.Forget(sid) // drop the cache → next Load re-hydrates from the DB
+	loaded, err := store.Load(ctx, sid)
 	if err != nil {
 		t.Fatalf("reload: %v", err)
 	}
@@ -69,9 +71,9 @@ func TestStoreHydrateFromBlob(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("seed blob: %v", err)
 	}
-	loaded, err := s.sessions.load(ctx, sid)
+	loaded, err := s.sessions.Load(ctx, sid)
 	if err != nil {
-		t.Fatalf("load: %v", err)
+		t.Fatalf("Load: %v", err)
 	}
 	if len(loaded.Initiative) != 1 || loaded.Initiative[0].Label != "Boss" || loaded.Round != 2 {
 		t.Errorf("hydrated %+v, want Boss/round 2", loaded)
@@ -98,9 +100,9 @@ func TestBlobSemTurnoNaoInventaCena(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("seed blob: %v", err)
 	}
-	loaded, err := s.sessions.load(ctx, sid)
+	loaded, err := s.sessions.Load(ctx, sid)
 	if err != nil {
-		t.Fatalf("load: %v", err)
+		t.Fatalf("Load: %v", err)
 	}
 	if loaded.SceneActive {
 		t.Error("blob sem turno acordou em cena — a fila iria para a mesa sem o mestre mandar")
@@ -114,17 +116,17 @@ func TestStoreRefreshCharacterMaxes(t *testing.T) {
 	sid := seedSession(t, s, seedCampaign(t, s, gm))
 	charID := seedCharacter(t, s, gm, "A", 7, 10, 3, 5) // real maxes 10/5
 	store := s.sessions
-	if _, err := store.load(ctx, sid); err != nil {
-		t.Fatalf("load: %v", err)
+	if _, err := store.Load(ctx, sid); err != nil {
+		t.Fatalf("Load: %v", err)
 	}
 	// Entry carries STALE maxes + a live current the refresh must not touch.
-	e := charEntry("A", 12, charID)
+	e := combatenteDeFicha("A", 12, charID)
 	stale, cur := int64(1), int64(4)
 	e.HpMax, e.HpCurrent = &stale, &cur
-	if _, err := store.addInitiativeEntry(sid, e); err != nil {
-		t.Fatalf("add: %v", err)
+	if _, err := store.AddInitiativeEntry(sid, e); err != nil {
+		t.Fatalf("Add: %v", err)
 	}
-	got := store.refreshCharacterMaxes(ctx, sid)
+	got := store.RefreshCharacterMaxes(ctx, sid)
 	entry := got.Initiative[0]
 	if entry.HpMax == nil || *entry.HpMax != 10 || entry.MpMax == nil || *entry.MpMax != 5 {
 		t.Errorf("maxes not refreshed: hpMax=%v mpMax=%v, want 10/5", entry.HpMax, entry.MpMax)
@@ -146,20 +148,20 @@ func TestStoreRefreshClampsCurrentToNewMax(t *testing.T) {
 	sid := seedSession(t, s, seedCampaign(t, s, gm))
 	charID := seedCharacter(t, s, gm, "Encolheu", 5, 5, 2, 2) // máximos reais 5/2
 	store := s.sessions
-	if _, err := store.load(ctx, sid); err != nil {
-		t.Fatalf("load: %v", err)
+	if _, err := store.Load(ctx, sid); err != nil {
+		t.Fatalf("Load: %v", err)
 	}
 	// A entrada carrega máximos ANTIGOS (maiores) e um atual acima do novo teto.
-	e := charEntry("Encolheu", 12, charID)
+	e := combatenteDeFicha("Encolheu", 12, charID)
 	velhoHpMax, atualHp := int64(30), int64(9)
 	velhoMpMax, atualMp := int64(10), int64(7)
 	e.HpMax, e.HpCurrent = &velhoHpMax, &atualHp
 	e.MpMax, e.MpCurrent = &velhoMpMax, &atualMp
-	if _, err := store.addInitiativeEntry(sid, e); err != nil {
-		t.Fatalf("add: %v", err)
+	if _, err := store.AddInitiativeEntry(sid, e); err != nil {
+		t.Fatalf("Add: %v", err)
 	}
 
-	entry := store.refreshCharacterMaxes(ctx, sid).Initiative[0]
+	entry := store.RefreshCharacterMaxes(ctx, sid).Initiative[0]
 
 	if entry.HpCurrent == nil || *entry.HpCurrent != 5 {
 		t.Errorf("PV atual=%v, queria 5 (aparado no novo máximo)", entry.HpCurrent)
@@ -174,34 +176,34 @@ func TestStoreDirtyOnPersistFailure(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 	store := s.sessions
-	if _, err := store.addInitiativeEntry(sid, npc("x", 1)); err != nil {
-		t.Fatalf("add: %v", err)
+	if _, err := store.AddInitiativeEntry(sid, npc("x", 1)); err != nil {
+		t.Fatalf("Add: %v", err)
 	}
-	if d, _ := store.persist(ctx, sid); d {
-		t.Fatalf("first persist should succeed")
+	if d, _ := store.Persist(ctx, sid); d {
+		t.Fatalf("first Persist should succeed")
 	}
 	_ = s.db.Close() // break the DB so the next write fails
-	if d, _ := store.persist(ctx, sid); !d {
-		t.Error("persist after DB close should report dirty")
+	if d, _ := store.Persist(ctx, sid); !d {
+		t.Error("Persist after DB close should report Dirty")
 	}
-	if !store.isDirty(sid) {
-		t.Error("isDirty should be true after a failed persist")
+	if !store.IsDirty(sid) {
+		t.Error("IsDirty should be true after a failed Persist")
 	}
 }
 
 func TestForgetPreservesDirtyForRecovery(t *testing.T) {
-	// forget (clear-tracker) must NOT drop the dirty flag: a session left dirty still
-	// needs to emit persistence-warning{dirty:false} on the next successful persist.
+	// Forget (clear-tracker) must NOT drop the Dirty flag: a session left Dirty still
+	// needs to Emit persistence-warning{Dirty:false} on the next successful Persist.
 	store := newTestServer(t).sessions
 	sid := int64(42)
-	store.mu.Lock()
-	store.dirty[sid] = true // simulate a prior failed persist (banner shown)
-	store.mu.Unlock()
+	store.Mu.Lock()
+	store.Dirty[sid] = true // simulate a prior failed Persist (banner shown)
+	store.Mu.Unlock()
 
-	store.forget(sid)
+	store.Forget(sid)
 
-	if !store.isDirty(sid) {
-		t.Error("forget cleared the dirty flag — the dirty→healthy recovery broadcast would be lost")
+	if !store.IsDirty(sid) {
+		t.Error("Forget cleared the Dirty flag — the Dirty→healthy recovery broadcast would be lost")
 	}
 }
 
@@ -217,18 +219,18 @@ func TestTrackerVitalsAreTheCharactersVitals(t *testing.T) {
 	charID := seedCharacter(t, s, gm, "A", 20, 30, 5, 10) // hp 20/30, mp 5/10
 	sid := seedSession(t, s, seedCampaign(t, s, gm))
 	store := s.sessions
-	if _, err := store.load(ctx, sid); err != nil {
-		t.Fatalf("load: %v", err)
+	if _, err := store.Load(ctx, sid); err != nil {
+		t.Fatalf("Load: %v", err)
 	}
 	hp, hpm, mp, mpm := int64(20), int64(30), int64(5), int64(10)
-	e := charEntry("A", 12, charID)
+	e := combatenteDeFicha("A", 12, charID)
 	e.HpCurrent, e.HpMax, e.MpCurrent, e.MpMax = &hp, &hpm, &mp, &mpm
-	if _, err := store.addInitiativeEntry(sid, e); err != nil {
-		t.Fatalf("add: %v", err)
+	if _, err := store.AddInitiativeEntry(sid, e); err != nil {
+		t.Fatalf("Add: %v", err)
 	}
-	entryID := store.getState(sid).Initiative[0].ID
+	entryID := store.GetState(sid).Initiative[0].ID
 
-	snap, err := store.deltaVitals(sid, entryID, ptrInt64(-8), ptrInt64(-2))
+	snap, err := store.DeltaVitals(sid, entryID, aovivo.PtrInt64(-8), aovivo.PtrInt64(-2))
 	if err != nil {
 		t.Fatalf("delta: %v", err)
 	}
@@ -243,9 +245,9 @@ func TestTrackerVitalsAreTheCharactersVitals(t *testing.T) {
 	}
 	// E a entrada espelha o que foi gravado — os dois números da tela são um só.
 	got := snap.Initiative[0]
-	if derefOr(got.HpCurrent, -1) != 12 || derefOr(got.MpCurrent, -1) != 3 {
+	if aovivo.DerefOr(got.HpCurrent, -1) != 12 || aovivo.DerefOr(got.MpCurrent, -1) != 3 {
 		t.Errorf("entrada = %d/%d, esperado espelhar a ficha (12/3)",
-			derefOr(got.HpCurrent, -1), derefOr(got.MpCurrent, -1))
+			aovivo.DerefOr(got.HpCurrent, -1), aovivo.DerefOr(got.MpCurrent, -1))
 	}
 }
 
@@ -260,18 +262,18 @@ func TestTrackerDamageDrainsTemporaryPoolsFirst(t *testing.T) {
 	seedTempHpPool(t, s, charID, 5)
 	sid := seedSession(t, s, seedCampaign(t, s, gm))
 	store := s.sessions
-	if _, err := store.load(ctx, sid); err != nil {
-		t.Fatalf("load: %v", err)
+	if _, err := store.Load(ctx, sid); err != nil {
+		t.Fatalf("Load: %v", err)
 	}
 	hp, hpm := int64(20), int64(30)
-	e := charEntry("A", 12, charID)
+	e := combatenteDeFicha("A", 12, charID)
 	e.HpCurrent, e.HpMax = &hp, &hpm
-	if _, err := store.addInitiativeEntry(sid, e); err != nil {
-		t.Fatalf("add: %v", err)
+	if _, err := store.AddInitiativeEntry(sid, e); err != nil {
+		t.Fatalf("Add: %v", err)
 	}
-	entryID := store.getState(sid).Initiative[0].ID
+	entryID := store.GetState(sid).Initiative[0].ID
 
-	if _, err := store.deltaVitals(sid, entryID, ptrInt64(-8), nil); err != nil {
+	if _, err := store.DeltaVitals(sid, entryID, aovivo.PtrInt64(-8), nil); err != nil {
 		t.Fatalf("delta: %v", err)
 	}
 
@@ -309,11 +311,11 @@ func TestStoreConcurrentMutations(t *testing.T) {
 		wg.Add(1)
 		go func(n int) {
 			defer wg.Done()
-			_, _ = store.addInitiativeEntry(sid, npc("m", n))
+			_, _ = store.AddInitiativeEntry(sid, npc("m", n))
 		}(i)
 	}
 	wg.Wait()
-	if got := len(store.getState(sid).Initiative); got != 20 {
+	if got := len(store.GetState(sid).Initiative); got != 20 {
 		t.Errorf("entries=%d, want 20", got)
 	}
 }

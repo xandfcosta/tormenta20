@@ -1,5 +1,7 @@
 package api
 
+import "t20engine/aovivo"
+
 import (
 	"os"
 	"path/filepath"
@@ -31,7 +33,7 @@ func TestInitiativeCapMatchesFrontend(t *testing.T) {
 	if err != nil {
 		t.Fatalf("valor do front não é número: %v", err)
 	}
-	if front != initiativeMaxEntries {
-		t.Errorf("teto do front = %d, servidor = %d — o cliente truncaria no número errado", front, initiativeMaxEntries)
+	if front != aovivo.InitiativeMaxEntries {
+		t.Errorf("teto do front = %d, servidor = %d — o cliente truncaria no número errado", front, aovivo.InitiativeMaxEntries)
 	}
 }

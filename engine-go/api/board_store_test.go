@@ -1,5 +1,7 @@
 package api
 
+import "t20engine/aovivo"
+
 import (
 	"context"
 	"encoding/json"
@@ -26,10 +28,10 @@ func TestBoardPersistsAndComesBack(t *testing.T) {
 	if _, err := s.boards.addToken(ctx, sid, BoardToken{Label: "Ogro", X: 3, Y: 4, Footprint: 2}, true); err != nil {
 		t.Fatalf("adicionar peça: %v", err)
 	}
-	s.boards.persist(ctx, sid)
+	s.boards.Persist(ctx, sid)
 
 	// Um servidor novo sobre o MESMO banco: é o reinício, sem fingir.
-	frio := newBoardStore(s.queries, newUUID)
+	frio := newBoardStore(s.queries, aovivo.NewUUID)
 	voltou := frio.get(ctx, sid)
 
 	if voltou == nil {
@@ -68,14 +70,14 @@ func TestClosingBoardErasesItFromDiskToo(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 	s.boards.open(ctx, sid, "Cripta", "pedra")
-	s.boards.persist(ctx, sid)
+	s.boards.Persist(ctx, sid)
 
 	s.boards.close(ctx, sid)
 
 	if b := s.boards.get(ctx, sid); b != nil {
 		t.Error("o tabuleiro encerrado continua na memória")
 	}
-	if b := newBoardStore(s.queries, newUUID).get(ctx, sid); b != nil {
+	if b := newBoardStore(s.queries, aovivo.NewUUID).get(ctx, sid); b != nil {
 		t.Error("o tabuleiro encerrado voltou do banco no próximo reinício")
 	}
 }
@@ -121,19 +123,19 @@ func TestBoardPersistFailureIsReported(t *testing.T) {
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 	s.boards.open(ctx, sid, "Cripta", "pedra")
 
-	if dirty, changed := s.boards.persist(ctx, sid); dirty || changed {
-		t.Fatalf("gravação saudável já saiu como falha: dirty=%v changed=%v", dirty, changed)
+	if Dirty, changed := s.boards.Persist(ctx, sid); Dirty || changed {
+		t.Fatalf("gravação saudável já saiu como falha: Dirty=%v changed=%v", Dirty, changed)
 	}
 
 	if _, err := s.db.Exec("DROP TABLE session_boards"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
-	dirty, changed := s.boards.persist(ctx, sid)
-	if !dirty || !changed {
-		t.Fatalf("a tabela sumiu e ninguém avisou: dirty=%v changed=%v", dirty, changed)
+	Dirty, changed := s.boards.Persist(ctx, sid)
+	if !Dirty || !changed {
+		t.Fatalf("a tabela sumiu e ninguém avisou: Dirty=%v changed=%v", Dirty, changed)
 	}
 	// Segunda falha seguida: continua falhando, mas NÃO é notícia nova.
-	if _, changed := s.boards.persist(ctx, sid); changed {
+	if _, changed := s.boards.Persist(ctx, sid); changed {
 		t.Error("a mesa levou um aviso a cada gravação, e não só na transição")
 	}
 
@@ -141,8 +143,8 @@ func TestBoardPersistFailureIsReported(t *testing.T) {
 		sessionId INTEGER PRIMARY KEY, state TEXT NOT NULL, updatedAt TEXT NOT NULL)`); err != nil {
 		t.Fatalf("recriar a tabela: %v", err)
 	}
-	if dirty, changed := s.boards.persist(ctx, sid); dirty || !changed {
-		t.Errorf("a recuperação não foi anunciada: dirty=%v changed=%v", dirty, changed)
+	if Dirty, changed := s.boards.Persist(ctx, sid); Dirty || !changed {
+		t.Errorf("a recuperação não foi anunciada: Dirty=%v changed=%v", Dirty, changed)
 	}
 }
 
@@ -162,11 +164,11 @@ func TestATransientReadFailureIsRetried(t *testing.T) {
 	if _, err := s.boards.addToken(ctx, sid, BoardToken{Label: "Ogro", X: 1, Y: 1}, true); err != nil {
 		t.Fatalf("adicionar peça: %v", err)
 	}
-	s.boards.persist(ctx, sid)
+	s.boards.Persist(ctx, sid)
 
 	// Um servidor frio sobre o mesmo banco, e a leitura falha: é o disco
 	// piscando no primeiro acesso à sessão.
-	frio := newBoardStore(s.queries, newUUID)
+	frio := newBoardStore(s.queries, aovivo.NewUUID)
 	if _, err := s.db.Exec("ALTER TABLE session_boards RENAME TO session_boards_escondida"); err != nil {
 		t.Fatalf("esconder a tabela: %v", err)
 	}
@@ -217,15 +219,15 @@ func TestClosingReportsAFailedDelete(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 	s.boards.open(ctx, sid, "Cripta", "pedra")
-	s.boards.persist(ctx, sid)
+	s.boards.Persist(ctx, sid)
 
 	if _, err := s.db.Exec("DROP TABLE session_boards"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
-	dirty, changed := s.boards.close(ctx, sid)
+	Dirty, changed := s.boards.close(ctx, sid)
 
-	if !dirty || !changed {
-		t.Fatalf("o encerramento falhou e ninguém soube: dirty=%v changed=%v", dirty, changed)
+	if !Dirty || !changed {
+		t.Fatalf("o encerramento falhou e ninguém soube: Dirty=%v changed=%v", Dirty, changed)
 	}
 }
 

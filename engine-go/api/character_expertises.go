@@ -135,7 +135,7 @@ func (s *Server) handleDeleteExpertise(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load expertise")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load expertise")
 		return
 	}
 	if meta.Custom == 0 {

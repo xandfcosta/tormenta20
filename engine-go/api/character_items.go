@@ -120,7 +120,7 @@ func (s *Server) handleAddItem(w http.ResponseWriter, r *http.Request) {
 
 // handleUpdateItem partial patch of an
 // item, validating slots + equip axis + the equip caps when `equipped` changes.
-// Decodes into a raw-field map so an ABSENT field (leave unchanged) is
+// Decodes into a raw-field map so an ABSENT field (Leave unchanged) is
 // distinguished from an explicit null (unequip / clear material) — a *string
 // can't tell them apart. NOTE: overlay compatibility is deferred like addItem.
 func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
@@ -142,7 +142,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load item")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load item")
 		return
 	}
 
@@ -153,7 +153,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 			plataforma.WriteError(w, http.StatusBadRequest, "Invalid name")
 			return
 		}
-		set.add("name = ?", strings.TrimSpace(name))
+		set.Add("name = ?", strings.TrimSpace(name))
 	}
 	if v, has := raw["quantity"]; has {
 		var q int64
@@ -161,7 +161,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 			plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"quantity": {"quantity out of range [1, 9999]"}})
 			return
 		}
-		set.add("quantity = ?", q)
+		set.Add("quantity = ?", q)
 	}
 	if v, has := raw["slots"]; has {
 		var sl float64
@@ -169,7 +169,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 			plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"slots": {"Slots must be a multiple of 0.5"}})
 			return
 		}
-		set.add("slots = ?", sl)
+		set.Add("slots = ?", sl)
 	}
 	if v, has := raw["equipped"]; has {
 		var eq *string
@@ -194,7 +194,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		set.add("equipped = ?", nullString(eq))
+		set.Add("equipped = ?", nullString(eq))
 	}
 	if v, has := raw["improvements"]; has {
 		var imp []string
@@ -202,7 +202,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 			plataforma.WriteError(w, http.StatusBadRequest, "Invalid improvements")
 			return
 		}
-		set.add("improvements = ?", marshalStrings(&imp))
+		set.Add("improvements = ?", marshalStrings(&imp))
 	}
 	if v, has := raw["material"]; has {
 		var mat *string
@@ -210,7 +210,7 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 			plataforma.WriteError(w, http.StatusBadRequest, "Invalid material")
 			return
 		}
-		set.add("material = ?", nullString(mat))
+		set.Add("material = ?", nullString(mat))
 	}
 	if set.empty() {
 		plataforma.WriteError(w, http.StatusBadRequest, "No fields to update")
@@ -259,7 +259,7 @@ func (s *Server) handleDeleteItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load item")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load item")
 		return
 	}
 	if err := s.queries.DeleteItem(r.Context(), itemID); err != nil {

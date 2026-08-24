@@ -156,7 +156,7 @@ func (s *Server) handleGetCampaign(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load campaign")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load campaign")
 		return
 	}
 	user := currentUser(r)
@@ -227,13 +227,13 @@ func (s *Server) handleUpdateCampaign(w http.ResponseWriter, r *http.Request) {
 			plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"name": {"name must be between 1 and 120 characters"}})
 			return
 		}
-		set.add("name = ?", name)
+		set.Add("name = ?", name)
 	}
 	if body.Description != nil {
 		// Same helper as create: a whitespace-only description is NULL on both
 		// paths, or the client reads "" from one and null from the other for the
 		// very same input.
-		set.add("description = ?", nullableArg(trimOrNull(body.Description)))
+		set.Add("description = ?", nullableArg(trimOrNull(body.Description)))
 	}
 	if set.empty() {
 		plataforma.WriteError(w, http.StatusBadRequest, "No fields to update")
@@ -283,13 +283,13 @@ func (s *Server) handleRotateInvite(w http.ResponseWriter, r *http.Request) {
 
 // handleResolveInvite resolves a shared token to {campaignId, campaignName}
 // (public). The frontend's CampaignInvitePreview expects camelCase keys —
-// returning {id, name} left the join form with an undefined campaignId, so the
+// returning {id, name} left the Join form with an undefined campaignId, so the
 // "Entrar" button stayed disabled forever (ALE-18). Mirrors handleRotateInvite,
 // which already returns campaignId.
 //
 // An unknown or rotated token is a 404. It used to answer 200 with a `null`
 // body, which made a dead invite arrive at the client as a SUCCESS carrying no
-// campaign — indistinguishable from one still loading, so the join screen sat
+// campaign — indistinguishable from one still loading, so the Join screen sat
 // there with a disabled button and no explanation (ALE-80). A missing thing is
 // a 404; only a genuine lookup failure is a 500.
 func (s *Server) handleResolveInvite(w http.ResponseWriter, r *http.Request) {
@@ -325,7 +325,7 @@ func (s *Server) resolveRole(ctx context.Context, user AuthUser, campaignID int6
 		return "", http.StatusNotFound, fmt.Errorf("Campaign %d not found", campaignID)
 	}
 	if err != nil {
-		return "", http.StatusInternalServerError, errors.New("Could not load campaign")
+		return "", http.StatusInternalServerError, errors.New("Could not Load campaign")
 	}
 	return s.roleIn(ctx, user, c)
 }
@@ -353,7 +353,7 @@ func (s *Server) loadOwnedCampaign(ctx context.Context, user AuthUser, id int64)
 		return c, http.StatusNotFound, fmt.Errorf("Campaign %d not found", id)
 	}
 	if err != nil {
-		return c, http.StatusInternalServerError, errors.New("Could not load campaign")
+		return c, http.StatusInternalServerError, errors.New("Could not Load campaign")
 	}
 	if c.Ownerid != user.ID && !user.IsAdmin {
 		return c, http.StatusForbidden, fmt.Errorf("Campaign %d belongs to another user", id)

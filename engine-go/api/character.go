@@ -26,7 +26,7 @@ func (s *Server) handleListCharacters(w http.ResponseWriter, r *http.Request) {
 	for _, row := range rows {
 		dto, err := s.loadCharacter(r.Context(), row)
 		if err != nil {
-			plataforma.WriteError(w, http.StatusInternalServerError, "Could not load character")
+			plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
 			return
 		}
 		out = append(out, dto)
@@ -43,14 +43,14 @@ func (s *Server) handleGetCharacter(w http.ResponseWriter, r *http.Request) {
 	}
 	dto, err := s.loadCharacter(r.Context(), row)
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load character")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
 		return
 	}
 	plataforma.WriteJSON(w, http.StatusOK, dto)
 }
 
-// characterFor is the preamble every character route repeats: read {id}, load
-// the row, enforce the read/mutation guard, and emit the right error. Returns
+// characterFor is the preamble every character route repeats: read {id}, Load
+// the row, enforce the read/mutation guard, and Emit the right error. Returns
 // ok=false when it already wrote the response.
 //
 // Twenty-three handlers spelled these nine lines out, and the copy-paste left a
@@ -74,14 +74,14 @@ func (s *Server) characterFor(w http.ResponseWriter, r *http.Request) (sqlcgen.C
 }
 
 // authorizedCharacter loads a character and enforces the read/mutation guard
-// (owner or campaign GM). Returns the row, or an HTTP status + error to emit.
+// (owner or campaign GM). Returns the row, or an HTTP status + error to Emit.
 func (s *Server) authorizedCharacter(ctx context.Context, user AuthUser, id int64) (sqlcgen.Character, int, error) {
 	row, err := s.queries.GetCharacter(ctx, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return row, http.StatusNotFound, fmt.Errorf("Character %d not found", id)
 	}
 	if err != nil {
-		return row, http.StatusInternalServerError, errors.New("Could not load character")
+		return row, http.StatusInternalServerError, errors.New("Could not Load character")
 	}
 	// The admin passes the same door as the owner and the campaign's GM: a table
 	// they administer includes the sheets in it (ALE-120).
@@ -130,7 +130,7 @@ func (s *Server) assertCharacterOwner(ctx context.Context, userID, characterID i
 		return http.StatusNotFound, fmt.Errorf("Character %d not found", characterID)
 	}
 	if err != nil {
-		return http.StatusInternalServerError, errors.New("Could not load character")
+		return http.StatusInternalServerError, errors.New("Could not Load character")
 	}
 	if owner != userID {
 		return http.StatusForbidden, fmt.Errorf(

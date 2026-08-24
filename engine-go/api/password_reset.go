@@ -31,12 +31,12 @@ type resetPasswordBody struct {
 // before showing the form, so an expired link says so instead of failing on
 // submit with a password already typed twice.
 func (s *Server) handleResolvePasswordReset(w http.ResponseWriter, r *http.Request) {
-	reset, ok := s.usableReset(r.Context(), chi.URLParam(r, "token"))
+	Reset, ok := s.usableReset(r.Context(), chi.URLParam(r, "token"))
 	if !ok {
 		plataforma.WriteError(w, http.StatusNotFound, resetRejected)
 		return
 	}
-	user, err := s.queries.GetUserByID(r.Context(), reset.Userid)
+	user, err := s.queries.GetUserByID(r.Context(), Reset.Userid)
 	if err != nil {
 		plataforma.WriteError(w, http.StatusNotFound, resetRejected)
 		return
@@ -46,7 +46,7 @@ func (s *Server) handleResolvePasswordReset(w http.ResponseWriter, r *http.Reque
 	plataforma.WriteJSON(w, http.StatusOK, map[string]string{"email": user.Email})
 }
 
-// handleResetPassword: POST /auth/reset-password.
+// handleResetPassword: POST /auth/Reset-password.
 func (s *Server) handleResetPassword(w http.ResponseWriter, r *http.Request) {
 	var body resetPasswordBody
 	if !plataforma.DecodeJSON(w, r, &body) {
@@ -56,7 +56,7 @@ func (s *Server) handleResetPassword(w http.ResponseWriter, r *http.Request) {
 		plataforma.WriteValidationError(w, fields)
 		return
 	}
-	reset, ok := s.usableReset(r.Context(), body.Token)
+	Reset, ok := s.usableReset(r.Context(), body.Token)
 	if !ok {
 		plataforma.WriteError(w, http.StatusForbidden, resetRejected)
 		return
@@ -66,7 +66,7 @@ func (s *Server) handleResetPassword(w http.ResponseWriter, r *http.Request) {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not hash password")
 		return
 	}
-	if err := s.applyReset(r.Context(), reset, string(hash)); err != nil {
+	if err := s.applyReset(r.Context(), Reset, string(hash)); err != nil {
 		writeResetError(w, err)
 		return
 	}
@@ -76,7 +76,7 @@ func (s *Server) handleResetPassword(w http.ResponseWriter, r *http.Request) {
 // applyReset writes the new hash and spends the link in ONE transaction, and
 // the spend is conditional — two people racing the same link cannot both set a
 // password on the account.
-func (s *Server) applyReset(ctx context.Context, reset sqlcgen.PasswordReset, hash string) error {
+func (s *Server) applyReset(ctx context.Context, Reset sqlcgen.PasswordReset, hash string) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -85,7 +85,7 @@ func (s *Server) applyReset(ctx context.Context, reset sqlcgen.PasswordReset, ha
 
 	q := s.queries.WithTx(tx)
 	spent, err := q.SpendPasswordReset(ctx, sqlcgen.SpendPasswordResetParams{
-		Usedat: nullString(ptrTo(plataforma.NowISO())), ID: reset.ID,
+		Usedat: nullString(ptrTo(plataforma.NowISO())), ID: Reset.ID,
 	})
 	if err != nil {
 		return err
@@ -94,21 +94,21 @@ func (s *Server) applyReset(ctx context.Context, reset sqlcgen.PasswordReset, ha
 		return errResetSpent
 	}
 	if err := q.UpdateUserPassword(ctx, sqlcgen.UpdateUserPasswordParams{
-		Passwordhash: hash, Updatedat: plataforma.NowISO(), ID: reset.Userid,
+		Passwordhash: hash, Updatedat: plataforma.NowISO(), ID: Reset.Userid,
 	}); err != nil {
 		return err
 	}
 	return tx.Commit()
 }
 
-var errResetSpent = errors.New("reset link already spent")
+var errResetSpent = errors.New("Reset link already spent")
 
 func writeResetError(w http.ResponseWriter, err error) {
 	if errors.Is(err, errResetSpent) {
 		plataforma.WriteError(w, http.StatusForbidden, resetRejected)
 		return
 	}
-	plataforma.WriteError(w, http.StatusInternalServerError, "Could not reset password")
+	plataforma.WriteError(w, http.StatusInternalServerError, "Could not Reset password")
 }
 
 // usableReset loads a link that can still be spent: it exists, nobody used it,
@@ -117,15 +117,15 @@ func (s *Server) usableReset(ctx context.Context, token string) (sqlcgen.Passwor
 	if token == "" {
 		return sqlcgen.PasswordReset{}, false
 	}
-	reset, err := s.queries.GetPasswordReset(ctx, token)
-	if err != nil || reset.Usedat.Valid {
+	Reset, err := s.queries.GetPasswordReset(ctx, token)
+	if err != nil || Reset.Usedat.Valid {
 		return sqlcgen.PasswordReset{}, false
 	}
-	expiresAt, err := time.Parse(plataforma.IsoLayout, reset.Expiresat)
+	expiresAt, err := time.Parse(plataforma.IsoLayout, Reset.Expiresat)
 	if err != nil || time.Now().UTC().After(expiresAt) {
 		return sqlcgen.PasswordReset{}, false
 	}
-	return reset, true
+	return Reset, true
 }
 
 func ptrTo[T any](v T) *T { return &v }

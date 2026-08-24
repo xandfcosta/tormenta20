@@ -23,7 +23,7 @@ func TestAdminScreenRoutesRejectEveryoneElse(t *testing.T) {
 	routes := []struct{ method, path string }{
 		{http.MethodGet, "/admin/users"},
 		{http.MethodDelete, "/admin/users/1"},
-		{http.MethodPost, "/admin/users/1/password-reset"},
+		{http.MethodPost, "/admin/users/1/password-Reset"},
 		{http.MethodGet, "/admin/invites"},
 		{http.MethodGet, "/admin/status"},
 		{http.MethodGet, "/admin/backups"},

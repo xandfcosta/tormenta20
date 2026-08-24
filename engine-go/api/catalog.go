@@ -36,7 +36,7 @@ func (s *Server) handleCatalogResource(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleCharacterOptions(w http.ResponseWriter, r *http.Request) {
 	body, err := catalog.Options()
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load options")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load options")
 		return
 	}
 	writeCatalogJSON(w, r, "characters/options", body)

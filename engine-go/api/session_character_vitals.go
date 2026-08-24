@@ -1,6 +1,17 @@
 package api
 
-// O PV do rastreador É o PV da ficha (ALE-122).
+import "t20engine/aovivo"
+
+// O PV do rastreador É o PV da ficha (ALE-122) — e agora atravessa uma PORTA.
+//
+// Este arquivo implementa `aovivo.VitaisDaFicha` (ALE-254). Os três métodos
+// eram do `sessionStore`, e o compilador apontou o problema quando o regime
+// virou pacote: eles usam `applyDamagePlan` e `aovivo.ClampVital`, que são regras da
+// FICHA. Um pacote do regime não pode conhecê-las.
+//
+// A troca é a que a issue pedia: o regime declara o que precisa, e quem entrega
+// fica deste lado. Quando o contexto `ficha` nascer, ele assume este tipo sem
+// que uma linha de `aovivo/` mude.
 //
 // Antes desta fatia havia dois PV para o mesmo personagem: o socket escrevia num
 // blob (`sessions.runtimeState`) e o HTTP escrevia na linha do personagem. A
@@ -23,6 +34,11 @@ import (
 
 	"t20engine/db/sqlcgen"
 )
+
+// vitaisDaFicha é quem cumpre a porta. Guarda só o que precisa — as queries —
+// em vez de um `*Server` inteiro: uma porta que recebesse o servidor não seria
+// porta, seria o acoplamento de antes com outro nome.
+type vitaisDaFicha struct{ q *sqlcgen.Queries }
 
 // applyDamagePlan runs the book's damage order — temporary pools first, biggest
 // first — persisting the drained pools and the new PV. Returns the plan so the
@@ -63,56 +79,56 @@ func applyDamagePlan(
 // applyCharacterDelta moves a character's PV/PM by a delta and persists it,
 // returning the values the tracker entry must mirror. Damage (negative PV) goes
 // through applyDamagePlan; healing and PM are clamped to the character's maxes.
-func (st *sessionStore) applyCharacterDelta(
+func (v vitaisDaFicha) AplicaDelta(
 	ctx context.Context, charID int64, hpDelta, mpDelta *int64,
 ) (*int64, *int64, error) {
-	row, err := st.q.GetCharacter(ctx, charID)
+	row, err := v.q.GetCharacter(ctx, charID)
 	if err != nil {
 		return nil, nil, err
 	}
 	hp, healed := row.Hpcurrent, false
 	if hpDelta != nil && *hpDelta < 0 {
-		plan, err := applyDamagePlan(ctx, st.q, row, int(-*hpDelta))
+		plan, err := applyDamagePlan(ctx, v.q, row, int(-*hpDelta))
 		if err != nil {
 			return nil, nil, err
 		}
 		hp = int64(plan.hpCurrent) // já persistido pelo plano
 	} else if hpDelta != nil {
-		hp, healed = clampVital(row.Hpcurrent+*hpDelta, &row.Hpmax), true
+		hp, healed = aovivo.ClampVital(row.Hpcurrent+*hpDelta, &row.Hpmax), true
 	}
 	mp := row.Mpcurrent
 	if mpDelta != nil {
-		mp = clampVital(row.Mpcurrent+*mpDelta, &row.Mpmax)
+		mp = aovivo.ClampVital(row.Mpcurrent+*mpDelta, &row.Mpmax)
 	}
-	return st.persistVitals(ctx, charID, hp, healed, mp, mpDelta != nil)
+	return v.persistVitals(ctx, charID, hp, healed, mp, mpDelta != nil)
 }
 
 // applyCharacterVitals sets absolute PV/PM on the character (the tracker's
 // "vitals-patch"). An absolute value is a statement about the total, not a hit,
 // so it does NOT drain temporary pools — that rule belongs to damage.
-func (st *sessionStore) applyCharacterVitals(
+func (v vitaisDaFicha) AplicaAbsoluto(
 	ctx context.Context, charID int64, hpCurrent, mpCurrent *int64,
 ) (*int64, *int64, error) {
-	row, err := st.q.GetCharacter(ctx, charID)
+	row, err := v.q.GetCharacter(ctx, charID)
 	if err != nil {
 		return nil, nil, err
 	}
 	hp := row.Hpcurrent
 	if hpCurrent != nil {
-		hp = clampVital(*hpCurrent, &row.Hpmax)
+		hp = aovivo.ClampVital(*hpCurrent, &row.Hpmax)
 	}
 	mp := row.Mpcurrent
 	if mpCurrent != nil {
-		mp = clampVital(*mpCurrent, &row.Mpmax)
+		mp = aovivo.ClampVital(*mpCurrent, &row.Mpmax)
 	}
-	return st.persistVitals(ctx, charID, hp, hpCurrent != nil, mp, mpCurrent != nil)
+	return v.persistVitals(ctx, charID, hp, hpCurrent != nil, mp, mpCurrent != nil)
 }
 
 // persistVitals writes only what changed and hands back BOTH values for the
 // entry to mirror — inclusive o que não foi escrito, senão o rastreador voltaria
 // a mostrar um número que a ficha não tem. `writeHp` é falso quando o plano de
 // dano já gravou o PV.
-func (st *sessionStore) persistVitals(
+func (v vitaisDaFicha) persistVitals(
 	ctx context.Context, charID, hp int64, writeHp bool, mp int64, writeMp bool,
 ) (*int64, *int64, error) {
 	if writeHp || writeMp {
@@ -123,25 +139,9 @@ func (st *sessionStore) persistVitals(
 		if writeMp {
 			params.MpCurrent = nullInt(&mp)
 		}
-		if _, err := st.q.UpdateVitals(ctx, params); err != nil {
+		if _, err := v.q.UpdateVitals(ctx, params); err != nil {
 			return nil, nil, err
 		}
 	}
 	return &hp, &mp, nil
-}
-
-// characterIDOf reports which character backs an entry, or nil for an NPC —
-// which is what decides whether the sheet or the tracker is the record.
-func (st *sessionStore) characterIDOf(sessionID int64, entryID string) *int64 {
-	st.mu.Lock()
-	defer st.mu.Unlock()
-	state := st.states[sessionID]
-	if state == nil {
-		return nil
-	}
-	idx := findEntryIndex(state, entryID)
-	if idx < 0 {
-		return nil
-	}
-	return state.Initiative[idx].CharacterID
 }

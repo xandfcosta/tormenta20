@@ -69,7 +69,7 @@ func (s *Server) handleAdminDeleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // deleteUserKeepingMesas moves the campaigns and deletes the account in ONE
-// transaction: a half-done delete would leave mesas owned by a row that no
+// transaction: a half-done delete would Leave mesas owned by a row that no
 // longer exists.
 func (s *Server) deleteUserKeepingMesas(r *http.Request, userID, newOwnerID int64) (int64, error) {
 	ctx := r.Context()
@@ -92,7 +92,7 @@ func (s *Server) deleteUserKeepingMesas(r *http.Request, userID, newOwnerID int6
 	return moved, tx.Commit()
 }
 
-// handleAdminCreatePasswordReset: POST /admin/users/{id}/password-reset. The
+// handleAdminCreatePasswordReset: POST /admin/users/{id}/password-Reset. The
 // admin never sees or types a password — they hand over a single-use link and
 // the player picks their own.
 func (s *Server) handleAdminCreatePasswordReset(w http.ResponseWriter, r *http.Request) {
@@ -105,7 +105,7 @@ func (s *Server) handleAdminCreatePasswordReset(w http.ResponseWriter, r *http.R
 		return
 	}
 	now := time.Now()
-	reset, err := s.queries.CreatePasswordReset(r.Context(), sqlcgen.CreatePasswordResetParams{
+	Reset, err := s.queries.CreatePasswordReset(r.Context(), sqlcgen.CreatePasswordResetParams{
 		Token:     generateInviteToken(),
 		Userid:    id,
 		Createdby: currentUser(r).ID,
@@ -113,10 +113,10 @@ func (s *Server) handleAdminCreatePasswordReset(w http.ResponseWriter, r *http.R
 		Expiresat: plataforma.IsoAt(now.Add(passwordResetTTL)),
 	})
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not create reset link")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not create Reset link")
 		return
 	}
-	plataforma.WriteJSON(w, http.StatusCreated, accountInviteDTO{Token: reset.Token, ExpiresAt: reset.Expiresat})
+	plataforma.WriteJSON(w, http.StatusCreated, accountInviteDTO{Token: Reset.Token, ExpiresAt: Reset.Expiresat})
 }
 
 // handleAdminListInvites: GET /admin/invites — the links already handed out and

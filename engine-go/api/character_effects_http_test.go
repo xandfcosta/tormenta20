@@ -27,7 +27,7 @@ import (
 // mestre de qualquer coisa com uma sessão viva em algum lugar.
 
 // endScopeRouter mounts only the two scope-expiring routes, injecting `user`
-// the way requireAuth would. The domain side of endScene/endDay is covered by
+// the way requireAuth would. The domain side of EndScene/endDay is covered by
 // TestEndSceneEndDay; what this file pins is the HTTP contract — who may call,
 // and the `clearedScopes` delta the caller uses to drop cached effects.
 func endScopeRouter(s *Server, user AuthUser) http.Handler {
@@ -114,7 +114,7 @@ func TestEndDayRouteClearsBothScopes(t *testing.T) {
 		t.Fatalf("status = %d, want 200 (body %q)", rec.Code, rec.Body.String())
 	}
 	// Both scopes, so the caller drops day effects too — reporting only "day"
-	// would leave the cleared scene buffs painted on the sheet.
+	// would Leave the cleared scene buffs painted on the sheet.
 	got := clearedScopes(t, rec)
 	if len(got) != 2 || got[0] != "scene" || got[1] != "day" {
 		t.Errorf("clearedScopes = %v, want [scene day]", got)

@@ -124,7 +124,7 @@ func TestResolveRole(t *testing.T) {
 		{"member is player", AuthUser{ID: player}, "player", 200},
 		{"stranger forbidden", AuthUser{ID: stranger}, "", 403},
 		// The admin enters any mesa as gm, and this is the rule the WS gateway
-		// runs too — it is what lets them join a live session (ALE-120).
+		// runs too — it is what lets them Join a live session (ALE-120).
 		{"admin is gm anywhere", AuthUser{ID: stranger, IsAdmin: true}, "gm", 200},
 	}
 	for _, c := range cases {
@@ -201,7 +201,7 @@ func TestSessionForCaller(t *testing.T) {
 			t.Errorf("status=%d role=%q id=%d err=%v", status, role, got.ID, err)
 		}
 	})
-	t.Run("stranger forbidden before session load", func(t *testing.T) {
+	t.Run("stranger forbidden before session Load", func(t *testing.T) {
 		if _, _, status, _ := s.sessionForCaller(ctx, AuthUser{ID: stranger}, campaignID, sess.ID); status != 403 {
 			t.Errorf("status=%d, want 403", status)
 		}
@@ -244,10 +244,10 @@ func TestEndSceneEndDay(t *testing.T) {
 	_ = seedCampaign(t, s, gmID)
 	char := seedCharacter(t, s, gmID, "PC", 10, 10, 5, 5)
 
-	t.Run("endScene removes only scene effects", func(t *testing.T) {
+	t.Run("EndScene removes only scene effects", func(t *testing.T) {
 		seedEffect(t, s, char, "buff-a", "scene")
 		seedEffect(t, s, char, "buff-b", "day")
-		if status, err := s.endScene(ctx, gm, char); status != 200 || err != nil {
+		if status, err := s.EndScene(ctx, gm, char); status != 200 || err != nil {
 			t.Fatalf("status=%d err=%v", status, err)
 		}
 		if got := effectScopes(t, s, char); len(got) != 1 || got[0] != "day" {
@@ -255,7 +255,7 @@ func TestEndSceneEndDay(t *testing.T) {
 		}
 	})
 	t.Run("endDay removes scene and day", func(t *testing.T) {
-		seedEffect(t, s, char, "buff-a", "scene") // re-add the scene one
+		seedEffect(t, s, char, "buff-a", "scene") // re-Add the scene one
 		if status, err := s.endDay(ctx, gm, char); status != 200 || err != nil {
 			t.Fatalf("status=%d err=%v", status, err)
 		}
@@ -265,7 +265,7 @@ func TestEndSceneEndDay(t *testing.T) {
 	})
 	t.Run("stranger forbidden, effects untouched", func(t *testing.T) {
 		seedEffect(t, s, char, "buff-c", "scene")
-		if status, _ := s.endScene(ctx, stranger, char); status != 403 {
+		if status, _ := s.EndScene(ctx, stranger, char); status != 403 {
 			t.Errorf("status=%d, want 403", status)
 		}
 		if got := effectScopes(t, s, char); len(got) != 1 {

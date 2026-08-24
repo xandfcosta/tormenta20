@@ -38,7 +38,7 @@ func ValidateRegister(b registerBody) plataforma.FieldErrorMap {
 }
 
 // ValidatePassword is the ONE password rule, shared by registration and by the
-// reset link (ALE-120) — two spellings of "at least 8" would drift, and the
+// Reset link (ALE-120) — two spellings of "at least 8" would drift, and the
 // screen that ended up laxer would be the one that matters.
 func ValidatePassword(password string) plataforma.FieldErrorMap {
 	f := plataforma.FieldErrorMap{}

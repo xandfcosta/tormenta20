@@ -62,20 +62,20 @@ func (s *Server) publishBoardState(sessionID int64, board *BoardState) {
 	if board != nil {
 		ordem = uint64(board.Version)
 	}
-	s.sse.emitOrdered(sessionID, "gm", "board-state", ordem, board)
-	s.sse.emitOrdered(sessionID, "player", "board-state", ordem, boardForRole("player", board))
+	s.sse.EmitOrdered(sessionID, "gm", "board-state", ordem, board)
+	s.sse.EmitOrdered(sessionID, "player", "board-state", ordem, boardForRole("player", board))
 	go s.persistBoardAndWarn(sessionID)
 }
 
 func (s *Server) persistBoardAndWarn(sessionID int64) {
-	if dirty, changed := s.boards.persist(context.Background(), sessionID); changed {
-		s.warnPersistenceOnBoard(sessionID, dirty)
+	if Dirty, changed := s.boards.Persist(context.Background(), sessionID); changed {
+		s.warnPersistenceOnBoard(sessionID, Dirty)
 	}
 }
 
-func (s *Server) warnPersistenceOnBoard(sessionID int64, dirty bool) {
-	s.sse.emit(sessionID, "", "persistence-warning", map[string]any{
-		"sessionId": sessionID, "dirty": dirty,
+func (s *Server) warnPersistenceOnBoard(sessionID int64, Dirty bool) {
+	s.sse.Emit(sessionID, "", "persistence-warning", map[string]any{
+		"sessionId": sessionID, "Dirty": Dirty,
 	})
 }
 
@@ -114,8 +114,8 @@ func (s *Server) handleBoardClose(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	// Um DELETE que falha deixa o tabuleiro fantasma no banco (ALE-155).
-	if dirty, changed := s.boards.close(r.Context(), ctx.sessionID); changed {
-		s.warnPersistenceOnBoard(ctx.sessionID, dirty)
+	if Dirty, changed := s.boards.close(r.Context(), ctx.sessionID); changed {
+		s.warnPersistenceOnBoard(ctx.sessionID, Dirty)
 	}
 	// `nil` é a mensagem: "esta sessão não tem tabuleiro" é estado de verdade, e
 	// não uma grade vazia.
@@ -282,7 +282,7 @@ func (s *Server) handleBoardPopulate(w http.ResponseWriter, r *http.Request) {
 	}
 	board, err := s.boards.populate(
 		r.Context(), ctx.sessionID,
-		s.sessions.getState(ctx.sessionID), chosenEntries(body, "entryIds"),
+		s.sessions.GetState(ctx.sessionID), chosenEntries(body, "entryIds"),
 	)
 	if err != nil {
 		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
@@ -320,8 +320,8 @@ func (s *Server) handleBoardReopen(w http.ResponseWriter, r *http.Request) {
 		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	if dirty, changed := s.boards.persist(r.Context(), ctx.sessionID); changed {
-		s.warnPersistenceOnBoard(ctx.sessionID, dirty)
+	if Dirty, changed := s.boards.Persist(r.Context(), ctx.sessionID); changed {
+		s.warnPersistenceOnBoard(ctx.sessionID, Dirty)
 	}
 	s.publishBoardState(ctx.sessionID, board)
 	plataforma.WriteJSON(w, http.StatusOK, boardForRole(ctx.role, board))
@@ -398,7 +398,7 @@ func (s *Server) handleBoardMovePropose(w http.ResponseWriter, r *http.Request) 
 	by, speed := s.moverFor(ctx, tokenID)
 	s.mutateBoardAndPublish(w, ctx, func() (*BoardState, error) {
 		return s.boards.proposeMove(r.Context(), ctx.sessionID,
-			s.sessions.getState(ctx.sessionID), tokenID, path, by, speed)
+			s.sessions.GetState(ctx.sessionID), tokenID, path, by, speed)
 	})
 }
 
@@ -415,7 +415,7 @@ func (s *Server) handleBoardMoveCommit(w http.ResponseWriter, r *http.Request) {
 	by, _ := s.moverFor(ctx, pendingTokenOf(s.boards.get(r.Context(), ctx.sessionID)))
 	s.mutateBoardAndPublish(w, ctx, func() (*BoardState, error) {
 		return s.boards.commitMove(r.Context(), ctx.sessionID,
-			s.sessions.getState(ctx.sessionID), version, by)
+			s.sessions.GetState(ctx.sessionID), version, by)
 	})
 }
 

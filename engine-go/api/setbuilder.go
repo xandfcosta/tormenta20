@@ -24,15 +24,15 @@ import (
 // @example
 //
 //	var set setBuilder
-//	set.add("name = ?", name)
+//	set.Add("name = ?", name)
 //	if err := set.exec(ctx, s.db, "UPDATE campaigns", id); err != nil { … }
 type setBuilder struct {
 	columns []string
 	args    []any
 }
 
-// add records one column assignment. `clause` must be a literal like "name = ?".
-func (b *setBuilder) add(clause string, value any) {
+// Add records one column assignment. `clause` must be a literal like "name = ?".
+func (b *setBuilder) Add(clause string, value any) {
 	b.columns = append(b.columns, clause)
 	b.args = append(b.args, value)
 }

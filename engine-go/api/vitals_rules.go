@@ -1,5 +1,7 @@
 package api
 
+import "t20engine/aovivo"
+
 import (
 	"context"
 	"errors"
@@ -22,8 +24,8 @@ func (s *Server) assertVitalsEditableFor(ctx context.Context, live liveCtx, entr
 	if live.role == "gm" {
 		return nil
 	}
-	state := s.sessions.getState(live.sessionID)
-	idx := findEntryIndex(state, entryID)
+	state := s.sessions.GetState(live.sessionID)
+	idx := aovivo.FindEntryIndex(state, entryID)
 	if idx < 0 {
 		return errors.New("Entry " + entryID + " not found")
 	}
@@ -62,7 +64,7 @@ func (s *Server) restParty(user AuthUser, campaignID, sessionID int64, scope, co
 
 // expirePartyScene expira a duração "cena" de TODA ficha do grupo: os efeitos
 // de escopo "scene", os usos "1/cena" e as posturas (o helper de domínio
-// `endScene` faz os três).
+// `EndScene` faz os três).
 //
 // É o caminho ÚNICO desde a ALE-220, e essa unificação É o conserto: o
 // "Encerrar cena" do mestre e a "Recuperar · cena" agora chamam ESTE helper.
@@ -74,7 +76,7 @@ func (s *Server) expirePartyScene(user AuthUser, campaignID, sessionID int64) (d
 		return 0, 0, err
 	}
 	for _, cid := range charIDs {
-		if _, e := s.endScene(context.Background(), user, cid); e != nil {
+		if _, e := s.EndScene(context.Background(), user, cid); e != nil {
 			log.Printf("session %d: encerrar cena do personagem %d falhou (%v)", sessionID, cid, e)
 			continue
 		}
@@ -104,10 +106,10 @@ func (s *Server) restCharacterDay(user AuthUser, sessionID, characterID int64, c
 // mirrorVitalsToTracker copies freshly-persisted PV/PM onto the matching live tracker entry
 // (if the character is in the current initiative) so bars update without a reload.
 func (s *Server) mirrorVitalsToTracker(sessionID, characterID int64, vitals restedVitals) {
-	for _, e := range s.sessions.getState(sessionID).Initiative {
+	for _, e := range s.sessions.GetState(sessionID).Initiative {
 		if e.CharacterID != nil && *e.CharacterID == characterID {
 			hp, mp := vitals.hpCurrent, vitals.mpCurrent
-			_, _ = s.sessions.patchVitals(sessionID, e.ID, &hp, &mp)
+			_, _ = s.sessions.PatchVitals(sessionID, e.ID, &hp, &mp)
 			return
 		}
 	}

@@ -1,5 +1,7 @@
 package api
 
+import "t20engine/aovivo"
+
 import (
 	"database/sql"
 	"encoding/json"
@@ -173,12 +175,12 @@ func (s *Server) handleCreateCharacter(w http.ResponseWriter, r *http.Request) {
 
 	row, err := s.queries.GetCharacter(r.Context(), id)
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load character")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
 		return
 	}
 	dto, err := s.loadCharacter(r.Context(), row)
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not load character")
+		plataforma.WriteError(w, http.StatusInternalServerError, "Could not Load character")
 		return
 	}
 	if err := s.healVitals(r, id, &dto); err != nil {
@@ -237,7 +239,7 @@ func (s *Server) insertCharacter(r *http.Request, ownerID int64, name string, bo
 	for _, it := range body.Items {
 		if _, err := q.CreateItem(r.Context(), sqlcgen.CreateItemParams{
 			Characterid: id, Catalogid: nullString(it.CatalogID), Name: derefStr(it.Name, ""),
-			Quantity: derefOr(it.Quantity, 1), Slots: derefF64(it.Slots, 1),
+			Quantity: aovivo.DerefOr(it.Quantity, 1), Slots: derefF64(it.Slots, 1),
 			Equipped: nullString(it.Equipped), Improvements: "[]", Material: sql.NullString{}, Createdat: now,
 		}); err != nil {
 			return 0, err

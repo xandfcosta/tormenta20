@@ -134,8 +134,8 @@ func (bs *boardStore) reopen(ctx context.Context, sessionID, placeID int64) (*Bo
 	// lugares, e o de fora é o que a lista mostra.
 	guardado.Place = row.Name
 
-	bs.mu.Lock()
-	defer bs.mu.Unlock()
+	bs.Mu.Lock()
+	defer bs.Mu.Unlock()
 	bs.hydrateLocked(ctx, sessionID)
 	if aberto := bs.boards[sessionID]; aberto != nil && aberto.Version >= guardado.Version {
 		guardado.Version = aberto.Version + 1

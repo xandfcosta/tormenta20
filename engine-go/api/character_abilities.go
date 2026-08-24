@@ -45,27 +45,27 @@ func (s *Server) handleUpdateAbilities(w http.ResponseWriter, r *http.Request) {
 
 	var set setBuilder
 	resp := map[string]string{}
-	add := func(column string, value string) {
-		set.add(column+" = ?", value)
+	Add := func(column string, value string) {
+		set.Add(column+" = ?", value)
 		resp[column] = value
 	}
 	if body.RaceAbilityChoices != nil {
-		add("raceAbilityChoices", marshalStrings(body.RaceAbilityChoices))
+		Add("raceAbilityChoices", marshalStrings(body.RaceAbilityChoices))
 	}
 	if body.OriginChoices != nil {
-		add("originChoices", marshalStrings(body.OriginChoices))
+		Add("originChoices", marshalStrings(body.OriginChoices))
 	}
 	if body.ClassPowers != nil {
-		add("classPowers", marshalStrings(body.ClassPowers))
+		Add("classPowers", marshalStrings(body.ClassPowers))
 	}
 	if body.ClassChoices != nil {
-		add("classChoices", compactJSON(*body.ClassChoices))
+		Add("classChoices", compactJSON(*body.ClassChoices))
 	}
 	if body.PowerChoices != nil {
-		add("powerChoices", compactJSON(*body.PowerChoices))
+		Add("powerChoices", compactJSON(*body.PowerChoices))
 	}
 	if body.RaceAttributeChoices != nil {
-		add("raceAttributeChoices", compactJSON(*body.RaceAttributeChoices))
+		Add("raceAttributeChoices", compactJSON(*body.RaceAttributeChoices))
 	}
 	if set.empty() {
 		plataforma.WriteError(w, http.StatusBadRequest, "No fields to update")
