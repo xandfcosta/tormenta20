@@ -48,14 +48,96 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 					for _, m := range v.Marcadores {
 						@marcadorNoPlano(m)
 					}
+					// A TRILHA vem antes das peças e depois do chão: ela é rastro,
+					// e a peça que anda por cima dela continua sendo a peça que
+					// se clica.
+					if v.Movimento != nil {
+						for _, q := range v.Movimento.Trilha {
+							<div aria-hidden="true" class="tabuleiro-trilha" style={ posicaoNoPlano(q.Col, q.Lin, 1) }></div>
+						}
+					}
+					// O ALCANCE é PINTURA e não alvo de clique, e a diferença é o
+					// que fez este desenho mudar no meio: quem tem orçamento é o
+					// jogador NA VEZ dele — o mestre move sem teto (-1), e fora
+					// de combate todo mundo também. Se a casa alcançável fosse o
+					// único alvo, o mestre não teria onde clicar, porque não há
+					// alcance a desenhar para quem não tem limite.
+					//
+					// Então o alcance informa e a camada abaixo é que recebe o
+					// clique. Ele continua sendo o que impede o estouro, só que
+					// pela frente: a pessoa vê até onde cabe antes de escolher.
+					for _, q := range v.Alcance {
+						<div aria-hidden="true" class="tabuleiro-alcance" style={ posicaoNoPlano(q.Col, q.Lin, 1) }></div>
+					}
 					for _, p := range v.Pecas {
 						@pecaNoPlano(p)
 					}
+					// A CAMADA DE CASAS é UM nó, e não um por quadrado: 280
+					// botões seriam um campo minado no leitor de tela, que é a
+					// mesma razão pela qual a SPA torna a dela condicional. O
+					// quadrado sai do PONTO do clique dividido pelo tamanho da
+					// casa, e o `$quadrado` acompanha o zoom quando ele chegar.
+					//
+					// Ela só existe quando há o que mover: sem peça movível e sem
+					// movimento em curso, ela seria um alvo que não faz nada.
+					if v.AlvoDoMovimento != "" {
+						<button
+							type="button"
+							aria-label={ "Mover " + v.RotuloDoAlvo + " — escolha a casa" }
+							data-on:click={ paradaNoPontoClicado(v) }
+							class="tabuleiro-casas"
+						></button>
+					}
 				</div>
 			</div>
+			if v.Movimento != nil && v.Movimento.Meu {
+				@oMovimentoProposto(v)
+			}
 		</section>
 	}
 }
+
+// oMovimentoProposto é a faixa que diz o CUSTO e oferece o par de decidir.
+//
+// O número vem antes dos botões porque ele é o que decide o clique: "5 de 6"
+// responde a pergunta que a pessoa tem na mão, e um par de botões sem o custo ao
+// lado obrigaria a contar quadrados na tela.
+//
+// Confirmar e cancelar NÃO são um interruptor, pelo mesmo motivo do encerrar
+// cena: são dois verbos com consequências diferentes, e um só convidaria ao
+// clique de volta que não existe.
+templ oMovimentoProposto(v tabuleiroView) {
+	<div class="flex flex-wrap items-center gap-2 border-t border-grimorio-iron px-1 pt-2 text-sm">
+		<p aria-live="polite" class="text-muted-foreground">
+			{ v.Movimento.Rotulo } ·
+			if v.Movimento.Orcamento < 0 {
+				// Sem orçamento é o mestre, ou fora de combate: o custo continua
+				// sendo dito, porque ele informa, mas não há teto para comparar.
+				<span class="font-mono tabular-nums text-foreground">{ fmt.Sprint(v.Movimento.Custo) }</span>
+				{ " quadrados" }
+			} else {
+				<span class="font-mono tabular-nums text-foreground">
+					{ fmt.Sprintf("%d de %d", v.Movimento.Custo, v.Movimento.Orcamento) }
+				</span>
+				{ fmt.Sprintf(" quadrados · sobram %d", v.Movimento.Restante) }
+			}
+		</p>
+		<span class="ml-auto flex items-center gap-2">
+			<button
+				type="button"
+				data-on:click={ comandoDoMovimento(v, "cancelar") }
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>Cancelar</button>
+			<button
+				type="button"
+				data-on:click={ comandoDoMovimento(v, "confirmar") }
+				class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>Confirmar</button>
+		</span>
+	</div>
+}
+
+
 
 // pecaNoPlano é uma peça: monograma da ESPÉCIE, selo da INSTÂNCIA, e a barra de
 // PV quando há número para mostrar.

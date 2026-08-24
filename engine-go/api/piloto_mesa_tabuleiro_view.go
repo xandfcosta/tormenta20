@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"t20engine/aovivo"
+	"t20engine/engine"
 	"t20engine/tabuleiro"
 )
 
@@ -36,6 +37,21 @@ type tabuleiroView struct {
 	// Dificil são os quadrados de terreno difícil (T20 p238), já em coordenada
 	// da TELA.
 	Dificil []quadradoDoTabuleiro
+	// Movimento é o proposto e ainda não confirmado, ou nil.
+	Movimento *movimentoView
+	// AlvoDoMovimento é a peça que o clique numa casa vai mover: a que já tem
+	// movimento proposto, ou a que quem olha pode COMEÇAR a mover agora. Vazio
+	// quando não há o que mover — e aí a camada de casas nem existe, porque um
+	// alvo que não faz nada é pior que a ausência dele.
+	AlvoDoMovimento string
+	RotuloDoAlvo    string
+	// Alcance são as casas que a peça ainda alcança, para PINTAR. Vazio quando
+	// não há orçamento (o mestre, e todo mundo fora de combate): não há teto, e
+	// desenhar um seria inventá-lo.
+	Alcance []quadradoDoTabuleiro
+	// CampaignID e SessionID moram aqui porque o tabuleiro escreve as próprias
+	// rotas, como a `mesaView` faz com as dela.
+	CampaignID, SessionID int64
 }
 
 // pecaDoTabuleiro é uma peça posicionada e já com a aparência resolvida.
@@ -82,7 +98,7 @@ type quadradoDoTabuleiro struct {
 // A saúde chega de fora, num mapa por `entryId`, porque ela não é do tabuleiro:
 // é da FILA, e o tabuleiro só a mostra. Derivá-la aqui seria a segunda conta de
 // PV do app, que é como a ALE-122 começou.
-func tabuleiroViewOf(b *tabuleiro.BoardState, saude map[string]int, naVez string) tabuleiroView {
+func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, saude map[string]int, naVez string, quem tabuleiro.Mover, meus map[int64]bool, campaignID, sessionID int64) tabuleiroView {
 	if b == nil {
 		return tabuleiroView{}
 	}
@@ -104,6 +120,9 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, saude map[string]int, naVez string
 	for _, q := range b.Difficult {
 		v.Dificil = append(v.Dificil, quadradoDoTabuleiro{Col: q.X - e.X0, Lin: q.Y - e.Y0})
 	}
+	v.CampaignID, v.SessionID = campaignID, sessionID
+	v.Movimento = movimentoDoTabuleiro(b, quem, e)
+	v.AlvoDoMovimento, v.RotuloDoAlvo, v.Alcance = oAlvoEOAlcance(b, st, quem, meus, e)
 	return v
 }
 
@@ -215,4 +234,158 @@ func corDeMarcador(c string) string {
 		return "var(--marcador-" + c + ")"
 	}
 	return "var(--marcador-gold)"
+}
+
+// ── o MOVIMENTO em curso (ALE-266) ───────────────────────────────────────────
+//
+// O movimento é uma sequência de PARADAS, e não um destino: a pessoa move a peça
+// para uma casa e pode mover de novo, contornando o que quiser. Mas nada disso
+// precisa de uma lista guardada em lugar nenhum — o CAMINHO PROPOSTO já é o
+// acumulado, e a última parada é o último quadrado dele. Acrescentar uma parada
+// é estender o caminho; e o alcance sai do fim dele com o que sobrou.
+//
+// Foi essa observação que apagou metade do desenho que eu ia fazer: eu ia
+// guardar as paradas num sinal do cliente, com o problema de sumirem num F5.
+
+// movimentoView é o movimento proposto, do ponto de vista de quem olha.
+type movimentoView struct {
+	TokenID string
+	Rotulo  string
+	// Trilha são as casas por onde a peça passa, já em coordenada da tela.
+	Trilha []quadradoDoTabuleiro
+	Custo  int
+	// Orcamento -1 é "sem orçamento": o mestre move qualquer peça a qualquer
+	// hora, e fora de combate cada um anda com a sua. Nesses casos não há
+	// alcance para desenhar, porque não há teto que ele desenharia.
+	Orcamento int
+	Restante  int
+	// Meu diz se quem olha decide sobre este movimento. O mestre decide por
+	// qualquer um — é ele quem toca a mesa.
+	Meu bool
+}
+
+// movimentoDoTabuleiro monta o movimento em curso, ou nil quando não há.
+//
+// O ALCANCE só é desenhado para quem PODE decidir: oferecer casas clicáveis a
+// quem não vai poder confirmar é convidar para um beco.
+func movimentoDoTabuleiro(b *tabuleiro.BoardState, m tabuleiro.Mover, e tabuleiro.Moldura) *movimentoView {
+	if b == nil || b.Pending == nil {
+		return nil
+	}
+	p := b.Pending
+	peca := tabuleiro.FindToken(b, p.TokenID)
+	if peca == nil {
+		return nil
+	}
+	v := &movimentoView{
+		TokenID: p.TokenID, Rotulo: peca.Label, Custo: p.Cost, Orcamento: p.Budget,
+		Meu: m.Role == "gm" || p.ByUserID == m.UserID,
+	}
+	for _, q := range p.Path {
+		v.Trilha = append(v.Trilha, quadradoDoTabuleiro{Col: q.X - e.X0, Lin: q.Y - e.Y0})
+	}
+	if v.Meu {
+		_, v.Restante = engine.AlcanceDaProximaParada(p.Path, p.Budget, terrenoDeMovimento(b))
+	}
+	return v
+}
+
+// terrenoDeMovimento traduz o terreno difícil do tabuleiro para o motor.
+//
+// Existe porque o `moveTerrainOf` do pacote `tabuleiro` é privado, e duplicar a
+// TRADUÇÃO é barato — duplicar a REGRA não seria. Se um dia ela virar três
+// linhas, ela sobe para lá.
+func terrenoDeMovimento(b *tabuleiro.BoardState) engine.MoveTerrain {
+	if len(b.Difficult) == 0 {
+		return engine.MoveTerrain{}
+	}
+	dificil := make(map[engine.Square]bool, len(b.Difficult))
+	for _, q := range b.Difficult {
+		dificil[q] = true
+	}
+	return engine.MoveTerrain{Difficult: dificil}
+}
+
+// pecaQueEuPossoMover é a peça que quem olha pode COMEÇAR a mover agora, ou "".
+//
+// Uma só, e não uma lista, porque a Mesa move uma peça por vez: com um
+// movimento em curso a resposta é vazia — quem tem um proposto confirma ou
+// cancela antes de pegar outra.
+//
+// A pergunta é respondida pelo `tabuleiro` e não aqui: quem sabe se é a vez, se
+// a peça é sua e quanto sobra de deslocamento é o `PodeMover`, que é o mesmo
+// `assertMovable` que a escrita usa. Perguntar de outro jeito na TELA é como
+// nasce um botão que existe e o servidor recusa.
+//
+// O ESTADO DA SESSÃO tem de ir junto, e a primeira versão mandava nil: sem ele o
+// `assertMovable` lê "fora de combate" e devolve que pode: a tela ofereceria
+// mover a peça do jogador FORA DA VEZ dele, e a recusa só viria no clique.
+func oAlvoEOAlcance(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, quem tabuleiro.Mover, meus map[int64]bool, e tabuleiro.Moldura) (alvo, rotulo string, alcance []quadradoDoTabuleiro) {
+	if b == nil {
+		return "", "", nil
+	}
+	// COM movimento em curso o alvo é a peça dele, e o alcance sai do fim do
+	// caminho com o que sobrou. Sem, é a primeira peça que quem olha pode mover,
+	// e o alcance sai de onde ela está com o orçamento inteiro.
+	de := []engine.Square(nil)
+	orcamento := 0
+	if p := b.Pending; p != nil && (quem.Role == "gm" || p.ByUserID == quem.UserID) {
+		if peca := tabuleiro.FindToken(b, p.TokenID); peca != nil {
+			alvo, rotulo, de, orcamento = p.TokenID, peca.Label, p.Path, p.Budget
+		}
+	}
+	if alvo == "" && b.Pending == nil {
+		for i := range b.Tokens {
+			// A POSSE é por PEÇA e não por pessoa, e a primeira versão disto
+			// esqueceu: o `Mover` carrega um booleano só, e eu o deixei em falso
+			// no caminho de leitura enquanto o de escrita o resolvia. O efeito era
+			// o jogador NA VEZ dele não ver alcance nenhum — a tela dizia que ele
+			// não podia mover a própria peça, e só o guarda acusou.
+			//
+			// Quem responde é o `meus`, montado contra o banco pelo `mesaRoster`:
+			// a ponte até a pessoa é o DONO do personagem (ALE-33).
+			dela := quem
+			if id := b.Tokens[i].CharacterID; id != nil {
+				dela.OwnsCharacter = meus[*id]
+			}
+			podeMover, orcamentoDela := tabuleiro.PodeMoverCom(b, st, b.Tokens[i].ID, dela)
+			if !podeMover {
+				continue
+			}
+			alvo, rotulo = b.Tokens[i].ID, b.Tokens[i].Label
+			de = []engine.Square{{X: b.Tokens[i].X, Y: b.Tokens[i].Y}}
+			orcamento = orcamentoDela
+			break
+		}
+	}
+	if alvo == "" {
+		return "", "", nil
+	}
+	casas, _ := engine.AlcanceDaProximaParada(de, orcamento, terrenoDeMovimento(b))
+	for _, q := range casas {
+		alcance = append(alcance, quadradoDoTabuleiro{Col: q.X - e.X0, Lin: q.Y - e.Y0})
+	}
+	return alvo, rotulo, alcance
+}
+
+// comandoDoMovimento escreve a chamada de confirmar ou cancelar.
+func comandoDoMovimento(v tabuleiroView, acao string) string {
+	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/%s/%s')", v.CampaignID, v.SessionID, v.Movimento.TokenID, acao)
+}
+
+// paradaNoPontoClicado traduz o PONTO do clique em quadrado do plano.
+//
+// A conta é do cliente e não do servidor porque ela é sobre PIXELS: o servidor
+// não sabe o zoom, que é do navegador desde que o enquadramento saiu do HTML.
+// Mas ela não é REGRA — é a mesma conversão que o `squareAt` da SPA faz —, e
+// tudo o que decide (o caminho, o custo, se cabe) continua do outro lado.
+//
+// `offsetX/offsetY` são relativos à camada, que cobre o plano inteiro; a origem
+// da moldura entra somada porque o quadrado 0 da tela é o `X0` do plano, e ele
+// pode ser NEGATIVO.
+func paradaNoPontoClicado(v tabuleiroView) string {
+	return fmt.Sprintf(
+		"@post('/piloto/mesa/%d/%d/tabuleiro/%s/parada/' + (Math.floor(evt.offsetX / $quadrado) + %d) + '/' + (Math.floor(evt.offsetY / $quadrado) + %d))",
+		v.CampaignID, v.SessionID, v.AlvoDoMovimento, v.X0, v.Y0,
+	)
 }

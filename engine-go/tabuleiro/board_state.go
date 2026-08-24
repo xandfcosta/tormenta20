@@ -752,3 +752,27 @@ func pendingFor(b *BoardState, by Mover) (*PendingMove, error) {
 	}
 	return b.Pending, nil
 }
+
+// PodeMover responde "esta pessoa pode mover esta peça agora?" para a TELA.
+//
+// Envelope fino sobre o `assertMovable`, e a razão de existir é que a tela
+// precisa da MESMA resposta que a escrita — perguntar de outro jeito é como
+// nasce um botão que existe e o servidor recusa, ou uma casa clicável que leva
+// a "não é a vez de Arwen" depois do clique.
+//
+// Não devolve o porquê: quem só desenha não tem o que fazer com a frase, e a
+// frase certa é a que a RECUSA escreve, no instante em que ela acontece.
+func PodeMover(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, by Mover) bool {
+	pode, _ := PodeMoverCom(b, st, tokenID, by)
+	return pode
+}
+
+// PodeMoverCom devolve também o ORÇAMENTO, que é o que a tela precisa para
+// desenhar até onde dá para ir (-1 = sem teto).
+func PodeMoverCom(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, by Mover) (bool, int) {
+	if b == nil {
+		return false, 0
+	}
+	_, orcamento, err := assertMovable(b, st, tokenID, by)
+	return err == nil, orcamento
+}

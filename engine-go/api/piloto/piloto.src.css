@@ -303,3 +303,48 @@
     --marcador-violet: oklch(0.62 0.16 300);
   }
 }
+
+/* O MOVIMENTO no tabuleiro (ALE-266). */
+@layer components {
+  /* A TRILHA é o rastro do caminho proposto. Dourado translúcido — o mesmo que
+   * diz "a vez" —, porque o movimento em curso é do turno em curso. Ela é
+   * pintura e não recebe clique: a peça que anda por cima dela continua sendo a
+   * peça que se clica. */
+  .tabuleiro-trilha {
+    background: oklch(0.8 0.11 85 / 0.22);
+    box-shadow: inset 0 0 0 1px oklch(0.8 0.11 85 / 0.45);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* O ALCANCE é onde a peça AINDA cabe, e ele informa antes da escolha em vez de
+   * avisar depois do erro. Não é alvo de clique — quem recebe é a camada de
+   * casas —, porque quem tem orçamento é só o jogador na vez dele: o mestre move
+   * sem teto, e sem alcance a desenhar ele ficaria sem onde clicar. */
+  .tabuleiro-alcance {
+    background: oklch(0.72 0.13 200 / 0.14);
+    box-shadow: inset 0 0 0 1px oklch(0.72 0.13 200 / 0.30);
+    pointer-events: none;
+  }
+
+  /* A CAMADA DE CASAS é UM nó cobrindo o plano, e não um por quadrado: 280
+   * botões seriam um campo minado no leitor de tela. O quadrado sai do ponto do
+   * clique; ela fica ABAIXO das peças no empilhamento para o clique numa peça
+   * continuar sendo da peça. */
+  .tabuleiro-casas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: 0;
+    cursor: crosshair;
+    outline: none;
+  }
+  .tabuleiro-casas:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+  }
+  /* As peças e a trilha sobem acima da camada de casas. */
+  .tabuleiro-peca { z-index: 2; }
+}

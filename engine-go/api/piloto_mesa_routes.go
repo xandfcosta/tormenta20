@@ -54,6 +54,7 @@ func (s *Server) PilotoRouter() http.Handler {
 		r.Post("/mesa/{campaignId}/{sessionId}/iniciativa", s.handleMesaInitiative)
 		s.rotasDosComandosDaMesa(r)
 		s.rotasDoBestiarioDaMesa(r)
+		s.rotasDoMovimento(r)
 	})
 	// A SEGUNDA superfície (ALE-219): a administração. Mesmo `requireAdmin` da
 	// API — a tela não decide quem pode ver, ela só deixa de oferecer o que o
@@ -116,7 +117,7 @@ func (s *Server) handleMesaPage(w http.ResponseWriter, r *http.Request) {
 		// "Registrar iniciativa" do mestre que também joga: a frase certa no
 		// lugar errado, que é como se lê um defeito. Uma palavra por conceito
 		// vale para sinal de página como vale para identificador.
-		Sinais: "{d20: 10, erro: '', erroDoComando: '', qualidadedodescanso: 'normal', formdecombatente: false, novonome: '', novainiciativa: 10, novopv: 0, novotipo: 'npc', edicaolinha: '', edicaonome: '', edicaoiniciativa: 0, edicaopv: 0, edicaopvmax: 0, rascunhode: '', pvdoverbete: 0, inidoverbete: 10, copiasdoverbete: 1}",
+		Sinais: "{d20: 10, erro: '', erroDoComando: '', qualidadedodescanso: 'normal', formdecombatente: false, novonome: '', novainiciativa: 10, novopv: 0, novotipo: 'npc', edicaolinha: '', edicaonome: '', edicaoiniciativa: 0, edicaopv: 0, edicaopvmax: 0, rascunhode: '', pvdoverbete: 0, inidoverbete: 10, copiasdoverbete: 1, quadrado: 44}",
 		Init:   fmt.Sprintf("@get('/piloto/mesa/%d/%d/stream')", campaignID, sessionID),
 	}, corpoDaMesa(r, view, campaignID, sessionID))
 }
@@ -158,9 +159,13 @@ func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, se
 	// peças escondidas antes de a cena existir. A saúde vem do estado JÁ
 	// REDIGIDO, então o combatente cujo PV o mestre ocultou chega sem `HpMax` e a
 	// peça dele sai sem barra — a redação alcança o mapa sem uma segunda decisão.
+	// O `Mover` diz de quem é a vez e de quem é a peça, e a POSSE é resolvida
+	// contra o banco (o `meus` do roster) e nunca contra o cliente — é o mesmo
+	// fio de volta até a pessoa que a ALE-33 fixou.
+	quemOlha := tabuleiro.Mover{UserID: user.ID, Role: role}
 	view.Tabuleiro = tabuleiroViewOf(
-		tabuleiro.BoardForRole(role, s.boards.Get(ctx, sessionID)),
-		saudeDaFila(st), combatenteDaVez(st),
+		tabuleiro.BoardForRole(role, s.boards.Get(ctx, sessionID)), st,
+		saudeDaFila(st), combatenteDaVez(st), quemOlha, meus, campaignID, sessionID,
 	)
 	// O rastreador só é MONTADO para o mestre. A trava não é a tela esconder o
 	// bloco: é a view não ter o que desenhar, pelo mesmo `role` que o
