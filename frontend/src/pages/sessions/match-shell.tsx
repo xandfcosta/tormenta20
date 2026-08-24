@@ -28,6 +28,8 @@ export function MatchShell(props: {
   live?: JSX.Element
   /** `true` acende a faixa: é a vez de quem está olhando (ALE-200). */
   minhaVez?: boolean
+  /** O estado da conexão. Sempre visível — ver o comentário no cabeçalho. */
+  conexao?: JSX.Element
   /** Right-hand slot — presence chips today. */
   bar?: JSX.Element
   /** O som se liga e desliga AQUI, e não só no Hub: mudar de ideia sobre áudio
@@ -94,9 +96,31 @@ export function MatchShell(props: {
             encolher — o `min-width: auto` padrão de um item flex é o
             min-content dele, que num texto sem quebra é a frase inteira
             (ALE-184). */}
+        {/* `shrink-0` no GRUPO e `min-w-0` só por dentro: sem isto o flex
+            encolhe o grupo abaixo do que o conteúdo precisa e o botão de som é
+            empurrado para FORA do cabeçalho — medido a 390px, e o guarda de
+            transbordo acusou. Quem absorve o aperto é o título, que trunca. */}
         <div class="ml-auto flex min-w-0 items-center gap-2">
+          {/* Toda a pressão de aperto cai no ESTADO AO VIVO, que trunca, e não
+              nos controles, que somem da tela se encolherem. Por isso o `live`
+              é o único sem `shrink-0`: a 390px o grupo precisa de ~400px, e
+              alguém tem de ceder — cede o texto que diz "aguardando", não o
+              botão de som nem o chip que denuncia queda. */}
           {props.live}
-          {props.bar}
+          {/* O CHIP NUNCA SOME, em nenhuma largura. Ele mudou de casa duas
+              vezes (ALE-129, ALE-198) sempre pela mesma razão: uma queda
+              silenciosa no meio do combate não pode depender de olhar a região
+              certa — e "esconder no telefone" é a mesma falha com outro nome.
+              Eu cheguei a escondê-lo junto com a presença, e o guarda que
+              procura a cena viva acusou. */}
+          <span class="flex shrink-0 items-center">{props.conexao}</span>
+          {/* A PRESENÇA some no telefone em pé, e é a escolha certa entre os
+              três: o chip de conexão denuncia queda no meio do combate (é a
+              razão de ele ter mudado de casa duas vezes), o som se liga e
+              desliga durante a sessão (ALE-165), e quem está na mesa é a única
+              das três que a pessoa já sabe — ela está olhando para as mesmas
+              pessoas. A 390px o grupo precisa de ~400 e alguém tem de ceder. */}
+          <span class="hidden shrink-0 items-center gap-2 sm:flex">{props.bar}</span>
           <Button
             variant="outline"
             size="icon-sm"
