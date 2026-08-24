@@ -448,3 +448,160 @@ func TestARecuperacaoDeCenaExpiraAsFichasESemDesligarACena(t *testing.T) {
 		t.Error("a recuperação de cena desligou a cena")
 	}
 }
+
+// ── os verbos da LINHA (ALE-263) ─────────────────────────────────────────────
+
+// naFila põe o grupo na fila e devolve o id do combatente do personagem.
+func (f pilotoFixture) naFila(t *testing.T) string {
+	t.Helper()
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/populate", ""); rec.Code != http.StatusOK {
+		t.Fatalf("adicionar grupo deu %d", rec.Code)
+	}
+	for _, e := range f.s.sessions.GetState(f.sessionID).Initiative {
+		if e.CharacterID != nil && *e.CharacterID == f.charID {
+			return e.ID
+		}
+	}
+	t.Fatal("o personagem não entrou na fila")
+	return ""
+}
+
+// TestFerirUmaLinhaPassaPelaFICHA — o guarda de composição desta fatia.
+//
+// Com personagem atrás da linha, quem manda é a FICHA: o dano é aplicado lá (é
+// ela quem sabe drenar PV temporários) e a entrada ESPELHA o resultado — a regra
+// que a ALE-122 pagou caro para ter num lugar só, depois de duas telas mostrarem
+// 52/95 e 57/95 do mesmo combatente.
+//
+// Por isso a asserção é sobre a FICHA e não sobre a linha: escrever só na
+// entrada compilaria, deixaria a fila com um número plausível, e a ficha do
+// jogador continuaria com o PV de antes.
+func TestFerirUmaLinhaPassaPelaFicha(t *testing.T) {
+	f := novoPiloto(t)
+	entryID := f.naFila(t)
+
+	rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/"+entryID+"/vitals/harm/5", "")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("ferir deu %d: %s", rec.Code, rec.Body.String())
+	}
+
+	ficha, err := f.s.queries.GetCharacter(context.Background(), f.charID)
+	if err != nil {
+		t.Fatalf("reler a ficha: %v", err)
+	}
+	if ficha.Hpcurrent != 15 {
+		t.Errorf("a FICHA ficou com %d PV; 20-5 = 15 — o dano não chegou nela", ficha.Hpcurrent)
+	}
+	// E a linha espelha, senão a fila mostraria o número velho ao lado da ficha
+	// certa, que é a ALE-122 pelo outro lado.
+	for _, e := range f.s.sessions.GetState(f.sessionID).Initiative {
+		if e.ID == entryID && (e.HpCurrent == nil || *e.HpCurrent != 15) {
+			t.Errorf("a linha não espelhou a ficha: %v", e.HpCurrent)
+		}
+	}
+}
+
+// TestOPassoDoVitalVemDoCaminhoESoExistemDois.
+//
+// O passo não é dado que a página manda: são duas rotas por verbo. Um passo
+// inventado não casa rota nenhuma, e a recusa nomeia o valor e a forma esperada.
+func TestOPassoDoVitalVemDoCaminhoESoExistemDois(t *testing.T) {
+	f := novoPiloto(t)
+	entryID := f.naFila(t)
+	base := f.urlDaMesa() + "/initiative/" + entryID + "/vitals/"
+
+	// O CONTROLE: os dois passos que existem passam. Sem ele, "o inventado
+	// falhou" também seria verdade se a rota inteira estivesse quebrada.
+	for _, passo := range []string{"1", "5"} {
+		if rec := f.pede(t, f.mestre, "POST", base+"heal/"+passo, ""); rec.Code != http.StatusOK {
+			t.Fatalf("curar em %s deu %d", passo, rec.Code)
+		}
+	}
+	rec := f.pede(t, f.mestre, "POST", base+"harm/99", "")
+	if corpo := rec.Body.String(); !strings.Contains(corpo, "99") || !strings.Contains(corpo, "Shift") {
+		t.Errorf("a recusa do passo 99 não citou o valor e os passos que existem; corpo = %q", corpo)
+	}
+}
+
+// TestOOlhoINVERTEoEstadoQueOServidorGUARDA.
+//
+// Dois cliques voltam ao começo, e é isso que prova que quem decide é o
+// SERVIDOR: se a página mandasse o valor desejado, duas abas do mestre com o
+// remendo atrasado mandariam "esconder" duas vezes e a segunda desfaria a
+// primeira sem ninguém pedir.
+func TestOOlhoInverteOEstadoQueOServidorGuarda(t *testing.T) {
+	f := novoPiloto(t)
+	entryID := f.naFila(t)
+	olho := f.urlDaMesa() + "/initiative/" + entryID + "/vitals/hidden"
+
+	oculto := func() bool {
+		for _, e := range f.s.sessions.GetState(f.sessionID).Initiative {
+			if e.ID == entryID {
+				return e.HpHidden != nil && *e.HpHidden
+			}
+		}
+		t.Fatal("a linha sumiu")
+		return false
+	}
+	if oculto() {
+		t.Fatal("a linha nasceu escondida — o teste mediria o contrário do que quer")
+	}
+	if rec := f.pede(t, f.mestre, "POST", olho, ""); rec.Code != http.StatusOK {
+		t.Fatalf("esconder deu %d", rec.Code)
+	}
+	if !oculto() {
+		t.Fatal("o primeiro clique não escondeu")
+	}
+	if rec := f.pede(t, f.mestre, "POST", olho, ""); rec.Code != http.StatusOK {
+		t.Fatalf("revelar deu %d", rec.Code)
+	}
+	if oculto() {
+		t.Error("o segundo clique não revelou — o olho não é interruptor, é um valor que a página manda")
+	}
+}
+
+// TestOsVerbosDaLinhaSaoDoMestre: a trava é o 403, e o HTML do jogador nem os
+// tem. As duas coisas são medidas juntas porque uma sem a outra engana — botão
+// ausente nunca foi prova de trava (ALE-144).
+func TestOsVerbosDaLinhaSaoDoMestre(t *testing.T) {
+	f := novoPiloto(t)
+	entryID := f.naFila(t)
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/scene/start", ""); rec.Code != http.StatusOK {
+		t.Fatalf("iniciar cena deu %d", rec.Code)
+	}
+
+	for _, acao := range []string{"vitals/harm/1", "vitals/heal/1", "vitals/hidden", "remove"} {
+		rec := f.pede(t, f.jogador, "POST", f.urlDaMesa()+"/initiative/"+entryID+"/"+acao, "")
+		if rec.Code != http.StatusForbidden {
+			t.Errorf("o jogador fez %q e levou %d, quero 403", acao, rec.Code)
+		}
+	}
+
+	corpo := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	// O CONTROLE de que ele está mesmo vendo a fila: sem a linha na tela, a
+	// ausência dos verbos não seria evidência de nada.
+	if !strings.Contains(corpo, "Arcanista") {
+		t.Fatalf("o jogador não viu a própria linha; a ausência abaixo não provaria nada")
+	}
+	for _, verbo := range []string{"Remover Arcanista", "Ferir Arcanista", "Ocultar os PV"} {
+		if strings.Contains(corpo, verbo) {
+			t.Errorf("o HTML do jogador veio com %q", verbo)
+		}
+	}
+}
+
+// TestRemoverTiraOCombatenteDaFila.
+func TestRemoverTiraOCombatenteDaFila(t *testing.T) {
+	f := novoPiloto(t)
+	entryID := f.naFila(t)
+	if n := len(f.s.sessions.GetState(f.sessionID).Initiative); n != 1 {
+		t.Fatalf("a fila começou com %d, queria 1", n)
+	}
+
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/"+entryID+"/remove", ""); rec.Code != http.StatusOK {
+		t.Fatalf("remover deu %d", rec.Code)
+	}
+	if n := len(f.s.sessions.GetState(f.sessionID).Initiative); n != 0 {
+		t.Errorf("a fila ficou com %d combatentes", n)
+	}
+}

@@ -269,3 +269,24 @@ func comandoDaMesa(v mesaView, metodo, acao string) string {
 	}
 	return fmt.Sprintf("@%s('%s')", strings.ToLower(metodo), caminho)
 }
+
+// comandoDaLinha escreve a chamada de um verbo que age sobre UM combatente.
+//
+// O `entryId` entra no CAMINHO, ao lado dos outros dois ids, e não num sinal:
+// sinal é da página inteira, e nove linhas escrevendo no mesmo sinal antes de
+// postar é uma corrida esperando por um mestre de dedo rápido. Caminho é do
+// botão que foi clicado, e não há segundo escritor.
+func comandoDaLinha(v mesaView, l mesaLinha, acao string) string {
+	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/initiative/%s/%s')", v.CampaignID, v.SessionID, l.ID, acao)
+}
+
+// vitalDaLinha escreve o ferir/curar com os DOIS passos já resolvidos em duas
+// URLs, e o `evt.shiftKey` escolhendo entre elas.
+//
+// O `@post` recebe uma expressão como ARGUMENTO, e não é um `@post` dentro de
+// cada braço de um ternário: a chamada é uma só, e o que varia é a string. Assim
+// o que o Datastar precisa reescrever é uma ação, não duas dentro de um desvio.
+func vitalDaLinha(v mesaView, l mesaLinha, verbo string) string {
+	base := fmt.Sprintf("/piloto/mesa/%d/%d/initiative/%s/vitals/%s/", v.CampaignID, v.SessionID, l.ID, verbo)
+	return fmt.Sprintf("@post(evt.shiftKey ? '%s5' : '%s1')", base, base)
+}

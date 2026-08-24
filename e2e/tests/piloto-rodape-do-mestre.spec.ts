@@ -136,6 +136,46 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
   })
 
   /**
+   * A LINHA DA FILA com os quatro verbos do mestre, nos dois formatos de celular
+   * (ALE-263).
+   *
+   * Quatro alvos de 36px mais o número da iniciativa mais o nome, numa tela de
+   * 390: é o formato onde a fileira estoura, e estourar aqui significa a lixeira
+   * saindo pela borda ou o nome empurrando os verbos para fora da caixa. jsdom
+   * mede zero e passaria verde sobre os dois.
+   *
+   * Quem cede é o NOME, que tem `truncate` — e é isso que a asserção prende: os
+   * verbos INTEIROS dentro da linha, em vez de "a página não rola de lado", que
+   * é mais fraco e não vê recorte dentro de um contêiner.
+   */
+  test('os verbos da linha cabem na fila a 390px', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto(MESA)
+
+    // O CONTROLE: sem linha na fila não há o que medir, e um `toBeLessThan`
+    // sobre uma lista vazia passa verde dizendo nada. O "Adicionar grupo" é
+    // idempotente, então chamá-lo aqui não depende do que outro spec deixou.
+    await page.getByRole('button', { name: '+ Adicionar grupo' }).click()
+    const linha = page.locator('#mesa ol li').first()
+    await expect(linha).toBeVisible()
+    await expect(linha.getByRole('button', { name: /^Ferir / })).toBeVisible()
+
+    const medida = await linha.evaluate((el) => {
+      const caixa = el.getBoundingClientRect()
+      const verbos = el.querySelector('div.shrink-0') as HTMLElement
+      const v = verbos.getBoundingClientRect()
+      return {
+        recorte: el.scrollWidth - el.clientWidth,
+        verbosForaPelaDireita: v.right - caixa.right,
+        verbosForaPelaEsquerda: caixa.left - v.left,
+      }
+    })
+    expect(medida.recorte, 'a linha recortou o próprio conteúdo').toBeLessThanOrEqual(1)
+    expect(medida.verbosForaPelaDireita, 'os verbos saíram pela direita da linha').toBeLessThanOrEqual(1)
+    expect(medida.verbosForaPelaEsquerda, 'os verbos saíram pela esquerda da linha').toBeLessThanOrEqual(1)
+  })
+
+  /**
    * O `<dialog>` modal centralizado (ALE-263).
    *
    * O `preflight` do Tailwind zera a margem de TODO elemento, e a centralização

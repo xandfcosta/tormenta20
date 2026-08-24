@@ -115,7 +115,7 @@ templ mesa(v mesaView) {
 				} else {
 					<ol class="space-y-1">
 						for _, l := range v.Fila {
-							@mesaLinhaDaFila(l)
+							@mesaLinhaDaFila(v, l)
 						}
 					</ol>
 				}
@@ -206,7 +206,7 @@ templ mesaRegistrar(v mesaView) {
 	</section>
 }
 
-templ mesaLinhaDaFila(l mesaLinha) {
+templ mesaLinhaDaFila(v mesaView, l mesaLinha) {
 	<li
 		if l.NaVez {
 			aria-current="true"
@@ -257,7 +257,94 @@ templ mesaLinhaDaFila(l mesaLinha) {
 				</ul>
 			}
 		</div>
+		if v.Mestre != nil {
+			@verbosDaLinha(v, l)
+		}
 	</li>
+}
+
+// verbosDaLinha é o que o MESTRE faz com um combatente: ferir, curar, esconder
+// os PV da mesa, e tirar da fila.
+//
+// CADA VERBO TEM O SEU LUGAR, reservado pela lista inteira (ALE-141). Sem isso o
+// conjunto muda de linha para linha e a fileira encolhe, então o `−` de uma cai
+// onde está a lixeira de outra e o olho não forma coluna. Quem não tem o verbo
+// deixa o espaço VAZIO em vez de encolher — é o `@vagaDeVerbo`.
+//
+// Ferir e curar só existem em linha COM vida: um capanga anônimo sem PV não tem
+// no que apanhar, e um botão que não muda nada é pior que um espaço em branco,
+// porque só se descobre clicando.
+//
+// A ordem é a do HUD e é deliberada: o `−` vem DEPOIS do `+` para um polegar
+// apressado não curar quando queria machucar.
+templ verbosDaLinha(v mesaView, l mesaLinha) {
+	<div class="flex shrink-0 items-center gap-1">
+		if l.PV != nil {
+			@passoDoVital(v, l, "heal", "+", "Curar")
+			@passoDoVital(v, l, "harm", "−", "Ferir")
+			@oOlhoDaLinha(v, l)
+		} else {
+			@vagaDeVerbo()
+			@vagaDeVerbo()
+			@vagaDeVerbo()
+		}
+		<button
+			type="button"
+			aria-label={ "Remover " + l.Rotulo + " da fila" }
+			title={ "Remover " + l.Rotulo + " da fila" }
+			data-on:click={ comandoDaLinha(v, l, "remove") }
+			class="flex size-9 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>🗑</button>
+	</div>
+}
+
+// vagaDeVerbo é o espaço que o verbo ausente continua ocupando (ALE-141).
+templ vagaDeVerbo() {
+	<span aria-hidden="true" class="size-9"></span>
+}
+
+// passoDoVital: clique tira ou devolve 1, Shift+clique 5.
+//
+// Os dois passos são DUAS ROTAS, e o `evt.shiftKey` só escolhe QUAL delas — o
+// número nunca viaja como dado. O `title` conta os dois passos porque atalho que
+// ninguém descobre não existe, e o nome acessível traz o do combatente: numa
+// fila de nove, "Ferir" sozinho não diz quem.
+templ passoDoVital(v mesaView, l mesaLinha, verbo, sinal, rotulo string) {
+	<button
+		type="button"
+		aria-label={ rotulo + " " + l.Rotulo }
+		title={ rotulo + " " + l.Rotulo + " — clique 1, Shift+clique 5" }
+		data-on:click={ vitalDaLinha(v, l, verbo) }
+		class="flex size-9 items-center justify-center rounded-sm border border-grimorio-iron font-mono text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+	>{ sinal }</button>
+}
+
+// oOlhoDaLinha esconde os PV deste combatente DOS JOGADORES.
+//
+// `aria-pressed` porque é um estado que fica, não uma ação que passa. E o
+// `title` diz de quem se esconde: o ícone sozinho não conta que o segredo é dos
+// jogadores e não do mestre (ALE-133).
+templ oOlhoDaLinha(v mesaView, l mesaLinha) {
+	<button
+		type="button"
+		aria-pressed={ fmt.Sprint(l.Oculto) }
+		if l.Oculto {
+			aria-label={ "Revelar os PV de " + l.Rotulo }
+			title={ "Revelar os PV de " + l.Rotulo + " para os jogadores" }
+		} else {
+			aria-label={ "Ocultar os PV de " + l.Rotulo }
+			title={ "Ocultar os PV de " + l.Rotulo + " dos jogadores" }
+		}
+		data-on:click={ comandoDaLinha(v, l, "vitals/hidden") }
+		class={ "flex size-9 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+			templ.KV("text-grimorio-gold", l.Oculto), templ.KV("text-muted-foreground", !l.Oculto) }
+	>
+		if l.Oculto {
+			🙈
+		} else {
+			👁
+		}
+	</button>
 }
 
 // barra tem o mesmo contrato de acessibilidade da `VitalBar` da SPA: um

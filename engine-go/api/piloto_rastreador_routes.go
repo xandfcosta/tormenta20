@@ -44,6 +44,82 @@ func (s *Server) rotasDoRastreador(r chi.Router) {
 	// próxima pessoa ter de descobrir qual vale onde.
 	r.Post("/mesa/{campaignId}/{sessionId}/rest/scene", s.comandoDoMestre(descansaOGrupo("scene")))
 	r.Post("/mesa/{campaignId}/{sessionId}/rest/day", s.comandoDoMestre(descansaOGrupo("day")))
+	// O QUE O MESTRE MEXE EM CADA LINHA. O `entryId` vem do caminho como os
+	// outros dois ids, e a autorização é a mesma dos comandos da mesa: o
+	// `comandoDoMestre` já barra quem não é mestre.
+	//
+	// Mais restrito que a API JSON de propósito. Lá o `assertVitalsEditableFor`
+	// deixa o jogador mexer nos vitais do PRÓPRIO personagem, porque lá existe a
+	// tela do jogador que faz isso. Aqui a superfície do jogador é leitura mais
+	// registrar iniciativa (ALE-213), e uma segunda regra de escrita seria uma
+	// porta que nenhuma tela usa.
+	r.Route("/mesa/{campaignId}/{sessionId}/initiative/{entryId}", func(r chi.Router) {
+		r.Post("/vitals/harm/{passo}", s.comandoDoMestre(mexeNosVitais(-1)))
+		r.Post("/vitals/heal/{passo}", s.comandoDoMestre(mexeNosVitais(+1)))
+		r.Post("/vitals/hidden", s.comandoDoMestre(alternaOOlho))
+		r.Post("/remove", s.comandoDoMestre(tiraDaFila))
+	})
+}
+
+// mexeNosVitais é o dano e a cura de UMA linha, e o PASSO vem do CAMINHO.
+//
+// Não é um número que a página manda, e a escolha é a lição desta fatia: sinal é
+// a superfície onde a página e o servidor discordam em silêncio — o
+// `qualidadedodescanso` chegou a viajar com DOIS nomes no fio, e o servidor leu
+// o que ninguém tinha tocado. Um passo em sinal teria de ser validado aqui de
+// qualquer jeito; no caminho, o que não é 1 nem 5 não casa rota nenhuma.
+//
+// O sinal do delta é do FECHAMENTO e não de uma comparação de string: "harm" e
+// "heal" são rotas diferentes, então não há o que comparar nem como escrever a
+// terceira palavra que não existe.
+//
+// Quem sabe somar é o store: com personagem atrás da linha quem manda é a FICHA
+// (o dano drena PV temporários) e a entrada espelha o resultado (ALE-122). O
+// piloto não tem uma segunda conta.
+func mexeNosVitais(sinal int64) func(*Server, mesaComando) (*aovivo.SessionRuntimeState, error) {
+	return func(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+		bruto := chi.URLParam(c.R, "passo")
+		passo, ok := passosDoVital[bruto]
+		if !ok {
+			return nil, fmt.Errorf("passo %q não existe; a tela oferece 1 (clique) e 5 (Shift+clique)", bruto)
+		}
+		delta := sinal * passo
+		return st.sessions.DeltaVitals(c.SessionID, chi.URLParam(c.R, "entryId"), &delta, nil)
+	}
+}
+
+// passosDoVital são os DOIS que a tela oferece: o clique e o Shift+clique.
+//
+// Espelham o `STEP`/`SHIFT_STEP` da SPA, e serem os mesmos números importa pelo
+// motivo de sempre nesta migração — duas escadas diferentes fariam as duas telas
+// chamarem de "um golpe" coisas diferentes.
+var passosDoVital = map[string]int64{"1": 1, "5": 5}
+
+// alternaOOlho esconde e revela os PV de uma linha para os JOGADORES.
+//
+// O servidor lê o estado atual e o INVERTE, em vez de a página mandar o valor
+// que ela quer. Dois mestres na mesma mesa — ou a mesma aba com o remendo
+// atrasado — mandariam "esconder" duas vezes, e a segunda desfaria a primeira
+// sem ninguém ter pedido. Quem sabe o estado é quem o guarda.
+func alternaOOlho(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+	entryID := chi.URLParam(c.R, "entryId")
+	estado := st.sessions.GetState(c.SessionID)
+	i := aovivo.FindEntryIndex(estado, entryID)
+	if i < 0 {
+		return nil, fmt.Errorf("combatente %q não está na fila", entryID)
+	}
+	// Nil é "nunca escondido", que é o estado de nascença de toda linha — e o
+	// `DerefOr` da casa só serve para int64.
+	atual := estado.Initiative[i].HpHidden
+	oculto := atual == nil || !*atual
+	return st.sessions.UpdateInitiativeEntry(c.SessionID, entryID, aovivo.EntryPatch{HpHidden: &oculto})
+}
+
+// tiraDaFila remove o combatente. Sem confirmação, como na SPA: o gesto é do
+// meio do combate, e a fila é remontável — o que não é remontável (encerrar a
+// cena) é que ganhou dois verbos distintos em vez de um interruptor.
+func tiraDaFila(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+	return st.sessions.RemoveInitiativeEntry(c.SessionID, chi.URLParam(c.R, "entryId"))
 }
 
 // descansaOGrupo é a RECUPERAÇÃO (T20 p105): devolve PV e PM ao grupo inteiro.
