@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"database/sql"
-	"path/filepath"
 	"t20engine/plataforma"
 	"testing"
 
@@ -19,12 +18,23 @@ import (
 // reading as before (ALE-120).
 func newTestServer(t *testing.T, adminEmails ...string) *Server {
 	t.Helper()
-	path := filepath.Join(t.TempDir(), "test.db")
+	// Copiado do molde já migrado, e não migrado do zero: ver `bancada_test.go`
+	// (ALE-260). São ~3.400 migrações a menos na suíte.
+	path := bancoDeTeste(t)
 	database, err := db.Open(path)
 	if err != nil {
 		t.Fatalf("Open test db: %v", err)
 	}
 	t.Cleanup(func() { _ = database.Close() })
+	// `synchronous=OFF` só no TESTE, e é o resto do conserto da ALE-260: o que
+	// sobrava depois do molde eram os `fsync` das escritas dos próprios testes,
+	// um por transação. Durabilidade é o que um banco de teste não tem o que
+	// proteger — ele morre no fim do caso, e uma queda de energia no meio da
+	// suíte não tem nada a salvar. Fica AQUI e não no `db.Open` porque em
+	// produção essa linha seria perda de dados do mestre.
+	if _, err := database.Exec("PRAGMA synchronous=OFF"); err != nil {
+		t.Fatalf("PRAGMA synchronous=OFF: %v", err)
+	}
 	// DatabasePath carries the file actually opened, so the config does not lie
 	// about it — /admin/status reports it, and reporting a path that is not the
 	// one in use would send the owner looking at the wrong file (ALE-120).
