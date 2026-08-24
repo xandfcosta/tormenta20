@@ -106,26 +106,45 @@ jobs:
         run: go build -o ./tmp/api ./cmd/api
         working-directory: engine-go
 
+      # O e2e roda contra o BUILD, não contra o Vite (ALE-256): é 2,3× mais
+      # rápido e — o que importa mais — é o CSS de produção que os guardas de
+      # cor, contraste e tipografia passam a medir. Um deles passava em dev por
+      # acidente, comparando o texto de uma custom property com um valor
+      # computado; o minificador reescreve `oklch(0.27 …)` como `oklch(27% …)`.
+      - name: Build the SPA
+        run: pnpm --filter frontend build
+
       # The API migrates the SQLite file on open (goose), so it has to run once
       # before seed.sql — which is data-only (INSERTs, no DDL) — can apply.
-      - name: Start the API + apply the seed
+      # É esta ordem que impede o `webServer` do Playwright de subir o servidor:
+      # ele não tem onde encaixar a seed entre o migrar e o primeiro teste.
+      - name: Start the API serving the build + apply the seed
         working-directory: engine-go
         env:
           JWT_SECRET: e2e-ci-secret
-          PORT: '3001'
+          PORT: '3010'
           COOKIE_NAME: t20_session
+          STATIC_DIR: ../frontend/dist
         run: |
           ./tmp/api > api.log 2>&1 &
           for _ in $(seq 1 60); do
-            curl -sf http://localhost:3001/health > /dev/null && break
+            curl -sf http://localhost:3010/health > /dev/null && break
             sleep 0.5
           done
-          curl -sf http://localhost:3001/health > /dev/null || { cat api.log; exit 1; }
+          curl -sf http://localhost:3010/health > /dev/null || { cat api.log; exit 1; }
+          # O controle que a ALE-256 pede: provar que é o BUILD que está sendo
+          # servido, e não uma API sem SPA. Sem isto a suíte morreria em 404 com
+          # cara de defeito do app.
+          grep -q "serving built frontend" api.log || { cat api.log; exit 1; }
           sqlite3 data/t20-dev.db ".timeout 5000" ".read seed.sql"
 
-      # Playwright's `webServer` starts Vite (:5173), which proxies /api + /socket.io
-      # to the API above.
+      # Um servidor só, mesma origem para SPA e API — a forma de produção. Desde
+      # a ALE-253 não há socket, então não há `/socket.io` a encaminhar nem
+      # `CORS_ORIGIN` a declarar.
       - name: E2E
+        env:
+          E2E_BASE_URL: http://localhost:3010
+          E2E_SERVIDOR_EXTERNO: '1'
         run: pnpm --filter e2e test
 
       - name: Upload the Playwright report
