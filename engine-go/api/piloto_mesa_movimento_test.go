@@ -222,3 +222,41 @@ func TestARecusaDeUmaParadaFalaNoTabuleiro(t *testing.T) {
 		t.Errorf("a parada válida não apagou a recusa anterior; sinais = %s", trechoDeSinais(aceito))
 	}
 }
+
+// TestOQueSOBRAdoDeslocamentoAparecePorEscrito.
+//
+// A realimentação que o dono pediu por nome: sem ela a pessoa empilha paradas
+// que no fim somam mais do que ela anda, e descobre no bloqueio sem saber o que
+// desfazer. O alcance desenhado é o aviso mudo; este número é o falado.
+//
+// Guarda também a CONTA, que estava sem dono: `Alcance` e `Restante` são os dois
+// valores de UMA chamada de `AlcanceDaProximaParada`, e enquanto ninguém
+// afirmava o segundo dava para movê-lo de lugar sem nenhum teste piscar.
+func TestOQueSobraDoDeslocamentoAparecePorEscrito(t *testing.T) {
+	f := novoPiloto(t)
+	tokenID := f.noTabuleiro(t)
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/scene/start", ""); rec.Code != http.StatusOK {
+		t.Fatalf("iniciar cena deu %d", rec.Code)
+	}
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/next-turn", ""); rec.Code != http.StatusOK {
+		t.Fatalf("avançar deu %d", rec.Code)
+	}
+
+	// Duas casas em linha reta custam 2 do deslocamento padrão de 6 (T20 p106).
+	if rec := f.pede(t, f.jogador, "POST", f.urlDaMesa()+"/tabuleiro/"+tokenID+"/parada/2/0", ""); rec.Code != http.StatusOK {
+		t.Fatalf("a parada deu %d", rec.Code)
+	}
+	tela := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+
+	// O CONTROLE: a frase do movimento está na tela. Sem ele, não achar "sobram"
+	// seria verdade também numa tela sem movimento proposto nenhum.
+	if !strings.Contains(tela, "quadrados") {
+		t.Fatal("o jogador não viu o movimento proposto")
+	}
+	if !strings.Contains(tela, "2 de 6") {
+		t.Errorf("a tela não diz o gasto contra o teto")
+	}
+	if !strings.Contains(tela, "sobram 4") {
+		t.Errorf("a tela não diz quanto ainda dá para andar")
+	}
+}

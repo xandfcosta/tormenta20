@@ -156,7 +156,11 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, sa
 	}
 	v.CampaignID, v.SessionID = campaignID, sessionID
 	v.Movimento = movimentoDoTabuleiro(b, quem, e)
-	v.AlvoDoMovimento, v.RotuloDoAlvo, v.Alcance = oAlvoEOAlcance(b, st, quem, meus, e)
+	var restante int
+	v.AlvoDoMovimento, v.RotuloDoAlvo, v.Alcance, restante = oAlvoEOAlcance(b, st, quem, meus, e)
+	if v.Movimento != nil && v.Movimento.Meu {
+		v.Movimento.Restante = restante
+	}
 	v.Destino, v.ArrastaAPeca = oQueSeArrasta(b, quem, v.AlvoDoMovimento, e)
 	return v
 }
@@ -319,9 +323,8 @@ func movimentoDoTabuleiro(b *tabuleiro.BoardState, m tabuleiro.Mover, e tabuleir
 	for _, q := range p.Path {
 		v.Trilha = append(v.Trilha, quadradoDoTabuleiro{Col: q.X - e.X0, Lin: q.Y - e.Y0})
 	}
-	if v.Meu {
-		_, v.Restante = engine.AlcanceDaProximaParada(p.Path, p.Budget, terrenoDeMovimento(b))
-	}
+	// O `Restante` é preenchido pelo chamador: ele sai da MESMA chamada que
+	// desenha o alcance, e recalculá-lo aqui seria a segunda conta da regra.
 	return v
 }
 
@@ -355,9 +358,15 @@ func terrenoDeMovimento(b *tabuleiro.BoardState) engine.MoveTerrain {
 // O ESTADO DA SESSÃO tem de ir junto, e a primeira versão mandava nil: sem ele o
 // `assertMovable` lê "fora de combate" e devolve que pode: a tela ofereceria
 // mover a peça do jogador FORA DA VEZ dele, e a recusa só viria no clique.
-func oAlvoEOAlcance(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, quem tabuleiro.Mover, meus map[int64]bool, e tabuleiro.Moldura) (alvo, rotulo string, alcance []quadradoDoTabuleiro) {
+// O RESTANTE sai daqui junto com as casas porque é a MESMA conta: `Alcance` e
+// `Restante` são os dois valores que `AlcanceDaProximaParada` devolve de uma
+// chamada só. A primeira versão chamava a função duas vezes com os mesmos
+// argumentos, cada sítio jogando fora a metade que não usava — e duas contas da
+// mesma regra é como este repositório já mostrou dois números diferentes para o
+// mesmo combatente em duas telas (ALE-122).
+func oAlvoEOAlcance(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, quem tabuleiro.Mover, meus map[int64]bool, e tabuleiro.Moldura) (alvo, rotulo string, alcance []quadradoDoTabuleiro, restante int) {
 	if b == nil {
-		return "", "", nil
+		return "", "", nil, 0
 	}
 	// COM movimento em curso o alvo é a peça dele, e o alcance sai do fim do
 	// caminho com o que sobrou. Sem, é a primeira peça que quem olha pode mover,
@@ -394,13 +403,13 @@ func oAlvoEOAlcance(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, que
 		}
 	}
 	if alvo == "" {
-		return "", "", nil
+		return "", "", nil, 0
 	}
-	casas, _ := engine.AlcanceDaProximaParada(de, orcamento, terrenoDeMovimento(b))
+	casas, restante := engine.AlcanceDaProximaParada(de, orcamento, terrenoDeMovimento(b))
 	for _, q := range casas {
 		alcance = append(alcance, quadradoDoTabuleiro{Col: q.X - e.X0, Lin: q.Y - e.Y0})
 	}
-	return alvo, rotulo, alcance
+	return alvo, rotulo, alcance, restante
 }
 
 // comandoDoMovimento escreve a chamada de confirmar ou cancelar.
