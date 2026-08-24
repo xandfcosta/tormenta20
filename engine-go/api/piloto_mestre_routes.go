@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -24,6 +25,112 @@ func (s *Server) rotasDoMestre(r chi.Router) {
 	r.Get("/mestre/bestiario", s.handleBestiario)
 	r.Post("/mestre/bestiario/tipo/{tipo}", s.handleBestiarioTipo)
 	r.Get("/mestre/catalogos", s.handleCatalogos)
+	r.Get("/mestre/encontros", s.handleEncontros)
+	r.Post("/mestre/encontros/adicionar/{id}", s.handleEncontroAdicionar)
+	r.Post("/mestre/encontros/mais/{id}", s.handleEncontroAdicionar)
+	r.Post("/mestre/encontros/menos/{id}", s.handleEncontroMenos)
+	r.Post("/mestre/encontros/remover/{id}", s.handleEncontroRemover)
+}
+
+// handleEncontros serve os dois casos numa rota. Sem autorização própria: o
+// bestiário é o LIVRO, e o rascunho vive no navegador de quem monta.
+func (s *Server) handleEncontros(w http.ResponseWriter, r *http.Request) {
+	s.respondeEncontro(w, r, nil)
+}
+
+// handleEncontroAdicionar serve o "acrescentar" do painel de busca E o `[+]` da
+// linha, porque a álgebra é a MESMA: `acrescenta` sobe a contagem quando a
+// criatura já está no encontro. Duas rotas para uma função é o que evita a
+// tela ter dois caminhos que podem divergir.
+func (s *Server) handleEncontroAdicionar(w http.ResponseWriter, r *http.Request) {
+	s.respondeEncontro(w, r, acrescenta)
+}
+
+func (s *Server) handleEncontroMenos(w http.ResponseWriter, r *http.Request) {
+	s.respondeEncontro(w, r, diminui)
+}
+
+func (s *Server) handleEncontroRemover(w http.ResponseWriter, r *http.Request) {
+	s.respondeEncontro(w, r, removeLinha)
+}
+
+// respondeEncontro lê o rascunho, aplica UM gesto e devolve a cena.
+//
+// A álgebra chega como função porque as quatro rotas só diferem nisso, e o
+// resto — ler sinais, recalcular, remendar — é idêntico. Sem o parâmetro,
+// seriam quatro cópias do mesmo handler, que é onde uma delas esquece de
+// recalcular.
+func (s *Server) respondeEncontro(
+	w http.ResponseWriter, r *http.Request,
+	gesto func([]linhaDoEncontro, string) []linhaDoEncontro,
+) {
+	nivel, grupo, linhas, busca := rascunhoDoPedido(r)
+	if gesto != nil {
+		linhas = gesto(linhas, chi.URLParam(r, "id"))
+	}
+	v := carregaEncontros(nivel, grupo, linhas, busca)
+
+	if r.Header.Get("datastar-request") != "" {
+		sse := datastar.NewSSE(w, r)
+		fragmento, err := renderFragmento(r.Context(), cenaDosEncontros(v))
+		if err != nil {
+			return
+		}
+		_ = sse.PatchElements(fragmento)
+		return
+	}
+
+	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
+		Titulo:        "Encontros · Mesa do Mestre · Tormenta 20",
+		Forma:         cascaDensa,
+		Voltar:        "/piloto/",
+		VoltarRotulo:  "Hub",
+		TituloVisivel: "Mesa do Mestre",
+	}, mesaDoMestre("encontros", cenaDosEncontros(v)))
+}
+
+// rascunhoDoPedido lê o encontro da URL na carga fria e dos SINAIS no remendo.
+//
+// A URL é o caminho do LINK COPIADO: `?nivel=3&grupo=4&c=goblin:4,ogro:1`. Os
+// sinais são o caminho de todo o resto, e vencem quando existem — eles são o
+// que o mestre acabou de clicar.
+func rascunhoDoPedido(r *http.Request) (int, int, []linhaDoEncontro, string) {
+	q := r.URL.Query()
+	nivel := numeroDaURL(q.Get("nivel"), nivelPadrao)
+	grupo := numeroDaURL(q.Get("grupo"), grupoPadrao)
+	linhas := linhasDaURL(q.Get("c"))
+	busca := q.Get("busca")
+
+	sinais := struct {
+		Nivel         *int               `json:"nivel"`
+		Grupo         *int               `json:"grupo"`
+		Encontro      *[]linhaDoEncontro `json:"encontro"`
+		BuscaCriatura *string            `json:"buscaCriatura"`
+	}{}
+	if err := datastar.ReadSignals(r, &sinais); err != nil {
+		return nivel, grupo, linhas, busca
+	}
+	if sinais.Nivel != nil {
+		nivel = *sinais.Nivel
+	}
+	if sinais.Grupo != nil {
+		grupo = *sinais.Grupo
+	}
+	if sinais.Encontro != nil {
+		linhas = *sinais.Encontro
+	}
+	if sinais.BuscaCriatura != nil {
+		busca = *sinais.BuscaCriatura
+	}
+	return nivel, grupo, linhas, busca
+}
+
+func numeroDaURL(bruto string, padrao int) int {
+	n, err := strconv.Atoi(strings.TrimSpace(bruto))
+	if err != nil {
+		return padrao
+	}
+	return n
 }
 
 // handleCatalogos serve os dois casos numa rota, como as outras cenas.
