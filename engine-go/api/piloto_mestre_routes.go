@@ -30,6 +30,114 @@ func (s *Server) rotasDoMestre(r chi.Router) {
 	r.Post("/mestre/encontros/mais/{id}", s.handleEncontroAdicionar)
 	r.Post("/mestre/encontros/menos/{id}", s.handleEncontroMenos)
 	r.Post("/mestre/encontros/remover/{id}", s.handleEncontroRemover)
+	r.Get("/mestre/improviso", s.handleImproviso)
+	r.Post("/mestre/improviso/{tabela}", s.handleImprovisoRola)
+}
+
+// handleImproviso desenha a cena com os históricos que vieram nos sinais.
+func (s *Server) handleImproviso(w http.ResponseWriter, r *http.Request) {
+	s.respondeImproviso(w, r, "")
+}
+
+// handleImprovisoRola rola UMA tabela e empilha o resultado no histórico dela.
+func (s *Server) handleImprovisoRola(w http.ResponseWriter, r *http.Request) {
+	s.respondeImproviso(w, r, chi.URLParam(r, "tabela"))
+}
+
+// respondeImproviso é o caminho único das cinco rotas.
+//
+// `tabela` vazio significa "só redesenhe" — é a carga fria e o campo de salas.
+// Com tabela, rola e empilha ANTES de montar a cena, porque o histórico é o que
+// a cena desenha.
+func (s *Server) respondeImproviso(w http.ResponseWriter, r *http.Request, tabela string) {
+	v := improvisoDoPedido(r)
+
+	if tabela != "" {
+		rolar, ok := asRolagens[tabela]
+		if !ok {
+			// Tabela inventada é 400 e não silêncio: a rota é montada a partir
+			// da própria lista, então um nome errado aqui só chega por URL
+			// digitada à mão — e devolver a cena intacta faria parecer que o
+			// botão não funciona.
+			http.Error(w, "tabela de improviso desconhecida: "+tabela, http.StatusBadRequest)
+			return
+		}
+		sorteado, err := rolar()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		v = empilhaEm(v, tabela, sorteado)
+	}
+
+	pronta := carregaImproviso(v)
+
+	if r.Header.Get("datastar-request") != "" {
+		sse := datastar.NewSSE(w, r)
+		fragmento, err := renderFragmento(r.Context(), cenaDoImproviso(pronta))
+		if err != nil {
+			return
+		}
+		_ = sse.PatchElements(fragmento)
+		return
+	}
+
+	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
+		Titulo:        "Improviso · Mesa do Mestre · Tormenta 20",
+		Forma:         cascaDensa,
+		Voltar:        "/piloto/",
+		VoltarRotulo:  "Hub",
+		TituloVisivel: "Mesa do Mestre",
+	}, mesaDoMestre("improviso", cenaDoImproviso(pronta)))
+}
+
+// asRolagens liga o nome da rota à função que rola. A tela e a rota leem a
+// MESMA tabela, então um nome novo aparece nos dois lugares ou em nenhum.
+var asRolagens = map[string]func() (sorteio, error){
+	"ruina":       rolaRuina,
+	"perseguicao": rolaPerseguicao,
+	"recompensa":  rolaRecompensa,
+	"ideias":      rolaIdeia,
+}
+
+func empilhaEm(v improvisoView, tabela string, s sorteio) improvisoView {
+	switch tabela {
+	case "ruina":
+		v.Ruina = empilha(v.Ruina, s)
+	case "perseguicao":
+		v.Perseguicao = empilha(v.Perseguicao, s)
+	case "recompensa":
+		v.Recompensa = empilha(v.Recompensa, s)
+	case "ideias":
+		v.Ideias = empilha(v.Ideias, s)
+	}
+	return v
+}
+
+// improvisoDoPedido lê os quatro históricos e o número de salas dos SINAIS.
+//
+// Aqui não há caminho pela URL, e é diferente das outras cenas de propósito: um
+// histórico de rolagens não é endereço — ninguém cola "os cinco dados que eu
+// tirei" no chat da mesa, e pôr isso na URL só encheria o histórico do
+// navegador a cada clique no botão de rolar.
+func improvisoDoPedido(r *http.Request) improvisoView {
+	sinais := struct {
+		Ruina       []sorteio `json:"ruina"`
+		Perseguicao []sorteio `json:"perseguicao"`
+		Recompensa  []sorteio `json:"recompensa"`
+		Ideias      []sorteio `json:"ideias"`
+		Salas       *int      `json:"salas"`
+	}{}
+	v := improvisoView{Salas: salasPadrao}
+	if err := datastar.ReadSignals(r, &sinais); err != nil {
+		return v
+	}
+	v.Ruina, v.Perseguicao = sinais.Ruina, sinais.Perseguicao
+	v.Recompensa, v.Ideias = sinais.Recompensa, sinais.Ideias
+	if sinais.Salas != nil {
+		v.Salas = *sinais.Salas
+	}
+	return v
 }
 
 // handleEncontros serve os dois casos numa rota. Sem autorização própria: o
