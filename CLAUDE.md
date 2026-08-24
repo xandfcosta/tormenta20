@@ -69,8 +69,17 @@ outcome someone would notice breaking. Everything below follows from that.
   e de leiaute é função de onde o teste NAVEGA, não de quantas asserções ele
   tem. Dois defeitos de contraste sobreviveram anos com o guarda no ar porque
   ele nunca abria um popover nem entrava no livro de campanhas (ALE-237); a
-  mesma forma reapareceu na tipografia (ALE-252). Cena nova entra na lista do
-  guarda, ou nasce sem medição.
+  mesma forma reapareceu na tipografia (ALE-252).
+
+  **Mas "põe a cena na lista" só resolve enquanto as cenas forem contáveis, e
+  vale saber a diferença.** Um guarda que mede a folha do grimório cobre 43
+  telas por AMOSTRAGEM — ele mede uma e vale para todas porque todas passam
+  pelos mesmos componentes. No dia em que uma tela escreve as classes à mão, o
+  regime vira ENUMERAÇÃO: uma entrada por cena, para sempre, e a que alguém
+  esquecer nasce sem medição — em silêncio, que é a marca desta família.
+  Enumerar é remendo; **o que restaura a amostragem é a tela nova passar pelos
+  componentes da casa.** Escolher o remendo dá sensação de conserto e deixa o
+  buraco aberto (ALE-252).
 - **Delete tests that cost more than they protect**: assertions on class names
   and DOM shape nobody promised, tests that re-derive the expected value by
   running the implementation, tests over code that is dead or gated out of the
