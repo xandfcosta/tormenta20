@@ -158,6 +158,11 @@ export type BoardState = {
   pending?: PendingMove | null
   /** Os lugares apontados no mapa (ALE-195). */
   markers?: BoardMarker[]
+  /** A CORTINA (ALE-202): o tabuleiro existe para o mestre e a mesa vê uma
+   *  cortina no lugar dele. Quando vem `true` para o jogador, o resto deste
+   *  objeto vem VAZIO — a redação é do servidor, e a tela não decide o que
+   *  esconder, ela desenha o que recebeu. */
+  curtained?: boolean
 }
 
 /** Uma cena guardada da campanha (ALE-124, fatia 5). Sem as peças: a lista serve
@@ -298,6 +303,12 @@ export type SessionRealtime = {
    *  alternado: o pincel pinta ARRASTANDO, e o arraste passa duas vezes pela
    *  mesma casa. */
   paintTerrain: (x: number, y: number, difficult: boolean) => void
+  /**
+   * Fecha ou abre a CORTINA (ALE-202): montar a taverna enquanto a mesa olha a
+   * cripta. Só o mestre; a trava é do SERVIDOR, e esconder no cliente entregaria
+   * a cena inteira no fio.
+   */
+  setCurtain: (curtained: boolean) => void
   /** Os lugares guardados da campanha (mestre). PERGUNTA com resposta, e não
    *  estado de broadcast: o acervo é preparação, não muda com a cena, e mandá-lo
    *  a cada snapshot seria carregar o armário do mestre em toda mensagem. */
@@ -502,6 +513,7 @@ export function createSessionSocket(
     removeMarker: (markerId) => send('board-marker-remove', { markerId }),
     populateBoard: (entryIds) => send('board-populate', { entryIds }),
     paintTerrain: (x, y, difficult) => send('board-terrain-paint', { x, y, difficult }),
+    setCurtain: (curtained) => send('board-curtain', { curtained }),
     listPlaces: () => ask('board-places', {}, readPlaces),
     reopenPlace: (placeId) => send('board-reopen', { placeId }),
     removePlace: (placeId) => ask('board-place-remove', { placeId }, readPlaces),

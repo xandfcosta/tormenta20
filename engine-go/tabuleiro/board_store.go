@@ -320,3 +320,25 @@ func (bs *BoardStore) CommitMove(ctx context.Context, sessionID int64, st *aoviv
 func (bs *BoardStore) CancelMove(ctx context.Context, sessionID int64, by Mover) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, func(b *BoardState) error { return CancelMove(b, by) })
 }
+
+// SetCurtain fecha ou abre a CORTINA (ALE-202). Devolve `changed` falso quando
+// o estado já era o pedido: fechar cortina fechada não é erro — dois cliques
+// no telefone do mestre, ou dois abas abertas — mas também não é mutação, e
+// publicar quadro por não-mudança acorda a mesa inteira à toa.
+func (bs *BoardStore) SetCurtain(ctx context.Context, sessionID int64, fechada bool) (*BoardState, bool, error) {
+	var mudou bool
+	b, err := bs.apply(ctx, sessionID, func(b *BoardState) error {
+		mudou = b.Curtained != fechada
+		if !mudou {
+			return nil
+		}
+		b.Curtained = fechada
+		// A versão TEM de subir, e não é contabilidade: o `publishBoardState`
+		// usa `Version` como ordem do quadro, e o hub DESCARTA quadro cuja ordem
+		// não avançou (ALE-238 #1). Cortina que muda sem bump é cortina que o
+		// mestre fecha e a mesa nunca vê — sem erro, sem log, sem nada.
+		b.Version++
+		return nil
+	})
+	return b, mudou, err
+}
