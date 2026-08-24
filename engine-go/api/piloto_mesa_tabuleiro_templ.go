@@ -13,7 +13,7 @@ import "fmt"
 // O TABULEIRO desenhado (ALE-263) — a fatia que se OLHA.
 //
 // UM NÓ POR CAMADA, nunca um por quadrado, e essa é a restrição que segura o
-// custo: um extenso de 20×14 são 280 quadrados, e desenhá-los daria 280 nós para
+// custo: uma moldura de 20×14 são 280 quadrados, e desenhá-los daria 280 nós para
 // pintar linhas que um `repeating-linear-gradient` pinta em zero. O chão, o
 // ambiente e a grade são três divs; o que vira nó é só o que EXISTE — as peças,
 // os marcadores e o terreno difícil.

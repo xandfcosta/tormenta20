@@ -55,7 +55,8 @@ alguém já usou e que não voltam.
 | **peça** | `BoardToken` | ~~token~~ (na tela) | A representação de alguém no mapa. **Não é o combatente** — a ponte é o `entryId`, e uma peça pode existir sem linha na fila (a porta, o baú). |
 | **lugar** | `BoardPlace` | ~~cena guardada~~ | O mapa GUARDADO no acervo da campanha, com as peças onde ficaram. |
 | **marcador** | `BoardMarker` | — | O ponto apontado no mapa (ALE-195). Nasce escondido. |
-| **terreno** | `terrain` | — | O chão difícil que o pincel pinta. |
+| **terreno** | `terrain` | — | O chão difícil que o pincel pinta. **Não confundir com o CHÃO do lugar** (`BoardState.Terrain`: pedra, taverna, cripta…), que é a aparência, nem com a **moldura**, que é o recorte. |
+| **moldura** | `Moldura` | ~~extenso~~ | O retângulo que o SERVIDOR desenha: a caixa que envolve tudo que existe no tabuleiro — peças com a pegada, marcadores, terreno difícil — mais 3 quadrados de margem, esticada até um piso de 20×14 aplicado centrado. **Não é "o tamanho do tabuleiro"** (o plano é infinito) **nem a janela** (essa é do navegador, e vive em CSS para o remendo do SSE não a perder). Nasceu como `extenso` na ALE-264, que é adjetivo virando substantivo; o dono pediu `terreno` e a palavra já estava tomada em dois sentidos. |
 
 ## D. Os monstros do mestre
 

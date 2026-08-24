@@ -14,7 +14,7 @@ import (
 
 // Os guardas do TABULEIRO na Mesa (ALE-263).
 //
-// O extenso e a aparência têm guarda de REGRA no `tabuleiro`, contra as bordas.
+// A moldura e a aparência têm guarda de REGRA no `tabuleiro`, contra as bordas.
 // O que se prende aqui é a COMPOSIÇÃO — que a cena pergunta a coisa certa a cada
 // regra, e sobretudo que a REDAÇÃO POR PAPEL alcança o mapa.
 

@@ -5,7 +5,7 @@ import "fmt"
 // O TABULEIRO desenhado (ALE-263) — a fatia que se OLHA.
 //
 // UM NÓ POR CAMADA, nunca um por quadrado, e essa é a restrição que segura o
-// custo: um extenso de 20×14 são 280 quadrados, e desenhá-los daria 280 nós para
+// custo: uma moldura de 20×14 são 280 quadrados, e desenhá-los daria 280 nós para
 // pintar linhas que um `repeating-linear-gradient` pinta em zero. O chão, o
 // ambiente e a grade são três divs; o que vira nó é só o que EXISTE — as peças,
 // os marcadores e o terreno difícil.
@@ -25,7 +25,7 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 				<h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tabuleiro</h2>
 				<p class="truncate text-sm text-foreground">{ v.Lugar }</p>
 			</div>
-			// O PALCO é a janela; o PLANO é o extenso inteiro dentro dela. O
+			// O PALCO é a janela; o PLANO é a moldura inteira dentro dela. O
 			// enquadramento é do NAVEGADOR e nunca do servidor — foi essa a
 			// escolha que tirou a ida ao servidor de cada passo de arrasto —, e
 			// nesta fatia ele é a rolagem nativa: ela já é o arrasto, e vem com

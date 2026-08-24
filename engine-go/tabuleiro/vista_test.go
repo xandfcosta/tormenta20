@@ -97,11 +97,11 @@ func TestOMatizEOMesmoDoRetratoDaSPA(t *testing.T) {
 	}
 }
 
-// ── o extenso (ALE-263) ──────────────────────────────────────────────────────
+// ── a moldura (ALE-263) ──────────────────────────────────────────────────────
 
 // Um tabuleiro VAZIO desenha o piso, e não o nada.
 func TestOTabuleiroVazioDesenhaOPiso(t *testing.T) {
-	e := ExtensoDe(&BoardState{})
+	e := MolduraDe(&BoardState{})
 	if e.Colunas != MinimoDeColunas || e.Linhas != MinimoDeLinhas {
 		t.Errorf("vazio deu %dx%d, queria o piso %dx%d", e.Colunas, e.Linhas, MinimoDeColunas, MinimoDeLinhas)
 	}
@@ -112,9 +112,9 @@ func TestOTabuleiroVazioDesenhaOPiso(t *testing.T) {
 	}
 }
 
-// O extenso ENVOLVE tudo que tem lugar, com margem — e a peça grande entra
+// A moldura ENVOLVE tudo que tem lugar, com margem — e a peça grande entra
 // inteira, não só a quina dela.
-func TestOExtensoEnvolveTudoComMargemEContaAPegada(t *testing.T) {
+func TestAMolduraEnvolveTudoComMargemEContaAPegada(t *testing.T) {
 	pv := &BoardState{
 		Tokens: []BoardToken{
 			{ID: "a", Label: "Ogro", X: 40, Y: 30, Footprint: 2},
@@ -123,7 +123,7 @@ func TestOExtensoEnvolveTudoComMargemEContaAPegada(t *testing.T) {
 		Markers:   []BoardMarker{{ID: "m", X: 45, Y: 33}},
 		Difficult: []engine.Square{{X: 36, Y: 27}},
 	}
-	e := ExtensoDe(pv)
+	e := MolduraDe(pv)
 
 	// A asserção é de CONTINÊNCIA e não de números exatos, e a primeira versão
 	// deste teste errou por isso: eu previ origem 33 (o mínimo do conteúdo, 36,
@@ -135,9 +135,9 @@ func TestOExtensoEnvolveTudoComMargemEContaAPegada(t *testing.T) {
 	// com pelo menos a margem sobrando de cada lado.
 	dentro := func(x, y int, oque string) {
 		t.Helper()
-		if x < e.X0+MargemDoExtenso || x > e.X0+e.Colunas-1-MargemDoExtenso ||
-			y < e.Y0+MargemDoExtenso || y > e.Y0+e.Linhas-1-MargemDoExtenso {
-			t.Errorf("%s em %d,%d não tem a margem de %d dentro do extenso %+v", oque, x, y, MargemDoExtenso, e)
+		if x < e.X0+MargemDaMoldura || x > e.X0+e.Colunas-1-MargemDaMoldura ||
+			y < e.Y0+MargemDaMoldura || y > e.Y0+e.Linhas-1-MargemDaMoldura {
+			t.Errorf("%s em %d,%d não tem a margem de %d dentro da moldura %+v", oque, x, y, MargemDaMoldura, e)
 		}
 	}
 	dentro(36, 27, "o terreno difícil")
@@ -145,20 +145,20 @@ func TestOExtensoEnvolveTudoComMargemEContaAPegada(t *testing.T) {
 }
 
 // Pegada ZERO é peça de um quadrado: o campo é `omitempty` no fio, e tratá-la
-// como zero encolheria o extenso para DENTRO da própria peça.
+// como zero encolheria a moldura para DENTRO da própria peça.
 func TestPegadaZeroContaComoUmQuadrado(t *testing.T) {
-	e := ExtensoDe(&BoardState{Tokens: []BoardToken{{ID: "a", Label: "Rato", X: 100, Y: 100}}})
-	if e.X0+e.Colunas-1 < 100+MargemDoExtenso {
-		t.Errorf("o extenso acaba em x=%d e não cobre a peça em 100 mais a margem", e.X0+e.Colunas-1)
+	e := MolduraDe(&BoardState{Tokens: []BoardToken{{ID: "a", Label: "Rato", X: 100, Y: 100}}})
+	if e.X0+e.Colunas-1 < 100+MargemDaMoldura {
+		t.Errorf("a moldura acaba em x=%d e não cobre a peça em 100 mais a margem", e.X0+e.Colunas-1)
 	}
 }
 
-// COORDENADA NEGATIVA é lugar legítimo: o plano não tem bordas, e um extenso que
+// COORDENADA NEGATIVA é lugar legítimo: o plano não tem bordas, e uma moldura que
 // se recusasse a ir para o negativo empurraria a peça para fora do desenho.
-func TestOExtensoVaiParaOnegativo(t *testing.T) {
-	e := ExtensoDe(&BoardState{Tokens: []BoardToken{{ID: "a", Label: "Ogro", X: -20, Y: -15}}})
+func TestAMolduraVaiParaONegativo(t *testing.T) {
+	e := MolduraDe(&BoardState{Tokens: []BoardToken{{ID: "a", Label: "Ogro", X: -20, Y: -15}}})
 	if e.X0 > -20 || e.Y0 > -15 {
-		t.Errorf("a peça em -20,-15 ficou fora do extenso %+v", e)
+		t.Errorf("a peça em -20,-15 ficou fora da moldura %+v", e)
 	}
 }
 
@@ -166,20 +166,20 @@ func TestOExtensoVaiParaOnegativo(t *testing.T) {
 // isso de verdade.
 //
 // A primeira punha a peça grande no meio de um tabuleiro onde um marcador estava
-// mais longe — então ignorar a pegada não mudava o extenso, e a sabotagem passou
+// mais longe — então ignorar a pegada não mudava a moldura, e a sabotagem passou
 // VERDE. Aqui a peça grande é o extremo e nada está além dela; e as duas peças
 // estão longe o bastante para o span passar do piso, senão o piso mascararia a
 // diferença exatamente como o marcador mascarava.
-func TestAPegadaEntraInteiraNoExtenso(t *testing.T) {
-	e := ExtensoDe(&BoardState{Tokens: []BoardToken{
+func TestAPegadaEntraInteiraNaMoldura(t *testing.T) {
+	e := MolduraDe(&BoardState{Tokens: []BoardToken{
 		{ID: "perto", Label: "Rato", X: 0, Y: 0},
 		{ID: "longe", Label: "Dragão", X: 30, Y: 20, Footprint: 3},
 	}})
 
 	// O Dragão de pegada 3 em (30,20) ocupa até (32,22). Ignorar a pegada faria
-	// o extenso acabar em 33, e a quina da peça ficaria sem margem — ou fora.
-	limiteX, limiteY := e.X0+e.Colunas-1-MargemDoExtenso, e.Y0+e.Linhas-1-MargemDoExtenso
+	// a moldura acabar em 33, e a quina da peça ficaria sem margem — ou fora.
+	limiteX, limiteY := e.X0+e.Colunas-1-MargemDaMoldura, e.Y0+e.Linhas-1-MargemDaMoldura
 	if limiteX < 32 || limiteY < 22 {
-		t.Errorf("a quina do Dragão (32,22) não tem margem dentro do extenso %+v (limite %d,%d)", e, limiteX, limiteY)
+		t.Errorf("a quina do Dragão (32,22) não tem margem dentro da moldura %+v (limite %d,%d)", e, limiteX, limiteY)
 	}
 }

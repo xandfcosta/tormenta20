@@ -12,7 +12,7 @@ import (
 // Puro de propósito, como a `mesaView`: o handler busca, este arquivo decide, o
 // template só desenha.
 //
-// Nenhuma regra NOVA nasce aqui. O extenso e a aparência da peça moram no
+// Nenhuma regra NOVA nasce aqui. A moldura e a aparência da peça moram no
 // `tabuleiro`, e o estado já chega redigido pelo `BoardForRole` — que é o mesmo
 // gargalo por papel que o `StateForRole` é para a fila. Um piloto que
 // reescrevesse a redação mediria a reescrita.
@@ -27,7 +27,7 @@ type tabuleiroView struct {
 	// Colunas e Linhas são o tamanho do plano em QUADRADOS. O pixel por
 	// quadrado é do navegador, num `--quadrado` que o dedo muda.
 	Colunas, Linhas int
-	// X0 e Y0 são a quina do extenso no plano, e podem ser NEGATIVOS — é assim
+	// X0 e Y0 são a quina da moldura no plano, e podem ser NEGATIVOS — é assim
 	// que o rótulo do eixo diz o número que o servidor guarda, em vez do "+1" de
 	// planilha que mentiria sobre onde a peça está.
 	X0, Y0     int
@@ -42,7 +42,7 @@ type tabuleiroView struct {
 type pecaDoTabuleiro struct {
 	ID     string
 	Rotulo string
-	// Col e Lin são o lugar DENTRO do extenso, contados de zero: é o que o CSS
+	// Col e Lin são o lugar DENTRO da moldura, contados de zero: é o que o CSS
 	// multiplica pelo `--quadrado`. A coordenada do plano fica no `Onde`, que é
 	// o que o nome acessível diz.
 	Col, Lin int
@@ -86,7 +86,7 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, saude map[string]int, naVez string
 	if b == nil {
 		return tabuleiroView{}
 	}
-	e := tabuleiro.ExtensoDe(b)
+	e := tabuleiro.MolduraDe(b)
 	v := tabuleiroView{
 		Aberto: true, Lugar: b.Place, Terreno: terrenoConhecido(b.Terrain),
 		Colunas: e.Colunas, Linhas: e.Linhas, X0: e.X0, Y0: e.Y0,
@@ -107,7 +107,7 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, saude map[string]int, naVez string
 	return v
 }
 
-func pecaDoTabuleiroDe(t *tabuleiro.BoardToken, e tabuleiro.Extenso, saude map[string]int, naVez string) pecaDoTabuleiro {
+func pecaDoTabuleiroDe(t *tabuleiro.BoardToken, e tabuleiro.Moldura, saude map[string]int, naVez string) pecaDoTabuleiro {
 	a := tabuleiro.AparenciaDe(t.Label)
 	pegada := t.Footprint
 	if pegada < 1 {

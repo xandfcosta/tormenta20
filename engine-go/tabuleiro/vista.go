@@ -24,42 +24,42 @@ import (
 // combatentes, então "tudo que existe" é pequeno. O infinito não some — ele
 // deixa de precisar ser desenhado.
 
-// MargemDoExtenso são os quadrados vazios em volta do que existe.
+// MargemDaMoldura são os quadrados vazios em volta do que existe.
 //
 // Três é o deslocamento de meio turno (9m = 6 quadrados, p106): o mestre vê para
 // onde a peça da borda pode andar sem o servidor precisar ampliar nada. Zero
 // deixaria a peça colada na borda, e um plano que acaba onde a peça está mente
 // sobre um plano que não acaba.
-const MargemDoExtenso = 3
+const MargemDaMoldura = 3
 
 // O piso da vista, em quadrados. São os mesmos números que a SPA usa como
 // janela padrão, e o motivo de existirem aqui é o mesmo de lá: um tabuleiro
-// recém-aberto não tem nada dentro, e um extenso de 0×0 desenharia o nada.
+// recém-aberto não tem nada dentro, e uma moldura de 0×0 desenharia o nada.
 const (
 	MinimoDeColunas = 20
 	MinimoDeLinhas  = 14
 )
 
-// Extenso é o retângulo que o servidor desenha, em quadrados do plano.
+// Moldura é o retângulo que o servidor desenha, em quadrados do plano.
 //
 // X0 e Y0 podem ser NEGATIVOS, e isso é o plano infinito sobrevivendo à
 // mudança: coordenada negativa é lugar legítimo, e o rótulo do eixo usa o número
 // COM SINAL que o servidor guarda — num plano sem bordas, o "+1" de planilha
 // mentiria sobre onde a peça está.
-type Extenso struct {
+type Moldura struct {
 	X0, Y0          int
 	Colunas, Linhas int
 }
 
-// ExtensoDe mede o que existe no tabuleiro e devolve o retângulo a desenhar.
+// MolduraDe mede o que existe no tabuleiro e devolve o retângulo a desenhar.
 //
 // Entram as PEÇAS (com a pegada, que é o que ocupa mais de um quadrado), os
 // MARCADORES e o terreno difícil — tudo que tem lugar. O que está escondido
-// entra também: o mestre desenha o extenso a partir do estado dele, e a redação
+// entra também: o mestre desenha a moldura a partir do estado dele, e a redação
 // para o jogador acontece antes, no `StateForRole`.
-func ExtensoDe(b *BoardState) Extenso {
+func MolduraDe(b *BoardState) Moldura {
 	if b == nil {
-		return extensoCentradoEm(0, 0, 0, 0)
+		return molduraCentradaEm(0, 0, 0, 0)
 	}
 	primeiro := true
 	var minX, minY, maxX, maxY int
@@ -74,7 +74,7 @@ func ExtensoDe(b *BoardState) Extenso {
 	}
 	for i := range b.Tokens {
 		// Pegada zero é peça de um quadrado: o campo é `omitempty` no fio, e
-		// tratá-la como zero encolheria o extenso para fora da própria peça.
+		// tratá-la como zero encolheria a moldura para fora da própria peça.
 		pegada := b.Tokens[i].Footprint
 		if pegada < 1 {
 			pegada = 1
@@ -88,17 +88,17 @@ func ExtensoDe(b *BoardState) Extenso {
 		cobre(b.Difficult[i].X, b.Difficult[i].Y, 1)
 	}
 	if primeiro {
-		return extensoCentradoEm(0, 0, 0, 0)
+		return molduraCentradaEm(0, 0, 0, 0)
 	}
-	return extensoCentradoEm(minX-MargemDoExtenso, minY-MargemDoExtenso,
-		maxX-minX+1+2*MargemDoExtenso, maxY-minY+1+2*MargemDoExtenso)
+	return molduraCentradaEm(minX-MargemDaMoldura, minY-MargemDaMoldura,
+		maxX-minX+1+2*MargemDaMoldura, maxY-minY+1+2*MargemDaMoldura)
 }
 
-// extensoCentradoEm cresce o retângulo até o piso, mantendo o conteúdo no MEIO.
+// molduraCentradaEm cresce o retângulo até o piso, mantendo o conteúdo no MEIO.
 //
 // Crescer só para a direita e para baixo empurraria o combate para a quina de um
 // tabuleiro vazio, e o mestre teria de deslizar para achar as próprias peças.
-func extensoCentradoEm(x0, y0, colunas, linhas int) Extenso {
+func molduraCentradaEm(x0, y0, colunas, linhas int) Moldura {
 	if colunas < MinimoDeColunas {
 		x0 -= (MinimoDeColunas - colunas) / 2
 		colunas = MinimoDeColunas
@@ -107,7 +107,7 @@ func extensoCentradoEm(x0, y0, colunas, linhas int) Extenso {
 		y0 -= (MinimoDeLinhas - linhas) / 2
 		linhas = MinimoDeLinhas
 	}
-	return Extenso{X0: x0, Y0: y0, Colunas: colunas, Linhas: linhas}
+	return Moldura{X0: x0, Y0: y0, Colunas: colunas, Linhas: linhas}
 }
 
 // ── como uma peça se PARECE ─────────────────────────────────────────────────
