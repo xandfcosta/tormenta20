@@ -40,6 +40,7 @@ const QUERIDOS = [
   'Plus',
   'KeyRound',
   'Mail',
+  'Crown',
 ]
 
 const indice = readFileSync(resolve(LUCIDE, 'lucide-solid.mjs'), 'utf8')

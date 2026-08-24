@@ -26,6 +26,7 @@ func (s *Server) rotasDeCampanhas(r chi.Router) {
 	r.Post("/campanhas/nova", s.handleCampanhaNovaPost)
 	r.Get("/campanhas/entrar", s.handleCampanhaEntrar)
 	r.Post("/campanhas/entrar", s.handleCampanhaEntrarPost)
+	r.Get("/campanhas/{id}", s.handleCronica)
 }
 
 func (s *Server) handleCampanhas(w http.ResponseWriter, r *http.Request) {
@@ -255,4 +256,38 @@ func (s *Server) escreveCarta(w http.ResponseWriter, r *http.Request, status int
 		Forma:  cascaDensa,
 		Voltar: "/piloto/campanhas",
 	}, campanhaEntrar(v))
+}
+
+// ── a crônica: a página de uma campanha (ALE-253) ────────────────────────────
+
+// handleCronica desenha a crônica inteira, com a aba escolhida pelo `?tab=`.
+//
+// UMA resposta, e não três: a tela da SPA dispara consultas separadas para
+// campanha, sessões e membros, cada uma com o próprio estado de carregando —
+// e a visão geral mostra números que só existem depois que as três voltam.
+func (s *Server) handleCronica(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		http.Error(w, "id inválido", http.StatusBadRequest)
+		return
+	}
+	v, err := s.carregaCronica(r.Context(), currentUser(r), id, r.URL.Query().Get("tab"))
+	if errors.Is(err, errCampanhaInexistente) {
+		http.Error(w, "Campanha não encontrada", http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		// O `roleIn` recusa quem não é da mesa, e a recusa dele é 403. Aqui ela
+		// vira página e não JSON, mas continua sendo a MESMA regra.
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
+	}
+	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
+		Titulo: v.Nome,
+		Forma:  cascaDensa,
+		Voltar: "/piloto/campanhas",
+		// O rótulo nomeia o destino em vez da seta genérica: daqui se volta
+		// para o livro, e "Campanhas" diz isso melhor que "Voltar".
+		VoltarRotulo: "Campanhas",
+	}, cronica(v))
 }
