@@ -73,4 +73,22 @@ describe('MatchShell', () => {
     expect(player.played).toEqual(['select'])
     expect(await screen.findByRole('button', { name: 'Desligar o som' })).toBeTruthy()
   })
+
+  /**
+   * A saída é um LINK e não um botão, e isso é regra do porte para Solid: sem
+   * `asChild`, um link com cara de botão é um `<a>` vestindo as classes do
+   * botão (armadilha #6). Trocá-lo por `<button>` com `navigate()` parece
+   * inofensivo e tira o meio-clique, o "abrir em nova aba" e o endereço que o
+   * navegador mostra ao passar o mouse.
+   *
+   * Veio de um e2e (ALE-187) que ia até a sessão só para clicar na saída e
+   * conferir a URL. O que ele media de único era o PAPEL do elemento, e papel
+   * se afirma aqui — a navegação em si é o router, que tem os testes dele.
+   */
+  it('a saída da sessão é um link, e aponta para a campanha', async () => {
+    renderShell()
+
+    const saida = await screen.findByRole('link', { name: 'Sair da sessão' })
+    expect(saida).toHaveAttribute('href', '/campaigns/1')
+  })
 })

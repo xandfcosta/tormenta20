@@ -7,11 +7,12 @@ import {
   createRouter,
 } from '@tanstack/solid-router'
 import { render, screen } from '@solidjs/testing-library'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 import { campaignMembersQueryOptions, campaignQueryOptions } from '@/entities/campaign/queries'
 import { campaignSessionsQueryOptions } from '@/entities/session/queries'
-import type { Campaign } from '@/shared/api/api'
+import type { Campaign, CampaignMember } from '@/shared/api/api'
 import { UiProvider } from '@/shared/stores/ui-context'
 import { createUiStore } from '@/shared/stores/ui-store'
 import { FakeStorage } from '@/shared/test/fake-storage'
@@ -37,7 +38,25 @@ function renderPage(role: 'gm' | 'player', search: string) {
   } as unknown as Campaign
   client.setQueryData(campaignQueryOptions(1).queryKey, campaign)
   client.setQueryData(campaignSessionsQueryOptions(1).queryKey, [])
-  client.setQueryData(campaignMembersQueryOptions(1).queryKey, [])
+  client.setQueryData(campaignMembersQueryOptions(1).queryKey, [
+    {
+      id: 7,
+      campaignId: 1,
+      characterId: 70,
+      role: 'player',
+      addedAt: '2026-01-01T00:00:00.000Z',
+      character: {
+        id: 70,
+        ownerId: 7,
+        name: 'Tanque Placas Nv10',
+        level: 10,
+        hpCurrent: 95,
+        hpMax: 95,
+        mpCurrent: 10,
+        mpMax: 10,
+      },
+    },
+  ] as unknown as CampaignMember[])
 
   const root = createRootRoute()
   const route = createRoute({
@@ -50,7 +69,7 @@ function renderPage(role: 'gm' | 'player', search: string) {
     routeTree: root.addChildren([route]),
     history: createMemoryHistory({ initialEntries: [`/campaigns/1${search}`] }),
   })
-  return render(() => (
+  const view = render(() => (
     <UiProvider store={createUiStore(new FakeStorage())}>
       <QueryClientProvider client={client}>
         {/* biome-ignore lint/suspicious/noExplicitAny: o router de teste tem uma rota só */}
@@ -58,6 +77,11 @@ function renderPage(role: 'gm' | 'player', search: string) {
       </QueryClientProvider>
     </UiProvider>
   ))
+  // O router vai junto porque a URL deste teste mora no HISTÓRICO DE MEMÓRIA, e
+  // não em `window.location`, que fica vazio aqui. Escrevi a asserção contra o
+  // `window` primeiro e ela falhou com `expected '' to contain 'tab=membros'` —
+  // o teste fazendo o trabalho dele.
+  return { ...view, router }
 }
 
 describe('CampaignDetailPage — a URL escolhe a seção', () => {
@@ -100,5 +124,26 @@ describe('CampaignDetailPage — a URL escolhe a seção', () => {
     const visao = await screen.findByRole('tab', { name: /Visão geral/i })
     expect(visao).toHaveAttribute('aria-selected', 'true')
     expect(screen.queryByText('Zona de perigo')).not.toBeInTheDocument()
+  })
+
+  /**
+   * O caminho INVERSO dos três casos acima: eles provam que a URL escolhe a
+   * seção, e este prova que o clique ESCREVE a URL. Sem os dois sentidos, uma
+   * aba que trocasse o painel sem mexer no endereço passaria — e aí o botão
+   * Voltar e o deep link discordariam da tela, que é a razão de a seção morar
+   * no `?tab=`.
+   *
+   * Veio de um e2e (ALE-187). Ele não media nada que precisasse de browser:
+   * clicava numa aba e conferia nomes na tela. O router de memória faz o mesmo
+   * em milissegundos, e de quebra afirma a URL, que o e2e também fazia.
+   */
+  it('clicar na aba Membros escreve a URL e lista quem está na mesa', async () => {
+    const user = userEvent.setup()
+    const { router } = renderPage('gm', '?tab=visao')
+
+    await user.click(await screen.findByRole('tab', { name: /Membros/i }))
+
+    expect(await screen.findByText('Tanque Placas Nv10')).toBeInTheDocument()
+    expect(router.state.location.searchStr).toContain('tab=membros')
   })
 })
