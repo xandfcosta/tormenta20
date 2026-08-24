@@ -17,7 +17,7 @@ type memberDTO struct {
 	ID          int64               `json:"id"`
 	CampaignID  int64               `json:"campaignId"`
 	CharacterID int64               `json:"characterId"`
-	Role        string              `json:"Role"`
+	Role        string              `json:"role"`
 	AddedAt     string              `json:"addedAt"`
 	Character   *memberCharacterDTO `json:"character,omitempty"`
 }
@@ -224,7 +224,7 @@ func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 	}
 	var body struct {
 		CharacterID *int64  `json:"characterId"`
-		Role        *string `json:"Role"`
+		Role        *string `json:"role"`
 		InviteToken *string `json:"inviteToken"`
 	}
 	if !plataforma.DecodeJSON(w, r, &body) {
@@ -323,7 +323,7 @@ func (s *Server) handleUpdateMemberRole(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	var body struct {
-		Role string `json:"Role"`
+		Role string `json:"role"`
 	}
 	if !plataforma.DecodeJSON(w, r, &body) {
 		return

@@ -35,7 +35,7 @@ type campaignCharacterDTO struct {
 // campaignListDTO adds the caller's Role + own member character (GET /campaigns).
 type campaignListDTO struct {
 	CampaignDTO
-	Role      string                `json:"Role"`
+	Role      string                `json:"role"`
 	Character *campaignCharacterDTO `json:"character"`
 	// OwnerName is present ONLY on a mesa the caller does not own, which today
 	// means an admin seeing everyone's (ALE-120). Absent is the normal case, so
@@ -45,7 +45,7 @@ type campaignListDTO struct {
 
 type campaignDetailDTO struct {
 	CampaignDTO
-	Role string `json:"Role"`
+	Role string `json:"role"`
 	// IgnoredRules acompanha o detalhe porque é nele que a campanha se configura
 	// (ALE-221) — pedir uma segunda rota para desenhar os interruptores faria a
 	// tela piscar entre "tudo ligado" e o estado real.
