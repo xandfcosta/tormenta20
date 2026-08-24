@@ -59,6 +59,7 @@ func (s *Server) rotasDoRastreador(r chi.Router) {
 		r.Post("/vitals/harm/{passo}", s.comandoDoMestre(mexeNosVitais(-1)))
 		r.Post("/vitals/heal/{passo}", s.comandoDoMestre(mexeNosVitais(+1)))
 		r.Post("/vitals/hidden", s.comandoDoMestre(alternaOOlho))
+		r.Post("/edit", s.comandoDoMestre(editaOCombatente))
 		r.Post("/remove", s.comandoDoMestre(tiraDaFila))
 	})
 }
@@ -190,6 +191,71 @@ func alternaOOlho(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error
 	atual := estado.Initiative[i].HpHidden
 	oculto := atual == nil || !*atual
 	return st.sessions.UpdateInitiativeEntry(c.SessionID, entryID, aovivo.EntryPatch{HpHidden: &oculto})
+}
+
+// editaOCombatente corrige a iniciativa e o PV de quem já está na fila.
+//
+// A iniciativa é o gesto que a ALE-122 nomeou e deixou sem saída: "Adicionar
+// grupo" entra com 0 e o mestre não tinha como consertar, então a única saída
+// era remover e acrescentar de novo — perdendo PV e condições no caminho.
+//
+// QUEM DECIDE SE HÁ PV PARA EDITAR é o servidor, olhando a linha, e não um sinal
+// que a página mande junto: uma tela defasada diria "tem" sobre um combatente
+// que acabou de perder a barra, e a escrita inventaria um pool. É a mesma
+// escolha do olho, pelo mesmo motivo.
+//
+// A ordem também importa: a iniciativa primeiro, porque ela REORDENA a fila, e
+// os vitais depois, pelo id — que não muda com a reordenação.
+func editaOCombatente(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+	entryID := chi.URLParam(c.R, "entryId")
+	edicao, err := edicaoDosSinais(c.R)
+	if err != nil {
+		return nil, err
+	}
+	if err := aovivo.ValidaIniciativa(edicao.Iniciativa); err != nil {
+		return nil, err
+	}
+	antes := st.sessions.GetState(c.SessionID)
+	i := aovivo.FindEntryIndex(antes, entryID)
+	if i < 0 {
+		return nil, fmt.Errorf("combatente %q não está na fila", entryID)
+	}
+	temVitais := antes.Initiative[i].HpMax != nil
+
+	estado, err := st.sessions.UpdateInitiativeEntry(c.SessionID, entryID,
+		aovivo.EntryPatch{Initiative: &edicao.Iniciativa})
+	if err != nil {
+		return nil, err
+	}
+	if !temVitais {
+		return estado, nil
+	}
+	// O `PatchVitals` é o caminho da casa e vale por si: com personagem atrás da
+	// linha ele escreve na FICHA e espelha, como o delta faz (ALE-122). Quem
+	// prende o valor ao teto é ele, não uma conta escrita aqui.
+	return st.sessions.PatchVitals(c.SessionID, entryID, &edicao.PV, nil)
+}
+
+// edicaoDosSinais lê o diálogo de editar. Nomes minúsculos pelo mesmo motivo de
+// sempre: são chaves de `data-bind:`, e nome de atributo é minusculado.
+func edicaoDosSinais(r *http.Request) (struct {
+	Iniciativa int
+	PV         int64
+}, error) {
+	var fora struct {
+		Iniciativa int
+		PV         int64
+	}
+	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
+	var sinais struct {
+		Iniciativa int   `json:"edicaoiniciativa"`
+		PV         int64 `json:"edicaopv"`
+	}
+	if err := datastar.ReadSignals(r, &sinais); err != nil {
+		return fora, fmt.Errorf("não entendi a edição enviada: %v", err)
+	}
+	fora.Iniciativa, fora.PV = sinais.Iniciativa, sinais.PV
+	return fora, nil
 }
 
 // tiraDaFila remove o combatente. Sem confirmação, como na SPA: o gesto é do

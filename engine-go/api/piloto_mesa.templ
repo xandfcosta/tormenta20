@@ -158,6 +158,13 @@ templ mesa(v mesaView) {
 							@mesaLinhaDaFila(v, l)
 						}
 					</ol>
+					// UM diálogo para a fila inteira, e não um por linha: quem
+					// diz em quem ele mexe é o sinal que o número semeia. Nove
+					// diálogos no documento seriam nove ids para colidir e nove
+					// cópias para o morph reconciliar a cada remendo.
+					if v.Mestre != nil {
+						@editarCombatente(v)
+					}
 				}
 			</section>
 		</div>
@@ -255,10 +262,14 @@ templ mesaLinhaDaFila(v mesaView, l mesaLinha) {
 			templ.KV("border-grimorio-gold/60 bg-grimorio-gold/10", l.NaVez),
 			templ.KV("border-border/60 bg-card/60", !l.NaVez) }
 	>
-		<span class={ "w-8 shrink-0 text-center font-mono text-lg font-bold tabular-nums",
-			templ.KV("text-grimorio-gold", l.NaVez), templ.KV("text-muted-foreground", !l.NaVez) }>
-			{ fmt.Sprint(l.Iniciativa) }
-		</span>
+		if v.Mestre != nil {
+			@oNumeroEditavel(v, l)
+		} else {
+			<span class={ "w-8 shrink-0 text-center font-mono text-lg font-bold tabular-nums",
+				templ.KV("text-grimorio-gold", l.NaVez), templ.KV("text-muted-foreground", !l.NaVez) }>
+				{ fmt.Sprint(l.Iniciativa) }
+			</span>
+		}
 		<div class="min-w-0 flex-1 space-y-1">
 			<div class="flex flex-wrap items-center gap-1.5">
 				<span class="truncate font-medium">{ l.Rotulo }</span>
@@ -502,4 +513,91 @@ templ oTipoDoCombatente(tipo, rotulo string) {
 		data-class={ fmt.Sprintf("{'border-grimorio-gold text-grimorio-gold': $novotipo === '%s', 'border-grimorio-iron text-muted-foreground': $novotipo !== '%s'}", tipo, tipo) }
 		class="min-h-11 rounded-sm border px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
 	>{ rotulo }</button>
+}
+
+// oNumeroEditavel: para o mestre, a INICIATIVA é botão.
+//
+// É o gesto que a ALE-122 nomeou e deixou sem saída — "Adicionar grupo" entra
+// com 0 e não havia como consertar, então a única saída era remover e
+// acrescentar de novo, perdendo PV e condições no caminho.
+//
+// O clique SEMEIA os sinais com os valores de AGORA antes de abrir: o diálogo
+// não busca nada, e sem a semeadura ele abriria com o que sobrou da linha
+// anterior. É a tradução do `setValue(props.current)` da SPA, que tem um
+// comentário dizendo exatamente isto.
+templ oNumeroEditavel(v mesaView, l mesaLinha) {
+	<button
+		type="button"
+		aria-label={ "Editar " + l.Rotulo }
+		title={ "Editar " + l.Rotulo + " — iniciativa e PV" }
+		data-on:click={ abreAEdicao(v, l) }
+		class={ "w-8 shrink-0 rounded-sm text-center font-mono text-lg font-bold tabular-nums outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+			templ.KV("text-grimorio-gold", l.NaVez), templ.KV("text-muted-foreground", !l.NaVez) }
+	>{ fmt.Sprint(l.Iniciativa) }</button>
+}
+
+// editarCombatente é DIÁLOGO e não campo na linha, e a razão vale a pena estar
+// escrita: a cena é remendada a cada mudança de qualquer um na mesa, e um input
+// vivo dentro da lista perderia o foco a cada tique. A SPA carrega o mesmo
+// comentário pelo mesmo motivo, lá por causa do broadcast do socket.
+//
+// Ele junta iniciativa e PV num diálogo só, e isso é DESVIO da SPA, que tem dois
+// (o da iniciativa no número, o do PV num quinto botão da linha). O motivo é
+// medido: a fileira de verbos já leva quatro alvos de 36px numa linha de 390px,
+// e um quinto não cabe. O ± continua sendo o caminho descoberto para o dano de
+// 1 e 5; este é o caminho do valor exato, que na SPA custava seis cliques.
+templ editarCombatente(v mesaView) {
+	<dialog
+		id="editar-combatente"
+		data-preserve-attr="open"
+		aria-labelledby="editar-combatente-titulo"
+		class="scene-grimorio m-auto w-[min(20rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
+	>
+		<h2 id="editar-combatente-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">
+			Editar <span data-text="$edicaonome"></span>
+		</h2>
+		<p class="mt-1 text-sm text-muted-foreground">A ordem se reordena sozinha, e quem está na vez continua na vez.</p>
+		<label for="edicao-iniciativa" class="mt-3 block text-xs font-bold uppercase tracking-widest text-muted-foreground">Iniciativa</label>
+		<input
+			id="edicao-iniciativa"
+			type="number"
+			min="-5"
+			max="40"
+			inputmode="numeric"
+			data-bind="edicaoiniciativa"
+			class="mt-1 w-full border border-input bg-background px-2 py-1.5 font-mono tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+		/>
+		// O campo de PV só existe em linha COM vida, e quem sabe disso é o sinal
+		// que o número semeou — o servidor confere de novo na escrita, porque a
+		// tela pode estar defasada.
+		<div data-show="$edicaopvmax > 0">
+			<label for="edicao-pv" class="mt-3 block text-xs font-bold uppercase tracking-widest text-muted-foreground">
+				PV (de <span data-text="$edicaopvmax"></span>)
+			</label>
+			<input
+				id="edicao-pv"
+				type="number"
+				min="0"
+				data-attr:max="$edicaopvmax"
+				inputmode="numeric"
+				data-bind="edicaopv"
+				class="mt-1 w-full border border-input bg-background px-2 py-1.5 font-mono tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			/>
+		</div>
+		<div class="mt-4 flex justify-end gap-2">
+			<button
+				type="button"
+				data-on:click="document.getElementById('editar-combatente').close()"
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>Cancelar</button>
+			// O caminho é montado com o id que o número semeou: o `entryId` viaja
+			// no CAMINHO como nos outros verbos da linha, e o sinal só existe
+			// porque o diálogo é um só para a fila inteira.
+			<button
+				type="button"
+				data-on:click={ salvaAEdicao(v) }
+				class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>Salvar</button>
+		</div>
+	</dialog>
 }

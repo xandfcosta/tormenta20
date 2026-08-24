@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"t20engine/aovivo"
@@ -319,4 +320,44 @@ func comandoDaLinha(v mesaView, l mesaLinha, acao string) string {
 func vitalDaLinha(v mesaView, l mesaLinha, verbo string) string {
 	base := fmt.Sprintf("/piloto/mesa/%d/%d/initiative/%s/vitals/%s/", v.CampaignID, v.SessionID, l.ID, verbo)
 	return fmt.Sprintf("@post(evt.shiftKey ? '%s5' : '%s1')", base, base)
+}
+
+// abreAEdicao semeia o diálogo com os valores de AGORA e o abre.
+//
+// Semear é obrigatório e não é conveniência: o diálogo é UM para a fila inteira,
+// então sem isto ele abriria com o que sobrou da linha anterior — e o mestre
+// salvaria o PV do Ogro em cima do Goblin sem ver nada de errado.
+func abreAEdicao(v mesaView, l mesaLinha) string {
+	pv, pvMax := int64(0), int64(0)
+	if l.PV != nil {
+		pv, pvMax = l.PV.Atual, l.PV.Max
+	}
+	return fmt.Sprintf(
+		"$edicaolinha = '%s'; $edicaonome = %s; $edicaoiniciativa = %d; $edicaopv = %d; $edicaopvmax = %d; document.getElementById('editar-combatente').showModal()",
+		l.ID, comoTextoJS(l.Rotulo), l.Iniciativa, pv, pvMax,
+	)
+}
+
+// salvaAEdicao monta o caminho com o id que o número semeou.
+func salvaAEdicao(v mesaView) string {
+	return fmt.Sprintf(
+		"document.getElementById('editar-combatente').close(); @post('/piloto/mesa/%d/%d/initiative/' + $edicaolinha + '/edit')",
+		v.CampaignID, v.SessionID,
+	)
+}
+
+// comoTextoJS escreve um literal de string de JavaScript seguro.
+//
+// O rótulo é digitado pelo MESTRE e vai parar dentro de uma expressão do
+// Datastar, que é JavaScript: um combatente chamado `O'Brien` fecharia a aspa e
+// o resto da expressão viraria sintaxe. O `templ` escapa o atributo (as aspas
+// viram `&#39;`), mas o navegador as desescapa antes de o Datastar compilar — o
+// escape de HTML não é o escape de JS, e confundir os dois é como se escreve uma
+// injeção sem querer.
+func comoTextoJS(s string) string {
+	cru, err := json.Marshal(s)
+	if err != nil {
+		return "''"
+	}
+	return string(cru)
 }

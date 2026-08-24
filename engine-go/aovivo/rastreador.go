@@ -224,14 +224,28 @@ func ValidaCombatenteNovo(c CombatenteNovo) error {
 	if n := len([]rune(rotulo)); n > MaxLetrasDoRotulo {
 		return fmt.Errorf("o nome tem %d letras; o limite é %d", n, MaxLetrasDoRotulo)
 	}
-	if c.Iniciativa < MinIniciativa || c.Iniciativa > MaxIniciativa {
-		return fmt.Errorf("iniciativa %d está fora da faixa de %d a %d", c.Iniciativa, MinIniciativa, MaxIniciativa)
+	if err := ValidaIniciativa(c.Iniciativa); err != nil {
+		return err
 	}
 	if c.PV < 0 || c.PV > MaxPontosDeVida {
 		return fmt.Errorf("PV %d está fora da faixa de 0 a %d; 0 é 'sem vida registrada'", c.PV, MaxPontosDeVida)
 	}
 	if c.Tipo != "npc" && c.Tipo != "character" {
 		return fmt.Errorf("tipo %q não existe; um combatente é 'npc' ou 'character'", c.Tipo)
+	}
+	return nil
+}
+
+// ValidaIniciativa é a faixa jogável, e ela vale tanto para o combatente que
+// NASCE quanto para o que é CORRIGIDO depois.
+//
+// Está separada porque tem dois chamadores: acrescentar e editar. Na SPA ela era
+// duas constantes copiadas em dois componentes (`AddCombatantForm` e
+// `InitiativeEditDialog`), com um comentário em cada dizendo "a mesma do
+// formulário de adicionar" — duas cópias que só um comentário mantinha juntas.
+func ValidaIniciativa(v int) error {
+	if v < MinIniciativa || v > MaxIniciativa {
+		return fmt.Errorf("iniciativa %d está fora da faixa de %d a %d", v, MinIniciativa, MaxIniciativa)
 	}
 	return nil
 }

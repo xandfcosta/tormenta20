@@ -779,3 +779,140 @@ func trechoDeSinais(corpo string) string {
 	}
 	return "(nenhuma linha de sinais na resposta)"
 }
+
+// ── editar o combatente (ALE-263) ────────────────────────────────────────────
+
+// TestEditarCorrigeAIniciativaEOPVDeUmaVez.
+//
+// A iniciativa é o gesto que a ALE-122 nomeou e deixou sem saída: "Adicionar
+// grupo" entra com 0 e não havia como consertar, então a única saída era remover
+// e acrescentar de novo — perdendo PV e condições no caminho. Por isso o teste
+// confere que a linha continua sendo A MESMA depois da edição.
+func TestEditarCorrigeAIniciativaEOPVDeUmaVez(t *testing.T) {
+	f := novoPiloto(t)
+	entryID := f.naFila(t)
+	// O CONTROLE do que a issue descreve: o grupo entra com iniciativa ZERO.
+	if fila := f.s.sessions.GetState(f.sessionID).Initiative; fila[0].Initiative != 0 {
+		t.Fatalf("o grupo entrou com iniciativa %d; o teste mede o conserto do zero", fila[0].Initiative)
+	}
+
+	rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/"+entryID+"/edit",
+		`{"edicaoiniciativa":21,"edicaopv":7}`)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("editar deu %d: %s", rec.Code, trechoDeSinais(rec.Body.String()))
+	}
+
+	fila := f.s.sessions.GetState(f.sessionID).Initiative
+	if len(fila) != 1 || fila[0].ID != entryID {
+		t.Fatalf("a linha não sobreviveu à edição: %+v", fila)
+	}
+	if fila[0].Initiative != 21 {
+		t.Errorf("a iniciativa ficou %d", fila[0].Initiative)
+	}
+	if fila[0].HpCurrent == nil || *fila[0].HpCurrent != 7 {
+		t.Errorf("o PV da linha ficou %v", fila[0].HpCurrent)
+	}
+	// E o PV passou pela FICHA, como o ferir/curar: a linha espelha, ela não é a
+	// autoridade (ALE-122).
+	ficha, err := f.s.queries.GetCharacter(context.Background(), f.charID)
+	if err != nil {
+		t.Fatalf("reler a ficha: %v", err)
+	}
+	if ficha.Hpcurrent != 7 {
+		t.Errorf("a FICHA ficou com %d PV — a edição não chegou nela", ficha.Hpcurrent)
+	}
+}
+
+// A validação da iniciativa é a MESMA de acrescentar, e agora ela tem um dono só.
+//
+// Na SPA eram duas constantes copiadas em dois componentes, com um comentário em
+// cada dizendo "a mesma do formulário de adicionar" — duas cópias que só um
+// comentário mantinha juntas.
+func TestEditarUsaAMesmaFaixaDeIniciativaQueAcrescentar(t *testing.T) {
+	f := novoPiloto(t)
+	entryID := f.naFila(t)
+
+	rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/"+entryID+"/edit",
+		`{"edicaoiniciativa":41,"edicaopv":10}`)
+	if corpo := trechoDeSinais(rec.Body.String()); !strings.Contains(corpo, "41") {
+		t.Errorf("a recusa não citou a iniciativa ofensiva; sinais = %s", corpo)
+	}
+	if fila := f.s.sessions.GetState(f.sessionID).Initiative; fila[0].Initiative != 0 {
+		t.Errorf("a iniciativa recusada foi gravada mesmo assim (%d)", fila[0].Initiative)
+	}
+}
+
+// TestEditarNaoInventaPoolEmLinhaSemVida.
+//
+// Quem decide se há PV para editar é o SERVIDOR olhando a linha, e não um sinal
+// que a página mande junto: uma tela defasada diria "tem" sobre um combatente
+// que acabou de perder a barra, e a escrita inventaria um pool onde não havia.
+func TestEditarNaoInventaPoolEmLinhaSemVida(t *testing.T) {
+	f := novoPiloto(t)
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/add",
+		`{"novonome":"Figurante","novainiciativa":5,"novopv":0,"novotipo":"npc"}`); rec.Code != http.StatusOK {
+		t.Fatalf("acrescentar deu %d", rec.Code)
+	}
+	entryID := f.s.sessions.GetState(f.sessionID).Initiative[0].ID
+
+	// A página manda PV, como mandaria se estivesse defasada.
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/"+entryID+"/edit",
+		`{"edicaoiniciativa":9,"edicaopv":50}`); rec.Code != http.StatusOK {
+		t.Fatalf("editar deu %d", rec.Code)
+	}
+
+	linha := f.s.sessions.GetState(f.sessionID).Initiative[0]
+	if linha.Initiative != 9 {
+		t.Errorf("a iniciativa não foi corrigida: %d", linha.Initiative)
+	}
+	if linha.HpMax != nil || linha.HpCurrent != nil {
+		t.Errorf("o capanga sem vida rastreada ganhou um pool inventado: %v/%v", linha.HpCurrent, linha.HpMax)
+	}
+}
+
+// TestOsVerbosDaLinhaSaoDoMestre já cobre o 403 dos outros; editar entra aqui.
+func TestEditarEDoMestre(t *testing.T) {
+	f := novoPiloto(t)
+	entryID := f.naFila(t)
+	rec := f.pede(t, f.jogador, "POST", f.urlDaMesa()+"/initiative/"+entryID+"/edit",
+		`{"edicaoiniciativa":21,"edicaopv":7}`)
+	if rec.Code != http.StatusForbidden {
+		t.Errorf("o jogador editou e levou %d, quero 403", rec.Code)
+	}
+}
+
+// TestUmCombatenteComASPAnoNomeNaoQuebraAExpressao.
+//
+// O rótulo é digitado pelo MESTRE e vai parar DENTRO de uma expressão do
+// Datastar, que é JavaScript. Um combatente chamado `O'Brien` fecharia a aspa e
+// o resto viraria sintaxe — o `templ` escapa o ATRIBUTO (a aspa vira `&#39;`),
+// mas o navegador a desescapa antes de o Datastar compilar. Escape de HTML não é
+// escape de JS, e confundir os dois é como se escreve uma injeção sem querer.
+func TestUmCombatenteComAspaNoNomeNaoQuebraAExpressao(t *testing.T) {
+	f := novoPiloto(t)
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/add",
+		`{"novonome":"O'Brien, o \"Justo\"","novainiciativa":5,"novopv":0,"novotipo":"npc"}`); rec.Code != http.StatusOK {
+		t.Fatalf("acrescentar deu %d", rec.Code)
+	}
+
+	corpo := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	// O literal tem de sair como JSON: aspas ESCAPADAS dentro dele, e não uma
+	// aspa crua fechando a string no meio do nome.
+	if !strings.Contains(corpo, `$edicaonome = &#34;O&#39;Brien, o \&#34;Justo\&#34;&#34;`) {
+		t.Errorf("o nome com aspas não virou literal seguro; a semeadura saiu como: %s", trechoDaSemeadura(corpo))
+	}
+}
+
+// trechoDaSemeadura tira só o pedaço da expressão que semeia o nome, porque a
+// página inteira enterra a asserção em vários KB de HTML.
+func trechoDaSemeadura(corpo string) string {
+	i := strings.Index(corpo, "$edicaonome = ")
+	if i < 0 {
+		return "(a semeadura do nome não está na página)"
+	}
+	fim := i + 120
+	if fim > len(corpo) {
+		fim = len(corpo)
+	}
+	return corpo[i:fim]
+}
