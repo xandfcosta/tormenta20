@@ -14,9 +14,15 @@ import (
 //
 // Uma parada por vez: a pessoa clica numa casa alcançável e a peça propõe ir até
 // lá; clica de novo e o caminho ESTENDE, contornando o que ela quiser. O que
-// impede o estouro do deslocamento não é um aviso depois do erro — são as casas
-// oferecidas, que já vêm limitadas pelo que sobrou. Não dá para clicar no que o
-// servidor recusaria.
+// impede o estouro do deslocamento é o ALCANCE desenhado, que já vem limitado
+// pelo que sobrou e encolhe a cada parada — medido: 84 casas com o deslocamento
+// inteiro, 12 depois de gastar 4 de 6.
+//
+// Mas "não dá para clicar no que o servidor recusaria" deixou de ser verdade
+// quando o ARRASTO entrou: clique cai numa casa oferecida, soltura cai onde o
+// dedo estiver, inclusive fora do alcance. Por isso a recusa também PRECISA
+// falar — e fala em `erroDoMovimento`, no tabuleiro. O alcance continua sendo a
+// realimentação principal; a frase é a rede embaixo dela.
 //
 // Nada de lista de paradas guardada: o CAMINHO proposto já é o acumulado, e a
 // última parada é o último quadrado dele.
@@ -138,7 +144,17 @@ func (s *Server) comandoDaMesa(
 		if estado != nil {
 			s.publishBoardState(sessionID, estado)
 		}
-		s.respondeAoMestre(w, r, user, campaignID, sessionID, err, sinais)
+		// A recusa vai para `erroDoMovimento` e NÃO para o `erroDoComando` do
+		// rodapé, que é do mestre: quem move é o jogador, e ele não tem rodapé
+		// nenhum — a frase cairia num elemento que a tela dele nem renderiza.
+		// Escrita nos DOIS caminhos pelo mesmo motivo do outro sinal: só acender
+		// deixa a recusa de duas paradas atrás acesa sobre uma que deu certo.
+		frase := ""
+		if err != nil {
+			frase = err.Error()
+		}
+		sinais["erroDoMovimento"] = frase
+		s.respondeAoMestre(w, r, user, campaignID, sessionID, nil, sinais)
 	}
 }
 

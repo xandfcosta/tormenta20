@@ -174,3 +174,51 @@ func TestOAlcanceSoApareceQuandoHaOrcamento(t *testing.T) {
 		t.Error("o mestre não tem orçamento e mesmo assim viu um teto desenhado")
 	}
 }
+
+// TestARecusaDeUmaParadaFALAnoTabuleiro.
+//
+// O arrasto (ALE-264) quebrou a invariante em que este arquivo se apoiava: com
+// CLIQUE só se acerta casa oferecida, mas soltar acontece onde o dedo estiver,
+// inclusive fora do alcance. A recusa passou a ser alcançável de verdade — e
+// ela saía em `erroDoComando`, que é o sinal do RODAPÉ DO MESTRE. O jogador não
+// renderiza rodapé nenhum: a frase existia no fio e não tinha onde pousar, e a
+// parada era engolida em silêncio.
+//
+// Prende as DUAS metades, porque uma sem a outra não é o conserto: que a frase
+// sai no sinal certo, e que a região do tabuleiro tem onde acendê-la.
+func TestARecusaDeUmaParadaFalaNoTabuleiro(t *testing.T) {
+	f := novoPiloto(t)
+	tokenID := f.noTabuleiro(t)
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/scene/start", ""); rec.Code != http.StatusOK {
+		t.Fatalf("iniciar cena deu %d", rec.Code)
+	}
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/next-turn", ""); rec.Code != http.StatusOK {
+		t.Fatalf("avançar deu %d", rec.Code)
+	}
+	base := f.urlDaMesa() + "/tabuleiro/" + tokenID
+
+	// O CANAL: a região do tabuleiro tem o elemento ligado ao sinal. Sem esta
+	// asserção, "a frase saiu" seria verdade sobre uma tela que não a mostra —
+	// que é exatamente o defeito que este guarda existe para pegar.
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	if !strings.Contains(doJogador, "$erroDoMovimento") {
+		t.Fatal("o tabuleiro do jogador não tem onde acender a recusa de uma parada")
+	}
+
+	// O deslocamento padrão são 6 quadrados (T20 p106); 9 não cabem.
+	recusado := f.pede(t, f.jogador, "POST", base+"/parada/9/0", "").Body.String()
+	sinais := trechoDeSinais(recusado)
+	if !strings.Contains(sinais, "erroDoMovimento") {
+		t.Errorf("a recusa não saiu no sinal do movimento; sinais = %s", sinais)
+	}
+	if strings.Contains(sinais, `"erroDoMovimento":""`) {
+		t.Errorf("a recusa saiu VAZIA — a parada foi engolida em silêncio; sinais = %s", sinais)
+	}
+
+	// E APAGA no acerto: um sinal que só se escreve quando dá errado deixa a
+	// recusa de duas paradas atrás acesa sobre uma que funcionou.
+	aceito := f.pede(t, f.jogador, "POST", base+"/parada/2/0", "").Body.String()
+	if !strings.Contains(trechoDeSinais(aceito), `"erroDoMovimento":""`) {
+		t.Errorf("a parada válida não apagou a recusa anterior; sinais = %s", trechoDeSinais(aceito))
+	}
+}

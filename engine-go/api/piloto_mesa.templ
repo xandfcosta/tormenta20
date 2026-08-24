@@ -159,6 +159,19 @@ templ mesaGrupo(v mesaView) {
 templ mesaTabuleiro(v mesaView) {
 	<div id="mesa-tabuleiro">
 		@tabuleiroDaMesa(v.Tabuleiro)
+		// A RECUSA de uma parada, e ela mora aqui: quem move é o jogador, que
+		// não tem o rodapé do mestre onde o `erroDoComando` acende. Fora do
+		// tabuleiro ela seria a frase certa longe do gesto que a causou.
+		//
+		// Fica FORA do movimento proposto de propósito, porque a recusa mais
+		// comum é a da PRIMEIRA parada ("não é a vez de Arwen"), e nessa hora
+		// não há proposta nenhuma para pendurá-la.
+		<p
+			data-show="$erroDoMovimento != ''"
+			data-text="$erroDoMovimento"
+			aria-live="assertive"
+			class="px-1 pt-1 text-xs text-destructive"
+		></p>
 	</div>
 }
 
