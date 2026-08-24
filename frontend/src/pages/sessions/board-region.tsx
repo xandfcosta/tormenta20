@@ -1,26 +1,34 @@
-import { Brush, Eraser, Eye, Library, MapPin, Radar, Ruler as RulerIcon, Users, X } from 'lucide-solid'
-import { Show, createEffect, createMemo, createSignal, on } from 'solid-js'
-import { boardKeyAction } from '@/features/battle-board/board-keys'
+import { Brush, Eraser, Eye, Library, MapPin, Radar, Ruler as RulerIcon, Theater, Users, X } from 'lucide-solid'
+import { createEffect, createMemo, createSignal, on, Show } from 'solid-js'
 import { createAreaTemplate } from '@/features/battle-board/area-template'
-import { createRuler } from '@/features/battle-board/ruler'
+import {
+  AreaBar,
+  CurtainBar,
+  CurtainForPlayers,
+  MoveBar,
+  PlayerLensBar,
+  RulerBar,
+  ViewControls,
+} from '@/features/battle-board/board-bars'
+import { boardKeyAction } from '@/features/battle-board/board-keys'
 import { pathBetween } from '@/features/battle-board/board-path'
-import { AreaBar, MoveBar, PlayerLensBar, RulerBar, ViewControls } from '@/features/battle-board/board-bars'
 import { BoardView } from '@/features/battle-board/board-view'
 import { type BoardViewport, SQUARE_METRES } from '@/features/battle-board/board-viewport'
 import { EmptyBoard } from '@/features/battle-board/empty-board'
 import { PlaceEditor } from '@/features/battle-board/place-editor'
 import { PlacesDialog } from '@/features/battle-board/places-list'
-import { MarkerActions, TokenActions, nextMarkerText } from '@/features/battle-board/token-actions'
-import { PopulateDialog, isPlayerEntry } from '@/features/battle-board/populate-dialog'
+import { isPlayerEntry, PopulateDialog } from '@/features/battle-board/populate-dialog'
+import { createRuler } from '@/features/battle-board/ruler'
+import { MarkerActions, nextMarkerText, TokenActions } from '@/features/battle-board/token-actions'
 import { TokenDialog } from '@/features/battle-board/token-dialog'
-import { SceneContainerProvider, useSceneContainer } from '@/shared/lib/scene-container'
-import { createFullscreen } from '@/shared/lib/fullscreen'
 import { boardReach } from '@/shared/lib/engine-wasm'
+import { createFullscreen } from '@/shared/lib/fullscreen'
+import { SceneContainerProvider, useSceneContainer } from '@/shared/lib/scene-container'
 import type { BoardPlace, BoardState, BoardToken, SessionRealtime } from '@/shared/realtime/realtime'
 import { Button } from '@/shared/ui/button'
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
-import { TurnStrip } from './board-turn-strip'
 import { SectionTitle } from '@/shared/ui/section-label'
+import { TurnStrip } from './board-turn-strip'
 
 /**
  * O tabuleiro dentro da cena da sessão (ALE-124).
@@ -448,7 +456,17 @@ export function BoardRegion(props: {
         }
       >
         {(live) => (
-          <>
+          // A CORTINA fecha a região INTEIRA para a mesa (ALE-202): sem
+          // cabeçalho, sem contagem de peças, sem grade. Um cabeçalho dizendo
+          // "· 0 peças" sobre uma cortina contaria que a cena está vazia, que é
+          // exatamente uma informação sobre a cena.
+          //
+          // O mestre nunca cai aqui pela própria vista — `BoardForRole("gm")`
+          // devolve o tabuleiro inteiro —, e dentro da LENTE ele precisa do
+          // cabeçalho para sair dela. Por isso a condição é o papel, e não só a
+          // cortina.
+          <Show when={props.isGm || !cena(live()).curtained} fallback={<CurtainForPlayers />}>
+          
             <header class="flex shrink-0 flex-wrap items-center gap-2 border-b border-grimorio-iron px-3 py-2">
               <SectionTitle contexto="painel" class="text-sm min-w-0 truncate">
                 {live().place}
@@ -502,6 +520,19 @@ export function BoardRegion(props: {
                     onClick={verComoJogador}
                   >
                     <Eye aria-hidden="true" class="size-4" />
+                  </Button>
+                  {/* Vizinho da lente porque são irmãos: os dois botões deste
+                      cabeçalho que falam do que a MESA vê, e não do que o mestre
+                      faz no mapa (ALE-202). */}
+                  <Button
+                    size="sm"
+                    variant={live().curtained ? 'default' : 'ghost'}
+                    aria-pressed={live().curtained ?? false}
+                    aria-label="Fechar a cortina"
+                    title="Fechar a cortina: montar a cena sem a mesa ver"
+                    onClick={() => props.rt.setCurtain(!live().curtained)}
+                  >
+                    <Theater aria-hidden="true" class="size-4" />
                   </Button>
                   <Button
                     size="sm"
@@ -606,48 +637,68 @@ export function BoardRegion(props: {
               <PlayerLensBar hidden={hiddenCount()} onExit={sairDaLente} />
             </Show>
 
+            {/* A tira lê `live()` e não `cena()`: dentro da lente o mestre está
+                vendo a cortina, e é justamente aí que ele mais precisa do
+                lembrete de que ela é DELE — senão a lente parece quebrada. */}
+            <Show when={props.isGm && live().curtained}>
+              <CurtainBar onOpen={() => props.rt.setCurtain(false)} />
+            </Show>
+
             <TurnStrip rt={props.rt} hidden={props.isGm} />
 
-            <BoardView
-              board={cena(live())}
-              view={props.view}
-              activeEntryId={props.activeEntryId}
-              highlightEntryId={props.highlightEntryId}
-              health={health()}
-              selectedTokenId={selectedTokenId()}
-              movableTokenIds={movableTokenIds()}
-              pending={cena(live()).pending}
-              // Quem não pode mover NENHUMA peça também não seleciona: sem isso
-              // a camada de quadrados nasceria com centenas de botões inertes
-              // na árvore de quem só assiste.
-              onSelectToken={movableTokenIds().size > 0 ? selectToken : undefined}
-              // Com a ferramenta na mão o pincel é DONO da superfície: sem
-              // isto o mesmo clique pintava duas vezes (o gesto e o botão da
-              // casa), e com uma peça selecionada ele ainda a pousava no meio
-              // do desenho.
-              onSquareClick={
-                measuring()
-                  ? ruler.pick
-                  : templating()
-                    ? area.pick
-                    : marking()
-                      ? markAt
-                      : !painting() && selectedTokenId()
-                        ? placeSelected
-                        : undefined
-              }
-              // Com a régua ligada, TODA casa responde: mede-se para onde não
-              // se pode andar, que é justamente a pergunta do ataque.
-              reachable={measuring() || templating() || marking() ? undefined : reachable()}
-              onSelectMarker={props.isGm ? setSelectedMarkerId : undefined}
-              selectedMarkerId={selectedMarkerId()}
-              area={area.squares()}
-              ruler={ruler.from() && ruler.to() ? { from: ruler.from()!, to: ruler.to()! } : null}
-              difficult={cena(live()).difficult}
-              // Arrastar com a ferramenta na mão PINTA em vez de mover a vista.
-              onPaintSquare={painting() ? paintSquare : undefined}
-              onKeyDown={onBoardKeyDown}
-            />
+            {/* A cortina sai de `cena()`, e é o que faz a lente da ALE-193
+                mostrá-la sem uma linha a mais: `cena()` é a cópia do jogador
+                quando a lente está ligada, e ela chega com `curtained` do
+                mesmo `BoardForRole` que atende a mesa. Uma segunda regra escrita
+                aqui poderia divergir do servidor, que é a classe de defeito que
+                a lente existe para não ter (ALE-202). */}
+            {/* Gateia pela CÓPIA DA MESA, e não por `cena()`: o estado do
+                mestre também carrega `curtained` — é dele que a tira e o botão
+                do cabeçalho vivem —, então gatear pela cena esconderia o mapa de
+                quem está montando, que é o contrário da cortina. Aqui só cai o
+                mestre DENTRO da lente, e é lá que ele quer ver a cortina. */}
+            <Show when={!playerCopy()?.curtained} fallback={<CurtainForPlayers />}>
+              <BoardView
+                board={cena(live())}
+                view={props.view}
+                activeEntryId={props.activeEntryId}
+                highlightEntryId={props.highlightEntryId}
+                health={health()}
+                selectedTokenId={selectedTokenId()}
+                movableTokenIds={movableTokenIds()}
+                pending={cena(live()).pending}
+                // Quem não pode mover NENHUMA peça também não seleciona: sem isso
+                // a camada de quadrados nasceria com centenas de botões inertes
+                // na árvore de quem só assiste.
+                onSelectToken={movableTokenIds().size > 0 ? selectToken : undefined}
+                // Com a ferramenta na mão o pincel é DONO da superfície: sem
+                // isto o mesmo clique pintava duas vezes (o gesto e o botão da
+                // casa), e com uma peça selecionada ele ainda a pousava no meio
+                // do desenho.
+                onSquareClick={
+                  measuring()
+                    ? ruler.pick
+                    : templating()
+                      ? area.pick
+                      : marking()
+                        ? markAt
+                        : !painting() && selectedTokenId()
+                          ? placeSelected
+                          : undefined
+                }
+                // Com a régua ligada, TODA casa responde: mede-se para onde não
+                // se pode andar, que é justamente a pergunta do ataque.
+                reachable={measuring() || templating() || marking() ? undefined : reachable()}
+                onSelectMarker={props.isGm ? setSelectedMarkerId : undefined}
+                selectedMarkerId={selectedMarkerId()}
+                area={area.squares()}
+                ruler={ruler.from() && ruler.to() ? { from: ruler.from()!, to: ruler.to()! } : null}
+                difficult={cena(live()).difficult}
+                // Arrastar com a ferramenta na mão PINTA em vez de mover a vista.
+                onPaintSquare={painting() ? paintSquare : undefined}
+                onKeyDown={onBoardKeyDown}
+              />
+            </Show>
 
             <Show when={props.isGm && selectedToken()}>
               {(token) => (
@@ -729,7 +780,8 @@ export function BoardRegion(props: {
                   : 'Clique numa casa acesa para propor o movimento.'}
               </p>
             </Show>
-          </>
+          
+          </Show>
         )}
       </Show>
       </section>

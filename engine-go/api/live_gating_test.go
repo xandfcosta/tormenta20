@@ -51,6 +51,7 @@ var gmGate = map[string]bool{
 	// dela, e fora de combate cada um anda com a sua.
 	"POST /board":                            true,
 	"DELETE /board":                          true,
+	"POST /board/curtain":                    true,  // a cortina é o gesto do mestre; não há como o jogador abrir a sua (ALE-202)
 	"GET /board":                             false, // ler o tabuleiro é de todo mundo na mesa — REDIGIDO por papel
 	"POST /board/tokens":                     true,
 	"DELETE /board/tokens/{tokenId}":         true,

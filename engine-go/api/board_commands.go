@@ -135,6 +135,39 @@ func (s *Server) handleBoardGet(w http.ResponseWriter, r *http.Request) {
 
 // handleBoardAsPlayer devolve ao MESTRE a versão que a mesa vê — é o "espiar
 // pelo olho do jogador", e por isso é do mestre e devolve o recorte de jogador.
+// handleBoardCurtain fecha ou abre a CORTINA (ALE-202): o tabuleiro continua
+// inteiro para o mestre e a mesa vê uma cortina no lugar dele.
+//
+// A trava é do SERVIDOR e não da tela. Esconder o mapa no cliente entregaria o
+// estado inteiro no fio e deixaria a emboscada a um DevTools de distância — a
+// cortina é feita em `tabuleiro.BoardForRole`, o mesmo lugar que já apaga a peça
+// escondida (ALE-124), e o cliente recebe um tabuleiro que NÃO TEM a cena.
+//
+// Não existe rota para o jogador abrir a própria cortina; ela sai daqui, e daqui
+// só o mestre passa.
+func (s *Server) handleBoardCurtain(w http.ResponseWriter, r *http.Request) {
+	ctx, body, ok := s.boardGmCommand(w, r)
+	if !ok {
+		return
+	}
+	fechada, informado := body["curtained"].(bool)
+	if !informado {
+		plataforma.WriteError(w, http.StatusBadRequest, "curtained (bool) is required")
+		return
+	}
+	board, mudou, err := s.boards.SetCurtain(r.Context(), ctx.sessionID, fechada)
+	if err != nil {
+		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	// Sem mudança não se publica: ver `SetCurtain`. O mestre ainda recebe o
+	// estado, porque a resposta dele é a confirmação do gesto.
+	if mudou {
+		s.publishBoardState(ctx.sessionID, board)
+	}
+	plataforma.WriteJSON(w, http.StatusOK, tabuleiro.BoardForRole(ctx.Role, board))
+}
+
 func (s *Server) handleBoardAsPlayer(w http.ResponseWriter, r *http.Request) {
 	ctx, ok := s.liveAccess(w, r)
 	if !ok || !requireGmRole(w, ctx) {

@@ -30,10 +30,16 @@ class FakeRealtime {
    *  `boardForRole("player", …)`, que apaga a peça escondida da cópia da mesa. */
   readonly boardAsPlayer = vi.fn(() => {
     const aberto = this.board()
-    return Promise.resolve(
-      aberto ? { ...aberto, tokens: aberto.tokens.filter((peca) => !peca.hidden) } : null,
-    )
+    if (!aberto) return Promise.resolve(null)
+    // A CORTINA vem antes da redação de peça, como no `BoardForRole` do Go
+    // (ALE-202): com ela fechada a mesa não recebe cena nenhuma, e um fake que
+    // só filtrasse peça escondida mentiria sobre o que o servidor manda.
+    if (aberto.curtained) {
+      return Promise.resolve({ version: aberto.version, curtained: true } as BoardState)
+    }
+    return Promise.resolve({ ...aberto, tokens: aberto.tokens.filter((peca) => !peca.hidden) })
   })
+  readonly setCurtain = vi.fn()
   /** Montar um lugar do acervo (ALE-191, fatia 2). A cena guardada chega por
    *  PERGUNTA — a lista viaja só com nome e contagem. */
   scene: BoardState | null = null
@@ -81,6 +87,7 @@ class FakeRealtime {
       closeBoard: this.closeBoard,
       populateBoard: this.populateBoard,
       paintTerrain: this.paintTerrain,
+      setCurtain: this.setCurtain,
       listPlaces: () => Promise.resolve(this.places),
       boardAsPlayer: this.boardAsPlayer,
       placeScene: () => Promise.resolve(this.scene),
@@ -1534,5 +1541,98 @@ describe('quem vem para o tabuleiro', () => {
     // nome no começo do rótulo.
     const lista = within(screen.getByRole('dialog'))
     expect(lista.getByRole('button', { name: /Sílfide Ladina/ })).toBeDisabled()
+  })
+})
+
+/**
+ * A CORTINA (ALE-202): o tabuleiro existe para o mestre e a mesa vê uma cortina
+ * no lugar dele — montar a taverna enquanto eles olham a cripta.
+ *
+ * O que se prova aqui é a composição, que é onde o defeito moraria: a redação em
+ * si é do servidor e já está provada no Go (`TestACortinaEscondeACenaInteiraDaMesa`).
+ * A tela não decide o que esconder; ela desenha o que recebeu, e o risco é ela
+ * desenhar a coisa errada — ou desenhar a cortina para quem não devia.
+ */
+describe('a cortina sobre a cena', () => {
+  /** O que o servidor manda à mesa com a cortina fechada: cena NENHUMA, e a
+   *  lista de peças VAZIA (nunca nula — o cabeçalho indexa `tokens.length`). */
+  const SOB_CORTINA: BoardState = { version: 4, place: '', terrain: '', tokens: [], curtained: true }
+
+  it('a mesa vê a cortina, e não a cena', () => {
+    renderRegion(false, SOB_CORTINA)
+
+    expect(screen.getByText('O mestre está montando a cena.')).toBeInTheDocument()
+    // A grade é o que denunciaria a cena: tamanho, terreno, onde tem peça.
+    expect(screen.queryByRole('grid')).not.toBeInTheDocument()
+    // "O mestre ainda não abriu um tabuleiro" é OUTRO estado, e o jogador o
+    // resolve de outro jeito — este é esperar, aquele é cutucar o mestre.
+    expect(screen.queryByText(/ainda não abriu/)).not.toBeInTheDocument()
+  })
+
+  // O CONTROLE do teste de cima: sem ele, um `BoardRegion` que escondesse a
+  // grade sempre passaria nas asserções de ausência e a mesa nunca mais veria
+  // tabuleiro nenhum. Ausência só é evidência quando se prova que o canal
+  // estaria lá.
+  it('sem cortina, a mesma mesa vê a grade', () => {
+    renderRegion(false, TABULEIRO)
+
+    expect(screen.getByRole('grid')).toBeInTheDocument()
+    expect(screen.queryByText('O mestre está montando a cena.')).not.toBeInTheDocument()
+  })
+
+  it('o mestre continua vendo a cena que está montando, com a tira avisando', async () => {
+    const CENA_FECHADA: BoardState = { ...TABULEIRO, curtained: true }
+    const { rt, user } = renderRegion(true, CENA_FECHADA)
+
+    // O ponto todo da cortina: o mestre trabalha no mapa inteiro.
+    expect(screen.getByRole('grid')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Ogro,/ })).toBeInTheDocument()
+
+    // A tira existe porque o esquecimento é o modo de falha caro: o mestre
+    // narra a taverna para uma mesa que está olhando um aviso.
+    const tira = screen.getByText('A cortina está fechada: a mesa não vê esta cena.')
+    expect(tira).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Abrir a cortina' }))
+    expect(rt.setCurtain).toHaveBeenCalledWith(false)
+  })
+
+  it('o mestre fecha a cortina pelo cabeçalho', async () => {
+    const { rt, user } = renderRegion(true, TABULEIRO)
+
+    const botao = screen.getByRole('button', { name: 'Fechar a cortina' })
+    expect(botao).toHaveAttribute('aria-pressed', 'false')
+
+    await user.click(botao)
+
+    expect(rt.setCurtain).toHaveBeenCalledWith(true)
+  })
+
+  // A lente da ALE-193 mostra a cortina SEM uma linha própria: ela pergunta ao
+  // servidor a cópia da mesa, e a cópia vem com a cortina. Uma segunda regra
+  // escrita na tela poderia divergir do servidor — que é a classe de defeito
+  // que a lente existe para não ter.
+  it('a lente do mestre mostra a cortina que a mesa está vendo', async () => {
+    const CENA_FECHADA: BoardState = { ...TABULEIRO, curtained: true }
+    const { user } = renderRegion(true, CENA_FECHADA)
+
+    await user.click(screen.getByRole('button', { name: 'Ver como jogador' }))
+
+    await waitFor(() =>
+      expect(screen.getByText('O mestre está montando a cena.')).toBeInTheDocument(),
+    )
+    // A tira da cortina sobrevive à lente: é aí que o mestre mais precisa saber
+    // que a cortina é DELE, senão a lente parece quebrada.
+    expect(screen.getByText('A cortina está fechada: a mesa não vê esta cena.')).toBeInTheDocument()
+  })
+
+  // O jogador não tem como abrir a própria cortina, e a trava de verdade é do
+  // SERVIDOR (provado no Go, `gmGate`). Aqui se afirma só que a tela não oferece
+  // o gesto — é UX, e não a fronteira de segurança.
+  it('a mesa não ganha botão de cortina', () => {
+    renderRegion(false, SOB_CORTINA)
+
+    expect(screen.queryByRole('button', { name: 'Fechar a cortina' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Abrir a cortina' })).not.toBeInTheDocument()
   })
 })

@@ -85,6 +85,20 @@ type BoardState struct {
 	// movimento proposto sobre um tabuleiro que já mudou, e o que deixa o
 	// cliente descartar um broadcast atrasado depois de reconectar.
 	Version int64 `json:"version"`
+	// Curtained é a CORTINA (ALE-202): o tabuleiro existe para o mestre e a
+	// mesa vê uma cortina no lugar dele.
+	//
+	// Mora no estado e não numa lista de sessões em memória porque tem de
+	// sobreviver a recarregar a página — o mestre monta a emboscada, fecha o
+	// laptop, e a cortina continua fechada. A persistência do tabuleiro já leva
+	// o estado inteiro desde a ALE-124, então isto vem de graça.
+	//
+	// O padrão é FALSO por uma razão que o comentário do `BoardForRole` já diz:
+	// errar para o lado que mostra seria vazar por omissão. Aqui é o inverso —
+	// um tabuleiro que nasce sob cortina sem o mestre pedir some da mesa sem
+	// ninguém entender, e o erro caro desta issue é achar que se está montando
+	// escondido e não estar. Quem fecha a cortina é um gesto explícito.
+	Curtained bool `json:"curtained"`
 	// Place é o nome do lugar ("Taverna do Javali") — o mestre está montando uma
 	// cena, não uma planilha.
 	Place   string       `json:"place"`
@@ -482,9 +496,25 @@ func occupied(b *BoardState, x, y int) bool {
 // BoardForRole é o tabuleiro como UM papel pode vê-lo. Papel desconhecido cai em
 // jogador: errar para o lado que MOSTRA seria vazar por omissão, a mesma regra
 // do `aovivo.StateForRole`.
-func BoardForRole(Role string, b *BoardState) *BoardState {
-	if b == nil || Role == "gm" {
+func BoardForRole(papel string, b *BoardState) *BoardState {
+	if b == nil || papel == "gm" {
 		return b
+	}
+	// A CORTINA vem ANTES da redação de peça (ALE-202): com ela fechada, a mesa
+	// não recebe o mapa nenhum — nem as peças visíveis, nem o terreno, nem o
+	// nome do lugar. Redigir peça por peça deixaria passar tudo o que não está
+	// marcado como escondido, que é justamente a cena que o mestre está
+	// montando.
+	//
+	// O que a mesa recebe é um tabuleiro VAZIO com a cortina ligada, e não
+	// `nil`: `nil` significa "não há tabuleiro" e a cortina é outra coisa —
+	// o jogador precisa saber que vem cena, sem ver qual (decisão do dono).
+	if b.Curtained {
+		// `Tokens` vai VAZIO e não nulo: fatia nil vira `null` no JSON, e o
+		// cliente indexa `tokens.length` no cabeçalho — a cortina derrubaria a
+		// tela da mesa em vez de escondê-la. O contrato do fio é "lista vazia é
+		// uma lista", e quem o garante é aqui, não cada leitor.
+		return &BoardState{Version: b.Version, Curtained: true, Tokens: []BoardToken{}}
 	}
 	return redactBoardForPlayers(b)
 }

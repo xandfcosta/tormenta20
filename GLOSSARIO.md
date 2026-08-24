@@ -56,6 +56,7 @@ alguém já usou e que não voltam.
 | **lugar** | `BoardPlace` | ~~cena guardada~~ | O mapa GUARDADO no acervo da campanha, com as peças onde ficaram. |
 | **marcador** | `BoardMarker` | — | O ponto apontado no mapa (ALE-195). Nasce escondido. |
 | **terreno** | `terrain` | — | O chão difícil que o pincel pinta. |
+| **cortina** | `curtained` | ~~oculto~~, ~~privado~~, ~~rascunho~~ | O tabuleiro EXISTE para o mestre e a mesa vê uma cortina no lugar dele (ALE-202). É durante a sessão, com a mesa presente — montar a taverna enquanto eles olham a cripta. **Não é o rascunho de lugar**, que é preparação FORA da sessão, sem ninguém conectado: tempos diferentes, gestos diferentes, e a decisão do dono foi que os dois convivem. Também **não é** "o mestre ainda não abriu um tabuleiro", que continua significando exatamente isso. A cortina é DESENHADA: o jogador sabe que vem cena, sem ver qual. |
 
 ## D. Os monstros do mestre
 

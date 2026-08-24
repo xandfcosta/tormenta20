@@ -56,6 +56,7 @@ func (s *Server) mountLiveRoutes(r chi.Router) {
 		r.Get("/as-player", s.handleBoardAsPlayer)
 		r.Post("/", s.handleBoardOpen)
 		r.Delete("/", s.handleBoardClose)
+		r.Post("/curtain", s.handleBoardCurtain)
 		r.Post("/populate", s.handleBoardPopulate)
 		r.Post("/terrain", s.handleBoardTerrainPaint)
 
