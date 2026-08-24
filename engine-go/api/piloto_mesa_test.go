@@ -54,11 +54,12 @@ func novoPiloto(t *testing.T) pilotoFixture {
 	}); err != nil {
 		t.Fatalf("semear perícia: %v", err)
 	}
-	// O gateway do socket, como em produção: é ele que preenche o `s.rt`, e sem
-	// ele a escrita pela página grava mas recusa dizendo que a mesa não foi
-	// avisada. Montá-lo aqui é o que põe a PONTE entre os dois transportes
-	// debaixo do teste — ela é o custo central do piloto e não pode ficar de fora.
-	_ = s.SocketHandler()
+	// Aqui havia um `_ = s.SocketHandler()`, e o comentário dele dizia que
+	// montar o gateway punha "a PONTE entre os dois transportes debaixo do
+	// teste, porque ela é o custo central do piloto". A ALE-253 tirou o socket
+	// do projeto e a ponte junto: há um caminho de publicação só, o hub SSE, e
+	// ele existe desde o `newServer`. O custo central do piloto deixou de
+	// existir em vez de deixar de ser testado.
 	return pilotoFixture{s: s, mestre: mestre, jogador: jogador, campaignID: campaignID, sessionID: sessionID, charID: charID}
 }
 

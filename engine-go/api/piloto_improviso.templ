@@ -1,0 +1,171 @@
+package api
+
+import "fmt"
+
+// O IMPROVISO (ALE-261) — as tabelas do Cap 6 e o esqueleto de masmorra.
+//
+// AS CITAÇÕES DE PÁGINA FORAM CONFERIDAS CONTRA O PDF, e precisavam ser: a SPA
+// contradizia a si mesma, com a tela e o arquivo de regras dando páginas
+// diferentes para a mesma tabela. Conferido, cada um acertava metade —
+//
+//	Ruína              p269   (a TELA acertava; não é tabela numerada, é prosa)
+//	Tabela 6-5         p274   (o arquivo de REGRAS acertava)
+//	Tabela 6-2         p263   (o arquivo de REGRAS acertava)
+//	Tabela 6-7         p278   (ninguém acertava: a tela dizia p276)
+//
+// E um erro que nenhum dos dois pegou: o comentário `Tabela 6-4: Ruínas` está
+// errado no NÚMERO e no NOME — a 6-4 é "Viagens", e a Ruína não é tabela
+// numerada. O livro escreve: "Um personagem que entre em uma ruína deve rolar
+// 1d6. Com um resultado 1 ou 2, a ruína possui apenas uma ameaça..." (p269).
+//
+// Método, para quem repetir: o PDF tem OFFSET DE 6 — a página impressa 269 é a
+// 275 do arquivo. Conferido em quatro amostras antes de eu confiar nele.
+//
+// Três tabelas lado a lado e a masmorra embaixo, como o original. A grade é
+// `sm:2 xl:3` e não a `.acervo-em-colunas` dos catálogos: aqui os cartões são
+// CONTROLES com histórico curto, não prosa de regra, então a medida de leitura
+// que rege os catálogos não se aplica.
+
+templ cenaDoImproviso(v improvisoView) {
+	<section
+		id="improviso"
+		class="mesa-palco flex min-h-0 flex-1 flex-col gap-4"
+		aria-labelledby="mesa-improviso"
+		data-signals={ sinaisDoImproviso(v) }
+	>
+		<h2 id="mesa-improviso" class="font-heading text-lg tracking-wide text-foreground">Improviso</h2>
+		<div class="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+			<div>
+				@rotuloDeSecao("muted", "mb-2") {
+					Tabelas do Cap 6
+				}
+				<div class="grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-3">
+					@tabelaQueRola("ruina", "Ermos — Ruína", "d6", "p269", v.Ruina)
+					@tabelaQueRola("perseguicao", "Perseguição — evento", "d20", "Tabela 6-5 · p274", v.Perseguicao)
+					@tabelaQueRola("recompensa", "Consequências de buscas", "d6", "Tabela 6-7 · p278", v.Recompensa)
+				</div>
+			</div>
+			<div class="border-t border-grimorio-iron pt-4">
+				@rotuloDeSecao("muted", "mb-2") {
+					Masmorra
+				}
+				<div class="grid items-start gap-3 sm:grid-cols-2">
+					@tabelaQueRola("ideias", "Ideias de masmorra", "d20", "Tabela 6-2 · p263", v.Ideias)
+					@planejadorDeMasmorra(v)
+				</div>
+			</div>
+		</div>
+	</section>
+}
+
+// tabelaQueRola é o cartão de uma tabela: o botão, o último resultado grande, e
+// as anteriores em voz baixa.
+//
+// O NÚMERO aparece sempre, ao lado do texto. Ele não é detalhe de
+// implementação: "saiu 4" é metade da resposta, e uma tabela cujo resultado não
+// se confere contra o livro é um oráculo, não uma ferramenta.
+//
+// `<section aria-label>` e não `<div>`: um cartão com cabeçalho próprio É uma
+// região, e sem nome acessível ele vira caixa anônima para quem navega por
+// regiões — a mesma razão do `secaoDoBloco` no bestiário. De quebra, é o que
+// deixa o teste apontar para UM cartão em vez de contar filhos de `div`, que é
+// o acoplamento a formato de DOM que o guia manda não escrever.
+templ tabelaQueRola(id, titulo, dado, fonte string, historico []sorteio) {
+	<section aria-label={ titulo } class="flex flex-col gap-2 rounded-sm border border-grimorio-iron p-3">
+		<div class="flex flex-wrap items-baseline gap-x-2">
+			<h3 class="font-heading text-sm tracking-wide text-foreground">{ titulo }</h3>
+			<span class="text-3xs text-muted-foreground">{ fonte }</span>
+		</div>
+		<button
+			type="button"
+			data-on:click={ fmt.Sprintf("@post('/piloto/mestre/improviso/%s')", id) }
+			data-indicator={ "rolando" + id }
+			class="inline-flex min-h-11 items-center justify-center gap-1.5 self-start rounded-sm border border-grimorio-iron px-3 text-xs text-foreground outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>
+			@icone("Dices", "size-4")
+			{ "Rolar " + dado }
+		</button>
+		if len(historico) == 0 {
+			<p class="text-xs text-muted-foreground">Nada rolado ainda.</p>
+		} else {
+			// O `aria-live` fica no BLOCO do resultado e não no botão: quem usa
+			// leitor de tela precisa ouvir o que saiu, e o botão só diria que
+			// foi clicado. `polite` porque a rolagem é do próprio usuário —
+			// `assertive` interromperia a leitura dele por uma coisa que ele
+			// acabou de pedir.
+			<div aria-live="polite" class="space-y-0.5">
+				<p class="flex items-baseline gap-2">
+					<span class="font-mono text-2xl leading-none tabular-nums text-grimorio-gold">{ inteiro(historico[0].Rolagem) }</span>
+					<span class="text-sm text-foreground">{ historico[0].Texto }</span>
+				</p>
+				if historico[0].Detalhe != "" {
+					<p class="pl-9 text-xs text-muted-foreground">{ historico[0].Detalhe }</p>
+				}
+			</div>
+			if len(historico) > 1 {
+				// As anteriores existem porque o mestre que rola duas vezes na
+				// mesma cena quer COMPARAR — guardar só a última joga fora a
+				// comparação no instante da segunda rolagem.
+				<ul class="space-y-0.5 border-t border-grimorio-iron pt-1.5">
+					for _, s := range historico[1:] {
+						<li class="flex items-baseline gap-2 text-3xs text-muted-foreground">
+							<span class="w-5 shrink-0 text-right font-mono tabular-nums">{ inteiro(s.Rolagem) }</span>
+							<span class="truncate">{ s.Texto }</span>
+						</li>
+					}
+				</ul>
+			}
+		}
+	</section>
+}
+
+// planejadorDeMasmorra não rola dado: ele responde uma CONTA sobre o número de
+// salas — que tamanho o livro chama isso, quanto tempo de mesa ele ocupa, e
+// quantas ameaças distribuir (uma a cada três salas, p263).
+templ planejadorDeMasmorra(v improvisoView) {
+	<section aria-label="Esqueleto da masmorra" class="flex flex-col gap-2 rounded-sm border border-grimorio-iron p-3">
+		<div class="flex flex-wrap items-baseline gap-x-2">
+			<h3 class="font-heading text-sm tracking-wide text-foreground">Esqueleto</h3>
+			<span class="text-3xs text-muted-foreground">p263</span>
+		</div>
+		<div class="space-y-1">
+			@rotuloDeSecao("muted", "block") {
+				<label for="improviso-salas">Salas</label>
+			}
+			<input
+				id="improviso-salas"
+				type="number"
+				min={ inteiro(salasMinimo) }
+				max={ inteiro(salasMaximo) }
+				value={ inteiro(v.Salas) }
+				data-bind:salas
+				data-on:input__debounce.300ms="@get('/piloto/mestre/improviso')"
+				aria-label="Número de salas da masmorra"
+				class="h-9 w-24 rounded-sm border border-input bg-transparent px-2 text-base tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring md:text-sm"
+			/>
+		</div>
+		if v.AcimaDoTeto {
+			// Acima do teto não é ERRO: é o livro recomendando parar. A tela diz
+			// isso em vez de esconder o resultado ou fingir um tamanho.
+			<p class="text-xs text-muted-foreground">
+				Acima do maior tamanho do livro. Ele recomenda parar aqui e quebrar em masmorras menores.
+			</p>
+		} else if v.Tamanho != nil {
+			<dl class="space-y-1 text-xs">
+				@linhaDoEsqueleto("Tamanho", v.Tamanho.Label)
+				@linhaDoEsqueleto("Ritmo", nomeDoRitmo(v.Tamanho.Pacing))
+				@linhaDoEsqueleto("Ameaças a distribuir", inteiro(v.Ameacas))
+				if v.Tamanho.MaxSecondaryObjectives > 0 {
+					@linhaDoEsqueleto("Objetivos secundários (até)", inteiro(v.Tamanho.MaxSecondaryObjectives))
+				}
+			</dl>
+		}
+	</section>
+}
+
+templ linhaDoEsqueleto(rotulo, valor string) {
+	<div class="flex items-baseline justify-between gap-2">
+		<dt class="text-muted-foreground">{ rotulo }</dt>
+		<dd class="font-mono tabular-nums text-foreground">{ valor }</dd>
+	</div>
+}
