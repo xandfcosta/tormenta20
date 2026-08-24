@@ -18,7 +18,7 @@ import templruntime "github.com/a-h/templ/runtime"
 // Quem decide se eles aparecem é o PAPEL, resolvido no servidor pelo mesmo
 // `stateForRole` que o resto da casa usa. Esconder no cliente seria UX; a trava
 // é a redação do estado, que o jogador nunca recebe.
-func controlesDoMestre(v mesaView, r rastreadorView) templ.Component {
+func controlesDoMestre(v mesaView, r mestreView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -46,7 +46,7 @@ func controlesDoMestre(v mesaView, r rastreadorView) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(r.Contador)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_rastreador.templ`, Line: 27, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_comandos.templ`, Line: 27, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -72,7 +72,7 @@ func controlesDoMestre(v mesaView, r rastreadorView) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaMesa(v, "POST", "initiative/next-turn"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_rastreador.templ`, Line: 49, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_comandos.templ`, Line: 49, Col: 69}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 			if templ_7745c5c3_Err != nil {
@@ -95,7 +95,7 @@ func controlesDoMestre(v mesaView, r rastreadorView) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(r.Avanco.Rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_rastreador.templ`, Line: 55, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_comandos.templ`, Line: 55, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -240,7 +240,7 @@ func aRecuperacao(v mesaView) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaMesa(v, "POST", "rest/scene"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_rastreador.templ`, Line: 119, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_comandos.templ`, Line: 119, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -298,7 +298,7 @@ func descansoDeDia(v mesaView) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue("document.getElementById('descanso-de-dia').close(); " + comandoDaMesa(v, "POST", "rest/day"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_rastreador.templ`, Line: 192, Col: 113}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_comandos.templ`, Line: 192, Col: 113}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -342,7 +342,7 @@ func passoDoTurno(v mesaView, rota, rotulo, sinal string, ligado bool) templ.Com
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_rastreador.templ`, Line: 204, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_comandos.templ`, Line: 204, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 		if templ_7745c5c3_Err != nil {
@@ -360,7 +360,7 @@ func passoDoTurno(v mesaView, rota, rotulo, sinal string, ligado bool) templ.Com
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaMesa(v, "POST", "initiative/"+rota))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_rastreador.templ`, Line: 206, Col: 63}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_comandos.templ`, Line: 206, Col: 63}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 			if templ_7745c5c3_Err != nil {
@@ -383,7 +383,7 @@ func passoDoTurno(v mesaView, rota, rotulo, sinal string, ligado bool) templ.Com
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(sinal)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_rastreador.templ`, Line: 212, Col: 9}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_comandos.templ`, Line: 212, Col: 9}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -436,7 +436,7 @@ func encerrarCena(v mesaView) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaMesa(v, "POST", "scene/end"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_rastreador.templ`, Line: 229, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_comandos.templ`, Line: 229, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 		if templ_7745c5c3_Err != nil {
@@ -478,7 +478,7 @@ func iniciarCena(v mesaView) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaMesa(v, "POST", "scene/start"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_rastreador.templ`, Line: 237, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_comandos.templ`, Line: 237, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 		if templ_7745c5c3_Err != nil {

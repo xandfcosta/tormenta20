@@ -51,7 +51,7 @@ func (s *Server) PilotoRouter() http.Handler {
 		r.Get("/mesa/{campaignId}/{sessionId}", s.handleMesaPage)
 		r.Get("/mesa/{campaignId}/{sessionId}/stream", s.handleMesaStream)
 		r.Post("/mesa/{campaignId}/{sessionId}/iniciativa", s.handleMesaInitiative)
-		s.rotasDoRastreador(r)
+		s.rotasDosComandosDaMesa(r)
 		s.rotasDoBestiarioDaMesa(r)
 	})
 	// A SEGUNDA superfície (ALE-219): a administração. Mesmo `requireAdmin` da
@@ -157,7 +157,7 @@ func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, se
 	// `stateForRole` já usou para redigir o estado.
 	if role == "gm" {
 		membros, presentes := s.membrosEPresenca(ctx, campaignID, sessionID)
-		r := rastreadorViewOf(st, membros, presentes, true)
+		r := mestreViewOf(st, membros, presentes, true)
 		// A presença é escrita nos cartões DEPOIS de o papel ser resolvido, e é
 		// isso que a mantém fora da tela do jogador sem uma segunda decisão na
 		// cena: quem não é mestre não chega aqui, e lá o campo continua nil.

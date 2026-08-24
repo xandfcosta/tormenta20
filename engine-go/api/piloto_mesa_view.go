@@ -37,7 +37,7 @@ type mesaView struct {
 	// Mestre é nil para o jogador, e essa é a trava na CENA: não há como
 	// desenhar controle que não existe na view. Esconder por classe deixaria o
 	// HTML na página para quem abrisse o inspetor.
-	Mestre *rastreadorView
+	Mestre *mestreView
 }
 
 // mesaTurn é de quem é a vez, do ponto de vista de quem olha. Espelha o
@@ -249,8 +249,8 @@ func mesaViewOf(
 // é a do jogador mais os controles, e não uma segunda cena — duas cenas seriam
 // duas listas de combatente para manter em dia.
 
-// rastreadorView é o acréscimo do mestre sobre a `mesaView`.
-type rastreadorView struct {
+// mestreView é o acréscimo do mestre sobre a `mesaView`.
+type mestreView struct {
 	// Contador é a frase que diz ONDE a sessão está (ALE-210).
 	Contador string
 	// Avanco é o rótulo do botão mais clicado da sessão, e ele diz PARA ONDE vai
@@ -267,13 +267,13 @@ type rastreadorView struct {
 	PodeAvancar bool
 }
 
-func rastreadorViewOf(
+func mestreViewOf(
 	st *aovivo.SessionRuntimeState,
 	membros []aovivo.MembroDaMesa,
 	presentes []int64,
 	ehMestre bool,
-) rastreadorView {
-	return rastreadorView{
+) mestreView {
+	return mestreView{
 		Contador:    aovivo.ContadorDoTurno(st.SceneActive, st.Round, st.TurnIndex, len(st.Initiative)),
 		Avanco:      aovivo.ProximoTurno(st.Initiative, st.TurnIndex),
 		VeVitais:    aovivo.OMestreVeOsVitais(st.Initiative, ehMestre),

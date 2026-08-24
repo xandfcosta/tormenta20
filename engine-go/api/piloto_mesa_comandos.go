@@ -24,7 +24,7 @@ import (
 // mesmo caminho que a API usa, e papel desconhecido cai em jogador. Esconder o
 // botão é UX; a trava é aqui.
 
-func (s *Server) rotasDoRastreador(r chi.Router) {
+func (s *Server) rotasDosComandosDaMesa(r chi.Router) {
 	r.Post("/mesa/{campaignId}/{sessionId}/initiative/next-turn", s.comandoDoMestre(
 		func(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
 			return st.sessions.NextTurn(c.SessionID)

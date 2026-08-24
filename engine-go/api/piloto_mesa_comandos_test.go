@@ -41,7 +41,7 @@ func TestOAvancoSoAcendeComCenaEFila(t *testing.T) {
 		{"em combate", estadoDe(true, 2, 0, arwen), true},
 	}
 	for _, c := range casos {
-		v := rastreadorViewOf(c.st, nil, nil, true)
+		v := mestreViewOf(c.st, nil, nil, true)
 		if v.PodeAvancar != c.quero {
 			t.Errorf("%s: PodeAvancar = %v, quero %v", c.nome, v.PodeAvancar, c.quero)
 		}
@@ -57,12 +57,12 @@ func TestOAvancoSoAcendeComCenaEFila(t *testing.T) {
 func TestOContadorEOAvancoContamAMesmaHistoria(t *testing.T) {
 	fila := []aovivo.InitiativeEntry{{Label: "Arwen"}, {Label: "Ogro"}}
 
-	fora := rastreadorViewOf(estadoDe(false, 0, -1, fila...), nil, nil, true)
+	fora := mestreViewOf(estadoDe(false, 0, -1, fila...), nil, nil, true)
 	if fora.Contador != "Fora de cena" {
 		t.Errorf("fora de cena o contador diz %q", fora.Contador)
 	}
 
-	montando := rastreadorViewOf(estadoDe(true, 0, -1, fila...), nil, nil, true)
+	montando := mestreViewOf(estadoDe(true, 0, -1, fila...), nil, nil, true)
 	if montando.Contador != "Rodada 0 · 2 na fila" {
 		t.Errorf("montando a ordem o contador diz %q", montando.Contador)
 	}
@@ -72,7 +72,7 @@ func TestOContadorEOAvancoContamAMesmaHistoria(t *testing.T) {
 		t.Errorf("montando a ordem o botão diz %q", montando.Avanco.Rotulo)
 	}
 
-	emCombate := rastreadorViewOf(estadoDe(true, 1, 0, fila...), nil, nil, true)
+	emCombate := mestreViewOf(estadoDe(true, 1, 0, fila...), nil, nil, true)
 	if emCombate.Contador != "Rodada 1 · Turno 1/2" {
 		t.Errorf("em combate o contador diz %q", emCombate.Contador)
 	}
@@ -88,13 +88,13 @@ func TestOsVitaisSeguemAFilaEOPapel(t *testing.T) {
 	comNPC := estadoDe(true, 1, 0, aovivo.InitiativeEntry{Label: "Ogro", HpMax: &pv})
 	soPCs := estadoDe(true, 1, 0, aovivo.InitiativeEntry{Label: "Arwen"})
 
-	if !rastreadorViewOf(comNPC, nil, nil, true).VeVitais {
+	if !mestreViewOf(comNPC, nil, nil, true).VeVitais {
 		t.Error("o mestre não vê vitais numa fila com NPC")
 	}
-	if rastreadorViewOf(comNPC, nil, nil, false).VeVitais {
+	if mestreViewOf(comNPC, nil, nil, false).VeVitais {
 		t.Error("o jogador viu os vitais do NPC")
 	}
-	if rastreadorViewOf(soPCs, nil, nil, true).VeVitais {
+	if mestreViewOf(soPCs, nil, nil, true).VeVitais {
 		t.Error("numa fila só de PCs a tela mudou de forma sem ter o que reservar")
 	}
 }
@@ -107,7 +107,7 @@ func TestAPresencaChegaNaCena(t *testing.T) {
 		{CharacterID: 11, DonoID: 2},
 		{CharacterID: 12, DonoID: 0},
 	}
-	v := rastreadorViewOf(estadoDe(true, 1, 0), membros, []int64{1}, true)
+	v := mestreViewOf(estadoDe(true, 1, 0), membros, []int64{1}, true)
 	if len(v.Conectados) != 1 || !v.Conectados[10] {
 		t.Errorf("conectados = %v, quero só o 10", v.Conectados)
 	}
