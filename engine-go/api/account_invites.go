@@ -1,6 +1,6 @@
 package api
 
-// Convite de CONTA (ALE-120). Serving the table on the LAN made open
+// Convite de CONTA (ALE-120). Serving the table on the LAN made Open
 // registration a real door: anyone reaching http://<ip>:3001 could create an
 // account. Now the admin issues a single-use link and hands it to the player,
 // who still picks their own password — the admin never sees it.
@@ -116,10 +116,10 @@ func (s *Server) createUser(
 	return user, tx.Commit()
 }
 
-func spend(ctx context.Context, q *sqlcgen.Queries, inviteID, userID int64) error {
+func spend(ctx context.Context, q *sqlcgen.Queries, inviteID, UserID int64) error {
 	rows, err := q.SpendAccountInvite(ctx, sqlcgen.SpendAccountInviteParams{
 		Usedat: sql.NullString{String: plataforma.NowISO(), Valid: true},
-		Usedby: sql.NullInt64{Int64: userID, Valid: true},
+		Usedby: sql.NullInt64{Int64: UserID, Valid: true},
 		ID:     inviteID,
 	})
 	if err != nil {

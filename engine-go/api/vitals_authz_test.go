@@ -82,8 +82,8 @@ func newVitalsFixture(t *testing.T) vitalsFixture {
 	}
 }
 
-func (f vitalsFixture) ctx(userID int64, role string) liveCtx {
-	return liveCtx{userID: userID, sessionID: f.sessionID, role: role}
+func (f vitalsFixture) ctx(UserID int64, Role string) liveCtx {
+	return liveCtx{UserID: UserID, sessionID: f.sessionID, Role: Role}
 }
 
 func TestAssertVitalsEditable(t *testing.T) {
@@ -149,8 +149,8 @@ func TestSessionForCallerRejectsForeignSession(t *testing.T) {
 		t.Fatalf("seed foreign session: %v", err)
 	}
 
-	_, role, status, err := s.sessionForCaller(ctx, AuthUser{ID: mine}, myCampaign, foreign.ID)
+	_, Role, status, err := s.sessionForCaller(ctx, AuthUser{ID: mine}, myCampaign, foreign.ID)
 	if err == nil || status == 200 {
-		t.Fatalf("status=%d role=%q err=%v — a sessão de outra mesa foi aceita", status, role, err)
+		t.Fatalf("status=%d Role=%q err=%v — a sessão de outra mesa foi aceita", status, Role, err)
 	}
 }

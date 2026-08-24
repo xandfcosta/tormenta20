@@ -1,65 +1,19 @@
 package api
 
+import "t20engine/tabuleiro"
+
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"log"
 	"t20engine/plataforma"
 
 	"t20engine/engine"
 )
 
-// As regras do tabuleiro: quem se move, quanto anda, o que vira peça.
-//
-// Este arquivo é o que SOBROU de `realtime_board.go` quando o socket.io foi
-// apagado (ALE-253). O corte foi pelo receptor: o que era `(g *realtimeGateway)`
-// era transporte e morreu junto; o que está aqui é aplicação, e não mudou uma
-// linha ao mudar de vizinho. As rotas HTTP em `session_commands.go` e
-// `board_commands.go` chamam exatamente as mesmas funções que os eventos
-// chamavam.
-
-// parseScene lê a cena montada do corpo da mensagem. Passa pelo JSON de novo
-// porque o corpo chega como `map[string]any` genérico, e reconstruir o
-// `BoardState` campo a campo aqui seria uma segunda definição do formato de fio.
-func parseScene(raw any) (*BoardState, error) {
-	blob, err := json.Marshal(raw)
-	if err != nil {
-		return nil, fmt.Errorf("cena ilegível: %w", err)
-	}
-	var cena BoardState
-	if err := json.Unmarshal(blob, &cena); err != nil {
-		return nil, fmt.Errorf("cena ilegível: %w", err)
-	}
-	if cena.Tokens == nil {
-		cena.Tokens = []BoardToken{}
-	}
-	return &cena, nil
-}
-
-// chosenEntries lê do corpo as linhas que o mestre escolheu trazer (ALE-204).
-//
-// Ausente devolve nil — TODAS, o significado que o evento sempre teve e que uma
-// aba aberta antes desta mudança ainda manda. Lista vazia devolve conjunto
-// vazio, que não traz ninguém: os dois casos são diferentes de propósito.
-func chosenEntries(body map[string]any, key string) entrySelection {
-	raw, ok := body[key].([]any)
-	if !ok {
-		return nil
-	}
-	chosen := entrySelection{}
-	for _, item := range raw {
-		if id, ok := item.(string); ok {
-			chosen[id] = true
-		}
-	}
-	return chosen
-}
-
 // speedsForBoard mede o deslocamento das peças de personagem que ainda não têm
 // um. Só as que faltam: recomputar a ficha de todo mundo a cada "trazer o grupo"
 // seria pagar caro por um número que não muda sozinho.
-func (s *Server) speedsForBoard(board *BoardState) map[string]int {
+func (s *Server) speedsForBoard(board *tabuleiro.BoardState) map[string]int {
 	speeds := map[string]int{}
 	if board == nil {
 		return speeds
@@ -82,12 +36,12 @@ func (s *Server) speedsForBoard(board *BoardState) map[string]int {
 // a armadura pesada tira metros, e o número da mesa tem de ser o mesmo que o
 // jogador lê na própria ficha. Falha de banco devolve orçamento zero, que a
 // peça traduz para o padrão do livro — a mesa não para porque o disco piscou.
-func (s *Server) moverFor(ctx liveCtx, tokenID string) (mover, int) {
-	by := mover{userID: ctx.userID, role: ctx.role}
-	if by.role == "gm" || tokenID == "" {
+func (s *Server) moverFor(ctx liveCtx, tokenID string) (tabuleiro.Mover, int) {
+	by := tabuleiro.Mover{UserID: ctx.UserID, Role: ctx.Role}
+	if by.Role == "gm" || tokenID == "" {
 		return by, 0
 	}
-	token := findToken(s.boards.get(context.Background(), ctx.sessionID), tokenID)
+	token := tabuleiro.FindToken(s.boards.Get(context.Background(), ctx.sessionID), tokenID)
 	if token == nil || token.CharacterID == nil {
 		return by, 0
 	}
@@ -96,7 +50,7 @@ func (s *Server) moverFor(ctx liveCtx, tokenID string) (mover, int) {
 		log.Printf("board: dono do personagem %d não resolvido (%v)", *token.CharacterID, err)
 		return by, 0
 	}
-	by.ownsCharacter = owner == ctx.userID
+	by.OwnsCharacter = owner == ctx.UserID
 	return by, s.speedSquaresFor(*token.CharacterID)
 }
 
@@ -114,9 +68,9 @@ func (s *Server) speedSquaresFor(characterID int64) int {
 	return engine.SquaresForDisplacement(float64(sheet.Displacement.Total))
 }
 
-// findToken num tabuleiro possivelmente ausente — a leitura do gateway acontece
+// tabuleiro.FindToken num tabuleiro possivelmente ausente — a leitura do gateway acontece
 // fora da trava, e "sem tabuleiro" é resposta legítima.
-func pendingTokenOf(b *BoardState) string {
+func pendingTokenOf(b *tabuleiro.BoardState) string {
 	if b == nil || b.Pending == nil {
 		return ""
 	}

@@ -38,14 +38,14 @@ var gmGate = map[string]bool{
 	"POST /initiative/next-turn":              true,
 	"POST /initiative/previous-turn":          true,
 	"DELETE /initiative":                      true, // reiniciar o combate
-	"POST /initiative/populate":               true,
+	"POST /initiative/Populate":               true,
 	"POST /scene/start":                       true, // quem decide que a cena começou é o mestre (ALE-210)
 	"POST /scene/end":                         true,
 	"PATCH /initiative/{entryId}/vitals":      false, // regra mais fina: assertVitalsEditableFor
 	"POST /initiative/{entryId}/vitals/delta": false, // idem
 	"POST /rest":                              true,
 	"POST /initiative/{entryId}/effects":      true,
-	// Tabuleiro (ALE-124): abrir, montar e esconder peça é do mestre. Mover tem
+	// Tabuleiro (ALE-124): abrir, montar e esconder peça é do mestre. tabuleiro.Mover tem
 	// regra mais fina (assertMovable) e por isso NÃO leva a porta larga — igual
 	// aos vitais: o mestre move qualquer peça, o jogador move a própria na vez
 	// dela, e fora de combate cada um anda com a sua.
@@ -56,7 +56,7 @@ var gmGate = map[string]bool{
 	"DELETE /board/tokens/{tokenId}":         true,
 	"PATCH /board/tokens/{tokenId}":          true,
 	"POST /board/tokens/{tokenId}/duplicate": true, // "mais um zumbi" é montar encontro, e montar é do mestre
-	"POST /board/populate":                   true,
+	"POST /board/Populate":                   true,
 	// O marcador é o LUGAR apontado no mapa (ALE-195): ele nasce escondido e o
 	// mestre revela, então marcar, revelar e apagar são todos dele.
 	"POST /board/markers":                 true,
@@ -64,11 +64,11 @@ var gmGate = map[string]bool{
 	"DELETE /board/markers/{markerId}":    true,
 	"POST /board/terrain":                 true, // o chão é da cena, e a cena é do mestre
 	"GET /board/as-player":                true, // "ver como jogador" é a lente do mestre sobre a própria cena
-	"GET /board/places":                   true, // o acervo de cenas guardadas é preparação do mestre
-	"POST /board/places/{placeId}/reopen": true,
-	"GET /board/places/{placeId}/scene":   true, // a cena guardada é preparação: o jogador não a pede
-	"PUT /board/places/{placeId}/scene":   true, // montar o lugar é do mestre, e não toca na mesa
-	"DELETE /board/places/{placeId}":      true,
+	"GET /board/Places":                   true, // o acervo de cenas guardadas é preparação do mestre
+	"POST /board/Places/{placeId}/Reopen": true,
+	"GET /board/Places/{placeId}/scene":   true, // a cena guardada é preparação: o jogador não a pede
+	"PUT /board/Places/{placeId}/scene":   true, // montar o lugar é do mestre, e não toca na mesa
+	"DELETE /board/Places/{placeId}":      true,
 	"POST /board/tokens/{tokenId}/move":   false, // assertMovable: papel, posse e a VEZ
 	"POST /board/move/cancel":             false, // desfaz o próprio provisório; o mestre desfaz o de qualquer um
 	"POST /board/move/commit":             false, // idem
@@ -228,11 +228,11 @@ func TestEstadoSaiDoServidorFiltradoPorPapel(t *testing.T) {
 	for _, linha := range linhas {
 		filtrada := strings.Contains(linha, "aovivo.StateForRole") ||
 			strings.Contains(linha, "aovivo.RedactForPlayers") ||
-			strings.Contains(linha, "boardForRole") ||
+			strings.Contains(linha, "tabuleiro.BoardForRole") ||
 			strings.Contains(linha, `, "gm", `)
 		if !filtrada {
 			t.Errorf("estado sai sem filtro de papel:\n%s\ndiga para quem:"+
-				" aovivo.StateForRole(ctx.role, …) na resposta, ou o papel no Emit", strings.TrimSpace(linha))
+				" aovivo.StateForRole(ctx.Role, …) na resposta, ou o papel no Emit", strings.TrimSpace(linha))
 		}
 	}
 }
@@ -240,17 +240,17 @@ func TestEstadoSaiDoServidorFiltradoPorPapel(t *testing.T) {
 // "Ver como jogador" redige para o JOGADOR, e não para quem pediu (ALE-193).
 //
 // O teste acima já obriga toda saída de estado a passar por um filtro de papel,
-// e o `boardForRole(ctx.role, …)` satisfaz aquela regra — só que aqui `ctx.role`
+// e o `tabuleiro.BoardForRole(ctx.Role, …)` satisfaz aquela regra — só que aqui `ctx.Role`
 // é "gm", então o mestre receberia a PRÓPRIA cena de volta: o botão acenderia,
 // a peça escondida continuaria na tela, e ele concluiria que a mesa está vendo
 // a emboscada. Um modo que mente sobre o segredo é pior que não ter modo.
 func TestVerComoJogadorRedigeParaAMesaENaoParaQuemPediu(t *testing.T) {
 	corpo := corpoDaFuncao(t, fonteDosComandos(t), "handleBoardAsPlayer")
 
-	if !strings.Contains(corpo, `boardForRole("player"`) {
+	if !strings.Contains(corpo, `tabuleiro.BoardForRole("player"`) {
 		t.Errorf("a resposta de as-player não redige para o jogador:\n%s", corpo)
 	}
-	if strings.Contains(corpo, "boardForRole(ctx.role") {
+	if strings.Contains(corpo, "tabuleiro.BoardForRole(ctx.Role") {
 		t.Error("as-player redige para o papel de QUEM PEDIU: o mestre receberia a própria cena de volta")
 	}
 }

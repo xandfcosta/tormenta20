@@ -1,4 +1,4 @@
-package api
+package tabuleiro
 
 import "t20engine/plataforma"
 
@@ -9,11 +9,11 @@ import "t20engine/plataforma"
 // jogo. A linha do glossário sobre `plataforma` diz exatamente isto — se um
 // conceito do jogo entrar lá, a fronteira está errada.
 
-// parseBoardToken lê a peça do corpo da mensagem. Posição ausente vira o
+// ParseBoardToken lê a peça do corpo da mensagem. Posição ausente vira o
 // primeiro quadrado livre da fileira de entrada — antes era (0,0) fixo, e com o
 // "+ Peça" da ALE-178 duas peças criadas seguidas nasciam UMA EM CIMA DA OUTRA
 // (ALE-166).
-func parseBoardToken(body map[string]any) (BoardToken, bool) {
+func ParseBoardToken(body map[string]any) (BoardToken, bool) {
 	token := BoardToken{
 		Label: plataforma.StringField(body, "label"),
 		Kind:  plataforma.StringField(body, "kind"),
@@ -41,8 +41,8 @@ func parseBoardToken(body map[string]any) (BoardToken, bool) {
 	return token, temX && temY
 }
 
-// parseTokenPatch lê só os campos PRESENTES: ausente é "não mexa", não "zere".
-func parseTokenPatch(raw any) tokenPatch {
+// ParseTokenPatch lê só os campos PRESENTES: ausente é "não mexa", não "zere".
+func ParseTokenPatch(raw any) tokenPatch {
 	patch := tokenPatch{}
 	m, ok := raw.(map[string]any)
 	if !ok {
@@ -69,8 +69,8 @@ func parseTokenPatch(raw any) tokenPatch {
 	return patch
 }
 
-// parseMarkerPatch lê só os campos PRESENTES.
-func parseMarkerPatch(raw any) markerPatch {
+// ParseMarkerPatch lê só os campos PRESENTES.
+func ParseMarkerPatch(raw any) markerPatch {
 	patch := markerPatch{}
 	m, ok := raw.(map[string]any)
 	if !ok {

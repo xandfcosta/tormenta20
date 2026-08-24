@@ -14,7 +14,7 @@ import (
 // grew their own `sets []string` / `args []any` pair — and copied the
 // `//nolint:gosec` alongside, which is the part that matters: the suppression
 // says "the SET clause is a fixed allowlist, not input", and that promise was
-// being re-asserted in four places where a fifth could quietly break it.
+// being re-asserted in four Places where a fifth could quietly break it.
 // Concentrating it here means the claim is made once, next to the only code
 // that builds the clause.
 //

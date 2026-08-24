@@ -23,7 +23,7 @@ func inviteFixture(t *testing.T, token string) (*Server, http.Handler) {
 	t.Helper()
 	sqlDB, err := db.Open(filepath.Join(t.TempDir(), "invites_test.db"))
 	if err != nil {
-		t.Fatalf("open test db: %v", err)
+		t.Fatalf("Open test db: %v", err)
 	}
 	t.Cleanup(func() { _ = sqlDB.Close() })
 

@@ -21,7 +21,7 @@ import (
 // (ALE-253): o mestre edita qualquer combatente, o jogador só o personagem
 // dele, e NPC é do mestre porque não há ficha atrás para conferir dono.
 func (s *Server) assertVitalsEditableFor(ctx context.Context, live liveCtx, entryID string) error {
-	if live.role == "gm" {
+	if live.Role == "gm" {
 		return nil
 	}
 	state := s.sessions.GetState(live.sessionID)
@@ -33,7 +33,7 @@ func (s *Server) assertVitalsEditableFor(ctx context.Context, live liveCtx, entr
 	if entry.CharacterID == nil {
 		return errors.New("Only the GM can edit NPC vitals")
 	}
-	_, err := s.assertCharacterOwner(ctx, live.userID, *entry.CharacterID)
+	_, err := s.assertCharacterOwner(ctx, live.UserID, *entry.CharacterID)
 	return err
 }
 

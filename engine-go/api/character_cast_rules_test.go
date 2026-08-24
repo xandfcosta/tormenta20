@@ -84,10 +84,10 @@ func seedCasterWithPowers(t *testing.T, s *Server, ownerID int64, className stri
 	return id
 }
 
-func castSpell(t *testing.T, s *Server, userID, characterID int64, spellID, body string) *httptest.ResponseRecorder {
+func castSpell(t *testing.T, s *Server, UserID, characterID int64, spellID, body string) *httptest.ResponseRecorder {
 	t.Helper()
 	path := fmt.Sprintf("/characters/%d/spells/%s/cast", characterID, spellID)
-	return authed(t, s, userID, http.MethodPost, path, body)
+	return authed(t, s, UserID, http.MethodPost, path, body)
 }
 
 func mpOf(t *testing.T, s *Server, characterID int64) int64 {

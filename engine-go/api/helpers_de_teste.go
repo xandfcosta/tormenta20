@@ -33,3 +33,19 @@ func labels(st *aovivo.SessionRuntimeState) []string {
 func npc(label string, init int) aovivo.InitiativeEntry {
 	return aovivo.InitiativeEntry{Label: label, Initiative: init, Type: "npc"}
 }
+
+// contadorDeIds gera ids previsíveis ("e1", "e2", …) para os testes deste
+// pacote. Andaime local: o irmão dele vive no `tabuleiro/` desde a ALE-254, e
+// teste não exporta para o vizinho.
+func contadorDeIds() func() string {
+	n := 0
+	return func() string {
+		n++
+		return "e" + itoa(n)
+	}
+}
+
+func combatenteDeFicha(label string, init int, charID int64) aovivo.InitiativeEntry {
+	c := charID
+	return aovivo.InitiativeEntry{Label: label, Initiative: init, Type: "character", CharacterID: &c}
+}

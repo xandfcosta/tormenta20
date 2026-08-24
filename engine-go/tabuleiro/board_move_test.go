@@ -1,4 +1,4 @@
-package api
+package tabuleiro
 
 import (
 	"fmt"
@@ -15,10 +15,10 @@ func combatenteDeFicha(label string, init int, charID int64) aovivo.InitiativeEn
 	return aovivo.InitiativeEntry{Label: label, Initiative: init, Type: "character", CharacterID: &c}
 }
 
-// contadorDeIds gera ids previsíveis para o teste. Era um helper compartilhado
+// ContadorDeIds gera ids previsíveis para o teste. Era um helper compartilhado
 // no `session_state_test.go`; quando aquele arquivo mudou de pacote (ALE-254) o
 // helper foi junto, e teste não exporta para o vizinho — cada pacote tem o seu.
-func contadorDeIds() func() string {
+func ContadorDeIds() func() string {
 	n := 0
 	return func() string { n++; return "e" + itoaLocal(n) }
 }
@@ -47,7 +47,7 @@ func itoaLocal(n int) string {
 func mesaEmCombate(t *testing.T) (*BoardState, *aovivo.SessionRuntimeState) {
 	t.Helper()
 	st := aovivo.EmptyRuntimeState()
-	id := contadorDeIds()
+	id := ContadorDeIds()
 	_ = aovivo.AddEntry(st, combatenteDeFicha("Sílfide", 18, 7), id) // e1
 	_ = aovivo.AddEntry(st, npc("Ogro", 12), id)                     // e2
 	st.TurnIndex = 0
@@ -55,8 +55,8 @@ func mesaEmCombate(t *testing.T) (*BoardState, *aovivo.SessionRuntimeState) {
 	b := newBoard("Taverna do Javali", "pedra")
 	tokens := boardCounter()
 	heroi := int64(7)
-	_ = addToken(b, BoardToken{Label: "Sílfide", X: 0, Y: 0, EntryID: strPtr("e1"), CharacterID: &heroi, SpeedSquares: 6}, tokens)
-	_ = addToken(b, BoardToken{Label: "Ogro", X: 9, Y: 9, EntryID: strPtr("e2")}, tokens)
+	_ = AddToken(b, BoardToken{Label: "Sílfide", X: 0, Y: 0, EntryID: strPtr("e1"), CharacterID: &heroi, SpeedSquares: 6}, tokens)
+	_ = AddToken(b, BoardToken{Label: "Ogro", X: 9, Y: 9, EntryID: strPtr("e2")}, tokens)
 	return b, st
 }
 
@@ -69,8 +69,8 @@ func caminho(squares ...[2]int) []engine.Square {
 }
 
 var (
-	jogadorDono = mover{userID: 42, role: "player", ownsCharacter: true}
-	mestre      = mover{userID: 1, role: "gm"}
+	jogadorDono = Mover{UserID: 42, Role: "player", OwnsCharacter: true}
+	mestre      = Mover{UserID: 1, Role: "gm"}
 )
 
 // O jogador anda com a própria peça na própria vez, e o caminho é MEDIDO: seis
@@ -78,7 +78,7 @@ var (
 func TestJogadorMoveAPropriaPecaNaPropriaVez(t *testing.T) {
 	b, st := mesaEmCombate(t)
 
-	err := proposeMove(b, st, "t1", caminho([2]int{0, 0}, [2]int{1, 0}, [2]int{2, 0}), jogadorDono)
+	err := ProposeMove(b, st, "t1", caminho([2]int{0, 0}, [2]int{1, 0}, [2]int{2, 0}), jogadorDono)
 	if err != nil {
 		t.Fatalf("movimento legítimo recusado: %v", err)
 	}
@@ -90,7 +90,7 @@ func TestJogadorMoveAPropriaPecaNaPropriaVez(t *testing.T) {
 		t.Errorf("a peça andou antes da confirmação: x=%d", b.Tokens[0].X)
 	}
 
-	if err := commitMove(b, st, b.Version, jogadorDono); err != nil {
+	if err := CommitMove(b, st, b.Version, jogadorDono); err != nil {
 		t.Fatalf("confirmar: %v", err)
 	}
 	if b.Tokens[0].X != 2 || b.Tokens[0].Y != 0 {
@@ -107,7 +107,7 @@ func TestJogadorMoveAPropriaPecaNaPropriaVez(t *testing.T) {
 func TestCaminhoAlemDoDeslocamentoERecusado(t *testing.T) {
 	b, st := mesaEmCombate(t)
 
-	err := proposeMove(b, st, "t1",
+	err := ProposeMove(b, st, "t1",
 		caminho([2]int{0, 0}, [2]int{1, 1}, [2]int{2, 2}, [2]int{3, 3}, [2]int{4, 4}), jogadorDono)
 
 	if err == nil {
@@ -123,7 +123,7 @@ func TestJogadorNaoAndaForaDaPropriaVez(t *testing.T) {
 	b, st := mesaEmCombate(t)
 	st.TurnIndex = 1 // a vez é do Ogro
 
-	if err := proposeMove(b, st, "t1", caminho([2]int{0, 0}, [2]int{1, 0}), jogadorDono); err == nil {
+	if err := ProposeMove(b, st, "t1", caminho([2]int{0, 0}, [2]int{1, 0}), jogadorDono); err == nil {
 		t.Fatal("o jogador andou na vez do Ogro")
 	}
 }
@@ -131,9 +131,9 @@ func TestJogadorNaoAndaForaDaPropriaVez(t *testing.T) {
 // A peça do vizinho não é da pessoa, mesmo estando na vez dela.
 func TestJogadorNaoMovePecaDeOutro(t *testing.T) {
 	b, st := mesaEmCombate(t)
-	naoDono := mover{userID: 42, role: "player", ownsCharacter: false}
+	naoDono := Mover{UserID: 42, Role: "player", OwnsCharacter: false}
 
-	if err := proposeMove(b, st, "t2", caminho([2]int{9, 9}, [2]int{8, 9}), naoDono); err == nil {
+	if err := ProposeMove(b, st, "t2", caminho([2]int{9, 9}, [2]int{8, 9}), naoDono); err == nil {
 		t.Fatal("o jogador moveu a peça do Ogro")
 	}
 }
@@ -145,7 +145,7 @@ func TestMestreMoveQualquerPecaSemOrcamento(t *testing.T) {
 
 	longe := caminho([2]int{9, 9}, [2]int{10, 10}, [2]int{11, 11}, [2]int{12, 12},
 		[2]int{13, 13}, [2]int{14, 14}, [2]int{15, 15}, [2]int{16, 16})
-	if err := proposeMove(b, st, "t2", longe, mestre); err != nil {
+	if err := ProposeMove(b, st, "t2", longe, mestre); err != nil {
 		t.Fatalf("o mestre foi barrado por orçamento: %v", err)
 	}
 	if b.Pending.Budget != -1 {
@@ -160,7 +160,7 @@ func TestForaDeCombateCadaUmAndaComASua(t *testing.T) {
 	st.TurnIndex = -1
 
 	longe := caminho([2]int{0, 0}, [2]int{1, 1}, [2]int{2, 2}, [2]int{3, 3}, [2]int{4, 4})
-	if err := proposeMove(b, st, "t1", longe, jogadorDono); err != nil {
+	if err := ProposeMove(b, st, "t1", longe, jogadorDono); err != nil {
 		t.Fatalf("fora de combate o jogador foi barrado: %v", err)
 	}
 	if b.Pending.Budget != -1 {
@@ -173,20 +173,20 @@ func TestForaDeCombateCadaUmAndaComASua(t *testing.T) {
 // broadcast atrasado que chega depois da re-hidratação.
 func TestCommitSobreTabuleiroMudadoERecusado(t *testing.T) {
 	b, st := mesaEmCombate(t)
-	_ = proposeMove(b, st, "t1", caminho([2]int{0, 0}, [2]int{1, 0}), jogadorDono)
+	_ = ProposeMove(b, st, "t1", caminho([2]int{0, 0}, [2]int{1, 0}), jogadorDono)
 	vista := b.Version
 
 	// O mestre mexe em outra peça: a cena que o jogador tinha na mão não existe mais.
-	_ = updateToken(b, "t2", tokenPatch{X: intPtr(5), Y: intPtr(5)})
+	_ = UpdateToken(b, "t2", tokenPatch{X: intPtr(5), Y: intPtr(5)})
 
-	if err := commitMove(b, st, vista, jogadorDono); err == nil {
+	if err := CommitMove(b, st, vista, jogadorDono); err == nil {
 		t.Fatal("o commit passou por cima de um tabuleiro que já tinha mudado")
 	}
 	if b.Pending == nil {
 		t.Error("o provisório foi perdido junto com a recusa: o jogador refaz o movimento do zero")
 	}
 	// Com a versão em dia, o mesmo commit entra.
-	if err := commitMove(b, st, b.Version, jogadorDono); err != nil {
+	if err := CommitMove(b, st, b.Version, jogadorDono); err != nil {
 		t.Fatalf("commit com a versão em dia recusado: %v", err)
 	}
 }
@@ -196,13 +196,13 @@ func TestCommitSobreTabuleiroMudadoERecusado(t *testing.T) {
 // provisório de outro.
 func TestMestreConfirmaPeloJogadorEOContrarioNao(t *testing.T) {
 	b, st := mesaEmCombate(t)
-	_ = proposeMove(b, st, "t1", caminho([2]int{0, 0}, [2]int{1, 0}), jogadorDono)
+	_ = ProposeMove(b, st, "t1", caminho([2]int{0, 0}, [2]int{1, 0}), jogadorDono)
 
-	outroJogador := mover{userID: 99, role: "player", ownsCharacter: true}
-	if err := commitMove(b, st, b.Version, outroJogador); err == nil {
+	outroJogador := Mover{UserID: 99, Role: "player", OwnsCharacter: true}
+	if err := CommitMove(b, st, b.Version, outroJogador); err == nil {
 		t.Fatal("um jogador confirmou o movimento proposto por outro")
 	}
-	if err := commitMove(b, st, b.Version, mestre); err != nil {
+	if err := CommitMove(b, st, b.Version, mestre); err != nil {
 		t.Fatalf("o mestre não pôde confirmar pelo jogador: %v", err)
 	}
 }
@@ -211,10 +211,10 @@ func TestMestreConfirmaPeloJogadorEOContrarioNao(t *testing.T) {
 // senão um caminho desenhado saindo do nada entregaria a emboscada.
 func TestProvisorioDePecaEscondidaNaoVazaParaOJogador(t *testing.T) {
 	b, st := mesaEmCombate(t)
-	_ = updateToken(b, "t2", tokenPatch{Hidden: boolPtr(true)})
-	_ = proposeMove(b, st, "t2", caminho([2]int{9, 9}, [2]int{8, 9}), mestre)
+	_ = UpdateToken(b, "t2", tokenPatch{Hidden: boolPtr(true)})
+	_ = ProposeMove(b, st, "t2", caminho([2]int{9, 9}, [2]int{8, 9}), mestre)
 
-	visto := boardForRole("player", b)
+	visto := BoardForRole("player", b)
 
 	if visto.Pending != nil {
 		t.Errorf("o provisório da peça escondida saiu para o jogador: %+v", visto.Pending)
@@ -223,7 +223,7 @@ func TestProvisorioDePecaEscondidaNaoVazaParaOJogador(t *testing.T) {
 		t.Errorf("o jogador viu %d peças, esperava só a dele", len(visto.Tokens))
 	}
 	// E o mestre continua vendo tudo.
-	if boardForRole("gm", b).Pending == nil {
+	if BoardForRole("gm", b).Pending == nil {
 		t.Error("o mestre perdeu o próprio provisório")
 	}
 }
@@ -232,9 +232,9 @@ func TestProvisorioDePecaEscondidaNaoVazaParaOJogador(t *testing.T) {
 // no tabuleiro nunca poderia ser confirmado e ficaria pendurado no estado.
 func TestRemoverAPecaLevaOProvisorioJunto(t *testing.T) {
 	b, st := mesaEmCombate(t)
-	_ = proposeMove(b, st, "t1", caminho([2]int{0, 0}, [2]int{1, 0}), jogadorDono)
+	_ = ProposeMove(b, st, "t1", caminho([2]int{0, 0}, [2]int{1, 0}), jogadorDono)
 
-	removeToken(b, "t1")
+	RemoveToken(b, "t1")
 
 	if b.Pending != nil {
 		t.Errorf("o provisório sobreviveu à peça: %+v", b.Pending)
@@ -246,7 +246,7 @@ func TestRemoverAPecaLevaOProvisorioJunto(t *testing.T) {
 func TestCaminhoTemDeComecarNaPeca(t *testing.T) {
 	b, st := mesaEmCombate(t)
 
-	if err := proposeMove(b, st, "t1", caminho([2]int{5, 5}, [2]int{6, 5}), jogadorDono); err == nil {
+	if err := ProposeMove(b, st, "t1", caminho([2]int{5, 5}, [2]int{6, 5}), jogadorDono); err == nil {
 		t.Fatal("caminho que começa longe da peça foi aceito")
 	}
 }
@@ -261,7 +261,7 @@ func boolPtr(v bool) *bool { return &v }
 // tinha de arrastar nove peças antes de a cena servir para alguma coisa.
 func TestPopulateStartsTheSidesApart(t *testing.T) {
 	st := aovivo.EmptyRuntimeState()
-	id := contadorDeIds()
+	id := ContadorDeIds()
 	_ = aovivo.AddEntry(st, combatenteDeFicha("Sílfide", 18, 7), id)
 	_ = aovivo.AddEntry(st, combatenteDeFicha("Paladino", 15, 8), id)
 	_ = aovivo.AddEntry(st, npc("Ogro", 12), id)
@@ -315,11 +315,11 @@ func TestPopulateStartsTheSidesApart(t *testing.T) {
 // antes de trazer o resto.
 func TestPopulateLeavesWhoIsAlreadyThere(t *testing.T) {
 	st := aovivo.EmptyRuntimeState()
-	id := contadorDeIds()
+	id := ContadorDeIds()
 	_ = aovivo.AddEntry(st, npc("Ogro", 12), id)
 	b := newBoard("Cripta", "pedra")
 	tokens := boardCounter()
-	_ = addToken(b, BoardToken{Label: "Ogro", X: 40, Y: 40, EntryID: strPtr("e1")}, tokens)
+	_ = AddToken(b, BoardToken{Label: "Ogro", X: 40, Y: 40, EntryID: strPtr("e1")}, tokens)
 
 	populateBoard(b, st, tokens, nil)
 	populateBoard(b, st, tokens, nil)
@@ -340,7 +340,7 @@ func TestLoosePiecesDoNotStack(t *testing.T) {
 
 	for _, nome := range []string{"Porta", "Baú", "Barril"} {
 		spot := nextFreeSpot(b)
-		if err := addToken(b, BoardToken{Label: nome, Kind: "object", X: spot.x, Y: spot.y}, tokens); err != nil {
+		if err := AddToken(b, BoardToken{Label: nome, Kind: "object", X: spot.x, Y: spot.y}, tokens); err != nil {
 			t.Fatalf("criar %s: %v", nome, err)
 		}
 	}
@@ -360,13 +360,13 @@ func TestLoosePiecesDoNotStack(t *testing.T) {
 // A conta do dobro é do motor e está provada contra a p238 em
 // `engine/board_movement_rules_test.go`. O que se prova AQUI é a ligação, que é
 // onde ela pode se perder: até esta fatia o estado nem tinha onde guardar o
-// chão, e o `proposeMove` chamava a régua com um mapa VAZIO — o mestre pintava
+// chão, e o `ProposeMove` chamava a régua com um mapa VAZIO — o mestre pintava
 // o brejo e a peça o atravessava como se fosse pedra lisa.
 func TestOTerrenoPintadoEncareceOCaminho(t *testing.T) {
 	b, st := mesaEmCombate(t)
 	// Quatro passos ortogonais custam 4 de 6 — cabe com folga.
 	reto := caminho([2]int{0, 0}, [2]int{1, 0}, [2]int{2, 0}, [2]int{3, 0}, [2]int{4, 0})
-	if err := proposeMove(b, st, "t1", reto, jogadorDono); err != nil {
+	if err := ProposeMove(b, st, "t1", reto, jogadorDono); err != nil {
 		t.Fatalf("caminho de quatro quadrados em chão limpo foi recusado: %v", err)
 	}
 	if b.Pending.Cost != 4 {
@@ -375,10 +375,10 @@ func TestOTerrenoPintadoEncareceOCaminho(t *testing.T) {
 	b.Pending = nil
 
 	// O mestre pinta DUAS casas do caminho: cada uma passa a custar 2.
-	paintTerrain(b, engine.Square{X: 2, Y: 0}, true)
-	paintTerrain(b, engine.Square{X: 3, Y: 0}, true)
+	PaintTerrain(b, engine.Square{X: 2, Y: 0}, true)
+	PaintTerrain(b, engine.Square{X: 3, Y: 0}, true)
 
-	if err := proposeMove(b, st, "t1", reto, jogadorDono); err != nil {
+	if err := ProposeMove(b, st, "t1", reto, jogadorDono); err != nil {
 		t.Fatalf("seis quadrados de custo num deslocamento de seis foram recusados: %v", err)
 	}
 	if b.Pending.Cost != 6 {
@@ -393,7 +393,7 @@ func TestPintarEApagarSaoExplicitosEIdempotentes(t *testing.T) {
 	b, _ := mesaEmCombate(t)
 	casa := engine.Square{X: 2, Y: 0}
 
-	paintTerrain(b, casa, true)
+	PaintTerrain(b, casa, true)
 	if len(b.Difficult) != 1 {
 		t.Fatalf("pintar não marcou a casa: %+v", b.Difficult)
 	}
@@ -401,12 +401,12 @@ func TestPintarEApagarSaoExplicitosEIdempotentes(t *testing.T) {
 
 	// O arraste passando de novo: nada muda, e a versão NÃO sobe à toa — cada
 	// subida é um broadcast para a mesa inteira.
-	paintTerrain(b, casa, true)
+	PaintTerrain(b, casa, true)
 	if len(b.Difficult) != 1 || b.Version != versaoDepoisDePintar {
 		t.Errorf("pintar de novo mexeu no estado: %d casas, versão %d", len(b.Difficult), b.Version)
 	}
 
-	paintTerrain(b, casa, false)
+	PaintTerrain(b, casa, false)
 
 	if len(b.Difficult) != 0 {
 		t.Errorf("a borracha não apagou: %+v", b.Difficult)
@@ -426,7 +426,7 @@ func TestProvisorioCarregaAContaQueProduziuOCusto(t *testing.T) {
 	b.Difficult = []engine.Square{{X: 1, Y: 0}}
 
 	// Um reto no brejo (2) e uma diagonal limpa (2): custo 4, uma causa de cada.
-	err := proposeMove(b, st, "t1", caminho([2]int{0, 0}, [2]int{1, 0}, [2]int{2, 1}), jogadorDono)
+	err := ProposeMove(b, st, "t1", caminho([2]int{0, 0}, [2]int{1, 0}, [2]int{2, 1}), jogadorDono)
 	if err != nil {
 		t.Fatalf("movimento legítimo recusado: %v", err)
 	}

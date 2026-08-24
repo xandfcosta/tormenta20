@@ -184,7 +184,7 @@ func TestStoreDirtyOnPersistFailure(t *testing.T) {
 	}
 	_ = s.db.Close() // break the DB so the next write fails
 	if d, _ := store.Persist(ctx, sid); !d {
-		t.Error("Persist after DB close should report Dirty")
+		t.Error("Persist after DB Close should report Dirty")
 	}
 	if !store.IsDirty(sid) {
 		t.Error("IsDirty should be true after a failed Persist")

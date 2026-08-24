@@ -124,7 +124,7 @@ func (s *Server) handleGetSheet(w http.ResponseWriter, r *http.Request) {
 
 // assertCharacterOwner is the strict owner-only check
 // the WS vitals gate uses: a player may edit only a character they own. Transport-agnostic.
-func (s *Server) assertCharacterOwner(ctx context.Context, userID, characterID int64) (int, error) {
+func (s *Server) assertCharacterOwner(ctx context.Context, UserID, characterID int64) (int, error) {
 	owner, err := s.queries.GetCharacterOwner(ctx, characterID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return http.StatusNotFound, fmt.Errorf("Character %d not found", characterID)
@@ -132,9 +132,9 @@ func (s *Server) assertCharacterOwner(ctx context.Context, userID, characterID i
 	if err != nil {
 		return http.StatusInternalServerError, errors.New("Could not Load character")
 	}
-	if owner != userID {
+	if owner != UserID {
 		return http.StatusForbidden, fmt.Errorf(
-			"Caller %d can only edit their own character's vitals (character %d)", userID, characterID)
+			"Caller %d can only edit their own character's vitals (character %d)", UserID, characterID)
 	}
 	return http.StatusOK, nil
 }

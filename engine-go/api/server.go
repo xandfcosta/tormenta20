@@ -1,5 +1,7 @@
 package api
 
+import "t20engine/tabuleiro"
+
 import (
 	"database/sql"
 	"net/http"
@@ -24,7 +26,7 @@ type Server struct {
 	queries  *sqlcgen.Queries
 	catalogs *engine.Catalogs         // nil if the catalog snapshot failed to Load
 	sessions *aovivo.SessionStore     // in-memory realtime tracker state (B.6)
-	boards   *boardStore              // tabuleiro tático vivo por sessão (ALE-124)
+	boards   *tabuleiro.BoardStore    // tabuleiro tático vivo por sessão (ALE-124)
 	presence *aovivo.PresenceRegistry // who's-online per session room (B.6)
 	sse      *aovivo.SSEHub           // leitores SSE por sessão e papel (ALE-253)
 	// charMu serializes mutating HTTP requests per character (characterID → *sync.Mutex)
@@ -108,7 +110,7 @@ func NewServer(cfg plataforma.Config, database *sql.DB, catalogs *engine.Catalog
 	return &Server{
 		cfg: cfg, db: database, queries: q, catalogs: catalogs,
 		sessions: aovivo.NewSessionStore(q, aovivo.NewUUID, vitaisDaFicha{q: q}),
-		boards:   newBoardStore(q, aovivo.NewUUID),
+		boards:   tabuleiro.NewBoardStore(q, aovivo.NewUUID),
 		presence: aovivo.NewPresenceRegistry(),
 		sse:      aovivo.NewSSEHub(),
 	}

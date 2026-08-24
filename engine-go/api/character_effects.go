@@ -253,7 +253,7 @@ type characterCampaignDTO struct {
 	ID          int64              `json:"id"`
 	CampaignID  int64              `json:"campaignId"`
 	CharacterID int64              `json:"characterId"`
-	Role        string             `json:"role"`
+	Role        string             `json:"Role"`
 	AddedAt     string             `json:"addedAt"`
 	Campaign    campaignSummaryDTO `json:"campaign"`
 }

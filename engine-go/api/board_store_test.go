@@ -1,5 +1,7 @@
 package api
 
+import "t20engine/tabuleiro"
+
 import "t20engine/aovivo"
 
 import (
@@ -24,15 +26,15 @@ func TestBoardPersistsAndComesBack(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
-	s.boards.open(ctx, sid, "Taverna do Javali", "taverna")
-	if _, err := s.boards.addToken(ctx, sid, BoardToken{Label: "Ogro", X: 3, Y: 4, Footprint: 2}, true); err != nil {
+	s.boards.Open(ctx, sid, "Taverna do Javali", "taverna")
+	if _, err := s.boards.AddToken(ctx, sid, tabuleiro.BoardToken{Label: "Ogro", X: 3, Y: 4, Footprint: 2}, true); err != nil {
 		t.Fatalf("adicionar peça: %v", err)
 	}
 	s.boards.Persist(ctx, sid)
 
 	// Um servidor novo sobre o MESMO banco: é o reinício, sem fingir.
-	frio := newBoardStore(s.queries, aovivo.NewUUID)
-	voltou := frio.get(ctx, sid)
+	frio := tabuleiro.NewBoardStore(s.queries, aovivo.NewUUID)
+	voltou := frio.Get(ctx, sid)
 
 	if voltou == nil {
 		t.Fatal("o tabuleiro não voltou do banco")
@@ -50,17 +52,17 @@ func TestBoardPersistsAndComesBack(t *testing.T) {
 	}
 }
 
-// "Sem tabuleiro" tem de voltar como AUSÊNCIA. Um `BoardState{}` de cortesia
+// "Sem tabuleiro" tem de voltar como AUSÊNCIA. Um `tabuleiro.BoardState{}` de cortesia
 // desenharia uma grade de 0×0 e o mestre acharia que abriu alguma coisa.
 func TestSessionWithoutBoardStaysWithout(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
-	if b := s.boards.get(ctx, sid); b != nil {
+	if b := s.boards.Get(ctx, sid); b != nil {
 		t.Errorf("sessão nova já veio com tabuleiro: %+v", b)
 	}
-	if _, err := s.boards.addToken(ctx, sid, BoardToken{Label: "Ninguém"}, false); err == nil {
+	if _, err := s.boards.AddToken(ctx, sid, tabuleiro.BoardToken{Label: "Ninguém"}, false); err == nil {
 		t.Error("pôs peça num tabuleiro que não existe")
 	}
 }
@@ -69,15 +71,15 @@ func TestClosingBoardErasesItFromDiskToo(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	s.boards.open(ctx, sid, "Cripta", "pedra")
+	s.boards.Open(ctx, sid, "Cripta", "pedra")
 	s.boards.Persist(ctx, sid)
 
-	s.boards.close(ctx, sid)
+	s.boards.Close(ctx, sid)
 
-	if b := s.boards.get(ctx, sid); b != nil {
+	if b := s.boards.Get(ctx, sid); b != nil {
 		t.Error("o tabuleiro encerrado continua na memória")
 	}
-	if b := newBoardStore(s.queries, aovivo.NewUUID).get(ctx, sid); b != nil {
+	if b := tabuleiro.NewBoardStore(s.queries, aovivo.NewUUID).Get(ctx, sid); b != nil {
 		t.Error("o tabuleiro encerrado voltou do banco no próximo reinício")
 	}
 }
@@ -89,13 +91,13 @@ func TestReopeningKeepsVersionMovingForward(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	primeiro := s.boards.open(ctx, sid, "Taverna", "taverna")
-	if _, err := s.boards.addToken(ctx, sid, BoardToken{Label: "Bandido"}, false); err != nil {
+	primeiro := s.boards.Open(ctx, sid, "Taverna", "taverna")
+	if _, err := s.boards.AddToken(ctx, sid, tabuleiro.BoardToken{Label: "Bandido"}, false); err != nil {
 		t.Fatalf("adicionar: %v", err)
 	}
-	antes := s.boards.get(ctx, sid).Version
+	antes := s.boards.Get(ctx, sid).Version
 
-	segundo := s.boards.open(ctx, sid, "Masmorra", "pedra")
+	segundo := s.boards.Open(ctx, sid, "Masmorra", "pedra")
 
 	if segundo.Version <= antes {
 		t.Errorf("a versão voltou no tempo: %d depois de %d (primeiro abriu em %d)",
@@ -121,7 +123,7 @@ func TestBoardPersistFailureIsReported(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	s.boards.open(ctx, sid, "Cripta", "pedra")
+	s.boards.Open(ctx, sid, "Cripta", "pedra")
 
 	if Dirty, changed := s.boards.Persist(ctx, sid); Dirty || changed {
 		t.Fatalf("gravação saudável já saiu como falha: Dirty=%v changed=%v", Dirty, changed)
@@ -160,19 +162,19 @@ func TestATransientReadFailureIsRetried(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
-	s.boards.open(ctx, sid, "Cripta", "pedra")
-	if _, err := s.boards.addToken(ctx, sid, BoardToken{Label: "Ogro", X: 1, Y: 1}, true); err != nil {
+	s.boards.Open(ctx, sid, "Cripta", "pedra")
+	if _, err := s.boards.AddToken(ctx, sid, tabuleiro.BoardToken{Label: "Ogro", X: 1, Y: 1}, true); err != nil {
 		t.Fatalf("adicionar peça: %v", err)
 	}
 	s.boards.Persist(ctx, sid)
 
 	// Um servidor frio sobre o mesmo banco, e a leitura falha: é o disco
 	// piscando no primeiro acesso à sessão.
-	frio := newBoardStore(s.queries, aovivo.NewUUID)
+	frio := tabuleiro.NewBoardStore(s.queries, aovivo.NewUUID)
 	if _, err := s.db.Exec("ALTER TABLE session_boards RENAME TO session_boards_escondida"); err != nil {
 		t.Fatalf("esconder a tabela: %v", err)
 	}
-	if vazio := frio.get(ctx, sid); vazio != nil {
+	if vazio := frio.Get(ctx, sid); vazio != nil {
 		t.Fatalf("leitura falhou e mesmo assim devolveu tabuleiro: %+v", vazio)
 	}
 
@@ -181,7 +183,7 @@ func TestATransientReadFailureIsRetried(t *testing.T) {
 	if _, err := s.db.Exec("ALTER TABLE session_boards_escondida RENAME TO session_boards"); err != nil {
 		t.Fatalf("devolver a tabela: %v", err)
 	}
-	voltou := frio.get(ctx, sid)
+	voltou := frio.Get(ctx, sid)
 
 	if voltou == nil {
 		t.Fatal("a falha transiente ficou cacheada: a sessão perdeu o tabuleiro até o próximo reinício")
@@ -198,7 +200,7 @@ func TestNoBoardIsStillCached(t *testing.T) {
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 
-	if b := s.boards.get(ctx, sid); b != nil {
+	if b := s.boards.Get(ctx, sid); b != nil {
 		t.Fatalf("sessão nova veio com tabuleiro: %+v", b)
 	}
 	// Com a tabela fora do ar, uma segunda leitura só pode responder se estiver
@@ -206,7 +208,7 @@ func TestNoBoardIsStillCached(t *testing.T) {
 	if _, err := s.db.Exec("DROP TABLE session_boards"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
-	if b := s.boards.get(ctx, sid); b != nil {
+	if b := s.boards.Get(ctx, sid); b != nil {
 		t.Errorf("a segunda leitura foi ao disco em vez de lembrar: %+v", b)
 	}
 }
@@ -218,13 +220,13 @@ func TestClosingReportsAFailedDelete(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-	s.boards.open(ctx, sid, "Cripta", "pedra")
+	s.boards.Open(ctx, sid, "Cripta", "pedra")
 	s.boards.Persist(ctx, sid)
 
 	if _, err := s.db.Exec("DROP TABLE session_boards"); err != nil {
 		t.Fatalf("derrubar a tabela: %v", err)
 	}
-	Dirty, changed := s.boards.close(ctx, sid)
+	Dirty, changed := s.boards.Close(ctx, sid)
 
 	if !Dirty || !changed {
 		t.Fatalf("o encerramento falhou e ninguém soube: Dirty=%v changed=%v", Dirty, changed)

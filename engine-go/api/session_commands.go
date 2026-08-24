@@ -29,13 +29,13 @@ import (
 // Fica AQUI e não no `server.go` por dois motivos: o roteador da raiz já passa
 // das 200 linhas com o teto da casa em 500, e — o que importa mais — cada
 // contexto passa a ser lido inteiro num arquivo só, comando e rota juntos
-// (ALE-254). O dia de virar pacote começa por mover um arquivo, não por caçar
+// (ALE-254). O dia de virar pacote começa por tabuleiro.Mover um arquivo, não por caçar
 // linhas espalhadas.
 func (s *Server) mountLiveRoutes(r chi.Router) {
 	r.Route("/{id}/initiative", func(r chi.Router) {
 		r.Post("/", s.handleInitiativeAdd)
 		r.Post("/self", s.handleInitiativeSelf)
-		r.Post("/populate", s.handleInitiativePopulate)
+		r.Post("/Populate", s.handleInitiativePopulate)
 		r.Post("/next-turn", s.handleNextTurn)
 		r.Post("/previous-turn", s.handlePreviousTurn)
 		r.Delete("/", s.handleInitiativeReset)
@@ -56,7 +56,7 @@ func (s *Server) mountLiveRoutes(r chi.Router) {
 		r.Get("/as-player", s.handleBoardAsPlayer)
 		r.Post("/", s.handleBoardOpen)
 		r.Delete("/", s.handleBoardClose)
-		r.Post("/populate", s.handleBoardPopulate)
+		r.Post("/Populate", s.handleBoardPopulate)
 		r.Post("/terrain", s.handleBoardTerrainPaint)
 
 		r.Post("/tokens", s.handleBoardTokenAdd)
@@ -72,21 +72,21 @@ func (s *Server) mountLiveRoutes(r chi.Router) {
 		r.Patch("/markers/{markerId}", s.handleBoardMarkerUpdate)
 		r.Delete("/markers/{markerId}", s.handleBoardMarkerRemove)
 
-		r.Get("/places", s.handleBoardPlaces)
-		r.Post("/places/{placeId}/reopen", s.handleBoardReopen)
-		r.Get("/places/{placeId}/scene", s.handleBoardPlaceScene)
-		r.Put("/places/{placeId}/scene", s.handleBoardPlaceSave)
-		r.Delete("/places/{placeId}", s.handleBoardPlaceRemove)
+		r.Get("/Places", s.handleBoardPlaces)
+		r.Post("/Places/{placeId}/Reopen", s.handleBoardReopen)
+		r.Get("/Places/{placeId}/scene", s.handleBoardPlaceScene)
+		r.Put("/Places/{placeId}/scene", s.handleBoardPlaceSave)
+		r.Delete("/Places/{placeId}", s.handleBoardPlaceRemove)
 	})
 }
 
 // liveCtx é o que o socket chamava de `msgCtx`: quem pediu, em que mesa, com
 // que papel. Resolvido uma vez por requisição.
 type liveCtx struct {
-	userID     int64
+	UserID     int64
 	campaignID int64
 	sessionID  int64
-	role       string
+	Role       string
 }
 
 // liveAccess resolve a mesa e o papel de quem chamou, ou responde e devolve
@@ -102,12 +102,12 @@ func (s *Server) liveAccess(w http.ResponseWriter, r *http.Request) (liveCtx, bo
 		return liveCtx{}, false
 	}
 	user := currentUser(r)
-	_, role, status, err := s.sessionForCaller(r.Context(), user, campaignID, sessionID)
+	_, Role, status, err := s.sessionForCaller(r.Context(), user, campaignID, sessionID)
 	if err != nil {
 		plataforma.WriteError(w, status, err.Error())
 		return liveCtx{}, false
 	}
-	return liveCtx{userID: user.ID, campaignID: campaignID, sessionID: sessionID, role: role}, true
+	return liveCtx{UserID: user.ID, campaignID: campaignID, sessionID: sessionID, Role: Role}, true
 }
 
 // requireGmRole barra o que é do mestre. Espelha o `requireGm` do gateway.
@@ -115,7 +115,7 @@ func (s *Server) liveAccess(w http.ResponseWriter, r *http.Request) (liveCtx, bo
 // 403 e não 401: quem chega aqui está autenticado e é da mesa — só não manda
 // nesta ação. Dizer "não autorizado" faria o cliente tentar entrar de novo.
 func requireGmRole(w http.ResponseWriter, ctx liveCtx) bool {
-	if ctx.role != "gm" {
+	if ctx.Role != "gm" {
 		plataforma.WriteError(w, http.StatusForbidden, "Only the GM can do this")
 		return false
 	}
@@ -139,7 +139,7 @@ func (s *Server) mutateAndPublish(
 		return
 	}
 	s.publishSessionState(ctx.sessionID, state)
-	plataforma.WriteJSON(w, http.StatusOK, aovivo.StateForRole(ctx.role, state))
+	plataforma.WriteJSON(w, http.StatusOK, aovivo.StateForRole(ctx.Role, state))
 }
 
 // publishSessionState transmite o estado às duas salas por papel e persiste.
@@ -167,7 +167,7 @@ func (s *Server) handleInitiativeAdd(w http.ResponseWriter, r *http.Request) {
 		plataforma.WriteError(w, http.StatusBadRequest, "entry is required")
 		return
 	}
-	entry, err := s.materializeEntry(r.Context(), ctx.userID, ctx.campaignID, body.Entry)
+	entry, err := s.materializeEntry(r.Context(), ctx.UserID, ctx.campaignID, body.Entry)
 	if err != nil {
 		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
@@ -230,7 +230,7 @@ func (s *Server) handleInitiativeSelf(w http.ResponseWriter, r *http.Request) {
 		plataforma.WriteError(w, http.StatusBadRequest, "characterId is required")
 		return
 	}
-	entry, err := s.selfInitiativeEntry(ctx.userID, ctx.campaignID, body.CharacterID, body.D20)
+	entry, err := s.selfInitiativeEntry(ctx.UserID, ctx.campaignID, body.CharacterID, body.D20)
 	if err != nil {
 		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
@@ -294,7 +294,7 @@ func (s *Server) handleInitiativePopulate(w http.ResponseWriter, r *http.Request
 		plataforma.WriteError(w, http.StatusBadRequest, addErr.Error())
 		return
 	}
-	plataforma.WriteJSON(w, http.StatusOK, aovivo.StateForRole(ctx.role, state))
+	plataforma.WriteJSON(w, http.StatusOK, aovivo.StateForRole(ctx.Role, state))
 }
 
 // --- Cena ------------------------------------------------------------------
@@ -330,7 +330,7 @@ func (s *Server) handleSceneEnd(w http.ResponseWriter, r *http.Request) {
 	s.sse.Emit(ctx.sessionID, "", "session-rest", map[string]any{
 		"sessionId": ctx.sessionID, "scope": "scene",
 	})
-	plataforma.WriteJSON(w, http.StatusOK, aovivo.StateForRole(ctx.role, state))
+	plataforma.WriteJSON(w, http.StatusOK, aovivo.StateForRole(ctx.Role, state))
 }
 
 // --- Vitais e descanso -----------------------------------------------------

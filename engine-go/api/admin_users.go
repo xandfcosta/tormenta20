@@ -71,7 +71,7 @@ func (s *Server) handleAdminDeleteUser(w http.ResponseWriter, r *http.Request) {
 // deleteUserKeepingMesas moves the campaigns and deletes the account in ONE
 // transaction: a half-done delete would Leave mesas owned by a row that no
 // longer exists.
-func (s *Server) deleteUserKeepingMesas(r *http.Request, userID, newOwnerID int64) (int64, error) {
+func (s *Server) deleteUserKeepingMesas(r *http.Request, UserID, newOwnerID int64) (int64, error) {
 	ctx := r.Context()
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -81,12 +81,12 @@ func (s *Server) deleteUserKeepingMesas(r *http.Request, userID, newOwnerID int6
 
 	q := s.queries.WithTx(tx)
 	moved, err := q.TransferCampaigns(ctx, sqlcgen.TransferCampaignsParams{
-		NewOwnerId: newOwnerID, UpdatedAt: plataforma.NowISO(), OldOwnerId: userID,
+		NewOwnerId: newOwnerID, UpdatedAt: plataforma.NowISO(), OldOwnerId: UserID,
 	})
 	if err != nil {
 		return 0, err
 	}
-	if err := q.DeleteUser(ctx, userID); err != nil {
+	if err := q.DeleteUser(ctx, UserID); err != nil {
 		return 0, err
 	}
 	return moved, tx.Commit()

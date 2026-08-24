@@ -23,7 +23,7 @@ type AuthUser struct {
 	Email string  `json:"email"`
 	Name  *string `json:"name"`
 	// IsAdmin is derived from ADMIN_EMAILS at every request, never stored: the
-	// role has no row to go stale against, and this is what the UI reads to show
+	// Role has no row to go stale against, and this is what the UI reads to show
 	// the admin door (ALE-120).
 	IsAdmin bool `json:"isAdmin"`
 }
@@ -53,7 +53,7 @@ type loginBody struct {
 // handleRegister creates a user (bcrypt), issues the session cookie, returns the
 // AuthUser. 201 on success; 409 on a duplicate email; 403 without a usable
 // invite. Since ALE-119 the app answers on the LAN, so registration is no longer
-// open — see registrationInvite.
+// Open — see registrationInvite.
 func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 	var body registerBody
 	if !plataforma.DecodeJSON(w, r, &body) {

@@ -8,7 +8,7 @@ package api
 // que não é domínio nenhum não pode conhecê-los.
 //
 // Foi o ciclo funcionando como a issue previu: ele disse que a fronteira estava
-// no lugar errado, e a resposta certa foi mover a regra, não afrouxar o pacote.
+// no lugar errado, e a resposta certa foi tabuleiro.Mover a regra, não afrouxar o pacote.
 // Em `plataforma/` ficou só a MAQUINARIA — o mapa de erro por campo e como ele
 // chega ao cliente.
 

@@ -1,4 +1,4 @@
-package api
+package tabuleiro
 
 import "t20engine/aovivo"
 
@@ -20,14 +20,14 @@ import (
 // na tela, e o mestre acharia que abriu.
 var errNoBoard = errors.New("esta sessão não tem tabuleiro aberto")
 
-// boardStore guarda o tabuleiro vivo de cada sessão em memória, com lastro na
+// BoardStore guarda o tabuleiro vivo de cada sessão em memória, com lastro na
 // tabela session_boards.
 //
 // Mutex PRÓPRIO, separado do `sessionStore`: lá o mutex é global a todas as
 // sessões, e um tabuleiro movimentado numa mesa serializaria a edição de PV de
 // outra mesa. Aqui a mesma trava vale para todos os tabuleiros — quando o custo
 // aparecer, ela vira uma por sessão sem mudar quem chama (ALE-124).
-type boardStore struct {
+type BoardStore struct {
 	Mu     sync.Mutex
 	boards map[int64]*BoardState
 	// loaded marca a sessão já consultada no banco, para "sem tabuleiro" não
@@ -40,8 +40,8 @@ type boardStore struct {
 	q     *sqlcgen.Queries
 }
 
-func newBoardStore(q *sqlcgen.Queries, newID func() string) *boardStore {
-	return &boardStore{
+func NewBoardStore(q *sqlcgen.Queries, newID func() string) *BoardStore {
+	return &BoardStore{
 		boards: map[int64]*BoardState{},
 		loaded: map[int64]bool{},
 		Dirty:  map[int64]bool{},
@@ -76,9 +76,9 @@ func cloneBoard(b *BoardState) *BoardState {
 	return &out
 }
 
-// get devolve o tabuleiro da sessão (nil quando não há), hidratando do banco na
+// Get devolve o tabuleiro da sessão (nil quando não há), hidratando do banco na
 // primeira leitura.
-func (bs *boardStore) get(ctx context.Context, sessionID int64) *BoardState {
+func (bs *BoardStore) Get(ctx context.Context, sessionID int64) *BoardState {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	bs.hydrateLocked(ctx, sessionID)
@@ -97,7 +97,7 @@ func (bs *boardStore) get(ctx context.Context, sessionID int64) *BoardState {
 // legítima e definitiva, então ela MARCA e evita uma ida ao disco por mensagem.
 // Qualquer outro erro deixa a sessão sem marca, e a mensagem seguinte tenta de
 // novo.
-func (bs *boardStore) hydrateLocked(ctx context.Context, sessionID int64) {
+func (bs *BoardStore) hydrateLocked(ctx context.Context, sessionID int64) {
 	if bs.loaded[sessionID] {
 		return
 	}
@@ -124,8 +124,8 @@ func (bs *boardStore) hydrateLocked(ctx context.Context, sessionID int64) {
 	bs.boards[sessionID] = &parsed
 }
 
-// open abre (ou substitui) o tabuleiro da sessão.
-func (bs *boardStore) open(ctx context.Context, sessionID int64, place, terrain string) *BoardState {
+// Open abre (ou substitui) o tabuleiro da sessão.
+func (bs *BoardStore) Open(ctx context.Context, sessionID int64, place, terrain string) *BoardState {
 	b := newBoard(place, terrain)
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
@@ -140,14 +140,14 @@ func (bs *boardStore) open(ctx context.Context, sessionID int64, place, terrain 
 	return cloneBoard(b)
 }
 
-// close encerra o tabuleiro: some da memória e do banco. As posições não são
+// Close encerra o tabuleiro: some da memória e do banco. As posições não são
 // arquivadas AINDA — os Lugares da crônica são fatia própria (ALE-124).
 //
 // Devolve as transições de saúde como o `Persist`, e pelo mesmo motivo
 // (ALE-155): se o DELETE falha, a memória diz "fechado" e o banco mantém a
 // linha — no próximo boot o tabuleiro FANTASMA volta, com as peças de uma cena
 // que a mesa já encerrou. Antes isso morria numa linha de log.
-func (bs *boardStore) close(ctx context.Context, sessionID int64) (Dirty, changed bool) {
+func (bs *BoardStore) Close(ctx context.Context, sessionID int64) (Dirty, changed bool) {
 	bs.Mu.Lock()
 	delete(bs.boards, sessionID)
 	bs.loaded[sessionID] = true
@@ -172,7 +172,7 @@ func (bs *boardStore) close(ctx context.Context, sessionID int64) (Dirty, change
 // apply roda uma mutação pura sob a trava e devolve o instantâneo para o
 // broadcast. Recusa quando não há tabuleiro: mexer no que não existe é erro de
 // quem chamou, não um tabuleiro criado por acidente.
-func (bs *boardStore) apply(ctx context.Context, sessionID int64, fn func(*BoardState) error) (*BoardState, error) {
+func (bs *BoardStore) apply(ctx context.Context, sessionID int64, fn func(*BoardState) error) (*BoardState, error) {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
 	bs.hydrateLocked(ctx, sessionID)
@@ -186,57 +186,57 @@ func (bs *boardStore) apply(ctx context.Context, sessionID int64, fn func(*Board
 	return cloneBoard(b), nil
 }
 
-// addToken põe a peça no tabuleiro. Sem posição declarada, ela nasce no
+// AddToken põe a peça no tabuleiro. Sem posição declarada, ela nasce no
 // primeiro quadrado livre da fileira de entrada — senão duas peças criadas
 // seguidas ficariam uma em cima da outra (ALE-166).
-func (bs *boardStore) addToken(ctx context.Context, sessionID int64, t BoardToken, temPosicao bool) (*BoardState, error) {
+func (bs *BoardStore) AddToken(ctx context.Context, sessionID int64, t BoardToken, temPosicao bool) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, func(b *BoardState) error {
 		if !temPosicao {
 			spot := nextFreeSpot(b)
 			t.X, t.Y = spot.x, spot.y
 		}
-		return addToken(b, t, bs.newID)
+		return AddToken(b, t, bs.newID)
 	})
 }
 
-func (bs *boardStore) removeToken(ctx context.Context, sessionID int64, tokenID string) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, func(b *BoardState) error { removeToken(b, tokenID); return nil })
+func (bs *BoardStore) RemoveToken(ctx context.Context, sessionID int64, tokenID string) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error { RemoveToken(b, tokenID); return nil })
 }
 
-// duplicateToken põe outra igual ao lado, numerada pelo SERVIDOR: dois clientes
+// DuplicateToken põe outra igual ao lado, numerada pelo SERVIDOR: dois clientes
 // duplicando ao mesmo tempo não podem inventar o mesmo "Zumbi 3" (ALE-192).
-func (bs *boardStore) duplicateToken(ctx context.Context, sessionID int64, tokenID string) (*BoardState, error) {
+func (bs *BoardStore) DuplicateToken(ctx context.Context, sessionID int64, tokenID string) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, func(b *BoardState) error {
-		return duplicateToken(b, tokenID, bs.newID)
+		return DuplicateToken(b, tokenID, bs.newID)
 	})
 }
 
-func (bs *boardStore) updateToken(ctx context.Context, sessionID int64, tokenID string, patch tokenPatch) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, func(b *BoardState) error { return updateToken(b, tokenID, patch) })
+func (bs *BoardStore) UpdateToken(ctx context.Context, sessionID int64, tokenID string, patch tokenPatch) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error { return UpdateToken(b, tokenID, patch) })
 }
 
 // Marcadores (ALE-195): o lugar apontado no mapa que não é peça.
-func (bs *boardStore) addMarker(ctx context.Context, sessionID int64, m BoardMarker) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, func(b *BoardState) error { return addMarker(b, m, bs.newID) })
+func (bs *BoardStore) AddMarker(ctx context.Context, sessionID int64, m BoardMarker) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error { return AddMarker(b, m, bs.newID) })
 }
 
-func (bs *boardStore) updateMarker(ctx context.Context, sessionID int64, markerID string, patch markerPatch) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, func(b *BoardState) error { return updateMarker(b, markerID, patch) })
+func (bs *BoardStore) UpdateMarker(ctx context.Context, sessionID int64, markerID string, patch markerPatch) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error { return UpdateMarker(b, markerID, patch) })
 }
 
-func (bs *boardStore) removeMarker(ctx context.Context, sessionID int64, markerID string) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, func(b *BoardState) error { removeMarker(b, markerID); return nil })
+func (bs *BoardStore) RemoveMarker(ctx context.Context, sessionID int64, markerID string) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error { RemoveMarker(b, markerID); return nil })
 }
 
-func (bs *boardStore) paintTerrain(ctx context.Context, sessionID int64, square engine.Square, difficult bool) (*BoardState, error) {
+func (bs *BoardStore) PaintTerrain(ctx context.Context, sessionID int64, square engine.Square, difficult bool) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, func(b *BoardState) error {
-		paintTerrain(b, square, difficult)
+		PaintTerrain(b, square, difficult)
 		return nil
 	})
 }
 
-func (bs *boardStore) populate(
-	ctx context.Context, sessionID int64, st *aovivo.SessionRuntimeState, chosen entrySelection,
+func (bs *BoardStore) Populate(
+	ctx context.Context, sessionID int64, st *aovivo.SessionRuntimeState, chosen EntrySelection,
 ) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, func(b *BoardState) error {
 		populateBoard(b, st, bs.newID, chosen)
@@ -244,10 +244,10 @@ func (bs *boardStore) populate(
 	})
 }
 
-// setSpeeds grava o orçamento de várias peças de uma vez. Uma mutação só, e um
-// broadcast só: um `updateToken` por peça faria a mesa receber seis tabuleiros
+// SetSpeeds grava o orçamento de várias peças de uma vez. Uma mutação só, e um
+// broadcast só: um `UpdateToken` por peça faria a mesa receber seis tabuleiros
 // seguidos ao trazer o grupo.
-func (bs *boardStore) setSpeeds(ctx context.Context, sessionID int64, speeds map[string]int) (*BoardState, error) {
+func (bs *BoardStore) SetSpeeds(ctx context.Context, sessionID int64, speeds map[string]int) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, func(b *BoardState) error {
 		for i := range b.Tokens {
 			if squares, ok := speeds[b.Tokens[i].ID]; ok && squares > 0 {
@@ -268,7 +268,7 @@ func (bs *boardStore) setSpeeds(ctx context.Context, sessionID int64, speeds map
 // existia), e o tabuleiro passou um dia vivendo só em memória — cada gravação
 // falhava numa linha de log que ninguém lê, e na tela estava tudo perfeito até
 // o processo reiniciar. Falha permanente de gravação não é "o disco piscou".
-func (bs *boardStore) Persist(ctx context.Context, sessionID int64) (Dirty, changed bool) {
+func (bs *BoardStore) Persist(ctx context.Context, sessionID int64) (Dirty, changed bool) {
 	bs.Mu.Lock()
 	b := cloneBoard(bs.boards[sessionID])
 	bs.Mu.Unlock()
@@ -298,25 +298,25 @@ func (bs *boardStore) Persist(ctx context.Context, sessionID int64) (Dirty, chan
 	return Dirty, changed
 }
 
-// proposeMove, commitMove e cancelMove são as três portas do movimento (ALE-124).
+// ProposeMove, CommitMove e CancelMove são as três portas do movimento (ALE-124).
 // A posse e o orçamento chegam RESOLVIDOS do gateway: quem consulta o banco é
 // ele, e a trava daqui não pode esperar por I/O.
 
-func (bs *boardStore) proposeMove(ctx context.Context, sessionID int64, st *aovivo.SessionRuntimeState, tokenID string, path []engine.Square, by mover, speedSquares int) (*BoardState, error) {
+func (bs *BoardStore) ProposeMove(ctx context.Context, sessionID int64, st *aovivo.SessionRuntimeState, tokenID string, path []engine.Square, by Mover, speedSquares int) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, func(b *BoardState) error {
 		// O orçamento fresco do motor entra na peça ANTES da medição: sem isso,
 		// a armadura vestida no meio da sessão só valeria no movimento seguinte.
-		if token := findToken(b, tokenID); token != nil && speedSquares > 0 {
+		if token := FindToken(b, tokenID); token != nil && speedSquares > 0 {
 			token.SpeedSquares = speedSquares
 		}
-		return proposeMove(b, st, tokenID, path, by)
+		return ProposeMove(b, st, tokenID, path, by)
 	})
 }
 
-func (bs *boardStore) commitMove(ctx context.Context, sessionID int64, st *aovivo.SessionRuntimeState, version int64, by mover) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, func(b *BoardState) error { return commitMove(b, st, version, by) })
+func (bs *BoardStore) CommitMove(ctx context.Context, sessionID int64, st *aovivo.SessionRuntimeState, version int64, by Mover) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error { return CommitMove(b, st, version, by) })
 }
 
-func (bs *boardStore) cancelMove(ctx context.Context, sessionID int64, by mover) (*BoardState, error) {
-	return bs.apply(ctx, sessionID, func(b *BoardState) error { return cancelMove(b, by) })
+func (bs *BoardStore) CancelMove(ctx context.Context, sessionID int64, by Mover) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error { return CancelMove(b, by) })
 }

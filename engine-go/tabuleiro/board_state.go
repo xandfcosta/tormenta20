@@ -1,4 +1,4 @@
-package api
+package tabuleiro
 
 import "t20engine/aovivo"
 
@@ -106,8 +106,8 @@ func newBoard(place, terrain string) *BoardState {
 	return &BoardState{Version: 1, Place: place, Terrain: terrain, Tokens: []BoardToken{}}
 }
 
-// addToken põe uma peça no tabuleiro, recusando o que sairia da grade.
-func addToken(b *BoardState, t BoardToken, newID func() string) error {
+// AddToken põe uma peça no tabuleiro, recusando o que sairia da grade.
+func AddToken(b *BoardState, t BoardToken, newID func() string) error {
 	if len(b.Tokens) >= boardMaxTokens {
 		return fmt.Errorf("o tabuleiro já tem %d peças (teto %d)", len(b.Tokens), boardMaxTokens)
 	}
@@ -150,15 +150,15 @@ func nextInstanceLabel(b *BoardState, label string) string {
 	return aovivo.NextInstanceLabelAmong(usados, label)
 }
 
-// duplicateToken põe outra igual no tabuleiro — "mais um zumbi" é a operação
+// DuplicateToken põe outra igual no tabuleiro — "mais um zumbi" é a operação
 // mais repetida ao montar encontro (ALE-192).
 //
 // A cópia leva o corpo (rótulo renumerado, tamanho, tipo e o ocultamento: o
 // segundo zumbi da emboscada também está escondido) e NÃO leva o vínculo:
 // `entryId` e `characterId` ficam para trás porque a cópia é uma peça nova, não
 // a mesma linha da iniciativa nem o mesmo personagem.
-func duplicateToken(b *BoardState, tokenID string, newID func() string) error {
-	original := findToken(b, tokenID)
+func DuplicateToken(b *BoardState, tokenID string, newID func() string) error {
+	original := FindToken(b, tokenID)
 	if original == nil {
 		return fmt.Errorf("peça %q não está no tabuleiro", tokenID)
 	}
@@ -169,7 +169,7 @@ func duplicateToken(b *BoardState, tokenID string, newID func() string) error {
 	copia.Label = nextInstanceLabel(b, original.Label)
 	spot := freeSpotNear(b, boardSpot{x: original.X, y: original.Y})
 	copia.X, copia.Y = spot.x, spot.y
-	return addToken(b, copia, newID)
+	return AddToken(b, copia, newID)
 }
 
 // freeSpotNear acha o primeiro quadrado livre em volta de um ponto, em anéis
@@ -195,9 +195,9 @@ func freeSpotNear(b *BoardState, from boardSpot) boardSpot {
 	return from
 }
 
-// removeToken tira a peça do tabuleiro. Some em silêncio se ela já não está lá:
+// RemoveToken tira a peça do tabuleiro. Some em silêncio se ela já não está lá:
 // dois cliques no mesmo botão não são erro do usuário.
-func removeToken(b *BoardState, tokenID string) {
+func RemoveToken(b *BoardState, tokenID string) {
 	for i, t := range b.Tokens {
 		if t.ID != tokenID {
 			continue
@@ -224,9 +224,9 @@ type tokenPatch struct {
 	Y         *int    `json:"y"`
 }
 
-// updateToken aplica o patch. Não há borda para respeitar — só o guarda contra
+// UpdateToken aplica o patch. Não há borda para respeitar — só o guarda contra
 // coordenada absurda, que é sobre lixo de cliente e não sobre o mapa.
-func updateToken(b *BoardState, tokenID string, patch tokenPatch) error {
+func UpdateToken(b *BoardState, tokenID string, patch tokenPatch) error {
 	for i := range b.Tokens {
 		t := &b.Tokens[i]
 		if t.ID != tokenID {
@@ -271,8 +271,8 @@ var markerColors = map[string]bool{"ouro": true, "carmim": true, "azul": true, "
 // estado inteiro viaja em todo broadcast.
 const boardMaxMarkers = 100
 
-// addMarker põe um lugar marcado no mapa.
-func addMarker(b *BoardState, m BoardMarker, newID func() string) error {
+// AddMarker põe um lugar marcado no mapa.
+func AddMarker(b *BoardState, m BoardMarker, newID func() string) error {
 	if len(b.Markers) >= boardMaxMarkers {
 		return fmt.Errorf("o tabuleiro já tem %d marcadores (teto %d)", len(b.Markers), boardMaxMarkers)
 	}
@@ -299,9 +299,9 @@ func trimMarkerText(text string) string {
 	return string(runas)
 }
 
-// updateMarker altera texto, cor ou o ocultamento — a posição não muda porque
+// UpdateMarker altera texto, cor ou o ocultamento — a posição não muda porque
 // marcador que anda é peça, e peça já existe.
-func updateMarker(b *BoardState, markerID string, patch markerPatch) error {
+func UpdateMarker(b *BoardState, markerID string, patch markerPatch) error {
 	for i := range b.Markers {
 		if b.Markers[i].ID != markerID {
 			continue
@@ -328,8 +328,8 @@ type markerPatch struct {
 	Hidden *bool   `json:"hidden"`
 }
 
-// removeMarker tira o lugar marcado. Some em silêncio se já não está lá.
-func removeMarker(b *BoardState, markerID string) {
+// RemoveMarker tira o lugar marcado. Some em silêncio se já não está lá.
+func RemoveMarker(b *BoardState, markerID string) {
 	for i, m := range b.Markers {
 		if m.ID != markerID {
 			continue
@@ -357,16 +357,16 @@ func abs(v int) int {
 	return v
 }
 
-// entrySelection nomeia as linhas da iniciativa que o mestre escolheu trazer
+// EntrySelection nomeia as linhas da iniciativa que o mestre escolheu trazer
 // (ALE-204).
 //
-// Nil é TODAS, e isso não é conveniência: é o que `board-populate` sem
+// Nil é TODAS, e isso não é conveniência: é o que `board-Populate` sem
 // `entryIds` sempre significou, e uma aba aberta antes desta mudança continua
 // mandando exatamente isso. Lista VAZIA é diferente de ausente — "não escolhi"
 // não é "escolhi ninguém".
-type entrySelection map[string]bool
+type EntrySelection map[string]bool
 
-func (s entrySelection) wants(entryID string) bool { return s == nil || s[entryID] }
+func (s EntrySelection) wants(entryID string) bool { return s == nil || s[entryID] }
 
 // populateBoard traz para o tabuleiro cada linha ESCOLHIDA da iniciativa que
 // ainda não tem peça, com os PERSONAGENS de um lado e o resto do outro.
@@ -383,7 +383,7 @@ func (s entrySelection) wants(entryID string) bool { return s == nil || s[entryI
 // assassino que o mestre montou para aparecer no terceiro turno, e desfazer
 // era peça por peça. Quem não foi escolhido não nasce — nem escondido: peça
 // que não existe não vaza por bug de redação.
-func populateBoard(b *BoardState, st *aovivo.SessionRuntimeState, newID func() string, chosen entrySelection) int {
+func populateBoard(b *BoardState, st *aovivo.SessionRuntimeState, newID func() string, chosen EntrySelection) int {
 	placed := 0
 	for _, entry := range st.Initiative {
 		if !chosen.wants(entry.ID) || hasTokenForEntry(b, entry.ID) {
@@ -395,7 +395,7 @@ func populateBoard(b *BoardState, st *aovivo.SessionRuntimeState, newID func() s
 		}
 		spot := clusterSpot(b, entry.Type == "character")
 		token.X, token.Y = spot.x, spot.y
-		if err := addToken(b, token, newID); err != nil {
+		if err := AddToken(b, token, newID); err != nil {
 			break
 		}
 		placed++
@@ -479,11 +479,11 @@ func occupied(b *BoardState, x, y int) bool {
 	return false
 }
 
-// boardForRole é o tabuleiro como UM papel pode vê-lo. Papel desconhecido cai em
+// BoardForRole é o tabuleiro como UM papel pode vê-lo. Papel desconhecido cai em
 // jogador: errar para o lado que MOSTRA seria vazar por omissão, a mesma regra
 // do `aovivo.StateForRole`.
-func boardForRole(role string, b *BoardState) *BoardState {
-	if b == nil || role == "gm" {
+func BoardForRole(Role string, b *BoardState) *BoardState {
+	if b == nil || Role == "gm" {
 		return b
 	}
 	return redactBoardForPlayers(b)
@@ -571,8 +571,8 @@ func speedOf(t BoardToken) int {
 	return boardDefaultSpeedSquares
 }
 
-// findToken devolve o ponteiro para a peça viva (para mutação) ou nil.
-func findToken(b *BoardState, tokenID string) *BoardToken {
+// FindToken devolve o ponteiro para a peça viva (para mutação) ou nil.
+func FindToken(b *BoardState, tokenID string) *BoardToken {
 	for i := range b.Tokens {
 		if b.Tokens[i].ID == tokenID {
 			return &b.Tokens[i]
@@ -581,17 +581,17 @@ func findToken(b *BoardState, tokenID string) *BoardToken {
 	return nil
 }
 
-// mover descreve quem está tentando mexer numa peça. O papel vem do socket e a
+// Mover descreve quem está tentando mexer numa peça. O papel vem do socket e a
 // posse do banco; a decisão de deixar ou não é a função abaixo.
-type mover struct {
-	userID int64
-	role   string
-	// ownsCharacter: a peça é de um personagem DESTE usuário. Resolvido no
+type Mover struct {
+	UserID int64
+	Role   string
+	// OwnsCharacter: a peça é de um personagem DESTE usuário. Resolvido no
 	// gateway, contra o banco — o cliente não é fonte de posse.
-	ownsCharacter bool
+	OwnsCharacter bool
 }
 
-// assertMovable responde "esta pessoa pode mover esta peça agora?" e, quando
+// assertMovable responde "esta pessoa pode Mover esta peça agora?" e, quando
 // pode, com QUANTO de orçamento (T20 p106; -1 = sem orçamento).
 //
 // Três regras, e as duas exceções são deliberadas:
@@ -600,15 +600,15 @@ type mover struct {
 //   - FORA DE COMBATE (`turnIndex` < 0) não existe vez nem deslocamento de
 //     turno: cada um anda com a própria peça, e o contador só informa;
 //   - em combate, o jogador move a própria peça só na vez dela.
-func assertMovable(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, by mover) (*BoardToken, int, error) {
-	token := findToken(b, tokenID)
+func assertMovable(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, by Mover) (*BoardToken, int, error) {
+	token := FindToken(b, tokenID)
 	if token == nil {
 		return nil, 0, fmt.Errorf("peça %q não está no tabuleiro", tokenID)
 	}
-	if by.role == "gm" {
+	if by.Role == "gm" {
 		return token, -1, nil
 	}
-	if !by.ownsCharacter {
+	if !by.OwnsCharacter {
 		return nil, 0, fmt.Errorf("a peça %q não é sua", token.Label)
 	}
 	if st == nil || st.TurnIndex < 0 {
@@ -630,10 +630,10 @@ func isTokenOnTurn(token *BoardToken, st *aovivo.SessionRuntimeState) bool {
 	return st.Initiative[st.TurnIndex].ID == *token.EntryID
 }
 
-// proposeMove mede o caminho e guarda o provisório. Recusa o que estoura o
+// ProposeMove mede o caminho e guarda o provisório. Recusa o que estoura o
 // deslocamento: a decisão do dono é BLOQUEAR no limite, e as saídas são o
 // mestre (sem orçamento) e a cena fora de combate.
-func proposeMove(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, path []engine.Square, by mover) error {
+func ProposeMove(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, path []engine.Square, by Mover) error {
 	token, budget, err := assertMovable(b, st, tokenID, by)
 	if err != nil {
 		return err
@@ -653,20 +653,20 @@ func proposeMove(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, 
 	}
 	b.Pending = &PendingMove{
 		TokenID: tokenID, Path: path, Cost: cost.Squares, Budget: budget,
-		Diagonals: cost.Diagonals, Difficult: cost.Difficult, ByUserID: by.userID,
+		Diagonals: cost.Diagonals, Difficult: cost.Difficult, ByUserID: by.UserID,
 	}
 	b.Version++
 	return nil
 }
 
-// paintTerrain marca ou apaga UMA casa como terreno difícil (T20 p238).
+// PaintTerrain marca ou apaga UMA casa como terreno difícil (T20 p238).
 //
 // Recebe o valor DESEJADO e não alterna, e a razão mudou junto com a tela: o
 // pincel pinta ARRASTANDO, e o arraste passa pela mesma casa mais de uma vez —
 // alternar faria a casa piscar entre brejo e chão limpo debaixo do dedo. Com o
 // valor explícito a mensagem é idempotente, que é o que um arraste precisa.
 // Quem apaga é a borracha, que manda `false`.
-func paintTerrain(b *BoardState, square engine.Square, difficult bool) {
+func PaintTerrain(b *BoardState, square engine.Square, difficult bool) {
 	for i, existente := range b.Difficult {
 		if existente == square {
 			if difficult {
@@ -698,7 +698,7 @@ func moveTerrainOf(b *BoardState) engine.MoveTerrain {
 	return engine.MoveTerrain{Difficult: difficult}
 }
 
-// commitMove pousa a peça no fim do caminho proposto.
+// CommitMove pousa a peça no fim do caminho proposto.
 //
 // `version` é a versão que o proponente tinha na mão: se o tabuleiro mudou
 // desde a proposta, o commit é RECUSADO em vez de aplicado sobre outra cena.
@@ -707,7 +707,7 @@ func moveTerrainOf(b *BoardState) engine.MoveTerrain {
 // que chega depois da re-hidratação. Versão 0 = "não sei em que versão eu
 // estava", aceita, porque recusar um cliente honesto e desatualizado seria
 // pior que aplicar o que ele acabou de ver na tela.
-func commitMove(b *BoardState, st *aovivo.SessionRuntimeState, version int64, by mover) error {
+func CommitMove(b *BoardState, st *aovivo.SessionRuntimeState, version int64, by Mover) error {
 	pending, err := pendingFor(b, by)
 	if err != nil {
 		return err
@@ -730,8 +730,8 @@ func commitMove(b *BoardState, st *aovivo.SessionRuntimeState, version int64, by
 	return nil
 }
 
-// cancelMove desfaz o provisório sem mexer na peça.
-func cancelMove(b *BoardState, by mover) error {
+// CancelMove desfaz o provisório sem mexer na peça.
+func CancelMove(b *BoardState, by Mover) error {
 	if _, err := pendingFor(b, by); err != nil {
 		return err
 	}
@@ -743,11 +743,11 @@ func cancelMove(b *BoardState, by mover) error {
 // pendingFor devolve o provisório se esta pessoa pode decidir sobre ele. O
 // mestre decide por qualquer um — é ele quem toca a mesa quando o jogador
 // travou ou caiu da rede —, e o jogador só sobre o que ele mesmo propôs.
-func pendingFor(b *BoardState, by mover) (*PendingMove, error) {
+func pendingFor(b *BoardState, by Mover) (*PendingMove, error) {
 	if b.Pending == nil {
 		return nil, fmt.Errorf("não há movimento proposto para confirmar")
 	}
-	if by.role != "gm" && b.Pending.ByUserID != by.userID {
+	if by.Role != "gm" && b.Pending.ByUserID != by.UserID {
 		return nil, fmt.Errorf("o movimento proposto não é seu")
 	}
 	return b.Pending, nil

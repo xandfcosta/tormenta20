@@ -17,7 +17,7 @@ type memberDTO struct {
 	ID          int64               `json:"id"`
 	CampaignID  int64               `json:"campaignId"`
 	CharacterID int64               `json:"characterId"`
-	Role        string              `json:"role"`
+	Role        string              `json:"Role"`
 	AddedAt     string              `json:"addedAt"`
 	Character   *memberCharacterDTO `json:"character,omitempty"`
 }
@@ -150,7 +150,7 @@ func (s *Server) resolveCombatant(ctx context.Context, callerID, campaignID, cha
 }
 
 // listPlayerCombatants returns every player character in the campaign with live vitals —
-// the GM's one-shot "populate tracker".
+// the GM's one-shot "Populate tracker".
 func (s *Server) listPlayerCombatants(ctx context.Context, campaignID int64) ([]combatant, error) {
 	rows, err := s.queries.ListMembers(ctx, campaignID)
 	if err != nil {
@@ -169,7 +169,7 @@ func (s *Server) listPlayerCombatants(ctx context.Context, campaignID int64) ([]
 	return out, nil
 }
 
-// listMemberCharacterIds returns the character id of every member (any role) — the set a
+// listMemberCharacterIds returns the character id of every member (any Role) — the set a
 // session-wide rest iterates over.
 func (s *Server) listMemberCharacterIds(ctx context.Context, campaignID int64) ([]int64, error) {
 	rows, err := s.queries.ListMembers(ctx, campaignID)
@@ -224,7 +224,7 @@ func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 	}
 	var body struct {
 		CharacterID *int64  `json:"characterId"`
-		Role        *string `json:"role"`
+		Role        *string `json:"Role"`
 		InviteToken *string `json:"inviteToken"`
 	}
 	if !plataforma.DecodeJSON(w, r, &body) {
@@ -265,9 +265,9 @@ func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 		plataforma.WriteError(w, http.StatusForbidden, fmt.Sprintf("Cannot Add a character you don't own (character %d)", *body.CharacterID))
 		return
 	}
-	role := derefStr(body.Role, "player")
-	if !campaignMemberRoles[role] {
-		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"role": {"role must be one of: player, gm"}})
+	Role := derefStr(body.Role, "player")
+	if !campaignMemberRoles[Role] {
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"Role": {"Role must be one of: player, gm"}})
 		return
 	}
 	// As duas travas abaixo falhavam ABERTAS (ALE-156): o erro era descartado
@@ -275,7 +275,7 @@ func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 	// Eram as únicas checagens do repositório que um erro ABRIA — as outras
 	// engolem o erro e NEGAM (mentem o status, não a decisão). Checagem de
 	// autorização ou de unicidade nunca descarta erro: na dúvida, nega.
-	if role == "player" {
+	if Role == "player" {
 		hasPc, err := s.queries.HasPlayerPc(r.Context(), sqlcgen.HasPlayerPcParams{Campaignid: cid, Ownerid: user.ID})
 		if err != nil {
 			plataforma.WriteError(w, http.StatusInternalServerError, "Could not check existing characters")
@@ -298,7 +298,7 @@ func (s *Server) handleAddMember(w http.ResponseWriter, r *http.Request) {
 		plataforma.WriteFieldError(w, http.StatusConflict, fmt.Sprintf("Character %d already in campaign %d", *body.CharacterID, cid), plataforma.FieldErrorMap{"characterId": {"Already a member"}})
 		return
 	}
-	m, err := s.joinCampaign(r.Context(), *body.CharacterID, cid, user.ID, role)
+	m, err := s.joinCampaign(r.Context(), *body.CharacterID, cid, user.ID, Role)
 	if errors.Is(err, errAlreadyInCampaign) {
 		// Perdeu a corrida para um pedido simultâneo: o desfecho é o mesmo 409
 		// que a checagem de fora daria, e não um 500 que culparia o servidor.
@@ -323,7 +323,7 @@ func (s *Server) handleUpdateMemberRole(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	var body struct {
-		Role string `json:"role"`
+		Role string `json:"Role"`
 	}
 	if !plataforma.DecodeJSON(w, r, &body) {
 		return
@@ -332,7 +332,7 @@ func (s *Server) handleUpdateMemberRole(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	if !campaignMemberRoles[body.Role] {
-		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"role": {"role must be one of: player, gm"}})
+		plataforma.WriteValidationError(w, plataforma.FieldErrorMap{"Role": {"Role must be one of: player, gm"}})
 		return
 	}
 	m, err := s.queries.GetMember(r.Context(), mid)
@@ -394,7 +394,7 @@ func (s *Server) handleRemoveMember(w http.ResponseWriter, r *http.Request) {
 //
 // A cópia existe porque a ficha da mesa é um instantâneo (ALE-33): editar
 // durante a sessão não pode vazar para as outras campanhas.
-func (s *Server) joinCampaign(ctx context.Context, sourceID, campaignID, ownerID int64, role string) (sqlcgen.CampaignMember, error) {
+func (s *Server) joinCampaign(ctx context.Context, sourceID, campaignID, ownerID int64, Role string) (sqlcgen.CampaignMember, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return sqlcgen.CampaignMember{}, err
@@ -411,7 +411,7 @@ func (s *Server) joinCampaign(ctx context.Context, sourceID, campaignID, ownerID
 	//
 	// É a mesma forma do commit de movimento no tabuleiro, que reconfere a vez:
 	// entre decidir e escrever, a mesa pode ter mudado.
-	if err := assertCanJoin(ctx, s.queries.WithTx(tx), tx, sourceID, campaignID, ownerID, role); err != nil {
+	if err := assertCanJoin(ctx, s.queries.WithTx(tx), tx, sourceID, campaignID, ownerID, Role); err != nil {
 		return sqlcgen.CampaignMember{}, err
 	}
 
@@ -420,7 +420,7 @@ func (s *Server) joinCampaign(ctx context.Context, sourceID, campaignID, ownerID
 		return sqlcgen.CampaignMember{}, err
 	}
 	member, err := s.queries.WithTx(tx).CreateMember(ctx, sqlcgen.CreateMemberParams{
-		Campaignid: campaignID, Characterid: copyID, Role: role, Addedat: plataforma.NowISO(),
+		Campaignid: campaignID, Characterid: copyID, Role: Role, Addedat: plataforma.NowISO(),
 	})
 	if err != nil {
 		return sqlcgen.CampaignMember{}, err
@@ -435,8 +435,8 @@ var errAlreadyInCampaign = errors.New("personagem já está na campanha")
 // assertCanJoin repete, DENTRO da transação, as duas travas que o handler já
 // tentou por fora. Repetição de propósito: a de fora é pela mensagem, esta é
 // pela verdade (ALE-156).
-func assertCanJoin(ctx context.Context, q *sqlcgen.Queries, tx *sql.Tx, sourceID, campaignID, ownerID int64, role string) error {
-	if role == "player" {
+func assertCanJoin(ctx context.Context, q *sqlcgen.Queries, tx *sql.Tx, sourceID, campaignID, ownerID int64, Role string) error {
+	if Role == "player" {
 		hasPc, err := q.HasPlayerPc(ctx, sqlcgen.HasPlayerPcParams{Campaignid: campaignID, Ownerid: ownerID})
 		if err != nil {
 			return err

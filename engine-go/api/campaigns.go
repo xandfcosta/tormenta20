@@ -32,10 +32,10 @@ type campaignCharacterDTO struct {
 	Classes []ClassDTO `json:"classes"`
 }
 
-// campaignListDTO adds the caller's role + own member character (GET /campaigns).
+// campaignListDTO adds the caller's Role + own member character (GET /campaigns).
 type campaignListDTO struct {
 	CampaignDTO
-	Role      string                `json:"role"`
+	Role      string                `json:"Role"`
 	Character *campaignCharacterDTO `json:"character"`
 	// OwnerName is present ONLY on a mesa the caller does not own, which today
 	// means an admin seeing everyone's (ALE-120). Absent is the normal case, so
@@ -45,7 +45,7 @@ type campaignListDTO struct {
 
 type campaignDetailDTO struct {
 	CampaignDTO
-	Role string `json:"role"`
+	Role string `json:"Role"`
 	// IgnoredRules acompanha o detalhe porque é nele que a campanha se configura
 	// (ALE-221) — pedir uma segunda rota para desenhar os interruptores faria a
 	// tela piscar entre "tudo ligado" e o estado real.
@@ -160,14 +160,14 @@ func (s *Server) handleGetCampaign(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := currentUser(r)
-	role, status, err := s.roleIn(r.Context(), user, c)
+	Role, status, err := s.roleIn(r.Context(), user, c)
 	if err != nil {
 		plataforma.WriteError(w, status, err.Error())
 		return
 	}
 	out := campaignDetailDTO{
 		CampaignDTO:  campaignScalars(c),
-		Role:         role,
+		Role:         Role,
 		IgnoredRules: s.ignoredRulesOf(r.Context(), c.ID),
 	}
 	// IsAdmin, not merely "not the owner": a PLAYER is also a non-owner here, and
@@ -313,10 +313,10 @@ func (s *Server) handleResolveInvite(w http.ResponseWriter, r *http.Request) {
 // resolveRole is the campaign-access domain rule,
 // transport-agnostic so both the HTTP handlers and the WS gateway can gate on it: the
 // owner is the "gm"; a user who owns a member character is a "player"; anyone else is
-// forbidden. Returns the role + an HTTP-ish status the caller maps to its transport.
-// The admin enters ANY mesa as "gm" (ALE-120): the role already exists, carries
+// forbidden. Returns the Role + an HTTP-ish status the caller maps to its transport.
+// The admin enters ANY mesa as "gm" (ALE-120): the Role already exists, carries
 // the tools they came to use, and nothing in the engine assumes a single GM —
-// presence de-duplicates per user and `requireGm` gates by role, not identity.
+// presence de-duplicates per user and `requireGm` gates by Role, not identity.
 // Two GMs can therefore drive initiative at once; that is the accepted cost of
 // letting the table's owner fix a player's mesa mid-session.
 func (s *Server) resolveRole(ctx context.Context, user AuthUser, campaignID int64) (string, int, error) {
@@ -331,7 +331,7 @@ func (s *Server) resolveRole(ctx context.Context, user AuthUser, campaignID int6
 }
 
 // roleIn is the same rule over a campaign the caller ALREADY loaded, so a
-// handler that needs both the row and the role does not read it twice.
+// handler that needs both the row and the Role does not read it twice.
 func (s *Server) roleIn(ctx context.Context, user AuthUser, c sqlcgen.Campaign) (string, int, error) {
 	if c.Ownerid == user.ID || user.IsAdmin {
 		return "gm", http.StatusOK, nil

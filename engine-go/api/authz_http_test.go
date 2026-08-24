@@ -23,11 +23,11 @@ import (
 // or a handler that forgets its authorization helper, fails here.
 
 // authed issues a real JWT for the user and sends the request as they would.
-func authed(t *testing.T, s *Server, userID int64, method, path, body string) *httptest.ResponseRecorder {
+func authed(t *testing.T, s *Server, UserID int64, method, path, body string) *httptest.ResponseRecorder {
 	t.Helper()
-	user, err := s.queries.GetUserByID(context.Background(), userID)
+	user, err := s.queries.GetUserByID(context.Background(), UserID)
 	if err != nil {
-		t.Fatalf("usuário %d não existe: %v", userID, err)
+		t.Fatalf("usuário %d não existe: %v", UserID, err)
 	}
 	token, err := s.signToken(user)
 	if err != nil {
@@ -193,8 +193,8 @@ func TestGetCampaignAuthorization(t *testing.T) {
 		if rec.Code != http.StatusOK {
 			t.Fatalf("esperado 200 para o dono, veio %d (%s)", rec.Code, rec.Body.String())
 		}
-		if role := jsonField(t, rec, "role"); role != "gm" {
-			t.Fatalf("papel esperado gm, veio %v", role)
+		if Role := jsonField(t, rec, "Role"); Role != "gm" {
+			t.Fatalf("papel esperado gm, veio %v", Role)
 		}
 	})
 
@@ -203,8 +203,8 @@ func TestGetCampaignAuthorization(t *testing.T) {
 		if rec.Code != http.StatusOK {
 			t.Fatalf("esperado 200 para o membro, veio %d (%s)", rec.Code, rec.Body.String())
 		}
-		if role := jsonField(t, rec, "role"); role != "player" {
-			t.Fatalf("papel esperado player, veio %v", role)
+		if Role := jsonField(t, rec, "Role"); Role != "player" {
+			t.Fatalf("papel esperado player, veio %v", Role)
 		}
 	})
 

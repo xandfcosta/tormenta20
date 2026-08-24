@@ -34,7 +34,7 @@ func (s *Server) handleSessionEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := currentUser(r)
-	_, role, status, err := s.sessionForCaller(r.Context(), user, campaignID, sessionID)
+	_, Role, status, err := s.sessionForCaller(r.Context(), user, campaignID, sessionID)
 	if err != nil {
 		plataforma.WriteError(w, status, err.Error())
 		return
@@ -58,25 +58,25 @@ func (s *Server) handleSessionEvents(w http.ResponseWriter, r *http.Request) {
 	flusher.Flush()
 
 	connID := aovivo.NewUUID()
-	conn := s.sse.Add(sessionID, connID, role)
+	conn := s.sse.Add(sessionID, connID, Role)
 	defer s.sse.Remove(sessionID, connID)
 
-	s.announcePresence(sessionID, connID, user, role)
+	s.announcePresence(sessionID, connID, user, Role)
 	defer s.dropPresence(sessionID, connID)
 
 	aovivo.StreamFrames(r.Context(), w, flusher, conn, aovivo.Heartbeat)
 }
 
 // announcePresence põe o leitor no elenco e conta à mesa.
-func (s *Server) announcePresence(sessionID int64, connID string, user AuthUser, role string) {
+func (s *Server) announcePresence(sessionID int64, connID string, user AuthUser, Role string) {
 	nome := user.Email
 	if user.Name != nil && *user.Name != "" {
 		nome = *user.Name
 	}
-	if role == "" {
-		role = "player"
+	if Role == "" {
+		Role = "player"
 	}
-	elenco := s.presence.Join(sessionID, connID, aovivo.PresenceUser{UserID: user.ID, Name: nome, Role: role})
+	elenco := s.presence.Join(sessionID, connID, aovivo.PresenceUser{UserID: user.ID, Name: nome, Role: Role})
 	s.emitPresence(sessionID, elenco)
 }
 

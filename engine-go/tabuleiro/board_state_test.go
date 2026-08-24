@@ -1,4 +1,4 @@
-package api
+package tabuleiro
 
 import "t20engine/aovivo"
 
@@ -27,10 +27,10 @@ func TestBoardHasNoEdges(t *testing.T) {
 	b := openBoard(t)
 	id := boardCounter()
 
-	if err := addToken(b, BoardToken{Label: "Batedor", X: -40, Y: -12}, id); err != nil {
+	if err := AddToken(b, BoardToken{Label: "Batedor", X: -40, Y: -12}, id); err != nil {
 		t.Errorf("coordenada negativa recusada num plano infinito: %v", err)
 	}
-	if err := addToken(b, BoardToken{Label: "Ogro", Footprint: 2, X: 999, Y: 4}, id); err != nil {
+	if err := AddToken(b, BoardToken{Label: "Ogro", Footprint: 2, X: 999, Y: 4}, id); err != nil {
 		t.Errorf("peça longe da origem recusada: %v", err)
 	}
 }
@@ -42,10 +42,10 @@ func TestAbsurdCoordinatesAreRefused(t *testing.T) {
 	b := openBoard(t)
 	id := boardCounter()
 
-	if err := addToken(b, BoardToken{Label: "Lixo", X: boardCoordLimit + 1}, id); err == nil {
+	if err := AddToken(b, BoardToken{Label: "Lixo", X: boardCoordLimit + 1}, id); err == nil {
 		t.Error("coordenada absurda foi aceita")
 	}
-	if err := addToken(b, BoardToken{Label: "Lixo", Y: -(boardCoordLimit + 1)}, id); err == nil {
+	if err := AddToken(b, BoardToken{Label: "Lixo", Y: -(boardCoordLimit + 1)}, id); err == nil {
 		t.Error("coordenada absurda negativa foi aceita")
 	}
 	if len(b.Tokens) != 0 {
@@ -58,18 +58,18 @@ func TestBoardVersionRisesOnEveryAcceptedChange(t *testing.T) {
 	id := boardCounter()
 	inicio := b.Version
 
-	_ = addToken(b, BoardToken{Label: "Goblin"}, id)
+	_ = AddToken(b, BoardToken{Label: "Goblin"}, id)
 	depoisDeAdicionar := b.Version
 	if depoisDeAdicionar <= inicio {
 		t.Error("adicionar peça não moveu a versão")
 	}
 	// Recusa NÃO conta: uma versão que sobe sem o estado mudar faria o cliente
 	// descartar broadcast bom.
-	_ = addToken(b, BoardToken{Label: "Lixo", X: boardCoordLimit + 1}, id)
+	_ = AddToken(b, BoardToken{Label: "Lixo", X: boardCoordLimit + 1}, id)
 	if b.Version != depoisDeAdicionar {
 		t.Error("uma mutação RECUSADA mexeu na versão")
 	}
-	removeToken(b, "t1")
+	RemoveToken(b, "t1")
 	if b.Version <= depoisDeAdicionar {
 		t.Error("remover peça não moveu a versão")
 	}
@@ -81,20 +81,20 @@ func TestBoardVersionRisesOnEveryAcceptedChange(t *testing.T) {
 func TestHiddenTokenVanishesForPlayers(t *testing.T) {
 	b := openBoard(t)
 	id := boardCounter()
-	_ = addToken(b, BoardToken{Label: "Bandido", X: 1, Y: 1}, id)
-	_ = addToken(b, BoardToken{Label: "Assassino na viga", X: 2, Y: 2, Hidden: true}, id)
+	_ = AddToken(b, BoardToken{Label: "Bandido", X: 1, Y: 1}, id)
+	_ = AddToken(b, BoardToken{Label: "Assassino na viga", X: 2, Y: 2, Hidden: true}, id)
 
-	doJogador := boardForRole("player", b)
+	doJogador := BoardForRole("player", b)
 
 	if len(doJogador.Tokens) != 1 || doJogador.Tokens[0].Label != "Bandido" {
 		t.Errorf("o jogador recebeu %d peças: %+v", len(doJogador.Tokens), doJogador.Tokens)
 	}
-	if doMestre := boardForRole("gm", b); len(doMestre.Tokens) != 2 {
+	if doMestre := BoardForRole("gm", b); len(doMestre.Tokens) != 2 {
 		t.Errorf("o mestre perdeu a própria emboscada: %d peças", len(doMestre.Tokens))
 	}
 	// Papel desconhecido cai em jogador: errar para o lado que MOSTRA seria
 	// vazar por omissão.
-	if len(boardForRole("", b).Tokens) != 1 {
+	if len(BoardForRole("", b).Tokens) != 1 {
 		t.Error("papel vazio recebeu o tabuleiro inteiro")
 	}
 	if len(b.Tokens) != 2 {
@@ -106,7 +106,7 @@ func TestPopulateBoardIsIdempotent(t *testing.T) {
 	b := openBoard(t)
 	id := boardCounter()
 	st := aovivo.EmptyRuntimeState()
-	entryID := contadorDeIds()
+	entryID := ContadorDeIds()
 	_ = aovivo.AddEntry(st, npc("Ogro", 12), entryID)
 	_ = aovivo.AddEntry(st, npc("Bandido", 8), entryID)
 
@@ -173,7 +173,7 @@ func TestACopiaGanhaOProximoNumeroLivre(t *testing.T) {
 				alvo = token.ID
 			}
 		}
-		if err := duplicateToken(b, alvo, novoIDFixo()); err != nil {
+		if err := DuplicateToken(b, alvo, novoIDFixo()); err != nil {
 			t.Fatalf("%s: duplicar: %v", caso.nome, err)
 		}
 		copia := b.Tokens[len(b.Tokens)-1]
@@ -193,7 +193,7 @@ func TestACopiaLevaOCorpoENaoOVinculo(t *testing.T) {
 	b.Tokens[0].Footprint = 2
 	b.Tokens[0].Hidden = true
 
-	if err := duplicateToken(b, "t0", novoIDFixo()); err != nil {
+	if err := DuplicateToken(b, "t0", novoIDFixo()); err != nil {
 		t.Fatalf("duplicar: %v", err)
 	}
 
@@ -216,7 +216,7 @@ func TestACopiaNasceAoLadoENaoEmCima(t *testing.T) {
 	b := tabuleiroCom("Zumbi 1")
 	b.Tokens[0].X, b.Tokens[0].Y = 30, 12
 
-	if err := duplicateToken(b, "t0", novoIDFixo()); err != nil {
+	if err := DuplicateToken(b, "t0", novoIDFixo()); err != nil {
 		t.Fatalf("duplicar: %v", err)
 	}
 
@@ -250,14 +250,14 @@ alvo. O marcador aponta e mais nada.
 // peça, e não uma segunda política.
 func TestOMarcadorEscondidoSomeParaOJogador(t *testing.T) {
 	b := newBoard("Cripta", "cripta")
-	if err := addMarker(b, BoardMarker{X: 2, Y: 3, Text: "1A", Color: "carmim", Hidden: true}, novoIDFixo()); err != nil {
+	if err := AddMarker(b, BoardMarker{X: 2, Y: 3, Text: "1A", Color: "carmim", Hidden: true}, novoIDFixo()); err != nil {
 		t.Fatalf("marcar: %v", err)
 	}
-	if err := addMarker(b, BoardMarker{X: 5, Y: 5, Text: "B", Color: "ouro"}, novoIDFixo()); err != nil {
+	if err := AddMarker(b, BoardMarker{X: 5, Y: 5, Text: "B", Color: "ouro"}, novoIDFixo()); err != nil {
 		t.Fatalf("marcar: %v", err)
 	}
 
-	daMesa := boardForRole("player", b)
+	daMesa := BoardForRole("player", b)
 
 	if len(b.Markers) != 2 {
 		t.Fatalf("o mestre ficou com %d marcadores", len(b.Markers))
@@ -271,7 +271,7 @@ func TestOMarcadorEscondidoSomeParaOJogador(t *testing.T) {
 // caractere na tela.
 func TestOMarcadorCabeEmDuasLetras(t *testing.T) {
 	b := newBoard("Cripta", "cripta")
-	if err := addMarker(b, BoardMarker{X: 0, Y: 0, Text: "Ê2A", Color: "azul"}, novoIDFixo()); err != nil {
+	if err := AddMarker(b, BoardMarker{X: 0, Y: 0, Text: "Ê2A", Color: "azul"}, novoIDFixo()); err != nil {
 		t.Fatalf("marcar: %v", err)
 	}
 
@@ -284,7 +284,7 @@ func TestOMarcadorCabeEmDuasLetras(t *testing.T) {
 // string deixaria o cliente escrever CSS no estado da mesa.
 func TestACorDoMarcadorEDeUmConjuntoFechado(t *testing.T) {
 	b := newBoard("Cripta", "cripta")
-	if err := addMarker(b, BoardMarker{X: 0, Y: 0, Text: "X", Color: "url(javascript:alert(1))"}, novoIDFixo()); err != nil {
+	if err := AddMarker(b, BoardMarker{X: 0, Y: 0, Text: "X", Color: "url(javascript:alert(1))"}, novoIDFixo()); err != nil {
 		t.Fatalf("marcar: %v", err)
 	}
 
@@ -293,7 +293,7 @@ func TestACorDoMarcadorEDeUmConjuntoFechado(t *testing.T) {
 	}
 	// E o mesmo vale ao ALTERAR: o patch não é uma porta de trás.
 	fora := "vermelho-do-cliente"
-	if err := updateMarker(b, b.Markers[0].ID, markerPatch{Color: &fora}); err != nil {
+	if err := UpdateMarker(b, b.Markers[0].ID, markerPatch{Color: &fora}); err != nil {
 		t.Fatalf("alterar: %v", err)
 	}
 	if got := b.Markers[0].Color; got != "ouro" {
@@ -304,16 +304,16 @@ func TestACorDoMarcadorEDeUmConjuntoFechado(t *testing.T) {
 // Revelar é o gesto seguinte a marcar, e é o que a mesa vê mudar.
 func TestRevelarOMarcadorOEntregaAMesa(t *testing.T) {
 	b := newBoard("Cripta", "cripta")
-	if err := addMarker(b, BoardMarker{X: 1, Y: 1, Text: "A", Color: "ouro", Hidden: true}, novoIDFixo()); err != nil {
+	if err := AddMarker(b, BoardMarker{X: 1, Y: 1, Text: "A", Color: "ouro", Hidden: true}, novoIDFixo()); err != nil {
 		t.Fatalf("marcar: %v", err)
 	}
 	visivel := false
 
-	if err := updateMarker(b, b.Markers[0].ID, markerPatch{Hidden: &visivel}); err != nil {
+	if err := UpdateMarker(b, b.Markers[0].ID, markerPatch{Hidden: &visivel}); err != nil {
 		t.Fatalf("revelar: %v", err)
 	}
 
-	if len(boardForRole("player", b).Markers) != 1 {
+	if len(BoardForRole("player", b).Markers) != 1 {
 		t.Error("revelado, o marcador continuou fora da cópia da mesa")
 	}
 }

@@ -46,12 +46,12 @@ func creatureToDTO(row sqlcgen.CampaignCreature) (creatureDTO, error) {
 // iniciativa, com a regra de PV oculto (ALE-137). Aqui a recusa é do servidor,
 // não da tela: esconder o botão é UX, o limite é aqui.
 func (s *Server) requireGM(w http.ResponseWriter, r *http.Request, campaignID int64) bool {
-	role, status, err := s.resolveRole(r.Context(), currentUser(r), campaignID)
+	Role, status, err := s.resolveRole(r.Context(), currentUser(r), campaignID)
 	if err != nil {
 		plataforma.WriteError(w, status, err.Error())
 		return false
 	}
-	if role != "gm" {
+	if Role != "gm" {
 		plataforma.WriteError(w, http.StatusForbidden, "Only the GM may read or write campaign creatures")
 		return false
 	}

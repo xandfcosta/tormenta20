@@ -41,8 +41,8 @@ func TestAdminReachesAnotherPlayersMesa(t *testing.T) {
 		if rec.Code != http.StatusOK {
 			t.Fatalf("esperado 200, veio %d (%s)", rec.Code, rec.Body.String())
 		}
-		if role, _ := jsonField(t, rec, "role").(string); role != "gm" {
-			t.Errorf("role = %q, esperado gm (%s)", role, rec.Body.String())
+		if Role, _ := jsonField(t, rec, "Role").(string); Role != "gm" {
+			t.Errorf("Role = %q, esperado gm (%s)", Role, rec.Body.String())
 		}
 		// Sem isto a tela de detalhe anuncia "Mestrando" na mesa de outro — e é
 		// justamente ali que se renomeia e apaga.
@@ -93,8 +93,8 @@ func TestAPlayersCampaignIsNotMarkedWithTheOwner(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("o jogador tem de ler a mesa em que joga, veio %d (%s)", rec.Code, rec.Body.String())
 	}
-	if role, _ := jsonField(t, rec, "role").(string); role != "player" {
-		t.Errorf("role = %q, esperado player", role)
+	if Role, _ := jsonField(t, rec, "Role").(string); Role != "player" {
+		t.Errorf("Role = %q, esperado player", Role)
 	}
 	if owner := jsonField(t, rec, "ownerName"); owner != nil {
 		t.Errorf("ownerName = %v, esperado ausente para o jogador", owner)
@@ -127,7 +127,7 @@ func TestTheAdminListSeesEveryMesaAndSaysWhoseItIs(t *testing.T) {
 
 	var list []struct {
 		ID        int64   `json:"id"`
-		Role      string  `json:"role"`
+		Role      string  `json:"Role"`
 		OwnerName *string `json:"ownerName"`
 	}
 	if err := json.Unmarshal(rec.Body.Bytes(), &list); err != nil {
@@ -140,7 +140,7 @@ func TestTheAdminListSeesEveryMesaAndSaysWhoseItIs(t *testing.T) {
 		t.Errorf("a mesa de outro tem de vir marcada com o dono, veio %s", rec.Body.String())
 	}
 	if list[0].Role != "gm" {
-		t.Errorf("role = %q, esperado gm — é o papel que o admin tem ao abrir", list[0].Role)
+		t.Errorf("Role = %q, esperado gm — é o papel que o admin tem ao abrir", list[0].Role)
 	}
 }
 

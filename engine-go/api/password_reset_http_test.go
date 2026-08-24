@@ -13,10 +13,10 @@ import (
 // senha DE VERDADE (a antiga para de valer), serve uma vez só, e nada disso
 // depende de estar logado — quem esqueceu a senha não consegue autenticar.
 
-// resetLinkFor mints a Reset link for userID through the admin route.
-func resetLinkFor(t *testing.T, s *Server, adminID, userID int64) string {
+// resetLinkFor mints a Reset link for UserID through the admin route.
+func resetLinkFor(t *testing.T, s *Server, adminID, UserID int64) string {
 	t.Helper()
-	path := "/admin/users/" + strconv.FormatInt(userID, 10) + "/password-Reset"
+	path := "/admin/users/" + strconv.FormatInt(UserID, 10) + "/password-Reset"
 	rec := authed(t, s, adminID, http.MethodPost, path, "")
 	if rec.Code != http.StatusCreated {
 		t.Fatalf("gerar link: esperado 201, veio %d (%s)", rec.Code, rec.Body.String())
@@ -28,9 +28,9 @@ func resetLinkFor(t *testing.T, s *Server, adminID, userID int64) string {
 	return token
 }
 
-func passwordOf(t *testing.T, s *Server, userID int64) string {
+func passwordOf(t *testing.T, s *Server, UserID int64) string {
 	t.Helper()
-	user, err := s.queries.GetUserByID(context.Background(), userID)
+	user, err := s.queries.GetUserByID(context.Background(), UserID)
 	if err != nil {
 		t.Fatalf("carregar usuário: %v", err)
 	}

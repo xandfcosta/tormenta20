@@ -15,14 +15,14 @@ import (
 // helpers under test (authz + combatant resolution) never touch the engine, so a nil
 // catalog snapshot is fine — this is the seam the WS gateway will reuse.
 // newTestServer boots the real server on a throwaway migrated DB. adminEmails
-// is variadic so the dozens of callers that don't care about the role keep
+// is variadic so the dozens of callers that don't care about the Role keep
 // reading as before (ALE-120).
 func newTestServer(t *testing.T, adminEmails ...string) *Server {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "test.db")
 	database, err := db.Open(path)
 	if err != nil {
-		t.Fatalf("open test db: %v", err)
+		t.Fatalf("Open test db: %v", err)
 	}
 	t.Cleanup(func() { _ = database.Close() })
 	// DatabasePath carries the file actually opened, so the config does not lie
@@ -95,10 +95,10 @@ func seedCharacterAtLevel(
 	return id
 }
 
-func seedMember(t *testing.T, s *Server, campaignID, characterID int64, role string) {
+func seedMember(t *testing.T, s *Server, campaignID, characterID int64, Role string) {
 	t.Helper()
 	if _, err := s.queries.CreateMember(context.Background(), sqlcgen.CreateMemberParams{
-		Campaignid: campaignID, Characterid: characterID, Role: role, Addedat: plataforma.NowISO(),
+		Campaignid: campaignID, Characterid: characterID, Role: Role, Addedat: plataforma.NowISO(),
 	}); err != nil {
 		t.Fatalf("seed member: %v", err)
 	}
@@ -128,9 +128,9 @@ func TestResolveRole(t *testing.T) {
 		{"admin is gm anywhere", AuthUser{ID: stranger, IsAdmin: true}, "gm", 200},
 	}
 	for _, c := range cases {
-		role, status, err := s.resolveRole(ctx, c.caller, campaignID)
-		if role != c.wantRole || status != c.wantStatus {
-			t.Errorf("%s: role=%q status=%d err=%v, want role=%q status=%d", c.name, role, status, err, c.wantRole, c.wantStatus)
+		Role, status, err := s.resolveRole(ctx, c.caller, campaignID)
+		if Role != c.wantRole || status != c.wantStatus {
+			t.Errorf("%s: Role=%q status=%d err=%v, want Role=%q status=%d", c.name, Role, status, err, c.wantRole, c.wantStatus)
 		}
 	}
 	if _, status, _ := s.resolveRole(ctx, AuthUser{ID: gm}, 999999); status != 404 {
@@ -195,10 +195,10 @@ func TestSessionForCaller(t *testing.T) {
 		t.Fatalf("seed session: %v", err)
 	}
 
-	t.Run("gm gets session + role", func(t *testing.T) {
-		got, role, status, err := s.sessionForCaller(ctx, AuthUser{ID: gm}, campaignID, sess.ID)
-		if err != nil || status != 200 || role != "gm" || got.ID != sess.ID {
-			t.Errorf("status=%d role=%q id=%d err=%v", status, role, got.ID, err)
+	t.Run("gm gets session + Role", func(t *testing.T) {
+		got, Role, status, err := s.sessionForCaller(ctx, AuthUser{ID: gm}, campaignID, sess.ID)
+		if err != nil || status != 200 || Role != "gm" || got.ID != sess.ID {
+			t.Errorf("status=%d Role=%q id=%d err=%v", status, Role, got.ID, err)
 		}
 	})
 	t.Run("stranger forbidden before session Load", func(t *testing.T) {
