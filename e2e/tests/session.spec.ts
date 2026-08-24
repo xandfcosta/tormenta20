@@ -1093,8 +1093,26 @@ test.describe('Sessão ao vivo', () => {
     await expect(ficha).toBeVisible()
     await ficha.getByLabel('Quantas').fill('2')
     await ficha.getByRole('button', { name: 'Adicionar' }).click()
-    await expect(ficha).toBeHidden()
-    await page.keyboard.press('Escape')
+    // `toHaveCount(0)` e não `toBeHidden()`: o segundo passa com a camada AINDA
+    // MONTADA, durante a animação de saída. Aqui a diferença já não é
+    // load-bearing — a gaveta fecha pelo botão logo abaixo —, mas fica porque é
+    // o que a asserção quer mesmo dizer: a ficha SAIU.
+    await expect(ficha).toHaveCount(0)
+    // A gaveta fecha pela AFORDÂNCIA DELA e não por `Escape` (ALE-238).
+    //
+    // Este fechamento é incidental: o teste só precisa da gaveta fora do
+    // caminho para contar a fila, e o comportamento do Esc que importa já está
+    // provado vinte linhas acima (fecha a ficha, mantém a gaveta). Usar a tecla
+    // aqui era disputar uma corrida — medido, 3 vermelhos em 6 corridas
+    // independentes, e 4 em 4 antes de eu apertar a asserção de cima.
+    //
+    // O mecanismo: quando a ficha aninhada fecha, existe uma janela em que ela
+    // já saiu do DOM e a gaveta ainda não reassumiu o ouvinte de Esc da pilha
+    // de camadas. A tecla apertada nessa fresta não chega a ninguém. É a
+    // assinatura #3 da ALE-238, e é defeito de PRODUTO — pequeno, porque o
+    // segundo Esc funciona —, registrado em issue própria. O que não se
+    // sustenta é um teste apostar nela.
+    await gaveta.getByRole('button', { name: 'Fechar Adicionar do bestiário' }).click()
     await expect(gaveta).toBeHidden()
 
     // EXATAMENTE dois novos, e é aqui que a issue se prova: se a leitura
