@@ -271,6 +271,45 @@ Uma armadilha que ela documenta e que vale para qualquer extração deste PDF: o
 linha de atributos aparece colada à criatura errada. Ler por coordenada, nunca
 por layout.
 
+## A bancada dos testes: um molde migrado, copiado por teste
+
+`newTestServer` abre um SQLite de VERDADE por teste — é o que faz este pacote
+provar composição em vez de mock. O que custava caro era migrar: `db.Open` roda
+as 9 migrações, e um teste por banco dava ~3.400 migrações com `fsync`.
+
+O preço de um `fsync` é o do dispositivo onde o `TMPDIR` cai, e a diferença não
+é de grau (ALE-260, medido nesta máquina):
+
+|                     | tmpfs (`/tmp`) | disco girante (`/mnt/HD`) |
+| ------------------- | -------------- | ------------------------- |
+| migrar do zero      | 7,1 ms         | **2.102 ms**              |
+| copiar o molde      | ~0,1 ms        | 0,076 ms                  |
+| reabrir já migrado  | ~1 ms          | 1 ms                      |
+
+No prato girante cada migração custava ~49 ms — uma rotação por `fsync` — e a
+suíte do `api/` levava **15m01s** com apenas 10 s de CPU: 99% de espera. O
+sintoma mente, porque aparece como "os testes estão lentos", que é a conclusão
+que faz alguém cortar teste ou subir o timeout em vez de consertar a bancada.
+
+Duas mudanças, as duas só no teste:
+
+1. **O molde** (`api/bancada_test.go`): o `TestMain` migra UM banco e cada teste
+   o copia. `db.Open` continua sendo o mesmo de produção, com o mesmo
+   `assertSchema` — o goose só encontra a versão 9 e não tem o que fazer.
+2. **`PRAGMA synchronous=OFF`** no banco de teste. Durabilidade é o que um banco
+   que morre no fim do caso não tem o que proteger. Fica no helper e **nunca** no
+   `db.Open`: em produção essa linha é perda de dados do mestre.
+
+Resultado: `api/` de **15m01s para 24 s** no disco girante, e a suíte Go inteira
+de 6,8 s para **4,7 s** em tmpfs. Os 178 testes do pacote continuam rodando, zero
+pulados.
+
+**Por que o molde e não exportar `TMPDIR` para um tmpfs.** A variável funciona —
+mas só para quem lembrar, e só na máquina de quem lembrou. Quando isto foi
+medido havia uma sessão vizinha rodando com o `TMPDIR` no prato girante sem saber
+que pagava quinze minutos por corrida. O molde tira o disco da conta em vez de
+pedir que alguém escolha o disco certo.
+
 ## Testes
 
 - `go test ./...` — sem flag, sem setup.
