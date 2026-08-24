@@ -193,8 +193,8 @@ func TestGetCampaignAuthorization(t *testing.T) {
 		if rec.Code != http.StatusOK {
 			t.Fatalf("esperado 200 para o dono, veio %d (%s)", rec.Code, rec.Body.String())
 		}
-		if Role := jsonField(t, rec, "Role"); Role != "gm" {
-			t.Fatalf("papel esperado gm, veio %v", Role)
+		if papel := jsonField(t, rec, "role"); papel != "gm" {
+			t.Fatalf("papel esperado gm, veio %v", papel)
 		}
 	})
 
@@ -203,8 +203,8 @@ func TestGetCampaignAuthorization(t *testing.T) {
 		if rec.Code != http.StatusOK {
 			t.Fatalf("esperado 200 para o membro, veio %d (%s)", rec.Code, rec.Body.String())
 		}
-		if Role := jsonField(t, rec, "Role"); Role != "player" {
-			t.Fatalf("papel esperado player, veio %v", Role)
+		if papel := jsonField(t, rec, "role"); papel != "player" {
+			t.Fatalf("papel esperado player, veio %v", papel)
 		}
 	})
 
