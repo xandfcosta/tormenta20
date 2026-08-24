@@ -90,7 +90,12 @@ test.describe('Campanha vista pelo jogador', () => {
     // falha original tinha SÓ a região de notificações, nada mais.
     // "Ao vivo" sozinho é ambíguo: o rail da sessão também carrega o selo.
     await expect(page.getByRole('link', { name: 'Sair da sessão' })).toBeVisible()
-    await expect(page.getByText(/· Sessão \d+/)).toBeVisible()
+    // O TÍTULO do cabeçalho, e não mais o `· Sessão N` do estado ao vivo: a
+    // ALE-201 apagou aquela cópia de propósito — o título ao lado já dizia o
+    // mesmo, e a repetição estourava o cabeçalho a 390px. A marca continua
+    // sendo "o shell da partida está pintado", que é o que este teste mede;
+    // só mudou qual elemento a carrega.
+    await expect(page.getByText(/^Sessão \d+ ·/)).toBeVisible()
 
     release()
     await expect(page.getByRole('tab', { name: 'Mochila' })).toBeVisible()
