@@ -20,7 +20,16 @@ templ mesa(v mesaView) {
 	// cheia com o CONTEÚDO rolando — o comentário do layout já dizia isso —, e
 	// com ela as duas faixas deixam de precisar de `sticky`: elas são o cabeçalho
 	// e o rodapé de uma caixa que não rola.
-	<main id="mesa" class="mesa-palco mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col">
+	// O `data-attr:style` traz as variáveis do ARRASTO, e elas moram AQUI porque
+	// o `#mesa` é a única raiz que o remendo nunca toca desde que a cena virou
+	// regiões — as variáveis descem por herança até quem está sendo arrastado.
+	// Na peça ou no plano, o primeiro remendo de outro jogador as apagaria no
+	// meio do gesto, que é o defeito que o dono nomeou.
+	<main
+		id="mesa"
+		data-attr:style="`--arrasto-x:${$arrastox}px; --arrasto-y:${$arrastoy}px`"
+		class="mesa-palco mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col"
+	>
 		@mesaCabecalho(v)
 		<div class="min-h-0 flex-1 space-y-4 overflow-y-auto p-3 sm:p-4">
 			@mesaRegistrarRegiao(v)

@@ -348,3 +348,59 @@
   /* As peças e a trilha sobem acima da camada de casas. */
   .tabuleiro-peca { z-index: 2; }
 }
+
+/* O ARRASTO, puramente visual (ALE-266).
+ *
+ * Enquanto o dedo está em cima, o que muda é este `transform` — a posição de
+ * verdade (`--col`/`--lin`) continua sendo do servidor, e só muda quando a
+ * parada é aceita. É isso que faz o remendo de outro jogador não cancelar o
+ * gesto: ele redesenha a peça no lugar dela, e o deslocamento vive por fora.
+ *
+ * As variáveis vêm do `#mesa` por herança — a única raiz que o remendo não
+ * toca. */
+@layer components {
+  .tabuleiro-arrastando {
+    transform: translate(var(--arrasto-x, 0px), var(--arrasto-y, 0px));
+    z-index: 5;
+    cursor: grabbing;
+    /* Sem transição: o que acompanha o dedo não pode ter inércia, senão a peça
+     * chega atrasada e o gesto parece emperrado. */
+    transition: none;
+  }
+  /* `touch-action: none` no que se arrasta, e só nele: sem isto o navegador
+   * entende o gesto como rolagem da página e o `pointermove` para de chegar no
+   * meio do arrasto. No palco inteiro seria pior — a rolagem nativa é como se
+   * alcança o resto do plano. */
+  .tabuleiro-peca[data-on\:pointerdown],
+  .tabuleiro-destino {
+    touch-action: none;
+    cursor: grab;
+  }
+
+  /* O DESTINO é LOSANGO para não ser confundido com peça: a peça está no lugar
+   * dela, e isto é uma promessa. Vazado, porque é o fim de um caminho e não uma
+   * coisa que ocupa a casa. */
+  .tabuleiro-destino {
+    position: absolute;
+    left: calc(var(--col) * var(--quadrado));
+    top: calc(var(--lin) * var(--quadrado));
+    width: var(--quadrado);
+    height: var(--quadrado);
+    background: transparent;
+    border: 0;
+    outline: none;
+    z-index: 3;
+  }
+  .tabuleiro-destino::before {
+    content: '';
+    position: absolute;
+    inset: 22%;
+    transform: rotate(45deg);
+    border: 2px solid var(--grimorio-gold);
+    background: oklch(0.8 0.11 85 / 0.18);
+  }
+  .tabuleiro-destino:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+  }
+}

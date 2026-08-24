@@ -90,7 +90,23 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 						<div aria-hidden="true" class="tabuleiro-alcance" style={ posicaoNoPlano(q.Col, q.Lin, 1) }></div>
 					}
 					for _, p := range v.Pecas {
-						@pecaNoPlano(p)
+						@pecaNoPlano(v, p)
+					}
+					// O DESTINO é o que se arrasta enquanto há proposta, e ele é
+					// losango para não ser confundido com peça: a peça está no
+					// lugar dela, e isto é uma promessa.
+					if v.Destino != nil {
+						<button
+							type="button"
+							aria-label={ "Arrastar o destino de " + v.RotuloDoAlvo }
+							title="Arraste para escolher a próxima parada"
+							style={ posicaoNoPlano(v.Destino.Col, v.Destino.Lin, 1) }
+							data-class={ estaArrastando("destino") }
+							data-on:pointerdown={ pegaParaArrastar("destino") }
+							data-on:pointermove__window={ segueODedo("destino") }
+							data-on:pointerup__window={ soltaEPara(v, "destino", v.Destino.X, v.Destino.Y) }
+							class="tabuleiro-destino"
+						></button>
 					}
 					// A CAMADA DE CASAS é UM nó, e não um por quadrado: 280
 					// botões seriam um campo minado no leitor de tela, que é a
@@ -169,12 +185,18 @@ templ oMovimentoProposto(v tabuleiroView) {
 // A cor vem por variável de estilo e não por classe, e é o único jeito: o matiz
 // é um número calculado por nome, então não existe classe do Tailwind para ele —
 // seriam 360 classes que o scanner nunca veria.
-templ pecaNoPlano(p pecaDoTabuleiro) {
+templ pecaNoPlano(v tabuleiroView, p pecaDoTabuleiro) {
 	<button
 		type="button"
 		aria-label={ nomeDaPeca(p) }
 		title={ nomeDaPeca(p) }
 		style={ posicaoNoPlano(p.Col, p.Lin, p.Pegada) + fmt.Sprintf("--matiz:%d;", p.Matiz) }
+		if v.ArrastaAPeca == p.ID {
+			data-class={ estaArrastando("peca") }
+			data-on:pointerdown={ pegaParaArrastar("peca") }
+			data-on:pointermove__window={ segueODedo("peca") }
+			data-on:pointerup__window={ soltaEPara(v, "peca", p.X, p.Y) }
+		}
 		class={ "tabuleiro-peca",
 			templ.KV("tabuleiro-peca-na-vez", p.NaVez),
 			templ.KV("tabuleiro-peca-oculta", p.Oculta) }

@@ -60,6 +60,11 @@ type tabuleiroView struct {
 	// não há orçamento (o mestre, e todo mundo fora de combate): não há teto, e
 	// desenhar um seria inventá-lo.
 	Alcance []quadradoDoTabuleiro
+	// Destino é a última parada da proposta, e ele é o que se ARRASTA enquanto
+	// há uma: a peça fica onde está porque o provisório a promete, não a move.
+	Destino *quadradoDoTabuleiro
+	// ArrastaAPeca liga o gesto na PEÇA, e só quando não há proposta aberta.
+	ArrastaAPeca string
 	// CampaignID e SessionID moram aqui porque o tabuleiro escreve as próprias
 	// rotas, como a `mesaView` faz com as dela.
 	CampaignID, SessionID int64
@@ -69,6 +74,8 @@ type tabuleiroView struct {
 type pecaDoTabuleiro struct {
 	ID     string
 	Rotulo string
+	// X e Y são o lugar no PLANO: é de onde o arrasto conta o deslocamento.
+	X, Y int
 	// Col e Lin são o lugar DENTRO da moldura, contados de zero: é o que o CSS
 	// multiplica pelo `--quadrado`. A coordenada do plano fica no `Onde`, que é
 	// o que o nome acessível diz.
@@ -102,6 +109,9 @@ type marcadorDoTabuleiro struct {
 
 type quadradoDoTabuleiro struct {
 	Col, Lin int
+	// X e Y são o lugar no PLANO, e só o destino arrastável precisa deles: é de
+	// onde o deslocamento do dedo é contado.
+	X, Y int
 }
 
 // tabuleiroViewOf monta o tabuleiro a partir do estado JÁ REDIGIDO.
@@ -147,6 +157,7 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, sa
 	v.CampaignID, v.SessionID = campaignID, sessionID
 	v.Movimento = movimentoDoTabuleiro(b, quem, e)
 	v.AlvoDoMovimento, v.RotuloDoAlvo, v.Alcance = oAlvoEOAlcance(b, st, quem, meus, e)
+	v.Destino, v.ArrastaAPeca = oQueSeArrasta(b, quem, v.AlvoDoMovimento, e)
 	return v
 }
 
@@ -158,7 +169,7 @@ func pecaDoTabuleiroDe(t *tabuleiro.BoardToken, e tabuleiro.Moldura, saude map[s
 	}
 	p := pecaDoTabuleiro{
 		ID: t.ID, Rotulo: t.Label,
-		Col: t.X - e.X0, Lin: t.Y - e.Y0, Onde: coordenada(t.X, t.Y),
+		Col: t.X - e.X0, Lin: t.Y - e.Y0, X: t.X, Y: t.Y, Onde: coordenada(t.X, t.Y),
 		Pegada:    pegada,
 		Monograma: a.Monograma, Instancia: a.Instancia, Matiz: a.Matiz,
 		Oculta: t.Hidden,
@@ -412,4 +423,102 @@ func paradaNoPontoClicado(v tabuleiroView) string {
 		"@post('/piloto/mesa/%d/%d/tabuleiro/%s/parada/' + (Math.floor(evt.offsetX / $quadrado) + %d) + '/' + (Math.floor(evt.offsetY / $quadrado) + %d))",
 		v.CampaignID, v.SessionID, v.AlvoDoMovimento, v.X0, v.Y0,
 	)
+}
+
+// ── o ARRASTO, puramente em CSS (ALE-266) ────────────────────────────────────
+//
+// A escolha do dono: o arrasto é VISUAL até soltar, e não toca no DOM que o
+// servidor governa. Enquanto o dedo está em cima, o que muda é um `transform`
+// alimentado por SINAIS; a posição de verdade só muda quando a parada é aceita.
+//
+// Os sinais vivem no `#mesa`, que é a única raiz que o remendo NUNCA toca desde
+// que a cena virou regiões — as variáveis CSS descem por herança até a peça. Se
+// morassem no plano ou na peça, o primeiro remendo de outro jogador as apagaria
+// no meio do gesto, que é exatamente o defeito que o dono nomeou.
+//
+// O QUE SE ARRASTA depende de haver proposta, e isso não é detalhe: o provisório
+// não move a peça — ele a PROMETE (é o `nextStepOrigin` da SPA). Então sem
+// proposta arrasta-se a PEÇA, de onde ela está; com proposta arrasta-se o
+// DESTINO, do fim da trilha. Arrastar a peça com uma proposta aberta faria o
+// deslocamento contar do lugar errado, e a parada cairia longe do dedo.
+
+// pegaParaArrastar escreve o `pointerdown`: marca quem está sendo arrastado e
+// guarda o ponto de partida.
+//
+// NÃO chama `setPointerCapture`, e a ausência é deliberada. Quem faz o gesto
+// sobreviver ao dedo sair de cima do elemento aqui é a JANELA: `segueODedo` e
+// `soltaEPara` entram como `pointermove__window`/`pointerup__window`, e a
+// janela recebe o evento com ou sem captura. Captura seria redundante e é a
+// única chamada da expressão que LANÇA — `NotFoundError` quando o `pointerId`
+// não é de um ponteiro ativo. E uma expressão Datastar que lança aborta a
+// propagação DEPOIS de já ter escrito os sinais: o `pointerup` calculava o
+// deslocamento certo (a URL saía `parada/4/3`) enquanto `data-class` e
+// `data-attr:style` nunca reagiam — o gesto funcionava e era invisível.
+func pegaParaArrastar(quem string) string {
+	return fmt.Sprintf(
+		"$arrastando = '%s'; $arrastoinix = evt.clientX; $arrastoiniy = evt.clientY; "+
+			"$arrastox = 0; $arrastoy = 0", quem)
+}
+
+// segueODedo escreve o `pointermove`. Só mexe nos sinais se for ESTE que está
+// sendo arrastado: os dois alvos escutam a mesma janela.
+func segueODedo(quem string) string {
+	return fmt.Sprintf(
+		"$arrastando === '%s' && ($arrastox = evt.clientX - $arrastoinix, $arrastoy = evt.clientY - $arrastoiniy)", quem)
+}
+
+// soltaEPara escreve o `pointerup`: converte o deslocamento em QUADRADOS e
+// propõe a parada.
+//
+// O arredondamento é para o quadrado mais próximo e não para baixo: quem solta a
+// peça em cima de uma linha quis a casa que está debaixo do dedo, e `floor`
+// faria o gesto cair sempre para cima e para a esquerda.
+//
+// Deslocamento de ZERO quadrado não propõe nada — é um clique que não andou, e
+// propor ali gastaria uma parada no lugar onde a peça já está. Os sinais são
+// limpos NOS DOIS caminhos, senão o `transform` fica pendurado e a peça não
+// volta para o lugar.
+func soltaEPara(v tabuleiroView, quem string, x, y int) string {
+	url := fmt.Sprintf("'/piloto/mesa/%d/%d/tabuleiro/%s/parada/' + (%d + dx) + '/' + (%d + dy)",
+		v.CampaignID, v.SessionID, v.AlvoDoMovimento, x, y)
+	return fmt.Sprintf(
+		"if ($arrastando === '%s') { "+
+			"const dx = Math.round($arrastox / $quadrado), dy = Math.round($arrastoy / $quadrado); "+
+			"$arrastando = ''; $arrastox = 0; $arrastoy = 0; "+
+			"if (dx || dy) @post(%s) }", quem, url)
+}
+
+// As variáveis do arrasto moram SÓ no `#mesa`, e descem por herança até quem
+// está sendo arrastado.
+//
+// A razão é que o `data-attr:style` SUBSTITUI o atributo inteiro. Eu escrevi
+// este aviso e mesmo assim pus o `data-attr:style` no destino também: o
+// resultado foi o `style` dele virar só as variáveis do arrasto, apagando o
+// `--col`/`--lin` que o POSICIONAVAM — o marcador ia parar na quina do plano.
+// Só a medição no navegador mostrou, porque o atributo continuava lá e com cara
+// de certo.
+//
+// A expressão ficou inline no `piloto_mesa.templ`, num lugar só, para não haver
+// um segundo elemento tentado a usá-la.
+
+// estaArrastando marca o elemento que o CSS deve deslocar.
+func estaArrastando(quem string) string {
+	return fmt.Sprintf("{'tabuleiro-arrastando': $arrastando === '%s'}", quem)
+}
+
+// oQueSeArrasta decide o alvo do gesto: o DESTINO quando há proposta, a PEÇA
+// quando não há.
+//
+// Os dois nunca coexistem, e é a regra do `nextStepOrigin` que manda: a próxima
+// parada conta do fim da trilha quando ela existe, e da peça quando não. Oferecer
+// os dois faria o mesmo gesto contar de dois lugares.
+func oQueSeArrasta(b *tabuleiro.BoardState, quem tabuleiro.Mover, alvo string, e tabuleiro.Moldura) (*quadradoDoTabuleiro, string) {
+	if b == nil || alvo == "" {
+		return nil, ""
+	}
+	if p := b.Pending; p != nil && len(p.Path) > 0 && (quem.Role == "gm" || p.ByUserID == quem.UserID) {
+		fim := p.Path[len(p.Path)-1]
+		return &quadradoDoTabuleiro{Col: fim.X - e.X0, Lin: fim.Y - e.Y0, X: fim.X, Y: fim.Y}, ""
+	}
+	return nil, alvo
 }
