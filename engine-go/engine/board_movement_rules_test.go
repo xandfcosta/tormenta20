@@ -248,3 +248,170 @@ func TestStraightCleanPathCountsNoDoubling(t *testing.T) {
 		t.Errorf("caminho reto e limpo contou dobras: diagonais=%d difícil=%d", custo.Diagonals, custo.Difficult)
 	}
 }
+
+// ── o caminho entre dois quadrados (ALE-264) ─────────────────────────────────
+//
+// Os casos são os que a suíte da SPA (`board-path.test.ts`) já nomeava: as
+// bordas não mudaram com a linguagem, e reescrevê-las de cabeça seria escrever
+// outro teste com o mesmo nome.
+
+func TestOCaminhoComecaNaOrigemETerminaNoDestino(t *testing.T) {
+	caminho := CaminhoEntre(Square{X: 0, Y: 0}, Square{X: 3, Y: 1})
+
+	if caminho[0] != (Square{X: 0, Y: 0}) {
+		t.Errorf("o caminho começa em %+v", caminho[0])
+	}
+	if fim := caminho[len(caminho)-1]; fim != (Square{X: 3, Y: 1}) {
+		t.Errorf("o caminho termina em %+v", fim)
+	}
+	if custo := PathCost(caminho, MoveTerrain{}, -1); !custo.Legal {
+		t.Errorf("o caminho desenhado é ilegal para o motor: %s", custo.Reason)
+	}
+}
+
+// A DIAGONAL vem primeiro porque é o que o olho espera de quem corta caminho —
+// e o custo é o mesmo em L, que é a razão de a escolha poder ser estética.
+func TestADiagonalVemPrimeiroECustaOMesmoQueOL(t *testing.T) {
+	diagonalPrimeiro := CaminhoEntre(Square{X: 0, Y: 0}, Square{X: 3, Y: 1})
+	emL := []Square{{X: 0, Y: 0}, {X: 1, Y: 0}, {X: 2, Y: 0}, {X: 3, Y: 0}, {X: 3, Y: 1}}
+
+	if segundo := diagonalPrimeiro[1]; segundo != (Square{X: 1, Y: 1}) {
+		t.Errorf("o segundo passo foi %+v, e a diagonal devia vir primeiro", segundo)
+	}
+	comDiagonal := PathCost(diagonalPrimeiro, MoveTerrain{}, -1).Squares
+	comL := PathCost(emL, MoveTerrain{}, -1).Squares
+	if comDiagonal != comL {
+		t.Errorf("diagonal custou %d e o L custou %d; com a diagonal valendo o dobro os dois têm de empatar (p238)", comDiagonal, comL)
+	}
+}
+
+// A peça que não sai do lugar tem caminho de UM quadrado. Zero quadrados faria
+// o `ProposeMove` recusar com "precisa de origem e destino", que é a mensagem
+// errada para quem só soltou a peça onde ela estava.
+func TestAPecaQueNaoSaiDoLugarTemCaminhoDeUmQuadrado(t *testing.T) {
+	caminho := CaminhoEntre(Square{X: 2, Y: 2}, Square{X: 2, Y: 2})
+	if len(caminho) != 1 || caminho[0] != (Square{X: 2, Y: 2}) {
+		t.Errorf("o caminho parado ficou %+v", caminho)
+	}
+}
+
+// COORDENADA NEGATIVA é lugar legítimo: o plano não tem bordas, e um sinal
+// invertido faria o laço andar para longe do destino e nunca terminar.
+func TestOCaminhoAndaParaONegativo(t *testing.T) {
+	caminho := CaminhoEntre(Square{X: 1, Y: 1}, Square{X: -2, Y: -3})
+	if fim := caminho[len(caminho)-1]; fim != (Square{X: -2, Y: -3}) {
+		t.Errorf("o caminho terminou em %+v", fim)
+	}
+	if len(caminho) != 5 {
+		t.Errorf("o caminho tem %d quadrados; de (1,1) a (-2,-3) são 4 passos mais a origem", len(caminho))
+	}
+}
+
+// ── o movimento por PARADAS (ALE-266) ────────────────────────────────────────
+
+// A EMENDA não repete o quadrado da parada: ele é o fim de um segmento e o
+// começo do outro, e repeti-lo poria no meio do caminho um passo que não anda —
+// e o `PathCost` mede passo a passo.
+func TestAsParadasSeEmendamSemRepetirOQuadrado(t *testing.T) {
+	caminho := CaminhoPorParadas([]Square{{X: 0, Y: 0}, {X: 2, Y: 0}, {X: 2, Y: 2}})
+
+	quero := []Square{{X: 0, Y: 0}, {X: 1, Y: 0}, {X: 2, Y: 0}, {X: 2, Y: 1}, {X: 2, Y: 2}}
+	if len(caminho) != len(quero) {
+		t.Fatalf("o caminho tem %d quadrados: %+v", len(caminho), caminho)
+	}
+	for i := range quero {
+		if caminho[i] != quero[i] {
+			t.Errorf("passo %d é %+v, queria %+v", i, caminho[i], quero[i])
+		}
+	}
+	if custo := PathCost(caminho, MoveTerrain{}, -1); !custo.Legal {
+		t.Errorf("o caminho emendado é ilegal para o motor: %s", custo.Reason)
+	}
+}
+
+// Uma parada IGUAL à anterior não acrescenta nada: quem soltou a peça onde ela
+// já estava não gastou movimento.
+func TestUmaParadaRepetidaNaoAcrescentaPasso(t *testing.T) {
+	caminho := CaminhoPorParadas([]Square{{X: 1, Y: 1}, {X: 1, Y: 1}, {X: 2, Y: 1}})
+	if len(caminho) != 2 {
+		t.Errorf("o caminho ficou %+v; a parada repetida virou passo", caminho)
+	}
+}
+
+// A ROTA É ESCOLHA DE QUEM JOGA, e ela custa o que custar — este é o teste que
+// diz por que as paradas existem.
+//
+// Do (0,0) ao (4,0) em linha reta são 4 quadrados. Passando por (2,2) — o
+// contorno que alguém faria para não passar ao lado de um inimigo — são 8, pelas
+// quatro diagonais. O caminho mais caro é legítimo, e antes das paradas ele era
+// IMPOSSÍVEL de expressar: o cliente desenhava a reta e pronto.
+func TestOContornoCustaMaisEIssoEOPonto(t *testing.T) {
+	reto := CaminhoPorParadas([]Square{{X: 0, Y: 0}, {X: 4, Y: 0}})
+	contornando := CaminhoPorParadas([]Square{{X: 0, Y: 0}, {X: 2, Y: 2}, {X: 4, Y: 0}})
+
+	custoReto := PathCost(reto, MoveTerrain{}, -1).Squares
+	custoContorno := PathCost(contornando, MoveTerrain{}, -1).Squares
+	if custoContorno <= custoReto {
+		t.Errorf("o contorno custou %d e a reta %d; o desvio tem de custar mais", custoContorno, custoReto)
+	}
+}
+
+// E COM TERRENO DIFÍCIL o desvio pode custar MENOS que a reta — que é a
+// desigualdade que o `board-path.ts` da SPA dizia não existir enquanto o terreno
+// difícil não chegasse. Chegou.
+func TestComTerrenoDificilODesvioPodeCustarMenosQueAReta(t *testing.T) {
+	// Lama exatamente sobre a reta de (0,0) a (4,0).
+	lama := MoveTerrain{Difficult: map[Square]bool{{X: 1, Y: 0}: true, {X: 2, Y: 0}: true, {X: 3, Y: 0}: true}}
+
+	// O desvio sobe UMA fileira e anda por fora, em vez de cortar em diagonal: a
+	// primeira versão deste teste desviou por (2,1) e saiu MAIS caro que a lama
+	// (8 contra 7), porque as diagonais custam 2 cada e eu tinha posto quatro
+	// delas. O caminho estava certo; o meu exemplo é que não evitava nada.
+	reto := CaminhoPorParadas([]Square{{X: 0, Y: 0}, {X: 4, Y: 0}})
+	desviando := CaminhoPorParadas([]Square{{X: 0, Y: 0}, {X: 1, Y: 1}, {X: 3, Y: 1}, {X: 4, Y: 0}})
+
+	custoReto := PathCost(reto, lama, -1).Squares
+	custoDesvio := PathCost(desviando, lama, -1).Squares
+	if custoDesvio >= custoReto {
+		t.Errorf("atravessar a lama custou %d e contorná-la custou %d; era para contornar sair mais barato", custoReto, custoDesvio)
+	}
+	// O CONTROLE: sem lama a desigualdade se INVERTE, e é isso que prova que o
+	// que a mudou foi o terreno e não a forma do caminho.
+	if PathCost(desviando, MoveTerrain{}, -1).Squares <= PathCost(reto, MoveTerrain{}, -1).Squares {
+		t.Error("sem lama o desvio devia custar mais que a reta")
+	}
+}
+
+// O FEEDBACK: quanto sobra e até onde dá para ir a partir da última parada.
+//
+// Sem ele a pessoa empilha paradas, o total passa do deslocamento, e ela não
+// sabe o que desfazer para corrigir.
+func TestOAlcanceEncolheAcadaParadaEZeraNoFim(t *testing.T) {
+	const orcamento = 6
+
+	alcance, restante := AlcanceDaProximaParada([]Square{{X: 0, Y: 0}}, orcamento, MoveTerrain{})
+	if restante != orcamento {
+		t.Errorf("sem andar, sobravam %d de %d", restante, orcamento)
+	}
+	if len(alcance) == 0 {
+		t.Fatal("com orçamento inteiro não havia para onde ir")
+	}
+
+	depois, restanteDepois := AlcanceDaProximaParada([]Square{{X: 0, Y: 0}, {X: 2, Y: 0}}, orcamento, MoveTerrain{})
+	if restanteDepois != orcamento-2 {
+		t.Errorf("depois de andar 2, sobravam %d", restanteDepois)
+	}
+	if len(depois) >= len(alcance) {
+		t.Errorf("o alcance não encolheu: %d antes, %d depois", len(alcance), len(depois))
+	}
+
+	// Gastou tudo: o alcance é VAZIO, e a tela diz "acabou" em vez de oferecer
+	// casas que o servidor recusaria.
+	fim, semSobra := AlcanceDaProximaParada([]Square{{X: 0, Y: 0}, {X: 6, Y: 0}}, orcamento, MoveTerrain{})
+	if semSobra != 0 {
+		t.Errorf("depois de gastar tudo, sobravam %d", semSobra)
+	}
+	if len(fim) != 0 {
+		t.Errorf("com orçamento zerado o alcance ofereceu %d casas", len(fim))
+	}
+}

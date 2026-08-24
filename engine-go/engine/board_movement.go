@@ -262,3 +262,96 @@ func sortSquares(list []Square) {
 		return list[i].X < list[j].X
 	})
 }
+
+// CaminhoEntre desenha por onde a peça anda de um quadrado a outro (ALE-264).
+//
+// Isto é GEOMETRIA e não regra: quem COBRA o caminho é o `PathCost`, logo acima.
+// A distinção é a mesma da ALE-104 — uma segunda implementação da regra da
+// diagonal seria uma segunda verdade sobre o livro.
+//
+// POR QUE NÃO EXISTE BUSCA DE CAMINHO: com a diagonal custando o dobro (T20
+// p238), um passo diagonal (2) vale exatamente dois passos ortogonais (1+1).
+// Então TODO caminho monótono entre A e B custa |dx| + |dy|, e não há caminho
+// mais barato para procurar. O que muda isso é o terreno difícil — e aí quem
+// responde continua sendo o `PathCost`, que já o pesa.
+//
+// A DIAGONAL VEM PRIMEIRO porque é o que o olho espera de quem corta caminho; o
+// custo seria o mesmo em L.
+//
+// Veio da SPA (`board-path.ts`), e vir para cá é o que tira a construção do
+// caminho do NAVEGADOR: a peça arrastada manda só o DESTINO, e o servidor diz
+// por onde ela passou e quanto custou. O cliente deixa de ter opinião sobre a
+// régua do livro.
+func CaminhoEntre(de, ate Square) []Square {
+	caminho := []Square{de}
+	x, y := de.X, de.Y
+	for x != ate.X || y != ate.Y {
+		x += sinalDe(ate.X - x)
+		y += sinalDe(ate.Y - y)
+		caminho = append(caminho, Square{X: x, Y: y})
+	}
+	return caminho
+}
+
+// sinalDe é o `Math.sign` que o Go não tem. Devolve -1, 0 ou 1.
+func sinalDe(n int) int {
+	switch {
+	case n > 0:
+		return 1
+	case n < 0:
+		return -1
+	}
+	return 0
+}
+
+// CaminhoPorParadas costura os segmentos entre PARADAS consecutivas (ALE-266).
+//
+// O movimento não é um destino: é uma sequência de lugares onde a peça parou.
+// Só as paradas são guardadas, e o caminho entre duas consecutivas é desenhado
+// pelo `CaminhoEntre`. É assim que a ROTA vira escolha de quem joga — contorna-se
+// um inimigo ou uma poça de lama acrescentando uma parada — sem o cliente
+// precisar mandar a trilha inteira do ponteiro.
+//
+// A EMENDA descarta o primeiro quadrado de cada segmento seguinte, porque ele é
+// o último do anterior. Repetir a parada poria um passo de custo zero no meio do
+// caminho, e é o `PathCost` que sofreria: ele mede passo a passo, e um passo que
+// não anda não é um passo.
+//
+// Uma parada IGUAL à anterior (quem soltou a peça onde ela já estava) não
+// acrescenta nada, e isso cai fora sozinho: o `CaminhoEntre` devolve um quadrado
+// só e a emenda o descarta.
+func CaminhoPorParadas(paradas []Square) []Square {
+	if len(paradas) == 0 {
+		return nil
+	}
+	caminho := []Square{paradas[0]}
+	for i := 1; i < len(paradas); i++ {
+		trecho := CaminhoEntre(paradas[i-1], paradas[i])
+		caminho = append(caminho, trecho[1:]...)
+	}
+	return caminho
+}
+
+// AlcanceDaProximaParada é o que a tela precisa mostrar ENQUANTO a pessoa monta
+// o movimento: de onde ela está agora, até onde ainda dá para andar.
+//
+// Sem isto o defeito é o que o dono descreveu: a pessoa empilha paradas, o total
+// passa do deslocamento, e ela NÃO SABE O QUE DESFAZER para corrigir. O feedback
+// não é enfeite da funcionalidade — é a metade que a torna usável.
+//
+// Devolve o alcance a partir da ÚLTIMA parada com o orçamento RESTANTE, e o
+// restante pode ser ZERO: aí o alcance é VAZIO — a tela diz "acabou" em vez de
+// oferecer casas que o servidor recusaria. Ele nunca inclui o quadrado onde a
+// peça está, porque ficar parado não é para onde se pode andar.
+func AlcanceDaProximaParada(paradas []Square, orcamento int, terreno MoveTerrain) (alcance []Square, restante int) {
+	if len(paradas) == 0 {
+		return nil, orcamento
+	}
+	ultima := paradas[len(paradas)-1]
+	gasto := PathCost(CaminhoPorParadas(paradas), terreno, -1).Squares
+	restante = orcamento - gasto
+	if restante < 0 {
+		restante = 0
+	}
+	return ReachableSquares(ultima, restante, terreno), restante
+}
