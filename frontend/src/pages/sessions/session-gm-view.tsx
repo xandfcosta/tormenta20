@@ -13,11 +13,10 @@ import { blankCreatureBlock } from '@/shared/api/creature-types'
 import { SceneStart, TurnAdvance, TurnCounter } from '@/features/session-tracker/turn-controls'
 import { SceneCycleControls } from '@/features/session-tracker/scene-cycle-controls'
 import { RestControls } from '@/features/session-tracker/rest-controls'
-import { connectionStatus, palcoBaixo } from '@/features/session-tracker/tracker-rules'
+import { palcoBaixo } from '@/features/session-tracker/tracker-rules'
 import { createElementSize } from '@/shared/lib/element-size'
 import { createMediaQuery } from '@/shared/lib/media-query'
 import { Button } from '@/shared/ui/button'
-import { ConnectionChip } from '@/shared/ui/connection-chip'
 import { SidePanel } from '@/shared/ui/side-panel'
 import { createBoardViewport } from '@/features/battle-board/board-viewport'
 import { AddMonsterPanel } from './add-monster-panel'
@@ -425,16 +424,6 @@ function TurnBar(props: {
   return (
     <div class="grimorio-frame flex min-w-0 shrink-0 flex-wrap items-center gap-2 bg-grimorio-panel px-3 py-2">
       <TurnCounter state={state()} />
-      {/* O estado do socket sobe para a faixa (ALE-198). Ele morava no
-          cabeçalho da iniciativa, que era região permanente e virou gaveta —
-          uma queda silenciosa no meio do combate passaria a parecer só um
-          rastreador lento, que é exatamente o que o chip existe para impedir.
-          Aqui ele fica no cromo que nunca sai da tela, e o cartão da fila
-          esconde o dele (`connectionChip={false}`) para não haver dois. */}
-      <ConnectionChip
-        status={connectionStatus(props.rt.isConnected(), props.rt.error())}
-        dirty={props.rt.hasPersistenceWarning()}
-      />
       <Show when={active()}>
         {(entry) => (
           <SectionTitle as="span" contexto="painel" class="text-sm flex min-w-0 items-center gap-1.5">

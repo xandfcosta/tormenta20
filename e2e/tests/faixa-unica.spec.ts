@@ -38,10 +38,21 @@ test.describe('A sessão tem UMA faixa de cabeçalho', () => {
     await expect(sair).toBeVisible()
     await expect(sair).not.toContainText('Sair da sessão')
 
+    // O chip de conexão vive AQUI, e esta é a terceira casa dele: saiu do card
+    // da iniciativa (ALE-129) e da faixa do turno (ALE-198), sempre porque uma
+    // queda silenciosa no meio do combate não pode depender de olhar a região
+    // certa. O cabeçalho é o único cromo que as duas cenas têm sempre na tela.
+    await expect(cabecalho.getByRole('status', { name: /Conectado|Reconectando/ })).toBeVisible()
+
     // E não sobrou uma segunda faixa com o mesmo assunto: fora do cabeçalho,
     // ninguém mais anuncia "Ao vivo".
     const foraDoCabecalho = page.locator('.scene-grimorio > div', { hasText: 'Ao vivo' })
     await expect(foraDoCabecalho).toHaveCount(0)
+
+    // E há UM chip na tela inteira, não dois: quando ele morava na faixa, o
+    // cartão da fila precisava esconder o dele (`connectionChip={false}`) para
+    // não duplicar. A garantia agora é de contagem e não de convenção.
+    await expect(page.getByRole('status', { name: /Conectado|Reconectando/ })).toHaveCount(1)
   })
 
   test('o cabeçalho cabe nos seis formatos, sem pintar para fora', async ({ page }) => {
@@ -65,6 +76,15 @@ test.describe('A sessão tem UMA faixa de cabeçalho', () => {
       })
 
       expect(transbordo, `${viewport.name}: pintado para fora do cabeçalho`).toEqual([])
+
+      // E o chip SOBREVIVE ao aperto. Coube porque algo cedeu — a presença some
+      // no estreito —, e o risco de "fazer caber" é esconder justamente o que
+      // não pode sumir. Eu escondi o chip junto com a presença numa tentativa,
+      // e só o guarda da cena viva acusou; esta linha põe a garantia aqui.
+      await expect(
+        cabecalho.getByRole('status', { name: /Conectado|Reconectando/ }),
+        `${viewport.name}: o chip de conexão sumiu`,
+      ).toBeVisible()
     }
   })
 })

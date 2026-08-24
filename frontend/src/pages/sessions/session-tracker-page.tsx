@@ -7,6 +7,8 @@ import {
 } from '@/entities/campaign/queries'
 import { campaignSessionQueryOptions } from '@/entities/session/queries'
 import { meQueryOptions } from '@/entities/user/queries'
+import { connectionStatus } from '@/features/session-tracker/tracker-rules'
+import { ConnectionChip } from '@/shared/ui/connection-chip'
 import { MatchShell } from '@/pages/sessions/match-shell'
 import {
   LiveSessionStatus,
@@ -120,6 +122,17 @@ export function SessionTrackerPage() {
         />
       }
       minhaVez={!isGm() && eAMinhaVez(vezDoJogador())}
+      /* O chip de conexão vive no CABEÇALHO desde a ALE-201, e é a terceira
+         casa dele: saiu do card da iniciativa na ALE-129 e da faixa do turno na
+         ALE-198, sempre pela mesma razão — uma queda silenciosa no meio do
+         combate não pode depender de olhar a região certa. O cabeçalho é o
+         único cromo que as DUAS cenas têm sempre na tela. */
+      conexao={
+        <ConnectionChip
+          status={connectionStatus(rt.isConnected(), rt.error())}
+          dirty={rt.hasPersistenceWarning()}
+        />
+      }
       bar={<PresenceChips users={rt.present()} />}
       sfxEnabled={ui.sfx()}
       onToggleSfx={toggleSfx}
