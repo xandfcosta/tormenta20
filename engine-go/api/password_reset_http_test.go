@@ -16,7 +16,7 @@ import (
 // resetLinkFor mints a Reset link for UserID through the admin route.
 func resetLinkFor(t *testing.T, s *Server, adminID, UserID int64) string {
 	t.Helper()
-	path := "/admin/users/" + strconv.FormatInt(UserID, 10) + "/password-Reset"
+	path := "/admin/users/" + strconv.FormatInt(UserID, 10) + "/password-reset"
 	rec := authed(t, s, adminID, http.MethodPost, path, "")
 	if rec.Code != http.StatusCreated {
 		t.Fatalf("gerar link: esperado 201, veio %d (%s)", rec.Code, rec.Body.String())

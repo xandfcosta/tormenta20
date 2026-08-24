@@ -8,6 +8,11 @@ import {
 import { campaignSessionQueryOptions } from '@/entities/session/queries'
 import { meQueryOptions } from '@/entities/user/queries'
 import { MatchShell } from '@/pages/sessions/match-shell'
+import {
+  LiveSessionStatus,
+  eAMinhaVez,
+  playerTurnState,
+} from '@/pages/sessions/live-session-status'
 import { SessionGmView } from '@/pages/sessions/session-gm-view'
 import { SessionPlayerView } from '@/pages/sessions/session-player-view'
 import { createCharacterVitalsSync } from '@/features/session-tracker/character-vitals-sync'
@@ -75,6 +80,7 @@ export function SessionTrackerPage() {
   const rt = createSessionSocket(campaignId, sessionId, {
     onCharacterChanged: (characterId) => {
       void queryClient.invalidateQueries({ queryKey: ['characters', characterId] })
+
     },
   })
   createTurnCue(rt.state, myCharacterIds, {
@@ -98,10 +104,22 @@ export function SessionTrackerPage() {
     return `Sessão ${current.sessionNumber}${mesa ? ` · ${mesa.name}` : ''}`
   }
 
+  // De quem é a vez, do ponto de vista de quem está olhando. Sobe para a página
+  // porque o CABEÇALHO passou a mostrá-la (ALE-201) — a mesma derivação que a
+  // cena do jogador usa, importada e não recopiada.
+  const vezDoJogador = createMemo(() => playerTurnState(rt, myCharacterIds()))
+
   return (
     <MatchShell
       campaignId={campaignId()}
       title={title()}
+      live={
+        <LiveSessionStatus
+          round={rt.state().round}
+          turn={vezDoJogador()}
+        />
+      }
+      minhaVez={!isGm() && eAMinhaVez(vezDoJogador())}
       bar={<PresenceChips users={rt.present()} />}
       sfxEnabled={ui.sfx()}
       onToggleSfx={toggleSfx}
