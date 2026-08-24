@@ -167,8 +167,28 @@ func icone(nome, classe string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
+		case "Skull":
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "<path d=\"m12.5 17-.5-1-.5 1h1z\"></path> <path d=\"M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z\"></path> <circle cx=\"15\" cy=\"12\" r=\"1\"></circle> <circle cx=\"9\" cy=\"12\" r=\"1\"></circle>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		case "Swords":
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<polyline points=\"14.5 17.5 3 6 3 3 6 3 17.5 14.5\"></polyline> <line x1=\"13\" x2=\"19\" y1=\"19\" y2=\"13\"></line> <line x1=\"16\" x2=\"20\" y1=\"16\" y2=\"20\"></line> <line x1=\"19\" x2=\"21\" y1=\"21\" y2=\"19\"></line> <polyline points=\"14.5 6.5 18 3 21 3 21 6 17.5 9.5\"></polyline> <line x1=\"5\" x2=\"9\" y1=\"14\" y2=\"18\"></line> <line x1=\"7\" x2=\"4\" y1=\"17\" y2=\"20\"></line> <line x1=\"3\" x2=\"5\" y1=\"19\" y2=\"21\"></line>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		case "Dices":
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<rect width=\"12\" height=\"12\" x=\"2\" y=\"10\" rx=\"2\" ry=\"2\"></rect> <path d=\"m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6\"></path> <path d=\"M6 18h.01\"></path> <path d=\"M10 14h.01\"></path> <path d=\"M15 6h.01\"></path> <path d=\"M18 9h.01\"></path>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		case "BookMarked":
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<path d=\"M10 2v8l3-3 3 3V2\"></path> <path d=\"M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20\"></path>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</svg>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "</svg>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

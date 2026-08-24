@@ -928,3 +928,61 @@ test.describe('A cena de personagens (piloto Datastar)', () => {
     await expect(page.getByRole('listbox', { name: 'Personagens' })).toBeVisible()
   })
 })
+
+test.describe('O bestiário (piloto Datastar)', () => {
+  test.use({ storageState: '.auth/user.json' })
+
+  const BESTIARIO = '/piloto/mestre/bestiario'
+
+  test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
+    await page.goto(BESTIARIO)
+    await expect(page.getByRole('navigation', { name: 'Ferramentas do mestre' })).toBeVisible()
+    expect(await textoComContrasteBaixo(page), 'texto abaixo do AA no bestiário').toEqual([])
+  })
+
+  test('o bestiário cabe nos seis formatos', async ({ page }) => {
+    await page.goto(BESTIARIO)
+    await expect(page.getByRole('heading', { name: 'Bestiário' })).toBeVisible()
+
+    await expectNoHorizontalOverflow(page, VIEWPORTS)
+    for (const viewport of VIEWPORTS) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height })
+      await expectDentroDaJanela(page)
+    }
+  })
+
+  /**
+   * A METADE ESTREITA, e é o único teste desta cena que precisa mesmo de browser.
+   *
+   * O `.mesa-painel` só existe a partir de 50rem de CONTÊINER — consulta de
+   * contêiner, não de mídia, e nem o jsdom nem uma asserção de classe sabem
+   * resolver isso. Abaixo do ponto de troca a ficha tem de estar no diálogo, e
+   * acima dela tem de estar no painel; a faixa em que as duas somem, ou em que
+   * as duas aparecem, é o defeito que este teste existe para pegar.
+   *
+   * Ele mede VISIBILIDADE REAL (`toBeVisible`), que é o que resolve a cascata
+   * inteira — a consulta de contêiner, o `display:none` da folha e o
+   * `data-show` do Datastar decidindo juntos.
+   */
+  test('a ficha vive no painel quando cabe, e no diálogo quando não cabe', async ({ page }) => {
+    await page.goto(BESTIARIO)
+    const painel = page.getByRole('region', { name: 'Criatura escolhida' })
+    const dialogo = page.getByRole('dialog')
+
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await expect(painel, 'o painel sumiu numa largura que comporta duas colunas').toBeVisible()
+    await expect(dialogo, 'o diálogo apareceu por cima do painel').toBeHidden()
+
+    // No telefone o painel não cabe: a ficha só é alcançável pelo diálogo, e é
+    // ele que impede a lista de virar uma lista sem detalhe nenhum.
+    await page.setViewportSize({ width: 390, height: 844 })
+    await expect(painel, 'o painel ficou visível onde não cabe').toBeHidden()
+    await expect(dialogo, 'o diálogo abriu sozinho').toBeHidden()
+
+    await page.getByRole('listitem').first().getByRole('link').click()
+    await expect(dialogo, 'tocar na linha não abriu a ficha no telefone').toBeVisible()
+
+    await page.keyboard.press('Escape')
+    await expect(dialogo, 'o Esc não fechou a ficha').toBeHidden()
+  })
+})

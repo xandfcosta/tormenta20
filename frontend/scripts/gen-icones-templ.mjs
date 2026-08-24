@@ -43,6 +43,12 @@ const QUERIDOS = [
   'Crown',
   'Trash2',
   'Flame',
+  // A trilha de ferramentas do mestre (ALE-257): a mesma escolha de ícones da
+  // SPA, para o mestre que aprendeu a trilha num lado a reconhecer no outro.
+  'Skull',
+  'Swords',
+  'Dices',
+  'BookMarked',
 ]
 
 const indice = readFileSync(resolve(LUCIDE, 'lucide-solid.mjs'), 'utf8')
