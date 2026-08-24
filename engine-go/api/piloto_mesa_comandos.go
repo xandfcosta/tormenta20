@@ -486,11 +486,19 @@ func (s *Server) respondeAoMestre(
 ) {
 	sse := datastar.NewSSE(w, r)
 	if view, _, err := s.loadMesaView(r.Context(), user, campaignID, sessionID); err == nil {
+		// Manda TODAS as regiões e não só as que mudaram, ao contrário do stream:
+		// aqui não há digital anterior para comparar — este caminho responde a um
+		// pedido, não mantém uma conexão. E não há o risco que motivou as regiões,
+		// porque quem recebe é quem acabou de CLICAR: ninguém está no meio de um
+		// arrasto no instante em que pediu outra coisa.
+		//
 		// Falhar ao redesenhar não desfaz a mutação, que já aconteceu e já foi
-		// transmitida; o stream corrige no próximo tique. Por isso o fragmento é
-		// best-effort e a frase sai de qualquer jeito.
-		if fragmento, err := renderFragmento(r.Context(), mesa(view)); err == nil {
-			_ = sse.PatchElements(fragmento)
+		// transmitida; o stream corrige no próximo tique. Por isso é best-effort e
+		// a frase sai de qualquer jeito.
+		for _, regiao := range regioesDaMesa(view) {
+			if fragmento, err := renderFragmento(r.Context(), regiao.No); err == nil {
+				_ = sse.PatchElements(fragmento)
+			}
 		}
 	}
 	frase := ""

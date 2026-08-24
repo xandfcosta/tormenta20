@@ -280,16 +280,27 @@ func TestMoverUmaPecaChegaAoStreamSemEsperarOBatimento(t *testing.T) {
 		}
 	}()
 
-	// O PRIMEIRO quadro é a carga do stream, e ele é o CONTROLE: sem ele, um
-	// stream que nunca abriu daria o mesmo silêncio que um aviso que não chega.
-	select {
-	case q := <-quadros:
-		if !strings.Contains(q, "Ogro em 2, 2") {
-			t.Fatalf("o primeiro quadro não trouxe a peça onde ela está:\n%.400s", q)
+	// A carga fria é o CONTROLE: sem ela, um stream que nunca abriu daria o mesmo
+	// silêncio que um aviso que não chega.
+	//
+	// PROCURA entre os quadros porque desde as regiões (ALE-264) a carga manda um
+	// por região, e o tabuleiro é o quarto. Esperar a peça no PRIMEIRO afirmaria
+	// a ordem do render, que não é promessa.
+	esperaAPeca := func(onde, oque string) {
+		t.Helper()
+		limite := time.After(3 * time.Second)
+		for {
+			select {
+			case q := <-quadros:
+				if strings.Contains(q, onde) {
+					return
+				}
+			case <-limite:
+				t.Fatalf("%s", oque)
+			}
 		}
-	case <-time.After(3 * time.Second):
-		t.Fatal("o stream não mandou o primeiro quadro")
 	}
+	esperaAPeca("Ogro em 2, 2", "a carga fria não trouxe a peça onde ela está")
 
 	inicio := time.Now()
 	if _, err := f.s.boards.UpdateToken(context.Background(), f.sessionID, pecaID,
@@ -308,5 +319,102 @@ func TestMoverUmaPecaChegaAoStreamSemEsperarOBatimento(t *testing.T) {
 		case <-limite:
 			t.Fatalf("a peça não chegou em 400ms — a tela está esperando o batimento de %v", mesaBatimento)
 		}
+	}
+}
+
+// TestUmaMudancaNaFILAnaoRemendaOMAPA — o guarda que as REGIÕES existem para dar
+// (ALE-264).
+//
+// A cena era um fragmento só, e o stream remendava o `<main id="mesa">` inteiro
+// a cada mudança de qualquer um: 39.742 bytes medidos para mover uma peça. O
+// desperdício é o menor dos problemas — o problema é de COMPORTAMENTO, e o dono
+// o nomeou: com o arrasto, um jogador registrando iniciativa substituiria o
+// elemento debaixo do dedo do mestre e cancelaria o gesto.
+//
+// Este teste mede a separação onde ela importa: mexer na FILA manda o quadro da
+// fila e NÃO manda o do mapa.
+func TestUmaMudancaNaFilaNaoRemendaOMapa(t *testing.T) {
+	f := novoPiloto(t)
+	f.abreTabuleiro(t, "pedra")
+	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID,
+		tabuleiro.BoardToken{Label: "Ogro", X: 2, Y: 2}, true); err != nil {
+		t.Fatalf("pôr a peça: %v", err)
+	}
+
+	srv := httptest.NewServer(http.StripPrefix("/piloto", f.s.PilotoRouter()))
+	defer srv.Close()
+	req, erroDoPedido := http.NewRequest(http.MethodGet, srv.URL+f.urlDaMesa()+"/stream", nil)
+	if erroDoPedido != nil {
+		t.Fatalf("montar pedido: %v", erroDoPedido)
+	}
+	req.Header.Set("Authorization", "Bearer "+f.token(t, f.mestre))
+	ctx, cancelar := context.WithCancel(context.Background())
+	defer cancelar()
+	resp, erroDoStream := http.DefaultClient.Do(req.WithContext(ctx))
+	if erroDoStream != nil {
+		t.Fatalf("abrir stream: %v", erroDoStream)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	quadros := make(chan string, 32)
+	go func() {
+		leitor := bufio.NewScanner(resp.Body)
+		leitor.Buffer(make([]byte, 0, 64*1024), 1<<20)
+		var atual strings.Builder
+		for leitor.Scan() {
+			if linha := leitor.Text(); linha != "" {
+				atual.WriteString(linha)
+				continue
+			}
+			select {
+			case quadros <- atual.String():
+			default:
+			}
+			atual.Reset()
+		}
+	}()
+
+	// Deixa a carga fria passar, drenando até o SILÊNCIO em vez de contar quadros.
+	// Contar afirmaria quantos eventos o SDK emite por região, que não é promessa
+	// nenhuma — e a primeira versão deste teste contou 6 e mediu a própria
+	// carga como se fosse a mudança.
+	vistosNaCarga := 0
+	for parou := false; !parou; {
+		select {
+		case <-quadros:
+			vistosNaCarga++
+		case <-time.After(300 * time.Millisecond):
+			parou = true
+		}
+	}
+	if vistosNaCarga == 0 {
+		t.Fatal("a carga fria não mandou nada — sem ela o silêncio abaixo não prova nada")
+	}
+
+	// Agora UMA mudança na fila, e mais nada.
+	if _, err := f.s.sessions.AddInitiativeEntry(f.sessionID,
+		combatenteDeFicha("Arwen", 17, f.charID)); err != nil {
+		t.Fatalf("pôr na fila: %v", err)
+	}
+
+	var viuAFila, viuOMapa bool
+	limite := time.After(700 * time.Millisecond)
+	for !viuAFila {
+		select {
+		case q := <-quadros:
+			if strings.Contains(q, `id="mesa-fila"`) {
+				viuAFila = true
+			}
+			if strings.Contains(q, `id="mesa-tabuleiro"`) {
+				viuOMapa = true
+			}
+		case <-limite:
+			t.Fatal("a mudança da fila não chegou — o teste não alcançou o que queria medir")
+		}
+	}
+	// O CONTROLE é o `viuAFila` acima: sem ele, "não vi o mapa" seria verdade
+	// também num stream que parou de mandar qualquer coisa.
+	if viuOMapa {
+		t.Error("mexer na FILA remendou o MAPA — a peça debaixo do dedo do mestre seria trocada no meio do arrasto")
 	}
 }

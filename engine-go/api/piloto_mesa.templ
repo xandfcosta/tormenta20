@@ -21,9 +21,37 @@ templ mesa(v mesaView) {
 	// com ela as duas faixas deixam de precisar de `sticky`: elas são o cabeçalho
 	// e o rodapé de uma caixa que não rola.
 	<main id="mesa" class="mesa-palco mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col">
-		// A faixa AO VIVO (ALE-30). Acende em DOURADO na vez do jogador, porque
-		// dourado é o que já diz "a vez" na iniciativa e no tabuleiro (ALE-200).
+		@mesaCabecalho(v)
+		<div class="min-h-0 flex-1 space-y-4 overflow-y-auto p-3 sm:p-4">
+			@mesaRegistrarRegiao(v)
+			@mesaGrupo(v)
+			@mesaTabuleiro(v)
+			@mesaFila(v)
+		</div>
+		@mesaComandos(v)
+	</main>
+}
+
+// AS REGIÕES DA MESA (ALE-264).
+//
+// A cena era UM fragmento, e o stream remendava o `<main id="mesa">` inteiro a
+// cada mudança de qualquer um — 39.742 bytes medidos, para mover uma peça um
+// quadrado. Isso é desperdício, e é também um PROBLEMA DE COMPORTAMENTO que o
+// dono nomeou: com o arrasto na próxima fatia, um jogador registrando iniciativa
+// substituiria o elemento debaixo do dedo do mestre e cancelaria o gesto.
+//
+// Agora cada região tem raiz com id ESTÁVEL e hash próprio: o stream manda só as
+// que mudaram. Uma mudança na fila não toca no mapa, e uma no mapa não toca na
+// fila.
+//
+// A raiz existe SEMPRE, com o condicional por dentro. Uma região que some leva o
+// id junto, e o remendo seguinte não acha onde pousar — o vazio precisa de casca.
+
+// mesaCabecalho é a faixa AO VIVO (ALE-30). Acende em DOURADO na vez do jogador,
+// porque dourado é o que já diz "a vez" na iniciativa e no tabuleiro (ALE-200).
+templ mesaCabecalho(v mesaView) {
 		<div
+			id="mesa-cabecalho"
 			class={ "flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b px-3 py-2 sm:px-4",
 				templ.KV("border-grimorio-gold/60 bg-grimorio-gold/10", v.Turn.Kind == "mine"),
 				templ.KV("border-grimorio-iron bg-grimorio-panel", v.Turn.Kind != "mine") }
@@ -53,16 +81,23 @@ templ mesa(v mesaView) {
 				}
 			</div>
 		</div>
-		<div class="min-h-0 flex-1 space-y-4 overflow-y-auto p-3 sm:p-4">
-			// Registrar iniciativa — a ÚNICA mutação desta superfície (ALE-213). Some
-			// fora de cena pelo mesmo motivo da SPA: gravaria o combatente na fila do
-			// mestre sem mudar nada na tela de quem clicou.
-			if v.SceneActive && v.Eu != nil {
-				@mesaRegistrar(v)
-			}
-			// Grupo — como todo mundo está, que é pergunta diferente de "quem age
-			// quando". Aparece FORA de cena de propósito: PV do grupo não é
-			// informação de combate.
+}
+
+// Registrar iniciativa — a ÚNICA mutação desta superfície (ALE-213). Some fora de
+// cena pelo mesmo motivo da SPA: gravaria o combatente na fila do mestre sem
+// mudar nada na tela de quem clicou.
+templ mesaRegistrarRegiao(v mesaView) {
+	<div id="mesa-registrar">
+		if v.SceneActive && v.Eu != nil {
+			@mesaRegistrar(v)
+		}
+	</div>
+}
+
+// Grupo — como todo mundo está, que é pergunta diferente de "quem age quando".
+// Aparece FORA de cena de propósito: PV do grupo não é informação de combate.
+templ mesaGrupo(v mesaView) {
+	<div id="mesa-grupo">
 			if len(v.Grupo) > 0 {
 				<section class="space-y-1.5">
 					<h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">Grupo</h2>
@@ -102,12 +137,26 @@ templ mesa(v mesaView) {
 					</div>
 				</section>
 			}
-			// O TABULEIRO vem ANTES da fila e depois do Grupo: quando há mapa, é
-			// nele que a mesa olha — a fila responde "quem age quando", e o mapa
-			// responde "quem está onde", que é a pergunta do turno em curso.
-			@tabuleiroDaMesa(v.Tabuleiro)
-			// Iniciativa — LEITURA para o jogador (ALE-213); o mestre ganha aqui o
-			// que MONTA a fila.
+	</div>
+}
+
+// O TABULEIRO vem ANTES da fila e depois do Grupo: quando há mapa, é nele que a
+// mesa olha — a fila responde "quem age quando", e o mapa responde "quem está
+// onde", que é a pergunta do turno em curso.
+//
+// A raiz com id é o que separa o mapa da fila no remendo, e é ela que faz o
+// arrasto da próxima fatia ser possível: um jogador registrando iniciativa passa
+// a não tocar no elemento debaixo do dedo do mestre.
+templ mesaTabuleiro(v mesaView) {
+	<div id="mesa-tabuleiro">
+		@tabuleiroDaMesa(v.Tabuleiro)
+	</div>
+}
+
+// Iniciativa — LEITURA para o jogador (ALE-213); o mestre ganha aqui o que MONTA
+// a fila. O diálogo de editar vem junto porque é dela que ele fala.
+templ mesaFila(v mesaView) {
+	<div id="mesa-fila">
 			<section class="space-y-1.5">
 				<div class="flex items-center justify-between gap-2">
 					<h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">Iniciativa</h2>
@@ -178,11 +227,18 @@ templ mesa(v mesaView) {
 					}
 				}
 			</section>
-		</div>
+	</div>
+}
+
+// Os comandos do mestre. A raiz existe para todo mundo e o CONTEÚDO é que é do
+// mestre — a trava continua sendo a view não ter o que desenhar, e o jogador
+// recebe uma casca vazia em vez de um id que some e leva o remendo junto.
+templ mesaComandos(v mesaView) {
+	<div id="mesa-comandos" class="contents">
 		if v.Mestre != nil {
 			@controlesDoMestre(v, *v.Mestre)
 		}
-	</main>
+	</div>
 }
 
 // mesaRegistrar é o único caminho de escrita da superfície.

@@ -364,30 +364,38 @@ func TestMesaStreamComprime(t *testing.T) {
 	if err != nil {
 		t.Fatalf("o corpo não é gzip: %v", err)
 	}
-	// Lê UM evento — até a linha em branco que o fecha. Ler um buffer de tamanho
-	// fixo não serve: o fragmento tem ~17KB e a fila fica depois da faixa e do
-	// Grupo, então um buffer curto corta justamente o que interessa, e um longo
-	// bloquearia esperando quadros que só o batimento traria.
+	// PROCURA a fila entre os quadros em vez de assumi-la no primeiro, e isso
+	// mudou com as REGIÕES (ALE-264): a carga fria manda um quadro por região —
+	// cabeçalho, registrar, grupo, tabuleiro, fila, comandos —, então a fila é o
+	// quinto. Ler só o primeiro afirmaria a ordem interna do render, que não é
+	// promessa nenhuma; o que o teste quer saber é que ela CHEGA comprimida.
+	//
+	// Ler um buffer de tamanho fixo continua não servindo: um buffer curto corta
+	// o fragmento no meio, e um longo bloquearia esperando quadros que só o
+	// batimento traria.
 	leitor := bufio.NewScanner(zr)
 	leitor.Buffer(make([]byte, 0, 64*1024), 1<<20)
-	var quadro strings.Builder
-	for leitor.Scan() {
+	var tudo strings.Builder
+	var achouPatch, achouFila bool
+	for leitor.Scan() && !achouFila {
 		linha := leitor.Text()
-		if linha == "" {
-			break
+		tudo.WriteString(linha)
+		tudo.WriteString("\n")
+		if strings.Contains(linha, "datastar-patch-elements") {
+			achouPatch = true
 		}
-		quadro.WriteString(linha)
-		quadro.WriteString("\n")
+		if strings.Contains(linha, "Ogro cansado") {
+			achouFila = true
+		}
 	}
 
 	// As duas metades: veio no evento do Datastar E carrega a fila de verdade.
 	// Só a primeira passaria verde com um stream que comprime silêncio.
-	texto := quadro.String()
-	if !strings.Contains(texto, "datastar-patch-elements") {
-		t.Errorf("o primeiro quadro não é um patch do Datastar:\n%s", texto)
+	if !achouPatch {
+		t.Errorf("nenhum quadro é um patch do Datastar:\n%.600s", tudo.String())
 	}
-	if !strings.Contains(texto, "Ogro cansado") {
-		t.Errorf("o primeiro quadro não trouxe a fila:\n%s", texto)
+	if !achouFila {
+		t.Errorf("a fila não chegou em quadro nenhum:\n%.600s", tudo.String())
 	}
 }
 

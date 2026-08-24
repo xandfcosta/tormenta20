@@ -2,7 +2,9 @@ package api
 
 import (
 	"context"
+
 	"crypto/sha256"
+	"github.com/a-h/templ"
 	"net/http"
 	"time"
 
@@ -62,7 +64,7 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 	defer pararMapa()
 
 	sse := datastar.NewSSE(w, r, datastar.WithCompression())
-	ultimo := escreveMesa(r.Context(), sse, view, [32]byte{})
+	ultimo := escreveMesa(r.Context(), sse, view, nil)
 
 	batimento := time.NewTicker(mesaBatimento)
 	defer batimento.Stop()
@@ -99,17 +101,53 @@ func (s *Server) handleMesaStream(w http.ResponseWriter, r *http.Request) {
 // `refreshCharacterMaxes` devolve struct nova a cada leitura, então igualdade de
 // estado mandaria tudo sempre; e comparar campo a campo seria a lista que
 // envelhece — o defeito que o `cloneState` documenta ter tido com o `TurnsTaken`.
-func escreveMesa(ctx context.Context, sse *datastar.ServerSentEventGenerator, view mesaView, anterior [32]byte) [32]byte {
-	fragmento, err := renderFragmento(ctx, mesa(view))
-	if err != nil {
-		return anterior
+func escreveMesa(ctx context.Context, sse *datastar.ServerSentEventGenerator, view mesaView, anterior digitais) digitais {
+	if anterior == nil {
+		anterior = digitais{}
 	}
-	digital := sha256.Sum256([]byte(fragmento))
-	if digital == anterior {
-		return anterior
+	for _, r := range regioesDaMesa(view) {
+		fragmento, err := renderFragmento(ctx, r.No)
+		if err != nil {
+			continue
+		}
+		digital := sha256.Sum256([]byte(fragmento))
+		if digital == anterior[r.ID] {
+			continue
+		}
+		if err := sse.PatchElements(fragmento); err != nil {
+			// Falhar ao escrever é o leitor tendo ido embora. NÃO grava a
+			// digital: gravar faria a região ser pulada no próximo ciclo, e a
+			// tela ficaria com o estado velho para sempre.
+			continue
+		}
+		anterior[r.ID] = digital
 	}
-	if err := sse.PatchElements(fragmento); err != nil {
-		return anterior
+	return anterior
+}
+
+// digitais é a impressão do que cada região tem NA TELA de um leitor. Uma por
+// conexão, porque cada uma chegou num momento e viu coisas diferentes.
+type digitais map[string][32]byte
+
+// regiaoDaMesa é um pedaço da cena que muda por conta própria (ALE-264).
+type regiaoDaMesa struct {
+	ID string
+	No templ.Component
+}
+
+// regioesDaMesa é a lista, e a ORDEM é a da tela.
+//
+// O corte é por QUEM MUDA a região, não por assunto: o cabeçalho e os comandos
+// mudam com o turno, o grupo muda com a ficha, o mapa muda com o tabuleiro, a
+// fila muda com a fila. Cortar por assunto juntaria coisas que mudam em ritmos
+// diferentes, e a região só é útil enquanto ela é a unidade de mudança.
+func regioesDaMesa(v mesaView) []regiaoDaMesa {
+	return []regiaoDaMesa{
+		{"mesa-cabecalho", mesaCabecalho(v)},
+		{"mesa-registrar", mesaRegistrarRegiao(v)},
+		{"mesa-grupo", mesaGrupo(v)},
+		{"mesa-tabuleiro", mesaTabuleiro(v)},
+		{"mesa-fila", mesaFila(v)},
+		{"mesa-comandos", mesaComandos(v)},
 	}
-	return digital
 }
