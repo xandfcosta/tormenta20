@@ -25,6 +25,20 @@ templ controlesDoMestre(v mesaView, r rastreadorView) {
 		// `aria-live` porque num app de remendo a rodada muda sem navegação, e
 		// quem não vê a tela não tem outro sinal.
 		<p aria-live="polite" class="text-xs text-muted-foreground">{ r.Contador }</p>
+		// A RECUSA de um comando, e ela mora aqui e não na caixa de registrar: o
+		// mestre que também joga tem as duas na tela, e a frase do "Adicionar
+		// grupo" acesa dentro do "Registrar iniciativa" seria a frase certa no
+		// lugar errado. Por isso o sinal é `erroDoComando` e não `erro`.
+		//
+		// `w-full` e `order-last` para ela ocupar a própria fileira quando
+		// aparece: enfiada entre os botões, empurraria o avanço para fora da
+		// linha e a frase seria lida como rótulo do vizinho.
+		<p
+			data-show="$erroDoComando != ''"
+			data-text="$erroDoComando"
+			aria-live="assertive"
+			class="order-last w-full text-xs text-destructive"
+		></p>
 		<div class="ml-auto flex flex-wrap items-center gap-2">
 			@passoDoTurno(v, "previous-turn", "Turno anterior", "‹", r.PodeAvancar)
 			// O rótulo do avanço diz PARA ONDE vai (ALE-184): o mestre lia "▶" e

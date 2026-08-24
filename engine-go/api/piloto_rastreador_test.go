@@ -128,7 +128,7 @@ func TestSoOMestreComandaAMesa(t *testing.T) {
 
 	comandos := []string{
 		"initiative/next-turn", "initiative/previous-turn",
-		"scene/start", "scene/end",
+		"scene/start", "scene/end", "initiative/populate",
 	}
 	for _, cmd := range comandos {
 		t.Run(cmd, func(t *testing.T) {
@@ -264,5 +264,91 @@ func TestEncerrarCenaPeloPilotoAvisaQueAsFichasMudaram(t *testing.T) {
 	}
 	if !viuFichas {
 		t.Error("a mesa não foi avisada de que as fichas mudaram")
+	}
+}
+
+// TestOComandoRecusadoCHEGAaoMestre.
+//
+// Os comandos respondiam `http.Error`, e isso era um beco: o Datastar não
+// desenha corpo de resposta 4xx, então a recusa não chegava a lugar nenhum e o
+// mestre clicava olhando para uma tela que não mudava. É o MESMO defeito que a
+// ALE-213 anotou no socket, onde o cliente não escutava o `exception`.
+//
+// Ele ficou urgente com o conserto da ALE-220 acima: não alcançar as fichas do
+// grupo ABORTA o encerrar-cena de propósito e deixa a cena LIGADA. Sem frase, o
+// mestre vê a cena aberta depois de mandar encerrá-la e não tem como saber por
+// quê.
+func TestOComandoRecusadoChegaAoMestre(t *testing.T) {
+	f := novoPiloto(t)
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/scene/start", ""); rec.Code != http.StatusOK {
+		t.Fatalf("iniciar cena deu %d", rec.Code)
+	}
+	// A mesma sabotagem do `initiative_rules_test.go`: sem o roster não há como
+	// alcançar as fichas, e o gesto inteiro tem de recusar.
+	if _, err := f.s.db.Exec("DROP TABLE campaign_members"); err != nil {
+		t.Fatalf("derrubar a tabela: %v", err)
+	}
+
+	rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/scene/end", "")
+	corpo := rec.Body.String()
+	if !strings.Contains(corpo, "erroDoComando") {
+		t.Fatalf("a recusa não chegou à cena do mestre; corpo = %q", corpo)
+	}
+	if strings.Contains(corpo, `"erroDoComando":""`) {
+		t.Error("a cena recebeu a frase VAZIA — o mestre veria a cena ligada e nenhuma explicação")
+	}
+}
+
+// E o sinal do comando é OUTRO que o `$erro` do registrar (ALE-263).
+//
+// Um sinal só faria a recusa de "Adicionar grupo" acender a frase vermelha
+// dentro da caixa "Registrar iniciativa" do mestre que também joga — a frase
+// certa no lugar errado, que é como se lê um defeito. Uma palavra por conceito
+// vale para sinal de página como vale para identificador.
+func TestOErroDoComandoNaoInvadeOErroDoRegistrar(t *testing.T) {
+	f := novoPiloto(t)
+	corpo := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	if !strings.Contains(corpo, "erroDoComando") {
+		t.Error("a página do mestre não declarou o sinal do comando")
+	}
+}
+
+// TestAdicionarGrupoTrazOsPersonagensEPodeSerClicadoDeNovo.
+//
+// As duas metades são o gesto: trazer o grupo, e o segundo clique NÃO duplicar.
+// A idempotência é o que sustenta o botão continuar clicável — o mestre que
+// aceitou um jogador atrasado clica de novo e leva só o que faltava. Sem ela o
+// desenho certo seria apagar o botão, e a fila teria Arwen duas vezes até
+// alguém notar.
+func TestAdicionarGrupoTrazOsPersonagensEPodeSerClicadoDeNovo(t *testing.T) {
+	f := novoPiloto(t)
+
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/populate", ""); rec.Code != http.StatusOK {
+		t.Fatalf("adicionar grupo deu %d", rec.Code)
+	}
+	fila := f.s.sessions.GetState(f.sessionID).Initiative
+	if len(fila) != 1 || fila[0].CharacterID == nil || *fila[0].CharacterID != f.charID {
+		t.Fatalf("a fila ficou %+v, queria só o personagem %d", fila, f.charID)
+	}
+
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/initiative/populate", ""); rec.Code != http.StatusOK {
+		t.Fatalf("o segundo clique deu %d", rec.Code)
+	}
+	if depois := f.s.sessions.GetState(f.sessionID).Initiative; len(depois) != 1 {
+		t.Errorf("o segundo clique deixou %d combatentes na fila, queria 1", len(depois))
+	}
+}
+
+// E o botão só existe para o MESTRE, porque a view do jogador não tem o que
+// desenhar. Esconder por classe deixaria o HTML na página para quem abrisse o
+// inspetor — e a trava de verdade é o 403 acima, medido em separado.
+func TestOJogadorNaoRecebeOAdicionarGrupoNoHTML(t *testing.T) {
+	f := novoPiloto(t)
+
+	if corpo := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String(); strings.Contains(corpo, "Adicionar grupo") {
+		t.Error("o HTML do jogador veio com o Adicionar grupo")
+	}
+	if corpo := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String(); !strings.Contains(corpo, "Adicionar grupo") {
+		t.Error("o mestre não recebeu o Adicionar grupo")
 	}
 }

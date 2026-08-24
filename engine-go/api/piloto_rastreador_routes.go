@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -35,6 +36,32 @@ func (s *Server) rotasDoRastreador(r chi.Router) {
 			return st.sessions.StartScene(c.SessionID)
 		}))
 	r.Post("/mesa/{campaignId}/{sessionId}/scene/end", s.comandoDoMestre(encerraACena))
+	r.Post("/mesa/{campaignId}/{sessionId}/initiative/populate", s.comandoDoMestre(trazOGrupo))
+}
+
+// trazOGrupo põe na fila cada personagem do grupo que ainda não está lá.
+//
+// É idempotente — o `populateParty` pula quem já está —, e é por isso que o
+// botão continua clicável em vez de apagar depois do primeiro uso: o mestre que
+// aceitou um jogador atrasado clica de novo e leva só o que faltava.
+//
+// O filtro de PAPEL é do `listPlayerCombatants`, e não daqui: o mestre costuma
+// ter um PC próprio no roster, e uma segunda opinião sobre quem é o grupo faria
+// esta tela discordar da SPA sobre a mesma pergunta (ALE-212).
+func trazOGrupo(st *Server, c mesaComando) (*aovivo.SessionRuntimeState, error) {
+	combatentes, err := st.listPlayerCombatants(c.R.Context(), c.CampaignID)
+	if err != nil {
+		return nil, errors.New("não deu para carregar o grupo desta campanha")
+	}
+	// O erro vem JUNTO com o estado parcial de propósito: pôr quatro dos cinco e
+	// tropeçar no quinto deixou a mesa com quatro combatentes novos, e é esse o
+	// estado que as outras telas precisam receber. Quem transmite o parcial é o
+	// `comandoDoMestre` — ver o comentário lá.
+	estado, err := st.populateParty(c.SessionID, combatentes)
+	if estado == nil {
+		estado = st.sessions.GetState(c.SessionID)
+	}
+	return estado, err
 }
 
 // mesaComando é o que a mutação de um comando do mestre recebe.
@@ -106,38 +133,59 @@ func (s *Server) comandoDoMestre(
 		estado, err := mutar(s, mesaComando{
 			R: r, User: user, CampaignID: campaignID, SessionID: sessionID,
 		})
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+		// O que POUSOU se transmite mesmo quando a chamada devolveu erro, e o
+		// `trazer o grupo` é quem o exige: ele põe quatro dos cinco e tropeça no
+		// quinto, e os quatro já são o estado da mesa. Segurar a transmissão
+		// porque houve erro deixaria as outras telas com a fila de antes —
+		// best-effort é sobre continuar apesar da falha, não sobre escondê-la
+		// (ALE-155).
+		//
 		// A SPA continua ouvindo o hub: enquanto as duas telas existirem, uma
 		// escrita por aqui tem de chegar lá.
-		s.publishSessionState(sessionID, estado)
-
-		// E a cena de quem clicou é remendada NA HORA, em vez de esperar o
-		// próximo tique do stream. O stream avisa-e-relê, então ele veria a
-		// mesma coisa daqui a até 200ms e o hash o faria calar — o remendo aqui
-		// é o que torna o botão mais clicado da sessão instantâneo.
-		s.remendaAMesa(w, r, user, campaignID, sessionID)
+		if estado != nil {
+			s.publishSessionState(sessionID, estado)
+		}
+		s.respondeAoMestre(w, r, user, campaignID, sessionID, err)
 	}
 }
 
-// remendaAMesa redesenha a cena para quem acabou de comandar.
-func (s *Server) remendaAMesa(
+// respondeAoMestre devolve a cena remendada E a frase da recusa — as duas
+// sempre, e as duas por SSE.
+//
+// Os comandos respondiam `http.Error`, e isso era um beco: o Datastar não
+// desenha corpo de resposta 4xx, então a recusa não chegava a lugar nenhum e o
+// mestre clicava olhando para uma tela que não mudava. É o mesmo defeito que a
+// ALE-213 anotou no socket, onde o cliente não escutava o `exception` — e ele
+// ficou urgente com o conserto da ALE-220 neste arquivo, porque encerrar a cena
+// passou a poder falhar DE PROPÓSITO e deixar a cena ligada.
+//
+// O 403 não vem por aqui e continua sendo `http.Error`: ele é para quem posta na
+// mão, e a tela de quem não é mestre nunca teve o botão.
+//
+// A cena é remendada NA HORA em vez de esperar o próximo tique do stream. O
+// stream avisa-e-relê, então ele veria a mesma coisa daqui a até 200ms e o hash
+// o faria calar — o remendo aqui é o que torna o botão mais clicado da sessão
+// instantâneo. E ele vale também na recusa: redesenhar mostra que a cena
+// continua ABERTA, que é a verdade que o mestre precisa ver ao lado da frase.
+func (s *Server) respondeAoMestre(
 	w http.ResponseWriter, r *http.Request,
-	user AuthUser, campaignID, sessionID int64,
+	user AuthUser, campaignID, sessionID int64, recusa error,
 ) {
-	view, _, err := s.loadMesaView(r.Context(), user, campaignID, sessionID)
-	if err != nil {
-		// A mutação já aconteceu e já foi publicada; falhar ao redesenhar não a
-		// desfaz. O stream corrige no próximo tique, e devolver erro aqui faria
-		// a tela dizer que o comando falhou quando ele funcionou.
-		return
-	}
 	sse := datastar.NewSSE(w, r)
-	fragmento, err := renderFragmento(r.Context(), mesa(view))
-	if err != nil {
-		return
+	if view, _, err := s.loadMesaView(r.Context(), user, campaignID, sessionID); err == nil {
+		// Falhar ao redesenhar não desfaz a mutação, que já aconteceu e já foi
+		// transmitida; o stream corrige no próximo tique. Por isso o fragmento é
+		// best-effort e a frase sai de qualquer jeito.
+		if fragmento, err := renderFragmento(r.Context(), mesa(view)); err == nil {
+			_ = sse.PatchElements(fragmento)
+		}
 	}
-	_ = sse.PatchElements(fragmento)
+	frase := ""
+	if recusa != nil {
+		frase = recusa.Error()
+	}
+	// Sai nos DOIS caminhos: no da recusa para acender a frase, e no do acerto
+	// para APAGAR a anterior. Um sinal que só se escreve quando dá errado deixa
+	// a recusa de dois cliques atrás acesa sobre um comando que funcionou.
+	_ = sse.MarshalAndPatchSignals(map[string]string{"erroDoComando": frase})
 }

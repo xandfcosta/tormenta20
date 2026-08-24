@@ -74,9 +74,20 @@ templ mesa(v mesaView) {
 					</div>
 				</section>
 			}
-			// Iniciativa — LEITURA, e só (ALE-213).
+			// Iniciativa — LEITURA para o jogador (ALE-213); o mestre ganha aqui o
+			// que MONTA a fila.
 			<section class="space-y-1.5">
-				<h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">Iniciativa</h2>
+				<div class="flex items-center justify-between gap-2">
+					<h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">Iniciativa</h2>
+					// "Adicionar grupo" fica com a LISTA e não com o rodapé, que é
+					// onde a SPA o pôs: ele monta a fila, e os verbos do rodapé
+					// andam com ela pronta. A palavra é a mesma dos dois lados de
+					// propósito — duas telas não devem inventar dois vocabulários
+					// para o mesmo gesto.
+					if v.Mestre != nil {
+						@adicionarGrupo(v)
+					}
+				</div>
 				// Desenha O QUE CHEGOU, e nada mais. A decisão de esconder a fila fora
 				// de cena já foi tomada pelo servidor, que a esvaziou no
 				// `redactForPlayers` — repeti-la aqui num `if v.SceneActive` seria a
@@ -258,4 +269,19 @@ templ barra(rotulo string, b mesaBarra) {
 		</div>
 		<span class="shrink-0 font-mono text-[13px] tabular-nums text-foreground">{ fmt.Sprint(b.Atual) }/{ fmt.Sprint(b.Max) }</span>
 	</div>
+}
+
+// adicionarGrupo traz os personagens do grupo para a fila.
+//
+// Continua clicável DEPOIS do primeiro uso porque `populateParty` é idempotente:
+// o mestre que aceitou um jogador atrasado clica de novo e leva só o que
+// faltava. Apagá-lo faria a segunda pergunta parecer respondida.
+templ adicionarGrupo(v mesaView) {
+	<button
+		type="button"
+		data-indicator:trazendo
+		data-attr:disabled="$trazendo"
+		data-on:click={ comandoDaMesa(v, "POST", "initiative/populate") }
+		class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
+	>+ Adicionar grupo</button>
 }
