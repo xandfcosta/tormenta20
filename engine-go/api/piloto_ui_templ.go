@@ -153,7 +153,7 @@ type campo struct {
 	Valor        string
 	Autocomplete string
 	Dica         string
-	// Erros vem do `plataforma.FieldErrorMap` do servidor, que é o MESMO que a API devolve
+	// Erros vem do `FieldErrorMap` do servidor, que é o MESMO que a API devolve
 	// — a porta não tem validação própria.
 	Erros []string
 	// Obrigatorio, TamanhoMinimo e Padrao viram validação NATIVA do navegador.

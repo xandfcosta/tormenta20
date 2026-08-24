@@ -1,14 +1,18 @@
-import { createFileRoute } from '@tanstack/solid-router'
-import { MesaPage } from '@/pages/gm/mesa-page'
-import { requireSession } from './-guards'
+import { Outlet, createFileRoute } from '@tanstack/solid-router'
 
 /**
- * `/gm` has children, so it MUST be a layout that renders an Outlet — a detail
- * screen here would swallow the outlet and `/gm/$tool` would never mount
- * ([[reference_tanstack_nested_routes]]). `MesaPage` is the shell: rail plus
- * Outlet, and it never unmounts as the GM walks between tools.
+ * A Mesa do Mestre saiu da SPA (ALE-264): as quatro ferramentas são cenas do
+ * servidor em `/piloto/mestre/{ferramenta}`. As rotas ficam como
+ * ENCAMINHAMENTO, porque `/gm` é o endereço que os mestres têm salvo.
+ *
+ * ESTA rota não encaminha, e a razão custou uma medição: o `beforeLoad` do pai
+ * roda ANTES do filho, então encaminhar aqui atropelava a `$tool` e
+ * `/gm/encontros` abria o BESTIÁRIO. Quem encaminha são as filhas — a `index`
+ * para a primeira ferramenta, a `$tool` levando o slug junto.
+ *
+ * Ela continua sendo um layout com Outlet pelo motivo de sempre: `/gm` tem
+ * filhas, e uma tela aqui engoliria a saída ([[reference_tanstack_nested_routes]]).
  */
 export const Route = createFileRoute('/gm')({
-  beforeLoad: requireSession,
-  component: MesaPage,
+  component: () => <Outlet />,
 })

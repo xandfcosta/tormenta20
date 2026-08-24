@@ -94,6 +94,23 @@ templ tabelaQueRola(id, titulo, dado, fonte string, historico []sorteio) {
 			@icone("Dices", "size-4")
 			{ "Rolar " + dado }
 		</button>
+		if len(historico) > 0 {
+			// LIMPAR só aparece com histórico, como na SPA: um botão que não tem
+			// o que fazer ocupa a linha e ensina errado.
+			//
+			// Ele quase se perdeu no porte — eu rolava e acumulava sem como
+			// zerar, e o que o denunciou foi comparar o teste ÓRFÃO
+			// (`roll-history.test.ts`, "limpar esvazia o histórico" — se lê com
+			// `git show 7956b59:frontend/src/features/gm-tools/roll-history.test.ts`) com o
+			// substituto em Go antes de apagá-lo. Apagar primeiro teria levado
+			// a testemunha junto.
+			<button
+				type="button"
+				aria-label={ "Limpar o histórico de " + titulo }
+				data-on:click={ fmt.Sprintf("@post('/piloto/mestre/improviso/%s/limpar')", id) }
+				class="self-start px-1 text-xs text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>Limpar</button>
+		}
 		if len(historico) == 0 {
 			<p class="text-xs text-muted-foreground">Nada rolado ainda.</p>
 		} else {

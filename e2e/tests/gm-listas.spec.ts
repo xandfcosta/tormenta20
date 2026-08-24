@@ -92,13 +92,20 @@ test.describe('Listas virtualizadas do mestre', () => {
   })
 
   test('a ferramenta Bestiário pinta a lista e abre a criatura escolhida', async ({ page }) => {
-    await page.goto('/gm/bestiario')
+    // A ferramenta virou cena do SERVIDOR na ALE-264, e o teste foi REAPONTADO
+    // em vez de apagado: o que ele afirma — a lista pinta, a busca filtra, o
+    // painel mostra a escolhida — continua sendo a promessa da tela, e o id
+    // `mesa-bestiario` sobreviveu ao porte de propósito.
+    //
+    // A linha é LINK e não botão: abrir uma criatura passou a ser navegação,
+    // com `?criatura=` no endereço.
+    await page.goto('/piloto/mestre/bestiario')
 
     const busca = page.getByRole('searchbox', { name: 'Buscar criatura' })
     await expect(busca).toBeVisible()
     await busca.fill('ogro')
 
-    const linha = page.getByRole('button', { name: /^Ogro/ }).first()
+    const linha = page.getByRole('link', { name: /^Ogro/ }).first()
     await expect(linha).toBeVisible()
     await linha.click()
 
@@ -230,8 +237,8 @@ test.describe('Listas virtualizadas do mestre', () => {
  */
 test('no tablet em pé, a lista do bestiário não deixa faixa morta', async ({ page }) => {
   await page.setViewportSize({ width: 768, height: 1024 })
-  await page.goto('/gm/bestiario')
-  await expect(page.getByRole('button', { name: /ND / }).first()).toBeVisible()
+  await page.goto('/piloto/mestre/bestiario')
+  await expect(page.getByRole('link', { name: /ND / }).first()).toBeVisible()
 
   // Sem transbordo a asserção não prova nada: seria uma lista que coube.
   const transbordou = await page.evaluate(
@@ -242,7 +249,16 @@ test('no tablet em pé, a lista do bestiário não deixa faixa morta', async ({ 
   )
   expect(transbordou, 'a lista não transbordou — o teste não mediu nada').toBe(true)
 
-  await expectSemFaixaMorta(page, '[aria-labelledby=mesa-bestiario]')
+  // A tolerância sobe de 8 para 12 px, e a razão é do INSTRUMENTO e não do
+  // defeito: a primitiva mede o último elemento com TEXTO, e a lista da SPA era
+  // virtualizada — linhas posicionadas exatamente, sem espaço próprio embaixo.
+  // Sem virtualização (ALE-257) cada linha tem `p-2`, então o texto da última
+  // fica legitimamente ~10px acima do fim do contêiner. Medido: 11px.
+  //
+  // Isto NÃO cega o guarda, e a diferença é de duas ordens de grandeza: o
+  // defeito da ALE-175 eram 243px de banda morta. Provado — recolocar uma tampa
+  // de altura na lista deixa este teste VERMELHO com a tolerância em 12.
+  await expectSemFaixaMorta(page, '[aria-labelledby=mesa-bestiario]', 12)
 })
 
 /**
@@ -266,8 +282,8 @@ test('no tablet em pé, a lista do bestiário não deixa faixa morta', async ({ 
  * jsdom nenhuma consulta casa e a grade responde sempre a mesma coisa.
  */
 test('alargar a janela nunca tira uma coluna do bestiário', async ({ page }) => {
-  await page.goto('/gm/bestiario')
-  await expect(page.getByRole('button', { name: /ND / }).first()).toBeVisible()
+  await page.goto('/piloto/mestre/bestiario')
+  await expect(page.getByRole('link', { name: /ND / }).first()).toBeVisible()
 
   await expectColunasMonotonicas(
     page,
@@ -290,29 +306,39 @@ test('alargar a janela nunca tira uma coluna do bestiário', async ({ page }) =>
  * Contar os cartões DENTRO da fileira é o que separa as duas metades.
  */
 test('alargar a janela nunca tira uma coluna do catálogo', async ({ page }) => {
-  await page.goto('/gm/catalogos')
-  await expect(page.locator('[data-index]').first()).toBeVisible()
+  // A lista deixou de ser VIRTUALIZADA na ALE-258 — são 992 entradas e o
+  // servidor manda todas —, então o alvo passa a ser a grade de verdade e não
+  // a fileira que o virtualizador montava. A garantia é a mesma: alargar a
+  // janela nunca pode tirar uma coluna.
+  await page.goto('/piloto/mestre/catalogos')
+  await expect(page.locator('.acervo-em-colunas').first()).toBeVisible()
 
   await expectColunasMonotonicas(
     page,
-    '[data-index] div.grid',
+    '.acervo-em-colunas',
     [1920, 1440, 1200, 1100, 1024, 1000, 900, 844, 768, 600, 390],
   )
 
+  // A segunda metade MUDOU DE PERGUNTA com a virada, e vale dizer por quê.
+  //
+  // Na lista virtualizada, "três colunas" não era grade de CSS — era o
+  // agrupamento dos dados antes de entregá-los, e a grade podia declarar três
+  // com um cartão só na fileira, deixando dois terços de vazio enquanto o CSS
+  // jurava estar certo. Contar cartões DENTRO da fileira separava as duas
+  // metades.
+  //
+  // Sem virtualização a grade é nativa e preenche sozinha, então essa
+  // discrepância não pode existir. O que PODE existir é o oposto, e é o que se
+  // afirma agora: a grade declarando MAIS colunas do que cabem — foi o defeito
+  // medido na ALE-258, quatro colunas a 1920 onde o teto de leitura é três.
   await page.setViewportSize({ width: 1920, height: 1080 })
-  await expect(page.locator('[data-index]').first()).toBeVisible()
-  const fileira = await page.evaluate(() => {
-    const grade = document.querySelector('[data-index] div.grid')
+  const colunas = await page.evaluate(() => {
+    const grade = document.querySelector('.acervo-em-colunas')
     if (!grade) return null
-    return {
-      declaradas: getComputedStyle(grade).gridTemplateColumns.split(' ').filter(Boolean).length,
-      cartoes: grade.children.length,
-    }
+    return getComputedStyle(grade).gridTemplateColumns.split(' ').filter(Boolean).length
   })
-  expect(fileira, 'nenhuma fileira pintou em 1920').not.toBeNull()
-  expect(fileira?.cartoes, 'a grade declara colunas que a fileira não preenche').toBe(
-    fileira?.declaradas,
-  )
+  expect(colunas, 'nenhuma grade pintou em 1920').not.toBeNull()
+  expect(colunas, 'o teto de três colunas é medida de leitura (ALE-170)').toBeLessThanOrEqual(3)
 })
 
 /**
@@ -342,20 +368,23 @@ test('as abas do catálogo enchem a faixa, e a última não sai dela', async ({ 
   // coluna aqui do lado. Recarregar por largura paga o portão dos catálogos
   // (18 buscas antes da primeira tela) a cada volta, e foi assim que a versão
   // anterior deste teste estourou o timeout sem que nada estivesse errado.
-  await page.goto('/gm/catalogos')
-  await expect(page.getByRole('tab', { name: 'Condições' })).toBeVisible()
+  // As abas viraram LINKS na ALE-258 — `?aba=magias` é endereço —, então o
+  // papel `tab` deixou de existir e a fileira é uma `nav` nomeada. O que se
+  // afirma não mudou: a fileira enche a faixa e a última aba não escapa dela.
+  await page.goto('/piloto/mestre/catalogos')
+  await expect(page.getByRole('link', { name: 'Condições' })).toBeVisible()
 
   for (const largura of [1920, 1024, 768, 390]) {
     await page.setViewportSize({ width: largura, height: 900 })
-    await expect(page.getByRole('tab', { name: 'Condições' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Condições' })).toBeVisible()
 
     // O par medido é a FAIXA contra a ferramenta, e não a aba contra a faixa:
     // com `w-fit` a lista encolhe até as abas, então as abas enchem a lista
     // perfeitamente e a asserção passa VERDE sobre o defeito. O espaço morto
     // está entre a lista e o painel, e é ali que ele se mede.
-    await expectEnchePai(page, '[aria-labelledby=mesa-catalogos]', '[role=tablist]')
+    await expectEnchePai(page, '[aria-labelledby=mesa-catalogos]', 'nav[aria-label="Catálogos"]')
     // A outra metade, a da ALE-122: `flex-1` não encolhe abaixo do conteúdo, e
     // sem `min-w-0` o rótulo mais longo empurra a última aba para fora.
-    await expectNadaEscapa(page, '[role=tablist]')
+    await expectNadaEscapa(page, 'nav[aria-label="Catálogos"]')
   }
 })

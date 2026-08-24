@@ -145,7 +145,7 @@ func (s *Server) Router() http.Handler {
 		r.Post("/login", s.handleLogin)
 		r.Post("/logout", s.handleLogout)
 		// Anonymous: see /password-resets above.
-		r.Post("/Reset-password", s.handleResetPassword)
+		r.Post("/reset-password", s.handleResetPassword)
 		r.With(s.requireAuth).Get("/me", s.handleMe)
 	})
 

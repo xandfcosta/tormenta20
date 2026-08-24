@@ -210,3 +210,68 @@ func TestATrilhaOfereceAsQuatroFerramentas(t *testing.T) {
 		})
 	}
 }
+
+// TestOsSlugsDaTrilhaSaoUnicos — a rota resolve por eles.
+//
+// Herdado do `gm-tools.test.ts` da SPA, apagado na virada da ALE-264 — o
+// original se lê com
+// `git show 7956b59:frontend/src/features/gm-tools/gm-tools.test.ts`. Slug repetido não
+// quebra compilação nem teste nenhum: as duas entradas viram links para o mesmo
+// endereço, e a segunda ferramenta fica inalcançável — com o trilho mostrando
+// as duas, o que é pior que faltar uma.
+func TestOsSlugsDaTrilhaSaoUnicos(t *testing.T) {
+	vistos := map[string]string{}
+	for _, f := range ferramentasDoMestre {
+		if antes, repetido := vistos[f.Slug]; repetido {
+			t.Errorf("o slug %q é de %q e de %q — a segunda fica inalcançável",
+				f.Slug, antes, f.Rotulo)
+		}
+		vistos[f.Slug] = f.Rotulo
+		if f.Slug == "" || f.Rotulo == "" || f.Icone == "" {
+			t.Errorf("a ferramenta %+v tem campo vazio", f)
+		}
+	}
+}
+
+// TestLimparZeraSOAquelaTabela.
+//
+// Esta feature quase se perdeu no porte: a SPA tem um botão "Limpar" por tabela
+// e a minha primeira versão rolava e acumulava sem como zerar. O que a
+// denunciou foi comparar o teste ÓRFÃO da SPA (`roll-history.test.ts` em
+// 7956b59, "limpar
+// esvazia o histórico") com o substituto em Go ANTES de apagá-lo — apagar
+// primeiro teria levado a testemunha junto, que é o que o checklist da virada
+// existe para impedir.
+//
+// O guarda mede o ISOLAMENTO e não só o zeramento: limpar a ruína não pode
+// levar junto o evento de perseguição que o mestre acabou de tirar.
+func TestLimparZeraSoAquelaTabela(t *testing.T) {
+	s := newTestServer(t)
+	eu := seedUser(t, s, "mestre@t20.local")
+
+	sinais := `{"ruina":[{"r":4,"t":"Vazia"}],"perseguicao":[{"r":9,"t":"Obstáculo"}],` +
+		`"recompensa":[{"r":2,"t":"Favor"}],"ideias":[{"r":7,"t":"Cripta"}]}`
+	rec := pedeNoMestre(t, s, eu, "POST", "/piloto/mestre/improviso/ruina/limpar", sinais)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d", rec.Code)
+	}
+	corpo := rec.Body.String()
+	if strings.Contains(corpo, "Vazia") {
+		t.Error("a ruína não foi limpa")
+	}
+	for _, sobrevivente := range []string{"Obstáculo", "Favor", "Cripta"} {
+		if !strings.Contains(corpo, sobrevivente) {
+			t.Errorf("limpar a ruína levou junto %q — as tabelas são independentes", sobrevivente)
+		}
+	}
+}
+
+// TestLimparTabelaInventadaERecusado, como a rolagem.
+func TestLimparTabelaInventadaERecusado(t *testing.T) {
+	s := newTestServer(t)
+	eu := seedUser(t, s, "mestre@t20.local")
+	rec := pedeNoMestre(t, s, eu, "POST", "/piloto/mestre/improviso/tarot/limpar", `{}`)
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("status %d, quero 400", rec.Code)
+	}
+}

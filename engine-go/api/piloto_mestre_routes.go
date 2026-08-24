@@ -31,7 +31,21 @@ func (s *Server) rotasDoMestre(r chi.Router) {
 	r.Post("/mestre/encontros/menos/{id}", s.handleEncontroMenos)
 	r.Post("/mestre/encontros/remover/{id}", s.handleEncontroRemover)
 	r.Get("/mestre/improviso", s.handleImproviso)
+	// A ferramenta DESCONHECIDA cai na primeira, e não em 404.
+	//
+	// Porte de comportamento: a `/gm/$tool` da SPA validava o slug e redirigia,
+	// com o comentário "uma URL digitada à mão ou velha aterrissa na primeira
+	// ferramenta em vez de num palco em branco". Com a virada, quem encaminha
+	// não valida mais — se o servidor devolvesse 404, um link velho de mestre
+	// viraria página de erro em vez de abrir a Mesa.
+	//
+	// No chi o segmento ESTÁTICO ganha do parâmetro, então as quatro rotas
+	// acima continuam sendo as que atendem; esta só recolhe o resto.
+	r.Get("/mestre/{ferramenta}", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/piloto/mestre/bestiario", http.StatusSeeOther)
+	})
 	r.Post("/mestre/improviso/{tabela}", s.handleImprovisoRola)
+	r.Post("/mestre/improviso/{tabela}/limpar", s.handleImprovisoLimpa)
 }
 
 // handleImproviso desenha a cena com os históricos que vieram nos sinais.
@@ -44,7 +58,16 @@ func (s *Server) handleImprovisoRola(w http.ResponseWriter, r *http.Request) {
 	s.respondeImproviso(w, r, chi.URLParam(r, "tabela"))
 }
 
-// respondeImproviso é o caminho único das cinco rotas.
+// handleImprovisoLimpa zera o histórico de UMA tabela.
+//
+// Zera só a dela, e não as quatro: as tabelas são independentes, e limpar a
+// ruína não pode levar junto o evento de perseguição que o mestre acabou de
+// tirar.
+func (s *Server) handleImprovisoLimpa(w http.ResponseWriter, r *http.Request) {
+	s.respondeImproviso(w, r, "limpar:"+chi.URLParam(r, "tabela"))
+}
+
+// respondeImproviso é o caminho único das seis rotas.
 //
 // `tabela` vazio significa "só redesenhe" — é a carga fria e o campo de salas.
 // Com tabela, rola e empilha ANTES de montar a cena, porque o histórico é o que
@@ -52,6 +75,14 @@ func (s *Server) handleImprovisoRola(w http.ResponseWriter, r *http.Request) {
 func (s *Server) respondeImproviso(w http.ResponseWriter, r *http.Request, tabela string) {
 	v := improvisoDoPedido(r)
 
+	if alvo, achou := strings.CutPrefix(tabela, "limpar:"); achou {
+		if _, conhecida := asRolagens[alvo]; !conhecida {
+			http.Error(w, "tabela de improviso desconhecida: "+alvo, http.StatusBadRequest)
+			return
+		}
+		v = zeraTabela(v, alvo)
+		tabela = ""
+	}
 	if tabela != "" {
 		rolar, ok := asRolagens[tabela]
 		if !ok {
@@ -98,6 +129,21 @@ var asRolagens = map[string]func() (sorteio, error){
 	"perseguicao": rolaPerseguicao,
 	"recompensa":  rolaRecompensa,
 	"ideias":      rolaIdeia,
+}
+
+// zeraTabela apaga o histórico de uma tabela e deixa as outras três intactas.
+func zeraTabela(v improvisoView, tabela string) improvisoView {
+	switch tabela {
+	case "ruina":
+		v.Ruina = nil
+	case "perseguicao":
+		v.Perseguicao = nil
+	case "recompensa":
+		v.Recompensa = nil
+	case "ideias":
+		v.Ideias = nil
+	}
+	return v
 }
 
 func empilhaEm(v improvisoView, tabela string, s sorteio) improvisoView {

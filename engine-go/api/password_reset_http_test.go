@@ -44,7 +44,7 @@ func TestTheResetLinkActuallyChangesThePassword(t *testing.T) {
 	token := resetLinkFor(t, s, admin, player)
 	before := passwordOf(t, s, player)
 
-	rec := sendRaw(t, s, http.MethodPost, "/auth/Reset-password",
+	rec := sendRaw(t, s, http.MethodPost, "/auth/reset-password",
 		`{"token":"`+token+`","password":"nova-senha-do-jogador"}`, "")
 
 	if rec.Code != http.StatusNoContent {
@@ -68,8 +68,8 @@ func TestTheResetLinkWorksOnlyOnce(t *testing.T) {
 	token := resetLinkFor(t, s, admin, player)
 	body := `{"token":"` + token + `","password":"outra-senha-longa"}`
 
-	first := sendRaw(t, s, http.MethodPost, "/auth/Reset-password", body, "")
-	second := sendRaw(t, s, http.MethodPost, "/auth/Reset-password", body, "")
+	first := sendRaw(t, s, http.MethodPost, "/auth/reset-password", body, "")
+	second := sendRaw(t, s, http.MethodPost, "/auth/reset-password", body, "")
 
 	if first.Code != http.StatusNoContent {
 		t.Fatalf("primeiro uso: esperado 204, veio %d", first.Code)
@@ -95,7 +95,7 @@ func TestConcurrentResetsSpendTheLinkOnce(t *testing.T) {
 		go func() {
 			body := `{"token":"` + token + `","password":"senha-do-corredor-` + strconv.Itoa(i) + `"}`
 			<-start
-			codes <- sendRaw(t, s, http.MethodPost, "/auth/Reset-password", body, "").Code
+			codes <- sendRaw(t, s, http.MethodPost, "/auth/reset-password", body, "").Code
 		}()
 	}
 	close(start)
@@ -139,7 +139,7 @@ func TestAResetRefusesAWeakPassword(t *testing.T) {
 	token := resetLinkFor(t, s, admin, player)
 	before := passwordOf(t, s, player)
 
-	rec := sendRaw(t, s, http.MethodPost, "/auth/Reset-password",
+	rec := sendRaw(t, s, http.MethodPost, "/auth/reset-password",
 		`{"token":"`+token+`","password":"curta"}`, "")
 
 	if rec.Code != http.StatusBadRequest {

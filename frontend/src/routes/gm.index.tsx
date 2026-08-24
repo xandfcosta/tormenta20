@@ -1,10 +1,8 @@
-import { createFileRoute, redirect } from '@tanstack/solid-router'
-import { DEFAULT_TOOL } from '@/features/gm-tools/gm-tools'
+import { createFileRoute } from '@tanstack/solid-router'
+import { entregaAPorta } from './-guards'
 
-// /gm names no tool, so it opens the first one. The Mesa always lives at an
-// addressable tool — there is no toolless Mesa to look at.
+/** `/gm/` sozinho abria a primeira ferramenta; agora encaminha para ela. */
 export const Route = createFileRoute('/gm/')({
-  beforeLoad: () => {
-    throw redirect({ to: '/gm/$tool', params: { tool: DEFAULT_TOOL } })
-  },
+  beforeLoad: () => entregaAPorta('/piloto/mestre/bestiario'),
+  component: () => null,
 })
