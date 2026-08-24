@@ -54,8 +54,15 @@ func (s *Server) mutateBoardAndPublish(
 
 // publishBoardState transmite às duas salas por papel e persiste.
 func (s *Server) publishBoardState(sessionID int64, board *BoardState) {
-	s.sse.emit(sessionID, "gm", "board-state", board)
-	s.sse.emit(sessionID, "player", "board-state", boardForRole("player", board))
+	// O tabuleiro já numera as próprias mutações, então a ordem sai de graça —
+	// `Version` sobe a cada mutação aceita. Fechar o tabuleiro manda `nil` e cai
+	// no caminho "sem ordem", que reinicia o destino de propósito.
+	var ordem uint64
+	if board != nil {
+		ordem = uint64(board.Version)
+	}
+	s.sse.emitOrdered(sessionID, "gm", "board-state", ordem, board)
+	s.sse.emitOrdered(sessionID, "player", "board-state", ordem, boardForRole("player", board))
 	go s.persistBoardAndWarn(sessionID)
 }
 

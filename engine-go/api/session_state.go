@@ -52,6 +52,12 @@ type InitiativeEntry struct {
 // Mirrors the frontend/backend SessionRuntimeState — the shape persisted in
 // Session.runtimeState and broadcast on `session-state`.
 type SessionRuntimeState struct {
+	// seq é a ORDEM da mutação que produziu este instantâneo (ALE-238). Não
+	// exportado de propósito: é metadado de transporte e não pode entrar no fio.
+	// O `encoding/json` ignora campo não exportado, então nem a persistência nem
+	// o tipo gerado da fronteira mudam — e o `cloneState` o carrega de graça,
+	// porque copia a struct inteira.
+	seq        uint64
 	Initiative []InitiativeEntry `json:"initiative"`
 	Round      int               `json:"round"`
 	TurnIndex  int               `json:"turnIndex"`

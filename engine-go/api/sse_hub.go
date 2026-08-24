@@ -39,15 +39,30 @@ type sseConn struct {
 	frames chan sseFrame
 }
 
+// destino identifica um fluxo ordenado: os quadros de um mesmo evento para um
+// mesmo papel de uma mesma sessão chegam na ordem em que as mutações
+// aconteceram, e não na ordem em que as goroutines conseguiram emitir.
+type destino struct {
+	sessionID int64
+	role      string
+	event     string
+}
+
 // sseHub guarda quem está ouvindo cada sessão.
 type sseHub struct {
 	mu sync.Mutex
 	// sessionID → connID → conexão
 	conns map[int64]map[string]*sseConn
+	// ultimaSeq guarda a maior ordem já emitida por destino, para reconhecer
+	// quadro atrasado. Ver `emitOrdered`.
+	ultimaSeq map[destino]uint64
 }
 
 func newSSEHub() *sseHub {
-	return &sseHub{conns: map[int64]map[string]*sseConn{}}
+	return &sseHub{
+		conns:     map[int64]map[string]*sseConn{},
+		ultimaSeq: map[destino]uint64{},
+	}
 }
 
 // A fila de cada conexão. Um leitor lento não pode segurar o broadcast — ver
@@ -98,6 +113,11 @@ func (h *sseHub) emit(sessionID int64, role string, event string, payload any) {
 	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
+	h.entregaLocked(sessionID, role, frame)
+}
+
+// entregaLocked enfileira o quadro nos destinatários. Exige `h.mu`.
+func (h *sseHub) entregaLocked(sessionID int64, role string, frame sseFrame) {
 	for _, conn := range h.conns[sessionID] {
 		if role != "" && conn.role != role {
 			continue
@@ -108,6 +128,53 @@ func (h *sseHub) emit(sessionID int64, role string, event string, payload any) {
 			// Leitor lento: o quadro se perde de propósito.
 		}
 	}
+}
+
+// emitOrdered entrega um evento DESCARTANDO quadro atrasado (ALE-238).
+//
+// O defeito que ele conserta é sutil e sobreviveu à troca do socket por SSE,
+// porque a forma foi copiada sem ser revista: a mutação do estado é serializada
+// por uma trava, mas a EMISSÃO acontece depois de a trava cair. Duas mutações
+// concorrentes podem então emitir fora de ordem, e o cliente aplica
+// `setState(next)` com o estado inteiro — o quadro velho vence, e a entrada que
+// só existia no quadro novo some da tela do mestre e da mesa.
+//
+// Foi medido: `TestOQuadroSegueAOrdemDaMutacao` reproduz sob `-race` em algumas
+// dezenas de tentativas, e é a assinatura #1 da ALE-238 ("uma condição some no
+// meio de três").
+//
+// A guarda mora AQUI, e não numa trava em volta de cada publicação, porque
+// publicação nova é fácil de esquecer — são nove pontos hoje. O hub é o funil
+// por onde tudo passa, e o que ele não deixa acontecer ninguém precisa lembrar
+// de evitar. É a mesma razão de o guarda de papel viver no `emit`.
+//
+// `seq == 0` significa SEM ORDEM: o quadro passa e o destino reinicia. É o que
+// eventos sem contador usam (presença, aviso de persistência) e é o que o
+// fechamento de tabuleiro usa — depois dele, o próximo tabuleiro começa da
+// versão 1, e insistir na ordem antiga descartaria o mapa novo inteiro.
+func (h *sseHub) emitOrdered(sessionID int64, role, event string, seq uint64, payload any) {
+	frame, err := encodeFrame(event, payload)
+	if err != nil {
+		return
+	}
+	chave := destino{sessionID: sessionID, role: role, event: event}
+
+	// A trava é UMA e cobre decidir E entregar. Decidir sob trava e entregar
+	// fora dela não conserta nada: outra goroutine se enfia entre as duas e
+	// enfileira o quadro dela primeiro — foi assim que a primeira versão desta
+	// função continuou vermelha, com a contabilidade certa e a fila errada.
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	if seq == 0 {
+		delete(h.ultimaSeq, chave) // sem ordem: passa e reinicia o destino
+	} else {
+		if seq < h.ultimaSeq[chave] {
+			return // quadro atrasado: a tela já tem coisa mais nova
+		}
+		h.ultimaSeq[chave] = seq
+	}
+	h.entregaLocked(sessionID, role, frame)
 }
 
 // listeners conta quem está ouvindo — para teste e para o `liveSessions`.

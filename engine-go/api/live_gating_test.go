@@ -213,7 +213,7 @@ func TestPortaDoMestreEmTodaRotaDaMesaAoVivo(t *testing.T) {
 // sem redação nenhuma e este teste passava verde — é assim que uma rede fica
 // cega, e o próprio arquivo avisa que é assim.
 var saidaDeEstado = regexp.MustCompile(
-	`(?m)^.*(sse\.emit\([^,]+, [^,]+, "(session|board)-state"|writeJSON\(w, http\.StatusOK, (state|board)\b).*$`)
+	`(?m)^.*(sse\.emit(Ordered)?\([^,]+, [^,]+, "(session|board)-state"|writeJSON\(w, http\.StatusOK, (state|board)\b).*$`)
 
 // O PV oculto é do mestre, e o broadcast não é o único caminho do estado até a
 // tela: a RESPOSTA do próprio comando hidrata quem o mandou, inclusive jogador.

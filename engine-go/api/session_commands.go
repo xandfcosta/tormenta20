@@ -142,8 +142,8 @@ func (s *Server) mutateAndPublish(
 // publishSessionState transmite o estado às duas salas por papel e persiste.
 // Espelha o `emitSessionState` do gateway.
 func (s *Server) publishSessionState(sessionID int64, state *SessionRuntimeState) {
-	s.sse.emit(sessionID, "gm", "session-state", state)
-	s.sse.emit(sessionID, "player", "session-state", redactForPlayers(state))
+	s.sse.emitOrdered(sessionID, "gm", "session-state", state.seq, state)
+	s.sse.emitOrdered(sessionID, "player", "session-state", state.seq, redactForPlayers(state))
 	go s.persistSessionAndWarn(sessionID)
 }
 
