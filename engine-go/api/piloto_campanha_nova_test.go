@@ -66,8 +66,10 @@ func TestAbrirCampanhaLevaAElaComVerHistoricoLimpo(t *testing.T) {
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("status = %d, queria 303 — com 302 recarregar reenviaria o POST", rec.Code)
 	}
+	// A crônica virou cena do servidor na ALE-255, então abrir uma campanha
+	// leva à página DELA e não mais à da SPA.
 	destino := rec.Header().Get("Location")
-	if !strings.HasPrefix(destino, "/campaigns/") {
+	if !strings.HasPrefix(destino, "/piloto/campanhas/") {
 		t.Errorf("destino = %q, queria a crônica recém-aberta", destino)
 	}
 

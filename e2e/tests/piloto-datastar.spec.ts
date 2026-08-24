@@ -512,6 +512,99 @@ test.describe('A folha em branco (piloto Datastar)', () => {
   })
 })
 
+test.describe('A crônica (piloto Datastar)', () => {
+  test.use({ storageState: '.auth/user.json' })
+
+  test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
+    await page.goto('/piloto/campanhas/1')
+    await expect(page.getByRole('navigation', { name: 'Seções da crônica' })).toBeVisible()
+    expect(await textoComContrasteBaixo(page), 'texto abaixo do AA na crônica').toEqual([])
+  })
+
+  test('a crônica cabe nos seis formatos', async ({ page }) => {
+    await page.goto('/piloto/campanhas/1')
+    // UM `h1` só, e é o nome da campanha: a casca só desenha o dela quando há
+    // título, e a crônica não passa um — ela tem o próprio.
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+
+    await expectNoHorizontalOverflow(page, VIEWPORTS)
+    for (const viewport of VIEWPORTS) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height })
+      await expectDentroDaJanela(page)
+    }
+  })
+
+  /**
+   * A ABA É ENDEREÇO, e é essa a decisão que a cena inteira apoia.
+   *
+   * Na SPA o `?tab=` já era o estado, mas a versão em React precisava espelhá-lo
+   * num `useState` com dois efeitos e um debounce de 250ms para a troca não
+   * travar. Aqui o parâmetro chega com o pedido — e o que se afirma é a
+   * consequência disso para quem usa: o link é colável e o histórico funciona.
+   *
+   * E2E porque histórico é do navegador: `goBack` não existe em jsdom.
+   */
+  test('a seção é endereço: ela sobrevive ao link colado e ao botão voltar', async ({ page }) => {
+    await page.goto('/piloto/campanhas/1?tab=membros')
+    await expect(page.locator('[aria-current="page"]')).toHaveText('Membros')
+
+    await page.getByRole('link', { name: 'Sessões', exact: true }).click()
+    await expect(page.locator('[aria-current="page"]')).toHaveText('Sessões')
+
+    await page.goBack()
+    await expect(page.locator('[aria-current="page"]'), 'o voltar não devolveu a seção').toHaveText(
+      'Membros',
+    )
+  })
+
+  /**
+   * O INTERRUPTOR das regras é a única ação da crônica que NÃO navega, e por
+   * isso é a única com Datastar: alternar um ajuste no meio de uma lista e
+   * recarregar a página perderia a posição de quem está lendo.
+   *
+   * E2E porque o remendo é SSE trocando um pedaço do DOM — o guarda em Go
+   * prova o estado do banco, e este prova que a tela acompanhou sem recarregar.
+   *
+   * Ele DEVOLVE o interruptor ao estado original no fim: a regra é do banco de
+   * desenvolvimento, e deixá-la desligada mudaria a carga de todo personagem da
+   * campanha 1 para o próximo teste — a família de problema da ALE-238.
+   */
+  test('alternar a regra opcional troca o estado sem recarregar a página', async ({ page }) => {
+    await page.goto('/piloto/campanhas/1?tab=config')
+    const chave = page.getByRole('switch', { name: 'Limites de carga' })
+    const antes = await chave.getAttribute('aria-checked')
+
+    // A navegação NÃO pode acontecer: se acontecesse, este marcador sumiria.
+    await page.evaluate(() => {
+      ;(window as unknown as { __mesmaPagina: boolean }).__mesmaPagina = true
+    })
+
+    await chave.click()
+    await expect(chave, 'o interruptor não trocou de estado').not.toHaveAttribute(
+      'aria-checked',
+      antes ?? '',
+    )
+    expect(
+      await page.evaluate(() => (window as unknown as { __mesmaPagina?: boolean }).__mesmaPagina),
+      'a página recarregou — o remendo virou navegação',
+    ).toBe(true)
+
+    await chave.click()
+    await expect(chave, 'o teste não devolveu a regra ao estado original').toHaveAttribute(
+      'aria-checked',
+      antes ?? '',
+    )
+  })
+
+  // O endereço antigo é o que os jogadores têm salvo, e o `?tab=` viaja junto:
+  // perdê-lo quebraria todo link de seção já compartilhado.
+  test('o endereço antigo /campaigns/:id encaminha COM a seção', async ({ page }) => {
+    await page.goto('/campaigns/1?tab=sessoes')
+    await expect(page).toHaveURL(/\/piloto\/campanhas\/1\?tab=sessoes$/)
+    await expect(page.locator('[aria-current="page"]')).toHaveText('Sessões')
+  })
+})
+
 test.describe('A folha de especificação (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
 

@@ -161,7 +161,9 @@ test.describe('Sessão ao vivo', () => {
     await page.getByRole('link', { name: /^Abrir campanha/ }).click()
     await expect(page.getByRole('heading', { name: CAMPAIGN, level: 1 })).toBeVisible()
 
-    await page.getByRole('button', { name: 'Continuar a sessão' }).click()
+    // Link aqui também, e pela mesma razão: a crônica virou cena do servidor na
+    // ALE-255, e continuar a sessão é navegar para ela.
+    await page.getByRole('link', { name: 'Continuar a sessão' }).click()
     await expect(page).toHaveURL(/\/campaigns\/\d+\/sessions\/\d+$/)
 
     // A superfície permanente é o TABULEIRO (ALE-198): é ele que prova que a
@@ -2035,7 +2037,11 @@ test.describe('Sessão ao vivo', () => {
     // Um LINK, não um botão: sem `asChild` no Solid, um link com cara de botão
     // é um `<a>` vestindo as classes do botão (armadilha #6 do porte).
     await page.getByRole('link', { name: 'Sair da sessão' }).click()
-    await expect(page).toHaveURL(/\/campaigns\/1$/)
+    // O destino é o endereço NOVO: a mesa ao vivo ainda é da SPA e o link dela
+    // aponta para `/campaigns/1`, que a `entregaAPorta` encaminha para a crônica
+    // do servidor (ALE-255). Afirmar o endereço antigo aqui passaria a medir o
+    // salto em vez do destino — e o salto some quando esta cena for portada.
+    await expect(page).toHaveURL(/\/piloto\/campanhas\/1$/)
     await expect(page.getByRole('heading', { name: CAMPAIGN, level: 1 })).toBeVisible()
   })
 })

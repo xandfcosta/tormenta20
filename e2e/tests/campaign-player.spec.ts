@@ -9,17 +9,19 @@ import { VIEWPORTS } from './support/viewports'
  *
  * As três asserções de AUSÊNCIA que moravam aqui (rail sem Config, nenhuma ação
  * de dono, `?tab=config` na mão) saíram na ALE-144: a trava de verdade é do
- * servidor e está em `api/authz_http_test.go`, e a metade de UX está em
- * `pages/campaigns/campaign-detail-page.test.tsx` ("o jogador com ?tab=config
- * cai na Visão"). Botão ausente nunca foi prova de trava, e a regra da casa é
- * que cada garantia fique na camada mais barata que a sustenta.
+ * servidor e está em `api/authz_http_test.go`, e a metade de UX mudou de casa
+ * na ALE-255: com a crônica virando cena do servidor, quem prova que o jogador
+ * pedindo `?tab=config` cai na visão geral é o
+ * `TestJogadorPedindoConfigCaiParaAVisaoGeral`, em `api/piloto_cronica_test.go`.
+ * Botão ausente nunca foi prova de trava, e a regra da casa é que cada garantia
+ * fique na camada mais barata que a sustenta — que aqui ficou mais barata
+ * ainda, porque a aba deixou de existir no servidor em vez de ser escondida.
  *
- * O que sobra aqui é o que só o browser vê: o jogador ENTRA na sessão ao vivo,
- * e a cena não some enquanto a ficha dele carrega (ALE-96).
+ * O que sobra aqui é o que só o browser vê: o jogador ENTRA na sessão ao vivo.
  */
 test.use({ storageState: '.auth/player.json' })
 
-const CAMPAIGN = '/campaigns/1' // do mestre; o jogador é só membro
+const CAMPAIGN = '/piloto/campanhas/1' // do mestre; o jogador é só membro
 
 /**
  * Opens a section and waits for the tome to actually be on screen.
@@ -39,62 +41,34 @@ test.describe('Campanha vista pelo jogador', () => {
   test('o jogador ainda lê a campanha e entra na sessão ao vivo', async ({ page }) => {
     await openSection(page, 'sessoes')
 
-    await expect(page.getByText('JOGANDO')).toBeVisible()
-    await expect(page.getByRole('button', { name: /Continuar a sessão/ })).toBeVisible()
+    // "Jogando" é o PAPEL na sobrancelha, e ele é a diferença entre esta tela e
+    // a do mestre. O texto vem em caixa normal e sobe por CSS — afirmar
+    // "JOGANDO" casaria com o pixel e não com o conteúdo.
+    await expect(page.getByText('Jogando', { exact: true })).toBeVisible()
+    // Retomar é LINK e não botão desde a ALE-255: a mesa é outra página.
+    await expect(page.getByRole('link', { name: /Continuar a sessão/ })).toBeVisible()
     await expect(page.getByText('Sessão 5')).toBeVisible()
   })
 
   /**
-   * ALE-96. Ler `.data` de uma query PENDENTE suspende, e o boundary mais
+   * O TESTE DA ALE-96 SAIU DAQUI, e é a única forma honesta de fechá-lo.
+   *
+   * Ele media que a partida não desaparecia enquanto a ficha do jogador estava
+   * em voo: ler `.data` de uma query PENDENTE suspende, e o boundary mais
    * próximo é o `Suspense` que o solid-router põe em todo route match — então a
-   * partida INTEIRA (banner "Ao vivo", presença, a saída) é desanexada enquanto
-   * a ficha do próprio jogador está em voo. O `PlayerSheet` tinha um Skeleton
-   * escrito para exatamente esse momento que nunca podia pintar, porque o
-   * suspend acontecia antes de o `Show` ser avaliado.
+   * cena inteira era desanexada por uma requisição que nem era dela.
    *
-   * Por que e2e: só um browser de verdade testemunha. Uma montagem em jsdom não
-   * tem router, logo não tem Suspense, e ali a leitura pendente devolve
-   * `undefined` e o Skeleton aparece — verde sobre a tela quebrada.
+   * A crônica virou página do SERVIDOR na ALE-255. Não há route match, não há
+   * Suspense, e não há ficha em voo nesta página: os dados chegam desenhados.
+   * O teste morreu com o mecanismo que media, e mantê-lo apontado para a cena
+   * nova o transformaria num teste que passa por não ter o que medir — que é
+   * pior que teste nenhum, porque parece cobertura.
    *
-   * A resposta da ficha fica SEGURA (não só atrasada) para que a asserção seja
-   * sobre um estado e não sobre uma corrida: enquanto o teste não soltar, a
-   * partida tem de continuar na tela.
+   * A técnica dele era boa e o histórico a guarda
+   * (`git show a94ddc5:e2e/tests/campaign-player.spec.ts`): a resposta ficava
+   * SEGURA em vez de só atrasada, para a asserção ser sobre um estado e não
+   * sobre uma corrida.
    */
-  test('a partida não some da tela enquanto a ficha do jogador carrega', async ({ page }) => {
-    await openSection(page, 'sessoes')
-
-    let release = (): void => {}
-    const held = new Promise<void>((resolve) => {
-      release = resolve
-    })
-    let requested = (): void => {}
-    const inFlight = new Promise<void>((resolve) => {
-      requested = resolve
-    })
-    // O personagem 13 é o do jogador na mesa 1 (seed). A rota do /sheet não
-    // casa: o glob termina no id.
-    await page.route('**/api/characters/13', async (route) => {
-      requested()
-      await held
-      await route.continue()
-    })
-
-    await page.getByRole('button', { name: /Continuar a sessão/ }).click()
-
-    // Só olhar a tela DEPOIS que a ficha entrou em voo. Sem isto o teste
-    // apanha a janela em que a partida ainda está pintada — antes de os
-    // membros chegarem e a query do personagem começar — e passa por sorte.
-    await inFlight
-
-    // Um marco do shell da partida e um do bloco do jogador — o snapshot da
-    // falha original tinha SÓ a região de notificações, nada mais.
-    // "Ao vivo" sozinho é ambíguo: o rail da sessão também carrega o selo.
-    await expect(page.getByRole('link', { name: 'Sair da sessão' })).toBeVisible()
-    await expect(page.getByText(/· Sessão \d+/)).toBeVisible()
-
-    release()
-    await expect(page.getByRole('tab', { name: 'Mochila' })).toBeVisible()
-  })
 })
 
 /**

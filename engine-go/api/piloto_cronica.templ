@@ -1,0 +1,512 @@
+package api
+
+import (
+	"fmt"
+	"strconv"
+)
+
+// A CRÔNICA desenhada (ALE-255): a página de uma campanha aberta no tomo.
+//
+// Mesma folha do grimório das outras cenas de campanha — a folha em branco que
+// se escreve, a carta que se enfia nela, e esta, que é a crônica que se lê.
+//
+// A ABA é um LINK e não um botão com estado, e isso é a decisão que sustenta a
+// cena inteira: `?tab=sessoes` é endereço, então ele volta no histórico, abre
+// em nova aba, e é o que alguém cola no chat da mesa. A versão em React
+// precisava de um `useState` espelhando a URL com dois efeitos e um debounce de
+// 250ms para não travar; no servidor o parâmetro É o estado e chega junto com o
+// pedido. Não há o que espelhar.
+
+templ cronica(v cronicaView) {
+	@folhaDoTomo() {
+		@cabecalhoDaCronica(v)
+		<div aria-hidden="true" class="h-px w-full bg-gradient-to-r from-transparent via-grimorio-gold/40 to-transparent"></div>
+		<div class="flex min-h-0 flex-1 flex-col gap-4 sm:flex-row sm:gap-6">
+			@trilhaDaCronica(v)
+			<div
+				data-nav-region="content"
+				data-nav-layout={ leiauteDaAba(v.AbaAtiva()) }
+				class="min-h-0 flex-1"
+			>
+				switch v.AbaAtiva() {
+					case "sessoes":
+						@abaDeSessoes(v)
+					case "membros":
+						@abaDeMembros(v)
+					case "config":
+						@abaDeConfiguracao(v)
+					default:
+						@abaDeVisao(v)
+				}
+			</div>
+		</div>
+	}
+}
+
+// A cabeça iluminada: brasão, nome, quem é o dono quando não sou eu, e a ÚNICA
+// ação de sessão que cabe aqui — retomar a que está viva.
+templ cabecalhoDaCronica(v cronicaView) {
+	<header data-nav-region="header" data-nav-layout="row" class="flex flex-wrap items-center gap-3">
+		<span
+			aria-hidden="true"
+			class="flex size-12 shrink-0 items-center justify-center rounded-sm font-display text-sm text-white/85"
+			style={ "background: " + gradienteDaCampanha(v.Nome) }
+		>{ iniciais(v.Nome) }</span>
+		<div class="min-w-0 flex-1">
+			// O PAPEL vem ACIMA do nome, como sobrancelha, e não misturado na
+			// linha de baixo: ele responde "o que eu sou nesta mesa", que é a
+			// primeira pergunta de quem abre a página.
+			@rotuloDeSecao("muted", "") {
+				{ papelNaMesa(v) }
+			}
+			<h1 class="truncate font-display text-2xl uppercase tracking-[0.05em] text-grimorio-gold sm:text-3xl">
+				{ v.Nome }
+			</h1>
+			<p class="text-xs text-muted-foreground">{ metaDaMesa(v) }</p>
+		</div>
+		if v.SessaoVivaID > 0 {
+			<div class="flex shrink-0 flex-col items-end gap-1">
+				@rotuloDeSecao("gold", "") {
+					{ fmt.Sprintf("Sessão %d em andamento", v.NumeroDaSessaoViva) }
+				}
+				<a
+					href={ templ.SafeURL(fmt.Sprintf("/campaigns/%d/sessions/%d", v.ID, v.SessaoVivaID)) }
+					class={ classesDoBotao(varPrimaria, tamPadrao, "") }
+				>
+					Continuar a sessão
+				</a>
+			</div>
+		}
+	</header>
+}
+
+// papelNaMesa é a sobrancelha: o que EU sou aqui. O nome do dono só aparece
+// para ADMIN que não é dono — para o jogador, marcar a mesa trocaria o
+// "Jogando" dele por "Mesa de Fulano", que é defeito que o e2e já pegou.
+func papelNaMesa(v cronicaView) string {
+	switch {
+	case v.EhMestre:
+		return "Mestrando"
+	case v.DonoOutro != "":
+		return "Mesa de " + v.DonoOutro
+	default:
+		return "Jogando"
+	}
+}
+
+// metaDaMesa é a linha de baixo: o tamanho do grupo e desde quando ela existe.
+func metaDaMesa(v cronicaView) string {
+	linha := plural(int64(v.TotalHerois), "herói", "heróis")
+	if v.CriadaEm != "" {
+		linha += " · Criada em " + v.CriadaEm
+	}
+	return linha
+}
+
+// leiauteDaAba: o painel e o elenco são grades; a linha do tempo e o formulário
+// são listas. É o que faz a seta andar como o olho vê.
+func leiauteDaAba(aba string) string {
+	if aba == "visao" || aba == "membros" {
+		return "grid"
+	}
+	return "column"
+}
+
+// A trilha é de LINKS. Um botão com sinal precisaria reimplementar histórico,
+// nova aba e link colável — três coisas que o `<a>` faz sem pedir.
+templ trilhaDaCronica(v cronicaView) {
+	<nav
+		aria-label="Seções da crônica"
+		data-nav-region="rail"
+		data-nav-layout="column"
+		data-nav-edge-right="content"
+		data-nav-edge-up="header"
+		class="flex shrink-0 gap-1 overflow-x-auto sm:w-44 sm:flex-col sm:overflow-visible"
+	>
+		for _, a := range v.Abas {
+			<a
+				href={ templ.SafeURL(fmt.Sprintf("/piloto/campanhas/%d?tab=%s", v.ID, a.ID)) }
+				data-nav-item
+				aria-current={ ariaAtual(a.Ativa) }
+				class={ "shrink-0 justify-start gap-2 rounded-none px-3 py-2 text-left text-sm outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+					templ.KV("bg-grimorio-panel-raised text-grimorio-gold sm:border-l-2 sm:border-grimorio-gold", a.Ativa),
+					templ.KV("text-muted-foreground hover:text-grimorio-gold sm:border-l-2 sm:border-transparent", !a.Ativa) }
+			>{ a.Rotulo }</a>
+		}
+		// A dica de teclado vive AQUI e não numa camada de ajuda: ela é a única
+		// coisa que conta que a cena tem gramática de setas, e uma gramática
+		// que ninguém descobre é uma gramática que não existe.
+		<p class="hidden pt-2 text-3xs uppercase tracking-widest text-muted-foreground/70 sm:block">
+			↑↓←→ navegar · PgUp/PgDn seção · Esc voltar
+		</p>
+	</nav>
+}
+
+// `aria-current="page"` e não `aria-selected`: estes são LINKS de navegação, e
+// o leitor de tela anuncia "página atual". `aria-selected` é de opção dentro de
+// um listbox, e usá-lo aqui mentiria sobre o que a peça é.
+func ariaAtual(ativa bool) string {
+	if ativa {
+		return "page"
+	}
+	return "false"
+}
+
+// ── as seções ────────────────────────────────────────────────────────────────
+
+// A visão geral: três sinetes e os dois painéis que resumem a mesa.
+//
+// Os números vêm CONTADOS do servidor. Na SPA eles são calculados na tela a
+// partir de duas consultas separadas, cada uma com o próprio estado de
+// carregando — e havia um instante em que a página dizia "0 heróis" porque uma
+// das duas ainda não tinha voltado.
+templ abaDeVisao(v cronicaView) {
+	<div class="space-y-6">
+		<div class="grid grid-cols-3 gap-3">
+			@sineteDaCronica("Users2", v.TotalHerois, "Heróis")
+			@sineteDaCronica("Scroll", v.TotalSessoes, "Sessões")
+			@sineteDaCronica("ShieldCheck", v.SessoesEncerradas, "Encerradas")
+		</div>
+		// `[&>*]:min-w-0` não é enfeite: item de grade tem `min-width: auto`, e
+		// sem isto a trilha é dimensionada pelo MIN-CONTENT dos painéis. A
+		// 390px isso já computou uma coluna de 457px numa caixa de 288, e o
+		// botão de convite foi parar em x=392 numa tela de 390 — inalcançável,
+		// e sem estouro visível porque o `overflow-x-hidden` da cena absorvia
+		// o sintoma (ALE-160).
+		<div class="grid gap-5 lg:grid-cols-2 [&>*]:min-w-0">
+			@painelDaCronica("A mesa", "Grupo") {
+				if len(v.Herois) == 0 {
+					<p class="text-sm text-muted-foreground">Nenhum personagem inscrito ainda.</p>
+				} else {
+					<ul class="space-y-2">
+						for _, h := range primeirosHerois(v.Herois, 6) {
+							@linhaDoHeroi(h)
+						}
+					</ul>
+					if len(v.Herois) > 4 {
+						@verTudo(v.ID, "membros", fmt.Sprintf("Ver %d membros →", len(v.Herois)))
+					}
+				}
+			}
+			@painelDaCronica("Campanha", "Sessões recentes") {
+				if len(v.Sessoes) == 0 {
+					<p class="text-sm text-muted-foreground">Nenhuma sessão ainda.</p>
+				} else {
+					<ul class="space-y-2">
+						for _, sess := range primeirasSessoes(v.Sessoes, 3) {
+							@linhaDaSessao(v.ID, sess)
+						}
+					</ul>
+					if len(v.Sessoes) > 3 {
+						@verTudo(v.ID, "sessoes", "Ver todas →")
+					}
+				}
+			}
+		</div>
+		if v.Descricao != "" {
+			@painelDaCronica("Campanha", "Sinopse") {
+				<p class="text-sm whitespace-pre-line text-muted-foreground">{ v.Descricao }</p>
+			}
+		}
+	</div>
+}
+
+templ sineteDaCronica(nomeDoIcone string, valor int, rotulo string) {
+	<div class="flex flex-col items-center gap-1 border border-grimorio-iron bg-grimorio-panel px-3 py-4 text-center">
+		<span aria-hidden="true" class="text-grimorio-gold/70">
+			@icone(nomeDoIcone, "size-4")
+		</span>
+		<span class="font-mono text-xl font-semibold tabular-nums text-foreground">{ strconv.Itoa(valor) }</span>
+		@rotuloDeSecao("muted", "") {
+			{ rotulo }
+		}
+	</div>
+}
+
+templ painelDaCronica(sobrancelha, titulo string) {
+	<section class="space-y-3 border border-grimorio-iron bg-grimorio-panel p-4">
+		<header class="space-y-0.5">
+			@rotuloDeSecao("muted", "") {
+				{ sobrancelha }
+			}
+			<h2 class="font-heading text-base tracking-wide text-foreground">{ titulo }</h2>
+		</header>
+		{ children... }
+	</section>
+}
+
+templ verTudo(campanhaID int64, aba, texto string) {
+	<a
+		href={ templ.SafeURL(fmt.Sprintf("/piloto/campanhas/%d?tab=%s", campanhaID, aba)) }
+		class="inline-flex min-h-11 items-center text-xs text-muted-foreground underline-offset-4 outline-none hover:text-grimorio-gold hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+	>{ texto }</a>
+}
+
+templ linhaDoHeroi(h heroiNaMesa) {
+	<li class="flex items-center gap-3">
+		<span
+			aria-hidden="true"
+			class="flex size-8 shrink-0 items-center justify-center rounded-sm font-display text-2xs text-white/85"
+			style={ "background: " + h.Gradiente }
+		>{ h.Iniciais }</span>
+		<span class="min-w-0 flex-1 truncate text-sm text-foreground">{ h.Nome }</span>
+		if h.Papel == "gm" {
+			// COROA e não a palavra "mestre": o crachá de texto compete com o
+			// nome pela mesma largura, e numa lista de seis ele empurra os
+			// nomes para o truncamento. O ícone é `aria-hidden` e quem o
+			// anuncia é o rótulo ao lado.
+			<span aria-label="mestre da mesa" class="shrink-0 text-grimorio-gold">
+				@icone("Crown", "size-3.5")
+			</span>
+		}
+	</li>
+}
+
+// A linha da sessão é uma LINHA DO TEMPO: número, título, data e estado. Sem a
+// data, "Sessão 4" não diz se foi ontem ou em março; sem o número, duas sessões
+// sem título viram a mesma linha.
+templ linhaDaSessao(campanhaID int64, sess sessaoNaCronica) {
+	<li>
+		<a
+			href={ templ.SafeURL(fmt.Sprintf("/campaigns/%d/sessions/%d", campanhaID, sess.ID)) }
+			data-nav-item
+			class="flex min-h-11 items-center gap-3 px-1 text-sm outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>
+			<span class="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">{ strconv.FormatInt(sess.Numero, 10) }</span>
+			<span class="min-w-0 flex-1 truncate text-foreground">{ nomeDaSessao(sess) }</span>
+			<span class="hidden shrink-0 font-mono text-3xs text-muted-foreground sm:inline">{ sess.Data }</span>
+			@crachaDoEstado(sess.Estado)
+		</a>
+	</li>
+}
+
+// O crachá do estado, com as TRÊS cores da casa — e elas não são escolha de
+// gosto. Eu tinha escrito o "ao vivo" com a tinta do PERGAMINHO, que rende
+// 2,59:1 sobre o painel escuro: é a lição da ALE-237 cometida de novo, uma
+// tinta verificada contra uma superfície usada noutra. A receita da SPA usa
+// `--hp-full` (4,66:1 medido na folha de especificação) para o vivo, o dourado
+// para o planejado e o texto apagado para o encerrado.
+templ crachaDoEstado(estado string) {
+	switch estado {
+		case "Ao vivo":
+			<span class="shrink-0 rounded-none border border-[color:var(--hp-full)]/70 bg-[color:var(--hp-full)]/12 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-widest text-[color:var(--hp-full)]">{ estado }</span>
+		case "Planejada":
+			<span class="shrink-0 rounded-none border border-grimorio-gold/50 bg-grimorio-gold/10 px-1.5 py-0.5 text-2xs uppercase tracking-widest text-grimorio-gold">{ estado }</span>
+		default:
+			<span class="shrink-0 rounded-none border border-grimorio-iron px-1.5 py-0.5 text-2xs uppercase tracking-widest text-muted-foreground">{ estado }</span>
+	}
+}
+
+// Sessão sem título vira "Sessão N" e não uma linha em branco — linha vazia
+// numa lista não se clica com confiança.
+func nomeDaSessao(sess sessaoNaCronica) string {
+	if sess.Titulo == "" {
+		return "Sessão " + strconv.FormatInt(sess.Numero, 10)
+	}
+	return "Sessão " + strconv.FormatInt(sess.Numero, 10) + " — " + sess.Titulo
+}
+
+templ abaDeSessoes(v cronicaView) {
+	<div class="space-y-3">
+		if len(v.Sessoes) == 0 {
+			<p class="text-sm text-muted-foreground">Nenhuma sessão ainda.</p>
+		} else {
+			<ul class="divide-y divide-grimorio-iron/60">
+				for _, sess := range v.Sessoes {
+					@linhaDaSessao(v.ID, sess)
+				}
+			</ul>
+		}
+	</div>
+}
+
+templ abaDeMembros(v cronicaView) {
+	<div class="space-y-3">
+		if len(v.Herois) == 0 {
+			<p class="text-sm text-muted-foreground">Nenhum personagem inscrito ainda.</p>
+		} else {
+			<ul class="grid gap-2 sm:grid-cols-2">
+				for _, h := range v.Herois {
+					@linhaDoHeroi(h)
+				}
+			</ul>
+		}
+	</div>
+}
+
+// A aba de CONFIGURAÇÃO: o cadastro da crônica, as regras opcionais, e a zona
+// de perigo — nesta ordem, e a do meio não é acidente. Regra opcional é ajuste
+// CORRIQUEIRO e não destruição, então ela fica entre o cadastro e o que apaga
+// (ALE-221); posta depois da zona de perigo, ela herdaria o tom de risco.
+templ abaDeConfiguracao(v cronicaView) {
+	<div class="space-y-6">
+		@rotuloDeSecao("muted", "") {
+			Ajustes do tomo
+		}
+		@cadastroDaCronica(v)
+		@regrasDaCronica(v)
+		@zonaDePerigo(v)
+	</div>
+}
+
+// O cadastro é o MESMO formulário da folha em branco, com outro verbo. Os dois
+// gravam pela mesma regra (`nomeDeCampanha` / `descricaoDeCampanha`), então
+// "salvar" e "abrir" não podem discordar sobre o que é um nome válido.
+templ cadastroDaCronica(v cronicaView) {
+	<section class="space-y-4 border border-grimorio-iron bg-grimorio-panel p-4">
+		<h2 class="font-heading text-base tracking-wide text-foreground">Editar campanha</h2>
+		<form method="post" action={ templ.SafeURL(fmt.Sprintf("/piloto/campanhas/%d/editar", v.ID)) } class="space-y-4">
+			@campoDeTexto(campo{
+				Nome: "name", Label: "Nome", Valor: v.Nome,
+				Obrigatorio: true, TamanhoMaximo: nomeDeCampanhaMax,
+				Erros: v.Erros["name"],
+			})
+			@campoDeTextoLongo(campo{
+				Nome: "description", Label: "Descrição", Valor: v.Descricao,
+				TamanhoMaximo: descricaoDeCampanhaMax,
+				Erros:         v.Erros["description"],
+			}, 6)
+			if v.Aviso != "" {
+				<p class="text-sm text-destructive">{ v.Aviso }</p>
+			}
+			<div class="flex justify-end">
+				@botao(varPrimaria, tamPadrao, "", templ.Attributes{"type": "submit"}) {
+					Salvar
+				}
+			</div>
+		</form>
+	</section>
+}
+
+// As regras opcionais são o único lugar da crônica com Datastar, e a razão é
+// que aqui NÃO se navega: alternar um interruptor e recarregar a página inteira
+// perderia a posição de quem está no fim de uma lista de ajustes. O remendo
+// volta só este painel.
+//
+// A falha aparece INLINE e não por aviso flutuante, e isso é porte fiel de uma
+// decisão medida: este mesmo painel é montado dentro de um overlay na cena da
+// sessão, e aviso disparado de dentro de modal não é anunciado.
+templ regrasDaCronica(v cronicaView) {
+	<section id="painel-regras" aria-label="Regras da campanha" class="space-y-3 border border-grimorio-iron bg-grimorio-panel p-4">
+		<header class="space-y-0.5">
+			@rotuloDeSecao("muted", "") {
+				Campanha
+			}
+			<h2 class="font-heading text-base tracking-wide text-foreground">Regras opcionais</h2>
+		</header>
+		for _, regra := range regrasOpcionais {
+			<div class="flex items-start justify-between gap-4">
+				<div class="min-w-0 flex-1 space-y-0.5">
+					<p class="text-sm text-foreground">{ regra.Titulo }</p>
+					<p class="text-xs text-muted-foreground">{ regra.Descricao }</p>
+				</div>
+				@interruptorDaRegra(v, regra)
+			</div>
+		}
+		<p class="text-sm text-destructive" data-show="$erroDaRegra != ''" data-text="$erroDaRegra"></p>
+	</section>
+}
+
+// O interruptor é um `button` com `aria-pressed`, e não um `checkbox`: ele não
+// vive num formulário e não tem valor a enviar — o que ele faz é DISPARAR uma
+// ação. `aria-pressed` é o que diz "ligado" para o leitor de tela sem mentir
+// sobre o elemento ser um campo.
+templ interruptorDaRegra(v cronicaView, regra regraOpcional) {
+	<button
+		type="button"
+		role="switch"
+		aria-checked={ boolTexto(v.RegraEmVigor(regra.ID)) }
+		aria-label={ regra.Titulo }
+		data-indicator:salvando
+		data-attr:disabled="$salvando"
+		data-on:click={ fmt.Sprintf("@post('/piloto/campanhas/%d/regras/%s')", v.ID, regra.ID) }
+		class={ "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50",
+			templ.KV("border-grimorio-gold bg-grimorio-gold/80", v.RegraEmVigor(regra.ID)),
+			templ.KV("border-grimorio-iron-light bg-grimorio-panel-raised", !v.RegraEmVigor(regra.ID)) }
+	>
+		<span
+			aria-hidden="true"
+			class={ "size-4 rounded-full bg-white transition-transform",
+				templ.KV("translate-x-6", v.RegraEmVigor(regra.ID)),
+				templ.KV("translate-x-1", !v.RegraEmVigor(regra.ID)) }
+		></span>
+	</button>
+}
+
+func boolTexto(b bool) string {
+	if b {
+		return "true"
+	}
+	return "false"
+}
+
+// A zona de perigo é selada em crimson porque excluir é irreversível, e o texto
+// diz o PREÇO — "todas as sessões e membros" — em vez de um genérico "não pode
+// ser desfeito", que não distingue apagar uma mesa vazia de apagar a de dois
+// anos de crônica.
+templ zonaDePerigo(v cronicaView) {
+	<div class="flex flex-wrap items-center justify-between gap-3 rounded-none border border-[color:var(--grimorio-crimson)]/50 bg-[color:var(--grimorio-crimson)]/[0.06] p-4">
+		<div class="space-y-1">
+			<p class="flex items-center gap-1.5 font-heading text-sm tracking-wide text-[color:var(--grimorio-crimson-bright)]">
+				@icone("Flame", "size-4")
+				Zona de perigo
+			</p>
+			<p class="text-xs text-muted-foreground">
+				Excluir a campanha remove todas as sessões e membros. Não pode ser desfeito.
+			</p>
+		</div>
+		// O primeiro clique ABRE o diálogo; quem apaga é o botão de dentro. É a
+		// mesma propriedade do apagar conta da administração, e pelo mesmo
+		// motivo: primeiro clique não pode ser irreversível.
+		@botao(varDestrutiva, tamPequeno, "shrink-0", templ.Attributes{
+			"type": "button", "data-on:click": "$excluir.showModal()",
+		}) {
+			@icone("Trash2", "mr-1 size-3.5")
+			Excluir campanha
+		}
+		@dialogoDeExclusao(v)
+	</div>
+}
+
+templ dialogoDeExclusao(v cronicaView) {
+	<dialog
+		id="excluir"
+		data-ref="excluir"
+		aria-labelledby="excluir-titulo"
+		class="m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-left text-foreground backdrop:bg-black/60"
+	>
+		<h2 id="excluir-titulo" class="font-heading text-base">Excluir "{ v.Nome }"?</h2>
+		<p class="mt-2 text-sm text-muted-foreground">
+			Todas as sessões e membros da campanha serão removidos. Esta ação não pode ser desfeita.
+		</p>
+		<div class="mt-4 flex justify-end gap-2">
+			<form method="dialog">
+				@botao(varSecundaria, tamPadrao, "", templ.Attributes{"type": "submit"}) {
+					Cancelar
+				}
+			</form>
+			// Formulário de VERDADE e não `@post`: apagar leva embora a página,
+			// e o que vem depois é uma navegação para o livro. Remendo não
+			// navega.
+			<form method="post" action={ templ.SafeURL(fmt.Sprintf("/piloto/campanhas/%d/excluir", v.ID)) }>
+				@botao(varDestrutiva, tamPadrao, "", templ.Attributes{"type": "submit"}) {
+					Excluir
+				}
+			</form>
+		</div>
+	</dialog>
+}
+
+func primeirosHerois(hs []heroiNaMesa, n int) []heroiNaMesa {
+	if len(hs) > n {
+		return hs[:n]
+	}
+	return hs
+}
+
+func primeirasSessoes(ss []sessaoNaCronica, n int) []sessaoNaCronica {
+	if len(ss) > n {
+		return ss[:n]
+	}
+	return ss
+}

@@ -16,9 +16,16 @@ import { DeleteSessionButton } from './delete-session-button'
  * EXCLUIR A SESSÃO (ALE-197, grupo A).
  *
  * A porta destrutiva mais rara do app não tinha teste nenhum, enquanto a irmã
- * dela (`delete-campaign-button.test.tsx`) tem quatro. E este é o caso MAIS
- * difícil dos dois: o outro recebe o `onConfirm` por prop, e este chama a api,
- * invalida a lista e NAVEGA — três coisas que só a montagem prova.
+ * dela — o excluir da CAMPANHA — tinha quatro. E este era o caso MAIS difícil
+ * dos dois: aquele recebia o `onConfirm` por prop, e este chama a api, invalida
+ * a lista e NAVEGA — três coisas que só a montagem prova.
+ *
+ * A irmã não existe mais: a crônica virou cena do servidor na ALE-255 e o
+ * `delete-campaign-button` foi junto. A comparação fica porque ela explica por
+ * que ESTE teste é o caro; o caminho do arquivo saiu porque apontar para um
+ * arquivo apagado é o defeito que a ALE-173 registrou — dois comentários do
+ * `index.css` mandaram "validar live at /grimorio" por meses depois de a
+ * página ter sido apagada.
  *
  * A navegação é afirmada pela tela de destino aparecendo, e não por um espião
  * no `useNavigate`: o que importa é que a pessoa saia da sessão que acabou de
