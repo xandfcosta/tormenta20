@@ -191,3 +191,78 @@ func TestOComandoAvisaAMesaInteira(t *testing.T) {
 		t.Error("o comando do piloto não avisou o hub — a SPA ficaria com o estado velho")
 	}
 }
+
+// TestEncerrarCenaPeloPilotoExpiraAsBencaosDoGrupo — a REGRESSÃO da ALE-220,
+// reaberta pelo piloto.
+//
+// O "Encerrar cena" da API passa pelo `endSceneForTable`, que é o caminho ÚNICO
+// desde aquela issue: ele expira a duração "cena" de toda ficha do grupo ANTES
+// de desligar a cena. O piloto chamava `sessions.EndScene` direto, que só mexe
+// no rastreador — a fila zerava na tela e a bênção de duração "cena" continuava
+// viva na ficha, que é a colisão C1 do glossário com outro botão.
+//
+// O gesto tem de ser o MESMO nos dois transportes, e a forma de garantir isso
+// não é repetir a sequência aqui: é chamar o mesmo helper.
+func TestEncerrarCenaPeloPilotoExpiraAsBencaosDoGrupo(t *testing.T) {
+	f := novoPiloto(t)
+	seedEffect(t, f.s, f.charID, "bencao", "scene")
+	seedEffect(t, f.s, f.charID, "heroismo", "day")
+
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/scene/start", ""); rec.Code != http.StatusOK {
+		t.Fatalf("iniciar cena deu %d", rec.Code)
+	}
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/scene/end", ""); rec.Code != http.StatusOK {
+		t.Fatalf("encerrar cena deu %d", rec.Code)
+	}
+
+	// Os DOIS lados: o de cena sai, o de dia FICA. Limpar demais apagaria a
+	// bênção que o grupo comprou para o dia todo, e ninguém veria.
+	if got := effectScopes(t, f.s, f.charID); len(got) != 1 || got[0] != "day" {
+		t.Errorf("a ficha do grupo ficou com os escopos %v, queria só [day]", got)
+	}
+}
+
+// TestEncerrarCenaPeloPilotoAvisaQueAsFICHASMudaram.
+//
+// O `session-state` não serve para isto: as fichas não estão no estado do
+// rastreador. Sem o `session-rest`, a SPA de quem está com a ficha aberta
+// continuaria mostrando o efeito morto e o "usado 1/cena" gasto até alguém
+// recarregar — a metade invisível do mesmo defeito.
+func TestEncerrarCenaPeloPilotoAvisaQueAsFichasMudaram(t *testing.T) {
+	f := novoPiloto(t)
+	conn := f.s.sse.Add(f.sessionID, "espia", "gm")
+	defer f.s.sse.Remove(f.sessionID, "espia")
+
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/scene/start", ""); rec.Code != http.StatusOK {
+		t.Fatalf("iniciar cena deu %d", rec.Code)
+	}
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/scene/end", ""); rec.Code != http.StatusOK {
+		t.Fatalf("encerrar cena deu %d", rec.Code)
+	}
+
+	// O CONTROLE contra ler ausência como evidência: o `session-state` sai
+	// sempre, então achá-lo prova que o canal está aberto e que a busca sabe
+	// olhar. Sem ele, "não achei o session-rest" e "o canal não existe" seriam
+	// a mesma linha no terminal.
+	var viuEstado, viuFichas bool
+	for {
+		select {
+		case frame := <-conn.Frames:
+			if strings.Contains(string(frame), "session-state") {
+				viuEstado = true
+			}
+			if strings.Contains(string(frame), "session-rest") {
+				viuFichas = true
+			}
+			continue
+		default:
+		}
+		break
+	}
+	if !viuEstado {
+		t.Fatal("nem o session-state chegou — o canal não estava aberto, e a ausência abaixo não seria evidência de nada")
+	}
+	if !viuFichas {
+		t.Error("a mesa não foi avisada de que as fichas mudaram")
+	}
+}
