@@ -101,6 +101,9 @@ templ mesa(v mesaView) {
 				}
 			</section>
 		</div>
+		if v.Mestre != nil {
+			@controlesDoMestre(v, *v.Mestre)
+		}
 	</main>
 }
 

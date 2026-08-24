@@ -1,6 +1,8 @@
 package api
 
 import (
+	"fmt"
+	"strings"
 	"t20engine/aovivo"
 )
 
@@ -31,6 +33,10 @@ type mesaView struct {
 	Grupo       []mesaMembro
 	Fila        []mesaLinha
 	Eu          *mesaEu
+	// Mestre é nil para o jogador, e essa é a trava na CENA: não há como
+	// desenhar controle que não existe na view. Esconder por classe deixaria o
+	// HTML na página para quem abrisse o inspetor.
+	Mestre *rastreadorView
 }
 
 // mesaTurn é de quem é a vez, do ponto de vista de quem olha. Espelha o
@@ -199,4 +205,67 @@ func mesaViewOf(
 		Fila:        mesaFilaDe(st, meus),
 		Eu:          eu,
 	}
+}
+
+// ── o rastreador do MESTRE (ALE-265) ─────────────────────────────────────────
+//
+// A cena de hoje é a superfície do JOGADOR: ela mostra a fila, o grupo e a vez.
+// O mestre precisa das mesmas coisas mais o que ele COMANDA — avançar o turno,
+// abrir e encerrar a cena, descansar, e mexer nos vitais de quem está na fila.
+//
+// O que decide entre as duas não é uma tela diferente: é o PAPEL, resolvido no
+// servidor pelo mesmo `stateForRole` que o resto da casa usa. A tela do mestre
+// é a do jogador mais os controles, e não uma segunda cena — duas cenas seriam
+// duas listas de combatente para manter em dia.
+
+// rastreadorView é o acréscimo do mestre sobre a `mesaView`.
+type rastreadorView struct {
+	// Contador é a frase que diz ONDE a sessão está (ALE-210).
+	Contador string
+	// Avanco é o rótulo do botão mais clicado da sessão, e ele diz PARA ONDE vai
+	// em vez de o que faz (ALE-184).
+	Avanco aovivo.AlvoDoProximoTurno
+	// VeVitais decide se a fila mostra PV de NPC. A pergunta é sobre a FILA e
+	// não sobre o papel: numa fila só de PCs não há o que reservar.
+	VeVitais bool
+	// Conectados são os personagens de quem está com a aba aberta agora.
+	Conectados map[int64]bool
+	// PodeAvancar separa "não há para onde ir" de "o botão está quebrado": sem
+	// cena aberta o avanço não existe, e um botão aceso que recusa é pior que um
+	// apagado que explica.
+	PodeAvancar bool
+}
+
+func rastreadorViewOf(
+	st *aovivo.SessionRuntimeState,
+	membros []aovivo.MembroDaMesa,
+	presentes []int64,
+	ehMestre bool,
+) rastreadorView {
+	return rastreadorView{
+		Contador:    aovivo.ContadorDoTurno(st.SceneActive, st.Round, st.TurnIndex, len(st.Initiative)),
+		Avanco:      aovivo.ProximoTurno(st.Initiative, st.TurnIndex),
+		VeVitais:    aovivo.OMestreVeOsVitais(st.Initiative, ehMestre),
+		Conectados:  aovivo.PersonagensConectados(membros, presentes),
+		PodeAvancar: st.SceneActive && len(st.Initiative) > 0,
+	}
+}
+
+// comandoDaMesa escreve a chamada Datastar de um comando do mestre.
+//
+// O caminho é o do PILOTO e não o da API JSON, e essa é a mesma escolha das
+// catorze fatias anteriores: a cena tem rotas próprias que chamam as MESMAS
+// regras extraídas. Apontar para `/api/...` acoplaria o piloto a uma superfície
+// que a migração existe para aposentar, e o ganho — não escrever a rota — some
+// no dia em que a API mudar de forma.
+//
+// O que impede as duas telas de divergirem não é compartilhar a rota: é
+// compartilhar a REGRA. É por isso que a ALE-122 aconteceu com dois transportes
+// chamando dois caminhos de escrita, e não acontece aqui.
+func comandoDaMesa(v mesaView, metodo, acao string) string {
+	caminho := fmt.Sprintf("/piloto/mesa/%d/%d/%s", v.CampaignID, v.SessionID, acao)
+	if metodo == "POST" {
+		return fmt.Sprintf("@post('%s')", caminho)
+	}
+	return fmt.Sprintf("@%s('%s')", strings.ToLower(metodo), caminho)
 }

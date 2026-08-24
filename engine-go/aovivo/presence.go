@@ -138,3 +138,17 @@ func sortedInt64Keys(m map[int64]bool) []int64 {
 	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
 	return keys
 }
+
+// Roster é quem está na sessão AGORA.
+//
+// Existe porque a cena do mestre em Datastar precisa marcar quem está com a aba
+// aberta, e ela lê o estado a cada desenho em vez de receber avisos — é a mesma
+// diferença de desenho que o `sse_hub.go` registra entre publicar-o-clone e
+// avisar-e-reler. O registro é do pacote e o campo é interno, então de fora
+// ninguém alcançaria; sem isto a cena marcaria "ninguém online" por não
+// conseguir olhar, que é o pior tipo de verde.
+func (p *PresenceRegistry) Roster(sessionID int64) []PresenceUser {
+	p.Mu.Lock()
+	defer p.Mu.Unlock()
+	return p.rosterLocked(sessionID)
+}

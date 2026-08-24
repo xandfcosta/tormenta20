@@ -49,6 +49,7 @@ func (s *Server) PilotoRouter() http.Handler {
 		r.Get("/mesa/{campaignId}/{sessionId}", s.handleMesaPage)
 		r.Get("/mesa/{campaignId}/{sessionId}/stream", s.handleMesaStream)
 		r.Post("/mesa/{campaignId}/{sessionId}/iniciativa", s.handleMesaInitiative)
+		s.rotasDoRastreador(r)
 	})
 	// A SEGUNDA superfície (ALE-219): a administração. Mesmo `requireAdmin` da
 	// API — a tela não decide quem pode ver, ela só deixa de oferecer o que o
@@ -128,7 +129,16 @@ func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, se
 	// piloto não ganha uma segunda decisão sobre quem vê o quê.
 	st := aovivo.StateForRole(role, s.sessions.RefreshCharacterMaxes(ctx, sessionID))
 	grupo, meus, eu := s.mesaRoster(ctx, user, campaignID)
-	return mesaViewOf(st, campaignID, sessionID, sess.Sessionnumber, grupo, meus, eu), http.StatusOK, nil
+	view := mesaViewOf(st, campaignID, sessionID, sess.Sessionnumber, grupo, meus, eu)
+	// O rastreador só é MONTADO para o mestre. A trava não é a tela esconder o
+	// bloco: é a view não ter o que desenhar, pelo mesmo `role` que o
+	// `stateForRole` já usou para redigir o estado.
+	if role == "gm" {
+		membros, presentes := s.membrosEPresenca(ctx, campaignID, sessionID)
+		r := rastreadorViewOf(st, membros, presentes, true)
+		view.Mestre = &r
+	}
+	return view, http.StatusOK, nil
 }
 
 // mesaRoster traduz o roster da campanha nas três coisas que a tela quer: os
@@ -203,3 +213,27 @@ func (s *Server) mesaClasses(ctx context.Context, characterID int64) string {
 //
 // Só sai byte quando o HTML MUDA — ver `handleMesaStream`.
 const mesaTick = 200 * time.Millisecond
+
+// membrosEPresenca junta o que as regras de presença precisam.
+//
+// Roster indisponível não derruba a cena: a presença é enfeite ao lado dos
+// nomes, e a fila é o assunto da tela.
+func (s *Server) membrosEPresenca(ctx context.Context, campaignID, sessionID int64) ([]aovivo.MembroDaMesa, []int64) {
+	rows, err := s.queries.ListMembers(ctx, campaignID)
+	if err != nil {
+		return nil, nil
+	}
+	membros := make([]aovivo.MembroDaMesa, 0, len(rows))
+	for _, m := range rows {
+		dono, err := s.queries.GetCharacterOwner(ctx, m.Characterid)
+		if err != nil {
+			continue
+		}
+		membros = append(membros, aovivo.MembroDaMesa{CharacterID: m.Characterid, DonoID: dono})
+	}
+	var presentes []int64
+	for _, u := range s.presence.Roster(sessionID) {
+		presentes = append(presentes, u.UserID)
+	}
+	return membros, presentes
+}

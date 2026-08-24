@@ -1,0 +1,83 @@
+package api
+
+
+
+// OS CONTROLES DO MESTRE (ALE-265).
+//
+// Eles entram na MESMA cena do jogador, e não numa segunda: a tela do mestre é
+// a do jogador mais o que ele comanda. Duas cenas seriam duas listas de
+// combatente para manter em dia, que é o formato exato do defeito da ALE-122 —
+// a mesma tela mostrando 52/95 e 57/95 do mesmo combatente.
+//
+// Quem decide se eles aparecem é o PAPEL, resolvido no servidor pelo mesmo
+// `stateForRole` que o resto da casa usa. Esconder no cliente seria UX; a trava
+// é a redação do estado, que o jogador nunca recebe.
+
+templ controlesDoMestre(v mesaView, r rastreadorView) {
+	<section
+		aria-label="Controles do mestre"
+		class="sticky bottom-0 z-10 flex flex-wrap items-center gap-2 border-t border-grimorio-iron bg-grimorio-panel px-3 py-2 sm:px-4"
+	>
+		// O CONTADOR vem primeiro e é texto, não enfeite: ele é quem explica por
+		// que o avanço está apagado quando está. Botão apagado sem frase ao lado
+		// é um beco.
+		//
+		// `aria-live` porque num app de remendo a rodada muda sem navegação, e
+		// quem não vê a tela não tem outro sinal.
+		<p aria-live="polite" class="text-xs text-muted-foreground">{ r.Contador }</p>
+		<div class="ml-auto flex flex-wrap items-center gap-2">
+			@passoDoTurno(v, "previous-turn", "Turno anterior", "‹", r.PodeAvancar)
+			// O rótulo do avanço diz PARA ONDE vai (ALE-184): o mestre lia "▶" e
+			// contava a lista para saber quem entrava.
+			<button
+				type="button"
+				if r.PodeAvancar {
+					data-on:click={ comandoDaMesa(v, "POST", "initiative/next-turn") }
+					class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-gold bg-accent px-3 text-sm font-medium text-grimorio-gold outline-none transition-colors hover:bg-grimorio-gold/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				} else {
+					disabled
+					class="inline-flex min-h-11 cursor-not-allowed items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground opacity-60"
+				}
+			>{ r.Avanco.Rotulo }</button>
+			@aCena(v)
+		</div>
+	</section>
+}
+
+// passoDoTurno é o voltar. Ele existe porque errar o avanço é o engano mais
+// comum da mesa, e sem ele o conserto é remontar a ordem inteira.
+templ passoDoTurno(v mesaView, rota, rotulo, sinal string, ligado bool) {
+	<button
+		type="button"
+		aria-label={ rotulo }
+		if ligado {
+			data-on:click={ comandoDaMesa(v, "POST", "initiative/"+rota) }
+			class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		} else {
+			disabled
+			class="flex size-11 cursor-not-allowed items-center justify-center rounded-sm border border-grimorio-iron text-sm text-muted-foreground opacity-60"
+		}
+	>{ sinal }</button>
+}
+
+// aCena é o par abrir/encerrar, e eles NÃO são um interruptor.
+//
+// Encerrar a cena tira a fila da mesa e é irreversível pelo mesmo clique —
+// desde a ALE-210 a vaga de registrar só existe DENTRO da cena. Um interruptor
+// convida ao clique de volta que não existe; dois verbos dizem o que cada um
+// faz.
+templ aCena(v mesaView) {
+	if v.SceneActive {
+		<button
+			type="button"
+			data-on:click={ comandoDaMesa(v, "POST", "scene/end") }
+			class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>Encerrar cena</button>
+	} else {
+		<button
+			type="button"
+			data-on:click={ comandoDaMesa(v, "POST", "scene/start") }
+			class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-gold px-3 text-sm text-grimorio-gold outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>Iniciar cena</button>
+	}
+}
