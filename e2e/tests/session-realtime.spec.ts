@@ -38,6 +38,44 @@ import {
 test.describe.configure({ mode: 'serial' })
 
 test.describe('Sessão ao vivo — dois clientes', () => {
+  test('cada papel recebe a SUA cena, e não a do outro', async ({ browser }) => {
+    const mestre = await browser.newContext({ storageState: '.auth/user.json' })
+    const jogador = await browser.newContext({ storageState: '.auth/player.json' })
+    const telaDoMestre = await mestre.newPage()
+    const telaDoJogador = await jogador.newPage()
+
+    try {
+      await telaDoMestre.goto('/campaigns/1/sessions/5')
+      await telaDoJogador.goto('/campaigns/1/sessions/5')
+      await expect(telaDoMestre.getByRole('status', { name: 'Conectado' })).toBeVisible()
+      await expect(telaDoJogador.getByRole('status', { name: 'Conectado' })).toBeVisible()
+
+      // O controle PRIVATIVO do mestre. Ele é o que separa as duas cenas: a do
+      // jogador tem fila, ficha e tabuleiro — só não tem o que só o mestre pode
+      // fazer.
+      await expect(
+        telaDoMestre.getByRole('button', { name: 'Configurações da sessão' }),
+        'o mestre não recebeu a cena do mestre',
+      ).toBeVisible()
+
+      // E o seletor de superfície é do JOGADOR: o mestre não escolhe entre
+      // "minha ficha" e "a mesa", ele vê a mesa inteira.
+      await expect(
+        telaDoJogador.getByRole('button', { name: 'Minha ficha' }),
+        'o jogador não recebeu a cena do jogador',
+      ).toBeVisible()
+      await expect(
+        telaDoMestre.getByRole('button', { name: 'Minha ficha' }),
+        'o mestre recebeu a cena do JOGADOR',
+      ).toHaveCount(0)
+    } finally {
+      // `catch` na limpeza, sempre: fechar contexto pode lançar "Failed to find
+      // context" e SUBSTITUIR o erro de verdade do teste (ALE-245).
+      await mestre.close().catch(() => {})
+      await jogador.close().catch(() => {})
+    }
+  })
+
   test('o que o mestre adiciona aparece na tela do jogador', async ({ browser }) => {
     const eco = `Eco de teste ${Date.now()}`
     const mestre = await browser.newContext({ storageState: '.auth/user.json' })
