@@ -32,11 +32,16 @@ func TestACortinaVoltaDoBanco(t *testing.T) {
 	}
 }
 
-// Fechar a cortina TEM de avançar a versão, e isto não é contabilidade: o
-// `publishBoardState` usa `Version` como ordem do quadro e o hub descarta quadro
-// cuja ordem não avançou (ALE-238 #1). Sem o bump, o mestre fecha a cortina, o
-// servidor publica, o hub joga fora, e a mesa continua vendo o mapa — sem erro e
-// sem log.
+// Fechar a cortina avança a versão, porque `Version` significa "o tabuleiro
+// mudou" e toda mutação aceita a sobe. Quem lê esse número são o descarte de
+// quadro atrasado do hub (ALE-238 #1) e o `commitMove`, que recusa confirmar um
+// movimento proposto sobre um tabuleiro que mudou desde então.
+//
+// O que este teste NÃO prova, e eu escrevi errado antes de medir: que sem o bump
+// a mesa não veria a cortina. O `EmitOrdered` descarta com `Seq < ultimaSeq` —
+// estritamente menor —, então versão repetida passa. Tirei o bump, subi o
+// servidor e o e2e de dois clientes seguiu verde. O guarda continua valendo pelo
+// primeiro motivo; a consequência dramática é que era invenção minha.
 func TestFecharACortinaAvancaAVersaoDoQuadro(t *testing.T) {
 	s := newTestServer(t)
 	ctx := context.Background()
@@ -52,7 +57,7 @@ func TestFecharACortinaAvancaAVersaoDoQuadro(t *testing.T) {
 		t.Error("fechar cortina aberta não foi reconhecido como mudança")
 	}
 	if fechada.Version <= antes {
-		t.Errorf("a versão não avançou (%d → %d): o hub descartaria este quadro", antes, fechada.Version)
+		t.Errorf("a versão não avançou (%d → %d): o contador deixou de dizer que o tabuleiro mudou", antes, fechada.Version)
 	}
 
 	// Fechar o que já está fechado não é erro nem mutação — dois cliques no
