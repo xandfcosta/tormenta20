@@ -176,6 +176,69 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
   })
 
   /**
+   * O COMANDO REMENDA A CENA SOZINHO, sem depender do stream (ALE-263).
+   *
+   * A primeira versão deste teste ia medir "o remendo chega antes do batimento",
+   * e ela seria VÁCUO: o `sessionStore` avisa quem escuta a cada mutação
+   * (`Assinar`), então o stream acorda na hora e entregaria a mesma tela
+   * igualmente rápido — o teste passaria verde com o remendo REMOVIDO, medindo o
+   * caminho que ele existe para dispensar.
+   *
+   * O que o remendo compra de verdade é INDEPENDÊNCIA: a cena de quem clicou é
+   * redesenhada pela resposta do PRÓPRIO comando. Então a forma honesta de
+   * medi-lo é cortar o stream e ver se o clique ainda funciona — com o canal
+   * fechado, o único caminho possível para o DOM mudar é a resposta do POST.
+   *
+   * O verbo escolhido é o OLHO e não o avanço, e isso é deliberado: dois cliques
+   * o devolvem ao estado original, e a sessão 1/4 é compartilhada por seis
+   * specs. Iniciar cena para medir o avanço deixaria estado ligado para os
+   * outros — e encerrá-la expira os efeitos de duração cena das fichas do grupo,
+   * que é um efeito colateral bem maior que o teste. O avanço tem guarda de fio
+   * no Go (`TestOComandoRemendaACenaNaHora`); o que falta a ele é só o navegador,
+   * e o mecanismo é o mesmo caminho de código.
+   */
+  test('o comando redesenha a cena mesmo com o stream cortado', async ({ page }) => {
+    // Cortado ANTES da carga: o `data-init` abre o stream ao montar a página, e
+    // abortar depois deixaria uma conexão viva que poderia entregar o remendo e
+    // fazer o teste passar pelo motivo errado.
+    // REGEX e não glob: o `@get` do Datastar anexa os sinais da página como
+    // query string, então a URL é `.../stream?datastar={...}` e um glob
+    // terminado em `/stream` não casa. Foi o controle abaixo que denunciou —
+    // sem ele este teste teria passado verde com o stream ABERTO, medindo
+    // exatamente o caminho que ele existe para excluir.
+    let tentouAbrir = 0
+    await page.route(/\/piloto\/mesa\/\d+\/\d+\/stream(\?|$)/, async (rota) => {
+      tentouAbrir++
+      await rota.abort()
+    })
+
+    await page.goto(MESA)
+    await page.getByRole('button', { name: '+ Adicionar grupo' }).click()
+
+    const olho = page
+      .locator('#mesa ol li')
+      .first()
+      .getByRole('button', { name: /^(Ocultar|Revelar) os PV de / })
+    await expect(olho).toBeVisible()
+    // O CONTROLE de que o canal está mesmo fechado: a página TENTOU abri-lo e
+    // foi barrada. Sem isto, um `data-init` que deixasse de existir faria este
+    // teste medir uma página sem stream por acidente, e não por corte.
+    expect(tentouAbrir, 'a página nem tentou abrir o stream — o corte não prova nada').toBeGreaterThan(0)
+
+    const antes = await olho.getAttribute('aria-pressed')
+    await olho.click()
+
+    // O DOM mudou com o stream fechado: só a resposta do POST podia ter feito
+    // isso. E mudou UMA vez — `aria-pressed` é o oposto, e não o valor de volta.
+    const depois = antes === 'true' ? 'false' : 'true'
+    await expect(olho).toHaveAttribute('aria-pressed', depois)
+
+    // Devolve a linha ao que era: a sessão é compartilhada.
+    await olho.click()
+    await expect(olho).toHaveAttribute('aria-pressed', antes ?? 'false')
+  })
+
+  /**
    * O `<dialog>` modal centralizado (ALE-263).
    *
    * O `preflight` do Tailwind zera a margem de TODO elemento, e a centralização
