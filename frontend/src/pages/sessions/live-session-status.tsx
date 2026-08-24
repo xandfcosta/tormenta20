@@ -65,7 +65,15 @@ export function LiveSessionStatus(props: {
   return (
     <span class="flex min-w-0 items-center gap-2">
       <LivePip />
-      <SectionLabel as="span" tom="inherit" class="text-xs font-semibold text-[color:var(--hp-full)]">
+      {/* No telefone em pé o cabeçalho não comporta tudo, e o que sai é o
+          SECUNDÁRIO: a palavra "Ao vivo" é redundante com o pip pulsando ao
+          lado, e a rodada é contexto que a fila mostra. Fica o pip e fica de
+          quem é a vez, que é o que muda e o que se procura. */}
+      <SectionLabel
+        as="span"
+        tom="inherit"
+        class="text-xs hidden font-semibold text-[color:var(--hp-full)] sm:inline"
+      >
         Ao vivo
       </SectionLabel>
       {/* A rodada só aparece quando alguém está na vez (ALE-213). Ela sobrevive
@@ -75,7 +83,9 @@ export function LiveSessionStatus(props: {
           ao lado da frase que diz que nenhum começou. `idle` é exatamente "não
           há vez de ninguém". */}
       <Show when={props.turn.kind !== 'idle'}>
-        <span class="shrink-0 text-sm text-muted-foreground">· Rodada {props.round}</span>
+        <span class="hidden shrink-0 text-sm text-muted-foreground sm:inline">
+          · Rodada {props.round}
+        </span>
       </Show>
 
       <Show

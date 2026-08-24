@@ -1,5 +1,5 @@
 import { Plus } from 'lucide-solid'
-import { Show, createMemo, createSignal } from 'solid-js'
+import { createMemo, createSignal, Show } from 'solid-js'
 import { encounterInitiativeEntries, enrichEncounter } from '@/features/gm-tools/encounter'
 import { EncounterComposer } from '@/features/gm-tools/encounter-composer'
 import { createEncounterDraft } from '@/features/gm-tools/encounter-draft'
@@ -58,7 +58,7 @@ export function EncounterPanel(props: {
     toast(`${entries.length} criaturas entraram na iniciativa`, {
       description:
         dropped > 0
-          ? `${dropped} ficaram de fora — o rastreador aceita 50 entradas.`
+          ? `${dropped} ficaram de fora — a fila aceita 50 entradas.`
           : 'Iniciativa rolada para cada uma (d20).',
     })
   }

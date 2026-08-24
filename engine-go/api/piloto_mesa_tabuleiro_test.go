@@ -418,3 +418,50 @@ func TestUmaMudancaNaFilaNaoRemendaOMapa(t *testing.T) {
 		t.Error("mexer na FILA remendou o MAPA — a peça debaixo do dedo do mestre seria trocada no meio do arrasto")
 	}
 }
+
+// TestACortinaEsconde ACENA e NAO parece um tabuleiro vazio (ALE-202).
+//
+// A cortina chegou pela `main` e a Mesa em Datastar desenharia uma GRADE VAZIA
+// no lugar dela — o que é justamente a tela do "o mestre ainda não abriu um
+// tabuleiro". Os dois estados têm de se parecer o menos possível: o jogador
+// resolve um esperando e o outro cutucando o mestre.
+//
+// O nome do lugar não pode aparecer, e a razão está no glossário: "Covil do
+// Dragão" já conta a cena que a cortina existe para esconder. Quem o apaga é o
+// `BoardForRole`; o que se prende aqui é que a cena não o reintroduz.
+func TestACortinaEscondeACenaENaoPareceTabuleiroVazio(t *testing.T) {
+	f := novoPiloto(t)
+	f.abreTabuleiro(t, "cripta")
+	if _, err := f.s.boards.AddToken(context.Background(), f.sessionID,
+		tabuleiro.BoardToken{Label: "Dragão", X: 3, Y: 3}, true); err != nil {
+		t.Fatalf("pôr a peça: %v", err)
+	}
+	if _, _, err := f.s.boards.SetCurtain(context.Background(), f.sessionID, true); err != nil {
+		t.Fatalf("fechar a cortina: %v", err)
+	}
+
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	if !strings.Contains(doJogador, "O mestre está montando a cena") {
+		t.Error("a mesa não viu a cortina")
+	}
+	// As TRÊS ausências, e cada uma é um vazamento diferente: a grade contaria
+	// que há cena montada, a peça contaria o que há nela, e o nome contaria qual
+	// é ela.
+	for _, vazamento := range []string{"tabuleiro-plano", "Dragão", "Taverna do Javali"} {
+		if strings.Contains(doJogador, vazamento) {
+			t.Errorf("a cortina deixou passar %q", vazamento)
+		}
+	}
+
+	// O CONTROLE: o mestre continua vendo a cena inteira, senão "a mesa não viu"
+	// seria verdade também num tabuleiro que ninguém abriu.
+	doMestre := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	if !strings.Contains(doMestre, "Dragão") || !strings.Contains(doMestre, "tabuleiro-plano") {
+		t.Error("o mestre perdeu a própria cena com a cortina fechada")
+	}
+	// E ele é AVISADO. Sem a tira, o mapa dele fica igualzinho com a cortina
+	// aberta ou fechada, e ele narra a taverna para uma mesa que vê um aviso.
+	if !strings.Contains(doMestre, "a mesa não vê esta cena") {
+		t.Error("o mestre não foi avisado de que a cortina está fechada")
+	}
+}

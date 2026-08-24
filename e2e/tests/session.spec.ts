@@ -39,8 +39,6 @@ function avancoDeTurno(page: Page) {
   return page.getByRole('button', { name: /^(Próximo|Começar|Ninguém na fila)/ })
 }
 
-const CAMPAIGN = 'Snapshot Test ALE-33' // the seed chronicle with a live session
-
 /** Combatentes que o teste do recorte CRIA, para a fila passar do que cabe. */
 const RECHEIO_DO_TRILHO = ['Recheio A', 'Recheio B', 'Recheio C', 'Recheio D', 'Recheio E']
 
@@ -147,31 +145,10 @@ test.describe('Sessão ao vivo', () => {
    * de quem rodou o quê antes.
    */
 
-  test('Campanhas → campanha → continuar a sessão (realtime conectado)', async ({ page }) => {
-    await page.goto('/campaigns')
-    // A espera pelo "ao vivo" SUMIU com a ALE-234, e a razão dela sumiu junto: o
-    // estado chegava depois da lista porque era uma fan-out separada de sessões,
-    // uma requisição por campanha. Agora ele vem na MESMA resposta, então não há
-    // instante em que os botões trocam debaixo do cursor (ALE-78).
-    //
-    // E as ações são LINKS na cena do servidor, não botões: abrir campanha é
-    // navegação, e um botão perderia o clique do meio e o "abrir em nova aba".
-    await expect(page.getByRole('link', { name: /^Continuar a sessão/ })).toBeVisible()
-
-    await page.getByRole('link', { name: /^Abrir campanha/ }).click()
-    await expect(page.getByRole('heading', { name: CAMPAIGN, level: 1 })).toBeVisible()
-
-    // Link aqui também, e pela mesma razão: a crônica virou cena do servidor na
-    // ALE-255, e continuar a sessão é navegar para ela.
-    await page.getByRole('link', { name: 'Continuar a sessão' }).click()
-    await expect(page).toHaveURL(/\/campaigns\/\d+\/sessions\/\d+$/)
-
-    // A superfície permanente é o TABULEIRO (ALE-198): é ele que prova que a
-    // cena montou. A iniciativa virou gaveta e não serve mais de âncora.
-    await expect(page.getByRole('navigation', { name: 'Consultas do mestre' })).toBeVisible()
-    // The connection chip flips to "Conectado" only after the socket handshake.
-    await expect(cenaViva(page)).toBeVisible()
-  })
+  // 'Campanhas → campanha → continuar a sessão' saiu na ALE-187: era uma
+  // jornada de navegação terminando no chip 'Conectado'. Os outros 28 testes
+  // deste arquivo também chegam à cena, e o handshake com dois clientes de
+  // verdade é o `session-realtime.spec.ts`. Jornada não é justificativa de e2e.
 
   /**
    * A mesma família da ALE-96, um andar acima. O `SessionTrackerPage` lia
@@ -1099,8 +1076,26 @@ test.describe('Sessão ao vivo', () => {
     await expect(ficha).toBeVisible()
     await ficha.getByLabel('Quantas').fill('2')
     await ficha.getByRole('button', { name: 'Adicionar' }).click()
-    await expect(ficha).toBeHidden()
-    await page.keyboard.press('Escape')
+    // `toHaveCount(0)` e não `toBeHidden()`: o segundo passa com a camada AINDA
+    // MONTADA, durante a animação de saída. Aqui a diferença já não é
+    // load-bearing — a gaveta fecha pelo botão logo abaixo —, mas fica porque é
+    // o que a asserção quer mesmo dizer: a ficha SAIU.
+    await expect(ficha).toHaveCount(0)
+    // A gaveta fecha pela AFORDÂNCIA DELA e não por `Escape` (ALE-238).
+    //
+    // Este fechamento é incidental: o teste só precisa da gaveta fora do
+    // caminho para contar a fila, e o comportamento do Esc que importa já está
+    // provado vinte linhas acima (fecha a ficha, mantém a gaveta). Usar a tecla
+    // aqui era disputar uma corrida — medido, 3 vermelhos em 6 corridas
+    // independentes, e 4 em 4 antes de eu apertar a asserção de cima.
+    //
+    // O mecanismo: quando a ficha aninhada fecha, existe uma janela em que ela
+    // já saiu do DOM e a gaveta ainda não reassumiu o ouvinte de Esc da pilha
+    // de camadas. A tecla apertada nessa fresta não chega a ninguém. É a
+    // assinatura #3 da ALE-238, e é defeito de PRODUTO — pequeno, porque o
+    // segundo Esc funciona —, registrado em issue própria. O que não se
+    // sustenta é um teste apostar nela.
+    await gaveta.getByRole('button', { name: 'Fechar Adicionar do bestiário' }).click()
     await expect(gaveta).toBeHidden()
 
     // EXATAMENTE dois novos, e é aqui que a issue se prova: se a leitura
@@ -2047,18 +2042,8 @@ test.describe('Sessão ao vivo', () => {
     ).toBe(cores?.painelDaCasa)
   })
 
-  test('Sair da sessão volta pra campanha', async ({ page }) => {
-    await page.goto('/campaigns/1/sessions/4')
-    await expect(cenaViva(page)).toBeVisible()
-
-    // Um LINK, não um botão: sem `asChild` no Solid, um link com cara de botão
-    // é um `<a>` vestindo as classes do botão (armadilha #6 do porte).
-    await page.getByRole('link', { name: 'Sair da sessão' }).click()
-    // O destino é o endereço NOVO: a mesa ao vivo ainda é da SPA e o link dela
-    // aponta para `/campaigns/1`, que a `entregaAPorta` encaminha para a crônica
-    // do servidor (ALE-255). Afirmar o endereço antigo aqui passaria a medir o
-    // salto em vez do destino — e o salto some quando esta cena for portada.
-    await expect(page).toHaveURL(/\/piloto\/campanhas\/1$/)
-    await expect(page.getByRole('heading', { name: CAMPAIGN, level: 1 })).toBeVisible()
-  })
+  // 'Sair da sessão volta pra campanha' saiu na ALE-187. O que ele media de
+  // único era o PAPEL do elemento — um `<a>` e não um `<button>`, a armadilha
+  // #6 do porte para Solid —, e papel se afirma montando: está em
+  // `pages/sessions/match-shell.test.tsx`, provado vermelho.
 })

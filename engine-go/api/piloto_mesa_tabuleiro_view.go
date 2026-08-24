@@ -22,9 +22,20 @@ import (
 type tabuleiroView struct {
 	// Aberto separa "não há tabuleiro" de "há um vazio": o primeiro é a cena
 	// antes de o mestre abrir, e ele NÃO desenha grade nenhuma.
-	Aberto  bool
-	Lugar   string
-	Terreno string
+	Aberto bool
+	// Cortina: o tabuleiro EXISTE para o mestre e a mesa vê uma cortina no lugar
+	// dele (ALE-202). É diferente de "não há tabuleiro", e as duas telas precisam
+	// se parecer o MENOS possível: são estados que o jogador resolve de formas
+	// diferentes — um é esperar, o outro é cutucar o mestre.
+	Cortina bool
+	// AvisoDaCortina é a tira que o MESTRE vê quando ela está fechada, e ela não
+	// é enfeite: o mapa dele fica IGUALZINHO com a cortina aberta ou fechada, e
+	// sem a tira ele narra a taverna, move o taverneiro e pergunta o que a mesa
+	// faz — para uma mesa que está olhando um aviso. É a única coisa na tela dele
+	// que denuncia o modo.
+	AvisoDaCortina bool
+	Lugar          string
+	Terreno        string
 	// Colunas e Linhas são o tamanho do plano em QUADRADOS. O pixel por
 	// quadrado é do navegador, num `--quadrado` que o dedo muda.
 	Colunas, Linhas int
@@ -102,9 +113,22 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, sa
 	if b == nil {
 		return tabuleiroView{}
 	}
+	// A CORTINA sai antes de tudo: o que chega aqui já veio vazio do
+	// `BoardForRole`, sem peça, sem terreno e sem o nome do lugar — "Covil do
+	// Dragão" já contaria a cena que ela existe para esconder. Montar moldura e
+	// peças sobre isso desenharia uma grade vazia, que é justamente a tela do
+	// "ainda não abri um tabuleiro".
+	// A cortina é o que a MESA vê, e não o que o mestre vê: para ele o
+	// `BoardForRole` devolveu a cena inteira, e esconder aqui tiraria o mapa de
+	// quem está montando a cena. A primeira versão disto não olhava o papel e o
+	// guarda acusou — "o mestre perdeu a própria cena com a cortina fechada".
+	if b.Curtained && quem.Role != "gm" {
+		return tabuleiroView{Aberto: true, Cortina: true}
+	}
 	e := tabuleiro.MolduraDe(b)
 	v := tabuleiroView{
-		Aberto: true, Lugar: b.Place, Terreno: terrenoConhecido(b.Terrain),
+		Aberto: true, AvisoDaCortina: b.Curtained,
+		Lugar: b.Place, Terreno: terrenoConhecido(b.Terrain),
 		Colunas: e.Colunas, Linhas: e.Linhas, X0: e.X0, Y0: e.Y0,
 	}
 	for i := range b.Tokens {

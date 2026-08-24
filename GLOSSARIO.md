@@ -56,6 +56,7 @@ alguém já usou e que não voltam.
 | **lugar** | `BoardPlace` | ~~cena guardada~~ | O mapa GUARDADO no acervo da campanha, com as peças onde ficaram. |
 | **marcador** | `BoardMarker` | — | O ponto apontado no mapa (ALE-195). Nasce escondido. |
 | **terreno** | `terrain` | — | O chão difícil que o pincel pinta. **Não confundir com o CHÃO do lugar** (`BoardState.Terrain`: pedra, taverna, cripta…), que é a aparência, nem com a **moldura**, que é o recorte. |
+| **cortina** | `curtained` | ~~oculto~~, ~~privado~~, ~~rascunho~~ | O tabuleiro EXISTE para o mestre e a mesa vê uma cortina no lugar dele (ALE-202). É durante a sessão, com a mesa presente — montar a taverna enquanto eles olham a cripta. **Não é o rascunho de lugar**, que é preparação FORA da sessão, sem ninguém conectado: tempos diferentes, gestos diferentes, e a decisão do dono foi que os dois convivem. Também **não é** "o mestre ainda não abriu um tabuleiro", que continua significando exatamente isso. A cortina é DESENHADA: o jogador sabe que vem cena, sem ver qual. |
 | **moldura** | `Moldura` | ~~extenso~~ | O retângulo que o SERVIDOR desenha: a caixa que envolve tudo que existe no tabuleiro — peças com a pegada, marcadores, terreno difícil — mais 3 quadrados de margem, esticada até um piso de 20×14 aplicado centrado. **Não é "o tamanho do tabuleiro"** (o plano é infinito) **nem a janela** (essa é do navegador, e vive em CSS para o remendo do SSE não a perder). Nasceu como `extenso` na ALE-264, que é adjetivo virando substantivo; o dono pediu `terreno` e a palavra já estava tomada em dois sentidos. |
 
 ## D. Os monstros do mestre
@@ -64,7 +65,7 @@ alguém já usou e que não voltam.
 |---|---|---|---|
 | **verbete** | `MonsterID` | — | A entrada IMUTÁVEL do bestiário do livro. |
 | **bloco de criatura** | `CreatureID` | — | O bloco EDITÁVEL que o mestre escreveu, e que pertence à campanha (ALE-137). Uma linha tem verbete ou bloco, nunca os dois. |
-| **NPC** | `type: 'npc'` | — | O PAPEL de uma linha na fila: não é ficha de jogador. Ortogonal a verbete/bloco. |
+| **NPC** | `type: 'npc'` | ~~PC~~ | O PAPEL de uma linha na fila: não é ficha de jogador. Ortogonal a verbete/bloco. **Na tela o par é `Ficha` / `NPC`** — decisão do dono, 2026-08-24, ao tirar o `PC` proibido dos DOIS apps. O oposto de NPC na fila é **ficha** e não "personagem": é a pergunta que a tabela de colisões faz do `type === 'character'` (linha abaixo), e "Personagem" não caberia no selo de uma linha de 390px. Cuidado ao mexer: `Ficha` é 2,5× mais largo que o `PC` que estava lá, e esse selo JÁ transbordou uma vez (`initiative-card.tsx:428`) — os guardas de transbordo do `session.spec.ts` são obrigatórios. |
 | **criatura** | — | — | O guarda-chuva ("Adicionar criatura", "Buscar criatura"). Use quando as três acima não importam. |
 
 ---

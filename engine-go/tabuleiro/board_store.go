@@ -326,3 +326,32 @@ func (bs *BoardStore) CommitMove(ctx context.Context, sessionID int64, st *aoviv
 func (bs *BoardStore) CancelMove(ctx context.Context, sessionID int64, by Mover) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, func(b *BoardState) error { return CancelMove(b, by) })
 }
+
+// SetCurtain fecha ou abre a CORTINA (ALE-202). Devolve `changed` falso quando
+// o estado já era o pedido: fechar cortina fechada não é erro — dois cliques
+// no telefone do mestre, ou dois abas abertas — mas também não é mutação, e
+// publicar quadro por não-mudança acorda a mesa inteira à toa.
+func (bs *BoardStore) SetCurtain(ctx context.Context, sessionID int64, fechada bool) (*BoardState, bool, error) {
+	var mudou bool
+	b, err := bs.apply(ctx, sessionID, func(b *BoardState) error {
+		mudou = b.Curtained != fechada
+		if !mudou {
+			return nil
+		}
+		b.Curtained = fechada
+		// `Version` significa "o tabuleiro mudou", e fechar a cortina é uma
+		// mudança: toda mutação aceita neste arquivo sobe o contador, e uma que
+		// não subisse faria o número mentir para quem o lê — o descarte de
+		// quadro atrasado do hub (ALE-238 #1) e o `commitMove`, que recusa
+		// confirmar sobre um tabuleiro que mudou desde a proposta.
+		//
+		// MEDIDO, porque eu primeiro escrevi aqui que sem o bump a mesa nunca
+		// veria a cortina: é FALSO. O `EmitOrdered` descarta com `Seq <
+		// ultimaSeq`, estritamente menor, então versão repetida PASSA — tirei o
+		// bump, subi o servidor e o e2e de dois clientes continuou verde. O
+		// contador não é o que faz a cortina chegar; é o que a mantém honesta.
+		b.Version++
+		return nil
+	})
+	return b, mudou, err
+}

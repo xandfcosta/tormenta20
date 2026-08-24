@@ -38,17 +38,9 @@ async function openSection(page: Page, tab: string): Promise<void> {
 test.describe('Campanha vista pelo jogador', () => {
   // O jogador PERDE ações de escrita, não a mesa: ele continua lendo a campanha
   // e entrando na sessão ao vivo.
-  test('o jogador ainda lê a campanha e entra na sessão ao vivo', async ({ page }) => {
-    await openSection(page, 'sessoes')
-
-    // "Jogando" é o PAPEL na sobrancelha, e ele é a diferença entre esta tela e
-    // a do mestre. O texto vem em caixa normal e sobe por CSS — afirmar
-    // "JOGANDO" casaria com o pixel e não com o conteúdo.
-    await expect(page.getByText('Jogando', { exact: true })).toBeVisible()
-    // Retomar é LINK e não botão desde a ALE-255: a mesa é outra página.
-    await expect(page.getByRole('link', { name: /Continuar a sessão/ })).toBeVisible()
-    await expect(page.getByText('Sessão 5')).toBeVisible()
-  })
+  // 'o jogador ainda lê a campanha e entra na sessão ao vivo' saiu na ALE-187:
+  // eram três `toBeVisible` de texto, nada que o jsdom não veja. O vizinho
+  // abaixo FICA, e a diferença entre os dois é exatamente o critério da casa.
 
   /**
    * O TESTE DA ALE-96 SAIU DAQUI, e é a única forma honesta de fechá-lo.
@@ -69,6 +61,46 @@ test.describe('Campanha vista pelo jogador', () => {
    * SEGURA em vez de só atrasada, para a asserção ser sobre um estado e não
    * sobre uma corrida.
    */
+  test('a partida não some da tela enquanto a ficha do jogador carrega', async ({ page }) => {
+    await openSection(page, 'sessoes')
+
+    let release = (): void => {}
+    const held = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    let requested = (): void => {}
+    const inFlight = new Promise<void>((resolve) => {
+      requested = resolve
+    })
+    // O personagem 13 é o do jogador na mesa 1 (seed). A rota do /sheet não
+    // casa: o glob termina no id.
+    await page.route('**/api/characters/13', async (route) => {
+      requested()
+      await held
+      await route.continue()
+    })
+
+    await page.getByRole('button', { name: /Continuar a sessão/ }).click()
+
+    // Só olhar a tela DEPOIS que a ficha entrou em voo. Sem isto o teste
+    // apanha a janela em que a partida ainda está pintada — antes de os
+    // membros chegarem e a query do personagem começar — e passa por sorte.
+    await inFlight
+
+    // Um marco do shell da partida e um do bloco do jogador — o snapshot da
+    // falha original tinha SÓ a região de notificações, nada mais.
+    // "Ao vivo" sozinho é ambíguo: o rail da sessão também carrega o selo.
+    await expect(page.getByRole('link', { name: 'Sair da sessão' })).toBeVisible()
+    // O TÍTULO do cabeçalho, e não mais o `· Sessão N` do estado ao vivo: a
+    // ALE-201 apagou aquela cópia de propósito — o título ao lado já dizia o
+    // mesmo, e a repetição estourava o cabeçalho a 390px. A marca continua
+    // sendo "o shell da partida está pintado", que é o que este teste mede;
+    // só mudou qual elemento a carrega.
+    await expect(page.getByText(/^Sessão \d+ ·/)).toBeVisible()
+
+    release()
+    await expect(page.getByRole('tab', { name: 'Mochila' })).toBeVisible()
+  })
 })
 
 /**

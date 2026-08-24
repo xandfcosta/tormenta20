@@ -1,28 +1,9 @@
-import { type Locator, type Page, expect, test } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import { openSheetFromRoster } from './support/roster'
 
 // A hero no other spec asserts on, so the vitals edit can't disturb them.
 const HERO = 'Necromante Nv12 Magias'
 
-/**
- * Waits for a vitals edit to actually reach the API. The two directions take
- * different routes — reduzir goes through the damage pipeline (temp HP pool),
- * curar patches the vitals directly — so match either.
- */
-function vitalsWrite(page: Page) {
-  return page.waitForResponse(
-    (res) =>
-      /\/api\/characters\/\d+\/(damage|vitals)$/.test(res.url()) &&
-      res.request().method() !== 'GET' &&
-      res.ok(),
-  )
-}
-
-async function currentHp(vida: Locator): Promise<number> {
-  const value = await vida.getAttribute('aria-valuenow')
-  if (value === null) throw new Error('barra de Vida sem aria-valuenow (esperado um inteiro)')
-  return Number(value)
-}
 
 /**
  * Login → Hub → abrir personagem → editar bloco da ficha (vitals).
@@ -31,30 +12,18 @@ async function currentHp(vida: Locator): Promise<number> {
  * the edit is a real server mutation, so the test must leave the seed as it
  * found it (F.I.R.S.T — repeatable).
  */
-test('Hub → herói → editar Vida no bloco de vitals (persiste no servidor)', async ({ page }) => {
-  await page.goto('/')
-  await page.getByText('Meus Heróis').click()
-  await expect(page).toHaveURL(/\/piloto\/personagens$/)
-  await openSheetFromRoster(page, HERO)
-  await expect(page).toHaveURL(/\/characters\/\d+$/)
-
-  const vida = page.getByRole('progressbar', { name: 'Vida' })
-  const before = await currentHp(vida)
-
-  const decremented = vitalsWrite(page)
-  await page.getByRole('button', { name: /^Reduzir Vida/ }).click()
-  await expect(vida).toHaveAttribute('aria-valuenow', String(before - 1))
-  await decremented
-
-  // Reload proves the write reached the API — not just the optimistic cache.
-  await page.reload()
-  await expect(vida).toHaveAttribute('aria-valuenow', String(before - 1))
-
-  const restored = vitalsWrite(page)
-  await page.getByRole('button', { name: /^Aumentar Vida/ }).click()
-  await expect(vida).toHaveAttribute('aria-valuenow', String(before))
-  await restored
-})
+// 'Hub → herói → editar Vida (persiste no servidor)' saiu na ALE-187, e o
+// motivo vale escrito: ele RECARREGAVA a página para provar que a escrita
+// tinha chegado ao banco. Só que ele já esperava a resposta `ok` da API antes
+// de recarregar — então o reload provava PERSISTÊNCIA, que é do servidor e
+// tem teste de handler em Go. Recarregar é mecanismo de browser, mas o
+// mecanismo estava sendo gasto numa garantia que não é daqui.
+//
+// O que sobrava de único era a FIAÇÃO — o botão de baixar PV chamar o caminho
+// do dano, e não o de escrita comum —, e ela está em
+// `features/character-sheet/vital-rows.test.tsx`. A regra da rajada, do
+// rollback e do assentamento continua no `vital-mutations.test.ts`, com nove
+// casos que nunca precisaram de browser.
 
 /**
  * A linha de PV/PM cabe na coluna quando a barra de rolagem come espaço

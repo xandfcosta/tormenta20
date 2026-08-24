@@ -30,10 +30,16 @@ class FakeRealtime {
    *  `boardForRole("player", …)`, que apaga a peça escondida da cópia da mesa. */
   readonly boardAsPlayer = vi.fn(() => {
     const aberto = this.board()
-    return Promise.resolve(
-      aberto ? { ...aberto, tokens: aberto.tokens.filter((peca) => !peca.hidden) } : null,
-    )
+    if (!aberto) return Promise.resolve(null)
+    // A CORTINA vem antes da redação de peça, como no `BoardForRole` do Go
+    // (ALE-202): com ela fechada a mesa não recebe cena nenhuma, e um fake que
+    // só filtrasse peça escondida mentiria sobre o que o servidor manda.
+    if (aberto.curtained) {
+      return Promise.resolve({ version: aberto.version, curtained: true } as BoardState)
+    }
+    return Promise.resolve({ ...aberto, tokens: aberto.tokens.filter((peca) => !peca.hidden) })
   })
+  readonly setCurtain = vi.fn()
   /** Montar um lugar do acervo (ALE-191, fatia 2). A cena guardada chega por
    *  PERGUNTA — a lista viaja só com nome e contagem. */
   scene: BoardState | null = null
@@ -81,6 +87,7 @@ class FakeRealtime {
       closeBoard: this.closeBoard,
       populateBoard: this.populateBoard,
       paintTerrain: this.paintTerrain,
+      setCurtain: this.setCurtain,
       listPlaces: () => Promise.resolve(this.places),
       boardAsPlayer: this.boardAsPlayer,
       placeScene: () => Promise.resolve(this.scene),
@@ -1534,5 +1541,193 @@ describe('quem vem para o tabuleiro', () => {
     // nome no começo do rótulo.
     const lista = within(screen.getByRole('dialog'))
     expect(lista.getByRole('button', { name: /Sílfide Ladina/ })).toBeDisabled()
+  })
+})
+
+/**
+ * A CORTINA (ALE-202): o tabuleiro existe para o mestre e a mesa vê uma cortina
+ * no lugar dele — montar a taverna enquanto eles olham a cripta.
+ *
+ * O que se prova aqui é a composição, que é onde o defeito moraria: a redação em
+ * si é do servidor e já está provada no Go (`TestACortinaEscondeACenaInteiraDaMesa`).
+ * A tela não decide o que esconder; ela desenha o que recebeu, e o risco é ela
+ * desenhar a coisa errada — ou desenhar a cortina para quem não devia.
+ */
+describe('a cortina sobre a cena', () => {
+  /** O que o servidor manda à mesa com a cortina fechada: cena NENHUMA, e a
+   *  lista de peças VAZIA (nunca nula — o cabeçalho indexa `tokens.length`). */
+  const SOB_CORTINA: BoardState = { version: 4, place: '', terrain: '', tokens: [], curtained: true }
+
+  it('a mesa vê a cortina, e não a cena', () => {
+    renderRegion(false, SOB_CORTINA)
+
+    expect(screen.getByText('O mestre está montando a cena.')).toBeInTheDocument()
+    // A grade é o que denunciaria a cena: tamanho, terreno, onde tem peça.
+    expect(screen.queryByRole('grid')).not.toBeInTheDocument()
+    // "O mestre ainda não abriu um tabuleiro" é OUTRO estado, e o jogador o
+    // resolve de outro jeito — este é esperar, aquele é cutucar o mestre.
+    expect(screen.queryByText(/ainda não abriu/)).not.toBeInTheDocument()
+  })
+
+  // O CONTROLE do teste de cima: sem ele, um `BoardRegion` que escondesse a
+  // grade sempre passaria nas asserções de ausência e a mesa nunca mais veria
+  // tabuleiro nenhum. Ausência só é evidência quando se prova que o canal
+  // estaria lá.
+  it('sem cortina, a mesma mesa vê a grade', () => {
+    renderRegion(false, TABULEIRO)
+
+    expect(screen.getByRole('grid')).toBeInTheDocument()
+    expect(screen.queryByText('O mestre está montando a cena.')).not.toBeInTheDocument()
+  })
+
+  it('o mestre continua vendo a cena que está montando, com a tira avisando', async () => {
+    const CENA_FECHADA: BoardState = { ...TABULEIRO, curtained: true }
+    const { rt, user } = renderRegion(true, CENA_FECHADA)
+
+    // O ponto todo da cortina: o mestre trabalha no mapa inteiro.
+    expect(screen.getByRole('grid')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Ogro,/ })).toBeInTheDocument()
+
+    // A tira existe porque o esquecimento é o modo de falha caro: o mestre
+    // narra a taverna para uma mesa que está olhando um aviso.
+    const tira = screen.getByText('A cortina está fechada: a mesa não vê esta cena.')
+    expect(tira).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Abrir a cortina' }))
+    expect(rt.setCurtain).toHaveBeenCalledWith(false)
+  })
+
+  it('o mestre fecha a cortina pelo cabeçalho', async () => {
+    const { rt, user } = renderRegion(true, TABULEIRO)
+
+    const botao = screen.getByRole('button', { name: 'Fechar a cortina' })
+    expect(botao).toHaveAttribute('aria-pressed', 'false')
+
+    await user.click(botao)
+
+    expect(rt.setCurtain).toHaveBeenCalledWith(true)
+  })
+
+  // A lente da ALE-193 mostra a cortina SEM uma linha própria: ela pergunta ao
+  // servidor a cópia da mesa, e a cópia vem com a cortina. Uma segunda regra
+  // escrita na tela poderia divergir do servidor — que é a classe de defeito
+  // que a lente existe para não ter.
+  it('a lente do mestre mostra a cortina que a mesa está vendo', async () => {
+    const CENA_FECHADA: BoardState = { ...TABULEIRO, curtained: true }
+    const { user } = renderRegion(true, CENA_FECHADA)
+
+    await user.click(screen.getByRole('button', { name: 'Ver como jogador' }))
+
+    await waitFor(() =>
+      expect(screen.getByText('O mestre está montando a cena.')).toBeInTheDocument(),
+    )
+    // A tira da cortina sobrevive à lente: é aí que o mestre mais precisa saber
+    // que a cortina é DELE, senão a lente parece quebrada.
+    expect(screen.getByText('A cortina está fechada: a mesa não vê esta cena.')).toBeInTheDocument()
+  })
+
+  // O jogador não tem como abrir a própria cortina, e a trava de verdade é do
+  // SERVIDOR (provado no Go, `gmGate`). Aqui se afirma só que a tela não oferece
+  // o gesto — é UX, e não a fronteira de segurança.
+  it('a mesa não ganha botão de cortina', () => {
+    renderRegion(false, SOB_CORTINA)
+
+    expect(screen.queryByRole('button', { name: 'Fechar a cortina' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Abrir a cortina' })).not.toBeInTheDocument()
+  })
+})
+
+/**
+ * PONTOS DE PARADA (ALE-266).
+ *
+ * O defeito: o caminho que ia no fio era sempre uma reta monótona que o cliente
+ * desenhava sozinho, então o jogador nunca escolhia a rota. Não doía enquanto
+ * todo caminho entre A e B custasse o mesmo — com a diagonal valendo o dobro
+ * (T20 p238) isso é verdade —, e passou a doer quando o terreno difícil chegou:
+ * contornar duas casas de lama custa diferente de atravessá-las, e o jogador
+ * pode QUERER a rota mais cara para não passar ao lado de um inimigo.
+ *
+ * O que se prova aqui é o desfecho: cada solta acrescenta uma perna, a perna sai
+ * da última parada, e desfazer volta uma parada de cada vez. O CUSTO não é
+ * afirmado — ele vem do servidor, e refazer a aritmética da diagonal e do brejo
+ * na tela seria a segunda implementação da regra que a ALE-104 apagou.
+ */
+describe('o caminho é feito de paradas, e não de uma reta', () => {
+  const PARADO_EM_8: BoardState = {
+    ...COM_JOGADOR,
+    pending: {
+      tokenId: 't2',
+      path: [
+        { x: 6, y: 5 },
+        { x: 7, y: 5 },
+        { x: 8, y: 5 },
+      ],
+      cost: 2,
+      budget: 6,
+      diagonals: 0,
+      difficult: 0,
+      byUserId: 42,
+    },
+  }
+
+  it('a segunda parada EMENDA na primeira, em vez de recomeçar da peça', async () => {
+    const { rt, user } = renderRegion(false, PARADO_EM_8, 'e1', {
+      myCharacterIds: MEU_HEROI,
+      turnIndex: 0,
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Sílfide Ladina, coluna 6, linha 5' }))
+    await user.click(screen.getByRole('button', { name: 'Coluna 8, linha 4' }))
+
+    // Sai da ÚLTIMA parada (8,5) e não do lugar da peça (6,5) — se recomeçasse
+    // da peça, o caminho teria três quadrados e o desvio do jogador sumiria.
+    expect(rt.proposeMove).toHaveBeenCalledWith('t2', [
+      { x: 6, y: 5 },
+      { x: 7, y: 5 },
+      { x: 8, y: 5 },
+      { x: 8, y: 4 },
+    ])
+  })
+
+  it('desfazer volta UMA parada, e a última vira cancelar', async () => {
+    // A cena muda no meio porque o servidor é quem devolve a proposta: o fake
+    // não a inventa, e sem ela a faixa do movimento não monta. É a mesma
+    // mutação que o broadcast traria, com a versão subindo.
+    const [live, setLive] = createSignal<BoardState | null>(COM_JOGADOR)
+    const { rt, user } = renderRegion(false, live, 'e1', {
+      myCharacterIds: MEU_HEROI,
+      turnIndex: 0,
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Sílfide Ladina, coluna 6, linha 5' }))
+    await user.click(screen.getByRole('button', { name: 'Coluna 8, linha 5' }))
+    expect(rt.proposeMove).toHaveBeenCalledTimes(1)
+    setLive({ ...PARADO_EM_8, version: COM_JOGADOR.version + 1 })
+
+    // Com uma parada só, desfazê-la não deixa proposta nenhuma de pé — e
+    // proposta sem perna não é proposta.
+    await user.click(await screen.findByRole('button', { name: 'Desfazer parada' }))
+    expect(rt.cancelMove).toHaveBeenCalled()
+    expect(rt.proposeMove).toHaveBeenCalledTimes(1)
+  })
+
+  /**
+   * A metade que o dono fez questão de separar: sem ver o que sobrou, o jogador
+   * empilha paradas, passa do deslocamento e não sabe o que desfazer.
+   *
+   * O número sai da conta do SERVIDOR (`pending.cost` contra `speedSquares`),
+   * nunca de uma refeita aqui.
+   */
+  it('a faixa diz quanto AINDA cabe, e não só o que já se gastou', async () => {
+    const { user } = renderRegion(false, PARADO_EM_8, 'e1', {
+      myCharacterIds: MEU_HEROI,
+      turnIndex: 0,
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Sílfide Ladina, coluna 6, linha 5' }))
+
+    // 6 de deslocamento menos os 2 que o servidor cobrou pelas duas primeiras
+    // casas.
+    expect(await screen.findByText(/resta 4 quadrados/)).toBeInTheDocument()
   })
 })

@@ -39,6 +39,7 @@ export const COMMANDS: Record<string, CommandSpec> = {
   'board-as-player': { method: 'GET', path: (i) => `${base(i)}/board/as-player` },
   'board-populate': { method: 'POST', path: (i) => `${base(i)}/board/populate` },
   'board-terrain-paint': { method: 'POST', path: (i) => `${base(i)}/board/terrain` },
+  'board-curtain': { method: 'POST', path: (i) => `${base(i)}/board/curtain` },
   'board-token-add': { method: 'POST', path: (i) => `${base(i)}/board/tokens` },
   'board-token-update': { method: 'PATCH', path: (i, b) => `${base(i)}/board/tokens/${b.tokenId}` },
   'board-token-remove': { method: 'DELETE', path: (i, b) => `${base(i)}/board/tokens/${b.tokenId}` },

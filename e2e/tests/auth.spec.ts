@@ -66,15 +66,13 @@ test.describe('A porta do jogo', () => {
    * seria apagar a tela e com ela o único destino do link que o administrador
    * entrega.
    */
-  test('criar conta só abre com convite na mão', async ({ page }) => {
-    await page.goto('/register')
-    await expect(page).toHaveURL(/\/piloto\/entrar/)
-    await expect(page.getByText(/por convite/i)).toBeVisible()
-
-    await page.goto('/register?convite=um-token-qualquer')
-    await expect(page).toHaveURL(/\/piloto\/criar-conta/)
-    await expect(page.getByRole('button', { name: /Criar conta/i })).toBeVisible()
-  })
+  // 'criar conta só abre com convite na mão' saiu na ALE-187. A porta de
+  // verdade é do SERVIDOR e tem oito testes de handler em Go
+  // (`TestRegisterRequiresAnInvite`, `...WorksExactlyOnce`,
+  // `TestExpiredInviteIsRejected`, concorrência). O redirecionamento da rota é
+  // UX sobre uma porta já fechada, e o próprio docstring de `routes/register.tsx`
+  // diz isso: 'a porta já era fechada — a rota só deixa de convidar estranhos a
+  // tentar'. Afirmar UI não move a fronteira de segurança.
 
   test('a porta cabe nos seis formatos', async ({ page }) => {
     await page.goto('/login')

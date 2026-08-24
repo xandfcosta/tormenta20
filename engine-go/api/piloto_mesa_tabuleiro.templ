@@ -19,12 +19,32 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 		<p class="border border-dashed border-grimorio-iron p-4 text-center text-sm text-muted-foreground">
 			Nenhum tabuleiro aberto. O mestre abre quando a cena tiver lugar.
 		</p>
+	} else if v.Cortina {
+		// A CORTINA ocupa o lugar da cena e NÃO desenha grade, de propósito: a
+		// cena vazia mostra grade, e as duas telas têm de se parecer o menos
+		// possível — o jogador resolve uma esperando e a outra cutucando o
+		// mestre. O nome do lugar não aparece porque o servidor já o apagou.
+		<section aria-label="Cortina" class="flex flex-col items-center justify-center gap-2 border border-dashed border-grimorio-gold/40 p-6 text-center">
+			<span aria-hidden="true" class="text-2xl text-grimorio-gold/70">🎭</span>
+			<p class="text-sm text-muted-foreground">O mestre está montando a cena.</p>
+		</section>
 	} else {
 		<section aria-label={ "Tabuleiro · " + v.Lugar } class="space-y-1.5">
 			<div class="flex flex-wrap items-baseline gap-x-2">
 				<h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tabuleiro</h2>
 				<p class="truncate text-sm text-foreground">{ v.Lugar }</p>
 			</div>
+			// A TIRA DA CORTINA, e o esquecimento que ela evita é caro: o mapa do
+			// mestre fica igualzinho com a cortina aberta ou fechada, então sem
+			// ela ele narra a taverna e move o taverneiro para uma mesa que está
+			// olhando um aviso. `role="status"` porque é o estado da cena, e não
+			// uma ação.
+			if v.AvisoDaCortina {
+				<p role="status" class="flex flex-wrap items-center gap-2 border-b border-grimorio-gold/40 bg-grimorio-gold/10 px-2 py-1 text-xs text-grimorio-gold">
+					<span aria-hidden="true">🎭</span>
+					A cortina está fechada: a mesa não vê esta cena.
+				</p>
+			}
 			// O PALCO é a janela; o PLANO é a moldura inteira dentro dela. O
 			// enquadramento é do NAVEGADOR e nunca do servidor — foi essa a
 			// escolha que tirou a ida ao servidor de cada passo de arrasto —, e

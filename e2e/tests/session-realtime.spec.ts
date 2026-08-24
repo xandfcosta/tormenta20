@@ -38,6 +38,44 @@ import {
 test.describe.configure({ mode: 'serial' })
 
 test.describe('Sessão ao vivo — dois clientes', () => {
+  test('cada papel recebe a SUA cena, e não a do outro', async ({ browser }) => {
+    const mestre = await browser.newContext({ storageState: '.auth/user.json' })
+    const jogador = await browser.newContext({ storageState: '.auth/player.json' })
+    const telaDoMestre = await mestre.newPage()
+    const telaDoJogador = await jogador.newPage()
+
+    try {
+      await telaDoMestre.goto('/campaigns/1/sessions/5')
+      await telaDoJogador.goto('/campaigns/1/sessions/5')
+      await expect(telaDoMestre.getByRole('status', { name: 'Conectado' })).toBeVisible()
+      await expect(telaDoJogador.getByRole('status', { name: 'Conectado' })).toBeVisible()
+
+      // O controle PRIVATIVO do mestre. Ele é o que separa as duas cenas: a do
+      // jogador tem fila, ficha e tabuleiro — só não tem o que só o mestre pode
+      // fazer.
+      await expect(
+        telaDoMestre.getByRole('button', { name: 'Configurações da sessão' }),
+        'o mestre não recebeu a cena do mestre',
+      ).toBeVisible()
+
+      // E o seletor de superfície é do JOGADOR: o mestre não escolhe entre
+      // "minha ficha" e "a mesa", ele vê a mesa inteira.
+      await expect(
+        telaDoJogador.getByRole('button', { name: 'Minha ficha' }),
+        'o jogador não recebeu a cena do jogador',
+      ).toBeVisible()
+      await expect(
+        telaDoMestre.getByRole('button', { name: 'Minha ficha' }),
+        'o mestre recebeu a cena do JOGADOR',
+      ).toHaveCount(0)
+    } finally {
+      // `catch` na limpeza, sempre: fechar contexto pode lançar "Failed to find
+      // context" e SUBSTITUIR o erro de verdade do teste (ALE-245).
+      await mestre.close().catch(() => {})
+      await jogador.close().catch(() => {})
+    }
+  })
+
   test('o que o mestre adiciona aparece na tela do jogador', async ({ browser }) => {
     const eco = `Eco de teste ${Date.now()}`
     const mestre = await browser.newContext({ storageState: '.auth/user.json' })
@@ -338,6 +376,104 @@ test.describe('Sessão ao vivo — dois clientes', () => {
     } finally {
       await mestre.close()
       await jogador.close()
+    }
+  })
+
+  /**
+   * A CORTINA atravessando o fluxo até a OUTRA tela (ALE-202).
+   *
+   * É e2e porque é o único lugar onde a cadeia inteira existe: o mestre fecha,
+   * o `SetCurtain` sobe a `Version`, o hub decide entregar, o SSE desce para a
+   * sala do JOGADOR (e não para a do mestre), e o cliente troca a cena pela
+   * cortina. A redação já está provada no Go e a composição no vitest; o que
+   * nenhum dos dois vê é o quadro chegando na outra máquina.
+   *
+   * O QUE ELE MEDE, medido por sabotagem e não por intenção — e as duas
+   * primeiras eu previ errado:
+   *
+   * - Tirei o `Version++` do `SetCurtain`: seguiu VERDE. O `EmitOrdered`
+   *   descarta com `Seq < ultimaSeq`, estritamente MENOR, então versão repetida
+   *   passa. O bump importa por outro motivo (o contador significa "o tabuleiro
+   *   mudou") e quem o prende é o teste de loja.
+   * - Tirei a cortina da redação do `BoardForRole`, mandando a cena inteira para
+   *   a mesa: seguiu VERDE. O cliente esconde a região pela FLAG, então a tela
+   *   fica certa mesmo com o servidor entregando tudo. Ou seja: este teste não
+   *   distingue redação do servidor de esconderijo do cliente, e a redação é
+   *   provada onde ela mora — `TestACortinaEscondeACenaInteiraDaMesa`, no Go.
+   *   É a regra da casa: a fronteira de segurança é do servidor, e afirmar UI
+   *   não a substitui.
+   * - Impedi a flag de viajar (`json:"-"`): VERMELHO, "a cortina não chegou na
+   *   tela da mesa".
+   *
+   * Então o que este e2e testemunha, e nenhum outro teste vê, é a CADEIA VIVA:
+   * o gesto do mestre vira requisição, o hub entrega na sala do jogador, o SSE
+   * desce até a outra máquina e a tela troca sozinha — ida e volta, sem
+   * ninguém recarregar nada.
+   *
+   * Vai e VOLTA de propósito. Abrir a cortina de novo prova as duas metades que
+   * fechar sozinho não prova: que o segundo quadro também sobe (uma ordem que
+   * travasse deixaria a mesa presa atrás da cortina para sempre) e que a mesa
+   * recupera a cena sem recarregar nada.
+   */
+  test('a cortina que o mestre fecha esconde a cena da mesa, e abrir devolve', async ({
+    browser,
+  }) => {
+    const lugar = `Taverna de teste ${Date.now()}`
+    const mestre = await browser.newContext({ storageState: '.auth/user.json' })
+    const jogador = await browser.newContext({ storageState: '.auth/player.json' })
+    const telaDoMestre = await mestre.newPage()
+    const telaDoJogador = await jogador.newPage()
+
+    try {
+      await telaDoMestre.goto('/campaigns/1/sessions/5')
+      await telaDoJogador.goto('/campaigns/1/sessions/5')
+      await expect(telaDoMestre.getByRole('status', { name: 'Conectado' })).toBeVisible()
+      await expect(telaDoJogador.getByRole('status', { name: 'Conectado' })).toBeVisible()
+      await telaDoJogador.getByRole('button', { name: /Tabuleiro/ }).click()
+
+      // O teste cuida do próprio terreno, como o irmão acima: a sessão da seed
+      // pode ter ficado com um tabuleiro de outra rodada.
+      const encerrar = telaDoMestre.getByRole('button', { name: 'Encerrar o tabuleiro' })
+      if (await encerrar.isVisible()) {
+        await encerrar.click()
+        await telaDoMestre.getByRole('dialog').getByRole('button', { name: 'Encerrar' }).click()
+      }
+      await telaDoMestre.getByRole('button', { name: 'Abrir tabuleiro' }).click()
+      await telaDoMestre.locator('#board-place').fill(lugar)
+      await telaDoMestre.getByRole('dialog').getByRole('button', { name: 'Abrir' }).click()
+
+      const grade = telaDoJogador.getByRole('grid', { name: new RegExp(lugar) })
+      const cortina = telaDoJogador.getByText('O mestre está montando a cena.')
+      // O CONTROLE, e ele vem antes de qualquer asserção de ausência: a mesa
+      // está vendo a cena AGORA. Sem isto, "a grade não está lá" no fim seria
+      // indistinguível de "a grade nunca chegou".
+      await expect(grade).toBeVisible()
+      await expect(cortina).toBeHidden()
+
+      await telaDoMestre.getByRole('button', { name: 'Fechar a cortina' }).click()
+
+      await expect(cortina, 'a cortina não chegou na tela da mesa').toBeVisible()
+      await expect(grade, 'a mesa continuou vendo a cena que o mestre escondeu').toBeHidden()
+      // O nome do lugar é metade da emboscada: "Covil do Dragão" já conta a cena.
+      await expect(telaDoJogador.getByText(lugar)).toBeHidden()
+      // E o mestre continua vendo o que está montando — é o ponto todo —, com a
+      // tira que impede ele de narrar para uma mesa que não vê nada.
+      await expect(telaDoMestre.getByRole('grid', { name: new RegExp(lugar) })).toBeVisible()
+      await expect(
+        telaDoMestre.getByText('A cortina está fechada: a mesa não vê esta cena.'),
+      ).toBeVisible()
+
+      await telaDoMestre.getByRole('button', { name: 'Abrir a cortina' }).click()
+
+      await expect(grade, 'a mesa ficou presa atrás da cortina').toBeVisible()
+      await expect(cortina).toBeHidden()
+
+      await telaDoMestre.getByRole('button', { name: 'Encerrar o tabuleiro' }).click()
+      await telaDoMestre.getByRole('dialog').getByRole('button', { name: 'Encerrar' }).click()
+    } finally {
+      // Limpeza com `catch`: ela não pode falar mais alto que o defeito (ALE-245).
+      await mestre.close().catch(() => {})
+      await jogador.close().catch(() => {})
     }
   })
 })

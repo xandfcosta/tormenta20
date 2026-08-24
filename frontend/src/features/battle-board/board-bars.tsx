@@ -1,10 +1,20 @@
-import { Check, Crosshair, Eye, Maximize, Minimize, Undo2, X } from 'lucide-solid'
+import {
+  Check,
+  CornerUpLeft,
+  Crosshair,
+  Eye,
+  Maximize,
+  Minimize,
+  Theater,
+  Undo2,
+  X,
+} from 'lucide-solid'
 import { For, Show } from 'solid-js'
-import type { BoardState } from '@/shared/realtime/realtime'
 import type { BoardAreaKind, BoardMeasurement } from '@/shared/lib/engine-wasm'
-import { NumberInput } from '@/shared/ui/number-input'
-import { Button } from '@/shared/ui/button'
 import type { FullscreenController } from '@/shared/lib/fullscreen'
+import type { BoardState } from '@/shared/realtime/realtime'
+import { Button } from '@/shared/ui/button'
+import { NumberInput } from '@/shared/ui/number-input'
 import { type BoardViewport, SQUARE_METRES } from './board-viewport'
 
 /**
@@ -43,6 +53,55 @@ export function PlayerLensBar(props: { hidden: number; onExit: () => void }) {
       <Button size="sm" variant="ghost" class="ml-auto" onClick={() => props.onExit()}>
         Voltar à vista do mestre
       </Button>
+    </div>
+  )
+}
+
+/**
+ * A tira da CORTINA (ALE-202), irmã da tira da lente e pela mesma razão: um modo
+ * que se esquece é pior que nenhum.
+ *
+ * Aqui o esquecimento é mais caro que na lente. Na lente, o mestre olha e não
+ * entende o que vê; com a cortina, ele NARRA — descreve a taverna, move o
+ * taverneiro, pergunta o que a mesa faz — para uma mesa que está olhando um
+ * aviso. A tira é a única coisa na tela do mestre que denuncia isso, porque o
+ * mapa dele continua igualzinho com a cortina aberta ou fechada.
+ *
+ * Carrega a própria saída pela mesma razão da irmã: quem percebe o modo tem de
+ * poder desfazê-lo de onde percebeu.
+ */
+export function CurtainBar(props: { onOpen: () => void }) {
+  return (
+    <div
+      role="status"
+      class="flex shrink-0 flex-wrap items-center gap-2 border-b border-grimorio-gold/40 bg-grimorio-gold/10 px-3 py-1 text-2xs text-grimorio-gold"
+    >
+      <Theater aria-hidden="true" class="size-3.5 shrink-0" />
+      <p>A cortina está fechada: a mesa não vê esta cena.</p>
+      <Button size="sm" variant="ghost" class="ml-auto" onClick={() => props.onOpen()}>
+        Abrir a cortina
+      </Button>
+    </div>
+  )
+}
+
+/**
+ * A CORTINA como a mesa a vê (ALE-202).
+ *
+ * Ocupa a região inteira e NÃO desenha grade — de propósito. A cena vazia ("o
+ * mestre ainda não abriu um tabuleiro") mostra uma grade, e as duas telas
+ * precisam se parecer o menos possível: são estados diferentes que o jogador
+ * resolve de formas diferentes — um é esperar, o outro é cutucar o mestre.
+ *
+ * Não diz o NOME do lugar, e não é omissão: o servidor apaga o nome antes de
+ * mandar, porque "Covil do Dragão" já contou a cena que a cortina existe para
+ * esconder.
+ */
+export function CurtainForPlayers() {
+  return (
+    <div class="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+      <Theater aria-hidden="true" class="size-8 text-grimorio-gold/70" />
+      <p class="text-sm text-muted-foreground">O mestre está montando a cena.</p>
     </div>
   )
 }
@@ -89,6 +148,13 @@ export function regraQueDobrou(diagonais: number, dificil: number): string | nul
 export function MoveBar(props: {
   move: NonNullable<BoardState['pending']>
   canDecide: boolean
+  /** Quantos quadrados ainda cabem no deslocamento do turno, quando há
+   *  orçamento em jogo. O mestre posiciona sem limite e não recebe nada. */
+  restante?: number
+  /** Desfaz a ÚLTIMA parada (ALE-266). Ausente quando não há parada a desfazer
+   *  — inclusive depois de recarregar a página, quando o cliente perdeu a lista
+   *  e só o Cancelar continua honesto. */
+  onDesfazerParada?: () => void
   onConfirm: () => void
   onCancel: () => void
 }) {
@@ -101,6 +167,18 @@ export function MoveBar(props: {
         {props.move.cost} {props.move.cost === 1 ? 'quadrado' : 'quadrados'} ({metres()}m)
         {props.move.budget >= 0 ? ` de ${props.move.budget}` : ' · sem limite de turno'}
       </p>
+      {/* QUANTO AINDA CABE, e não só quanto já se gastou (ALE-266). Com paradas
+          o jogador empilha pernas, e "5 de 6" faz a subtração na cabeça dele a
+          cada clique. Dizer o resto é o que deixa a próxima parada ser uma
+          decisão em vez de uma tentativa — e quando chega a zero, o losango
+          apaga e a frase explica por quê. */}
+      <Show when={props.restante !== undefined}>
+        <p class="font-mono text-2xs tabular-nums text-muted-foreground">
+          {props.restante === 0
+            ? '· deslocamento esgotado'
+            : `· resta ${props.restante} ${props.restante === 1 ? 'quadrado' : 'quadrados'}`}
+        </p>
+      </Show>
       {/* A REGRA que produziu o número, ao lado do número (ALE-190). Sem isto o
           losango do alcance chega como mágica: o jogador aceita a forma e não
           aprende a contar — e na mesa presencial é ele quem vai contar quadrado
@@ -110,6 +188,18 @@ export function MoveBar(props: {
       </Show>
       <Show when={props.canDecide} fallback={<span class="text-2xs text-muted-foreground">Aguardando confirmação.</span>}>
         <div class="ml-auto flex items-center gap-1">
+          {/* Desfazer UMA parada vem antes de Refazer, e a ordem é a do
+              arrependimento: primeiro se corrige a última perna, e só depois se
+              joga a rota inteira fora. Some quando não há parada a desfazer —
+              um botão que não faz nada é pior que nenhum. */}
+          <Show when={props.onDesfazerParada}>
+            {(desfazer) => (
+              <Button size="sm" variant="ghost" onClick={() => desfazer()()}>
+                <CornerUpLeft aria-hidden="true" class="size-4" />
+                Desfazer parada
+              </Button>
+            )}
+          </Show>
           <Button size="sm" variant="ghost" onClick={() => props.onCancel()}>
             <Undo2 aria-hidden="true" class="size-4" />
             Refazer

@@ -3,6 +3,7 @@ import type { CatalogItem } from '@/shared/api/item-types'
 import { describe, expect, it } from 'vitest'
 import {
   type SearchableCatalogs,
+  catalogColumns,
   catalogSearchRows,
   matchesAllTerms,
 } from './catalog-model'
@@ -72,5 +73,41 @@ describe('catalogSearchRows', () => {
     const keys = catalogSearchRows('', CATALOGS).map((row) => row.key)
 
     expect(new Set(keys).size).toBe(keys.length)
+  })
+})
+
+/**
+ * A LARGURA decide quantas colunas, e o número tem razão de ser (ALE-170): o
+ * teto de três é MEDIDA DE LEITURA — num painel de 1920 uma coluna só dá ~122
+ * caracteres por linha, mais que o dobro do confortável, e três põem isso em
+ * ~70.
+ *
+ * Isto não tinha teste nenhum, e o e2e que existe mede outra coisa: lá a
+ * asserção é que o AGRUPAMENTO dos dados bate com a grade declarada, porque
+ * numa lista virtualizada "três colunas" não é CSS, é como as linhas foram
+ * montadas — e a grade pode jurar três com um cartão só em cada fileira. Essa
+ * metade precisa de browser. A ARITMÉTICA não precisa, e é esta.
+ */
+describe('catalogColumns', () => {
+  it('respeita o teto de três, que é medida de leitura e não estética', () => {
+    expect(catalogColumns(1080)).toBe(3)
+    // Larguras de painel absurdas não abrem uma quarta coluna.
+    expect(catalogColumns(5000)).toBe(3)
+  })
+
+  it('uma coluna a cada 360px de painel', () => {
+    expect(catalogColumns(360)).toBe(1)
+    expect(catalogColumns(719)).toBe(1)
+    expect(catalogColumns(720)).toBe(2)
+  })
+
+  /**
+   * Largura ZERO é "ainda não medi", e responder zero colunas esconderia a
+   * lista inteira no primeiro quadro — a tela pisca vazia e volta. Uma coluna é
+   * o arranjo que sempre serve.
+   */
+  it('largura ainda não medida cai em UMA coluna, nunca em zero', () => {
+    expect(catalogColumns(0)).toBe(1)
+    expect(catalogColumns(-10)).toBe(1)
   })
 })

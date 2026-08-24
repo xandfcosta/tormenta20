@@ -6,8 +6,6 @@ import { CharacterSheet } from '@/features/character-sheet/character-sheet'
 import { CharacterSheetSkeleton } from '@/features/character-sheet/character-sheet-skeleton'
 import { InitiativeCard } from '@/features/session-tracker/initiative-card'
 import { PartyRoster } from '@/features/session-tracker/party-roster'
-import { connectionStatus } from '@/features/session-tracker/tracker-rules'
-import { ConnectionChip } from '@/shared/ui/connection-chip'
 import type { Session } from '@/shared/api/api'
 import { settledQuery } from '@/shared/lib/settled-query'
 import type { SessionRealtime } from '@/shared/realtime/realtime'
@@ -79,16 +77,16 @@ export function SessionPlayerView(props: {
     // personagem na mesa caía num ramo alternativo sem seletor nenhum — ficava
     // sem tabuleiro e sem escolha, o que é pior do que não ter ficha.
     <div class="flex h-full min-h-0 flex-col">
-      {/* Ancorado, nunca rolando para fora: é o menu da cena. O estado da
-          conexão vem junto porque ele vale para a sessão INTEIRA — antes ele
-          morava dentro do card da iniciativa, e sumia da tela junto com ele
-          quando o jogador estava olhando a ficha (ALE-129). */}
+      {/* Ancorado, nunca rolando para fora: é o menu da cena.
+
+          O chip de conexão SAIU daqui e subiu para o cabeçalho (ALE-201). Ele
+          vale para a sessão inteira, e o cabeçalho é o único cromo que nunca
+          sai da tela nas duas cenas — que é a razão de ele ter saído do card da
+          iniciativa na ALE-129 e da faixa do turno na ALE-198. Esta é a terceira
+          e última mudança de casa dele, e agora ele está onde o mestre e o
+          jogador olham igual. */}
       <div class="flex shrink-0 items-center gap-2 px-3 pt-2 sm:px-4">
         <PlayerSurfaceSwitch surface={surface()} onSurface={setSurface} />
-        <ConnectionChip
-          status={connectionStatus(props.rt.isConnected(), props.rt.error())}
-          dirty={props.rt.hasPersistenceWarning()}
-        />
       </div>
 
       <Show when={surface() === 'ficha'}>
