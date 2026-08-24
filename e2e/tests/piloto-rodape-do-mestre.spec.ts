@@ -159,6 +159,13 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
     const linha = page.locator('#mesa ol li').first()
     await expect(linha).toBeVisible()
     await expect(linha.getByRole('button', { name: /^Ferir / })).toBeVisible()
+    // E a linha medida TEM o crachá, senão a medida é de outra linha que não a
+    // que corre risco. Ele passou de `PC` (2 letras) para `Ficha` (5) quando o
+    // termo proibido saiu, e é o mesmo selo que a SPA registra ter transbordado
+    // uma vez — "o e2e da cena pegou isso com quatro 'PC' pintados fora do pai"
+    // (`initiative-card.tsx`). Sem esta linha, o teste mediria uma fileira sem
+    // crachá e diria verde sobre o caso que importa.
+    await expect(linha.getByText('Ficha', { exact: true })).toBeVisible()
 
     const medida = await linha.evaluate((el) => {
       const caixa = el.getBoundingClientRect()

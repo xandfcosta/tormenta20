@@ -916,3 +916,32 @@ func trechoDaSemeadura(corpo string) string {
 	}
 	return corpo[i:fim]
 }
+
+// TestOCrachaDaFilaDizFICHAeNuncaPC.
+//
+// Um teste sobre uma PALAVRA, e ele se justifica por uma lacuna medida: a sessão
+// irmã trocou este mesmo crachá na SPA e 260 testes passaram sem piscar, porque
+// nada afirmava o texto — o e2e cobre o LEIAUTE do selo, não a palavra.
+//
+// A palavra carrega regra: o GLOSSARIO bane `PC` sem qualificador de escopo, e o
+// canônico aqui é `ficha` e não "personagem" porque a tabela de colisões diz
+// qual pergunta o `type == "character"` responde — "esta linha é ficha ou é
+// NPC?". As duas metades ficam juntas de propósito: afirmar só a nova deixaria
+// passar uma tela que diz as duas coisas.
+func TestOCrachaDaFilaDizFichaENuncaPC(t *testing.T) {
+	f := novoPiloto(t)
+	f.naFila(t)
+
+	corpo := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	// O CONTROLE: a linha do personagem está na tela. Sem ele, "não achei PC"
+	// seria verdade também numa fila vazia.
+	if !strings.Contains(corpo, "Arcanista") {
+		t.Fatal("a fila não tem a linha do personagem; as asserções abaixo não provariam nada")
+	}
+	if !strings.Contains(corpo, ">Ficha<") {
+		t.Error("o crachá da linha de personagem não diz Ficha")
+	}
+	if strings.Contains(corpo, ">PC<") {
+		t.Error("o crachá voltou a dizer PC, que o GLOSSARIO proíbe")
+	}
+}
