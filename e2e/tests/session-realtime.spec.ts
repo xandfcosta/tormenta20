@@ -1,5 +1,16 @@
 import { expect, test } from '@playwright/test'
-import { abreAFila, acionaOCiclo, garanteACena, labelsNaFila } from './support/gm-scene'
+import {
+  abreAFicha,
+  abreAFila,
+  acionaOCiclo,
+  fechaAFicha,
+  fechaAFila,
+  garanteACena,
+  labelsNaFila,
+  labelsNaGaveta,
+  limpaAsCondicoes,
+  primeiroDaFila,
+} from './support/gm-scene'
 
 /**
  * O realtime com DOIS clientes na mesma mesa — o mecanismo que só um browser
@@ -65,6 +76,102 @@ test.describe('Sessão ao vivo — dois clientes', () => {
     } finally {
       await mestre.close()
       await jogador.close()
+    }
+  })
+
+  /**
+   * A CONDIÇÃO QUE O MESTRE APLICA CHEGA À TELA DO JOGADOR (ALE-245).
+   *
+   * O defeito: a escrita de condição é HTTP, e até esta fatia NENHUM handler
+   * HTTP conseguia falar com a sala — o gateway guarda `s *Server` e o ponteiro
+   * nunca vai na direção contrária. O mestre aplicava "Caído" num PC e a tela
+   * do jogador não ficava sabendo.
+   *
+   * Pior que o chip faltando: o motor deriva Defesa e perícias da condição
+   * (ALE-28), então os dois passavam a ver números diferentes do MESMO
+   * personagem, sem nada na tela dizendo que discordavam. É a família da
+   * ALE-122, "o PV do rastreador mente".
+   *
+   * É e2e e são DOIS clientes porque é a única testemunha possível: o Go prova
+   * que o gancho dispara, o vitest prova que o ouvinte invalida, e nenhum dos
+   * dois prova que a mensagem saiu de um navegador e chegou no outro. Um
+   * `emitCharacterChanged` que transmitisse para a sala errada passaria pelos
+   * dois lados.
+   *
+   * O personagem precisa estar NA FILA: é por ela que o servidor acha a mesa, e
+   * esse limite está prendido em `character_changed_test.go`.
+   */
+  test('a condição que o mestre aplica aparece na ficha do jogador', async ({ browser }) => {
+    // Dois contextos, cena, grupo na fila e ficha aberta não cabem nos 30s
+    // padrão do arquivo — e estourar o teto faz o `finally` mascarar o erro de
+    // verdade com um "Failed to find context".
+    test.setTimeout(90_000)
+    const mestre = await browser.newContext({ storageState: '.auth/user.json' })
+    const jogador = await browser.newContext({ storageState: '.auth/player.json' })
+    const telaDoMestre = await mestre.newPage()
+    const telaDoJogador = await jogador.newPage()
+
+    try {
+      await telaDoMestre.goto('/campaigns/1/sessions/5')
+      await telaDoJogador.goto('/campaigns/1/sessions/5')
+      await expect(telaDoMestre.getByRole('status', { name: 'Conectado' })).toBeVisible()
+      await expect(telaDoJogador.getByRole('status', { name: 'Conectado' })).toBeVisible()
+      await garanteACena(telaDoMestre)
+
+      // O grupo entra na fila: sem o PC ali o servidor não acha a mesa, por
+      // desenho. `Adicionar grupo` é idempotente.
+      const fila = await abreAFila(telaDoMestre)
+      const antes = await labelsNaGaveta(fila)
+      await fila.getByRole('button', { name: 'Adicionar grupo' }).click()
+      await expect(
+        telaDoMestre.locator('[role="progressbar"][aria-label^="PM "]').first(),
+      ).toBeVisible()
+      await fechaAFila(telaDoMestre)
+
+      // A ficha do jogador é a superfície padrão dele (ALE-129), e ela desenha
+      // os chips de condição. Confirma que está limpa ANTES.
+      const chipNaFicha = telaDoJogador.getByRole('listitem').filter({ hasText: 'Abalado' })
+      await expect(chipNaFicha).toHaveCount(0)
+
+      // O mestre aplica na ficha DO JOGADOR, e não no primeiro da fila: a
+      // ordem sai de um d20, então mirar "o primeiro" editaria o personagem de
+      // outra pessoa e o teste passaria a afirmar nada. O nome vem da tela do
+      // próprio jogador.
+      // O `h1` da cena do jogador é o nome do personagem que ELE está vendo. O
+      // jogador da seed tem QUATRO na campanha e a ficha mostra um: mirar
+      // qualquer outro faria o mestre editar um personagem que não está na tela
+      // dele, e o teste passaria a afirmar nada.
+      const nomeDoPc = (await telaDoJogador.locator('h1').first().innerText()).trim()
+      expect(nomeDoPc, 'não achei o nome do personagem na ficha do jogador').not.toBe('')
+      await abreAFicha(telaDoMestre, nomeDoPc)
+      await expect(telaDoMestre.getByRole('tab', { name: 'Perícias' })).toBeVisible()
+      await limpaAsCondicoes(telaDoMestre)
+      const seletor = telaDoMestre.getByLabel('Aplicar condição')
+      await seletor.click()
+      await seletor.fill('Abalado')
+      await telaDoMestre.getByRole('option', { name: 'Abalado', exact: true }).first().click()
+      await expect(
+        telaDoMestre.getByRole('button', { name: 'Ver a condição ativa' }),
+      ).toBeVisible()
+
+      // E a tela do jogador aprende sozinha, SEM recarregar. É a issue inteira.
+      await expect(chipNaFicha.first()).toBeVisible()
+
+      await limpaAsCondicoes(telaDoMestre)
+      await fechaAFicha(telaDoMestre)
+      const paraLimpar = await abreAFila(telaDoMestre)
+      for (const label of await labelsNaGaveta(paraLimpar)) {
+        if (!antes.includes(label)) {
+          await paraLimpar.getByRole('button', { name: `Remover ${label}`, exact: true }).click()
+        }
+      }
+    } finally {
+      // `catch` na limpeza: se o teste falhou antes, fechar o contexto lança um
+      // "Target page has been closed" que SUBSTITUI o erro de verdade — foi o
+      // que escondeu a primeira falha deste teste atrás de um erro de
+      // protocolo. Limpeza não pode falar mais alto que o defeito.
+      await mestre.close().catch(() => {})
+      await jogador.close().catch(() => {})
     }
   })
 

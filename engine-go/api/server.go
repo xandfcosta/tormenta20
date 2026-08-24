@@ -35,6 +35,30 @@ type Server struct {
 	// so concurrent read-modify-write mutations (rapid damage/vitals clicks) can't lose
 	// updates. Mirrors the per-session lock used by the realtime store.
 	charMu sync.Map
+	// notifyCharacterChanged avisa as mesas AO VIVO que a ficha de um personagem
+	// mudou por HTTP (ALE-245).
+	//
+	// Sem isto nenhum handler HTTP CONSEGUE falar com a sala, e a razão é
+	// estrutural: o gateway guarda `s *Server`, e o ponteiro nunca vai na
+	// direção contrária. O efeito na mesa é o da ALE-122 — o mestre aplica
+	// "Caído" num PC e a tela do jogador não fica sabendo. Pior que o chip
+	// faltando: o motor deriva Defesa e perícias da condição (ALE-28), então os
+	// dois passam a ver números diferentes do mesmo personagem.
+	//
+	// É um GANCHO e não uma referência ao socket porque o `Server` existe sem
+	// gateway — nos testes de handler, e num binário que sirva só HTTP. Nulo é
+	// caminho normal, não erro.
+	//
+	// O gancho é preenchido pelo `SocketHandler()`, que é onde o gateway nasce.
+	notifyCharacterChanged func(characterID int64)
+}
+
+// characterChanged avisa a mesa, se houver gateway. Nulo é silêncio, de
+// propósito: o `Server` roda sem socket em teste e num binário só-HTTP.
+func (s *Server) characterChanged(characterID int64) {
+	if s.notifyCharacterChanged != nil {
+		s.notifyCharacterChanged(characterID)
+	}
 }
 
 // lockCharacter acquires the per-character write lock, returning the unlock func.
