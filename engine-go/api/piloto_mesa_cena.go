@@ -30,6 +30,7 @@ func (s *Server) rotasDaCena(r chi.Router) {
 	r.Post(base+"/lugares/{placeId}/reabrir", s.comandoDoMestreNoTabuleiro(reabreOLugar))
 	r.Post(base+"/lugares/{placeId}/remover", s.comandoDoMestreNoTabuleiro(removeOLugar))
 	r.Post(base+"/terreno/{especie}/{x}/{y}", s.comandoDoMestreNoTabuleiro(pintaOTerreno))
+	r.Post(base+"/pecas", s.comandoDoMestreNoTabuleiro(poeNoMapa))
 }
 
 // pintaOTerreno liga ou desliga uma espécie numa casa (T20 p238).

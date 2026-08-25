@@ -147,6 +147,12 @@ func regioesDaMesa(v mesaView) []regiaoDaMesa {
 		{"mesa-registrar", mesaRegistrarRegiao(v)},
 		{"mesa-grupo", mesaGrupo(v)},
 		{"mesa-tabuleiro", mesaTabuleiro(v)},
+		// REGIÃO PRÓPRIA, e ela nasceu de um guarda: o diálogo de pôr no mapa muda
+		// com a FILA (quem existe) e com o MAPA (quem já tem peça), então pendurá-lo
+		// em qualquer uma das duas faz a outra ser remendada de graça. Dentro do
+		// mapa, `TestUmaMudancaNaFilaNaoRemendaOMapa` acusou na hora — a peça
+		// debaixo do dedo do mestre seria trocada no meio do arrasto.
+		{"mesa-por-no-mapa", mesaPorNoMapa(v)},
 		{"mesa-fila", mesaFila(v)},
 		{"mesa-comandos", mesaComandos(v)},
 	}

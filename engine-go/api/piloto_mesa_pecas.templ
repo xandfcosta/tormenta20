@@ -1,0 +1,109 @@
+package api
+
+// O gesto de PÔR NO MAPA (ALE-264, item 5). A regra e as expressões estão em
+// `piloto_mesa_pecas.go`; aqui é só o desenho.
+
+// botaoDePorNoMapa: UM botão, DOIS gestos, e o padrão é o seguro (ALE-204).
+//
+// Esquerdo abre o diálogo com as fichas já escolhidas; direito põe as fichas
+// direto. Pôr as fichas no mapa é o gesto de abrir cena e não revela nada — eles
+// sabem onde estão. Todo o resto é informação que o mestre controla, e
+// informação que o mestre controla nunca sai por atalho.
+//
+// O `title` conta o gesto direito porque um gesto que ninguém descobre é o mesmo
+// que não existir — e ele nunca é o único caminho: o diálogo faz o mesmo.
+templ botaoDePorNoMapa(v tabuleiroView) {
+	if v.Mestre {
+		<button
+			type="button"
+			title="Escolher quem vem para o mapa. Clique direito põe só as fichas."
+			data-on:click={ abreOPorNoMapa() }
+			data-on:contextmenu={ atalhoDasFichas(v) }
+			class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>Pôr no mapa</button>
+	}
+}
+
+// mesaPorNoMapa é a REGIÃO do diálogo — ver a razão em `regioesDaMesa`.
+//
+// O `<div>` existe SEMPRE, inclusive para o jogador e inclusive sem tabuleiro
+// aberto: região que some do HTML é região que o remendo não acha, e a cena
+// voltaria a precisar de uma recarga para o diálogo existir. O que a porta do
+// mestre esconde é o CONTEÚDO.
+templ mesaPorNoMapa(v mesaView) {
+	<div id="mesa-por-no-mapa">
+		if v.Tabuleiro.Mestre {
+			@poeNoMapaDialogo(v.Tabuleiro)
+		}
+	</div>
+}
+
+// O diálogo. Os candidatos são CRACHÁS que ligam e desligam, e não caixas de
+// seleção: é o gesto que o mestre já aprendeu nos filtros do bestiário e do
+// acervo, e o estado mora num sinal — a cena é remendada a cada mudança de
+// qualquer um na mesa, e entrada em curso presa ao DOM seria apagada no meio.
+templ poeNoMapaDialogo(v tabuleiroView) {
+	<dialog
+		id="por-no-mapa"
+		data-preserve-attr="open"
+		aria-labelledby="por-no-mapa-titulo"
+		class="scene-grimorio m-auto w-[min(28rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
+	>
+		<h2 id="por-no-mapa-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">Pôr no mapa</h2>
+		<p class="mt-1 text-sm text-muted-foreground">
+			As fichas já vêm escolhidas. Quem você marcar aqui nasce no mapa: as fichas de um lado, o resto do outro.
+		</p>
+		<ul class="mt-3 flex flex-wrap gap-1.5">
+			for _, cand := range v.Candidatos {
+				<li>
+					if cand.NoMapa {
+						// Já no mapa: aparece, não se escolhe. Sumir faria o mestre
+						// procurar um nome que ele acabou de ver na fila; oferecer
+						// faria um clique que o servidor ignora (o `Populate` é
+						// idempotente), que é pior — parece que não funcionou.
+						<span class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-dashed border-grimorio-iron px-3 text-sm text-muted-foreground">
+							{ cand.Nome }
+							<span class="text-xs uppercase tracking-widest">já no mapa</span>
+						</span>
+					} else {
+						<button
+							type="button"
+							data-id={ cand.ID }
+							data-ficha?={ cand.Ficha }
+							data-attr:aria-pressed={ estaEscolhido(cand.ID) + " ? 'true' : 'false'" }
+							data-class={ "{'pincel-ligado': " + estaEscolhido(cand.ID) + "}" }
+							data-on:click={ alternaNoMapa(cand.ID) }
+							class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+						>
+							{ cand.Nome }
+							// O selo diz o LADO do mapa em que a peça nasce, e é o
+							// mesmo predicado que o servidor usa. `Ficha`/`NPC` é o
+							// par da casa — o `PC` está proibido (GLOSSARIO).
+							if cand.Ficha {
+								<span class="text-xs uppercase tracking-widest text-muted-foreground">Ficha</span>
+							} else {
+								<span class="text-xs uppercase tracking-widest text-muted-foreground">NPC</span>
+							}
+						</button>
+					}
+				</li>
+			}
+		</ul>
+		<div class="mt-4 flex justify-end gap-2">
+			<button
+				type="button"
+				data-on:click="document.getElementById('por-no-mapa').close()"
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>Cancelar</button>
+			// Fecha ANTES de postar, como o abrir e o descanso: a recusa chega no
+			// `$erroDoComando`, que é do RODAPÉ do mestre, e o diálogo por cima
+			// dela esconderia a única frase que explica o que houve.
+			<button
+				type="button"
+				data-attr:disabled="$escolhidosdomapa === ''"
+				data-on:click={ "document.getElementById('por-no-mapa').close(); " + comandoDePorNoMapa(v) }
+				class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
+			>Pôr no mapa</button>
+		</div>
+	</dialog>
+}

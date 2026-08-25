@@ -48,6 +48,12 @@ type tabuleiroView struct {
 	X0, Y0     int
 	Pecas      []pecaDoTabuleiro
 	Marcadores []marcadorDoTabuleiro
+	// Candidatos é a fila oferecida ao diálogo "Pôr no mapa", e ela é DO MESTRE:
+	// a lista traz todo combatente, inclusive o assassino que ainda não entrou em
+	// cena. Preenchê-la para o jogador escreveria no HTML dele os nomes que a
+	// cortina e o `hidden` existem para não contar — o vazamento não apareceria na
+	// tela, só no "ver código-fonte".
+	Candidatos []candidatoAoMapa
 	// Terreno são os quadrados pintados, de TODAS as espécies, já em coordenada
 	// da tela e cada um sabendo qual é a sua (T20 p238).
 	//
@@ -210,6 +216,9 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, sa
 	}
 	v.CampaignID, v.SessionID = campaignID, sessionID
 	v.Mestre = quem.Role == "gm"
+	if v.Mestre {
+		v.Candidatos = candidatosAoMapa(b, st)
+	}
 	v.Movimento = movimentoDoTabuleiro(b, quem, e)
 	var restante int
 	v.AlvoDoMovimento, v.RotuloDoAlvo, v.Alcance, restante = oAlvoEOAlcance(b, st, quem, meus, e)
