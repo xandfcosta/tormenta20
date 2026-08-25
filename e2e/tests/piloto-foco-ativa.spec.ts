@@ -129,7 +129,14 @@ test('com o foco na ficha, as setas rolam o painel', async ({ page }) => {
   // 620px de janela o palco mede 476 — quatro abaixo. Lá o painel nem existe, e
   // o controle abaixo acusa "não transborda" quando a verdade é "não está na
   // tela". A 680 o palco mede 536 e a ficha esconde 111px.
-  await page.setViewportSize({ width: 1400, height: 680 })
+  //
+  // 1200 de LARGURA e não 1400, e este número também é medido — ele nasceu de o
+  // guarda ficar vermelho dizendo "a ficha não transborda". O `dec9d01` (ALE-264)
+  // deu à ficha do monstro DUAS COLUNAS quando o bloco passa de 46rem, e duas
+  // colunas cabem sem rolar: a 1400 o bloco mede 750px e esconde 0. A 1200 ele
+  // mede 550, empilha, e esconde 211px. O guarda perdeu a PREMISSA, não a
+  // garantia — e ele mesmo denunciou isso, em vez de passar verde sobre nada.
+  await page.setViewportSize({ width: 1200, height: 680 })
   await page.goto('/piloto/mestre/bestiario')
   await page.waitForLoadState('networkidle')
 
@@ -227,12 +234,33 @@ test('a seta chega na ficha sem nenhum TAB', async ({ page }) => {
     'a seta para a direita não cruzou da lista para a ficha',
   ).toBe(true)
 
-  // E VOLTA para a lista, senão a ficha vira o beco que ela deixou de ser.
+  // E DÁ PARA SAIR dela só com setas, senão a ficha vira o beco que ela deixou
+  // de ser. O caminho medido é `← filtros ↓↓ lista`, e não `← lista` como era:
+  // o `dec9d01` (ALE-264) encurtou a ficha ao dar-lhe duas colunas, o centro
+  // dela subiu, e o vizinho à esquerda naquela altura passou a ser a fileira de
+  // filtros. O driver cruza REGIÕES por geometria, então quem mudou o caminho
+  // foi o leiaute e não a navegação.
+  //
+  // A asserção é sobre a GARANTIA (não é beco) e não sobre uma tecla: prender
+  // "uma seta para a esquerda" de novo faria o guarda quebrar no próximo
+  // ajuste de altura, sem nada ter piorado para quem usa.
   await page.keyboard.press('ArrowLeft')
   expect(
-    await page.evaluate(() => !!document.activeElement?.closest('[data-nav-region="lista"]')),
-    'a seta para a esquerda não voltou da ficha para a lista',
-  ).toBe(true)
+    await page.evaluate(() => !!document.activeElement?.closest('[data-nav-region="ficha"]')),
+    'a seta para a esquerda não tirou o foco da ficha',
+  ).toBe(false)
+
+  // Sete é teto generoso de propósito: o que se afirma é que a lista é
+  // ALCANÇÁVEL, não em quantas teclas. Sem teto seria laço infinito; com teto
+  // apertado, um guarda que quebra por uma linha a mais nos filtros.
+  let naLista = false
+  for (let i = 0; i < 7 && !naLista; i++) {
+    await page.keyboard.press('ArrowDown')
+    naLista = await page.evaluate(
+      () => !!document.activeElement?.closest('[data-nav-region="lista"]'),
+    )
+  }
+  expect(naLista, 'da ficha não se volta à lista só com setas').toBe(true)
 })
 
 /**
@@ -323,17 +351,27 @@ test('trocar de ferramenta pelo teclado mantém o foco no trilho', async ({ page
   await page.goto('/piloto/mestre/bestiario')
   await page.waitForLoadState('networkidle')
 
-  await page.locator('[data-nav-region="rail"] a').first().focus()
+  // O DESTINO SAI DO TRILHO, não do meu dedo. Este guarda escrevia
+  // `/piloto/mestre/encontros` à mão e ficou vermelho quando o `aa3edc9`
+  // (ALE-264) reordenou o trilho em Ferramentas + Catálogos: a segunda parada
+  // passou a ser `improviso`. Manutenção cobrada sem nada protegido — a
+  // garantia é "o foco sobrevive à troca", e qual é a parada vizinha não
+  // importa. Lendo o trilho, a reordenação de amanhã não quebra nada.
+  const paradas = page.locator('[data-nav-region="rail"] a')
+  const segunda = await paradas.nth(1).getAttribute('href')
+  expect(segunda, 'o trilho não tem uma segunda parada para onde ir').toBeTruthy()
+
+  await paradas.first().focus()
   await page.keyboard.press('ArrowDown')
   await page.keyboard.press('Enter')
   // `waitForURL` e NÃO `waitForLoadState`: medido, o segundo volta antes de a
   // navegação começar e a asserção lê a URL antiga — o controle acusa "o Enter
   // não trocou de ferramenta" sobre uma troca que aconteceu.
-  await page.waitForURL('**/piloto/mestre/encontros')
+  await page.waitForURL(`**${segunda}`)
 
   // O CONTROLE: a navegação aconteceu. Sem ele, "o foco ficou no trilho" seria
   // verdade sobre uma tecla que não fez nada.
-  expect(page.url(), 'o Enter não trocou de ferramenta').toContain('/piloto/mestre/encontros')
+  expect(page.url(), 'o Enter não trocou de ferramenta').toContain(segunda as string)
 
   const foco = await page.evaluate(() => {
     const e = document.activeElement as HTMLElement

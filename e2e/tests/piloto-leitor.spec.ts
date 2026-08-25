@@ -23,16 +23,23 @@ test('o botão do bestiário abre o livro na página do verbete, com o nome marc
   // O endereço vem da CENA e não é escrito aqui: se a página do Lobo mudar no
   // catálogo, este guarda continua medindo o que a tela oferece — e não um
   // número que eu teria de lembrar de atualizar.
+  // `count()` ANTES de `getAttribute`, e a ordem é o conserto: `getAttribute`
+  // ESPERA o elemento aparecer, então numa bancada sem `LIVRO_PDF` — onde o
+  // botão não existe e nunca vai existir — ele consumia os 30s do teste e
+  // estourava por timeout. O `test.skip` logo abaixo era código INALCANÇÁVEL,
+  // e o modo de falhar mentia sobre a causa: parecia leitor quebrado, era
+  // bancada sem livro. `count()` resolve na hora, com zero.
   const botao = page.locator('a[href*="/piloto/livro/ler"]').first()
-  const endereco = await botao.getAttribute('href')
 
-  if (!endereco) {
+  if ((await botao.count()) === 0) {
     // Sem `LIVRO_PDF` configurado não há botão, e isso é estado LEGÍTIMO. O que
     // não pode existir é meio caminho: link sem livro ou livro sem link.
     expect(await page.locator('a[href*="/piloto/livro"]').count()).toBe(0)
     test.skip(true, 'esta bancada não serve o livro (LIVRO_PDF vazio)')
     return
   }
+
+  const endereco = await botao.getAttribute('href')
 
   expect(endereco).toMatch(/\?p=\d+&t=Lobo/)
   await page.goto(endereco)

@@ -80,7 +80,15 @@ test.describe('Campanha vista pelo jogador', () => {
       await route.continue()
     })
 
-    await page.getByRole('button', { name: /Continuar a sessão/ }).click()
+    // LINK e não `button`: `/campaigns/$id` encaminha para a crônica do piloto
+    // desde a ALE-255, e lá a afordância é um `<a href>` para a sessão. O papel
+    // errado não falha explicando — ele espera 30s por um botão que não existe
+    // e morre em timeout, com cara de tela quebrada.
+    //
+    // O que este guarda mede continua na SPA: a sessão ao vivo
+    // (`/campaigns/$id/sessions/$sid`) é a última tela não portada, e é dela a
+    // garantia de que a partida não pisca enquanto a ficha carrega.
+    await page.getByRole('link', { name: /Continuar a sessão/ }).click()
 
     // Só olhar a tela DEPOIS que a ficha entrou em voo. Sem isto o teste
     // apanha a janela em que a partida ainda está pintada — antes de os
