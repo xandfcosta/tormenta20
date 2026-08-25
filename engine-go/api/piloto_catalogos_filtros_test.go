@@ -143,3 +143,53 @@ func TestAsRacasExoticasDizemQueSaoExoticas(t *testing.T) {
 		t.Errorf("%d exóticas e %d comuns — o livro tem 9 e 8", contagem["Exótica"], contagem["Comum"])
 	}
 }
+
+// TestAEscolaDaMagiaTemVerbeteEViraElo (ALE-264).
+//
+// O filtro de escola nasceu antes do catálogo, e por duas horas o app teve DUAS
+// listas das mesmas oito escolas: uma tabela de rótulos no código e o dado das
+// magias. Pior: a escola decidia o filtro e não estava escrita em cartão nenhum
+// — o mestre filtrava por evocação e as magias não diziam que eram de evocação.
+func TestAEscolaDaMagiaTemVerbeteEViraElo(t *testing.T) {
+	escolas := escolasDeMagia()
+	if len(escolas) != 8 {
+		t.Fatalf("%d escolas de magia — o livro tem 8", len(escolas))
+	}
+	// TODA escola que alguma magia usa tem verbete: elo que aponta para o vazio
+	// é pior que texto puro.
+	conhecidas := map[string]bool{}
+	for _, e := range escolas {
+		conhecidas[e.ID] = true
+		if e.Description == "" || e.BookPage == 0 {
+			t.Errorf("a escola %q veio sem definição ou sem página", e.Name)
+		}
+	}
+	for _, m := range catalogosDoLivro().Magias {
+		if m.School != "" && !conhecidas[m.School] {
+			t.Errorf("a magia %q é da escola %q, que não tem verbete", m.Name, m.School)
+		}
+	}
+}
+
+// TestOCartaoDaMagiaDizEDeixaAbrirAEscola: o elo, ponta a ponta.
+func TestOCartaoDaMagiaDizEDeixaAbrirAEscola(t *testing.T) {
+	s := newTestServer(t)
+	eu := seedUser(t, s, "mestre@t20.local")
+
+	corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/magias?entrada=bola-de-fogo", "").Body.String()
+	if !strings.Contains(corpo, "Evocação") {
+		t.Error("o cartão da magia não diz a escola dela")
+	}
+	if !strings.Contains(corpo, "/piloto/mestre/escolas?entrada=evocacao") {
+		t.Error("a escola não virou elo")
+	}
+	// E o destino existe, com a definição do livro.
+	escola := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/escolas?entrada=evocacao", "").Body.String()
+	if !strings.Contains(escola, "manipulam ou geram energia pura") {
+		t.Error("o verbete da escola não traz a definição do livro")
+	}
+	// A ABREVIATURA que as tabelas do livro imprimem.
+	if !strings.Contains(escola, "Evoc") {
+		t.Error("o verbete perdeu a abreviatura, que é como o livro escreve nas tabelas")
+	}
+}

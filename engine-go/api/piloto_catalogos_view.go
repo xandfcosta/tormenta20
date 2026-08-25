@@ -368,6 +368,7 @@ var abasDoAcervo = []abaDoAcervo{
 	{"poderes", "Poderes"},
 	{"itens", "Itens"},
 	{"efeitos", "Efeitos"},
+	{"escolas", "Escolas"},
 	{"racas", "Raças"},
 	{"classes", "Classes"},
 	{"deuses", "Deuses"},
@@ -404,6 +405,7 @@ type grupoDoAcervo struct {
 	Poderes   []poderDoLivro
 	Itens     []itemDoLivro
 	Efeitos   []efeitoDoLivro
+	Escolas   []escolaDeMagia
 	Racas     []racaDoLivro
 	Classes   []classeDoLivro
 	Deuses    []deusDoLivro
@@ -411,7 +413,7 @@ type grupoDoAcervo struct {
 
 func (g grupoDoAcervo) Quantos() int {
 	return len(g.Condicoes) + len(g.Magias) + len(g.Poderes) + len(g.Itens) +
-		len(g.Efeitos) + len(g.Racas) + len(g.Classes) + len(g.Deuses)
+		len(g.Efeitos) + len(g.Escolas) + len(g.Racas) + len(g.Classes) + len(g.Deuses)
 }
 
 // criteriosDoAcervo é o que a URL (ou os sinais) pedem da cena.
@@ -481,6 +483,7 @@ func carregaCatalogos(c criteriosDoAcervo, livro enderecoDoLivro) catalogosView 
 		{Rotulo: "Poderes", Poderes: filtra(a.Poderes, camposDoPoder, busca)},
 		{Rotulo: "Itens", Itens: filtra(a.Itens, camposDoItem, busca)},
 		{Rotulo: "Efeitos", Efeitos: filtra(tiposDeEfeito(), camposDoEfeito, busca)},
+		{Rotulo: "Escolas", Escolas: filtra(escolasDeMagia(), camposDaEscola, busca)},
 		{Rotulo: "Raças", Racas: filtra(racas, camposDaRaca, busca)},
 		{Rotulo: "Classes", Classes: filtra(classes, camposDaClasse, busca)},
 		{Rotulo: "Deuses", Deuses: filtra(deuses, camposDoDeus, busca)},
@@ -533,6 +536,11 @@ func grupoDaEntrada(aba, id string) grupoDoAcervo {
 			fora.Efeitos = append(fora.Efeitos, e)
 		}
 	}
+	for _, e := range inteiro.Escolas {
+		if e.ID == id {
+			fora.Escolas = append(fora.Escolas, e)
+		}
+	}
 	for _, r := range inteiro.Racas {
 		if r.ID == id {
 			fora.Racas = append(fora.Racas, r)
@@ -563,6 +571,8 @@ func grupoDaAba(a acervoDoMestre, aba string, acesos map[string][]string) grupoD
 		return grupoDoAcervo{Rotulo: "Itens", Itens: aplicaFiltros(a.Itens, acesos, itemCasa)}
 	case "efeitos":
 		return grupoDoAcervo{Rotulo: "Efeitos", Efeitos: tiposDeEfeito()}
+	case "escolas":
+		return grupoDoAcervo{Rotulo: "Escolas", Escolas: escolasDeMagia()}
 	case "racas":
 		return grupoDoAcervo{Rotulo: "Raças", Racas: aplicaFiltros(racas, acesos, racaCasa)}
 	case "classes":
@@ -615,26 +625,6 @@ func nomeDoAlcance(a string) string {
 		return r
 	}
 	return a
-}
-
-// rotuloDaEscola escreve a escola de magia como o livro (p172). O dado guarda
-// sem acento porque é chave.
-var rotuloDaEscola = map[string]string{
-	"abjuracao":    "Abjuração",
-	"adivinhacao":  "Adivinhação",
-	"convocacao":   "Convocação",
-	"encantamento": "Encantamento",
-	"evocacao":     "Evocação",
-	"ilusao":       "Ilusão",
-	"necromancia":  "Necromancia",
-	"transmutacao": "Transmutação",
-}
-
-func nomeDaEscola(e string) string {
-	if r, ok := rotuloDaEscola[e]; ok {
-		return r
-	}
-	return e
 }
 
 var rotuloDaCategoria = map[string]string{

@@ -124,6 +124,9 @@ templ resultadosDoAcervo(v catalogosView) {
 						for _, e := range g.Efeitos {
 							@cartaoDeEfeito(e, v.Livro)
 						}
+						for _, e := range g.Escolas {
+							@cartaoDeEscola(e, v.Livro)
+						}
 						for _, r := range g.Racas {
 							@cartaoDeRaca(r, v.Livro)
 						}
@@ -201,6 +204,28 @@ templ cartaoDeCondicao(c condicaoDoLivro, livro enderecoDoLivro) {
 	}
 }
 
+// O cartão da ESCOLA DE MAGIA (ALE-264): o destino dos elos que saem das magias.
+//
+// A ABREVIATURA fica ao lado do nome porque é o que as tabelas do livro imprimem
+// — quem lê "Evoc" numa ficha precisa poder achar aqui. Ilusão não tem, e o
+// crachá simplesmente não sai.
+templ cartaoDeEscola(e escolaDeMagia, livro enderecoDoLivro) {
+	@cartaoDoAcervo() {
+		<p class="flex flex-wrap items-center gap-1.5 font-medium">
+			{ e.Name }
+			if e.Abrev != "" {
+				<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ e.Abrev }</span>
+			}
+			@seloDaPagina(livro, e.BookPage, e.Name)
+		</p>
+		<p class="mt-1 text-muted-foreground">
+			for _, pedaco := range comElosDoTexto(e.Description) {
+				@pedacoDoTexto(pedaco, livro)
+			}
+		</p>
+	}
+}
+
 // O cartão do TIPO DE EFEITO (ALE-264). Ele é o destino dos elos que saem das
 // condições, e o livro o define em uma frase na p228.
 templ cartaoDeEfeito(e efeitoDoLivro, livro enderecoDoLivro) {
@@ -224,6 +249,12 @@ templ cartaoDeMagia(m magiaDoLivro, livro enderecoDoLivro) {
 			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">
 				{ fmt.Sprintf("%dº círculo", m.Circle) }
 			</span>
+			// A ESCOLA passou a aparecer no cartão, e como ELO (ALE-264): ela
+			// decidia o filtro e não estava escrita em lugar nenhum — o mestre
+			// filtrava por evocação e as magias não diziam que eram de evocação.
+			@eloParaOAcervo("escolas", m.School, nomeDaEscola(m.School)) {
+				{ nomeDaEscola(m.School) }
+			}
 			@seloDaPagina(livro, m.BookPage, m.Name)
 		</p>
 		<p class="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">

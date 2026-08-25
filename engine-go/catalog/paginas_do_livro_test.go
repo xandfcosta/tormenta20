@@ -3,6 +3,7 @@ package catalog
 import (
 	"encoding/json"
 	"io/fs"
+	"strings"
 	"testing"
 )
 
@@ -188,5 +189,54 @@ func TestOsTresBlocosQueAbremUmaPaginaAdiante(t *testing.T) {
 	}
 	if visto != len(esperado) {
 		t.Errorf("só %d das %d criaturas cobradas existem no catálogo", visto, len(esperado))
+	}
+}
+
+// TestNenhumVerbeteExtraidoTrazSujeiraDaPagina (ALE-264).
+//
+// Os tipos de efeito e as escolas de magia são EXTRAÍDOS do PDF pelo
+// `scripts/paginas-do-livro.py`, e as duas formas de sujeira que o extrator já
+// deixou passar estão aqui — as duas vistas na tela, nenhuma detectada por ele:
+//
+//   - o HÍFEN de quebra de linha, que virou "impede convoca- ções";
+//   - a MOBÍLIA da página colada no último verbete: uma citação decorativa na
+//     p172 ("Uma magia será tão poderosa quanto seu conjurador") e a seção
+//     inteira de "Habilidades Gerais" na p228, que deu 1.800 caracteres.
+//
+// Este teste não tem o livro — ele mora fora do repositório. O que ele mede é a
+// FORMA do que foi extraído, que é o que sobrevive sem o PDF na mão.
+func TestNenhumVerbeteExtraidoTrazSujeiraDaPagina(t *testing.T) {
+	for _, recurso := range []string{"tipos-de-efeito", "escolas-de-magia"} {
+		bruto, ok := Resource(recurso)
+		if !ok {
+			t.Errorf("catálogo %q ausente", recurso)
+			continue
+		}
+		var verbetes []struct {
+			Name        string `json:"name"`
+			Description string `json:"description"`
+		}
+		if err := json.Unmarshal(bruto, &verbetes); err != nil {
+			t.Errorf("%s: %v", recurso, err)
+			continue
+		}
+		if len(verbetes) < 8 {
+			t.Errorf("%s tem só %d verbetes", recurso, len(verbetes))
+		}
+		for _, v := range verbetes {
+			if strings.Contains(v.Description, "- ") {
+				t.Errorf("%s → %q: hífen de quebra solto no meio do texto", recurso, v.Name)
+			}
+			// Uma definição do livro é uma ou duas frases. Passando disto, o
+			// extrator comeu a seção vizinha.
+			if len(v.Description) > 700 {
+				t.Errorf("%s → %q: %d caracteres, a página vizinha entrou junto",
+					recurso, v.Name, len(v.Description))
+			}
+			if !strings.HasSuffix(strings.TrimSpace(v.Description), ".") {
+				t.Errorf("%s → %q: a definição não termina em ponto — foi cortada no meio",
+					recurso, v.Name)
+			}
+		}
 	}
 }

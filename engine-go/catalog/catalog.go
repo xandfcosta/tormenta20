@@ -176,6 +176,10 @@ var resources = []string{
 	// apontar. As definições saem do texto da p228, extraídas pelo
 	// `scripts/paginas-do-livro.py`.
 	"tipos-de-efeito",
+	// `escolas-de-magia` (ALE-264), pelo mesmo motivo: a magia CITA a escola e
+	// não havia para onde o elo apontar — o nome dela nem aparecia no cartão.
+	// As oito definições saem do texto da p172.
+	"escolas-de-magia",
 }
 
 var valid = func() map[string]bool {

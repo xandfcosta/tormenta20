@@ -60,6 +60,53 @@ func nomeDoEfeito(id string) string {
 
 func camposDoEfeito(e efeitoDoLivro) []string { return []string{e.Name, e.Description} }
 
+// ── escola de magia ──────────────────────────────────────────────────────────
+
+// escolaDeMagia é a família de uma magia (T20 p172). Ela mora aqui, ao lado do
+// tipo de efeito, porque nasceu pela mesma razão: a magia a CITA, e citação sem
+// destino é texto morto. E as duas coisas se tocam — o livro diz que "escolas de
+// magia contam como tipos de efeitos".
+type escolaDeMagia struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	// Abrev é a forma curta que o livro imprime nas tabelas ("Abjur"). Ilusão
+	// não tem — o livro não deu —, e vazio aqui é ausência e não dado.
+	Abrev    string `json:"abrev,omitempty"`
+	BookPage int    `json:"bookPage"`
+}
+
+var (
+	escolasUmaVez  sync.Once
+	escolasDoLivro []escolaDeMagia
+)
+
+func escolasDeMagia() []escolaDeMagia {
+	escolasUmaVez.Do(func() {
+		escolasDoLivro = listaDoCatalogo[escolaDeMagia]("escolas-de-magia")
+	})
+	return escolasDoLivro
+}
+
+// nomeDaEscola resolve o id que a magia guarda ("evocacao") no nome que se lê.
+//
+// Sai do CATÁLOGO e não de uma tabela no código, e isso é o conserto de uma
+// duplicação que eu mesmo criei duas horas antes: escrevi as oito à mão para
+// rotular o filtro, e agora elas têm verbete. Duas listas dos mesmos oito nomes
+// divergem na primeira correção de acento.
+func nomeDaEscola(id string) string {
+	for _, e := range escolasDeMagia() {
+		if e.ID == id {
+			return e.Name
+		}
+	}
+	return id
+}
+
+func camposDaEscola(e escolaDeMagia) []string {
+	return []string{e.Name, e.Abrev, e.Description}
+}
+
 // ── o texto com elos dentro ──────────────────────────────────────────────────
 
 // trecho é um pedaço de descrição. `Aba` vazia é texto puro; preenchida, o

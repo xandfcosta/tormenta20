@@ -62,6 +62,7 @@ var trilhoDoMestre = []secaoDoTrilho{
 		{"condicoes", "Condições", "HeartPulse", "As 35 condições do livro e o que cada uma faz."},
 		{"deuses", "Deuses", "Church", "Os 20 deuses, com símbolo, devotos e poderes concedidos."},
 		{"efeitos", "Efeitos", "Zap", "Os tipos de efeito (p228): medo, mental, metabolismo…"},
+		{"escolas", "Escolas", "Wand2", "As oito escolas de magia (p172), com o que cada uma faz."},
 		{"itens", "Itens", "Backpack", "Armas, armaduras e equipamento, com preço e espaços."},
 		{"magias", "Magias", "Wand2", "As 198 magias, por círculo, com aprimoramentos."},
 		{"poderes", "Poderes", "Star", "Poderes de classe, gerais e divinos numa lista só."},
@@ -174,7 +175,7 @@ func trilhaDoMestre(atual string) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(secao.Rotulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 134, Col: 18}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 135, Col: 18}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -192,7 +193,7 @@ func trilhaDoMestre(atual string) templ.Component {
 				var templ_7745c5c3_Var4 templ.SafeURL
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/piloto/mestre/" + f.Slug))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 138, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 139, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -205,7 +206,7 @@ func trilhaDoMestre(atual string) templ.Component {
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(marcaDeTrocaPorTeclado)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 139, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 140, Col: 45}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 				if templ_7745c5c3_Err != nil {
@@ -218,7 +219,7 @@ func trilhaDoMestre(atual string) templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(f.Dica)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 140, Col: 19}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 141, Col: 19}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 				if templ_7745c5c3_Err != nil {
@@ -254,7 +255,7 @@ func trilhaDoMestre(atual string) templ.Component {
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(f.Rotulo)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 149, Col: 79}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 150, Col: 79}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -303,7 +304,7 @@ func cenaDoBestiario(v bestiarioView) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(sinaisDoBestiario(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 163, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 164, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -316,7 +317,7 @@ func cenaDoBestiario(v bestiarioView) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d de %d", len(v.Verbetes), v.Total))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 167, Col: 95}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 168, Col: 95}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -415,7 +416,7 @@ func fichaEmDialogo(m verbete, livro enderecoDoLivro) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(m.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 271, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 272, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 		if templ_7745c5c3_Err != nil {
@@ -428,7 +429,7 @@ func fichaEmDialogo(m verbete, livro enderecoDoLivro) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue("Fechar a ficha de " + m.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 276, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 277, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 		if templ_7745c5c3_Err != nil {
@@ -510,7 +511,7 @@ func filtrosDoBestiario(v bestiarioView) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@get('%s')", v.bestiarioBase()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 311, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 312, Col: 80}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 		if templ_7745c5c3_Err != nil {
@@ -523,7 +524,7 @@ func filtrosDoBestiario(v bestiarioView) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Busca)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 312, Col: 19}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 313, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 		if templ_7745c5c3_Err != nil {
@@ -575,7 +576,7 @@ func filtrosDoBestiario(v bestiarioView) templ.Component {
 			var templ_7745c5c3_Var18 string
 			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolTexto(v.tipoAceso(t)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 332, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 333, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18)
 			if templ_7745c5c3_Err != nil {
@@ -588,7 +589,7 @@ func filtrosDoBestiario(v bestiarioView) templ.Component {
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@post('%s/tipo/%s')", v.bestiarioBase(), t))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 333, Col: 77}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 334, Col: 77}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 			if templ_7745c5c3_Err != nil {
@@ -616,7 +617,7 @@ func filtrosDoBestiario(v bestiarioView) templ.Component {
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(nomeDoTipo(t))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 339, Col: 20}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 340, Col: 20}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
@@ -684,7 +685,7 @@ func caixaDeND(base, id, rotulo, sinal, valor string) templ.Component {
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue("bestiario-" + id)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 353, Col: 33}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 354, Col: 33}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 			if templ_7745c5c3_Err != nil {
@@ -697,7 +698,7 @@ func caixaDeND(base, id, rotulo, sinal, valor string) templ.Component {
 			var templ_7745c5c3_Var24 string
 			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 353, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 354, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 			if templ_7745c5c3_Err != nil {
@@ -720,7 +721,7 @@ func caixaDeND(base, id, rotulo, sinal, valor string) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue("bestiario-" + id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 356, Col: 25}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 357, Col: 25}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 		if templ_7745c5c3_Err != nil {
@@ -741,7 +742,7 @@ func caixaDeND(base, id, rotulo, sinal, valor string) templ.Component {
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.ResolveAttributeValue(valor)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 362, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 363, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var26)
 		if templ_7745c5c3_Err != nil {
@@ -754,7 +755,7 @@ func caixaDeND(base, id, rotulo, sinal, valor string) templ.Component {
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(sinal)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 363, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 364, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 		if templ_7745c5c3_Err != nil {
@@ -767,7 +768,7 @@ func caixaDeND(base, id, rotulo, sinal, valor string) templ.Component {
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@get('%s')", base))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 364, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 365, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
 		if templ_7745c5c3_Err != nil {
@@ -780,7 +781,7 @@ func caixaDeND(base, id, rotulo, sinal, valor string) templ.Component {
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 365, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 366, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 		if templ_7745c5c3_Err != nil {
@@ -844,7 +845,7 @@ func listaDeVerbetes(v bestiarioView) templ.Component {
 				var templ_7745c5c3_Var31 templ.SafeURL
 				templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(v.bestiarioBase() + "?criatura=" + m.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 411, Col: 67}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 412, Col: 67}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 				if templ_7745c5c3_Err != nil {
@@ -857,7 +858,7 @@ func listaDeVerbetes(v bestiarioView) templ.Component {
 				var templ_7745c5c3_Var32 string
 				templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("evt.preventDefault(); $criatura = %q; @get('%s')", m.ID, abrirAFicha(v.bestiarioBase())))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 412, Col: 123}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 413, Col: 123}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var32)
 				if templ_7745c5c3_Err != nil {
@@ -870,7 +871,7 @@ func listaDeVerbetes(v bestiarioView) templ.Component {
 				var templ_7745c5c3_Var33 string
 				templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$criatura = %q; @get('%s')", m.ID, v.bestiarioBase()))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 413, Col: 112}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 414, Col: 112}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 				if templ_7745c5c3_Err != nil {
@@ -898,7 +899,7 @@ func listaDeVerbetes(v bestiarioView) templ.Component {
 				var templ_7745c5c3_Var34 string
 				templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(m.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 422, Col: 15}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 423, Col: 15}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 				if templ_7745c5c3_Err != nil {
@@ -911,7 +912,7 @@ func listaDeVerbetes(v bestiarioView) templ.Component {
 				var templ_7745c5c3_Var35 string
 				templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs("ND " + ndEscrito(m.ND))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 423, Col: 84}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 424, Col: 84}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 				if templ_7745c5c3_Err != nil {
@@ -924,7 +925,7 @@ func listaDeVerbetes(v bestiarioView) templ.Component {
 				var templ_7745c5c3_Var36 string
 				templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(nomeDoTipo(m.Tipo) + " · " + nomeDoTamanho(m.Size))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 425, Col: 61}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 426, Col: 61}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 				if templ_7745c5c3_Err != nil {
@@ -937,7 +938,7 @@ func listaDeVerbetes(v bestiarioView) templ.Component {
 				var templ_7745c5c3_Var37 string
 				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("PV %d · DEF %d · p%d", m.HP, m.Defesa, m.BookPage))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 429, Col: 74}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 430, Col: 74}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 				if templ_7745c5c3_Err != nil {
@@ -998,7 +999,7 @@ func blocoDoVerbete(m verbete, livro enderecoDoLivro) templ.Component {
 		var templ_7745c5c3_Var39 string
 		templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(m.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 454, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 455, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 		if templ_7745c5c3_Err != nil {
@@ -1011,7 +1012,7 @@ func blocoDoVerbete(m verbete, livro enderecoDoLivro) templ.Component {
 		var templ_7745c5c3_Var40 string
 		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("ND %s · %s · %s · ", ndEscrito(m.ND), nomeDoTipo(m.Tipo), nomeDoTamanho(m.Size)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 456, Col: 102}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 457, Col: 102}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 		if templ_7745c5c3_Err != nil {
@@ -1024,7 +1025,7 @@ func blocoDoVerbete(m verbete, livro enderecoDoLivro) templ.Component {
 		var templ_7745c5c3_Var41 string
 		templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(" · XP %d", xpDoND(m.ND)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 458, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 459, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 		if templ_7745c5c3_Err != nil {
@@ -1089,7 +1090,7 @@ func blocoDoVerbete(m verbete, livro enderecoDoLivro) templ.Component {
 					var templ_7745c5c3_Var43 string
 					templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(a.Name + " ")
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 479, Col: 22}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 480, Col: 22}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
 					if templ_7745c5c3_Err != nil {
@@ -1102,7 +1103,7 @@ func blocoDoVerbete(m verbete, livro enderecoDoLivro) templ.Component {
 					var templ_7745c5c3_Var44 string
 					templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(comSinalInt(a.AttackBonus) + " · " + a.Damage)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 480, Col: 102}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 481, Col: 102}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 					if templ_7745c5c3_Err != nil {
@@ -1120,7 +1121,7 @@ func blocoDoVerbete(m verbete, livro enderecoDoLivro) templ.Component {
 						var templ_7745c5c3_Var45 string
 						templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(a.Special)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 483, Col: 61}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 484, Col: 61}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 						if templ_7745c5c3_Err != nil {
@@ -1172,7 +1173,7 @@ func blocoDoVerbete(m verbete, livro enderecoDoLivro) templ.Component {
 					var templ_7745c5c3_Var47 string
 					templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(h)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 494, Col: 13}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 495, Col: 13}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 					if templ_7745c5c3_Err != nil {
@@ -1216,7 +1217,7 @@ func blocoDoVerbete(m verbete, livro enderecoDoLivro) templ.Component {
 						var templ_7745c5c3_Var49 string
 						templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(" · ")
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 504, Col: 15}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 505, Col: 15}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 						if templ_7745c5c3_Err != nil {
@@ -1230,7 +1231,7 @@ func blocoDoVerbete(m verbete, livro enderecoDoLivro) templ.Component {
 					var templ_7745c5c3_Var50 string
 					templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(p.Name + " ")
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 506, Col: 20}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 507, Col: 20}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 					if templ_7745c5c3_Err != nil {
@@ -1243,7 +1244,7 @@ func blocoDoVerbete(m verbete, livro enderecoDoLivro) templ.Component {
 					var templ_7745c5c3_Var51 string
 					templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(comSinalInt(p.Bonus))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 507, Col: 52}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 508, Col: 52}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 					if templ_7745c5c3_Err != nil {
@@ -1261,7 +1262,7 @@ func blocoDoVerbete(m verbete, livro enderecoDoLivro) templ.Component {
 						var templ_7745c5c3_Var52 string
 						templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(" (" + p.Nota + ")")
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 509, Col: 64}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 510, Col: 64}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 						if templ_7745c5c3_Err != nil {
@@ -1304,7 +1305,7 @@ func blocoDoVerbete(m verbete, livro enderecoDoLivro) templ.Component {
 				var templ_7745c5c3_Var54 string
 				templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(m.Equipamento)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 520, Col: 38}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 521, Col: 38}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 				if templ_7745c5c3_Err != nil {
@@ -1341,7 +1342,7 @@ func blocoDoVerbete(m verbete, livro enderecoDoLivro) templ.Component {
 				var templ_7745c5c3_Var56 string
 				templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(m.Tesouro)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 525, Col: 34}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 526, Col: 34}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 				if templ_7745c5c3_Err != nil {
@@ -1485,7 +1486,7 @@ func secaoDoBloco(titulo string) templ.Component {
 		var templ_7745c5c3_Var60 string
 		templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.ResolveAttributeValue(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 552, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 553, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var60)
 		if templ_7745c5c3_Err != nil {
@@ -1520,7 +1521,7 @@ func secaoDoBloco(titulo string) templ.Component {
 		var templ_7745c5c3_Var63 string
 		templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 553, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 554, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var63))
 		if templ_7745c5c3_Err != nil {
@@ -1582,7 +1583,7 @@ func estatistica(rotulo, valor string) templ.Component {
 			var templ_7745c5c3_Var66 string
 			templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 561, Col: 11}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 562, Col: 11}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var66))
 			if templ_7745c5c3_Err != nil {
@@ -1601,7 +1602,7 @@ func estatistica(rotulo, valor string) templ.Component {
 		var templ_7745c5c3_Var67 string
 		templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(valor)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 563, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 564, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var67))
 		if templ_7745c5c3_Err != nil {

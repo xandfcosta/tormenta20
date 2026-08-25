@@ -531,6 +531,185 @@ def cria_o_catalogo_de_classes(livro):
     print(f"catálogo de classes: {len(classes)} de {len(nomes)}")
 
 
+# ── os verbetes que o livro define numa PÁGINA só ────────────────────────────
+
+def verbetes_da_pagina(livro, impressa, nomes):
+    """Corta uma página em verbetes "Nome (Abrev). Definição.".
+
+    É o mesmo algoritmo dos tipos de efeito (p228) e das escolas de magia
+    (p172), e por isso mora num lugar só: os dois nasceram com o mesmo corte
+    escrito duas vezes, e os dois ganharam o mesmo defeito duas vezes.
+
+    Os TRÊS cortes, cada um de um defeito medido na tela:
+
+      - no NOME seguinte, que é o corte óbvio;
+      - na LINHA EM BRANCO, porque depois do último verbete vem a mobília da
+        página. Em p172 é uma citação decorativa ("Uma magia será tão poderosa
+        quanto seu conjurador"), que saiu colada na Transmutação;
+      - no RODAPÉ, porque o texto de uma página de duas colunas continua na
+        seção vizinha depois do número — foi assim que "Veneno" saiu com 1.800
+        caracteres em p228.
+
+    E o HÍFEN de quebra é emendado antes de tudo: sem isso "impede convoca-\nções"
+    vira "impede convoca- ções" na tela, que foi o que o dono viu.
+    """
+    cru = livro.cru[impressa + livro.abertura - 1]
+    # O hífen de quebra some ANTES de o parágrafo virar uma linha só.
+    emendado = re.sub(r"-\n\s*", "", cru)
+
+    marcas = []
+    for nome in nomes:
+        # O nome aparece duas vezes: no texto de abertura e abrindo o verbete. O
+        # verbete é o que vem seguido de "(" ou de ".".
+        casa = re.search(re.escape(nome) + r"\s*(\([^)]*\))?\.", emendado)
+        if not casa:
+            raise SystemExit(f"não achei {nome!r} na p{impressa}")
+        marcas.append((casa.start(), casa.end(), nome, casa.group(1)))
+    marcas.sort()
+
+    fora = []
+    for i, (_, fim, nome, parenteses) in enumerate(marcas):
+        ate = marcas[i + 1][0] if i + 1 < len(marcas) else len(emendado)
+        bruto = emendado[fim:ate]
+        # Linha em branco e rodapé, nesta ordem: o que vier depois de qualquer um
+        # dos dois não é definição.
+        bruto = re.split(r"\n\s*\n", bruto)[0]
+        bruto = re.split(rf"\s{impressa}\s", bruto)[0]
+        texto = re.sub(r"\s+", " ", bruto).strip()
+        texto = re.sub(r"\s*\d{1,3}\s*$", "", texto).strip()
+        if len(texto) > 700:
+            raise SystemExit(f"a definição de {nome!r} veio com {len(texto)} caracteres — o corte falhou")
+        if not texto:
+            raise SystemExit(f"a definição de {nome!r} veio vazia — o corte comeu tudo")
+        fora.append((nome, parenteses[1:-1] if parenteses else "", texto))
+    return fora
+
+
+# ── os TIPOS DE EFEITO, que não tinham catálogo ──────────────────────────────
+
+# A página impressa onde o livro define os tipos, e ela é conferida no boot desta
+# função: o número entra aqui porque é o ÚNICO lugar do script que aponta uma
+# página à mão, e a conferência é o que impede que ele envelheça em silêncio.
+PAGINA_DOS_EFEITOS = 228
+
+# Os nomes que o livro imprime, na ordem em que ele os imprime. A lista existe
+# para o extrator saber onde CORTAR o texto corrido — sem ela seria preciso
+# adivinhar onde termina uma definição e começa a seguinte, e uma frase que
+# comece com maiúscula viraria um tipo inventado.
+NOMES_DOS_EFEITOS = [
+    "Arcano", "Atordoamento", "Cansaço", "Climático", "Cura", "Dano", "Divino",
+    "Luz", "Mágico", "Medo", "Mental", "Metabolismo", "Metamorfose", "Movimento",
+    "Perda de Vida", "Sentidos", "Trevas", "Veneno",
+]
+
+
+def cria_o_catalogo_de_efeitos(livro):
+    """Escreve `catalog/data/tipos-de-efeito.json` a partir do texto da p228.
+
+    Ele existe porque a condição CITA o tipo ("Abalado ... Medo.") e o leitor da
+    tela não tem para onde ir com isso. O livro define cada tipo em uma frase, e
+    é essa frase que vira o verbete — extraída do PDF, não transcrita à mão.
+
+    O `id` é o nome DOBRADO, que é a chave com que as condições já os guardam
+    (`tags: ["cansaco"]`). Se algum tag ficar sem tipo correspondente, o script
+    RECLAMA: elo que aponta para o vazio é pior que elo nenhum.
+    """
+    efeitos = [
+        {"id": dobra(nome).replace(" ", "-"), "name": nome, "description": texto,
+         "bookPage": PAGINA_DOS_EFEITOS}
+        for nome, _, texto in verbetes_da_pagina(livro, PAGINA_DOS_EFEITOS, NOMES_DOS_EFEITOS)
+    ]
+
+    tags = {t for c in carrega("conditions.json").values() for t in c.get("tags", [])}
+    orfas = sorted(tags - {e["id"] for e in efeitos})
+    if orfas:
+        raise SystemExit(f"tags de condição sem tipo de efeito: {orfas}")
+
+    grava("tipos-de-efeito.json", efeitos)
+    print(f"catálogo de tipos de efeito: {len(efeitos)} · nenhuma tag órfã")
+
+
+# ── as CLASSES, que não tinham catálogo ──────────────────────────────────────
+
+def cria_o_catalogo_de_classes(livro):
+    """Escreve `catalog/data/classes.json`: id, nome e página das 14 classes.
+
+    Elas existiam só como uma LISTA DE NOMES dentro de `options.json`, sem lugar
+    onde guardar a página — e sem página não há botão para o livro. O catálogo
+    novo é mínimo de propósito: o que a classe tem de PV, PM e perícias é
+    transcrição de tabela, e transcrever à mão é o que este script existe para
+    não fazer. O que a tela mostra além do nome ela deriva do que já existe
+    (perícias treinadas, poderes da classe).
+
+    O `id` segue a convenção que os poderes de classe já usam
+    ("class.arcanista.…"): o nome dobrado, sem acento e sem espaço.
+    """
+    nomes = carrega("options.json")["classes"]
+    classes = []
+    for nome in nomes:
+        paginas = [p for p in livro.por_indice(nome, ("classe", "")) if livro.confere(nome, p)]
+        if not paginas:
+            print(f"   ✗ classe {nome} sem página — fica de fora")
+            continue
+        classes.append({"id": dobra(nome).replace(" ", "-"), "name": nome, "bookPage": paginas[0]})
+    grava("classes.json", classes)
+    print(f"catálogo de classes: {len(classes)} de {len(nomes)}")
+
+
+# ── os verbetes que o livro define numa PÁGINA só ────────────────────────────
+
+def verbetes_da_pagina(livro, impressa, nomes):
+    """Corta uma página em verbetes "Nome (Abrev). Definição.".
+
+    É o mesmo algoritmo dos tipos de efeito (p228) e das escolas de magia
+    (p172), e por isso mora num lugar só: os dois nasceram com o mesmo corte
+    escrito duas vezes, e os dois ganharam o mesmo defeito duas vezes.
+
+    Os TRÊS cortes, cada um de um defeito medido na tela:
+
+      - no NOME seguinte, que é o corte óbvio;
+      - na LINHA EM BRANCO, porque depois do último verbete vem a mobília da
+        página. Em p172 é uma citação decorativa ("Uma magia será tão poderosa
+        quanto seu conjurador"), que saiu colada na Transmutação;
+      - no RODAPÉ, porque o texto de uma página de duas colunas continua na
+        seção vizinha depois do número — foi assim que "Veneno" saiu com 1.800
+        caracteres em p228.
+
+    E o HÍFEN de quebra é emendado antes de tudo: sem isso "impede convoca-\nções"
+    vira "impede convoca- ções" na tela, que foi o que o dono viu.
+    """
+    cru = livro.cru[impressa + livro.abertura - 1]
+    # O hífen de quebra some ANTES de o parágrafo virar uma linha só.
+    emendado = re.sub(r"-\n\s*", "", cru)
+
+    marcas = []
+    for nome in nomes:
+        # O nome aparece duas vezes: no texto de abertura e abrindo o verbete. O
+        # verbete é o que vem seguido de "(" ou de ".".
+        casa = re.search(re.escape(nome) + r"\s*(\([^)]*\))?\.", emendado)
+        if not casa:
+            raise SystemExit(f"não achei {nome!r} na p{impressa}")
+        marcas.append((casa.start(), casa.end(), nome, casa.group(1)))
+    marcas.sort()
+
+    fora = []
+    for i, (_, fim, nome, parenteses) in enumerate(marcas):
+        ate = marcas[i + 1][0] if i + 1 < len(marcas) else len(emendado)
+        bruto = emendado[fim:ate]
+        # Linha em branco e rodapé, nesta ordem: o que vier depois de qualquer um
+        # dos dois não é definição.
+        bruto = re.split(r"\n\s*\n", bruto)[0]
+        bruto = re.split(rf"\s{impressa}\s", bruto)[0]
+        texto = re.sub(r"\s+", " ", bruto).strip()
+        texto = re.sub(r"\s*\d{1,3}\s*$", "", texto).strip()
+        if len(texto) > 700:
+            raise SystemExit(f"a definição de {nome!r} veio com {len(texto)} caracteres — o corte falhou")
+        if not texto:
+            raise SystemExit(f"a definição de {nome!r} veio vazia — o corte comeu tudo")
+        fora.append((nome, parenteses[1:-1] if parenteses else "", texto))
+    return fora
+
+
 # ── os TIPOS DE EFEITO, que não tinham catálogo ──────────────────────────────
 
 # A página impressa onde o livro define os tipos, e ela é conferida no boot desta
@@ -611,6 +790,48 @@ def cria_o_catalogo_de_efeitos(livro):
     print(f"catálogo de tipos de efeito: {len(efeitos)} · nenhuma tag órfã")
 
 
+# ── as ESCOLAS DE MAGIA, que também não tinham catálogo ──────────────────────
+
+PAGINA_DAS_ESCOLAS = 172
+
+# Na ordem em que o livro as imprime. Como nos tipos de efeito, a lista existe
+# para o extrator saber onde CORTAR — sem ela, uma frase que comece com
+# maiúscula viraria escola inventada.
+NOMES_DAS_ESCOLAS = [
+    "Abjuração", "Adivinhação", "Convocação", "Encantamento",
+    "Evocação", "Ilusão", "Necromancia", "Transmutação",
+]
+
+
+def cria_o_catalogo_de_escolas(livro):
+    """Escreve `catalog/data/escolas-de-magia.json` a partir do texto da p172.
+
+    Mesmo motivo dos tipos de efeito: a magia CITA a escola e não havia para onde
+    o elo apontar — o nome dela nem aparecia no cartão. O `id` é o nome dobrado,
+    que é exatamente o que `spells.json` guarda em `school`; se algum valor de lá
+    ficar sem escola, o script RECLAMA.
+
+    A ABREVIATURA vem junto porque o livro a imprime ("Abjuração (Abjur)") e as
+    tabelas de magia dele usam a forma curta. Ilusão não tem — o livro não deu —,
+    e ausência aqui é ausência, não string vazia com cara de dado.
+    """
+    escolas = []
+    for nome, abrev, texto in verbetes_da_pagina(livro, PAGINA_DAS_ESCOLAS, NOMES_DAS_ESCOLAS):
+        escola = {"id": dobra(nome), "name": nome, "description": texto,
+                  "bookPage": PAGINA_DAS_ESCOLAS}
+        if abrev:
+            escola["abrev"] = abrev
+        escolas.append(escola)
+
+    usadas = {m.get("school") for m in carrega("spells.json").values() if m.get("school")}
+    orfas = sorted(usadas - {e["id"] for e in escolas})
+    if orfas:
+        raise SystemExit(f"magias com escola sem verbete: {orfas}")
+
+    grava("escolas-de-magia.json", escolas)
+    print(f"catálogo de escolas de magia: {len(escolas)} · nenhuma magia órfã")
+
+
 def main():
     caminho = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("-") else None
     caminho = caminho or os.environ.get("LIVRO_PDF") or PADRAO_DO_LIVRO
@@ -630,6 +851,7 @@ def main():
     if gravar:
         cria_o_catalogo_de_classes(livro)
         cria_o_catalogo_de_efeitos(livro)
+        cria_o_catalogo_de_escolas(livro)
         sincroniza_o_dump()
     print(f"\n{mudadas} páginas mudadas · {faltando} entradas sem página")
     print("GRAVADO" if gravar else "nada gravado (use --gravar)")
