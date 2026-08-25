@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"strings"
 
 	"t20engine/aovivo"
 	"t20engine/engine"
@@ -74,6 +75,27 @@ type tabuleiroView struct {
 	// redação usa, e não de um parâmetro novo: duas fontes para o papel é como
 	// nasce a tela que esconde o botão de quem pode e o mostra para quem não.
 	Mestre bool
+	// Acervo são os LUGARES guardados da campanha (ALE-124, fatia 5). Só o
+	// mestre tem — a mesa não escolhe onde joga.
+	//
+	// Vem no RETRATO e não por pedido sob demanda, ao contrário da SPA: lá o
+	// acervo estava fora do instantâneo do socket e custava uma ida ao
+	// servidor; aqui a página inteira JÁ é servida pelo servidor, e uma segunda
+	// viagem para buscar o que ele já tem na mão seria inventar a latência que a
+	// migração existe para tirar. O custo por tique do fluxo está medido.
+	Acervo []lugarDoAcervo
+}
+
+// lugarDoAcervo é uma cena guardada, pronta para listar.
+//
+// A CONTAGEM de peças e não a lista: o acervo serve para escolher onde jogar, e
+// mandar a cena inteira de cada lugar seria mandar a crônica toda a cada
+// abertura de menu. A cena chega ao REABRIR.
+type lugarDoAcervo struct {
+	ID     int64
+	Nome   string
+	Pecas  int
+	Quando string
 }
 
 // pecaDoTabuleiro é uma peça posicionada e já com a aparência resolvida.
@@ -535,4 +557,51 @@ func oQueSeArrasta(b *tabuleiro.BoardState, quem tabuleiro.Mover, alvo string, e
 // quando não há tabuleiro.
 func comandoDoTabuleiroDaCena(v tabuleiroView, acao string) string {
 	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/%s')", v.CampaignID, v.SessionID, acao)
+}
+
+// acervoDaCampanha traduz os lugares guardados para a tela.
+//
+// A DATA é encurtada para o dia: o acervo responde "quando joguei isto?", e a
+// hora não ajuda a escolher entre a taverna de ontem e a cripta de março. O
+// formato vem do banco em ISO, e cortar no `T` é mais honesto que reformatar —
+// não inventa fuso que o servidor não guardou.
+func acervoDaCampanha(lugares []tabuleiro.Place) []lugarDoAcervo {
+	acervo := make([]lugarDoAcervo, 0, len(lugares))
+	for _, l := range lugares {
+		acervo = append(acervo, lugarDoAcervo{
+			ID: l.ID, Nome: l.Name, Pecas: l.Tokens, Quando: diaDe(l.UpdatedAt),
+		})
+	}
+	return acervo
+}
+
+func diaDe(iso string) string {
+	if dia, _, achou := strings.Cut(iso, "T"); achou {
+		return dia
+	}
+	return iso
+}
+
+// comandoDoLugar escreve a chamada de reabrir ou apagar um lugar do acervo.
+func comandoDoLugar(v tabuleiroView, placeID int64, acao string) string {
+	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/lugares/%d/%s')",
+		v.CampaignID, v.SessionID, placeID, acao)
+}
+
+// pecasEmPortugues concorda o número com o substantivo.
+//
+// Existe porque "1 peças" apareceu na tela na primeira medição, e essa é a
+// classe de erro que passa por todo teste que compara com `fmt.Sprintf` do mesmo
+// jeito — o teste re-derivaria o defeito. O caso do ZERO é escrito por extenso
+// porque "0 peças" descreve mal o que a linha é: cena aberta e abandonada, que é
+// justamente o que o mestre está procurando quando abre o acervo para limpar.
+func pecasEmPortugues(n int) string {
+	switch n {
+	case 0:
+		return "cena vazia"
+	case 1:
+		return "1 peça"
+	default:
+		return fmt.Sprintf("%d peças", n)
+	}
 }

@@ -172,6 +172,11 @@ func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, se
 		tabuleiro.BoardForRole(role, s.boards.Get(ctx, sessionID)), st,
 		saudeDaFila(st), combatenteDaVez(st), quemOlha, meus, campaignID, sessionID,
 	)
+	// O ACERVO é do mestre, pela mesma razão do rastreador: a mesa não escolhe
+	// onde joga. A trava é a view não ter o que desenhar, e não a tela esconder.
+	if role == "gm" {
+		view.Tabuleiro.Acervo = acervoDaCampanha(s.boards.Places(ctx, campaignID))
+	}
 	// O rastreador só é MONTADO para o mestre. A trava não é a tela esconder o
 	// bloco: é a view não ter o que desenhar, pelo mesmo `role` que o
 	// `stateForRole` já usou para redigir o estado.

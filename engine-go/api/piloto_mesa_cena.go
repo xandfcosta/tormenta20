@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -26,6 +27,51 @@ func (s *Server) rotasDaCena(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro"
 	r.Post(base+"/abrir", s.comandoDoMestreNoTabuleiro(abreOTabuleiro))
 	r.Post(base+"/encerrar", s.comandoDoMestreNoTabuleiro(encerraOTabuleiro))
+	r.Post(base+"/lugares/{placeId}/reabrir", s.comandoDoMestreNoTabuleiro(reabreOLugar))
+	r.Post(base+"/lugares/{placeId}/remover", s.comandoDoMestreNoTabuleiro(removeOLugar))
+}
+
+// reabreOLugar traz uma cena guardada de volta para a mesa.
+//
+// `ShowPlace` e não `Reopen`: ele ARQUIVA a cena atual antes de trocar, que é o
+// que deixa o mestre pular da taverna para a cripta com a mesa jogando sem
+// perder a taverna. E a política dele é o OPOSTO da do encerrar — falhar ao
+// guardar RECUSA a troca, porque trocar em cima de um acervo que não gravou é
+// justamente perder a cena que se queria guardar.
+func reabreOLugar(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
+	id, err := lugarDaURL(c.R)
+	if err != nil {
+		return nil, err
+	}
+	return st.boards.ShowPlace(c.R.Context(), c.CampaignID, c.SessionID, id)
+}
+
+// removeOLugar apaga uma cena do acervo, e ela não volta.
+//
+// Devolve o tabuleiro ATUAL e não nil: apagar um lugar guardado não mexe na cena
+// que está na mesa, e devolver nil faria o `comandoDoTabuleiro` publicar "não há
+// tabuleiro" para a mesa inteira — o mestre limparia o acervo e a mesa perderia
+// a cena em que estava jogando.
+func removeOLugar(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
+	id, err := lugarDaURL(c.R)
+	if err != nil {
+		return nil, err
+	}
+	if err := st.boards.RemovePlace(c.R.Context(), c.CampaignID, id); err != nil {
+		return nil, err
+	}
+	return st.boards.Get(c.R.Context(), c.SessionID), nil
+}
+
+// lugarDaURL lê o id do CAMINHO, como o quadrado do movimento: o valor é do
+// botão que foi clicado, e não de um sinal da página que N linhas disputariam.
+func lugarDaURL(r *http.Request) (int64, error) {
+	bruto := chi.URLParam(r, "placeId")
+	id, err := strconv.ParseInt(bruto, 10, 64)
+	if err != nil || id <= 0 {
+		return 0, fmt.Errorf("lugar %q não é um id", bruto)
+	}
+	return id, nil
 }
 
 // abreOTabuleiro monta a cena com o lugar e o chão que o mestre escolheu.

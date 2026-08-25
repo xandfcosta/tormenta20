@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -151,5 +152,186 @@ func TestACenaVaziaDizCoisasDiferentesAosDois(t *testing.T) {
 	}
 	if !strings.Contains(doJogador, "O mestre ainda não abriu um tabuleiro") {
 		t.Error("a frase do jogador não diz de quem ele está esperando")
+	}
+}
+
+// Os guardas do ACERVO de lugares (ALE-264, item 4).
+
+// TestOAcervoLISTAoQueFoiEncerrado, com a contagem de peças.
+//
+// A contagem é o que separa a cena montada da cena aberta e abandonada, e é por
+// ela que o mestre decide o que reabrir e o que apagar.
+func TestOAcervoListaOQueFoiEncerrado(t *testing.T) {
+	f := novoPiloto(t)
+	f.noTabuleiro(t) // abre a Taverna e põe UMA peça
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
+		t.Fatalf("encerrar deu %d", rec.Code)
+	}
+
+	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	if !strings.Contains(tela, "Lugares da campanha · 1") {
+		t.Errorf("o acervo não apareceu com a cena encerrada")
+	}
+	// LITERAL e nunca `pecasEmPortugues(1)`: o esperado derivado da produção
+	// afirmaria o defeito junto com a regra, e foi assim que "1 peças" chegou à
+	// tela na primeira medição.
+	if !strings.Contains(tela, "1 peça") {
+		t.Errorf("o acervo não diz quantas peças a cena guardada tem")
+	}
+	if strings.Contains(tela, "1 peças") {
+		t.Errorf("a concordância quebrou: a linha diz \"1 peças\"")
+	}
+
+	// O acervo é do MESTRE: a mesa não escolhe onde joga.
+	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	if strings.Contains(doJogador, "Lugares da campanha") {
+		t.Error("o jogador recebeu o acervo da campanha")
+	}
+}
+
+// TestSemLugarGUARDADOnaoHAbotaoDeAcervo.
+//
+// Um botão que abre uma lista vazia ensina que o acervo não serve para nada. É a
+// metade que faz o guarda acima significar alguma coisa — sem ela, "o acervo
+// apareceu" seria verdade sobre um botão que aparece sempre.
+func TestSemLugarGuardadoNaoHaBotaoDeAcervo(t *testing.T) {
+	f := novoPiloto(t)
+	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	if !strings.Contains(tela, "Abrir tabuleiro") {
+		t.Fatal("a cena vazia do mestre não desenhou — o guarda mediria a tela errada")
+	}
+	if strings.Contains(tela, "Lugares da campanha") {
+		t.Error("o acervo vazio ofereceu um menu que não tem o que mostrar")
+	}
+}
+
+// TestReabrirTROCAacenaEGUARDAaqueEstavaNaMesa.
+//
+// As duas metades juntas porque é isso que deixa o mestre pular da taverna para
+// a cripta com a mesa jogando: reabrir sem guardar a atual perderia a cena em
+// que eles estavam.
+func TestReabrirTrocaACenaEGuardaAQueEstavaNaMesa(t *testing.T) {
+	f := novoPiloto(t)
+	f.abreTabuleiro(t, "taverna") // "Taverna do Javali"
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
+		t.Fatalf("encerrar a taverna deu %d", rec.Code)
+	}
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/tabuleiro/abrir",
+		`{"novolugar":"Cripta","novochao":"cripta"}`); rec.Code != http.StatusOK {
+		t.Fatalf("abrir a cripta deu %d", rec.Code)
+	}
+
+	taverna := int64(0)
+	for _, l := range f.s.boards.Places(context.Background(), f.campaignID) {
+		if l.Name == "Taverna do Javali" {
+			taverna = l.ID
+		}
+	}
+	if taverna == 0 {
+		t.Fatal("a taverna não está no acervo — o guarda mediria a troca errada")
+	}
+
+	if rec := f.pede(t, f.mestre, "POST",
+		fmt.Sprintf("%s/tabuleiro/lugares/%d/reabrir", f.urlDaMesa(), taverna), ""); rec.Code != http.StatusOK {
+		t.Fatalf("reabrir deu %d", rec.Code)
+	}
+	b := f.s.boards.Get(context.Background(), f.sessionID)
+	if b == nil || b.Place != "Taverna do Javali" {
+		t.Fatalf("a mesa não voltou para a taverna: %+v", b)
+	}
+	// E a CRIPTA foi guardada na troca, em vez de perdida.
+	achouCripta := false
+	for _, l := range f.s.boards.Places(context.Background(), f.campaignID) {
+		if l.Name == "Cripta" {
+			achouCripta = true
+		}
+	}
+	if !achouCripta {
+		t.Error("a cena que estava na mesa se perdeu na troca")
+	}
+}
+
+// TestApagarUmLugarNAOderrubaAcenaDaMesa.
+//
+// O `removeOLugar` devolve o tabuleiro ATUAL e não nil, e é por isso: nil faria
+// o caminho publicar "não há tabuleiro" para a mesa inteira — o mestre limparia
+// o acervo e a mesa perderia a cena em que estava jogando.
+func TestApagarUmLugarNaoDerrubaACenaDaMesa(t *testing.T) {
+	f := novoPiloto(t)
+	f.abreTabuleiro(t, "taverna")
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
+		t.Fatalf("encerrar deu %d", rec.Code)
+	}
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/tabuleiro/abrir",
+		`{"novolugar":"Cripta","novochao":"cripta"}`); rec.Code != http.StatusOK {
+		t.Fatalf("abrir a cripta deu %d", rec.Code)
+	}
+	guardados := f.s.boards.Places(context.Background(), f.campaignID)
+	if len(guardados) == 0 {
+		t.Fatal("o acervo está vazio — o guarda não teria o que apagar")
+	}
+
+	if rec := f.pede(t, f.mestre, "POST",
+		fmt.Sprintf("%s/tabuleiro/lugares/%d/remover", f.urlDaMesa(), guardados[0].ID), ""); rec.Code != http.StatusOK {
+		t.Fatalf("remover deu %d", rec.Code)
+	}
+	if b := f.s.boards.Get(context.Background(), f.sessionID); b == nil {
+		t.Error("apagar um lugar do acervo derrubou a cena que estava na mesa")
+	} else if b.Place != "Cripta" {
+		t.Errorf("a cena da mesa virou %q", b.Place)
+	}
+}
+
+// TestSOoMESTREmexeNoAcervo: a trava é do servidor.
+func TestSoOMestreMexeNoAcervo(t *testing.T) {
+	f := novoPiloto(t)
+	f.abreTabuleiro(t, "taverna")
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
+		t.Fatalf("encerrar deu %d", rec.Code)
+	}
+	guardados := f.s.boards.Places(context.Background(), f.campaignID)
+	if len(guardados) == 0 {
+		t.Fatal("o acervo está vazio — o guarda mediria uma rota sem alvo")
+	}
+	id := guardados[0].ID
+
+	for _, acao := range []string{"reabrir", "remover"} {
+		rec := f.pede(t, f.jogador, "POST",
+			fmt.Sprintf("%s/tabuleiro/lugares/%d/%s", f.urlDaMesa(), id, acao), "")
+		if rec.Code != http.StatusForbidden {
+			t.Errorf("o jogador conseguiu %s um lugar: %d", acao, rec.Code)
+		}
+	}
+	if len(f.s.boards.Places(context.Background(), f.campaignID)) != len(guardados) {
+		t.Error("o acervo mudou de tamanho com o jogador mexendo nele")
+	}
+}
+
+// TestACenaVAZIAnoAcervoSeANUNCIAcomoTal.
+//
+// "0 peças" descreve mal o que a linha é. Cena aberta e abandonada é justamente
+// o que o mestre procura quando abre o acervo para limpar, e a linha tem de
+// dizer isso em vez de fazer ele contar zeros.
+func TestACenaVaziaNoAcervoSeAnunciaComoTal(t *testing.T) {
+	f := novoPiloto(t)
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/tabuleiro/abrir",
+		`{"novolugar":"Sala esquecida","novochao":"pedra"}`); rec.Code != http.StatusOK {
+		t.Fatalf("abrir deu %d", rec.Code)
+	}
+	if rec := f.pede(t, f.mestre, "POST", f.urlDaMesa()+"/tabuleiro/encerrar", ""); rec.Code != http.StatusOK {
+		t.Fatalf("encerrar deu %d", rec.Code)
+	}
+
+	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	// O CONTROLE: a cena guardada está listada. Sem ele, não achar "0 peças"
+	// seria verdade também sobre um acervo que não desenhou nada.
+	if !strings.Contains(tela, "Sala esquecida") {
+		t.Fatal("a cena encerrada não apareceu no acervo")
+	}
+	if strings.Contains(tela, "0 peças") {
+		t.Error(`a linha diz "0 peças" em vez de dizer que a cena está vazia`)
+	}
+	if !strings.Contains(tela, "cena vazia") {
+		t.Error("a cena sem peça nenhuma não se anuncia como vazia")
 	}
 }
