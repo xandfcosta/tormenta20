@@ -228,9 +228,11 @@ func (bs *BoardStore) RemoveMarker(ctx context.Context, sessionID int64, markerI
 	return bs.apply(ctx, sessionID, func(b *BoardState) error { RemoveMarker(b, markerID); return nil })
 }
 
-func (bs *BoardStore) PaintTerrain(ctx context.Context, sessionID int64, square engine.Square, difficult bool) (*BoardState, error) {
+func (bs *BoardStore) PaintTerrain(
+	ctx context.Context, sessionID int64, square engine.Square, especie EspecieDeTerreno, ligado bool,
+) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, func(b *BoardState) error {
-		PaintTerrain(b, square, difficult)
+		PaintTerrain(b, square, especie, ligado)
 		return nil
 	})
 }
