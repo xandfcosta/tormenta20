@@ -177,13 +177,7 @@ templ cartaoDeCondicao(c condicaoDoLivro, livro enderecoDoLivro) {
 			// A descrição CITA outras condições ("Desprevenido e imóvel"), e são
 			// 11 citações nas 35 — a densidade que justifica varrer o texto.
 			for _, pedaco := range comElosParaCondicoes(c.Description, c.Name) {
-				if pedaco.Aba != "" {
-					@eloParaOAcervo(pedaco.Aba, pedaco.ID, pedaco.Texto) {
-						{ pedaco.Texto }
-					}
-				} else {
-					{ pedaco.Texto }
-				}
+				@pedacoDoTexto(pedaco, livro)
 			}
 			// O TIPO DE EFEITO fecha a descrição, em itálico, exatamente onde o
 			// livro o imprime: "Abalado. O personagem sofre –2 … *Medo.*".
@@ -222,7 +216,11 @@ templ cartaoDeEfeito(e efeitoDoLivro, livro enderecoDoLivro) {
 			{ e.Name }
 			@seloDaPagina(livro, e.BookPage, e.Name)
 		</p>
-		<p class="mt-1 text-muted-foreground">{ e.Description }</p>
+		<p class="mt-1 text-muted-foreground">
+			for _, pedaco := range comElosDoTexto(e.Description) {
+				@pedacoDoTexto(pedaco, livro)
+			}
+		</p>
 	}
 }
 
@@ -243,9 +241,22 @@ templ cartaoDeMagia(m magiaDoLivro, livro enderecoDoLivro) {
 				<span>{ "Resistência: " + m.Resistance }</span>
 			}
 		</p>
-		<p class="mt-1 text-muted-foreground">{ m.BaseEffect }</p>
+		<p class="mt-1 text-muted-foreground">
+			for _, pedaco := range comElosDoTexto(m.BaseEffect) {
+				@pedacoDoTexto(pedaco, livro)
+			}
+		</p>
+		// Os APRIMORAMENTOS abrem numa caixa (ALE-264): eram uma CONTAGEM
+		// ("3 aprimoramentos disponíveis"), que diz que existe algo e não deixa
+		// lê-lo. São três a cinco linhas por magia — no cartão, empurrariam a
+		// lista inteira para baixo; na caixa, aparecem quando se pergunta.
 		if len(m.Augments) > 0 {
-			<p class="mt-1 text-xs text-muted-foreground">{ aprimoramentosEscritos(len(m.Augments)) }</p>
+			<button
+				type="button"
+				data-nav-skip
+				data-on:click={ abreOsAprimoramentos(m.ID) }
+				class="mt-1 rounded-sm text-left text-xs text-muted-foreground underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>{ aprimoramentosEscritos(len(m.Augments)) }</button>
 		}
 	}
 }
@@ -257,7 +268,11 @@ templ cartaoDePoder(p poderDoLivro, livro enderecoDoLivro) {
 			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ p.Fonte }</span>
 			@seloDaPagina(livro, p.BookPage, p.Name)
 		</p>
-		<p class="mt-1 text-muted-foreground">{ p.Description }</p>
+		<p class="mt-1 text-muted-foreground">
+			for _, pedaco := range comElosDoTexto(p.Description) {
+				@pedacoDoTexto(pedaco, livro)
+			}
+		</p>
 	}
 }
 
@@ -397,6 +412,35 @@ templ cartaoDeDeus(d deusDoLivro, livro enderecoDoLivro) {
 			</p>
 		}
 	}
+}
+
+// osAprimoramentosDaMagia é a outra coisa que a caixa mostra: o que a magia
+// ganha quando se gasta mais mana.
+//
+// O mesmo id (`#verbete-do-elo`) porque é a mesma caixa — o que muda é o miolo,
+// e quem decide é a rota.
+templ osAprimoramentosDaMagia(m magiaDoLivro, livro enderecoDoLivro) {
+	<div id="verbete-do-elo" class="space-y-2 pr-8">
+		<p class="flex flex-wrap items-center gap-1.5 font-medium">
+			{ m.Name }
+			@seloDaPagina(livro, m.BookPage, m.Name)
+		</p>
+		<ul class="space-y-1.5">
+			for _, a := range m.Augments {
+				<li class="flex gap-2 text-sm">
+					// O CUSTO na frente e em largura fixa: é por ele que o mestre
+					// varre a lista — "o que dá para fazer com 2 PM?".
+					<span class="w-14 shrink-0 font-mono text-xs text-grimorio-gold">{ a.Escrito() }</span>
+					<span class="text-muted-foreground">
+						<span class="text-3xs uppercase tracking-widest">{ nomeDoTipoDeAprimoramento(a.Kind) + " · " }</span>
+						for _, pedaco := range comElosDoTexto(a.Description) {
+							@pedacoDoTexto(pedaco, livro)
+						}
+					</span>
+				</li>
+			}
+		</ul>
+	</div>
 }
 
 // verbeteDoElo é o miolo da caixa: os cartões do grupo, sem a moldura da cena.

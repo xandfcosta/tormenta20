@@ -128,7 +128,33 @@ func montaAchados(busca string, peloTexto bool) buscadorView {
 		v.Achados += g.Total
 		v.Grupos = append(v.Grupos, g)
 	}
+	ordenaPorRelevancia(v.Grupos)
 	return v
+}
+
+// ordenaPorRelevancia põe na frente o grupo que tem o MELHOR achado.
+//
+// O defeito foi visto pelo dono na tela: digitando "medo", o verbete "Medo" —
+// nome inteiro, a pontuação máxima — aparecia no SEXTO grupo, abaixo de
+// criaturas que só têm a palavra no nome ("Devorador de Medos"). A ordem dos
+// grupos era a da fileira de abas, fixa, e ela é a certa para NAVEGAR (condição
+// primeiro porque é a consulta do combate) e a errada para BUSCAR.
+//
+// Estável, então a ordem da fileira continua valendo no EMPATE: dois grupos com
+// achados igualmente bons saem na ordem de sempre.
+func ordenaPorRelevancia(grupos []grupoDoBuscador) {
+	slices.SortStableFunc(grupos, func(a, b grupoDoBuscador) int {
+		return cmp.Compare(b.melhorPonto(), a.melhorPonto())
+	})
+}
+
+// melhorPonto é a nota do primeiro achado — a lista já vem ordenada pelo
+// `melhorPrimeiro`, então o primeiro é o melhor.
+func (g grupoDoBuscador) melhorPonto() int {
+	if len(g.Achados) == 0 {
+		return 0
+	}
+	return g.Achados[0].ponto
 }
 
 // grupoBuscado pontua, ordena e corta um catálogo.

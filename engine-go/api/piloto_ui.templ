@@ -1,6 +1,7 @@
 package api
 
 import "fmt"
+import "net/url"
 
 // A contraparte templ do `shared/ui` da SPA (ALE-229).
 //
@@ -464,6 +465,20 @@ const abreOVerbetePorCima = `(evt.metaKey || evt.ctrlKey || evt.shiftKey || evt.
 	`document.getElementById('verbete-em-dialogo').showModal(), ` +
 	"@get('" + rotaDoVerbete + "?' + el.getAttribute('href').split('?')[1]))"
 
+// abreOsAprimoramentos mostra os aprimoramentos da magia na MESMA caixa do elo.
+//
+// A mesma caixa e não uma segunda: as duas perguntas são "me mostra isso sem me
+// tirar daqui", e um segundo diálogo com o mesmo desenho seria a divergência
+// esperando acontecer.
+//
+// Não é `<a>` porque não há endereço para isto: os aprimoramentos são uma PARTE
+// do verbete, e a magia inteira já tem o endereço dela. Botão que não navega é
+// botão.
+func abreOsAprimoramentos(id string) string {
+	return `document.getElementById('verbete-em-dialogo').showModal(); ` +
+		`@get('` + rotaDoVerbete + `?aba=magias&parte=aprimoramentos&entrada=` + url.QueryEscape(id) + `')`
+}
+
 // atalhosDaCasca é o que o `keydown` da janela roda, e eles vão num atributo SÓ.
 //
 // Dois `data-on:keydown__window` no mesmo elemento não somam: é atributo
@@ -519,6 +534,17 @@ const andaNoBuscador = `['ArrowDown', 'ArrowUp'].includes(evt.key) && (evt.preve
 // O `termo` é o que o leitor DESTACA na página. Vem de quem chama e não do
 // número: é o nome do verbete, e é ele que o olho procura ao chegar.
 templ aPaginaDoLivro(livro enderecoDoLivro, pagina int, termo string) {
+	@umLinkParaOLivro(livro, pagina, termo) {
+		{ fmt.Sprintf("p%d ↗", pagina) }
+	}
+}
+
+// umLinkParaOLivro é o mesmo link com o TEXTO de quem chama.
+//
+// Ele existe porque o livro se cita dentro do próprio texto ("veja a página
+// 230"), e ali o link tem de ser a frase que já está escrita — trocá-la por
+// "p230 ↗" reescreveria o livro na tela.
+templ umLinkParaOLivro(livro enderecoDoLivro, pagina int, termo string) {
 	<a
 		href={ templ.SafeURL(livro.naPagina(pagina, termo)) }
 		data-on:click={ abreOLivroPorCima }
@@ -527,7 +553,26 @@ templ aPaginaDoLivro(livro enderecoDoLivro, pagina int, termo string) {
 		data-nav-skip
 		title={ fmt.Sprintf("Abrir o livro na página %d", pagina) }
 		class="rounded-sm underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-	>{ fmt.Sprintf("p%d ↗", pagina) }</a>
+	>{ children... }</a>
+}
+
+// pedacoDoTexto desenha UM pedaço de uma descrição varrida: elo para outro
+// verbete, elo para o livro, ou texto puro.
+//
+// Um componente porque o `for` que o consome aparece em cada cartão que tem
+// texto, e três `if` copiados divergem no primeiro que alguém ajustar.
+templ pedacoDoTexto(pedaco trecho, livro enderecoDoLivro) {
+	if pedaco.Aba != "" {
+		@eloParaOAcervo(pedaco.Aba, pedaco.ID, pedaco.Texto) {
+			{ pedaco.Texto }
+		}
+	} else if pedaco.Pagina > 0 && livro.naPagina(pedaco.Pagina, "") != "" {
+		@umLinkParaOLivro(livro, pedaco.Pagina, "") {
+			{ pedaco.Texto }
+		}
+	} else {
+		{ pedaco.Texto }
+	}
 }
 
 // oLivroEmDialogo é a moldura que a casca desenha uma vez por página.

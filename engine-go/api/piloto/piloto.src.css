@@ -131,6 +131,29 @@ html {
     0 0 18px oklch(0.8 0.11 85 / 0.28);
 }
 
+/* O CAMPO do buscador: o anel do foco vai na LINHA, não no `<input>` (ALE-264).
+
+   A regra global da casa dá anel dourado a qualquer `input` da cena. Num campo
+   com borda e cantos redondos isso fica certo — é a busca das cenas. Aqui o
+   campo é a linha inteira do diálogo, sem borda própria, e o anel saía como um
+   retângulo colado nas bordas da caixa: o dono mandou a imagem.
+
+   FORA de `@layer`, e isto é a lição do bloco acima aprendida de novo: escrevi
+   primeiro dentro de `@layer components` e a regra não valeu NADA, mesmo com um
+   `#id` no seletor. Estilo não-camada ganha de estilo em camada por mais
+   específico que o segundo seja — a especificidade só desempata DENTRO da mesma
+   camada. O e2e do foco acusou: `outline-style` continuava `solid`.
+
+   O `:has()` na linha é o mesmo padrão do `.mesa-painel` acima: quem recebe o
+   foco é o campo, quem acende é a caixa. */
+.scene-grimorio #buscador-campo:focus-visible {
+  outline: none;
+}
+
+.scene-grimorio .buscador-linha:has(#buscador-campo:focus-visible) {
+  border-color: var(--grimorio-gold);
+}
+
 @layer components {
   .acervo-em-colunas {
     display: grid;

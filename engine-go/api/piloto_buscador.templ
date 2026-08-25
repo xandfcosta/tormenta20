@@ -27,7 +27,7 @@ templ buscadorDoLivro() {
 		class="scene-grimorio m-auto w-[min(42rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-0 text-foreground backdrop:bg-black/60"
 	>
 		<h2 id="buscador-titulo" class="sr-only">Buscar no livro</h2>
-		<div class="flex items-center gap-2 border-b border-grimorio-iron px-3">
+		<div class="buscador-linha flex items-center gap-2 border-b border-grimorio-iron px-3 transition-colors">
 			<span aria-hidden="true" class="text-sm text-muted-foreground">⌕</span>
 			// O NOME DO SINAL É MINÚSCULO porque o analisador de HTML minuscula
 			// nome de atributo: um `data-bind:buscaDoLivro` ligaria um sinal

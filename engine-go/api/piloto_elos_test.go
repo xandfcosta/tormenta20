@@ -201,3 +201,109 @@ func TestACaixaDoVerbeteTrazOCartaoInteiro(t *testing.T) {
 		t.Error("um id desconhecido não disse que não achou")
 	}
 }
+
+// TestODevotoNoPluralAchaOVerbete (ALE-264).
+//
+// PROVADO VERMELHO: a primeira versão tentava só tirar "s" e "es", e o dono viu
+// os buracos. Os quatro casos abaixo são os que faltavam, cada um por um motivo
+// diferente do português — ou por não ser plural nenhum.
+func TestODevotoNoPluralAchaOVerbete(t *testing.T) {
+	racas, _, _ := catalogosDoPersonagem()
+	nomePorID := map[string]string{}
+	for _, r := range racas {
+		nomePorID[r.ID] = r.Name
+	}
+
+	casos := []struct{ devoto, raca, porque string }{
+		{"Anões", "Anão", "ões → ão, e não “Anõe”"},
+		{"Golens", "Golem", "ns → m"},
+		{"Sereias/Tritões", "Sereia/Tritão", "as DUAS metades vão para o plural"},
+		{"Aggelus", "Suraggel", "não é plural: é a ascendência que o catálogo guarda"},
+		{"Sulfure", "Suraggel", "a outra ascendência"},
+		{"Elfos", "Elfo", "o caso simples continua valendo"},
+	}
+	for _, caso := range casos {
+		aba, id := eloDoDevoto(caso.devoto)
+		if aba != "racas" || nomePorID[id] != caso.raca {
+			t.Errorf("%q levou a %q/%q, esperado a raça %q — %s",
+				caso.devoto, aba, id, caso.raca, caso.porque)
+		}
+	}
+
+	// O CONTROLE: o que não é verbete continua sem elo. Sem ele, uma regra
+	// frouxa demais passaria verde ligando tudo a qualquer coisa.
+	for _, naoEh := range []string{"Quaisquer", "Aventureiros (todas as classes)", "Qualquer duyshidakk"} {
+		if aba, _ := eloDoDevoto(naoEh); aba != "" {
+			t.Errorf("%q virou elo para %q, e não é verbete de nada", naoEh, aba)
+		}
+	}
+}
+
+// TestAReferenciaDePaginaNoTextoViraElo: o livro se cita, e o número levava a
+// lugar nenhum.
+func TestAReferenciaDePaginaNoTextoViraElo(t *testing.T) {
+	pedacos := comElosDoTexto("Reduz os PV do alvo. Efeitos deste tipo são subdivididos em tipos de dano (veja a página 230).")
+	var achou *trecho
+	for i := range pedacos {
+		if pedacos[i].Pagina > 0 {
+			achou = &pedacos[i]
+		}
+	}
+	if achou == nil {
+		t.Fatalf("a referência não virou elo: %+v", pedacos)
+	}
+	if achou.Pagina != 230 {
+		t.Errorf("a referência aponta para a p%d", achou.Pagina)
+	}
+	// O TEXTO do elo é a frase do livro, e não um "p230 ↗" inventado: trocá-la
+	// reescreveria o livro na tela.
+	if achou.Texto != "página 230" {
+		t.Errorf("o elo mudou o texto para %q", achou.Texto)
+	}
+	// E o resto da frase continua inteiro, texto puro.
+	inteiro := ""
+	for _, p := range pedacos {
+		inteiro += p.Texto
+	}
+	if !strings.Contains(inteiro, "Reduz os PV do alvo.") || !strings.Contains(inteiro, ").") {
+		t.Errorf("a varredura comeu pedaço da frase: %q", inteiro)
+	}
+}
+
+// TestUmNumeroSoltoNaoViraPagina: o controle da varredura.
+func TestUmNumeroSoltoNaoViraPagina(t *testing.T) {
+	for _, texto := range []string{"causa 3d6 de dano", "recebe +2 na Defesa e 230 de alcance", "20% de chance"} {
+		for _, p := range comElosDoTexto(texto) {
+			if p.Pagina > 0 {
+				t.Errorf("%q: o número %d virou página", texto, p.Pagina)
+			}
+		}
+	}
+}
+
+// TestOsAprimoramentosAbremNaCaixa: eram uma contagem que não se podia ler.
+func TestOsAprimoramentosAbremNaCaixa(t *testing.T) {
+	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
+	eu := seedUser(t, s, "mestre@t20.local")
+
+	cena := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/catalogos?aba=magias&entrada=bola-de-fogo", "").Body.String()
+	if !strings.Contains(cena, "aprimoramentos disponíveis") {
+		t.Fatal("o cartão não oferece os aprimoramentos")
+	}
+	if !strings.Contains(cena, "parte=aprimoramentos") {
+		t.Error("o botão não pede a parte dos aprimoramentos")
+	}
+
+	caixa := pedeNoMestre(t, s, eu, "GET", "/piloto/verbete?aba=magias&parte=aprimoramentos&entrada=bola-de-fogo", "").Body.String()
+	if !strings.Contains(caixa, "Aumenta o dano em +2d6") {
+		t.Error("a caixa não traz o texto do aprimoramento")
+	}
+	if !strings.Contains(caixa, "+2 PM") {
+		t.Error("a caixa não traz o custo, que é por onde o mestre varre a lista")
+	}
+	// O CONTROLE: sem a `parte`, a mesma rota devolve o cartão inteiro.
+	inteiro := pedeNoMestre(t, s, eu, "GET", "/piloto/verbete?aba=magias&entrada=bola-de-fogo", "").Body.String()
+	if strings.Contains(inteiro, "Aumenta o dano em +2d6") {
+		t.Error("o cartão inteiro veio com os aprimoramentos — a `parte` não separa nada")
+	}
+}

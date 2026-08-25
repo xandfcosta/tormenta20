@@ -72,19 +72,40 @@ type condicaoDoLivro struct {
 	BookPage int `json:"bookPage"`
 }
 
+// aprimoramentoDaMagia é o que o livro imprime abaixo da magia: quanto custa a
+// mais e o que muda. Eram `[]any` — a cena só contava quantos havia —, e o
+// dono pediu para poder LER cada um.
+type aprimoramentoDaMagia struct {
+	PmCost      int    `json:"pmCost"`
+	Kind        string `json:"kind"`
+	Description string `json:"description"`
+}
+
+// Escrito diz o custo como o livro: "+2 PM".
+func (a aprimoramentoDaMagia) Escrito() string { return fmt.Sprintf("+%d PM", a.PmCost) }
+
+// nomeDoTipoDeAprimoramento: o livro separa o que AUMENTA um efeito do que o
+// MUDA, e a diferença importa na hora de gastar mana.
+func nomeDoTipoDeAprimoramento(kind string) string {
+	if kind == "aumenta" {
+		return "aumenta"
+	}
+	return "muda"
+}
+
 type magiaDoLivro struct {
-	ID         string   `json:"id"`
-	Name       string   `json:"name"`
-	Circle     int      `json:"circle"`
-	School     string   `json:"school"`
-	Execution  string   `json:"execution"`
-	Range      string   `json:"range"`
-	Duration   string   `json:"duration"`
-	Resistance string   `json:"resistance,omitempty"`
-	BaseEffect string   `json:"baseEffect"`
-	Augments   []any    `json:"augments"`
-	Classes    []string `json:"classes"`
-	BookPage   int      `json:"bookPage"`
+	ID         string                 `json:"id"`
+	Name       string                 `json:"name"`
+	Circle     int                    `json:"circle"`
+	School     string                 `json:"school"`
+	Execution  string                 `json:"execution"`
+	Range      string                 `json:"range"`
+	Duration   string                 `json:"duration"`
+	Resistance string                 `json:"resistance,omitempty"`
+	BaseEffect string                 `json:"baseEffect"`
+	Augments   []aprimoramentoDaMagia `json:"augments"`
+	Classes    []string               `json:"classes"`
+	BookPage   int                    `json:"bookPage"`
 }
 
 // poderDoLivro é o poder ACHATADO. O livro espalha poder por três catálogos —

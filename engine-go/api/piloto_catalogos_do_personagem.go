@@ -39,16 +39,21 @@ type habilidadeDaRaca struct {
 }
 
 type racaDoLivro struct {
-	ID              string             `json:"id"`
-	Name            string             `json:"name"`
-	Tier            string             `json:"tier"`
-	Tamanho         string             `json:"tamanho"`
-	Deslocamento    int                `json:"deslocamento"`
-	VisaoNoEscuro   bool               `json:"visaoNoEscuro"`
-	VisaoNaPenumbra bool               `json:"visaoNaPenumbra"`
-	AtributoMod     atributoDeRaca     `json:"atributoMod"`
-	Abilities       []habilidadeDaRaca `json:"abilities"`
-	BookPage        int                `json:"bookPage"`
+	ID              string         `json:"id"`
+	Name            string         `json:"name"`
+	Tier            string         `json:"tier"`
+	Tamanho         string         `json:"tamanho"`
+	Deslocamento    int            `json:"deslocamento"`
+	VisaoNoEscuro   bool           `json:"visaoNoEscuro"`
+	VisaoNaPenumbra bool           `json:"visaoNaPenumbra"`
+	AtributoMod     atributoDeRaca `json:"atributoMod"`
+	// Ascendencias são as metades de uma raça que se escolhe na criação — o
+	// suraggel é "aggelus" ou "sulfure". Elas importam aqui porque os DEUSES
+	// citam a ascendência e não a raça ("Devotos: Aggelus"), e sem isto o elo
+	// desses dois não existiria.
+	Ascendencias []string           `json:"ascendencias"`
+	Abilities    []habilidadeDaRaca `json:"abilities"`
+	BookPage     int                `json:"bookPage"`
 }
 
 // atributoDeRaca são as DUAS formas do livro, e elas não se reduzem a uma: o

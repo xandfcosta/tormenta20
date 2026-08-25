@@ -1,7 +1,9 @@
 package api
 
 import (
+	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -73,6 +75,10 @@ type trecho struct {
 	// texto: nome é tela e muda com revisão do livro, id é como os catálogos já
 	// se referem uns aos outros.
 	ID string
+	// Pagina, quando maior que zero, faz o pedaço virar um elo para o LIVRO em
+	// vez de para o acervo: é uma referência escrita no texto ("veja a página
+	// 230"), e ela merece o mesmo clique que o botão de página do cartão.
+	Pagina int
 }
 
 // comElosParaCondicoes parte a descrição nos nomes de CONDIÇÃO que ela cita.
@@ -87,7 +93,61 @@ type trecho struct {
 // A própria entrada é excluída: um elo que aponta para a página em que já se
 // está é ruído com cara de saída.
 func comElosParaCondicoes(texto, exceto string) []trecho {
-	return parteNosNomes(texto, nomesDeCondicaoPorTamanho(), exceto, "condicoes")
+	return comElosDePagina(parteNosNomes(texto, nomesDeCondicaoPorTamanho(), exceto, "condicoes"))
+}
+
+// referenciaDePagina é como o livro cita a si mesmo: "veja a página 230",
+// "pág. 172". Medido no catálogo — são cinco ocorrências, duas nos tipos de
+// efeito e três nos dragões —, e cada uma era texto morto: o número estava lá e
+// não levava a lugar nenhum.
+var referenciaDePagina = regexp.MustCompile(`(?i)p[áa]g(?:ina)?\.?\s*(\d{1,3})`)
+
+// comElosDePagina parte os pedaços de TEXTO PURO nas referências de página.
+//
+// Roda DEPOIS da varredura de nomes e só sobre o que sobrou como texto: um
+// pedaço que já virou elo para um verbete não pode virar elo para o livro
+// também — dois destinos na mesma palavra é uma escolha que ninguém pediu.
+func comElosDePagina(pedacos []trecho) []trecho {
+	var fora []trecho
+	for _, pedaco := range pedacos {
+		if pedaco.Aba != "" {
+			fora = append(fora, pedaco)
+			continue
+		}
+		fora = append(fora, parteNasPaginas(pedaco.Texto)...)
+	}
+	return fora
+}
+
+func parteNasPaginas(texto string) []trecho {
+	marcas := referenciaDePagina.FindAllStringSubmatchIndex(texto, -1)
+	if marcas == nil {
+		return []trecho{{Texto: texto}}
+	}
+	var fora []trecho
+	fim := 0
+	for _, m := range marcas {
+		pagina, err := strconv.Atoi(texto[m[2]:m[3]])
+		if err != nil || pagina <= 0 {
+			continue
+		}
+		if antes := texto[fim:m[0]]; antes != "" {
+			fora = append(fora, trecho{Texto: antes})
+		}
+		fora = append(fora, trecho{Texto: texto[m[0]:m[1]], Pagina: pagina})
+		fim = m[1]
+	}
+	if resto := texto[fim:]; resto != "" {
+		fora = append(fora, trecho{Texto: resto})
+	}
+	return fora
+}
+
+// comElosDoTexto é a varredura para os catálogos que NÃO citam condições — só as
+// referências de página. Ver o cabeçalho: em magia e poder as citações de
+// condição são 3 em 668, e varrer 992 descrições atrás delas é custo sem retorno.
+func comElosDoTexto(texto string) []trecho {
+	return parteNasPaginas(texto)
 }
 
 // idDaCondicao resolve o nome no id com que o catálogo a guarda.
@@ -169,15 +229,24 @@ func fronteira(texto string, i int) bool {
 
 // ── os elos que vêm de CAMPO e não de texto ──────────────────────────────────
 
-// eloDoDevoto acha a aba de um devoto do deus ("Elfos", "Bárbaros").
+// eloDoDevoto acha a aba e o id de um devoto do deus ("Elfos", "Bárbaros").
 //
-// O dado vem no PLURAL e as entradas são singulares, então a busca tenta o nome
-// como veio e depois sem o "s" final. Não achou, não vira elo: "Quaisquer" é
-// devoto de Aharadak e não é raça nem classe nenhuma.
+// O dado vem no PLURAL e as entradas são singulares. A primeira versão tentava
+// só tirar "s" e "es", e o dono viu os buracos: MEDIDOS, faltavam elo em
+// "Anões", "Golens" e "Sereias/Tritões" — plurais que o português não faz
+// acrescentando letra, e um nome composto por barra em que as DUAS metades vão
+// para o plural.
+//
+// E em "Aggelus" e "Sulfure", que não são plural de nada: são as ASCENDÊNCIAS do
+// suraggel, e o catálogo já as guarda no campo `ascendencias`. O elo leva à raça
+// que as contém — resolver por dado e não por uma tabela de exceções escrita à
+// mão, que envelheceria na primeira raça nova.
+//
+// Não achou, não vira elo: "Quaisquer" e "Aventureiros (todas as classes)" não
+// são verbete de nada.
 func eloDoDevoto(nome string) (aba, id string) {
-	candidatos := []string{nome, strings.TrimSuffix(nome, "s"), strings.TrimSuffix(nome, "es")}
 	racas, classes, _ := catalogosDoPersonagem()
-	for _, candidato := range candidatos {
+	for _, candidato := range noSingular(nome) {
 		for _, r := range racas {
 			if r.Name == candidato {
 				return "racas", r.ID
@@ -189,7 +258,55 @@ func eloDoDevoto(nome string) (aba, id string) {
 			}
 		}
 	}
+	for _, r := range racas {
+		if slices.Contains(r.Ascendencias, dobraSimples(nome)) {
+			return "racas", r.ID
+		}
+	}
 	return "", ""
+}
+
+// noSingular devolve as formas a tentar, do nome como veio ao singular provável.
+//
+// As regras são as do português, e cada uma nasceu de um caso do catálogo:
+//
+//	"Elfos"            → "Elfo"      (s)
+//	"Caçadores"        → "Caçador"   (es)
+//	"Anões"            → "Anão"      (ões → ão)
+//	"Golens"           → "Golem"     (ns → m)
+//	"Sereias/Tritões"  → "Sereia/Tritão"  (as duas metades)
+func noSingular(nome string) []string {
+	singular := func(palavra string) []string {
+		fora := []string{palavra}
+		for de, para := range map[string]string{"ões": "ão", "ãos": "ão", "ns": "m", "es": "", "s": ""} {
+			if strings.HasSuffix(palavra, de) {
+				fora = append(fora, strings.TrimSuffix(palavra, de)+para)
+			}
+		}
+		return fora
+	}
+	if !strings.Contains(nome, "/") {
+		return singular(nome)
+	}
+	// Nome composto: cada metade vai para o singular, e só a combinação de todas
+	// as metades no singular casa "Sereia/Tritão".
+	var partes [][]string
+	for _, parte := range strings.Split(nome, "/") {
+		partes = append(partes, singular(parte))
+	}
+	fora := []string{nome}
+	for _, esquerda := range partes[0] {
+		for _, direita := range partes[len(partes)-1] {
+			fora = append(fora, esquerda+"/"+direita)
+		}
+	}
+	return fora
+}
+
+// dobraSimples é minúsculas sem acento, para casar a ascendência que o catálogo
+// guarda em caixa baixa ("aggelus") com o nome que o deus escreve ("Aggelus").
+func dobraSimples(s string) string {
+	return strings.ToLower(s)
 }
 
 // idDoPoder devolve o id do poder concedido pelo deus, ou vazio se ele não tem

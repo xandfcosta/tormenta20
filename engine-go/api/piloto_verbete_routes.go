@@ -29,8 +29,17 @@ func (s *Server) handleVerbeteDoElo(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	grupo := grupoDaEntrada(abaConhecida(q.Get("aba")), q.Get("entrada"))
 
+	// `parte` pede um PEDAÇO do verbete em vez do cartão inteiro — hoje só os
+	// aprimoramentos da magia. Parâmetro e não segunda rota porque o que muda é
+	// o miolo da mesma caixa: duas rotas obrigariam o cliente a saber qual
+	// chamar, e o dia em que houver um terceiro pedaço seriam três.
+	miolo := verbeteDoElo(grupo, s.livro.endereco)
+	if q.Get("parte") == "aprimoramentos" && len(grupo.Magias) == 1 {
+		miolo = osAprimoramentosDaMagia(grupo.Magias[0], s.livro.endereco)
+	}
+
 	sse := datastar.NewSSE(w, r)
-	fragmento, err := renderFragmento(r.Context(), verbeteDoElo(grupo, s.livro.endereco))
+	fragmento, err := renderFragmento(r.Context(), miolo)
 	if err != nil {
 		return
 	}

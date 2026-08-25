@@ -93,3 +93,31 @@ test('o Esc fecha a caixa e devolve a cena', async ({ page }) => {
   // `data-voltar` da casca e levar a pessoa para o Hub.
   expect(page.url()).toContain('/piloto/mestre/bestiario')
 })
+
+test('o campo do buscador acende a linha, e não um retângulo colado na caixa', async ({ page }) => {
+  await page.setViewportSize({ width: 1400, height: 900 })
+  await page.goto('/piloto/mestre/catalogos')
+  await page.keyboard.press('Control+k')
+  await expect(page.locator(CAMPO)).toBeFocused()
+
+  // O defeito, visto pelo dono na tela: a regra global da casa dá anel dourado a
+  // qualquer `input` da cena e VENCE o `outline-none` do utilitário. Num campo
+  // com borda isso fica certo; aqui o campo é a linha inteira do diálogo, e o
+  // anel saía como um retângulo colado nas bordas.
+  //
+  // E2E porque a pergunta é de CASCATA: quem ganha entre duas folhas, e um
+  // `:has()` que acende o pai. Só o navegador resolve isso.
+  const medida = await page.evaluate(() => {
+    const campo = document.getElementById('buscador-campo')!
+    const linha = campo.closest('.buscador-linha')!
+    return {
+      anelDoCampo: getComputedStyle(campo).outlineStyle,
+      bordaDaLinha: getComputedStyle(linha).borderBottomColor,
+      bordaDeFora: getComputedStyle(document.getElementById('buscador')!).borderTopColor,
+    }
+  })
+  expect(medida.anelDoCampo, 'o campo ainda desenha o anel do navegador').toBe('none')
+  // O CONTROLE: a linha acende com uma cor DIFERENTE da borda da caixa. Sem ele,
+  // "tem borda" seria verdade sobre a borda de sempre.
+  expect(medida.bordaDaLinha).not.toBe(medida.bordaDeFora)
+})

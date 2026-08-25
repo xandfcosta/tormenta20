@@ -229,3 +229,50 @@ func temOAchado(v buscadorView, nome string) bool {
 	}
 	return false
 }
+
+// TestOMelhorAchadoVemNoPrimeiroGrupo (ALE-264).
+//
+// PROVADO VERMELHO contra a ordem fixa: os grupos saíam na ordem da FILEIRA DE
+// ABAS, e o dono viu o efeito — digitando "medo", o verbete "Medo" (nome
+// inteiro, nota máxima) aparecia no sexto grupo, abaixo de criaturas que só têm
+// a palavra no nome. A ordem da fileira é a certa para NAVEGAR e a errada para
+// BUSCAR.
+func TestOMelhorAchadoVemNoPrimeiroGrupo(t *testing.T) {
+	casos := []struct{ termo, grupo, achado string }{
+		{"medo", "Efeitos", "Medo"},
+		{"abal", "Condições", "Abalado"},
+		{"lobo", "Criaturas", "Lobo"},
+	}
+	for _, caso := range casos {
+		v := buscaNoLivro(caso.termo)
+		if len(v.Grupos) == 0 {
+			t.Errorf("%q não achou nada", caso.termo)
+			continue
+		}
+		primeiro := v.Grupos[0]
+		if primeiro.Rotulo != caso.grupo || primeiro.Achados[0].Nome != caso.achado {
+			t.Errorf("%q → %s(%s); esperado %s(%s)",
+				caso.termo, primeiro.Rotulo, primeiro.Achados[0].Nome, caso.grupo, caso.achado)
+		}
+	}
+}
+
+// TestOEmpateMantemAOrdemDaFileira: a ordenação é ESTÁVEL.
+//
+// A ordem das abas tem razão registrada — condição primeiro porque é a consulta
+// do combate — e ela continua valendo quando dois grupos têm achados igualmente
+// bons. Sem estabilidade, a mesma busca poderia sair em ordens diferentes.
+func TestOEmpateMantemAOrdemDaFileira(t *testing.T) {
+	grupos := []grupoDoBuscador{
+		{Rotulo: "Condições", Achados: []achadoDoBuscador{{Nome: "a", ponto: 40}}},
+		{Rotulo: "Magias", Achados: []achadoDoBuscador{{Nome: "b", ponto: 40}}},
+		{Rotulo: "Itens", Achados: []achadoDoBuscador{{Nome: "c", ponto: 100}}},
+	}
+	ordenaPorRelevancia(grupos)
+	if grupos[0].Rotulo != "Itens" {
+		t.Errorf("o grupo com o melhor achado não veio na frente: %q", grupos[0].Rotulo)
+	}
+	if grupos[1].Rotulo != "Condições" || grupos[2].Rotulo != "Magias" {
+		t.Errorf("o empate não manteve a ordem da fileira: %q, %q", grupos[1].Rotulo, grupos[2].Rotulo)
+	}
+}
