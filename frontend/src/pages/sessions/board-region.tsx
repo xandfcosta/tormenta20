@@ -1,4 +1,4 @@
-import { Brush, Eraser, Eye, Library, MapPin, Radar, Ruler as RulerIcon, Theater, Users, X } from 'lucide-solid'
+import { Eye, Library, Theater, Users, X } from 'lucide-solid'
 import { createEffect, createMemo, createSignal, on, Show } from 'solid-js'
 import { createAreaTemplate } from '@/features/battle-board/area-template'
 import {
@@ -11,6 +11,7 @@ import {
   ViewControls,
 } from '@/features/battle-board/board-bars'
 import { boardKeyAction } from '@/features/battle-board/board-keys'
+import { ToolRail } from '@/features/battle-board/tool-rail'
 import { pathBetween } from '@/features/battle-board/board-path'
 import { BoardView } from '@/features/battle-board/board-view'
 import { type BoardViewport, SQUARE_METRES } from '@/features/battle-board/board-viewport'
@@ -152,21 +153,57 @@ export function BoardRegion(props: {
     ),
   )
 
-  // O pincel é MODO e não gesto: enquanto ele está ligado, a casa clicada (ou
-  // arrastada) vira terreno difícil em vez de receber a peça. Modo porque o
-  // clique numa casa já tem dono — pousar —, e porque gesto com tecla não
-  // existe no toque. A BORRACHA é modo irmão em vez de "clicar de novo apaga":
-  // arrastando, alternar faria a casa piscar debaixo do dedo.
-  const [tool, setTool] = createSignal<'brush' | 'eraser' | null>(null)
+  /**
+   * UMA FERRAMENTA ATIVA POR VEZ (ALE-203, fatia 1).
+   *
+   * Antes eram cinco sinais soltos — `tool`, `measuring`, `templating`,
+   * `marking` — e cada `toggle` desligava os outros À MÃO. Isso era o defeito,
+   * não o estilo: a régua não desligava o pincel e o gabarito não desligava
+   * nenhum dos dois, então dava para ter pincel E régua ligados, com a régua
+   * ganhando o clique enquanto o pincel continuava pintando no arrasto. O
+   * `onSquareClick` tinha uma cadeia de precedência para arbitrar um estado que
+   * não deveria existir.
+   *
+   * Com um sinal só, a exclusão é POR CONSTRUÇÃO: não há como dois estarem
+   * ligados, e ninguém precisa lembrar de desligar o vizinho ao acrescentar a
+   * sexta ferramenta.
+   *
+   * `'peca'` é o padrão e é o que a cena sempre fez: o clique pousa a peça
+   * selecionada. A issue prevê partir isso em movimento livre + interação, e
+   * essa é a FATIA 2 — aqui o nome diz o que o código faz hoje, porque um nome
+   * que promete o desenho futuro mente enquanto ele não chega.
+   */
+  type Ferramenta = 'peca' | 'regua' | 'gabarito' | 'marcador' | 'terreno' | 'borracha'
+  const [ferramenta, setFerramenta] = createSignal<Ferramenta>('peca')
+
+  /**
+   * Escolher a mesma ferramenta duas vezes volta ao padrão — é o que os botões
+   * de modo já faziam, e tirar isso obrigaria a ir ao trilho só para "desligar".
+   *
+   * A limpeza que cada uma exigia continua aqui, num lugar só: a régua e o
+   * gabarito descartam o desenho pela metade, e todas largam a peça na mão,
+   * senão o clique seguinte a pousaria no meio de outro gesto.
+   */
+  const escolheFerramenta = (quero: Ferramenta) => {
+    const proxima = ferramenta() === quero ? 'peca' : quero
+    ruler.clear()
+    area.clear()
+    setSelectedMarkerId(null)
+    setSelectedTokenId(null)
+    setFerramenta(proxima)
+  }
+
+  // Os nomes DERIVADOS ficam: o resto do arquivo pergunta "estou medindo?" e não
+  // "qual é a ferramenta?", e trocar cinquenta chamadas para provar a mesma
+  // coisa seria diff sem garantia.
+  const tool = () => (ferramenta() === 'terreno' ? 'brush' : ferramenta() === 'borracha' ? 'eraser' : null)
   const painting = () => tool() !== null
-  const useTool = (wanted: 'brush' | 'eraser') =>
-    setTool((atual) => (atual === wanted ? null : wanted))
   /**
    * O botão direito apaga — o gesto que todo editor de mapa tem — e a ferramenta
    * SELECIONADA muda junto, senão a tela diria "pincel" enquanto a mão apaga.
    */
   const paintSquare = (x: number, y: number, secondary: boolean) => {
-    if (secondary) setTool('eraser')
+    if (secondary) setFerramenta('borracha')
     props.rt.paintTerrain(x, y, !secondary && tool() === 'brush')
   }
   /**
@@ -178,13 +215,8 @@ export function BoardRegion(props: {
    * mesma regra do pincel, e pela mesma razão: o clique já tem dono.
    */
   const ruler = createRuler()
-  const [measuring, setMeasuring] = createSignal(false)
-  const toggleRuler = () => {
-    ruler.clear()
-    setSelectedTokenId(null)
-    setTemplating(false)
-    setMeasuring((ligada) => !ligada)
-  }
+  const measuring = () => ferramenta() === 'regua'
+  const toggleRuler = () => escolheFerramenta('regua')
 
   /**
    * O gabarito de área (ALE-124, fatia 6b). Como a régua, é de todo mundo e é
@@ -192,13 +224,8 @@ export function BoardRegion(props: {
    * figura da p225; aqui só mora a escolha e onde ela foi posta.
    */
   const area = createAreaTemplate(() => board()?.tokens ?? [])
-  const [templating, setTemplating] = createSignal(false)
-  const toggleTemplate = () => {
-    area.clear()
-    setSelectedTokenId(null)
-    setMeasuring(false)
-    setTemplating((ligado) => !ligado)
-  }
+  const templating = () => ferramenta() === 'gabarito'
+  const toggleTemplate = () => escolheFerramenta('gabarito')
 
   /**
    * Marcar um LUGAR do mapa que não é peça (ALE-195): a armadilha, a porta que
@@ -209,15 +236,8 @@ export function BoardRegion(props: {
    * armadilha no meio da cena não quer digitar, e "A", "B", "C" é como a mesa
    * fala de lugares num mapa.
    */
-  const [marking, setMarking] = createSignal(false)
   const [selectedMarkerId, setSelectedMarkerId] = createSignal<string | null>(null)
-  const toggleMarking = () => {
-    setSelectedMarkerId(null)
-    setSelectedTokenId(null)
-    setMeasuring(false)
-    setTemplating(false)
-    setMarking((ligado) => !ligado)
-  }
+  const marking = () => ferramenta() === 'marcador'
   const selectedMarker = () => board()?.markers?.find((m) => m.id === selectedMarkerId())
   const markAt = (x: number, y: number) => {
     props.rt.addMarker({ x, y, text: nextMarkerText(board()?.markers ?? []), color: 'ouro', hidden: true })
@@ -575,6 +595,20 @@ export function BoardRegion(props: {
           // cabeçalho para sair dela. Por isso a condição é o papel, e não só a
           // cortina.
           <Show when={props.isGm || !cena(live()).curtained} fallback={<CurtainForPlayers />}>
+            {/* O trilho é IRMÃO do cabeçalho e do mapa, e não filho do
+                cabeçalho: no grande ele fica à esquerda dos dois, e é isso que
+                devolve a fileira de cima ao título (ALE-203). */}
+            <ToolRail
+              ativa={ferramenta()}
+              isGm={props.isGm}
+              onEscolher={escolheFerramenta}
+            >
+              <ViewControls
+                view={props.view}
+                onFit={() => props.view.fit(live().tokens)}
+                fullscreen={fullscreen}
+              />
+            </ToolRail>
           
             <header class="flex shrink-0 flex-wrap items-center gap-2 border-b border-grimorio-iron px-3 py-2">
               <SectionTitle contexto="painel" class="text-sm min-w-0 truncate">
@@ -589,32 +623,7 @@ export function BoardRegion(props: {
                   cortado com o ✕ de encerrar INALCANÇÁVEL fora da tela
                   (ALE-178). */}
               <div class="ml-auto flex flex-wrap items-center justify-end gap-1">
-                <ViewControls
-                  view={props.view}
-                  onFit={() => props.view.fit(live().tokens)}
-                  fullscreen={fullscreen}
-                />
                 {/* Fora do bloco do mestre de propósito: medir é de quem joga. */}
-                <Button
-                  size="sm"
-                  variant={measuring() ? 'default' : 'ghost'}
-                  aria-pressed={measuring()}
-                  aria-label="Régua"
-                  title="Régua"
-                  onClick={toggleRuler}
-                >
-                  <RulerIcon aria-hidden="true" class="size-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant={templating() ? 'default' : 'ghost'}
-                  aria-pressed={templating()}
-                  aria-label="Gabarito de área"
-                  title="Gabarito de área"
-                  onClick={toggleTemplate}
-                >
-                  <Radar aria-hidden="true" class="size-4" />
-                </Button>
                 <Show when={props.isGm}>
                   {/* Ícone só, como a borracha: o cabeçalho acabou de perder
                       seis botões por ocupar o lugar de quem trabalha (ALE-124),
@@ -642,34 +651,6 @@ export function BoardRegion(props: {
                     onClick={() => props.rt.setCurtain(!live().curtained)}
                   >
                     <Theater aria-hidden="true" class="size-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={marking() ? 'default' : 'ghost'}
-                    aria-pressed={marking()}
-                    aria-label="Marcar um lugar"
-                    title="Marcar um lugar"
-                    onClick={toggleMarking}
-                  >
-                    <MapPin aria-hidden="true" class="size-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={tool() === 'brush' ? 'default' : 'ghost'}
-                    aria-pressed={tool() === 'brush'}
-                    onClick={() => useTool('brush')}
-                  >
-                    <Brush aria-hidden="true" class="size-4" />
-                    Terreno
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={tool() === 'eraser' ? 'default' : 'ghost'}
-                    aria-pressed={tool() === 'eraser'}
-                    aria-label="Apagar terreno"
-                    onClick={() => useTool('eraser')}
-                  >
-                    <Eraser aria-hidden="true" class="size-4" />
                   </Button>
                   {/* O acervo alcançável COM cena na mesa (ALE-191): trocar de
                       cena não exige mais ENCERRAR o tabuleiro primeiro, com a
