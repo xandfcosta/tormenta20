@@ -334,8 +334,19 @@ html {
      * A rolagem do navegador já é o arrasto, e vem com teclado, roda e toque de
      * graça. O `--desliza-*` que eu tinha escrito para um `transform` saiu junto:
      * ele não tinha quem o escrevesse nesta fatia, e variável que ninguém move é
-     * código morto com cara de preparo. A fatia dos GESTOS traz o zoom e o
-     * arrasto por transform, e aí ela decide o que fazer com esta rolagem. */
+     * código morto com cara de preparo.
+     *
+     * A DECISÃO que esta linha adiava está tomada (ALE-264, item 6): a rolagem
+     * FICA, e o zoom entra sem tomá-la. A SPA pôde dar a roda ao zoom porque lá
+     * não havia rolagem nativa para perder; aqui há, e é como se percorre o mapa
+     * — tirá-la seria trocar um gesto por outro em vez de somar. Então: roda
+     * sozinha rola, `Ctrl+roda` amplia (convenção de mapa), e os botões e as
+     * teclas `+`/`−` fazem o mesmo sem gesto nenhum.
+     *
+     * E o zoom NÃO é `transform`: quem muda é o `--quadrado`, então o plano
+     * muda de tamanho de verdade e a rolagem continua sabendo até onde ir. Um
+     * `transform: scale` mentiria sobre o leiaute e o palco deixaria metade do
+     * mapa inalcançável, que é o defeito que a rolagem nativa veio consertar. */
     overflow: auto;
     overscroll-behavior: contain;
     height: min(60vh, 32rem);

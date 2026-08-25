@@ -68,12 +68,20 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 			<div class="flex flex-wrap items-baseline gap-x-2">
 				<h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tabuleiro</h2>
 				<p class="truncate text-sm text-foreground">{ v.Lugar }</p>
+				// O ZOOM é de TODO MUNDO, e é por isso que ele fica fora do bloco
+				// do mestre logo abaixo: cada pessoa enquadra a própria janela, e
+				// o jogador que não enxerga a peça no telefone não tem por que
+				// depender do mestre para aproximar.
+				//
+				// O `ml-auto` mudou de dono para cá, e de propósito: ele precisa
+				// morar no primeiro grupo que existe SEMPRE. No bloco do mestre
+				// ele sumia da tela do jogador, e o alinhamento ia junto.
+				@oZoomDoPlano()
 				if v.Mestre {
-					// Os DOIS verbos do canto direito num agrupador só, e ele
-					// existe para o `ml-auto` ter dono fixo: pendurado no ✕, o
-					// alinhamento sumia junto com o acervo quando a campanha
-					// ainda não tinha lugar guardado nenhum.
-					<span class="ml-auto flex items-center gap-1">
+					// Os DOIS verbos do canto direito num agrupador só. O
+					// `ml-auto` saiu daqui para o grupo do zoom, que é o que
+					// existe para os dois papéis.
+					<span class="flex items-center gap-1">
 						// O acervo alcançável COM cena na mesa (ALE-191): trocar da
 						// taverna para a cripta sem encerrar primeiro. Sem ele o
 						// caminho existia e era inalcançável, porque a lista só
@@ -124,7 +132,12 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 			// teclado, roda e toque de graça. Como o enquadramento não está no
 			// HTML, o remendo do SSE redesenha as peças sem que o mestre perca
 			// onde estava olhando.
-			<div class="tabuleiro-palco grimorio-frame">
+			<div
+				data-attr:style={ estiloDoPalco }
+				data-on:wheel={ zoomPelaRoda }
+				data-on:keydown__window={ zoomPeloTeclado }
+				class="tabuleiro-palco grimorio-frame"
+			>
 				<div
 					class={ "tabuleiro-plano chao-" + v.Chao }
 					style={ fmt.Sprintf("--colunas:%d; --linhas:%d", v.Colunas, v.Linhas) }
@@ -649,4 +662,44 @@ templ oTrilhoDoPincel(v tabuleiroView) {
 			Borracha
 		</button>
 	</div>
+}
+
+// O ZOOM do plano (ALE-264, item 6).
+//
+// AÇÃO e não ferramenta, e a divisa é a mesma que a ALE-203 desenhou na SPA:
+// ferramenta muda o que o CLIQUE faz, ação acontece uma vez e acaba. Por isso
+// ele fica no cabeçalho e não no trilho — no trilho, aproximar pareceria um modo
+// que se liga.
+//
+// Os botões DESABILITAM no limite em vez de sumir: um botão que some move os
+// vizinhos debaixo do dedo de quem está clicando repetido para aproximar.
+templ oZoomDoPlano() {
+	<span role="group" aria-label="Aproximar e afastar o mapa" class="ml-auto flex items-center gap-1">
+		<button
+			type="button"
+			aria-label="Afastar o mapa"
+			title="Afastar (tecla −, ou Ctrl+roda)"
+			data-attr:disabled={ zoomNoLimite(-passoDoZoom) }
+			data-on:click={ ampliaOPlano(-passoDoZoom) }
+			class="flex size-8 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
+		>−</button>
+		// O NÚMERO em quadrados por tela é mais útil que "120%": a pergunta do
+		// mestre é "cabe o deslocamento inteiro?" (6 quadrados, p106), e uma
+		// porcentagem obriga a converter de cabeça. `aria-live` porque ele é a
+		// única resposta ao clique para quem não vê o mapa mudar.
+		<output
+			aria-live="polite"
+			aria-label="Tamanho do quadrado"
+			data-text="$quadrado + ' px'"
+			class="min-w-14 text-center text-xs tabular-nums text-muted-foreground"
+		></output>
+		<button
+			type="button"
+			aria-label="Aproximar o mapa"
+			title="Aproximar (tecla +, ou Ctrl+roda)"
+			data-attr:disabled={ zoomNoLimite(passoDoZoom) }
+			data-on:click={ ampliaOPlano(passoDoZoom) }
+			class="flex size-8 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
+		>+</button>
+	</span>
 }
