@@ -183,6 +183,11 @@ class Livro:
     def _pos(self, impressa):
         return impressa + self.abertura - 1
 
+    def pagina(self, impressa):
+        """O texto achatado de uma página impressa, ou vazio fora do livro."""
+        i = self._pos(impressa)
+        return self.texto[i] if 0 <= i < len(self.texto) else ""
+
     def confere(self, nome, impressa):
         """Ver o comentário de `indice_de`: página do índice nunca é resposta."""
         """O nome aparece no texto daquela página impressa?
@@ -234,11 +239,27 @@ class Livro:
 # (criatura)" contra "grifo (parceiro)". Vazio na lista aceita a entrada sem
 # parênteses, que é o caso da maioria.
 
+# `assinatura` é como o LIVRO imprime o começo daquele verbete, e ela é a prova
+# mais forte que existe aqui — mais forte que o índice e que o `bookPage` que já
+# estava. Ela nasceu de uma imprecisão medida: a p289 contém "lobos-das-cavernas"
+# no texto corrido, então a conferência por substring aprovava a página errada
+# enquanto o bloco do Lobo abre na 290.
+#
+# `{nome}` é substituído pelo nome dobrado da entrada.
+#
+#   criatura:  "lobo nd 1/2 ..."      → o ND vem colado no nome, sempre
+#   condição:  "abalado. o personagem ..."
+#
+# Onde não há assinatura confiável (item, poder, magia), a escada continua sendo
+# índice → título na faixa. Assinatura inventada seria pior que nenhuma: ela
+# passaria a decidir com a autoridade de uma prova.
 CATALOGOS = [
-    {"arquivo": "conditions.json", "rotulo": "condições", "qualificadores": ("condição", "")},
+    {"arquivo": "conditions.json", "rotulo": "condições", "qualificadores": ("condição", ""),
+     "assinatura": r"{nome}\.\s+(o personagem|voce|a criatura)"},
     {"arquivo": "items.json", "rotulo": "itens", "qualificadores": ("",)},
     {"arquivo": "spells.json", "rotulo": "magias", "qualificadores": ("magia", "")},
-    {"arquivo": "bestiary.json", "rotulo": "criaturas", "qualificadores": ("criatura", "")},
+    {"arquivo": "bestiary.json", "rotulo": "criaturas", "qualificadores": ("criatura", ""),
+     "assinatura": r"{nome}\s+nd\s+\d"},
     {"arquivo": "races.json", "rotulo": "raças", "qualificadores": ("raça", "")},
     {"arquivo": "deuses.json", "rotulo": "deuses", "qualificadores": ("",)},
     {"arquivo": "general-powers.json", "rotulo": "poderes gerais", "qualificadores": ("",)},
@@ -275,7 +296,25 @@ def nome_da(entrada):
     return entrada.get("name") or entrada.get("id") or ""
 
 
-def resolve(livro, entrada, qualificadores, faixa):
+def por_assinatura(livro, nome, assinatura, faixa):
+    """As páginas em que o livro ABRE este verbete, pela assinatura do catálogo.
+
+    Só serve quando a resposta é ÚNICA: duas páginas casando a assinatura
+    significam que ela não distingue, e escolher uma seria dar a uma dúvida a
+    cara de uma prova.
+    """
+    if not assinatura:
+        return None
+    padrao = re.compile(assinatura.replace("{nome}", re.escape(dobra(nome))))
+    achadas = [
+        impressa
+        for impressa in range(faixa[0], faixa[1] + 1)
+        if impressa < livro.indice_de and padrao.search(livro.pagina(impressa))
+    ]
+    return achadas[0] if len(achadas) == 1 else None
+
+
+def resolve(livro, entrada, qualificadores, faixa, assinatura=None):
     """A escada, da fonte mais forte para a mais fraca. Devolve (página, fonte).
 
     Página que não confere não é usada, venha de onde vier — inclusive do
@@ -284,6 +323,16 @@ def resolve(livro, entrada, qualificadores, faixa):
     """
     nome = nome_da(entrada)
     tinha = entrada.get("bookPage")
+
+    # A ASSINATURA vem antes de tudo, inclusive do que já estava: ela é a única
+    # fonte aqui que sabe a diferença entre a página que CITA o verbete e a que
+    # o ABRE. Foi o que corrigiu o Lobo (289→290), o Troll (309→308) e o Trog
+    # (292→291) — os três com o bloco uma página adiante do que o catálogo dizia.
+    if faixa:
+        pagina = por_assinatura(livro, nome, assinatura, faixa)
+        if pagina:
+            return pagina, "assinatura do livro"
+
     if tinha and livro.confere(nome, tinha):
         return tinha, "já estava"
 
@@ -378,9 +427,10 @@ def processa(livro, catalogo, gravar):
 
     # Primeira volta: só as fontes fortes, para o envelope nascer de página
     # conferida e não de chute.
+    assinatura = catalogo.get("assinatura")
     primeira = {}
     for entrada in lista:
-        pagina, fonte = resolve(livro, entrada, quali, None)
+        pagina, fonte = resolve(livro, entrada, quali, None, assinatura)
         primeira[id(entrada)] = (pagina, fonte)
     faixa = faixa_dos_confirmados([p for p, _ in primeira.values() if p])
 
@@ -389,8 +439,12 @@ def processa(livro, catalogo, gravar):
     sem = []
     for entrada in lista:
         pagina, fonte = primeira[id(entrada)]
-        if pagina is None and faixa:
-            pagina, fonte = resolve(livro, entrada, quali, faixa)
+        if faixa:
+            # A segunda volta roda para TODOS e não só para quem ficou sem
+            # página: é nela que a faixa existe, e é a faixa que habilita a
+            # assinatura — sem ela o Lobo continuaria em 289, resolvido pelo
+            # "já estava" da primeira volta.
+            pagina, fonte = resolve(livro, entrada, quali, faixa, assinatura)
         contagem[fonte if pagina else "SEM PÁGINA"] += 1
         if pagina is None:
             sem.append((nome_da(entrada), entrada.get("bookPage"), fonte))

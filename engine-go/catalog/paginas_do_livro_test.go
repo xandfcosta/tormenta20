@@ -151,3 +151,42 @@ func TestTodaClasseSabeSuaPagina(t *testing.T) {
 		}
 	}
 }
+
+// TestOsTresBlocosQueAbremUmaPaginaAdiante (ALE-264).
+//
+// A TRAP da tabela, e não a tabela inteira: estas três criaturas tinham no
+// catálogo a página que as CITA, não a que abre o bloco delas. A p289 fala de
+// "lobos-das-cavernas" no texto corrido, e a conferência por substring aprovava
+// — o botão abria uma página antes, no mesmo capítulo, parecendo certo.
+//
+// Quem consertou foi a assinatura `<nome> nd <valor>`, que é como o livro
+// imprime o começo de todo bloco. Fica preso aqui porque uma regeneração
+// desatenta do catálogo os traria de volta em silêncio.
+func TestOsTresBlocosQueAbremUmaPaginaAdiante(t *testing.T) {
+	bruto, ok := Resource("bestiary")
+	if !ok {
+		t.Fatal("bestiário ausente")
+	}
+	var criaturas []struct {
+		Name     string `json:"name"`
+		BookPage int    `json:"bookPage"`
+	}
+	if err := json.Unmarshal(bruto, &criaturas); err != nil {
+		t.Fatalf("bestiário: %v", err)
+	}
+	esperado := map[string]int{"Lobo": 290, "Troll": 308, "Trog": 291}
+	visto := 0
+	for _, c := range criaturas {
+		pagina, cobrada := esperado[c.Name]
+		if !cobrada {
+			continue
+		}
+		visto++
+		if c.BookPage != pagina {
+			t.Errorf("%s: p%d — o bloco dele abre na p%d", c.Name, c.BookPage, pagina)
+		}
+	}
+	if visto != len(esperado) {
+		t.Errorf("só %d das %d criaturas cobradas existem no catálogo", visto, len(esperado))
+	}
+}

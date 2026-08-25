@@ -7405,7 +7405,7 @@
       "name": "Redução de Dano 6",
       "description": "Redução de Dano aumenta para 6.",
       "grantedAtLevel": 11,
-      "bookPage": 229
+      "bookPage": 41
     },
     {
       "id": "class.barbaro.reducao-de-dano-8",
@@ -7517,7 +7517,7 @@
       "name": "Redução de Dano 10",
       "description": "Redução de Dano aumenta para 10.",
       "grantedAtLevel": 17,
-      "bookPage": 229
+      "bookPage": 63
     },
     {
       "id": "class.barbaro.furia-titanica",

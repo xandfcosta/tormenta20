@@ -202,7 +202,13 @@ func TestACenaDoBestiarioAbreOLivroNaPaginaDaCriatura(t *testing.T) {
 
 	corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/bestiario?criatura=lobo", "").Body.String()
 	// O endereço leva ao LEITOR, na página impressa e com o nome a destacar.
-	if !strings.Contains(corpo, "/piloto/livro/ler?p=289&amp;t=Lobo") {
+	//
+	// 290 e não 289: o bloco do Lobo abre na impressa 290, e o catálogo dizia
+	// 289 porque a p289 tem "lobos-das-cavernas" no texto corrido — a
+	// conferência por substring aprovava a página que CITA em vez da que ABRE.
+	// Corrigido pela assinatura "<nome> nd <valor>", que é como o livro imprime
+	// o começo de todo bloco de criatura.
+	if !strings.Contains(corpo, "/piloto/livro/ler?p=290&amp;t=Lobo") {
 		t.Error("a ficha do Lobo não abre o leitor na página dele")
 	}
 
