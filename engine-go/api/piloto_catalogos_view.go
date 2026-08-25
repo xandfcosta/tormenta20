@@ -277,6 +277,17 @@ var abasDoAcervo = []abaDoAcervo{
 	{"deuses", "Deuses"},
 }
 
+// rotuloDaAba devolve o nome que a fileira mostra, para a frase de volta não
+// dizer "condicoes" com a cara de chave.
+func rotuloDaAba(id string) string {
+	for _, a := range abasDoAcervo {
+		if a.ID == id {
+			return a.Rotulo
+		}
+	}
+	return id
+}
+
 func abaConhecida(id string) string {
 	for _, a := range abasDoAcervo {
 		if a.ID == id {
@@ -307,6 +318,16 @@ func (g grupoDoAcervo) Quantos() int {
 		len(g.Efeitos) + len(g.Racas) + len(g.Classes) + len(g.Deuses)
 }
 
+// criteriosDoAcervo é o que a URL (ou os sinais) pedem da cena.
+type criteriosDoAcervo struct {
+	Busca string
+	Aba   string
+	// Entrada é o ID de UM verbete, e ela ganha de tudo: com ela a cena mostra
+	// aquele verbete sozinho. É o endereço que um ELO usa — quem clica em "Medo"
+	// pediu o Medo, não uma busca por "medo" nos oito catálogos.
+	Entrada string
+}
+
 // catalogosView é a cena inteira numa resposta.
 type catalogosView struct {
 	Busca string
@@ -318,7 +339,9 @@ type catalogosView struct {
 	// mostra os quatro catálogos agrupados, que é a decisão que a ALE-22
 	// registrou — a versão em React filtrava só a aba ativa, e "bola de fogo"
 	// digitado em Condições dizia "nada encontrado" com a magia existindo.
-	Aba     string
+	Aba string
+	// Entrada é o id do verbete que a cena está mostrando sozinho, ou vazio.
+	Entrada string
 	Grupos  []grupoDoAcervo
 	Achados int
 }
@@ -327,8 +350,16 @@ func (v catalogosView) Buscando() bool { return strings.TrimSpace(v.Busca) != ""
 
 // carregaCatalogos monta a cena: os quatro catálogos quando há busca, um só
 // quando não há.
-func carregaCatalogos(busca, aba string, livro enderecoDoLivro) catalogosView {
-	v := catalogosView{Busca: busca, Aba: abaConhecida(aba), Livro: livro}
+func carregaCatalogos(c criteriosDoAcervo, livro enderecoDoLivro) catalogosView {
+	v := catalogosView{Busca: c.Busca, Aba: abaConhecida(c.Aba), Livro: livro, Entrada: c.Entrada}
+	// A ENTRADA vem primeiro e encerra: ela é um endereço para um verbete só, e
+	// misturá-la com busca daria uma tela que responde duas perguntas.
+	if c.Entrada != "" {
+		v.Grupos = []grupoDoAcervo{grupoDaEntrada(v.Aba, c.Entrada)}
+		v.Achados = v.Grupos[0].Quantos()
+		return v
+	}
+	busca := c.Busca
 	a := catalogosDoLivro()
 
 	if !v.Buscando() {
@@ -355,6 +386,61 @@ func carregaCatalogos(busca, aba string, livro enderecoDoLivro) catalogosView {
 		v.Grupos = append(v.Grupos, g)
 	}
 	return v
+}
+
+// grupoDaEntrada acha UM verbete pelo id, dentro da aba pedida.
+//
+// Pelo ID e não pelo nome: nome é texto de tela e muda com a revisão do livro;
+// id é a chave com que os catálogos se referem uns aos outros ("upgradesTo":
+// "apavorado"). Um elo é uma referência entre DADOS, e referência por texto de
+// tela é a que quebra em silêncio no dia de uma correção de acento.
+//
+// Id desconhecido devolve grupo VAZIO, e a cena diz que não achou — endereço se
+// digita à mão e catálogo muda; inventar um verbete seria pior.
+func grupoDaEntrada(aba, id string) grupoDoAcervo {
+	inteiro := grupoDaAba(catalogosDoLivro(), aba)
+	fora := grupoDoAcervo{Rotulo: inteiro.Rotulo}
+	for _, c := range inteiro.Condicoes {
+		if c.ID == id {
+			fora.Condicoes = append(fora.Condicoes, c)
+		}
+	}
+	for _, m := range inteiro.Magias {
+		if m.ID == id {
+			fora.Magias = append(fora.Magias, m)
+		}
+	}
+	for _, p := range inteiro.Poderes {
+		if p.ID == id {
+			fora.Poderes = append(fora.Poderes, p)
+		}
+	}
+	for _, i := range inteiro.Itens {
+		if i.ID == id {
+			fora.Itens = append(fora.Itens, i)
+		}
+	}
+	for _, e := range inteiro.Efeitos {
+		if e.ID == id {
+			fora.Efeitos = append(fora.Efeitos, e)
+		}
+	}
+	for _, r := range inteiro.Racas {
+		if r.ID == id {
+			fora.Racas = append(fora.Racas, r)
+		}
+	}
+	for _, c := range inteiro.Classes {
+		if c.ID == id {
+			fora.Classes = append(fora.Classes, c)
+		}
+	}
+	for _, d := range inteiro.Deuses {
+		if d.ID == id {
+			fora.Deuses = append(fora.Deuses, d)
+		}
+	}
+	return fora
 }
 
 func grupoDaAba(a acervoDoMestre, aba string) grupoDoAcervo {

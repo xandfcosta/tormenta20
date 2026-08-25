@@ -84,7 +84,7 @@ func TestORotuloVazioNaoSaiSozinho(t *testing.T) {
 
 // TestABuscaUnificadaAlcancaOsTresNovos: a busca sem aba varre os SETE.
 func TestABuscaUnificadaAlcancaOsTresNovos(t *testing.T) {
-	v := carregaCatalogos("allihanna", "", enderecoDoLivro{})
+	v := carregaCatalogos(criteriosDoAcervo{Busca: "allihanna", Aba: ""}, enderecoDoLivro{})
 	if v.Achados == 0 {
 		t.Fatal("a busca unificada não achou a deusa Allihanna")
 	}

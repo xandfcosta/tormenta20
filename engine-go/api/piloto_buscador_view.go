@@ -20,6 +20,10 @@ import (
 // Decisão do dono, com mockup na mão: o Enter NAVEGA para a cena com a entrada
 // aberta, em vez de desenhar o verbete dentro do próprio diálogo. Reusa as duas
 // cenas que já existem em vez de manter um terceiro desenho da mesma regra.
+//
+// "Com a entrada ABERTA" virou `?entrada=<id>` na segunda passada: o endereço
+// era uma BUSCA pelo nome, e cair numa lista de oito grupos para achar o que se
+// escolheu é o oposto de escolher.
 
 // achadosPorGrupo corta cada grupo, e o corte é DITO na tela ("+12").
 //
@@ -191,27 +195,27 @@ func achadoDaCondicao(c condicaoDoLivro) achadoDoBuscador {
 	if c.UpgradesTo != "" {
 		detalhe = "Condição · agrava para " + nomeDaCondicao(c.UpgradesTo)
 	}
-	return achadoDoBuscador{Nome: c.Name, Detalhe: detalhe, Destino: destinoNoAcervo("condicoes", c.Name), Pagina: c.BookPage}
+	return achadoDoBuscador{Nome: c.Name, Detalhe: detalhe, Destino: destinoDaEntrada("condicoes", c.ID), Pagina: c.BookPage}
 }
 
 func achadoDaMagia(m magiaDoLivro) achadoDoBuscador {
 	return achadoDoBuscador{
 		Nome:    m.Name,
 		Detalhe: fmt.Sprintf("%dº círculo · %s", m.Circle, nomeDaExecucao(m.Execution)),
-		Destino: destinoNoAcervo("magias", m.Name),
+		Destino: destinoDaEntrada("magias", m.ID),
 		Pagina:  m.BookPage,
 	}
 }
 
 func achadoDoPoder(p poderDoLivro) achadoDoBuscador {
-	return achadoDoBuscador{Nome: p.Name, Detalhe: p.Fonte, Destino: destinoNoAcervo("poderes", p.Name), Pagina: p.BookPage}
+	return achadoDoBuscador{Nome: p.Name, Detalhe: p.Fonte, Destino: destinoDaEntrada("poderes", p.ID), Pagina: p.BookPage}
 }
 
 func achadoDoItem(i itemDoLivro) achadoDoBuscador {
 	return achadoDoBuscador{
 		Nome:    i.Name,
 		Detalhe: nomeDaCategoria(i.Category),
-		Destino: destinoNoAcervo("itens", i.Name),
+		Destino: destinoDaEntrada("itens", i.ID),
 		Pagina:  i.BookPage,
 	}
 }
@@ -220,7 +224,7 @@ func achadoDoEfeito(e efeitoDoLivro) achadoDoBuscador {
 	return achadoDoBuscador{
 		Nome:    e.Name,
 		Detalhe: "Tipo de efeito",
-		Destino: destinoNoAcervo("efeitos", e.Name),
+		Destino: destinoDaEntrada("efeitos", e.ID),
 		Pagina:  e.BookPage,
 	}
 }
@@ -229,7 +233,7 @@ func achadoDaRaca(r racaDoLivro) achadoDoBuscador {
 	return achadoDoBuscador{
 		Nome:    r.Name,
 		Detalhe: nomeDoTier(r.Tier) + " · " + r.AtributoMod.Escrito(),
-		Destino: destinoNoAcervo("racas", r.Name),
+		Destino: destinoDaEntrada("racas", r.ID),
 		Pagina:  r.BookPage,
 	}
 }
@@ -238,7 +242,7 @@ func achadoDaClasse(c classeDoLivro) achadoDoBuscador {
 	return achadoDoBuscador{
 		Nome:    c.Name,
 		Detalhe: fmt.Sprintf("Classe · %d poderes", c.Poderes),
-		Destino: destinoNoAcervo("classes", c.Name),
+		Destino: destinoDaEntrada("classes", c.ID),
 		Pagina:  c.BookPage,
 	}
 }
@@ -247,7 +251,7 @@ func achadoDoDeus(d deusDoLivro) achadoDoBuscador {
 	return achadoDoBuscador{
 		Nome:    d.Name,
 		Detalhe: d.Portfolio,
-		Destino: destinoNoAcervo("deuses", d.Name),
+		Destino: destinoDaEntrada("deuses", d.ID),
 		Pagina:  d.BookPage,
 	}
 }
@@ -270,6 +274,16 @@ func achadoDoVerbete(m verbete) achadoDoBuscador {
 // que precisaria ser mantido junto.
 func destinoNoAcervo(aba, nome string) string {
 	return "/piloto/mestre/catalogos?aba=" + aba + "&busca=" + url.QueryEscape(nome)
+}
+
+// destinoDaEntrada é o endereço de UM verbete: a aba dele, mostrando só ele.
+//
+// Diferente do `destinoNoAcervo`, que faz uma BUSCA. A diferença apareceu na
+// tela: clicar no elo "Medo" caía numa busca por "medo" nos oito catálogos, com
+// o verbete procurado espremido no quinto grupo. Quem clica num conceito pediu o
+// conceito.
+func destinoDaEntrada(aba, id string) string {
+	return "/piloto/mestre/catalogos?aba=" + aba + "&entrada=" + url.QueryEscape(id)
 }
 
 // destinoNoBestiario leva à cena do bestiário filtrada. Serve tanto para o "+12"

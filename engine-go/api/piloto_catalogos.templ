@@ -48,6 +48,17 @@ templ cenaDosCatalogos(v catalogosView) {
 		if !v.Buscando() {
 			@fileiraDeCatalogos(v.Aba)
 		}
+		// A saída de quem chegou por um ELO com o endereço na barra (ctrl+clique,
+		// link colado): a cena mostra UM verbete, e sem esta linha a pessoa fica
+		// sem entender por que a aba tem uma entrada só.
+		if v.Entrada != "" {
+			<p class="shrink-0 text-xs text-muted-foreground">
+				<a
+					href={ templ.SafeURL("/piloto/mestre/catalogos?aba=" + v.Aba) }
+					class="underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				>{ "‹ ver " + rotuloDaAba(v.Aba) + " inteiro" }</a>
+			</p>
+		}
 		@resultadosDoAcervo(v)
 	</section>
 }
@@ -167,7 +178,7 @@ templ cartaoDeCondicao(c condicaoDoLivro, livro enderecoDoLivro) {
 			// 11 citações nas 35 — a densidade que justifica varrer o texto.
 			for _, pedaco := range comElosParaCondicoes(c.Description, c.Name) {
 				if pedaco.Aba != "" {
-					@eloParaOAcervo(pedaco.Aba, pedaco.Texto) {
+					@eloParaOAcervo(pedaco.Aba, pedaco.ID, pedaco.Texto) {
 						{ pedaco.Texto }
 					}
 				} else {
@@ -186,7 +197,7 @@ templ cartaoDeCondicao(c condicaoDoLivro, livro enderecoDoLivro) {
 				// frase que acabou de terminar, e é o desenho que o mestre já
 				// conhece da página impressa.
 				<em>
-					@eloParaOAcervo("efeitos", nomeDoEfeito(t)) {
+					@eloParaOAcervo("efeitos", t, nomeDoEfeito(t)) {
 						{ nomeDoEfeito(t) + "." }
 					}
 				</em>
@@ -195,7 +206,7 @@ templ cartaoDeCondicao(c condicaoDoLivro, livro enderecoDoLivro) {
 		if c.UpgradesTo != "" {
 			<p class="mt-1 text-xs text-muted-foreground">
 				Agrava para 
-				@eloParaOAcervo("condicoes", nomeDaCondicao(c.UpgradesTo)) {
+				@eloParaOAcervo("condicoes", c.UpgradesTo, nomeDaCondicao(c.UpgradesTo)) {
 					{ nomeDaCondicao(c.UpgradesTo) }
 				}
 			</p>
@@ -358,8 +369,8 @@ templ cartaoDeDeus(d deusDoLivro, livro enderecoDoLivro) {
 					if i > 0 {
 						{ ", " }
 					}
-					if ehPoderConhecido(poder) {
-						@eloParaOAcervo("poderes", poder) {
+					if id := idDoPoder(poder); id != "" {
+						@eloParaOAcervo("poderes", id, poder) {
 							{ poder }
 						}
 					} else {
@@ -375,8 +386,8 @@ templ cartaoDeDeus(d deusDoLivro, livro enderecoDoLivro) {
 					if i > 0 {
 						{ ", " }
 					}
-					if aba := eloDoDevoto(devoto); aba != "" {
-						@eloParaOAcervo(aba, devoto) {
+					if aba, id := eloDoDevoto(devoto); aba != "" {
+						@eloParaOAcervo(aba, id, devoto) {
 							{ devoto }
 						}
 					} else {
@@ -386,4 +397,40 @@ templ cartaoDeDeus(d deusDoLivro, livro enderecoDoLivro) {
 			</p>
 		}
 	}
+}
+
+// verbeteDoElo é o miolo da caixa: os cartões do grupo, sem a moldura da cena.
+//
+// Reusa os MESMOS cartões da aba — o verbete tem um desenho só, e um segundo
+// desenho "para a caixa" divergiria do primeiro na terceira issue.
+templ verbeteDoElo(g grupoDoAcervo, livro enderecoDoLivro) {
+	<div id="verbete-do-elo" class="pr-8">
+		if g.Quantos() == 0 {
+			<p class="text-xs text-muted-foreground">Este verbete não está no acervo.</p>
+		}
+		for _, c := range g.Condicoes {
+			@cartaoDeCondicao(c, livro)
+		}
+		for _, m := range g.Magias {
+			@cartaoDeMagia(m, livro)
+		}
+		for _, p := range g.Poderes {
+			@cartaoDePoder(p, livro)
+		}
+		for _, i := range g.Itens {
+			@cartaoDeItem(i, livro)
+		}
+		for _, e := range g.Efeitos {
+			@cartaoDeEfeito(e, livro)
+		}
+		for _, r := range g.Racas {
+			@cartaoDeRaca(r, livro)
+		}
+		for _, c := range g.Classes {
+			@cartaoDeClasse(c, livro)
+		}
+		for _, d := range g.Deuses {
+			@cartaoDeDeus(d, livro)
+		}
+	</div>
 }

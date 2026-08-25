@@ -47,3 +47,30 @@ for (const aba of ABAS) {
     ).toEqual([])
   })
 }
+
+test('o elo mostra o conceito por cima, sem tirar a pessoa da regra que lia', async ({ page }) => {
+  await page.setViewportSize({ width: 1400, height: 900 })
+  await page.goto('/piloto/mestre/catalogos?aba=condicoes')
+
+  // A condição Abalado termina em "Medo." — o tipo de efeito, que é outro
+  // verbete. É o caso que o dono trouxe.
+  // Pelo `title` e não pelo nome acessível: o texto do elo é "Medo." (com o
+  // ponto do livro), e é ele que vira o nome — o `title` é a explicação.
+  const elo = page.locator('a[title="Ver Medo"]').first()
+  await expect(elo).toBeVisible()
+
+  const caixa = page.locator('#verbete-em-dialogo')
+  expect(await caixa.evaluate((d: HTMLDialogElement) => d.open)).toBe(false)
+
+  await elo.click()
+
+  expect(await caixa.evaluate((d: HTMLDialogElement) => d.open)).toBe(true)
+  await expect(caixa).toContainText('Medo capaz de prejudicar o alvo')
+  // A CENA CONTINUA: o endereço não mudou e a condição que se estava lendo está
+  // lá atrás. Era isso que a navegação para uma busca destruía.
+  expect(page.url()).toContain('aba=condicoes')
+  await expect(page.getByText('-2 em testes de perícia.')).toBeVisible()
+
+  await page.keyboard.press('Escape')
+  expect(await caixa.evaluate((d: HTMLDialogElement) => d.open)).toBe(false)
+})

@@ -69,6 +69,10 @@ func camposDoEfeito(e efeitoDoLivro) []string { return []string{e.Name, e.Descri
 type trecho struct {
 	Texto string
 	Aba   string
+	// ID é a chave do verbete de destino. O elo endereça por ID e não pelo
+	// texto: nome é tela e muda com revisão do livro, id é como os catálogos já
+	// se referem uns aos outros.
+	ID string
 }
 
 // comElosParaCondicoes parte a descrição nos nomes de CONDIÇÃO que ela cita.
@@ -83,8 +87,17 @@ type trecho struct {
 // A própria entrada é excluída: um elo que aponta para a página em que já se
 // está é ruído com cara de saída.
 func comElosParaCondicoes(texto, exceto string) []trecho {
-	nomes := nomesDeCondicaoPorTamanho()
-	return parteNosNomes(texto, nomes, exceto, "condicoes")
+	return parteNosNomes(texto, nomesDeCondicaoPorTamanho(), exceto, "condicoes")
+}
+
+// idDaCondicao resolve o nome no id com que o catálogo a guarda.
+func idDaCondicao(nome string) string {
+	for _, c := range catalogosDoLivro().Condicoes {
+		if c.Name == nome {
+			return c.ID
+		}
+	}
+	return ""
 }
 
 var (
@@ -120,7 +133,7 @@ func parteNosNomes(texto string, nomes []string, exceto, aba string) []trecho {
 		if antes := texto[:onde]; antes != "" {
 			fora = append(fora, parteNosNomes(antes, nomes, exceto, aba)...)
 		}
-		fora = append(fora, trecho{Texto: nome, Aba: aba})
+		fora = append(fora, trecho{Texto: nome, Aba: aba, ID: idDaCondicao(nome)})
 		if depois := texto[onde+len(nome):]; depois != "" {
 			fora = append(fora, parteNosNomes(depois, nomes, exceto, aba)...)
 		}
@@ -161,30 +174,31 @@ func fronteira(texto string, i int) bool {
 // O dado vem no PLURAL e as entradas são singulares, então a busca tenta o nome
 // como veio e depois sem o "s" final. Não achou, não vira elo: "Quaisquer" é
 // devoto de Aharadak e não é raça nem classe nenhuma.
-func eloDoDevoto(nome string) string {
+func eloDoDevoto(nome string) (aba, id string) {
 	candidatos := []string{nome, strings.TrimSuffix(nome, "s"), strings.TrimSuffix(nome, "es")}
 	racas, classes, _ := catalogosDoPersonagem()
 	for _, candidato := range candidatos {
 		for _, r := range racas {
 			if r.Name == candidato {
-				return "racas"
+				return "racas", r.ID
 			}
 		}
 		for _, c := range classes {
 			if c.Name == candidato {
-				return "classes"
+				return "classes", c.ID
 			}
 		}
 	}
-	return ""
+	return "", ""
 }
 
-// ehPoderConhecido diz se o poder concedido pelo deus tem verbete no acervo.
-func ehPoderConhecido(nome string) bool {
+// idDoPoder devolve o id do poder concedido pelo deus, ou vazio se ele não tem
+// verbete no acervo.
+func idDoPoder(nome string) string {
 	for _, p := range catalogosDoLivro().Poderes {
 		if p.Name == nome {
-			return true
+			return p.ID
 		}
 	}
-	return false
+	return ""
 }

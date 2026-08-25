@@ -209,6 +209,10 @@ templ layout(p paginaPiloto, corpo templ.Component) {
 					// no `<iframe>`, quem nunca abre o livro não paga um byte do
 					// pdf.js. Fora da porta pela mesma razão do buscador.
 					@oLivroEmDialogo()
+					// E a caixa do VERBETE citado por um elo. Mesma razão de
+					// estar aqui: a cena dos catálogos é remendada a cada tecla
+					// da busca, e o diálogo perderia o conteúdo junto.
+					@oVerbeteEmDialogo()
 				}
 			</section>
 		</body>

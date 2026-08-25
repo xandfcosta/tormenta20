@@ -50,6 +50,9 @@ func (s *Server) PilotoRouter() http.Handler {
 		// abre em QUALQUER cena, inclusive na Mesa, e a rota tem de existir onde
 		// quer que o ⌃K seja apertado.
 		s.rotasDoBuscador(r)
+		// O VERBETE citado por um elo (ALE-264), na casca pelo mesmo motivo do
+		// buscador: a caixa abre em qualquer cena.
+		s.rotasDoVerbete(r)
 		// O LIVRO (ALE-264) é servido para quem ENTROU e não anonimamente como
 		// os estáticos: os estáticos são o bundle do Datastar, e isto é um
 		// arquivo do dono da mesa. Sem `LIVRO_PDF` a rota devolve 404 — o botão

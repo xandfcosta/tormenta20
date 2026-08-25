@@ -1258,6 +1258,22 @@ const abreOLivroPorCima = `(evt.metaKey || evt.ctrlKey || evt.shiftKey || evt.bu
 	`document.getElementById('livro-em-dialogo').querySelector('iframe').src = el.getAttribute('href') + '&dialogo=1', ` +
 	`document.getElementById('livro-em-dialogo').showModal())`
 
+// abreOVerbetePorCima mostra o verbete do elo numa caixa sobre a cena.
+//
+// Mesma forma do `abreOLivroPorCima`: deixa passar o clique modificado, e o
+// `href` cuida desses. A diferença é que aqui o conteúdo vem por REMENDO do
+// Datastar e não por iframe — é um cartão de texto, não um visualizador de PDF
+// de 1,8 MB, e um documento inteiro para desenhar três linhas seria caro por
+// nada.
+//
+// A caixa abre ANTES da resposta chegar, com o "carregando" que ela já traz: o
+// fragmento sai da memória do servidor e volta em milissegundos na rede da mesa,
+// e abrir depois faria o clique parecer perdido.
+const abreOVerbetePorCima = `(evt.metaKey || evt.ctrlKey || evt.shiftKey || evt.button !== 0) || (` +
+	`evt.preventDefault(), ` +
+	`document.getElementById('verbete-em-dialogo').showModal(), ` +
+	"@get('" + rotaDoVerbete + "?' + el.getAttribute('href').split('?')[1]))"
+
 // atalhosDaCasca é o que o `keydown` da janela roda, e eles vão num atributo SÓ.
 //
 // Dois `data-on:keydown__window` no mesmo elemento não somam: é atributo
@@ -1340,7 +1356,7 @@ func aPaginaDoLivro(livro enderecoDoLivro, pagina int, termo string) templ.Compo
 		var templ_7745c5c3_Var53 templ.SafeURL
 		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(livro.naPagina(pagina, termo)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 507, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 523, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 		if templ_7745c5c3_Err != nil {
@@ -1353,7 +1369,7 @@ func aPaginaDoLivro(livro enderecoDoLivro, pagina int, termo string) templ.Compo
 		var templ_7745c5c3_Var54 string
 		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.ResolveAttributeValue(abreOLivroPorCima)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 508, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 524, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var54)
 		if templ_7745c5c3_Err != nil {
@@ -1366,7 +1382,7 @@ func aPaginaDoLivro(livro enderecoDoLivro, pagina int, termo string) templ.Compo
 		var templ_7745c5c3_Var55 string
 		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("Abrir o livro na página %d", pagina))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 512, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 528, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var55)
 		if templ_7745c5c3_Err != nil {
@@ -1379,7 +1395,7 @@ func aPaginaDoLivro(livro enderecoDoLivro, pagina int, termo string) templ.Compo
 		var templ_7745c5c3_Var56 string
 		templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("p%d ↗", pagina))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 514, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 530, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 		if templ_7745c5c3_Err != nil {
@@ -1475,7 +1491,7 @@ func seloDaPagina(livro enderecoDoLivro, pagina int, termo string) templ.Compone
 				var templ_7745c5c3_Var59 string
 				templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("p%d", pagina))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 558, Col: 86}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 574, Col: 86}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var59))
 				if templ_7745c5c3_Err != nil {
@@ -1503,7 +1519,14 @@ func seloDaPagina(livro enderecoDoLivro, pagina int, termo string) templ.Compone
 // O sublinhado é PONTILHADO como o do selo de página, e isso é deliberado: as
 // duas coisas são "leva para outro lugar", e desenhar diferente ensinaria que
 // são gestos diferentes.
-func eloParaOAcervo(aba, nome string) templ.Component {
+// O CLIQUE abre a caixa por cima; o `href` fica para o ctrl+clique, o botão do
+// meio e o link copiado — e ele é um endereço de verdade, o do verbete sozinho
+// na aba dele.
+//
+// A caixa existe porque a alternativa confunde: navegar tira a pessoa da regra
+// que ela estava lendo, e antes disso o endereço era uma BUSCA — clicar em
+// "Medo" caía numa lista de oito grupos com o verbete no quinto.
+func eloParaOAcervo(aba, id, nome string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1529,28 +1552,41 @@ func eloParaOAcervo(aba, nome string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var61 templ.SafeURL
-		templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(destinoNoAcervo(aba, nome)))
+		templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(destinoDaEntrada(aba, id)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 578, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 601, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var61))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "\" data-nav-skip title=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var62 string
-		templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.ResolveAttributeValue("Ver " + nome)
+		templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.ResolveAttributeValue(abreOVerbetePorCima)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 580, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 602, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var62)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, "\" class=\"rounded-sm underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, "\" data-nav-skip title=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var63 string
+		templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.ResolveAttributeValue("Ver " + nome)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 604, Col: 23}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var63)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 83, "\" class=\"rounded-sm underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1558,7 +1594,48 @@ func eloParaOAcervo(aba, nome string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 83, "</a>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 84, "</a>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+// A CAIXA do verbete do elo (ALE-264): o conceito citado, mostrado por cima da
+// cena que se estava lendo.
+//
+// Ela nasce com o "carregando" e é REMENDADA pelo `#verbete-do-elo` — o
+// conteúdo vem do servidor, que já tem os oito catálogos em memória. Sem sinal
+// nenhum: o que decide o que aparece é o endereço no `href` do elo, e sinal aqui
+// seria estado de cliente viajando em toda requisição da cena.
+//
+// Mora na CASCA e não na cena dos catálogos, e a razão é mecânica: o
+// `#catalogos` é REMENDADO a cada tecla da busca, e um diálogo lá dentro seria
+// redesenhado junto — perdendo o conteúdo que o elo acabou de trazer. A casca
+// nunca é remendada.
+func oVerbeteEmDialogo() templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var64 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var64 == nil {
+			templ_7745c5c3_Var64 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 85, "<dialog id=\"verbete-em-dialogo\" data-preserve-attr=\"open\" aria-label=\"Verbete citado\" class=\"scene-grimorio m-auto w-[min(34rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-3 text-foreground backdrop:bg-black/60\"><button type=\"button\" aria-label=\"Fechar o verbete\" data-on:click=\"el.closest('dialog').close()\" class=\"absolute right-2 top-2 flex size-9 items-center justify-center rounded-sm text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">×</button><div id=\"verbete-do-elo\" class=\"pr-8\"><p class=\"text-xs text-muted-foreground\">Carregando…</p></div></dialog>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

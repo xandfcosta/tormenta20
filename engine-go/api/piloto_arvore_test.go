@@ -55,10 +55,10 @@ func cenasDoPiloto(t *testing.T) map[string]string {
 		return renderFragmento(ctx, cenaDoBestiario(carregaBestiarioDe(rotaDoBestiarioDoMestre, enderecoDoLivro{}, "", nil, ndMinimo, ndMaximo, "")))
 	})
 	monta("catalogos", func() (string, error) {
-		return renderFragmento(ctx, cenaDosCatalogos(carregaCatalogos("", "condicoes", enderecoDoLivro{})))
+		return renderFragmento(ctx, cenaDosCatalogos(carregaCatalogos(criteriosDoAcervo{Busca: "", Aba: "condicoes"}, enderecoDoLivro{})))
 	})
 	monta("catalogos-busca", func() (string, error) {
-		return renderFragmento(ctx, cenaDosCatalogos(carregaCatalogos("fogo", "", enderecoDoLivro{})))
+		return renderFragmento(ctx, cenaDosCatalogos(carregaCatalogos(criteriosDoAcervo{Busca: "fogo", Aba: ""}, enderecoDoLivro{})))
 	})
 	monta("encontros", func() (string, error) {
 		v := carregaEncontros(3, 4, []linhaDoEncontro{{ID: "ogro", Qtd: 2}}, "ogro")

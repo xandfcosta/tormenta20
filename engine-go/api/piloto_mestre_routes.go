@@ -292,8 +292,7 @@ func numeroDaURL(bruto string, padrao int) int {
 // Sem autorização própria e pelo mesmo motivo do bestiário: o catálogo é o
 // LIVRO, igual para todo mundo. O `requirePagina` do grupo já exige sessão.
 func (s *Server) handleCatalogos(w http.ResponseWriter, r *http.Request) {
-	busca, aba := criteriosDoAcervo(r)
-	v := carregaCatalogos(busca, aba, s.livro.endereco)
+	v := carregaCatalogos(criteriosDoPedidoDoAcervo(r), s.livro.endereco)
 
 	if r.Header.Get("datastar-request") != "" {
 		sse := datastar.NewSSE(w, r)
@@ -314,29 +313,34 @@ func (s *Server) handleCatalogos(w http.ResponseWriter, r *http.Request) {
 	}, mesaDoMestre("catalogos", cenaDosCatalogos(v)))
 }
 
-// criteriosDoAcervo lê a busca e a aba da URL na carga fria e dos SINAIS quando
-// o Datastar chama — mesma decisão das outras cenas, e é ela que faz
-// `?busca=fogo` e `?aba=magias` serem endereços que se recarregam.
-func criteriosDoAcervo(r *http.Request) (string, string) {
+// criteriosDoPedidoDoAcervo lê a busca, a aba e a ENTRADA da URL na carga fria e
+// dos SINAIS quando o Datastar chama — mesma decisão das outras cenas, e é ela
+// que faz `?busca=fogo`, `?aba=magias` e `?entrada=medo` serem endereços que se
+// recarregam.
+//
+// `entrada` NÃO vem de sinal, e é deliberado: ela é um endereço para UM verbete,
+// escrito por um elo ou colado por alguém. Vindo de sinal, ela sobreviveria à
+// próxima tecla digitada na busca e a cena ficaria presa num verbete só.
+func criteriosDoPedidoDoAcervo(r *http.Request) criteriosDoAcervo {
 	q := r.URL.Query()
-	busca, aba := q.Get("busca"), q.Get("aba")
+	c := criteriosDoAcervo{Busca: q.Get("busca"), Aba: q.Get("aba"), Entrada: q.Get("entrada")}
 
 	sinais := struct {
 		Busca *string `json:"busca"`
 		Aba   *string `json:"aba"`
 	}{}
 	if err := datastar.ReadSignals(r, &sinais); err != nil {
-		return busca, aba
+		return c
 	}
 	// Ponteiro para separar "não veio" de "veio vazio": busca APAGADA é valor
 	// legítimo, e tratá-la como ausente ressuscitaria o texto da URL.
 	if sinais.Busca != nil {
-		busca = *sinais.Busca
+		c.Busca = *sinais.Busca
 	}
 	if sinais.Aba != nil {
-		aba = *sinais.Aba
+		c.Aba = *sinais.Aba
 	}
-	return busca, aba
+	return c
 }
 
 // rotaDoBestiarioDoMestre é a base da CENA do mestre. O painel da Mesa tem a

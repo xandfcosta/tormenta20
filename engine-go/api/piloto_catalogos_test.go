@@ -98,7 +98,7 @@ func TestOAcentoNaoSeparaNaBusca(t *testing.T) {
 // digitado na aba Condições dizia "nada encontrado" com a magia existindo. A
 // aba é para NAVEGAR sem termo; com termo, o assunto é o acervo inteiro.
 func TestBuscarVarreOsQuatroCatalogos(t *testing.T) {
-	v := carregaCatalogos("fogo", "condicoes", enderecoDoLivro{})
+	v := carregaCatalogos(criteriosDoAcervo{Busca: "fogo", Aba: "condicoes"}, enderecoDoLivro{})
 	if !v.Buscando() {
 		t.Fatal("a cena não se considerou em busca")
 	}
@@ -130,7 +130,7 @@ func TestSemBuscaMostraSoAAbaAberta(t *testing.T) {
 		{"itens", "Itens", len(a.Itens)},
 	} {
 		t.Run(caso.aba, func(t *testing.T) {
-			v := carregaCatalogos("", caso.aba, enderecoDoLivro{})
+			v := carregaCatalogos(criteriosDoAcervo{Aba: caso.aba}, enderecoDoLivro{})
 			if len(v.Grupos) != 1 {
 				t.Fatalf("%d grupos, quero 1", len(v.Grupos))
 			}
@@ -147,7 +147,7 @@ func TestSemBuscaMostraSoAAbaAberta(t *testing.T) {
 // TestAbaInventadaCaiNaPrimeira: o `?aba=` é endereço e alguém o digita errado
 // — cair em tela vazia leria como catálogo quebrado.
 func TestAbaInventadaCaiNaPrimeira(t *testing.T) {
-	v := carregaCatalogos("", "grimorios-proibidos", enderecoDoLivro{})
+	v := carregaCatalogos(criteriosDoAcervo{Busca: "", Aba: "grimorios-proibidos"}, enderecoDoLivro{})
 	if v.Aba != "condicoes" {
 		t.Errorf("aba %q, quero cair em condicoes", v.Aba)
 	}
@@ -234,7 +234,7 @@ func TestABuscaNaURLValeNaCargaFria(t *testing.T) {
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	rec := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/catalogos?busca=fogo", "")
-	esperados := carregaCatalogos("fogo", "", enderecoDoLivro{}).Achados
+	esperados := carregaCatalogos(criteriosDoAcervo{Busca: "fogo", Aba: ""}, enderecoDoLivro{}).Achados
 	if esperados == 0 {
 		t.Fatal("buscar fogo não acha nada: o dado mudou e o teste perdeu o sentido")
 	}
