@@ -131,6 +131,51 @@ html {
     0 0 18px oklch(0.8 0.11 85 / 0.28);
 }
 
+/* A FICHA DO MONSTRO em duas colunas quando ela tem largura (ALE-264).
+
+   O bloco parava numa coluna de 56rem com meia tela vazia ao lado, e as
+   habilidades especiais ficavam abaixo da dobra — o dono mandou a imagem. O teto
+   existia por uma razão certa (a 1920 as caixas de atributo esticavam para
+   ~220px para segurar dois caracteres), e a saída é o teto ser da COLUNA dos
+   números e não da ficha inteira.
+
+   `container-type: inline-size` no PRÓPRIO bloco: ele é desenhado no painel do
+   mestre, no diálogo da Mesa e na ficha em diálogo do telefone, e a pergunta é
+   quanto ESTE bloco recebe. Não é um segundo contêiner para a pergunta que a
+   `.mesa-palco` responde — aquela é sobre o palco, esta é sobre o bloco.
+
+   46rem = 736px é o corte, e ele é o ponto em que a coluna dos números (21rem)
+   deixa uma coluna de texto com pelo menos 24rem — abaixo disso a prosa das
+   habilidades vira torre.
+
+   FORA de `@layer` pela mesma razão das regras vizinhas. */
+.bloco-do-verbete {
+  container-type: inline-size;
+}
+
+.bloco-do-verbete-colunas {
+  display: grid;
+  gap: 1rem;
+}
+
+.bloco-do-verbete .bloco-atributos {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@container (min-width: 46rem) {
+  .bloco-do-verbete-colunas {
+    grid-template-columns: minmax(0, 21rem) minmax(0, 1fr);
+    gap: 1.5rem;
+    /* `start` porque as duas colunas têm alturas diferentes: sem isto, a coluna
+       curta estica e as caixas de atributo voltam a crescer, que é exatamente o
+       defeito que o teto de 56rem existia para evitar. */
+    align-items: start;
+  }
+  .bloco-do-verbete .bloco-atributos {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
 /* O CARTÃO dentro da CAIXA do elo perde a moldura (ALE-264).
 
    O cartão do acervo tem borda e cantos porque na lista ele é um cartão entre

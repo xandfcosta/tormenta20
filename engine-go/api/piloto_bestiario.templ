@@ -451,7 +451,18 @@ templ listaDeVerbetes(v bestiarioView) {
 // A medida é limitada (`max-w-4xl`) porque isto é dado mais prosa: a 1920 as
 // caixas de atributo esticavam para ~220px cada para segurar dois caracteres.
 templ blocoDoVerbete(m verbete, livro enderecoDoLivro) {
-	<div class="max-w-4xl space-y-4 text-sm">
+	// O TETO de 56rem saiu do bloco inteiro e virou teto da COLUNA dos números.
+	// O comentário que ele carregava continua certo — a 1920 as caixas de
+	// atributo esticavam para ~220px para segurar dois caracteres — mas a cura
+	// era pior que a doença: a ficha parava numa coluna estreita com meia tela
+	// vazia ao lado, e o mestre rolava para ver as habilidades. O dono mandou a
+	// imagem.
+	//
+	// O contêiner é o PRÓPRIO bloco e não o painel, porque a pergunta é "quanto
+	// ESTE bloco recebe": ele é desenhado no painel do mestre, no diálogo da
+	// Mesa e na ficha em diálogo do telefone, e as três larguras são diferentes.
+	// Consulta de viewport aqui erraria nas três.
+	<div class="bloco-do-verbete space-y-4 text-sm">
 		<div class="space-y-0.5">
 			<h3 class="font-heading text-lg tracking-wide text-foreground">{ m.Name }</h3>
 			<p class="text-xs text-muted-foreground">
@@ -460,90 +471,128 @@ templ blocoDoVerbete(m verbete, livro enderecoDoLivro) {
 				{ fmt.Sprintf(" · XP %d", xpDoND(m.ND)) }
 			</p>
 		</div>
-		// Iniciativa e Percepção são a PRIMEIRA linha do bloco impresso (p289),
-		// e o mestre rola as duas antes de qualquer outra coisa no combate.
-		<div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-			@estatistica("Iniciativa", comSinalInt(m.Iniciativa))
-			@estatistica("Percepção", comSinalInt(m.Percepcao))
-			@estatistica("PV", fmt.Sprintf("%d", m.HP))
-			@estatistica("Defesa", fmt.Sprintf("%d", m.Defesa))
-			@estatistica("Deslocamento", m.Deslocamento)
-			if m.PM != nil {
-				@estatistica("PM", fmt.Sprintf("%d", *m.PM))
-			}
-		</div>
-		if len(m.Attacks) > 0 {
-			@secaoDoBloco("Ataques") {
-				<div class="space-y-1">
-					for _, a := range m.Attacks {
-						<div class="rounded-sm border border-grimorio-iron p-2">
-							<p class="text-xs font-semibold">
-								{ a.Name + " " }
-								<span class="font-mono text-muted-foreground">{ comSinalInt(a.AttackBonus) + " · " + a.Damage }</span>
-							</p>
-							if a.Special != "" {
-								<p class="text-2xs text-muted-foreground">{ a.Special }</p>
+		// DUAS COLUNAS quando o bloco tem largura: os NÚMEROS de um lado e o
+		// TEXTO do outro. É como o livro imprime — o bloco de estatísticas e a
+		// prosa ao lado —, e é o que tira a rolagem: as habilidades especiais
+		// ficavam abaixo da dobra com meia tela vazia à direita.
+		//
+		// A ORDEM DO DOM é a dos números primeiro, e ela importa além do
+		// desenho: numa coluna só (telefone, diálogo estreito) é nessa ordem que
+		// tudo empilha, e é a ordem em que o leitor de tela lê. Ataque antes de
+		// PV leria a ficha de trás para a frente.
+		<div class="bloco-do-verbete-colunas">
+			<div class="space-y-4">
+				// Iniciativa e Percepção são a PRIMEIRA linha do bloco impresso
+				// (p289), e o mestre rola as duas antes de qualquer outra coisa
+				// no combate.
+				<div class="grid grid-cols-2 gap-2">
+					@estatistica("Iniciativa", comSinalInt(m.Iniciativa))
+					@estatistica("Percepção", comSinalInt(m.Percepcao))
+					@estatistica("PV", fmt.Sprintf("%d", m.HP))
+					@estatistica("Defesa", fmt.Sprintf("%d", m.Defesa))
+					@estatistica("Deslocamento", m.Deslocamento)
+					if m.PM != nil {
+						@estatistica("PM", fmt.Sprintf("%d", *m.PM))
+					}
+				</div>
+				@secaoDoBloco("Atributos") {
+					<div class="bloco-atributos grid gap-1">
+						@estatistica("For", comSinal(m.Forca))
+						@estatistica("Des", comSinal(m.Destreza))
+						@estatistica("Con", comSinal(m.Constituicao))
+						@estatistica("Int", comSinal(m.Inteligencia))
+						@estatistica("Sab", comSinal(m.Sabedoria))
+						@estatistica("Car", comSinal(m.Carisma))
+					</div>
+				}
+				@secaoDoBloco("Resistências") {
+					<div class="grid grid-cols-3 gap-1">
+						@estatistica("Fortitude", comSinalInt(m.Fortitude))
+						@estatistica("Reflexos", comSinalInt(m.Reflexos))
+						@estatistica("Vontade", comSinalInt(m.Vontade))
+					</div>
+				}
+			</div>
+			<div class="space-y-4">
+				if len(m.Attacks) > 0 {
+					@secaoDoBloco("Ataques") {
+						<div class="space-y-1">
+							for _, a := range m.Attacks {
+								<div class="rounded-sm border border-grimorio-iron p-2">
+									<p class="text-xs font-semibold">
+										{ a.Name + " " }
+										<span class="font-mono text-muted-foreground">{ comSinalInt(a.AttackBonus) + " · " + a.Damage }</span>
+									</p>
+									if a.Special != "" {
+										<p class="text-2xs text-muted-foreground">{ a.Special }</p>
+									}
+								</div>
 							}
 						</div>
 					}
-				</div>
-			}
-		}
-		if len(m.SpecialAbilities) > 0 {
-			@secaoDoBloco("Habilidades especiais") {
-				<ul class="list-disc space-y-1 pl-5 text-xs">
-					for _, h := range m.SpecialAbilities {
-						<li>{ h }</li>
+				}
+				if len(m.SpecialAbilities) > 0 {
+					@secaoDoBloco("Habilidades especiais") {
+						<ul class="list-disc space-y-1 pl-5 text-xs">
+							for _, h := range m.SpecialAbilities {
+								<li>
+									for _, pedaco := range comElosDoTexto(h) {
+										@pedacoDoTexto(pedaco, livro)
+									}
+								</li>
+							}
+						</ul>
 					}
-				</ul>
-			}
-		}
-		if len(m.Skills) > 0 {
-			@secaoDoBloco("Perícias") {
-				<p class="text-xs">
-					for i, p := range m.Skills {
-						if i > 0 {
-							{ " · " }
-						}
-						{ p.Name + " " }
-						<span class="font-mono">{ comSinalInt(p.Bonus) }</span>
-						if p.Nota != "" {
-							<span class="text-muted-foreground">{ " (" + p.Nota + ")" }</span>
-						}
+				}
+				if len(m.Skills) > 0 {
+					@secaoDoBloco("Perícias") {
+						<p class="text-xs">
+							for i, p := range m.Skills {
+								if i > 0 {
+									{ " · " }
+								}
+								// A perícia da criatura leva ao verbete dela: o
+								// mestre lê "Furtividade +5" e pode querer saber
+								// se ela sofre penalidade de armadura.
+								@eloParaOAcervo("pericias", chaveDoNome(p.Name), p.Name) {
+									{ p.Name }
+								}
+								{ " " }
+								<span class="font-mono">{ comSinalInt(p.Bonus) }</span>
+								if p.Nota != "" {
+									<span class="text-muted-foreground">{ " (" + p.Nota + ")" }</span>
+								}
+							}
+						</p>
 					}
-				</p>
-			}
-		}
-		// Equipamento e Tesouro fecham o bloco impresso, e é onde o livro os
-		// põe. O equipamento se perdeu INTEIRO na importação — zero dos 80
-		// verbetes o tinham — e o tesouro virava um número de XP (ALE-151).
-		if m.Equipamento != "" {
-			@secaoDoBloco("Equipamento") {
-				<p class="text-xs">{ m.Equipamento }</p>
-			}
-		}
-		if m.Tesouro != "" {
-			@secaoDoBloco("Tesouro") {
-				<p class="text-xs">{ m.Tesouro }</p>
-			}
-		}
-		@secaoDoBloco("Atributos") {
-			<div class="grid grid-cols-3 gap-1 sm:grid-cols-6">
-				@estatistica("For", comSinal(m.Forca))
-				@estatistica("Des", comSinal(m.Destreza))
-				@estatistica("Con", comSinal(m.Constituicao))
-				@estatistica("Int", comSinal(m.Inteligencia))
-				@estatistica("Sab", comSinal(m.Sabedoria))
-				@estatistica("Car", comSinal(m.Carisma))
+				}
+				// Equipamento e Tesouro fecham o bloco impresso, e é onde o livro
+				// os põe. O equipamento se perdeu INTEIRO na importação — zero
+				// dos 80 verbetes o tinham — e o tesouro virava um número de XP
+				// (ALE-151).
+				// As duas passam pela varredura pelo mesmo motivo das habilidades:
+				// o tesouro do dragão diz "veja o quadro na página 312", e o
+				// número era texto morto no meio da frase.
+				if m.Equipamento != "" {
+					@secaoDoBloco("Equipamento") {
+						<p class="text-xs">
+							for _, pedaco := range comElosDoTexto(m.Equipamento) {
+								@pedacoDoTexto(pedaco, livro)
+							}
+						</p>
+					}
+				}
+				if m.Tesouro != "" {
+					@secaoDoBloco("Tesouro") {
+						<p class="text-xs">
+							for _, pedaco := range comElosDoTexto(m.Tesouro) {
+								@pedacoDoTexto(pedaco, livro)
+							}
+						</p>
+					}
+				}
 			</div>
-		}
-		@secaoDoBloco("Resistências") {
-			<div class="grid grid-cols-3 gap-1">
-				@estatistica("Fortitude", comSinalInt(m.Fortitude))
-				@estatistica("Reflexos", comSinalInt(m.Reflexos))
-				@estatistica("Vontade", comSinalInt(m.Vontade))
-			</div>
-		}
+		</div>
 	</div>
 }
 

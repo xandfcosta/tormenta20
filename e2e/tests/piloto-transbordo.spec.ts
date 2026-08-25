@@ -107,3 +107,51 @@ test('o elo mostra o conceito por cima, sem tirar a pessoa da regra que lia', as
   await page.keyboard.press('Escape')
   expect(await caixa.evaluate((d: HTMLDialogElement) => d.open)).toBe(false)
 })
+
+test('a ficha do monstro usa a largura: duas colunas quando cabe, empilhada quando não', async ({
+  page,
+}) => {
+  // O defeito, visto pelo dono na tela: a ficha parava numa coluna de 56rem com
+  // meia tela vazia ao lado, e as habilidades especiais ficavam abaixo da dobra.
+  //
+  // E2E porque a decisão é de `@container`: a pergunta é quanto o BLOCO recebe,
+  // e o bloco é desenhado em três larguras diferentes (painel do mestre, diálogo
+  // da Mesa, ficha em diálogo do telefone). Em jsdom todo elemento mede zero e a
+  // consulta de contêiner nunca dispara.
+  await page.setViewportSize({ width: 1500, height: 900 })
+  await page.goto('/piloto/mestre/bestiario?criatura=dragao-adulto')
+
+  // O bloco é desenhado DUAS vezes na cena — no painel e na ficha em diálogo do
+  // telefone, que o CSS esconde nesta largura. Medir o do painel é medir o que
+  // está na tela; o outro tem largura zero, e medir caixa escondida é medir
+  // nada com cara de medição.
+  const colunas = page.locator('.mesa-painel .bloco-do-verbete-colunas')
+  await expect(colunas).toBeVisible()
+
+  const largo = await colunas.evaluate((el) => ({
+    colunas: getComputedStyle(el).gridTemplateColumns.split(' ').length,
+    // Os dois filhos lado a lado: mesma linha significa mesmo topo.
+    mesmoTopo:
+      el.children[0].getBoundingClientRect().top === el.children[1].getBoundingClientRect().top,
+    sobra: el.parentElement!.getBoundingClientRect().width - el.getBoundingClientRect().width,
+  }))
+  expect(largo.colunas, 'a ficha não abriu em duas colunas com 1500px').toBe(2)
+  expect(largo.mesmoTopo, 'as duas colunas não estão lado a lado').toBe(true)
+  // E ela USA a largura: o bloco não pode parar muito antes do painel.
+  expect(largo.sobra, 'a ficha deixou meia tela vazia ao lado').toBeLessThan(40)
+
+  // Num painel ESTREITO volta a empilhar — a mesma árvore, sem segundo desenho:
+  // duas árvores para o mesmo bloco se desencontram.
+  //
+  // 1000px e não 420: a esta largura o painel ainda existe (o palco passa dos
+  // 50rem que a `.mesa-duas-colunas` pede) mas dá ao bloco menos que 46rem. A
+  // 420 o painel some inteiro, e a asserção mediria um elemento escondido.
+  await page.setViewportSize({ width: 1000, height: 900 })
+  await expect(colunas).toBeVisible()
+  const estreito = await colunas.evaluate((el) => ({
+    colunas: getComputedStyle(el).gridTemplateColumns.split(' ').length,
+    largura: el.getBoundingClientRect().width,
+  }))
+  expect(estreito.largura, 'o painel não ficou estreito o bastante para medir').toBeLessThan(46 * 16)
+  expect(estreito.colunas, 'a ficha continuou em duas colunas num painel estreito').toBe(1)
+})
