@@ -138,8 +138,20 @@ templ resultadosDoAcervo(v catalogosView) {
 
 // ── os quatro cartões ────────────────────────────────────────────────────────
 
+// `wrap-anywhere` (`overflow-wrap: anywhere`) no CARTÃO, e é conserto de um
+// defeito que o dono viu na tela: a magia "Sopro da Salvação" lista as condições
+// que remove como UM token sem espaço —
+// `(abalado/atordoado/apavorado/…)`, 100 caracteres — e a BARRA não é
+// oportunidade de quebra para o navegador. Medido: 1.343px de conteúdo numa
+// coluna de 540px, pintando por cima dos cartões vizinhos.
+//
+// `anywhere` e não `break-word`: os cartões vivem numa grade, e só o `anywhere`
+// entra na conta do tamanho MÍNIMO do conteúdo. Com `break-word` a coluna ainda
+// pediria a largura do token inteiro.
+//
+// No cartão e não em cada descrição: são oito abas, e a nona nasce protegida.
 templ cartaoDoAcervo() {
-	<div class="rounded-sm border border-grimorio-iron p-2.5 text-sm">
+	<div class="wrap-anywhere rounded-sm border border-grimorio-iron p-2.5 text-sm">
 		{ children... }
 	</div>
 }
@@ -148,14 +160,6 @@ templ cartaoDeCondicao(c condicaoDoLivro, livro enderecoDoLivro) {
 	@cartaoDoAcervo() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ c.Name }
-			// A TAG é o tipo de efeito, e o livro o imprime em itálico no fim da
-			// condição ("Abalado … Medo."). Aqui ele vira ELO: o mestre lia a
-			// palavra e tinha de ir procurar o que ela significa.
-			for _, t := range c.Tags {
-				@eloParaOAcervo("efeitos", nomeDoEfeito(t)) {
-					{ nomeDoEfeito(t) }
-				}
-			}
 			@seloDaPagina(livro, c.BookPage, c.Name)
 		</p>
 		<p class="mt-1 text-muted-foreground">
@@ -169,6 +173,23 @@ templ cartaoDeCondicao(c condicaoDoLivro, livro enderecoDoLivro) {
 				} else {
 					{ pedaco.Texto }
 				}
+			}
+			// O TIPO DE EFEITO fecha a descrição, em itálico, exatamente onde o
+			// livro o imprime: "Abalado. O personagem sofre –2 … *Medo.*".
+			//
+			// Ele estava colado no NOME, e o dono leu "Abalado Medo" como se as
+			// duas palavras fossem o mesmo verbete. Depois da explicação, e como
+			// elo, ele se anuncia pelo que é: outro conceito, com página própria.
+			for _, t := range c.Tags {
+				{ " " }
+				// `<em>` com o itálico do livro: ele é o que separa o TIPO da
+				// frase que acabou de terminar, e é o desenho que o mestre já
+				// conhece da página impressa.
+				<em>
+					@eloParaOAcervo("efeitos", nomeDoEfeito(t)) {
+						{ nomeDoEfeito(t) + "." }
+					}
+				</em>
 			}
 		</p>
 		if c.UpgradesTo != "" {

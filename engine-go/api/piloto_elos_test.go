@@ -23,9 +23,17 @@ func TestOTipoDeEfeitoDaCondicaoVirouElo(t *testing.T) {
 		t.Error("a tag da condição não leva ao tipo de efeito")
 	}
 	// E ela é escrita como o LIVRO escreve, não como o dado guarda: a tag é
-	// `cansaco`, sem acento e em caixa baixa, porque é uma chave.
-	if !strings.Contains(corpo, ">Medo<") {
+	// `cansaco`, sem acento e em caixa baixa, porque é uma chave. O ponto final
+	// vem junto porque é assim que o livro fecha a condição ("… *Medo.*").
+	if !strings.Contains(corpo, ">Medo.<") {
 		t.Error("a tag saiu com a cara de chave em vez do nome do tipo")
+	}
+	// E ela vem DEPOIS da explicação, não colada no nome: o dono leu "Abalado
+	// Medo" como se as duas palavras fossem o mesmo verbete. A ordem no HTML é
+	// a prova — a descrição primeiro, o tipo em seguida.
+	abalado := corpo[strings.Index(corpo, ">Abalado<"):]
+	if strings.Index(abalado, "em testes de perícia") > strings.Index(abalado, ">Medo.<") {
+		t.Error("o tipo de efeito voltou para antes da explicação")
 	}
 	efeitos := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/catalogos?aba=efeitos", "").Body.String()
 	if !strings.Contains(efeitos, "Medo capaz de prejudicar o alvo") {
