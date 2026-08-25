@@ -184,3 +184,32 @@ func matizDe(nome string) int {
 	}
 	return int(hash % 360)
 }
+
+// ChaoDoLugar é uma das aparências que o lugar pode ter. Ver GLOSSARIO.md: é o
+// CHÃO, e não o terreno difícil — um é como a cena se parece, o outro é quanto
+// custa atravessá-la.
+type ChaoDoLugar struct {
+	ID     string
+	Rotulo string
+}
+
+// ChoesDoLugar é a lista que o mestre escolhe ao abrir uma cena.
+//
+// Ela vive aqui e não na tela porque JÁ EXISTIA duas vezes — em `.chao-*` no CSS
+// do piloto e no `TERRAIN_LABEL` da SPA —, e uma terceira cópia escrita à mão no
+// templ é como nasce a opção que a tela oferece e o CSS não sabe pintar. O
+// `chao_do_lugar_test.go` amarra esta lista ao CSS: acrescentar um chão aqui sem
+// pintá-lo lá derruba o guarda.
+//
+// A ORDEM é a da SPA, e o primeiro é o padrão de quem não escolhe.
+var ChoesDoLugar = []ChaoDoLugar{
+	{"pedra", "Pedra"},
+	{"taverna", "Taverna"},
+	{"floresta", "Floresta"},
+	{"ermo", "Ermo"},
+	{"cripta", "Cripta"},
+	{"papel", "Papel"},
+}
+
+// ChaoPadrao é o que o servidor usa quando ninguém escolheu.
+func ChaoPadrao() string { return ChoesDoLugar[0].ID }

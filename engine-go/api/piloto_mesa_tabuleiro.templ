@@ -1,6 +1,10 @@
 package api
 
-import "fmt"
+import (
+	"fmt"
+
+	"t20engine/tabuleiro"
+)
 
 // O TABULEIRO desenhado (ALE-263) — a fatia que se OLHA.
 //
@@ -16,9 +20,26 @@ import "fmt"
 
 templ tabuleiroDaMesa(v tabuleiroView) {
 	if !v.Aberto {
-		<p class="border border-dashed border-grimorio-iron p-4 text-center text-sm text-muted-foreground">
-			Nenhum tabuleiro aberto. O mestre abre quando a cena tiver lugar.
-		</p>
+		// As duas frases são DIFERENTES de propósito: o jogador não tem o que
+		// fazer além de esperar, e o mestre tem. Uma frase só serviria mal aos
+		// dois — e "o mestre abre quando a cena tiver lugar" dita ao próprio
+		// mestre é a tela mandando ele fazer o que ela não deixa.
+		<div class="flex flex-col items-center gap-3 border border-dashed border-grimorio-iron p-6 text-center">
+			<span aria-hidden="true" class="text-2xl text-muted-foreground">▦</span>
+			if v.Mestre {
+				<p class="text-sm text-muted-foreground">Nenhum tabuleiro aberto. Vale para combate e para cena de interpretação.</p>
+				<button
+					type="button"
+					data-on:click="document.getElementById('abrir-tabuleiro').showModal()"
+					class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				>Abrir tabuleiro</button>
+			} else {
+				<p class="text-sm text-muted-foreground">O mestre ainda não abriu um tabuleiro.</p>
+			}
+		</div>
+		if v.Mestre {
+			@abrirTabuleiro(v)
+		}
 	} else if v.Cortina {
 		// A CORTINA ocupa o lugar da cena e NÃO desenha grade, de propósito: a
 		// cena vazia mostra grade, e as duas telas têm de se parecer o menos
@@ -33,7 +54,24 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 			<div class="flex flex-wrap items-baseline gap-x-2">
 				<h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tabuleiro</h2>
 				<p class="truncate text-sm text-foreground">{ v.Lugar }</p>
+				if v.Mestre {
+					// ÍCONE e não texto, à direita, como o ✕ da SPA: a linha do
+					// lugar é a mais estreita da região, e "Encerrar o
+					// tabuleiro" por extenso empurra o nome da cena para fora.
+					// O nome acessível é o texto inteiro — quem usa leitor de
+					// tela não perde a palavra que o desenho economizou.
+					<button
+						type="button"
+						aria-label="Encerrar o tabuleiro"
+						title="Encerrar o tabuleiro"
+						data-on:click="document.getElementById('encerrar-tabuleiro').showModal()"
+						class="ml-auto flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					>✕</button>
+				}
 			</div>
+			if v.Mestre {
+				@encerrarTabuleiro(v)
+			}
 			// A TIRA DA CORTINA, e o esquecimento que ela evita é caro: o mapa do
 			// mestre fica igualzinho com a cortina aberta ou fechada, então sem
 			// ela ele narra a taverna e move o taverneiro para uma mesa que está
@@ -54,7 +92,7 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 			// onde estava olhando.
 			<div class="tabuleiro-palco grimorio-frame">
 				<div
-					class={ "tabuleiro-plano chao-" + v.Terreno }
+					class={ "tabuleiro-plano chao-" + v.Chao }
 					style={ fmt.Sprintf("--colunas:%d; --linhas:%d", v.Colunas, v.Linhas) }
 				>
 					<div aria-hidden="true" class="tabuleiro-ambiente"></div>
@@ -222,4 +260,104 @@ templ marcadorNoPlano(m marcadorDoTabuleiro) {
 		style={ posicaoNoPlano(m.Col, m.Lin, 1) + fmt.Sprintf("--marcador:%s;", corDeMarcador(m.Cor)) }
 		class="tabuleiro-marcador"
 	>{ m.Texto }</span>
+}
+
+// O diálogo de ABRIR (ALE-124, portado na ALE-264).
+//
+// Pede o LUGAR antes da grade porque é uma cena que o mestre está montando, não
+// uma planilha: "Taverna do Javali" é o que a mesa vai ler no topo. E diz a
+// conversão do livro à vista (1 quadrado = 1,5m, p236) porque a ficha fala em
+// METROS — sem ela o mestre faz a conta de cabeça toda vez.
+//
+// `<dialog>` nativo pelo mesmo motivo dos outros: foco preso, Escape, fundo
+// inerte e camada de topo, que é o que o tira de dentro do `contain` do palco.
+// O `m-auto` é obrigatório — o `preflight` do Tailwind zera a margem de todo
+// elemento, e a centralização do modal é justamente a `margin: auto`.
+templ abrirTabuleiro(v tabuleiroView) {
+	<dialog
+		id="abrir-tabuleiro"
+		data-preserve-attr="open"
+		aria-labelledby="abrir-tabuleiro-titulo"
+		class="scene-grimorio m-auto w-[min(24rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
+	>
+		<h2 id="abrir-tabuleiro-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">Abrir tabuleiro</h2>
+		<p class="mt-1 text-sm text-muted-foreground">
+			O tabuleiro não tem bordas: cada quadrado é 1,5m (p236) e a cena cresce para onde a mesa for. O deslocamento padrão de 9m anda 6 quadrados (p106).
+		</p>
+		<label for="novo-lugar" class="mt-3 block text-xs font-bold uppercase tracking-widest text-muted-foreground">Lugar</label>
+		// O NOME DO SINAL É TODO MINÚSCULO, e é obrigatório: nome de ATRIBUTO é
+		// minusculado pelo analisador de HTML, então um `data-bind:novoLugar`
+		// liga um sinal `novolugar` e deixa o declarado intocado — o fio leva os
+		// dois e o servidor lê o errado.
+		<input
+			id="novo-lugar"
+			type="text"
+			data-bind:novolugar
+			placeholder="Taverna do Javali"
+			class="mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+		/>
+		// CHÃO e não "Cenário", que é o rótulo da SPA: em T20 cenário é ARTON, o
+		// mundo da campanha, e a palavra não pode significar duas coisas na
+		// mesma casa. Ver GLOSSARIO.md.
+		<label for="novo-chao" class="mt-3 block text-xs font-bold uppercase tracking-widest text-muted-foreground">Chão</label>
+		<select
+			id="novo-chao"
+			data-bind:novochao
+			class="mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+		>
+			// A lista vem do `tabuleiro` e não é digitada aqui: ela já existia no
+			// CSS e na SPA, e uma terceira cópia à mão é como nasce a opção que a
+			// tela oferece e o navegador desenha em branco.
+			for _, chao := range tabuleiro.ChoesDoLugar {
+				<option value={ chao.ID }>{ chao.Rotulo }</option>
+			}
+		</select>
+		<div class="mt-4 flex justify-end gap-2">
+			<button
+				type="button"
+				data-on:click="document.getElementById('abrir-tabuleiro').close()"
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>Cancelar</button>
+			// Fecha ANTES de postar, como o descanso: a recusa chega no
+			// `$erroDoComando`, que é do RODAPÉ — o diálogo aberto por cima dela
+			// esconderia a única frase que explica o que houve.
+			<button
+				type="button"
+				data-on:click={ "document.getElementById('abrir-tabuleiro').close(); " + comandoDoTabuleiroDaCena(v, "abrir") }
+				class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>Abrir</button>
+		</div>
+	</dialog>
+}
+
+// O diálogo de ENCERRAR, que é confirmação e não interruptor.
+//
+// A frase diz o que ACONTECE com a cena porque "encerrar" sozinho soa como
+// perder: ela vai para os Lugares da campanha com as peças onde estão. Sem isso
+// o mestre hesita no fim da noite e deixa a cena velha na mesa da semana
+// seguinte.
+templ encerrarTabuleiro(v tabuleiroView) {
+	<dialog
+		id="encerrar-tabuleiro"
+		data-preserve-attr="open"
+		aria-labelledby="encerrar-tabuleiro-titulo"
+		class="scene-grimorio m-auto w-[min(24rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
+	>
+		<h2 id="encerrar-tabuleiro-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">Encerrar o tabuleiro?</h2>
+		<p class="mt-1 text-sm text-muted-foreground">
+			A cena vai para os Lugares da campanha, com as peças onde estão, e você a reabre quando quiser. A iniciativa e os PV continuam como estão.
+		</p>
+		<div class="mt-4 flex justify-end gap-2">
+			<button
+				type="button"
+				data-on:click="document.getElementById('encerrar-tabuleiro').close()"
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>Cancelar</button>
+			<button
+				type="button"
+				data-on:click={ "document.getElementById('encerrar-tabuleiro').close(); " + comandoDoTabuleiroDaCena(v, "encerrar") }
+				class="inline-flex min-h-11 items-center rounded-sm bg-destructive px-3 text-sm font-semibold text-destructive-foreground outline-none transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>Encerrar</button>
+		</div>
+	</dialog>
 }

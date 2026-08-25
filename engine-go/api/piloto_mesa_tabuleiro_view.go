@@ -35,7 +35,9 @@ type tabuleiroView struct {
 	// que denuncia o modo.
 	AvisoDaCortina bool
 	Lugar          string
-	Terreno        string
+	// Chao é a APARÊNCIA do lugar (pedra, taverna, cripta…), e não o terreno
+	// difícil, que é regra de movimento e vive no `Dificil`. Ver GLOSSARIO.md.
+	Chao string
 	// Colunas e Linhas são o tamanho do plano em QUADRADOS. O pixel por
 	// quadrado é do navegador, num `--quadrado` que o dedo muda.
 	Colunas, Linhas int
@@ -68,6 +70,10 @@ type tabuleiroView struct {
 	// CampaignID e SessionID moram aqui porque o tabuleiro escreve as próprias
 	// rotas, como a `mesaView` faz com as dela.
 	CampaignID, SessionID int64
+	// Mestre é quem MONTA e DESMONTA a cena. Sai do mesmo `quem.Role` que a
+	// redação usa, e não de um parâmetro novo: duas fontes para o papel é como
+	// nasce a tela que esconde o botão de quem pode e o mostra para quem não.
+	Mestre bool
 }
 
 // pecaDoTabuleiro é uma peça posicionada e já com a aparência resolvida.
@@ -120,8 +126,13 @@ type quadradoDoTabuleiro struct {
 // é da FILA, e o tabuleiro só a mostra. Derivá-la aqui seria a segunda conta de
 // PV do app, que é como a ALE-122 começou.
 func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, saude map[string]int, naVez string, quem tabuleiro.Mover, meus map[int64]bool, campaignID, sessionID int64) tabuleiroView {
+	// A cena VAZIA ainda precisa saber quem olha e onde ela está: é dela que
+	// sai o "Abrir tabuleiro", e um botão sem rota não é botão. A primeira
+	// versão devolvia o zero e o mestre via a moldura tracejada sem gesto
+	// nenhum — o mesmo estado que o jogador vê, que é justamente o que as duas
+	// telas não podem ter em comum.
 	if b == nil {
-		return tabuleiroView{}
+		return tabuleiroView{Mestre: quem.Role == "gm", CampaignID: campaignID, SessionID: sessionID}
 	}
 	// A CORTINA sai antes de tudo: o que chega aqui já veio vazio do
 	// `BoardForRole`, sem peça, sem terreno e sem o nome do lugar — "Covil do
@@ -133,12 +144,12 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, sa
 	// quem está montando a cena. A primeira versão disto não olhava o papel e o
 	// guarda acusou — "o mestre perdeu a própria cena com a cortina fechada".
 	if b.Curtained && quem.Role != "gm" {
-		return tabuleiroView{Aberto: true, Cortina: true}
+		return tabuleiroView{Aberto: true, Cortina: true, CampaignID: campaignID, SessionID: sessionID}
 	}
 	e := tabuleiro.MolduraDe(b)
 	v := tabuleiroView{
 		Aberto: true, AvisoDaCortina: b.Curtained,
-		Lugar: b.Place, Terreno: terrenoConhecido(b.Terrain),
+		Lugar: b.Place, Chao: chaoConhecido(b.Terrain),
 		Colunas: e.Colunas, Linhas: e.Linhas, X0: e.X0, Y0: e.Y0,
 	}
 	for i := range b.Tokens {
@@ -155,6 +166,7 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, sa
 		v.Dificil = append(v.Dificil, quadradoDoTabuleiro{Col: q.X - e.X0, Lin: q.Y - e.Y0})
 	}
 	v.CampaignID, v.SessionID = campaignID, sessionID
+	v.Mestre = quem.Role == "gm"
 	v.Movimento = movimentoDoTabuleiro(b, quem, e)
 	var restante int
 	v.AlvoDoMovimento, v.RotuloDoAlvo, v.Alcance, restante = oAlvoEOAlcance(b, st, quem, meus, e)
@@ -192,22 +204,6 @@ func pecaDoTabuleiroDe(t *tabuleiro.BoardToken, e tabuleiro.Moldura, saude map[s
 // Num plano sem bordas o "+1" de planilha mente sobre onde a peça está, e é este
 // texto que o leitor de tela recebe — sem ele a peça é um disco anônimo.
 func coordenada(x, y int) string { return fmt.Sprintf("%d, %d", x, y) }
-
-// terrenosDoLivro são os seis chãos que a casa desenha, e o nome vira CLASSE
-// (`chao-pedra`). Vindo do banco, ele é dado do cliente: um terreno inventado
-// viraria uma classe que não existe e o chão sairia transparente — o que se
-// parece com defeito de CSS e manda procurar no lugar errado.
-var terrenosDoLivro = map[string]bool{
-	"pedra": true, "taverna": true, "floresta": true,
-	"ermo": true, "cripta": true, "papel": true,
-}
-
-func terrenoConhecido(t string) string {
-	if terrenosDoLivro[t] {
-		return t
-	}
-	return "pedra"
-}
 
 // saudeDaFila é quanto de PV resta a cada combatente, em porcentagem (ALE-188).
 //
@@ -530,4 +526,13 @@ func oQueSeArrasta(b *tabuleiro.BoardState, quem tabuleiro.Mover, alvo string, e
 		return &quadradoDoTabuleiro{Col: fim.X - e.X0, Lin: fim.Y - e.Y0, X: fim.X, Y: fim.Y}, ""
 	}
 	return nil, alvo
+}
+
+// comandoDoTabuleiroDaCena escreve a chamada de abrir ou encerrar.
+//
+// Irmão do `comandoDoMovimento` e separado dele de propósito: aquele leva o id
+// da PEÇA no caminho, e este não tem peça nenhuma — abrir acontece justamente
+// quando não há tabuleiro.
+func comandoDoTabuleiroDaCena(v tabuleiroView, acao string) string {
+	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/%s')", v.CampaignID, v.SessionID, acao)
 }

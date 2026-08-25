@@ -127,14 +127,45 @@ func (s *Server) quemMove(c mesaComando) tabuleiro.Mover {
 func (s *Server) comandoDaMesa(
 	mutar func(*Server, mesaComando) (*tabuleiro.BoardState, error),
 ) http.HandlerFunc {
+	return s.comandoDoTabuleiro(mutar, false)
+}
+
+// comandoDoMestreNoTabuleiro é abrir e encerrar a cena: mutação de TABULEIRO,
+// mas só o mestre monta e desmonta a mesa.
+//
+// As duas diferenças andam JUNTAS e por isso são um parâmetro só. Quem pode agir
+// decide onde a recusa fala: comando que só o mestre emite fala no RODAPÉ dele,
+// que é a superfície que ele tem na tela; comando que o jogador também emite
+// fala no TABULEIRO, porque jogador não renderiza rodapé nenhum — foi assim que
+// uma recusa de movimento ficou muda por meia sessão.
+func (s *Server) comandoDoMestreNoTabuleiro(
+	mutar func(*Server, mesaComando) (*tabuleiro.BoardState, error),
+) http.HandlerFunc {
+	return s.comandoDoTabuleiro(mutar, true)
+}
+
+// comandoDoTabuleiro é o corpo dos dois. Separá-los em duas cópias seria repetir
+// resolver a mesa, mutar, publicar e redesenhar — e é numa delas que alguém
+// esquece de publicar e a mesa fica vendo a cena velha.
+func (s *Server) comandoDoTabuleiro(
+	mutar func(*Server, mesaComando) (*tabuleiro.BoardState, error),
+	soODoMestre bool,
+) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		campaignID, sessionID, ok := mesaParams(w, r)
 		if !ok {
 			return
 		}
 		user := currentUser(r)
-		if _, _, status, err := s.sessionForCaller(r.Context(), user, campaignID, sessionID); err != nil {
+		_, papel, status, err := s.sessionForCaller(r.Context(), user, campaignID, sessionID)
+		if err != nil {
 			http.Error(w, err.Error(), status)
+			return
+		}
+		// A trava é aqui e não na tela: quem postar na mão leva 403, e o botão
+		// escondido é só cortesia para quem não pode.
+		if soODoMestre && papel != "gm" {
+			http.Error(w, "só o mestre monta a cena", http.StatusForbidden)
 			return
 		}
 		sinais := map[string]any{}
@@ -143,6 +174,11 @@ func (s *Server) comandoDaMesa(
 		})
 		if estado != nil {
 			s.publishBoardState(sessionID, estado)
+		}
+		if soODoMestre {
+			// O `respondeAoMestre` escreve o `erroDoComando` do rodapé sozinho.
+			s.respondeAoMestre(w, r, user, campaignID, sessionID, err, sinais)
+			return
 		}
 		// A recusa vai para `erroDoMovimento` e NÃO para o `erroDoComando` do
 		// rodapé, que é do mestre: quem move é o jogador, e ele não tem rodapé
