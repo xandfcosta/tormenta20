@@ -24,10 +24,8 @@ afterEach(() => {
 })
 
 describe('SceneShell', () => {
-  it('rende o conteúdo que recebe', () => {
-    render(() => <SceneShell>conteúdo</SceneShell>)
-    expect(screen.getByText('conteúdo')).toBeInTheDocument()
-  })
+  // 'rende o conteúdo que recebe' saiu na ALE-187: passagem de `children`, que o Solid faz
+  // e o typechecker garante.
 
   it('layout padrão mostra o título cinematográfico com kicker', () => {
     render(() => (

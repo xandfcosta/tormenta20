@@ -63,10 +63,26 @@ describe('toggleProficiency', () => {
 })
 
 describe('classDefaults', () => {
-  it('devolve só o que a classe concede', () => {
-    const defaults = classDefaults(character())
-    const granted = proficiencyCatalog(character()).filter((e) => e.granted)
-    expect(defaults).toEqual(granted.map((e) => e.category))
+  /**
+   * A lista LITERAL do Guerreiro (p42), e não `proficiencyCatalog(...).filter(granted)`
+   * como estava antes (ALE-187).
+   *
+   * O esperado era calculado pela função IRMÃ, sobre o mesmo personagem — a
+   * implementação comparada consigo mesma, que só falharia se a linguagem
+   * quebrasse. Trocar a regra do Guerreiro deixava as duas mudarem juntas e o
+   * teste seguia verde.
+   *
+   * Os cinco nomes foram rodados uma vez e TRANSCRITOS. É o mesmo método do
+   * `hueFromName` (ALE-238): quem prende um valor não pode recalculá-lo.
+   */
+  it('devolve só o que a classe concede — o Guerreiro, por extenso', () => {
+    expect(classDefaults(character())).toEqual([
+      'armas-simples',
+      'armas-marciais',
+      'armaduras-leves',
+      'armaduras-pesadas',
+      'escudos',
+    ])
   })
 })
 

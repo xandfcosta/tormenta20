@@ -14,9 +14,17 @@ import {
 } from './class-powers'
 
 describe('tormentaPowerOptions', () => {
-  it('returns the 22 poderes da Tormenta, all source "tormenta"', () => {
+  /**
+   * A CONTAGEM ("22 poderes") saiu na ALE-187: é transcrição do livro, e dado
+   * transcrito é validado por SCHEMA no dump, não por um `expect` que obriga
+   * dois commits coordenados para acrescentar um poder.
+   *
+   * O que fica é o FILTRO, que é código desta casa: nenhum poder de outra
+   * fonte pode vazar para a lista da Tormenta.
+   */
+  it('só traz poderes de fonte "tormenta"', () => {
     const opts = tormentaPowerOptions()
-    expect(opts).toHaveLength(22)
+    expect(opts.length).toBeGreaterThan(0)
     expect(opts.every((o) => o.source === 'tormenta')).toBe(true)
   })
 

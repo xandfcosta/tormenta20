@@ -1,6 +1,6 @@
 import { initials } from '@/shared/lib/initials'
 import { describe, expect, it } from 'vitest'
-import {campaignEmblemGradient, roleLabel} from './emblem'
+import { roleLabel } from './emblem'
 
 describe('initials', () => {
   it('usa as iniciais das duas primeiras palavras', () => {
@@ -20,25 +20,14 @@ describe('initials', () => {
   })
 })
 
-describe('campaignEmblemGradient', () => {
-  // O emblema é derivado do nome justamente pra não precisar de imagem salva:
-  // mesma campanha, mesmo sigilo, em qualquer reload.
-  it('é estável pro mesmo nome', () => {
-    expect(campaignEmblemGradient('A Queda de Tauron')).toBe(
-      campaignEmblemGradient('A Queda de Tauron'),
-    )
-  })
-
-  it('distingue campanhas diferentes', () => {
-    expect(campaignEmblemGradient('A Queda de Tauron')).not.toBe(
-      campaignEmblemGradient('Segredos de Wynlla'),
-    )
-  })
-
-  it('devolve um gradiente CSS usável', () => {
-    expect(campaignEmblemGradient('Tormenta')).toMatch(/^linear-gradient\(155deg, oklch\(/)
-  })
-})
+// O bloco `campaignEmblemGradient` saiu na ALE-187, e o pior dos três casos era
+// o primeiro: ele comparava `campaignEmblemGradient(x)` com ELE MESMO, ou seja a
+// implementação contra si própria — só falharia se a função virasse aleatória.
+//
+// A determinação de verdade mora um nível abaixo, no `hueFromName`, e desde a
+// ALE-238 ela é afirmada com VALORES FIXADOS (186, 278, 22) que valem como
+// contrato com a segunda implementação, em Go. Os outros dois casos eram o
+// espalhamento — coberto lá também — e um regex de formato CSS.
 
 describe('roleLabel', () => {
   it('gm mestra', () => {

@@ -55,6 +55,10 @@ export function tempHpPool(character: Character): TempHpPool {
  *
  * @example routeDamage(7, 5) // { toPool: 5, toHp: 2 }
  */
+// Irmã em `shared/ui/resource-adjust-dialog.tsx` (`adjustPreview` calcula o
+// mesmo `soak`), e o dono da regra é o servidor, em `api/temp_hp_test.go`. As
+// três não podem divergir; ver a nota longa no `adjustPreview` sobre por que a
+// unificação não foi feita (ALE-187).
 export function routeDamage(
   damage: number,
   pool: number,
