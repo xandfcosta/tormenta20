@@ -24,8 +24,8 @@ func (s *Server) handleGrimorio(w http.ResponseWriter, r *http.Request) {
 		Voltar:        "/piloto/",
 		VoltarRotulo:  "Hub",
 		Scripts: []string{
-			"/piloto/static/grimorio.js",
-			"/piloto/static/pecas-solid.js",
+			EstaticoDoPiloto("grimorio.js"),
+			EstaticoDoPiloto("pecas-solid.js"),
 		},
 	}, grimorio())
 }

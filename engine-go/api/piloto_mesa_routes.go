@@ -78,7 +78,7 @@ func pilotoStaticHandler() http.Handler {
 	if err != nil {
 		panic("piloto: static embutido ausente: " + err.Error())
 	}
-	return http.FileServer(http.FS(sub))
+	return comCacheDeEstatico(http.FileServer(http.FS(sub)))
 }
 
 // mesaParams lê os dois ids da URL. Erro aqui é URL digitada errada, e a

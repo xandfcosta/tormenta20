@@ -84,13 +84,13 @@ templ layout(p paginaPiloto, corpo templ.Component) {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 			<title>{ p.Titulo }</title>
 			<link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
-			<link rel="stylesheet" href="/piloto/static/piloto.css"/>
-			<script type="module" src="/piloto/static/datastar.js"></script>
+			<link rel="stylesheet" href={ EstaticoDoPiloto("piloto.css") }/>
+			<script type="module" src={ EstaticoDoPiloto("datastar.js") }></script>
 			// `cena.js` é o teclado, os cues de áudio e o posicionamento do
 			// popover — compilado dos MESMOS fontes que a SPA usa (ALE-231), não
 			// de uma cópia. Vale para toda página do Datastar, e é `defer` por ser
 			// módulo: ele consulta o DOM ao carregar.
-			<script type="module" src="/piloto/static/cena.js"></script>
+			<script type="module" src={ EstaticoDoPiloto("cena.js") }></script>
 			for _, modulo := range p.Scripts {
 				<script type="module" src={ modulo }></script>
 			}

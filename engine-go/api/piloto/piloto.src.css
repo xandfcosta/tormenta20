@@ -46,6 +46,19 @@
  * Mesma consulta de contêiner do `.mesa-painel`, e isso é de propósito: as
  * duas metades têm de trocar EXATAMENTE no mesmo ponto, senão existe uma faixa
  * de largura sem ficha nenhuma ou com as duas. */
+/* O `html` ganha o fundo da mesa, e isto é conserto de EXPERIÊNCIA (ALE-264).
+   A propagação de fundo do `body` para o canvas só vale DEPOIS de o body existir
+   e estar estilizado; enquanto o documento novo é analisado, o canvas é o do
+   `html`, que era transparente — ou seja, BRANCO. Numa mesa escura, qualquer
+   janela em que o navegador decida pintar aparece como um clarão.
+
+   É a segunda metade do conserto do "flick" na troca de páginas: a primeira foi
+   o cache dos estáticos, que tirou a espera pela folha bloqueante. Esta tira a
+   COR do pior caso, para a janela que sobrar não ser branca. */
+html {
+  background-color: oklch(0.15 0.01 305);
+}
+
 @layer components {
   @container (min-width: 50rem) and (min-height: 30rem) {
     .mesa-ficha-em-dialogo {
