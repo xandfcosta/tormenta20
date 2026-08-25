@@ -48,9 +48,15 @@ type tabuleiroView struct {
 	X0, Y0     int
 	Pecas      []pecaDoTabuleiro
 	Marcadores []marcadorDoTabuleiro
-	// Dificil são os quadrados de terreno difícil (T20 p238), já em coordenada
-	// da TELA.
-	Dificil []quadradoDoTabuleiro
+	// Terreno são os quadrados pintados, de TODAS as espécies, já em coordenada
+	// da tela e cada um sabendo qual é a sua (T20 p238).
+	//
+	// UMA lista com a espécie dentro, e não quatro irmãs como no estado: lá elas
+	// são separadas porque só o difícil alimenta o motor e a assimetria tem de
+	// ficar à vista; aqui todas fazem a MESMA coisa — viram um `<div>` com uma
+	// classe —, e quatro laços idênticos no templ seriam a repetição sem a razão
+	// que a justifica do outro lado.
+	Terreno []quadradoDeTerreno
 	// Movimento é o proposto e ainda não confirmado, ou nil.
 	Movimento *movimentoView
 	// AlvoDoMovimento é a peça que o clique numa casa vai mover: a que já tem
@@ -135,6 +141,13 @@ type marcadorDoTabuleiro struct {
 	Onde     string
 }
 
+// quadradoDeTerreno é uma casa pintada que sabe de que espécie é. A espécie vai
+// como STRING porque o que a tela faz com ela é virar nome de classe.
+type quadradoDeTerreno struct {
+	quadradoDoTabuleiro
+	Especie string
+}
+
 type quadradoDoTabuleiro struct {
 	Col, Lin int
 	// X e Y são o lugar no PLANO, e só o destino arrastável precisa deles: é de
@@ -184,8 +197,16 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, sa
 			Col: m.X - e.X0, Lin: m.Y - e.Y0, Onde: coordenada(m.X, m.Y),
 		})
 	}
-	for _, q := range b.Difficult {
-		v.Dificil = append(v.Dificil, quadradoDoTabuleiro{Col: q.X - e.X0, Lin: q.Y - e.Y0})
+	// A ORDEM do laço é a de `EspeciesDeTerreno`, então o desenho de uma casa
+	// com duas espécies é sempre o mesmo — folhagens são difícil E camuflagem
+	// (p267), e uma ordem que variasse faria a mesma casa mudar de cara entre
+	// dois remendos.
+	for _, pincel := range tabuleiro.EspeciesDeTerreno {
+		for _, q := range tabuleiro.QuadradosDe(b, pincel.ID) {
+			v.Terreno = append(v.Terreno, quadradoDeTerreno{
+				quadradoDoTabuleiro{Col: q.X - e.X0, Lin: q.Y - e.Y0}, string(pincel.ID),
+			})
+		}
 	}
 	v.CampaignID, v.SessionID = campaignID, sessionID
 	v.Mestre = quem.Role == "gm"
@@ -604,4 +625,40 @@ func pecasEmPortugues(n int) string {
 	default:
 		return fmt.Sprintf("%d peças", n)
 	}
+}
+
+// ── o PINCEL de terreno (ALE-264, item 5) ────────────────────────────────────
+//
+// UM SINAL para a ferramenta ativa, `pincel`, e não um por espécie. A razão veio
+// da sessão da main, que estava consertando o gêmeo disto na SPA: cinco
+// alternadores independentes deixam ligar dois ao mesmo tempo, e o estado
+// impossível não estoura — ele aparece como o clique indo para a ferramenta
+// errada. Com um sinal só, escolher uma DESescolhe as outras por construção.
+//
+// Vazio é o pincel guardado, e aí o clique volta a mover a peça. É a mesma
+// superfície disputada por dois gestos, e quem arbitra é o sinal.
+
+// pinturaNoPontoClicado escreve o clique que PINTA.
+//
+// A conta do quadrado é a mesma do `paradaNoPontoClicado` — a origem da moldura
+// somada ao ponto dividido pelo lado —, e ela é do cliente pelo mesmo motivo: é
+// sobre PIXELS, e o servidor não sabe o zoom.
+//
+// A BORRACHA não é uma espécie: ela é o `ligado=false` de qualquer uma. Por isso
+// o sinal do pincel guarda a espécie e o apagar vira um segundo sinal booleano —
+// uma "espécie borracha" obrigaria a decidir o que ela apaga quando a casa tem
+// duas, e a resposta certa (a que estiver selecionada) já é o que isto faz.
+func pinturaNoPontoClicado(v tabuleiroView) string {
+	return fmt.Sprintf(
+		"@post('/piloto/mesa/%d/%d/tabuleiro/terreno/' + $pincel + '/' + (Math.floor(evt.offsetX / $quadrado) + %d) + '/' + (Math.floor(evt.offsetY / $quadrado) + %d) + ($apagando ? '?apagar=1' : ''))",
+		v.CampaignID, v.SessionID, v.X0, v.Y0,
+	)
+}
+
+// escolheOPincel liga uma espécie, ou a DESliga se ela já estava.
+//
+// Clicar de novo na ferramenta ativa guarda o pincel, que é o gesto que devolve
+// o clique ao movimento sem precisar de um sexto botão "nenhum".
+func escolheOPincel(especie string) string {
+	return fmt.Sprintf("$pincel = ($pincel === %q ? '' : %q)", especie, especie)
 }

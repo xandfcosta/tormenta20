@@ -864,3 +864,19 @@ func PodeMoverCom(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string,
 	_, orcamento, err := assertMovable(b, st, tokenID, by)
 	return err == nil, orcamento
 }
+
+// QuadradosDe são as casas pintadas de uma espécie, para quem só LÊ.
+//
+// Existe para o mapeamento espécie→lista continuar com um dono só: sem ela,
+// quem desenha refaz o `switch` do `listaDaEspecie` do lado de fora, e é a cópia
+// de fora que fica para trás quando a quinta espécie chegar. Devolve a fatia e
+// não o ponteiro justamente por ser leitura — o pincel é quem escreve.
+func QuadradosDe(b *BoardState, especie EspecieDeTerreno) []engine.Square {
+	if b == nil {
+		return nil
+	}
+	if lista := listaDaEspecie(b, especie); lista != nil {
+		return *lista
+	}
+	return nil
+}

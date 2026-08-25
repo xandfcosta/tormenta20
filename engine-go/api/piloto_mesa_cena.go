@@ -29,6 +29,30 @@ func (s *Server) rotasDaCena(r chi.Router) {
 	r.Post(base+"/encerrar", s.comandoDoMestreNoTabuleiro(encerraOTabuleiro))
 	r.Post(base+"/lugares/{placeId}/reabrir", s.comandoDoMestreNoTabuleiro(reabreOLugar))
 	r.Post(base+"/lugares/{placeId}/remover", s.comandoDoMestreNoTabuleiro(removeOLugar))
+	r.Post(base+"/terreno/{especie}/{x}/{y}", s.comandoDoMestreNoTabuleiro(pintaOTerreno))
+}
+
+// pintaOTerreno liga ou desliga uma espécie numa casa (T20 p238).
+//
+// A espécie e o quadrado vêm do CAMINHO, e o APAGAR vem da query. A divisão não
+// é arbitrária: caminho é o que identifica a casa que o clique acertou — e é a
+// mesma escolha do movimento —, enquanto apagar é um MODO da ferramenta, que
+// vale para o arraste inteiro e não para um quadrado.
+//
+// Idempotente de propósito, e o `PaintTerrain` é quem garante: o pincel pinta
+// ARRASTANDO e o arraste passa duas vezes pela mesma casa. Alternar faria a casa
+// piscar entre brejo e chão limpo debaixo do dedo.
+func pintaOTerreno(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
+	casa, err := quadradoDaURL(c.R)
+	if err != nil {
+		return nil, err
+	}
+	if st.boards.Get(c.R.Context(), c.SessionID) == nil {
+		return nil, fmt.Errorf("não há tabuleiro aberto para pintar")
+	}
+	especie := tabuleiro.EspecieConhecida(chi.URLParam(c.R, "especie"))
+	ligado := c.R.URL.Query().Get("apagar") == ""
+	return st.boards.PaintTerrain(c.R.Context(), c.SessionID, casa, especie, ligado)
 }
 
 // reabreOLugar traz uma cena guardada de volta para a mesa.

@@ -218,7 +218,7 @@ html {
 
   /* Posição ABSOLUTA e não grade: uma grade de 280 trilhas custaria leiaute a
    * cada remendo para colocar meia dúzia de coisas. */
-  .tabuleiro-dificil,
+  .tabuleiro-terreno,
   .tabuleiro-peca,
   .tabuleiro-marcador {
     position: absolute;
@@ -230,9 +230,67 @@ html {
 
   /* Terreno difícil (T20 p238): hachura, não cor chapada — cor chapada sobre um
    * chão que já é degradê some, e a peça em cima dela apagaria o resto. */
+  /* As QUATRO espécies de terreno (T20 p238). Distinguíveis por FORMA e não só
+     por cor: uma casa pode ter duas (folhagens são difícil E camuflagem, p267),
+     e duas cores sobrepostas viram uma terceira cor que não é nenhuma das duas.
+     Padrões diferentes empilham lendo como os dois que são.
+
+     O ELEVADO é de outra família visual de propósito, e a razão está no
+     glossário: as outras três PROTEGEM quem está na casa, e ele BENEFICIA quem
+     ataca de lá. Textura sobreposta diz "tem coisa aqui"; chanfro diz "isto
+     está mais alto", que é a afordância clássica de relevo e a única das quatro
+     que fala de altura. */
+  .tabuleiro-terreno {
+    pointer-events: none;
+  }
+
   .tabuleiro-dificil {
     background: repeating-linear-gradient(45deg, oklch(0.8 0.11 85 / 0.14) 0 3px, transparent 3px 9px);
-    pointer-events: none;
+  }
+
+  /* Cobertura: uma barreira na borda, porque cobertura é o que fica ENTRE o
+     atacante e o alvo. Moldura por dentro e não preenchimento — preencher
+     esconderia o chão do lugar, que continua sendo informação. */
+  .tabuleiro-cobertura {
+    box-shadow: inset 0 0 0 3px oklch(0.72 0.09 230 / 0.55);
+  }
+
+  /* Camuflagem: névoa. Suave e sem borda, que é o oposto da cobertura — uma
+     protege por barreira e a outra por não deixar ver. */
+  .tabuleiro-camuflagem {
+    background: radial-gradient(60% 60% at 50% 50%, oklch(0.85 0.03 260 / 0.30), transparent 72%);
+  }
+
+  /* Elevado: chanfro. Claro em cima e à esquerda, escuro embaixo e à direita —
+     a luz vem de cima, e o olho lê a casa como um degrau. */
+  .tabuleiro-elevado {
+    box-shadow:
+      inset 2px 2px 0 oklch(0.95 0.02 90 / 0.34),
+      inset -2px -2px 0 oklch(0.2 0.02 90 / 0.5);
+  }
+
+  /* A AMOSTRA no botão do trilho é o mesmo desenho que a casa recebe, em
+     miniatura: o mestre reconhece o pincel pelo que ele PINTA, e não por uma
+     legenda que ele teria de decorar. Por isso ela empilha a classe da espécie
+     em vez de repetir as cores — repetir daria dois desenhos para a mesma
+     espécie, e o que fica para trás é sempre o da legenda. */
+  .pincel-amostra {
+    display: inline-block;
+    width: 0.9rem;
+    height: 0.9rem;
+    border: 1px solid var(--color-grimorio-iron, oklch(0.35 0.01 305));
+    /* O fundo do tabuleiro por baixo, senão a amostra da cobertura e a do
+       elevado — que são sombras internas sobre transparente — não teriam
+       superfície nenhuma para desenhar. */
+    background-color: oklch(0.22 0.01 305);
+  }
+
+  /* A ferramenta LIGADA, e é dourado porque nesta casa dourado é o que diz "a
+     vez" e "o ativo" — na iniciativa e no tabuleiro (ALE-200/ALE-201). */
+  .pincel-ligado {
+    border-color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
+    background-color: oklch(0.8 0.11 85 / 0.14);
+    color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
   }
 
   .tabuleiro-peca {

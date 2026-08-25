@@ -113,6 +113,9 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 					A cortina está fechada: a mesa não vê esta cena.
 				</p>
 			}
+			if v.Mestre {
+				@oTrilhoDoPincel(v)
+			}
 			// O PALCO é a janela; o PLANO é a moldura inteira dentro dela. O
 			// enquadramento é do NAVEGADOR e nunca do servidor — foi essa a
 			// escolha que tirou a ida ao servidor de cada passo de arrasto —, e
@@ -127,11 +130,15 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 				>
 					<div aria-hidden="true" class="tabuleiro-ambiente"></div>
 					<div aria-hidden="true" class="tabuleiro-grade"></div>
-					// O terreno difícil vem ANTES das peças para ficar por baixo
-					// delas: ele é chão, e uma peça em cima de terreno difícil
-					// continua sendo a peça que se clica.
-					for _, q := range v.Dificil {
-						<div aria-hidden="true" class="tabuleiro-dificil" style={ posicaoNoPlano(q.Col, q.Lin, 1) }></div>
+					// O TERRENO vem ANTES das peças para ficar por baixo delas:
+					// ele é chão, e uma peça em cima de terreno difícil continua
+					// sendo a peça que se clica.
+					//
+					// Um laço só para as quatro espécies, com a classe saindo do
+					// nome dela. Quatro laços dariam quatro lugares para esquecer
+					// de acrescentar o quinto.
+					for _, q := range v.Terreno {
+						<div aria-hidden="true" class={ "tabuleiro-terreno tabuleiro-" + q.Especie } style={ posicaoNoPlano(q.Col, q.Lin, 1) }></div>
 					}
 					for _, m := range v.Marcadores {
 						@marcadorNoPlano(m)
@@ -184,9 +191,39 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 					//
 					// Ela só existe quando há o que mover: sem peça movível e sem
 					// movimento em curso, ela seria um alvo que não faz nada.
+					// A MESMA superfície serve a dois gestos, e quem arbitra é o
+					// sinal do pincel: com uma espécie escolhida o clique PINTA,
+					// sem ela o clique MOVE. Duas camadas empilhadas dariam o
+					// estado impossível que a sessão da main foi consertar na SPA
+					// — pincel e régua ligados, com uma roubando o clique da
+					// outra.
+					//
+					// O `data-show` e não um `if` do servidor: a escolha do pincel
+					// é do NAVEGADOR e não passa pelo servidor, então uma camada
+					// que só existisse conforme o estado de lá chegaria tarde.
+					//
+					// O nome acessível da camada NÃO cita a espécie, e a primeira
+					// versão citava: ela saía do sinal, que guarda o ID, então o
+					// leitor de tela anunciava "Pintar dificil" — sem acento,
+					// porque id não é texto de gente. A saída não é um segundo
+					// sinal com o rótulo; é notar que QUEM diz a espécie é o
+					// TRILHO, pelo botão que está `aria-pressed`. É a semântica
+					// normal de barra de ferramentas, e custa um sinal a menos.
+					if v.Mestre {
+						<button
+							type="button"
+							data-show="$pincel != ''"
+							data-attr:aria-label="$apagando ? 'Apagar terreno — escolha a casa' : 'Pintar terreno — escolha a casa'"
+							data-on:click={ pinturaNoPontoClicado(v) }
+							class="tabuleiro-casas"
+						></button>
+					}
 					if v.AlvoDoMovimento != "" {
 						<button
 							type="button"
+							if v.Mestre {
+								data-show="$pincel === ''"
+							}
 							aria-label={ "Mover " + v.RotuloDoAlvo + " — escolha a casa" }
 							data-on:click={ paradaNoPontoClicado(v) }
 							class="tabuleiro-casas"
@@ -464,4 +501,53 @@ templ oAcervoDeLugares(v tabuleiroView) {
 			>Fechar</button>
 		</div>
 	</dialog>
+}
+
+// O TRILHO do pincel (ALE-264, item 5): as quatro espécies e a borracha.
+//
+// Diz o EFEITO ao lado do nome, e isso não é enfeite: "Cobertura" sozinho não
+// lembra ninguém de que são +5 na Defesa, e o mestre que precisa da regra sai da
+// mesa para procurá-la no livro. É a mesma razão de o diálogo de abrir dizer
+// que um quadrado são 1,5m.
+//
+// O trilho só existe para o MESTRE e só com cena aberta — pintar chão de uma
+// cena que não está na mesa não tem onde acontecer.
+templ oTrilhoDoPincel(v tabuleiroView) {
+	<div role="group" aria-label="Pincel de terreno" class="flex flex-wrap items-center gap-1">
+		// O `aria-pressed` devolve STRING e não booleano: o `data-attr` do Datastar
+		// trata valor booleano como ATRIBUTO booleano — verdadeiro vira
+		// `aria-pressed=""`, que não anuncia estado nenhum. Vale para todo
+		// `data-attr:aria-*`.
+		for _, pincel := range tabuleiro.EspeciesDeTerreno {
+			<button
+				type="button"
+				title={ pincel.Rotulo + ": " + pincel.Efeito + " (p238)" }
+				data-attr:aria-pressed={ fmt.Sprintf("$pincel === %q ? 'true' : 'false'", pincel.ID) }
+				data-class={ fmt.Sprintf("{'pincel-ligado': $pincel === %q}", pincel.ID) }
+				data-on:click={ escolheOPincel(string(pincel.ID)) }
+				class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>
+				<span aria-hidden="true" class={ "pincel-amostra tabuleiro-" + string(pincel.ID) }></span>
+				{ pincel.Rotulo }
+			</button>
+		}
+		// A BORRACHA é um MODO e não uma espécie, e por isso fica separada por um
+		// vinco: ela não escolhe o que pintar, ela inverte o que o pincel
+		// escolhido faz. Uma "espécie borracha" obrigaria a decidir o que apagar
+		// numa casa que tem duas, e a resposta certa — a que está selecionada —
+		// já é o que este modo faz.
+		<span aria-hidden="true" class="mx-1 h-6 w-px bg-grimorio-iron"></span>
+		<button
+			type="button"
+			title="Borracha: o clique APAGA a espécie escolhida em vez de pintá-la"
+			data-attr:aria-pressed="$apagando ? 'true' : 'false'"
+			data-attr:disabled="$pincel === ''"
+			data-class="{'pincel-ligado': $apagando}"
+			data-on:click="$apagando = !$apagando"
+			class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
+		>
+			<span aria-hidden="true">🧽</span>
+			Borracha
+		</button>
+	</div>
 }
