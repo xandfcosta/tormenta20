@@ -86,6 +86,7 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 						// taverna para a cripta sem encerrar primeiro. Sem ele o
 						// caminho existia e era inalcançável, porque a lista só
 						// aparecia na cena vazia.
+						@botaoDaCortina(v)
 						@botaoDePorNoMapa(v)
 						if len(v.Acervo) > 0 {
 							@botaoDoAcervo(v)
@@ -120,6 +121,15 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 				<p role="status" class="flex flex-wrap items-center gap-2 border-b border-grimorio-gold/40 bg-grimorio-gold/10 px-2 py-1 text-xs text-grimorio-gold">
 					<span aria-hidden="true">🎭</span>
 					A cortina está fechada: a mesa não vê esta cena.
+					// O CAMINHO DE VOLTA mora AQUI, e não só no cabeçalho: a tira
+					// é onde o mestre percebe que a cortina ficou fechada, e
+					// mandá-lo procurar o botão lá em cima é a distância exata em
+					// que se esquece. Ela só ABRE — ver o `correACortina`.
+					<button
+						type="button"
+						data-on:click={ comandoDaCortina(v, "abrir") }
+						class="ml-auto inline-flex min-h-6 items-center rounded-sm border border-grimorio-gold/60 px-2 text-xs outline-none transition-colors hover:bg-grimorio-gold/20 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+					>Abrir a cortina</button>
 				</p>
 			}
 			if v.Mestre {
@@ -702,4 +712,33 @@ templ oZoomDoPlano() {
 			class="flex size-8 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
 		>+</button>
 	</span>
+}
+
+// O botão da CORTINA (ALE-202, portado na ALE-269).
+//
+// O tabuleiro é do mestre; a mesa vê uma cortina no lugar dele enquanto ele
+// monta a taverna com eles olhando a cripta. O servidor sabia fazer isso inteiro
+// — `SetCurtain`, `BoardForRole` esvaziando a cena, e esta cena até desenhava o
+// aviso — e não havia gesto nenhum: a feature estava no ar e invisível.
+//
+// `aria-pressed` e não dois botões: é UM estado com dois lados, e o leitor de
+// tela anuncia "pressionado" sem precisar de uma segunda palavra na tela. O
+// valor sai como STRING porque `data-attr` com booleano vira atributo booleano,
+// e `aria-pressed=""` não anuncia estado nenhum.
+templ botaoDaCortina(v tabuleiroView) {
+	<button
+		type="button"
+		aria-pressed={ fmt.Sprintf("%t", v.AvisoDaCortina) }
+		if v.AvisoDaCortina {
+			aria-label="Abrir a cortina para a mesa"
+			title="Abrir a cortina: a mesa volta a ver a cena"
+		} else {
+			aria-label="Fechar a cortina"
+			title="Fechar a cortina: montar a cena sem a mesa ver"
+		}
+		data-on:click={ comandoDaCortina(v, destinoDaCortina(v.AvisoDaCortina)) }
+		class={ "flex size-8 items-center justify-center rounded-sm border text-sm outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+			templ.KV("border-grimorio-gold bg-grimorio-gold/20 text-grimorio-gold", v.AvisoDaCortina),
+			templ.KV("border-transparent text-muted-foreground hover:bg-accent", !v.AvisoDaCortina) }
+	>🎭</button>
 }

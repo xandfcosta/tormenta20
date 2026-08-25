@@ -73,6 +73,7 @@ func (s *Server) PilotoRouter() http.Handler {
 		s.rotasDoMovimento(r)
 		s.rotasDaCena(r)
 		s.rotasDosMarcadores(r)
+		s.rotasDaCortina(r)
 	})
 	// A SEGUNDA superfície (ALE-219): a administração. Mesmo `requireAdmin` da
 	// API — a tela não decide quem pode ver, ela só deixa de oferecer o que o

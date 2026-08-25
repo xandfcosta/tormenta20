@@ -806,3 +806,21 @@ const zoomPeloTeclado = `!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.acti
 	`(evt.key === '+' || evt.key === '=' ? ` +
 	`$quadrado = Math.min(96, $quadrado + 8) : ` +
 	`evt.key === '-' ? $quadrado = Math.max(20, $quadrado - 8) : null)`
+
+// comandoDaCortina escreve o gesto que fecha ou abre (ALE-202, ALE-269).
+func comandoDaCortina(v tabuleiroView, estado string) string {
+	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/cortina/%s')",
+		v.CampaignID, v.SessionID, estado)
+}
+
+// destinoDaCortina é para onde o botão do cabeçalho leva.
+//
+// O botão ALTERNA e a tira só ABRE, e são dois destinos e não um alternar cego —
+// a razão está no `correACortina`. Aqui é só a tradução do estado atual para o
+// verbo que falta.
+func destinoDaCortina(fechada bool) string {
+	if fechada {
+		return "abrir"
+	}
+	return "fechar"
+}
