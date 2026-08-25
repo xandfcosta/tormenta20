@@ -51,15 +51,36 @@ export default defineConfig({
   fullyParallel: true,
   // Um worker por padrão na máquina de dev, dois no CI.
   //
+  // UM WORKER EM TODA PARTE, inclusive no CI (ALE-238).
+  //
   // Histórico: o padrão do Playwright (metade dos núcleos → 4 aqui) saturava e
   // dava timeout PURO, com pico de 32,3s contra o teto de 30s; capar em 2 saiu
   // MAIS rápido (1,9 min contra 3,0), que é o sintoma clássico de
   // sobrescrição (ALE-93). Só que a máquina do dono ficou mais cheia desde
   // então — dev server, API, o browser dele, o browser da automação — e a
-  // suíte passou a TRAVAR o laptop. Um worker troca ~2 min de relógio por uma
-  // máquina que continua usável enquanto a suíte roda, e quem quiser o
-  // paralelismo de volta passa E2E_WORKERS=2.
-  workers: Number(process.env.E2E_WORKERS ?? (process.env.CI ? 2 : 1)),
+  // suíte passou a TRAVAR o laptop.
+  //
+  // O CI ficou em 2 e isso custou caro: três corridas vermelhas em sete num dia
+  // só, sempre em asserções de LEIAUTE, sempre com vítimas DIFERENTES
+  // (`session.spec:614`, `session.spec:300`, `piloto-datastar:969`) — e todas
+  // passando no rerun. Medido aqui, nesta máquina de 8 núcleos:
+  //
+  //   1 worker  → 3,7 min, 183/183 verde (duas corridas)
+  //   2 workers → 4,5 min, 1 vermelha
+  //   2 workers → 8,3 min, 2 vermelhas
+  //
+  // **Dois workers é mais LENTO que um**, e é esse número que decide: o mesmo
+  // sintoma de sobrescrição do ALE-93, com a mesma conclusão. No CI é pior por
+  // aritmética — `ubuntu-latest` tem 2 vCPUs, então são 2 workers por 2 núcleos
+  // MAIS o Chromium e o servidor Go, proporcionalmente pior que os 4-em-8 que
+  // já haviam sido medidos como saturação.
+  //
+  // Vítima que varia a cada corrida é contenção de RECURSO; estado
+  // compartilhado escolheria sempre a mesma. E o custo do vermelho não é o
+  // rerun: é que um vermelho frequente e conhecido ensina a ignorar vermelho.
+  //
+  // `E2E_WORKERS=2` continua disponível para quem quiser medir de novo.
+  workers: Number(process.env.E2E_WORKERS ?? 1),
   forbidOnly: !!process.env.CI,
   // `retries: 0` local é DELIBERADO e fica: retentativa esconde intermitência,
   // que é justamente o que se caça numa máquina de dev (ALE-244).
