@@ -293,6 +293,13 @@ type bestiarioView struct {
 	Tipos     []string
 	NDMin     float64
 	NDMax     float64
+	// Abrir diz que ESTE pedido veio de um clique numa linha, e por isso a ficha
+	// tem de nascer aberta. Vem da URL e não de um sinal: a MESMA rota serve a
+	// busca e os filtros de tipo, e os dois mandam os sinais TODOS — inclusive o
+	// `criatura` já escolhido. Um sinal não separaria "escolhi esta criatura" de
+	// "digitei uma letra com uma criatura já escolhida", e a busca passaria a
+	// abrir a ficha sozinha a cada tecla.
+	Abrir bool
 }
 
 // escolhidoOuPrimeiro: a cena SEMPRE mostra um bloco quando há lista.
@@ -370,8 +377,19 @@ func sinaisDoBestiario(v bestiarioView) string {
 	}
 	busca, _ := json.Marshal(v.Busca)
 	criatura, _ := json.Marshal(escolhida)
-	return fmt.Sprintf(`{busca: %s, ndMin: %s, ndMax: %s, tipos: %s, criatura: %s, fichaAberta: false}`,
-		busca, ndNaCaixa(v.NDMin), ndNaCaixa(v.NDMax), tipos, criatura)
+	// `fichaAberta` sai DAQUI e não de um evento de sinal separado, e a razão é o
+	// que a medição mostrou: este `data-signals` mora no `#bestiario`, que É o
+	// elemento remendado, então ele REDECLARA os sinais a cada remendo. Um
+	// evento de sinal mandado depois do conteúdo era desfeito por esta linha —
+	// o fio levava `{"fichaAberta":true}` e o diálogo continuava `display:none`.
+	//
+	// É o mesmo perigo que o `piloto_layout.templ` já tinha escrito ao pôr os
+	// sinais da página no `<body>`, que nunca é remendado. Aqui a saída não é
+	// mover: é o servidor redeclarar com o valor CERTO, e aí o conteúdo e o
+	// estado de aberto chegam no MESMO remendo — atômicos, sem janela em que um
+	// esteja aplicado e o outro não.
+	return fmt.Sprintf(`{busca: %s, ndMin: %s, ndMax: %s, tipos: %s, criatura: %s, fichaAberta: %t}`,
+		busca, ndNaCaixa(v.NDMin), ndNaCaixa(v.NDMax), tipos, criatura, v.Abrir)
 }
 
 // bestiarioBase é o prefixo de rota da cena, e ele NÃO tem padrão.
@@ -424,4 +442,35 @@ func verbetePorID(id string) *verbete {
 		}
 	}
 	return nil
+}
+
+// ── ABRIR a ficha na hora certa (ALE-264) ────────────────────────────────────
+//
+// O clique NÃO abre mais a ficha; quem abre é o SERVIDOR, depois de o conteúdo
+// estar remendado. O defeito que isso conserta foi visto pelo dono e medido
+// depois: clicar numa linha NÃO selecionada fazia a ficha abrir na hora com a
+// criatura ANTERIOR e trocar um quadro depois. Amostrado no navegador — a 0ms a
+// ficha dizia "Bandido", a 16ms dizia "Lobo".
+//
+// Clicar na linha JÁ selecionada não piscava, e foi essa diferença que o dono
+// isolou sozinho: lá o conteúdo já estava certo, então não havia troca para ver.
+// É a assinatura de conteúdo obsoleto exibido antes do novo, e não de
+// renderização lenta — a lentidão apareceria nas duas linhas.
+//
+// Custa uma ida ao servidor antes de a ficha aparecer, e é o preço certo: 16ms
+// medidos contra um quadro mostrando a criatura errada. Mostrar o errado rápido
+// é pior que mostrar o certo um quadro depois.
+
+// abrirAFicha marca o pedido que deve ABRIR a ficha ao terminar.
+//
+// A marca vai na URL e não num sinal porque a MESMA rota serve a busca e os
+// filtros de tipo, e os dois mandam os sinais todos — inclusive o `criatura`.
+// Um sinal não distinguiria "escolhi esta criatura" de "digitei uma letra na
+// busca com uma criatura já escolhida", e a busca passaria a abrir a ficha
+// sozinha a cada tecla.
+func abrirAFicha(base string) string {
+	if strings.Contains(base, "?") {
+		return base + "&abrir=1"
+	}
+	return base + "?abrir=1"
 }

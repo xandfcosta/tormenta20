@@ -247,7 +247,7 @@ templ listaDeVerbetes(v bestiarioView) {
 				<li>
 					<a
 						href={ templ.SafeURL(v.bestiarioBase() + "?criatura=" + m.ID) }
-						data-on:click={ fmt.Sprintf("evt.preventDefault(); $criatura = %q; $fichaAberta = true; @get('%s')", m.ID, v.bestiarioBase()) }
+						data-on:click={ fmt.Sprintf("evt.preventDefault(); $criatura = %q; @get('%s')", m.ID, abrirAFicha(v.bestiarioBase())) }
 						if v.Escolhido != nil && v.Escolhido.ID == m.ID {
 							aria-current="true"
 							class="block w-full rounded-sm border border-grimorio-gold bg-accent p-2 text-left transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"

@@ -59,11 +59,26 @@ html {
   background-color: oklch(0.15 0.01 305);
 }
 
-@layer components {
-  @container (min-width: 50rem) and (min-height: 30rem) {
-    .mesa-ficha-em-dialogo {
-      display: none;
-    }
+/* A ficha em diálogo some quando o painel lateral cabe — e esta regra fica FORA
+   de `@layer`, o que é conserto e não estilo.
+
+   Dentro de `@layer components` ela NUNCA valeu. O elemento carrega a utilitária
+   `flex` do Tailwind, que vive numa camada POSTERIOR, e camada posterior ganha
+   de anterior independentemente de especificidade. O efeito era o pior possível:
+   numa tela larga apareciam OS DOIS — o painel lateral com a ficha e o modal por
+   cima dela —, e o comentário do `fichaEmDialogo` afirmava o contrário porque a
+   regra parecia certa e nunca foi medida.
+
+   Medido no navegador antes de escrever isto: contêiner de 1276×566, as duas
+   condições casando, `display: flex`. A MESMA regra injetada sem camada devolveu
+   `display: none`, que é o experimento que fecha a causa.
+
+   Regra sem camada ganha de toda camada, e é o instrumento certo aqui: o que se
+   quer é justamente sobrepor uma utilitária que o elemento precisa ter para
+   funcionar como modal na largura em que ele É usado. */
+@container (min-width: 50rem) and (min-height: 30rem) {
+  .mesa-ficha-em-dialogo {
+    display: none;
   }
 }
 

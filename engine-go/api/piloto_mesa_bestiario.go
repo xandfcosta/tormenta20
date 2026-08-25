@@ -43,7 +43,9 @@ func (s *Server) rotasDoBestiarioDaMesa(r chi.Router) {
 // bestiarioDaMesaPara monta a view do painel para esta mesa.
 func bestiarioDaMesaPara(r *http.Request, campaignID, sessionID int64) bestiarioView {
 	c := criteriosDoPedido(r)
-	return carregaBestiarioDe(rotaDoBestiarioDaMesa(campaignID, sessionID), c.Busca, c.Tipos, c.NDMin, c.NDMax, c.Escolhida)
+	v := carregaBestiarioDe(rotaDoBestiarioDaMesa(campaignID, sessionID), c.Busca, c.Tipos, c.NDMin, c.NDMax, c.Escolhida)
+	v.Abrir = c.Abrir
+	return v
 }
 
 // handleBestiarioDaMesa redesenha o PAINEL e mais nada.

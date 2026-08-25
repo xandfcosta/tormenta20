@@ -44,3 +44,50 @@ func TestTodoChaoOferecidoTemComoSerPintado(t *testing.T) {
 		}
 	}
 }
+
+// TestAregraQueESCONDEoDialogoFICAforaDeCAMADA.
+//
+// Guarda de CASCATA, e ele prende a COLOCAÇÃO porque é ela o defeito.
+//
+// A regra viveu dentro de `@layer components` e nunca valeu: o elemento carrega
+// a utilitária `flex` do Tailwind, que mora numa camada POSTERIOR, e camada
+// posterior ganha de anterior independentemente de especificidade. O efeito era
+// o pior possível — numa tela larga apareciam OS DOIS, o painel lateral com a
+// ficha e o modal por cima dela. O dono viu e perguntou por que havia diálogo se
+// a ficha já abre ao lado; o comentário do código afirmava que não havia.
+//
+// Medido antes do conserto: contêiner de 1276×566, as duas condições da consulta
+// casando, e `display: flex`. A MESMA regra injetada sem camada devolveu
+// `display: none` — o experimento que fecha a causa.
+//
+// O que este guarda NÃO faz: ele não resolve cascata, ele lê TEXTO. Cascata de
+// verdade só um navegador resolve, e um e2e para uma linha seria caro. O que ele
+// pega é a regressão exata e provável — alguém arrastar a regra de volta para
+// dentro do `@layer` numa arrumação, achando que camada é organização.
+func TestARegraQueEscondeODialogoFicaForaDeCamada(t *testing.T) {
+	folha, err := os.ReadFile("piloto/piloto.src.css")
+	if err != nil {
+		t.Fatalf("ler o CSS do piloto: %v", err)
+	}
+	css := string(folha)
+
+	pos := strings.Index(css, ".mesa-ficha-em-dialogo")
+	if pos < 0 {
+		t.Fatalf("a regra sumiu da folha — o guarda está lendo o arquivo errado (%d bytes)", len(css))
+	}
+
+	// Profundidade de blocos ABERTOS na altura da regra. Um nível é o
+	// `@container`, que é legítimo e necessário; dois ou mais significa que há
+	// um `@layer` (ou outro bloco) por fora, e lá a regra perde.
+	profundidade := 0
+	for _, c := range css[:pos] {
+		if c == '{' {
+			profundidade++
+		} else if c == '}' {
+			profundidade--
+		}
+	}
+	if profundidade > 1 {
+		t.Errorf("a regra que esconde a ficha em diálogo está %d blocos aninhada, e só o `@container` é esperado: dentro de `@layer` ela perde para o `flex` do Tailwind e a tela larga mostra o painel E o modal", profundidade)
+	}
+}

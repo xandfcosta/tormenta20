@@ -413,6 +413,9 @@ type criteriosDoBestiario struct {
 	NDMin     float64
 	NDMax     float64
 	Escolhida string
+	// Abrir: este pedido veio de um clique numa LINHA, e a ficha tem de nascer
+	// aberta com a criatura certa.
+	Abrir bool
 }
 
 // criteriosDoPedido lê os critérios da URL na carga fria e dos SINAIS quando o
@@ -431,6 +434,10 @@ func criteriosDoPedido(r *http.Request) criteriosDoBestiario {
 		Busca:     q.Get("busca"),
 		Escolhida: q.Get("criatura"),
 		Tipos:     tiposDaURL(q.Get("tipos")),
+		// Só da URL, e NUNCA dos sinais: os sinais viajam em todo pedido desta
+		// rota — busca, filtro de tipo, escolha de criatura — e não separariam
+		// "cliquei numa linha" de "digitei uma letra".
+		Abrir: q.Get("abrir") != "",
 	}
 	c.NDMin, c.NDMax = faixaDeND(q.Get("nd-min"), q.Get("nd-max"))
 
@@ -510,5 +517,7 @@ func apertaND(n, padrao float64) float64 {
 // carregaBestiario com os critérios já lidos. Envelope fino sobre a função da
 // camada de dados, para o handler não repetir a ordem dos cinco argumentos.
 func carregaBestiario(c criteriosDoBestiario) bestiarioView {
-	return carregaBestiarioDe(rotaDoBestiarioDoMestre, c.Busca, c.Tipos, c.NDMin, c.NDMax, c.Escolhida)
+	v := carregaBestiarioDe(rotaDoBestiarioDoMestre, c.Busca, c.Tipos, c.NDMin, c.NDMax, c.Escolhida)
+	v.Abrir = c.Abrir
+	return v
 }

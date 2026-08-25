@@ -748,9 +748,9 @@ func listaDeVerbetes(v bestiarioView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var30 string
-				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("evt.preventDefault(); $criatura = %q; $fichaAberta = true; @get('%s')", m.ID, v.bestiarioBase()))
+				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("evt.preventDefault(); $criatura = %q; @get('%s')", m.ID, abrirAFicha(v.bestiarioBase())))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 250, Col: 131}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_bestiario.templ`, Line: 250, Col: 123}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 				if templ_7745c5c3_Err != nil {
