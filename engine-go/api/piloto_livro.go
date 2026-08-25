@@ -101,17 +101,26 @@ func digitoDoLivro(info os.FileInfo) string {
 	return hex.EncodeToString(soma[:])[:12]
 }
 
-// avisaSeNaoLinearizado diz, no boot, se o navegador vai ter de baixar o livro
-// INTEIRO antes de mostrar a página pedida.
+// avisaSeNaoLinearizado diz, no boot, que o arquivo configurado não passou pelo
+// `qpdf --linearize`.
 //
-// Medido no PDF da casa: 89.489.751 bytes e `Optimized: no`. Um PDF não
-// linearizado não tem a tabela que permite ao visualizador pedir só as faixas
-// da página, então `#page=295` custa o arquivo todo. `qpdf --linearize` leva
-// 4,5s e devolve 78.622.788 bytes com `/Linearized 1`.
+// O QUE FOI MEDIDO, e ele desmente a suposição com que isto começou. A aposta
+// era que a linearização faria o visualizador pedir só as FAIXAS da página, e
+// não faz — pelo menos não no Chrome, abrindo o PDF como navegação de topo.
+// Contando os bytes da interface de loopback (ruído aferido antes: 0 KiB em 4s,
+// duas vezes), abrir `#page=295` transferiu o ARQUIVO INTEIRO nos dois casos:
+// 85 MiB com o PDF cru de 89.489.751 bytes, 75 MiB com o linearizado de
+// 78.622.788. Os dois números batem com o tamanho do arquivo, que é o controle
+// da leitura.
+//
+// Então o ganho MEDIDO do `qpdf` é de tamanho — 12% —, e não de faixas. A
+// renderização progressiva que a linearização promete não foi medida daqui: no
+// localhost a transferência termina antes de haver o que ver, e medi-la exigiria
+// estrangular o link. Quem for afirmá-la, meça antes.
 //
 // Aviso e não conserto: linearizar aqui obrigaria o servidor a depender do
 // `qpdf` instalado e a gravar um segundo arquivo de 78 MB no boot. O que o
-// servidor pode fazer barato é NOMEAR o problema e o comando que o resolve.
+// servidor pode fazer barato é NOMEAR o comando.
 func avisaSeNaoLinearizado(caminho string) {
 	f, err := os.Open(caminho)
 	if err != nil {
@@ -125,7 +134,7 @@ func avisaSeNaoLinearizado(caminho string) {
 	if ehLinearizado(cabeca[:n]) {
 		return
 	}
-	log.Printf("livro: %s não está linearizado — o navegador baixa o arquivo inteiro antes de mostrar a página. Conserto: qpdf --linearize %s %s", caminho, caminho, caminho+".linear")
+	log.Printf("livro: %s não está linearizado — medido, o navegador transfere o arquivo inteiro para abrir uma página, e o qpdf ainda o encolhe 12%%. Conserto: qpdf --linearize %s %s", caminho, caminho, caminho+".linear")
 }
 
 // ehLinearizado procura a marca do PDF linearizado no começo do arquivo.
