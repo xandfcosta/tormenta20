@@ -106,7 +106,7 @@ func campanhas(v campanhasView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div class=\"flex min-h-0 flex-1 items-center justify-center\"><div class=\"flex min-h-0 w-full max-w-7xl flex-col gap-2 lg:flex-row lg:items-stretch lg:gap-0\"><div aria-hidden=\"true\" class=\"hidden lg:block lg:w-56 lg:shrink-0\"></div><div class=\"flex min-h-0 flex-1 items-center justify-center py-1\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "           <div class=\"flex min-h-0 flex-1 flex-col\"><div class=\"flex min-h-0 flex-1 overflow-y-auto px-4 py-2\"><div class=\"m-auto w-full max-w-7xl\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -116,7 +116,7 @@ func campanhas(v campanhasView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -124,7 +124,7 @@ func campanhas(v campanhasView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -167,7 +167,7 @@ func barraDeCampanhas(v campanhasView) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("{busca: %q, papel: %q, cursor: %d}", v.Busca, v.Papel, v.CursorID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 66, Col: 96}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 80, Col: 96}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 		if templ_7745c5c3_Err != nil {
@@ -193,7 +193,7 @@ func barraDeCampanhas(v campanhasView) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Busca)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 85, Col: 20}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 99, Col: 20}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 			if templ_7745c5c3_Err != nil {
@@ -358,7 +358,7 @@ func chipDePapel(v campanhasView, valor, rotulo string) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(boolStr(v.Papel == valor))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 122, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 136, Col: 42}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 		if templ_7745c5c3_Err != nil {
@@ -371,7 +371,7 @@ func chipDePapel(v campanhasView, valor, rotulo string) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$papel = %q; @get('/piloto/campanhas')", valor))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 123, Col: 78}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 137, Col: 78}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 		if templ_7745c5c3_Err != nil {
@@ -397,7 +397,7 @@ func chipDePapel(v campanhasView, valor, rotulo string) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 128, Col: 10}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 142, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -447,7 +447,7 @@ func livroDaCampanha(c campanhaCartao) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$cursor == %d", c.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 141, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 155, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18)
 		if templ_7745c5c3_Err != nil {
@@ -501,7 +501,7 @@ func folhaDaArte(c campanhaCartao) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + c.Gradiente)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 153, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 167, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -514,7 +514,7 @@ func folhaDaArte(c campanhaCartao) templ.Component {
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(c.Iniciais)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 159, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 173, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
@@ -558,7 +558,7 @@ func folhaDaInformacao(c campanhaCartao) templ.Component {
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(c.Papel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 171, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 185, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {
@@ -581,7 +581,7 @@ func folhaDaInformacao(c campanhaCartao) templ.Component {
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 180, Col: 113}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 194, Col: 113}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 		if templ_7745c5c3_Err != nil {
@@ -604,7 +604,7 @@ func folhaDaInformacao(c campanhaCartao) templ.Component {
 			var templ_7745c5c3_Var25 string
 			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(c.Sinopse)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 184, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 198, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 			if templ_7745c5c3_Err != nil {
@@ -623,7 +623,7 @@ func folhaDaInformacao(c campanhaCartao) templ.Component {
 			var templ_7745c5c3_Var26 string
 			templ_7745c5c3_Var26, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + gradienteDaCampanha(c.Meu.Nome))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 191, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 205, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 			if templ_7745c5c3_Err != nil {
@@ -636,7 +636,7 @@ func folhaDaInformacao(c campanhaCartao) templ.Component {
 			var templ_7745c5c3_Var27 string
 			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(c.Meu.Iniciais)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 192, Col: 21}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 206, Col: 21}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 			if templ_7745c5c3_Err != nil {
@@ -649,7 +649,7 @@ func folhaDaInformacao(c campanhaCartao) templ.Component {
 			var templ_7745c5c3_Var28 string
 			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(c.Meu.Nome)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 194, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 208, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 			if templ_7745c5c3_Err != nil {
@@ -662,7 +662,7 @@ func folhaDaInformacao(c campanhaCartao) templ.Component {
 			var templ_7745c5c3_Var29 string
 			templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(c.Meu.Classes)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 195, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 209, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 			if templ_7745c5c3_Err != nil {
@@ -729,7 +729,7 @@ func acoesDaCampanha(c campanhaCartao) templ.Component {
 		var templ_7745c5c3_Var32 templ.SafeURL
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/piloto/campanhas/" + strconv.FormatInt(c.ID, 10)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 213, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 227, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 		if templ_7745c5c3_Err != nil {
@@ -765,7 +765,7 @@ func acoesDaCampanha(c campanhaCartao) templ.Component {
 			var templ_7745c5c3_Var35 templ.SafeURL
 			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(fmt.Sprintf("/campaigns/%d/sessions/%d", c.ID, c.SessaoID)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 220, Col: 84}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 234, Col: 84}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 			if templ_7745c5c3_Err != nil {
@@ -823,6 +823,19 @@ func seAoVivo(c campanhaCartao, aoVivo, parado variante) variante {
 // como `option`. E é a semântica certa: o trilho ESCOLHE o que o palco mostra,
 // não navega para lugar nenhum. Escrever `nav` aqui faria o leitor de tela
 // anunciar duas coisas diferentes para a mesma peça nas duas telas.
+// O trilho é a TIRA de baixo desde a ALE-264, com o mesmo desenho do filme de
+// personagens: borda em cima, rolagem horizontal, altura própria.
+//
+// O nome da região continua `rail` e isso NÃO é descuido: ele é contrato com o
+// driver de teclado, que procura literalmente `[data-nav-region="rail"]` para o
+// Esc subir um nível e para escolher onde o foco pousa ao entrar na cena. O nome
+// diz o PAPEL da região (a lista que escolhe o que o palco mostra), não onde ela
+// fica na tela — três cenas do piloto já perderam esse comportamento por
+// batizarem a região com nome próprio.
+//
+// O que muda com a posição é a GRAMÁTICA: `row` e `horizontal`, porque agora a
+// seta que anda na lista é a lateral. Declarar `column` numa tira deitada faria
+// a seta para baixo procurar um vizinho que está ao lado.
 func trilhoDeCampanhas(v campanhasView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -844,7 +857,7 @@ func trilhoDeCampanhas(v campanhasView) templ.Component {
 			templ_7745c5c3_Var37 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "<div role=\"listbox\" aria-label=\"Campanhas\" aria-orientation=\"vertical\" data-nav-region=\"rail\" data-nav-layout=\"column\" class=\"flex gap-1 overflow-x-auto lg:-ml-px lg:w-56 lg:shrink-0 lg:flex-col lg:overflow-visible lg:self-stretch\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "<div role=\"listbox\" aria-label=\"Campanhas\" aria-orientation=\"horizontal\" data-nav-region=\"rail\" data-nav-layout=\"row\" class=\"flex shrink-0 items-center gap-2 overflow-x-auto border-t border-grimorio-iron px-4 py-3\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -883,7 +896,7 @@ func marcadorDaCampanha(c campanhaCartao) templ.Component {
 			templ_7745c5c3_Var38 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var39 = []any{"flex min-h-11 shrink-0 items-center gap-2 border border-grimorio-iron bg-grimorio-panel px-3 py-2 text-left outline-none transition-colors hover:bg-grimorio-panel-raised focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
+		var templ_7745c5c3_Var39 = []any{"flex min-h-11 w-52 shrink-0 items-center gap-2 rounded-sm border border-grimorio-iron bg-grimorio-panel px-3 py-2 text-left outline-none transition-colors hover:bg-grimorio-panel-raised focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
 			"aria-selected:border-grimorio-gold aria-selected:bg-grimorio-panel-raised"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var39...)
 		if templ_7745c5c3_Err != nil {
@@ -896,7 +909,7 @@ func marcadorDaCampanha(c campanhaCartao) templ.Component {
 		var templ_7745c5c3_Var40 string
 		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$cursor == %d ? 'true' : 'false'", c.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 269, Col: 81}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 296, Col: 81}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var40)
 		if templ_7745c5c3_Err != nil {
@@ -909,7 +922,7 @@ func marcadorDaCampanha(c campanhaCartao) templ.Component {
 		var templ_7745c5c3_Var41 string
 		templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$cursor = %d", c.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 270, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 297, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var41)
 		if templ_7745c5c3_Err != nil {
@@ -922,7 +935,7 @@ func marcadorDaCampanha(c campanhaCartao) templ.Component {
 		var templ_7745c5c3_Var42 string
 		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$cursor = %d", c.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 271, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 298, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var42)
 		if templ_7745c5c3_Err != nil {
@@ -948,7 +961,7 @@ func marcadorDaCampanha(c campanhaCartao) templ.Component {
 		var templ_7745c5c3_Var44 string
 		templ_7745c5c3_Var44, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + c.Gradiente)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 278, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 305, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 		if templ_7745c5c3_Err != nil {
@@ -961,7 +974,7 @@ func marcadorDaCampanha(c campanhaCartao) templ.Component {
 		var templ_7745c5c3_Var45 string
 		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(c.Iniciais)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 279, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 306, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 		if templ_7745c5c3_Err != nil {
@@ -974,7 +987,7 @@ func marcadorDaCampanha(c campanhaCartao) templ.Component {
 		var templ_7745c5c3_Var46 string
 		templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 284, Col: 69}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 311, Col: 69}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 		if templ_7745c5c3_Err != nil {
@@ -987,7 +1000,7 @@ func marcadorDaCampanha(c campanhaCartao) templ.Component {
 		var templ_7745c5c3_Var47 string
 		templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(c.Papel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 285, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_campanhas.templ`, Line: 312, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 		if templ_7745c5c3_Err != nil {

@@ -155,3 +155,36 @@ test('a ficha do monstro usa a largura: duas colunas quando cabe, empilhada quan
   expect(estreito.largura, 'o painel não ficou estreito o bastante para medir').toBeLessThan(46 * 16)
   expect(estreito.colunas, 'a ficha continuou em duas colunas num painel estreito').toBe(1)
 })
+
+test('a cena de campanhas tem a mesma forma da de personagens: palco em cima, lista embaixo', async ({
+  page,
+}) => {
+  // Decisão do dono: as duas telas respondem a mesma pergunta — escolha um da
+  // lista e veja o palco —, e discordavam. A de campanhas punha a lista numa
+  // COLUNA ao lado, e o livro ficava com metade da janela.
+  //
+  // E2E porque a afirmação é de GEOMETRIA: quem está acima de quem, e quanto o
+  // livro recebe de largura. Em jsdom todo elemento mede zero.
+  await page.setViewportSize({ width: 1500, height: 900 })
+
+  const medidas: Record<string, { livro: number; tiraAbaixo: boolean; tiraDeitada: boolean }> = {}
+  for (const cena of ['/piloto/campanhas', '/piloto/personagens']) {
+    await page.goto(cena)
+    medidas[cena] = await page.evaluate(() => {
+      // A tira é a região que o driver de teclado dirige: `rail` nas campanhas
+      // (o nome é contrato com o driver) e `filme` nos personagens.
+      const tira = document.querySelector('[data-nav-region="rail"], [data-nav-region="filme"]')!
+      const palco = tira.previousElementSibling!
+      const t = tira.getBoundingClientRect()
+      const p = palco.getBoundingClientRect()
+      return { livro: p.width, tiraAbaixo: t.top >= p.bottom - 1, tiraDeitada: t.width > t.height }
+    })
+  }
+
+  for (const [cena, m] of Object.entries(medidas)) {
+    expect(m.tiraAbaixo, `${cena}: a lista não está abaixo do palco`).toBe(true)
+    expect(m.tiraDeitada, `${cena}: a lista não está deitada`).toBe(true)
+    // O palco toma a janela inteira: era isto que a coluna ao lado comia.
+    expect(m.livro, `${cena}: o palco não usa a largura`).toBeGreaterThan(1400)
+  }
+})

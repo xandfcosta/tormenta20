@@ -38,18 +38,32 @@ templ campanhas(v campanhasView) {
 	} else if v.FiltrouTudo {
 		@buscaSemResultado(v)
 	} else {
-		<div class="flex min-h-0 flex-1 items-center justify-center">
-			<div class="flex min-h-0 w-full max-w-7xl flex-col gap-2 lg:flex-row lg:items-stretch lg:gap-0">
-				// Espelha a largura do trilho para o LIVRO centralizar na janela, e
-				// não o conjunto livro+trilho. Some no telefone.
-				<div aria-hidden="true" class="hidden lg:block lg:w-56 lg:shrink-0"></div>
-				<div class="flex min-h-0 flex-1 items-center justify-center py-1">
+		// PALCO em cima, LISTA embaixo — a mesma forma da cena de personagens,
+		// por decisão do dono. O trilho era uma COLUNA de 14rem ao lado, e o
+		// livro ficava com o resto: numa janela de 1568px ele desenhava a ~680px,
+		// metade da tela, com a arte da campanha espremida.
+		//
+		// Some junto o vão que espelhava a largura do trilho para centralizar o
+		// livro: sem coluna ao lado, o livro centraliza sozinho.
+		//
+		// As duas telas são irmãs e discordavam — a de personagens já punha o
+		// elenco numa tira embaixo. Duas formas para a mesma pergunta ("escolha
+		// um da lista e veja o palco") é o que faz o mestre reaprender a tela.
+		<div class="flex min-h-0 flex-1 flex-col">
+			// `overflow-y-auto` no palco e `m-auto` no livro, e NÃO
+			// `items-center`: no telefone o livro fica mais alto que o palco, e
+			// centralizar com flex CORTA o que passa — medido a 390px, o livro
+			// terminava 35px por baixo da tira. Com `m-auto` ele centraliza
+			// quando cabe e rola quando não cabe, que é o comportamento que o
+			// dedo espera.
+			<div class="flex min-h-0 flex-1 overflow-y-auto px-4 py-2">
+				<div class="m-auto w-full max-w-7xl">
 					for _, c := range v.Campanhas {
 						@livroDaCampanha(c)
 					}
 				</div>
-				@trilhoDeCampanhas(v)
 			</div>
+			@trilhoDeCampanhas(v)
 		</div>
 	}
 }
@@ -245,14 +259,27 @@ func seAoVivo(c campanhaCartao, aoVivo, parado variante) variante {
 // como `option`. E é a semântica certa: o trilho ESCOLHE o que o palco mostra,
 // não navega para lugar nenhum. Escrever `nav` aqui faria o leitor de tela
 // anunciar duas coisas diferentes para a mesma peça nas duas telas.
+// O trilho é a TIRA de baixo desde a ALE-264, com o mesmo desenho do filme de
+// personagens: borda em cima, rolagem horizontal, altura própria.
+//
+// O nome da região continua `rail` e isso NÃO é descuido: ele é contrato com o
+// driver de teclado, que procura literalmente `[data-nav-region="rail"]` para o
+// Esc subir um nível e para escolher onde o foco pousa ao entrar na cena. O nome
+// diz o PAPEL da região (a lista que escolhe o que o palco mostra), não onde ela
+// fica na tela — três cenas do piloto já perderam esse comportamento por
+// batizarem a região com nome próprio.
+//
+// O que muda com a posição é a GRAMÁTICA: `row` e `horizontal`, porque agora a
+// seta que anda na lista é a lateral. Declarar `column` numa tira deitada faria
+// a seta para baixo procurar um vizinho que está ao lado.
 templ trilhoDeCampanhas(v campanhasView) {
 	<div
 		role="listbox"
 		aria-label="Campanhas"
-		aria-orientation="vertical"
+		aria-orientation="horizontal"
 		data-nav-region="rail"
-		data-nav-layout="column"
-		class="flex gap-1 overflow-x-auto lg:-ml-px lg:w-56 lg:shrink-0 lg:flex-col lg:overflow-visible lg:self-stretch"
+		data-nav-layout="row"
+		class="flex shrink-0 items-center gap-2 overflow-x-auto border-t border-grimorio-iron px-4 py-3"
 	>
 		for _, c := range v.Campanhas {
 			@marcadorDaCampanha(c)
@@ -269,7 +296,7 @@ templ marcadorDaCampanha(c campanhaCartao) {
 		data-attr:aria-selected={ fmt.Sprintf("$cursor == %d ? 'true' : 'false'", c.ID) }
 		data-on:focusin={ fmt.Sprintf("$cursor = %d", c.ID) }
 		data-on:click={ fmt.Sprintf("$cursor = %d", c.ID) }
-		class={ "flex min-h-11 shrink-0 items-center gap-2 border border-grimorio-iron bg-grimorio-panel px-3 py-2 text-left outline-none transition-colors hover:bg-grimorio-panel-raised focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
+		class={ "flex min-h-11 w-52 shrink-0 items-center gap-2 rounded-sm border border-grimorio-iron bg-grimorio-panel px-3 py-2 text-left outline-none transition-colors hover:bg-grimorio-panel-raised focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
 			"aria-selected:border-grimorio-gold aria-selected:bg-grimorio-panel-raised" }
 	>
 		<span

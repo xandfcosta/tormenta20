@@ -371,3 +371,33 @@ func TestACenaDoMestreFalaParaARotaDoMestre(t *testing.T) {
 		t.Errorf("a cena do mestre nasceu com Base %q", v.Base)
 	}
 }
+
+// TestOTrilhoTemUmaParadaPorCatalogo: o trilho lista TODOS os catálogos.
+//
+// Por AMOSTRAGEM sobre `abasDoAcervo` e não por lista escrita à mão: o e2e que
+// media isto contava "onze paradas", e as duas que nasceram depois (escolas e
+// perícias) só o denunciaram quando ele ficou vermelho por um número velho.
+// Aqui o catálogo novo entra medido no dia em que entra na lista — que é o que
+// devolve a amostragem no lugar da enumeração.
+//
+// A GEOMETRIA (nenhuma parada escapa da janela, em qualquer largura) fica no
+// e2e: é caixa contra caixa, e em jsdom todo elemento mede zero.
+func TestOTrilhoTemUmaParadaPorCatalogo(t *testing.T) {
+	s := newTestServer(t)
+	eu := seedUser(t, s, "mestre@t20.local")
+
+	corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/condicoes", "").Body.String()
+
+	for _, a := range abasDoAcervo {
+		if !strings.Contains(corpo, `href="/piloto/mestre/`+a.ID+`"`) {
+			t.Errorf("o catálogo %q não tem parada no trilho", a.ID)
+		}
+	}
+	// O bestiário é catálogo como os outros (ALE-264), e as duas ferramentas
+	// são a outra seção do trilho — se alguma sumir, o mestre perde a porta.
+	for _, parada := range []string{"bestiario", "encontros", "improviso"} {
+		if !strings.Contains(corpo, `href="/piloto/mestre/`+parada+`"`) {
+			t.Errorf("a parada %q sumiu do trilho", parada)
+		}
+	}
+}

@@ -361,7 +361,7 @@ test('alargar a janela nunca tira uma coluna do catálogo', async ({ page }) => 
  * Por que e2e: é caixa contra caixa. Em jsdom todo elemento mede zero e
  * `expectNadaEscapa` passaria verde sobre qualquer arranjo.
  */
-test('o trilho do mestre segura as onze paradas em qualquer largura', async ({ page }) => {
+test('o trilho do mestre segura todas as paradas em qualquer largura', async ({ page }) => {
   // Uma navegação só, redimensionando depois — o mesmo padrão dos guardas de
   // coluna aqui do lado. Recarregar por largura paga o portão dos catálogos
   // (18 buscas antes da primeira tela) a cada volta, e foi assim que a versão
@@ -369,11 +369,18 @@ test('o trilho do mestre segura as onze paradas em qualquer largura', async ({ p
   // A FILEIRA DE ABAS que este guarda media não existe mais: na ALE-264 cada
   // catálogo virou uma parada do TRILHO, e ter as duas coisas seria o mesmo
   // estado desenhado em dois lugares. A garantia não foi apagada — ela MUDOU DE
-  // ENDEREÇO junto com o risco: eram quatro abas numa faixa, são onze paradas
+  // ENDEREÇO junto com o risco: eram quatro abas numa faixa, são treze paradas
   // num trilho que no telefone rola na horizontal.
   await page.goto('/piloto/mestre/condicoes')
   const trilho = 'nav[aria-label="Ferramentas do mestre"]'
   await expect(page.getByRole('link', { name: 'Condições' })).toBeVisible()
+
+  // A CONTAGEM saiu daqui e virou `TestOTrilhoTemUmaParadaPorCatalogo` no Go,
+  // por amostragem sobre `abasDoAcervo`. Ela estava escrita como o número onze,
+  // e as duas paradas nascidas depois (escolas, perícias) só apareceram quando
+  // ele ficou vermelho por um número velho — enumeração cobrando manutenção sem
+  // proteger nada. Aqui fica o que só o navegador testemunha: a geometria.
+  let referencia = 0
 
   for (const largura of [1920, 1024, 768, 390]) {
     await page.setViewportSize({ width: largura, height: 900 })
@@ -384,11 +391,12 @@ test('o trilho do mestre segura as onze paradas em qualquer largura', async ({ p
     // para fora.
     await expectNadaEscapa(page, trilho)
 
-    // E as ONZE continuam alcançáveis: no laptop em coluna, no telefone
+    // E TODAS continuam alcançáveis: no laptop em coluna, no telefone
     // rolando. Uma parada que some da tela é uma ferramenta que deixou de
     // existir para quem está naquela largura — o defeito da ALE-178, que fez o
     // ✕ de encerrar ficar inalcançável a 390px.
     const alcancaveis = await page.locator(`${trilho} a`).count()
-    expect(alcancaveis, `a ${largura}px o trilho perdeu paradas`).toBe(11)
+    if (largura === 1920) referencia = alcancaveis
+    expect(alcancaveis, `a ${largura}px o trilho perdeu paradas`).toBe(referencia)
   }
 })

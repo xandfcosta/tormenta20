@@ -416,7 +416,9 @@ test.describe('A cena de campanhas (piloto Datastar)', () => {
     })
 
     await opcoes.first().focus()
-    await page.keyboard.press('ArrowDown')
+    // Seta DIREITA e não abaixo: a listagem virou uma tira deitada no rodapé,
+    // igual à de personagens, e o driver lê `data-nav-layout="row"`.
+    await page.keyboard.press('ArrowRight')
 
     await expect(opcoes.nth(1)).toHaveAttribute('aria-selected', 'true')
     await expect(opcoes.first()).toHaveAttribute('aria-selected', 'false')
@@ -994,7 +996,7 @@ test.describe('Os catálogos (piloto Datastar)', () => {
 
   test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
     await page.goto(CATALOGOS)
-    await expect(page.getByRole('navigation', { name: 'Catálogos' })).toBeVisible()
+    await expect(page.getByRole('navigation', { name: 'Ferramentas do mestre' })).toBeVisible()
     expect(await textoComContrasteBaixo(page), 'texto abaixo do AA nos catálogos').toEqual([])
   })
 
@@ -1059,23 +1061,27 @@ test.describe('Os catálogos (piloto Datastar)', () => {
   })
 
   /**
-   * A busca varre os QUATRO catálogos, e a aba some enquanto ela dura.
+   * A busca varre TODOS os catálogos, não só o que está aberto.
    *
    * É a ALE-22: a versão em React filtrava só a aba ativa, então "bola de fogo"
    * digitado na aba Condições dizia "nada encontrado" com a magia existindo.
+   *
+   * A segunda metade deste guarda — "e a fileira de abas sai de cena" — saiu
+   * junto com a fileira: cada catálogo mora hoje no seu endereço e quem troca é
+   * o trilho do mestre, que é permanente. Não sobrou fileira para sumir, e uma
+   * asserção sobre elemento que não existe passa verde sobre nada.
    */
-  test('buscar varre tudo e a fileira de abas sai de cena', async ({ page }) => {
+  test('buscar varre todos os catálogos, não só o que está aberto', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto(`${CATALOGOS}?aba=condicoes`)
-    await expect(page.getByRole('navigation', { name: 'Catálogos' })).toBeVisible()
+    await expect(page.getByRole('navigation', { name: 'Ferramentas do mestre' })).toBeVisible()
 
     await page.getByRole('searchbox', { name: 'Buscar nos catálogos' }).fill('fogo')
 
-    await expect(page.getByRole('region', { name: 'Magias' })).toBeVisible()
     await expect(
-      page.getByRole('navigation', { name: 'Catálogos' }),
-      'a fileira de abas ficou acesa durante a busca',
-    ).toBeHidden()
+      page.getByRole('region', { name: 'Magias' }),
+      'buscar de dentro das condições não alcançou as magias (ALE-22)',
+    ).toBeVisible()
   })
 })
 
