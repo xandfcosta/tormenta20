@@ -375,8 +375,8 @@ func TestOTerrenoPintadoEncareceOCaminho(t *testing.T) {
 	b.Pending = nil
 
 	// O mestre pinta DUAS casas do caminho: cada uma passa a custar 2.
-	PaintTerrain(b, engine.Square{X: 2, Y: 0}, true)
-	PaintTerrain(b, engine.Square{X: 3, Y: 0}, true)
+	PaintTerrain(b, engine.Square{X: 2, Y: 0}, TerrenoDificil, true)
+	PaintTerrain(b, engine.Square{X: 3, Y: 0}, TerrenoDificil, true)
 
 	if err := ProposeMove(b, st, "t1", reto, jogadorDono); err != nil {
 		t.Fatalf("seis quadrados de custo num deslocamento de seis foram recusados: %v", err)
@@ -393,7 +393,7 @@ func TestPintarEApagarSaoExplicitosEIdempotentes(t *testing.T) {
 	b, _ := mesaEmCombate(t)
 	casa := engine.Square{X: 2, Y: 0}
 
-	PaintTerrain(b, casa, true)
+	PaintTerrain(b, casa, TerrenoDificil, true)
 	if len(b.Difficult) != 1 {
 		t.Fatalf("pintar não marcou a casa: %+v", b.Difficult)
 	}
@@ -401,12 +401,12 @@ func TestPintarEApagarSaoExplicitosEIdempotentes(t *testing.T) {
 
 	// O arraste passando de novo: nada muda, e a versão NÃO sobe à toa — cada
 	// subida é um broadcast para a mesa inteira.
-	PaintTerrain(b, casa, true)
+	PaintTerrain(b, casa, TerrenoDificil, true)
 	if len(b.Difficult) != 1 || b.Version != versaoDepoisDePintar {
 		t.Errorf("pintar de novo mexeu no estado: %d casas, versão %d", len(b.Difficult), b.Version)
 	}
 
-	PaintTerrain(b, casa, false)
+	PaintTerrain(b, casa, TerrenoDificil, false)
 
 	if len(b.Difficult) != 0 {
 		t.Errorf("a borracha não apagou: %+v", b.Difficult)

@@ -299,13 +299,19 @@ func (s *Server) handleBoardTerrainPaint(w http.ResponseWriter, r *http.Request)
 		plataforma.WriteError(w, http.StatusBadRequest, "x and y are required")
 		return
 	}
-	difficult, informado := body["difficult"].(bool)
+	ligado, informado := body["difficult"].(bool)
 	if !informado {
-		difficult = true
+		ligado = true
 	}
+	// A ESPÉCIE é opcional e o padrão é o difícil, que é o que este endpoint
+	// pintava quando era a única (T20 p238). Compatível para trás de propósito:
+	// a SPA manda só `x`, `y` e `difficult`, e continua pintando exatamente o
+	// que pintava. O nome do campo do corpo continua `difficult` pelo mesmo
+	// motivo — renomeá-lo para `on` seria quebrar a SPA para ganhar uma palavra.
+	especie := tabuleiro.EspecieConhecida(plataforma.StringField(body, "kind"))
 	s.mutateBoardAndPublish(w, ctx, func() (*tabuleiro.BoardState, error) {
 		return s.boards.PaintTerrain(
-			r.Context(), ctx.sessionID, engine.Square{X: int(x), Y: int(y)}, difficult,
+			r.Context(), ctx.sessionID, engine.Square{X: int(x), Y: int(y)}, especie, ligado,
 		)
 	})
 }
