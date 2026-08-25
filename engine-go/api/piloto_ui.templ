@@ -560,3 +560,24 @@ templ seloDaPagina(livro enderecoDoLivro, pagina int, termo string) {
 	}
 }
 
+
+// eloParaOAcervo liga uma palavra ao verbete dela (ALE-264).
+//
+// O destino é a MESMA cena com a entrada filtrada — o endereço que o buscador
+// já usa —, então o elo não inventa superfície: a entrada aparece sozinha na aba
+// dela, com o botão do livro ao lado.
+//
+// `data-nav-skip` pela mesma razão do selo de página: são centenas de cartões, e
+// cada palavra ligada viraria uma parada da seta. O Tab continua chegando.
+//
+// O sublinhado é PONTILHADO como o do selo de página, e isso é deliberado: as
+// duas coisas são "leva para outro lugar", e desenhar diferente ensinaria que
+// são gestos diferentes.
+templ eloParaOAcervo(aba, nome string) {
+	<a
+		href={ templ.SafeURL(destinoNoAcervo(aba, nome)) }
+		data-nav-skip
+		title={ "Ver " + nome }
+		class="rounded-sm underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+	>{ children... }</a>
+}

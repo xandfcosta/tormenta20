@@ -113,6 +113,7 @@ func montaAchados(busca string, peloTexto bool) buscadorView {
 		grupoBuscado("Magias", a.Magias, busca, peloTexto, destinoNoAcervo("magias", busca), camposDaMagia, achadoDaMagia),
 		grupoBuscado("Poderes", a.Poderes, busca, peloTexto, destinoNoAcervo("poderes", busca), camposDoPoder, achadoDoPoder),
 		grupoBuscado("Itens", a.Itens, busca, peloTexto, destinoNoAcervo("itens", busca), camposDoItem, achadoDoItem),
+		grupoBuscado("Efeitos", tiposDeEfeito(), busca, peloTexto, destinoNoAcervo("efeitos", busca), camposDoEfeito, achadoDoEfeito),
 		grupoBuscado("Raças", racas, busca, peloTexto, destinoNoAcervo("racas", busca), camposDaRaca, achadoDaRaca),
 		grupoBuscado("Classes", classes, busca, peloTexto, destinoNoAcervo("classes", busca), camposDaClasse, achadoDaClasse),
 		grupoBuscado("Deuses", deuses, busca, peloTexto, destinoNoAcervo("deuses", busca), camposDoDeus, achadoDoDeus),
@@ -212,6 +213,15 @@ func achadoDoItem(i itemDoLivro) achadoDoBuscador {
 		Detalhe: nomeDaCategoria(i.Category),
 		Destino: destinoNoAcervo("itens", i.Name),
 		Pagina:  i.BookPage,
+	}
+}
+
+func achadoDoEfeito(e efeitoDoLivro) achadoDoBuscador {
+	return achadoDoBuscador{
+		Nome:    e.Name,
+		Detalhe: "Tipo de efeito",
+		Destino: destinoNoAcervo("efeitos", e.Name),
+		Pagina:  e.BookPage,
 	}
 }
 

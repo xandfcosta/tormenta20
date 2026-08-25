@@ -271,6 +271,7 @@ var abasDoAcervo = []abaDoAcervo{
 	{"magias", "Magias"},
 	{"poderes", "Poderes"},
 	{"itens", "Itens"},
+	{"efeitos", "Efeitos"},
 	{"racas", "Raças"},
 	{"classes", "Classes"},
 	{"deuses", "Deuses"},
@@ -295,6 +296,7 @@ type grupoDoAcervo struct {
 	Magias    []magiaDoLivro
 	Poderes   []poderDoLivro
 	Itens     []itemDoLivro
+	Efeitos   []efeitoDoLivro
 	Racas     []racaDoLivro
 	Classes   []classeDoLivro
 	Deuses    []deusDoLivro
@@ -302,7 +304,7 @@ type grupoDoAcervo struct {
 
 func (g grupoDoAcervo) Quantos() int {
 	return len(g.Condicoes) + len(g.Magias) + len(g.Poderes) + len(g.Itens) +
-		len(g.Racas) + len(g.Classes) + len(g.Deuses)
+		len(g.Efeitos) + len(g.Racas) + len(g.Classes) + len(g.Deuses)
 }
 
 // catalogosView é a cena inteira numa resposta.
@@ -341,6 +343,7 @@ func carregaCatalogos(busca, aba string, livro enderecoDoLivro) catalogosView {
 		{Rotulo: "Magias", Magias: filtra(a.Magias, camposDaMagia, busca)},
 		{Rotulo: "Poderes", Poderes: filtra(a.Poderes, camposDoPoder, busca)},
 		{Rotulo: "Itens", Itens: filtra(a.Itens, camposDoItem, busca)},
+		{Rotulo: "Efeitos", Efeitos: filtra(tiposDeEfeito(), camposDoEfeito, busca)},
 		{Rotulo: "Raças", Racas: filtra(racas, camposDaRaca, busca)},
 		{Rotulo: "Classes", Classes: filtra(classes, camposDaClasse, busca)},
 		{Rotulo: "Deuses", Deuses: filtra(deuses, camposDoDeus, busca)},
@@ -363,6 +366,8 @@ func grupoDaAba(a acervoDoMestre, aba string) grupoDoAcervo {
 		return grupoDoAcervo{Rotulo: "Poderes", Poderes: a.Poderes}
 	case "itens":
 		return grupoDoAcervo{Rotulo: "Itens", Itens: a.Itens}
+	case "efeitos":
+		return grupoDoAcervo{Rotulo: "Efeitos", Efeitos: tiposDeEfeito()}
 	case "racas":
 		return grupoDoAcervo{Rotulo: "Raças", Racas: racas}
 	case "classes":

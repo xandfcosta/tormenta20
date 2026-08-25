@@ -171,6 +171,9 @@ class Livro:
         # — e "não confere" seria lido como "a página está errada".
         self.texto = [achata(p) for p in paginas]
         self.linhas = [[dobra(l) for l in p.split("\n")] for p in paginas]
+        # As páginas CRUAS, com acento e caixa: o catálogo de tipos de efeito
+        # sai daqui, e um texto dobrado viraria "cansaco" na tela.
+        self.cru = paginas
         self.indice = le_o_indice(paginas, self.abertura)
         self.paginas = len(paginas)
         # As páginas do PRÓPRIO índice são proibidas como resposta, e isto é
@@ -528,6 +531,86 @@ def cria_o_catalogo_de_classes(livro):
     print(f"catálogo de classes: {len(classes)} de {len(nomes)}")
 
 
+# ── os TIPOS DE EFEITO, que não tinham catálogo ──────────────────────────────
+
+# A página impressa onde o livro define os tipos, e ela é conferida no boot desta
+# função: o número entra aqui porque é o ÚNICO lugar do script que aponta uma
+# página à mão, e a conferência é o que impede que ele envelheça em silêncio.
+PAGINA_DOS_EFEITOS = 228
+
+# Os nomes que o livro imprime, na ordem em que ele os imprime. A lista existe
+# para o extrator saber onde CORTAR o texto corrido — sem ela seria preciso
+# adivinhar onde termina uma definição e começa a seguinte, e uma frase que
+# comece com maiúscula viraria um tipo inventado.
+NOMES_DOS_EFEITOS = [
+    "Arcano", "Atordoamento", "Cansaço", "Climático", "Cura", "Dano", "Divino",
+    "Luz", "Mágico", "Medo", "Mental", "Metabolismo", "Metamorfose", "Movimento",
+    "Perda de Vida", "Sentidos", "Trevas", "Veneno",
+]
+
+
+def cria_o_catalogo_de_efeitos(livro):
+    """Escreve `catalog/data/tipos-de-efeito.json` a partir do texto da p228.
+
+    Ele existe porque a condição CITA o tipo ("Abalado ... Medo.") e o leitor da
+    tela não tem para onde ir com isso. O livro define cada tipo em uma frase, e
+    é essa frase que vira o verbete — extraída do PDF, não transcrita à mão.
+
+    O `id` é o nome DOBRADO, que é a chave com que as condições já os guardam
+    (`tags: ["cansaco"]`). Se algum tag ficar sem tipo correspondente, o script
+    RECLAMA: elo que aponta para o vazio é pior que elo nenhum.
+    """
+    cru = livro.cru[PAGINA_DOS_EFEITOS + livro.abertura - 1]
+    corpo = re.sub(r"\s+", " ", cru)
+    if "Tipos de efeitos" not in corpo:
+        raise SystemExit(f"a p{PAGINA_DOS_EFEITOS} não é mais a dos tipos de efeito")
+
+    # Corta em cada "Nome." conhecido: o pedaço até o próximo nome é a definição.
+    marcas = []
+    for nome in NOMES_DOS_EFEITOS:
+        onde = corpo.find(nome + ".")
+        if onde < 0:
+            raise SystemExit(f"não achei o tipo {nome!r} na p{PAGINA_DOS_EFEITOS}")
+        marcas.append((onde, nome))
+    marcas.sort()
+
+    efeitos = []
+    for i, (onde, nome) in enumerate(marcas):
+        fim = marcas[i + 1][0] if i + 1 < len(marcas) else len(corpo)
+        texto = corpo[onde + len(nome) + 1 : fim].strip()
+        # CORTA NO RODAPÉ, e este é o conserto de um defeito que o olho pegou: a
+        # página é diagramada em duas colunas, e o texto extraído continua na
+        # SEÇÃO SEGUINTE depois do número da página. O último tipo ("Veneno")
+        # saiu com 1.800 caracteres — a definição dele mais "Habilidades Gerais"
+        # inteira.
+        #
+        # O corte é pelo número DESTA página e não por um `\d+` qualquer: as
+        # definições citam páginas ("veja a página 230"), e cortar no primeiro
+        # número decapitaria metade delas.
+        texto = re.split(rf"\s{PAGINA_DOS_EFEITOS}\s", texto)[0].strip()
+        texto = re.sub(r"\s*\d{1,3}\s*$", "", texto).strip()
+        # O CONTROLE do corte: uma definição do livro é uma ou duas frases. Se
+        # alguma passar disto, o extrator comeu a seção vizinha de novo — e um
+        # verbete com meia página de texto errado é pior que verbete nenhum.
+        if len(texto) > 400:
+            raise SystemExit(f"a definição de {nome!r} veio com {len(texto)} caracteres — o corte falhou")
+        efeitos.append({
+            "id": dobra(nome).replace(" ", "-"),
+            "name": nome,
+            "description": texto,
+            "bookPage": PAGINA_DOS_EFEITOS,
+        })
+
+    tags = {t for c in carrega("conditions.json").values() for t in c.get("tags", [])}
+    conhecidos = {e["id"] for e in efeitos}
+    orfas = sorted(tags - conhecidos)
+    if orfas:
+        raise SystemExit(f"tags de condição sem tipo de efeito: {orfas}")
+
+    grava("tipos-de-efeito.json", efeitos)
+    print(f"catálogo de tipos de efeito: {len(efeitos)} · nenhuma tag órfã")
+
+
 def main():
     caminho = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("-") else None
     caminho = caminho or os.environ.get("LIVRO_PDF") or PADRAO_DO_LIVRO
@@ -546,6 +629,7 @@ def main():
         faltando += s
     if gravar:
         cria_o_catalogo_de_classes(livro)
+        cria_o_catalogo_de_efeitos(livro)
         sincroniza_o_dump()
     print(f"\n{mudadas} páginas mudadas · {faltando} entradas sem página")
     print("GRAVADO" if gravar else "nada gravado (use --gravar)")

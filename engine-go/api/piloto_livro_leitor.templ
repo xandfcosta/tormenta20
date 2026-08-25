@@ -14,7 +14,14 @@ import "fmt"
 // de cliente viajando em toda requisição seguinte para nada.
 templ leitorDoLivro(v leitorView) {
 	<div class="flex h-full min-h-0 flex-col">
-		<div class="flex flex-wrap items-center gap-2 border-b border-grimorio-iron px-3 py-2">
+		// `pr-16` dentro do diálogo: o ✕ que fecha é da MOLDURA, desenhado por
+		// cima no canto direito, e sem esta folga ele cobre o "abrir fora" — o
+		// dono viu na tela. A barra não pode reservar o espaço sempre: na aba
+		// própria não há ✕ nenhum, e o buraco ficaria à toa.
+		<div
+			class={ "flex flex-wrap items-center gap-2 border-b border-grimorio-iron px-3 py-2",
+				templ.KV("pr-16", v.EmDialogo) }
+		>
 			if !v.EmDialogo {
 				<a
 					href={ templ.SafeURL(v.Voltar) }

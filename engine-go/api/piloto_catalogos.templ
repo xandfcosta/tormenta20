@@ -117,6 +117,9 @@ templ resultadosDoAcervo(v catalogosView) {
 						for _, i := range g.Itens {
 							@cartaoDeItem(i, v.Livro)
 						}
+						for _, e := range g.Efeitos {
+							@cartaoDeEfeito(e, v.Livro)
+						}
 						for _, r := range g.Racas {
 							@cartaoDeRaca(r, v.Livro)
 						}
@@ -145,17 +148,49 @@ templ cartaoDeCondicao(c condicaoDoLivro, livro enderecoDoLivro) {
 	@cartaoDoAcervo() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ c.Name }
+			// A TAG é o tipo de efeito, e o livro o imprime em itálico no fim da
+			// condição ("Abalado … Medo."). Aqui ele vira ELO: o mestre lia a
+			// palavra e tinha de ir procurar o que ela significa.
 			for _, t := range c.Tags {
-				<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ t }</span>
+				@eloParaOAcervo("efeitos", nomeDoEfeito(t)) {
+					{ nomeDoEfeito(t) }
+				}
 			}
 			@seloDaPagina(livro, c.BookPage, c.Name)
 		</p>
-		<p class="mt-1 text-muted-foreground">{ c.Description }</p>
+		<p class="mt-1 text-muted-foreground">
+			// A descrição CITA outras condições ("Desprevenido e imóvel"), e são
+			// 11 citações nas 35 — a densidade que justifica varrer o texto.
+			for _, pedaco := range comElosParaCondicoes(c.Description, c.Name) {
+				if pedaco.Aba != "" {
+					@eloParaOAcervo(pedaco.Aba, pedaco.Texto) {
+						{ pedaco.Texto }
+					}
+				} else {
+					{ pedaco.Texto }
+				}
+			}
+		</p>
 		if c.UpgradesTo != "" {
 			<p class="mt-1 text-xs text-muted-foreground">
-				Agrava para <span class="font-medium">{ nomeDaCondicao(c.UpgradesTo) }</span>
+				Agrava para 
+				@eloParaOAcervo("condicoes", nomeDaCondicao(c.UpgradesTo)) {
+					{ nomeDaCondicao(c.UpgradesTo) }
+				}
 			</p>
 		}
+	}
+}
+
+// O cartão do TIPO DE EFEITO (ALE-264). Ele é o destino dos elos que saem das
+// condições, e o livro o define em uma frase na p228.
+templ cartaoDeEfeito(e efeitoDoLivro, livro enderecoDoLivro) {
+	@cartaoDoAcervo() {
+		<p class="flex flex-wrap items-center gap-1.5 font-medium">
+			{ e.Name }
+			@seloDaPagina(livro, e.BookPage, e.Name)
+		</p>
+		<p class="mt-1 text-muted-foreground">{ e.Description }</p>
 	}
 }
 
@@ -292,14 +327,41 @@ templ cartaoDeDeus(d deusDoLivro, livro enderecoDoLivro) {
 				<span>{ "Arma preferida: " + d.ArmaPreferida }</span>
 			}
 		</p>
+		// Concedidos e devotos são LISTAS DE NOMES de coisas que têm verbete —
+		// o poder está em Poderes, o devoto é raça ou classe. Cada nome vira o
+		// elo dele; o que não tem verbete (o "Quaisquer" de Aharadak) fica texto.
 		if len(d.PoderesConcedidos) > 0 {
 			<p class="mt-1 text-xs text-muted-foreground">
-				{ "Concede: " + strings.Join(d.PoderesConcedidos, ", ") }
+				Concede: 
+				for i, poder := range d.PoderesConcedidos {
+					if i > 0 {
+						{ ", " }
+					}
+					if ehPoderConhecido(poder) {
+						@eloParaOAcervo("poderes", poder) {
+							{ poder }
+						}
+					} else {
+						{ poder }
+					}
+				}
 			</p>
 		}
 		if len(d.Devotos) > 0 {
 			<p class="mt-1 text-xs text-muted-foreground">
-				{ "Devotos: " + strings.Join(d.Devotos, ", ") }
+				Devotos: 
+				for i, devoto := range d.Devotos {
+					if i > 0 {
+						{ ", " }
+					}
+					if aba := eloDoDevoto(devoto); aba != "" {
+						@eloParaOAcervo(aba, devoto) {
+							{ devoto }
+						}
+					} else {
+						{ devoto }
+					}
+				}
 			</p>
 		}
 	}

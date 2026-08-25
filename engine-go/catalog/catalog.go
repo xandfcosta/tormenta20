@@ -171,6 +171,11 @@ var resources = []string{
 	// sem lugar para a página não havia botão para o livro. Ver
 	// `scripts/paginas-do-livro.py`.
 	"classes",
+	// `tipos-de-efeito` nasceu na ALE-264 pelo mesmo motivo de `classes`: a
+	// condição CITA o tipo ("Abalado … Medo.") e não havia para onde o elo
+	// apontar. As definições saem do texto da p228, extraídas pelo
+	// `scripts/paginas-do-livro.py`.
+	"tipos-de-efeito",
 }
 
 var valid = func() map[string]bool {
