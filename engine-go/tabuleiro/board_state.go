@@ -104,10 +104,42 @@ type BoardState struct {
 	Place   string       `json:"place"`
 	Terrain string       `json:"terrain"`
 	Tokens  []BoardToken `json:"tokens"`
-	// Difficult são as casas que custam o dobro (T20 p238). Lista ESPARSA, e não
-	// um mapa do tabuleiro: o plano é infinito, então não existe "todas as
-	// casas" para preencher — existem as poucas que o mestre pintou.
+	// As quatro espécies de TERRENO — o que o quadrado FAZ com quem está nele
+	// (T20 p238, Tabela 5-3). Listas ESPARSAS, e não um mapa do tabuleiro: o
+	// plano é infinito, então não existe "todas as casas" para preencher —
+	// existem as poucas que o mestre pintou.
+	//
+	// QUATRO LISTAS IRMÃS e não um `map[string][]Square`, e o motivo é de
+	// DOMÍNIO: as quatro não são variantes de uma coisa só. O difícil muda o
+	// CUSTO DO MOVIMENTO e é consumido por regra (`PathCost`, e o alcance que
+	// acende as casas); os outros três mudam Defesa, chance de falha e ataque, e
+	// hoje não são consumidos por nada — alimentam o OLHO, porque o app não
+	// resolve ataque contra Defesa em lugar nenhum. Um mapa afirmaria que são
+	// intercambiáveis, e a Tabela 5-3 diz que não; e chave de string ainda
+	// convida ao erro mudo, com `"elevated"` contra `"elevado"` virando lista
+	// vazia sem estourar.
+	//
+	// A assimetria é a parte que importa e a que um mapa esconderia: ela é
+	// exatamente o que quem for implementar a resolução de ataque precisa ver.
+	//
+	// NÃO é argumento contra o mapa que ele quebraria os Lugares já gravados.
+	// Foi o meu primeiro, e ele não sustenta: o `Archive` faz `json.Marshal` do
+	// estado inteiro, então um `UnmarshalJSON` que leia o `difficult` legado
+	// resolveria em dez linhas. "Quebra os gravados" é razão para ESCREVER a
+	// migração, não para evitar a forma — quem revisar isto não deve herdar o
+	// argumento errado (achado da sessão da main, que foi ler a persistência).
+	//
+	// A repetição está contida no `listaDaEspecie`, que é o único lugar que sabe
+	// qual lista guarda qual espécie.
 	Difficult []engine.Square `json:"difficult,omitempty"`
+	// Cover: +5 na Defesa de quem está nela (p238). Trincheira, árvore estreita.
+	Cover []engine.Square `json:"cover,omitempty"`
+	// Concealment: 20% de chance de falha no ataque contra quem está nela
+	// (p238). Folhagens, moitas.
+	Concealment []engine.Square `json:"concealment,omitempty"`
+	// Elevated: +2 no ataque de quem ataca DE LÁ (p238). É a única espécie que
+	// beneficia quem está nela em vez de proteger.
+	Elevated []engine.Square `json:"elevated,omitempty"`
 	// Markers são os LUGARES apontados no mapa (ALE-195). Não são peças: não
 	// ocupam quadrado e não entram na conta de nada.
 	Markers []BoardMarker `json:"markers,omitempty"`
@@ -696,22 +728,48 @@ func ProposeMove(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, 
 // alternar faria a casa piscar entre brejo e chão limpo debaixo do dedo. Com o
 // valor explícito a mensagem é idempotente, que é o que um arraste precisa.
 // Quem apaga é a borracha, que manda `false`.
-func PaintTerrain(b *BoardState, square engine.Square, difficult bool) {
-	for i, existente := range b.Difficult {
+func PaintTerrain(b *BoardState, square engine.Square, especie EspecieDeTerreno, ligado bool) {
+	lista := listaDaEspecie(b, especie)
+	if lista == nil {
+		return // espécie que não existe não pinta nada, e não derruba a mesa
+	}
+	for i, existente := range *lista {
 		if existente == square {
-			if difficult {
+			if ligado {
 				return // já é brejo: nada mudou, e a versão não sobe à toa
 			}
-			b.Difficult = append(b.Difficult[:i], b.Difficult[i+1:]...)
+			*lista = append((*lista)[:i], (*lista)[i+1:]...)
 			b.Version++
 			return
 		}
 	}
-	if !difficult {
+	if !ligado {
 		return
 	}
-	b.Difficult = append(b.Difficult, square)
+	*lista = append(*lista, square)
 	b.Version++
+}
+
+// listaDaEspecie é o ÚNICO lugar que sabe qual lista guarda qual espécie.
+//
+// Devolve ponteiro para o campo porque o pincel escreve nele. É o que segura a
+// repetição das quatro listas irmãs num ponto só: acrescentar uma quinta espécie
+// é uma linha aqui e uma no `EspeciesDeTerreno`, e o resto do código não muda.
+//
+// nil para espécie desconhecida, e o pincel trata: o id vem do cliente, e uma
+// espécie inventada não pode derrubar a mesa nem pintar a lista errada.
+func listaDaEspecie(b *BoardState, especie EspecieDeTerreno) *[]engine.Square {
+	switch especie {
+	case TerrenoDificil:
+		return &b.Difficult
+	case TerrenoCobertura:
+		return &b.Cover
+	case TerrenoCamuflagem:
+		return &b.Concealment
+	case TerrenoElevado:
+		return &b.Elevated
+	}
+	return nil
 }
 
 // moveTerrainOf traduz a lista esparsa para o que o motor cobra. A conversão
