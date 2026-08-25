@@ -85,6 +85,7 @@ templ trilhaDoMestre(atual string) {
 		for _, f := range ferramentasDoMestre {
 			<a
 				href={ templ.SafeURL("/piloto/mestre/" + f.Slug) }
+				data-on:keydown={ marcaDeTrocaPorTeclado }
 				title={ f.Dica }
 				if f.Slug == atual {
 					aria-current="page"

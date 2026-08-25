@@ -1172,4 +1172,28 @@ const atalhoDaBarra = `evt.key === '/' && ` +
 	`!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName) && ` +
 	`(evt.preventDefault(), document.querySelector('[data-busca-da-cena]')?.focus())`
 
+// O FOCO SOBREVIVE à troca de ferramenta, e o problema é do transporte.
+//
+// O trilho é feito de LINKS, e trocar de ferramenta é NAVEGAR: documento novo,
+// foco no `body`, e quem estava andando de seta recomeça do primeiro item — foi
+// o que o dono relatou ("preciso começar na tab de bestiário de novo"). A SPA
+// não tem isso porque lá a troca não descarta o documento.
+//
+// Restaurar SÓ quando a troca veio do TECLADO, e é por isso que existe a marca:
+// focar o trilho em toda carga roubaria o foco de quem clicou, com um cursor
+// dourado aparecendo sozinho e a página saltando para ele. A marca é escrita no
+// `keydown` do próprio link e lida uma vez na carga seguinte.
+//
+// `sessionStorage` e não um sinal: sinal do Datastar não atravessa navegação de
+// documento — é justamente o que se perde aqui. E `session` e não `local` porque
+// a marca vale para ESTA aba e para os próximos milissegundos; sobreviver ao
+// fechamento do navegador seria o foco pulando sozinho numa sessão futura.
+const marcaDeTrocaPorTeclado = `evt.key === 'Enter' && sessionStorage.setItem('piloto-foco-no-trilho', '1')`
+
+// restauraOFocoDoTrilho roda na carga. Lê a marca, APAGA, e devolve o foco ao
+// item da ferramenta atual — não ao primeiro, que é o que a pessoa não pediu.
+const restauraOFocoDoTrilho = `sessionStorage.getItem('piloto-foco-no-trilho') && ` +
+	`(sessionStorage.removeItem('piloto-foco-no-trilho'), ` +
+	`document.querySelector('[data-nav-region="rail"] [aria-current]')?.focus())`
+
 var _ = templruntime.GeneratedTemplate

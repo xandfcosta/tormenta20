@@ -101,13 +101,19 @@ templ layout(p paginaPiloto, corpo templ.Component) {
 		// então dentro de um fragmento cada remendo o traria de volta e abriria
 		// um segundo SSE a cada tique. E `data-signals` reinicializaria o que o
 		// jogador está digitando, uma vez por tique.
+		// O `data-init` sai SEMPRE, porque a restauração do foco do trilho vale
+		// para toda cena; o que a página pediu vem depois, no mesmo atributo.
+		// Dois `data-init` no mesmo nó não somam — o segundo substitui —, e foi
+		// por isso que a restauração não virou um atributo próprio.
 		<body
 			class="antialiased"
 			if p.Sinais != "" {
 				data-signals={ p.Sinais }
 			}
 			if p.Init != "" {
-				data-init={ p.Init }
+				data-init={ restauraOFocoDoTrilho + "; " + p.Init }
+			} else {
+				data-init={ restauraOFocoDoTrilho }
 			}
 		>
 			// Os `data-slot` são o CONTRATO OBSERVÁVEL que a SPA publica, e não

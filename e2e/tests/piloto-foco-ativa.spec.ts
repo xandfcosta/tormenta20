@@ -304,3 +304,58 @@ test('a ficha focada acende UM cursor, e na moldura', async ({ page }) => {
   expect(medida.molduraAcesa, 'a moldura da ficha não acendeu').toBe(true)
   expect(medida.mioloComBrilho, 'o miolo acendeu por dentro do que rola').toBe(false)
 })
+
+/**
+ * O foco SOBREVIVE à troca de ferramenta pelo teclado.
+ *
+ * O trilho é feito de LINKS, e trocar de ferramenta NAVEGA: documento novo, foco
+ * no `body`, e quem andava de seta recomeça do primeiro item — relatado pelo
+ * dono como "preciso começar na tab de bestiário de novo". A SPA não sofre disso
+ * porque lá a troca não descarta o documento; é um custo do transporte que a
+ * migração escolheu, e por isso o conserto mora no piloto.
+ *
+ * E as duas metades importam: restaurar quando veio do teclado, e NÃO restaurar
+ * quando veio do mouse — focar o trilho em toda carga roubaria o foco de quem
+ * clicou, com um cursor dourado aparecendo sozinho.
+ */
+test('trocar de ferramenta pelo teclado mantém o foco no trilho', async ({ page }) => {
+  await page.setViewportSize({ width: 1400, height: 900 })
+  await page.goto('/piloto/mestre/bestiario')
+  await page.waitForLoadState('networkidle')
+
+  await page.locator('[data-nav-region="rail"] a').first().focus()
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('Enter')
+  // `waitForURL` e NÃO `waitForLoadState`: medido, o segundo volta antes de a
+  // navegação começar e a asserção lê a URL antiga — o controle acusa "o Enter
+  // não trocou de ferramenta" sobre uma troca que aconteceu.
+  await page.waitForURL('**/piloto/mestre/encontros')
+
+  // O CONTROLE: a navegação aconteceu. Sem ele, "o foco ficou no trilho" seria
+  // verdade sobre uma tecla que não fez nada.
+  expect(page.url(), 'o Enter não trocou de ferramenta').toContain('/piloto/mestre/encontros')
+
+  const foco = await page.evaluate(() => {
+    const e = document.activeElement as HTMLElement
+    return {
+      noTrilho: !!e?.closest('[data-nav-region="rail"]'),
+      naFerramentaAtual: e?.getAttribute('aria-current') === 'page',
+    }
+  })
+  expect(foco.noTrilho, 'o foco caiu no body depois da troca').toBe(true)
+  expect(foco.naFerramentaAtual, 'o foco voltou para o primeiro item, não para a ferramenta aberta').toBe(true)
+})
+
+test('trocar de ferramenta pelo MOUSE não rouba o foco', async ({ page }) => {
+  await page.setViewportSize({ width: 1400, height: 900 })
+  await page.goto('/piloto/mestre/bestiario')
+  await page.waitForLoadState('networkidle')
+
+  await page.locator('[data-nav-region="rail"] a', { hasText: 'IMPROVISO' }).click()
+  await page.waitForURL('**/piloto/mestre/improviso')
+
+  const roubou = await page.evaluate(
+    () => !!document.activeElement?.closest('[data-nav-region="rail"]'),
+  )
+  expect(roubou, 'a carga por clique acendeu o cursor no trilho sozinha').toBe(false)
+})
