@@ -19,7 +19,8 @@
         "traits": [],
         "finesse": true
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 146
     },
     {
       "id": "espada-curta",
@@ -38,7 +39,8 @@
         "purpose": "melee",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 148
     },
     {
       "id": "foice",
@@ -57,7 +59,8 @@
         "purpose": "melee",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 148
     },
     {
       "id": "clava",
@@ -76,7 +79,8 @@
         "purpose": "melee",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 147
     },
     {
       "id": "lanca",
@@ -96,7 +100,8 @@
         "range": "curto",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 148
     },
     {
       "id": "maca",
@@ -115,7 +120,8 @@
         "purpose": "melee",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 149
     },
     {
       "id": "bordao",
@@ -136,7 +142,8 @@
           "dupla"
         ]
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 147
     },
     {
       "id": "pique",
@@ -157,7 +164,8 @@
           "alongada"
         ]
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 150
     },
     {
       "id": "tacape",
@@ -176,7 +184,8 @@
         "purpose": "melee",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 150
     },
     {
       "id": "azagaia",
@@ -196,7 +205,8 @@
         "range": "medio",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 146
     },
     {
       "id": "besta-leve",
@@ -216,7 +226,8 @@
         "range": "medio",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 146
     },
     {
       "id": "funda",
@@ -236,7 +247,8 @@
         "range": "medio",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 148
     },
     {
       "id": "arco-curto",
@@ -256,7 +268,8 @@
         "range": "medio",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 146
     },
     {
       "id": "machadinha",
@@ -276,7 +289,8 @@
         "range": "curto",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 149
     },
     {
       "id": "cimitarra",
@@ -297,7 +311,8 @@
           "agil"
         ]
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 147
     },
     {
       "id": "espada-longa",
@@ -316,7 +331,8 @@
         "purpose": "melee",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 148
     },
     {
       "id": "florete",
@@ -337,7 +353,8 @@
           "agil"
         ]
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 148
     },
     {
       "id": "machado-batalha",
@@ -356,7 +373,8 @@
         "purpose": "melee",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 149
     },
     {
       "id": "mangual",
@@ -389,7 +407,8 @@
             "c": "wielded"
           }
         }
-      ]
+      ],
+      "bookPage": 149
     },
     {
       "id": "martelo-guerra",
@@ -408,7 +427,8 @@
         "purpose": "melee",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 149
     },
     {
       "id": "picareta",
@@ -427,7 +447,8 @@
         "purpose": "melee",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 150
     },
     {
       "id": "tridente",
@@ -461,7 +482,8 @@
             "c": "wielded"
           }
         }
-      ]
+      ],
+      "bookPage": 150
     },
     {
       "id": "alabarda",
@@ -482,7 +504,8 @@
           "alongada"
         ]
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 146
     },
     {
       "id": "alfange",
@@ -501,7 +524,8 @@
         "purpose": "melee",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 146
     },
     {
       "id": "gadanho",
@@ -520,7 +544,8 @@
         "purpose": "melee",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 148
     },
     {
       "id": "lanca-montada",
@@ -541,7 +566,8 @@
           "alongada"
         ]
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 148
     },
     {
       "id": "machado-guerra",
@@ -560,7 +586,8 @@
         "purpose": "melee",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 149
     },
     {
       "id": "marreta",
@@ -579,7 +606,8 @@
         "purpose": "melee",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 149
     },
     {
       "id": "montante",
@@ -598,7 +626,8 @@
         "purpose": "melee",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 150
     },
     {
       "id": "arco-longo",
@@ -618,7 +647,8 @@
         "range": "medio",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 146
     },
     {
       "id": "besta-pesada",
@@ -638,7 +668,8 @@
         "range": "medio",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 146
     },
     {
       "id": "chicote",
@@ -694,7 +725,8 @@
             "c": "wielded"
           }
         }
-      ]
+      ],
+      "bookPage": 147
     },
     {
       "id": "espada-bastarda",
@@ -715,7 +747,8 @@
           "adaptavel"
         ]
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 147
     },
     {
       "id": "katana",
@@ -737,7 +770,8 @@
           "agil"
         ]
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 148
     },
     {
       "id": "machado-anao",
@@ -756,7 +790,8 @@
         "purpose": "melee",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 149
     },
     {
       "id": "corrente-espinhos",
@@ -813,7 +848,8 @@
             "c": "wielded"
           }
         }
-      ]
+      ],
+      "bookPage": 147
     },
     {
       "id": "machado-taurico",
@@ -847,7 +883,8 @@
           },
           "note": "desbalanceada: -2 em ataque"
         }
-      ]
+      ],
+      "bookPage": 149
     },
     {
       "id": "rede",
@@ -867,7 +904,8 @@
         "range": "curto",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 150
     },
     {
       "id": "pistola",
@@ -887,7 +925,8 @@
         "range": "curto",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 150
     },
     {
       "id": "mosquete",
@@ -907,7 +946,8 @@
         "range": "medio",
         "traits": []
       },
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 150
     },
     {
       "id": "armadura-acolchoada",
@@ -943,7 +983,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 154
     },
     {
       "id": "armadura-couro",
@@ -968,7 +1009,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 154
     },
     {
       "id": "couro-batido",
@@ -1003,7 +1045,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 154
     },
     {
       "id": "gibao-peles",
@@ -1038,7 +1081,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 154
     },
     {
       "id": "couraca",
@@ -1073,7 +1117,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 154
     },
     {
       "id": "brunea",
@@ -1151,7 +1196,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 154
     },
     {
       "id": "cota-malha",
@@ -1229,7 +1275,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 154
     },
     {
       "id": "loriga-segmentada",
@@ -1307,7 +1354,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 154
     },
     {
       "id": "meia-armadura",
@@ -1385,7 +1433,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 154
     },
     {
       "id": "armadura-completa",
@@ -1463,7 +1512,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 154
     },
     {
       "id": "escudo-leve",
@@ -1499,7 +1549,8 @@
             "c": "wielded"
           }
         }
-      ]
+      ],
+      "bookPage": 154
     },
     {
       "id": "escudo-pesado",
@@ -1535,7 +1586,8 @@
             "c": "wielded"
           }
         }
-      ]
+      ],
+      "bookPage": 154
     },
     {
       "id": "andrajos-aldeao",
@@ -1557,7 +1609,8 @@
             "note": "interrogar populares"
           }
         }
-      ]
+      ],
+      "bookPage": 159
     },
     {
       "id": "bandana",
@@ -1578,7 +1631,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 159
     },
     {
       "id": "botas-reforcadas",
@@ -1598,7 +1652,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 159
     },
     {
       "id": "camisa-bufante",
@@ -1619,7 +1674,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 159
     },
     {
       "id": "capa-esvoacante",
@@ -1640,7 +1696,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 159
     },
     {
       "id": "capa-pesada",
@@ -1661,7 +1718,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 159
     },
     {
       "id": "casaco-longo",
@@ -1693,7 +1751,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 159
     },
     {
       "id": "chapeu-arcano",
@@ -1714,7 +1773,8 @@
             "note": "apenas com habilidade Caminho do Arcanista"
           }
         }
-      ]
+      ],
+      "bookPage": 159
     },
     {
       "id": "enfeite-elmo",
@@ -1734,7 +1794,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 159
     },
     {
       "id": "farrapos-ermitao",
@@ -1755,7 +1816,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 159
     },
     {
       "id": "gorro-ervas",
@@ -1776,7 +1838,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 159
     },
     {
       "id": "luva-pelica",
@@ -1797,7 +1860,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 159
     },
     {
       "id": "manopla",
@@ -1818,7 +1882,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 159
     },
     {
       "id": "manto-camuflado",
@@ -1840,7 +1905,8 @@
             "type": "compatível com o manto"
           }
         }
-      ]
+      ],
+      "bookPage": 159
     },
     {
       "id": "manto-eclesiastico",
@@ -1861,7 +1927,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 159
     },
     {
       "id": "robe-mistico",
@@ -1882,7 +1949,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 159
     },
     {
       "id": "sapatos-camurca",
@@ -1903,7 +1971,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 159
     },
     {
       "id": "tabardo",
@@ -1924,7 +1993,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 159
     },
     {
       "id": "traje-corte",
@@ -1933,7 +2003,8 @@
       "price": 100,
       "slots": 1,
       "equip": "vested",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 159
     },
     {
       "id": "traje-viajante",
@@ -1942,7 +2013,8 @@
       "price": 10,
       "slots": 0,
       "equip": "vested",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 159
     },
     {
       "id": "veste-seda",
@@ -1963,7 +2035,8 @@
             "c": "vested"
           }
         }
-      ]
+      ],
+      "bookPage": 159
     },
     {
       "id": "bolsa-de-po",
@@ -1973,7 +2046,8 @@
       "slots": 1,
       "equip": "wielded",
       "hands": 1,
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 159
     },
     {
       "id": "cajado-arcano",
@@ -2006,7 +2080,8 @@
           },
           "note": "+1 CD para resistir (arcanas)"
         }
-      ]
+      ],
+      "bookPage": 160
     },
     {
       "id": "cetro-elemental",
@@ -2016,7 +2091,8 @@
       "slots": 1,
       "equip": "wielded",
       "hands": 1,
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 160
     },
     {
       "id": "costela-de-lich",
@@ -2026,7 +2102,8 @@
       "slots": 1,
       "equip": "wielded",
       "hands": 1,
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 160
     },
     {
       "id": "dedo-de-ente",
@@ -2036,7 +2113,8 @@
       "slots": 1,
       "equip": "wielded",
       "hands": 1,
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 160
     },
     {
       "id": "luva-de-ferro",
@@ -2046,7 +2124,8 @@
       "slots": 1,
       "equip": "wielded",
       "hands": 1,
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 160
     },
     {
       "id": "medalhao-de-prata",
@@ -2068,7 +2147,8 @@
           },
           "note": "+1 limite de PM em magias de alcance pessoal"
         }
-      ]
+      ],
+      "bookPage": 160
     },
     {
       "id": "orbe-cristalino",
@@ -2090,7 +2170,8 @@
           },
           "note": "+1 limite de PM em magias arcanas pessoais"
         }
-      ]
+      ],
+      "bookPage": 160
     },
     {
       "id": "tomo-hermetico",
@@ -2112,7 +2193,8 @@
           },
           "note": "+2 CD em uma escola de magia escolhida"
         }
-      ]
+      ],
+      "bookPage": 160
     },
     {
       "id": "varinha-arcana",
@@ -2134,7 +2216,8 @@
           },
           "note": "+1 CD para resistir (arcanas)"
         }
-      ]
+      ],
+      "bookPage": 160
     },
     {
       "id": "mochila-aventureiro",
@@ -2155,7 +2238,8 @@
           },
           "note": "+2 espaços de carga"
         }
-      ]
+      ],
+      "bookPage": 156
     },
     {
       "id": "simbolo-sagrado",
@@ -2177,7 +2261,8 @@
           },
           "note": "+1 testes de resistência (se devoto)"
         }
-      ]
+      ],
+      "bookPage": 96
     },
     {
       "id": "bandoleira-pocoes",
@@ -2186,7 +2271,8 @@
       "price": 20,
       "slots": 1,
       "equip": "vested",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 156
     },
     {
       "id": "maleta-medicamentos",
@@ -2196,7 +2282,8 @@
       "slots": 1,
       "equip": "wielded",
       "hands": 1,
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 158
     },
     {
       "id": "luneta",
@@ -2220,7 +2307,8 @@
           },
           "note": "+5 Percepção em alcance longo"
         }
-      ]
+      ],
+      "bookPage": 158
     },
     {
       "id": "coleccao-de-livros",
@@ -2244,7 +2332,8 @@
           },
           "note": "+1 em uma perícia de conhecimento"
         }
-      ]
+      ],
+      "bookPage": 158
     },
     {
       "id": "algemas",
@@ -2253,7 +2342,8 @@
       "price": 15,
       "slots": 1,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 156
     },
     {
       "id": "arpeu",
@@ -2262,7 +2352,8 @@
       "price": 5,
       "slots": 1,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 156
     },
     {
       "id": "barraca",
@@ -2271,7 +2362,8 @@
       "price": 10,
       "slots": 1,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 156
     },
     {
       "id": "corda",
@@ -2280,7 +2372,8 @@
       "price": 1,
       "slots": 1,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 156
     },
     {
       "id": "espelho",
@@ -2289,7 +2382,8 @@
       "price": 10,
       "slots": 1,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 156
     },
     {
       "id": "lampiao",
@@ -2298,7 +2392,8 @@
       "price": 7,
       "slots": 1,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 156
     },
     {
       "id": "mochila",
@@ -2307,7 +2402,8 @@
       "price": 2,
       "slots": 0,
       "equip": "vested",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 156
     },
     {
       "id": "organizador-de-pergaminhos",
@@ -2316,7 +2412,8 @@
       "price": 25,
       "slots": 1,
       "equip": "vested",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 156
     },
     {
       "id": "pe-de-cabra",
@@ -2325,7 +2422,8 @@
       "price": 2,
       "slots": 1,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 156
     },
     {
       "id": "saco-de-dormir",
@@ -2343,7 +2441,8 @@
       "price": 1,
       "slots": 1,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 157
     },
     {
       "id": "vara-de-madeira",
@@ -2352,7 +2451,8 @@
       "price": 1,
       "slots": 1,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 157
     },
     {
       "id": "equipamento-de-viagem",
@@ -2361,7 +2461,8 @@
       "price": 10,
       "slots": 1,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 158
     },
     {
       "id": "estojo-de-disfarces",
@@ -2370,7 +2471,8 @@
       "price": 50,
       "slots": 1,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 158
     },
     {
       "id": "gazua",
@@ -2379,7 +2481,8 @@
       "price": 5,
       "slots": 1,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 158
     },
     {
       "id": "instrumentos-de-oficio",
@@ -2397,7 +2500,8 @@
       "price": 35,
       "slots": 1,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 158
     },
     {
       "id": "sela",
@@ -2406,7 +2510,8 @@
       "price": 20,
       "slots": 1,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 158
     },
     {
       "id": "agua-benta",
@@ -2430,7 +2535,8 @@
       "modifiers": [],
       "consumable": {
         "scope": "instant"
-      }
+      },
+      "bookPage": 156
     },
     {
       "id": "racao-de-viagem",
@@ -2442,7 +2548,8 @@
       "modifiers": [],
       "consumable": {
         "scope": "instant"
-      }
+      },
+      "bookPage": 162
     },
     {
       "id": "refeicao-comum",
@@ -2454,7 +2561,8 @@
       "modifiers": [],
       "consumable": {
         "scope": "instant"
-      }
+      },
+      "bookPage": 163
     },
     {
       "id": "balsamo-restaurador",
@@ -2471,7 +2579,8 @@
             "dice": "2d4"
           }
         }
-      }
+      },
+      "bookPage": 160
     },
     {
       "id": "essencia-de-mana",
@@ -2488,7 +2597,8 @@
             "dice": "1d4"
           }
         }
-      }
+      },
+      "bookPage": 160
     },
     {
       "id": "cosmetico",
@@ -2510,7 +2620,8 @@
             "bonusType": "untyped"
           }
         ]
-      }
+      },
+      "bookPage": 160
     },
     {
       "id": "gorad-quente",
@@ -2529,7 +2640,8 @@
             "bonus": 2
           }
         }
-      }
+      },
+      "bookPage": 162
     },
     {
       "id": "macarrao-de-yuvalin",
@@ -2548,7 +2660,8 @@
             "bonus": 5
           }
         }
-      }
+      },
+      "bookPage": 162
     },
     {
       "id": "baga-de-fogo",
@@ -2561,7 +2674,8 @@
       "consumable": {
         "scope": "scene",
         "modifiers": []
-      }
+      },
+      "bookPage": 160
     },
     {
       "id": "acido",
@@ -2585,7 +2699,8 @@
       "modifiers": [],
       "consumable": {
         "scope": "instant"
-      }
+      },
+      "bookPage": 160
     },
     {
       "id": "elixir-amor",
@@ -2597,7 +2712,8 @@
       "modifiers": [],
       "consumable": {
         "scope": "instant"
-      }
+      },
+      "bookPage": 160
     },
     {
       "id": "fogo-alquimico",
@@ -2621,7 +2737,8 @@
       "modifiers": [],
       "consumable": {
         "scope": "instant"
-      }
+      },
+      "bookPage": 160
     },
     {
       "id": "dente-dragao",
@@ -2643,7 +2760,8 @@
             "bonusType": "untyped"
           }
         ]
-      }
+      },
+      "bookPage": 161
     },
     {
       "id": "essencia-abissal",
@@ -2665,7 +2783,8 @@
             "bonusType": "untyped"
           }
         ]
-      }
+      },
+      "bookPage": 161
     },
     {
       "id": "liquen-lilas",
@@ -2687,7 +2806,8 @@
             "bonusType": "untyped"
           }
         ]
-      }
+      },
+      "bookPage": 161
     },
     {
       "id": "musgo-purpura",
@@ -2709,7 +2829,8 @@
             "bonusType": "untyped"
           }
         ]
-      }
+      },
+      "bookPage": 161
     },
     {
       "id": "ossos-monstro",
@@ -2731,7 +2852,8 @@
             "bonusType": "untyped"
           }
         ]
-      }
+      },
+      "bookPage": 161
     },
     {
       "id": "po-cristal",
@@ -2753,7 +2875,8 @@
             "bonusType": "untyped"
           }
         ]
-      }
+      },
+      "bookPage": 161
     },
     {
       "id": "po-giz",
@@ -2775,7 +2898,8 @@
             "bonusType": "untyped"
           }
         ]
-      }
+      },
+      "bookPage": 161
     },
     {
       "id": "ramo-verdejante",
@@ -2797,7 +2921,8 @@
             "bonusType": "untyped"
           }
         ]
-      }
+      },
+      "bookPage": 161
     },
     {
       "id": "saco-sal",
@@ -2819,7 +2944,8 @@
             "bonusType": "untyped"
           }
         ]
-      }
+      },
+      "bookPage": 161
     },
     {
       "id": "seixo-ambar",
@@ -2841,7 +2967,8 @@
             "bonusType": "untyped"
           }
         ]
-      }
+      },
+      "bookPage": 161
     },
     {
       "id": "terra-cemiterio",
@@ -2863,7 +2990,8 @@
             "bonusType": "untyped"
           }
         ]
-      }
+      },
+      "bookPage": 161
     },
     {
       "id": "beladona",
@@ -2875,7 +3003,8 @@
       "modifiers": [],
       "consumable": {
         "scope": "instant"
-      }
+      },
+      "bookPage": 161
     },
     {
       "id": "bruma-sonolenta",
@@ -2887,7 +3016,8 @@
       "modifiers": [],
       "consumable": {
         "scope": "instant"
-      }
+      },
+      "bookPage": 161
     },
     {
       "id": "cicuta",
@@ -2899,7 +3029,8 @@
       "modifiers": [],
       "consumable": {
         "scope": "instant"
-      }
+      },
+      "bookPage": 161
     },
     {
       "id": "essencia-sombra",
@@ -2911,7 +3042,8 @@
       "modifiers": [],
       "consumable": {
         "scope": "instant"
-      }
+      },
+      "bookPage": 161
     },
     {
       "id": "nevoa-toxica",
@@ -2923,7 +3055,8 @@
       "modifiers": [],
       "consumable": {
         "scope": "instant"
-      }
+      },
+      "bookPage": 161
     },
     {
       "id": "peconha-comum",
@@ -2935,7 +3068,8 @@
       "modifiers": [],
       "consumable": {
         "scope": "instant"
-      }
+      },
+      "bookPage": 161
     },
     {
       "id": "peconha-concentrada",
@@ -2947,7 +3081,8 @@
       "modifiers": [],
       "consumable": {
         "scope": "instant"
-      }
+      },
+      "bookPage": 162
     },
     {
       "id": "peconha-potente",
@@ -2959,7 +3094,8 @@
       "modifiers": [],
       "consumable": {
         "scope": "instant"
-      }
+      },
+      "bookPage": 162
     },
     {
       "id": "po-lich",
@@ -2971,7 +3107,8 @@
       "modifiers": [],
       "consumable": {
         "scope": "instant"
-      }
+      },
+      "bookPage": 162
     },
     {
       "id": "riso-nimb",
@@ -2983,7 +3120,8 @@
       "modifiers": [],
       "consumable": {
         "scope": "instant"
-      }
+      },
+      "bookPage": 162
     },
     {
       "id": "batata-valkariana",
@@ -2996,7 +3134,8 @@
       "consumable": {
         "scope": "day",
         "oncePerDay": true
-      }
+      },
+      "bookPage": 162
     },
     {
       "id": "prato-aventureiro",
@@ -3009,7 +3148,8 @@
       "consumable": {
         "scope": "day",
         "oncePerDay": true
-      }
+      },
+      "bookPage": 162
     },
     {
       "id": "sopa-peixe",
@@ -3022,7 +3162,8 @@
       "consumable": {
         "scope": "day",
         "oncePerDay": true
-      }
+      },
+      "bookPage": 162
     },
     {
       "id": "melhoria-certeira",
@@ -3047,7 +3188,8 @@
           },
           "note": "+1 atq"
         }
-      ]
+      ],
+      "bookPage": 165
     },
     {
       "id": "melhoria-pungente",
@@ -3072,7 +3214,8 @@
           },
           "note": "+2 atq (pré-req: Certeira)"
         }
-      ]
+      ],
+      "bookPage": 166
     },
     {
       "id": "melhoria-cruel",
@@ -3097,7 +3240,8 @@
           },
           "note": "+1 dano"
         }
-      ]
+      ],
+      "bookPage": 165
     },
     {
       "id": "melhoria-atroz",
@@ -3122,7 +3266,8 @@
           },
           "note": "+2 dano (pré-req: Cruel)"
         }
-      ]
+      ],
+      "bookPage": 165
     },
     {
       "id": "melhoria-equilibrada",
@@ -3183,7 +3328,8 @@
           },
           "note": "+2 em manobras"
         }
-      ]
+      ],
+      "bookPage": 165
     },
     {
       "id": "melhoria-harmonizada-arma",
@@ -3207,7 +3353,8 @@
           },
           "note": "custo da habilidade escolhida -1 PM (pré-req: outra melhoria)"
         }
-      ]
+      ],
+      "bookPage": 165
     },
     {
       "id": "melhoria-injecao-alquimica",
@@ -3219,7 +3366,8 @@
       "appliesTo": [
         "weapon"
       ],
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 165
     },
     {
       "id": "melhoria-macica",
@@ -3243,7 +3391,8 @@
           },
           "note": "+1 multiplicador de crítico (não combina com Precisa)"
         }
-      ]
+      ],
+      "bookPage": 165
     },
     {
       "id": "melhoria-mira-telescopica",
@@ -3255,7 +3404,8 @@
       "appliesTo": [
         "weapon"
       ],
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 166
     },
     {
       "id": "melhoria-precisa",
@@ -3279,7 +3429,8 @@
           },
           "note": "+1 margem de ameaça (não combina com Maciça)"
         }
-      ]
+      ],
+      "bookPage": 166
     },
     {
       "id": "melhoria-ajustada",
@@ -3304,7 +3455,8 @@
           },
           "note": "-1 na penalidade de armadura"
         }
-      ]
+      ],
+      "bookPage": 165
     },
     {
       "id": "melhoria-sob-medida",
@@ -3329,7 +3481,8 @@
           },
           "note": "-2 na penalidade de armadura (pré-req: Ajustada, usuário específico)"
         }
-      ]
+      ],
+      "bookPage": 166
     },
     {
       "id": "melhoria-delicada",
@@ -3341,7 +3494,8 @@
       "appliesTo": [
         "armor"
       ],
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 165
     },
     {
       "id": "melhoria-espinhosa-armadura",
@@ -3353,7 +3507,8 @@
       "appliesTo": [
         "armor"
       ],
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 165
     },
     {
       "id": "melhoria-espinhoso-escudo",
@@ -3365,7 +3520,8 @@
       "appliesTo": [
         "shield"
       ],
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 165
     },
     {
       "id": "melhoria-polida",
@@ -3378,7 +3534,8 @@
         "armor",
         "shield"
       ],
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 166
     },
     {
       "id": "melhoria-reforcada",
@@ -3414,7 +3571,8 @@
           },
           "note": "+1 na penalidade de armadura"
         }
-      ]
+      ],
+      "bookPage": 166
     },
     {
       "id": "melhoria-selada",
@@ -3438,7 +3596,8 @@
           },
           "note": "+1 em testes de resistência (apenas armaduras pesadas)"
         }
-      ]
+      ],
+      "bookPage": 166
     },
     {
       "id": "melhoria-canalizador",
@@ -3462,7 +3621,8 @@
           },
           "note": "+1 no limite de PM"
         }
-      ]
+      ],
+      "bookPage": 165
     },
     {
       "id": "melhoria-energetico",
@@ -3474,7 +3634,8 @@
       "appliesTo": [
         "apparel"
       ],
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 165
     },
     {
       "id": "melhoria-harmonizado-esoterico",
@@ -3498,7 +3659,8 @@
           },
           "note": "custo da magia escolhida -1 PM"
         }
-      ]
+      ],
+      "bookPage": 165
     },
     {
       "id": "melhoria-poderoso",
@@ -3522,7 +3684,8 @@
           },
           "note": "+1 na CD de magias"
         }
-      ]
+      ],
+      "bookPage": 166
     },
     {
       "id": "melhoria-vigilante",
@@ -3546,7 +3709,8 @@
           },
           "note": "+2 na Defesa"
         }
-      ]
+      ],
+      "bookPage": 166
     },
     {
       "id": "melhoria-aprimorado",
@@ -3558,7 +3722,8 @@
       "appliesTo": [
         "apparel"
       ],
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 165
     },
     {
       "id": "melhoria-banhado-a-ouro",
@@ -3583,7 +3748,8 @@
           "bonusType": "item",
           "note": "+2 em Diplomacia"
         }
-      ]
+      ],
+      "bookPage": 165
     },
     {
       "id": "melhoria-cravejado-de-gemas",
@@ -3608,7 +3774,8 @@
           "bonusType": "item",
           "note": "+2 em Enganação"
         }
-      ]
+      ],
+      "bookPage": 165
     },
     {
       "id": "melhoria-discreto",
@@ -3623,7 +3790,8 @@
         "shield",
         "apparel"
       ],
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 165
     },
     {
       "id": "melhoria-macabro",
@@ -3682,7 +3850,8 @@
           },
           "note": "+2 dano vs criaturas vivas"
         }
-      ]
+      ],
+      "bookPage": 166
     },
     {
       "id": "material-adamante",
@@ -3702,7 +3871,8 @@
           "category": "dr",
           "text": "Ignora redução de dano não-mágica"
         }
-      ]
+      ],
+      "bookPage": 166
     },
     {
       "id": "material-mitral",
@@ -3727,7 +3897,8 @@
           },
           "note": "reduz penalidade em 2"
         }
-      ]
+      ],
+      "bookPage": 167
     },
     {
       "id": "material-gelo-eterno",
@@ -3752,7 +3923,8 @@
           },
           "note": "+1d6 frio"
         }
-      ]
+      ],
+      "bookPage": 166
     },
     {
       "id": "material-madeira-tollon",
@@ -3765,7 +3937,8 @@
         "weapon",
         "shield"
       ],
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 167
     },
     {
       "id": "material-materia-vermelha",
@@ -3779,7 +3952,8 @@
         "armor",
         "shield"
       ],
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 167
     },
     {
       "id": "alforje",
@@ -3788,7 +3962,8 @@
       "price": 30,
       "slots": 0,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 162
     },
     {
       "id": "cao-de-caca",
@@ -3797,7 +3972,8 @@
       "price": 150,
       "slots": 0,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 162
     },
     {
       "id": "cavalo",
@@ -3806,7 +3982,8 @@
       "price": 75,
       "slots": 0,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 162
     },
     {
       "id": "cavalo-de-guerra",
@@ -3815,7 +3992,8 @@
       "price": 400,
       "slots": 0,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 157
     },
     {
       "id": "estabulo",
@@ -3824,7 +4002,8 @@
       "price": 0.1,
       "slots": 0,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 157
     },
     {
       "id": "ponei",
@@ -3833,7 +4012,8 @@
       "price": 5,
       "slots": 0,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 162
     },
     {
       "id": "ponei-de-guerra",
@@ -3842,7 +4022,8 @@
       "price": 30,
       "slots": 0,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 157
     },
     {
       "id": "trobo",
@@ -3851,7 +4032,8 @@
       "price": 60,
       "slots": 0,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 163
     },
     {
       "id": "balao-goblin",
@@ -3860,7 +4042,8 @@
       "price": 200,
       "slots": 0,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 163
     },
     {
       "id": "carroca",
@@ -3869,7 +4052,8 @@
       "price": 150,
       "slots": 0,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 163
     },
     {
       "id": "carruagem",
@@ -3878,7 +4062,8 @@
       "price": 500,
       "slots": 0,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 163
     },
     {
       "id": "canoa",
@@ -3887,7 +4072,8 @@
       "price": 70,
       "slots": 0,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 163
     },
     {
       "id": "veleiro",
@@ -3896,7 +4082,8 @@
       "price": 10000,
       "slots": 0,
       "equip": "either",
-      "modifiers": []
+      "modifiers": [],
+      "bookPage": 163
     }
   ],
   "races": [
@@ -6509,7 +6696,8 @@
       "className": "Arcanista",
       "name": "Caminho do Arcanista",
       "description": "Escolha Bruxo, Feiticeiro ou Mago. Define atributo-chave de magia (Cha/Int conforme caminho) e habilidade exclusiva. Escolha permanente.",
-      "grantedAtLevel": 1
+      "grantedAtLevel": 1,
+      "bookPage": 37
     },
     {
       "id": "class.arcanista.magias-1-circulo",
@@ -6551,13 +6739,15 @@
       "className": "Arcanista",
       "name": "Alta Arcana",
       "description": "Capstone: custo em PM de magias arcanas reduzido à metade (após aplicar aprimoramentos e outros efeitos).",
-      "grantedAtLevel": 20
+      "grantedAtLevel": 20,
+      "bookPage": 39
     },
     {
       "id": "class.arcanista.arcano-de-batalha",
       "className": "Arcanista",
       "name": "Arcano de Batalha",
-      "description": "Quando lança magia, soma atributo-chave na rolagem de dano."
+      "description": "Quando lança magia, soma atributo-chave na rolagem de dano.",
+      "bookPage": 38
     },
     {
       "id": "class.arcanista.aumento-de-atributo",
@@ -6594,7 +6784,8 @@
             "name": "Carisma"
           }
         ]
-      }
+      },
+      "bookPage": 38
     },
     {
       "id": "class.arcanista.caldeirao-do-bruxo",
@@ -6610,13 +6801,15 @@
           "kind": "note",
           "description": "Treinado em Ofício (alquimista)"
         }
-      ]
+      ],
+      "bookPage": 38
     },
     {
       "id": "class.arcanista.conhecimento-magico",
       "className": "Arcanista",
       "name": "Conhecimento Mágico",
-      "description": "Aprende 2 magias de qualquer círculo que possa lançar. Pode ser escolhido várias vezes."
+      "description": "Aprende 2 magias de qualquer círculo que possa lançar. Pode ser escolhido várias vezes.",
+      "bookPage": 38
     },
     {
       "id": "class.arcanista.contramagica-aprimorada",
@@ -6628,13 +6821,15 @@
           "kind": "note",
           "description": "Conhecer a magia Dissipar Magia"
         }
-      ]
+      ],
+      "bookPage": 38
     },
     {
       "id": "class.arcanista.envolto-em-misterio",
       "className": "Arcanista",
       "name": "Envolto em Mistério",
-      "description": "Aparência assombrosa: +5 Enganação e Intimidação contra pessoas não treinadas em Conhecimento ou Misticismo."
+      "description": "Aparência assombrosa: +5 Enganação e Intimidação contra pessoas não treinadas em Conhecimento ou Misticismo.",
+      "bookPage": 38
     },
     {
       "id": "class.arcanista.escriba-arcano",
@@ -6650,7 +6845,8 @@
           "kind": "note",
           "description": "Treinado em Ofício (escriba)"
         }
-      ]
+      ],
+      "bookPage": 38
     },
     {
       "id": "class.arcanista.especialista-em-escola",
@@ -6704,20 +6900,23 @@
             "name": "Transmutação"
           }
         ]
-      }
+      },
+      "bookPage": 38
     },
     {
       "id": "class.arcanista.familiar",
       "className": "Arcanista",
       "name": "Familiar",
-      "description": "Possui animal mágico telepático com habilidade especial. Ver quadro Familiares Arcanos."
+      "description": "Possui animal mágico telepático com habilidade especial. Ver quadro Familiares Arcanos.",
+      "bookPage": 38
     },
     {
       "id": "class.arcanista.fluxo-de-mana",
       "className": "Arcanista",
       "name": "Fluxo de Mana",
       "description": "Pode manter 2 efeitos sustentados simultaneamente como ação livre, pagando custo de cada separadamente.",
-      "minLevel": 10
+      "minLevel": 10,
+      "bookPage": 38
     },
     {
       "id": "class.arcanista.foco-vital",
@@ -6729,14 +6928,16 @@
           "kind": "power",
           "id": "class.arcanista.caminho-bruxo"
         }
-      ]
+      ],
+      "bookPage": 38
     },
     {
       "id": "class.arcanista.fortalecimento-arcano",
       "className": "Arcanista",
       "name": "Fortalecimento Arcano",
       "description": "CD para resistir a suas magias +1. Se pode lançar magias de 4° círculo, sobe para +2.",
-      "minLevel": 5
+      "minLevel": 5,
+      "bookPage": 38
     },
     {
       "id": "class.arcanista.heranca-aprimorada",
@@ -6749,7 +6950,8 @@
           "kind": "power",
           "id": "class.arcanista.caminho-feiticeiro"
         }
-      ]
+      ],
+      "bookPage": 38
     },
     {
       "id": "class.arcanista.heranca-superior",
@@ -6762,13 +6964,15 @@
           "kind": "power",
           "id": "class.arcanista.heranca-aprimorada"
         }
-      ]
+      ],
+      "bookPage": 38
     },
     {
       "id": "class.arcanista.magia-pungente",
       "className": "Arcanista",
       "name": "Magia Pungente",
-      "description": "Quando lança magia, pode pagar 1 PM para aumentar CD para resistir em +2."
+      "description": "Quando lança magia, pode pagar 1 PM para aumentar CD para resistir em +2.",
+      "bookPage": 38
     },
     {
       "id": "class.arcanista.mestre-em-escola",
@@ -6781,7 +6985,8 @@
           "kind": "power",
           "id": "class.arcanista.especialista-em-escola"
         }
-      ]
+      ],
+      "bookPage": 38
     },
     {
       "id": "class.arcanista.poder-magico",
@@ -6799,13 +7004,15 @@
             "per": "level"
           }
         }
-      ]
+      ],
+      "bookPage": 38
     },
     {
       "id": "class.arcanista.raio-arcano",
       "className": "Arcanista",
       "name": "Raio Arcano",
-      "description": "Ação padrão, 1 PM: causa 1d8 dano arcano em alvo em alcance curto. +1d8 por círculo de magia acima do 1° que pode lançar. Alvo: Reflexos (CD atributo-chave) reduz à metade."
+      "description": "Ação padrão, 1 PM: causa 1d8 dano arcano em alvo em alcance curto. +1d8 por círculo de magia acima do 1° que pode lançar. Alvo: Reflexos (CD atributo-chave) reduz à metade.",
+      "bookPage": 39
     },
     {
       "id": "class.arcanista.raio-elemental",
@@ -6817,7 +7024,8 @@
           "kind": "power",
           "id": "class.arcanista.raio-arcano"
         }
-      ]
+      ],
+      "bookPage": 39
     },
     {
       "id": "class.arcanista.raio-poderoso",
@@ -6829,7 +7037,8 @@
           "kind": "power",
           "id": "class.arcanista.raio-arcano"
         }
-      ]
+      ],
+      "bookPage": 39
     },
     {
       "id": "class.arcanista.tinta-do-mago",
@@ -6845,7 +7054,8 @@
           "kind": "note",
           "description": "Treinado em Ofício (escriba)"
         }
-      ]
+      ],
+      "bookPage": 39
     },
     {
       "id": "class.arcanista.caminho-bruxo",
@@ -6868,7 +7078,8 @@
             "attribute": "intelligence"
           }
         }
-      ]
+      ],
+      "bookPage": 37
     },
     {
       "id": "class.arcanista.caminho-feiticeiro",
@@ -6891,7 +7102,8 @@
             "attribute": "charisma"
           }
         }
-      ]
+      ],
+      "bookPage": 37
     },
     {
       "id": "class.arcanista.caminho-mago",
@@ -6914,7 +7126,8 @@
             "attribute": "intelligence"
           }
         }
-      ]
+      ],
+      "bookPage": 37
     },
     {
       "id": "class.barbaro.furia",
@@ -6975,7 +7188,8 @@
             "label": "Em Fúria"
           }
         }
-      ]
+      ],
+      "bookPage": 41
     },
     {
       "id": "class.barbaro.instinto-selvagem-1",
@@ -7008,14 +7222,16 @@
           "amount": 1,
           "bonusType": "enhancement"
         }
-      ]
+      ],
+      "bookPage": 42
     },
     {
       "id": "class.barbaro.reducao-de-dano",
       "className": "Bárbaro",
       "name": "Redução de Dano",
       "description": "Recebe RD 2 contra dano físico. Sobe +2 a cada 3 níveis (RD 4 em L8, RD 6 em L11, RD 8 em L14, RD 10 em L17).",
-      "grantedAtLevel": 5
+      "grantedAtLevel": 5,
+      "bookPage": 229
     },
     {
       "id": "class.barbaro.furia-3",
@@ -7076,14 +7292,16 @@
             "label": "Em Fúria"
           }
         }
-      ]
+      ],
+      "bookPage": 41
     },
     {
       "id": "class.barbaro.reducao-de-dano-4",
       "className": "Bárbaro",
       "name": "Redução de Dano 4",
       "description": "Redução de Dano aumenta para 4.",
-      "grantedAtLevel": 8
+      "grantedAtLevel": 8,
+      "bookPage": 229
     },
     {
       "id": "class.barbaro.instinto-selvagem-2",
@@ -7116,7 +7334,8 @@
           "amount": 2,
           "bonusType": "enhancement"
         }
-      ]
+      ],
+      "bookPage": 42
     },
     {
       "id": "class.barbaro.furia-4",
@@ -7177,21 +7396,24 @@
             "label": "Em Fúria"
           }
         }
-      ]
+      ],
+      "bookPage": 41
     },
     {
       "id": "class.barbaro.reducao-de-dano-6",
       "className": "Bárbaro",
       "name": "Redução de Dano 6",
       "description": "Redução de Dano aumenta para 6.",
-      "grantedAtLevel": 11
+      "grantedAtLevel": 11,
+      "bookPage": 229
     },
     {
       "id": "class.barbaro.reducao-de-dano-8",
       "className": "Bárbaro",
       "name": "Redução de Dano 8",
       "description": "Redução de Dano aumenta para 8.",
-      "grantedAtLevel": 14
+      "grantedAtLevel": 14,
+      "bookPage": 229
     },
     {
       "id": "class.barbaro.instinto-selvagem-3",
@@ -7224,7 +7446,8 @@
           "amount": 3,
           "bonusType": "enhancement"
         }
-      ]
+      ],
+      "bookPage": 42
     },
     {
       "id": "class.barbaro.furia-5",
@@ -7285,27 +7508,31 @@
             "label": "Em Fúria"
           }
         }
-      ]
+      ],
+      "bookPage": 41
     },
     {
       "id": "class.barbaro.reducao-de-dano-10",
       "className": "Bárbaro",
       "name": "Redução de Dano 10",
       "description": "Redução de Dano aumenta para 10.",
-      "grantedAtLevel": 17
+      "grantedAtLevel": 17,
+      "bookPage": 229
     },
     {
       "id": "class.barbaro.furia-titanica",
       "className": "Bárbaro",
       "name": "Fúria Titânica",
       "description": "Capstone: bônus de Fúria nos testes de ataque e rolagens de dano é dobrado. Exemplo: 5 PM gastos = bônus de +10 em vez de +5.",
-      "grantedAtLevel": 20
+      "grantedAtLevel": 20,
+      "bookPage": 42
     },
     {
       "id": "class.barbaro.alma-de-bronze",
       "className": "Bárbaro",
       "name": "Alma de Bronze",
-      "description": "Quando entra em fúria, recebe PV temporários = nível + Força."
+      "description": "Quando entra em fúria, recebe PV temporários = nível + Força.",
+      "bookPage": 41
     },
     {
       "id": "class.barbaro.aumento-de-atributo",
@@ -7342,7 +7569,8 @@
             "name": "Carisma"
           }
         ]
-      }
+      },
+      "bookPage": 38
     },
     {
       "id": "class.barbaro.brado-assustador",
@@ -7354,14 +7582,16 @@
           "kind": "trained",
           "expertise": "Intimidação"
         }
-      ]
+      ],
+      "bookPage": 41
     },
     {
       "id": "class.barbaro.critico-brutal",
       "className": "Bárbaro",
       "name": "Crítico Brutal",
       "description": "Multiplicador de crítico com armas corpo-a-corpo aumenta em +1. Ex: x3 vira x4.",
-      "minLevel": 6
+      "minLevel": 6,
+      "bookPage": 41
     },
     {
       "id": "class.barbaro.destruidor",
@@ -7374,7 +7604,8 @@
           "attr": "strength",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 41
     },
     {
       "id": "class.barbaro.espirito-inquebravel",
@@ -7386,55 +7617,64 @@
           "kind": "power",
           "id": "class.barbaro.alma-de-bronze"
         }
-      ]
+      ],
+      "bookPage": 41
     },
     {
       "id": "class.barbaro.esquiva-sobrenatural",
       "className": "Bárbaro",
       "name": "Esquiva Sobrenatural",
-      "description": "Instintos apurados — nunca fica surpreendido."
+      "description": "Instintos apurados — nunca fica surpreendido.",
+      "bookPage": 42
     },
     {
       "id": "class.barbaro.forca-indomavel",
       "className": "Bárbaro",
       "name": "Força Indomável",
-      "description": "Em teste de Força ou Atletismo, gasta 1 PM para somar nível. Pode usar após rolar dado, antes de o mestre dizer se passou."
+      "description": "Em teste de Força ou Atletismo, gasta 1 PM para somar nível. Pode usar após rolar dado, antes de o mestre dizer se passou.",
+      "bookPage": 42
     },
     {
       "id": "class.barbaro.frenesi",
       "className": "Bárbaro",
       "name": "Frenesi",
-      "description": "Uma vez por rodada, se em fúria e usar ação agredir corpo-a-corpo ou arma de arremesso, gasta 2 PM para fazer ataque adicional."
+      "description": "Uma vez por rodada, se em fúria e usar ação agredir corpo-a-corpo ou arma de arremesso, gasta 2 PM para fazer ataque adicional.",
+      "bookPage": 42
     },
     {
       "id": "class.barbaro.furia-da-savana",
       "className": "Bárbaro",
       "name": "Fúria da Savana",
-      "description": "Deslocamento aumenta em +3m. Em fúria, bônus aplica também a armas de arremesso."
+      "description": "Deslocamento aumenta em +3m. Em fúria, bônus aplica também a armas de arremesso.",
+      "bookPage": 42
     },
     {
       "id": "class.barbaro.furia-raivosa",
       "className": "Bárbaro",
       "name": "Fúria Raivosa",
-      "description": "Se Fúria fosse terminar por não ter atacado nem sido alvo de efeito hostil, paga 1 PM para continuar em fúria."
+      "description": "Se Fúria fosse terminar por não ter atacado nem sido alvo de efeito hostil, paga 1 PM para continuar em fúria.",
+      "bookPage": 42
     },
     {
       "id": "class.barbaro.golpe-poderoso",
       "className": "Bárbaro",
       "name": "Golpe Poderoso",
-      "description": "Ao acertar ataque corpo-a-corpo ou arma de arremesso, gasta 1 PM para causar dado de dano extra do mesmo tipo."
+      "description": "Ao acertar ataque corpo-a-corpo ou arma de arremesso, gasta 1 PM para causar dado de dano extra do mesmo tipo.",
+      "bookPage": 42
     },
     {
       "id": "class.barbaro.impeto",
       "className": "Bárbaro",
       "name": "Ímpeto",
-      "description": "Gasta 1 PM para aumentar deslocamento em +6m por uma rodada."
+      "description": "Gasta 1 PM para aumentar deslocamento em +6m por uma rodada.",
+      "bookPage": 42
     },
     {
       "id": "class.barbaro.investida-imprudente",
       "className": "Bárbaro",
       "name": "Investida Imprudente",
-      "description": "Em investida, pode aumentar penalidade de Defesa para -5 para receber +1d12 na rolagem de dano deste ataque."
+      "description": "Em investida, pode aumentar penalidade de Defesa para -5 para receber +1d12 na rolagem de dano deste ataque.",
+      "bookPage": 42
     },
     {
       "id": "class.barbaro.pele-de-aco",
@@ -7461,7 +7701,8 @@
             "label": "sem armadura pesada"
           }
         }
-      ]
+      ],
+      "bookPage": 42
     },
     {
       "id": "class.barbaro.pele-de-ferro",
@@ -7481,19 +7722,22 @@
             "label": "sem armadura pesada"
           }
         }
-      ]
+      ],
+      "bookPage": 42
     },
     {
       "id": "class.barbaro.sangue-dos-inimigos",
       "className": "Bárbaro",
       "name": "Sangue dos Inimigos",
-      "description": "Em fúria, quando confirma crítico ou reduz inimigo a 0 PV, recebe +1 cumulativo em ataque e dano (até fim da cena, limitado por nível)."
+      "description": "Em fúria, quando confirma crítico ou reduz inimigo a 0 PV, recebe +1 cumulativo em ataque e dano (até fim da cena, limitado por nível).",
+      "bookPage": 42
     },
     {
       "id": "class.barbaro.supersticao",
       "className": "Bárbaro",
       "name": "Superstição",
-      "description": "Odeia magia: recebe resistência a magia +5."
+      "description": "Odeia magia: recebe resistência a magia +5.",
+      "bookPage": 42
     },
     {
       "id": "class.barbaro.totem-espiritual",
@@ -7567,13 +7811,15 @@
             "note": "Vitalidade Fantasma"
           }
         ]
-      }
+      },
+      "bookPage": 42
     },
     {
       "id": "class.barbaro.vigor-primal",
       "className": "Bárbaro",
       "name": "Vigor Primal",
-      "description": "Ação de movimento + PM (limitado por Con). Para cada PM, recupera 1d12 PV."
+      "description": "Ação de movimento + PM (limitado por Con). Para cada PM, recupera 1d12 PV.",
+      "bookPage": 42
     },
     {
       "id": "class.bardo.inspiracao-1",
@@ -7594,7 +7840,8 @@
             "label": "Sob Inspiração"
           }
         }
-      ]
+      ],
+      "bookPage": 44
     },
     {
       "id": "class.bardo.magias-1-circulo",
@@ -7621,7 +7868,8 @@
       "className": "Bardo",
       "name": "Eclético",
       "description": "Ao fazer teste de perícia, gasta 1 PM para receber benefícios de ser treinado nessa perícia para este teste. Não consome slot de poder.",
-      "grantedAtLevel": 2
+      "grantedAtLevel": 2,
+      "bookPage": 45
     },
     {
       "id": "class.bardo.inspiracao-2",
@@ -7642,7 +7890,8 @@
             "label": "Sob Inspiração"
           }
         }
-      ]
+      ],
+      "bookPage": 44
     },
     {
       "id": "class.bardo.magias-2-circulo",
@@ -7670,7 +7919,8 @@
             "label": "Sob Inspiração"
           }
         }
-      ]
+      ],
+      "bookPage": 44
     },
     {
       "id": "class.bardo.magias-3-circulo",
@@ -7698,7 +7948,8 @@
             "label": "Sob Inspiração"
           }
         }
-      ]
+      ],
+      "bookPage": 44
     },
     {
       "id": "class.bardo.magias-4-circulo",
@@ -7726,26 +7977,30 @@
             "label": "Sob Inspiração"
           }
         }
-      ]
+      ],
+      "bookPage": 44
     },
     {
       "id": "class.bardo.artista-completo",
       "className": "Bardo",
       "name": "Artista Completo",
       "description": "Capstone: pode usar Inspiração como ação livre. Sob Inspiração, custo em PM de habilidades de bardo (incluindo magias) reduzido à metade.",
-      "grantedAtLevel": 20
+      "grantedAtLevel": 20,
+      "bookPage": 45
     },
     {
       "id": "class.bardo.arte-magica",
       "className": "Bardo",
       "name": "Arte Mágica",
-      "description": "Sob Inspiração, CD para resistir a suas habilidades de bardo +2."
+      "description": "Sob Inspiração, CD para resistir a suas habilidades de bardo +2.",
+      "bookPage": 44
     },
     {
       "id": "class.bardo.aumentar-repertorio",
       "className": "Bardo",
       "name": "Aumentar Repertório",
-      "description": "Aprende magia de qualquer círculo que possa lançar — pertencente às escolas que sabe usar, arcanas ou divinas. Pode escolher várias vezes."
+      "description": "Aprende magia de qualquer círculo que possa lançar — pertencente às escolas que sabe usar, arcanas ou divinas. Pode escolher várias vezes.",
+      "bookPage": 44
     },
     {
       "id": "class.bardo.aumento-de-atributo",
@@ -7782,7 +8037,8 @@
             "name": "Carisma"
           }
         ]
-      }
+      },
+      "bookPage": 38
     },
     {
       "id": "class.bardo.danca-das-laminas",
@@ -7795,20 +8051,23 @@
           "kind": "power",
           "id": "class.bardo.esgrima-magica"
         }
-      ]
+      ],
+      "bookPage": 44
     },
     {
       "id": "class.bardo.esgrima-magica",
       "className": "Bardo",
       "name": "Esgrima Mágica",
-      "description": "Sob Inspiração, pode substituir testes de Luta por testes de Atuação (ataques corpo-a-corpo com armas leves ou de uma mão)."
+      "description": "Sob Inspiração, pode substituir testes de Luta por testes de Atuação (ataques corpo-a-corpo com armas leves ou de uma mão).",
+      "bookPage": 44
     },
     {
       "id": "class.bardo.estrelato",
       "className": "Bardo",
       "name": "Estrelato",
       "description": "+5 em perícias baseadas em Carisma para impressionar plateia. Pode ser difícil passar despercebido em cidades grandes.",
-      "minLevel": 6
+      "minLevel": 6,
+      "bookPage": 44
     },
     {
       "id": "class.bardo.fascinar-em-massa",
@@ -7820,7 +8079,8 @@
           "kind": "power",
           "id": "class.bardo.musica-balada-fascinante"
         }
-      ]
+      ],
+      "bookPage": 44
     },
     {
       "id": "class.bardo.golpe-elemental",
@@ -7832,7 +8092,8 @@
           "kind": "power",
           "id": "class.bardo.golpe-magico"
         }
-      ]
+      ],
+      "bookPage": 45
     },
     {
       "id": "class.bardo.golpe-magico",
@@ -7844,13 +8105,15 @@
           "kind": "power",
           "id": "class.bardo.esgrima-magica"
         }
-      ]
+      ],
+      "bookPage": 45
     },
     {
       "id": "class.bardo.inspiracao-marcial",
       "className": "Bardo",
       "name": "Inspiração Marcial",
-      "description": "Bônus da sua Inspiração também se aplica a rolagens de dano."
+      "description": "Bônus da sua Inspiração também se aplica a rolagens de dano.",
+      "bookPage": 45
     },
     {
       "id": "class.bardo.lendas-e-historias",
@@ -7863,7 +8126,8 @@
           "attr": "intelligence",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 45
     },
     {
       "id": "class.bardo.manipular",
@@ -7875,7 +8139,8 @@
           "kind": "power",
           "id": "class.bardo.musica-balada-fascinante"
         }
-      ]
+      ],
+      "bookPage": 45
     },
     {
       "id": "class.bardo.manipular-em-massa",
@@ -7892,7 +8157,8 @@
           "kind": "power",
           "id": "class.bardo.manipular"
         }
-      ]
+      ],
+      "bookPage": 45
     },
     {
       "id": "class.bardo.mestre-dos-sussurros",
@@ -7913,25 +8179,29 @@
           "kind": "trained",
           "expertise": "Investigação"
         }
-      ]
+      ],
+      "bookPage": 45
     },
     {
       "id": "class.bardo.musica-balada-fascinante",
       "className": "Bardo",
       "name": "Música: Balada Fascinante",
-      "description": "Teste de Atuação oposto pelo teste de Vontade de criatura no alcance. Se passar, fica fascinada enquanto bardo se concentrar. Música."
+      "description": "Teste de Atuação oposto pelo teste de Vontade de criatura no alcance. Se passar, fica fascinada enquanto bardo se concentrar. Música.",
+      "bookPage": 44
     },
     {
       "id": "class.bardo.musica-cancao-assustadora",
       "className": "Bardo",
       "name": "Música: Canção Assustadora",
-      "description": "Teste Atuação oposto Vontade. Alvos que falharem ficam abalados até fim da cena. Alvos que passarem ficam imunes por 1 dia. Música."
+      "description": "Teste Atuação oposto Vontade. Alvos que falharem ficam abalados até fim da cena. Alvos que passarem ficam imunes por 1 dia. Música.",
+      "bookPage": 45
     },
     {
       "id": "class.bardo.musica-melodia-curativa",
       "className": "Bardo",
       "name": "Música: Melodia Curativa",
-      "description": "Criaturas à sua escolha em alcance da música recuperam 1d6 PV. Pode gastar mais PM: cada PM extra aumenta cura em +1d6 PV. Música."
+      "description": "Criaturas à sua escolha em alcance da música recuperam 1d6 PV. Pode gastar mais PM: cada PM extra aumenta cura em +1d6 PV. Música.",
+      "bookPage": 45
     },
     {
       "id": "class.bardo.musica-melodia-restauradora",
@@ -7943,41 +8213,47 @@
           "kind": "power",
           "id": "class.bardo.musica-melodia-curativa"
         }
-      ]
+      ],
+      "bookPage": 45
     },
     {
       "id": "class.bardo.parodia",
       "className": "Bardo",
       "name": "Paródia",
-      "description": "Uma vez por rodada, ao ver criatura lançar magia em alcance médio, paga 1 PM e teste Atuação (CD 15 + custo em PM da magia). Se passar, pode lançar a magia até fim do próximo turno."
+      "description": "Uma vez por rodada, ao ver criatura lançar magia em alcance médio, paga 1 PM e teste Atuação (CD 15 + custo em PM da magia). Se passar, pode lançar a magia até fim do próximo turno.",
+      "bookPage": 45
     },
     {
       "id": "class.bardo.prestidigitacao",
       "className": "Bardo",
       "name": "Prestidigitação",
       "description": "Ação padrão para lançar magia com execução completa ou menor. Teste Atuação CD 15 + custo PM. Se passar, lança como ação livre. Se falhar, gasta PM mas magia falha.",
-      "minLevel": 6
+      "minLevel": 6,
+      "bookPage": 45
     },
     {
       "id": "class.bucaneiro.audacia",
       "className": "Bucaneiro",
       "name": "Audácia",
       "description": "Em teste de perícia, gasta 2 PM para somar Carisma no teste. Não vale para testes de ataque.",
-      "grantedAtLevel": 1
+      "grantedAtLevel": 1,
+      "bookPage": 47
     },
     {
       "id": "class.bucaneiro.insolencia",
       "className": "Bucaneiro",
       "name": "Insolência",
       "description": "Soma Carisma na Defesa, limitado pelo nível. Exige liberdade de movimentos (não funciona em armadura pesada ou imóvel).",
-      "grantedAtLevel": 1
+      "grantedAtLevel": 1,
+      "bookPage": 47
     },
     {
       "id": "class.bucaneiro.evasao",
       "className": "Bucaneiro",
       "name": "Evasão",
       "description": "Em teste de Reflexos que reduziria dano à metade, sucesso = 0 dano. Falha = dano normal. Exige liberdade de movimentos.",
-      "grantedAtLevel": 2
+      "grantedAtLevel": 2,
+      "bookPage": 47
     },
     {
       "id": "class.bucaneiro.esquiva-sagaz-1",
@@ -8011,14 +8287,16 @@
             "label": "sem armadura pesada"
           }
         }
-      ]
+      ],
+      "bookPage": 48
     },
     {
       "id": "class.bucaneiro.panache",
       "className": "Bucaneiro",
       "name": "Panache",
       "description": "Quando faz crítico em combate ou reduz inimigo a 0 PV, recupera 1 PM.",
-      "grantedAtLevel": 5
+      "grantedAtLevel": 5,
+      "bookPage": 48
     },
     {
       "id": "class.bucaneiro.esquiva-sagaz-2",
@@ -8052,14 +8330,16 @@
             "label": "sem armadura pesada"
           }
         }
-      ]
+      ],
+      "bookPage": 48
     },
     {
       "id": "class.bucaneiro.evasao-aprimorada",
       "className": "Bucaneiro",
       "name": "Evasão Aprimorada",
       "description": "Em teste de Reflexos que reduziria dano à metade: sucesso = 0 dano, falha = metade. Exige liberdade de movimentos.",
-      "grantedAtLevel": 10
+      "grantedAtLevel": 10,
+      "bookPage": 48
     },
     {
       "id": "class.bucaneiro.esquiva-sagaz-3",
@@ -8093,7 +8373,8 @@
             "label": "sem armadura pesada"
           }
         }
-      ]
+      ],
+      "bookPage": 48
     },
     {
       "id": "class.bucaneiro.esquiva-sagaz-4",
@@ -8127,7 +8408,8 @@
             "label": "sem armadura pesada"
           }
         }
-      ]
+      ],
+      "bookPage": 48
     },
     {
       "id": "class.bucaneiro.esquiva-sagaz-5",
@@ -8161,14 +8443,16 @@
             "label": "sem armadura pesada"
           }
         }
-      ]
+      ],
+      "bookPage": 48
     },
     {
       "id": "class.bucaneiro.sorte-de-nimb",
       "className": "Bucaneiro",
       "name": "Sorte de Nimb",
       "description": "Capstone: gasta 5 PM para refazer um teste. Qualquer 11+ no segundo dado conta como 20 natural.",
-      "grantedAtLevel": 20
+      "grantedAtLevel": 20,
+      "bookPage": 48
     },
     {
       "id": "class.bucaneiro.abusar-dos-fracos",
@@ -8180,7 +8464,8 @@
           "kind": "power",
           "id": "class.bucaneiro.flagelo-dos-mares"
         }
-      ]
+      ],
+      "bookPage": 47
     },
     {
       "id": "class.bucaneiro.amigos-no-porto",
@@ -8194,7 +8479,8 @@
           "attr": "charisma",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 47
     },
     {
       "id": "class.bucaneiro.aparar",
@@ -8206,7 +8492,8 @@
           "kind": "power",
           "id": "class.bucaneiro.esgrimista"
         }
-      ]
+      ],
+      "bookPage": 47
     },
     {
       "id": "class.bucaneiro.apostador",
@@ -8218,13 +8505,15 @@
           "kind": "trained",
           "expertise": "Jogatina"
         }
-      ]
+      ],
+      "bookPage": 47
     },
     {
       "id": "class.bucaneiro.ataque-acrobatico",
       "className": "Bucaneiro",
       "name": "Ataque Acrobático",
-      "description": "Ao se aproximar com salto/pirueta (Atletismo/Acrobacia para mover) e atacar no mesmo turno, recebe +2 nesse teste e na rolagem de dano."
+      "description": "Ao se aproximar com salto/pirueta (Atletismo/Acrobacia para mover) e atacar no mesmo turno, recebe +2 nesse teste e na rolagem de dano.",
+      "bookPage": 47
     },
     {
       "id": "class.bucaneiro.aumento-de-atributo",
@@ -8261,13 +8550,15 @@
             "name": "Carisma"
           }
         ]
-      }
+      },
+      "bookPage": 38
     },
     {
       "id": "class.bucaneiro.aventureiro-avido",
       "className": "Bucaneiro",
       "name": "Aventureiro Ávido",
-      "description": "Uma vez por rodada, gasta 5 PM para ação padrão ou movimento adicional. Se possuir Surto Heroico, custo cai para -2 PM."
+      "description": "Uma vez por rodada, gasta 5 PM para ação padrão ou movimento adicional. Se possuir Surto Heroico, custo cai para -2 PM.",
+      "bookPage": 47
     },
     {
       "id": "class.bucaneiro.bravata-audaz",
@@ -8291,7 +8582,8 @@
           "kind": "power",
           "id": "class.bucaneiro.esgrimista"
         }
-      ]
+      ],
+      "bookPage": 48
     },
     {
       "id": "class.bucaneiro.esgrimista",
@@ -8304,7 +8596,8 @@
           "attr": "intelligence",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 48
     },
     {
       "id": "class.bucaneiro.flagelo-dos-mares",
@@ -8316,7 +8609,8 @@
           "kind": "trained",
           "expertise": "Intimidação"
         }
-      ]
+      ],
+      "bookPage": 48
     },
     {
       "id": "class.bucaneiro.foliao",
@@ -8329,7 +8623,8 @@
           "attr": "charisma",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 48
     },
     {
       "id": "class.bucaneiro.grudar-o-cano",
@@ -8345,19 +8640,22 @@
           "kind": "power",
           "id": "class.bucaneiro.pistoleiro"
         }
-      ]
+      ],
+      "bookPage": 48
     },
     {
       "id": "class.bucaneiro.pernas-do-mar",
       "className": "Bucaneiro",
       "name": "Pernas do Mar",
-      "description": "+2 Acrobacia e Atletismo. Não fica desprevenido quando se equilibrando ou escalando. Deslocamento não reduzido à metade."
+      "description": "+2 Acrobacia e Atletismo. Não fica desprevenido quando se equilibrando ou escalando. Deslocamento não reduzido à metade.",
+      "bookPage": 48
     },
     {
       "id": "class.bucaneiro.pistoleiro",
       "className": "Bucaneiro",
       "name": "Pistoleiro",
-      "description": "Proficiência com armas de fogo. +2 nas rolagens de dano com armas de fogo."
+      "description": "Proficiência com armas de fogo. +2 nas rolagens de dano com armas de fogo.",
+      "bookPage": 48
     },
     {
       "id": "class.bucaneiro.presenca-paralisante",
@@ -8371,7 +8669,8 @@
           "attr": "charisma",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 48
     },
     {
       "id": "class.bucaneiro.ripostar",
@@ -8384,7 +8683,8 @@
           "kind": "power",
           "id": "class.bucaneiro.aparar"
         }
-      ]
+      ],
+      "bookPage": 48
     },
     {
       "id": "class.bucaneiro.touche",
@@ -8397,14 +8697,16 @@
           "kind": "power",
           "id": "class.bucaneiro.esgrimista"
         }
-      ]
+      ],
+      "bookPage": 48
     },
     {
       "id": "class.cacador.marca-da-presa-1d4",
       "className": "Caçador",
       "name": "Marca da Presa +1d4",
       "description": "Ação de movimento + 1 PM: analisa criatura em alcance curto. Até fim da cena, recebe +1d4 nas rolagens de dano contra ela. A cada 4 níveis pode gastar +1 PM para aumentar bônus (vide tabela).",
-      "grantedAtLevel": 1
+      "grantedAtLevel": 1,
+      "bookPage": 50
     },
     {
       "id": "class.cacador.rastreador",
@@ -8421,49 +8723,56 @@
           "amount": 2,
           "bonusType": "untyped"
         }
-      ]
+      ],
+      "bookPage": 50
     },
     {
       "id": "class.cacador.explorador",
       "className": "Caçador",
       "name": "Explorador",
       "description": "Escolha um tipo de terreno (aquático, ártico, colina, deserto, floresta, montanha, pântano, planície, subterrâneo, urbano). Quando nele, soma Sabedoria (mín +1) na Defesa e em testes de Acrobacia, Atletismo, Furtividade, Percepção e Sobrevivência. L11 inclui Tormenta. A cada 4 níveis (L7/11/15/19), escolhe outro terreno ou aumenta bônus em terreno já escolhido em +2.",
-      "grantedAtLevel": 3
+      "grantedAtLevel": 3,
+      "bookPage": 51
     },
     {
       "id": "class.cacador.marca-da-presa-1d8",
       "className": "Caçador",
       "name": "Marca da Presa +1d8",
       "description": "Bônus de dano da Marca da Presa sobe para +1d8.",
-      "grantedAtLevel": 5
+      "grantedAtLevel": 5,
+      "bookPage": 50
     },
     {
       "id": "class.cacador.caminho-do-explorador",
       "className": "Caçador",
       "name": "Caminho do Explorador",
       "description": "Pode atravessar terrenos difíceis sem redução em seu deslocamento e CD para rastreá-lo aumenta em +10. Só funciona em terrenos com Explorador.",
-      "grantedAtLevel": 5
+      "grantedAtLevel": 5,
+      "bookPage": 51
     },
     {
       "id": "class.cacador.marca-da-presa-1d12",
       "className": "Caçador",
       "name": "Marca da Presa +1d12",
       "description": "Bônus de dano da Marca da Presa sobe para +1d12.",
-      "grantedAtLevel": 9
+      "grantedAtLevel": 9,
+      "bookPage": 50
     },
     {
       "id": "class.cacador.marca-da-presa-2d8",
       "className": "Caçador",
       "name": "Marca da Presa +2d8",
       "description": "Bônus de dano da Marca da Presa sobe para +2d8.",
-      "grantedAtLevel": 13
+      "grantedAtLevel": 13,
+      "bookPage": 50
     },
     {
       "id": "class.cacador.marca-da-presa-2d10",
       "className": "Caçador",
       "name": "Marca da Presa +2d10",
       "description": "Bônus de dano da Marca da Presa sobe para +2d10.",
-      "grantedAtLevel": 17
+      "grantedAtLevel": 17,
+      "bookPage": 50
     },
     {
       "id": "class.cacador.mestre-cacador",
@@ -8483,7 +8792,8 @@
             "note": "contra a criatura marcada — +5 PM ao usar Marca da Presa"
           }
         }
-      ]
+      ],
+      "bookPage": 51
     },
     {
       "id": "class.cacador.ambidestria",
@@ -8496,7 +8806,8 @@
           "attr": "dexterity",
           "min": 2
         }
-      ]
+      ],
+      "bookPage": 50
     },
     {
       "id": "class.cacador.armadilha-arataca",
@@ -8520,7 +8831,8 @@
       "id": "class.cacador.armadilha-rede",
       "className": "Caçador",
       "name": "Armadilha: Rede",
-      "description": "Criaturas na área ficam enredadas. Vítima escapa com ação padrão + Força/Acrobacia (CD 25). Área = terreno difícil."
+      "description": "Criaturas na área ficam enredadas. Vítima escapa com ação padrão + Força/Acrobacia (CD 25). Área = terreno difícil.",
+      "bookPage": 150
     },
     {
       "id": "class.cacador.armadilheiro",
@@ -8551,7 +8863,8 @@
           "attr": "wisdom",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 50
     },
     {
       "id": "class.cacador.aumento-de-atributo",
@@ -8588,7 +8901,8 @@
             "name": "Carisma"
           }
         ]
-      }
+      },
+      "bookPage": 38
     },
     {
       "id": "class.cacador.bote",
@@ -8601,7 +8915,8 @@
           "kind": "power",
           "id": "class.cacador.ambidestria"
         }
-      ]
+      ],
+      "bookPage": 50
     },
     {
       "id": "class.cacador.camuflagem",
@@ -8626,7 +8941,8 @@
           "kind": "power",
           "id": "class.cacador.ambidestria"
         }
-      ]
+      ],
+      "bookPage": 50
     },
     {
       "id": "class.cacador.companheiro-animal",
@@ -8681,7 +8997,8 @@
             "name": "Montaria"
           }
         ]
-      }
+      },
+      "bookPage": 61
     },
     {
       "id": "class.cacador.elo-com-a-natureza",
@@ -8708,7 +9025,8 @@
             "attribute": "wisdom"
           }
         }
-      ]
+      ],
+      "bookPage": 51
     },
     {
       "id": "class.cacador.emboscar",
@@ -8720,13 +9038,15 @@
           "kind": "trained",
           "expertise": "Furtividade"
         }
-      ]
+      ],
+      "bookPage": 51
     },
     {
       "id": "class.cacador.empatia-selvagem",
       "className": "Caçador",
       "name": "Empatia Selvagem",
-      "description": "Comunica-se com animais. Pode usar Adestramento com animais para mudar atitude e persuasão (como Diplomacia)."
+      "description": "Comunica-se com animais. Pode usar Adestramento com animais para mudar atitude e persuasão (como Diplomacia).",
+      "bookPage": 21
     },
     {
       "id": "class.cacador.escaramuca",
@@ -8740,7 +9060,8 @@
           "attr": "dexterity",
           "min": 2
         }
-      ]
+      ],
+      "bookPage": 51
     },
     {
       "id": "class.cacador.escaramuca-superior",
@@ -8753,25 +9074,29 @@
           "kind": "power",
           "id": "class.cacador.escaramuca"
         }
-      ]
+      ],
+      "bookPage": 51
     },
     {
       "id": "class.cacador.espreitar",
       "className": "Caçador",
       "name": "Espreitar",
-      "description": "Quando usa Marca da Presa, +1 em testes de perícia contra criatura marcada. Bônus +1 para cada PM gasto. Dobra com Inimigo."
+      "description": "Quando usa Marca da Presa, +1 em testes de perícia contra criatura marcada. Bônus +1 para cada PM gasto. Dobra com Inimigo.",
+      "bookPage": 51
     },
     {
       "id": "class.cacador.ervas-curativas",
       "className": "Caçador",
       "name": "Ervas Curativas",
-      "description": "Ação completa + PM (limitado por Sab) para aplicar ervas: cada PM cura 2d6 PV ou remove condição envenenada de criatura adjacente."
+      "description": "Ação completa + PM (limitado por Sab) para aplicar ervas: cada PM cura 2d6 PV ou remove condição envenenada de criatura adjacente.",
+      "bookPage": 51
     },
     {
       "id": "class.cacador.impeto",
       "className": "Caçador",
       "name": "Ímpeto",
-      "description": "Gasta 1 PM para aumentar deslocamento em +6m por uma rodada."
+      "description": "Gasta 1 PM para aumentar deslocamento em +6m por uma rodada.",
+      "bookPage": 42
     },
     {
       "id": "class.cacador.inimigo-de-criatura",
@@ -8783,20 +9108,23 @@
       "id": "class.cacador.olho-do-falcao",
       "className": "Caçador",
       "name": "Olho do Falcão",
-      "description": "Pode usar Marca da Presa em criaturas em alcance longo."
+      "description": "Pode usar Marca da Presa em criaturas em alcance longo.",
+      "bookPage": 51
     },
     {
       "id": "class.cacador.ponto-fraco",
       "className": "Caçador",
       "name": "Ponto Fraco",
-      "description": "Quando usa Marca da Presa, +2 margem de ameaça contra criatura marcada. Dobra com Inimigo."
+      "description": "Quando usa Marca da Presa, +2 margem de ameaça contra criatura marcada. Dobra com Inimigo.",
+      "bookPage": 51
     },
     {
       "id": "class.cavaleiro.codigo-de-honra",
       "className": "Cavaleiro",
       "name": "Código de Honra",
       "description": "Não pode atacar oponente pelas costas (sem flanqueamento), caído, desprevenido ou incapaz de lutar. Se violar, perde todos os PM e só recupera no próximo dia.",
-      "grantedAtLevel": 1
+      "grantedAtLevel": 1,
+      "bookPage": 53
     },
     {
       "id": "class.cavaleiro.baluarte-2",
@@ -8827,7 +9155,8 @@
             "note": "Baluarte — 1 PM, até o início do próximo turno"
           }
         }
-      ]
+      ],
+      "bookPage": 53
     },
     {
       "id": "class.cavaleiro.duelo-2",
@@ -8860,7 +9189,8 @@
             "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
           }
         }
-      ]
+      ],
+      "bookPage": 53
     },
     {
       "id": "class.cavaleiro.baluarte-4",
@@ -8891,14 +9221,16 @@
             "note": "Baluarte — 1 PM, até o início do próximo turno"
           }
         }
-      ]
+      ],
+      "bookPage": 53
     },
     {
       "id": "class.cavaleiro.caminho-do-cavaleiro",
       "className": "Cavaleiro",
       "name": "Caminho do Cavaleiro",
       "description": "Escolha entre Bastião ou Montaria.",
-      "grantedAtLevel": 5
+      "grantedAtLevel": 5,
+      "bookPage": 55
     },
     {
       "id": "class.cavaleiro.baluarte-aliados-adjacentes",
@@ -8938,7 +9270,8 @@
             "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
           }
         }
-      ]
+      ],
+      "bookPage": 53
     },
     {
       "id": "class.cavaleiro.baluarte-6",
@@ -8969,14 +9302,16 @@
             "note": "Baluarte — 1 PM, até o início do próximo turno"
           }
         }
-      ]
+      ],
+      "bookPage": 53
     },
     {
       "id": "class.cavaleiro.resoluto",
       "className": "Cavaleiro",
       "name": "Resoluto",
       "description": "Gasta 1 PM para refazer teste de resistência contra condição. Segundo teste recebe +5. Apenas uma vez por efeito.",
-      "grantedAtLevel": 11
+      "grantedAtLevel": 11,
+      "bookPage": 55
     },
     {
       "id": "class.cavaleiro.duelo-4",
@@ -9009,7 +9344,8 @@
             "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
           }
         }
-      ]
+      ],
+      "bookPage": 53
     },
     {
       "id": "class.cavaleiro.baluarte-8",
@@ -9040,7 +9376,8 @@
             "note": "Baluarte — 1 PM, até o início do próximo turno"
           }
         }
-      ]
+      ],
+      "bookPage": 53
     },
     {
       "id": "class.cavaleiro.baluarte-aliados-em-alcance-curto",
@@ -9078,7 +9415,8 @@
             "note": "Baluarte — 1 PM, até o início do próximo turno"
           }
         }
-      ]
+      ],
+      "bookPage": 53
     },
     {
       "id": "class.cavaleiro.duelo-5",
@@ -9111,20 +9449,23 @@
             "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
           }
         }
-      ]
+      ],
+      "bookPage": 53
     },
     {
       "id": "class.cavaleiro.bravura-final",
       "className": "Cavaleiro",
       "name": "Bravura Final",
       "description": "Capstone: se reduzido a 0 PV ou menos, paga 3 PM para continuar consciente e em pé. Sustentada. Ao encerrar, sofre PV atuais (cai/morre se for caso).",
-      "grantedAtLevel": 20
+      "grantedAtLevel": 20,
+      "bookPage": 55
     },
     {
       "id": "class.cavaleiro.armadura-da-honra",
       "className": "Cavaleiro",
       "name": "Armadura da Honra",
-      "description": "No início de cada cena, recebe PV temporários = nível + Carisma. Duram até fim da cena."
+      "description": "No início de cada cena, recebe PV temporários = nível + Carisma. Duram até fim da cena.",
+      "bookPage": 53
     },
     {
       "id": "class.cavaleiro.aumento-de-atributo",
@@ -9161,33 +9502,38 @@
             "name": "Carisma"
           }
         ]
-      }
+      },
+      "bookPage": 38
     },
     {
       "id": "class.cavaleiro.autoridade-feudal",
       "className": "Cavaleiro",
       "name": "Autoridade Feudal",
       "description": "Em locais com influência (mestre decide), gasta 1 hora + 2 PM para conclamar parceiro iniciante até fim da aventura.",
-      "minLevel": 6
+      "minLevel": 6,
+      "bookPage": 54
     },
     {
       "id": "class.cavaleiro.desprezar-os-covardes",
       "className": "Cavaleiro",
       "name": "Desprezar os Covardes",
-      "description": "Redução de dano 5 contra ataques de oponentes caídos, desprevenidos ou flanqueados."
+      "description": "Redução de dano 5 contra ataques de oponentes caídos, desprevenidos ou flanqueados.",
+      "bookPage": 54
     },
     {
       "id": "class.cavaleiro.escudeiro",
       "className": "Cavaleiro",
       "name": "Escudeiro",
-      "description": "Recebe parceiro escudeiro que cuida do equipamento. Suas armas recebem +1 nas rolagens de dano e armadura concede +1 Defesa. Pode gastar 1 PM para ação de movimento extra (levantar/sacar/etc)."
+      "description": "Recebe parceiro escudeiro que cuida do equipamento. Suas armas recebem +1 nas rolagens de dano e armadura concede +1 Defesa. Pode gastar 1 PM para ação de movimento extra (levantar/sacar/etc).",
+      "bookPage": 54
     },
     {
       "id": "class.cavaleiro.especializacao-em-armadura",
       "className": "Cavaleiro",
       "name": "Especialização em Armadura",
       "description": "Em armadura pesada, RD 5 (cumulativa com RD por Bastião).",
-      "minLevel": 12
+      "minLevel": 12,
+      "bookPage": 54
     },
     {
       "id": "class.cavaleiro.estandarte",
@@ -9200,19 +9546,22 @@
           "kind": "power",
           "id": "class.cavaleiro.titulo"
         }
-      ]
+      ],
+      "bookPage": 54
     },
     {
       "id": "class.cavaleiro.etiqueta",
       "className": "Cavaleiro",
       "name": "Etiqueta",
-      "description": "+2 Diplomacia e Nobreza. Em teste dessas perícias, gasta 1 PM para rolá-lo novamente."
+      "description": "+2 Diplomacia e Nobreza. Em teste dessas perícias, gasta 1 PM para rolá-lo novamente.",
+      "bookPage": 121
     },
     {
       "id": "class.cavaleiro.investida-destruidora",
       "className": "Cavaleiro",
       "name": "Investida Destruidora",
-      "description": "Em ação investida, gasta 2 PM para causar +2d8 dano. Decisão antes de rolar ataque."
+      "description": "Em ação investida, gasta 2 PM para causar +2d8 dano. Decisão antes de rolar ataque.",
+      "bookPage": 54
     },
     {
       "id": "class.cavaleiro.montaria-corajosa",
@@ -9224,13 +9573,15 @@
           "kind": "power",
           "id": "class.cavaleiro.caminho-montaria"
         }
-      ]
+      ],
+      "bookPage": 54
     },
     {
       "id": "class.cavaleiro.pajem",
       "className": "Cavaleiro",
       "name": "Pajem",
-      "description": "Recebe parceiro pajem. +2 Diplomacia (sempre aprumado). Condição de descanso 1 categoria acima."
+      "description": "Recebe parceiro pajem. +2 Diplomacia (sempre aprumado). Condição de descanso 1 categoria acima.",
+      "bookPage": 54
     },
     {
       "id": "class.cavaleiro.postura-ariete-implacavel",
@@ -9272,7 +9623,8 @@
       "id": "class.cavaleiro.solidez",
       "className": "Cavaleiro",
       "name": "Solidez",
-      "description": "Se está usando escudo, soma bônus na Defesa concedido pelo escudo em testes de resistência."
+      "description": "Se está usando escudo, soma bônus na Defesa concedido pelo escudo em testes de resistência.",
+      "bookPage": 55
     },
     {
       "id": "class.cavaleiro.titulo",
@@ -9285,13 +9637,15 @@
           "kind": "power",
           "id": "class.cavaleiro.autoridade-feudal"
         }
-      ]
+      ],
+      "bookPage": 55
     },
     {
       "id": "class.cavaleiro.torre-armada",
       "className": "Cavaleiro",
       "name": "Torre Armada",
-      "description": "Quando inimigo te ataca, gasta 1 PM para +5 nas rolagens de dano contra esse inimigo no próximo turno."
+      "description": "Quando inimigo te ataca, gasta 1 PM para +5 nas rolagens de dano contra esse inimigo no próximo turno.",
+      "bookPage": 55
     },
     {
       "id": "class.cavaleiro.caminho-bastiao",
@@ -9309,7 +9663,8 @@
             "bastiao"
           ]
         }
-      ]
+      ],
+      "bookPage": 55
     },
     {
       "id": "class.cavaleiro.caminho-montaria",
@@ -9334,7 +9689,8 @@
       "className": "Clérigo",
       "name": "Devoto Fiel",
       "description": "Devoto de deus maior. Recebe DOIS poderes concedidos por se tornar devoto (em vez de um). Alternativa: cultuar o Panteão (não recebe Poder Concedido; só pode usar maças). Atributo-chave para magias: Sabedoria.",
-      "grantedAtLevel": 1
+      "grantedAtLevel": 1,
+      "bookPage": 61
     },
     {
       "id": "class.clerigo.magias-1-circulo",
@@ -9389,13 +9745,15 @@
       "className": "Clérigo",
       "name": "Mão da Divindade",
       "description": "Capstone: ação completa + 15 PM. Lança 3 magias divinas (qualquer círculo, incluindo magias que não conhece), uma como ação livre e sem gastar PM (paga outros custos). Depois fica atordoado 1d4 rodadas.",
-      "grantedAtLevel": 20
+      "grantedAtLevel": 20,
+      "bookPage": 58
     },
     {
       "id": "class.clerigo.abencoar-arma",
       "className": "Clérigo",
       "name": "Abençoar Arma",
-      "description": "Treinado na arma preferida da divindade. Pode empunhar e gastar ação de movimento + 3 PM: arma vira mágica, +1 passo de dano, usa Sabedoria nas rolagens de ataque e dano."
+      "description": "Treinado na arma preferida da divindade. Pode empunhar e gastar ação de movimento + 3 PM: arma vira mágica, +1 passo de dano, usa Sabedoria nas rolagens de ataque e dano.",
+      "bookPage": 57
     },
     {
       "id": "class.clerigo.aumento-de-atributo",
@@ -9432,7 +9790,8 @@
             "name": "Carisma"
           }
         ]
-      }
+      },
+      "bookPage": 38
     },
     {
       "id": "class.clerigo.autoridade-eclesiastica",
@@ -9469,7 +9828,8 @@
             "wynna"
           ]
         }
-      ]
+      ],
+      "bookPage": 57
     },
     {
       "id": "class.clerigo.canalizar-energia-positiva-negativa",
@@ -9487,19 +9847,22 @@
           "kind": "power",
           "id": "class.clerigo.canalizar-energia-positiva-negativa"
         }
-      ]
+      ],
+      "bookPage": 58
     },
     {
       "id": "class.clerigo.comunhao-vital",
       "className": "Clérigo",
       "name": "Comunhão Vital",
-      "description": "Quando lança magia que cura criatura, paga +2 PM para outra criatura em alcance curto (incluindo você mesmo) recuperar PV iguais à metade da cura original."
+      "description": "Quando lança magia que cura criatura, paga +2 PM para outra criatura em alcance curto (incluindo você mesmo) recuperar PV iguais à metade da cura original.",
+      "bookPage": 58
     },
     {
       "id": "class.clerigo.conhecimento-magico",
       "className": "Clérigo",
       "name": "Conhecimento Mágico",
-      "description": "Aprende 2 magias de qualquer círculo que possa lançar. Pode escolher várias vezes."
+      "description": "Aprende 2 magias de qualquer círculo que possa lançar. Pode escolher várias vezes.",
+      "bookPage": 38
     },
     {
       "id": "class.clerigo.expulsar-comandar-mortos-vivos",
@@ -9517,13 +9880,15 @@
       "id": "class.clerigo.liturgia-magica",
       "className": "Clérigo",
       "name": "Liturgia Mágica",
-      "description": "Ação de movimento: liturgia breve. Sua fé aumenta. CD para resistir à sua próxima habilidade de clérigo (usada até fim do próximo turno) +1."
+      "description": "Ação de movimento: liturgia breve. Sua fé aumenta. CD para resistir à sua próxima habilidade de clérigo (usada até fim do próximo turno) +1.",
+      "bookPage": 58
     },
     {
       "id": "class.clerigo.magia-sagrada-profana",
       "className": "Clérigo",
       "name": "Magia Sagrada/Profana",
-      "description": "Quando lança magia divina que causa dano, paga +1 PM para mudar tipo do dano da magia para luz (energia positiva) ou trevas (energia negativa)."
+      "description": "Quando lança magia divina que causa dano, paga +1 PM para mudar tipo do dano da magia para luz (energia positiva) ou trevas (energia negativa).",
+      "bookPage": 58
     },
     {
       "id": "class.clerigo.mestre-celebrante",
@@ -9542,7 +9907,8 @@
             "class.clerigo.missa-superar-as-limitacoes"
           ]
         }
-      ]
+      ],
+      "bookPage": 58
     },
     {
       "id": "class.clerigo.missa-bencao-da-vida",
@@ -9578,27 +9944,31 @@
       "id": "class.clerigo.prece-de-combate",
       "className": "Clérigo",
       "name": "Prece de Combate",
-      "description": "Quando lança magia divina com tempo de conjuração de ação padrão em si mesmo, paga +2 PM para lançá-la como ação de movimento."
+      "description": "Quando lança magia divina com tempo de conjuração de ação padrão em si mesmo, paga +2 PM para lançá-la como ação de movimento.",
+      "bookPage": 58
     },
     {
       "id": "class.clerigo.simbolo-sagrado-energizado",
       "className": "Clérigo",
       "name": "Símbolo Sagrado Energizado",
-      "description": "Ação de movimento + 1 PM: símbolo emite luz dourada/púrpura até fim da cena. Custo em PM para magias divinas diminui em 1 enquanto empunha símbolo energizado."
+      "description": "Ação de movimento + 1 PM: símbolo emite luz dourada/púrpura até fim da cena. Custo em PM para magias divinas diminui em 1 enquanto empunha símbolo energizado.",
+      "bookPage": 58
     },
     {
       "id": "class.druida.devoto-fiel",
       "className": "Druida",
       "name": "Devoto Fiel",
       "description": "Torna-se devoto de deus disponível para druidas (Allihanna, Megalokk ou Oceano). Recebe DOIS poderes concedidos.",
-      "grantedAtLevel": 1
+      "grantedAtLevel": 1,
+      "bookPage": 61
     },
     {
       "id": "class.druida.empatia-selvagem",
       "className": "Druida",
       "name": "Empatia Selvagem",
       "description": "Pode se comunicar com animais via linguagem corporal e vocalizações. Pode usar Adestramento com animais para mudar atitude e persuasão (como Diplomacia).",
-      "grantedAtLevel": 1
+      "grantedAtLevel": 1,
+      "bookPage": 21
     },
     {
       "id": "class.druida.magias-1-circulo",
@@ -9625,7 +9995,8 @@
       "className": "Druida",
       "name": "Caminho dos Ermos",
       "description": "Pode atravessar terrenos difíceis sem redução em seu deslocamento. CD para rastreá-lo aumenta em +10. Só em terrenos naturais.",
-      "grantedAtLevel": 2
+      "grantedAtLevel": 2,
+      "bookPage": 63
     },
     {
       "id": "class.druida.magias-2-circulo",
@@ -9691,31 +10062,36 @@
             "type": "natural"
           }
         }
-      ]
+      ],
+      "bookPage": 63
     },
     {
       "id": "class.druida.aspecto-da-primavera",
       "className": "Druida",
       "name": "Aspecto da Primavera",
-      "description": "Aprende magia de encantamento ou ilusão (arcana ou divina) de qualquer círculo que possa lançar. Custo dessas magias -1 PM, mais reduzido em +1 por cada PM ate Cha (mín 1)."
+      "description": "Aprende magia de encantamento ou ilusão (arcana ou divina) de qualquer círculo que possa lançar. Custo dessas magias -1 PM, mais reduzido em +1 por cada PM ate Cha (mín 1).",
+      "bookPage": 61
     },
     {
       "id": "class.druida.aspecto-do-verao",
       "className": "Druida",
       "name": "Aspecto do Verão",
-      "description": "Aprende magia de transmutação (arcana ou divina) de qualquer círculo que possa lançar. Pode gastar 1 PM para cobrir arma com chamas até fim da cena. Arma causa +1d6 dano de fogo. Acerto = recebe 1 PM temp (máx = nível)."
+      "description": "Aprende magia de transmutação (arcana ou divina) de qualquer círculo que possa lançar. Pode gastar 1 PM para cobrir arma com chamas até fim da cena. Arma causa +1d6 dano de fogo. Acerto = recebe 1 PM temp (máx = nível).",
+      "bookPage": 61
     },
     {
       "id": "class.druida.aspecto-do-outono",
       "className": "Druida",
       "name": "Aspecto do Outono",
-      "description": "Aprende magia de necromancia (arcana ou divina) de qualquer círculo que possa lançar. Pode gastar 1 PM para -2 em testes de resistência de todos inimigos em alcance curto."
+      "description": "Aprende magia de necromancia (arcana ou divina) de qualquer círculo que possa lançar. Pode gastar 1 PM para -2 em testes de resistência de todos inimigos em alcance curto.",
+      "bookPage": 61
     },
     {
       "id": "class.druida.aspecto-do-inverno",
       "className": "Druida",
       "name": "Aspecto do Inverno",
-      "description": "Aprende magia de evocação (arcana ou divina) de qualquer círculo que possa lançar. Recebe RD 5 contra frio. Suas magias de frio causam +1 dano por dado."
+      "description": "Aprende magia de evocação (arcana ou divina) de qualquer círculo que possa lançar. Recebe RD 5 contra frio. Suas magias de frio causam +1 dano por dado.",
+      "bookPage": 61
     },
     {
       "id": "class.druida.aumento-de-atributo",
@@ -9752,7 +10128,8 @@
             "name": "Carisma"
           }
         ]
-      }
+      },
+      "bookPage": 38
     },
     {
       "id": "class.druida.companheiro-animal",
@@ -9807,7 +10184,8 @@
             "name": "Montaria"
           }
         ]
-      }
+      },
+      "bookPage": 61
     },
     {
       "id": "class.druida.companheiro-animal-aprimorado",
@@ -9852,7 +10230,8 @@
       "id": "class.druida.coracao-da-selva",
       "className": "Druida",
       "name": "Coração da Selva",
-      "description": "CD para resistir a efeitos de veneno +2 e seus efeitos causam +1 perda de vida por dado."
+      "description": "CD para resistir a efeitos de veneno +2 e seus efeitos causam +1 perda de vida por dado.",
+      "bookPage": 62
     },
     {
       "id": "class.druida.espirito-dos-equinocios",
@@ -9869,7 +10248,8 @@
           "kind": "power",
           "id": "class.druida.aspecto-do-outono"
         }
-      ]
+      ],
+      "bookPage": 62
     },
     {
       "id": "class.druida.espirito-dos-solsticios",
@@ -9886,14 +10266,16 @@
           "kind": "power",
           "id": "class.druida.aspecto-do-verao"
         }
-      ]
+      ],
+      "bookPage": 62
     },
     {
       "id": "class.druida.forca-dos-penhascos",
       "className": "Druida",
       "name": "Força dos Penhascos",
       "description": "+2 em Fortitude. Quando sofre dano em contato com solo/superfície de pedra, paga PM (limitado por Sab) para reduzir dano em 10 por PM gasto.",
-      "minLevel": 4
+      "minLevel": 4,
+      "bookPage": 62
     },
     {
       "id": "class.druida.forma-primal",
@@ -9906,13 +10288,15 @@
           "kind": "power",
           "id": "class.druida.forma-selvagem"
         }
-      ]
+      ],
+      "bookPage": 62
     },
     {
       "id": "class.druida.forma-selvagem",
       "className": "Druida",
       "name": "Forma Selvagem",
-      "description": "Ação completa + 3 PM: transforma-se em animal. Adquire características da forma escolhida. Equipamento desaparece. Pode reverter ao normal quando quiser. Formas: Ágil, Feroz, Resistente, Sorrateira, Veloz."
+      "description": "Ação completa + 3 PM: transforma-se em animal. Adquire características da forma escolhida. Equipamento desaparece. Pode reverter ao normal quando quiser. Formas: Ágil, Feroz, Resistente, Sorrateira, Veloz.",
+      "bookPage": 62
     },
     {
       "id": "class.druida.forma-selvagem-aprimorada",
@@ -9944,7 +10328,8 @@
       "id": "class.druida.liberdade-da-pradaria",
       "className": "Druida",
       "name": "Liberdade da Pradaria",
-      "description": "+2 Reflexos. Se for ar livre, ao lançar magia paga 1 PM para aumentar alcance um passo."
+      "description": "+2 Reflexos. Se for ar livre, ao lançar magia paga 1 PM para aumentar alcance um passo.",
+      "bookPage": 62
     },
     {
       "id": "class.druida.magia-natural",
@@ -9956,81 +10341,93 @@
           "kind": "power",
           "id": "class.druida.forma-selvagem"
         }
-      ]
+      ],
+      "bookPage": 62
     },
     {
       "id": "class.druida.presas-afiadas",
       "className": "Druida",
       "name": "Presas Afiadas",
-      "description": "Margem de ameaça de suas armas naturais +2."
+      "description": "Margem de ameaça de suas armas naturais +2.",
+      "bookPage": 63
     },
     {
       "id": "class.druida.segredos-da-natureza",
       "className": "Druida",
       "name": "Segredos da Natureza",
-      "description": "Aprende 2 magias de qualquer círculo que possa lançar — devem pertencer às escolas que sabe usar (arcanas ou divinas). Pode escolher várias vezes."
+      "description": "Aprende 2 magias de qualquer círculo que possa lançar — devem pertencer às escolas que sabe usar (arcanas ou divinas). Pode escolher várias vezes.",
+      "bookPage": 63
     },
     {
       "id": "class.druida.tranquilidade-dos-lagos",
       "className": "Druida",
       "name": "Tranquilidade dos Lagos",
-      "description": "+2 Vontade. Se portando recipiente com água, uma vez por rodada, em teste de resistência paga 1 PM para refazer rolagem."
+      "description": "+2 Vontade. Se portando recipiente com água, uma vez por rodada, em teste de resistência paga 1 PM para refazer rolagem.",
+      "bookPage": 63
     },
     {
       "id": "class.guerreiro.ataque-especial-4",
       "className": "Guerreiro",
       "name": "Ataque Especial +4",
       "description": "Em ataque, gasta 1 PM para +4 no teste de ataque ou rolagem de dano. A cada 4 níveis pode gastar +1 PM para aumentar bônus em +4. Pode dividir bônus.",
-      "grantedAtLevel": 1
+      "grantedAtLevel": 1,
+      "bookPage": 65
     },
     {
       "id": "class.guerreiro.durao",
       "className": "Guerreiro",
       "name": "Durão",
       "description": "Quando sofre dano, gasta 3 PM para reduzir esse dano à metade.",
-      "grantedAtLevel": 3
+      "grantedAtLevel": 3,
+      "bookPage": 66
     },
     {
       "id": "class.guerreiro.ataque-especial-8",
       "className": "Guerreiro",
       "name": "Ataque Especial +8",
       "description": "Bônus base do Ataque Especial sobe para +8.",
-      "grantedAtLevel": 5
+      "grantedAtLevel": 5,
+      "bookPage": 65
     },
     {
       "id": "class.guerreiro.ataque-extra",
       "className": "Guerreiro",
       "name": "Ataque Extra",
       "description": "Quando usa ação agredir, gasta 2 PM para realizar ataque adicional uma vez por rodada.",
-      "grantedAtLevel": 6
+      "grantedAtLevel": 6,
+      "bookPage": 66
     },
     {
       "id": "class.guerreiro.ataque-especial-12",
       "className": "Guerreiro",
       "name": "Ataque Especial +12",
       "description": "Bônus base do Ataque Especial sobe para +12.",
-      "grantedAtLevel": 9
+      "grantedAtLevel": 9,
+      "bookPage": 65
     },
     {
       "id": "class.guerreiro.ataque-especial-16",
       "className": "Guerreiro",
       "name": "Ataque Especial +16",
       "description": "Bônus base do Ataque Especial sobe para +16.",
-      "grantedAtLevel": 13
+      "grantedAtLevel": 13,
+      "bookPage": 65
     },
     {
       "id": "class.guerreiro.ataque-especial-20",
       "className": "Guerreiro",
       "name": "Ataque Especial +20",
       "description": "Bônus base do Ataque Especial sobe para +20.",
-      "grantedAtLevel": 17
+      "grantedAtLevel": 17,
+      "bookPage": 65
     },
     {
       "id": "class.guerreiro.campeao",
       "className": "Guerreiro",
       "name": "Campeão",
       "description": "Capstone: dano de todos seus ataques aumenta em um passo. Quando faz Ataque Especial ou Golpe Pessoal e acerta o ataque, recupera PM iguais aos gastos nele.",
-      "grantedAtLevel": 20
+      "grantedAtLevel": 20,
+      "bookPage": 66
     },
     {
       "id": "class.guerreiro.ambidestria",
@@ -10043,7 +10440,8 @@
           "attr": "dexterity",
           "min": 2
         }
-      ]
+      ],
+      "bookPage": 50
     },
     {
       "id": "class.guerreiro.arqueiro",
@@ -10056,7 +10454,8 @@
           "attr": "wisdom",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 50
     },
     {
       "id": "class.guerreiro.ataque-reflexo",
@@ -10069,7 +10468,8 @@
           "attr": "dexterity",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 65
     },
     {
       "id": "class.guerreiro.aumento-de-atributo",
@@ -10106,13 +10506,15 @@
             "name": "Carisma"
           }
         ]
-      }
+      },
+      "bookPage": 38
     },
     {
       "id": "class.guerreiro.bater-e-correr",
       "className": "Guerreiro",
       "name": "Bater e Correr",
-      "description": "Quando faz investida, pode continuar se movendo após ataque até limite de deslocamento. 2 PM = investida sobre terreno difícil sem penalidade."
+      "description": "Quando faz investida, pode continuar se movendo após ataque até limite de deslocamento. 2 PM = investida sobre terreno difícil sem penalidade.",
+      "bookPage": 65
     },
     {
       "id": "class.guerreiro.destruidor",
@@ -10125,7 +10527,8 @@
           "attr": "strength",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 41
     },
     {
       "id": "class.guerreiro.esgrimista",
@@ -10138,7 +10541,8 @@
           "attr": "intelligence",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 48
     },
     {
       "id": "class.guerreiro.especializacao-em-arma",
@@ -10149,39 +10553,45 @@
         "kind": "weapon",
         "label": "Arma",
         "repeatable": true
-      }
+      },
+      "bookPage": 65
     },
     {
       "id": "class.guerreiro.especializacao-em-armadura",
       "className": "Guerreiro",
       "name": "Especialização em Armadura",
       "description": "Redução de Dano 5 se usando armadura pesada.",
-      "minLevel": 12
+      "minLevel": 12,
+      "bookPage": 54
     },
     {
       "id": "class.guerreiro.golpe-de-raspao",
       "className": "Guerreiro",
       "name": "Golpe de Raspão",
-      "description": "Uma vez por rodada, quando erra ataque, gasta 2 PM para causar metade do dano (ignorando efeitos que se aplicariam caso acertasse)."
+      "description": "Uma vez por rodada, quando erra ataque, gasta 2 PM para causar metade do dano (ignorando efeitos que se aplicariam caso acertasse).",
+      "bookPage": 65
     },
     {
       "id": "class.guerreiro.golpe-demolidor",
       "className": "Guerreiro",
       "name": "Golpe Demolidor",
-      "description": "Quando usa manobra quebrar ou ataca objeto, gasta 2 PM para ignorar redução de dano dele."
+      "description": "Quando usa manobra quebrar ou ataca objeto, gasta 2 PM para ignorar redução de dano dele.",
+      "bookPage": 65
     },
     {
       "id": "class.guerreiro.golpe-pessoal",
       "className": "Guerreiro",
       "name": "Golpe Pessoal",
       "description": "Pode desferir Golpe Pessoal — técnica única construída combinando efeitos (Amplo, Atordoante, Brutal, Conjurador, Destruidor, Distante, Elemental, Impactante, Letal, Penetrante, Preciso, Qualquer Arma, Ricocheteante, Teleguiado, Lento, Perto da Morte, Sacrifício). Soma custos. Só com arma específica.",
-      "minLevel": 5
+      "minLevel": 5,
+      "bookPage": 65
     },
     {
       "id": "class.guerreiro.impeto",
       "className": "Guerreiro",
       "name": "Ímpeto",
-      "description": "Gasta 1 PM para aumentar deslocamento em +6m por uma rodada."
+      "description": "Gasta 1 PM para aumentar deslocamento em +6m por uma rodada.",
+      "bookPage": 42
     },
     {
       "id": "class.guerreiro.mestre-em-arma",
@@ -10194,7 +10604,8 @@
           "kind": "power",
           "id": "class.guerreiro.especializacao-em-arma"
         }
-      ]
+      ],
+      "bookPage": 66
     },
     {
       "id": "class.guerreiro.planejamento-marcial",
@@ -10207,67 +10618,77 @@
           "kind": "trained",
           "expertise": "Guerra"
         }
-      ]
+      ],
+      "bookPage": 66
     },
     {
       "id": "class.guerreiro.romper-resistencias",
       "className": "Guerreiro",
       "name": "Romper Resistências",
-      "description": "Quando faz Ataque Especial, paga 1 PM adicional para ignorar 10 pontos de redução de dano."
+      "description": "Quando faz Ataque Especial, paga 1 PM adicional para ignorar 10 pontos de redução de dano.",
+      "bookPage": 66
     },
     {
       "id": "class.guerreiro.solidez",
       "className": "Guerreiro",
       "name": "Solidez",
-      "description": "Se usando escudo, soma bônus na Defesa concedido pelo escudo em testes de resistência."
+      "description": "Se usando escudo, soma bônus na Defesa concedido pelo escudo em testes de resistência.",
+      "bookPage": 55
     },
     {
       "id": "class.guerreiro.tornado-de-dor",
       "className": "Guerreiro",
       "name": "Tornado de Dor",
       "description": "Ação padrão + 2 PM: golpes giratórios. Ataque corpo-a-corpo contra Defesa de cada inimigo adjacente. Rolagem de dano com +2 cumulativo por acerto.",
-      "minLevel": 6
+      "minLevel": 6,
+      "bookPage": 66
     },
     {
       "id": "class.guerreiro.valentao",
       "className": "Guerreiro",
       "name": "Valentão",
-      "description": "+2 em testes de ataque e rolagens de dano contra oponentes caídos, desprevenidos, flanqueados ou indefesos."
+      "description": "+2 em testes de ataque e rolagens de dano contra oponentes caídos, desprevenidos, flanqueados ou indefesos.",
+      "bookPage": 66
     },
     {
       "id": "class.inventor.engenhosidade",
       "className": "Inventor",
       "name": "Engenhosidade",
       "description": "Em teste de perícia, gasta 2 PM para somar Inteligência no teste. Não vale para testes de ataque.",
-      "grantedAtLevel": 1
+      "grantedAtLevel": 1,
+      "bookPage": 68
     },
     {
       "id": "class.inventor.prototipo",
       "className": "Inventor",
       "name": "Protótipo",
       "description": "Começa com item superior OU 10 itens alquímicos (preço total até T$ 500).",
-      "grantedAtLevel": 1
+      "grantedAtLevel": 1,
+      "bookPage": 68
     },
     {
       "id": "class.inventor.fabricar-item-superior-1-melhoria",
       "className": "Inventor",
       "name": "Fabricar Item Superior (1 melhoria)",
       "description": "Recebe item superior com preço até T$ 2.000. Passa a poder fabricar itens superiores com uma melhoria.",
-      "grantedAtLevel": 2
+      "grantedAtLevel": 2,
+      "bookPage": 68
     },
     {
       "id": "class.inventor.comerciante",
       "className": "Inventor",
       "name": "Comerciante",
       "description": "Pode vender itens 10% mais caro (não cumulativo com barganha).",
-      "grantedAtLevel": 3
+      "grantedAtLevel": 3,
+      "bookPage": 70
     },
     {
       "id": "class.inventor.fabricar-item-superior-2-melhorias",
       "className": "Inventor",
       "name": "Fabricar Item Superior (2 melhorias)",
       "description": "Pode substituir item por superior com duas melhorias. Passa a fabricar itens superiores com até 2 melhorias.",
-      "grantedAtLevel": 5
+      "grantedAtLevel": 5,
+      "bookPage": 68
     },
     {
       "id": "class.inventor.encontrar-fraqueza",
@@ -10288,14 +10709,16 @@
             "note": "contra alvo analisado de armadura ou construto — 2 PM, até o fim da cena"
           }
         }
-      ]
+      ],
+      "bookPage": 70
     },
     {
       "id": "class.inventor.fabricar-item-superior-3-melhorias",
       "className": "Inventor",
       "name": "Fabricar Item Superior (3 melhorias)",
       "description": "Pode substituir item por superior com três melhorias. Passa a fabricar itens superiores com até 3 melhorias.",
-      "grantedAtLevel": 8
+      "grantedAtLevel": 8,
+      "bookPage": 68
     },
     {
       "id": "class.inventor.fabricar-item-magico-menor",
@@ -10309,14 +10732,16 @@
       "className": "Inventor",
       "name": "Olho do Dragão",
       "description": "Ação completa: analisa item. Descobre se é mágico, propriedades e como usá-lo.",
-      "grantedAtLevel": 10
+      "grantedAtLevel": 10,
+      "bookPage": 70
     },
     {
       "id": "class.inventor.fabricar-item-superior-4-melhorias",
       "className": "Inventor",
       "name": "Fabricar Item Superior (4 melhorias)",
       "description": "Pode substituir item por superior com quatro melhorias. Passa a fabricar itens superiores com até 4 melhorias.",
-      "grantedAtLevel": 11
+      "grantedAtLevel": 11,
+      "bookPage": 68
     },
     {
       "id": "class.inventor.fabricar-item-magico-medio",
@@ -10337,7 +10762,8 @@
       "className": "Inventor",
       "name": "Obra-Prima",
       "description": "Capstone: fabrica obra-prima (benefícios equivalentes a item com 5 melhorias e 4 encantos). Não gasta dinheiro, tempo ou PM.",
-      "grantedAtLevel": 20
+      "grantedAtLevel": 20,
+      "bookPage": 70
     },
     {
       "id": "class.inventor.agite-antes-de-usar",
@@ -10349,7 +10775,8 @@
           "kind": "note",
           "description": "Treinado em Ofício (alquimista)"
         }
-      ]
+      ],
+      "bookPage": 68
     },
     {
       "id": "class.inventor.ajuste-de-mira",
@@ -10361,7 +10788,8 @@
           "kind": "power",
           "id": "class.inventor.balistica"
         }
-      ]
+      ],
+      "bookPage": 68
     },
     {
       "id": "class.inventor.alquimista-de-batalha",
@@ -10373,7 +10801,8 @@
           "kind": "power",
           "id": "class.inventor.alquimista-iniciado"
         }
-      ]
+      ],
+      "bookPage": 68
     },
     {
       "id": "class.inventor.alquimista-iniciado",
@@ -10395,7 +10824,8 @@
           "kind": "note",
           "description": "Treinado em Ofício (alquimista)"
         }
-      ]
+      ],
+      "bookPage": 68
     },
     {
       "id": "class.inventor.armeiro",
@@ -10411,7 +10841,8 @@
           "kind": "note",
           "description": "Treinado em Ofício (armeiro)"
         }
-      ]
+      ],
+      "bookPage": 68
     },
     {
       "id": "class.inventor.ativacao-rapida",
@@ -10424,7 +10855,8 @@
           "kind": "power",
           "id": "class.inventor.engenhoqueiro"
         }
-      ]
+      ],
+      "bookPage": 68
     },
     {
       "id": "class.inventor.aumento-de-atributo",
@@ -10461,7 +10893,8 @@
             "name": "Carisma"
           }
         ]
-      }
+      },
+      "bookPage": 38
     },
     {
       "id": "class.inventor.automato",
@@ -10473,7 +10906,8 @@
           "kind": "power",
           "id": "class.inventor.engenhoqueiro"
         }
-      ]
+      ],
+      "bookPage": 69
     },
     {
       "id": "class.inventor.automato-prototipado",
@@ -10485,7 +10919,8 @@
           "kind": "power",
           "id": "class.inventor.automato"
         }
-      ]
+      ],
+      "bookPage": 69
     },
     {
       "id": "class.inventor.balistica",
@@ -10501,7 +10936,8 @@
           "kind": "note",
           "description": "Treinado em Ofício (armeiro)"
         }
-      ]
+      ],
+      "bookPage": 69
     },
     {
       "id": "class.inventor.blindagem",
@@ -10514,7 +10950,8 @@
           "kind": "power",
           "id": "class.inventor.couraceiro"
         }
-      ]
+      ],
+      "bookPage": 69
     },
     {
       "id": "class.inventor.cano-raiado",
@@ -10527,7 +10964,8 @@
           "kind": "power",
           "id": "class.inventor.balistica"
         }
-      ]
+      ],
+      "bookPage": 69
     },
     {
       "id": "class.inventor.catalisador-instavel",
@@ -10539,7 +10977,8 @@
           "kind": "power",
           "id": "class.inventor.alquimista-iniciado"
         }
-      ]
+      ],
+      "bookPage": 69
     },
     {
       "id": "class.inventor.chutes-e-palavroes",
@@ -10551,7 +10990,8 @@
           "kind": "power",
           "id": "class.inventor.engenhoqueiro"
         }
-      ]
+      ],
+      "bookPage": 69
     },
     {
       "id": "class.inventor.conhecimento-de-formulas",
@@ -10563,7 +11003,8 @@
           "kind": "power",
           "id": "class.inventor.alquimista-iniciado"
         }
-      ]
+      ],
+      "bookPage": 69
     },
     {
       "id": "class.inventor.couraceiro",
@@ -10575,7 +11016,8 @@
           "kind": "note",
           "description": "Treinado em Ofício (armeiro)"
         }
-      ]
+      ],
+      "bookPage": 69
     },
     {
       "id": "class.inventor.engenhoqueiro",
@@ -10592,7 +11034,8 @@
           "kind": "note",
           "description": "Treinado em Ofício (engenhoqueiro)"
         }
-      ]
+      ],
+      "bookPage": 69
     },
     {
       "id": "class.inventor.farmaceutico",
@@ -10609,7 +11052,8 @@
           "kind": "note",
           "description": "Treinado em Ofício (alquimista)"
         }
-      ]
+      ],
+      "bookPage": 69
     },
     {
       "id": "class.inventor.ferreiro",
@@ -10622,7 +11066,8 @@
           "kind": "power",
           "id": "class.inventor.armeiro"
         }
-      ]
+      ],
+      "bookPage": 69
     },
     {
       "id": "class.inventor.granadeiro",
@@ -10634,7 +11079,8 @@
           "kind": "power",
           "id": "class.inventor.alquimista-de-batalha"
         }
-      ]
+      ],
+      "bookPage": 69
     },
     {
       "id": "class.inventor.homunculo",
@@ -10646,19 +11092,22 @@
           "kind": "power",
           "id": "class.inventor.alquimista-iniciado"
         }
-      ]
+      ],
+      "bookPage": 69
     },
     {
       "id": "class.inventor.invencao-potente",
       "className": "Inventor",
       "name": "Invenção Potente",
-      "description": "Quando usa item ou engenhoca fabricado por você mesmo, paga 1 PM para aumentar em +2 a CD para resistir a ele."
+      "description": "Quando usa item ou engenhoca fabricado por você mesmo, paga 1 PM para aumentar em +2 a CD para resistir a ele.",
+      "bookPage": 69
     },
     {
       "id": "class.inventor.maestria-em-pericia",
       "className": "Inventor",
       "name": "Maestria em Perícia",
-      "description": "Escolha n° de perícias treinadas = Inteligência (sem bônus temporários). Em teste dessas perícias, gasta 1 PM para escolher 10 em qualquer situação (exceto ataque)."
+      "description": "Escolha n° de perícias treinadas = Inteligência (sem bônus temporários). Em teste dessas perícias, gasta 1 PM para escolher 10 em qualquer situação (exceto ataque).",
+      "bookPage": 69
     },
     {
       "id": "class.inventor.manutencao-eficiente",
@@ -10671,7 +11120,8 @@
           "kind": "power",
           "id": "class.inventor.engenhoqueiro"
         }
-      ]
+      ],
+      "bookPage": 69
     },
     {
       "id": "class.inventor.mestre-alquimista",
@@ -10694,7 +11144,8 @@
           "kind": "power",
           "id": "class.inventor.alquimista-iniciado"
         }
-      ]
+      ],
+      "bookPage": 70
     },
     {
       "id": "class.inventor.mestre-cuca",
@@ -10706,7 +11157,8 @@
           "kind": "note",
           "description": "Treinado em Ofício (cozinheiro)"
         }
-      ]
+      ],
+      "bookPage": 69
     },
     {
       "id": "class.inventor.mistura-fervilhante",
@@ -10719,7 +11171,8 @@
           "kind": "power",
           "id": "class.inventor.alquimista-iniciado"
         }
-      ]
+      ],
+      "bookPage": 69
     },
     {
       "id": "class.inventor.oficina-de-campo",
@@ -10731,7 +11184,8 @@
           "kind": "note",
           "description": "Treinado em Ofício (armeiro)"
         }
-      ]
+      ],
+      "bookPage": 70
     },
     {
       "id": "class.inventor.pedra-de-amolar",
@@ -10743,7 +11197,8 @@
           "kind": "power",
           "id": "class.inventor.armeiro"
         }
-      ]
+      ],
+      "bookPage": 70
     },
     {
       "id": "class.inventor.sintese-rapida",
@@ -10755,126 +11210,144 @@
           "kind": "power",
           "id": "class.inventor.alquimista-iniciado"
         }
-      ]
+      ],
+      "bookPage": 70
     },
     {
       "id": "class.ladino.ataque-furtivo-1d6",
       "className": "Ladino",
       "name": "Ataque Furtivo +1d6",
       "description": "Uma vez por rodada, ao atingir criatura desprevenida (corpo-a-corpo ou alcance curto) ou flanqueando, causa +1d6 dano extra. Cada 2 níveis: +1d6 adicional. Criaturas imunes a crítico imunes a furtivo.",
-      "grantedAtLevel": 1
+      "grantedAtLevel": 1,
+      "bookPage": 73
     },
     {
       "id": "class.ladino.especialista",
       "className": "Ladino",
       "name": "Especialista",
       "description": "Escolha n° de perícias treinadas = Inteligência (sem bônus temp, mín 1). Em teste de uma dessas perícias, gasta 1 PM para dobrar bônus de treinamento. Não em ataque.",
-      "grantedAtLevel": 1
+      "grantedAtLevel": 1,
+      "bookPage": 73
     },
     {
       "id": "class.ladino.evasao",
       "className": "Ladino",
       "name": "Evasão",
       "description": "Em teste de Reflexos que reduziria dano à metade, sucesso = 0 dano. Falha = dano normal. Exige liberdade de movimentos.",
-      "grantedAtLevel": 2
+      "grantedAtLevel": 2,
+      "bookPage": 47
     },
     {
       "id": "class.ladino.ataque-furtivo-2d6",
       "className": "Ladino",
       "name": "Ataque Furtivo +2d6",
       "description": "Bônus do Ataque Furtivo sobe para +2d6.",
-      "grantedAtLevel": 3
+      "grantedAtLevel": 3,
+      "bookPage": 73
     },
     {
       "id": "class.ladino.esquiva-sobrenatural",
       "className": "Ladino",
       "name": "Esquiva Sobrenatural",
       "description": "Instintos apurados — nunca fica surpreendido.",
-      "grantedAtLevel": 4
+      "grantedAtLevel": 4,
+      "bookPage": 42
     },
     {
       "id": "class.ladino.ataque-furtivo-3d6",
       "className": "Ladino",
       "name": "Ataque Furtivo +3d6",
       "description": "Bônus do Ataque Furtivo sobe para +3d6.",
-      "grantedAtLevel": 5
+      "grantedAtLevel": 5,
+      "bookPage": 73
     },
     {
       "id": "class.ladino.ataque-furtivo-4d6",
       "className": "Ladino",
       "name": "Ataque Furtivo +4d6",
       "description": "Bônus do Ataque Furtivo sobe para +4d6.",
-      "grantedAtLevel": 7
+      "grantedAtLevel": 7,
+      "bookPage": 73
     },
     {
       "id": "class.ladino.olhos-nas-costas",
       "className": "Ladino",
       "name": "Olhos nas Costas",
       "description": "Pode lutar contra diversos inimigos como se fossem apenas um. Não pode ser flanqueado.",
-      "grantedAtLevel": 8
+      "grantedAtLevel": 8,
+      "bookPage": 74
     },
     {
       "id": "class.ladino.ataque-furtivo-5d6",
       "className": "Ladino",
       "name": "Ataque Furtivo +5d6",
       "description": "Bônus do Ataque Furtivo sobe para +5d6.",
-      "grantedAtLevel": 9
+      "grantedAtLevel": 9,
+      "bookPage": 73
     },
     {
       "id": "class.ladino.evasao-aprimorada",
       "className": "Ladino",
       "name": "Evasão Aprimorada",
       "description": "Em teste Reflexos que reduziria dano à metade: sucesso = 0, falha = metade. Exige liberdade de movimentos.",
-      "grantedAtLevel": 10
+      "grantedAtLevel": 10,
+      "bookPage": 48
     },
     {
       "id": "class.ladino.ataque-furtivo-6d6",
       "className": "Ladino",
       "name": "Ataque Furtivo +6d6",
       "description": "Bônus do Ataque Furtivo sobe para +6d6.",
-      "grantedAtLevel": 11
+      "grantedAtLevel": 11,
+      "bookPage": 73
     },
     {
       "id": "class.ladino.ataque-furtivo-7d6",
       "className": "Ladino",
       "name": "Ataque Furtivo +7d6",
       "description": "Bônus do Ataque Furtivo sobe para +7d6.",
-      "grantedAtLevel": 13
+      "grantedAtLevel": 13,
+      "bookPage": 73
     },
     {
       "id": "class.ladino.ataque-furtivo-8d6",
       "className": "Ladino",
       "name": "Ataque Furtivo +8d6",
       "description": "Bônus do Ataque Furtivo sobe para +8d6.",
-      "grantedAtLevel": 15
+      "grantedAtLevel": 15,
+      "bookPage": 73
     },
     {
       "id": "class.ladino.ataque-furtivo-9d6",
       "className": "Ladino",
       "name": "Ataque Furtivo +9d6",
       "description": "Bônus do Ataque Furtivo sobe para +9d6.",
-      "grantedAtLevel": 17
+      "grantedAtLevel": 17,
+      "bookPage": 73
     },
     {
       "id": "class.ladino.ataque-furtivo-10d6",
       "className": "Ladino",
       "name": "Ataque Furtivo +10d6",
       "description": "Bônus do Ataque Furtivo sobe para +10d6.",
-      "grantedAtLevel": 19
+      "grantedAtLevel": 19,
+      "bookPage": 73
     },
     {
       "id": "class.ladino.a-pessoa-certa-para-o-trabalho",
       "className": "Ladino",
       "name": "A Pessoa Certa para o Trabalho",
       "description": "Capstone: mestre da ladinagem. Em ataque furtivo ou perícia da lista de ladino, gasta 5 PM para +10 no teste.",
-      "grantedAtLevel": 20
+      "grantedAtLevel": 20,
+      "bookPage": 74
     },
     {
       "id": "class.ladino.assassinar",
       "className": "Ladino",
       "name": "Assassinar",
       "description": "Ação de movimento + 3 PM: analisa criatura em alcance curto. Até fim do próximo turno, primeiro AF que causar dano a ela tem dados de furtivo dobrados.",
-      "minLevel": 5
+      "minLevel": 5,
+      "bookPage": 73
     },
     {
       "id": "class.ladino.aumento-de-atributo",
@@ -10911,7 +11384,8 @@
             "name": "Carisma"
           }
         ]
-      }
+      },
+      "bookPage": 38
     },
     {
       "id": "class.ladino.contatos-no-submundo",
@@ -10929,13 +11403,15 @@
           "kind": "trained",
           "expertise": "Furtividade"
         }
-      ]
+      ],
+      "bookPage": 51
     },
     {
       "id": "class.ladino.escapista",
       "className": "Ladino",
       "name": "Escapista",
-      "description": "+5 Acrobacia para escapar/passar por espaço apertado/passar por inimigo, e testes para resistir a efeitos de movimento."
+      "description": "+5 Acrobacia para escapar/passar por espaço apertado/passar por inimigo, e testes para resistir a efeitos de movimento.",
+      "bookPage": 73
     },
     {
       "id": "class.ladino.fuga-formidavel",
@@ -10948,13 +11424,15 @@
           "attr": "intelligence",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 73
     },
     {
       "id": "class.ladino.gatuno",
       "className": "Ladino",
       "name": "Gatuno",
-      "description": "+2 Atletismo. Quando escala, não fica desprevenido e avança deslocamento normal em vez de metade."
+      "description": "+2 Atletismo. Quando escala, não fica desprevenido e avança deslocamento normal em vez de metade.",
+      "bookPage": 74
     },
     {
       "id": "class.ladino.ladrao-arcano",
@@ -10967,7 +11445,8 @@
           "kind": "power",
           "id": "class.ladino.roubo-de-mana"
         }
-      ]
+      ],
+      "bookPage": 74
     },
     {
       "id": "class.ladino.mao-na-boca",
@@ -10979,7 +11458,8 @@
           "kind": "trained",
           "expertise": "Luta"
         }
-      ]
+      ],
+      "bookPage": 74
     },
     {
       "id": "class.ladino.maos-rapidas",
@@ -10996,7 +11476,8 @@
           "kind": "trained",
           "expertise": "Ladinagem"
         }
-      ]
+      ],
+      "bookPage": 74
     },
     {
       "id": "class.ladino.mente-criminosa",
@@ -11009,14 +11490,16 @@
           "attr": "intelligence",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 74
     },
     {
       "id": "class.ladino.oportunismo",
       "className": "Ladino",
       "name": "Oportunismo",
       "description": "Uma vez por rodada, quando inimigo adjacente sofre dano de aliado, gasta 2 PM para ataque corpo-a-corpo contra esse inimigo.",
-      "minLevel": 6
+      "minLevel": 6,
+      "bookPage": 74
     },
     {
       "id": "class.ladino.rolamento-defensivo",
@@ -11028,7 +11511,8 @@
           "kind": "trained",
           "expertise": "Reflexos"
         }
-      ]
+      ],
+      "bookPage": 74
     },
     {
       "id": "class.ladino.roubo-de-mana",
@@ -11041,7 +11525,8 @@
           "attr": "intelligence",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 74
     },
     {
       "id": "class.ladino.saqueador-de-tumbas",
@@ -11054,7 +11539,8 @@
           "kind": "power",
           "id": "class.ladino.truque-magico"
         }
-      ]
+      ],
+      "bookPage": 74
     },
     {
       "id": "class.ladino.sombra",
@@ -11066,7 +11552,8 @@
           "kind": "trained",
           "expertise": "Furtividade"
         }
-      ]
+      ],
+      "bookPage": 74
     },
     {
       "id": "class.ladino.truque-magico",
@@ -11079,7 +11566,8 @@
           "attr": "intelligence",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 74
     },
     {
       "id": "class.ladino.velocidade-ladina",
@@ -11096,7 +11584,8 @@
           "kind": "trained",
           "expertise": "Iniciativa"
         }
-      ]
+      ],
+      "bookPage": 74
     },
     {
       "id": "class.ladino.veneno-persistente",
@@ -11109,7 +11598,8 @@
           "kind": "power",
           "id": "class.ladino.veneno-potente"
         }
-      ]
+      ],
+      "bookPage": 74
     },
     {
       "id": "class.ladino.veneno-potente",
@@ -11121,21 +11611,24 @@
           "kind": "note",
           "description": "Treinado em Ofício (alquimista)"
         }
-      ]
+      ],
+      "bookPage": 74
     },
     {
       "id": "class.lutador.briga-1d6",
       "className": "Lutador",
       "name": "Briga (1d6)",
       "description": "Ataques desarmados causam 1d6 dano e podem ser letais ou não letais (sem penalidades). A cada 4 níveis, dano desarmado aumenta. Médias 1d6, Pequenas/Minúsculas diminuem 1 passo, Grandes/Enormes aumentam, Colossais 2 passos.",
-      "grantedAtLevel": 1
+      "grantedAtLevel": 1,
+      "bookPage": 76
     },
     {
       "id": "class.lutador.golpe-relampago",
       "className": "Lutador",
       "name": "Golpe Relâmpago",
       "description": "Quando usa ação agredir para fazer ataque desarmado, gasta 1 PM para fazer ataque desarmado adicional.",
-      "grantedAtLevel": 1
+      "grantedAtLevel": 1,
+      "bookPage": 76
     },
     {
       "id": "class.lutador.casca-grossa-con",
@@ -11149,7 +11642,8 @@
       "className": "Lutador",
       "name": "Briga (1d8)",
       "description": "Dano desarmado sobe para 1d8.",
-      "grantedAtLevel": 5
+      "grantedAtLevel": 5,
+      "bookPage": 76
     },
     {
       "id": "class.lutador.golpe-cruel",
@@ -11169,7 +11663,8 @@
             "note": "com ataques desarmados"
           }
         }
-      ]
+      ],
+      "bookPage": 77
     },
     {
       "id": "class.lutador.casca-grossa-con-1",
@@ -11192,7 +11687,8 @@
       "className": "Lutador",
       "name": "Briga (1d10)",
       "description": "Dano desarmado sobe para 1d10.",
-      "grantedAtLevel": 9
+      "grantedAtLevel": 9,
+      "bookPage": 76
     },
     {
       "id": "class.lutador.golpe-violento",
@@ -11212,7 +11708,8 @@
             "note": "com ataques desarmados"
           }
         }
-      ]
+      ],
+      "bookPage": 77
     },
     {
       "id": "class.lutador.casca-grossa-con-2",
@@ -11235,7 +11732,8 @@
       "className": "Lutador",
       "name": "Briga (2d6)",
       "description": "Dano desarmado sobe para 2d6.",
-      "grantedAtLevel": 13
+      "grantedAtLevel": 13,
+      "bookPage": 76
     },
     {
       "id": "class.lutador.casca-grossa-con-3",
@@ -11258,7 +11756,8 @@
       "className": "Lutador",
       "name": "Briga (2d8)",
       "description": "Dano desarmado sobe para 2d8.",
-      "grantedAtLevel": 17
+      "grantedAtLevel": 17,
+      "bookPage": 76
     },
     {
       "id": "class.lutador.casca-grossa-con-4",
@@ -11281,19 +11780,22 @@
       "className": "Lutador",
       "name": "Dono da Rua (2d10)",
       "description": "Capstone: dano desarmado sobe para 2d10. Quando usa ação agredir para ataque desarmado, faz dois ataques (podendo usar Golpe Relâmpago para terceiro).",
-      "grantedAtLevel": 20
+      "grantedAtLevel": 20,
+      "bookPage": 77
     },
     {
       "id": "class.lutador.arma-improvisada",
       "className": "Lutador",
       "name": "Arma Improvisada",
-      "description": "Pode atacar com armas improvisadas como ataques desarmados, mas dano aumenta um passo. Ação de movimento + teste Percepção CD 20: encontra arma improvisada. Frágeis (se erra + d20 ímpar, arma quebra)."
+      "description": "Pode atacar com armas improvisadas como ataques desarmados, mas dano aumenta um passo. Ação de movimento + teste Percepção CD 20: encontra arma improvisada. Frágeis (se erra + d20 ímpar, arma quebra).",
+      "bookPage": 76
     },
     {
       "id": "class.lutador.ate-acertar",
       "className": "Lutador",
       "name": "Até Acertar",
-      "description": "Quando erra ataque desarmado, recebe +2 cumulativo em ataque e dano desarmado contra mesmo oponente até acertar ou fim cena."
+      "description": "Quando erra ataque desarmado, recebe +2 cumulativo em ataque e dano desarmado contra mesmo oponente até acertar ou fim cena.",
+      "bookPage": 76
     },
     {
       "id": "class.lutador.aumento-de-atributo",
@@ -11330,19 +11832,22 @@
             "name": "Carisma"
           }
         ]
-      }
+      },
+      "bookPage": 38
     },
     {
       "id": "class.lutador.bracos-calejados",
       "className": "Lutador",
       "name": "Braços Calejados",
-      "description": "Se não estiver usando armadura, soma Força na Defesa, limitado pelo nível."
+      "description": "Se não estiver usando armadura, soma Força na Defesa, limitado pelo nível.",
+      "bookPage": 76
     },
     {
       "id": "class.lutador.cabecada",
       "className": "Lutador",
       "name": "Cabeçada",
-      "description": "Em ataque desarmado, gasta 2 PM. Se acertar, oponente fica desprevenido contra este ataque. 1x/cena contra um mesmo alvo."
+      "description": "Em ataque desarmado, gasta 2 PM. Se acertar, oponente fica desprevenido contra este ataque. 1x/cena contra um mesmo alvo.",
+      "bookPage": 76
     },
     {
       "id": "class.lutador.chave",
@@ -11360,32 +11865,37 @@
           "kind": "power",
           "id": "class.lutador.lutador-de-chao"
         }
-      ]
+      ],
+      "bookPage": 76
     },
     {
       "id": "class.lutador.confianca-dos-ringues",
       "className": "Lutador",
       "name": "Confiança dos Ringues",
       "description": "Quando inimigo erra ataque corpo-a-corpo, recebe 2 PM temp (cumulativos). Máx = nível por cena. Desaparecem fim cena.",
-      "minLevel": 8
+      "minLevel": 8,
+      "bookPage": 76
     },
     {
       "id": "class.lutador.convencido",
       "className": "Lutador",
       "name": "Convencido",
-      "description": "Desdém por artes mais sofisticadas. Resistência a medo e mental +5."
+      "description": "Desdém por artes mais sofisticadas. Resistência a medo e mental +5.",
+      "bookPage": 76
     },
     {
       "id": "class.lutador.golpe-baixo",
       "className": "Lutador",
       "name": "Golpe Baixo",
-      "description": "Em ataque desarmado, gasta 2 PM. Se acertar, oponente Fort CD For ou atordoado por uma rodada (1x/cena)."
+      "description": "Em ataque desarmado, gasta 2 PM. Se acertar, oponente Fort CD For ou atordoado por uma rodada (1x/cena).",
+      "bookPage": 76
     },
     {
       "id": "class.lutador.golpe-imprudente",
       "className": "Lutador",
       "name": "Golpe Imprudente",
-      "description": "Quando usa Golpe Relâmpago, ataca de forma impulsiva. Ataques desarmados recebem dado de dano extra do mesmo tipo, mas sofre -5 Defesa."
+      "description": "Quando usa Golpe Relâmpago, ataca de forma impulsiva. Ataques desarmados recebem dado de dano extra do mesmo tipo, mas sofre -5 Defesa.",
+      "bookPage": 77
     },
     {
       "id": "class.lutador.imobilizacao",
@@ -11398,7 +11908,8 @@
           "kind": "power",
           "id": "class.lutador.chave"
         }
-      ]
+      ],
+      "bookPage": 77
     },
     {
       "id": "class.lutador.lingua-dos-becos",
@@ -11415,33 +11926,38 @@
           "kind": "trained",
           "expertise": "Intimidação"
         }
-      ]
+      ],
+      "bookPage": 77
     },
     {
       "id": "class.lutador.lutador-de-chao",
       "className": "Lutador",
       "name": "Lutador de Chão",
-      "description": "+2 em testes de ataque para agarrar e derrubar. Quando agarra criatura, gasta 1 PM para manobra derrubar como ação livre."
+      "description": "+2 em testes de ataque para agarrar e derrubar. Quando agarra criatura, gasta 1 PM para manobra derrubar como ação livre.",
+      "bookPage": 77
     },
     {
       "id": "class.lutador.nome-na-arena",
       "className": "Lutador",
       "name": "Nome na Arena",
       "description": "Reputação no circuito de lutas. Uma vez por cena, gasta ação completa + teste Luta CD 10. Se passar, +2 todos testes de perícias baseadas em Carisma até fim cena. Escala com sucesso.",
-      "minLevel": 11
+      "minLevel": 11,
+      "bookPage": 77
     },
     {
       "id": "class.lutador.punhos-de-adamante",
       "className": "Lutador",
       "name": "Punhos de Adamante",
       "description": "Ataques desarmados ignoram 10 pontos de redução de dano do alvo.",
-      "minLevel": 8
+      "minLevel": 8,
+      "bookPage": 77
     },
     {
       "id": "class.lutador.rasteira",
       "className": "Lutador",
       "name": "Rasteira",
-      "description": "Em ataque desarmado contra criatura até uma categoria de tamanho maior que sua, paga 2 PM. Se acertar, criatura fica caída."
+      "description": "Em ataque desarmado contra criatura até uma categoria de tamanho maior que sua, paga 2 PM. Se acertar, criatura fica caída.",
+      "bookPage": 77
     },
     {
       "id": "class.lutador.sarado",
@@ -11467,14 +11983,16 @@
             "attribute": "strength"
           }
         }
-      ]
+      ],
+      "bookPage": 77
     },
     {
       "id": "class.lutador.sequencia-destruidora",
       "className": "Lutador",
       "name": "Sequência Destruidora",
       "description": "Início do turno: gasta 2 PM para dizer número (≥2). Se fizer e acertar quantidade de ataques igual, último recebe +4 cumulativo na rolagem de dano por ataque feito.",
-      "minLevel": 8
+      "minLevel": 8,
+      "bookPage": 77
     },
     {
       "id": "class.lutador.trincado",
@@ -11492,14 +12010,16 @@
           "kind": "power",
           "id": "class.lutador.sarado"
         }
-      ]
+      ],
+      "bookPage": 77
     },
     {
       "id": "class.lutador.trocacao",
       "className": "Lutador",
       "name": "Trocação",
       "description": "Quando começa a bater, não para. Ao acertar ataque desarmado, pode fazer outro ataque contra mesmo alvo pagando PM = ataques já realizados.",
-      "minLevel": 6
+      "minLevel": 6,
+      "bookPage": 77
     },
     {
       "id": "class.lutador.trocacao-tumultuosa",
@@ -11512,47 +12032,54 @@
           "kind": "power",
           "id": "class.lutador.trocacao"
         }
-      ]
+      ],
+      "bookPage": 77
     },
     {
       "id": "class.lutador.valentao",
       "className": "Lutador",
       "name": "Valentão",
-      "description": "+2 em testes de ataque e rolagens de dano contra oponentes caídos, desprevenidos, flanqueados ou indefesos."
+      "description": "+2 em testes de ataque e rolagens de dano contra oponentes caídos, desprevenidos, flanqueados ou indefesos.",
+      "bookPage": 66
     },
     {
       "id": "class.lutador.voadora",
       "className": "Lutador",
       "name": "Voadora",
-      "description": "Em investida desarmada, gasta 2 PM. Recebe +1d6 dano para cada 3m que se deslocou (limitado pelo nível)."
+      "description": "Em investida desarmada, gasta 2 PM. Recebe +1d6 dano para cada 3m que se deslocou (limitado pelo nível).",
+      "bookPage": 77
     },
     {
       "id": "class.nobre.autoconfianca",
       "className": "Nobre",
       "name": "Autoconfiança",
       "description": "Pode usar Carisma em vez de Destreza na Defesa (não soma atributo na Defesa quando usa armadura pesada).",
-      "grantedAtLevel": 1
+      "grantedAtLevel": 1,
+      "bookPage": 79
     },
     {
       "id": "class.nobre.espolio",
       "className": "Nobre",
       "name": "Espólio",
       "description": "Recebe item a sua escolha com preço de até T$ 2.000.",
-      "grantedAtLevel": 1
+      "grantedAtLevel": 1,
+      "bookPage": 79
     },
     {
       "id": "class.nobre.orgulho",
       "className": "Nobre",
       "name": "Orgulho",
       "description": "Em teste de perícia, gasta PM (limitado por Car). Para cada PM, recebe +2 no teste.",
-      "grantedAtLevel": 1
+      "grantedAtLevel": 1,
+      "bookPage": 79
     },
     {
       "id": "class.nobre.palavras-afiadas-2d6",
       "className": "Nobre",
       "name": "Palavras Afiadas (2d6)",
       "description": "Ação padrão + 1 PM: teste Diplomacia ou Intimidação oposto Vontade de criatura inteligente em alcance curto. Vencer = 2d6 dano psíquico não letal. Perder = metade. A cada 4 níveis pode gastar +1 PM para aumentar dano.",
-      "grantedAtLevel": 2
+      "grantedAtLevel": 2,
+      "bookPage": 80
     },
     {
       "id": "class.nobre.riqueza",
@@ -11566,56 +12093,64 @@
       "className": "Nobre",
       "name": "Gritar Ordens",
       "description": "Gasta PM (limitado por Car). Até início do próximo turno, aliados em alcance curto recebem bônus em perícias = PM gasto.",
-      "grantedAtLevel": 4
+      "grantedAtLevel": 4,
+      "bookPage": 80
     },
     {
       "id": "class.nobre.presenca-aristocratica",
       "className": "Nobre",
       "name": "Presença Aristocrática",
       "description": "Sempre que criatura inteligente tentar machucá-lo, gasta 2 PM. Vontade CD Car ou não consegue machucá-lo e perde ação. 1x/cena contra mesma criatura.",
-      "grantedAtLevel": 5
+      "grantedAtLevel": 5,
+      "bookPage": 80
     },
     {
       "id": "class.nobre.palavras-afiadas-4d6",
       "className": "Nobre",
       "name": "Palavras Afiadas (4d6)",
       "description": "Dano base de Palavras Afiadas sobe para 4d6.",
-      "grantedAtLevel": 6
+      "grantedAtLevel": 6,
+      "bookPage": 80
     },
     {
       "id": "class.nobre.palavras-afiadas-6d6",
       "className": "Nobre",
       "name": "Palavras Afiadas (6d6)",
       "description": "Dano base de Palavras Afiadas sobe para 6d6.",
-      "grantedAtLevel": 10
+      "grantedAtLevel": 10,
+      "bookPage": 80
     },
     {
       "id": "class.nobre.palavras-afiadas-8d6",
       "className": "Nobre",
       "name": "Palavras Afiadas (8d6)",
       "description": "Dano base de Palavras Afiadas sobe para 8d6.",
-      "grantedAtLevel": 14
+      "grantedAtLevel": 14,
+      "bookPage": 80
     },
     {
       "id": "class.nobre.palavras-afiadas-10d6",
       "className": "Nobre",
       "name": "Palavras Afiadas (10d6)",
       "description": "Dano base de Palavras Afiadas sobe para 10d6.",
-      "grantedAtLevel": 18
+      "grantedAtLevel": 18,
+      "bookPage": 80
     },
     {
       "id": "class.nobre.realeza",
       "className": "Nobre",
       "name": "Realeza",
       "description": "Capstone: CD para resistir à Presença Aristocrática +5. Criatura que falhe Vontade por 10+ pontos se arrepende, passa a lutar ao seu lado pelo resto cena. Criatura reduzida a 0 PV por Palavras Afiadas não sofre dano, passa a lutar ao seu lado.",
-      "grantedAtLevel": 20
+      "grantedAtLevel": 20,
+      "bookPage": 80
     },
     {
       "id": "class.nobre.armadura-brilhante",
       "className": "Nobre",
       "name": "Armadura Brilhante",
       "description": "Pode usar Carisma na Defesa quando usa armadura pesada. Se fizer, não pode somar Destreza.",
-      "minLevel": 8
+      "minLevel": 8,
+      "bookPage": 79
     },
     {
       "id": "class.nobre.aumento-de-atributo",
@@ -11652,20 +12187,23 @@
             "name": "Carisma"
           }
         ]
-      }
+      },
+      "bookPage": 38
     },
     {
       "id": "class.nobre.autoridade-feudal",
       "className": "Nobre",
       "name": "Autoridade Feudal",
       "description": "Em locais com influência (mestre decide), gasta 1 hora + 2 PM para conclamar parceiro iniciante até fim da aventura.",
-      "minLevel": 6
+      "minLevel": 6,
+      "bookPage": 54
     },
     {
       "id": "class.nobre.educacao-privilegiada",
       "className": "Nobre",
       "name": "Educação Privilegiada",
-      "description": "Torna-se treinado em duas perícias de nobre a sua escolha."
+      "description": "Torna-se treinado em duas perícias de nobre a sua escolha.",
+      "bookPage": 79
     },
     {
       "id": "class.nobre.estrategista",
@@ -11683,13 +12221,15 @@
           "kind": "trained",
           "expertise": "Guerra"
         }
-      ]
+      ],
+      "bookPage": 79
     },
     {
       "id": "class.nobre.favor",
       "className": "Nobre",
       "name": "Favor",
-      "description": "Pode pedir favor (5 PM + 1 hora de conversa). Funciona como persuasão (Diplomacia p118). Mais caros disponíveis (convite festa, carona, acesso militar). Mesmo favor não pode ser pedido por 1 semana."
+      "description": "Pode pedir favor (5 PM + 1 hora de conversa). Funciona como persuasão (Diplomacia p118). Mais caros disponíveis (convite festa, carona, acesso militar). Mesmo favor não pode ser pedido por 1 semana.",
+      "bookPage": 79
     },
     {
       "id": "class.nobre.general",
@@ -11702,20 +12242,23 @@
           "kind": "power",
           "id": "class.nobre.estrategista"
         }
-      ]
+      ],
+      "bookPage": 79
     },
     {
       "id": "class.nobre.grito-tiranico",
       "className": "Nobre",
       "name": "Grito Tirânico",
       "description": "Pode usar Palavras Afiadas como ação completa em vez de padrão. Se fizer, dados aumentam para d8 e atinge todos inimigos em alcance curto.",
-      "minLevel": 8
+      "minLevel": 8,
+      "bookPage": 80
     },
     {
       "id": "class.nobre.inspirar-confianca",
       "className": "Nobre",
       "name": "Inspirar Confiança",
-      "description": "Quando aliado em alcance curto faz teste, gasta 2 PM para ele rolar novamente esse teste."
+      "description": "Quando aliado em alcance curto faz teste, gasta 2 PM para ele rolar novamente esse teste.",
+      "bookPage": 80
     },
     {
       "id": "class.nobre.inspirar-gloria",
@@ -11728,20 +12271,23 @@
           "kind": "power",
           "id": "class.nobre.inspirar-confianca"
         }
-      ]
+      ],
+      "bookPage": 80
     },
     {
       "id": "class.nobre.jogo-da-corte",
       "className": "Nobre",
       "name": "Jogo da Corte",
-      "description": "Quando faz teste Diplomacia/Intuição/Nobreza, gasta 1 PM para rolá-lo novamente."
+      "description": "Quando faz teste Diplomacia/Intuição/Nobreza, gasta 1 PM para rolá-lo novamente.",
+      "bookPage": 80
     },
     {
       "id": "class.nobre.liderar-pelo-exemplo",
       "className": "Nobre",
       "name": "Liderar pelo Exemplo",
       "description": "Gasta 2 PM para servir de inspiração. Até início próximo turno, sempre que passar em teste de perícia, aliados em alcance curto podem usar seu resultado em vez do próprio.",
-      "minLevel": 6
+      "minLevel": 6,
+      "bookPage": 80
     },
     {
       "id": "class.nobre.lingua-de-ouro",
@@ -11754,19 +12300,22 @@
           "kind": "power",
           "id": "class.nobre.lingua-de-prata"
         }
-      ]
+      ],
+      "bookPage": 80
     },
     {
       "id": "class.nobre.lingua-de-prata",
       "className": "Nobre",
       "name": "Língua de Prata",
-      "description": "Em teste de perícia baseada em Carisma, gasta 2 PM para receber bônus no teste igual à metade do seu nível."
+      "description": "Em teste de perícia baseada em Carisma, gasta 2 PM para receber bônus no teste igual à metade do seu nível.",
+      "bookPage": 80
     },
     {
       "id": "class.nobre.lingua-rapida",
       "className": "Nobre",
       "name": "Língua Rápida",
-      "description": "Em teste de Diplomacia para mudar atitude como ação completa, sofre penalidade de -5 em vez de -10."
+      "description": "Em teste de Diplomacia para mudar atitude como ação completa, sofre penalidade de -5 em vez de -10.",
+      "bookPage": 80
     },
     {
       "id": "class.nobre.presenca-majestosa",
@@ -11786,13 +12335,15 @@
           "kind": "power",
           "id": "class.nobre.autoridade-feudal"
         }
-      ]
+      ],
+      "bookPage": 55
     },
     {
       "id": "class.nobre.voz-poderosa",
       "className": "Nobre",
       "name": "Voz Poderosa",
-      "description": "+2 Diplomacia e Intimidação. Habilidades de nobre com alcance curto passam a alcance médio."
+      "description": "+2 Diplomacia e Intimidação. Habilidades de nobre com alcance curto passam a alcance médio.",
+      "bookPage": 80
     },
     {
       "id": "class.paladino.abencoado",
@@ -11812,42 +12363,48 @@
             "attribute": "charisma"
           }
         }
-      ]
+      ],
+      "bookPage": 82
     },
     {
       "id": "class.paladino.codigo-do-heroi",
       "className": "Paladino",
       "name": "Código do Herói",
       "description": "Deve manter palavra. Nunca recusar pedido de ajuda de inocente. Nunca mentir, trapacear ou roubar. Se violar, perde todos PM e só recupera no próximo dia.",
-      "grantedAtLevel": 1
+      "grantedAtLevel": 1,
+      "bookPage": 82
     },
     {
       "id": "class.paladino.golpe-divino-1d8",
       "className": "Paladino",
       "name": "Golpe Divino (+1d8)",
       "description": "Em ataque corpo-a-corpo, gasta 2 PM para desferir golpe destruidor. Soma Carisma no teste de ataque e +1d8 na rolagem de dano. A cada 4 níveis, pode gastar +1 PM para aumentar dano em +1d8.",
-      "grantedAtLevel": 1
+      "grantedAtLevel": 1,
+      "bookPage": 82
     },
     {
       "id": "class.paladino.cura-pelas-maos-1d8-1-pv",
       "className": "Paladino",
       "name": "Cura pelas Mãos (1d8+1 PV)",
       "description": "Ação de movimento + 1 PM por luz: cura 1d8+1 PV em alvo em alcance corpo-a-corpo (incluindo você). A cada 4 níveis pode gastar +1 PM para aumentar cura em +1d8+1. Causa dano de luz a mortos-vivos (CD Car). L6+: gasta +1 PM para anular condição (abalado, atordoado, apavorado, cego, doente, exausto, fatigado ou surdo).",
-      "grantedAtLevel": 2
+      "grantedAtLevel": 2,
+      "bookPage": 82
     },
     {
       "id": "class.paladino.aura-sagrada",
       "className": "Paladino",
       "name": "Aura Sagrada",
       "description": "Gasta 1 PM para gerar aura com 9m de raio. Você e aliados na aura somam Carisma em testes de resistência. Aura emite luz dourada. Duração sustentada.",
-      "grantedAtLevel": 3
+      "grantedAtLevel": 3,
+      "bookPage": 84
     },
     {
       "id": "class.paladino.bencao-da-justica",
       "className": "Paladino",
       "name": "Bênção da Justiça",
       "description": "Escolha Égide Sagrada ou Montaria Sagrada. Permanente.",
-      "grantedAtLevel": 5
+      "grantedAtLevel": 5,
+      "bookPage": 84
     },
     {
       "id": "class.paladino.golpe-divino-2d8",
@@ -11861,7 +12418,8 @@
       "className": "Paladino",
       "name": "Cura pelas Mãos (2d8+2 PV)",
       "description": "Cura base sobe para 2d8+2 PV.",
-      "grantedAtLevel": 6
+      "grantedAtLevel": 6,
+      "bookPage": 82
     },
     {
       "id": "class.paladino.golpe-divino-3d8",
@@ -11875,7 +12433,8 @@
       "className": "Paladino",
       "name": "Cura pelas Mãos (3d8+3 PV)",
       "description": "Cura base sobe para 3d8+3 PV.",
-      "grantedAtLevel": 10
+      "grantedAtLevel": 10,
+      "bookPage": 82
     },
     {
       "id": "class.paladino.golpe-divino-4d8",
@@ -11889,7 +12448,8 @@
       "className": "Paladino",
       "name": "Cura pelas Mãos (4d8+4 PV)",
       "description": "Cura base sobe para 4d8+4 PV.",
-      "grantedAtLevel": 14
+      "grantedAtLevel": 14,
+      "bookPage": 82
     },
     {
       "id": "class.paladino.golpe-divino-5d8",
@@ -11903,14 +12463,16 @@
       "className": "Paladino",
       "name": "Cura pelas Mãos (5d8+5 PV)",
       "description": "Cura base sobe para 5d8+5 PV.",
-      "grantedAtLevel": 18
+      "grantedAtLevel": 18,
+      "bookPage": 82
     },
     {
       "id": "class.paladino.vingador-sagrado",
       "className": "Paladino",
       "name": "Vingador Sagrado",
       "description": "Capstone: ação completa + 10 PM. Cobre-se de energia divina, assume forma de vingador sagrado até fim cena. Deslocamento de voo 18m e RD 20. Golpe Divino custa metade e causa +2 dados de dano.",
-      "grantedAtLevel": 20
+      "grantedAtLevel": 20,
+      "bookPage": 84
     },
     {
       "id": "class.paladino.arma-sagrada",
@@ -11929,7 +12491,8 @@
             "paladino-do-bem"
           ]
         }
-      ]
+      ],
+      "bookPage": 82
     },
     {
       "id": "class.paladino.aumento-de-atributo",
@@ -11966,48 +12529,55 @@
             "name": "Carisma"
           }
         ]
-      }
+      },
+      "bookPage": 38
     },
     {
       "id": "class.paladino.aura-antimagia",
       "className": "Paladino",
       "name": "Aura Antimagia",
       "description": "Sua aura ativa: você e aliados dentro podem rolar novamente teste de resistência contra magia recém realizado.",
-      "minLevel": 14
+      "minLevel": 14,
+      "bookPage": 82
     },
     {
       "id": "class.paladino.aura-ardente",
       "className": "Paladino",
       "name": "Aura Ardente",
       "description": "Sua aura ativa: início de cada turno, espíritos e mortos-vivos dentro sofrem dano de luz = 5 + Carisma.",
-      "minLevel": 10
+      "minLevel": 10,
+      "bookPage": 83
     },
     {
       "id": "class.paladino.aura-de-cura",
       "className": "Paladino",
       "name": "Aura de Cura",
       "description": "Sua aura ativa: início dos turnos, você e aliados a sua escolha dentro curam PV = 5 + Carisma.",
-      "minLevel": 6
+      "minLevel": 6,
+      "bookPage": 83
     },
     {
       "id": "class.paladino.aura-de-invencibilidade",
       "className": "Paladino",
       "name": "Aura de Invencibilidade",
       "description": "Sua aura ativa: ignora primeiro dano que sofrer na cena. Mesmo para aliados dentro da aura.",
-      "minLevel": 18
+      "minLevel": 18,
+      "bookPage": 83
     },
     {
       "id": "class.paladino.aura-poderosa",
       "className": "Paladino",
       "name": "Aura Poderosa",
       "description": "Raio da sua aura aumenta para 30m.",
-      "minLevel": 6
+      "minLevel": 6,
+      "bookPage": 83
     },
     {
       "id": "class.paladino.fulgor-divino",
       "className": "Paladino",
       "name": "Fulgor Divino",
-      "description": "Quando usa Golpe Divino, todos inimigos em alcance curto ficam ofuscados até início do próximo turno."
+      "description": "Quando usa Golpe Divino, todos inimigos em alcance curto ficam ofuscados até início do próximo turno.",
+      "bookPage": 83
     },
     {
       "id": "class.paladino.julgamento-divino-arrependimento",
@@ -12019,7 +12589,8 @@
       "id": "class.paladino.julgamento-divino-autoridade",
       "className": "Paladino",
       "name": "Julgamento Divino: Autoridade",
-      "description": "Gasta 1 PM para comandar criatura em alcance curto. Teste Diplomacia oposto Vontade. Vencer = criatura obedece a comando simples (uma vez/cena). Mental. Julgamento."
+      "description": "Gasta 1 PM para comandar criatura em alcance curto. Teste Diplomacia oposto Vontade. Vencer = criatura obedece a comando simples (uma vez/cena). Mental. Julgamento.",
+      "bookPage": 111
     },
     {
       "id": "class.paladino.julgamento-divino-coragem",
@@ -12031,7 +12602,8 @@
       "id": "class.paladino.julgamento-divino-iluminacao",
       "className": "Paladino",
       "name": "Julgamento Divino: Iluminação",
-      "description": "Gasta 2 PM para marcar inimigo em alcance curto. Quando acertar ataque corpo-a-corpo nesse inimigo, recebe 2 PM temp. 1x/cena. Julgamento."
+      "description": "Gasta 2 PM para marcar inimigo em alcance curto. Quando acertar ataque corpo-a-corpo nesse inimigo, recebe 2 PM temp. 1x/cena. Julgamento.",
+      "bookPage": 228
     },
     {
       "id": "class.paladino.julgamento-divino-justica",
@@ -12067,7 +12639,8 @@
       "id": "class.paladino.orar",
       "className": "Paladino",
       "name": "Orar",
-      "description": "Aprende e pode lançar magia divina de 1° círculo a sua escolha. Atributo-chave: Sabedoria. Pode escolher várias vezes."
+      "description": "Aprende e pode lançar magia divina de 1° círculo a sua escolha. Atributo-chave: Sabedoria. Pode escolher várias vezes.",
+      "bookPage": 83
     },
     {
       "id": "class.paladino.virtude-paladinesca-caridade",
@@ -12115,7 +12688,8 @@
             "egide-sagrada"
           ]
         }
-      ]
+      ],
+      "bookPage": 84
     },
     {
       "id": "class.paladino.caminho-montaria-sagrada",
@@ -12133,7 +12707,8 @@
             "montaria-sagrada"
           ]
         }
-      ]
+      ],
+      "bookPage": 84
     }
   ],
   "generalPowers": [
@@ -12148,7 +12723,8 @@
           "attr": "dexterity",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 124
     },
     {
       "id": "ataque-poderoso",
@@ -12161,7 +12737,8 @@
           "attr": "strength",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 124
     },
     {
       "id": "combate-defensivo",
@@ -12174,7 +12751,8 @@
           "attr": "intelligence",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 125
     },
     {
       "id": "esquiva",
@@ -12204,7 +12782,8 @@
           "amount": 2,
           "bonusType": "untyped"
         }
-      ]
+      ],
+      "bookPage": 125
     },
     {
       "id": "reflexos-de-combate",
@@ -12217,7 +12796,8 @@
           "attr": "dexterity",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 129
     },
     {
       "id": "encouracado",
@@ -12229,7 +12809,8 @@
           "kind": "note",
           "description": "Proficiência com armaduras pesadas"
         }
-      ]
+      ],
+      "bookPage": 125
     },
     {
       "id": "estilo-de-arma-e-escudo",
@@ -12245,7 +12826,8 @@
           "kind": "note",
           "description": "Proficiência com escudos"
         }
-      ]
+      ],
+      "bookPage": 125
     },
     {
       "id": "estilo-de-duas-armas",
@@ -12262,7 +12844,8 @@
           "kind": "trained",
           "expertise": "Luta"
         }
-      ]
+      ],
+      "bookPage": 125
     },
     {
       "id": "estilo-de-duas-maos",
@@ -12279,7 +12862,8 @@
           "kind": "trained",
           "expertise": "Luta"
         }
-      ]
+      ],
+      "bookPage": 128
     },
     {
       "id": "estilo-de-disparo",
@@ -12291,7 +12875,8 @@
           "kind": "trained",
           "expertise": "Pontaria"
         }
-      ]
+      ],
+      "bookPage": 125
     },
     {
       "id": "estilo-de-arremesso",
@@ -12303,7 +12888,8 @@
           "kind": "trained",
           "expertise": "Pontaria"
         }
-      ]
+      ],
+      "bookPage": 125
     },
     {
       "id": "estilo-de-uma-arma",
@@ -12315,7 +12901,8 @@
           "kind": "trained",
           "expertise": "Luta"
         }
-      ]
+      ],
+      "bookPage": 128
     },
     {
       "id": "estilo-desarmado",
@@ -12327,7 +12914,8 @@
           "kind": "trained",
           "expertise": "Luta"
         }
-      ]
+      ],
+      "bookPage": 128
     },
     {
       "id": "foco-em-arma",
@@ -12339,7 +12927,8 @@
           "kind": "note",
           "description": "Proficiência com a arma escolhida"
         }
-      ]
+      ],
+      "bookPage": 128
     },
     {
       "id": "ginete",
@@ -12351,13 +12940,15 @@
           "kind": "trained",
           "expertise": "Cavalgar"
         }
-      ]
+      ],
+      "bookPage": 128
     },
     {
       "id": "proficiencia",
       "kind": "combate",
       "name": "Proficiência",
-      "description": "Ganha proficiência em armas marciais, armas de fogo, armaduras pesadas ou escudos (à escolha)."
+      "description": "Ganha proficiência em armas marciais, armas de fogo, armaduras pesadas ou escudos (à escolha).",
+      "bookPage": 32
     },
     {
       "id": "saque-rapido",
@@ -12379,7 +12970,8 @@
           "amount": 2,
           "bonusType": "untyped"
         }
-      ]
+      ],
+      "bookPage": 129
     },
     {
       "id": "vitalidade",
@@ -12412,7 +13004,8 @@
             "per": "level"
           }
         }
-      ]
+      ],
+      "bookPage": 129
     },
     {
       "id": "arma-secundaria-grande",
@@ -12424,7 +13017,8 @@
           "kind": "power",
           "id": "estilo-de-duas-armas"
         }
-      ]
+      ],
+      "bookPage": 124
     },
     {
       "id": "arremesso-multiplo",
@@ -12441,7 +13035,8 @@
           "kind": "power",
           "id": "estilo-de-arremesso"
         }
-      ]
+      ],
+      "bookPage": 124
     },
     {
       "id": "arremesso-potente",
@@ -12458,7 +13053,8 @@
           "kind": "power",
           "id": "estilo-de-arremesso"
         }
-      ]
+      ],
+      "bookPage": 124
     },
     {
       "id": "ataque-com-escudo",
@@ -12470,7 +13066,8 @@
           "kind": "power",
           "id": "estilo-de-arma-e-escudo"
         }
-      ]
+      ],
+      "bookPage": 124
     },
     {
       "id": "ataque-pesado",
@@ -12482,7 +13079,8 @@
           "kind": "power",
           "id": "estilo-de-duas-maos"
         }
-      ]
+      ],
+      "bookPage": 124
     },
     {
       "id": "ataque-preciso",
@@ -12494,7 +13092,8 @@
           "kind": "power",
           "id": "estilo-de-uma-arma"
         }
-      ]
+      ],
+      "bookPage": 124
     },
     {
       "id": "bloqueio-com-escudo",
@@ -12506,7 +13105,8 @@
           "kind": "power",
           "id": "estilo-de-arma-e-escudo"
         }
-      ]
+      ],
+      "bookPage": 124
     },
     {
       "id": "carga-de-cavalaria",
@@ -12518,7 +13118,8 @@
           "kind": "power",
           "id": "ginete"
         }
-      ]
+      ],
+      "bookPage": 124
     },
     {
       "id": "derrubar-aprimorado",
@@ -12530,7 +13131,8 @@
           "kind": "power",
           "id": "combate-defensivo"
         }
-      ]
+      ],
+      "bookPage": 125
     },
     {
       "id": "desarmar-aprimorado",
@@ -12542,7 +13144,8 @@
           "kind": "power",
           "id": "combate-defensivo"
         }
-      ]
+      ],
+      "bookPage": 125
     },
     {
       "id": "disparo-preciso",
@@ -12557,7 +13160,8 @@
             "estilo-de-arremesso"
           ]
         }
-      ]
+      ],
+      "bookPage": 125
     },
     {
       "id": "disparo-rapido",
@@ -12574,7 +13178,8 @@
           "kind": "power",
           "id": "estilo-de-disparo"
         }
-      ]
+      ],
+      "bookPage": 125
     },
     {
       "id": "empunhadura-poderosa",
@@ -12587,7 +13192,8 @@
           "attr": "strength",
           "min": 3
         }
-      ]
+      ],
+      "bookPage": 125
     },
     {
       "id": "estilo-de-arma-longa",
@@ -12604,7 +13210,8 @@
           "kind": "trained",
           "expertise": "Luta"
         }
-      ]
+      ],
+      "bookPage": 126
     },
     {
       "id": "fanatico",
@@ -12617,7 +13224,8 @@
           "kind": "power",
           "id": "encouracado"
         }
-      ]
+      ],
+      "bookPage": 128
     },
     {
       "id": "finta-aprimorada",
@@ -12629,7 +13237,8 @@
           "kind": "trained",
           "expertise": "Enganação"
         }
-      ]
+      ],
+      "bookPage": 128
     },
     {
       "id": "inexpugnavel",
@@ -12642,7 +13251,8 @@
           "kind": "power",
           "id": "encouracado"
         }
-      ]
+      ],
+      "bookPage": 128
     },
     {
       "id": "mira-apurada",
@@ -12659,7 +13269,8 @@
           "kind": "power",
           "id": "disparo-preciso"
         }
-      ]
+      ],
+      "bookPage": 128
     },
     {
       "id": "piqueiro",
@@ -12671,7 +13282,8 @@
           "kind": "power",
           "id": "estilo-de-arma-longa"
         }
-      ]
+      ],
+      "bookPage": 128
     },
     {
       "id": "presenca-aterradora",
@@ -12683,7 +13295,8 @@
           "kind": "trained",
           "expertise": "Intimidação"
         }
-      ]
+      ],
+      "bookPage": 128
     },
     {
       "id": "quebrar-aprimorado",
@@ -12695,7 +13308,8 @@
           "kind": "power",
           "id": "ataque-poderoso"
         }
-      ]
+      ],
+      "bookPage": 129
     },
     {
       "id": "trespassar",
@@ -12707,7 +13321,8 @@
           "kind": "power",
           "id": "ataque-poderoso"
         }
-      ]
+      ],
+      "bookPage": 129
     },
     {
       "id": "acrobatico",
@@ -12720,7 +13335,8 @@
           "attr": "dexterity",
           "min": 2
         }
-      ]
+      ],
+      "bookPage": 129
     },
     {
       "id": "aparencia-inofensiva",
@@ -12733,7 +13349,8 @@
           "attr": "charisma",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 130
     },
     {
       "id": "atletico",
@@ -12763,7 +13380,8 @@
           "amount": 3,
           "bonusType": "untyped"
         }
-      ]
+      ],
+      "bookPage": 130
     },
     {
       "id": "atraente",
@@ -12776,7 +13394,8 @@
           "attr": "charisma",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 130
     },
     {
       "id": "comandar",
@@ -12789,7 +13408,8 @@
           "attr": "charisma",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 130
     },
     {
       "id": "foco-em-pericia",
@@ -12801,13 +13421,15 @@
           "kind": "note",
           "description": "Treinado na perícia escolhida"
         }
-      ]
+      ],
+      "bookPage": 130
     },
     {
       "id": "lobo-solitario",
       "kind": "destino",
       "name": "Lobo Solitário",
-      "description": "+1 em perícia e Defesa quando sem aliados em alcance curto; sem penalidade ao usar Cura em si mesmo."
+      "description": "+1 em perícia e Defesa quando sem aliados em alcance curto; sem penalidade ao usar Cura em si mesmo.",
+      "bookPage": 130
     },
     {
       "id": "medicina",
@@ -12824,7 +13446,8 @@
           "kind": "trained",
           "expertise": "Cura"
         }
-      ]
+      ],
+      "bookPage": 130
     },
     {
       "id": "sentidos-agucados",
@@ -12851,19 +13474,22 @@
           "amount": 2,
           "bonusType": "untyped"
         }
-      ]
+      ],
+      "bookPage": 130
     },
     {
       "id": "sortudo",
       "kind": "destino",
       "name": "Sortudo",
-      "description": "Gasta 3 PM para rolar um teste novamente."
+      "description": "Gasta 3 PM para rolar um teste novamente.",
+      "bookPage": 131
     },
     {
       "id": "surto-heroico",
       "kind": "destino",
       "name": "Surto Heroico",
-      "description": "1×/rodada: 5 PM para ação padrão OU de movimento adicional."
+      "description": "1×/rodada: 5 PM para ação padrão OU de movimento adicional.",
+      "bookPage": 131
     },
     {
       "id": "torcida",
@@ -12876,13 +13502,15 @@
           "attr": "charisma",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 131
     },
     {
       "id": "treinamento-em-pericia",
       "kind": "destino",
       "name": "Treinamento em Perícia",
-      "description": "Torna-se treinado em uma perícia à escolha. Pode ser pego várias vezes."
+      "description": "Torna-se treinado em uma perícia à escolha. Pode ser pego várias vezes.",
+      "bookPage": 131
     },
     {
       "id": "vontade-de-ferro",
@@ -12917,14 +13545,16 @@
             "round": "down"
           }
         }
-      ]
+      ],
+      "bookPage": 131
     },
     {
       "id": "ao-sabor-do-destino",
       "kind": "destino",
       "name": "Ao Sabor do Destino",
       "description": "Abre mão de usar itens mágicos (exceto poções); em troca ganha bônus por patamar por tabela (L6 +2 perícia, L7 +1 Defesa, L8 +1 dano, L9 +1 atributo, L11 +2 perícia, L12 +2 Defesa, L13 +2 dano, L14 +1 atributo, L16 +2 perícia, L17 +3 Defesa, L18 +3 dano, L19 +1 atributo). Bônus não cumulativos — atributo e perícia devem ser diferentes a cada vez. Usar item mágico voluntariamente perde o benefício até o fim da aventura.",
-      "minLevel": 6
+      "minLevel": 6,
+      "bookPage": 129
     },
     {
       "id": "costas-largas",
@@ -12942,7 +13572,8 @@
           "attr": "strength",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 130
     },
     {
       "id": "inventario-organizado",
@@ -12955,7 +13586,8 @@
           "attr": "intelligence",
           "min": 1
         }
-      ]
+      ],
+      "bookPage": 130
     },
     {
       "id": "investigador",
@@ -12978,7 +13610,8 @@
           "amount": 2,
           "bonusType": "untyped"
         }
-      ]
+      ],
+      "bookPage": 130
     },
     {
       "id": "parceiro-poder",
@@ -12991,7 +13624,8 @@
           "kind": "note",
           "description": "Treinado em Adestramento (parceiro animal) OU Diplomacia (parceiro humanoide)"
         }
-      ]
+      ],
+      "bookPage": 130
     },
     {
       "id": "veneficio",
@@ -13003,7 +13637,8 @@
           "kind": "note",
           "description": "Treinado em Ofício (alquimista)"
         }
-      ]
+      ],
+      "bookPage": 131
     },
     {
       "id": "celebrar-ritual",
@@ -13016,7 +13651,8 @@
           "kind": "note",
           "description": "Lançar magias; treinado em Misticismo ou Religião"
         }
-      ]
+      ],
+      "bookPage": 131
     },
     {
       "id": "escrever-pergaminho",
@@ -13028,7 +13664,8 @@
           "kind": "note",
           "description": "Lançar magias; treinado em Ofício (escriba)"
         }
-      ]
+      ],
+      "bookPage": 131
     },
     {
       "id": "foco-em-magia",
@@ -13040,7 +13677,8 @@
           "kind": "note",
           "description": "Lançar magias"
         }
-      ]
+      ],
+      "bookPage": 131
     },
     {
       "id": "magia-acelerada",
@@ -13052,7 +13690,8 @@
           "kind": "note",
           "description": "Capacidade de lançar magias de 2º círculo"
         }
-      ]
+      ],
+      "bookPage": 131
     },
     {
       "id": "magia-ampliada",
@@ -13064,7 +13703,8 @@
           "kind": "note",
           "description": "Lançar magias"
         }
-      ]
+      ],
+      "bookPage": 131
     },
     {
       "id": "magia-discreta",
@@ -13076,7 +13716,8 @@
           "kind": "note",
           "description": "Lançar magias"
         }
-      ]
+      ],
+      "bookPage": 131
     },
     {
       "id": "magia-ilimitada",
@@ -13088,7 +13729,8 @@
           "kind": "note",
           "description": "Lançar magias"
         }
-      ]
+      ],
+      "bookPage": 131
     },
     {
       "id": "preparar-pocao",
@@ -13100,7 +13742,8 @@
           "kind": "note",
           "description": "Lançar magias; treinado em Ofício (alquimista)"
         }
-      ]
+      ],
+      "bookPage": 131
     }
   ],
   "grantedPowers": [
@@ -13959,7 +14602,7 @@
           "summary": "Respira embaixo d'água; natação 12m com cauda; fora d'água ganha pernas (9m); >1 dia sem água: não recupera PM."
         }
       ],
-      "bookPage": 30
+      "bookPage": 29
     },
     "silfide": {
       "id": "silfide",
