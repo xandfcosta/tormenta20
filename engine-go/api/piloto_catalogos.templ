@@ -30,6 +30,7 @@ templ cenaDosCatalogos(v catalogosView) {
 			@icone("Search", "pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground")
 			<input
 				type="search"
+				data-busca-da-cena
 				name="busca"
 				data-bind:busca
 				data-on:input__debounce.250ms="@get('/piloto/mestre/catalogos')"

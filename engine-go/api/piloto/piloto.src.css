@@ -97,23 +97,38 @@ html {
  *
  * O `max()` no piso é o que impõe o teto: uma coluna nunca fica menor que um
  * terço do contêiner, então nunca cabem quatro. */
-/* O anel de foco da FICHA fica na BORDA DELA, e não no miolo.
-   O foco precisa ir num filho — é assim que o driver de navegação enxerga um
-   item —, mas o filho vive DENTRO da caixa que rola. Anel no filho é anel
-   desenhado por dentro: ele acompanha a rolagem, encosta no conteúdo e some no
-   corte, que foi o "estranhamento" que o dono descreveu com a tela na mão.
+/* O CURSOR da ficha fica na moldura dela, e na linguagem da casa.
+   Três medições levaram a esta forma, e vale registrar as duas erradas.
 
-   `:has()` devolve o anel para quem é a caixa: quem recebe o foco continua
-   sendo o miolo (a navegação não muda), e quem se ACENDE é a moldura. É a
-   mesma ideia do `focus-within`, mas restrita a `:focus-visible` para o anel
-   não aparecer no clique do mouse.
+   (1) Anel no MIOLO desenha por dentro do que rola: acompanha a rolagem,
+   encosta no conteúdo e some no corte. Foi o "estranhamento" que o dono
+   descreveu com a tela na mão.
 
-   Fora de `@layer` pelo mesmo motivo da regra do diálogo: `outline-none` é
-   utilitária do Tailwind e mora numa camada posterior — dentro de `components`
-   esta regra perderia dela e nunca desenharia nada. */
-.mesa-painel:has(:focus-visible) {
-  outline: 2px solid var(--color-ring, oklch(0.8 0.11 85));
-  outline-offset: -2px;
+   (2) Anel na `<section>` via `:has()` deu DOIS anéis, também medido — porque o
+   miolo continuava pegando a regra global de foco do `index.css`, aquela que
+   vale para qualquer focável. O que eu não tinha visto é que existe uma SEGUNDA
+   regra global logo abaixo dela: item dentro de `[data-nav-region]` não usa anel
+   de navegador, usa a linguagem de "selecionado" da casa — borda dourada com
+   brilho, a mesma do trilho e da tira de heróis. Só que o seletor dela é
+   `:is(a, button, [data-nav-item])`, e o meu miolo era um `[tabindex]` puro:
+   caía na regra geral em vez da de cursor.
+
+   O conserto é o miolo declarar `data-nav-item`, que é a convenção, e o cursor
+   ser desenhado na MOLDURA: quem recebe o foco continua sendo o miolo (a
+   navegação não muda) e quem se acende é a caixa, sem nada por dentro do que
+   rola.
+
+   Fora de `@layer` porque disputa com regras não-camadas do `index.css`, e
+   depois do import por isso mesmo: mesma especificidade, ganha quem vem depois. */
+.scene-grimorio .mesa-painel > [data-nav-item]:focus-visible {
+  box-shadow: none;
+}
+
+.scene-grimorio .mesa-painel:has(> [data-nav-item]:focus-visible) {
+  border-color: var(--grimorio-gold);
+  box-shadow:
+    0 0 0 1px var(--grimorio-gold),
+    0 0 18px oklch(0.8 0.11 85 / 0.28);
 }
 
 @layer components {

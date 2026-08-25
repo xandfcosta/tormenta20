@@ -255,3 +255,52 @@ test('a legenda de teclado aparece no laptop e some no telefone', async ({ page 
   await page.setViewportSize({ width: 640, height: 900 })
   await expect(legenda).toBeHidden()
 })
+
+/**
+ * UM cursor só, e ele fica na MOLDURA da ficha — não por dentro do que rola.
+ *
+ * Duas formas erradas antes desta, as duas vistas pelo dono na tela: anel no
+ * miolo desenhava por dentro do scroll (acompanha a rolagem, some no corte), e
+ * anel na moldura via `:has()` deixou DOIS, porque o miolo continuava pegando a
+ * regra global de foco do `index.css`.
+ *
+ * A causa é uma convenção da casa que eu não seguia: item dentro de
+ * `[data-nav-region]` não usa anel de navegador, usa a linguagem de
+ * "selecionado" (borda dourada e brilho) — e o seletor dela pede
+ * `a`, `button` ou `data-nav-item`. Um `[tabindex]` puro cai na regra geral.
+ *
+ * E2E porque cascata com `:has()`, camadas e duas folhas só o navegador resolve.
+ */
+test('a ficha focada acende UM cursor, e na moldura', async ({ page }) => {
+  await page.setViewportSize({ width: 1400, height: 760 })
+  await page.goto('/piloto/mestre/bestiario')
+  await page.waitForLoadState('networkidle')
+
+  await page.locator('a[href*="criatura="]').first().focus()
+  await page.keyboard.press('ArrowRight')
+
+  const medida = await page.evaluate(() => {
+    const desenha = (e: Element) => {
+      const cs = getComputedStyle(e)
+      return cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0
+    }
+    const painel = document.querySelector('.mesa-painel') as HTMLElement
+    return {
+      focoNaFicha: !!document.activeElement?.closest('[data-nav-region="ficha"]'),
+      comAnel: [...document.querySelectorAll('*')].filter(desenha).map((e) =>
+        String((e as HTMLElement).className).slice(0, 30),
+      ),
+      molduraAcesa: getComputedStyle(painel).boxShadow !== 'none',
+      mioloComBrilho:
+        getComputedStyle(document.activeElement as HTMLElement).boxShadow !== 'none',
+    }
+  })
+
+  // O CONTROLE: o foco está na ficha. Sem ele, "nenhum anel" seria verdade sobre
+  // uma tela em que nada está focado.
+  expect(medida.focoNaFicha, 'o guarda não chegou na ficha').toBe(true)
+
+  expect(medida.comAnel, `anéis de contorno desenhados: ${medida.comAnel.join(' / ')}`).toEqual([])
+  expect(medida.molduraAcesa, 'a moldura da ficha não acendeu').toBe(true)
+  expect(medida.mioloComBrilho, 'o miolo acendeu por dentro do que rola').toBe(false)
+})

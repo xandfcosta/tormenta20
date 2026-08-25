@@ -128,6 +128,7 @@ templ layout(p paginaPiloto, corpo templ.Component) {
 			// para lugar nenhum.
 			<section
 				data-slot="scene-shell"
+				data-on:keydown__window={ atalhoDaBarra }
 				if p.Voltar != "" {
 					data-voltar={ p.Voltar }
 				}

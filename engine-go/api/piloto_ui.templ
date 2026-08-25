@@ -353,3 +353,22 @@ templ legendaDoTeclado() {
 		{ " abrir" }
 	</p>
 }
+
+// A BARRA foca a busca da cena.
+//
+// Mora na CASCA e não em cada tela: é atalho global, e um `keydown` por cena
+// seria exatamente o que a filosofia proíbe — a regra em N lugares diverge no
+// primeiro que alguém esquecer.
+//
+// A guarda de digitação é o que impede o atalho de roubar a tecla de quem
+// escreve: sem ela, digitar "1/2" numa busca dispararia o atalho e a barra nunca
+// chegaria ao campo. Mesma razão pela qual o driver de navegação se recolhe em
+// alvo de digitação.
+//
+// A busca é achada por `[data-busca-da-cena]` e não por id: cada cena tem a sua
+// com id próprio, e procurar por id obrigaria a casca a conhecer as telas — o
+// contrário de quem serve a quem. Cena sem busca simplesmente não reage, que é
+// melhor que reagir para o lugar errado.
+const atalhoDaBarra = `evt.key === '/' && ` +
+	`!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName) && ` +
+	`(evt.preventDefault(), document.querySelector('[data-busca-da-cena]')?.focus())`
