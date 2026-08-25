@@ -14,4 +14,12 @@ cd "$raiz/frontend"
 # O binário direto, e não `pnpm exec`, pelo mesmo motivo do CSS: o `pnpm exec`
 # roda uma checagem de dependências que aborta quando há script de instalação
 # pendente de aprovação, e isso é irrelevante para gerar um bundle.
-exec ./node_modules/.bin/vite build --config vite.piloto.config.ts --logLevel warn
+./node_modules/.bin/vite build --config vite.piloto.config.ts --logLevel warn
+
+# O WORKER do pdf.js é COPIADO e não empacotado (ALE-264): ele é um segundo
+# ponto de entrada, carregado pelo navegador com `new Worker(url)`, e o Vite em
+# modo `lib` não emite worker de dependência. São 1,3 MB que só a cena do leitor
+# pede — e é justamente por rodar fora da thread principal que a página do livro
+# desenha sem travar a cena.
+cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs \
+   "$raiz/engine-go/api/piloto/static/pdf.worker.js"

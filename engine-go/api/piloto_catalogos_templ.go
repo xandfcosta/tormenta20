@@ -473,7 +473,7 @@ func cartaoDeCondicao(c condicaoDoLivro, livro enderecoDoLivro) templ.Component 
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = seloDaPagina(livro, c.BookPage).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = seloDaPagina(livro, c.BookPage, c.Name).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -586,7 +586,7 @@ func cartaoDeMagia(m magiaDoLivro, livro enderecoDoLivro) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = seloDaPagina(livro, m.BookPage).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = seloDaPagina(livro, m.BookPage, m.Name).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -761,7 +761,7 @@ func cartaoDePoder(p poderDoLivro, livro enderecoDoLivro) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = seloDaPagina(livro, p.BookPage).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = seloDaPagina(livro, p.BookPage, p.Name).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -855,7 +855,7 @@ func cartaoDeItem(i itemDoLivro, livro enderecoDoLivro) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = seloDaPagina(livro, i.BookPage).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = seloDaPagina(livro, i.BookPage, i.Name).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -967,7 +967,7 @@ func cartaoDeRaca(r racaDoLivro, livro enderecoDoLivro) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = seloDaPagina(livro, r.BookPage).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = seloDaPagina(livro, r.BookPage, r.Name).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1121,7 +1121,7 @@ func cartaoDeClasse(c classeDoLivro, livro enderecoDoLivro) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = seloDaPagina(livro, c.BookPage).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = seloDaPagina(livro, c.BookPage, c.Name).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1262,7 +1262,7 @@ func cartaoDeDeus(d deusDoLivro, livro enderecoDoLivro) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = seloDaPagina(livro, d.BookPage).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = seloDaPagina(livro, d.BookPage, d.Name).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

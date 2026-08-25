@@ -402,7 +402,7 @@ templ blocoDoVerbete(m verbete, livro enderecoDoLivro) {
 			<h3 class="font-heading text-lg tracking-wide text-foreground">{ m.Name }</h3>
 			<p class="text-xs text-muted-foreground">
 				{ fmt.Sprintf("ND %s · %s · %s · ", ndEscrito(m.ND), nomeDoTipo(m.Tipo), nomeDoTamanho(m.Size)) }
-				@seloDaPagina(livro, m.BookPage)
+				@seloDaPagina(livro, m.BookPage, m.Name)
 				{ fmt.Sprintf(" · XP %d", xpDoND(m.ND)) }
 			</p>
 		</div>

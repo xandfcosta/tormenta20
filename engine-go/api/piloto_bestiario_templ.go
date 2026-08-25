@@ -959,7 +959,7 @@ func blocoDoVerbete(m verbete, livro enderecoDoLivro) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = seloDaPagina(livro, m.BookPage).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = seloDaPagina(livro, m.BookPage, m.Name).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

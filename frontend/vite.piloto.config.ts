@@ -37,6 +37,11 @@ export default defineConfig({
         cena: resolve(import.meta.dirname, 'src/piloto/cena.ts'),
         grimorio: resolve(import.meta.dirname, 'src/piloto/grimorio.ts'),
         'pecas-solid': resolve(import.meta.dirname, 'src/piloto/pecas-solid.tsx'),
+        // O leitor do livro (ALE-264) é a terceira entrada com o mesmo motivo
+        // das duas anteriores: ele carrega o pdf.js, que são 448 KB, e só a
+        // cena `/piloto/livro/ler` o pede. Pô-lo no `cena.js` seria mandar um
+        // visualizador de PDF para quem abriu a ficha de um personagem.
+        leitor: resolve(import.meta.dirname, 'src/piloto/leitor.ts'),
       },
       formats: ['es'],
       fileName: (_formato, nome) => `${nome}.js`,

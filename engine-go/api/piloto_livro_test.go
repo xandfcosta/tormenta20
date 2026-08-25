@@ -46,28 +46,36 @@ func servidorComLivro(t *testing.T, s *Server, conteudo string) *Server {
 	return s
 }
 
-// TestOBotaoAbreAPaginaDoArquivoENaoAImpressa: a soma da abertura.
+// TestOBotaoAbreOLeitorNaPaginaImpressaComOTermo.
 //
-// O controle está no segundo caso: com abertura zero o endereço traz o número
-// IMPRESSO, então este guarda vê a diferença entre somar e não somar — sem ele,
-// um `+ l.Abertura` apagado passaria verde contra um número que também existe.
-func TestOBotaoAbreAPaginaDoArquivoENaoAImpressa(t *testing.T) {
-	comAbertura := enderecoDoLivro{Base: "/piloto/livro?v=abc", Abertura: 6}
-	if got := comAbertura.naPagina(289); got != "/piloto/livro?v=abc#page=295" {
-		t.Errorf("a página impressa 289 abriu em %q — no arquivo ela é a 295", got)
+// O endereço mudou na segunda fatia desta issue: ele apontava para o PDF cru com
+// `#page=N`, e passou a apontar para o LEITOR da casa. A troca é medida — o
+// visualizador do Chrome ignora `#search=` (não há destaque possível por URL) e
+// transfere o arquivo inteiro; o leitor destaca o termo e custou 1 MiB contra
+// 85 MiB, contados na interface de loopback.
+func TestOBotaoAbreOLeitorNaPaginaImpressaComOTermo(t *testing.T) {
+	livro := enderecoDoLivro{Base: "/piloto/livro?v=abc", Abertura: 6}
+	if got := livro.naPagina(289, "Lobo"); got != "/piloto/livro/ler?p=289&t=Lobo" {
+		t.Errorf("o botão do Lobo aponta para %q", got)
 	}
-	semAbertura := enderecoDoLivro{Base: "/piloto/livro?v=abc"}
-	if got := semAbertura.naPagina(289); got != "/piloto/livro?v=abc#page=289" {
-		t.Errorf("sem abertura o endereço devia trazer a página impressa, e trouxe %q", got)
+	// O termo vai ESCAPADO: "Bola de Fogo" tem espaço, e nome de verbete com
+	// "&" quebraria a consulta inteira.
+	if got := livro.naPagina(180, "Bola de Fogo"); got != "/piloto/livro/ler?p=180&t=Bola+de+Fogo" {
+		t.Errorf("o termo não foi escapado: %q", got)
+	}
+	// A ABERTURA não entra no endereço: quem soma é o leitor, que fala em página
+	// impressa com quem lê e em página de arquivo com o pdf.js.
+	if got := livro.naPagina(289, ""); got != "/piloto/livro/ler?p=289" {
+		t.Errorf("sem termo o endereço devia ser só a página, e foi %q", got)
 	}
 }
 
 // TestSemLivroConfiguradoNaoHaEndereco: o zero valor não produz link quebrado.
 func TestSemLivroConfiguradoNaoHaEndereco(t *testing.T) {
-	if got := (enderecoDoLivro{}).naPagina(289); got != "" {
+	if got := (enderecoDoLivro{}).naPagina(289, "Lobo"); got != "" {
 		t.Errorf("sem livro o endereço devia ser vazio, e foi %q", got)
 	}
-	if got := (enderecoDoLivro{Base: "/piloto/livro"}).naPagina(0); got != "" {
+	if got := (enderecoDoLivro{Base: "/piloto/livro"}).naPagina(0, "Lobo"); got != "" {
 		t.Errorf("criatura sem página no livro devia ficar sem endereço, e ficou %q", got)
 	}
 }
@@ -193,18 +201,74 @@ func TestACenaDoBestiarioAbreOLivroNaPaginaDaCriatura(t *testing.T) {
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/bestiario?criatura=lobo", "").Body.String()
-	// O Lobo diz p289, e a página impressa 289 é a 295 do arquivo.
-	if !strings.Contains(corpo, "#page=295") {
-		t.Error("a ficha do Lobo não linka a página 295 do arquivo")
+	// O endereço leva ao LEITOR, na página impressa e com o nome a destacar.
+	if !strings.Contains(corpo, "/piloto/livro/ler?p=289&amp;t=Lobo") {
+		t.Error("a ficha do Lobo não abre o leitor na página dele")
 	}
 
 	semLivro := newTestServer(t)
 	outro := seedUser(t, semLivro, "mestre@t20.local")
 	sem := pedeNoMestre(t, semLivro, outro, "GET", "/piloto/mestre/bestiario?criatura=lobo", "").Body.String()
-	if strings.Contains(sem, "#page=") {
+	if strings.Contains(sem, "/piloto/livro/ler") {
 		t.Error("sem LIVRO_PDF a cena desenhou um link para um livro que não é servido")
 	}
 	if !strings.Contains(sem, "p289") {
 		t.Error("sem livro a página impressa devia continuar escrita na ficha")
+	}
+}
+
+// TestALeituraDoLivroCarregaOQueACenaPrecisa (ALE-264).
+//
+// O leitor é JavaScript: o pdf.js lê o PDF, desenha o canvas e posiciona as
+// marcas. Nada disso cabe num teste de handler, e é o `e2e/tests/piloto-leitor.spec.ts`
+// que mede. O que cabe AQUI é o contrato entre os dois — os cinco dados que o
+// servidor escreve no `<div id="leitor">`. Errar um deles quebra o leitor em
+// silêncio: sem `data-abertura` ele abre seis páginas antes, sem `data-worker` o
+// pdf.js cai no modo sem worker e trava a aba.
+func TestALeituraDoLivroCarregaOQueACenaPrecisa(t *testing.T) {
+	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
+	eu := seedUser(t, s, "mestre@t20.local")
+
+	corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/livro/ler?p=290&t=Lobo", "").Body.String()
+	for _, dado := range []string{
+		`data-pagina="290"`,
+		`data-termo="Lobo"`,
+		`data-abertura="6"`,
+		`data-worker="/piloto/static/pdf.worker.js`,
+		`data-livro="/piloto/livro?v=`,
+	} {
+		if !strings.Contains(corpo, dado) {
+			t.Errorf("a cena do leitor não escreveu %s", dado)
+		}
+	}
+	// O módulo do leitor só entra NESTA cena: são 540 KB de pdf.js.
+	if !strings.Contains(corpo, "leitor.js") {
+		t.Error("a cena não carrega o módulo do leitor")
+	}
+	if bestiario := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/bestiario", "").Body.String(); strings.Contains(bestiario, "leitor.js") {
+		t.Error("o bestiário carregou o pdf.js — 540 KB no caminho de quem só quer a ficha")
+	}
+}
+
+// TestSemLivroNaoHaLeitor: a cena não existe sem o arquivo, como a rota do PDF.
+func TestSemLivroNaoHaLeitor(t *testing.T) {
+	s := newTestServer(t)
+	eu := seedUser(t, s, "mestre@t20.local")
+
+	if rec := pedeNoMestre(t, s, eu, "GET", "/piloto/livro/ler?p=290", ""); rec.Code != http.StatusNotFound {
+		t.Errorf("sem LIVRO_PDF o leitor respondeu %d, e não 404", rec.Code)
+	}
+}
+
+// TestAPaginaDoLeitorRecusaLixo: o endereço é compartilhável e se digita à mão.
+func TestAPaginaDoLeitorRecusaLixo(t *testing.T) {
+	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
+	eu := seedUser(t, s, "mestre@t20.local")
+
+	for _, alvo := range []string{"/piloto/livro/ler?p=abacaxi", "/piloto/livro/ler?p=-3", "/piloto/livro/ler"} {
+		corpo := pedeNoMestre(t, s, eu, "GET", alvo, "").Body.String()
+		if !strings.Contains(corpo, `data-pagina="1"`) {
+			t.Errorf("%s não caiu na primeira página — a cena aceitou lixo", alvo)
+		}
 	}
 }

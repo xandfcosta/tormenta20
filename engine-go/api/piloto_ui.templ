@@ -475,11 +475,14 @@ const andaNoBuscador = `['ArrowDown', 'ArrowUp'].includes(evt.key) && (evt.preve
 // chegando, que é o caminho certo para um atalho de saída. Nos catálogos vale o
 // mesmo: são centenas de cartões, e cada um viraria uma parada da seta.
 //
-// `target="_blank"` porque a mesa está aberta atrás: trocar a cena pelo PDF
+// `target="_blank"` porque a mesa está aberta atrás: trocar a cena pelo livro
 // perderia a fila da iniciativa no meio do combate.
-templ aPaginaDoLivro(livro enderecoDoLivro, pagina int) {
+//
+// O `termo` é o que o leitor DESTACA na página. Vem de quem chama e não do
+// número: é o nome do verbete, e é ele que o olho procura ao chegar.
+templ aPaginaDoLivro(livro enderecoDoLivro, pagina int, termo string) {
 	<a
-		href={ templ.SafeURL(livro.naPagina(pagina)) }
+		href={ templ.SafeURL(livro.naPagina(pagina, termo)) }
 		target="_blank"
 		rel="noopener"
 		data-nav-skip
@@ -495,10 +498,10 @@ templ aPaginaDoLivro(livro enderecoDoLivro, pagina int) {
 // a regra "zero significa que o catálogo não sabe" escrita sete vezes é a que
 // alguém esquece no oitavo. O número puro NÃO é consolo: o mestre com o livro de
 // papel na mesa usa exatamente isso.
-templ seloDaPagina(livro enderecoDoLivro, pagina int) {
+templ seloDaPagina(livro enderecoDoLivro, pagina int, termo string) {
 	if pagina > 0 {
-		if livro.naPagina(pagina) != "" {
-			@aPaginaDoLivro(livro, pagina)
+		if livro.naPagina(pagina, termo) != "" {
+			@aPaginaDoLivro(livro, pagina, termo)
 		} else {
 			<span class="font-mono text-3xs text-muted-foreground">{ fmt.Sprintf("p%d", pagina) }</span>
 		}

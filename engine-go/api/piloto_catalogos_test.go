@@ -275,7 +275,7 @@ func TestTodaAbaDoAcervoOfereceOLivro(t *testing.T) {
 
 	for _, aba := range abasDoAcervo {
 		corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/catalogos?aba="+aba.ID, "").Body.String()
-		if !strings.Contains(corpo, "#page=") {
+		if !strings.Contains(corpo, "/piloto/livro/ler?p=") {
 			t.Errorf("a aba %q não oferece o livro em nenhuma entrada", aba.Rotulo)
 		}
 		if !strings.Contains(corpo, "Abrir o livro na página") {
@@ -286,7 +286,7 @@ func TestTodaAbaDoAcervoOfereceOLivro(t *testing.T) {
 	semLivro := newTestServer(t)
 	outro := seedUser(t, semLivro, "mestre@t20.local")
 	sem := pedeNoMestre(t, semLivro, outro, "GET", "/piloto/mestre/catalogos?aba=condicoes", "").Body.String()
-	if strings.Contains(sem, "#page=") {
+	if strings.Contains(sem, "/piloto/livro/ler") {
 		t.Error("sem LIVRO_PDF a cena linkou um livro que não é servido")
 	}
 	// E a página continua ESCRITA: o mestre com o livro de papel usa o número.

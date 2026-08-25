@@ -523,4 +523,22 @@ html {
     outline: 2px solid var(--ring);
     outline-offset: -2px;
   }
+
+  /* A MARCA do leitor do livro (ALE-264): o destaque do verbete na página.
+   *
+   * Escrita aqui e não como utilitário do Tailwind porque quem a cria é o
+   * `leitor.js` em tempo de execução — o scanner do Tailwind lê os `.templ` e
+   * uma classe que só existe numa string de JS simplesmente não sairia na
+   * folha, e o destaque nasceria invisível.
+   *
+   * `mix-blend-mode: multiply` em vez de opacidade: o fundo da página do livro
+   * é papel claro com textura, e um retângulo semitransparente por cima apaga o
+   * texto. Multiplicando, a tinta preta atravessa a marca amarela como num
+   * marca-texto de verdade. */
+  .leitor-marca {
+    position: absolute;
+    background: oklch(0.86 0.17 95);
+    mix-blend-mode: multiply;
+    border-radius: 2px;
+  }
 }

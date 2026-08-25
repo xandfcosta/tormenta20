@@ -1285,9 +1285,12 @@ const andaNoBuscador = `['ArrowDown', 'ArrowUp'].includes(evt.key) && (evt.preve
 // chegando, que é o caminho certo para um atalho de saída. Nos catálogos vale o
 // mesmo: são centenas de cartões, e cada um viraria uma parada da seta.
 //
-// `target="_blank"` porque a mesa está aberta atrás: trocar a cena pelo PDF
+// `target="_blank"` porque a mesa está aberta atrás: trocar a cena pelo livro
 // perderia a fila da iniciativa no meio do combate.
-func aPaginaDoLivro(livro enderecoDoLivro, pagina int) templ.Component {
+//
+// O `termo` é o que o leitor DESTACA na página. Vem de quem chama e não do
+// número: é o nome do verbete, e é ele que o olho procura ao chegar.
+func aPaginaDoLivro(livro enderecoDoLivro, pagina int, termo string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1313,9 +1316,9 @@ func aPaginaDoLivro(livro enderecoDoLivro, pagina int) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var53 templ.SafeURL
-		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(livro.naPagina(pagina)))
+		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(livro.naPagina(pagina, termo)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 482, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 485, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 		if templ_7745c5c3_Err != nil {
@@ -1328,7 +1331,7 @@ func aPaginaDoLivro(livro enderecoDoLivro, pagina int) templ.Component {
 		var templ_7745c5c3_Var54 string
 		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("Abrir o livro na página %d", pagina))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 486, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 489, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var54)
 		if templ_7745c5c3_Err != nil {
@@ -1341,7 +1344,7 @@ func aPaginaDoLivro(livro enderecoDoLivro, pagina int) templ.Component {
 		var templ_7745c5c3_Var55 string
 		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("p%d ↗", pagina))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 488, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 491, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 		if templ_7745c5c3_Err != nil {
@@ -1362,7 +1365,7 @@ func aPaginaDoLivro(livro enderecoDoLivro, pagina int) templ.Component {
 // a regra "zero significa que o catálogo não sabe" escrita sete vezes é a que
 // alguém esquece no oitavo. O número puro NÃO é consolo: o mestre com o livro de
 // papel na mesa usa exatamente isso.
-func seloDaPagina(livro enderecoDoLivro, pagina int) templ.Component {
+func seloDaPagina(livro enderecoDoLivro, pagina int, termo string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1384,8 +1387,8 @@ func seloDaPagina(livro enderecoDoLivro, pagina int) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		if pagina > 0 {
-			if livro.naPagina(pagina) != "" {
-				templ_7745c5c3_Err = aPaginaDoLivro(livro, pagina).Render(ctx, templ_7745c5c3_Buffer)
+			if livro.naPagina(pagina, termo) != "" {
+				templ_7745c5c3_Err = aPaginaDoLivro(livro, pagina, termo).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1397,7 +1400,7 @@ func seloDaPagina(livro enderecoDoLivro, pagina int) templ.Component {
 				var templ_7745c5c3_Var57 string
 				templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("p%d", pagina))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 503, Col: 86}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 506, Col: 86}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 				if templ_7745c5c3_Err != nil {

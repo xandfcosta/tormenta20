@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -37,18 +38,29 @@ type enderecoDoLivro struct {
 	Abertura int
 }
 
-// naPagina devolve o endereço que abre o livro na página IMPRESSA pedida.
+// naPagina devolve o endereço que abre o livro na página IMPRESSA pedida, com o
+// verbete destacado.
 //
-//	v.Livro.naPagina(289) // → "/piloto/livro?v=ab12…#page=295"
+//	v.Livro.naPagina(289, "Lobo") // → "/piloto/livro/ler?p=289&t=Lobo"
 //
-// A soma da abertura é o miolo disto: `#page=` conta páginas do ARQUIVO e o
-// catálogo grava a página impressa no rodapé. Ver `plataforma.Config.LivroAbertura`
-// para a medição.
-func (l enderecoDoLivro) naPagina(pagina int) string {
+// Aponta para o LEITOR e não para o PDF cru, e a troca é medida: o visualizador
+// do Chrome obedece `#page=N` e IGNORA `#search=` — não há como pedir destaque
+// por URL —, e ainda transfere o arquivo inteiro para mostrar uma página (85 MiB
+// contados no loopback). O leitor da casa (`frontend/src/piloto/leitor.ts`)
+// resolve os dois: destaca o termo e pede faixas.
+//
+// A ABERTURA não entra aqui: quem soma é o leitor, que fala em página impressa
+// com quem lê e em página de arquivo com o pdf.js. Ver
+// `plataforma.Config.LivroAbertura` para a medição do 6.
+func (l enderecoDoLivro) naPagina(pagina int, termo string) string {
 	if l.Base == "" || pagina <= 0 {
 		return ""
 	}
-	return l.Base + "#page=" + strconv.Itoa(pagina+l.Abertura)
+	endereco := rotaDoLeitor + "?p=" + strconv.Itoa(pagina)
+	if termo != "" {
+		endereco += "&t=" + url.QueryEscape(termo)
+	}
+	return endereco
 }
 
 // livroServido é o que o servidor guarda: onde o arquivo está e como falar dele.
@@ -61,6 +73,11 @@ type livroServido struct {
 // rotaDoLivro é o caminho DENTRO do piloto; o público leva o `/piloto` na frente
 // porque é isso que o navegador pede (o `buildMux` monta com `StripPrefix`).
 const rotaDoLivro = "/livro"
+
+// rotaDoLeitor é o endereço PÚBLICO da cena que desenha o livro. Ela não é
+// versionada porque é uma página HTML servida com `no-store`; quem carrega
+// versão é o PDF que ela pede.
+const rotaDoLeitor = "/piloto/livro/ler"
 
 // abreOLivro lê a configuração UMA vez, no boot.
 //
@@ -140,6 +157,65 @@ func avisaSeNaoLinearizado(caminho string) {
 // ehLinearizado procura a marca do PDF linearizado no começo do arquivo.
 func ehLinearizado(cabeca []byte) bool {
 	return strings.Contains(string(cabeca), "/Linearized")
+}
+
+// ── a cena do leitor ─────────────────────────────────────────────────────────
+
+// leitorView é o que a cena precisa saber: onde está o PDF, em que página abrir,
+// o que destacar e para onde voltar.
+type leitorView struct {
+	PDF      string
+	Pagina   int
+	Abertura int
+	Termo    string
+	Voltar   string
+}
+
+// carregaOLeitor lê a URL e recusa o que não faz sentido.
+//
+// A página vem da URL porque este endereço é COMPARTILHÁVEL: o mestre manda
+// "olha na p289" no chat da mesa, e o link tem de abrir lá. Página fora do livro
+// cai na primeira em vez de derrubar a cena — endereço se digita à mão.
+func (s *Server) carregaOLeitor(r *http.Request) leitorView {
+	pagina, err := strconv.Atoi(r.URL.Query().Get("p"))
+	if err != nil || pagina <= 0 {
+		pagina = 1
+	}
+	voltar := r.Referer()
+	if voltar == "" || !strings.HasPrefix(voltar, "/") {
+		// Referer de outro site (ou nenhum) não vira link de voltar: seria um
+		// endereço de terceiro na nossa barra. O Hub é o destino de quem chegou
+		// por um link colado.
+		voltar = "/piloto/"
+	}
+	return leitorView{
+		PDF:      s.livro.endereco.Base,
+		Pagina:   pagina,
+		Abertura: s.livro.endereco.Abertura,
+		Termo:    r.URL.Query().Get("t"),
+		Voltar:   voltar,
+	}
+}
+
+func (s *Server) handleLeitorDoLivro(w http.ResponseWriter, r *http.Request) {
+	if s.livro.caminho == "" {
+		http.NotFound(w, r)
+		return
+	}
+	v := s.carregaOLeitor(r)
+	titulo := "Livro · Tormenta 20"
+	if v.Termo != "" {
+		titulo = v.Termo + " · Livro · Tormenta 20"
+	}
+	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
+		Titulo: titulo,
+		Forma:  cascaNua,
+		Voltar: v.Voltar,
+		// O módulo do leitor só entra AQUI: são 540 KB de pdf.js, e mandá-los em
+		// toda cena seria pôr um visualizador de PDF no caminho de quem abriu a
+		// ficha de um personagem.
+		Scripts: []string{EstaticoDoPiloto("leitor.js")},
+	}, leitorDoLivro(v))
 }
 
 // LivroDoPiloto serve o PDF configurado, com faixas.

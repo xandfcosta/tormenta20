@@ -55,6 +55,10 @@ func (s *Server) PilotoRouter() http.Handler {
 		// arquivo do dono da mesa. Sem `LIVRO_PDF` a rota devolve 404 — o botão
 		// que a levaria também não é desenhado.
 		r.Handle(rotaDoLivro, s.LivroDoPiloto())
+		// O LEITOR é uma PÁGINA e o `/livro` é o arquivo. Rotas irmãs de
+		// propósito: quem quiser o PDF cru (imprimir, buscar no visualizador do
+		// navegador) tem o endereço de sempre.
+		r.Get(rotaDoLivro+"/ler", s.handleLeitorDoLivro)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(s.requirePagina)
