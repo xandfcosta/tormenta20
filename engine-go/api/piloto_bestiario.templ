@@ -385,32 +385,6 @@ templ listaDeVerbetes(v bestiarioView) {
 
 // ── o bloco de estatísticas ──────────────────────────────────────────────────
 
-// aPaginaDoLivro abre o PDF do livro na página desta criatura (ALE-264).
-//
-// A página JÁ estava escrita na linha ("p289") — virar link é o gesto mais
-// barato que existia aqui: nada de botão novo disputando espaço com o nome da
-// criatura, e a seta diz que abre fora.
-//
-// `data-nav-skip` porque o painel da ficha é uma REGIÃO de layout `column` com
-// UM item, e é isso que faz a vertical ROLAR o bloco em vez de andar (ver o
-// comentário da região em `cenaDoBestiario`). O driver de teclado coleta
-// `a[href]`, então sem esta marca um segundo item nasceria aqui e a seta para
-// baixo passaria a saltar para o link em vez de rolar a ficha. O Tab continua
-// chegando, que é o caminho certo para um atalho de saída.
-//
-// `target="_blank"` porque a mesa está aberta atrás: trocar a cena pelo PDF
-// perderia a fila da iniciativa no meio do combate.
-templ aPaginaDoLivro(livro enderecoDoLivro, pagina int) {
-	<a
-		href={ templ.SafeURL(livro.naPagina(pagina)) }
-		target="_blank"
-		rel="noopener"
-		data-nav-skip
-		title={ fmt.Sprintf("Abrir o livro na página %d", pagina) }
-		class="rounded-sm underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-	>{ fmt.Sprintf("p%d ↗", pagina) }</a>
-}
-
 // blocoDoVerbete é a ficha da criatura como o livro a imprime.
 //
 // A ORDEM é regra e foi decidida na ALE-170: Ataques e Habilidades vêm ANTES
@@ -428,11 +402,7 @@ templ blocoDoVerbete(m verbete, livro enderecoDoLivro) {
 			<h3 class="font-heading text-lg tracking-wide text-foreground">{ m.Name }</h3>
 			<p class="text-xs text-muted-foreground">
 				{ fmt.Sprintf("ND %s · %s · %s · ", ndEscrito(m.ND), nomeDoTipo(m.Tipo), nomeDoTamanho(m.Size)) }
-				if livro.Base != "" {
-					@aPaginaDoLivro(livro, m.BookPage)
-				} else {
-					{ fmt.Sprintf("p%d", m.BookPage) }
-				}
+				@seloDaPagina(livro, m.BookPage)
 				{ fmt.Sprintf(" · XP %d", xpDoND(m.ND)) }
 			</p>
 		</div>

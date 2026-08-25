@@ -8,6 +8,8 @@ package api
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+import "fmt"
+
 // A contraparte templ do `shared/ui` da SPA (ALE-229).
 //
 // Ela nasce agora e não no piloto porque o piloto podia escrever classe à mão
@@ -193,7 +195,7 @@ func campoDeTexto(c campo) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 105, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 107, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -206,7 +208,7 @@ func campoDeTexto(c campo) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(c.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 106, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 108, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -219,7 +221,7 @@ func campoDeTexto(c campo) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 109, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 111, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -232,7 +234,7 @@ func campoDeTexto(c campo) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 110, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 112, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 		if templ_7745c5c3_Err != nil {
@@ -245,7 +247,7 @@ func campoDeTexto(c campo) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(tipoOuTexto(c.Tipo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 111, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 113, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -258,7 +260,7 @@ func campoDeTexto(c campo) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Valor)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 112, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 114, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {
@@ -276,7 +278,7 @@ func campoDeTexto(c campo) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Autocomplete)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 114, Col: 33}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 116, Col: 33}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 			if templ_7745c5c3_Err != nil {
@@ -301,7 +303,7 @@ func campoDeTexto(c campo) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(inteiro(c.TamanhoMinimo))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 120, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 122, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 			if templ_7745c5c3_Err != nil {
@@ -320,7 +322,7 @@ func campoDeTexto(c campo) templ.Component {
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(inteiro(c.TamanhoMaximo))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 123, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 125, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 			if templ_7745c5c3_Err != nil {
@@ -339,7 +341,7 @@ func campoDeTexto(c campo) templ.Component {
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome + "-erro")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 127, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 129, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 			if templ_7745c5c3_Err != nil {
@@ -362,7 +364,7 @@ func campoDeTexto(c campo) templ.Component {
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(c.Dica)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 132, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 134, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -381,7 +383,7 @@ func campoDeTexto(c campo) templ.Component {
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome + "-erro")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 135, Col: 29}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 137, Col: 29}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 			if templ_7745c5c3_Err != nil {
@@ -399,7 +401,7 @@ func campoDeTexto(c campo) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(e)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 137, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 139, Col: 44}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -510,7 +512,7 @@ func tituloDaCena(titulo, kicker string) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 157, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 159, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -528,7 +530,7 @@ func tituloDaCena(titulo, kicker string) templ.Component {
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(kicker)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 166, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 168, Col: 89}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
@@ -590,7 +592,7 @@ func campoDeTextoLongo(c campo, linhas int) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 188, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 190, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 		if templ_7745c5c3_Err != nil {
@@ -603,7 +605,7 @@ func campoDeTextoLongo(c campo, linhas int) templ.Component {
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(c.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 189, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 191, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 		if templ_7745c5c3_Err != nil {
@@ -616,7 +618,7 @@ func campoDeTextoLongo(c campo, linhas int) templ.Component {
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 192, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 194, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 		if templ_7745c5c3_Err != nil {
@@ -629,7 +631,7 @@ func campoDeTextoLongo(c campo, linhas int) templ.Component {
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 193, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 195, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
 		if templ_7745c5c3_Err != nil {
@@ -642,7 +644,7 @@ func campoDeTextoLongo(c campo, linhas int) templ.Component {
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue(inteiro(linhas))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 194, Col: 25}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 196, Col: 25}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 		if templ_7745c5c3_Err != nil {
@@ -660,7 +662,7 @@ func campoDeTextoLongo(c campo, linhas int) templ.Component {
 			var templ_7745c5c3_Var30 string
 			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue(inteiro(c.TamanhoMaximo))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 196, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 198, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 			if templ_7745c5c3_Err != nil {
@@ -679,7 +681,7 @@ func campoDeTextoLongo(c campo, linhas int) templ.Component {
 			var templ_7745c5c3_Var31 string
 			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome + "-erro")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 200, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 202, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var31)
 			if templ_7745c5c3_Err != nil {
@@ -697,7 +699,7 @@ func campoDeTextoLongo(c campo, linhas int) templ.Component {
 		var templ_7745c5c3_Var32 string
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(c.Valor)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 203, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 205, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 		if templ_7745c5c3_Err != nil {
@@ -715,7 +717,7 @@ func campoDeTextoLongo(c campo, linhas int) templ.Component {
 			var templ_7745c5c3_Var33 string
 			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(c.Dica)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 205, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 207, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 			if templ_7745c5c3_Err != nil {
@@ -734,7 +736,7 @@ func campoDeTextoLongo(c campo, linhas int) templ.Component {
 			var templ_7745c5c3_Var34 string
 			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Nome + "-erro")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 208, Col: 29}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 210, Col: 29}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 			if templ_7745c5c3_Err != nil {
@@ -752,7 +754,7 @@ func campoDeTextoLongo(c campo, linhas int) templ.Component {
 				var templ_7745c5c3_Var35 string
 				templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(e)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 210, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 212, Col: 44}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 				if templ_7745c5c3_Err != nil {
@@ -1023,7 +1025,7 @@ func caixaRolavel(rotulo string, extra string) templ.Component {
 		var templ_7745c5c3_Var45 string
 		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 315, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 317, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
 		if templ_7745c5c3_Err != nil {
@@ -1113,7 +1115,7 @@ func legendaDoTeclado() templ.Component {
 		var templ_7745c5c3_Var48 string
 		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(" navegar")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 349, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 351, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 		if templ_7745c5c3_Err != nil {
@@ -1126,7 +1128,7 @@ func legendaDoTeclado() templ.Component {
 		var templ_7745c5c3_Var49 string
 		templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(" trocar de painel")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 351, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 353, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 		if templ_7745c5c3_Err != nil {
@@ -1139,7 +1141,7 @@ func legendaDoTeclado() templ.Component {
 		var templ_7745c5c3_Var50 string
 		templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(" abrir")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 353, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 355, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 		if templ_7745c5c3_Err != nil {
@@ -1152,7 +1154,7 @@ func legendaDoTeclado() templ.Component {
 		var templ_7745c5c3_Var51 string
 		templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(" buscar no livro")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 355, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 357, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 		if templ_7745c5c3_Err != nil {
@@ -1268,5 +1270,147 @@ const andaNoBuscador = `['ArrowDown', 'ArrowUp'].includes(evt.key) && (evt.preve
 	`})()), ` +
 	`evt.key === 'Enter' && document.activeElement?.id === 'buscador-campo' && ` +
 	`(evt.preventDefault(), el.querySelector('[data-resultado]')?.click())`
+
+// aPaginaDoLivro abre o PDF do livro na página de uma entrada (ALE-264).
+//
+// A página JÁ estava escrita na linha ("p289") — virar link é o gesto mais
+// barato que existia aqui: nada de botão novo disputando espaço com o nome da
+// criatura, e a seta diz que abre fora.
+//
+// `data-nav-skip` porque o painel da ficha é uma REGIÃO de layout `column` com
+// UM item, e é isso que faz a vertical ROLAR o bloco em vez de andar (ver o
+// comentário da região em `cenaDoBestiario`). O driver de teclado coleta
+// `a[href]`, então sem esta marca um segundo item nasceria aqui e a seta para
+// baixo passaria a saltar para o link em vez de rolar a ficha. O Tab continua
+// chegando, que é o caminho certo para um atalho de saída. Nos catálogos vale o
+// mesmo: são centenas de cartões, e cada um viraria uma parada da seta.
+//
+// `target="_blank"` porque a mesa está aberta atrás: trocar a cena pelo PDF
+// perderia a fila da iniciativa no meio do combate.
+func aPaginaDoLivro(livro enderecoDoLivro, pagina int) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var52 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var52 == nil {
+			templ_7745c5c3_Var52 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "<a href=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var53 templ.SafeURL
+		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(livro.naPagina(pagina)))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 482, Col: 46}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "\" target=\"_blank\" rel=\"noopener\" data-nav-skip title=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var54 string
+		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("Abrir o livro na página %d", pagina))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 486, Col: 60}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var54)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "\" class=\"rounded-sm underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var55 string
+		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("p%d ↗", pagina))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 488, Col: 34}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "</a>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+// seloDaPagina é o que as CENAS chamam: o link quando há livro servido, o número
+// puro quando não há, e nada quando o catálogo não sabe a página.
+//
+// Um componente e não um `if` em cada cartão porque são sete catálogos hoje — e
+// a regra "zero significa que o catálogo não sabe" escrita sete vezes é a que
+// alguém esquece no oitavo. O número puro NÃO é consolo: o mestre com o livro de
+// papel na mesa usa exatamente isso.
+func seloDaPagina(livro enderecoDoLivro, pagina int) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var56 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var56 == nil {
+			templ_7745c5c3_Var56 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		if pagina > 0 {
+			if livro.naPagina(pagina) != "" {
+				templ_7745c5c3_Err = aPaginaDoLivro(livro, pagina).Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "<span class=\"font-mono text-3xs text-muted-foreground\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var57 string
+				templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("p%d", pagina))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 503, Col: 86}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "</span>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+		}
+		return nil
+	})
+}
 
 var _ = templruntime.GeneratedTemplate

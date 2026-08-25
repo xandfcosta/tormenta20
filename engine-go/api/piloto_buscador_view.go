@@ -33,10 +33,10 @@ type achadoDoBuscador struct {
 	Nome    string
 	Detalhe string
 	Destino string
-	// Pagina é a do livro, e ZERO significa "o catálogo não sabe". Só o
-	// bestiário sabe hoje: `condicaoDoLivro`, `magiaDoLivro`, `poderDoLivro` e
-	// `itemDoLivro` não têm campo de página nenhum, então a linha delas sai sem
-	// número em vez de sair com "p0".
+	// Pagina é a do livro, e ZERO significa "o catálogo não sabe" — a linha sai
+	// sem número em vez de sair com "p0". Desde a derivação das páginas
+	// (`scripts/paginas-do-livro.py`) os cinco catálogos sabem a sua; o que
+	// continua zerado são as 81 entradas que o Índice Remissivo não resolve.
 	Pagina int
 	// ponto não vai para a tela: ele é a ORDEM, e mostrá-lo convidaria a
 	// discutir a nota em vez do resultado.
@@ -185,7 +185,7 @@ func achadoDaCondicao(c condicaoDoLivro) achadoDoBuscador {
 	if c.UpgradesTo != "" {
 		detalhe = "Condição · agrava para " + nomeDaCondicao(c.UpgradesTo)
 	}
-	return achadoDoBuscador{Nome: c.Name, Detalhe: detalhe, Destino: destinoNoAcervo("condicoes", c.Name)}
+	return achadoDoBuscador{Nome: c.Name, Detalhe: detalhe, Destino: destinoNoAcervo("condicoes", c.Name), Pagina: c.BookPage}
 }
 
 func achadoDaMagia(m magiaDoLivro) achadoDoBuscador {
@@ -193,11 +193,12 @@ func achadoDaMagia(m magiaDoLivro) achadoDoBuscador {
 		Nome:    m.Name,
 		Detalhe: fmt.Sprintf("%dº círculo · %s", m.Circle, nomeDaExecucao(m.Execution)),
 		Destino: destinoNoAcervo("magias", m.Name),
+		Pagina:  m.BookPage,
 	}
 }
 
 func achadoDoPoder(p poderDoLivro) achadoDoBuscador {
-	return achadoDoBuscador{Nome: p.Name, Detalhe: p.Fonte, Destino: destinoNoAcervo("poderes", p.Name)}
+	return achadoDoBuscador{Nome: p.Name, Detalhe: p.Fonte, Destino: destinoNoAcervo("poderes", p.Name), Pagina: p.BookPage}
 }
 
 func achadoDoItem(i itemDoLivro) achadoDoBuscador {
@@ -205,6 +206,7 @@ func achadoDoItem(i itemDoLivro) achadoDoBuscador {
 		Nome:    i.Name,
 		Detalhe: nomeDaCategoria(i.Category),
 		Destino: destinoNoAcervo("itens", i.Name),
+		Pagina:  i.BookPage,
 	}
 }
 

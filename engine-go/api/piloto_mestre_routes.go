@@ -293,7 +293,7 @@ func numeroDaURL(bruto string, padrao int) int {
 // LIVRO, igual para todo mundo. O `requirePagina` do grupo já exige sessão.
 func (s *Server) handleCatalogos(w http.ResponseWriter, r *http.Request) {
 	busca, aba := criteriosDoAcervo(r)
-	v := carregaCatalogos(busca, aba)
+	v := carregaCatalogos(busca, aba, s.livro.endereco)
 
 	if r.Header.Get("datastar-request") != "" {
 		sse := datastar.NewSSE(w, r)

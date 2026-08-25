@@ -105,16 +105,16 @@ templ resultadosDoAcervo(v catalogosView) {
 					}
 					<div class="acervo-em-colunas">
 						for _, c := range g.Condicoes {
-							@cartaoDeCondicao(c)
+							@cartaoDeCondicao(c, v.Livro)
 						}
 						for _, m := range g.Magias {
-							@cartaoDeMagia(m)
+							@cartaoDeMagia(m, v.Livro)
 						}
 						for _, p := range g.Poderes {
-							@cartaoDePoder(p)
+							@cartaoDePoder(p, v.Livro)
 						}
 						for _, i := range g.Itens {
-							@cartaoDeItem(i)
+							@cartaoDeItem(i, v.Livro)
 						}
 					</div>
 				</section>
@@ -131,13 +131,14 @@ templ cartaoDoAcervo() {
 	</div>
 }
 
-templ cartaoDeCondicao(c condicaoDoLivro) {
+templ cartaoDeCondicao(c condicaoDoLivro, livro enderecoDoLivro) {
 	@cartaoDoAcervo() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ c.Name }
 			for _, t := range c.Tags {
 				<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ t }</span>
 			}
+			@seloDaPagina(livro, c.BookPage)
 		</p>
 		<p class="mt-1 text-muted-foreground">{ c.Description }</p>
 		if c.UpgradesTo != "" {
@@ -148,13 +149,14 @@ templ cartaoDeCondicao(c condicaoDoLivro) {
 	}
 }
 
-templ cartaoDeMagia(m magiaDoLivro) {
+templ cartaoDeMagia(m magiaDoLivro, livro enderecoDoLivro) {
 	@cartaoDoAcervo() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ m.Name }
 			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">
 				{ fmt.Sprintf("%dº círculo", m.Circle) }
 			</span>
+			@seloDaPagina(livro, m.BookPage)
 		</p>
 		<p class="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
 			<span>{ "Execução: " + nomeDaExecucao(m.Execution) }</span>
@@ -171,21 +173,23 @@ templ cartaoDeMagia(m magiaDoLivro) {
 	}
 }
 
-templ cartaoDePoder(p poderDoLivro) {
+templ cartaoDePoder(p poderDoLivro, livro enderecoDoLivro) {
 	@cartaoDoAcervo() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ p.Name }
 			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ p.Fonte }</span>
+			@seloDaPagina(livro, p.BookPage)
 		</p>
 		<p class="mt-1 text-muted-foreground">{ p.Description }</p>
 	}
 }
 
-templ cartaoDeItem(i itemDoLivro) {
+templ cartaoDeItem(i itemDoLivro, livro enderecoDoLivro) {
 	@cartaoDoAcervo() {
 		<p class="flex flex-wrap items-center gap-1.5 font-medium">
 			{ i.Name }
 			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ nomeDaCategoria(i.Category) }</span>
+			@seloDaPagina(livro, i.BookPage)
 		</p>
 		<p class="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
 			<span>{ "Preço: " + precoEscrito(i.Price) }</span>

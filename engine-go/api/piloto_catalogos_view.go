@@ -65,6 +65,11 @@ type condicaoDoLivro struct {
 	Tags        []string `json:"tags"`
 	// UpgradesTo é a condição em que esta AGRAVA — "Abalado" vira "Apavorado".
 	UpgradesTo string `json:"upgradesTo,omitempty"`
+	// BookPage é a página IMPRESSA do verbete, derivada do Índice Remissivo do
+	// próprio livro e conferida contra o texto da página
+	// (`scripts/paginas-do-livro.py`). ZERO significa "o catálogo não sabe", e a
+	// tela não desenha selo nenhum — mentir a página é pior que não mostrá-la.
+	BookPage int `json:"bookPage"`
 }
 
 type magiaDoLivro struct {
@@ -79,6 +84,7 @@ type magiaDoLivro struct {
 	BaseEffect string   `json:"baseEffect"`
 	Augments   []any    `json:"augments"`
 	Classes    []string `json:"classes"`
+	BookPage   int      `json:"bookPage"`
 }
 
 // poderDoLivro é o poder ACHATADO. O livro espalha poder por três catálogos —
@@ -90,6 +96,7 @@ type poderDoLivro struct {
 	Name        string
 	Fonte       string
 	Description string
+	BookPage    int
 }
 
 type itemDoLivro struct {
@@ -98,6 +105,7 @@ type itemDoLivro struct {
 	Category string  `json:"category"`
 	Price    float64 `json:"price"`
 	Slots    float64 `json:"slots"`
+	BookPage int     `json:"bookPage"`
 }
 
 // ── a leitura, uma vez só ────────────────────────────────────────────────────
@@ -198,8 +206,11 @@ func poderesAchatados() []poderDoLivro {
 		ClassName   string `json:"className"`
 		Name        string `json:"name"`
 		Description string `json:"description"`
+		BookPage    int    `json:"bookPage"`
 	}]("class-powers") {
-		fora = append(fora, poderDoLivro{p.ID, p.Name, p.ClassName, p.Description})
+		fora = append(fora, poderDoLivro{
+			ID: p.ID, Name: p.Name, Fonte: p.ClassName, Description: p.Description, BookPage: p.BookPage,
+		})
 	}
 
 	for _, p := range listaDoCatalogo[struct {
@@ -207,18 +218,24 @@ func poderesAchatados() []poderDoLivro {
 		Name        string `json:"name"`
 		Kind        string `json:"kind"`
 		Description string `json:"description"`
+		BookPage    int    `json:"bookPage"`
 	}]("general-powers") {
-		fora = append(fora, poderDoLivro{"general." + p.ID, p.Name, "Geral · " + p.Kind, p.Description})
+		fora = append(fora, poderDoLivro{
+			ID: "general." + p.ID, Name: p.Name, Fonte: "Geral · " + p.Kind,
+			Description: p.Description, BookPage: p.BookPage,
+		})
 	}
 
 	for _, p := range listaDoCatalogo[struct {
-		ID     string   `json:"id"`
-		Name   string   `json:"name"`
-		Deuses []string `json:"deuses"`
-		Effect string   `json:"effect"`
+		ID       string   `json:"id"`
+		Name     string   `json:"name"`
+		Deuses   []string `json:"deuses"`
+		Effect   string   `json:"effect"`
+		BookPage int      `json:"bookPage"`
 	}]("granted-powers") {
 		fora = append(fora, poderDoLivro{
-			"granted." + p.ID, p.Name, "Concedido · " + strings.Join(p.Deuses, ", "), p.Effect,
+			ID: "granted." + p.ID, Name: p.Name,
+			Fonte: "Concedido · " + strings.Join(p.Deuses, ", "), Description: p.Effect, BookPage: p.BookPage,
 		})
 	}
 	return fora
@@ -281,6 +298,10 @@ func (g grupoDoAcervo) Quantos() int {
 // catalogosView é a cena inteira numa resposta.
 type catalogosView struct {
 	Busca string
+	// Livro é o endereço do PDF servido (ALE-264). Zero valor = não há livro
+	// configurado, e aí o cartão mostra a página em texto puro — que é o que o
+	// mestre com o livro de papel na mesa usa.
+	Livro enderecoDoLivro
 	// Aba só importa quando NÃO se está buscando: com termo digitado a cena
 	// mostra os quatro catálogos agrupados, que é a decisão que a ALE-22
 	// registrou — a versão em React filtrava só a aba ativa, e "bola de fogo"
@@ -294,8 +315,8 @@ func (v catalogosView) Buscando() bool { return strings.TrimSpace(v.Busca) != ""
 
 // carregaCatalogos monta a cena: os quatro catálogos quando há busca, um só
 // quando não há.
-func carregaCatalogos(busca, aba string) catalogosView {
-	v := catalogosView{Busca: busca, Aba: abaConhecida(aba)}
+func carregaCatalogos(busca, aba string, livro enderecoDoLivro) catalogosView {
+	v := catalogosView{Busca: busca, Aba: abaConhecida(aba), Livro: livro}
 	a := catalogosDoLivro()
 
 	if !v.Buscando() {

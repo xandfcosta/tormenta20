@@ -98,7 +98,7 @@ func TestOAcentoNaoSeparaNaBusca(t *testing.T) {
 // digitado na aba Condições dizia "nada encontrado" com a magia existindo. A
 // aba é para NAVEGAR sem termo; com termo, o assunto é o acervo inteiro.
 func TestBuscarVarreOsQuatroCatalogos(t *testing.T) {
-	v := carregaCatalogos("fogo", "condicoes")
+	v := carregaCatalogos("fogo", "condicoes", enderecoDoLivro{})
 	if !v.Buscando() {
 		t.Fatal("a cena não se considerou em busca")
 	}
@@ -130,7 +130,7 @@ func TestSemBuscaMostraSoAAbaAberta(t *testing.T) {
 		{"itens", "Itens", len(a.Itens)},
 	} {
 		t.Run(caso.aba, func(t *testing.T) {
-			v := carregaCatalogos("", caso.aba)
+			v := carregaCatalogos("", caso.aba, enderecoDoLivro{})
 			if len(v.Grupos) != 1 {
 				t.Fatalf("%d grupos, quero 1", len(v.Grupos))
 			}
@@ -147,7 +147,7 @@ func TestSemBuscaMostraSoAAbaAberta(t *testing.T) {
 // TestAbaInventadaCaiNaPrimeira: o `?aba=` é endereço e alguém o digita errado
 // — cair em tela vazia leria como catálogo quebrado.
 func TestAbaInventadaCaiNaPrimeira(t *testing.T) {
-	v := carregaCatalogos("", "grimorios-proibidos")
+	v := carregaCatalogos("", "grimorios-proibidos", enderecoDoLivro{})
 	if v.Aba != "condicoes" {
 		t.Errorf("aba %q, quero cair em condicoes", v.Aba)
 	}
@@ -234,7 +234,7 @@ func TestABuscaNaURLValeNaCargaFria(t *testing.T) {
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	rec := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/catalogos?busca=fogo", "")
-	esperados := carregaCatalogos("fogo", "").Achados
+	esperados := carregaCatalogos("fogo", "", enderecoDoLivro{}).Achados
 	if esperados == 0 {
 		t.Fatal("buscar fogo não acha nada: o dado mudou e o teste perdeu o sentido")
 	}
@@ -257,5 +257,40 @@ func TestBuscarEscondeAFileiraDeAbas(t *testing.T) {
 	}
 	if strings.Contains(comBusca, `aria-label="Catálogos"`) {
 		t.Error("com busca a fileira de abas continuou na tela")
+	}
+}
+
+// TestTodaAbaDoAcervoOfereceOLivro (ALE-264).
+//
+// AMOSTRAGEM e não enumeração: o teste percorre `abasDoAcervo`, então a aba que
+// entrar amanhã já nasce medida. Foi a lição da ALE-252 — guarda que nomeia cada
+// caso deixa o próximo nascer sem medição, em silêncio.
+//
+// O CONTROLE é a segunda metade: sem livro configurado, a mesma cena não pode
+// trazer link nenhum. Sem ele, "achei `#page=`" seria verdade sobre um endereço
+// que a cena escreve de qualquer jeito.
+func TestTodaAbaDoAcervoOfereceOLivro(t *testing.T) {
+	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
+	eu := seedUser(t, s, "mestre@t20.local")
+
+	for _, aba := range abasDoAcervo {
+		corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/catalogos?aba="+aba.ID, "").Body.String()
+		if !strings.Contains(corpo, "#page=") {
+			t.Errorf("a aba %q não oferece o livro em nenhuma entrada", aba.Rotulo)
+		}
+		if !strings.Contains(corpo, "Abrir o livro na página") {
+			t.Errorf("a aba %q tem o endereço mas não o título que diz o que ele faz", aba.Rotulo)
+		}
+	}
+
+	semLivro := newTestServer(t)
+	outro := seedUser(t, semLivro, "mestre@t20.local")
+	sem := pedeNoMestre(t, semLivro, outro, "GET", "/piloto/mestre/catalogos?aba=condicoes", "").Body.String()
+	if strings.Contains(sem, "#page=") {
+		t.Error("sem LIVRO_PDF a cena linkou um livro que não é servido")
+	}
+	// E a página continua ESCRITA: o mestre com o livro de papel usa o número.
+	if !strings.Contains(sem, "p394") {
+		t.Error("sem livro a página impressa sumiu do cartão — ela não depende do PDF")
 	}
 }

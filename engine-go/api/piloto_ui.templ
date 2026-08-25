@@ -1,5 +1,7 @@
 package api
 
+import "fmt"
+
 // A contraparte templ do `shared/ui` da SPA (ALE-229).
 //
 // Ela nasce agora e não no piloto porque o piloto podia escrever classe à mão
@@ -458,3 +460,48 @@ const andaNoBuscador = `['ArrowDown', 'ArrowUp'].includes(evt.key) && (evt.preve
 	`})()), ` +
 	`evt.key === 'Enter' && document.activeElement?.id === 'buscador-campo' && ` +
 	`(evt.preventDefault(), el.querySelector('[data-resultado]')?.click())`
+
+// aPaginaDoLivro abre o PDF do livro na página de uma entrada (ALE-264).
+//
+// A página JÁ estava escrita na linha ("p289") — virar link é o gesto mais
+// barato que existia aqui: nada de botão novo disputando espaço com o nome da
+// criatura, e a seta diz que abre fora.
+//
+// `data-nav-skip` porque o painel da ficha é uma REGIÃO de layout `column` com
+// UM item, e é isso que faz a vertical ROLAR o bloco em vez de andar (ver o
+// comentário da região em `cenaDoBestiario`). O driver de teclado coleta
+// `a[href]`, então sem esta marca um segundo item nasceria aqui e a seta para
+// baixo passaria a saltar para o link em vez de rolar a ficha. O Tab continua
+// chegando, que é o caminho certo para um atalho de saída. Nos catálogos vale o
+// mesmo: são centenas de cartões, e cada um viraria uma parada da seta.
+//
+// `target="_blank"` porque a mesa está aberta atrás: trocar a cena pelo PDF
+// perderia a fila da iniciativa no meio do combate.
+templ aPaginaDoLivro(livro enderecoDoLivro, pagina int) {
+	<a
+		href={ templ.SafeURL(livro.naPagina(pagina)) }
+		target="_blank"
+		rel="noopener"
+		data-nav-skip
+		title={ fmt.Sprintf("Abrir o livro na página %d", pagina) }
+		class="rounded-sm underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+	>{ fmt.Sprintf("p%d ↗", pagina) }</a>
+}
+
+// seloDaPagina é o que as CENAS chamam: o link quando há livro servido, o número
+// puro quando não há, e nada quando o catálogo não sabe a página.
+//
+// Um componente e não um `if` em cada cartão porque são sete catálogos hoje — e
+// a regra "zero significa que o catálogo não sabe" escrita sete vezes é a que
+// alguém esquece no oitavo. O número puro NÃO é consolo: o mestre com o livro de
+// papel na mesa usa exatamente isso.
+templ seloDaPagina(livro enderecoDoLivro, pagina int) {
+	if pagina > 0 {
+		if livro.naPagina(pagina) != "" {
+			@aPaginaDoLivro(livro, pagina)
+		} else {
+			<span class="font-mono text-3xs text-muted-foreground">{ fmt.Sprintf("p%d", pagina) }</span>
+		}
+	}
+}
+
