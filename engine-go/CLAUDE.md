@@ -328,9 +328,21 @@ desencontrado, no mesmo molde do `TestGeneratedTypesAreCurrent`. O que segue foi
 todo descoberto errando — está aqui para ninguém redescobrir:
 
 - **Comentário NÃO vive na lista de atributos de um elemento.** `// ...` entre
-  dois atributos derruba o parser com `malformed open element`, e a mensagem
-  aponta a linha do `<`, não a do comentário. Já aconteceu **cinco** vezes. O
-  comentário vai ACIMA do `templ`, ou acima do elemento inteiro.
+  dois atributos derruba o parser, e a mensagem aponta OUTRA linha — nunca a do
+  comentário. Já aconteceu **oito** vezes; as três últimas foram na mesma sessão,
+  por quem não leu esta linha antes de escrever.
+  **A mensagem varia com o que envolve o elemento, e é por isso que ninguém
+  reconhece o sintoma na segunda vez:** solto dá `malformed open element` na
+  linha do `<`; dentro de um `for` dá `for: expected nodes, but none were found`;
+  dentro de um `if` dá `if: expected nodes, but none were found` — as duas
+  apontando a linha do BLOCO, dezenas de linhas acima. Se um `for`/`if` que não
+  mudou começou a reclamar de "expected nodes", procure o comentário que você
+  acabou de pôr entre dois atributos.
+  O comentário vai ACIMA do `templ`, ou acima do elemento inteiro.
+  **E o pior não é o erro: é que `go build` fica VERDE por cima dele**, porque o
+  `_templ.go` antigo continua no lugar. `templ generate && go build` numa linha
+  só esconde isso — o build sucede sobre código gerado velho, e a página serve o
+  HTML de antes. Leia a saída do `templ generate`, não a do `go build`.
 - **`@componente()` tem de COMEÇAR a linha.** No meio de um texto ele vira texto
   literal, e a página mostra `@tecla("⏎")` escrito na tela — sem erro nenhum.
 - **Valor CONSTANTE de atributo sai literal; só o DINÂMICO é escapado.** Uma

@@ -55,8 +55,20 @@ templ mesaDoMestre(atual string, cena templ.Component) {
 // é navegar. O botão perdia o clique do meio, o "abrir em nova aba" e o
 // endereço que se cola no chat.
 templ trilhaDoMestre(atual string) {
+	// `data-nav-region` + `data-nav-layout` são o CONTRATO com o driver de
+	// teclado: o trilho declara a forma e nunca importa o driver, exatamente como
+	// o menu do Hub. Declarado AQUI e não em cada cena porque o trilho é um só —
+	// as quatro ferramentas do mestre passam por este componente, então uma
+	// declaração cobre as quatro. Declarar por cena seria enumeração, e a quinta
+	// ferramenta nasceria muda.
+	//
+	// `column` e não `row`: o trilho é barra horizontal no telefone e COLUNA no
+	// laptop, e o driver só liga a partir de `≥xl` com ponteiro fino — na largura
+	// em que ele existe, a forma é coluna.
 	<nav
 		aria-label="Ferramentas do mestre"
+		data-nav-region="trilha"
+		data-nav-layout="column"
 		class="flex shrink-0 gap-1 overflow-x-auto pb-1 lg:w-44 lg:flex-col lg:overflow-x-visible lg:pb-0"
 	>
 		for _, f := range ferramentasDoMestre {
@@ -157,9 +169,21 @@ templ fichaEmDialogo(m verbete) {
 		data-on:click="evt.target === el && ($fichaAberta = false)"
 		data-on:keydown__window="evt.key === 'Escape' && ($fichaAberta = false)"
 	>
+		// `data-expanded` é o que faz o DRIVER DE TECLADO se recolher: ele procura
+		// `[role="dialog"][data-expanded]`, e sem isto as setas continuariam
+		// andando na lista ATRÁS do modal — que é exatamente o que a filosofia
+		// manda evitar ("a modal surface owns the keyboard while open").
+		//
+		// Aqui o `data-attr` com BOOLEANO é o certo, ao contrário do que vale
+		// para `aria-*`: o Datastar trata valor booleano como atributo booleano,
+		// então verdadeiro põe `data-expanded=""` e falso REMOVE — e é a
+		// PRESENÇA que o seletor procura. Para ARIA isso seria defeito (um
+		// `aria-pressed=""` não anuncia estado); para um atributo de presença é
+		// exatamente a semântica desejada.
 		<div
 			role="dialog"
 			aria-modal="true"
+			data-attr:data-expanded="$fichaAberta"
 			aria-label={ m.Name }
 			class="relative max-h-[85vh] w-full overflow-y-auto rounded-t-md border border-grimorio-iron bg-background p-4 sm:max-w-2xl sm:rounded-md"
 		>
@@ -256,12 +280,34 @@ templ listaDeVerbetes(v bestiarioView) {
 	if len(v.Verbetes) == 0 {
 		<p class="p-4 text-center text-xs text-muted-foreground">Nenhuma criatura casa com os filtros.</p>
 	} else {
-		<ul class="min-h-0 flex-1 space-y-1 overflow-y-auto rounded-sm border border-grimorio-iron p-1">
+		<ul
+			data-nav-region="lista"
+			data-nav-layout="column"
+			class="min-h-0 flex-1 space-y-1 overflow-y-auto rounded-sm border border-grimorio-iron p-1"
+		>
 			for _, m := range v.Verbetes {
 				<li>
+					// FOCO ATIVA, como em jogo: a seta anda na lista e a ficha
+					// segue junto, sem exigir um Enter para ver. Decisão do
+					// dono.
+					//
+					// O foco NÃO abre o modal, e o clique abre — a divisão não
+					// é detalhe. Numa largura estreita a ficha é um `role=dialog`
+					// que o driver de teclado respeita se recolhendo; abrir no
+					// FOCO prenderia a pessoa dentro dele no primeiro passo da
+					// seta, e a saída seria um Esc que ela não pediu. Por isso
+					// só o gesto deliberado (clique ou Enter) leva o `abrir=1`.
+					//
+					// `__debounce`: segurar a seta atravessa a lista inteira, e
+					// sem isto seriam 80 idas ao servidor para ver UMA ficha —
+					// a intermediária que ninguém leu. 120ms é abaixo do que se
+					// percebe como espera e acima do intervalo de repetição da
+					// tecla, então parar numa linha desenha e passar por ela
+					// não custa nada.
 					<a
 						href={ templ.SafeURL(v.bestiarioBase() + "?criatura=" + m.ID) }
 						data-on:click={ fmt.Sprintf("evt.preventDefault(); $criatura = %q; @get('%s')", m.ID, abrirAFicha(v.bestiarioBase())) }
+						data-on:focus__throttle.100ms.leading={ fmt.Sprintf("$criatura = %q; @get('%s')", m.ID, v.bestiarioBase()) }
 						if v.Escolhido != nil && v.Escolhido.ID == m.ID {
 							aria-current="true"
 							class="block w-full rounded-sm border border-grimorio-gold bg-accent p-2 text-left transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
