@@ -250,7 +250,60 @@ templ mesaFila(v mesaView) {
 					}
 				}
 			</section>
+			if v.Mestre != nil {
+				@condicoesDoCombatente(v)
+			}
 	</div>
+}
+
+// AS CONDIÇÕES do combatente (ALE-122, portadas na ALE-269).
+//
+// UM diálogo para todas as linhas, e não um por combatente: são 35 condições, e
+// nove linhas × 35 crachás seriam 315 nós redesenhados a cada mudança na fila.
+// Quem diz de QUEM é a caixa são os sinais, reescritos pela ABERTURA — que é o
+// gesto que troca de item, e por isso o que limpa (a lição do link de redefinir
+// senha, no guia do `engine-go/`).
+//
+// A lista vem do CATÁLOGO e já chega ordenada em pt-BR. Uma segunda tabela do
+// livro escrita aqui é uma tabela que desvia: a API já teve 34 ids ao lado das
+// 35 do catálogo, e a que faltava dava 400 ao ser aplicada.
+templ condicoesDoCombatente(v mesaView) {
+	<dialog
+		id="condicoes-do-combatente"
+		data-preserve-attr="open"
+		aria-labelledby="condicoes-do-combatente-titulo"
+		class="scene-grimorio m-auto w-[min(34rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
+	>
+		<h2 id="condicoes-do-combatente-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">
+			Condições de <span data-text="$rotulodalinha"></span>
+		</h2>
+		<p class="mt-1 text-sm text-muted-foreground">
+			As condições do livro (p394-395). Aqui elas são RASTREIO: o bloco de uma criatura é escrito à mão, então o app não recalcula Defesa nem ataque — quem aplica o efeito é você.
+		</p>
+		<ul class="mt-3 flex max-h-[50vh] flex-wrap gap-1.5 overflow-y-auto">
+			for _, c := range catalogosDoLivro().Condicoes {
+				<li>
+					<button
+						type="button"
+						title={ c.Description }
+						data-attr:aria-pressed={ condicaoLigada(c.ID) + " ? 'true' : 'false'" }
+						data-class={ "{'pincel-ligado': " + condicaoLigada(c.ID) + "}" }
+						data-on:click={ alternaACondicaoDaLinha(v, c.ID) }
+						class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+					>{ c.Name }</button>
+				</li>
+			}
+		</ul>
+		<div class="mt-4 flex justify-end">
+			// FECHAR e não confirmar: cada clique já foi aplicado, e um botão de
+			// confirmar prometeria que nada valeu até ali.
+			<button
+				type="button"
+				data-on:click="document.getElementById('condicoes-do-combatente').close()"
+				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>Fechar</button>
+		</div>
+	</dialog>
 }
 
 // Os comandos do mestre. A raiz existe para todo mundo e o CONTEÚDO é que é do
@@ -401,8 +454,18 @@ templ mesaLinhaDaFila(v mesaView, l mesaLinha) {
 					// navegador, aquilo dava 2,36:1 contra os 4,5 do AA. É o mesmo erro
 					// que a ALE-200 consertou no botão destrutivo — tinta é para
 					// ESCREVER sobre o painel, não sobre o próprio preenchimento.
+					// O NOME e não o `id`: o crachá desenhava o identificador cru, e
+					// o `uppercase` disfarçava — 31 das 35 saem iguais em maiúsculas,
+					// e as outras quatro apareciam como CAIDO, EM-CHAMAS, IMOVEL e
+					// VULNERAVEL. O `title` carrega o EFEITO porque a condição aqui é
+					// RASTREIO e não regra: o motor não recalcula os números de um
+					// bloco escrito à mão, então quem aplica é o mestre, e ele precisa
+					// ler o que ela faz (ALE-122).
 					for _, c := range l.Condicoes {
-						<li class="rounded-md border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/15 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-[color:var(--hp-hurt)]">{ c }</li>
+						<li
+							title={ efeitoDaCondicao(c) }
+							class="rounded-md border border-[color:var(--hp-hurt)]/60 bg-[color:var(--hp-hurt)]/15 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-[color:var(--hp-hurt)]"
+						>{ nomeDaCondicao(c) }</li>
 					}
 				</ul>
 			}
@@ -438,6 +501,16 @@ templ verbosDaLinha(v mesaView, l mesaLinha) {
 			@vagaDeVerbo()
 			@vagaDeVerbo()
 		}
+		// AS CONDIÇÕES antes do remover, porque é o verbo do meio do combate e o
+		// remover é o do fim. Ele não tem `vagaDeVerbo` irmã: existe para toda
+		// linha, com ficha ou sem.
+		<button
+			type="button"
+			aria-label={ "Condições de " + l.Rotulo }
+			title={ "Condições de " + l.Rotulo + " (p394-395)" }
+			data-on:click={ abreAsCondicoes(l) }
+			class="flex size-9 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>🩹</button>
 		<button
 			type="button"
 			aria-label={ "Remover " + l.Rotulo + " da fila" }

@@ -367,3 +367,36 @@ func comoTextoJS(s string) string {
 	}
 	return string(cru)
 }
+
+// ── As CONDIÇÕES do combatente na tela (ALE-122, portadas na ALE-269) ────────
+
+// abreAsCondicoes escolhe a linha e abre o diálogo.
+//
+// Ele reescreve OS DOIS sinais, e é quem TROCA de item que limpa — a lição do
+// diálogo de redefinir senha, onde o link da Ana aparecia sob o nome da Bia
+// (está no guia do `engine-go/`). Quem gera não sabe que haverá um próximo;
+// quem troca sabe que houve um anterior.
+func abreAsCondicoes(l mesaLinha) string {
+	return fmt.Sprintf(
+		"$linhadacondicao = %q; $condicoesdalinha = %q; $rotulodalinha = %q;"+
+			" document.getElementById('condicoes-do-combatente').showModal()",
+		l.ID, strings.Join(l.Condicoes, ","), l.Rotulo,
+	)
+}
+
+// condicaoLigada é a pergunta que pinta o crachá do diálogo.
+func condicaoLigada(id string) string {
+	return fmt.Sprintf("$condicoesdalinha.split(',').includes(%q)", id)
+}
+
+// alternaACondicaoDaLinha posta o clique na linha ESCOLHIDA.
+//
+// O `entryId` sai do sinal e não do caminho escrito pelo servidor porque o
+// diálogo é UM só para todas as linhas — é o preço de não desenhar 35 crachás
+// por combatente, e o sinal é reescrito a cada abertura.
+func alternaACondicaoDaLinha(v mesaView, id string) string {
+	return fmt.Sprintf(
+		"@post('/piloto/mesa/%d/%d/initiative/' + $linhadacondicao + '/condicao/%s')",
+		v.CampaignID, v.SessionID, id,
+	)
+}
