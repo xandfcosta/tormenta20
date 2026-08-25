@@ -100,3 +100,30 @@ func comCacheDeEstatico(interno http.Handler) http.Handler {
 		interno.ServeHTTP(w, r)
 	})
 }
+
+// FontesDoPiloto serve as fontes que a FOLHA pede em `/fonts/…`.
+//
+// O defeito, relatado pelo dono com o cabeçalho na mão: `GET
+// /fonts/cinzel-latin.woff2` devolvia 404. A folha do piloto importa a da SPA
+// inteira, e é lá que mora o `@font-face` com `url('/fonts/cinzel-latin.woff2')`
+// — caminho ABSOLUTO. Em produção o `STATIC_DIR` serve o `dist` da SPA, onde o
+// Vite copiou `public/fonts/`, e o caminho resolve. No binário do piloto sozinho
+// não existe rota nenhuma ali, e a Cinzel caía para uma serifada do sistema em
+// TODA tela — que é justamente o binário em que a cena é revisada.
+//
+// As duas fontes viraram cópia embutida porque `go:embed` não alcança fora do
+// módulo Go: `../frontend/public/fonts` está fora do `engine-go/`. São 40KB, e o
+// `TestAsFontesEmbutidasSaoAsMesmasDaSPA` prende as cópias byte a byte — cópia
+// anotada com guarda é dívida; sem o guarda seria armadilha, com a fonte
+// atualizada num lugar só e a diferença aparecendo como um desenho levemente
+// errado que ninguém liga à causa.
+func (s *Server) FontesDoPiloto() http.Handler {
+	sub, err := fs.Sub(pilotoFS, "piloto/static/fonts")
+	if err != nil {
+		panic("piloto: fontes embutidas ausentes: " + err.Error())
+	}
+	// `StripPrefix` porque o `FileServer` recebe `/fonts/x.woff2` e procuraria
+	// `fonts/x.woff2` DENTRO do sub-FS, que já tem a pasta como raiz. Sem ele o
+	// 404 continua e parece que o embed falhou — medido.
+	return http.StripPrefix("/fonts", comCacheDeEstatico(http.FileServer(http.FS(sub))))
+}

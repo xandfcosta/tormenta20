@@ -1058,4 +1058,99 @@ func caixaRolavel(rotulo string, extra string) templ.Component {
 	})
 }
 
+// legendaDoTeclado diz como andar na cena SEM o mouse.
+//
+// O dono pediu depois de perceber que a gramática existia e não se anunciava:
+// "falta as hints de movimentação com teclado". Descoberta é metade de uma
+// afordância — uma seta que funciona e ninguém sabe que funciona não existe.
+//
+// SÓ AS TECLAS QUE FUNCIONAM, e isto é a regra do `@tecla` aplicada a uma
+// legenda: dica de atalho morto é pior que dica nenhuma, porque ensina errado.
+// Por isso o **Esc não está aqui** — eu o media antes de escrever e ele não faz
+// nada nesta cena (mesma URL, mesmo foco, medido com teclado real). Quando
+// alguém ligar o `onEscape` do driver, a tecla entra nesta linha e não antes.
+//
+// `xl:flex` porque é a mesma faixa em que o DRIVER liga (`≥xl` com ponteiro
+// fino): anunciar seta para quem está no toque é ruído sobre uma tecla que não
+// existe ali.
+//
+// `aria-hidden` porque é repetição visual do modelo de interação: quem usa
+// leitor de tela recebe as REGIÕES anunciadas pelo próprio `role`/`aria-label`,
+// e uma legenda de setas lida em toda cena seria ruído a cada navegação.
+//
+// Sem cor própria, como o `@tecla`: ela herda a de quem a contém. Cor de painel
+// escuro dentro de superfície clara foi como o guarda de contraste pegou a
+// primeira versão daquele componente.
+func legendaDoTeclado() templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var47 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var47 == nil {
+			templ_7745c5c3_Var47 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "<p aria-hidden=\"true\" class=\"hidden shrink-0 items-center justify-end gap-1 pt-1 text-3xs text-muted-foreground xl:flex\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = tecla("↑↓").Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var48 string
+		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(" navegar")
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 349, Col: 14}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = tecla("←→").Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var49 string
+		templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(" trocar de painel")
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 351, Col: 23}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = tecla("⏎").Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var50 string
+		templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(" abrir")
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 353, Col: 12}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "</p>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
 var _ = templruntime.GeneratedTemplate

@@ -185,6 +185,13 @@ func buildMux(cfg plataforma.Config, srv *api.Server) *http.ServeMux {
 		http.Redirect(w, r, "/piloto/", http.StatusFound)
 	})
 	if cfg.StaticDir == "" {
+		// As FONTES só entram aqui, e não no caminho com `STATIC_DIR`: lá o
+		// `dist` da SPA já as serve, e sobrepor uma rota da raiz em produção
+		// seria mudar o que hoje funciona para consertar o que só quebra no
+		// modo sem SPA. O 404 que o dono relatou é deste modo — e é nele que a
+		// cena do piloto é revisada, com a Cinzel caindo para uma serifada do
+		// sistema em toda tela.
+		mux.Handle("/fonts/", srv.FontesDoPiloto())
 		mux.Handle("/", srv.Router())
 		return mux
 	}

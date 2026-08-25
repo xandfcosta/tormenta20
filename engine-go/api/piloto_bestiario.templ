@@ -39,6 +39,10 @@ templ mesaDoMestre(atual string, cena templ.Component) {
 		@trilhaDoMestre(atual)
 		<div class="flex min-h-0 flex-1 flex-col">
 			@cena
+			// A legenda mora na CASCA e não em cada cena, pelo mesmo motivo do
+			// trilho: as quatro ferramentas do mestre passam por aqui, então uma
+			// declaração cobre as quatro e a quinta já nasce anunciada.
+			@legendaDoTeclado()
 		</div>
 	</div>
 }
@@ -114,26 +118,46 @@ templ cenaDoBestiario(v bestiarioView) {
 				@filtrosDoBestiario(v)
 				@listaDeVerbetes(v)
 			</div>
-			// `tabindex="0"` pela MESMA razão do `caixaRolavel`, e aqui ele é
-			// escrito à mão porque o `.mesa-painel` é classe da casa, com a
-			// consulta de contêiner dela: o painel ROLA e o conteúdo é só texto —
-			// a ficha da criatura não tem link nem botão —, então sem isto o foco
-			// nunca entra e a ficha comprida fica inalcançável pelo teclado.
-			// Medido: 69px presos a 1200×700, e 714px na tela de catálogos, que
-			// tem o mesmo formato.
+			// A ficha é REGIÃO e o alvo do foco é o miolo, não a `<section>`.
 			//
-			// Já tem nome acessível (`aria-label`), que é metade do conserto: um
-			// `tabindex="0"` sem nome é uma parada anônima no TAB.
+			// Duas exigências que brigam, e a forma abaixo é o que as concilia. O
+			// dono quer (a) chegar na ficha SÓ COM SETAS, sem TAB, e (b) uma vez
+			// nela, rolar com as setas. Região resolve (a): o driver cruza para o
+			// vizinho pela geometria, e sem `data-nav-region` a ficha era
+			// inalcançável pela seta. Mas o driver só considera ITEM o que é
+			// focável DENTRO da região — uma região cujo único focável é ela mesma
+			// nasce vazia e continua inalcançável. Daí o `tabindex` ter descido
+			// para o miolo.
+			//
+			// E (b) exigiu as bordas VERTICAIS apontarem para a própria ficha.
+			// Sem elas, medido: a seta para baixo saltava para a `lista`, porque a
+			// coluna da lista é alta e a busca por vizinho a encontra "abaixo" —
+			// o driver escuta na CAPTURA, então nenhum handler da cena chegaria
+			// antes para impedir.
+			//
+			// `data-nav-edge-<direção>` nomeia a região de destino, e a busca
+			// EXCLUI a própria região: apontar para si mesma devolve nulo, o
+			// `handleMove` não chama `stop(e)`, e a tecla cai para o navegador —
+			// rolagem nativa rola o ancestral rolável, que é esta `<section>`.
+			//
+			// Lido como gramática, é o que se quer num painel de leitura:
+			// HORIZONTAL troca de painel, VERTICAL rola o que está aberto. A
+			// esquerda continua voltando para a lista pela geometria.
 			<section
+				data-nav-region="ficha"
+				data-nav-layout="column"
+				data-nav-edge-up="ficha"
+				data-nav-edge-down="ficha"
 				aria-label="Criatura escolhida"
-				tabindex="0"
-				class="mesa-painel outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				class="mesa-painel"
 			>
-				if v.Escolhido != nil {
-					@blocoDoVerbete(*v.Escolhido)
-				} else {
-					<p class="text-xs text-muted-foreground">Escolha uma criatura na lista.</p>
-				}
+				<div tabindex="0" class="outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+					if v.Escolhido != nil {
+						@blocoDoVerbete(*v.Escolhido)
+					} else {
+						<p class="text-xs text-muted-foreground">Escolha uma criatura na lista.</p>
+					}
+				</div>
 			</section>
 		</div>
 		if v.Escolhido != nil {
@@ -198,8 +222,24 @@ templ fichaEmDialogo(m verbete) {
 	</div>
 }
 
+// Os filtros são uma REGIÃO, e declará-los foi conserto: a lista virou região na
+// fatia anterior e este bloco não, então a seta que entrava na lista não tinha
+// vizinho para cruzar e ficava presa lá dentro — o dono relatou como "não
+// consigo chegar nos botões ou inputs de filtro com o teclado". O TAB sempre
+// chegou (medido: busca, ND mínimo, ND máximo e os sete tipos, nessa ordem); o
+// que faltava era a metade da gramática que eu tinha declarado pela metade.
+//
+// `grid` e não `column`: o bloco é bidimensional de verdade — busca ocupando a
+// linha inteira, dois campos de ND lado a lado, sete crachás que quebram linha.
+// Com `column` a seta para a direita não teria para onde ir entre ND mínimo e ND
+// máximo.
+//
+// A BUSCA é campo de texto, e ali a seta continua editando em vez de navegar: o
+// driver se recolhe em alvo de digitação, o que é a regra certa e não um buraco
+// — quem está escrevendo "ogro" espera que a seta ande no texto. Sai de lá pelo
+// TAB, como em qualquer formulário.
 templ filtrosDoBestiario(v bestiarioView) {
-	<div class="space-y-2">
+	<div data-nav-region="filtros" data-nav-layout="grid" class="space-y-2">
 		<div class="relative">
 			@icone("Search", "pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground")
 			<input
