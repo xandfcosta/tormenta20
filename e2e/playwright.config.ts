@@ -79,6 +79,12 @@ export default defineConfig({
   // compartilhado escolheria sempre a mesma. E o custo do vermelho não é o
   // rerun: é que um vermelho frequente e conhecido ensina a ignorar vermelho.
   //
+  // O PREÇO, medido no CI depois da troca e não estimado: o job de e2e foi de
+  // 3m33s–4m49s (dois workers) para 5m36s (um). Aqui, com 8 núcleos, um worker
+  // era MAIS rápido; lá, com 2 vCPUs, ele custa ~1 min. Eu tinha escrito que o
+  // custo era nenhum, e o número me corrigiu — fica assim porque um minuto por
+  // corrida é barato contra 43% de vermelho que não é regressão.
+  //
   // `E2E_WORKERS=2` continua disponível para quem quiser medir de novo.
   workers: Number(process.env.E2E_WORKERS ?? 1),
   forbidOnly: !!process.env.CI,
