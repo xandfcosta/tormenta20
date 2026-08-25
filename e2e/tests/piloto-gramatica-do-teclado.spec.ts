@@ -1,0 +1,77 @@
+import { expect, test } from '@playwright/test'
+
+/**
+ * TODA cena do piloto declara a gramática de teclado da casa.
+ *
+ * O defeito que isto prende foi contado antes de ser consertado: 6 das 20 cenas
+ * declaravam alguma `data-nav-region` e 14 não declaravam nenhuma. O motor
+ * estava no ar em todas, sem nada para dirigir. E ninguém viu porque o guarda
+ * que prova a tese exercita as setas em `/piloto/` e não entra em mais nenhuma
+ * tela — "um guarda só mede o que ele VISITA" (ALE-237, ALE-252).
+ *
+ * Este é o guarda que troca "visita o Hub" por "percorre a lista": cena nova
+ * entra aqui e nasce medida. Continua sendo ENUMERAÇÃO de cenas, e isso é
+ * honesto de dizer — o que restauraria amostragem de verdade seria a casca
+ * declarar a região, e ela só pode declarar a que é dela (o `rail`). O miolo
+ * cada cena tem de nomear, porque só ela sabe a própria forma.
+ *
+ * E2E porque `data-nav-region` sozinho não prova nada: o driver só liga em `≥xl`
+ * com ponteiro fino, e a região tem de ter ÁREA (o `hasArea` do driver) — em
+ * jsdom todo elemento mede zero e a região existiria no papel e não na tela.
+ */
+test.use({ storageState: '.auth/user.json' })
+
+const CENAS = [
+  { nome: 'hub', url: '/piloto/' },
+  { nome: 'campanhas', url: '/piloto/campanhas' },
+  { nome: 'personagens', url: '/piloto/personagens' },
+  { nome: 'grimório', url: '/piloto/grimorio' },
+  { nome: 'bestiário', url: '/piloto/mestre/bestiario' },
+  { nome: 'catálogos', url: '/piloto/mestre/catalogos' },
+  { nome: 'encontros', url: '/piloto/mestre/encontros' },
+  { nome: 'improviso', url: '/piloto/mestre/improviso' },
+  { nome: 'admin', url: '/piloto/admin' },
+  { nome: 'campanha nova', url: '/piloto/campanhas/nova' },
+]
+
+for (const cena of CENAS) {
+  test(`a cena de ${cena.nome} declara a gramática de teclado`, async ({ page }) => {
+    await page.setViewportSize({ width: 1400, height: 900 })
+    await page.goto(cena.url)
+    await page.waitForLoadState('networkidle')
+
+    const medida = await page.evaluate(() => {
+      const comArea = (e: Element) => {
+        const r = e.getBoundingClientRect()
+        return r.width > 0 && r.height > 0
+      }
+      const regioes = [...document.querySelectorAll('[data-nav-region]')]
+      return {
+        desenhou: !!document.querySelector('[data-slot="scene-shell"]'),
+        temVoltar: document.querySelector('[data-slot="scene-shell"]')?.hasAttribute('data-voltar'),
+        regioes: regioes.filter(comArea).map((e) => ({
+          nome: e.getAttribute('data-nav-region'),
+          itens: e.querySelectorAll(
+            'a[href],button:not([disabled]),[tabindex]:not([tabindex="-1"]),[data-nav-item]',
+          ).length,
+        })),
+      }
+    })
+
+    // O CONTROLE: a cena desenhou. Sem ele "não declara região" seria verdade
+    // sobre um 404 ou um redirecionamento, e a mensagem mandaria procurar no
+    // arquivo errado.
+    expect(medida.desenhou, `a cena de ${cena.nome} não desenhou`).toBe(true)
+
+    expect(
+      medida.regioes.length,
+      `a cena de ${cena.nome} não declara nenhuma região: o driver de teclado carrega e não tem o que dirigir`,
+    ).toBeGreaterThan(0)
+
+    // Região SEM item é pior que região nenhuma: o driver tenta entrar e o foco
+    // some. Cada uma tem de ter ao menos um alvo.
+    for (const r of medida.regioes) {
+      expect(r.itens, `a região "${r.nome}" de ${cena.nome} não tem item focável`).toBeGreaterThan(0)
+    }
+  })
+}

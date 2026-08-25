@@ -8,7 +8,15 @@ templ admin(v adminView) {
 	<main class="w-full space-y-4">
 		// Uma coluna no telefone, duas a partir de lg com os jogadores — a lista
 		// que cresce — na maior. Mesma repartição da tela da SPA.
-		<div class="grid w-full items-start gap-4 lg:grid-cols-[3fr_2fr]">
+		// REGIÃO de conteúdo, `grid` porque a repartição é bidimensional de
+		// verdade: os jogadores numa coluna larga, convites e servidor empilhados
+		// na outra. Com `column` a seta para o lado não teria como atravessar.
+		//
+		// Uma região só para os três painéis, e não uma por painel: o que o
+		// driver move é o FOCO entre itens por geometria, e três regiões
+		// obrigariam a cruzar borda para andar entre coisas que estão lado a
+		// lado na mesma tela.
+		<div data-nav-region="content" data-nav-layout="grid" class="grid w-full items-start gap-4 lg:grid-cols-[3fr_2fr]">
 			@painelJogadores(v)
 			<div class="flex flex-col gap-4">
 				@painelConvites(v)

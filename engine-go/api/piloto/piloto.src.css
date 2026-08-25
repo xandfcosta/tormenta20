@@ -97,6 +97,25 @@ html {
  *
  * O `max()` no piso é o que impõe o teto: uma coluna nunca fica menor que um
  * terço do contêiner, então nunca cabem quatro. */
+/* O anel de foco da FICHA fica na BORDA DELA, e não no miolo.
+   O foco precisa ir num filho — é assim que o driver de navegação enxerga um
+   item —, mas o filho vive DENTRO da caixa que rola. Anel no filho é anel
+   desenhado por dentro: ele acompanha a rolagem, encosta no conteúdo e some no
+   corte, que foi o "estranhamento" que o dono descreveu com a tela na mão.
+
+   `:has()` devolve o anel para quem é a caixa: quem recebe o foco continua
+   sendo o miolo (a navegação não muda), e quem se ACENDE é a moldura. É a
+   mesma ideia do `focus-within`, mas restrita a `:focus-visible` para o anel
+   não aparecer no clique do mouse.
+
+   Fora de `@layer` pelo mesmo motivo da regra do diálogo: `outline-none` é
+   utilitária do Tailwind e mora numa camada posterior — dentro de `components`
+   esta regra perderia dela e nunca desenharia nada. */
+.mesa-painel:has(:focus-visible) {
+  outline: 2px solid var(--color-ring, oklch(0.8 0.11 85));
+  outline-offset: -2px;
+}
+
 @layer components {
   .acervo-em-colunas {
     display: grid;

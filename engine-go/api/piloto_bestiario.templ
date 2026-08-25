@@ -59,6 +59,13 @@ templ mesaDoMestre(atual string, cena templ.Component) {
 // é navegar. O botão perdia o clique do meio, o "abrir em nova aba" e o
 // endereço que se cola no chat.
 templ trilhaDoMestre(atual string) {
+	// O nome `rail` é RESERVADO pelo driver e não é escolha de estilo: o `Esc`
+	// sobe um nível procurando literalmente `[data-nav-region="rail"]`, e o
+	// `enterScene` prefere essa região ao entrar na cena. Batizado de "trilha",
+	// como estava, o Esc pulava a subida e saía direto da página — medido.
+	// Três cenas do piloto inventaram nome próprio (`trilha`, `trilho`) e as três
+	// perderam o mesmo comportamento sem nada acusar.
+	//
 	// `data-nav-region` + `data-nav-layout` são o CONTRATO com o driver de
 	// teclado: o trilho declara a forma e nunca importa o driver, exatamente como
 	// o menu do Hub. Declarado AQUI e não em cada cena porque o trilho é um só —
@@ -71,7 +78,7 @@ templ trilhaDoMestre(atual string) {
 	// em que ele existe, a forma é coluna.
 	<nav
 		aria-label="Ferramentas do mestre"
-		data-nav-region="trilha"
+		data-nav-region="rail"
 		data-nav-layout="column"
 		class="flex shrink-0 gap-1 overflow-x-auto pb-1 lg:w-44 lg:flex-col lg:overflow-x-visible lg:pb-0"
 	>
@@ -151,7 +158,7 @@ templ cenaDoBestiario(v bestiarioView) {
 				aria-label="Criatura escolhida"
 				class="mesa-painel"
 			>
-				<div tabindex="0" class="outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+				<div tabindex="0" class="outline-none">
 					if v.Escolhido != nil {
 						@blocoDoVerbete(*v.Escolhido)
 					} else {
@@ -245,6 +252,7 @@ templ filtrosDoBestiario(v bestiarioView) {
 			<input
 				type="search"
 				name="busca"
+				{ campoNavegavel()... }
 				data-bind:busca
 				data-on:input__debounce.250ms={ fmt.Sprintf("@get('%s')", v.bestiarioBase()) }
 				value={ v.Busca }
@@ -292,6 +300,7 @@ templ caixaDeND(base, id, rotulo, sinal, valor string) {
 		}
 		<input
 			id={ "bestiario-" + id }
+			{ campoNavegavel()... }
 			type="number"
 			min="0"
 			max="20"

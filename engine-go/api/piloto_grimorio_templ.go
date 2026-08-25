@@ -984,7 +984,7 @@ func grimorio() templ.Component {
 			templ_7745c5c3_Var40 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "<div class=\"flex min-h-0 flex-1 flex-col gap-3 px-4 py-3 lg:flex-row lg:gap-4\"><nav aria-label=\"Seções do sistema de desenho\" data-nav-region=\"trilha\" data-nav-layout=\"list\" class=\"flex shrink-0 gap-1 overflow-x-auto lg:w-40 lg:flex-col lg:overflow-visible\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "<div class=\"flex min-h-0 flex-1 flex-col gap-3 px-4 py-3 lg:flex-row lg:gap-4\"><nav aria-label=\"Seções do sistema de desenho\" data-nav-region=\"rail\" data-nav-layout=\"list\" class=\"flex shrink-0 gap-1 overflow-x-auto lg:w-40 lg:flex-col lg:overflow-visible\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

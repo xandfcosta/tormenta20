@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"encoding/json"
 	"fmt"
+	"github.com/a-h/templ"
 	"math"
 	"slices"
 	"strconv"
@@ -473,4 +474,36 @@ func abrirAFicha(base string) string {
 		return base + "&abrir=1"
 	}
 	return base + "?abrir=1"
+}
+
+// ── campos alcançáveis pela SETA (ALE-264) ───────────────────────────────────
+
+// campoNavegavel são os atributos que põem um `<input>` na navegação por setas.
+//
+// O driver NÃO considera campo um item: o seletor dele é `a[href], button,
+// [tabindex], [data-nav-item]` — `input` está fora de propósito, porque com o
+// foco dentro de um campo a seta EDITA (move o cursor, muda o número) e quem
+// entra não sai. `data-nav-item` é o ponto de extensão declarado para dizer
+// "este é um item mesmo assim".
+//
+// O que torna isso seguro é a SAÍDA. O driver se recolhe em alvo de digitação
+// (`isTypingTarget`) e — a parte que importa — se recolhe SEM consumir a tecla:
+// não há `stop(e)`, então o evento continua até o elemento. Um `keydown` no
+// próprio campo alcança o Esc, e é assim que a porta de saída existe sem tocar
+// no driver, que é compartilhado com a SPA.
+//
+// Esc sobe para o TRILHO e não apenas tira o foco, porque é o que a gramática da
+// casa faz em toda parte: o `handleBack` do driver leva para
+// `[data-nav-region="rail"]` antes de sair da cena. Duas saídas diferentes para
+// a mesma tecla seria a pessoa aprendendo duas regras.
+//
+// É `keydown` por cena? Não: é UM helper, usado por todo campo que entra na
+// navegação. A filosofia proíbe "hand-roll per-scene keydown handlers", e o que
+// ela protege é justamente isto — a regra num lugar só.
+func campoNavegavel() templ.Attributes {
+	return templ.Attributes{
+		"data-nav-item": "",
+		"data-on:keydown": "evt.key === 'Escape' && " +
+			"(evt.preventDefault(), document.querySelector('[data-nav-region=\"rail\"] a')?.focus())",
+	}
 }

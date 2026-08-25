@@ -844,7 +844,7 @@ func trilhoDeCampanhas(v campanhasView) templ.Component {
 			templ_7745c5c3_Var37 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "<div role=\"listbox\" aria-label=\"Campanhas\" aria-orientation=\"vertical\" data-nav-region=\"trilho\" data-nav-layout=\"column\" class=\"flex gap-1 overflow-x-auto lg:-ml-px lg:w-56 lg:shrink-0 lg:flex-col lg:overflow-visible lg:self-stretch\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "<div role=\"listbox\" aria-label=\"Campanhas\" aria-orientation=\"vertical\" data-nav-region=\"rail\" data-nav-layout=\"column\" class=\"flex gap-1 overflow-x-auto lg:-ml-px lg:w-56 lg:shrink-0 lg:flex-col lg:overflow-visible lg:self-stretch\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

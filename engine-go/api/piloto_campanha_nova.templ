@@ -19,7 +19,16 @@ templ campanhaNova(v campanhaNovaView) {
 		// enorme numa tela grande. Com conteúdo mais alto as margens somem.
 		<div class="m-auto w-full max-w-2xl space-y-6">
 			@tituloDaFolha("Folha em branco", "Abrir nova campanha")
-			<form method="post" action="/piloto/campanhas/nova" class="space-y-4">
+			// REGIÃO de conteúdo numa FOLHA DE FORMULÁRIO, e o que ela alcança
+			// hoje são os BOTÕES — os campos de texto não são itens do driver
+			// (`input` está fora do seletor dele de propósito, porque com o foco
+			// dentro a seta edita). O caminho completo pelos campos continua
+			// sendo o TAB.
+			//
+			// Declará-la mesmo assim vale por duas razões: o Esc passa a subir
+			// para a casca em vez de morrer, e a cena deixa de ser a única sem
+			// gramática nenhuma — o que o guarda de cenas cobra.
+			<form method="post" action="/piloto/campanhas/nova" data-nav-region="content" data-nav-layout="column" class="space-y-4">
 				@campoDeTexto(campo{
 					Nome: "name", Label: "Nome", Valor: v.Nome,
 					Obrigatorio: true, TamanhoMaximo: nomeDeCampanhaMax,

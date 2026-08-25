@@ -115,7 +115,24 @@ templ layout(p paginaPiloto, corpo templ.Component) {
 			// que os tokens resolvem a paleta da mesa e não o tema claro do
 			// template. Sem eles a virada quebraria um guarda que continua válido
 			// — a pergunta que ele faz não mudou, só o motor que desenha (ALE-229).
-			<section data-slot="scene-shell" class="scene-grimorio relative flex h-dvh flex-col overflow-hidden">
+			// `data-voltar` é o que o Esc LÊ para saber para onde subir, e ele
+			// nunca era emitido: o `p.Voltar` alimentava só o link visível de
+			// voltar, então o driver procurava um atributo que ninguém escrevia e
+			// o Esc estava morto em TODAS as cenas do piloto. Medido antes de
+			// escrever a legenda de teclado, que por isso não o anuncia.
+			//
+			// Emitido AQUI, na casca, e não em cada cena: uma linha liga o Esc em
+			// toda tela que tem para onde voltar, e a tela nova já nasce com ele.
+			// Sem valor o atributo não sai, que é o caso do Hub — cena raiz, sem
+			// nível acima, e um Esc que não faz nada é melhor que um que salta
+			// para lugar nenhum.
+			<section
+				data-slot="scene-shell"
+				if p.Voltar != "" {
+					data-voltar={ p.Voltar }
+				}
+				class="scene-grimorio relative flex h-dvh flex-col overflow-hidden"
+			>
 				<div aria-hidden="true" data-slot="background-texture" data-variant="stone" data-vignette="true" class="grimorio-stone grimorio-vignette pointer-events-none absolute inset-0 -z-10"></div>
 				if p.Forma == cascaDensa {
 					<header
