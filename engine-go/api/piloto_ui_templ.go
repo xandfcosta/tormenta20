@@ -969,4 +969,93 @@ func tomDoRotulo(tom string) string {
 	return "text-muted-foreground"
 }
 
+// caixaRolavel é uma região que ROLA e que o TECLADO alcança.
+//
+// O `tabindex="0"` é o conserto e não enfeite. A casca do piloto é `h-dvh` com
+// `overflow-hidden`, então o DOCUMENTO não rola: quem rola são caixas aninhadas.
+// Uma caixa dessas cujo conteúdo é só TEXTO não tem nenhum descendente focável,
+// e sem `tabindex` o foco nunca entra nela — seta, PageDown, Home e End não
+// fazem nada, e o conteúdo escondido fica inalcançável sem mouse. Medido na
+// tela de catálogos do mestre: 1263px presos, zero focáveis dentro.
+//
+// Caixa que CONTÉM links ou botões não sofre disso (o foco entra pelos filhos e
+// a rolagem acompanha), mas ela ganha o atributo do mesmo jeito: uma lista que
+// hoje tem links pode virar texto amanhã, e o defeito volta em silêncio. O custo
+// é uma parada de TAB a mais; o benefício é a tela nova nascer alcançável.
+//
+// O `role="region"` com NOME é obrigatório junto: um `<div tabindex=0>` sem nome
+// é uma parada anônima no TAB, que para quem usa leitor de tela é pior que a
+// ausência — ele anuncia "grupo" e não diz de quê.
+//
+// Existir como COMPONENTE é o ponto: enquanto cada cena escrever `overflow-y-auto`
+// à mão, cobrir isto é ENUMERAÇÃO — uma entrada por tela, para sempre, e a que
+// alguém esquecer nasce sem alcance. Passando por aqui, volta a ser amostragem.
+func caixaRolavel(rotulo string, extra string) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var43 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var43 == nil {
+			templ_7745c5c3_Var43 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		var templ_7745c5c3_Var44 = []any{juntar("min-h-0 flex-1 overflow-y-auto outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring", extra)}
+		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var44...)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "<div role=\"region\" aria-label=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var45 string
+		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotulo)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 315, Col: 21}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "\" tabindex=\"0\" class=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var46 string
+		templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var44).String())
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 1, Col: 0}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var46)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ_7745c5c3_Var43.Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "</div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
 var _ = templruntime.GeneratedTemplate

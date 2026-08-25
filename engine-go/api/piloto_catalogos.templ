@@ -91,7 +91,7 @@ templ resultadosDoAcervo(v catalogosView) {
 	if v.Achados == 0 {
 		<p class="p-4 text-center text-xs text-muted-foreground">Nada nos catálogos casa com essa busca.</p>
 	} else {
-		<div class="min-h-0 flex-1 space-y-4 overflow-y-auto rounded-sm border border-grimorio-iron p-2">
+		@caixaRolavel("Resultados dos catálogos", "space-y-4 rounded-sm border border-grimorio-iron p-2") {
 			for _, g := range v.Grupos {
 				<section aria-label={ g.Rotulo }>
 					if v.Buscando() {
@@ -118,7 +118,7 @@ templ resultadosDoAcervo(v catalogosView) {
 					</div>
 				</section>
 			}
-		</div>
+		}
 	}
 }
 

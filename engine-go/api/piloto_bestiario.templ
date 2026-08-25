@@ -102,7 +102,21 @@ templ cenaDoBestiario(v bestiarioView) {
 				@filtrosDoBestiario(v)
 				@listaDeVerbetes(v)
 			</div>
-			<section aria-label="Criatura escolhida" class="mesa-painel">
+			// `tabindex="0"` pela MESMA razão do `caixaRolavel`, e aqui ele é
+			// escrito à mão porque o `.mesa-painel` é classe da casa, com a
+			// consulta de contêiner dela: o painel ROLA e o conteúdo é só texto —
+			// a ficha da criatura não tem link nem botão —, então sem isto o foco
+			// nunca entra e a ficha comprida fica inalcançável pelo teclado.
+			// Medido: 69px presos a 1200×700, e 714px na tela de catálogos, que
+			// tem o mesmo formato.
+			//
+			// Já tem nome acessível (`aria-label`), que é metade do conserto: um
+			// `tabindex="0"` sem nome é uma parada anônima no TAB.
+			<section
+				aria-label="Criatura escolhida"
+				tabindex="0"
+				class="mesa-painel outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>
 				if v.Escolhido != nil {
 					@blocoDoVerbete(*v.Escolhido)
 				} else {

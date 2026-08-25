@@ -287,3 +287,35 @@ func tomDoRotulo(tom string) string {
 	}
 	return "text-muted-foreground"
 }
+
+// caixaRolavel é uma região que ROLA e que o TECLADO alcança.
+//
+// O `tabindex="0"` é o conserto e não enfeite. A casca do piloto é `h-dvh` com
+// `overflow-hidden`, então o DOCUMENTO não rola: quem rola são caixas aninhadas.
+// Uma caixa dessas cujo conteúdo é só TEXTO não tem nenhum descendente focável,
+// e sem `tabindex` o foco nunca entra nela — seta, PageDown, Home e End não
+// fazem nada, e o conteúdo escondido fica inalcançável sem mouse. Medido na
+// tela de catálogos do mestre: 1263px presos, zero focáveis dentro.
+//
+// Caixa que CONTÉM links ou botões não sofre disso (o foco entra pelos filhos e
+// a rolagem acompanha), mas ela ganha o atributo do mesmo jeito: uma lista que
+// hoje tem links pode virar texto amanhã, e o defeito volta em silêncio. O custo
+// é uma parada de TAB a mais; o benefício é a tela nova nascer alcançável.
+//
+// O `role="region"` com NOME é obrigatório junto: um `<div tabindex=0>` sem nome
+// é uma parada anônima no TAB, que para quem usa leitor de tela é pior que a
+// ausência — ele anuncia "grupo" e não diz de quê.
+//
+// Existir como COMPONENTE é o ponto: enquanto cada cena escrever `overflow-y-auto`
+// à mão, cobrir isto é ENUMERAÇÃO — uma entrada por tela, para sempre, e a que
+// alguém esquecer nasce sem alcance. Passando por aqui, volta a ser amostragem.
+templ caixaRolavel(rotulo string, extra string) {
+	<div
+		role="region"
+		aria-label={ rotulo }
+		tabindex="0"
+		class={ juntar("min-h-0 flex-1 overflow-y-auto outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring", extra) }
+	>
+		{ children... }
+	</div>
+}
