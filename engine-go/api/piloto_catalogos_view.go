@@ -365,6 +365,7 @@ type abaDoAcervo struct {
 var abasDoAcervo = []abaDoAcervo{
 	{"condicoes", "Condições"},
 	{"magias", "Magias"},
+	{"pericias", "Perícias"},
 	{"poderes", "Poderes"},
 	{"itens", "Itens"},
 	{"efeitos", "Efeitos"},
@@ -406,6 +407,7 @@ type grupoDoAcervo struct {
 	Itens     []itemDoLivro
 	Efeitos   []efeitoDoLivro
 	Escolas   []escolaDeMagia
+	Pericias  []periciaDoLivro
 	Racas     []racaDoLivro
 	Classes   []classeDoLivro
 	Deuses    []deusDoLivro
@@ -413,7 +415,7 @@ type grupoDoAcervo struct {
 
 func (g grupoDoAcervo) Quantos() int {
 	return len(g.Condicoes) + len(g.Magias) + len(g.Poderes) + len(g.Itens) +
-		len(g.Efeitos) + len(g.Escolas) + len(g.Racas) + len(g.Classes) + len(g.Deuses)
+		len(g.Efeitos) + len(g.Escolas) + len(g.Pericias) + len(g.Racas) + len(g.Classes) + len(g.Deuses)
 }
 
 // criteriosDoAcervo é o que a URL (ou os sinais) pedem da cena.
@@ -484,6 +486,7 @@ func carregaCatalogos(c criteriosDoAcervo, livro enderecoDoLivro) catalogosView 
 		{Rotulo: "Itens", Itens: filtra(a.Itens, camposDoItem, busca)},
 		{Rotulo: "Efeitos", Efeitos: filtra(tiposDeEfeito(), camposDoEfeito, busca)},
 		{Rotulo: "Escolas", Escolas: filtra(escolasDeMagia(), camposDaEscola, busca)},
+		{Rotulo: "Perícias", Pericias: filtra(periciasDoAcervo(), camposDaPericia, busca)},
 		{Rotulo: "Raças", Racas: filtra(racas, camposDaRaca, busca)},
 		{Rotulo: "Classes", Classes: filtra(classes, camposDaClasse, busca)},
 		{Rotulo: "Deuses", Deuses: filtra(deuses, camposDoDeus, busca)},
@@ -541,6 +544,11 @@ func grupoDaEntrada(aba, id string) grupoDoAcervo {
 			fora.Escolas = append(fora.Escolas, e)
 		}
 	}
+	for _, p := range inteiro.Pericias {
+		if p.ID == id {
+			fora.Pericias = append(fora.Pericias, p)
+		}
+	}
 	for _, r := range inteiro.Racas {
 		if r.ID == id {
 			fora.Racas = append(fora.Racas, r)
@@ -573,6 +581,8 @@ func grupoDaAba(a acervoDoMestre, aba string, acesos map[string][]string) grupoD
 		return grupoDoAcervo{Rotulo: "Efeitos", Efeitos: tiposDeEfeito()}
 	case "escolas":
 		return grupoDoAcervo{Rotulo: "Escolas", Escolas: escolasDeMagia()}
+	case "pericias":
+		return grupoDoAcervo{Rotulo: "Perícias", Pericias: aplicaFiltros(periciasDoAcervo(), acesos, periciaCasa)}
 	case "racas":
 		return grupoDoAcervo{Rotulo: "Raças", Racas: aplicaFiltros(racas, acesos, racaCasa)}
 	case "classes":

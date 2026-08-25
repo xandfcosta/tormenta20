@@ -131,6 +131,21 @@ html {
     0 0 18px oklch(0.8 0.11 85 / 0.28);
 }
 
+/* O CARTÃO dentro da CAIXA do elo perde a moldura (ALE-264).
+
+   O cartão do acervo tem borda e cantos porque na lista ele é um cartão entre
+   muitos. Dentro do diálogo do elo ele é o conteúdo ÚNICO de uma caixa que já
+   tem borda e cantos — e o resultado eram duas bordas concêntricas com três
+   milímetros entre elas, com o ✕ do diálogo colado na de dentro. O dono mandou a
+   imagem.
+
+   FORA de `@layer` pela mesma razão da regra abaixo: utilitário do Tailwind é
+   camada, e estilo não-camada ganha dele. */
+#verbete-em-dialogo .cartao-do-acervo {
+  border: 0;
+  padding: 0;
+}
+
 /* O CAMPO do buscador: o anel do foco vai na LINHA, não no `<input>` (ALE-264).
 
    A regra global da casa dá anel dourado a qualquer `input` da cena. Num campo

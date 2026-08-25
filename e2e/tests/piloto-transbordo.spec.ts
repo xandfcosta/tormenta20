@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, type Page, test } from '@playwright/test'
 
 /**
  * NADA transborda o cartão (ALE-264).
@@ -17,16 +17,41 @@ import { expect, test } from '@playwright/test'
  */
 test.use({ storageState: '.auth/user.json' })
 
-const ABAS = ['condicoes', 'magias', 'poderes', 'itens', 'efeitos', 'racas', 'classes', 'deuses']
+/**
+ * As cenas a visitar saem do TRILHO, lidas da página — não de uma lista aqui.
+ *
+ * A lista escrita à mão tinha oito entradas e o trilho ganhou duas (escolas de
+ * magia e perícias) sem que ela soubesse: as duas cenas novas nasceriam sem
+ * medição, em silêncio, que é a marca desta família (ALE-252). Lendo o trilho, a
+ * décima primeira já entra medida.
+ */
+async function cenasDosCatalogos(page: Page): Promise<string[]> {
+  await page.goto('/piloto/mestre/condicoes')
+  const enderecos = await page
+    .locator('nav[aria-label="Ferramentas do mestre"] a')
+    .evaluateAll((links) =>
+      links.map((a) => (a as HTMLAnchorElement).getAttribute('href') ?? ''),
+    )
+  // As FERRAMENTAS ficam de fora: encontros e improviso não desenham cartão de
+  // acervo, e cobrar transbordo delas mediria outra coisa.
+  return enderecos.filter((e) => !e.endsWith('/encontros') && !e.endsWith('/improviso'))
+}
 
-for (const aba of ABAS) {
-  test(`nenhum cartão da aba ${aba} transborda a coluna`, async ({ page }) => {
-    await page.setViewportSize({ width: 1400, height: 900 })
-    await page.goto(`/piloto/mestre/${aba}`)
+test('nenhum cartão do acervo transborda a coluna, em nenhuma cena', async ({ page }) => {
+  await page.setViewportSize({ width: 1400, height: 900 })
+  const cenas = await cenasDosCatalogos(page)
+  // O CONTROLE: o trilho tem catálogos de verdade. Uma lista vazia faria o
+  // laço abaixo não medir nada e passar verde.
+  expect(cenas.length, 'o trilho não ofereceu catálogo nenhum').toBeGreaterThan(8)
+
+  let medidas = 0
+  for (const cena of cenas) {
+    await page.goto(cena)
 
     const medida = await page.evaluate(() => {
       const cartoes = [...document.querySelectorAll('.acervo-em-colunas > div')]
       return {
+        temGrade: !!document.querySelector('.acervo-em-colunas'),
         quantos: cartoes.length,
         estouram: cartoes
           .filter((c) => c.scrollWidth > c.clientWidth + 1)
@@ -38,15 +63,23 @@ for (const aba of ABAS) {
       }
     })
 
-    // O CONTROLE: a aba desenhou cartões. Sem ele, "nada transbordou" seria
+    // O BESTIÁRIO está entre os catálogos do trilho e NÃO usa a grade de
+    // cartões: ele tem lista e painel, com os filtros próprios dele. Cena sem
+    // grade é pulada, e a conta abaixo é o que impede isso de virar um jeito de
+    // não medir nada.
+    if (!medida.temGrade) continue
+    medidas++
+
+    // O CONTROLE: a cena desenhou cartões. Sem ele, "nada transbordou" seria
     // verdade sobre uma tela vazia.
-    expect(medida.quantos, `a aba ${aba} não desenhou cartão nenhum`).toBeGreaterThan(0)
-    expect(
-      medida.estouram,
-      `cartões da aba ${aba} pintam por cima do vizinho`,
-    ).toEqual([])
-  })
-}
+    expect(medida.quantos, `${cena} não desenhou cartão nenhum`).toBeGreaterThan(0)
+    expect(medida.estouram, `cartões de ${cena} pintam por cima do vizinho`).toEqual([])
+  }
+
+  // Nove ou mais cenas MEDIDAS de verdade: sem isto, um seletor que parasse de
+  // casar transformaria o guarda inteiro num laço que não afirma nada.
+  expect(medidas, 'quase nenhuma cena foi medida').toBeGreaterThan(8)
+})
 
 test('o elo mostra o conceito por cima, sem tirar a pessoa da regra que lia', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })

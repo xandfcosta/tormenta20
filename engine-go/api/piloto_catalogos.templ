@@ -1,7 +1,6 @@
 package api
 
 import "fmt"
-import "strings"
 
 // OS CATÁLOGOS (ALE-258), segunda ferramenta da Mesa do Mestre.
 //
@@ -127,6 +126,9 @@ templ resultadosDoAcervo(v catalogosView) {
 						for _, e := range g.Escolas {
 							@cartaoDeEscola(e, v.Livro)
 						}
+						for _, p := range g.Pericias {
+							@cartaoDePericia(p, v.Livro)
+						}
 						for _, r := range g.Racas {
 							@cartaoDeRaca(r, v.Livro)
 						}
@@ -145,6 +147,11 @@ templ resultadosDoAcervo(v catalogosView) {
 
 // ── os quatro cartões ────────────────────────────────────────────────────────
 
+// A classe `cartao-do-acervo` é ANCORAGEM e não estilo: dentro da caixa do elo o
+// cartão perde a moldura, porque lá a caixa já é a moldura — duas bordas
+// concêntricas com três milímetros entre elas, que foi o que o dono viu. A regra
+// vive no `piloto.src.css`, fora de `@layer`.
+//
 // `wrap-anywhere` (`overflow-wrap: anywhere`) no CARTÃO, e é conserto de um
 // defeito que o dono viu na tela: a magia "Sopro da Salvação" lista as condições
 // que remove como UM token sem espaço —
@@ -158,7 +165,7 @@ templ resultadosDoAcervo(v catalogosView) {
 //
 // No cartão e não em cada descrição: são oito abas, e a nona nasce protegida.
 templ cartaoDoAcervo() {
-	<div class="wrap-anywhere rounded-sm border border-grimorio-iron p-2.5 text-sm">
+	<div class="cartao-do-acervo wrap-anywhere rounded-sm border border-grimorio-iron p-2.5 text-sm">
 		{ children... }
 	</div>
 }
@@ -198,6 +205,44 @@ templ cartaoDeCondicao(c condicaoDoLivro, livro enderecoDoLivro) {
 				Agrava para 
 				@eloParaOAcervo("condicoes", c.UpgradesTo, nomeDaCondicao(c.UpgradesTo)) {
 					{ nomeDaCondicao(c.UpgradesTo) }
+				}
+			</p>
+		}
+	}
+}
+
+// O cartão da PERÍCIA (ALE-264).
+//
+// As duas marcas do livro viram crachá porque elas mudam COMO a perícia se usa —
+// "só treinada" decide se dá para rolar, e a penalidade decide se a armadura
+// atrapalha. Ficam ao lado do atributo, que é a terceira coisa que se olha antes
+// de rolar.
+//
+// "Treinada por" são só as classes que a treinam DE SAÍDA. Ver o comentário do
+// carregador: a piscina de escolha tem quase tudo em quase toda classe.
+templ cartaoDePericia(p periciaDoLivro, livro enderecoDoLivro) {
+	@cartaoDoAcervo() {
+		<p class="flex flex-wrap items-center gap-1.5 font-medium">
+			{ p.Name }
+			<span class="rounded-sm border border-grimorio-iron px-1.5 font-mono text-3xs text-muted-foreground">{ siglaDoAtributo(p.Attribute) }</span>
+			if p.SoTreinada {
+				<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">Só treinada</span>
+			}
+			if p.PenalidadeDeArmadura {
+				<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">Penalidade de armadura</span>
+			}
+			@seloDaPagina(livro, p.BookPage, p.Name)
+		</p>
+		if len(p.Classes) > 0 {
+			<p class="mt-1 text-xs text-muted-foreground">
+				Treinada de saída por: 
+				for i, classe := range p.Classes {
+					if i > 0 {
+						{ ", " }
+					}
+					@eloParaOAcervo("classes", chaveDoNome(classe), classe) {
+						{ classe }
+					}
 				}
 			</p>
 		}
@@ -357,8 +402,21 @@ templ cartaoDeClasse(c classeDoLivro, livro enderecoDoLivro) {
 		</p>
 		<p class="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
 			<span>{ fmt.Sprintf("%d poderes de classe", c.Poderes) }</span>
+			// As perícias treinadas viram ELOS: a classe cita a perícia, e
+			// citação sem destino é texto morto — o mesmo que valia para o
+			// poder concedido do deus.
 			if len(c.Pericias) > 0 {
-				<span>{ "Treinado em: " + strings.Join(c.Pericias, ", ") }</span>
+				<span>
+					Treinado em: 
+					for i, pericia := range c.Pericias {
+						if i > 0 {
+							{ ", " }
+						}
+						@eloParaOAcervo("pericias", chaveDoNome(pericia), pericia) {
+							{ pericia }
+						}
+					}
+				</span>
 			}
 			if c.Escolhe > 0 {
 				<span>{ fmt.Sprintf("+ %d à escolha", c.Escolhe) }</span>

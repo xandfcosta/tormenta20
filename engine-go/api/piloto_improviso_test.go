@@ -194,14 +194,14 @@ func TestTabelaInventadaERecusada(t *testing.T) {
 //
 // Eram QUATRO até a ALE-264, quando o dono viu que "o bestiário conta como
 // catálogo": o trilho virou duas seções e cada catálogo ganhou parada e cena
-// próprias. São 12 — duas ferramentas e dez catálogos, com as escolas de magia
-// chegando por último. O número fica preso porque uma parada que perde a rota
-// some do trilho sem erro nenhum.
+// próprias. São 13 — duas ferramentas e ONZE catálogos, os últimos a chegar
+// sendo as escolas de magia e as perícias. O número fica preso porque uma parada
+// que perde a rota some do trilho sem erro nenhum.
 func TestOTrilhoOfereceTodasAsParadas(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	if len(ferramentasDoMestre) != 12 {
+	if len(ferramentasDoMestre) != 13 {
 		t.Fatalf("o trilho tem %d paradas", len(ferramentasDoMestre))
 	}
 	// E as DUAS seções existem: sem elas o trilho volta a ser uma lista só, que

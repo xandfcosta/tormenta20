@@ -119,6 +119,7 @@ func montaAchados(busca string, peloTexto bool) buscadorView {
 		grupoBuscado("Itens", a.Itens, busca, peloTexto, destinoNoAcervo("itens", busca), camposDoItem, achadoDoItem),
 		grupoBuscado("Efeitos", tiposDeEfeito(), busca, peloTexto, destinoNoAcervo("efeitos", busca), camposDoEfeito, achadoDoEfeito),
 		grupoBuscado("Escolas", escolasDeMagia(), busca, peloTexto, destinoNoAcervo("escolas", busca), camposDaEscola, achadoDaEscola),
+		grupoBuscado("Perícias", periciasDoAcervo(), busca, peloTexto, destinoNoAcervo("pericias", busca), camposDaPericia, achadoDaPericia),
 		grupoBuscado("Raças", racas, busca, peloTexto, destinoNoAcervo("racas", busca), camposDaRaca, achadoDaRaca),
 		grupoBuscado("Classes", classes, busca, peloTexto, destinoNoAcervo("classes", busca), camposDaClasse, achadoDaClasse),
 		grupoBuscado("Deuses", deuses, busca, peloTexto, destinoNoAcervo("deuses", busca), camposDoDeus, achadoDoDeus),
@@ -262,6 +263,19 @@ func achadoDaEscola(e escolaDeMagia) achadoDoBuscador {
 		Detalhe: "Escola de magia",
 		Destino: destinoDaEntrada("escolas", e.ID),
 		Pagina:  e.BookPage,
+	}
+}
+
+func achadoDaPericia(p periciaDoLivro) achadoDoBuscador {
+	detalhe := "Perícia · " + siglaDoAtributo(p.Attribute)
+	if p.SoTreinada {
+		detalhe += " · só treinada"
+	}
+	return achadoDoBuscador{
+		Nome:    p.Name,
+		Detalhe: detalhe,
+		Destino: destinoDaEntrada("pericias", p.ID),
+		Pagina:  p.BookPage,
 	}
 }
 

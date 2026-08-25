@@ -180,6 +180,10 @@ var resources = []string{
 	// não havia para onde o elo apontar — o nome dela nem aparecia no cartão.
 	// As oito definições saem do texto da p172.
 	"escolas-de-magia",
+	// `pericias` (ALE-264): elas existiam como lista de nome e atributo dentro
+	// do `options.json`, sem página e sem as duas regras que o livro imprime ao
+	// lado de cada uma — só treinada e penalidade de armadura, da Tabela 2-1.
+	"pericias",
 }
 
 var valid = func() map[string]bool {

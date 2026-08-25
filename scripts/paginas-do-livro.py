@@ -832,6 +832,89 @@ def cria_o_catalogo_de_escolas(livro):
     print(f"catálogo de escolas de magia: {len(escolas)} · nenhuma magia órfã")
 
 
+# ── as PERÍCIAS, que existiam como lista de nome e atributo ──────────────────
+
+# A Tabela 2-1 do livro, que traz as duas colunas que o app não tinha: "só
+# treinada" e "penalidade de armadura".
+PAGINA_DA_TABELA_DE_PERICIAS = 115
+
+# A faixa onde as perícias são DESCRITAS, para achar a página das duas que o
+# índice remissivo não lista.
+FAIXA_DAS_PERICIAS = (115, 123)
+
+SIGLA_DO_ATRIBUTO = {
+    "strength": "for", "dexterity": "des", "constitution": "con",
+    "intelligence": "int", "wisdom": "sab", "charisma": "car",
+}
+
+
+def cria_o_catalogo_de_pericias(livro):
+    """Escreve `catalog/data/pericias.json`.
+
+    As perícias existiam como uma lista de NOME e ATRIBUTO dentro de
+    `options.json` — sem página, sem as duas regras que o livro imprime ao lado
+    de cada uma, e sem lugar para um elo apontar. É a mesma lacuna das classes.
+
+    O que entra aqui é o que se COLHE, nunca o que se transcreve:
+
+      - o atributo vem do `options.json`, que o motor já usa para rolar;
+      - a página vem do Índice Remissivo, conferida contra o texto;
+      - "só treinada" e "penalidade de armadura" vêm da Tabela 2-1 (p115).
+
+    E há um CONTROLE que vale mais que os três: o atributo da tabela do livro é
+    comparado com o do `options.json`, perícia a perícia. As 29 casaram — o que
+    diz que a leitura da tabela está certa E que o dado do app concorda com o
+    livro. Uma discordância aqui pararia o script, porque significaria que uma
+    das duas fontes está errada e eu não sei qual.
+    """
+    tabela = livro.pagina(PAGINA_DA_TABELA_DE_PERICIAS)
+    pericias = []
+    for entrada in carrega("options.json")["expertises"]:
+        nome = entrada["name"]
+        casa = re.search(
+            re.escape(dobra(nome)) + r"\s+(for|des|con|int|sab|car)\s+(\S+)\s+(\S+)", tabela
+        )
+        if not casa:
+            raise SystemExit(f"a perícia {nome!r} não está na Tabela 2-1 da p{PAGINA_DA_TABELA_DE_PERICIAS}")
+        atributo, treino, armadura = casa.groups()
+        if atributo != SIGLA_DO_ATRIBUTO[entrada["attribute"]]:
+            raise SystemExit(
+                f"{nome}: a tabela do livro diz {atributo} e o catálogo diz "
+                f"{SIGLA_DO_ATRIBUTO[entrada['attribute']]} — uma das duas está errada"
+            )
+
+        paginas = [p for p in livro.por_indice(nome, ("perícia", "")) if livro.confere(nome, p)]
+        if not paginas:
+            # Pontaria e Reflexos não estão no índice; a descrição delas está na
+            # faixa das perícias, e lá o nome abre a linha.
+            #
+            # A página da TABELA sai da conta: as 29 aparecem lá (é uma tabela de
+            # nomes), e aceitá-la mandaria essas duas para a lista em vez de para
+            # a descrição delas. É a mesma armadilha da página do índice
+            # remissivo, uma página adiante.
+            paginas = [
+                p for p in livro.por_titulo(nome, FAIXA_DAS_PERICIAS)
+                if p != PAGINA_DA_TABELA_DE_PERICIAS and livro.confere(nome, p)
+            ]
+        if not paginas:
+            raise SystemExit(f"não achei a página da perícia {nome!r}")
+
+        pericias.append({
+            "id": dobra(nome).replace(" ", "-"),
+            "name": nome,
+            "attribute": entrada["attribute"],
+            "soTreinada": treino == "sim",
+            "penalidadeDeArmadura": armadura == "sim",
+            "bookPage": paginas[0],
+        })
+
+    grava("pericias.json", pericias)
+    treinadas = sum(1 for p in pericias if p["soTreinada"])
+    armaduras = sum(1 for p in pericias if p["penalidadeDeArmadura"])
+    print(f"catálogo de perícias: {len(pericias)} · {treinadas} só treinadas · "
+          f"{armaduras} com penalidade de armadura · atributos conferidos contra a Tabela 2-1")
+
+
 def main():
     caminho = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("-") else None
     caminho = caminho or os.environ.get("LIVRO_PDF") or PADRAO_DO_LIVRO
@@ -852,6 +935,7 @@ def main():
         cria_o_catalogo_de_classes(livro)
         cria_o_catalogo_de_efeitos(livro)
         cria_o_catalogo_de_escolas(livro)
+        cria_o_catalogo_de_pericias(livro)
         sincroniza_o_dump()
     print(f"\n{mudadas} páginas mudadas · {faltando} entradas sem página")
     print("GRAVADO" if gravar else "nada gravado (use --gravar)")

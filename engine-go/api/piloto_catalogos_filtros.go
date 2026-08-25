@@ -52,6 +52,13 @@ func filtrosDaAba(aba string) []filtroDoAcervo {
 			{Chave: "escola", Rotulo: "Escola", Opcoes: opcoesDeEscola()},
 			{Chave: "classe", Rotulo: "Classe", Opcoes: opcoesDeClasseDeMagia()},
 		}
+	case "pericias":
+		return []filtroDoAcervo{
+			{Chave: "atributo", Rotulo: "Atributo", Opcoes: opcoesDeAtributo()},
+			{Chave: "treino", Rotulo: "Treino", Opcoes: []opcaoDeFiltro{
+				{"so-treinada", "Só treinada"}, {"armadura", "Penalidade de armadura"},
+			}},
+		}
 	case "poderes":
 		return []filtroDoAcervo{{Chave: "fonte", Rotulo: "Fonte", Opcoes: opcoesDeFonteDePoder()}}
 	case "itens":
@@ -183,6 +190,35 @@ func valoresDistintos[T any](lista []T, de func(T) string) []string {
 }
 
 // ── o casamento, catálogo a catálogo ─────────────────────────────────────────
+
+// opcoesDeAtributo são os seis, na ordem da ficha e do livro — nunca alfabética.
+func opcoesDeAtributo() []opcaoDeFiltro {
+	usados := map[string]bool{}
+	for _, p := range periciasDoAcervo() {
+		usados[p.Attribute] = true
+	}
+	var fora []opcaoDeFiltro
+	for _, a := range ordemDosAtributos {
+		if usados[a.Chave] {
+			fora = append(fora, opcaoDeFiltro{a.Chave, a.Sigla})
+		}
+	}
+	return fora
+}
+
+func periciaCasa(p periciaDoLivro, chave, valor string) bool {
+	switch chave {
+	case "atributo":
+		return p.Attribute == valor
+	case "treino":
+		// As duas marcas do livro num filtro só: são as duas coisas que mudam
+		// COMO a perícia se usa, e separá-las em duas linhas de um crachá cada
+		// gastaria duas linhas para dizer o que uma diz.
+		return (valor == "so-treinada" && p.SoTreinada) ||
+			(valor == "armadura" && p.PenalidadeDeArmadura)
+	}
+	return true
+}
 
 func condicaoCasa(c condicaoDoLivro, chave, valor string) bool {
 	if chave == "efeito" {

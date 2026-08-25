@@ -17,14 +17,16 @@ func TestCadaCatalogoOfereceOsFiltrosDele(t *testing.T) {
 	esperado := map[string][]string{
 		"condicoes": {"efeito"},
 		"magias":    {"circulo", "escola", "classe"},
+		"pericias":  {"atributo", "treino"},
 		"poderes":   {"fonte"},
 		"itens":     {"familia"},
 		"deuses":    {"energia"},
 		"racas":     {"linhagem"},
-		// Classes (14) e Efeitos (18) não têm filtro, e é decisão: numa lista
-		// que cabe na tela, filtro é cromo que não poupa rolagem.
+		// Classes (14), Efeitos (18) e Escolas (8) não têm filtro, e é decisão:
+		// numa lista que cabe na tela, filtro é cromo que não poupa rolagem.
 		"classes": nil,
 		"efeitos": nil,
+		"escolas": nil,
 	}
 	for _, aba := range abasDoAcervo {
 		chaves := esperado[aba.ID]
@@ -191,5 +193,64 @@ func TestOCartaoDaMagiaDizEDeixaAbrirAEscola(t *testing.T) {
 	// A ABREVIATURA que as tabelas do livro imprimem.
 	if !strings.Contains(escola, "Evoc") {
 		t.Error("o verbete perdeu a abreviatura, que é como o livro escreve nas tabelas")
+	}
+}
+
+// TestAPericiaTrazOQueOLivroImprimeAoLadoDoNome (ALE-264).
+//
+// As perícias existiam como lista de NOME e ATRIBUTO dentro do `options.json` —
+// sem página, sem as duas regras da Tabela 2-1 e sem lugar para um elo apontar.
+//
+// O CONTROLE que vale mais que os números: o atributo do catálogo novo é
+// comparado com o do `options.json`, que é o que o motor usa para ROLAR. As duas
+// fontes concordarem é o que diz que a leitura da tabela do livro está certa.
+func TestAPericiaTrazOQueOLivroImprimeAoLadoDoNome(t *testing.T) {
+	pericias := periciasDoAcervo()
+	if len(pericias) != 29 {
+		t.Fatalf("%d perícias — o livro tem 29", len(pericias))
+	}
+
+	treinadas, comArmadura := 0, 0
+	for _, p := range pericias {
+		if p.SoTreinada {
+			treinadas++
+		}
+		if p.PenalidadeDeArmadura {
+			comArmadura++
+		}
+		if p.BookPage == 0 {
+			t.Errorf("a perícia %q ficou sem página", p.Name)
+		}
+		if siglaDoAtributo(p.Attribute) == p.Attribute {
+			t.Errorf("a perícia %q tem atributo desconhecido: %q", p.Name, p.Attribute)
+		}
+	}
+	if treinadas != 11 || comArmadura != 3 {
+		t.Errorf("%d só treinadas e %d com penalidade — a Tabela 2-1 dá 11 e 3", treinadas, comArmadura)
+	}
+
+	// A página é a da DESCRIÇÃO e não a da tabela: Pontaria e Reflexos não estão
+	// no índice remissivo, e a busca por título as achava na p115, que é a lista
+	// de nomes. É a mesma armadilha da página do índice, uma página adiante.
+	for _, p := range pericias {
+		if (p.Name == "Pontaria" || p.Name == "Reflexos") && p.BookPage == 115 {
+			t.Errorf("a perícia %q aponta para a tabela e não para a descrição dela", p.Name)
+		}
+	}
+}
+
+// TestAClasseLigaAsPericiasQueTreina: citação sem destino é texto morto.
+func TestAClasseLigaAsPericiasQueTreina(t *testing.T) {
+	s := newTestServer(t)
+	eu := seedUser(t, s, "mestre@t20.local")
+
+	corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/classes?entrada=bardo", "").Body.String()
+	if !strings.Contains(corpo, "/piloto/mestre/pericias?entrada=atuacao") {
+		t.Error("o Bardo não liga a perícia que ele treina")
+	}
+	// E o caminho de volta: a perícia diz quem a treina de saída.
+	pericia := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/pericias?entrada=atuacao", "").Body.String()
+	if !strings.Contains(pericia, "/piloto/mestre/classes?entrada=bardo") {
+		t.Error("Atuação não diz que o Bardo a treina de saída")
 	}
 }

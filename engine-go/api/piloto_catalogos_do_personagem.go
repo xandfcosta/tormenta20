@@ -124,6 +124,81 @@ type periciasDaClasse struct {
 	ChooseCount int      `json:"chooseCount"`
 }
 
+// ── perícia ──────────────────────────────────────────────────────────────────
+
+// periciaDoLivro é uma das 29, com o que o livro imprime ao lado do nome.
+//
+// As duas regras vêm da Tabela 2-1 (p115) e não de uma lista no código: o motor
+// tinha as três de penalidade de armadura escritas à mão em
+// `engine/breakdowns.go`, e a tabela do livro concorda com elas — o que é uma
+// boa notícia e não um motivo para manter duas fontes.
+type periciaDoLivro struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Attribute string `json:"attribute"`
+	// SoTreinada: sem treinamento, nem se rola.
+	SoTreinada bool `json:"soTreinada"`
+	// PenalidadeDeArmadura: armadura pesada atrapalha.
+	PenalidadeDeArmadura bool `json:"penalidadeDeArmadura"`
+	BookPage             int  `json:"bookPage"`
+	// Classes são as que treinam a perícia de saída, DERIVADAS de
+	// `class-expertises` — ver o cabeçalho do arquivo.
+	Classes []string `json:"-"`
+}
+
+var (
+	periciasUmaVez  sync.Once
+	periciasDoLivro []periciaDoLivro
+)
+
+func periciasDoAcervo() []periciaDoLivro {
+	periciasUmaVez.Do(func() {
+		periciasDoLivro = listaDoCatalogo[periciaDoLivro]("pericias")
+		treinadaPor := map[string][]string{}
+		var pericias map[string]periciasDaClasse
+		if bruto, ok := catalog.Resource("class-expertises"); ok {
+			_ = json.Unmarshal(bruto, &pericias)
+		}
+		// Só as FIXAS: a piscina de escolha tem quase tudo em quase toda classe,
+		// e dizer que Acrobacia é "treinada por" doze classes porque ela está em
+		// doze piscinas seria informação que não separa nada.
+		for _, classe := range ordemDasClasses(pericias) {
+			for _, nome := range pericias[classe].Fixed {
+				treinadaPor[nome] = append(treinadaPor[nome], classe)
+			}
+		}
+		for i := range periciasDoLivro {
+			periciasDoLivro[i].Classes = treinadaPor[periciasDoLivro[i].Name]
+		}
+	})
+	return periciasDoLivro
+}
+
+// ordemDasClasses devolve os nomes em ordem estável: a de um `map` é aleatória,
+// e sem isto a lista de classes de cada perícia mudaria a cada render.
+func ordemDasClasses(pericias map[string]periciasDaClasse) []string {
+	nomes := make([]string, 0, len(pericias))
+	for nome := range pericias {
+		nomes = append(nomes, nome)
+	}
+	slices.Sort(nomes)
+	return nomes
+}
+
+// siglaDoAtributo escreve o atributo como a ficha e a tabela do livro escrevem.
+func siglaDoAtributo(chave string) string {
+	for _, a := range ordemDosAtributos {
+		if a.Chave == chave {
+			return a.Sigla
+		}
+	}
+	return chave
+}
+
+func camposDaPericia(p periciaDoLivro) []string {
+	return append([]string{p.Name, siglaDoAtributo(p.Attribute)}, p.Classes...)
+}
+
 // ── divindade ────────────────────────────────────────────────────────────────
 
 // deusDoLivro: o nome do tipo é `deus` porque é a palavra do livro e do dado
