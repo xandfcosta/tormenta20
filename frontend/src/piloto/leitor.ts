@@ -17,8 +17,9 @@
  * Vendorizar o viewer completo do pdf.js traria locales, cmaps e imagens — dez
  * vezes o peso para funções que a cena não pede.
  */
-import * as pdfjs from 'pdfjs-dist'
+
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist'
+import * as pdfjs from 'pdfjs-dist'
 
 /** O que o servidor escreve no `<div id="leitor">`. */
 type Cartaz = {
