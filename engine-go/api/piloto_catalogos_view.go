@@ -247,19 +247,94 @@ func poderesAchatados() []poderDoLivro {
 		})
 	}
 
-	for _, p := range listaDoCatalogo[struct {
-		ID       string   `json:"id"`
-		Name     string   `json:"name"`
-		Deuses   []string `json:"deuses"`
-		Effect   string   `json:"effect"`
-		BookPage int      `json:"bookPage"`
-	}]("granted-powers") {
-		fora = append(fora, poderDoLivro{
-			ID: "granted." + p.ID, Name: p.Name,
-			Fonte: "Concedido · " + strings.Join(p.Deuses, ", "), Description: p.Effect, BookPage: p.BookPage,
-		})
+	return append(fora, poderesDivinos()...)
+}
+
+// poderesDivinos são os que os DEUSES concedem, e este bloco é conserto de uma
+// lacuna que o dono viu na tela: nos cartões de Valkaria, Wynna e Thwor a maior
+// parte dos poderes concedidos não virava elo.
+//
+// A causa era um comentário desatualizado. Ele dizia que os poderes divinos
+// "carregam página do livro e nenhum texto de regra, então não há o que
+// consultar" — e o dado DESMENTE: os 80 têm descrição completa. Por causa dessa
+// frase o acervo lia só o `granted-powers`, que são 36 dos 72 nomes.
+//
+// Lidos do `divine-powers`, que é o catálogo completo. Ele guarda uma linha por
+// (poder, DEUS) — "Coragem Total" aparece quatro vezes, uma para Arsenal,
+// Khalmyr, Lin-Wu e Valkaria, com a mesma descrição —, então aqui eles são
+// juntados por NOME e os deuses viram a fonte. Sem juntar, a lista teria o mesmo
+// poder quatro vezes e o elo não saberia para qual apontar.
+func poderesDivinos() []poderDoLivro {
+	type divino struct {
+		DeusID      string `json:"deusId"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		BookPage    int    `json:"bookPage"`
+	}
+
+	porNome := map[string]*poderDoLivro{}
+	var ordem []string
+	for _, p := range listaDoCatalogo[divino]("divine-powers") {
+		if achado, tem := porNome[p.Name]; tem {
+			achado.Fonte += ", " + nomeDoDeus(p.DeusID)
+			continue
+		}
+		porNome[p.Name] = &poderDoLivro{
+			// O id é o NOME em forma de chave: o `divine-powers` não traz `id`,
+			// e o elo endereça por id. Prefixado para não colidir com um poder
+			// de classe de mesmo nome.
+			ID:          "divino." + chaveDoNome(p.Name),
+			Name:        p.Name,
+			Fonte:       "Divino · " + nomeDoDeus(p.DeusID),
+			Description: p.Description,
+			BookPage:    p.BookPage,
+		}
+		ordem = append(ordem, p.Name)
+	}
+
+	fora := make([]poderDoLivro, 0, len(ordem))
+	for _, nome := range ordem {
+		fora = append(fora, *porNome[nome])
 	}
 	return fora
+}
+
+// nomeDoDeus resolve o id que o poder divino guarda ("lin-wu") no nome que se lê.
+//
+// Lê o catálogo DIRETO e não pelo `catalogosDoPersonagem`, e isto é conserto de
+// um DEADLOCK que pendurou a suíte inteira sem erro nenhum: aquele carregador
+// tem um `sync.Once` que chama o `poderesAchatados` para contar os poderes de
+// cada classe, e o `poderesAchatados` chamava de volta o `catalogosDoPersonagem`
+// daqui. `Once` reentrante trava para sempre — não é pânico, não é teste
+// vermelho: é o processo parado.
+//
+// Quem apontou o dedo foi o `go test -timeout 25s`, que despeja a pilha de todas
+// as goroutines. Sem o timeout, o sintoma era "a suíte demora".
+var (
+	deusesUmaVez sync.Once
+	nomePorDeus  map[string]string
+)
+
+func nomeDoDeus(id string) string {
+	deusesUmaVez.Do(func() {
+		nomePorDeus = map[string]string{}
+		for _, d := range listaDoCatalogo[struct {
+			ID   string `json:"id"`
+			Name string `json:"name"`
+		}]("deuses") {
+			nomePorDeus[d.ID] = d.Name
+		}
+	})
+	if nome, tem := nomePorDeus[id]; tem {
+		return nome
+	}
+	return id
+}
+
+// chaveDoNome transforma um nome em chave de endereço: sem acento, minúsculo,
+// espaços viram hífen. É a mesma forma dos ids que os catálogos já usam.
+func chaveDoNome(nome string) string {
+	return strings.ReplaceAll(dobra(nome), " ", "-")
 }
 
 // ── o que cada catálogo busca ────────────────────────────────────────────────

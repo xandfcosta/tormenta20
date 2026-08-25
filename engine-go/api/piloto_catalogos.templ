@@ -427,12 +427,21 @@ templ osAprimoramentosDaMagia(m magiaDoLivro, livro enderecoDoLivro) {
 		</p>
 		<ul class="space-y-1.5">
 			for _, a := range m.Augments {
-				<li class="flex gap-2 text-sm">
-					// O CUSTO na frente e em largura fixa: é por ele que o mestre
-					// varre a lista — "o que dá para fazer com 2 PM?".
-					<span class="w-14 shrink-0 font-mono text-xs text-grimorio-gold">{ a.Escrito() }</span>
+				// GRADE de duas colunas e não uma fileira: o texto do
+				// aprimoramento tem três linhas, e numa fileira a segunda linha
+				// volta para debaixo do custo. Com a grade, a coluna do texto é
+				// uma caixa — tudo o que é texto começa na mesma vertical.
+				//
+				// `items-baseline` porque o custo é `text-xs` mono e o texto é
+				// `text-sm`: alinhados pelo TOPO, o número flutua acima da
+				// primeira linha, que foi o que o dono viu.
+				<li class="grid grid-cols-[3.5rem_1fr] items-baseline gap-x-3 text-sm">
+					// O CUSTO na frente e alinhado à DIREITA: é por ele que o
+					// mestre varre a lista ("o que dá para fazer com 2 PM?"), e
+					// número em coluna se lê pela unidade.
+					<span class="text-right font-mono text-xs text-grimorio-gold">{ a.Escrito() }</span>
 					<span class="text-muted-foreground">
-						<span class="text-3xs uppercase tracking-widest">{ nomeDoTipoDeAprimoramento(a.Kind) + " · " }</span>
+						<span class="mr-1 text-3xs uppercase tracking-widest opacity-70">{ nomeDoTipoDeAprimoramento(a.Kind) }</span>
 						for _, pedaco := range comElosDoTexto(a.Description) {
 							@pedacoDoTexto(pedaco, livro)
 						}

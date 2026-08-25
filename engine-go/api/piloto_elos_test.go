@@ -307,3 +307,60 @@ func TestOsAprimoramentosAbremNaCaixa(t *testing.T) {
 		t.Error("o cartão inteiro veio com os aprimoramentos — a `parte` não separa nada")
 	}
 }
+
+// TestTodoDeusLigaOsPoderesQueConcede (ALE-264).
+//
+// PROVADO VERMELHO: o dono mandou três cartões — Valkaria, Wynna e Thwor — em
+// que a maior parte dos poderes concedidos era texto morto. A causa não estava
+// no elo: o acervo lia o `granted-powers` (36 nomes) e não o `divine-powers`
+// (72), por causa de um comentário que afirmava que os divinos "não têm texto de
+// regra". Eles têm.
+//
+// AMOSTRAGEM sobre os VINTE deuses e não sobre os três que o dono viu: a lacuna
+// era invisível na tela — a palavra continuava lá, só não levava a lugar nenhum
+// —, e conferir só os relatados deixaria os outros dezessete no escuro.
+func TestTodoDeusLigaOsPoderesQueConcede(t *testing.T) {
+	_, _, deuses := catalogosDoPersonagem()
+	if len(deuses) < 20 {
+		t.Fatalf("só %d deuses — o guarda mediria quase nada", len(deuses))
+	}
+	concedidos := 0
+	for _, d := range deuses {
+		for _, poder := range d.PoderesConcedidos {
+			concedidos++
+			if idDoPoder(poder) == "" {
+				t.Errorf("%s concede %q, que não tem verbete no acervo", d.Name, poder)
+			}
+		}
+	}
+	// O CONTROLE: havia poder para medir. Sem ele, um `poderesConcedidos` vazio
+	// passaria verde.
+	if concedidos < 60 {
+		t.Errorf("só %d poderes concedidos no total — o catálogo não carregou", concedidos)
+	}
+}
+
+// TestTodoDevotoQueEVerbeteViraElo: o outro lado do cartão do deus.
+//
+// Os três que ficam de fora estão NOMEADOS porque são exatamente os que não são
+// verbete de nada — e prendê-los é o que faz o guarda acusar no dia em que um
+// quarto aparecer por um defeito de casamento de plural.
+func TestTodoDevotoQueEVerbeteViraElo(t *testing.T) {
+	_, _, deuses := catalogosDoPersonagem()
+	semVerbete := map[string]bool{
+		"Quaisquer":                       true,
+		"Qualquer duyshidakk":             true,
+		"Aventureiros (todas as classes)": true,
+	}
+	for _, d := range deuses {
+		for _, devoto := range d.Devotos {
+			aba, _ := eloDoDevoto(devoto)
+			if aba == "" && !semVerbete[devoto] {
+				t.Errorf("%s tem o devoto %q sem elo — plural que o casamento não pega?", d.Name, devoto)
+			}
+			if aba != "" && semVerbete[devoto] {
+				t.Errorf("%q virou elo para %q, e não é raça nem classe", devoto, aba)
+			}
+		}
+	}
+}

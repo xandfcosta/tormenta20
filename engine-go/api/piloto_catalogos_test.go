@@ -167,8 +167,8 @@ func TestOsPoderesVemDosTresCatalogos(t *testing.T) {
 		switch {
 		case strings.HasPrefix(p.ID, "general."):
 			fontes["geral"]++
-		case strings.HasPrefix(p.ID, "granted."):
-			fontes["concedido"]++
+		case strings.HasPrefix(p.ID, "divino."):
+			fontes["divino"]++
 		default:
 			fontes["classe"]++
 		}
@@ -176,10 +176,21 @@ func TestOsPoderesVemDosTresCatalogos(t *testing.T) {
 			t.Fatalf("o poder %q não diz de onde veio", p.Name)
 		}
 	}
-	for _, esperada := range []string{"classe", "geral", "concedido"} {
+	for _, esperada := range []string{"classe", "geral", "divino"} {
 		if fontes[esperada] == 0 {
 			t.Errorf("nenhum poder de %q — um dos três catálogos não entrou", esperada)
 		}
+	}
+	// Os DIVINOS são 72 e eram 36 (ALE-264): o acervo lia o `granted-powers`,
+	// que é metade dos nomes, porque um comentário afirmava que os poderes
+	// divinos não têm texto de regra. Eles têm — os 80 do `divine-powers` vêm
+	// com descrição completa, e 80 viram 72 ao juntar por nome os que vários
+	// deuses concedem ("Coragem Total" aparece quatro vezes).
+	//
+	// O número está preso porque a lacuna era INVISÍVEL: o cartão do deus
+	// mostrava os poderes como texto e ninguém via que metade não virava elo.
+	if fontes["divino"] != 72 {
+		t.Errorf("%d poderes divinos no acervo — eram 72 quando isto foi escrito", fontes["divino"])
 	}
 }
 
