@@ -142,7 +142,7 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 						<div aria-hidden="true" class={ "tabuleiro-terreno tabuleiro-" + q.Especie } style={ posicaoNoPlano(q.Col, q.Lin, 1) }></div>
 					}
 					for _, m := range v.Marcadores {
-						@marcadorNoPlano(m)
+						@marcadorNoPlano(v, m)
 					}
 					// A TRILHA vem antes das peças e depois do chão: ela é rastro,
 					// e a peça que anda por cima dela continua sendo a peça que
@@ -213,9 +213,16 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 					if v.Mestre {
 						<button
 							type="button"
-							data-show="$pincel != ''"
+							data-show="$ferramenta != '' && $ferramenta != 'marcador'"
 							data-attr:aria-label="$apagando ? 'Apagar terreno — escolha a casa' : 'Pintar terreno — escolha a casa'"
 							data-on:click={ pinturaNoPontoClicado(v) }
+							class="tabuleiro-casas"
+						></button>
+						<button
+							type="button"
+							data-show="$ferramenta === 'marcador'"
+							aria-label="Marcar um lugar — escolha a casa"
+							data-on:click={ marcacaoNoPontoClicado(v) }
 							class="tabuleiro-casas"
 						></button>
 					}
@@ -223,7 +230,7 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 						<button
 							type="button"
 							if v.Mestre {
-								data-show="$pincel === ''"
+								data-show="$ferramenta === ''"
 							}
 							aria-label={ "Mover " + v.RotuloDoAlvo + " — escolha a casa" }
 							data-on:click={ paradaNoPontoClicado(v) }
@@ -321,13 +328,88 @@ templ pecaNoPlano(v tabuleiroView, p pecaDoTabuleiro) {
 	</button>
 }
 
-templ marcadorNoPlano(m marcadorDoTabuleiro) {
-	<span
-		aria-label={ "Marcador " + m.Texto + " em " + m.Onde }
-		title={ m.Texto + " · " + m.Onde }
-		style={ posicaoNoPlano(m.Col, m.Lin, 1) + fmt.Sprintf("--marcador:%s;", corDeMarcador(m.Cor)) }
-		class="tabuleiro-marcador"
-	>{ m.Texto }</span>
+// O MARCADOR no plano. Para a mesa ele é um selo que não se clica; para o mestre
+// é um botão que abre o que fazer com ele.
+//
+// O `pointer-events` decide isso no CSS e não aqui, e é o certo: o marcador fica
+// POR CIMA do plano, então capturar o clique de quem não pode mexer nele
+// roubaria o gesto de mover a peça que estiver embaixo.
+templ marcadorNoPlano(v tabuleiroView, m marcadorDoTabuleiro) {
+	if v.Mestre {
+		<button
+			type="button"
+			aria-label={ nomeDoMarcador(m) }
+			title={ nomeDoMarcador(m) }
+			data-attr:aria-pressed={ marcadorEscolhido(m.ID) + " ? 'true' : 'false'" }
+			data-on:click={ escolheOMarcador(m.ID) }
+			style={ posicaoNoPlano(m.Col, m.Lin, 1) + fmt.Sprintf("--marcador:%s;", corDeMarcador(m.Cor)) }
+			class={ "tabuleiro-marcador", templ.KV("tabuleiro-marcador-escondido", m.Escondido) }
+		>{ m.Texto }</button>
+		@acoesDoMarcador(v, m)
+	} else {
+		<span
+			aria-label={ "Marcador " + m.Texto + " em " + m.Onde }
+			title={ m.Texto + " · " + m.Onde }
+			style={ posicaoNoPlano(m.Col, m.Lin, 1) + fmt.Sprintf("--marcador:%s;", corDeMarcador(m.Cor)) }
+			class="tabuleiro-marcador"
+		>{ m.Texto }</span>
+	}
+}
+
+// O que o mestre faz com o LUGAR marcado (ALE-195).
+//
+// REVELAR vem primeiro porque é o verbo que a mesa vê: o marcador nasce
+// escondido, e o gesto que importa é o de mostrá-lo na hora certa. As cores e o
+// apagar vêm depois, na ordem em que se usam.
+//
+// As ações ficam no HTML SEMPRE e quem as mostra é o sinal: um grupo que só
+// existisse depois de uma ida ao servidor chegaria tarde para um clique que já
+// aconteceu.
+templ acoesDoMarcador(v tabuleiroView, m marcadorDoTabuleiro) {
+	<div
+		role="group"
+		aria-label={ "O que fazer com o marcador " + m.Texto }
+		data-show={ marcadorEscolhido(m.ID) }
+		style={ posicaoNoPlano(m.Col, m.Lin, 1) }
+		class="tabuleiro-marcador-acoes"
+	>
+		<button
+			type="button"
+			if m.Escondido {
+				aria-label={ "Revelar o marcador " + m.Texto + " para a mesa" }
+				title="Revelar para a mesa"
+			} else {
+				aria-label={ "Esconder o marcador " + m.Texto + " da mesa" }
+				title="Esconder da mesa"
+			}
+			data-on:click={ comandoDoMarcador(v, m.ID, "revelar") }
+			class="inline-flex size-6 items-center justify-center rounded-sm text-xs outline-none hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+		>
+			if m.Escondido {
+				👁
+			} else {
+				🚫
+			}
+		</button>
+		for _, cor := range tabuleiro.CoresDeMarcador {
+			<button
+				type="button"
+				aria-label={ "Pintar o marcador " + m.Texto + " de " + cor.Rotulo }
+				title={ cor.Rotulo }
+				aria-pressed={ fmt.Sprintf("%t", cor.ID == m.Cor) }
+				data-on:click={ comandoDoMarcador(v, m.ID, "cor/"+cor.ID) }
+				style={ fmt.Sprintf("--marcador:var(--marcador-%s);", cor.ID) }
+				class="tabuleiro-marcador-cor"
+			></button>
+		}
+		<button
+			type="button"
+			aria-label={ "Apagar o marcador " + m.Texto }
+			title="Apagar"
+			data-on:click={ escolheOMarcador("") + "; " + comandoDoMarcador(v, m.ID, "remover") }
+			class="inline-flex size-6 items-center justify-center rounded-sm text-xs text-muted-foreground outline-none hover:border hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+		>✕</button>
+	</div>
 }
 
 // O diálogo de ABRIR (ALE-124, portado na ALE-264).
@@ -514,7 +596,7 @@ templ oAcervoDeLugares(v tabuleiroView) {
 // O trilho só existe para o MESTRE e só com cena aberta — pintar chão de uma
 // cena que não está na mesa não tem onde acontecer.
 templ oTrilhoDoPincel(v tabuleiroView) {
-	<div role="group" aria-label="Pincel de terreno" class="flex flex-wrap items-center gap-1">
+	<div role="group" aria-label="Ferramentas do mapa" class="flex flex-wrap items-center gap-1">
 		// O `aria-pressed` devolve STRING e não booleano: o `data-attr` do Datastar
 		// trata valor booleano como ATRIBUTO booleano — verdadeiro vira
 		// `aria-pressed=""`, que não anuncia estado nenhum. Vale para todo
@@ -523,15 +605,31 @@ templ oTrilhoDoPincel(v tabuleiroView) {
 			<button
 				type="button"
 				title={ pincel.Rotulo + ": " + pincel.Efeito + " (p238)" }
-				data-attr:aria-pressed={ fmt.Sprintf("$pincel === %q ? 'true' : 'false'", pincel.ID) }
-				data-class={ fmt.Sprintf("{'pincel-ligado': $pincel === %q}", pincel.ID) }
-				data-on:click={ escolheOPincel(string(pincel.ID)) }
+				data-attr:aria-pressed={ fmt.Sprintf("$ferramenta === %q ? 'true' : 'false'", pincel.ID) }
+				data-class={ fmt.Sprintf("{'pincel-ligado': $ferramenta === %q}", pincel.ID) }
+				data-on:click={ escolheAFerramenta(string(pincel.ID)) }
 				class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>
 				<span aria-hidden="true" class={ "pincel-amostra tabuleiro-" + string(pincel.ID) }></span>
 				{ pincel.Rotulo }
 			</button>
 		}
+		// MARCAR é ferramenta e não espécie: ela fica na mesma fileira porque
+		// disputa o mesmo clique — com ela ligada o clique não pinta nem move —,
+		// e é o sinal único que garante que só uma esteja ligada. Ela vem depois
+		// das quatro porque pintar é o gesto de montar a cena e marcar é o de
+		// apontar durante ela.
+		<button
+			type="button"
+			title="Marcar um lugar: o clique põe um ponto ESCONDIDO no mapa, para o mestre revelar quando quiser"
+			data-attr:aria-pressed={ fmt.Sprintf("$ferramenta === %q ? 'true' : 'false'", FerramentaDeMarcar) }
+			data-class={ fmt.Sprintf("{'pincel-ligado': $ferramenta === %q}", FerramentaDeMarcar) }
+			data-on:click={ escolheAFerramenta(FerramentaDeMarcar) }
+			class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>
+			<span aria-hidden="true">📍</span>
+			Marcar
+		</button>
 		// A BORRACHA é um MODO e não uma espécie, e por isso fica separada por um
 		// vinco: ela não escolhe o que pintar, ela inverte o que o pincel
 		// escolhido faz. Uma "espécie borracha" obrigaria a decidir o que apagar
@@ -542,7 +640,7 @@ templ oTrilhoDoPincel(v tabuleiroView) {
 			type="button"
 			title="Borracha: o clique APAGA a espécie escolhida em vez de pintá-la"
 			data-attr:aria-pressed="$apagando ? 'true' : 'false'"
-			data-attr:disabled="$pincel === ''"
+			data-attr:disabled="$ferramenta === '' || $ferramenta === 'marcador'"
 			data-class="{'pincel-ligado': $apagando}"
 			data-on:click="$apagando = !$apagando"
 			class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-2.5 text-xs outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"

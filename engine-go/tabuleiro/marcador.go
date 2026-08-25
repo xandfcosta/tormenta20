@@ -69,3 +69,25 @@ func ProximaLetraDeMarcador(marcadores []BoardMarker) string {
 	}
 	return "??"
 }
+
+// ── os patches TIPADOS, para quem não fala JSON ──────────────────────────────
+//
+// O `ParseMarkerPatch` monta o patch a partir de um `map[string]any`, que é a
+// forma do corpo JSON da SPA. O piloto não tem esse mapa — os gestos dele levam
+// a intenção no CAMINHO —, e montar um mapa só para desmontá-lo em seguida seria
+// atravessar o formato de fio de uma tela para chegar ao domínio da outra.
+
+// RevelacaoDeMarcador monta o patch que mostra ou esconde.
+//
+// REVELAR é o verbo que importa: o marcador nasce escondido porque marcar a
+// armadilha na frente da mesa entrega a armadilha (ALE-195).
+func RevelacaoDeMarcador(escondido bool) markerPatch {
+	return markerPatch{Hidden: &escondido}
+}
+
+// CorNovaDeMarcador monta o patch da cor. Cor fora da lista é IGNORADA pelo
+// `UpdateMarker`, então o marcador fica com a que tinha — que é melhor do que
+// cair no padrão, porque aqui já existe uma escolha anterior a preservar.
+func CorNovaDeMarcador(cor string) markerPatch {
+	return markerPatch{Color: &cor}
+}

@@ -104,14 +104,23 @@ func TestOTrilhoDizOEfeitoDeCadaEspecie(t *testing.T) {
 	f.abreTabuleiro(t, "pedra")
 	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
 
-	if !strings.Contains(tela, "Pincel de terreno") {
-		t.Fatal("o mestre não tem trilho de pincel na cena aberta")
+	// "Ferramentas do mapa" e não mais "Pincel de terreno": o trilho deixou de
+	// ser só do pincel quando MARCAR entrou nele (ALE-264, item 5), e um grupo
+	// que se anuncia como pincel enquanto carrega outra ferramenta mente para
+	// quem navega por leitor de tela. O guarda acusou a troca e foi ATUALIZADO.
+	if !strings.Contains(tela, "Ferramentas do mapa") {
+		t.Fatal("o mestre não tem trilho de ferramentas na cena aberta")
 	}
 	// O nome acessível da camada NÃO cita a espécie: ela sairia do sinal, que
 	// guarda o ID, e o leitor de tela anunciaria "Pintar dificil" sem acento.
 	// Quem diz qual é a espécie é o botão `aria-pressed` do trilho.
-	if strings.Contains(tela, "'Pintar ' + $pincel") {
-		t.Error("o nome acessível da camada monta o rótulo com o id do pincel")
+	//
+	// O sinal chama-se `$ferramenta` desde a ALE-264 — e esta linha é um lembrete
+	// caro: ela citava `$pincel`, que deixou de existir, e uma asserção de
+	// AUSÊNCIA sobre um nome morto passa verde sobre nada. Nome de sinal em
+	// asserção negativa envelhece em silêncio.
+	if strings.Contains(tela, "'Pintar ' + $ferramenta") {
+		t.Error("o nome acessível da camada monta o rótulo com o id da ferramenta")
 	}
 	for _, pincel := range tabuleiro.EspeciesDeTerreno {
 		if !strings.Contains(tela, pincel.Efeito) {
@@ -126,8 +135,8 @@ func TestOTrilhoDizOEfeitoDeCadaEspecie(t *testing.T) {
 
 	// E o pincel é do MESTRE: o jogador não pinta chão.
 	doJogador := f.pede(t, f.jogador, http.MethodGet, f.urlDaMesa(), "").Body.String()
-	if strings.Contains(doJogador, "Pincel de terreno") {
-		t.Error("o jogador recebeu o pincel de terreno")
+	if strings.Contains(doJogador, "Ferramentas do mapa") {
+		t.Error("o jogador recebeu o trilho de ferramentas do mestre")
 	}
 }
 

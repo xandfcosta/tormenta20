@@ -145,6 +145,11 @@ type marcadorDoTabuleiro struct {
 	Cor      string
 	Col, Lin int
 	Onde     string
+	// Escondido só chega ao MESTRE — para a mesa o marcador escondido nem existe
+	// (o `BoardForRole` o retira). Sem este campo o mestre revelava e a tela dele
+	// não mudava: ele não tinha como saber o que a mesa estava vendo, que é a
+	// pergunta que o gesto de revelar existe para responder.
+	Escondido bool
 }
 
 // quadradoDeTerreno é uma casa pintada que sabe de que espécie é. A espécie vai
@@ -199,7 +204,7 @@ func tabuleiroViewOf(b *tabuleiro.BoardState, st *aovivo.SessionRuntimeState, sa
 	for i := range b.Markers {
 		m := &b.Markers[i]
 		v.Marcadores = append(v.Marcadores, marcadorDoTabuleiro{
-			ID: m.ID, Texto: m.Text, Cor: m.Color,
+			ID: m.ID, Texto: m.Text, Cor: m.Color, Escondido: m.Hidden,
 			Col: m.X - e.X0, Lin: m.Y - e.Y0, Onde: coordenada(m.X, m.Y),
 		})
 	}
@@ -662,15 +667,80 @@ func pecasEmPortugues(n int) string {
 // duas, e a resposta certa (a que estiver selecionada) já é o que isto faz.
 func pinturaNoPontoClicado(v tabuleiroView) string {
 	return fmt.Sprintf(
-		"@post('/piloto/mesa/%d/%d/tabuleiro/terreno/' + $pincel + '/' + (Math.floor(evt.offsetX / $quadrado) + %d) + '/' + (Math.floor(evt.offsetY / $quadrado) + %d) + ($apagando ? '?apagar=1' : ''))",
+		"@post('/piloto/mesa/%d/%d/tabuleiro/terreno/' + $ferramenta + '/' + (Math.floor(evt.offsetX / $quadrado) + %d) + '/' + (Math.floor(evt.offsetY / $quadrado) + %d) + ($apagando ? '?apagar=1' : ''))",
 		v.CampaignID, v.SessionID, v.X0, v.Y0,
 	)
 }
 
-// escolheOPincel liga uma espécie, ou a DESliga se ela já estava.
+// escolheAFerramenta liga uma ferramenta, ou a DESliga se ela já estava.
 //
 // Clicar de novo na ferramenta ativa guarda o pincel, que é o gesto que devolve
-// o clique ao movimento sem precisar de um sexto botão "nenhum".
-func escolheOPincel(especie string) string {
-	return fmt.Sprintf("$pincel = ($pincel === %q ? '' : %q)", especie, especie)
+// o clique ao movimento sem precisar de mais um botão "nenhum".
+//
+// UM SINAL SÓ, e o valor É a ferramenta: as quatro espécies de terreno, o
+// `marcador`, e vazio para mover. A exclusão fica POR CONSTRUÇÃO — não há como
+// duas estarem ligadas, e ninguém precisa lembrar de desligar a vizinha ao
+// acrescentar a sexta. É a mesma conclusão a que a ALE-203 chegou na SPA, onde
+// cinco sinais soltos deixavam pincel e régua ligados ao mesmo tempo, com um
+// roubando o clique do outro.
+func escolheAFerramenta(qual string) string {
+	return fmt.Sprintf("$ferramenta = ($ferramenta === %q ? '' : %q)", qual, qual)
+}
+
+// FerramentaDeMarcar é o valor do sinal quando o clique MARCA.
+//
+// Constante e não string solta porque ela aparece em quatro expressões e num
+// `data-show`: escrita à mão, a quinta ocorrência é a que erra a letra e vira
+// uma ferramenta que a tela liga e o mapa nunca escuta.
+const FerramentaDeMarcar = "marcador"
+
+// marcacaoNoPontoClicado põe um marcador na casa que o dedo acertou.
+//
+// Mesma aritmética da pintura — o ponto do clique dividido pelo tamanho da casa,
+// mais a origem da moldura —, e ela é repetida porque o DESTINO é outro. Extrair
+// a conta para um helper compartilhado economizaria uma linha e faria as duas
+// rotas mudarem juntas no dia em que uma delas precisar do canto e não do centro.
+func marcacaoNoPontoClicado(v tabuleiroView) string {
+	return fmt.Sprintf(
+		"@post('/piloto/mesa/%d/%d/tabuleiro/marcadores/novo/' + (Math.floor(evt.offsetX / $quadrado) + %d) + '/' + (Math.floor(evt.offsetY / $quadrado) + %d))",
+		v.CampaignID, v.SessionID, v.X0, v.Y0,
+	)
+}
+
+// comandoDoMarcador escreve o gesto sobre um marcador que já existe.
+func comandoDoMarcador(v tabuleiroView, id, acao string) string {
+	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/tabuleiro/marcadores/%s/%s')",
+		v.CampaignID, v.SessionID, id, acao)
+}
+
+// nomeDoMarcador é o que o leitor de tela anuncia, e ele DIZ o estado.
+//
+// "Marcador A em 3, 2" não conta a única coisa que o mestre precisa saber antes
+// de clicar: se a mesa já está vendo aquilo. O estado entra no nome porque é
+// aqui que ele muda o que a pessoa vai fazer.
+func nomeDoMarcador(m marcadorDoTabuleiro) string {
+	estado := "visível para a mesa"
+	if m.Escondido {
+		estado = "escondido da mesa"
+	}
+	return fmt.Sprintf("Marcador %s em %s, %s", m.Texto, m.Onde, estado)
+}
+
+// marcadorEscolhido é a pergunta que mostra as ações de UM marcador.
+func marcadorEscolhido(id string) string {
+	return fmt.Sprintf("$marcadorescolhido === %q", id)
+}
+
+// escolheOMarcador abre as ações, ou as fecha se já estavam abertas.
+//
+// Clicar de novo no mesmo marcador FECHA, que é o gesto que sai de lá sem
+// precisar de um botão "fechar" — o mesmo padrão do trilho de ferramentas.
+// Passar "" fecha sem abrir outro, e é o que o apagar usa: as ações de um
+// marcador que deixou de existir ficariam penduradas na tela até o próximo
+// clique.
+func escolheOMarcador(id string) string {
+	if id == "" {
+		return "$marcadorescolhido = ''"
+	}
+	return fmt.Sprintf("$marcadorescolhido = ($marcadorescolhido === %q ? '' : %q)", id, id)
 }
