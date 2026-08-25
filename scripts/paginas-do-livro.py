@@ -447,6 +447,33 @@ def sincroniza_o_dump():
     print(f"dump do motor sincronizado: {', '.join(GEMEOS)}")
 
 
+# ── as CLASSES, que não tinham catálogo ──────────────────────────────────────
+
+def cria_o_catalogo_de_classes(livro):
+    """Escreve `catalog/data/classes.json`: id, nome e página das 14 classes.
+
+    Elas existiam só como uma LISTA DE NOMES dentro de `options.json`, sem lugar
+    onde guardar a página — e sem página não há botão para o livro. O catálogo
+    novo é mínimo de propósito: o que a classe tem de PV, PM e perícias é
+    transcrição de tabela, e transcrever à mão é o que este script existe para
+    não fazer. O que a tela mostra além do nome ela deriva do que já existe
+    (perícias treinadas, poderes da classe).
+
+    O `id` segue a convenção que os poderes de classe já usam
+    ("class.arcanista.…"): o nome dobrado, sem acento e sem espaço.
+    """
+    nomes = carrega("options.json")["classes"]
+    classes = []
+    for nome in nomes:
+        paginas = [p for p in livro.por_indice(nome, ("classe", "")) if livro.confere(nome, p)]
+        if not paginas:
+            print(f"   ✗ classe {nome} sem página — fica de fora")
+            continue
+        classes.append({"id": dobra(nome).replace(" ", "-"), "name": nome, "bookPage": paginas[0]})
+    grava("classes.json", classes)
+    print(f"catálogo de classes: {len(classes)} de {len(nomes)}")
+
+
 def main():
     caminho = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("-") else None
     caminho = caminho or os.environ.get("LIVRO_PDF") or PADRAO_DO_LIVRO
@@ -464,6 +491,7 @@ def main():
         mudadas += m
         faltando += s
     if gravar:
+        cria_o_catalogo_de_classes(livro)
         sincroniza_o_dump()
     print(f"\n{mudadas} páginas mudadas · {faltando} entradas sem página")
     print("GRAVADO" if gravar else "nada gravado (use --gravar)")

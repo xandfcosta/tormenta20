@@ -127,3 +127,27 @@ func entradasComNome(t *testing.T, arquivo string, bruto []byte) []entradaComPag
 	}
 	return nil
 }
+
+// TestTodaClasseSabeSuaPagina: o catálogo de classes nasceu na ALE-264 com três
+// campos, e a PÁGINA é o motivo dele existir — sem ela, ele não teria por quê.
+func TestTodaClasseSabeSuaPagina(t *testing.T) {
+	bruto, ok := Resource("classes")
+	if !ok {
+		t.Fatal("catálogo de classes ausente — a aba nasce vazia e nada estoura")
+	}
+	var classes []struct {
+		Name     string `json:"name"`
+		BookPage int    `json:"bookPage"`
+	}
+	if err := json.Unmarshal(bruto, &classes); err != nil {
+		t.Fatalf("classes: %v", err)
+	}
+	if len(classes) != 14 {
+		t.Errorf("%d classes — o livro tem 14", len(classes))
+	}
+	for _, c := range classes {
+		if c.BookPage == 0 {
+			t.Errorf("a classe %q ficou sem página do livro", c.Name)
+		}
+	}
+}

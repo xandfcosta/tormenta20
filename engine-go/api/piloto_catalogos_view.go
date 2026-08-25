@@ -263,11 +263,17 @@ type abaDoAcervo struct {
 
 // A ordem é a da SPA: condição primeiro porque é a consulta mais frequente no
 // meio do combate, e item por último porque é a de entre-cenas.
+// As três últimas entraram na ALE-264 e vão no FIM pela mesma razão que decidiu
+// a ordem original: raça, classe e deus são consulta de CRIAÇÃO de personagem, e
+// as quatro primeiras são consulta de mesa com o combate em curso.
 var abasDoAcervo = []abaDoAcervo{
 	{"condicoes", "Condições"},
 	{"magias", "Magias"},
 	{"poderes", "Poderes"},
 	{"itens", "Itens"},
+	{"racas", "Raças"},
+	{"classes", "Classes"},
+	{"deuses", "Deuses"},
 }
 
 func abaConhecida(id string) string {
@@ -289,10 +295,14 @@ type grupoDoAcervo struct {
 	Magias    []magiaDoLivro
 	Poderes   []poderDoLivro
 	Itens     []itemDoLivro
+	Racas     []racaDoLivro
+	Classes   []classeDoLivro
+	Deuses    []deusDoLivro
 }
 
 func (g grupoDoAcervo) Quantos() int {
-	return len(g.Condicoes) + len(g.Magias) + len(g.Poderes) + len(g.Itens)
+	return len(g.Condicoes) + len(g.Magias) + len(g.Poderes) + len(g.Itens) +
+		len(g.Racas) + len(g.Classes) + len(g.Deuses)
 }
 
 // catalogosView é a cena inteira numa resposta.
@@ -325,11 +335,15 @@ func carregaCatalogos(busca, aba string, livro enderecoDoLivro) catalogosView {
 		return v
 	}
 
+	racas, classes, deuses := catalogosDoPersonagem()
 	for _, g := range []grupoDoAcervo{
 		{Rotulo: "Condições", Condicoes: filtra(a.Condicoes, camposDaCondicao, busca)},
 		{Rotulo: "Magias", Magias: filtra(a.Magias, camposDaMagia, busca)},
 		{Rotulo: "Poderes", Poderes: filtra(a.Poderes, camposDoPoder, busca)},
 		{Rotulo: "Itens", Itens: filtra(a.Itens, camposDoItem, busca)},
+		{Rotulo: "Raças", Racas: filtra(racas, camposDaRaca, busca)},
+		{Rotulo: "Classes", Classes: filtra(classes, camposDaClasse, busca)},
+		{Rotulo: "Deuses", Deuses: filtra(deuses, camposDoDeus, busca)},
 	} {
 		if g.Quantos() == 0 {
 			continue
@@ -341,6 +355,7 @@ func carregaCatalogos(busca, aba string, livro enderecoDoLivro) catalogosView {
 }
 
 func grupoDaAba(a acervoDoMestre, aba string) grupoDoAcervo {
+	racas, classes, deuses := catalogosDoPersonagem()
 	switch aba {
 	case "magias":
 		return grupoDoAcervo{Rotulo: "Magias", Magias: a.Magias}
@@ -348,6 +363,12 @@ func grupoDaAba(a acervoDoMestre, aba string) grupoDoAcervo {
 		return grupoDoAcervo{Rotulo: "Poderes", Poderes: a.Poderes}
 	case "itens":
 		return grupoDoAcervo{Rotulo: "Itens", Itens: a.Itens}
+	case "racas":
+		return grupoDoAcervo{Rotulo: "Raças", Racas: racas}
+	case "classes":
+		return grupoDoAcervo{Rotulo: "Classes", Classes: classes}
+	case "deuses":
+		return grupoDoAcervo{Rotulo: "Deuses", Deuses: deuses}
 	default:
 		return grupoDoAcervo{Rotulo: "Condições", Condicoes: a.Condicoes}
 	}

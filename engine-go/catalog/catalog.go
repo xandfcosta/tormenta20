@@ -166,6 +166,11 @@ var resources = []string{
 	"race-defs", "class-powers", "general-powers", "granted-powers", "origens",
 	"tormenta-powers", "divine-powers", "activations",
 	"class-expertises", "devoto-terms", "gm-tables", "dungeon-design",
+	// `classes` nasceu na ALE-264 com três campos — id, nome e página do livro.
+	// As classes existiam só como uma lista de NOMES dentro de `options.json`, e
+	// sem lugar para a página não havia botão para o livro. Ver
+	// `scripts/paginas-do-livro.py`.
+	"classes",
 }
 
 var valid = func() map[string]bool {

@@ -4,7 +4,13 @@ tmp/
 # `t20-dev.db` e `t20-prod.db`, com seus WAL/SHM (ALE-119). Nenhum é rastreado:
 # o schema vem das migrações e o conteúdo é da máquina de quem roda.
 bin/
-data/
+# `/data/` ANCORADO na raiz do módulo, e a barra da frente é o conserto de uma
+# armadilha silenciosa: sem ela o padrão pega QUALQUER pasta chamada `data`, e
+# `catalog/data/` é onde vivem os catálogos do livro. Os que existiam continuavam
+# rastreados por já estarem no índice, então o `classes.json` novo (ALE-264)
+# nasceu invisível — o build local achava, e o de qualquer outra máquina serviria
+# a aba vazia sem erro nenhum.
+/data/
 *.db
 *.db-shm
 *.db-wal

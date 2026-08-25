@@ -1,6 +1,7 @@
 package api
 
 import "fmt"
+import "strings"
 
 // OS CATÁLOGOS (ALE-258), segunda ferramenta da Mesa do Mestre.
 //
@@ -116,6 +117,15 @@ templ resultadosDoAcervo(v catalogosView) {
 						for _, i := range g.Itens {
 							@cartaoDeItem(i, v.Livro)
 						}
+						for _, r := range g.Racas {
+							@cartaoDeRaca(r, v.Livro)
+						}
+						for _, c := range g.Classes {
+							@cartaoDeClasse(c, v.Livro)
+						}
+						for _, d := range g.Deuses {
+							@cartaoDeDeus(d, v.Livro)
+						}
 					</div>
 				</section>
 			}
@@ -195,5 +205,102 @@ templ cartaoDeItem(i itemDoLivro, livro enderecoDoLivro) {
 			<span>{ "Preço: " + precoEscrito(i.Price) }</span>
 			<span>{ fmt.Sprintf("Espaços: %s", espacosEscritos(i.Slots)) }</span>
 		</p>
+	}
+}
+
+// ── os três cartões do personagem (ALE-264) ─────────────────────────────────
+
+// O cartão da RAÇA diz o que muda numa ficha: os modificadores, o tamanho, o
+// deslocamento e a visão. As habilidades vêm com o resumo de uma linha que o
+// catálogo já guarda — o texto inteiro está no livro, a um clique de distância.
+templ cartaoDeRaca(r racaDoLivro, livro enderecoDoLivro) {
+	@cartaoDoAcervo() {
+		<p class="flex flex-wrap items-center gap-1.5 font-medium">
+			{ r.Name }
+			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ r.AtributoMod.Escrito() }</span>
+			@seloDaPagina(livro, r.BookPage)
+		</p>
+		<p class="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+			<span>{ nomeDoTier(r.Tier) }</span>
+			<span>{ r.Tamanho }</span>
+			<span>{ fmt.Sprintf("Deslocamento: %dm", r.Deslocamento) }</span>
+			if r.VisaoNoEscuro {
+				<span>Visão no escuro</span>
+			} else if r.VisaoNaPenumbra {
+				<span>Visão na penumbra</span>
+			}
+		</p>
+		for _, h := range r.Abilities {
+			<p class="mt-1 text-xs text-muted-foreground">
+				<span class="font-medium text-foreground">{ h.Name }</span>
+				{ " · " + h.Summary }
+			</p>
+		}
+	}
+}
+
+// O cartão da CLASSE mostra só o que se DERIVA do repositório — ver o cabeçalho
+// de `piloto_catalogos_do_personagem.go`. É pouco de propósito: o bloco da
+// classe é uma tabela de vinte níveis, e transcrevê-la à mão seria a fonte de
+// erro que esta issue inteira existe para evitar.
+templ cartaoDeClasse(c classeDoLivro, livro enderecoDoLivro) {
+	@cartaoDoAcervo() {
+		<p class="flex flex-wrap items-center gap-1.5 font-medium">
+			{ c.Name }
+			@seloDaPagina(livro, c.BookPage)
+		</p>
+		<p class="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+			<span>{ fmt.Sprintf("%d poderes de classe", c.Poderes) }</span>
+			if len(c.Pericias) > 0 {
+				<span>{ "Treinado em: " + strings.Join(c.Pericias, ", ") }</span>
+			}
+			if c.Escolhe > 0 {
+				<span>{ fmt.Sprintf("+ %d à escolha", c.Escolhe) }</span>
+			}
+		</p>
+	}
+}
+
+// O cartão do DEUS traz o que o mestre consulta na hora: o que o deus cobra dos
+// devotos e o que ele concede. O símbolo e a arma preferida entram porque são o
+// que aparece na cena — o clérigo saca a arma preferida, o símbolo está no altar.
+templ cartaoDeDeus(d deusDoLivro, livro enderecoDoLivro) {
+	@cartaoDoAcervo() {
+		<p class="flex flex-wrap items-center gap-1.5 font-medium">
+			{ d.Name }
+			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">
+				if d.Major {
+					Maior
+				} else {
+					Menor
+				}
+			</span>
+			@seloDaPagina(livro, d.BookPage)
+		</p>
+		<p class="mt-1 text-muted-foreground">{ d.Portfolio }</p>
+		// Campo VAZIO não vira rótulo órfão: Lena e Marah não têm arma preferida
+		// no livro (são deusas de paz e cura), e "Arma preferida:" seguido de
+		// nada parece dado perdido em vez de ausência com significado.
+		<p class="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+			if d.Energia != "" {
+				<span>{ "Energia: " + d.Energia }</span>
+			}
+			if d.Simbolo != "" {
+				<span>{ "Símbolo: " + d.Simbolo }</span>
+			}
+			if d.ArmaPreferida != "" {
+				<span>{ "Arma preferida: " + d.ArmaPreferida }</span>
+			}
+		</p>
+		if len(d.PoderesConcedidos) > 0 {
+			<p class="mt-1 text-xs text-muted-foreground">
+				{ "Concede: " + strings.Join(d.PoderesConcedidos, ", ") }
+			</p>
+		}
+		if len(d.Devotos) > 0 {
+			<p class="mt-1 text-xs text-muted-foreground">
+				{ "Devotos: " + strings.Join(d.Devotos, ", ") }
+			</p>
+		}
 	}
 }

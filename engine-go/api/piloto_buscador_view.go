@@ -72,8 +72,9 @@ func (v buscadorView) Buscando() bool { return strings.TrimSpace(v.Busca) != "" 
 // buscaNoLivro monta o resultado do ⌃K.
 //
 // A ORDEM DOS GRUPOS é a do acervo e tem razão registrada lá: condição primeiro
-// porque é a consulta mais frequente no meio do combate. Criatura vem em
-// seguida porque é a segunda, e item por último porque é de entre-cenas.
+// porque é a consulta mais frequente no meio do combate, criatura em seguida
+// porque é a segunda, e os três do PERSONAGEM no fim — raça, classe e deus são
+// consulta de criação de ficha, não de mesa com o combate em curso.
 func buscaNoLivro(busca string) buscadorView {
 	v := montaAchados(busca, pelosNomes)
 	if v.Achados > 0 || !v.Buscando() {
@@ -105,12 +106,16 @@ func montaAchados(busca string, peloTexto bool) buscadorView {
 		return v
 	}
 	a := catalogosDoLivro()
+	racas, classes, deuses := catalogosDoPersonagem()
 	for _, g := range []grupoDoBuscador{
 		grupoBuscado("Condições", a.Condicoes, busca, peloTexto, destinoNoAcervo("condicoes", busca), camposDaCondicao, achadoDaCondicao),
 		grupoBuscado("Criaturas", criaturasDoLivro(), busca, peloTexto, destinoNoBestiario(busca), camposDoVerbete, achadoDoVerbete),
 		grupoBuscado("Magias", a.Magias, busca, peloTexto, destinoNoAcervo("magias", busca), camposDaMagia, achadoDaMagia),
 		grupoBuscado("Poderes", a.Poderes, busca, peloTexto, destinoNoAcervo("poderes", busca), camposDoPoder, achadoDoPoder),
 		grupoBuscado("Itens", a.Itens, busca, peloTexto, destinoNoAcervo("itens", busca), camposDoItem, achadoDoItem),
+		grupoBuscado("Raças", racas, busca, peloTexto, destinoNoAcervo("racas", busca), camposDaRaca, achadoDaRaca),
+		grupoBuscado("Classes", classes, busca, peloTexto, destinoNoAcervo("classes", busca), camposDaClasse, achadoDaClasse),
+		grupoBuscado("Deuses", deuses, busca, peloTexto, destinoNoAcervo("deuses", busca), camposDoDeus, achadoDoDeus),
 	} {
 		if g.Total == 0 {
 			continue
@@ -207,6 +212,33 @@ func achadoDoItem(i itemDoLivro) achadoDoBuscador {
 		Detalhe: nomeDaCategoria(i.Category),
 		Destino: destinoNoAcervo("itens", i.Name),
 		Pagina:  i.BookPage,
+	}
+}
+
+func achadoDaRaca(r racaDoLivro) achadoDoBuscador {
+	return achadoDoBuscador{
+		Nome:    r.Name,
+		Detalhe: nomeDoTier(r.Tier) + " · " + r.AtributoMod.Escrito(),
+		Destino: destinoNoAcervo("racas", r.Name),
+		Pagina:  r.BookPage,
+	}
+}
+
+func achadoDaClasse(c classeDoLivro) achadoDoBuscador {
+	return achadoDoBuscador{
+		Nome:    c.Name,
+		Detalhe: fmt.Sprintf("Classe · %d poderes", c.Poderes),
+		Destino: destinoNoAcervo("classes", c.Name),
+		Pagina:  c.BookPage,
+	}
+}
+
+func achadoDoDeus(d deusDoLivro) achadoDoBuscador {
+	return achadoDoBuscador{
+		Nome:    d.Name,
+		Detalhe: d.Portfolio,
+		Destino: destinoNoAcervo("deuses", d.Name),
+		Pagina:  d.BookPage,
 	}
 }
 
