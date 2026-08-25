@@ -238,7 +238,11 @@ func (s *Server) escrevePorta(
 		Forma:  cascaTitulo,
 		Kicker: "— Grimório de Arton —",
 		// Sem `Sinais` e sem `Init`: esta superfície não tem estado de cliente
-		// nenhum, e é isso que mantém a senha fora dele.
+		// nenhum, e é isso que mantém a senha fora dele. O campo abaixo DIZ isso
+		// para a casca, que de outro modo acrescentaria o `data-init` da
+		// restauração de foco do trilho a toda página — a porta não tem trilho, e
+		// o guarda desta regra existe justamente porque a omissão é silenciosa.
+		SemEstadoDeCliente: true,
 	}, corpo)
 }
 

@@ -40,6 +40,17 @@ type paginaPiloto struct {
 	// TituloVisivel e Voltar são da casca DENSA; Kicker é da casca TÍTULO.
 	TituloVisivel string
 	Voltar        string
+	// SemEstadoDeCliente marca a superfície que não pode ter sinal NEM `data-init`
+	// — hoje só a PORTA. Um sinal é estado do cliente e o Datastar o serializa em
+	// TODA requisição seguinte, então qualquer estado ali faria a senha viajar de
+	// novo a cada pedido da página. É o que o `TestPortaNaoPoeNadaEmSinalDoDatastar`
+	// cobra, e ele me pegou: ao fazer o `data-init` da restauração de foco sair
+	// sempre, eu o pus também na porta, que não tem trilho para restaurar.
+	//
+	// Campo EXPLÍCITO e não inferido da forma da casca: `cascaTitulo` descreve o
+	// desenho, e amarrar uma regra de segurança a um nome de leiaute é a regra
+	// sumindo no dia em que alguém usar a mesma casca noutra tela.
+	SemEstadoDeCliente bool
 	Kicker        string
 	Sinais        string
 	Init          string
@@ -110,10 +121,12 @@ templ layout(p paginaPiloto, corpo templ.Component) {
 			if p.Sinais != "" {
 				data-signals={ p.Sinais }
 			}
-			if p.Init != "" {
-				data-init={ restauraOFocoDoTrilho + "; " + p.Init }
-			} else {
-				data-init={ restauraOFocoDoTrilho }
+			if !p.SemEstadoDeCliente {
+				if p.Init != "" {
+					data-init={ restauraOFocoDoTrilho + "; " + p.Init }
+				} else {
+					data-init={ restauraOFocoDoTrilho }
+				}
 			}
 		>
 			// Os `data-slot` são o CONTRATO OBSERVÁVEL que a SPA publica, e não
