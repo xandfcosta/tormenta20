@@ -57,7 +57,7 @@ func TestAsTresAbasNovasDesenhamOQueASuaEntradaTem(t *testing.T) {
 		{"deuses", "Concede", "os poderes concedidos são o que o mestre consulta"},
 	}
 	for _, caso := range casos {
-		corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/catalogos?aba="+caso.aba, "").Body.String()
+		corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/"+caso.aba, "").Body.String()
 		if !strings.Contains(corpo, caso.esperado) {
 			t.Errorf("a aba %q não traz %q — %s", caso.aba, caso.esperado, caso.porque)
 		}
@@ -72,7 +72,7 @@ func TestORotuloVazioNaoSaiSozinho(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/catalogos?aba=deuses", "").Body.String()
+	corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/deuses", "").Body.String()
 	if strings.Contains(corpo, "Arma preferida: </span>") {
 		t.Error("um rótulo saiu sem valor — Lena e Marah não têm arma preferida")
 	}

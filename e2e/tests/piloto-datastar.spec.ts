@@ -990,7 +990,7 @@ test.describe('O bestiário (piloto Datastar)', () => {
 test.describe('Os catálogos (piloto Datastar)', () => {
   test.use({ storageState: '.auth/user.json' })
 
-  const CATALOGOS = '/piloto/mestre/catalogos'
+  const CATALOGOS = '/piloto/mestre/condicoes'
 
   test('nenhum texto fica abaixo do mínimo de contraste do AA', async ({ page }) => {
     await page.goto(CATALOGOS)

@@ -2,7 +2,6 @@ import { expect, test } from '@playwright/test'
 import { ensurePowersFixture } from './support/character'
 import {
   expectColunasMonotonicas,
-  expectEnchePai,
   expectNadaEscapa,
   expectSemFaixaMorta,
 } from './support/geometry'
@@ -310,7 +309,7 @@ test('alargar a janela nunca tira uma coluna do catálogo', async ({ page }) => 
   // servidor manda todas —, então o alvo passa a ser a grade de verdade e não
   // a fileira que o virtualizador montava. A garantia é a mesma: alargar a
   // janela nunca pode tirar uma coluna.
-  await page.goto('/piloto/mestre/catalogos')
+  await page.goto('/piloto/mestre/condicoes')
   await expect(page.locator('.acervo-em-colunas').first()).toBeVisible()
 
   await expectColunasMonotonicas(
@@ -352,39 +351,44 @@ test('alargar a janela nunca tira uma coluna do catálogo', async ({ page }) => 
  *
  * A segunda asserção é a armadilha da ALE-122: junto de `flex-1` o `min-w-0` é
  * obrigatório, porque um item flex não encolhe abaixo do conteúdo e o rótulo
- * mais longo empurra a última aba para FORA da faixa. Ela NÃO reproduz um
- * defeito de hoje — medido a 390px, os quatro rótulos curtos cabem mesmo sem
- * `min-w-0`. Ela protege o próximo: uma quinta aba, ou "Condições" virando
- * "Condições e estados", e a faixa estoura sem ninguém ver.
+ * mais longo empurra a última parada para FORA do trilho. Ela NÃO reproduz um
+ * defeito de hoje. Ela protege o próximo: um rótulo mais longo, uma parada a
+ * mais, e o trilho estoura sem ninguém ver.
  *
  * As duas larguras não são simetria: a régua é o CONTÊINER, e a mesma janela dá
  * a largura inteira na Mesa e ~384px na gaveta da sessão (ALE-138, ALE-172).
  *
  * Por que e2e: é caixa contra caixa. Em jsdom todo elemento mede zero e
- * `expectEnchePai` passaria verde sobre qualquer arranjo.
+ * `expectNadaEscapa` passaria verde sobre qualquer arranjo.
  */
-test('as abas do catálogo enchem a faixa, e a última não sai dela', async ({ page }) => {
+test('o trilho do mestre segura as onze paradas em qualquer largura', async ({ page }) => {
   // Uma navegação só, redimensionando depois — o mesmo padrão dos guardas de
   // coluna aqui do lado. Recarregar por largura paga o portão dos catálogos
   // (18 buscas antes da primeira tela) a cada volta, e foi assim que a versão
   // anterior deste teste estourou o timeout sem que nada estivesse errado.
-  // As abas viraram LINKS na ALE-258 — `?aba=magias` é endereço —, então o
-  // papel `tab` deixou de existir e a fileira é uma `nav` nomeada. O que se
-  // afirma não mudou: a fileira enche a faixa e a última aba não escapa dela.
-  await page.goto('/piloto/mestre/catalogos')
+  // A FILEIRA DE ABAS que este guarda media não existe mais: na ALE-264 cada
+  // catálogo virou uma parada do TRILHO, e ter as duas coisas seria o mesmo
+  // estado desenhado em dois lugares. A garantia não foi apagada — ela MUDOU DE
+  // ENDEREÇO junto com o risco: eram quatro abas numa faixa, são onze paradas
+  // num trilho que no telefone rola na horizontal.
+  await page.goto('/piloto/mestre/condicoes')
+  const trilho = 'nav[aria-label="Ferramentas do mestre"]'
   await expect(page.getByRole('link', { name: 'Condições' })).toBeVisible()
 
   for (const largura of [1920, 1024, 768, 390]) {
     await page.setViewportSize({ width: largura, height: 900 })
     await expect(page.getByRole('link', { name: 'Condições' })).toBeVisible()
 
-    // O par medido é a FAIXA contra a ferramenta, e não a aba contra a faixa:
-    // com `w-fit` a lista encolhe até as abas, então as abas enchem a lista
-    // perfeitamente e a asserção passa VERDE sobre o defeito. O espaço morto
-    // está entre a lista e o painel, e é ali que ele se mede.
-    await expectEnchePai(page, '[aria-labelledby=mesa-catalogos]', 'nav[aria-label="Catálogos"]')
-    // A outra metade, a da ALE-122: `flex-1` não encolhe abaixo do conteúdo, e
-    // sem `min-w-0` o rótulo mais longo empurra a última aba para fora.
-    await expectNadaEscapa(page, 'nav[aria-label="Catálogos"]')
+    // Nenhuma parada escapa do trilho — a da ALE-122: `flex-1` não encolhe
+    // abaixo do conteúdo, e sem `min-w-0` o rótulo mais longo empurra a última
+    // para fora.
+    await expectNadaEscapa(page, trilho)
+
+    // E as ONZE continuam alcançáveis: no laptop em coluna, no telefone
+    // rolando. Uma parada que some da tela é uma ferramenta que deixou de
+    // existir para quem está naquela largura — o defeito da ALE-178, que fez o
+    // ✕ de encerrar ficar inalcançável a 390px.
+    const alcancaveis = await page.locator(`${trilho} a`).count()
+    expect(alcancaveis, `a ${largura}px o trilho perdeu paradas`).toBe(11)
   }
 })

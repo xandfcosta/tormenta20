@@ -130,7 +130,7 @@ func TestOAchadoSabeParaOndeLevar(t *testing.T) {
 		t.Error("a criatura veio sem página do livro, e o bestiário é o único catálogo que sabe a dele")
 	}
 	condicao := primeiroDoGrupo(t, buscaNoLivro("abalado"), "Condições")
-	if !strings.Contains(condicao.Destino, "aba=condicoes") {
+	if !strings.Contains(condicao.Destino, "/piloto/mestre/condicoes") {
 		t.Errorf("a condição leva para %q", condicao.Destino)
 	}
 }

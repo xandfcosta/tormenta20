@@ -25,13 +25,52 @@ type ferramentaDoMestre struct {
 	Dica   string
 }
 
-// A ordem é a da trilha, e ela não é alfabética: vai do que se usa em combate
-// para o que se consulta entre cenas.
-var ferramentasDoMestre = []ferramentaDoMestre{
-	{"bestiario", "Bestiário", "Skull", "Criaturas por ND, tipo e tamanho, com ataques e habilidades."},
-	{"encontros", "Encontros", "Swords", "ND do combate e XP do grupo, combinando criaturas."},
-	{"improviso", "Improviso", "Dices", "Tabelas do Cap 6 e estrutura de masmorra na hora."},
-	{"catalogos", "Catálogos", "BookMarked", "Condições, magias, poderes e itens numa busca só."},
+// secaoDoTrilho separa o que o mestre FAZ do que ele CONSULTA.
+//
+// A divisão é decisão do dono (ALE-264) e nasceu de uma observação dele: "o
+// bestiário conta como catálogo, não faz sentido a divisão". Era verdade —
+// bestiário, condições e magias são a mesma coisa (verbetes do livro) e estavam
+// em níveis diferentes, um como ferramenta e os outros escondidos dentro de uma.
+//
+// Com a divisão, a fileira de abas de dentro da cena SUMIU: quem diz onde se
+// está é o trilho, e ter as duas coisas seria o mesmo estado desenhado em dois
+// lugares.
+type secaoDoTrilho struct {
+	Rotulo  string
+	Paradas []ferramentaDoMestre
+}
+
+// A ordem dentro de CATÁLOGOS é alfabética, por decisão do dono — com o
+// bestiário na frente, que é o mais consultado no meio do combate. Nas
+// FERRAMENTAS a ordem é a de sempre.
+var trilhoDoMestre = []secaoDoTrilho{
+	{"Ferramentas", []ferramentaDoMestre{
+		{"encontros", "Encontros", "Swords", "ND do combate e XP do grupo, combinando criaturas."},
+		{"improviso", "Improviso", "Dices", "Tabelas do Cap 6 e estrutura de masmorra na hora."},
+	}},
+	{"Catálogos", []ferramentaDoMestre{
+		{"bestiario", "Bestiário", "Skull", "Criaturas por ND, tipo e tamanho, com ataques e habilidades."},
+		{"classes", "Classes", "Shield", "As 14 classes, com perícias treinadas e poderes."},
+		{"condicoes", "Condições", "HeartPulse", "As 35 condições do livro e o que cada uma faz."},
+		{"deuses", "Deuses", "Church", "Os 20 deuses, com símbolo, devotos e poderes concedidos."},
+		{"efeitos", "Efeitos", "Zap", "Os tipos de efeito (p228): medo, mental, metabolismo…"},
+		{"itens", "Itens", "Backpack", "Armas, armaduras e equipamento, com preço e espaços."},
+		{"magias", "Magias", "Wand2", "As 198 magias, por círculo, com aprimoramentos."},
+		{"poderes", "Poderes", "Star", "Poderes de classe, gerais e divinos numa lista só."},
+		{"racas", "Raças", "Users2", "As 17 raças, com modificadores e habilidades."},
+	}},
+}
+
+// ferramentasDoMestre é o trilho ACHATADO, para quem precisa da lista e não das
+// seções — as rotas e os guardas.
+var ferramentasDoMestre = achataOTrilho()
+
+func achataOTrilho() []ferramentaDoMestre {
+	var fora []ferramentaDoMestre
+	for _, secao := range trilhoDoMestre {
+		fora = append(fora, secao.Paradas...)
+	}
+	return fora
 }
 
 templ mesaDoMestre(atual string, cena templ.Component) {
@@ -82,21 +121,34 @@ templ trilhaDoMestre(atual string) {
 		data-nav-layout="column"
 		class="flex shrink-0 gap-1 overflow-x-auto pb-1 lg:w-44 lg:flex-col lg:overflow-x-visible lg:pb-0"
 	>
-		for _, f := range ferramentasDoMestre {
-			<a
-				href={ templ.SafeURL("/piloto/mestre/" + f.Slug) }
-				data-on:keydown={ marcaDeTrocaPorTeclado }
-				title={ f.Dica }
-				if f.Slug == atual {
-					aria-current="page"
-					class="flex min-h-11 shrink-0 items-center gap-2 rounded-sm border border-grimorio-gold bg-accent px-3 py-2 text-left text-xs font-medium text-grimorio-gold transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:w-full"
-				} else {
-					class="flex min-h-11 shrink-0 items-center gap-2 rounded-sm border border-grimorio-iron px-3 py-2 text-left text-xs text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:w-full"
-				}
-			>
-				@icone(f.Icone, "size-4 shrink-0")
-				<span class="truncate font-heading uppercase tracking-[0.12em]">{ f.Rotulo }</span>
-			</a>
+		for _, secao := range trilhoDoMestre {
+			// O cabeçalho é `<p>` e não `<h3>`: a `<nav>` já tem `aria-label`, e
+			// os dois títulos são separadores VISUAIS dentro dela — cabeçalho de
+			// verdade faria o leitor de tela anunciar dois níveis novos no meio
+			// de uma lista de links.
+			//
+			// `hidden lg:block`: no telefone o trilho é uma barra que rola na
+			// horizontal, e um rótulo de seção ali roubaria uma parada inteira de
+			// espaço sem separar nada — em fileira, o que separa é a ordem.
+			<p class="hidden shrink-0 px-3 pt-2 font-heading text-3xs uppercase tracking-[0.14em] text-muted-foreground lg:block">
+				{ secao.Rotulo }
+			</p>
+			for _, f := range secao.Paradas {
+				<a
+					href={ templ.SafeURL("/piloto/mestre/" + f.Slug) }
+					data-on:keydown={ marcaDeTrocaPorTeclado }
+					title={ f.Dica }
+					if f.Slug == atual {
+						aria-current="page"
+						class="flex min-h-11 shrink-0 items-center gap-2 rounded-sm border border-grimorio-gold bg-accent px-3 py-2 text-left text-xs font-medium text-grimorio-gold transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:w-full"
+					} else {
+						class="flex min-h-11 shrink-0 items-center gap-2 rounded-sm border border-grimorio-iron px-3 py-2 text-left text-xs text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:w-full"
+					}
+				>
+					@icone(f.Icone, "size-4 shrink-0")
+					<span class="truncate font-heading uppercase tracking-[0.12em]">{ f.Rotulo }</span>
+				</a>
+			}
 		}
 	</nav>
 }

@@ -76,7 +76,7 @@ alguém já usou e que não voltam.
 
 | Canônico | Identificador | Proibidos | O que é |
 |---|---|---|---|
-| **verbete** | `MonsterID` | — | A entrada IMUTÁVEL do bestiário do livro. |
+| **verbete** | `MonsterID` | — | A entrada IMUTÁVEL do bestiário do livro. Por extensão, qualquer entrada de catálogo que o mestre CONSULTA — a condição, a magia, o tipo de efeito. A ALE-264 desfez a divisão que separava o bestiário dos outros: "o bestiário conta como catálogo", e o trilho passou a ter uma seção **Ferramentas** (o que o mestre FAZ: encontros, improviso) e uma **Catálogos** (o que ele consulta, nove). |
 | **bloco de criatura** | `CreatureID` | — | O bloco EDITÁVEL que o mestre escreveu, e que pertence à campanha (ALE-137). Uma linha tem verbete ou bloco, nunca os dois. |
 | **NPC** | `type: 'npc'` | ~~PC~~ | O PAPEL de uma linha na fila: não é ficha de jogador. Ortogonal a verbete/bloco. **Na tela o par é `Ficha` / `NPC`** — decisão do dono, 2026-08-24, ao tirar o `PC` proibido dos DOIS apps. O oposto de NPC na fila é **ficha** e não "personagem": é a pergunta que a tabela de colisões faz do `type === 'character'` (linha abaixo), e "Personagem" não caberia no selo de uma linha de 390px. Cuidado ao mexer: `Ficha` é 2,5× mais largo que o `PC` que estava lá, e esse selo JÁ transbordou uma vez (`initiative-card.tsx:428`) — os guardas de transbordo do `session.spec.ts` são obrigatórios. |
 | **criatura** | — | — | O guarda-chuva ("Adicionar criatura", "Buscar criatura"). Use quando as três acima não importam. |

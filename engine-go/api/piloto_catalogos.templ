@@ -24,7 +24,10 @@ templ cenaDosCatalogos(v catalogosView) {
 		data-signals={ sinaisDosCatalogos(v) }
 	>
 		<div class="flex flex-wrap items-baseline gap-x-3">
-			<h2 id="mesa-catalogos" class="font-heading text-lg tracking-wide text-foreground">Catálogos</h2>
+			// O título é o da ABA, e não "Catálogos": desde que cada catálogo
+			// virou uma parada do trilho, a cena é a das Condições — e repetir a
+			// palavra genérica aqui deixaria a tela sem dizer onde se está.
+			<h2 id="mesa-catalogos" class="font-heading text-lg tracking-wide text-foreground">{ rotuloDaAba(v.Aba) }</h2>
 			<p class="text-xs text-muted-foreground">{ contagemDoAcervo(v) }</p>
 		</div>
 		<div class="relative shrink-0">
@@ -34,20 +37,21 @@ templ cenaDosCatalogos(v catalogosView) {
 				data-busca-da-cena
 				name="busca"
 				data-bind:busca
-				data-on:input__debounce.250ms="@get('/piloto/mestre/catalogos')"
+				data-on:input__debounce.250ms={ "@get('/piloto/mestre/" + v.Aba + "')" }
 				value={ v.Busca }
 				placeholder="Buscar em todos os catálogos"
 				aria-label="Buscar nos catálogos"
 				class="h-9 w-full rounded-sm border border-input bg-transparent pl-8 pr-3 text-base outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring md:text-sm"
 			/>
 		</div>
-		// A fileira de abas SOME durante a busca, e isso é porte fiel: com termo
-		// digitado o assunto é o acervo inteiro, não uma aba. É a ALE-22 — a
-		// versão em React filtrava só a aba ativa, e "bola de fogo" digitado em
-		// Condições dizia "nada encontrado" com a magia existindo.
-		if !v.Buscando() {
-			@fileiraDeCatalogos(v.Aba)
-		}
+		// A fileira de abas SUMIU na ALE-264: cada catálogo virou uma parada do
+		// trilho, e ter as duas coisas seria o mesmo estado desenhado em dois
+		// lugares — o trilho dizendo "Condições" e a fileira dizendo de novo.
+		//
+		// O que a fileira fazia e continua valendo: com termo digitado, a busca
+		// varre os OITO catálogos e mostra os grupos, não só o da cena. É a
+		// ALE-22 — "bola de fogo" digitado em Condições achava "nada encontrado"
+		// com a magia existindo.
 		// A saída de quem chegou por um ELO com o endereço na barra (ctrl+clique,
 		// link colado): a cena mostra UM verbete, e sem esta linha a pessoa fica
 		// sem entender por que a aba tem uma entrada só.
@@ -70,24 +74,6 @@ func contagemDoAcervo(v catalogosView) string {
 	return fmt.Sprintf("%d entradas", v.Achados)
 }
 
-// fileiraDeCatalogos são LINKS e não botões de aba, pela mesma razão da trilha
-// da crônica: `?aba=magias` é ENDEREÇO — volta no histórico, abre em nova aba e
-// é o que alguém cola no chat da mesa.
-templ fileiraDeCatalogos(atual string) {
-	<nav aria-label="Catálogos" class="flex shrink-0 flex-wrap gap-1">
-		for _, a := range abasDoAcervo {
-			<a
-				href={ templ.SafeURL("/piloto/mestre/catalogos?aba=" + a.ID) }
-				if a.ID == atual {
-					aria-current="page"
-					class="min-h-11 rounded-sm border border-grimorio-gold bg-accent px-3 py-1.5 font-heading text-xs uppercase tracking-[0.12em] text-grimorio-gold outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-				} else {
-					class="min-h-11 rounded-sm border border-grimorio-iron px-3 py-1.5 font-heading text-xs uppercase tracking-[0.12em] text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-				}
-			>{ a.Rotulo }</a>
-		}
-	</nav>
-}
 
 // resultadosDoAcervo é a caixa que ROLA. Ver o cabeçalho do arquivo.
 //

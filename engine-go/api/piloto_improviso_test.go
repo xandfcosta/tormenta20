@@ -187,16 +187,26 @@ func TestTabelaInventadaERecusada(t *testing.T) {
 	}
 }
 
-// TestATrilhaOfereceAsQuatroFerramentas — e cada uma responde.
+// TestOTrilhoOfereceTodasAsParadas — e cada uma responde.
 //
-// É o guarda da VIRADA: a `/gm` só pode ser apagada quando as quatro
+// É o guarda da VIRADA: a `/gm` só pode ser apagada quando as ferramentas
 // estiverem de pé, e "de pé" é responder 200, não existir no trilho.
-func TestATrilhaOfereceAsQuatroFerramentas(t *testing.T) {
+//
+// Eram QUATRO até a ALE-264, quando o dono viu que "o bestiário conta como
+// catálogo": o trilho virou duas seções e cada catálogo ganhou parada e cena
+// próprias. São 11 — duas ferramentas e nove catálogos. O número fica preso
+// porque uma parada que perde a rota some do trilho sem erro nenhum.
+func TestOTrilhoOfereceTodasAsParadas(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	if len(ferramentasDoMestre) != 4 {
-		t.Fatalf("a trilha tem %d ferramentas", len(ferramentasDoMestre))
+	if len(ferramentasDoMestre) != 11 {
+		t.Fatalf("o trilho tem %d paradas", len(ferramentasDoMestre))
+	}
+	// E as DUAS seções existem: sem elas o trilho volta a ser uma lista só, que
+	// é o que o dono pediu para desfazer.
+	if len(trilhoDoMestre) != 2 {
+		t.Fatalf("o trilho tem %d seções", len(trilhoDoMestre))
 	}
 	for _, f := range ferramentasDoMestre {
 		t.Run(f.Slug, func(t *testing.T) {

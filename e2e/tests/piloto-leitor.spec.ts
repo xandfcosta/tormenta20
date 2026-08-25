@@ -85,7 +85,7 @@ test('as setas andam pelo livro e a barra diz a página impressa', async ({ page
 
 test('o livro abre POR CIMA da cena e o fechar devolve a memória', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/piloto/mestre/catalogos?aba=condicoes')
+  await page.goto('/piloto/mestre/condicoes')
 
   const botao = page.locator('a[href*="/piloto/livro/ler"]').first()
   if ((await botao.count()) === 0) {

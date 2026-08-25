@@ -31,7 +31,7 @@ import { expect, test } from '@playwright/test'
 test.use({ storageState: '.auth/user.json' })
 
 const CENAS = [
-  { nome: 'catálogos do mestre', url: '/piloto/mestre/catalogos' },
+  { nome: 'catálogos do mestre', url: '/piloto/mestre/condicoes' },
   { nome: 'bestiário do mestre', url: '/piloto/mestre/bestiario' },
   { nome: 'encontros', url: '/piloto/mestre/encontros' },
   { nome: 'improviso', url: '/piloto/mestre/improviso' },

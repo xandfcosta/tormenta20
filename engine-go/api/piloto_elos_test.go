@@ -18,8 +18,8 @@ func TestOTipoDeEfeitoDaCondicaoVirouElo(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/catalogos?aba=condicoes", "").Body.String()
-	if !strings.Contains(corpo, "aba=efeitos&amp;entrada=medo") {
+	corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/condicoes", "").Body.String()
+	if !strings.Contains(corpo, "/piloto/mestre/efeitos?entrada=medo") {
 		t.Error("a tag da condição não leva ao tipo de efeito")
 	}
 	// E ela é escrita como o LIVRO escreve, não como o dado guarda: a tag é
@@ -35,7 +35,7 @@ func TestOTipoDeEfeitoDaCondicaoVirouElo(t *testing.T) {
 	if strings.Index(abalado, "em testes de perícia") > strings.Index(abalado, ">Medo.<") {
 		t.Error("o tipo de efeito voltou para antes da explicação")
 	}
-	efeitos := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/catalogos?aba=efeitos", "").Body.String()
+	efeitos := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/efeitos", "").Body.String()
 	if !strings.Contains(efeitos, "Medo capaz de prejudicar o alvo") {
 		t.Error("o destino do elo não tem a definição do livro — o elo levaria a lugar nenhum")
 	}
@@ -147,11 +147,11 @@ func TestOEloEnderecaUmVerbeteENaoUmaBusca(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/catalogos?aba=condicoes", "").Body.String()
-	if !strings.Contains(corpo, "aba=efeitos&amp;entrada=medo") {
+	corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/condicoes", "").Body.String()
+	if !strings.Contains(corpo, "/piloto/mestre/efeitos?entrada=medo") {
 		t.Error("o elo não endereça o verbete — voltou a ser busca")
 	}
-	if strings.Contains(corpo, "aba=efeitos&amp;busca=") {
+	if strings.Contains(corpo, "/piloto/mestre/efeitos?busca=") {
 		t.Error("sobrou elo apontando para uma busca")
 	}
 }
@@ -161,7 +161,7 @@ func TestOEnderecoDeUmVerbeteMostraSoEle(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/catalogos?aba=efeitos&entrada=medo", "").Body.String()
+	corpo := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/efeitos?entrada=medo", "").Body.String()
 	if !strings.Contains(corpo, "Medo capaz de prejudicar o alvo") {
 		t.Fatal("o endereço do verbete não mostrou o verbete")
 	}
@@ -286,7 +286,7 @@ func TestOsAprimoramentosAbremNaCaixa(t *testing.T) {
 	s := servidorComLivro(t, newTestServer(t), "%PDF-1.6")
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	cena := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/catalogos?aba=magias&entrada=bola-de-fogo", "").Body.String()
+	cena := pedeNoMestre(t, s, eu, "GET", "/piloto/mestre/magias?entrada=bola-de-fogo", "").Body.String()
 	if !strings.Contains(cena, "aprimoramentos disponíveis") {
 		t.Fatal("o cartão não oferece os aprimoramentos")
 	}

@@ -49,6 +49,14 @@ const QUERIDOS = [
   'Swords',
   'Dices',
   'BookMarked',
+  // Os oito catálogos viraram paradas do trilho (ALE-264): cada um precisa do
+  // ícone dele. `Skull` (bestiário) e `Wand2` (magias) já estavam na lista.
+  'Shield',
+  'HeartPulse',
+  'Church',
+  'Zap',
+  'Backpack',
+  'Star',
 ]
 
 const indice = readFileSync(resolve(LUCIDE, 'lucide-solid.mjs'), 'utf8')

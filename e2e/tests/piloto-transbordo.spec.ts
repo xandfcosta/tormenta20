@@ -22,7 +22,7 @@ const ABAS = ['condicoes', 'magias', 'poderes', 'itens', 'efeitos', 'racas', 'cl
 for (const aba of ABAS) {
   test(`nenhum cartão da aba ${aba} transborda a coluna`, async ({ page }) => {
     await page.setViewportSize({ width: 1400, height: 900 })
-    await page.goto(`/piloto/mestre/catalogos?aba=${aba}`)
+    await page.goto(`/piloto/mestre/${aba}`)
 
     const medida = await page.evaluate(() => {
       const cartoes = [...document.querySelectorAll('.acervo-em-colunas > div')]
@@ -50,7 +50,7 @@ for (const aba of ABAS) {
 
 test('o elo mostra o conceito por cima, sem tirar a pessoa da regra que lia', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/piloto/mestre/catalogos?aba=condicoes')
+  await page.goto('/piloto/mestre/condicoes')
 
   // A condição Abalado termina em "Medo." — o tipo de efeito, que é outro
   // verbete. É o caso que o dono trouxe.

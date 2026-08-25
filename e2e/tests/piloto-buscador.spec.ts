@@ -63,7 +63,7 @@ test('a seta desce do campo para o primeiro achado e o Enter abre a cena', async
   await page.keyboard.press('Enter')
   // `waitForURL` e NUNCA `networkidle` depois de uma tecla que navega: o
   // segundo volta ANTES de a navegação começar, e a asserção leria a URL velha.
-  await page.waitForURL(/\/piloto\/mestre\/catalogos\?/)
+  await page.waitForURL(/\/piloto\/mestre\/condicoes\?/)
   await expect(page.locator('#buscador')).toHaveCount(1)
 })
 
@@ -96,7 +96,7 @@ test('o Esc fecha a caixa e devolve a cena', async ({ page }) => {
 
 test('o campo do buscador acende a linha, e não um retângulo colado na caixa', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/piloto/mestre/catalogos')
+  await page.goto('/piloto/mestre/condicoes')
   await page.keyboard.press('Control+k')
   await expect(page.locator(CAMPO)).toBeFocused()
 

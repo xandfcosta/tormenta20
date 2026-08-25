@@ -299,7 +299,7 @@ func achadoDoVerbete(m verbete) achadoDoBuscador {
 // lista, que é o que a pessoa pediu, sem inventar um terceiro estado de cena
 // que precisaria ser mantido junto.
 func destinoNoAcervo(aba, nome string) string {
-	return "/piloto/mestre/catalogos?aba=" + aba + "&busca=" + url.QueryEscape(nome)
+	return "/piloto/mestre/" + aba + "?busca=" + url.QueryEscape(nome)
 }
 
 // destinoDaEntrada é o endereço de UM verbete: a aba dele, mostrando só ele.
@@ -309,7 +309,7 @@ func destinoNoAcervo(aba, nome string) string {
 // o verbete procurado espremido no quinto grupo. Quem clica num conceito pediu o
 // conceito.
 func destinoDaEntrada(aba, id string) string {
-	return "/piloto/mestre/catalogos?aba=" + aba + "&entrada=" + url.QueryEscape(id)
+	return "/piloto/mestre/" + aba + "?entrada=" + url.QueryEscape(id)
 }
 
 // destinoNoBestiario leva à cena do bestiário filtrada. Serve tanto para o "+12"

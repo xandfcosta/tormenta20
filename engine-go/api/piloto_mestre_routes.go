@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"path"
 	"slices"
 	"strconv"
 	"strings"
@@ -24,7 +25,20 @@ func (s *Server) rotasDoMestre(r chi.Router) {
 	})
 	r.Get("/mestre/bestiario", s.handleBestiario)
 	r.Post("/mestre/bestiario/tipo/{tipo}", s.handleBestiarioTipo)
-	r.Get("/mestre/catalogos", s.handleCatalogos)
+	// CADA CATÁLOGO tem endereço próprio desde a ALE-264: eles viraram paradas do
+	// trilho, e parada de trilho é uma cena. `/piloto/mestre/condicoes` em vez de
+	// `/piloto/mestre/catalogos?aba=condicoes` — o mesmo handler, com a aba vindo
+	// do CAMINHO.
+	//
+	// O laço sobre `abasDoAcervo` e não nove linhas escritas: o catálogo que
+	// entrar amanhã ganha rota sozinho, e uma lista de rotas à mão é a que fica
+	// para trás em silêncio.
+	for _, aba := range abasDoAcervo {
+		r.Get("/mestre/"+aba.ID, s.handleCatalogos)
+	}
+	// O endereço VELHO continua respondendo, redirecionando: ele foi o único por
+	// duas fatias desta issue, e pode estar colado no chat de alguma mesa.
+	r.Get("/mestre/catalogos", s.handleCatalogosVelho)
 	r.Get("/mestre/encontros", s.handleEncontros)
 	r.Post("/mestre/encontros/adicionar/{id}", s.handleEncontroAdicionar)
 	r.Post("/mestre/encontros/mais/{id}", s.handleEncontroAdicionar)
@@ -291,6 +305,19 @@ func numeroDaURL(bruto string, padrao int) int {
 //
 // Sem autorização própria e pelo mesmo motivo do bestiário: o catálogo é o
 // LIVRO, igual para todo mundo. O `requirePagina` do grupo já exige sessão.
+// handleCatalogosVelho manda o endereço antigo para a cena da aba pedida,
+// preservando busca e entrada — um redirecionamento que perde a consulta
+// devolveria a pessoa a uma tela que não é a que ela pediu.
+func (s *Server) handleCatalogosVelho(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	destino := "/piloto/mestre/" + abaConhecida(q.Get("aba"))
+	q.Del("aba")
+	if resto := q.Encode(); resto != "" {
+		destino += "?" + resto
+	}
+	http.Redirect(w, r, destino, http.StatusMovedPermanently)
+}
+
 func (s *Server) handleCatalogos(w http.ResponseWriter, r *http.Request) {
 	v := carregaCatalogos(criteriosDoPedidoDoAcervo(r), s.livro.endereco)
 
@@ -305,12 +332,12 @@ func (s *Server) handleCatalogos(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.escrevePagina(w, r, http.StatusOK, paginaPiloto{
-		Titulo:        "Catálogos · Mesa do Mestre · Tormenta 20",
+		Titulo:        rotuloDaAba(v.Aba) + " · Mesa do Mestre · Tormenta 20",
 		Forma:         cascaDensa,
 		Voltar:        "/piloto/",
 		VoltarRotulo:  "Hub",
 		TituloVisivel: "Mesa do Mestre",
-	}, mesaDoMestre("catalogos", cenaDosCatalogos(v)))
+	}, mesaDoMestre(v.Aba, cenaDosCatalogos(v)))
 }
 
 // criteriosDoPedidoDoAcervo lê a busca, a aba e a ENTRADA da URL na carga fria e
@@ -323,7 +350,14 @@ func (s *Server) handleCatalogos(w http.ResponseWriter, r *http.Request) {
 // próxima tecla digitada na busca e a cena ficaria presa num verbete só.
 func criteriosDoPedidoDoAcervo(r *http.Request) criteriosDoAcervo {
 	q := r.URL.Query()
-	c := criteriosDoAcervo{Busca: q.Get("busca"), Aba: q.Get("aba"), Entrada: q.Get("entrada")}
+	// A ABA vem do CAMINHO desde que cada catálogo virou uma cena
+	// (`/piloto/mestre/condicoes`). A consulta continua sendo lida para o
+	// endereço velho e para quem digitar `?aba=` à mão.
+	aba := path.Base(r.URL.Path)
+	if abaConhecida(aba) != aba {
+		aba = q.Get("aba")
+	}
+	c := criteriosDoAcervo{Busca: q.Get("busca"), Aba: aba, Entrada: q.Get("entrada")}
 
 	sinais := struct {
 		Busca *string `json:"busca"`

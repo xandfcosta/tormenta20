@@ -27,7 +27,11 @@ const CENAS = [
   { nome: 'personagens', url: '/piloto/personagens' },
   { nome: 'grimório', url: '/piloto/grimorio' },
   { nome: 'bestiário', url: '/piloto/mestre/bestiario' },
-  { nome: 'catálogos', url: '/piloto/mestre/catalogos' },
+    // Os catálogos viraram NOVE cenas na ALE-264 — cada uma é uma parada do
+  // trilho. Duas amostram as nove: elas passam pelos mesmos componentes, e a
+  // que fugir disso é a que este guarda existe para pegar.
+  { nome: 'condições', url: '/piloto/mestre/condicoes' },
+  { nome: 'deuses', url: '/piloto/mestre/deuses' },
   { nome: 'encontros', url: '/piloto/mestre/encontros' },
   { nome: 'improviso', url: '/piloto/mestre/improviso' },
   { nome: 'admin', url: '/piloto/admin' },
