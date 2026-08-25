@@ -1731,3 +1731,70 @@ describe('o caminho é feito de paradas, e não de uma reta', () => {
     expect(await screen.findByText(/resta 4 quadrados/)).toBeInTheDocument()
   })
 })
+
+/**
+ * O TRILHO E A FERRAMENTA ÚNICA (ALE-203, fatia 1).
+ *
+ * A fatia não muda comportamento nenhum — os 89 casos deste arquivo passaram sem
+ * uma linha alterada, e essa é a prova de que ela é refundação e não redesenho.
+ * O que ela ACRESCENTA é uma garantia que antes não existia, e é o que se afirma
+ * aqui.
+ *
+ * O defeito que ela apaga: as ferramentas eram cinco sinais soltos e cada
+ * `toggle` desligava os outros À MÃO, de forma inconsistente — a régua não
+ * desligava o pincel, e o gabarito não desligava nem um nem outro. Dava para ter
+ * pincel E régua ligados ao mesmo tempo, com a régua ganhando o clique enquanto
+ * o pincel continuava pintando no arrasto; havia até uma cadeia de precedência
+ * no `onSquareClick` para arbitrar um estado que não deveria existir.
+ *
+ * Com um sinal só, a exclusão é POR CONSTRUÇÃO. O teste prende o desfecho, não a
+ * implementação: escolher uma desmarca a outra, na tela.
+ */
+describe('o trilho de ferramentas', () => {
+  it('escolher uma ferramenta DESMARCA a anterior', async () => {
+    const { user } = renderRegion(true)
+
+    const pincel = screen.getByRole('button', { name: 'Terreno' })
+    const regua = screen.getByRole('button', { name: 'Régua' })
+
+    await user.click(pincel)
+    expect(pincel).toHaveAttribute('aria-pressed', 'true')
+
+    await user.click(regua)
+
+    // A metade que o modelo antigo não tinha: o pincel APAGA. Antes ele
+    // continuava ligado, pintando no arrasto por baixo da régua.
+    expect(regua).toHaveAttribute('aria-pressed', 'true')
+    expect(pincel).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  // Escolher a mesma duas vezes volta ao padrão — era o que os botões de modo
+  // já faziam, e tirar isso obrigaria a ir ao trilho só para "desligar".
+  it('escolher a mesma de novo volta a pousar a peça', async () => {
+    const { user } = renderRegion(true)
+    const regua = screen.getByRole('button', { name: 'Régua' })
+
+    await user.click(regua)
+    await user.click(regua)
+
+    expect(regua).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: 'Pousar a peça' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+  })
+
+  /**
+   * O trilho é do MESTRE naquilo que muda a cena, e de todo mundo no que só
+   * mede. "Dá para acertar daqui?" é pergunta de quem ataca — a régua e o
+   * gabarito não podem sumir para o jogador.
+   */
+  it('o jogador mede, mas não pinta nem marca', () => {
+    renderRegion(false, COM_JOGADOR, 'e1', { myCharacterIds: MEU_HEROI, turnIndex: 0 })
+
+    expect(screen.getByRole('button', { name: 'Régua' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Gabarito de área' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Terreno' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Marcar um lugar' })).not.toBeInTheDocument()
+  })
+})
