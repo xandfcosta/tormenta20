@@ -161,7 +161,7 @@ templ cenaDoBestiario(v bestiarioView) {
 			>
 				<div tabindex="0" data-nav-item class="outline-none">
 					if v.Escolhido != nil {
-						@blocoDoVerbete(*v.Escolhido)
+						@blocoDoVerbete(*v.Escolhido, v.Livro)
 					} else {
 						<p class="text-xs text-muted-foreground">Escolha uma criatura na lista.</p>
 					}
@@ -169,7 +169,7 @@ templ cenaDoBestiario(v bestiarioView) {
 			</section>
 		</div>
 		if v.Escolhido != nil {
-			@fichaEmDialogo(*v.Escolhido)
+			@fichaEmDialogo(*v.Escolhido, v.Livro)
 		}
 	</section>
 }
@@ -194,7 +194,7 @@ templ cenaDoBestiario(v bestiarioView) {
 // O Esc e o clique fora fecham, porque diálogo sem saída é tela travada — e o
 // botão de fechar existe além dos dois, para quem navega por teclado não
 // depender de descobrir o Esc.
-templ fichaEmDialogo(m verbete) {
+templ fichaEmDialogo(m verbete, livro enderecoDoLivro) {
 	<div
 		class="mesa-ficha-em-dialogo fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4"
 		data-show="$fichaAberta"
@@ -225,7 +225,7 @@ templ fichaEmDialogo(m verbete) {
 				data-on:click="$fichaAberta = false"
 				class="absolute right-2 top-2 flex size-11 items-center justify-center rounded-sm text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 			>×</button>
-			@blocoDoVerbete(m)
+			@blocoDoVerbete(m, livro)
 		</div>
 	</div>
 }
@@ -385,6 +385,32 @@ templ listaDeVerbetes(v bestiarioView) {
 
 // ── o bloco de estatísticas ──────────────────────────────────────────────────
 
+// aPaginaDoLivro abre o PDF do livro na página desta criatura (ALE-264).
+//
+// A página JÁ estava escrita na linha ("p289") — virar link é o gesto mais
+// barato que existia aqui: nada de botão novo disputando espaço com o nome da
+// criatura, e a seta diz que abre fora.
+//
+// `data-nav-skip` porque o painel da ficha é uma REGIÃO de layout `column` com
+// UM item, e é isso que faz a vertical ROLAR o bloco em vez de andar (ver o
+// comentário da região em `cenaDoBestiario`). O driver de teclado coleta
+// `a[href]`, então sem esta marca um segundo item nasceria aqui e a seta para
+// baixo passaria a saltar para o link em vez de rolar a ficha. O Tab continua
+// chegando, que é o caminho certo para um atalho de saída.
+//
+// `target="_blank"` porque a mesa está aberta atrás: trocar a cena pelo PDF
+// perderia a fila da iniciativa no meio do combate.
+templ aPaginaDoLivro(livro enderecoDoLivro, pagina int) {
+	<a
+		href={ templ.SafeURL(livro.naPagina(pagina)) }
+		target="_blank"
+		rel="noopener"
+		data-nav-skip
+		title={ fmt.Sprintf("Abrir o livro na página %d", pagina) }
+		class="rounded-sm underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+	>{ fmt.Sprintf("p%d ↗", pagina) }</a>
+}
+
 // blocoDoVerbete é a ficha da criatura como o livro a imprime.
 //
 // A ORDEM é regra e foi decidida na ALE-170: Ataques e Habilidades vêm ANTES
@@ -396,12 +422,18 @@ templ listaDeVerbetes(v bestiarioView) {
 //
 // A medida é limitada (`max-w-4xl`) porque isto é dado mais prosa: a 1920 as
 // caixas de atributo esticavam para ~220px cada para segurar dois caracteres.
-templ blocoDoVerbete(m verbete) {
+templ blocoDoVerbete(m verbete, livro enderecoDoLivro) {
 	<div class="max-w-4xl space-y-4 text-sm">
 		<div class="space-y-0.5">
 			<h3 class="font-heading text-lg tracking-wide text-foreground">{ m.Name }</h3>
 			<p class="text-xs text-muted-foreground">
-				{ fmt.Sprintf("ND %s · %s · %s · p%d · XP %d", ndEscrito(m.ND), nomeDoTipo(m.Tipo), nomeDoTamanho(m.Size), m.BookPage, xpDoND(m.ND)) }
+				{ fmt.Sprintf("ND %s · %s · %s · ", ndEscrito(m.ND), nomeDoTipo(m.Tipo), nomeDoTamanho(m.Size)) }
+				if livro.Base != "" {
+					@aPaginaDoLivro(livro, m.BookPage)
+				} else {
+					{ fmt.Sprintf("p%d", m.BookPage) }
+				}
+				{ fmt.Sprintf(" · XP %d", xpDoND(m.ND)) }
 			</p>
 		</div>
 		// Iniciativa e Percepção são a PRIMEIRA linha do bloco impresso (p289),

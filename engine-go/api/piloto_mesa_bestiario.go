@@ -41,9 +41,9 @@ func (s *Server) rotasDoBestiarioDaMesa(r chi.Router) {
 }
 
 // bestiarioDaMesaPara monta a view do painel para esta mesa.
-func bestiarioDaMesaPara(r *http.Request, campaignID, sessionID int64) bestiarioView {
+func (s *Server) bestiarioDaMesaPara(r *http.Request, campaignID, sessionID int64) bestiarioView {
 	c := criteriosDoPedido(r)
-	v := carregaBestiarioDe(rotaDoBestiarioDaMesa(campaignID, sessionID), c.Busca, c.Tipos, c.NDMin, c.NDMax, c.Escolhida)
+	v := carregaBestiarioDe(rotaDoBestiarioDaMesa(campaignID, sessionID), s.livro.endereco, c.Busca, c.Tipos, c.NDMin, c.NDMax, c.Escolhida)
 	v.Abrir = c.Abrir
 	return v
 }
@@ -63,7 +63,7 @@ func (s *Server) handleBestiarioDaMesa(w http.ResponseWriter, r *http.Request) {
 	// regra, e ela já custou um defeito que só apareceu no navegador (ver o
 	// comentário do `piloto_mesa_action.go`).
 	rascunho := rascunhoDosSinais(r)
-	v := bestiarioDaMesaPara(r, campaignID, sessionID)
+	v := s.bestiarioDaMesaPara(r, campaignID, sessionID)
 
 	sse := datastar.NewSSE(w, r)
 	if fragmento, err := renderFragmento(r.Context(), bestiarioDaMesa(v)); err == nil {
@@ -125,7 +125,7 @@ func (s *Server) handleTipoDoBestiarioDaMesa(w http.ResponseWriter, r *http.Requ
 	}
 	criterios.Tipos = tipos
 	v := carregaBestiarioDe(
-		rotaDoBestiarioDaMesa(campaignID, sessionID),
+		rotaDoBestiarioDaMesa(campaignID, sessionID), s.livro.endereco,
 		criterios.Busca, criterios.Tipos, criterios.NDMin, criterios.NDMax, criterios.Escolhida,
 	)
 

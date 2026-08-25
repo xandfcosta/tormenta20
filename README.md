@@ -228,3 +228,5 @@ Variáveis (defaults em `engine-go/api/config.go`):
 | `STATIC_DIR` | vazio | o `dist` do front; vazio = modo dev (o Vite serve) |
 | `BACKUP_DIR` | `../backups` | onde o `pnpm db:backup` e a tela de admin escrevem |
 | `CATALOG_PATH` | `parity/_catalogs.json` | catálogos dos validadores de mutação |
+| `LIVRO_PDF` | vazio | o Tormenta 20 em PDF que o servidor entrega em `/piloto/livro`; vazio = não serve nada e o botão "abrir no livro" não aparece. **Linearize antes** (`qpdf --linearize`): sem isso o navegador baixa os 89 MB inteiros para mostrar uma página, e o boot avisa |
+| `LIVRO_ABERTURA` | `6` | quantas páginas o arquivo tem antes da página impressa 1 — `#page=N` conta páginas do ARQUIVO e o catálogo grava a IMPRESSA |

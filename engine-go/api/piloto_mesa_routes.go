@@ -46,6 +46,11 @@ func (s *Server) PilotoRouter() http.Handler {
 		s.rotasDePersonagens(r)
 		s.rotasDoGrimorio(r)
 		s.rotasDoMestre(r)
+		// O LIVRO (ALE-264) é servido para quem ENTROU e não anonimamente como
+		// os estáticos: os estáticos são o bundle do Datastar, e isto é um
+		// arquivo do dono da mesa. Sem `LIVRO_PDF` a rota devolve 404 — o botão
+		// que a levaria também não é desenhado.
+		r.Handle(rotaDoLivro, s.LivroDoPiloto())
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(s.requirePagina)
@@ -78,7 +83,7 @@ func pilotoStaticHandler() http.Handler {
 	if err != nil {
 		panic("piloto: static embutido ausente: " + err.Error())
 	}
-	return comCacheDeEstatico(http.FileServer(http.FS(sub)))
+	return comCacheVersionado(versaoDosEstaticos, "public", http.FileServer(http.FS(sub)))
 }
 
 // mesaParams lê os dois ids da URL. Erro aqui é URL digitada errada, e a
@@ -124,7 +129,7 @@ func (s *Server) handleMesaPage(w http.ResponseWriter, r *http.Request) {
 		// o formulário nasceria oferecendo um chão e o servidor abrindo outro.
 		Sinais: fmt.Sprintf("{d20: 10, erro: '', erroDoComando: '', erroDoMovimento: '', novolugar: '', novochao: '%s', pincel: '', apagando: false, qualidadedodescanso: 'normal', formdecombatente: false, novonome: '', novainiciativa: 10, novopv: 0, novotipo: 'npc', edicaolinha: '', edicaonome: '', edicaoiniciativa: 0, edicaopv: 0, edicaopvmax: 0, rascunhode: '', pvdoverbete: 0, inidoverbete: 10, copiasdoverbete: 1, quadrado: 44, arrastando: '', arrastoinix: 0, arrastoiniy: 0, arrastox: 0, arrastoy: 0}", tabuleiro.ChaoPadrao()),
 		Init:   fmt.Sprintf("@get('/piloto/mesa/%d/%d/stream')", campaignID, sessionID),
-	}, corpoDaMesa(r, view, campaignID, sessionID))
+	}, s.corpoDaMesa(r, view, campaignID, sessionID))
 }
 
 // corpoDaMesa escolhe o que a PÁGINA desenha: a cena sozinha para o jogador, a
@@ -134,11 +139,11 @@ func (s *Server) handleMesaPage(w http.ResponseWriter, r *http.Request) {
 // não é a tela que esconde, é a página que não o tem. Mandá-lo para todo mundo e
 // escondê-lo por CSS entregaria as 80 criaturas com PV e defesa a quem abrisse o
 // inspetor — e esconder PV de NPC é literalmente o que o olho da linha faz.
-func corpoDaMesa(r *http.Request, view mesaView, campaignID, sessionID int64) templ.Component {
+func (s *Server) corpoDaMesa(r *http.Request, view mesaView, campaignID, sessionID int64) templ.Component {
 	if view.Mestre == nil {
 		return mesa(view)
 	}
-	return mesaEBestiario(view, bestiarioDaMesaPara(r, campaignID, sessionID))
+	return mesaEBestiario(view, s.bestiarioDaMesaPara(r, campaignID, sessionID))
 }
 
 // loadMesaView busca tudo o que a tela precisa e delega a DECISÃO ao

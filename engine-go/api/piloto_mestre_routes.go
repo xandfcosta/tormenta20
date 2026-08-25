@@ -350,7 +350,7 @@ const rotaDoBestiarioDoMestre = "/piloto/mestre/bestiario"
 // igual para todo mundo. O `requirePagina` do grupo já exige sessão, que é o
 // único requisito — não há dado de campanha nem de personagem nesta tela.
 func (s *Server) handleBestiario(w http.ResponseWriter, r *http.Request) {
-	v := carregaBestiario(criteriosDoPedido(r))
+	v := s.carregaBestiario(criteriosDoPedido(r))
 
 	if r.Header.Get("datastar-request") != "" {
 		sse := datastar.NewSSE(w, r)
@@ -399,7 +399,7 @@ func (s *Server) handleBestiarioTipo(w http.ResponseWriter, r *http.Request) {
 	criterios.Tipos = tipos
 	sse := datastar.NewSSE(w, r)
 
-	fragmento, err := renderFragmento(r.Context(), cenaDoBestiario(carregaBestiario(criterios)))
+	fragmento, err := renderFragmento(r.Context(), cenaDoBestiario(s.carregaBestiario(criterios)))
 	if err != nil {
 		return
 	}
@@ -516,8 +516,8 @@ func apertaND(n, padrao float64) float64 {
 
 // carregaBestiario com os critérios já lidos. Envelope fino sobre a função da
 // camada de dados, para o handler não repetir a ordem dos cinco argumentos.
-func carregaBestiario(c criteriosDoBestiario) bestiarioView {
-	v := carregaBestiarioDe(rotaDoBestiarioDoMestre, c.Busca, c.Tipos, c.NDMin, c.NDMax, c.Escolhida)
+func (s *Server) carregaBestiario(c criteriosDoBestiario) bestiarioView {
+	v := carregaBestiarioDe(rotaDoBestiarioDoMestre, s.livro.endereco, c.Busca, c.Tipos, c.NDMin, c.NDMax, c.Escolhida)
 	v.Abrir = c.Abrir
 	return v
 }

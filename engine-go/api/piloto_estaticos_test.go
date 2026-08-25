@@ -26,7 +26,7 @@ func pedeEstatico(t *testing.T, alvo string, cabecalhos map[string]string) *http
 		req.Header.Set(k, v)
 	}
 	rec := httptest.NewRecorder()
-	comCacheDeEstatico(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	comCacheVersionado(versaoDosEstaticos, "public", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("/* folha */"))
 	})).ServeHTTP(rec, req)
 	return rec

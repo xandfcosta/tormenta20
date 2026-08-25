@@ -114,7 +114,7 @@ func bestiarioDaMesa(v bestiarioView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if v.Escolhido != nil {
-			templ_7745c5c3_Err = blocoDoVerbete(*v.Escolhido).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = blocoDoVerbete(*v.Escolhido, v.Livro).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -137,7 +137,7 @@ func bestiarioDaMesa(v bestiarioView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = fichaEmDialogo(*v.Escolhido).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = fichaEmDialogo(*v.Escolhido, v.Livro).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

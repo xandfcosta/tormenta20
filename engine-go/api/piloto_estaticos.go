@@ -74,7 +74,7 @@ func EstaticoDoPiloto(arquivo string) string {
 	return "/piloto/static/" + arquivo + "?v=" + versaoDosEstaticos
 }
 
-// comCacheDeEstatico embrulha o servidor de arquivos com a política de cache.
+// comCacheVersionado embrulha o servidor de arquivos com a política de cache.
 //
 // COM a versão certa na consulta: um ano e `immutable`, porque a URL identifica
 // o conteúdo — se o conteúdo mudar, o dígito muda e a URL é outra.
@@ -82,18 +82,24 @@ func EstaticoDoPiloto(arquivo string) string {
 // SEM ela: `no-cache`, e é deliberado ser o pior caso. Um endereço sem versão
 // pode ter sido guardado por alguém antes de um deploy, e servi-lo como eterno
 // é prender a pessoa numa folha velha sem nenhum gesto que a resgate.
-func comCacheDeEstatico(interno http.Handler) http.Handler {
+// O `alcance` é `public` ou `private`, e não é detalhe: `public` autoriza um
+// cache COMPARTILHADO a guardar a resposta, o que está certo para a folha e as
+// fontes (elas saem sem sessão) e errado para o que só sai depois do
+// `requirePagina` — ver `piloto_livro.go`.
+func comCacheVersionado(versao, alcance string, interno http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Query().Get("v") == versaoDosEstaticos {
-			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		if r.URL.Query().Get("v") == versao {
+			w.Header().Set("Cache-Control", alcance+", max-age=31536000, immutable")
 		} else {
 			w.Header().Set("Cache-Control", "no-cache")
 		}
 		// O `ETag` sai nos DOIS casos: ele é o que dá 304 a quem chega sem
 		// versão, e é a única coisa que o `embed` não podia oferecer sozinho
 		// (modtime zero). Forte e entre aspas, como manda o RFC.
-		w.Header().Set("ETag", `"`+versaoDosEstaticos+`"`)
-		if strings.Contains(r.Header.Get("If-None-Match"), versaoDosEstaticos) {
+		w.Header().Set("ETag", `"`+versao+`"`)
+		// `versao != ""` porque `strings.Contains(x, "")` é VERDADEIRO: uma
+		// versão vazia responderia 304 a qualquer pedido, e o corpo nunca sairia.
+		if versao != "" && strings.Contains(r.Header.Get("If-None-Match"), versao) {
 			w.WriteHeader(http.StatusNotModified)
 			return
 		}
@@ -125,5 +131,5 @@ func (s *Server) FontesDoPiloto() http.Handler {
 	// `StripPrefix` porque o `FileServer` recebe `/fonts/x.woff2` e procuraria
 	// `fonts/x.woff2` DENTRO do sub-FS, que já tem a pasta como raiz. Sem ele o
 	// 404 continua e parece que o embed falhou — medido.
-	return http.StripPrefix("/fonts", comCacheDeEstatico(http.FileServer(http.FS(sub))))
+	return http.StripPrefix("/fonts", comCacheVersionado(versaoDosEstaticos, "public", http.FileServer(http.FS(sub))))
 }

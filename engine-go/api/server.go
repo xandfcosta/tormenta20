@@ -29,6 +29,7 @@ type Server struct {
 	boards   *tabuleiro.BoardStore    // tabuleiro tático vivo por sessão (ALE-124)
 	presence *aovivo.PresenceRegistry // who's-online per session room (B.6)
 	sse      *aovivo.SSEHub           // leitores SSE por sessão e papel (ALE-253)
+	livro    livroServido             // o PDF do livro, quando LIVRO_PDF aponta para um (ALE-264)
 	// charMu serializes mutating HTTP requests per character (characterID → *sync.Mutex)
 	// so concurrent read-modify-write mutations (rapid damage/vitals clicks) can't lose
 	// updates. Mirrors the per-session lock used by the realtime store.
@@ -109,6 +110,9 @@ func NewServer(cfg plataforma.Config, database *sql.DB, catalogs *engine.Catalog
 	q := sqlcgen.New(database)
 	return &Server{
 		cfg: cfg, db: database, queries: q, catalogs: catalogs,
+		// Lido UMA vez, no boot: o dígito do endereço vem do `os.Stat`, e
+		// refazê-lo por requisição seria ir ao disco para responder um cabeçalho.
+		livro:    abreOLivro(cfg),
 		sessions: aovivo.NewSessionStore(q, aovivo.NewUUID, vitaisDaFicha{q: q}),
 		boards:   tabuleiro.NewBoardStore(q, aovivo.NewUUID),
 		presence: aovivo.NewPresenceRegistry(),

@@ -286,7 +286,13 @@ type bestiarioView struct {
 	// Sem valor não há rota: o `bestiarioBase` recusa a string vazia em vez de
 	// deixar o botão apontar para a página atual, que é o defeito silencioso
 	// desta forma — o clique "funciona" e recarrega a cena.
-	Base      string
+	Base string
+	// Livro é o endereço do PDF do livro (ALE-264), e o ZERO VALOR é o caso
+	// normal: sem `LIVRO_PDF` configurado não há livro para abrir e o bloco não
+	// desenha o botão. Ele vem pedido no construtor, ao lado da Base, pela mesma
+	// razão que ela — são os dois endereços de que a cena depende, e um deles
+	// esquecido some em silêncio.
+	Livro     enderecoDoLivro
 	Verbetes  []verbete
 	Total     int
 	Escolhido *verbete
@@ -326,11 +332,12 @@ func escolhidoOuPrimeiro(lista []verbete, id string) *verbete {
 // teste de outra pasta montou a cena sem ele. Construtor que consegue produzir
 // valor inválido é o próprio defeito — pedir aqui torna o esquecimento
 // impossível em vez de detectável.
-func carregaBestiarioDe(base, busca string, tipos []string, ndMin, ndMax float64, escolhido string) bestiarioView {
+func carregaBestiarioDe(base string, livro enderecoDoLivro, busca string, tipos []string, ndMin, ndMax float64, escolhido string) bestiarioView {
 	todos := criaturasDoLivro()
 	lista := filtraCriaturas(todos, filtroDeCriaturas{Busca: busca, Tipos: tipos, NDMin: ndMin, NDMax: ndMax})
 	return bestiarioView{
 		Base:      base,
+		Livro:     livro,
 		Verbetes:  lista,
 		Total:     len(todos),
 		Escolhido: escolhidoOuPrimeiro(lista, escolhido),

@@ -81,6 +81,24 @@ type Config struct {
 	// routes /api/* to the domain (no Vite to strip the prefix). Empty in dev, where
 	// Vite serves the front and proxies /api + /socket.io.
 	StaticDir string
+	// LivroPDF é o caminho do Tormenta 20 em PDF que o servidor entrega em
+	// `/piloto/livro`, e VAZIO é o padrão: sem ele o botão "abrir no livro"
+	// simplesmente não existe, e nada é servido.
+	//
+	// Por configuração e não embutido porque o PDF está FORA do módulo Go
+	// (`../t20-book.pdf`, e ignorado pelo git) — `go:embed` não o alcança —,
+	// e porque servir o livro é decisão do dono da mesa: a mesa conecta pela
+	// rede local, então a rota publica o arquivo para quem entrou.
+	LivroPDF string
+	// LivroAbertura é quantas páginas o ARQUIVO tem antes da página impressa 1.
+	//
+	// Ela existe porque `#page=N` conta páginas do arquivo e o catálogo grava a
+	// página IMPRESSA (`bookPage`). MEDIDO no PDF da casa (407 páginas), pelo
+	// número no RODAPÉ: a página 295 do arquivo imprime "289", a 297 imprime
+	// "291" e a 203 imprime "197" — três amostras em regiões distantes, todas
+	// com abertura 6. Sem isto o botão abriria seis páginas antes, no MESMO
+	// capítulo, que é o tipo de erro que parece certo.
+	LivroAbertura int
 }
 
 // LoadConfig loads `.env.<APP_ENV>` (or ENV_FILE, when set) and reads the
@@ -94,22 +112,24 @@ func LoadConfig() (Config, error) {
 		return Config{}, err
 	}
 	return Config{
-		AppEnv:       appEnv,
-		AdminEmails:  splitEmails(os.Getenv("ADMIN_EMAILS")),
-		Port:         env("PORT", "3001"),
-		DatabasePath: stripFilePrefix(env("DATABASE_URL", "file:./data/t20-dev.db")),
-		JWTSecret:    os.Getenv("JWT_SECRET"),
-		JWTExpiresIn: env("JWT_EXPIRES_IN", "7d"),
-		CookieName:   env("COOKIE_NAME", "t20_session"),
-		CookieSecure: os.Getenv("COOKIE_SECURE") == "true",
-		CORSOrigins:  SplitOrigins(env("CORS_ORIGIN", defaultCORSOrigin(appEnv))),
-		BackupDir:    env("BACKUP_DIR", "../backups"),
-		BackupEvery:  envDuration("BACKUP_EVERY", 24*time.Hour),
-		BackupKeep:   envInt("BACKUP_KEEP", 7),
-		CatalogPath:  env("CATALOG_PATH", "parity/_catalogs.json"),
-		TLSCertFile:  os.Getenv("TLS_CERT_FILE"),
-		TLSKeyFile:   os.Getenv("TLS_KEY_FILE"),
-		StaticDir:    env("STATIC_DIR", ""),
+		AppEnv:        appEnv,
+		AdminEmails:   splitEmails(os.Getenv("ADMIN_EMAILS")),
+		Port:          env("PORT", "3001"),
+		DatabasePath:  stripFilePrefix(env("DATABASE_URL", "file:./data/t20-dev.db")),
+		JWTSecret:     os.Getenv("JWT_SECRET"),
+		JWTExpiresIn:  env("JWT_EXPIRES_IN", "7d"),
+		CookieName:    env("COOKIE_NAME", "t20_session"),
+		CookieSecure:  os.Getenv("COOKIE_SECURE") == "true",
+		CORSOrigins:   SplitOrigins(env("CORS_ORIGIN", defaultCORSOrigin(appEnv))),
+		BackupDir:     env("BACKUP_DIR", "../backups"),
+		BackupEvery:   envDuration("BACKUP_EVERY", 24*time.Hour),
+		BackupKeep:    envInt("BACKUP_KEEP", 7),
+		CatalogPath:   env("CATALOG_PATH", "parity/_catalogs.json"),
+		TLSCertFile:   os.Getenv("TLS_CERT_FILE"),
+		TLSKeyFile:    os.Getenv("TLS_KEY_FILE"),
+		StaticDir:     env("STATIC_DIR", ""),
+		LivroPDF:      env("LIVRO_PDF", ""),
+		LivroAbertura: envInt("LIVRO_ABERTURA", 6),
 	}, nil
 }
 

@@ -70,7 +70,7 @@ templ bestiarioDaMesa(v bestiarioView) {
 			</div>
 			<section aria-label="Criatura escolhida" class="mesa-painel">
 				if v.Escolhido != nil {
-					@blocoDoVerbete(*v.Escolhido)
+					@blocoDoVerbete(*v.Escolhido, v.Livro)
 				} else {
 					<p class="text-xs text-muted-foreground">Escolha uma criatura na lista.</p>
 				}
@@ -87,7 +87,7 @@ templ bestiarioDaMesa(v bestiarioView) {
 			// criatura e não veria bloco nenhum — escolheria pelo nome. É um
 			// `<div role="dialog">` e não um `<dialog>` nativo, então aninhá-lo
 			// aqui dentro é só posicionamento.
-			@fichaEmDialogo(*v.Escolhido)
+			@fichaEmDialogo(*v.Escolhido, v.Livro)
 		}
 	</dialog>
 }

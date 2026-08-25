@@ -366,7 +366,7 @@ func TestABaseDoBestiarioNaoTemPadrao(t *testing.T) {
 // E a cena do mestre continua falando para a rota dela: o refator trocou o
 // literal por um campo, e este guarda prende que o campo chegou preenchido.
 func TestACenaDoMestreFalaParaARotaDoMestre(t *testing.T) {
-	v := carregaBestiario(criteriosDoBestiario{NDMax: 20})
+	v := (&Server{}).carregaBestiario(criteriosDoBestiario{NDMax: 20})
 	if v.Base != rotaDoBestiarioDoMestre {
 		t.Errorf("a cena do mestre nasceu com Base %q", v.Base)
 	}
