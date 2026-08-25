@@ -46,6 +46,10 @@ func (s *Server) PilotoRouter() http.Handler {
 		s.rotasDePersonagens(r)
 		s.rotasDoGrimorio(r)
 		s.rotasDoMestre(r)
+		// O BUSCADOR (ALE-264) fica no grupo do Hub e não no do mestre: a caixa
+		// abre em QUALQUER cena, inclusive na Mesa, e a rota tem de existir onde
+		// quer que o ⌃K seja apertado.
+		s.rotasDoBuscador(r)
 		// O LIVRO (ALE-264) é servido para quem ENTROU e não anonimamente como
 		// os estáticos: os estáticos são o bundle do Datastar, e isto é um
 		// arquivo do dono da mesa. Sem `LIVRO_PDF` a rota devolve 404 — o botão

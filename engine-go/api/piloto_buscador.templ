@@ -1,0 +1,124 @@
+package api
+
+import "fmt"
+import "strconv"
+
+// A CAIXA do buscador do livro (ALE-264).
+//
+// `<dialog>` NATIVO, como o `abrir-tabuleiro`, e aqui ele paga cinco coisas de
+// uma vez: foco preso, Esc, fundo inerte, camada de topo — e o driver de
+// teclado da cena se RECOLHE sozinho, porque o `hasOpenOverlay()` do
+// `scene-nav.ts` procura `dialog[open]`. Sem isso as setas continuariam andando
+// na lista ATRÁS da caixa.
+//
+// `m-auto` é obrigatório: o preflight do Tailwind zera a margem de todo
+// elemento, e a centralização de um modal nativo é justamente a `margin: auto`.
+//
+// A caixa mora na CASCA e é desenhada UMA vez por página. Ela não é remendada —
+// só o `#buscador-achados` de dentro é —, e essa divisão importa: o
+// `data-bind:buscador` do campo vive fora do que o servidor troca, então o que
+// a pessoa está digitando nunca é redeclarado por baixo dela.
+templ buscadorDoLivro() {
+	<dialog
+		id="buscador"
+		data-preserve-attr="open"
+		aria-labelledby="buscador-titulo"
+		data-on:keydown={ andaNoBuscador }
+		class="scene-grimorio m-auto w-[min(42rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-0 text-foreground backdrop:bg-black/60"
+	>
+		<h2 id="buscador-titulo" class="sr-only">Buscar no livro</h2>
+		<div class="flex items-center gap-2 border-b border-grimorio-iron px-3">
+			<span aria-hidden="true" class="text-sm text-muted-foreground">⌕</span>
+			// O NOME DO SINAL É MINÚSCULO porque o analisador de HTML minuscula
+			// nome de atributo: um `data-bind:buscaDoLivro` ligaria um sinal
+			// `buscadolivro` e deixaria o declarado intocado.
+			//
+			// E ele NÃO se chama `busca`: esse nome já é o da busca da cena, no
+			// MESMO documento. Duas ligações no mesmo sinal fariam digitar aqui
+			// reescrever o filtro da tela atrás — e o `@get` da cena mandaria o
+			// texto do buscador.
+			<input
+				id="buscador-campo"
+				type="text"
+				data-bind:buscador
+				data-on:input__debounce.200ms={ "@get('" + rotaDoBuscador + "')" }
+				autocomplete="off"
+				placeholder="Buscar no livro"
+				aria-label="Buscar no livro"
+				class="min-h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+			/>
+		</div>
+		@achadosDoBuscador(buscadorView{})
+		<p aria-hidden="true" class="flex items-center justify-end gap-1 border-t border-grimorio-iron px-3 py-1.5 text-3xs text-muted-foreground">
+			@tecla("↑↓")
+			{ " navegar" }
+			@tecla("⏎")
+			{ " abrir" }
+			@tecla("Esc")
+			{ " fechar" }
+		</p>
+	</dialog>
+}
+
+// achadosDoBuscador é o único pedaço REMENDADO, e por isso tem id próprio.
+//
+// `aria-live="polite"` porque a lista muda sem gesto nenhum de quem lê: o
+// resultado chega 200ms depois da tecla, e sem o anúncio quem usa leitor de tela
+// digita no escuro.
+templ achadosDoBuscador(v buscadorView) {
+	<div id="buscador-achados" aria-live="polite" class="max-h-[60vh] overflow-y-auto p-2">
+		if !v.Buscando() {
+			<p class="px-2 py-8 text-center text-xs text-muted-foreground">
+				Procura em criaturas, condições, magias, poderes e itens do livro.
+			</p>
+		} else if v.Achados == 0 {
+			<p class="px-2 py-8 text-center text-xs text-muted-foreground">
+				{ "Nada no livro casa com “" + v.Busca + "”." }
+			</p>
+		} else {
+			// O AVISO da segunda passada: sem ele, uma lista em que o termo não
+			// aparece em nome nenhum parece a lista errada. Ver `buscaNoLivro`.
+			if v.PeloTexto {
+				<p class="px-2 pt-2 text-3xs text-muted-foreground">
+					{ "Nenhum nome casa — estes mencionam “" + v.Busca + "” no texto da regra." }
+				</p>
+			}
+			for _, g := range v.Grupos {
+				<p class="px-2 pt-2 pb-1 text-3xs font-bold uppercase tracking-widest text-grimorio-gold">{ g.Rotulo }</p>
+				<ul>
+					for _, a := range g.Achados {
+						<li>
+							// `<a>` de verdade: abrir é NAVEGAR, e um botão com
+							// JavaScript perderia o clique do meio, o "abrir em
+							// nova aba" e o Enter que o navegador já dá de graça.
+							// O `data-resultado` é o que as setas percorrem.
+							<a
+								href={ templ.SafeURL(a.Destino) }
+								data-resultado
+								class="flex min-h-11 items-center gap-2 rounded-sm px-2 text-sm outline-none transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+							>
+								<span class="shrink-0 font-semibold">{ a.Nome }</span>
+								<span class="truncate text-3xs text-muted-foreground">{ a.Detalhe }</span>
+								if a.Pagina > 0 {
+									<span class="ml-auto shrink-0 font-mono text-3xs text-muted-foreground">{ fmt.Sprintf("p%d", a.Pagina) }</span>
+								}
+							</a>
+						</li>
+					}
+					// O CORTE é dito e tem saída: um "+12" que não leva a lugar
+					// nenhum informa e abandona. Este leva à cena da ferramenta
+					// com a mesma busca, que é onde os doze estão.
+					if g.Cortados() > 0 {
+						<li>
+							<a
+								href={ templ.SafeURL(g.Mais) }
+								data-resultado
+								class="flex min-h-11 items-center rounded-sm px-2 text-3xs text-muted-foreground outline-none transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+							>{ "+" + strconv.Itoa(g.Cortados()) + " em " + g.Rotulo }</a>
+						</li>
+					}
+				</ul>
+			}
+		}
+	</div>
+}

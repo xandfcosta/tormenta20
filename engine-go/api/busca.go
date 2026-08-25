@@ -3,6 +3,7 @@ package api
 import (
 	"strings"
 	"unicode"
+	"unicode/utf8"
 
 	"golang.org/x/text/runes"
 	"golang.org/x/text/transform"
@@ -92,4 +93,179 @@ func ehSubsequencia(campo, alvo string) bool {
 		}
 	}
 	return false
+}
+
+// ── o RANQUEAMENTO, que só o buscador do livro precisa (ALE-264) ─────────────
+//
+// O comentário no alto deste arquivo diz que a pontuação do `rankItem` não veio
+// da SPA porque ninguém a lia: as listas só perguntam "passou?" e desenham na
+// ordem alfabética. Isso continua verdade para elas.
+//
+// O buscador do livro é outra pergunta. Ele varre 1.072 entradas — 80 criaturas
+// e 992 do acervo — e mostra SEIS por grupo. Sem ordem de relevância, "abal"
+// mostraria as seis primeiras em ordem alfabética entre as que casam, e
+// "Abalado" poderia não estar entre elas. Cortar sem ranquear é escolher ao
+// acaso o que a pessoa vê.
+
+// pontuaBusca mede o quanto o NOME casa com o que foi digitado. Zero é não
+// casar; maior é melhor.
+//
+//	pontuaBusca("Abalado", "abal")      // → 80, prefixo
+//	pontuaBusca("Bola de Fogo", "fogo") // → 60, começa uma palavra
+//
+// Só o nome, e de propósito: casar por descrição não distingue o verbete que a
+// pessoa procura do que apenas menciona a palavra. A descrição entra por fora,
+// com peso baixo — ver `pontuaEntrada`.
+//
+// VÁRIOS TERMOS são exigidos TODOS, e a nota é a média. Sem isso "bola fogo"
+// não acha "Bola de Fogo" — medido: o nome não começa com a frase, não a contém,
+// e pular o "de " estoura a folga do quase-igual. Digitar duas palavras de um
+// nome é como se procura o que se lembra pela metade.
+func pontuaBusca(nome, busca string) int {
+	alvo := dobra(strings.TrimSpace(busca))
+	if alvo == "" {
+		return 0
+	}
+	campo := dobra(nome)
+	termos := strings.Fields(alvo)
+	if len(termos) == 1 {
+		return pontuaTermo(campo, alvo)
+	}
+	soma := 0
+	for _, termo := range termos {
+		ponto := pontuaTermo(campo, termo)
+		if ponto == 0 {
+			return 0
+		}
+		soma += ponto
+	}
+	return soma / len(termos)
+}
+
+// pontuaTermo é a escada, do casamento mais forte para o mais fraco.
+func pontuaTermo(campo, termo string) int {
+	switch {
+	case campo == termo:
+		return 100
+	case strings.HasPrefix(campo, termo):
+		return 80
+	case comecaUmaPalavra(campo, termo):
+		return 60
+	case strings.Contains(campo, termo):
+		return 40
+	case ehQuaseIgual(campo, termo):
+		return 20
+	}
+	return 0
+}
+
+// ehQuaseIgual é a tolerância a typo APERTADA, e ela existe porque a frouxa não
+// serve aqui.
+//
+// O `ehSubsequencia` aceita letras faltando em qualquer lugar, e o comentário
+// dele já avisa o limite: "numa lista de seis campanhas isso faria a busca
+// devolver a lista inteira". Em 1.072 entradas é pior, e foi MEDIDO na tela —
+// "abal" trouxe "Capitão-Baluarte", "Hobgoblin Mago de Batalha" e "Suporte
+// Ambiental" empurrando resultados de verdade para fora do corte de seis.
+//
+// A regra: as letras podem faltar, mas o buraco todo cabe em DUAS. "ncromante"
+// continua achando "Necromante" (uma letra pulada), e "abal" para de achar
+// "Capitão-Baluarte" (seis). É a diferença entre corrigir um dedo torto e
+// aceitar qualquer coisa.
+func ehQuaseIgual(campo, alvo string) bool {
+	letras := []rune(campo)
+	procurado := []rune(alvo)
+	if len(procurado) < 2 {
+		return strings.HasPrefix(campo, alvo)
+	}
+	for inicio := range letras {
+		if letras[inicio] != procurado[0] {
+			continue
+		}
+		if buracoAte(letras[inicio:], procurado) <= 2 {
+			return true
+		}
+	}
+	return false
+}
+
+// buracoAte conta quantas letras foram PULADAS até casar o alvo inteiro, e
+// devolve `naoCasa` quando o alvo acaba sem casar.
+//
+// O sentinela é uma CONSTANTE, e isso é conserto de um vermelho: a primeira
+// versão devolvia `len(letras)+1`, que num resto de UMA letra é 2 — dentro da
+// folga. O efeito foi medido na sonda: "abal" casava com "Naja" (o último "a",
+// e nada depois), e a busca por nome devolvia 282 entradas em vez de uma.
+// Sentinela calculado a partir da entrada é sentinela que a entrada alcança.
+const naoCasa = 1 << 30
+
+func buracoAte(letras, procurado []rune) int {
+	buraco, i := 0, 0
+	for _, r := range letras {
+		if r == procurado[i] {
+			i++
+			if i == len(procurado) {
+				return buraco
+			}
+			continue
+		}
+		buraco++
+		if buraco > 2 {
+			break
+		}
+	}
+	return naoCasa
+}
+
+// comecaUmaPalavra procura o termo no COMEÇO de qualquer palavra.
+//
+// É o que põe "Bola de Fogo" acima de "Explosão de Fogo Congelante" quando se
+// digita "fogo": as duas contêm o termo, mas numa ele abre a palavra. E é o que
+// tira "trabalho" de uma busca por "abal" — medido, era isso que fazia "abal"
+// devolver 296 entradas com "Abalado" perdido no meio.
+//
+// Por LIMITE e não por `strings.Fields`: no corpo de uma regra a palavra vem
+// colada em pontuação ("(abalado", "abalado,"), e cortar só no espaço deixaria
+// esses casos de fora. A letra anterior é decodificada como RUNA porque o
+// domínio é pt-BR — um byte solto no meio de "ção" não é letra nenhuma.
+func comecaUmaPalavra(campo, alvo string) bool {
+	de := 0
+	for {
+		onde := strings.Index(campo[de:], alvo)
+		if onde < 0 {
+			return false
+		}
+		onde += de
+		anterior, _ := utf8.DecodeLastRuneInString(campo[:onde])
+		if onde == 0 || !(unicode.IsLetter(anterior) || unicode.IsDigit(anterior)) {
+			return true
+		}
+		de = onde + 1
+	}
+}
+
+// pontuaTexto é o último recurso: o termo aparece no CORPO da regra.
+//
+// Dez é deliberadamente baixo e sem graus: achar "camuflagem" no efeito de uma
+// magia é um acerto de verdade, e ainda assim vale menos que qualquer casamento
+// de nome.
+//
+// TRÊS letras para entrar, e o número é medido: com duas, "ab" aparece no corpo
+// de centenas de regras. O nome continua buscável desde a primeira letra — é lá
+// que a pessoa sabe o que procura.
+//
+// Todos os termos, e cada um abrindo uma PALAVRA. "Contém" cru aqui é o que
+// fazia "abal" achar "trabalho".
+func pontuaTexto(textos []string, busca string) int {
+	alvo := dobra(strings.TrimSpace(busca))
+	if len([]rune(alvo)) < 3 {
+		return 0
+	}
+	junto := dobra(strings.Join(textos, " "))
+	for _, termo := range strings.Fields(alvo) {
+		if !comecaUmaPalavra(junto, termo) {
+			return 0
+		}
+	}
+	return 10
 }

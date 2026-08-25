@@ -147,7 +147,7 @@ templ layout(p paginaPiloto, corpo templ.Component) {
 			// para lugar nenhum.
 			<section
 				data-slot="scene-shell"
-				data-on:keydown__window={ atalhoDaBarra }
+				data-on:keydown__window={ atalhosDaCasca }
 				if p.Voltar != "" {
 					data-voltar={ p.Voltar }
 				}
@@ -194,6 +194,18 @@ templ layout(p paginaPiloto, corpo templ.Component) {
 					}
 					@corpo
 				</div>
+				// O BUSCADOR (ALE-264) é desenhado por último e fora do que rola:
+				// `<dialog>` nativo vai para a camada de topo do navegador, então
+				// onde ele está no documento não muda onde ele aparece — mas
+				// dentro do `overflow-y-auto` ele entraria na conta da rolagem.
+				//
+				// Não sai na PORTA: a caixa liga um sinal (`data-bind:buscador`),
+				// e sinal é estado de cliente que o Datastar serializa em toda
+				// requisição seguinte — o que faria a senha viajar de novo a cada
+				// pedido. É o que o `TestPortaNaoPoeNadaEmSinalDoDatastar` cobra.
+				if !p.SemEstadoDeCliente {
+					@buscadorDoLivro()
+				}
 			</section>
 		</body>
 	</html>

@@ -1145,6 +1145,19 @@ func legendaDoTeclado() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
+		templ_7745c5c3_Err = tecla("⌃K").Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var51 string
+		templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(" buscar no livro")
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 355, Col: 22}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "</p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1195,5 +1208,65 @@ const marcaDeTrocaPorTeclado = `evt.key === 'Enter' && sessionStorage.setItem('p
 const restauraOFocoDoTrilho = `sessionStorage.getItem('piloto-foco-no-trilho') && ` +
 	`(sessionStorage.removeItem('piloto-foco-no-trilho'), ` +
 	`document.querySelector('[data-nav-region="rail"] [aria-current]')?.focus())`
+
+// O ⌃K abre o BUSCADOR DO LIVRO (ALE-264).
+//
+// Na casca pela mesma razão da barra: atalho global escrito em cada cena é a
+// regra em N lugares, e ela diverge no primeiro que alguém esquecer.
+//
+// SEM guarda de digitação, ao contrário do `/`, e a diferença é o que a tecla
+// significa: `/` é um caractere que a pessoa pode estar escrevendo, e ⌃K não —
+// ele não produz texto em campo nenhum. Um buscador que só abre quando o foco
+// está "fora" seria um buscador que não abre quando mais se precisa dele, que é
+// no meio de uma busca da cena que não achou nada.
+//
+// `metaKey` junto com `ctrlKey` porque no Mac o gesto é ⌘K, e um atalho que só
+// existe num sistema é um atalho quebrado no outro.
+//
+// A caixa pode NÃO EXISTIR — a porta não a desenha, porque ela é estado de
+// cliente e a porta não pode ter nenhum (ver `SemEstadoDeCliente`). Por isso o
+// atalho começa procurando o elemento em vez de supor: sem ele, o ⌃K na tela de
+// entrar estouraria num `null` e ainda teria roubado a tecla do navegador.
+//
+// `.open ||` antes do `showModal()` porque chamar `showModal` num diálogo já
+// aberto lança `InvalidStateError` — apertar ⌃K duas vezes é gesto normal.
+const atalhoDoBuscador = `(evt.key === 'k' || evt.key === 'K') && (evt.ctrlKey || evt.metaKey) && ` +
+	`document.getElementById('buscador') && (` +
+	`evt.preventDefault(), ` +
+	`document.getElementById('buscador').open || document.getElementById('buscador').showModal(), ` +
+	`document.getElementById('buscador-campo').select())`
+
+// atalhosDaCasca é o que o `keydown` da janela roda, e eles vão num atributo SÓ.
+//
+// Dois `data-on:keydown__window` no mesmo elemento não somam: é atributo
+// repetido, e o segundo é descartado pelo analisador de HTML antes de o Datastar
+// ver qualquer coisa — o atalho novo simplesmente não existiria, sem erro.
+const atalhosDaCasca = atalhoDaBarra + "; " + atalhoDoBuscador
+
+// andaNoBuscador move o foco entre os resultados com as setas.
+//
+// O driver de teclado da cena não faz isso aqui, e é por construção: ele se
+// RECOLHE quando há `dialog[open]`, que é justamente o que dá o foco preso e o
+// Esc de graça. Quem abre um modal assume o teclado dele.
+//
+// Da CAIXA e não da lista: o evento sobe do campo de digitação, e é isso que faz
+// a seta para baixo levar de quem digita ao primeiro resultado sem um segundo
+// ouvinte. Sem foco em resultado nenhum, a seta entra pelas pontas — para baixo
+// no primeiro, para cima no último.
+//
+// O Enter tem guarda de origem: no CAMPO ele abre o primeiro resultado, e num
+// resultado ele não faz nada aqui, porque o `<a>` já navega sozinho. Sem a
+// guarda, Enter em qualquer linha abriria a PRIMEIRA — o resultado errado, com o
+// certo em foco.
+const andaNoBuscador = `['ArrowDown', 'ArrowUp'].includes(evt.key) && (evt.preventDefault(), (() => {` +
+	`const itens = [...el.querySelectorAll('[data-resultado]')];` +
+	`if (!itens.length) return;` +
+	`const onde = itens.indexOf(document.activeElement);` +
+	`const passo = evt.key === 'ArrowDown' ? 1 : -1;` +
+	`const alvo = onde < 0 ? (passo > 0 ? 0 : itens.length - 1) : Math.min(itens.length - 1, Math.max(0, onde + passo));` +
+	`itens[alvo].focus();` +
+	`})()), ` +
+	`evt.key === 'Enter' && document.activeElement?.id === 'buscador-campo' && ` +
+	`(evt.preventDefault(), el.querySelector('[data-resultado]')?.click())`
 
 var _ = templruntime.GeneratedTemplate
