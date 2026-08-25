@@ -499,11 +499,15 @@ html {
    * valor vem do banco: interpolar a string crua no `style` seria injeção de
    * CSS, e o Go já a prende a esta lista. */
   .tabuleiro-palco {
-    --marcador-gold: var(--grimorio-gold);
-    --marcador-red: var(--hp-critical);
-    --marcador-green: var(--hp-full);
-    --marcador-blue: var(--mp-arcane);
-    --marcador-violet: oklch(0.62 0.16 300);
+    /* Os NOMES são os do domínio (`tabuleiro.CoresDeMarcador`), e não uma
+       segunda tradução: eles eram `gold/red/green/blue/violet` e a autoridade
+       nunca aceitou nenhum dos cinco, então todo marcador caía no dourado —
+       em silêncio, que é a marca desta família. O `piloto_marcador_test.go`
+       amarra esta lista à de lá. */
+    --marcador-ouro: var(--grimorio-gold);
+    --marcador-carmim: var(--hp-critical);
+    --marcador-azul: var(--mp-arcane);
+    --marcador-verde: var(--hp-full);
   }
 }
 

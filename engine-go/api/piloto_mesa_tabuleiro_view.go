@@ -309,18 +309,21 @@ func nomeDaPeca(p pecaDoTabuleiro) string {
 	return nome
 }
 
-// coresDeMarcador são as que o mestre pode escolher. Vem do banco, então é dado
-// do cliente: uma cor inventada iria direto para o `style`, e daí para uma
-// injeção de CSS. Fora da lista, cai no dourado da casa.
-var coresDeMarcador = map[string]bool{
-	"gold": true, "red": true, "green": true, "blue": true, "violet": true,
-}
-
+// corDeMarcador traduz a cor guardada para a variável que pinta.
+//
+// A lista vem do `tabuleiro` e NÃO é escrita aqui, e esta função é a prova de
+// por quê: ela mantinha um conjunto próprio em inglês — `gold/red/green/blue/
+// violet` — enquanto a autoridade sempre aceitou `ouro/carmim/azul/verde`.
+// Nenhuma das cinco casava com nenhuma das quatro, então TODO marcador do piloto
+// caía no dourado, inclusive o carmim escolhido na outra tela. Nada estourava.
+//
+// A cor vem do banco, então é dado de cliente: fora da lista ela cai no padrão,
+// porque string livre daqui iria direto para o `style`.
 func corDeMarcador(c string) string {
-	if coresDeMarcador[c] {
+	if tabuleiro.CorDeMarcadorConhecida(c) {
 		return "var(--marcador-" + c + ")"
 	}
-	return "var(--marcador-gold)"
+	return "var(--marcador-" + tabuleiro.CorPadraoDeMarcador() + ")"
 }
 
 // ── o MOVIMENTO em curso (ALE-266) ───────────────────────────────────────────

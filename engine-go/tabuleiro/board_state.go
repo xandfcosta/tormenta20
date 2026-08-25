@@ -308,11 +308,6 @@ func applyTokenPatch(t *BoardToken, patch tokenPatch) {
 	}
 }
 
-// markerColors é o conjunto FECHADO de cores do marcador. Fechado porque a cor
-// vira classe na tela: aceitar qualquer string deixaria o cliente escrever CSS
-// no estado da mesa.
-var markerColors = map[string]bool{"ouro": true, "carmim": true, "azul": true, "verde": true}
-
 // boardMaxMarkers — teto de marcadores, pelo mesmo motivo do teto de peças: o
 // estado inteiro viaja em todo broadcast.
 const boardMaxMarkers = 100
@@ -325,8 +320,8 @@ func AddMarker(b *BoardState, m BoardMarker, newID func() string) error {
 	if abs(m.X) > boardCoordLimit || abs(m.Y) > boardCoordLimit {
 		return fmt.Errorf("marcador em (%d,%d) está além do limite de sanidade de %d quadrados", m.X, m.Y, boardCoordLimit)
 	}
-	if !markerColors[m.Color] {
-		m.Color = "ouro"
+	if !CorDeMarcadorConhecida(m.Color) {
+		m.Color = CorPadraoDeMarcador()
 	}
 	m.Text = trimMarkerText(m.Text)
 	m.ID = newID()
@@ -355,7 +350,7 @@ func UpdateMarker(b *BoardState, markerID string, patch markerPatch) error {
 		if patch.Text != nil {
 			b.Markers[i].Text = trimMarkerText(*patch.Text)
 		}
-		if patch.Color != nil && markerColors[*patch.Color] {
+		if patch.Color != nil && CorDeMarcadorConhecida(*patch.Color) {
 			b.Markers[i].Color = *patch.Color
 		}
 		if patch.Hidden != nil {
