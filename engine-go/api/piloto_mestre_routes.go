@@ -1,7 +1,9 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
+	"net/url"
 	"path"
 	"slices"
 	"strconv"
@@ -340,6 +342,19 @@ func (s *Server) handleCatalogos(w http.ResponseWriter, r *http.Request) {
 	}, mesaDoMestre(v.Aba, cenaDosCatalogos(v)))
 }
 
+// filtrosDaURL lê os crachás que a consulta pede, só os DA ABA: `?circulo=2&circulo=3`
+// na cena das condições não filtra nada, e aceitá-lo faria a cena carregar um
+// estado que ela não sabe desenhar.
+func filtrosDaURL(q url.Values, aba string) map[string][]string {
+	fora := map[string][]string{}
+	for _, f := range filtrosDaAba(abaConhecida(aba)) {
+		if valores := q[f.Chave]; len(valores) > 0 {
+			fora[f.Chave] = valores
+		}
+	}
+	return fora
+}
+
 // criteriosDoPedidoDoAcervo lê a busca, a aba e a ENTRADA da URL na carga fria e
 // dos SINAIS quando o Datastar chama — mesma decisão das outras cenas, e é ela
 // que faz `?busca=fogo`, `?aba=magias` e `?entrada=medo` serem endereços que se
@@ -357,7 +372,23 @@ func criteriosDoPedidoDoAcervo(r *http.Request) criteriosDoAcervo {
 	if abaConhecida(aba) != aba {
 		aba = q.Get("aba")
 	}
-	c := criteriosDoAcervo{Busca: q.Get("busca"), Aba: aba, Entrada: q.Get("entrada")}
+	c := criteriosDoAcervo{
+		Busca: q.Get("busca"), Aba: aba, Entrada: q.Get("entrada"),
+		Filtros: filtrosDaURL(q, aba),
+	}
+
+	// Os FILTROS vêm num mapa cru e não numa struct: as chaves dependem da aba
+	// (`circulo` só existe em magias), e uma struct com os seis campos faria
+	// toda cena declarar os filtros das outras.
+	var todos map[string]json.RawMessage
+	if err := datastar.ReadSignals(r, &todos); err == nil {
+		for _, f := range filtrosDaAba(abaConhecida(aba)) {
+			var valores []string
+			if bruto, tem := todos[f.Chave]; tem && json.Unmarshal(bruto, &valores) == nil {
+				c.Filtros[f.Chave] = valores
+			}
+		}
+	}
 
 	sinais := struct {
 		Busca *string `json:"busca"`

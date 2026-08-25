@@ -68,7 +68,7 @@ test('o elo mostra o conceito por cima, sem tirar a pessoa da regra que lia', as
   await expect(caixa).toContainText('Medo capaz de prejudicar o alvo')
   // A CENA CONTINUA: o endereço não mudou e a condição que se estava lendo está
   // lá atrás. Era isso que a navegação para uma busca destruía.
-  expect(page.url()).toContain('aba=condicoes')
+  expect(page.url()).toContain('/piloto/mestre/condicoes')
   await expect(page.getByText('-2 em testes de perícia.')).toBeVisible()
 
   await page.keyboard.press('Escape')

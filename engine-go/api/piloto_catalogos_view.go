@@ -422,6 +422,9 @@ type criteriosDoAcervo struct {
 	// aquele verbete sozinho. É o endereço que um ELO usa — quem clica em "Medo"
 	// pediu o Medo, não uma busca por "medo" nos oito catálogos.
 	Entrada string
+	// Filtros são os crachás acesos, por chave (`{"circulo": ["2","3"]}`). Vêm
+	// da URL na carga fria e dos sinais quando o Datastar chama, como a busca.
+	Filtros map[string][]string
 }
 
 // catalogosView é a cena inteira numa resposta.
@@ -438,6 +441,9 @@ type catalogosView struct {
 	Aba string
 	// Entrada é o id do verbete que a cena está mostrando sozinho, ou vazio.
 	Entrada string
+	// Filtros é o que a cena tem para oferecer, e Acesos o que está ligado.
+	Filtros []filtroDoAcervo
+	Acesos  map[string][]string
 	Grupos  []grupoDoAcervo
 	Achados int
 }
@@ -447,7 +453,11 @@ func (v catalogosView) Buscando() bool { return strings.TrimSpace(v.Busca) != ""
 // carregaCatalogos monta a cena: os quatro catálogos quando há busca, um só
 // quando não há.
 func carregaCatalogos(c criteriosDoAcervo, livro enderecoDoLivro) catalogosView {
-	v := catalogosView{Busca: c.Busca, Aba: abaConhecida(c.Aba), Livro: livro, Entrada: c.Entrada}
+	v := catalogosView{
+		Busca: c.Busca, Aba: abaConhecida(c.Aba), Livro: livro, Entrada: c.Entrada,
+		Acesos: c.Filtros,
+	}
+	v.Filtros = filtrosDaAba(v.Aba)
 	// A ENTRADA vem primeiro e encerra: ela é um endereço para um verbete só, e
 	// misturá-la com busca daria uma tela que responde duas perguntas.
 	if c.Entrada != "" {
@@ -459,7 +469,7 @@ func carregaCatalogos(c criteriosDoAcervo, livro enderecoDoLivro) catalogosView 
 	a := catalogosDoLivro()
 
 	if !v.Buscando() {
-		v.Grupos = []grupoDoAcervo{grupoDaAba(a, v.Aba)}
+		v.Grupos = []grupoDoAcervo{grupoDaAba(a, v.Aba, c.Filtros)}
 		v.Achados = v.Grupos[0].Quantos()
 		return v
 	}
@@ -494,7 +504,9 @@ func carregaCatalogos(c criteriosDoAcervo, livro enderecoDoLivro) catalogosView 
 // Id desconhecido devolve grupo VAZIO, e a cena diz que não achou — endereço se
 // digita à mão e catálogo muda; inventar um verbete seria pior.
 func grupoDaEntrada(aba, id string) grupoDoAcervo {
-	inteiro := grupoDaAba(catalogosDoLivro(), aba)
+	// Sem filtro: o elo pede UM verbete pelo id, e um crachá aceso na cena de
+	// origem não pode esconder o destino do elo.
+	inteiro := grupoDaAba(catalogosDoLivro(), aba, nil)
 	fora := grupoDoAcervo{Rotulo: inteiro.Rotulo}
 	for _, c := range inteiro.Condicoes {
 		if c.ID == id {
@@ -539,25 +551,26 @@ func grupoDaEntrada(aba, id string) grupoDoAcervo {
 	return fora
 }
 
-func grupoDaAba(a acervoDoMestre, aba string) grupoDoAcervo {
+// grupoDaAba monta o catálogo da cena, já com os crachás aplicados.
+func grupoDaAba(a acervoDoMestre, aba string, acesos map[string][]string) grupoDoAcervo {
 	racas, classes, deuses := catalogosDoPersonagem()
 	switch aba {
 	case "magias":
-		return grupoDoAcervo{Rotulo: "Magias", Magias: a.Magias}
+		return grupoDoAcervo{Rotulo: "Magias", Magias: aplicaFiltros(a.Magias, acesos, magiaCasa)}
 	case "poderes":
-		return grupoDoAcervo{Rotulo: "Poderes", Poderes: a.Poderes}
+		return grupoDoAcervo{Rotulo: "Poderes", Poderes: aplicaFiltros(a.Poderes, acesos, poderCasa)}
 	case "itens":
-		return grupoDoAcervo{Rotulo: "Itens", Itens: a.Itens}
+		return grupoDoAcervo{Rotulo: "Itens", Itens: aplicaFiltros(a.Itens, acesos, itemCasa)}
 	case "efeitos":
 		return grupoDoAcervo{Rotulo: "Efeitos", Efeitos: tiposDeEfeito()}
 	case "racas":
-		return grupoDoAcervo{Rotulo: "Raças", Racas: racas}
+		return grupoDoAcervo{Rotulo: "Raças", Racas: aplicaFiltros(racas, acesos, racaCasa)}
 	case "classes":
 		return grupoDoAcervo{Rotulo: "Classes", Classes: classes}
 	case "deuses":
-		return grupoDoAcervo{Rotulo: "Deuses", Deuses: deuses}
+		return grupoDoAcervo{Rotulo: "Deuses", Deuses: aplicaFiltros(deuses, acesos, deusCasa)}
 	default:
-		return grupoDoAcervo{Rotulo: "Condições", Condicoes: a.Condicoes}
+		return grupoDoAcervo{Rotulo: "Condições", Condicoes: aplicaFiltros(a.Condicoes, acesos, condicaoCasa)}
 	}
 }
 
@@ -604,6 +617,26 @@ func nomeDoAlcance(a string) string {
 	return a
 }
 
+// rotuloDaEscola escreve a escola de magia como o livro (p172). O dado guarda
+// sem acento porque é chave.
+var rotuloDaEscola = map[string]string{
+	"abjuracao":    "Abjuração",
+	"adivinhacao":  "Adivinhação",
+	"convocacao":   "Convocação",
+	"encantamento": "Encantamento",
+	"evocacao":     "Evocação",
+	"ilusao":       "Ilusão",
+	"necromancia":  "Necromancia",
+	"transmutacao": "Transmutação",
+}
+
+func nomeDaEscola(e string) string {
+	if r, ok := rotuloDaEscola[e]; ok {
+		return r
+	}
+	return e
+}
+
 var rotuloDaCategoria = map[string]string{
 	"weapon-simple":  "Arma simples",
 	"weapon-martial": "Arma marcial",
@@ -635,7 +668,36 @@ func nomeDaCategoria(c string) string {
 func sinaisDosCatalogos(v catalogosView) string {
 	busca, _ := json.Marshal(v.Busca)
 	aba, _ := json.Marshal(v.Aba)
-	return fmt.Sprintf(`{busca: %s, aba: %s}`, busca, aba)
+	partes := []string{fmt.Sprintf("busca: %s", busca), fmt.Sprintf("aba: %s", aba)}
+	// UM sinal por filtro da cena, e só os DELA: um sinal de círculo declarado
+	// na cena das condições viajaria em toda requisição dali para nada.
+	for _, f := range v.Filtros {
+		valores, _ := json.Marshal(v.Acesos[f.Chave])
+		if v.Acesos[f.Chave] == nil {
+			valores = []byte("[]")
+		}
+		partes = append(partes, fmt.Sprintf("%s: %s", f.Chave, valores))
+	}
+	return "{" + strings.Join(partes, ", ") + "}"
+}
+
+// crachaAceso diz se aquele valor está ligado, para a cena não precisar de
+// `slices`.
+func (v catalogosView) crachaAceso(chave, valor string) bool {
+	return slices.Contains(v.Acesos[chave], valor)
+}
+
+// alternaOCracha é a expressão que o clique roda: liga o que está desligado e
+// desliga o que está ligado, no sinal daquele filtro.
+//
+// Escrita aqui e não no templ porque é a MESMA para os seis filtros, e uma
+// linha de JavaScript copiada seis vezes é a que diverge na sétima.
+func alternaOCracha(aba, chave, valor string) string {
+	sinal := "$" + chave
+	return fmt.Sprintf(
+		"%s = %s.includes(%q) ? %s.filter(v => v !== %q) : [...%s, %q]; @get('/piloto/mestre/%s')",
+		sinal, sinal, valor, sinal, valor, sinal, valor, aba,
+	)
 }
 
 // nomeDaCondicao resolve o id de uma condição no nome que se lê.

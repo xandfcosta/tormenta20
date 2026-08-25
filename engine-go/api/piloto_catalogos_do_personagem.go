@@ -225,9 +225,18 @@ func camposDoDeus(d deusDoLivro) []string {
 // identificador, como `nomeDaCategoria` e `nomeDoTipo`, em vez de inventar uma
 // palavra nova em português para um conceito que a tela mostra só como
 // "Comum"/"Exótica" — o livro tem a seção "Raças Exóticas" e nada além disso.
+//
+// O valor é `extra` e NÃO `exotica`, e isto é conserto de um defeito que só
+// apareceu ao medir o dado para montar o filtro: eu tinha escrito `exotica`, e
+// como o `else` devolve "Comum", as DEZESSETE raças diziam Comum — inclusive as
+// nove exóticas. Um `switch` com valor desconhecido devolvendo o valor cru seria
+// feio na tela e visível; um `else` com um dos dois rótulos é mentira silenciosa.
 func nomeDoTier(tier string) string {
-	if tier == "exotica" {
+	switch tier {
+	case "extra":
 		return "Exótica"
+	case "comum":
+		return "Comum"
 	}
-	return "Comum"
+	return tier
 }
