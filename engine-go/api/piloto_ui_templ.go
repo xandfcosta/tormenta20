@@ -1238,6 +1238,26 @@ const atalhoDoBuscador = `(evt.key === 'k' || evt.key === 'K') && (evt.ctrlKey |
 	`document.getElementById('buscador').open || document.getElementById('buscador').showModal(), ` +
 	`document.getElementById('buscador-campo').select())`
 
+// abreOLivroPorCima troca a ida para outra aba por um diálogo sobre a cena.
+//
+// Ele DEIXA PASSAR o clique modificado (Ctrl, ⌘, Shift, botão do meio) e o
+// `target="_blank"` cuida desses: quem pede outra aba está pedindo outra aba, e
+// sequestrar isso é o defeito clássico de link que virou botão.
+//
+// O endereço ganha `&dialogo=1`, que é o que faz a cena de dentro esconder o
+// link de VOLTAR — ver `leitorView.EmDialogo`.
+//
+// O `<iframe>` é a escolha de PERFORMANCE, e ela é medida: o pdf.js são 1,8 MB
+// (540 KB do módulo e 1,3 MB do worker) mais um canvas de alguns milhões de
+// pixels. Num `import()` dinâmico isso tudo passaria a viver DENTRO da cena dos
+// catálogos, que já desenha 992 cartões, e continuaria vivo depois de fechar.
+// Com iframe, o custo nasce no clique e MORRE no fechamento: `about:blank`
+// descarta o documento, o worker e o bitmap de uma vez.
+const abreOLivroPorCima = `(evt.metaKey || evt.ctrlKey || evt.shiftKey || evt.button !== 0) || (` +
+	`evt.preventDefault(), ` +
+	`document.getElementById('livro-em-dialogo').querySelector('iframe').src = el.getAttribute('href') + '&dialogo=1', ` +
+	`document.getElementById('livro-em-dialogo').showModal())`
+
 // atalhosDaCasca é o que o `keydown` da janela roda, e eles vão num atributo SÓ.
 //
 // Dois `data-on:keydown__window` no mesmo elemento não somam: é atributo
@@ -1285,8 +1305,10 @@ const andaNoBuscador = `['ArrowDown', 'ArrowUp'].includes(evt.key) && (evt.preve
 // chegando, que é o caminho certo para um atalho de saída. Nos catálogos vale o
 // mesmo: são centenas de cartões, e cada um viraria uma parada da seta.
 //
-// `target="_blank"` porque a mesa está aberta atrás: trocar a cena pelo livro
-// perderia a fila da iniciativa no meio do combate.
+// O clique abre o livro POR CIMA da cena, num diálogo — a mesa continua atrás,
+// com a fila da iniciativa onde estava. E ele continua sendo um `<a href>` de
+// verdade: o `target="_blank"` é o que sobra para o clique do meio, o Ctrl e o
+// "abrir em nova aba", que o `abreOLivroPorCima` deixa passar de propósito.
 //
 // O `termo` é o que o leitor DESTACA na página. Vem de quem chama e não do
 // número: é o nome do verbete, e é ele que o olho procura ao chegar.
@@ -1318,39 +1340,92 @@ func aPaginaDoLivro(livro enderecoDoLivro, pagina int, termo string) templ.Compo
 		var templ_7745c5c3_Var53 templ.SafeURL
 		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(livro.naPagina(pagina, termo)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 485, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 507, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "\" target=\"_blank\" rel=\"noopener\" data-nav-skip title=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "\" data-on:click=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var54 string
-		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("Abrir o livro na página %d", pagina))
+		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.ResolveAttributeValue(abreOLivroPorCima)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 489, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 508, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var54)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "\" class=\"rounded-sm underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "\" target=\"_blank\" rel=\"noopener\" data-nav-skip title=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var55 string
-		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("p%d ↗", pagina))
+		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("Abrir o livro na página %d", pagina))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 491, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 512, Col: 60}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var55)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "</a>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "\" class=\"rounded-sm underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var56 string
+		templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("p%d ↗", pagina))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 514, Col: 34}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "</a>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+// oLivroEmDialogo é a moldura que a casca desenha uma vez por página.
+//
+// Ela nasce VAZIA: o `<iframe>` sem `src` não carrega nada, então uma cena que
+// nunca abre o livro não paga um byte de pdf.js. O `close` devolve o iframe ao
+// `about:blank`, e é essa linha que faz a memória voltar — sem ela, o worker e o
+// bitmap da página ficariam vivos até a navegação seguinte.
+//
+// `<dialog>` nativo pelo mesmo motivo do buscador: foco preso, Esc, fundo inerte
+// e camada de topo. E o driver de teclado da cena se recolhe sozinho, porque ele
+// procura `dialog[open]` — as setas passam a ser do livro, que é o que se quer
+// com o livro aberto na frente.
+func oLivroEmDialogo() templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var57 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var57 == nil {
+			templ_7745c5c3_Var57 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "<dialog id=\"livro-em-dialogo\" data-preserve-attr=\"open\" aria-label=\"O livro\" data-on:close=\"el.querySelector('iframe').src = 'about:blank'\" class=\"scene-grimorio m-auto h-[min(92vh,60rem)] w-[min(72rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-0 text-foreground backdrop:bg-black/70\"><button type=\"button\" aria-label=\"Fechar o livro\" data-on:click=\"el.closest('dialog').close()\" class=\"absolute right-2 top-2 z-10 flex size-11 items-center justify-center rounded-sm border border-grimorio-iron bg-grimorio-panel text-lg text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">×</button> <iframe title=\"O livro\" class=\"size-full border-0\"></iframe></dialog>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1381,9 +1456,9 @@ func seloDaPagina(livro enderecoDoLivro, pagina int, termo string) templ.Compone
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var56 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var56 == nil {
-			templ_7745c5c3_Var56 = templ.NopComponent
+		templ_7745c5c3_Var58 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var58 == nil {
+			templ_7745c5c3_Var58 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		if pagina > 0 {
@@ -1393,20 +1468,20 @@ func seloDaPagina(livro enderecoDoLivro, pagina int, termo string) templ.Compone
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "<span class=\"font-mono text-3xs text-muted-foreground\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, "<span class=\"font-mono text-3xs text-muted-foreground\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var57 string
-				templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("p%d", pagina))
+				var templ_7745c5c3_Var59 string
+				templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("p%d", pagina))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 506, Col: 86}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_ui.templ`, Line: 558, Col: 86}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var59))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "</span>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "</span>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

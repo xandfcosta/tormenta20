@@ -82,3 +82,45 @@ test('as setas andam pelo livro e a barra diz a página impressa', async ({ page
   await page.locator('[data-acao="anterior"]').click()
   await expect(rotulo).toHaveText(/p290 de \d+/)
 })
+
+test('o livro abre POR CIMA da cena e o fechar devolve a memória', async ({ page }) => {
+  await page.setViewportSize({ width: 1400, height: 900 })
+  await page.goto('/piloto/mestre/catalogos?aba=condicoes')
+
+  const botao = page.locator('a[href*="/piloto/livro/ler"]').first()
+  if ((await botao.count()) === 0) {
+    test.skip(true, 'esta bancada não serve o livro (LIVRO_PDF vazio)')
+    return
+  }
+
+  const dialogo = page.locator('#livro-em-dialogo')
+  // O CONTROLE: a moldura existe e nasce VAZIA. É isso que faz uma cena que
+  // nunca abre o livro não pagar um byte de pdf.js.
+  await expect(dialogo).toBeAttached()
+  expect(await dialogo.locator('iframe').getAttribute('src')).toBeNull()
+
+  // DUAS aberturas seguidas, e não uma: a segunda é a que prova que fechar não
+  // deixou o leitor num estado que impede a próxima. Sondando por CDP eu vi a
+  // segunda falhar e quase consertei um defeito que não existia — o que estava
+  // quebrado era a página em que eu tinha mexido à mão.
+  for (const indice of [0, 3]) {
+    await page.locator('a[href*="/piloto/livro/ler"]').nth(indice).click()
+    expect(await dialogo.evaluate((d: HTMLDialogElement) => d.open)).toBe(true)
+    // A CENA CONTINUA ATRÁS — é a diferença entre isto e a aba nova: a fila da
+    // iniciativa e os filtros do acervo ficam onde estavam.
+    await expect(page.locator('[data-slot="scene-content"]')).toBeVisible()
+
+    const dentro = dialogo.frameLocator('iframe')
+    await expect(dentro.locator('#leitor[data-pronto]')).toBeAttached({ timeout: 30_000 })
+    await expect(dentro.locator('.leitor-marca').first()).toBeAttached()
+
+    await dialogo.locator('button[aria-label="Fechar o livro"]').click()
+    expect(await dialogo.evaluate((d: HTMLDialogElement) => d.open)).toBe(false)
+    // E o documento do livro é DESCARTADO. Sem isto o worker do pdf.js e o
+    // bitmap da página ficariam vivos até a navegação seguinte — a conta de
+    // memória que o iframe existe para poder zerar.
+    await expect
+      .poll(async () => await dialogo.locator('iframe').evaluate((f: HTMLIFrameElement) => f.src))
+      .toBe('about:blank')
+  }
+})

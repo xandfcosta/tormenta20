@@ -169,6 +169,12 @@ type leitorView struct {
 	Abertura int
 	Termo    string
 	Voltar   string
+	// EmDialogo diz que esta cena está dentro do `<iframe>` do diálogo que a
+	// casca desenha, e não numa aba própria. A diferença na tela é o link de
+	// VOLTAR: dentro do diálogo ele levaria o iframe para a cena anterior, com a
+	// mesa aparecendo miniaturizada dentro de uma caixa — quem fecha é o ✕ do
+	// diálogo, que é do lado de fora.
+	EmDialogo bool
 }
 
 // carregaOLeitor lê a URL e recusa o que não faz sentido.
@@ -189,11 +195,12 @@ func (s *Server) carregaOLeitor(r *http.Request) leitorView {
 		voltar = "/piloto/"
 	}
 	return leitorView{
-		PDF:      s.livro.endereco.Base,
-		Pagina:   pagina,
-		Abertura: s.livro.endereco.Abertura,
-		Termo:    r.URL.Query().Get("t"),
-		Voltar:   voltar,
+		PDF:       s.livro.endereco.Base,
+		Pagina:    pagina,
+		Abertura:  s.livro.endereco.Abertura,
+		Termo:     r.URL.Query().Get("t"),
+		Voltar:    voltar,
+		EmDialogo: r.URL.Query().Get("dialogo") != "",
 	}
 }
 

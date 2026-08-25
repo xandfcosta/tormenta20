@@ -15,10 +15,12 @@ import "fmt"
 templ leitorDoLivro(v leitorView) {
 	<div class="flex h-full min-h-0 flex-col">
 		<div class="flex flex-wrap items-center gap-2 border-b border-grimorio-iron px-3 py-2">
-			<a
-				href={ templ.SafeURL(v.Voltar) }
-				class="inline-flex min-h-11 items-center px-2 font-heading text-sm tracking-wide text-muted-foreground outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-			>‹ Voltar</a>
+			if !v.EmDialogo {
+				<a
+					href={ templ.SafeURL(v.Voltar) }
+					class="inline-flex min-h-11 items-center px-2 font-heading text-sm tracking-wide text-muted-foreground outline-none transition-colors hover:text-grimorio-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				>‹ Voltar</a>
+			}
 			if v.Termo != "" {
 				<p class="font-heading text-base tracking-wide text-grimorio-gold">{ v.Termo }</p>
 			}

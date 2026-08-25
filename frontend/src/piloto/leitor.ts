@@ -228,6 +228,18 @@ export function montaOLeitor(): void {
     if (document.querySelector('dialog[open]')) return
     if (evento.key === 'ArrowRight') leitor.vai(1)
     if (evento.key === 'ArrowLeft') leitor.vai(-1)
+    // O Esc ATRAVESSA o iframe. Dentro do diálogo da cena, o foco fica no
+    // documento de dentro, e o Esc do `<dialog>` é do documento de FORA — sem
+    // esta linha, quem lê pelo teclado não tem como fechar o livro. Mesma
+    // origem, então falar com o pai é permitido; o `try` cobre o dia em que
+    // alguém embutir esta cena de outro lugar.
+    if (evento.key === 'Escape' && window.parent !== window) {
+      try {
+        window.parent.document.querySelector<HTMLDialogElement>('#livro-em-dialogo')?.close()
+      } catch {
+        /* origem diferente: não há o que fechar daqui */
+      }
+    }
   })
 
   void leitor.abre().catch((erro: unknown) => {

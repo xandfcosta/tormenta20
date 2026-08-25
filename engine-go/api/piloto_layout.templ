@@ -205,6 +205,10 @@ templ layout(p paginaPiloto, corpo templ.Component) {
 				// pedido. É o que o `TestPortaNaoPoeNadaEmSinalDoDatastar` cobra.
 				if !p.SemEstadoDeCliente {
 					@buscadorDoLivro()
+					// O livro por cima da cena (ALE-264). Nasce vazio: sem `src`
+					// no `<iframe>`, quem nunca abre o livro não paga um byte do
+					// pdf.js. Fora da porta pela mesma razão do buscador.
+					@oLivroEmDialogo()
 				}
 			</section>
 		</body>
