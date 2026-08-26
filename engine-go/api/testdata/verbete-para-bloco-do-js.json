@@ -1,0 +1,183 @@
+{
+  "_": "GERADO por scripts/dump-verbete-oracle.ts. Não edite à mão.",
+  "casos": [
+    {
+      "id": "ogro",
+      "nota": "o caso comum: ataque, perícias, habilidade especial",
+      "bloco": {
+        "nd": 4,
+        "tipo": "humanoide",
+        "size": "grande",
+        "iniciativa": 3,
+        "percepcao": 1,
+        "defesa": 23,
+        "fortitude": 16,
+        "reflexos": 10,
+        "vontade": 0,
+        "hp": 130,
+        "deslocamento": "9m",
+        "forca": 7,
+        "destreza": 0,
+        "constituicao": 4,
+        "inteligencia": -3,
+        "sabedoria": -2,
+        "carisma": -2,
+        "attacks": [
+          {
+            "name": "Tacape",
+            "attackBonus": 16,
+            "damage": "1d12+18"
+          }
+        ],
+        "skills": [
+          {
+            "name": "Atletismo",
+            "bonus": 12
+          },
+          {
+            "name": "Intuição",
+            "bonus": -5
+          }
+        ],
+        "equipment": "Tacape aumentado",
+        "treasure": "Padrão",
+        "specialAbilities": [
+          "Burro Demais...: -5 em Intuição e Vontade (já contabilizado).",
+          "...Para Morrer!: dano de corte, impacto e perfuração reduzido à metade.",
+          "Visão na penumbra."
+        ],
+        "sourceMonsterId": "ogro"
+      }
+    },
+    {
+      "id": "zumbi",
+      "nota": "ATRIBUTO AUSENTE — o livro escreve travessão em Int (p297), e o bloco vira 0",
+      "bloco": {
+        "nd": 0.25,
+        "tipo": "morto-vivo",
+        "size": "medio",
+        "iniciativa": -1,
+        "percepcao": -1,
+        "defesa": 11,
+        "fortitude": 3,
+        "reflexos": -1,
+        "vontade": -1,
+        "hp": 20,
+        "deslocamento": "6m",
+        "forca": 3,
+        "destreza": -1,
+        "constituicao": 2,
+        "inteligencia": 0,
+        "sabedoria": -1,
+        "carisma": 0,
+        "attacks": [
+          {
+            "name": "Mordida",
+            "attackBonus": 7,
+            "damage": "1d6+6"
+          }
+        ],
+        "skills": [],
+        "equipment": "",
+        "treasure": "Nenhum",
+        "specialAbilities": [
+          "Fraqueza Zumbi: dobro de dano em críticos ou ataques contra cérebro (Defesa 21).",
+          "Visão no escuro; imunidades de morto-vivo (cansaço/metabólicos/trevas/veneno)."
+        ],
+        "sourceMonsterId": "zumbi"
+      }
+    },
+    {
+      "id": "dragao-jovem",
+      "nota": "conjurador: o PM existe e atravessa",
+      "bloco": {
+        "nd": 7,
+        "tipo": "monstro",
+        "size": "grande",
+        "iniciativa": 11,
+        "percepcao": 11,
+        "pm": 15,
+        "defesa": 32,
+        "fortitude": 20,
+        "reflexos": 9,
+        "vontade": 12,
+        "hp": 320,
+        "deslocamento": "12m, voo 18m",
+        "forca": 7,
+        "destreza": 2,
+        "constituicao": 6,
+        "inteligencia": 2,
+        "sabedoria": 2,
+        "carisma": 2,
+        "attacks": [
+          {
+            "name": "Mordida",
+            "attackBonus": 25,
+            "damage": "2d6+14",
+            "special": "crítico 19"
+          },
+          {
+            "name": "Duas garras",
+            "attackBonus": 25,
+            "damage": "1d8+14",
+            "special": "crítico 19"
+          }
+        ],
+        "skills": [
+          {
+            "name": "Intimidação",
+            "bonus": 11
+          }
+        ],
+        "equipment": "",
+        "treasure": "Dobro e 2 peças de couro de dragão (CD 22 para extrair, veja o quadro na página 312)",
+        "specialAbilities": [
+          "Sopro (padrão, recarga mov): cone 9m, 6d12 fogo + em chamas (Ref CD 25 reduz à metade e evita).",
+          "Varrer (livre): 1×/rod, reduzir alvo a 0 PV concede ataque adicional contra adjacente.",
+          "Redução de dano 5; imune fogo; vulnerável frio; resistência a magia +2.",
+          "Metamorfose Dracônica; percepção às cegas."
+        ],
+        "sourceMonsterId": "dragao-jovem"
+      }
+    },
+    {
+      "id": "goblin-salteador",
+      "nota": "sem PM: a AUSÊNCIA atravessa, e não vira zero",
+      "bloco": {
+        "nd": 0.25,
+        "tipo": "humanoide",
+        "size": "pequeno",
+        "iniciativa": 5,
+        "percepcao": 1,
+        "defesa": 13,
+        "fortitude": 2,
+        "reflexos": 3,
+        "vontade": -1,
+        "hp": 4,
+        "deslocamento": "9m, escalada 9m",
+        "forca": 0,
+        "destreza": 3,
+        "constituicao": 0,
+        "inteligencia": 0,
+        "sabedoria": -1,
+        "carisma": -1,
+        "attacks": [
+          {
+            "name": "Duas adagas",
+            "attackBonus": 7,
+            "damage": "1d4",
+            "special": "crítico 19"
+          }
+        ],
+        "skills": [],
+        "equipment": "Adagas x2",
+        "treasure": "Padrão",
+        "specialAbilities": [
+          "Frenesi: +2 em ataque e dano por cada outro goblin salteador adjacente ao alvo.",
+          "Visão no escuro."
+        ],
+        "sourceMonsterId": "goblin-salteador"
+      }
+    }
+  ]
+}

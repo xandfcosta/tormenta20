@@ -58,6 +58,10 @@ type mesaView struct {
 	// vez de cuspir HTML. Nasce aqui e não no template porque parsear em
 	// template é regra escondida onde ninguém a testa.
 	NotasBlocos []mdBloco
+	// NPCs é o elenco da CAMPANHA (ALE-269, superfície 6b) — o taverneiro que
+	// não briga e o chefe da semana que vem. Do mestre, como as notas: a view do
+	// jogador não o tem, e por isso não há o que a tela dele esconder.
+	NPCs []npcDoElenco
 }
 
 // mesaTurn é de quem é a vez, do ponto de vista de quem olha. Espelha o

@@ -1,0 +1,92 @@
+package api
+
+import (
+	"encoding/json"
+	"os"
+	"reflect"
+	"testing"
+)
+
+// A PARIDADE DA CÓPIA COM O JS (ALE-269, superfície 6b).
+//
+// Enquanto as duas telas existirem, o mestre pode copiar o Ogro pela SPA numa
+// noite e pelo piloto na outra, e o bloco vai para a MESMA coluna do MESMO
+// banco. Duas cópias diferentes do mesmo verbete é a divergência mais cara
+// possível aqui, porque ela não aparece: os dois blocos são JSON válido.
+//
+// O esperado é MEDIDO rodando o `creature-from-monster.ts` de verdade:
+//
+//	node scripts/dump-verbete-oracle.ts
+//
+// Digitar os campos à mão em Go seria uma segunda transcrição da regra — e é a
+// segunda transcrição que diverge em silêncio, sempre.
+
+type oraculoDaCopia struct {
+	Casos []struct {
+		ID    string        `json:"id"`
+		Nota  string        `json:"nota"`
+		Bloco CreatureBlock `json:"bloco"`
+	} `json:"casos"`
+}
+
+func TestACopiaDoVerbeteCasaComOJS(t *testing.T) {
+	bruto, err := os.ReadFile("testdata/verbete-para-bloco-do-js.json")
+	if err != nil {
+		t.Fatalf("oráculo ausente (rode `node scripts/dump-verbete-oracle.ts`): %v", err)
+	}
+	var oraculo oraculoDaCopia
+	if err := json.Unmarshal(bruto, &oraculo); err != nil {
+		t.Fatalf("oráculo ilegível: %v", err)
+	}
+	// O CONTROLE: um oráculo vazio faria o laço passar verde sem comparar nada.
+	if len(oraculo.Casos) == 0 {
+		t.Fatal("o oráculo está vazio — o laço abaixo não compararia nada")
+	}
+	livro := criaturasDoLivro()
+	if len(livro) == 0 {
+		t.Fatal("o bestiário do Go veio vazio — não há de onde copiar")
+	}
+
+	for _, caso := range oraculo.Casos {
+		t.Run(caso.ID+" — "+caso.Nota, func(t *testing.T) {
+			v := escolhidoOuPrimeiro(livro, caso.ID)
+			if v == nil || v.ID != caso.ID {
+				t.Fatalf("o verbete %q não existe no bestiário do Go", caso.ID)
+			}
+			meu := copiaDoVerbete(*v)
+			if reflect.DeepEqual(meu, caso.Bloco) {
+				return
+			}
+			doJS, _ := json.Marshal(caso.Bloco)
+			doGo, _ := json.Marshal(meu)
+			t.Errorf("a cópia divergiu\n  o JS dá: %s\n  o Go dá: %s", doJS, doGo)
+		})
+	}
+}
+
+// TestACopiaNaoCOMPARTILHA fatia com o catálogo.
+//
+// O catálogo é EMBUTIDO e servido à mesa inteira; o bloco nasce para ser
+// editado. Se os dois dividissem o mesmo array, o mestre mexer no ataque do seu
+// "Ogro Capitão" mexeria no verbete que o bestiário desenha para todo mundo — e
+// a fonte do livro passaria a mentir para quem a consultasse depois, sem nada
+// na tela dizendo por quê.
+//
+// `reflect.DeepEqual` não pega isto: duas fatias que compartilham memória são
+// profundamente iguais. Só a MUTAÇÃO revela.
+func TestACopiaNaoCompartilhaFatiaComOCatalogo(t *testing.T) {
+	livro := criaturasDoLivro()
+	v := escolhidoOuPrimeiro(livro, "ogro")
+	if v == nil || len(v.Attacks) == 0 {
+		t.Skip("o ogro do catálogo não tem ataque para mexer")
+	}
+	original := v.Attacks[0].Name
+
+	bloco := copiaDoVerbete(*v)
+	bloco.Attacks[0].Name = "MEXIDO PELO MESTRE"
+
+	if v.Attacks[0].Name != original {
+		t.Errorf("editar o bloco do mestre reescreveu o VERBETE do livro: %q virou %q",
+			original, v.Attacks[0].Name)
+	}
+}

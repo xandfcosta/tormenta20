@@ -78,6 +78,7 @@ func (s *Server) PilotoRouter() http.Handler {
 		s.rotasDaSessao(r)
 		s.rotasDasNotas(r)
 		s.rotasDoElenco(r)
+		s.rotasDosNPCs(r)
 	})
 	// A SEGUNDA superfície (ALE-219): a administração. Mesmo `requireAdmin` da
 	// API — a tela não decide quem pode ver, ela só deixa de oferecer o que o
@@ -144,7 +145,7 @@ func (s *Server) handleMesaPage(w http.ResponseWriter, r *http.Request) {
 		// terceira cópia da mesma escolha (a lista, o servidor e a página), e a
 		// que fica para trás quando alguém trocar o padrão é justamente esta —
 		// o formulário nasceria oferecendo um chão e o servidor abrindo outro.
-		Sinais: fmt.Sprintf("{d20: 10, erro: '', erroDoComando: '', erroDoMovimento: '', novolugar: '', novochao: '%s', ferramenta: '', apagando: false, marcadorescolhido: '', escolhidosdomapa: '', qualidadedodescanso: 'normal', formdecombatente: false, linhadacondicao: '', condicoesdalinha: '', rotulodalinha: '', novonome: '', novainiciativa: 10, novopv: 0, novotipo: 'npc', edicaolinha: '', edicaonome: '', edicaoiniciativa: 0, edicaopv: 0, edicaopvmax: 0, rascunhode: '', pvdoverbete: 0, inidoverbete: 10, copiasdoverbete: 1, quadrado: %d, arrastando: '', arrastoinix: 0, arrastoiniy: 0, arrastox: 0, arrastoy: 0, notas: '', notassalvas: '', notasmodo: 'duplo', notasabertas: false, notassalvando: false, erroDasNotas: ''}", tabuleiro.ChaoPadrao(), quadradoPadrao),
+		Sinais: fmt.Sprintf("{d20: 10, erro: '', erroDoComando: '', erroDoMovimento: '', novolugar: '', novochao: '%s', ferramenta: '', apagando: false, marcadorescolhido: '', escolhidosdomapa: '', qualidadedodescanso: 'normal', formdecombatente: false, linhadacondicao: '', condicoesdalinha: '', rotulodalinha: '', novonome: '', novainiciativa: 10, novopv: 0, novotipo: 'npc', edicaolinha: '', edicaonome: '', edicaoiniciativa: 0, edicaopv: 0, edicaopvmax: 0, rascunhode: '', pvdoverbete: 0, inidoverbete: 10, copiasdoverbete: 1, quadrado: %d, arrastando: '', arrastoinix: 0, arrastoiniy: 0, arrastox: 0, arrastoy: 0, notas: '', notassalvas: '', notasmodo: 'duplo', notasabertas: false, notassalvando: false, erroDasNotas: '', nomedonpc: ''}", tabuleiro.ChaoPadrao(), quadradoPadrao),
 		Init:   fmt.Sprintf("@get('/piloto/mesa/%d/%d/stream')", campaignID, sessionID),
 	}, s.corpoDaMesa(r, view, campaignID, sessionID))
 }
@@ -225,6 +226,9 @@ func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, se
 	if role == "gm" && sess.Notes.Valid {
 		view.Notas = sess.Notes.String
 		view.NotasBlocos = parseNota(sess.Notes.String)
+	}
+	if role == "gm" {
+		view.NPCs = s.oElencoDaCampanha(ctx, campaignID)
 	}
 	if role == "gm" {
 		membros, presentes := s.membrosEPresenca(ctx, campaignID, sessionID)

@@ -1,0 +1,143 @@
+package api
+
+import "fmt"
+
+// O PAINEL DO ELENCO (ALE-269, superfície 6b): os NPCs da campanha.
+//
+// Ele é uma CONSULTA do trilho direito — abre com uma pergunta na cabeça ("quem
+// eu já preparei?") e fecha em seguida —, e não uma coluna permanente como as
+// notas. O trilho é o lugar previsível de onde se chama o que se consulta.
+//
+// A palavra "Elenco" aparece em dois lugares e é o MESMO conceito em duas
+// densidades, como na SPA: o trilho esquerdo mostra os jogadores recolhidos em
+// retratos, e este painel mostra o elenco inteiro — os jogadores e os NPCs. Não
+// é a colisão que o GLOSSARIO proíbe; é a mesma coisa de perto e de longe.
+templ mesaElencoDaCampanha(v mesaView) {
+	<dialog
+		id="elenco-da-campanha"
+		data-preserve-attr="open"
+		aria-labelledby="elenco-da-campanha-titulo"
+		class="scene-grimorio m-auto hidden h-[min(40rem,calc(100vh-2rem))] w-[min(40rem,calc(100vw-2rem))] flex-col gap-3 rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground open:flex backdrop:bg-black/60"
+	>
+		<div class="flex shrink-0 items-start justify-between gap-3">
+			<div>
+				<h2 id="elenco-da-campanha-titulo" class="font-heading text-lg tracking-wide text-grimorio-gold">Elenco da campanha</h2>
+				<p class="text-xs text-muted-foreground">Quem existe nesta campanha fora da fila do combate. Eles voltam semana que vem.</p>
+			</div>
+			<button
+				type="button"
+				aria-label="Fechar o elenco"
+				data-on:click="document.getElementById('elenco-da-campanha').close()"
+				class="flex size-8 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>
+				@icone("X", "size-4")
+			</button>
+		</div>
+		<div class="min-h-0 flex-1 overflow-y-auto">
+			@mesaListaDeNPCs(v)
+		</div>
+		<p class="shrink-0 border-t border-grimorio-iron pt-3 text-xs text-muted-foreground">
+			Para guardar alguém novo, abra o bestiário e use <span class="text-foreground">Guardar no elenco</span> — a cópia nasce com os números do livro e você muda o que quiser.
+		</p>
+	</dialog>
+}
+
+// A LISTA é região própria (`mesa-npcs`): ela muda quando o mestre guarda ou
+// apaga um NPC, que é um ritmo completamente diferente do da fila e do mapa.
+// Pendurá-la em qualquer um dos dois faria o outro ser remendado de graça.
+templ mesaListaDeNPCs(v mesaView) {
+	<div id="mesa-npcs" class="space-y-2">
+		if len(v.NPCs) == 0 {
+			<p class="border border-dashed border-grimorio-iron p-6 text-center text-sm text-muted-foreground">
+				Nenhum NPC guardado ainda.
+			</p>
+		} else {
+			for _, npc := range v.NPCs {
+				@umNPCDoElenco(v, npc)
+			}
+		}
+	</div>
+}
+
+templ umNPCDoElenco(v mesaView, npc npcDoElenco) {
+	<article class="flex flex-wrap items-center gap-x-3 gap-y-2 border border-grimorio-iron bg-card/60 p-3">
+		<div class="min-w-0 flex-1">
+			<p class="flex flex-wrap items-baseline gap-x-2">
+				<span class="truncate font-medium text-foreground">{ npc.Nome }</span>
+				if npc.DoLivro != "" && npc.DoLivro != npc.Nome {
+					<span class="text-2xs uppercase tracking-widest text-muted-foreground">cópia de { npc.DoLivro }</span>
+				}
+			</p>
+			if npc.Resumo != "" {
+				<p class="truncate text-xs text-muted-foreground">{ npc.Resumo }</p>
+			} else {
+				<p class="text-xs text-destructive">O bloco deste NPC está ilegível — dá para apagar.</p>
+			}
+		</div>
+		<div class="flex shrink-0 items-center gap-1.5">
+			if npc.PV > 0 {
+				<button
+					type="button"
+					data-on:click={ comandoDoNPC(v, npc, "na-fila") }
+					class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-gold px-3 text-sm text-grimorio-gold outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				>
+					@icone("Swords", "size-4")
+					Pôr na fila
+				</button>
+			}
+			<button
+				type="button"
+				aria-label={ "Apagar " + npc.Nome + " do elenco" }
+				data-on:click={ comandoDoNPC(v, npc, "apagar") }
+				class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>
+				@icone("Trash2", "size-4")
+			</button>
+		</div>
+	</article>
+}
+
+// O botão que chama o elenco, no trilho das consultas.
+templ oBotaoDoElenco(v mesaView) {
+	<button
+		type="button"
+		aria-label={ fmt.Sprintf("Elenco da campanha · %d NPCs guardados", len(v.NPCs)) }
+		title="Elenco — os NPCs que você preparou para esta campanha"
+		data-on:click="document.getElementById('elenco-da-campanha').showModal()"
+		class="flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:size-12"
+	>
+		@icone("Users2", "size-5")
+	</button>
+}
+
+// GUARDAR NO ELENCO, dentro do painel do bestiário.
+//
+// O gesto mora AQUI e não num seletor próprio porque é aqui que o mestre está
+// quando tem a ideia: ele veio ver o Ogro, e "este serve, guarda" é a frase
+// seguinte. Um painel separado o faria procurar de novo o que já estava na tela.
+//
+// O NOME É OPCIONAL, e o campo diz isso no `placeholder` em vez de numa nota:
+// guardar "Ogro" como "Ogro" é o caso comum, e o servidor cai no nome do livro
+// quando o campo vem vazio.
+templ oGuardarNoElenco(v bestiarioView) {
+	<div class="flex flex-wrap items-end gap-2 border-t border-grimorio-iron pt-3">
+		<div class="min-w-0 flex-1 space-y-1">
+			<label for="nome-do-npc" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Guardar no elenco</label>
+			<input
+				id="nome-do-npc"
+				type="text"
+				data-bind:nomedonpc
+				placeholder="Com outro nome? (em branco, fica o do livro)"
+				class="w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+			/>
+		</div>
+		<button
+			type="button"
+			data-on:click={ guardaNoElenco(v) }
+			class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+		>
+			@icone("Users2", "size-4")
+			Guardar
+		</button>
+	</div>
+}

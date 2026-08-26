@@ -46,6 +46,7 @@ templ palcoDoMestre(v mesaView, b bestiarioView) {
 		@gavetaDaFila(v)
 		@mesaPorNoMapa(v)
 		@mesaConfigDaSessao(v)
+		@mesaElencoDaCampanha(v)
 	</main>
 	@bestiarioDaMesa(b)
 }
@@ -166,6 +167,7 @@ templ trilhoDasConsultas(v mesaView) {
 			class="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:hidden"
 		>Iniciativa · { fmt.Sprint(len(v.Fila)) }</button>
 		@oBotaoDasNotas()
+		@oBotaoDoElenco(v)
 		<button
 			type="button"
 			aria-label="Abrir o bestiário"

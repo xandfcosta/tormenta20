@@ -164,6 +164,7 @@ func regioesDaMesa(v mesaView) []regiaoDaMesa {
 	// garante fazendo as duas perguntarem à mesma `view`.
 	if v.Mestre != nil {
 		regioes = append(regioes, regiaoDaMesa{"mesa-trilho-fila", mesaTrilhoDaFila(v)})
+		regioes = append(regioes, regiaoDaMesa{"mesa-npcs", mesaListaDeNPCs(v)})
 	}
 	return regioes
 }
