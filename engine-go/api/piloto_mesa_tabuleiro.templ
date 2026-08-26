@@ -182,7 +182,13 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 					// nome dela. Quatro laços dariam quatro lugares para esquecer
 					// de acrescentar o quinto.
 					for _, q := range v.Terreno {
-						<div aria-hidden="true" class={ "tabuleiro-terreno tabuleiro-" + q.Especie } style={ posicaoNoPlano(q.X, q.Y, 1) }></div>
+						// O ÍCONE mora DENTRO da casa e o CSS o põe no canto da
+						// espécie (ALE-203, escolha do dono). Ver
+						// `piloto_mesa_terreno_desenho.go` para o porquê dos
+						// cantos e de o ícone dizer a REGRA da espécie.
+						<div aria-hidden="true" class={ aClasseDaCasa(q.Especie) } style={ posicaoNoPlano(q.X, q.Y, 1) }>
+							@icone(oDesenhoDe(tabuleiro.EspecieDeTerreno(q.Especie)).Icone, "terreno-marca")
+						</div>
 					}
 					// A TRILHA vem antes das peças e depois do chão: ela é rastro,
 					// e a peça que anda por cima dela continua sendo a peça que
@@ -1053,11 +1059,7 @@ templ aFerramentaNoTrilho(f ferramentaDoMapa) {
 		data-on:click={ escolheAFerramenta(f.ID) }
 		class="tabuleiro-ferramenta"
 	>
-		if f.Amostra != "" {
-			<span aria-hidden="true" class={ f.Amostra }></span>
-		} else {
-			@icone(f.Icone, "size-4")
-		}
+		@icone(f.Icone, "size-4 "+f.Matiz)
 		<span aria-hidden="true" class="tabuleiro-ferramenta-tecla">{ f.Atalho }</span>
 	</button>
 }

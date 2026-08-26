@@ -626,62 +626,83 @@ html {
     height: calc(var(--pegada) * var(--quadrado));
   }
 
-  /* Terreno difícil (T20 p238): hachura, não cor chapada — cor chapada sobre um
-   * chão que já é degradê some, e a peça em cima dela apagaria o resto. */
-  /* As QUATRO espécies de terreno (T20 p238). Distinguíveis por FORMA e não só
-     por cor: uma casa pode ter duas (folhagens são difícil E camuflagem, p267),
-     e duas cores sobrepostas viram uma terceira cor que não é nenhuma das duas.
-     Padrões diferentes empilham lendo como os dois que são.
-
-     O ELEVADO é de outra família visual de propósito, e a razão está no
-     glossário: as outras três PROTEGEM quem está na casa, e ele BENEFICIA quem
-     ataca de lá. Textura sobreposta diz "tem coisa aqui"; chanfro diz "isto
-     está mais alto", que é a afordância clássica de relevo e a única das quatro
-     que fala de altura. */
+  /* AS QUATRO ESPÉCIES DE TERRENO (T20 p238), redesenhadas na ALE-203 por
+     escolha do dono.
+     
+     O desenho anterior eram quatro LAVAGENS — hachura dourada a 14%, moldura
+     azul, névoa, chanfro — e o comentário que morava aqui dizia que "padrões
+     diferentes empilham lendo como os dois que são". O uso desmentiu: a 14% de
+     opacidade sobre pedra escura nenhuma delas se lê de um metro de distância, e
+     duas somadas viram uma terceira coisa que não é nenhuma das duas. Folhagens
+     são difícil E camuflagem (p267), então a casa com duas não é hipótese.
+     
+     O que entra é ÍCONE + TINTA. O ícone diz QUAL espécie e mora num canto
+     próprio de cada uma — quatro espécies, quatro cantos —, então duas na mesma
+     casa continuam sendo duas coisas distintas em vez de uma mistura. A tinta diz
+     QUE TEM ALGUMA COISA ALI, e é ela que sobrevive ao zoom pequeno.
+     
+     Os ícones dizem a REGRA e não a aparência: `Shield` porque cobertura é +5 na
+     Defesa, `EyeOff` porque camuflagem é 20% de chance de falha. Ver
+     `piloto_mesa_terreno_desenho.go`. */
   .tabuleiro-terreno {
     pointer-events: none;
+    /* CONTÊINER para o ícone poder medir a CASA. O `--quadrado` é uma variável
+       CSS, e `@media` não enxerga variável — `@container` enxerga o tamanho, que
+       é o que a pergunta realmente é. */
+    container-type: inline-size;
   }
 
-  .tabuleiro-dificil {
-    background: repeating-linear-gradient(45deg, oklch(0.8 0.11 85 / 0.14) 0 3px, transparent 3px 9px);
+  /* A TINTA de cada espécie. Chapada e não textura: a textura era o que sumia de
+     longe, e é o ícone que carrega a identidade agora. As quatro somam sem virar
+     papa porque a leitura de QUAL não depende mais da cor. */
+  .tabuleiro-dificil { background-color: oklch(0.8 0.11 85 / 0.16); }
+  .tabuleiro-cobertura { background-color: oklch(0.72 0.09 230 / 0.18); }
+  .tabuleiro-camuflagem { background-color: oklch(0.85 0.03 260 / 0.16); }
+  .tabuleiro-elevado { background-color: oklch(0.75 0.12 145 / 0.16); }
+
+  /* A MARCA é o ícone no canto. `position: absolute` dentro da casa, e o canto
+     vem da classe que o servidor escreve — uma espécie, um canto, para sempre.
+     
+     `18cqw` = 18% da largura da casa: ele acompanha o zoom sem uma linha de
+     JavaScript, do mesmo jeito que todo o resto do plano. */
+  .terreno-marca {
+    position: absolute;
+    width: 26cqw;
+    height: 26cqw;
+    opacity: 0.85;
+  }
+  .terreno-canto-noroeste .terreno-marca { top: 6cqw; left: 6cqw; }
+  .terreno-canto-nordeste .terreno-marca { top: 6cqw; right: 6cqw; }
+  .terreno-canto-sudeste .terreno-marca { bottom: 6cqw; right: 6cqw; }
+  .terreno-canto-sudoeste .terreno-marca { bottom: 6cqw; left: 6cqw; }
+
+  /* A COR da marca é a da espécie, cheia — a tinta do fundo é translúcida de
+     propósito (o chão do lugar continua sendo informação), e o ícone é o que
+     precisa de contraste. */
+  .tabuleiro-dificil .terreno-marca { color: oklch(0.8 0.11 85); }
+  .tabuleiro-cobertura .terreno-marca { color: oklch(0.78 0.11 230); }
+  .tabuleiro-camuflagem .terreno-marca { color: oklch(0.88 0.04 260); }
+  .tabuleiro-elevado .terreno-marca { color: oklch(0.8 0.14 145); }
+
+  /* O ÍCONE SOME NO ZOOM PEQUENO, e este é o custo que a escolha do dono
+     declarou: abaixo de 32px de lado ele vira um borrão de seis pixels, e um
+     borrão não informa — só suja. Nesse regime a TINTA sozinha responde "tem
+     alguma coisa aqui", que é o que cabe em 20px. */
+  @container (max-width: 31px) {
+    .terreno-marca { display: none; }
   }
 
-  /* Cobertura: uma barreira na borda, porque cobertura é o que fica ENTRE o
-     atacante e o alvo. Moldura por dentro e não preenchimento — preencher
-     esconderia o chão do lugar, que continua sendo informação. */
-  .tabuleiro-cobertura {
-    box-shadow: inset 0 0 0 3px oklch(0.72 0.09 230 / 0.55);
-  }
-
-  /* Camuflagem: névoa. Suave e sem borda, que é o oposto da cobertura — uma
-     protege por barreira e a outra por não deixar ver. */
-  .tabuleiro-camuflagem {
-    background: radial-gradient(60% 60% at 50% 50%, oklch(0.85 0.03 260 / 0.30), transparent 72%);
-  }
-
-  /* Elevado: chanfro. Claro em cima e à esquerda, escuro embaixo e à direita —
-     a luz vem de cima, e o olho lê a casa como um degrau. */
-  .tabuleiro-elevado {
-    box-shadow:
-      inset 2px 2px 0 oklch(0.95 0.02 90 / 0.34),
-      inset -2px -2px 0 oklch(0.2 0.02 90 / 0.5);
-  }
-
-  /* A AMOSTRA no botão do trilho é o mesmo desenho que a casa recebe, em
-     miniatura: o mestre reconhece o pincel pelo que ele PINTA, e não por uma
-     legenda que ele teria de decorar. Por isso ela empilha a classe da espécie
-     em vez de repetir as cores — repetir daria dois desenhos para a mesma
-     espécie, e o que fica para trás é sempre o da legenda. */
-  .pincel-amostra {
-    display: inline-block;
-    width: 0.9rem;
-    height: 0.9rem;
-    border: 1px solid var(--color-grimorio-iron, oklch(0.35 0.01 305));
-    /* O fundo do tabuleiro por baixo, senão a amostra da cobertura e a do
-       elevado — que são sombras internas sobre transparente — não teriam
-       superfície nenhuma para desenhar. */
-    background-color: oklch(0.22 0.01 305);
-  }
+  /* O PINCEL NO TRILHO mostra o MESMO ícone que a casa recebe, tingido com a cor
+     da espécie: o mestre reconhece o pincel pelo que ele PINTA.
+     
+     Ele era um QUADRADINHO de cor, e a troca veio junto com o desenho novo — no
+     dia em que cada espécie ganhou ícone próprio, quatro quadradinhos que só
+     diferiam de matiz viraram a legenda que a casa acabara de dispensar. */
+  .pincel-matiz { opacity: 0.95; }
+  .tabuleiro-matiz-dificil { color: oklch(0.8 0.11 85); }
+  .tabuleiro-matiz-cobertura { color: oklch(0.78 0.11 230); }
+  .tabuleiro-matiz-camuflagem { color: oklch(0.88 0.04 260); }
+  .tabuleiro-matiz-elevado { color: oklch(0.8 0.14 145); }
 
   /* A SUPERFÍCIE ESCOLHIDA do jogador (ALE-129, portada na ALE-269).
    *

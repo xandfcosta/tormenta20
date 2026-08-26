@@ -170,3 +170,53 @@ func TestATelaLigaOTracoEOBotaoDireito(t *testing.T) {
 		t.Error("a camada de pintura voltou a ser um clique por casa")
 	}
 }
+
+// TestTodaEspecieTemDesenho.
+//
+// O guarda que paga o preço de o desenho morar fora do domínio: `oDesenhoDe`
+// entra em pânico numa espécie sem entrada, e este caso faz o pânico acontecer
+// na suíte em vez de na mesa. Sem ele, a quinta espécie nasceria com uma casa
+// que não se distingue de nenhuma outra — indistinguível de "o pincel não
+// funcionou", que é a família de defeito que esta issue inteira persegue.
+//
+// E ele afirma também que os CANTOS são distintos: duas espécies no mesmo canto
+// desenham uma por cima da outra, e a casa com folhagens (difícil E camuflagem,
+// p267) mostraria uma só.
+func TestTodaEspecieTemDesenho(t *testing.T) {
+	cantos := map[string]string{}
+	for _, pincel := range tabuleiro.EspeciesDeTerreno {
+		d := oDesenhoDe(pincel.ID)
+		if d.Icone == "" || d.Canto == "" {
+			t.Errorf("a espécie %q tem desenho incompleto: %+v", pincel.ID, d)
+		}
+		if dono, tem := cantos[d.Canto]; tem {
+			t.Errorf("o canto %q é de %q e de %q — uma desenha por cima da outra",
+				d.Canto, dono, pincel.ID)
+		}
+		cantos[d.Canto] = string(pincel.ID)
+	}
+}
+
+// TestACasaPintadaTrazOIconeDaEspecie: a ponta que só o HTML servido responde —
+// o ícone chega à casa, e o trilho mostra o MESMO.
+func TestACasaPintadaTrazOIconeDaEspecie(t *testing.T) {
+	f := novoPiloto(t)
+	f.abreTabuleiro(t, "pedra")
+	if rec := f.pede(t, f.mestre, http.MethodPost,
+		f.urlDaMesa()+"/tabuleiro/terreno/camuflagem/3/3/ate/3/3", ""); rec.Code != http.StatusOK {
+		t.Fatalf("pintar deu %d", rec.Code)
+	}
+	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+
+	d := oDesenhoDe(tabuleiro.TerrenoCamuflagem)
+	if !strings.Contains(tela, "terreno-canto-"+d.Canto) {
+		t.Errorf("a casa de camuflagem não veste o canto %q", d.Canto)
+	}
+	if !strings.Contains(tela, "terreno-marca") {
+		t.Error("a casa pintada não tem a marca da espécie")
+	}
+	// E o TRILHO usa a mesma tabela: o botão do pincel tinge com a cor dela.
+	if !strings.Contains(tela, "tabuleiro-matiz-camuflagem") {
+		t.Error("o pincel do trilho não veste o matiz da espécie")
+	}
+}

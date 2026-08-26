@@ -39,9 +39,15 @@ type ferramentaDoMapa struct {
 	Dica   string
 	// SoMestre: pintar chão e marcar lugar são gestos de quem MONTA a mesa.
 	SoMestre bool
-	// Amostra é a classe do quadradinho de cor dos pincéis de terreno — eles
-	// mostram o que pintam em vez de um ícone genérico. Vazio nas outras.
-	Amostra string
+	// Matiz é a classe que tinge o ícone com a cor da espécie, nos pincéis de
+	// terreno. Vazio nas outras.
+	//
+	// Ela substituiu um QUADRADINHO de cor (`Amostra`), e a troca veio junto com o
+	// desenho novo das casas (ALE-203): quando cada espécie ganhou ícone próprio,
+	// quatro quadradinhos que só diferiam de matiz viraram a legenda que o desenho
+	// da casa acabara de tornar desnecessária. Agora o botão mostra o MESMO ícone
+	// que a casa recebe — o mestre reconhece o pincel pelo que ele pinta.
+	Matiz string
 }
 
 // FerramentaDaBorracha é o valor do sinal quando o clique LIMPA a casa.
@@ -82,8 +88,9 @@ func asFerramentasDoMapa() []ferramentaDoMapa {
 	for _, pincel := range tabuleiro.EspeciesDeTerreno {
 		trilho = append(trilho, ferramentaDoMapa{
 			ID: string(pincel.ID), Rotulo: pincel.Rotulo, SoMestre: true,
-			Dica:    pincel.Rotulo + ": " + pincel.Efeito + " (p238)",
-			Amostra: "pincel-amostra tabuleiro-" + string(pincel.ID),
+			Icone: oDesenhoDe(pincel.ID).Icone,
+			Dica:  pincel.Rotulo + ": " + pincel.Efeito + " (p238)",
+			Matiz: "pincel-matiz tabuleiro-matiz-" + string(pincel.ID),
 		})
 	}
 	trilho = append(trilho, ferramentaDoMapa{
