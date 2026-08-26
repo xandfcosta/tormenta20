@@ -355,6 +355,32 @@ templ oGabaritoDesenhado(v tabuleiroView) {
 	>
 		<g data-attr:transform={ oDesenhoNaJanela }>
 			<path data-attr:d="$gabaritopath" class="tabuleiro-gabarito"></path>
+			// AS DUAS PONTAS (ALE-203, item 7 do dono: "não tem feedback visual
+			// algum no tabuleiro para mostrar o ponto inicial e o final").
+			//
+			// A ORIGEM é um pingo cheio e fica enquanto houver gabarito: é ela que
+			// diz de ONDE a área sai, e numa esfera o desenho sozinho não conta
+			// isso — o círculo é simétrico, e o centro dele é uma casa que se
+			// clicou.
+			//
+			// A MIRA é um anel vazado e só existe enquanto a forma APONTA e a
+			// pessoa está mirando: um anel parado depois de posto seria uma ponta
+			// que ninguém pode mais mover.
+			<circle
+				data-show={ "$gabaritofase > 0" }
+				data-attr:cx="$gabaritox + 0.5"
+				data-attr:cy="$gabaritoy + 0.5"
+				r="0.13"
+				class="tabuleiro-regua-ponta"
+			></circle>
+			<circle
+				data-show="$gabaritofase === 1 && $gabaritoaponta"
+				data-attr:cx="$gabaritomirax + 0.5"
+				data-attr:cy="$gabaritomiray + 0.5"
+				r="0.22"
+				vector-effect="non-scaling-stroke"
+				class="tabuleiro-regua-alvo"
+			></circle>
 		</g>
 	</svg>
 }
@@ -375,30 +401,54 @@ templ aReguaDesenhada(v tabuleiroView) {
 		class="tabuleiro-medida tabuleiro-medida-frente"
 	>
 		<g data-attr:transform={ oDesenhoNaJanela }>
-			<line
-				data-show="$reguafase === 2"
-				data-attr:x1={ aPontaDaRegua("1", "x") }
-				data-attr:y1={ aPontaDaRegua("1", "y") }
-				data-attr:x2={ aPontaDaRegua("2", "x") }
-				data-attr:y2={ aPontaDaRegua("2", "y") }
+			// A POLILINHA inteira num `<path>` só: o caminho sai dos sinais, e o
+			// número de pernas não muda o número de nós.
+			<path
+				data-attr:d={ oCaminhoDaRegua }
 				vector-effect="non-scaling-stroke"
 				class="tabuleiro-regua-fio"
-			></line>
+			></path>
+			// OS PINGOS de cada parada, e a RESERVA existe porque o Datastar não
+			// tem laço: os nós são fixos e cada um se mostra conforme a lista.
+			for _, i := range aReservaDeParadas() {
+				<circle
+					data-show={ oPingoExiste(i) }
+					data-attr:cx={ aParadaDaRegua(i, 0) }
+					data-attr:cy={ aParadaDaRegua(i, 1) }
+					r="0.13"
+					class="tabuleiro-regua-ponta"
+				></circle>
+			}
+			// O ALVO na ponta VIVA, que é onde o dedo está. Ele some quando a
+			// régua congela: ali a ponta virou parada e já tem pingo.
 			<circle
-				data-attr:cx={ aPontaDaRegua("1", "x") }
-				data-attr:cy={ aPontaDaRegua("1", "y") }
-				r="0.14"
-				class="tabuleiro-regua-ponta"
-			></circle>
-			<circle
-				data-show="$reguafase === 2"
-				data-attr:cx={ aPontaDaRegua("2", "x") }
-				data-attr:cy={ aPontaDaRegua("2", "y") }
-				r="0.2"
+				data-show={ "$reguafase === " + oNumero(reguaMedindo) }
+				data-attr:cx="$reguamirax + 0.5"
+				data-attr:cy="$reguamiray + 0.5"
+				r="0.22"
 				vector-effect="non-scaling-stroke"
 				class="tabuleiro-regua-alvo"
 			></circle>
 		</g>
+		// OS RÓTULOS DE CADA PERNA (pedido do dono: "mostre a distância como um
+		// popover na linha que conecta duas paradas").
+		//
+		// FORA do `<g>` que escala, e isto não é arrumação: dentro dele o texto
+		// seria multiplicado pelo `--quadrado` e viraria uma letra de 40px no zoom
+		// máximo. Aqui ele fica do tamanho que se lê, e quem o posiciona é o
+		// mesmo par de números passado pelo `scale` à mão.
+		for _, i := range aReservaDeParadas() {
+			<g data-show={ oRotuloExiste(i) }>
+				<text
+					data-attr:x={ oMeioDaPerna(i, 0) + " * $quadrado - $vistax" }
+					data-attr:y={ oMeioDaPerna(i, 1) + " * $quadrado - $vistay" }
+					data-text={ oRotuloDaPerna(i) }
+					text-anchor="middle"
+					dominant-baseline="middle"
+					class="tabuleiro-regua-rotulo"
+				></text>
+			</g>
+		}
 	</svg>
 }
 
@@ -1319,18 +1369,32 @@ templ asCamadasDeClique(v tabuleiroView) {
 	// não tinha ferramenta nenhuma para ligar, e a condição era
 	// escrita só onde havia pincel. Deixá-la lá tornaria a régua do
 	// jogador um desenho que rouba o clique do próprio movimento.
+	// A RÉGUA é uma POLILINHA desde a ALE-203, e por isso a camada dela ganhou
+	// quatro gestos onde havia um: clique acrescenta parada, duplo clique
+	// congela, botão direito apaga, e o movimento leva a perna viva atrás do
+	// dedo. Ver `reguaNoPontoClicado` para a gramática inteira e para o Escape
+	// que não chega.
 	<button
 		type="button"
 		data-show={ "$ferramenta === '" + FerramentaDaRegua + "'" }
-		aria-label="Medir a distância — escolha as duas casas"
+		aria-label="Medir a distância — clique para acrescentar paradas, duplo clique fecha, botão direito apaga"
 		data-on:click={ reguaNoPontoClicado(v) }
+		data-on:dblclick={ congelaARegua }
+		data-on:pointermove={ aReguaSegueOPonteiro(v) }
+		data-on:contextmenu={ prendeOMenuDoNavegador + "; " + guardaARegua }
 		class="tabuleiro-casas"
 	></button>
+	// O GABARITO ganhou os mesmos gestos da régua na ALE-203, e por simetria: o
+	// ponteiro leva a MIRA atrás do dedo enquanto a forma aponta, e o botão
+	// direito apaga sem trocar de ferramenta. Duas ferramentas de medir com
+	// gramáticas diferentes seriam duas coisas para lembrar.
 	<button
 		type="button"
 		data-show={ "$ferramenta === '" + FerramentaDoGabarito + "'" }
-		aria-label="Pôr o gabarito de área — escolha a casa"
+		aria-label="Pôr o gabarito de área — clique na origem, clique de novo para apontar, botão direito apaga"
 		data-on:click={ gabaritoNoPontoClicado(v) }
+		data-on:pointermove={ oGabaritoSegueOPonteiro(v) }
+		data-on:contextmenu={ prendeOMenuDoNavegador + "; " + guardaOGabarito }
 		class="tabuleiro-casas"
 	></button>
 	if v.AlvoDoMovimento != "" {

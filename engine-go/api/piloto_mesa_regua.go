@@ -36,26 +36,101 @@ import (
 
 func (s *Server) rotasDaRegua(r chi.Router) {
 	base := "/mesa/{campaignId}/{sessionId}/tabuleiro"
-	r.Post(base+"/regua/{x1}/{y1}/{x2}/{y2}", s.handleReguaDaMesa)
+	r.Post(base+"/regua", s.handleReguaDaMesa)
 	r.Post(base+"/gabarito/{tipo}/{tamanho}/{x}/{y}/{mx}/{my}", s.handleGabaritoDaMesa)
 }
 
-// handleReguaDaMesa devolve a leitura entre as duas pontas.
+// handleReguaDaMesa devolve a leitura de CADA PERNA e o total da polilinha.
 //
-// A FAIXA do livro (p224) é o que ela tem de mais útil: "10,5m" obriga o jogador
-// a lembrar que curto são 9m, enquanto "alcance médio" já é a resposta.
+// A régua virou POLILINHA na ALE-203 ("a régua não permite calcular distâncias
+// com mais de uma parada"), e com ela a rota deixou de ter as pontas no caminho:
+// o número de paradas é variável, e um caminho com número variável de segmentos
+// seria uma rota que muda de forma. As paradas chegam nos SINAIS, que é onde
+// elas já moram.
+//
+// O que volta continua sendo só SINAL — a régua não muta nada, e uma medição que
+// remendasse o mapa trocaria a peça debaixo do dedo de quem está arrastando.
 func (s *Server) handleReguaDaMesa(w http.ResponseWriter, r *http.Request) {
-	_, _, ok := s.quemMedeAMesa(w, r)
-	if !ok {
+	if _, _, ok := s.quemMedeAMesa(w, r); !ok {
 		return
 	}
-	de, err1 := quadradoDoCaminho(r, "x1", "y1")
-	ate, err2 := quadradoDoCaminho(r, "x2", "y2")
-	if err1 != nil || err2 != nil {
-		http.Error(w, "as pontas da régua precisam ser dois pares de números", http.StatusBadRequest)
+	paradas, err := asParadasDaRegua(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	escreveSinais(w, r, map[string]any{"reguatexto": leituraDaRegua(engine.Measure(de, ate))})
+	escreveSinais(w, r, aLeituraDaPolilinha(paradas))
+}
+
+// oMaximoDeParadas é o teto da polilinha.
+//
+// Doze paradas são onze pernas, e onze é mais do que qualquer movimento de um
+// turno precisa contornar. O teto não é zelo com memória: é o tamanho da RESERVA
+// de rótulos que o `.templ` desenha, e os dois números têm de ser o mesmo — um
+// rótulo sem nó é um número que ninguém vê.
+const oMaximoDeParadas = 12
+
+// asParadasDaRegua lê as paradas dos sinais, com a MIRA no fim.
+//
+// A mira — o quadrado sob o ponteiro — entra como se fosse a última parada, e é
+// isso que faz a perna viva ter medida antes de alguém clicar. Ela só entra
+// enquanto a régua está MEDINDO: congelada, o ponteiro passeia e a medida fica.
+func asParadasDaRegua(r *http.Request) ([]engine.Square, error) {
+	var sinais struct {
+		Pontos [][]int `json:"reguapontos"`
+		MiraX  int     `json:"reguamirax"`
+		MiraY  int     `json:"reguamiray"`
+		Fase   int     `json:"reguafase"`
+	}
+	if err := datastar.ReadSignals(r, &sinais); err != nil {
+		return nil, fmt.Errorf("as paradas da régua não vieram: %w", err)
+	}
+	paradas := make([]engine.Square, 0, len(sinais.Pontos)+1)
+	for _, p := range sinais.Pontos {
+		if len(p) != 2 {
+			return nil, fmt.Errorf("parada %v não é um par de números", p)
+		}
+		paradas = append(paradas, engine.Square{X: p[0], Y: p[1]})
+	}
+	if sinais.Fase == reguaMedindo {
+		paradas = append(paradas, engine.Square{X: sinais.MiraX, Y: sinais.MiraY})
+	}
+	if len(paradas) > oMaximoDeParadas {
+		return nil, fmt.Errorf("a régua tem %d paradas e o teto é %d", len(paradas), oMaximoDeParadas)
+	}
+	return paradas, nil
+}
+
+// aLeituraDaPolilinha escreve o rótulo de cada perna e a frase do TOTAL.
+//
+// Por que o rótulo da perna NÃO diz a faixa: faixa é sobre ALCANCE (p224), e
+// alcance é linha reta — a perna de um caminho não é o alcance de nada. Dizer
+// "alcance curto" sobre a segunda perna de um contorno seria uma resposta certa
+// para uma pergunta que ninguém fez.
+//
+// E por que o TOTAL diz: com DUAS paradas a polilinha é uma reta, que é
+// exatamente a régua de sempre, e a mesa pergunta "dá para acertar daqui?". Com
+// mais paradas o total é o custo do CAMINHO, e a faixa continua sendo a leitura
+// certa do número — só que da pergunta "cabe no meu deslocamento?".
+func aLeituraDaPolilinha(paradas []engine.Square) map[string]any {
+	rotulos := make([]string, 0, oMaximoDeParadas)
+	total := 0
+	for i := 1; i < len(paradas); i++ {
+		perna := engine.Measure(paradas[i-1], paradas[i])
+		total += perna.Squares
+		rotulos = append(rotulos, aPernaEmMetros(perna))
+	}
+	if len(paradas) < 2 {
+		return map[string]any{"reguarotulos": rotulos, "reguatexto": aDicaDaReguaVazia}
+	}
+	return map[string]any{
+		"reguarotulos": rotulos,
+		"reguatexto": leituraDaRegua(engine.Measurement{
+			Squares: total,
+			Metres:  float64(total) * engine.SquareMetres,
+			Band:    engine.BandFor(total),
+		}),
+	}
 }
 
 // leituraDaRegua escreve a medida em QUADRADOS, em metros e na faixa do livro.
@@ -71,6 +146,30 @@ func leituraDaRegua(m engine.Measurement) string {
 	}
 	return fmt.Sprintf("%d %s (%sm) · %s", m.Squares, quadradosEmPortugues(m.Squares), emMetros(m.Metres), faixa)
 }
+
+// aPernaEmMetros é o rótulo que pousa sobre a linha entre duas paradas (pedido
+// do dono).
+//
+// METRO e não quadrado, ao contrário da frase do total: sobre a linha cabe UMA
+// unidade, e a que a mesa fala em voz alta é o metro — "ele está a nove metros"
+// é a frase do turno, e "seis quadrados" obriga a converter de cabeça. A frase
+// do total continua trazendo as duas, porque lá cabe.
+//
+// A PERNA DE ZERO devolve VAZIO, e é o que apaga o rótulo: o instante logo depois
+// de um clique tem a mira em cima da parada que acabou de nascer, e um "0,0m"
+// piscando sob o dedo é ruído sobre o gesto que a pessoa está fazendo.
+func aPernaEmMetros(m engine.Measurement) string {
+	if m.Squares == 0 {
+		return ""
+	}
+	return emMetros(m.Metres) + "m"
+}
+
+// aDicaDaReguaVazia é o que a barra diz com uma ponta só posta.
+//
+// Uma ponta não é distância nenhuma, e uma frase em branco ali faria a régua
+// parecer quebrada justamente no instante em que ela acabou de começar.
+const aDicaDaReguaVazia = "Clique para acrescentar paradas · duplo clique fecha · botão direito apaga"
 
 // handleGabaritoDaMesa desenha o gabarito e diz QUEM está dentro.
 //

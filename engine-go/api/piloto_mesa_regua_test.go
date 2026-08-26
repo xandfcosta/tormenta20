@@ -175,7 +175,10 @@ func TestMedirNaoRemendaACena(t *testing.T) {
 	f := novoPiloto(t)
 	f.abreTabuleiro(t, "pedra")
 
-	resposta := f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/regua/0/0/3/0", "")
+	// As paradas vêm nos SINAIS desde a ALE-203: com número variável de pernas,
+	// um caminho com as pontas dentro seria uma rota que muda de forma.
+	resposta := f.posta(t, f.mestre, f.urlDaMesa()+"/tabuleiro/regua",
+		`{"reguapontos":[[0,0],[3,0]],"reguafase":2}`)
 	if !strings.Contains(resposta, "reguatexto") {
 		t.Fatalf("a medida não voltou: %s", resposta)
 	}

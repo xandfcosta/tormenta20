@@ -1072,6 +1072,7 @@ html {
   }
 
   .tabuleiro-regua-fio {
+    fill: none;
     stroke: var(--color-grimorio-gold, oklch(0.8 0.11 85));
     /* `non-scaling-stroke` no atributo do elemento: o fio é uma LINHA de leitura
        e não parte do mapa — ele tem de ter a mesma espessura em qualquer zoom,
@@ -1083,6 +1084,26 @@ html {
     fill: none;
     stroke: var(--color-grimorio-gold, oklch(0.8 0.11 85));
     stroke-width: 2;
+  }
+
+  /* O RÓTULO DE CADA PERNA (ALE-203, pedido do dono: "mostre a distância como um
+     popover na linha que conecta duas paradas").
+     
+     Ele fica FORA do `<g>` que escala, e por isso mede em PIXEL: dentro, o
+     `scale(--quadrado)` multiplicaria a fonte e uma letra de 12px viraria 1000px
+     no zoom máximo. Aqui ele tem o tamanho que se lê, em qualquer zoom.
+     
+     O `paint-order: stroke` desenha o contorno ANTES do preenchimento, e é ele
+     que faz o número sobreviver por cima do fio dourado e de uma peça: sem o
+     halo escuro, ouro sobre ouro some. */
+  .tabuleiro-regua-rotulo {
+    fill: var(--color-grimorio-gold, oklch(0.8 0.11 85));
+    stroke: oklch(0.15 0.01 300 / 0.9);
+    stroke-width: 3;
+    paint-order: stroke;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
   }
 }
 

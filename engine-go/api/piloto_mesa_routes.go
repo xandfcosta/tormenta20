@@ -226,9 +226,10 @@ func sinaisDaMesa() string {
 		// O TRAÇO do pincel e da borracha (ALE-203): o modo em curso e a última
 		// casa que ele já mandou.
 		osSinaisDoPincel,
-		// A RÉGUA: as duas pontas em coordenada do PLANO (podem ser negativas), a
-		// fase da máquina de dois cliques, e a leitura que o servidor escreve.
-		"regua1x: 0, regua1y: 0, regua2x: 0, regua2y: 0, reguafase: 0, reguatexto: ''",
+		// A RÉGUA: as PARADAS em coordenada do PLANO (podem ser negativas), a mira
+		// sob o ponteiro, a fase da máquina, os rótulos de cada perna e a frase do
+		// total — as duas últimas escritas pelo servidor.
+		osSinaisDaRegua,
 		// O GABARITO nasce na PRIMEIRA forma da lista, e ela é derivada e não
 		// digitada pelo mesmo motivo do chão: a página que escreve 'esfera' à mão
 		// é a que fica para trás no dia em que a ordem mudar, e o defeito seria a
