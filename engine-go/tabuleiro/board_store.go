@@ -221,6 +221,14 @@ func (bs *BoardStore) UpdateToken(ctx context.Context, sessionID int64, tokenID 
 	return bs.apply(ctx, sessionID, func(b *BoardState) error { return UpdateToken(b, tokenID, patch) })
 }
 
+// LimpaACasa é a BORRACHA (ALE-203): tira todo terreno de um quadrado.
+func (bs *BoardStore) LimpaACasa(ctx context.Context, sessionID int64, square engine.Square) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error {
+		LimpaACasa(b, square)
+		return nil
+	})
+}
+
 // VoltaAPeca desfaz o último pouso (ALE-206).
 func (bs *BoardStore) VoltaAPeca(ctx context.Context, sessionID int64, tokenID string) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, func(b *BoardState) error { return VoltaAPeca(b, tokenID) })

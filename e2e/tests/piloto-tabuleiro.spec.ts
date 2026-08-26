@@ -168,6 +168,21 @@ async function abreOTabuleiro(page: Page, mesa: string): Promise<void> {
 const camadaDe = (page: Page, gesto: RegExp) =>
   page.locator('.tabuleiro-casas').and(page.getByRole('button', { name: gesto }))
 
+/**
+ * A FERRAMENTA no trilho, e não qualquer botão com aquele nome.
+ *
+ * Terceira vez que um seletor por nome deixa de ser único nesta cena, e a lição
+ * é sempre a mesma: nome de botão é um PREFIXO que a próxima ferramenta pode
+ * colidir. Aqui o `exact: true` também parou de servir — o trilho passou a dizer
+ * a tecla no nome acessível ("Marcar (tecla 4)"), de propósito, para quem navega
+ * por teclado descobrir o atalho.
+ *
+ * Perguntar DENTRO do trilho resolve os dois: o número pode mudar de lugar e o
+ * caso continua apontando para a ferramenta que ele quer.
+ */
+const ferramenta = (page: Page, nome: string) =>
+  page.getByRole('navigation', { name: 'Ferramentas do mapa' }).getByRole('button', { name: nome })
+
 const quadrado = (page: Page) =>
   page.locator('.tabuleiro-palco').evaluate((e) => getComputedStyle(e).getPropertyValue('--quadrado').trim())
 
@@ -196,7 +211,7 @@ test('o zoom e a rolagem sobrevivem ao remendo do servidor', async ({ page }) =>
     expect(zoomAntes, 'o zoom não saiu do padrão — não há o que sobreviver').not.toBe('44px')
 
     // Uma mudança que vem DO SERVIDOR e redesenha a região do mapa.
-    await page.getByRole('button', { name: 'Difícil' }).click()
+    await ferramenta(page, 'Difícil').click()
     await camadaDe(page, /Pintar terreno/).click({ position: { x: 60, y: 60 } })
 
     // O CONTROLE: o remendo chegou e mudou a cena.
@@ -286,14 +301,14 @@ test('o marcador continua clicável por baixo da camada de mover', async ({ page
     // `exact` porque o nome do botão do trilho é PREFIXO do nome da camada de
     // clique ("Marcar um lugar — escolha a casa"), e sem ele o seletor casa com
     // os dois.
-    await page.getByRole('button', { name: 'Marcar', exact: true }).click()
+    await ferramenta(page, 'Marcar').click()
     await camadaDe(page, /Marcar um lugar/).click({ position: { x: 90, y: 90 } })
     const marcador = page.locator('.tabuleiro-marcador')
     await expect(marcador, 'o marcador não nasceu').toHaveCount(1)
 
     // De volta ao padrão: é assim que a ferramenta fica enquanto o mestre joga,
     // e era exatamente aí que o marcador ficava inalcançável.
-    await page.getByRole('button', { name: 'Marcar', exact: true }).click()
+    await ferramenta(page, 'Marcar').click()
 
     // O CONTROLE do empilhamento: a camada que cobria o marcador tem de estar NO
     // AR. Sem ele, "o clique chegou" é verdade num palco onde nada cobria nada —

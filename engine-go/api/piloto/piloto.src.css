@@ -321,6 +321,177 @@ html {
    * em variáveis CSS — `--quadrado` é o zoom, `--desliza-*` é o arrasto — e é
    * isso que o tira do HTML: o remendo do SSE redesenha as peças sem que o
    * mestre perca onde estava olhando. */
+  /* A CENA é a caixa do tabuleiro, e é ela que ancora TUDO o que flutua por
+   * cima: o trilho, os avisos e os ajudantes de ferramenta (ALE-203).
+   *
+   * Sobrepor e não empilhar foi pedido do dono, e a razão é medível: antes,
+   * acender a lente ou abrir o gabarito EMPURRAVA o mapa para baixo — a cena
+   * mudava de tamanho por causa de um aviso, e a casa debaixo do dedo trocava de
+   * lugar no meio do gesto. */
+  .tabuleiro-cena {
+    position: relative;
+    display: flex;
+    min-height: 0;
+    flex: 1 1 0%;
+    flex-direction: column;
+  }
+
+  /* O TRILHO flutua colado à esquerda, centrado na altura: trocar de ferramenta
+   * é o gesto mais frequente da cena, e a mão volta sempre ao mesmo lugar.
+   *
+   * VERTICAL porque nove ferramentas numa linha não cabem em telefone nenhum —
+   * é o enrolamento que a ALE-178 registrou, com o ✕ inalcançável a 390px. */
+  .tabuleiro-trilho {
+    position: absolute;
+    left: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 7;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.125rem;
+    padding: 0.25rem;
+    border: 1px solid var(--color-grimorio-iron, oklch(0.35 0.01 305));
+    border-radius: 0.125rem;
+    /* Fundo OPACO e não translúcido: o trilho fica por cima do mapa, e um fundo
+     * que deixa a grade passar transforma nove ícones num ruído difícil de ler
+     * justamente sobre o terreno pintado. */
+    background: oklch(0.18 0.012 300);
+    box-shadow: 0 4px 14px oklch(0 0 0 / 0.45);
+    /* Se o trilho for mais alto que a cena — telefone deitado com o mestre vendo
+     * as nove —, ele rola por dentro em vez de vazar para fora do mapa. */
+    max-height: calc(100% - 1rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .tabuleiro-trilho-vinco {
+    width: 1.25rem;
+    height: 1px;
+    margin-block: 0.125rem;
+    background: var(--color-grimorio-iron, oklch(0.35 0.01 305));
+  }
+
+  .tabuleiro-ferramenta {
+    position: relative;
+    display: flex;
+    width: 2.25rem;
+    height: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    border-radius: 0.125rem;
+    outline: none;
+    transition: color 150ms, border-color 150ms, background-color 150ms;
+  }
+  .tabuleiro-ferramenta:hover {
+    border-color: var(--color-grimorio-iron, oklch(0.35 0.01 305));
+    color: var(--color-foreground, oklch(0.93 0.014 85));
+  }
+  .tabuleiro-ferramenta:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+  }
+  /* A ATIVA é a coisa mais alta do trilho, e isto foi medido na tela: com só o
+   * `.pincel-ligado` (borda + fundo a 14%), o ANEL DE FOCO de outro botão lia
+   * como "esta é a ativa" — dois estados diferentes com o mesmo peso visual, num
+   * componente que existe justamente para responder "qual está ligada".
+   *
+   * Aqui ela ganha o fundo cheio e uma barra na borda esquerda, que é a marca
+   * que nenhum estado passageiro usa. */
+  .tabuleiro-ferramenta.pincel-ligado {
+    background-color: oklch(0.8 0.11 85 / 0.22);
+    box-shadow: inset 3px 0 0 var(--color-grimorio-gold, oklch(0.8 0.11 85));
+  }
+  .tabuleiro-ferramenta.pincel-ligado .tabuleiro-ferramenta-tecla { opacity: 0.9; }
+  /* O NÚMERO no canto, e não só no `title`: um atalho que só existe no balão do
+   * mouse é um atalho que quem navega por teclado nunca descobre — e é
+   * justamente essa pessoa que mais o usaria. */
+  .tabuleiro-ferramenta-tecla {
+    position: absolute;
+    right: 1px;
+    bottom: 0;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 0.5625rem;
+    line-height: 1;
+    opacity: 0.55;
+  }
+
+  /* AVISOS no alto, AJUDANTES no pé, e a divisa é de natureza: aviso é ESTADO da
+   * cena que se esquece (a cortina, a lente); ajudante é o que a ferramenta
+   * ativa diz AGORA (a medida, o gabarito, o custo do movimento).
+   *
+   * O CONTÊINER não recebe clique e os filhos recebem: eles cobrem uma faixa
+   * inteira do mapa, e sem isso um aviso apagado roubaria o clique de metade da
+   * cena sem nada na tela para explicar. */
+  .tabuleiro-avisos,
+  .tabuleiro-ajudantes {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 6;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    /* O trilho mora na esquerda; os overlays começam depois dele para não
+       cobrirem os ícones. */
+    padding-left: 3.75rem;
+    pointer-events: none;
+  }
+  .tabuleiro-avisos { top: 0; }
+  .tabuleiro-ajudantes { bottom: 0; }
+  .tabuleiro-avisos > *,
+  .tabuleiro-ajudantes > * {
+    pointer-events: auto;
+  }
+
+  .tabuleiro-aviso {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid oklch(0.8 0.11 85 / 0.4);
+    border-radius: 0.125rem;
+    background: oklch(0.2 0.03 85 / 0.96);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
+    box-shadow: 0 4px 14px oklch(0 0 0 / 0.45);
+  }
+  .tabuleiro-aviso-saida {
+    margin-left: auto;
+    display: inline-flex;
+    min-height: 1.5rem;
+    align-items: center;
+    border: 1px solid oklch(0.8 0.11 85 / 0.6);
+    border-radius: 0.125rem;
+    padding-inline: 0.5rem;
+    font-size: 0.75rem;
+    outline: none;
+    transition: background-color 150ms;
+  }
+  .tabuleiro-aviso-saida:hover { background: oklch(0.8 0.11 85 / 0.2); }
+  .tabuleiro-aviso-saida:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 1px;
+  }
+
+  /* O AJUDANTE é a barra da ferramenta ativa. Ele era uma tira ABAIXO do mapa,
+   * com `border-t`, e virou painel flutuante — a borda de cima não descreve mais
+   * nada, e o fundo opaco é o que o torna legível sobre a grade. */
+  .tabuleiro-ajudante {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    border: 1px solid var(--color-grimorio-iron, oklch(0.35 0.01 305));
+    border-radius: 0.125rem;
+    background: oklch(0.18 0.012 300 / 0.96);
+    padding: 0.375rem 0.5rem;
+    font-size: 0.875rem;
+    box-shadow: 0 4px 14px oklch(0 0 0 / 0.45);
+  }
+
   .tabuleiro-palco {
     --quadrado: 44px;
     position: relative;

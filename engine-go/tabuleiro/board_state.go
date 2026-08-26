@@ -812,6 +812,42 @@ func listaDaEspecie(b *BoardState, especie EspecieDeTerreno) *[]engine.Square {
 	return nil
 }
 
+// LimpaACasa tira TODO terreno de um quadrado, seja qual for a espécie
+// (ALE-203, decisão do dono).
+//
+// É o conserto do defeito que o dono relatou como "a borracha não funciona".
+// Ela era um MODO que invertia o pincel selecionado, então com `Cobertura` na
+// mão clicar num quadrado de `Difícil` apagava a cobertura que não estava ali —
+// e a tela não dizia nada. Medido na bancada, clique a clique.
+//
+// A borracha agora promete o que o nome diz: a casa fica limpa, e o pincel na
+// mão não entra na conta. O que se perde é "tirar só a cobertura desta casa", e
+// o dono aceitou a troca — repintar o que sobrou é um clique, e descobrir por
+// que um gesto não fez nada é uma noite.
+//
+// Devolve se ALGUMA COISA saiu: quem chama usa para não subir a versão (e não
+// acordar a mesa) por um clique em chão limpo.
+func LimpaACasa(b *BoardState, square engine.Square) bool {
+	limpou := false
+	for _, pincel := range EspeciesDeTerreno {
+		lista := listaDaEspecie(b, pincel.ID)
+		if lista == nil {
+			continue
+		}
+		for i, existente := range *lista {
+			if existente == square {
+				*lista = append((*lista)[:i], (*lista)[i+1:]...)
+				limpou = true
+				break
+			}
+		}
+	}
+	if limpou {
+		b.Version++
+	}
+	return limpou
+}
+
 // moveTerrainOf traduz a lista esparsa para o que o motor cobra. A conversão
 // mora aqui e não no motor porque o motor não conhece tabuleiro: ele responde
 // sobre um caminho e um chão, e quem tem chão é o estado.

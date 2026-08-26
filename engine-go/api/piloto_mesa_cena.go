@@ -30,6 +30,7 @@ func (s *Server) rotasDaCena(r chi.Router) {
 	r.Post(base+"/lugares/{placeId}/reabrir", s.comandoDoMestreNoTabuleiro(reabreOLugar))
 	r.Post(base+"/lugares/{placeId}/remover", s.comandoDoMestreNoTabuleiro(removeOLugar))
 	r.Post(base+"/terreno/{especie}/{x}/{y}", s.comandoDoMestreNoTabuleiro(pintaOTerreno))
+	r.Post(base+"/terreno/limpar/{x}/{y}", s.comandoDoMestreNoTabuleiro(limpaOTerreno))
 	r.Post(base+"/pecas", s.comandoDoMestreNoTabuleiro(poeNoMapa))
 }
 
@@ -54,6 +55,24 @@ func pintaOTerreno(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
 	especie := tabuleiro.EspecieConhecida(chi.URLParam(c.R, "especie"))
 	ligado := c.R.URL.Query().Get("apagar") == ""
 	return st.boards.PaintTerrain(c.R.Context(), c.SessionID, casa, especie, ligado)
+}
+
+// limpaOTerreno é a BORRACHA (ALE-203): o clique devolve a casa ao chão limpo,
+// seja qual for o terreno nela.
+//
+// ROTA PRÓPRIA e não `?apagar=1` na rota de pintar, e a diferença é o que
+// conserta o defeito: aquela precisa de uma ESPÉCIE no caminho, e era justamente
+// a espécie que fazia a borracha apagar a coisa errada em silêncio. Sem espécie
+// no caminho, não há como errar qual.
+func limpaOTerreno(st *Server, c mesaComando) (*tabuleiro.BoardState, error) {
+	casa, err := quadradoDaURL(c.R)
+	if err != nil {
+		return nil, err
+	}
+	if st.boards.Get(c.R.Context(), c.SessionID) == nil {
+		return nil, fmt.Errorf("não há tabuleiro aberto para apagar")
+	}
+	return st.boards.LimpaACasa(c.R.Context(), c.SessionID, casa)
 }
 
 // reabreOLugar traz uma cena guardada de volta para a mesa.
