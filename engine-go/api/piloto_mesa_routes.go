@@ -75,6 +75,7 @@ func (s *Server) PilotoRouter() http.Handler {
 		s.rotasDosMarcadores(r)
 		s.rotasDaCortina(r)
 		s.rotasDasCondicoes(r)
+		s.rotasDaSessao(r)
 	})
 	// A SEGUNDA superfície (ALE-219): a administração. Mesmo `requireAdmin` da
 	// API — a tela não decide quem pode ver, ela só deixa de oferecer o que o
@@ -178,6 +179,13 @@ func (s *Server) loadMesaView(ctx context.Context, user AuthUser, campaignID, se
 	st := aovivo.StateForRole(role, s.sessions.RefreshCharacterMaxes(ctx, sessionID))
 	grupo, meus, eu := s.mesaRoster(ctx, user, campaignID)
 	view := mesaViewOf(st, campaignID, sessionID, sess.Sessionnumber, grupo, meus, eu)
+	// O CICLO da sessão chega à tela (ALE-269): sem o estado, os verbos teriam de
+	// ser oferecidos todos, e "encerrar" numa sessão que nunca começou é o gesto
+	// que o servidor recusa — oferecer o que será recusado é desenhar um erro.
+	view.Status = sess.Status
+	if sess.Title.Valid {
+		view.Titulo = sess.Title.String
+	}
 	// O tabuleiro passa pelo MESMO gargalo por papel que a fila: o `BoardForRole`
 	// é para o mapa o que o `StateForRole` é para a lista, e é ele que tira as
 	// peças escondidas antes de a cena existir. A saúde vem do estado JÁ

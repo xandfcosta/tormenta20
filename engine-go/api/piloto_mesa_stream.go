@@ -153,6 +153,7 @@ func regioesDaMesa(v mesaView) []regiaoDaMesa {
 		// mapa, `TestUmaMudancaNaFilaNaoRemendaOMapa` acusou na hora — a peça
 		// debaixo do dedo do mestre seria trocada no meio do arrasto.
 		{"mesa-por-no-mapa", mesaPorNoMapa(v)},
+		{"mesa-config-da-sessao", mesaConfigDaSessao(v)},
 		{"mesa-fila", mesaFila(v)},
 		{"mesa-comandos", mesaComandos(v)},
 	}

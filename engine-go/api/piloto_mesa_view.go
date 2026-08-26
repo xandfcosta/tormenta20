@@ -22,6 +22,14 @@ import (
 // mesaView é uma tela inteira da Mesa. Campos exportados porque `html/template`
 // não enxerga os minúsculos — a única razão, e ela é do pacote de template.
 type mesaView struct {
+	// Status é o ciclo da sessão — `planned`, `active` ou `ended`. Ele decide
+	// QUAIS verbos a tela oferece, e não só como ela os pinta: o servidor recusa
+	// encerrar o que nunca começou, e um botão que existe para levar recusa é um
+	// erro desenhado.
+	Status string
+	// Titulo é o apelido da noite, e pode ser VAZIO: a identidade da sessão é o
+	// NÚMERO. Obrigar a um título faria o mestre inventar texto para salvar.
+	Titulo     string
 	CampaignID int64
 	SessionID  int64
 	SessionNum int64
@@ -399,4 +407,50 @@ func alternaACondicaoDaLinha(v mesaView, id string) string {
 		"@post('/piloto/mesa/%d/%d/initiative/' + $linhadacondicao + '/condicao/%s')",
 		v.CampaignID, v.SessionID, id,
 	)
+}
+
+// ── O CICLO da sessão na tela (ALE-269) ─────────────────────────────────────
+
+// comandoDaSessao escreve a chamada de um verbo do ciclo.
+func comandoDaSessao(v mesaView, acao string) string {
+	return fmt.Sprintf("@post('/piloto/mesa/%d/%d/sessao/%s')", v.CampaignID, v.SessionID, acao)
+}
+
+// caminhoDeExcluir é o `action` do form, e não uma expressão: excluir NAVEGA.
+func caminhoDeExcluir(v mesaView) string {
+	return fmt.Sprintf("/piloto/mesa/%d/%d/sessao/excluir", v.CampaignID, v.SessionID)
+}
+
+// aCronicaDaCampanha é para onde se sai da sessão.
+//
+// A crônica e não o Hub: é de lá que se entra numa sessão, então é lá que o
+// mestre continua o que estava fazendo. Sair para a raiz obrigaria a refazer
+// dois cliques para voltar à mesa que ele acabou de deixar.
+func aCronicaDaCampanha(v mesaView) string {
+	return fmt.Sprintf("/piloto/campanhas/%d", v.CampaignID)
+}
+
+// oCicloEmPortugues é o que o crachá do cabeçalho diz.
+//
+// Traduzido AQUI e não no banco: `planned`/`active`/`ended` são a forma de fio,
+// e a tela não deve imprimir identificador — é o mesmo defeito que o crachá de
+// condição tinha, e que custou CAIDO e VULNERAVEL na tela.
+func oCicloEmPortugues(status string) string {
+	switch status {
+	case "active":
+		return "Ao vivo"
+	case "ended":
+		return "Encerrada"
+	default:
+		return "Planejada"
+	}
+}
+
+// abreAConfigDaSessao semeia o título de AGORA e abre o diálogo.
+//
+// Quem abre é quem semeia, pela mesma razão do `abreAEdicao`: o campo é ligado a
+// um SINAL e nunca recebe `value` do servidor, senão o remendo da próxima troca
+// de turno apagaria o que o mestre está digitando.
+func abreAConfigDaSessao(v mesaView) string {
+	return fmt.Sprintf("$titulodasessao = %q; document.getElementById('config-da-sessao').showModal()", v.Titulo)
 }

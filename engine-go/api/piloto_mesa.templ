@@ -36,6 +36,7 @@ templ mesa(v mesaView) {
 			@mesaGrupo(v)
 			@mesaTabuleiro(v)
 			@mesaPorNoMapa(v)
+			@mesaConfigDaSessao(v)
 			@mesaFila(v)
 		</div>
 		@mesaComandos(v)
@@ -77,6 +78,7 @@ templ mesaCabecalho(v mesaView) {
 			// `aria-live` é obrigatório aqui e não é enfeite: num app de morph a vez
 			// muda sem navegação nenhuma, então quem não vê a tela não tem OUTRO
 			// sinal de que chegou a vez dele. Na SPA o aviso chega por toast.
+			@verbosDaSessao(v)
 			<div class="flex items-center gap-2 text-sm" aria-live="polite">
 				if v.Turn.Kind != "idle" {
 					<span class="text-muted-foreground">Rodada { fmt.Sprint(v.Round) }</span>
