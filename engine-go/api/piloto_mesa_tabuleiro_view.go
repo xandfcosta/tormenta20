@@ -357,6 +357,13 @@ type movimentoView struct {
 	// Meu diz se quem olha decide sobre este movimento. O mestre decide por
 	// qualquer um — é ele quem toca a mesa.
 	Meu bool
+	// Paradas são as casas onde a pessoa CLICOU, sem a última: elas viram uma
+	// marca na trilha, e é ela que faz o "Desfazer parada" ter o que desfazer aos
+	// olhos de quem clica. A última fica de fora porque já é o losango do destino.
+	Paradas []quadradoDoTabuleiro
+	// PodeDesfazer é ter mais de UMA perna. Com uma só, desfazer é cancelar — e o
+	// Cancelar está ali do lado, dizendo isso com a palavra certa.
+	PodeDesfazer bool
 }
 
 // movimentoDoTabuleiro monta o movimento em curso, ou nil quando não há.
@@ -378,6 +385,15 @@ func movimentoDoTabuleiro(b *tabuleiro.BoardState, m tabuleiro.Mover, e tabuleir
 	}
 	for _, q := range p.Path {
 		v.Trilha = append(v.Trilha, quadradoDoTabuleiro{Col: q.X - e.X0, Lin: q.Y - e.Y0})
+	}
+	// As paradas INTERMEDIÁRIAS: a última é o destino, que já tem desenho
+	// próprio, e a primeira é de onde a peça saiu — marcar as duas contaria a
+	// mesma coisa duas vezes.
+	if len(p.Stops) > 2 {
+		v.PodeDesfazer = true
+		for _, q := range p.Stops[1 : len(p.Stops)-1] {
+			v.Paradas = append(v.Paradas, quadradoDoTabuleiro{Col: q.X - e.X0, Lin: q.Y - e.Y0})
+		}
 	}
 	// O `Restante` é preenchido pelo chamador: ele sai da MESMA chamada que
 	// desenha o alcance, e recalculá-lo aqui seria a segunda conta da regra.

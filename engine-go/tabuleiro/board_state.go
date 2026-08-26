@@ -611,6 +611,19 @@ type PendingMove struct {
 	// ByUserID é quem propôs. O mestre confirma por qualquer um; o jogador só
 	// confirma o que ele mesmo propôs.
 	ByUserID int64 `json:"byUserId"`
+	// Stops são as casas onde a pessoa CLICOU, na ordem, com a primeira sendo o
+	// lugar de onde a peça saiu. O `Path` é o que elas produzem
+	// (`CaminhoPorParadas`), e não o contrário.
+	//
+	// Existe porque o caminho NÃO deixa descobri-las: um trecho legítimo já tem
+	// uma dobra (a diagonal vem primeiro), e ela é indistinguível da dobra de uma
+	// parada. Sem esta lista, "desfazer a última perna" só poderia ser adivinhado
+	// — e o que se adivinha errado aqui é o movimento que a mesa está vendo.
+	//
+	// NULO é um valor legítimo e quer dizer "não se sabe onde ela parou": é o que
+	// o `ProposeMove` deixa quando o caminho chega pronto de fora. Quem propõe por
+	// paradas usa o `ProposeMoveComParadas`, e só aí o desfazer de UMA existe.
+	Stops []engine.Square `json:"stops,omitempty"`
 }
 
 // boardDefaultSpeedSquares é o orçamento de quem não declarou deslocamento: 9m,
@@ -713,6 +726,26 @@ func ProposeMove(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, 
 		Diagonals: cost.Diagonals, Difficult: cost.Difficult, ByUserID: by.UserID,
 	}
 	b.Version++
+	return nil
+}
+
+// ProposeMoveComParadas propõe pelas casas em que a pessoa CLICOU, e guarda a
+// lista junto (ALE-269, item 10).
+//
+// A primeira parada é onde a peça está; cada uma seguinte estende o caminho,
+// contornando o que quem move quiser. É a forma que o piloto usa, e é ela que
+// torna "desfazer a última perna" uma operação exata em vez de um palpite: o
+// caminho se reconstrói pelas paradas que sobraram, e reconstruir é o que o
+// `CaminhoPorParadas` já faz de graça.
+//
+// A validação inteira continua sendo a do `ProposeMove` — o orçamento, a vez, a
+// posse, a contiguidade. Esta função não afrouxa nada; ela só LEMBRA de onde o
+// caminho veio.
+func ProposeMoveComParadas(b *BoardState, st *aovivo.SessionRuntimeState, tokenID string, paradas []engine.Square, by Mover) error {
+	if err := ProposeMove(b, st, tokenID, engine.CaminhoPorParadas(paradas), by); err != nil {
+		return err
+	}
+	b.Pending.Stops = paradas
 	return nil
 }
 

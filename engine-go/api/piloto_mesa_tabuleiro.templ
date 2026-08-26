@@ -190,6 +190,13 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 						for _, q := range v.Movimento.Trilha {
 							<div aria-hidden="true" class="tabuleiro-trilha" style={ posicaoNoPlano(q.Col, q.Lin, 1) }></div>
 						}
+						// As PARADAS marcadas sobre a trilha (ALE-266, portadas na
+						// ALE-269): sem elas o caminho é uma faixa contínua e não há
+						// como ver quantas pernas o "Desfazer parada" vai encontrar —
+						// o botão desfaria algo que a tela não mostra.
+						for _, q := range v.Movimento.Paradas {
+							<div aria-hidden="true" class="tabuleiro-parada" style={ posicaoNoPlano(q.Col, q.Lin, 1) }></div>
+						}
 					}
 					// O ALCANCE é PINTURA e não alvo de clique, e a diferença é o
 					// que fez este desenho mudar no meio: quem tem orçamento é o
@@ -500,6 +507,21 @@ templ oMovimentoProposto(v tabuleiroView) {
 			}
 		</p>
 		<span class="ml-auto flex items-center gap-2">
+			// DESFAZER UMA vem antes de CANCELAR, e a ordem é a do arrependimento:
+			// primeiro se corrige a última perna, e só depois se joga a rota inteira
+			// fora. Some quando não há perna a desfazer — um botão que não faz nada
+			// é pior que nenhum, e com uma perna só desfazer JÁ É cancelar, que está
+			// ali do lado dizendo isso com a palavra certa.
+			if v.Movimento.PodeDesfazer {
+				<button
+					type="button"
+					data-on:click={ comandoDoMovimento(v, "desfazer-parada") }
+					class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				>
+					@icone("CornerUpLeft", "size-4")
+					Desfazer parada
+				</button>
+			}
 			<button
 				type="button"
 				data-on:click={ comandoDoMovimento(v, "cancelar") }

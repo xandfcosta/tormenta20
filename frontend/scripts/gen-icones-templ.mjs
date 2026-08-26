@@ -87,6 +87,8 @@ const QUERIDOS = [
   'MousePointer2',
   // O CENTRALIZADOR (ALE-269, item 9), o mesmo ícone que a `ViewControls` da SPA.
   'Crosshair',
+  // DESFAZER A PARADA (ALE-269, item 10), o mesmo da `MoveBar` da SPA.
+  'CornerUpLeft',
 ]
 
 const indice = readFileSync(resolve(LUCIDE, 'lucide-solid.mjs'), 'utf8')

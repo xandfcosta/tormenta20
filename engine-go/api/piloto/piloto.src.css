@@ -651,6 +651,28 @@ html {
     z-index: 1;
   }
 
+  /* A PARADA é onde a pessoa CLICOU, e ela marca a junta entre duas pernas
+   * (ALE-266, portada na ALE-269).
+   *
+   * Sem ela a trilha é uma faixa contínua e não há como ver quantas pernas o
+   * "Desfazer parada" vai encontrar — o botão desfaria algo que a tela não
+   * mostra. Um ponto no meio da casa, e não a casa inteira pintada: a casa já
+   * está na trilha, e pintá-la de novo diria "o caminho passa aqui" em vez de
+   * "aqui houve uma decisão". */
+  .tabuleiro-parada {
+    position: absolute;
+    left: calc(var(--col) * var(--quadrado));
+    top: calc(var(--lin) * var(--quadrado));
+    width: var(--quadrado);
+    height: var(--quadrado);
+    pointer-events: none;
+    z-index: 1;
+    background:
+      radial-gradient(circle at 50% 50%,
+        oklch(0.8 0.11 85 / 0.95) 0 18%,
+        transparent 18% 100%);
+  }
+
   /* O ALCANCE é onde a peça AINDA cabe, e ele informa antes da escolha em vez de
    * avisar depois do erro. Não é alvo de clique — quem recebe é a camada de
    * casas —, porque quem tem orçamento é só o jogador na vez dele: o mestre move

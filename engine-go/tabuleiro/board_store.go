@@ -321,6 +321,22 @@ func (bs *BoardStore) ProposeMove(ctx context.Context, sessionID int64, st *aovi
 	})
 }
 
+// ProposeMoveComParadas é a porta de quem monta o movimento CLICANDO, e ela
+// existe para a lista de paradas ser guardada junto (ALE-269, item 10).
+//
+// Mesma trava, mesmo orçamento fresco, mesma medição: o que muda é a memória de
+// ONDE a pessoa parou, que o caminho sozinho não deixa reconstruir. Sem ela,
+// "desfazer a última perna" seria um palpite sobre o movimento que a mesa está
+// vendo.
+func (bs *BoardStore) ProposeMoveComParadas(ctx context.Context, sessionID int64, st *aovivo.SessionRuntimeState, tokenID string, paradas []engine.Square, by Mover, speedSquares int) (*BoardState, error) {
+	return bs.apply(ctx, sessionID, func(b *BoardState) error {
+		if token := FindToken(b, tokenID); token != nil && speedSquares > 0 {
+			token.SpeedSquares = speedSquares
+		}
+		return ProposeMoveComParadas(b, st, tokenID, paradas, by)
+	})
+}
+
 func (bs *BoardStore) CommitMove(ctx context.Context, sessionID int64, st *aovivo.SessionRuntimeState, version int64, by Mover) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, func(b *BoardState) error { return CommitMove(b, st, version, by) })
 }
