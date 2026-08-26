@@ -72,6 +72,22 @@ const (
 	clicouEmY = "Math.floor((evt.offsetY + $vistay) / $quadrado)"
 )
 
+// A INTERSEÇÃO MAIS PERTO do clique, e não a casa.
+//
+// `round` no lugar de `floor`, e a diferença é a regra da esfera: ela "surge na
+// interseção de quatro quadrados" (p225), e uma interseção é um CANTO. Com
+// `floor` o clique cai sempre no canto de CIMA E À ESQUERDA da casa apontada —
+// até meio quadrado longe de onde o dedo estava, sem nada na tela dizendo por
+// quê.
+//
+// A convenção do canto é a do `engine.sphereSquares`: o canto `(X,Y)` é o ponto
+// no alto-esquerda da casa `(X,Y)`, e a esfera se espalha simétrica em volta
+// dele.
+const (
+	clicouNoCantoX = "Math.round((evt.offsetX + $vistax) / $quadrado)"
+	clicouNoCantoY = "Math.round((evt.offsetY + $vistay) / $quadrado)"
+)
+
 // oPontoNoPlano é o mesmo para um ponto qualquer da janela, e não só do clique —
 // o arrasto da vista precisa dele para o zoom ancorado.
 func oPontoNoPlano(pixelX, pixelY string) (x, y string) {

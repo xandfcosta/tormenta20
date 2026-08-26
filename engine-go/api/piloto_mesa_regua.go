@@ -367,6 +367,24 @@ func apontaOGabarito(k engine.AreaKind) bool {
 	return k == engine.AreaCone || k == engine.AreaLine
 }
 
+// aFormaNasceNaIntersecao diz onde a ORIGEM da forma pousa, e isso é REGRA do
+// livro e não escolha de tela (p225, conferido no PDF p231):
+//
+//	"Esfera. Surge na INTERSEÇÃO DE QUATRO QUADRADOS, estendendo-se em todas as
+//	 direções até o limite de seu raio."
+//	"Quadrado. Surge NO QUADRADO ou quadrados escolhidos, afetando o piso."
+//	"Cone/Linha. Surge ADJACENTE A VOCÊ e se afasta de você…"
+//
+// O dono pediu uma escolha de "montar esfera centralizada" e o livro respondeu:
+// não há escolha, a esfera é SEMPRE da interseção. O `engine.sphereSquares` já
+// desenhava assim — ele recebe a origem como CANTO. Quem errava era a TELA, que
+// mandava o quadrado do `floor` do clique e desenhava o pingo no CENTRO dele:
+// meio quadrado de deslocamento entre onde a pessoa clicou e onde a bola caiu, e
+// nada na tela dizendo por quê. É a resposta ao "não tem feedback visual algum".
+func aFormaNasceNaIntersecao(k engine.AreaKind) bool {
+	return k == engine.AreaSphere
+}
+
 // gabaritoDaURL recusa forma que o livro não tem, e a mensagem diz o valor
 // recebido e a lista do que existe.
 func gabaritoDaURL(bruto string) (engine.AreaKind, error) {

@@ -366,10 +366,13 @@ templ oGabaritoDesenhado(v tabuleiroView) {
 			// A MIRA é um anel vazado e só existe enquanto a forma APONTA e a
 			// pessoa está mirando: um anel parado depois de posto seria uma ponta
 			// que ninguém pode mais mover.
+			// O PINGO pousa onde a forma NASCE: no CANTO para a esfera, no
+			// centro da casa para as outras (p225). Desenhá-lo sempre no centro
+			// mostrava a origem meio quadrado longe de onde a bola caiu.
 			<circle
 				data-show={ "$gabaritofase > 0" }
-				data-attr:cx="$gabaritox + 0.5"
-				data-attr:cy="$gabaritoy + 0.5"
+				data-attr:cx="$gabaritox + ($gabaritonaintersecao ? 0 : 0.5)"
+				data-attr:cy="$gabaritoy + ($gabaritonaintersecao ? 0 : 0.5)"
 				r="0.13"
 				class="tabuleiro-regua-ponta"
 			></circle>

@@ -167,3 +167,41 @@ func TestAReguaForjadaERecusada(t *testing.T) {
 		t.Errorf("uma régua com %d paradas não foi recusada: %q", len(pontos), corpo)
 	}
 }
+
+// TestAEsferaNasceNaIntersecao — REGRA DO LIVRO, não escolha de tela.
+//
+// p225, conferido no PDF p231:
+//
+//	"Esfera. Surge na INTERSEÇÃO DE QUATRO QUADRADOS, estendendo-se em todas as
+//	 direções até o limite de seu raio."
+//	"Quadrado. Surge NO QUADRADO ou quadrados escolhidos."
+//
+// O dono pediu uma escolha de "montar esfera centralizada" e o livro respondeu
+// que escolha não há. O `engine.sphereSquares` já desenhava a partir do CANTO —
+// quem errava era a tela, que mandava o quadrado do `floor` do clique: até meio
+// quadrado entre onde o dedo estava e onde a bola caía, e nada dizendo por quê.
+//
+// O guarda prende as DUAS pontas — a regra e o gesto — porque separadas elas já
+// divergiram uma vez.
+func TestAEsferaNasceNaIntersecao(t *testing.T) {
+	if !aFormaNasceNaIntersecao(engine.AreaSphere) {
+		t.Error("a esfera deixou de nascer na interseção (p225)")
+	}
+	for _, outra := range []engine.AreaKind{engine.AreaSquare, engine.AreaCone, engine.AreaLine} {
+		if aFormaNasceNaIntersecao(outra) {
+			t.Errorf("%q passou a nascer na interseção, e o livro só diz isso da esfera (p225)", outra)
+		}
+	}
+
+	f := novoPiloto(t)
+	f.abreTabuleiro(t, "pedra")
+	tela := f.pede(t, f.mestre, http.MethodGet, f.urlDaMesa(), "").Body.String()
+	if !strings.Contains(tela, "Math.round((evt.offsetX") {
+		t.Error("a tela não arredonda o clique para o canto: com `floor` a esfera cai " +
+			"meio quadrado longe do dedo, e o defeito é silencioso")
+	}
+	if !strings.Contains(tela, "gabaritonaintersecao") {
+		t.Error("a tela não pergunta ao servidor onde a forma nasce — a regra virou " +
+			"uma segunda cópia na expressão")
+	}
+}

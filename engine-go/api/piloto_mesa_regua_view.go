@@ -153,11 +153,24 @@ func gabaritoNoPontoClicado(v tabuleiroView) string {
 		// SÓ O BOTÃO PRIMÁRIO põe gabarito, pela mesma razão medida na régua: o
 		// clique sintético que acompanha o botão direito vem com `offsetX` zero e
 		// poria a área na origem do plano no mesmo gesto que a apagou.
-		"if (evt.button !== 0) return; const cx = %s, cy = %s; "+
-			"if ($gabaritofase === 1 && $gabaritoaponta) { $gabaritomirax = cx; $gabaritomiray = cy; $gabaritofase = 2 } "+
-			"else { $gabaritox = cx; $gabaritoy = cy; $gabaritomirax = cx; $gabaritomiray = cy; $gabaritofase = 1 } "+
+		//
+		// A ORIGEM pousa onde o LIVRO manda, e é o `$gabaritonaintersecao` quem
+		// diz qual: a esfera na interseção de quatro quadrados, o resto na casa
+		// (p225). Perguntar aqui `$gabarito === 'esfera'` seria a segunda cópia da
+		// regra, livre para divergir da primeira — a mesma razão do
+		// `$gabaritoaponta`.
+		//
+		// A MIRA continua sendo CASA em qualquer forma: ela é para onde o cone
+		// aponta, e direção se escolhe apontando para um quadrado.
+		"if (evt.button !== 0) return; "+
+			"const cx = $gabaritonaintersecao ? %s : %s, cy = $gabaritonaintersecao ? %s : %s; "+
+			"if ($gabaritofase === 1 && $gabaritoaponta) { $gabaritomirax = %s; $gabaritomiray = %s; $gabaritofase = 2 } "+
+			"else { $gabaritox = cx; $gabaritoy = cy; $gabaritomirax = %s; $gabaritomiray = %s; $gabaritofase = 1 } "+
 			"%s",
-		clicouEmX, clicouEmY, remedeOGabarito(v),
+		clicouNoCantoX, clicouEmX, clicouNoCantoY, clicouEmY,
+		clicouEmX, clicouEmY,
+		clicouEmX, clicouEmY,
+		remedeOGabarito(v),
 	)
 }
 
@@ -203,8 +216,8 @@ func remedeOGabarito(v tabuleiroView) string {
 // O `$gabaritoaponta` sai daqui com o valor do SERVIDOR: é o botão que sabe qual
 // forma ele liga, e é o `apontaOGabarito` que sabe quais formas apontam.
 func escolheAForma(forma engine.AreaKind) string {
-	return fmt.Sprintf("$gabarito = %q; $gabaritoaponta = %t; %s",
-		string(forma), apontaOGabarito(forma), guardaOGabarito)
+	return fmt.Sprintf("$gabarito = %q; $gabaritoaponta = %t; $gabaritonaintersecao = %t; %s",
+		string(forma), apontaOGabarito(forma), aFormaNasceNaIntersecao(forma), guardaOGabarito)
 }
 
 // aDicaDoGabaritoVazio é o que a barra diz enquanto não há gabarito posto, e ela

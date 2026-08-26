@@ -235,8 +235,9 @@ func sinaisDaMesa() string {
 		// é a que fica para trás no dia em que a ordem mudar, e o defeito seria a
 		// barra marcando uma forma e o mapa desenhando outra. `aponta: false`
 		// acompanha, porque a esfera vai para todos os lados (p225).
-		fmt.Sprintf("gabarito: '%s', gabaritoaponta: %t, gabaritotamanho: 2",
-			string(asFormasDoLivro[0]), apontaOGabarito(asFormasDoLivro[0])),
+		fmt.Sprintf("gabarito: '%s', gabaritoaponta: %t, gabaritonaintersecao: %t, gabaritotamanho: 2",
+			string(asFormasDoLivro[0]), apontaOGabarito(asFormasDoLivro[0]),
+			aFormaNasceNaIntersecao(asFormasDoLivro[0])),
 		"gabaritox: 0, gabaritoy: 0, gabaritomirax: 0, gabaritomiray: 0, gabaritofase: 0",
 		fmt.Sprintf("gabaritopath: '', gabaritotexto: %q", aDicaDoGabaritoVazio),
 		// As NOTAS da sessão.
