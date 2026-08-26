@@ -46,13 +46,6 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 		</div>
 		if v.Mestre {
 			@abrirTabuleiro(v)
-			// O diálogo nasce E MORRE com o gatilho: um `<dialog>` sem botão que
-			// o abra é peso morto no documento, e o guarda pegou isto na
-			// primeira corrida — a campanha sem lugar nenhum servia um menu
-			// inalcançável cujo título a busca da página ainda encontrava.
-			if len(v.Acervo) > 0 {
-				@oAcervoDeLugares(v)
-			}
 		}
 	} else if v.Cortina {
 		// A CORTINA ocupa o lugar da cena e NÃO desenha grade, de propósito: a
@@ -131,9 +124,6 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 				// abre. Ele mora aqui, fora do plano, porque um `<dialog>` dentro do
 				// mapa herdaria o `--quadrado` e o empilhamento das camadas.
 				@editarAPeca(v)
-				if len(v.Acervo) > 0 {
-					@oAcervoDeLugares(v)
-				}
 			}
 			// A CENA é a JANELA sobre um plano infinito (ALE-203, decisão do dono),
 			// e tudo o que não é o mapa flutua POR CIMA dela: o trilho, os avisos e
@@ -1277,11 +1267,20 @@ templ asCamadasDeClique(v tabuleiroView) {
 	// TRILHO, pelo botão que está `aria-pressed`. É a semântica
 	// normal de barra de ferramentas, e custa um sinal a menos.
 	if v.Mestre {
+		// PINTAR É UM TRAÇO e não um clique (ALE-203, item 8 do dono). O
+		// `pointerdown` começa, o `pointermove` continua enquanto o dedo
+		// atravessa casas novas, e o `pointerup` larga. O botão DIREITO apaga
+		// no mesmo gesto, que é o que todo editor de mapa faz — e é por isso
+		// que o menu do navegador precisa ser preso aqui.
 		<button
 			type="button"
 			data-show={ oPincelEstaLigado() }
-			aria-label="Pintar terreno — escolha a casa"
-			data-on:click={ pinturaNoPontoClicado(v) }
+			aria-label="Pintar terreno — arraste para pintar, botão direito apaga"
+			data-on:pointerdown={ oPincelPega(v, "") }
+			data-on:pointermove={ oPincelSegue(v) }
+			data-on:pointerup={ oPincelLarga }
+			data-on:pointercancel={ oPincelLarga }
+			data-on:contextmenu={ prendeOMenuDoNavegador }
 			class="tabuleiro-casas"
 		></button>
 		// A BORRACHA tem camada PRÓPRIA desde a ALE-203, e não é
@@ -1290,11 +1289,18 @@ templ asCamadasDeClique(v tabuleiroView) {
 		// dividia a camada com a pintura, o nome acessível tinha de
 		// sair de um sinal — e era o mesmo sinal que fazia a borracha
 		// apagar a espécie errada em silêncio.
+		// A BORRACHA também é traço, e nela os DOIS botões apagam: a
+		// ferramenta já disse o que o gesto é, e um botão que fizesse outra
+		// coisa seria a mesma ambiguidade que a fez virar ferramenta.
 		<button
 			type="button"
 			data-show={ aFerramentaEstaLigada(FerramentaDaBorracha) }
-			aria-label="Apagar o terreno — escolha a casa"
-			data-on:click={ limpaNoPontoClicado(v) }
+			aria-label="Apagar o terreno — arraste para apagar"
+			data-on:pointerdown={ aBorrachaPega(v) }
+			data-on:pointermove={ oPincelSegue(v) }
+			data-on:pointerup={ oPincelLarga }
+			data-on:pointercancel={ oPincelLarga }
+			data-on:contextmenu={ prendeOMenuDoNavegador }
 			class="tabuleiro-casas"
 		></button>
 		<button
@@ -1334,4 +1340,31 @@ templ asCamadasDeClique(v tabuleiroView) {
 			class="tabuleiro-casas"
 		></button>
 	}
+}
+
+// mesaAcervoDeLugares é a REGIÃO do acervo, e ela saiu de DENTRO do tabuleiro
+// por causa de uma medição (ALE-203).
+//
+// O acervo é um `<dialog>` com uma linha por lugar guardado, e numa campanha de
+// verdade eles são 147. Medido no navegador: a região `mesa-tabuleiro` inteira
+// pesava 282 KB, dos quais **236 KB eram essa lista** — a cena do tabuleiro em si
+// são 30 KB. Cada casa pintada devolvia os 282, e o gesto contínuo do pincel
+// multiplica isso pelo tamanho do traço.
+//
+// Mas o argumento não é o tamanho, é o RITMO, que é o critério que o
+// `regioesDaMesa` já usa: o acervo muda quando uma cena é ARQUIVADA ou removida —
+// duas vezes por sessão —, e o tabuleiro muda a cada peça que anda. Pendurar um no
+// outro faz o mais lento ser remendado de graça a cada mudança do mais rápido.
+// É exatamente a razão que criou a região `mesa-por-no-mapa`.
+//
+// O `<div>` existe SEMPRE, como o de lá: região que some do HTML é região que o
+// remendo não acha. O que a porta do mestre esconde é o CONTEÚDO — e o `<dialog>`
+// continua nascendo e morrendo com o gatilho, porque um diálogo sem botão que o
+// abra é peso morto que a busca da página ainda encontra.
+templ mesaAcervoDeLugares(v mesaView) {
+	<div id="mesa-acervo">
+		if v.Tabuleiro.Mestre && len(v.Tabuleiro.Acervo) > 0 {
+			@oAcervoDeLugares(v.Tabuleiro)
+		}
+	</div>
 }

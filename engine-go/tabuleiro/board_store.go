@@ -223,8 +223,20 @@ func (bs *BoardStore) UpdateToken(ctx context.Context, sessionID int64, tokenID 
 
 // LimpaACasa é a BORRACHA (ALE-203): tira todo terreno de um quadrado.
 func (bs *BoardStore) LimpaACasa(ctx context.Context, sessionID int64, square engine.Square) (*BoardState, error) {
+	return bs.LimpaOTraco(ctx, sessionID, []engine.Square{square})
+}
+
+// LimpaOTraco apaga o segmento inteiro numa gravação só.
+//
+// UMA transação para o traço e não uma por casa, e a diferença não é desempenho:
+// `apply` sobe a versão do tabuleiro e publica para a mesa. Uma gravação por casa
+// faria a mesa receber dez quadros para um gesto só, e cada um deles com metade
+// do traço desenhada.
+func (bs *BoardStore) LimpaOTraco(ctx context.Context, sessionID int64, traco []engine.Square) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, func(b *BoardState) error {
-		LimpaACasa(b, square)
+		for _, casa := range traco {
+			LimpaACasa(b, casa)
+		}
 		return nil
 	})
 }
@@ -250,8 +262,17 @@ func (bs *BoardStore) RemoveMarker(ctx context.Context, sessionID int64, markerI
 func (bs *BoardStore) PaintTerrain(
 	ctx context.Context, sessionID int64, square engine.Square, especie EspecieDeTerreno, ligado bool,
 ) (*BoardState, error) {
+	return bs.PintaOTraco(ctx, sessionID, []engine.Square{square}, especie, ligado)
+}
+
+// PintaOTraco pinta o segmento inteiro numa gravação só — ver `LimpaOTraco`.
+func (bs *BoardStore) PintaOTraco(
+	ctx context.Context, sessionID int64, traco []engine.Square, especie EspecieDeTerreno, ligado bool,
+) (*BoardState, error) {
 	return bs.apply(ctx, sessionID, func(b *BoardState) error {
-		PaintTerrain(b, square, especie, ligado)
+		for _, casa := range traco {
+			PaintTerrain(b, casa, especie, ligado)
+		}
 		return nil
 	})
 }

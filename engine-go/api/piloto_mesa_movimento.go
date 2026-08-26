@@ -137,6 +137,21 @@ func quadradoDaURL(r *http.Request) (engine.Square, error) {
 	return engine.Square{X: x, Y: y}, nil
 }
 
+// segundoQuadradoDaURL é o FIM do traço do pincel (ALE-203).
+//
+// Nomes próprios (`x2`, `y2`) e não um `quadradoDaURL` com prefixo: o chi lê por
+// nome, e um helper que recebesse o prefixo seria uma indireção a mais para ler
+// dois parâmetros.
+func segundoQuadradoDaURL(r *http.Request) (engine.Square, error) {
+	x, errX := intDoCaminho(chi.URLParam(r, "x2"))
+	y, errY := intDoCaminho(chi.URLParam(r, "y2"))
+	if errX != nil || errY != nil {
+		return engine.Square{}, fmt.Errorf("fim do traço (%q,%q) não é um par de números",
+			chi.URLParam(r, "x2"), chi.URLParam(r, "y2"))
+	}
+	return engine.Square{X: x, Y: y}, nil
+}
+
 // quemMove resolve a POSSE contra o banco, e nunca contra o cliente.
 //
 // O `Mover.OwnsCharacter` é o que separa "a peça é sua" de "você disse que é": a
@@ -187,12 +202,33 @@ func (s *Server) comandoDoMestreNoTabuleiro(
 	return s.comandoDoTabuleiro(mutar, true)
 }
 
+// comandoContinuoDoMestre é o irmão do de cima para o gesto que se REPETE
+// enquanto o dedo está no botão (ALE-203): pintar e apagar terreno arrastando.
+//
+// A diferença é o TAMANHO DA RESPOSTA, e ela é medida: o `respondeAoMestre`
+// repinta TODAS as regiões da Mesa, e um clique de pintura devolvia **353 KB**.
+// O comentário dele explicava por que isso era seguro — "ninguém está no meio de
+// um arrasto no instante em que pediu outra coisa" — e essa frase deixa de valer
+// exatamente aqui: no gesto contínuo a pessoa ESTÁ no meio de um arrasto, e cada
+// casa que o dedo cruza mandaria a Mesa inteira de volta. Um traço de vinte
+// casas custaria sete megabytes.
+//
+// A resposta fica no `mesa-tabuleiro` porque terreno não aparece em mais lugar
+// nenhum. Quem precisar de outra região não usa este atalho — é uma lista
+// explícita, não um padrão.
+func (s *Server) comandoContinuoDoMestre(
+	mutar func(*Server, mesaComando) (*tabuleiro.BoardState, error),
+) http.HandlerFunc {
+	return s.comandoDoTabuleiro(mutar, true, "mesa-tabuleiro")
+}
+
 // comandoDoTabuleiro é o corpo dos dois. Separá-los em duas cópias seria repetir
 // resolver a mesa, mutar, publicar e redesenhar — e é numa delas que alguém
 // esquece de publicar e a mesa fica vendo a cena velha.
 func (s *Server) comandoDoTabuleiro(
 	mutar func(*Server, mesaComando) (*tabuleiro.BoardState, error),
 	soODoMestre bool,
+	soAsRegioes ...string,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		campaignID, sessionID, ok := mesaParams(w, r)
@@ -220,7 +256,7 @@ func (s *Server) comandoDoTabuleiro(
 		}
 		if soODoMestre {
 			// O `respondeAoMestre` escreve o `erroDoComando` do rodapé sozinho.
-			s.respondeAoMestre(w, r, user, campaignID, sessionID, err, sinais)
+			s.respondeAoMestre(w, r, user, campaignID, sessionID, err, sinais, soAsRegioes...)
 			return
 		}
 		// A recusa vai para `erroDoMovimento` e NÃO para o `erroDoComando` do

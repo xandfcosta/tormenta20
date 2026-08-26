@@ -223,6 +223,9 @@ func sinaisDaMesa() string {
 		// A JANELA sobre o plano infinito (ALE-203): ela substituiu a rolagem
 		// nativa, que precisava de uma caixa com fim para ter até onde rolar.
 		osSinaisDaJanela,
+		// O TRAÇO do pincel e da borracha (ALE-203): o modo em curso e a última
+		// casa que ele já mandou.
+		osSinaisDoPincel,
 		// A RÉGUA: as duas pontas em coordenada do PLANO (podem ser negativas), a
 		// fase da máquina de dois cliques, e a leitura que o servidor escreve.
 		"regua1x: 0, regua1y: 0, regua2x: 0, regua2y: 0, reguafase: 0, reguatexto: ''",

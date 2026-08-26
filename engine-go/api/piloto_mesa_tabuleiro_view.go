@@ -693,24 +693,6 @@ func pecasEmPortugues(n int) string {
 // Vazio é o pincel guardado, e aí o clique volta a mover a peça. É a mesma
 // superfície disputada por dois gestos, e quem arbitra é o sinal.
 
-// pinturaNoPontoClicado escreve o clique que PINTA.
-//
-// A conta do quadrado é a mesma do `paradaNoPontoClicado` — a origem da moldura
-// somada ao ponto dividido pelo lado —, e ela é do cliente pelo mesmo motivo: é
-// sobre PIXELS, e o servidor não sabe o zoom.
-//
-// A BORRACHA saiu daqui na ALE-203. Ela era o `ligado=false` desta mesma rota, e
-// o comentário que estava nesta linha dizia que "a resposta certa é a que estiver
-// selecionada" — o dono usou e provou o contrário: com `Cobertura` na mão, clicar
-// num quadrado de `Difícil` apagava a cobertura que não estava ali, em silêncio.
-// Agora ela é ferramenta própria, com rota própria, e limpa a casa inteira.
-func pinturaNoPontoClicado(v tabuleiroView) string {
-	return fmt.Sprintf(
-		"@post('/piloto/mesa/%d/%d/tabuleiro/terreno/' + $ferramenta + '/' + (%s) + '/' + (%s))",
-		v.CampaignID, v.SessionID, clicouEmX, clicouEmY,
-	)
-}
-
 // escolheAFerramenta liga uma ferramenta, ou a DESliga se ela já estava.
 //
 // Clicar de novo na ferramenta ativa guarda o pincel, que é o gesto que devolve

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -483,19 +484,27 @@ func (s *Server) comandoDoMestre(
 func (s *Server) respondeAoMestre(
 	w http.ResponseWriter, r *http.Request,
 	user AuthUser, campaignID, sessionID int64, recusa error, sinais map[string]any,
+	soAsRegioes ...string,
 ) {
 	sse := datastar.NewSSE(w, r)
 	if view, _, err := s.loadMesaView(r.Context(), user, campaignID, sessionID); err == nil {
-		// Manda TODAS as regiões e não só as que mudaram, ao contrário do stream:
-		// aqui não há digital anterior para comparar — este caminho responde a um
-		// pedido, não mantém uma conexão. E não há o risco que motivou as regiões,
-		// porque quem recebe é quem acabou de CLICAR: ninguém está no meio de um
-		// arrasto no instante em que pediu outra coisa.
+		// Por PADRÃO manda TODAS as regiões e não só as que mudaram, ao contrário
+		// do stream: aqui não há digital anterior para comparar — este caminho
+		// responde a um pedido, não mantém uma conexão.
+		//
+		// O que justificava mandar tudo era que quem recebe acabou de CLICAR, e
+		// ninguém está no meio de um arrasto no instante em que pede outra coisa.
+		// O GESTO CONTÍNUO da ALE-203 quebrou essa frase — no arrasto do pincel a
+		// pessoa está no meio do gesto, e cada casa cruzada devolvia a Mesa
+		// inteira: 353 KB medidos por clique. Daí o `soAsRegioes`.
 		//
 		// Falhar ao redesenhar não desfaz a mutação, que já aconteceu e já foi
 		// transmitida; o stream corrige no próximo tique. Por isso é best-effort e
 		// a frase sai de qualquer jeito.
 		for _, regiao := range regioesDaMesa(view) {
+			if !pedidaOuTodas(regiao.ID, soAsRegioes) {
+				continue
+			}
 			if fragmento, err := renderFragmento(r.Context(), regiao.No); err == nil {
 				_ = sse.PatchElements(fragmento)
 			}
@@ -510,4 +519,14 @@ func (s *Server) respondeAoMestre(
 	// a recusa de dois cliques atrás acesa sobre um comando que funcionou.
 	sinais["erroDoComando"] = frase
 	_ = sse.MarshalAndPatchSignals(sinais)
+}
+
+// pedidaOuTodas: lista vazia quer dizer "a Mesa inteira", que é o padrão de
+// quase todo comando. Escrito como função e não como `if len(...) == 0` no laço
+// para o caso vazio ficar dito uma vez só, em vez de a cada leitura do laço.
+func pedidaOuTodas(id string, pedidas []string) bool {
+	if len(pedidas) == 0 {
+		return true
+	}
+	return slices.Contains(pedidas, id)
 }

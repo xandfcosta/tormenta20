@@ -29,6 +29,7 @@ var asRegioesDaMesa = []string{
 	"mesa-grupo",
 	"mesa-tabuleiro",
 	"mesa-por-no-mapa",
+	"mesa-acervo",
 	"mesa-config-da-sessao",
 	"mesa-fila",
 	"mesa-comandos",

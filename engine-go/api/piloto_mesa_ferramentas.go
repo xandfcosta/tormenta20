@@ -196,19 +196,6 @@ func oVestidoDaFerramenta(id string) string {
 		aFerramentaEstaLigada(id), aFerramentaEstaLigada(id))
 }
 
-// limpaNoPontoClicado é o gesto da borracha.
-//
-// A mesma aritmética das outras camadas — o ponto do clique dividido pelo lado
-// da casa, mais a quina da moldura —, e ela é repetida pelo mesmo motivo que a
-// `marcacaoNoPontoClicado` a repete: o DESTINO é outro, e um helper compartilhado
-// faria as rotas mudarem juntas no dia em que uma delas precisar de outra conta.
-func limpaNoPontoClicado(v tabuleiroView) string {
-	return fmt.Sprintf(
-		"@post('/piloto/mesa/%d/%d/tabuleiro/terreno/limpar/' + (%s) + '/' + (%s))",
-		v.CampaignID, v.SessionID, clicouEmX, clicouEmY,
-	)
-}
-
 // oNomeComAtalho é o que o leitor de tela e o `title` recebem.
 //
 // A tecla vai no NOME ACESSÍVEL e não só no `title`: um atalho que só existe no
