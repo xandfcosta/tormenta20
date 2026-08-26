@@ -1,7 +1,5 @@
 package api
 
-import "fmt"
-
 // O HUB desenhado (ALE-231).
 //
 // Três coisas nesta tela respondem, cada uma, a uma pergunta que a migração
@@ -46,7 +44,7 @@ templ menuDoHub(v hubView) {
 			// Só aparece com partida rolando — o "Continue" de um jogo. Mestre e
 			// jogador retomam a MESMA tela.
 			@itemDoMenu("PlayCircle", "Continuar sessão",
-				fmt.Sprintf("/campaigns/%d/sessions/%d", v.Viva.CampaignID, v.Viva.SessionID), true)
+				rotaDaMesa(v.Viva.CampaignID, v.Viva.SessionID), true)
 		}
 	</nav>
 }

@@ -8,8 +8,6 @@ package api
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "fmt"
-
 // O HUB desenhado (ALE-231).
 //
 // Três coisas nesta tela respondem, cada uma, a uma pergunta que a migração
@@ -113,7 +111,7 @@ func menuDoHub(v hubView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			templ_7745c5c3_Err = itemDoMenu("PlayCircle", "Continuar sessão",
-				fmt.Sprintf("/campaigns/%d/sessions/%d", v.Viva.CampaignID, v.Viva.SessionID), true).Render(ctx, templ_7745c5c3_Buffer)
+				rotaDaMesa(v.Viva.CampaignID, v.Viva.SessionID), true).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -161,7 +159,7 @@ func itemDoMenu(icone_, rotulo, destino string, temProximo bool) templ.Component
 		var templ_7745c5c3_Var4 templ.SafeURL
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(destino))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 63, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 61, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -182,7 +180,7 @@ func itemDoMenu(icone_, rotulo, destino string, temProximo bool) templ.Component
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 71, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 69, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -235,7 +233,7 @@ func rodapeDoHub(v hubView) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue("Menu de " + v.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 84, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 82, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -248,7 +246,7 @@ func rodapeDoHub(v hubView) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(v.Inicial)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 92, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 90, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -261,7 +259,7 @@ func rodapeDoHub(v hubView) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(v.Nome)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 94, Col: 92}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 92, Col: 92}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -688,7 +686,7 @@ func conviteGerado(caminho string) templ.Component {
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(caminho)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 264, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_hub.templ`, Line: 262, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 		if templ_7745c5c3_Err != nil {

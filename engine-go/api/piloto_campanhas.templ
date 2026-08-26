@@ -231,7 +231,7 @@ templ acoesDaCampanha(c campanhaCartao) {
 		</a>
 		if c.AoVivo {
 			<a
-				href={ templ.SafeURL(fmt.Sprintf("/campaigns/%d/sessions/%d", c.ID, c.SessaoID)) }
+				href={ templ.SafeURL(rotaDaMesa(c.ID, c.SessaoID)) }
 				class={ classesDoBotao(varPrimaria, tamGrande, "") }
 			>
 				Continuar a sessão

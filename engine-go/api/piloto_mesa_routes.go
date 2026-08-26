@@ -108,6 +108,28 @@ func pilotoStaticHandler() http.Handler {
 	return comCacheVersionado(versaoDosEstaticos, "public", http.FileServer(http.FS(sub)))
 }
 
+// rotaDaMesa é PARA ONDE se entra numa sessão, e desde a ALE-269 ela é a Mesa em
+// Datastar.
+//
+// Era `/campaigns/{id}/sessions/{sid}` — a rota da SPA — em quatro lugares: o
+// Hub, o cartão da campanha e duas linhas da crônica. Enquanto o piloto apontava
+// para lá, a Mesa nova só era alcançável por URL digitada, e é por isso que
+// trocar estes quatro `href` É a virada: a partir daqui, entrar numa sessão é
+// entrar nela.
+//
+// UMA função e não quatro `Sprintf`, e a razão vale para os dois sentidos: hoje
+// ela é o que faz os quatro caminhos concordarem, e no dia do `git rm` ela é o
+// único lugar que precisa ser lido para saber quem manda para onde.
+//
+// A tela antiga continua de pé e alcançável por URL (decisão do dono): apagar a
+// `SessionTrackerPage` é fatia própria, depois de uma sessão de verdade rodar na
+// Mesa nova. Enquanto isso, voltar atrás é um `git revert` deste commit.
+//
+// @example rotaDaMesa(1, 4) // "/piloto/mesa/1/4"
+func rotaDaMesa(campanhaID, sessaoID int64) string {
+	return fmt.Sprintf("/piloto/mesa/%d/%d", campanhaID, sessaoID)
+}
+
 // mesaParams lê os dois ids da URL. Erro aqui é URL digitada errada, e a
 // resposta é uma frase e não um JSON: quem está do outro lado é um navegador
 // mostrando uma página.

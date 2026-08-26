@@ -114,8 +114,16 @@ func TestSessaoVivaSemNenhumaNaoEhErro(t *testing.T) {
 	}
 }
 
+// destinoDaSessao é PARA ONDE o "Continuar sessão" leva, e ele mudou na ALE-269:
+// era `/campaigns/{id}/sessions/{sid}`, a rota da SPA, e passou a ser a Mesa em
+// Datastar. A troca é a VIRADA — enquanto o piloto apontava para lá, a Mesa nova
+// só era alcançável por URL digitada.
+//
+// Escrito À MÃO e não derivado do `rotaDaMesa` da produção, de propósito: derivar
+// faria o teste concordar com o defeito, e um destino trocado por engano passaria
+// verde nos dois lados.
 func destinoDaSessao(campanha, sessao int64) string {
-	return fmt.Sprintf("/campaigns/%d/sessions/%d", campanha, sessao)
+	return fmt.Sprintf("/piloto/mesa/%d/%d", campanha, sessao)
 }
 
 // ── quem vê o quê ────────────────────────────────────────────────────────────
