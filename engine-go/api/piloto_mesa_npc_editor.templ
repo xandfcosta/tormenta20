@@ -35,8 +35,13 @@ templ oEditorDeBloco(v mesaView) {
 		// número do bloco, é como o NPC se chama na mesa — e uma aba que o
 		// escondesse deixaria "salvar sem nome" ser recusado por um campo que a
 		// pessoa não estava vendo.
+		// "Nome do NPC" e não "Nome", e a razão não é o teste que acusou: a cena do
+		// mestre já tem uma caixa chamada "Nome" — a do combatente novo, na fila —,
+		// e duas caixas com o MESMO nome acessível no mesmo documento é ambiguidade
+		// para quem navega por leitor de tela. O e2e só foi o primeiro a tropeçar
+		// nela (`strict mode violation` em `getByLabel('Nome')`).
 		<div class="shrink-0 space-y-1">
-			<label for="npc-nome" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Nome</label>
+			<label for="npc-nome" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground">Nome do NPC</label>
 			<input
 				id="npc-nome"
 				type="text"

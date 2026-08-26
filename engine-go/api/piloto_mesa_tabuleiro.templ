@@ -64,9 +64,19 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 			<p class="text-sm text-muted-foreground">O mestre está montando a cena.</p>
 		</section>
 	} else {
+		// O TABULEIRO OCUPA A SUPERFÍCIE INTEIRA, e desde a forma do jogador
+		// (ALE-269) isso vale para os dois papéis. Antes o `flex-1` e o palco
+		// cheio eram condicionais ao mestre, porque só o palco dele dava altura ao
+		// mapa — na coluna do jogador o tabuleiro era um bloco entre outros e
+		// crescer empurraria a fila para fora da tela.
+		//
+		// A condição saiu porque a premissa saiu: com o seletor de superfícies, o
+		// mapa do jogador não divide tela com nada. Sempre que esta cena é
+		// desenhada, ela é a tela toda — e uma condição que agora é sempre
+		// verdadeira só serve para alguém acreditar que ainda decide algo.
 		<section
 			aria-label={ "Tabuleiro · " + v.Lugar }
-			class={ "space-y-1.5", templ.KV("flex min-h-0 flex-1 flex-col", v.Mestre) }
+			class="flex min-h-0 flex-1 flex-col space-y-1.5"
 		>
 			<div class="flex flex-wrap items-baseline gap-x-2">
 				<h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tabuleiro</h2>
@@ -176,7 +186,7 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 				data-attr:style={ estiloDoPalco }
 				data-on:wheel={ zoomPelaRoda }
 				data-on:keydown__window={ zoomPeloTeclado }
-				class={ "tabuleiro-palco grimorio-frame", templ.KV("tabuleiro-palco-cheio", v.Mestre) }
+				class="tabuleiro-palco tabuleiro-palco-cheio grimorio-frame"
 			>
 				// FERRAMENTA LIGADA torna a peça e o losango INERTES ao dedo, e
 				// isto é a segunda metade da promessa do trilho: uma ferramenta

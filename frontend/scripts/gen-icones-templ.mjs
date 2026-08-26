@@ -89,6 +89,9 @@ const QUERIDOS = [
   'Crosshair',
   // DESFAZER A PARADA (ALE-269, item 10), o mesmo da `MoveBar` da SPA.
   'CornerUpLeft',
+  // O seletor de superfícies do jogador (ALE-269): os MESMOS ícones que a
+  // `PlayerSurfaceSwitch` da SPA importa. `Users2` já estava na lista.
+  'LayoutGrid',
 ]
 
 const indice = readFileSync(resolve(LUCIDE, 'lucide-solid.mjs'), 'utf8')

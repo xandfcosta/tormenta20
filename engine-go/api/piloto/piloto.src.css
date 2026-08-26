@@ -350,7 +350,27 @@ html {
     overflow: auto;
     overscroll-behavior: contain;
     height: min(60vh, 32rem);
+    /* O PLANO FICA NO MEIO quando cabe, e a razão apareceu com a forma do
+     * jogador (ALE-269): o mapa passou a ocupar a tela inteira, e uma moldura de
+     * 20×44px encostada à esquerda de 1568px deixa uma faixa preta de 700px ao
+     * lado da cena. Antes ele vivia numa coluna de 48rem, onde a moldura
+     * transbordava e a pergunta não existia.
+     *
+     * `margin: auto` no filho de um flex, e NÃO `justify-content: center`:
+     * aquele centraliza igual e RECORTA o começo do conteúdo quando ele é maior
+     * que a caixa — o mestre aproximaria o zoom e perderia a metade de cima do
+     * mapa, sem barra de rolagem para trazê-la de volta. */
+    display: flex;
+    /* E os DOIS `min-*: 0` vêm junto com o `display: flex`, não por precaução:
+     * um contêiner flex tem tamanho mínimo AUTOMÁTICO — ele se recusa a encolher
+     * abaixo do conteúdo. Medido no navegador: com o plano a 96px por quadrado o
+     * palco cresceu para 1877x1346 dentro de uma janela de 1568x742, e a PÁGINA
+     * inteira passou a rolar em vez do mapa. Sem estas duas linhas, aproximar o
+     * zoom desmonta a tela cheia. */
+    min-width: 0;
+    min-height: 0;
   }
+  .tabuleiro-plano { margin: auto; }
 
   /* O CENTRALIZAR SALTA, e não desliza — e a decisão é medida, não gosto.
    *
@@ -489,6 +509,18 @@ html {
        elevado — que são sombras internas sobre transparente — não teriam
        superfície nenhuma para desenhar. */
     background-color: oklch(0.22 0.01 305);
+  }
+
+  /* A SUPERFÍCIE ESCOLHIDA do jogador (ALE-129, portada na ALE-269).
+   *
+   * Dourado cheio e não só o texto, ao contrário da aba do editor: aqui a
+   * escolha decide o que ocupa a TELA INTEIRA, e não onde se está olhando dentro
+   * de um formulário. É a mesma marca do `.pincel-ligado`, porque é a mesma
+   * força de afirmação. */
+  .superficie-escolhida {
+    border-color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
+    background-color: oklch(0.8 0.11 85 / 0.15);
+    color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
   }
 
   /* A ABA ABERTA do editor de bloco (ALE-269).

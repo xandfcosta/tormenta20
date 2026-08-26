@@ -169,6 +169,10 @@ func sinaisDaMesa() string {
 		// que fica para trás quando alguém trocar o padrão é justamente esta —
 		// o formulário nasceria oferecendo um chão e o servidor abrindo outro.
 		fmt.Sprintf("novolugar: '', novochao: '%s'", tabuleiro.ChaoPadrao()),
+		// A SUPERFÍCIE do jogador (ALE-129): qual das duas ocupa a tela. Abre na
+		// MESA (decisão do dono) — quem entra na sessão quer saber de quem é a vez
+		// e quem está em cena, e o tabuleiro pode nem estar aberto.
+		fmt.Sprintf("superficie: '%s'", superficieQueAbrePadrao),
 		// O TRILHO de ferramentas: um sinal só, e o valor É a ferramenta.
 		"ferramenta: '', apagando: false, marcadorescolhido: '', escolhidosdomapa: ''",
 		// A FILA e os verbos da linha.
@@ -196,7 +200,7 @@ func sinaisDaMesa() string {
 		// é a que fica para trás no dia em que a ordem mudar, e o defeito seria a
 		// barra marcando uma forma e o mapa desenhando outra. `aponta: false`
 		// acompanha, porque a esfera vai para todos os lados (p225).
-		fmt.Sprintf("gabarito: %q, gabaritoaponta: %t, gabaritotamanho: 2",
+		fmt.Sprintf("gabarito: '%s', gabaritoaponta: %t, gabaritotamanho: 2",
 			string(asFormasDoLivro[0]), apontaOGabarito(asFormasDoLivro[0])),
 		"gabaritox: 0, gabaritoy: 0, gabaritomirax: 0, gabaritomiray: 0, gabaritofase: 0",
 		fmt.Sprintf("gabaritopath: '', gabaritotexto: %q", aDicaDoGabaritoVazio),

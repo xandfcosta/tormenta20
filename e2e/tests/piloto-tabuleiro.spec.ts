@@ -115,7 +115,11 @@ async function abreAFila(page: Page): Promise<void> {
 async function poeUmaPecaNoMapa(page: Page): Promise<void> {
   await abreAFila(page)
   await page.getByRole('button', { name: '+ Combatente' }).click()
-  await page.getByLabel('Nome').fill('Ogro do E2E')
+  // `exact` porque `getByLabel` casa por SUBSTRING: desde o editor de bloco
+  // (ALE-269) a mesma cena tem "Nome do NPC", e `'Nome'` passou a resolver para
+  // dois campos. É a segunda vez nesta fatia que um seletor único por acidente
+  // deixa de ser — a outra foi a camada de clique.
+  await page.getByLabel('Nome', { exact: true }).fill('Ogro do E2E')
   await page.getByRole('button', { name: 'Acrescentar' }).click()
   // A GAVETA FECHA ANTES de o teste voltar ao mapa, e esta ordem é a jornada de
   // verdade: monta-se a fila na gaveta, fecha-se, e põe-se no mapa pela faixa do

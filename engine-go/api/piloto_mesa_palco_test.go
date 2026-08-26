@@ -57,8 +57,10 @@ func TestOPalcoDoMestreTemTodasAsRegioesUmaVezSo(t *testing.T) {
 	}
 }
 
-// TestAColunaDoJogadorNaoGanhouOTrilhoDoMestre é o outro lado, e ele existe
-// porque a forma nova NÃO é para os dois papéis: o jogador continua na coluna.
+// TestAColunaDoJogadorNaoGanhouOTrilhoDoMestre é o outro lado, e o que ele
+// afirma sobreviveu à forma do jogador (ALE-269) mesmo com o nome envelhecendo:
+// o jogador deixou de estar numa coluna e passou a ter duas SUPERFÍCIES, mas o
+// trilho continua não sendo dele.
 //
 // O trilho de 80px é do mestre, e mandá-lo ao jogador seria mandar a fila
 // inteira para quem o `redactForPlayers` acabou de esvaziá-la — a trava da

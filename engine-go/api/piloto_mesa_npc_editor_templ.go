@@ -80,7 +80,7 @@ func oEditorDeBloco(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" class=\"min-w-0 flex-1 truncate font-heading text-base tracking-wide text-grimorio-gold\"></h3></div><div class=\"shrink-0 space-y-1\"><label for=\"npc-nome\" class=\"block text-xs font-bold uppercase tracking-widest text-muted-foreground\">Nome</label> <input id=\"npc-nome\" type=\"text\" data-bind=\"rascunho.nome\" placeholder=\"Ogro Capitão\" class=\"w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\"></div><div role=\"tablist\" aria-label=\"Partes do bloco\" class=\"flex shrink-0 flex-wrap gap-1 border-b border-grimorio-iron\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" class=\"min-w-0 flex-1 truncate font-heading text-base tracking-wide text-grimorio-gold\"></h3></div><div class=\"shrink-0 space-y-1\"><label for=\"npc-nome\" class=\"block text-xs font-bold uppercase tracking-widest text-muted-foreground\">Nome do NPC</label> <input id=\"npc-nome\" type=\"text\" data-bind=\"rascunho.nome\" placeholder=\"Ogro Capitão\" class=\"w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring\"></div><div role=\"tablist\" aria-label=\"Partes do bloco\" class=\"flex shrink-0 flex-wrap gap-1 border-b border-grimorio-iron\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -113,7 +113,7 @@ func oEditorDeBloco(v mesaView) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(fechaOEditor)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 71, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 76, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 		if templ_7745c5c3_Err != nil {
@@ -126,7 +126,7 @@ func oEditorDeBloco(v mesaView) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(salvaOBloco(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 76, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 81, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -175,7 +175,7 @@ func aAbaDoEditor(aba abaDoEditor) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("%s ? 'true' : 'false'", naAba(aba.ID)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 94, Col: 79}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 99, Col: 79}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -188,7 +188,7 @@ func aAbaDoEditor(aba abaDoEditor) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(oVestidoDaAba(aba.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 95, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 100, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 		if templ_7745c5c3_Err != nil {
@@ -201,7 +201,7 @@ func aAbaDoEditor(aba abaDoEditor) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(escolheAAba(aba.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 96, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 101, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -214,7 +214,7 @@ func aAbaDoEditor(aba abaDoEditor) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(aba.Rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 99, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 104, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -232,7 +232,7 @@ func aAbaDoEditor(aba abaDoEditor) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(oResumoDaAba(aba.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 102, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 107, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 			if templ_7745c5c3_Err != nil {
@@ -286,7 +286,7 @@ func osNumerosDoBloco() templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(naAba(abaDosNumeros))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 117, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 122, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 		if templ_7745c5c3_Err != nil {
@@ -536,7 +536,7 @@ func oManaDoBloco() templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(oCampoDoRascunho("pm"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 165, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 170, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 		if templ_7745c5c3_Err != nil {
@@ -581,7 +581,7 @@ func aAbaDosAtaques(v mesaView) templ.Component {
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue(naAba(abaDosAtaques))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 176, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 181, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 		if templ_7745c5c3_Err != nil {
@@ -635,7 +635,7 @@ func aAbaDasPosses(v mesaView) templ.Component {
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue(naAba(abaDasPosses))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 186, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 191, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 		if templ_7745c5c3_Err != nil {
@@ -735,7 +735,7 @@ func oCabecalhoDaLista(v mesaView, lista, titulo, oQue string) templ.Component {
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 204, Col: 85}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 209, Col: 85}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 		if templ_7745c5c3_Err != nil {
@@ -748,7 +748,7 @@ func oCabecalhoDaLista(v mesaView, lista, titulo, oQue string) templ.Component {
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaLista(v.CampaignID, v.SessionID, lista, -1))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 207, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 212, Col: 71}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 		if templ_7745c5c3_Err != nil {
@@ -765,7 +765,7 @@ func oCabecalhoDaLista(v mesaView, lista, titulo, oQue string) templ.Component {
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(oQue)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 211, Col: 9}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 216, Col: 9}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 		if templ_7745c5c3_Err != nil {
@@ -843,7 +843,7 @@ func osAtaquesDoRascunho(campanha, sessao int64, ataques []CreatureAttack) templ
 			var templ_7745c5c3_Var30 string
 			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue(oCampoDaLinha(listaDeAtaques, i, "ranged"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 234, Col: 82}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 239, Col: 82}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 			if templ_7745c5c3_Err != nil {
@@ -978,7 +978,7 @@ func asHabilidadesDoRascunho(campanha, sessao int64, habilidades []string) templ
 			var templ_7745c5c3_Var33 string
 			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("Habilidade especial %d", i+1))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 276, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 281, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 			if templ_7745c5c3_Err != nil {
@@ -991,7 +991,7 @@ func asHabilidadesDoRascunho(campanha, sessao int64, habilidades []string) templ
 			var templ_7745c5c3_Var34 string
 			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue(oCampoDaLinha(listaDeHabilidades, i, ""))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 277, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 282, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 			if templ_7745c5c3_Err != nil {
@@ -1004,7 +1004,7 @@ func asHabilidadesDoRascunho(campanha, sessao int64, habilidades []string) templ
 			var templ_7745c5c3_Var35 string
 			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.ResolveAttributeValue(oPlaceholderDaHabilidade)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 278, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 283, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 			if templ_7745c5c3_Err != nil {
@@ -1060,7 +1060,7 @@ func umaSecaoDoBloco(titulo string) templ.Component {
 		var templ_7745c5c3_Var37 string
 		templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(titulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 291, Col: 85}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 296, Col: 85}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 		if templ_7745c5c3_Err != nil {
@@ -1110,7 +1110,7 @@ func umNumeroDoBloco(campo, rotulo string, minimo, maximo int) templ.Component {
 		var templ_7745c5c3_Var39 string
 		templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.ResolveAttributeValue("npc-" + campo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 300, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 305, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var39)
 		if templ_7745c5c3_Err != nil {
@@ -1123,7 +1123,7 @@ func umNumeroDoBloco(campo, rotulo string, minimo, maximo int) templ.Component {
 		var templ_7745c5c3_Var40 string
 		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 300, Col: 120}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 305, Col: 120}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 		if templ_7745c5c3_Err != nil {
@@ -1136,7 +1136,7 @@ func umNumeroDoBloco(campo, rotulo string, minimo, maximo int) templ.Component {
 		var templ_7745c5c3_Var41 string
 		templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.ResolveAttributeValue("npc-" + campo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 302, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 307, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var41)
 		if templ_7745c5c3_Err != nil {
@@ -1149,7 +1149,7 @@ func umNumeroDoBloco(campo, rotulo string, minimo, maximo int) templ.Component {
 		var templ_7745c5c3_Var42 string
 		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprint(minimo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 304, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 309, Col: 27}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var42)
 		if templ_7745c5c3_Err != nil {
@@ -1162,7 +1162,7 @@ func umNumeroDoBloco(campo, rotulo string, minimo, maximo int) templ.Component {
 		var templ_7745c5c3_Var43 string
 		templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprint(maximo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 305, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 310, Col: 27}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var43)
 		if templ_7745c5c3_Err != nil {
@@ -1175,7 +1175,7 @@ func umNumeroDoBloco(campo, rotulo string, minimo, maximo int) templ.Component {
 		var templ_7745c5c3_Var44 string
 		templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue(oCampoDoRascunho(campo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 306, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 311, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var44)
 		if templ_7745c5c3_Err != nil {
@@ -1217,7 +1217,7 @@ func umTextoDoBloco(campo, rotulo, dica string) templ.Component {
 		var templ_7745c5c3_Var46 string
 		templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.ResolveAttributeValue("npc-" + campo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 314, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 319, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var46)
 		if templ_7745c5c3_Err != nil {
@@ -1230,7 +1230,7 @@ func umTextoDoBloco(campo, rotulo, dica string) templ.Component {
 		var templ_7745c5c3_Var47 string
 		templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 314, Col: 120}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 319, Col: 120}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 		if templ_7745c5c3_Err != nil {
@@ -1243,7 +1243,7 @@ func umTextoDoBloco(campo, rotulo, dica string) templ.Component {
 		var templ_7745c5c3_Var48 string
 		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.ResolveAttributeValue("npc-" + campo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 316, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 321, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var48)
 		if templ_7745c5c3_Err != nil {
@@ -1256,7 +1256,7 @@ func umTextoDoBloco(campo, rotulo, dica string) templ.Component {
 		var templ_7745c5c3_Var49 string
 		templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.ResolveAttributeValue(oCampoDoRascunho(campo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 318, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 323, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var49)
 		if templ_7745c5c3_Err != nil {
@@ -1269,7 +1269,7 @@ func umTextoDoBloco(campo, rotulo, dica string) templ.Component {
 		var templ_7745c5c3_Var50 string
 		templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.ResolveAttributeValue(dica)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 319, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 324, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var50)
 		if templ_7745c5c3_Err != nil {
@@ -1314,7 +1314,7 @@ func umaEscolhaDoBloco(campo, rotulo string, opcoes []opcaoDoBloco) templ.Compon
 		var templ_7745c5c3_Var52 string
 		templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.ResolveAttributeValue("npc-" + campo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 330, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 335, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var52)
 		if templ_7745c5c3_Err != nil {
@@ -1327,7 +1327,7 @@ func umaEscolhaDoBloco(campo, rotulo string, opcoes []opcaoDoBloco) templ.Compon
 		var templ_7745c5c3_Var53 string
 		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 330, Col: 120}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 335, Col: 120}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 		if templ_7745c5c3_Err != nil {
@@ -1340,7 +1340,7 @@ func umaEscolhaDoBloco(campo, rotulo string, opcoes []opcaoDoBloco) templ.Compon
 		var templ_7745c5c3_Var54 string
 		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.ResolveAttributeValue("npc-" + campo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 332, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 337, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var54)
 		if templ_7745c5c3_Err != nil {
@@ -1353,7 +1353,7 @@ func umaEscolhaDoBloco(campo, rotulo string, opcoes []opcaoDoBloco) templ.Compon
 		var templ_7745c5c3_Var55 string
 		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.ResolveAttributeValue(oCampoDoRascunho(campo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 333, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 338, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var55)
 		if templ_7745c5c3_Err != nil {
@@ -1371,7 +1371,7 @@ func umaEscolhaDoBloco(campo, rotulo string, opcoes []opcaoDoBloco) templ.Compon
 			var templ_7745c5c3_Var56 string
 			templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.ResolveAttributeValue(opcao.Valor)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 337, Col: 31}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 342, Col: 31}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var56)
 			if templ_7745c5c3_Err != nil {
@@ -1384,7 +1384,7 @@ func umaEscolhaDoBloco(campo, rotulo string, opcoes []opcaoDoBloco) templ.Compon
 			var templ_7745c5c3_Var57 string
 			templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(opcao.Rotulo)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 337, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 342, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 			if templ_7745c5c3_Err != nil {
@@ -1449,7 +1449,7 @@ func aCaixaDaLinha(caminho, rotulo, dica, largura string) templ.Component {
 		var templ_7745c5c3_Var61 string
 		templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 345, Col: 87}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 350, Col: 87}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var61))
 		if templ_7745c5c3_Err != nil {
@@ -1462,7 +1462,7 @@ func aCaixaDaLinha(caminho, rotulo, dica, largura string) templ.Component {
 		var templ_7745c5c3_Var62 string
 		templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 348, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 353, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var62)
 		if templ_7745c5c3_Err != nil {
@@ -1475,7 +1475,7 @@ func aCaixaDaLinha(caminho, rotulo, dica, largura string) templ.Component {
 		var templ_7745c5c3_Var63 string
 		templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.ResolveAttributeValue(caminho)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 349, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 354, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var63)
 		if templ_7745c5c3_Err != nil {
@@ -1488,7 +1488,7 @@ func aCaixaDaLinha(caminho, rotulo, dica, largura string) templ.Component {
 		var templ_7745c5c3_Var64 string
 		templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.ResolveAttributeValue(dica)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 350, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 355, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var64)
 		if templ_7745c5c3_Err != nil {
@@ -1530,7 +1530,7 @@ func oNumeroDaLinha(caminho, rotulo string, minimo, maximo int) templ.Component 
 		var templ_7745c5c3_Var66 string
 		templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.JoinStringErrs(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 358, Col: 87}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 363, Col: 87}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var66))
 		if templ_7745c5c3_Err != nil {
@@ -1543,7 +1543,7 @@ func oNumeroDaLinha(caminho, rotulo string, minimo, maximo int) templ.Component 
 		var templ_7745c5c3_Var67 string
 		templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.ResolveAttributeValue(rotulo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 361, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 366, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var67)
 		if templ_7745c5c3_Err != nil {
@@ -1556,7 +1556,7 @@ func oNumeroDaLinha(caminho, rotulo string, minimo, maximo int) templ.Component 
 		var templ_7745c5c3_Var68 string
 		templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprint(minimo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 362, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 367, Col: 27}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var68)
 		if templ_7745c5c3_Err != nil {
@@ -1569,7 +1569,7 @@ func oNumeroDaLinha(caminho, rotulo string, minimo, maximo int) templ.Component 
 		var templ_7745c5c3_Var69 string
 		templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprint(maximo))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 363, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 368, Col: 27}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var69)
 		if templ_7745c5c3_Err != nil {
@@ -1582,7 +1582,7 @@ func oNumeroDaLinha(caminho, rotulo string, minimo, maximo int) templ.Component 
 		var templ_7745c5c3_Var70 string
 		templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.ResolveAttributeValue(caminho)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 364, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 369, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var70)
 		if templ_7745c5c3_Err != nil {
@@ -1629,7 +1629,7 @@ func oBotaoDeTirarLinha(campanha, sessao int64, lista string, indice int, oQue s
 		var templ_7745c5c3_Var72 string
 		templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.ResolveAttributeValue("Tirar " + oQue)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 378, Col: 30}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 383, Col: 30}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var72)
 		if templ_7745c5c3_Err != nil {
@@ -1642,7 +1642,7 @@ func oBotaoDeTirarLinha(campanha, sessao int64, lista string, indice int, oQue s
 		var templ_7745c5c3_Var73 string
 		templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.ResolveAttributeValue("Tirar " + oQue)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 379, Col: 25}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 384, Col: 25}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var73)
 		if templ_7745c5c3_Err != nil {
@@ -1655,7 +1655,7 @@ func oBotaoDeTirarLinha(campanha, sessao int64, lista string, indice int, oQue s
 		var templ_7745c5c3_Var74 string
 		templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.ResolveAttributeValue(comandoDaLista(campanha, sessao, lista, indice))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 380, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_npc_editor.templ`, Line: 385, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var74)
 		if templ_7745c5c3_Err != nil {
