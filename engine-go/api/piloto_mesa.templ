@@ -109,7 +109,62 @@ templ mesaRegistrarRegiao(v mesaView) {
 // Grupo — como todo mundo está, que é pergunta diferente de "quem age quando".
 // Aparece FORA de cena de propósito: PV do grupo não é informação de combate.
 templ mesaGrupo(v mesaView) {
-	<div id="mesa-grupo">
+	<div
+		id="mesa-grupo"
+		class={ templ.KV("flex min-h-0 flex-1 flex-col", v.Mestre != nil) }
+	>
+		if v.Mestre != nil {
+			@elencoDoMestre(v)
+		} else {
+			@grupoEmCartoes(v)
+		}
+	</div>
+}
+
+// O ELENCO recolhido: o segundo bloco do trilho esquerdo (ALE-269, a vaga do
+// `CastRail` da SPA).
+//
+// A MESMA população do cartão do jogador — o roster já vem filtrado por
+// `role == "player"` no servidor —, desenhada como monograma porque 80px não
+// comportam nome, nível, classes e duas barras. O mestre lê PV na fila e na
+// gaveta, que é onde ele age sobre eles.
+//
+// Este bloco ROLA e o da fila não, e a assimetria é deliberada: a fila não pode
+// rolar porque a posição dela CARREGA significado (acima já agiu, abaixo ainda
+// vai). O elenco é lista sem ordem própria, e rolar não custa leitura nenhuma.
+//
+// A presença nunca vai só na cor: ela viaja no `title` e num rótulo só-para-
+// leitor, porque cor não existe para quem usa leitor de tela (ALE-212).
+templ elencoDoMestre(v mesaView) {
+	if len(v.Grupo) > 0 {
+		<nav
+			aria-label="Elenco"
+			class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto border border-grimorio-iron bg-grimorio-panel p-1"
+		>
+			for _, m := range v.Grupo {
+				<span
+					title={ rotuloDoElenco(m) }
+					class="relative flex flex-col items-center rounded-sm border border-grimorio-iron px-1 py-1.5"
+				>
+					<span class="text-sm font-semibold text-foreground">{ m.Iniciais }</span>
+					if m.Presenca != nil {
+						<span
+							class={ "absolute right-0.5 top-0.5 size-2 rounded-full",
+								templ.KV("bg-hp-full", m.Presenca.NaMesa),
+								templ.KV("bg-grimorio-iron", !m.Presenca.NaMesa) }
+						></span>
+					}
+					<span class="sr-only">{ rotuloDoElenco(m) }</span>
+				</span>
+			}
+		</nav>
+	}
+}
+
+// O GRUPO em cartões: a superfície do JOGADOR, como sempre foi.
+//
+// Aparece FORA de cena de propósito: PV do grupo não é informação de combate.
+templ grupoEmCartoes(v mesaView) {
 			if len(v.Grupo) > 0 {
 				<section class="space-y-1.5">
 					<h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">Grupo</h2>
@@ -149,7 +204,6 @@ templ mesaGrupo(v mesaView) {
 					</div>
 				</section>
 			}
-	</div>
 }
 
 // O TABULEIRO vem ANTES da fila e depois do Grupo: quando há mapa, é nele que a
@@ -160,7 +214,10 @@ templ mesaGrupo(v mesaView) {
 // arrasto da próxima fatia ser possível: um jogador registrando iniciativa passa
 // a não tocar no elemento debaixo do dedo do mestre.
 templ mesaTabuleiro(v mesaView) {
-	<div id="mesa-tabuleiro">
+	<div
+		id="mesa-tabuleiro"
+		class={ templ.KV("flex min-h-0 flex-1 flex-col", v.Mestre != nil) }
+	>
 		@tabuleiroDaMesa(v.Tabuleiro)
 		// A RECUSA de uma parada, e ela mora aqui: quem move é o jogador, que
 		// não tem o rodapé do mestre onde o `erroDoComando` acende. Fora do
@@ -774,16 +831,4 @@ templ editarCombatente(v mesaView) {
 			>Salvar</button>
 		</div>
 	</dialog>
-}
-
-// mesaEBestiario é o que a PÁGINA desenha para o mestre: a cena mais o painel.
-//
-// Os dois são raízes IRMÃS e não aninhadas, e é isso que faz o painel
-// sobreviver: as rotas da mesa remendam `#mesa`, as do bestiário remendam
-// `#bestiario-da-mesa`, e nenhuma pisa na outra. Só o handler da página usa esta
-// composição — o stream e os comandos continuam mandando `mesa(v)` sozinha, que
-// é o que os mantém baratos.
-templ mesaEBestiario(v mesaView, b bestiarioView) {
-	@mesa(v)
-	@bestiarioDaMesa(b)
 }

@@ -351,6 +351,22 @@ html {
     overscroll-behavior: contain;
     height: min(60vh, 32rem);
   }
+
+  /* O PALCO DO MESTRE dá ao mapa a altura que sobra (ALE-269).
+   *
+   * A altura fixa acima é a resposta certa para a COLUNA do jogador, que rola:
+   * lá o mapa é um bloco entre outros, e deixá-lo crescer empurraria a fila
+   * para fora da tela. Na forma do mestre a pergunta se inverte — o tabuleiro é
+   * o centro e o que rola é ele por dentro —, e a altura fixa deixava 217px
+   * mortos abaixo dele numa janela de 963 (medido, 1600x1000).
+   *
+   * `height: auto` ANTES do `flex`, e não só o `flex`: a declaração de cima é
+   * uma altura em `min()`, e uma base flexível não a apaga sozinha. */
+  .tabuleiro-palco-cheio {
+    height: auto;
+    min-height: 0;
+    flex: 1 1 0%;
+  }
   .tabuleiro-plano {
     position: relative;
     width: calc(var(--colunas) * var(--quadrado));

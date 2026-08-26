@@ -81,10 +81,13 @@ type mesaMembro struct {
 	// CharacterID não é desenhado: é a chave que casa o cartão com a presença.
 	CharacterID int64
 	Nome        string
-	Nivel       int64
-	Classes     string
-	PV          mesaBarra
-	PM          mesaBarra
+	// Iniciais é o monograma do ELENCO no trilho do mestre (ALE-269) — a vaga
+	// do `CastRail` da SPA. O jogador continua lendo o nome inteiro no cartão.
+	Iniciais string
+	Nivel    int64
+	Classes  string
+	PV       mesaBarra
+	PM       mesaBarra
 	// Presenca é nil para o JOGADOR, e isso segue o precedente da SPA: presença
 	// POR PERSONAGEM é do mestre (o trilho do elenco vive na `session-gm-view`),
 	// enquanto os crachás de NOME são de todo mundo. Nil e não "false" porque
@@ -132,6 +135,46 @@ type mesaLinha struct {
 	PV        *mesaBarra
 	Oculto    bool
 	Condicoes []string
+	// Iniciais é o monograma do trilho de 80px (ALE-269). Nasce na view e não
+	// no template pela convenção da casa — `piloto_campanhas_view.go` faz o
+	// mesmo —, e porque duas letras NÃO são um nome: quem desenha o retrato
+	// precisa do rótulo inteiro ao lado, no `aria-label`.
+	Iniciais string
+}
+
+// rotuloDoRetrato é o nome INTEIRO de um combatente do trilho, com os vitais
+// junto (ALE-269).
+//
+// Ele existe porque duas letras não são um nome: o retrato de 80px desenha o
+// monograma, e quem usa leitor de tela — ou o ponteiro parado em cima — precisa
+// ouvir "Ogro, PV 22 de 40" e não "OG".
+//
+// PV ausente e PV OCULTO dizem coisas diferentes e a frase separa as duas: a
+// primeira é linha sem vida rastreada, a segunda é o mestre tendo escondido de
+// propósito (ALE-210), e ele é o único que lê este trilho.
+//
+// @example rotuloDoRetrato(mesaLinha{Rotulo: "Ogro", PV: &mesaBarra{22, 40, 55, ""}}) // "Ogro — PV 22 de 40"
+func rotuloDoRetrato(l mesaLinha) string {
+	if l.Oculto {
+		return fmt.Sprintf("%s — PV oculto", l.Rotulo)
+	}
+	if l.PV == nil {
+		return l.Rotulo
+	}
+	return fmt.Sprintf("%s — PV %d de %d", l.Rotulo, l.PV.Atual, l.PV.Max)
+}
+
+// rotuloDoElenco é o nome de um personagem do elenco recolhido, com a presença
+// junto — porque no trilho ela é um PONTO colorido, e cor não existe para quem
+// usa leitor de tela (ALE-212).
+//
+// @example rotuloDoElenco(mesaMembro{Nome: "Arwen", Nivel: 3}) // "Arwen, Nv 3"
+func rotuloDoElenco(m mesaMembro) string {
+	rotulo := fmt.Sprintf("%s, Nv %d", m.Nome, m.Nivel)
+	if m.Presenca == nil {
+		return rotulo
+	}
+	return fmt.Sprintf("%s — %s", rotulo, m.Presenca.Frase)
 }
 
 // mesaEu é o personagem de quem olha, quando ele tem um nesta mesa. Nil é um
@@ -209,6 +252,7 @@ func mesaFilaDe(st *aovivo.SessionRuntimeState, meus map[int64]bool) []mesaLinha
 			NaVez:      i == st.TurnIndex,
 			Oculto:     e.HpHidden != nil && *e.HpHidden,
 			Condicoes:  e.Conditions,
+			Iniciais:   iniciais(e.Label),
 		}
 		// O `HpMax` nil depois da redação é como o servidor DIZ "isto não é seu
 		// para ver". Desenhar barra aqui inventaria um número.

@@ -142,7 +142,7 @@ type regiaoDaMesa struct {
 // fila muda com a fila. Cortar por assunto juntaria coisas que mudam em ritmos
 // diferentes, e a região só é útil enquanto ela é a unidade de mudança.
 func regioesDaMesa(v mesaView) []regiaoDaMesa {
-	return []regiaoDaMesa{
+	regioes := []regiaoDaMesa{
 		{"mesa-cabecalho", mesaCabecalho(v)},
 		{"mesa-registrar", mesaRegistrarRegiao(v)},
 		{"mesa-grupo", mesaGrupo(v)},
@@ -157,4 +157,13 @@ func regioesDaMesa(v mesaView) []regiaoDaMesa {
 		{"mesa-fila", mesaFila(v)},
 		{"mesa-comandos", mesaComandos(v)},
 	}
+	// O TRILHO DA FILA só existe no palco do mestre (ALE-269), e por isso ele
+	// entra na lista pela MESMA condição que o desenha. Mandar um remendo para
+	// um id que não está no documento é escrever no vazio — e a lista e a
+	// página não podem discordar sobre quais regiões existem, o que só se
+	// garante fazendo as duas perguntarem à mesma `view`.
+	if v.Mestre != nil {
+		regioes = append(regioes, regiaoDaMesa{"mesa-trilho-fila", mesaTrilhoDaFila(v)})
+	}
+	return regioes
 }

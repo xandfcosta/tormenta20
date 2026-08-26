@@ -147,18 +147,28 @@ func (s *Server) handleMesaPage(w http.ResponseWriter, r *http.Request) {
 	}, s.corpoDaMesa(r, view, campaignID, sessionID))
 }
 
-// corpoDaMesa escolhe o que a PÁGINA desenha: a cena sozinha para o jogador, a
-// cena mais o painel do bestiário para o mestre.
+// corpoDaMesa escolhe QUAL DAS DUAS FORMAS a página desenha (ALE-269).
 //
-// O painel só nasce para quem pode abri-lo, pela mesma trava do resto da fatia:
-// não é a tela que esconde, é a página que não o tem. Mandá-lo para todo mundo e
-// escondê-lo por CSS entregaria as 80 criaturas com PV e defesa a quem abrisse o
-// inspetor — e esconder PV de NPC é literalmente o que o olho da linha faz.
+// O jogador recebe a coluna — uma superfície que rola, com Grupo, mapa e fila
+// empilhados. O mestre recebe o PALCO: trilhos nas bordas e o tabuleiro no
+// centro, que é a geometria da `session-gm-view` desde a ALE-198.
+//
+// SÃO DUAS FORMAS E NÃO DUAS TELAS, e a distinção é o que mantém de pé o
+// argumento da ALE-265 contra uma segunda cena: as REGIÕES são as mesmas, com
+// os mesmos ids e os mesmos componentes, e o que muda é onde elas são
+// penduradas. Duas listas de combatente para manter em dia continuaria sendo o
+// defeito da ALE-122; duas ARRUMAÇÕES da mesma lista não é.
+//
+// O painel do bestiário só nasce para quem pode abri-lo, pela mesma trava do
+// resto da fatia: não é a tela que esconde, é a página que não o tem. Mandá-lo
+// para todo mundo e escondê-lo por CSS entregaria as 80 criaturas com PV e
+// defesa a quem abrisse o inspetor — e esconder PV de NPC é literalmente o que o
+// olho da linha faz.
 func (s *Server) corpoDaMesa(r *http.Request, view mesaView, campaignID, sessionID int64) templ.Component {
 	if view.Mestre == nil {
 		return mesa(view)
 	}
-	return mesaEBestiario(view, s.bestiarioDaMesaPara(r, campaignID, sessionID))
+	return palcoDoMestre(view, s.bestiarioDaMesaPara(r, campaignID, sessionID))
 }
 
 // loadMesaView busca tudo o que a tela precisa e delega a DECISÃO ao
@@ -253,6 +263,7 @@ func (s *Server) mesaRoster(ctx context.Context, user AuthUser, campaignID int64
 		grupo = append(grupo, mesaMembro{
 			CharacterID: m.Characterid,
 			Nome:        m.Charname,
+			Iniciais:    iniciais(m.Charname),
 			Nivel:       m.Charlevel,
 			Classes:     s.mesaClasses(ctx, m.Characterid),
 			PV:          mesaBarraDe(m.Charhpcurrent, m.Charhpmax, false),

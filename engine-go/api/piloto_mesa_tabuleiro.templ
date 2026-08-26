@@ -64,7 +64,10 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 			<p class="text-sm text-muted-foreground">O mestre está montando a cena.</p>
 		</section>
 	} else {
-		<section aria-label={ "Tabuleiro · " + v.Lugar } class="space-y-1.5">
+		<section
+			aria-label={ "Tabuleiro · " + v.Lugar }
+			class={ "space-y-1.5", templ.KV("flex min-h-0 flex-1 flex-col", v.Mestre) }
+		>
 			<div class="flex flex-wrap items-baseline gap-x-2">
 				<h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tabuleiro</h2>
 				<p class="truncate text-sm text-foreground">{ v.Lugar }</p>
@@ -146,7 +149,7 @@ templ tabuleiroDaMesa(v tabuleiroView) {
 				data-attr:style={ estiloDoPalco }
 				data-on:wheel={ zoomPelaRoda }
 				data-on:keydown__window={ zoomPeloTeclado }
-				class="tabuleiro-palco grimorio-frame"
+				class={ "tabuleiro-palco grimorio-frame", templ.KV("tabuleiro-palco-cheio", v.Mestre) }
 			>
 				<div
 					class={ "tabuleiro-plano chao-" + v.Chao }
