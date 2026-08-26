@@ -232,18 +232,10 @@ func (s *Server) handleStartSession(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	now := plataforma.NowISO()
-	var updated sqlcgen.Session
-	var err error
-	switch sess.Status {
-	case "active":
-		plataforma.WriteJSON(w, http.StatusOK, sessionDTO(sess))
-		return
-	case "ended":
-		updated, err = s.queries.ReopenSession(r.Context(), sqlcgen.ReopenSessionParams{UpdatedAt: now, ID: sid})
-	default:
-		updated, err = s.queries.StartSessionFresh(r.Context(), sqlcgen.StartSessionFreshParams{StartedAt: sql.NullString{String: now, Valid: true}, UpdatedAt: now, ID: sid})
-	}
+	// A DECISÃO mora no `sessao_ciclo.go` desde a ALE-269: a Mesa em Datastar
+	// precisa dela sem reescrevê-la, e duas telas decidindo por conta própria o
+	// que "iniciar" significa é como nasce a divergência que ninguém nota.
+	updated, err := s.IniciaASessao(r.Context(), sess)
 	if err != nil {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not start session")
 		return
@@ -266,18 +258,12 @@ func (s *Server) handleEndSession(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	switch sess.Status {
-	case "planned":
-		plataforma.WriteError(w, http.StatusBadRequest, fmt.Sprintf("Session %d was never started; nothing to end", sid))
-		return
-	case "ended":
-		plataforma.WriteJSON(w, http.StatusOK, sessionDTO(sess))
-		return
-	}
-	now := plataforma.NowISO()
-	updated, err := s.queries.EndSession(r.Context(), sqlcgen.EndSessionParams{EndedAt: sql.NullString{String: now, Valid: true}, UpdatedAt: now, ID: sid})
+	// A RECUSA do "planejada" continua sendo 400, e a mensagem mudou de língua
+	// junto com a extração — ela agora sai do `EncerraASessao`, que é quem
+	// conhece a regra. O status é o mesmo de antes.
+	updated, err := s.EncerraASessao(r.Context(), sess)
 	if err != nil {
-		plataforma.WriteError(w, http.StatusInternalServerError, "Could not end session")
+		plataforma.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	plataforma.WriteJSON(w, http.StatusOK, sessionDTO(updated))
@@ -296,16 +282,12 @@ func (s *Server) handleClearTracker(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.ownedSession(w, r, cid, sid); !ok {
 		return
 	}
-	if err := s.queries.ResetSessionTracker(r.Context(), sqlcgen.ResetSessionTrackerParams{
-		RuntimeState: defaultRuntimeState, UpdatedAt: plataforma.NowISO(), ID: sid,
-	}); err != nil {
+	// A REGRA — incluindo o `Forget` do cache, sem o qual a fila velha continua
+	// servida — mora no `sessao_ciclo.go` desde a ALE-269.
+	if err := s.ReiniciaOCombate(r.Context(), sid); err != nil {
 		plataforma.WriteError(w, http.StatusInternalServerError, "Could not clear tracker")
 		return
 	}
-	// Drop the in-memory tracker too — otherwise a live session's cached state
-	// would shadow the cleared DB row until the next cold Load (the realtime
-	// store hydrates only on first access). Code-review finding (B.6 fase 2).
-	s.sessions.Forget(sid)
 	plataforma.WriteJSON(w, http.StatusOK, map[string]int64{"id": sid})
 }
 
