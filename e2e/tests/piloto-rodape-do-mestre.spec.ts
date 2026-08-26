@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, type Page, test } from '@playwright/test'
 
 /**
  * O RODAPÉ DO MESTRE na Mesa em Datastar (ALE-263).
@@ -26,6 +26,36 @@ test.use({ storageState: '.auth/user.json' })
 const MESA = '/piloto/mesa/1/4'
 
 const rodape = 'section[aria-label="Controles do mestre"]'
+
+/**
+ * Abre a GAVETA da fila, que é onde a lista inteira passou a morar (ALE-269).
+ *
+ * A forma do mestre virou SHELL: o trilho de 80px responde "de quem é a vez", e
+ * dano, ordem, condição, "+ Combatente" e "Adicionar grupo" desceram para uma
+ * gaveta pela esquerda — a mesma decisão que a ALE-198 tomou na SPA, onde a
+ * fila inteira vive num `SidePanel`.
+ *
+ * Sem este passo os botões existem no HTML dentro de um `<dialog>` FECHADO, que
+ * o navegador esconde com `display:none`. O sintoma não é "não achei o botão":
+ * é um TIMEOUT de clique em cima de um seletor que casou — que foi exatamente
+ * como estes casos apareceram no CI.
+ *
+ * UM seletor nas duas larguras: acima de 1024 quem abre é o ⤢ do trilho, abaixo
+ * é o botão da fileira de consultas, e os dois têm o mesmo prefixo de nome
+ * acessível de propósito. O `visible` é o que escolhe entre eles — o outro está
+ * no DOM com `display:none`, e sem o filtro o `.first()` acertaria o escondido.
+ * É o caso de 390px deste arquivo que exercita a segunda metade.
+ */
+async function abreAFila(page: Page): Promise<void> {
+  await page
+    .getByRole('button', { name: /^Abrir a iniciativa/ })
+    .filter({ visible: true })
+    .click()
+  await expect(page.locator('#gaveta-da-fila'), 'a gaveta da fila não abriu').toHaveAttribute(
+    'open',
+    '',
+  )
+}
 
 test.describe('O rodapé do mestre (piloto Datastar)', () => {
   /**
@@ -155,6 +185,7 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
     // O CONTROLE: sem linha na fila não há o que medir, e um `toBeLessThan`
     // sobre uma lista vazia passa verde dizendo nada. O "Adicionar grupo" é
     // idempotente, então chamá-lo aqui não depende do que outro spec deixou.
+    await abreAFila(page)
     await page.getByRole('button', { name: '+ Adicionar grupo' }).click()
     const linha = page.locator('#mesa ol li').first()
     await expect(linha).toBeVisible()
@@ -220,6 +251,7 @@ test.describe('O rodapé do mestre (piloto Datastar)', () => {
     })
 
     await page.goto(MESA)
+    await abreAFila(page)
     await page.getByRole('button', { name: '+ Adicionar grupo' }).click()
 
     const olho = page

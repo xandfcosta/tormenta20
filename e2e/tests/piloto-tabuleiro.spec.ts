@@ -67,6 +67,43 @@ async function mesaDescartavel(page: Page): Promise<{ mesa: string; apagar: () =
 }
 
 /**
+ * Abre a GAVETA da fila, que é onde a lista inteira passou a morar (ALE-269).
+ *
+ * A forma do mestre virou SHELL: o trilho de 80px responde "de quem é a vez", e
+ * dano, ordem, condição, "+ Combatente" e "Adicionar grupo" desceram para uma
+ * gaveta pela esquerda — a mesma decisão que a ALE-198 tomou na SPA, onde a
+ * fila inteira vive num `SidePanel`.
+ *
+ * Sem este passo os botões existem no HTML dentro de um `<dialog>` FECHADO, que
+ * o navegador esconde com `display:none`. O sintoma não é "não achei o botão":
+ * é um TIMEOUT de clique em cima de um seletor que casou — que foi exatamente
+ * como estes três casos apareceram no CI.
+ *
+ * UM seletor nas duas larguras: acima de 1024 quem abre é o ⤢ do trilho, abaixo
+ * é o botão da fileira de consultas, e os dois têm o mesmo prefixo de nome
+ * acessível de propósito. O `visible` é o que escolhe entre eles — o outro está
+ * no DOM com `display:none`, e sem o filtro o `.first()` acertaria o escondido.
+ */
+async function fechaAFila(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Fechar a iniciativa' }).click()
+  await expect(page.locator('#gaveta-da-fila'), 'a gaveta da fila não fechou').not.toHaveAttribute(
+    'open',
+    '',
+  )
+}
+
+async function abreAFila(page: Page): Promise<void> {
+  await page
+    .getByRole('button', { name: /^Abrir a iniciativa/ })
+    .filter({ visible: true })
+    .click()
+  await expect(page.locator('#gaveta-da-fila'), 'a gaveta da fila não abriu').toHaveAttribute(
+    'open',
+    '',
+  )
+}
+
+/**
  * Põe UMA peça no mapa, e este passo não é enfeite: a camada de MOVER — a que
  * cobria o marcador — só é desenhada quando existe algo movível
  * (`v.AlvoDoMovimento != ""`). Num tabuleiro vazio ela não nasce, e um teste de
@@ -76,9 +113,17 @@ async function mesaDescartavel(page: Page): Promise<{ mesa: string; apagar: () =
  * verde. Ele media um palco onde nada cobria nada.
  */
 async function poeUmaPecaNoMapa(page: Page): Promise<void> {
+  await abreAFila(page)
   await page.getByRole('button', { name: '+ Combatente' }).click()
   await page.getByLabel('Nome').fill('Ogro do E2E')
   await page.getByRole('button', { name: 'Acrescentar' }).click()
+  // A GAVETA FECHA ANTES de o teste voltar ao mapa, e esta ordem é a jornada de
+  // verdade: monta-se a fila na gaveta, fecha-se, e põe-se no mapa pela faixa do
+  // tabuleiro. Ela é MODAL — deixá-la aberta torna inerte tudo o que está atrás,
+  // e o `Pôr no mapa` da faixa (que vem antes no DOM, então é o que o `.first()`
+  // acha) ficaria coberto por ela. O sintoma é "dialog intercepts pointer
+  // events" num seletor que casou, e não um "não achei".
+  await fechaAFila(page)
   await page.getByRole('button', { name: 'Pôr no mapa', exact: true }).first().click()
   // Escopado ao DIÁLOGO: o nome do combatente aparece também na fila atrás dele,
   // e um seletor de página inteira acha os dois.

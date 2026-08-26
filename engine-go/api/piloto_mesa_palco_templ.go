@@ -449,20 +449,33 @@ func trilhoDasConsultas(v mesaView) templ.Component {
 			templ_7745c5c3_Var16 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<nav aria-label=\"Consultas do mestre\" class=\"order-first flex shrink-0 gap-1 overflow-x-auto border border-grimorio-iron bg-grimorio-panel p-1 lg:order-last lg:w-14 lg:flex-col lg:overflow-x-visible\"><button type=\"button\" data-on:click=\"document.getElementById('gaveta-da-fila').showModal()\" class=\"inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:hidden\">Iniciativa · ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<nav aria-label=\"Consultas do mestre\" class=\"order-first flex shrink-0 gap-1 overflow-x-auto border border-grimorio-iron bg-grimorio-panel p-1 lg:order-last lg:w-14 lg:flex-col lg:overflow-x-visible\"><button type=\"button\" aria-label=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var17 string
-		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(len(v.Fila)))
+		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue("Abrir a iniciativa · " + fmt.Sprint(len(v.Fila)) + " na fila")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_palco.templ`, Line: 163, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_palco.templ`, Line: 161, Col: 79}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "</button> <button type=\"button\" aria-label=\"Abrir o bestiário\" title=\"Bestiário — trazer uma criatura do livro\" data-on:click=\"document.getElementById('bestiario-da-mesa').showModal()\" class=\"flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:size-12\">🐉</button></nav>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "\" data-on:click=\"document.getElementById('gaveta-da-fila').showModal()\" class=\"inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:hidden\">Iniciativa · ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var18 string
+		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(len(v.Fila)))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `api/piloto_mesa_palco.templ`, Line: 164, Col: 42}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "</button> <button type=\"button\" aria-label=\"Abrir o bestiário\" title=\"Bestiário — trazer uma criatura do livro\" data-on:click=\"document.getElementById('bestiario-da-mesa').showModal()\" class=\"flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:size-12\">🐉</button></nav>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -499,12 +512,12 @@ func gavetaDaFila(v mesaView) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var18 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var18 == nil {
-			templ_7745c5c3_Var18 = templ.NopComponent
+		templ_7745c5c3_Var19 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var19 == nil {
+			templ_7745c5c3_Var19 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<dialog id=\"gaveta-da-fila\" data-preserve-attr=\"open\" aria-labelledby=\"gaveta-da-fila-titulo\" class=\"scene-grimorio mr-auto h-dvh max-h-none w-[min(30rem,calc(100vw-2rem))] max-w-none border border-grimorio-iron bg-grimorio-panel p-0 text-foreground backdrop:bg-black/60\"><div class=\"flex h-full flex-col\"><div class=\"flex shrink-0 items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2\"><h2 id=\"gaveta-da-fila-titulo\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Iniciativa</h2><button type=\"button\" aria-label=\"Fechar a iniciativa\" data-on:click=\"document.getElementById('gaveta-da-fila').close()\" class=\"flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">✕</button></div><div class=\"min-h-0 flex-1 space-y-3 overflow-y-auto p-3\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<dialog id=\"gaveta-da-fila\" data-preserve-attr=\"open\" aria-labelledby=\"gaveta-da-fila-titulo\" class=\"scene-grimorio mr-auto h-dvh max-h-none w-[min(30rem,calc(100vw-2rem))] max-w-none border border-grimorio-iron bg-grimorio-panel p-0 text-foreground backdrop:bg-black/60\"><div class=\"flex h-full flex-col\"><div class=\"flex shrink-0 items-center justify-between gap-2 border-b border-grimorio-iron px-3 py-2\"><h2 id=\"gaveta-da-fila-titulo\" class=\"font-heading text-lg tracking-wide text-grimorio-gold\">Iniciativa</h2><button type=\"button\" aria-label=\"Fechar a iniciativa\" data-on:click=\"document.getElementById('gaveta-da-fila').close()\" class=\"flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring\">✕</button></div><div class=\"min-h-0 flex-1 space-y-3 overflow-y-auto p-3\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -516,7 +529,7 @@ func gavetaDaFila(v mesaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "</div></div></dialog>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</div></div></dialog>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
