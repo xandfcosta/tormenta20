@@ -94,6 +94,10 @@ const QUERIDOS = [
   'LayoutGrid',
   // O menu de contexto da peça (ALE-206): duplicar.
   'Copy',
+  // A MÃO que arrasta a vista sobre o plano infinito (ALE-203). É o ícone que
+  // toda ferramenta de tela infinita usa para o mesmo gesto — Figma, Excalidraw,
+  // Miro —, e reconhecê-lo é metade do que faz a ferramenta ser descoberta.
+  'Hand',
 ]
 
 const indice = readFileSync(resolve(LUCIDE, 'lucide-solid.mjs'), 'utf8')

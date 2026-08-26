@@ -64,11 +64,11 @@ func oPincelEstaLigado() string {
 // expressão.
 func reguaNoPontoClicado(v tabuleiroView) string {
 	return fmt.Sprintf(
-		"const cx = Math.floor(evt.offsetX / $quadrado) + %d, cy = Math.floor(evt.offsetY / $quadrado) + %d; "+
+		"const cx = %s, cy = %s; "+
 			"if ($reguafase === 1) { $regua2x = cx; $regua2y = cy; $reguafase = 2; "+
 			"@post('/piloto/mesa/%d/%d/tabuleiro/regua/' + $regua1x + '/' + $regua1y + '/' + cx + '/' + cy) } "+
 			"else { $regua1x = cx; $regua1y = cy; $regua2x = cx; $regua2y = cy; $reguafase = 1; $reguatexto = '' }",
-		v.X0, v.Y0, v.CampaignID, v.SessionID,
+		clicouEmX, clicouEmY, v.CampaignID, v.SessionID,
 	)
 }
 
@@ -91,11 +91,11 @@ const guardaARegua = "$reguafase = 0; $reguatexto = ''"
 // para divergir da primeira.
 func gabaritoNoPontoClicado(v tabuleiroView) string {
 	return fmt.Sprintf(
-		"const cx = Math.floor(evt.offsetX / $quadrado) + %d, cy = Math.floor(evt.offsetY / $quadrado) + %d; "+
+		"const cx = %s, cy = %s; "+
 			"if ($gabaritofase === 1 && $gabaritoaponta) { $gabaritomirax = cx; $gabaritomiray = cy; $gabaritofase = 2 } "+
 			"else { $gabaritox = cx; $gabaritoy = cy; $gabaritomirax = cx; $gabaritomiray = cy; $gabaritofase = 1 } "+
 			"%s",
-		v.X0, v.Y0, remedeOGabarito(v),
+		clicouEmX, clicouEmY, remedeOGabarito(v),
 	)
 }
 
@@ -189,20 +189,25 @@ func aPontaDaRegua(ponta, eixo string) string {
 	return fmt.Sprintf("$regua%s%s + 0.5", ponta, eixo)
 }
 
-// aQuinaDaMoldura tira do desenho a origem do plano.
+// oDesenhoNaJanela põe o SVG a falar a língua do tabuleiro: a JANELA e o ZOOM.
 //
-// O sinal guarda a coordenada ABSOLUTA — o plano não tem bordas e a peça pode
-// estar em -3 —, e é o servidor que sabe onde a moldura começa. Pôr a subtração
-// aqui, num `transform` que o remendo redesenha, é o que mantém a medida certa
-// quando a moldura cresce debaixo dela.
-func aQuinaDaMoldura(v tabuleiroView) string {
-	return fmt.Sprintf("translate(%d %d)", -v.X0, -v.Y0)
-}
-
-// aMolduraEmQuadrados é o `viewBox`: o SVG passa a falar a língua do tabuleiro.
-func aMolduraEmQuadrados(v tabuleiroView) string {
-	return fmt.Sprintf("0 0 %d %d", v.Colunas, v.Linhas)
-}
+// Ele era um `viewBox` do tamanho da moldura mais um `transform` que descontava
+// a quina dela, e a moldura saiu na ALE-203. A primeira tentativa foi só um
+// `scale($quadrado)` com o SVG dentro do plano deslocado — e ela NÃO DESENHAVA
+// NADA. Medido: o `<path>` tinha caixa certa (176×176 no lugar certo), `fill`
+// certo, `display: block`, e a tela ficava vazia; dar tamanho ao `<svg>` na mão
+// fazia a esfera aparecer na hora.
+//
+// A causa é que o `<svg>` MAIS EXTERNO recorta pelo VIEWPORT dele, e `overflow:
+// visible` não levanta esse recorte — dentro de um plano de tamanho zero, o
+// viewport era 0×0 e tudo caía fora. É um recorte que não acusa: nada no DOM
+// diz "isto está cortado".
+//
+// Então o SVG passou a ser filho da CENA e a cobrir a JANELA — que é um recorte
+// que a gente QUER —, e os dois números que todo o resto usa entram aqui no
+// `transform`: a janela desloca, o zoom escala. Nessa ordem, porque a janela é
+// medida em PIXELS e o `scale` viria depois multiplicá-la.
+const oDesenhoNaJanela = "`translate(${-$vistax}, ${-$vistay}) scale(${$quadrado})`"
 
 // oTamanhoEmMetros converte o número digitado para a unidade da FICHA.
 //

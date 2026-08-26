@@ -233,8 +233,13 @@ templ grupoEmCartoes(v mesaView) {
 // Com o tabuleiro ocupando a superfície inteira isso vira defeito, e ele foi
 // medido: com o zoom em 96px por quadrado, o plano de 1344px de altura empurrou
 // esta raiz para 1440, a `<section>` de dentro foi junto, e a PÁGINA passou a
-// rolar em vez do mapa. Uma altura que não é repassada para baixo faz o
-// `overflow: auto` do palco não ter contra o que medir.
+// rolar em vez do mapa.
+//
+// Depois da ALE-203 o plano não tem mais altura própria — ele é uma origem de
+// tamanho zero num plano infinito —, e mesmo assim estas classes FICAM: a cena
+// é `flex: 1` e recorta com `overflow: hidden`, e um `flex: 1` só sabe até onde
+// crescer se o ancestral repassar a altura. Sem elas a janela nasceria com a
+// altura do nada.
 templ mesaTabuleiro(v mesaView) {
 	<div id="mesa-tabuleiro" class="flex min-h-0 flex-1 flex-col">
 		@tabuleiroDaMesa(v.Tabuleiro)

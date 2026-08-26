@@ -18,13 +18,14 @@ import (
 //  2. cada ferramenta tem um NÚMERO de atalho;
 //  3. a BORRACHA deixa de ser um modo do pincel e vira ferramenta própria.
 //
-// # Por que o número é FIXO por ferramenta, e não a posição no trilho
+// # Por que o número sai do trilho INTEIRO, e não do trilho que aparece
 //
-// O trilho do jogador tem três entradas e o do mestre tem nove. Numerar por
-// posição faria a régua ser `2` para um e `2` para o outro por acidente, e a
-// primeira ferramenta só do mestre desalinharia tudo. Com número fixo, quem
-// aprendeu `3 = gabarito` mestrando continua com `3 = gabarito` jogando — e os
-// números que o jogador não tem simplesmente não fazem nada.
+// O trilho do jogador tem quatro entradas e o do mestre tem dez. Numerar o que
+// cada papel VÊ faria a régua ser `3` para um e `2` para o outro, e a primeira
+// ferramenta só do mestre desalinharia tudo. O número sai da posição na lista
+// COMPLETA, antes de filtrar: quem aprendeu `4 = gabarito` mestrando continua
+// com `4 = gabarito` jogando, e os números que o jogador não tem simplesmente
+// não fazem nada.
 
 // ferramentaDoMapa é uma entrada do trilho.
 type ferramentaDoMapa struct {
@@ -62,29 +63,60 @@ const FerramentaDaBorracha = "borracha"
 // agrupadas, com a borracha fechando porque ela é o desfazer das quatro acima.
 func asFerramentasDoMapa() []ferramentaDoMapa {
 	trilho := []ferramentaDoMapa{
-		{ID: "", Atalho: "1", Rotulo: "Mover a peça", Icone: "MousePointer2",
+		{ID: "", Rotulo: "Mover a peça", Icone: "MousePointer2",
 			Dica: "Mover a peça: o clique escolhe a casa para onde ela vai"},
-		{ID: FerramentaDaRegua, Atalho: "2", Rotulo: "Régua", Icone: "Ruler",
+		// A MÃO é a SEGUNDA e não a última, e ela é de TODO MUNDO: sem moldura
+		// não há rolagem nativa, então arrastar a vista deixou de ser conforto e
+		// virou o único jeito de chegar ao outro lado do plano (ALE-203).
+		{ID: FerramentaDaVista, Rotulo: "Arrastar a vista", Icone: "Hand",
+			Dica: "Arrastar a vista: o clique e o arrasto percorrem o plano, que não tem bordas"},
+		{ID: FerramentaDaRegua, Rotulo: "Régua", Icone: "Ruler",
 			Dica: "Régua: mede a distância e diz a faixa de alcance do livro (p224)"},
-		{ID: FerramentaDoGabarito, Atalho: "3", Rotulo: "Gabarito", Icone: "Radar",
+		{ID: FerramentaDoGabarito, Rotulo: "Gabarito", Icone: "Radar",
 			Dica: "Gabarito de área: a esfera, o cone, a linha e o quadrado (p225), e quem eles pegam"},
-		{ID: FerramentaDeMarcar, Atalho: "4", Rotulo: "Marcar", Icone: "MapPin", SoMestre: true,
+		{ID: FerramentaDeMarcar, Rotulo: "Marcar", Icone: "MapPin", SoMestre: true,
 			Dica: "Marcar um lugar: o clique põe um ponto ESCONDIDO no mapa, para revelar quando quiser"},
 	}
 	// Os PINCÉIS saem da lista de espécies e nunca de uma cópia escrita à mão: a
 	// quinta espécie nasce no trilho, com atalho, sem ninguém lembrar disto.
-	for i, pincel := range tabuleiro.EspeciesDeTerreno {
+	for _, pincel := range tabuleiro.EspeciesDeTerreno {
 		trilho = append(trilho, ferramentaDoMapa{
-			ID: string(pincel.ID), Atalho: fmt.Sprint(5 + i), Rotulo: pincel.Rotulo, SoMestre: true,
+			ID: string(pincel.ID), Rotulo: pincel.Rotulo, SoMestre: true,
 			Dica:    pincel.Rotulo + ": " + pincel.Efeito + " (p238)",
 			Amostra: "pincel-amostra tabuleiro-" + string(pincel.ID),
 		})
 	}
-	return append(trilho, ferramentaDoMapa{
-		ID: FerramentaDaBorracha, Atalho: fmt.Sprint(5 + len(tabuleiro.EspeciesDeTerreno)),
-		Rotulo: "Borracha", Icone: "Eraser", SoMestre: true,
+	trilho = append(trilho, ferramentaDoMapa{
+		ID: FerramentaDaBorracha, Rotulo: "Borracha", Icone: "Eraser", SoMestre: true,
 		Dica: "Borracha: o clique limpa a casa inteira, seja qual for o terreno nela",
 	})
+	return numeraOTrilho(trilho)
+}
+
+// asTeclasDoTrilho é a fileira de números do teclado, na ordem em que a mão a
+// percorre: as nove digitais e o zero fechando, que é onde a borracha cai.
+//
+// DEZ é o teto desta gramática, e ele está escrito aqui de propósito: a décima
+// primeira ferramenta não ganha uma letra sorteada — ela pede outra ideia
+// (submenu, ferramenta que troca de modo), e o `numeraOTrilho` faz o problema
+// aparecer em vez de nascer sem atalho em silêncio.
+var asTeclasDoTrilho = []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"}
+
+// numeraOTrilho escreve o atalho de cada ferramenta a partir da posição dela.
+//
+// Os números eram digitados à mão em cada linha, e a mão errou na primeira
+// oportunidade: pôr a vista em segundo lugar teria exigido renumerar as seis
+// abaixo, e uma esquecida daria duas ferramentas com a mesma tecla — a segunda
+// simplesmente nunca ligaria, sem erro nenhum.
+func numeraOTrilho(trilho []ferramentaDoMapa) []ferramentaDoMapa {
+	if len(trilho) > len(asTeclasDoTrilho) {
+		panic(fmt.Sprintf("o trilho tem %d ferramentas e só há %d teclas: %v",
+			len(trilho), len(asTeclasDoTrilho), asTeclasDoTrilho))
+	}
+	for i := range trilho {
+		trilho[i].Atalho = asTeclasDoTrilho[i]
+	}
+	return trilho
 }
 
 // oTrilhoDe devolve as ferramentas que aquele papel realmente tem.
@@ -93,8 +125,19 @@ func asFerramentasDoMapa() []ferramentaDoMapa {
 // concordarem sobre quem existe: os dois leem esta função. Escritos em dois
 // lugares, o jogador ganharia uma tecla que liga uma ferramenta sem botão.
 func oTrilhoDe(mestre bool) []ferramentaDoMapa {
-	fora := make([]ferramentaDoMapa, 0, len(asFerramentasDoMapa()))
-	for _, f := range asFerramentasDoMapa() {
+	return asVisiveisPara(mestre, asFerramentasDoMapa())
+}
+
+// asVisiveisPara é o filtro, e ele recebe o trilho em vez de buscá-lo.
+//
+// Separado por causa do GUARDA: a promessa do número fixo só é interessante
+// quando uma ferramenta SÓ DO MESTRE vem ANTES de uma compartilhada — hoje todas
+// as do mestre estão no fim, e um teste sobre o trilho real passaria mesmo com a
+// numeração feita depois do filtro. Com o trilho como parâmetro, o guarda monta
+// o caso que importa em vez de esperar que a ordem real o produza um dia.
+func asVisiveisPara(mestre bool, trilho []ferramentaDoMapa) []ferramentaDoMapa {
+	fora := make([]ferramentaDoMapa, 0, len(trilho))
+	for _, f := range trilho {
 		if mestre || !f.SoMestre {
 			fora = append(fora, f)
 		}
@@ -161,8 +204,8 @@ func oVestidoDaFerramenta(id string) string {
 // faria as rotas mudarem juntas no dia em que uma delas precisar de outra conta.
 func limpaNoPontoClicado(v tabuleiroView) string {
 	return fmt.Sprintf(
-		"@post('/piloto/mesa/%d/%d/tabuleiro/terreno/limpar/' + (Math.floor(evt.offsetX / $quadrado) + %d) + '/' + (Math.floor(evt.offsetY / $quadrado) + %d))",
-		v.CampaignID, v.SessionID, v.X0, v.Y0,
+		"@post('/piloto/mesa/%d/%d/tabuleiro/terreno/limpar/' + (%s) + '/' + (%s))",
+		v.CampaignID, v.SessionID, clicouEmX, clicouEmY,
 	)
 }
 

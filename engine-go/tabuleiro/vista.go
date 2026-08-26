@@ -7,108 +7,24 @@ import (
 	"t20engine/aovivo"
 )
 
-// O QUE SE DESENHA DO TABULEIRO (ALE-263).
+// COMO UMA PEÇA SE PARECE.
 //
-// O plano é INFINITO, e a SPA resolve isso desenhando só a JANELA que o mestre
-// enquadrou — origem fracionária, recalculada a cada pixel arrastado. No piloto
-// quem desenha é o SERVIDOR, e repetir aquele modelo custaria uma ida ao
-// servidor por passo de arrasto, com o remendo do SSE disputando com o dedo.
+// Este arquivo teve uma segunda metade — a MOLDURA (ALE-263), o retângulo que o
+// servidor desenhava porque ele continha tudo o que existe, mais margem. Ela
+// saiu inteira na ALE-203, com os testes dela.
 //
-// A escolha do dono foi outra e ela inverte a divisão: o servidor desenha o
-// EXTENSO — o retângulo que contém tudo que existe, mais margem — e o
-// enquadramento (deslizar e ampliar) vira `transform` no navegador. Arrastar
-// deixa de custar pedido, e o remendo do SSE não perde o enquadramento porque
-// ele não está no HTML.
+// A razão de guardar isto escrito: a moldura era uma resposta razoável a uma
+// pergunta real ("como desenhar um plano infinito de um servidor?"), e ela
+// FALHOU de um jeito que só aparece no uso. Ela CRESCIA — pintar perto da borda
+// mexia no `X0`, e o mesmo ponto da tela virava outro quadrado entre dois
+// cliques (medido na bancada: de -11 para -12). E ela era uma caixa: fora dela
+// não havia onde clicar, então pintar longe do grupo exigia primeiro que ela
+// crescesse até lá.
 //
-// O que sustenta a troca é o TETO DA MESA: o servidor limita a sessão a 50
-// combatentes, então "tudo que existe" é pequeno. O infinito não some — ele
-// deixa de precisar ser desenhado.
-
-// MargemDaMoldura são os quadrados vazios em volta do que existe.
-//
-// Três é o deslocamento de meio turno (9m = 6 quadrados, p106): o mestre vê para
-// onde a peça da borda pode andar sem o servidor precisar ampliar nada. Zero
-// deixaria a peça colada na borda, e um plano que acaba onde a peça está mente
-// sobre um plano que não acaba.
-const MargemDaMoldura = 3
-
-// O piso da vista, em quadrados. São os mesmos números que a SPA usa como
-// janela padrão, e o motivo de existirem aqui é o mesmo de lá: um tabuleiro
-// recém-aberto não tem nada dentro, e uma moldura de 0×0 desenharia o nada.
-const (
-	MinimoDeColunas = 20
-	MinimoDeLinhas  = 14
-)
-
-// Moldura é o retângulo que o servidor desenha, em quadrados do plano.
-//
-// X0 e Y0 podem ser NEGATIVOS, e isso é o plano infinito sobrevivendo à
-// mudança: coordenada negativa é lugar legítimo, e o rótulo do eixo usa o número
-// COM SINAL que o servidor guarda — num plano sem bordas, o "+1" de planilha
-// mentiria sobre onde a peça está.
-type Moldura struct {
-	X0, Y0          int
-	Colunas, Linhas int
-}
-
-// MolduraDe mede o que existe no tabuleiro e devolve o retângulo a desenhar.
-//
-// Entram as PEÇAS (com a pegada, que é o que ocupa mais de um quadrado), os
-// MARCADORES e o terreno difícil — tudo que tem lugar. O que está escondido
-// entra também: o mestre desenha a moldura a partir do estado dele, e a redação
-// para o jogador acontece antes, no `StateForRole`.
-func MolduraDe(b *BoardState) Moldura {
-	if b == nil {
-		return molduraCentradaEm(0, 0, 0, 0)
-	}
-	primeiro := true
-	var minX, minY, maxX, maxY int
-	cobre := func(x, y, tamanho int) {
-		if primeiro {
-			minX, minY, maxX, maxY = x, y, x+tamanho-1, y+tamanho-1
-			primeiro = false
-			return
-		}
-		minX, minY = min(minX, x), min(minY, y)
-		maxX, maxY = max(maxX, x+tamanho-1), max(maxY, y+tamanho-1)
-	}
-	for i := range b.Tokens {
-		// Pegada zero é peça de um quadrado: o campo é `omitempty` no fio, e
-		// tratá-la como zero encolheria a moldura para fora da própria peça.
-		pegada := b.Tokens[i].Footprint
-		if pegada < 1 {
-			pegada = 1
-		}
-		cobre(b.Tokens[i].X, b.Tokens[i].Y, pegada)
-	}
-	for i := range b.Markers {
-		cobre(b.Markers[i].X, b.Markers[i].Y, 1)
-	}
-	for i := range b.Difficult {
-		cobre(b.Difficult[i].X, b.Difficult[i].Y, 1)
-	}
-	if primeiro {
-		return molduraCentradaEm(0, 0, 0, 0)
-	}
-	return molduraCentradaEm(minX-MargemDaMoldura, minY-MargemDaMoldura,
-		maxX-minX+1+2*MargemDaMoldura, maxY-minY+1+2*MargemDaMoldura)
-}
-
-// molduraCentradaEm cresce o retângulo até o piso, mantendo o conteúdo no MEIO.
-//
-// Crescer só para a direita e para baixo empurraria o combate para a quina de um
-// tabuleiro vazio, e o mestre teria de deslizar para achar as próprias peças.
-func molduraCentradaEm(x0, y0, colunas, linhas int) Moldura {
-	if colunas < MinimoDeColunas {
-		x0 -= (MinimoDeColunas - colunas) / 2
-		colunas = MinimoDeColunas
-	}
-	if linhas < MinimoDeLinhas {
-		y0 -= (MinimoDeLinhas - linhas) / 2
-		linhas = MinimoDeLinhas
-	}
-	return Moldura{X0: x0, Y0: y0, Colunas: colunas, Linhas: linhas}
-}
+// O que entrou no lugar é a divisão que o Excalidraw usa: o servidor manda o que
+// EXISTE em coordenada absoluta, e o NAVEGADOR recorta com uma janela que nunca
+// vai ao servidor (`api/piloto_mesa_janela.go`). O infinito parou de precisar de
+// um retângulo que o contivesse.
 
 // ── como uma peça se PARECE ─────────────────────────────────────────────────
 

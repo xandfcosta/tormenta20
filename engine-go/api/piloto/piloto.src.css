@@ -316,24 +316,52 @@ html {
       repeating-linear-gradient(90deg, rgba(0,0,0,.12) 0 1px, transparent 1px 100%);
     background-size: var(--quadrado) var(--quadrado);
   }
+  /* A grade COBRE A JANELA e desliza junto com ela (ALE-203). Ela é fundo da
+   * CENA e não do plano, e a diferença é o que faz o plano ser infinito: dentro
+   * do plano deslocado a grade cobriria só o retângulo de onde saiu, e arrastar
+   * revelaria o vazio na direção do arrasto. Como fundo da janela, com a origem
+   * amarrada à vista, ela é a mesma grade para sempre — o mesmo truque que o
+   * Excalidraw usa, e é ele que dispensa desenhar o que não aparece. */
+  .tabuleiro-grade,
+  .chao-papel .tabuleiro-grade {
+    background-position: calc(var(--vista-x) * -1) calc(var(--vista-y) * -1);
+  }
 
-  /* O PALCO recorta; o PLANO desliza dentro dele. O enquadramento inteiro vive
-   * em variáveis CSS — `--quadrado` é o zoom, `--desliza-*` é o arrasto — e é
-   * isso que o tira do HTML: o remendo do SSE redesenha as peças sem que o
-   * mestre perca onde estava olhando. */
-  /* A CENA é a caixa do tabuleiro, e é ela que ancora TUDO o que flutua por
-   * cima: o trilho, os avisos e os ajudantes de ferramenta (ALE-203).
+  /* A CENA é a JANELA sobre um plano INFINITO (ALE-203, decisão do dono), e ela
+   * ancora TUDO: o plano que desliza, a grade que o acompanha, as camadas de
+   * clique e os overlays (o trilho, os avisos, os ajudantes de ferramenta).
+   *
+   * O enquadramento inteiro vive em variáveis CSS — `--quadrado` é o zoom,
+   * `--vista-*` é a janela — e é isso que o tira do HTML: o remendo do SSE
+   * redesenha as peças sem que o mestre perca onde estava olhando.
    *
    * Sobrepor e não empilhar foi pedido do dono, e a razão é medível: antes,
    * acender a lente ou abrir o gabarito EMPURRAVA o mapa para baixo — a cena
    * mudava de tamanho por causa de um aviso, e a casa debaixo do dedo trocava de
-   * lugar no meio do gesto. */
+   * lugar no meio do gesto.
+   *
+   * `overflow: hidden` é o que RECORTA, e é o que faz "infinito" caber numa tela
+   * finita: fora da janela nada é pintado. `touch-action: none` porque o arrasto
+   * da vista é o gesto do dedo, e sem isso o navegador o interpreta como rolagem
+   * da página. */
   .tabuleiro-cena {
+    --quadrado: 44px;
+    --vista-x: 0px;
+    --vista-y: 0px;
     position: relative;
-    display: flex;
+    overflow: hidden;
     min-height: 0;
     flex: 1 1 0%;
-    flex-direction: column;
+    touch-action: none;
+    /* Os NOMES das cores de marcador são os do domínio
+       (`tabuleiro.CoresDeMarcador`), e não uma segunda tradução: eles eram
+       `gold/red/green/blue/violet` e a autoridade nunca aceitou nenhum dos
+       cinco, então todo marcador caía no dourado — em silêncio, que é a marca
+       desta família. O `piloto_marcador_test.go` amarra esta lista à de lá. */
+    --marcador-ouro: var(--grimorio-gold);
+    --marcador-carmim: var(--hp-critical);
+    --marcador-azul: var(--mp-arcane);
+    --marcador-verde: var(--hp-full);
   }
 
   /* O TRILHO flutua colado à esquerda, centrado na altura: trocar de ferramenta
@@ -492,86 +520,26 @@ html {
     box-shadow: 0 4px 14px oklch(0 0 0 / 0.45);
   }
 
-  .tabuleiro-palco {
-    --quadrado: 44px;
-    position: relative;
-    /* ROLAGEM NATIVA e não `overflow:hidden` com transform, nesta fatia.
-     *
-     * O plano é maior que o palco por construção — é o extenso, com margem —, e
-     * um palco que RECORTA sem dar caminho deixa o mestre sem alcançar a metade
-     * do próprio tabuleiro. Medido: com o extenso em 880px e o palco em ~590, os
-     * dois ogros ficavam fora e não havia gesto nenhum para chegar até eles.
-     *
-     * A rolagem do navegador já é o arrasto, e vem com teclado, roda e toque de
-     * graça. O `--desliza-*` que eu tinha escrito para um `transform` saiu junto:
-     * ele não tinha quem o escrevesse nesta fatia, e variável que ninguém move é
-     * código morto com cara de preparo.
-     *
-     * A DECISÃO que esta linha adiava está tomada (ALE-264, item 6): a rolagem
-     * FICA, e o zoom entra sem tomá-la. A SPA pôde dar a roda ao zoom porque lá
-     * não havia rolagem nativa para perder; aqui há, e é como se percorre o mapa
-     * — tirá-la seria trocar um gesto por outro em vez de somar. Então: roda
-     * sozinha rola, `Ctrl+roda` amplia (convenção de mapa), e os botões e as
-     * teclas `+`/`−` fazem o mesmo sem gesto nenhum.
-     *
-     * E o zoom NÃO é `transform`: quem muda é o `--quadrado`, então o plano
-     * muda de tamanho de verdade e a rolagem continua sabendo até onde ir. Um
-     * `transform: scale` mentiria sobre o leiaute e o palco deixaria metade do
-     * mapa inalcançável, que é o defeito que a rolagem nativa veio consertar. */
-    overflow: auto;
-    overscroll-behavior: contain;
-    height: min(60vh, 32rem);
-    /* O PLANO FICA NO MEIO quando cabe, e a razão apareceu com a forma do
-     * jogador (ALE-269): o mapa passou a ocupar a tela inteira, e uma moldura de
-     * 20×44px encostada à esquerda de 1568px deixa uma faixa preta de 700px ao
-     * lado da cena. Antes ele vivia numa coluna de 48rem, onde a moldura
-     * transbordava e a pergunta não existia.
-     *
-     * `margin: auto` no filho de um flex, e NÃO `justify-content: center`:
-     * aquele centraliza igual e RECORTA o começo do conteúdo quando ele é maior
-     * que a caixa — o mestre aproximaria o zoom e perderia a metade de cima do
-     * mapa, sem barra de rolagem para trazê-la de volta. */
-    display: flex;
-    /* E os DOIS `min-*: 0` vêm junto com o `display: flex`, não por precaução:
-     * um contêiner flex tem tamanho mínimo AUTOMÁTICO — ele se recusa a encolher
-     * abaixo do conteúdo. Medido no navegador: com o plano a 96px por quadrado o
-     * palco cresceu para 1877x1346 dentro de uma janela de 1568x742, e a PÁGINA
-     * inteira passou a rolar em vez do mapa. Sem estas duas linhas, aproximar o
-     * zoom desmonta a tela cheia. */
-    min-width: 0;
-    min-height: 0;
-  }
-  .tabuleiro-plano { margin: auto; }
-
-  /* O CENTRALIZAR SALTA, e não desliza — e a decisão é medida, não gosto.
+  /* O PALCO SAIU (ALE-203). Ele era a caixa que ROLAVA, e rolagem nativa precisa
+   * de um fim: o plano tinha `width: colunas × --quadrado` porque havia moldura,
+   * e a moldura era o retângulo do que existia. Num plano infinito não há
+   * `scrollWidth` para o navegador prender, então quem anda é a JANELA (dois
+   * sinais em pixels) e o gesto é o arrasto — que é o que o dono cobrou como
+   * "ferramenta de movimentar dentro do tabuleiro com clique e arrasto".
    *
-   * `scroll-behavior: smooth` aqui (ou `scrollTo({behavior:'smooth'})` no JS)
-   * deixava o `scrollTop` em ZERO, sem erro em lugar nenhum: a rolagem
-   * programática simplesmente não acontecia. Com a atribuição direta e sem
-   * `smooth`, ela chega ao lugar certo — conferido nos dois sentidos no mesmo
-   * navegador, e o `prefers-reduced-motion` de lá dizia `no-preference`, então
-   * a preferência do usuário não era a causa.
+   * O que se perde com a rolagem nativa: a roda, o teclado e o toque de graça.
+   * Os três voltaram à mão — a roda em `aRodaMoveAJanela`, as setas em
+   * `oTecladoDaJanela`, e o toque pelo mesmo `pointer*` do arrasto.
    *
-   * Um botão que anima e não chega é pior que um botão que salta. Se a animação
-   * voltar à mesa, ela volta com a MEDIÇÃO de que a rolagem acontece — e sob
-   * `prefers-reduced-motion`, que é onde ela pode ser desligada por quem pediu
-   * menos movimento. */
-
-  /* O PALCO DO MESTRE dá ao mapa a altura que sobra (ALE-269).
+   * O que se ganha: o quadrado debaixo do dedo PARA DE MUDAR. A moldura crescia
+   * quando se pintava perto da borda, e `X0` ia de -11 para -12 entre dois
+   * cliques — medido na bancada. Era uma das duas causas do "apaguei e não
+   * apagou".
    *
-   * A altura fixa acima é a resposta certa para a COLUNA do jogador, que rola:
-   * lá o mapa é um bloco entre outros, e deixá-lo crescer empurraria a fila
-   * para fora da tela. Na forma do mestre a pergunta se inverte — o tabuleiro é
-   * o centro e o que rola é ele por dentro —, e a altura fixa deixava 217px
-   * mortos abaixo dele numa janela de 963 (medido, 1600x1000).
-   *
-   * `height: auto` ANTES do `flex`, e não só o `flex`: a declaração de cima é
-   * uma altura em `min()`, e uma base flexível não a apaga sozinha. */
-  .tabuleiro-palco-cheio {
-    height: auto;
-    min-height: 0;
-    flex: 1 1 0%;
-  }
+   * O CENTRALIZAR continua SALTANDO e não deslizando, e a decisão segue medida:
+   * `scroll-behavior: smooth` (ou `scrollTo({behavior:'smooth'})`) deixava o
+   * `scrollTop` em ZERO, sem erro em lugar nenhum. Um botão que anima e não
+   * chega é pior que um botão que salta. */
 
   /* AS NOTAS DA SESSÃO (ALE-269, superfície 5).
    *
@@ -605,11 +573,44 @@ html {
       grid-template-columns: 1fr 1fr;
     }
   }
+  /* O PLANO é uma ORIGEM, não uma caixa (ALE-203): tamanho ZERO, e tudo o que
+   * ele contém escapa dele por `position: absolute`. Ele tinha `width: colunas ×
+   * --quadrado`, e as duas variáveis morreram com a moldura.
+   *
+   * UM `translate` para o plano inteiro, e não uma conta por peça: mover a
+   * janela é uma composição na GPU em vez de recalcular a posição de cada nó.
+   * `will-change` porque o arrasto o move a cada quadro. */
   .tabuleiro-plano {
-    position: relative;
-    width: calc(var(--colunas) * var(--quadrado));
-    height: calc(var(--linhas) * var(--quadrado));
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    transform: translate(calc(var(--vista-x) * -1), calc(var(--vista-y) * -1));
+    will-change: transform;
   }
+
+  /* O PLANO É DOIS, e as camadas de clique passam ENTRE eles.
+   *
+   * O e2e do marcador provou por quê: `transform` cria CONTEXTO DE
+   * EMPILHAMENTO, então assim que o plano passou a ser deslocado, o `z-index: 2`
+   * do marcador deixou de disputar com as camadas — ele passou a disputar
+   * DENTRO do plano, e o plano inteiro perdia para as camadas, que vêm depois no
+   * DOM. O marcador ficou inalcançável pela segunda vez na vida deste arquivo, do
+   * mesmo jeito e por outra causa; e de novo só o navegador viu.
+   *
+   * Embaixo fica o que é CHÃO e se olha; em cima, o que responde ao dedo. É a
+   * mesma ordem de sempre, agora escrita em dois nós em vez de numa pilha de
+   * `z-index` que o contexto de empilhamento passou a ignorar. */
+  .tabuleiro-plano-chao { z-index: 0; }
+  .tabuleiro-medida-fundo { z-index: 1; }
+  .tabuleiro-casas,
+  .tabuleiro-vista { z-index: 2; }
+  .tabuleiro-plano-pecas { z-index: 3; }
+  .tabuleiro-medida-frente { z-index: 4; }
+  /* O AMBIENTE cobre a JANELA, pela mesma razão da grade: ele é a luz da cena,
+   * e luz que acaba na borda do que já foi pintado denuncia que o plano tem
+   * fim. */
   .tabuleiro-ambiente,
   .tabuleiro-grade { position: absolute; inset: 0; pointer-events: none; }
 
@@ -837,20 +838,10 @@ html {
     cursor: pointer;
   }
 
-  /* As cores que o mestre pode escolher para um marcador. Nomeadas porque o
-   * valor vem do banco: interpolar a string crua no `style` seria injeção de
-   * CSS, e o Go já a prende a esta lista. */
-  .tabuleiro-palco {
-    /* Os NOMES são os do domínio (`tabuleiro.CoresDeMarcador`), e não uma
-       segunda tradução: eles eram `gold/red/green/blue/violet` e a autoridade
-       nunca aceitou nenhum dos cinco, então todo marcador caía no dourado —
-       em silêncio, que é a marca desta família. O `piloto_marcador_test.go`
-       amarra esta lista à de lá. */
-    --marcador-ouro: var(--grimorio-gold);
-    --marcador-carmim: var(--hp-critical);
-    --marcador-azul: var(--mp-arcane);
-    --marcador-verde: var(--hp-full);
-  }
+  /* As cores que o mestre pode escolher para um marcador são nomeadas porque o
+   * valor vem do banco — interpolar a string crua no `style` seria injeção de
+   * CSS, e o Go já a prende a esta lista. Elas moram na `.tabuleiro-cena`
+   * (ALE-203), que é o ancestral que sobrou depois de o palco sair. */
 }
 
 /* O MOVIMENTO no tabuleiro (ALE-266). */
@@ -898,10 +889,17 @@ html {
     pointer-events: none;
   }
 
-  /* A CAMADA DE CASAS é UM nó cobrindo o plano, e não um por quadrado: 280
+  /* A CAMADA DE CASAS é UM nó cobrindo a JANELA, e não um por quadrado: 280
    * botões seriam um campo minado no leitor de tela. O quadrado sai do ponto do
-   * clique; ela fica ABAIXO das peças no empilhamento para o clique numa peça
-   * continuar sendo da peça. */
+   * clique somado à vista; ela fica ABAIXO das peças no empilhamento para o
+   * clique numa peça continuar sendo da peça.
+   *
+   * A janela INTEIRA é clicável (ALE-203, decisão do dono), e é isso que faz o
+   * plano ser infinito para o dedo também: antes, fora da moldura não havia
+   * onde clicar, então pintar longe do grupo exigia primeiro que a moldura
+   * crescesse até lá. Por isso ela é irmã do plano e NÃO filha — filha, ela
+   * andaria com o `translate` e o `offsetX` mediria a partir da origem do
+   * plano em vez da quina da tela. */
   .tabuleiro-casas {
     position: absolute;
     inset: 0;
@@ -912,6 +910,18 @@ html {
     cursor: crosshair;
     outline: none;
   }
+  /* A MÃO que arrasta a vista (ALE-203). Mesma geometria da camada de casas — a
+   * janela inteira —, e o que muda é o CURSOR: aberta em repouso, fechada
+   * enquanto o dedo segura. É a convenção de toda tela infinita (Figma,
+   * Excalidraw, Miro), e reconhecê-la é metade do que faz a ferramenta ser
+   * descoberta sem ninguém explicar. */
+  .tabuleiro-vista {
+    position: absolute;
+    inset: 0;
+    cursor: grab;
+  }
+  .tabuleiro-vista-pegando { cursor: grabbing; }
+
   .tabuleiro-casas:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: -2px;
@@ -1002,25 +1012,35 @@ html {
  * silêncio. Cabendo num `d` e em quatro números, eles moram em SINAIS, e sinal
  * sobrevive ao remendo.
  *
- * O SVG fala em QUADRADOS: o `viewBox` é a moldura contada em casas, e o
- * elemento mede `colunas × --quadrado`. É isso que faz o desenho acompanhar o
- * zoom sem uma linha de JavaScript. */
+ * O SVG fala em QUADRADOS: um `scale($quadrado)` converte a unidade inteira, e é
+ * isso que faz o desenho acompanhar o zoom sem uma linha de JavaScript. Ele era
+ * um `viewBox` do tamanho da moldura; sem moldura não há caixa que recorte, e o
+ * desenho ESCAPA do elemento pelo `overflow: visible` abaixo. */
 @layer components {
+  /* O SVG cobre a JANELA, e não o plano — e isto é conserto de um recorte que
+     não acusava (ALE-203).
+     
+     Dentro do plano, que tem tamanho ZERO, o `<svg>` mais externo ficava 0×0 e
+     recortava TUDO: o `<path>` tinha caixa certa no lugar certo, `fill` certo e
+     `display: block`, e a tela ficava vazia. `overflow: visible` NÃO levanta o
+     recorte do viewport de um svg externo — medido, dar tamanho ao elemento na
+     mão fazia a esfera aparecer na hora.
+     
+     Cobrindo a janela, o recorte passa a ser o que a gente quer, e quem desloca
+     o desenho é o `transform` do `<g>` (`oDesenhoNaJanela`). */
   .tabuleiro-medida {
     position: absolute;
     inset: 0;
+    /* `width`/`height` explícitos, e não só o `inset: 0`: o `<svg>` é elemento
+       SUBSTITUÍDO e tem tamanho intrínseco de 300×150 — com os quatro insets
+       zerados ele fica nesse tamanho em vez de esticar, e o desenho volta a ser
+       recortado. Medido: 300×150 na quina, com o `<path>` correto a 176px dali. */
     width: 100%;
     height: 100%;
     /* Nunca recebe clique: quem responde continua sendo a camada de casas, e uma
        régua que roubasse o clique não deixaria medir a segunda ponta. */
     pointer-events: none;
-    overflow: visible;
   }
-  /* O gabarito fica ABAIXO das peças (que estão em 2) e acima do terreno: quem a
-     bola de fogo pega precisa aparecer POR CIMA dela. A régua fica acima de
-     tudo, porque é um fio fino que uma peça apagaria pela metade. */
-  .tabuleiro-medida-fundo { z-index: 1; }
-  .tabuleiro-medida-frente { z-index: 3; }
 
   .tabuleiro-gabarito {
     fill: oklch(0.8 0.11 85 / 0.25);
@@ -1063,10 +1083,15 @@ html {
      * chega atrasada e o gesto parece emperrado. */
     transition: none;
   }
-  /* `touch-action: none` no que se arrasta, e só nele: sem isto o navegador
-   * entende o gesto como rolagem da página e o `pointermove` para de chegar no
-   * meio do arrasto. No palco inteiro seria pior — a rolagem nativa é como se
-   * alcança o resto do plano. */
+  /* `touch-action: none` no que se arrasta: sem isto o navegador entende o gesto
+   * como rolagem da página e o `pointermove` para de chegar no meio do arrasto.
+   *
+   * Ele era "e só nele", porque pôr no palco inteiro tirava a rolagem nativa —
+   * que era como se alcançava o resto do plano. A rolagem saiu com a moldura
+   * (ALE-203) e a CENA inteira passou a ter a mesma linha: num plano infinito
+   * quem percorre é o arrasto, e é ele que não pode ser confundido com rolagem.
+   * Aqui a declaração fica pelo `cursor`, e porque repetir o que já vem por
+   * herança custa menos que descobrir um dia que a herança quebrou. */
   .tabuleiro-peca[data-on\:pointerdown],
   .tabuleiro-destino {
     touch-action: none;
